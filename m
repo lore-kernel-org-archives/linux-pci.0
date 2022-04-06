@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10365C4332F
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Apr 2022 11:53:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C61C4332F
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Apr 2022 11:53:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231144AbiDFLzb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Apr 2022 07:55:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34754 "EHLO
+        id S231576AbiDFLzh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Apr 2022 07:55:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230516AbiDFLzL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2022 07:55:11 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2514E35C048;
-        Wed,  6 Apr 2022 00:19:04 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4KYG6k06D3zgYQj;
-        Wed,  6 Apr 2022 15:17:18 +0800 (CST)
+        with ESMTP id S231200AbiDFLzM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2022 07:55:12 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AB6635C044;
+        Wed,  6 Apr 2022 00:19:03 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.57])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4KYG3t4yyTzBs0m;
+        Wed,  6 Apr 2022 15:14:50 +0800 (CST)
 Received: from localhost.localdomain (10.67.164.66) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 6 Apr 2022 15:19:01 +0800
+ 15.1.2375.24; Wed, 6 Apr 2022 15:19:00 +0800
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
         <alexander.shishkin@linux.intel.com>, <lorenzo.pieralisi@arm.com>,
@@ -39,12 +39,10 @@ To:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
 CC:     <prime.zeng@huawei.com>, <liuqi115@huawei.com>,
         <zhangshaokun@hisilicon.com>, <linuxarm@huawei.com>,
         <yangyicong@hisilicon.com>
-Subject: [PATCH v6 3/7] hisi_ptt: Add support for dynamically updating the filter list
-Date:   Wed, 6 Apr 2022 15:17:26 +0800
-Message-ID: <20220406071730.41031-4-yangyicong@hisilicon.com>
+Subject: [PATCH v6 0/7] Add support for HiSilicon PCIe Tune and Trace device
+Date:   Wed, 6 Apr 2022 15:17:23 +0800
+Message-ID: <20220406071730.41031-1-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20220406071730.41031-1-yangyicong@hisilicon.com>
-References: <20220406071730.41031-1-yangyicong@hisilicon.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -56,307 +54,132 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCIe devices supported by the PTT trace can be removed/rescanned by
-hotplug or through sysfs.  Add support for dynamically updating the
-available filter list by registering a PCI bus notifier block. Then user
-can always get latest information about available tracing filters and
-driver can block the invalid filters of which related devices no longer
-exist in the system.
+HiSilicon PCIe tune and trace device (PTT) is a PCIe Root Complex
+integrated Endpoint (RCiEP) device, providing the capability
+to dynamically monitor and tune the PCIe traffic (tune),
+and trace the TLP headers (trace).
 
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
----
- drivers/hwtracing/ptt/hisi_ptt.c | 159 ++++++++++++++++++++++++++++---
- drivers/hwtracing/ptt/hisi_ptt.h |  34 +++++++
- 2 files changed, 180 insertions(+), 13 deletions(-)
+PTT tune is designed for monitoring and adjusting PCIe link parameters.
+We provide several parameters of the PCIe link. Through the driver,
+user can adjust the value of certain parameter to affect the PCIe link
+for the purpose of enhancing the performance in certian situation.
 
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
-index 3342774b6b14..266b0195ce8c 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.c
-+++ b/drivers/hwtracing/ptt/hisi_ptt.c
-@@ -270,27 +270,121 @@ static int hisi_ptt_register_irq(struct hisi_ptt *hisi_ptt)
- 	return 0;
- }
- 
--static int hisi_ptt_init_filters(struct pci_dev *pdev, void *data)
-+static void hisi_ptt_update_filters(struct work_struct *work)
- {
-+	struct delayed_work *delayed_work = to_delayed_work(work);
-+	struct hisi_ptt_filter_update_info info;
- 	struct hisi_ptt_filter_desc *filter;
--	struct hisi_ptt *hisi_ptt = data;
- 	struct list_head *target_list;
-+	struct hisi_ptt *hisi_ptt;
- 
--	target_list = pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT ?
--		      &hisi_ptt->port_filters : &hisi_ptt->req_filters;
-+	hisi_ptt = container_of(delayed_work, struct hisi_ptt, work);
- 
--	filter = kzalloc(sizeof(*filter), GFP_KERNEL);
--	if (!filter) {
--		pci_err(hisi_ptt->pdev, "failed to add filter %s\n", pci_name(pdev));
--		return -ENOMEM;
-+	if (!mutex_trylock(&hisi_ptt->mutex)) {
-+		schedule_delayed_work(&hisi_ptt->work, HISI_PTT_WORK_DELAY_MS);
-+		return;
- 	}
- 
--	filter->pdev = pdev;
--	list_add_tail(&filter->list, target_list);
-+	while (kfifo_get(&hisi_ptt->filter_update_kfifo, &info)) {
-+		bool is_port = pci_pcie_type(info.pdev) == PCI_EXP_TYPE_ROOT_PORT;
-+		u16 val = hisi_ptt_get_filter_val(info.pdev);
- 
--	/* Update the available port mask */
--	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT)
--		hisi_ptt->port_mask |= hisi_ptt_get_filter_val(pdev);
-+		target_list = is_port ? &hisi_ptt->port_filters : &hisi_ptt->req_filters;
-+
-+		if (info.is_add) {
-+			filter = kzalloc(sizeof(*filter), GFP_KERNEL);
-+			if (!filter) {
-+				pci_err(hisi_ptt->pdev, "failed to add filter %s\n",
-+					pci_name(info.pdev));
-+				continue;
-+			}
-+
-+			filter->pdev = info.pdev;
-+			list_add_tail(&filter->list, target_list);
-+		} else {
-+			list_for_each_entry(filter, target_list, list)
-+				if (hisi_ptt_get_filter_val(filter->pdev) == val) {
-+					list_del(&filter->list);
-+					kfree(filter);
-+					break;
-+				}
-+		}
-+
-+		/* Update the available port mask */
-+		if (!is_port)
-+			continue;
-+
-+		if (info.is_add)
-+			hisi_ptt->port_mask |= val;
-+		else
-+			hisi_ptt->port_mask &= ~val;
-+	}
-+
-+	mutex_unlock(&hisi_ptt->mutex);
-+}
-+
-+static void hisi_ptt_update_fifo_in(struct hisi_ptt *hisi_ptt,
-+				    struct hisi_ptt_filter_update_info *info)
-+{
-+	struct pci_dev *root_port = pcie_find_root_port(info->pdev);
-+	u32 port_devid;
-+
-+	if (!root_port)
-+		return;
-+
-+	port_devid = PCI_DEVID(root_port->bus->number, root_port->devfn);
-+	if (port_devid < hisi_ptt->lower ||
-+	    port_devid > hisi_ptt->upper)
-+		return;
-+
-+	if (kfifo_in_spinlocked(&hisi_ptt->filter_update_kfifo, info, 1,
-+				&hisi_ptt->filter_update_lock))
-+		schedule_delayed_work(&hisi_ptt->work, 0);
-+	else
-+		pci_warn(hisi_ptt->pdev,
-+			 "filter update fifo overflow for target %s\n",
-+			 pci_name(info->pdev));
-+}
-+
-+/*
-+ * A PCI bus notifier is used here for dynamically updating the filter
-+ * list.
-+ */
-+static int hisi_ptt_notifier_call(struct notifier_block *nb, unsigned long action,
-+				  void *data)
-+{
-+	struct hisi_ptt *hisi_ptt = container_of(nb, struct hisi_ptt, hisi_ptt_nb);
-+	struct hisi_ptt_filter_update_info info;
-+	struct device *dev = data;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	info.pdev = pdev;
-+
-+	switch (action) {
-+	case BUS_NOTIFY_ADD_DEVICE:
-+		info.is_add = true;
-+		break;
-+	case BUS_NOTIFY_DEL_DEVICE:
-+		info.is_add = false;
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	hisi_ptt_update_fifo_in(hisi_ptt, &info);
-+
-+	return 0;
-+}
-+
-+static int hisi_ptt_init_filters(struct pci_dev *pdev, void *data)
-+{
-+	struct hisi_ptt_filter_update_info info = {
-+		.pdev = pdev,
-+		.is_add = true,
-+	};
-+	struct hisi_ptt *hisi_ptt = data;
-+
-+	hisi_ptt_update_fifo_in(hisi_ptt, &info);
- 
- 	return 0;
- }
-@@ -318,6 +412,9 @@ static int hisi_ptt_init_ctrls(struct hisi_ptt *hisi_ptt)
- 	int ret;
- 	u32 reg;
- 
-+	INIT_DELAYED_WORK(&hisi_ptt->work, hisi_ptt_update_filters);
-+	spin_lock_init(&hisi_ptt->filter_update_lock);
-+	INIT_KFIFO(hisi_ptt->filter_update_kfifo);
- 	INIT_LIST_HEAD(&hisi_ptt->port_filters);
- 	INIT_LIST_HEAD(&hisi_ptt->req_filters);
- 
-@@ -334,6 +431,13 @@ static int hisi_ptt_init_ctrls(struct hisi_ptt *hisi_ptt)
- 	hisi_ptt->upper = FIELD_GET(HISI_PTT_DEVICE_RANGE_UPPER, reg);
- 	hisi_ptt->lower = FIELD_GET(HISI_PTT_DEVICE_RANGE_LOWER, reg);
- 
-+	/*
-+	 * No need to fail if the bus is NULL here as the device
-+	 * maybe hotplugged after the PTT driver probe, in which
-+	 * case we can detect the event and update the list as
-+	 * we register a bus notifier for dynamically updating
-+	 * the filter list.
-+	 */
- 	bus = pci_find_bus(pci_domain_nr(pdev->bus), PCI_BUS_NUM(hisi_ptt->upper));
- 	if (bus)
- 		pci_walk_bus(bus, hisi_ptt_init_filters, hisi_ptt);
-@@ -760,6 +864,31 @@ static int hisi_ptt_register_pmu(struct hisi_ptt *hisi_ptt)
- 	return perf_pmu_register(&hisi_ptt->hisi_ptt_pmu, pmu_name, -1);
- }
- 
-+static void hisi_ptt_unregister_filter_update_notifier(void *data)
-+{
-+	struct hisi_ptt *hisi_ptt = data;
-+
-+	bus_unregister_notifier(&pci_bus_type, &hisi_ptt->hisi_ptt_nb);
-+
-+	/* Cancel any work that has been queued */
-+	cancel_delayed_work_sync(&hisi_ptt->work);
-+}
-+
-+/* Register the bus notifier for dynamically updating the filter list */
-+static int hisi_ptt_register_filter_update_notifier(struct hisi_ptt *hisi_ptt)
-+{
-+	int ret;
-+
-+	hisi_ptt->hisi_ptt_nb.notifier_call = hisi_ptt_notifier_call;
-+	ret = bus_register_notifier(&pci_bus_type, &hisi_ptt->hisi_ptt_nb);
-+	if (ret)
-+		return ret;
-+
-+	return devm_add_action_or_reset(&hisi_ptt->pdev->dev,
-+					hisi_ptt_unregister_filter_update_notifier,
-+					hisi_ptt);
-+}
-+
- /*
-  * The DMA of PTT trace can only use direct mapping, due to some
-  * hardware restriction. Check whether there is an IOMMU or the
-@@ -832,6 +961,10 @@ static int hisi_ptt_probe(struct pci_dev *pdev,
- 		return ret;
- 	}
- 
-+	ret = hisi_ptt_register_filter_update_notifier(hisi_ptt);
-+	if (ret)
-+		pci_warn(pdev, "failed to register filter update notifier, ret = %d", ret);
-+
- 	ret = hisi_ptt_register_pmu(hisi_ptt);
- 	if (ret) {
- 		pci_err(pdev, "failed to register PMU device, ret = %d", ret);
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.h b/drivers/hwtracing/ptt/hisi_ptt.h
-index 29b6d6293d6c..53805f6c9bc2 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.h
-+++ b/drivers/hwtracing/ptt/hisi_ptt.h
-@@ -10,11 +10,15 @@
- #define _HISI_PTT_H
- 
- #include <linux/bits.h>
-+#include <linux/kfifo.h>
- #include <linux/list.h>
- #include <linux/mutex.h>
-+#include <linux/notifier.h>
- #include <linux/pci.h>
- #include <linux/perf_event.h>
-+#include <linux/spinlock.h>
- #include <linux/types.h>
-+#include <linux/workqueue.h>
- 
- #define DRV_NAME "hisi_ptt"
- 
-@@ -57,6 +61,12 @@
- /* Wait time for hardware DMA to reset */
- #define HISI_PTT_RESET_TIMEOUT_US	10UL
- #define HISI_PTT_RESET_POLL_INTERVAL_US	1UL
-+/* FIFO size for dynamically updating the PTT trace filter list. */
-+#define HISI_PTT_FILTER_UPDATE_FIFO_SIZE	16
-+/* Delay time for filter updating work */
-+#define HISI_PTT_WORK_DELAY_MS		100UL
-+/* Wait time for DMA hardware to reset */
-+#define HISI_PTT_RESET_WAIT_MS		1000UL
- /* Poll timeout and interval for waiting hardware work to finish */
- #define HISI_PTT_WAIT_TRACE_TIMEOUT_US	100UL
- #define HISI_PTT_WAIT_POLL_INTERVAL_US	10UL
-@@ -112,6 +122,15 @@ struct hisi_ptt_filter_desc {
- 	struct pci_dev *pdev;
- };
- 
-+/**
-+ * struct hisi_ptt_filter_update_info - information for PTT filter updating
-+ * @pdev:       the PCI device to update in the filter list
-+ * @is_add:     adding to the filter or not
-+ */
-+struct hisi_ptt_filter_update_info {
-+	struct pci_dev *pdev;
-+	bool is_add;
-+};
- 
- /**
-  * struct hisi_ptt_pmu_buf - descriptor of the AUX buffer of PTT trace
-@@ -139,9 +158,13 @@ struct hisi_ptt_pmu_buf {
-  * @port_filters: the filter list of root ports
-  * @req_filters:  the filter list of requester ID
-  * @port_mask:    port mask of the managed root ports
-+ * @work:         delayed work for filter updating
-+ * @filter_update_lock: spinlock to protect the filter update fifo
-+ * @filter_update_fifo: fifo of the filters waiting to update the filter list
-  */
- struct hisi_ptt {
- 	struct hisi_ptt_trace_ctrl trace_ctrl;
-+	struct notifier_block hisi_ptt_nb;
- 	struct pmu hisi_ptt_pmu;
- 	void __iomem *iobase;
- 	struct pci_dev *pdev;
-@@ -159,6 +182,17 @@ struct hisi_ptt {
- 	struct list_head port_filters;
- 	struct list_head req_filters;
- 	u16 port_mask;
-+
-+	/*
-+	 * We use a delayed work here to avoid indefinitely waiting for
-+	 * the hisi_ptt->mutex which protecting the filter list. The
-+	 * work will be delayed only if the mutex can not be held,
-+	 * otherwise no delay will be applied.
-+	 */
-+	struct delayed_work work;
-+	spinlock_t filter_update_lock;
-+	DECLARE_KFIFO(filter_update_kfifo, struct hisi_ptt_filter_update_info,
-+		      HISI_PTT_FILTER_UPDATE_FIFO_SIZE);
- };
- 
- #define to_hisi_ptt(pmu) container_of(pmu, struct hisi_ptt, hisi_ptt_pmu)
+PTT trace is designed for dumping the TLP headers to the memory, which
+can be used to analyze the transactions and usage condition of the PCIe
+Link. Users can choose filters to trace headers, by either requester
+ID, or those downstream of a set of Root Ports on the same core of the
+PTT device. It's also supported to trace the headers of certain type and
+of certain direction.
+
+The driver registers a PMU device for each PTT device. The trace can
+be used through `perf record` and the traced headers can be decoded
+by `perf report`. The perf command support for the device is also
+added in this patchset. The tune can be used through the sysfs
+attributes of related PMU device. See the documentation for the
+detailed usage.
+
+Change since v5:
+- Squash the PMU patch into PATCH 2 suggested by John
+- refine the commit message of PATCH 1 and some comments
+Link: https://lore.kernel.org/lkml/20220308084930.5142-1-yangyicong@hisilicon.com/
+
+Change since v4:
+Address the comments from Jonathan, John and Ma Ca, thanks.
+- Use devm* also for allocating the DMA buffers
+- Remove the IRQ handler stub in Patch 2
+- Make functions waiting for hardware state return boolean
+- Manual remove the PMU device as it should be removed first
+- Modifier the orders in probe and removal to make them matched well
+- Make available {directions,type,format} array const and non-global
+- Using the right filter list in filters show and well protect the
+  list with mutex
+- Record the trace status with a boolean @started rather than enum
+- Optimize the process of finding the PTT devices of the perf-tool
+Link: https://lore.kernel.org/linux-pci/20220221084307.33712-1-yangyicong@hisilicon.com/
+
+Change since v3:
+Address the comments from Jonathan and John, thanks.
+- drop members in the common struct which can be get on the fly
+- reduce buffer struct and organize the buffers with array instead of list
+- reduce the DMA reset wait time to avoid long time busy loop
+- split the available_filters sysfs attribute into two files, for root port
+  and requester respectively. Update the documentation accordingly
+- make IOMMU mapping check earlier in probe to avoid race condition. Also
+  make IOMMU quirk patch prior to driver in the series
+- Cleanups and typos fixes from John and Jonathan
+Link: https://lore.kernel.org/linux-pci/20220124131118.17887-1-yangyicong@hisilicon.com/
+
+Change since v2:
+- address the comments from Mathieu, thanks.
+  - rename the directory to ptt to match the function of the device
+  - spinoff the declarations to a separate header
+  - split the trace function to several patches
+  - some other comments.
+- make default smmu domain type of PTT device to identity
+  Drop the RMR as it's not recommended and use an iommu_def_domain_type
+  quirk to passthrough the device DMA as suggested by Robin. 
+Link: https://lore.kernel.org/linux-pci/20211116090625.53702-1-yangyicong@hisilicon.com/
+
+Change since v1:
+- switch the user interface of trace to perf from debugfs
+- switch the user interface of tune to sysfs from debugfs
+- add perf tool support to start trace and decode the trace data
+- address the comments of documentation from Bjorn
+- add RMR[1] support of the device as trace works in RMR mode or
+  direct DMA mode. RMR support is achieved by common APIs rather
+  than the APIs implemented in [1].
+Link: https://lore.kernel.org/lkml/1618654631-42454-1-git-send-email-yangyicong@hisilicon.com/
+
+[1] https://lore.kernel.org/linux-acpi/20210805080724.480-1-shameerali.kolothum.thodi@huawei.com/
+
+Qi Liu (1):
+  perf tool: Add support for HiSilicon PCIe Tune and Trace device driver
+
+Yicong Yang (6):
+  iommu/arm-smmu-v3: Make default domain type of HiSilicon PTT device to
+    identity
+  hwtracing: Add trace function support for HiSilicon PCIe Tune and
+    Trace device
+  hisi_ptt: Add support for dynamically updating the filter list
+  hisi_ptt: Add tune function support for HiSilicon PCIe Tune and Trace
+    device
+  docs: Add HiSilicon PTT device driver documentation
+  MAINTAINERS: Add maintainer for HiSilicon PTT driver
+
+ Documentation/trace/hisi-ptt.rst              |  303 +++++
+ MAINTAINERS                                   |    7 +
+ drivers/Makefile                              |    1 +
+ drivers/hwtracing/Kconfig                     |    2 +
+ drivers/hwtracing/ptt/Kconfig                 |   12 +
+ drivers/hwtracing/ptt/Makefile                |    2 +
+ drivers/hwtracing/ptt/hisi_ptt.c              | 1161 +++++++++++++++++
+ drivers/hwtracing/ptt/hisi_ptt.h              |  220 ++++
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c   |   16 +
+ tools/perf/arch/arm/util/auxtrace.c           |   76 +-
+ tools/perf/arch/arm/util/pmu.c                |    3 +
+ tools/perf/arch/arm64/util/Build              |    2 +-
+ tools/perf/arch/arm64/util/hisi_ptt.c         |  195 +++
+ tools/perf/util/Build                         |    2 +
+ tools/perf/util/auxtrace.c                    |    4 +
+ tools/perf/util/auxtrace.h                    |    1 +
+ tools/perf/util/hisi-ptt-decoder/Build        |    1 +
+ .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.c   |  170 +++
+ .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.h   |   28 +
+ tools/perf/util/hisi_ptt.c                    |  218 ++++
+ tools/perf/util/hisi_ptt.h                    |   28 +
+ 21 files changed, 2448 insertions(+), 4 deletions(-)
+ create mode 100644 Documentation/trace/hisi-ptt.rst
+ create mode 100644 drivers/hwtracing/ptt/Kconfig
+ create mode 100644 drivers/hwtracing/ptt/Makefile
+ create mode 100644 drivers/hwtracing/ptt/hisi_ptt.c
+ create mode 100644 drivers/hwtracing/ptt/hisi_ptt.h
+ create mode 100644 tools/perf/arch/arm64/util/hisi_ptt.c
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/Build
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.h
+ create mode 100644 tools/perf/util/hisi_ptt.c
+ create mode 100644 tools/perf/util/hisi_ptt.h
+
 -- 
 2.24.0
 
