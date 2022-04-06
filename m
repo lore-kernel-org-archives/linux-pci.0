@@ -2,179 +2,315 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3820BC3527D
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Apr 2022 21:04:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70372C433F5
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Apr 2022 05:42:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242781AbiDEVAV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Apr 2022 17:00:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34878 "EHLO
+        id S231138AbiDFFnr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Apr 2022 01:43:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1457652AbiDEQZy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 12:25:54 -0400
-Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6941955758
-        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 09:23:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649175836; x=1680711836;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=VIIL95YZv6RsZLI0HeLhDGD9sJSPe2rvrM4tcLhpqnM=;
-  b=C1zD9HRz96za+SJoXg22L0ILpy4/MCpYqFRc0B8xJ5UIADm+HGbIZwTm
-   RXVDAHNu/vRl2OPQ3ZPHNS/h7bq1hF86XUrpJJiNcj4vPIkgPVSc6ki/+
-   ujyfoLlblmBEbsPWvsYVeYMBt2xwkdp93jtaYCD0ldgNlylc3cmSLp0NQ
-   iEmDwOJxeuZAfVRJgimJnoFMlXApU1A/IZTz3hyLvGBiZKLkMxdkYcJcn
-   PgI1oIH1SaN8DBDCtFl50D7263ktq4gGUSKryk98PwKZXX5ITG+GMj65Q
-   X2CjOaz2i/VqhWlWot0DxkDTUuxMfD587RmlD0RC0fwXsw9ttkrDWzfpC
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10308"; a="260970162"
-X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
-   d="scan'208";a="260970162"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2022 09:23:55 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,236,1643702400"; 
-   d="scan'208";a="569964529"
-Received: from fmsmsx603.amr.corp.intel.com ([10.18.126.83])
-  by orsmga008.jf.intel.com with ESMTP; 05 Apr 2022 09:23:55 -0700
-Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
- fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Tue, 5 Apr 2022 09:23:54 -0700
-Received: from fmsmsx610.amr.corp.intel.com (10.18.126.90) by
- fmsmsx610.amr.corp.intel.com (10.18.126.90) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.27; Tue, 5 Apr 2022 09:23:54 -0700
-Received: from fmsmsx610.amr.corp.intel.com ([10.18.126.90]) by
- fmsmsx610.amr.corp.intel.com ([10.18.126.90]) with mapi id 15.01.2308.027;
- Tue, 5 Apr 2022 09:23:54 -0700
-From:   "Vivi, Rodrigo" <rodrigo.vivi@intel.com>
-To:     "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: Quirk Intel DG2 ASPM L1 acceptable latency to be
- unlimited
-Thread-Topic: [PATCH] PCI: Quirk Intel DG2 ASPM L1 acceptable latency to be
- unlimited
-Thread-Index: AQHYSNDQWg3XdsSM/UK8Ii3alDU2Fqzh8KOAgAAGJwA=
-Date:   Tue, 5 Apr 2022 16:23:54 +0000
-Message-ID: <ef9a1811a8c6d102dd39f2e7111b9df13d354db3.camel@intel.com>
-References: <20220405160151.GA68831@bhelgaas>
-In-Reply-To: <20220405160151.GA68831@bhelgaas>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.40.4 (3.40.4-3.fc34) 
-x-originating-ip: [10.1.200.100]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <58ACD115E33110408354EA2230CDC82C@intel.com>
-Content-Transfer-Encoding: base64
+        with ESMTP id S1455327AbiDFD7Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2022 23:59:16 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD8B5216A7A
+        for <linux-pci@vger.kernel.org>; Tue,  5 Apr 2022 17:19:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3AEFBB81B94
+        for <linux-pci@vger.kernel.org>; Wed,  6 Apr 2022 00:19:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA953C385A0;
+        Wed,  6 Apr 2022 00:19:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649204384;
+        bh=YRaZEYdBSERzq8cyztJx1Wo3hwRSa7F4pBp2VIm7P7Y=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=omNltD2o34bhZsLgb0QC3M6i6vviXJJ/RpiZkGlWTWJqMk93I6AzvL8ejbgYpI36t
+         aHMPtKwXGkLOHUs28A8/dlxCcYEeSqXm1H2dQ2GfoiKCNZ0c5jRLAw75Zo/yxRPs1Y
+         Mi4UcNjOuCscF60SQMP/Nie45ZGdVXoMdeeywbQ5z4p2u0CZxXi5SUnaQYCKfHV7Az
+         eDF2RnvVEAYltZKbvtFk+Prb+Nl0YH7JMpRqLZXqg/mkKaAiFTbeZHFRD4S28Kxcb4
+         xw+V8cxn1I9o/tTmbKdVfHVIP4oz20gtADsX6Yt8WY/a6BgazAnrYoz+rpOwJFpaUG
+         u2URpawF7Mehg==
+Date:   Tue, 5 Apr 2022 19:19:42 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Hans de Goede <hdegoede@redhat.com>
+Cc:     Mark Brown <broonie@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        kernelci-results@groups.io, bot@kernelci.org,
+        gtucker@collabora.com, linux-pci@vger.kernel.org
+Subject: Re: next/master bisection: baseline.login on asus-C523NA-A20057-coral
+Message-ID: <20220406001942.GA74862@bhelgaas>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <76c5de03-a3a4-8444-d7f6-496fa119d830@redhat.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gVHVlLCAyMDIyLTA0LTA1IGF0IDExOjAxIC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0K
-PiBPbiBUdWUsIEFwciAwNSwgMjAyMiBhdCAxMjozODoxMFBNICswMzAwLCBNaWthIFdlc3RlcmJl
-cmcgd3JvdGU6DQo+ID4gSW50ZWwgREcyIGRpc2NyZXRlIGdyYXBoaWNzIFBDSWUgZW5kcG9pbnRz
-IGhhcmQtY29kZSB0aGVpcg0KPiA+IGFjY2VwdGFibGUgTDENCj4gPiBBU1BNIGxhdGVuY3kgdG8g
-YmUgPCAxdXMgZXZlbiB0aG91Z2ggdGhlIGhhcmR3YXJlIGFjdHVhbGx5IHN1cHBvcnRzDQo+ID4g
-aGlnaGVyIGxhdGVuY2llcyAoPiA2NCB1cykganVzdCBmaW5lLiBJbiBvcmRlciB0byBhbGxvdyB0
-aGUgbGlua3MNCj4gPiB0byBnbw0KPiA+IGludG8gTDEgYW5kIHNhdmUgcG93ZXIsIHF1aXJrIHRo
-ZSBhY2NlcHRhYmxlIEwxIEFTUE0gbGF0ZW5jeSBmb3INCj4gPiB0aGVzZQ0KPiA+IGVuZHBvaW50
-cyB0byBiZSB1bmxpbWl0ZWQuDQo+IA0KPiBJcyB0aGVyZSBhIHBsYW4gdG8gZml4IHRoaXMgaW4g
-ZnV0dXJlIERHMiBoYXJkd2FyZS9maXJtd2FyZT8NCj4gT2J2aW91c2x5IHRoZSBwb2ludCBvZiBE
-ZXYgQ2FwIGlzIHRvIG1ha2UgdGhlIGRldmljZSBzZWxmLWRlc2NyaWJpbmcNCj4gc28gd2UgY2Fu
-IGF2b2lkIHVwZGF0ZXMgbGlrZSB0aGlzIGV2ZXJ5IHRpbWUgbmV3IGhhcmR3YXJlIGNvbWVzIG91
-dC4NCg0KVW5mb3J0dW5hdGVseSBubyBmaXggcG9zc2libGUgaW4gREcyIGh3IChwY2kgaWQgbGlz
-dCBiZWxvdyksIGJ1dCBpdA0Kd2lsbCBiZSBmaXhlZCBmb3Igb3RoZXIgcGxhdGZvcm1zIGNvbWlu
-ZyBhZnRlciB0aG9zZS4NCg0KPiANCj4gPiBOb3RlIHRoaXMgZG9lcyBub3QgaGF2ZSBhbnkgZWZm
-ZWN0IHVubGVzcyB0aGUgdXNlciByZXF1ZXN0ZWQgdGhlDQo+ID4ga2VybmVsDQo+ID4gdG8gZW5h
-YmxlIEFTUE0gaW4gdGhlIGZpcnN0IHBsYWNlIChieSBkZWZhdWx0IHdlIGRvbid0IGVuYWJsZSBp
-dCkuIA0KPiANCj4gSSB0aGluayB0aGlzIGRlcGVuZHMgb24gdGhlIHBsYXRmb3JtIGFuZCBrZXJu
-ZWwgY29uZmlnLCBkb2Vzbid0IGl0Pw0KPiBJZiBDT05GSUdfUENJRUFTUE1fUE9XRVJTQVZFPXkg
-b3IgQ09ORklHX1BDSUVBU1BNX1BPV0VSX1NVUEVSU0FWRT15DQo+IEkgc3VzcGVjdCB3ZSB3b3Vs
-ZCBlbmFibGUgQVNQTSBMMSBldmVuIHdpdGhvdXQgdGhlIHBhcmFtZXRlcnMgYmVsb3cuDQo+IA0K
-PiA+IFRoaXMgaXMgZG9uZSB3aXRoICJwY2llX2FzcG09Zm9yY2UNCj4gPiBwY2llX2FzcG0ucG9s
-aWN5PXBvd2Vyc3Vwc2Vyc2F2ZSINCj4gPiBjb21tYW5kIGxpbmUgcGFyYW1ldGVycy4NCj4gDQo+
-IHMvcG93ZXJzdXBzZXJzYXZlL3Bvd2Vyc3VwZXJzYXZlLw0KPiANCj4gVGhpcyBzaG91bGQgYWZm
-ZWN0ICJwb3dlcnNhdmUiIGFzIHdlbGwgYXMgInBvd2Vyc3VwZXJzYXZlIiwgcmlnaHQ/DQo+IEJv
-dGggZW5hYmxlIEwxLsKgICJwb3dlcnN1cGVyc2F2ZSIgZW5hYmxlcyB0aGUgTDEgc3Vic3RhdGVz
-Lg0KPiANCj4gV2UgKnNob3VsZCogYmUgYWJsZSB0byBlbmFibGUvZGlzYWJsZSBBU1BNIEwxIHVz
-aW5nIHRoZSBzeXNmcw0KPiAibDFfYXNwbQ0KPiBmaWxlLCB0b28uDQo+IA0KPiA+IFNpZ25lZC1v
-ZmYtYnk6IE1pa2EgV2VzdGVyYmVyZyA8bWlrYS53ZXN0ZXJiZXJnQGxpbnV4LmludGVsLmNvbT4N
-Cj4gPiAtLS0NCj4gPiDCoGRyaXZlcnMvcGNpL3F1aXJrcy5jIHwgNDQNCj4gPiArKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0KPiA+IMKgMSBmaWxlIGNoYW5nZWQs
-IDQ0IGluc2VydGlvbnMoKykNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcXVp
-cmtzLmMgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiA+IGluZGV4IGRhODI5Mjc0ZmM2Ni4uZTk3
-YjVkYWEwMGViIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jDQo+ID4gKysr
-IGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gPiBAQCAtNTg5NSwzICs1ODk1LDQ3IEBAIERFQ0xB
-UkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUwsDQo+ID4gMHgxNTMzLCByb21f
-YmFyX292ZXJsYXBfZGVmZWN0KTsNCj4gPiDCoERFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9W
-RU5ET1JfSURfSU5URUwsIDB4MTUzNiwNCj4gPiByb21fYmFyX292ZXJsYXBfZGVmZWN0KTsNCj4g
-PiDCoERFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4MTUzNywN
-Cj4gPiByb21fYmFyX292ZXJsYXBfZGVmZWN0KTsNCj4gPiDCoERFQ0xBUkVfUENJX0ZJWFVQX0VB
-UkxZKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4MTUzOCwNCj4gPiByb21fYmFyX292ZXJsYXBfZGVm
-ZWN0KTsNCj4gPiArDQo+ID4gKyNpZmRlZiBDT05GSUdfUENJRUFTUE0NCj4gPiArLyoNCj4gPiAr
-ICogSW50ZWwgREcyIGdyYXBoaWNzIGNhcmQgaGFzIGhhcmQtY29kZWQgYWNjZXB0YWJsZSBMMSBs
-YXRlbmN5DQo+ID4gdGhhdCBpcw0KPiA+ICsgKiB0b28gbG93IHdoaWNoIHByZXZlbnRzIEFTUE0g
-dG8gYmUgZW5hYmxlZC4gSXQgZG9lcyBzdXBwb3J0IEFTUE0NCj4gPiBMMQ0KPiA+ICsgKiBhbmQg
-dG9sZXJhdGVzIGhpZ2hlciBsYXRlbmNpZXMgc28gcXVpcmsgaXQgdG8gYmUgdW5saW1pdGVkLg0K
-PiA+ICsgKi8NCj4gPiArc3RhdGljIHZvaWQgcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5
-KHN0cnVjdCBwY2lfZGV2ICpkZXYpDQo+ID4gK3sNCj4gPiArwqDCoMKgwqDCoMKgwqBpZiAoKGRl
-di0+ZGV2Y2FwICYgUENJX0VYUF9ERVZDQVBfTDEpID4+IDkgPCA3KSB7DQo+ID4gK8KgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoHUzMiBkZXZjYXAgPSBkZXYtPmRldmNhcDsNCj4gPiArDQo+
-ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRldi0+ZGV2Y2FwIHw9IDcgPDwgOTsN
-Cj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcGNpX2luZm8oZGV2LCAicXVpcmtp
-bmcgZGV2Y2FwIGZvciBMMSBhY2NlcHRlZA0KPiA+IGxhdGVuY3kgMHglMDh4IC0+IDB4JTA4eFxu
-IiwNCj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBk
-ZXZjYXAsIGRldi0+ZGV2Y2FwKTsNCj4gPiArwqDCoMKgwqDCoMKgwqB9DQo+ID4gK30NCj4gPiAr
-REVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NGY4MCwNCj4g
-PiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhV
-UF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg0ZjgxLA0KPiA+IHF1aXJrX2FzcG1fYWNj
-ZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVO
-RE9SX0lEX0lOVEVMLCAweDRmODIsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5
-KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4
-NGY4MywNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJF
-X1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg0Zjg0LA0KPiA+IHF1aXJr
-X2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURF
-UihQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDRmODUsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9s
-MV9sYXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURf
-SU5URUwsIDB4NGY4NiwNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+
-ICtERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg0Zjg3LA0K
-PiA+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJ
-WFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDRmODgsDQo+ID4gcXVpcmtfYXNwbV9h
-Y2NlcHRlZF9sMV9sYXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9W
-RU5ET1JfSURfSU5URUwsIDB4NTY5MCwNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVu
-Y3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwg
-MHg1NjkxLA0KPiA+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xB
-UkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDU2OTIsDQo+ID4gcXVp
-cmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVB
-REVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NTY5MywNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVk
-X2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9J
-RF9JTlRFTCwgMHg1Njk0LA0KPiA+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+
-ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDU2OTUs
-DQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lf
-RklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NTZhMCwNCj4gPiBxdWlya19hc3Bt
-X2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJ
-X1ZFTkRPUl9JRF9JTlRFTCwgMHg1NmExLA0KPiA+IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0
-ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9SX0lEX0lOVEVM
-LCAweDU2YTIsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5KTsNCj4gPiArREVD
-TEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NTZhMywNCj4gPiBx
-dWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BDSV9GSVhVUF9I
-RUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg1NmE0LA0KPiA+IHF1aXJrX2FzcG1fYWNjZXB0
-ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfVkVORE9S
-X0lEX0lOVEVMLCAweDU2YTUsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9sYXRlbmN5KTsN
-Cj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4NTZh
-NiwNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtERUNMQVJFX1BD
-SV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg1NmIwLA0KPiA+IHF1aXJrX2Fz
-cG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQ
-Q0lfVkVORE9SX0lEX0lOVEVMLCAweDU2YjEsDQo+ID4gcXVpcmtfYXNwbV9hY2NlcHRlZF9sMV9s
-YXRlbmN5KTsNCj4gPiArREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKFBDSV9WRU5ET1JfSURfSU5U
-RUwsIDB4NTZjMCwNCj4gPiBxdWlya19hc3BtX2FjY2VwdGVkX2wxX2xhdGVuY3kpOw0KPiA+ICtE
-RUNMQVJFX1BDSV9GSVhVUF9IRUFERVIoUENJX1ZFTkRPUl9JRF9JTlRFTCwgMHg1NmMxLA0KPiA+
-IHF1aXJrX2FzcG1fYWNjZXB0ZWRfbDFfbGF0ZW5jeSk7DQo+ID4gKyNlbmRpZg0KPiA+IC0tIA0K
-PiA+IDIuMzUuMQ0KPiA+IA0KDQo=
+On Mon, Apr 04, 2022 at 10:45:10AM +0200, Hans de Goede wrote:
+> On 3/30/22 13:35, Bjorn Helgaas wrote:
+> > On Mon, Mar 28, 2022 at 02:54:42PM +0200, Hans de Goede wrote:
+
+> >> Ok, Guillaume, can you try a kernel with commit 5949965ec9340cfc0e65f7d8a576b660b26e2535
+> >> ("x86/PCI: Preserve host bridge windows completely covered by E820") + the 
+> >> attached patch added on top a try on the asus-C523NA-A20057-coral machine please
+> >> and see if that makes it boot again ?
+
+> >> From b8080a6d2d889847900e1408f71d0c01c73f5c94 Mon Sep 17 00:00:00 2001
+> >> From: Hans de Goede <hdegoede@redhat.com>
+> >> Date: Mon, 28 Mar 2022 14:47:41 +0200
+> >> Subject: [PATCH] x86/PCI: Limit "e820 entry fully covers window" check to non
+> >>  ISA MMIO addresses
+> >>
+> >> Commit FIXME ("x86/PCI: Preserve host bridge windows completely
+> >> covered by E820") added a check to skip e820 table entries which
+> >> fully cover a PCI bride's memory window when clipping PCI bridge
+> >> memory windows.
+> >>
+> >> This check also caused ISA MMIO windows to not get clipped when
+> >> fully covered, which is causing some coreboot based Chromebooks
+> >> to not boot.
+> >>
+> >> Modify the fully covered check to not apply to ISA MMIO windows.
+
+> >> Fixes: FIXME ("x86/PCI: Preserve host bridge windows completely covered by E820")
+> >> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> >> ---
+> >>  arch/x86/kernel/resource.c | 6 +++++-
+> >>  1 file changed, 5 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/arch/x86/kernel/resource.c b/arch/x86/kernel/resource.c
+> >> index 6be82e16e5f4..d9ec913619c3 100644
+> >> --- a/arch/x86/kernel/resource.c
+> >> +++ b/arch/x86/kernel/resource.c
+> >> @@ -46,8 +46,12 @@ void remove_e820_regions(struct device *dev, struct resource *avail)
+> >>  		 * devices.  But if it covers the *entire* resource, it's
+> >>  		 * more likely just telling us that this is MMIO space, and
+> >>  		 * that doesn't need to be removed.
+> >> +		 * Note this *entire* resource covering check is only
+> >> +		 * intended for 32 bit memory resources for the 16 bit
+> >> +		 * isa window we always apply the e820 entries.
+> >>  		 */
+> >> -		if (e820_start <= avail->start && avail->end <= e820_end) {
+> >> +		if (avail->start >= ISA_END_ADDRESS &&
+> > 
+> > What is the justification for needing to check ISA_END_ADDRESS here?
+> > The commit log basically says "this makes it work", which isn't very
+> > satisfying.
+> 
+> I did not have a log with the:
+> 
+> >   acpi PNP0A08:00: clipped [mem 0x000a0000-0x000bffff window] to [mem 0x00100000-0x000bffff window] for e820 entry [mem 0x000a0000-0x000fffff]
+> >   acpi PNP0A08:00: clipped [mem 0x7b800000-0x7fffffff window] to [mem 0x80000000-0x7fffffff window] for e820 entry [mem 0x7b000000-0x7fffffff]
+> >   acpi PNP0A08:00: clipped [mem 0x80000000-0xe0000000 window] to [mem 0x80000000-0xcfffffff window] for e820 entry [mem 0xd0000000-0xd0ffffff]
+> 
+> messages. Instead I was looking at this log:
+> 
+> https://storage.kernelci.org/next/master/next-20220310/x86_64/x86_64_defconfig+x86-chromebook/gcc-10/lab-collabora/baseline-asus-C523NA-A20057-coral.html
+> 
+> With the following messages (as I quoted higher up in the email-thread):
+> 
+> """
+>  1839 17:54:41.406548  <6>[    0.000000] BIOS-provided physical RAM map:
+>  1840 17:54:41.413121  <6>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000000fff] type 16
+>  1841 17:54:41.419712  <6>[    0.000000] BIOS-e820: [mem 0x0000000000001000-0x000000000009ffff] usable
+>  1842 17:54:41.430192  <6>[    0.000000] BIOS-e820: [mem 0x00000000000a0000-0x00000000000fffff] reserved
+>  1843 17:54:41.436207  <6>[    0.000000] BIOS-e820: [mem 0x0000000000100000-0x000000000fffffff] usable
+>  1844 17:54:41.446353  <6>[    0.000000] BIOS-e820: [mem 0x0000000010000000-0x0000000012150fff] reserved
+>  1845 17:54:41.453290  <6>[    0.000000] BIOS-e820: [mem 0x0000000012151000-0x000000007a9fcfff] usable
+>  1846 17:54:41.459966  <6>[    0.000000] BIOS-e820: [mem 0x000000007a9fd000-0x000000007affffff] type 16
+>  1847 17:54:41.469549  <6>[    0.000000] BIOS-e820: [mem 0x000000007b000000-0x000000007fffffff] reserved
+>  1848 17:54:41.476685  <6>[    0.000000] BIOS-e820: [mem 0x00000000d0000000-0x00000000d0ffffff] reserved
+>  1849 17:54:41.486439  <6>[    0.000000] BIOS-e820: [mem 0x00000000e0000000-0x00000000efffffff] reserved
+>  1850 17:54:41.492994  <6>[    0.000000] BIOS-e820: [mem 0x00000000fed10000-0x00000000fed17fff] reserved
+>  1851 17:54:41.503008  <6>[    0.000000] BIOS-e820: [mem 0x0000000100000000-0x000000017fffffff] usable
+> ...
+>  2030 17:54:42.809183  <6>[    0.313771] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+>  2031 17:54:42.819092  <6>[    0.314424] pci_bus 0000:00: root bus resource [mem 0x7b800000-0xe0000000 window]
+> """
+> 
+> ###
+> 
+> What I find weird here is that this boot with a somewhat earlier kernel has:
+> 
+>  2030 17:54:42.809183  <6>[    0.313771] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+>  2031 17:54:42.819092  <6>[    0.314424] pci_bus 0000:00: root bus resource [mem 0x7b800000-0xe0000000 window]
+> 
+> Where as the boot with the clipped messages has:
+> 
+> <6>[    0.313705] acpi PNP0A08:00: ignoring host bridge window [mem 0x00100000-0x000bffff window] (conflicts with PCI mem [mem 0x00000000-0x7fffffffff])
+> <6>[    0.314702] acpi PNP0A08:00: ignoring host bridge window [mem 0x80000000-0x7fffffff window] (conflicts with PCI mem [mem 0x00000000-0x7fffffffff])
+> <6>[    0.315747] PCI host bridge to bus 0000:00
+> <6>[    0.316118] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window]
+> <6>[    0.316703] pci_bus 0000:00: root bus resource [io  0x1000-0xffff window]
+> <6>[    0.317298] pci_bus 0000:00: root bus resource [mem 0x80000000-0xcfffffff window]
+> <6>[    0.317703] pci_bus 0000:00: root bus resource [bus 00-ff]
+> 
+> So in the boot with the clipped messages we are getting 3 windows from _CRS
+> where as before we were getting only 2?  I know that we are now applying
+> the clipping directly when we are parsing the resources. So I guess that
+> before we somehow also merged the 2 resources which are back to back together
+> before the "root bus resource" messages get printed. This caused me to just
+> see the "root bus resource [mem 0x7b800000-0xe0000000 window]" which is
+> not fully covered which is why I focused on the ISA MMIO window.
+
+Yes, we do merge adjacent windows together.  See 7c3855c423b1 ("PCI:
+Coalesce host bridge contiguous apertures") [1].  This is because our
+BAR assignment isn't smart enough to assign space from two ajacent
+resources to one BAR.
+
+We have (at least) three apertures, and the latter two would be merged
+together:
+
+  acpi PNP0A08:00: ... [mem 0x000a0000-0x000bffff window] ...
+  acpi PNP0A08:00: ... [mem 0x7b800000-0x7fffffff window] ...
+  acpi PNP0A08:00: ... [mem 0x80000000-0xe0000000 window] ...
+
+The boot at [2] was with 5.17.0-rc7-next-20220310, which includes
+7f7b4236f204 ("x86/PCI: Ignore E820 reservations for bridge windows on
+newer systems") [3], so we ignored E820 completely and we found two
+windows (the VGA framebuffer and the big merged window):
+
+  Linux version 5.17.0-rc7-next-20220310 (KernelCI@build-j608383-x86-64-gcc-10-x86-64-defconfig-x86-chromebooc26pc) (gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2) #1 SMP PREEMPT Fri Mar 11 17:23:28 UTC 2022
+  pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+  pci_bus 0000:00: root bus resource [mem 0x7b800000-0xe0000000 window]
+
+The boot at [4] was with d13f73e9108a ("x86/PCI: Log host bridge
+window clipping for E820 regions") [5].  In addition to logging,
+d13f73e9108a also does the clipping *before* the merging:
+
+  Linux version 5.17.0-rc7 (KernelCI@0bd4b548bde7) (gcc (Debian 10.2.1-6) 
+  acpi PNP0A08:00: clipped [mem 0x000a0000-0x000bffff window] to [mem 0x00100000-0x000bffff window] for e820 entry [mem 0x000a0000-0x000fffff]
+  acpi PNP0A08:00: clipped [mem 0x7b800000-0x7fffffff window] to [mem 0x80000000-0x7fffffff window] for e820 entry [mem 0x7b000000-0x7fffffff]
+  acpi PNP0A08:00: clipped [mem 0x80000000-0xe0000000 window] to [mem 0x80000000-0xcfffffff window] for e820 entry [mem 0xd0000000-0xd0ffffff]
+  pci_bus 0000:00: root bus resource [mem 0x80000000-0xcfffffff window]
+
+Here we clipped the VGA framebuffer and [mem 0x7b800000-0x7fffffff]
+completely out, so we ignored them, and we clipped the big window to
+avoid [mem 0xd0000000-0xd0ffffff], so all we have left is
+[mem 0x80000000-0xcfffffff].
+
+> > The Asus log of the last good commit shows:
+> > 
+> >   PCI: 00:0d.0 [8086/5a92] enabled
+> >   constrain_resources: PCI: 00:0d.0 10 base d0000000 limit d0ffffff mem (fixed)
+> >   ...
+> >   BIOS-e820: [mem 0x000000007b000000-0x000000007fffffff] reserved
+> >   BIOS-e820: [mem 0x00000000d0000000-0x00000000d0ffffff] reserved
+> >   BIOS-e820: [mem 0x00000000e0000000-0x00000000efffffff] reserved
+> >   ...
+> >   acpi PNP0A08:00: clipped [mem 0x000a0000-0x000bffff window] to [mem 0x00100000-0x000bffff window] for e820 entry [mem 0x000a0000-0x000fffff]
+> >   acpi PNP0A08:00: clipped [mem 0x7b800000-0x7fffffff window] to [mem 0x80000000-0x7fffffff window] for e820 entry [mem 0x7b000000-0x7fffffff]
+> >   acpi PNP0A08:00: clipped [mem 0x80000000-0xe0000000 window] to [mem 0x80000000-0xcfffffff window] for e820 entry [mem 0xd0000000-0xd0ffffff]
+> >   acpi PNP0A08:00: ignoring host bridge window [mem 0x00100000-0x000bffff window] (conflicts with PCI mem [mem 0x00000000-0x7fffffffff])
+> >   acpi PNP0A08:00: ignoring host bridge window [mem 0x80000000-0x7fffffff window] (conflicts with PCI mem [mem 0x00000000-0x7fffffffff])
+
+> > From the firmware part of the log, it looks like 00:0d.0 is a hidden
+> > device that consumes [mem d0000000-0xd0ffffff].  Linux doesn't
+> > enumerate 00:0d.0, so firmware should have carved that out of the [mem
+> > 0x80000000-0xe0000000 window] in _CRS.
+> > 
+> > We don't have a log with 5949965ec934 ("x86/PCI: Preserve host bridge
+> > windows completely covered by E820") applied, but I think it would
+> > show this:
+> > 
+> >   acpi PNP0A08:00: resource [mem 0x000a0000-0x000bffff window] fully covered by e820 entry [mem 0x000a0000-0x000fffff]
+> >   acpi PNP0A08:00: resource [mem 0x7b800000-0x7fffffff window] fully covered by e820 entry [mem 0x7b000000-0x7fffffff]
+> > 
+> > instead of clipping those windows.  But none of the devices we
+> > enumerate appears to be using either of those windows.
+> 
+> Not with a working kernel no, because they are clipped of, but
+> with the don't clip fully-covered _CRS windows change, the 
+> [mem 0x7b000000-0x7fffffff] all of a sudden becomes fair game
+> to assign BARs to.
+> 
+> I agree that we will get a fully-covered msg for that one with
+> the patch, which would change:
+> 
+> [    0.317298] pci_bus 0000:00: root bus resource [mem 0x80000000-0xcfffffff window]
+> 
+> to:
+> 
+> [    0.317298] pci_bus 0000:00: root bus resource [mem 0x7b800000-0xcfffffff window]
+> 
+> and I believe that likely is our culprit.
+
+I think you're probably right.  We started with this:
+
+  BIOS-e820: [mem 0x00000000000a0000-0x00000000000fffff] reserved
+  BIOS-e820: [mem 0x000000007b000000-0x000000007fffffff] reserved
+  BIOS-e820: [mem 0x00000000d0000000-0x00000000d0ffffff] reserved
+  BIOS-e820: [mem 0x00000000e0000000-0x00000000efffffff] reserved
+  acpi PNP0A08:00: ... [mem 0x000a0000-0x000bffff window] ...
+  acpi PNP0A08:00: ... [mem 0x7b800000-0x7fffffff window] ...
+  acpi PNP0A08:00: ... [mem 0x80000000-0xe0000000 window] ...
+
+After 5949965ec934, clipping will give us this:
+
+  pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+  pci_bus 0000:00: root bus resource [mem 0x7b800000-0x7fffffff window]
+  pci_bus 0000:00: root bus resource [mem 0x80000000-0xcfffffff window]
+
+and merging will give us this:
+
+  pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+  pci_bus 0000:00: root bus resource [mem 0x7b800000-0xcfffffff window]
+
+BIOS left a 00:18.2 BAR here [6]:
+
+  pci 0000:00:18.2: reg 0x10: [mem 0xde000000-0xde000fff 64bit]
+
+That BAR is outside the windows we know about, so we'll move it,
+probably to 0x7b800000 and maybe it doesn't work there.
+
+> So to fix this I guess that we first need to merge back-to-back
+> windows coming from _CRS into a single window, before calling
+> remove_e820_regions()
+> 
+> That would pass [mem 0x7b800000-0xe0000000 window] to
+> remove_e820_regions() in a single call (as I expected from the
+> logs), which should result in both the top and the bottom still
+> getting clipped as before.
+
+So I think the progression is:
+
+  1) Remove anything mentioned in E820 from _CRS (4dc2287c1805 [7]).
+     This worked around some issues on Dell systems.
+
+  2) Remove things mentioned in E820 unless they cover the entire
+     window (5949965ec934 [8])
+
+  3) Coalesce adjacent _CRS windows, *then* remove things mentioned in
+     E820 unless they cover the entire (coalesced) window (current
+     proposal)
+
+Even 3) leaves us with the 00:18.2 BAR above that will be moved when
+it doesn't need to be.  That could lead us to something like this:
+
+  4) Coalesce adjacent _CRS windows, *then* remove things mentioned in
+     E820 unless they cover the entire (coalesced) window (current
+     proposal), but punch holes instead of lopping entire sections, so 
+     we would end up with these windows:
+
+      pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+      pci_bus 0000:00: root bus resource [mem 0x7b800000-0xcfffffff window]
+      pci_bus 0000:00: root bus resource [mem 0xd0100000-0xdfffffff window]
+
+But I don't think this is leading to a maintainable result.  We
+shouldn't be using E820 at all in an ACPI system (and again, the fact
+that we *do* use it is my fault, and I'll take my beatings).  We need
+to *reduce* or at least contain that E820 usage instead of expanding
+it.
+
+[1] https://git.kernel.org/linus/7c3855c423b1
+[2] https://storage.kernelci.org/next/master/next-20220310/x86_64/x86_64_defconfig+x86-chromebook/gcc-10/lab-collabora/baseline-asus-C523NA-A20057-coral.html#L2030
+[3] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/patch/?id=7f7b4236f204
+[4] https://lava.collabora.co.uk/scheduler/job/5937945#L2023
+[5] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/patch/?id=d13f73e9108a
+[6] https://storage.kernelci.org/next/master/next-20220310/x86_64/x86_64_defconfig+x86-chromebook/gcc-10/lab-collabora/baseline-asus-C523NA-A20057-coral.html#L2084
+[7] https://git.kernel.org/linus/4dc2287c1805
+[8] https://lore.kernel.org/all/20220304035110.988712-4-helgaas@kernel.org/
