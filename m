@@ -2,101 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27549C433FE
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 16:01:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A583DC433EF
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 16:41:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233537AbiDGQDY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Apr 2022 12:03:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58890 "EHLO
+        id S232771AbiDGQnh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Apr 2022 12:43:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229816AbiDGQDW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2022 12:03:22 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45C161DEA81;
-        Thu,  7 Apr 2022 09:01:21 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id B4FBECE27EE;
-        Thu,  7 Apr 2022 16:01:19 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04483C385A5;
-        Thu,  7 Apr 2022 16:01:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649347278;
-        bh=yAnO4c7MDGXcf6Gal/+bTFrLqSTatoGBMYjleu4Ss1Q=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=uM+vZOCA5IzJZCsNSrAwwXCQY5jXsP16RBrgP9QPhmPtbO18pA/p6hfvg/57+7Yso
-         eE0k1MYJZtSZua5T9kMskawRJBhAdmofen15mx0p4YcU7F6J2Ate+Uy7U6obPMuizX
-         m2T4u2m5a7B+PYlVK1IyT/nwdjwwzJm/Ct1jIJIHitF6YPgUzeacK00CrIh9nxo3uN
-         PS2NRkLzeDEzDRqIQOvVqUy1vmMTrdaDUO7N50sT1JNQcV4odlcprUkUB7VXqI5lSy
-         WhSDkQAN5baOCzlGDwu+pnIqM8237y8XAV6uijFUXe+9obFohCdduB1rbO6AecohqC
-         /pVOZ+QafMZHw==
-Date:   Thu, 7 Apr 2022 11:01:16 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Christoph Hellwig <hch@infradead.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH V7 03/10] PCI: Create PCI library functions in support of
- DOE mailboxes.
-Message-ID: <20220407160116.GA239672@bhelgaas>
+        with ESMTP id S231684AbiDGQnh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2022 12:43:37 -0400
+Received: from mail-yb1-f175.google.com (mail-yb1-f175.google.com [209.85.219.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 959C3195D97;
+        Thu,  7 Apr 2022 09:41:36 -0700 (PDT)
+Received: by mail-yb1-f175.google.com with SMTP id l36so10513989ybj.12;
+        Thu, 07 Apr 2022 09:41:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ag3ZPrDaG7eymU9bbXcPlL6ed5F1nvkJ2snTyLrGnXs=;
+        b=CukGAeIT43xM17pCPytcQyhT370asJLMKxD1G9ALDllv6I6Rd669Do8qgvq+QygIuN
+         Hxo7ghI6dKZzSAph4osOml+Wkf70N5bCpgBxvb43p7jVL0stg4RR6wTTe3SLwNoICBEG
+         n5LRZ9uD+Na4ElubNJPiax/so7/1vNezIAuqTzQZPNGbmDK5cjt0tCkr0+k8ARP0YUFV
+         TYpB4U37Oj2Wha7PWbWQttTJjENuA/LbIg2UMA4xk1J7a7xWW/AgWCR3m+UAyOd/m2IA
+         /zVyQBo/Pfqt817qd6YERWrN7a7SuvCwp/e56OWnsAuSC45dezzMOBkJKkiVjc53exMA
+         95xQ==
+X-Gm-Message-State: AOAM533p5tXleLMDRy7XioiEVmArbS7PDQyeJpc4hiICWo6pOtwtdqL1
+        9OgbfOvCauo8vajNcfs6TArNBnrAor1U7SfVcEc=
+X-Google-Smtp-Source: ABdhPJwWQD4BFr0N61om2oTZkMiWX4Rr2YEQ3mpLAc2fGixxeUMxNh9UrphFjXkRcH94v9AOqW3Qm14l5jYbhkvU+LY=
+X-Received: by 2002:a25:8409:0:b0:63c:bea7:30af with SMTP id
+ u9-20020a258409000000b0063cbea730afmr9874223ybk.633.1649349695694; Thu, 07
+ Apr 2022 09:41:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yk4EvRDd/Kw5rEil@iweiny-desk3>
+References: <20220407131602.14727-1-yangyicong@hisilicon.com> <20220407154257.GA235990@bhelgaas>
+In-Reply-To: <20220407154257.GA235990@bhelgaas>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Thu, 7 Apr 2022 18:41:24 +0200
+Message-ID: <CAJZ5v0gWzDsh8VWY+EzO6WxyO6Fe1GcRzVfABVOaO0ywJegLwA@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ACPI: Decouple the negotiation of ASPM and other PCIe services
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Yicong Yang <yangyicong@hisilicon.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 06, 2022 at 02:23:09PM -0700, Ira Weiny wrote:
-> On Wed, Apr 06, 2022 at 11:11:10AM +0100, Jonathan Cameron wrote:
-> > On Tue, 5 Apr 2022 16:22:11 -0700
-> > Ira Weiny <ira.weiny@intel.com> wrote:
-> > > On Sat, Apr 02, 2022 at 04:48:45PM +0200, Lukas Wunner wrote:
-> > > > On Thu, Mar 31, 2022 at 08:19:56AM -0700, Ira Weiny wrote:  
-> > > > > On Wed, Mar 30, 2022 at 10:50:31PM -0700, Christoph Hellwig wrote:  
-> > > > > > On Wed, Mar 30, 2022 at 04:59:13PM -0700, ira.weiny@intel.com wrote:  
-> > > > > > > Introduced in a PCI v6.0[1], DOE provides a config space based mailbox
-> > > > > > > with standard protocol discovery.  Each mailbox is accessed through a
-> > > > > > > DOE Extended Capability.  
-> > > > > > 
-> > > > > > I really don't think this should be built unconditionally and bloat
-> > > > > > every single kernel built with PCI support.  
-> > > > > 
-> > > > > I can add a Kconfig.  
-> > > > 
-> > > > Ideally, that config option should live in the pcie/ subdirectory,
-> > > > i.e. in drivers/pci/pcie/Kconfig, alongside drivers/pci/pcie/doe.c,
-> > > > as we try to consolidate PCIe-specific features there and reserve
-> > > > core code in drivers/pci/*.c for functionality that also applies
-> > > > to Conventional PCI.  
-> > > 
-> > > Thanks for letting me know about this direction.  I was unaware of this.
-> > 
-> > We had this in the pcie directory, but Bjorn asked us to move it to the pci
-> > directory as there isn't anything specific to PCIe about DOE. You could
-> > implement it on pci-x (maybe 2.0?) I think even though it's in the PCIe specification.
-> > 
-> > https://lore.kernel.org/linux-pci/20210413194927.GA2241331@bjorn-Precision-5520/
-> 
-> :-/
-> 
-> I'd forgotten that far back.
-> 
-> Bjorn?
+On Thu, Apr 7, 2022 at 5:43 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> [+cc Rafael]
+>
+> On Thu, Apr 07, 2022 at 09:16:02PM +0800, Yicong Yang wrote:
+> > Currently we regard ASPM as a necessary PCIe service and if it's disabled
+> > by pcie_aspm=off we cannot enable other services like AER and hotplug.
+> > However the ASPM is just one of the PCIe services and other services
+> > mentioned no dependency on this. So this patch decouples the negotiation
+> > of ASPM and other PCIe services, then we can make use of other services
+> > in the absence of ASPM.
+>
+> Why do you want to boot with "pcie_aspm=off"?  If we have to use a
+> PCI-related parameter to boot, something is already wrong, so if
+> there's a problem that requires ASPM to be disabled, we should fix
+> that first.
+>
+> If there's a known hardware or firmware issue with ASPM, we should
+> quirk it so users don't have to discover this parameter.
+>
+> > Aaron Sierra tried to fix this originally:
+> > https://lore.kernel.org/linux-pci/20190702201318.GC128603@google.com/
+>
+> Yes.  My question from that review is still open:
+>
+>   But Rafael added ACPI_PCIE_REQ_SUPPORT with 415e12b23792 ("PCI/ACPI:
+>   Request _OSC control once for each root bridge (v3)") [1], apparently
+>   related to a bug [2].  I assume there was some reason for requiring
+>   all those things together, so I'd really like his comments.
 
-I would still prefer it in drivers/pci because I don't think
-there's enough value to justify the pcie/ subdirectory.  We have
-ats.c, ecam.c, iov.c, pci-pf-stub.c, and vc.c in drivers/pci even
-though they're PCIe-specific.  Other files in drivers/pci like
-access.c, pci-acpi.c, pci.c, probe.c, etc also have some PCIe
-content.
+Well, it was quite a few years ago.
 
-Bjorn
+>   [1] https://git.kernel.org/linus/415e12b23792
+>   [2] https://bugzilla.kernel.org/show_bug.cgi?id=20232
+>
+> Rafael clearly said in [1] that we need to:
+>
+>   ... check if all of the requisite _OSC support bits are set before
+>   calling acpi_pci_osc_control_set() for a given root complex.
+
+IIRC, the idea was to avoid requesting native control of anything PCIe
+if those bits were not set in the mask, because otherwise we wouldn't
+be able to get PME and native hotplug control which were not
+configurable at that time.  [PME is still not configurable and
+potentially related to hotplug, because they may use the same MSI IRQ
+in principle, but the native hotplug is configurable now anyway.]
+
+> We would still need to explain why Rafael thought all these _OSC
+> support bits were required, but now they're not.
+>
+> _OSC does not negotiate directly for control of ASPM (though of course
+> it *does* negotiate for control of the PCIe Capability, which contains
+> the ASPM control bits), but the PCI Firmware spec, r3.3, sec 4.5.3, has
+> this comment in a sample _OSC implementation:
+>
+>   // Only allow native hot plug control if the OS supports:
+>   // * ASPM
+>   // * Clock PM
+>   // * MSI/MSI-X
+>
+> which matches the current ACPI_PCIE_REQ_SUPPORT.
+>
+> So I think I would approach this by reworking the _OSC negotiation so
+> we always advertise "OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT"
+> if CONFIG_PCIEASPM=y.
+
+That'd be reasonable IMO.
+
+> Advertising support for ASPM doesn't mean Linux has to actually
+> *enable* it, so we could make a different mechanism to prevent use of
+> ASPM if we have a device or platform quirk or we're booting with
+> "pcie_aspm=off".
+
+Right.
+
+Note that if we don't request the native control of a PCIe feature,
+this basically gives the BIOS a licence to scribble on the related
+device registers and some of the features are not independent, so we
+may need to advertise support for two features in order to get control
+of just one of them.
