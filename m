@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C3E7C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C9BDC433FE
 	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 04:32:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240669AbiDGEeX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Apr 2022 00:34:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47324 "EHLO
+        id S240660AbiDGEeS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Apr 2022 00:34:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47196 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240639AbiDGEeR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2022 00:34:17 -0400
-Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB28A1E6F80;
-        Wed,  6 Apr 2022 21:32:17 -0700 (PDT)
-Received: by mail-ed1-x534.google.com with SMTP id r10so5000580eda.1;
-        Wed, 06 Apr 2022 21:32:17 -0700 (PDT)
+        with ESMTP id S240656AbiDGEeP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2022 00:34:15 -0400
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D7041E6E8F;
+        Wed,  6 Apr 2022 21:32:13 -0700 (PDT)
+Received: by mail-ej1-x62f.google.com with SMTP id bq8so8276209ejb.10;
+        Wed, 06 Apr 2022 21:32:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XzsO0OH64I9oYEuJ3bY1ziODzwl46OGR5ery+8e6tc4=;
-        b=Kqciknive9KvGUbs71Z+2JUtJqRbxHRIRvk+3wCe2zKZjAe2FuZN5Iw9V+bM4ShVas
-         zrCB6gvQQzXb0V5n1G3OUBkHlbuTZ2y7v7/IfbgCC9yKDBDkBafTuz9SdYdFrc1fFxZq
-         5JDHnt+nXlL1JrgYi0qtmAiexcbooenX81b5mTWw+ZxLUwCOD3aXy/0OdZFYnuIdROf4
-         YOkCPhWIj45uea7nw5GwQV7RyelvZKYDKrYcT0VYzDYYj7isyL3QCtZWK4YKSLae5H2w
-         E2hP7/cKNk6OtoTnAawWd8wiZ/V0hV6GJohSCq9tDuLJRpESMbP1T9/yMPfQ4oftGxff
-         nVow==
+        bh=PLk82bq3hxGeZAsu9PKoYX7IPjIjTIMBZgaXITeK+Oo=;
+        b=FgBomAD9uMBxBhvAxcGsyN8xGpx6a4yc7XbtSZF0jBwzC3SxUwv9d1sucKUMJQt14W
+         p6RBZbhkhyBeQ6srNiXAw6b3PP6rAcp8GfwZSqRyogyhKhzcf+imd7HBVV+lN2Y5oed+
+         M6V2lB6gWpouN051rJsiURiw3SA8U8aSjGtvw4Dzgzcq3L9t+Pt4xYL+Gad40UwBDUyS
+         iRZzFSGvGF822WBLdeORC7hVGAId5/eEdrB0VMw896z0IRdGONoyBn40b2RleNmahIcG
+         SNMSJGIHB4N6t02/jRH84aTyKmwez0wxDSV9rOgWmjSE9FAu21uqugOtm/gYZnqAjHax
+         oPQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XzsO0OH64I9oYEuJ3bY1ziODzwl46OGR5ery+8e6tc4=;
-        b=x1YSwQuxsfCFlDJ179K7zNzL/Eea2pTr9GGuierg7cczoJpwXrC81mbC7hpFEZvDxB
-         72Lo99D8N+3g5SC6WkxgI0NDCryYKAa2PYQ8P9HQJj0B/9HeXMMu/Ik9PlEwxJMZUBaT
-         iyD80OSc/95MXsZyjdzJuOe+H/2TMSQhGZgMU8W5Aaaje34JNnH7LbbE+Zab+8MThNHu
-         713dPUvUKh7eVlxhpO2e7vlH/nsWXlEefZ+BWl8IVRH1YKrTvHvnHWB/O08lpXuF50lV
-         KZJWMh6LWzLG2eZkFovajXtyvqOzIKb7TEoimgDL+DvSGzTUWGCJhQ7h4GlEMCYXyLHR
-         D+AA==
-X-Gm-Message-State: AOAM530ZwPRKkHSLfR3sUAug23V9muHJkXlaoVZDxeW4UgUbPbyX+Ff+
-        R1qtBpMOGp+s4ggM0zL4h0s=
-X-Google-Smtp-Source: ABdhPJxvbHS6Z5yrJL4QnjMLuMR2ia6OQV2phjaGSlfbQ5cEiI6213i9pD6/nJTh40E7oiTIYXjsVQ==
-X-Received: by 2002:a05:6402:190d:b0:41b:a70d:1367 with SMTP id e13-20020a056402190d00b0041ba70d1367mr12116188edz.155.1649305936485;
-        Wed, 06 Apr 2022 21:32:16 -0700 (PDT)
+        bh=PLk82bq3hxGeZAsu9PKoYX7IPjIjTIMBZgaXITeK+Oo=;
+        b=knQR2a8PSM2neMWN8ThE/XZHLM67AADZWJEbZ1+InP7KuxB67EajM3r9QKp6rLdMJw
+         1n9dBBOv5s0nJMeLnNiFmwBt8UJbDTBDERUREVHwXCigyMs3J7wHGQFxGlN5/2d2TKXw
+         UuKNaQYElQfyrr8OCi1Pkdt72w8+9QwOVD22HXPQKpAYpxMQ9PcuwPTi7obMtmA5HF7O
+         JK9t+8WaXrc6VL3Jtn/IgfVM1xy3vHADB3RWuSsravNTiP1/XttBFm0o2wx+wFBrGR2e
+         emxYaIKfMFhN0X6uePeZMkKOJTslgSh7Lr5++D41PB3cPegaD5wjjOCeM0m8+leXELPD
+         evDg==
+X-Gm-Message-State: AOAM532DEtssh5WJh/9/M4xu5wplhqilkfQw5PgdJ3TOYzQSrluTm186
+        wnLyrRpVdKGOmT2fIaklC50=
+X-Google-Smtp-Source: ABdhPJxfGXZZDvMla7/zEF1udPgXurPdzhQgieX4EzxF2MqJtQrYqZdQ1q2bbCDdmAdv1RRKwdagNw==
+X-Received: by 2002:a17:907:6d2a:b0:6df:e513:5410 with SMTP id sa42-20020a1709076d2a00b006dfe5135410mr11302460ejc.544.1649305931920;
+        Wed, 06 Apr 2022 21:32:11 -0700 (PDT)
 Received: from anparri.mshome.net (host-87-11-75-174.retail.telecomitalia.it. [87.11.75.174])
-        by smtp.gmail.com with ESMTPSA id ke11-20020a17090798eb00b006e7fbf53398sm3531341ejc.129.2022.04.06.21.32.15
+        by smtp.gmail.com with ESMTPSA id ke11-20020a17090798eb00b006e7fbf53398sm3531341ejc.129.2022.04.06.21.32.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Apr 2022 21:32:16 -0700 (PDT)
+        Wed, 06 Apr 2022 21:32:11 -0700 (PDT)
 From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
 To:     KY Srinivasan <kys@microsoft.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
@@ -61,9 +61,9 @@ To:     KY Srinivasan <kys@microsoft.com>,
 Cc:     linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-Subject: [PATCH 4/6] Drivers: hv: vmbus: Introduce vmbus_request_addr_match()
-Date:   Thu,  7 Apr 2022 06:30:26 +0200
-Message-Id: <20220407043028.379534-5-parri.andrea@gmail.com>
+Subject: [PATCH 2/6] PCI: hv: Use vmbus_requestor to generate transaction IDs for VMbus hardening
+Date:   Thu,  7 Apr 2022 06:30:24 +0200
+Message-Id: <20220407043028.379534-3-parri.andrea@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220407043028.379534-1-parri.andrea@gmail.com>
 References: <20220407043028.379534-1-parri.andrea@gmail.com>
@@ -73,140 +73,118 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The function can be used to retrieve and clear/remove a transation ID
-from a channel requestor, provided the memory address corresponding to
-the ID equals a specified address.  The function, and its 'lockless'
-variant __vmbus_request_addr_match(), will be used by hv_pci.
-
-Refactor vmbus_request_addr() to reuse the 'newly' introduced code.
-
-No functional change.
+Currently, pointers to guest memory are passed to Hyper-V as transaction
+IDs in hv_pci.  In the face of errors or malicious behavior in Hyper-V,
+hv_pci should not expose or trust the transaction IDs returned by
+Hyper-V to be valid guest memory addresses.  Instead, use small integers
+generated by vmbus_requestor as request (transaction) IDs.
 
 Suggested-by: Michael Kelley <mikelley@microsoft.com>
 Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
 ---
- drivers/hv/channel.c   | 65 ++++++++++++++++++++++++++++++------------
- include/linux/hyperv.h |  5 ++++
- 2 files changed, 52 insertions(+), 18 deletions(-)
+ drivers/pci/controller/pci-hyperv.c | 39 +++++++++++++++++++++--------
+ 1 file changed, 29 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
-index 585a8084848bf..49f10a603a091 100644
---- a/drivers/hv/channel.c
-+++ b/drivers/hv/channel.c
-@@ -1279,17 +1279,11 @@ u64 vmbus_next_request_id(struct vmbus_channel *channel, u64 rqst_addr)
- }
- EXPORT_SYMBOL_GPL(vmbus_next_request_id);
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index 88b3b56d05228..c1322ac37cda9 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -91,6 +91,13 @@ static enum pci_protocol_version_t pci_protocol_versions[] = {
+ /* space for 32bit serial number as string */
+ #define SLOT_NAME_SIZE 11
  
--/*
-- * vmbus_request_addr - Returns the memory address stored at @trans_id
-- * in @rqstor. Uses a spin lock to avoid race conditions.
-- * @channel: Pointer to the VMbus channel struct
-- * @trans_id: Request id sent back from Hyper-V. Becomes the requestor's
-- * next request id.
-- */
--u64 vmbus_request_addr(struct vmbus_channel *channel, u64 trans_id)
-+/* As in vmbus_request_addr_match() but without the requestor lock */
-+u64 __vmbus_request_addr_match(struct vmbus_channel *channel, u64 trans_id,
-+			       u64 rqst_addr)
- {
- 	struct vmbus_requestor *rqstor = &channel->requestor;
--	unsigned long flags;
- 	u64 req_addr;
- 
- 	/* Check rqstor has been initialized */
-@@ -1300,25 +1294,60 @@ u64 vmbus_request_addr(struct vmbus_channel *channel, u64 trans_id)
- 	if (!trans_id)
- 		return VMBUS_RQST_ERROR;
- 
--	spin_lock_irqsave(&rqstor->req_lock, flags);
--
- 	/* Data corresponding to trans_id is stored at trans_id - 1 */
- 	trans_id--;
- 
- 	/* Invalid trans_id */
--	if (trans_id >= rqstor->size || !test_bit(trans_id, rqstor->req_bitmap)) {
--		spin_unlock_irqrestore(&rqstor->req_lock, flags);
-+	if (trans_id >= rqstor->size || !test_bit(trans_id, rqstor->req_bitmap))
- 		return VMBUS_RQST_ERROR;
--	}
- 
- 	req_addr = rqstor->req_arr[trans_id];
--	rqstor->req_arr[trans_id] = rqstor->next_request_id;
--	rqstor->next_request_id = trans_id;
-+	if (rqst_addr == VMBUS_RQST_ADDR_ANY || req_addr == rqst_addr) {
-+		rqstor->req_arr[trans_id] = rqstor->next_request_id;
-+		rqstor->next_request_id = trans_id;
- 
--	/* The already held spin lock provides atomicity */
--	bitmap_clear(rqstor->req_bitmap, trans_id, 1);
-+		/* The already held spin lock provides atomicity */
-+		bitmap_clear(rqstor->req_bitmap, trans_id, 1);
-+	}
-+
-+	return req_addr;
-+}
-+EXPORT_SYMBOL_GPL(__vmbus_request_addr_match);
-+
 +/*
-+ * vmbus_request_addr_match - Clears/removes @trans_id from the @channel's
-+ * requestor, provided the memory address stored at @trans_id equals @rqst_addr
-+ * (or provided @rqst_addr matches the sentinel value VMBUS_RQST_ADDR_ANY).
-+ *
-+ * Returns the memory address stored at @trans_id, or VMBUS_RQST_ERROR if
-+ * @trans_id is not contained in the requestor.
-+ *
-+ * Acquires and releases the requestor spin lock.
++ * Size of requestor for VMbus; the value is based on the observation
++ * that having more than one request outstanding is 'rare', and so 64
++ * should be generous in ensuring that we don't ever run out.
 + */
-+u64 vmbus_request_addr_match(struct vmbus_channel *channel, u64 trans_id,
-+			     u64 rqst_addr)
-+{
-+	struct vmbus_requestor *rqstor = &channel->requestor;
-+	unsigned long flags;
-+	u64 req_addr;
- 
-+	spin_lock_irqsave(&rqstor->req_lock, flags);
-+	req_addr = __vmbus_request_addr_match(channel, trans_id, rqst_addr);
- 	spin_unlock_irqrestore(&rqstor->req_lock, flags);
++#define HV_PCI_RQSTOR_SIZE 64
 +
- 	return req_addr;
+ /*
+  * Message Types
+  */
+@@ -1407,7 +1414,7 @@ static void hv_int_desc_free(struct hv_pci_dev *hpdev,
+ 	int_pkt->wslot.slot = hpdev->desc.win_slot.slot;
+ 	int_pkt->int_desc = *int_desc;
+ 	vmbus_sendpacket(hpdev->hbus->hdev->channel, int_pkt, sizeof(*int_pkt),
+-			 (unsigned long)&ctxt.pkt, VM_PKT_DATA_INBAND, 0);
++			 0, VM_PKT_DATA_INBAND, 0);
+ 	kfree(int_desc);
  }
-+EXPORT_SYMBOL_GPL(vmbus_request_addr_match);
+ 
+@@ -2649,7 +2656,7 @@ static void hv_eject_device_work(struct work_struct *work)
+ 	ejct_pkt->message_type.type = PCI_EJECTION_COMPLETE;
+ 	ejct_pkt->wslot.slot = hpdev->desc.win_slot.slot;
+ 	vmbus_sendpacket(hbus->hdev->channel, ejct_pkt,
+-			 sizeof(*ejct_pkt), (unsigned long)&ctxt.pkt,
++			 sizeof(*ejct_pkt), 0,
+ 			 VM_PKT_DATA_INBAND, 0);
+ 
+ 	/* For the get_pcichild() in hv_pci_eject_device() */
+@@ -2696,8 +2703,9 @@ static void hv_pci_onchannelcallback(void *context)
+ 	const int packet_size = 0x100;
+ 	int ret;
+ 	struct hv_pcibus_device *hbus = context;
++	struct vmbus_channel *chan = hbus->hdev->channel;
+ 	u32 bytes_recvd;
+-	u64 req_id;
++	u64 req_id, req_addr;
+ 	struct vmpacket_descriptor *desc;
+ 	unsigned char *buffer;
+ 	int bufferlen = packet_size;
+@@ -2715,8 +2723,8 @@ static void hv_pci_onchannelcallback(void *context)
+ 		return;
+ 
+ 	while (1) {
+-		ret = vmbus_recvpacket_raw(hbus->hdev->channel, buffer,
+-					   bufferlen, &bytes_recvd, &req_id);
++		ret = vmbus_recvpacket_raw(chan, buffer, bufferlen,
++					   &bytes_recvd, &req_id);
+ 
+ 		if (ret == -ENOBUFS) {
+ 			kfree(buffer);
+@@ -2743,11 +2751,14 @@ static void hv_pci_onchannelcallback(void *context)
+ 		switch (desc->type) {
+ 		case VM_PKT_COMP:
+ 
+-			/*
+-			 * The host is trusted, and thus it's safe to interpret
+-			 * this transaction ID as a pointer.
+-			 */
+-			comp_packet = (struct pci_packet *)req_id;
++			req_addr = chan->request_addr_callback(chan, req_id);
++			if (req_addr == VMBUS_RQST_ERROR) {
++				dev_warn_ratelimited(&hbus->hdev->device,
++						     "Invalid transaction ID %llx\n",
++						     req_id);
++				break;
++			}
++			comp_packet = (struct pci_packet *)req_addr;
+ 			response = (struct pci_response *)buffer;
+ 			comp_packet->completion_func(comp_packet->compl_ctxt,
+ 						     response,
+@@ -3428,6 +3439,10 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 		goto free_dom;
+ 	}
+ 
++	hdev->channel->next_request_id_callback = vmbus_next_request_id;
++	hdev->channel->request_addr_callback = vmbus_request_addr;
++	hdev->channel->rqstor_size = HV_PCI_RQSTOR_SIZE;
 +
-+/*
-+ * vmbus_request_addr - Returns the memory address stored at @trans_id
-+ * in @rqstor. Uses a spin lock to avoid race conditions.
-+ * @channel: Pointer to the VMbus channel struct
-+ * @trans_id: Request id sent back from Hyper-V. Becomes the requestor's
-+ * next request id.
-+ */
-+u64 vmbus_request_addr(struct vmbus_channel *channel, u64 trans_id)
-+{
-+	return vmbus_request_addr_match(channel, trans_id, VMBUS_RQST_ADDR_ANY);
-+}
- EXPORT_SYMBOL_GPL(vmbus_request_addr);
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index a7cb596d893b1..c77d78f34b96a 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -788,6 +788,7 @@ struct vmbus_requestor {
+ 	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
+ 			 hv_pci_onchannelcallback, hbus);
+ 	if (ret)
+@@ -3758,6 +3773,10 @@ static int hv_pci_resume(struct hv_device *hdev)
  
- #define VMBUS_NO_RQSTOR U64_MAX
- #define VMBUS_RQST_ERROR (U64_MAX - 1)
-+#define VMBUS_RQST_ADDR_ANY U64_MAX
- /* NetVSC-specific */
- #define VMBUS_RQST_ID_NO_RESPONSE (U64_MAX - 2)
- /* StorVSC-specific */
-@@ -1042,6 +1043,10 @@ struct vmbus_channel {
- };
+ 	hbus->state = hv_pcibus_init;
  
- u64 vmbus_next_request_id(struct vmbus_channel *channel, u64 rqst_addr);
-+u64 __vmbus_request_addr_match(struct vmbus_channel *channel, u64 trans_id,
-+			       u64 rqst_addr);
-+u64 vmbus_request_addr_match(struct vmbus_channel *channel, u64 trans_id,
-+			     u64 rqst_addr);
- u64 vmbus_request_addr(struct vmbus_channel *channel, u64 trans_id);
- 
- static inline bool is_hvsock_channel(const struct vmbus_channel *c)
++	hdev->channel->next_request_id_callback = vmbus_next_request_id;
++	hdev->channel->request_addr_callback = vmbus_request_addr;
++	hdev->channel->rqstor_size = HV_PCI_RQSTOR_SIZE;
++
+ 	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
+ 			 hv_pci_onchannelcallback, hbus);
+ 	if (ret)
 -- 
 2.25.1
 
