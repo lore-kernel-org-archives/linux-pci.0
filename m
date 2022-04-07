@@ -2,71 +2,73 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D74C433F5
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 00:51:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 832FCC433EF
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 01:31:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232528AbiDGAxO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Apr 2022 20:53:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38790 "EHLO
+        id S232477AbiDGBdm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Apr 2022 21:33:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230120AbiDGAxN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2022 20:53:13 -0400
+        with ESMTP id S240691AbiDGBaO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2022 21:30:14 -0400
 Received: from mx.socionext.com (mx.socionext.com [202.248.49.38])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 365BCAACAF;
-        Wed,  6 Apr 2022 17:51:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E34401AD1D8;
+        Wed,  6 Apr 2022 18:22:48 -0700 (PDT)
 Received: from unknown (HELO iyokan2-ex.css.socionext.com) ([172.31.9.54])
-  by mx.socionext.com with ESMTP; 07 Apr 2022 09:51:10 +0900
-Received: from mail.mfilter.local (m-filter-2 [10.213.24.62])
-        by iyokan2-ex.css.socionext.com (Postfix) with ESMTP id 2C9832058B50;
-        Thu,  7 Apr 2022 09:51:10 +0900 (JST)
-Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Thu, 7 Apr 2022 09:51:10 +0900
-Received: from [10.212.181.247] (unknown [10.212.181.247])
-        by kinkan2.css.socionext.com (Postfix) with ESMTP id 66CDFB62B7;
-        Thu,  7 Apr 2022 09:51:09 +0900 (JST)
-Subject: Re: [PATCH 1/3] dt-bindings: PCI: designware-ep: Increase maxItems of
- reg and reg-names
-To:     Rob Herring <robh@kernel.org>
-Cc:     Jingoo Han <jingoohan1@gmail.com>,
+  by mx.socionext.com with ESMTP; 07 Apr 2022 10:22:47 +0900
+Received: from mail.mfilter.local (m-filter-1 [10.213.24.61])
+        by iyokan2-ex.css.socionext.com (Postfix) with ESMTP id D05912058B50;
+        Thu,  7 Apr 2022 10:22:47 +0900 (JST)
+Received: from 172.31.9.51 (172.31.9.51) by m-FILTER with ESMTP; Thu, 7 Apr 2022 10:22:47 +0900
+Received: from plum.e01.socionext.com (unknown [10.212.243.119])
+        by kinkan2.css.socionext.com (Postfix) with ESMTP id 55CAAB62B7;
+        Thu,  7 Apr 2022 10:22:47 +0900 (JST)
+From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <1649145062-29833-1-git-send-email-hayashi.kunihiko@socionext.com>
- <1649145062-29833-2-git-send-email-hayashi.kunihiko@socionext.com>
- <Yk3YaAWPJ0bpLTHK@robh.at.kernel.org>
-From:   Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Message-ID: <b7cd4fe0-5d61-322a-b42a-d239ee23b201@socionext.com>
-Date:   Thu, 7 Apr 2022 09:51:09 +0900
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-MIME-Version: 1.0
-In-Reply-To: <Yk3YaAWPJ0bpLTHK@robh.at.kernel.org>
-Content-Type: text/plain; charset=iso-2022-jp; format=flowed; delsp=yes
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc:     Masami Hiramatsu <mhiramat@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH v2 1/3] dt-bindings: PCI: designware-ep: Increase maxItems of reg and reg-names
+Date:   Thu,  7 Apr 2022 10:22:31 +0900
+Message-Id: <1649294553-17310-2-git-send-email-hayashi.kunihiko@socionext.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1649294553-17310-1-git-send-email-hayashi.kunihiko@socionext.com>
+References: <1649294553-17310-1-git-send-email-hayashi.kunihiko@socionext.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rob,
-Thank you for pointing out.
+UniPhier PCIe EP controller has up to 5 register mappings (dbi, dbi2, link,
+addr_space and atu), so maxItems of "reg" and "reg-names" should allow 5.
 
-On 2022/04/07 3:14, Rob Herring wrote:
-> On Tue, Apr 05, 2022 at 04:51:00PM +0900, Kunihiko Hayashi wrote:
->> UniPhier PCIe EP controller has 5 register mappings (dbi, dbi2, link,
->> config and atu), so maxItems of "reg" and "reg-names" should allow 5.
-> 
-> Shouldn't that be 'addr_space' rather than 'config'? IIRC, 'config' is
-> only for the host.
-
-Yes. I made a mistake in the comment.
-UniPhier EP controller has also "addr_space", not "config".
-I'll fix it next.
-
-Thank you,
-
+Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 ---
-Best Regards
-Kunihiko Hayashi
+ Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index e59059ab5be0..03f97e7c4089 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -28,11 +28,11 @@ properties:
+       versions.
+       For designware core version >= 4.80, it may contain ATU address space.
+     minItems: 2
+-    maxItems: 4
++    maxItems: 5
+ 
+   reg-names:
+     minItems: 2
+-    maxItems: 4
++    maxItems: 5
+     items:
+       enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
+ 
+-- 
+2.25.1
+
