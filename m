@@ -2,204 +2,230 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59C9CC433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 17:07:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 185B0C4332F
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 17:22:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229909AbiDGRJD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Apr 2022 13:09:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43622 "EHLO
+        id S1346166AbiDGRYR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Apr 2022 13:24:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229655AbiDGRJC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2022 13:09:02 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BE812CE03
-        for <linux-pci@vger.kernel.org>; Thu,  7 Apr 2022 10:06:58 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2659061331
-        for <linux-pci@vger.kernel.org>; Thu,  7 Apr 2022 17:06:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55339C385A0;
-        Thu,  7 Apr 2022 17:06:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649351217;
-        bh=Zyfq0AzuyIsUW5wL2mPZWfFCcFVATCGGT0nRWyAq25w=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=h1XERmpEr+7y8CYg4jOEzr3UITspRwt8SN+/AJb8jPkm2wlVTZADHX9Sq+vrKZ5X6
-         Rscsv3vyWsmWs7iVJm7JLLPqjwzrFVelfo14ETw5A6nczMDvM//mIg6AT5i6hPwPGW
-         aTJo8aoseMy1ttjp6l+YMosGUBkRG6O2Lqq2+/f4ncCJalTL9X2kNEKG+Gf8dG8yKG
-         6A3nNQ5JZB76evjuQuugtXioR96KAwGxPK66lUPTvk4ChxwcClvURshYJL9seu9SnR
-         VXQbrB5aN3h114MY50GLv+DXQXm7mEnp6vo5tY1ph7uRrge4L6PxbOUkdEVmSEWkVw
-         /c6gtravVnfag==
-Date:   Thu, 7 Apr 2022 12:06:55 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Quirk Intel DG2 ASPM L1 acceptable latency to be
- unlimited
-Message-ID: <20220407170655.GA249049@bhelgaas>
+        with ESMTP id S1346129AbiDGRYJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2022 13:24:09 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B642321259;
+        Thu,  7 Apr 2022 10:22:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
+        :references:content-disposition:in-reply-to;
+        bh=QQhUi1Xq2QqfpBbLq5uekDiKHile0ThFbEcLp2auguA=; b=Z2B0OWvjsBXZG+Po1KK+WUMEXc
+        KhSx34IpZ0AI8aL0gxnlQVTEWdHlq25KfR5dyEmGN02Qv1mhOvQ/m+tYDUWIMkJ8kmmw2lzO8lH7+
+        C5uqhDsgk6Z/v+Rarq9WGa7MyH3ERhNcRb7Y7Pf5invz2moGaQR6f51UIvOvmwg/9TGH7RGq3oY41
+        lU10tgDUD9LPc65o58kVQxmRh1KVDirIrP2tqgD52lmPk7hIvFX2Y/okfPZrjC3RT1Pm4bNJMDcgd
+        /P8thTQsODceP+6HgN7276J/70kpfzQKujgCH3cgxkdPmHjyPpai3lv2pQ/RIHWEOVQERD+qiJQ+L
+        XtxgKBHg==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1ncUMH-002BBe-KU; Thu, 07 Apr 2022 09:47:42 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1ncUMB-00021F-4G; Thu, 07 Apr 2022 09:47:35 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, iommu@lists.linux-foundation.org
+Cc:     Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Don Dutile <ddutile@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Jakowski Andrzej <andrzej.jakowski@intel.com>,
+        Minturn Dave B <dave.b.minturn@intel.com>,
+        Jason Ekstrand <jason@jlekstrand.net>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Xiong Jianxin <jianxin.xiong@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Martin Oliveira <martin.oliveira@eideticom.com>,
+        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
+        Ralph Campbell <rcampbell@nvidia.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Thu,  7 Apr 2022 09:46:56 -0600
+Message-Id: <20220407154717.7695-1-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220405093810.76613-1-mika.westerberg@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, andrzej.jakowski@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, jhubbard@nvidia.com, rcampbell@nvidia.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH v6 00/21] Userspace P2PDMA with O_DIRECT NVMe devices
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 05, 2022 at 12:38:10PM +0300, Mika Westerberg wrote:
-> Intel DG2 discrete graphics PCIe endpoints hard-code their acceptable L1
-> ASPM latency to be < 1us even though the hardware actually supports
-> higher latencies (> 64 us) just fine. In order to allow the links to go
-> into L1 and save power, quirk the acceptable L1 ASPM latency for these
-> endpoints to be unlimited.
-> 
-> Note this does not have any effect unless the user requested the kernel
-> to enable ASPM in the first place (by default we don't enable it). This
-> is done with "pcie_aspm=force pcie_aspm.policy=powersupsersave" command
-> line parameters.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Hi,
 
-I wordsmithed as below and applied to pci/aspm for v5.19, thanks!
+This patchset continues my work to add userspace P2PDMA access using
+O_DIRECT NVMe devices. This posting contains some minor fixes and a
+rebase onto v5.18-rc1 which contains cleanup from Christoph around
+free_zone_device_page() that helps to enable this patchset. The
+previous posting was here[1].
 
-Please double-check that I didn't screw up the FIELD_GET/PREP usage.
+The patchset enables userspace P2PDMA by allowing userspace to mmap()
+allocated chunks of the CMB. The resulting VMA can be passed only
+to O_DIRECT IO on NVMe backed files or block devices. A flag is added
+to GUP() in Patch <>, then Patches <> through <> wire this flag up based
+on whether the block queue indicates P2PDMA support. Patches <>
+through <> enable the CMB to be mapped into userspace by mmaping
+the nvme char device.
 
-> ---
->  drivers/pci/quirks.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 44 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index da829274fc66..e97b5daa00eb 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5895,3 +5895,47 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1533, rom_bar_overlap_defect);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1536, rom_bar_overlap_defect);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1537, rom_bar_overlap_defect);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1538, rom_bar_overlap_defect);
-> +
-> +#ifdef CONFIG_PCIEASPM
-> +/*
-> + * Intel DG2 graphics card has hard-coded acceptable L1 latency that is
-> + * too low which prevents ASPM to be enabled. It does support ASPM L1
-> + * and tolerates higher latencies so quirk it to be unlimited.
-> + */
-> +static void quirk_aspm_accepted_l1_latency(struct pci_dev *dev)
-> +{
-> +	if ((dev->devcap & PCI_EXP_DEVCAP_L1) >> 9 < 7) {
-> +		u32 devcap = dev->devcap;
-> +
-> +		dev->devcap |= 7 << 9;
-> +		pci_info(dev, "quirking devcap for L1 accepted latency 0x%08x -> 0x%08x\n",
-> +			 devcap, dev->devcap);
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f80, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f81, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f82, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f83, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f84, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f85, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f86, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f87, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f88, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5690, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5691, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5692, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5693, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5694, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5695, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a0, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a1, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a2, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a3, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a4, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a5, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a6, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b0, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b1, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c0, quirk_aspm_accepted_l1_latency);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c1, quirk_aspm_accepted_l1_latency);
-> +#endif
+This is relatively straightforward, however the one significant
+problem is that, presently, pci_p2pdma_map_sg() requires a homogeneous
+SGL with all P2PDMA pages or all regular pages. Enhancing GUP to
+support enforcing this rule would require a huge hack that I don't
+expect would be all that pallatable. So the first 13 patches add
+support for P2PDMA pages to dma_map_sg[table]() to the dma-direct
+and dma-iommu implementations. Thus systems without an IOMMU plus
+Intel and AMD IOMMUs are supported. (Other IOMMU implementations would
+then be unsupported, notably ARM and PowerPC but support would be added
+when they convert to dma-iommu).
+
+dma_map_sgtable() is preferred when dealing with P2PDMA memory as it
+will return -EREMOTEIO when the DMA device cannot map specific P2PDMA
+pages based on the existing rules in calc_map_type_and_dist().
+
+The other issue is dma_unmap_sg() needs a flag to determine whether a
+given dma_addr_t was mapped regularly or as a PCI bus address. To allow
+this, a third flag is added to the page_link field in struct
+scatterlist. This effectively means support for P2PDMA will now depend
+on CONFIG_64BIT.
+
+Feedback welcome.
+
+This series is based on v5.18-rc1. A git branch is available here:
+
+  https://github.com/sbates130272/linux-p2pmem/  p2pdma_user_cmb_v6
+
+Thanks,
+
+Logan
+
+[1] lkml.kernel.org/r/20220128002614.6136-1-logang@deltatee.com
+
+--
+
+Changes since v5:
+  - Rebased onto v5.18-rc1 which includes Christophs cleanup to
+    free_zone_device_page() (similar to Ralph's patch).
+  - Fix bug with concurrent first calls to pci_p2pdma_vma_fault()
+    that caused a double allocation and lost p2p memory. Noticed
+    by Andrew Maier.
+  - Collected a Reviewed-by tag from Chaitanya.
+  - Numerous minor fixes to commit messages
+
+Changes since v4:
+  - Rebase onto v5.17-rc1.
+  - Included Ralph Cambell's patches which removes the ZONE_DEVICE page
+    reference count offset. This is just to demonstrate that this
+    series is compatible with that direction.
+  - Added a comment in pci_p2pdma_map_sg_attrs(), per Chaitanya and
+    included his Reviewed-by tags.
+  - Patch 1 in the last series which cleaned up scatterlist.h
+    has been upstreamed.
+  - Dropped NEED_SG_DMA_BUS_ADDR_FLAG seeing depends on doesn't
+    work with selected symbols, per Christoph.
+  - Switched iov_iter_get_pages_[alloc_]flags to be exported with
+    EXPORT_SYMBOL_GPL, per Christoph.
+  - Renamed zone_device_pages_are_mergeable() to
+    zone_device_pages_have_same_pgmap(), per Christoph.
+  - Renamed .mmap_file_open operation in nvme_ctrl_ops to
+    cdev_file_open(), per Christoph.
+
+Changes since v3:
+  - Add some comment and commit message cleanups I had missed for v3,
+    also moved the prototypes for some of the p2pdma helpers to
+    dma-map-ops.h (which I missed in v3 and was suggested in v2).
+  - Add separate cleanup patch for scatterlist.h and change the macros
+    to functions. (Suggested by Chaitanya and Jason, respectively)
+  - Rename sg_dma_mark_pci_p2pdma() and sg_is_dma_pci_p2pdma() to
+    sg_dma_mark_bus_address() and sg_is_dma_bus_address() which
+    is a more generic name (As requested by Jason)
+  - Fixes to some comments and commit messages as suggested by Bjorn
+    and Jason.
+  - Ensure swiotlb is not used with P2PDMA pages. (Per Jason)
+  - The sgtable coversion in RDMA was split out and sent upstream
+    separately, the new patch is only the removal. (Per Jason)
+  - Moved the FOLL_PCI_P2PDMA check outside of get_dev_pagemap() as
+    Jason suggested this will be removed in the near term.
+  - Add two patches to ensure that zone device pages with different
+    pgmaps are never merged in the block layer or
+    sg_alloc_append_table_from_pages() (Per Jason)
+  - Ensure synchronize_rcu() or call_rcu() is used before returning
+    pages to the genalloc. (Jason pointed out that pages are not
+    gauranteed to be unused in all architectures until at least
+    after an RCU grace period, and that synchronize_rcu() was likely
+    too slow to use in the vma close operation.
+  - Collected Acks and Reviews by Bjorn, Jason and Max.
+
+Logan Gunthorpe (21):
+  lib/scatterlist: add flag for indicating P2PDMA segments in an SGL
+  PCI/P2PDMA: Attempt to set map_type if it has not been set
+  PCI/P2PDMA: Expose pci_p2pdma_map_type()
+  PCI/P2PDMA: Introduce helpers for dma_map_sg implementations
+  dma-mapping: allow EREMOTEIO return code for P2PDMA transfers
+  dma-direct: support PCI P2PDMA pages in dma-direct map_sg
+  dma-mapping: add flags to dma_map_ops to indicate PCI P2PDMA support
+  iommu/dma: support PCI P2PDMA pages in dma-iommu map_sg
+  nvme-pci: check DMA ops when indicating support for PCI P2PDMA
+  nvme-pci: convert to using dma_map_sgtable()
+  RDMA/core: introduce ib_dma_pci_p2p_dma_supported()
+  RDMA/rw: drop pci_p2pdma_[un]map_sg()
+  PCI/P2PDMA: Remove pci_p2pdma_[un]map_sg()
+  mm: introduce FOLL_PCI_P2PDMA to gate getting PCI P2PDMA pages
+  iov_iter: introduce iov_iter_get_pages_[alloc_]flags()
+  block: add check when merging zone device pages
+  lib/scatterlist: add check when merging zone device pages
+  block: set FOLL_PCI_P2PDMA in __bio_iov_iter_get_pages()
+  block: set FOLL_PCI_P2PDMA in bio_map_user_iov()
+  PCI/P2PDMA: Introduce pci_mmap_p2pmem()
+  nvme-pci: allow mmaping the CMB in userspace
+
+ block/bio.c                  |  10 +-
+ block/blk-map.c              |   7 +-
+ drivers/infiniband/core/rw.c |  45 +---
+ drivers/iommu/dma-iommu.c    |  68 ++++-
+ drivers/nvme/host/core.c     |  18 +-
+ drivers/nvme/host/nvme.h     |   4 +-
+ drivers/nvme/host/pci.c      |  97 ++++----
+ drivers/nvme/target/rdma.c   |   2 +-
+ drivers/pci/Kconfig          |   5 +
+ drivers/pci/p2pdma.c         | 467 ++++++++++++++++++++++++++++++-----
+ include/linux/dma-map-ops.h  |  76 ++++++
+ include/linux/dma-mapping.h  |   5 +
+ include/linux/mm.h           |  24 ++
+ include/linux/pci-p2pdma.h   |  38 +--
+ include/linux/scatterlist.h  |  44 +++-
+ include/linux/uio.h          |   6 +
+ include/rdma/ib_verbs.h      |  11 +
+ include/uapi/linux/magic.h   |   1 +
+ kernel/dma/direct.c          |  43 +++-
+ kernel/dma/direct.h          |   8 +-
+ kernel/dma/mapping.c         |  22 +-
+ lib/iov_iter.c               |  25 +-
+ lib/scatterlist.c            |  25 +-
+ mm/gup.c                     |  22 +-
+ 24 files changed, 867 insertions(+), 206 deletions(-)
 
 
-commit 03038d84ace7 ("PCI/ASPM: Make Intel DG2 L1 acceptable latency unlimited")
-Author: Mika Westerberg <mika.westerberg@linux.intel.com>
-Date:   Tue Apr 5 12:38:10 2022 +0300
+base-commit: 3123109284176b1532874591f7c81f3837bbdc17
+-- 
+2.30.2
 
-    PCI/ASPM: Make Intel DG2 L1 acceptable latency unlimited
-    
-    Intel DG2 discrete graphics PCIe endpoints advertise L1 acceptable exit
-    latency to be < 1us even though they can actually tolerate unlimited exit
-    latencies just fine. Quirk the L1 acceptable exit latency for these
-    endpoints to be unlimited so ASPM L1 can be enabled.
-    
-    [bhelgaas: use FIELD_GET/FIELD_PREP, wordsmith comment & commit log]
-    Link: https://lore.kernel.org/r/20220405093810.76613-1-mika.westerberg@linux.intel.com
-    Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index da829274fc66..41aeaa235132 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -12,6 +12,7 @@
-  * file, where their drivers can use them.
-  */
- 
-+#include <linux/bitfield.h>
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/export.h>
-@@ -5895,3 +5896,49 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1533, rom_bar_overlap_defect);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1536, rom_bar_overlap_defect);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1537, rom_bar_overlap_defect);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1538, rom_bar_overlap_defect);
-+
-+#ifdef CONFIG_PCIEASPM
-+/*
-+ * Several Intel DG2 graphics devices advertise that they can only tolerate
-+ * 1us latency when transitioning from L1 to L0, which may prevent ASPM L1
-+ * from being enabled.  But in fact these devices can tolerate unlimited
-+ * latency.  Override their Device Capabilities value to allow ASPM L1 to
-+ * be enabled.
-+ */
-+static void aspm_l1_acceptable_latency(struct pci_dev *dev)
-+{
-+	u32 l1_lat = FIELD_GET(PCI_EXP_DEVCAP_L1, dev->devcap);
-+
-+	if (l1_lat < 7) {
-+		dev->devcap |= FIELD_PREP(PCI_EXP_DEVCAP_L1, 7);
-+		pci_info(dev, "ASPM: overriding L1 acceptable latency from %#x to 0x7\n",
-+			 l1_lat);
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f80, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f81, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f82, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f83, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f84, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f85, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f86, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f87, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f88, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5690, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5691, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5692, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5693, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5694, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5695, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a0, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a1, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a2, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a3, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a4, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a5, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a6, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b0, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b1, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c0, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c1, aspm_l1_acceptable_latency);
-+#endif
