@@ -2,83 +2,86 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A362C43219
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 08:51:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8334C433F5
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Apr 2022 13:01:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243442AbiDGIxZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Apr 2022 04:53:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42298 "EHLO
+        id S232084AbiDGND2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Apr 2022 09:03:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243563AbiDGIxQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2022 04:53:16 -0400
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAAEB2ACD;
-        Thu,  7 Apr 2022 01:51:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649321476; x=1680857476;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=rvvRdha+qpxn4dQmcryB8CJAVWXcpexk0ryCTlfgnEM=;
-  b=M7RcDyUJ8/zzkWPSzZUJ0vXtK90kP2GO9rH+/AGbzKUkk56Vi+KZz7GP
-   EvZtKbhTCoJyz11aM/aK0h87S2XPr+ywhmka/zOJWGSiWOKTdgpLZbCh/
-   20nShUHl+Mmf29NZdJFdx5Wa9tv/KAExK1o5ZEhS4s4Wa3vyrgIk6H8+s
-   WDnyLZ/MOEqjuPUAtFsTBpd84WjsN7j7yYEidPsmEIv1Cm9B0ps+RFc4c
-   lgmw5aPt4BUZ/u65q+HyjT2NqjjOfeZqyq7aeydFPfjmhNYugvRKx7kgj
-   8t/my32LeBI1Ibx5nwdf0m7l57tD37Re+qSDZe+F4FOCwnlGPECtRTyJZ
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10309"; a="241860122"
-X-IronPort-AV: E=Sophos;i="5.90,241,1643702400"; 
-   d="scan'208";a="241860122"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2022 01:51:13 -0700
-X-IronPort-AV: E=Sophos;i="5.90,241,1643702400"; 
-   d="scan'208";a="570963311"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.162])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2022 01:51:10 -0700
-Received: by lahna (sSMTP sendmail emulation); Thu, 07 Apr 2022 11:50:46 +0300
-Date:   Thu, 7 Apr 2022 11:50:46 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH v1] PCI: PM: Power up all devices during runtime resume
-Message-ID: <Yk6l5riEX3WJLZfT@lahna>
-References: <4412361.LvFx2qVVIh@kreacher>
+        with ESMTP id S245690AbiDGNCa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2022 09:02:30 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA8871AF7F0;
+        Thu,  7 Apr 2022 06:00:16 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4KZ1dy0VVLzgYWM;
+        Thu,  7 Apr 2022 20:58:30 +0800 (CST)
+Received: from localhost.localdomain (10.67.164.66) by
+ canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 7 Apr 2022 21:00:14 +0800
+From:   Yicong Yang <yangyicong@hisilicon.com>
+To:     <gregkh@linuxfoundation.org>, <helgaas@kernel.org>,
+        <alexander.shishkin@linux.intel.com>, <lorenzo.pieralisi@arm.com>,
+        <will@kernel.org>, <mark.rutland@arm.com>,
+        <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
+        <mike.leach@linaro.org>, <leo.yan@linaro.org>,
+        <jonathan.cameron@huawei.com>, <daniel.thompson@linaro.org>,
+        <joro@8bytes.org>, <john.garry@huawei.com>,
+        <shameerali.kolothum.thodi@huawei.com>, <robin.murphy@arm.com>,
+        <peterz@infradead.org>, <mingo@redhat.com>, <acme@kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <coresight@lists.linaro.org>, <linux-pci@vger.kernel.org>,
+        <linux-perf-users@vger.kernel.org>,
+        <iommu@lists.linux-foundation.org>
+CC:     <prime.zeng@huawei.com>, <liuqi115@huawei.com>,
+        <zhangshaokun@hisilicon.com>, <linuxarm@huawei.com>,
+        <yangyicong@hisilicon.com>
+Subject: [PATCH v7 7/7] MAINTAINERS: Add maintainer for HiSilicon PTT driver
+Date:   Thu, 7 Apr 2022 20:58:41 +0800
+Message-ID: <20220407125841.3678-8-yangyicong@hisilicon.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20220407125841.3678-1-yangyicong@hisilicon.com>
+References: <20220407125841.3678-1-yangyicong@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4412361.LvFx2qVVIh@kreacher>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.67.164.66]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ canpemm500009.china.huawei.com (7.192.105.203)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 06, 2022 at 09:00:52PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> Currently, endpoint devices may not be powered up entirely during
-> runtime resume that follows a D3hot -> D0 transition of the parent
-> bridge.
-> 
-> Namely, even if the power state of an endpoint device, as indicated
-> by its PCI_PM_CTRL register, is D0 after powering up its parent
-> bridge, it may be still necessary to bring its ACPI companion into
-> D0 and that should be done before accessing it.  However, the current
-> code assumes that reading the PCI_PM_CTRL register is sufficient to
-> establish the endpoint device's power state, which may lead to
-> problems.
-> 
-> Address that by forcing a power-up of all PCI devices, including the
-> platform firmware part of it, during runtime resume.
-> 
-> Link: https://lore.kernel.org/linux-pm/11967527.O9o76ZdvQC@kreacher
-> Fixes: 5775b843a619 ("PCI: Restore config space on runtime resume despite being unbound")
-> Reported-by: Abhishek Sahu <abhsahu@nvidia.com>
-> Tested-by: Abhishek Sahu <abhsahu@nvidia.com>
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Add maintainer for driver and documentation of HiSilicon PTT device.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fd768d43e048..d30a1698251c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8858,6 +8858,13 @@ F:	Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+ F:	Documentation/admin-guide/perf/hisi-pmu.rst
+ F:	drivers/perf/hisilicon
+ 
++HISILICON PTT DRIVER
++M:	Yicong Yang <yangyicong@hisilicon.com>
++L:	linux-kernel@vger.kernel.org
++S:	Maintained
++F:	Documentation/trace/hisi-ptt.rst
++F:	drivers/hwtracing/ptt/
++
+ HISILICON QM AND ZIP Controller DRIVER
+ M:	Zhou Wang <wangzhou1@hisilicon.com>
+ L:	linux-crypto@vger.kernel.org
+-- 
+2.24.0
+
