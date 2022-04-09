@@ -2,62 +2,92 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B262CC433FE
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Apr 2022 13:29:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4D01C43219
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Apr 2022 13:29:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242137AbiDINbO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 9 Apr 2022 09:31:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57070 "EHLO
+        id S242159AbiDINbS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 9 Apr 2022 09:31:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242149AbiDINbM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Apr 2022 09:31:12 -0400
+        with ESMTP id S242114AbiDINbH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Apr 2022 09:31:07 -0400
 Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B4C9BD2CA;
-        Sat,  9 Apr 2022 06:29:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB93FB0A77;
+        Sat,  9 Apr 2022 06:29:00 -0700 (PDT)
 Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
  by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.0.0)
- id 8101deb5f057adf1; Sat, 9 Apr 2022 15:29:03 +0200
+ id 774345feafbd1fe9; Sat, 9 Apr 2022 15:28:59 +0200
 Received: from kreacher.localnet (89-77-51-84.dynamic.chello.pl [89.77.51.84])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 2AC2566BCD0;
-        Sat,  9 Apr 2022 15:29:03 +0200 (CEST)
+        by v370.home.net.pl (Postfix) with ESMTPSA id 7BE1266BCD0;
+        Sat,  9 Apr 2022 15:28:58 +0200 (CEST)
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Linux PCI <linux-pci@vger.kernel.org>
 Cc:     Linux PM <linux-pm@vger.kernel.org>,
         LKML <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <helgaas@kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v1 0/7] PCI/PM: Improvements related to device transitions into D0
-Date:   Sat, 09 Apr 2022 15:03:14 +0200
-Message-ID: <4419002.LvFx2qVVIh@kreacher>
+Subject: [PATCH v1 3/7] PCI/PM: Rearrange pci_update_current_state()
+Date:   Sat, 09 Apr 2022 15:08:39 +0200
+Message-ID: <3191989.aeNJFYEL58@kreacher>
+In-Reply-To: <4419002.LvFx2qVVIh@kreacher>
+References: <4419002.LvFx2qVVIh@kreacher>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="UTF-8"
 X-CLIENT-IP: 89.77.51.84
 X-CLIENT-HOSTNAME: 89-77-51-84.dynamic.chello.pl
 X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvvddrudekvddgfeelucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvffufffkggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvvefgteeuteehkeduuedvudetleevffdtffdtjeejueekffetieekgfeigfehudenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppeekledrjeejrdehuddrkeegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepkeelrdejjedrhedurdekgedphhgvlhhopehkrhgvrggthhgvrhdrlhhotggrlhhnvghtpdhmrghilhhfrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqedpnhgspghrtghpthhtohephedprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhg
- pdhrtghpthhtohepmhhikhgrrdifvghsthgvrhgsvghrgheslhhinhhugidrihhnthgvlhdrtghomh
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvvddrudekvddgfeelucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvffufffkjghfggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvjeelgffhiedukedtleekkedvudfggefhgfegjefgueekjeelvefggfdvledutdenucfkphepkeelrdejjedrhedurdekgeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeekledrjeejrdehuddrkeegpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeehpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhpmhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmihhkrgdrfigvshht
+ vghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhm
 X-DCC--Metrics: v370.home.net.pl 1024; Body=5 Fuz1=5 Fuz2=5
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This series supersedes the one at
+Save one config space access in pci_update_current_state() by
+testing the retireved PCI_PM_CTRL register value against
+PCI_POSSIBLE_ERROR() instead of invoking pci_device_is_present()
+separately.
 
-https://lore.kernel.org/linux-pm/4198163.ejJDZkT8p0@kreacher
+While at it, drop a pair of unnecessary parens.
 
-It addresses some potential issues related to PCI device transitions from
-low-power states into D0 and makes the related code more straightforward
-and so easier to follow.
+No expected functional impact.
 
-Please refer to the patch changelogs for details.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Thanks!
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -1201,14 +1201,17 @@ static int pci_raw_set_power_state(struc
+  */
+ void pci_update_current_state(struct pci_dev *dev, pci_power_t state)
+ {
+-	if (platform_pci_get_power_state(dev) == PCI_D3cold ||
+-	    !pci_device_is_present(dev)) {
++	if (platform_pci_get_power_state(dev) == PCI_D3cold) {
+ 		dev->current_state = PCI_D3cold;
+ 	} else if (dev->pm_cap) {
+ 		u16 pmcsr;
+ 
+ 		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+-		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
++		if (PCI_POSSIBLE_ERROR(pmcsr)) {
++			dev->current_state = PCI_D3cold;
++			return;
++		}
++		dev->current_state = pmcsr & PCI_PM_CTRL_STATE_MASK;
+ 	} else {
+ 		dev->current_state = state;
+ 	}
 
 
 
