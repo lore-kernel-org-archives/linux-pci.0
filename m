@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29915C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0CA8C433FE
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Apr 2022 19:01:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234178AbiDKTDh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1349297AbiDKTDh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 11 Apr 2022 15:03:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58702 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244926AbiDKTDg (ORCPT
+        with ESMTP id S1344205AbiDKTDg (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2022 15:03:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3782A32041;
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C0ED32045;
         Mon, 11 Apr 2022 12:01:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id CD99A6140F;
-        Mon, 11 Apr 2022 19:01:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13989C385A6;
-        Mon, 11 Apr 2022 19:01:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F14A5B81867;
+        Mon, 11 Apr 2022 19:01:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85295C385A4;
+        Mon, 11 Apr 2022 19:01:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649703680;
-        bh=dtnf8XsUhj4Osmhrrm08Dt6iD1UNUzpBusiWKcRHhvA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OTS3qLMsLBOoQuuPqyrf6snrwRJnEgz8uyxhJR4Wr2GOnuwBxWtBBPS41FORx5re0
-         ZvJdmXOicezA/vU3/yeDemD6P6DJ8YYV57AFIakKks/xFaTGaXORXClSF1G79iGNMs
-         Y8/JfjPT9rCKd+4z2gmonEziI1ggQuIIFmZCc9Es8Z4UFT/6NEDOBQBQlx++oLl4GS
-         3Md3dcg7RH8Duu8eiuS3WOFsZWEQNTB1yt59rNb3MkqaX/vBg4jjGcQk0ek36Munhg
-         qphvDYxAGIZzY7dUtgK7ouT70UBg0v6P25aOrdqSwQVW/Yi94lAmHIsRQi7tWaNM73
-         kVC2hLoWnR71w==
+        s=k20201202; t=1649703678;
+        bh=F3IVYCcv84WeuyRoIp+9Ax43Yu2K2bXuFY+2WqsXMr0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=mqYOpwzlrBPRAfI8M9B0GGVUGk+VczSp/OGw1nbBe0v+hp1v864RWzs/zIG7FxwQ1
+         e07llQ7m3dDMxax76e4wfkv1/AkrdZvrPHK9Vw83LL1fPdasR3wQcU8ClmUcK0iAkm
+         nt7o518VtYD1eIRFf82BDjolNKnJBtbLpIBR3NPFDGcCIh1iCAiotbK6yPGdYrvV/M
+         MH1/mZAkiIz7pW3+lSdRmHzE5ta1XeeAKIMRBfYsbfx0KjL6cFFUQsJr8VHjQp80c/
+         gzk2VdnqRGGAVxwDzx3u/Gy9DNSmy307d1ZAfjdOEP8tLjj8ibn5SS/qXvsPJN2uQS
+         q+0COb8nk3Q0w==
 Received: by pali.im (Postfix)
-        id 69F23A83; Mon, 11 Apr 2022 21:01:17 +0200 (CEST)
+        id 5DFB6947; Mon, 11 Apr 2022 21:01:15 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -43,12 +43,10 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Russell King <rmk+kernel@armlinux.org.uk>
 Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v4 2/4] dt-bindings: Add 'slot-power-limit-milliwatt' PCIe port property
-Date:   Mon, 11 Apr 2022 20:58:57 +0200
-Message-Id: <20220411185859.32722-3-pali@kernel.org>
+Subject: [PATCH v4 0/4] PCI: mvebu: Slot support
+Date:   Mon, 11 Apr 2022 20:58:55 +0200
+Message-Id: <20220411185859.32722-1-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220411185859.32722-1-pali@kernel.org>
-References: <20220411185859.32722-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -56,44 +54,39 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This property specifies slot power limit in mW unit. It is a form-factor
-and board specific value and must be initialized by hardware.
+This patch series add slot support to pci-mvebu.c driver.
 
-Some PCIe controllers delegate this work to software to allow hardware
-flexibility and therefore this property basically specifies what should
-host bridge program into PCIe Slot Capabilities registers.
+Changes in v4:
+* Set 239 W when DT slot-power-limit-milliwatt is between 239 W and 250 W
+* Fix returning power limit value
 
-The property needs to be specified in mW unit instead of the special format
-defined by Slot Capabilities (which encodes scaling factor or different
-unit). Host drivers should convert the value from mW to needed format.
+Changes in v3:
+* Set 600 W when DT slot-power-limit-milliwatt > 600 W
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Signed-off-by: Marek Behún <kabel@kernel.org>
+Changes in v2:
+* Dropped patch with PCI_EXP_SLTCAP_*_SHIFT macros as it is not needed anymore
+* Dropped patch "ARM: dts: turris-omnia: Set PCIe slot-power-limit-milliwatt properties" which was applied
+* Added support for PCIe 6.0 slot power limit encodings
+* Round down slot power limit value
+* Fix handling of slot power limit with scale x1.0 (0x00 value)
+* Use FIELD_PREP instead of _SHIFT macros
+* Changed commit message to Bjorn's suggestion
+* Changed comments in the code to match PCIe spec
+* Preserve user settings of PCI_EXP_SLTCTL_ASPL_DISABLE bit
 
----
-This change was already accepted into dt-schema repo by Rob Herring:
-https://github.com/devicetree-org/dt-schema/pull/66
----
- Documentation/devicetree/bindings/pci/pci.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
+Pali Rohár (4):
+  PCI: Add PCI_EXP_SLTCTL_ASPL_DISABLE macro
+  dt-bindings: Add 'slot-power-limit-milliwatt' PCIe port property
+  PCI: Add function for parsing 'slot-power-limit-milliwatt' DT property
+  PCI: mvebu: Add support for sending Set_Slot_Power_Limit message
 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index 6a8f2874a24d..b0cc133ed00d 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -32,6 +32,12 @@ driver implementation may support the following properties:
-    root port to downstream device and host bridge drivers can do programming
-    which depends on CLKREQ signal existence. For example, programming root port
-    not to advertise ASPM L1 Sub-States support if there is no CLKREQ signal.
-+- slot-power-limit-milliwatt:
-+   If present, this property specifies slot power limit in milliwatts. Host
-+   drivers can parse this property and use it for programming Root Port or host
-+   bridge, or for composing and sending PCIe Set_Slot_Power_Limit messages
-+   through the Root Port or host bridge when transitioning PCIe link from a
-+   non-DL_Up Status to a DL_Up Status.
- 
- PCI-PCI Bridge properties
- -------------------------
+ Documentation/devicetree/bindings/pci/pci.txt |  6 ++
+ drivers/pci/controller/pci-mvebu.c            | 96 ++++++++++++++++++-
+ drivers/pci/of.c                              | 70 ++++++++++++++
+ drivers/pci/pci.h                             | 15 +++
+ include/uapi/linux/pci_regs.h                 |  1 +
+ 5 files changed, 183 insertions(+), 5 deletions(-)
+
 -- 
 2.20.1
 
