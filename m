@@ -2,35 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3024C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD022C433FE
 	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 11:04:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243168AbiDLLCa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Apr 2022 07:02:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55482 "EHLO
+        id S242628AbiDLLC2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Apr 2022 07:02:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235504AbiDLLAX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 07:00:23 -0400
+        with ESMTP id S235614AbiDLLAV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 07:00:21 -0400
 Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACBED65408;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD70A90CFE;
         Tue, 12 Apr 2022 02:50:57 -0700 (PDT)
-Received: from relay2-d.mail.gandi.net (unknown [IPv6:2001:4b98:dc4:8::222])
-        by mslow1.mail.gandi.net (Postfix) with ESMTP id 2841DCACAB;
-        Tue, 12 Apr 2022 09:41:04 +0000 (UTC)
+Received: from relay2-d.mail.gandi.net (unknown [217.70.183.194])
+        by mslow1.mail.gandi.net (Postfix) with ESMTP id A0498CE2A8;
+        Tue, 12 Apr 2022 09:41:07 +0000 (UTC)
 Received: (Authenticated sender: herve.codina@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPA id D556C40003;
-        Tue, 12 Apr 2022 09:40:51 +0000 (UTC)
+        by mail.gandi.net (Postfix) with ESMTPA id 2E7B44001B;
+        Tue, 12 Apr 2022 09:40:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1649756453;
+        t=1649756460;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=Y12T1CEMfMWe2NpkV1QENtKbmIrbzZW7cJDV3YjWVnk=;
-        b=e5UHNKcL2gZpBP9QB9dDy8sVF3iGWof0cKi6VuePhvjvbU7RaEQDbStbRbrSh0HAsYpLUi
-        O597nrUHkNlVxkI9VHDvN6I9olhgQyL/UWp4FilWuE34NvADWGYh4Y40M96nk8cDLzbGSf
-        zhrjn1yK4fzUiG/E/FsupiQoDzLWyGPVBxF20OYJJtf3LCAjEp8yY6Emk8jLmip/+k8vdE
-        XLXbdEuJLQz2mDMpg8BKRjgfZpRjClAknyygtE84KQ9vh0fGzUTKQc2swoIWOO5qvi+L+a
-        X8HDurlNV9I5mIiGcOp3dsijs0Q+SJAzH7ncU9ROTLCXKhsJjefj/BUV5WI4FQ==
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=72EU7fqyLNwo7dQx4SfOnbogRdsZnfhW6yqgprEWLGg=;
+        b=Q06giUglgqEzDNBY0DNHDOs++180sMNPSvECIwcUmDqN8fpohNonBEyKYr9TPgSDHIoLAt
+        1+kW0ENLCOpGDQ9e+ioDoWnwz0WIM+e1KAbNEd7TupgUddA0fwwbbTyioQe8ugQ03kY2RY
+        TJdj+q+NWinL+SQCWFZyEiIxT8vUnufxePY/SSXEh960KotZEEtD7v/bxKv4FjPf5olLFI
+        T8gX/bM66YzLkCZ0WZa57gnAJ2E8WRssq3uvyzHrnaeGINyqPW3bffzlt80M2CqSa4satC
+        NtYZlBGlZezOyYX5SeT09ZLZDOuVOdS+2rH5eKUbaTUK1FEcKkr4vcgB4/RS+A==
 From:   Herve Codina <herve.codina@bootlin.com>
 To:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
@@ -48,40 +49,41 @@ Cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
         Clement Leger <clement.leger@bootlin.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>,
         Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH 0/6] RZN1 USB Host support
-Date:   Tue, 12 Apr 2022 11:40:23 +0200
-Message-Id: <20220412094029.287562-1-herve.codina@bootlin.com>
+Subject: [PATCH 3/6] PCI: rcar-gen2: Add R9A06G032 support
+Date:   Tue, 12 Apr 2022 11:40:26 +0200
+Message-Id: <20220412094029.287562-4-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220412094029.287562-1-herve.codina@bootlin.com>
+References: <20220412094029.287562-1-herve.codina@bootlin.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Add Renesas R9A06G032 SoC support to the Renesas R-Car gen2 PCI
+bridge driver.
+The Renesas RZ/N1D (R9A06G032) internal PCI bridge is compatible
+with the one available in the R-Car Gen2 family.
 
-This series add support for the USB Host controllers available on
-RZN1 (r9a06g032) SOC.
+Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+---
+ drivers/pci/controller/pci-rcar-gen2.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-These USB Host controllers are PCI OHCI/EHCI controllers located
-behind a bridge.
-
-Regards,
-Herve
-
-Herve Codina (6):
-  PCI: rcar-gen2: Add support for clocks
-  dt-bindings: PCI: pci-rcar-gen2: Add device tree support for r9a06g032
-  PCI: rcar-gen2: Add R9A06G032 support
-  ARM: dts: r9a06g032: Add internal PCI bridge node
-  ARM: dts: r9a06g032: Add USB PHY DT support
-  ARM: dts: r9a06g032: Link the PCI USB devices to the USB PHY
-
- .../devicetree/bindings/pci/pci-rcar-gen2.txt |  4 +-
- arch/arm/boot/dts/r9a06g032.dtsi              | 46 +++++++++++++++++++
- drivers/pci/controller/pci-rcar-gen2.c        | 30 +++++++++++-
- 3 files changed, 77 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/pci/controller/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
+index 528bc3780e01..586e4785a57f 100644
+--- a/drivers/pci/controller/pci-rcar-gen2.c
++++ b/drivers/pci/controller/pci-rcar-gen2.c
+@@ -352,6 +352,8 @@ static const struct of_device_id rcar_pci_of_match[] = {
+ 	{ .compatible = "renesas,pci-r8a7791", },
+ 	{ .compatible = "renesas,pci-r8a7794", },
+ 	{ .compatible = "renesas,pci-rcar-gen2", },
++	{ .compatible = "renesas,pci-r9a06g032", },
++	{ .compatible = "renesas,pci-rzn1", },
+ 	{ },
+ };
+ 
 -- 
 2.35.1
 
