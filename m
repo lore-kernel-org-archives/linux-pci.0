@@ -2,410 +2,360 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1029C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 23:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78DA1C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 23:41:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230022AbiDLXZd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Apr 2022 19:25:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38554 "EHLO
+        id S229727AbiDLXoD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Apr 2022 19:44:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229977AbiDLXYb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 19:24:31 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAB281CB26
-        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2022 15:44:12 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id b12-20020a056902030c00b0061d720e274aso236318ybs.20
-        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2022 15:44:12 -0700 (PDT)
+        with ESMTP id S232234AbiDLXnk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 19:43:40 -0400
+Received: from mail-oo1-xc33.google.com (mail-oo1-xc33.google.com [IPv6:2607:f8b0:4864:20::c33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DAF475C02
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2022 16:28:05 -0700 (PDT)
+Received: by mail-oo1-xc33.google.com with SMTP id w20-20020a4ae9f4000000b003243aa2c71aso83966ooc.0
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2022 16:28:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=j+uFg3UvBPSpe9z7EjPoimwDUI3tSTdqXoWzVBlT8YA=;
-        b=HwHLzedYjS+IUQlGju+jlS6RAWdrjLVCflB7Xg274v3cbLF+QlAtwn7wjvHLdSDhqN
-         79sVvq9GJAKECcvYiEUbpfCo7qi4m2Py1AIn+EqIDAKohghe0dJsBHFSvlcEa5eItEev
-         kOgkGWC9oEjNEfxmCkZDiys1r5J3xDmZhpxRvWqbXbbUtViAFPWehEyFU4Jv/Mq+jsaN
-         4/N1m8Ce4geOGMsUa+kbjt4EzQpw1xL7JrpF9vsOZUrwMy5DnelCHza15FNsTzM0+LGK
-         ia2ZBL5PjqiQiavZ8ITilA0jznoXtTbJ0/OJmQUUw4c5tEVk73kZuMCaUfrccOAZj4ur
-         6vPA==
+        bh=7qLgda0jl4fJo9a34Ft6PXSCgDo4MN7cC6u6Bn0fN1s=;
+        b=JxXCDUG6dz8qCfbXlUwEz0x6omM87fluBjEhu5leFU7xXd9jvsDk75FYWHaiHZ9UsZ
+         H+sR30OLjTqB5vFJeXDpZJtW1GVX6zutCiA+PXaA9g1pXvngdXEoi4p2Nt+zYfhIjL54
+         V2LHmR2kAtKlGJe+fbUkRW/cKZm47mBCHS+ZjsNMAizJgqGC3O4a0ApkOrYiyMFoUuoq
+         Qx0LZ3qDrXKZvuKB0OCct5WPq+3ZQQx7eTN5xUum/kejkEV/oz84iJ3MPTqd3jXEjSfY
+         meGxtIGx6AbfBCeGXUkw47d1RgTGuwM6MFp52umiKHxewHrSgRwinliEY5epmZmuvqt9
+         v8Nw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=j+uFg3UvBPSpe9z7EjPoimwDUI3tSTdqXoWzVBlT8YA=;
-        b=gIiKvFFiMHtQLIp6OMxxy32ic0ThiMQkkuKzc+J03tALmczf6O8YRjJa8NCQXTCUd1
-         CekP7VogzeasPIdBxP8Jh29j5cbb6ngjJAqMptwQ6s+91fvBzqB+hHCRsgdRL78mZopZ
-         2TaXvCcSYaDlrMKO+tRgHQxcjapiCf4jmfhuk+UfBKY9gfJqAQk7qiRXqNbXy3qPgn/S
-         WFIK6nGqMLJgzJvwNM+BiCl20PMCIk0p1ZB1QGEdm2Eep3N/YtaznqS+/GUSwmOP/f1+
-         ebyl/0j1iQlO1CqwYzA7C70B7KR82l7JvhgKVojUu2EQ6zwP3EJUNWfxe11GrNGatAeX
-         XFYg==
-X-Gm-Message-State: AOAM533kaYPNBnUpjls+7KqbQzby5VuPlyrsHMlDYeUWg5RlZot3JtD6
-        k2sL97RwBVMXJ8ihrdOISy7hkS+cFAstruI=
-X-Google-Smtp-Source: ABdhPJxmaX4f7eR9NYtp3dHD+Hth17rj4XFauB+9rp80Ol/yYeoj7tX+cNd/8JowOkjsiHpI5vVGwiL3Gc6cx14=
-X-Received: from tansuresh.svl.corp.google.com ([2620:15c:2c5:13:8573:aa64:c3e8:ebc])
- (user=tansuresh job=sendgmr) by 2002:a81:2fd1:0:b0:2e5:d8d8:f60 with SMTP id
- v200-20020a812fd1000000b002e5d8d80f60mr31882457ywv.164.1649803452193; Tue, 12
- Apr 2022 15:44:12 -0700 (PDT)
-Date:   Tue, 12 Apr 2022 15:43:48 -0700
-In-Reply-To: <20220412224348.1038613-3-tansuresh@google.com>
-Message-Id: <20220412224348.1038613-4-tansuresh@google.com>
-Mime-Version: 1.0
-References: <20220412224348.1038613-1-tansuresh@google.com>
- <20220412224348.1038613-2-tansuresh@google.com> <20220412224348.1038613-3-tansuresh@google.com>
-X-Mailer: git-send-email 2.36.0.rc0.470.gd361397f0d-goog
-Subject: [PATCH v2 3/3] nvme: Add async shutdown support
-From:   Tanjore Suresh <tansuresh@google.com>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, Tanjore Suresh <tansuresh@google.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=7qLgda0jl4fJo9a34Ft6PXSCgDo4MN7cC6u6Bn0fN1s=;
+        b=jrMALkIoVcgdVgHoa8t0LfSDJ7BQX/ms30WDtLvHbC7UJU1Ia1f2IDAl+d295YyhAF
+         vXyH9K125n/55lTPJJVdo8+osuWAiyCJQpWa/PSqqLr5GxobKQLImOuTQVD1rsFxAMA3
+         n0yYHTOqqtoXNVKDllhahoajxMEA0MMFdwMFMVESDNeLjffT66NH5hl4fiMz+oDAarYS
+         qghnZcoczUyJZMNieD5Xmx6Sq2Q1967pgDMva3Yrdu+tqj76JWUBq0jsaUIeTDBvbGUB
+         Ctz9ZzQqSTQziRLtWPwnFH+sXakIJQFarUk2HXU2536+FQ4P2gMBd6Jq3cEV9cVQSrPR
+         ojcw==
+X-Gm-Message-State: AOAM5318ZH6/MdZ8QKf5X5/TVWyx92qEQgOd0E1gGfsfjyTRV3jJ+qjk
+        S+d1ZKEk1wRTUsP0p8R6SsoUwKg5MwHIEMGYrH9GiryLFsTdwA==
+X-Google-Smtp-Source: ABdhPJz9qAenM3p6XtIsB/evarsB6OBVUfdWRWrKwr3f5WJ4zQt3PeKiwqGQnC63657TxKrWmufKmENRqwYVOQ3gCxs=
+X-Received: by 2002:a4a:e4c7:0:b0:329:afad:cb2d with SMTP id
+ w7-20020a4ae4c7000000b00329afadcb2dmr6831830oov.77.1649806084283; Tue, 12 Apr
+ 2022 16:28:04 -0700 (PDT)
+MIME-Version: 1.0
+References: <164894751774.951952.9428402449668442020.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <164918880566.2022733.9710638662231385597.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <CAJZ5v0h8eOWf6fPzBtns-Nxh1jxA931uFQpPwgE_T3yeOoP3rA@mail.gmail.com>
+In-Reply-To: <CAJZ5v0h8eOWf6fPzBtns-Nxh1jxA931uFQpPwgE_T3yeOoP3rA@mail.gmail.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 12 Apr 2022 16:27:53 -0700
+Message-ID: <CAPcyv4j6NoLvbL9rGdbkJX8uV9ZzeCt5rOczsUo1fU8xUX_x9A@mail.gmail.com>
+Subject: Re: [PATCH v2] PM: CXL: Disable suspend
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     linux-cxl@vger.kernel.org, Pavel Machek <pavel@ucw.cz>,
+        Len Brown <len.brown@intel.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This works with the asynchronous shutdown mechanism setup for the PCI
-drivers and participates to provide both pre and post shutdown
-routines at pci_driver structure level.
+On Tue, Apr 12, 2022 at 10:02 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
+>
+> On Tue, Apr 5, 2022 at 10:00 PM Dan Williams <dan.j.williams@intel.com> wrote:
+> >
+> > The CXL specification claims S3 support at a hardware level, but at a
+> > system software level there are some missing pieces. Section 9.4 (CXL
+> > 2.0) rightly claims that "CXL mem adapters may need aux power to retain
+> > memory context across S3", but there is no enumeration mechanism for the
+> > OS to determine if a given adapter has that support. Moreover the save
+> > state and resume image for the system may inadvertantly end up in a CXL
+> > device that needs to be restored before the save state is recoverable.
+> > I.e. a circular dependency that is not resolvable without a third party
+> > save-area.
+> >
+> > Arrange for the cxl_mem driver to fail S3 attempts. This still nominaly
+> > allows for suspend, but requires unbinding all CXL memory devices before
+> > the suspend to ensure the typical DRAM flow is taken. The cxl_mem unbind
+> > flow is intended to also tear down all CXL memory regions associated
+> > with a given cxl_memdev.
+> >
+> > It is reasonable to assume that any device participating in a System RAM
+> > range published in the EFI memory map is covered by aux power and
+> > save-area outside the device itself. So this restriction can be
+> > minimized in the future once pre-existing region enumeration support
+> > arrives, and perhaps a spec update to clarify if the EFI memory map is
+> > sufficent for determining the range of devices managed by
+> > platform-firmware for S3 support.
+> >
+> > Per Rafael, if the CXL configuration prevents suspend then it should
+> > fail early before tasks are frozen, and mem_sleep should stop showing
+> > 'mem' as an option [1]. Effectively CXL augments the platform suspend
+> > ->valid() op since, for example, the ACPI ops are not aware of the CXL /
+> > PCI dependencies. Given the split role of platform firmware vs OS
+> > provisioned CXL memory it is up to the cxl_mem driver to determine if
+> > the CXL configuration has elements that platform firmware may not be
+> > prepared to restore.
+> >
+> > Link: https://lore.kernel.org/r/CAJZ5v0hGVN_=3iU8OLpHY3Ak35T5+JcBM-qs8SbojKrpd0VXsA@mail.gmail.com [1]
+> > Cc: "Rafael J. Wysocki" <rafael@kernel.org>
+> > Cc: Pavel Machek <pavel@ucw.cz>
+> > Cc: Len Brown <len.brown@intel.com>
+> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>
+> The majority of the changes are in the CXL code, so
+>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> or please let me know if you want me to take this.
 
-The shutdown_pre routine starts the shutdown and does not wait for the
-shutdown to complete.  The shutdown_post routine waits for the shutdown
-to complete on individual controllers that this driver instance
-controls. This mechanism optimizes to speed up the shutdown in a
-system which host many controllers.
+Thanks Rafael, I'll do one more update to return the call to
+device_set_pm_not_required() since with this new scheme the CXL
+dev_pm_ops are not used. I'll take this through cxl.git.
 
-Signed-off-by: Tanjore Suresh <tansuresh@google.com>
----
- drivers/nvme/host/core.c | 28 ++++++++++----
- drivers/nvme/host/nvme.h |  8 ++++
- drivers/nvme/host/pci.c  | 80 +++++++++++++++++++++++++---------------
- 3 files changed, 80 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 677fa4bf76d3..24b08789fd34 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -2173,16 +2173,30 @@ EXPORT_SYMBOL_GPL(nvme_enable_ctrl);
- 
- int nvme_shutdown_ctrl(struct nvme_ctrl *ctrl)
- {
--	unsigned long timeout = jiffies + (ctrl->shutdown_timeout * HZ);
--	u32 csts;
- 	int ret;
- 
-+	ret = nvme_shutdown_ctrl_start(ctrl);
-+	if (ret)
-+		return ret;
-+	return nvme_wait_for_shutdown_cmpl(ctrl);
-+}
-+EXPORT_SYMBOL_GPL(nvme_shutdown_ctrl);
-+
-+int nvme_shutdown_ctrl_start(struct nvme_ctrl *ctrl)
-+{
-+
- 	ctrl->ctrl_config &= ~NVME_CC_SHN_MASK;
- 	ctrl->ctrl_config |= NVME_CC_SHN_NORMAL;
- 
--	ret = ctrl->ops->reg_write32(ctrl, NVME_REG_CC, ctrl->ctrl_config);
--	if (ret)
--		return ret;
-+	return ctrl->ops->reg_write32(ctrl, NVME_REG_CC, ctrl->ctrl_config);
-+}
-+EXPORT_SYMBOL_GPL(nvme_shutdown_ctrl_start);
-+
-+int nvme_wait_for_shutdown_cmpl(struct nvme_ctrl *ctrl)
-+{
-+	unsigned long deadline = jiffies + (ctrl->shutdown_timeout * HZ);
-+	u32 csts;
-+	int ret;
- 
- 	while ((ret = ctrl->ops->reg_read32(ctrl, NVME_REG_CSTS, &csts)) == 0) {
- 		if ((csts & NVME_CSTS_SHST_MASK) == NVME_CSTS_SHST_CMPLT)
-@@ -2191,7 +2205,7 @@ int nvme_shutdown_ctrl(struct nvme_ctrl *ctrl)
- 		msleep(100);
- 		if (fatal_signal_pending(current))
- 			return -EINTR;
--		if (time_after(jiffies, timeout)) {
-+		if (time_after(jiffies, deadline)) {
- 			dev_err(ctrl->device,
- 				"Device shutdown incomplete; abort shutdown\n");
- 			return -ENODEV;
-@@ -2200,7 +2214,7 @@ int nvme_shutdown_ctrl(struct nvme_ctrl *ctrl)
- 
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(nvme_shutdown_ctrl);
-+EXPORT_SYMBOL_GPL(nvme_wait_for_shutdown_cmpl);
- 
- static int nvme_configure_timestamp(struct nvme_ctrl *ctrl)
- {
-diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
-index f4b674a8ce20..87f5803ef577 100644
---- a/drivers/nvme/host/nvme.h
-+++ b/drivers/nvme/host/nvme.h
-@@ -170,6 +170,12 @@ enum {
- 	NVME_REQ_USERCMD		= (1 << 1),
- };
- 
-+enum shutdown_type {
-+	DO_NOT_SHUTDOWN = 0,
-+	SHUTDOWN_TYPE_SYNC = 1,
-+	SHUTDOWN_TYPE_ASYNC = 2,
-+};
-+
- static inline struct nvme_request *nvme_req(struct request *req)
- {
- 	return blk_mq_rq_to_pdu(req);
-@@ -672,6 +678,8 @@ bool nvme_wait_reset(struct nvme_ctrl *ctrl);
- int nvme_disable_ctrl(struct nvme_ctrl *ctrl);
- int nvme_enable_ctrl(struct nvme_ctrl *ctrl);
- int nvme_shutdown_ctrl(struct nvme_ctrl *ctrl);
-+int nvme_shutdown_ctrl_start(struct nvme_ctrl *ctrl);
-+int nvme_wait_for_shutdown_cmpl(struct nvme_ctrl *ctrl);
- int nvme_init_ctrl(struct nvme_ctrl *ctrl, struct device *dev,
- 		const struct nvme_ctrl_ops *ops, unsigned long quirks);
- void nvme_uninit_ctrl(struct nvme_ctrl *ctrl);
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 2e98ac3f3ad6..e812509462e8 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -107,7 +107,7 @@ MODULE_PARM_DESC(noacpi, "disable acpi bios quirks");
- struct nvme_dev;
- struct nvme_queue;
- 
--static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown);
-+static void nvme_dev_disable(struct nvme_dev *dev, int shutdown_type);
- static bool __nvme_disable_io_queues(struct nvme_dev *dev, u8 opcode);
- 
- /*
-@@ -1357,7 +1357,7 @@ static enum blk_eh_timer_return nvme_timeout(struct request *req, bool reserved)
- 	 */
- 	if (nvme_should_reset(dev, csts)) {
- 		nvme_warn_reset(dev, csts);
--		nvme_dev_disable(dev, false);
-+		nvme_dev_disable(dev, DO_NOT_SHUTDOWN);
- 		nvme_reset_ctrl(&dev->ctrl);
- 		return BLK_EH_DONE;
- 	}
-@@ -1392,7 +1392,7 @@ static enum blk_eh_timer_return nvme_timeout(struct request *req, bool reserved)
- 			 "I/O %d QID %d timeout, disable controller\n",
- 			 req->tag, nvmeq->qid);
- 		nvme_req(req)->flags |= NVME_REQ_CANCELLED;
--		nvme_dev_disable(dev, true);
-+		nvme_dev_disable(dev, SHUTDOWN_TYPE_SYNC);
- 		return BLK_EH_DONE;
- 	case NVME_CTRL_RESETTING:
- 		return BLK_EH_RESET_TIMER;
-@@ -1410,7 +1410,7 @@ static enum blk_eh_timer_return nvme_timeout(struct request *req, bool reserved)
- 			 "I/O %d QID %d timeout, reset controller\n",
- 			 req->tag, nvmeq->qid);
- 		nvme_req(req)->flags |= NVME_REQ_CANCELLED;
--		nvme_dev_disable(dev, false);
-+		nvme_dev_disable(dev, DO_NOT_SHUTDOWN);
- 		nvme_reset_ctrl(&dev->ctrl);
- 
- 		return BLK_EH_DONE;
-@@ -1503,11 +1503,13 @@ static void nvme_suspend_io_queues(struct nvme_dev *dev)
- 		nvme_suspend_queue(&dev->queues[i]);
- }
- 
--static void nvme_disable_admin_queue(struct nvme_dev *dev, bool shutdown)
-+static void nvme_disable_admin_queue(struct nvme_dev *dev, int shutdown_type)
- {
- 	struct nvme_queue *nvmeq = &dev->queues[0];
- 
--	if (shutdown)
-+	if (shutdown_type == SHUTDOWN_TYPE_ASYNC)
-+		nvme_shutdown_ctrl_start(&dev->ctrl);
-+	else if (shutdown_type == SHUTDOWN_TYPE_SYNC)
- 		nvme_shutdown_ctrl(&dev->ctrl);
- 	else
- 		nvme_disable_ctrl(&dev->ctrl);
-@@ -2669,7 +2671,7 @@ static void nvme_pci_disable(struct nvme_dev *dev)
- 	}
- }
- 
--static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown)
-+static void nvme_dev_disable(struct nvme_dev *dev, int shutdown_type)
- {
- 	bool dead = true, freeze = false;
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
-@@ -2691,14 +2693,14 @@ static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown)
- 	 * Give the controller a chance to complete all entered requests if
- 	 * doing a safe shutdown.
- 	 */
--	if (!dead && shutdown && freeze)
-+	if (!dead && (shutdown_type != DO_NOT_SHUTDOWN) && freeze)
- 		nvme_wait_freeze_timeout(&dev->ctrl, NVME_IO_TIMEOUT);
- 
- 	nvme_stop_queues(&dev->ctrl);
- 
- 	if (!dead && dev->ctrl.queue_count > 0) {
- 		nvme_disable_io_queues(dev);
--		nvme_disable_admin_queue(dev, shutdown);
-+		nvme_disable_admin_queue(dev, shutdown_type);
- 	}
- 	nvme_suspend_io_queues(dev);
- 	nvme_suspend_queue(&dev->queues[0]);
-@@ -2710,12 +2712,12 @@ static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown)
- 	blk_mq_tagset_wait_completed_request(&dev->tagset);
- 	blk_mq_tagset_wait_completed_request(&dev->admin_tagset);
- 
--	/*
--	 * The driver will not be starting up queues again if shutting down so
--	 * must flush all entered requests to their failed completion to avoid
--	 * deadlocking blk-mq hot-cpu notifier.
--	 */
--	if (shutdown) {
-+	if (shutdown_type == SHUTDOWN_TYPE_SYNC) {
-+		/*
-+		 * The driver will not be starting up queues again if shutting down so
-+		 * must flush all entered requests to their failed completion to avoid
-+		 * deadlocking blk-mq hot-cpu notifier.
-+		 */
- 		nvme_start_queues(&dev->ctrl);
- 		if (dev->ctrl.admin_q && !blk_queue_dying(dev->ctrl.admin_q))
- 			nvme_start_admin_queue(&dev->ctrl);
-@@ -2723,11 +2725,11 @@ static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown)
- 	mutex_unlock(&dev->shutdown_lock);
- }
- 
--static int nvme_disable_prepare_reset(struct nvme_dev *dev, bool shutdown)
-+static int nvme_disable_prepare_reset(struct nvme_dev *dev, int type)
- {
- 	if (!nvme_wait_reset(&dev->ctrl))
- 		return -EBUSY;
--	nvme_dev_disable(dev, shutdown);
-+	nvme_dev_disable(dev, type);
- 	return 0;
- }
- 
-@@ -2785,7 +2787,7 @@ static void nvme_remove_dead_ctrl(struct nvme_dev *dev)
- 	 */
- 	nvme_change_ctrl_state(&dev->ctrl, NVME_CTRL_DELETING);
- 	nvme_get_ctrl(&dev->ctrl);
--	nvme_dev_disable(dev, false);
-+	nvme_dev_disable(dev, DO_NOT_SHUTDOWN);
- 	nvme_kill_queues(&dev->ctrl);
- 	if (!queue_work(nvme_wq, &dev->remove_work))
- 		nvme_put_ctrl(&dev->ctrl);
-@@ -2810,7 +2812,7 @@ static void nvme_reset_work(struct work_struct *work)
- 	 * moving on.
- 	 */
- 	if (dev->ctrl.ctrl_config & NVME_CC_ENABLE)
--		nvme_dev_disable(dev, false);
-+		nvme_dev_disable(dev, DO_NOT_SHUTDOWN);
- 	nvme_sync_queues(&dev->ctrl);
- 
- 	mutex_lock(&dev->shutdown_lock);
-@@ -3151,7 +3153,7 @@ static void nvme_reset_prepare(struct pci_dev *pdev)
- 	 * state as pci_dev device lock is held, making it impossible to race
- 	 * with ->remove().
- 	 */
--	nvme_disable_prepare_reset(dev, false);
-+	nvme_disable_prepare_reset(dev, DO_NOT_SHUTDOWN);
- 	nvme_sync_queues(&dev->ctrl);
- }
- 
-@@ -3163,13 +3165,32 @@ static void nvme_reset_done(struct pci_dev *pdev)
- 		flush_work(&dev->ctrl.reset_work);
- }
- 
--static void nvme_shutdown(struct pci_dev *pdev)
-+static void nvme_async_shutdown_start(struct pci_dev *pdev)
- {
- 	struct nvme_dev *dev = pci_get_drvdata(pdev);
- 
--	nvme_disable_prepare_reset(dev, true);
-+	nvme_disable_prepare_reset(dev, SHUTDOWN_TYPE_ASYNC);
- }
- 
-+static void nvme_async_shutdown_end(struct pci_dev *pdev)
-+{
-+	struct nvme_dev *dev = pci_get_drvdata(pdev);
-+
-+	mutex_lock(&dev->shutdown_lock);
-+	nvme_wait_for_shutdown_cmpl(&dev->ctrl);
-+
-+	/*
-+	 * The driver will not be starting up queues again if shutting down so
-+	 * must flush all entered requests to their failed completion to avoid
-+	 * deadlocking blk-mq hot-cpu notifier.
-+	 */
-+	nvme_start_queues(&dev->ctrl);
-+	if (dev->ctrl.admin_q && !blk_queue_dying(dev->ctrl.admin_q))
-+		nvme_start_admin_queue(&dev->ctrl);
-+
-+	mutex_unlock(&dev->shutdown_lock);
-+
-+}
- static void nvme_remove_attrs(struct nvme_dev *dev)
- {
- 	if (dev->attrs_added)
-@@ -3191,13 +3212,13 @@ static void nvme_remove(struct pci_dev *pdev)
- 
- 	if (!pci_device_is_present(pdev)) {
- 		nvme_change_ctrl_state(&dev->ctrl, NVME_CTRL_DEAD);
--		nvme_dev_disable(dev, true);
-+		nvme_dev_disable(dev, SHUTDOWN_TYPE_SYNC);
- 	}
- 
- 	flush_work(&dev->ctrl.reset_work);
- 	nvme_stop_ctrl(&dev->ctrl);
- 	nvme_remove_namespaces(&dev->ctrl);
--	nvme_dev_disable(dev, true);
-+	nvme_dev_disable(dev, SHUTDOWN_TYPE_SYNC);
- 	nvme_remove_attrs(dev);
- 	nvme_free_host_mem(dev);
- 	nvme_dev_remove_admin(dev);
-@@ -3259,7 +3280,7 @@ static int nvme_suspend(struct device *dev)
- 	if (pm_suspend_via_firmware() || !ctrl->npss ||
- 	    !pcie_aspm_enabled(pdev) ||
- 	    (ndev->ctrl.quirks & NVME_QUIRK_SIMPLE_SUSPEND))
--		return nvme_disable_prepare_reset(ndev, true);
-+		return nvme_disable_prepare_reset(ndev, SHUTDOWN_TYPE_SYNC);
- 
- 	nvme_start_freeze(ctrl);
- 	nvme_wait_freeze(ctrl);
-@@ -3302,7 +3323,7 @@ static int nvme_suspend(struct device *dev)
- 		 * Clearing npss forces a controller reset on resume. The
- 		 * correct value will be rediscovered then.
- 		 */
--		ret = nvme_disable_prepare_reset(ndev, true);
-+		ret = nvme_disable_prepare_reset(ndev, SHUTDOWN_TYPE_SYNC);
- 		ctrl->npss = 0;
- 	}
- unfreeze:
-@@ -3314,7 +3335,7 @@ static int nvme_simple_suspend(struct device *dev)
- {
- 	struct nvme_dev *ndev = pci_get_drvdata(to_pci_dev(dev));
- 
--	return nvme_disable_prepare_reset(ndev, true);
-+	return nvme_disable_prepare_reset(ndev, SHUTDOWN_TYPE_SYNC);
- }
- 
- static int nvme_simple_resume(struct device *dev)
-@@ -3351,7 +3372,7 @@ static pci_ers_result_t nvme_error_detected(struct pci_dev *pdev,
- 	case pci_channel_io_frozen:
- 		dev_warn(dev->ctrl.device,
- 			"frozen state error detected, reset controller\n");
--		nvme_dev_disable(dev, false);
-+		nvme_dev_disable(dev, DO_NOT_SHUTDOWN);
- 		return PCI_ERS_RESULT_NEED_RESET;
- 	case pci_channel_io_perm_failure:
- 		dev_warn(dev->ctrl.device,
-@@ -3478,7 +3499,8 @@ static struct pci_driver nvme_driver = {
- 	.id_table	= nvme_id_table,
- 	.probe		= nvme_probe,
- 	.remove		= nvme_remove,
--	.shutdown	= nvme_shutdown,
-+	.async_shutdown_start   = nvme_async_shutdown_start,
-+	.async_shutdown_end  = nvme_async_shutdown_end,
- #ifdef CONFIG_PM_SLEEP
- 	.driver		= {
- 		.pm	= &nvme_dev_pm_ops,
--- 
-2.36.0.rc0.470.gd361397f0d-goog
-
+>
+> Thanks!
+>
+> > ---
+> >  drivers/Makefile           |    2 +-
+> >  drivers/cxl/Kconfig        |    4 ++++
+> >  drivers/cxl/Makefile       |    2 +-
+> >  drivers/cxl/core/Makefile  |    1 +
+> >  drivers/cxl/core/memdev.c  |    1 -
+> >  drivers/cxl/core/suspend.c |   23 +++++++++++++++++++++++
+> >  drivers/cxl/cxlmem.h       |   11 +++++++++++
+> >  drivers/cxl/mem.c          |   22 +++++++++++++++++++++-
+> >  include/linux/pm.h         |    9 +++++++++
+> >  kernel/power/hibernate.c   |    2 +-
+> >  kernel/power/main.c        |    5 ++++-
+> >  kernel/power/suspend.c     |    3 ++-
+> >  12 files changed, 78 insertions(+), 7 deletions(-)
+> >  create mode 100644 drivers/cxl/core/suspend.c
+> >
+> > diff --git a/drivers/Makefile b/drivers/Makefile
+> > index 020780b6b4d2..f735c4955143 100644
+> > --- a/drivers/Makefile
+> > +++ b/drivers/Makefile
+> > @@ -72,9 +72,9 @@ obj-$(CONFIG_PARPORT)         += parport/
+> >  obj-y                          += base/ block/ misc/ mfd/ nfc/
+> >  obj-$(CONFIG_LIBNVDIMM)                += nvdimm/
+> >  obj-$(CONFIG_DAX)              += dax/
+> > -obj-$(CONFIG_CXL_BUS)          += cxl/
+> >  obj-$(CONFIG_DMA_SHARED_BUFFER) += dma-buf/
+> >  obj-$(CONFIG_NUBUS)            += nubus/
+> > +obj-y                          += cxl/
+> >  obj-y                          += macintosh/
+> >  obj-y                          += scsi/
+> >  obj-y                          += nvme/
+> > diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
+> > index b88ab956bb7c..f64e3984689f 100644
+> > --- a/drivers/cxl/Kconfig
+> > +++ b/drivers/cxl/Kconfig
+> > @@ -98,4 +98,8 @@ config CXL_PORT
+> >         default CXL_BUS
+> >         tristate
+> >
+> > +config CXL_SUSPEND
+> > +       def_bool y
+> > +       depends on SUSPEND && CXL_MEM
+> > +
+> >  endif
+> > diff --git a/drivers/cxl/Makefile b/drivers/cxl/Makefile
+> > index ce267ef11d93..a78270794150 100644
+> > --- a/drivers/cxl/Makefile
+> > +++ b/drivers/cxl/Makefile
+> > @@ -1,5 +1,5 @@
+> >  # SPDX-License-Identifier: GPL-2.0
+> > -obj-$(CONFIG_CXL_BUS) += core/
+> > +obj-y += core/
+> >  obj-$(CONFIG_CXL_PCI) += cxl_pci.o
+> >  obj-$(CONFIG_CXL_MEM) += cxl_mem.o
+> >  obj-$(CONFIG_CXL_ACPI) += cxl_acpi.o
+> > diff --git a/drivers/cxl/core/Makefile b/drivers/cxl/core/Makefile
+> > index 6d37cd78b151..9d35085d25af 100644
+> > --- a/drivers/cxl/core/Makefile
+> > +++ b/drivers/cxl/core/Makefile
+> > @@ -1,5 +1,6 @@
+> >  # SPDX-License-Identifier: GPL-2.0
+> >  obj-$(CONFIG_CXL_BUS) += cxl_core.o
+> > +obj-$(CONFIG_CXL_SUSPEND) += suspend.o
+> >
+> >  ccflags-y += -I$(srctree)/drivers/cxl
+> >  cxl_core-y := port.o
+> > diff --git a/drivers/cxl/core/memdev.c b/drivers/cxl/core/memdev.c
+> > index 1f76b28f9826..efe4d2e9bfef 100644
+> > --- a/drivers/cxl/core/memdev.c
+> > +++ b/drivers/cxl/core/memdev.c
+> > @@ -251,7 +251,6 @@ static struct cxl_memdev *cxl_memdev_alloc(struct cxl_dev_state *cxlds,
+> >         dev->bus = &cxl_bus_type;
+> >         dev->devt = MKDEV(cxl_mem_major, cxlmd->id);
+> >         dev->type = &cxl_memdev_type;
+> > -       device_set_pm_not_required(dev);
+> >         INIT_WORK(&cxlmd->detach_work, detach_memdev);
+> >
+> >         cdev = &cxlmd->cdev;
+> > diff --git a/drivers/cxl/core/suspend.c b/drivers/cxl/core/suspend.c
+> > new file mode 100644
+> > index 000000000000..88bdbe30a1df
+> > --- /dev/null
+> > +++ b/drivers/cxl/core/suspend.c
+> > @@ -0,0 +1,23 @@
+> > +// SPDX-License-Identifier: GPL-2.0-only
+> > +/* Copyright(c) 2022 Intel Corporation. All rights reserved. */
+> > +#include <linux/atomic.h>
+> > +#include <linux/export.h>
+> > +
+> > +static atomic_t mem_active;
+> > +
+> > +bool cxl_mem_active(void)
+> > +{
+> > +       return atomic_read(&mem_active) != 0;
+> > +}
+> > +
+> > +void cxl_mem_active_inc(void)
+> > +{
+> > +       atomic_inc(&mem_active);
+> > +}
+> > +EXPORT_SYMBOL_NS_GPL(cxl_mem_active_inc, CXL);
+> > +
+> > +void cxl_mem_active_dec(void)
+> > +{
+> > +       atomic_dec(&mem_active);
+> > +}
+> > +EXPORT_SYMBOL_NS_GPL(cxl_mem_active_dec, CXL);
+> > diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
+> > index 243dd86a8b46..7235d2f976e5 100644
+> > --- a/drivers/cxl/cxlmem.h
+> > +++ b/drivers/cxl/cxlmem.h
+> > @@ -353,6 +353,17 @@ int cxl_mem_create_range_info(struct cxl_dev_state *cxlds);
+> >  struct cxl_dev_state *cxl_dev_state_create(struct device *dev);
+> >  void set_exclusive_cxl_commands(struct cxl_dev_state *cxlds, unsigned long *cmds);
+> >  void clear_exclusive_cxl_commands(struct cxl_dev_state *cxlds, unsigned long *cmds);
+> > +#ifdef CONFIG_CXL_SUSPEND
+> > +void cxl_mem_active_inc(void);
+> > +void cxl_mem_active_dec(void);
+> > +#else
+> > +static inline void cxl_mem_active_inc(void)
+> > +{
+> > +}
+> > +static inline void cxl_mem_active_dec(void)
+> > +{
+> > +}
+> > +#endif
+> >
+> >  struct cxl_hdm {
+> >         struct cxl_component_regs regs;
+> > diff --git a/drivers/cxl/mem.c b/drivers/cxl/mem.c
+> > index 49a4b1c47299..0576d2d3df07 100644
+> > --- a/drivers/cxl/mem.c
+> > +++ b/drivers/cxl/mem.c
+> > @@ -129,6 +129,11 @@ __mock bool cxl_dvsec_decode_init(struct cxl_dev_state *cxlds)
+> >         return do_hdm_init;
+> >  }
+> >
+> > +static void enable_suspend(void *data)
+> > +{
+> > +       cxl_mem_active_dec();
+> > +}
+> > +
+> >  static int cxl_mem_probe(struct device *dev)
+> >  {
+> >         struct cxl_memdev *cxlmd = to_cxl_memdev(dev);
+> > @@ -207,7 +212,22 @@ static int cxl_mem_probe(struct device *dev)
+> >  out:
+> >         cxl_device_unlock(&parent_port->dev);
+> >         put_device(&parent_port->dev);
+> > -       return rc;
+> > +
+> > +       /*
+> > +        * The kernel may be operating out of CXL memory on this device,
+> > +        * there is no spec defined way to determine whether this device
+> > +        * preserves contents over suspend, and there is no simple way
+> > +        * to arrange for the suspend image to avoid CXL memory which
+> > +        * would setup a circular dependency between PCI resume and save
+> > +        * state restoration.
+> > +        *
+> > +        * TODO: support suspend when all the regions this device is
+> > +        * hosting are locked and covered by the system address map,
+> > +        * i.e. platform firmware owns restoring the HDM configuration
+> > +        * that it locked.
+> > +        */
+> > +       cxl_mem_active_inc();
+> > +       return devm_add_action_or_reset(dev, enable_suspend, NULL);
+> >  }
+> >
+> >  static struct cxl_driver cxl_mem_driver = {
+> > diff --git a/include/linux/pm.h b/include/linux/pm.h
+> > index e65b3ab28377..7911c4c9a7be 100644
+> > --- a/include/linux/pm.h
+> > +++ b/include/linux/pm.h
+> > @@ -36,6 +36,15 @@ static inline void pm_vt_switch_unregister(struct device *dev)
+> >  }
+> >  #endif /* CONFIG_VT_CONSOLE_SLEEP */
+> >
+> > +#ifdef CONFIG_CXL_SUSPEND
+> > +bool cxl_mem_active(void);
+> > +#else
+> > +static inline bool cxl_mem_active(void)
+> > +{
+> > +       return false;
+> > +}
+> > +#endif
+> > +
+> >  /*
+> >   * Device power management
+> >   */
+> > diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
+> > index 938d5c78b421..20a66bf9f465 100644
+> > --- a/kernel/power/hibernate.c
+> > +++ b/kernel/power/hibernate.c
+> > @@ -83,7 +83,7 @@ bool hibernation_available(void)
+> >  {
+> >         return nohibernate == 0 &&
+> >                 !security_locked_down(LOCKDOWN_HIBERNATION) &&
+> > -               !secretmem_active();
+> > +               !secretmem_active() && !cxl_mem_active();
+> >  }
+> >
+> >  /**
+> > diff --git a/kernel/power/main.c b/kernel/power/main.c
+> > index 7e646079fbeb..3e6be1c33e0b 100644
+> > --- a/kernel/power/main.c
+> > +++ b/kernel/power/main.c
+> > @@ -127,7 +127,9 @@ static ssize_t mem_sleep_show(struct kobject *kobj, struct kobj_attribute *attr,
+> >         char *s = buf;
+> >         suspend_state_t i;
+> >
+> > -       for (i = PM_SUSPEND_MIN; i < PM_SUSPEND_MAX; i++)
+> > +       for (i = PM_SUSPEND_MIN; i < PM_SUSPEND_MAX; i++) {
+> > +               if (i >= PM_SUSPEND_MEM && cxl_mem_active())
+> > +                       continue;
+> >                 if (mem_sleep_states[i]) {
+> >                         const char *label = mem_sleep_states[i];
+> >
+> > @@ -136,6 +138,7 @@ static ssize_t mem_sleep_show(struct kobject *kobj, struct kobj_attribute *attr,
+> >                         else
+> >                                 s += sprintf(s, "%s ", label);
+> >                 }
+> > +       }
+> >
+> >         /* Convert the last space to a newline if needed. */
+> >         if (s != buf)
+> > diff --git a/kernel/power/suspend.c b/kernel/power/suspend.c
+> > index 6fcdee7e87a5..827075944d28 100644
+> > --- a/kernel/power/suspend.c
+> > +++ b/kernel/power/suspend.c
+> > @@ -236,7 +236,8 @@ EXPORT_SYMBOL_GPL(suspend_valid_only_mem);
+> >
+> >  static bool sleep_state_supported(suspend_state_t state)
+> >  {
+> > -       return state == PM_SUSPEND_TO_IDLE || valid_state(state);
+> > +       return state == PM_SUSPEND_TO_IDLE ||
+> > +              (valid_state(state) && !cxl_mem_active());
+> >  }
+> >
+> >  static int platform_suspend_prepare(suspend_state_t state)
+> >
