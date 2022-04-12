@@ -2,128 +2,115 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 147E0C43217
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 23:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEC6BC433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 23:22:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229909AbiDLXYZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Apr 2022 19:24:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39168 "EHLO
+        id S229966AbiDLXZM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Apr 2022 19:25:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229900AbiDLXYK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 19:24:10 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D59C2A8EEB;
-        Tue, 12 Apr 2022 15:46:51 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 90F5AB82050;
-        Tue, 12 Apr 2022 22:46:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C897DC385A1;
-        Tue, 12 Apr 2022 22:46:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649803609;
-        bh=ffZYKwatNc5nZJyZ3dD5dRgf2cNxyz6TOXNBsJ+l5EE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=jlyaLcuIIGFUt/+a3KrMJBXgJ5vFHdz1jIZgvJP/jtrm24Idy+ad2Wp1E2RgdFkjf
-         JjZ4eSQy92doGD8tiWLYBiCNGYnSvKlt9nbObLDbJtI3VykyUCnLTfh/S6F4e95xAX
-         N0xEgS18DuWSzyqLgNCX8SHooE7keCmHfrqdTODH4D4jlpfR0zHgaZZQ6C63q+hXJz
-         UsluBF4mqLNc3pR2gw46PmJewRrMODQD3O7L7boPy03byZZHPD5T0ppH9CEF0/9BFD
-         XStz96DwmJe2W3yqTBqRQHdLZ8HSApZxOS3zRfoFeCoUHzrWOGvx+EA0HvEjfnu9XO
-         Uchx1ty/MLoGg==
-Date:   Tue, 12 Apr 2022 17:46:47 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Prasad Malisetty <quic_pmaliset@quicinc.com>
-Cc:     agross@kernel.org, bjorn.andersson@linaro.org,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        rajatja@google.com, refactormyself@gmail.com,
-        quic_vbadigan@quicinc.com, quic_ramkri@quicinc.com,
-        manivannan.sadhasivam@linaro.org, swboyd@chromium.org,
-        Vidya Sagar <vidyas@nvidia.com>,
-        "Kenneth R. Crudup" <kenny@panix.com>
-Subject: Re: [PATCH v2] [RFC PATCH] PCI: Update LTR threshold based on LTRME
- bit
-Message-ID: <20220412224647.GA639905@bhelgaas>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1646679549-12494-1-git-send-email-quic_pmaliset@quicinc.com>
+        with ESMTP id S229783AbiDLXY3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 19:24:29 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 196897CDCF
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2022 15:43:56 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id z15-20020a25bb0f000000b00613388c7d99so276367ybg.8
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2022 15:43:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=AMvt99Ex3LWgVMSklCg5XNF3Fu8kmLTfCLQjqVndY6w=;
+        b=RazfDvaD5aj8XVU4guL9lnFicByqFFYKMKgI9ETIiiTeEWVsXQiUmC4r9d+KA7NlGz
+         SMpX/oUt8RqMU0SPyZhXdqUQDx8LQQUHQ6iD3GKz8/G7FOVI0743NRajKeuQyq4Oxk4W
+         eFksHyrtSZwa3mmURayx+lMlxJJVuTmYVWEbV46ZNxN8Mx+pyDt8lkTgCjOVXGBWGHCm
+         yHyM2NQPx3xwEvLMhtxV4Jxn4NYyIPvlfVHF1PJ8ypg4N4dqW624dI5Z07Dr/nvsczuy
+         CXbA2dXFHKpoD+vUdHIKSREFJjDiBl/oozVwp9T6RVdmqMsulQamDI0WhVn3V2vcxJvy
+         OjsQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=AMvt99Ex3LWgVMSklCg5XNF3Fu8kmLTfCLQjqVndY6w=;
+        b=2z5JJES7Ylfpq7K/szxVQ0sZIGfMBhQOkInf2pKRPv+uwn5Ppx7uZvI2z7qHk76xSk
+         zMfkcUilOAlJ+GonULE4U/mN7yBC0jqRsUxqW0RHCs8qguy+TGLN2G7IVnoIMmnlt8OG
+         67lqZV50v6GEjn8XjDKvWjAeqXZyvhBUsNhdfjc200z74z2qK9GKm+cWm72RPmsf19QB
+         AZzscyxZSxRG1I9uGWKnCxoacXlw/CB4S96sw614GI9mS1K54DIrRNaFuk5PBDizFzma
+         J1/q15/mFVq64804gPug0HgoJ/TMf/l9UE4YKZfOR9n9+MISKfGNPfSkZCXBYvt6+fX+
+         7+TQ==
+X-Gm-Message-State: AOAM531/So7dOs0rqf6mNaFnVFZS4foiDWPQLMhAIjYVWjbPQmlqtqPP
+        PWGZdQrEwHC3vjADjcfQQIceQVU4I3yIwyk=
+X-Google-Smtp-Source: ABdhPJxCd0bNO7tLDwtDjUMz0mlBl45zHQLJLdIutO0p8cCHIr5/4Sb9YUXg6f/qhNMrRWACrr9iOa0pZYfPhJM=
+X-Received: from tansuresh.svl.corp.google.com ([2620:15c:2c5:13:8573:aa64:c3e8:ebc])
+ (user=tansuresh job=sendgmr) by 2002:a25:d34f:0:b0:641:3dcc:c2de with SMTP id
+ e76-20020a25d34f000000b006413dccc2demr11259325ybf.547.1649803435313; Tue, 12
+ Apr 2022 15:43:55 -0700 (PDT)
+Date:   Tue, 12 Apr 2022 15:43:45 -0700
+Message-Id: <20220412224348.1038613-1-tansuresh@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.36.0.rc0.470.gd361397f0d-goog
+Subject: [PATCH v2 0/3] Asynchronous shutdown interface and example implementation
+From:   Tanjore Suresh <tansuresh@google.com>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org, Tanjore Suresh <tansuresh@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Vidya, Kenny]
+Problem:
 
-On Tue, Mar 08, 2022 at 12:29:09AM +0530, Prasad Malisetty wrote:
-> Update LTR threshold scale and value based on LTRME (Latency
-> Tolenrance Reporting Mechanism) from device capabilities.
-> 
-> In ASPM driver, LTR threshold scale and value is updating
-> based on tcommon_mode and t_poweron values. In kioxia NVMe,
-> L1.2 is failing due to LTR threshold scale and value is
-> greater values than max snoop/non snoop value.
-> 
-> In general, updated LTR threshold scale and value should be
-> less than max snoop/non snoop value to enter the device
-> into L1.2 state.
+Some of our machines are configured with  many NVMe devices and
+are validated for strict shutdown time requirements. Each NVMe
+device plugged into the system, typicaly takes about 4.5 secs
+to shutdown. A system with 16 such NVMe devices will takes
+approximately 80 secs to shutdown and go through reboot.
 
-Interesting that you mention an L1.2 issue on a KIOXIA NVMe device.
+The current shutdown APIs as defined at bus level is defined to be
+synchronous. Therefore, more devices are in the system the greater
+the time it takes to shutdown. This shutdown time significantly
+contributes the machine reboot time.
 
-Kenny also reported an L1 Substates issue related to a KIOXIA NVMe
-device at [1].  That issue happened when saving/restoring the L1 SS
-state for suspend/resume.
+Solution:
 
-We ended up reverting 4257f7e008ea to avoid the problem, but when he
-tested that commit later, the issue did not occur [2].
+This patch set proposes an asynchronous shutdown interface at bus level,
+modifies the core driver, device shutdown routine to exploit the
+new interface while maintaining backward compatibility with synchronous
+implementation already existing (Patch 1 of 3) and exploits new interface
+to enable all PCI-E based devices to use asynchronous interface semantics
+if necessary (Patch 2 of 3). The implementation at PCI-E level also works
+in a backward compatible way, to allow exiting device implementation
+to work with current synchronous semantics. Only show cases an example
+implementation for NVMe device to exploit this asynchronous shutdown
+interface. (Patch 3 of 3).
 
-I don't know if there's a connection here, so this is just a heads-up
-in case there is.
+Changelog:
 
-[1] https://lore.kernel.org/r/20201228040513.GA611645@bjorn-Precision-5520
-[2] https://lore.kernel.org/r/3ca14a7-b726-8430-fe61-a3ac183a1088@panix.com
+v2: - Replaced the shutdown_pre & shutdown_post entry point names with the
+      recommended names (async_shutdown_start and asynch_shutdown_end).
 
-> Signed-off-by: Prasad Malisetty <quic_pmaliset@quicinc.com>
-> 
-> ---
-> Changes since v1:
-> 	- Added missing variable declaration in v1 patch.
-> ---
->  drivers/pci/pcie/aspm.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index a96b742..a67746c 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -463,6 +463,7 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
->  	u32 val1, val2, scale1, scale2;
->  	u32 t_common_mode, t_power_on, l1_2_threshold, scale, value;
->  	u32 ctl1 = 0, ctl2 = 0;
-> +	u32 cap;
->  	u32 pctl1, pctl2, cctl1, cctl2;
->  	u32 pl1_2_enables, cl1_2_enables;
->  
-> @@ -499,9 +500,14 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
->  	 * Table 5-11.  T(POWER_OFF) is at most 2us and T(L1.2) is at
->  	 * least 4us.
->  	 */
-> -	l1_2_threshold = 2 + 4 + t_common_mode + t_power_on;
-> -	encode_l12_threshold(l1_2_threshold, &scale, &value);
-> -	ctl1 |= t_common_mode << 8 | scale << 29 | value << 16;
-> +	pcie_capability_read_dword(child, PCI_EXP_DEVCAP2, &cap);
-> +	if (!(cap & PCI_EXP_DEVCAP2_LTR)) {
-> +		l1_2_threshold = 2 + 4 + t_common_mode + t_power_on;
-> +		encode_l12_threshold(l1_2_threshold, &scale, &value);
-> +		ctl1 |= scale << 29 | value << 16;
-> +	}
-> +
-> +	ctl1 |= t_common_mode;
->  
->  	/* Some broken devices only support dword access to L1 SS */
->  	pci_read_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1, &pctl1);
-> -- 
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member 
-> of Code Aurora Forum, hosted by The Linux Foundation
-> 
+    - Comment about ordering requirements between bridge shutdown versus
+      leaf/endpoint shutdown was agreed to be different when calling
+      async_shutdown_start and async_shutdown_end. Now this implements the
+      same order of calling both start and end entry points.
+
+Tanjore Suresh (3):
+  driver core: Support asynchronous driver shutdown
+  PCI: Support asynchronous shutdown
+  nvme: Add async shutdown support
+
+ drivers/base/core.c        | 38 +++++++++++++++++-
+ drivers/nvme/host/core.c   | 28 +++++++++----
+ drivers/nvme/host/nvme.h   |  8 ++++
+ drivers/nvme/host/pci.c    | 80 ++++++++++++++++++++++++--------------
+ drivers/pci/pci-driver.c   | 20 ++++++++--
+ include/linux/device/bus.h | 12 ++++++
+ include/linux/pci.h        |  4 ++
+ 7 files changed, 149 insertions(+), 41 deletions(-)
+
+-- 
+2.36.0.rc0.470.gd361397f0d-goog
+
