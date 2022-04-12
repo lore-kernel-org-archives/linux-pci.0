@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83AF9C4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 10:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6155FC433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 11:00:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241179AbiDLLCJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Apr 2022 07:02:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44594 "EHLO
+        id S238009AbiDLLCR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Apr 2022 07:02:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237083AbiDLLAI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 07:00:08 -0400
+        with ESMTP id S240019AbiDLLAg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 07:00:36 -0400
 Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DAB365406;
-        Tue, 12 Apr 2022 02:50:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A52190FCF;
+        Tue, 12 Apr 2022 02:51:02 -0700 (PDT)
 Received: from relay2-d.mail.gandi.net (unknown [IPv6:2001:4b98:dc4:8::222])
-        by mslow1.mail.gandi.net (Postfix) with ESMTP id 75E75CE289;
-        Tue, 12 Apr 2022 09:41:06 +0000 (UTC)
+        by mslow1.mail.gandi.net (Postfix) with ESMTP id 9803ACE944;
+        Tue, 12 Apr 2022 09:41:49 +0000 (UTC)
 Received: (Authenticated sender: herve.codina@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPA id 1001D40005;
-        Tue, 12 Apr 2022 09:40:57 +0000 (UTC)
+        by mail.gandi.net (Postfix) with ESMTPA id 394B14000C;
+        Tue, 12 Apr 2022 09:41:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1649756458;
+        t=1649756469;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Xc7elETUhx4Ylc8cUvJvfmJyb8bpXLKnBKj1vDU7LOQ=;
-        b=UAqUgyzAD5RDK5aUtx8RhEHu5pV/ZosSkZZ9QbAentA8pU2q0I6B1QxgWtu66bB37VuRmq
-        /ApiySh5muMEsucwjUgknODrJ6ejhlX3POD2nBfRln2Cc7D+zlMHdzTHYtpI1NDRQSGE7y
-        G2iF/wa5LEH4oWmJ6pZ6G7SegecdiJPRrDo1yoOq2pSKcc7yQJcpgJF2GkclPfhKzZxvUA
-        arWxwRTsR1aL7dyvKjhHu8QmPrSZJHLGR4ljkNUd7B1gWvyf/CzCLinzp6V29prOWlWZtj
-        L4Tkmr0QPeOMWp5ZyMMMAZDoE87iXmi8gHzsnsdTGqqopdkMjsxMeiexVu764A==
+        bh=B8CDPPUOPXF9Ae/2eM03+qKM9N1UneWOPC2xfFm8SEc=;
+        b=G1P5G7Kq8YBZ/FoftXUVyLLB1A/8NyK9XCOGbGno9tjhtntJY/26ecGVLPfCM/WucLGGPB
+        hOar6H5tHnyUt8VKOxl4hYsJBPhtEbZW0AFQQo2l9fC3UUYyIb/GApnwC9R60gbTBgGRQL
+        aNPhYjzQPGa7ZnFVdrKv/UFYfZWL+dBPVYlYYLwXqIG/3VKfmITfbAPoLznduh/lPvMFKO
+        m+Rd1QpPal7nd0sWUX2zukgyFy3CtxcqKpBy7mUcn2Cd44jIT1Vg+7RrL0fUteP8x2b95E
+        dKEz6/pV2QT5dyDAQVj6q+yjCo7EvHhLNtGNVthigCTYYwE5hylzqr1ebSo87g==
 From:   Herve Codina <herve.codina@bootlin.com>
 To:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
@@ -49,9 +49,9 @@ Cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
         Clement Leger <clement.leger@bootlin.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>,
         Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH 2/6] dt-bindings: PCI: pci-rcar-gen2: Add device tree support for r9a06g032
-Date:   Tue, 12 Apr 2022 11:40:25 +0200
-Message-Id: <20220412094029.287562-3-herve.codina@bootlin.com>
+Subject: [PATCH 6/6] ARM: dts: r9a06g032: Link the PCI USB devices to the USB PHY
+Date:   Tue, 12 Apr 2022 11:40:29 +0200
+Message-Id: <20220412094029.287562-7-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220412094029.287562-1-herve.codina@bootlin.com>
 References: <20220412094029.287562-1-herve.codina@bootlin.com>
@@ -61,30 +61,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add internal PCI bridge support for the r9a06g032 SoC. The Renesas
-RZ/N1D (R9A06G032) internal PCI bridge is compatible with the one
-present in the R-Car Gen2 family.
+Describe the PCI USB devices that are behind the PCI bridge, adding
+necessary links to the USB PHY device.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 ---
- Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ arch/arm/boot/dts/r9a06g032.dtsi | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-index aeba38f0a387..098ea12e6c95 100644
---- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-@@ -15,7 +15,9 @@ Required properties:
- 	      "renesas,pci-r8a7793" for the R8A7793 SoC;
- 	      "renesas,pci-r8a7794" for the R8A7794 SoC;
- 	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 or
--				      RZ/G1 compatible device.
-+				      RZ/G1 compatible device;
-+	      "renesas,pci-r9a06g032" for the R9A06G032 (RZ/N1D) SoC;
-+	      "renesas,pci-rzn1" for a generic RZ/N1 compatible device.
+diff --git a/arch/arm/boot/dts/r9a06g032.dtsi b/arch/arm/boot/dts/r9a06g032.dtsi
+index c9336dc4888a..75e45fd6bedb 100644
+--- a/arch/arm/boot/dts/r9a06g032.dtsi
++++ b/arch/arm/boot/dts/r9a06g032.dtsi
+@@ -244,6 +244,18 @@ pci_usb: pci@40030000 {
+ 			interrupt-map = <0x0000 0 0 1 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
+ 					 0x0800 0 0 1 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
+ 					 0x1000 0 0 2 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH>;
++
++			usb@1,0 {
++				reg = <0x800 0 0 0 0>;
++				phys = <&usbphy 0>;
++				phy-names = "usb";
++			};
++
++			usb@2,0 {
++				reg = <0x1000 0 0 0 0>;
++				phys = <&usbphy 0>;
++				phy-names = "usb";
++			};
+ 		};
+ 	};
  
- 
- 	      When compatible with the generic version, nodes must list the
 -- 
 2.35.1
 
