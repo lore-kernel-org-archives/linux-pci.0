@@ -2,156 +2,211 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27AFCC433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 14:30:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06396C433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Apr 2022 14:40:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356532AbiDLOdL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Apr 2022 10:33:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40702 "EHLO
+        id S1347933AbiDLOnA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Apr 2022 10:43:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356534AbiDLOdI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 10:33:08 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F7195EDE6;
-        Tue, 12 Apr 2022 07:30:50 -0700 (PDT)
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 23CDsP4R006044;
-        Tue, 12 Apr 2022 14:30:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : content-transfer-encoding
- : mime-version; s=pp1; bh=VumadtbAhg7J0oAzytt4nXBVTZSNqML19OlNy6Mzrvk=;
- b=UAlzjLP902wHOA7aS3x+nHo3l1ib7VISuOl5EVnEzXURhl58Yrflx3B76rgBuMRCrvzw
- 9ng7z8C/7i6Pl06R6SCX2pyua8C+o+sQSnWkKHeRLPdF7iOIH45wwzILp99PpBZAA8FS
- X9LqvzH4dsIoueo2Z6s1mo27UIw9MDFGVlm5S4lPGs3EXhZ73CfttFHSDZt1VO7Shd3/
- myLyN+HepCtkxD0N4JMLVWm0AMOIN624dXff/9J770pZDbh8r31M+E7kHykdXa32esWa
- vODhqOoya3/1QskwN0Hthvj0IVWW8LRiq/lRR1dHMVf16JFHcy/rsi0UApS6TFvPwzio 5A== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3fdaqkrva0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Apr 2022 14:30:47 +0000
-Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 23CDu87K004959;
-        Tue, 12 Apr 2022 14:30:47 GMT
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3fdaqkrv8x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Apr 2022 14:30:46 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23CEE0Nj015594;
-        Tue, 12 Apr 2022 14:30:44 GMT
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-        by ppma03ams.nl.ibm.com with ESMTP id 3fb1s8w1xk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 12 Apr 2022 14:30:44 +0000
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23CEUfrM52036012
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 12 Apr 2022 14:30:41 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 06ED952051;
-        Tue, 12 Apr 2022 14:30:41 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id C3D825205F;
-        Tue, 12 Apr 2022 14:30:40 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jan Kiszka <jan.kiszka@siemens.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Pierre Morel <pmorel@linux.ibm.com>
-Cc:     linux-s390@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/4] PCI: Move jailhouse's isolated function handling to pci_scan_slot()
-Date:   Tue, 12 Apr 2022 16:30:38 +0200
-Message-Id: <20220412143040.1882096-3-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220412143040.1882096-1-schnelle@linux.ibm.com>
-References: <20220412143040.1882096-1-schnelle@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: BS6WV4q7WWMrpPR7GJl3YwUyMJivfMZa
-X-Proofpoint-ORIG-GUID: pigLOYQVWaDbOc9Z-H6EBnFArRW4jB6Q
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S234174AbiDLOm6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2022 10:42:58 -0400
+Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43F3411155
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2022 07:40:41 -0700 (PDT)
+Received: by mail-oi1-f169.google.com with SMTP id q189so19191005oia.9
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2022 07:40:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=hEAbkH+fqKRUETCwi4mFn/Yo2FmpfQYB5VhKYBCoHH4=;
+        b=pqSG3Yn80KjDq/1EJj4KkoXtRMbN7IqP5m/K3p0cNTo3S5Ioc9SRIoQ/nNoAMxW/US
+         mPW2YsEybWGJc0YqCCnDPO0dH4w75fPR+JOB5XlXfvl3oKtLRf7+rlo5ArYdveQZZ04r
+         hcfyJjCZx50HqG7j/FAYUlkhRbB08Ar228SX6J2ofXuGL6v8EovFjBLCz+3mYNdQWGER
+         +Q5456JCneKl49mNyuj5d5hJ/LqOWR4E352zHKmm1Dl61ig6N8zcwyJ4/jHjErnv47R8
+         T8WYBslfgqhju+/OstXDY4oz6v26cA29ms/kKkQLElNGbQkwEJLUbEddx9BXLM+4CdZy
+         Lo1A==
+X-Gm-Message-State: AOAM532if5DPjs9vI/lLHPqZ5GPqRcm2Z3ubz4h7pqGQtBW0tyTPFWkr
+        3dvPhFMocdHemvVQsyRBp2+JrfmcAA==
+X-Google-Smtp-Source: ABdhPJwNfeudp2tlaoWTCceKkddoAOttN8aXcLXxUa3imnwOScRncGt5IKdZpGuYyLdgSolAUUcs/Q==
+X-Received: by 2002:a05:6808:208c:b0:2da:10e3:c70 with SMTP id s12-20020a056808208c00b002da10e30c70mr1924185oiw.42.1649774440426;
+        Tue, 12 Apr 2022 07:40:40 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id v17-20020a9d69d1000000b005b2319a08c4sm13399891oto.18.2022.04.12.07.40.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Apr 2022 07:40:40 -0700 (PDT)
+Received: (nullmailer pid 60097 invoked by uid 1000);
+        Tue, 12 Apr 2022 14:40:39 -0000
+Date:   Tue, 12 Apr 2022 09:40:39 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Huacai Chen <chenhuacai@loongson.cn>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Huacai Chen <chenhuacai@gmail.com>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>
+Subject: Re: [PATCH V12 1/6] PCI: loongson: Use generic 8/16/32-bit config
+ ops on LS2K/LS7A
+Message-ID: <YlWPZ3J408ncOujh@robh.at.kernel.org>
+References: <20220226104731.76776-1-chenhuacai@loongson.cn>
+ <20220226104731.76776-2-chenhuacai@loongson.cn>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-04-12_05,2022-04-12_02,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- malwarescore=0 spamscore=0 clxscore=1015 priorityscore=1501
- mlxlogscore=999 adultscore=0 phishscore=0 suspectscore=0
- lowpriorityscore=0 mlxscore=0 bulkscore=0 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2204120068
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220226104731.76776-2-chenhuacai@loongson.cn>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The special case of the jailhouse hypervisor passing through individual
-PCI functions handles scanning for PCI functions even if function 0 does
-not exist. Currently this is done with an extra loop duplicating the one
-in pci_scan_slot(). By incorporating the check for jailhouse_paravirt()
-into next_fn() we can instead do this as part of the normal
-pci_scan_slot(). The only functional change is that we now call
-pcie_aspm_init_link_state() for these functions but this already
-happened if function 0 was passed through and should not be a problem.
+On Sat, Feb 26, 2022 at 06:47:26PM +0800, Huacai Chen wrote:
+> LS2K/LS7A support 8/16/32-bits PCI config access operations via CFG1, so
+> we can disable CFG0 for them and safely use pci_generic_config_read()/
+> pci_generic_config_write() instead of pci_generic_config_read32()/pci_
+> generic_config_write32().
+> 
+> Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+> ---
+>  drivers/pci/controller/pci-loongson.c | 65 +++++++++++++++++++--------
+>  1 file changed, 46 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
+> index 48169b1e3817..433261c5f34c 100644
+> --- a/drivers/pci/controller/pci-loongson.c
+> +++ b/drivers/pci/controller/pci-loongson.c
+> @@ -25,11 +25,16 @@
+>  #define FLAG_CFG1	BIT(1)
+>  #define FLAG_DEV_FIX	BIT(2)
+>  
+> +struct pci_controller_data {
 
-Link: https://lore.kernel.org/linux-pci/20220408224514.GA353445@bhelgaas/
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
- drivers/pci/probe.c | 25 ++++++-------------------
- 1 file changed, 6 insertions(+), 19 deletions(-)
+struct loongson_pci_data
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 389aa1f9cb2c..8100e044dfc5 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2602,10 +2602,11 @@ static int next_fn(struct pci_bus *bus, struct pci_dev *dev, int fn)
- 	if (dev && !dev->multifunction)
- 		return -ENODEV;
- 	/*
--	 * A function 0 is required but multifunction devices may
--	 * be non-contiguous so dev can be NULL otherwise.
-+	 * Usually a function 0 is required but the jailhouse hypervisor may
-+	 * pass individual functions. For non-contiguous multifunction devices
-+	 * some functions may also be missing.
- 	 */
--	if (!fn && !dev)
-+	if (!fn && !dev && !jailhouse_paravirt())
- 		return -ENODEV;
- 	return (fn <= 6) ? fn + 1 : -ENODEV;
- }
-@@ -2855,30 +2856,16 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- {
- 	unsigned int used_buses, normal_bridges = 0, hotplug_bridges = 0;
- 	unsigned int start = bus->busn_res.start;
--	unsigned int devfn, fn, cmax, max = start;
-+	unsigned int devfn, cmax, max = start;
- 	struct pci_dev *dev;
- 	int nr_devs;
- 
- 	dev_dbg(&bus->dev, "scanning bus\n");
- 
- 	/* Go find them, Rover! */
--	for (devfn = 0; devfn < 256; devfn += 8) {
-+	for (devfn = 0; devfn < 256; devfn += 8)
- 		nr_devs = pci_scan_slot(bus, devfn);
- 
--		/*
--		 * The Jailhouse hypervisor may pass individual functions of a
--		 * multi-function device to a guest without passing function 0.
--		 * Look for them as well.
--		 */
--		if (jailhouse_paravirt() && nr_devs == 0) {
--			for (fn = 1; fn < 8; fn++) {
--				dev = pci_scan_single_device(bus, devfn + fn);
--				if (dev)
--					dev->multifunction = 1;
--			}
--		}
--	}
--
- 	/* Reserve buses for SR-IOV capability */
- 	used_buses = pci_iov_bus_range(bus);
- 	max += used_buses;
--- 
-2.32.0
+> +	u32 flags;
+> +	struct pci_ops *ops;
 
+const struct
+
+> +};
+> +
+>  struct loongson_pci {
+>  	void __iomem *cfg0_base;
+>  	void __iomem *cfg1_base;
+>  	struct platform_device *pdev;
+> -	u32 flags;
+> +	struct pci_controller_data *data;
+>  };
+>  
+>  /* Fixup wrong class code in PCIe bridges */
+> @@ -126,8 +131,8 @@ static void __iomem *pci_loongson_map_bus(struct pci_bus *bus, unsigned int devf
+>  	 * Do not read more than one device on the bus other than
+>  	 * the host bus. For our hardware the root bus is always bus 0.
+>  	 */
+> -	if (priv->flags & FLAG_DEV_FIX && busnum != 0 &&
+> -		PCI_SLOT(devfn) > 0)
+> +	if (priv->data->flags & FLAG_DEV_FIX &&
+> +			busnum != 0 && PCI_SLOT(devfn) > 0)
+
+Are you sure you need all this? The default for PCIe (not PCI) is to 
+only scan device 0 on child buses.
+
+In any case, use pci_is_root_bus() rather than checking bus number 
+is/isn't 0.
+
+
+>  		return NULL;
+>  
+>  	/* CFG0 can only access standard space */
+> @@ -159,20 +164,42 @@ static int loongson_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+>  	return val;
+>  }
+>  
+> -/* H/w only accept 32-bit PCI operations */
+> +/* LS2K/LS7A accept 8/16/32-bit PCI config operations */
+>  static struct pci_ops loongson_pci_ops = {
+> +	.map_bus = pci_loongson_map_bus,
+> +	.read	= pci_generic_config_read,
+> +	.write	= pci_generic_config_write,
+> +};
+> +
+> +/* RS780/SR5690 only accept 32-bit PCI config operations */
+> +static struct pci_ops loongson_pci_ops32 = {
+>  	.map_bus = pci_loongson_map_bus,
+>  	.read	= pci_generic_config_read32,
+>  	.write	= pci_generic_config_write32,
+>  };
+>  
+> +static const struct pci_controller_data ls2k_pci_data = {
+> +	.flags = FLAG_CFG1 | FLAG_DEV_FIX,
+> +	.ops = &loongson_pci_ops,
+> +};
+> +
+> +static const struct pci_controller_data ls7a_pci_data = {
+> +	.flags = FLAG_CFG1 | FLAG_DEV_FIX,
+> +	.ops = &loongson_pci_ops,
+> +};
+> +
+> +static const struct pci_controller_data rs780e_pci_data = {
+> +	.flags = FLAG_CFG0,
+> +	.ops = &loongson_pci_ops32,
+> +};
+> +
+>  static const struct of_device_id loongson_pci_of_match[] = {
+>  	{ .compatible = "loongson,ls2k-pci",
+> -		.data = (void *)(FLAG_CFG0 | FLAG_CFG1 | FLAG_DEV_FIX), },
+> +		.data = (void *)&ls2k_pci_data, },
+
+Don't need the cast IIRC.
+
+>  	{ .compatible = "loongson,ls7a-pci",
+> -		.data = (void *)(FLAG_CFG0 | FLAG_CFG1 | FLAG_DEV_FIX), },
+> +		.data = (void *)&ls7a_pci_data, },
+>  	{ .compatible = "loongson,rs780e-pci",
+> -		.data = (void *)(FLAG_CFG0), },
+> +		.data = (void *)&rs780e_pci_data, },
+>  	{}
+>  };
+>  
+> @@ -193,20 +220,20 @@ static int loongson_pci_probe(struct platform_device *pdev)
+>  
+>  	priv = pci_host_bridge_priv(bridge);
+>  	priv->pdev = pdev;
+> -	priv->flags = (unsigned long)of_device_get_match_data(dev);
+> +	priv->data = (struct pci_controller_data *)of_device_get_match_data(dev);
+>  
+> -	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> -	if (!regs) {
+> -		dev_err(dev, "missing mem resources for cfg0\n");
+> -		return -EINVAL;
+> +	if (priv->data->flags & FLAG_CFG0) {
+> +		regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +		if (!regs)
+> +			dev_err(dev, "missing mem resources for cfg0\n");
+> +		else {
+> +			priv->cfg0_base = devm_pci_remap_cfg_resource(dev, regs);
+> +			if (IS_ERR(priv->cfg0_base))
+> +				return PTR_ERR(priv->cfg0_base);
+> +		}
+>  	}
+>  
+> -	priv->cfg0_base = devm_pci_remap_cfg_resource(dev, regs);
+> -	if (IS_ERR(priv->cfg0_base))
+> -		return PTR_ERR(priv->cfg0_base);
+> -
+> -	/* CFG1 is optional */
+> -	if (priv->flags & FLAG_CFG1) {
+> +	if (priv->data->flags & FLAG_CFG1) {
+>  		regs = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>  		if (!regs)
+>  			dev_info(dev, "missing mem resource for cfg1\n");
+> @@ -218,7 +245,7 @@ static int loongson_pci_probe(struct platform_device *pdev)
+>  	}
+>  
+>  	bridge->sysdata = priv;
+> -	bridge->ops = &loongson_pci_ops;
+> +	bridge->ops = priv->data->ops;
+>  	bridge->map_irq = loongson_map_irq;
+>  
+>  	return pci_host_probe(bridge);
+> -- 
+> 2.27.0
+> 
