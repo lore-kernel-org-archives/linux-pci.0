@@ -2,130 +2,145 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90066C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 09:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8637C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 11:29:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241714AbiDNJZu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 05:25:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52284 "EHLO
+        id S242705AbiDNLcQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 07:32:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241715AbiDNJZn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 05:25:43 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2055.outbound.protection.outlook.com [40.107.94.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05AA16F488;
-        Thu, 14 Apr 2022 02:23:18 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HvCt6ja9ypS2vCEUqGBI0ULHUv/wg56eGnLdOAYBcfy/zdUdRcWhXr//+h+x6nj6XJexOddIOkBGWLQJ5yQ0fGyc6pzfj7VB42wfn94qANLKdPcDlKoOVJMfi06P9oAfN2loAMSmGlLjNWXQh3xWXTMIZPiTppxM/CnwOw8eD6+QyUmDcVIQCk1x9eawEcD229n3DphnSSCZFINeHnqYiA9XZNcGdTcoJjeGMCg3o1IX012DFxtfk1+Mzyrid6hGUwul6uZwezpLoTVoBJG0PPwsvYW8Ys8TNKEDvbit5d2G9NDJMtopDZWOM0DtyhJwyAKSJ45p+gWW1QJ/q6s0CA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=UKCFekQVonpSQR2YKHvLD5Pwtw/4uei54TMdo23UCVc=;
- b=Rojvu/5rzedBTRZp0Gnn8dPfZWroDlTmuMZt0M4PMmOkeoBCDnyEB6u3tSG34Op7Mi4b5N7tcDPgxgz1dRuo0cmzFUZ7lYP0WRvY43N0SInz8kxk0+n5hWmqQVKLIkJxCXYhqZwSbY1uixIkm6IXyIM3+UifAdKNk/qLwjbqgVWrkfRL0fCI8PHqUg2p+b+6NwI1IdHWFCdIP8cvWG0D4H9w7FA9ivNNlRN5aZmSlgXAdF8LYG92lQjd62stukoixonx4KxLgu71nyGXgyI5VLupKWaQ3D2E0mApGshTRxKtmXdpgfyW7CwyGm4x/O9EYvw57XiEvcCrkKrxrjqsiQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 149.199.62.198) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=xilinx.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=xilinx.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UKCFekQVonpSQR2YKHvLD5Pwtw/4uei54TMdo23UCVc=;
- b=osotZQu2QjJVcRC0DjMbixibPs9CN1pw8Bw90rHY3JBgCdZrSU9wvLS/dIfK9h8+vh/6r2OUKgDa551JM34z+E+boPFfGOyBvetfXzsdFDPRQS6YRPckaWWSTR6VnsZC4Br8llnOSLX9jqZ2FpZuAKRk+RjBUKOkvBd9gsRotXQ=
-Received: from BN8PR04CA0063.namprd04.prod.outlook.com (2603:10b6:408:d4::37)
- by MWHPR02MB3277.namprd02.prod.outlook.com (2603:10b6:301:6a::37) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5144.29; Thu, 14 Apr
- 2022 09:23:17 +0000
-Received: from BN1NAM02FT063.eop-nam02.prod.protection.outlook.com
- (2603:10b6:408:d4:cafe::65) by BN8PR04CA0063.outlook.office365.com
- (2603:10b6:408:d4::37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5164.20 via Frontend
- Transport; Thu, 14 Apr 2022 09:23:17 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 149.199.62.198)
- smtp.mailfrom=xilinx.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=xilinx.com;
-Received-SPF: Pass (protection.outlook.com: domain of xilinx.com designates
- 149.199.62.198 as permitted sender) receiver=protection.outlook.com;
- client-ip=149.199.62.198; helo=xsj-pvapexch01.xlnx.xilinx.com;
-Received: from xsj-pvapexch01.xlnx.xilinx.com (149.199.62.198) by
- BN1NAM02FT063.mail.protection.outlook.com (10.13.2.169) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5164.19 via Frontend Transport; Thu, 14 Apr 2022 09:23:17 +0000
-Received: from xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) by
- xsj-pvapexch01.xlnx.xilinx.com (172.19.86.40) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Thu, 14 Apr 2022 02:23:04 -0700
-Received: from smtp.xilinx.com (172.19.127.96) by
- xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server id
- 15.1.2176.14 via Frontend Transport; Thu, 14 Apr 2022 02:23:04 -0700
-Envelope-to: linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- devicetree@vger.kernel.org,
- lorenzo.pieralisi@arm.com,
- bhelgaas@google.com,
- robh@kernel.org
-Received: from [10.140.9.2] (port=38782 helo=xhdbharatku40.xilinx.com)
-        by smtp.xilinx.com with esmtp (Exim 4.90)
-        (envelope-from <bharat.kumar.gogada@xilinx.com>)
-        id 1nevgu-0008Tv-6i; Thu, 14 Apr 2022 02:23:04 -0700
-From:   Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-CC:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <michals@xilinx.com>, <robh@kernel.org>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: [PATCH v1 2/3] PCI: xilinx-cpm: Remove version number in compatible string
-Date:   Thu, 14 Apr 2022 14:52:51 +0530
-Message-ID: <20220414092252.12174-3-bharat.kumar.gogada@xilinx.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220414092252.12174-1-bharat.kumar.gogada@xilinx.com>
-References: <20220414092252.12174-1-bharat.kumar.gogada@xilinx.com>
+        with ESMTP id S242700AbiDNLcP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 07:32:15 -0400
+Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [217.70.183.194])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46DD637A94;
+        Thu, 14 Apr 2022 04:29:45 -0700 (PDT)
+Received: (Authenticated sender: herve.codina@bootlin.com)
+        by mail.gandi.net (Postfix) with ESMTPSA id E669440008;
+        Thu, 14 Apr 2022 11:29:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1649935784;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=qRrX/8Jotzsy6iQLV5tj4FOuDifcieScWpPwj2D0dac=;
+        b=Ezoe77V7SQHGJDbVcnEt0HG8gxn+9iEz6lNCCthfy5D53f0EFtzsqwJd6xaEKLw9QePM/S
+        +/dkqi+0dtSzYL9yuYR0m/sUTqofMra1AxS+tSt5xu+yswTI47FnjzE2XkdZ6FMupgyWbO
+        5aHhklzsz6+jRFFnuWj4+H303C8WBiwiT70X6vwy+nBKZpNl1fNDP/Al97g0CHkfpw/9Du
+        fbupqg8hO7QjWBQOm3Z+Uvr+iN6oWiqeUwKSTy5sKv7hukSRRGOvXQIZ+3JxeJzzvtYCyw
+        nER4JqUUWhAdfgTbUfs1nwTMXyNLrf7JxbuORGjRKIlnDMqZPsyl7GmO+7d8qA==
+Date:   Thu, 14 Apr 2022 13:29:34 +0200
+From:   Herve Codina <herve.codina@bootlin.com>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Clement Leger <clement.leger@bootlin.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH v2 1/8] PCI: rcar-gen2: Add support for clocks
+Message-ID: <20220414132534.35467781@bootlin.com>
+In-Reply-To: <CAMuHMdW8q5AjDtTE83yVPfmgnQy02UgLSns33z06WMFBUULWEw@mail.gmail.com>
+References: <20220414074011.500533-1-herve.codina@bootlin.com>
+        <20220414074011.500533-2-herve.codina@bootlin.com>
+        <CAMuHMdW8q5AjDtTE83yVPfmgnQy02UgLSns33z06WMFBUULWEw@mail.gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.31; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0cde12ab-6011-491d-6ebc-08da1df868b2
-X-MS-TrafficTypeDiagnostic: MWHPR02MB3277:EE_
-X-Microsoft-Antispam-PRVS: <MWHPR02MB32770AABF7A0EAA67FCAD26BA5EF9@MWHPR02MB3277.namprd02.prod.outlook.com>
-X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: nCTUit5G46BbG8S+uS26Cljl8SLiEw1/M1QD0woC021vue36z5irXUku91SC83WjNboMJx6oBDICxXW6g1O0x4Vn6cn5+e7Em6dnWE0LC9uc3wLJGvwq0tcOyL5k8m14owZdF4NKM1HTtBD1LSOMRHPEuLMljrzb7NumNuoYsJq1AfkdO1iM3nJYvKNG/wWw+4dJDq9ZZOHvCyagKzQe0Cw9kuMUwZNC0scy95+UUkKnAkBZULj9HIidJGnXV/bP1w4G2hqO1pXDzaxeGLHmz8dNkxwVQUTDN34MrF/YApLZZTJzMRr5vq+4EZ8U5Hk1EO1f1KvPZY+O+ulRWVANhSjNp8XgOAoXgLFDdN+RXPypDJyCGS/FJr05omUcvB9aDamkup9+tVZw+Rx4t5zALQ0XkS4JTgJAyohMfF7Enp4PLPrIH7711kV0F+WhZI9bkkPdUoXlcQiTiEdbxAp3Tjmomnk2sPGHtzLfb7ygf9wKX5/jbIlNG2te2ASwwYKrkyS0qFoV+zjZNE7/n47RYjECmsOVJPuyTE7W0sPP63WNIxdMF6lkak7NOrkuglMJfdZEaMKl6uSeTG490Mk0B7iMZCEIq9RH3Rz/LP1aDm6IaFGW3DNIiqRfPXxgYlRSWBgsdfullV4tBX7+cDZSlknN2c3ZzuGyLk5HXwIIUReEClegoMFPZA5E0uDMm8M1eBQjMTMy2O5tt/R5ncmWnA==
-X-Forefront-Antispam-Report: CIP:149.199.62.198;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xsj-pvapexch01.xlnx.xilinx.com;PTR:unknown-62-198.xilinx.com;CAT:NONE;SFS:(13230001)(4636009)(36840700001)(46966006)(40470700004)(26005)(36860700001)(1076003)(186003)(5660300002)(356005)(82310400005)(7636003)(6666004)(7696005)(316002)(336012)(40460700003)(83380400001)(2616005)(426003)(9786002)(508600001)(110136005)(2906002)(8936002)(4744005)(47076005)(70586007)(8676002)(4326008)(70206006)(36756003)(103116003)(107886003)(54906003)(102446001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: xilinx.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Apr 2022 09:23:17.0559
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0cde12ab-6011-491d-6ebc-08da1df868b2
-X-MS-Exchange-CrossTenant-Id: 657af505-d5df-48d0-8300-c31994686c5c
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.62.198];Helo=[xsj-pvapexch01.xlnx.xilinx.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN1NAM02FT063.eop-nam02.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR02MB3277
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Remove unnecessary version number in compatible string.
+Hi Geert,
 
-Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
----
- drivers/pci/controller/pcie-xilinx-cpm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Thu, 14 Apr 2022 10:45:54 +0200
+Geert Uytterhoeven <geert@linux-m68k.org> wrote:
 
-diff --git a/drivers/pci/controller/pcie-xilinx-cpm.c b/drivers/pci/controller/pcie-xilinx-cpm.c
-index c7cd44ed4dfc..52bc74335584 100644
---- a/drivers/pci/controller/pcie-xilinx-cpm.c
-+++ b/drivers/pci/controller/pcie-xilinx-cpm.c
-@@ -592,7 +592,7 @@ static int xilinx_cpm_pcie_probe(struct platform_device *pdev)
- }
- 
- static const struct of_device_id xilinx_cpm_pcie_of_match[] = {
--	{ .compatible = "xlnx,versal-cpm-host-1.00", },
-+	{ .compatible = "xlnx,versal-cpm-host", },
- 	{}
- };
- 
--- 
-2.17.1
+> Hi Herv=C3=A9,
+>=20
+> Thanks for your patch!
+>=20
+> On Thu, Apr 14, 2022 at 9:40 AM Herve Codina <herve.codina@bootlin.com> w=
+rote:
+> > The PCI rcar-gen2 does not call any clk_prepare_enable(). =20
+>=20
+> Correct, this driver manages the clocks indirectly through Runtime PM.
+>=20
+> > This lead to an access failure when the driver tries to access
+> > the IP (at least on a RZ/N1D platform). =20
+>=20
+> I expect adding
+>=20
+>     power-domans =3D <&sysctrl>;
+>=20
+> to the pci_usb node makes this patch redundant.
 
+Seems not enough.
+I tried what you suggest :
+ - Added 'power-domains =3D <&systrl>;' to the pci_usb node
+ - Added missing '#power-domain-cells =3D <0>;' to sysctrl node
+ - Reverted my patch.
+
+The system crashed at boot:
+--- 8< ---
+...
+[    0.705309] loop: module loaded
+[    0.709597] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+[    0.716804] ehci-pci: EHCI PCI platform driver
+[    0.721716] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+[    0.728522] ohci-pci: OHCI PCI platform driver
+[    0.733581] usbcore: registered new interface driver usb-storage
+[    0.740458] ThumbEE CPU extension supported.
+[    0.745093] Registering SWP/SWPB emulation handler
+[    0.797518] rzn1-pinctrl 40067000.pinctrl: probed
+[    0.803311] pci-rcar-gen2 40030000.pci: host bridge /soc/pci@40030000 ra=
+nges:
+[    0.811255] pci-rcar-gen2 40030000.pci:      MEM 0x0040020000..0x004002f=
+fff -> 0x0040020000
+[    0.820373] pci-rcar-gen2 40030000.pci:   IB MEM 0x0080000000..0x00bffff=
+fff -> 0x0080000000
+[    0.829609] 8<--- cut here ---
+[    0.832958] Unhandled fault: external abort on non-linefetch (0x1008) at=
+ 0x90b5f848
+[    0.841259] [90b5f848] *pgd=3D82149811, *pte=3D40030653, *ppte=3D40030453
+[    0.848093] Internal error: : 1008 [#1] SMP ARM
+[    0.853024] Modules linked in:
+[    0.856398] CPU: 0 PID: 31 Comm: kworker/u4:1 Not tainted 5.18.0-rc2-000=
+09-g803ee9fd9fa5-dirty #5
+[    0.865998] Hardware name: Generic DT based system
+[    0.871176] Workqueue: events_unbound deferred_probe_work_func
+[    0.877539] PC is at rcar_pci_probe+0x15c/0x2f8
+[    0.882454] LR is at _raw_spin_unlock_irqrestore+0x24/0x2c
+[    0.888434] pc : [<803ea428>]    lr : [<804dc9b0>]    psr: 60000013
+[    0.895193] sp : 90aa5e40  ip : 8217c4e0  fp : 00000000
+[    0.900857] r10: 80e7bd30  r9 : 80000000  r8 : 40000000
+[    0.906532] r7 : 80000000  r6 : 8217c410  r5 : 821d3400  r4 : 90b5f000
+[    0.913580] r3 : 00000009  r2 : 5c120fb6  r1 : 60000013  r0 : 00000000
+[    0.920646] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment=
+ none
+[    0.928365] Control: 10c5387d  Table: 8000406a  DAC: 00000051
+...
+--- 8< ---
+
+I also added a trace printk in r9a06g032-clocks.c and
+r9a06g032_attach_dev() was never called.
+
+Did I miss to set something ?
+
+Regards,
+Herv=C3=A9
