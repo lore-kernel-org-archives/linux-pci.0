@@ -2,93 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E371C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 07:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C33CDC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 07:49:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229590AbiDNHnu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 03:43:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60722 "EHLO
+        id S231375AbiDNHv6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 03:51:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240643AbiDNHnh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 03:43:37 -0400
-Received: from relay5-d.mail.gandi.net (relay5-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::225])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DA3E58801;
-        Thu, 14 Apr 2022 00:40:55 -0700 (PDT)
-Received: (Authenticated sender: herve.codina@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPA id 4A0761C0002;
-        Thu, 14 Apr 2022 07:40:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1649922054;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=/HaP1IPsXOMTJDxi/2nGbwDNVZapKrfnOpUYaIlabXs=;
-        b=pjtI2EnteulEn6PvCuscIMvp9IYAnzULmnwWB8Vowxa/qBhOBdzVK9ESvlaPL591E5pt6E
-        CvTZtvvydWziOy1NJ+tglOi1WSPn6EAxPsDU+9Q4y50WiLGJ8TUXLNvrqq6G/WIiUmnJNQ
-        w9PuvMr3a0qxVc/dNrQLfPtx7blx1b/aJUWt2cTlEsm84s16UwCTrTWgjMMLwJLlUnf3Ya
-        qgGiM1SdpXjHut+h7uUT+vgCEV6hBOQEE6ihrtrQvq9R6gN1qlGR40BszSzZRE6MUSHAJw
-        8w+/98NSV3UP4SMB93joDnMzdQV4IBLbylvBbfTNgoOYLYtAsRutUjLzYqnoRg==
-From:   Herve Codina <herve.codina@bootlin.com>
-To:     Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
-Cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Clement Leger <clement.leger@bootlin.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH v2 8/8] ARM: dts: r9a06g032: Link the PCI USB devices to the USB PHY
-Date:   Thu, 14 Apr 2022 09:40:11 +0200
-Message-Id: <20220414074011.500533-9-herve.codina@bootlin.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220414074011.500533-1-herve.codina@bootlin.com>
-References: <20220414074011.500533-1-herve.codina@bootlin.com>
+        with ESMTP id S231676AbiDNHv5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 03:51:57 -0400
+X-Greylist: delayed 2305 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 14 Apr 2022 00:49:31 PDT
+Received: from imap3.hz.codethink.co.uk (imap3.hz.codethink.co.uk [176.9.8.87])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D0CA12602;
+        Thu, 14 Apr 2022 00:49:29 -0700 (PDT)
+Received: from cpc152649-stkp13-2-0-cust121.10-2.cable.virginm.net ([86.15.83.122] helo=[192.168.0.21])
+        by imap3.hz.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
+        id 1netd6-0005jh-I9; Thu, 14 Apr 2022 08:11:00 +0100
+Message-ID: <3acd20b2-5882-7cc0-8a7b-7b406b768c1c@codethink.co.uk>
+Date:   Thu, 14 Apr 2022 08:11:00 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [V3] PCI: fu740: Drop to 2.5GT/s to fix initial device probing on
+ some boards
+Content-Language: en-GB
+To:     "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc:     Alexandre Ghiti <alex@ghiti.fr>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Greentime Hu <greentime.hu@sifive.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        David Abdurachmanov <david.abdurachmanov@sifive.com>,
+        Neill Whillans <neill.whillans@codethink.co.uk>
+References: <20220318152430.526320-1-ben.dooks@codethink.co.uk>
+ <2442936e-a53e-59bf-488f-95eac26d1252@ghiti.fr>
+ <85e864fd-762e-0780-f829-bfbb178ab24e@ghiti.fr>
+ <bded4b1e-3404-6bcd-3289-dc8d5b4d713a@codethink.co.uk>
+ <alpine.DEB.2.21.2204140048460.9383@angie.orcam.me.uk>
+From:   Ben Dooks <ben.dooks@codethink.co.uk>
+Organization: Codethink Limited.
+In-Reply-To: <alpine.DEB.2.21.2204140048460.9383@angie.orcam.me.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Describe the PCI USB devices that are behind the PCI bridge, adding
-necessary links to the USB PHY device.
+On 14/04/2022 01:10, Maciej W. Rozycki wrote:
+> On Wed, 23 Mar 2022, Ben Dooks wrote:
+> 
+>>> FWIW, I have tested this and it solved my issue with nvme not being probed,
+>>> so:
+>>>
+>>> Tested-by: Alexandre Ghiti <alexandre.ghiti@canonical.com>
+>>
+>> Ok, great. Our test rig seems to be still working with this.
+> 
+>   I ran simple verification of your change by interrupting U-Boot after a
+> power-up and issuing:
+> 
+> => setenv boot_pci_enum true
+> 
+> at the command prompt before booting from the uSD card and curiously
+> enough the root port comes up with the Link Capabilities Register
+> reporting the lack of Link Bandwidth Notification Capability in this
+> scenario, while it reports its presence if booted undisturbed, i.e.:
+> 
+> 		LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM L0s L1, Exit Latency L0s <4us, L1 <4us
+> 			ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp+
+> 
+> vs:
+> 
+> 		LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM L0s L1, Exit Latency L0s <4us, L1 <4us
+> 			ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
+> 
+> It is fully reproducible.
+> 
+>   Any idea what might be causing it?  I can't see it being explicitly set
+> or cleared anywhere, be it in U-Boot or Linux, so it must be done by the
+> device itself depending on something.  And the lack of this capability
+> seems to me like non-compliance for a multiple-lane, multiple-speed
+> device.
 
-Signed-off-by: Herve Codina <herve.codina@bootlin.com>
----
- arch/arm/boot/dts/r9a06g032.dtsi | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+I'll see if we can reproduce this
 
-diff --git a/arch/arm/boot/dts/r9a06g032.dtsi b/arch/arm/boot/dts/r9a06g032.dtsi
-index 2f7236e3eff0..f0007b0447ca 100644
---- a/arch/arm/boot/dts/r9a06g032.dtsi
-+++ b/arch/arm/boot/dts/r9a06g032.dtsi
-@@ -244,6 +244,18 @@ pci_usb: pci@40030000 {
- 			interrupt-map = <0x0000 0 0 1 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
- 					 0x0800 0 0 1 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
- 					 0x1000 0 0 2 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			usb@1,0 {
-+				reg = <0x800 0 0 0 0>;
-+				phys = <&usbphy 0>;
-+				phy-names = "usb";
-+			};
-+
-+			usb@2,0 {
-+				reg = <0x1000 0 0 0 0>;
-+				phys = <&usbphy 0>;
-+				phy-names = "usb";
-+			};
- 		};
- 	};
- 
+
 -- 
-2.35.1
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
 
+https://www.codethink.co.uk/privacy.html
