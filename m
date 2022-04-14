@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9133FC35273
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 20:32:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E91D1C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 20:33:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346438AbiDNUfV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 16:35:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44236 "EHLO
+        id S1346444AbiDNUfW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 16:35:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346408AbiDNUfT (ORCPT
+        with ESMTP id S1346393AbiDNUfT (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 16:35:19 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E51AB6D0B;
-        Thu, 14 Apr 2022 13:32:53 -0700 (PDT)
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E35AEB18AF;
+        Thu, 14 Apr 2022 13:32:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649968373; x=1681504373;
+  t=1649968371; x=1681504371;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=3gyDazsOshz3oeahlbhDyK1bPrO6GOsAq/G6LeDMe1I=;
-  b=iJGXarbHBpiEHpqNLg7NoYgFfdAf3KbDEA/aYPRfeKSCwonfvMPqt4b7
-   8w1ks/j+mpqyo6k4miziuq8d3chc8yE9EDnPgo+ao+7TdMahpLk0Z0YxC
-   l63jEq0ADgNxW3VGCZqi+RWFewq/PPXytoaKABQ8oeqh+V/wm3ZMW+t5x
-   KaLYjQz4emiODgYk/SV7Dk0AchIVTHYvdecMs9YEkcXXCAlRRusMEqRS6
-   KOD219fxf5BRXG1zsDo/Ycmm4KB/VBUV4qHUB/82MLNvXjbf6KGnoIaq+
-   u0xUKi+AfsomVp5eTli6JaTXmElTRYgLoDAFvBb72cP7wElxXjiQHwZZ3
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10317"; a="323468891"
+  bh=2Tybu43Q/AOkxQR4mWLkzoAsXHB7tKEYezKagE/IOBY=;
+  b=eQFNm0WHR7tB5jT1msTy/npSsTUAoXCKWZiW7kxZdE1AsGtS1Ze/yODS
+   W+bBaoYdwDTJi/p6vKRXlCStXT+CaIJLIQqRJuPD2TpJxYRN2Ap2rtAfM
+   OMXfV2JBZMyk8hM1dRhUShE9srbb0Xb0hN0gQcWS7PR5OspZNcJxeoY6o
+   CtLN+7pyB2RLllx8UuZQaU2Nu0XkBaIFe4qe524/sG71vWV76WjMyevGQ
+   8AY0zVBuRXcEIIhNkeIc8uY788zl4SuNuJWbg+KlOXnCAKutwOPHOEyvi
+   tSfw/X5wBP/LS0RrMX2+kBIbL17ZBWZE8NZOZVmXpufbyJbsG50D8QaIP
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10317"; a="262779242"
 X-IronPort-AV: E=Sophos;i="5.90,260,1643702400"; 
-   d="scan'208";a="323468891"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:43 -0700
+   d="scan'208";a="262779242"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:51 -0700
 X-IronPort-AV: E=Sophos;i="5.90,260,1643702400"; 
-   d="scan'208";a="656144408"
+   d="scan'208";a="661507150"
 Received: from aimeehax-mobl1.amr.corp.intel.com (HELO localhost) ([10.212.113.132])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:43 -0700
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:51 -0700
 From:   ira.weiny@intel.com
 To:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Alison Schofield <alison.schofield@intel.com>,
+Cc:     Ira Weiny <ira.weiny@intel.com>,
+        Alison Schofield <alison.schofield@intel.com>,
         Vishal Verma <vishal.l.verma@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
         Ben Widawsky <ben.widawsky@intel.com>,
         linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH V8 01/10] PCI: Add vendor ID for the PCI SIG
-Date:   Thu, 14 Apr 2022 13:32:28 -0700
-Message-Id: <20220414203237.2198665-2-ira.weiny@intel.com>
+Subject: [PATCH V8 10/10] cxl/port: Parse out DSMAS data from CDAT table
+Date:   Thu, 14 Apr 2022 13:32:37 -0700
+Message-Id: <20220414203237.2198665-11-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220414203237.2198665-1-ira.weiny@intel.com>
 References: <20220414203237.2198665-1-ira.weiny@intel.com>
@@ -58,31 +58,185 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+From: Ira Weiny <ira.weiny@intel.com>
 
-This ID is used in DOE headers to identify protocols that are defined
-within the PCI Express Base Specification, PCIe r6.0, sec 6.30.1.1 table
-6-32.
+CXL Ports with memory devices attached need the information from the
+Device Scoped Memory Affinity Structure (DSMAS).  This information is
+contained within the CDAT table buffer which is previously read and
+cached in the device state.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+If CDAT data is available, parse and cache DSMAS data from the table.
+Store this data in unmarshaled struct dsmas data structures for ease of
+use.
+
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+
 ---
- include/linux/pci_ids.h | 1 +
- 1 file changed, 1 insertion(+)
+Changes from V7
+	Rebased on cxl-pending
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 0178823ce8c2..8af3b86206b1 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -151,6 +151,7 @@
- #define PCI_CLASS_OTHERS		0xff
+Changes from V6
+	Move to port.c
+	It is not an error if no DSMAS data is found
+
+Changes from V5
+	Fix up sparse warnings
+	Split out cdat_hdr_valid()
+	Update cdat_hdr_valid()
+		Remove revision and cs field parsing
+			There is no point in these
+		Add seq check and debug print.
+	From Jonathan
+		Add spaces around '+' and '/'
+		use devm_krealloc() for dmas_ary
+---
+ drivers/cxl/cdat.h | 17 ++++++++++++
+ drivers/cxl/cxl.h  |  6 +++++
+ drivers/cxl/port.c | 65 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 88 insertions(+)
+
+diff --git a/drivers/cxl/cdat.h b/drivers/cxl/cdat.h
+index a7725d26f2d2..66706b238bc9 100644
+--- a/drivers/cxl/cdat.h
++++ b/drivers/cxl/cdat.h
+@@ -83,6 +83,23 @@
+ #define CDAT_SSLBIS_ENTRY_PORT_Y(entry, i) (((entry)[4 + (i) * 2] & 0xffff0000) >> 16)
+ #define CDAT_SSLBIS_ENTRY_LAT_OR_BW(entry, i) ((entry)[4 + (i) * 2 + 1] & 0x0000ffff)
  
- /* Vendors and devices.  Sort key: vendor first, device next. */
-+#define PCI_VENDOR_ID_PCI_SIG		0x0001
++/**
++ * struct cxl_dsmas - host unmarshaled version of DSMAS data
++ *
++ * As defined in the Coherent Device Attribute Table (CDAT) specification this
++ * represents a single DSMAS entry in that table.
++ *
++ * @dpa_base: The lowest Device Physical Address associated with this DSMAD
++ * @length: Length in bytes of this DSMAD
++ * @non_volatile: If set, the memory region represents Non-Volatile memory
++ */
++struct cxl_dsmas {
++	u64 dpa_base;
++	u64 length;
++	/* Flags */
++	u8 non_volatile:1;
++};
++
+ /**
+  * struct cxl_cdat - CXL CDAT data
+  *
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index 50817fd2c912..80fd39769a65 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -9,6 +9,8 @@
+ #include <linux/bitops.h>
+ #include <linux/io.h>
  
- #define PCI_VENDOR_ID_LOONGSON		0x0014
++#include "cdat.h"
++
+ /**
+  * DOC: cxl objects
+  *
+@@ -269,6 +271,8 @@ struct cxl_nvdimm {
+  * @component_reg_phys: component register capability base address (optional)
+  * @dead: last ep has been removed, force port re-creation
+  * @depth: How deep this port is relative to the root. depth 0 is the root.
++ * @dsmas_ary: Array of DSMAS entries as parsed from the CDAT table
++ * @nr_dsmas: Number of entries in dsmas_ary
+  */
+ struct cxl_port {
+ 	struct device dev;
+@@ -280,6 +284,8 @@ struct cxl_port {
+ 	resource_size_t component_reg_phys;
+ 	bool dead;
+ 	unsigned int depth;
++	struct cxl_dsmas *dsmas_ary;
++	int nr_dsmas;
+ };
  
+ /**
+diff --git a/drivers/cxl/port.c b/drivers/cxl/port.c
+index d420da5fc39c..2288432a27cd 100644
+--- a/drivers/cxl/port.c
++++ b/drivers/cxl/port.c
+@@ -30,6 +30,70 @@ static void schedule_detach(void *cxlmd)
+ 	schedule_cxl_memdev_detach(cxlmd);
+ }
+ 
++static void parse_dsmas(struct cxl_port *port, struct cxl_dev_state *cxlds)
++{
++	struct device *dev = &port->dev;
++	struct cxl_dsmas *dsmas_ary = NULL;
++	u32 *data = cxlds->cdat.table;
++	int bytes_left = cxlds->cdat.length;
++	int nr_dsmas = 0;
++
++	if (!data) {
++		dev_info(dev, "No CDAT data available for DSMAS\n");
++		return;
++	}
++
++	/* Skip header */
++	data += CDAT_HEADER_LENGTH_DW;
++	bytes_left -= CDAT_HEADER_LENGTH_BYTES;
++
++	while (bytes_left > 0) {
++		u32 *cur_rec = data;
++		u8 type = FIELD_GET(CDAT_STRUCTURE_DW0_TYPE, cur_rec[0]);
++		u16 length = FIELD_GET(CDAT_STRUCTURE_DW0_LENGTH, cur_rec[0]);
++
++		if (type == CDAT_STRUCTURE_DW0_TYPE_DSMAS) {
++			struct cxl_dsmas *new_ary;
++			u8 flags;
++
++			new_ary = devm_krealloc(dev, dsmas_ary,
++					   sizeof(*dsmas_ary) * (nr_dsmas + 1),
++					   GFP_KERNEL);
++			if (!new_ary) {
++				dev_err(dev,
++					"Failed to allocate memory for DSMAS data (nr_dsmas %d)\n",
++					nr_dsmas);
++				return;
++			}
++			dsmas_ary = new_ary;
++
++			flags = FIELD_GET(CDAT_DSMAS_DW1_FLAGS, cur_rec[1]);
++
++			dsmas_ary[nr_dsmas].dpa_base = CDAT_DSMAS_DPA_OFFSET(cur_rec);
++			dsmas_ary[nr_dsmas].length = CDAT_DSMAS_DPA_LEN(cur_rec);
++			dsmas_ary[nr_dsmas].non_volatile = CDAT_DSMAS_NON_VOLATILE(flags);
++
++			dev_dbg(dev, "DSMAS %d: %llx:%llx %s\n",
++				nr_dsmas,
++				dsmas_ary[nr_dsmas].dpa_base,
++				dsmas_ary[nr_dsmas].dpa_base +
++					dsmas_ary[nr_dsmas].length,
++				(dsmas_ary[nr_dsmas].non_volatile ?
++					"Persistent" : "Volatile")
++				);
++
++			nr_dsmas++;
++		}
++
++		data += (length / sizeof(u32));
++		bytes_left -= length;
++	}
++
++	dev_dbg(dev, "Found %d DSMAS entries\n", nr_dsmas);
++	port->dsmas_ary = dsmas_ary;
++	port->nr_dsmas = nr_dsmas;
++}
++
+ static int cxl_port_probe(struct device *dev)
+ {
+ 	struct cxl_port *port = to_cxl_port(dev);
+@@ -43,6 +107,7 @@ static int cxl_port_probe(struct device *dev)
+ 		rc = devm_add_action_or_reset(dev, schedule_detach, cxlmd);
+ 		if (rc)
+ 			return rc;
++		parse_dsmas(port, cxlmd->cxlds);
+ 	} else {
+ 		rc = devm_cxl_port_enumerate_dports(port);
+ 		if (rc < 0)
 -- 
 2.35.1
 
