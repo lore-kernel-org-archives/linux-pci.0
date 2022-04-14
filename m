@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B53FC433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 18:23:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A8EC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 18:23:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344511AbiDNSZg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 14:25:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59046 "EHLO
+        id S1344537AbiDNSZi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 14:25:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344166AbiDNSZ1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 14:25:27 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF509E541F;
-        Thu, 14 Apr 2022 11:23:01 -0700 (PDT)
+        with ESMTP id S232644AbiDNSZ3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 14:25:29 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F5EFEA742;
+        Thu, 14 Apr 2022 11:23:04 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 88D0CB82916;
-        Thu, 14 Apr 2022 18:23:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07A3DC385A5;
-        Thu, 14 Apr 2022 18:22:59 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B141F617BA;
+        Thu, 14 Apr 2022 18:23:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8A27C385A8;
+        Thu, 14 Apr 2022 18:23:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649960579;
-        bh=i6fF8C2eeYGD1JMuZx5bmzgFvF7k9OE5JPcxR8RGGdY=;
+        s=k20201202; t=1649960583;
+        bh=Yb83EN+sDLgzqvgweWLW49J1Fc/NtV05Qrk0Xa6Lqoc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XSnVsuM+uLPoTf/buzTKkiGpGVM+oIcmWXrUymeSuMYuBjrW3FXCRWlJIOHDfTn1B
-         MyUkkHS79P7vqC3VYB8JQYdnoY0sfSKbLNOoII3jveGgypmXpyX8bnHtfVz9TflHtf
-         K4uQoJIwNMg9lY2RHsOKGEumsKxlPTr4YCWCk5G46yGksJsfEd6ry8G11hSpZk8dZj
-         dbMklwo+e4izMZakiMEdPvnURGFvBace2YPzYvprUWyFTDGsQ1su2z/82llZWJDk+I
-         qnCArmnLq/UUwScSfF0j9Voi3RYcyJIuA4gDSxETwjDGyzgTKwpVQGucSQlueRg4zi
-         rNmyHTYYX2nEA==
+        b=ADx2a5KuaQKlxYnF/wamQ+z5LP9F2h0tZILHySNKoSEs8rdeYyzXrGpq76jAFD0MD
+         +TlXK2OiZLp2Ln5h/Cl5Gp316v3ANnT6xFmA4R/uW/k+WoYKySJru26BDwY3yPUZ5m
+         fcd9of7tr1VQTZcJPSY9HDNui+86VQGDE4GjN4wWt3ScTSTMGVVVZ+PgliI35BwzTq
+         hy7LAsn4fqIS+Dl9ONKwrj3Q69JrJrVWBK1HSTRk3uV40bjh88hTnAacpld4VxpOY6
+         V8Kb7At6BhjDxF4vf7xyFzRb8HwUWCQfrZcFNQfqTa3eyRAFBqpqiUq441R88gHpDq
+         kEq7sqtZlhiJw==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Hans de Goede <hdegoede@redhat.com>,
         "Rafael J . Wysocki" <rjw@rjwysocki.net>,
@@ -47,9 +47,9 @@ Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
         x86@kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Subject: [PATCH v2 1/3] x86/PCI: Eliminate remove_e820_regions() common subexpressions
-Date:   Thu, 14 Apr 2022 13:22:50 -0500
-Message-Id: <20220414182252.758742-2-helgaas@kernel.org>
+Subject: [PATCH v2 3/3] x86/PCI: Clip only host bridge windows for E820 regions
+Date:   Thu, 14 Apr 2022 13:22:52 -0500
+Message-Id: <20220414182252.758742-4-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220414182252.758742-1-helgaas@kernel.org>
 References: <20220414182252.758742-1-helgaas@kernel.org>
@@ -61,39 +61,138 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Add local variables to reduce repetition later.  No functional change
-intended.
+ACPI firmware advertises PCI host bridge resources via PNP0A03 _CRS
+methods.  Some BIOSes include non-window address space in _CRS, and if we
+allocate that non-window space for PCI devices, they don't work.
 
-Link: https://lore.kernel.org/r/20220304035110.988712-2-helgaas@kernel.org
+4dc2287c1805 ("x86: avoid E820 regions when allocating address space")
+works around this issue by clipping out any regions mentioned in the E820
+table in the allocate_resource() path, but the implementation has a couple
+issues:
+
+  - The clipping is done for *all* allocations, not just those for PCI
+    address space, and
+
+  - The clipping is done at each allocation instead of being done once when
+    setting up the host bridge windows.
+
+Rework the implementation so we only clip PCI host bridge windows, and we
+do it once when setting them up.
+
+Example output changes:
+
+    BIOS-e820: [mem 0x00000000b0000000-0x00000000c00fffff] reserved
+  + acpi PNP0A08:00: clipped [mem 0xc0000000-0xfebfffff window] to [mem 0xc0100000-0xfebfffff window] for e820 entry [mem 0xb0000000-0xc00fffff]
+  - pci_bus 0000:00: root bus resource [mem 0xc0000000-0xfebfffff window]
+  + pci_bus 0000:00: root bus resource [mem 0xc0100000-0xfebfffff window]
+
+Link: https://lore.kernel.org/r/20220304035110.988712-3-helgaas@kernel.org
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/x86/kernel/resource.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ arch/x86/include/asm/e820/api.h |  5 +++++
+ arch/x86/kernel/resource.c      | 14 +++++++-------
+ arch/x86/pci/acpi.c             |  5 +++++
+ 3 files changed, 17 insertions(+), 7 deletions(-)
 
+diff --git a/arch/x86/include/asm/e820/api.h b/arch/x86/include/asm/e820/api.h
+index e8f58ddd06d9..5a39ed59b6db 100644
+--- a/arch/x86/include/asm/e820/api.h
++++ b/arch/x86/include/asm/e820/api.h
+@@ -4,6 +4,9 @@
+ 
+ #include <asm/e820/types.h>
+ 
++struct device;
++struct resource;
++
+ extern struct e820_table *e820_table;
+ extern struct e820_table *e820_table_kexec;
+ extern struct e820_table *e820_table_firmware;
+@@ -43,6 +46,8 @@ extern void e820__register_nosave_regions(unsigned long limit_pfn);
+ 
+ extern int  e820__get_entry_type(u64 start, u64 end);
+ 
++extern void remove_e820_regions(struct device *dev, struct resource *avail);
++
+ /*
+  * Returns true iff the specified range [start,end) is completely contained inside
+  * the ISA region.
 diff --git a/arch/x86/kernel/resource.c b/arch/x86/kernel/resource.c
-index 9b9fb7882c20..8ffe68437744 100644
+index 30d524adb012..db2b350a37b7 100644
 --- a/arch/x86/kernel/resource.c
 +++ b/arch/x86/kernel/resource.c
-@@ -27,12 +27,14 @@ static void remove_e820_regions(struct resource *avail)
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0
++#include <linux/dev_printk.h>
+ #include <linux/ioport.h>
+-#include <linux/printk.h>
+ #include <asm/e820/api.h>
+ 
+ static void resource_clip(struct resource *res, resource_size_t start,
+@@ -24,13 +24,16 @@ static void resource_clip(struct resource *res, resource_size_t start,
+ 		res->start = end + 1;
+ }
+ 
+-static void remove_e820_regions(struct resource *avail)
++void remove_e820_regions(struct device *dev, struct resource *avail)
  {
  	int i;
  	struct e820_entry *entry;
-+	u64 e820_start, e820_end;
+ 	u64 e820_start, e820_end;
+ 	struct resource orig = *avail;
  
++	if (!(avail->flags & IORESOURCE_MEM))
++		return;
++
  	for (i = 0; i < e820_table->nr_entries; i++) {
  		entry = &e820_table->entries[i];
-+		e820_start = entry->addr;
-+		e820_end = entry->addr + entry->size - 1;
+ 		e820_start = entry->addr;
+@@ -38,7 +41,7 @@ static void remove_e820_regions(struct resource *avail)
  
--		resource_clip(avail, entry->addr,
--			      entry->addr + entry->size - 1);
-+		resource_clip(avail, e820_start, e820_end);
- 	}
+ 		resource_clip(avail, e820_start, e820_end);
+ 		if (orig.start != avail->start || orig.end != avail->end) {
+-			pr_info("clipped %pR to %pR for e820 entry [mem %#010Lx-%#010Lx]\n",
++			dev_info(dev, "clipped %pR to %pR for e820 entry [mem %#010Lx-%#010Lx]\n",
+ 				 &orig, avail, e820_start, e820_end);
+ 			orig = *avail;
+ 		}
+@@ -52,9 +55,6 @@ void arch_remove_reservations(struct resource *avail)
+ 	 * the low 1MB unconditionally, as this area is needed for some ISA
+ 	 * cards requiring a memory range, e.g. the i82365 PCMCIA controller.
+ 	 */
+-	if (avail->flags & IORESOURCE_MEM) {
++	if (avail->flags & IORESOURCE_MEM)
+ 		resource_clip(avail, BIOS_ROM_BASE, BIOS_ROM_END);
+-
+-		remove_e820_regions(avail);
+-	}
  }
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 052f1d78a562..562c81a51ea0 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -8,6 +8,7 @@
+ #include <linux/pci-acpi.h>
+ #include <asm/numa.h>
+ #include <asm/pci_x86.h>
++#include <asm/e820/api.h>
  
+ struct pci_root_info {
+ 	struct acpi_pci_root_info common;
+@@ -299,6 +300,10 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+ 	int status;
+ 
+ 	status = acpi_pci_probe_root_resources(ci);
++
++	resource_list_for_each_entry(entry, &ci->resources)
++		remove_e820_regions(&device->dev, entry->res);
++
+ 	if (pci_use_crs) {
+ 		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
+ 			if (resource_is_pcicfg_ioport(entry->res))
 -- 
 2.25.1
 
