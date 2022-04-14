@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EBCAC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 13:24:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2F15C433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 13:24:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244380AbiDNN0q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 09:26:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49872 "EHLO
+        id S244351AbiDNN0y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 09:26:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244346AbiDNN0a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 09:26:30 -0400
+        with ESMTP id S244400AbiDNN0b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 09:26:31 -0400
 Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D5999E9E1;
-        Thu, 14 Apr 2022 06:19:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 627039F38A;
+        Thu, 14 Apr 2022 06:19:58 -0700 (PDT)
 Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
  by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.0.0)
- id 6ff0503fedc9cd83; Thu, 14 Apr 2022 15:19:55 +0200
+ id ec8940abd779740b; Thu, 14 Apr 2022 15:19:56 +0200
 Received: from kreacher.localnet (unknown [213.134.181.101])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 3DC4666BE86;
-        Thu, 14 Apr 2022 15:19:54 +0200 (CEST)
+        by v370.home.net.pl (Postfix) with ESMTPSA id CC5B866BE86;
+        Thu, 14 Apr 2022 15:19:55 +0200 (CEST)
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Linux PCI <linux-pci@vger.kernel.org>
 Cc:     Linux PM <linux-pm@vger.kernel.org>,
         LKML <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <helgaas@kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v3 6/9] PCI/PM: Clean up pci_set_low_power_state()
-Date:   Thu, 14 Apr 2022 15:15:31 +0200
-Message-ID: <1749771.VLH7GnMWUR@kreacher>
+Subject: [PATCH v3 5/9] PCI/PM: Move pci_set_low_power_state() next to its caller
+Date:   Thu, 14 Apr 2022 15:14:10 +0200
+Message-ID: <3124866.5fSG56mABF@kreacher>
 In-Reply-To: <5838942.lOV4Wx5bFT@kreacher>
 References: <4419002.LvFx2qVVIh@kreacher> <11975904.O9o76ZdvQC@kreacher> <5838942.lOV4Wx5bFT@kreacher>
 MIME-Version: 1.0
@@ -49,21 +49,10 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Make the following assorted non-essential changes in
-pci_set_low_power_state():
+Because pci_set_power_state() is the only caller of
+pci_set_low_power_state(), move the latter next to the former.
 
- 1. Drop two redundant checks from it (the caller takes care of these
-    conditions).
-
- 2. Modify error messages printed by it to make them more consistent
-    with the messages printed by pci_power_up() and
-    pci_set_full_power_state().
-
- 3. Change the log level of one of the messages to "debug", because
-    it only indicates a programming mistake.
-
- 4. Make it return -ENODEV (instead of -EIO) when the device is not
-    accessible.
+No functional impact.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
@@ -73,52 +62,187 @@ v1 -> v3:
    * Added R-by from Mika.
 
 ---
- drivers/pci/pci.c |   13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+ drivers/pci/pci.c |  160 +++++++++++++++++++++++++++---------------------------
+ 1 file changed, 80 insertions(+), 80 deletions(-)
 
 Index: linux-pm/drivers/pci/pci.c
 ===================================================================
 --- linux-pm.orig/drivers/pci/pci.c
 +++ linux-pm/drivers/pci/pci.c
-@@ -1345,16 +1345,9 @@ static int pci_set_low_power_state(struc
- {
- 	u16 pmcsr;
+@@ -1068,86 +1068,6 @@ static inline bool platform_pci_bridge_d
+ }
  
+ /**
+- * pci_set_low_power_state - Program the given device into a low-power state
+- * @dev: PCI device to handle.
+- * @state: PCI power state (D1, D2, D3hot) to put the device into.
+- *
+- * RETURN VALUE:
+- * -EINVAL if the requested state is invalid.
+- * -EIO if device does not support PCI PM or its PM capabilities register has a
+- * wrong version, or device doesn't support the requested state.
+- * 0 if device already is in the requested state.
+- * 0 if device's power state has been successfully changed.
+- */
+-static int pci_set_low_power_state(struct pci_dev *dev, pci_power_t state)
+-{
+-	u16 pmcsr;
+-
 -	/* Check if we're already there */
 -	if (dev->current_state == state)
 -		return 0;
 -
- 	if (!dev->pm_cap)
- 		return -EIO;
- 
+-	if (!dev->pm_cap)
+-		return -EIO;
+-
 -	if (state < PCI_D1 || state > PCI_D3hot)
 -		return -EINVAL;
 -
- 	/*
- 	 * Validate transition: We can enter D0 from any state, but if
- 	 * we're already in a low-power state, we can only go deeper.  E.g.,
-@@ -1362,7 +1355,7 @@ static int pci_set_low_power_state(struc
- 	 * we'd have to go from D3 to D0, then to D1.
- 	 */
- 	if (dev->current_state <= PCI_D3cold && dev->current_state > state) {
+-	/*
+-	 * Validate transition: We can enter D0 from any state, but if
+-	 * we're already in a low-power state, we can only go deeper.  E.g.,
+-	 * we can go from D1 to D3, but we can't go directly from D3 to D1;
+-	 * we'd have to go from D3 to D0, then to D1.
+-	 */
+-	if (dev->current_state <= PCI_D3cold && dev->current_state > state) {
 -		pci_err(dev, "invalid power transition (from %s to %s)\n",
-+		pci_dbg(dev, "Invalid power transition (from %s to %s)\n",
- 			pci_power_name(dev->current_state),
- 			pci_power_name(state));
- 		return -EINVAL;
-@@ -1375,10 +1368,10 @@ static int pci_set_low_power_state(struc
- 
- 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
- 	if (PCI_POSSIBLE_ERROR(pmcsr)) {
--		pci_err(dev, "can't change power state from %s to %s (config space inaccessible)\n",
-+		pci_err(dev, "Unable to change power state from %s to %s, device inaccessible\n",
- 			pci_power_name(dev->current_state),
- 			pci_power_name(state));
+-			pci_power_name(dev->current_state),
+-			pci_power_name(state));
+-		return -EINVAL;
+-	}
+-
+-	/* Check if this device supports the desired state */
+-	if ((state == PCI_D1 && !dev->d1_support)
+-	   || (state == PCI_D2 && !dev->d2_support))
 -		return -EIO;
-+		return -ENODEV;
- 	}
+-
+-	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+-	if (PCI_POSSIBLE_ERROR(pmcsr)) {
+-		pci_err(dev, "can't change power state from %s to %s (config space inaccessible)\n",
+-			pci_power_name(dev->current_state),
+-			pci_power_name(state));
+-		return -EIO;
+-	}
+-
+-	pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+-	pmcsr |= state;
+-
+-	/* Enter specified state */
+-	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
+-
+-	/*
+-	 * Mandatory power management transition delays; see PCI PM 1.1
+-	 * 5.6.1 table 18
+-	 */
+-	if (state == PCI_D3hot)
+-		pci_dev_d3_sleep(dev);
+-	else if (state == PCI_D2)
+-		udelay(PCI_PM_D2_DELAY);
+-
+-	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+-	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+-	if (dev->current_state != state)
+-		pci_info_ratelimited(dev, "refused to change power state from %s to %s\n",
+-			 pci_power_name(dev->current_state),
+-			 pci_power_name(state));
+-
+-	if (dev->bus->self)
+-		pcie_aspm_pm_state_change(dev->bus->self);
+-
+-	return 0;
+-}
+-
+-/**
+  * pci_update_current_state - Read power state of given device and cache it
+  * @dev: PCI device to handle.
+  * @state: State to cache in case the device doesn't have the PM capability
+@@ -1405,6 +1325,86 @@ static int pci_set_full_power_state(stru
  
- 	pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+ 	if (dev->bus->self)
+ 		pcie_aspm_pm_state_change(dev->bus->self);
++
++	return 0;
++}
++
++/**
++ * pci_set_low_power_state - Program the given device into a low-power state
++ * @dev: PCI device to handle.
++ * @state: PCI power state (D1, D2, D3hot) to put the device into.
++ *
++ * RETURN VALUE:
++ * -EINVAL if the requested state is invalid.
++ * -EIO if device does not support PCI PM or its PM capabilities register has a
++ * wrong version, or device doesn't support the requested state.
++ * 0 if device already is in the requested state.
++ * 0 if device's power state has been successfully changed.
++ */
++static int pci_set_low_power_state(struct pci_dev *dev, pci_power_t state)
++{
++	u16 pmcsr;
++
++	/* Check if we're already there */
++	if (dev->current_state == state)
++		return 0;
++
++	if (!dev->pm_cap)
++		return -EIO;
++
++	if (state < PCI_D1 || state > PCI_D3hot)
++		return -EINVAL;
++
++	/*
++	 * Validate transition: We can enter D0 from any state, but if
++	 * we're already in a low-power state, we can only go deeper.  E.g.,
++	 * we can go from D1 to D3, but we can't go directly from D3 to D1;
++	 * we'd have to go from D3 to D0, then to D1.
++	 */
++	if (dev->current_state <= PCI_D3cold && dev->current_state > state) {
++		pci_err(dev, "invalid power transition (from %s to %s)\n",
++			pci_power_name(dev->current_state),
++			pci_power_name(state));
++		return -EINVAL;
++	}
++
++	/* Check if this device supports the desired state */
++	if ((state == PCI_D1 && !dev->d1_support)
++	   || (state == PCI_D2 && !dev->d2_support))
++		return -EIO;
++
++	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
++	if (PCI_POSSIBLE_ERROR(pmcsr)) {
++		pci_err(dev, "can't change power state from %s to %s (config space inaccessible)\n",
++			pci_power_name(dev->current_state),
++			pci_power_name(state));
++		return -EIO;
++	}
++
++	pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
++	pmcsr |= state;
++
++	/* Enter specified state */
++	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
++
++	/*
++	 * Mandatory power management transition delays; see PCI PM 1.1
++	 * 5.6.1 table 18
++	 */
++	if (state == PCI_D3hot)
++		pci_dev_d3_sleep(dev);
++	else if (state == PCI_D2)
++		udelay(PCI_PM_D2_DELAY);
++
++	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
++	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
++	if (dev->current_state != state)
++		pci_info_ratelimited(dev, "refused to change power state from %s to %s\n",
++			 pci_power_name(dev->current_state),
++			 pci_power_name(state));
++
++	if (dev->bus->self)
++		pcie_aspm_pm_state_change(dev->bus->self);
+ 
+ 	return 0;
+ }
 
 
 
