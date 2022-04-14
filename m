@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B88C4321E
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 20:32:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00E9CC43219
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 20:32:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346363AbiDNUfU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 16:35:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44102 "EHLO
+        id S1346422AbiDNUfT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 16:35:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346367AbiDNUfO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 16:35:14 -0400
+        with ESMTP id S1346383AbiDNUfS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 16:35:18 -0400
 Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A98AAC9D;
-        Thu, 14 Apr 2022 13:32:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82F6DAFAD5;
+        Thu, 14 Apr 2022 13:32:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649968367; x=1681504367;
+  t=1649968369; x=1681504369;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=bYJtVExh9ya6dkOfv/s8l5rDL/6UedPrhO6YnabSYfg=;
-  b=KEwmohJYM+7+SuVfy5PtYWJd5NcscYBo2pSNLgUiLGm0qT4R+QHwgeGb
-   Fmo1xBv6bR0RMDEb8M02bOfvEzpQ5c30v/DlAzXtbp1ekTn4knvrbKQ6N
-   zSp/48JPDmZV6+JNMFl3jdDwwJO7EPrFVtwcom1AY+0MIMTIw7JePkvW0
-   g5mBLsr7aRePbKuEAYQep59h2iB1l5ftXGt+YbKVA0beuiU/7MMu01O3R
-   qd1B0gKGqu0fg8MM4wyh6Qn4Z+BXWA9c0NqE+WMoOm+/KR38uf8Z8ajMM
-   2ldbzzmCseqmCv3gzrF6tiEqJbz7R7y+Tm3DgX9C+NN5aBu44GddQwLOA
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10317"; a="250323640"
+  bh=2A/nDk54DNLU4Xv/kYeSwcUSn5YoQAcC9glwKkY81MU=;
+  b=de3Tzjw+t6kLNC9UQPNYit7TAiulkngwQAGkGDLiPBzVFimcZBak2FFQ
+   RbvAySYxcvEMWW2LoRBJ33MDCCvKlC7MMKTU863dFlWwgyXjs8yENIB42
+   4IJAiFtBo96A/xDGIpI8RL74XcicSNLctDPQjIAGC83MuwUdJBOPdLQJQ
+   YLahw3lAeIFtw0cdxEpCDwGX+3Xf2E7IZPg5pyZy1xgtYG6iNs2fbFZiJ
+   ZSZYUKvL0iuaaabKr17rEN9IWlZh752hgMiUtPvc7J9KlBA9Sr4jnuA1+
+   eJp/JyC7SBK+bqACJ7dXmPBKPJCZNGQ25DnI+B6Y52mpgoCCZO+L4GfP2
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10317"; a="250323645"
 X-IronPort-AV: E=Sophos;i="5.90,260,1643702400"; 
-   d="scan'208";a="250323640"
+   d="scan'208";a="250323645"
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:46 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:49 -0700
 X-IronPort-AV: E=Sophos;i="5.90,260,1643702400"; 
-   d="scan'208";a="591319543"
+   d="scan'208";a="591319565"
 Received: from aimeehax-mobl1.amr.corp.intel.com (HELO localhost) ([10.212.113.132])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:46 -0700
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:48 -0700
 From:   ira.weiny@intel.com
 To:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,9 +46,9 @@ Cc:     Ira Weiny <ira.weiny@intel.com>,
         Ben Widawsky <ben.widawsky@intel.com>,
         linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH V8 05/10] cxl/pci: Create DOE auxiliary driver
-Date:   Thu, 14 Apr 2022 13:32:32 -0700
-Message-Id: <20220414203237.2198665-6-ira.weiny@intel.com>
+Subject: [PATCH V8 07/10] cxl/mem: Read CDAT table
+Date:   Thu, 14 Apr 2022 13:32:34 -0700
+Message-Id: <20220414203237.2198665-8-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220414203237.2198665-1-ira.weiny@intel.com>
 References: <20220414203237.2198665-1-ira.weiny@intel.com>
@@ -58,328 +58,494 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
-CXL kernel drivers optionally need to access DOE mailbox capabilities.
-Access to mailboxes for things such as CDAT, SPDM, and IDE are needed by
-the kernel while other access is designed towards user space usage.  An
-example of this is for CXL Compliance Testing (see CXL 2.0 14.16.4
-Compliance Mode DOE) which offers a mechanism to set different test
-modes for a device.
+The OS will need CDAT data from CXL devices to properly set up
+interleave sets.  Currently this is supported by a through a DOE mailbox
+which supports CDAT.  But any cxl_mem object can provide this data later
+if need be, for example for testing.
 
-There is no anticipated need for the kernel to share an individual
-mailbox with user space.  Thus developing an interface to marshal access
-between the kernel and user space for a single mailbox is unnecessary
-overhead.  However, having the kernel relinquish some mailboxes to be
-controlled by user space is a reasonable compromise to share access to
-the device.
+Cache the CDAT data for later parsing.  Provide a sysfs binary attribute
+to allow dumping of the CDAT.
 
-The auxiliary bus provides an elegant solution for this.  Each DOE
-capability is given its own auxiliary device.  This device is controlled
-by a kernel driver by default which restricts access to the mailbox.
-Unbinding the driver from a single auxiliary device (DOE mailbox
-capability) frees the mailbox for user space access.  This architecture
-also allows a clear picture on which mailboxes are kernel controlled vs
-not.
+Binary dumping is modeled on /sys/firmware/ACPI/tables/
 
-Create a driver for the DOE auxiliary devices.  The driver uses the PCI
-DOE core to manage the mailbox.
+The ability to dump this table will be very useful for emulation of real
+devices once they become available as QEMU CXL type 3 device emulation will
+be able to load this file in.
 
-User space must be prevented from unbinding the driver state when the
-DOE auxiliary driver is being accessed by the kernel.  Add a read write
-lock to the DOE auxiliary device to protect the driver data portion.
+This does not support table updates at runtime. It will always provide
+whatever was there when first cached. Handling of table updates can be
+implemented later.
 
-Finally, flag the driver module to be preloaded by device creation to
-ensure the driver is attached when iterating the DOE capabilities.
+Finally create a complete list of DOE defines within cdat.h for code
+wishing to decode the CDAT table.
 
-User space access can be obtained by unbinding the driver from that
-device.  For example:
-
-$ ls -l /sys/bus/auxiliary/drivers
-total 0
-drwxr-xr-x 2 root root 0 Mar 24 10:45 cxl_doe.cxl_doe_drv
-
-$ ls -l /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci*
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.0 -> ../../../../devices/pci0000:bf/0000:bf:00.0/0000:c0:00.0/cxl_pci.doe.0
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.1 -> ../../../../devices/pci0000:bf/0000:bf:01.0/0000:c1:00.0/cxl_pci.doe.1
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.2 -> ../../../../devices/pci0000:35/0000:35:00.0/0000:36:00.0/cxl_pci.doe.2
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.3 -> ../../../../devices/pci0000:35/0000:35:01.0/0000:37:00.0/cxl_pci.doe.3
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.3 -> ../../../../devices/pci0000:35/0000:35:01.0/0000:37:00.0/cxl_pci.doe.4
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.5 -> ../../../../devices/pci0000:bf/0000:bf:00.0/0000:c0:00.0/cxl_pci.doe.5
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.6 -> ../../../../devices/pci0000:35/0000:35:01.0/0000:37:00.0/cxl_pci.doe.6
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.7 -> ../../../../devices/pci0000:bf/0000:bf:01.0/0000:c1:00.0/cxl_pci.doe.7
-
-$ echo "cxl_pci.doe.4" > /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/unbind
-
-$ ls -l /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci*
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.0 -> ../../../../devices/pci0000:bf/0000:bf:00.0/0000:c0:00.0/cxl_pci.doe.0
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.1 -> ../../../../devices/pci0000:bf/0000:bf:01.0/0000:c1:00.0/cxl_pci.doe.1
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.2 -> ../../../../devices/pci0000:35/0000:35:00.0/0000:36:00.0/cxl_pci.doe.2
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.3 -> ../../../../devices/pci0000:35/0000:35:01.0/0000:37:00.0/cxl_pci.doe.3
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.5 -> ../../../../devices/pci0000:bf/0000:bf:00.0/0000:c0:00.0/cxl_pci.doe.5
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.6 -> ../../../../devices/pci0000:35/0000:35:01.0/0000:37:00.0/cxl_pci.doe.6
-lrwxrwxrwx 1 root root 0 Mar 24 10:53 /sys/bus/auxiliary/drivers/cxl_doe.cxl_doe_drv/cxl_pci.doe.7 -> ../../../../devices/pci0000:bf/0000:bf:01.0/0000:c1:00.0/cxl_pci.doe.7
-
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Co-developed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from V7:
-	Now need to select PCI_DOE
-	Change MODULE_LICENSE to 'GPL' instead of old 'GPL v2'
-
 Changes from V6:
-	The CXL layer now contains the driver for these auxiliary
-	devices.
+	Fix issue with devm use
+		Move cached cdat data to cxl_dev_state
+	Use new pci_doe_submit_task()
+	Ensure the aux driver is locked while processing tasks
+	Rebased on cxl-pending
 
 Changes from V5:
-	Split the CXL specific stuff off from the PCI DOE create
-	auxiliary device code.
----
- drivers/cxl/Kconfig           | 13 +++++
- drivers/cxl/Makefile          |  2 +
- drivers/cxl/cxlpci.h          | 13 +++++
- drivers/cxl/doe.c             | 90 +++++++++++++++++++++++++++++++++++
- drivers/cxl/pci.c             | 20 ++++++++
- include/uapi/linux/pci_regs.h |  1 +
- 6 files changed, 139 insertions(+)
- create mode 100644 drivers/cxl/doe.c
+	Add proper guards around cdat.h
+	Split out finding the CDAT DOE mailbox
+	Use cxl_cdat to group CDAT data together
+	Adjust to use auxiliary_find_device() to find the DOE device
+		which supplies the CDAT protocol.
+	Rebased to latest
+	Remove dev_dbg(length)
+	Remove unneeded DOE Table access defines
+	Move CXL_DOE_PROTOCOL_TABLE_ACCESS define into this patch where
+		it is used
 
-diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-index ac0f5ca95431..82f3908fa5cc 100644
---- a/drivers/cxl/Kconfig
-+++ b/drivers/cxl/Kconfig
-@@ -103,4 +103,17 @@ config CXL_SUSPEND
- 	def_bool y
- 	depends on SUSPEND && CXL_MEM
- 
-+config CXL_PCI_DOE
-+      tristate "CXL PCI Data Object Exchange (DOE) support"
-+      depends on CXL_PCI
-+      default CXL_BUS
-+      select PCI_DOE
-+      help
-+        Driver for DOE auxiliary devices.
+Changes from V4:
+	Split this into it's own patch
+	Rearchitect this such that the memdev driver calls into the DOE
+	driver via the cxl_mem state object.  This allows CDAT data to
+	come from any type of cxl_mem object not just PCI DOE.
+	Rebase on new struct cxl_dev_state
+---
+ drivers/cxl/cdat.h        |  97 ++++++++++++++++++++++++
+ drivers/cxl/core/memdev.c |  38 ++++++++++
+ drivers/cxl/cxlmem.h      |  26 +++++++
+ drivers/cxl/cxlpci.h      |   1 +
+ drivers/cxl/pci.c         | 153 ++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 315 insertions(+)
+ create mode 100644 drivers/cxl/cdat.h
+
+diff --git a/drivers/cxl/cdat.h b/drivers/cxl/cdat.h
+new file mode 100644
+index 000000000000..4722b6bbbaf0
+--- /dev/null
++++ b/drivers/cxl/cdat.h
+@@ -0,0 +1,97 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __CXL_CDAT_H__
++#define __CXL_CDAT_H__
 +
-+	The DOE capabilities provides a simple mailbox in PCI config space that
-+	is used for a number of different protocols useful to CXL.  The CXL PCI
-+	subsystem creates auxiliary devices for each DOE mailbox capability
-+	found.  This driver is required for the kernel to use these devices.
-+
- endif
-diff --git a/drivers/cxl/Makefile b/drivers/cxl/Makefile
-index a78270794150..c71b7a6345fb 100644
---- a/drivers/cxl/Makefile
-+++ b/drivers/cxl/Makefile
-@@ -1,6 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
- obj-y += core/
- obj-$(CONFIG_CXL_PCI) += cxl_pci.o
-+obj-$(CONFIG_CXL_PCI_DOE) += cxl_doe.o
- obj-$(CONFIG_CXL_MEM) += cxl_mem.o
- obj-$(CONFIG_CXL_ACPI) += cxl_acpi.o
- obj-$(CONFIG_CXL_PMEM) += cxl_pmem.o
-@@ -8,6 +9,7 @@ obj-$(CONFIG_CXL_PORT) += cxl_port.o
- 
- cxl_mem-y := mem.o
- cxl_pci-y := pci.o
-+cxl_doe-y := doe.o
- cxl_acpi-y := acpi.o
- cxl_pmem-y := pmem.o
- cxl_port-y := port.o
-diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-index 2ad8715173ce..821fe05e8289 100644
---- a/drivers/cxl/cxlpci.h
-+++ b/drivers/cxl/cxlpci.h
-@@ -79,6 +79,7 @@ int devm_cxl_port_enumerate_dports(struct cxl_port *port);
-  *
-  * @adev: Auxiliary bus device
-  * @pdev: PCI device this belongs to
-+ * @driver_access: Lock the driver during access
-  * @cap_offset: Capability offset
-  * @use_irq: Set if IRQs are to be used with this mailbox
-  *
-@@ -88,9 +89,21 @@ int devm_cxl_port_enumerate_dports(struct cxl_port *port);
- struct cxl_doe_dev {
- 	struct auxiliary_device adev;
- 	struct pci_dev *pdev;
-+	struct rw_semaphore driver_access;
- 	int cap_offset;
- 	bool use_irq;
- };
- #define DOE_DEV_NAME "doe"
- 
-+/**
-+ * struct cxl_doe_drv_state - state of the DOE Aux driver
++/*
++ * Coherent Device Attribute table (CDAT)
 + *
-+ * @doe_dev: The Auxiliary DOE device
-+ * @doe_mb: PCI DOE mailbox state
++ * Specification available from UEFI.org
++ *
++ * Whilst CDAT is defined as a single table, the access via DOE maiboxes is
++ * done one entry at a time, where the first entry is the header.
 + */
-+struct cxl_doe_drv_state {
-+	struct cxl_doe_dev *doe_dev;
-+	struct pci_doe_mb *doe_mb;
++
++#define CXL_DOE_TABLE_ACCESS_REQ_CODE		0x000000ff
++#define   CXL_DOE_TABLE_ACCESS_REQ_CODE_READ	0
++#define CXL_DOE_TABLE_ACCESS_TABLE_TYPE		0x0000ff00
++#define   CXL_DOE_TABLE_ACCESS_TABLE_TYPE_CDATA	0
++#define CXL_DOE_TABLE_ACCESS_ENTRY_HANDLE	0xffff0000
++
++/*
++ * CDAT entries are little endian and are read from PCI config space which
++ * is also little endian.
++ * As such, on a big endian system these will have been reversed.
++ * This prevents us from making easy use of packed structures.
++ * Style form pci_regs.h
++ */
++
++#define CDAT_HEADER_LENGTH_DW 4
++#define CDAT_HEADER_LENGTH_BYTES (CDAT_HEADER_LENGTH_DW * sizeof(u32))
++#define CDAT_HEADER_DW0_LENGTH		0xffffffff
++#define CDAT_HEADER_DW1_REVISION	0x000000ff
++#define CDAT_HEADER_DW1_CHECKSUM	0x0000ff00
++/* CDAT_HEADER_DW2_RESERVED	*/
++#define CDAT_HEADER_DW3_SEQUENCE	0xffffffff
++
++/* All structures have a common first DW */
++#define CDAT_STRUCTURE_DW0_TYPE		0x000000ff
++#define   CDAT_STRUCTURE_DW0_TYPE_DSMAS 0
++#define   CDAT_STRUCTURE_DW0_TYPE_DSLBIS 1
++#define   CDAT_STRUCTURE_DW0_TYPE_DSMSCIS 2
++#define   CDAT_STRUCTURE_DW0_TYPE_DSIS 3
++#define   CDAT_STRUCTURE_DW0_TYPE_DSEMTS 4
++#define   CDAT_STRUCTURE_DW0_TYPE_SSLBIS 5
++
++#define CDAT_STRUCTURE_DW0_LENGTH	0xffff0000
++
++/* Device Scoped Memory Affinity Structure */
++#define CDAT_DSMAS_DW1_DSMAD_HANDLE	0x000000ff
++#define CDAT_DSMAS_DW1_FLAGS		0x0000ff00
++#define CDAT_DSMAS_DPA_OFFSET(entry) ((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_DSMAS_DPA_LEN(entry) ((u64)((entry)[5]) << 32 | (entry)[4])
++#define CDAT_DSMAS_NON_VOLATILE(flags)  ((flags & 0x04) >> 2)
++
++/* Device Scoped Latency and Bandwidth Information Structure */
++#define CDAT_DSLBIS_DW1_HANDLE		0x000000ff
++#define CDAT_DSLBIS_DW1_FLAGS		0x0000ff00
++#define CDAT_DSLBIS_DW1_DATA_TYPE	0x00ff0000
++#define CDAT_DSLBIS_BASE_UNIT(entry) ((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_DSLBIS_DW4_ENTRY_0		0x0000ffff
++#define CDAT_DSLBIS_DW4_ENTRY_1		0xffff0000
++#define CDAT_DSLBIS_DW5_ENTRY_2		0x0000ffff
++
++/* Device Scoped Memory Side Cache Information Structure */
++#define CDAT_DSMSCIS_DW1_HANDLE		0x000000ff
++#define CDAT_DSMSCIS_MEMORY_SIDE_CACHE_SIZE(entry) \
++	((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_DSMSCIS_DW4_MEMORY_SIDE_CACHE_ATTRS 0xffffffff
++
++/* Device Scoped Initiator Structure */
++#define CDAT_DSIS_DW1_FLAGS		0x000000ff
++#define CDAT_DSIS_DW1_HANDLE		0x0000ff00
++
++/* Device Scoped EFI Memory Type Structure */
++#define CDAT_DSEMTS_DW1_HANDLE		0x000000ff
++#define CDAT_DSEMTS_DW1_EFI_MEMORY_TYPE_ATTR	0x0000ff00
++#define CDAT_DSEMTS_DPA_OFFSET(entry)	((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_DSEMTS_DPA_LENGTH(entry)	((u64)((entry)[5]) << 32 | (entry)[4])
++
++/* Switch Scoped Latency and Bandwidth Information Structure */
++#define CDAT_SSLBIS_DW1_DATA_TYPE	0x000000ff
++#define CDAT_SSLBIS_BASE_UNIT(entry)	((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_SSLBIS_ENTRY_PORT_X(entry, i) ((entry)[4 + (i) * 2] & 0x0000ffff)
++#define CDAT_SSLBIS_ENTRY_PORT_Y(entry, i) (((entry)[4 + (i) * 2] & 0xffff0000) >> 16)
++#define CDAT_SSLBIS_ENTRY_LAT_OR_BW(entry, i) ((entry)[4 + (i) * 2 + 1] & 0x0000ffff)
++
++/**
++ * struct cxl_cdat - CXL CDAT data
++ *
++ * @table: cache of CDAT table
++ * @length: length of cached CDAT table
++ */
++struct cxl_cdat {
++	void *table;
++	size_t length;
 +};
 +
- #endif /* __CXL_PCI_H__ */
-diff --git a/drivers/cxl/doe.c b/drivers/cxl/doe.c
-new file mode 100644
-index 000000000000..1d3a24a77002
---- /dev/null
-+++ b/drivers/cxl/doe.c
-@@ -0,0 +1,90 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/* Copyright(c) 2022 Intel Corporation. All rights reserved. */
-+
-+#include <linux/pci.h>
-+#include <linux/pci-doe.h>
-+
-+#include "cxlpci.h"
-+
-+static void doe_destroy_mb(void *ds)
++#endif /* !__CXL_CDAT_H__ */
+diff --git a/drivers/cxl/core/memdev.c b/drivers/cxl/core/memdev.c
+index 1f76b28f9826..9ca5f2f2d308 100644
+--- a/drivers/cxl/core/memdev.c
++++ b/drivers/cxl/core/memdev.c
+@@ -86,6 +86,37 @@ static ssize_t pmem_size_show(struct device *dev, struct device_attribute *attr,
+ 	return sysfs_emit(buf, "%#llx\n", len);
+ }
+ 
++static ssize_t CDAT_read(struct file *filp, struct kobject *kobj,
++			 struct bin_attribute *bin_attr, char *buf,
++			 loff_t offset, size_t count)
 +{
-+	struct cxl_doe_drv_state *doe_ds = ds;
++	struct device *dev = kobj_to_dev(kobj);
++	struct cxl_memdev *cxlmd = to_cxl_memdev(dev);
++	struct cxl_dev_state *cxlds = cxlmd->cxlds;
 +
-+	pci_doe_destroy_mb(doe_ds->doe_mb);
++	if (!cxlds->cdat.table)
++		return 0;
++
++	return memory_read_from_buffer(buf, count, &offset,
++				       cxlds->cdat.table,
++				       cxlds->cdat.length);
 +}
 +
-+static int cxl_pci_doe_probe(struct auxiliary_device *aux_dev,
-+			     const struct auxiliary_device_id *id)
++static BIN_ATTR_RO(CDAT, 0);
++
++static umode_t cxl_memdev_bin_attr_is_visible(struct kobject *kobj,
++					      struct bin_attribute *attr, int i)
 +{
-+	struct cxl_doe_dev *doe_dev = container_of(aux_dev, struct cxl_doe_dev,
-+						   adev);
-+	struct device *dev = &aux_dev->dev;
-+	struct cxl_doe_drv_state *doe_ds;
-+	struct pci_doe_mb *doe_mb;
++	struct device *dev = kobj_to_dev(kobj);
++	struct cxl_memdev *cxlmd = to_cxl_memdev(dev);
++	struct cxl_dev_state *cxlds = cxlmd->cxlds;
 +
-+	doe_ds = devm_kzalloc(dev, sizeof(*doe_ds), GFP_KERNEL);
-+	if (!doe_ds)
-+		return -ENOMEM;
-+
-+	doe_mb = pci_doe_create_mb(doe_dev->pdev, doe_dev->cap_offset,
-+				   doe_dev->use_irq);
-+	if (IS_ERR(doe_mb)) {
-+		dev_err(dev, "Failed to create the DOE mailbox state machine\n");
-+		return PTR_ERR(doe_mb);
-+	}
-+
-+	doe_ds->doe_mb = doe_mb;
-+	devm_add_action_or_reset(dev, doe_destroy_mb, doe_ds);
-+
-+	down_write(&doe_dev->driver_access);
-+	auxiliary_set_drvdata(aux_dev, doe_ds);
-+	up_write(&doe_dev->driver_access);
++	if ((attr == &bin_attr_CDAT) && cxlds->cdat.table)
++		return 0400;
 +
 +	return 0;
 +}
 +
-+static void cxl_pci_doe_remove(struct auxiliary_device *aux_dev)
-+{
-+	struct cxl_doe_dev *doe_dev = container_of(aux_dev, struct cxl_doe_dev,
-+						   adev);
+ static struct device_attribute dev_attr_pmem_size =
+ 	__ATTR(size, 0444, pmem_size_show, NULL);
+ 
+@@ -115,6 +146,11 @@ static struct attribute *cxl_memdev_attributes[] = {
+ 	NULL,
+ };
+ 
++static struct bin_attribute *cxl_memdev_bin_attributes[] = {
++	&bin_attr_CDAT,
++	NULL,
++};
 +
-+	down_write(&doe_dev->driver_access);
-+	auxiliary_set_drvdata(aux_dev, NULL);
-+	up_write(&doe_dev->driver_access);
+ static struct attribute *cxl_memdev_pmem_attributes[] = {
+ 	&dev_attr_pmem_size.attr,
+ 	NULL,
+@@ -136,6 +172,8 @@ static umode_t cxl_memdev_visible(struct kobject *kobj, struct attribute *a,
+ static struct attribute_group cxl_memdev_attribute_group = {
+ 	.attrs = cxl_memdev_attributes,
+ 	.is_visible = cxl_memdev_visible,
++	.bin_attrs = cxl_memdev_bin_attributes,
++	.is_bin_visible = cxl_memdev_bin_attr_is_visible,
+ };
+ 
+ static struct attribute_group cxl_memdev_ram_attribute_group = {
+diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
+index 0dc6988afb30..8bf058c8d31f 100644
+--- a/drivers/cxl/cxlmem.h
++++ b/drivers/cxl/cxlmem.h
+@@ -5,6 +5,7 @@
+ #include <uapi/linux/cxl_mem.h>
+ #include <linux/cdev.h>
+ #include "cxl.h"
++#include "cdat.h"
+ 
+ /* CXL 2.0 8.2.8.5.1.1 Memory Device Status Register */
+ #define CXLMDEV_STATUS_OFFSET 0x0
+@@ -169,6 +170,7 @@ struct cxl_endpoint_dvsec_info {
+  *
+  * @dev: The device associated with this CXL state
+  * @cdat_doe: Auxiliary DOE device capabile of reading CDAT
++ * @cdat: Cached CDAT data
+  * @regs: Parsed register blocks
+  * @cxl_dvsec: Offset to the PCIe device DVSEC
+  * @payload_size: Size of space for payload
+@@ -194,6 +196,10 @@ struct cxl_endpoint_dvsec_info {
+  * @serial: PCIe Device Serial Number
+  * @mbox_send: @dev specific transport for transmitting mailbox commands
+  * @wait_media_ready: @dev specific method to await media ready
++ * @cdat_get_length: @dev specific function for reading the CDAT table length
++ *                   returns -errno if CDAT not supported on this device
++ * @cdat_read_table: @dev specific function for reading the table
++ *                   returns -errno if CDAT not supported on this device
+  *
+  * See section 8.2.9.5.2 Capacity Configuration and Label Storage for
+  * details on capacity parameters.
+@@ -202,6 +208,7 @@ struct cxl_dev_state {
+ 	struct device *dev;
+ 
+ 	struct cxl_doe_dev *cdat_doe;
++	struct cxl_cdat cdat;
+ 	struct cxl_regs regs;
+ 	int cxl_dvsec;
+ 
+@@ -230,6 +237,9 @@ struct cxl_dev_state {
+ 
+ 	int (*mbox_send)(struct cxl_dev_state *cxlds, struct cxl_mbox_cmd *cmd);
+ 	int (*wait_media_ready)(struct cxl_dev_state *cxlds);
++	int (*cdat_get_length)(struct cxl_dev_state *cxlds, size_t *length);
++	int (*cdat_read_table)(struct cxl_dev_state *cxlds,
++			       struct cxl_cdat *cdat);
+ };
+ 
+ enum cxl_opcode {
+@@ -374,4 +384,20 @@ struct cxl_hdm {
+ 	unsigned int interleave_mask;
+ 	struct cxl_port *port;
+ };
++
++static inline int cxl_mem_cdat_get_length(struct cxl_dev_state *cxlds, size_t *length)
++{
++	if (cxlds->cdat_get_length)
++		return cxlds->cdat_get_length(cxlds, length);
++	return -EOPNOTSUPP;
 +}
 +
-+static const struct auxiliary_device_id cxl_pci_doe_auxiliary_id_table[] = {
-+	{.name = "cxl_pci." DOE_DEV_NAME, },
-+	{},
-+};
-+
-+MODULE_DEVICE_TABLE(auxiliary, cxl_pci_doe_auxiliary_id_table);
-+
-+struct auxiliary_driver cxl_pci_doe_auxiliary_drv = {
-+	.name = "cxl_doe_drv",
-+	.id_table = cxl_pci_doe_auxiliary_id_table,
-+	.probe = cxl_pci_doe_probe,
-+	.remove = cxl_pci_doe_remove,
-+};
-+
-+static int __init cxl_pci_doe_init_module(void)
++static inline int cxl_mem_cdat_read_table(struct cxl_dev_state *cxlds,
++					  struct cxl_cdat *cdat)
 +{
-+	int ret;
++	if (cxlds->cdat_read_table)
++		return cxlds->cdat_read_table(cxlds, cdat);
++	return -EOPNOTSUPP;
++}
 +
-+	ret = auxiliary_driver_register(&cxl_pci_doe_auxiliary_drv);
-+	if (ret) {
-+		pr_err("Failed cxl_pci_doe auxiliary_driver_register() ret=%d\n",
-+		       ret);
+ #endif /* __CXL_MEM_H__ */
+diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
+index 821fe05e8289..aa8c6ef93000 100644
+--- a/drivers/cxl/cxlpci.h
++++ b/drivers/cxl/cxlpci.h
+@@ -4,6 +4,7 @@
+ #define __CXL_PCI_H__
+ #include <linux/auxiliary_bus.h>
+ #include <linux/pci.h>
++#include <linux/pci-doe.h>
+ #include "cxl.h"
+ 
+ #define CXL_MEMORY_PROGIF	0x10
+diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+index 622cac925262..aecb327911a0 100644
+--- a/drivers/cxl/pci.c
++++ b/drivers/cxl/pci.c
+@@ -13,6 +13,7 @@
+ #include "cxlmem.h"
+ #include "cxlpci.h"
+ #include "cxl.h"
++#include "cdat.h"
+ 
+ /**
+  * DOC: cxl pci
+@@ -780,6 +781,151 @@ static int cxl_setup_doe_devices(struct cxl_dev_state *cxlds)
+ 	return 0;
+ }
+ 
++#define CDAT_DOE_REQ(entry_handle)					\
++	(FIELD_PREP(CXL_DOE_TABLE_ACCESS_REQ_CODE,			\
++		    CXL_DOE_TABLE_ACCESS_REQ_CODE_READ) |		\
++	 FIELD_PREP(CXL_DOE_TABLE_ACCESS_TABLE_TYPE,			\
++		    CXL_DOE_TABLE_ACCESS_TABLE_TYPE_CDATA) |		\
++	 FIELD_PREP(CXL_DOE_TABLE_ACCESS_ENTRY_HANDLE, (entry_handle)))
++
++static void cxl_doe_task_complete(struct pci_doe_task *task)
++{
++	complete(task->private);
++}
++
++static int cxl_cdat_get_length(struct cxl_dev_state *cxlds, size_t *length)
++{
++	struct cxl_doe_dev *doe_dev = cxlds->cdat_doe;
++	struct cxl_doe_drv_state *doe_ds;
++	u32 cdat_request_pl = CDAT_DOE_REQ(0);
++	u32 cdat_response_pl[32];
++	DECLARE_COMPLETION_ONSTACK(c);
++	struct pci_doe_task task = {
++		.prot.vid = PCI_DVSEC_VENDOR_ID_CXL,
++		.prot.type = CXL_DOE_PROTOCOL_TABLE_ACCESS,
++		.request_pl = &cdat_request_pl,
++		.request_pl_sz = sizeof(cdat_request_pl),
++		.response_pl = cdat_response_pl,
++		.response_pl_sz = sizeof(cdat_response_pl),
++		.complete = cxl_doe_task_complete,
++		.private = &c,
++	};
++	int rc = 0;
++
++	doe_ds = cxl_pci_doe_get_drv(doe_dev);
++	if (!doe_ds) {
++		rc = -EIO;
++		goto release_driver;
 +	}
 +
++	rc = pci_doe_submit_task(doe_ds->doe_mb, &task);
++	if (rc < 0) {
++		dev_err(cxlds->dev, "DOE submit failed: %d", rc);
++		goto release_driver;
++	}
++	wait_for_completion(&c);
++
++	if (task.rv < 1) {
++		rc = -EIO;
++		goto release_driver;
++	}
++
++	*length = cdat_response_pl[1];
++	dev_dbg(cxlds->dev, "CDAT length %lu\n", *length);
++
++release_driver:
++	cxl_pci_doe_put_drv(doe_dev);
++	return rc;
++}
++
++static int cxl_cdat_read_table(struct cxl_dev_state *cxlds,
++			       struct cxl_cdat *cdat)
++{
++	struct cxl_doe_dev *doe_dev = cxlds->cdat_doe;
++	struct cxl_doe_drv_state *doe_ds;
++	size_t length = cdat->length;
++	u32 *data = cdat->table;
++	int entry_handle = 0;
++	int rc = 0;
++
++	doe_ds = cxl_pci_doe_get_drv(doe_dev);
++	if (!doe_ds) {
++		rc = -EIO;
++		goto release_driver;
++	}
++
++	do {
++		u32 cdat_request_pl = CDAT_DOE_REQ(entry_handle);
++		u32 cdat_response_pl[32];
++		DECLARE_COMPLETION_ONSTACK(c);
++		struct pci_doe_task task = {
++			.prot.vid = PCI_DVSEC_VENDOR_ID_CXL,
++			.prot.type = CXL_DOE_PROTOCOL_TABLE_ACCESS,
++			.request_pl = &cdat_request_pl,
++			.request_pl_sz = sizeof(cdat_request_pl),
++			.response_pl = cdat_response_pl,
++			.response_pl_sz = sizeof(cdat_response_pl),
++			.complete = cxl_doe_task_complete,
++			.private = &c,
++		};
++		size_t entry_dw;
++		u32 *entry;
++
++		rc = pci_doe_submit_task(doe_ds->doe_mb, &task);
++		if (rc < 0) {
++			dev_err(cxlds->dev, "DOE submit failed: %d", rc);
++			goto release_driver;
++		}
++		wait_for_completion(&c);
++
++		entry = cdat_response_pl + 1;
++		entry_dw = task.rv / sizeof(u32);
++		/* Skip Header */
++		entry_dw -= 1;
++		entry_dw = min(length / 4, entry_dw);
++		memcpy(data, entry, entry_dw * sizeof(u32));
++		length -= entry_dw * sizeof(u32);
++		data += entry_dw;
++		entry_handle = FIELD_GET(CXL_DOE_TABLE_ACCESS_ENTRY_HANDLE, cdat_response_pl[0]);
++
++	} while (entry_handle != 0xFFFF);
++
++release_driver:
++	cxl_pci_doe_put_drv(doe_dev);
++	return rc;
++}
++
++static void cxl_initialize_cdat_callbacks(struct cxl_dev_state *cxlds)
++{
++	if (!cxlds->cdat_doe)
++		return;
++
++	cxlds->cdat_get_length = cxl_cdat_get_length;
++	cxlds->cdat_read_table = cxl_cdat_read_table;
++}
++
++static int read_cdat_data(struct cxl_dev_state *cxlds)
++{
++	struct device *dev = cxlds->dev;
++	size_t cdat_length;
++	int ret;
++
++	if (cxl_mem_cdat_get_length(cxlds, &cdat_length))
++		return 0;
++
++	cxlds->cdat.table = devm_kzalloc(dev, cdat_length, GFP_KERNEL);
++	if (!cxlds->cdat.table)
++		return -ENOMEM;
++	cxlds->cdat.length = cdat_length;
++	ret = cxl_mem_cdat_read_table(cxlds, &cxlds->cdat);
++	if (ret) {
++		devm_kfree(dev, cxlds->cdat.table);
++		cxlds->cdat.table = NULL;
++		cxlds->cdat.length = 0;
++	}
 +	return ret;
 +}
 +
-+static void __exit cxl_pci_doe_exit_module(void)
-+{
-+	auxiliary_driver_unregister(&cxl_pci_doe_auxiliary_drv);
-+}
+ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+ 	struct cxl_register_map map;
+@@ -850,6 +996,13 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (rc)
+ 		return rc;
+ 
++	cxl_initialize_cdat_callbacks(cxlds);
 +
-+module_init(cxl_pci_doe_init_module);
-+module_exit(cxl_pci_doe_exit_module);
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 41a6f3eb0a5c..0dec1f1a3f38 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -590,6 +590,17 @@ static void cxl_pci_doe_destroy_device(void *ad)
- 	auxiliary_device_uninit(ad);
- }
- 
-+static struct cxl_doe_drv_state *cxl_pci_doe_get_drv(struct cxl_doe_dev *doe_dev)
-+{
-+	down_read(&doe_dev->driver_access);
-+	return auxiliary_get_drvdata(&doe_dev->adev);
-+}
++	/* Cache the data early to ensure is_visible() works */
++	rc = read_cdat_data(cxlds);
++	if (rc)
++		dev_err(&pdev->dev, "CDAT data read error (%d)\n", rc);
 +
-+static void cxl_pci_doe_put_drv(struct cxl_doe_dev *doe_dev)
-+{
-+	up_read(&doe_dev->driver_access);
-+}
-+
- /**
-  * cxl_pci_create_doe_devices - Create auxiliary bus DOE devices for all DOE
-  *				mailboxes found
-@@ -652,6 +663,7 @@ static int cxl_pci_create_doe_devices(struct pci_dev *pdev)
- 			return -ENOMEM;
+ 	cxl_dvsec_ranges(cxlds);
  
- 		new_dev->pdev = pdev;
-+		init_rwsem(&new_dev->driver_access);
- 		new_dev->cap_offset = off;
- 		new_dev->use_irq = use_irq;
- 
-@@ -682,6 +694,13 @@ static int cxl_pci_create_doe_devices(struct pci_dev *pdev)
- 					      adev);
- 		if (rc)
- 			return rc;
-+
-+		if (device_attach(&adev->dev) != 1) {
-+			dev_err(&adev->dev,
-+				"Failed to attach a driver to DOE device %d\n",
-+				adev->id);
-+			return -ENODEV;
-+		}
- 	}
- 
- 	return 0;
-@@ -785,6 +804,7 @@ static struct pci_driver cxl_pci_driver = {
- 	},
- };
- 
-+MODULE_SOFTDEP("pre: cxl_doe");
- MODULE_LICENSE("GPL v2");
- module_pci_driver(cxl_pci_driver);
- MODULE_IMPORT_NS(CXL);
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 4e96b45ee36d..c268df088dd4 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1118,6 +1118,7 @@
- #define  PCI_DOE_STATUS_DATA_OBJECT_READY	0x80000000  /* Data Object Ready */
- #define PCI_DOE_WRITE		0x10    /* DOE Write Data Mailbox Register */
- #define PCI_DOE_READ		0x14    /* DOE Read Data Mailbox Register */
-+#define PCI_DOE_CAP_SIZE	(0x14 + 4)	/* Size of this register block */
- 
- /* DOE Data Object - note not actually registers */
- #define PCI_DOE_DATA_OBJECT_HEADER_1_VID		0x0000ffff
+ 	cxlmd = devm_cxl_add_memdev(cxlds);
 -- 
 2.35.1
 
