@@ -2,217 +2,282 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 968E5C43217
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 20:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CD17C433F5
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 20:36:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346358AbiDNUfZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 16:35:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44118 "EHLO
+        id S1346530AbiDNUjJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 16:39:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346376AbiDNUfO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 16:35:14 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A94CAAFACE;
-        Thu, 14 Apr 2022 13:32:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649968368; x=1681504368;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=esZFHOlUtVB8Mxgv4vakb9fRAVpIFIVpO6bWYPlosDk=;
-  b=GFg28qfurQbjF95iMAxvH3oLZI7q9GY0t1OOXyQeSBUBjF2Dzf9iTVm0
-   BO8W8VGJPwlNJaUIwFRl8hzW1ZLC88m0+ctC3pguIJH7BTqhyaQ9Naodr
-   7wHzJn/gt/RrUsXn2Avku7uyZvbIs6risxS3SSy5RQ43jZCLU2d0FHcXr
-   Cdy4fPQoa/k8nxnUqqMq3vO5n7fp3ScTR3/sIBQArVOnl5lgN56nmK0cT
-   P41nCNykFyzEjKyBIRut5Szns4LGTIHRFY50Pry+w9GENamTnud3Ehxn9
-   oaV4XuqRciZQE2bKxZHnfjMCmEK6MPmHT9KL9j0JYV3nxyojteFzjgROs
-   g==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10317"; a="261869991"
-X-IronPort-AV: E=Sophos;i="5.90,260,1643702400"; 
-   d="scan'208";a="261869991"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:48 -0700
-X-IronPort-AV: E=Sophos;i="5.90,260,1643702400"; 
-   d="scan'208";a="508546755"
-Received: from aimeehax-mobl1.amr.corp.intel.com (HELO localhost) ([10.212.113.132])
-  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Apr 2022 13:32:47 -0700
-From:   ira.weiny@intel.com
-To:     Dan Williams <dan.j.williams@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH V8 06/10] cxl/pci: Find the DOE mailbox which supports CDAT
-Date:   Thu, 14 Apr 2022 13:32:33 -0700
-Message-Id: <20220414203237.2198665-7-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220414203237.2198665-1-ira.weiny@intel.com>
-References: <20220414203237.2198665-1-ira.weiny@intel.com>
+        with ESMTP id S239274AbiDNUjI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 16:39:08 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BA85E2F72;
+        Thu, 14 Apr 2022 13:36:42 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C3BFAB8293E;
+        Thu, 14 Apr 2022 20:36:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 573B5C385A1;
+        Thu, 14 Apr 2022 20:36:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649968599;
+        bh=0YOUcX1s+MakPztIpP6ZGkf5l+r7N3LY6huJ438u3gE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=SFX8IfO7A6lIiz20UEEOHyavGrH//NtmZf0Ki54L0u4FBuu5DKoqH/kehrkh27AVX
+         98xok0tBD6AEAas5XX5Sgpdyk3twGgLijE02NDR2v592aVnwgTy8aLP4QqtXdA15KC
+         ERLxPe/ELkNJTC9Aa1SSSNi++YTHjPlHClLG4IGlEi6yA/MowGfDalYMPsFKSgv2UN
+         3/cTPrR5UFZqvgC5UVZZRD5n5EB9vOisR22/6vFU+N+R2/TAKkdsArjAvMuzD8kZaW
+         7b8YMnA/FL511ONoM+vvpFI2BCIFUY1YdTeS2wzh9+QjsZCGiaFgIVFBJYYyZFVGg/
+         ElBSRk35oOUsA==
+Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <maz@kernel.org>)
+        id 1nf6Ci-004Phs-Sn; Thu, 14 Apr 2022 21:36:36 +0100
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Date:   Thu, 14 Apr 2022 21:36:36 +0100
+From:   Marc Zyngier <maz@kernel.org>
+To:     Peter Geis <pgwipeout@gmail.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] PCI: dwc: rockchip: add legacy interrupt support
+In-Reply-To: <20220413133731.242870-3-pgwipeout@gmail.com>
+References: <20220413133731.242870-1-pgwipeout@gmail.com>
+ <20220413133731.242870-3-pgwipeout@gmail.com>
+User-Agent: Roundcube Webmail/1.4.13
+Message-ID: <c493261cef27714181a523545dab6d0e@kernel.org>
+X-Sender: maz@kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 51.254.78.96
+X-SA-Exim-Rcpt-To: pgwipeout@gmail.com, lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com, bhelgaas@google.com, heiko@sntech.de, linux-rockchip@lists.infradead.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On 2022-04-13 14:37, Peter Geis wrote:
+> The legacy interrupts on the rk356x pcie controller are handled by a
+> single muxed interrupt. Add irq domain support to the pcie-dw-rockchip
+> driver to support the virtual domain.
+> 
+> Signed-off-by: Peter Geis <pgwipeout@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 123 +++++++++++++++++-
+>  1 file changed, 121 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index c9b341e55cbb..a8b1dc03d3cc 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> @@ -10,9 +10,12 @@
+> 
+>  #include <linux/clk.h>
+>  #include <linux/gpio/consumer.h>
+> +#include <linux/irqchip/chained_irq.h>
+> +#include <linux/irqdomain.h>
+>  #include <linux/mfd/syscon.h>
+>  #include <linux/module.h>
+>  #include <linux/of_device.h>
+> +#include <linux/of_irq.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/regmap.h>
+> @@ -36,10 +39,13 @@
+>  #define PCIE_LINKUP			(PCIE_SMLH_LINKUP | PCIE_RDLH_LINKUP)
+>  #define PCIE_L0S_ENTRY			0x11
+>  #define PCIE_CLIENT_GENERAL_CONTROL	0x0
+> +#define PCIE_CLIENT_INTR_STATUS_LEGACY	0x8
+> +#define PCIE_CLIENT_INTR_MASK_LEGACY	0x1c
+>  #define PCIE_CLIENT_GENERAL_DEBUG	0x104
+> -#define PCIE_CLIENT_HOT_RESET_CTRL      0x180
+> +#define PCIE_CLIENT_HOT_RESET_CTRL	0x180
+>  #define PCIE_CLIENT_LTSSM_STATUS	0x300
+> -#define PCIE_LTSSM_ENABLE_ENHANCE       BIT(4)
+> +#define PCIE_LEGACY_INT_ENABLE		GENMASK(3, 0)
+> +#define PCIE_LTSSM_ENABLE_ENHANCE	BIT(4)
+>  #define PCIE_LTSSM_STATUS_MASK		GENMASK(5, 0)
+> 
+>  struct rockchip_pcie {
+> @@ -51,6 +57,8 @@ struct rockchip_pcie {
+>  	struct reset_control		*rst;
+>  	struct gpio_desc		*rst_gpio;
+>  	struct regulator                *vpcie3v3;
+> +	struct irq_domain		*irq_domain;
+> +	raw_spinlock_t			irq_lock;
+>  };
+> 
+>  static int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip,
+> @@ -65,6 +73,105 @@ static void rockchip_pcie_writel_apb(struct
+> rockchip_pcie *rockchip,
+>  	writel_relaxed(val, rockchip->apb_base + reg);
+>  }
+> 
+> +static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+> +{
+> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+> +	struct rockchip_pcie *rockchip = irq_desc_get_handler_data(desc);
+> +	struct device *dev = rockchip->pci.dev;
+> +	u32 reg;
+> +	u32 hwirq;
+> +	u32 virq;
+> +
+> +	chained_irq_enter(chip, desc);
+> +
+> +	reg = rockchip_pcie_readl_apb(rockchip, 
+> PCIE_CLIENT_INTR_STATUS_LEGACY);
+> +
+> +	while (reg) {
+> +		hwirq = ffs(reg) - 1;
+> +		reg &= ~BIT(hwirq);
 
-Each CXL device may have multiple DOE mailbox capabilities and each
-mailbox may support multiple protocols.
+The whole construct would be better served by for_each_set_bit().
 
-Search the DOE auxiliary devices for one which supports the CDAT
-protocol.  Cache that device to be used for future queries.
+> +
+> +		virq = irq_find_mapping(rockchip->irq_domain, hwirq);
+> +		if (virq)
+> +			generic_handle_irq(virq);
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+Please replace this with generic_handle_domain_irq().
 
----
-Changes from V7
-	Minor code clean ups
+> +		else
+> +			dev_err(dev, "unexpected IRQ, INT%d\n", hwirq);
 
-Changes from V6
-	Adjust for aux devices being a CXL only concept
-	Update commit msg.
-	Ensure devices iterated by auxiliary_find_device() are checked
-		to be DOE devices prior to checking for the CDAT
-		protocol
-	From Ben
-		Ensure reference from auxiliary_find_device() is dropped
----
- drivers/cxl/cxl.h    |  2 ++
- drivers/cxl/cxlmem.h |  2 ++
- drivers/cxl/pci.c    | 76 +++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 79 insertions(+), 1 deletion(-)
+This hardly serves any purpose. At best, this is a debug statement.
+At worse, this is a DoS. In any case, please remove it.
 
-diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-index 990b6670222e..50817fd2c912 100644
---- a/drivers/cxl/cxl.h
-+++ b/drivers/cxl/cxl.h
-@@ -90,6 +90,8 @@ static inline int cxl_hdm_decoder_count(u32 cap_hdr)
- #define CXLDEV_MBOX_BG_CMD_STATUS_OFFSET 0x18
- #define CXLDEV_MBOX_PAYLOAD_OFFSET 0x20
- 
-+#define CXL_DOE_PROTOCOL_TABLE_ACCESS 2
-+
- /*
-  * Using struct_group() allows for per register-block-type helper routines,
-  * without requiring block-type agnostic code to include the prefix.
-diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
-index 7235d2f976e5..0dc6988afb30 100644
---- a/drivers/cxl/cxlmem.h
-+++ b/drivers/cxl/cxlmem.h
-@@ -168,6 +168,7 @@ struct cxl_endpoint_dvsec_info {
-  * Currently only memory devices are represented.
-  *
-  * @dev: The device associated with this CXL state
-+ * @cdat_doe: Auxiliary DOE device capabile of reading CDAT
-  * @regs: Parsed register blocks
-  * @cxl_dvsec: Offset to the PCIe device DVSEC
-  * @payload_size: Size of space for payload
-@@ -200,6 +201,7 @@ struct cxl_endpoint_dvsec_info {
- struct cxl_dev_state {
- 	struct device *dev;
- 
-+	struct cxl_doe_dev *cdat_doe;
- 	struct cxl_regs regs;
- 	int cxl_dvsec;
- 
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 0dec1f1a3f38..622cac925262 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -706,6 +706,80 @@ static int cxl_pci_create_doe_devices(struct pci_dev *pdev)
- 	return 0;
- }
- 
-+static bool cxl_doe_dev_supports_prot(struct cxl_doe_dev *doe_dev, u16 vid, u16 pid)
-+{
-+	struct cxl_doe_drv_state *doe_ds;
-+	bool ret;
-+
-+	doe_ds = cxl_pci_doe_get_drv(doe_dev);
-+	if (!doe_ds) {
-+		cxl_pci_doe_put_drv(doe_dev);
-+		return false;
-+	}
-+	ret = pci_doe_supports_prot(doe_ds->doe_mb, vid, pid);
-+	cxl_pci_doe_put_drv(doe_dev);
-+	return ret;
-+}
-+
-+static int cxl_match_cdat_doe_device(struct device *dev, const void *data)
-+{
-+	const struct cxl_dev_state *cxlds = data;
-+	struct auxiliary_device *adev = to_auxiliary_dev(dev);
-+	struct cxl_doe_dev *doe_dev;
-+
-+	/* Ensure this is a DOE device */
-+	if (strcmp(DOE_DEV_NAME, adev->name))
-+		return 0;
-+
-+	/* Determine if this auxiliary device belongs to the cxlds */
-+	if (cxlds->dev != dev->parent)
-+		return 0;
-+
-+	doe_dev = container_of(adev, struct cxl_doe_dev, adev);
-+
-+	/* If it is one of ours check for the CDAT protocol */
-+	if (!cxl_doe_dev_supports_prot(doe_dev, PCI_DVSEC_VENDOR_ID_CXL,
-+				   CXL_DOE_PROTOCOL_TABLE_ACCESS))
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static void drop_cdat_doe_ref(void *data)
-+{
-+	struct cxl_doe_dev *cdat_doe = data;
-+
-+	put_device(&cdat_doe->adev.dev);
-+}
-+
-+static int cxl_setup_doe_devices(struct cxl_dev_state *cxlds)
-+{
-+	struct device *dev = cxlds->dev;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct auxiliary_device *adev;
-+	int rc;
-+
-+	rc = cxl_pci_create_doe_devices(pdev);
-+	if (rc)
-+		return rc;
-+
-+	adev = auxiliary_find_device(NULL, cxlds, &cxl_match_cdat_doe_device);
-+
-+	if (adev) {
-+		struct cxl_doe_dev *doe_dev = container_of(adev,
-+							   struct cxl_doe_dev,
-+							   adev);
-+
-+		/* auxiliary_find_device() takes the reference */
-+		rc = devm_add_action_or_reset(dev, drop_cdat_doe_ref, doe_dev);
-+		if (rc)
-+			return rc;
-+		cxlds->cdat_doe = doe_dev;
-+	}
-+
-+	return 0;
-+}
-+
- static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	struct cxl_register_map map;
-@@ -772,7 +846,7 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (rc)
- 		return rc;
- 
--	rc = cxl_pci_create_doe_devices(pdev);
-+	rc = cxl_setup_doe_devices(cxlds);
- 	if (rc)
- 		return rc;
- 
+> +	}
+> +
+> +	chained_irq_exit(chip, desc);
+> +}
+> +
+> +static void rockchip_intx_mask(struct irq_data *data)
+> +{
+> +	struct rockchip_pcie *rockchip = irq_data_get_irq_chip_data(data);
+> +	unsigned long flags;
+> +	u32 val;
+> +
+> +	/* disable legacy interrupts */
+> +	raw_spin_lock_irqsave(&rockchip->irq_lock, flags);
+> +	val = HIWORD_UPDATE_BIT(PCIE_LEGACY_INT_ENABLE);
+> +	val |= PCIE_LEGACY_INT_ENABLE;
+> +	rockchip_pcie_writel_apb(rockchip, val, 
+> PCIE_CLIENT_INTR_MASK_LEGACY);
+> +	raw_spin_unlock_irqrestore(&rockchip->irq_lock, flags);
+> +};
+> +
+> +static void rockchip_intx_unmask(struct irq_data *data)
+> +{
+> +	struct rockchip_pcie *rockchip = irq_data_get_irq_chip_data(data);
+> +	unsigned long flags;
+> +	u32 val;
+> +
+> +	/* enable legacy interrupts */
+> +	raw_spin_lock_irqsave(&rockchip->irq_lock, flags);
+> +	val = HIWORD_UPDATE_BIT(PCIE_LEGACY_INT_ENABLE);
+> +	val &= ~PCIE_LEGACY_INT_ENABLE;
+> +	rockchip_pcie_writel_apb(rockchip, val, 
+> PCIE_CLIENT_INTR_MASK_LEGACY);
+> +	raw_spin_unlock_irqrestore(&rockchip->irq_lock, flags);
+> +};
+> +
+> +static struct irq_chip rockchip_intx_irq_chip = {
+> +	.flags			= IRQCHIP_SKIP_SET_WAKE | IRQCHIP_MASK_ON_SUSPEND,
+> +	.irq_mask		= rockchip_intx_mask,
+> +	.irq_unmask		= rockchip_intx_unmask,
+> +	.name			= "INTx",
+
+For consistency, please place 'name' at the top, and 'flags' at the end.
+
+> +};
+> +
+> +static int rockchip_pcie_intx_map(struct irq_domain *domain, unsigned 
+> int irq,
+> +				  irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &rockchip_intx_irq_chip, 
+> handle_simple_irq);
+
+Why isn't this a *level* handler, as per the PCI spec?
+
+> +	irq_set_chip_data(irq, domain->host_data);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct irq_domain_ops intx_domain_ops = {
+> +	.map = rockchip_pcie_intx_map,
+> +};
+> +
+> +static int rockchip_pcie_init_irq_domain(struct rockchip_pcie 
+> *rockchip)
+> +{
+> +	struct device *dev = rockchip->pci.dev;
+> +	struct device_node *intc;
+> +
+> +	raw_spin_lock_init(&rockchip->irq_lock);
+> +
+> +	intc = of_get_child_by_name(dev->of_node, 
+> "legacy-interrupt-controller");
+> +	if (!intc) {
+> +		dev_err(dev, "missing child interrupt-controller node\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	rockchip->irq_domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
+> +						    &intx_domain_ops, rockchip);
+> +	of_node_put(intc);
+> +	if (!rockchip->irq_domain) {
+> +		dev_err(dev, "failed to get a INTx IRQ domain\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
+>  {
+>  	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
+> @@ -111,7 +218,19 @@ static int rockchip_pcie_host_init(struct 
+> pcie_port *pp)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>  	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
+> +	struct device *dev = rockchip->pci.dev;
+>  	u32 val = HIWORD_UPDATE_BIT(PCIE_LTSSM_ENABLE_ENHANCE);
+> +	int irq, ret;
+> +
+> +	irq = of_irq_get_byname(dev->of_node, "legacy");
+> +	if (irq < 0)
+> +		return irq;
+> +
+> +	irq_set_chained_handler_and_data(irq,
+> rockchip_pcie_legacy_int_handler, rockchip);
+> +
+
+Installing the handler before the domain is instantiated is
+unlikely to end well if you have a pending interrupt...
+
+> +	ret = rockchip_pcie_init_irq_domain(rockchip);
+> +	if (ret < 0)
+> +		dev_err(dev, "failed to init irq domain\n");
+> 
+>  	/* LTSSM enable control mode */
+>  	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
+
+Thanks,
+
+         M.
 -- 
-2.35.1
-
+Jazz is not dead. It just smells funny...
