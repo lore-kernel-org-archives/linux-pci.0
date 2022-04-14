@@ -2,143 +2,130 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C07DFC4332F
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 13:31:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86689C43219
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 14:21:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244354AbiDNNdj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 09:33:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49970 "EHLO
+        id S234396AbiDNOWe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 10:22:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244431AbiDNN0x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 09:26:53 -0400
-Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B0C89F6E8;
-        Thu, 14 Apr 2022 06:20:04 -0700 (PDT)
-Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
- by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.0.0)
- id 12888393597a75da; Thu, 14 Apr 2022 15:20:03 +0200
-Received: from kreacher.localnet (unknown [213.134.181.101])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 69DCB66BE86;
-        Thu, 14 Apr 2022 15:20:02 +0200 (CEST)
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Linux PCI <linux-pci@vger.kernel.org>
-Cc:     Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v3 1/9] PCI/PM: Resume subordinate bus in bus type callbacks
-Date:   Thu, 14 Apr 2022 15:04:13 +0200
-Message-ID: <3190097.aeNJFYEL58@kreacher>
-In-Reply-To: <5838942.lOV4Wx5bFT@kreacher>
-References: <4419002.LvFx2qVVIh@kreacher> <11975904.O9o76ZdvQC@kreacher> <5838942.lOV4Wx5bFT@kreacher>
+        with ESMTP id S1345131AbiDNNpL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 09:45:11 -0400
+Received: from relay8-d.mail.gandi.net (relay8-d.mail.gandi.net [217.70.183.201])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 502D8140DE;
+        Thu, 14 Apr 2022 06:42:45 -0700 (PDT)
+Received: (Authenticated sender: herve.codina@bootlin.com)
+        by mail.gandi.net (Postfix) with ESMTPSA id 047581BF20C;
+        Thu, 14 Apr 2022 13:42:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1649943763;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uf/NUgWHuhWSypo4uHHoAgWnaBAtZS72tioBfXir5rw=;
+        b=RH9+J969PE/jWaLdsCV+Jg1ttNMgnWmL2DqDCmlGulbszBjD9NE52I2J8RVKtHvaLsECs9
+        S8j67gnG0CdrH/urV5Uw8cdGR4XfehozZgFSA6Eg7ukBmemeWcBtEsm45Q6wloI5KV7rbX
+        Fy1xTIHQyDpWpZ7/AthMJAEHBuy4ptwTA4uoeVdplikQzQx5jG5FeLj+uPWcStSohLc28N
+        KAAWjoFcxPN+HmjvfAAD+dE+5eo8GyyKzsL/4WqsfD4BjmhB6//KozDJPHWWWcoYawa3FI
+        wwZPzGot1uDZ4YL894ldPzkehTWSGlL7VU3yYbmpYpXogF/aXiFowNMKUC6JKQ==
+Date:   Thu, 14 Apr 2022 15:42:32 +0200
+From:   Herve Codina <herve.codina@bootlin.com>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Clement Leger <clement.leger@bootlin.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH v2 1/8] PCI: rcar-gen2: Add support for clocks
+Message-ID: <20220414154232.098a4451@bootlin.com>
+In-Reply-To: <CAMuHMdUCvJ6rAwnV=w9iFqnm=c0U_BpGiYEw109shsrWAeUJCA@mail.gmail.com>
+References: <20220414074011.500533-1-herve.codina@bootlin.com>
+        <20220414074011.500533-2-herve.codina@bootlin.com>
+        <CAMuHMdW8q5AjDtTE83yVPfmgnQy02UgLSns33z06WMFBUULWEw@mail.gmail.com>
+        <20220414132534.35467781@bootlin.com>
+        <CAMuHMdUCvJ6rAwnV=w9iFqnm=c0U_BpGiYEw109shsrWAeUJCA@mail.gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.31; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 213.134.181.101
-X-CLIENT-HOSTNAME: 213.134.181.101
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvvddrudelfedgieefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecujffqoffgrffnpdggtffipffknecuuegrihhlohhuthemucduhedtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvffufffkjghfggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvjeelgffhiedukedtleekkedvudfggefhgfegjefgueekjeelvefggfdvledutdenucfkphepvddufedrudefgedrudekuddruddtudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpedvudefrddufeegrddukedurddutddupdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeehpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhpmhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtthhopehm
- ihhkrgdrfigvshhtvghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhm
-X-DCC--Metrics: v370.home.net.pl 1024; Body=5 Fuz1=5 Fuz2=5
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi Geert,
 
-Calling pci_resume_bus() on the secondary bus from pci_power_up() as
-it is done now is questionable, because it depends on the mandatory
-bridge power-up delays that are only covered by the PCI bus type PM
-callbacks.
+On Thu, 14 Apr 2022 13:48:22 +0200
+Geert Uytterhoeven <geert@linux-m68k.org> wrote:
 
-For this reason, move the subordinate bus resume to those callbacks
-too and use the observation that if a bridge is being powered-up
-during resume from system-wide suspend, it may be still desirable
-to runtime-resume its subordinate bus after completing the system-
-wide transition (in case the resume of the devices on that bus is
-skipped during it).
+> Hi Herv=C3=A9,
+>=20
+> On Thu, Apr 14, 2022 at 1:29 PM Herve Codina <herve.codina@bootlin.com> w=
+rote:
+> > On Thu, 14 Apr 2022 10:45:54 +0200
+> > Geert Uytterhoeven <geert@linux-m68k.org> wrote: =20
+> > > On Thu, Apr 14, 2022 at 9:40 AM Herve Codina <herve.codina@bootlin.co=
+m> wrote: =20
+> > > > The PCI rcar-gen2 does not call any clk_prepare_enable(). =20
+> > >
+> > > Correct, this driver manages the clocks indirectly through Runtime PM.
+> > > =20
+> > > > This lead to an access failure when the driver tries to access
+> > > > the IP (at least on a RZ/N1D platform). =20
+> > >
+> > > I expect adding
+> > >
+> > >     power-domans =3D <&sysctrl>;
+> > >
+> > > to the pci_usb node makes this patch redundant. =20
+> >
+> > Seems not enough.
+> > I tried what you suggest :
+> >  - Added 'power-domains =3D <&systrl>;' to the pci_usb node
+> >  - Added missing '#power-domain-cells =3D <0>;' to sysctrl node
+> >  - Reverted my patch.
+> >
+> > The system crashed at boot: =20
+>=20
+> > [    0.832958] Unhandled fault: external abort on non-linefetch (0x1008=
+) at 0x90b5f848 =20
+>=20
+> That's indeed a typical symptom of accessing a module's registers
+> while the module's clock is disabled.
+>=20
+> > I also added a trace printk in r9a06g032-clocks.c and
+> > r9a06g032_attach_dev() was never called.
+> >
+> > Did I miss to set something ? =20
+>=20
+> Do you have CONFIG_PM and CONFIG_PM_GENERIC_DOMAINS
+> enabled?
+> Apparently ARCH_RZN1 does not select these options yet.
+>=20
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
+Thanks a lot for pointing this.
 
-v1 -> v3:
-   * Added R-by from Mika.
+I added select CONFIG_PM and CONFIG_PM_GENERIC_DOMAINS
+in ARCH_RZN1 and it works.
 
----
- drivers/pci/pci-driver.c |   15 +++++++++++++--
- drivers/pci/pci.c        |   15 ---------------
- 2 files changed, 13 insertions(+), 17 deletions(-)
+I will remove my patch calling clk_bulk_prepare_enable() and
+add some new patches to enable power domains in the v3 series.
 
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -559,6 +559,17 @@ static void pci_pm_default_resume_early(
- 	pci_pme_restore(pci_dev);
- }
- 
-+static void pci_pm_bridge_power_up_actions(struct pci_dev *pci_dev)
-+{
-+	pci_bridge_wait_for_secondary_bus(pci_dev);
-+	/*
-+	 * When powering on a bridge from D3cold, the whole hierarchy may be
-+	 * powered on into D0uninitialized state, resume them to give them a
-+	 * chance to suspend again
-+	 */
-+	pci_resume_bus(pci_dev->subordinate);
-+}
-+
- #endif
- 
- #ifdef CONFIG_PM_SLEEP
-@@ -934,7 +945,7 @@ static int pci_pm_resume_noirq(struct de
- 	pcie_pme_root_status_cleanup(pci_dev);
- 
- 	if (!skip_bus_pm && prev_state == PCI_D3cold)
--		pci_bridge_wait_for_secondary_bus(pci_dev);
-+		pci_pm_bridge_power_up_actions(pci_dev);
- 
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return 0;
-@@ -1321,7 +1332,7 @@ static int pci_pm_runtime_resume(struct
- 	pci_pm_default_resume(pci_dev);
- 
- 	if (prev_state == PCI_D3cold)
--		pci_bridge_wait_for_secondary_bus(pci_dev);
-+		pci_pm_bridge_power_up_actions(pci_dev);
- 
- 	if (pm && pm->runtime_resume)
- 		error = pm->runtime_resume(dev);
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -1310,21 +1310,6 @@ static int pci_dev_wait(struct pci_dev *
- int pci_power_up(struct pci_dev *dev)
- {
- 	pci_platform_power_transition(dev, PCI_D0);
--
--	/*
--	 * Mandatory power management transition delays are handled in
--	 * pci_pm_resume_noirq() and pci_pm_runtime_resume() of the
--	 * corresponding bridge.
--	 */
--	if (dev->runtime_d3cold) {
--		/*
--		 * When powering on a bridge from D3cold, the whole hierarchy
--		 * may be powered on into D0uninitialized state, resume them to
--		 * give them a chance to suspend again
--		 */
--		pci_resume_bus(dev->subordinate);
--	}
--
- 	return pci_raw_set_power_state(dev, PCI_D0);
- }
- 
-
-
+Regards,
+Herv=C3=A9
 
