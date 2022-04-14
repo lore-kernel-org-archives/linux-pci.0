@@ -2,96 +2,339 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C33CDC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 07:49:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98692C433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 08:19:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231375AbiDNHv6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 03:51:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50754 "EHLO
+        id S240668AbiDNIVa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 04:21:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231676AbiDNHv5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 03:51:57 -0400
-X-Greylist: delayed 2305 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 14 Apr 2022 00:49:31 PDT
-Received: from imap3.hz.codethink.co.uk (imap3.hz.codethink.co.uk [176.9.8.87])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D0CA12602;
-        Thu, 14 Apr 2022 00:49:29 -0700 (PDT)
-Received: from cpc152649-stkp13-2-0-cust121.10-2.cable.virginm.net ([86.15.83.122] helo=[192.168.0.21])
-        by imap3.hz.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
-        id 1netd6-0005jh-I9; Thu, 14 Apr 2022 08:11:00 +0100
-Message-ID: <3acd20b2-5882-7cc0-8a7b-7b406b768c1c@codethink.co.uk>
-Date:   Thu, 14 Apr 2022 08:11:00 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [V3] PCI: fu740: Drop to 2.5GT/s to fix initial device probing on
- some boards
-Content-Language: en-GB
-To:     "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc:     Alexandre Ghiti <alex@ghiti.fr>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+        with ESMTP id S240610AbiDNIVW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 04:21:22 -0400
+Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B18357144
+        for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2022 01:18:55 -0700 (PDT)
+Received: from relay5-d.mail.gandi.net (unknown [217.70.183.197])
+        by mslow1.mail.gandi.net (Postfix) with ESMTP id 604F4C0F79
+        for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2022 08:08:47 +0000 (UTC)
+Received: (Authenticated sender: miquel.raynal@bootlin.com)
+        by mail.gandi.net (Postfix) with ESMTPSA id 0A3251C0013;
+        Thu, 14 Apr 2022 08:08:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1649923721;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=epQ7ur/IC+M7rUzwT/LZw6lANOz+LVhuy2A10k1/oeQ=;
+        b=kII6LdfSA0CEkzlRuXQjWlIv0Kik6u9RQCp7n/U/AgCEvR+PAXFvUNY+yFR7bYCy7lggmS
+        z/2U1yA5R7X8KxnVlhFx3pPgfRHNcO80Trg7reBraLCF8jGez7WVLtD26ywYABSXKyfkPj
+        vxaQRhc3OLPYmpzFqvLtEf1MJUjVZHV86paWs4ydhNUZU7hPx7vFF1EYYrVJRNWKZccssd
+        +7miUHmCjYbZOEMmP0va8EOFpJPwQuhqRUAse6AA0DGtcJGaBhQyGifVzixSgPbluU3nSk
+        gXQr0/j+C8PKaZgA28ZMRfZ2B8YGWeJNgGYWssxJLRFMlX/Op82MMjZjMj0Ydg==
+Date:   Thu, 14 Apr 2022 10:08:35 +0200
+From:   Miquel Raynal <miquel.raynal@bootlin.com>
+To:     Herve Codina <herve.codina@bootlin.com>
+Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Rob Herring <robh@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Greentime Hu <greentime.hu@sifive.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        David Abdurachmanov <david.abdurachmanov@sifive.com>,
-        Neill Whillans <neill.whillans@codethink.co.uk>
-References: <20220318152430.526320-1-ben.dooks@codethink.co.uk>
- <2442936e-a53e-59bf-488f-95eac26d1252@ghiti.fr>
- <85e864fd-762e-0780-f829-bfbb178ab24e@ghiti.fr>
- <bded4b1e-3404-6bcd-3289-dc8d5b4d713a@codethink.co.uk>
- <alpine.DEB.2.21.2204140048460.9383@angie.orcam.me.uk>
-From:   Ben Dooks <ben.dooks@codethink.co.uk>
-Organization: Codethink Limited.
-In-Reply-To: <alpine.DEB.2.21.2204140048460.9383@angie.orcam.me.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Clement Leger <clement.leger@bootlin.com>
+Subject: Re: [PATCH v2 2/8] dt-bindings: PCI: renesas-pci-usb: Convert
+ bindings to json-schema
+Message-ID: <20220414100835.4c2efa3b@xps13>
+In-Reply-To: <20220414074011.500533-3-herve.codina@bootlin.com>
+References: <20220414074011.500533-1-herve.codina@bootlin.com>
+        <20220414074011.500533-3-herve.codina@bootlin.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.7 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 14/04/2022 01:10, Maciej W. Rozycki wrote:
-> On Wed, 23 Mar 2022, Ben Dooks wrote:
-> 
->>> FWIW, I have tested this and it solved my issue with nvme not being probed,
->>> so:
->>>
->>> Tested-by: Alexandre Ghiti <alexandre.ghiti@canonical.com>
->>
->> Ok, great. Our test rig seems to be still working with this.
-> 
->   I ran simple verification of your change by interrupting U-Boot after a
-> power-up and issuing:
-> 
-> => setenv boot_pci_enum true
-> 
-> at the command prompt before booting from the uSD card and curiously
-> enough the root port comes up with the Link Capabilities Register
-> reporting the lack of Link Bandwidth Notification Capability in this
-> scenario, while it reports its presence if booted undisturbed, i.e.:
-> 
-> 		LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM L0s L1, Exit Latency L0s <4us, L1 <4us
-> 			ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp+
-> 
-> vs:
-> 
-> 		LnkCap: Port #0, Speed 8GT/s, Width x8, ASPM L0s L1, Exit Latency L0s <4us, L1 <4us
-> 			ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
-> 
-> It is fully reproducible.
-> 
->   Any idea what might be causing it?  I can't see it being explicitly set
-> or cleared anywhere, be it in U-Boot or Linux, so it must be done by the
-> device itself depending on something.  And the lack of this capability
-> seems to me like non-compliance for a multiple-lane, multiple-speed
-> device.
+Hi Herv=C3=A9,
 
-I'll see if we can reproduce this
+herve.codina@bootlin.com wrote on Thu, 14 Apr 2022 09:40:05 +0200:
+
+> Convert Renesas PCI bridge bindings documentation to json-schema.
+> Also name it 'renesas,pci-usb' as it is specifically used to
+> connect the PCI USB controllers to AHB bus.
+>=20
+> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+> ---
+>  .../devicetree/bindings/pci/pci-rcar-gen2.txt |  84 -----------
+>  .../bindings/pci/renesas,pci-usb.yaml         | 134 ++++++++++++++++++
+>  2 files changed, 134 insertions(+), 84 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/pci/pci-rcar-gen2.t=
+xt
+>  create mode 100644 Documentation/devicetree/bindings/pci/renesas,pci-usb=
+.yaml
+>=20
+> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Do=
+cumentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> deleted file mode 100644
+> index aeba38f0a387..000000000000
+> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+> +++ /dev/null
+> @@ -1,84 +0,0 @@
+> -Renesas AHB to PCI bridge
+> --------------------------
+> -
+> -This is the bridge used internally to connect the USB controllers to the
+> -AHB. There is one bridge instance per USB port connected to the internal
+> -OHCI and EHCI controllers.
+> -
+> -Required properties:
+> -- compatible: "renesas,pci-r8a7742" for the R8A7742 SoC;
+> -	      "renesas,pci-r8a7743" for the R8A7743 SoC;
+> -	      "renesas,pci-r8a7744" for the R8A7744 SoC;
+> -	      "renesas,pci-r8a7745" for the R8A7745 SoC;
+> -	      "renesas,pci-r8a7790" for the R8A7790 SoC;
+> -	      "renesas,pci-r8a7791" for the R8A7791 SoC;
+> -	      "renesas,pci-r8a7793" for the R8A7793 SoC;
+> -	      "renesas,pci-r8a7794" for the R8A7794 SoC;
+> -	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 or
+> -				      RZ/G1 compatible device.
+> -
+> -
+> -	      When compatible with the generic version, nodes must list the
+> -	      SoC-specific version corresponding to the platform first
+> -	      followed by the generic version.
+> -
+> -- reg:	A list of physical regions to access the device: the first is
+> -	the operational registers for the OHCI/EHCI controllers and the
+> -	second is for the bridge configuration and control registers.
+> -- interrupts: interrupt for the device.
+> -- clocks: The reference to the device clock.
+> -- bus-range: The PCI bus number range; as this is a single bus, the range
+> -	     should be specified as the same value twice.
+> -- #address-cells: must be 3.
+> -- #size-cells: must be 2.
+> -- #interrupt-cells: must be 1.
+> -- interrupt-map: standard property used to define the mapping of the PCI
+> -  interrupts to the GIC interrupts.
+> -- interrupt-map-mask: standard property that helps to define the interru=
+pt
+> -  mapping.
+> -
+> -Optional properties:
+> -- dma-ranges: a single range for the inbound memory region. If not suppl=
+ied,
+> -  defaults to 1GiB at 0x40000000. Note there are hardware restrictions o=
+n the
+> -  allowed combinations of address and size.
+> -
+> -Example SoC configuration:
+> -
+> -	pci0: pci@ee090000  {
+> -		compatible =3D "renesas,pci-r8a7790", "renesas,pci-rcar-gen2";
+> -		clocks =3D <&mstp7_clks R8A7790_CLK_EHCI>;
+> -		reg =3D <0x0 0xee090000 0x0 0xc00>,
+> -		      <0x0 0xee080000 0x0 0x1100>;
+> -		interrupts =3D <0 108 IRQ_TYPE_LEVEL_HIGH>;
+> -		status =3D "disabled";
+> -
+> -		bus-range =3D <0 0>;
+> -		#address-cells =3D <3>;
+> -		#size-cells =3D <2>;
+> -		#interrupt-cells =3D <1>;
+> -		dma-ranges =3D <0x42000000 0 0x40000000 0 0x40000000 0 0x40000000>;
+> -		interrupt-map-mask =3D <0xff00 0 0 0x7>;
+> -		interrupt-map =3D <0x0000 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
+> -				 0x0800 0 0 1 &gic 0 108 IRQ_TYPE_LEVEL_HIGH
+> -				 0x1000 0 0 2 &gic 0 108 IRQ_TYPE_LEVEL_HIGH>;
+> -
+> -		usb@1,0 {
+> -			reg =3D <0x800 0 0 0 0>;
+> -			phys =3D <&usb0 0>;
+> -			phy-names =3D "usb";
+> -		};
+> -
+> -		usb@2,0 {
+> -			reg =3D <0x1000 0 0 0 0>;
+> -			phys =3D <&usb0 0>;
+> -			phy-names =3D "usb";
+> -		};
+> -	};
+> -
+> -Example board setup:
+> -
+> -&pci0 {
+> -	status =3D "okay";
+> -	pinctrl-0 =3D <&usb0_pins>;
+> -	pinctrl-names =3D "default";
+> -};
+> diff --git a/Documentation/devicetree/bindings/pci/renesas,pci-usb.yaml b=
+/Documentation/devicetree/bindings/pci/renesas,pci-usb.yaml
+> new file mode 100644
+> index 000000000000..3f8d79b746c7
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/renesas,pci-usb.yaml
+> @@ -0,0 +1,134 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/renesas,pci-usb.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Renesas AHB to PCI bridge
+> +
+> +maintainers:
+> +  - Marek Vasut <marek.vasut+renesas@gmail.com>
+> +  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> +
+> +description: |
+> +  This is the bridge used internally to connect the USB controllers to t=
+he
+> +  AHB. There is one bridge instance per USB port connected to the intern=
+al
+> +  OHCI and EHCI controllers.
+> +
+> +allOf:
+> +  - $ref: /schemas/pci/pci-bus.yaml#
+> +
+> +properties:
+> +  compatible:
+> +    oneOf:
+> +      - items:
+> +          - enum:
+> +              - renesas,pci-r8a7742      # RZ/G1H
+> +              - renesas,pci-r8a7743      # RZ/G1M
+> +              - renesas,pci-r8a7744      # RZ/G1N
+> +              - renesas,pci-r8a7745      # RZ/G1E
+> +              - renesas,pci-r8a7790      # R-Car H2
+> +              - renesas,pci-r8a7791      # R-Car M2-W
+> +              - renesas,pci-r8a7793      # R-Car M2-N
+> +              - renesas,pci-r8a7794      # R-Car E2
+> +          - const: renesas,pci-rcar-gen2 # R-Car Gen2 and RZ/G1
+> +
+> +  reg:
+> +    description: |
+> +      A list of physical regions to access the device. The first is
+> +      the operational registers for the OHCI/EHCI controllers and the
+> +      second is for the bridge configuration and control registers.
+> +    minItems: 2
+> +    maxItems: 2
+> +
+> +  interrupts:
+> +    description: Interrupt for the device.
+
+When the description is rather straightforward (like "this is the main
+interrupt/clock") I don't think a description is expected. A number
+however might be useful, I believe.
+
+> +
+> +  interrupt-map:
+> +    description: |
+> +      Standard property used to define the mapping of the PCI interrupts
+> +      to the GIC interrupts.
+> +
+> +  interrupt-map-mask:
+> +    description:
+> +      Standard property that helps to define the interrupt mapping.
+> +
+> +  clocks:
+> +    description: The reference to the device clock.
+
+Maybe maxItems: 1 ?
+
+> +
+> +  bus-range:
+> +    description: |
+> +      The PCI bus number range; as this is a single bus, the range
+> +      should be specified as the same value twice.
+> +
+> +  "#address-cells":
+> +    const: 3
+> +
+> +  "#size-cells":
+> +    const: 2
+> +
+> +  "#interrupt-cells":
+> +    const: 1
+> +
+> +  dma-ranges:
+> +    description: |
+> +      A single range for the inbound memory region. If not supplied,
+> +      defaults to 1GiB at 0x40000000. Note there are hardware restrictio=
+ns on
+> +      the allowed combinations of address and size.
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +  - interrupt-map
+> +  - interrupt-map-mask
+> +  - clocks
+> +  - bus-range
+> +  - "#address-cells"
+> +  - "#size-cells"
+> +  - "#interrupt-cells"
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/clock/r8a7790-cpg-mssr.h>
+> +
+> +    bus {
+> +        #address-cells =3D <2>;
+> +        #size-cells =3D <2>;
+> +
+> +        pci0: pci@ee090000  {
+> +            compatible =3D "renesas,pci-r8a7790", "renesas,pci-rcar-gen2=
+";
+> +            device_type =3D "pci";
+> +            clocks =3D <&cpg CPG_MOD 703>;
+> +            reg =3D <0 0xee090000 0 0xc00>,
+> +                  <0 0xee080000 0 0x1100>;
+> +            interrupts =3D <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
+> +            status =3D "disabled";
+> +
+> +            bus-range =3D <0 0>;
+> +            #address-cells =3D <3>;
+> +            #size-cells =3D <2>;
+> +            #interrupt-cells =3D <1>;
+> +            ranges =3D <0x02000000 0 0xee080000 0 0xee080000 0 0x0001000=
+0>;
+> +            dma-ranges =3D <0x42000000 0 0x40000000 0 0x40000000 0 0x400=
+00000>;
+> +            interrupt-map-mask =3D <0xf800 0 0 0x7>;
+> +            interrupt-map =3D <0x0000 0 0 1 &gic GIC_SPI 108 IRQ_TYPE_LE=
+VEL_HIGH>,
+> +                            <0x0800 0 0 1 &gic GIC_SPI 108 IRQ_TYPE_LEVE=
+L_HIGH>,
+> +                            <0x1000 0 0 2 &gic GIC_SPI 108 IRQ_TYPE_LEVE=
+L_HIGH>;
+> +
+> +            usb@1,0 {
+> +                reg =3D <0x800 0 0 0 0>;
+> +                phys =3D <&usb0 0>;
+> +                phy-names =3D "usb";
+> +            };
+> +           =20
+> +            usb@2,0 {
+> +                reg =3D <0x1000 0 0 0 0>;
+> +                phys =3D <&usb0 0>;
+> +                phy-names =3D "usb";
+> +            };
+> +        };
+> +    };
 
 
--- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
-
-https://www.codethink.co.uk/privacy.html
+Thanks,
+Miqu=C3=A8l
