@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5753AC4321E
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 07:40:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E5EFC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Apr 2022 07:41:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240470AbiDNHnG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Apr 2022 03:43:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59466 "EHLO
+        id S240616AbiDNHn1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Apr 2022 03:43:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240553AbiDNHmv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 03:42:51 -0400
-Received: from relay5-d.mail.gandi.net (relay5-d.mail.gandi.net [217.70.183.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1277940931;
-        Thu, 14 Apr 2022 00:40:26 -0700 (PDT)
+        with ESMTP id S240607AbiDNHnO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2022 03:43:14 -0400
+Received: from relay5-d.mail.gandi.net (relay5-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::225])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B3505714A;
+        Thu, 14 Apr 2022 00:40:49 -0700 (PDT)
 Received: (Authenticated sender: herve.codina@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPA id E6CC01C0015;
-        Thu, 14 Apr 2022 07:40:22 +0000 (UTC)
+        by mail.gandi.net (Postfix) with ESMTPA id 7BA071C0006;
+        Thu, 14 Apr 2022 07:40:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1649922025;
+        t=1649922048;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WLMGN8W4KzuVPgqbnvRFLH6IcEpJsrhI1QCKS4t1hsA=;
-        b=EmAxXWkw4b+7SoVMA9NWRxnSwWeu8qw/PIJHX0OZ/TNgQHMimmtL2oZ1i0BcgJvhconYaB
-        bP/jD8JqfjWZTYq3rfZtEbd24xiekZ6NjVW9XvvJCdCTa4SXn+yJW/YikZejDibVM2tag7
-        A2bH/YdXxW5VQH9BNA1ytZ7r7ToUoMFTjHc9LEaj3aMjGx6IljT7LKoPdHgFSzDUwajti0
-        hf5TP4nqWzAGEXCsKfZZxMR6mBWavlnle454weujPXKlubPCCRSR9SoonQMKUbYNNpPq1Y
-        xKKZdU1MgDA3RfqEj+WbIgVkL7g726Qn3//M8LyyfiBf5dQ17TQLdV8TT2QXAg==
+        bh=XdDCShbbxhQ2SA9jviWD/+YRBhMlJkyJIZxBflXfYR0=;
+        b=FLdKrGqHEkSb6QGT+rXqIUJJoDIxHeweM6Q/pByus+MXYtcHDIFqg2mjp9uUNQ93dPDVrR
+        p0a1oF7qbtBRrqe3cbL6nFJyKRfJ9ayNy8geU4yuJ+6VumDc74uLGnUa84yRpIPYDn4vke
+        SZGq+UOGZejnWpPW79zckaU9n5puyeuC4j2f11WITwC6W3bIADkaBtIWrfb7gWB4+LC+dk
+        ZIbw7+UeSFDL9LSCFXZG7SC2lmDb8DWOgMbG4aGCb+9ALWHy2eVRqhBLB6ZzFqOBOD0h/r
+        v+FP+aKD778FEfMD3vc+4J2LGBC0pxvk8uIa3O2RNOD/BDQEUwi4PWKWR+CoAg==
 From:   Herve Codina <herve.codina@bootlin.com>
 To:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
@@ -46,9 +46,9 @@ Cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
         Clement Leger <clement.leger@bootlin.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>,
         Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH v2 1/8] PCI: rcar-gen2: Add support for clocks
-Date:   Thu, 14 Apr 2022 09:40:04 +0200
-Message-Id: <20220414074011.500533-2-herve.codina@bootlin.com>
+Subject: [PATCH v2 6/8] ARM: dts: r9a06g032: Add internal PCI bridge node
+Date:   Thu, 14 Apr 2022 09:40:09 +0200
+Message-Id: <20220414074011.500533-7-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220414074011.500533-1-herve.codina@bootlin.com>
 References: <20220414074011.500533-1-herve.codina@bootlin.com>
@@ -58,92 +58,52 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI rcar-gen2 does not call any clk_prepare_enable().
-This lead to an access failure when the driver tries to access
-the IP (at least on a RZ/N1D platform).
-
-Prepare and enable clocks using the bulk version of
-clk_prepare_enable() in order to prepare and enable all clocks
-attached to this device.
+Add the device node for the r9a06g032 internal PCI bridge device.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 ---
- drivers/pci/controller/pci-rcar-gen2.c | 28 ++++++++++++++++++++++++--
- 1 file changed, 26 insertions(+), 2 deletions(-)
+ arch/arm/boot/dts/r9a06g032.dtsi | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
-index 35804ea394fd..528bc3780e01 100644
---- a/drivers/pci/controller/pci-rcar-gen2.c
-+++ b/drivers/pci/controller/pci-rcar-gen2.c
-@@ -8,6 +8,7 @@
-  * Author: Valentine Barshak <valentine.barshak@cogentembedded.com>
-  */
- 
-+#include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/init.h>
- #include <linux/interrupt.h>
-@@ -99,6 +100,8 @@ struct rcar_pci {
- 	struct resource mem_res;
- 	struct resource *cfg_res;
- 	int irq;
-+	struct clk_bulk_data *clocks;
-+	int nclocks;
- };
- 
- /* PCI configuration space operations */
-@@ -282,6 +285,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	struct rcar_pci *priv;
- 	struct pci_host_bridge *bridge;
- 	void __iomem *reg;
-+	int ret;
- 
- 	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*priv));
- 	if (!bridge)
-@@ -305,13 +309,25 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 	priv->mem_res = *mem_res;
- 	priv->cfg_res = cfg_res;
- 
-+	ret = devm_clk_bulk_get_all(dev, &priv->clocks);
-+	if (ret < 0) {
-+		dev_err(dev, "failed to get clocks %d\n", ret);
-+		return ret;
-+	}
-+	priv->nclocks = ret;
+diff --git a/arch/arm/boot/dts/r9a06g032.dtsi b/arch/arm/boot/dts/r9a06g032.dtsi
+index 636a6ab31c58..848dc034bb8c 100644
+--- a/arch/arm/boot/dts/r9a06g032.dtsi
++++ b/arch/arm/boot/dts/r9a06g032.dtsi
+@@ -211,6 +211,34 @@ gic: interrupt-controller@44101000 {
+ 			interrupts =
+ 				<GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
+ 		};
 +
-+	ret = clk_bulk_prepare_enable(priv->nclocks, priv->clocks);
-+	if (ret)
-+		return ret;
++		pci_usb: pci@40030000 {
++			compatible = "renesas,pci-r9a06g032", "renesas,pci-rzn1";
++			device_type = "pci";
++			clocks = <&sysctrl R9A06G032_HCLK_USBH>,
++				 <&sysctrl R9A06G032_HCLK_USBPM>,
++				 <&sysctrl R9A06G032_CLK_PCI_USB>;
++			clock-names = "hclk_usbh", "hclk_usbpm", "clk_pci_usb";
++			reg = <0x40030000 0xc00>,
++			      <0x40020000 0x1100>;
++			interrupts = <GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH>;
++			status = "disabled";
 +
- 	priv->irq = platform_get_irq(pdev, 0);
- 	priv->reg = reg;
- 	priv->dev = dev;
++			bus-range = <0 0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			ranges = <0x02000000 0 0x40020000 0x40020000 0 0x00010000>;
++			/* Should map all possible DDR as inbound ranges, but
++			 * the IP only supports a 256MB, 512MB, or 1GB window.
++			 * flags, PCI addr (64-bit), CPU addr, PCI size (64-bit)
++			 */
++			dma-ranges = <0x42000000 0 0x80000000 0x80000000 0 0x40000000>;
++			interrupt-map-mask = <0xf800 0 0 0x7>;
++			interrupt-map = <0x0000 0 0 1 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
++					 0x0800 0 0 1 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH
++					 0x1000 0 0 2 &gic GIC_SPI 79 IRQ_TYPE_LEVEL_HIGH>;
++		};
+ 	};
  
- 	if (priv->irq < 0) {
- 		dev_err(dev, "no valid irq found\n");
--		return priv->irq;
-+		ret = priv->irq;
-+		goto disable_clocks;
- 	}
- 
- 	bridge->ops = &rcar_pci_ops;
-@@ -320,7 +336,15 @@ static int rcar_pci_probe(struct platform_device *pdev)
- 
- 	rcar_pci_setup(priv);
- 
--	return pci_host_probe(bridge);
-+	ret = pci_host_probe(bridge);
-+	if (ret < 0)
-+		goto disable_clocks;
-+
-+	return 0;
-+
-+disable_clocks:
-+	clk_bulk_disable_unprepare(priv->nclocks, priv->clocks);
-+	return ret;
- }
- 
- static const struct of_device_id rcar_pci_of_match[] = {
+ 	timer {
 -- 
 2.35.1
 
