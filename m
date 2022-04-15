@@ -2,239 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C52BC43217
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Apr 2022 21:06:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58655C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Apr 2022 21:27:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354283AbiDOVJF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Apr 2022 17:09:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41068 "EHLO
+        id S1354498AbiDOV3q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Apr 2022 17:29:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353834AbiDOVI7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Apr 2022 17:08:59 -0400
-Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A62CD8AE74;
-        Fri, 15 Apr 2022 14:06:29 -0700 (PDT)
-Received: by mail-qt1-x82f.google.com with SMTP id x18so879386qtw.4;
-        Fri, 15 Apr 2022 14:06:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=2wd9sVHC/mmpYlhb5g3G/iw92sjMjBm/QMls3NoS/gY=;
-        b=ZepHFbUzX9nQ3lczHQjoOxDVF0craAJAMae1b6EHo3hHdQ+IHHofZdfLd9VMQBCuus
-         ct+9sdg88EpUIksezPpW5S8b7h9vWnigYjRxGNZbaTSYU/tavv8dprWDdBUbWUDgSGKu
-         2hdfCjZ9D106tCWK4CeCcUCqCV3fMxu0jeA/XrUMZbh+gehCEc4FhTmWXKLS4Sf5xCGw
-         X6+O48y6iEJW5E8HvzKfkkE2BIejK3k2JjVorDC/C7505rTsU9k94O5jjnZQLndM3KIq
-         vMafaSbG5JWbFgdZwcMCjLIuwFoaAsymXtoaimIpF8w1yyKUbE8RcC6B87Up8CZm2T+O
-         rhLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=2wd9sVHC/mmpYlhb5g3G/iw92sjMjBm/QMls3NoS/gY=;
-        b=gzWw+3p7iK87AxxoI9Ix1q7IrmoQHpUKavAs2EnjFAHUhyF917Q/WjLJNIL+R1i/Ae
-         6FZytL9EEvUooAydSnPwMcCy9+JCKxcEYuvwgRZgbYvZSOokYSGTYOf/30RrkGygb8OM
-         MGa0lOjvribBMqmQsB3J2vpNB5Z5Lzelp1k80R4nIS3xS0M4PoaW3CCkqp8umu6Cm5zB
-         keVmtWa3yGJ0syYxJ0RD6/klp3Ui7LFq4BTkk9Q+xiMxmw1Xl9SqQZuPFWiDT+u/BwwB
-         915uNsMi/4xMocc9eE1zCcxpCAVXhsKcm8YO6ukiJosYVE3agZR8PjxlmcnyDzaVIDJQ
-         wfDw==
-X-Gm-Message-State: AOAM5305HdqINFSqIxpM1Upt3LVYgNJCTCxUc23PbBmffLZXDPjsL5MK
-        nFBYndCj2grbaIjkmJ0vLGuP5RRoH1Wg5Xhv
-X-Google-Smtp-Source: ABdhPJyqAQz14tDPs4vZep13IX2IvP5mbxuo3Rt92NtsADgjhHNBNxqJlwMfgyC8otf9fU+LXjUi4Q==
-X-Received: by 2002:ac8:578b:0:b0:2e2:324a:7b6c with SMTP id v11-20020ac8578b000000b002e2324a7b6cmr672763qta.267.1650056788532;
-        Fri, 15 Apr 2022 14:06:28 -0700 (PDT)
-Received: from master-x64.sparksnet ([2601:153:980:85b1::10])
-        by smtp.gmail.com with ESMTPSA id w8-20020a05620a148800b0069c4884c990sm2838664qkj.108.2022.04.15.14.06.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Apr 2022 14:06:28 -0700 (PDT)
-From:   Peter Geis <pgwipeout@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>
-Cc:     linux-rockchip@lists.infradead.org,
-        Peter Geis <pgwipeout@gmail.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 2/4] PCI: dwc: rockchip: add legacy interrupt support
-Date:   Fri, 15 Apr 2022 17:06:19 -0400
-Message-Id: <20220415210621.538109-3-pgwipeout@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220415210621.538109-1-pgwipeout@gmail.com>
-References: <20220415210621.538109-1-pgwipeout@gmail.com>
+        with ESMTP id S1355472AbiDOV25 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Apr 2022 17:28:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E4E7DAFDE;
+        Fri, 15 Apr 2022 14:25:36 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BB6AD620BE;
+        Fri, 15 Apr 2022 21:25:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D654EC385A4;
+        Fri, 15 Apr 2022 21:25:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650057935;
+        bh=vwSHnKHKO3IOmpaR8ZgMY3Rm4mueE+R5d078hf6Pu6A=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=UPgphip03sbzXT0W362vRLwvBo87HGwgbf+Qs4PKqK+EUiZbVUXITL8h1+XZbUSM4
+         ucR+/iiXoUS1KdvQAmWHEE8IQPcG7NY+THUUKWzttQN1N8bYZfr0d6+WkSNdc/GY6D
+         e/BFs090rGQF6n+AXTBmV7xqdt9/T5F2A0FmlJ9ImQcuDkjp17Z2r+658ZaM8D6EaV
+         lQC45eOilvVFEYJ43XPRriG9Q5jxJW3RWex7H/cORwMAle213xWPxsIPlo/5oiYe3p
+         pKL4ubLHIsk5l9DX/VAF169crMRvqrGHSHv8io/gtKCB9wthiCwRlO/X6ZcfV6iNUx
+         qr+JP2DvJcXxQ==
+Date:   Fri, 15 Apr 2022 16:25:33 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     Vidya Sagar <vidyas@nvidia.com>,
+        "Kenneth R. Crudup" <kenny@panix.com>, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, hkallweit1@gmail.com,
+        wangxiongfeng2@huawei.com, mika.westerberg@linux.intel.com,
+        chris.packham@alliedtelesis.co.nz, yangyicong@hisilicon.com,
+        treding@nvidia.com, jonathanh@nvidia.com, abhsahu@nvidia.com,
+        sagupta@nvidia.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kthota@nvidia.com,
+        mmaddireddy@nvidia.com, sagar.tv@gmail.com,
+        Ricky Wu <ricky_wu@realtek.com>,
+        Rajat Jain <rajatja@google.com>,
+        Prasad Malisetty <quic_pmaliset@quicinc.com>,
+        Victor Ding <victording@google.com>
+Subject: Re: [PATCH V1] PCI/ASPM: Save/restore L1SS Capability for
+ suspend/resume
+Message-ID: <20220415212533.GA844147@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAAd53p6DX2C7KVRV=uu_mmPTTjE7=RsXfNPxjbOBLRbf-pXi5A@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The legacy interrupts on the rk356x pcie controller are handled by a
-single muxed interrupt. Add irq domain support to the pcie-dw-rockchip
-driver to support the virtual domain.
+On Fri, Apr 15, 2022 at 10:26:19PM +0800, Kai-Heng Feng wrote:
+> On Fri, Apr 15, 2022 at 12:41 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Wed, Apr 13, 2022 at 08:19:26AM +0800, Kai-Heng Feng wrote:
+> > > On Wed, Apr 13, 2022 at 6:50 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > ...
+> >
+> > > >   - For L1 PM Substates configuration, sec 5.5.4 says that both ports
+> > > >     must be configured while ASPM L1 is disabled, but I don't think we
+> > > >     currently guarantee this: we restore all the upstream component
+> > > >     state first, and we don't know the ASPM state of the downstream
+> > > >     one.  Maybe we need to:
+> > > >
+> > > >       * When restoring upstream component,
+> > > >           + disable its ASPM
+> > > >
+> > > >       * When restoring downstream component,
+> > > >           + disable its ASPM
+> > > >           + restore upstream component's LTR, L1SS
+> > > >           + restore downstream component's LTR, L1SS
+> > > >           + restore upstream component's ASPM
+> > > >           + restore downstream component's ASPM
+> > >
+> > > Right now L1SS isn't reprogrammed after S3, and that causes WD NVMe
+> > > starts to spew lots of AER errors.
+> >
+> > Right now we don't fully restore L1SS-related state after S3, so maybe
+> > there's some inconsistency that leads to the AER errors.
 
-Signed-off-by: Peter Geis <pgwipeout@gmail.com>
----
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 112 +++++++++++++++++-
- 1 file changed, 110 insertions(+), 2 deletions(-)
+> > Could you collect the "lspci -vv" state before and after S3 so we can
+> > compare them?
+> >
+> > > So yes please restore L1SS upon resume. Meanwhile I am asking vendor
+> > > _why_ restoring L1SS is crucial for it to work.
+> > >
+> > > I also wonder what's the purpose of pcie_aspm_pm_state_change()? Can't
+> > > we just restore ASPM bits like other configs?
+> >
+> > Good question.  What's the context?  This is in the
+> > pci_raw_set_power_state() path, not the pci_restore_state() path, so
+> > seems like a separate discussion.
+> 
+> Because this patch alone doesn't restore T_PwrOn and LTR1.2_Threshold.
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index c9b341e55cbb..863374604fb1 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -10,9 +10,12 @@
- 
- #include <linux/clk.h>
- #include <linux/gpio/consumer.h>
-+#include <linux/irqchip/chained_irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/mfd/syscon.h>
- #include <linux/module.h>
- #include <linux/of_device.h>
-+#include <linux/of_irq.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/regmap.h>
-@@ -36,10 +39,13 @@
- #define PCIE_LINKUP			(PCIE_SMLH_LINKUP | PCIE_RDLH_LINKUP)
- #define PCIE_L0S_ENTRY			0x11
- #define PCIE_CLIENT_GENERAL_CONTROL	0x0
-+#define PCIE_CLIENT_INTR_STATUS_LEGACY	0x8
-+#define PCIE_CLIENT_INTR_MASK_LEGACY	0x1c
- #define PCIE_CLIENT_GENERAL_DEBUG	0x104
--#define PCIE_CLIENT_HOT_RESET_CTRL      0x180
-+#define PCIE_CLIENT_HOT_RESET_CTRL	0x180
- #define PCIE_CLIENT_LTSSM_STATUS	0x300
--#define PCIE_LTSSM_ENABLE_ENHANCE       BIT(4)
-+#define PCIE_LEGACY_INT_ENABLE		GENMASK(3, 0)
-+#define PCIE_LTSSM_ENABLE_ENHANCE	BIT(4)
- #define PCIE_LTSSM_STATUS_MASK		GENMASK(5, 0)
- 
- struct rockchip_pcie {
-@@ -51,6 +57,8 @@ struct rockchip_pcie {
- 	struct reset_control		*rst;
- 	struct gpio_desc		*rst_gpio;
- 	struct regulator                *vpcie3v3;
-+	struct irq_domain		*irq_domain;
-+	raw_spinlock_t			irq_lock;
- };
- 
- static int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip,
-@@ -65,6 +73,94 @@ static void rockchip_pcie_writel_apb(struct rockchip_pcie *rockchip,
- 	writel_relaxed(val, rockchip->apb_base + reg);
- }
- 
-+static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
-+{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct rockchip_pcie *rockchip = irq_desc_get_handler_data(desc);
-+	unsigned long reg, hwirq;
-+
-+	chained_irq_enter(chip, desc);
-+
-+	reg = rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_INTR_STATUS_LEGACY);
-+
-+	for_each_set_bit(hwirq, &reg, 8)
-+		generic_handle_domain_irq(rockchip->irq_domain, hwirq);
-+
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static void rockchip_intx_mask(struct irq_data *data)
-+{
-+	struct rockchip_pcie *rockchip = irq_data_get_irq_chip_data(data);
-+	unsigned long flags;
-+	u32 val;
-+
-+	/* disable legacy interrupts */
-+	raw_spin_lock_irqsave(&rockchip->irq_lock, flags);
-+	val = HIWORD_UPDATE_BIT(PCIE_LEGACY_INT_ENABLE);
-+	val |= PCIE_LEGACY_INT_ENABLE;
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_LEGACY);
-+	raw_spin_unlock_irqrestore(&rockchip->irq_lock, flags);
-+};
-+
-+static void rockchip_intx_unmask(struct irq_data *data)
-+{
-+	struct rockchip_pcie *rockchip = irq_data_get_irq_chip_data(data);
-+	unsigned long flags;
-+	u32 val;
-+
-+	/* enable legacy interrupts */
-+	raw_spin_lock_irqsave(&rockchip->irq_lock, flags);
-+	val = HIWORD_UPDATE_BIT(PCIE_LEGACY_INT_ENABLE);
-+	val &= ~PCIE_LEGACY_INT_ENABLE;
-+	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_INTR_MASK_LEGACY);
-+	raw_spin_unlock_irqrestore(&rockchip->irq_lock, flags);
-+};
-+
-+static struct irq_chip rockchip_intx_irq_chip = {
-+	.name			= "INTx",
-+	.irq_mask		= rockchip_intx_mask,
-+	.irq_unmask		= rockchip_intx_unmask,
-+	.flags			= IRQCHIP_SKIP_SET_WAKE | IRQCHIP_MASK_ON_SUSPEND,
-+};
-+
-+static int rockchip_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-+				  irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &rockchip_intx_irq_chip, handle_level_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops intx_domain_ops = {
-+	.map = rockchip_pcie_intx_map,
-+};
-+
-+static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
-+{
-+	struct device *dev = rockchip->pci.dev;
-+	struct device_node *intc;
-+
-+	raw_spin_lock_init(&rockchip->irq_lock);
-+
-+	intc = of_get_child_by_name(dev->of_node, "legacy-interrupt-controller");
-+	if (!intc) {
-+		dev_err(dev, "missing child interrupt-controller node\n");
-+		return -EINVAL;
-+	}
-+
-+	rockchip->irq_domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
-+						    &intx_domain_ops, rockchip);
-+	of_node_put(intc);
-+	if (!rockchip->irq_domain) {
-+		dev_err(dev, "failed to get a INTx IRQ domain\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
- {
- 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
-@@ -111,7 +207,19 @@ static int rockchip_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
-+	struct device *dev = rockchip->pci.dev;
- 	u32 val = HIWORD_UPDATE_BIT(PCIE_LTSSM_ENABLE_ENHANCE);
-+	int irq, ret;
-+
-+	irq = of_irq_get_byname(dev->of_node, "legacy");
-+	if (irq < 0)
-+		return irq;
-+
-+	ret = rockchip_pcie_init_irq_domain(rockchip);
-+	if (ret < 0)
-+		dev_err(dev, "failed to init irq domain\n");
-+
-+	irq_set_chained_handler_and_data(irq, rockchip_pcie_legacy_int_handler, rockchip);
- 
- 	/* LTSSM enable control mode */
- 	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
--- 
-2.25.1
+I assume the post-S3 path is basically this:
 
+  pci_pm_resume_noirq
+    pci_pm_default_resume_early
+      pci_power_up
+        pci_raw_set_power_state(D0)
+          pcie_aspm_pm_state_change
+            pcie_config_aspm_path
+              pcie_config_aspm_link
+                pcie_config_aspm_l1ss
+                  clear PCI_EXP_LNKCTL_ASPM_L1 etc
+                  set PCI_L1SS_CTL1_ASPM_L1_1 etc
+                pcie_config_aspm_dev
+                  set PCI_EXP_LNKCTL_ASPM_L1 etc
+      pci_restore_state
+        pci_restore_ltr_state
+        pci_restore_aspm_l1ss_state     # after this patch
+        pci_restore_pcie_state
+
+Hmm...  I think I see what you're saying.  pcie_aspm_pm_state_change()
+fiddles with ASPM and L1SS enable bits.  It likely disables L1,
+enables L1SS, enables L1, but never restores the LTR capability or the
+T_PwrOn and LTR1.2_Threshold bits you mention.
+
+Then we turn around and overwrite all that stuff (and the LTR cap) in
+pci_restore_state().  That all seems fairly broken, and I agree, I
+don't know why pcie_aspm_pm_state_change() exists.
+
+> So I forced the pcie_aspm_pm_state_change() calling path to eventually
+> call aspm_calc_l1ss_info() which solved the problem for me.
+
+This would update T_PwrOn and LTR1.2_Threshold, so I guess it makes
+sense that this would help.  But I think we need to figure out the
+reason why pcie_aspm_pm_state_change() exists and get rid of it or at
+least better integrate it with pci_restore_state().
+
+If we call pcie_aspm_pm_state_change() after D3cold or reset, things
+still aren't going to work because the LTR cap isn't restored or
+programmed.
