@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1285AC433F5
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Apr 2022 14:05:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE752C433F5
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Apr 2022 14:05:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232226AbiDPOHt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Apr 2022 10:07:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39390 "EHLO
+        id S232223AbiDPOH6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 16 Apr 2022 10:07:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232223AbiDPOHs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Apr 2022 10:07:48 -0400
-Received: from mxout4.routing.net (mxout4.routing.net [IPv6:2a03:2900:1:a::9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AC231836A
-        for <linux-pci@vger.kernel.org>; Sat, 16 Apr 2022 07:05:13 -0700 (PDT)
+        with ESMTP id S232181AbiDPOH4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Apr 2022 10:07:56 -0400
+Received: from mxout3.routing.net (mxout3.routing.net [IPv6:2a03:2900:1:a::8])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAD91286EA
+        for <linux-pci@vger.kernel.org>; Sat, 16 Apr 2022 07:05:23 -0700 (PDT)
 Received: from mxbox2.masterlogin.de (unknown [192.168.10.89])
-        by mxout4.routing.net (Postfix) with ESMTP id AEF821007A0;
-        Sat, 16 Apr 2022 13:55:36 +0000 (UTC)
+        by mxout3.routing.net (Postfix) with ESMTP id ACDE460362;
+        Sat, 16 Apr 2022 13:55:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1650117336;
+        s=20200217; t=1650117332;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=5P+kuagV6Z84gNo/RLW8HroxGzgqmpKqpzpblsOEYl4=;
-        b=SAxjKjmrGjaI1uK2U/O/6+N2p68chmV2mmP0kNgXJkUHVP5KL3bknUE0AkqdNT+5e+l2kG
-        XrqOi5Hjk5GehVDEX+/mX7WQqtUy9X+XoZEWVw1Si5Or1yjMXtD9besm0+TK6yIjW63ZJs
-        MQmC1tcWWEXhAI7nih/OVDT1onLdqpg=
+        bh=s68gl0yAxZUm+X2bvVvokjQGAHtdT79RQMQEhISep+M=;
+        b=rE8+uq6rNsCmMbExXD0PS3nAsHvd1dwdaJL/p41t0+95QEfLUYPl1ClZrBRyzZfI81PGKf
+        o83mnws4tZCflHeGe/4+rnuKJtyX8Arfwu/t8rv+UGUKqu5PnxhOYhaHRAH7lakV4HxbdQ
+        Fay4p/hLJBxd51Ey0DQwCUx16pTJp/8=
 Received: from localhost.localdomain (fttx-pool-217.61.150.108.bambit.de [217.61.150.108])
-        by mxbox2.masterlogin.de (Postfix) with ESMTPSA id 6ADE81006D1;
-        Sat, 16 Apr 2022 13:55:35 +0000 (UTC)
+        by mxbox2.masterlogin.de (Postfix) with ESMTPSA id 4397A1006D1;
+        Sat, 16 Apr 2022 13:55:31 +0000 (UTC)
 From:   Frank Wunderlich <linux@fw-web.de>
 To:     linux-rockchip@lists.infradead.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
@@ -48,73 +48,112 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [RFC/RFT 4/6] PCI: rockchip-dwc: add pcie bifurcation
-Date:   Sat, 16 Apr 2022 15:54:56 +0200
-Message-Id: <20220416135458.104048-5-linux@fw-web.de>
+Subject: [RFC/RFT 1/6] dt-bindings: phy: rockchip: add pcie3 phy
+Date:   Sat, 16 Apr 2022 15:54:53 +0200
+Message-Id: <20220416135458.104048-2-linux@fw-web.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220416135458.104048-1-linux@fw-web.de>
 References: <20220416135458.104048-1-linux@fw-web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Mail-ID: 81dc4821-c206-4329-8a32-b1fae495dacc
+X-Mail-ID: 2d0b12d3-a185-41d7-b17c-fea8090fc266
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Frank Wunderlich <frank-w@public-files.de>
 
-PCIe Lanes can be split to 2 slots with bifurcation.
-Add support for this in existing pcie driver.
+Add a new binding file for Rockchip PCIe V3 phy driver.
 
-Co-developed-by: Peter Geis <pgwipeout@gmail.com>
 Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
 ---
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ .../bindings/phy/rockchip-pcie3-phy.yaml      | 77 +++++++++++++++++++
+ 1 file changed, 77 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 863374604fb1..1b0c2115b32e 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -20,6 +20,7 @@
- #include <linux/platform_device.h>
- #include <linux/regmap.h>
- #include <linux/reset.h>
-+#include <linux/phy/pcie.h>
- 
- #include "pcie-designware.h"
- 
-@@ -59,6 +60,7 @@ struct rockchip_pcie {
- 	struct regulator                *vpcie3v3;
- 	struct irq_domain		*irq_domain;
- 	raw_spinlock_t			irq_lock;
-+	bool				bifurcation;
- };
- 
- static int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip,
-@@ -273,6 +275,12 @@ static int rockchip_pcie_phy_init(struct rockchip_pcie *rockchip)
- 		return dev_err_probe(dev, PTR_ERR(rockchip->phy),
- 				     "missing PHY\n");
- 
-+	if (rockchip->bifurcation) {
-+		ret = phy_set_mode_ext(rockchip->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_BIFURCATION);
-+		if (ret)
-+			return ret;
-+	}
+diff --git a/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml b/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml
+new file mode 100644
+index 000000000000..58a8ce175f13
+--- /dev/null
++++ b/Documentation/devicetree/bindings/phy/rockchip-pcie3-phy.yaml
+@@ -0,0 +1,77 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/phy/rockchip-pcie3-phy.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
- 	ret = phy_init(rockchip->phy);
- 	if (ret < 0)
- 		return ret;
-@@ -345,6 +353,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
-+	if (device_property_read_bool(dev, "rockchip,bifurcation"))
-+		rockchip->bifurcation = true;
++title: Rockchip PCIe v3 phy
 +
- 	ret = rockchip_pcie_phy_init(rockchip);
- 	if (ret)
- 		goto disable_regulator;
++maintainers:
++  - Heiko Stuebner <heiko@sntech.de>
++
++properties:
++  compatible:
++    enum:
++      - rockchip,rk3568-pcie3-phy
++      - rockchip,rk3588-pcie3-phy
++
++  reg:
++    maxItems: 2
++
++  clocks:
++    minItems: 1
++    maxItems: 3
++
++  clock-names:
++    contains:
++      anyOf:
++        - enum: [ refclk_m, refclk_n, pclk ]
++
++  "#phy-cells":
++    const: 0
++
++  resets:
++    maxItems: 1
++
++  reset-names:
++    const: phy
++
++  rockchip,phy-grf:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description: phandle to the syscon managing the phy "general register files"
++
++  rockchip,pipe-grf:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description: phandle to the syscon managing the pipe "general register files"
++
++  rockchip,pcie30-phymode:
++    $ref: '/schemas/types.yaml#/definitions/uint32'
++    description: |
++      use PHY_MODE_PCIE_AGGREGATION if not defined
++    minimum: 0x0
++    maximum: 0x4
++
++
++required:
++  - compatible
++  - reg
++  - rockchip,phy-grf
++
++additionalProperties: false
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/rk3568-cru.h>
++    pcie30phy: phy@fe8c0000 {
++      compatible = "rockchip,rk3568-pcie3-phy";
++      reg = <0x0 0xfe8c0000 0x0 0x20000>;
++      #phy-cells = <0>;
++      clocks = <&pmucru CLK_PCIE30PHY_REF_M>, <&pmucru CLK_PCIE30PHY_REF_N>,
++       <&cru PCLK_PCIE30PHY>;
++      clock-names = "refclk_m", "refclk_n", "pclk";
++      resets = <&cru SRST_PCIE30PHY>;
++      reset-names = "phy";
++      rockchip,phy-grf = <&pcie30_phy_grf>;
++    };
 -- 
 2.25.1
 
