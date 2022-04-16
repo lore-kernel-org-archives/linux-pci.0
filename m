@@ -2,153 +2,152 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE830C433F5
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Apr 2022 22:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F7A4C433F5
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Apr 2022 08:01:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241323AbiDOWRl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Apr 2022 18:17:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52140 "EHLO
+        id S230297AbiDPIDu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 16 Apr 2022 04:03:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231145AbiDOWRl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Apr 2022 18:17:41 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F04A3A5CC;
-        Fri, 15 Apr 2022 15:15:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id B03BECE31AC;
-        Fri, 15 Apr 2022 22:15:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDF39C385A4;
-        Fri, 15 Apr 2022 22:15:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650060908;
-        bh=s0Dk+7YpW8NELxA7hL4hxZKqgZ+VVInWF3zxwlrWQ8Y=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=mWa9A5pSTPbpb4OH489eFDoOPOebYkSL0TyfWWeXqI9ObwL3QN4NooutjQhdqYfVA
-         P31YIk8uoXovQZ4uKieXMISW5jSTGLM32Xp/FF8AjRhIlBDCH+stwfaaxG70ULJGDW
-         Wnx/bccL5gl290yieW3KZvj9ou5IwY7CLkW6/mAnyL0gdnJGf1OZwOAL7l7Debe0nE
-         4kLZieNBHZALIEGeKkryhv4OgJtotVulutog5aOfM2UmXSRMDcekYDjVYgJ0Om8hRk
-         wdi1RQLssP7NH+ncNJsiiJPwJj3GswVYN+ztyfBGWMt30VK8HjFzaiZ3DD3dEpUems
-         jw9nHoAprKjWw==
-Date:   Fri, 15 Apr 2022 17:15:06 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Rajat Jain <rajatja@google.com>
-Cc:     Jean-Philippe Brucker <jean-philippe@linaro.org>,
-        Rajat Jain <rajatxjain@gmail.com>,
-        Will Deacon <will@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Pavel Machek <pavel@denx.de>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        iommu@lists.linux-foundation.org,
-        Oliver O'Halloran <oohall@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        with ESMTP id S230305AbiDPIDs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Apr 2022 04:03:48 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69A1B100E29;
+        Sat, 16 Apr 2022 01:01:15 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id k5so17041743lfg.9;
+        Sat, 16 Apr 2022 01:01:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=MXlAdpQLGQGUUo4/nFrsdLnsJFw/wYKXZIo/9dWMKPs=;
+        b=GlWDVh4mGOslT9x+9Cf/M39/Uru7iSzMMGf0MsIHsJOECxtBIQEKSiOhQ6d5pbdf4j
+         0Q4ZSqwrihtygT0jrukCM2I5zVYNwWIr+kQ9Vt/kp3uXZwNjlTgFSu1injKGGeDyIW7w
+         l1qnOjTfmeatmweRiq24gZCi7q6JE9tLgmNi0SvW/Up+I0yjZLEIR58qIBBomdv5S+On
+         o6HQSqmfwHSo2KYKzD3onll3iGoNhgFDBt+GBdRV0h5xCFZ7DjwqXq/3/TE9n4v7T1+2
+         1jE2ZhXcJvn5NewsRez8HY/igateUo1vk+AZ087w895RzKsn83MZsPgSNi2LQnx9IZo6
+         xO2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=MXlAdpQLGQGUUo4/nFrsdLnsJFw/wYKXZIo/9dWMKPs=;
+        b=3AjgWXLADfJDv+on13NN3zfZ47SZfUsp17pNBe7w//lEtWWxzNUgzz0VddMAXpb0HE
+         T0EK+G3fhpD9yZ+xYN8dOK1JWd3PubTEmmp0L3LypROMNIzFpck8EX4M8+K/fDxrGP6t
+         K1xJGRcHocCafbGOBNNjWS/fE5KFELlr1KqgozvnwQSkbpQf92G/FB5PsTATTLvYJpo5
+         /afb3mHAvEFGhAQW2I2gLEeR9m3Cf93yXZ2VRxSJNPuwCVmbybfYctNZPB44ukVfJOFo
+         ZLJQ+/WRQHsukEZ7nzMevMFXsuY8OhpYfxNE1pwq3Gls16C5tzScV9Bp9gjHtt0RQ/wk
+         sYyQ==
+X-Gm-Message-State: AOAM533FHeMdhLJw31EoD4cX2ivBL1srpuBbDxO8YuM2EJTLggq1LB2J
+        5Pq7JXUFwCBbNcbtKPSpNdgt99RgsR6fdA==
+X-Google-Smtp-Source: ABdhPJz6CVXoHDhAV9Gyik5pPZg9sjhX0loL8jq9bIV8r8fjCmT8MZhcpEDiC1lO6R2UIgUS5k4BJQ==
+X-Received: by 2002:a05:6512:3c87:b0:46c:fde0:5d2e with SMTP id h7-20020a0565123c8700b0046cfde05d2emr1683544lfv.525.1650096073460;
+        Sat, 16 Apr 2022 01:01:13 -0700 (PDT)
+Received: from mobilestation (ip1.ibrae.ac.ru. [91.238.191.1])
+        by smtp.gmail.com with ESMTPSA id t25-20020a19dc19000000b0044a16b068c7sm593375lfg.117.2022.04.16.01.01.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 16 Apr 2022 01:01:11 -0700 (PDT)
+Date:   Sat, 16 Apr 2022 11:01:09 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Joe Perches <joe@perches.com>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Jesse Barnes <jsbarnes@google.com>,
-        Dmitry Torokhov <dtor@google.com>, Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH v5 1/2] PCI: ACPI: Support Microsoft's "DmaProperty"
-Message-ID: <20220415221506.GA851834@bhelgaas>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 03/16] PCI: dwc: Add more verbose link-up message
+Message-ID: <20220416080109.pqnuojor6lewltr3@mobilestation>
+References: <20220324013734.18234-1-Sergey.Semin@baikalelectronics.ru>
+ <20220324013734.18234-4-Sergey.Semin@baikalelectronics.ru>
+ <8569d431ce4e1d64ae271f0498c7a0395d2c5c7e.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CACK8Z6Fy3L7vijVn4w+6HwRuuTtW5ePrWc04rUc8U8TPT0Re0w@mail.gmail.com>
+In-Reply-To: <8569d431ce4e1d64ae271f0498c7a0395d2c5c7e.camel@perches.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 14, 2022 at 04:15:47PM -0700, Rajat Jain via iommu wrote:
-> On Thu, Apr 7, 2022 at 12:17 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Mar 25, 2022 at 11:46:08AM -0700, Rajat Jain wrote:
-
-> > > Support the "DmaProperty" with the same semantics. This is useful for
-> > > internal PCI devices that do not hang off a PCIe rootport, but offer
-> > > an attack surface for DMA attacks (e.g. internal network devices).
-> >
-> > Same semantics as what?
+On Mon, Mar 28, 2022 at 04:31:53PM -0700, Joe Perches wrote:
+> On Thu, 2022-03-24 at 04:37 +0300, Serge Semin wrote:
+> > Printing just "link up" isn't that much informative especially when it
+> > comes to working with the PCI Express bus. Even if the link is up, due to
+> > multiple reasons the bus performance can degrade to slower speeds or to
+> > narrower width than both Root Port and its partner is capable of. In that
+> > case it would be handy to know the link specifications as early as
+> > possible. So let's add a more verbose message to the busy-wait link-state
+> > method, which will contain the link speed generation and the PCIe bus
+> > width in case if the link up state is discovered. Otherwise an error will
+> > be printed to the system log.
+> > 
+> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-designware.c | 22 +++++++++++++++-----
+> >  1 file changed, 17 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> []
+> > @@ -528,14 +528,26 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+> >  
+> >  	/* Check if the link is up or not */
+> >  	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+> > -		if (dw_pcie_link_up(pci)) {
+> > -			dev_info(pci->dev, "Link up\n");
+> > -			return 0;
+> > -		}
+> > +		if (dw_pcie_link_up(pci))
+> > +			break;
+> > +
+> >  		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+> >  	}
+> >  
+> > -	dev_info(pci->dev, "Phy link never came up\n");
+> > +	if (retries < LINK_WAIT_MAX_RETRIES) {
+> > +		u32 offset, val;
+> > +
+> > +		offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> > +		val = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
+> > +
+> > +		dev_info(pci->dev, "PCIe Gen.%u x%u link up\n",
+> > +			 FIELD_GET(PCI_EXP_LNKSTA_CLS, val),
+> > +			 FIELD_GET(PCI_EXP_LNKSTA_NLW, val));
+> > +
+> > +		return 0;
+> > +	}
+> > +
+> > +	dev_err(pci->dev, "Phy link never came up\n");
+> >  
+> >  	return -ETIMEDOUT;
+> >  }
 > 
-> Er, I meant the same semantics as the "DmaProperty". Please also see below.
 
-"Support the 'DmaProperty' with the same semantics as 'DmaProperty'"
-doesn't help much, so there must be a little more to the story :)
+> IMO: it's generally bette to test the error condition and unindent
+> the typical return.
 
-> > The MS description of "ExternalFacingPort" says:
-> >
-> >   This ACPI object enables the operating system to identify externally
-> >   exposed PCIe hierarchies, such as Thunderbolt.
+Absolutely right. Thanks for noticing that. No idea why I haven't done
+the way you said 'cause it seems neater, more maintainable than what I
+suggested here.
+
+-Sergey
+
 > 
-> No, my patch doesn't have to do with this one.
-
-I know, but it's similar, and I'm just hoping we can deal with them
-consistently.
-
-> > and "DmaProperty" says:
-> >
-> >   This ACPI object enables the operating system to identify internal
-> >   PCIe hierarchies that are easily accessible by users (such as,
-> >   Laptop M.2 PCIe slots accessible by way of a latch) and require
-> >   protection by the OS Kernel DMA Protection mechanism.
+> 	if (retries >= LINK_WAIT_MAX_RETRIES) {
+> 		dev_err(pci->dev, "Phy link never came up\n");
+> 		return -ETIMEDOUT;
+> 	}
 > 
-> Yes, this is the property that my patch uses. Microsoft has agreed to
-> update this documentation (in a sideband thread that I also copied you
-> on), with the updated semantics that this property can be used to
-> identify any PCI devices that require Kernel DMA protection. i.e. the
-> property is not restricted to identify "internal PCIe hierarchies"
-> (starting at root port), but to "any PCI device".
+> 	offset = ...
+> 	val = ...
+> 	dev_info(...)
 > 
-> > I don't really understand why they called out "laptop M.2 PCIe slots"
-> > here.  Is the idea that those are more accessible than a standard
-> > internal PCIe slot?  Seems like a pretty small distinction to me.
-> >
-> > I can understand your example of internal network devices adding an
-> > attack surface.  But I don't see how "DmaProperty" helps identify
-> > those.  Wouldn't a NIC in a standard internal PCIe slot add the same
-> > attack surface?
+> 	return 0;
+> }
 > 
-> Yes it would. The attack surface is the same. They probably only
-> thought of devices external to the SoC (starting from a root port)
-> when designing this property and thus called out internal M.2 PCI
-> slots. But nowhave realized that this could be opened to any PCI
-> device.
-
-> > > +      * Property also used by Microsoft Windows for same purpose,
-> > > +      * (to implement DMA protection from a device, using the IOMMU).
-> > > +      */
-> > > +     if (device_property_read_u8(&dev->dev, "DmaProperty", &val))
-> >
-> > The MS web page says a _DSD with this property must be implemented in
-> > the Root Port device scope, but we don't enforce that here.  We *do*
-> > enforce it in pci_acpi_set_untrusted().  Shouldn't we do the same
-> > here?
-> 
-> No, the whole point of doing this (please refer to the discussion on
-> the previous versions of this patch) was that we want to have a
-> property that is NOT limited to the root ports only. And we have
-> reached an agreement with Microsoft about that.
-
-We need to either mention the fact that we're going beyond what the MS
-web page says or (ideally, as you are doing) get the page updated with
-the semantics you need.
-
-> > But IIUC, device_property_read_u8() works for either ACPI or DT
-> > properties, and maybe there is interest in using this for DT systems.
-> > None of these appear in any in-tree DTs, but maybe it is important to
-> > handle these in DTs?
-> >
-> > If that's the case, this code would no longer be specific to ACPI and
-> > should be moved to somewhere that's compiled even when CONFIG_ACPI
-> > isn't set.
-> 
-> I think unifying ACPI and GPIO systems to use the same code / function
-> to read the properties might be more work/investigation, because
-> reading the properties for ACPI system happens much later than DT
-> systems (For acpi systems, it happens in pci_acpi_setup() which is
-> called much later). Given that no one wants to use this for DT
-> systems, I'd prefer for this to be ACPI specific for now, and then we
-> can solve it for DT once someone needs it.
-
-I think it's OK to make it ACPI-specific for now.
-
-Bjorn
