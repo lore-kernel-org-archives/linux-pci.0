@@ -2,86 +2,100 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A271DC433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Apr 2022 13:55:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD26C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Apr 2022 14:02:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230055AbiDPN5v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Apr 2022 09:57:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59430 "EHLO
+        id S231942AbiDPOFO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 16 Apr 2022 10:05:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232133AbiDPN5t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Apr 2022 09:57:49 -0400
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D1D52A72B;
-        Sat, 16 Apr 2022 06:55:17 -0700 (PDT)
-Received: by mail-ej1-x632.google.com with SMTP id i27so19740100ejd.9;
-        Sat, 16 Apr 2022 06:55:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=6SJ0gjuIReiuq6mKLxC15SlD0RAGcpMYYaigPzM4upQ=;
-        b=QStPKpSkC1LkjeyGv3bKHJYw9iXMBqJMz7A9O9udDbO2DfaYzQ9wEXayi6wYS1FfJs
-         h28pj3Tj1tzh8bKPIGh0uU0YpYp95FvbdVoGObTqp5lYF/qcBM7ASVkgfRxAyGZH29QP
-         AOkFOVLtMwSOXX0YzxG4NVXO9rH7OY40Xx7V8v/l/TnAw05i56w3mcUUb4nJpwosqmex
-         kZWOpcSvgAZHEj3ZvZOOxYMe8+YOixhHxBUdk19j9XUHZsuZSjUXxCgx7ooFkSzsXf/4
-         Xtz0jtZQW9YrhcljnoOnqbiNHmWsKlsO3BtCgdlOkuNeY5hKsFZOSZ9yAXm9j8Y00Su8
-         OW2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=6SJ0gjuIReiuq6mKLxC15SlD0RAGcpMYYaigPzM4upQ=;
-        b=Z9AcGPHE3qCpiW/RpInJe9ANf4syV1qGD0fR8wyzSBaiYoJdloWYvZwB9ndmqerveu
-         40SdV6Gk5N0goCx7rzmDjfJB3SGo/t9FeecF1Tc1ufXjhdSItWf9PTRyO4ibBoHwPpi4
-         1A+AOaN0umPuvNJ6ySM5GEO4YagXyRC/TmejrMywjfJajTpya1Mcm5pgtB2uuAyvtcXa
-         LwgSvt5Whr0XjSeVRGuH2wGRkpxvABLG/NxIfEyp1pIrmts0mCDEJ1aDUXwjsLw7E/vf
-         pNsPumdBtHMR4elFCLlxpAasxphY2u1NQqLOdQO9AJQ9kOl8kNxnWiqCAoOIffQoEvuH
-         GcFg==
-X-Gm-Message-State: AOAM531/FRi8DMfVUPxWLX4kcMLS1sIFd2XZR7279aqpUviF3FEgz2fj
-        N9MZ9AfGBS1tMvDfXYe9QLW2wNJ0y3xJl7rEeoi3yVKRYLE=
-X-Google-Smtp-Source: ABdhPJxnrbadrn8LjtwLPpjps81ECEVthSYbNkd4qnaqH6ZLIhBCPTFttIxzMll+6jY4JmULrxZLxToMBGz+FwtbLOs=
-X-Received: by 2002:a17:906:6a08:b0:6e8:a871:b8d2 with SMTP id
- qw8-20020a1709066a0800b006e8a871b8d2mr2826295ejc.71.1650117315860; Sat, 16
- Apr 2022 06:55:15 -0700 (PDT)
+        with ESMTP id S231854AbiDPOFK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Apr 2022 10:05:10 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5FD1E29CB2;
+        Sat, 16 Apr 2022 07:02:38 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id ED50F92009E; Sat, 16 Apr 2022 16:02:35 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id E061592009C;
+        Sat, 16 Apr 2022 15:02:35 +0100 (BST)
+Date:   Sat, 16 Apr 2022 15:02:35 +0100 (BST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+cc:     Palmer Dabbelt <palmer@dabbelt.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Avoid handing out address 0 to devices
+In-Reply-To: <20220415183912.GA824311@bhelgaas>
+Message-ID: <alpine.DEB.2.21.2204160049500.9383@angie.orcam.me.uk>
+References: <20220415183912.GA824311@bhelgaas>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-References: <CAH9NwWec6ovS1xQbuPsB5duskJdmK_qv4t+URTK6thCvGNST7w@mail.gmail.com>
- <20220323023714.GA1244184@bhelgaas>
-In-Reply-To: <20220323023714.GA1244184@bhelgaas>
-From:   Christian Gmeiner <christian.gmeiner@gmail.com>
-Date:   Sat, 16 Apr 2022 15:55:04 +0200
-Message-ID: <CAH9NwWfZQWbfc6VJMT3isv2gmnWCoAOU4osDKQ7EBW_XsywGpg@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: cadence: Enable Controller to respond to received
- PTM Requests
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Tom Joseph <tjoseph@cadence.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> > >
-> > > > This enables the Controller [RP] to automatically respond with
-> > > > Response/ResponseD messages if CDNS_PCIE_LM_TPM_CTRL_PTMRSEN
-> > > > and PCI_PTM_CTRL_ENABLE bits are both set.
-> > > >
-> > > > Signed-off-by: Christian Gmeiner <christian.gmeiner@gmail.com>
->
-> We're in the middle of the merge window right now, but I'm sure
-> Lorenzo will be able to look at it after -rc1.  This looks fine to me.
->
+On Fri, 15 Apr 2022, Bjorn Helgaas wrote:
 
-Another gentle ping :(
+> > > I guess the question is whether we want to reserve port 0 and MMIO
+> > > address 0 as being "invalid".  That makes the first space smaller than
+> > > the others, but it's not *much* smaller and it's an unlikely
+> > > configuration to begin with.
+> > 
+> >  Unfortunately just as IRQ 0 is considered special and barring the 8254 
+> > special exception for PC-style legacy junk it means "no IRQ", similarly 
+> > I/O port or MMIO address 0 is considered "no device" in several places.  
+> > One I have identified as noted above is `uart_configure_port':
+> > 
+> > 	/*
+> > 	 * If there isn't a port here, don't do anything further.
+> > 	 */
+> > 	if (!port->iobase && !port->mapbase && !port->membase)
+> > 		return;
+> > 
+> > So even if we let address 0 through it will be rejected downstream here 
+> > and there and the device won't work.
+> 
+> This is a driver question, which I think is secondary.  If necessary,
+> we can fix drivers after figuring out what the PCI core should do.
 
--- 
-greets
---
-Christian Gmeiner, MSc
+ This goes back to ISA and user-supplied driver options given as kernel 
+parameters, so I am fairly sure it's been a part of our user interface 
+since forever.  Changing these assumptions would surely break something 
+for someone out there, so I would be very wary making such changes.
 
-https://christian-gmeiner.info/privacypolicy
+> > > We do have the IORESOURCE_UNSET flag bit that could possibly be used
+> > > in pci_iomap_range() instead of testing for "!start".  Or maybe
+> > > there's a way to allocate address 0 instead of special-casing the
+> > > allocator?  Just thinking out loud here.
+> 
+> Another possibility is PCIBIOS_MIN_IO.  It's also kind of an ugly
+> special case, but at least it already exists.  Most arches define it
+> to be non-zero, which should avoid this issue.
+> 
+> Defining PCIBIOS_MIN_IO would be simple; what would we lose compared
+> to adding code in pci_bus_alloc_from_region()?
+
+ As I explained in the change description:
+
+> Especially I/O space ranges are particularly valuable, because bridges
+> only decode bits from 12 up and consequently where 16-bit addressing is
+> in effect, as few as 16 separate ranges can be assigned to individual
+> buses only.
+> 
+> Therefore avoid handing out address 0, however rather than bumping the
+> lowest address available to PCI via PCIBIOS_MIN_IO and PCIBIOS_MIN_MEM,
+> or doing an equivalent arrangement in `__pci_assign_resource', let the
+> whole range assigned to a bus start from that address and instead only
+> avoid it for actual devices.  [...]
+
+Yes, just bumping up PCIBIOS_MIN_IO was my first thought and the path of 
+least resistance.  However with the strictly hierarchical topology of PCIe 
+systems the limit of 16 ranges feels so frighteningly low to me already as 
+to make me rather unwilling to reduce it even further for a system that is 
+free from PC legacy junk (no southbridge let alone ISA) and therefore does 
+not require it.  So I've reconsidered my initial approach and came up with 
+this proposal instead.  I think it is a good compromise.
+
+  Maciej
