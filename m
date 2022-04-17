@@ -2,181 +2,113 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 679DEC433EF
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Apr 2022 04:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3FADC433EF
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Apr 2022 09:08:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233399AbiDQETe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 17 Apr 2022 00:19:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50516 "EHLO
+        id S232161AbiDQJLS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 17 Apr 2022 05:11:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231489AbiDQETd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 17 Apr 2022 00:19:33 -0400
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9489E186ED;
-        Sat, 16 Apr 2022 21:16:59 -0700 (PDT)
-Received: by mail-lf1-f52.google.com with SMTP id b21so19758727lfb.5;
-        Sat, 16 Apr 2022 21:16:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=CW3A/aitUHfF5G3ViJWNE+t6LZ1tgXv7FWh03lEBllU=;
-        b=EQXcsvxXAG4iJs6iTM60JTinlujWtHTw+eqvF4hVZrtz4Z62YMPkVoNOfuHy7YjJIq
-         f00emz4csdwohzpEeEnQIQHmNHrauE1GkIgZh90dNf/EnCLgEbkMuevM+vNOVnatGoOD
-         9dDLnOia36yWrc1UzFEZDelO2gocfp1NXrxD2QYEfeErLkURsMljYAtlTN5buKsDNEUa
-         adbFk8vZxaT4MdxZE8DZ90U7YdDQK98Vd6F/eXxcT07ZTagPgpm1HEfEsXyvEGQz19Jb
-         Mygf1UJFDO3d+3v8mo/jhEsnXsYZIw2RrAnec6yZI36LMeXOHxsXsQZeYWaJqejynm2v
-         QAgA==
-X-Gm-Message-State: AOAM530rt40W6grZnCnCwLsL9GB2k2Q2CL5PTj2+nNtVT7Aew5089wdl
-        Q4nqc/yb+4ES4ptW/WDZmMJ6WCsI51dZO2ZG25iHiRJr
-X-Google-Smtp-Source: ABdhPJyH2jlIt83huHMF+Z98TjJC15Gu6bL8/bkTHT7SCzAXDfJaeQOrjInn07SGUs+kqL2FLxp1LYJZRAG72OFw214=
-X-Received: by 2002:a05:6512:1688:b0:464:f53f:850f with SMTP id
- bu8-20020a056512168800b00464f53f850fmr4121402lfb.637.1650169017848; Sat, 16
- Apr 2022 21:16:57 -0700 (PDT)
+        with ESMTP id S233750AbiDQJLR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 17 Apr 2022 05:11:17 -0400
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A0A627CF3;
+        Sun, 17 Apr 2022 02:08:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1650186483;
+        bh=HiCerFGpE/ayU2rNlzN03bfcN/5dOTZBCfCNgKlWJ0o=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=RF5LsLbH2pRh+HPMUdHXYyIBKr+lyPFri3MbyzolzXymfWSog757kCMGuw2EDSBPj
+         gcp95NvBQcqc6iX/vCYQOvzo5AcGGQ6Hq0QeisYuj5/ex09d4/68Hob4Uk2OIVc3qi
+         VDJacmm5WsMHG5GPWztGJXgqTW50DwwsiYJQAZ7k=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from [217.61.151.209] ([217.61.151.209]) by web-mail.gmx.net
+ (3c-app-gmx-bs58.server.lan [172.19.170.142]) (via HTTP); Sun, 17 Apr 2022
+ 11:08:02 +0200
 MIME-Version: 1.0
-References: <20190701134255.25959-1-stephend@silicom-usa.com>
-In-Reply-To: <20190701134255.25959-1-stephend@silicom-usa.com>
-From:   Len Brown <lenb@kernel.org>
-Date:   Sun, 17 Apr 2022 00:16:46 -0400
-Message-ID: <CAJvTdKn9MEQ9rTXyqxV-t-3FzY-YbL7RL+s1wvc9uyKbg3f5FA@mail.gmail.com>
-Subject: Re: [PATCH] intel_idle: prevent SKX boot failure when C6 & SERIRQ enabled
-To:     Stephen Douthit <stephend@silicom-usa.com>
-Cc:     Jacob Pan <jacob.jun.pan@linux.intel.com>,
+Message-ID: <trinity-a220fd81-2ee9-474d-bd65-505b9ed904b2-1650186482865@3c-app-gmx-bs58>
+From:   Frank Wunderlich <frank-w@public-files.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Frank Wunderlich <linux@fw-web.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        linux-rockchip@lists.infradead.org,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Johan Jonker <jbx6244@gmail.com>,
+        Peter Geis <pgwipeout@gmail.com>,
+        Michael Riesch <michael.riesch@wolfvision.net>,
+        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Aw: Re: [RFC/RFT 4/6] PCI: rockchip-dwc: add pcie bifurcation
+Content-Type: text/plain; charset=UTF-8
+Date:   Sun, 17 Apr 2022 11:08:02 +0200
+Importance: normal
+Sensitivity: Normal
+In-Reply-To: <20220416233047.GA938296@bhelgaas>
+References: <20220416135458.104048-5-linux@fw-web.de>
+ <20220416233047.GA938296@bhelgaas>
+X-UI-Message-Type: mail
+X-Priority: 3
+X-Provags-ID: V03:K1:2bpGmb0SGB/uw7Zt7eXuN4pld6iukRT7tzTTsFyOx4YULzjSB9kfUHZXHXv87BGPUG1fF
+ Ea0IN1aJksF6SwZFzKGn4eBJIt3IH8e8T1HeghhbpvbIzv8UkKCIIfhdLOdPxJWBdK4fC8S5/ceS
+ F8/4MRTjwu2r6Hj3MTb7GJJktcfcSXWinWqfZHoHhSCxqWiyf9nTJQ/nN7ADw+m5s3R68WLA30qN
+ WVdjwONHPS4oTdl/p/ar5oVZO5LO5c3Vn3r/xfaicL03CI3/JTzMGZJvUOodWCpp2+/iwlnT16Tf
+ Zc=
+X-UI-Out-Filterresults: notjunk:1;V03:K0:ZfuaCt4JPa4=:SvXYLMCMbDSlLrN7ezprt4
+ om6bbWzv0yCV8/obOHIlm947NpThP8O54jmXsFPHcKL2NvznDfiM3GQhRGnJqIbb+DYf1P9pY
+ UXLLKrWgrDEltMyrscIJO45o0UEgsA2v/s4VZhazYCVyoIVP1YtKwNUsD93MTCxOIgZsGw43A
+ YVHzaE8EGaxXz6aG8LnmT5UWt3P9mOX6gBImUxbJvXMNESiW5w2rxseRIiKF8G1Ceb6xMx1sn
+ RyhmRCA5+OcitHzHP3Ca4ySaRJkc6XQ3GuRbjsTlnOLpYXOzFM2N+xrQxxMWaq7Ej2FsuV56l
+ i+vkfx+ecru+OP+ehU3+gKL2u2WWYWSCz6CViszAkU7Y2k8hD/L5OFLdJw5amTPD7hD6uYIIh
+ CJ2Bhh8WeLtkWClvfVbDE7cgam5OBXrk0Aigg1IW0v3I1oMyn2Irg4RMJuu0d+ZIrkHMBugsK
+ DqvVQwA3zzpECG+VksAFMasJn6aeZWzbA8BX7UiwvVrEOdSRq88w+VX6p8AimzTWyFOsLPA/N
+ dPxW2JVnWp+nytRvRqaGm1bHG+t7oqWj7iuakk2M9AclYnAdh9gmNj7fUChOs6ZNQn5K16QjJ
+ 7rKsQeoFdW6pXJAOcn/V3hJuMVab5ONJOTxDfrfLDx3nzfggTeNMBIZWn1KqRtchmtqd062gs
+ bNO1e6zHL/qIoovsuucAEKsd/6gPad5g+Lwd044BN05SRFUZvSv/lP1wvFYHoEgaNMF7MlTVO
+ EzoOcTUrYdFi4moapEwgKPHby5l5b4lKrjxM0W5TbFjqvAWLie5e3zTzj758vCxZK91wAjGIX
+ 9Ennnk3
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Stephen,
+Hi,
 
-I noticed this patch languishing in patchwork.
-I don't see any discussion on it, and it never went upstream.
+> Gesendet: Sonntag, 17. April 2022 um 01:30 Uhr
+> Von: "Bjorn Helgaas" <helgaas@kernel.org>
 
-Was this problem addressed in another way?
+thanks for first review
 
-If no, and somebody is using this patch, I'm curious if it is really
-CC6 that you want to disable, or perhaps disabling PC6 is sufficient?
+> On Sat, Apr 16, 2022 at 03:54:56PM +0200, Frank Wunderlich wrote:
+> > From: Frank Wunderlich <frank-w@public-files.de>
+> >
+> > PCIe Lanes can be split to 2 slots with bifurcation.
+> > Add support for this in existing pcie driver.
+>
+> Please s/pcie/PCIe/ in subject and above to be consistent.  You also
+> have kind of a random usage in other patches.
 
-thanks,
--Len
+will do
 
-On Mon, Jul 1, 2019 at 9:43 AM Stephen Douthit <stephend@silicom-usa.com> wrote:
->
-> Interrupts are getting misrouted and/or dropped on SKLYLAKE_X based D-2100s
-> when C6 and SERIRQ are enabled.  I've only seen this issue on systems
-> using SERIRQs (in my case for a LPC based UART providing the serial
-> console for a headless server).
->
-> One failure mode is "do_IRQ: 8.33 No irq handler for vector" getting
-> printed in the kernel logs. The core getting the unhandled irq is typically
-> the one handling the UART SERIRQ.  I've seen it on other cores, but I
-> haven't confirmed if that's because the UART irq handler was moved to
-> another core at some point.  The vector varies from 33-36, but it's most
-> often 33.
->
-> The other failure mode is the system hanging.  Sometimes forcing some non
-> SERIRQ interrupt to fire (by plugging/unplugging a network/USB cable) can
-> get the system out of this state.  Generating more SERIRQs via the UART
-> will not unstick the system.
->
-> Both failures seemed to occur when transition to a low load state, which
-> is why I started playing around with power management options and found
-> that booting with "intel_idle.max_cstate=2" fixed the issue.
->
-> This patch only disables C6 if it's able to determine that SERIRQs are
-> enabled by checking the enable bit in the LPC controllers PCI config space.
->
-> Signed-off-by: Stephen Douthit <stephend@silicom-usa.com>
-> ---
->  drivers/idle/intel_idle.c | 35 ++++++++++++++++++++++++++++++++++-
->  include/linux/pci_ids.h   |  1 +
->  2 files changed, 35 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/idle/intel_idle.c b/drivers/idle/intel_idle.c
-> index b8647b5c3d4d..353f6a9b1818 100644
-> --- a/drivers/idle/intel_idle.c
-> +++ b/drivers/idle/intel_idle.c
-> @@ -61,12 +61,13 @@
->  #include <linux/notifier.h>
->  #include <linux/cpu.h>
->  #include <linux/moduleparam.h>
-> +#include <linux/pci.h>
->  #include <asm/cpu_device_id.h>
->  #include <asm/intel-family.h>
->  #include <asm/mwait.h>
->  #include <asm/msr.h>
->
-> -#define INTEL_IDLE_VERSION "0.4.1"
-> +#define INTEL_IDLE_VERSION "0.4.2"
->
->  static struct cpuidle_driver intel_idle_driver = {
->         .name = "intel_idle",
-> @@ -1306,6 +1307,35 @@ static void sklh_idle_state_table_update(void)
->         skl_cstates[5].disabled = 1;    /* C8-SKL */
->         skl_cstates[6].disabled = 1;    /* C9-SKL */
->  }
-> +/*
-> + * skx_idle_state_table_update()
-> + *
-> + * On SKX (model 0x55) SoCs disable C6 if SERIRQ is enabled
-> + */
-> +static void skx_idle_state_table_update(void)
-> +{
-> +#define SCNT_OFF 0x64
-> +#define SCNT_EN (1 << 7)
-> +       struct pci_dev *pdev = pci_get_device(PCI_VENDOR_ID_INTEL,
-> +                                             PCI_DEVICE_ID_INTEL_SKX_LPC,
-> +                                             NULL);
-> +       u8 reg;
-> +
-> +       /*
-> +        * Check bit 7 of the Serial IRQ Control (SCNT) register (0x64) in the
-> +        * LPC controller.  If it's set serial IRQs are enabled, and we need to
-> +        * disable C6 to prevent hangs.
-> +        */
-> +       if (!pdev)
-> +               return;
-> +       if (pci_read_config_byte(pdev, SCNT_OFF, &reg))
-> +               return;
-> +       if (!(reg & SCNT_EN))
-> +               return;
-> +
-> +       pr_debug("SERIRQ enabled on SKX, disabling C6 to avoid hangs\n");
-> +       skx_cstates[2].disabled = 1;    /* C6-SKX */
-> +}
->  /*
->   * intel_idle_state_table_update()
->   *
-> @@ -1326,6 +1356,9 @@ static void intel_idle_state_table_update(void)
->         case INTEL_FAM6_SKYLAKE_DESKTOP:
->                 sklh_idle_state_table_update();
->                 break;
-> +       case INTEL_FAM6_SKYLAKE_X:
-> +               skx_idle_state_table_update();
-> +               break;
->         }
->  }
->
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 70e86148cb1e..02bac8de03fd 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2997,6 +2997,7 @@
->  #define PCI_DEVICE_ID_INTEL_84460GX    0x84ea
->  #define PCI_DEVICE_ID_INTEL_IXP4XX     0x8500
->  #define PCI_DEVICE_ID_INTEL_IXP2800    0x9004
-> +#define PCI_DEVICE_ID_INTEL_SKX_LPC    0xa1c8
->  #define PCI_DEVICE_ID_INTEL_S21152BB   0xb152
->
->  #define PCI_VENDOR_ID_SCALEMP          0x8686
-> --
-> 2.21.0
->
+> Mention the DT property used for this in the commit log.
 
+good point
 
--- 
-Len Brown, Intel Open Source Technology Center
+noticed that i forgot to add it to pcie-bindings  (rockchip-dw-pcie.yaml).
+
+> Is the "rockchip,bifurcation" DT property something that should be
+> generalized so it's not rockchip-specific?  Other controllers are
+> likely to support similar functionality.
+
+I do not know if other controllers support similar functionality, but i ac=
+k a property without vendor prefix is better. Should i use "bifurcation" a=
+s name or do you think about a different name which is more generic?
+
+regards Frank
