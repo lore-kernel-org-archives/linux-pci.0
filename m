@@ -2,122 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B007C433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Apr 2022 15:10:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CE57C433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Apr 2022 15:58:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380033AbiDTPNS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Apr 2022 11:13:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43312 "EHLO
+        id S240486AbiDTQBQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Apr 2022 12:01:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380077AbiDTPMp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2022 11:12:45 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E081BEB8;
-        Wed, 20 Apr 2022 08:09:59 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S232100AbiDTQBP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2022 12:01:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAAA7326D6;
+        Wed, 20 Apr 2022 08:58:28 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 5B4A1210E4;
-        Wed, 20 Apr 2022 15:09:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1650467398; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=E9Za1fy7SJZVuU3gsJHYcUnfUQspR3rknfU8bXQql9Y=;
-        b=s7o4aJsXllglxjEicM+le/pE5Q4+nZsQh1+qkc+l1wMXB8I5KM8EXHpK9vVJQBopp4olwE
-        /0eL2tvJFzr8/5F+QMy5ysfmCp4A5ramqeRsMJKSZCtFDWgeFHKh6l0oEFDWWCNJk0EhzP
-        yXIHNy0QuiJkmeTPgRibcNpvjDS2yuo=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 96AE513AD5;
-        Wed, 20 Apr 2022 15:09:57 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id QAKAI0UiYGJILQAAMHmgww
-        (envelope-from <jgross@suse.com>); Wed, 20 Apr 2022 15:09:57 +0000
-From:   Juergen Gross <jgross@suse.com>
-To:     xen-devel@lists.xenproject.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-integrity@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Cc:     Juergen Gross <jgross@suse.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Oleksandr Andrushchenko <oleksandr_andrushchenko@epam.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
-        Peter Huewe <peterhuewe@gmx.de>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 00/18] xen: simplify frontend side ring setup
-Date:   Wed, 20 Apr 2022 17:09:24 +0200
-Message-Id: <20220420150942.31235-1-jgross@suse.com>
-X-Mailer: git-send-email 2.34.1
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 769D8618FA;
+        Wed, 20 Apr 2022 15:58:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A839EC385A1;
+        Wed, 20 Apr 2022 15:58:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650470307;
+        bh=VvLMFQx+kyGUgqKbI5QdNFQWU8MFY2kgwwVYHLQ1fjg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Al1tKU0PVMhdgvBzcru+cjod1p0+mweJT3K9CV5c+C9Pgfz7Tw4QPaGjXyVYsWtB5
+         xgTwiHh8kHcD+FpxZzTx2vwEo5iT6Yv9fZ7FFQZNzCmpcdoTOU3gEjy2sQjt+TVYGc
+         befJfu4gftHbZdludJ669rTmJI7BxUpySPFzHaOe8sytcI+fiNZO520CFnkXMYAKy8
+         6eh/A7Jal0X353b3UX8SloBkNA9/8RFhVa24aU/acM4gS4Hp1UKlGMQVbf1z8Cb7Vp
+         QSQEoqfY6a56IoidVgyfwm9nEDJNjKc29U6SoAfoZ+/b5LvUK8q+QLGtcfqj4SirZl
+         KUP7qEn+kzh0g==
+Date:   Wed, 20 Apr 2022 10:58:25 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] PCI: fix unused pci_restore_standard_config without
+ suspend/hibernate
+Message-ID: <20220420155825.GA1298368@bhelgaas>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220420141135.444820-1-krzysztof.kozlowski@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Many Xen PV frontends share similar code for setting up a ring page
-(allocating and granting access for the backend) and for tearing it
-down.
+On Wed, Apr 20, 2022 at 04:11:35PM +0200, Krzysztof Kozlowski wrote:
+> The pci_restore_standard_config() is called only by functions within
+> CONFIG_SUSPEND or CONFIG_HIBERNATION, so a configuration with only PM
+> leads to a warning:
+> 
+>   drivers/pci/pci-driver.c:533:12: error: ‘pci_restore_standard_config’ defined but not used [-Werror=unused-function]
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-Create new service functions doing all needed steps in one go.
+Applied to pci/pm for v5.19, thanks!
 
-This requires all frontends to use a common value for an invalid
-grant reference in order to make the functions idempotent.
-
-Juergen Gross (18):
-  xen/blkfront: switch blkfront to use INVALID_GRANT_REF
-  xen/netfront: switch netfront to use INVALID_GRANT_REF
-  xen/scsifront: remove unused GRANT_INVALID_REF definition
-  xen/usb: switch xen-hcd to use INVALID_GRANT_REF
-  xen/drm: switch xen_drm_front to use INVALID_GRANT_REF
-  xen/sound: switch xen_snd_front to use INVALID_GRANT_REF
-  xen/dmabuf: switch gntdev-dmabuf to use INVALID_GRANT_REF
-  xen/shbuf: switch xen-front-pgdir-shbuf to use INVALID_GRANT_REF
-  xen/xenbus: add xenbus_setup_ring() service function
-  xen/blkfront: use xenbus_setup_ring() and xenbus_teardown_ring()
-  xen/netfront: use xenbus_setup_ring() and xenbus_teardown_ring()
-  xen/tpmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
-  xen/drmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
-  xen/pcifront: use xenbus_setup_ring() and xenbus_teardown_ring()
-  xen/scsifront: use xenbus_setup_ring() and xenbus_teardown_ring()
-  xen/usbfront: use xenbus_setup_ring() and xenbus_teardown_ring()
-  xen/sndfront: use xenbus_setup_ring() and xenbus_teardown_ring()
-  xen/xenbus: eliminate xenbus_grant_ring()
-
- drivers/block/xen-blkfront.c                | 54 ++++----------
- drivers/char/tpm/xen-tpmfront.c             | 18 +----
- drivers/gpu/drm/xen/xen_drm_front.h         |  9 ---
- drivers/gpu/drm/xen/xen_drm_front_evtchnl.c | 40 +++-------
- drivers/net/xen-netfront.c                  | 77 ++++++--------------
- drivers/pci/xen-pcifront.c                  | 19 +----
- drivers/scsi/xen-scsifront.c                | 30 ++------
- drivers/usb/host/xen-hcd.c                  | 59 ++++-----------
- drivers/xen/gntdev-dmabuf.c                 | 13 +---
- drivers/xen/xen-front-pgdir-shbuf.c         | 17 +----
- drivers/xen/xenbus/xenbus_client.c          | 81 ++++++++++++++++-----
- include/xen/xenbus.h                        |  4 +-
- sound/xen/xen_snd_front_evtchnl.c           | 41 +++--------
- sound/xen/xen_snd_front_evtchnl.h           |  9 ---
- 14 files changed, 156 insertions(+), 315 deletions(-)
-
--- 
-2.34.1
-
+> ---
+>  drivers/pci/pci-driver.c | 12 ++++++++----
+>  1 file changed, 8 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index dc18c1faf5e5..a2e6aabfa324 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -522,9 +522,9 @@ static void pci_device_shutdown(struct device *dev)
+>  		pci_clear_master(pci_dev);
+>  }
+>  
+> -#ifdef CONFIG_PM
+> +#ifdef CONFIG_PM_SLEEP
+>  
+> -/* Auxiliary functions used for system resume and run-time resume. */
+> +/* Auxiliary functions used for system resume. */
+>  
+>  /**
+>   * pci_restore_standard_config - restore standard config registers of PCI device
+> @@ -544,6 +544,11 @@ static int pci_restore_standard_config(struct pci_dev *pci_dev)
+>  	pci_pme_restore(pci_dev);
+>  	return 0;
+>  }
+> +#endif /* CONFIG_PM_SLEEP */
+> +
+> +#ifdef CONFIG_PM
+> +
+> +/* Auxiliary functions used for system resume and run-time resume. */
+>  
+>  static void pci_pm_default_resume(struct pci_dev *pci_dev)
+>  {
+> @@ -558,8 +563,7 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+>  	pci_restore_state(pci_dev);
+>  	pci_pme_restore(pci_dev);
+>  }
+> -
+> -#endif
+> +#endif /* CONFIG_PM */
+>  
+>  #ifdef CONFIG_PM_SLEEP
+>  
+> -- 
+> 2.32.0
+> 
