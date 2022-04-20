@@ -2,109 +2,121 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34DCBC433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Apr 2022 14:56:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF6B2C4321E
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Apr 2022 15:10:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354050AbiDTO73 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Apr 2022 10:59:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56660 "EHLO
+        id S1379992AbiDTPNQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Apr 2022 11:13:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236824AbiDTO72 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2022 10:59:28 -0400
-Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::222])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EC723BFA4;
-        Wed, 20 Apr 2022 07:56:40 -0700 (PDT)
-Received: (Authenticated sender: herve.codina@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id 696F940003;
-        Wed, 20 Apr 2022 14:56:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1650466599;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        with ESMTP id S1380098AbiDTPMt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2022 11:12:49 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CC963E5F7;
+        Wed, 20 Apr 2022 08:10:03 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id B143321600;
+        Wed, 20 Apr 2022 15:10:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1650467401; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2t76+K9/ufuuUqXnbJnz0ta26ZIOGtfR+N8Pj3Hoeqw=;
-        b=E2gnkhahRyJW3qrFkTmcybpsRxoiG1YSyg+T6tCRXOshC8me6CX1EG9Hric3dInxtpVJQ9
-        GBhRPYEl731GNFiN/tJvvBUQBn7kQ7kFjPqkT3aA87mNK16MuCwp51A+RIwC37j/ifuCG/
-        yU3Fu33ln/dbixooeK7JdSaxkAxRdkWTyvJcqFv1N//d1yWqopb8HFIYwd1097T3uivvT3
-        up2ZjgGrIChICjjsZmSJfvh3WBX7a5jVXNTWTse/HvdrqucPdQt60UfPoUbmSLRRTI4H9C
-        vJuXFN5luZdSR36zXJCqlH49wvigIxYlTgNRcWpHqRCvcAm0924lij7xAPyvYg==
-Date:   Wed, 20 Apr 2022 16:56:35 +0200
-From:   Herve Codina <herve.codina@bootlin.com>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Clement Leger <clement.leger@bootlin.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: Re: [PATCH v2 3/8] dt-bindings: PCI: renesas-pci-usb: Allow
- multiple clocks
-Message-ID: <20220420165635.0d221ee6@bootlin.com>
-In-Reply-To: <CAMuHMdWqVDwdyNuB3tBrWNGt7tuNOXQwqB_Un9sZYCS-6P99bA@mail.gmail.com>
-References: <20220414074011.500533-1-herve.codina@bootlin.com>
-        <20220414074011.500533-4-herve.codina@bootlin.com>
-        <CAMuHMdWZyuNQJhxkhzs5H8+8DFGDS95nvptrO-s9RC4QL5kibA@mail.gmail.com>
-        <20220420150759.713fcd02@bootlin.com>
-        <CAMuHMdWqVDwdyNuB3tBrWNGt7tuNOXQwqB_Un9sZYCS-6P99bA@mail.gmail.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.31; x86_64-redhat-linux-gnu)
+        bh=4w7uCrVXVTwZfPuB483vIPp5pLFfFRyBD4Y2IYXR2Yk=;
+        b=fz0rlO1XMdB4BddZo8c4Teth0+zAy8QaParWZU14wrqXGD6EySljVo6Vq6kBi9HXKi0Rga
+        xuTZhtvj50WWZimNnLTKwBftHtnnForaUNyo7J+NGQQPcb/KSOCH4nn4iVfeQ4OCTkaQVZ
+        j32mZDbE44Ahb1h++ngv8o4nT0tLPzw=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7A52A13AD5;
+        Wed, 20 Apr 2022 15:10:01 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id mMS4HEkiYGJILQAAMHmgww
+        (envelope-from <jgross@suse.com>); Wed, 20 Apr 2022 15:10:01 +0000
+From:   Juergen Gross <jgross@suse.com>
+To:     xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 14/18] xen/pcifront: use xenbus_setup_ring() and xenbus_teardown_ring()
+Date:   Wed, 20 Apr 2022 17:09:38 +0200
+Message-Id: <20220420150942.31235-15-jgross@suse.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220420150942.31235-1-jgross@suse.com>
+References: <20220420150942.31235-1-jgross@suse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Geert,
+Simplify pcifront's shared page creation and removal via
+xenbus_setup_ring() and xenbus_teardown_ring().
 
-On Wed, 20 Apr 2022 15:32:27 +0200
-Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+Signed-off-by: Juergen Gross <jgross@suse.com>
+---
+ drivers/pci/xen-pcifront.c | 19 +++----------------
+ 1 file changed, 3 insertions(+), 16 deletions(-)
 
-> Hi Herv=C3=A9,
->=20
-> On Wed, Apr 20, 2022 at 3:08 PM Herve Codina <herve.codina@bootlin.com> w=
-rote:
-> > Is there a way to have the clocks description depending on the compatib=
-le value. =20
->=20
-> Rob already replied.
-> For an example, check out the various bindings for RZ/G2L devices,
-> e.g. Documentation/devicetree/bindings/net/renesas,etheravb.yaml
+diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
+index 3edc1565a27c..689271c4245c 100644
+--- a/drivers/pci/xen-pcifront.c
++++ b/drivers/pci/xen-pcifront.c
+@@ -709,9 +709,8 @@ static struct pcifront_device *alloc_pdev(struct xenbus_device *xdev)
+ 	if (pdev == NULL)
+ 		goto out;
+ 
+-	pdev->sh_info =
+-	    (struct xen_pci_sharedinfo *)__get_free_page(GFP_KERNEL);
+-	if (pdev->sh_info == NULL) {
++	if (xenbus_setup_ring(xdev, GFP_KERNEL, (void **)&pdev->sh_info, 1,
++			      &pdev->gnt_ref)) {
+ 		kfree(pdev);
+ 		pdev = NULL;
+ 		goto out;
+@@ -729,7 +728,6 @@ static struct pcifront_device *alloc_pdev(struct xenbus_device *xdev)
+ 	spin_lock_init(&pdev->sh_info_lock);
+ 
+ 	pdev->evtchn = INVALID_EVTCHN;
+-	pdev->gnt_ref = INVALID_GRANT_REF;
+ 	pdev->irq = -1;
+ 
+ 	INIT_WORK(&pdev->op_work, pcifront_do_aer);
+@@ -754,11 +752,7 @@ static void free_pdev(struct pcifront_device *pdev)
+ 	if (pdev->evtchn != INVALID_EVTCHN)
+ 		xenbus_free_evtchn(pdev->xdev, pdev->evtchn);
+ 
+-	if (pdev->gnt_ref != INVALID_GRANT_REF)
+-		gnttab_end_foreign_access(pdev->gnt_ref,
+-					  (unsigned long)pdev->sh_info);
+-	else
+-		free_page((unsigned long)pdev->sh_info);
++	xenbus_teardown_ring((void **)&pdev->sh_info, 1, &pdev->gnt_ref);
+ 
+ 	dev_set_drvdata(&pdev->xdev->dev, NULL);
+ 
+@@ -769,13 +763,6 @@ static int pcifront_publish_info(struct pcifront_device *pdev)
+ {
+ 	int err = 0;
+ 	struct xenbus_transaction trans;
+-	grant_ref_t gref;
+-
+-	err = xenbus_grant_ring(pdev->xdev, pdev->sh_info, 1, &gref);
+-	if (err < 0)
+-		goto out;
+-
+-	pdev->gnt_ref = gref;
+ 
+ 	err = xenbus_alloc_evtchn(pdev->xdev, &pdev->evtchn);
+ 	if (err)
+-- 
+2.34.1
 
-Yes, thanks.
-
->=20
-> > I mean something like:
-> > --- 8< ---
-> > properties:
-> >   clocks:
-> >     maxItems: 1
-> >
-> > if:
-> >   properties:
-> >     compatible:
-> >       contains:
-> >         enum:
-> >           - renesas,pci-r9a06g032
-> >           - renesas,pci-rzn1 =20
->=20
-> Checking only for the second compatible value should be sufficient.
-
-Ok, changed.
-
-Regards,
-Herv=C3=A9
