@@ -2,137 +2,80 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2ED3C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Apr 2022 10:23:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6A5EC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Apr 2022 10:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1388350AbiDUK0g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Apr 2022 06:26:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51028 "EHLO
+        id S239921AbiDUKbu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Apr 2022 06:31:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1388319AbiDUK00 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2022 06:26:26 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ED3015710;
-        Thu, 21 Apr 2022 03:23:37 -0700 (PDT)
+        with ESMTP id S232263AbiDUKbu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2022 06:31:50 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3739D1113;
+        Thu, 21 Apr 2022 03:29:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9B4FBB823EF;
-        Thu, 21 Apr 2022 10:23:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6AE8C385AD;
-        Thu, 21 Apr 2022 10:23:33 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E1BB0B823EA;
+        Thu, 21 Apr 2022 10:28:59 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F11BC385A1;
+        Thu, 21 Apr 2022 10:28:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650536613;
-        bh=OPcQi8PNLxtf9QqmHXSHr2vOBK8ZZT68KQP3kx1rv+E=;
-        h=From:To:Cc:Subject:Date:From;
-        b=qbA6edcrA92ddaDuiDgGIQ8er1FIBNdhw16dpGwwZRTMNAZmAWJ4MjfSCPscdF4BU
-         5qI71065k50tiLpfjRfpHEr1H926epJOCV9jebBB7ROGCIIUbLkFnAbmSVFzH4rbl4
-         maIrJTsdNvzsYVTzKl+ew6rtiqGgHtM+s/mX39cQRVHiaIFibeWk6+X0H7lOzS7f/8
-         c66O4O1FCb0nxGFiGN3YVPpVnYJLyMasC4O5HZe/mrQ2ocitChiZ+y+oTmzUYVVj8Y
-         dxzndsOM+XUXlziAoTjs2F9+CfXj0kTpYtfV+hq2QNxaDMgLudsjOlZi/oULOZ+Fob
-         guX8zs+eUWbsQ==
+        s=k20201202; t=1650536938;
+        bh=bxue8ZtwMQMyRy8NefsZ1PIntfrTYQCoztKFP/yP8wY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=L7nwFcYvQE5TNDkujME5dtDcHsPMjc39z8mRQ0p+4qFxQxe410a8Ux78sOJ8Wfqo8
+         VWRQ3sWyQEH1F4cAnrVPIbHUbJwbOz/dTV1b+C0uByrGr4xLXCBNqLV4Je77EhhfL8
+         r0CguD5hLMPBTD8rMnY5AJR96IkoaG7ISMvhp6+fvyCcFmedmoYydhDRXkcpJokV3O
+         xZrGpyTF4E2ZScFihH6ubWjhvRjJAVp3//sVI0agniIxFZGdZVmk6r69ah0CY9ojd1
+         oYgwTf+PkpvjWkWiYROJjLJ20MrX0nngdlqZiKMB7idUjBAtDyCA2ND4rH+rWrN35m
+         F49eu+epDrUNA==
 Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan+linaro@kernel.org>)
-        id 1nhTyA-0004Xc-Fq; Thu, 21 Apr 2022 12:23:27 +0200
-From:   Johan Hovold <johan+linaro@kernel.org>
-To:     Andy Gross <agross@kernel.org>,
+        (envelope-from <johan@kernel.org>)
+        id 1nhU3Q-0004c5-CV; Thu, 21 Apr 2022 12:28:52 +0200
+Date:   Thu, 21 Apr 2022 12:28:52 +0200
+From:   Johan Hovold <johan@kernel.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Stephen Boyd <swboyd@chromium.org>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Taniya Das <tdas@codeaurora.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        "Stephen Boyd" <swboyd@chromium.org>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
         Prasad Malisetty <quic_pmaliset@quicinc.com>,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org,
-        Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH RFC 0/5] phy: qcom-qmp: add support for pipe clock muxing
-Date:   Thu, 21 Apr 2022 12:20:36 +0200
-Message-Id: <20220421102041.17345-1-johan+linaro@kernel.org>
-X-Mailer: git-send-email 2.35.1
+        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 0/6] PCI: qcom: rework pipe_clk/pipe_clk_src handling
+Message-ID: <YmEx5JPcDucjDiho@hovoldconsulting.com>
+References: <20220413233144.275926-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220413233144.275926-1-dmitry.baryshkov@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some QMP PHYs need to remux to their pipe clock input to the pipe clock
-output generated by the PHY before powering on the PHY and restore the
-default source during power down.
+On Thu, Apr 14, 2022 at 02:31:38AM +0300, Dmitry Baryshkov wrote:
+> PCIe pipe clk (and some other clocks) must be parked to the "safe"
+> source (bi_tcxo) when corresponding GDSC is turned off and on again.
+> Currently this is handcoded in the PCIe driver by reparenting the
+> gcc_pipe_N_clk_src clock.
+> 
+> Instead of doing it manually, follow the approach used by
+> clk_rcg2_shared_ops and implement this parking in the enable() and
+> disable() clock operations for respective pipe clocks.
 
-         +---------------+
-         |   PHY block   |<<---------------------------------------+
-         |               |                   +-----+               |
-         |   +-------+   |                   | GCC |               |
-   I/P---^-->|  PLL  |---^--->pipe_clksrc--->|-\   |		   |
-    clk  |   +-------+   |                   |  +--|--->pipe_clk---+
-    	 |		 |	       xo--->|-/   |  
-         +---------------+	             +-----|
+Please take a look at the alternative approach of moving the pipe clock
+muxing into the PHY driver:
 
-This series moves the pipe clock mux handling from PCIe controller
-driver into the PHY driver which already manages the pipe clock as the
-PHY is both the producer of the pipe clock as well as its (primary)
-consumer.
+	https://lore.kernel.org/all/20220421102041.17345-1-johan+linaro@kernel.org/
 
-This is an alternative to the series posted here
-
-	https://lore.kernel.org/r/20220413233144.275926-1-dmitry.baryshkov@linaro.org
-
-which instead moves the mux handling into the clock drivers and ties
-remuxing to the gating/ungating of the pipe clock in the GCC. That
-approach means that it is still possible to have the pipe clock ungated
-without providing a valid source, somethings which can cause hangs when
-enabling/disabling the GDSC (presumably as some entity is consuming the
-pipe clock).
-
-Implementing this in the clock drivers also means that the
-implementation is spread out over multiple files and makes it harder to
-add support for new SoCs as it may not be clear that every pipe clock
-mux definition needs to be updated with safe and non-safe parent-clock
-indexes and an ad-hoc mux ops implementation.
-
-The custom mux implementation currently also hides the actual topology
-of the clock tree by always reporting the pipe mux source as being
-provided by the PHY (e.g. as reported by debugfs).
-
-This series, by contrast, ties the muxing to when the pipe clock source
-is enabled, that is, when the PHY is powered on, so that the GCC pipe
-clock always has a valid source.
-
-The implementation is more straight-forward, avoids the one-off clock
-mux implementation, and allows for documenting this once and for all in
-the PHY driver.
-
-Note that the devicetree bindings remains to be updated but that this
-was left out of this RFC.
-
-This series depends on the two qcom-qmp fixlets posted here:
-
-	https://lore.kernel.org/all/20220420152331.5527-1-johan+linaro@kernel.org/
+The implementation is more straight forward and I believe it is also
+more conceptually sound as it ties the muxing to when the PHY is powered
+on so that the GCC pipe clock always has a valid source.
 
 Johan
-
-
-Dmitry Baryshkov (1):
-  PCI: qcom: Remove unnecessary pipe_clk handling
-
-Johan Hovold (4):
-  phy: qcom-qmp: add support for pipe clock muxing
-  arm64: dts: qcom: sc7280: move pipe mux handling to phy
-  PCI: qcom: Drop pipe clock muxing
-  PCI: qcom: Drop unused post-init callbacks
-
- arch/arm64/boot/dts/qcom/sc7280.dtsi   | 18 ++---
- drivers/pci/controller/dwc/pcie-qcom.c | 96 ++------------------------
- drivers/phy/qualcomm/phy-qcom-qmp.c    | 71 +++++++++++++++++--
- 3 files changed, 76 insertions(+), 109 deletions(-)
-
--- 
-2.35.1
-
