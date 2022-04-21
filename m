@@ -2,36 +2,39 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1641C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Apr 2022 21:00:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 570AFC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Apr 2022 21:11:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356103AbiDUVCz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Apr 2022 17:02:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40354 "EHLO
+        id S233067AbiDUVOA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Apr 2022 17:14:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244830AbiDUVCz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2022 17:02:55 -0400
-X-Greylist: delayed 1184 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 21 Apr 2022 14:00:03 PDT
-Received: from l2mail1.panix.com (l2mail1.panix.com [166.84.1.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 782E76178;
-        Thu, 21 Apr 2022 14:00:01 -0700 (PDT)
-Received: from mailbackend.panix.com (mailbackend.panix.com [166.84.1.89])
-        by l2mail1.panix.com (Postfix) with ESMTPS id 4KkqDL0Jm5zDQD;
-        Thu, 21 Apr 2022 16:40:18 -0400 (EDT)
-Received: from [192.168.125.3] (ip98-164-213-246.oc.oc.cox.net [98.164.213.246])
-        by mailbackend.panix.com (Postfix) with ESMTPSA id 4KkqD52yctz18CR;
-        Thu, 21 Apr 2022 16:40:05 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=panix.com; s=panix;
-        t=1650573616; bh=3DLk127xG6VmBI2lKNf3p0IKGAxhZ0S9OZakATsgpqs=;
-        h=Date:From:Reply-To:To:cc:Subject:In-Reply-To:References;
-        b=j7RQKhZN/XZTnUPLR9x7uHijW3ePTAXL2PVcl0tnQxrNO+5FexNvT+UJa3k3nTW5V
-         nU00sTmYdbkH720jliREH/mq6ycYwHiXmS7o4+fyGZtnInVPkpjUIYDfPrP6iDHKdJ
-         SqqP4nAgxKSCuqqbmTO1r6kNbGoGlkCu3QXoMgfs=
-Date:   Thu, 21 Apr 2022 13:40:02 -0700 (PDT)
-From:   "Kenneth R. Crudup" <kenny@panix.com>
-Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        with ESMTP id S233035AbiDUVN7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2022 17:13:59 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C9A148E74;
+        Thu, 21 Apr 2022 14:11:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 01930B82939;
+        Thu, 21 Apr 2022 21:11:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7194CC385A7;
+        Thu, 21 Apr 2022 21:11:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1650575465;
+        bh=Z/8IJwNR5HI9ZzJwsHxg/Nx1x76tQDZbLuZtg/Z3b3M=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=H/IByQTNQn69lKp+psedf4aIechOeR0j915REYKGr86wvc57eSLTAW3rWcnsKiN7l
+         pM2INXuN4N4L8l78M+00xNpNRsuYpxbdfCTYLxf0REFBET1QBNcGuky6YcpUeABQtI
+         3LoM5/4Bgqhc5bVK7BpsJQehCMuFsKDtrTLrrrmfTmMTov4Mx8hvTgZIVyweXqaVUR
+         juwtmhYNGgFDQG63Mc1Y6CvCSyHh+fodKj56aAEdas9m3mlgqavBYnnkFxU6QrJtjS
+         e9L1Xfl1Yr9KdsJS4TqcsX7xMLUMf62hM+uiHpncEtn+QfsM76lVd1vNm/vhXF3vDY
+         Zq+58zDgQFVDw==
+Date:   Thu, 21 Apr 2022 16:11:03 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Kenneth R. Crudup" <kenny@panix.com>
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
         lorenzo.pieralisi@arm.com, hkallweit1@gmail.com,
         wangxiongfeng2@huawei.com, mika.westerberg@linux.intel.com,
@@ -43,42 +46,43 @@ cc:     Bjorn Helgaas <helgaas@kernel.org>,
         Ricky Wu <ricky_wu@realtek.com>,
         Rajat Jain <rajatja@google.com>,
         Prasad Malisetty <quic_pmaliset@quicinc.com>,
-        Victor Ding <victording@google.com>,
-        "Kenneth R. Crudup" <kenny@panix.com>
+        Victor Ding <victording@google.com>
 Subject: Re: [PATCH V1] PCI/ASPM: Save/restore L1SS Capability for
  suspend/resume
-In-Reply-To: <CAAd53p6jh7Jx3pzg9TzrSrW8+3pzLN6EBAFjFv+7T4tMODmX+g@mail.gmail.com>
-Message-ID: <42f9a28-e67-ec2a-f6-9a8b58edd84d@panix.com>
-References: <CAAd53p6DX2C7KVRV=uu_mmPTTjE7=RsXfNPxjbOBLRbf-pXi5A@mail.gmail.com> <20220415212533.GA844147@bhelgaas> <CAAd53p6jh7Jx3pzg9TzrSrW8+3pzLN6EBAFjFv+7T4tMODmX+g@mail.gmail.com>
+Message-ID: <20220421211103.GA1426981@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <42f9a28-e67-ec2a-f6-9a8b58edd84d@panix.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Thu, Apr 21, 2022 at 01:40:02PM -0700, Kenneth R. Crudup wrote:
+> On Thu, 21 Apr 2022, Kai-Heng Feng wrote:
+> 
+> > I went through the whole discussion again, maybe Kenneth's case is
+> > also the result of pcie_aspm_pm_state_change()?
+> 
+> > Since Kenneth is using TLP to switch ASPM between performance and
+> > powersaving/powersupersaving, that means 'aspm_disabled' is false.
+> > Hence the KOXIA NVMe stops working post suspend and Realtek card
+> > reader toggles L1ss post hibernation.
+> 
+> > Kenneth, can you please see if removing pcie_aspm_pm_state_change()
+> > from pci_raw_set_power_state() helps?
+> > Anyway, this can be easier to spot if dmesg was attached.
+> 
+> Well, I haven't had an issue with resume/return from hibernate for quite some
+> time, and the patch I'd reported a long time ago is now in the Linus' master
+> I've been running. I believe a BIOS change from Dell fixed it up for me.
 
-On Thu, 21 Apr 2022, Kai-Heng Feng wrote:
+Which patch are you referring to?
 
-> I went through the whole discussion again, maybe Kenneth's case is
-> also the result of pcie_aspm_pm_state_change()?
+Vidya's original patch [1] is not upstream, at least AFAIK.  Well, it
+*was* merged as 4257f7e008ea [2] in v5.11-rc1, but then reverted by
+40fb68c7725a [3] in v5.11-rc7.
 
-> Since Kenneth is using TLP to switch ASPM between performance and
-> powersaving/powersupersaving, that means 'aspm_disabled' is false.
-> Hence the KOXIA NVMe stops working post suspend and Realtek card
-> reader toggles L1ss post hibernation.
-
-> Kenneth, can you please see if removing pcie_aspm_pm_state_change()
-> from pci_raw_set_power_state() helps?
-> Anyway, this can be easier to spot if dmesg was attached.
-
-Well, I haven't had an issue with resume/return from hibernate for quite some
-time, and the patch I'd reported a long time ago is now in the Linus' master
-I've been running. I believe a BIOS change from Dell fixed it up for me.
-
-But if you're looking for information in any case, I could still do this and
-get back to the topic re: the results.
-
-	-Kenny
-
--- 
-Kenneth R. Crudup / Sr. SW Engineer, Scott County Consulting, Orange County CA
+[1] https://lore.kernel.org/r/20220201123536.12962-1-vidyas@nvidia.com
+[2] https://git.kernel.org/linus/4257f7e008ea
+[3] https://git.kernel.org/linus/40fb68c7725a
