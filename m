@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2FC2C433F5
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Apr 2022 14:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70CAAC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Apr 2022 14:45:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1389614AbiDUOry (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Apr 2022 10:47:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53312 "EHLO
+        id S1389603AbiDUOrZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Apr 2022 10:47:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1389719AbiDUOrp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2022 10:47:45 -0400
+        with ESMTP id S1389599AbiDUOrR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2022 10:47:17 -0400
 Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05on2044.outbound.protection.outlook.com [40.107.20.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FC5EF2D;
-        Thu, 21 Apr 2022 07:44:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6215341F87;
+        Thu, 21 Apr 2022 07:44:25 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PqN9sXNceL8hhRGKOiG4PmllIGAlFTnkh102hIa83rmIa1qv/BFRc6YO2klcQVAiFLpP0Exi0h0qQN0MM5izDXQmmAAbY+v+TzhtbC0uKdwSiAKBW2LWo5ZB2DjdRhBo6R1Ae5OaS13wxZubUx6G/qK5zImc9R+91KPUclIiHVXxDjE/hmQXObPPGigQJMV/H5z2yEi9m0PjQUcI5U8BbggN0ostxYzaWtEIRjtJx314nH2uUcvA0PUaIjcp2zZNz+x+RDwiO3qkRlUPJ5qf+tVm2A8MIHALmRg4yef0C3LL177LqDEccXHOqt7N6odIImXILTdv5Vb+MpCgV8Z/ug==
+ b=UjSFHrKUz/m5lwRBcx5+uxqX2vfGNGUIATlQ0GRyGmGkqCdSH+OAjTh+iM7/e/9JA4E3umlB+Jc9mIj9sc7RX9gBXxWz1KxZlWeyeY4j+VoQQRh+k8vIPxsWWO/YXKL4IOdrf/JWkvlZSAp+oiIgH9LkF7lTKHmzwVMn95xSy1mRU4RiM0IFog/EYCj6M4doW5gN7xYJnVpJoOG8PJsDDtmLJIPDXoQAzX7Ms3v/XG2ka6yJxZ5Imk4YvI9XsHQ6VdpB+DvVVMCDC+da9eZlUpVDgC6aSN6Y0L8yXgD5zc8TN/m0BoptuIYYl8MwGJS5RfKj+XQ8oaUyIPnhfCBnog==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Pj/pveH5kPziUMCOxK05/YsFnLQbVdu/IqeDPLzlQX4=;
- b=OnD3C+WGWcTah+cDAFAn6W+d2h2XFTtMtby9mVfFoCZ3FFXq1Of3th8JAVeGwu6S2iz1gxpEXi1PnJtPP4fuSQ6yfMBfWfUIR9CAqz2UWefcbKbBEgfqPDlBR/NvrgEs33HBNb2XW50XllKDEeBORcwUBJr1T0g6DXsXwDO0ITh4at4l6cJ7EWZdaNcXAbTr44omdHAp885Tvt4m3d/j7te8+qtBnJi+7Kin0pzcBV7U8tbeZnI7Dv+VERv1cms235afsZMMrc5A6WoVAye1vB0FHMKn3Oke2kJjamCOIci/zcFqD550VA1oit8i70BMh9B7ZH+fuZ0CjAzqY0yPUA==
+ bh=17U6Qt6FdE0+BwbMclw3zfwSYXWHcahLGZF5bZ8LxNo=;
+ b=hhs4HD4FNgjQuK9eX8jf9p8NHpVNICZixyhT/41747jXAeCNKYSfMneZS8fhiQ9nluloAQ+Tq/7TffWiZqEK8eaa6oKvx7Utl06McX14M+7nvNpmS5qPQOskqL3LyMP7McNCWDu5M/hSBYjL40t/iNb7d3Ex1NyrSA32OamInWBv/b1eBePniYVPf8EUSWWDt946NboRVr6Dmi6ZwWtaWQe7BfCKuD86jBDfro0HIMBv8jJn5Kfqc5iTjdTNYL4X6yC8LgJ3VXvThdPOloSZsrmCWJdvBqDPYIdOQwgvEqRRhs+mtHhvIFiHZg3F4UW5blGWKrK5ll+WAmRFsvkQ2w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Pj/pveH5kPziUMCOxK05/YsFnLQbVdu/IqeDPLzlQX4=;
- b=e3EAQgK7pjEihbniQhb8tBbWap4rFzDyfJ+Jwkd8GZOz3LQ5SffdFgC2BWN2LQpkdc2tAC3Spb0Sv46wN30D09UG2QdOwdS+qnMT60TkGKxeehatXaLFJccHeoGnSvZrzaP1CJRyezwXioXOx/KCxqVUIP5P2nLMz6kZ0BBe/Yw=
+ bh=17U6Qt6FdE0+BwbMclw3zfwSYXWHcahLGZF5bZ8LxNo=;
+ b=rArTIuk6w7cPCuw/VNniSRadYOP1l2x6VjgBkslp3U31y0HsrecLf3SwE7ZUYLXv0aYy5n8nEqip4H78UmpCSvaKqgV/xedQTk5bWuz+YQGAzRqkU0sCgSfd5xcty+X/5KOmMOVxgt/xFothOAJuXHwZrF6G2QSlEzjdREwL2eo=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from PAXPR04MB9186.eurprd04.prod.outlook.com (2603:10a6:102:232::18)
  by AS8PR04MB8689.eurprd04.prod.outlook.com (2603:10a6:20b:428::19) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5186.13; Thu, 21 Apr
- 2022 14:44:52 +0000
+ 2022 14:44:22 +0000
 Received: from PAXPR04MB9186.eurprd04.prod.outlook.com
  ([fe80::adc5:45f8:fa40:1b8a]) by PAXPR04MB9186.eurprd04.prod.outlook.com
  ([fe80::adc5:45f8:fa40:1b8a%7]) with mapi id 15.20.5186.014; Thu, 21 Apr 2022
- 14:44:52 +0000
+ 14:44:22 +0000
 From:   Frank Li <Frank.Li@nxp.com>
 To:     gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
         l.stach@pengutronix.de, linux-imx@nxp.com,
@@ -47,9 +47,9 @@ To:     gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
 Cc:     vkoul@kernel.org, lorenzo.pieralisi@arm.com, robh@kernel.org,
         kw@linux.com, bhelgaas@google.com,
         manivannan.sadhasivam@linaro.org, Sergey.Semin@baikalelectronics.ru
-Subject: [PATCH v8 9/9] PCI: endpoint: Add embedded DMA controller test
-Date:   Thu, 21 Apr 2022 09:43:49 -0500
-Message-Id: <20220421144349.690115-10-Frank.Li@nxp.com>
+Subject: [PATCH v8 2/9] dmaengine: dw-edma: Detach the private data and chip info structures
+Date:   Thu, 21 Apr 2022 09:43:42 -0500
+Message-Id: <20220421144349.690115-3-Frank.Li@nxp.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220421144349.690115-1-Frank.Li@nxp.com>
 References: <20220421144349.690115-1-Frank.Li@nxp.com>
@@ -60,299 +60,887 @@ X-ClientProxiedBy: SJ0PR13CA0048.namprd13.prod.outlook.com
  (2603:10a6:102:232::18)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ddd5d5ec-74fd-4d72-8b3f-08da23a57e93
+X-MS-Office365-Filtering-Correlation-Id: 1e5ebfac-6c08-496c-200e-08da23a56c74
 X-MS-TrafficTypeDiagnostic: AS8PR04MB8689:EE_
-X-Microsoft-Antispam-PRVS: <AS8PR04MB8689B70AFD17FD63D3EDDAFB88F49@AS8PR04MB8689.eurprd04.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <AS8PR04MB86896F2670015CDCC455F9ED88F49@AS8PR04MB8689.eurprd04.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: pfTkx+/B4HPP/TgJRQ2343wZUk8aqFZF6ySe+ojX5wTpp52q+jUN80h6BbRWaEdnUpVlW1mjo69cCjf5O9fhtTw8rNEjfXc1znorrArLYlTznoiydtFHCrH1vDu/Y6qbr5QM3gp58HEOm3/avIAajuZ7POJM5Hr4x2Ek5tRu2sfIu/HJ74sVxt+Sh/+6BvdvKjQvNmk+l1nztyyqyLrGQzrVuB/PtSA8sKpyFWseA5HLvQ2WoL3L0wTAeh6k/5WOlwAjdzSAopaLSM0DW18rzOi2yPiqGQE3LoZfKfWFc94/QTbWkKIXnpJpObCsE/KPL7kg/h7gbBzzCEuBsEc3t9Yn+Bz/YByuUxRf1FelEQ461+5Q3nJhcGS2bHrcR15eoWNZwPVkfFrPsqfwT2W/ll0YZNVWIYjG4RR+RtU0mX949ZixAFv2HOXhX3oiEHpM2PqkUg/KWjfsqQWoojR8cdbWVsvmcaNuEg94iVdi6EJAKNHVDvJNyvaSfH9cLxg/5F6Dz4f0YLWyuvwfUzMfL/qZngExkAF4uhPR3vdXZIxwWhq4atNA1tg7Y9gtnDRPHIbKauEc9eivkFQhNQromvJb3r6NIf6gLMMK0Zm5wJfFDSP2M73TW1pl2AIXqqqof4RhIB0MBRN+iLCV6gWXBQ8CwHhiqPF/ToHbQxRxf6FIbuMDjcKzRgrx0+fyqIObOEUsJjsLdjF8cLLLZTdgaw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9186.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(38100700002)(38350700002)(186003)(86362001)(7416002)(2616005)(36756003)(5660300002)(1076003)(8936002)(2906002)(8676002)(26005)(66556008)(52116002)(6666004)(6512007)(508600001)(66946007)(66476007)(316002)(4326008)(83380400001)(6506007)(6486002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 6ido6JFUevAPc4heRJZVtBRqS+f7bugJkX3vUx35UOh9kSR2ovrA4EMSB10xEcdKl08JtvGRokq6agNVJs1ndZNaAe5hlBnoWD0beHqLZ2DPSpyxoXIyFGWfQy6VAPMd/MiMhULrOBdIGZ5Z/aylkA+HNfJD9DqnEHi2F+9viIZt+9uzcG9mUlYVm0DHBRVufNF2+mtnHKnOZc4MPdXI4Nnpa9q7qaFGL+di0SsudDQyws8RECYunQODkbkT0u1NmpmBCN7GYWX1kB/bj0HpaUyA+TureZTWUjRM+gteBn+CbcdlHrMLfUSpo88xsxVm5I2etipU63YoDXFRq6CV0APioF2YXk1/yeQPhJihg5obt+/u+kWoIjYPZYs4QFEJ9cdSHMlTZJ0z7awBDM7O/VX6xW6nP2xxWYEPQXF569yfpXlGlamJbZKmZjyLgYYVHKcgZiL1x4IeVvyTnItyacE12mvNC5OnMtPkRNambF/M0A7X2wqJiHaE65h4Qon7YSfrhlJwwqf7UTlFRMgCMagpgBtPODlmvc4Jyyc9YU+jjbEfgNdyhAVkRUJvSs28pDdGUJsrh4cT1q32a6ajZGX/RoFtlN0ahXbmgFcc0zkJllld+cVAC2Uq4DEbpJJZJu3Tf3pWVpunwoJlD5b6ZDDaLer1YoyzpDeeTGej8gEF6cozvB7xI5ch/KJE1jnHe+trvAdwKEAtde+LSfaQTg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9186.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(66476007)(66946007)(6512007)(508600001)(4326008)(316002)(26005)(66556008)(8676002)(52116002)(6666004)(6506007)(6486002)(83380400001)(86362001)(38350700002)(38100700002)(186003)(8936002)(2906002)(2616005)(7416002)(36756003)(5660300002)(1076003)(30864003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?xo1Bld3A70QopxTQdiHZ1fifwgdcQDRDIhlUxEqr/OC0UkXG492wyg4qs+Zw?=
- =?us-ascii?Q?ohEEDgPyTrbt7QkGgS0BiohmfFggQ6oXjxAwzxztx4mam4X3ITQFdYACL0Fx?=
- =?us-ascii?Q?FJLELLjyNGmeEo20oI+4sTir+/p964LDgNlLCYWYBhx9Vws2CzQR5JzzeaNg?=
- =?us-ascii?Q?yKetXD8vTB/AHLiEHUL+DumAviReqFHctKJk9Gr+m4XIimZuT+WS7sf3Mtpw?=
- =?us-ascii?Q?sLlqtapAJ1EyV4DYhKYcRZniBOJcmSI3tj1saOAzHiG/2iCoN5ol5M24CdQp?=
- =?us-ascii?Q?f3IFERR4Ulm3tVQWTGvgMeFBlvdCgpJY7COGb/q3QfWYzSsI3t0q9FySrdOb?=
- =?us-ascii?Q?wHmvu8Y8ezmitYzM541qWXSR9/KrGKQA4J3RghYL1+oEOg5Lz62rNPsFrYmb?=
- =?us-ascii?Q?MyFQ9YaHvaJ9hoPtmhNW2i/FAMFTrPGDtmbK5NLe5gN2/1napdhhrlk2EGvP?=
- =?us-ascii?Q?WHpYhzG2iOUqhbcRAEcjI8hchdGFTHKL7G4Mup6TLeKDQZri3iPw2qsevIXv?=
- =?us-ascii?Q?p92WdqhZv7BBnS1/TETcuy0LDpMgXSKdzL+P0svyuPnLNXTDIJjkXbxfWmQ2?=
- =?us-ascii?Q?eqeiPsC83CgcfPBvVnTPcd6LHPZUwba2D+JDMMyGuOS4BCUYAKqOE5QVybX9?=
- =?us-ascii?Q?AdbEiA66klh57cZSd9sMf9L1zvW0u0MDVHEhiBsv5TVSqEsB4wXa+/mmpcHS?=
- =?us-ascii?Q?yBs9F0m+1FHrdJIFy0Yp1Kaa4/MbeLE69LAuvcGsdXgKnrw+/rIbP5JhuGe1?=
- =?us-ascii?Q?uFN0J6RQ2sQw/7lG0Cf4fiI8n3nNiorNE8yriKqN+ZlcGlBvSiziWQJTF0vw?=
- =?us-ascii?Q?N4o+hxdc48/7Cyr3FdUQtvgX67GMEj1fBQYy4Q2Cn4V4MRVpMmbnFRrkuemh?=
- =?us-ascii?Q?spkrGfnuZb3HntvD5vlp5vQY8dmyVENW4FWV0bPVhuoXCaUSGSw2sRHMQmSS?=
- =?us-ascii?Q?Exs5zKL1EaJuXPk4FSbuGomJhjzW7yv3c8GxzsscIArJMRAQ6gFcwA7o4fDO?=
- =?us-ascii?Q?k3KrYgmIlOV34VOgcFIqDEW/QOnkqWpb2XDpjaAK9l+LuYNk7lvNjJmTUF4r?=
- =?us-ascii?Q?kda4k4EG77vxS/Yc7LN+syfMxAlTqKfEvMcQfp5C66MtDDPP20Nh7W/xYTMf?=
- =?us-ascii?Q?buZe+hQCIKHCxvBTT2yW8UKSxpJ89aGzO8Mrocd6QPxYsAJy3SpLeWTZFDGh?=
- =?us-ascii?Q?yfCoqu/cx8DVvJVguoYGY/vtQkzbaYNAuJbntoG3FnB18fOzs1h+PHEBgfXi?=
- =?us-ascii?Q?MTm+b/DBXTdBV9BlZ8NrY6bHEO3gtdhHc8jZ94AwD9pvKm8xplMhr31YfOQY?=
- =?us-ascii?Q?8pYiFROqICFIytYmBUj/Gitw4yMeVxkAJhPfdpuu/Pt719KnqIwtOYSVkdlI?=
- =?us-ascii?Q?ALAG8Bqtou6tpsKALJvoVYyZBdzqa+OifCcDS7k4SpMcHQjN0ieVrwHCO+MV?=
- =?us-ascii?Q?oz1TtbdAspI/lNoZkWrVxAjWhatFPsj8B/Df1pYE1plyoPwrHTr7tL58jYiT?=
- =?us-ascii?Q?oyPGoa3rkm2ChmHz1PX73gjBOqWuokbhT1n/IE3gbApTF4NYABZw5qxdI6LU?=
- =?us-ascii?Q?nXt3XaGPg5CBRgdAP6LTWTEPIkIKgeigYxl2XfF2GFG4p6Cd/h2RIqDdFmxt?=
- =?us-ascii?Q?rcwG8sgi2PVB2N5yOF4RTfL2pN1/MX2ZWkJxuzsa3SyNzz84zmMzUGNzuF7i?=
- =?us-ascii?Q?Y9x5mmokwsGoJ8PEJYm3+O/moMM45f/976Wox0skqkVJphqz3+VZCMJ55Jc0?=
- =?us-ascii?Q?mqnpxZuh7w=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?f8fkoNq7Ea6LLAYfDaoBvyxnCbWRVySNnay5N2Q92UXp/6PEfwk/g7ggvud8?=
+ =?us-ascii?Q?4RNLKDexbqEYSwBf23PkMGhNcv8OvlnpLtwuDHkq7k255Cla6PFHKGo1wdkd?=
+ =?us-ascii?Q?HDpEpap9XTh+hCxrekdUvItqBbIF2k3M/UYg6FpHl30X0ND58IhfcbNt5qYc?=
+ =?us-ascii?Q?eiAuriOiaO8cljdrp7Kfcr+oAKxAkK6g0ZKmVa0CQtSt/BvsIiAU5q1YgXJN?=
+ =?us-ascii?Q?/QongTmZ3y6G/BF1Yxn+d+QCrXa++i888IR1IPT//z86gkRDCF2zW8wI2Zyr?=
+ =?us-ascii?Q?4Lu6O3s2rRMR0Afp8UzzmkQu1HmM05DN06oEey5SxUs7hHuF4CRXRKaMdlIs?=
+ =?us-ascii?Q?1W8eK9TWCy1QzlcWAwOiwjzRysywfzjkoHLRsVEVFVGUXc1sJO1m6llhInHc?=
+ =?us-ascii?Q?Brp7ZWCBTXYYSH37BKSuLIHKtscAyaxgidwbP5azE+/Sd75ZctAkHT6pVm20?=
+ =?us-ascii?Q?CGq1HGsjKwC1QFgx3fGFpzppPvJgmihgOafoTIi2J1lsP3wes0bOXxkgS8H9?=
+ =?us-ascii?Q?vI4h9baVr4aKeVcmH7WXWdvf8KZyysDK2Hh9sJ5GaZqd6lfAtSlFA2QlB2DR?=
+ =?us-ascii?Q?Qt0lMirbQ2ES5MQ+JwWHQ6YEeYLlyqaMszsj5Ec5JIdvWBdXMlimP6OTMM22?=
+ =?us-ascii?Q?rbgIxmaNLFFqHnqKNV1dUMul4F9Ti3zWAbM3Y73d6bM8b5j/F2/5HX32WltV?=
+ =?us-ascii?Q?OwvwohA73GneC0jd6NiRTUVlxBtL5bgCB9ytLQsn7Fae+AoyHwd7KfTTUvtC?=
+ =?us-ascii?Q?G2xhUjTP2I2SxwmllWGzJDJmDJ7nwwRj3DN3MeDqwPpU58GecOAPFTWhQo53?=
+ =?us-ascii?Q?YCsPPzaDAObNYicaMD8Nxhzlb6R0WH+E+NR5TNfRwxK8R3RzTX6J8QB9kBuR?=
+ =?us-ascii?Q?oI43anelTNIxfYQ+5tAyKFvMtFJt7sOjCXOa6J1XTDWQUUmjYbGtdeRBRHfG?=
+ =?us-ascii?Q?kY52raLMUP5d4gaiozmNthU0k3xQnUi+DPlBLtGybL3D23i4nrMwcX529TtU?=
+ =?us-ascii?Q?btuX2zDJU9Y5rDLhd4gv9kKe4zZOfT3BRU0YtwR8KQ6Yy+mV3NuWvpwSqbTu?=
+ =?us-ascii?Q?w7aH19HsDuKqCGWbQuutz7kAXsD9xrBMv27zOslRfJtjbzbbz4lhHIQ0GKMs?=
+ =?us-ascii?Q?qPvJvdvRGggkyQVXrks08wPf+RL1ERNR6NDru2Mo1iAcUCrhpCAjn0TW3EZm?=
+ =?us-ascii?Q?g2eOfitpuLqlWuAQ/Fhu4dW6UQXvKgwMYPk/Vm15RRwdB3tjqmusM9FomUlO?=
+ =?us-ascii?Q?gg7+nCEqoWFGYsjeszNltLgSIMxuJ0A586T3ULJqtJrP07I9eOPMLsseWGsq?=
+ =?us-ascii?Q?CtT6sarxt7Aa/VuT6TssOJXSIJLfA9U2HjGgqqa4o3wmrqoyl4LPHbXqU1zn?=
+ =?us-ascii?Q?eqKnCDTBvCTWzw35lyHFAKxJxjGxLNKRveHxCWFxh8npIOlNAUvEcewc0/S2?=
+ =?us-ascii?Q?PPtvkup1SQ5uP+inEsNudmH83DqDqZbrhPsa1z4tbEIBNE+eMiV5rCSFed3m?=
+ =?us-ascii?Q?tvznCgSFLqgkw/F9+TqIgSZldA1ZdqX6MBvHAhlCFNZidO2bqid+2+BqTFGL?=
+ =?us-ascii?Q?8OT2PkGQkBRuuT8YBl93iB4uBv63R1w9NvV53jI3IVJ77QPcW+eEZPl3d1gI?=
+ =?us-ascii?Q?I9nLjd8RWvi0z4AIB2+pIWr5I1UdROjyLPaAdvDB7nWWXJPPki7VgPjEwKpb?=
+ =?us-ascii?Q?taofm1/Gi9CKpgHDU8BoDxev3cF6knZeiMnO5fHT+tgddQBond9yAXnvbPoO?=
+ =?us-ascii?Q?kDX3guYHUg=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ddd5d5ec-74fd-4d72-8b3f-08da23a57e93
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1e5ebfac-6c08-496c-200e-08da23a56c74
 X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB9186.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2022 14:44:52.8239
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Apr 2022 14:44:22.5752
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: OuvsnRRYldCey1jE/38Bzb6teMGWnSoJDuVZtyJ9/d07hRUP1rO9LQ254NyEGzKZDqdqp+RBu8bxUE5qYa2jjw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: qBLNnqpBJB3ge6XibSZUJwsgnWXkrHcFMgPScCokuTnVfa1YccZ4IxzX9q1R69r2ek5Z24JQUrh5CsUVzkuncQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB8689
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Designware provided eDMA support in controller. This enabled use
-this eDMA controller to transfer data.
+"struct dw_edma_chip" contains an internal structure "struct dw_edma" that
+is used by the eDMA core internally. This structure should not be touched
+by the eDMA controller drivers themselves. But currently, the eDMA
+controller drivers like "dw-edma-pci" allocates and populates this
+internal structure then passes it on to eDMA core. The eDMA core further
+populates the structure and uses it. This is wrong!
 
-The whole flow align with standard DMA usage module
-
-1. Using dma_request_channel() and filter function to find correct
-RX and TX Channel.
-2. dmaengine_slave_config() config remote side physcial address.
-3. using dmaengine_prep_slave_single() create transfer descriptor
-4. tx_submit();
-5. dma_async_issue_pending();
-
-Tested at i.MX8DXL platform.
-
-root@imx8qmmek:~# /usr/bin/pcitest -d -w
-WRITE ( 102400 bytes):          OKAY
-root@imx8qmmek:~# /usr/bin/pcitest -d -r
-READ ( 102400 bytes):           OKAY
-
-WRITE => Size: 102400 bytes DMA: YES  Time: 0.000180145 seconds Rate: 555108 KB/s
-READ => Size: 102400 bytes  DMA: YES  Time: 0.000194397 seconds Rate: 514411 KB/s
-
-READ => Size: 102400 bytes  DMA: NO   Time: 0.013532597 seconds Rate: 7389 KB/s
-WRITE => Size: 102400 bytes DMA: NO   Time: 0.000857090 seconds Rate: 116673 KB/s
+Hence, move all the "struct dw_edma" specifics from controller drivers
+to the eDMA core.
 
 Signed-off-by: Frank Li <Frank.Li@nxp.com>
 ---
-Change from v6 to v8:
- - none
-Change from v5 to v6:
- - change subject
-Change from v4 to v5:
- - none
-Change from v3 to v4:
- - reverse Xmas tree order
- - local -> dma_local
- - change error message
- - IS_ERR -> IS_ERR_OR_NULL
- - check return value of dmaengine_slave_config()
-Change from v1 to v2:
- - none
+Change from v7 to v8
+ - Check chip->ops at probe()
+ - use struct edma_dw at dw_edma_v0_debugfs_on/off()
 
- drivers/pci/endpoint/functions/pci-epf-test.c | 108 ++++++++++++++++--
- 1 file changed, 98 insertions(+), 10 deletions(-)
+Change from v6 to v7
+ - Move nr_irqs and chip->ops check into dw_edma_irq_request()
+ - Move dw->irq devm_kcalloc() into dw_edma_irq_request()
+ - Change dw->nr_irqs after request success
+ - Fix wrong use chip->nr_irqs when remove
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 90d84d3bc868f..f26afd02f3a86 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -52,9 +52,11 @@ struct pci_epf_test {
- 	enum pci_barno		test_reg_bar;
- 	size_t			msix_table_offset;
- 	struct delayed_work	cmd_handler;
--	struct dma_chan		*dma_chan;
-+	struct dma_chan		*dma_chan_tx;
-+	struct dma_chan		*dma_chan_rx;
- 	struct completion	transfer_complete;
- 	bool			dma_supported;
-+	bool			dma_private;
- 	const struct pci_epc_features *epc_features;
+Change from v5 to v6
+ - Don't touch chip->nr_irqs
+ - Don't set chip->dw utill everything is okay
+ - dw_edma_channel_setup() and dw_edma_v0_core_debugfs_on/off() methods take
+   dw_edma structure pointer as a parameter
+
+Change from v4 to v5
+ - Move chip->nr_irqs before allocate dw_edma
+Change from v3 to v4
+ - Accept most suggestions of Serge Semin
+Change from v2 to v3
+ - none
+Change from v1 to v2
+ - rework commit message
+ - remove duplicate field in struct dw_edma
+
+ drivers/dma/dw-edma/dw-edma-core.c       | 90 +++++++++++++-----------
+ drivers/dma/dw-edma/dw-edma-core.h       | 31 +-------
+ drivers/dma/dw-edma/dw-edma-pcie.c       | 82 +++++++++------------
+ drivers/dma/dw-edma/dw-edma-v0-core.c    | 32 ++++-----
+ drivers/dma/dw-edma/dw-edma-v0-core.h    |  4 +-
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 18 ++---
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.h |  8 +--
+ include/linux/dma/edma.h                 | 44 ++++++++++++
+ 8 files changed, 161 insertions(+), 148 deletions(-)
+
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index 53289927dd0d6..435e4f2ab6575 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -64,8 +64,8 @@ static struct dw_edma_burst *dw_edma_alloc_burst(struct dw_edma_chunk *chunk)
+ 
+ static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *desc)
+ {
++	struct dw_edma_chip *chip = desc->chan->dw->chip;
+ 	struct dw_edma_chan *chan = desc->chan;
+-	struct dw_edma *dw = chan->chip->dw;
+ 	struct dw_edma_chunk *chunk;
+ 
+ 	chunk = kzalloc(sizeof(*chunk), GFP_NOWAIT);
+@@ -82,11 +82,11 @@ static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *desc)
+ 	 */
+ 	chunk->cb = !(desc->chunks_alloc % 2);
+ 	if (chan->dir == EDMA_DIR_WRITE) {
+-		chunk->ll_region.paddr = dw->ll_region_wr[chan->id].paddr;
+-		chunk->ll_region.vaddr = dw->ll_region_wr[chan->id].vaddr;
++		chunk->ll_region.paddr = chip->ll_region_wr[chan->id].paddr;
++		chunk->ll_region.vaddr = chip->ll_region_wr[chan->id].vaddr;
+ 	} else {
+-		chunk->ll_region.paddr = dw->ll_region_rd[chan->id].paddr;
+-		chunk->ll_region.vaddr = dw->ll_region_rd[chan->id].vaddr;
++		chunk->ll_region.paddr = chip->ll_region_rd[chan->id].paddr;
++		chunk->ll_region.vaddr = chip->ll_region_rd[chan->id].vaddr;
+ 	}
+ 
+ 	if (desc->chunk) {
+@@ -664,7 +664,7 @@ static int dw_edma_alloc_chan_resources(struct dma_chan *dchan)
+ 	if (chan->status != EDMA_ST_IDLE)
+ 		return -EBUSY;
+ 
+-	pm_runtime_get(chan->chip->dev);
++	pm_runtime_get(chan->dw->chip->dev);
+ 
+ 	return 0;
+ }
+@@ -686,15 +686,15 @@ static void dw_edma_free_chan_resources(struct dma_chan *dchan)
+ 		cpu_relax();
+ 	}
+ 
+-	pm_runtime_put(chan->chip->dev);
++	pm_runtime_put(chan->dw->chip->dev);
+ }
+ 
+-static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
++static int dw_edma_channel_setup(struct dw_edma *dw, bool write,
+ 				 u32 wr_alloc, u32 rd_alloc)
+ {
++	struct dw_edma_chip *chip = dw->chip;
+ 	struct dw_edma_region *dt_region;
+ 	struct device *dev = chip->dev;
+-	struct dw_edma *dw = chip->dw;
+ 	struct dw_edma_chan *chan;
+ 	struct dw_edma_irq *irq;
+ 	struct dma_device *dma;
+@@ -727,7 +727,7 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
+ 
+ 		chan->vc.chan.private = dt_region;
+ 
+-		chan->chip = chip;
++		chan->dw = dw;
+ 		chan->id = j;
+ 		chan->dir = write ? EDMA_DIR_WRITE : EDMA_DIR_READ;
+ 		chan->configured = false;
+@@ -735,9 +735,9 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
+ 		chan->status = EDMA_ST_IDLE;
+ 
+ 		if (write)
+-			chan->ll_max = (dw->ll_region_wr[j].sz / EDMA_LL_SZ);
++			chan->ll_max = (chip->ll_region_wr[j].sz / EDMA_LL_SZ);
+ 		else
+-			chan->ll_max = (dw->ll_region_rd[j].sz / EDMA_LL_SZ);
++			chan->ll_max = (chip->ll_region_rd[j].sz / EDMA_LL_SZ);
+ 		chan->ll_max -= 1;
+ 
+ 		dev_vdbg(dev, "L. List:\tChannel %s[%u] max_cnt=%u\n",
+@@ -767,13 +767,13 @@ static int dw_edma_channel_setup(struct dw_edma_chip *chip, bool write,
+ 		vchan_init(&chan->vc, dma);
+ 
+ 		if (write) {
+-			dt_region->paddr = dw->dt_region_wr[j].paddr;
+-			dt_region->vaddr = dw->dt_region_wr[j].vaddr;
+-			dt_region->sz = dw->dt_region_wr[j].sz;
++			dt_region->paddr = chip->dt_region_wr[j].paddr;
++			dt_region->vaddr = chip->dt_region_wr[j].vaddr;
++			dt_region->sz = chip->dt_region_wr[j].sz;
+ 		} else {
+-			dt_region->paddr = dw->dt_region_rd[j].paddr;
+-			dt_region->vaddr = dw->dt_region_rd[j].vaddr;
+-			dt_region->sz = dw->dt_region_rd[j].sz;
++			dt_region->paddr = chip->dt_region_rd[j].paddr;
++			dt_region->vaddr = chip->dt_region_rd[j].vaddr;
++			dt_region->sz = chip->dt_region_rd[j].sz;
+ 		}
+ 
+ 		dw_edma_v0_core_device_config(chan);
+@@ -827,11 +827,11 @@ static inline void dw_edma_add_irq_mask(u32 *mask, u32 alloc, u16 cnt)
+ 		(*mask)++;
+ }
+ 
+-static int dw_edma_irq_request(struct dw_edma_chip *chip,
++static int dw_edma_irq_request(struct dw_edma *dw,
+ 			       u32 *wr_alloc, u32 *rd_alloc)
+ {
+-	struct device *dev = chip->dev;
+-	struct dw_edma *dw = chip->dw;
++	struct dw_edma_chip *chip = dw->chip;
++	struct device *dev = dw->chip->dev;
+ 	u32 wr_mask = 1;
+ 	u32 rd_mask = 1;
+ 	int i, err = 0;
+@@ -840,12 +840,16 @@ static int dw_edma_irq_request(struct dw_edma_chip *chip,
+ 
+ 	ch_cnt = dw->wr_ch_cnt + dw->rd_ch_cnt;
+ 
+-	if (dw->nr_irqs < 1)
++	if (chip->nr_irqs < 1 || !chip->ops || !chip->ops->irq_vector)
+ 		return -EINVAL;
+ 
+-	if (dw->nr_irqs == 1) {
++	dw->irq = devm_kcalloc(dev, chip->nr_irqs, sizeof(*dw->irq), GFP_KERNEL);
++	if (!dw->irq)
++		return -ENOMEM;
++
++	if (chip->nr_irqs == 1) {
+ 		/* Common IRQ shared among all channels */
+-		irq = dw->ops->irq_vector(dev, 0);
++		irq = chip->ops->irq_vector(dev, 0);
+ 		err = request_irq(irq, dw_edma_interrupt_common,
+ 				  IRQF_SHARED, dw->name, &dw->irq[0]);
+ 		if (err) {
+@@ -855,9 +859,11 @@ static int dw_edma_irq_request(struct dw_edma_chip *chip,
+ 
+ 		if (irq_get_msi_desc(irq))
+ 			get_cached_msi_msg(irq, &dw->irq[0].msi);
++
++		dw->nr_irqs = 1;
+ 	} else {
+ 		/* Distribute IRQs equally among all channels */
+-		int tmp = dw->nr_irqs;
++		int tmp = chip->nr_irqs;
+ 
+ 		while (tmp && (*wr_alloc + *rd_alloc) < ch_cnt) {
+ 			dw_edma_dec_irq_alloc(&tmp, wr_alloc, dw->wr_ch_cnt);
+@@ -868,7 +874,7 @@ static int dw_edma_irq_request(struct dw_edma_chip *chip,
+ 		dw_edma_add_irq_mask(&rd_mask, *rd_alloc, dw->rd_ch_cnt);
+ 
+ 		for (i = 0; i < (*wr_alloc + *rd_alloc); i++) {
+-			irq = dw->ops->irq_vector(dev, i);
++			irq = chip->ops->irq_vector(dev, i);
+ 			err = request_irq(irq,
+ 					  i < *wr_alloc ?
+ 						dw_edma_interrupt_write :
+@@ -902,20 +908,22 @@ int dw_edma_probe(struct dw_edma_chip *chip)
+ 		return -EINVAL;
+ 
+ 	dev = chip->dev;
+-	if (!dev)
++	if (!dev || !chip->ops)
+ 		return -EINVAL;
+ 
+-	dw = chip->dw;
+-	if (!dw || !dw->irq || !dw->ops || !dw->ops->irq_vector)
+-		return -EINVAL;
++	dw = devm_kzalloc(dev, sizeof(*dw), GFP_KERNEL);
++	if (!dw)
++		return -ENOMEM;
++
++	dw->chip = chip;
+ 
+ 	raw_spin_lock_init(&dw->lock);
+ 
+-	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt,
++	dw->wr_ch_cnt = min_t(u16, chip->wr_ch_cnt,
+ 			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE));
+ 	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt, EDMA_MAX_WR_CH);
+ 
+-	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt,
++	dw->rd_ch_cnt = min_t(u16, chip->rd_ch_cnt,
+ 			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ));
+ 	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt, EDMA_MAX_RD_CH);
+ 
+@@ -937,17 +945,17 @@ int dw_edma_probe(struct dw_edma_chip *chip)
+ 	dw_edma_v0_core_off(dw);
+ 
+ 	/* Request IRQs */
+-	err = dw_edma_irq_request(chip, &wr_alloc, &rd_alloc);
++	err = dw_edma_irq_request(dw, &wr_alloc, &rd_alloc);
+ 	if (err)
+ 		return err;
+ 
+ 	/* Setup write channels */
+-	err = dw_edma_channel_setup(chip, true, wr_alloc, rd_alloc);
++	err = dw_edma_channel_setup(dw, true, wr_alloc, rd_alloc);
+ 	if (err)
+ 		goto err_irq_free;
+ 
+ 	/* Setup read channels */
+-	err = dw_edma_channel_setup(chip, false, wr_alloc, rd_alloc);
++	err = dw_edma_channel_setup(dw, false, wr_alloc, rd_alloc);
+ 	if (err)
+ 		goto err_irq_free;
+ 
+@@ -955,15 +963,15 @@ int dw_edma_probe(struct dw_edma_chip *chip)
+ 	pm_runtime_enable(dev);
+ 
+ 	/* Turn debugfs on */
+-	dw_edma_v0_core_debugfs_on(chip);
++	dw_edma_v0_core_debugfs_on(dw);
++
++	chip->dw = dw;
+ 
+ 	return 0;
+ 
+ err_irq_free:
+ 	for (i = (dw->nr_irqs - 1); i >= 0; i--)
+-		free_irq(dw->ops->irq_vector(dev, i), &dw->irq[i]);
+-
+-	dw->nr_irqs = 0;
++		free_irq(chip->ops->irq_vector(dev, i), &dw->irq[i]);
+ 
+ 	return err;
+ }
+@@ -981,7 +989,7 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+ 
+ 	/* Free irqs */
+ 	for (i = (dw->nr_irqs - 1); i >= 0; i--)
+-		free_irq(dw->ops->irq_vector(dev, i), &dw->irq[i]);
++		free_irq(chip->ops->irq_vector(dev, i), &dw->irq[i]);
+ 
+ 	/* Power management */
+ 	pm_runtime_disable(dev);
+@@ -1002,7 +1010,7 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+ 	}
+ 
+ 	/* Turn debugfs off */
+-	dw_edma_v0_core_debugfs_off(chip);
++	dw_edma_v0_core_debugfs_off(dw);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
+index 60316d408c3e0..85df2d511907b 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.h
++++ b/drivers/dma/dw-edma/dw-edma-core.h
+@@ -15,20 +15,12 @@
+ #include "../virt-dma.h"
+ 
+ #define EDMA_LL_SZ					24
+-#define EDMA_MAX_WR_CH					8
+-#define EDMA_MAX_RD_CH					8
+ 
+ enum dw_edma_dir {
+ 	EDMA_DIR_WRITE = 0,
+ 	EDMA_DIR_READ
  };
  
-@@ -105,12 +107,15 @@ static void pci_epf_test_dma_callback(void *param)
-  */
- static int pci_epf_test_data_transfer(struct pci_epf_test *epf_test,
- 				      dma_addr_t dma_dst, dma_addr_t dma_src,
--				      size_t len)
-+				      size_t len, dma_addr_t dma_remote,
-+				      enum dma_transfer_direction dir)
- {
-+	struct dma_chan *chan = (dir == DMA_DEV_TO_MEM) ? epf_test->dma_chan_tx : epf_test->dma_chan_rx;
-+	dma_addr_t dma_local = (dir == DMA_MEM_TO_DEV) ? dma_src : dma_dst;
- 	enum dma_ctrl_flags flags = DMA_CTRL_ACK | DMA_PREP_INTERRUPT;
--	struct dma_chan *chan = epf_test->dma_chan;
- 	struct pci_epf *epf = epf_test->epf;
- 	struct dma_async_tx_descriptor *tx;
-+	struct dma_slave_config sconf = {};
- 	struct device *dev = &epf->dev;
- 	dma_cookie_t cookie;
- 	int ret;
-@@ -120,7 +125,22 @@ static int pci_epf_test_data_transfer(struct pci_epf_test *epf_test,
- 		return -EINVAL;
+-enum dw_edma_map_format {
+-	EDMA_MF_EDMA_LEGACY = 0x0,
+-	EDMA_MF_EDMA_UNROLL = 0x1,
+-	EDMA_MF_HDMA_COMPAT = 0x5
+-};
+-
+ enum dw_edma_request {
+ 	EDMA_REQ_NONE = 0,
+ 	EDMA_REQ_STOP,
+@@ -57,12 +49,6 @@ struct dw_edma_burst {
+ 	u32				sz;
+ };
+ 
+-struct dw_edma_region {
+-	phys_addr_t			paddr;
+-	void				__iomem *vaddr;
+-	size_t				sz;
+-};
+-
+ struct dw_edma_chunk {
+ 	struct list_head		list;
+ 	struct dw_edma_chan		*chan;
+@@ -87,7 +73,7 @@ struct dw_edma_desc {
+ 
+ struct dw_edma_chan {
+ 	struct virt_dma_chan		vc;
+-	struct dw_edma_chip		*chip;
++	struct dw_edma			*dw;
+ 	int				id;
+ 	enum dw_edma_dir		dir;
+ 
+@@ -109,10 +95,6 @@ struct dw_edma_irq {
+ 	struct dw_edma			*dw;
+ };
+ 
+-struct dw_edma_core_ops {
+-	int	(*irq_vector)(struct device *dev, unsigned int nr);
+-};
+-
+ struct dw_edma {
+ 	char				name[20];
+ 
+@@ -122,21 +104,14 @@ struct dw_edma {
+ 	struct dma_device		rd_edma;
+ 	u16				rd_ch_cnt;
+ 
+-	struct dw_edma_region		rg_region;	/* Registers */
+-	struct dw_edma_region		ll_region_wr[EDMA_MAX_WR_CH];
+-	struct dw_edma_region		ll_region_rd[EDMA_MAX_RD_CH];
+-	struct dw_edma_region		dt_region_wr[EDMA_MAX_WR_CH];
+-	struct dw_edma_region		dt_region_rd[EDMA_MAX_RD_CH];
+-
+ 	struct dw_edma_irq		*irq;
+ 	int				nr_irqs;
+ 
+-	enum dw_edma_map_format		mf;
+-
+ 	struct dw_edma_chan		*chan;
+-	const struct dw_edma_core_ops	*ops;
+ 
+ 	raw_spinlock_t			lock;		/* Only for legacy */
++
++	struct dw_edma_chip             *chip;
+ #ifdef CONFIG_DEBUG_FS
+ 	struct dentry			*debugfs;
+ #endif /* CONFIG_DEBUG_FS */
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index b8f52ca10fa91..2c1c5fa4e9f28 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -148,7 +148,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	struct dw_edma_pcie_data vsec_data;
+ 	struct device *dev = &pdev->dev;
+ 	struct dw_edma_chip *chip;
+-	struct dw_edma *dw;
+ 	int err, nr_irqs;
+ 	int i, mask;
+ 
+@@ -214,10 +213,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	if (!chip)
+ 		return -ENOMEM;
+ 
+-	dw = devm_kzalloc(dev, sizeof(*dw), GFP_KERNEL);
+-	if (!dw)
+-		return -ENOMEM;
+-
+ 	/* IRQs allocation */
+ 	nr_irqs = pci_alloc_irq_vectors(pdev, 1, vsec_data.irqs,
+ 					PCI_IRQ_MSI | PCI_IRQ_MSIX);
+@@ -228,28 +223,23 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
  	}
  
--	tx = dmaengine_prep_dma_memcpy(chan, dma_dst, dma_src, len, flags);
-+	if (epf_test->dma_private) {
-+		sconf.direction = dir;
-+		if (dir == DMA_MEM_TO_DEV)
-+			sconf.dst_addr = dma_remote;
-+		else
-+			sconf.src_addr = dma_remote;
-+
-+		if (dmaengine_slave_config(chan, &sconf)) {
-+			dev_err(dev, "DMA slave config fail\n");
-+			return -EIO;
-+		}
-+		tx = dmaengine_prep_slave_single(chan, dma_local, len, dir, flags);
-+	} else {
-+		tx = dmaengine_prep_dma_memcpy(chan, dma_dst, dma_src, len, flags);
-+	}
-+
- 	if (!tx) {
- 		dev_err(dev, "Failed to prepare DMA memcpy\n");
- 		return -EIO;
-@@ -148,6 +168,23 @@ static int pci_epf_test_data_transfer(struct pci_epf_test *epf_test,
- 	return 0;
- }
+ 	/* Data structure initialization */
+-	chip->dw = dw;
+ 	chip->dev = dev;
+ 	chip->id = pdev->devfn;
  
-+struct epf_dma_filter {
-+	struct device *dev;
-+	u32 dma_mask;
-+};
-+
-+static bool epf_dma_filter_fn(struct dma_chan *chan, void *node)
-+{
-+	struct epf_dma_filter *filter = node;
-+	struct dma_slave_caps caps;
-+
-+	memset(&caps, 0, sizeof(caps));
-+	dma_get_slave_caps(chan, &caps);
-+
-+	return chan->device->dev == filter->dev
-+		&& (filter->dma_mask & caps.directions);
-+}
-+
- /**
-  * pci_epf_test_init_dma_chan() - Function to initialize EPF test DMA channel
-  * @epf_test: the EPF test device that performs data transfer operation
-@@ -158,10 +195,44 @@ static int pci_epf_test_init_dma_chan(struct pci_epf_test *epf_test)
- {
- 	struct pci_epf *epf = epf_test->epf;
- 	struct device *dev = &epf->dev;
-+	struct epf_dma_filter filter;
- 	struct dma_chan *dma_chan;
- 	dma_cap_mask_t mask;
- 	int ret;
+-	dw->mf = vsec_data.mf;
+-	dw->nr_irqs = nr_irqs;
+-	dw->ops = &dw_edma_pcie_core_ops;
+-	dw->wr_ch_cnt = vsec_data.wr_ch_cnt;
+-	dw->rd_ch_cnt = vsec_data.rd_ch_cnt;
++	chip->mf = vsec_data.mf;
++	chip->nr_irqs = nr_irqs;
++	chip->ops = &dw_edma_pcie_core_ops;
  
-+	filter.dev = epf->epc->dev.parent;
-+	filter.dma_mask = BIT(DMA_DEV_TO_MEM);
-+
-+	dma_cap_zero(mask);
-+	dma_cap_set(DMA_SLAVE, mask);
-+	dma_chan = dma_request_channel(mask, epf_dma_filter_fn, &filter);
-+	if (IS_ERR_OR_NULL(dma_chan)) {
-+		dev_info(dev, "Failed to get private DMA channel. Falling back to generic one\n");
-+		goto fail_back_tx;
-+	}
-+
-+	epf_test->dma_chan_rx = dma_chan;
-+
-+	filter.dma_mask = BIT(DMA_MEM_TO_DEV);
-+	dma_chan = dma_request_channel(mask, epf_dma_filter_fn, &filter);
-+
-+	if (IS_ERR(dma_chan)) {
-+		dev_info(dev, "Failed to get private DMA channel. Falling back to generic one\n");
-+		goto fail_back_rx;
-+	}
-+
-+	epf_test->dma_chan_tx = dma_chan;
-+	epf_test->dma_private = true;
-+
-+	init_completion(&epf_test->transfer_complete);
-+
-+	return 0;
-+
-+fail_back_rx:
-+	dma_release_channel(epf_test->dma_chan_rx);
-+	epf_test->dma_chan_tx = NULL;
-+
-+fail_back_tx:
- 	dma_cap_zero(mask);
- 	dma_cap_set(DMA_MEMCPY, mask);
+-	dw->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg.bar];
+-	if (!dw->rg_region.vaddr)
+-		return -ENOMEM;
++	chip->wr_ch_cnt = vsec_data.wr_ch_cnt;
++	chip->rd_ch_cnt = vsec_data.rd_ch_cnt;
  
-@@ -174,7 +245,7 @@ static int pci_epf_test_init_dma_chan(struct pci_epf_test *epf_test)
+-	dw->rg_region.vaddr += vsec_data.rg.off;
+-	dw->rg_region.paddr = pdev->resource[vsec_data.rg.bar].start;
+-	dw->rg_region.paddr += vsec_data.rg.off;
+-	dw->rg_region.sz = vsec_data.rg.sz;
++	chip->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg.bar];
++	if (!chip->rg_region.vaddr)
++		return -ENOMEM;
+ 
+-	for (i = 0; i < dw->wr_ch_cnt; i++) {
+-		struct dw_edma_region *ll_region = &dw->ll_region_wr[i];
+-		struct dw_edma_region *dt_region = &dw->dt_region_wr[i];
++	for (i = 0; i < chip->wr_ch_cnt; i++) {
++		struct dw_edma_region *ll_region = &chip->ll_region_wr[i];
++		struct dw_edma_region *dt_region = &chip->dt_region_wr[i];
+ 		struct dw_edma_block *ll_block = &vsec_data.ll_wr[i];
+ 		struct dw_edma_block *dt_block = &vsec_data.dt_wr[i];
+ 
+@@ -272,9 +262,9 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		dt_region->sz = dt_block->sz;
  	}
- 	init_completion(&epf_test->transfer_complete);
  
--	epf_test->dma_chan = dma_chan;
-+	epf_test->dma_chan_tx = epf_test->dma_chan_rx = dma_chan;
+-	for (i = 0; i < dw->rd_ch_cnt; i++) {
+-		struct dw_edma_region *ll_region = &dw->ll_region_rd[i];
+-		struct dw_edma_region *dt_region = &dw->dt_region_rd[i];
++	for (i = 0; i < chip->rd_ch_cnt; i++) {
++		struct dw_edma_region *ll_region = &chip->ll_region_rd[i];
++		struct dw_edma_region *dt_region = &chip->dt_region_rd[i];
+ 		struct dw_edma_block *ll_block = &vsec_data.ll_rd[i];
+ 		struct dw_edma_block *dt_block = &vsec_data.dt_rd[i];
  
- 	return 0;
+@@ -298,45 +288,45 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* Debug info */
+-	if (dw->mf == EDMA_MF_EDMA_LEGACY)
+-		pci_dbg(pdev, "Version:\teDMA Port Logic (0x%x)\n", dw->mf);
+-	else if (dw->mf == EDMA_MF_EDMA_UNROLL)
+-		pci_dbg(pdev, "Version:\teDMA Unroll (0x%x)\n", dw->mf);
+-	else if (dw->mf == EDMA_MF_HDMA_COMPAT)
+-		pci_dbg(pdev, "Version:\tHDMA Compatible (0x%x)\n", dw->mf);
++	if (chip->mf == EDMA_MF_EDMA_LEGACY)
++		pci_dbg(pdev, "Version:\teDMA Port Logic (0x%x)\n", chip->mf);
++	else if (chip->mf == EDMA_MF_EDMA_UNROLL)
++		pci_dbg(pdev, "Version:\teDMA Unroll (0x%x)\n", chip->mf);
++	else if (chip->mf == EDMA_MF_HDMA_COMPAT)
++		pci_dbg(pdev, "Version:\tHDMA Compatible (0x%x)\n", chip->mf);
+ 	else
+-		pci_dbg(pdev, "Version:\tUnknown (0x%x)\n", dw->mf);
++		pci_dbg(pdev, "Version:\tUnknown (0x%x)\n", chip->mf);
+ 
+-	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
++	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p)\n",
+ 		vsec_data.rg.bar, vsec_data.rg.off, vsec_data.rg.sz,
+-		dw->rg_region.vaddr, &dw->rg_region.paddr);
++		chip->rg_region.vaddr);
+ 
+ 
+-	for (i = 0; i < dw->wr_ch_cnt; i++) {
++	for (i = 0; i < chip->wr_ch_cnt; i++) {
+ 		pci_dbg(pdev, "L. List:\tWRITE CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+ 			i, vsec_data.ll_wr[i].bar,
+-			vsec_data.ll_wr[i].off, dw->ll_region_wr[i].sz,
+-			dw->ll_region_wr[i].vaddr, &dw->ll_region_wr[i].paddr);
++			vsec_data.ll_wr[i].off, chip->ll_region_wr[i].sz,
++			chip->ll_region_wr[i].vaddr, &chip->ll_region_wr[i].paddr);
+ 
+ 		pci_dbg(pdev, "Data:\tWRITE CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+ 			i, vsec_data.dt_wr[i].bar,
+-			vsec_data.dt_wr[i].off, dw->dt_region_wr[i].sz,
+-			dw->dt_region_wr[i].vaddr, &dw->dt_region_wr[i].paddr);
++			vsec_data.dt_wr[i].off, chip->dt_region_wr[i].sz,
++			chip->dt_region_wr[i].vaddr, &chip->dt_region_wr[i].paddr);
+ 	}
+ 
+-	for (i = 0; i < dw->rd_ch_cnt; i++) {
++	for (i = 0; i < chip->rd_ch_cnt; i++) {
+ 		pci_dbg(pdev, "L. List:\tREAD CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+ 			i, vsec_data.ll_rd[i].bar,
+-			vsec_data.ll_rd[i].off, dw->ll_region_rd[i].sz,
+-			dw->ll_region_rd[i].vaddr, &dw->ll_region_rd[i].paddr);
++			vsec_data.ll_rd[i].off, chip->ll_region_rd[i].sz,
++			chip->ll_region_rd[i].vaddr, &chip->ll_region_rd[i].paddr);
+ 
+ 		pci_dbg(pdev, "Data:\tREAD CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+ 			i, vsec_data.dt_rd[i].bar,
+-			vsec_data.dt_rd[i].off, dw->dt_region_rd[i].sz,
+-			dw->dt_region_rd[i].vaddr, &dw->dt_region_rd[i].paddr);
++			vsec_data.dt_rd[i].off, chip->dt_region_rd[i].sz,
++			chip->dt_region_rd[i].vaddr, &chip->dt_region_rd[i].paddr);
+ 	}
+ 
+-	pci_dbg(pdev, "Nr. IRQs:\t%u\n", dw->nr_irqs);
++	pci_dbg(pdev, "Nr. IRQs:\t%u\n", chip->nr_irqs);
+ 
+ 	/* Validating if PCI interrupts were enabled */
+ 	if (!pci_dev_msi_enabled(pdev)) {
+@@ -344,10 +334,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		return -EPERM;
+ 	}
+ 
+-	dw->irq = devm_kcalloc(dev, nr_irqs, sizeof(*dw->irq), GFP_KERNEL);
+-	if (!dw->irq)
+-		return -ENOMEM;
+-
+ 	/* Starting eDMA driver */
+ 	err = dw_edma_probe(chip);
+ 	if (err) {
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
+index 329fc2e57b703..6cf6c28ce0cc9 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-core.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
+@@ -25,7 +25,7 @@ enum dw_edma_control {
+ 
+ static inline struct dw_edma_v0_regs __iomem *__dw_regs(struct dw_edma *dw)
+ {
+-	return dw->rg_region.vaddr;
++	return dw->chip->rg_region.vaddr;
  }
-@@ -190,8 +261,17 @@ static void pci_epf_test_clean_dma_chan(struct pci_epf_test *epf_test)
- 	if (!epf_test->dma_supported)
+ 
+ #define SET_32(dw, name, value)				\
+@@ -96,7 +96,7 @@ static inline struct dw_edma_v0_regs __iomem *__dw_regs(struct dw_edma *dw)
+ static inline struct dw_edma_v0_ch_regs __iomem *
+ __dw_ch_regs(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch)
+ {
+-	if (dw->mf == EDMA_MF_EDMA_LEGACY)
++	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY)
+ 		return &(__dw_regs(dw)->type.legacy.ch);
+ 
+ 	if (dir == EDMA_DIR_WRITE)
+@@ -108,7 +108,7 @@ __dw_ch_regs(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch)
+ static inline void writel_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ 			     u32 value, void __iomem *addr)
+ {
+-	if (dw->mf == EDMA_MF_EDMA_LEGACY) {
++	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY) {
+ 		u32 viewport_sel;
+ 		unsigned long flags;
+ 
+@@ -133,7 +133,7 @@ static inline u32 readl_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ {
+ 	u32 value;
+ 
+-	if (dw->mf == EDMA_MF_EDMA_LEGACY) {
++	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY) {
+ 		u32 viewport_sel;
+ 		unsigned long flags;
+ 
+@@ -169,7 +169,7 @@ static inline u32 readl_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ static inline void writeq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ 			     u64 value, void __iomem *addr)
+ {
+-	if (dw->mf == EDMA_MF_EDMA_LEGACY) {
++	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY) {
+ 		u32 viewport_sel;
+ 		unsigned long flags;
+ 
+@@ -194,7 +194,7 @@ static inline u64 readq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ {
+ 	u32 value;
+ 
+-	if (dw->mf == EDMA_MF_EDMA_LEGACY) {
++	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY) {
+ 		u32 viewport_sel;
+ 		unsigned long flags;
+ 
+@@ -256,7 +256,7 @@ u16 dw_edma_v0_core_ch_count(struct dw_edma *dw, enum dw_edma_dir dir)
+ 
+ enum dma_status dw_edma_v0_core_ch_status(struct dw_edma_chan *chan)
+ {
+-	struct dw_edma *dw = chan->chip->dw;
++	struct dw_edma *dw = chan->dw;
+ 	u32 tmp;
+ 
+ 	tmp = FIELD_GET(EDMA_V0_CH_STATUS_MASK,
+@@ -272,7 +272,7 @@ enum dma_status dw_edma_v0_core_ch_status(struct dw_edma_chan *chan)
+ 
+ void dw_edma_v0_core_clear_done_int(struct dw_edma_chan *chan)
+ {
+-	struct dw_edma *dw = chan->chip->dw;
++	struct dw_edma *dw = chan->dw;
+ 
+ 	SET_RW_32(dw, chan->dir, int_clear,
+ 		  FIELD_PREP(EDMA_V0_DONE_INT_MASK, BIT(chan->id)));
+@@ -280,7 +280,7 @@ void dw_edma_v0_core_clear_done_int(struct dw_edma_chan *chan)
+ 
+ void dw_edma_v0_core_clear_abort_int(struct dw_edma_chan *chan)
+ {
+-	struct dw_edma *dw = chan->chip->dw;
++	struct dw_edma *dw = chan->dw;
+ 
+ 	SET_RW_32(dw, chan->dir, int_clear,
+ 		  FIELD_PREP(EDMA_V0_ABORT_INT_MASK, BIT(chan->id)));
+@@ -357,7 +357,7 @@ static void dw_edma_v0_core_write_chunk(struct dw_edma_chunk *chunk)
+ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
+ {
+ 	struct dw_edma_chan *chan = chunk->chan;
+-	struct dw_edma *dw = chan->chip->dw;
++	struct dw_edma *dw = chan->dw;
+ 	u32 tmp;
+ 
+ 	dw_edma_v0_core_write_chunk(chunk);
+@@ -365,7 +365,7 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
+ 	if (first) {
+ 		/* Enable engine */
+ 		SET_RW_32(dw, chan->dir, engine_en, BIT(0));
+-		if (dw->mf == EDMA_MF_HDMA_COMPAT) {
++		if (dw->chip->mf == EDMA_MF_HDMA_COMPAT) {
+ 			switch (chan->id) {
+ 			case 0:
+ 				SET_RW_COMPAT(dw, chan->dir, ch0_pwr_en,
+@@ -431,7 +431,7 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
+ 
+ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan)
+ {
+-	struct dw_edma *dw = chan->chip->dw;
++	struct dw_edma *dw = chan->dw;
+ 	u32 tmp = 0;
+ 
+ 	/* MSI done addr - low, high */
+@@ -501,12 +501,12 @@ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan)
+ }
+ 
+ /* eDMA debugfs callbacks */
+-void dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip)
++void dw_edma_v0_core_debugfs_on(struct dw_edma *dw)
+ {
+-	dw_edma_v0_debugfs_on(chip);
++	dw_edma_v0_debugfs_on(dw);
+ }
+ 
+-void dw_edma_v0_core_debugfs_off(struct dw_edma_chip *chip)
++void dw_edma_v0_core_debugfs_off(struct dw_edma *dw)
+ {
+-	dw_edma_v0_debugfs_off(chip);
++	dw_edma_v0_debugfs_off(dw);
+ }
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.h b/drivers/dma/dw-edma/dw-edma-v0-core.h
+index 2afa626b8300c..75aec6d31b210 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-core.h
++++ b/drivers/dma/dw-edma/dw-edma-v0-core.h
+@@ -22,7 +22,7 @@ u32 dw_edma_v0_core_status_abort_int(struct dw_edma *chan, enum dw_edma_dir dir)
+ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first);
+ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan);
+ /* eDMA debug fs callbacks */
+-void dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip);
+-void dw_edma_v0_core_debugfs_off(struct dw_edma_chip *chip);
++void dw_edma_v0_core_debugfs_on(struct dw_edma *dw);
++void dw_edma_v0_core_debugfs_off(struct dw_edma *dw);
+ 
+ #endif /* _DW_EDMA_V0_CORE_H */
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+index 4b3bcffd15ef1..b765adb969998 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+@@ -54,7 +54,7 @@ struct debugfs_entries {
+ static int dw_edma_debugfs_u32_get(void *data, u64 *val)
+ {
+ 	void __iomem *reg = (void __force __iomem *)data;
+-	if (dw->mf == EDMA_MF_EDMA_LEGACY &&
++	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY &&
+ 	    reg >= (void __iomem *)&regs->type.legacy.ch) {
+ 		void __iomem *ptr = &regs->type.legacy.ch;
+ 		u32 viewport_sel = 0;
+@@ -173,7 +173,7 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
+ 
+-	if (dw->mf == EDMA_MF_HDMA_COMPAT) {
++	if (dw->chip->mf == EDMA_MF_HDMA_COMPAT) {
+ 		nr_entries = ARRAY_SIZE(debugfs_unroll_regs);
+ 		dw_edma_debugfs_create_x32(debugfs_unroll_regs, nr_entries,
+ 					   regs_dir);
+@@ -242,7 +242,7 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
+ 
+-	if (dw->mf == EDMA_MF_HDMA_COMPAT) {
++	if (dw->chip->mf == EDMA_MF_HDMA_COMPAT) {
+ 		nr_entries = ARRAY_SIZE(debugfs_unroll_regs);
+ 		dw_edma_debugfs_create_x32(debugfs_unroll_regs, nr_entries,
+ 					   regs_dir);
+@@ -282,13 +282,13 @@ static void dw_edma_debugfs_regs(void)
+ 	dw_edma_debugfs_regs_rd(regs_dir);
+ }
+ 
+-void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
++void dw_edma_v0_debugfs_on(struct dw_edma *_dw)
+ {
+-	dw = chip->dw;
++	dw = _dw;
+ 	if (!dw)
  		return;
  
--	dma_release_channel(epf_test->dma_chan);
--	epf_test->dma_chan = NULL;
-+	dma_release_channel(epf_test->dma_chan_tx);
-+	if (epf_test->dma_chan_tx == epf_test->dma_chan_rx) {
-+		epf_test->dma_chan_tx = NULL;
-+		epf_test->dma_chan_rx = NULL;
-+		return;
-+	}
-+
-+	dma_release_channel(epf_test->dma_chan_rx);
-+	epf_test->dma_chan_rx = NULL;
-+
-+	return;
+-	regs = dw->rg_region.vaddr;
++	regs = dw->chip->rg_region.vaddr;
+ 	if (!regs)
+ 		return;
+ 
+@@ -296,16 +296,16 @@ void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
+ 	if (!dw->debugfs)
+ 		return;
+ 
+-	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->mf);
++	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->chip->mf);
+ 	debugfs_create_u16("wr_ch_cnt", 0444, dw->debugfs, &dw->wr_ch_cnt);
+ 	debugfs_create_u16("rd_ch_cnt", 0444, dw->debugfs, &dw->rd_ch_cnt);
+ 
+ 	dw_edma_debugfs_regs();
  }
  
- static void pci_epf_test_print_rate(const char *ops, u64 size,
-@@ -280,8 +360,14 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 			goto err_map_addr;
- 		}
+-void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip)
++void dw_edma_v0_debugfs_off(struct dw_edma *_dw)
+ {
+-	dw = chip->dw;
++	dw = _dw;
+ 	if (!dw)
+ 		return;
  
-+		if (epf_test->dma_private) {
-+			dev_err(dev, "Cannot transfer data using DMA\n");
-+			ret = -EINVAL;
-+			goto err_map_addr;
-+		}
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
+index d0ff25a9ea5c9..3391b86edf5ab 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
+@@ -12,14 +12,14 @@
+ #include <linux/dma/edma.h>
+ 
+ #ifdef CONFIG_DEBUG_FS
+-void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip);
+-void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip);
++void dw_edma_v0_debugfs_on(struct dw_edma *dw);
++void dw_edma_v0_debugfs_off(struct dw_edma *dw);
+ #else
+-static inline void dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
++static inline void dw_edma_v0_debugfs_on(struct dw_edma *dw)
+ {
+ }
+ 
+-static inline void dw_edma_v0_debugfs_off(struct dw_edma_chip *chip)
++static inline void dw_edma_v0_debugfs_off(struct dw_edma *dw)
+ {
+ }
+ #endif /* CONFIG_DEBUG_FS */
+diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+index d4333e721588d..6fd374cc72c8e 100644
+--- a/include/linux/dma/edma.h
++++ b/include/linux/dma/edma.h
+@@ -12,17 +12,61 @@
+ #include <linux/device.h>
+ #include <linux/dmaengine.h>
+ 
++#define EDMA_MAX_WR_CH                                  8
++#define EDMA_MAX_RD_CH                                  8
 +
- 		ret = pci_epf_test_data_transfer(epf_test, dst_phys_addr,
--						 src_phys_addr, reg->size);
-+						 src_phys_addr, reg->size, 0, DMA_MEM_TO_MEM);
- 		if (ret)
- 			dev_err(dev, "Data transfer failed\n");
- 	} else {
-@@ -363,7 +449,8 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
+ struct dw_edma;
  
- 		ktime_get_ts64(&start);
- 		ret = pci_epf_test_data_transfer(epf_test, dst_phys_addr,
--						 phys_addr, reg->size);
-+						 phys_addr, reg->size,
-+						 reg->src_addr, DMA_DEV_TO_MEM);
- 		if (ret)
- 			dev_err(dev, "Data transfer failed\n");
- 		ktime_get_ts64(&end);
-@@ -453,8 +540,9 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 		}
- 
- 		ktime_get_ts64(&start);
++struct dw_edma_region {
++	phys_addr_t	paddr;
++	void __iomem	*vaddr;
++	size_t		sz;
++};
 +
- 		ret = pci_epf_test_data_transfer(epf_test, phys_addr,
--						 src_phys_addr, reg->size);
-+						 src_phys_addr, reg->size, reg->dst_addr, DMA_MEM_TO_DEV);
- 		if (ret)
- 			dev_err(dev, "Data transfer failed\n");
- 		ktime_get_ts64(&end);
++struct dw_edma_core_ops {
++	int (*irq_vector)(struct device *dev, unsigned int nr);
++};
++
++enum dw_edma_map_format {
++	EDMA_MF_EDMA_LEGACY = 0x0,
++	EDMA_MF_EDMA_UNROLL = 0x1,
++	EDMA_MF_HDMA_COMPAT = 0x5
++};
++
+ /**
+  * struct dw_edma_chip - representation of DesignWare eDMA controller hardware
+  * @dev:		 struct device of the eDMA controller
+  * @id:			 instance ID
++ * @nr_irqs:		 total dma irq number
++ * @ops			 DMA channel to IRQ number mapping
++ * @wr_ch_cnt		 DMA write channel number
++ * @rd_ch_cnt		 DMA read channel number
++ * @rg_region		 DMA register region
++ * @ll_region_wr	 DMA descriptor link list memory for write channel
++ * @ll_region_rd	 DMA descriptor link list memory for read channel
++ * @mf			 DMA register map format
+  * @dw:			 struct dw_edma that is filed by dw_edma_probe()
+  */
+ struct dw_edma_chip {
+ 	struct device		*dev;
+ 	int			id;
++	int			nr_irqs;
++	const struct dw_edma_core_ops   *ops;
++
++	struct dw_edma_region	rg_region;
++
++	u16			wr_ch_cnt;
++	u16			rd_ch_cnt;
++	/* link list address */
++	struct dw_edma_region	ll_region_wr[EDMA_MAX_WR_CH];
++	struct dw_edma_region	ll_region_rd[EDMA_MAX_RD_CH];
++
++	/* data region */
++	struct dw_edma_region	dt_region_wr[EDMA_MAX_WR_CH];
++	struct dw_edma_region	dt_region_rd[EDMA_MAX_RD_CH];
++
++	enum dw_edma_map_format	mf;
++
+ 	struct dw_edma		*dw;
+ };
+ 
 -- 
 2.35.1
 
