@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C3B4C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Apr 2022 22:16:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B4DAC433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Apr 2022 22:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232349AbiDVWT2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Apr 2022 18:19:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57066 "EHLO
+        id S232386AbiDVWTa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Apr 2022 18:19:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233134AbiDVWSY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Apr 2022 18:18:24 -0400
-Received: from mail-lj1-x234.google.com (mail-lj1-x234.google.com [IPv6:2a00:1450:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68C0E24E904
-        for <linux-pci@vger.kernel.org>; Fri, 22 Apr 2022 14:10:06 -0700 (PDT)
-Received: by mail-lj1-x234.google.com with SMTP id q22so11054992ljh.10
-        for <linux-pci@vger.kernel.org>; Fri, 22 Apr 2022 14:10:06 -0700 (PDT)
+        with ESMTP id S233225AbiDVWS1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Apr 2022 18:18:27 -0400
+Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C122632B243
+        for <linux-pci@vger.kernel.org>; Fri, 22 Apr 2022 14:10:09 -0700 (PDT)
+Received: by mail-lj1-x22a.google.com with SMTP id 17so11108891lji.1
+        for <linux-pci@vger.kernel.org>; Fri, 22 Apr 2022 14:10:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=4gfbcYi90VHSh39P/bZzk6rssopLYBjtF7uMGAekry8=;
-        b=kmyYVf+hNaqkYZIdCB9r+E6Ffly6R3kC5X/i4Rp2F5t+42EplGPh+eFoyhQwIMHBWk
-         g5oIJuU/OxwalyZBaxh+tioQFgodAfCR+B7oXMca7NfZPUtRzIMq80R2bLiFyKpHRFjY
-         Fg3FF+mFSFOupfzQf30iAj2GmvGwug+zGPywpiDJ/DpVMnzn/KGfSMZMXSqlzEfRo3Km
-         RJFwVvZb5+rI8PyR0plijIU56k812T+utXiBGyveWQwFHIK+MR/aQd8y01B106iBcMwo
-         px2URkrtswH65ZE5YxxyGPVDUE49rpXLSRGC5j+vic8+HFpadGAhAM1Iit5gLiI5DEb3
-         W85Q==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=E5gfhqqfjatXbBteVPXIO9+6L0d8Um+h14mjmTgnTNw=;
+        b=KBM1H6FRmOvGWz+HASYdwEsVNzwXdWi2Nek5sUoaELmMIHrDjv+nfMJxoR0wb4BMJV
+         dKb6Dzc7GJq/UxaHFVlKHavCInoAMoLPSAgMfZHXlfqN4u2yiY6A1NukKOX8QYJHy51c
+         RS4nUpLC/D8v7b9PCKHAiYCSR4i+6LRDxveP7AAnf0bXrTEvnlx4byb1+ekTE3/VGPTH
+         HtYpW8420Y2MaBsnMN2qRxqZcVzHDTuXJkfchvV2nBWnj/8usfKaLPiIkUusOJ7Bjoa4
+         Ms58qPZgYnzZhNjJOZElKIVWsAjnj3YGwj2tPrMQS8/xwf34E9wk3qzVEAYL1BtNwI+j
+         oyag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=4gfbcYi90VHSh39P/bZzk6rssopLYBjtF7uMGAekry8=;
-        b=xDQLkzyJdU2sIMC/Vlj8BrvAdgzAQ41eupNItGtj9bzK0pPk4h8/MKk3MY5GBFYdP8
-         2GtzhfUPUF66CzCU7rR1zEqBViFjO9pC65DCKOQpvouqzjpZAZ898PBwGzgMqFPNUxcZ
-         tjicDl2Et8a+CGNi1KzmtUjBJSQlQUoIPHSlq+46M5NFTHPCJMF75sMChKmuVvRq4yiI
-         vp1b8tpco4T1mwgUzUwXlUxNQgfto7/nTFbwlHpn/x9Hk/KXjNj0izQo3mKnBVgs1D1J
-         RANwsOo6A3zW7ZfIKGhYofLOGfiwrt7NTGImgAtM1zLGj0rea4Sl76FFWjSjuuhZj+zz
-         EA4Q==
-X-Gm-Message-State: AOAM533qqaQI2K6aDeFWfEal8Yha7dplo0r3VQ6T54eBwtb9+//xGZul
-        zDFprm4Q4sI8JymsCiyYOqylNQ==
-X-Google-Smtp-Source: ABdhPJxSfkHVJ07KB73M5FjvXpYMsfOskLEEeoTTneKBUKR2b5pgjXJTWVhoXxyiVJSdh4X/o0t/rg==
-X-Received: by 2002:a2e:94ce:0:b0:24b:3811:b242 with SMTP id r14-20020a2e94ce000000b0024b3811b242mr3898143ljh.197.1650661804677;
-        Fri, 22 Apr 2022 14:10:04 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=E5gfhqqfjatXbBteVPXIO9+6L0d8Um+h14mjmTgnTNw=;
+        b=qvLEXc854+K0zzscrwJRFkvyxW5v22D317awIaV+c0HQqaEG0Ls6GctWPTLfJiOSMN
+         gYIifzV80pag9LxEDDAuUuTx66Mkdv2ZZO7xbYBESLPyTpk5ghJP3NaODm+5PCaB2dgn
+         hf2ARztuWGBL9Dh17eWIlG2UNDssmnNlelwJjrMO/4IjAhhifzro8enCM74BQIZWVkKI
+         V4UDBeL5A29KimV/zvSDOGhp5w0+HW5fVutazOR3giZE5tZUIoEvjuRED9GvulAU0yWn
+         PeIKX4R2t4BAGOqnLDBxWWrgf4ONVLjUA2YM0LCbRbG4nYjS42VrYRvImZey2ERv7XBD
+         vAqQ==
+X-Gm-Message-State: AOAM5337IFqLH+OO999Obwg4KzkvXaQCfqaWBPUZnLXw98i34HE7GS1H
+        cGe/n5cDAHrNEappw7YVDsstUw==
+X-Google-Smtp-Source: ABdhPJwz+NOKGJrx6VpHjh5arxlOhJNPk6yDW/G9OueZX9q5+63+JzEdqTwGTQdtd2FxlR69K4JPHg==
+X-Received: by 2002:a2e:808b:0:b0:24d:c2a4:3fc7 with SMTP id i11-20020a2e808b000000b0024dc2a43fc7mr3846655ljg.58.1650661807748;
+        Fri, 22 Apr 2022 14:10:07 -0700 (PDT)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id 6-20020ac24d46000000b0046bb728b873sm351240lfp.252.2022.04.22.14.10.03
+        by smtp.gmail.com with ESMTPSA id 6-20020ac24d46000000b0046bb728b873sm351240lfp.252.2022.04.22.14.10.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Apr 2022 14:10:04 -0700 (PDT)
+        Fri, 22 Apr 2022 14:10:07 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -55,78 +55,133 @@ To:     Andy Gross <agross@kernel.org>,
         Stanimir Varbanov <svarbanov@mm-sol.com>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: [PATCH v2 0/7]  dt-bindings: YAMLify pci/qcom,pcie schema
-Date:   Sat, 23 Apr 2022 00:09:55 +0300
-Message-Id: <20220422211002.2012070-1-dmitry.baryshkov@linaro.org>
+        devicetree@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v2 4/7] arm64: dts: qcom: stop using snps,dw-pcie falback
+Date:   Sat, 23 Apr 2022 00:09:59 +0300
+Message-Id: <20220422211002.2012070-5-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220422211002.2012070-1-dmitry.baryshkov@linaro.org>
+References: <20220422211002.2012070-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert pci/qcom,pcie schema to YAML description. The first patch
-introduces several warnings which are fixed by the other patches in the
-series.
+Qualcomm PCIe devices are not really compatible with the snps,dw-pcie.
+Unlike the generic IP core, they have special requirements regarding
+enabling clocks, toggling resets, using the PHY, etc.
 
-Note regarding the snps,dw-pcie compatibility. The Qualcomm PCIe
-controller uses Synopsys PCIe IP core. However it is not just fused to
-the address space. Accessing PCIe registers requires several clocks and
-regulators to be powered up. Thus it can be assumed that the qcom,pcie
-bindings are not fully compatible with the snps,dw-pcie schema.
+This is not to mention that platform snps-dw-pcie driver expects to find
+two IRQs declared, while Qualcomm platforms use just one.
 
-Changes since v1 (all kudos to Krzyshtof):
- - Dropped the reg-names patch. It will be handled separately
- - Squashed the snps,dw-pcie removal (from schema) into the first patch
- - Replaced deprecated perst-gpio and wake-gpio with perst-gpios and
-   wake-gpios in the examples and in DT files
- - Moved common clocks/clock-names, resets/reset-names and power-domains
-   properties to the top level of the schema, leaving only platform
-   specifics in the conditional branches
- - Dropped iommu-map/iommu-map-mask for now
- - Added (missed) interrupt-cells, clocks, clock-names, resets,
-   reset-names properties to the required list (resets/reset-names are
-   removed in the next patch, as they are not used on msm8996)
- - Fixed IRQ flags in the examples
- - Merged apq8064/ipq8064 into the single condition statement
- - Added extra empty lines
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+---
+ arch/arm64/boot/dts/qcom/msm8996.dtsi | 6 +++---
+ arch/arm64/boot/dts/qcom/qcs404.dtsi  | 2 +-
+ arch/arm64/boot/dts/qcom/sdm845.dtsi  | 4 ++--
+ arch/arm64/boot/dts/qcom/sm8250.dtsi  | 6 +++---
+ 4 files changed, 9 insertions(+), 9 deletions(-)
 
-
-Dmitry Baryshkov (7):
-  dt-bindings: pci/qcom,pcie: convert to YAML
-  dt-bindings: pci/qcom,pcie: resets are not defined for msm8996
-  dt-bindings: pci/qcom,pcie: add schema for sc7280 chipset
-  arm64: dts: qcom: stop using snps,dw-pcie falback
-  arm: dts: qcom: stop using snps,dw-pcie falback
-  arm: dts: qcom-*: replace deprecated perst-gpio with perst-gpios
-  arm64: dts: qcom: replace deprecated perst-gpio with perst-gpios
-
- .../devicetree/bindings/pci/qcom,pcie.txt     | 397 -----------
- .../devicetree/bindings/pci/qcom,pcie.yaml    | 634 ++++++++++++++++++
- arch/arm/boot/dts/qcom-apq8064-cm-qs600.dts   |   2 +-
- arch/arm/boot/dts/qcom-apq8064-ifc6410.dts    |   2 +-
- arch/arm/boot/dts/qcom-apq8064.dtsi           |   2 +-
- arch/arm/boot/dts/qcom-ipq4019-ap.dk04.1.dtsi |   2 +-
- .../boot/dts/qcom-ipq4019-ap.dk07.1-c1.dts    |   2 +-
- arch/arm/boot/dts/qcom-ipq4019.dtsi           |   2 +-
- arch/arm/boot/dts/qcom-ipq8064.dtsi           |   6 +-
- arch/arm64/boot/dts/qcom/apq8096-db820c.dts   |   6 +-
- arch/arm64/boot/dts/qcom/ipq8074-hk01.dts     |   4 +-
- arch/arm64/boot/dts/qcom/ipq8074-hk10.dtsi    |   4 +-
- .../dts/qcom/msm8996-sony-xperia-tone.dtsi    |   4 +-
- arch/arm64/boot/dts/qcom/msm8996.dtsi         |   6 +-
- arch/arm64/boot/dts/qcom/qcs404-evb.dtsi      |   2 +-
- arch/arm64/boot/dts/qcom/qcs404.dtsi          |   2 +-
- .../arm64/boot/dts/qcom/sc7280-herobrine.dtsi |   2 +-
- arch/arm64/boot/dts/qcom/sc7280-idp.dtsi      |   2 +-
- arch/arm64/boot/dts/qcom/sdm845-db845c.dts    |   4 +-
- arch/arm64/boot/dts/qcom/sdm845.dtsi          |   4 +-
- arch/arm64/boot/dts/qcom/sm8250.dtsi          |   6 +-
- 21 files changed, 666 insertions(+), 429 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-
+diff --git a/arch/arm64/boot/dts/qcom/msm8996.dtsi b/arch/arm64/boot/dts/qcom/msm8996.dtsi
+index f0f81c23c16f..b577b9046938 100644
+--- a/arch/arm64/boot/dts/qcom/msm8996.dtsi
++++ b/arch/arm64/boot/dts/qcom/msm8996.dtsi
+@@ -1574,7 +1574,7 @@ agnoc@0 {
+ 			ranges;
+ 
+ 			pcie0: pcie@600000 {
+-				compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
++				compatible = "qcom,pcie-msm8996";
+ 				status = "disabled";
+ 				power-domains = <&gcc PCIE0_GDSC>;
+ 				bus-range = <0x00 0xff>;
+@@ -1626,7 +1626,7 @@ pcie0: pcie@600000 {
+ 			};
+ 
+ 			pcie1: pcie@608000 {
+-				compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
++				compatible = "qcom,pcie-msm8996";
+ 				power-domains = <&gcc PCIE1_GDSC>;
+ 				bus-range = <0x00 0xff>;
+ 				num-lanes = <1>;
+@@ -1679,7 +1679,7 @@ pcie1: pcie@608000 {
+ 			};
+ 
+ 			pcie2: pcie@610000 {
+-				compatible = "qcom,pcie-msm8996", "snps,dw-pcie";
++				compatible = "qcom,pcie-msm8996";
+ 				power-domains = <&gcc PCIE2_GDSC>;
+ 				bus-range = <0x00 0xff>;
+ 				num-lanes = <1>;
+diff --git a/arch/arm64/boot/dts/qcom/qcs404.dtsi b/arch/arm64/boot/dts/qcom/qcs404.dtsi
+index 3f06f7cd3cf2..2386081463e3 100644
+--- a/arch/arm64/boot/dts/qcom/qcs404.dtsi
++++ b/arch/arm64/boot/dts/qcom/qcs404.dtsi
+@@ -1280,7 +1280,7 @@ glink-edge {
+ 		};
+ 
+ 		pcie: pci@10000000 {
+-			compatible = "qcom,pcie-qcs404", "snps,dw-pcie";
++			compatible = "qcom,pcie-qcs404";
+ 			reg =  <0x10000000 0xf1d>,
+ 			       <0x10000f20 0xa8>,
+ 			       <0x07780000 0x2000>,
+diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+index b31bf62e8680..85dfa0842003 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -2027,7 +2027,7 @@ llcc: system-cache-controller@1100000 {
+ 		};
+ 
+ 		pcie0: pci@1c00000 {
+-			compatible = "qcom,pcie-sdm845", "snps,dw-pcie";
++			compatible = "qcom,pcie-sdm845";
+ 			reg = <0 0x01c00000 0 0x2000>,
+ 			      <0 0x60000000 0 0xf1d>,
+ 			      <0 0x60000f20 0 0xa8>,
+@@ -2132,7 +2132,7 @@ pcie0_lane: phy@1c06200 {
+ 		};
+ 
+ 		pcie1: pci@1c08000 {
+-			compatible = "qcom,pcie-sdm845", "snps,dw-pcie";
++			compatible = "qcom,pcie-sdm845";
+ 			reg = <0 0x01c08000 0 0x2000>,
+ 			      <0 0x40000000 0 0xf1d>,
+ 			      <0 0x40000f20 0 0xa8>,
+diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+index af8f22636436..410272a1e19b 100644
+--- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+@@ -1789,7 +1789,7 @@ mmss_noc: interconnect@1740000 {
+ 		};
+ 
+ 		pcie0: pci@1c00000 {
+-			compatible = "qcom,pcie-sm8250", "snps,dw-pcie";
++			compatible = "qcom,pcie-sm8250";
+ 			reg = <0 0x01c00000 0 0x3000>,
+ 			      <0 0x60000000 0 0xf1d>,
+ 			      <0 0x60000f20 0 0xa8>,
+@@ -1888,7 +1888,7 @@ pcie0_lane: phy@1c06200 {
+ 		};
+ 
+ 		pcie1: pci@1c08000 {
+-			compatible = "qcom,pcie-sm8250", "snps,dw-pcie";
++			compatible = "qcom,pcie-sm8250";
+ 			reg = <0 0x01c08000 0 0x3000>,
+ 			      <0 0x40000000 0 0xf1d>,
+ 			      <0 0x40000f20 0 0xa8>,
+@@ -1994,7 +1994,7 @@ pcie1_lane: phy@1c0e200 {
+ 		};
+ 
+ 		pcie2: pci@1c10000 {
+-			compatible = "qcom,pcie-sm8250", "snps,dw-pcie";
++			compatible = "qcom,pcie-sm8250";
+ 			reg = <0 0x01c10000 0 0x3000>,
+ 			      <0 0x64000000 0 0xf1d>,
+ 			      <0 0x64000f20 0 0xa8>,
 -- 
 2.35.1
 
