@@ -2,85 +2,99 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC52C433FE
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Apr 2022 16:41:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC4D8C4332F
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Apr 2022 17:37:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236467AbiDWQoh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 23 Apr 2022 12:44:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58652 "EHLO
+        id S232576AbiDWRkD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 23 Apr 2022 13:40:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236465AbiDWQoR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Apr 2022 12:44:17 -0400
-Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3660347AD3;
-        Sat, 23 Apr 2022 09:41:14 -0700 (PDT)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru ADB9123081DB
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH v3 7/8] ARM: dts: r9a06g032: Add USB PHY DT support
-To:     Herve Codina <herve.codina@bootlin.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rob Herring" <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        "Geert Uytterhoeven" <geert+renesas@glider.be>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>
-CC:     Rob Herring <robh@kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-renesas-soc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Clement Leger <clement.leger@bootlin.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>
-References: <20220422120850.769480-1-herve.codina@bootlin.com>
- <20220422120850.769480-8-herve.codina@bootlin.com>
- <ed432ba2-6081-4d82-bdc9-cd88cb52ca1f@omp.ru>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <f7e76000-11ec-42d1-5767-7f270a3b025d@omp.ru>
-Date:   Sat, 23 Apr 2022 19:41:09 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S236625AbiDWRkC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Apr 2022 13:40:02 -0400
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53D0D1C3792
+        for <linux-pci@vger.kernel.org>; Sat, 23 Apr 2022 10:37:04 -0700 (PDT)
+Received: by mail-ej1-x62f.google.com with SMTP id bv19so22027322ejb.6
+        for <linux-pci@vger.kernel.org>; Sat, 23 Apr 2022 10:37:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=tZbINIXlUl/40TFimt3iSlztPAx1Ens2saKIOxMhKsg=;
+        b=x1Ks/vtbcthMBQ/q2IS9ZNaJv4J6T+AjjoE8A++C791k2EtR6zNxfBjgkDzQdIvgqV
+         +bPBI2QWkWKkwCGkFtZc/WKqcdZ/oEm/QNfhV3NPYh7KFkwrp/0NdpiVwxICbBR/NwV5
+         5rUpmptTDFxgat6XZg2jMxCWHmn0DRn39BUG8ey/JAysJ1Gtualkk8d/E9LS84W1bWvl
+         VYhvoUac+YpE8PDtjEnFRU5XDns+lWpWIgT1rfsRkphuPtrxGORG1Q1RAPn2qdUQR6ei
+         LXaBCLoILIdXEneZ1vqsK24h25uFaQPBypc1u4dU8ISjCQMmO5+PrhbUSHEiOe1+KFaq
+         NVDQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=tZbINIXlUl/40TFimt3iSlztPAx1Ens2saKIOxMhKsg=;
+        b=REoj6BxXkZDbPOfHHF0Z0jCG8mLnKm6AHqh7Uk4YKzoucw+xeaK/MREWPFp0vXPUiy
+         Rs6w9V3cP7jF7CHG6RqRdxxwnkT8ToG5KyLYf85NHxlXDcb1woxDzvx4NVL1RoUUpgzS
+         3+ECg2A7iFDVge33/gIQr2XUYcZ16B9AvhaefcHSTM+dwv2ab4jPKqVFxVFx828IQFnx
+         chSCh2eTBf6z9aa6hn11PfNJbGcfQT0Rk35pDuE+NCmrBI3r+R3DXdscz+HmCdlvx55o
+         1iSliAMqSAfHrnvxM+HhKoMws6Chof1r5bNlVMLafxKxq/0jr5KnNBOpKaaFI4kGb24J
+         ZjSw==
+X-Gm-Message-State: AOAM533zfqiOI9J1l0wkA4psHQ/7DAZLJOh/sYQamLiqs2ow4OqLanWm
+        guCV/1fhYC3Ahohd6zzrykCbUw==
+X-Google-Smtp-Source: ABdhPJy9BYi9YuQCm1Bju52aXZfhNjJJ0vnhGT9HSi0yGDQ6V2EY9wiQrkZLochW4NLSt6a79iAA5A==
+X-Received: by 2002:a17:906:18b2:b0:6d0:ee54:1add with SMTP id c18-20020a17090618b200b006d0ee541addmr9097509ejf.499.1650735422931;
+        Sat, 23 Apr 2022 10:37:02 -0700 (PDT)
+Received: from [192.168.0.234] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
+        by smtp.gmail.com with ESMTPSA id b25-20020a056402139900b0041904036ab1sm2447772edv.5.2022.04.23.10.37.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 23 Apr 2022 10:37:02 -0700 (PDT)
+Message-ID: <b1b0a459-5970-7a14-eb51-6a464fe83753@linaro.org>
+Date:   Sat, 23 Apr 2022 19:37:01 +0200
 MIME-Version: 1.0
-In-Reply-To: <ed432ba2-6081-4d82-bdc9-cd88cb52ca1f@omp.ru>
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v2 4/5] dt-bindings: pci/qcom,pcie: support additional MSI
+ interrupts
 Content-Language: en-US
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
+References: <20220423133939.2123449-1-dmitry.baryshkov@linaro.org>
+ <20220423133939.2123449-5-dmitry.baryshkov@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20220423133939.2123449-5-dmitry.baryshkov@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 4/23/22 12:09 PM, Sergey Shtylyov wrote:
+On 23/04/2022 15:39, Dmitry Baryshkov wrote:
+> On Qualcomm platforms each group of 32 MSI vectors is routed to the
+> separate GIC interrupt. Document mapping of additional interrupts.
 
-[...]
->> Define the r9a06g032 generic part of the USB PHY device node.
->>
->> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
->> ---
->>  arch/arm/boot/dts/r9a06g032.dtsi | 6 ++++++
->>  1 file changed, 6 insertions(+)
->>
->> diff --git a/arch/arm/boot/dts/r9a06g032.dtsi b/arch/arm/boot/dts/r9a06g032.dtsi
->> index 33581f0c55c4..58af07eb75c9 100644
->> --- a/arch/arm/boot/dts/r9a06g032.dtsi
->> +++ b/arch/arm/boot/dts/r9a06g032.dtsi
->> @@ -59,6 +59,12 @@ ext_rtc_clk: extrtcclk {
->>  		clock-frequency = <0>;
->>  	};
->>  
->> +	usbphy: usbphy {
+Is it on every Qualcomm platform? How many per each variant? IOW, this
+should have a per-compatible constraints, if possible.
+
 > 
->    I think the node name should be "usb-phy"...
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+> ---
+>  .../devicetree/bindings/pci/qcom,pcie.yaml         | 14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> index 04fda2a4bb60..71b3be5570dd 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> @@ -49,11 +49,21 @@ properties:
+>          - atu # ATU address space (optional)
 
-   It's not my thinking alone, the DT spec documents "usb-phy" in section 2.2.2. :-)
 
-> [...]
-
-MBR, Sergey
+Best regards,
+Krzysztof
