@@ -2,139 +2,89 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8E73C43217
-	for <linux-pci@archiver.kernel.org>; Sun, 24 Apr 2022 13:20:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FFC9C433F5
+	for <linux-pci@archiver.kernel.org>; Sun, 24 Apr 2022 14:24:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235557AbiDXNXy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 24 Apr 2022 09:23:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54748 "EHLO
+        id S237019AbiDXO1H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 24 Apr 2022 10:27:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234388AbiDXNXn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 Apr 2022 09:23:43 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84AD2A1B0
-        for <linux-pci@vger.kernel.org>; Sun, 24 Apr 2022 06:20:40 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id w1so21906384lfa.4
-        for <linux-pci@vger.kernel.org>; Sun, 24 Apr 2022 06:20:40 -0700 (PDT)
+        with ESMTP id S233285AbiDXO1G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 24 Apr 2022 10:27:06 -0400
+Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86EAA24589
+        for <linux-pci@vger.kernel.org>; Sun, 24 Apr 2022 07:24:05 -0700 (PDT)
+Received: by mail-ej1-x634.google.com with SMTP id kq17so1852619ejb.4
+        for <linux-pci@vger.kernel.org>; Sun, 24 Apr 2022 07:24:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=r63/wTPr4/PHvX+hVpl1ZWtMnqt2kinAFP5uZt5KkRE=;
-        b=ALmRy/bFlY69tvB5T3mBwXhmSpEaxXkLGQShEotFEuSD4RWbrgMXqsnfjOdQADWurQ
-         MSNPGTbc98Wdm+3Miz853Lmib3OnmUKCP42RpXC1Aq77m7qhjXIH3Cic4TBs6Udyoyar
-         pTAfJiz3GA2lJeHChB3xgj9r7E1IhLzCFppv+3y56mPC1bv2mtaNOpqruPyNQkcRZ3Rv
-         zcpaDntmzcVzBUuJT+UuY8ZU6WtjtY+uaVpue4cCjE+5ZMm46iA1uOHJsqVRx/CXVC71
-         3N+qdTsxglieVRY9mNJAXy5U9gZ0xpdn/txsIzP8I/6qlxORFuNpT4nTNcUoL1xUi0uP
-         Kjuw==
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=E3dBXxPqD0YxnjHmiA7xJuHkn7CA7DSP1Z0K8k9qbxM=;
+        b=H2l+U+lCGSKN9q8kiWmzMpyleSYNRaZqepbD9uGPRJ1HE2+e8UmvgvbsG/z1fTxX/u
+         rjtARyPRggqwIAby1eFY3ZZMl9su4Wc3wX2jmc/GZfUvq3DO39cnfGtSrF1M+kFcQRUC
+         1hs4uZZHT3S3Dav6M6OCJaZ35Z2jgainkn9e80lYUPU4z90EqEmOoNaoMtFVsITw0YSd
+         dIHZXQxALR9GSVoFouZkPEyVTEglyyHva0guszaJ2ZtNBmBntfC3AMvg/chYnKzau0Zs
+         kAPze2G8bZp+yR4Axxw8syeprxMp2M0lslsXpir7GSdtZB624PrNm/oKWyMyDmJ2KuHF
+         HkYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=r63/wTPr4/PHvX+hVpl1ZWtMnqt2kinAFP5uZt5KkRE=;
-        b=kZwIBtIuGYxszHvr4wILXmk8U4ES2rw8gVKz64+fk8MTAYArlRbsLR0+s5yjGRS5BB
-         yPbOI9rMcthR1SFb30d93OeTVXhhD6blhFm5J3i+pQtIcQPEPP15zErRHfsXHHIj8xIx
-         WrBEuQlRO3XyBNeA8rE05LXfSKIFLyygMLLImfbVwH4IIkMaze5tK5KCZp/eVZL5P4vd
-         HUaxRd8E15y6xPa++cmvUi0D+nR/waeDwXRxxeuxMZiL/RBirxEhoc2zDqiu+8sD5Z/a
-         tLG7973Fa+s5IEZcutJq+uc30pXNlEBE11yglBxpLPM7wUQlitmLGtYnL91Itvaao6UE
-         Cdmw==
-X-Gm-Message-State: AOAM531cvgIoA2PDms3Fd96ijOmZkKfu6EhWGMm+/z8wj3OFgDN0m8Bb
-        deGDuABIic+A7+h1ssq+10ldOg==
-X-Google-Smtp-Source: ABdhPJz62gajffXDWjGnPCI0nRAXA8BAM9TDCLtTQ1iSpcdCOb5MmZTMh76RuYP2hIZ3E7ueCPFOhg==
-X-Received: by 2002:a19:ca50:0:b0:471:f556:92b with SMTP id h16-20020a19ca50000000b00471f556092bmr5626331lfj.587.1650806438850;
-        Sun, 24 Apr 2022 06:20:38 -0700 (PDT)
-Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id l12-20020a056512332c00b0046d0e0e5b44sm1015877lfe.20.2022.04.24.06.20.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Apr 2022 06:20:38 -0700 (PDT)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=E3dBXxPqD0YxnjHmiA7xJuHkn7CA7DSP1Z0K8k9qbxM=;
+        b=xbg4RYPh0IyFbE0/h2GLBgKc6ekT15s4bkEKdJ/DPLpGUy+V03W7EY0D/NYL6GL9w2
+         vV5b5XWihdpphfVcIWDWJRus98VgoW7lezzdZNEDBcjRDXdH5oiBGcXySLEFPpzQkZ+V
+         qXC36CsV7/osepze8bxxezsJtP7JjUob3iNO81j8TRNZZa4WMyLou959pm3AYlBaWHO0
+         PSO/OfQ17iA4q6C7rkp5y433bMmp+zo6ssLM268aXBPvWwZsdTMhEt1pWBUjVC9Ye1g+
+         ru2kQi4XdWJxZSB7CWDicFM1YPYZeaT9OLcfp+XSnVghixsCTpDR5iFWE5McCxP3UGWc
+         M2wQ==
+X-Gm-Message-State: AOAM532I+ajl3TrNsZ0tKlZYWn8X3QZrSHWOCMRYBns1KO0xRLMrIG5S
+        oqG0AtFQ7KJKsTSxYHhzTt1vfA==
+X-Google-Smtp-Source: ABdhPJxdTQds02i4/AyRpmhPcWN+4ZJugtwd5Cr5B1fnCwYGQWhxlILkfOWiNktf0oBjp3up4GFCKA==
+X-Received: by 2002:a17:907:6d8b:b0:6f0:2533:72fb with SMTP id sb11-20020a1709076d8b00b006f0253372fbmr12146376ejc.93.1650810244149;
+        Sun, 24 Apr 2022 07:24:04 -0700 (PDT)
+Received: from [192.168.0.235] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
+        by smtp.gmail.com with ESMTPSA id p24-20020a1709061b5800b006e88dfea127sm2632428ejg.3.2022.04.24.07.24.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 24 Apr 2022 07:24:03 -0700 (PDT)
+Message-ID: <111477bc-6de2-7bc2-ae1e-f84d7543fa76@linaro.org>
+Date:   Sun, 24 Apr 2022 16:24:02 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v3 3/8] dt-bindings: pci/qcom-pcie: specify reg-names
+ explicitly
+Content-Language: en-US
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v3 4/8] dt-bindings: pci/qcom,pcie: add schema for sc7280 chipset
-Date:   Sun, 24 Apr 2022 16:20:30 +0300
-Message-Id: <20220424132034.2235768-5-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220424132034.2235768-1-dmitry.baryshkov@linaro.org>
+        devicetree@vger.kernel.org
 References: <20220424132034.2235768-1-dmitry.baryshkov@linaro.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+ <20220424132034.2235768-4-dmitry.baryshkov@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20220424132034.2235768-4-dmitry.baryshkov@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for sc7280-specific clock and reset definitions.
+On 24/04/2022 15:20, Dmitry Baryshkov wrote:
+> Instead of specifying the enum of possible reg-names, specify them
+> explicitly. This allows us to specify which chipsets need the "atu"
+> regions, which do not. Also it clearly describes which platforms
+> enumerate PCIe cores using the dbi region and which use parf region for
+> that.
+
 
 Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- .../devicetree/bindings/pci/qcom,pcie.yaml    | 32 +++++++++++++++++++
- 1 file changed, 32 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index c79b12a0d315..48d56b073564 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -25,6 +25,7 @@ properties:
-       - qcom,pcie-ipq4019
-       - qcom,pcie-ipq8074
-       - qcom,pcie-qcs404
-+      - qcom,pcie-sc7280
-       - qcom,pcie-sc8180x
-       - qcom,pcie-sdm845
-       - qcom,pcie-sm8250
-@@ -176,6 +177,7 @@ allOf:
-         compatible:
-           contains:
-             enum:
-+              - qcom,pcie-sc7280
-               - qcom,pcie-sc8180x
-               - qcom,pcie-sm8250
-               - qcom,pcie-sm8450-pcie0
-@@ -411,6 +413,36 @@ allOf:
-             - const: pwr # PWR reset
-             - const: ahb # AHB reset
- 
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            enum:
-+              - qcom,pcie-sc7280
-+    then:
-+      properties:
-+        clocks:
-+          minItems: 11
-+          maxItems: 11
-+        clock-names:
-+          items:
-+            - const: pipe # PIPE clock
-+            - const: pipe_mux # PIPE MUX
-+            - const: phy_pipe # PIPE output clock
-+            - const: ref # REFERENCE clock
-+            - const: aux # Auxiliary clock
-+            - const: cfg # Configuration clock
-+            - const: bus_master # Master AXI clock
-+            - const: bus_slave # Slave AXI clock
-+            - const: slave_q2a # Slave Q2A clock
-+            - const: tbu # PCIe TBU clock
-+            - const: ddrss_sf_tbu # PCIe SF TBU clock
-+        resets:
-+          maxItems: 1
-+        reset-names:
-+          items:
-+            - const: pci # PCIe core reset
-+
-   - if:
-       properties:
-         compatible:
--- 
-2.35.1
 
+Best regards,
+Krzysztof
