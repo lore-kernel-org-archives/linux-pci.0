@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD1E8C433F5
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Apr 2022 10:56:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E43A1C433FE
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Apr 2022 11:00:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231309AbiD0K7c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Apr 2022 06:59:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34390 "EHLO
+        id S231849AbiD0LD0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Apr 2022 07:03:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36988 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231871AbiD0K7T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2022 06:59:19 -0400
+        with ESMTP id S232007AbiD0LCl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2022 07:02:41 -0400
 Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4775F4184C1;
-        Wed, 27 Apr 2022 03:49:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03F9C29A0FB;
+        Wed, 27 Apr 2022 03:41:17 -0700 (PDT)
 Received: from relay1-d.mail.gandi.net (unknown [IPv6:2001:4b98:dc4:8::221])
-        by mslow1.mail.gandi.net (Postfix) with ESMTP id 806BFC139B;
-        Wed, 27 Apr 2022 09:48:16 +0000 (UTC)
+        by mslow1.mail.gandi.net (Postfix) with ESMTP id AF743C136F;
+        Wed, 27 Apr 2022 09:48:54 +0000 (UTC)
 Received: (Authenticated sender: clement.leger@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id 3C889240005;
-        Wed, 27 Apr 2022 09:46:47 +0000 (UTC)
+        by mail.gandi.net (Postfix) with ESMTPSA id A378924000F;
+        Wed, 27 Apr 2022 09:46:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1651052809;
+        t=1651052813;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Lo0sS2FamHTxkgucmXZLA8+CDYrMlYUMiwprP2QNxYs=;
-        b=b8rym0FHvT+aDTJ1IxQd17RW7oC4z2hYhxZW1NOm7sm6arDCaW4fTWK4SDOfrs2NNBIpxa
-        Y76MFcE/SmzMVSnPoIjoQEyU5FKqG/8DKxe59ceJdB+pOj7clvrVe3FbHTBuX+ekQRvDAU
-        QRrwwFStrynfMiXEMg3msLr2jtgqb5R7nhTznaxmVdqDWwXwvMI5yMDu2wKCUDLcv/Thk+
-        VzBLwJdSqeW4NQoAVvlcTyDnihjuVSW+1vHlkaZkycDx5cCGHrE1pY6BhyOPc0gASt2HUG
-        8zyOJSc5ovNj8z/hVrTfixCiTXfu6b/LZPp74PaoeFr3eucxF9xZSGfyu6PWqQ==
+        bh=ltHOMKbgCOhHd9y0Bf1O4j4UMymB2yRYerupfKTXBio=;
+        b=VhqLHmU/Cly7FViEHinBRlikaQPRsXHVfF7C4wV8yiUUBoY79Gqu/QU7fyHIFD2vYL5Of/
+        TduJDdeMjD+JjoPlFc2SbDaCdyEi72c1xX4vXEnCO2OfylgrjmoWEG5utpzfg47QAEUFAl
+        ZK41p1c3mU2x4OS4d9NR4HJdbCURuCr9dfSmI5o+b+9dssbSfoTL3hGo6bsH0pTkLlSGhd
+        VCs1lVIFrbBt+qmwp04R2vIF1CZu2BNMyLf62gY5sa2FfOw/ubUjR4hMukvi7EpLUlpW/9
+        sSquoOQ4Q1dzVFRAk/aH4uHBOQjSDKyI8SOiW6O4XUSdHPhM9VTV/6dPIQAzvA==
 From:   =?UTF-8?q?Cl=C3=A9ment=20L=C3=A9ger?= <clement.leger@bootlin.com>
 To:     Rob Herring <robh+dt@kernel.org>,
         Frank Rowand <frowand.list@gmail.com>,
@@ -48,11 +48,10 @@ Cc:     =?UTF-8?q?Cl=C3=A9ment=20L=C3=A9ger?= <clement.leger@bootlin.com>,
         Jakub Kicinski <kuba@kernel.org>,
         Hans de Goede <hdegoede@redhat.com>,
         Andrew Lunn <andrew@lunn.ch>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH 1/3] of: always populate a root node
-Date:   Wed, 27 Apr 2022 11:45:00 +0200
-Message-Id: <20220427094502.456111-2-clement.leger@bootlin.com>
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 3/3] of: overlay: add of_overlay_fdt_apply_to_node()
+Date:   Wed, 27 Apr 2022 11:45:02 +0200
+Message-Id: <20220427094502.456111-4-clement.leger@bootlin.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20220427094502.456111-1-clement.leger@bootlin.com>
 References: <20220427094502.456111-1-clement.leger@bootlin.com>
@@ -63,52 +62,140 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When enabling CONFIG_OF on a platform where of_root is not populated by
-firmware, we end up without a root node. In order to apply overlays and
-create subnodes of the root node, we need one. This commit creates an
-empty root node if not present.
+When using a driver which load an overlay and applies it on the of_node
+of device it represent, the target node isn't known in advance. This is
+for example the case when applying an overlay from a PCI driver. PCI
+cards might be plugged on whatever slot the user want and thus, the
+target node of the overlay framgents are unknown. This function allows
+to specify the node on which the overlay fragments will be applied.
 
-Co-developed-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Rob Herring <robh@kernel.org>
 Signed-off-by: Clément Léger <clement.leger@bootlin.com>
 ---
- drivers/of/base.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/of/overlay.c | 21 +++++++++++++--------
+ include/linux/of.h   | 17 +++++++++++++----
+ 2 files changed, 26 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/of/base.c b/drivers/of/base.c
-index e7d92b67cb8a..6b8584c39f73 100644
---- a/drivers/of/base.c
-+++ b/drivers/of/base.c
-@@ -177,6 +177,19 @@ void __init of_core_init(void)
- 		pr_err("failed to register existing nodes\n");
- 		return;
- 	}
-+
-+	if (!of_root) {
-+		of_root = kzalloc(sizeof(*of_root), GFP_KERNEL);
-+		if (!of_root) {
-+			mutex_unlock(&of_mutex);
-+			pr_err("failed to create root node\n");
-+			return;
-+		}
-+
-+		of_root->full_name = "/";
-+		of_node_init(of_root);
-+	}
-+
- 	for_each_of_allnodes(np) {
- 		__of_attach_node_sysfs(np);
- 		if (np->phandle && !phandle_cache[of_phandle_cache_hash(np->phandle)])
-@@ -185,8 +198,7 @@ void __init of_core_init(void)
- 	mutex_unlock(&of_mutex);
+diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
+index d80160cf34bb..4dabe1b65343 100644
+--- a/drivers/of/overlay.c
++++ b/drivers/of/overlay.c
+@@ -730,7 +730,8 @@ static struct device_node *find_target(struct device_node *info_node)
+  * detected in @tree, or -ENOSPC if idr_alloc() error.
+  */
+ static int init_overlay_changeset(struct overlay_changeset *ovcs,
+-		const void *fdt, struct device_node *tree)
++		const void *fdt, struct device_node *tree,
++		struct device_node *target)
+ {
+ 	struct device_node *node, *overlay_node;
+ 	struct fragment *fragment;
+@@ -792,7 +793,10 @@ static int init_overlay_changeset(struct overlay_changeset *ovcs,
  
- 	/* Symlink in /proc as required by userspace ABI */
--	if (of_root)
--		proc_symlink("device-tree", NULL, "/sys/firmware/devicetree/base");
-+	proc_symlink("device-tree", NULL, "/sys/firmware/devicetree/base");
+ 		fragment = &fragments[cnt];
+ 		fragment->overlay = overlay_node;
+-		fragment->target = find_target(node);
++		if (target)
++			fragment->target = target;
++		else
++			fragment->target = find_target(node);
+ 		if (!fragment->target) {
+ 			of_node_put(fragment->overlay);
+ 			ret = -EINVAL;
+@@ -877,6 +881,7 @@ static void free_overlay_changeset(struct overlay_changeset *ovcs)
+  * @fdt:	base of memory allocated to hold the aligned FDT
+  * @tree:	Expanded overlay device tree
+  * @ovcs_id:	Pointer to overlay changeset id
++ * @target:	Target node to override target-path property value
+  *
+  * Creates and applies an overlay changeset.
+  *
+@@ -914,7 +919,7 @@ static void free_overlay_changeset(struct overlay_changeset *ovcs)
+  */
+ 
+ static int of_overlay_apply(const void *fdt, struct device_node *tree,
+-		int *ovcs_id)
++		int *ovcs_id, struct device_node *target)
+ {
+ 	struct overlay_changeset *ovcs;
+ 	int ret = 0, ret_revert, ret_tmp;
+@@ -947,7 +952,7 @@ static int of_overlay_apply(const void *fdt, struct device_node *tree,
+ 	if (ret)
+ 		goto err_free_tree;
+ 
+-	ret = init_overlay_changeset(ovcs, fdt, tree);
++	ret = init_overlay_changeset(ovcs, fdt, tree, target);
+ 	if (ret)
+ 		goto err_free_tree;
+ 
+@@ -1014,8 +1019,8 @@ static int of_overlay_apply(const void *fdt, struct device_node *tree,
+ 	return ret;
  }
  
- static struct property *__of_find_property(const struct device_node *np,
+-int of_overlay_fdt_apply(const void *overlay_fdt, u32 overlay_fdt_size,
+-			 int *ovcs_id)
++int of_overlay_fdt_apply_to_node(const void *overlay_fdt, u32 overlay_fdt_size,
++				 int *ovcs_id, struct device_node *target)
+ {
+ 	void *new_fdt;
+ 	void *new_fdt_align;
+@@ -1053,7 +1058,7 @@ int of_overlay_fdt_apply(const void *overlay_fdt, u32 overlay_fdt_size,
+ 		goto out_free_new_fdt;
+ 	}
+ 
+-	ret = of_overlay_apply(new_fdt, overlay_root, ovcs_id);
++	ret = of_overlay_apply(new_fdt, overlay_root, ovcs_id, target);
+ 	if (ret < 0) {
+ 		/*
+ 		 * new_fdt and overlay_root now belong to the overlay
+@@ -1072,7 +1077,7 @@ int of_overlay_fdt_apply(const void *overlay_fdt, u32 overlay_fdt_size,
+ out:
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(of_overlay_fdt_apply);
++EXPORT_SYMBOL_GPL(of_overlay_fdt_apply_to_node);
+ 
+ /*
+  * Find @np in @tree.
+diff --git a/include/linux/of.h b/include/linux/of.h
+index 2dc77430a91a..4df653606936 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -1566,8 +1566,8 @@ struct of_overlay_notify_data {
+ 
+ #ifdef CONFIG_OF_OVERLAY
+ 
+-int of_overlay_fdt_apply(const void *overlay_fdt, u32 overlay_fdt_size,
+-			 int *ovcs_id);
++int of_overlay_fdt_apply_to_node(const void *overlay_fdt, u32 overlay_fdt_size,
++				 int *ovcs_id, struct device_node *target);
+ int of_overlay_remove(int *ovcs_id);
+ int of_overlay_remove_all(void);
+ 
+@@ -1576,8 +1576,10 @@ int of_overlay_notifier_unregister(struct notifier_block *nb);
+ 
+ #else
+ 
+-static inline int of_overlay_fdt_apply(void *overlay_fdt, u32 overlay_fdt_size,
+-				       int *ovcs_id)
++static inline int of_overlay_fdt_apply_to_node(const void *overlay_fdt,
++					       u32 overlay_fdt_size,
++					       int *ovcs_id,
++					       struct device_node *target)
+ {
+ 	return -ENOTSUPP;
+ }
+@@ -1604,4 +1606,11 @@ static inline int of_overlay_notifier_unregister(struct notifier_block *nb)
+ 
+ #endif
+ 
++static inline int of_overlay_fdt_apply(const void *overlay_fdt,
++				       u32 overlay_fdt_size, int *ovcs_id)
++{
++	return of_overlay_fdt_apply_to_node(overlay_fdt, overlay_fdt_size,
++					    ovcs_id, NULL);
++}
++
+ #endif /* _LINUX_OF_H */
 -- 
 2.34.1
 
