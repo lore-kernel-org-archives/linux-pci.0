@@ -2,96 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57AF0C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B256C433EF
 	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 09:46:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231901AbiD1Jt5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Apr 2022 05:49:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45182 "EHLO
+        id S231837AbiD1Jtz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Apr 2022 05:49:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347537AbiD1Jc7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 05:32:59 -0400
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ED7647CDD9
-        for <linux-pci@vger.kernel.org>; Thu, 28 Apr 2022 02:29:45 -0700 (PDT)
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B46AD1474;
-        Thu, 28 Apr 2022 02:29:45 -0700 (PDT)
-Received: from lpieralisi (unknown [10.57.11.131])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B81263F774;
-        Thu, 28 Apr 2022 02:29:43 -0700 (PDT)
-Date:   Thu, 28 Apr 2022 10:29:37 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     daire.mcnamara@microchip.com
-Cc:     helgaas@kernel.org, bhelgaas@google.com,
-        conor.dooley@microchip.com, cyril.jean@microchip.com,
-        maz@kernel.org, david.abdurachmanov@gmail.com,
-        linux-pci@vger.kernel.org, robh@kernel.org
-Subject: Re: [RESEND PATCH v1 1/1] PCI: microchip: Fix potential race in
- interrupt handling
-Message-ID: <20220428092937.GA12804@lpieralisi>
-References: <20220405111751.166427-1-daire.mcnamara@microchip.com>
+        with ESMTP id S1345715AbiD1JS7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 05:18:59 -0400
+Received: from relay3-d.mail.gandi.net (relay3-d.mail.gandi.net [217.70.183.195])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C31971260D;
+        Thu, 28 Apr 2022 02:15:40 -0700 (PDT)
+Received: (Authenticated sender: herve.codina@bootlin.com)
+        by mail.gandi.net (Postfix) with ESMTPSA id 6C0E160009;
+        Thu, 28 Apr 2022 09:15:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1651137339;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=601hOmZZ+FfI38UJ5XOFnA3K1IMHPaxWsKoMipp8iH8=;
+        b=jUV/lrLJBVuq9ZQB/l/IXNc1u5fLXgsjkw6We9t7h9ghH1hr1PsCYjQBV6r20yG2bjj2tq
+        rnsm90AuBdguGeEa8kyjzPeATTX/s5WjE/XfmfnC6V3U3LZ9NF22tS+2t0kZO0S4oDHikc
+        c53S2dnJu+pFxcjpRyvel9eIdhcsTnSBNPc8SmNVd1Oi4llQNTZe3T2dOIQ3/KKQRlyqzD
+        FhdIVSsqZlSrXobw/rmBBlQiACrkNZhSaHMVVOpb3pHTbL6w5gj8a5RRdD3L201ipJ6lMV
+        TD5CnoYmzt26cTgO9/1JQMtJUun2wUq85q5GL0zpISRS7PF9XoPbNM1th3LaJg==
+Date:   Thu, 28 Apr 2022 11:15:35 +0200
+From:   Herve Codina <herve.codina@bootlin.com>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Clement Leger <clement.leger@bootlin.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH v3 4/8] soc: renesas: rzn1: Select PM and
+ PM_GENERIC_DOMAINS configs
+Message-ID: <20220428111535.51833857@bootlin.com>
+In-Reply-To: <CAMuHMdWmcBXRxZ_SDLCnimh7GqzkR0_qz178s51EtXsMm39ddg@mail.gmail.com>
+References: <20220422120850.769480-1-herve.codina@bootlin.com>
+        <20220422120850.769480-5-herve.codina@bootlin.com>
+        <CAMuHMdWmcBXRxZ_SDLCnimh7GqzkR0_qz178s51EtXsMm39ddg@mail.gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.31; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220405111751.166427-1-daire.mcnamara@microchip.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 05, 2022 at 12:17:51PM +0100, daire.mcnamara@microchip.com wrote:
-> From: Daire McNamara <daire.mcnamara@microchip.com>
-> 
-> Clear MSI bit in ISTATUS register after reading it before
-> handling individual MSI bits
+Hi Geert,
 
-That explains nothing. If you are fixing a bug please describe
-the issue and how the patch is fixing it.
+On Wed, 27 Apr 2022 16:58:07 +0200
+Geert Uytterhoeven <geert@linux-m68k.org> wrote:
 
-> This fixes a potential race condition pointed out by Bjorn Helgaas:
-> https://lore.kernel.org/linux-pci/20220127202000.GA126335@bhelgaas/
-> 
-> Fixes: 6f15a9c9f941 ("PCI: microchip: Add Microchip PolarFire PCIe controller driver")
-> Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
-> ---
-> Adding linux-pci mailing list
->  drivers/pci/controller/pcie-microchip-host.c | 6 +-----
->  1 file changed, 1 insertion(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-> index 29d8e81e4181..da8e3fdc97b3 100644
-> --- a/drivers/pci/controller/pcie-microchip-host.c
-> +++ b/drivers/pci/controller/pcie-microchip-host.c
-> @@ -416,6 +416,7 @@ static void mc_handle_msi(struct irq_desc *desc)
->  
->  	status = readl_relaxed(bridge_base_addr + ISTATUS_LOCAL);
->  	if (status & PM_MSI_INT_MSI_MASK) {
-> +		writel_relaxed(status & PM_MSI_INT_MSI_MASK, bridge_base_addr + ISTATUS_LOCAL);
+> On Fri, Apr 22, 2022 at 2:09 PM Herve Codina <herve.codina@bootlin.com> w=
+rote:
+> > PM and PM_GENERIC_DOMAINS configs are required for RZ/N1 SOCs.
+> > Without these configs, the clocks used by the PCI bridge are not
+> > enabled and so accessing the devices leads to a kernel crash:
+> >   [    0.832958] Unhandled fault: external abort on non-linefetch (0x10=
+08) at 0x90b5f848
+> >
+> > Select PM and PM_GENERIC_DOMAINS for ARCH_RZN1
+> >
+> > Signed-off-by: Herve Codina <herve.codina@bootlin.com> =20
+>=20
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> i.e. will queue in renesas-devel for v5.19.
+>=20
 
-What does ISTATUS_LOCAL contain vs ISTATUS_MSI ? If you explain that
-to me I could help you write the commit log.
+I plan to send a v4 of this series.
 
-Thanks,
-Lorenzo
+As this patch (4/8) and the following one (5/8) will be
+queued for v5.19, I plan to remove them from the v4 version
+of the series.
 
->  		status = readl_relaxed(bridge_base_addr + ISTATUS_MSI);
->  		for_each_set_bit(bit, &status, msi->num_vectors) {
->  			ret = generic_handle_domain_irq(msi->dev_domain, bit);
-> @@ -432,13 +433,8 @@ static void mc_msi_bottom_irq_ack(struct irq_data *data)
->  	void __iomem *bridge_base_addr =
->  		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
->  	u32 bitpos = data->hwirq;
-> -	unsigned long status;
->  
->  	writel_relaxed(BIT(bitpos), bridge_base_addr + ISTATUS_MSI);
-> -	status = readl_relaxed(bridge_base_addr + ISTATUS_MSI);
-> -	if (!status)
-> -		writel_relaxed(BIT(PM_MSI_INT_MSI_SHIFT),
-> -			       bridge_base_addr + ISTATUS_LOCAL);
->  }
->  
->  static void mc_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> -- 
-> 2.25.1
-> 
+Is that ok for you or do you prefer to still have them
+in v4 ?
+
+Regards,
+Herv=C3=A9
+
+--=20
+Herv=C3=A9 Codina, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
