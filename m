@@ -2,58 +2,56 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D54F2C4332F
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 09:46:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8A96C4332F
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 09:46:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231665AbiD1Jtu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Apr 2022 05:49:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58424 "EHLO
+        id S231732AbiD1Jtv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Apr 2022 05:49:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346662AbiD1J00 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 05:26:26 -0400
-Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::224])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A2B77B548;
-        Thu, 28 Apr 2022 02:23:09 -0700 (PDT)
+        with ESMTP id S1345346AbiD1JXL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 05:23:11 -0400
+Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 962C06D845;
+        Thu, 28 Apr 2022 02:19:56 -0700 (PDT)
 Received: (Authenticated sender: herve.codina@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id 9A08BE000F;
-        Thu, 28 Apr 2022 09:23:03 +0000 (UTC)
+        by mail.gandi.net (Postfix) with ESMTPSA id 28371240004;
+        Thu, 28 Apr 2022 09:19:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1651137787;
+        t=1651137595;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=+FYRz/NDTDdoqmZUrm0uByCiRUWY9guhdRNlt4HmCM0=;
-        b=mJOuZ1T9tUD92MO7DKvtNI5dLapxlMOfwd7x4IIOEHvO1p2pSSEfgESCe1miSaBT1AgaMJ
-        5CsfIP5a+s3RTPwOw2+O+S5UiQxtIzAMf86SF1I/TFrEVBHzqrH1WKOi85bPLE86lBFoxE
-        jbWa112E+vXYK9vbmptM/yRaFcw6MjONxHK4d/AvH0CTKpvTVPBSo1+2qc91CSfQwgZaT7
-        qc8R0IvfKv6PFFUwaS6UdHsLKATrELdCMNdtEeZR6+aUgM4OGcdgWUhTcIcMi+rI7LlhET
-        RjssszI3MTwi14aQ1drKj44O76GFOB8+ukLaYATaEmRHMuEaFSbr2D/vVvah1g==
-Date:   Thu, 28 Apr 2022 11:23:02 +0200
+        bh=Df+wN7i7GXTPAPUWzT4clFhqc7n0VuULVgdHkDDeB+8=;
+        b=YFphup6tz6V2InfqjN1G/PcTMyqpiio3QC0ISmM+g6/eHuM9Q0Pg7r/SBrF1g9dbC5Yccf
+        WIeKDje/t3UTfovBAVa3E6fkmolLGJoqKajAjkpTne6eWKh/LWWxZ08rA3OVPSOVaPAp/h
+        twpPGuKsIJXWieaSzrW2WEet+NAw0lS7vv4R8PPhCWXOV3YABWRe9H3Mef+wVgVhZZ2EPa
+        pJ69lzhRba7mlqu1JkVvtgvvsTaXQSPJT4VK3e2pHxHsFUT9kjFL05aRtLF/IzRH4hJ5W8
+        ZPCYJ3mKHINUghC2TzYyF8L+dTruWNnn7v0X1b3ObHW2KNpSiW8RH+55aL1Oeg==
+Date:   Thu, 28 Apr 2022 11:19:50 +0200
 From:   Herve Codina <herve.codina@bootlin.com>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>
+To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rob Herring" <robh+dt@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        "Geert Uytterhoeven" <geert+renesas@glider.be>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
         Magnus Damm <magnus.damm@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-renesas-soc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
+        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Sergey Shtylyov <s.shtylyov@omp.ru>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Clement Leger <clement.leger@bootlin.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: Re: [PATCH v3 7/8] ARM: dts: r9a06g032: Add USB PHY DT support
-Message-ID: <20220428112302.3e8d3a7f@bootlin.com>
-In-Reply-To: <f7e76000-11ec-42d1-5767-7f270a3b025d@omp.ru>
-References: <20220422120850.769480-1-herve.codina@bootlin.com>
-        <20220422120850.769480-8-herve.codina@bootlin.com>
-        <ed432ba2-6081-4d82-bdc9-cd88cb52ca1f@omp.ru>
-        <f7e76000-11ec-42d1-5767-7f270a3b025d@omp.ru>
+Subject: Re: [PATCH v3 3/8] PCI: rcar-gen2: Add RZ/N1 SOCs support
+Message-ID: <20220428111950.1c23c685@bootlin.com>
+In-Reply-To: <20220422164744.GA1460864@bhelgaas>
+References: <20220422120850.769480-4-herve.codina@bootlin.com>
+        <20220422164744.GA1460864@bhelgaas>
 Organization: Bootlin
 X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.31; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
@@ -63,40 +61,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Sergey,
+Hi Bjorn,
 
-On Sat, 23 Apr 2022 19:41:09 +0300
-Sergey Shtylyov <s.shtylyov@omp.ru> wrote:
+On Fri, 22 Apr 2022 11:47:44 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-> On 4/23/22 12:09 PM, Sergey Shtylyov wrote:
+> On Fri, Apr 22, 2022 at 02:08:45PM +0200, Herve Codina wrote:
+> > Add Renesas RZ/N1 SOCs family support to the Renesas R-Car
+> > gen2 PCI bridge driver.
+> > The Renesas RZ/N1 SOCs internal PCI bridge is comptible with
+> > the one available in the R-Car Gen2 family.
+> > Tested with the RZ/N1D (R9A06G032) SOC. =20
 >=20
-> [...]
-> >> Define the r9a06g032 generic part of the USB PHY device node.
-> >>
-> >> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-> >> ---
-> >>  arch/arm/boot/dts/r9a06g032.dtsi | 6 ++++++
-> >>  1 file changed, 6 insertions(+)
-> >>
-> >> diff --git a/arch/arm/boot/dts/r9a06g032.dtsi b/arch/arm/boot/dts/r9a0=
-6g032.dtsi
-> >> index 33581f0c55c4..58af07eb75c9 100644
-> >> --- a/arch/arm/boot/dts/r9a06g032.dtsi
-> >> +++ b/arch/arm/boot/dts/r9a06g032.dtsi
-> >> @@ -59,6 +59,12 @@ ext_rtc_clk: extrtcclk {
-> >>  		clock-frequency =3D <0>;
-> >>  	};
-> >> =20
-> >> +	usbphy: usbphy { =20
-> >=20
-> >    I think the node name should be "usb-phy"... =20
+> Nits (only address if you have some other reason to repost this
+> series):
 >=20
->    It's not my thinking alone, the DT spec documents "usb-phy" in section=
- 2.2.2. :-)
+>   - Subject claims this adds "support," which suggests that this adds
+>     some piece of new functionality.  But it adds no new
+>     functionality, it merely adds a new compatible string.  I would
+>     say "Add RZ/N1 SOC compatible string"
+>=20
+>   - Add blank lines between paragraphs
+>=20
+>   - Rewrap paragraphs to fill 75 characters
+>=20
+>   - s/comptible/compatible/
+>=20
+>   - s/R-Car gen2/R-Car Gen2/ to write this consistently instead of
+>     capitalizing "Gen2" sometimes but not others
 
-Will be changed in v4.
+I plan a v4 and so, I will take these points into account.
 
-Thanks for pointing this.
+Thanks for the review.
 
 Regards,
 Herv=C3=A9
