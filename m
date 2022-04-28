@@ -2,36 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C3FFC43217
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 09:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55486C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 09:46:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229991AbiD1Jts (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Apr 2022 05:49:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33314 "EHLO
+        id S231216AbiD1Jtt convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Apr 2022 05:49:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58074 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347018AbiD1J2q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 05:28:46 -0400
-Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DAD67C795;
-        Thu, 28 Apr 2022 02:25:30 -0700 (PDT)
-Received: (Authenticated sender: herve.codina@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id 0CAC7240008;
-        Thu, 28 Apr 2022 09:25:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1651137929;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=HMLva4/g7+wAMx0LKhwNxH51lXYsvGGHAJATfjO0pGs=;
-        b=YPR4woGd2LbLPt23lAH82e2KSKHFmuR/RTpRojKTgNtF6wKuUygUbjYuS1XrGiaflxm9uc
-        JqhnwEiKfOLQERiERPTe+1//P5XkUcVgAPMfGLe/XO65agC9qinxS1MjW7i0jhYnbKpq1i
-        OpQ+VZRDpBnqLKyzY6iW7qdNVD1xaLQ0eOSwSXzJ8ufZFrL0eh69DNdIVZnIyk5XjbgmO0
-        K4hsoMazXZDhiruoFoQvpLvWWIiBHUmMbhk7M0iAehbFw+89OrK+zdZwYDNTM5VkQ9KBr2
-        L1tLpfgombKHZ1Q+/bEmGbmWT3hMaGmog8dBREZomFQvwOl55m58BEwh0imf3Q==
-Date:   Thu, 28 Apr 2022 11:25:26 +0200
-From:   Herve Codina <herve.codina@bootlin.com>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
+        with ESMTP id S1346585AbiD1J0D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 05:26:03 -0400
+Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1EB87B55A;
+        Thu, 28 Apr 2022 02:22:49 -0700 (PDT)
+Received: by mail-qv1-f54.google.com with SMTP id a5so2816005qvx.1;
+        Thu, 28 Apr 2022 02:22:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=XqlNbfP07/JFH01D+0otUBRM7EY77qBFCn/ld2fGXUk=;
+        b=oEZ+F4UIOxbggPbpUd+38Q5RcsS64KEBKvmzSIUP01hIQdxh4ftDWoIUbC7eYTPeDk
+         aMuMQy02J6QAJbFDC0BC8xeEfOJC4JRomGUKnYgx/jyAcv6jeNuEMGGMMsXRZFFmUl0s
+         ZA67KSd3Or34vRmR7dJvt8OP0Fb0SKHyLXLFQcHE23FEOkybjmueeuf0+eKGvzH5GBQo
+         XDBVl6glmg6YsMdwWxyejRC8yp/a4ccln6Z9dhT/ik8Q7K505wywuQ88vBvDIUBDXlCZ
+         N5N7rVE+JzIAuKPBm29EpHiM+7wZmYe0zXipPcl+DZ4x7GN/6WOQEoEcPQ25EsHDwMQk
+         IGaA==
+X-Gm-Message-State: AOAM532YwHdDSVzECnrVS+odxRarZpir6BtB3buK30VX0A4soO6Z7LCr
+        Ij4l0zWAo6reu2LQuvlgPXAOjkpqmv++LQ==
+X-Google-Smtp-Source: ABdhPJyZVJVTfXghprm+uK544vIooJPyHd/NqYJy555ifKHxac+s/bMU6ua9HBq+/o2o7618xwjcww==
+X-Received: by 2002:a05:6214:d86:b0:456:4ae4:d993 with SMTP id e6-20020a0562140d8600b004564ae4d993mr7911694qve.38.1651137768464;
+        Thu, 28 Apr 2022 02:22:48 -0700 (PDT)
+Received: from mail-yb1-f174.google.com (mail-yb1-f174.google.com. [209.85.219.174])
+        by smtp.gmail.com with ESMTPSA id n186-20020a37bdc3000000b0069c218173e8sm9372017qkf.112.2022.04.28.02.22.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 28 Apr 2022 02:22:48 -0700 (PDT)
+Received: by mail-yb1-f174.google.com with SMTP id m128so7933688ybm.5;
+        Thu, 28 Apr 2022 02:22:47 -0700 (PDT)
+X-Received: by 2002:a5b:984:0:b0:63f:8c38:676c with SMTP id
+ c4-20020a5b0984000000b0063f8c38676cmr30668590ybq.393.1651137767425; Thu, 28
+ Apr 2022 02:22:47 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220422120850.769480-1-herve.codina@bootlin.com>
+ <20220422120850.769480-5-herve.codina@bootlin.com> <CAMuHMdWmcBXRxZ_SDLCnimh7GqzkR0_qz178s51EtXsMm39ddg@mail.gmail.com>
+ <20220428111535.51833857@bootlin.com>
+In-Reply-To: <20220428111535.51833857@bootlin.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Thu, 28 Apr 2022 11:22:35 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdUf6M=ESvSnRoqYkBfvizW-tBzTwUX2Uka-FOGvLFzL=w@mail.gmail.com>
+Message-ID: <CAMuHMdUf6M=ESvSnRoqYkBfvizW-tBzTwUX2Uka-FOGvLFzL=w@mail.gmail.com>
+Subject: Re: [PATCH v3 4/8] soc: renesas: rzn1: Select PM and
+ PM_GENERIC_DOMAINS configs
+To:     Herve Codina <herve.codina@bootlin.com>
 Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -40,7 +62,7 @@ Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
         Magnus Damm <magnus.damm@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
         Rob Herring <robh@kernel.org>,
         linux-pci <linux-pci@vger.kernel.org>,
         Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
@@ -51,68 +73,50 @@ Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Clement Leger <clement.leger@bootlin.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: Re: [PATCH v3 4/8] soc: renesas: rzn1: Select PM and
- PM_GENERIC_DOMAINS configs
-Message-ID: <20220428112526.3b55555b@bootlin.com>
-In-Reply-To: <CAMuHMdUf6M=ESvSnRoqYkBfvizW-tBzTwUX2Uka-FOGvLFzL=w@mail.gmail.com>
-References: <20220422120850.769480-1-herve.codina@bootlin.com>
-        <20220422120850.769480-5-herve.codina@bootlin.com>
-        <CAMuHMdWmcBXRxZ_SDLCnimh7GqzkR0_qz178s51EtXsMm39ddg@mail.gmail.com>
-        <20220428111535.51833857@bootlin.com>
-        <CAMuHMdUf6M=ESvSnRoqYkBfvizW-tBzTwUX2Uka-FOGvLFzL=w@mail.gmail.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.31; x86_64-redhat-linux-gnu)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Geert,
-On Thu, 28 Apr 2022 11:22:35 +0200
-Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+Hi Hervé,
 
-> Hi Herv=C3=A9,
->=20
-> On Thu, Apr 28, 2022 at 11:15 AM Herve Codina <herve.codina@bootlin.com> =
-wrote:
-> > On Wed, 27 Apr 2022 16:58:07 +0200
-> > Geert Uytterhoeven <geert@linux-m68k.org> wrote: =20
-> > > On Fri, Apr 22, 2022 at 2:09 PM Herve Codina <herve.codina@bootlin.co=
-m> wrote: =20
-> > > > PM and PM_GENERIC_DOMAINS configs are required for RZ/N1 SOCs.
-> > > > Without these configs, the clocks used by the PCI bridge are not
-> > > > enabled and so accessing the devices leads to a kernel crash:
-> > > >   [    0.832958] Unhandled fault: external abort on non-linefetch (=
-0x1008) at 0x90b5f848
-> > > >
-> > > > Select PM and PM_GENERIC_DOMAINS for ARCH_RZN1
-> > > >
-> > > > Signed-off-by: Herve Codina <herve.codina@bootlin.com> =20
+On Thu, Apr 28, 2022 at 11:15 AM Herve Codina <herve.codina@bootlin.com> wrote:
+> On Wed, 27 Apr 2022 16:58:07 +0200
+> Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> > On Fri, Apr 22, 2022 at 2:09 PM Herve Codina <herve.codina@bootlin.com> wrote:
+> > > PM and PM_GENERIC_DOMAINS configs are required for RZ/N1 SOCs.
+> > > Without these configs, the clocks used by the PCI bridge are not
+> > > enabled and so accessing the devices leads to a kernel crash:
+> > >   [    0.832958] Unhandled fault: external abort on non-linefetch (0x1008) at 0x90b5f848
 > > >
-> > > Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> > > i.e. will queue in renesas-devel for v5.19. =20
+> > > Select PM and PM_GENERIC_DOMAINS for ARCH_RZN1
+> > >
+> > > Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 > >
-> > I plan to send a v4 of this series.
-> >
-> > As this patch (4/8) and the following one (5/8) will be
-> > queued for v5.19, I plan to remove them from the v4 version
-> > of the series.
-> >
-> > Is that ok for you or do you prefer to still have them
-> > in v4 ? =20
->=20
-> As these two patches are not strictly related to adding PCI support,
-> but they are dependencies, I will queue them separately. Hence you
-> do not need to include them in v5.
+> > Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > i.e. will queue in renesas-devel for v5.19.
+>
+> I plan to send a v4 of this series.
+>
+> As this patch (4/8) and the following one (5/8) will be
+> queued for v5.19, I plan to remove them from the v4 version
+> of the series.
+>
+> Is that ok for you or do you prefer to still have them
+> in v4 ?
 
-Perfect.
+As these two patches are not strictly related to adding PCI support,
+but they are dependencies, I will queue them separately. Hence you
+do not need to include them in v5.
 
-Thanks,
-Herv=C3=A9
+Gr{oetje,eeting}s,
 
---=20
-Herv=C3=A9 Codina, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
