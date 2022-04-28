@@ -2,166 +2,127 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F55C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 08:08:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E775FC433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 08:27:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343936AbiD1ILT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Apr 2022 04:11:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46526 "EHLO
+        id S1344171AbiD1IbG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Apr 2022 04:31:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343833AbiD1IKs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 04:10:48 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA9B9612A7;
-        Thu, 28 Apr 2022 01:07:29 -0700 (PDT)
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23S7fSIA031365;
-        Thu, 28 Apr 2022 08:07:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : content-transfer-encoding
- : mime-version; s=pp1; bh=BUKnHMMtJlhw8wLxcVR6t/uKudxySSsONcFK+URS3a0=;
- b=BL1kipiDd8zjOWETYOfIT9JACUTUx5NHGthf3sggXxWjTFcH0di+ExSq/mnpDVE4fLhr
- xyv/4nACfqGkyo6Hoa/C1rZxsklC4RJiuC+amFg2aP9J3spghlq5kOWFlQvC4sqUulWS
- TAsKS0x94O5pvPUaAVlH8lRmFxaX5lxXejo2cVU7przUoPQ634GDaEs2pGQFw7QhN1Aq
- GnmkbVyXM1UkTEmUAyM79Ucd2ZBqXZiAByr+D+3Ku3qYYhx5dh6IwH4U1RXlv/MO4Vn+
- znJvykrJ5bdKreNv53AoWhyqLKUkT3RrxClilACAk2VAh0OiptYY7QALjDI077v+TJbM 2w== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqnfga2s8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Apr 2022 08:07:25 +0000
-Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 23S7hYJ5025154;
-        Thu, 28 Apr 2022 08:07:24 GMT
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqnfga2rc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Apr 2022 08:07:24 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23S7wldN005960;
-        Thu, 28 Apr 2022 08:07:22 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma04ams.nl.ibm.com with ESMTP id 3fm938y3km-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Apr 2022 08:07:22 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23S87Jq647120794
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 28 Apr 2022 08:07:19 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6EB4C4C040;
-        Thu, 28 Apr 2022 08:07:19 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2E2054C044;
-        Thu, 28 Apr 2022 08:07:19 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu, 28 Apr 2022 08:07:19 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jan Kiszka <jan.kiszka@siemens.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Pierre Morel <pmorel@linux.ibm.com>
-Cc:     linux-kernel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v5 2/4] PCI: Move jailhouse's isolated function handling to pci_scan_slot()
-Date:   Thu, 28 Apr 2022 10:07:16 +0200
-Message-Id: <20220428080718.3094464-3-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20220428080718.3094464-1-schnelle@linux.ibm.com>
-References: <20220428080718.3094464-1-schnelle@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: h3vu6NpiKc1Lkc7QlOOnoNIOtdGxAevY
-X-Proofpoint-ORIG-GUID: NWJDT8M5a_TtT6KVhxO0PWnDXrjZIFJg
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S1344142AbiD1IbC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 04:31:02 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B95EA0BD2;
+        Thu, 28 Apr 2022 01:27:49 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id CDEBA2186F;
+        Thu, 28 Apr 2022 08:27:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1651134467; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=uHWa92vFc0VKwXbjUTC1XMh188o1HlT0uQD6qb0vP48=;
+        b=ptsNFLPN4AOJ9HLpo2aUFC1C35GqsbNQmwQwd/cc0fkX9rwV4HLRJVj0WiG+95oGxsBYyw
+        5reFV928fpI3wng15ZZWSf2aMaxIkut0k3dO9MjlmOJ7aHFGqGsaFIzVlip6U6aXsYeVwo
+        KQjHMdo/P4x1VKzfCdDMkbEiS1Pfu8Q=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id EF6F413491;
+        Thu, 28 Apr 2022 08:27:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id ApxEOAJQamIBLgAAMHmgww
+        (envelope-from <jgross@suse.com>); Thu, 28 Apr 2022 08:27:46 +0000
+From:   Juergen Gross <jgross@suse.com>
+To:     xen-devel@lists.xenproject.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-integrity@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc:     Juergen Gross <jgross@suse.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        =?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Oleksandr Andrushchenko <oleksandr_andrushchenko@epam.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, alsa-devel@alsa-project.org,
+        Peter Huewe <peterhuewe@gmx.de>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v2 00/19] xen: simplify frontend side ring setup
+Date:   Thu, 28 Apr 2022 10:27:24 +0200
+Message-Id: <20220428082743.16593-1-jgross@suse.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-04-27_04,2022-04-27_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- malwarescore=0 mlxscore=0 adultscore=0 mlxlogscore=999 priorityscore=1501
- bulkscore=0 clxscore=1015 lowpriorityscore=0 spamscore=0 suspectscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2202240000 definitions=main-2204280049
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The special case of the jailhouse hypervisor passing through individual
-PCI functions handles scanning for PCI functions even if function 0 does
-not exist. Currently this is done with an extra loop duplicating the one
-in pci_scan_slot(). By incorporating the check for jailhouse_paravirt()
-into pci_scan_slot() we can instead do this as part of the normal
-slot scan. Note that with the assignment of dev->multifunction gated by
-fn > 0 we set dev->multifunction unconditionally for all functions if
-function 0 is missing just as in the existing jailhouse loop.
+Many Xen PV frontends share similar code for setting up a ring page
+(allocating and granting access for the backend) and for tearing it
+down.
 
-The only functional change is that we now call
-pcie_aspm_init_link_state() for these functions but this already
-happened if function 0 was passed through and should not be a problem.
+Create new service functions doing all needed steps in one go.
 
-Cc: Jan Kiszka <jan.kiszka@siemens.com>
-Link: https://lore.kernel.org/linux-pci/20220408224514.GA353445@bhelgaas/
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
- drivers/pci/probe.c | 30 ++++++++++--------------------
- 1 file changed, 10 insertions(+), 20 deletions(-)
+This requires all frontends to use a common value for an invalid
+grant reference in order to make the functions idempotent.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 78aa1bccab2f..3029edc68ff7 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2658,8 +2658,13 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
- 			if (fn > 0)
- 				dev->multifunction = 1;
- 		} else if (fn == 0) {
--			/* function 0 is required */
--			break;
-+			/*
-+			 * function 0 is required unless we are running on
-+			 * a hypervisor which passes through individual PCI
-+			 * functions.
-+			 */
-+			if (!jailhouse_paravirt())
-+				break;
- 		}
- 		fn = next_fn(bus, dev, fn);
- 	} while (fn >= 0);
-@@ -2858,29 +2863,14 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
- {
- 	unsigned int used_buses, normal_bridges = 0, hotplug_bridges = 0;
- 	unsigned int start = bus->busn_res.start;
--	unsigned int devfn, fn, cmax, max = start;
-+	unsigned int devfn, cmax, max = start;
- 	struct pci_dev *dev;
--	int nr_devs;
- 
- 	dev_dbg(&bus->dev, "scanning bus\n");
- 
- 	/* Go find them, Rover! */
--	for (devfn = 0; devfn < 256; devfn += 8) {
--		nr_devs = pci_scan_slot(bus, devfn);
--
--		/*
--		 * The Jailhouse hypervisor may pass individual functions of a
--		 * multi-function device to a guest without passing function 0.
--		 * Look for them as well.
--		 */
--		if (jailhouse_paravirt() && nr_devs == 0) {
--			for (fn = 1; fn < 8; fn++) {
--				dev = pci_scan_single_device(bus, devfn + fn);
--				if (dev)
--					dev->multifunction = 1;
--			}
--		}
--	}
-+	for (devfn = 0; devfn < 256; devfn += 8)
-+		pci_scan_slot(bus, devfn);
- 
- 	/* Reserve buses for SR-IOV capability */
- 	used_buses = pci_iov_bus_range(bus);
+Changes in V2:
+- new patch 9 and related changes in patches 10-18
+
+Juergen Gross (19):
+  xen/blkfront: switch blkfront to use INVALID_GRANT_REF
+  xen/netfront: switch netfront to use INVALID_GRANT_REF
+  xen/scsifront: remove unused GRANT_INVALID_REF definition
+  xen/usb: switch xen-hcd to use INVALID_GRANT_REF
+  xen/drm: switch xen_drm_front to use INVALID_GRANT_REF
+  xen/sound: switch xen_snd_front to use INVALID_GRANT_REF
+  xen/dmabuf: switch gntdev-dmabuf to use INVALID_GRANT_REF
+  xen/shbuf: switch xen-front-pgdir-shbuf to use INVALID_GRANT_REF
+  xen: update ring.h
+  xen/xenbus: add xenbus_setup_ring() service function
+  xen/blkfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/netfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/tpmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/drmfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/pcifront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/scsifront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/usbfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/sndfront: use xenbus_setup_ring() and xenbus_teardown_ring()
+  xen/xenbus: eliminate xenbus_grant_ring()
+
+ drivers/block/xen-blkfront.c                | 57 +++++---------
+ drivers/char/tpm/xen-tpmfront.c             | 18 +----
+ drivers/gpu/drm/xen/xen_drm_front.h         |  9 ---
+ drivers/gpu/drm/xen/xen_drm_front_evtchnl.c | 43 +++--------
+ drivers/net/xen-netfront.c                  | 85 +++++++--------------
+ drivers/pci/xen-pcifront.c                  | 19 +----
+ drivers/scsi/xen-scsifront.c                | 31 ++------
+ drivers/usb/host/xen-hcd.c                  | 65 ++++------------
+ drivers/xen/gntdev-dmabuf.c                 | 13 +---
+ drivers/xen/xen-front-pgdir-shbuf.c         | 17 +----
+ drivers/xen/xenbus/xenbus_client.c          | 82 +++++++++++++++-----
+ include/xen/interface/io/ring.h             | 19 +++--
+ include/xen/xenbus.h                        |  4 +-
+ sound/xen/xen_snd_front_evtchnl.c           | 44 +++--------
+ sound/xen/xen_snd_front_evtchnl.h           |  9 ---
+ 15 files changed, 179 insertions(+), 336 deletions(-)
+
 -- 
-2.32.0
+2.34.1
 
