@@ -2,119 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C49C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 09:46:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C3FFC43217
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Apr 2022 09:46:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229903AbiD1Jtr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Apr 2022 05:49:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44900 "EHLO
+        id S229991AbiD1Jts (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Apr 2022 05:49:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347342AbiD1Jbv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 05:31:51 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 873A77CDEE
-        for <linux-pci@vger.kernel.org>; Thu, 28 Apr 2022 02:28:36 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id p4so4859388edx.0
-        for <linux-pci@vger.kernel.org>; Thu, 28 Apr 2022 02:28:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=ARjzKSJ1boVbUsyHWVKrd/F0BEB2NcYm5tFfBpPw1B8=;
-        b=m9L56/TLMjbkJNGkPq0/4vhj93TF6hX+vp42zkfW2sWK6J+QKnIfFwHN5bf58QgSTG
-         pulJdYDFBa3+C+wC+swn1KbaLFRuT3LdB+Q4kxG5j9R2uT5h2JhsWqNXJMYOXi4ihFXA
-         5FMsjXrtJhe7ScN8oEx3CG1naMEgWrFbbd54hwxFQ3qKJWnL7DjWnz1b0zt73aAh0rTh
-         nSBWhRhGPGrO+Jq50N/al+48Y9vUUPSFtlB+avzPMptKnfgEJ63cR/vSzp86P2RIflbL
-         vi7R3GSdcWZAQVxjDC4tCOuPeqXqG572fHa0wYZgyDX6IoDPI7nnE91CjA5LRHXgm0ld
-         5sfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=ARjzKSJ1boVbUsyHWVKrd/F0BEB2NcYm5tFfBpPw1B8=;
-        b=srYadlaMvbgVYSNaRZNXiR551AapgPhJWRI3AZjLj0RZ4ltmlyrjerXgbhWptV2853
-         SqL50/JNeji40aQL6buu2VReiFoMF4kXR1pHwYwvtyhubQbjeOsoQ/CnGk5fqkDa+UDj
-         0VS3IPUi7liXr7kUu8oqkkb+uWvyi6aYQNgvpeoV9bCoDGoMpW8euLV2T7dCqhhgdxkA
-         ZqmsCNzKhvXLuecri69Y//uYXnFs3+rn+C9EzXlCc/8cGWHhS1k9bUxk4MAQ6hTMoCAZ
-         oiDxddvaZ9LXu9xVlqVd+O1x4wyHz81pKKqkdmxxzPWuD62I7VoQS2QOOiKN2WgxQ3tn
-         medA==
-X-Gm-Message-State: AOAM532Xb7uWrPeOA0+dnp3cwfpL1RWt6YDgJLu4nbTbdZj6Y4H2LKdX
-        PwRuxpqmqi2nZE5A8fm5p3yuJQ==
-X-Google-Smtp-Source: ABdhPJxGwsAH2L/Urtc7neXZ8Wk3ukX7a601iUj1Wv389n0WEpH/jegU2zbjfen3b6tiseIIGqbnVg==
-X-Received: by 2002:a05:6402:11cd:b0:425:ee49:58cb with SMTP id j13-20020a05640211cd00b00425ee4958cbmr19442993edw.157.1651138115159;
-        Thu, 28 Apr 2022 02:28:35 -0700 (PDT)
-Received: from [192.168.0.161] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id b11-20020a17090630cb00b006e83fb1e6b1sm8118357ejb.100.2022.04.28.02.28.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Apr 2022 02:28:34 -0700 (PDT)
-Message-ID: <a8d73c8f-76dc-c3ab-baf8-fcc253330fb3@linaro.org>
-Date:   Thu, 28 Apr 2022 11:28:33 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: Aw: Re: [RFC/RFT v2 03/11] dt-bindings: phy: rockchip: add PCIe
- v3 constants
-Content-Language: en-US
-To:     Frank Wunderlich <frank-w@public-files.de>
-Cc:     Frank Wunderlich <linux@fw-web.de>,
-        linux-rockchip@lists.infradead.org,
+        with ESMTP id S1347018AbiD1J2q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2022 05:28:46 -0400
+Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DAD67C795;
+        Thu, 28 Apr 2022 02:25:30 -0700 (PDT)
+Received: (Authenticated sender: herve.codina@bootlin.com)
+        by mail.gandi.net (Postfix) with ESMTPSA id 0CAC7240008;
+        Thu, 28 Apr 2022 09:25:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1651137929;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=HMLva4/g7+wAMx0LKhwNxH51lXYsvGGHAJATfjO0pGs=;
+        b=YPR4woGd2LbLPt23lAH82e2KSKHFmuR/RTpRojKTgNtF6wKuUygUbjYuS1XrGiaflxm9uc
+        JqhnwEiKfOLQERiERPTe+1//P5XkUcVgAPMfGLe/XO65agC9qinxS1MjW7i0jhYnbKpq1i
+        OpQ+VZRDpBnqLKyzY6iW7qdNVD1xaLQ0eOSwSXzJ8ufZFrL0eh69DNdIVZnIyk5XjbgmO0
+        K4hsoMazXZDhiruoFoQvpLvWWIiBHUmMbhk7M0iAehbFw+89OrK+zdZwYDNTM5VkQ9KBr2
+        L1tLpfgombKHZ1Q+/bEmGbmWT3hMaGmog8dBREZomFQvwOl55m58BEwh0imf3Q==
+Date:   Thu, 28 Apr 2022 11:25:26 +0200
+From:   Herve Codina <herve.codina@bootlin.com>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Vinod Koul <vkoul@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Johan Jonker <jbx6244@gmail.com>,
-        Peter Geis <pgwipeout@gmail.com>,
-        Michael Riesch <michael.riesch@wolfvision.net>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org
-References: <20220426132139.26761-1-linux@fw-web.de>
- <20220426132139.26761-4-linux@fw-web.de>
- <918f5bc9-77f6-4d65-7432-ab53aadd6734@linaro.org>
- <trinity-3a10bccf-c3ed-479f-81c8-b48712f34432-1651138074158@3c-app-gmx-bs20>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <trinity-3a10bccf-c3ed-479f-81c8-b48712f34432-1651138074158@3c-app-gmx-bs20>
+        Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Clement Leger <clement.leger@bootlin.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH v3 4/8] soc: renesas: rzn1: Select PM and
+ PM_GENERIC_DOMAINS configs
+Message-ID: <20220428112526.3b55555b@bootlin.com>
+In-Reply-To: <CAMuHMdUf6M=ESvSnRoqYkBfvizW-tBzTwUX2Uka-FOGvLFzL=w@mail.gmail.com>
+References: <20220422120850.769480-1-herve.codina@bootlin.com>
+        <20220422120850.769480-5-herve.codina@bootlin.com>
+        <CAMuHMdWmcBXRxZ_SDLCnimh7GqzkR0_qz178s51EtXsMm39ddg@mail.gmail.com>
+        <20220428111535.51833857@bootlin.com>
+        <CAMuHMdUf6M=ESvSnRoqYkBfvizW-tBzTwUX2Uka-FOGvLFzL=w@mail.gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.31; x86_64-redhat-linux-gnu)
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 28/04/2022 11:27, Frank Wunderlich wrote:
-> Hi
-> 
->> Gesendet: Donnerstag, 28. April 2022 um 08:34 Uhr
->> Von: "Krzysztof Kozlowski" <krzysztof.kozlowski@linaro.org>
->>
->> On 26/04/2022 15:21, Frank Wunderlich wrote:
->>> From: Frank Wunderlich <frank-w@public-files.de>
->>>
->>>  include/dt-bindings/phy/phy-rockchip-pcie3.h | 21 ++++++++++++++++++++
->>
->> Naming - vendor,device.
-> 
-> ok, would rename to rockchip,pcie3-phy.h, is this ok?
+Hi Geert,
+On Thu, 28 Apr 2022 11:22:35 +0200
+Geert Uytterhoeven <geert@linux-m68k.org> wrote:
 
-Yes.
+> Hi Herv=C3=A9,
+>=20
+> On Thu, Apr 28, 2022 at 11:15 AM Herve Codina <herve.codina@bootlin.com> =
+wrote:
+> > On Wed, 27 Apr 2022 16:58:07 +0200
+> > Geert Uytterhoeven <geert@linux-m68k.org> wrote: =20
+> > > On Fri, Apr 22, 2022 at 2:09 PM Herve Codina <herve.codina@bootlin.co=
+m> wrote: =20
+> > > > PM and PM_GENERIC_DOMAINS configs are required for RZ/N1 SOCs.
+> > > > Without these configs, the clocks used by the PCI bridge are not
+> > > > enabled and so accessing the devices leads to a kernel crash:
+> > > >   [    0.832958] Unhandled fault: external abort on non-linefetch (=
+0x1008) at 0x90b5f848
+> > > >
+> > > > Select PM and PM_GENERIC_DOMAINS for ARCH_RZN1
+> > > >
+> > > > Signed-off-by: Herve Codina <herve.codina@bootlin.com> =20
+> > >
+> > > Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > > i.e. will queue in renesas-devel for v5.19. =20
+> >
+> > I plan to send a v4 of this series.
+> >
+> > As this patch (4/8) and the following one (5/8) will be
+> > queued for v5.19, I plan to remove them from the v4 version
+> > of the series.
+> >
+> > Is that ok for you or do you prefer to still have them
+> > in v4 ? =20
+>=20
+> As these two patches are not strictly related to adding PCI support,
+> but they are dependencies, I will queue them separately. Hence you
+> do not need to include them in v5.
 
-> 
->>> --- /dev/null
->>> +++ b/include/dt-bindings/phy/phy-rockchip-pcie3.h
->>> @@ -0,0 +1,21 @@
->>> +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
->>
->> s/MIT/BSD-2-clause/ just like bindings because it is part of it. Unless
->> you took it from something and it is already licensed like that?
-> 
-> took this with this license from downstream-repo, only removed snps from name and changed name of include guarding.
+Perfect.
 
-Then you need to keep the original license, so it is ok.
+Thanks,
+Herv=C3=A9
 
-Best regards,
-Krzysztof
+--=20
+Herv=C3=A9 Codina, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
