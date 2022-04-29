@@ -2,108 +2,106 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04767C4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:53:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EF44C43217
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376783AbiD2N4r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 09:56:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54198 "EHLO
+        id S1376483AbiD2N4t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 09:56:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376687AbiD2N4M (ORCPT
+        with ESMTP id S1376689AbiD2N4M (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 09:56:12 -0400
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91B58CD32B;
-        Fri, 29 Apr 2022 06:51:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5B8CCD306;
+        Fri, 29 Apr 2022 06:51:47 -0700 (PDT)
 Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TBZSqZ029789;
-        Fri, 29 Apr 2022 13:51:38 GMT
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TAixSm029719;
+        Fri, 29 Apr 2022 13:51:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : content-transfer-encoding
- : mime-version; s=pp1; bh=5TChM/Jm1YNQcv6uZ7hBq+xkdX+K5dvNl1xTNcUGSBQ=;
- b=YEbFFFhaAfXZED9GuEDSBE2Bw/Y3Vj9bnoCnVYizNlsG7MnhEGAGSXSmyWY1lwxuria8
- T+Qs2A8O/B7NExtxk6fEXH57srar/PuIraHSwNSztIrri1P5biPjmxtwwHWngVr6DGna
- pPRVwrT7z9h+isXeTeXRp9FV9P/JKvh6SFN0EIulq8CUnVk9ByaY9CIeaUc7g+8DLAXC
- D3p1kbW8IFw3PU4KIbf3gh4yTJE8GY1Dwz3DRLCpLippq0BIRMmiahD2iCox7tOIZkkw
- HV3kVpj1qTL3QGUCFmzvbQVoP2PVGJzgY+mrI+PV5ki7HCJ9iP1B0+m1FoqXg6dTZh0J PQ== 
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqv5rjk7s-1
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=64esgO81yLB/tFQVXXpxiKaK2wV0+w6I0268y8JWc7k=;
+ b=XZLcZQnL97tzbrqHKmKLgfSa204ZP8v1XNb2IB0Z9eDwV2f5stTxYc8N23tUNzslb/Xc
+ yp+whTpd7Tv3cWETGaC9tPOeCR8Op2v1oFI+kcWd/tG6fa1q2dcnaOaWHUNqJE0y6Ktg
+ K2kpQAmBpj6cvxgwHRTV5aIOLfb91SIhq8BYla1CabdS+NiI7dViucrJ11aCvBMjd8Iu
+ O89uN3zpKKvH0grRleR1wFHpx1wt7qYtQdP2xucrfVjwwHnl/WlyVuQCHkgxcOMBadaR
+ dOi3aH6TLRWc3620O7kh0yJXgzRk2Ys3i7FcPuJJt8Rruk9AubtzVuhKyVBuAmj/K9fE ZQ== 
+Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqv5rjkap-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:37 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDQkng021533;
-        Fri, 29 Apr 2022 13:51:35 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma03ams.nl.ibm.com with ESMTP id 3fm93917ra-1
+        Fri, 29 Apr 2022 13:51:42 +0000
+Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
+        by ppma02fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDQuvJ016011;
+        Fri, 29 Apr 2022 13:51:40 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma02fra.de.ibm.com with ESMTP id 3fpuygb971-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:35 +0000
+        Fri, 29 Apr 2022 13:51:40 +0000
 Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpXDS21233972
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpkD525035168
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Apr 2022 13:51:33 GMT
+        Fri, 29 Apr 2022 13:51:46 GMT
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 4CDAA4C04E;
-        Fri, 29 Apr 2022 13:51:33 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 422414C046;
+        Fri, 29 Apr 2022 13:51:38 +0000 (GMT)
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id EBFF14C040;
-        Fri, 29 Apr 2022 13:51:32 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id E6C134C040;
+        Fri, 29 Apr 2022 13:51:37 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 29 Apr 2022 13:51:32 +0000 (GMT)
+        Fri, 29 Apr 2022 13:51:37 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-acpi@vger.kernel.org (open list:PNP SUPPORT)
-Subject: [PATCH 23/37] pnp: add HAS_IOPORT dependencies
-Date:   Fri, 29 Apr 2022 15:50:38 +0200
-Message-Id: <20220429135108.2781579-41-schnelle@linux.ibm.com>
+        Sebastian Reichel <sre@kernel.org>,
+        linux-pm@vger.kernel.org (open list:SYSTEM RESET/SHUTDOWN DRIVERS)
+Subject: [RFC v2 28/39] power: add HAS_IOPORT dependencies
+Date:   Fri, 29 Apr 2022 15:50:47 +0200
+Message-Id: <20220429135108.2781579-50-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: eYIdm508_hLWSYbDLm5Lj5-3j4KaEQSL
-X-Proofpoint-ORIG-GUID: eYIdm508_hLWSYbDLm5Lj5-3j4KaEQSL
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: i4FEg9DTp51Xw3CnGxSuRtuLpGy9RV_n
+X-Proofpoint-ORIG-GUID: i4FEg9DTp51Xw3CnGxSuRtuLpGy9RV_n
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-04-29_06,2022-04-28_01,2022-02-23_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
- clxscore=1011 malwarescore=0 impostorscore=0 bulkscore=0
+ clxscore=1015 malwarescore=0 impostorscore=0 bulkscore=0
  lowpriorityscore=0 priorityscore=1501 mlxscore=0 adultscore=0 spamscore=0
- mlxlogscore=848 classifier=spam adjust=0 reason=mlx scancount=1
+ mlxlogscore=803 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2202240000 definitions=main-2204290078
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to depend on HAS_IOPORT even when
-compile testing only.
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/pnp/isapnp/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/power/reset/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pnp/isapnp/Kconfig b/drivers/pnp/isapnp/Kconfig
-index d0479a563123..79bd48f1dd94 100644
---- a/drivers/pnp/isapnp/Kconfig
-+++ b/drivers/pnp/isapnp/Kconfig
-@@ -4,7 +4,7 @@
- #
- config ISAPNP
- 	bool "ISA Plug and Play support"
--	depends on ISA || COMPILE_TEST
-+	depends on ISA || (HAS_IOPORT && COMPILE_TEST)
+diff --git a/drivers/power/reset/Kconfig b/drivers/power/reset/Kconfig
+index 4b563db3ab3e..96b91eaca0cd 100644
+--- a/drivers/power/reset/Kconfig
++++ b/drivers/power/reset/Kconfig
+@@ -151,6 +151,7 @@ config POWER_RESET_OXNAS
+ config POWER_RESET_PIIX4_POWEROFF
+ 	tristate "Intel PIIX4 power-off driver"
+ 	depends on PCI
++	depends on HAS_IOPORT
+ 	depends on MIPS || COMPILE_TEST
  	help
- 	  Say Y here if you would like support for ISA Plug and Play devices.
- 	  Some information is in <file:Documentation/driver-api/isapnp.rst>.
+ 	  This driver supports powering off a system using the Intel PIIX4
 -- 
 2.32.0
 
