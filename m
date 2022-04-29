@@ -2,92 +2,78 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 912E0C43219
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:52:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B5DC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:52:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376531AbiD2NzS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 09:55:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51692 "EHLO
+        id S1376535AbiD2NzT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 09:55:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376464AbiD2Ny5 (ORCPT
+        with ESMTP id S1376468AbiD2Ny5 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 09:54:57 -0400
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57B035A14F;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 765055BE76;
         Fri, 29 Apr 2022 06:51:31 -0700 (PDT)
 Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TBZSqW029789;
-        Fri, 29 Apr 2022 13:51:25 GMT
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TBZSqY029789;
+        Fri, 29 Apr 2022 13:51:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=JsP9DZ13GY9p4Te/4OhuyLur42PMbft/qLBbv9gdVfA=;
- b=NdBt+3oWgMAh6kkB5ONjj6VT9226CnPF3qib/HpQq0itE/3j34BjXwWM5FT6Ri6Ob4Eg
- pn9x+wVa57SeWNcXePpggb2jaoFu2r463WXTlBY/ycXqyQdgWD6DAweWjdfGwvHHLcZ4
- 0BELjPDh2ikuzvNHGlgfWPu6yMBFNX073G7yzY25Bcn7gcZPR+GB66j2hfmXoZUMtn6D
- 03zaAaVsCxCRP24JO38Ldtq0xJFFZa7JoHLu59iMa8vi+lR0tsQqecuKMCprks0W0qi4
- 3Llkk2yFvVhDIASkWVZs+XT9/c41zqI9nHmIeO//3VK8NM1MYLngreFg61Ftcqjk7q9H NA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqv5rjk2f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:24 +0000
-Received: from m0098399.ppops.net (m0098399.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 23TDVxnB015749;
-        Fri, 29 Apr 2022 13:51:24 GMT
+ bh=0YZGzId6ewK9csYggsw+WYYFHpmL7P8ZiGT1L6Q4FQ8=;
+ b=XF5hMqjcp6gG3yWzqOpB4ZzbVA0EfDOTaipeqXb2pdrJe633p9X9gpWFgODWLrcQHmOv
+ yH/S8RDQXGBnkzKSgVH1hvu82FhbDVdSgL+xujKc30JKFoW97InYQPuqltGd7s0BBNfl
+ D44E8+tTgYD/GBIGUxOIsCNFx75k0Jyy7fAc5R4rnMV1by2HUNwZDLBrz8U8EycznXFQ
+ OUHT/wuq2npwrn85+MLexlizHvNf3tCDGy/HXOPbwIBEty5dctCF8a5jOBYRMWR6L5c/
+ hTdfRia3KLhwf0VPdGh/ohnLzYIRHZMhRGfQOVG+ma6lIQrR5LGyKlCWUHqw0dQV7zU3 MQ== 
 Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqv5rjk1c-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqv5rjk2r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 13:51:26 +0000
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDQmHf014253;
+        Fri, 29 Apr 2022 13:51:24 GMT
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
+        by ppma04ams.nl.ibm.com with ESMTP id 3fm93916wa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Fri, 29 Apr 2022 13:51:24 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDQlvl014243;
-        Fri, 29 Apr 2022 13:51:21 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma04ams.nl.ibm.com with ESMTP id 3fm93916w4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:21 +0000
 Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpJ9F38273394
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpMTR48169240
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Apr 2022 13:51:19 GMT
+        Fri, 29 Apr 2022 13:51:22 GMT
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 17FDA4C040;
-        Fri, 29 Apr 2022 13:51:19 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 153D44C044;
+        Fri, 29 Apr 2022 13:51:22 +0000 (GMT)
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A8D314C044;
-        Fri, 29 Apr 2022 13:51:18 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id C9F544C040;
+        Fri, 29 Apr 2022 13:51:21 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 29 Apr 2022 13:51:18 +0000 (GMT)
+        Fri, 29 Apr 2022 13:51:21 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Dave Airlie <airlied@redhat.com>,
-        Gerd Hoffmann <kraxel@redhat.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        virtualization@lists.linux-foundation.org (open list:DRM DRIVER FOR QXL
-        VIRTUAL GPU),
-        spice-devel@lists.freedesktop.org (open list:DRM DRIVER FOR QXL VIRTUAL
-        GPU), dri-devel@lists.freedesktop.org (open list:DRM DRIVERS)
-Subject: [RFC v2 08/39] drm: handle HAS_IOPORT dependencies
-Date:   Fri, 29 Apr 2022 15:50:13 +0200
-Message-Id: <20220429135108.2781579-16-schnelle@linux.ibm.com>
+        linux-i2c@vger.kernel.org (open list:I2C SUBSYSTEM HOST DRIVERS)
+Subject: [RFC v2 12/39] i2c: add HAS_IOPORT dependencies
+Date:   Fri, 29 Apr 2022 15:50:19 +0200
+Message-Id: <20220429135108.2781579-22-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: Z2_b3Ep6jzQYlZLubaqzG5wd29WjJfWI
-X-Proofpoint-ORIG-GUID: 2dZ9-j-Mnz9uF8ZFVdGA_r1MSqumR5yW
+X-Proofpoint-GUID: HkJYotdJgbUNqVRdMHjYEmWTr-xVYKOD
+X-Proofpoint-ORIG-GUID: HkJYotdJgbUNqVRdMHjYEmWTr-xVYKOD
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-04-29_06,2022-04-28_01,2022-02-23_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
  clxscore=1011 malwarescore=0 impostorscore=0 bulkscore=0
  lowpriorityscore=0 priorityscore=1501 mlxscore=0 adultscore=0 spamscore=0
- mlxlogscore=708 classifier=spam adjust=0 reason=mlx scancount=1
+ mlxlogscore=824 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2202240000 definitions=main-2204290078
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -95,113 +81,168 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
 not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them. In the bochs driver there is optional MMIO
-support detected at runtime, warn if this isn't taken when
-HAS_IOPORT is not defined.
-
-There is also a direct and hard coded use in cirrus.c which according to
-the comment is only necessary during resume.  Let's just skip this as
-for example s390 which doesn't have I/O port support also doesen't
-support suspend/resume.
+those drivers using them.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/gpu/drm/qxl/Kconfig   |  1 +
- drivers/gpu/drm/tiny/bochs.c  | 19 +++++++++++++++++++
- drivers/gpu/drm/tiny/cirrus.c |  2 ++
- 3 files changed, 22 insertions(+)
+ drivers/i2c/busses/Kconfig | 31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/gpu/drm/qxl/Kconfig b/drivers/gpu/drm/qxl/Kconfig
-index ca3f51c2a8fe..d0e0d440c8d9 100644
---- a/drivers/gpu/drm/qxl/Kconfig
-+++ b/drivers/gpu/drm/qxl/Kconfig
-@@ -2,6 +2,7 @@
- config DRM_QXL
- 	tristate "QXL virtual GPU"
- 	depends on DRM && PCI && MMU
+diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+index a1bae59208e3..d1d97420cf10 100644
+--- a/drivers/i2c/busses/Kconfig
++++ b/drivers/i2c/busses/Kconfig
+@@ -18,7 +18,7 @@ config I2C_CCGX_UCSI
+ 
+ config I2C_ALI1535
+ 	tristate "ALI 1535"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the SMB
+ 	  Host controller on Acer Labs Inc. (ALI) M1535 South Bridges.  The SMB
+@@ -30,7 +30,7 @@ config I2C_ALI1535
+ 
+ config I2C_ALI1563
+ 	tristate "ALI 1563"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the SMB
+ 	  Host controller on Acer Labs Inc. (ALI) M1563 South Bridges.  The SMB
+@@ -42,7 +42,7 @@ config I2C_ALI1563
+ 
+ config I2C_ALI15X3
+ 	tristate "ALI 15x3"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the
+ 	  Acer Labs Inc. (ALI) M1514 and M1543 motherboard I2C interfaces.
+@@ -52,7 +52,7 @@ config I2C_ALI15X3
+ 
+ config I2C_AMD756
+ 	tristate "AMD 756/766/768/8111 and nVidia nForce"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the AMD
+ 	  756/766/768 mainboard I2C interfaces.  The driver also includes
+@@ -77,7 +77,7 @@ config I2C_AMD756_S4882
+ 
+ config I2C_AMD8111
+ 	tristate "AMD 8111"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the
+ 	  second (SMBus 2.0) AMD 8111 mainboard I2C interface.
+@@ -107,7 +107,7 @@ config I2C_HIX5HD2
+ 
+ config I2C_I801
+ 	tristate "Intel 82801 (ICH/PCH)"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	select CHECK_SIGNATURE if X86 && DMI
+ 	select I2C_SMBUS
+ 	help
+@@ -162,7 +162,7 @@ config I2C_I801
+ 
+ config I2C_ISCH
+ 	tristate "Intel SCH SMBus 1.0"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	select LPC_SCH
+ 	help
+ 	  Say Y here if you want to use SMBus controller on the Intel SCH
+@@ -183,7 +183,7 @@ config I2C_ISMT
+ 
+ config I2C_PIIX4
+ 	tristate "Intel PIIX4 and compatible (ATI/AMD/Serverworks/Broadcom/SMSC)"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the Intel
+ 	  PIIX4 family of mainboard I2C interfaces.  Specifically, the following
+@@ -229,7 +229,7 @@ config I2C_CHT_WC
+ 
+ config I2C_NFORCE2
+ 	tristate "Nvidia nForce2, nForce3 and nForce4"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the Nvidia
+ 	  nForce2, nForce3 and nForce4 families of mainboard I2C interfaces.
+@@ -262,7 +262,7 @@ config I2C_NVIDIA_GPU
+ 
+ config I2C_SIS5595
+ 	tristate "SiS 5595"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the
+ 	  SiS5595 SMBus (a subset of I2C) interface.
+@@ -272,7 +272,7 @@ config I2C_SIS5595
+ 
+ config I2C_SIS630
+ 	tristate "SiS 630/730/964"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the
+ 	  SiS630, SiS730 and SiS964 SMBus (a subset of I2C) interface.
+@@ -282,7 +282,7 @@ config I2C_SIS630
+ 
+ config I2C_SIS96X
+ 	tristate "SiS 96x"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the SiS
+ 	  96x SMBus (a subset of I2C) interfaces.  Specifically, the following
+@@ -300,7 +300,7 @@ config I2C_SIS96X
+ 
+ config I2C_VIA
+ 	tristate "VIA VT82C586B"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	select I2C_ALGOBIT
+ 	help
+ 	  If you say yes to this option, support will be included for the VIA
+@@ -311,7 +311,7 @@ config I2C_VIA
+ 
+ config I2C_VIAPRO
+ 	tristate "VIA VT82C596/82C686/82xx and CX700/VX8xx/VX900"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  If you say yes to this option, support will be included for the VIA
+ 	  VT82C596 and later SMBus interface.  Specifically, the following
+@@ -849,6 +849,7 @@ config I2C_NPCM7XX
+ 
+ config I2C_OCORES
+ 	tristate "OpenCores I2C Controller"
 +	depends on HAS_IOPORT
- 	select DRM_KMS_HELPER
- 	select DRM_TTM
- 	select DRM_TTM_HELPER
-diff --git a/drivers/gpu/drm/tiny/bochs.c b/drivers/gpu/drm/tiny/bochs.c
-index ed971c8bb446..9acc726d99ec 100644
---- a/drivers/gpu/drm/tiny/bochs.c
-+++ b/drivers/gpu/drm/tiny/bochs.c
-@@ -1,5 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0-or-later
- 
-+#include <asm/bug.h>
- #include <linux/pci.h>
- 
- #include <drm/drm_aperture.h>
-@@ -102,7 +103,11 @@ static void bochs_vga_writeb(struct bochs_device *bochs, u16 ioport, u8 val)
- 
- 		writeb(val, bochs->mmio + offset);
- 	} else {
-+#ifdef HAS_IOPORT
- 		outb(val, ioport);
-+#else
-+		WARN_ONCE(1, "Non-MMIO bochs device needs HAS_IOPORT");
-+#endif
- 	}
- }
- 
-@@ -116,7 +121,12 @@ static u8 bochs_vga_readb(struct bochs_device *bochs, u16 ioport)
- 
- 		return readb(bochs->mmio + offset);
- 	} else {
-+#ifdef HAS_IOPORT
- 		return inb(ioport);
-+#else
-+		WARN_ONCE(1, "Non-MMIO bochs device needs HAS_IOPORT");
-+		return 0xff;
-+#endif
- 	}
- }
- 
-@@ -129,8 +139,13 @@ static u16 bochs_dispi_read(struct bochs_device *bochs, u16 reg)
- 
- 		ret = readw(bochs->mmio + offset);
- 	} else {
-+#ifdef HAS_IOPORT
- 		outw(reg, VBE_DISPI_IOPORT_INDEX);
- 		ret = inw(VBE_DISPI_IOPORT_DATA);
-+#else
-+		WARN_ONCE(1, "Non-MMIO bochs device needs HAS_IOPORT");
-+		ret = 0xffff;
-+#endif
- 	}
- 	return ret;
- }
-@@ -142,8 +157,12 @@ static void bochs_dispi_write(struct bochs_device *bochs, u16 reg, u16 val)
- 
- 		writew(val, bochs->mmio + offset);
- 	} else {
-+#ifdef HAS_IOPORT
- 		outw(reg, VBE_DISPI_IOPORT_INDEX);
- 		outw(val, VBE_DISPI_IOPORT_DATA);
-+#else
-+		WARN_ONCE(1, "Non-MMIO bochs device needs HAS_IOPORT");
-+#endif
- 	}
- }
- 
-diff --git a/drivers/gpu/drm/tiny/cirrus.c b/drivers/gpu/drm/tiny/cirrus.c
-index c8e791840862..0dc4788c5399 100644
---- a/drivers/gpu/drm/tiny/cirrus.c
-+++ b/drivers/gpu/drm/tiny/cirrus.c
-@@ -306,8 +306,10 @@ static int cirrus_mode_set(struct cirrus_device *cirrus,
- 
- 	cirrus_set_start_address(cirrus, 0);
- 
-+#ifdef CONFIG_HAS_IOPORT
- 	/* Unblank (needed on S3 resume, vgabios doesn't do it then) */
- 	outb(0x20, 0x3c0);
-+#endif
- 
- 	drm_dev_exit(idx);
- 	return 0;
+ 	help
+ 	  If you say yes to this option, support will be included for the
+ 	  OpenCores I2C controller. For details see
+@@ -1232,6 +1233,7 @@ config I2C_CP2615
+ config I2C_PARPORT
+ 	tristate "Parallel port adapter"
+ 	depends on PARPORT
++	depends on HAS_IOPORT
+ 	select I2C_ALGOBIT
+ 	select I2C_SMBUS
+ 	help
+@@ -1330,6 +1332,7 @@ config I2C_ICY
+ config I2C_MLXCPLD
+ 	tristate "Mellanox I2C driver"
+ 	depends on X86_64 || COMPILE_TEST
++	depends on HAS_IOPORT
+ 	help
+ 	  This exposes the Mellanox platform I2C busses to the linux I2C layer
+ 	  for X86 based systems.
 -- 
 2.32.0
 
