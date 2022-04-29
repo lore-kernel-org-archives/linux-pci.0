@@ -2,98 +2,122 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 039F0C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 14:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B97B8C433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 14:32:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350309AbiD2Ofe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 10:35:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43444 "EHLO
+        id S1377376AbiD2OgL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 10:36:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234264AbiD2Ofd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 10:35:33 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46D25101F1;
-        Fri, 29 Apr 2022 07:32:15 -0700 (PDT)
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TDsAVq015832;
-        Fri, 29 Apr 2022 14:31:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- mime-version : content-transfer-encoding; s=pp1;
- bh=+Pd3boeYYOqUdToIy6lpJJ2YBcwWkKSMUxL2UvbDusM=;
- b=m6DraJhAHR47/7DzBzYzZ9l7B31AuMWOtvmaMt43ukcKlb3nq8NzZy5wJFVUe84hS1ay
- CUJYXIIEsU1QFeuB0YjERLD9e1gbpDrYdqvZ221CelK7b8jQa7Cno55RhyTe4ewtMt0D
- AVeiB+6tmQ+5GpGt7Hbstu7FnPP6OX7aXaYmdlR6iUUxCl2clG+7cOPqI9jA4Xl4xDth
- WBS5ryczNzuJaW5d9Q8hKRY/OOgnFNdont4CAgqm3DGlk5MuqG87dR2Bob91Q5LW22lZ
- 1hBWhx7uQQtykV3LmKBF1hLELkQ7m72ZS2ekDLjuYa6OinXDZS89h2uDleAK3bekNwTD hg== 
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fque1dju2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 14:31:53 +0000
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TEJqoB028882;
-        Fri, 29 Apr 2022 14:31:51 GMT
-Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
-        by ppma03fra.de.ibm.com with ESMTP id 3fm938yc1y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 14:31:51 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TEIe2S52429238
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Apr 2022 14:18:40 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C7DB242042;
-        Fri, 29 Apr 2022 14:31:48 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2963742041;
-        Fri, 29 Apr 2022 14:31:48 +0000 (GMT)
-Received: from sig-9-145-61-57.uk.ibm.com (unknown [9.145.61.57])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 29 Apr 2022 14:31:48 +0000 (GMT)
-Message-ID: <81bf3efbd65eb4627c6a75d01a107a8a97507026.camel@linux.ibm.com>
-Subject: Re: [PATCH 15/37] hwmon: add HAS_IOPORT dependencies
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        with ESMTP id S1377371AbiD2OgK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 10:36:10 -0400
+Received: from mail-qk1-x72b.google.com (mail-qk1-x72b.google.com [IPv6:2607:f8b0:4864:20::72b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D842BA6E35
+        for <linux-pci@vger.kernel.org>; Fri, 29 Apr 2022 07:32:50 -0700 (PDT)
+Received: by mail-qk1-x72b.google.com with SMTP id a22so2951181qkl.5
+        for <linux-pci@vger.kernel.org>; Fri, 29 Apr 2022 07:32:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=3O9IbsR8egFahs985GCQfMgbbIRRPAH3wloOj+Oxdhg=;
+        b=SA4881NwL1mOajreSJkMArXs+IFG++sFNGmbhdo7ZvATrNuMjzEDFYou8WmyAo8NLf
+         cxaV03r5I3emLbYofvret1R3HJQQVgeKzXuOMAcgawXIRJW5MhyW+Yna9E91DuONn8sE
+         JrhBoaaL2dM/iofKeoXwC0Jpen1ZxaWkzJwXVUX5zhX3Z/zPC4UoL5pc/0Bi+K995Tm2
+         3oAtSsZWsmFX82LtcplTYFDVnLBhG7bBjc5r2m/OjMu+D3uh9OsZcUufjmxLRhIRQqTG
+         cY2vqyKC5E8ux8ifQOR/wDuefPQpr1l44QOKRFZCU/rIwO/1tDkFH7ORJhSkOerT0cZ2
+         K8BA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=3O9IbsR8egFahs985GCQfMgbbIRRPAH3wloOj+Oxdhg=;
+        b=SeQhw8xujc9U9C9GcQg1TD8US2UebXzFR1AqBMJnA45Z4w1/Tm5OAX57HAqgrQEBi7
+         2KqWI8lB5zSzW8ipvZwKrzRWioedvzgG8A7zGbSDRjG9cSOuKh10n+mxMBmDZIwRBoBH
+         7Om7oO5mBW9hTL+blJ+YHAPvE1bYaVg8m9MJ7qo5TCOhe2VcAua4stQxsmVpLvVGPmnr
+         jwft1ZPtkJPT+K1ko8jz7bUWcH53sxwFji/1kfJF6oQyOrga/1EwCftSAgRvQsT9zrCc
+         pzwfYUfItovE5lr0vO5qZGf91510XL/SMT7Y1hkaJAWT31imiJf9kapjufmYwv5zm1FY
+         CeXQ==
+X-Gm-Message-State: AOAM532p6OxZGdTUwNe7WbU763tyFEUvIbRd+83GS0YLgRot28NpWoAm
+        Vm9RwbkIDK52dFwUEwZTJqfM8A==
+X-Google-Smtp-Source: ABdhPJyy84R40nLJZl4f5lZSrOwppSdNFvxQ/yq7ZXL7CCmahwab1Thd/2hvhrIE32LX9iOmok1mPQ==
+X-Received: by 2002:a37:f516:0:b0:69f:83cd:f557 with SMTP id l22-20020a37f516000000b0069f83cdf557mr10824296qkk.555.1651242768910;
+        Fri, 29 Apr 2022 07:32:48 -0700 (PDT)
+Received: from fedora (69-109-179-158.lightspeed.dybhfl.sbcglobal.net. [69.109.179.158])
+        by smtp.gmail.com with ESMTPSA id p5-20020ae9f305000000b0069e6dcc4188sm1423017qkg.57.2022.04.29.07.32.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 Apr 2022 07:32:48 -0700 (PDT)
+Date:   Fri, 29 Apr 2022 10:32:46 -0400
+From:   William Breathitt Gray <william.gray@linaro.org>
+To:     Niklas Schnelle <schnelle@linux.ibm.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        "open list:HARDWARE MONITORING" <linux-hwmon@vger.kernel.org>
-Date:   Fri, 29 Apr 2022 16:31:47 +0200
-In-Reply-To: <20220429135108.2781579-27-schnelle@linux.ibm.com>
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>
+Subject: Re: [RFC v2 10/39] gpio: add HAS_IOPORT dependencies
+Message-ID: <Ymv3DnS1vPMY8QIg@fedora>
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
-         <20220429135108.2781579-27-schnelle@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: McOyZFxNh6EASf-nj4fPz0W4TI3_yvzr
-X-Proofpoint-GUID: McOyZFxNh6EASf-nj4fPz0W4TI3_yvzr
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-04-29_07,2022-04-28_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 suspectscore=0
- priorityscore=1501 spamscore=0 impostorscore=0 mlxscore=0
- lowpriorityscore=0 adultscore=0 phishscore=0 malwarescore=0
- mlxlogscore=441 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2202240000 definitions=main-2204290079
+ <20220429135108.2781579-19-schnelle@linux.ibm.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="Cw51uSVYoGjleSw0"
+Content-Disposition: inline
+In-Reply-To: <20220429135108.2781579-19-schnelle@linux.ibm.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 2022-04-29 at 15:50 +0200, Niklas Schnelle wrote:
-> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+
+--Cw51uSVYoGjleSw0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Apr 29, 2022 at 03:50:16PM +0200, Niklas Schnelle wrote:
+> In a future patch HAS_IOPORT=3Dn will result in inb()/outb() and friends
 > not being declared. We thus need to add HAS_IOPORT as dependency for
 > those drivers using them.
-> 
+>=20
 > Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 > ---
+>  drivers/gpio/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
+> index 45764ec3b2eb..14e5998ee95c 100644
+> --- a/drivers/gpio/Kconfig
+> +++ b/drivers/gpio/Kconfig
+> @@ -697,7 +697,7 @@ config GPIO_VR41XX
+> =20
+>  config GPIO_VX855
+>  	tristate "VIA VX855/VX875 GPIO"
+> -	depends on (X86 || COMPILE_TEST) && PCI
+> +	depends on (X86 || COMPILE_TEST) && PCI && HAS_IOPORT
+>  	select MFD_CORE
+>  	select MFD_VX855
+>  	help
+> --=20
+> 2.32.0
 
-Sorry everyone. I sent this as PATCH in error while preparing to sent
-the same series as RFC. Since e-mail has no remote delete and I lack a
-time machine let's just all pretend you only got the RFC.
+I noticed a number of other GPIO drivers make use of inb()/outb() -- for
+example the PC104 drivers -- should the respective Kconfigs for those
+drivers also be adjusted here?
 
+William Breathitt Gray
 
+--Cw51uSVYoGjleSw0
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQSNN83d4NIlKPjon7a1SFbKvhIjKwUCYmv28AAKCRC1SFbKvhIj
+K9u2AP0UA+4zFLE6ibsTpOqIeY862n11cgnRQU0F5BoTpsqG6gD/fLWsB6OMJM2o
+mmkhnCExcMN+ipH3bm/pBsjIkmHHaAY=
+=/Adj
+-----END PGP SIGNATURE-----
+
+--Cw51uSVYoGjleSw0--
