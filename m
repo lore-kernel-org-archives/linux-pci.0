@@ -2,126 +2,120 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD5E8C4167D
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:54:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B46C43219
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:54:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376842AbiD2N51 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 09:57:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54276 "EHLO
+        id S1376639AbiD2N52 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 09:57:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376745AbiD2N4o (ORCPT
+        with ESMTP id S1376524AbiD2N4o (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 09:56:44 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44690CE4B6;
-        Fri, 29 Apr 2022 06:51:54 -0700 (PDT)
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TCKEnA024333;
-        Fri, 29 Apr 2022 13:51:50 GMT
+Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDAD9CE48A;
+        Fri, 29 Apr 2022 06:51:52 -0700 (PDT)
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TCc4e6016905;
+        Fri, 29 Apr 2022 13:51:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=VtjPCAEJBXs1gxsqkuVy+3yvJKxteb9KMjaZfFc7UHc=;
- b=rt80VcN87ARp8+8xHVFyABcGc53AULF2sE+ooCC7l+yU2/ECZJpDYT74Pg0fwk77uRH6
- vDd95mC127y/Q4ZSXKcNpqRbLAOEF6KXHhMDbGkN8Ari7exXaVaNH+6B5L9euvo5c85K
- AiksS1FbI8A1kt7dsvmTLdGK22OdVqMAJwc21Iswavy6Q0fNdh2f3mCEXMA4NUqpYYLI
- ftiKdG+F64KFLFEddjPhe8qa1fisx13kBzh8ngpGZ7P5z2b/Q5a0Kfbem2PygV1b2Tlr
- T1d0h7M+QNSKGNE6FCxBaYVTCnEJEMpYms7bYaZegxphndVSbK1zmqZbTTUtotzkt0ht Tg== 
-Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqnke420r-1
+ bh=bsnoYaCxcP6yUiJWmu0WIZU/5X+rJ9IzWoxXls9WFFs=;
+ b=pflSrtABJWUVIxNMnch6wQF9To4KyKo7kIIY40+gcZ3dHVU5J+lc3mWVU5awVGNqS3nS
+ 19xLh8indDER4en+P/nSwOxIBlDzDZxqjGNiv2+JuyEA5aPSxnk4XUlXqhss8dbmcXlo
+ /3cQeSuKIdsQhspwM6dIqErRlAfiBsqdZZhPLY7s5rIT4S+mHVxuK97XEPcB464sf6Zc
+ wMPcqOtuIEIafSPckeClSfN1mkV/p+uXBvQtcrhdEdRB5tI0cRYg9+XJvbFlTv0awEuY
+ blQgU7XQcCDbY3LsnTKE7B+vjht6n5q3zPTFAvdzMXoN8JnSqQJMglfZTt8tlxjcOMls Qw== 
+Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqqtnsuq3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:49 +0000
-Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
-        by ppma04fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDRnL5027477;
-        Fri, 29 Apr 2022 13:51:47 GMT
-Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
-        by ppma04fra.de.ibm.com with ESMTP id 3fm938yanj-1
+        Fri, 29 Apr 2022 13:51:40 +0000
+Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
+        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDS1BU025967;
+        Fri, 29 Apr 2022 13:51:38 GMT
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
+        by ppma05fra.de.ibm.com with ESMTP id 3fm938yag9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:47 +0000
+        Fri, 29 Apr 2022 13:51:38 +0000
 Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDprq625035182
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpZ9X15008044
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Apr 2022 13:51:53 GMT
+        Fri, 29 Apr 2022 13:51:35 GMT
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 241BF4C044;
-        Fri, 29 Apr 2022 13:51:45 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id B90BC4C040;
+        Fri, 29 Apr 2022 13:51:35 +0000 (GMT)
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id DEB8A4C040;
-        Fri, 29 Apr 2022 13:51:44 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 72E6F4C04A;
+        Fri, 29 Apr 2022 13:51:35 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 29 Apr 2022 13:51:44 +0000 (GMT)
+        Fri, 29 Apr 2022 13:51:35 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
-Subject: [PATCH 34/37] firmware: dmi-sysfs: handle HAS_IOPORT=n
-Date:   Fri, 29 Apr 2022 15:50:59 +0200
-Message-Id: <20220429135108.2781579-62-schnelle@linux.ibm.com>
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Benson Leung <bleung@chromium.org>,
+        chrome-platform@lists.linux.dev (open list:CHROME HARDWARE PLATFORM
+        SUPPORT)
+Subject: [RFC v2 26/39] platform: add HAS_IOPORT dependencies
+Date:   Fri, 29 Apr 2022 15:50:43 +0200
+Message-Id: <20220429135108.2781579-46-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: WGQA2v0dSg8yDr5FtMAE4b6evcbMhdR4
-X-Proofpoint-GUID: WGQA2v0dSg8yDr5FtMAE4b6evcbMhdR4
+X-Proofpoint-ORIG-GUID: EA4jbLDcCsqf0lwrM3l98xAtoxb0RX3a
+X-Proofpoint-GUID: EA4jbLDcCsqf0lwrM3l98xAtoxb0RX3a
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-04-29_06,2022-04-28_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 bulkscore=0
- malwarescore=0 suspectscore=0 impostorscore=0 clxscore=1015 adultscore=0
- priorityscore=1501 spamscore=0 lowpriorityscore=0 phishscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2204290078
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
+ adultscore=0 impostorscore=0 malwarescore=0 suspectscore=0 phishscore=0
+ priorityscore=1501 spamscore=0 clxscore=1015 mlxlogscore=706
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2204290078
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to guard sections of code calling them
-as alternative access methods.
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/firmware/dmi-sysfs.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/platform/chrome/Kconfig          | 1 +
+ drivers/platform/chrome/wilco_ec/Kconfig | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/firmware/dmi-sysfs.c b/drivers/firmware/dmi-sysfs.c
-index 3a353776bd34..384988a10d09 100644
---- a/drivers/firmware/dmi-sysfs.c
-+++ b/drivers/firmware/dmi-sysfs.c
-@@ -310,6 +310,7 @@ static struct kobj_type dmi_system_event_log_ktype = {
- 	.default_groups = dmi_sysfs_sel_groups,
- };
- 
-+#ifdef CONFIG_HAS_IOPORT
- typedef u8 (*sel_io_reader)(const struct dmi_system_event_log *sel,
- 			    loff_t offset);
- 
-@@ -374,6 +375,7 @@ static ssize_t dmi_sel_raw_read_io(struct dmi_sysfs_entry *entry,
- 
- 	return wrote;
- }
-+#endif
- 
- static ssize_t dmi_sel_raw_read_phys32(struct dmi_sysfs_entry *entry,
- 				       const struct dmi_system_event_log *sel,
-@@ -409,11 +411,13 @@ static ssize_t dmi_sel_raw_read_helper(struct dmi_sysfs_entry *entry,
- 	memcpy(&sel, dh, sizeof(sel));
- 
- 	switch (sel.access_method) {
-+#ifdef CONFIG_HAS_IOPORT
- 	case DMI_SEL_ACCESS_METHOD_IO8:
- 	case DMI_SEL_ACCESS_METHOD_IO2x8:
- 	case DMI_SEL_ACCESS_METHOD_IO16:
- 		return dmi_sel_raw_read_io(entry, &sel, state->buf,
- 					   state->pos, state->count);
-+#endif
- 	case DMI_SEL_ACCESS_METHOD_PHYS32:
- 		return dmi_sel_raw_read_phys32(entry, &sel, state->buf,
- 					       state->pos, state->count);
+diff --git a/drivers/platform/chrome/Kconfig b/drivers/platform/chrome/Kconfig
+index 75e93efd669f..51f895663e95 100644
+--- a/drivers/platform/chrome/Kconfig
++++ b/drivers/platform/chrome/Kconfig
+@@ -111,6 +111,7 @@ config CROS_EC_SPI
+ config CROS_EC_LPC
+ 	tristate "ChromeOS Embedded Controller (LPC)"
+ 	depends on CROS_EC && ACPI && (X86 || COMPILE_TEST)
++	depends on HAS_IOPORT
+ 	help
+ 	  If you say Y here, you get support for talking to the ChromeOS EC
+ 	  over an LPC bus, including the LPC Microchip EC (MEC) variant.
+diff --git a/drivers/platform/chrome/wilco_ec/Kconfig b/drivers/platform/chrome/wilco_ec/Kconfig
+index 49e8530ca0ac..d1648fb099ac 100644
+--- a/drivers/platform/chrome/wilco_ec/Kconfig
++++ b/drivers/platform/chrome/wilco_ec/Kconfig
+@@ -3,6 +3,7 @@ config WILCO_EC
+ 	tristate "ChromeOS Wilco Embedded Controller"
+ 	depends on X86 || COMPILE_TEST
+ 	depends on ACPI && CROS_EC_LPC && LEDS_CLASS
++	depends on HAS_IOPORT
+ 	help
+ 	  If you say Y here, you get support for talking to the ChromeOS
+ 	  Wilco EC over an eSPI bus. This uses a simple byte-level protocol
 -- 
 2.32.0
 
