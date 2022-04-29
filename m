@@ -2,103 +2,74 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94A9CC433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 14:39:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F8BFC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 14:41:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377674AbiD2OnG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 10:43:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33252 "EHLO
+        id S1377810AbiD2OpA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 10:45:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377672AbiD2Om0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 10:42:26 -0400
-X-Greylist: delayed 559 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 29 Apr 2022 07:37:40 PDT
-Received: from sonata.ens-lyon.org (domu-toccata.ens-lyon.fr [140.77.166.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ADB83B558;
-        Fri, 29 Apr 2022 07:37:39 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-        by sonata.ens-lyon.org (Postfix) with ESMTP id 18E2120164;
-        Fri, 29 Apr 2022 16:28:19 +0200 (CEST)
-Received: from sonata.ens-lyon.org ([127.0.0.1])
-        by localhost (sonata.ens-lyon.org [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id SY08BDkqk9Wk; Fri, 29 Apr 2022 16:28:19 +0200 (CEST)
-Received: from begin (nat-inria-interne-52-gw-01-bso.bordeaux.inria.fr [194.199.1.52])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        with ESMTP id S1378157AbiD2Oo2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 10:44:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C52395AEDE;
+        Fri, 29 Apr 2022 07:41:01 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sonata.ens-lyon.org (Postfix) with ESMTPSA id 6C8A82015D;
-        Fri, 29 Apr 2022 16:28:18 +0200 (CEST)
-Received: from samy by begin with local (Exim 4.95)
-        (envelope-from <samuel.thibault@ens-lyon.org>)
-        id 1nkRbV-006Sju-NJ;
-        Fri, 29 Apr 2022 16:28:17 +0200
-Date:   Fri, 29 Apr 2022 16:28:17 +0200
-From:   Samuel Thibault <samuel.thibault@ens-lyon.org>
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B04D861A09;
+        Fri, 29 Apr 2022 14:41:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FBDCC385A7;
+        Fri, 29 Apr 2022 14:40:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651243260;
+        bh=zbW9iUV/RG0Ob9qAu90IBbElC2QsUzjzzLanYd3CW2M=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=sAWtZ+/ks6cyJgabSY5Jq8dYVXgNO022Tjz9BAzzocHhoo6lSN9DatoyKFxMY0CFy
+         940ZJUR6IM7zhrgsB8KjzwMTs0alKb5kHwA3/67r6bnt0Ceon93VN1dWKlQYUR4DTy
+         g7s5V47TBPbcnngPaF4bXMvoDkfI1ulc0j18spu16qR8hSnDGDlXUx1AcC1USmufNB
+         Tt/avoZjV2BmF9va7ZTWfHLXOLaif7cr0vu32M9ufiwFSwzr8NoLkBRL+NwIlPts4R
+         kSLxblpGiruzhzI3KwcMz98lGkqpsjvSUnbTTDlW3WqQq1eJXgAGPnr4J3A8Oeh7sC
+         F2zLO+tojc9Rw==
+From:   Kalle Valo <kvalo@kernel.org>
 To:     Niklas Schnelle <schnelle@linux.ibm.com>
 Cc:     Arnd Bergmann <arnd@arndb.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        William Hubbs <w.d.hubbs@gmail.com>,
-        Chris Brannon <chris@the-brannons.com>,
-        Kirk Reiser <kirk@reisers.ca>,
-        "open list:SPEAKUP CONSOLE SPEECH DRIVER" <speakup@linux-speakup.org>
-Subject: Re: [PATCH 06/37] speakup: add HAS_IOPORT dependency for
- SPEAKUP_SERIALIO
-Message-ID: <20220429142817.knvopowhs2ibzz6z@begin>
-Mail-Followup-To: Samuel Thibault <samuel.thibault@ens-lyon.org>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        William Hubbs <w.d.hubbs@gmail.com>,
-        Chris Brannon <chris@the-brannons.com>,
-        Kirk Reiser <kirk@reisers.ca>,
-        "open list:SPEAKUP CONSOLE SPEECH DRIVER" <speakup@linux-speakup.org>
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Jouni Malinen <j@w1.fi>,
+        linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS)),
+        netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
+Subject: Re: [RFC v2 38/39] wireless: add HAS_IOPORT dependencies
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
- <20220429135108.2781579-12-schnelle@linux.ibm.com>
+        <20220429135108.2781579-70-schnelle@linux.ibm.com>
+Date:   Fri, 29 Apr 2022 17:40:53 +0300
+In-Reply-To: <20220429135108.2781579-70-schnelle@linux.ibm.com> (Niklas
+        Schnelle's message of "Fri, 29 Apr 2022 15:51:07 +0200")
+Message-ID: <87zgk4c5qi.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220429135108.2781579-12-schnelle@linux.ibm.com>
-Organization: I am not organized
-User-Agent: NeoMutt/20170609 (1.8.3)
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Niklas Schnelle, le ven. 29 avril 2022 15:50:09 +0200, a ecrit:
+Niklas Schnelle <schnelle@linux.ibm.com> writes:
+
 > In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-> not being declared. SPEAKUP_SERIALIO thus needs to depend on HAS_IOPORT.
-> 
+> not being declared. We thus need to add HAS_IOPORT as dependency for
+> those drivers using them.
+>
 > Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 
-Reviewed-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+I assume this will go via some other tree than wireless-next:
 
-> ---
->  drivers/accessibility/speakup/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/accessibility/speakup/Kconfig b/drivers/accessibility/speakup/Kconfig
-> index 07ecbbde0384..e84fb617acc4 100644
-> --- a/drivers/accessibility/speakup/Kconfig
-> +++ b/drivers/accessibility/speakup/Kconfig
-> @@ -46,6 +46,7 @@ if SPEAKUP
->  config SPEAKUP_SERIALIO
->  	def_bool y
->  	depends on ISA || COMPILE_TEST
-> +	depends on HAS_IOPORT
->  
->  config SPEAKUP_SYNTH_ACNTSA
->  	tristate "Accent SA synthesizer support"
-> -- 
-> 2.32.0
-> 
+Acked-by: Kalle Valo <kvalo@kernel.org>
 
 -- 
-Samuel
----
-Pour une évaluation indépendante, transparente et rigoureuse !
-Je soutiens la Commission d'Évaluation de l'Inria.
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
