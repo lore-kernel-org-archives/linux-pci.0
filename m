@@ -2,95 +2,122 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D383C433F5
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 14:33:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 922C9C433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 14:34:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1377224AbiD2Ogx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 10:36:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49394 "EHLO
+        id S1377464AbiD2OhR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 10:37:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377471AbiD2Ogu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 10:36:50 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14E03A94D1;
-        Fri, 29 Apr 2022 07:33:29 -0700 (PDT)
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TEXBq7011400;
-        Fri, 29 Apr 2022 14:33:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- mime-version : content-transfer-encoding; s=pp1;
- bh=McaJecGfu7nYAlIu5SkfOFk3qp3fcSEUiSvAOWVAX0Q=;
- b=EIXnw1kQYZl5Ds5h3tMU3AF1QNdJ+3oo+Hmca6th8UBl+/JPWioIJpn7dLWjSc19MGY0
- 956y4vqbtn/GYKMAbMIF04PtrkTN/BjNx52wFvVu5g9+Oe2dlCsUdjokAVqhvDa9wUow
- rqq5EKZzIlqw8yexVIfB8xBnxc3RsGy9aQ34hRnuNVixrTHeBZ1RyFcp6W1SryEX/ynW
- I/B2RRQzTd9yFPH232UPpm/tntFmY0it9uibVJ+W2DvUM1lYee+4HIbV4UEJPNnVnqC0
- 1pVmK3aZQg8EaRyVqTPQOFLeFdtDLjku8ne4hzhXOkpGQVlEyrrKoxXrHBe5sb2uvXq9 mQ== 
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3frhvrr04x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 14:33:23 +0000
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TEK62U027829;
-        Fri, 29 Apr 2022 14:33:21 GMT
-Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
-        by ppma06fra.de.ibm.com with ESMTP id 3fm8qhqc72-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 14:33:21 +0000
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TEKAsP52953532
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Apr 2022 14:20:10 GMT
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 45BC9A405C;
-        Fri, 29 Apr 2022 14:33:19 +0000 (GMT)
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C66FEA405B;
-        Fri, 29 Apr 2022 14:33:18 +0000 (GMT)
-Received: from sig-9-145-61-57.uk.ibm.com (unknown [9.145.61.57])
-        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 29 Apr 2022 14:33:18 +0000 (GMT)
-Message-ID: <2b10924e9ac7dbbe4296c3d30513918bb7957299.camel@linux.ibm.com>
-Subject: Re: [PATCH 21/37] pcmcia: add HAS_IOPORT dependencies
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>
+        with ESMTP id S1377482AbiD2OhP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 10:37:15 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA694A94C7
+        for <linux-pci@vger.kernel.org>; Fri, 29 Apr 2022 07:33:56 -0700 (PDT)
+Received: from ptz.office.stw.pengutronix.de ([2a0a:edc0:0:900:1d::77] helo=[127.0.0.1])
+        by metis.ext.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <a.fatoum@pengutronix.de>)
+        id 1nkRgt-00042Z-F1; Fri, 29 Apr 2022 16:33:51 +0200
+Message-ID: <ff7605de-fe12-3bbf-cce9-aec18be9d54e@pengutronix.de>
+Date:   Fri, 29 Apr 2022 16:33:48 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+From:   Ahmad Fatoum <a.fatoum@pengutronix.de>
+Subject: Re: [RFC v2 04/39] char: impi, tpm: depend on HAS_IOPORT
+To:     Niklas Schnelle <schnelle@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Dominik Brodowski <linux@dominikbrodowski.net>
-Date:   Fri, 29 Apr 2022 16:33:18 +0200
-In-Reply-To: <20220429135108.2781579-37-schnelle@linux.ibm.com>
+        Corey Minyard <minyard@acm.org>,
+        Peter Huewe <peterhuewe@gmx.de>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        "moderated list:IPMI SUBSYSTEM" 
+        <openipmi-developer@lists.sourceforge.net>,
+        "open list:TPM DEVICE DRIVER" <linux-integrity@vger.kernel.org>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
-         <20220429135108.2781579-37-schnelle@linux.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
-Mime-Version: 1.0
+ <20220429135108.2781579-7-schnelle@linux.ibm.com>
+ <07c39877d9e940a96be41e21e22fe45dbb73d949.camel@linux.ibm.com>
+Content-Language: en-US
+In-Reply-To: <07c39877d9e940a96be41e21e22fe45dbb73d949.camel@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: TY77ZulIPFqtjmNMU754mAW08oq35z9a
-X-Proofpoint-GUID: TY77ZulIPFqtjmNMU754mAW08oq35z9a
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
- definitions=2022-04-29_07,2022-04-28_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 adultscore=0
- spamscore=0 clxscore=1015 phishscore=0 suspectscore=0 priorityscore=1501
- mlxscore=0 bulkscore=0 lowpriorityscore=0 malwarescore=0 mlxlogscore=468
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
- definitions=main-2204290080
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:900:1d::77
+X-SA-Exim-Mail-From: a.fatoum@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 2022-04-29 at 15:50 +0200, Niklas Schnelle wrote:
-> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-> not being declared. PCMCIA devices are either LEGACY_PCI devices
-> which implies HAS_IOPORT or require HAS_IOPORT.
+Hello Niklas,
+
+On 29.04.22 16:23, Niklas Schnelle wrote:
+>> Hello Niklas,
+>>
+>> On 29.04.22 15:50, Niklas Schnelle wrote:
+>>> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+>>> not being declared. We thus need to add this dependency and ifdef
+>>> sections of code using inb()/outb() as alternative access methods.
+>>>
+>>> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+>>> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+>>
+>> [snip]
+>>
+>>> diff --git a/drivers/char/tpm/tpm_infineon.c b/drivers/char/tpm/tpm_infineon.c
+>>> index 9c924a1440a9..2d2ae37153ba 100644
+>>> --- a/drivers/char/tpm/tpm_infineon.c
+>>> +++ b/drivers/char/tpm/tpm_infineon.c
+>>> @@ -51,34 +51,40 @@ static struct tpm_inf_dev tpm_dev;
+>>>  
+>>>  static inline void tpm_data_out(unsigned char data, unsigned char offset)
+>>>  {
+>>> +#ifdef CONFIG_HAS_IOPORT
+>>>       if (tpm_dev.iotype == TPM_INF_IO_PORT)
+>>>               outb(data, tpm_dev.data_regs + offset);
+>>>       else
+>>> +#endif
+>>
+>> This looks ugly. Can't you declare inb/outb anyway and skip the definition,
+>> so you can use IS_ENABLED() here instead?
+>>
+>> You can mark the declarations with __compiletime_error("some message"), so
+>> if an IS_ENABLED() reference is not removed at compile time, you get some
+>> readable error message instead of a link error.
+>>
+>> Cheers,
+>> Ahmad
 > 
-> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> ---
+> I didn't know about __compiletime_error() that certainly sounds
+> interesting even when using a normal #ifdef.
+> 
+> That said either with the function not being declared or this
+> __compiletime_error() mechanism I would think that using IS_ENABLED()
+> relies on compiler optimizations not to compile in the missing/error
+> function call, right? I'm not sure if that is something we should do.
 
-Sorry everyone. I sent this as PATCH in error while preparing to sent
-the same series as RFC. Since e-mail has no remote delete and I lack a
-time machine let's just all pretend you only got the RFC.
+Yes, it assumes your compiler is able to discard the body of an if (0),
+which we already assume, otherwise it wouldn't make sense for any existing
+code to use __compiletime_error().
 
+To me this sounds much cleaner than #ifdefs in the midst of functions,
+which are a detriment to maintainability.
+
+Cheers,
+Ahmad
+
+
+
+
+> 
+> 
+
+
+-- 
+Pengutronix e.K.                           |                             |
+Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
+31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
