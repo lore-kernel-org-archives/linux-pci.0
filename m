@@ -2,117 +2,117 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF722C4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:54:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 869D5C43217
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:54:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376896AbiD2N6K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 09:58:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54224 "EHLO
+        id S1376906AbiD2N6O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 09:58:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376648AbiD2N5B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 09:57:01 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95111CEE1B;
+        with ESMTP id S1376680AbiD2N5C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 09:57:02 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2239CEE1D;
         Fri, 29 Apr 2022 06:52:01 -0700 (PDT)
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TBRfht016696;
-        Fri, 29 Apr 2022 13:51:44 GMT
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TBZSqf029789;
+        Fri, 29 Apr 2022 13:51:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=JaB+L6/l7HEX0hSHTIZHlZVNT/65KYSwvbIKPXAaA0c=;
- b=kEhUFcE5eqWaUZaKGoK3gEhWR+2SNKyKX/nWiAmc+7uRb6h4/T1AprTRg9FFBuoQ9Ieo
- h5ar81qms3DOcM7M8BUz1GNoGilHcqhlA/Ug/hLpm4oPS4nn5h52WX1gFmw5wCYabjB1
- RDE/Jy9yDwptWNA3CHID9qLzkQ8URoHTtpGpKQDmVoiG60Xbm8tOqqPgfPun885Qp40k
- yDK0qS2dlCWoAiw/SHIiu3CruL9JxdkpWP47zt37K9WcwKXJji9LJs4a8gVAzNqJQVRC
- 62TFrOl0epNmeOUIMZkk1tk2kIX1d1svHteRH73vL1OzB0ucIfIlXjCfPRrkes1a+w7q wQ== 
+ bh=7b7byQxCn7kwflUEJyv9x4ybdKCKDFMgc5gXmklA6Ao=;
+ b=GeFY39oQRd3J/v5r8QFEO8Ipm849fZwF3eOS87VAOgDAEK5gZx/tmij1dZHWqBvrgs2k
+ isQ21xFTryiWE+5tLvPEcM9u86BHXxrnm2G6G+NzoqReBMOwXkb2WAZ4D63tH+jFt/L5
+ h0R+XW+mPtezouk+TqOhbu3PiVSLwH1JJoJK29EKnGFtme2+BdBT7uRvQFYLsnOhTgcz
+ hu1mdBnvocl2fkfShw6sLhqSvO9oO5Et6BP+/EBduynZhDnCiSnkBK4MXo3TFoMfJnL0
+ E/w/47CDvOlddD8y9qFW0rctmC20s4YDkzv8M56I0zJBfw1geXJF7ASrYJ8axmvk1WXT 5Q== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fr27h16bj-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqv5rjkdq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:44 +0000
-Received: from m0098416.ppops.net (m0098416.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 23TCp742019029;
-        Fri, 29 Apr 2022 13:51:43 GMT
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fr27h16av-1
+        Fri, 29 Apr 2022 13:51:49 +0000
+Received: from m0098399.ppops.net (m0098399.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 23TDdJPI015106;
+        Fri, 29 Apr 2022 13:51:48 GMT
+Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqv5rjkcu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:43 +0000
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDRlGR011851;
-        Fri, 29 Apr 2022 13:51:41 GMT
-Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
-        by ppma06fra.de.ibm.com with ESMTP id 3fm8qhqaw3-1
+        Fri, 29 Apr 2022 13:51:48 +0000
+Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
+        by ppma04fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDRlrv027470;
+        Fri, 29 Apr 2022 13:51:46 GMT
+Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
+        by ppma04fra.de.ibm.com with ESMTP id 3fm938yanh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:41 +0000
+        Fri, 29 Apr 2022 13:51:46 +0000
 Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDplAD22479358
+        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDphFu53608916
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Apr 2022 13:51:47 GMT
+        Fri, 29 Apr 2022 13:51:43 GMT
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C62EF4C046;
-        Fri, 29 Apr 2022 13:51:38 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id AB5DB4C04E;
+        Fri, 29 Apr 2022 13:51:43 +0000 (GMT)
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6AFF24C044;
-        Fri, 29 Apr 2022 13:51:38 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 4A8E44C040;
+        Fri, 29 Apr 2022 13:51:43 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 29 Apr 2022 13:51:38 +0000 (GMT)
+        Fri, 29 Apr 2022 13:51:43 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Teddy Wang <teddy.wang@siliconmotion.com>,
-        linux-fbdev@vger.kernel.org (open list:STAGING - SILICON MOTION SM750
-        FRAME BUFFER DRIVER),
-        linux-staging@lists.linux.dev (open list:STAGING SUBSYSTEM)
-Subject: [PATCH 28/37] staging: sm750fb: add HAS_IOPORT dependencies
-Date:   Fri, 29 Apr 2022 15:50:48 +0200
-Message-Id: <20220429135108.2781579-51-schnelle@linux.ibm.com>
+        linux-pci@vger.kernel.org,
+        Samuel Thibault <samuel.thibault@ens-lyon.org>,
+        Arnd Bergmann <arnd@kernel.org>,
+        William Hubbs <w.d.hubbs@gmail.com>,
+        Chris Brannon <chris@the-brannons.com>,
+        Kirk Reiser <kirk@reisers.ca>,
+        speakup@linux-speakup.org (open list:SPEAKUP CONSOLE SPEECH DRIVER)
+Subject: [RFC v2 32/39] speakup: add HAS_IOPORT dependency for SPEAKUP_SERIALIO
+Date:   Fri, 29 Apr 2022 15:50:56 +0200
+Message-Id: <20220429135108.2781579-59-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: rwgkemXJQjlHZGtm1d6FO1L7W_MDB4-F
-X-Proofpoint-GUID: 1rwW-ssktKhGp1DUKorPt95eRU5hJLcw
+X-Proofpoint-GUID: qIn2Pra3brbLn3byyfy53EgsZ4BvFFfu
+X-Proofpoint-ORIG-GUID: xtdB8VJtQOuzpQOJHZtYxvWBz7H8SXJc
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-04-29_06,2022-04-28_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- clxscore=1011 adultscore=0 priorityscore=1501 mlxlogscore=921
- suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 bulkscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ clxscore=1015 malwarescore=0 impostorscore=0 bulkscore=0
+ lowpriorityscore=0 priorityscore=1501 mlxscore=0 adultscore=0 spamscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2202240000 definitions=main-2204290078
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+not being declared. SPEAKUP_SERIALIO thus needs to depend on HAS_IOPORT.
 
+Reviewed-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/staging/sm750fb/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/accessibility/speakup/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/sm750fb/Kconfig b/drivers/staging/sm750fb/Kconfig
-index 8c0d8a873d5b..73781c5bf03a 100644
---- a/drivers/staging/sm750fb/Kconfig
-+++ b/drivers/staging/sm750fb/Kconfig
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
- config FB_SM750
- 	tristate "Silicon Motion SM750 framebuffer support"
--	depends on FB && PCI
-+	depends on FB && PCI && HAS_IOPORT
- 	select FB_MODE_HELPERS
- 	select FB_CFB_FILLRECT
- 	select FB_CFB_COPYAREA
+diff --git a/drivers/accessibility/speakup/Kconfig b/drivers/accessibility/speakup/Kconfig
+index 07ecbbde0384..e84fb617acc4 100644
+--- a/drivers/accessibility/speakup/Kconfig
++++ b/drivers/accessibility/speakup/Kconfig
+@@ -46,6 +46,7 @@ if SPEAKUP
+ config SPEAKUP_SERIALIO
+ 	def_bool y
+ 	depends on ISA || COMPILE_TEST
++	depends on HAS_IOPORT
+ 
+ config SPEAKUP_SYNTH_ACNTSA
+ 	tristate "Accent SA synthesizer support"
 -- 
 2.32.0
 
