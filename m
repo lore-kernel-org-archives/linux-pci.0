@@ -2,78 +2,85 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1640C43219
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:53:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A6D6C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:53:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376753AbiD2N4p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 09:56:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53822 "EHLO
+        id S1376761AbiD2N4q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 09:56:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53838 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1376638AbiD2Nzx (ORCPT
+        with ESMTP id S1376642AbiD2Nzx (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 09:55:53 -0400
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD9E3986FD;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E640798F5C;
         Fri, 29 Apr 2022 06:51:45 -0700 (PDT)
 Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TDhXZr012223;
-        Fri, 29 Apr 2022 13:51:27 GMT
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TDhXa1012223;
+        Fri, 29 Apr 2022 13:51:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=CBUD9zEvWYDFaM5Uh2Jv4COW+ZWLsyjXhw9voFWaOFc=;
- b=YS2uAozxXl862v3hXQPyE5xzHt5lebRgPU8Dm4V+ALGC6tPRwIK41dn71FHUTzFkgt3l
- 7vzoIvNFcAOnfAOdJ1h7QjHxfLQ2yJ66nOH5WXMLPePYRTbQ4BU5ptlrgRQP9aF/24a8
- hI3W5BeSIIIJZbii3SCB68IZJix2msrlJb+LbKMVig96BeXiLFUfCUA70aQvt8MWmUHG
- J9xVf0QERcTT2ZQruiTtsd9OcAU9OH4iOtD75v79BhRThNeze17jdZ0a+EaCQfIBOAor
- G5ZBKGeBItvxKCNdR36LVHi+x/AeofaZFnoAW39d4opKemw6uiH9hBNvF/KQ4v7GRPrm DQ== 
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3frh5eg47j-1
+ bh=YxpQ3H20/E/Qr4kvVqxRNsgC1Qp0/t94nuLJRCpv7+M=;
+ b=ba0d/eme8fiOJggWKPdM63j8iZzS0dV+ujelJirQrODtCNi3LINi4WVoWEq8LzjCjVGi
+ /RX2GdswJ9CRchzdDVvqtI+bQ6ODvHEsj7ipKabP0PCbYVc4dIkIgMHn9Z7RZgrsu4CL
+ TeeYP2kyygC0wVRW3/8B18Ov7XllfPtAAE/ny+J7mF0oibL0h3a1SsIwjxI548NVSWWu
+ nljOETV37F/bTtCr8XCjs2180DRLyPkGPoxrsD1YrapG986Sb89LpIIqqwJMETrOd91h
+ 03hOU6ikAyI8KMRglGO1ZcbwrXzSOgFx/GMeZH7p/gNqW2KOW2lxcwReDTj5UTmYWyVL Kg== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3frh5eg4em-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:26 +0000
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDSeaD024602;
-        Fri, 29 Apr 2022 13:51:23 GMT
+        Fri, 29 Apr 2022 13:51:40 +0000
+Received: from m0098396.ppops.net (m0098396.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 23TDjFHE015966;
+        Fri, 29 Apr 2022 13:51:40 GMT
+Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3frh5eg4de-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 13:51:40 +0000
+Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
+        by ppma04fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDS1XP027891;
+        Fri, 29 Apr 2022 13:51:37 GMT
 Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
-        by ppma01fra.de.ibm.com with ESMTP id 3fm938yabn-1
+        by ppma04fra.de.ibm.com with ESMTP id 3fm938yanb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:23 +0000
+        Fri, 29 Apr 2022 13:51:37 +0000
 Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpLLk34210252
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpZ1S14483964
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Apr 2022 13:51:21 GMT
+        Fri, 29 Apr 2022 13:51:35 GMT
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0656E4C058;
-        Fri, 29 Apr 2022 13:51:21 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 3EBEB4C046;
+        Fri, 29 Apr 2022 13:51:35 +0000 (GMT)
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AEA924C04E;
-        Fri, 29 Apr 2022 13:51:20 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id E6C8B4C040;
+        Fri, 29 Apr 2022 13:51:34 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 29 Apr 2022 13:51:20 +0000 (GMT)
+        Fri, 29 Apr 2022 13:51:34 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        linux-hwmon@vger.kernel.org (open list:HARDWARE MONITORING)
-Subject: [RFC v2 11/39] hwmon: add HAS_IOPORT dependencies
-Date:   Fri, 29 Apr 2022 15:50:17 +0200
-Message-Id: <20220429135108.2781579-20-schnelle@linux.ibm.com>
+        Helge Deller <deller@gmx.de>,
+        linux-fbdev@vger.kernel.org (open list:FRAMEBUFFER LAYER),
+        dri-devel@lists.freedesktop.org (open list:FRAMEBUFFER LAYER)
+Subject: [PATCH 25/37] video: handle HAS_IOPORT dependencies
+Date:   Fri, 29 Apr 2022 15:50:42 +0200
+Message-Id: <20220429135108.2781579-45-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: btp1ideK8IvhT7baXC-SDd3RD36n4Oej
-X-Proofpoint-ORIG-GUID: btp1ideK8IvhT7baXC-SDd3RD36n4Oej
+X-Proofpoint-GUID: InHxbhdQi1mqvRnQs6ej_0Pyk52_uHFc
+X-Proofpoint-ORIG-GUID: 3NvGqrZMpP351LnInEIDCvckvqAO5eg2
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-04-29_06,2022-04-28_01,2022-02-23_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
- phishscore=0 mlxlogscore=415 clxscore=1011 impostorscore=0 suspectscore=0
+ phishscore=0 mlxlogscore=999 clxscore=1011 impostorscore=0 suspectscore=0
  lowpriorityscore=0 spamscore=0 priorityscore=1501 mlxscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2202240000
  definitions=main-2204290078
@@ -83,165 +90,166 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
 not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+those drivers using them and guard inline code in headers.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/hwmon/Kconfig | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+ drivers/video/fbdev/Kconfig | 25 +++++++++++++------------
+ include/video/vga.h         |  8 ++++++++
+ 2 files changed, 21 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
-index 68a8a27ab3b7..67a4aa2e0235 100644
---- a/drivers/hwmon/Kconfig
-+++ b/drivers/hwmon/Kconfig
-@@ -563,6 +563,7 @@ config SENSORS_SPARX5
+diff --git a/drivers/video/fbdev/Kconfig b/drivers/video/fbdev/Kconfig
+index 93b8d84c34cf..e7d27c0602d5 100644
+--- a/drivers/video/fbdev/Kconfig
++++ b/drivers/video/fbdev/Kconfig
+@@ -343,7 +343,7 @@ config FB_IMX
  
- config SENSORS_F71805F
- 	tristate "Fintek F71805F/FG, F71806F/FG and F71872F/FG"
+ config FB_CYBER2000
+ 	tristate "CyberPro 2000/2010/5000 support"
+-	depends on FB && PCI && (BROKEN || !SPARC64)
++	depends on FB && PCI && HAS_IOPORT && (BROKEN || !SPARC64)
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -436,6 +436,7 @@ config FB_FM2
+ config FB_ARC
+ 	tristate "Arc Monochrome LCD board support"
+ 	depends on FB && (X86 || COMPILE_TEST)
 +	depends on HAS_IOPORT
- 	depends on !PPC
- 	help
- 	  If you say yes here you get support for hardware monitoring
-@@ -574,6 +575,7 @@ config SENSORS_F71805F
+ 	select FB_SYS_FILLRECT
+ 	select FB_SYS_COPYAREA
+ 	select FB_SYS_IMAGEBLIT
+@@ -1242,7 +1243,7 @@ config FB_RADEON_DEBUG
  
- config SENSORS_F71882FG
- 	tristate "Fintek F71882FG and compatibles"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	help
- 	  If you say yes here you get support for hardware monitoring
-@@ -777,6 +779,7 @@ config SENSORS_CORETEMP
+ config FB_ATY128
+ 	tristate "ATI Rage128 display support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1265,7 +1266,7 @@ config FB_ATY128_BACKLIGHT
  
- config SENSORS_IT87
- 	tristate "ITE IT87xx and compatibles"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	select HWMON_VID
- 	help
-@@ -1404,6 +1407,7 @@ config SENSORS_LM95245
+ config FB_ATY
+ 	tristate "ATI Mach64 display support" if PCI || ATARI
+-	depends on FB && !SPARC32
++	depends on FB && HAS_IOPORT && !SPARC32
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1315,7 +1316,7 @@ config FB_ATY_BACKLIGHT
  
- config SENSORS_PC87360
- 	tristate "National Semiconductor PC87360 family"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	select HWMON_VID
- 	help
-@@ -1418,6 +1422,7 @@ config SENSORS_PC87360
+ config FB_S3
+ 	tristate "S3 Trio/Virge support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1374,7 +1375,7 @@ config FB_SAVAGE_ACCEL
  
- config SENSORS_PC87427
- 	tristate "National Semiconductor PC87427"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	help
- 	  If you say yes here you get access to the hardware monitoring
-@@ -1449,6 +1454,7 @@ config SENSORS_NTC_THERMISTOR
+ config FB_SIS
+ 	tristate "SiS/XGI display support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1404,7 +1405,7 @@ config FB_SIS_315
  
- config SENSORS_NCT6683
- 	tristate "Nuvoton NCT6683D"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	help
- 	  If you say yes here you get support for the hardware monitoring
-@@ -1459,6 +1465,7 @@ config SENSORS_NCT6683
+ config FB_VIA
+ 	tristate "VIA UniChrome (Pro) and Chrome9 display support"
+-	depends on FB && PCI && GPIOLIB && I2C && (X86 || COMPILE_TEST)
++	depends on FB && PCI && GPIOLIB && I2C && HAS_IOPORT && (X86 || COMPILE_TEST)
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1442,7 +1443,7 @@ endif
  
- config SENSORS_NCT6775
- 	tristate "Nuvoton NCT6775F and compatibles"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	depends on ACPI_WMI || ACPI_WMI=n
- 	select HWMON_VID
-@@ -1683,7 +1690,7 @@ config SENSORS_S3C_RAW
+ config FB_NEOMAGIC
+ 	tristate "NeoMagic display support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_MODE_HELPERS
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+@@ -1470,7 +1471,7 @@ config FB_KYRO
  
- config SENSORS_SIS5595
- 	tristate "Silicon Integrated Systems Corp. SiS5595"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  If you say yes here you get support for the integrated sensors in
- 	  SiS5595 South Bridges.
-@@ -1702,6 +1709,7 @@ config SENSORS_SY7636A
+ config FB_3DFX
+ 	tristate "3Dfx Banshee/Voodoo3/Voodoo5 display support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_IMAGEBLIT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+@@ -1518,7 +1519,7 @@ config FB_VOODOO1
  
- config SENSORS_DME1737
- 	tristate "SMSC DME1737, SCH311x and compatibles"
-+	depends on HAS_IOPORT
- 	depends on I2C && !PPC
- 	select HWMON_VID
- 	help
-@@ -1745,6 +1753,7 @@ config SENSORS_EMC6W201
+ config FB_VT8623
+ 	tristate "VIA VT8623 support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1532,7 +1533,7 @@ config FB_VT8623
  
- config SENSORS_SMSC47M1
- 	tristate "SMSC LPC47M10x and compatibles"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	help
- 	  If you say yes here you get support for the integrated fan
-@@ -1779,6 +1788,7 @@ config SENSORS_SMSC47M192
+ config FB_TRIDENT
+ 	tristate "Trident/CyberXXX/CyberBlade support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1554,7 +1555,7 @@ config FB_TRIDENT
  
- config SENSORS_SMSC47B397
- 	tristate "SMSC LPC47B397-NC"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	help
- 	  If you say yes here you get support for the SMSC LPC47B397-NC
-@@ -1792,6 +1802,7 @@ config SENSORS_SCH56XX_COMMON
+ config FB_ARK
+ 	tristate "ARK 2000PV support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -2226,7 +2227,7 @@ config FB_SSD1307
  
- config SENSORS_SCH5627
- 	tristate "SMSC SCH5627"
-+	depends on HAS_IOPORT
- 	depends on !PPC && WATCHDOG
- 	select SENSORS_SCH56XX_COMMON
- 	select WATCHDOG_CORE
-@@ -1805,6 +1816,7 @@ config SENSORS_SCH5627
+ config FB_SM712
+ 	tristate "Silicon Motion SM712 framebuffer support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+diff --git a/include/video/vga.h b/include/video/vga.h
+index d334e64c1c19..53cb52c0fddb 100644
+--- a/include/video/vga.h
++++ b/include/video/vga.h
+@@ -201,18 +201,26 @@ extern int restore_vga(struct vgastate *state);
+  
+ static inline unsigned char vga_io_r (unsigned short port)
+ {
++#ifdef CONFIG_HAS_IOPORT
+ 	return inb_p(port);
++#else
++	return 0xff;
++#endif
+ }
  
- config SENSORS_SCH5636
- 	tristate "SMSC SCH5636"
-+	depends on HAS_IOPORT
- 	depends on !PPC && WATCHDOG
- 	select SENSORS_SCH56XX_COMMON
- 	select WATCHDOG_CORE
-@@ -2047,7 +2059,7 @@ config SENSORS_VIA_CPUTEMP
+ static inline void vga_io_w (unsigned short port, unsigned char val)
+ {
++#ifdef CONFIG_HAS_IOPORT
+ 	outb_p(val, port);
++#endif
+ }
  
- config SENSORS_VIA686A
- 	tristate "VIA686A"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  If you say yes here you get support for the integrated sensors in
- 	  Via 686A/B South Bridges.
-@@ -2057,6 +2069,7 @@ config SENSORS_VIA686A
+ static inline void vga_io_w_fast (unsigned short port, unsigned char reg,
+ 				  unsigned char val)
+ {
++#ifdef CONFIG_HAS_IOPORT
+ 	outw(VGA_OUT16VAL (val, reg), port);
++#endif
+ }
  
- config SENSORS_VT1211
- 	tristate "VIA VT1211"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	select HWMON_VID
- 	help
-@@ -2068,7 +2081,7 @@ config SENSORS_VT1211
- 
- config SENSORS_VT8231
- 	tristate "VIA VT8231"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select HWMON_VID
- 	help
- 	  If you say yes here then you get support for the integrated sensors
-@@ -2176,6 +2189,7 @@ config SENSORS_W83L786NG
- 
- config SENSORS_W83627HF
- 	tristate "Winbond W83627HF, W83627THF, W83637HF, W83687THF, W83697HF"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	select HWMON_VID
- 	help
-@@ -2188,6 +2202,7 @@ config SENSORS_W83627HF
- 
- config SENSORS_W83627EHF
- 	tristate "Winbond W83627EHF/EHG/DHG/UHG, W83667HG"
-+	depends on HAS_IOPORT
- 	depends on !PPC
- 	select HWMON_VID
- 	help
+ static inline unsigned char vga_mm_r (void __iomem *regbase, unsigned short port)
 -- 
 2.32.0
 
