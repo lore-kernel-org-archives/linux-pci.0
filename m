@@ -2,658 +2,355 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB79CC433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 13:59:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFFC1C43219
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Apr 2022 14:06:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376554AbiD2ODF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Apr 2022 10:03:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42006 "EHLO
+        id S1377220AbiD2OJk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Apr 2022 10:09:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357407AbiD2OCu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 10:02:50 -0400
+        with ESMTP id S1377115AbiD2OJb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2022 10:09:31 -0400
 Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EEF66E4E8;
-        Fri, 29 Apr 2022 06:53:26 -0700 (PDT)
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TCc7RS017233;
-        Fri, 29 Apr 2022 13:51:48 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29FA1D117B;
+        Fri, 29 Apr 2022 07:01:10 -0700 (PDT)
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 23TBDTcs021204;
+        Fri, 29 Apr 2022 13:51:17 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=daVhxiWTuS9B4P2cA2D0EYmsyoD90srap5wOQUbBuB8=;
- b=L8H2Yu9yMeE3gslDZ2wQ+Ms3dv0/1xnYkroe1i5YPDADLLWcFc06NyzLyXlXO0CISFr3
- FoMy70lgy+Ds+zwDWhyQnVbOFJXKqalOp6WD+GsoecTA797hW+2vrUEFbtxZ2u+pWvHq
- pVcMYUwAuKEJZjctUJBP7Ha8DVn4ZDxHALoD4t1/3E/oRLarIZou6y0i5uUq7ZEdJi1Q
- NMvQR2u9+9oWNgtoPKEKIMB0CxJ2bXjg2yWZLtYjtSks5koAjWdIceG/EIWqhJ4imxae
- Qf+5cR8F38PJp+JIQ2eSYs9OPsWlFZzNwufuMM/W9OndkChNWJLrMrc5xM+ejzwlEMxO mg== 
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fqqtnsutw-1
+ bh=DSYmU2KyqXgcAYYRjyeArvgju810FAKBNpHnSvEJAOk=;
+ b=VSKE1evyZCC76igMGiQhDdrXgKlUgBp9E4rGzJEMpEl+r+FtKKRfe0GPBelcbfDoI0OA
+ pRQpK3XIySZFZUERD0SEKUK0/vB45gjEvQzoPFu4j8SW7xV1PjEbwCmpWf2Xz8p1mFnX
+ 5VN3qOC/XfXyoYEdC2S9NAubnSDDwSluJP+FTgGde/6/pnY15+3EcfzeIY+PqXq0RBSp
+ fieeTMm7OY5w9Ex+S0DzS95m9wLf3d5YarZBjvL6Eo4T8UhJmzoQJFAGizulSJF0DArR
+ KwLnXgutqDPaWsvAYuiCMR24XDxm2ycWIVax7pwi3QMgnfd0T2bWQ7Ablex/adugEKiH jQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fr27h15yk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:47 +0000
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDSeaH024602;
-        Fri, 29 Apr 2022 13:51:46 GMT
-Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
-        by ppma01fra.de.ibm.com with ESMTP id 3fm938yac8-1
+        Fri, 29 Apr 2022 13:51:17 +0000
+Received: from m0098416.ppops.net (m0098416.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 23TDm9iZ018377;
+        Fri, 29 Apr 2022 13:51:16 GMT
+Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
+        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3fr27h15xf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 29 Apr 2022 13:51:45 +0000
+        Fri, 29 Apr 2022 13:51:16 +0000
+Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
+        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 23TDS7M1025989;
+        Fri, 29 Apr 2022 13:51:14 GMT
+Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
+        by ppma05fra.de.ibm.com with ESMTP id 3fm938yafv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 29 Apr 2022 13:51:13 +0000
 Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDpgOb42205508
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 23TDc24F51577340
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 29 Apr 2022 13:51:42 GMT
+        Fri, 29 Apr 2022 13:38:02 GMT
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AB38A4C044;
-        Fri, 29 Apr 2022 13:51:42 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 418974C044;
+        Fri, 29 Apr 2022 13:51:11 +0000 (GMT)
 Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5194A4C040;
-        Fri, 29 Apr 2022 13:51:42 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 32F8D4C040;
+        Fri, 29 Apr 2022 13:51:10 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 29 Apr 2022 13:51:42 +0000 (GMT)
+        Fri, 29 Apr 2022 13:51:10 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>,
-        alsa-devel@alsa-project.org (moderated list:SOUND)
-Subject: [RFC v2 31/39] sound: add HAS_IOPORT dependencies
-Date:   Fri, 29 Apr 2022 15:50:54 +0200
-Message-Id: <20220429135108.2781579-57-schnelle@linux.ibm.com>
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Michal Simek <monstr@monstr.eu>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Rich Felker <dalias@libc.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)),
+        linux-alpha@vger.kernel.org (open list:ALPHA PORT),
+        linux-arm-kernel@lists.infradead.org (moderated list:ARM PORT),
+        linux-ia64@vger.kernel.org (open list:IA64 (Itanium) PLATFORM),
+        linux-m68k@lists.linux-m68k.org (open list:M68K ARCHITECTURE),
+        linux-mips@vger.kernel.org (open list:MIPS),
+        linux-parisc@vger.kernel.org (open list:PARISC ARCHITECTURE),
+        linuxppc-dev@lists.ozlabs.org (open list:LINUX FOR POWERPC (32-BIT AND
+        64-BIT)),
+        linux-riscv@lists.infradead.org (open list:RISC-V ARCHITECTURE),
+        linux-sh@vger.kernel.org (open list:SUPERH),
+        sparclinux@vger.kernel.org (open list:SPARC + UltraSPARC
+        (sparc/sparc64))
+Subject: [RFC v2 01/39] Kconfig: introduce HAS_IOPORT option and select it as necessary
+Date:   Fri, 29 Apr 2022 15:49:59 +0200
+Message-Id: <20220429135108.2781579-2-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: T2FI9TXjGGjp7GrM_qrYXBpDvXdCJh_C
-X-Proofpoint-GUID: T2FI9TXjGGjp7GrM_qrYXBpDvXdCJh_C
+X-Proofpoint-ORIG-GUID: -P9J6AB2n6AMBUugkA7mMRpNV34BmBS_
+X-Proofpoint-GUID: RcRk9MDBXbun4qDsErZKbZJh7zT5Xep-
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.205,Aquarius:18.0.858,Hydra:6.0.486,FMLib:17.11.64.514
  definitions=2022-04-29_06,2022-04-28_01,2022-02-23_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
- adultscore=0 impostorscore=0 malwarescore=0 suspectscore=0 phishscore=0
- priorityscore=1501 spamscore=0 clxscore=1015 mlxlogscore=747
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
+ clxscore=1011 adultscore=0 priorityscore=1501 mlxlogscore=804
+ suspectscore=0 malwarescore=0 spamscore=0 phishscore=0 bulkscore=0
  lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2202240000 definitions=main-2204290078
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them. For SND_OPL3_LIB this adds its first
-dependency so drivers currently selecting it unconditionally need to
-depend on it instead.
+We introduce a new HAS_IOPORT Kconfig option to indicate support for
+I/O Port access. In a future patch HAS_IOPORT=n will disable compilation
+of the I/O accessor functions inb()/outb() and friends on architectures
+which can not meaningfully support legacy I/O spaces such as s390 or
+where such support is optional. The "depends on" relations on HAS_IOPORT
+in drivers as well as ifdefs for HAS_IOPORT specific sections will be
+added in subsequent patches on a per subsystem basis.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- sound/drivers/Kconfig |  5 ++++
- sound/isa/Kconfig     | 44 ++++++++++++++---------------
- sound/pci/Kconfig     | 64 +++++++++++++++++++++++++++++--------------
- 3 files changed, 70 insertions(+), 43 deletions(-)
+ arch/alpha/Kconfig      | 1 +
+ arch/arm/Kconfig        | 1 +
+ arch/arm64/Kconfig      | 1 +
+ arch/ia64/Kconfig       | 1 +
+ arch/m68k/Kconfig       | 1 +
+ arch/microblaze/Kconfig | 1 +
+ arch/mips/Kconfig       | 1 +
+ arch/parisc/Kconfig     | 1 +
+ arch/powerpc/Kconfig    | 1 +
+ arch/riscv/Kconfig      | 1 +
+ arch/sh/Kconfig         | 1 +
+ arch/sparc/Kconfig      | 1 +
+ arch/x86/Kconfig        | 1 +
+ drivers/bus/Kconfig     | 2 +-
+ lib/Kconfig             | 4 ++++
+ lib/Kconfig.kgdb        | 1 +
+ 16 files changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/sound/drivers/Kconfig b/sound/drivers/Kconfig
-index ca4cdf666f82..4d250e619786 100644
---- a/sound/drivers/Kconfig
-+++ b/sound/drivers/Kconfig
-@@ -1,10 +1,12 @@
- # SPDX-License-Identifier: GPL-2.0-only
- config SND_MPU401_UART
- 	tristate
+diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
+index 7d0d26b5b3f5..2b9cf1b0bdb8 100644
+--- a/arch/alpha/Kconfig
++++ b/arch/alpha/Kconfig
+@@ -27,6 +27,7 @@ config ALPHA
+ 	select AUDIT_ARCH
+ 	select GENERIC_CPU_VULNERABILITIES
+ 	select GENERIC_SMP_IDLE_THREAD
++	select HAS_IOPORT
+ 	select HAVE_ARCH_AUDITSYSCALL
+ 	select HAVE_MOD_ARCH_SPECIFIC
+ 	select MODULES_USE_ELF_RELA
+diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+index 2e8091e2d8a8..603ce00033a5 100644
+--- a/arch/arm/Kconfig
++++ b/arch/arm/Kconfig
+@@ -69,6 +69,7 @@ config ARM
+ 	select GENERIC_SCHED_CLOCK
+ 	select GENERIC_SMP_IDLE_THREAD
+ 	select HARDIRQS_SW_RESEND
++	select HAS_IOPORT
+ 	select HAVE_ARCH_AUDITSYSCALL if AEABI && !OABI_COMPAT
+ 	select HAVE_ARCH_BITREVERSE if (CPU_32v7M || CPU_32v7) && !CPU_32v6
+ 	select HAVE_ARCH_JUMP_LABEL if !XIP_KERNEL && !CPU_ENDIAN_BE32 && MMU
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 20ea89d9ac2f..234dc89a7654 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -136,6 +136,7 @@ config ARM64
+ 	select GENERIC_GETTIMEOFDAY
+ 	select GENERIC_VDSO_TIME_NS
+ 	select HARDIRQS_SW_RESEND
++	select HAS_IOPORT
+ 	select HAVE_MOVE_PMD
+ 	select HAVE_MOVE_PUD
+ 	select HAVE_PCI
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index cb93769a9f2a..0fffe5130a80 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -25,6 +25,7 @@ config IA64
+ 	select PCI_DOMAINS if PCI
+ 	select PCI_MSI
+ 	select PCI_SYSCALL if PCI
++	select HAS_IOPORT
+ 	select HAVE_ASM_MODVERSIONS
+ 	select HAVE_UNSTABLE_SCHED_CLOCK
+ 	select HAVE_EXIT_THREAD
+diff --git a/arch/m68k/Kconfig b/arch/m68k/Kconfig
+index 936cce42ae9a..54bf0a40c2f0 100644
+--- a/arch/m68k/Kconfig
++++ b/arch/m68k/Kconfig
+@@ -18,6 +18,7 @@ config M68K
+ 	select GENERIC_CPU_DEVICES
+ 	select GENERIC_IOMAP
+ 	select GENERIC_IRQ_SHOW
++	select HAS_IOPORT if PCI || ISA || ATARI_ROM_ISA
+ 	select HAVE_ASM_MODVERSIONS
+ 	select HAVE_DEBUG_BUGVERBOSE
+ 	select HAVE_EFFICIENT_UNALIGNED_ACCESS if !CPU_HAS_NO_UNALIGNED
+diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
+index 8cf429ad1c84..966a6682f1fc 100644
+--- a/arch/microblaze/Kconfig
++++ b/arch/microblaze/Kconfig
+@@ -21,6 +21,7 @@ config MICROBLAZE
+ 	select GENERIC_IRQ_SHOW
+ 	select GENERIC_PCI_IOMAP
+ 	select GENERIC_SCHED_CLOCK
++	select HAS_IOPORT if PCI
+ 	select HAVE_ARCH_HASH
+ 	select HAVE_ARCH_KGDB
+ 	select HAVE_ARCH_SECCOMP
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index de3b32a507d2..4c55df08d6f1 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -47,6 +47,7 @@ config MIPS
+ 	select GENERIC_SMP_IDLE_THREAD
+ 	select GENERIC_TIME_VSYSCALL
+ 	select GUP_GET_PTE_LOW_HIGH if CPU_MIPS32 && PHYS_ADDR_T_64BIT
++	select HAS_IOPORT
+ 	select HAVE_ARCH_COMPILER_H
+ 	select HAVE_ARCH_JUMP_LABEL
+ 	select HAVE_ARCH_KGDB if MIPS_FP_SUPPORT
+diff --git a/arch/parisc/Kconfig b/arch/parisc/Kconfig
+index 52e550b45692..741c5c64c173 100644
+--- a/arch/parisc/Kconfig
++++ b/arch/parisc/Kconfig
+@@ -46,6 +46,7 @@ config PARISC
+ 	select MODULES_USE_ELF_RELA
+ 	select CLONE_BACKWARDS
+ 	select TTY # Needed for pdc_cons.c
++	select HAS_IOPORT if PCI || EISA
+ 	select HAVE_DEBUG_STACKOVERFLOW
+ 	select HAVE_ARCH_AUDITSYSCALL
+ 	select HAVE_ARCH_HASH
+diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index 174edabb74fa..7133cc35b777 100644
+--- a/arch/powerpc/Kconfig
++++ b/arch/powerpc/Kconfig
+@@ -182,6 +182,7 @@ config PPC
+ 	select GENERIC_SMP_IDLE_THREAD
+ 	select GENERIC_TIME_VSYSCALL
+ 	select GENERIC_VDSO_TIME_NS
++	select HAS_IOPORT			if PCI
+ 	select HAVE_ARCH_AUDITSYSCALL
+ 	select HAVE_ARCH_HUGE_VMALLOC		if HAVE_ARCH_HUGE_VMAP
+ 	select HAVE_ARCH_HUGE_VMAP		if PPC_RADIX_MMU || PPC_8xx
+diff --git a/arch/riscv/Kconfig b/arch/riscv/Kconfig
+index 00fd9c548f26..27fc8a450478 100644
+--- a/arch/riscv/Kconfig
++++ b/arch/riscv/Kconfig
+@@ -67,6 +67,7 @@ config RISCV
+ 	select GENERIC_SMP_IDLE_THREAD
+ 	select GENERIC_TIME_VSYSCALL if MMU && 64BIT
+ 	select GENERIC_VDSO_TIME_NS if HAVE_GENERIC_VDSO
++	select HAS_IOPORT if MMU
+ 	select HAVE_ARCH_AUDITSYSCALL
+ 	select HAVE_ARCH_JUMP_LABEL if !XIP_KERNEL
+ 	select HAVE_ARCH_JUMP_LABEL_RELATIVE if !XIP_KERNEL
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index 5f220e903e5a..6c1694e82b89 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -25,6 +25,7 @@ config SUPERH
+ 	select GENERIC_SCHED_CLOCK
+ 	select GENERIC_SMP_IDLE_THREAD
+ 	select GUP_GET_PTE_LOW_HIGH if X2TLB
++	select HAS_IOPORT if HAS_IOPORT_MAP
+ 	select HAVE_ARCH_AUDITSYSCALL
+ 	select HAVE_ARCH_KGDB
+ 	select HAVE_ARCH_SECCOMP_FILTER
+diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+index 9200bc04701c..64736476dde8 100644
+--- a/arch/sparc/Kconfig
++++ b/arch/sparc/Kconfig
+@@ -32,6 +32,7 @@ config SPARC
+ 	select GENERIC_IRQ_SHOW
+ 	select ARCH_WANT_IPC_PARSE_VERSION
+ 	select GENERIC_PCI_IOMAP
++	select HAS_IOPORT
+ 	select HAVE_NMI_WATCHDOG if SPARC64
+ 	select HAVE_CBPF_JIT if SPARC32
+ 	select HAVE_EBPF_JIT if SPARC64
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index b0142e01002e..9ef0438d1b7d 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -155,6 +155,7 @@ config X86
+ 	select GUP_GET_PTE_LOW_HIGH		if X86_PAE
+ 	select HARDIRQS_SW_RESEND
+ 	select HARDLOCKUP_CHECK_TIMESTAMP	if X86_64
++	select HAS_IOPORT
+ 	select HAVE_ACPI_APEI			if ACPI
+ 	select HAVE_ACPI_APEI_NMI		if ACPI
+ 	select HAVE_ALIGNED_STRUCT_PAGE		if SLUB
+diff --git a/drivers/bus/Kconfig b/drivers/bus/Kconfig
+index 3c68e174a113..a61285100224 100644
+--- a/drivers/bus/Kconfig
++++ b/drivers/bus/Kconfig
+@@ -81,7 +81,7 @@ config MOXTET
+ config HISILICON_LPC
+ 	bool "Support for ISA I/O space on HiSilicon Hip06/7"
+ 	depends on (ARM64 && ARCH_HISI) || (COMPILE_TEST && !ALPHA && !HEXAGON && !PARISC)
+-	depends on HAS_IOMEM
 +	depends on HAS_IOPORT
- 	select SND_RAWMIDI
- 
- config SND_OPL3_LIB
- 	tristate
-+	depends on HAS_IOPPORT
- 	select SND_TIMER
- 	select SND_HWDEP
- 	select SND_SEQ_DEVICE if SND_SEQUENCER != n
-@@ -128,6 +130,7 @@ config SND_VIRMIDI
- 
- config SND_MTPAV
- 	tristate "MOTU MidiTimePiece AV multiport MIDI"
+ 	select INDIRECT_PIO if ARM64
+ 	help
+ 	  Driver to enable I/O access to devices attached to the Low Pin
+diff --git a/lib/Kconfig b/lib/Kconfig
+index 087e06b4cdfd..177fed9cf20a 100644
+--- a/lib/Kconfig
++++ b/lib/Kconfig
+@@ -91,6 +91,7 @@ config ARCH_USE_SYM_ANNOTATIONS
+ config INDIRECT_PIO
+ 	bool "Access I/O in non-MMIO mode"
+ 	depends on ARM64
 +	depends on HAS_IOPORT
- 	select SND_RAWMIDI
  	help
- 	  To use a MOTU MidiTimePiece AV multiport MIDI adapter
-@@ -152,6 +155,7 @@ config SND_MTS64
+ 	  On some platforms where no separate I/O space exists, there are I/O
+ 	  hosts which can not be accessed in MMIO mode. Using the logical PIO
+@@ -493,6 +494,9 @@ config HAS_IOMEM
+ 	depends on !NO_IOMEM
+ 	default y
  
- config SND_SERIAL_U16550
- 	tristate "UART16550 serial MIDI driver"
++config HAS_IOPORT
++	def_bool ISA
++
+ config HAS_IOPORT_MAP
+ 	bool
+ 	depends on HAS_IOMEM && !NO_IOPORT_MAP
+diff --git a/lib/Kconfig.kgdb b/lib/Kconfig.kgdb
+index 05dae05b6cc9..c68e4d9dcecb 100644
+--- a/lib/Kconfig.kgdb
++++ b/lib/Kconfig.kgdb
+@@ -121,6 +121,7 @@ config KDB_DEFAULT_ENABLE
+ 
+ config KDB_KEYBOARD
+ 	bool "KGDB_KDB: keyboard as input device"
 +	depends on HAS_IOPORT
- 	select SND_RAWMIDI
+ 	depends on VT && KGDB_KDB
+ 	default n
  	help
- 	  To include support for MIDI serial port interfaces, say Y here
-@@ -167,6 +171,7 @@ config SND_SERIAL_U16550
- 
- config SND_MPU401
- 	tristate "Generic MPU-401 UART driver"
-+	depends on HAS_IOPORT
- 	select SND_MPU401_UART
- 	help
- 	  Say Y here to include support for MIDI ports compatible with
-diff --git a/sound/isa/Kconfig b/sound/isa/Kconfig
-index 570b88e0b201..072265429f39 100644
---- a/sound/isa/Kconfig
-+++ b/sound/isa/Kconfig
-@@ -31,7 +31,7 @@ if SND_ISA
- 
- config SND_ADLIB
- 	tristate "AdLib FM card"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	help
- 	  Say Y here to include support for AdLib FM cards.
- 
-@@ -42,7 +42,7 @@ config SND_AD1816A
- 	tristate "Analog Devices SoundPort AD1816A"
- 	depends on PNP
- 	select ISAPNP
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_PCM
- 	select SND_TIMER
-@@ -70,7 +70,7 @@ config SND_ALS100
- 	tristate "Diamond Tech. DT-019x and Avance Logic ALSxxx"
- 	depends on PNP
- 	select ISAPNP
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_SB16_DSP
- 	help
-@@ -86,7 +86,7 @@ config SND_AZT1605
- 	depends on SND
- 	select SND_WSS_LIB
- 	select SND_MPU401_UART
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	help
- 	  Say Y here to include support for Aztech Sound Galaxy cards
- 	  based on the AZT1605 chipset.
-@@ -99,7 +99,7 @@ config SND_AZT2316
- 	depends on SND
- 	select SND_WSS_LIB
- 	select SND_MPU401_UART
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	help
- 	  Say Y here to include support for Aztech Sound Galaxy cards
- 	  based on the AZT2316 chipset.
-@@ -111,7 +111,7 @@ config SND_AZT2320
- 	tristate "Aztech Systems AZT2320"
- 	depends on PNP
- 	select ISAPNP
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_WSS_LIB
- 	help
-@@ -124,7 +124,7 @@ config SND_AZT2320
- config SND_CMI8328
- 	tristate "C-Media CMI8328"
- 	select SND_WSS_LIB
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	help
- 	  Say Y here to include support for soundcards based on the
-@@ -137,7 +137,7 @@ config SND_CMI8330
- 	tristate "C-Media CMI8330"
- 	select SND_WSS_LIB
- 	select SND_SB16_DSP
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	help
- 	  Say Y here to include support for soundcards based on the
-@@ -159,7 +159,7 @@ config SND_CS4231
- 
- config SND_CS4236
- 	tristate "Generic Cirrus Logic CS4232/CS4236+ driver"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_WSS_LIB
- 	help
-@@ -172,7 +172,7 @@ config SND_CS4236
- 
- config SND_ES1688
- 	tristate "Generic ESS ES688/ES1688 and ES968 PnP driver"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_PCM
- 	help
-@@ -184,7 +184,7 @@ config SND_ES1688
- 
- config SND_ES18XX
- 	tristate "Generic ESS ES18xx driver"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_PCM
- 	help
-@@ -197,7 +197,7 @@ config SND_SC6000
- 	tristate "Gallant SC-6000/6600/7000 and Audio Excel DSP 16"
- 	depends on HAS_IOPORT_MAP
- 	select SND_WSS_LIB
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	help
- 	  Say Y here to include support for Gallant SC-6000, SC-6600, SC-7000
-@@ -223,7 +223,7 @@ config SND_GUSCLASSIC
- 
- config SND_GUSEXTREME
- 	tristate "Gravis UltraSound Extreme"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_PCM
- 	select SND_TIMER
-@@ -273,7 +273,7 @@ config SND_INTERWAVE_STB
- 
- config SND_JAZZ16
- 	tristate "Media Vision Jazz16 card and compatibles"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_SB8_DSP
- 	help
-@@ -289,7 +289,7 @@ config SND_JAZZ16
- 
- config SND_OPL3SA2
- 	tristate "Yamaha OPL3-SA2/SA3"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_WSS_LIB
- 	help
-@@ -301,7 +301,7 @@ config SND_OPL3SA2
- 
- config SND_OPTI92X_AD1848
- 	tristate "OPTi 82C92x - AD1848"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_OPL4_LIB
- 	select SND_MPU401_UART
- 	select SND_WSS_LIB
-@@ -314,7 +314,7 @@ config SND_OPTI92X_AD1848
- 
- config SND_OPTI92X_CS4231
- 	tristate "OPTi 82C92x - CS4231"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_OPL4_LIB
- 	select SND_MPU401_UART
- 	select SND_WSS_LIB
-@@ -327,7 +327,7 @@ config SND_OPTI92X_CS4231
- 
- config SND_OPTI93X
- 	tristate "OPTi 82C93x"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_WSS_LIB
- 	help
-@@ -352,7 +352,7 @@ config SND_MIRO
- 
- config SND_SB8
- 	tristate "Sound Blaster 1.0/2.0/Pro (8-bit)"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_RAWMIDI
- 	select SND_SB8_DSP
- 	help
-@@ -364,7 +364,7 @@ config SND_SB8
- 
- config SND_SB16
- 	tristate "Sound Blaster 16 (PnP)"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_SB16_DSP
- 	help
-@@ -376,7 +376,7 @@ config SND_SB16
- 
- config SND_SBAWE
- 	tristate "Sound Blaster AWE (32,64) (PnP)"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_SB16_DSP
- 	select SND_SEQ_DEVICE if SND_SEQUENCER != n
-@@ -427,7 +427,7 @@ config SND_SSCAPE
- config SND_WAVEFRONT
- 	tristate "Turtle Beach Maui,Tropez,Tropez+ (Wavefront)"
- 	select FW_LOADER
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_WSS_LIB
- 	help
-diff --git a/sound/pci/Kconfig b/sound/pci/Kconfig
-index a55836225401..c9fd973a7893 100644
---- a/sound/pci/Kconfig
-+++ b/sound/pci/Kconfig
-@@ -25,8 +25,8 @@ config SND_ALS300
- 	tristate "Avance Logic ALS300/ALS300+"
- 	select SND_PCM
- 	select SND_AC97_CODEC
--	select SND_OPL3_LIB
--	depends on ZONE_DMA
-+	depends on SND_OPL3_LIB
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say 'Y' or 'M' to include support for Avance Logic ALS300/ALS300+
- 
-@@ -36,7 +36,7 @@ config SND_ALS300
- config SND_ALS4000
- 	tristate "Avance Logic ALS4000"
- 	depends on ISA_DMA_API
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_PCM
- 	select SND_SB_COMMON
-@@ -51,7 +51,7 @@ config SND_ALI5451
- 	tristate "ALi M5451 PCI Audio Controller"
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for the integrated AC97 sound
- 	  device on motherboards using the ALi M5451 Audio Controller
-@@ -96,6 +96,7 @@ config SND_ATIIXP_MODEM
- 
- config SND_AU8810
- 	tristate "Aureal Advantage"
-+	depends on HAS_IOPORT
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
- 	help
-@@ -110,6 +111,7 @@ config SND_AU8810
- 
- config SND_AU8820
- 	tristate "Aureal Vortex"
-+	depends on HAS_IOPORT
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
- 	help
-@@ -123,6 +125,7 @@ config SND_AU8820
- 
- config SND_AU8830
- 	tristate "Aureal Vortex 2"
-+	depends on HAS_IOPORT
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
- 	help
-@@ -151,13 +154,13 @@ config SND_AW2
- 
- config SND_AZT3328
- 	tristate "Aztech AZF3328 / PCI168"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_PCM
- 	select SND_RAWMIDI
- 	select SND_AC97_CODEC
- 	select SND_TIMER
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for Aztech AZF3328 (PCI168)
- 	  soundcards.
-@@ -193,6 +196,7 @@ config SND_BT87X_OVERCLOCK
- 
- config SND_CA0106
- 	tristate "SB Audigy LS / Live 24bit"
-+	depends on HAS_IOPORT
- 	select SND_AC97_CODEC
- 	select SND_RAWMIDI
- 	select SND_VMASTER
-@@ -205,7 +209,8 @@ config SND_CA0106
- 
- config SND_CMIPCI
- 	tristate "C-Media 8338, 8738, 8768, 8770"
--	select SND_OPL3_LIB
-+	depends on HAS_IOPORT
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_PCM
- 	help
-@@ -221,6 +226,7 @@ config SND_OXYGEN_LIB
- 
- config SND_OXYGEN
- 	tristate "C-Media 8786, 8787, 8788 (Oxygen)"
-+	depends on HAS_IOPORT
- 	select SND_OXYGEN_LIB
- 	select SND_PCM
- 	select SND_MPU401_UART
-@@ -246,7 +252,8 @@ config SND_OXYGEN
- 
- config SND_CS4281
- 	tristate "Cirrus Logic (Sound Fusion) CS4281"
--	select SND_OPL3_LIB
-+	depends on HAS_IOPORT
-+	depends on SND_OPL3_LIB
- 	select SND_RAWMIDI
- 	select SND_AC97_CODEC
- 	help
-@@ -257,6 +264,7 @@ config SND_CS4281
- 
- config SND_CS46XX
- 	tristate "Cirrus Logic (Sound Fusion) CS4280/CS461x/CS462x/CS463x"
-+	depends on HAS_IOPORT
- 	select SND_RAWMIDI
- 	select SND_AC97_CODEC
- 	select FW_LOADER
-@@ -290,6 +298,7 @@ config SND_CS5530
- config SND_CS5535AUDIO
- 	tristate "CS5535/CS5536 Audio"
- 	depends on X86_32 || MIPS || COMPILE_TEST
-+	depends on HAS_IOPORT
- 	select SND_PCM
- 	select SND_AC97_CODEC
- 	help
-@@ -307,6 +316,7 @@ config SND_CS5535AUDIO
- 
- config SND_CTXFI
- 	tristate "Creative Sound Blaster X-Fi"
-+	depends on HAS_IOPORT
- 	select SND_PCM
- 	help
- 	  If you want to use soundcards based on Creative Sound Blastr X-Fi
-@@ -468,7 +478,7 @@ config SND_EMU10K1
- 	select SND_AC97_CODEC
- 	select SND_TIMER
- 	select SND_SEQ_DEVICE if SND_SEQUENCER != n
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y to include support for Sound Blaster PCI 512, Live!,
- 	  Audigy and E-mu APS (partially supported) soundcards.
-@@ -491,7 +501,7 @@ config SND_EMU10K1X
- 	tristate "Emu10k1X (Dell OEM Version)"
- 	select SND_AC97_CODEC
- 	select SND_RAWMIDI
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for the Dell OEM version of the
- 	  Sound Blaster Live!.
-@@ -501,6 +511,7 @@ config SND_EMU10K1X
- 
- config SND_ENS1370
- 	tristate "(Creative) Ensoniq AudioPCI 1370"
-+	depends on HAS_IOPORT
- 	select SND_RAWMIDI
- 	select SND_PCM
- 	help
-@@ -511,6 +522,7 @@ config SND_ENS1370
- 
- config SND_ENS1371
- 	tristate "(Creative) Ensoniq AudioPCI 1371/1373"
-+	depends on HAS_IOPORT
- 	select SND_RAWMIDI
- 	select SND_AC97_CODEC
- 	help
-@@ -522,10 +534,10 @@ config SND_ENS1371
- 
- config SND_ES1938
- 	tristate "ESS ES1938/1946/1969 (Solo-1)"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for soundcards based on ESS Solo-1
- 	  (ES1938, ES1946, ES1969) chips.
-@@ -537,7 +549,7 @@ config SND_ES1968
- 	tristate "ESS ES1968/1978 (Maestro-1/2/2E)"
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for soundcards based on ESS Maestro
- 	  1/2/2E chips.
-@@ -569,7 +581,8 @@ config SND_ES1968_RADIO
- 
- config SND_FM801
- 	tristate "ForteMedia FM801"
--	select SND_OPL3_LIB
-+	depends on HAS_IOPORT
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
- 	help
-@@ -624,7 +637,7 @@ config SND_ICE1712
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
- 	select BITREVERSE
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for soundcards based on the
- 	  ICE1712 (Envy24) chip.
-@@ -640,6 +653,7 @@ config SND_ICE1712
- 
- config SND_ICE1724
- 	tristate "ICE/VT1724/1720 (Envy24HT/PT)"
-+	depends on HAS_IOPORT
- 	select SND_RAWMIDI
- 	select SND_AC97_CODEC
- 	select SND_VMASTER
-@@ -712,7 +726,7 @@ config SND_LX6464ES
- config SND_MAESTRO3
- 	tristate "ESS Allegro/Maestro3"
- 	select SND_AC97_CODEC
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for soundcards based on ESS Maestro 3
- 	  (Allegro) chips.
-@@ -753,6 +767,7 @@ config SND_NM256
- 
- config SND_PCXHR
- 	tristate "Digigram PCXHR"
-+	depends on HAS_IOPORT
- 	select FW_LOADER
- 	select SND_PCM
- 	select SND_HWDEP
-@@ -764,8 +779,9 @@ config SND_PCXHR
- 
- config SND_RIPTIDE
- 	tristate "Conexant Riptide"
-+	depends on HAS_IOPORT
- 	select FW_LOADER
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
- 	help
-@@ -808,6 +824,7 @@ config SND_RME9652
- config SND_SE6X
- 	tristate "Studio Evolution SE6X"
- 	depends on SND_OXYGEN=n && SND_VIRTUOSO=n  # PCI ID conflict
-+	depends on HAS_IOPORT
- 	select SND_OXYGEN_LIB
- 	select SND_PCM
- 	select SND_MPU401_UART
-@@ -827,10 +844,10 @@ config SND_SIS7019
- 
- config SND_SONICVIBES
- 	tristate "S3 SonicVibes"
--	select SND_OPL3_LIB
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for soundcards based on the S3
- 	  SonicVibes chip.
-@@ -842,7 +859,7 @@ config SND_TRIDENT
- 	tristate "Trident 4D-Wave DX/NX; SiS 7018"
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
--	depends on ZONE_DMA
-+	depends on ZONE_DMA && HAS_IOPORT
- 	help
- 	  Say Y here to include support for soundcards based on Trident
- 	  4D-Wave DX/NX or SiS 7018 chips.
-@@ -852,6 +869,7 @@ config SND_TRIDENT
- 
- config SND_VIA82XX
- 	tristate "VIA 82C686A/B, 8233/8235 AC97 Controller"
-+	depends on HAS_IOPORT
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
- 	help
-@@ -863,6 +881,7 @@ config SND_VIA82XX
- 
- config SND_VIA82XX_MODEM
- 	tristate "VIA 82C686A/B, 8233 based Modems"
-+	depends on HAS_IOPORT
- 	select SND_AC97_CODEC
- 	help
- 	  Say Y here to include support for the integrated MC97 modem on
-@@ -873,6 +892,7 @@ config SND_VIA82XX_MODEM
- 
- config SND_VIRTUOSO
- 	tristate "Asus Virtuoso 66/100/200 (Xonar)"
-+	depends on HAS_IOPORT
- 	select SND_OXYGEN_LIB
- 	select SND_PCM
- 	select SND_MPU401_UART
-@@ -889,6 +909,7 @@ config SND_VIRTUOSO
- 
- config SND_VX222
- 	tristate "Digigram VX222"
-+	depends on HAS_IOPORT
- 	select SND_VX_LIB
- 	help
- 	  Say Y here to include support for Digigram VX222 soundcards.
-@@ -898,7 +919,8 @@ config SND_VX222
- 
- config SND_YMFPCI
- 	tristate "Yamaha YMF724/740/744/754"
--	select SND_OPL3_LIB
-+	depends on HAS_IOPORT
-+	depends on SND_OPL3_LIB
- 	select SND_MPU401_UART
- 	select SND_AC97_CODEC
- 	select SND_TIMER
 -- 
 2.32.0
 
