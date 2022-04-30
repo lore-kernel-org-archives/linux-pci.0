@@ -2,135 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B11C433EF
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Apr 2022 08:52:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25639C433EF
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Apr 2022 12:56:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230060AbiD3Izp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 30 Apr 2022 04:55:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32808 "EHLO
+        id S1358157AbiD3NAE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 30 Apr 2022 09:00:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241446AbiD3IyL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Apr 2022 04:54:11 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C46FC2638
-        for <linux-pci@vger.kernel.org>; Sat, 30 Apr 2022 01:50:49 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 83D49B80FA1
-        for <linux-pci@vger.kernel.org>; Sat, 30 Apr 2022 08:50:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAB86C385AA;
-        Sat, 30 Apr 2022 08:50:44 +0000 (UTC)
-From:   Huacai Chen <chenhuacai@loongson.cn>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
-Cc:     linux-pci@vger.kernel.org, Xuefeng Li <lixuefeng@loongson.cn>,
-        Huacai Chen <chenhuacai@gmail.com>,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        Huacai Chen <chenhuacai@loongson.cn>
-Subject: [PATCH V13 5/6] PCI: Add quirk for LS7A to avoid reboot failure
-Date:   Sat, 30 Apr 2022 16:48:45 +0800
-Message-Id: <20220430084846.3127041-6-chenhuacai@loongson.cn>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20220430084846.3127041-1-chenhuacai@loongson.cn>
-References: <20220430084846.3127041-1-chenhuacai@loongson.cn>
+        with ESMTP id S232897AbiD3NAA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Apr 2022 09:00:00 -0400
+Received: from netrider.rowland.org (netrider.rowland.org [192.131.102.5])
+        by lindbergh.monkeyblade.net (Postfix) with SMTP id 1CAA6674EF
+        for <linux-pci@vger.kernel.org>; Sat, 30 Apr 2022 05:56:38 -0700 (PDT)
+Received: (qmail 986304 invoked by uid 1000); 30 Apr 2022 08:56:38 -0400
+Date:   Sat, 30 Apr 2022 08:56:38 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Niklas Schnelle <schnelle@linux.ibm.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>
+Subject: Re: [RFC v2 35/39] usb: handle HAS_IOPORT dependencies
+Message-ID: <Ym0yBti0J5w2S59W@rowland.harvard.edu>
+References: <20220429135108.2781579-1-schnelle@linux.ibm.com>
+ <20220429135108.2781579-65-schnelle@linux.ibm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220429135108.2781579-65-schnelle@linux.ibm.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Commit cc27b735ad3a75574a ("PCI/portdrv: Turn off PCIe services during
-shutdown") causes poweroff/reboot failure on systems with LS7A chipset.
-We found that if we remove "pci_command &= ~PCI_COMMAND_MASTER;" in
-do_pci_disable_device(), it can work well. The hardware engineer says
-that the root cause is that CPU is still accessing PCIe devices while
-poweroff/reboot, and if we disable the Bus Master Bit at this time, the
-PCIe controller doesn't forward requests to downstream devices, and also
-doesn't send TIMEOUT to CPU, which causes CPU wait forever (hardware
-deadlock). This behavior is a PCIe protocol violation (Bus Master should
-not be involved in CPU MMIO transactions), and it will be fixed in new
-revisions of hardware (add timeout mechanism for CPU read request,
-whether or not Bus Master bit is cleared).
+On Fri, Apr 29, 2022 at 03:51:02PM +0200, Niklas Schnelle wrote:
+> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+> not being declared. We thus need to guard sections of code calling them
+> as alternative access methods with CONFIG_HAS_IOPORT checks. Similarly
+> drivers requiring these functions need to depend on HAS_IOPORT.
+> 
+> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> ---
 
-On some x86 platforms, radeon/amdgpu devices can cause similar problems
-[1][2]. Once before I wanted to make a single patch to solve "all of
-these problems" together, but it seems unreasonable because maybe they
-are not exactly the same problem. So, this patch just add a quirk for
-LS7A to avoid clearing Bus Master bit in pcie_port_device_remove(), and
-leave other platforms as is.
+...
 
-[1] https://bugs.freedesktop.org/show_bug.cgi?id=97980
-[2] https://bugs.freedesktop.org/show_bug.cgi?id=98638
+> diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+> index ef08d68b9714..4fd06b48149d 100644
+> --- a/drivers/usb/host/pci-quirks.c
+> +++ b/drivers/usb/host/pci-quirks.c
 
-Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
----
- drivers/pci/controller/pci-loongson.c | 17 +++++++++++++++++
- drivers/pci/pcie/portdrv_core.c       |  6 +++++-
- include/linux/pci.h                   |  1 +
- 3 files changed, 23 insertions(+), 1 deletion(-)
+> @@ -632,7 +590,53 @@ bool usb_amd_pt_check_port(struct device *device, int port)
+>  	return !(value & BIT(port_shift));
+>  }
+>  EXPORT_SYMBOL_GPL(usb_amd_pt_check_port);
+> +#endif
+> @@ -1273,7 +1280,8 @@ static void quirk_usb_early_handoff(struct pci_dev *pdev)
+>  			 "Can't enable PCI device, BIOS handoff failed.\n");
+>  		return;
+>  	}
+> -	if (pdev->class == PCI_CLASS_SERIAL_USB_UHCI)
+> +	if (IS_ENABLED(CONFIG_USB_UHCI_HCD) &&
+> +	    pdev->class == PCI_CLASS_SERIAL_USB_UHCI)
+>  		quirk_usb_handoff_uhci(pdev);
 
-diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
-index 83447264048a..49d8b8c24ffb 100644
---- a/drivers/pci/controller/pci-loongson.c
-+++ b/drivers/pci/controller/pci-loongson.c
-@@ -85,6 +85,23 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
- 			DEV_PCIE_PORT_2, loongson_mrrs_quirk);
- 
-+static void loongson_bmaster_quirk(struct pci_dev *pdev)
-+{
-+	/*
-+	 * Some Loongson PCIe ports will cause CPU deadlock if disable
-+	 * the Bus Master bit during poweroff/reboot.
-+	 */
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
-+
-+	bridge->no_dis_bmaster = 1;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
-+			DEV_PCIE_PORT_0, loongson_bmaster_quirk);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
-+			DEV_PCIE_PORT_1, loongson_bmaster_quirk);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
-+			DEV_PCIE_PORT_2, loongson_bmaster_quirk);
-+
- static struct loongson_pci *pci_bus_to_loongson_pci(struct pci_bus *bus)
- {
- 	struct pci_config_window *cfg;
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 604feeb84ee4..23f41e31a6c6 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -491,9 +491,13 @@ EXPORT_SYMBOL_GPL(pcie_port_find_device);
-  */
- void pcie_port_device_remove(struct pci_dev *dev)
- {
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
-+
- 	device_for_each_child(&dev->dev, NULL, remove_iter);
- 	pci_free_irq_vectors(dev);
--	pci_disable_device(dev);
-+
-+	if (!bridge->no_dis_bmaster)
-+		pci_disable_device(dev);
- }
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d146eb28e6da..c52d6486ff99 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -570,6 +570,7 @@ struct pci_host_bridge {
- 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
- 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
- 	unsigned int	no_inc_mrrs:1;		/* No Increase MRRS */
-+	unsigned int	no_dis_bmaster:1;	/* No Disable Bus Master */
- 	unsigned int	native_aer:1;		/* OS may use PCIe AER */
- 	unsigned int	native_pcie_hotplug:1;	/* OS may use PCIe hotplug */
- 	unsigned int	native_shpc_hotplug:1;	/* OS may use SHPC hotplug */
--- 
-2.27.0
+We discussed this already.  quirk_usb_handoff_uhci() is supposed to be 
+called even when CONFIG_USB_UHCI_HCD isn't enabled.
 
+...
+
+> diff --git a/drivers/usb/host/uhci-hcd.h b/drivers/usb/host/uhci-hcd.h
+> index 8ae5ccd26753..be4aee1f0ca5 100644
+> --- a/drivers/usb/host/uhci-hcd.h
+> +++ b/drivers/usb/host/uhci-hcd.h
+> @@ -505,36 +505,43 @@ static inline bool uhci_is_aspeed(const struct uhci_hcd *uhci)
+>   * we use memory mapped registers.
+>   */
+>  
+> +#ifdef CONFIG_HAS_IOPORT
+> +#define UHCI_IN(x)	x
+> +#define UHCI_OUT(x)	x
+> +#else
+> +#define UHCI_IN(x)	0
+> +#define UHCI_OUT(x)
+> +#endif
+
+Should have a blank line here.
+
+>  #ifndef CONFIG_USB_UHCI_SUPPORT_NON_PCI_HC
+>  /* Support PCI only */
+>  static inline u32 uhci_readl(const struct uhci_hcd *uhci, int reg)
+>  {
+> -	return inl(uhci->io_addr + reg);
+> +	return UHCI_IN(inl(uhci->io_addr + reg));
+>  }
+>  
+>  static inline void uhci_writel(const struct uhci_hcd *uhci, u32 val, int reg)
+>  {
+> -	outl(val, uhci->io_addr + reg);
+> +	UHCI_OUT(outl(val, uhci->io_addr + reg));
+>  }
+>  
+>  static inline u16 uhci_readw(const struct uhci_hcd *uhci, int reg)
+>  {
+> -	return inw(uhci->io_addr + reg);
+> +	return UHCI_IN(inw(uhci->io_addr + reg));
+>  }
+>  
+>  static inline void uhci_writew(const struct uhci_hcd *uhci, u16 val, int reg)
+>  {
+> -	outw(val, uhci->io_addr + reg);
+> +	UHCI_OUT(outw(val, uhci->io_addr + reg));
+>  }
+>  
+>  static inline u8 uhci_readb(const struct uhci_hcd *uhci, int reg)
+>  {
+> -	return inb(uhci->io_addr + reg);
+> +	return UHCI_IN(inb(uhci->io_addr + reg));
+>  }
+>  
+>  static inline void uhci_writeb(const struct uhci_hcd *uhci, u8 val, int reg)
+>  {
+> -	outb(val, uhci->io_addr + reg);
+> +	UHCI_OUT(outb(val, uhci->io_addr + reg));
+>  }
+>  
+>  #else
+
+I thought you were going to update the definition of 
+uhci_has_pci_registers().  It shouldn't do a test at runtime if 
+CONFIG_HAS_IOPORT is disabled.
+
+Alan Stern
