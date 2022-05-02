@@ -2,65 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AC2DC433FE
-	for <linux-pci@archiver.kernel.org>; Mon,  2 May 2022 11:39:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58170C433F5
+	for <linux-pci@archiver.kernel.org>; Mon,  2 May 2022 11:46:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232763AbiEBLnL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 May 2022 07:43:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57772 "EHLO
+        id S1384781AbiEBLtp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 May 2022 07:49:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232611AbiEBLnK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2022 07:43:10 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5903515FDF;
-        Mon,  2 May 2022 04:39:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 15528B81657;
-        Mon,  2 May 2022 11:39:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9598FC385AF;
-        Mon,  2 May 2022 11:39:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1651491579;
-        bh=WSHwriL2NKIWz7/ayg94uts9h/We1ZDjIIHGMTCDU1Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FYaSw7qVeQY/1RjtQHtZyPreRSSvo1ycGJh3qjZdzr/A5eZKYaMBHWrjuLfc9i/2F
-         4CALcNjkcxrF3NhvN73aoGSSIx2KQyIBPliS9iiZqpyfBSm+TkRwIiHPPvlb0QThky
-         gJI8vxI9Aa3RnD6NmT+8zqmcdTr2uR4ypYYKl+gQ=
-Date:   Mon, 2 May 2022 13:39:38 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Hector Martin <marcan@marcan.st>
-Cc:     Marc Zyngier <maz@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        with ESMTP id S1355474AbiEBLtm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2022 07:49:42 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 35A92167D4;
+        Mon,  2 May 2022 04:46:13 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id A665B92009C; Mon,  2 May 2022 13:46:11 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id A19A992009B;
+        Mon,  2 May 2022 12:46:11 +0100 (BST)
+Date:   Mon, 2 May 2022 12:46:11 +0100 (BST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Ben Dooks <ben.dooks@codethink.co.uk>
+cc:     Alexandre Ghiti <alex@ghiti.fr>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
-        Sven Peter <sven@svenpeter.dev>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: apple: GPIO handling nitfixes
-Message-ID: <Ym/C+iFmWIEPrv8y@kroah.com>
-References: <20220502093832.32778-1-marcan@marcan.st>
- <20220502093832.32778-2-marcan@marcan.st>
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Greentime Hu <greentime.hu@sifive.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        David Abdurachmanov <david.abdurachmanov@sifive.com>,
+        Neill Whillans <neill.whillans@codethink.co.uk>
+Subject: Re: [V3] PCI: fu740: Drop to 2.5GT/s to fix initial device probing
+ on some boards
+In-Reply-To: <3acd20b2-5882-7cc0-8a7b-7b406b768c1c@codethink.co.uk>
+Message-ID: <alpine.DEB.2.21.2205020049130.9383@angie.orcam.me.uk>
+References: <20220318152430.526320-1-ben.dooks@codethink.co.uk> <2442936e-a53e-59bf-488f-95eac26d1252@ghiti.fr> <85e864fd-762e-0780-f829-bfbb178ab24e@ghiti.fr> <bded4b1e-3404-6bcd-3289-dc8d5b4d713a@codethink.co.uk> <alpine.DEB.2.21.2204140048460.9383@angie.orcam.me.uk>
+ <3acd20b2-5882-7cc0-8a7b-7b406b768c1c@codethink.co.uk>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220502093832.32778-2-marcan@marcan.st>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, May 02, 2022 at 06:38:30PM +0900, Hector Martin wrote:
-> - Use devm managed GPIO getter
-> - GPIO ops can sleep in this context
+Hi Ben,
 
-Please read the section entitled "The canonical patch format" in the
-kernel file, Documentation/SubmittingPatches for what is needed in order
-to properly describe the change.  This text does not make any sense.
+> >   Any idea what might be causing it?  I can't see it being explicitly set
+> > or cleared anywhere, be it in U-Boot or Linux, so it must be done by the
+> > device itself depending on something.  And the lack of this capability
+> > seems to me like non-compliance for a multiple-lane, multiple-speed
+> > device.
+> 
+> I'll see if we can reproduce this
 
-Same for your subject, it needs to be reworked.
+ Have you been able to look into it?
 
-thanks,
-
-greg k-h
+  Maciej
