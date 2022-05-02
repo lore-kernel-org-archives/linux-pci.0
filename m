@@ -2,80 +2,87 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AFC5C433EF
-	for <linux-pci@archiver.kernel.org>; Mon,  2 May 2022 11:49:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5D7C433F5
+	for <linux-pci@archiver.kernel.org>; Mon,  2 May 2022 12:16:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1384813AbiEBLxR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 May 2022 07:53:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41980 "EHLO
+        id S1384991AbiEBMTn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 May 2022 08:19:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43918 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229651AbiEBLxR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2022 07:53:17 -0400
-X-Greylist: delayed 568 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 02 May 2022 04:49:48 PDT
-Received: from rosenzweig.io (rosenzweig.io [138.197.143.207])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C516217041;
-        Mon,  2 May 2022 04:49:48 -0700 (PDT)
-Received: by rosenzweig.io (Postfix, from userid 1000)
-        id 6848A41019; Mon,  2 May 2022 11:40:19 +0000 (UTC)
-Date:   Mon, 2 May 2022 11:40:19 +0000
-From:   Alyssa Rosenzweig <alyssa@rosenzweig.io>
-To:     Hector Martin <marcan@marcan.st>
-Cc:     Sven Peter <sven@svenpeter.dev>, Rob Herring <robh+dt@kernel.org>,
-        Mark Kettenis <kettenis@openbsd.org>,
-        Marc Zyngier <maz@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: pci: apple,pcie: Drop max-link-speed from
- example
-Message-ID: <Ym/DI6yAmSHCHimf@rosenzweig.io>
-References: <20220502091308.28233-1-marcan@marcan.st>
+        with ESMTP id S1384965AbiEBMTm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2022 08:19:42 -0400
+X-Greylist: delayed 9429 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 02 May 2022 05:16:04 PDT
+Received: from mail.marcansoft.com (marcansoft.com [212.63.210.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8539915A1A;
+        Mon,  2 May 2022 05:16:04 -0700 (PDT)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: marcan@marcan.st)
+        by mail.marcansoft.com (Postfix) with ESMTPSA id 609183FA5E;
+        Mon,  2 May 2022 12:16:00 +0000 (UTC)
+Message-ID: <f241698b-96ad-6268-217d-da64d8d7cb22@marcan.st>
+Date:   Mon, 2 May 2022 21:15:57 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220502091308.28233-1-marcan@marcan.st>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 3/3] PCI: apple: Add support for optional PWREN GPIO
+Content-Language: es-ES
+To:     Marc Zyngier <maz@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Sven Peter <sven@svenpeter.dev>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20220502093832.32778-1-marcan@marcan.st>
+ <20220502093832.32778-4-marcan@marcan.st> <87ee1ci5u8.wl-maz@kernel.org>
+From:   Hector Martin <marcan@marcan.st>
+In-Reply-To: <87ee1ci5u8.wl-maz@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Reviewed-by: Alyssa Rosenzweig <alyssa@rosenzweig.io> 
-On Mon, May 02, 2022 at 06:13:08PM +0900, Hector Martin wrote:
-> We no longer use these since 111659c2a570 (and they never worked
-> anyway); drop them from the example to avoid confusion.
+On 02/05/2022 19.31, Marc Zyngier wrote:
+> On Mon, 02 May 2022 10:38:32 +0100,
+> Hector Martin <marcan@marcan.st> wrote:
+>>
+>> WiFi and SD card devices on M1 Macs have a separate power enable GPIO.
+>> Add support for this to the PCIe controller. This is modeled after how
+>> pcie-fu740 does it.
 > 
-> Fixes: 111659c2a570 ("arm64: dts: apple: t8103: Remove PCIe max-link-speed properties")
-> Signed-off-by: Hector Martin <marcan@marcan.st>
-> ---
->  Documentation/devicetree/bindings/pci/apple,pcie.yaml | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/apple,pcie.yaml b/Documentation/devicetree/bindings/pci/apple,pcie.yaml
-> index 7f01e15fc81c..daf602ac0d0f 100644
-> --- a/Documentation/devicetree/bindings/pci/apple,pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/apple,pcie.yaml
-> @@ -142,7 +142,6 @@ examples:
->            device_type = "pci";
->            reg = <0x0 0x0 0x0 0x0 0x0>;
->            reset-gpios = <&pinctrl_ap 152 0>;
-> -          max-link-speed = <2>;
->  
->            #address-cells = <3>;
->            #size-cells = <2>;
-> @@ -153,7 +152,6 @@ examples:
->            device_type = "pci";
->            reg = <0x800 0x0 0x0 0x0 0x0>;
->            reset-gpios = <&pinctrl_ap 153 0>;
-> -          max-link-speed = <2>;
->  
->            #address-cells = <3>;
->            #size-cells = <2>;
-> @@ -164,7 +162,6 @@ examples:
->            device_type = "pci";
->            reg = <0x1000 0x0 0x0 0x0 0x0>;
->            reset-gpios = <&pinctrl_ap 33 0>;
-> -          max-link-speed = <1>;
->  
->            #address-cells = <3>;
->            #size-cells = <2>;
-> -- 
-> 2.35.1
-> 
+> Please update the DT binding to reflect this as an optional property.
+
+That's a bit more involved than you might think, considering we aren't
+checking *any* properties in the root port child nodes right now :-)
+
+How's this?
+
+patternProperties:
+  "^pci@":
+    $ref: /schemas/pci/pci-bus.yaml#
+    type: object
+    description: A single PCI root port
+
+    properties:
+      reg:
+        maxItems: 1
+
+      pwren-gpios:
+        description: Optional GPIO to power on the device
+        maxItems: 1
+
+    required:
+      - reset-gpios
+      - interrupt-controller
+      - "#interrupt-cells"
+      - interrupt-map-mask
+      - interrupt-map
+
+-- 
+Hector Martin (marcan@marcan.st)
+Public Key: https://mrcn.st/pub
