@@ -2,98 +2,98 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF837C433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 22:43:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2074C433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 22:51:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236354AbiECWrW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 May 2022 18:47:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35192 "EHLO
+        id S235682AbiECWys (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 May 2022 18:54:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232766AbiECWrW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 18:47:22 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9631A427FB;
-        Tue,  3 May 2022 15:43:48 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 43153B82225;
-        Tue,  3 May 2022 22:43:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD586C385A9;
-        Tue,  3 May 2022 22:43:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651617826;
-        bh=Z6S2y7SUOakVPhPiGmuDOM2Gy1kVlAWgAuhNi3LGULs=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=EuRM+xKHtw/nFA9UEqMY8i0S22dY3/CFsn8xt3cAPhCzU7Cb70s7Tjb/tsbOrkfOB
-         hmwglyPYxM+Qy7tc1L1Kxs5nHLEwc3tjFDaiSc1vgK2Hu/R6o1NorSbgtht9PIBh3A
-         mXoJm8vNgHYoTY6Rj3E5SBK94H3nfJnYJpkd0/DcaZNeW+gERmyBV3BMuXzKtdIkK8
-         Ri8g1gkBSP2Cr3AgisBjXoDnEo5iK4/+poNBWnGliVY5boQyktMQfT7ov7jObnJcAh
-         DlpCgLsVEaOPLX6mB5fUTqwiAvGEylHMjupQGJBfPeeQJjpNgYZgBXuvSQcE2YbAmG
-         IAnGw0zNxZBng==
-Date:   Tue, 3 May 2022 17:43:43 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        with ESMTP id S233794AbiECWys (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 18:54:48 -0400
+Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8620D28E13;
+        Tue,  3 May 2022 15:51:14 -0700 (PDT)
+Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 5C76C16D1;
+        Wed,  4 May 2022 01:51:47 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 5C76C16D1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baikalelectronics.ru; s=mail; t=1651618307;
+        bh=mO431tI1SNQWLBayZin6EOk4nSImyeG4ZAo0sqrxslA=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=KJQDLWp4uw+MV/pE08eMUEm3STzjE1jPymvmHWLFZHnRcsKxDCAKVrShxLpr4XSHX
+         ByCbxSCfuRqxhXFeBVmDbPqZWTzvaJKYw9h0jnjtQ0WUpebjgd8vLnR+6beBC2OeoR
+         rv0hbs7+TbZ3nV0C9iCK5bRkYiXBTgpWm5mNODJk=
+Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 01:51:13 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: Remove ddrss_sf_tbu clock from sc8180x
-Message-ID: <20220503224343.GA415146@bhelgaas>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Vladimir Murzin <vladimir.murzin@arm.com>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <iommu@lists.linux-foundation.org>
+Subject: [PATCH v2 01/26] dma-direct: take dma-ranges/offsets into account in resource mapping
+Date:   Wed, 4 May 2022 01:50:39 +0300
+Message-ID: <20220503225104.12108-2-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220503225104.12108-1-Sergey.Semin@baikalelectronics.ru>
+References: <20220503225104.12108-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220331013415.592748-1-bjorn.andersson@linaro.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 30, 2022 at 06:34:15PM -0700, Bjorn Andersson wrote:
-> The Qualcomm SC8180X platform was piggy backing on the SM8250
-> qcom_pcie_cfg, but the platform doesn't have the ddrss_sf_tbu clock, so
-> it now fails to probe due to the missing clock.
-> 
-> Give SC8180X its own qcom_pcie_cfg, without the ddrss_sf_tbu flag set.
-> 
-> Fixes: 0614f98bbb9f ("PCI: qcom: Add ddrss_sf_tbu flag")
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+A basic device-specific linear memory mapping was introduced back in
+commit ("dma: Take into account dma_pfn_offset") as a single-valued offset
+preserved in the device.dma_pfn_offset field, which was initialized for
+instance by means of the "dma-ranges" DT property. Afterwards the
+functionality was extended to support more than one device-specific region
+defined in the device.dma_range_map list of maps. But all of these
+improvements concerned a single pointer, page or sg DMA-mapping methods,
+while the system resource mapping function turned to miss the
+corresponding modification. Thus the dma_direct_map_resource() method now
+just casts the CPU physical address to the device DMA address with no
+dma-ranges-based mapping taking into account, which is obviously wrong.
+Let's fix it by using the phys_to_dma_direct() method to get the
+device-specific bus address from the passed memory resource for the case
+of the directly mapped DMA.
 
-Since this fixes a regression that we added in v5.18-rc1, I applied
-this to for-linus for v5.18.  Thanks!
+Fixes: 25f1e1887088 ("dma: Take into account dma_pfn_offset")
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+---
+ kernel/dma/direct.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 6ab90891801d..816028c0f6ed 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1550,6 +1550,11 @@ static const struct qcom_pcie_cfg sc7280_cfg = {
->  	.pipe_clk_need_muxing = true,
->  };
->  
-> +static const struct qcom_pcie_cfg sc8180x_cfg = {
-> +	.ops = &ops_1_9_0,
-> +	.has_tbu_clk = true,
-> +};
-> +
->  static const struct dw_pcie_ops dw_pcie_ops = {
->  	.link_up = qcom_pcie_link_up,
->  	.start_link = qcom_pcie_start_link,
-> @@ -1656,7 +1661,7 @@ static const struct of_device_id qcom_pcie_match[] = {
->  	{ .compatible = "qcom,pcie-qcs404", .data = &ipq4019_cfg },
->  	{ .compatible = "qcom,pcie-sdm845", .data = &sdm845_cfg },
->  	{ .compatible = "qcom,pcie-sm8250", .data = &sm8250_cfg },
-> -	{ .compatible = "qcom,pcie-sc8180x", .data = &sm8250_cfg },
-> +	{ .compatible = "qcom,pcie-sc8180x", .data = &sc8180x_cfg },
->  	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &sm8450_pcie0_cfg },
->  	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &sm8450_pcie1_cfg },
->  	{ .compatible = "qcom,pcie-sc7280", .data = &sc7280_cfg },
-> -- 
-> 2.35.1
-> 
+diff --git a/kernel/dma/direct.c b/kernel/dma/direct.c
+index 9743c6ccce1a..bc06db74dfdb 100644
+--- a/kernel/dma/direct.c
++++ b/kernel/dma/direct.c
+@@ -497,7 +497,7 @@ int dma_direct_map_sg(struct device *dev, struct scatterlist *sgl, int nents,
+ dma_addr_t dma_direct_map_resource(struct device *dev, phys_addr_t paddr,
+ 		size_t size, enum dma_data_direction dir, unsigned long attrs)
+ {
+-	dma_addr_t dma_addr = paddr;
++	dma_addr_t dma_addr = phys_to_dma_direct(dev, paddr);
+ 
+ 	if (unlikely(!dma_capable(dev, dma_addr, size, false))) {
+ 		dev_err_once(dev,
+-- 
+2.35.1
+
