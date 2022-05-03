@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 850C1C433F5
-	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 21:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F89C4332F
+	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 21:47:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243199AbiECVu5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 May 2022 17:50:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33040 "EHLO
+        id S243236AbiECVvP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 May 2022 17:51:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243203AbiECVuv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 17:50:51 -0400
+        with ESMTP id S243241AbiECVux (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 17:50:53 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C31D4419A7;
-        Tue,  3 May 2022 14:47:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8F0D541F93;
+        Tue,  3 May 2022 14:47:14 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id BDCE916D6;
-        Wed,  4 May 2022 00:47:39 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru BDCE916D6
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id EE33C16D6;
+        Wed,  4 May 2022 00:47:47 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru EE33C16D6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651614459;
-        bh=hrJgTy2FnB/c9Q9rJw4QNSOKSyrn0kRuvuyAhzMZnVw=;
+        d=baikalelectronics.ru; s=mail; t=1651614467;
+        bh=DE07tde5EIYdsFG7YTpf4YolgyrqiTMh/YtdqPmWpgw=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=EN7vShXicF6Osf/mn0TVzIBJn+pXOpOw+AQ+PKt9G3hnnLOPMDKC1FVkP3GjdoPjA
-         ddoxeu9r5GjBOZv+ARc3szXnQYUK3Uf9R9tyJVy4C78IaqA/rHI40eXtwDKpYINvSB
-         9M3Osns4936mkyH5rzYZKaS+AT8+lu+eokhnVGJ4=
+        b=QK8g8i8MN3UK7s3ux/31qZgRw56IQDC6AUnxbyt/klWtQdaSQ8kYhQ7yANW/z4EBr
+         drnBT9UOmPnflsxyMsj4TkIHxjWGVbVqas4W5Cm2+IlbPpKaXtJBNxy8C+jqWI5+Xc
+         L0xpOzb9GhjUPkYJX/5RmLoU1AWIg9YvOEX9kvZY=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 00:47:05 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 00:47:13 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -42,9 +42,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Rob Herring <robh+dt@kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 06/17] PCI: dwc: Add IP-core version detection procedure
-Date:   Wed, 4 May 2022 00:46:27 +0300
-Message-ID: <20220503214638.1895-7-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 13/17] PCI: dwc: Verify in/out regions against iATU constraints
+Date:   Wed, 4 May 2022 00:46:34 +0300
+Message-ID: <20220503214638.1895-14-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503214638.1895-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503214638.1895-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -55,124 +55,147 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since DWC PCIe v4.70a the controller version and version type can be read
-from the PORT_LOGIC.PCIE_VERSION_OFF and PORT_LOGIC.PCIE_VERSION_TYPE_OFF
-registers respectively. Seeing the generic code has got version-dependent
-parts let's use these registers to find out the controller version.  The
-detection procedure is executed for both RC and EP modes right after the
-platform-specific initialization. We can't do that earlier since the
-glue-drivers can perform the DBI-related setups there including the bus
-reference clocks activation, without which the CSRs just can't be read.
+Since the DWC PCIe driver private data now contains the iATU inbound and
+outbound regions constraints info like alignment, minimum and maximum
+limits, we can use them to make the in- and outbound iATU regions setup
+methods more strict to the ranges a callee tries to specify.  That will
+give us the safer dw_pcie_prog_outbound_atu(),
+dw_pcie_prog_ep_outbound_atu() and dw_pcie_prog_inbound_atu() functions.
 
-Note the CSRs content is zero on the older DWC PCIe controller. In that
-case we have no choice but to rely on the platform setup.
+First of all let's update the outbound ATU entries setup methods to
+returning the operation status. The methods will fail either in case if
+the range is failed to be activated or the passed region doesn't fulfill
+iATU constraints. Secondly the passed to the
+dw_pcie_prog_{ep_}outbound_atu() methods region-related parameters are
+verified against the detected iATU regions constraints. In particular the
+region limit address must not overflow the lower/upper limit CSR RW-fields
+otherwise the specified range will be just silently clamped. That
+verification will also protect the code from having u64 type overflow.
+Secondly let's make sure base address (CPU-address), target address
+(PCI-address) and size are properly aligned. Unaligned ranges will be
+silently aligned down (addresses) and up (limit) on writing the values to
+the corresponding registers, which in it turn may lead to unpredictable
+results like ranges virtual overlap. Finally the CPU-address alignment
+needs to be verified in the dw_pcie_prog_inbound_atu() method too as the
+DWC PCIe RC/EP registers manual demands seeing the lower bits of the in-
+and outbound iATU base address are always zeros.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-
 ---
+ drivers/pci/controller/dwc/pcie-designware.c | 39 +++++++++++++-------
+ drivers/pci/controller/dwc/pcie-designware.h | 10 ++---
+ 2 files changed, 30 insertions(+), 19 deletions(-)
 
-Changelog v2:
-- Move the IP-core version detection procedure call from
-  dw_pcie_ep_init_complete() to dw_pcie_ep_init().
----
- .../pci/controller/dwc/pcie-designware-ep.c   |  2 ++
- .../pci/controller/dwc/pcie-designware-host.c |  2 ++
- drivers/pci/controller/dwc/pcie-designware.c  | 24 +++++++++++++++++++
- drivers/pci/controller/dwc/pcie-designware.h  |  6 +++++
- 4 files changed, 34 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index c152021d0bf6..1be8bbf35047 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -715,6 +715,8 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	ep->phys_base = res->start;
- 	ep->addr_size = resource_size(res);
- 
-+	dw_pcie_version_detect(pci);
-+
- 	dw_pcie_iatu_detect(pci);
- 
- 	ep->ib_window_map = devm_kcalloc(dev,
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 1c815d3bead9..c74b4587b236 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -404,6 +404,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
-+	dw_pcie_version_detect(pci);
-+
- 	dw_pcie_iatu_detect(pci);
- 
- 	dw_pcie_setup_rc(pp);
 diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 3ebb7bfee10f..62f50086aa49 100644
+index 1cc5e3b2fa6d..747e252c09e6 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.c
 +++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -16,6 +16,30 @@
- #include "../../pci.h"
- #include "pcie-designware.h"
+@@ -8,6 +8,7 @@
+  * Author: Jingoo Han <jg1.han@samsung.com>
+  */
  
-+void dw_pcie_version_detect(struct dw_pcie *pci)
-+{
-+	u32 ver;
++#include <linux/align.h>
+ #include <linux/bitops.h>
+ #include <linux/delay.h>
+ #include <linux/of.h>
+@@ -308,9 +309,9 @@ static inline u32 dw_pcie_enable_ecrc(u32 val)
+ 	return val | PCIE_ATU_TD;
+ }
+ 
+-static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+-					int index, int type, u64 cpu_addr,
+-					u64 pci_addr, u64 size)
++static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
++				       int index, int type, u64 cpu_addr,
++				       u64 pci_addr, u64 size)
+ {
+ 	u32 retries, val;
+ 	u64 limit_addr;
+@@ -320,6 +321,13 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+ 
+ 	limit_addr = cpu_addr + size - 1;
+ 
++	if ((limit_addr & ~pci->region_limit) != (cpu_addr & ~pci->region_limit) ||
++	    !IS_ALIGNED(cpu_addr, pci->region_align) ||
++	    !IS_ALIGNED(pci_addr, pci->region_align) ||
++	    !IS_ALIGNED(size, pci->region_align) || !size) {
++		return -EINVAL;
++	}
 +
-+	/* The content of the CSR is zero on DWC PCIe older than v4.70a */
-+	ver = dw_pcie_readl_dbi(pci, PCIE_VERSION_NUMBER);
-+	if (!ver)
-+		return;
+ 	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_LOWER_BASE,
+ 			      lower_32_bits(cpu_addr));
+ 	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_UPPER_BASE,
+@@ -353,27 +361,29 @@ static void __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
+ 	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
+ 		val = dw_pcie_readl_atu_ob(pci, index, PCIE_ATU_REGION_CTRL2);
+ 		if (val & PCIE_ATU_ENABLE)
+-			return;
++			return 0;
+ 
+ 		mdelay(LINK_WAIT_IATU);
+ 	}
+ 
+ 	dev_err(pci->dev, "Outbound iATU is not being enabled\n");
 +
-+	if (pci->version && pci->version != ver)
-+		dev_warn(pci->dev, "Versions don't match (%08x != %08x)\n",
-+			 pci->version, ver);
-+	else
-+		pci->version = ver;
++	return -ETIMEDOUT;
+ }
+ 
+-void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+-			       u64 cpu_addr, u64 pci_addr, u64 size)
++int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
++			      u64 cpu_addr, u64 pci_addr, u64 size)
+ {
+-	__dw_pcie_prog_outbound_atu(pci, 0, index, type,
+-				    cpu_addr, pci_addr, size);
++	return __dw_pcie_prog_outbound_atu(pci, 0, index, type,
++					   cpu_addr, pci_addr, size);
+ }
+ 
+-void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+-				  int type, u64 cpu_addr, u64 pci_addr,
+-				  u64 size)
++int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
++				 int type, u64 cpu_addr, u64 pci_addr,
++				 u64 size)
+ {
+-	__dw_pcie_prog_outbound_atu(pci, func_no, index, type,
+-				    cpu_addr, pci_addr, size);
++	return __dw_pcie_prog_outbound_atu(pci, func_no, index, type,
++					   cpu_addr, pci_addr, size);
+ }
+ 
+ static inline u32 dw_pcie_readl_atu_ib(struct dw_pcie *pci, u32 index, u32 reg)
+@@ -392,6 +402,9 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+ {
+ 	u32 retries, val;
+ 
++	if (!IS_ALIGNED(cpu_addr, pci->region_align))
++		return -EINVAL;
 +
-+	ver = dw_pcie_readl_dbi(pci, PCIE_VERSION_TYPE);
-+
-+	if (pci->type && pci->type != ver)
-+		dev_warn(pci->dev, "Types don't match (%08x != %08x)\n",
-+			 pci->type, ver);
-+	else
-+		pci->type = ver;
-+}
-+
- /*
-  * These interfaces resemble the pci_find_*capability() interfaces, but these
-  * are for configuring host controllers, which are bridges *to* PCI devices but
+ 	dw_pcie_writel_atu_ib(pci, index, PCIE_ATU_LOWER_TARGET,
+ 			      lower_32_bits(cpu_addr));
+ 	dw_pcie_writel_atu_ib(pci, index, PCIE_ATU_UPPER_TARGET,
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 5be43c662176..f70cbdedf5a3 100644
+index faf42f2b2ff3..f0aa2c823b5d 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -85,6 +85,9 @@
- #define PCIE_PORT_MULTI_LANE_CTRL	0x8C0
- #define PORT_MLTI_UPCFG_SUPPORT		BIT(7)
- 
-+#define PCIE_VERSION_NUMBER		0x8F8
-+#define PCIE_VERSION_TYPE		0x8FC
-+
- #define PCIE_ATU_VIEWPORT		0x900
- #define PCIE_ATU_REGION_INBOUND		BIT(31)
- #define PCIE_ATU_REGION_OUTBOUND	0
-@@ -278,6 +281,7 @@ struct dw_pcie {
- 	struct dw_pcie_ep	ep;
- 	const struct dw_pcie_ops *ops;
- 	u32			version;
-+	u32			type;
- 	int			num_lanes;
- 	int			link_gen;
- 	u8			n_fts[2];
-@@ -290,6 +294,8 @@ struct dw_pcie {
- #define to_dw_pcie_from_ep(endpoint)   \
- 		container_of((endpoint), struct dw_pcie, ep)
- 
-+void dw_pcie_version_detect(struct dw_pcie *pci);
-+
- u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap);
- u16 dw_pcie_find_ext_capability(struct dw_pcie *pci, u8 cap);
- 
+@@ -304,12 +304,10 @@ void dw_pcie_write_dbi2(struct dw_pcie *pci, u32 reg, size_t size, u32 val);
+ int dw_pcie_link_up(struct dw_pcie *pci);
+ void dw_pcie_upconfig_setup(struct dw_pcie *pci);
+ int dw_pcie_wait_for_link(struct dw_pcie *pci);
+-void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+-			       int type, u64 cpu_addr, u64 pci_addr,
+-			       u64 size);
+-void dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+-				  int type, u64 cpu_addr, u64 pci_addr,
+-				  u64 size);
++int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
++			      u64 cpu_addr, u64 pci_addr, u64 size);
++int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
++				 int type, u64 cpu_addr, u64 pci_addr, u64 size);
+ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+ 			     int type, u64 cpu_addr, u8 bar);
+ void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index);
 -- 
 2.35.1
 
