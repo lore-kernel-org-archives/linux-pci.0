@@ -2,155 +2,291 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B613C433F5
-	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 16:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12FDFC433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 17:11:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239512AbiECQ10 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 May 2022 12:27:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38732 "EHLO
+        id S240107AbiECRPW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 May 2022 13:15:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60702 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239519AbiECQ1W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 12:27:22 -0400
-Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 119F33C48A
-        for <linux-pci@vger.kernel.org>; Tue,  3 May 2022 09:23:48 -0700 (PDT)
-Received: from relay2-d.mail.gandi.net (unknown [217.70.183.194])
-        by mslow1.mail.gandi.net (Postfix) with ESMTP id BCCF2CD68D
-        for <linux-pci@vger.kernel.org>; Tue,  3 May 2022 16:07:22 +0000 (UTC)
-Received: (Authenticated sender: clement.leger@bootlin.com)
-        by mail.gandi.net (Postfix) with ESMTPSA id 11B8340005;
-        Tue,  3 May 2022 16:07:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1651594036;
+        with ESMTP id S240106AbiECRPU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 13:15:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 991771CFF1
+        for <linux-pci@vger.kernel.org>; Tue,  3 May 2022 10:11:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1651597906;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xthf4C7ur9zN4o/9f3kzfNM7G/i4L2TMAmLJ5bF8nnI=;
-        b=PqfIbDa8O9C9Mq6unBJ/Ed+fd0gBO/cMham8ZD5lCisKxFdiERR8HF1CDaaHqFU76oYATY
-        0manVcHlIdzbQRoJzyoV+HZwmuJaj6selVkqYbEXDAxPqf0I5irS+d9Eab65Ah3AyJYP8e
-        8Fn7aDuieDU1zsRb8eRC0XK9T6GOn00MUZHE1T1RZCfnP1l71dwy9K+k0zZ4xrJgrAV/jN
-        DPZo/LrlGC3z/Qh22NVtPPnH2MVyOcxvvO8MHO8Y3DqRKxI2i8CbXXb7s28go/rgcKmc5x
-        nv4eTTqLZw1RuBQ0AJgr4LQ26mo5Ss+kR6RxbVxCeZMBm420yVBX0hBD1F/aWg==
-Date:   Tue, 3 May 2022 18:05:58 +0200
-From:   =?UTF-8?B?Q2zDqW1lbnQgTMOpZ2Vy?= <clement.leger@bootlin.com>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Frank Rowand <frowand.list@gmail.com>,
-        Pantelis Antoniou <pantelis.antoniou@konsulko.com>,
+        bh=PmDpcAKRURnYViq/lT/qk3yWWoPeoPeLoyR0xccq8g0=;
+        b=IxAMVbIAcjpY6667dNeMZx2h68N+zezm4Z0wbKcQVlGp2GPiT42xudGcJS56KBfM7zmt1i
+        /mYO9mGyycW7nPwTcuWtfyWNrInk1+1hMZ3PqMoRhzSIL1PmUlc4/k+Ct68QAzKktNpvL5
+        fe05jX7vc0E6dV29B3gMSTWfvZuZzZA=
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com
+ [209.85.166.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-620-dlkWg7nAPEyJUfsMqLUqrQ-1; Tue, 03 May 2022 13:11:27 -0400
+X-MC-Unique: dlkWg7nAPEyJUfsMqLUqrQ-1
+Received: by mail-io1-f71.google.com with SMTP id x13-20020a0566022c4d00b0065491fa5614so13146227iov.9
+        for <linux-pci@vger.kernel.org>; Tue, 03 May 2022 10:11:27 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
+         :references:organization:mime-version:content-transfer-encoding;
+        bh=PmDpcAKRURnYViq/lT/qk3yWWoPeoPeLoyR0xccq8g0=;
+        b=7Vl6B6dMSy40kpkiQX3O6z4LqnsOGR9eFj8kqJBmk4AgGr6L53kjH5S4xc+skHBJH2
+         21NbrAQEV74lqo7d1w/IQPRtEDh4mJPn8mdILB5MIZJ0GIWhw7IuSZpqaQwEhizNXGsS
+         U7z9DrA7nUuAJYags6TOONnGRc3YbqJg5XnrTeE+V+HuRYUk3HCQH/E6R7RMfzmtEX2x
+         BWiDTaXUCIisHXsE78CqbznS7d89VZgrmKZbGoBTNXsz9MjANbDi3fOJjRkYqlYLl4p2
+         tdLNc9FlXUldi1nv04AizVsm0WcyU6+1vx2jYnt9EHwyV3AzUiiyEObSlohel8q0aIQl
+         1bsQ==
+X-Gm-Message-State: AOAM533lvd5rFeRgaALz9P2Wjv+4jE6oljCtzeqs9VKg33d8FR+V7HXW
+        0/ftcbZQks8yTGXgE1XYoGdyT9VF1XN0YpQbLeiAkC53gJRD9kIik4TcrTjkanSy0+zqfD1xyTc
+        6yWAamaGc79ejASOhLuFj
+X-Received: by 2002:a92:3405:0:b0:2c8:70ad:fa86 with SMTP id b5-20020a923405000000b002c870adfa86mr6944742ila.268.1651597887007;
+        Tue, 03 May 2022 10:11:27 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx7d7yOwkgKoHubTk3YAA9A5VeFfPMRsv66nBH6pKBak6btih6TX9vYxf5tX3YhN+5w9tPJ4w==
+X-Received: by 2002:a92:3405:0:b0:2c8:70ad:fa86 with SMTP id b5-20020a923405000000b002c870adfa86mr6944714ila.268.1651597886678;
+        Tue, 03 May 2022 10:11:26 -0700 (PDT)
+Received: from redhat.com ([38.15.36.239])
+        by smtp.gmail.com with ESMTPSA id r2-20020a92c502000000b002cde6e352e2sm3578912ilg.44.2022.05.03.10.11.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 May 2022 10:11:25 -0700 (PDT)
+Date:   Tue, 3 May 2022 11:11:24 -0600
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     Abhishek Sahu <abhsahu@nvidia.com>
+Cc:     Cornelia Huck <cohuck@redhat.com>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Max Gurtovoy <mgurtovoy@nvidia.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Allan Nielsen <allan.nielsen@microchip.com>,
-        Horatiu Vultur <horatiu.vultur@microchip.com>,
-        Steen Hegelund <steen.hegelund@microchip.com>,
-        Thomas Petazzoni <thomas.petazonni@bootlin.com>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Mark Brown <broonie@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Andrew Lunn <andrew@lunn.ch>, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: of: create DT nodes for PCI devices if they do
- not exists
-Message-ID: <20220503180558.0ec2fd56@fixe.home>
-In-Reply-To: <YnE4Ni+QUJT/CXV4@robh.at.kernel.org>
-References: <20220427094502.456111-1-clement.leger@bootlin.com>
-        <20220427094502.456111-3-clement.leger@bootlin.com>
-        <YnE4Ni+QUJT/CXV4@robh.at.kernel.org>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.31; x86_64-pc-linux-gnu)
+        <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 4/8] vfio/pci: Add support for setting driver data
+ inside core layer
+Message-ID: <20220503111124.38b07a9e.alex.williamson@redhat.com>
+In-Reply-To: <20220425092615.10133-5-abhsahu@nvidia.com>
+References: <20220425092615.10133-1-abhsahu@nvidia.com>
+        <20220425092615.10133-5-abhsahu@nvidia.com>
+Organization: Red Hat
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Le Tue, 3 May 2022 09:12:06 -0500,
-Rob Herring <robh@kernel.org> a =C3=A9crit :
+On Mon, 25 Apr 2022 14:56:11 +0530
+Abhishek Sahu <abhsahu@nvidia.com> wrote:
 
-> On Wed, Apr 27, 2022 at 11:45:01AM +0200, Cl=C3=A9ment L=C3=A9ger wrote:
-> > In order to apply overlays to PCI device nodes, the nodes must first
-> > exist. This commit add support to populate a skeleton tree for PCI bus
-> > and devices. These nodes can then be used by drivers to apply overlays.
-> >  =20
->=20
-> While I implemented this creating the nodes as the PCI devices are=20
-> created, I think probably we're going to want to create the device node=20
-> and any needed parent nodes on demand. Otherwise, just turning on=20
-> CONFIG_OF could break platforms.
+> The vfio driver is divided into two layers: core layer (implemented in
+> vfio_pci_core.c) and parent driver (For example, vfio_pci, mlx5_vfio_pci,
+> hisi_acc_vfio_pci, etc.). All the parent driver calls dev_set_drvdata()
+> and assigns its own structure as driver data. Some of the callback
+> functions are implemented in the core layer and these callback functions
+> provide the reference of 'struct pci_dev' or 'struct device'. Currently,
+> we use vfio_device_get_from_dev() which provides reference to the
+> vfio_device for a device. But this function follows long path to extract
+> the same. There are few cases, where we don't need to go through this
+> long path if we get this through drvdata.
+> 
+> This patch moves the setting of drvdata inside the core layer. If we see
+> the current implementation of parent driver structure implementation,
+> then 'struct vfio_pci_core_device' is a first member so the pointer of
+> the parent structure and 'struct vfio_pci_core_device' should be the same.
+> 
+> struct hisi_acc_vf_core_device {
+>     struct vfio_pci_core_device core_device;
+>     ...
+> };
+> 
+> struct mlx5vf_pci_core_device {
+>     struct vfio_pci_core_device core_device;
+>     ...
+> };
+> 
+> The vfio_pci.c uses 'struct vfio_pci_core_device' itself.
+> 
+> To support getting the drvdata in both the layers, we can put the
+> restriction to make 'struct vfio_pci_core_device' as a first member.
+> Also, vfio_pci_core_register_device() has this validation which makes sure
+> that this prerequisite is always satisfied.
+> 
+> Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
+> ---
+>  .../vfio/pci/hisilicon/hisi_acc_vfio_pci.c    |  4 ++--
+>  drivers/vfio/pci/mlx5/main.c                  |  3 +--
+>  drivers/vfio/pci/vfio_pci.c                   |  4 ++--
+>  drivers/vfio/pci/vfio_pci_core.c              | 24 ++++++++++++++++---
+>  include/linux/vfio_pci_core.h                 |  7 +++++-
+>  5 files changed, 32 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c b/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c
+> index 767b5d47631a..c76c09302a8f 100644
+> --- a/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c
+> +++ b/drivers/vfio/pci/hisilicon/hisi_acc_vfio_pci.c
+> @@ -1274,11 +1274,11 @@ static int hisi_acc_vfio_pci_probe(struct pci_dev *pdev, const struct pci_device
+>  					  &hisi_acc_vfio_pci_ops);
+>  	}
+>  
+> -	ret = vfio_pci_core_register_device(&hisi_acc_vdev->core_device);
+> +	ret = vfio_pci_core_register_device(&hisi_acc_vdev->core_device,
+> +					    hisi_acc_vdev);
+>  	if (ret)
+>  		goto out_free;
+>  
+> -	dev_set_drvdata(&pdev->dev, hisi_acc_vdev);
+>  	return 0;
+>  
+>  out_free:
+> diff --git a/drivers/vfio/pci/mlx5/main.c b/drivers/vfio/pci/mlx5/main.c
+> index bbec5d288fee..8689248f66f3 100644
+> --- a/drivers/vfio/pci/mlx5/main.c
+> +++ b/drivers/vfio/pci/mlx5/main.c
+> @@ -614,11 +614,10 @@ static int mlx5vf_pci_probe(struct pci_dev *pdev,
+>  		}
+>  	}
+>  
+> -	ret = vfio_pci_core_register_device(&mvdev->core_device);
+> +	ret = vfio_pci_core_register_device(&mvdev->core_device, mvdev);
+>  	if (ret)
+>  		goto out_free;
+>  
+> -	dev_set_drvdata(&pdev->dev, mvdev);
+>  	return 0;
+>  
+>  out_free:
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index 2b047469e02f..e0f8027c5cd8 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -151,10 +151,10 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  		return -ENOMEM;
+>  	vfio_pci_core_init_device(vdev, pdev, &vfio_pci_ops);
+>  
+> -	ret = vfio_pci_core_register_device(vdev);
+> +	ret = vfio_pci_core_register_device(vdev, vdev);
+>  	if (ret)
+>  		goto out_free;
+> -	dev_set_drvdata(&pdev->dev, vdev);
+> +
+>  	return 0;
+>  
+>  out_free:
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 1271728a09db..953ac33b2f5f 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -1822,9 +1822,11 @@ void vfio_pci_core_uninit_device(struct vfio_pci_core_device *vdev)
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_uninit_device);
+>  
+> -int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev)
+> +int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev,
+> +				  void *driver_data)
+>  {
+>  	struct pci_dev *pdev = vdev->pdev;
+> +	struct device *dev = &pdev->dev;
+>  	int ret;
+>  
+>  	if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
+> @@ -1843,6 +1845,17 @@ int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev)
+>  		return -EBUSY;
+>  	}
+>  
+> +	/*
+> +	 * The 'struct vfio_pci_core_device' should be the first member of the
+> +	 * of the structure referenced by 'driver_data' so that it can be
+> +	 * retrieved with dev_get_drvdata() inside vfio-pci core layer.
+> +	 */
+> +	if ((struct vfio_pci_core_device *)driver_data != vdev) {
+> +		pci_warn(pdev, "Invalid driver data\n");
+> +		return -EINVAL;
+> +	}
 
-Ok, so this creation would potentially be done on request from some PCI
-driver that want to apply it's overlay on the tree. Should I actually
-add some function such as of_pci_apply_overlay() which would create the
-PCI node tree if not present and apply the overlay to the of_node that
-is associated to the PCIe device ?
+It seems a bit odd to me to add a driver_data arg to the function,
+which is actually required to point to the same thing as the existing
+function arg.  Is this just to codify the requirement?  Maybe others
+can suggest alternatives.
 
->=20
-> One potential issue is that fwnode assumes there is either a DT node or=20
-> ACPI node. With this, we have the potential for both. I'm not sure how=20
-> much that's going to be an issue.
+We also need to collaborate with Jason's patch:
 
-Not sure either but that's better not to play with that.
+https://lore.kernel.org/all/0-v2-0f36bcf6ec1e+64d-vfio_get_from_dev_jgg@nvidia.com/
 
->=20
-> > Co-developed-by: Rob Herring <robh@kernel.org>
-> > Signed-off-by: Rob Herring <robh@kernel.org>
-> > Signed-off-by: Cl=C3=A9ment L=C3=A9ger <clement.leger@bootlin.com>
-> > ---
-> >  drivers/pci/of.c | 184 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 184 insertions(+)
-> >=20
-> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> > index cb2e8351c2cc..f2325708726e 100644
-> > --- a/drivers/pci/of.c
-> > +++ b/drivers/pci/of.c
-> > @@ -16,12 +16,194 @@
-> >  #include "pci.h"
-> > =20
-> >  #ifdef CONFIG_PCI
-> > +static int of_pci_add_property(struct of_changeset *ocs, struct device=
-_node *np,
-> > +			       const char *name, const void *value, int length) =20
->=20
-> Nothing really PCI specific about this function.
->=20
-> The kernel support for creating nodes and properties is pretty poor. We=20
-> should improve it with functions like this (in drivers/of/). Maybe the=20
-> changeset part should be separate though. We have some cases of creating=
-=20
-> properties or nodes already, and whatever new APIs we make those=20
-> cases should be able to use them. And if they are converted, then it can=
-=20
-> be merged sooner rather than when all the PCI parts are ready.
+(and maybe others)
 
-Ok, so this will be done as a first separate series to add property
-creation then.
+If we implement a change like proposed here that vfio-pci-core sets
+drvdata then we don't need for each variant driver to implement their
+own wrapper around err_handler or err_detected as Jason proposes in the
+linked patch.  Thanks,
 
-> > +
-> > +static int of_pci_add_cells_props(struct device_node *node,
-> > +				  struct of_changeset *cs, int n_addr_cells,
-> > +				  int n_size_cells)
-> > +{
-> > +	__be32 val;
-> > +	int ret;
-> > +
-> > +	ret =3D of_pci_add_property(cs, node, "ranges", NULL, 0); =20
->=20
-> The host bridge node is going to need to fill in 'ranges'. Empty ranges=20
-> is not valid when there's a change in number of cells.
+Alex
 
-Ok, wasn't aware of that. If I understand, I'll need to obtain the
-range of PCI addresses that are behind the bridge to fill in this
-ranges property right ?
+> +	dev_set_drvdata(dev, driver_data);
+> +
+>  	if (pci_is_root_bus(pdev->bus)) {
+>  		ret = vfio_assign_device_set(&vdev->vdev, vdev);
+>  	} else if (!pci_probe_reset_slot(pdev->slot)) {
+> @@ -1856,10 +1869,10 @@ int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev)
+>  	}
+>  
+>  	if (ret)
+> -		return ret;
+> +		goto out_drvdata;
+>  	ret = vfio_pci_vf_init(vdev);
+>  	if (ret)
+> -		return ret;
+> +		goto out_drvdata;
+>  	ret = vfio_pci_vga_init(vdev);
+>  	if (ret)
+>  		goto out_vf;
+> @@ -1890,6 +1903,8 @@ int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev)
+>  		vfio_pci_set_power_state(vdev, PCI_D0);
+>  out_vf:
+>  	vfio_pci_vf_uninit(vdev);
+> +out_drvdata:
+> +	dev_set_drvdata(dev, NULL);
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_register_device);
+> @@ -1897,6 +1912,7 @@ EXPORT_SYMBOL_GPL(vfio_pci_core_register_device);
+>  void vfio_pci_core_unregister_device(struct vfio_pci_core_device *vdev)
+>  {
+>  	struct pci_dev *pdev = vdev->pdev;
+> +	struct device *dev = &pdev->dev;
+>  
+>  	vfio_pci_core_sriov_configure(pdev, 0);
+>  
+> @@ -1907,6 +1923,8 @@ void vfio_pci_core_unregister_device(struct vfio_pci_core_device *vdev)
+>  
+>  	if (!disable_idle_d3)
+>  		vfio_pci_set_power_state(vdev, PCI_D0);
+> +
+> +	dev_set_drvdata(dev, NULL);
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_unregister_device);
+>  
+> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+> index 505b2a74a479..3c7d65e68340 100644
+> --- a/include/linux/vfio_pci_core.h
+> +++ b/include/linux/vfio_pci_core.h
+> @@ -225,7 +225,12 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev);
+>  void vfio_pci_core_init_device(struct vfio_pci_core_device *vdev,
+>  			       struct pci_dev *pdev,
+>  			       const struct vfio_device_ops *vfio_pci_ops);
+> -int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev);
+> +/*
+> + * The 'struct vfio_pci_core_device' should be the first member
+> + * of the structure referenced by 'driver_data'.
+> + */
+> +int vfio_pci_core_register_device(struct vfio_pci_core_device *vdev,
+> +				  void *driver_data);
+>  void vfio_pci_core_uninit_device(struct vfio_pci_core_device *vdev);
+>  void vfio_pci_core_unregister_device(struct vfio_pci_core_device *vdev);
+>  int vfio_pci_core_sriov_configure(struct pci_dev *pdev, int nr_virtfn);
 
->=20
-> The root node also will need "#address-cells" and "#size-cells".
-> =20
-
-Ok.
-
-
---=20
-Cl=C3=A9ment L=C3=A9ger,
-Embedded Linux and Kernel engineer at Bootlin
-https://bootlin.com
