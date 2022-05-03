@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5898C4321E
-	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 21:24:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EF13C433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 21:24:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240888AbiECV1d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 May 2022 17:27:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41826 "EHLO
+        id S243052AbiECV1k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 May 2022 17:27:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242868AbiECV1W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 17:27:22 -0400
+        with ESMTP id S242947AbiECV1Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 17:27:24 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0E2D441638;
-        Tue,  3 May 2022 14:23:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E50E34161F;
+        Tue,  3 May 2022 14:23:39 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 721B916A9;
-        Wed,  4 May 2022 00:24:07 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 721B916A9
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 377A816A9;
+        Wed,  4 May 2022 00:24:12 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 377A816A9
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651613047;
-        bh=aZ0FrYvdbbu8Dgya3SIuok2wzI17oaJMGYt84OA6t2M=;
+        d=baikalelectronics.ru; s=mail; t=1651613052;
+        bh=1f4SBFBJMaiyWW+OZ9FwRsB77hHDXlOvNwoIoORkwEc=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=Dq+bMEOBAp03ImhYsN36vwLB7KNT6XscOGIA5ZkvC7yyu2PQ7oBviPa2uxdZtchgD
-         wX4S5CgbPWmJqd86jjWrdstUV4rkeEBEaVVOuvnxfz1CHnVEe9nd196kqVQIoozhv5
-         gG4fanaoJPSz3UvacvAJQ8qLRTo+nhzgt0Qwy9rE=
+        b=Jb27D/wdLNlDtQyTHTCfnCOvqenrXizO1iA995zACny6lJh6/EGVVl/Galj2aTFPm
+         oB3aA3GpYwVONTwl6B6Yunv6VAURyiM2ZW0GImxbyx28QUWuabWYvmFWRL3hxPF+xX
+         pn7nbu7iXf4CU7sLdIxjCaEoNIuAbLjDKUwLBe0w=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 00:23:33 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 00:23:38 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -41,9 +41,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 08/13] PCI: dwc: Discard IP-core version checking on unrolled iATU detection
-Date:   Wed, 4 May 2022 00:22:55 +0300
-Message-ID: <20220503212300.30105-9-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 13/13] PCI: dwc-plat: Drop dw_plat_pcie_of_match forward declaration
+Date:   Wed, 4 May 2022 00:23:00 +0300
+Message-ID: <20220503212300.30105-14-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503212300.30105-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503212300.30105-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -54,63 +54,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It's pretty much pointless. Even though unrolled version of the internal
-ATU has been indeed available since DWC PCIe v4.80a IP-core, there is no
-guarantee it was enabled during the IP-core configuration (Synopsys
-suggests to contact the Solvnet support for guidance of how to do that for
-the newer IP-cores). So the only reliable way to find out the unrolled
-iATU feature availability is indeed to check the iATU viewport register
-content. In accordance with the reference manual [1] if the register
-doesn't exist (unrolled iATU is enabled) it's content is fixed with
-0xff-s, otherwise it will contain some zeros. So we can freely drop the
-IP-core version checking in this matter then and use the
-dw_pcie_iatu_unroll_enabled() method only to detect whether iATU/eDMA
-space is unrolled.
-
-[1] DesignWare Cores, PCI Express Controller, Register Desciptions,
-v.4.90a, December 2016, p.855
+The denoted forward declaration used to be required to get the OF-device
+ID structure by calling the of_match_device() method. The later method
+invocation has been replaced with the of_device_get_match_data() call in
+the commit 5c204204cf24 ("PCI: designware-plat: Prefer
+of_device_get_match_data()"). Thus the forward declaration of the
+OF-compatible device strings no longer needed. Drop it for good.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-plat.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 3bd1cfd12148..e3d2c11e6998 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -600,15 +600,15 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 99cf2ac5b0ba..e606c5d5f06f 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -29,8 +29,6 @@ struct dw_plat_pcie_of_data {
+ 	enum dw_pcie_device_mode	mode;
+ };
  
- }
+-static const struct of_device_id dw_plat_pcie_of_match[];
+-
+ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+ };
  
--static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
-+static bool dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
- {
- 	u32 val;
- 
- 	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
- 	if (val == 0xffffffff)
--		return 1;
-+		return true;
- 
--	return 0;
-+	return false;
- }
- 
- static void dw_pcie_iatu_detect_regions_unroll(struct dw_pcie *pci)
-@@ -680,9 +680,8 @@ void dw_pcie_iatu_detect(struct dw_pcie *pci)
- 	struct device *dev = pci->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
- 
--	if (pci->version >= 0x480A || (!pci->version &&
--				       dw_pcie_iatu_unroll_enabled(pci))) {
--		pci->iatu_unroll_enabled = true;
-+	pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
-+	if (pci->iatu_unroll_enabled) {
- 		if (!pci->atu_base) {
- 			struct resource *res =
- 				platform_get_resource_byname(pdev, IORESOURCE_MEM, "atu");
 -- 
 2.35.1
 
