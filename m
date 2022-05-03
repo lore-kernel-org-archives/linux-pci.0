@@ -2,40 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECA2FC433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 21:23:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7134DC433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 21:24:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242999AbiECV1Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 May 2022 17:27:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41838 "EHLO
+        id S231690AbiECV1b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 May 2022 17:27:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41878 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242887AbiECV1W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 17:27:22 -0400
+        with ESMTP id S242909AbiECV1X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 17:27:23 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 221464162E;
-        Tue,  3 May 2022 14:23:36 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 364E34163F;
+        Tue,  3 May 2022 14:23:37 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 5D53816A9;
-        Wed,  4 May 2022 00:24:09 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 5D53816A9
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 46BD416D6;
+        Wed,  4 May 2022 00:24:11 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 46BD416D6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651613049;
-        bh=bo5OqnK+Z6C/zfKXy1FN6D2uyOimMZxXIfJNT8kWNlI=;
+        d=baikalelectronics.ru; s=mail; t=1651613051;
+        bh=DWfIhQOlThJ6h1HtDk1Jv4zywOs8e0bFpuSN9WfYfs4=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=icKemu7SIwVe5HDWo/ep1D9y8aOHLzTYni1wpNEF53a3vC9mME5CA6sE+3K6iE3NE
-         4yxxXUuURFofMY9YRBUEsQ2hYa1P5mL9cGNmPf5MrxrT86g2UwgopxDo5vp+e7Qqn4
-         2H11maKoNHZiZfaLEfpHYaufos/aY7SHAYGV0tIM=
+        b=ST3CBNxFw9aKNHigL70CVKAAZkG4CdoQaJMJc6T0DJSLXLNOrBVwOP8dHwr+cLyAC
+         heGM1J622OyyK8/NYUFKfCiS8pel1ff1ayjRB3ng8+PhE9cQOA79OsuW/jheA/GeBv
+         bEiaIv+ASl2q4UhGMoZDvu1aaoTaDC5JdfqdbGLs=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 00:23:35 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 00:23:37 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Joao Pinto <jpinto@synopsys.com>
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
@@ -43,9 +41,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 10/13] PCI: dwc: Deallocate EPC memory on EP init error
-Date:   Wed, 4 May 2022 00:22:57 +0300
-Message-ID: <20220503212300.30105-11-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 12/13] PCI: dwc-plat: Discard unused regmap pointer
+Date:   Wed, 4 May 2022 00:22:59 +0300
+Message-ID: <20220503212300.30105-13-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220503212300.30105-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220503212300.30105-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,60 +54,35 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If the dw_pcie_ep_init() method fails to perform any action after the EPC
-memory is initialized and the MSI memory region is allocated, the later
-parts won't be undone thus causing the memory leak.  Let's fix that by
-introducing the cleanup-on-error path in the dw_pcie_ep_init() method,
-which will be taken should any consequent erroneous situation happens.
+The regmap pointer was added into the dw_plat_pcie structure in
+commit 1d906b22076e ("PCI: dwc: Add support for EP mode"), but it hasn't
+been utilized neither in the code submitted in the denoted so far nor in
+the platform driver evolving afterwards. Drop it then for good.
 
-Fixes: 2fd0c9d966cc ("PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
+ drivers/pci/controller/dwc/pcie-designware-plat.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Changelog v2:
-- This is a new patch create as a result of the discussion in:
-  Link: https://lore.kernel.org/linux-pci/20220324014836.19149-26-Sergey.Semin@baikalelectronics.ru
----
- .../pci/controller/dwc/pcie-designware-ep.c    | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 7c9315fffe24..7ad349c32082 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -780,8 +780,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
- 					     epc->mem->window.page_size);
- 	if (!ep->msi_mem) {
-+		ret = -ENOMEM;
- 		dev_err(dev, "Failed to reserve memory for MSI/MSI-X\n");
--		return -ENOMEM;
-+		goto err_exit_epc_mem;
- 	}
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index fea785096261..99cf2ac5b0ba 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -17,13 +17,11 @@
+ #include <linux/platform_device.h>
+ #include <linux/resource.h>
+ #include <linux/types.h>
+-#include <linux/regmap.h>
  
- 	if (ep->ops->get_features) {
-@@ -790,6 +791,19 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 			return 0;
- 	}
+ #include "pcie-designware.h"
  
--	return dw_pcie_ep_init_complete(ep);
-+	ret = dw_pcie_ep_init_complete(ep);
-+	if (ret)
-+		goto err_free_epc_mem;
-+
-+	return 0;
-+
-+err_free_epc_mem:
-+	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
-+			      epc->mem->window.page_size);
-+
-+err_exit_epc_mem:
-+	pci_epc_mem_exit(epc);
-+
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_init);
+ struct dw_plat_pcie {
+ 	struct dw_pcie			*pci;
+-	struct regmap			*regmap;
+ 	enum dw_pcie_device_mode	mode;
+ };
+ 
 -- 
 2.35.1
 
