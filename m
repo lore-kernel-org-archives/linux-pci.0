@@ -2,137 +2,143 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB723C433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 21:23:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 995E9C433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 21:23:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235261AbiECV1C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 May 2022 17:27:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41078 "EHLO
+        id S242782AbiECV1D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 May 2022 17:27:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237718AbiECV1C (ORCPT
+        with ESMTP id S242680AbiECV1C (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2022 17:27:02 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7201C4161F;
-        Tue,  3 May 2022 14:23:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2302B41620;
+        Tue,  3 May 2022 14:23:28 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 27ADB16A9;
-        Wed,  4 May 2022 00:23:59 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 27ADB16A9
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 1BDC316D6;
+        Wed,  4 May 2022 00:24:01 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 1BDC316D6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1651613039;
-        bh=MWL5jX04ZCFiBmuggxzKjSwz2cxc4Q3dVldm8/4eMZM=;
-        h=From:To:CC:Subject:Date:From;
-        b=GWNLZU3iNBImx+APlBp73LKzKMmtiouPRBfnWOl6NmjeXNa/D5LoOVBeGfFINU5Yx
-         QlzzE8IvuyvV//m9fYGRAt1PNKug4scf6xQHDsvHNjUtqZg2OQvuLdtuUpO2RyUrtV
-         ld+kS3knrIHsO+I88LDjy27sYirmY0Bn90fnOT84=
+        d=baikalelectronics.ru; s=mail; t=1651613041;
+        bh=Go84IpXAHFc/LHfNIGML74WiUTZQAGtam3QAbp3gIcA=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=hC1h+s6lUcMej3QMN3IZ5hi8934q6hGjsUK+kwJIrf7WvkD6fUk5JCIRn5jNYxz/Y
+         uUZm1+zi4T84Fj2rw71ehAR+jX0FgeZtA+IMUvryBSzk597q4yqPM8UzuvAuztnUij
+         LAr0bxtRNkumsWFddGNF1V5u9UiJ13sbVB6q5i4Q=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 00:23:25 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 4 May 2022 00:23:27 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 00/13] PCI: dwc: Various fixes and cleanups
-Date:   Wed, 4 May 2022 00:22:47 +0300
-Message-ID: <20220503212300.30105-1-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v2 02/13] PCI: dwc: Don't use generic IO-ops for DBI-space access
+Date:   Wed, 4 May 2022 00:22:49 +0300
+Message-ID: <20220503212300.30105-3-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220503212300.30105-1-Sergey.Semin@baikalelectronics.ru>
+References: <20220503212300.30105-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patchset is a second one in the series created in the framework of
-my Baikal-T1 PCIe/eDMA-related work:
+Commit c2b0c098fbd1 ("PCI: dwc: Use generic config accessors") replaced
+the locally defined DW PCIe host controller config-space accessors with
+the generic methods pci_generic_config_read() and
+pci_generic_config_write(). It was intended that the corresponding
+bus-mapping callback returned a correct virtual address of the passed PCI
+config-space register. The problem of the proposed solution was that it
+didn't take into account the way the host config-space is accessed on the
+DW PCIe. Depending on the DW PCIe IP-core synthesize parameters different
+interfaces can be used to access the host and peripheral config/memory
+spaces. The former one can be accessed via the DBI interface, while the
+later ones is reached via the AHB/AXI application bus. In case if the DW
+PCIe controller is configured to have a dedicated DBI interface, the way
+it is mapped into the IO-memory turns to be platform-specific. For such
+setups the DWC PCIe driver provides a set of the callbacks
+dw_pcie_ops.{read_dbi,write_dbi} so the platforms glue-drivers would be
+able to take into account the DBI bus IO peculiarities. Since
+commit c2b0c098fbd1 ("PCI: dwc: Use generic config accessors") these
+methods haven't been utilized during the generic host initialization
+performed by the PCIe subsystem code.
 
-[1: In-progress v3] clk: Baikal-T1 DDR/PCIe resets and some xGMAC fixes
-Link: https://lore.kernel.org/linux-pci/20220503205722.24755-1-Sergey.Semin@baikalelectronics.ru/
-[2: In-progress v2] PCI: dwc: Various fixes and cleanups
-Link: https://lore.kernel.org/linux-pci/20220324012524.16784-1-Sergey.Semin@baikalelectronics.ru/
-[3: In-progress v1] PCI: dwc: Add dma-ranges/YAML-schema/Baikal-T1 support
-Link: https://lore.kernel.org/linux-pci/20220324013734.18234-1-Sergey.Semin@baikalelectronics.ru/
-[4: In-progress v1] dmaengine: dw-edma: Add RP/EP local DMA controllers support
-Link: https://lore.kernel.org/linux-pci/20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru/
+I don't really know how come there have been no problems spotted for the
+Histb/Exynos/Kirin PCIe controllers so far, but in our case with dword
+aligned IO requirement the generic config-space accessors can't be
+utilized for the host config-space. Thus in order to make sure the host
+config-space is properly accessed via the DBI bus let's get back the
+dw_pcie_rd_own_conf() and dw_pcie_wr_own_conf() methods. They are going to
+be just wrappers around the already defined
+dw_pcie_read_dbi()/dw_pcie_write_dbi() functions with proper arguments
+conversion. These methods perform the platform-specific config-space IO if
+the DBI accessors are specified, otherwise they call normal MMIO
+operations.
 
-Note it is very recommended to merge the patchsets in the same order as
-they are placed in the list above in order to prevent possible merge/build
-conflicts. Nothing prevents them from being reviewed synchronously though.
-
-As it can be easily inferred from the patchset title, this series is about
-the DW PCIe Root Port/End-point driver fixes and the code cleanups, where
-fixes come before the cleanup patches. The patchset starts with adding the
-stop_link() platform-specific method invocation in case of the PCIe host
-probe procedure errors. It has been missing in the cleanup-on-error path
-of the DW PCIe Host initialization method. After that there is a patch
-which fixes the host own cfg-space accessors for the case of the
-platform-specific DBI implementation. Third the unrolled CSRs layout is
-added to the iATU disable procedure. Fourth the disable iATU procedure is
-fixed to be called only for the internal ATU as being specific for the
-internal ATU implementation. Last but no least the outbound iATU extended
-region setup procedure is fixed to have the INCREASE_REGION_SIZE flag set
-based on the limit-address - not the region size one.
-
-Afterwards there is a series of cleanups. It concerns the changes like
-adding braces to the multi-line if-else constructions, trailing new-lines
-to the print format-string, dropping unnecessary version checking, and
-various code simplifications and optimizations.
-
-New features like adding two-level DT bindings abstraction, adding better
-structured IP-core version interface, adding iATU regions size detection
-and the PCIe regions verification procedure, adding dma-ranges support,
-introducing a set of generic platform clocks and resets and finally adding
-Baikal-T1 PCIe interface support will be submitted in the next part of the
-series.
-
-Link: https://lore.kernel.org/linux-pci/20220324012524.16784-1-Sergey.Semin@baikalelectronics.ru/
-Changelog v2:
-- Fix the end address of the example in the patch log with
-  the INCREASE_REGION_SIZE flag usage fixup. It should be
-  0x1000FFFF and not 0x0000FFFF (@Manivannan).
-- Add the cleanup-on-error path to the dw_pcie_ep_init() function.
-  (@Manivannan)
-
+Fixes: c2b0c098fbd1 ("PCI: dwc: Use generic config accessors")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
-Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
-Cc: Rob Herring <robh@kernel.org>
-Cc: "Krzysztof Wilczyński" <kw@linux.com>
-Cc: Frank Li <Frank.Li@nxp.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+---
+ .../pci/controller/dwc/pcie-designware-host.c | 34 +++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
 
-Serge Semin (13):
-  PCI: dwc: Stop link in the host init error and de-initialization
-  PCI: dwc: Don't use generic IO-ops for DBI-space access
-  PCI: dwc: Add unroll iATU space support to the regions disable method
-  PCI: dwc: Disable outbound windows for controllers with iATU
-  PCI: dwc: Set INCREASE_REGION_SIZE flag based on limit address
-  PCI: dwc: Add braces to the multi-line if-else statements
-  PCI: dwc: Add trailing new-line literals to the log messages
-  PCI: dwc: Discard IP-core version checking on unrolled iATU detection
-  PCI: dwc: Convert Link-up status method to using dw_pcie_readl_dbi()
-  PCI: dwc: Deallocate EPC memory on EP init error
-  PCI: dwc-plat: Simplify the probe method return value handling
-  PCI: dwc-plat: Discard unused regmap pointer
-  PCI: dwc-plat: Drop dw_plat_pcie_of_match forward declaration
-
- .../pci/controller/dwc/pcie-designware-ep.c   | 22 +++++--
- .../pci/controller/dwc/pcie-designware-host.c | 66 +++++++++++++++----
- .../pci/controller/dwc/pcie-designware-plat.c | 13 ++--
- drivers/pci/controller/dwc/pcie-designware.c  | 48 +++++++++-----
- 4 files changed, 109 insertions(+), 40 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 7403b1709726..a250869334a5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -534,10 +534,40 @@ void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn,
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_own_conf_map_bus);
+ 
++static int dw_pcie_rd_own_conf(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 *val)
++{
++	struct pcie_port *pp = bus->sysdata;
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++
++	if (PCI_SLOT(devfn) > 0) {
++		*val = ~0U;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	*val = dw_pcie_read_dbi(pci, where, size);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int dw_pcie_wr_own_conf(struct pci_bus *bus, unsigned int devfn,
++			       int where, int size, u32 val)
++{
++	struct pcie_port *pp = bus->sysdata;
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++
++	if (PCI_SLOT(devfn) > 0)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	dw_pcie_write_dbi(pci, where, size, val);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static struct pci_ops dw_pcie_ops = {
+ 	.map_bus = dw_pcie_own_conf_map_bus,
+-	.read = pci_generic_config_read,
+-	.write = pci_generic_config_write,
++	.read = dw_pcie_rd_own_conf,
++	.write = dw_pcie_wr_own_conf,
+ };
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
 -- 
 2.35.1
 
