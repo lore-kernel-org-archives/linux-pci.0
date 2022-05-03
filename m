@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3F77C433F5
-	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 01:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE530C433F5
+	for <linux-pci@archiver.kernel.org>; Tue,  3 May 2022 01:06:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229569AbiECBKC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 May 2022 21:10:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45094 "EHLO
+        id S229502AbiECBKP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 May 2022 21:10:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229502AbiECBKB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2022 21:10:01 -0400
+        with ESMTP id S229506AbiECBKM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2022 21:10:12 -0400
 Received: from EUR04-DB3-obe.outbound.protection.outlook.com (mail-eopbgr60088.outbound.protection.outlook.com [40.107.6.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B06564D9C0;
-        Mon,  2 May 2022 18:06:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7197A4DF4F;
+        Mon,  2 May 2022 18:06:32 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=BG4XEQr/+hUYw3K0JFX7A1MCGGw3CUVJT3jEqhzKQTNgjX5zPg06WdTG3PldGr3XQDBMQvr4St6d+NbpeF2+JcLABXqXK50qGxYev6dsO9EzMjCfwl5Zlbru2DWbqZxiftY1m4R8YMU+56mLJYMSiwwhYDbw0DBLhjWmKlrvDfKvSn0HcnVvt2p5YSrpXkX3XfezdSVlly9BOAZSIGs91mqtgP0CqKkOuHLpiIsreI81b1RfQrIqO7Cffld5/82kEi/yRSYdCbjXhEL7h3xvXSl2XQ7b4R21KtM4VRaW5M/2sbSFshOQWiZ+/S3kvXEjCilR/AyFeR8MsK/XosRHWg==
+ b=XxUBILcrifmos+8DI49KPl3QLhcmupiVyPSRk+xOC4HC2ADVTmkMMri4rF1RNWp3moj+u0VYH+gtCkcBXWlOb8cIiEA+3UdSb1CLyoOm+QxvSf5dQZVu/zdMsH4Tc+TKjTBFsw/oITRyfTk5mbY5IopHRvh1fNrjqZhajRjkmcGNq71XNexhodeSXJFgGImjtxC+tKA3OZFUuAMalC8hZDuNDd+Rw2Dg3VTahQucvQAVzskkD1QGtHgf9MZGS35bYW/TLBkuQCAUbPuAAj8RSeYfr/GqdfX135cgmPDv0x7mP+71eeCI8kgZ/W4GXJsIAI7NmSo7tuH6KLgYsKmDug==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=NlH3AETgHTHuoCEu3lF3xQ1YNUtINLey+i9nswYIzjg=;
- b=V1jGNkO2TPvJhOwE4x9O1hx9dk0uU1dghtqvrSvCx7KlAnSrFtvcq7gDKpT+AZOFDIVftc2+605KSiAXDpwGCu2cMQqj9had16914/ghLcBSbona+VTbOhBJtGOLWbckT7SM8xDa7nJIqbiEGAKfpZ7eJrZwR62SidXBS+/1bCkDQWLC8VvQfOZ31yCNupnV8gvFuQQZSUFwU++S2CFW8v8Io1JHcINpZKRQEefhYd+eYVXsAB/bmji7EmNE9jZ5jG1M78vf4dz/yitWoAwr3LCKGgPBMi3A/jGcpNKMeaWJnnvZmrMvsRtPKwOPYqFEs6LKM6TJLrRk9gK5i6DioQ==
+ bh=BfRQg/MgFzk63hvHAPu5+FP7P9qu3rldByaup1Qp8as=;
+ b=FdIBmI2817EiN9i/APDJQwfOtxH0oPD7O4feysPYBM8/UOurYNIf0MQGo6EwVBMbIPBHU4wrq7GGcMBvhP+13doiTDotvMmfz1zVwi/WXXMT5PcZWKugtmUGZgqXrB4wvV277aYDw7PwcrprXdtKInGsxwbpL6VUPOgIrQdRmZe5C3SHS0+r6AM3pG/8OVrocRaKkHPaKy45J/qYxsK7rv/cxz925u4fmFGXcqKbmwKingY4l0DQ+hBY6fxHSU3en+6Ft04NsOq2PD4bxXporS9D3LnSZ4i8eEX1TQ6x2v8dwl6HpV8xODlvWxG6mnbfVU8Gmhnln/s6WDmNAWIKxA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NlH3AETgHTHuoCEu3lF3xQ1YNUtINLey+i9nswYIzjg=;
- b=oURM/k47bA/lX7Pt/3aVhIGN8hb4dQ1nHNyzIYqGVqjUoCcCc0f2tYC8FTLqwYKZKpO2xEFpfedkT0tNSd3dGK7dwajAJGILKU2uUCBGunumVJySgcJYcRC2LZApLuXNolJQ+p3dvoYw4bi29vUu9VXYzZIIE2fkZUBBE8C+hh8=
+ bh=BfRQg/MgFzk63hvHAPu5+FP7P9qu3rldByaup1Qp8as=;
+ b=XD5Y19WbiS9xgH9JIXSyn3hAnj5znxWrYZCWRV7/6XZl8ss7cOZH5RSCttJz6bpQP25TYSINXaEpnjbWVCKubwvEF9MveTfMFinLyPAuJX6ay9lxrshsocjLdC+5bxgz/5Fq/MP5cK45qP9jUZ6pARiBR5USmm7exMhd7gIKEHw=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from PAXPR04MB9186.eurprd04.prod.outlook.com (2603:10a6:102:232::18)
  by AM8PR04MB7364.eurprd04.prod.outlook.com (2603:10a6:20b:1db::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5206.24; Tue, 3 May
- 2022 00:58:33 +0000
+ 2022 00:58:20 +0000
 Received: from PAXPR04MB9186.eurprd04.prod.outlook.com
  ([fe80::adc5:45f8:fa40:1b8a]) by PAXPR04MB9186.eurprd04.prod.outlook.com
  ([fe80::adc5:45f8:fa40:1b8a%7]) with mapi id 15.20.5186.021; Tue, 3 May 2022
- 00:58:33 +0000
+ 00:58:20 +0000
 From:   Frank Li <Frank.Li@nxp.com>
 To:     gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
         l.stach@pengutronix.de, linux-imx@nxp.com,
@@ -47,12 +47,10 @@ To:     gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
 Cc:     vkoul@kernel.org, lorenzo.pieralisi@arm.com, robh@kernel.org,
         kw@linux.com, bhelgaas@google.com,
         manivannan.sadhasivam@linaro.org, Sergey.Semin@baikalelectronics.ru
-Subject: [PATCH v10 3/9] dmaengine: dw-edma: Change rg_region to reg_base in struct dw_edma_chip
-Date:   Mon,  2 May 2022 19:57:55 -0500
-Message-Id: <20220503005801.1714345-4-Frank.Li@nxp.com>
+Subject: [PATCH v10 0/9] Enable designware PCI EP EDMA locally
+Date:   Mon,  2 May 2022 19:57:52 -0500
+Message-Id: <20220503005801.1714345-1-Frank.Li@nxp.com>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220503005801.1714345-1-Frank.Li@nxp.com>
-References: <20220503005801.1714345-1-Frank.Li@nxp.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-ClientProxiedBy: SJ0P220CA0024.NAMP220.PROD.OUTLOOK.COM
@@ -60,152 +58,114 @@ X-ClientProxiedBy: SJ0P220CA0024.NAMP220.PROD.OUTLOOK.COM
  (2603:10a6:102:232::18)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0e031379-5fe3-4cdd-a80e-08da2ca00bb3
+X-MS-Office365-Filtering-Correlation-Id: 8a5bcc09-4aca-44ab-f83a-08da2ca0043f
 X-MS-TrafficTypeDiagnostic: AM8PR04MB7364:EE_
-X-Microsoft-Antispam-PRVS: <AM8PR04MB7364CC4EAE1CE858A91BE89E88C09@AM8PR04MB7364.eurprd04.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <AM8PR04MB73640D0BFAEB8B009399E7DA88C09@AM8PR04MB7364.eurprd04.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: JazDPE6XY0q+RjmI64WUgAXm9zegB7ZsvhS1V8frzn/pZNScy+7RG6LZks45GW1X+iB/ppTSfUWH0tb1L13XCZdnwewD6dyg8rsa21+iz9W4YhliaUQDNt+zQQWTlDQJb0kWAfI4YbNmxYgg/y7OXsYTELSjAWjD0o9bN24emN1k7Cyq+lZJgXI1iW4t2/U1ecLe/eNdw+U0rPCQSGoaGAvR2cOxK7KYAwRVDHdLjxvciQiFGLNAG9zi7YAefuItZg7NwPPYYUa79x+/ArytU50dh9hWQxiSBZxqiLDxMZjXKK3+8Cowr6Ax22EvzjpZ4bI5gTDo0JZNEXJvHBLoQI0fiHDAn05iIgkbbm81gFdr4+Ar3TIPZFlrQLlA7wQCIA5islYsJlwJmGvkTzhfiYHaisD/E/zxi7PCYlE+b/WESPN+2KpH9wlwNK4cGZUmNnfl3Zq9B6ZoPk9JKYRo73m5dq95ej5d/HCZZhBRYBzcwsbOWc2SKsNa0M93GZGOWMx8C2GhSTJP5CfkWoI3m5IHvV3TVBsTKYWy3gjrcc42z6iNA1SII62uoL7ujyfldbcHN/9gFohagXfXaxAaDZ8+Ep2xH5fY/zng7+RueE6sOFVemyPHhjSc/eBD9iu/yS0146rP4YQJqRPO2c0Khxax4UIA47R94NYzPpHNYlxr3OU+dz8K2yradF0T4omdZPgszeKWg3awzE/25L5/Cg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9186.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(8676002)(66556008)(66946007)(4326008)(2906002)(36756003)(66476007)(6512007)(6666004)(316002)(6506007)(26005)(83380400001)(1076003)(86362001)(186003)(38100700002)(7416002)(8936002)(38350700002)(508600001)(5660300002)(2616005)(52116002)(6486002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: McyUICQMMBS/ox8y76d0YkIMxM16r5K0fQtgWjYBodF/5HUkLT9wOmzTf7FeQucfsb4sxMrJuK1ae1llNIuvr5g1ZbQX5QjYbb5SX4qzc5k7HOaCWkBsMwB2/PLsEPwDfYunzxt0gs8e3ajZGPal6EqJEX0BzAKtlP5biUCtCE3UfwqSH/ZnK+M8HOFt3AvgKH7hqKNV01pGdjERnhQZ4ekx7fcphK5KPz5ggTdADjpK875b1sHnG5Xq5HZGXcDHwh2GbP3qwes4sbkU3Cr1iXEvPUWhA99zQCo1nMp+HeCNful2V65sKsNo4SYoKY7hUa36+f7py7Frf5mGuJyAhK/kssAHzbFJnrE7pAG85BBiYfK8ow0du+6DJimiC+ubGOjOX8nXgvT5LqsmXNqqtUHBrtTz8OikJwmvaU9kBsdP/Ojkf8fMheEhmlkiYW52tenHf+Xlw1R48VSOjNN/EeJDTdEmwc2u65NRhETlUN0GipAuwYObvDbKruYc3cnssD5PuVJrwdufSpDh+Pyava6NS6NrvKRq4bD77TOg+BWF7FELIo35PaSJ4GUrBgR7IN9yvtQGlufz3c4rLxm0GzTTWtHwFUYECG1zJpLkpVtljE/QQuCykW3aUC4GYcDCBkz3K9Bijxm3WTOTcK4gSzcQWGOWcTK0Eh1dyl+cLZboN/PVjZ3kBJGFXz1s4t5/ASHUoJY6zlyIOVzUMcs9FR8iko1N8jCHZ21kI4fjMyVxeSevhm7TxlTxRVU3RuY0/DNPcYDJho3nHkcga1mfMRsCg9c0l+DadbEGR4Y2F4s=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9186.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(8676002)(66556008)(66946007)(4326008)(2906002)(36756003)(66476007)(6512007)(6666004)(316002)(6506007)(26005)(83380400001)(1076003)(86362001)(186003)(966005)(38100700002)(7416002)(8936002)(38350700002)(508600001)(5660300002)(2616005)(52116002)(6486002);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/mG+LxPSuMaJbEk+6dUFiNB9lg0kKm6LVw5ykbDzdrvz7wPdOLIZNErSQvcH?=
- =?us-ascii?Q?rr3dKOWPFbCXjRJN7257Bn0tZw3uyTSn27MJSrMY8hOvVVCoU3TDd9AhSqep?=
- =?us-ascii?Q?u+t8cJkrRNRAtk08XT+CiiKSIAcOIFrj4+je20/LCqhHfDOVkc2di7l9dSQc?=
- =?us-ascii?Q?Iejv+tXlctONSKMzK6E7hxR6Dhez0kMD+9/qwt5QQmCDJm5/ebpKh6GlWh7d?=
- =?us-ascii?Q?T39L4dn3ycPwo9nM1BmE1C3EJY3/L4scChDmylhYypNSbP9sZUzF+u/6s3gG?=
- =?us-ascii?Q?taCq6H9AdH9g278pYTE7aqonYI4+8qu57qLCjy199nZIrNqH9k1YbyyaykDE?=
- =?us-ascii?Q?sk8lzbEt2Z56BrOzkCjIHnbF+zsiilPAr/3Ri3z9rcay4Xox69RwqLmBfHap?=
- =?us-ascii?Q?C4U69gH/zFqK5+wjZQ+VnDGuPNuuCM7DjYWpGID0SClT5OUkPVVZrtjuxkNM?=
- =?us-ascii?Q?IzM8ZGO2wtE47/wA1CFd57D/0XjDwCKOPkZch3qWiV4NgnJqGNxwUkF/utTe?=
- =?us-ascii?Q?vlrFA+ixugbe9n/2VUcH2xQRUoepAXrPiJV/JYMJU+4qBK3Klsb1VPijGilR?=
- =?us-ascii?Q?9Ul1VKx9QjQ+T3oW2/vvyDpJT8NpLYjxmpPwnqziz9PPNG/zixv0l4r5wDcw?=
- =?us-ascii?Q?40y/MuZ3ZqZxzp/Xd/P/8TMzs8Fhsnk4pL9bGA4yIBlrgDdeqeUnPnUO4Bzq?=
- =?us-ascii?Q?1FkPhfvGHVxGG5jnrxly7HtvS6DxcjFZySgRzXlV86LARqyfJqHn4GBtgXL7?=
- =?us-ascii?Q?T3RCH0H+yUxVfStOJ79uncBdupA0JNSf7u7DVdVaBb8dOIY0UJ5UtS+zrX6p?=
- =?us-ascii?Q?pegrBRqfijijsXw6caaPxVxNmmTNs3whd4obpL0jOkIcAZsmGV+/EaAB6jMf?=
- =?us-ascii?Q?p10z7UuPF2tgRlF4COnbRG0HblDpPrEakAOEkhVRAkCvAxD8dHKURhpfNDtp?=
- =?us-ascii?Q?OlfiDaEjw/TOatHX4WrNaDrE/1mTIerSo6kGezsUa7Em1DbFldSxuAJpdlFP?=
- =?us-ascii?Q?kgdGov+Fxfd2gLBehKNLLNKlKsY+OIvV9Z8VllqSYPV8Udzif57tnaoKGUur?=
- =?us-ascii?Q?TE3eFYkNpfamn69dCcPmwLhAZgdvmPKBCbNx/sHp11/gzzCjNjurlseSthD1?=
- =?us-ascii?Q?+nGcknw1kHVqwSly6pkN8fwBNe+ZA042JXMY1LGwOMIVI1MI9sxVnfmES2Ez?=
- =?us-ascii?Q?FafcnOy2s5ycrHEd4wZxEEFven10BSnkElhHp69NoRJ9RAaGItDSJaAH+VMD?=
- =?us-ascii?Q?IVh+dAUlii6JeHVo5mvr6dtuVWehdX8rUY6+jJQsmB1S+pO95zut9oma4ann?=
- =?us-ascii?Q?OiLgHnYM4ClcfOA43hg47k66YqvKwAhvOVXB4fc02/Bn1MH0GBnHk4xsepKL?=
- =?us-ascii?Q?FPPdrU6wCyatGpDDNEdpMAkS3xbmxrlRTIQPjyUge3Evu5hmj8YqjmIIhmuG?=
- =?us-ascii?Q?CWqykM+hqrmOaBbd6PMl4euPm/Ek2ZIY82SIqrYKRL6cLoL8mXJa64PkqU0T?=
- =?us-ascii?Q?kaoNLbbtUP5a7tcliLgUulfyNTSpu6ga77d3b50TjOfczF1pq04cwwuWOC+u?=
- =?us-ascii?Q?3P9o5QQqUoz3Xa4g0zV3y19N5sXv4FmK8ea5PjraeRvBEmOQegdns8+21nE+?=
- =?us-ascii?Q?SYs1HBD6BN84LD1JG4hPr6H5L97VkO3XclO2XcyiWF4t4BpOr7puIxi11/Gr?=
- =?us-ascii?Q?QmknjjqfmnlGFeq+qZXDXzlubvCcR788OdMFTTnXGA9JEH1/i7oMLwFrj2+D?=
- =?us-ascii?Q?N3qJWcxIRA=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?k7xqpO/UPrDdfGIdwH+LwChbgPRsVbjZCYEqQuwerX5AXEJZBvWBmBoqSpxc?=
+ =?us-ascii?Q?W4ScYO47YCJRosW9t/JkBhAWd5SiqH5JTn5F7PVcnKo799ZfcZ6sSZ3J17Jf?=
+ =?us-ascii?Q?hAfyJ6y5/8I8RI1noK5jFD4RtV3wGruSADg9DNkvIqOT0EP5vwGxbYc6a/Z1?=
+ =?us-ascii?Q?jadybR+wYWhq9lbPvy/DQI8B6RseS/aEaOL+Tkt1pi1JfOvRzDnrTqlQ8mki?=
+ =?us-ascii?Q?q7uMHGUjr+AgRHdQFqawQ8m+x4YinL/azZtbHalQnHR3vxO0m7eqBG6MfQwP?=
+ =?us-ascii?Q?MZcAPghB4wophzIcQiNbtxliX3Cf7chR0oKrjSCV/alqQAUocmu3hIvoVsez?=
+ =?us-ascii?Q?n+FXgKQmkPy2KMn6h3+eb4/jj1IYWozF/YQPlXaFZQ1XkTqNwcgrHeYyWxnz?=
+ =?us-ascii?Q?Un23muNYp1h+eQ3lNfaUEOunWKeBzaPyJmR7mDuGfo3x5NpUEpn7mMHmYUdn?=
+ =?us-ascii?Q?S1ZM+Vz2Zr5kJNUwwZYqkxmUmmcYxchlvzUeQ+eafSEHwX5oiW9/qUVOfbMW?=
+ =?us-ascii?Q?eAMEc8mtTghXQFYK535iNXCjZsrwiLoAe0impV6Z7+FrPN9dZgIShBA7Fj0d?=
+ =?us-ascii?Q?1uITZmoA8/KG/+6SaR2GWInbW/mpfglfNxhZ26uppxzsGp4aVtn0L7dsthzS?=
+ =?us-ascii?Q?bA3QN0sz6JZXZyDAnAN5drawNkSTf0joZBqXTuserXnWi7FMNKuLTsO+aiTf?=
+ =?us-ascii?Q?sIMl4C8H1VJu8SY1yd4BcIxxBQm6zK6GluB2pqsL/Uq6PQWm+FdQSic1FKJl?=
+ =?us-ascii?Q?8WXZHViuESXb+p+klzADSI8BqX701neVufS5z1Nuvaxt0skadBH8bDA0Tpnb?=
+ =?us-ascii?Q?6hHXmF4Nx2CdAaY6m9qV4IFzfTbYhHpjZvqVx5S4MDL5oFiJMZax50TjoEsD?=
+ =?us-ascii?Q?/EcXI6DlTN9c+n6bmpoU0s1BTf5UVA7mwUEUaBlAqdaRp3DUO1Xqxe/rizDZ?=
+ =?us-ascii?Q?0ilvL2mrDob8MPUuzsN+6ZYW18FyFJBVgevLsCioyaPuHSjxDcMSPJBVPxaB?=
+ =?us-ascii?Q?zmNZHIM6ZgKwf5t7mUiIDtNAX38OARkJfhAscNyUnPn0YzNJYSiF1vqkXQRy?=
+ =?us-ascii?Q?wvRih53S+J5jrC3Y2rgKttLWEiraU08xOq/H75wHegv9PhiMaWmrK7PRYobA?=
+ =?us-ascii?Q?1v62XAwCFHYSx1KX8G96uWJHKQgkXqKO5SGr3OFePb29B+/Oo5++5BMk4GwX?=
+ =?us-ascii?Q?lJvZAIZKya3uTdmZbMJetnXuXL6EcaVVVl5vgVfDlJEUOn77gQ8V3DcP/o3C?=
+ =?us-ascii?Q?xq+2epPS4eTKM4U8kfhNm8HwNPjb6UN3X+BDWqEmKY3mt5+JOElf6qUcDnQJ?=
+ =?us-ascii?Q?9BVMoxpeDWZeN7rdSI7WKfQssvlFCNYfGHuTKFEwfkD+pmMYq1hMiW4p6r/D?=
+ =?us-ascii?Q?mX4bl85aR1dyPOPWk7DDytsaCgt4PHn2hQFnme3h7iC4hAOJH/4JkvJB+c/Z?=
+ =?us-ascii?Q?DS0E9TBA8VkZZkZLCJWqJ9+SjtXKG0ftFF6VOnnLqS7WIUYPogD8AmFbYC2y?=
+ =?us-ascii?Q?fJwm6OwOi4v2vFZqHnDU8+54isixLJAVsx2cpj8BUlNhycyz5MaZHyWtyA7S?=
+ =?us-ascii?Q?FEQdGG6T3nUgcwQ50pnILcmQMEHhtU85JLnZ3WA4dKyQPJHjmww2EfKDy+sR?=
+ =?us-ascii?Q?bVpEZq+v1LahH2MtDd8pTnwozCjOheHvgkg+8NQLxWuAjrXt9V2oaiodHmXK?=
+ =?us-ascii?Q?9aNlTAD+A5Y0r0JCUx0EP1GrS6xQWv/SZe3GJOogzgPbxJGPKIWc4XeZ+DtU?=
+ =?us-ascii?Q?sdhnJhA0DA=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e031379-5fe3-4cdd-a80e-08da2ca00bb3
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8a5bcc09-4aca-44ab-f83a-08da2ca0043f
 X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB9186.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 May 2022 00:58:33.0777
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 May 2022 00:58:20.6692
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: mqPO+CVNrT8Uwir3xb04TnS+xmM2M3WSnNwlxm3Mf9jHs8Lu720ZwtDdyK36jIWqiSNmu/Z+8AwQJ+4Xu6zoiw==
+X-MS-Exchange-CrossTenant-UserPrincipalName: S2RS9u//JfZrUK0Lk+UY1cqconbbukplTbiKMRYOal94MoTChGJ2RHQyZme5WbHaTBacwjKo6xSHrDUNnb+zcA==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8PR04MB7364
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-struct dw_edma_region rg_region included virtual address, physical
-address and size information. But only virtual address is used by EDMA
-driver. Change it to void __iomem *reg_base to clean up code.
+Default Designware EDMA just probe remotely at host side.
+This patch allow EDMA driver can probe at EP side.
 
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Tested-by: Serge Semin <fancer.lancer@gmail.com>
----
-Change from v6 to v10:
- - none
-Change from v5 to v6:
- -s/change/Change at subject
-New patch at v4
+1. Clean up patch
+   dmaengine: dw-edma: Detach the private data and chip info structures
+   dmaengine: dw-edma: Remove unused field irq in struct dw_edma_chip
+   dmaengine: dw-edma: Change rg_region to reg_base in struct
+   dmaengine: dw-edma: rename wr(rd)_ch_cnt to ll_wr(rd)_cnt in struct
 
- drivers/dma/dw-edma/dw-edma-pcie.c       | 6 +++---
- drivers/dma/dw-edma/dw-edma-v0-core.c    | 2 +-
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 2 +-
- include/linux/dma/edma.h                 | 3 ++-
- 4 files changed, 7 insertions(+), 6 deletions(-)
+2. Enhance EDMA driver to allow prode eDMA at EP side
+   dmaengine: dw-edma: Add support for chip specific flags
+   dmaengine: dw-edma: Add DW_EDMA_CHIP_32BIT_DBI for chip specific flags
 
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index 2c1c5fa4e9f28..ae42bad24dd5a 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -233,8 +233,8 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 	chip->wr_ch_cnt = vsec_data.wr_ch_cnt;
- 	chip->rd_ch_cnt = vsec_data.rd_ch_cnt;
- 
--	chip->rg_region.vaddr = pcim_iomap_table(pdev)[vsec_data.rg.bar];
--	if (!chip->rg_region.vaddr)
-+	chip->reg_base = pcim_iomap_table(pdev)[vsec_data.rg.bar];
-+	if (!chip->reg_base)
- 		return -ENOMEM;
- 
- 	for (i = 0; i < chip->wr_ch_cnt; i++) {
-@@ -299,7 +299,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 
- 	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p)\n",
- 		vsec_data.rg.bar, vsec_data.rg.off, vsec_data.rg.sz,
--		chip->rg_region.vaddr);
-+		chip->reg_base);
- 
- 
- 	for (i = 0; i < chip->wr_ch_cnt; i++) {
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
-index 6cf6c28ce0cc9..c59e23b9f9fdb 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
-@@ -25,7 +25,7 @@ enum dw_edma_control {
- 
- static inline struct dw_edma_v0_regs __iomem *__dw_regs(struct dw_edma *dw)
- {
--	return dw->chip->rg_region.vaddr;
-+	return dw->chip->reg_base;
- }
- 
- #define SET_32(dw, name, value)				\
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-index b765adb969998..5226c9014703c 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-@@ -288,7 +288,7 @@ void dw_edma_v0_debugfs_on(struct dw_edma *_dw)
- 	if (!dw)
- 		return;
- 
--	regs = dw->chip->rg_region.vaddr;
-+	regs = dw->chip->reg_base;
- 	if (!regs)
- 		return;
- 
-diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-index 86697d33e0610..195ee1e47f21d 100644
---- a/include/linux/dma/edma.h
-+++ b/include/linux/dma/edma.h
-@@ -39,6 +39,7 @@ enum dw_edma_map_format {
-  * @id:			 instance ID
-  * @nr_irqs:		 total dma irq number
-  * @ops			 DMA channel to IRQ number mapping
-+ * @reg_base		 DMA register base address
-  * @wr_ch_cnt		 DMA write channel number
-  * @rd_ch_cnt		 DMA read channel number
-  * @rg_region		 DMA register region
-@@ -55,7 +56,7 @@ struct dw_edma_chip {
- 	int			nr_irqs;
- 	const struct dw_edma_core_ops   *ops;
- 
--	struct dw_edma_region	rg_region;
-+	void __iomem		*reg_base;
- 
- 	u16			wr_ch_cnt;
- 	u16			rd_ch_cnt;
+3. Bugs fix at EDMA driver when probe eDMA at EP side
+   dmaengine: dw-edma: Fix programming the source & dest addresses for ep
+   dmaengine: dw-edma: Don't rely on the deprecated "direction" member
+
+4. change pci-epf-test to use EDMA driver to transfer data.
+   PCI: endpoint: Add embedded DMA controller test
+
+5. Using imx8dxl to do test, but some EP functions still have not
+upstream yet. So below patch show how probe eDMA driver at EP
+controller driver.
+https://lore.kernel.org/linux-pci/20220309120149.GB134091@thinkpad/T/#m979eb506c73ab3cfca2e7a43635ecdaec18d8097
+
+
+Frank Li (7):
+  dmaengine: dw-edma: Remove unused field irq in struct dw_edma_chip
+  dmaengine: dw-edma: Detach the private data and chip info structures
+  dmaengine: dw-edma: Change rg_region to reg_base in struct
+    dw_edma_chip
+  dmaengine: dw-edma: Rename wr(rd)_ch_cnt to ll_wr(rd)_cnt in struct
+    dw_edma_chip
+  dmaengine: dw-edma: Add support for chip specific flags
+  dmaengine: dw-edma: Add DW_EDMA_CHIP_32BIT_DBI for chip specific flags
+  PCI: endpoint: Enable DMA controller tests for endpoints with DMA
+    capabilities
+
+Serge Semin (2):
+  dmaengine: dw-edma: Drop dma_slave_config.direction field usage
+  dmaengine: dw-edma: Fix eDMA Rd/Wr-channels and DMA-direction
+    semantics
+
+ drivers/dma/dw-edma/dw-edma-core.c            | 141 +++++++++++-------
+ drivers/dma/dw-edma/dw-edma-core.h            |  31 +---
+ drivers/dma/dw-edma/dw-edma-pcie.c            |  83 +++++------
+ drivers/dma/dw-edma/dw-edma-v0-core.c         |  54 ++++---
+ drivers/dma/dw-edma/dw-edma-v0-core.h         |   4 +-
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c      |  18 +--
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.h      |   8 +-
+ drivers/pci/endpoint/functions/pci-epf-test.c | 108 ++++++++++++--
+ include/linux/dma/edma.h                      |  61 +++++++-
+ 9 files changed, 323 insertions(+), 185 deletions(-)
+
 -- 
 2.35.1
 
