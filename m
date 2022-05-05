@@ -2,96 +2,115 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A855DC433F5
-	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 15:20:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D831BC433F5
+	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 15:37:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380619AbiEEPYf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 May 2022 11:24:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49372 "EHLO
+        id S242683AbiEEPlg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 May 2022 11:41:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381305AbiEEPYc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 11:24:32 -0400
-Received: from us-smtp-delivery-74.mimecast.com (us-smtp-delivery-74.mimecast.com [170.10.129.74])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 757FD554A8
-        for <linux-pci@vger.kernel.org>; Thu,  5 May 2022 08:20:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1651764051;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=NOhqwWJm0Xg7KJkj4jc2xm55/msX/E/vXJVK7yWqZr8=;
-        b=XdaKNQb6kRSCw+LgFTD+pGBqcE0tA9DWWjGkiCi9rFJOxazaYUQ633FSRYtHNT5nZlkvYE
-        pfzNPR7xw9EEozhEJw1bg83K3ia0Q4yA8oNRDT0LMBilq2kgRdIll77rv9kIvEib85TSW9
-        9TThnbLQMSZXW/F7GXSWNRmCdqM2uXE=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-195-htru64m9OTylFJ3NnKPgnQ-1; Thu, 05 May 2022 11:20:46 -0400
-X-MC-Unique: htru64m9OTylFJ3NnKPgnQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.rdu2.redhat.com [10.11.54.5])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id AF1A53C10229;
-        Thu,  5 May 2022 15:20:40 +0000 (UTC)
-Received: from shalem.redhat.com (unknown [10.39.192.251])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 032207B64;
-        Thu,  5 May 2022 15:20:16 +0000 (UTC)
-From:   Hans de Goede <hdegoede@redhat.com>
-To:     "Rafael J . Wysocki" <rafael@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Myron Stowe <myron.stowe@redhat.com>,
-        Juha-Pekka Heikkila <juhapekka.heikkila@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>
-Cc:     Hans de Goede <hdegoede@redhat.com>,
-        =?UTF-8?q?Benoit=20Gr=C3=A9goire?= <benoitg@coeus.ca>,
-        Hui Wang <hui.wang@canonical.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, x86@kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v7 0/1] x86/PCI: Ignore E820 reservations for bridge windows on newer systems
-Date:   Thu,  5 May 2022 17:20:15 +0200
-Message-Id: <20220505152016.5059-1-hdegoede@redhat.com>
+        with ESMTP id S238590AbiEEPld (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 11:41:33 -0400
+Received: from extserv.mm-sol.com (ns.mm-sol.com [37.157.136.199])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 218BD15815;
+        Thu,  5 May 2022 08:37:52 -0700 (PDT)
+Received: from [192.168.1.17] (unknown [84.238.208.205])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: svarbanov@mm-sol.com)
+        by extserv.mm-sol.com (Postfix) with ESMTPSA id BF412D2AA;
+        Thu,  5 May 2022 18:37:50 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mm-sol.com; s=201706;
+        t=1651765070; bh=uVBey31bxdTj1jCCK+/s43l7HdKmJ0V7+XbcUggK3zA=;
+        h=Date:Subject:To:Cc:From:From;
+        b=nkIpo+HObdOmz3xtRL3k69eQ5gV3avmAx9tAxhZakfllVMMRQJLx0GpYxbf7XKTnm
+         Wf6qbPwZ7Z912uWgMvVyb9htTfP6OpOCQIsHX4XkodBxZ8RqIBBaIVbSRMmm+8Ku7g
+         urirEqfGJmmDX2wZwRRDLLZbGIbIdivxe+H8kes5t47FZMFEuVnApJLBgPXtcuGDpP
+         rN6n7+KZ+rP8vaHVz0CzGt53tQKEjQmSNkDTioHzmbFWuLbiph0DEOIRNMWQP2rWtj
+         vM+NysPthpGf/2duhomPGxxlfd1j7IFDqEOMlMnI0VkWn7e9S5/SqzkBMrnMdAiFoL
+         9T6z5/LVoNoWA==
+Message-ID: <ace7dd07-cf2f-fa74-866f-50f7da0b89bb@mm-sol.com>
+Date:   Thu, 5 May 2022 18:37:48 +0300
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v7 0/7] PCI: qcom: Fix higher MSI vectors handling
+Content-Language: en-US
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+References: <20220505135407.1352382-1-dmitry.baryshkov@linaro.org>
+From:   Stanimir Varbanov <svarbanov@mm-sol.com>
+In-Reply-To: <20220505135407.1352382-1-dmitry.baryshkov@linaro.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.11.54.5
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+Thanks Dmitry!
 
-Here is v7 of my patch to address the E820 reservations vs PCI host bridge
-ranges issue which are causing touchpad and/or thunderbolt issues on many
-different laptop models.
+On 5/5/22 16:54, Dmitry Baryshkov wrote:
+> I have replied with my Tested-by to the patch at [2], which has landed
+> in the linux-next as the commit 20f1bfb8dd62 ("PCI: qcom:
+> Add support for handling MSIs from 8 endpoints"). However lately I
+> noticed that during the tests I still had 'pcie_pme=nomsi', so the
+> device was not forced to use higher MSI vectors.
+> 
+> After removing this option I noticed that hight MSI vectors are not
+> delivered on tested platforms. After additional research I stumbled upon
+> a patch in msm-4.14 ([1]), which describes that each group of MSI
+> vectors is mapped to the separate interrupt. Implement corresponding
+> mapping.
+> 
+> Since we can not expect that other platforms will use multi-IRQ scheme
+> for MSI mapping (e.g. iMX and Tegra map all 256 MSI interrupts to single
+> IRQ), it's support is implemented directly in pcie-qcom rather than in
+> the core driver.
+> 
+> The first patch in the series is a revert of  [2] (landed in pci-next).
+> Either both patches should be applied or both should be dropped.
+> 
+> Patchseries dependecies: [3] (for the schema change).
+> 
+> Changes since v6:
+>  - Fix indentation of the arguments as requested by Stanimir
 
-After previous attemps to identify these systems by looking for E820
-reservations covering the entire bridge window, which broke the boot
-on some coreboot based ChromeBooks we are now back to using a bios date
-based approach, now combined with DMI quirks for systems after the
-cutoff date which still report a wrong window from their _CRS method
-despite them being new(ish).
+<cut>
 
-This is based on top of Bjorn's pci/resource branch:
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
+> 
+> Dmitry Baryshkov (7):
+>   PCI: qcom: Revert "PCI: qcom: Add support for handling MSIs from 8
+>     endpoints"
+>   PCI: dwc: Correct msi_irq condition in dw_pcie_free_msi()
+>   PCI: dwc: Add msi_host_deinit callback
+>   PCI: dwc: Export several functions useful for MSI implentations
+>   PCI: qcom: Handle MSIs routed to multiple GIC interrupts
+>   dt-bindings: PCI: qcom: Support additional MSI interrupts
+>   arm64: dts: qcom: sm8250: provide additional MSI interrupts
 
-Regards,
+For PCI qcom driver:
 
-Hans
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
 
-
-Hans de Goede (1):
-  x86/PCI: Ignore E820 reservations for bridge windows on newer systems
-
- .../admin-guide/kernel-parameters.txt         |  9 +++
- arch/x86/include/asm/pci_x86.h                |  2 +
- arch/x86/pci/acpi.c                           | 74 ++++++++++++++++++-
- arch/x86/pci/common.c                         |  6 ++
- 4 files changed, 89 insertions(+), 2 deletions(-)
+> 
+>  .../devicetree/bindings/pci/qcom,pcie.yaml    |  45 +++++-
+>  arch/arm64/boot/dts/qcom/sm8250.dtsi          |  11 +-
+>  .../pci/controller/dwc/pcie-designware-host.c |  72 +++++----
+>  drivers/pci/controller/dwc/pcie-designware.h  |  12 ++
+>  drivers/pci/controller/dwc/pcie-qcom.c        | 138 +++++++++++++++++-
+>  5 files changed, 246 insertions(+), 32 deletions(-)
+> 
 
 -- 
-2.36.0
-
+regards,
+Stan
