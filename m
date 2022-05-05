@@ -2,306 +2,186 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6365C4332F
-	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 13:54:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81317C433EF
+	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 14:48:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380172AbiEEN6B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 May 2022 09:58:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45800 "EHLO
+        id S234446AbiEEOwL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 May 2022 10:52:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380206AbiEEN54 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 09:57:56 -0400
-Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD5D857B2B
-        for <linux-pci@vger.kernel.org>; Thu,  5 May 2022 06:54:13 -0700 (PDT)
-Received: by mail-lj1-x231.google.com with SMTP id v4so5681715ljd.10
-        for <linux-pci@vger.kernel.org>; Thu, 05 May 2022 06:54:13 -0700 (PDT)
+        with ESMTP id S235620AbiEEOwK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 10:52:10 -0400
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 558445AA7E;
+        Thu,  5 May 2022 07:48:30 -0700 (PDT)
+Received: by mail-ed1-x532.google.com with SMTP id d6so5475144ede.8;
+        Thu, 05 May 2022 07:48:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=opoHBzqPC/K+mFUCoBApnycDEm10H+LfONZsozeNoZ0=;
-        b=XYtWZRPPppNpA1jNY0+itKfRDvSGt/dfCxrfCf12t0RhNWZN1JmZgC5Aot0Nw95BBb
-         +ocBwONZaYQhZuOtvyy3EIdDc+Ogv4VVwgKQgBRq++sTR3xcBjxEh1SYABewsLqg2RQK
-         8ajFHmfSgTtIIMKM3HeLiqAMtngzZImbSU0md6H3T2SuaUAVqlvX8hk7UDWluWoUhFiB
-         PJ9njCCsOuQ6ALHLQymi3LVDEflGvXomRkzgBBE0w8VRvFZVBrUSUghjiMPtZj/AjYrn
-         GO86gQboRdlH/5TC2gEuer6yE3wNjpAYuqgMd3WadoZXyP+ijwmCXHkY2IGHl/5CJAZX
-         yRCw==
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=fd70nvC/kGik6EimE0pvtKLSK3cMZ3QY965UUQGAHsQ=;
+        b=p0TmC0ikJBR+grxIKAFpjv+/t2z7SoAaG5Iu3Qrp4QMC6iCbAqOESWe7xp7EEYFcyd
+         Idu0mWp1LoxM+JsyihAomcyyxlSbeGy7fao6qKpPs2GXv59BjQ+/UOrJojMDcjjJRi6u
+         hmip7B2MRWaZPJNQDi0xuRJFygjW/25N2iJP7SUWmM5IFUQ9budOFDrNgYDTdoveHU/O
+         YwUMYcURtUL/ivq5S06bEO61NFk0MQsawbiq8Jwfms0TGH91hV7TV3p53xvAVF5rOKx/
+         0i3zmR1SBdfyRXIEypmk3GIAt9zYmYZnFfAD1BN9EQAsqV9Lp2l/fvGx4YJEfuIf7QQy
+         z6gw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=opoHBzqPC/K+mFUCoBApnycDEm10H+LfONZsozeNoZ0=;
-        b=Bz3u6mgtFummzDqfmt/r1Q2P9nLhEhrYKf87pVsbRjFX49BJB3C7DgmZTLUA+5zKIQ
-         8UcROXzP5CffaJNLw6IrGcZBzp/bgpArPdYU73H6HncgwxIiLrLqWhizXj0mj8RfGIBT
-         KBHa8g+Ow9kMhgsmocw75LxQpkXj1vOGuYZQS248itnYc6wHUYa6Huk+9prBuReqBP2O
-         7BBFJHVzf8aGNt8PNB0X4FTfNN++Aa+3zelHS3Yv48DbIP0iIA9OqyxopyEHVqUknRrR
-         NcdOiIVAc2yahbgHBRkxUmi+y7ypuLBQElLPhGs8QoZ6UAbbf25iv9OzmThFFah+/Mkc
-         fGPw==
-X-Gm-Message-State: AOAM532BFA1xY34KT7STDjN3QXJvjh/XR1gik7ih26hIQKV4JgtXLvlZ
-        BCIX2lFbiv8kqThb57d78M4l7A==
-X-Google-Smtp-Source: ABdhPJzqHG1M5PiOY5XUu4dIUKLYOBt9njGJeN2wHnPLx3AISIVKGysnRQqxm3VQO/DsfcRyZtwewQ==
-X-Received: by 2002:a2e:97cf:0:b0:24f:1348:7319 with SMTP id m15-20020a2e97cf000000b0024f13487319mr16146557ljj.523.1651758851876;
-        Thu, 05 May 2022 06:54:11 -0700 (PDT)
-Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id z24-20020ac25df8000000b0047255d211ccsm221788lfq.251.2022.05.05.06.54.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 May 2022 06:54:11 -0700 (PDT)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: [PATCH v7 5/7] PCI: qcom: Handle MSIs routed to multiple GIC interrupts
-Date:   Thu,  5 May 2022 16:54:05 +0300
-Message-Id: <20220505135407.1352382-6-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220505135407.1352382-1-dmitry.baryshkov@linaro.org>
-References: <20220505135407.1352382-1-dmitry.baryshkov@linaro.org>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=fd70nvC/kGik6EimE0pvtKLSK3cMZ3QY965UUQGAHsQ=;
+        b=qoBQ+nVTVzm0iKuv/e2zq1b7oWzi5Ya+6IQ5NxdW/k8ArZfTc3SBOnek26TAjllK6C
+         WgBobh8tBxgxyrNji1YTxcoVboDef9LqYQ0t2xxZvf5BCI67tn/7C1nsNYtDZGZYvRU8
+         EbSuO7kTjnWNyK5yL+JJYBKgTun6lx5N7a6Z4EZ/TM0qX6QIAeaAn8e5MDiqvWR6oiI0
+         gXxznRYHyiMeUfqcUEPFcv21p+WD3hSipnuNf857pYND4xj1/KenwOqSUA4L3iJsk6cB
+         Ydri7LbUcmiJul2o3HpPnj51H3i/hFSqq8P+84A/0Rx1xWI0/pYmOjk4KH1eBgqyR9bu
+         tvtQ==
+X-Gm-Message-State: AOAM53299+C3oKSzF0z+tXkMxfmhZ7eWQHUmm697xoM4ETvmgGoD3kFu
+        27j+gj8djSHxoiuEIDfWR/cumjkXRp+9OV2mTm3Laz4n
+X-Google-Smtp-Source: ABdhPJztF1kabtWoNgLYmA+4ymkpEypoqrPwztbeQVyiCrSsOKjATNMfHr7gY5SFRAQc1JI9cKYW54+QjT+6jlc720U=
+X-Received: by 2002:a05:6402:515:b0:425:bd3f:1ad4 with SMTP id
+ m21-20020a056402051500b00425bd3f1ad4mr29884789edv.381.1651762108721; Thu, 05
+ May 2022 07:48:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220429105627.GA28438@lpieralisi> <20220429192825.GA82239@bhelgaas>
+ <20220505144347.GA19346@JADEVM-DRA>
+In-Reply-To: <20220505144347.GA19346@JADEVM-DRA>
+From:   Christian Gmeiner <christian.gmeiner@gmail.com>
+Date:   Thu, 5 May 2022 16:48:17 +0200
+Message-ID: <CAH9NwWcU71gZ2woZ7ePRvuwz=_T+F7V6VOYLyAqPhTy1j6xxPA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: cadence: respond to received PTM Requests
+To:     Dominic Rath <dominic.rath@ibv-augsburg.net>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Tom Joseph <tjoseph@cadence.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On some of Qualcomm platforms each group of 32 MSI vectors is routed to the
-separate GIC interrupt. Thus to receive higher MSI vectors properly,
-add separate msi_host_init()/msi_host_deinit() handling additional host
-IRQs.
+Am Do., 5. Mai 2022 um 16:43 Uhr schrieb Dominic Rath
+<dominic.rath@ibv-augsburg.net>:
+>
+> On Fri, Apr 29, 2022 at 02:28:25PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Apr 29, 2022 at 11:56:27AM +0100, Lorenzo Pieralisi wrote:
+> > > On Tue, Feb 22, 2022 at 07:40:54PM +0530, Kishon Vijay Abraham I wrote:
+> > > > On 18/02/22 6:50 pm, Bjorn Helgaas wrote:
+> > > > > On Fri, Feb 18, 2022 at 04:26:48PM +0530, Kishon Vijay Abraham I wrote:
+> > > > >> On 01/02/22 3:35 am, Bjorn Helgaas wrote:
+> > > > >>> Update subject line to match previous conventions ("git log --oneline
+> > > > >>> drivers/pci/controller/cadence/pcie-cadence-host.c" to see).
+> > > > >>>
+> > > > >>> On Mon, Jan 31, 2022 at 01:08:27PM +0100, Christian Gmeiner wrote:
+> > > > >>>> This enables the Controller [RP] to automatically respond
+> > > > >>>> with Response/ResponseD messages.
+> > > > >
+> > > > >>>> +static void cdns_pcie_host_enable_ptm_response(struct cdns_pcie *pcie)
+> > > > >>>> +{
+> > > > >>>> +    u32 val;
+> > > > >>>> +
+> > > > >>>> +    val = cdns_pcie_readl(pcie, CDNS_PCIE_LM_PTM_CTRL);
+> > > > >>>> +    cdns_pcie_writel(pcie, CDNS_PCIE_LM_PTM_CTRL, val | CDNS_PCIE_LM_TPM_CTRL_PTMRSEN);
+> > > > >>>
+> > > > >>> I assume this is some device-specific enable bit that is effectively
+> > > > >>> ANDed with PCI_PTM_CTRL_ENABLE in the Precision Time Measurement
+> > > > >>> Capability?
+> > > > >>
+> > > > >> That's correct. This bit enables Controller [RP] to respond to the
+> > > > >> received PTM Requests.
+> > > > >
+> > > > > Great!  Christian, can you update the commit log to reflect that
+> > > > > both this bit *and* PCI_PTM_CTRL_ENABLE must be set for the RP to
+> > > > > respond to received PTM Requests?
+> > > > >
+> > > > > When CDNS_PCIE_LM_TPM_CTRL_PTMRSEN is cleared, do PCI_PTM_CAP_ROOT
+> > > > > and the PTM Responder Capable bit (for which we don't have a #define)
+> > > > > read as zero?
+> > > >
+> > > > I see both PTM Responder Capable bit and PTM Root Capable is
+> > > > by-default set to '1'.
+> > >
+> > > Without this patch applied and with no other SW setting
+> > > CDNS_PCIE_LM_TPM_CTRL_PTMRSEN, correct ?
+>
+> Yes. The capability bits default to '1', even if
+> CDNS_PCIE_LM_TPM_CTRL_PTMRSEN is cleared. Strictly speaking the current
+> behavior is wrong, and the capability bits should be cleared instead.
+>
+> > > > root@am64xx-evm:~# devmem2 0xD000A24
+> > > >
+> > > > /dev/mem opened.
+> > > > Memory mapped at address 0xffffa8980000.
+> > > > Read at address  0x0D000A24 (0xffffa8980a24): 0x00000406
+> > > >
+> > > > And this bit can be programmed through the local management APB
+> > > > interface if required.
+> > >
+> > > Which bit ? CDNS_PCIE_LM_TPM_CTRL_PTMRSEN ?
+>
+> I believe "these bits" would have been more correct. Since these are
+> capability bits, the AM64* TRM lists them as read-only, but of course
+> they can be modified. To write them, you need to set bit [21], e.g.
+> you can write the PTM capability register at address 0xD200A24. At
+> the TRM address 0xD000A24 it is read-only.
+>
+> > >
+> > > > But with this patch which enables PTM by default for RC, it
+> > > > wouldn't be required to clear those bits.
+> > >
+> > > Yes but that does not comply with the specifications as Bjorn
+> > > pointed out below.
+> > >
+> > > We can merge this patch but it would be good to investigate on this
+> > > point.
+> >
+> > I *think* this is OK.  Correct me if I'm wrong:
+> >
+> >   - We're talking about a Root Port.
+> >
+> >   - The Root Port's PTM Capability reads as 0x00000406 (PTM Responder
+> >     Capable and PTM Root Capable set).
+> >
+> >   - Without this patch, setting PTM Enable does nothing, and the Root
+> >     Port does not send PTM Responses.
+> >
+> >     This is the non-conforming situation because the Port claims that
+> >     it implements the PTM Responder role, but it can't actually be
+> >     enabled.
+> >
+> >   - With this patch that sets CDNS_PCIE_LM_TPM_CTRL_PTMRSEN, the PTM
+> >     Enable bit still powers up as zero, so the Port does not send PTM
+> >     Responses, but setting PTM Enable enables PTM Responses from the
+> >     Root Port.
+>
+> This is correct.
+>
+> >
+> > So I think that after setting CDNS_PCIE_LM_TPM_CTRL_PTMRSEN, the PTM
+> > capability works as per spec.
+> >
+> > I think the proposed subject of "Enable Controller to respond to
+> > received PTM Requests" is somewhat misleading, though, because PTM
+> > responses still aren't enabled until we set PTM Enable.  I suggest
+> > something like:
+> >
+> >   PCI: cadence: Allow PTM Responder to be enabled
+>
+> I'll ask Christian for permission to resend his patch with the subject
+> changed.
+>
 
-Note, that if DT doesn't list extra MSI interrupts, the driver will limit
-the amount of supported MSI vectors accordingly (to 32).
+I will send a new version tomorrow with an improved subject line.
 
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 137 ++++++++++++++++++++++++-
- 1 file changed, 136 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 375f27ab9403..53a7dc266cf4 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -194,6 +194,7 @@ struct qcom_pcie_ops {
- 
- struct qcom_pcie_cfg {
- 	const struct qcom_pcie_ops *ops;
-+	unsigned int has_split_msi_irqs:1;
- 	unsigned int pipe_clk_need_muxing:1;
- 	unsigned int has_tbu_clk:1;
- 	unsigned int has_ddrss_sf_tbu_clk:1;
-@@ -209,6 +210,7 @@ struct qcom_pcie {
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	const struct qcom_pcie_cfg *cfg;
-+	int msi_irqs[MAX_MSI_CTRLS];
- };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-@@ -1387,6 +1389,124 @@ static int qcom_pcie_config_sid_sm8250(struct qcom_pcie *pcie)
- 	return 0;
- }
- 
-+static void qcom_chained_msi_isr(struct irq_desc *desc)
-+{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	int irq = irq_desc_get_irq(desc);
-+	struct pcie_port *pp;
-+	int i, pos;
-+	unsigned long val;
-+	u32 status, num_ctrls;
-+	struct dw_pcie *pci;
-+	struct qcom_pcie *pcie;
-+
-+	chained_irq_enter(chip, desc);
-+
-+	pp = irq_desc_get_handler_data(desc);
-+	pci = to_dw_pcie_from_pp(pp);
-+	pcie = to_qcom_pcie(pci);
-+
-+	/*
-+	 * Unlike generic dw_handle_msi_irq(), we can determine which group of
-+	 * MSIs triggered the IRQ, so process just that group.
-+	 */
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
-+	for (i = 0; i < num_ctrls; i++) {
-+		if (pcie->msi_irqs[i] == irq)
-+			break;
-+	}
-+
-+	if (WARN_ON_ONCE(unlikely(i == num_ctrls)))
-+		goto out;
-+
-+	status = dw_pcie_readl_dbi(pci, PCIE_MSI_INTR0_STATUS +
-+				   (i * MSI_REG_CTRL_BLOCK_SIZE));
-+	if (!status)
-+		goto out;
-+
-+	val = status;
-+	pos = 0;
-+	while ((pos = find_next_bit(&val, MAX_MSI_IRQS_PER_CTRL,
-+				    pos)) != MAX_MSI_IRQS_PER_CTRL) {
-+		generic_handle_domain_irq(pp->irq_domain,
-+					  (i * MAX_MSI_IRQS_PER_CTRL) +
-+					  pos);
-+		pos++;
-+	}
-+
-+out:
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static int qcom_pcie_msi_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct qcom_pcie *pcie = to_qcom_pcie(pci);
-+	struct platform_device *pdev = to_platform_device(pci->dev);
-+	char irq_name[] = "msiXXX";
-+	unsigned int ctrl, num_ctrls;
-+	int msi_irq, ret;
-+
-+	pp->msi_irq = -EINVAL;
-+
-+	/*
-+	 * We provide our own implementation of MSI init/deinit, but rely on
-+	 * using the rest of DWC MSI functionality.
-+	 */
-+	pp->has_msi_ctrl = true;
-+
-+	msi_irq = platform_get_irq_byname_optional(pdev, "msi");
-+	if (msi_irq < 0) {
-+		msi_irq = platform_get_irq(pdev, 0);
-+		if (msi_irq < 0)
-+			return msi_irq;
-+	}
-+
-+	pcie->msi_irqs[0] = msi_irq;
-+
-+	for (num_ctrls = 1; num_ctrls < MAX_MSI_CTRLS; num_ctrls++) {
-+		snprintf(irq_name, sizeof(irq_name), "msi%d", num_ctrls + 1);
-+		msi_irq = platform_get_irq_byname_optional(pdev, irq_name);
-+		if (msi_irq == -ENXIO)
-+			break;
-+
-+		pcie->msi_irqs[num_ctrls] = msi_irq;
-+	}
-+
-+	pp->num_vectors = num_ctrls * MAX_MSI_IRQS_PER_CTRL;
-+	dev_info(&pdev->dev, "Using %d MSI vectors\n", pp->num_vectors);
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
-+		pp->irq_mask[ctrl] = ~0;
-+
-+	ret = dw_pcie_allocate_msi(pp);
-+	if (ret)
-+		return ret;
-+
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
-+		irq_set_chained_handler_and_data(pcie->msi_irqs[ctrl],
-+						 qcom_chained_msi_isr,
-+						 pp);
-+
-+	return 0;
-+}
-+
-+static void qcom_pcie_msi_host_deinit(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct qcom_pcie *pcie = to_qcom_pcie(pci);
-+	unsigned int ctrl, num_ctrls;
-+
-+	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-+
-+	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
-+		irq_set_chained_handler_and_data(pcie->msi_irqs[ctrl],
-+						 NULL,
-+						 NULL);
-+
-+	dw_pcie_free_msi(pp);
-+}
-+
- static int qcom_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -1435,6 +1555,12 @@ static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
- 	.host_init = qcom_pcie_host_init,
- };
- 
-+static const struct dw_pcie_host_ops qcom_pcie_msi_dw_ops = {
-+	.host_init = qcom_pcie_host_init,
-+	.msi_host_init = qcom_pcie_msi_host_init,
-+	.msi_host_deinit = qcom_pcie_msi_host_deinit,
-+};
-+
- /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
- static const struct qcom_pcie_ops ops_2_1_0 = {
- 	.get_resources = qcom_pcie_get_resources_2_1_0,
-@@ -1508,6 +1634,7 @@ static const struct qcom_pcie_cfg ipq8064_cfg = {
- 
- static const struct qcom_pcie_cfg msm8996_cfg = {
- 	.ops = &ops_2_3_2,
-+	.has_split_msi_irqs = true,
- };
- 
- static const struct qcom_pcie_cfg ipq8074_cfg = {
-@@ -1520,6 +1647,7 @@ static const struct qcom_pcie_cfg ipq4019_cfg = {
- 
- static const struct qcom_pcie_cfg sdm845_cfg = {
- 	.ops = &ops_2_7_0,
-+	.has_split_msi_irqs = true,
- 	.has_tbu_clk = true,
- };
- 
-@@ -1532,12 +1660,14 @@ static const struct qcom_pcie_cfg sm8150_cfg = {
- 
- static const struct qcom_pcie_cfg sm8250_cfg = {
- 	.ops = &ops_1_9_0,
-+	.has_split_msi_irqs = true,
- 	.has_tbu_clk = true,
- 	.has_ddrss_sf_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sm8450_pcie0_cfg = {
- 	.ops = &ops_1_9_0,
-+	.has_split_msi_irqs = true,
- 	.has_ddrss_sf_tbu_clk = true,
- 	.pipe_clk_need_muxing = true,
- 	.has_aggre0_clk = true,
-@@ -1546,6 +1676,7 @@ static const struct qcom_pcie_cfg sm8450_pcie0_cfg = {
- 
- static const struct qcom_pcie_cfg sm8450_pcie1_cfg = {
- 	.ops = &ops_1_9_0,
-+	.has_split_msi_irqs = true,
- 	.has_ddrss_sf_tbu_clk = true,
- 	.pipe_clk_need_muxing = true,
- 	.has_aggre1_clk = true,
-@@ -1553,6 +1684,7 @@ static const struct qcom_pcie_cfg sm8450_pcie1_cfg = {
- 
- static const struct qcom_pcie_cfg sc7280_cfg = {
- 	.ops = &ops_1_9_0,
-+	.has_split_msi_irqs = true,
- 	.has_tbu_clk = true,
- 	.pipe_clk_need_muxing = true,
- };
-@@ -1626,7 +1758,10 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto err_pm_runtime_put;
- 
--	pp->ops = &qcom_pcie_dw_ops;
-+	if (pcie->cfg->has_split_msi_irqs)
-+		pp->ops = &qcom_pcie_msi_dw_ops;
-+	else
-+		pp->ops = &qcom_pcie_dw_ops;
- 
- 	ret = phy_init(pcie->phy);
- 	if (ret) {
 -- 
-2.35.1
+greets
+--
+Christian Gmeiner, MSc
 
+https://christian-gmeiner.info/privacypolicy
