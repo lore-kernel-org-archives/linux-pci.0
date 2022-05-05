@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDAD3C4332F
-	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 13:54:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4128FC43219
+	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 13:54:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232606AbiEEN56 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 May 2022 09:57:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45820 "EHLO
+        id S1380222AbiEEN6A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 May 2022 09:58:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380172AbiEEN5x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 09:57:53 -0400
-Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B356857981
-        for <linux-pci@vger.kernel.org>; Thu,  5 May 2022 06:54:11 -0700 (PDT)
-Received: by mail-lf1-x136.google.com with SMTP id b18so7605996lfv.9
-        for <linux-pci@vger.kernel.org>; Thu, 05 May 2022 06:54:11 -0700 (PDT)
+        with ESMTP id S1380193AbiEEN54 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 09:57:56 -0400
+Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53ECD5798F
+        for <linux-pci@vger.kernel.org>; Thu,  5 May 2022 06:54:14 -0700 (PDT)
+Received: by mail-lf1-x134.google.com with SMTP id bu29so7665271lfb.0
+        for <linux-pci@vger.kernel.org>; Thu, 05 May 2022 06:54:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=WbPm7wPFz42k3w9HjVTRf/Wo4cb2U+ygFCZJLREQuWI=;
-        b=Xn+8z8ql0h5nj7WQRPPklQCv4vzgkLbNrjDogwUJw9hlZ+xiYTGzIbLBYyGHqdCo9l
-         1+oVjLjlQMbVQPIfCbXuXjrGin2VJD5zeGJz7O80qZ7krgrW1Lo8R3kFBnNE7RhHvuEM
-         lTBvVX52Tqc2WWmGt5+xPIs4sfC2W+kIozvwFNK2PZUMk5HIPejKEvOSr4SsluGztQH+
-         Gh1t+nkZDVQVfWbvLCXwHuaWx/b7dfhL7ZUe656lFalBWZ4Sq2KOL6+yfyoRJtY1p2g4
-         VE+JGEyOJYcQtwkt6I7B2baL+uVbnKgJSnvHahYPLni02pXe5MSuWzEbl01J2bkjJ69i
-         Flxg==
+        bh=CTHkilprIvL9A/8ur+bw1pjnP/4ABBDDnOBt355kY54=;
+        b=cJbdjlgRt5S21pqwH/4LI/wh0h3Zpznl9TYcC0evuBNGcVYXKlVEALpYx7WDmJem4/
+         gWUVU+KyKv3b2ZOhn18vaVGL3QAgLZHM8XD3/wEMUXo1nhpdr3cbUBuBBTd/TsumHcre
+         vMfUCJ4aae3+uqC3Sjd4C/mZqjudldl5iWWX68a/LCU7pGj4o1RvtFVm3vi0/dj5wY/D
+         TynRX1OwF5OBf0kvIa8dLeXxX5QjrDUWHxVab+QOAKoj/XP6BydG5gDgDOAOn1hNHLiq
+         a1/xnVabjKRtuoSYSv4x8CAaONsHZorcnaJe9BauiSCQtYzXK5lVjmh66VT3Z5QOD489
+         PuFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=WbPm7wPFz42k3w9HjVTRf/Wo4cb2U+ygFCZJLREQuWI=;
-        b=WEsTi5FlShoAkMgdEnk+BI2UbiehYcJ29n154ZonV9fyNz3jag7gyIMRq6cfoAejKN
-         hX0GU8xpIYQBkLTcbFmYsdqyaE7SuZ0VAkZkgPy9LCqnHrxp8eP7UlWpWO3+s2eJASZP
-         Jdn83ASlqZ+d5AyTL8fe8JzWaTaz8xPCGG58NdB7CclHqXgLd3ijfdkunjjVcydylEh6
-         9OhhFvY1LALUqQ2rAtrVoUaiHJDF4BuUa/RbLBQVLZW8xkyIBmpyPjjI5CQd49Xk9uMA
-         rXzC6veAv/2rNmlA3PErmK2h91wBBb+zPSqlss8SUIZOtotE3a9rCWE566NqqSrGuWfo
-         EoKQ==
-X-Gm-Message-State: AOAM532OAByjsuYTTBRxbYa5ntqd0UGfvUdD3jgMGuKhgQ2hCAXd+/q+
-        532lFytTYDJbzdE9LhRedJeIrA==
-X-Google-Smtp-Source: ABdhPJweT0d33EPcdMX3DaxBXIJifrw1qhZigxI3qvTMuhBG+U9o6VTEuGWBZ/ud2jnXqSLddFE0yw==
-X-Received: by 2002:a05:6512:39d5:b0:473:c255:b811 with SMTP id k21-20020a05651239d500b00473c255b811mr4941705lfu.201.1651758849664;
-        Thu, 05 May 2022 06:54:09 -0700 (PDT)
+        bh=CTHkilprIvL9A/8ur+bw1pjnP/4ABBDDnOBt355kY54=;
+        b=7c2uUNv+SjUn4ts0lxcddWVz3eIREmPh4AlDhhVTy/WYca2kFb1dBvxN4SJ25yrAUt
+         GDZNruywEG761KZ8FiD73VHnhtczenwIpZUB61QYCHXKEt24jsCZyhty0ClJNuPhboHw
+         B6PCc1R7TlCHNQ7FCcvlbawZk1AWJupADlKtIlaXU+eUPhUrxphqXru9BSw8ZvWBrkBL
+         k8xT4GWYa/W/mVxApvG/YKxHSYpOH0X24GuHUe9L68WAdamkT7OMGMRrOBgjsT04RtUd
+         FeunpUogFOymvvDQE5Pp1IkXWrNr6ghS/fAGfzh37OnVT+NHJAoVZVvHgNWMBC2S3XF3
+         NJ9A==
+X-Gm-Message-State: AOAM533PIupPaPIJc0oRWxHuI7sC/KAFj7os5rLYPvCN8u8hi9qHoe75
+        pdH6xZNCXTFLLkJgLYeI5yfh9w==
+X-Google-Smtp-Source: ABdhPJz6ZWKVIfK2ub5g2meRCjSaHdTV6ukDSC/+1DMTCGpGr2aHdKTltlD7dikydGBvhbrrrfM9Qw==
+X-Received: by 2002:ac2:5287:0:b0:472:57c7:d1de with SMTP id q7-20020ac25287000000b0047257c7d1demr16887371lfm.654.1651758852648;
+        Thu, 05 May 2022 06:54:12 -0700 (PDT)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id z24-20020ac25df8000000b0047255d211ccsm221788lfq.251.2022.05.05.06.54.09
+        by smtp.gmail.com with ESMTPSA id z24-20020ac25df8000000b0047255d211ccsm221788lfq.251.2022.05.05.06.54.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 May 2022 06:54:09 -0700 (PDT)
+        Thu, 05 May 2022 06:54:12 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -59,10 +59,11 @@ To:     Andy Gross <agross@kernel.org>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Cc:     Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: [PATCH v7 2/7] PCI: dwc: Correct msi_irq condition in dw_pcie_free_msi()
-Date:   Thu,  5 May 2022 16:54:02 +0300
-Message-Id: <20220505135407.1352382-3-dmitry.baryshkov@linaro.org>
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v7 6/7] dt-bindings: PCI: qcom: Support additional MSI interrupts
+Date:   Thu,  5 May 2022 16:54:06 +0300
+Message-Id: <20220505135407.1352382-7-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220505135407.1352382-1-dmitry.baryshkov@linaro.org>
 References: <20220505135407.1352382-1-dmitry.baryshkov@linaro.org>
@@ -72,29 +73,82 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The subdrivers pass -ESOMETHING if they do not want the core to touch
-MSI IRQ. dw_pcie_host_init() also checks if (msi_irq > 0) rather than
-just if (msi_irq). So let's make dw_pcie_free_msi() also check that
-msi_irq is greater than zero.
+On Qualcomm platforms each group of 32 MSI vectors is routed to the
+separate GIC interrupt. Document mapping of additional interrupts.
 
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../devicetree/bindings/pci/qcom,pcie.yaml    | 45 ++++++++++++++++++-
+ 1 file changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 2fa86f32d964..43d1d6116007 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -257,7 +257,7 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 0b69b12b849e..fd3290e0e220 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -43,11 +43,20 @@ properties:
+     maxItems: 5
  
- static void dw_pcie_free_msi(struct pcie_port *pp)
- {
--	if (pp->msi_irq)
-+	if (pp->msi_irq > 0)
- 		irq_set_chained_handler_and_data(pp->msi_irq, NULL, NULL);
+   interrupts:
+-    maxItems: 1
++    minItems: 1
++    maxItems: 8
  
- 	irq_domain_remove(pp->msi_domain);
+   interrupt-names:
++    minItems: 1
+     items:
+       - const: msi
++      - const: msi2
++      - const: msi3
++      - const: msi4
++      - const: msi5
++      - const: msi6
++      - const: msi7
++      - const: msi8
+ 
+   # Common definitions for clocks, clock-names and reset.
+   # Platform constraints are described later.
+@@ -623,6 +632,40 @@ allOf:
+         - resets
+         - reset-names
+ 
++    # On newer chipsets support either 1 or 8 msi interrupts
++    # On older chipsets it's always 1 msi interrupt
++  - if:
++      properties:
++        compatibles:
++          contains:
++            enum:
++              - qcom,pcie-msm8996
++              - qcom,pcie-sc7280
++              - qcom,pcie-sc8180x
++              - qcom,pcie-sdm845
++              - qcom,pcie-sm8150
++              - qcom,pcie-sm8250
++              - qcom,pcie-sm8450-pcie0
++              - qcom,pcie-sm8450-pcie1
++    then:
++      oneOf:
++        - properties:
++            interrupts:
++              maxItems: 1
++            interrupt-names:
++              maxItems: 1
++        - properties:
++            interrupts:
++              minItems: 8
++            interrupt-names:
++              minItems: 8
++    else:
++      properties:
++        interrupts:
++          maxItems: 1
++        interrupt-names:
++          maxItems: 1
++
+ unevaluatedProperties: false
+ 
+ examples:
 -- 
 2.35.1
 
