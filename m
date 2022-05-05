@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D3CFC4321E
-	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 09:12:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62D83C43217
+	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 09:12:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351904AbiEEJQR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 May 2022 05:16:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54556 "EHLO
+        id S1352008AbiEEJQS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 May 2022 05:16:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351912AbiEEJQQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 05:16:16 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94AE54BFF7
-        for <linux-pci@vger.kernel.org>; Thu,  5 May 2022 02:12:36 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id w1so6445935lfa.4
-        for <linux-pci@vger.kernel.org>; Thu, 05 May 2022 02:12:36 -0700 (PDT)
+        with ESMTP id S1351951AbiEEJQR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 05:16:17 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A3A54C78A
+        for <linux-pci@vger.kernel.org>; Thu,  5 May 2022 02:12:37 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id x17so6422296lfa.10
+        for <linux-pci@vger.kernel.org>; Thu, 05 May 2022 02:12:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=ncVhMJxrohn0+P1cFmOcnIFJEP0t7Z52SvJtNUy/BIs=;
-        b=ER2VTsvOq2LCrjduxIUhbMKGiBJEGvyC5Wu3W99lakjPL70aD4wsw/EiXe84rguaUd
-         g/e6q3E1abhNoijcXiRLzDyGKfUZkJtYFsTJ+djpv7Z49y7LFjMkDwFXN0/EKgmko93c
-         RYWDdRauscaPgykwRZijCF4ZmAbhRtyZJ9C3NkoubBtIKptg76c4FjPjtmAEMAwDYLYz
-         G45WHyU2Reigo6y2ZptjbcQGi/mZPQ/6yGJ/ZRUSETFNbf37WvGBK2f8jaRjor5XV+jJ
-         GGei8p26qXpxnGeQ9zkr7OXWDHbrwSibpUGeS34ybXRX0FHCM1IqF8U7C7Q4Ssok1k8g
-         YObw==
+        bh=Ga1FXFUoff60uV1gZjfSxxZrosbrRhkS2aF6jySEeu8=;
+        b=W3tyAprDWp6UyDWYOdLrEzdJRss3YRRpqzy/uk0dYDH8QNfXcnaSp0CqWZ+wvwsLyL
+         oAsAwF4GR9NRKLP7bSNYHld3TK6NV1t2Pmdu1ZYmvLEyOf/CprNYm9D5nXMhfjOmhiOM
+         RWSy6eMW8s8wVq+5xJtCMjB9au4uTac8PUJpjgsIrsPvQYgJs70LuVXhTnXYGko96ev8
+         1POUYPIZ+cq6p1NEJ+CYQRxR+p6OhAuiajCBJoJvKLPy1YfbYoiKt2K2j3lfotrnfvH1
+         pc9FBAm14Yq+Wa5ZPOaXLM0fS1kx2VfOXzCYjNRwlcWqSgyS1N7VINWFJSyfxASNbSh4
+         Wm4A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ncVhMJxrohn0+P1cFmOcnIFJEP0t7Z52SvJtNUy/BIs=;
-        b=UJp8MuTR94lR/fQrtvZIakvsLJLLGIZuRGhc/b5JvLiLRY2kCqN3Rc9Beus9LBS7B4
-         viCFRghuKnfGlCF8p0VDadWKgbQE7qEQprg01M7vT+KDsfKn4smw52i84FCohYy7SyPA
-         ojEzNlLEMpahBqy6O2dzbfnwiTlRaBIG2reBAmjULl7kxuqNpiOF5bWogQWwGQk9cgyf
-         2Ji2zyiOhSHp5rm9UZHFErNag2yb6cyQw7TVZsUODm/vhRD5x2wNXnWKkaqjkb9df2/v
-         EOZy2SpdHz6BTKr7teactk54mLZE+aBiouNRK2GHts53TSa0ZvqXWYFjyiVnVa6d8RMV
-         +HEg==
-X-Gm-Message-State: AOAM530s+Xse+wAp8BKuDvfH4hAw/WpT1pSrlQ+GQy4f1I0PMUA7FKyg
-        AteHYEZ5yHrF1nwD0gEXK/PbRNue4GUYQg==
-X-Google-Smtp-Source: ABdhPJz0OE5hEfPUlrdgJDuB9wb0bPV6T5/O0LJr4MVJk64hHCsgA0akUPwfOg8XtmlQf6LLdQDvvw==
-X-Received: by 2002:a05:6512:3982:b0:473:ac4e:8a14 with SMTP id j2-20020a056512398200b00473ac4e8a14mr7326702lfu.73.1651741954880;
-        Thu, 05 May 2022 02:12:34 -0700 (PDT)
+        bh=Ga1FXFUoff60uV1gZjfSxxZrosbrRhkS2aF6jySEeu8=;
+        b=wWuduWMxLWVhFu8wCvNGZsxBZVoCl0aIWek3x7X7NBYLbN8I2KJUSAM2qEQ2e03/qG
+         9jpm4ivS5mkjlNJUWlBA1jWQr80PPlBoEF7SUc1yojwlXOM/29Ll5owxjQaLORPn8bv4
+         hrp+wQ1VmvXjPK18Tk0NmyGbZ8eQMqhKJpaj+KzNqbC4qvgVeds3eq4vLLhATy5NEj/v
+         3UJCaatkzkP4Q3EGkoZnol91On7dltCF5Yblu5Tu0+ZHEFUNU6rJ6r2XShO6u46dM3ov
+         nu++ztujf+jZKlKKx5DxOTCGyi3Z5dwuQLEsj3QHiC6c1IVE8naDvfK6QLfapbddVhF8
+         NKCg==
+X-Gm-Message-State: AOAM531HXnq8/lz1lY24vPIfCQh0m3YQnacrIc1lSAndQFgGGaf20x+W
+        comaNNRJwbbnyYl29hsXfYsFrA==
+X-Google-Smtp-Source: ABdhPJzZlSdGDF1bKE1X4lKCce+HRMOaUZjOQni3fefl0hld3wq50mbnLmt9CR8cvex4VIClMGVu/A==
+X-Received: by 2002:a05:6512:1513:b0:448:39c0:def0 with SMTP id bq19-20020a056512151300b0044839c0def0mr17057736lfb.469.1651741957121;
+        Thu, 05 May 2022 02:12:37 -0700 (PDT)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id v26-20020ac2593a000000b0047255d211e8sm133564lfi.279.2022.05.05.02.12.34
+        by smtp.gmail.com with ESMTPSA id v26-20020ac2593a000000b0047255d211e8sm133564lfi.279.2022.05.05.02.12.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 May 2022 02:12:34 -0700 (PDT)
+        Thu, 05 May 2022 02:12:36 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -60,9 +60,9 @@ To:     Andy Gross <agross@kernel.org>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Cc:     Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: [PATCH v6 4/7] PCI: dwc: Export several functions useful for MSI implentations
-Date:   Thu,  5 May 2022 12:12:28 +0300
-Message-Id: <20220505091231.1308963-5-dmitry.baryshkov@linaro.org>
+Subject: [PATCH v6 7/7] arm64: dts: qcom: sm8250: provide additional MSI interrupts
+Date:   Thu,  5 May 2022 12:12:31 +0300
+Message-Id: <20220505091231.1308963-8-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220505091231.1308963-1-dmitry.baryshkov@linaro.org>
 References: <20220505091231.1308963-1-dmitry.baryshkov@linaro.org>
@@ -72,134 +72,41 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Supporting multiple MSI interrupts on Qualcomm hardware would benefit
-from having these functions being exported rather than static. Note that
-both designware and qcom driver can not be built as modules, so no need
-to use EXPORT_SYMBOL here.
+On SM8250 each group of MSI interrupts is mapped to the separate host
+interrupt. Describe each of interrupts in the device tree for PCIe0
+host.
+
+Tested on Qualcomm RB5 platform with first group of MSI interrupts being
+used by the PME and attached ath11k WiFi chip using second group of MSI
+interrupts.
 
 Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 ---
- .../pci/controller/dwc/pcie-designware-host.c | 62 ++++++++++++-------
- drivers/pci/controller/dwc/pcie-designware.h  | 11 ++++
- 2 files changed, 49 insertions(+), 24 deletions(-)
+ arch/arm64/boot/dts/qcom/sm8250.dtsi | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 92dcaeabe2bf..c3b8ab278a00 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -255,7 +255,39 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
- 	return 0;
- }
+diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+index 410272a1e19b..0659ac45c651 100644
+--- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+@@ -1807,8 +1807,15 @@ pcie0: pci@1c00000 {
+ 			ranges = <0x01000000 0x0 0x60200000 0 0x60200000 0x0 0x100000>,
+ 				 <0x02000000 0x0 0x60300000 0 0x60300000 0x0 0x3d00000>;
  
--static void dw_pcie_free_msi(struct pcie_port *pp)
-+int dw_pcie_allocate_msi(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	int ret;
-+
-+	ret = dw_pcie_allocate_domains(pp);
-+	if (ret)
-+		return ret;
-+
-+	if (pp->msi_irq > 0)
-+		irq_set_chained_handler_and_data(pp->msi_irq,
-+				dw_chained_msi_isr,
-+				pp);
-+
-+	ret = dma_set_mask(pci->dev, DMA_BIT_MASK(32));
-+	if (ret)
-+		dev_warn(pci->dev, "Failed to set DMA mask to 32-bit. Devices with only 32-bit MSI support may not work properly\n");
-+
-+	pp->msi_data = dma_map_single_attrs(pci->dev, &pp->msi_msg,
-+			sizeof(pp->msi_msg),
-+			DMA_FROM_DEVICE,
-+			DMA_ATTR_SKIP_CPU_SYNC);
-+	ret = dma_mapping_error(pci->dev, pp->msi_data);
-+	if (ret) {
-+		dev_err(pci->dev, "Failed to map MSI data\n");
-+		pp->msi_data = 0;
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+void dw_pcie_free_msi(struct pcie_port *pp)
- {
- 	if (pp->msi_irq > 0)
- 		irq_set_chained_handler_and_data(pp->msi_irq, NULL, NULL);
-@@ -357,6 +389,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 			return -EINVAL;
- 		}
- 
-+		/* this can be overridden by msi_host_init() if necessary */
-+		pp->msi_irq_chip = &dw_pci_msi_bottom_irq_chip;
-+
- 		if (pp->ops->msi_host_init) {
- 			ret = pp->ops->msi_host_init(pp);
- 			if (ret < 0)
-@@ -377,30 +412,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 				}
- 			}
- 
--			pp->msi_irq_chip = &dw_pci_msi_bottom_irq_chip;
--
--			ret = dw_pcie_allocate_domains(pp);
--			if (ret)
-+			ret = dw_pcie_allocate_msi(pp);
-+			if (ret < 0)
- 				return ret;
--
--			if (pp->msi_irq > 0)
--				irq_set_chained_handler_and_data(pp->msi_irq,
--							    dw_chained_msi_isr,
--							    pp);
--
--			ret = dma_set_mask(pci->dev, DMA_BIT_MASK(32));
--			if (ret)
--				dev_warn(pci->dev, "Failed to set DMA mask to 32-bit. Devices with only 32-bit MSI support may not work properly\n");
--
--			pp->msi_data = dma_map_single_attrs(pci->dev, &pp->msi_msg,
--						      sizeof(pp->msi_msg),
--						      DMA_FROM_DEVICE,
--						      DMA_ATTR_SKIP_CPU_SYNC);
--			if (dma_mapping_error(pci->dev, pp->msi_data)) {
--				dev_err(pci->dev, "Failed to map MSI data\n");
--				pp->msi_data = 0;
--				goto err_free_msi;
--			}
- 		}
- 	}
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index e1c48b71e0d2..f72447f15dc5 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -374,6 +374,8 @@ void dw_pcie_host_deinit(struct pcie_port *pp);
- int dw_pcie_allocate_domains(struct pcie_port *pp);
- void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn,
- 				       int where);
-+int dw_pcie_allocate_msi(struct pcie_port *pp);
-+void dw_pcie_free_msi(struct pcie_port *pp);
- #else
- static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- {
-@@ -403,6 +405,15 @@ static inline void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus,
- {
- 	return NULL;
- }
-+
-+static int dw_pcie_allocate_msi(struct pcie_port *pp)
-+{
-+	return -EINVAL;
-+}
-+
-+static void dw_pcie_free_msi(struct pcie_port *pp)
-+{
-+}
- #endif
- 
- #ifdef CONFIG_PCIE_DW_EP
+-			interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>;
+-			interrupt-names = "msi";
++			interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi", "msi2", "msi3", "msi4", "msi5", "msi6", "msi7", "msi8";
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0 0 0 0x7>;
+ 			interrupt-map = <0 0 0 1 &intc 0 149 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
 -- 
 2.35.1
 
