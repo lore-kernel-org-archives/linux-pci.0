@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A83FBC433FE
-	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 18:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AE7EC433FE
+	for <linux-pci@archiver.kernel.org>; Thu,  5 May 2022 18:33:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231845AbiEESf1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 May 2022 14:35:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55026 "EHLO
+        id S232818AbiEEShP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 May 2022 14:37:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1385227AbiEESaQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 14:30:16 -0400
+        with ESMTP id S1381112AbiEESff (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2022 14:35:35 -0400
 Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BC5F5F241;
-        Thu,  5 May 2022 11:20:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D242D14087;
+        Thu,  5 May 2022 11:26:38 -0700 (PDT)
 Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
  by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.0.0)
- id 1873c2b789deefa0; Thu, 5 May 2022 20:19:36 +0200
+ id e30f9251d57c40cd; Thu, 5 May 2022 20:19:30 +0200
 Received: from kreacher.localnet (unknown [213.134.161.219])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id 2DF7D66C2F2;
-        Thu,  5 May 2022 20:19:35 +0200 (CEST)
+        by v370.home.net.pl (Postfix) with ESMTPSA id 0EFE266C2F2;
+        Thu,  5 May 2022 20:19:30 +0200 (CEST)
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Linux PCI <linux-pci@vger.kernel.org>
 Cc:     LKML <linux-kernel@vger.kernel.org>,
@@ -31,9 +31,9 @@ Cc:     LKML <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <helgaas@kernel.org>,
         Nathan Chancellor <nathan@kernel.org>,
         Anders Roxell <anders.roxell@linaro.org>
-Subject: [PATCH v1 06/11] PCI/PM: Write 0 to PMCSR in pci_power_up() in all cases
-Date:   Thu, 05 May 2022 20:10:43 +0200
-Message-ID: <5748066.MhkbZ0Pkbq@kreacher>
+Subject: [PATCH v1 09/11] PCI/PM: Clean up pci_set_low_power_state()
+Date:   Thu, 05 May 2022 20:15:34 +0200
+Message-ID: <2539071.Lt9SDvczpP@kreacher>
 In-Reply-To: <4738492.GXAFRqVoOG@kreacher>
 References: <4738492.GXAFRqVoOG@kreacher>
 MIME-Version: 1.0
@@ -51,39 +51,51 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Make pci_power_up() write 0 to the device's PCI_PM_CTRL register in
-order to put it into D0 regardless of the power state returned by
-the previous read from that register which should not matter.
+Make the following assorted non-essential changes in
+pci_set_low_power_state():
+
+ 1. Drop two redundant checks from it (the caller takes care of these
+    conditions).
+
+ 2. Change the log level of a messages printed by it to "debug",
+    because it only indicates a programming mistake.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/pci.c |   11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ drivers/pci/pci.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
 Index: linux-pm/drivers/pci/pci.c
 ===================================================================
 --- linux-pm.orig/drivers/pci/pci.c
 +++ linux-pm/drivers/pci/pci.c
-@@ -1230,15 +1230,10 @@ int pci_power_up(struct pci_dev *dev)
- 	}
+@@ -1341,16 +1341,9 @@ static int pci_set_low_power_state(struc
+ {
+ 	u16 pmcsr;
  
- 	/*
--	 * If we're (effectively) in D3, force entire word to 0. This doesn't
--	 * affect PME_Status, disables PME_En, and sets PowerState to 0.
-+	 * Force the entire word to 0. This doesn't affect PME_Status, disables
-+	 * PME_En, and sets PowerState to 0.
- 	 */
--	if (state == PCI_D3hot)
--		pmcsr = 0;
--	else
--		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+-	/* Check if we're already there */
+-	if (dev->current_state == state)
+-		return 0;
 -
--	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
-+	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, 0);
+ 	if (!dev->pm_cap)
+ 		return -EIO;
  
- 	/* Mandatory transition delays; see PCI PM 1.2. */
- 	if (state == PCI_D3hot)
-
+-	if (state < PCI_D1 || state > PCI_D3hot)
+-		return -EINVAL;
+-
+ 	/*
+ 	 * Validate transition: We can enter D0 from any state, but if
+ 	 * we're already in a low-power state, we can only go deeper.  E.g.,
+@@ -1358,7 +1351,7 @@ static int pci_set_low_power_state(struc
+ 	 * we'd have to go from D3 to D0, then to D1.
+ 	 */
+ 	if (dev->current_state <= PCI_D3cold && dev->current_state > state) {
+-		pci_err(dev, "invalid power transition (from %s to %s)\n",
++		pci_dbg(dev, "Invalid power transition (from %s to %s)\n",
+ 			pci_power_name(dev->current_state),
+ 			pci_power_name(state));
+ 		return -EINVAL;
 
 
 
