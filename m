@@ -2,222 +2,158 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87BEAC433F5
-	for <linux-pci@archiver.kernel.org>; Fri,  6 May 2022 20:17:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D85C433F5
+	for <linux-pci@archiver.kernel.org>; Fri,  6 May 2022 22:40:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242918AbiEFUVM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 May 2022 16:21:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48712 "EHLO
+        id S1347039AbiEFWod (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 May 2022 18:44:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233871AbiEFUVM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2022 16:21:12 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73FD464725
-        for <linux-pci@vger.kernel.org>; Fri,  6 May 2022 13:17:27 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2F497B83945
-        for <linux-pci@vger.kernel.org>; Fri,  6 May 2022 20:17:26 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F3D5C385A8;
-        Fri,  6 May 2022 20:17:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651868244;
-        bh=OmjI2XCL4fTldCAIC0FtoHQghW1E611IMOnivnt6Q9M=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=E357CrUptmg2XtIbr1Up4PiUggZncPkf5F2zRbVysQi4etyne1ypPo/+4e7hWMdF0
-         iMYaUj6vTRpLHaotWFUKXE18X+tON8Wqg5peQMaWKf5Yi5+6uzKFNw9IPXgo6EYugU
-         qRweyco/GfQRUYg3d0i3cvofjtBJa1B2Y6/YGy7MxFMP6zekUUwkSe6XvTVDiOAxSj
-         6hrxaNU3NdVKEIw5Nl9znPIU0jYwoMP5hBiHKyTO325SL+4/ZGIVcQx3jp+1SN2PMa
-         g5Mk0qFqh1XMGZ0SyXnUopuHWmAnsXs57L4BkS6hFJx+JZOgY9RK7sORkJHiq+UmYg
-         K12j69Y+OpyZA==
-Date:   Fri, 6 May 2022 15:17:22 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Volodymyr Babchuk <Volodymyr_Babchuk@epam.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: Write to srvio_numvfs triggers kernel panic
-Message-ID: <20220506201722.GA555374@bhelgaas>
+        with ESMTP id S1391354AbiEFWoW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2022 18:44:22 -0400
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D168318360
+        for <linux-pci@vger.kernel.org>; Fri,  6 May 2022 15:40:36 -0700 (PDT)
+Received: by mail-pg1-x533.google.com with SMTP id g3so7189378pgg.3
+        for <linux-pci@vger.kernel.org>; Fri, 06 May 2022 15:40:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=065LDUWhqHCWgMdSSFbFDlbRvxvwACfC87yilPrGdlI=;
+        b=zBIqQHyP2DRtu8jz8+AeLb0ciWZUD2F8sqANruiZOVMvEMBEZAD3emBi/qQVdLHqzp
+         FVHMU/GpxMUVJkH9RZzn+SAkcjpv4QVSuwQq5svgxeZZuJMAfI5wZmEpZr/PUNpF0trc
+         v3FhaSLgSXaMB+u/Oj16M0ZDcapRGhaMUNu5wuOgExggSL2OpO6Q79H9C0m44+SLlmoK
+         CGdmBpImvHG/vxatvNPDekkhw+VeGMDKncZSVQPPJN84rz/lbCUkxKFc0jAyjgd0j8bN
+         XjopR/MAHgdcUIvAT/+tlwE2P5TQ9VWRpEznQWZ+5aS2XCz+uU3dwDcZAZ01ORpmZxyj
+         NKrw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=065LDUWhqHCWgMdSSFbFDlbRvxvwACfC87yilPrGdlI=;
+        b=rMA9hp2Tp7zJ3ZnvtLLXZ0I6MfF6rdYhrZ2d6yGoijvgw0ZoC1g8oBhxptkEfRWslc
+         ar2fKK6FcT1SbgI8F3XikZMio0EicIBGO0/MsKvbG1p8G9K2qv44tHy0ObM0z7s+8X04
+         TuwSzD3fgB6YrcmuDtvXHI7U6XqfOYUR45PQVWSmMKNcM1uyEV2YHxuLp4djKAEJDzRf
+         MQaPCgAjHR9406XCPObG+e27Jq2YJTA63ns4jGWXa19hHzru4L2wbdbRH7Nf7IgA56ek
+         /xmSYTiN3KejudyHMHsFreMtgUhWQbvYzL30RyyIZu84rBkJgNXEjnfmQn/R9Psi7j6T
+         Obfg==
+X-Gm-Message-State: AOAM533j7tSC/JSCCQxWOQqFu/+mFLvr9J+sNLgwzTyaRDImpzuPqPTk
+        lMvGaht2Phrs8kbxgMZiaQG5+jXDHPMuy1Oh+PbGykJMo3gbQg==
+X-Google-Smtp-Source: ABdhPJwmOiKypJh3j0YJSeDdlLbNrycMsjuELoXdkDcdp8bN/9RM2i9cleVTUpHB3xROZ6zQ4ez2oeSNjpMNfuP+Jtw=
+X-Received: by 2002:a63:1117:0:b0:399:2df0:7fb9 with SMTP id
+ g23-20020a631117000000b003992df07fb9mr4692066pgl.40.1651876836471; Fri, 06
+ May 2022 15:40:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <87a6bxm5vm.fsf@epam.com>
+References: <20220503153449.4088-1-Jonathan.Cameron@huawei.com>
+In-Reply-To: <20220503153449.4088-1-Jonathan.Cameron@huawei.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Fri, 6 May 2022 15:40:25 -0700
+Message-ID: <CAPcyv4geBaTkoJ+Gefgq6RaKHtB3NMh5ruZ-1yV_i0UVaw3SWA@mail.gmail.com>
+Subject: Re: [RFC PATCH 0/1] DOE usage with pcie/portdrv
+To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc:     Linuxarm <linuxarm@huawei.com>, "Weiny, Ira" <ira.weiny@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-cxl@vger.kernel.org,
+        "Wunner, Lukas" <lukas.wunner@intel.com>,
+        CHUCK_LEVER <chuck.lever@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Alex, Leon, Jason]
+[ add Lukas and Chuck ]
 
-On Wed, May 04, 2022 at 07:56:01PM +0000, Volodymyr Babchuk wrote:
-> 
-> Hello,
-> 
-> I have encountered issue when PCI code tries to use both fields in
-> 
->         union {
-> 		struct pci_sriov	*sriov;		/* PF: SR-IOV info */
-> 		struct pci_dev		*physfn;	/* VF: related PF */
-> 	};
-> 
-> (which are part of struct pci_dev) at the same time.
-> 
-> Symptoms are following:
-> 
-> # echo 1 > /sys/bus/pci/devices/0000:01:00.0/sriov_numvfs
-> 
-> pci 0000:01:00.2: reg 0x20c: [mem 0x30018000-0x3001ffff 64bit]
-> pci 0000:01:00.2: VF(n) BAR0 space: [mem 0x30018000-0x30117fff 64bit] (contains BAR0 for 32 VFs)
->  Unable to handle kernel paging request at virtual address 0001000200000010
->  Mem abort info:
->    ESR = 0x96000004
->    EC = 0x25: DABT (current EL), IL = 32 bits
->    SET = 0, FnV = 0
->    EA = 0, S1PTW = 0
->  Data abort info:
->    ISV = 0, ISS = 0x00000004
->    CM = 0, WnR = 0
->  [0001000200000010] address between user and kernel address ranges
->  Internal error: Oops: 96000004 [#1] PREEMPT SMP
-> Modules linked in: xt_MASQUERADE iptable_nat nf_nat nf_conntrack nf_defrag_ipv6
-> nf_defrag_ipv4 libcrc32c iptable_filter crct10dif_ce nvme nvme_core at24
-> pci_endpoint_test bridge pdrv_genirq ip_tables x_tables ipv6
->  CPU: 3 PID: 287 Comm: sh Not tainted 5.10.41-lorc+ #233
->  Hardware name: XENVM-4.17 (DT)
->  pstate: 60400005 (nZCv daif +PAN -UAO -TCO BTYPE=--)
->  pc : pcie_aspm_get_link+0x90/0xcc
->  lr : pcie_aspm_get_link+0x8c/0xcc
->  sp : ffff8000130d39c0
->  x29: ffff8000130d39c0 x28: 00000000000001a4
->  x27: 00000000ffffee4b x26: ffff80001164f560
->  x25: 0000000000000000 x24: 0000000000000000
->  x23: ffff80001164f660 x22: 0000000000000000
->  x23: ffff80001164f660 x22: 0000000000000000
->  x21: ffff000003f08000 x20: ffff800010db37d8
->  x19: ffff000004b8e780 x18: ffffffffffffffff
->  x17: 0000000000000000 x16: 00000000deadbeef
->  x15: ffff8000930d36c7 x14: 0000000000000006
->  x13: ffff8000115c2710 x12: 000000000000081c
->  x11: 00000000000002b4 x10: ffff8000115c2710
->  x9 : ffff8000115c2710 x8 : 00000000ffffefff
->  x7 : ffff80001161a710 x6 : ffff80001161a710
->  x5 : ffff00003fdad900 x4 : 0000000000000000
->  x3 : 0000000000000000 x2 : 0000000000000000
->  x1 : ffff000003c51c80 x0 : 0001000200000000
->  Call trace:
->   pcie_aspm_get_link+0x90/0xcc
->   aspm_ctrl_attrs_are_visible+0x30/0xc0
->   internal_create_group+0xd0/0x3cc
->   internal_create_groups.part.0+0x4c/0xc0
->   sysfs_create_groups+0x20/0x34
->   device_add+0x2b4/0x760
->   pci_device_add+0x814/0x854
->   pci_iov_add_virtfn+0x240/0x2f0
->   sriov_enable+0x1f8/0x474
->   pci_sriov_configure_simple+0x38/0x90
->   sriov_numvfs_store+0xa4/0x1a0
->   dev_attr_store+0x1c/0x30
->   sysfs_kf_write+0x48/0x60
->   kernfs_fop_write_iter+0x118/0x1ac
->   new_sync_write+0xe8/0x184
->   vfs_write+0x23c/0x2a0
->   ksys_write+0x68/0xf4
->   __arm64_sys_write+0x20/0x2c
->   el0_svc_common.constprop.0+0x78/0x1a0
->   do_el0_svc+0x28/0x94
->   el0_svc+0x14/0x20
->   el0_sync_handler+0xa4/0x130
->   el0_sync+0x180/0x1c0
-> Code: d0002120 9133e000 97ffef8e f9400a60 (f9400813)
-> 
-> 
-> Debugging showed the following:
-> 
-> pci_iov_add_virtfn() allocates new struct pci_dev:
-> 
-> 	virtfn = pci_alloc_dev(bus);
-> and sets physfn:
-> 	virtfn->is_virtfn = 1;
-> 	virtfn->physfn = pci_dev_get(dev);
-> 
-> then we will get into sriov_init() via the following call path:
-> 
-> pci_device_add(virtfn, virtfn->bus);
->   pci_init_capabilities(dev);
->     pci_iov_init(dev);
->       sriov_init(dev, pos);
+On Tue, May 3, 2022 at 8:35 AM Jonathan Cameron
+<Jonathan.Cameron@huawei.com> wrote:
+>
+> So far, we have been considering Data Object Exchange (DOE) mailboxes only
+> on EPs (CXL type 3 devices).
+> CXL CDAT (technically CXL Table Query Protocol but lets just call it CDAT)
+>   https://lore.kernel.org/linux-cxl/20220414203237.2198665-1-ira.weiny@intel.com
+> CMA/SPDM support
+>   https://lore.kernel.org/linux-cxl/20220303135905.10420-1-Jonathan.Cameron@huawei.com/
+>
+> However, a number of DOE protocols apply to switch (and root) ports.
+> DOE instances supporting CDAT occur on switch upstream ports as well as EPs.
+>
+> DOE instances supporting CMA may occur in root ports, upstream switch ports,
+> downstream switch ports and EPs (including multiple functions where relevant).
+>
 
-We called pci_device_add() with the VF.  pci_iov_init() only calls
-sriov_init() if it finds an SR-IOV capability on the device:
+So, like you, I was envisioning all the CMA and SPDM code landing in
+the kernel until I read this:
 
-  pci_iov_init(struct pci_dev *dev)
-    pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
-    if (pos)
-      return sriov_init(dev, pos);
+"Extending in-kernel TLS support"
+https://lwn.net/Articles/892216/
 
-So this means the VF must have an SR-IOV capability, which sounds a
-little dubious.  From PCIe r6.0:
+...and questioned why this new CMA/SPDM session establishment, which
+is similar to TLS, be done inside the kernel while TLS session
+establishment is done in userspace? I had a chance to chat with Chuck
+at LSF/MM and confirmed there is little appetite to change this
+up-call requirement for session establishment and expect CMA to be the
+same. The rough idea of how this works with CMA/SPDM is providing an
+ABI to retrieve session setup data with the end result of userspace
+instantiating a keyid via keyctl the to be used for future SPDM
+messages.
 
-  9.3.3 SR-IOV Extended Capability
+> The intent of this RFC is to discuss how to actually implement such support.
+> The attached patch is a really rough PoC for CDAT on upstream switch ports
+> done by adding a new pcie_port_service_driver.  This is different from the
+> proposed auxiliary device used for CXL type 3 devices (for now).
 
-  The SR-IOV Extended Capability defined here is a PCIe extended
-  capability that must be implemented in each PF that supports SR-IOV.
-  This Capability is used to describe and control a PF’s SR-IOV
-  Capabilities.
+CDAT to me is on the "CXL" side of a given PCI device. Given that
+endpoints and switches are each represented by cxl_port objects it
+seems those should generically carry the CDAT binary attribute, not
+the PCI device, don't you think?
 
-  For Multi-Function Devices, each PF that supports SR-IOV shall
-  provide the Capability structure defined in this section.  This
-  Capability structure may be present in any Function with a Type 0
-  Configuration Space Header. This Capability must not be present in
-  Functions with a Type 1 Configuration Space Header.
+>
+> So open questions:
+>
+> 1. Granularity. Should we do a driver per group of protocols that may
+>    be collocated, or one per DOE instance. For now, we might be looking
+>    at CDAT as done for this PoC, and CMA/IDE.
 
-Can you supply the output of "sudo lspci -vv" for your system?
+The more time goes by the more I am coming around to Bjorn's initial
+reaction to all this that DOE is closer to a VPD model than an
+auxiliary_device model or pcie_port_device model.
 
-It could be that the device has an SR-IOV capability when it
-shouldn't.  But even if it does, Linux could tolerate that better
-than it does today.
+I.e. have some common discovery in the PCI core for enumerating DOE
+instances and advertisting protocols, but otherwise leave it up to
+individual leaf drivers like cxl_pci or cxl_port to use that core to
+run a given protocol.
 
-> sriov_init() overwrites value in the union:
-> 	dev->sriov = iov; <<<<<---- There
-> 	dev->is_physfn = 1;
-> 
-> Next, we will get into function that causes panic:
-> 
-> pci_device_add(virtfn, virtfn->bus);
->   device_add(&dev->dev)
->     sysfs_create_groups()
->       internal_create_group()
->         aspm_ctrl_attrs_are_visible()
->           pcie_aspm_get_link()
->             pci_upstream_bridge()
->               pci_physfn()
-> 
-> which is
-> 
-> static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
-> {
-> #ifdef CONFIG_PCI_IOV
-> 	if (dev->is_virtfn)
-> 		dev = dev->physfn;
-> #endif
-> 	return dev;
-> }
-> 
-> 
-> as is_virtfn == 1 and dev->physfn was overwritten via write to
-> dev->sriov, pci_physfn() will return pointer to struct pci_sriov
-> allocated by sriov_init(). And then pci_upstream_bridge() will
-> cause panic by acessing it as if it were pointer to struct pci_dev
-> 
-> I encountered this issue on ARM64, Linux 5.10.41. Tried to test
-> on master branch, but it is quite difficult to rebase platform
-> code on the master. But I compared all relevant parts of PCI code
-> and didn't found any differences.
-> 
-> Looks like I am missing following, because how SR-IOV can be so broken?
-> But what exactly?
-> 
-> -- 
-> Volodymyr Babchuk at EPAM
+> 2. Use of a pcie_port_service_driver a reasonable way to do this?
+> 3. Service provision. It is likely that all of the protocols defined
+>    above will be used as part of activities that span multiple devices.
+>    a) CDAT used to establish latencies and bandwidth between host CPU
+>       and memory on a CXL type 3 device beyond one or more CXL switches.
+>    b) CMA.  Might just be used to provide simple device attestation
+>       and potentially lock out the upstream port above a switch if the
+>       switch does not pass attestation.  Many many other uses possible...
+
+Per above once userspace has installed an SPDM session keyid for a
+given PCI device it can also optionally set an 'authorized' attribute
+(similiar to what USB and Thunderbolt have) to indicate whether a
+device has passed attestation. As for the actual protocols that are
+going to run over the SPDM session those would need their own drivers
+that reference the established keyid.
+
+>    c) Secure CMA / IDE. Likely to be used to set up link IDE.  What
+>       this will look like is a question I've not really started
+>       thinking about yet.
+>
+>    So how do we support this?  If nothing else we need to make sure
+>    the drivers for the port don't go away whilst in use.
+
+Another reason to make it a core aspect of the PCI device like VPD so
+there are no entanglements beyond "PCI device exists".
+
+> The patch is a very early PoC just to show it would 'work'...
+>
+> Note I am keen to not have the discussion around this support delay
+> Ira's series.
+
+Is there a nearer term forcing function for this? I.e. v5.20 seems to
+be where the current DOE series is going to intercept. I think abandon
+the "aux" organization for now and make DOE like VPD.
