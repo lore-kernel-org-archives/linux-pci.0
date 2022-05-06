@@ -2,92 +2,81 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3C0C433F5
-	for <linux-pci@archiver.kernel.org>; Fri,  6 May 2022 13:40:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C0F0C433FE
+	for <linux-pci@archiver.kernel.org>; Fri,  6 May 2022 13:40:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1441799AbiEFNoC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 May 2022 09:44:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41660 "EHLO
+        id S1441806AbiEFNo3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 May 2022 09:44:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1392635AbiEFNny (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2022 09:43:54 -0400
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B84B9689B6;
-        Fri,  6 May 2022 06:40:10 -0700 (PDT)
-Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 418EA9200BC; Fri,  6 May 2022 15:40:09 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 3D20D92009E;
-        Fri,  6 May 2022 14:40:09 +0100 (BST)
-Date:   Fri, 6 May 2022 14:40:09 +0100 (BST)
-From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-cc:     David Laight <David.Laight@aculab.com>,
-        Arnd Bergmann <arnd@kernel.org>, Rich Felker <dalias@libc.org>,
-        "open list:IA64 (Itanium) PLATFORM" <linux-ia64@vger.kernel.org>,
-        "open list:SUPERH" <linux-sh@vger.kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "open list:MIPS" <linux-mips@vger.kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        "open list:SPARC + UltraSPARC (sparc/sparc64)" 
-        <sparclinux@vger.kernel.org>,
-        "open list:RISC-V ARCHITECTURE" <linux-riscv@lists.infradead.org>,
-        Will Deacon <will@kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Helge Deller <deller@gmx.de>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Ingo Molnar <mingo@redhat.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Matt Turner <mattst88@gmail.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        "open list:M68K ARCHITECTURE" <linux-m68k@lists.linux-m68k.org>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "moderated list:ARM PORT" <linux-arm-kernel@lists.infradead.org>,
-        Richard Henderson <rth@twiddle.net>,
-        Michal Simek <monstr@monstr.eu>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "open list:PARISC ARCHITECTURE" <linux-parisc@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        "open list:ALPHA PORT" <linux-alpha@vger.kernel.org>,
-        Borislav Petkov <bp@alien8.de>,
-        "open list:LINUX FOR POWERPC (32-BIT AND 64-BIT)" 
-        <linuxppc-dev@lists.ozlabs.org>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [RFC v2 01/39] Kconfig: introduce HAS_IOPORT option and select
- it as necessary
-In-Reply-To: <CAMuHMdWj5rmrP941DF7bsUXbiiemE-o2=8XqnAS-chgmpFFPQg@mail.gmail.com>
-Message-ID: <alpine.DEB.2.21.2205061426390.52331@angie.orcam.me.uk>
-References: <CAK8P3a0sJgMSpZB_Butx2gO0hapYZy-Dm_QH-hG5rOaq_ZgsXg@mail.gmail.com> <20220505161028.GA492600@bhelgaas> <CAK8P3a3fmPExr70+fVb564hZdGAuPtYa-QxgMMe5KLpnY_sTrQ@mail.gmail.com> <alpine.DEB.2.21.2205061058540.52331@angie.orcam.me.uk>
- <CAK8P3a0NzG=3tDLCdPj2=A__2r_+xiiUTW=WJCBNp29x_A63Og@mail.gmail.com> <alpine.DEB.2.21.2205061314110.52331@angie.orcam.me.uk> <5239892986c94239a122ab2f7a18a7a5@AcuMS.aculab.com> <CAMuHMdWj5rmrP941DF7bsUXbiiemE-o2=8XqnAS-chgmpFFPQg@mail.gmail.com>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+        with ESMTP id S1441801AbiEFNo1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2022 09:44:27 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D92171081;
+        Fri,  6 May 2022 06:40:44 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7503D620BC;
+        Fri,  6 May 2022 13:40:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6B58C385BE;
+        Fri,  6 May 2022 13:40:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1651844443;
+        bh=XOfCRiSnJEHlnQ3QGJRGEiJHjdZf3trk4k7UXZvzBMg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=BAH9uYIuww1yQEF8UaaquDhv+kfSez0+qJsrBcA0Kb2jx4XB3IJZ6M3a56snYvrrZ
+         2Rhxrok2V1CovPlayEpgtyFJ9yqru3GhZHUnRjhYbvZzF5+yo8Y8pdf1HODM+/ww6s
+         uK+9yr2nBKcr5VLvMdqOZyzJ1NyvLEWsUtib/HyZs2iXmyD0fQ8VbEkSGxhgIqGUNa
+         EUEytkQiAqKC5GExWz3wbaXMValtGAxrSniS7XDzwEp33+TDzNV3ZAonY++AQ6GHXg
+         HK/c4E9pBaLS8HrVUIo+40etNo1e9sw4MeAqQ411MG/d28pCCwiQzgxEG//bub55It
+         c2/EZ7WryQqbA==
+Received: by pali.im (Postfix)
+        id 222B313AB; Fri,  6 May 2022 15:40:41 +0200 (CEST)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 4/6] dt-bindings: PCI: mvebu: Update information about summary interrupt
+Date:   Fri,  6 May 2022 15:40:27 +0200
+Message-Id: <20220506134029.21470-5-pali@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220506134029.21470-1-pali@kernel.org>
+References: <20220506134029.21470-1-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 6 May 2022, Geert Uytterhoeven wrote:
+Signed-off-by: Pali Rohár <pali@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/mvebu-pci.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-> A loooong time ago,  it was suggested to add register accessor
-> functions to struct device, so e.g. readl(dev, offset) would call
-> into these accessors, which would implement the bus-specific behavior.
-> No more worries about readl(), __raw_readl(), ioread32b(), or whatever
-> quirk is needed, at the (small on nowadays' machines) expense of
-> some indirection...
+diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+index 6d022a9d36ee..ef33558210d0 100644
+--- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
++++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+@@ -83,6 +83,7 @@ and the following optional properties:
+   specified will default to 100ms, as required by the PCIe specification.
+ - interrupt-names: list of interrupt names, supported are:
+    - "intx" - interrupt line triggered by one of the legacy interrupt
++   - "summary" - interrupt line triggered by any event, including "intx"
+ - interrupts or interrupts-extended: List of the interrupt sources which
+   corresponding to the "interrupt-names". If non-empty then also additional
+   'interrupt-controller' subnode must be defined.
+-- 
+2.20.1
 
- I guess you'd need an additional parameter for the endianness policy 
-required (to match either bit or byte lanes, according to ultimate data 
-interpretation) where crossing between buses of a different endianness 
-each.  Otherwise you'd end up with the mess elsewhere.
-
-  Maciej
