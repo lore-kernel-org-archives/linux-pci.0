@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C0F0C433FE
-	for <linux-pci@archiver.kernel.org>; Fri,  6 May 2022 13:40:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D20E2C433F5
+	for <linux-pci@archiver.kernel.org>; Fri,  6 May 2022 13:40:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1441806AbiEFNo3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 May 2022 09:44:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42326 "EHLO
+        id S1441837AbiEFNob (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 May 2022 09:44:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1441801AbiEFNo1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2022 09:44:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D92171081;
-        Fri,  6 May 2022 06:40:44 -0700 (PDT)
+        with ESMTP id S1349657AbiEFNo2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2022 09:44:28 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A65F62709;
+        Fri,  6 May 2022 06:40:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7503D620BC;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4F033B831C5;
         Fri,  6 May 2022 13:40:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6B58C385BE;
-        Fri,  6 May 2022 13:40:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92A23C385AA;
+        Fri,  6 May 2022 13:40:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651844443;
-        bh=XOfCRiSnJEHlnQ3QGJRGEiJHjdZf3trk4k7UXZvzBMg=;
+        s=k20201202; t=1651844442;
+        bh=BcPBeM8K8k7DoVQJlpk7FQyNGP2EPhIvqXciXnoQMFs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BAH9uYIuww1yQEF8UaaquDhv+kfSez0+qJsrBcA0Kb2jx4XB3IJZ6M3a56snYvrrZ
-         2Rhxrok2V1CovPlayEpgtyFJ9yqru3GhZHUnRjhYbvZzF5+yo8Y8pdf1HODM+/ww6s
-         uK+9yr2nBKcr5VLvMdqOZyzJ1NyvLEWsUtib/HyZs2iXmyD0fQ8VbEkSGxhgIqGUNa
-         EUEytkQiAqKC5GExWz3wbaXMValtGAxrSniS7XDzwEp33+TDzNV3ZAonY++AQ6GHXg
-         HK/c4E9pBaLS8HrVUIo+40etNo1e9sw4MeAqQ411MG/d28pCCwiQzgxEG//bub55It
-         c2/EZ7WryQqbA==
+        b=oTGEPTrhUkuVAOPzIFZayAfVu81c6KkvYSNThqiGPWaRzML/+Ef/0WkGWwuN2EupR
+         4a4LpMG5+11YJsAYc/h0gMHOfXXAMbZv0M+phbEsU4B8+khLj075UL4mA7WMm9yEqL
+         84EmwJtmt0aMYytZZf1boBMDhkeDYOVJKE97ojmovYNY22TOLn7pALAint0HUpIN7L
+         0Je2zatXahW/UjjWTPGtOmp9VsfdZycrmSLzP/t9HW1/q3EeJEu7mHYAIWimSvScyu
+         Kav4joF9KkZXKv64SdBo0Zbv1S4yX2t4mEgQlFIGQbLrLErkBKng7mF4HQ2YmicGH6
+         2BMtpCSqljW7Q==
 Received: by pali.im (Postfix)
-        id 222B313AB; Fri,  6 May 2022 15:40:41 +0200 (CEST)
+        id D6B9E11FA; Fri,  6 May 2022 15:40:39 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Thomas Gleixner <tglx@linutronix.de>,
         Marc Zyngier <maz@kernel.org>,
@@ -47,9 +47,9 @@ To:     Thomas Gleixner <tglx@linutronix.de>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 4/6] dt-bindings: PCI: mvebu: Update information about summary interrupt
-Date:   Fri,  6 May 2022 15:40:27 +0200
-Message-Id: <20220506134029.21470-5-pali@kernel.org>
+Subject: [PATCH 1/6] dt-bindings: irqchip: armada-370-xp: Update information about MPIC SoC Error
+Date:   Fri,  6 May 2022 15:40:24 +0200
+Message-Id: <20220506134029.21470-2-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220506134029.21470-1-pali@kernel.org>
 References: <20220506134029.21470-1-pali@kernel.org>
@@ -62,21 +62,34 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/mvebu-pci.txt | 1 +
- 1 file changed, 1 insertion(+)
+ .../interrupt-controller/marvell,armada-370-xp-mpic.txt  | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-index 6d022a9d36ee..ef33558210d0 100644
---- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-@@ -83,6 +83,7 @@ and the following optional properties:
-   specified will default to 100ms, as required by the PCIe specification.
- - interrupt-names: list of interrupt names, supported are:
-    - "intx" - interrupt line triggered by one of the legacy interrupt
-+   - "summary" - interrupt line triggered by any event, including "intx"
- - interrupts or interrupts-extended: List of the interrupt sources which
-   corresponding to the "interrupt-names". If non-empty then also additional
-   'interrupt-controller' subnode must be defined.
+diff --git a/Documentation/devicetree/bindings/interrupt-controller/marvell,armada-370-xp-mpic.txt b/Documentation/devicetree/bindings/interrupt-controller/marvell,armada-370-xp-mpic.txt
+index 5fc03134a999..8cddbc16ddbd 100644
+--- a/Documentation/devicetree/bindings/interrupt-controller/marvell,armada-370-xp-mpic.txt
++++ b/Documentation/devicetree/bindings/interrupt-controller/marvell,armada-370-xp-mpic.txt
+@@ -24,6 +24,11 @@ Optional properties:
+   connected as a slave to the Cortex-A9 GIC. The provided interrupt
+   indicate to which GIC interrupt the MPIC output is connected.
+ 
++Optional subnodes:
++
++- interrupt-controller@20 with interrupt-controller property for
++  MPIC SoC Error IRQ controller
++
+ Example:
+ 
+         mpic: interrupt-controller@d0020000 {
+@@ -35,4 +40,8 @@ Example:
+               msi-controller;
+               reg = <0xd0020a00 0x1d0>,
+                     <0xd0021070 0x58>;
++              soc_err: interrupt-controller@20 {
++                    interrupt-controller;
++                    #interrupt-cells = <1>;
++              };
+         };
 -- 
 2.20.1
 
