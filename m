@@ -2,136 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8077BC433F5
-	for <linux-pci@archiver.kernel.org>; Mon,  9 May 2022 07:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60912C433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  9 May 2022 09:27:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230519AbiEIHzp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 May 2022 03:55:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48244 "EHLO
+        id S230429AbiEIJav (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 May 2022 05:30:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235802AbiEIHm1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 May 2022 03:42:27 -0400
-Received: from smtp-relay-canonical-0.canonical.com (smtp-relay-canonical-0.canonical.com [185.125.188.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FCA419C397;
-        Mon,  9 May 2022 00:38:30 -0700 (PDT)
-Received: from localhost.localdomain (unknown [10.101.196.174])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id 8B45041385;
-        Mon,  9 May 2022 07:37:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1652081847;
-        bh=BGdQS7GDt72NyKsTP48y7ylwYoRPiomJUKtDk9kD5KI=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
-        b=APTuzxakfgtwQV4qWpjpID7To9ihg0LEQfJO+iSozdAPobUQA3OmkO5dM13Z8tXIr
-         uyKI8TGKfVF7ZRPaq0tL2ipecAozQlsWseqk7zYXVCpHkf/Jl+N/PyNhOExN0ghUgo
-         wYWD40D3zKb3MPDSslzTiFdfTWLyH3SQW1x9e8ZaJz6AKkiWoAQI6gDK8OYECZh/Uq
-         vbtFM/J8vIqJ+4C57R7qE4Qna+fUPWIoufYy9KcVzcM7LacNd8oIktY/eoK5xW9iSR
-         cNv2+Pr3rHSrc7QRMihpFMBjjG/gtRW81P5QIGWGtdqgZY4PKZqVCL8msKGFINT3Ms
-         /be0ReZS7CmiQ==
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-To:     bhelgaas@google.com
-Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI:ASPM: Remove pcie_aspm_pm_state_change()
-Date:   Mon,  9 May 2022 15:36:37 +0800
-Message-Id: <20220509073639.2048236-1-kai.heng.feng@canonical.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S237186AbiEIIzy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 May 2022 04:55:54 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F17013F1E7;
+        Mon,  9 May 2022 01:52:00 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1652086318;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=F47FNB3UPmZkk3XgxnsY0dE6OJ5OY97nItlGqfv1nig=;
+        b=MUrIGsX15rb+saRCqWwo7fGrHKkoPeYHsfDkuifsddStxXPK7vpsFeXPM+uJpMeqTJfiX0
+        1wfvYcDEWGBYWqqS9x0s9UYuvpdoshqHwuPmU5LVr55f8b5tQdqSd7PhzQVd7JLteNO3Kp
+        FZvdIIC4eE8GPD/RyItmNBom9EfEdBzWqZ/8FbxDmn3PRSy9tZD/10LWUQwVO199DbUjVA
+        sGJhjPZheZFhX2UkM/V24VEiyCISV6tGDKc0/MzMrrUXEA8lD4rR1vwuUZK2ToZS4+FOMP
+        6gx92yX0NOydhaxgBz9mOjrjjTnasPwhFwIlo6ru1SJHYaZ2YEH2lPPrPhqaaA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1652086318;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=F47FNB3UPmZkk3XgxnsY0dE6OJ5OY97nItlGqfv1nig=;
+        b=25QTTNR1gr/qNxOFt4KgxJmy+X+P9qgMg06xzXZUPudpM6mbF6bIcMMOloHobP2e4k15Ss
+        /FpS5Oy7H07w/4BQ==
+To:     Pali =?utf-8?Q?Roh=C3=A1r?= <pali@kernel.org>,
+        Marc Zyngier <maz@kernel.org>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Marek =?utf-8?Q?Beh=C3=BAn?= <kabel@kernel.org>,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 2/6] irqchip/armada-370-xp: Implement SoC Error interrupts
+In-Reply-To: <20220506185546.n5rl3chyyauy4bjt@pali>
+References: <20220506134029.21470-1-pali@kernel.org>
+ <20220506134029.21470-3-pali@kernel.org> <87mtfu7ccd.wl-maz@kernel.org>
+ <20220506183051.wimo7p4nuqfnl2aj@pali> <8735hmijlu.wl-maz@kernel.org>
+ <20220506185546.n5rl3chyyauy4bjt@pali>
+Date:   Mon, 09 May 2022 10:51:57 +0200
+Message-ID: <87sfpjytoy.ffs@tglx>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pcie_aspm_pm_state_change() was introduced at the inception of PCIe
-ASPM code.
+Pali,
 
-However, it can cause some issues. For instance, when ASPM config is
-changed via sysfs, those changes won't persist across power state change
-because pcie_aspm_pm_state_change() overwrites them.
+On Fri, May 06 2022 at 20:55, Pali Roh=C3=A1r wrote:
+> On Friday 06 May 2022 19:47:25 Marc Zyngier wrote:
+>> > I'm not rewriting driver or doing big refactor of it, as this is not in
+>> > the scope of the PCIe AER interrupt support.
+>>
+>> Fair enough. By the same logic, I'm not taking any change to the
+>> driver until it is put in a better shape. Your call.
+>
+> If you are maintainer of this code then it is expected from _you_ to
+> move the current code into _better shape_ as you wrote and expect. And
+> then show us exactly, how new changes in this driver should look like,
+> in examples.
 
-In addition to that, if the driver is to restore L1ss [1] after system
-resume, the restored states will also be overwritten by
-pcie_aspm_pm_state_change().
+this is not how kernel development works.
 
-So remove pcie_aspm_pm_state_change() for now, if there's any hardware
-really needs it to function, a quirk can be used instead.
+Maintainers are not the servants who mop up the mess which random people
+dump into the tree. They are gatekeepers and one of their duties is to
+prevent that mess is created or existing mess is proliferated.
 
-[1] https://lore.kernel.org/linux-pci/20220201123536.12962-1-vidyas@nvidia.com/
+You are asking the maintainer to take your changes, deal with the
+fallout and maintain them for a long time free of charge. So it's a very
+reasonable request from a maintainer to ask for refactoring of existing
+code before adding new functionality to it.
 
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
----
- drivers/pci/pci.c       |  3 ---
- drivers/pci/pci.h       |  2 --
- drivers/pci/pcie/aspm.c | 19 -------------------
- 3 files changed, 24 deletions(-)
+With such a request the refactoring becomes scope of your work, whether
+you and your manager like it or not. If you don't want to do that extra
+work, then don't expect maintainers to care about your fancy new
+features.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 9ecce435fb3f1..d09f7b60ee4dc 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1181,9 +1181,6 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
- 	if (need_restore)
- 		pci_restore_bars(dev);
- 
--	if (dev->bus->self)
--		pcie_aspm_pm_state_change(dev->bus->self);
--
- 	return 0;
- }
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 3d60cabde1a15..86a19f293d4ad 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -560,12 +560,10 @@ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- #ifdef CONFIG_PCIEASPM
- void pcie_aspm_init_link_state(struct pci_dev *pdev);
- void pcie_aspm_exit_link_state(struct pci_dev *pdev);
--void pcie_aspm_pm_state_change(struct pci_dev *pdev);
- void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
- #else
- static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
- static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
--static inline void pcie_aspm_pm_state_change(struct pci_dev *pdev) { }
- static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
- #endif
- 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index a96b7424c9bc8..7f76a5875feb4 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -1012,25 +1012,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
- 	up_read(&pci_bus_sem);
- }
- 
--/* @pdev: the root port or switch downstream port */
--void pcie_aspm_pm_state_change(struct pci_dev *pdev)
--{
--	struct pcie_link_state *link = pdev->link_state;
--
--	if (aspm_disabled || !link)
--		return;
--	/*
--	 * Devices changed PM state, we should recheck if latency
--	 * meets all functions' requirement
--	 */
--	down_read(&pci_bus_sem);
--	mutex_lock(&aspm_lock);
--	pcie_update_aspm_capable(link->root);
--	pcie_config_aspm_path(link);
--	mutex_unlock(&aspm_lock);
--	up_read(&pci_bus_sem);
--}
--
- void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
- {
- 	struct pcie_link_state *link = pdev->link_state;
--- 
-2.34.1
+Marc gave you very reasonable and consice directions how the code should
+be reworked. He spent a lot of time explaining it to you. Again, free of
+charge. Now you expect him to do your homework free of charge, so you
+can get your feature merged? Nice try.
 
+Thanks,
+
+        Thomas
