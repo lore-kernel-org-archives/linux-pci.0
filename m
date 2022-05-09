@@ -2,150 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26123C433EF
-	for <linux-pci@archiver.kernel.org>; Mon,  9 May 2022 09:49:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D642C433F5
+	for <linux-pci@archiver.kernel.org>; Mon,  9 May 2022 10:16:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231840AbiEIJxi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 May 2022 05:53:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55776 "EHLO
+        id S232511AbiEIKUl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 May 2022 06:20:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235738AbiEIJwj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 May 2022 05:52:39 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 937F7224689;
-        Mon,  9 May 2022 02:48:44 -0700 (PDT)
-Received: from fraeml742-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KxbrL6gDtz683mZ;
-        Mon,  9 May 2022 17:45:22 +0800 (CST)
-Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
- fraeml742-chm.china.huawei.com (10.206.15.223) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 9 May 2022 11:48:12 +0200
-Received: from localhost (10.202.226.42) by lhreml710-chm.china.huawei.com
- (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 9 May
- 2022 10:48:07 +0100
-Date:   Mon, 9 May 2022 10:48:06 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Lukas Wunner <lukas@wunner.de>
-CC:     Dan Williams <dan.j.williams@intel.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "Weiny, Ira" <ira.weiny@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        <linux-cxl@vger.kernel.org>, CHUCK_LEVER <chuck.lever@oracle.com>
-Subject: Re: [RFC PATCH 0/1] DOE usage with pcie/portdrv
-Message-ID: <20220509104806.00007c61@Huawei.com>
-In-Reply-To: <20220507101848.GB31314@wunner.de>
-References: <20220503153449.4088-1-Jonathan.Cameron@huawei.com>
-        <CAPcyv4geBaTkoJ+Gefgq6RaKHtB3NMh5ruZ-1yV_i0UVaw3SWA@mail.gmail.com>
-        <20220507101848.GB31314@wunner.de>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
+        with ESMTP id S233445AbiEIKUd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 May 2022 06:20:33 -0400
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C608174939;
+        Mon,  9 May 2022 03:16:17 -0700 (PDT)
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4C0E61063;
+        Mon,  9 May 2022 03:16:13 -0700 (PDT)
+Received: from e121345-lin.cambridge.arm.com (e121345-lin.cambridge.arm.com [10.1.196.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 3D4073F66F;
+        Mon,  9 May 2022 03:16:12 -0700 (PDT)
+From:   Robin Murphy <robin.murphy@arm.com>
+To:     joro@8bytes.org, will@kernel.org, bhelgaas@google.com,
+        robh@kernel.org
+Cc:     iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2] iommu/dma: Explicitly sort PCI DMA windows
+Date:   Mon,  9 May 2022 11:16:08 +0100
+Message-Id: <35661036a7e4160850895f9b37f35408b6a29f2f.1652091160.git.robin.murphy@arm.com>
+X-Mailer: git-send-email 2.35.3.dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.42]
-X-ClientProxiedBy: lhreml747-chm.china.huawei.com (10.201.108.197) To
- lhreml710-chm.china.huawei.com (10.201.108.61)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 7 May 2022 12:18:48 +0200
-Lukas Wunner <lukas@wunner.de> wrote:
+Originally, creating the dma_ranges resource list in pre-sorted fashion
+was the simplest and most efficient way to enforce the order required by
+iova_reserve_pci_windows(). However since then at least one PCI host
+driver is now re-sorting the list for its own probe-time processing,
+which doesn't seem entirely unreasonable, so that basic assumption no
+longer holds. Make iommu-dma robust and get the sort order it needs by
+explicitly sorting, which means we can also save the effort at creation
+time and just build the list in whatever natural order the DT had.
 
-> On Fri, May 06, 2022 at 03:40:25PM -0700, Dan Williams wrote:
-> > On Tue, May 3, 2022 at 8:35 AM Jonathan Cameron <Jonathan.Cameron@huawei.com> wrote:
-> > So, like you, I was envisioning all the CMA and SPDM code landing in
-> > the kernel until I read this:
-> > 
-> > "Extending in-kernel TLS support"
-> > https://lwn.net/Articles/892216/
-> > 
-> > ...and questioned why this new CMA/SPDM session establishment, which
-> > is similar to TLS, be done inside the kernel while TLS session
-> > establishment is done in userspace? I had a chance to chat with Chuck
-> > at LSF/MM and confirmed there is little appetite to change this
-> > up-call requirement for session establishment and expect CMA to be the
-> > same. The rough idea of how this works with CMA/SPDM is providing an
-> > ABI to retrieve session setup data with the end result of userspace
-> > instantiating a keyid via keyctl the to be used for future SPDM
-> > messages.  
-> 
-> I'm still somewhat undecided on the kernel vs. user space question.
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+---
 
-Likewise.  I feel a few more prototypes are needed to come to clear
-conclusion.
+v2: Clean up now-unused local variable
 
-> 
-> The simplest approach would be to expose DOE to user space and just
-> let it send the requests necessary for setting up an SPDM session
-> as well as IDE.
-> 
-> Jonathan posted patches a while ago to expose a DOE chrdev:
-> https://lore.kernel.org/all/20210524133938.2815206-5-Jonathan.Cameron@huawei.com/
+ drivers/iommu/dma-iommu.c | 13 ++++++++++++-
+ drivers/pci/of.c          |  8 +-------
+ 2 files changed, 13 insertions(+), 8 deletions(-)
 
-Discussions at Plumbers last year (and on list) concluded that generic
-interface was probably a non starter, but something SPDM specific should
-be fine. (even if it's just that generic interface with a check that it
-is the right DOE protocol ;)
-> 
-> On the other hand, I'm poring over Jonathan's latest kernel SPDM/CMA
-> patches and they're not very large, hence seem upstreamable.
-
-That ended up rather cleaner than I expected. Though note that series doesn't get
-quite as far as secure channel setup which is the point where a
-userspace stack might hand over to kernel.  It should be a fairly trivial
-addition though.
-
-> 
-> It would be nice to have the kernel auto-detect that a PCI device
-> supports IDE and create a directory in sysfs as a result.  The user
-> would just drop certificates there which are added to a keyring
-> and the kernel would automatically try to set up an SPDM session
-> with one of the certificates and bring up IDE encryption.  Binding of
-> drivers to devices could be delayed until IDE is set up, as could be
-> enumeration of devices below a hot-plugged, IDE-capable PCIe switch.
-
-Not sure interface would look exactly like that, but the point in general
-is good.
-
-> 
-> (I can think of plenty of use cases, some good, some evil.
-> Such as preventing malicious / forged devices from being used,
-> but also vendors and employers controlling what people plug into
-> their machines.  Brave new world.)
-
-We could do driver specific 'blocking' until the 'authorized' bit Dan suggested
-is set by userspace (after attestation) and end up with somewhat
-similar security.  The only real difference being that a malicious device
-might have more driver code to attack than it would if we blocked
-the driver starting at all.  That would depend on how the driver was
-implemented.
-
-> 
-> Of course, it would probably be possible to implement all of this
-> in user space but it might not be as seamless.
-> 
-> I just fear that we may become a laughing stock for security researchers
-> with a kernel-only implementation.  Kind of like "ASN.1 parsing at ring 0":
-> https://x41-dsec.de/lab/blog/kernel_userspace/
-> 
-> I have some feedback on Jonathan's SPDM/CMA patches and will send it
-> out in a bit...
-
-Cool. Though I suspect those will be parked for now as 'sufficient' for
-discussion.  Next step is to mock up what the alternative looks like...
-
-Good to capture the feedback while it's fresh on basis we might end up back there!
-
-Jonathan
-
-
-> 
-> Thanks,
-> 
-> Lukas
-> 
+diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+index 09f6e1c0f9c0..d05538af4fe9 100644
+--- a/drivers/iommu/dma-iommu.c
++++ b/drivers/iommu/dma-iommu.c
+@@ -20,6 +20,7 @@
+ #include <linux/iommu.h>
+ #include <linux/iova.h>
+ #include <linux/irq.h>
++#include <linux/list_sort.h>
+ #include <linux/mm.h>
+ #include <linux/mutex.h>
+ #include <linux/pci.h>
+@@ -414,6 +415,15 @@ static int cookie_init_hw_msi_region(struct iommu_dma_cookie *cookie,
+ 	return 0;
+ }
+ 
++static int iommu_dma_ranges_sort(void *priv, const struct list_head *a,
++		const struct list_head *b)
++{
++	struct resource_entry *res_a = list_entry(a, typeof(*res_a), node);
++	struct resource_entry *res_b = list_entry(b, typeof(*res_b), node);
++
++	return res_a->res->start > res_b->res->start;
++}
++
+ static int iova_reserve_pci_windows(struct pci_dev *dev,
+ 		struct iova_domain *iovad)
+ {
+@@ -432,6 +442,7 @@ static int iova_reserve_pci_windows(struct pci_dev *dev,
+ 	}
+ 
+ 	/* Get reserved DMA windows from host bridge */
++	list_sort(NULL, &bridge->dma_ranges, iommu_dma_ranges_sort);
+ 	resource_list_for_each_entry(window, &bridge->dma_ranges) {
+ 		end = window->res->start - window->offset;
+ resv_iova:
+@@ -440,7 +451,7 @@ static int iova_reserve_pci_windows(struct pci_dev *dev,
+ 			hi = iova_pfn(iovad, end);
+ 			reserve_iova(iovad, lo, hi);
+ 		} else if (end < start) {
+-			/* dma_ranges list should be sorted */
++			/* DMA ranges should be non-overlapping */
+ 			dev_err(&dev->dev,
+ 				"Failed to reserve IOVA [%pa-%pa]\n",
+ 				&start, &end);
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index cb2e8351c2cc..8f0ebaf9ae85 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -369,7 +369,6 @@ static int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 
+ 	dev_dbg(dev, "Parsing dma-ranges property...\n");
+ 	for_each_of_pci_range(&parser, &range) {
+-		struct resource_entry *entry;
+ 		/*
+ 		 * If we failed translation or got a zero-sized region
+ 		 * then skip this range
+@@ -393,12 +392,7 @@ static int devm_of_pci_get_host_bridge_resources(struct device *dev,
+ 			goto failed;
+ 		}
+ 
+-		/* Keep the resource list sorted */
+-		resource_list_for_each_entry(entry, ib_resources)
+-			if (entry->res->start > res->start)
+-				break;
+-
+-		pci_add_resource_offset(&entry->node, res,
++		pci_add_resource_offset(ib_resources, res,
+ 					res->start - range.pci_addr);
+ 	}
+ 
+-- 
+2.35.3.dirty
 
