@@ -2,44 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F986C4332F
-	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 14:18:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E55EC433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 14:26:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237914AbiEKOSO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 May 2022 10:18:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33570 "EHLO
+        id S234962AbiEKO0r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 May 2022 10:26:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234147AbiEKOSM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 10:18:12 -0400
+        with ESMTP id S235400AbiEKO0m (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 10:26:42 -0400
 Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5EA0C644EE;
-        Wed, 11 May 2022 07:18:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AA6636AA67;
+        Wed, 11 May 2022 07:26:41 -0700 (PDT)
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 381B3ED1;
-        Wed, 11 May 2022 07:18:11 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7C256ED1;
+        Wed, 11 May 2022 07:26:41 -0700 (PDT)
 Received: from e123427-lin.arm.com (unknown [10.57.1.148])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0AF533F66F;
-        Wed, 11 May 2022 07:18:08 -0700 (PDT)
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7D14B3F66F;
+        Wed, 11 May 2022 07:26:38 -0700 (PDT)
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>
+To:     ryder.lee@mediatek.com,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vinod Koul <vkoul@kernel.org>, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: (subset) [PATCH v6 0/8] dt-bindings: YAMLify pci/qcom,pcie schema
-Date:   Wed, 11 May 2022 15:18:03 +0100
-Message-Id: <165227865526.22848.18311880619180745069.b4-ty@arm.com>
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, jianjun.wang@mediatek.com,
+        linux-kernel@vger.kernel.org, robh@kernel.org,
+        kernel@collabora.com, p.zabel@pengutronix.de,
+        matthias.bgg@gmail.com, bhelgaas@google.com,
+        nfraprado@collabora.com, kw@linux.com
+Subject: Re: [PATCH] PCI: mediatek-gen3: Assert resets to ensure expected init state
+Date:   Wed, 11 May 2022 15:26:27 +0100
+Message-Id: <165227916327.28061.3388397168727783283.b4-ty@arm.com>
 X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20220506152107.1527552-1-dmitry.baryshkov@linaro.org>
-References: <20220506152107.1527552-1-dmitry.baryshkov@linaro.org>
+In-Reply-To: <20220404144858.92390-1-angelogioacchino.delregno@collabora.com>
+References: <20220404144858.92390-1-angelogioacchino.delregno@collabora.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -47,29 +44,20 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 6 May 2022 18:20:59 +0300, Dmitry Baryshkov wrote:
-> Convert pci/qcom,pcie schema to YAML description. The first patch
-> introduces several warnings which are fixed by the other patches in the
-> series.
-> 
-> Note regarding the snps,dw-pcie compatibility. The Qualcomm PCIe
-> controller uses Synopsys PCIe IP core. However it is not just fused to
-> the address space. Accessing PCIe registers requires several clocks and
-> regulators to be powered up. Thus it can be assumed that the qcom,pcie
-> bindings are not fully compatible with the snps,dw-pcie schema.
+On Mon, 4 Apr 2022 16:48:58 +0200, AngeloGioacchino Del Regno wrote:
+> The controller may have been left out of reset by the bootloader,
+> in which case, before the powerup sequence, the controller will be
+> found preconfigured with values that were set before booting the
+> kernel: this produces a controller failure, with the result of
+> a failure during the mtk_pcie_startup_port() sequence as the PCIe
+> link never gets up.
 > 
 > [...]
 
-Applied to pci/qcom, thanks!
+Applied to pci/mediatek, thanks!
 
-[1/8] dt-bindings: PCI: qcom: Convert to YAML
-      https://git.kernel.org/lpieralisi/pci/c/5383d16f06
-[2/8] dt-bindings: PCI: qcom: Do not require resets on msm8996 platforms
-      https://git.kernel.org/lpieralisi/pci/c/81dab110d3
-[3/8] dt-bindings: PCI: qcom: Specify reg-names explicitly
-      https://git.kernel.org/lpieralisi/pci/c/a6f2d6b1b3
-[4/8] dt-bindings: PCI: qcom: Add schema for sc7280 chipset
-      https://git.kernel.org/lpieralisi/pci/c/bddedfeb13
+[1/1] PCI: mediatek-gen3: Assert resets to ensure expected init state
+      https://git.kernel.org/lpieralisi/pci/c/1d565935e3
 
 Thanks,
 Lorenzo
