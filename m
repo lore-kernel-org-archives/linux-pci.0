@@ -2,115 +2,107 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8EAC433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 20:39:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 823C5C433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 20:54:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232538AbiEKUjy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 May 2022 16:39:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55696 "EHLO
+        id S1347905AbiEKUyZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 May 2022 16:54:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43168 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229637AbiEKUjx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 16:39:53 -0400
-Received: from hobbes.mraw.org (hobbes.mraw.org [195.154.31.160])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9D35E5281
-        for <linux-pci@vger.kernel.org>; Wed, 11 May 2022 13:39:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mraw.org;
-        s=mail2022; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=jz5xv5UGDELcNS0g7w77KHRkzqPdJlbRBk92OOO81H8=; b=qrns5de+igzZw5xrZnBofiijAY
-        FJG6aUBQsFBSkL2bub5rz0JN9LziKFOsnWjlS9fPQvHcDMmlOJwpLCw/xEPThmwZKS+MIsLVgmpMy
-        x5ZT2hyKUhBMJtvJ4rYiUyr1D4Wd4NDe5fSSLRtyZdd1+eI6WbJTHk9AYrpJWQa5eG9mhzpPNq+Vv
-        r6HUJVx7KDvR2ILq3KaJeCMSnLnsbpf9JMwwgMaglOAWW5w91waJJ9fa8ltSw0d4qg0+kNjgSU9Wh
-        BnFCmz/yoJXoxEC4iDrMSbSbECgen9cwpq8y50Bq8yfdBuQU9g0fOj87rQbn/mjcPc4+BkpCWTn/D
-        TBs19zLA==;
-Received: from 82-64-171-251.subs.proxad.net ([82.64.171.251] helo=mraw.org)
-        by hobbes.mraw.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <kibi@debian.org>)
-        id 1not7c-004o8T-Hi; Wed, 11 May 2022 22:39:48 +0200
-Date:   Wed, 11 May 2022 22:39:46 +0200
-From:   Cyril Brulebois <kibi@debian.org>
-To:     Florian Fainelli <f.fainelli@gmail.com>
+        with ESMTP id S1347892AbiEKUyX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 16:54:23 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABCD31C12F5
+        for <linux-pci@vger.kernel.org>; Wed, 11 May 2022 13:54:22 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id p12so3042048pfn.0
+        for <linux-pci@vger.kernel.org>; Wed, 11 May 2022 13:54:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=QV6Lz2aGs3anXJW4RYiy6Oo8doNy37ZheOo8iqMeyZc=;
+        b=iA99rpcmBzeEFSjsItohY9n35a4ST68mji3JjLkvtvtg89fRWoyXOiMsMpz5gSC4kx
+         x1ghp/xOg0FCXeLNOhGt7aSGYbhxwptIq2IeTWDN2EzDiJ7W4hKdsh3oRc/ULM5rSfWu
+         Zyo+/1u6z+YD+rNsuDe+kTrAmVgIZHu8DDXz1ZxoI91iqxBs71HZRHxxHnYiZPjy4Yl0
+         rlOD/qDIa+6SMUbmiBacTswBVDTVbU4jmeKDUjH5P4u+u4jSzum1wxUgZSESlqC55FAR
+         Q/kDi6zuwb48bfUHblH2aGPxoCgoGtmMB3SasPrZggdMFsVPdP/GGLIrEnmBRjgshEdH
+         DSGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=QV6Lz2aGs3anXJW4RYiy6Oo8doNy37ZheOo8iqMeyZc=;
+        b=vccEFqRrjj+0PksQ68AqSZoHMgoFCX7pguPF8rHckfET3NTTWFbrdDfloArFZlrpww
+         6dWwRzOIEJvDdINaqE/Y+SXEyyqkj5udxtiup0+gESFW07tpYyh1rzo4fskveuMF0yMU
+         jhkt4StWJXhOBd+fFFeOON5DnjVtgxA76/ZdNz71OnNXb8nhMbOZCmqhuwSK1JbzyYGL
+         GmZaDtCjV0NGaLaXOOKVQpxp1WcMBsBpGsfeuN/oKPCJYlR9dOeL8VeqR4Xc6Pc1uJ0P
+         SE4lCcsvjeWH9pxNyUVCvVJbHL7duF3rREcMe2HLj2g7d1HaKfjByCuhm5vsXHmu+tmI
+         2PVQ==
+X-Gm-Message-State: AOAM531ooTNVZ2W/i8xR9elh8JF0XFKwpZat+doBhmjtLhvE4NIwebQq
+        P4de3Mz16TlAcenHROKAy8M=
+X-Google-Smtp-Source: ABdhPJzr8f9t0y8LGvXFf9E1amAAkPWPQmK7W4sPkYo8GzGbDOSDYoPTWukDpxE5xoYHHmtYoOcBjw==
+X-Received: by 2002:a65:6954:0:b0:3c6:42cd:bd38 with SMTP id w20-20020a656954000000b003c642cdbd38mr21863158pgq.331.1652302462089;
+        Wed, 11 May 2022 13:54:22 -0700 (PDT)
+Received: from [10.67.48.245] ([192.19.223.252])
+        by smtp.googlemail.com with ESMTPSA id q5-20020a170903204500b0015e8ddeac5dsm2240770pla.252.2022.05.11.13.54.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 May 2022 13:54:21 -0700 (PDT)
+Message-ID: <aaa4b4d5-486d-869c-10b7-f88c87c450fd@gmail.com>
+Date:   Wed, 11 May 2022 13:54:16 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.1
+Subject: Re: [PATCH 0/4] PCI: brcmstb: Revert subdevice regulator stuff
+Content-Language: en-US
+To:     Cyril Brulebois <kibi@debian.org>,
+        Florian Fainelli <f.fainelli@gmail.com>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>,
         Jim Quinlan <jim2101024@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Nicolas Saenz Julienne <nsaenz@kernel.org>,
         bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
         regressions@lists.linux.dev, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 0/4] PCI: brcmstb: Revert subdevice regulator stuff
-Message-ID: <20220511203946.nr2qqzjlintrgxmi@mraw.org>
-Organization: Debian
 References: <20220511201856.808690-1-helgaas@kernel.org>
  <f9be7d36-d670-ef6c-8877-5b38e828e97f@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="awkc2voxjp3fqrf4"
-Content-Disposition: inline
-In-Reply-To: <f9be7d36-d670-ef6c-8877-5b38e828e97f@gmail.com>
+ <20220511203946.nr2qqzjlintrgxmi@mraw.org>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+In-Reply-To: <20220511203946.nr2qqzjlintrgxmi@mraw.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On 5/11/22 13:39, Cyril Brulebois wrote:
+> Florian Fainelli <f.fainelli@gmail.com> (2022-05-11):
+>> How about we get a chance to fix this? Where, when and how was this even
+>> reported?
+> 
+> I started downstream:
+>    https://bugs.debian.org/1010365
+> 
+> did some more debugging and moved upstream (the link is mentioned in
+> each commit message) roughly 10 days ago:
+>    https://bugzilla.kernel.org/show_bug.cgi?id=215925
+> 
+> As I wrote in response to Thorsten Leemhuis (regressions@), who looped
+> in a bunch of people:
+> 
+>     I had spent so much time bisecting that issue that I concentrated on
+>     trying to summarize it properly in Bugzilla, failing to check
+>     reporting guidelines and best practices (I even missed the
+>     Regression: yes flag in my initial submission).
+> 
+> Again, sorry for failing to notify everyone in the first place, I tried
+> to have the contents of the report squared away.
+> 
+> That being said, as mentioned on regressions@ & linux-pci@, I'm happy to
+> test any attempts at fixing the issue, instead of a full-on revert. I'll
+> also try to track mainline more closely, so that such obvious issues
+> don't go unnoticed for ~1.5 release cycles.
 
---awkc2voxjp3fqrf4
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Florian Fainelli <f.fainelli@gmail.com> (2022-05-11):
-> How about we get a chance to fix this? Where, when and how was this even
-> reported?
-
-I started downstream:
-  https://bugs.debian.org/1010365
-
-did some more debugging and moved upstream (the link is mentioned in
-each commit message) roughly 10 days ago:
-  https://bugzilla.kernel.org/show_bug.cgi?id=3D215925
-
-As I wrote in response to Thorsten Leemhuis (regressions@), who looped
-in a bunch of people:
-
-   I had spent so much time bisecting that issue that I concentrated on
-   trying to summarize it properly in Bugzilla, failing to check
-   reporting guidelines and best practices (I even missed the
-   Regression: yes flag in my initial submission).
-
-Again, sorry for failing to notify everyone in the first place, I tried
-to have the contents of the report squared away.
-
-That being said, as mentioned on regressions@ & linux-pci@, I'm happy to
-test any attempts at fixing the issue, instead of a full-on revert. I'll
-also try to track mainline more closely, so that such obvious issues
-don't go unnoticed for ~1.5 release cycles.
-
-
-Cheers,
---=20
-Cyril Brulebois (kibi@debian.org)            <https://debamax.com/>
-D-I release manager -- Release team member -- Freelance Consultant
-
---awkc2voxjp3fqrf4
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEtg6/KYRFPHDXTPR4/5FK8MKzVSAFAmJ8HwkACgkQ/5FK8MKz
-VSAphg//eUBGUgTb7rj6kZHMU0Ip3D01kCqIkQj3OX96Pa8HH5asKWEyuzaq0Jro
-4cCJh25glm84QSQr8lJ4/rVd9CJfdOWwMcNaiCFzNFCjKaim8N1mhb4E3AbM71wv
-22RPQ2Dz1zqmZSifwGRNN1dsesCfAOwE3gYkeUYwQIxQq4Om5ZzQywPFyEyk5Zmi
-sj2uxDD3D3ynRGOqGaIv8gzuCD1VeASO7JhvPweqOthCnlIE1CP/1y5cnc3++pWH
-sXMa04GwTBiW1Efp/xmJGYaPzYPgDRzWxGDtMrjSxbRhC/jolHtg/5APAg336CrD
-T6nGIjlodUo7mqugukUjR4p1ghDufJYTLaheEUZJ4AZo+4Y8pjyJPhE3j+hsAsSo
-cXd//jMo9K8cM64YpGINZB7z/xi2vgJUa8dx7ES7IjZ4TphMAJnPNlZbr/8/NSVM
-6Del1i4hp8yF8lKH1YF4w+5DI7TC0ValP9aYTkctmjF/HxP2gA2n4RWiFJs3TNQ9
-gMTnX3Yo/g/3iKjkN2McHNnOqmUORc6TDFMou6BXsAzWIfd91v9vZn+arogNd1Fc
-i9fY4p6Dmb943iXRVya5rcOOlcZFIXLOq5QJYVSD1Fi0IqdycULscS0Ld99zLaCo
-iKKxyTPM2BQfk5HOC3YS2t/5+Js9VyYHM7i6WY/ziPrbZgFeRL8=
-=JX8F
------END PGP SIGNATURE-----
-
---awkc2voxjp3fqrf4--
+No worries, I don't have a CM4 board at the moment but will try to order 
+one so we can get to the bottom of this quicker.
+-- 
+Florian
