@@ -2,149 +2,63 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7DDCC433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 15:24:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F5DC433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 16:02:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232784AbiEKPYJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 May 2022 11:24:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44710 "EHLO
+        id S1344197AbiEKQCr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 May 2022 12:02:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343607AbiEKPYI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 11:24:08 -0400
-Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E7B34EDE2;
-        Wed, 11 May 2022 08:24:05 -0700 (PDT)
-Received: from ip5b412258.dynamic.kabel-deutschland.de ([91.65.34.88] helo=diego.localnet)
-        by gloria.sntech.de with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <heiko@sntech.de>)
-        id 1nooBr-0003aM-1O; Wed, 11 May 2022 17:23:53 +0200
-From:   Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
-To:     Peter Geis <pgwipeout@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Marc Zyngier <maz@kernel.org>, PCI <linux-pci@vger.kernel.org>,
-        devicetree <devicetree@vger.kernel.org>,
-        arm-mail-list <linux-arm-kernel@lists.infradead.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Nicolas Frattaroli <frattaroli.nicolas@gmail.com>
-Subject: Re: [PATCH v9 2/5] PCI: rockchip-dwc: Reset core at driver probe
-Date:   Wed, 11 May 2022 17:23:28 +0200
-Message-ID: <1860493.taCxCBeP46@diego>
-In-Reply-To: <YnvPdSPUm85Bg9zE@lpieralisi>
-References: <20220429123832.2376381-1-pgwipeout@gmail.com> <CAMdYzYqdDPUFPhAZqA71dLaf6rT9CwFqQ1dFMRbGpVMyzgT8bg@mail.gmail.com> <YnvPdSPUm85Bg9zE@lpieralisi>
+        with ESMTP id S1344196AbiEKQCr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 12:02:47 -0400
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C2BBF188E44;
+        Wed, 11 May 2022 09:02:45 -0700 (PDT)
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 40A79ED1;
+        Wed, 11 May 2022 09:02:45 -0700 (PDT)
+Received: from e123427-lin.arm.com (unknown [10.57.1.148])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 69A2B3F73D;
+        Wed, 11 May 2022 09:02:42 -0700 (PDT)
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Parshuram Raju Thombare <pthombar@cadence.com>,
+        tjoseph@cadence.com, bhelgaas@google.com, robh@kernel.org,
+        kishon@ti.com, kw@linux.com
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, mparab@cadence.com,
+        linux-pci@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: cadence: Clear FLR in device capabilities register
+Date:   Wed, 11 May 2022 17:02:35 +0100
+Message-Id: <165228494389.11307.11313445181760109588.b4-ty@arm.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <1637048356-73662-1-git-send-email-pthombar@cadence.com>
+References: <1637048356-73662-1-git-send-email-pthombar@cadence.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Mittwoch, 11. Mai 2022, 17:00:05 CEST schrieb Lorenzo Pieralisi:
-> On Wed, May 11, 2022 at 10:26:20AM -0400, Peter Geis wrote:
-> > On Wed, May 11, 2022 at 9:50 AM Lorenzo Pieralisi
-> > <lorenzo.pieralisi@arm.com> wrote:
-> > >
-> > > On Fri, Apr 29, 2022 at 08:38:28AM -0400, Peter Geis wrote:
-> > > > The PCIe controller is in an unknown state at driver probe. This can
-> > > > lead to undesireable effects when the driver attempts to configure the
-> > > > controller.
-> > > >
-> > > > Prevent issues in the future by resetting the core during probe.
-> > > >
-> > > > Signed-off-by: Peter Geis <pgwipeout@gmail.com>
-> > > > Tested-by: Nicolas Frattaroli <frattaroli.nicolas@gmail.com>
-> > > > ---
-> > > >  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 23 ++++++++-----------
-> > > >  1 file changed, 10 insertions(+), 13 deletions(-)
-> > >
-> > > I fear that the controller reset behaviour is bootloader/firmware
-> > > dependent.
-> > >
-> > > Are we sure we are not triggering any regressions by resetting the
-> > > controller in the middle of probe (aka is the driver implicitly
-> > > relying on existing behaviour on systems that are not the ones
-> > > you are testing on) ?
-> > >
-> > > Just asking, the rockchip maintainers should be able to answer this
-> > > question.
-> > 
-> > This is a new driver with no current users, this series enables the
-> > first user. It does not support ACPI nor any sort of handoff at this
-> > time.
+On Mon, 15 Nov 2021 23:39:16 -0800, Parshuram Raju Thombare wrote:
+> From: Parshuram Thombare <pthombar@cadence.com>
 > 
-> Ok. I will take patches [1-3], dts changes will have to go via
-> platform trees, I hope that's fine.
-
-yep, that sounds great and I'll pick the dts patches then :-)
-
-Thanks
-Heiko
-
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> > > > index c9b341e55cbb..faedbd6ebc20 100644
-> > > > --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> > > > +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> > > > @@ -152,6 +152,11 @@ static int rockchip_pcie_resource_get(struct platform_device *pdev,
-> > > >       if (IS_ERR(rockchip->rst_gpio))
-> > > >               return PTR_ERR(rockchip->rst_gpio);
-> > > >
-> > > > +     rockchip->rst = devm_reset_control_array_get_exclusive(&pdev->dev);
-> > > > +     if (IS_ERR(rockchip->rst))
-> > > > +             return dev_err_probe(&pdev->dev, PTR_ERR(rockchip->rst),
-> > > > +                                  "failed to get reset lines\n");
-> > > > +
-> > > >       return 0;
-> > > >  }
-> > > >
-> > > > @@ -182,18 +187,6 @@ static void rockchip_pcie_phy_deinit(struct rockchip_pcie *rockchip)
-> > > >       phy_power_off(rockchip->phy);
-> > > >  }
-> > > >
-> > > > -static int rockchip_pcie_reset_control_release(struct rockchip_pcie *rockchip)
-> > > > -{
-> > > > -     struct device *dev = rockchip->pci.dev;
-> > > > -
-> > > > -     rockchip->rst = devm_reset_control_array_get_exclusive(dev);
-> > > > -     if (IS_ERR(rockchip->rst))
-> > > > -             return dev_err_probe(dev, PTR_ERR(rockchip->rst),
-> > > > -                                  "failed to get reset lines\n");
-> > > > -
-> > > > -     return reset_control_deassert(rockchip->rst);
-> > > > -}
-> > > > -
-> > > >  static const struct dw_pcie_ops dw_pcie_ops = {
-> > > >       .link_up = rockchip_pcie_link_up,
-> > > >       .start_link = rockchip_pcie_start_link,
-> > > > @@ -222,6 +215,10 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
-> > > >       if (ret)
-> > > >               return ret;
-> > > >
-> > > > +     ret = reset_control_assert(rockchip->rst);
-> > > > +     if (ret)
-> > > > +             return ret;
-> > > > +
-> > > >       /* DON'T MOVE ME: must be enable before PHY init */
-> > > >       rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
-> > > >       if (IS_ERR(rockchip->vpcie3v3)) {
-> > > > @@ -241,7 +238,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
-> > > >       if (ret)
-> > > >               goto disable_regulator;
-> > > >
-> > > > -     ret = rockchip_pcie_reset_control_release(rockchip);
-> > > > +     ret = reset_control_deassert(rockchip->rst);
-> > > >       if (ret)
-> > > >               goto deinit_phy;
-> > > >
-> > > > --
-> > > > 2.25.1
-> > > >
+> Clear FLR (Function Level Reset) from device capabilities
+> registers for all physical functions.
 > 
+> During FLR, the Margining Lane Status and Margining Lane Control
+> registers should not be reset, as per PCIe specification.
+> However, the controller incorrectly resets these registers upon FLR.
+> This causes PCISIG compliance FLR test to fail. Hence preventing
+> all functions from advertising FLR support if flag quirk_disable_flr
+> is set.
+> 
+> [...]
 
+Applied to pci/cadence, thanks!
 
+[1/1] PCI: cadence: Clear FLR in device capabilities register
+      https://git.kernel.org/lpieralisi/pci/c/d3dbd4d862
 
-
+Thanks,
+Lorenzo
