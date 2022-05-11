@@ -2,112 +2,67 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A67C433EF
-	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 16:57:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2575AC433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 17:03:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345197AbiEKQ53 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 May 2022 12:57:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41906 "EHLO
+        id S1345302AbiEKRD2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 May 2022 13:03:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233678AbiEKQ50 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 12:57:26 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D58646677
-        for <linux-pci@vger.kernel.org>; Wed, 11 May 2022 09:57:24 -0700 (PDT)
+        with ESMTP id S1345317AbiEKRD0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 13:03:26 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DCB489CC7
+        for <linux-pci@vger.kernel.org>; Wed, 11 May 2022 10:03:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652288244; x=1683824244;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=+NWnGNJYf46SVOU0nzamlDIEmiOV9qFuWzzou7Mhbf0=;
-  b=Mw8VK4oyQB9vou7eZWkj8hGbVkRU/+7WgEoZ0nZWFm4X97efYl1e9qxM
-   Hxz/x7NCwWuRZRePsSvffCpToU5zeuUS2wzAKAcjrZBMLWLRjQ7eEwz5H
-   DXoP/ZSQSEy+1Nf35EGnRA82mq0ja/ZLI9fGGfzCQiPmdIUrRrxk2YKm5
-   1LDJnCQlJvcJbV8DJHeq79eF4f09gTv1cdXscNUGuv8AFBUXqHd7vVlz0
-   4o49JkXPcNlYmsiH+oLOj8rHpNyCXB6Iot9itl8nAzjk+i2IM3qnaFHrd
-   wQ1PWLGroqlEr6IgqZeTXcpB7P7XCGe8knGXhml/hCeNDXkiCXiBVt6TK
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10344"; a="267341196"
+  t=1652288604; x=1683824604;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=ep1NpoWBAu0QrrJGK5qZ85w2uoUEBDEApxOHzjml43A=;
+  b=HMVvJBfUYB2L2mjjtjOS81tHef2aMOuRjccDenKYVecICFZjPSEUgPF1
+   qhsO0DujRvVNujOjjkP3k8vo+h1mfsnfHhIVCA2u7QyN1jnuZ5aDYlD8t
+   ynOxvt5a+zJhlJfHqf9p5Vku0Rso6JAn6GzVwyhpayMVP1YzKbciuZj5Q
+   JPDfeUbc7pGgr4A31a3lwaG5E6uTvWt1y1rdHNBffsUjaAz70AX833N6s
+   VtJkawKBsru3x0r7x37TwmjfrOr0GGGoHEzZITO+xfO/1Nr08DTtP7zoX
+   HG5M9CLNwooA82tRkzGbs9fn+SDfyyVt7Un5TGT7lohNOpXGENOKwNKWu
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10344"; a="269693794"
 X-IronPort-AV: E=Sophos;i="5.91,217,1647327600"; 
-   d="scan'208";a="267341196"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2022 09:57:24 -0700
+   d="scan'208";a="269693794"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2022 10:03:13 -0700
 X-IronPort-AV: E=Sophos;i="5.91,217,1647327600"; 
-   d="scan'208";a="624033752"
-Received: from patelni-mobl1.amr.corp.intel.com (HELO [10.212.49.34]) ([10.212.49.34])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2022 09:57:20 -0700
-Message-ID: <fccd0dc4-fe00-6f34-0fd3-3cedcbcb8ca3@linux.intel.com>
-Date:   Wed, 11 May 2022 09:57:19 -0700
+   d="scan'208";a="542391467"
+Received: from azvmdlinux1.ch.intel.com ([10.2.230.15])
+  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2022 10:03:13 -0700
+From:   Nirmal Patel <nirmal.patel@linux.intel.com>
+To:     <linux-pci@vger.kernel.org>,
+        Nirmal Patel <nirmal.patel@linux.intel.com>
+Subject: [PATCH v2 0/2] PCI: vmd: IRQ domain assignment to sub devices
+Date:   Wed, 11 May 2022 02:57:05 -0700
+Message-Id: <20220511095707.25403-1-nirmal.patel@linux.intel.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.8.1
-Subject: Re: [PATCH 1/2] PCI: vmd: Assign VMD IRQ domain before enumeration
-Content-Language: en-US
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-pci@vger.kernel.org, maz@kernel.org
-References: <20220502084900.7903-1-nirmal.patel@linux.intel.com>
- <20220502084900.7903-2-nirmal.patel@linux.intel.com>
- <Ynt9jJU78JnIiZ7z@lpieralisi>
-From:   "Patel, Nirmal" <nirmal.patel@linux.intel.com>
-In-Reply-To: <Ynt9jJU78JnIiZ7z@lpieralisi>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 5/11/2022 2:10 AM, Lorenzo Pieralisi wrote:
-> [Adding Marc, to keep an eye on IRQ domain usage]
->
-> On Mon, May 02, 2022 at 01:48:59AM -0700, Nirmal Patel wrote:
->> VMD creates and assigns a separate IRQ domain when MSI-X remapping is
->> enabled. For example VMD-MSI. But VMD doesn't assign IRQ domain when
->> MSI-X remapping is disabled resulting child devices getting default
->> PCI-MSI IRQ domain. Now when interrupt remapping is enabled by
->> intel-iommu all the PCI devices are assigned INTEL-IR-MSI domain
->> including VMD endpoints. But devices behind VMD get PCI-MSI IRQ domain
->> when VMD create a root bus and configures child devices.
-> I would encourage you to rewrite this log, it is unclear - granted,
-> I don't know intel-iommu internals - but IMHO if you explain the
-> issue and the fix thoroughly this could avoid repeating what
-> you have to do in patch(2).
->
-> Please describe how VMD handles IRQ domains and how you are fixing
-> that.
->
-> Thanks,
-> Lorenzo
-I will add more information to the commit logs.
+Host OS fails to boot and DMAR errors were observed when interrupt
+remapping is enabled by intel_iommu because of the fact that VMD child
+devices are on different IRQ domain than all other PCI devices.
+Make sure VMD assigns proper IRQ domain to the child devices during
+device enumeration.
 
-Thanks,
-nirmal
+Nirmal Patel (2):
+  PCI: vmd: Assign VMD IRQ domain before enumeration
+  PCI: vmd: Revert 2565e5b69c44 ("PCI: vmd: Do not disable MSI-X
+    remapping if interrupt remapping is enabled by IOMMU.")
 
->> As a result DMAR errors were observed when interrupt remapping was
->> enabled on Intel Icelake CPUs. For instance:
->>
->>   DMAR: DRHD: handling fault status reg 2
->>   DMAR: [INTR-REMAP] Request device [0xe2:0x00.0] fault index 0xa00 [fault reason 0x25] Blocked a compatibility format interrupt request
->>
->> Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
->> ---
->>  drivers/pci/controller/vmd.c | 3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
->> index eb05cceab964..5015adc04d19 100644
->> --- a/drivers/pci/controller/vmd.c
->> +++ b/drivers/pci/controller/vmd.c
->> @@ -853,6 +853,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
->>  	vmd_attach_resources(vmd);
->>  	if (vmd->irq_domain)
->>  		dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
->> +	else
->> +		dev_set_msi_domain(&vmd->bus->dev,
->> +				   dev_get_msi_domain(&vmd->dev->dev));
->>  
->>  	vmd_acpi_begin();
->>  
->> -- 
->> 2.26.2
->>
+ drivers/pci/controller/vmd.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+-- 
+2.26.2
 
