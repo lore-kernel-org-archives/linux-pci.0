@@ -2,119 +2,149 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEB62C433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 15:23:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7DDCC433FE
+	for <linux-pci@archiver.kernel.org>; Wed, 11 May 2022 15:24:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343598AbiEKPXt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 May 2022 11:23:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43174 "EHLO
+        id S232784AbiEKPYJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 May 2022 11:24:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343615AbiEKPXq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 11:23:46 -0400
-Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C5A9227B69;
-        Wed, 11 May 2022 08:23:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1652282624; x=1683818624;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=AVveWnE/41toybXdFcKoLHipqHXNcyTy2wnaG3mmhMg=;
-  b=AfFxliW0TLF94L2Wc4GabRYMnXoIKgBFJ40DGcy0RFQKoDAc/EgwC4dI
-   oj8LRxjbtjjzPXwcRwk3uGP4nOJn5v0jrQtex8GsWOn8aVz+RRDkqgKaW
-   uH+VkrjzS5RfrpO8NoCcTzhuxzXc2jb48+XbTtWA6M+DdgQKG4gsZlcSz
-   A=;
-Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
-  by alexa-out.qualcomm.com with ESMTP; 11 May 2022 08:23:44 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 May 2022 08:23:13 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 11 May 2022 08:23:13 -0700
-Received: from jhugo-lnx.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 11 May 2022 08:23:12 -0700
-From:   Jeffrey Hugo <quic_jhugo@quicinc.com>
-To:     <kys@microsoft.com>, <haiyangz@microsoft.com>,
-        <sthemmin@microsoft.com>, <wei.liu@kernel.org>,
-        <decui@microsoft.com>, <lorenzo.pieralisi@arm.com>,
-        <robh@kernel.org>, <kw@linux.com>, <bhelgaas@google.com>
-CC:     <jakeo@microsoft.com>, <dazhan@microsoft.com>,
-        <linux-hyperv@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Jeffrey Hugo <quic_jhugo@quicinc.com>
-Subject: [PATCH v2 1/2] PCI: hv: Reuse existing IRTE allocation in compose_msi_msg()
-Date:   Wed, 11 May 2022 09:23:02 -0600
-Message-ID: <1652282582-21595-1-git-send-email-quic_jhugo@quicinc.com>
-X-Mailer: git-send-email 2.7.4
+        with ESMTP id S1343607AbiEKPYI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2022 11:24:08 -0400
+Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E7B34EDE2;
+        Wed, 11 May 2022 08:24:05 -0700 (PDT)
+Received: from ip5b412258.dynamic.kabel-deutschland.de ([91.65.34.88] helo=diego.localnet)
+        by gloria.sntech.de with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <heiko@sntech.de>)
+        id 1nooBr-0003aM-1O; Wed, 11 May 2022 17:23:53 +0200
+From:   Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+To:     Peter Geis <pgwipeout@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Marc Zyngier <maz@kernel.org>, PCI <linux-pci@vger.kernel.org>,
+        devicetree <devicetree@vger.kernel.org>,
+        arm-mail-list <linux-arm-kernel@lists.infradead.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Nicolas Frattaroli <frattaroli.nicolas@gmail.com>
+Subject: Re: [PATCH v9 2/5] PCI: rockchip-dwc: Reset core at driver probe
+Date:   Wed, 11 May 2022 17:23:28 +0200
+Message-ID: <1860493.taCxCBeP46@diego>
+In-Reply-To: <YnvPdSPUm85Bg9zE@lpieralisi>
+References: <20220429123832.2376381-1-pgwipeout@gmail.com> <CAMdYzYqdDPUFPhAZqA71dLaf6rT9CwFqQ1dFMRbGpVMyzgT8bg@mail.gmail.com> <YnvPdSPUm85Bg9zE@lpieralisi>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently if compose_msi_msg() is called multiple times, it will free any
-previous IRTE allocation, and generate a new allocation.  While nothing
-prevents this from occurring, it is extraneous when Linux could just reuse
-the existing allocation and avoid a bunch of overhead.
+Am Mittwoch, 11. Mai 2022, 17:00:05 CEST schrieb Lorenzo Pieralisi:
+> On Wed, May 11, 2022 at 10:26:20AM -0400, Peter Geis wrote:
+> > On Wed, May 11, 2022 at 9:50 AM Lorenzo Pieralisi
+> > <lorenzo.pieralisi@arm.com> wrote:
+> > >
+> > > On Fri, Apr 29, 2022 at 08:38:28AM -0400, Peter Geis wrote:
+> > > > The PCIe controller is in an unknown state at driver probe. This can
+> > > > lead to undesireable effects when the driver attempts to configure the
+> > > > controller.
+> > > >
+> > > > Prevent issues in the future by resetting the core during probe.
+> > > >
+> > > > Signed-off-by: Peter Geis <pgwipeout@gmail.com>
+> > > > Tested-by: Nicolas Frattaroli <frattaroli.nicolas@gmail.com>
+> > > > ---
+> > > >  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 23 ++++++++-----------
+> > > >  1 file changed, 10 insertions(+), 13 deletions(-)
+> > >
+> > > I fear that the controller reset behaviour is bootloader/firmware
+> > > dependent.
+> > >
+> > > Are we sure we are not triggering any regressions by resetting the
+> > > controller in the middle of probe (aka is the driver implicitly
+> > > relying on existing behaviour on systems that are not the ones
+> > > you are testing on) ?
+> > >
+> > > Just asking, the rockchip maintainers should be able to answer this
+> > > question.
+> > 
+> > This is a new driver with no current users, this series enables the
+> > first user. It does not support ACPI nor any sort of handoff at this
+> > time.
+> 
+> Ok. I will take patches [1-3], dts changes will have to go via
+> platform trees, I hope that's fine.
 
-However, when future IRTE allocations operate on blocks of MSIs instead of
-a single line, freeing the allocation will impact all of the lines.  This
-could cause an issue where an allocation of N MSIs occurs, then some of
-the lines are retargeted, and finally the allocation is freed/reallocated.
-The freeing of the allocation removes all of the configuration for the
-entire block, which requires all the lines to be retargeted, which might
-not happen since some lines might already be unmasked/active.
+yep, that sounds great and I'll pick the dts patches then :-)
 
-Signed-off-by: Jeffrey Hugo <quic_jhugo@quicinc.com>
-Reviewed-by: Dexuan Cui <decui@microsoft.com>
-Tested-by: Dexuan Cui <decui@microsoft.com>
-Tested-by: Michael Kelley <mikelley@microsoft.com>
----
- drivers/pci/controller/pci-hyperv.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+Thanks
+Heiko
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index cf2fe575..5e2e637 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -1707,6 +1707,15 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 	u32 size;
- 	int ret;
- 
-+	/* Reuse the previous allocation */
-+	if (data->chip_data) {
-+		int_desc = data->chip_data;
-+		msg->address_hi = int_desc->address >> 32;
-+		msg->address_lo = int_desc->address & 0xffffffff;
-+		msg->data = int_desc->data;
-+		return;
-+	}
-+
- 	pdev = msi_desc_to_pci_dev(irq_data_get_msi_desc(data));
- 	dest = irq_data_get_effective_affinity_mask(data);
- 	pbus = pdev->bus;
-@@ -1716,13 +1725,6 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 	if (!hpdev)
- 		goto return_null_message;
- 
--	/* Free any previous message that might have already been composed. */
--	if (data->chip_data) {
--		int_desc = data->chip_data;
--		data->chip_data = NULL;
--		hv_int_desc_free(hpdev, int_desc);
--	}
--
- 	int_desc = kzalloc(sizeof(*int_desc), GFP_ATOMIC);
- 	if (!int_desc)
- 		goto drop_reference;
--- 
-2.7.4
+> > > > diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> > > > index c9b341e55cbb..faedbd6ebc20 100644
+> > > > --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> > > > +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> > > > @@ -152,6 +152,11 @@ static int rockchip_pcie_resource_get(struct platform_device *pdev,
+> > > >       if (IS_ERR(rockchip->rst_gpio))
+> > > >               return PTR_ERR(rockchip->rst_gpio);
+> > > >
+> > > > +     rockchip->rst = devm_reset_control_array_get_exclusive(&pdev->dev);
+> > > > +     if (IS_ERR(rockchip->rst))
+> > > > +             return dev_err_probe(&pdev->dev, PTR_ERR(rockchip->rst),
+> > > > +                                  "failed to get reset lines\n");
+> > > > +
+> > > >       return 0;
+> > > >  }
+> > > >
+> > > > @@ -182,18 +187,6 @@ static void rockchip_pcie_phy_deinit(struct rockchip_pcie *rockchip)
+> > > >       phy_power_off(rockchip->phy);
+> > > >  }
+> > > >
+> > > > -static int rockchip_pcie_reset_control_release(struct rockchip_pcie *rockchip)
+> > > > -{
+> > > > -     struct device *dev = rockchip->pci.dev;
+> > > > -
+> > > > -     rockchip->rst = devm_reset_control_array_get_exclusive(dev);
+> > > > -     if (IS_ERR(rockchip->rst))
+> > > > -             return dev_err_probe(dev, PTR_ERR(rockchip->rst),
+> > > > -                                  "failed to get reset lines\n");
+> > > > -
+> > > > -     return reset_control_deassert(rockchip->rst);
+> > > > -}
+> > > > -
+> > > >  static const struct dw_pcie_ops dw_pcie_ops = {
+> > > >       .link_up = rockchip_pcie_link_up,
+> > > >       .start_link = rockchip_pcie_start_link,
+> > > > @@ -222,6 +215,10 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+> > > >       if (ret)
+> > > >               return ret;
+> > > >
+> > > > +     ret = reset_control_assert(rockchip->rst);
+> > > > +     if (ret)
+> > > > +             return ret;
+> > > > +
+> > > >       /* DON'T MOVE ME: must be enable before PHY init */
+> > > >       rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
+> > > >       if (IS_ERR(rockchip->vpcie3v3)) {
+> > > > @@ -241,7 +238,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+> > > >       if (ret)
+> > > >               goto disable_regulator;
+> > > >
+> > > > -     ret = rockchip_pcie_reset_control_release(rockchip);
+> > > > +     ret = reset_control_deassert(rockchip->rst);
+> > > >       if (ret)
+> > > >               goto deinit_phy;
+> > > >
+> > > > --
+> > > > 2.25.1
+> > > >
+> 
+
+
+
 
