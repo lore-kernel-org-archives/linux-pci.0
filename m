@@ -2,101 +2,215 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 292F8C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 12 May 2022 20:25:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E671C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 12 May 2022 21:14:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1358357AbiELUZk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 May 2022 16:25:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34962 "EHLO
+        id S1358478AbiELVOi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 May 2022 17:14:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1358355AbiELUZc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 May 2022 16:25:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C0D9A2734F6
-        for <linux-pci@vger.kernel.org>; Thu, 12 May 2022 13:25:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1652387129;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=A+SVmp8Ec1mwAnRL9D+3Iqr0uC2bLC542T8P5rVpM1s=;
-        b=CrzK61ujNxPSTtk6EOrmI6j45klHbzDNFH+pQqEHYDQ4hjg4Y42WMKsBIqrMQ0RQP0YIr+
-        /86q+K8w3zzXroyBnZazpE/EUCrI2ckYNUaDB/xt9Skr0nSXPRpAXrgq/mfsHqgqMJsJAC
-        4xb7Pwb++NGtODSTqrTNM0iV774B5dA=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-107-qKjpMjsnNjyiSDCCJcbD4Q-1; Thu, 12 May 2022 16:25:24 -0400
-X-MC-Unique: qKjpMjsnNjyiSDCCJcbD4Q-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 92FC1101A52C;
-        Thu, 12 May 2022 20:25:23 +0000 (UTC)
-Received: from shalem.redhat.com (unknown [10.39.192.5])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 993EA2026D6A;
-        Thu, 12 May 2022 20:25:12 +0000 (UTC)
-From:   Hans de Goede <hdegoede@redhat.com>
-To:     "Rafael J . Wysocki" <rafael@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        with ESMTP id S235641AbiELVOi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 May 2022 17:14:38 -0400
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E985B5DD1F;
+        Thu, 12 May 2022 14:14:36 -0700 (PDT)
+Received: by mail-lf1-x12a.google.com with SMTP id bq30so11289122lfb.3;
+        Thu, 12 May 2022 14:14:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=2fvUun18Y3H3meaphIs95kvs9TKAJnuvpJthSALeEsM=;
+        b=SYgDrGbNWezxlXhEFlbnKE3qsxKpg88XcLFqsc7qV+AJzja8nq9Uexp4VpOOl+mC3e
+         jhMnlzK2uojPDcPOqs6NTPtCQJGBFRhg5A5ZuPF27RmZsEndI34lxxxzNyqfcbdLO9Fv
+         Q5xxhUUGW0kMcMd2HeXixR9aWsR0HFAbrwkMYJH8KpZk7stUNhRtvbmr1Y1ESAj25ZPo
+         MEt46XQG+ql7Wrp74OArn7vvK2YjM8kel2xsR0aj98UqlxpFZUqYVi2J5J4Fa89HvEJG
+         WUuhfKWD5wvAfD2ENIv2dnY1BGFaSnUJCucHcsHBBkvPV8CzWY5lrXXsIAYZRcudHRfv
+         UAwQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=2fvUun18Y3H3meaphIs95kvs9TKAJnuvpJthSALeEsM=;
+        b=sozquFOcTMDkfjCrmF+X4AjoaCSS/u4hpxdgEUo9r2WJBwp61YM7C7hXfHYjgZbmqZ
+         i973Lh/jY8+kIhmEdAqgqTDWpaMFODf2NBOdVokiXRm8bZi3jgsfyOJmxbv97CAJm7+U
+         RDoxd63tzHWAFN8M24P2h5W6AP2RGor4HvhDaxmFkkJUMmOE7imy4kAcS23cX/pZ7Uot
+         buQm2yYZHp0XGhgze5zL7P2I3aAVtjd6Pe7VL5vrAqDoaGYUZCGQ5/0zgeqVxjOwUeX1
+         oSHZ/lKf7HT80O2B8cka8gr/E5Au415F7TDeeNMGn8sEpUoCUonfsswSbQzhqqfi7XUm
+         R0Nw==
+X-Gm-Message-State: AOAM531jMzlgbkcaG+/BwYSeOyKwMUUH4YNYQsdXA2m3cIcT0ear3yyr
+        xjxPLl8JUOfDhzXTEKdoasnTwU48oOMogA==
+X-Google-Smtp-Source: ABdhPJw0FfTmusT3d920y6m5KoaaHCk+Tsb3Q08jENhNjHIibospIHJ569V43l4Bjqcs7Ohp7XYiIg==
+X-Received: by 2002:ac2:5cc7:0:b0:472:5be:eb7b with SMTP id f7-20020ac25cc7000000b0047205beeb7bmr1081981lfq.663.1652390075108;
+        Thu, 12 May 2022 14:14:35 -0700 (PDT)
+Received: from mobilestation ([95.79.189.214])
+        by smtp.gmail.com with ESMTPSA id p23-20020a2e8057000000b0024f3d1dae7csm104867ljg.4.2022.05.12.14.14.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 May 2022 14:14:33 -0700 (PDT)
+Date:   Fri, 13 May 2022 00:14:31 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Michael Turquette <mturquette@baylibre.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Myron Stowe <myron.stowe@redhat.com>,
-        Juha-Pekka Heikkila <juhapekka.heikkila@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H . Peter Anvin" <hpa@zytor.com>
-Cc:     Hans de Goede <hdegoede@redhat.com>,
-        =?UTF-8?q?Benoit=20Gr=C3=A9goire?= <benoitg@coeus.ca>,
-        Hui Wang <hui.wang@canonical.com>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, x86@kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v8 0/1] x86/PCI: Ignore E820 reservations for bridge windows on future systems
-Date:   Thu, 12 May 2022 22:25:10 +0200
-Message-Id: <20220512202511.34197-1-hdegoede@redhat.com>
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        linux-clk@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/4] clk: Baikal-T1 DDR/PCIe resets and some xGMAC
+ fixes
+Message-ID: <20220512211431.r23r6daua36lty7d@mobilestation>
+References: <20220503205722.24755-1-Sergey.Semin@baikalelectronics.ru>
+ <20220512001156.x6kqyhi3vjjpqch6@mobilestation>
+ <20220512152705.GA2506@lpieralisi>
+ <20220512171150.GA164627@thinkpad>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.78 on 10.11.54.4
+In-Reply-To: <20220512171150.GA164627@thinkpad>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+On Thu, May 12, 2022 at 10:41:50PM +0530, Manivannan Sadhasivam wrote:
+> On Thu, May 12, 2022 at 04:27:05PM +0100, Lorenzo Pieralisi wrote:
+> > On Thu, May 12, 2022 at 03:11:56AM +0300, Serge Semin wrote:
+> > > On Tue, May 03, 2022 at 11:57:18PM +0300, Serge Semin wrote:
+> > > > This patchset is an initial one in the series created in the framework
+> > > > of my Baikal-T1 PCIe/eDMA-related work:
+> > > > 
+> > > > [1: In-progress v3] clk: Baikal-T1 DDR/PCIe resets and some xGMAC fixes
+> > > > Link: https://lore.kernel.org/linux-pci/20220330144320.27039-1-Sergey.Semin@baikalelectronics.ru/
+> > > > [2: In-progress v1] PCI: dwc: Various fixes and cleanups
+> > > > Link: https://lore.kernel.org/linux-pci/20220324012524.16784-1-Sergey.Semin@baikalelectronics.ru/
+> > > > [3: In-progress v1] PCI: dwc: Add dma-ranges/YAML-schema/Baikal-T1 support
+> > > > Link: https://lore.kernel.org/linux-pci/20220324013734.18234-1-Sergey.Semin@baikalelectronics.ru/
+> > > > [4: In-progress v1] dmaengine: dw-edma: Add RP/EP local DMA controllers support
+> > > > Link: https://lore.kernel.org/linux-pci/20220324014836.19149-1-Sergey.Semin@baikalelectronics.ru/
+> > > > 
+> > > > Since some of the patches in the later patchsets depend on the
+> > > > modifications introduced here, @Lorenzo could you please merge this series
+> > > > through your PCIe subsystem repo? After getting all the required ack'es of
+> > > > course.
+> > > > 
+> > > > Short summary regarding this patchset. A few more modifications are
+> > > > introduced here to finally finish the Baikal-T1 CCU unit support up and
+> > > > prepare the code before adding the Baikal-T1 PCIe/xGMAC support. First of
+> > > > all it turned out I specified wrong DW xGMAC PTP reference clock divider
+> > > > in my initial patches. It must be 8, not 10. Secondly I was wrong to add a
+> > > > joint xGMAC Ref and PTP clock instead of having them separately defined.
+> > > > The SoC manual describes these clocks as separate fixed clock wrappers.
+> > > > Finally in order to close the SoC clock/reset support up we need to add
+> > > > the DDR and PCIe interfaces reset controls support. It's done in two
+> > > > steps. First I've moved the reset-controls-related code into a dedicated
+> > > > module. Then the DDR/PCIe reset-control functionality is added.
+> > > > 
+> > > > Link: https://lore.kernel.org/linux-pci/20220324010905.15589-1-Sergey.Semin@baikalelectronics.ru/
+> > > > Changelog v2:
+> > > > - Resubmit the series with adding @Philipp to the list of the recipients.
+> > > > 
+> > > > Link: https://lore.kernel.org/linux-pci/20220330144320.27039-1-Sergey.Semin@baikalelectronics.ru/
+> > > > Changelog v3:
+> > > > - Rebased from v5.17 onto v5.18-rc3.
+> > > > - No comments. Just resend the series.
+> > > 
+> > > No comments for more than a week. There were no comments in v1 and v2
+> > > either. Please at least ack or merge in the series. It would be very
+> > > appreciated to merge it in through one repo with the rest of the
+> > > patchsets before the next merge window. @Bjorn, @Lorenzo, @Michael?
+> > 
 
-Here is v8 of my patch to address the E820 reservations vs PCI host bridge
-ranges issue which are causing touchpad and/or thunderbolt issues on many
-different laptop models.
+Hello Lorenzo, Manivannan
 
-After previous attemps to identify these systems by looking for E820
-reservations covering the entire bridge window, which broke the boot
-on some coreboot based ChromeBooks we are now back to using a bios date
-based approach.
+> > Hi Sergey,
+> > 
+> > these changes affect the clock tree and have to be reviewed and merged
+> > by the respective maintainers if they think the changes can be accepted.
+> > 
+> > I don't see any reason why we should, if ACK'ed, take them in the PCI
+> > tree, this series does not apply changes to the PCI tree at all and you
+> > don't need it as a base for future to-be-merged PCI patches either.
+> > 
+> > So in short, this series has to go through the usual clock tree review
+> > process.
+> > 
 
-Changes in v8:
-- Change the cut-off for no longer excluding E820 reservations from
-  the bridge window to BIOS year >= 2023 so that this only applies to
-  upcoming systems.
-- Use DMI quirks for existing systems on which excluding E820
-  reservations from the _CRS returned bridge window is an issue.
+I do know the normal procedure. But if patches concern different
+subsystems but for some reason inter-depended somehow it's ok to merge
+them in via a single repo. In my case the platform clock driver has
+been updated in a way so to support the reset-controls utilized in the
+PCIe driver altered in another patchset. So I didn't want to leave the
+kernel not working in the framework of my platform on any git hash
+state. That's why I asked to merge the patchsets in via the same repo.
+The kernel would be still buildable though.
 
-This is based on top of Bjorn's pci/resource branch:
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
+> 
+> Yes, Stephen should be the one taking these patches through the clk tree. Also,
+> there is no need to club both pci and clk patches in a single tree. That's
+> usually done for patches with build dependencies, but here there are none.
 
-Regards,
+Well, I didn't expect to have my patchsets review to be that delayed.
+Now seeing Lorenzo is going to review only DW PCIe fixes and cleanups
+after which will be gone for two more months I have to admit that my
+plan of getting the changes accepted in 5.19 won't come true. Really
+I thought of any subsystem but not of PCIe/DMA that review procedure
+would last that long.
 
-Hans
+-Sergey
 
-
-Hans de Goede (1):
-  x86/PCI: Ignore E820 reservations for bridge windows on future systems
-
- .../admin-guide/kernel-parameters.txt         |   9 ++
- arch/x86/include/asm/pci_x86.h                |   2 +
- arch/x86/pci/acpi.c                           | 109 +++++++++++++++++-
- arch/x86/pci/common.c                         |   8 ++
- 4 files changed, 126 insertions(+), 2 deletions(-)
-
--- 
-2.36.0
-
+> 
+> Thanks,
+> Mani
+> 
+> > Thanks,
+> > Lorenzo
+> > 
+> > > -Sergey
+> > > 
+> > > > 
+> > > > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> > > > Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
+> > > > Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
+> > > > Cc: Rob Herring <robh@kernel.org>
+> > > > Cc: "Krzysztof Wilczyński" <kw@linux.com>
+> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> > > > Cc: linux-clk@vger.kernel.org
+> > > > Cc: linux-pci@vger.kernel.org
+> > > > Cc: linux-mips@vger.kernel.org
+> > > > Cc: linux-kernel@vger.kernel.org
+> > > > 
+> > > > Serge Semin (4):
+> > > >   clk: baikal-t1: Fix invalid xGMAC PTP clock divider
+> > > >   clk: baikal-t1: Define shared xGMAC ref/ptp clocks parent
+> > > >   clk: baikal-t1: Move reset-controls code into a dedicated module
+> > > >   clk: baikal-t1: Add DDR/PCIe directly controlled resets support
+> > > > 
+> > > >  drivers/clk/baikal-t1/Kconfig       |  12 +-
+> > > >  drivers/clk/baikal-t1/Makefile      |   1 +
+> > > >  drivers/clk/baikal-t1/ccu-div.c     |   1 +
+> > > >  drivers/clk/baikal-t1/ccu-div.h     |   6 +
+> > > >  drivers/clk/baikal-t1/ccu-rst.c     | 373 ++++++++++++++++++++++++++++
+> > > >  drivers/clk/baikal-t1/ccu-rst.h     |  64 +++++
+> > > >  drivers/clk/baikal-t1/clk-ccu-div.c | 102 ++------
+> > > >  include/dt-bindings/reset/bt1-ccu.h |   9 +
+> > > >  8 files changed, 482 insertions(+), 86 deletions(-)
+> > > >  create mode 100644 drivers/clk/baikal-t1/ccu-rst.c
+> > > >  create mode 100644 drivers/clk/baikal-t1/ccu-rst.h
+> > > > 
+> > > > -- 
+> > > > 2.35.1
+> > > > 
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
