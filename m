@@ -2,117 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D541C4332F
-	for <linux-pci@archiver.kernel.org>; Thu, 12 May 2022 14:18:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20251C4332F
+	for <linux-pci@archiver.kernel.org>; Thu, 12 May 2022 14:35:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355172AbiELOSd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 May 2022 10:18:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52324 "EHLO
+        id S1355391AbiELOfx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 May 2022 10:35:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354853AbiELOST (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 May 2022 10:18:19 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DE1887A03
-        for <linux-pci@vger.kernel.org>; Thu, 12 May 2022 07:18:14 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id gj17-20020a17090b109100b001d8b390f77bso7966449pjb.1
-        for <linux-pci@vger.kernel.org>; Thu, 12 May 2022 07:18:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=7iZZodcw2kcYl7DcsgXoMrjWgWmUo2hoVmfbC2enldQ=;
-        b=f0iav4TX9MWlsCmY6kc9xgrGJbCfS5isN6BM1Z6iWUxV5R949SvxIHYuhyNXGq/LbV
-         iAVEe/k5sttQeWMaw8UJeNzTt7nM8mgs/GC29uCwzVviZ9UmUBlRI+Yz4RUEq3Dnpjdu
-         2s0PTjvqcKHLtt7RtJpqsNMesXKMwyhVVaDQmx0ZS2gv/W14tS7b3di51NdIdSkN/LgV
-         XzQIgrd3IqcQpA9t8nnDLybJ7SAHI7TXsGvLN72OpLgWmloZOd2HbrLfE11Ys9oztA22
-         585mp7uatbKavu7kiketYuGxOhssXwkcveNeYR6yEJEx5D8busxanwG2Ez59YvnJLBGT
-         vRRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=7iZZodcw2kcYl7DcsgXoMrjWgWmUo2hoVmfbC2enldQ=;
-        b=7kP44ZyVYsARI77nXTZlPrgC12yfmcUrTpa8fa3pIG94bVEOVtqLrG9fxo9ZRRxYir
-         mrSX0pr+rtkMJj5576HZshRLw2K7bC5eo9Q7EKjQQEviR35PyEYXp7oHw0Ux0v06EaCo
-         wIIWZ1DIW7d4yH82KX4ZPwqhpPq3suxj8Bm40v/WU0Zya2NymuemIQorZamWetdGbc+8
-         n11TEjBRVvmSys/6bpiEd3TH9s+XDaNUzCun/NZdQdpxQJ2i6/yAeFc9oRM6IBUJW6Bc
-         ymvpbA30YAhgZdMhjlZYJYPUpb7toCphe8tZZKlovGsDe2pikenZV+cUKCBMiYB0YvCX
-         6Otg==
-X-Gm-Message-State: AOAM5339GYp2yCKv02GXZ0clWxdEDB2Jd5uiNv6Uki211Mda/usKLly6
-        lKQKcHokD+sxfkDrAHQO76D+
-X-Google-Smtp-Source: ABdhPJy0b5z0NMw6JCWSQ6xCOd3R5EJ290CTQnJbuWRxW4kXTEznCyVtk2LbYi8JPVi2vsroZVZbrg==
-X-Received: by 2002:a17:90a:170c:b0:1dc:20c4:6354 with SMTP id z12-20020a17090a170c00b001dc20c46354mr11089713pjd.113.1652365093661;
-        Thu, 12 May 2022 07:18:13 -0700 (PDT)
-Received: from thinkpad ([117.202.184.202])
-        by smtp.gmail.com with ESMTPSA id u1-20020a170903124100b0015e8d4eb1f2sm3997428plh.60.2022.05.12.07.18.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 May 2022 07:18:13 -0700 (PDT)
-Date:   Thu, 12 May 2022 19:48:06 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Frank Li <Frank.Li@nxp.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 02/26] dmaengine: Fix dma_slave_config.dst_addr
- description
-Message-ID: <20220512141806.GG35848@thinkpad>
-References: <20220503225104.12108-1-Sergey.Semin@baikalelectronics.ru>
- <20220503225104.12108-3-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S1349939AbiELOfw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 May 2022 10:35:52 -0400
+X-Greylist: delayed 1669 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 12 May 2022 07:35:48 PDT
+Received: from hostingweb31-40.netsons.net (hostingweb31-40.netsons.net [89.40.174.40])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DED8218B;
+        Thu, 12 May 2022 07:35:46 -0700 (PDT)
+Received: from lmontsouris-655-1-15-199.w80-11.abo.wanadoo.fr ([80.11.122.199]:54250 helo=[192.168.1.105])
+        by hostingweb31.netsons.net with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <luca@lucaceresoli.net>)
+        id 1np9Tu-000GvQ-K8; Thu, 12 May 2022 16:07:54 +0200
+Message-ID: <615718f9-151e-20fb-fcb0-56063ae61ca6@lucaceresoli.net>
+Date:   Thu, 12 May 2022 16:07:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220503225104.12108-3-Sergey.Semin@baikalelectronics.ru>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.1
+Subject: Re: [PATCH 1/2] PCI: dra7xx: Fix link removal on probe error
+Content-Language: en-US
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>
+Cc:     Saravana Kannan <saravanak@google.com>,
+        PCI <linux-pci@vger.kernel.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        linux-omap <linux-omap@vger.kernel.org>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sekhar Nori <nsekhar@ti.com>
+References: <20211214221450.589884-1-luca@lucaceresoli.net>
+ <CAL_Jsq+GQTcx1EGKHug2ZcDZufrKM-4k6PB0vQeTCTG42MHzvA@mail.gmail.com>
+ <59a23c89-0810-eb28-acd9-7051ac34d438@lucaceresoli.net>
+ <4579940c-27dc-733e-4022-ebea4671c839@lucaceresoli.net>
+ <CAL_JsqJ5nr6xJoTv3A6UPMMDXhWKcwSEUA3ux3kK8OMWQxdc6w@mail.gmail.com>
+ <YnvnNUrsCOUxMu8A@lpieralisi>
+From:   Luca Ceresoli <luca@lucaceresoli.net>
+In-Reply-To: <YnvnNUrsCOUxMu8A@lpieralisi>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - hostingweb31.netsons.net
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - lucaceresoli.net
+X-Get-Message-Sender-Via: hostingweb31.netsons.net: authenticated_id: luca@lucaceresoli.net
+X-Authenticated-Sender: hostingweb31.netsons.net: luca@lucaceresoli.net
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 04, 2022 at 01:50:40AM +0300, Serge Semin wrote:
-> Most likely due to a copy-paste mistake the dst_addr member of the
-> dma_slave_config structure has been marked as ignored if the !source!
-> address belong to the memory. That is relevant to the src_addr field of
-> the structure while the dst_addr field as containing a destination device
-> address is supposed to be ignored if the destination is the CPU memory.
-> Let's fix the field description accordingly.
-> 
-> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Hi Lorenzo,
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-Thanks,
-Mani
-
-> ---
->  include/linux/dmaengine.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+On 11/05/22 18:41, Lorenzo Pieralisi wrote:
+> On Sat, Jan 15, 2022 at 10:02:00AM -0600, Rob Herring wrote:
+>> +Saravana
+>>
+>> On Tue, Jan 11, 2022 at 4:35 AM Luca Ceresoli <luca@lucaceresoli.net> wrote:
+>>>
+>>> Hi Rob,
+>>>
+>>> On 16/12/21 10:08, Luca Ceresoli wrote:
+>>>> Hi Rob,
+>>>>
+>>>> thanks for the quick feedback!
+>>>>
+>>>> On 14/12/21 23:42, Rob Herring wrote:
+>>>>> On Tue, Dec 14, 2021 at 4:15 PM Luca Ceresoli <luca@lucaceresoli.net> wrote:
+>>>>>>
+>>>>>> If a devm_phy_get() calls fails with phy_count==N (N > 0), then N links
+>>>>>> have already been added by device_link_add() and won't be deleted by
+>>>>>> device_link_del() because the code calls 'return' and not 'goto err_link'.
+>>>>>>
+>>>>>> Fix in a very simple way by doing all the devm_phy_get() calls before all
+>>>>>> the device_link_add() calls.
+>>>>>>
+>>>>>> Fixes: 7a4db656a635 ("PCI: dra7xx: Create functional dependency between PCIe and PHY")
+>>>>>> Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
+>>>>>> ---
+>>>>>>  drivers/pci/controller/dwc/pci-dra7xx.c | 2 ++
+>>>>>>  1 file changed, 2 insertions(+)
+>>>>>>
+>>>>>> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+>>>>>> index f7f1490e7beb..2ccc53869e13 100644
+>>>>>> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
+>>>>>> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+>>>>>> @@ -757,7 +757,9 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
+>>>>>>                 phy[i] = devm_phy_get(dev, name);
+>>>>>>                 if (IS_ERR(phy[i]))
+>>>>>>                         return PTR_ERR(phy[i]);
+>>>>>> +       }
+>>>>>>
+>>>>>> +       for (i = 0; i < phy_count; i++) {
+>>>>>>                 link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
+>>>>>
+>>>>> I think this should happen automatically now with fw_devlink being
+>>>>> enabled by default. Can you try?
+>>>>
+>>>> Do you mean removal should be done automatically? I think they are not
+>>>> due to the DL_FLAG_STATELESS flag.
+>>>
+>>> I would love to have feedback because, as said, I think my patch is
+>>> correct, but if I'm wrong (which might well be) I have to drop patch 1
+>>> and rewrite patch 2 in a slightly more complex form.
+>>
+>> I mean that why do you need explicit dependency tracking here when
+>> dependencies on a PHY should happen automatically now. IOW, what is
+>> special about this driver and dependency?
 > 
-> diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-> index 842d4f7ca752..f204ea16ac1c 100644
-> --- a/include/linux/dmaengine.h
-> +++ b/include/linux/dmaengine.h
-> @@ -395,7 +395,7 @@ enum dma_slave_buswidth {
->   * should be read (RX), if the source is memory this argument is
->   * ignored.
->   * @dst_addr: this is the physical address where DMA slave data
-> - * should be written (TX), if the source is memory this argument
-> + * should be written (TX), if the destination is memory this argument
->   * is ignored.
->   * @src_addr_width: this is the width in bytes of the source (RX)
->   * register where DMA data shall be read. If the source
-> -- 
-> 2.35.1
-> 
+> Any update on this patch ? I think patch 2 can be merged, please
+> let me know if this one can be dropped.
+
+Thanks for the feedback! You would say yes, you can merge patch 2,
+except it probably does not even apply as it is written in a way that is
+based on the changes in patch 1.
+
+I could rewrite patch 2 to not depend on patch 1 of course, but it
+wouldn't make code simpler, perhaps more complex. And moreover the
+hardware that I used to have access to has phy_count==1 so I could never
+test the failing case, and sadly now I have no access to that hardware.
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Luca
