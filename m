@@ -2,160 +2,135 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3172BC433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 13 May 2022 17:26:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CCB4C433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 13 May 2022 17:53:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1382997AbiEMR0x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 May 2022 13:26:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40994 "EHLO
+        id S1382746AbiEMRxp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 May 2022 13:53:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1383014AbiEMR0l (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2022 13:26:41 -0400
-Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0D9B712D5
-        for <linux-pci@vger.kernel.org>; Fri, 13 May 2022 10:26:31 -0700 (PDT)
-Received: by mail-lf1-x136.google.com with SMTP id f4so2836446lfu.12
-        for <linux-pci@vger.kernel.org>; Fri, 13 May 2022 10:26:31 -0700 (PDT)
+        with ESMTP id S1357601AbiEMRxo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2022 13:53:44 -0400
+Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7507945047
+        for <linux-pci@vger.kernel.org>; Fri, 13 May 2022 10:53:42 -0700 (PDT)
+Received: by mail-lf1-x12e.google.com with SMTP id f4so2946346lfu.12
+        for <linux-pci@vger.kernel.org>; Fri, 13 May 2022 10:53:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=HYUuQ4fR4SBZdSuM6IAnUnoggotKrAQZZIhO70s2q7Y=;
-        b=aYogHwM28rVSe1gmJKZChmVT5a8H2SRM5oq6FocUxjQElKyDPH2lglb9Xy+suEHVQg
-         h+DSYL0Ek0qZfCjRygy3aPjee9JgIEngsVqPQxXjV0XDcTITotD/988vsq+fRHie8vIi
-         CLsAngRIpl9+j8MVRAy76P5cQpUY35Lv4kS6q60I0SCRhNsGDuz9n25iTJzAjHdaG3KU
-         WZn/PJeTsyLTRSXxW/TU+Y/+72t/+GDyM9rT+FBgCULZgDVD1iv0sli0g1TQgD4SoYrq
-         a3E6wLlKebpYmHkolrQplAEKb2bxsDznFJIjawgst+gXqGzNWR3un7Tm+AqrZNLnA7Nn
-         i4aQ==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EywLNplJdhTOSjIrHEUbtkgjSZSVIH3B6l+DwWXu1aM=;
+        b=t93IW+xsm+igKQJ+Tt3mX6kLOZYQXbTUPG9S0er4q92iJDT5dcfCtLMdhpbm1EpIgd
+         GHhEJCMDodOIjFA/OcM6mzxfS9JhTcJXZWTwrF165y9sAdJAmwjmnT32UXuN5jey+dHL
+         A4VKkh9PgLRFPfwe2rpIYXZxS7w7nOHSJgkHWiwJ6f2XK6O/sujszjtFMKaVzpzbvwUx
+         blWGCPcvCOEtagWh9InsfcP/cxT7A1pDjxlsX0QU229SQ8oSSJwY5D4WlIROpiMfiCP9
+         zKsX/CgdpA+bey3h28/xykFwYaFHQxuak7cpPT32OmY2LBTReReOiZwn/PNQEMe/KMin
+         gM/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=HYUuQ4fR4SBZdSuM6IAnUnoggotKrAQZZIhO70s2q7Y=;
-        b=VqjJDJqHopw+/lx3z/A0dTY1frLTqwToyT1jZT43EF4r8MFpd+twr95xndVperVcNt
-         5h5W1rAyiLBUH7bmQVzBcpeXTu8kBi6d/8Gn++QCIi0/1Y6lHYzF57Gjb2w4UnO5PBIP
-         OMxsFkBCfjUS8AvZI8s4K1/l1qscL2ZD+lbn+kRIgBanTEUuZtll7oTUQ6WJGvPF7D8v
-         hjGFF64ea0PCq6Sh2eUPlGCzREYBQ+r4FVPfnn1rUbR7ZgbmLuJgic/rPXzs8Q7+w6kY
-         kFVHRh5pbuLsRAQCqFKwrCKqjLRWoNA220Icnqy6Ape4KwoWGy87lKKtp/XBcOq1Nobs
-         S8+Q==
-X-Gm-Message-State: AOAM532m9KxVedmQnFEFH5PlttBivxftPROIJP9hXG5mGH91Inni6Fdt
-        Iy+aJzcbsPhD/mtdHJA+/CHfNw==
-X-Google-Smtp-Source: ABdhPJwIIwnzoWOB5P9szj3u3+LmWWrBC088kCFePfKkRL88hnV7pM2/c7QLaTOZ8dKqLu4vrM8lCA==
-X-Received: by 2002:a05:6512:31cd:b0:473:a235:1ac0 with SMTP id j13-20020a05651231cd00b00473a2351ac0mr4364227lfe.364.1652462791209;
-        Fri, 13 May 2022 10:26:31 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EywLNplJdhTOSjIrHEUbtkgjSZSVIH3B6l+DwWXu1aM=;
+        b=mw33+s9CgyxXHZxDHaJfhgBJOuXXgdFDLlXcf/f0JLjy8bYHGTlKY9ROTK4An+zGst
+         lNm1dfd6q+H+NcxC9jKmWHD/6JUTPHme5yYncRr8qe52xY1udNDV4yDNa2jE9nIjXuIy
+         KMInvOAqpWMgJBXfMR5uyHw9bnxT37dDfAdT0O4hqWHddM6ydmJRSF5QD2qmMaa/37qJ
+         Y5/a0/EJK9ZjWj10d9eQBmBSCvtD87RQn2x4J9q74bJuIYcKW2eg0PCLhJUT2rP4ycq4
+         00GBSooT0qfquWPDndMPpfxHhkXN9ivuX8CM7vIgazfJcLqUyeyfYq6Jt6Kv+1LBpO9+
+         PuWg==
+X-Gm-Message-State: AOAM532O27+rGeG8kvh/2LyscaXBJhTNsAnUDgf25iZ3liznj9A9DUoh
+        FCuUvFn4gs2yN7J2wWWR7AHZRg==
+X-Google-Smtp-Source: ABdhPJxl8CVYhd4bafVoMCRPgIhQg6yHs3CiF7ixBVMn3g6QrszZ9qd96nLEefR3oGkPlJQ7xtkT+w==
+X-Received: by 2002:a05:6512:3b26:b0:473:a671:eff2 with SMTP id f38-20020a0565123b2600b00473a671eff2mr4447090lfv.500.1652464420840;
+        Fri, 13 May 2022 10:53:40 -0700 (PDT)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id e3-20020a2e8183000000b0024f3d1daec0sm511157ljg.72.2022.05.13.10.26.30
+        by smtp.gmail.com with ESMTPSA id n2-20020a195502000000b0047255d21164sm448614lfe.147.2022.05.13.10.53.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 May 2022 10:26:30 -0700 (PDT)
+        Fri, 13 May 2022 10:53:40 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Johan Hovold <johan@kernel.org>
-Cc:     Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v10 09/10] dt-bindings: PCI: qcom: Support additional MSI interrupts
-Date:   Fri, 13 May 2022 20:26:21 +0300
-Message-Id: <20220513172622.2968887-10-dmitry.baryshkov@linaro.org>
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <swboyd@chromium.org>,
+        Johan Hovold <johan+linaro@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     Prasad Malisetty <quic_pmaliset@quicinc.com>,
+        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-clk@vger.kernel.org
+Subject: [PATCH v6 0/5] PCI: qcom: Rework pipe_clk/pipe_clk_src handling
+Date:   Fri, 13 May 2022 20:53:34 +0300
+Message-Id: <20220513175339.2981959-1-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220513172622.2968887-1-dmitry.baryshkov@linaro.org>
-References: <20220513172622.2968887-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Qualcomm platforms each group of 32 MSI vectors is routed to the
-separate GIC interrupt. Document mapping of additional interrupts.
+PCIe pipe clk (and some other clocks) must be parked to the "safe"
+source (bi_tcxo) when corresponding GDSC is turned off and on again.
+Currently this is handcoded in the PCIe driver by reparenting the
+gcc_pipe_N_clk_src clock.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- .../devicetree/bindings/pci/qcom,pcie.yaml    | 53 +++++++++++++++++--
- 1 file changed, 50 insertions(+), 3 deletions(-)
+Instead of doing it manually, follow the approach used by
+clk_rcg2_shared_ops and implement this parking in the enable() and
+disable() clock operations for respective pipe clocks.
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index 0b69b12b849e..fe8f9a62a665 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -43,11 +43,12 @@ properties:
-     maxItems: 5
- 
-   interrupts:
--    maxItems: 1
-+    minItems: 1
-+    maxItems: 8
- 
-   interrupt-names:
--    items:
--      - const: msi
-+    minItems: 1
-+    maxItems: 8
- 
-   # Common definitions for clocks, clock-names and reset.
-   # Platform constraints are described later.
-@@ -623,6 +624,52 @@ allOf:
-         - resets
-         - reset-names
- 
-+    # On newer chipsets support either 1 or 8 msi interrupts
-+    # On older chipsets it's always 1 msi interrupt
-+  - if:
-+      properties:
-+        compatibles:
-+          contains:
-+            enum:
-+              - qcom,pcie-msm8996
-+              - qcom,pcie-sc7280
-+              - qcom,pcie-sc8180x
-+              - qcom,pcie-sdm845
-+              - qcom,pcie-sm8150
-+              - qcom,pcie-sm8250
-+              - qcom,pcie-sm8450-pcie0
-+              - qcom,pcie-sm8450-pcie1
-+    then:
-+      oneOf:
-+        - properties:
-+            interrupts:
-+              maxItems: 1
-+            interrupt-names:
-+              maxItems: 1
-+              items:
-+                - const: msi
-+        - properties:
-+            interrupts:
-+              minItems: 8
-+            interrupt-names:
-+              minItems: 8
-+              items:
-+                - const: msi0
-+                - const: msi1
-+                - const: msi2
-+                - const: msi3
-+                - const: msi4
-+                - const: msi5
-+                - const: msi6
-+                - const: msi7
-+    else:
-+      properties:
-+        interrupts:
-+          maxItems: 1
-+        interrupt-names:
-+          items:
-+            - const: msi
-+
- unevaluatedProperties: false
- 
- examples:
+Changes since v5:
+ - Rename the clock to clk-regmap-phy-mux and the enable/disable values
+   to phy_src_val and ref_src_val respectively (as recommended by
+   Johan).
+
+Changes since v4:
+ - Renamed the clock to clk-regmap-pipe-src,
+ - Added mention of PCIe2 PHY to the commit message,
+ - Expanded commit messages to mention additional pipe clock details.
+
+Changes since v3:
+ - Replaced the clock multiplexer implementation with branch-like clock.
+
+Changes since v2:
+ - Added is_enabled() callback
+ - Added default parent to the pipe clock configuration
+
+Changes since v1:
+ - Rebased on top of [1].
+ - Removed erroneous Fixes tag from the patch 4.
+
+Changes since RFC:
+ - Rework clk-regmap-mux fields. Specify safe parent as P_* value rather
+   than specifying the register value directly
+ - Expand commit message to the first patch to specially mention that
+   it is required only on newer generations of Qualcomm chipsets.
+
+
+Dmitry Baryshkov (5):
+  PCI: qcom: Remove unnecessary pipe_clk handling
+  clk: qcom: regmap: add PHY clock source implementation
+  clk: qcom: gcc-sm8450: use new clk_regmap_pipe_src_ops for PCIe pipe
+    clocks
+  clk: qcom: gcc-sc7280: use new clk_regmap_pipe_src_ops for PCIe pipe
+    clocks
+  PCI: qcom: Drop manual pipe_clk_src handling
+
+ drivers/clk/qcom/Makefile              |  1 +
+ drivers/clk/qcom/clk-regmap-phy-mux.c  | 62 ++++++++++++++++++++
+ drivers/clk/qcom/clk-regmap-phy-mux.h  | 37 ++++++++++++
+ drivers/clk/qcom/gcc-sc7280.c          | 49 ++++++----------
+ drivers/clk/qcom/gcc-sm8450.c          | 51 ++++++----------
+ drivers/pci/controller/dwc/pcie-qcom.c | 81 +-------------------------
+ 6 files changed, 141 insertions(+), 140 deletions(-)
+ create mode 100644 drivers/clk/qcom/clk-regmap-phy-mux.c
+ create mode 100644 drivers/clk/qcom/clk-regmap-phy-mux.h
+
+
+base-commit: 3123109284176b1532874591f7c81f3837bbdc17
+prerequisite-patch-id: 71e4b5b7ff5d87f2407735cc6a3074812cde3697
 -- 
 2.35.1
 
