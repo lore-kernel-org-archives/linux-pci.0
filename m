@@ -2,101 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76AF4C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 16 May 2022 21:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8F1BC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 16 May 2022 21:12:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349063AbiEPVId (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 May 2022 17:08:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36224 "EHLO
+        id S1349255AbiEPVMx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 May 2022 17:12:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349169AbiEPVIM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 May 2022 17:08:12 -0400
-Received: from mail-oa1-f48.google.com (mail-oa1-f48.google.com [209.85.160.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E955A4A3C8;
-        Mon, 16 May 2022 13:49:44 -0700 (PDT)
-Received: by mail-oa1-f48.google.com with SMTP id 586e51a60fabf-edf9ddb312so21773769fac.8;
-        Mon, 16 May 2022 13:49:44 -0700 (PDT)
+        with ESMTP id S1349863AbiEPVLv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 May 2022 17:11:51 -0400
+Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41D411FA61;
+        Mon, 16 May 2022 13:59:44 -0700 (PDT)
+Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-2fee9fe48c2so45665917b3.3;
+        Mon, 16 May 2022 13:59:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=dJ407RX9rra+MeG41XsuDhxD1nvVBeIHBR/vdQHMxFg=;
-        b=uGnV8i7EYk9xkRxbGIAMf418oeQ21KaYhYgowf2A8Vjd1QfUKN0nrw8E6GKqiwZu4Z
-         HDq7Q+CkWPNONUBqc5ecbQLl/2TB0k87rKSJsqOGfrK0ILY4Ih7UXk1JodpzHhPMMMEE
-         X/ieg0ezp8uETsPc4Xj2JNDoEBXJLvEgjujThQc0jbBFtnXVYY8Vb8claRIFIa172oXt
-         2y0DXKRWlFOyB0wav+uxASE0NCpab1+qvwMp92YmyiM4GtvZchi9Lfvh6R+KzS+USEGp
-         /kvL4iuBaPlhumU9vVvKTTr7lViMclSWluR7YV1rxd7F8aJnG9BI9HuNT+XzXcCUFLe/
-         ZcWg==
-X-Gm-Message-State: AOAM533L8IRKnD8E53wXa6Kb9BMPlr1SJYiY4zooFQ6Likc1YShOskbM
-        Hgbc8f/m+uCxXbhj4MgJFg==
-X-Google-Smtp-Source: ABdhPJwSZjeoTdSCcmGSB5osGq7WGCVKCO9I/IGTjq81+0ENZwa2gjhYxpSHG+AyOhA/zPGQj+g1IQ==
-X-Received: by 2002:a05:6870:b527:b0:ed:9cbd:e04a with SMTP id v39-20020a056870b52700b000ed9cbde04amr16246920oap.41.1652734184207;
-        Mon, 16 May 2022 13:49:44 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id s124-20020aca5e82000000b00325cda1ffb8sm4158039oib.55.2022.05.16.13.49.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 May 2022 13:49:43 -0700 (PDT)
-Received: (nullmailer pid 3259375 invoked by uid 1000);
-        Mon, 16 May 2022 20:49:42 -0000
-Date:   Mon, 16 May 2022 15:49:42 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Frank Li <Frank.Li@nxp.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 10/17] PCI: dwc: Drop iATU regions enumeration -
- dw_pcie_region_type
-Message-ID: <20220516204942.GG3209795-robh@kernel.org>
-References: <20220503214638.1895-1-Sergey.Semin@baikalelectronics.ru>
- <20220503214638.1895-11-Sergey.Semin@baikalelectronics.ru>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=v8CuZFsnTOi32M4APK7fICwRmlRzyWraAOnG9eilkyo=;
+        b=jLQWTnfFKtrSqFaqll7upzyWIWIuSopUONa3xYqrH4bXL/fI3yAyFlcjmfGnpyqAOj
+         womYBTP+CExHEogIe1+59c7j7c9XQN3FX0IIE81Wops1vj7WRWm8ARvKxIu6XTJerbEQ
+         TYlv6nnDCGjYRC1oQINXtgY4zxzQhYqMUJzhqb2LdK5Kv45+S7eMMY2tdGxgMP9oUDpG
+         KiNaw3lHjYqo8aI/I4sKUe8924awtqOtM3T4dvTY7aL4V6OBUe8vPvCgyi97lptmfmtX
+         5wxlp78E/IssiqeV0YOzV59gkvXL5YveVcPEEK8vcjSgIt6msj7/1MpjBgfVzjrNF/1I
+         DyOA==
+X-Gm-Message-State: AOAM530m5bRgTRET/gEB6DADpuSk+BzQkQWUaxEPZo/+y6mZ4I2TNmyE
+        s432g4+FGPV6Ch8oJL1HklUrXYxfoXoyKyLydGgCngxF0/s=
+X-Google-Smtp-Source: ABdhPJxKhTbm4KUGm4E639zehLL3oGJVzd+DOuaL3l/fDv4EecMJc90THrk+O6ZSiJ+y9oKlD0rCncRNi3iCskiwqB8=
+X-Received: by 2002:a81:260a:0:b0:2f4:ca82:a42f with SMTP id
+ m10-20020a81260a000000b002f4ca82a42fmr22397134ywm.149.1652734783486; Mon, 16
+ May 2022 13:59:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220503214638.1895-11-Sergey.Semin@baikalelectronics.ru>
+References: <SJ0PR11MB5070B095B8A28634B43A231F9ECA9@SJ0PR11MB5070.namprd11.prod.outlook.com>
+ <20220516200927.GA1046452@bhelgaas>
+In-Reply-To: <20220516200927.GA1046452@bhelgaas>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Mon, 16 May 2022 22:59:32 +0200
+Message-ID: <CAJZ5v0g6GdKfN4b5uwHEhh4hBuG=haVHaXc-XuMQLe8Wd41Y3g@mail.gmail.com>
+Subject: Re: [PATCH v5 2/2] PCI/PM: Fix pci_pm_suspend_noirq() to disable PTM
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Jingar, Rajvi" <rajvi.jingar@intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        David Box <david.e.box@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 04, 2022 at 12:46:31AM +0300, Serge Semin wrote:
-> There is no point in having the dw_pcie_region_type enumeration for almost
-> the same reasons as it was stated for dw_pcie_as_type. First of all it's
-> redundant since the driver already has a set of the macros declared which
-> describe the possible inbound and outbound iATU regions. Having an
-> addition abstraction just needlessly complicates the code. Secondly
-> checking the region type passed to the dw_pcie_disable_atu() method for
-> validity is pointless since the erroneous situation is just ignored in the
-> current method implementation. So to speak let's drop the redundant
-> dw_pcie_region_type enumeration replacing it with the direct iATU
-> direction macro usage.
-> 
-> Since the dw_pcie_disable_atu() method now directly accepts the
-> in-/outbound iATU region direction instead of the abstract region type we
-> need to change the argument name and the arguments order. The later change
-> makes the function prototype looking more logical since the passed index
-> indicates an iATU window within the regions with the corresponding
-> direction.
-> 
-> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> 
-> ---
-> 
-> Changelog v2:
-> - Move this patch to being applied before the IB/OB iATU windows setup
->   simplification patch (@Rob).
-> ---
->  .../pci/controller/dwc/pcie-designware-ep.c   |  4 +--
->  .../pci/controller/dwc/pcie-designware-host.c |  2 +-
->  drivers/pci/controller/dwc/pcie-designware.c  | 28 +++++--------------
->  drivers/pci/controller/dwc/pcie-designware.h  | 13 ++-------
->  4 files changed, 13 insertions(+), 34 deletions(-)
+On Mon, May 16, 2022 at 10:09 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Fri, May 13, 2022 at 10:00:48PM +0000, Jingar, Rajvi wrote:
+> >
+> > > -----Original Message-----
+> > > From: Bjorn Helgaas <helgaas@kernel.org>
+> > > Sent: Thursday, May 12, 2022 11:36 AM
+> > > To: Rafael J. Wysocki <rafael@kernel.org>
+> > > Cc: Jingar, Rajvi <rajvi.jingar@intel.com>; Wysocki, Rafael J
+> > > <rafael.j.wysocki@intel.com>; Bjorn Helgaas <bhelgaas@google.com>; David Box
+> > > <david.e.box@linux.intel.com>; Linux PCI <linux-pci@vger.kernel.org>; Linux
+> > > Kernel Mailing List <linux-kernel@vger.kernel.org>; Linux PM <linux-
+> > > pm@vger.kernel.org>
+> > > Subject: Re: [PATCH v5 2/2] PCI/PM: Fix pci_pm_suspend_noirq() to disable PTM
+> > >
+> > > On Thu, May 12, 2022 at 07:52:36PM +0200, Rafael J. Wysocki wrote:
+> > > > On Thu, May 12, 2022 at 7:42 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > > On Thu, May 12, 2022 at 03:49:18PM +0200, Rafael J. Wysocki wrote:
+> > >
+> > > > > > Something like this should suffice IMV:
+> > > > > >
+> > > > > > if (!dev_state_saved || pci_dev->current_state != PCI_D3cold)
+> > > > > >
+> > > > > >         pci_disable_ptm(pci_dev);
+> > > > >
+> > > > > It makes sense to me that we needn't disable PTM if the device is in
+> > > > > D3cold.  But the "!dev_state_saved" condition depends on what the
+> > > > > driver did.  Why is that important?  Why should we not do the
+> > > > > following?
+> > > > >
+> > > > >   if (pci_dev->current_state != PCI_D3cold)
+> > > > >     pci_disable_ptm(pci_dev);
+> > > >
+> > > > We can do this too.  I thought we could skip the power state
+> > > > check if dev_state_saved was unset, because then we would know
+> > > > that the power state was not D3cold.  It probably isn't worth
+> > > > the hassle though.
+> >
+> > We see issue with certain platforms where only checking if device
+> > power state in D3Cold is not enough and the !dev_state_saved check
+> > is needed when disabling PTM. Device like nvme is relying on ASPM,
+> > it stays in D0 but state is saved. Touching the config space wakes
+> > up the device which prevents the system from entering into low power
+> > state.
+>
+> Correct me if I'm wrong: for NVMe devices, nvme_suspend() has already
+> saved state and put the device in some low-power state.  Disabling PTM
+> here is functionally OK but prevents a system low power state, so you
+> want to leave PTM enabled.
+>
+> But I must be missing something because pci_prepare_to_sleep()
+> currently disables PTM for Root Ports.  If we leave PTM enabled on
+> NVMe but disable it on the Root Port above it, any PTM Request from
+> NVMe will cause an Unsupported Request error.
+>
+> Disabling PTM must be coordinated across PTM Requesters and PTM
+> Responders.  That means the decision to disable cannot depend on
+> driver-specific things like whether the driver has saved state.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Setting state_saved generally informs pci_pm_suspend_noirq() that the
+device has already been handled and it doesn't need to do anything to
+it.
+
+But you are right that PTM should be disabled on downstream devices as
+well as on the ports that those devices are connected to and it can be
+done even if the given device has already been handled, so the
+state_saved value is technically irrelevant.
+
+That's why I suggested to check if the power state is between D0 and
+D3cold (exclusive) and only disable PTM if that is the case.  It is
+pointless to disable PTM for devices in D3cold and it may be harmful
+for devices that are left in D0.
