@@ -2,154 +2,149 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00497C433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 14:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6032C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 15:03:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240458AbiEQOyi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 May 2022 10:54:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48064 "EHLO
+        id S1349563AbiEQPDr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 May 2022 11:03:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349450AbiEQOyf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 10:54:35 -0400
-Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB7BB50447;
-        Tue, 17 May 2022 07:54:32 -0700 (PDT)
-Received: by mail-io1-f43.google.com with SMTP id e194so19447192iof.11;
-        Tue, 17 May 2022 07:54:32 -0700 (PDT)
+        with ESMTP id S1349545AbiEQPDq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 11:03:46 -0400
+Received: from mail-vs1-xe33.google.com (mail-vs1-xe33.google.com [IPv6:2607:f8b0:4864:20::e33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99124286F1;
+        Tue, 17 May 2022 08:03:45 -0700 (PDT)
+Received: by mail-vs1-xe33.google.com with SMTP id q2so18969190vsr.5;
+        Tue, 17 May 2022 08:03:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=S4e8UP5BJWcehEd5lvqnvGFisDV1bTubwTjUFBZmIpM=;
+        b=it+A4dqWumEFH1OSAjnGrn0chRuB/5FpiUDVDsQus4pGIE77uwkNPajTFqp43yaQQV
+         0K4FVAfDKxGbfdWuXwGMuG7OWRggbGm9UcyR6gkdkalqgO7NTI8voWH0N6d7cHwOuPLb
+         tAwe5tmJsOrauX8ChVqllBdIg4J3215TuS3u6DcHR4ERrH0PN+5+kH7m93V1Cye9CgP+
+         vUeIStn210AYuqJef07EjLTloaNfpoPGmO2ohlLbpqZ8tzNhJ+mEmaAVYk7w2HQe2lqo
+         29xH4Y+sUjHCMOxqVITXcyH9o5Ob+H1KoW7qMDLlKIeQsHopFS681ikGrcVWoXCqVTOv
+         JKJw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=H8nn88xQh9eGLKIffo1TE6yNWGKhqJHXOhxiPgSDN0E=;
-        b=TJbJUVog3vcrz0zoSnCUaSiO+S4a0kT/cl95I3D1/KcKPTcGZ3sgpl1gJkFdViso1j
-         KGL+KrmPp4XdbEytUsywYZcFcDA6haUbmlR3BNqTNbGGiJDZyZNYmE218noTLNAW7vud
-         TcuHf7DSPemojfGMnvs/JvqQBIlj8e8hNK23QJTfD5TYSl8oaE87GaYHMfyz8X0wpvHj
-         rwJMIbOiik7lTuJFFw86xk2578inwTNtRWDid27kI/FF0h6DjLql+YUjSGRsrdAHCYst
-         OpLv8asCPeE1jj3ZDuE9rQ6a+qML28qOmZnbbPdDytvmE3MncsMsfLIOkr3FPPIaWMUA
-         8c8g==
-X-Gm-Message-State: AOAM533WfNqFLrWqRlWpNtK7T91G7SArSdJLeyxxanwTvuc/saidNy2I
-        rtVjL2Hmcc5a9WaGTdaQ8pMKUC6+HngB4cICo2o=
-X-Google-Smtp-Source: ABdhPJyUbjhY69ilI/s9mBNDVH5iERYUtRrDzsbW/o8lztqPEGggfJCDCG4DcINQoLOPIxgyFBXYTR3Y9cWQF9ak7V0=
-X-Received: by 2002:a05:6602:2082:b0:657:ad1c:795e with SMTP id
- a2-20020a056602208200b00657ad1c795emr10733535ioa.187.1652799272034; Tue, 17
- May 2022 07:54:32 -0700 (PDT)
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=S4e8UP5BJWcehEd5lvqnvGFisDV1bTubwTjUFBZmIpM=;
+        b=Ixa3kqQJh7u+rcI8FT00j7ISHXObOAuEOvDw2JNo+O7PVH+hZuH5wdbbubopfMl6z9
+         +faYjoycZ0+OoE1NvLm7OBai0h5blQhD84sqSq5n2Xko2XO/OlaZH0IqFQ1CvLGiwJ6J
+         bNKJLNDMqedaOKX258T4uR7EckLhzTV0S4Sy3LJbPdkZ2tTDrp9AEw7CH+tpZXnV61Y0
+         PL7c2ickuhzKeqb65xbapHLTiD8qEk9AezxP3GhAgPU1hYVqpk2tMYCMIA3nIMkvqkM+
+         yjiwe+v1IG2pPVzai7yDMAFjbrW5QAdgpIKFX0e4EnNBiJCRd8QPKVuX91nxGePbyTn7
+         GlwA==
+X-Gm-Message-State: AOAM532WFodYtpWp+320nPRJ9k19+i3BiljLlHNer1nDvUW/bHXDdEyK
+        0NENvGddh9kslkksnb5jV5I=
+X-Google-Smtp-Source: ABdhPJxRUVIxQQmWioisYDsZbORonfIHNKzTiaRi23XzztneUyBk5dUPpWSFnz0dCz+HHvz3xLdiRA==
+X-Received: by 2002:a05:6102:548a:b0:32d:8c72:ee18 with SMTP id bk10-20020a056102548a00b0032d8c72ee18mr9187660vsb.70.1652799824751;
+        Tue, 17 May 2022 08:03:44 -0700 (PDT)
+Received: from [192.168.1.140] ([65.35.200.237])
+        by smtp.gmail.com with ESMTPSA id b20-20020a056102233400b0032d275e6922sm1207602vsa.34.2022.05.17.08.03.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 17 May 2022 08:03:44 -0700 (PDT)
+Message-ID: <30bb7968-06fb-308c-a5f0-df316dfb240e@gmail.com>
+Date:   Tue, 17 May 2022 11:03:41 -0400
 MIME-Version: 1.0
-References: <CAJZ5v0g6GdKfN4b5uwHEhh4hBuG=haVHaXc-XuMQLe8Wd41Y3g@mail.gmail.com>
- <20220517144846.GA1068039@bhelgaas>
-In-Reply-To: <20220517144846.GA1068039@bhelgaas>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 17 May 2022 16:54:20 +0200
-Message-ID: <CAJZ5v0iNaAd=yP3DgDVVpffKU6kt+nSpPeqxWJyRddaX5K4FRA@mail.gmail.com>
-Subject: Re: [PATCH v5 2/2] PCI/PM: Fix pci_pm_suspend_noirq() to disable PTM
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        "Jingar, Rajvi" <rajvi.jingar@intel.com>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>,
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.8.1
+Subject: Re: [PATCH 1/3] of: always populate a root node
+Content-Language: en-US
+To:     =?UTF-8?B?Q2zDqW1lbnQgTMOpZ2Vy?= <clement.leger@bootlin.com>
+Cc:     Rob Herring <robh@kernel.org>,
+        Pantelis Antoniou <pantelis.antoniou@konsulko.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        David Box <david.e.box@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Allan Nielsen <allan.nielsen@microchip.com>,
+        Horatiu Vultur <horatiu.vultur@microchip.com>,
+        Steen Hegelund <steen.hegelund@microchip.com>,
+        Thomas Petazzoni <thomas.petazonni@bootlin.com>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Mark Brown <broonie@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Andrew Lunn <andrew@lunn.ch>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+References: <20220427094502.456111-1-clement.leger@bootlin.com>
+ <20220427094502.456111-2-clement.leger@bootlin.com>
+ <YnEx5/ni1ddIFCj9@robh.at.kernel.org>
+ <d356acbe-daff-1c66-6511-aab97a171c82@gmail.com>
+ <20220517093729.214c33a3@fixe.home>
+From:   Frank Rowand <frowand.list@gmail.com>
+In-Reply-To: <20220517093729.214c33a3@fixe.home>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, May 17, 2022 at 4:48 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Mon, May 16, 2022 at 10:59:32PM +0200, Rafael J. Wysocki wrote:
-> > On Mon, May 16, 2022 at 10:09 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > On Fri, May 13, 2022 at 10:00:48PM +0000, Jingar, Rajvi wrote:
-> > > > > -----Original Message-----
-> > > > > From: Bjorn Helgaas <helgaas@kernel.org>
-> > > > > Sent: Thursday, May 12, 2022 11:36 AM
-> > > > > To: Rafael J. Wysocki <rafael@kernel.org>
-> > > > > Cc: Jingar, Rajvi <rajvi.jingar@intel.com>; Wysocki, Rafael J
-> > > > > <rafael.j.wysocki@intel.com>; Bjorn Helgaas <bhelgaas@google.com>; David Box
-> > > > > <david.e.box@linux.intel.com>; Linux PCI <linux-pci@vger.kernel.org>; Linux
-> > > > > Kernel Mailing List <linux-kernel@vger.kernel.org>; Linux PM <linux-
-> > > > > pm@vger.kernel.org>
-> > > > > Subject: Re: [PATCH v5 2/2] PCI/PM: Fix pci_pm_suspend_noirq() to disable PTM
-> > > > >
-> > > > > On Thu, May 12, 2022 at 07:52:36PM +0200, Rafael J. Wysocki wrote:
-> > > > > > On Thu, May 12, 2022 at 7:42 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > > > On Thu, May 12, 2022 at 03:49:18PM +0200, Rafael J. Wysocki wrote:
-> > > > >
-> > > > > > > > Something like this should suffice IMV:
-> > > > > > > >
-> > > > > > > > if (!dev_state_saved || pci_dev->current_state != PCI_D3cold)
-> > > > > > > >
-> > > > > > > >         pci_disable_ptm(pci_dev);
-> > > > > > >
-> > > > > > > It makes sense to me that we needn't disable PTM if the device is in
-> > > > > > > D3cold.  But the "!dev_state_saved" condition depends on what the
-> > > > > > > driver did.  Why is that important?  Why should we not do the
-> > > > > > > following?
-> > > > > > >
-> > > > > > >   if (pci_dev->current_state != PCI_D3cold)
-> > > > > > >     pci_disable_ptm(pci_dev);
-> > > > > >
-> > > > > > We can do this too.  I thought we could skip the power state
-> > > > > > check if dev_state_saved was unset, because then we would know
-> > > > > > that the power state was not D3cold.  It probably isn't worth
-> > > > > > the hassle though.
-> > > >
-> > > > We see issue with certain platforms where only checking if device
-> > > > power state in D3Cold is not enough and the !dev_state_saved check
-> > > > is needed when disabling PTM. Device like nvme is relying on ASPM,
-> > > > it stays in D0 but state is saved. Touching the config space wakes
-> > > > up the device which prevents the system from entering into low power
-> > > > state.
-> > >
-> > > Correct me if I'm wrong: for NVMe devices, nvme_suspend() has already
-> > > saved state and put the device in some low-power state.  Disabling PTM
-> > > here is functionally OK but prevents a system low power state, so you
-> > > want to leave PTM enabled.
-> > >
-> > > But I must be missing something because pci_prepare_to_sleep()
-> > > currently disables PTM for Root Ports.  If we leave PTM enabled on
-> > > NVMe but disable it on the Root Port above it, any PTM Request from
-> > > NVMe will cause an Unsupported Request error.
-> > >
-> > > Disabling PTM must be coordinated across PTM Requesters and PTM
-> > > Responders.  That means the decision to disable cannot depend on
-> > > driver-specific things like whether the driver has saved state.
-> >
-> > Setting state_saved generally informs pci_pm_suspend_noirq() that the
-> > device has already been handled and it doesn't need to do anything to
-> > it.
-> >
-> > But you are right that PTM should be disabled on downstream devices as
-> > well as on the ports that those devices are connected to and it can be
-> > done even if the given device has already been handled, so the
-> > state_saved value is technically irrelevant.
-> >
-> > That's why I suggested to check if the power state is between D0 and
-> > D3cold (exclusive) and only disable PTM if that is the case.  It is
-> > pointless to disable PTM for devices in D3cold and it may be harmful
-> > for devices that are left in D0.
->
-> "... it may be harmful for devices that are left in D0" -- I want to
-> understand this better.  It sounds like nvme_suspend() leaves the
-> device in some device-specific low-power flavor of D0, and subsequent
-> config accesses take it out of that low-power situation?
+On 5/17/22 02:37, Clément Léger wrote:
+> Le Mon, 16 May 2022 23:11:03 -0400,
+> Frank Rowand <frowand.list@gmail.com> a écrit :
+> 
+>> On 5/3/22 08:45, Rob Herring wrote:
+>>> On Wed, Apr 27, 2022 at 11:45:00AM +0200, Clément Léger wrote:  
+>>>> When enabling CONFIG_OF on a platform where of_root is not populated by
+>>>> firmware, we end up without a root node. In order to apply overlays and
+>>>> create subnodes of the root node, we need one. This commit creates an
+>>>> empty root node if not present.  
+>>>
+>>> The existing unittest essentially does the same thing for running the 
+>>> tests on non-DT systems. It should be modified to use this support 
+>>> instead. Maybe that's just removing the unittest code that set of_root.
+>>>
+>>> I expect Frank will have some comments.  
+>>
+>> My preference would be for unflatten_and_copy_device_tree() to
+>> use a compiled in FDT that only contains a root node, in the
+>> case that no valid device tree is found (in other words,
+>> "if (!initial_boot_params)".
+> 
+> Ok, so basically, instead of creating the root node manually, you
+> expect a device-tree which contains the following to be builtin the
+> kernel and unflattened if needed:
+> 
+> / {
+> 
+> };
 
-That's my understanding of it.
+Yes.  If you agree with this I can create a patch to implement it.  I think
+it is useful even stand alone from the rest of the series.
 
-> If that's the case, it sounds a little brittle.  I don't think it's
-> obvious that "pci_dev->state_saved was set by the driver" means "no
-> config accesses allowed in pci_pm_suspend_noirq()."
+> 
+> Maybe "chosen" and "aliases" nodes should also be provided as empty
+> nodes since the unittest are creating them anyway and the core DT code
+> also uses them.
 
-Well, yes and no.  The device may be in D3cold then, so
-pci_pm_suspend_noirq() should at least check that before accessing its
-config space.
+No. Unittest does not create both of them (I'm pretty sure, but I'm not
+going to double check).  If I recall correctly, unittest adds a property
+in one of those two nodes, and thus implicitly creates the node if not
+already present.  Unittest does populate internal pointers to those two
+nodes if the nodes are present (otherwise the pointers will have the
+value of null).  There is no need for the nodes to be present if empty.
 
-> And pci_pm_suspend_noirq() calls quirks via pci_fixup_device(), which are
-> very likely to do config accesses.
->
-> Maybe PTM needs to be disabled earlier, e.g., in pci_pm_suspend()?  I
-> don't think PTM uses any interrupts, so there's probably no reason
-> interrupts need to be disabled before disabling PTM.
+-Frank
 
-That certainly is worth investigation.  For one, I don't see any
-obvious downsides of doing so.
+> 
+> Thanks,
+> 
+> Clément
+> 
+>>
+>> unflatten_and_copy_device_tree() calls unittest_unflatten_overlay_base()
+>> after unflattening the device tree passed into the booting kernel.  This
+>> step is needed for a specific portion of the unittests.
+>>
+>> I'm still looking at the bigger picture of using overlays for the PCIe
+>> card, so more comments will be coming about that bigger picture.
+>>
+>> -Frank
+>>
+> 
+> 
+
