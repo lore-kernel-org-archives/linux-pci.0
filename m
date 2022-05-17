@@ -2,221 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D0F8C433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 10:04:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70502C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 10:07:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343600AbiEQKEt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 May 2022 06:04:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34890 "EHLO
+        id S239621AbiEQKHw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 May 2022 06:07:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343531AbiEQKEE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 06:04:04 -0400
-Received: from NAM02-BN1-obe.outbound.protection.outlook.com (mail-bn1nam07on2051.outbound.protection.outlook.com [40.107.212.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DB5647393;
-        Tue, 17 May 2022 03:03:20 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ms+6GSCAAQsiE+m4zdbckZLOph9vNxNIRETNLEXwUE7fMasDB7QP0uHC00M28JoLy0pr4NKZrtF6YaFhKoaeTn7k55NMkM/bWUELQTLjM6bOvBYtM94+/lBOCCYllTrxjpHcgxMPu2BYAQSHUHJH5KZcpgK/gQja5bj+ppZWDfeKMjuR2c+ZTPsQO45j2XolFmGl+Z0owIUXYDz+Qn6ZZVLx7fYyUFZ2QRmvxXiMsoycCPBvMFMUg7bLw55b8W88k1KqY85ytrrMoGHwOCbqPKuXzAs6c4F+BvW8r4sXuTNd5kM5rzcfUgutlARosB5/7r0ezI3t4gzLvUfxMypRkw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vdME6vPxUISYgZVGmHwkzLnGlWlreSxXUxnkAsPFLI4=;
- b=jpQ754AITyHxNvLaeFjlHRD96lD4ZMLBw6BSgcAVSWBeqd/ZpKFhrgxv8fLIfuuO5iZFw3kI+R18tqTe6Pg04DFz6Daum5frE4+qF0Zynzl3FX6u90NZyNUWwcNEInmluHEI8OmF9YmGRVLNWH4fR/38+GJj9BqwarwlmH1r/4/rbEmJBcGxbS/9ZLM9rvND7IJe4LQKaiDeZJ2Ou2TMsiMfeibgemYnQJO1e/5Do5v80XdSINiOIMb3hoDEQbEfXJv58Dxaio9UMO/M05TfY3u/7z7YeT+XmzaCK0ZAIGSr3AnWzWLPV1v+03D5HEpfaks2Wv4IyUgYIoXej1IGAQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.235) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vdME6vPxUISYgZVGmHwkzLnGlWlreSxXUxnkAsPFLI4=;
- b=QCeq6swzg0A8xVBZl9eWbCmrqV2l2++nP8E191lCyP+GBxpdOBvv9y2vYq3mpcAu0FblCOkjeezd8t4A/HH2I6UvebcqgGVAE+Gm3wxjGYlOU4bwAAARbu521vChpUjkwGwjlFs1SNNyXupMsicAHEL2UZfd3lqWWdTaSlZ9khZ1HSo5vUm+63nQ8J8w17t9HrR/Lrpy5ReaWa1YULqmupUF1lIJEc3EQnd9bLgQOpT/073F4S154i7neQV2w++nmqKzZYKXyPtHZx791OhgOrvvgDQJlymSsCfLpL/Hj7HDqAW4EiB1xUghrgyCz4Wlfd8WFhbS0WXFUBpn2UXf/Q==
-Received: from MW4PR04CA0106.namprd04.prod.outlook.com (2603:10b6:303:83::21)
- by BN7PR12MB2660.namprd12.prod.outlook.com (2603:10b6:408:29::26) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5250.17; Tue, 17 May
- 2022 10:03:18 +0000
-Received: from CO1NAM11FT026.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:83:cafe::8f) by MW4PR04CA0106.outlook.office365.com
- (2603:10b6:303:83::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.13 via Frontend
- Transport; Tue, 17 May 2022 10:03:18 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.235)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.235 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.235; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (12.22.5.235) by
- CO1NAM11FT026.mail.protection.outlook.com (10.13.175.67) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.5250.13 via Frontend Transport; Tue, 17 May 2022 10:03:18 +0000
-Received: from drhqmail201.nvidia.com (10.126.190.180) by
- DRHQMAIL107.nvidia.com (10.27.9.16) with Microsoft SMTP Server (TLS) id
- 15.0.1497.32; Tue, 17 May 2022 10:02:33 +0000
-Received: from drhqmail203.nvidia.com (10.126.190.182) by
- drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Tue, 17 May 2022 03:02:33 -0700
-Received: from nvidia-abhsahu-1.nvidia.com (10.127.8.9) by mail.nvidia.com
- (10.126.190.182) with Microsoft SMTP Server id 15.2.986.22 via Frontend
- Transport; Tue, 17 May 2022 03:02:28 -0700
-From:   Abhishek Sahu <abhsahu@nvidia.com>
-To:     Alex Williamson <alex.williamson@redhat.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Yishai Hadas <yishaih@nvidia.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-CC:     Max Gurtovoy <mgurtovoy@nvidia.com>,
+        with ESMTP id S245760AbiEQKFl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 06:05:41 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B02E949C9F;
+        Tue, 17 May 2022 03:05:11 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id y32so30390182lfa.6;
+        Tue, 17 May 2022 03:05:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=25GtIoitw+ZTlzSdukQ7WOPmbkJJHbA+G1F2JqOUPCg=;
+        b=OD/oBRJQvC09yFulvynVFmg5bIQgbGkZh5k15Ylg2dYQR/LVFqVH5v2UBGviF1S2+R
+         1Gj0BSqWsra1NjlBMun1RetI2YgmIGm5zHF8TnRwNCgU6gPc1WvPPErI6Z/cfo7MOlo5
+         I2hVY0N9fVt9Ui62nZpice02zg83O1TIdgO5+upw1IPyNFH47kZYsLAc2pB09nE2zF0W
+         jnrklqqpBsdK0sqFkFNpCXllL2zUhMzfZ9D9La76wohjWLHSECu/1cI46IbRyBSl26bG
+         LrjhqS6ZC4IBQ+p74Czp5xdFmDS7K5XeBBFzubUbI/TkfZM6MvS/My6TFFIPSYu0N7o6
+         tCuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=25GtIoitw+ZTlzSdukQ7WOPmbkJJHbA+G1F2JqOUPCg=;
+        b=by7k7hXWtmA4zDTa7k9RdYNI7i+WnxJRa6Jt4x61aSa27ImHr8Z4HfNNhqcxhDlFgm
+         bUtvns6d2DVAYsUi3J7gTbx07zBE2kftzMIfZvX9KdaRMSuppUOzMMSLquJzZlsljOYe
+         4qIvkj14OZ5QU5yUDJO5YMXrMlEWwBeZb5vkh3UgAACPX4jN83lU7GwDqrp3Ogj6RcYe
+         vVzKFmAZAFby4J+aFTd0FnQNJwfYCq1mOxneSnUV6VKmKyvyUIrbvj9JR/+g0e28tMdT
+         BeCnaOJH6zqm4kWvZ2EBAq/snBhSBpNrL4hXC/Sv+uxJeP3khxEm34QwOOGPqmmAcRqi
+         V3GA==
+X-Gm-Message-State: AOAM5338ctLcFDoIXI06pC+J143k9deMdDrwx0IFVPE+K1dt1jp8bR7E
+        lgC3I1REggWO/c6Z1Ncmgcc=
+X-Google-Smtp-Source: ABdhPJxLVyTObUX+R4E5Tn6dZ4YNA2w3W0p4AvbybfDxgisgorYGKfA4XMH8NTFJdPuV3IVe2suFiA==
+X-Received: by 2002:a05:6512:3090:b0:473:a636:dbee with SMTP id z16-20020a056512309000b00473a636dbeemr16124368lfd.119.1652781909895;
+        Tue, 17 May 2022 03:05:09 -0700 (PDT)
+Received: from mobilestation ([95.79.189.214])
+        by smtp.gmail.com with ESMTPSA id a3-20020ac25e63000000b0047255d211acsm1541267lfr.219.2022.05.17.03.05.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 May 2022 03:05:09 -0700 (PDT)
+Date:   Tue, 17 May 2022 13:05:07 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Stephen Boyd <sboyd@kernel.org>
+Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Michael Turquette <mturquette@baylibre.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        Abhishek Sahu <abhsahu@nvidia.com>
-Subject: [PATCH v4 0/4] vfio/pci: power management changes
-Date:   Tue, 17 May 2022 15:32:15 +0530
-Message-ID: <20220517100219.15146-1-abhsahu@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-X-NVConfidentiality: public
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        linux-clk@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/4] clk: Baikal-T1 DDR/PCIe resets and some xGMAC
+ fixes
+Message-ID: <20220517100507.2ng3se7bbl2eqbz3@mobilestation>
+References: <20220503205722.24755-1-Sergey.Semin@baikalelectronics.ru>
+ <20220512001156.x6kqyhi3vjjpqch6@mobilestation>
+ <20220512152705.GA2506@lpieralisi>
+ <20220512171150.GA164627@thinkpad>
+ <20220512211431.r23r6daua36lty7d@mobilestation>
+ <20220517074020.56093C34100@smtp.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: cdaf3adc-81bc-4b0f-84ad-08da37ec7794
-X-MS-TrafficTypeDiagnostic: BN7PR12MB2660:EE_
-X-Microsoft-Antispam-PRVS: <BN7PR12MB2660C4C3D37F6612B6B157FECCCE9@BN7PR12MB2660.namprd12.prod.outlook.com>
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: vHNFWs1C7oBZocGs9Y3410CDaBE+Ztu3bdLXeGbGTIIwU88hVD+zE3edc2r3NYWXSLDWTYfELd5SoFxkYFlZXXDsuYwL+NQ/acA8tjoQTHqyDyRgNg+hZYl6BRsdX6RN+OhLKl1GULMTiJhq9Ce2lhtf1tBeaI92q/vKn8mOsjN5eJiUO2mT9n4h8uefI9zxHqyr7klV2aj597wVLTl+4GiJdaWyI6CpmxDIySXLVeaytCjsegymkhTIfLyQ3w2L+aFRBghKhCBS2L5CDX8V3MtS1+G1stMWnDE+2YXhm7tRBgQyTuNvRUyUJLsOyuI0rsL2HviP8pdMkSCVxAlKJ6W5w9EYNql+3Y7NzP6o+/jPfOSoCDcg5KtUgZMI8UMgHXchpK2/qCZsM0zXRk/ypagZ6boS7qd7dF4ZK0qq91XCBjMi2+K0woV598UvEvZWjF2CGcZu+NRu2W80mshfGH04aLzqQ0RPdJ9MitacuDRQzgfgpJQeq3QFt4HpXx0eokZYf9o3OJ4JUQ9RGcmm6jaJfmonDURuFDcSFK1EKLVo/SXNH6NlnwBW8jBV4xWieiw385F9GCTlw+euyKuI3yLUS+VQ8j7ta1WlrUGzSls6C2/FC572qbnW5HN5Xc0UCNI3IzAOf/g+mT6LOFHbMk+d/2PHL+WYVf1pOXjL9G2DjgcjO8Hk+S+ri88TqA+x2t5iNF6haVnn9FYGKu3M2TrIeBs8w6V2YWmsmSvHM8k5/JANQ1QIT60pIhmJ1RxDLKoSZNW9QCFwJxI1KDo9ZJA1TOlBTjz3WiQh7HGeZQfIAwfbaTZvwZlZEv6i8yX8pnam2Z8egnoUnVFA2nWGUg==
-X-Forefront-Antispam-Report: CIP:12.22.5.235;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230001)(4636009)(46966006)(40470700004)(36840700001)(508600001)(4326008)(8676002)(8936002)(70206006)(70586007)(7416002)(5660300002)(7696005)(40460700003)(966005)(86362001)(26005)(2616005)(107886003)(36756003)(336012)(47076005)(426003)(356005)(2906002)(6666004)(81166007)(36860700001)(83380400001)(186003)(1076003)(82310400005)(110136005)(316002)(54906003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 May 2022 10:03:18.3284
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: cdaf3adc-81bc-4b0f-84ad-08da37ec7794
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.235];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT026.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR12MB2660
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220517074020.56093C34100@smtp.kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently, there is very limited power management support available
-in the upstream vfio-pci driver. If there is no user of vfio-pci device,
-then it will be moved into D3Hot state. Similarly, if we enable the
-runtime power management for vfio-pci device in the guest OS, then the
-device is being runtime suspended (for linux guest OS) and the PCI
-device will be put into D3hot state (in function
-vfio_pm_config_write()). If the D3cold state can be used instead of
-D3hot, then it will help in saving maximum power. The D3cold state can't
-be possible with native PCI PM. It requires interaction with platform
-firmware which is system-specific. To go into low power states
-(including D3cold), the runtime PM framework can be used which
-internally interacts with PCI and platform firmware and puts the device
-into the lowest possible D-States.
+On Tue, May 17, 2022 at 12:40:18AM -0700, Stephen Boyd wrote:
+> Quoting Serge Semin (2022-05-12 14:14:31)
+> > On Thu, May 12, 2022 at 10:41:50PM +0530, Manivannan Sadhasivam wrote:
+> > > On Thu, May 12, 2022 at 04:27:05PM +0100, Lorenzo Pieralisi wrote:
+> > > > So in short, this series has to go through the usual clock tree review
+> > > > process.
+> > > > 
+> > 
+> > I do know the normal procedure. But if patches concern different
+> > subsystems but for some reason inter-depended somehow it's ok to merge
+> > them in via a single repo. In my case the platform clock driver has
+> > been updated in a way so to support the reset-controls utilized in the
+> > PCIe driver altered in another patchset. So I didn't want to leave the
+> > kernel not working in the framework of my platform on any git hash
+> > state. That's why I asked to merge the patchsets in via the same repo.
+> > The kernel would be still buildable though.
+> > 
+> 
 
-This patch series registers the vfio-pci driver with runtime
-PM framework and uses the same for moving the physical PCI
-device to go into the low power state for unused idle devices.
-There will be separate patch series that will add the support
-for using runtime PM framework for used idle devices.
+> Is it going to be broken if I merge the clk patches through clk tree?
 
-The current PM support was added with commit 6eb7018705de ("vfio-pci:
-Move idle devices to D3hot power state") where the following point was
-mentioned regarding D3cold state.
+No. It won't be broken.
 
- "It's tempting to try to use D3cold, but we have no reason to inhibit
-  hotplug of idle devices and we might get into a loop of having the
-  device disappear before we have a chance to try to use it."
+> Has it ever worked?
 
-With the runtime PM, if the user want to prevent going into D3cold then
-/sys/bus/pci/devices/.../d3cold_allowed can be set to 0 for the
-devices where the above functionality is required instead of
-disallowing the D3cold state for all the cases.
+It has and is working well except some minor fixes provided in this
+petchset:
+[PATCH v3 1/4] clk: baikal-t1: Fix invalid xGMAC PTP clock divider
+[PATCH v3 2/4] clk: baikal-t1: Define shared xGMAC ref/ptp clocks parent
 
-The BAR access needs to be disabled if device is in D3hot state.
-Also, there should not be any config access if device is in D3cold
-state. For SR-IOV, the PF power state should be higher than VF's power
-state.
+> Does the kernel still boot, just PCIe fails if the
+> patches are applied?
 
-* Changes in v4
+Yes, the kernel will be bootable. There won't be any problem if the patches
+in this series are applied because it is self-consistent. As I
+said in the cover letter there is an implicit dependency of another series
+"[PATCH v2 00/17] PCI: dwc: Add dma-ranges/YAML-schema/Baikal-T1 support"
+(https://lore.kernel.org/linux-pci/20220503214638.1895-1-Sergey.Semin@baikalelectronics.ru/T/#me3c5c248adad9760702b545bd4bacd89d5f8a2bd)
+from this one. In particular the functionality implemented in the
+patch
+"[PATCH v2 17/17] PCI: dwc: Add Baikal-T1 PCIe controller support"
+(https://lore.kernel.org/linux-pci/20220503214638.1895-1-Sergey.Semin@baikalelectronics.ru/T/#m219e11c38c4ab8db0c2520c4050366d641598600)
+depends on the patches 3 and 4 of this patchset. But the
+dependency is implicit hidden under the DT clock/reset bindings layer.
+The Baikal-T1 PCIe platform driver will just fail to probe the host
+controller device if this series isn't applied. So the clock/reset
+patchset can be freely merged in via the clk tree especially seeing
+the PCIe Host/EP subsystem maintainer is going to be AFK from
+Wednesday and my series will sadly but likely hang up in limbo for a
+while.
 
-- Rebased over https://github.com/awilliam/linux-vfio/tree/next.
-- Split the patch series into 2 parts. This part contains the patches
-  for using runtime PM for unused idle device.
-- Used the 'pdev->current_state' for checking if the device in D3 state.
-- Adds the check in __vfio_pci_memory_enabled() function itself instead
-  of adding power state check at each caller.
-- Make vfio_pci_lock_and_set_power_state() global since it is needed
-  in different files.
-- Used vfio_pci_lock_and_set_power_state() instead of
-  vfio_pci_set_power_state() before pci_enable_sriov().
-- Inside vfio_pci_core_sriov_configure(), handled both the cases
-  (the device is in low power state with and without user).
-- Used list_for_each_entry_continue_reverse() in
-  vfio_pci_dev_set_pm_runtime_get().
-
-* Changes in v3
-  (https://lore.kernel.org/lkml/20220425092615.10133-1-abhsahu@nvidia.com)
-
-- Rebased patches on v5.18-rc3.
-- Marked this series as PATCH instead of RFC.
-- Addressed the review comments given in v2.
-- Removed the limitation to keep device in D0 state if there is any
-  access from host side. This is specific to NVIDIA use case and
-  will be handled separately.
-- Used the existing DEVICE_FEATURE IOCTL itself instead of adding new
-  IOCTL for power management.
-- Removed all custom code related with power management in runtime
-  suspend/resume callbacks and IOCTL handling. Now, the callbacks
-  contain code related with INTx handling and few other stuffs and
-  all the PCI state and platform PM handling will be done by PCI core
-  functions itself.
-- Add the support of wake-up in main vfio layer itself since now we have
-  more vfio/pci based drivers.
-- Instead of assigning the 'struct dev_pm_ops' in individual parent
-  driver, now the vfio_pci_core tself assigns the 'struct dev_pm_ops'. 
-- Added handling of power management around SR-IOV handling.
-- Moved the setting of drvdata in a separate patch.
-- Masked INTx before during runtime suspended state.
-- Changed the order of patches so that Fix related things are at beginning
-  of this patch series.
-- Removed storing the power state locally and used one new boolean to
-  track the d3 (D3cold and D3hot) power state 
-- Removed check for IO access in D3 power state.
-- Used another helper function vfio_lock_and_set_power_state() instead
-  of touching vfio_pci_set_power_state().
-- Considered the fixes made in
-  https://lore.kernel.org/lkml/20220217122107.22434-1-abhsahu@nvidia.com
-  and updated the patches accordingly.
-
-* Changes in v2
-  (https://lore.kernel.org/lkml/20220124181726.19174-1-abhsahu@nvidia.com)
-
-- Rebased patches on v5.17-rc1.
-- Included the patch to handle BAR access in D3cold.
-- Included the patch to fix memory leak.
-- Made a separate IOCTL that can be used to change the power state from
-  D3hot to D3cold and D3cold to D0.
-- Addressed the review comments given in v1.
-
-* v1
-  https://lore.kernel.org/lkml/20211115133640.2231-1-abhsahu@nvidia.com/
-
-Abhishek Sahu (4):
-  vfio/pci: Invalidate mmaps and block the access in D3hot power state
-  vfio/pci: Change the PF power state to D0 before enabling VFs
-  vfio/pci: Virtualize PME related registers bits and initialize to zero
-  vfio/pci: Move the unused device into low power state with runtime PM
-
- drivers/vfio/pci/vfio_pci_config.c |  40 +++++-
- drivers/vfio/pci/vfio_pci_core.c   | 195 +++++++++++++++++++++--------
- include/linux/vfio_pci_core.h      |   2 +
- 3 files changed, 181 insertions(+), 56 deletions(-)
-
--- 
-2.17.1
+-Sergey
 
