@@ -2,129 +2,119 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C14A6C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 12:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F4CFC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 12:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240475AbiEQMsW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 May 2022 08:48:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46812 "EHLO
+        id S1346434AbiEQMvs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 May 2022 08:51:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243529AbiEQMsR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 08:48:17 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F7F13F333;
-        Tue, 17 May 2022 05:48:16 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4L2bV55dh0zgYBb;
-        Tue, 17 May 2022 20:46:53 +0800 (CST)
-Received: from [10.67.102.169] (10.67.102.169) by
- canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 17 May 2022 20:48:14 +0800
-CC:     <linux-kernel@vger.kernel.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [RESEND PATCH v5] PCI: Make sure the bus bridge powered on when
- scanning bus
-To:     <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-References: <20220517124319.47125-1-yangyicong@hisilicon.com>
-From:   Yicong Yang <yangyicong@huawei.com>
-Message-ID: <eb120037-d22b-15ca-1bb0-8bfe728a6055@huawei.com>
-Date:   Tue, 17 May 2022 20:48:13 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.5.1
+        with ESMTP id S1346419AbiEQMvr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 08:51:47 -0400
+Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E7C7541310;
+        Tue, 17 May 2022 05:51:40 -0700 (PDT)
+Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id B71EEBD5;
+        Tue, 17 May 2022 15:52:36 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru B71EEBD5
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baikalelectronics.ru; s=mail; t=1652791956;
+        bh=X91Eb7i1pO+lRymwUnCcZj2+zZX4JThyCF/DCQW4gW0=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=IX4B2HB3Ib6XpiNwfQ+1Q62K21PUWcQTzYU2yNSOGc3NCVj4B8iDwm8vIVlMaa0Zc
+         5TY/jGrB/Lre6WS9SfRSsNOCBu/1VU393CeatwAbk2CKEGJxB63p5t1Fljb5c5ni+A
+         HyzNMR6E7KEhFQwLnTfC6x7oqHDluPlEnjn1ONb8=
+Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 17 May 2022 15:51:39 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Frank Li <Frank.Li@nxp.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3 04/13] PCI: dwc: Disable outbound windows for controllers with iATU
+Date:   Tue, 17 May 2022 15:50:49 +0300
+Message-ID: <20220517125058.18488-5-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220517125058.18488-1-Sergey.Semin@baikalelectronics.ru>
+References: <20220517125058.18488-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-In-Reply-To: <20220517124319.47125-1-yangyicong@hisilicon.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.67.102.169]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- canpemm500009.china.huawei.com (7.192.105.203)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2022/5/17 20:43, Yicong Yang wrote:
-> When the bus bridge is runtime suspended, we'll fail to rescan
-> the devices through sysfs as we cannot access the configuration
-> space correctly when the bridge is in D3hot.
-> It can be reproduced like:
-> 
-> $ echo 1 > /sys/bus/pci/devices/0000:80:00.0/0000:81:00.1/remove
-> $ echo 1 > /sys/bus/pci/devices/0000:80:00.0/pci_bus/0000:81/rescan
-> 
-> 0000:80:00.0 is a Root Port and it is runtime-suspended, so
-> 0000:81:00.1 is unreachable after a rescan.
-> 
-> Power up the bridge when scanning the child bus and allow it to
-> suspend again by adding pm_runtime_get_sync()/pm_runtime_put()
-> in pci_scan_child_bus_extend().
-> 
-> Cc: Rafael J. Wysocki <rafael@kernel.org>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
+In accordance with the dw_pcie_setup_rc() method semantics and judging by
+what the comment added in commit dd193929d91e ("PCI: designware: Explain
+why we don't program ATU for some platforms") states there are DWC
+PCIe-available platforms like Keystone (pci-keystone.c) or Amazon's
+Annapurna Labs (pcie-al.c) which don't have the DW PCIe internal ATU
+enabled and use it's own address translation approach implemented. In
+these cases at the very least there is no point in touching the DW PCIe
+iATU CSRs. Moreover depending on the vendor-specific address translation
+implementation it might be even erroneous. So let's move the iATU windows
+disabling procedure to being under the corresponding conditional statement
+clause thus performing that procedure only if the iATU is expected to be
+available on the platform.
 
-Attach the change log here. Sorry for my forgetness..
+Fixes: 458ad06c4cdd ("PCI: dwc: Ensure all outbound ATU windows are reset")
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-Change since v4:
-- rephrase the commit suggested by Rafael
-Link: https://lore.kernel.org/lkml/20220422080404.27724-1-yangyicong@hisilicon.com/
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index a250869334a5..4e5c89c19f78 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -572,7 +572,6 @@ static struct pci_ops dw_pcie_ops = {
+ 
+ void dw_pcie_setup_rc(struct pcie_port *pp)
+ {
+-	int i;
+ 	u32 val, ctrl, num_ctrls;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 
+@@ -623,19 +622,22 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+ 	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
+ 
+-	/* Ensure all outbound windows are disabled so there are multiple matches */
+-	for (i = 0; i < pci->num_ob_windows; i++)
+-		dw_pcie_disable_atu(pci, i, DW_PCIE_REGION_OUTBOUND);
+-
+ 	/*
+ 	 * If the platform provides its own child bus config accesses, it means
+ 	 * the platform uses its own address translation component rather than
+ 	 * ATU, so we should not program the ATU here.
+ 	 */
+ 	if (pp->bridge->child_ops == &dw_child_pcie_ops) {
+-		int atu_idx = 0;
++		int i, atu_idx = 0;
+ 		struct resource_entry *entry;
+ 
++		/*
++		 * Ensure all outbound windows are disabled so there are
++		 * multiple matches
++		 */
++		for (i = 0; i < pci->num_ob_windows; i++)
++			dw_pcie_disable_atu(pci, i, DW_PCIE_REGION_OUTBOUND);
++
+ 		/* Get last memory resource entry */
+ 		resource_list_for_each_entry(entry, &pp->bridge->windows) {
+ 			if (resource_type(entry->res) != IORESOURCE_MEM)
+-- 
+2.35.1
 
-Change since v3:
-- retain the pm_runtime_*() calls in pci_scan_bridge_extend() as Rafael points
-  out that it's necessary when the brigde is in D3cold
-Link: https://lore.kernel.org/linux-pci/20220414123736.34150-1-yangyicong@hisilicon.com/
-
-Change since v2:
-- just rebase it on v5.18-rc2
-Link: https://lore.kernel.org/linux-pci/1601029386-4928-1-git-send-email-yangyicong@hisilicon.com/
-
-Change since v1:
-- use an intermediate variable *bridge as suggested
-- remove the pm_runtime_*() calls in pci_scan_bridge_extend()
-Link: https://lore.kernel.org/linux-pci/1596022223-4765-1-git-send-email-yangyicong@hisilicon.com/
-
->  drivers/pci/probe.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 17a969942d37..b108e72b6586 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2859,11 +2859,20 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
->  	unsigned int used_buses, normal_bridges = 0, hotplug_bridges = 0;
->  	unsigned int start = bus->busn_res.start;
->  	unsigned int devfn, fn, cmax, max = start;
-> +	struct pci_dev *bridge = bus->self;
->  	struct pci_dev *dev;
->  	int nr_devs;
->  
->  	dev_dbg(&bus->dev, "scanning bus\n");
->  
-> +	/*
-> +	 * Make sure the bus bridge is powered on, otherwise we may not be
-> +	 * able to scan the devices as we may fail to access the configuration
-> +	 * space of subordinates.
-> +	 */
-> +	if (bridge)
-> +		pm_runtime_get_sync(&bridge->dev);
-> +
->  	/* Go find them, Rover! */
->  	for (devfn = 0; devfn < 256; devfn += 8) {
->  		nr_devs = pci_scan_slot(bus, devfn);
-> @@ -2976,6 +2985,9 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
->  		}
->  	}
->  
-> +	if (bridge)
-> +		pm_runtime_put(&bridge->dev);
-> +
->  	/*
->  	 * We've scanned the bus and so we know all about what's on
->  	 * the other side of any bridges that may be on this bus plus
-> 
