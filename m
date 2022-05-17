@@ -2,40 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 977E6C433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 12:51:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ABD2C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 12:51:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346484AbiEQMvy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 May 2022 08:51:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52384 "EHLO
+        id S1346495AbiEQMvz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 May 2022 08:51:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346461AbiEQMvw (ORCPT
+        with ESMTP id S1346464AbiEQMvw (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 08:51:52 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1396540A12;
-        Tue, 17 May 2022 05:51:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9D7DD3A72C;
+        Tue, 17 May 2022 05:51:45 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 52046BDB;
-        Tue, 17 May 2022 15:52:43 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 52046BDB
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 3FF74BD9;
+        Tue, 17 May 2022 15:52:41 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 3FF74BD9
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1652791964;
-        bh=GDpe6sxaX1HL2b20b4PQZVdtCQsuX7sYvlNk4XwXwtk=;
+        d=baikalelectronics.ru; s=mail; t=1652791961;
+        bh=MBFfEYWBn9NnwWI6fHyW8yfe6AKk/ZfnrvWbq2mNjbE=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=cOlvGk5EYSx2G73TGf45crGao3YfwKPVm8JaBDw9ciAaVXD7HnIZhA+aQVN9m7b9z
-         qv3u3mTb1CJD+7HGzUq+sK1VTtxb7asNijSiRy/Ve+6fPbibhfunGx8nFq9Dg5POVM
-         YNaNkVlw6SknMAwL+7qlSoFp0PNf1fkAg29q/DMs=
+        b=CajE4rL1xH31fJIgayx2K2Ar1MzU/xvx0llhqeNCl4mkZSgesvo7RGwC5Q5/hdfHE
+         1icQBuBUlRqRiBB2HTNAY5azXxl3p3nv4wFmZiEtxbAio4nL5oOyDfqMl7qOauRWJ/
+         j0ZFIVTujoyunj6JXFC1gbt8Yxn3H2VUi0sR9qTs=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 17 May 2022 15:51:46 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 17 May 2022 15:51:44 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Niklas Cassel <niklas.cassel@axis.com>
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
@@ -43,9 +41,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 10/13] PCI: dwc: Deallocate EPC memory on EP init error
-Date:   Tue, 17 May 2022 15:50:55 +0300
-Message-ID: <20220517125058.18488-11-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v3 08/13] PCI: dwc: Discard IP-core version checking on unrolled iATU detection
+Date:   Tue, 17 May 2022 15:50:53 +0300
+Message-ID: <20220517125058.18488-9-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220517125058.18488-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220517125058.18488-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,61 +54,64 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If the dw_pcie_ep_init() method fails to perform any action after the EPC
-memory is initialized and the MSI memory region is allocated, the later
-parts won't be undone thus causing the memory leak.  Let's fix that by
-introducing the cleanup-on-error path in the dw_pcie_ep_init() method,
-which will be taken should any consequent erroneous situation happens.
+It's pretty much pointless. Even though unrolled version of the internal
+ATU has been indeed available since DWC PCIe v4.80a IP-core, there is no
+guarantee it was enabled during the IP-core configuration (Synopsys
+suggests to contact the Solvnet support for guidance of how to do that for
+the newer IP-cores). So the only reliable way to find out the unrolled
+iATU feature availability is indeed to check the iATU viewport register
+content. In accordance with the reference manual [1] if the register
+doesn't exist (unrolled iATU is enabled) it's content is fixed with
+0xff-s, otherwise it will contain some zeros. So we can freely drop the
+IP-core version checking in this matter then and use the
+dw_pcie_iatu_unroll_enabled() method only to detect whether iATU/eDMA
+space is unrolled.
 
-Fixes: 2fd0c9d966cc ("PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init")
+[1] DesignWare Cores, PCI Express Controller, Register Desciptions,
+v.4.90a, December 2016, p.855
+
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
 ---
+ drivers/pci/controller/dwc/pcie-designware.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Changelog v2:
-- This is a new patch create as a result of the discussion in:
-  Link: https://lore.kernel.org/linux-pci/20220324014836.19149-26-Sergey.Semin@baikalelectronics.ru
----
- .../pci/controller/dwc/pcie-designware-ep.c    | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 7c9315fffe24..7ad349c32082 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -780,8 +780,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
- 					     epc->mem->window.page_size);
- 	if (!ep->msi_mem) {
-+		ret = -ENOMEM;
- 		dev_err(dev, "Failed to reserve memory for MSI/MSI-X\n");
--		return -ENOMEM;
-+		goto err_exit_epc_mem;
- 	}
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 62382eda5533..f4d9184258c4 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -600,15 +600,15 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
  
- 	if (ep->ops->get_features) {
-@@ -790,6 +791,19 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 			return 0;
- 	}
- 
--	return dw_pcie_ep_init_complete(ep);
-+	ret = dw_pcie_ep_init_complete(ep);
-+	if (ret)
-+		goto err_free_epc_mem;
-+
-+	return 0;
-+
-+err_free_epc_mem:
-+	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
-+			      epc->mem->window.page_size);
-+
-+err_exit_epc_mem:
-+	pci_epc_mem_exit(epc);
-+
-+	return ret;
  }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_init);
+ 
+-static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
++static bool dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+ {
+ 	u32 val;
+ 
+ 	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
+ 	if (val == 0xffffffff)
+-		return 1;
++		return true;
+ 
+-	return 0;
++	return false;
+ }
+ 
+ static void dw_pcie_iatu_detect_regions_unroll(struct dw_pcie *pci)
+@@ -680,9 +680,8 @@ void dw_pcie_iatu_detect(struct dw_pcie *pci)
+ 	struct device *dev = pci->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 
+-	if (pci->version >= 0x480A || (!pci->version &&
+-				       dw_pcie_iatu_unroll_enabled(pci))) {
+-		pci->iatu_unroll_enabled = true;
++	pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
++	if (pci->iatu_unroll_enabled) {
+ 		if (!pci->atu_base) {
+ 			struct resource *res =
+ 				platform_get_resource_byname(pdev, IORESOURCE_MEM, "atu");
 -- 
 2.35.1
 
