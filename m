@@ -2,39 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A4CC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D0FC4321E
 	for <linux-pci@archiver.kernel.org>; Tue, 17 May 2022 12:51:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346459AbiEQMvv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 May 2022 08:51:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51992 "EHLO
+        id S1343506AbiEQMvw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 May 2022 08:51:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346417AbiEQMvr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 08:51:47 -0400
+        with ESMTP id S1346440AbiEQMvv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 May 2022 08:51:51 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 48CF23F889;
-        Tue, 17 May 2022 05:51:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9D6682C662;
+        Tue, 17 May 2022 05:51:45 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id B184EBD4;
-        Tue, 17 May 2022 15:52:35 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru B184EBD4
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id E878BBD7;
+        Tue, 17 May 2022 15:52:38 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru E878BBD7
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1652791955;
-        bh=HvFRjLfRZVpB1a2dJ+Y3tW+LbZlq0RtxiS2ht743LVQ=;
+        d=baikalelectronics.ru; s=mail; t=1652791958;
+        bh=tpvLBnqOsvw+Y9Lu79MzBU/091077M9EeMSrXis1gw0=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=GZINoVA2cAE0s74DZOslmcgg+RVjJqa0Yu+dH52V7n5FiZ88SUN2JtUEUhAD00Oht
-         b2KQdUEQqH/1hTaA282qN7kIWiZ/BAPSY1vPa46TKMVBpkrxHKgae52gikT9uVwfFt
-         yPRxGka2qPU2fq31JQQvnVVJKNZEASyEeDWkHEPo=
+        b=lagX7xf7vcSXEeBdOj+Fn2hOfqi583SbYNCVU435nGXvIkRa9WC1bxqddqloOlxZx
+         cTYnOiCdxbg6GvXK2CTx8cA+T9SW24NMnuVYTiMq+ZaFAK3o9TgdWip2JBdXyTYu8p
+         u7FrdpIxpndpbd9bAlPXIiBS+7TUd6pwywrgbbIA=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 17 May 2022 15:51:38 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 17 May 2022 15:51:41 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
@@ -42,9 +41,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 03/13] PCI: dwc: Add unroll iATU space support to the regions disable method
-Date:   Tue, 17 May 2022 15:50:48 +0300
-Message-ID: <20220517125058.18488-4-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v3 06/13] PCI: dwc: Add braces to the multi-line if-else statements
+Date:   Tue, 17 May 2022 15:50:51 +0300
+Message-ID: <20220517125058.18488-7-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220517125058.18488-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220517125058.18488-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -55,71 +54,52 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The dw_pcie_disable_atu() method was introduced in the commit f8aed6ec624f
-("PCI: dwc: designware: Add EP mode support"). Since then it hasn't
-changed at all.  For all that time the method has supported the viewport
-version of the iATU CSRs only. Basically it works for the DW PCIe IP-cores
-older than v4.80a since the newer controllers are equipped with the
-unrolled iATU/eDMA space. It means the methods using it like
-pci_epc_ops.clear_bar and pci_epc_ops.unmap_addr callbacks just don't work
-correctly for the DW PCIe controllers with unrolled iATU CSRs. The same
-concerns the dw_pcie_setup_rc() method, which disables the outbound iATU
-entries before re-initializing them.
+In accordance with [1] if there is at least one multi-line if-else
+clause in the statement, then each clause will need to be surrounded by
+the braces. The driver code violates that coding style rule in a few
+places. Let's fix it.
 
-So in order to fix the problems denoted above let's convert the
-dw_pcie_disable_atu() method to disabling the iATU inbound and outbound
-regions in the unrolled iATU CSRs in case the DW PCIe controller has been
-synthesized with the ones support. The former semantics will be remained
-for the controller having iATU mapped over the viewport.
+[1] Documentation/process/coding-style.rst
 
-Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
 ---
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 4 ++--
+ drivers/pci/controller/dwc/pcie-designware.c    | 3 ++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-Changelog v3:
-- Convert region variable type to u32 in order to fix the implicit type
-  conversion peculiarity. (@kbot)
----
- drivers/pci/controller/dwc/pcie-designware.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 0eda8236c125..7c9315fffe24 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -699,9 +699,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 
+ 	if (!pci->dbi_base2) {
+ 		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi2");
+-		if (!res)
++		if (!res) {
+ 			pci->dbi_base2 = pci->dbi_base + SZ_4K;
+-		else {
++		} else {
+ 			pci->dbi_base2 = devm_pci_remap_cfg_resource(dev, res);
+ 			if (IS_ERR(pci->dbi_base2))
+ 				return PTR_ERR(pci->dbi_base2);
 diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index d92c8a25094f..84fef21efdbc 100644
+index 347251bf87d0..ef995e006cf0 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.c
 +++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -491,7 +491,7 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
- void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
- 			 enum dw_pcie_region_type type)
- {
--	int region;
-+	u32 region;
+@@ -699,8 +699,9 @@ void dw_pcie_iatu_detect(struct dw_pcie *pci)
+ 			pci->atu_size = SZ_4K;
  
- 	switch (type) {
- 	case DW_PCIE_REGION_INBOUND:
-@@ -504,8 +504,18 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
- 		return;
- 	}
- 
--	dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, region | index);
--	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, ~(u32)PCIE_ATU_ENABLE);
-+	if (pci->iatu_unroll_enabled) {
-+		if (region == PCIE_ATU_REGION_INBOUND) {
-+			dw_pcie_writel_ib_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL2,
-+						 ~(u32)PCIE_ATU_ENABLE);
-+		} else {
-+			dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL2,
-+						 ~(u32)PCIE_ATU_ENABLE);
-+		}
+ 		dw_pcie_iatu_detect_regions_unroll(pci);
+-	} else
 +	} else {
-+		dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, region | index);
-+		dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, ~(u32)PCIE_ATU_ENABLE);
+ 		dw_pcie_iatu_detect_regions(pci);
 +	}
- }
  
- int dw_pcie_wait_for_link(struct dw_pcie *pci)
+ 	dev_info(pci->dev, "iATU unroll: %s\n", pci->iatu_unroll_enabled ?
+ 		"enabled" : "disabled");
 -- 
 2.35.1
 
