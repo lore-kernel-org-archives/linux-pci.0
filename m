@@ -2,67 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AB83C433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 18 May 2022 09:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED3B6C433F5
+	for <linux-pci@archiver.kernel.org>; Wed, 18 May 2022 09:53:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234641AbiERJsG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 May 2022 05:48:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42890 "EHLO
+        id S234716AbiERJxF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 May 2022 05:53:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59166 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233911AbiERJsF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 May 2022 05:48:05 -0400
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 300C920BD7;
-        Wed, 18 May 2022 02:48:00 -0700 (PDT)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C348A1A0D8B;
-        Wed, 18 May 2022 11:47:58 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 7D2DA1A0D87;
-        Wed, 18 May 2022 11:47:58 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id D76A5180031E;
-        Wed, 18 May 2022 17:47:56 +0800 (+08)
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     l.stach@pengutronix.de, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, festevam@gmail.com
-Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kernel@pengutronix.de, linux-imx@nxp.com
-Subject: [RFC 2/2] PCI: imx6: Support more than Gen2 speed link mode
-Date:   Wed, 18 May 2022 17:35:28 +0800
-Message-Id: <1652866528-13220-2-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1652866528-13220-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1652866528-13220-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        with ESMTP id S234775AbiERJxC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 May 2022 05:53:02 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9674155235;
+        Wed, 18 May 2022 02:52:59 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 37D85B81E9F;
+        Wed, 18 May 2022 09:52:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E835DC385A5;
+        Wed, 18 May 2022 09:52:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1652867577;
+        bh=Et2W7y8NJvxpwiLd4zH+9CgPsuoRcz9snyrXRRHp7bI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=dlmmF04YeJ1HO0mj0AtLRH2ln5V/AX/Ys7yMtbWIvMA2ES66u7yrH8lwnE0mX1Yhm
+         poKjsn1NqPsiUbChrhjy390RqCWXme4IsL6xBnoBDzOvssfWZ3pt5NERxy4HcAEoXE
+         to4GhaBXNR2R+9Yj1Zcxj4r/tGLOw/ClNd3iMJ25AiEXUxkuti/2byVeZ+r8Fcwf2p
+         oXGfctOhCNE/t7j2VDsRF0kDocdgly7nz9O0496arjawq7usvZvkYMHd3DnjFjd/MS
+         eMzejn/QwTYbRwUDS4QkHtN22WuA7UqXPEvSVtVUEuBVczabd+J6QzFOCM/8F4Zbdc
+         XU2qM4Ex0g1Wg==
+Received: from johan by xi.lan with local (Exim 4.94.2)
+        (envelope-from <johan@kernel.org>)
+        id 1nrGMT-0003Y7-3z; Wed, 18 May 2022 11:52:57 +0200
+Date:   Wed, 18 May 2022 11:52:57 +0200
+From:   Johan Hovold <johan@kernel.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v10 08/10] PCI: qcom: Handle MSIs routed to multiple GIC
+ interrupts
+Message-ID: <YoTB+Rr726BjxdHx@hovoldconsulting.com>
+References: <20220513172622.2968887-1-dmitry.baryshkov@linaro.org>
+ <20220513172622.2968887-9-dmitry.baryshkov@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220513172622.2968887-9-dmitry.baryshkov@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Support more than Gen2 speed link mode, since i.MX8MP PCIe supports up
-to Gen3 link speed.
+On Fri, May 13, 2022 at 08:26:20PM +0300, Dmitry Baryshkov wrote:
+> On some of Qualcomm platforms each group of 32 MSI vectors is routed to the
+> separate GIC interrupt. Thus, to receive higher MSI vectors properly,
+> declare that the host should use split MSI IRQ handling on these
+> platforms.
+> 
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 2e5464edc36e..f79752d1d680 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -194,6 +194,7 @@ struct qcom_pcie_ops {
+>  
+>  struct qcom_pcie_cfg {
+>  	const struct qcom_pcie_ops *ops;
+> +	unsigned int has_split_msi_irq:1;
+>  	unsigned int pipe_clk_need_muxing:1;
+>  	unsigned int has_tbu_clk:1;
+>  	unsigned int has_ddrss_sf_tbu_clk:1;
+> @@ -1502,6 +1503,7 @@ static const struct qcom_pcie_cfg ipq8064_cfg = {
+>  
+>  static const struct qcom_pcie_cfg msm8996_cfg = {
+>  	.ops = &ops_2_3_2,
+> +	.has_split_msi_irq = true,
+>  };
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> @@ -1592,6 +1599,11 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  
+>  	pcie->cfg = pcie_cfg;
+>  
+> +	if (pcie->cfg->has_split_msi_irq) {
+> +		pp->num_vectors = MAX_MSI_IRQS;
+> +		pp->has_split_msi_irq = true;
+> +	}
+> +
+>  	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
+>  	if (IS_ERR(pcie->reset)) {
+>  		ret = PTR_ERR(pcie->reset);
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 30641d2dda14..37012f9a33a0 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -809,8 +809,8 @@ static int imx6_pcie_start_link(struct dw_pcie *pci)
- 
- 	dw_pcie_wait_for_link(pci);
- 
--	if (pci->link_gen == 2) {
--		/* Allow Gen2 mode after the link is up. */
-+	if (pci->link_gen > 1) {
-+		/* Allow faster modes after the link is up. */
- 		dw_pcie_dbi_ro_wr_en(pci);
- 		tmp = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
- 		tmp &= ~PCI_EXP_LNKCAP_SLS;
--- 
-2.25.1
+So if you fix dwc core to always infer num_vectors when passed in as 0
+as I just suggested, then this patch isn't needed.
 
+It also avoids having to pass in MAX_MSI_IRQS (or complicate the qcom
+driver) for sc8280xp which only uses four "msi" GIC interrupts and hence
+only MAX_MSI_IRQS/2 vectors.
+
+Johan
