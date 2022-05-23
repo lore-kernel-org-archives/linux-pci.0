@@ -2,191 +2,158 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC400C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 23 May 2022 07:53:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3516C433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 23 May 2022 08:41:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231376AbiEWHxp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 May 2022 03:53:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52082 "EHLO
+        id S231858AbiEWIl0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 May 2022 04:41:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231550AbiEWHxo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2022 03:53:44 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2782B20F6B;
-        Mon, 23 May 2022 00:53:41 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CD551B80F10;
-        Mon, 23 May 2022 07:53:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33439C385AA;
-        Mon, 23 May 2022 07:53:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653292418;
-        bh=Xq4Me4uoPFHoirID66CAuT9yC8SWOqcALamohE0HdT4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JV0slQaJamIu1d4cBTwR9O0Hq7yJEwGQxcBeH2sFgZSLdizWPn4b6ZAgN5IvHEwUs
-         1+FOzMIwySE5l1ffcmsSPKjXjxwVyZDdyptZwqmyjBHB+zbRHslLsj6gODNDNzPROP
-         ywpekfban2GV1Uwdt5/CBfonyeDdlRSMWPnaADtaUr9JK6TqftKb8H6TxcyO6Pjz8H
-         2M//tY+2mAkn+0LjNmH1s/R598VF4eXipuA6G4PfG6RA4FX+fEi9TNDRypVnd1n1FP
-         Q9AJyZIGMbFSYiMSH2KPs7Ma9TxjprOqOUqvKpI+NbMSQ/8Nat8qsRoEin1Z5vRzOK
-         Kf4gx3+YvkfMg==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1nt2sg-0001gy-Vl; Mon, 23 May 2022 09:53:35 +0200
-Date:   Mon, 23 May 2022 09:53:34 +0200
-From:   Johan Hovold <johan@kernel.org>
-To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v11 3/7] PCI: dwc: Handle MSIs routed to multiple GIC
- interrupts
-Message-ID: <Yos9fkgxAN1jJ4jO@hovoldconsulting.com>
-References: <20220520183114.1356599-1-dmitry.baryshkov@linaro.org>
- <20220520183114.1356599-4-dmitry.baryshkov@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220520183114.1356599-4-dmitry.baryshkov@linaro.org>
+        with ESMTP id S232076AbiEWIlI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2022 04:41:08 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71A786413;
+        Mon, 23 May 2022 01:41:05 -0700 (PDT)
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 24N8LPC5001298;
+        Mon, 23 May 2022 08:40:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : to : cc : date : in-reply-to : references : content-type :
+ mime-version : content-transfer-encoding; s=pp1;
+ bh=pxBN4qd2Ox8ZyLMxExL1i3qx0MaG8nHVRbGAtGIlZ5Q=;
+ b=r9jcFozH9ZYNP6y1NQuLpp1Ol778rYWh9S2ZFyYUC68UqVitrfS+bGGDmfck/lCZOQdb
+ m14/UXjLwN5h9X61xQLmrGRkEKmWLW7+rdwflF/i5OMlHkbC/9J/gDiWDBCk0bEJyvPg
+ MeTdPg8/UNa2TIuAAYn7c440WC3ACoP1TDP/aYjceBdT5KgLzhWGQ/ebEIhLNoMsJbaz
+ CrWaluMXEUyA2YJ0ihX7Vgkh/I3xt88JW1JCGwyr9It98/HpA7onqSyrJOqZsF7u9TkI
+ EtDRNtD/kb1PmBMdMG1YEAEIlf3jLAqyXBI6sY1Oq/4URYhAYKINU+xwAtrK9s8xOn5S +g== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3g7a3ryftf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 23 May 2022 08:40:59 +0000
+Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 24N7vawt028878;
+        Mon, 23 May 2022 08:40:58 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3g7a3ryft1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 23 May 2022 08:40:58 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 24N7fNpZ001898;
+        Mon, 23 May 2022 08:40:57 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma03ams.nl.ibm.com with ESMTP id 3g6qq92fbw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 23 May 2022 08:40:56 +0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 24N8er8B51773894
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 23 May 2022 08:40:53 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B51C85204E;
+        Mon, 23 May 2022 08:40:53 +0000 (GMT)
+Received: from oc-nschnelle.boeblingen.de.ibm.com (unknown [9.155.199.46])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 6B4F55204F;
+        Mon, 23 May 2022 08:40:53 +0000 (GMT)
+Message-ID: <26e53653b06e6045ef94f2c5f9c10e333821f186.camel@linux.ibm.com>
+Subject: Re: [PATCH RESEND v5 1/4] PCI: Clean up pci_scan_slot()
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Jan Kiszka <jan.kiszka@siemens.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Pierre Morel <pmorel@linux.ibm.com>,
+        linux-kernel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org
+Date:   Mon, 23 May 2022 10:40:53 +0200
+In-Reply-To: <20220513140723.GA947754@bhelgaas>
+References: <20220513140723.GA947754@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: oiYVEcXeUU0nn-6MTTh1kgwana7kjaKx
+X-Proofpoint-ORIG-GUID: fQ9j2cjFyKKG-q4izm0OY682iSR6rOu5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.874,Hydra:6.0.486,FMLib:17.11.64.514
+ definitions=2022-05-23_03,2022-05-20_02,2022-02-23_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 adultscore=0 malwarescore=0 spamscore=0 impostorscore=0
+ mlxscore=0 phishscore=0 bulkscore=0 mlxlogscore=946 lowpriorityscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2202240000 definitions=main-2205230045
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, May 20, 2022 at 09:31:10PM +0300, Dmitry Baryshkov wrote:
-> On some of Qualcomm platforms each group of 32 MSI vectors is routed to the
-> separate GIC interrupt. Implement support for such configurations by
-> parsing "msi0" ... "msiN" interrupts and attaching them to the chained
-> handler.
+On Fri, 2022-05-13 at 09:07 -0500, Bjorn Helgaas wrote:
+> On Thu, May 12, 2022 at 04:56:42PM +0200, Niklas Schnelle wrote:
+> > On Thu, 2022-05-05 at 10:38 +0200, Niklas Schnelle wrote:
+> > > While determining the next PCI function is factored out of
+> > > pci_scan_slot() into next_fn() the former still handles the first
+> > > function as a special case. This duplicates the code from the scan loop.
+> > > 
+> > > Furthermore the non ARI branch of next_fn() is generally hard to
+> > > understand and especially the check for multifunction devices is hidden
+> > > in the handling of NULL devices for non-contiguous multifunction. It
+> > > also signals that no further functions need to be scanned by returning
+> > > 0 via wraparound and this is a valid function number.
+> > > 
+> > > Improve upon this by transforming the conditions in next_fn() to be
+> > > easier to understand.
+> > > 
+> > > By changing next_fn() to return -ENODEV instead of 0 when there is no
+> > > next function we can then handle the initial function inside the loop
+> > > and deduplicate the shared handling. This also makes it more explicit
+> > > that only function 0 must exist.
+> > > 
+> > > No functional change is intended.
+> > > 
+> > > Cc: Jan Kiszka <jan.kiszka@siemens.com>
+> > > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> > > ---
+> > 
+> > Friendly ping :-)
 > 
-> Note, that if DT doesn't list an array of MSI interrupts and uses single
-> "msi" IRQ, the driver will limit the amount of supported MSI vectors
-> accordingly (to 32).
+> Thanks and sorry for the delay.  I'm off today for my daughter's
+> wedding reception but will get back to it next week.  Just to expose
+> some of my thought process (and not to request more work from you!)
+> I've been wondering whether b1bd58e448f2 ("PCI: Consolidate
+> "next-function" functions") is really causing us more trouble than
+> it's worth.  In some ways that makes the single next-function harder
+> to read.  But I guess the hypervisor special case is not exactly a
+> "next-function" thing -- it's a "keep scanning even if there's no fn
+> 0" thing.
 > 
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-> ---
->  .../pci/controller/dwc/pcie-designware-host.c | 58 +++++++++++++++++--
->  1 file changed, 54 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index a076abe6611c..381bc24d5715 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -288,6 +288,43 @@ static void dw_pcie_msi_init(struct pcie_port *pp)
->  	dw_pcie_writel_dbi(pci, PCIE_MSI_ADDR_HI, upper_32_bits(msi_target));
->  }
->  
-> +static const char * const split_msi_names[] = {
-> +	"msi0", "msi1", "msi2", "msi3",
-> +	"msi4", "msi5", "msi6", "msi7",
-> +};
-> +
-> +static int dw_pcie_parse_split_msi_irq(struct pcie_port *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct device *dev = pci->dev;
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	int irq;
-> +	u32 ctrl;
-> +
-> +	irq = platform_get_irq_byname_optional(pdev, split_msi_names[0]);
-> +	if (irq == -ENXIO)
-> +		return -ENXIO;
+> Bjorn
 
-You still need to check for other errors and -EPROBE_DEFER here.
+I've thought again about your comment. Personally what I like about
+b1bd58e448f2 ("PCI: Consolidate "next-function" functions") is that it got rid of the next_fn function pointer complication. I agree though that on the other hand it removed a nice separation between the ARI and traditional cases. So I'm thinking maybe we should bring that part back. I think my patch as is makes it easier to see the equivalence to the existing code but then we could add a patch on top and turn it into the below, it's a bit more verbose but very easy to follow.
 
-> +
-> +	pp->msi_irq[0] = irq;
-> +
-> +	/* Parse as many IRQs as described in the DTS. */
+static int next_ari_fn(struct pci_bus *bus, struct pci_dev *dev, int fn)
+{
+…
+}
 
-s/DTS/devicetree/
+static int next_trad_fn(struct pci_bus *bus, struct pci_dev *dev, int fn)
+{
+	if (fn >= 7)
+		return -ENODEV;
 
-> +	for (ctrl = 1; ctrl < MAX_MSI_CTRLS; ctrl++) {
-> +		irq = platform_get_irq_byname_optional(pdev, split_msi_names[ctrl]);
-> +		if (irq == -ENXIO)
-> +			break;
-> +		if (irq < 0)
-> +			return dev_err_probe(dev, irq,
-> +					     "Failed to parse MSI IRQ '%s'\n",
-> +					     split_msi_names[ctrl]);
-> +
-> +		pp->msi_irq[ctrl] = irq;
-> +	}
-> +
-> +	pp->num_vectors = ctrl * MAX_MSI_IRQS_PER_CTRL;
-> +
-> +	return 0;
-> +}
-> +
->  static int dw_pcie_msi_host_init(struct pcie_port *pp)
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> @@ -295,22 +332,34 @@ static int dw_pcie_msi_host_init(struct pcie_port *pp)
->  	struct platform_device *pdev = to_platform_device(dev);
->  	int ret;
->  	u32 ctrl, num_ctrls;
-> +	bool has_split_msi_irq = false;
+	/* only multifunction devices may have more functions */
+	if (dev && !dev->multifunction)
+		return -ENODEV;
 
-This one should go in the follow-on patch that starts using it.
+	return fn + 1;
+}
 
-> -	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-> -	for (ctrl = 0; ctrl < num_ctrls; ctrl++)
-> +	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
->  		pp->irq_mask[ctrl] = ~0;
->  
-> +	if (!pp->msi_irq[0]) {
-> +		ret = dw_pcie_parse_split_msi_irq(pp);
-> +		if (ret < 0 && ret != -ENXIO)
-> +			return ret;
-> +	}
-> +
-> +	if (!pp->num_vectors)
-> +		pp->num_vectors = MSI_DEF_NUM_VECTORS;
+static int next_fn(struct pci_bus *bus, struct pci_dev *dev, int fn)
+{
+	if (pci_ari_enabled(bus)) {
+		return next_ari_fn(bus, dev, fn);
+	}
+	return next_trad_fn(bus, dev, fn);
+}
 
-This works, but now you override num_vectors unconditionally when using
-split msis (and not just when num_vectors is set to zero).
 
-Is it work allowing to use num_vectors as a maximum as in previous
-versions (if only for consistency)?
-
-> +	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
-> +
->  	if (!pp->msi_irq[0]) {
->  		int irq = platform_get_irq_byname_optional(pdev, "msi");
->  
->  		if (irq < 0) {
->  			irq = platform_get_irq(pdev, 0);
->  			if (irq < 0)
-> -				return irq;
-> +				return dev_err_probe(dev, irq, "Failed to parse MSI irq\n");
->  		}
->  		pp->msi_irq[0] = irq;
->  	}
->  
-> +	dev_dbg(dev, "Using %d MSI vectors\n", pp->num_vectors);
-> +
->  	pp->msi_irq_chip = &dw_pci_msi_bottom_irq_chip;
->  
->  	ret = dw_pcie_allocate_domains(pp);
-> @@ -407,7 +456,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  				     of_property_read_bool(np, "msi-parent") ||
->  				     of_property_read_bool(np, "msi-map"));
->  
-> -		if (!pp->num_vectors) {
-> +		/* for the has_msi_ctrl the default assignment is handled inside dw_pcie_msi_host_init() */
-> +		if (!pp->has_msi_ctrl && !pp->num_vectors) {
->  			pp->num_vectors = MSI_DEF_NUM_VECTORS;
->  		} else if (pp->num_vectors > MAX_MSI_IRQS) {
->  			dev_err(dev, "Invalid number of vectors\n");
-
-Johan
