@@ -2,75 +2,60 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EF30C433EF
-	for <linux-pci@archiver.kernel.org>; Mon, 23 May 2022 08:56:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCFEC433F5
+	for <linux-pci@archiver.kernel.org>; Mon, 23 May 2022 08:58:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232132AbiEWI4x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 May 2022 04:56:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50544 "EHLO
+        id S232201AbiEWI6F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 May 2022 04:58:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232081AbiEWI4t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2022 04:56:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6715D11C;
-        Mon, 23 May 2022 01:56:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 371D260F00;
-        Mon, 23 May 2022 08:56:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 918FCC385A9;
-        Mon, 23 May 2022 08:56:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653296204;
-        bh=Q5eUJXYpAGTyVW1k30SbejcbHGQMhf5cXtb9Q2uVNRw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=f3MJbXYCAD3sent/cH8XqNpG3Q9+bKHwE/DKb/wmurC9RyRjIwhRpgOF2GNck5Xot
-         Mfg4QS87qP0Zu6aPJh7ZkuQunIfGDo0OcazVIXtrQji8GrvcV/Rmm4iBckAFEubZiV
-         rEYdTTqpXd888ZuCERhBLcbcqzNMl/QDh78/gYXekEfZ1mfgwefpWEZeqA6nFuNsfj
-         Ddu4Ay0d1ZwZLez4Tt97VVK3LAEVAJ7MJvWDCcvfuS0h7tqkTmUPxmx9ml17EAbHrY
-         vvgyhntvjQlDD4WBFhLyKfe571+tJ4SkV6YODpp35eJyoNPYD5e/m8NfSAPRMeZMHv
-         keIfMzYgrGbfg==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1nt3rl-0000hY-HM; Mon, 23 May 2022 10:56:41 +0200
-Date:   Mon, 23 May 2022 10:56:41 +0200
-From:   Johan Hovold <johan@kernel.org>
-To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Stephen Boyd <swboyd@chromium.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Taniya Das <quic_tdas@quicinc.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Johan Hovold <johan+linaro@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Prasad Malisetty <quic_pmaliset@quicinc.com>
-Subject: Re: [PATCH v7 8/8] PCI: qcom: Drop manual pipe_clk_src handling
-Message-ID: <YotMSa+sRVTrsDXX@hovoldconsulting.com>
-References: <20220521005343.1429642-1-dmitry.baryshkov@linaro.org>
- <20220521005343.1429642-9-dmitry.baryshkov@linaro.org>
+        with ESMTP id S232265AbiEWI6C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2022 04:58:02 -0400
+X-Greylist: delayed 1591 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 23 May 2022 01:58:01 PDT
+Received: from mail.tireplot.pl (mail.tireplot.pl [46.183.184.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6425E3E5DA
+        for <linux-pci@vger.kernel.org>; Mon, 23 May 2022 01:58:01 -0700 (PDT)
+Received: by mail.tireplot.pl (Postfix, from userid 1001)
+        id 902C44A78B; Mon, 23 May 2022 10:06:44 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tireplot.pl; s=mail;
+        t=1653293344; bh=Rfzvu4C+yJ1wyuJ4V+t/udh6cgYEQVnY6S5ltO4wdNg=;
+        h=Date:From:To:Subject:From;
+        b=ip4MtgcTS2jJH2k2JkvPM479TKpv/JP700q088a9AXJOaN7Q5g96wOZctVkh0jSl0
+         0Qgh+n394Irw/TpKbRznrOr7n6kn2ZtVjl5O/dOmolswtKuj8nDoPGZYa638wHlwq1
+         GEff8hGrVBR+z0PPsXjdyMX9gAbNnEw5dq5yXZySVvHITMm4h3XZQ09nG+rkSxAZkq
+         qejYZr4H+NsIJcN513Fhwtrqr3Y6Z9AyzcyUVS0xdgR6WLVOGJbhEngCeKHwcKvx81
+         sJVx1iVInFEQQT9w0pbZu6t/qQyeThZdScuieIBZ35LJ1eL70BeKS37AzAtWmT9lv3
+         O001ikbzosYKw==
+Received: by mail.tireplot.pl for <linux-pci@vger.kernel.org>; Mon, 23 May 2022 08:05:32 GMT
+Message-ID: <20220523084501-0.1.2k.fyq0.0.hdjr3fniw1@tireplot.pl>
+Date:   Mon, 23 May 2022 08:05:32 GMT
+From:   =?UTF-8?Q? "Arkadiusz_Soko=C5=82owski" ?= 
+        <arkadiusz.sokolowski@tireplot.pl>
+To:     <linux-pci@vger.kernel.org>
+Subject: Koszty instalacji fotowoltaicznej
+X-Mailer: mail.tireplot.pl
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220521005343.1429642-9-dmitry.baryshkov@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, May 21, 2022 at 03:53:43AM +0300, Dmitry Baryshkov wrote:
-> Manual reparenting of pipe_clk_src is being replaced with the parking of
-> the clock with clk_disable()/clk_enable() in the phy driver. Drop
-> redundant code switching of the pipe clock between the PHY clock source
-> and the safe bi_tcxo.
-> 
-> Cc: Prasad Malisetty <quic_pmaliset@quicinc.com>
-> Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Dzie=C5=84 dobry,
 
-You forgot to add my Reviewed-by and Tested-by yet again.
+stworzyli=C5=9Bmy specjaln=C4=85 ofert=C4=99 dla firm, na kompleksow=C4=85=
+ obs=C5=82ug=C4=99 inwestycji w fotowoltaik=C4=99. =20
 
-Johan
+Specjalizujemy si=C4=99 w zakresie doboru, monta=C5=BCu i serwisie instal=
+acji fotowoltaicznych, dysponujemy najnowocze=C5=9Bniejszymi rozwi=C4=85z=
+ania, kt=C3=B3re zapewni=C4=85 Pa=C5=84stwu oczekiwane rezultaty.
+
+Mo=C5=BCemy przygotowa=C4=87 dla Pa=C5=84stwa wst=C4=99pn=C4=85 kalkulacj=
+=C4=99 i przeanalizowa=C4=87 efekty mo=C5=BCliwe do osi=C4=85gni=C4=99cia=
+=2E
+
+Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
+temacie?
+
+Pozdrawiam
+Arkadiusz Soko=C5=82owski
