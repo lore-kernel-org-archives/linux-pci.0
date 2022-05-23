@@ -2,60 +2,125 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCFEC433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 23 May 2022 08:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 947BDC433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 23 May 2022 11:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232201AbiEWI6F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 May 2022 04:58:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51656 "EHLO
+        id S234656AbiEWLGz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 May 2022 07:06:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232265AbiEWI6C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2022 04:58:02 -0400
-X-Greylist: delayed 1591 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 23 May 2022 01:58:01 PDT
-Received: from mail.tireplot.pl (mail.tireplot.pl [46.183.184.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6425E3E5DA
-        for <linux-pci@vger.kernel.org>; Mon, 23 May 2022 01:58:01 -0700 (PDT)
-Received: by mail.tireplot.pl (Postfix, from userid 1001)
-        id 902C44A78B; Mon, 23 May 2022 10:06:44 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tireplot.pl; s=mail;
-        t=1653293344; bh=Rfzvu4C+yJ1wyuJ4V+t/udh6cgYEQVnY6S5ltO4wdNg=;
-        h=Date:From:To:Subject:From;
-        b=ip4MtgcTS2jJH2k2JkvPM479TKpv/JP700q088a9AXJOaN7Q5g96wOZctVkh0jSl0
-         0Qgh+n394Irw/TpKbRznrOr7n6kn2ZtVjl5O/dOmolswtKuj8nDoPGZYa638wHlwq1
-         GEff8hGrVBR+z0PPsXjdyMX9gAbNnEw5dq5yXZySVvHITMm4h3XZQ09nG+rkSxAZkq
-         qejYZr4H+NsIJcN513Fhwtrqr3Y6Z9AyzcyUVS0xdgR6WLVOGJbhEngCeKHwcKvx81
-         sJVx1iVInFEQQT9w0pbZu6t/qQyeThZdScuieIBZ35LJ1eL70BeKS37AzAtWmT9lv3
-         O001ikbzosYKw==
-Received: by mail.tireplot.pl for <linux-pci@vger.kernel.org>; Mon, 23 May 2022 08:05:32 GMT
-Message-ID: <20220523084501-0.1.2k.fyq0.0.hdjr3fniw1@tireplot.pl>
-Date:   Mon, 23 May 2022 08:05:32 GMT
-From:   =?UTF-8?Q? "Arkadiusz_Soko=C5=82owski" ?= 
-        <arkadiusz.sokolowski@tireplot.pl>
-To:     <linux-pci@vger.kernel.org>
-Subject: Koszty instalacji fotowoltaicznej
-X-Mailer: mail.tireplot.pl
+        with ESMTP id S234634AbiEWLGy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2022 07:06:54 -0400
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C44ED248E6;
+        Mon, 23 May 2022 04:06:52 -0700 (PDT)
+Received: by mail-lf1-x130.google.com with SMTP id br17so12625513lfb.2;
+        Mon, 23 May 2022 04:06:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=jsy4mAgZhGmvO2e1F6vd27JF9COzA3o3JEt2jxRswBk=;
+        b=HYJxXxD2mc4rz7bUxx0a72s4o8XQzS+bpQ6tFTLS9arEQHg5J+7A+zk9GVOuCW7Wmy
+         ueQnG0VX5n2xduPj9M8BaI3vcuc988zIErw3FySk3jjElQ/HtHnE/rcLzuTKh0O6GIat
+         0133NbEeiUCbzWR+ixhFpS+IfoeEvJy0PvYOjNwTctJbNFnA51U66kv1xjoD+kzEryv3
+         NXj6Ok5akS3Qv3VI1kHHAaC8prLrmGoWD37a1RvNnp1lltBwr22P5RQu2yBqo9K5lYrp
+         nBEzkPhgbkjVILPoQ+pzlDeq2/TBDzZuIBL2NMeL23L+hKltfipBpNNvLP0e21czH2qH
+         19dQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=jsy4mAgZhGmvO2e1F6vd27JF9COzA3o3JEt2jxRswBk=;
+        b=r5/gXCG5rBP/Ba1In3J/5BQ1e10NTavgOwGkZUI0+6kG4siUjB4x6hD0uj6T+PxjwC
+         6TK7aKDaIblkO8EG/2ybehvjHauGrOeCEWEic8y2g8NcuqW8lNrCBFfmiJZw7qw5Zl6j
+         VsN37c8P1ARvC2sAN9eEJBkWXG6WMfr8Tyo8w5xhrjp2FP+ghypnvlQi90ULmDV7r7QX
+         cEKMoZh6GG1QnZ7gJ2/rsKKfgC0eoRDVrjhpX+6QyhxPhdB+3Cj2Emcdx2ld3ijgu7ZJ
+         xAY9/DCLOZ+bD8c8nHB8h+4YD0SQSmiD3iCvBw65TruiAQmNLObdcKAmMAoFRvAcLUR0
+         k6mg==
+X-Gm-Message-State: AOAM533dWUK/s46ca5Oypc/H71xykwCbpLVXm1sip/Y/4BNef6KWXagi
+        3Hzi6Xz9BEzqRwLze6D+v/U=
+X-Google-Smtp-Source: ABdhPJwzr7j//CefeblT0s2YSmDOXbceMrzPkqf/qbDFrGJ1jXxKwWlTYMbSaQdC+j2CHxoLM4QXfQ==
+X-Received: by 2002:a05:6512:4019:b0:478:79ba:f94e with SMTP id br25-20020a056512401900b0047879baf94emr1817977lfb.260.1653304010885;
+        Mon, 23 May 2022 04:06:50 -0700 (PDT)
+Received: from mobilestation ([95.79.189.214])
+        by smtp.gmail.com with ESMTPSA id p20-20020ac24ed4000000b0047255d210easm1919220lfr.25.2022.05.23.04.06.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 May 2022 04:06:50 -0700 (PDT)
+Date:   Mon, 23 May 2022 14:06:47 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Vinod Koul <vkoul@kernel.org>
+Cc:     Frank Li <Frank.Li@nxp.com>, gustavo.pimentel@synopsys.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de, linux-imx@nxp.com,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        lznuaa@gmail.com, helgaas@kernel.org, kishon@ti.com,
+        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
+        bhelgaas@google.com, manivannan.sadhasivam@linaro.org,
+        Sergey.Semin@baikalelectronics.ru
+Subject: Re: [PATCH v11 0/8] Enable designware PCI EP EDMA locally
+Message-ID: <20220523110647.ndhijpwgtaf2rkar@mobilestation>
+References: <20220517151915.2212838-1-Frank.Li@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220517151915.2212838-1-Frank.Li@nxp.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Hello Vinod,
 
-stworzyli=C5=9Bmy specjaln=C4=85 ofert=C4=99 dla firm, na kompleksow=C4=85=
- obs=C5=82ug=C4=99 inwestycji w fotowoltaik=C4=99. =20
+On Tue, May 17, 2022 at 10:19:07AM -0500, Frank Li wrote:
+> Default Designware EDMA just probe remotely at host side.
+> This patch allow EDMA driver can probe at EP side.
+> 
+> 1. Clean up patch
+>    dmaengine: dw-edma: Detach the private data and chip info structures
+>    dmaengine: dw-edma: Remove unused field irq in struct dw_edma_chip
+>    dmaengine: dw-edma: Change rg_region to reg_base in struct
+>    dmaengine: dw-edma: rename wr(rd)_ch_cnt to ll_wr(rd)_cnt in struct
+> 
+> 2. Enhance EDMA driver to allow prode eDMA at EP side
+>    dmaengine: dw-edma: Add support for chip specific flags
+>    dmaengine: dw-edma: Add DW_EDMA_CHIP_32BIT_DBI for chip specific
+> flags (this patch removed at v11 because dma tree already have fixed
+> patch)
+> 
+> 3. Bugs fix at EDMA driver when probe eDMA at EP side
+>    dmaengine: dw-edma: Fix programming the source & dest addresses for
+> ep
+>    dmaengine: dw-edma: Don't rely on the deprecated "direction" member
+> 
+> 4. change pci-epf-test to use EDMA driver to transfer data.
+>    PCI: endpoint: Add embedded DMA controller test
+> 
+> 5. Using imx8dxl to do test, but some EP functions still have not
+> upstream yet. So below patch show how probe eDMA driver at EP
+> controller driver.
+> https://lore.kernel.org/linux-pci/20220309120149.GB134091@thinkpad/T/#m979eb506c73ab3cfca2e7a43635ecdaec18d8097
 
-Specjalizujemy si=C4=99 w zakresie doboru, monta=C5=BCu i serwisie instal=
-acji fotowoltaicznych, dysponujemy najnowocze=C5=9Bniejszymi rozwi=C4=85z=
-ania, kt=C3=B3re zapewni=C4=85 Pa=C5=84stwu oczekiwane rezultaty.
+The series has been hanging out on review for over three months now.
+It has got to v11 and has been tested on at least two platforms. The
+original driver maintainer has been silent for all that time (most
+likely Gustavo dropped the driver maintaining role). Could you please
+merge it in seeing no comments have been posted for the last several
+weeks? The PCI Host/EP controller drivers maintainer suggested to get
+this series via the DMA-engine tree:
+https://lore.kernel.org/linux-pci/YnqlRShJzvma2SKM@lpieralisi/
+which is obviously right seeing it mainly concerns the DW eDMA driver.
+Though after that Lorenzo disappeared as quickly as popped up.)
 
-Mo=C5=BCemy przygotowa=C4=87 dla Pa=C5=84stwa wst=C4=99pn=C4=85 kalkulacj=
-=C4=99 i przeanalizowa=C4=87 efekty mo=C5=BCliwe do osi=C4=85gni=C4=99cia=
-=2E
+There is one more series depending on the changes in this
+patchset:
+https://lore.kernel.org/linux-pci/20220503225104.12108-1-Sergey.Semin@baikalelectronics.ru/
+Me and Frank already settled all the conflicts and inter-dependencies,
+so at least his series is more than ready to be merged in into the
+kernel repo. It would be very good to get it accepted on this merge
+window so to have the kernel v5.19 with all this changes available.
 
-Czy s=C4=85 Pa=C5=84stwo otwarci na wst=C4=99pn=C4=85 rozmow=C4=99 w tym =
-temacie?
+-Sergey
 
-Pozdrawiam
-Arkadiusz Soko=C5=82owski
+> 
+> -- 
+> 2.35.1
+> 
