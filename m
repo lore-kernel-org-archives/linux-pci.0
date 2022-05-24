@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E05AC433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 24 May 2022 15:23:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A25C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 24 May 2022 15:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238887AbiEXPXO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 May 2022 11:23:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42072 "EHLO
+        id S234133AbiEXPXW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 May 2022 11:23:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238786AbiEXPXG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2022 11:23:06 -0400
+        with ESMTP id S238870AbiEXPXD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2022 11:23:03 -0400
 Received: from EUR05-AM6-obe.outbound.protection.outlook.com (mail-am6eur05on2084.outbound.protection.outlook.com [40.107.22.84])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A2D35715F;
-        Tue, 24 May 2022 08:23:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B69C9E9DA;
+        Tue, 24 May 2022 08:22:44 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RKfep7JPscO0r/TfazBzLOajZ0X8bAd9Q6IEV5wWqN6jIwijsGYVNgY61SUk+ATrknhLbeamBXZfdYl1Lx6r5AAhfTb0xaYy7sGc7+FAVBsyNGUeTpLyTdu1dXfwnJtqiHXp3HEj6/qRtjBl7Hg99hs8HM6co7PAjxpa93f03jdBe46O3p7yke8jPhOZAXxqX9U4xMMvGe7fj9NLK8tclxkYUTY35PuJ/JoSVBi0hGCJq+RUgkWNjYhyB2d1n0t46TV1t8MlTfLl1zZDKXIoq0uQQPzcM8xLp2IC6wYXxyJD/p5Llp1zspR+2IIvadct/lAuvk5R/4afVZMF5nnD5w==
+ b=QC261s8OOhqVe9G9bH+3KtJFENmNh8/XTcLn8hoUTzS615ydvzHUz9X4WQnVB+9T6yWGKTbbCe1rUd8tADU0ZaRdFLB4sm7pvsF8WGTbBBQ6qFp+pJMQ6ZQrghoAVQ0qjuZk5Q60rXto3bTlnp6FatfdZjyrat/dl3xwJqbM/V9VTXEiBJ+eE90WTTZi8IGfSJ3fyYlZmStqmdkpqwulDs+Vavi+uQM3lCgngOsgUAFUNguQmJ2l5mosyGvGKTkpY+3S5KUV0JmoxUvuTIH54UNyXKyj3j6FAe4/uoodDnfH0fKgyAcK2lAJwdrUBMyajhG8wL52RoCM0O+55jg4ag==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yUl4xK3MiOMAFiJxrMmhTFnUxSXfq0wb8AMP9oRxT+Q=;
- b=bP0zvuDSvcvO6X/IWda8xPmzn7XQt8UNdZz3HIedRzLygZSjgm3bHiMUzOPiSDzmAA9EbIwnHO4Kuj/oWar0Dk0vraiBe8ErkbJk6gupi3WgDpTQdVZl/NiVsIhLiCxX/Bp7pb/CAxr3gtVv/gRGZyZm7Tx5OkqIyPxm8jpalUHtK5qeHoJX6+HcT94euMlvX+luoCCCzRfMN5W5tBSgisqbVk1z1pphiQmuiC+e4fGp1YT4C3h/xKRbP4ZrEDp9nXCe82xZ6k6jAaQf+LQlwS9eMAj+femnxU/DL+kQfmpTzKz4oTrw6er6e/02ayP8GphxNN4OLbcjiesH52tn9A==
+ bh=8fHfKStKCIND70Y7qYZIBayS2AiLFEuv7NF99z+l/vE=;
+ b=U6bhzO3uVRpMxZHzho8yF/Y4PnU+92BJcIkYN4pfaNuTKiXTapJ1kDkJsWHXKr/RtXWGtoTxMkxj3rFuB+9IK5w5sOz2sZ+p5cXLLgiFWP6XAaTGshTbq2qXMrO5jCwD0ATQz14QyFOwlh4TwgI/jnrhixxpmnkqBZYKYIKDBmewbEsrYH2sl8P1PtmpDDfXstzbTamarpvoD7dqFNu34Xu8VHCR9I3o8j2vzBudH0yvv+jmE2QY5j1TIFAZ7UN/GJmSzUpkt6n7muDuJqE2LynHOg57yn9xe0De1sds3ljnDWIKT0iANTDiy4rluSoqEKbFaWjljpdEwMSnkLU9WA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yUl4xK3MiOMAFiJxrMmhTFnUxSXfq0wb8AMP9oRxT+Q=;
- b=poN/luJb5ZsEBoiWY0IzRJqSBqECYSC0bw8zAO4Ayaz3QO/pi1KS2MIWEi9pxyBxz9IJY+PEsdOSLgYIyNlQ29VkkGx3TJyPT7c1v0J84QkcKyRZ3BJ2bpfuAOfdQHIpIP3CsaSVzQqWinCNoXmkmHf3iDrfykJZkZrFwSiWHEY=
+ bh=8fHfKStKCIND70Y7qYZIBayS2AiLFEuv7NF99z+l/vE=;
+ b=gqzXxUsEVnILf4Xk2MGHtwCGew8iv59IvBCSkslHfgLObnqFAdq5yFz2Kl3egUqZh1DBa/2AyF+UZhQRFL/KrgXSTPCmoRtUhWGj57SnvlWDybh5G1o9rgE7RsaLtx8TesapDmeCYxZRnLR3zXzTirEUmE+9DykGIBecxBLlP0E=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from PAXPR04MB9186.eurprd04.prod.outlook.com (2603:10a6:102:232::18)
  by AM6PR04MB5672.eurprd04.prod.outlook.com (2603:10a6:20b:ae::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5273.22; Tue, 24 May
- 2022 15:22:52 +0000
+ 2022 15:22:35 +0000
 Received: from PAXPR04MB9186.eurprd04.prod.outlook.com
  ([fe80::e0bf:616e:3fa0:e4ea]) by PAXPR04MB9186.eurprd04.prod.outlook.com
  ([fe80::e0bf:616e:3fa0:e4ea%5]) with mapi id 15.20.5273.022; Tue, 24 May 2022
- 15:22:52 +0000
+ 15:22:35 +0000
 From:   Frank Li <Frank.Li@nxp.com>
 To:     gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
         l.stach@pengutronix.de, linux-imx@nxp.com,
@@ -48,9 +48,9 @@ To:     gustavo.pimentel@synopsys.com, hongxing.zhu@nxp.com,
 Cc:     vkoul@kernel.org, lorenzo.pieralisi@arm.com, robh@kernel.org,
         kw@linux.com, bhelgaas@google.com,
         manivannan.sadhasivam@linaro.org, Sergey.Semin@baikalelectronics.ru
-Subject: [PATCH v12 8/8] PCI: endpoint: Enable DMA tests for endpoints with DMA capabilities
-Date:   Tue, 24 May 2022 10:21:59 -0500
-Message-Id: <20220524152159.2370739-9-Frank.Li@nxp.com>
+Subject: [PATCH v12 4/8] dmaengine: dw-edma: Rename wr(rd)_ch_cnt to ll_wr(rd)_cnt in struct dw_edma_chip
+Date:   Tue, 24 May 2022 10:21:55 -0500
+Message-Id: <20220524152159.2370739-5-Frank.Li@nxp.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220524152159.2370739-1-Frank.Li@nxp.com>
 References: <20220524152159.2370739-1-Frank.Li@nxp.com>
@@ -60,324 +60,180 @@ X-ClientProxiedBy: BYAPR01CA0004.prod.exchangelabs.com (2603:10b6:a02:80::17)
  To PAXPR04MB9186.eurprd04.prod.outlook.com (2603:10a6:102:232::18)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 3243030c-d5e5-4dcd-690a-08da3d9944d2
+X-MS-Office365-Filtering-Correlation-Id: 3a98c565-a24d-4659-bf66-08da3d993adc
 X-MS-TrafficTypeDiagnostic: AM6PR04MB5672:EE_
-X-Microsoft-Antispam-PRVS: <AM6PR04MB5672D6CB7C87ED18B4BD8D4F88D79@AM6PR04MB5672.eurprd04.prod.outlook.com>
+X-Microsoft-Antispam-PRVS: <AM6PR04MB5672BC922EEF7DB522554BA188D79@AM6PR04MB5672.eurprd04.prod.outlook.com>
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: nBYQejlq2yWqbYN/qzOmn10JNGE+kjZfOpOMy5HwBhsBzI5Llr5mkCIVSP4j5+xbKxVPsHCOWzDj1MrX2ihuqz7UjH5vMzoQPDMbG8DeX4WcOZRVSGux7/9c0DI363+pCocz8DphcIjtwk6cK6yjHyrtL0N8adHi8EuMdqfzdzJa4a1u4TSqlOML8hgArwYy8SLqdPOV4gZXqlK23LYeFFeNW2c1uUaaDyTkfjJARH6xOryAUVcTrECpO/jd1Q9dMZaEQwTdZEyn4B0UepwzpSr9+8KZ+RnZdq4La+N/ruWZDTwM1w1J6pTAdLjH2WWofXY91uCAneVHmM6f12sq0OdKr72MynNWax6ZuDHRVFSEhn8orf6Z7tprZUd3WZLQDsehh0qgZEJPW2jf1jXg3tdfWmVMzWTZ8EpquxdjhuAwvJgZ0Aaq9Puax3tzQ9vqSA9Id/DD9dbZphsJSIg/wvAc7EdZIIyaziNIF1Kpxz1/7NTwXxBkFaYBePMpB/Ap4xViDuuCJ1KI//qCr9CULEGNBlWI+fV07SDyDUVNgn6Mp5XkoatM1oBPaY+fQddtBk4a3H+Gm23k+DY09kYrXbRhD9QS3C9F6s72ROM8Usinxp1w5OcWZ9cSINfMA58amYnWQT8tHLJ3Lcmz6GAhZBSOjqzJws/PiMY81wjuyxVLr533BUHK5HnkzoVdj7fP/8KHXkR8yoJVAjuiESovIDYJ8Ix8lGb9XExIIU1aNKA=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9186.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(6512007)(1076003)(921005)(36756003)(83380400001)(2616005)(52116002)(26005)(66946007)(66556008)(6486002)(7416002)(86362001)(66476007)(8676002)(38350700002)(6506007)(316002)(38100700002)(4326008)(5660300002)(186003)(508600001)(8936002)(2906002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: qEfqEb9ExqC6UV4o5P/+o+A/TECSQ78J9ZkbC9ROrFualzh5mfPwC2PhRUukSrbhkZcLiHb9syb1a6XsoB5STyBO2J2mowodn4OSTJLLX3W/I1mQKK4465l+Hc4UuReRLLMnovuyxf1sLrQic50emfHQVlMMydkE/e+pDKPV7Hj4v4TuGgWGEFqYG054Ii/5Uq2XAKMycHz/nt0K0olIhfjn/sC16lLEYmMIx/LOEdSgpauK5GjZf7MMNeduKbHIvP/ycVeHBTCSMqce3oePggkd5Og4XtAbqFyMybHUoIQ0ZOwJW5q4ljqXNPlygE2czdXAT6MuH02i7LAZqSsY7GNAnxrK0fNDu+rMR3UHrfq+c+4Neh+Qo8mO7Zm23tJZ5qNgeZVBumF/QjB7/Yc1ZYLXPNCvrdiNXg6Hp/hIr5g1E/8XHZUk63i8gUbttxrEktzuGUF+SQo3BQEKeJIJA/eW1GkjriBn3ys8YEoahwX/gnIJ499M128SqjIjOylQklJE6v7RJnU3pISB1gzkOBzBKr1zllVU94kqQ1SjbgZvL850+98DXxm+O0fGRYm1jgZx/T32L5SDc2MVF1vmu26d8ydpK8RTX0iAW2+96QWrxgEsSoG+FbsZb9UtEbTOF0MY+Ops23dFEUEYIc423YIEm6m3uP3Mg1+KzspHLIVyoA8Yc2JYj8KCrFU3S1zmh8xmnGZ9gPJ3sOD3TN2zpZk7SLXR2otsbNpsFs6QtHg=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9186.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(86362001)(66476007)(8676002)(7416002)(316002)(38100700002)(38350700002)(6506007)(6486002)(66556008)(26005)(66946007)(508600001)(8936002)(2906002)(5660300002)(186003)(4326008)(6512007)(921005)(1076003)(83380400001)(52116002)(2616005)(6666004)(36756003);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?UInq8I1/cJgk6659hDDms6UONwi7FIs5Jjd1eKYAJKHXREoZ9LOD0kjXiQMg?=
- =?us-ascii?Q?kOk2NUKuPa5uKTbQ5OuEy8hq4poDkv3Bnl395x6ODi3Rn4ah3k4Dy1BPaSmU?=
- =?us-ascii?Q?UPX8c8xGlYYWCsuuP97ojM1uI2nW3MEXExxgfKYmeITIMXJuADcYjoTFXTJ9?=
- =?us-ascii?Q?zVmbDX56vMX4vqmivItCN16kxKSxO31OTCv4i0VX+1FOn8+ZrQTtw9zyYg31?=
- =?us-ascii?Q?ftd7dBDuQWC4xPn1iigwD2vmBo4zGxuU6mnnkFklbnxbaW+ZnxhW0rH6xEtP?=
- =?us-ascii?Q?WeHiWa6IO2y/nANl/thEWnKO/dbA7w/z0iE8lQQcQya6fiuNjyOOWlgjuc26?=
- =?us-ascii?Q?GtOfvLQ8G6ibUnEzglPGz/zH4GB+G5GDVnq6nJqrNW6FQNDB+JoG4FCbvMI2?=
- =?us-ascii?Q?g6jHViGyHiO+4e128A9I4gXJ57RDqIe3CZ5eWL20tHSnp/Dmd5oge6lRNwc2?=
- =?us-ascii?Q?rLQBjH9JhVGLvux+LjlmiCfqX5+txtDfHuSj5cMOtFZNgaZbGaTOyb6SLjBO?=
- =?us-ascii?Q?NVxnEIJmcJpFPHE/jhHVyH1tK/blxbEZBTUpUnfc2zWU4e4aRCpjdU9LwVwd?=
- =?us-ascii?Q?h7L/FdDVk8PtuQQWc8hK1MtaDCXFeeG5z9lRZbtqCk7rCBvxUwzV8mzrxBdJ?=
- =?us-ascii?Q?8X4I/dGwLhIDGit91D/XaQtu71d7DkB+dyJBLv/xCToo6CiOgKlQ2Vo1PGVZ?=
- =?us-ascii?Q?OddsP02bIuWsUFHNnd88dO9l0RgUSDIcrvr9XMnRWO4OGaccl09WBTxoYYMh?=
- =?us-ascii?Q?YYGgP/RW4i7AcdmGRXp5Z0F9L30ujm0aiTqgi8X1a21uLkO2HbEPK6sl7fEf?=
- =?us-ascii?Q?HkLGFD1rzrnIrHOl8/yxYvFINkUz64NSjvdhud2c+t/IX/FW/wM0xyrn2A7I?=
- =?us-ascii?Q?VWlLD67lPxws6/tyAeRkRwTCGMpbUF+21Go0urElag13/1GjnEhX8J2cdt5W?=
- =?us-ascii?Q?lPPLxU+PLZzOPbM95aF/jyZXDzDSrTlSjnHofVV5UuCW3jw787HsVXclDK2/?=
- =?us-ascii?Q?R8vs+98KlK+MMuF6zpIY/SO93C6+QWcvsk6tkn+MXOvzT53v9+uSkd5LCALa?=
- =?us-ascii?Q?N3bGlppogIGtt1fJoNsQ0p2c/zeyy4noUQ/UffJ3ce8xvjxuNFXQMUkVhEUs?=
- =?us-ascii?Q?BHNJdtFnsu7nvoNLHd2VNaSDaKyK7AoRMWlH3c7uFv+uaLD67Qk1ZxQZg5Et?=
- =?us-ascii?Q?rw+sbm3qpxbseFKDMATGnps0ZgIi1zkjeMVzI1eNiUbP74+vP5L8fkPz+uqE?=
- =?us-ascii?Q?44iY77pfW/oseNtbrtgWN6Z9XNPcmYQT9kSJA1Ce7VuN4H3jrgz7FpxBUyLo?=
- =?us-ascii?Q?KdCtlmHB/7zgiWjwUVH9CnshRXh7cNazKoSnWphPw29j1xhPizAmRQ+Qq7Uk?=
- =?us-ascii?Q?G47oIvDefPBgV70Xnh27rL3bmi2+23X1oh8IHGQYyNsBbH0EFl7IogB4516o?=
- =?us-ascii?Q?3/m38rxnh4LoL13zmZRtsAT5bQfPDd+XaZ3MF14PiuEtjEyuJB/RWpYdiVQ/?=
- =?us-ascii?Q?BRQgZHBhaWl8UKclucfspeR1aj3n2dHyuQw2WOic/TNm8BNJf47gzRGHLRqu?=
- =?us-ascii?Q?KtPJQF8VN4NlLIaDIvxI6yAv/pb6skDVL4cPPsN2ZAmrfNpwNMjxgJbSQL0/?=
- =?us-ascii?Q?qij8RBuUk+vzpz5MABSE1pdaXmpqH85RcUCByFDfM/DQu+gjWD92U0Bwyep6?=
- =?us-ascii?Q?3O1vvyYsGiskE8udABBoRVBs4lo78WJXiNpKhdPfo9jfvrbhDfL07Q+KlNU3?=
- =?us-ascii?Q?o2GSGflyvg=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Kjr0oRM5a3U3BMtyPCtQHFDcJloaQu3vv4l47M35zreTm3fe7TElzcjwYfYU?=
+ =?us-ascii?Q?8TRnE7m4q3HUicvekgbDawP4cQ9LRLigkmG030oFtuYN0myS0DnebuRAn3Aw?=
+ =?us-ascii?Q?ovxCc0JpHNrICFKbb1MB5/a7tOQxjiELy8wvOuswA7wy1eMWz4yPwPXhxfgB?=
+ =?us-ascii?Q?yIxFyFHUXEa3ecq2WsubUkrhdB4x2QwwbXfRF9M+e0bhaHeV+nIQAkiJdyBv?=
+ =?us-ascii?Q?FjMiXji8sqaNmPXSb76Pj/v8KMflH8Yy1gtZr3QwvZrhElU4z/FFkSI+iM63?=
+ =?us-ascii?Q?jH1Va76hha7ip6JYg14mHRQMixFQVLh5nU2PBDoMgK/MA+/3LC56HwPUTV1e?=
+ =?us-ascii?Q?Irn34pAQl7iMISxgpvNgot+z36Eizw2PkINpLm/AGJ0qx0GlAJC7W7XUbGTh?=
+ =?us-ascii?Q?mjMGYbMS9xkUwetoGNXvLW4y2VO22brKKD/YWmRWfgXwh5puOP6w3mdjWh7c?=
+ =?us-ascii?Q?VS5nRGtUIOgWwW/WHmmGlPnbAieUtGLISIhYBmGlcGnN89/6+PHuo38RwWuU?=
+ =?us-ascii?Q?ly5AvKFBMCr6ywnYPeBrx1j4ZCxJPgCPjTdSQLlE7BBOIZn9zXHTpqo4WnzB?=
+ =?us-ascii?Q?rVaQ6e2LtVwDvlFlFK/RWoPohSW3M5bSyMpjrKaC1OvyHsk0MiyuiBwW9npT?=
+ =?us-ascii?Q?VIC3eGv5e5VwrGf1jESE2pL2gb27ohLATTsd3yy9DxQVFm0QITLeE0vLKDIT?=
+ =?us-ascii?Q?pXvXM2iinFB0EFlUeohRvQsJ9WCJA/tewMUCqc7SgySv39RLT7UlSJqxUrL7?=
+ =?us-ascii?Q?nPGbAfL9kByJQOBe+AnS8PLsoP2zt/8/R+QfeEwKiFj8Cr0c7+L4EMkpaM3V?=
+ =?us-ascii?Q?LtClXWpf2LnQ4QD8T896w4p8KWJ2KOc4pkcgSbEQ+eUxehctCFRwHlQiJL2Y?=
+ =?us-ascii?Q?ntqqnUomKOo7PZHHIXVqXd05JLKeSlGlIDUt6+kZ0nr1Hs1nrPzt5jXvM7jc?=
+ =?us-ascii?Q?3Z2PJbXbMNRozS3uY7Ccoc87jFZKm82CR9OWxQgIPTYIkizU5eiqoGpkB5A9?=
+ =?us-ascii?Q?UAv7Iq/rWLpgE9kTOQDNXoIaSG5EUW7/Sq3kbiLHxrG40+F67X+zB4Q+J0ox?=
+ =?us-ascii?Q?MVGo4PE9umoX8MmFQ2uBYSOB+/gvN4a66J6S8cvsehhMsQoX9W0XgRccv0Wz?=
+ =?us-ascii?Q?7778G1iB4eo3aBsiHZEkf7j6VvId0toTkcy172zluE4w+j3aWLpScOX1dBTA?=
+ =?us-ascii?Q?/VUT5/HOFbSobJyYUd5GvAsVNai70/91X1/ccs/hGXrmu3+iQYyMIOwu6eJ5?=
+ =?us-ascii?Q?+mChJFrD+E5D2PqDVYzHYXCcpw+BQGrUxKO54VgDTh2QYcD80ejQD+5BBnUn?=
+ =?us-ascii?Q?KNJNb18EYsF4ZtGDiuQTLpC9KZEA3jQPSFtNfWAcR54R89+arO7+gMWwKFBu?=
+ =?us-ascii?Q?AYudIFEIT2TVUZC7j/YAZFaZJ8irV3neKsmG6E+P8/Wg9L3Em7BsZaja6LgK?=
+ =?us-ascii?Q?5ak7NZL/zUfP1WZJus5mZmurPslXAJrEOLzGyu+EWtZu7mvXblEzhyHm/Fyd?=
+ =?us-ascii?Q?9/xiWWln75DetjYNLSADHSXHxMpX0fXtyQWH3TttSD50MlHtybGsMqwgq52T?=
+ =?us-ascii?Q?r3UL/YMU+jeyi64SqO5dQRSkU9QT7odseK2FAHvfpeWo1toK+/6KqKUTW7O2?=
+ =?us-ascii?Q?TpTRGz9/6pW6ceGVvL/yn1PR/DmUdUoA0ZMsmrARSnHtho1IW8BoxadDJlGX?=
+ =?us-ascii?Q?2r+tHLmJcox6gdRP32vIau2DxmI8tewqlm/8z7scmub2QJZ+hpTngIfFWP5p?=
+ =?us-ascii?Q?hdP+Xpxg8w=3D=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3243030c-d5e5-4dcd-690a-08da3d9944d2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3a98c565-a24d-4659-bf66-08da3d993adc
 X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB9186.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 15:22:52.7302
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2022 15:22:35.5213
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: zvWFaaT5P5HPAMUdFqRrollIDFL9OAJK2aCL2rNJfbhQOgTtV9TuXIUeDlnpR6kZ7bBggg7GeLsfluybrCNFeA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: krA4a3gFEHz4EnmoRtj2Dg2nfsotUBZB0+4iICTiU/Qvw4mLeF03pANshLGPCYyj0dPOWwNspIcLDcgM5gCS3A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB5672
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some PCI Endpoint controllers integrate an eDMA (embedded DMA).
-eDMA can bypass the outbound memory address translation unit to
-access all RC memory space.
-
-Add eDMA support for pci-epf-test.
-
-Depending on HW availability, the EPF test can use either eDMA or
-general system DMA controllers to perform DMA. The test tries to use
-eDMA first and falls back to general system DMA controllers if
-there's no eDMA
-
-Separate dma_chan to dma_chan_tx and dma_chan_rx. Search for an eDMA
-channel first, then search for a memory-to-memory DMA channel.
-If general memory to memory channels are used, dma_chan_rx = dma_chan_tx.
-
-Add dma_addr_t dma_remote in pci_epf_test_data_transfer()
-because eDMA uses remote RC physical address directly.
-
-Add enum dma_transfer_direction dir in pci_epf_test_data_transfer()
-because eDMA chooses the correct RX/TX channel by dir.
-
-The overall steps are
-
-1. Execute dma_request_channel() and filter function to find correct
-eDMA RX and TX Channel. If a channel does not exist, fallback to try to
-allocate general memory to memory DMA channel.
-2. Execute dmaengine_slave_config() to configure remote side physical
-address.
-3. Execute dmaengine_prep_slave_single() to create transfer descriptor.
-4. Execute tx_submit().
-5. Execute dma_async_issue_pending()
+There are same name wr(rd)_ch_cnt in struct dw_edma. EDMA driver get
+write(read) channel number from register, then save these into dw_edma.
+Old wr(rd)_ch_cnt in dw_edma_chip actuall means how many link list memory
+are available in ll_region_wr(rd)[EDMA_MAX_WR_CH]. So rename it to
+ll_wr(rd)_cnt to indicate actual usage.
 
 Signed-off-by: Frank Li <Frank.Li@nxp.com>
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Tested-by: Serge Semin <fancer.lancer@gmail.com>
+Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
-Change from v11 to v12:
- - remrite commit message
- - wrap code to 80 line
- - difference error message when apply tx/rx channel
-Change from v10 to v11:
- - rewrite commit message
-Change from v9 to v10:
- - rewrite commit message
-Change from v4 to v9:
+Change from v10 to v12
  - none
-Change from v3 to v4:
- - reverse Xmas tree order
- - local -> dma_local
- - change error message
- - IS_ERR -> IS_ERR_OR_NULL
- - check return value of dmaengine_slave_config()
-Change from v1 to v2:
+Change from v9 to v10
+ - Change comment for ll_wr(rd)_cnt
+Change from v6 to v9
  - none
+Change from v5 to v6
+ - s/rename/Rename/ at subject
+new patch at v4
 
- drivers/pci/endpoint/functions/pci-epf-test.c | 113 ++++++++++++++++--
- 1 file changed, 103 insertions(+), 10 deletions(-)
+ drivers/dma/dw-edma/dw-edma-core.c |  4 ++--
+ drivers/dma/dw-edma/dw-edma-pcie.c | 12 ++++++------
+ include/linux/dma/edma.h           |  8 ++++----
+ 3 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 90d84d3bc868f..f232dd8eb19f0 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -52,9 +52,11 @@ struct pci_epf_test {
- 	enum pci_barno		test_reg_bar;
- 	size_t			msix_table_offset;
- 	struct delayed_work	cmd_handler;
--	struct dma_chan		*dma_chan;
-+	struct dma_chan		*dma_chan_tx;
-+	struct dma_chan		*dma_chan_rx;
- 	struct completion	transfer_complete;
- 	bool			dma_supported;
-+	bool			dma_private;
- 	const struct pci_epc_features *epc_features;
- };
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index 58e91fe384282..1ef326f7151a3 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -919,11 +919,11 @@ int dw_edma_probe(struct dw_edma_chip *chip)
  
-@@ -96,6 +98,8 @@ static void pci_epf_test_dma_callback(void *param)
-  * @dma_src: The source address of the data transfer. It can be a physical
-  *	     address given by pci_epc_mem_alloc_addr or DMA mapping APIs.
-  * @len: The size of the data transfer
-+ * @dma_remote: remote RC physical address
-+ * @dir: DMA transfer direction
-  *
-  * Function that uses dmaengine API to transfer data between PCIe EP and remote
-  * PCIe RC. The source and destination address can be a physical address given
-@@ -105,12 +109,16 @@ static void pci_epf_test_dma_callback(void *param)
-  */
- static int pci_epf_test_data_transfer(struct pci_epf_test *epf_test,
- 				      dma_addr_t dma_dst, dma_addr_t dma_src,
--				      size_t len)
-+				      size_t len, dma_addr_t dma_remote,
-+				      enum dma_transfer_direction dir)
- {
-+	struct dma_chan *chan = (dir == DMA_DEV_TO_MEM) ?
-+				 epf_test->dma_chan_tx : epf_test->dma_chan_rx;
-+	dma_addr_t dma_local = (dir == DMA_MEM_TO_DEV) ? dma_src : dma_dst;
- 	enum dma_ctrl_flags flags = DMA_CTRL_ACK | DMA_PREP_INTERRUPT;
--	struct dma_chan *chan = epf_test->dma_chan;
- 	struct pci_epf *epf = epf_test->epf;
- 	struct dma_async_tx_descriptor *tx;
-+	struct dma_slave_config sconf = {};
- 	struct device *dev = &epf->dev;
- 	dma_cookie_t cookie;
- 	int ret;
-@@ -120,7 +128,22 @@ static int pci_epf_test_data_transfer(struct pci_epf_test *epf_test,
- 		return -EINVAL;
+ 	raw_spin_lock_init(&dw->lock);
+ 
+-	dw->wr_ch_cnt = min_t(u16, chip->wr_ch_cnt,
++	dw->wr_ch_cnt = min_t(u16, chip->ll_wr_cnt,
+ 			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_WRITE));
+ 	dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt, EDMA_MAX_WR_CH);
+ 
+-	dw->rd_ch_cnt = min_t(u16, chip->rd_ch_cnt,
++	dw->rd_ch_cnt = min_t(u16, chip->ll_rd_cnt,
+ 			      dw_edma_v0_core_ch_count(dw, EDMA_DIR_READ));
+ 	dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt, EDMA_MAX_RD_CH);
+ 
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index ae42bad24dd5a..7732537f96086 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -230,14 +230,14 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 	chip->nr_irqs = nr_irqs;
+ 	chip->ops = &dw_edma_pcie_core_ops;
+ 
+-	chip->wr_ch_cnt = vsec_data.wr_ch_cnt;
+-	chip->rd_ch_cnt = vsec_data.rd_ch_cnt;
++	chip->ll_wr_cnt = vsec_data.wr_ch_cnt;
++	chip->ll_rd_cnt = vsec_data.rd_ch_cnt;
+ 
+ 	chip->reg_base = pcim_iomap_table(pdev)[vsec_data.rg.bar];
+ 	if (!chip->reg_base)
+ 		return -ENOMEM;
+ 
+-	for (i = 0; i < chip->wr_ch_cnt; i++) {
++	for (i = 0; i < chip->ll_wr_cnt; i++) {
+ 		struct dw_edma_region *ll_region = &chip->ll_region_wr[i];
+ 		struct dw_edma_region *dt_region = &chip->dt_region_wr[i];
+ 		struct dw_edma_block *ll_block = &vsec_data.ll_wr[i];
+@@ -262,7 +262,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		dt_region->sz = dt_block->sz;
  	}
  
--	tx = dmaengine_prep_dma_memcpy(chan, dma_dst, dma_src, len, flags);
-+	if (epf_test->dma_private) {
-+		sconf.direction = dir;
-+		if (dir == DMA_MEM_TO_DEV)
-+			sconf.dst_addr = dma_remote;
-+		else
-+			sconf.src_addr = dma_remote;
-+
-+		if (dmaengine_slave_config(chan, &sconf)) {
-+			dev_err(dev, "DMA slave config fail\n");
-+			return -EIO;
-+		}
-+		tx = dmaengine_prep_slave_single(chan, dma_local, len, dir, flags);
-+	} else {
-+		tx = dmaengine_prep_dma_memcpy(chan, dma_dst, dma_src, len, flags);
-+	}
-+
- 	if (!tx) {
- 		dev_err(dev, "Failed to prepare DMA memcpy\n");
- 		return -EIO;
-@@ -148,6 +171,23 @@ static int pci_epf_test_data_transfer(struct pci_epf_test *epf_test,
- 	return 0;
- }
+-	for (i = 0; i < chip->rd_ch_cnt; i++) {
++	for (i = 0; i < chip->ll_rd_cnt; i++) {
+ 		struct dw_edma_region *ll_region = &chip->ll_region_rd[i];
+ 		struct dw_edma_region *dt_region = &chip->dt_region_rd[i];
+ 		struct dw_edma_block *ll_block = &vsec_data.ll_rd[i];
+@@ -302,7 +302,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 		chip->reg_base);
  
-+struct epf_dma_filter {
-+	struct device *dev;
-+	u32 dma_mask;
-+};
-+
-+static bool epf_dma_filter_fn(struct dma_chan *chan, void *node)
-+{
-+	struct epf_dma_filter *filter = node;
-+	struct dma_slave_caps caps;
-+
-+	memset(&caps, 0, sizeof(caps));
-+	dma_get_slave_caps(chan, &caps);
-+
-+	return chan->device->dev == filter->dev
-+		&& (filter->dma_mask & caps.directions);
-+}
-+
- /**
-  * pci_epf_test_init_dma_chan() - Function to initialize EPF test DMA channel
-  * @epf_test: the EPF test device that performs data transfer operation
-@@ -158,10 +198,44 @@ static int pci_epf_test_init_dma_chan(struct pci_epf_test *epf_test)
- {
- 	struct pci_epf *epf = epf_test->epf;
- 	struct device *dev = &epf->dev;
-+	struct epf_dma_filter filter;
- 	struct dma_chan *dma_chan;
- 	dma_cap_mask_t mask;
- 	int ret;
  
-+	filter.dev = epf->epc->dev.parent;
-+	filter.dma_mask = BIT(DMA_DEV_TO_MEM);
-+
-+	dma_cap_zero(mask);
-+	dma_cap_set(DMA_SLAVE, mask);
-+	dma_chan = dma_request_channel(mask, epf_dma_filter_fn, &filter);
-+	if (IS_ERR_OR_NULL(dma_chan)) {
-+		dev_info(dev, "Failed to get private DMA rx channel. Falling back to generic one\n");
-+		goto fail_back_tx;
-+	}
-+
-+	epf_test->dma_chan_rx = dma_chan;
-+
-+	filter.dma_mask = BIT(DMA_MEM_TO_DEV);
-+	dma_chan = dma_request_channel(mask, epf_dma_filter_fn, &filter);
-+
-+	if (IS_ERR(dma_chan)) {
-+		dev_info(dev, "Failed to get private DMA tx channel. Falling back to generic one\n");
-+		goto fail_back_rx;
-+	}
-+
-+	epf_test->dma_chan_tx = dma_chan;
-+	epf_test->dma_private = true;
-+
-+	init_completion(&epf_test->transfer_complete);
-+
-+	return 0;
-+
-+fail_back_rx:
-+	dma_release_channel(epf_test->dma_chan_rx);
-+	epf_test->dma_chan_tx = NULL;
-+
-+fail_back_tx:
- 	dma_cap_zero(mask);
- 	dma_cap_set(DMA_MEMCPY, mask);
- 
-@@ -174,7 +248,7 @@ static int pci_epf_test_init_dma_chan(struct pci_epf_test *epf_test)
+-	for (i = 0; i < chip->wr_ch_cnt; i++) {
++	for (i = 0; i < chip->ll_wr_cnt; i++) {
+ 		pci_dbg(pdev, "L. List:\tWRITE CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+ 			i, vsec_data.ll_wr[i].bar,
+ 			vsec_data.ll_wr[i].off, chip->ll_region_wr[i].sz,
+@@ -314,7 +314,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 			chip->dt_region_wr[i].vaddr, &chip->dt_region_wr[i].paddr);
  	}
- 	init_completion(&epf_test->transfer_complete);
  
--	epf_test->dma_chan = dma_chan;
-+	epf_test->dma_chan_tx = epf_test->dma_chan_rx = dma_chan;
+-	for (i = 0; i < chip->rd_ch_cnt; i++) {
++	for (i = 0; i < chip->ll_rd_cnt; i++) {
+ 		pci_dbg(pdev, "L. List:\tREAD CH%.2u, BAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%p, p=%pa)\n",
+ 			i, vsec_data.ll_rd[i].bar,
+ 			vsec_data.ll_rd[i].off, chip->ll_region_rd[i].sz,
+diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+index 195ee1e47f21d..c8b479f1d4da7 100644
+--- a/include/linux/dma/edma.h
++++ b/include/linux/dma/edma.h
+@@ -40,8 +40,8 @@ enum dw_edma_map_format {
+  * @nr_irqs:		 total dma irq number
+  * @ops			 DMA channel to IRQ number mapping
+  * @reg_base		 DMA register base address
+- * @wr_ch_cnt		 DMA write channel number
+- * @rd_ch_cnt		 DMA read channel number
++ * @ll_wr_cnt		 DMA write link list count
++ * @ll_rd_cnt		 DMA read link list count
+  * @rg_region		 DMA register region
+  * @ll_region_wr	 DMA descriptor link list memory for write channel
+  * @ll_region_rd	 DMA descriptor link list memory for read channel
+@@ -58,8 +58,8 @@ struct dw_edma_chip {
  
- 	return 0;
- }
-@@ -190,8 +264,17 @@ static void pci_epf_test_clean_dma_chan(struct pci_epf_test *epf_test)
- 	if (!epf_test->dma_supported)
- 		return;
+ 	void __iomem		*reg_base;
  
--	dma_release_channel(epf_test->dma_chan);
--	epf_test->dma_chan = NULL;
-+	dma_release_channel(epf_test->dma_chan_tx);
-+	if (epf_test->dma_chan_tx == epf_test->dma_chan_rx) {
-+		epf_test->dma_chan_tx = NULL;
-+		epf_test->dma_chan_rx = NULL;
-+		return;
-+	}
-+
-+	dma_release_channel(epf_test->dma_chan_rx);
-+	epf_test->dma_chan_rx = NULL;
-+
-+	return;
- }
- 
- static void pci_epf_test_print_rate(const char *ops, u64 size,
-@@ -280,8 +363,14 @@ static int pci_epf_test_copy(struct pci_epf_test *epf_test)
- 			goto err_map_addr;
- 		}
- 
-+		if (epf_test->dma_private) {
-+			dev_err(dev, "Cannot transfer data using DMA\n");
-+			ret = -EINVAL;
-+			goto err_map_addr;
-+		}
-+
- 		ret = pci_epf_test_data_transfer(epf_test, dst_phys_addr,
--						 src_phys_addr, reg->size);
-+						 src_phys_addr, reg->size, 0, DMA_MEM_TO_MEM);
- 		if (ret)
- 			dev_err(dev, "Data transfer failed\n");
- 	} else {
-@@ -363,7 +452,8 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
- 
- 		ktime_get_ts64(&start);
- 		ret = pci_epf_test_data_transfer(epf_test, dst_phys_addr,
--						 phys_addr, reg->size);
-+						 phys_addr, reg->size,
-+						 reg->src_addr, DMA_DEV_TO_MEM);
- 		if (ret)
- 			dev_err(dev, "Data transfer failed\n");
- 		ktime_get_ts64(&end);
-@@ -453,8 +543,11 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
- 		}
- 
- 		ktime_get_ts64(&start);
-+
- 		ret = pci_epf_test_data_transfer(epf_test, phys_addr,
--						 src_phys_addr, reg->size);
-+						 src_phys_addr, reg->size,
-+						 reg->dst_addr,
-+						 DMA_MEM_TO_DEV);
- 		if (ret)
- 			dev_err(dev, "Data transfer failed\n");
- 		ktime_get_ts64(&end);
+-	u16			wr_ch_cnt;
+-	u16			rd_ch_cnt;
++	u16			ll_wr_cnt;
++	u16			ll_rd_cnt;
+ 	/* link list address */
+ 	struct dw_edma_region	ll_region_wr[EDMA_MAX_WR_CH];
+ 	struct dw_edma_region	ll_region_rd[EDMA_MAX_RD_CH];
 -- 
 2.35.1
 
