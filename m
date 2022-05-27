@@ -2,104 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA1EEC433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 27 May 2022 09:39:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D42DAC433F5
+	for <linux-pci@archiver.kernel.org>; Fri, 27 May 2022 12:55:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350185AbiE0Jjf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 27 May 2022 05:39:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45102 "EHLO
+        id S1346684AbiE0MzK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 27 May 2022 08:55:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245331AbiE0Jjd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 May 2022 05:39:33 -0400
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [IPv6:2a01:4f8:150:2161:1:b009:f23e:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 341A4BA55E;
-        Fri, 27 May 2022 02:39:32 -0700 (PDT)
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1" (verified OK))
-        by bmailout3.hostsharing.net (Postfix) with ESMTPS id 7E2FE101951A4;
-        Fri, 27 May 2022 11:39:28 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 52D002F792A; Fri, 27 May 2022 11:39:28 +0200 (CEST)
-Date:   Fri, 27 May 2022 11:39:28 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Gavin Hindman <gavin.hindman@intel.com>,
-        Linuxarm <linuxarm@huawei.com>,
-        "Weiny, Ira" <ira.weiny@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        linux-cxl@vger.kernel.org, CHUCK_LEVER <chuck.lever@oracle.com>
-Subject: Re: [RFC PATCH 0/1] DOE usage with pcie/portdrv
-Message-ID: <20220527093928.GA11083@wunner.de>
-References: <20220503153449.4088-1-Jonathan.Cameron@huawei.com>
- <CAPcyv4geBaTkoJ+Gefgq6RaKHtB3NMh5ruZ-1yV_i0UVaw3SWA@mail.gmail.com>
- <20220507101848.GB31314@wunner.de>
- <20220509104806.00007c61@Huawei.com>
- <20220511191345.GA26623@wunner.de>
- <20220511191943.GB26623@wunner.de>
- <CAPcyv4hUKjt7QrA__wQ0KowfaxyQuMjHB5V-=rZBm=UbV4OvSg@mail.gmail.com>
- <20220514135521.GB14833@wunner.de>
- <CAPcyv4izKEGKw0L=QkTxp8MMfuWxzF9Rz4Bb_F0rRRiy_+2m8w@mail.gmail.com>
+        with ESMTP id S1349827AbiE0MzF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 May 2022 08:55:05 -0400
+Received: from mail-qk1-x729.google.com (mail-qk1-x729.google.com [IPv6:2607:f8b0:4864:20::729])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEEA022BE7
+        for <linux-pci@vger.kernel.org>; Fri, 27 May 2022 05:55:03 -0700 (PDT)
+Received: by mail-qk1-x729.google.com with SMTP id p63so4954742qkf.0
+        for <linux-pci@vger.kernel.org>; Fri, 27 May 2022 05:55:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=BSsMozD0Lq0iC4EM9lYNlXi49mNRG6l4hCD1Hs5iBXM=;
+        b=E1IEYVgSG0+Cp9E27az2DSZCdjooKZRFTIAknVPbxEA24IswYpisrb22a0LCO4Yutp
+         4XsJlV3iiAHfEJHOUqZar/+z6eq/RNVnQDFf6R3luEpLOO9ZSoMj2k2S0fC4R/pSwYXU
+         DOpBIBWUCslS52Qi/CzJYZEl+JwIDoG+YDkhlb773/e2F0xPQeqxylr+kzCyh268b3ya
+         yKVvkB2lJlxnxrNfvpXMgjf4YpupMDYotK/5yJ7lKPpEk0ZuMkyWYAMEIMPhh7qzI2wh
+         swLJ7nNqHWA6WZu24/335hmDWzwhZxSHaBFgg7blIZ9gyKzXZY7CMQ39H9PyDicns9IH
+         ExdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=BSsMozD0Lq0iC4EM9lYNlXi49mNRG6l4hCD1Hs5iBXM=;
+        b=pOSWmqyuuHjTolzCGRooD81P38FsQ4ki/VvvM3q2cHAzkOx/SPrk0TdOmjMegZG5GU
+         BSI42ZFfFa1QNvlND7Ir/3gMXEWnsKG0Vsh59XKZWC8x3Mg7Puh8Sk6ZeiYSPfPmD75g
+         RYccTeIMJAX0IhhZmb7PNOF5LIBGeLYaYaiq/mmzQNAX5bZFn/rirmV9bXMOflWx9Rly
+         2aKBOFMOx+GijPBcOIW/QL3fdf+m5eKOOF4aSckqz9qKN35f6Lin+T7oEZcBFgn7BHxp
+         16+hb8+UbKm0KgSvGQKsm3W5C0tIyYD7zGSldCCIeE/08Obl5xULBkb0nr/RaPicuHES
+         1GyQ==
+X-Gm-Message-State: AOAM5338OX1bHuvA7nzbYKu/DQZLQ3aSzwVbxfm254iS4NLPtoHOkvZU
+        U4GMg8UVNhgCWj3foWLxu6UL0A==
+X-Google-Smtp-Source: ABdhPJxcD+5XVE67Aydy9O792T3TtXb3ll0b0WRGBBEtp6VFaNN0UYQTLMiTbm4pLr0b1PVKMYNipA==
+X-Received: by 2002:a05:620a:4481:b0:6a3:6326:784 with SMTP id x1-20020a05620a448100b006a363260784mr21538514qkp.372.1653656103072;
+        Fri, 27 May 2022 05:55:03 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-162-113-129.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.162.113.129])
+        by smtp.gmail.com with ESMTPSA id g5-20020ac87d05000000b002f940249151sm3165272qtb.73.2022.05.27.05.55.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 May 2022 05:55:02 -0700 (PDT)
+Received: from jgg by mlx with local (Exim 4.94)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1nuZUb-00DTYK-OD; Fri, 27 May 2022 09:55:01 -0300
+Date:   Fri, 27 May 2022 09:55:01 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, iommu@lists.linux-foundation.org,
+        Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Don Dutile <ddutile@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Jakowski Andrzej <andrzej.jakowski@intel.com>,
+        Minturn Dave B <dave.b.minturn@intel.com>,
+        Jason Ekstrand <jason@jlekstrand.net>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Xiong Jianxin <jianxin.xiong@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Martin Oliveira <martin.oliveira@eideticom.com>,
+        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
+        Ralph Campbell <rcampbell@nvidia.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v6 20/21] PCI/P2PDMA: Introduce pci_mmap_p2pmem()
+Message-ID: <20220527125501.GD2960187@ziepe.ca>
+References: <20220407154717.7695-1-logang@deltatee.com>
+ <20220407154717.7695-21-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4izKEGKw0L=QkTxp8MMfuWxzF9Rz4Bb_F0rRRiy_+2m8w@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20220407154717.7695-21-logang@deltatee.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, May 16, 2022 at 10:01:26AM -0700, Dan Williams wrote:
-> On Sat, May 14, 2022 at 6:55 AM Lukas Wunner <lukas@wunner.de> wrote:
-> > Circling back to the SPDM/IDE topic, while NVMe is now capable of
-> > reliably recovering from errors, it does expect the kernel to handle
-> > recovery within a few seconds.  I'm not sure we can continue to
-> > guarantee that if the kernel depends on user space to perform
-> > re-authentication with SPDM after reset.  That's another headache
-> > that we could avoid with in-kernel SPDM authentication.
-> 
-> What is missing from this conversation is what constitutes a device
-> leaving the trusted compute boundary and is the existing attestation
-> invalidated by a reset. I.e. perhaps the kernel can just do a
-> keep-alive heartbeat after the reset with the already negotiated key
-> to confirm the session is still valid.
+On Thu, Apr 07, 2022 at 09:47:16AM -0600, Logan Gunthorpe wrote:
+> +static void pci_p2pdma_unmap_mappings(void *data)
+> +{
+> +	struct pci_dev *pdev = data;
+> +	struct pci_p2pdma *p2pdma = rcu_dereference_protected(pdev->p2pdma, 1);
+> +
+> +	/* Ensure no new pages can be allocated in mappings */
+> +	p2pdma->active = false;
+> +	synchronize_rcu();
+> +
+> +	unmap_mapping_range(p2pdma->inode->i_mapping, 0, 0, 1);
+> +
+> +	/*
+> +	 * On some architectures, TLB flushes are done with call_rcu()
+> +	 * so to ensure GUP fast is done with the pages, call synchronize_rcu()
+> +	 * before freeing them.
+> +	 */
+> +	synchronize_rcu();
+> +	pci_p2pdma_free_mappings(p2pdma->inode->i_mapping);
 
-After a bit of digging in the spec I think I can answer your question.
+With the series from Felix getting close this should get updated to
+not set pte_devmap and use proper natural refcounting without any of
+this stuff.
 
-Any type of reset (both Conventional Reset and FLR) "must result in all
-IDE Streams associated with that Function transitioning to the Insecure
-state, and all keys must be invalidated and rendered unreadable."
-(PCIe r6.0, sec 6.33.8).
-
-So IDE is always gone after reset and needs to be re-established.
-An SPDM session is necessary for that.  Does a reset affect SPDM?
-
-It depends on the type of reset:  A FLR "must not change the state
-of the secure session" (PCIe r6.0, sec 6.31.4).
-
-But for a Conventional Reset, the situation seems to be different:
-The CMA/SPDM section of the spec doesn't say what happens to an
-SPDM session upon a Conventional Reset, but sec 6.6.1 clearly states
-that "all Port registers and state machines must be set to their
-initialization values as specified in this document, except for
-sticky registers".  So I think we must assume that the SPDM session
-is gone after a Conventional Reset.
-
-DPC results in a Conventional Reset at the port where it occurs and
-also propagates a Hot Reset down the hierarchy (see ea401499e943).
-
-The bottom line is that after DPC, both the SPDM session as well as IDE
-need to be re-established, requiring the certificate validation
-which is controversial here when performed at the kernel level.
-
-(As an aside, sec 6.6.2 lists the registers not affected by a FLR
-but neglects to mention the SPDM/CMA session state.  I think that's
-an erratum, I've requested access to the protocol workgroup to
-report that.)
-
-Thanks,
-
-Lukas
+Jason
