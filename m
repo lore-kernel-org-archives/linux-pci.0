@@ -2,116 +2,79 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D342C4332F
-	for <linux-pci@archiver.kernel.org>; Sun, 29 May 2022 13:21:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41C2FC433F5
+	for <linux-pci@archiver.kernel.org>; Sun, 29 May 2022 16:15:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229743AbiE2NVm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 29 May 2022 09:21:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34502 "EHLO
+        id S231296AbiE2QPG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 29 May 2022 12:15:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229719AbiE2NVm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 May 2022 09:21:42 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 420D240E50;
-        Sun, 29 May 2022 06:21:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EAED9B80B12;
-        Sun, 29 May 2022 13:21:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86A05C385A9;
-        Sun, 29 May 2022 13:21:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653830496;
-        bh=dxfYme49t+GbMgcSO3QeI/AUvVznk4CbVEjgcs5IqeA=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ZtvYyGuKggkHRZd4Tuz79URyRouxrmYBBua0Sj4ctMAqerLnnHdoIaKrqigBEKqhu
-         yo3F+UafQ2xlqmoX2615EZF0FRYj3B2o5NwUr1GawytpkyyWYDE7pUJz8KZRtu1qdp
-         U7KEHKxx1mS68I/tPRFz70tePN3o5ED45GDZToadAUpFfGr44ti5zkbo0WQqh00rjW
-         rW7vf+lITgBan3cYOyV6Bd8y6Mb6BgQCpL6lDnWqhEkGW5QmPz9wKElyAYDL2ZQXHD
-         QVYnZt9Zd+Km7TGL4g5B6FX+b32Az4r2s9HDs9IUAU+vrpn5tSmN54cgW84fmKua8E
-         Ixxu1y7kvkm0A==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=wait-a-minute.misterjones.org)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <maz@kernel.org>)
-        id 1nvIrO-00ELlF-6O; Sun, 29 May 2022 14:21:34 +0100
-Date:   Sun, 29 May 2022 14:21:33 +0100
-Message-ID: <875ylomq3m.wl-maz@kernel.org>
-From:   Marc Zyngier <maz@kernel.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        with ESMTP id S230190AbiE2QPC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 29 May 2022 12:15:02 -0400
+X-Greylist: delayed 1091 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 29 May 2022 09:15:00 PDT
+Received: from imap3.hz.codethink.co.uk (imap3.hz.codethink.co.uk [176.9.8.87])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0D3191545
+        for <linux-pci@vger.kernel.org>; Sun, 29 May 2022 09:15:00 -0700 (PDT)
+Received: from cpc152649-stkp13-2-0-cust121.10-2.cable.virginm.net ([86.15.83.122] helo=[192.168.0.17])
+        by imap3.hz.codethink.co.uk with esmtpsa  (Exim 4.92 #3 (Debian))
+        id 1nvLHZ-0005f7-KS; Sun, 29 May 2022 16:56:45 +0100
+Message-ID: <ddc1462c-be74-420a-6809-c868fa056fa7@codethink.co.uk>
+Date:   Sun, 29 May 2022 16:56:44 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.9.0
+Subject: Re: [V3] PCI: fu740: Drop to 2.5GT/s to fix initial device probing on
+ some boards
+Content-Language: en-GB
+To:     "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc:     Alexandre Ghiti <alex@ghiti.fr>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Palmer Dabbelt <palmer@dabbelt.com>,
-        Masahiro Yamada <masahiroy@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Huacai Chen <chenhuacai@loongson.cn>,
-        WANG Xuerui <kernel@xen0n.name>, libc-alpha@sourceware.org,
-        musl@lists.openwall.com, ardb@kernel.org,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [GIT PULL] asm-generic changes for 5.19
-In-Reply-To: <CAK8P3a0SpU1n+29KQxzKnPRvzmDE=L0V9RUpKxhemv=74kevcQ@mail.gmail.com>
-References: <CAK8P3a2_52JPnBWNvTTkFVwLxPAa7=NaQ4whwC1UeH_NYHeUKQ@mail.gmail.com>
-        <CAK8P3a0SpU1n+29KQxzKnPRvzmDE=L0V9RUpKxhemv=74kevcQ@mail.gmail.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/27.1
- (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: arnd@kernel.org, torvalds@linux-foundation.org, linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org, ysato@users.sourceforge.jp, palmer@dabbelt.com, masahiroy@kernel.org, peterz@infradead.org, chenhuacai@loongson.cn, kernel@xen0n.name, libc-alpha@sourceware.org, musl@lists.openwall.com, ardb@kernel.org, linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+        Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Greentime Hu <greentime.hu@sifive.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        David Abdurachmanov <david.abdurachmanov@sifive.com>,
+        Neill Whillans <neill.whillans@codethink.co.uk>
+References: <20220318152430.526320-1-ben.dooks@codethink.co.uk>
+ <2442936e-a53e-59bf-488f-95eac26d1252@ghiti.fr>
+ <85e864fd-762e-0780-f829-bfbb178ab24e@ghiti.fr>
+ <bded4b1e-3404-6bcd-3289-dc8d5b4d713a@codethink.co.uk>
+ <alpine.DEB.2.21.2204140048460.9383@angie.orcam.me.uk>
+ <3acd20b2-5882-7cc0-8a7b-7b406b768c1c@codethink.co.uk>
+ <alpine.DEB.2.21.2205020049130.9383@angie.orcam.me.uk>
+From:   Ben Dooks <ben.dooks@codethink.co.uk>
+Organization: Codethink Limited.
+In-Reply-To: <alpine.DEB.2.21.2205020049130.9383@angie.orcam.me.uk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, 29 May 2022 12:24:29 +0100,
-Arnd Bergmann <arnd@kernel.org> wrote:
+On 02/05/2022 12:46, Maciej W. Rozycki wrote:
+> Hi Ben,
 > 
-> On Thu, May 26, 2022 at 5:00 PM Arnd Bergmann <arnd@kernel.org> wrote:
-> > - A series to add a generic ticket spinlock that can be shared by most
-> >   architectures with a working cmpxchg or ll/sc type atomic, including
-> >   the conversion of riscv, csky and openrisc. This series is also a
-> >   prerequisite for the loongarch64 architecture port that will come as
-> >   a separate pull request.
->
-> An update on Loongarch: I was originally planning to  send Linus a
-> pull request with
-> the branch with the contents from
+>>>    Any idea what might be causing it?  I can't see it being explicitly set
+>>> or cleared anywhere, be it in U-Boot or Linux, so it must be done by the
+>>> device itself depending on something.  And the lack of this capability
+>>> seems to me like non-compliance for a multiple-lane, multiple-speed
+>>> device.
+>>
+>> I'll see if we can reproduce this
 > 
-> https://git.kernel.org/pub/scm/linux/kernel/git/chenhuacai/linux-loongson.git/log/?h=loongarch-next
+>   Have you been able to look into it?
 > 
-> but I saw that this includes both the architecture code and some
-> device drivers (irqchip, pci, acpi) that are essential for the
-> kernel to actually boot. At least the irqchip driver has not passed
-> review because it uses a nonstandard way to integrate into ACPI, and
-> the PCI stuff may or may not be ready but has no Reviewed-by or
-> Acked-by tags from the maintainers. I clearly don't want to bypass
-> the subsystem maintainers on those drivers by sending a pull request
-> for the current branch.
 
-It seems that there is now a new contributor on the irqchip front, and
-the current approach *should* be better than the "copy MIPS and run"
-approach that was previously taken. I'm still to find time to review
-the new series (I just came back from a week off), but hopefully next
-week.
+I can't see anything obvious from the code, however my SD card image
+does not have lspci on it and I have not had time to make a new image
+to test.
 
-> My feeling is that there is also no point in merging a port without
-> the drivers as it cannot work on any hardware. On the other hand,
-> the libc submissions (glibc and musl) are currently blocked while
-> they are waiting for the kernel port to get merged.
-
-I'd tend to agree. But if on the other hand the userspace ABI is
-clearly defined, I think it could make sense to go for it (if I
-remember well, we merged arm64 without any support irqchip support,
-and the arm64 GIC support appeared later in the game).
-
-Thanks,
-
-	M.
+I wonder if anyone at SiFive can comment on this?
 
 -- 
-Without deviation from the norm, progress is not possible.
+Ben Dooks				http://www.codethink.co.uk/
+Senior Engineer				Codethink - Providing Genius
+
+https://www.codethink.co.uk/privacy.html
