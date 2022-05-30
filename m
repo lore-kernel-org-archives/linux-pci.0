@@ -2,103 +2,102 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B80C433F5
-	for <linux-pci@archiver.kernel.org>; Mon, 30 May 2022 07:36:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B596C433EF
+	for <linux-pci@archiver.kernel.org>; Mon, 30 May 2022 08:21:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233544AbiE3HgK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 May 2022 03:36:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40774 "EHLO
+        id S233731AbiE3IV3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 May 2022 04:21:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233542AbiE3HgJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2022 03:36:09 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47CA039B99;
-        Mon, 30 May 2022 00:36:03 -0700 (PDT)
-X-UUID: 33b064ae7da048188e2a565cc58ae238-20220530
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.5,REQID:57f8ed2e-6554-4fd0-bd82-9213fe71ea40,OB:0,LO
-        B:0,IP:0,URL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,RULE:Release_Ham,ACTI
-        ON:release,TS:0
-X-CID-META: VersionHash:2a19b09,CLOUDID:0e78bfb8-3c45-407b-8f66-25095432a27a,C
-        OID:IGNORED,Recheck:0,SF:nil,TC:nil,Content:0,EDM:-3,IP:nil,URL:0,File:nil
-        ,QS:0,BEC:nil
-X-UUID: 33b064ae7da048188e2a565cc58ae238-20220530
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw02.mediatek.com
-        (envelope-from <miles.chen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 1687734413; Mon, 30 May 2022 15:35:57 +0800
-Received: from mtkmbs07n1.mediatek.inc (172.21.101.16) by
- mtkmbs11n1.mediatek.inc (172.21.101.185) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Mon, 30 May 2022 15:35:56 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs07n1.mediatek.inc (172.21.101.16) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Mon, 30 May 2022 15:35:55 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 30 May 2022 15:35:55 +0800
-From:   Miles Chen <miles.chen@mediatek.com>
-To:     <linmq006@gmail.com>
-CC:     <bhelgaas@google.com>, <jianjun.wang@mediatek.com>, <kw@linux.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <lorenzo.pieralisi@arm.com>, <matthias.bgg@gmail.com>,
-        <maz@kernel.org>, <miles.chen@mediatek.com>, <robh@kernel.org>,
-        <ryder.lee@mediatek.com>
-Subject: Re: [PATCH] PCI: mediatek-gen3: Fix refcount leak in mtk_pcie_init_irq_domains
-Date:   Mon, 30 May 2022 15:35:56 +0800
-Message-ID: <20220530073556.1831-1-miles.chen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <6cf820cf-a2e7-c93e-3c00-08bc366f2eb2@gmail.com>
-References: <6cf820cf-a2e7-c93e-3c00-08bc366f2eb2@gmail.com>
+        with ESMTP id S233572AbiE3IVT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2022 04:21:19 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87FA06D19E;
+        Mon, 30 May 2022 01:21:18 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 236D660E8E;
+        Mon, 30 May 2022 08:21:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83626C3411E;
+        Mon, 30 May 2022 08:21:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653898877;
+        bh=6mZJiJbmBP5nIWsu49+CXVUX8jQfK+UvVFjRNgWXebw=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=XaoiQTO07UWKTKa7DvAu3E1TqyqCrZvDMjSawN2jqjs76oebLWXuHNyMMHpEHCuW2
+         RWVc8AQkaQdSALmWN1qEnP0U8+tmhvdUUIDC3u1bZpg/H6AlLeWXqRxTX/vimIu5bw
+         OXy7mEv0vYi2vsR/WO2VshcjWhH9onv5cq3HaCOzUDMYDdSqutECZxfI+ZI4FnTXlx
+         PNqKIZPahp6AyssPmubpmLdigj+1u+H946fyAVrYADTUucMm/fFuIBWV9X6L1Zmr14
+         QpLIbLZkXFgalB1GAGy3ay5uv7IuaVB4BOqOQrDUDblPJ+kvhE44AXYO5EfX0654Vb
+         Oc99QbaK00vFw==
+Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-30c1b401711so38155747b3.2;
+        Mon, 30 May 2022 01:21:17 -0700 (PDT)
+X-Gm-Message-State: AOAM530PAd9NbmwcjyGNwsNsNXlbx4pNk0C7Y1eP7B/M3yqeHOIbnB71
+        KAYKCayUz6DR6nrKuQd/NV4ac5wnAgu2nGBnXLk=
+X-Google-Smtp-Source: ABdhPJwtYtcRJBvW0OhdeYiTGlxOaw+f4fu0VS7H8dnFKjbyUOJjLxz2DuwfUfrH0XZz0QtT75LFMu05vESNYppoiso=
+X-Received: by 2002:a81:488c:0:b0:302:549f:ffbc with SMTP id
+ v134-20020a81488c000000b00302549fffbcmr21167071ywa.495.1653898876538; Mon, 30
+ May 2022 01:21:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+References: <CAK8P3a2_52JPnBWNvTTkFVwLxPAa7=NaQ4whwC1UeH_NYHeUKQ@mail.gmail.com>
+ <CAK8P3a0SpU1n+29KQxzKnPRvzmDE=L0V9RUpKxhemv=74kevcQ@mail.gmail.com> <df5c406c-eec6-c340-2847-49670b7fe8bf@xen0n.name>
+In-Reply-To: <df5c406c-eec6-c340-2847-49670b7fe8bf@xen0n.name>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Mon, 30 May 2022 10:20:59 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a3awFdB1-G65DC38NBuSTvo6SvFTaS0m9YBxunHjHjQvQ@mail.gmail.com>
+Message-ID: <CAK8P3a3awFdB1-G65DC38NBuSTvo6SvFTaS0m9YBxunHjHjQvQ@mail.gmail.com>
+Subject: Re: [GIT PULL] asm-generic changes for 5.19
+To:     WANG Xuerui <kernel@xen0n.name>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        libc-alpha@sourceware.org,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        musl@lists.openwall.com,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        linux-acpi@vger.kernel.org, Jianmin Lv <lvjianmin@loongson.cn>,
+        linux-pci@vger.kernel.org, ardb@kernel.org,
+        Huacai Chen <chenhuacai@loongson.cn>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Miaoqian,
+On Sun, May 29, 2022 at 3:10 PM WANG Xuerui <kernel@xen0n.name> wrote:
+> But what for the users and downstream projects? Do the users owning
+> LoongArch hardware (me included) and projects/companies porting their
+> offerings have to pay for Loongson's mistakes and wait another [2mo,
+> 1yr], "ideally" also missing the glibc 2.36 release too?
+...
+> Lastly, I'd like to clarify, that this is by no means a
+> passive-aggressive statement to make the community look like "the bad
+> guy", or to make Loongson "look bad"; I just intend to provide a
+> hopefully fresh perspective from a/an {end user, hobbyist kernel
+> developer, distro developer, native Chinese speaker with a hopefully
+> decent grasp of English}'s view.
 
->Hi, Miles
->
->On 2022/5/30 10:19, Miles Chen wrote:
->> Hi Miaoqian,
->>
->>>>> 						  &intx_domain_ops, pcie);
->>>>> 	if (!pcie->intx_domain) {
->>>>> 		dev_err(dev, "failed to create INTx IRQ domain\n");
->>>>> +		of_node_put(intc_node);
->>>>> 		return -ENODEV;
->>>>> 	}
->>>> Thanks for doing this.
->>>>
->>>> I checked mtk_pcie_init_irq_domains() and there are multiple exit paths like
->>>> err_msi_domain and err_msi_bottom_domain and the normal path which also
->>>> need of_node_put(intc_node).
->>> Thanks for your reply,
->>>
->>> I didn't add of_node_put() in other paths because I am not sure if the reference passed through irq_domain_add_linear(), since intc_node is passed to irq_domain_add_linear().
->>>
->>> __irq_domain_add() keeps &node->fwnode in the irq_domain structure.
->>>
->>> and use fwnode_handle_get() to get the reference of fwnode, but I still uncertain.
->>>
->>> If the reference don't needed anymore after irq_domain_add_linear(),
->>>
->>> your suggestion looks fine, and I will submit v2.
->>
->> Thanks for your reply, I think we can do similar things like
->> rtl8365mb_irq_setup() in drivers/net/dsa/realtek/rtl8365mb.c
->
->I checked rtl8365mb_irq_setup(), it calls of_node_put() by goto statement for error paths.
->
->and calls of_node_put() before return 0 in normal path. I didn't see the same problem.
+Your feedback has been extremely valuable, as always. I definitely
+don't want to hold up merging the port for the glibc-2.36 release. If
+that is a risk, and if merging the architecture port without the drivers
+helps with that, I agree we should just do that. This will also help
+with build testing and any treewide changes that are going to be
+done on top of v5.19-rc1.
 
-Sorry for the confusing. I meant that we can do the same thing - 
-it calls of_node_put() by goto statement for error paths
-and calls of_node_put() before return 0 in normal path. :-)
+For the continuous maintenance, would you be available as an
+additional Reviewer or co-maintainer to be listed in the maintainers
+file? I think in general it is a good idea to have at least one maintainer
+that is not directly part of the organization that owns the product,
+and you are clearly the best person outside of loongson technology
+for this.
 
-Thanks,
-Miles
+Regarding the irqchip driver, merging those is entirely up to Marc and
+Thomas. Marc already brought up the precedent of merging arch/arm64
+without the required irqchip driver support, and if it turns out that he
+find the latest driver submission acceptable, that might still make it in
+through the irqchip tree.
+
+        Arnd
