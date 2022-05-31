@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9366CC433F5
-	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 15:27:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0E85C4332F
+	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 15:27:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345684AbiEaP1F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 May 2022 11:27:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60874 "EHLO
+        id S1345649AbiEaP1G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 May 2022 11:27:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32816 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345660AbiEaP07 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 11:26:59 -0400
+        with ESMTP id S243321AbiEaP1C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 11:27:02 -0400
 Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BF262C679;
-        Tue, 31 May 2022 08:26:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40E0F3CFD0;
+        Tue, 31 May 2022 08:27:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654010817; x=1685546817;
+  t=1654010820; x=1685546820;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ycQuLresR2RRvgxxXObAlnYWlR5adWa/fCrWLcv5LMg=;
-  b=ErhSOFYtvOh5K78xWY2uo1TFdnBVRjqdtp7yTWT2XpyFxs+ZypbuLInn
-   XsrNWwSAchkmYQ1D2oyxSq6Az7a+FQIk70Q4Sb49lagbTLRgLyRkyfuCR
-   pdt4hMI7CKAGvkzC4ODMxXm7AQy8Gus2dS6Imc3XSpZC2rPrH0AaTYroZ
-   yxQexic/PXVoVwJbmjg5BljxkzsPj3FtNQuMLbcUDOQRkP15Evc0BA5Ff
-   GJrLxqXV9uqcrCdZ3esVfUkXVGiGtrcH8QVxhsHnv+6IzmA4Py21aJjV2
-   8urOiPFrk9OhfvHaj1PaNlCiFqpgtGvdxKeZPZtlYtGA1otULHScB/yrg
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10364"; a="275374302"
+  bh=B1VIV7rDHJBWufsm5OMkB7JZJiwMaUmV9RgNAVp8k8I=;
+  b=h2jp3JHmNIOCUhXPGy0Tm1PcbF6zTx8ZVneE5dDk8FJlSelhv2LTL8lj
+   /yoCk/5iF5Qe+Dn10sjXdprS2JwNeAq5FSvRIRA54iQ05BlqhGdHtKHCx
+   DVsdat9P8+j0Durg82mbWkEnR+0rvgMDeiTgErcxWOxUjwDsi1frRNE0t
+   myRWqPuM0H0DYTyVlmRA5QV2YiilWkKyzirWxCs3+dVYyZILiE1FR9ueU
+   gJpupyfQIoaAo0X+OG0YcVR2V/+xkBkF9SkYvCqUzTDPA1/BXB19YzXE7
+   AVYytkcAyE3UoVTG0TNrdFyAc0PowOAufWoH2pkeQSrHBmiq8FTUA2bqr
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10364"; a="275374323"
 X-IronPort-AV: E=Sophos;i="5.91,265,1647327600"; 
-   d="scan'208";a="275374302"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 08:26:55 -0700
+   d="scan'208";a="275374323"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 08:27:00 -0700
 X-IronPort-AV: E=Sophos;i="5.91,265,1647327600"; 
-   d="scan'208";a="576456518"
+   d="scan'208";a="755078893"
 Received: from mdossant-mobl1.amr.corp.intel.com (HELO localhost) ([10.212.154.135])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 08:26:55 -0700
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 08:26:59 -0700
 From:   ira.weiny@intel.com
 To:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,9 +46,9 @@ Cc:     Alison Schofield <alison.schofield@intel.com>,
         Dave Jiang <dave.jiang@intel.com>,
         Ben Widawsky <ben@bwidawsk.net>, linux-kernel@vger.kernel.org,
         linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH V9 3/9] PCI: Create PCI library functions in support of DOE mailboxes.
-Date:   Tue, 31 May 2022 08:26:26 -0700
-Message-Id: <20220531152632.1397976-4-ira.weiny@intel.com>
+Subject: [PATCH V9 6/9] cxl/port: Read CDAT table
+Date:   Tue, 31 May 2022 08:26:29 -0700
+Message-Id: <20220531152632.1397976-7-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220531152632.1397976-1-ira.weiny@intel.com>
 References: <20220531152632.1397976-1-ira.weiny@intel.com>
@@ -60,989 +60,423 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
-Introduced in a PCI r6.0, sec 6.30, DOE provides a config space based mailbox
-with standard protocol discovery.  Each mailbox is accessed through a
-DOE Extended Capability.
+The OS will need CDAT data from CXL devices to properly set up
+interleave sets.  Currently this is supported through a DOE mailbox
+which supports CDAT.
 
-Each DOE mailbox must support the DOE discovery protocol in addition to
-any number of additional protocols.
+Cache the CDAT data for later parsing.  Provide a sysfs binary attribute
+to allow dumping of the CDAT.
 
-Define core PCI functionality to manage a single PCI DOE mailbox at a
-defined config space offset.  Functionality includes iterating,
-creating, query of supported protocol, task submission, and destruction
-of the mailboxes.
+Binary dumping is modeled on /sys/firmware/ACPI/tables/
 
-If interrupts are desired, the interrupt number can be queried and
-passed to the create function.  Passing a negative value disables
-interrupts for that mailbox.  It is the callers responsibility to ensure
-enough interrupt vectors are allocated.
+The ability to dump this table will be very useful for emulation of real
+devices once they become available as QEMU CXL type 3 device emulation will
+be able to load this file in.
+
+This does not support table updates at runtime. It will always provide
+whatever was there when first cached. Handling of table updates can be
+implemented later.
+
+Finally create a complete list of DOE defines within cdat.h for code
+wishing to decode the CDAT table.
 
 Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Co-developed-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from V8
-	Remove Bjorn's ack
-	Expose a function to find the irq number for a mailbox based on
-	offset.  This is the code Jonathan proposed for finding the irq
-	number here:
-	https://lore.kernel.org/linux-cxl/20220503153449.4088-2-Jonathan.Cameron@huawei.com/
-		This removes funky bool parameter to create.
-	Move pci_set_master() within the pci_doe_enable_irq()
-	Per Bjorn
-		Clean up commit messages
-		move pci-doe.c to doe.c
-		Clean up PCI spec references
-		Ensure all messages use pci_*()
-		Add offset to error messages to distinguish mailboxes
-			use hex for DOE offsets
-		Print 4 nibbles for Vendor ID and 2 for type.
-		s/irq/IRQ in comments
-		Fix long lines
-		Fix typos
+Changes from V8:
+	Fix length print format
+	Incorporate feedback from Jonathan
+	Move all this to cxl_port which can help support switches when
+	the time comes.
 
-Changes from V7
-	Add a Kconfig for this functionality
-	Fix bug in pci_doe_supports_prot()
+Changes from V6:
+	Fix issue with devm use
+		Move cached cdat data to cxl_dev_state
+	Use new pci_doe_submit_task()
+	Ensure the aux driver is locked while processing tasks
 	Rebased on cxl-pending
 
-Changes from V6
-	Clean up signed off by lines
-	Make this functionality all PCI library functions
-	Clean up header files
-	s/pci_doe_irq/pci_doe_irq_handler
-	Use pci_{request,free}_irq
-		Remove irq_name (maintained by pci_request_irq)
-	Fix checks to use an irq
-	Consistently use u16 for cap_offset
-	Cleanup kdocs and comments
-	Create a helper retire_cur_task() to handle locking of the
-		current task pointer.
-	Remove devm_ calls from PCI layer.
-		The devm_ calls do not allow for the pci_doe_mb objects
-		to be tied to an auxiliary device.  Leave it to the
-		caller to use devm_ if desired.
-	From Dan Williams
-		s/cb/end_task/; Pass pci_doe_task to end_task
-		Clarify exchange/task/request/response.
-			Merge pci_doe_task and pci_doe_exchange into
-			pci_doe_task which represents a single
-			request/response task for the state machine to
-			process.
-		Simplify submitting work to the mailbox
-			Replace pci_doe_exchange_sync() with
-			pci_doe_submit_task() Consumers of the mailbox
-			are now responsible for setting up callbacks
-			within a task object and submitting them to the
-			mailbox to be processed.
-		Remove WARN_ON when task != NULL and be sure to abort that task.
-		Convert abort/dead to atomic flags
-		s/state_lock/task_lock to better define what the lock is
-			protecting
-		Remove all the auxiliary bus code from the PCI layer
-			The PCI layer provides helpers to use the DOE
-			Mailboxes.  Each subsystem can then use the
-			helpers as they see fit.  The CXL layer in this
-			series uses aux devices to manage the new
-			pci_doe_mb objects.
+Changes from V5:
+	Add proper guards around cdat.h
+	Split out finding the CDAT DOE mailbox
+	Use cxl_cdat to group CDAT data together
+	Adjust to use auxiliary_find_device() to find the DOE device
+		which supplies the CDAT protocol.
+	Rebased to latest
+	Remove dev_dbg(length)
+	Remove unneeded DOE Table access defines
+	Move CXL_DOE_PROTOCOL_TABLE_ACCESS define into this patch where
+		it is used
 
-	From Bjorn
-		Clarify the fact that DOE mailboxes are capabilities of
-			the device.
-		Code clean ups
-		Cleanup Makefile
-		Update references to PCI SIG spec v6.0
-		Move this attribution here:
-		This code is based on Jonathan's V4 series here:
-		https://lore.kernel.org/linux-cxl/20210524133938.2815206-1-Jonathan.Cameron@huawei.com/
-
-Changes from V5
-	From Bjorn
-		s/pci_WARN/pci_warn
-			Add timeout period to print
-		Trim to 80 chars
-		Use Tabs for DOE define spacing
-		Use %#x for clarity
-	From Jonathan
-		Addresses concerns about the order of unwinding stuff
-		s/doe/doe_dev in pci_doe_exhcnage_sync
-		Correct kernel Doc comment
-		Move pci_doe_task_complete() down in the file.
-		Rework pci_doe_irq()
-			process STATUS_ERROR first
-			Return IRQ_NONE if the irq is not processed
-			Use PCI_DOE_STATUS_INT_STATUS explicitly to
-				clear the irq
-	Clean up goto label s/err_free_irqs/err_free_irq
-	use devm_kzalloc for doe struct
-	clean up error paths in pci_doe_probe
-	s/pci_doe_drv/pci_doe
-	remove include mutex.h
-	remove device name and define, move it in the next patch which uses it
-	use devm_kasprintf() for irq_name
-	use devm_request_irq()
-	remove pci_doe_unregister()
-		[get/put]_device() were unneeded and with the use of
-		devm_* this function can be removed completely.
-	refactor pci_doe_register and s/pci_doe_register/pci_doe_reg_irq
-		make this function just a registration of the irq and
-		move pci_doe_abort() into pci_doe_probe()
-	use devm_* to allocate the protocol array
-
-Changes from Jonathan's V4
-	Move the DOE MB code into the DOE auxiliary driver
-	Remove Task List in favor of a wait queue
-
-Changes from Ben
-	remove CXL references
-	propagate rc from pci functions on error
+Changes from V4:
+	Split this into it's own patch
+	Rearchitect this such that the memdev driver calls into the DOE
+	driver via the cxl_mem state object.  This allows CDAT data to
+	come from any type of cxl_mem object not just PCI DOE.
+	Rebase on new struct cxl_dev_state
 ---
- drivers/pci/Kconfig           |   3 +
- drivers/pci/Makefile          |   1 +
- drivers/pci/doe.c             | 633 ++++++++++++++++++++++++++++++++++
- include/linux/pci-doe.h       | 120 +++++++
- include/uapi/linux/pci_regs.h |  29 +-
- 5 files changed, 785 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/doe.c
- create mode 100644 include/linux/pci-doe.h
+ drivers/cxl/cdat.h      |  99 ++++++++++++++++++++++++++++++
+ drivers/cxl/core/pci.c  | 132 +++++++++++++++++++++++++++++++++++++++-
+ drivers/cxl/core/port.c |  43 +++++++++++++
+ drivers/cxl/cxl.h       |   3 +
+ drivers/cxl/cxlpci.h    |   1 +
+ 5 files changed, 276 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/cxl/cdat.h
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 133c73207782..b2f2e588a817 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -121,6 +121,9 @@ config XEN_PCIDEV_FRONTEND
- config PCI_ATS
- 	bool
- 
-+config PCI_DOE
-+	bool
-+
- config PCI_ECAM
- 	bool
- 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 0da6b1ebc694..2680e4c92f0a 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -31,6 +31,7 @@ obj-$(CONFIG_PCI_ECAM)		+= ecam.o
- obj-$(CONFIG_PCI_P2PDMA)	+= p2pdma.o
- obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
- obj-$(CONFIG_VGA_ARB)		+= vgaarb.o
-+obj-$(CONFIG_PCI_DOE)		+= doe.o
- 
- # Endpoint library must be initialized before its users
- obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
-diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+diff --git a/drivers/cxl/cdat.h b/drivers/cxl/cdat.h
 new file mode 100644
-index 000000000000..5c533ba2e580
+index 000000000000..f5193a6a51fe
 --- /dev/null
-+++ b/drivers/pci/doe.c
-@@ -0,0 +1,633 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Data Object Exchange
-+ *	PCIe r6.0, sec 6.30 DOE
-+ *
-+ * Copyright (C) 2021 Huawei
-+ *	Jonathan Cameron <Jonathan.Cameron@huawei.com>
-+ *
-+ * Copyright (C) 2022 Intel Corporation
-+ *	Ira Weiny <ira.weiny@intel.com>
-+ */
-+
-+#include <linux/bitfield.h>
-+#include <linux/delay.h>
-+#include <linux/jiffies.h>
-+#include <linux/mutex.h>
-+#include <linux/pci.h>
-+#include <linux/pci-doe.h>
-+#include <linux/workqueue.h>
-+
-+#define PCI_DOE_PROTOCOL_DISCOVERY 0
-+
-+#define PCI_DOE_BUSY_MAX_RETRIES 16
-+#define PCI_DOE_POLL_INTERVAL (HZ / 128)
-+
-+/* Timeout of 1 second from 6.30.2 Operation, PCI Spec r6.0 */
-+#define PCI_DOE_TIMEOUT HZ
-+
-+static irqreturn_t pci_doe_irq_handler(int irq, void *data)
-+{
-+	struct pci_doe_mb *doe_mb = data;
-+	struct pci_dev *pdev = doe_mb->pdev;
-+	int offset = doe_mb->cap_offset;
-+	u32 val;
-+
-+	pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
-+
-+	/* Leave the error case to be handled outside IRQ */
-+	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val)) {
-+		mod_delayed_work(system_wq, &doe_mb->statemachine, 0);
-+		return IRQ_HANDLED;
-+	}
-+
-+	if (FIELD_GET(PCI_DOE_STATUS_INT_STATUS, val)) {
-+		pci_write_config_dword(pdev, offset + PCI_DOE_STATUS,
-+					PCI_DOE_STATUS_INT_STATUS);
-+		mod_delayed_work(system_wq, &doe_mb->statemachine, 0);
-+		return IRQ_HANDLED;
-+	}
-+
-+	return IRQ_NONE;
-+}
++++ b/drivers/cxl/cdat.h
+@@ -0,0 +1,99 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __CXL_CDAT_H__
++#define __CXL_CDAT_H__
 +
 +/*
-+ * Only called when safe to directly access the DOE from
-+ * doe_statemachine_work().  Outside access is not protected.  Users who
-+ * perform such access are left with the pieces.
++ * Coherent Device Attribute table (CDAT)
++ *
++ * Specification available from UEFI.org
++ *
++ * Whilst CDAT is defined as a single table, the access via DOE maiboxes is
++ * done one entry at a time, where the first entry is the header.
 + */
-+static void pci_doe_abort_start(struct pci_doe_mb *doe_mb)
-+{
-+	struct pci_dev *pdev = doe_mb->pdev;
-+	int offset = doe_mb->cap_offset;
-+	u32 val;
 +
-+	val = PCI_DOE_CTRL_ABORT;
-+	if (doe_mb->irq >= 0)
-+		val |= PCI_DOE_CTRL_INT_EN;
-+	pci_write_config_dword(pdev, offset + PCI_DOE_CTRL, val);
++#define CXL_DOE_TABLE_ACCESS_REQ_CODE		0x000000ff
++#define   CXL_DOE_TABLE_ACCESS_REQ_CODE_READ	0
++#define CXL_DOE_TABLE_ACCESS_TABLE_TYPE		0x0000ff00
++#define   CXL_DOE_TABLE_ACCESS_TABLE_TYPE_CDATA	0
++#define CXL_DOE_TABLE_ACCESS_ENTRY_HANDLE	0xffff0000
 +
-+	doe_mb->timeout_jiffies = jiffies + HZ;
-+	schedule_delayed_work(&doe_mb->statemachine, HZ);
-+}
++/*
++ * CDAT entries are little endian and are read from PCI config space which
++ * is also little endian.
++ * As such, on a big endian system these will have been reversed.
++ * This prevents us from making easy use of packed structures.
++ * Style form pci_regs.h
++ */
 +
-+static int pci_doe_send_req(struct pci_doe_mb *doe_mb,
-+			    struct pci_doe_task *task)
-+{
-+	struct pci_dev *pdev = doe_mb->pdev;
-+	int offset = doe_mb->cap_offset;
-+	u32 val;
-+	int i;
++#define CDAT_HEADER_LENGTH_DW 4
++#define CDAT_HEADER_LENGTH_BYTES (CDAT_HEADER_LENGTH_DW * sizeof(u32))
++#define CDAT_HEADER_DW0_LENGTH		0xffffffff
++#define CDAT_HEADER_DW1_REVISION	0x000000ff
++#define CDAT_HEADER_DW1_CHECKSUM	0x0000ff00
++/* CDAT_HEADER_DW2_RESERVED	*/
++#define CDAT_HEADER_DW3_SEQUENCE	0xffffffff
 +
-+	/*
-+	 * Check the DOE busy bit is not set. If it is set, this could indicate
-+	 * someone other than Linux (e.g. firmware) is using the mailbox. Note
-+	 * it is expected that firmware and OS will negotiate access rights via
-+	 * an, as yet to be defined method.
-+	 */
-+	pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
-+	if (FIELD_GET(PCI_DOE_STATUS_BUSY, val))
-+		return -EBUSY;
++/* All structures have a common first DW */
++#define CDAT_STRUCTURE_DW0_TYPE		0x000000ff
++#define   CDAT_STRUCTURE_DW0_TYPE_DSMAS 0
++#define   CDAT_STRUCTURE_DW0_TYPE_DSLBIS 1
++#define   CDAT_STRUCTURE_DW0_TYPE_DSMSCIS 2
++#define   CDAT_STRUCTURE_DW0_TYPE_DSIS 3
++#define   CDAT_STRUCTURE_DW0_TYPE_DSEMTS 4
++#define   CDAT_STRUCTURE_DW0_TYPE_SSLBIS 5
 +
-+	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val))
-+		return -EIO;
++#define CDAT_STRUCTURE_DW0_LENGTH	0xffff0000
 +
-+	/* Write DOE Header */
-+	val = FIELD_PREP(PCI_DOE_DATA_OBJECT_HEADER_1_VID, task->prot.vid) |
-+		FIELD_PREP(PCI_DOE_DATA_OBJECT_HEADER_1_TYPE, task->prot.type);
-+	pci_write_config_dword(pdev, offset + PCI_DOE_WRITE, val);
-+	/* Length is 2 DW of header + length of payload in DW */
-+	pci_write_config_dword(pdev, offset + PCI_DOE_WRITE,
-+			       FIELD_PREP(PCI_DOE_DATA_OBJECT_HEADER_2_LENGTH,
-+					  2 + task->request_pl_sz /
-+						sizeof(u32)));
-+	for (i = 0; i < task->request_pl_sz / sizeof(u32); i++)
-+		pci_write_config_dword(pdev, offset + PCI_DOE_WRITE,
-+				       task->request_pl[i]);
++/* Device Scoped Memory Affinity Structure */
++#define CDAT_DSMAS_DW1_DSMAD_HANDLE	0x000000ff
++#define CDAT_DSMAS_DW1_FLAGS		0x0000ff00
++#define CDAT_DSMAS_DPA_OFFSET(entry) ((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_DSMAS_DPA_LEN(entry) ((u64)((entry)[5]) << 32 | (entry)[4])
++#define CDAT_DSMAS_NON_VOLATILE(flags)  ((flags & 0x04) >> 2)
 +
-+	val = PCI_DOE_CTRL_GO;
-+	if (doe_mb->irq >= 0)
-+		val |= PCI_DOE_CTRL_INT_EN;
++/* Device Scoped Latency and Bandwidth Information Structure */
++#define CDAT_DSLBIS_DW1_HANDLE		0x000000ff
++#define CDAT_DSLBIS_DW1_FLAGS		0x0000ff00
++#define CDAT_DSLBIS_DW1_DATA_TYPE	0x00ff0000
++#define CDAT_DSLBIS_BASE_UNIT(entry) ((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_DSLBIS_DW4_ENTRY_0		0x0000ffff
++#define CDAT_DSLBIS_DW4_ENTRY_1		0xffff0000
++#define CDAT_DSLBIS_DW5_ENTRY_2		0x0000ffff
 +
-+	pci_write_config_dword(pdev, offset + PCI_DOE_CTRL, val);
-+	/* Request is sent - now wait for poll or IRQ */
-+	return 0;
-+}
++/* Device Scoped Memory Side Cache Information Structure */
++#define CDAT_DSMSCIS_DW1_HANDLE		0x000000ff
++#define CDAT_DSMSCIS_MEMORY_SIDE_CACHE_SIZE(entry) \
++	((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_DSMSCIS_DW4_MEMORY_SIDE_CACHE_ATTRS 0xffffffff
 +
-+static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *task)
-+{
-+	struct pci_dev *pdev = doe_mb->pdev;
-+	int offset = doe_mb->cap_offset;
++/* Device Scoped Initiator Structure */
++#define CDAT_DSIS_DW1_FLAGS		0x000000ff
++#define CDAT_DSIS_DW1_HANDLE		0x0000ff00
++
++/* Device Scoped EFI Memory Type Structure */
++#define CDAT_DSEMTS_DW1_HANDLE		0x000000ff
++#define CDAT_DSEMTS_DW1_EFI_MEMORY_TYPE_ATTR	0x0000ff00
++#define CDAT_DSEMTS_DPA_OFFSET(entry)	((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_DSEMTS_DPA_LENGTH(entry)	((u64)((entry)[5]) << 32 | (entry)[4])
++
++/* Switch Scoped Latency and Bandwidth Information Structure */
++#define CDAT_SSLBIS_DW1_DATA_TYPE	0x000000ff
++#define CDAT_SSLBIS_BASE_UNIT(entry)	((u64)((entry)[3]) << 32 | (entry)[2])
++#define CDAT_SSLBIS_ENTRY_PORT_X(entry, i) ((entry)[4 + (i) * 2] & 0x0000ffff)
++#define CDAT_SSLBIS_ENTRY_PORT_Y(entry, i) (((entry)[4 + (i) * 2] & 0xffff0000) >> 16)
++#define CDAT_SSLBIS_ENTRY_LAT_OR_BW(entry, i) ((entry)[4 + (i) * 2 + 1] & 0x0000ffff)
++
++#define CXL_DOE_PROTOCOL_TABLE_ACCESS 2
++
++/**
++ * struct cxl_cdat - CXL CDAT data
++ *
++ * @table: cache of CDAT table
++ * @length: length of cached CDAT table
++ */
++struct cxl_cdat {
++	void *table;
 +	size_t length;
-+	u32 val;
-+	int i;
++};
 +
-+	/* Read the first dword to get the protocol */
-+	pci_read_config_dword(pdev, offset + PCI_DOE_READ, &val);
-+	if ((FIELD_GET(PCI_DOE_DATA_OBJECT_HEADER_1_VID, val) != task->prot.vid) ||
-+	    (FIELD_GET(PCI_DOE_DATA_OBJECT_HEADER_1_TYPE, val) != task->prot.type)) {
-+		pci_err(pdev,
-+			"DOE [%x] expected [VID, Protocol] = [%04x, %02x], got [%04x, %02x]\n",
-+			doe_mb->cap_offset,
-+			task->prot.vid, task->prot.type,
-+			FIELD_GET(PCI_DOE_DATA_OBJECT_HEADER_1_VID, val),
-+			FIELD_GET(PCI_DOE_DATA_OBJECT_HEADER_1_TYPE, val));
-+		return -EIO;
-+	}
++#endif /* !__CXL_CDAT_H__ */
+diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+index 5497a65bdcf3..4c25a7d7abfd 100644
+--- a/drivers/cxl/core/pci.c
++++ b/drivers/cxl/core/pci.c
+@@ -9,8 +9,7 @@
+ #include <cxlmem.h>
+ #include <cxl.h>
+ #include "core.h"
+-
+-#define CXL_DOE_PROTOCOL_TABLE_ACCESS 2
++#include "cdat.h"
+ 
+ /**
+  * DOC: cxl core pci
+@@ -486,3 +485,132 @@ void cxl_find_cdat_mb(struct cxl_port *port)
+ 	}
+ }
+ EXPORT_SYMBOL_NS_GPL(cxl_find_cdat_mb, CXL);
 +
-+	pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
-+	/* Read the second dword to get the length */
-+	pci_read_config_dword(pdev, offset + PCI_DOE_READ, &val);
-+	pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
++#define CDAT_DOE_REQ(entry_handle)					\
++	(FIELD_PREP(CXL_DOE_TABLE_ACCESS_REQ_CODE,			\
++		    CXL_DOE_TABLE_ACCESS_REQ_CODE_READ) |		\
++	 FIELD_PREP(CXL_DOE_TABLE_ACCESS_TABLE_TYPE,			\
++		    CXL_DOE_TABLE_ACCESS_TABLE_TYPE_CDATA) |		\
++	 FIELD_PREP(CXL_DOE_TABLE_ACCESS_ENTRY_HANDLE, (entry_handle)))
 +
-+	length = FIELD_GET(PCI_DOE_DATA_OBJECT_HEADER_2_LENGTH, val);
-+	if (length > SZ_1M || length < 2)
-+		return -EIO;
-+
-+	/* First 2 dwords have already been read */
-+	length -= 2;
-+	/* Read the rest of the response payload */
-+	for (i = 0; i < min(length, task->response_pl_sz / sizeof(u32)); i++) {
-+		pci_read_config_dword(pdev, offset + PCI_DOE_READ,
-+				      &task->response_pl[i]);
-+		pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
-+	}
-+
-+	/* Flush excess length */
-+	for (; i < length; i++) {
-+		pci_read_config_dword(pdev, offset + PCI_DOE_READ, &val);
-+		pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
-+	}
-+	/* Final error check to pick up on any since Data Object Ready */
-+	pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
-+	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val))
-+		return -EIO;
-+
-+	return min(length, task->response_pl_sz / sizeof(u32)) * sizeof(u32);
-+}
-+
-+static void signal_task_complete(struct pci_doe_task *task, int rv)
-+{
-+	task->rv = rv;
-+	task->complete(task);
-+}
-+
-+static void retire_cur_task(struct pci_doe_mb *doe_mb)
-+{
-+	mutex_lock(&doe_mb->task_lock);
-+	doe_mb->cur_task = NULL;
-+	mutex_unlock(&doe_mb->task_lock);
-+	wake_up_interruptible(&doe_mb->wq);
-+}
-+
-+static void doe_statemachine_work(struct work_struct *work)
-+{
-+	struct delayed_work *w = to_delayed_work(work);
-+	struct pci_doe_mb *doe_mb = container_of(w, struct pci_doe_mb,
-+						 statemachine);
-+	struct pci_dev *pdev = doe_mb->pdev;
-+	int offset = doe_mb->cap_offset;
-+	struct pci_doe_task *task;
-+	u32 val;
-+	int rc;
-+
-+	mutex_lock(&doe_mb->task_lock);
-+	task = doe_mb->cur_task;
-+	mutex_unlock(&doe_mb->task_lock);
-+
-+	if (test_and_clear_bit(PCI_DOE_FLAG_ABORT, &doe_mb->flags)) {
-+		/*
-+		 * Currently only used during init - care needed if
-+		 * pci_doe_abort() is generally exposed as it would impact
-+		 * queries in flight.
-+		 */
-+		if (task)
-+			pci_err(pdev, "DOE [%x] Aborting with active task!\n",
-+				doe_mb->cap_offset);
-+		doe_mb->state = DOE_WAIT_ABORT;
-+		pci_doe_abort_start(doe_mb);
-+		return;
-+	}
-+
-+	switch (doe_mb->state) {
-+	case DOE_IDLE:
-+		if (task == NULL)
-+			return;
-+
-+		rc = pci_doe_send_req(doe_mb, task);
-+
-+		/*
-+		 * The specification does not provide any guidance on how long
-+		 * some other entity could keep the DOE busy, so try for 1
-+		 * second then fail. Busy handling is best effort only, because
-+		 * there is no way of avoiding racing against another user of
-+		 * the DOE.
-+		 */
-+		if (rc == -EBUSY) {
-+			doe_mb->busy_retries++;
-+			if (doe_mb->busy_retries == PCI_DOE_BUSY_MAX_RETRIES) {
-+				/* Long enough, fail this request */
-+				pci_warn(pdev,
-+					"DOE [%x] busy for too long (> 1 sec)\n",
-+					doe_mb->cap_offset);
-+				doe_mb->busy_retries = 0;
-+				goto err_busy;
-+			}
-+			schedule_delayed_work(w, HZ / PCI_DOE_BUSY_MAX_RETRIES);
-+			return;
-+		}
-+		if (rc)
-+			goto err_abort;
-+		doe_mb->busy_retries = 0;
-+
-+		doe_mb->state = DOE_WAIT_RESP;
-+		doe_mb->timeout_jiffies = jiffies + HZ;
-+		/* Now poll or wait for IRQ with timeout */
-+		if (doe_mb->irq >= 0)
-+			schedule_delayed_work(w, PCI_DOE_TIMEOUT);
-+		else
-+			schedule_delayed_work(w, PCI_DOE_POLL_INTERVAL);
-+		return;
-+
-+	case DOE_WAIT_RESP:
-+		/* Not possible to get here with NULL task */
-+		pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
-+		if (FIELD_GET(PCI_DOE_STATUS_ERROR, val)) {
-+			rc = -EIO;
-+			goto err_abort;
-+		}
-+
-+		if (!FIELD_GET(PCI_DOE_STATUS_DATA_OBJECT_READY, val)) {
-+			/* If not yet at timeout reschedule otherwise abort */
-+			if (time_after(jiffies, doe_mb->timeout_jiffies)) {
-+				rc = -ETIMEDOUT;
-+				goto err_abort;
-+			}
-+			schedule_delayed_work(w, PCI_DOE_POLL_INTERVAL);
-+			return;
-+		}
-+
-+		rc  = pci_doe_recv_resp(doe_mb, task);
-+		if (rc < 0)
-+			goto err_abort;
-+
-+		doe_mb->state = DOE_IDLE;
-+
-+		retire_cur_task(doe_mb);
-+		/* Set the return value to the length of received payload */
-+		signal_task_complete(task, rc);
-+
-+		return;
-+
-+	case DOE_WAIT_ABORT:
-+	case DOE_WAIT_ABORT_ON_ERR:
-+		pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
-+
-+		if (!FIELD_GET(PCI_DOE_STATUS_ERROR, val) &&
-+		    !FIELD_GET(PCI_DOE_STATUS_BUSY, val)) {
-+			/* Back to normal state - carry on */
-+			retire_cur_task(doe_mb);
-+
-+			/*
-+			 * For deliberately triggered abort, someone is
-+			 * waiting.
-+			 */
-+			if (doe_mb->state == DOE_WAIT_ABORT) {
-+				if (task)
-+					signal_task_complete(task, -EFAULT);
-+				complete(&doe_mb->abort_c);
-+			}
-+
-+			doe_mb->state = DOE_IDLE;
-+			return;
-+		}
-+		if (time_after(jiffies, doe_mb->timeout_jiffies)) {
-+			/* Task has timed out and is dead - abort */
-+			pci_err(pdev, "DOE [%x] ABORT timed out\n",
-+				doe_mb->cap_offset);
-+			set_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags);
-+			retire_cur_task(doe_mb);
-+
-+			if (doe_mb->state == DOE_WAIT_ABORT) {
-+				if (task)
-+					signal_task_complete(task, -EFAULT);
-+				complete(&doe_mb->abort_c);
-+			}
-+		}
-+		return;
-+	}
-+
-+err_abort:
-+	doe_mb->state = DOE_WAIT_ABORT_ON_ERR;
-+	pci_doe_abort_start(doe_mb);
-+err_busy:
-+	signal_task_complete(task, rc);
-+	if (doe_mb->state == DOE_IDLE)
-+		retire_cur_task(doe_mb);
-+}
-+
-+static void pci_doe_task_complete(struct pci_doe_task *task)
++static void cxl_doe_task_complete(struct pci_doe_task *task)
 +{
 +	complete(task->private);
 +}
 +
-+static int pci_doe_discovery(struct pci_doe_mb *doe_mb, u8 *index, u16 *vid,
-+			     u8 *protocol)
++static int cxl_cdat_get_length(struct cxl_port *port, size_t *length)
 +{
-+	u32 request_pl = FIELD_PREP(PCI_DOE_DATA_OBJECT_DISC_REQ_3_INDEX,
-+				    *index);
-+	u32 response_pl;
++	u32 cdat_request_pl = CDAT_DOE_REQ(0);
++	u32 cdat_response_pl[32];
 +	DECLARE_COMPLETION_ONSTACK(c);
 +	struct pci_doe_task task = {
-+		.prot.vid = PCI_VENDOR_ID_PCI_SIG,
-+		.prot.type = PCI_DOE_PROTOCOL_DISCOVERY,
-+		.request_pl = &request_pl,
-+		.request_pl_sz = sizeof(request_pl),
-+		.response_pl = &response_pl,
-+		.response_pl_sz = sizeof(response_pl),
-+		.complete = pci_doe_task_complete,
++		.prot.vid = PCI_DVSEC_VENDOR_ID_CXL,
++		.prot.type = CXL_DOE_PROTOCOL_TABLE_ACCESS,
++		.request_pl = &cdat_request_pl,
++		.request_pl_sz = sizeof(cdat_request_pl),
++		.response_pl = cdat_response_pl,
++		.response_pl_sz = sizeof(cdat_response_pl),
++		.complete = cxl_doe_task_complete,
 +		.private = &c,
 +	};
-+	int ret;
++	int rc = 0;
 +
-+	ret = pci_doe_submit_task(doe_mb, &task);
-+	if (ret < 0)
-+		return ret;
++	if (!port->cdat_mb)
++		return -EIO;
 +
++	rc = pci_doe_submit_task(port->cdat_mb, &task);
++	if (rc < 0) {
++		dev_err(&port->dev, "DOE submit failed: %d", rc);
++		return rc;
++	}
 +	wait_for_completion(&c);
 +
-+	if (task.rv != sizeof(response_pl))
++	if (task.rv < 1)
 +		return -EIO;
 +
-+	*vid = FIELD_GET(PCI_DOE_DATA_OBJECT_DISC_RSP_3_VID, response_pl);
-+	*protocol = FIELD_GET(PCI_DOE_DATA_OBJECT_DISC_RSP_3_PROTOCOL,
-+			      response_pl);
-+	*index = FIELD_GET(PCI_DOE_DATA_OBJECT_DISC_RSP_3_NEXT_INDEX,
-+			   response_pl);
++	*length = cdat_response_pl[1];
++	dev_dbg(&port->dev, "CDAT length %zu\n", *length);
 +
-+	return 0;
++	return rc;
 +}
 +
-+static int pci_doe_cache_protocols(struct pci_doe_mb *doe_mb)
++static int cxl_cdat_read_table(struct cxl_port *port,
++			       struct cxl_cdat *cdat)
 +{
-+	u8 index = 0;
-+	int num_prots;
-+	int rc;
++	size_t length = cdat->length;
++	u32 *data = cdat->table;
++	int entry_handle = 0;
++	int rc = 0;
 +
-+	/* Discovery protocol must always be supported and must report itself */
-+	num_prots = 1;
++	if (!port->cdat_mb)
++		return -EIO;
 +
-+	doe_mb->prots = kcalloc(num_prots, sizeof(*doe_mb->prots), GFP_KERNEL);
-+	if (!doe_mb->prots)
-+		return -ENOMEM;
-+
-+	/*
-+	 * NOTE: doe_mb_prots is freed by pci_doe_free_mb() automatically on
-+	 * error if pci_doe_cache_protocols() fails past this point.
-+	 */
 +	do {
-+		struct pci_doe_protocol *prot;
++		u32 cdat_request_pl = CDAT_DOE_REQ(entry_handle);
++		u32 cdat_response_pl[32];
++		DECLARE_COMPLETION_ONSTACK(c);
++		struct pci_doe_task task = {
++			.prot.vid = PCI_DVSEC_VENDOR_ID_CXL,
++			.prot.type = CXL_DOE_PROTOCOL_TABLE_ACCESS,
++			.request_pl = &cdat_request_pl,
++			.request_pl_sz = sizeof(cdat_request_pl),
++			.response_pl = cdat_response_pl,
++			.response_pl_sz = sizeof(cdat_response_pl),
++			.complete = cxl_doe_task_complete,
++			.private = &c,
++		};
++		size_t entry_dw;
++		u32 *entry;
 +
-+		prot = &doe_mb->prots[num_prots - 1];
-+		rc = pci_doe_discovery(doe_mb, &index, &prot->vid, &prot->type);
-+		if (rc)
++		rc = pci_doe_submit_task(port->cdat_mb, &task);
++		if (rc < 0) {
++			dev_err(&port->dev, "DOE submit failed: %d", rc);
 +			return rc;
-+
-+		if (index) {
-+			struct pci_doe_protocol *prot_new;
-+
-+			num_prots++;
-+			prot_new = krealloc(doe_mb->prots,
-+					    sizeof(*doe_mb->prots) * num_prots,
-+					    GFP_KERNEL);
-+			if (!prot_new)
-+				return -ENOMEM;
-+
-+			doe_mb->prots = prot_new;
 +		}
-+	} while (index);
++		wait_for_completion(&c);
 +
-+	doe_mb->num_prots = num_prots;
-+	return 0;
++		entry = cdat_response_pl + 1;
++		entry_dw = task.rv / sizeof(u32);
++		/* Skip Header */
++		entry_dw -= 1;
++		entry_dw = min(length / 4, entry_dw);
++		memcpy(data, entry, entry_dw * sizeof(u32));
++		length -= entry_dw * sizeof(u32);
++		data += entry_dw;
++		entry_handle = FIELD_GET(CXL_DOE_TABLE_ACCESS_ENTRY_HANDLE, cdat_response_pl[0]);
++
++	} while (entry_handle != 0xFFFF);
++
++	return rc;
 +}
 +
-+static int pci_doe_abort(struct pci_doe_mb *doe_mb)
++void read_cdat_data(struct cxl_port *port)
 +{
-+	reinit_completion(&doe_mb->abort_c);
-+	set_bit(PCI_DOE_FLAG_ABORT, &doe_mb->flags);
-+	schedule_delayed_work(&doe_mb->statemachine, 0);
-+	wait_for_completion(&doe_mb->abort_c);
++	struct device *dev = &port->dev;
++	size_t cdat_length;
++	int ret;
 +
-+	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags))
-+		return -EIO;
++	if (cxl_cdat_get_length(port, &cdat_length))
++		return;
 +
-+	return 0;
-+}
-+
-+static int pci_doe_enable_irq(struct pci_doe_mb *doe_mb, unsigned int irq)
-+{
-+	struct pci_dev *pdev = doe_mb->pdev;
-+	int offset = doe_mb->cap_offset;
-+	int rc;
-+
-+	/*
-+	 * Enabling bus mastering is required for MSI/MSIx.  It is safe to call
-+	 * this multiple times and thus is called here to ensure that mastering
-+	 * is enabled even if the driver has done so.
-+	 */
-+	pci_set_master(pdev);
-+	rc = pci_request_irq(pdev, irq, pci_doe_irq_handler, NULL, doe_mb,
-+			     "DOE[%d:%s]", irq, pci_name(pdev));
-+	if (rc)
-+		return rc;
-+
-+	doe_mb->irq = irq;
-+	pci_write_config_dword(pdev, offset + PCI_DOE_CTRL,
-+			       PCI_DOE_CTRL_INT_EN);
-+	return 0;
-+}
-+
-+static void pci_doe_free_mb(struct pci_doe_mb *doe_mb)
-+{
-+	if (doe_mb->irq >= 0)
-+		pci_free_irq(doe_mb->pdev, doe_mb->irq, doe_mb);
-+	kfree(doe_mb->prots);
-+	kfree(doe_mb);
-+}
-+
-+/**
-+ * pci_doe_get_irq_num() - Return the irq number for the mailbox at offset
-+ *
-+ * @pdev: The PCI device
-+ * @offset: Offset of the DOE mailbox
-+ *
-+ * Returns: irq number on success
-+ *	    -errno if irqs are not supported on this mailbox
-+ */
-+int pci_doe_get_irq_num(struct pci_dev *pdev, int offset)
-+{
-+	u32 val;
-+
-+	pci_read_config_dword(pdev, offset + PCI_DOE_CAP, &val);
-+	if (!FIELD_GET(PCI_DOE_CAP_INT, val))
-+		return -EOPNOTSUPP;
-+
-+	return FIELD_GET(PCI_DOE_CAP_IRQ, val);
-+}
-+EXPORT_SYMBOL_GPL(pci_doe_get_irq_num);
-+
-+/**
-+ * pci_doe_create_mb() - Create a DOE mailbox object
-+ *
-+ * @pdev: PCI device to create the DOE mailbox for
-+ * @cap_offset: Offset of the DOE mailbox
-+ * @irq: irq number to use; a negative value means don't use interrupts
-+ *
-+ * Create a single mailbox object to manage the mailbox protocol at the
-+ * cap_offset specified.
-+ *
-+ * Caller should allocate PCI IRQ vectors before setting use_irq.
-+ *
-+ * RETURNS: created mailbox object on success
-+ *	    ERR_PTR(-errno) on failure
-+ */
-+struct pci_doe_mb *pci_doe_create_mb(struct pci_dev *pdev, u16 cap_offset,
-+				     int irq)
-+{
-+	struct pci_doe_mb *doe_mb;
-+	int rc;
-+
-+	doe_mb = kzalloc(sizeof(*doe_mb), GFP_KERNEL);
-+	if (!doe_mb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	doe_mb->pdev = pdev;
-+	init_completion(&doe_mb->abort_c);
-+	doe_mb->irq = -1;
-+	doe_mb->cap_offset = cap_offset;
-+
-+	init_waitqueue_head(&doe_mb->wq);
-+	mutex_init(&doe_mb->task_lock);
-+	INIT_DELAYED_WORK(&doe_mb->statemachine, doe_statemachine_work);
-+	doe_mb->state = DOE_IDLE;
-+
-+	if (irq >= 0) {
-+		rc = pci_doe_enable_irq(doe_mb, irq);
-+		if (rc)
-+			pci_err(pdev,
-+				"DOE [%x] enable requested IRQ (%d) failed : %d\n",
-+				doe_mb->cap_offset, irq, rc);
++	port->cdat.table = devm_kzalloc(dev, cdat_length, GFP_KERNEL);
++	if (!port->cdat.table) {
++		ret = -ENOMEM;
++		goto error;
 +	}
 +
-+	/* Reset the mailbox by issuing an abort */
-+	rc = pci_doe_abort(doe_mb);
-+	if (rc) {
-+		pci_err(pdev, "DOE [%x] failed to reset : %d\n",
-+			doe_mb->cap_offset, rc);
-+		pci_doe_free_mb(doe_mb);
-+		return ERR_PTR(rc);
++	port->cdat.length = cdat_length;
++	ret = cxl_cdat_read_table(port, &port->cdat);
++	if (ret) {
++		devm_kfree(dev, port->cdat.table);
++		port->cdat.table = NULL;
++		port->cdat.length = 0;
++		ret = -EIO;
++		goto error;
 +	}
 +
-+	rc = pci_doe_cache_protocols(doe_mb);
-+	if (rc) {
-+		pci_err(pdev, "DOE [%x] failed to cache protocols : %d\n",
-+			doe_mb->cap_offset, rc);
-+		pci_doe_free_mb(doe_mb);
-+		return ERR_PTR(rc);
-+	}
-+
-+	return doe_mb;
++	return;
++error:
++	dev_err(dev, "CDAT data read error (%d)\n", ret);
 +}
-+EXPORT_SYMBOL_GPL(pci_doe_create_mb);
-+
-+/**
-+ * pci_doe_supports_prot() - Return if the DOE instance supports the given
-+ *			     protocol
-+ * @doe_mb: DOE mailbox capability to query
-+ * @vid: Protocol Vendor ID
-+ * @type: Protocol type
-+ *
-+ * RETURNS: True if the DOE mailbox supports the protocol specified
-+ */
-+bool pci_doe_supports_prot(struct pci_doe_mb *doe_mb, u16 vid, u8 type)
-+{
-+	int i;
-+
-+	/* The discovery protocol must always be supported */
-+	if (vid == PCI_VENDOR_ID_PCI_SIG && type == PCI_DOE_PROTOCOL_DISCOVERY)
-+		return true;
-+
-+	for (i = 0; i < doe_mb->num_prots; i++)
-+		if ((doe_mb->prots[i].vid == vid) &&
-+		    (doe_mb->prots[i].type == type))
-+			return true;
-+
-+	return false;
-+}
-+EXPORT_SYMBOL_GPL(pci_doe_supports_prot);
-+
-+/**
-+ * pci_doe_submit_task() - Submit a task to be processed by the state machine
-+ *
-+ * @doe_mb: DOE mailbox capability to submit to
-+ * @task: task to be queued
-+ *
-+ * Submit a DOE task (request/response) to the DOE mailbox to be processed.
-+ * Returns upon queueing the task object.  If the queue is full this function
-+ * will sleep until there is room in the queue.
-+ *
-+ * task->complete will be called when the state machine is done processing this
-+ * task.
-+ *
-+ * Excess data will be discarded.
-+ *
-+ * RETURNS: 0 when task has been successful queued, -ERRNO on error
-+ */
-+int pci_doe_submit_task(struct pci_doe_mb *doe_mb, struct pci_doe_task *task)
-+{
-+	if (!pci_doe_supports_prot(doe_mb, task->prot.vid, task->prot.type))
-+		return -EINVAL;
-+
-+	/* DOE requests must be a whole number of DW */
-+	if (task->request_pl_sz % sizeof(u32))
-+		return -EINVAL;
-+
-+again:
-+	mutex_lock(&doe_mb->task_lock);
-+	if (doe_mb->cur_task) {
-+		mutex_unlock(&doe_mb->task_lock);
-+		wait_event_interruptible(doe_mb->wq, doe_mb->cur_task == NULL);
-+		goto again;
-+	}
-+
-+	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags)) {
-+		mutex_unlock(&doe_mb->task_lock);
-+		return -EIO;
-+	}
-+	doe_mb->cur_task = task;
-+	mutex_unlock(&doe_mb->task_lock);
-+	schedule_delayed_work(&doe_mb->statemachine, 0);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_doe_submit_task);
-+
-+/**
-+ * pci_doe_destroy_mb() - Destroy a DOE mailbox object created with
-+ * pci_doe_create_mb()
-+ *
-+ * @doe_mb: DOE mailbox capability structure to destroy
-+ *
-+ * The mailbox becomes invalid and should not be used after this call.
-+ */
-+void pci_doe_destroy_mb(struct pci_doe_mb *doe_mb)
-+{
-+	/* abort any work in progress */
-+	pci_doe_abort(doe_mb);
-+
-+	/* halt the state machine */
-+	cancel_delayed_work_sync(&doe_mb->statemachine);
-+
-+	pci_doe_free_mb(doe_mb);
-+}
-+EXPORT_SYMBOL_GPL(pci_doe_destroy_mb);
-diff --git a/include/linux/pci-doe.h b/include/linux/pci-doe.h
-new file mode 100644
-index 000000000000..90bd4bfbb809
---- /dev/null
-+++ b/include/linux/pci-doe.h
-@@ -0,0 +1,120 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Data Object Exchange
-+ *	PCIe r6.0, sec 6.30 DOE
-+ *
-+ * Copyright (C) 2021 Huawei
-+ *     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-+ *
-+ * Copyright (C) 2022 Intel Corporation
-+ *	Ira Weiny <ira.weiny@intel.com>
-+ */
-+
-+#ifndef LINUX_PCI_DOE_H
-+#define LINUX_PCI_DOE_H
-+
-+#include <linux/completion.h>
-+
-+enum pci_doe_state {
-+	DOE_IDLE,
-+	DOE_WAIT_RESP,
-+	DOE_WAIT_ABORT,
-+	DOE_WAIT_ABORT_ON_ERR,
-+};
-+
-+#define PCI_DOE_FLAG_ABORT	0
-+#define PCI_DOE_FLAG_DEAD	1
-+
-+struct pci_doe_protocol {
-+	u16 vid;
-+	u8 type;
-+};
-+
-+/**
-+ * struct pci_doe_task - represents a single query/response
-+ *
-+ * @prot: DOE Protocol
-+ * @request_pl: The request payload
-+ * @request_pl_sz: Size of the request payload
-+ * @response_pl: The response payload
-+ * @response_pl_sz: Size of the response payload
-+ * @rv: Return value.  Length of received response or error
-+ * @complete: Called when task is complete
-+ * @private: Private data for the consumer
-+ */
-+struct pci_doe_task {
-+	struct pci_doe_protocol prot;
-+	u32 *request_pl;
-+	size_t request_pl_sz;
-+	u32 *response_pl;
-+	size_t response_pl_sz;
-+	int rv;
-+	void (*complete)(struct pci_doe_task *task);
-+	void *private;
-+};
-+
-+/**
-+ * struct pci_doe_mb - State for a single DOE mailbox
-+ *
-+ * This state is used to manage a single DOE mailbox capability.  All fields
-+ * should be considered opaque to the consumers and the structure passed into
-+ * the helpers below after being created by devm_pci_doe_create()
-+ *
-+ * @pdev: PCI device this belongs to mailbox belongs to
-+ * @abort_c: Completion used for initial abort handling
-+ * @irq: Interrupt used for signaling DOE ready or abort
-+ * @prots: Array of protocols supported on this DOE
-+ * @num_prots: Size of prots array
-+ * @cap_offset: Capability offset
-+ * @wq: Wait queue to wait on if a query is in progress
-+ * @cur_task: Current task the state machine is working on
-+ * @task_lock: Protect cur_task
-+ * @statemachine: Work item for the DOE state machine
-+ * @state: Current state of this DOE
-+ * @timeout_jiffies: 1 second after GO set
-+ * @busy_retries: Count of retry attempts
-+ * @flags: Bit array of PCI_DOE_FLAG_* flags
-+ *
-+ * Note: prots can't be allocated with struct size because the number of
-+ * protocols is not known until after this structure is in use.  However, the
-+ * single discovery protocol is always required to query for the number of
-+ * protocols.
-+ */
-+struct pci_doe_mb {
-+	struct pci_dev *pdev;
-+	struct completion abort_c;
-+	int irq;
-+	struct pci_doe_protocol *prots;
-+	int num_prots;
-+	u16 cap_offset;
-+
-+	wait_queue_head_t wq;
-+	struct pci_doe_task *cur_task;
-+	struct mutex task_lock;
-+	struct delayed_work statemachine;
-+	enum pci_doe_state state;
-+	unsigned long timeout_jiffies;
-+	unsigned int busy_retries;
-+	unsigned long flags;
-+};
-+
-+/**
-+ * pci_doe_for_each_off - Iterate each DOE capability
-+ * @pdev: struct pci_dev to iterate
-+ * @off: u16 of config space offset of each mailbox capability found
-+ */
-+#define pci_doe_for_each_off(pdev, off) \
-+	for (off = pci_find_next_ext_capability(pdev, off, \
-+					PCI_EXT_CAP_ID_DOE); \
-+		off > 0; \
-+		off = pci_find_next_ext_capability(pdev, off, \
-+					PCI_EXT_CAP_ID_DOE))
-+
-+int pci_doe_get_irq_num(struct pci_dev *pdev, int offset);
-+struct pci_doe_mb *pci_doe_create_mb(struct pci_dev *pdev, u16 cap_offset,
-+				     int irq);
-+void pci_doe_destroy_mb(struct pci_doe_mb *doe_mb);
-+bool pci_doe_supports_prot(struct pci_doe_mb *doe_mb, u16 vid, u8 type);
-+int pci_doe_submit_task(struct pci_doe_mb *doe_mb, struct pci_doe_task *task);
-+
-+#endif
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index bee1a9ed6e66..4e96b45ee36d 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -736,7 +736,8 @@
- #define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
- #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
- #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
--#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_16GT
-+#define PCI_EXT_CAP_ID_DOE	0x2E	/* Data Object Exchange */
-+#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_DOE
++EXPORT_SYMBOL_NS_GPL(read_cdat_data, CXL);
+diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+index 2e2bd65c1024..aa4229ddc1bc 100644
+--- a/drivers/cxl/core/port.c
++++ b/drivers/cxl/core/port.c
+@@ -320,7 +320,48 @@ static void cxl_port_release(struct device *dev)
+ 	kfree(port);
+ }
  
- #define PCI_EXT_CAP_DSN_SIZEOF	12
- #define PCI_EXT_CAP_MCAST_ENDPOINT_SIZEOF 40
-@@ -1102,4 +1103,30 @@
- #define  PCI_PL_16GT_LE_CTRL_USP_TX_PRESET_MASK		0x000000F0
- #define  PCI_PL_16GT_LE_CTRL_USP_TX_PRESET_SHIFT	4
++static ssize_t cdat_read(struct file *filp, struct kobject *kobj,
++			 struct bin_attribute *bin_attr, char *buf,
++			 loff_t offset, size_t count)
++{
++	struct device *dev = kobj_to_dev(kobj);
++	struct cxl_port *port = to_cxl_port(dev);
++
++	if (!port->cdat.table)
++		return 0;
++
++	return memory_read_from_buffer(buf, count, &offset,
++				       port->cdat.table,
++				       port->cdat.length);
++}
++
++static BIN_ATTR_RO(cdat, 0);
++
++static umode_t cxl_port_bin_attr_is_visible(struct kobject *kobj,
++					      struct bin_attribute *attr, int i)
++{
++	struct device *dev = kobj_to_dev(kobj);
++	struct cxl_port *port = to_cxl_port(dev);
++
++	if ((attr == &bin_attr_cdat) && port->cdat.table)
++		return 0400;
++
++	return 0;
++}
++
++static struct bin_attribute *cxl_cdat_bin_attributes[] = {
++	&bin_attr_cdat,
++	NULL,
++};
++
++static struct attribute_group cxl_cdat_attribute_group = {
++	.name = "CDAT",
++	.bin_attrs = cxl_cdat_bin_attributes,
++	.is_bin_visible = cxl_port_bin_attr_is_visible,
++};
++
+ static const struct attribute_group *cxl_port_attribute_groups[] = {
++	&cxl_cdat_attribute_group,
+ 	&cxl_base_attribute_group,
+ 	NULL,
+ };
+@@ -462,6 +503,8 @@ struct cxl_port *devm_cxl_add_port(struct device *host, struct device *uport,
+ 		return port;
  
-+/* Data Object Exchange */
-+#define PCI_DOE_CAP		0x04    /* DOE Capabilities Register */
-+#define  PCI_DOE_CAP_INT			0x00000001  /* Interrupt Support */
-+#define  PCI_DOE_CAP_IRQ			0x00000ffe  /* Interrupt Message Number */
-+#define PCI_DOE_CTRL		0x08    /* DOE Control Register */
-+#define  PCI_DOE_CTRL_ABORT			0x00000001  /* DOE Abort */
-+#define  PCI_DOE_CTRL_INT_EN			0x00000002  /* DOE Interrupt Enable */
-+#define  PCI_DOE_CTRL_GO			0x80000000  /* DOE Go */
-+#define PCI_DOE_STATUS		0x0c    /* DOE Status Register */
-+#define  PCI_DOE_STATUS_BUSY			0x00000001  /* DOE Busy */
-+#define  PCI_DOE_STATUS_INT_STATUS		0x00000002  /* DOE Interrupt Status */
-+#define  PCI_DOE_STATUS_ERROR			0x00000004  /* DOE Error */
-+#define  PCI_DOE_STATUS_DATA_OBJECT_READY	0x80000000  /* Data Object Ready */
-+#define PCI_DOE_WRITE		0x10    /* DOE Write Data Mailbox Register */
-+#define PCI_DOE_READ		0x14    /* DOE Read Data Mailbox Register */
-+
-+/* DOE Data Object - note not actually registers */
-+#define PCI_DOE_DATA_OBJECT_HEADER_1_VID		0x0000ffff
-+#define PCI_DOE_DATA_OBJECT_HEADER_1_TYPE		0x00ff0000
-+#define PCI_DOE_DATA_OBJECT_HEADER_2_LENGTH		0x0003ffff
-+
-+#define PCI_DOE_DATA_OBJECT_DISC_REQ_3_INDEX		0x000000ff
-+#define PCI_DOE_DATA_OBJECT_DISC_RSP_3_VID		0x0000ffff
-+#define PCI_DOE_DATA_OBJECT_DISC_RSP_3_PROTOCOL		0x00ff0000
-+#define PCI_DOE_DATA_OBJECT_DISC_RSP_3_NEXT_INDEX	0xff000000
-+
- #endif /* LINUX_PCI_REGS_H */
+ 	cxl_find_cdat_mb(port);
++	/* Cache the data early to ensure is_visible() works */
++	read_cdat_data(port);
+ 
+ 	dev = &port->dev;
+ 	if (is_cxl_memdev(uport))
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index 0a86be589ffc..531b77d296c7 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -8,6 +8,7 @@
+ #include <linux/bitfield.h>
+ #include <linux/bitops.h>
+ #include <linux/io.h>
++#include "cdat.h"
+ 
+ /**
+  * DOC: cxl objects
+@@ -268,6 +269,7 @@ struct cxl_nvdimm {
+  * @dead: last ep has been removed, force port re-creation
+  * @depth: How deep this port is relative to the root. depth 0 is the root.
+  * @cdat_mb: Mailbox which supports the CDAT protocol
++ * @cdat: Cached CDAT data
+  */
+ struct cxl_port {
+ 	struct device dev;
+@@ -280,6 +282,7 @@ struct cxl_port {
+ 	bool dead;
+ 	unsigned int depth;
+ 	struct pci_doe_mb *cdat_mb;
++	struct cxl_cdat cdat;
+ };
+ 
+ /**
+diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
+index 366b21bd1a01..35f0d4892eaa 100644
+--- a/drivers/cxl/cxlpci.h
++++ b/drivers/cxl/cxlpci.h
+@@ -75,4 +75,5 @@ int devm_cxl_port_enumerate_dports(struct cxl_port *port);
+ struct cxl_dev_state;
+ int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm);
+ void cxl_find_cdat_mb(struct cxl_port *port);
++void read_cdat_data(struct cxl_port *port);
+ #endif /* __CXL_PCI_H__ */
 -- 
 2.35.1
 
