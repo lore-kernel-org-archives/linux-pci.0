@@ -2,96 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51956C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 07:56:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EAB4C433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 08:09:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243813AbiEaH4N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 May 2022 03:56:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41824 "EHLO
+        id S244712AbiEaIJs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 May 2022 04:09:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243133AbiEaH4M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 03:56:12 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 560977220A;
-        Tue, 31 May 2022 00:56:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1653983771; x=1685519771;
-  h=from:to:cc:subject:date:message-id;
-  bh=lhnpqbk67ab3C0F5+yqnzu3Jp0YtzFvqnqVGOX76r5A=;
-  b=RuiEgKmkl1My0TPDHs2uJVwenmVZSbTCnwIJgaAp0K9e8kO/jLe4aPn/
-   p7A/2ENNVplRVRKkd2uJeac4L/e+qXA8LLQRFeGf+Sc7bZSegiCJ2AgE+
-   Y+h3JYweZyvZAH3vHhybjvMk2vp+bhSSO7CZn6wgfxk8S4TNG997KhORi
-   1kIIQYEBGPngBFhbt9Ywl2+NOb7eqorbxHiOGBAMvA7DYYsiQSLdAwUuA
-   GhL1m8J4DSuYNNVdEMJk3Es4PEJI4300H5vwjx2fXm2x8eL6xDXzqDxrs
-   67q8ac4KHkwAiSsCkGibX+oRmscsg3zVtHQy0MjguG/qO+Etic2GYVgqJ
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10363"; a="272745827"
-X-IronPort-AV: E=Sophos;i="5.91,264,1647327600"; 
-   d="scan'208";a="272745827"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 00:56:11 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.91,264,1647327600"; 
-   d="scan'208";a="903864531"
-Received: from ubuntu-700f5.iind.intel.com ([10.99.115.212])
-  by fmsmga005.fm.intel.com with ESMTP; 31 May 2022 00:56:08 -0700
-From:   subramanian.mohan@intel.com
-To:     nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
-        lorenzo.pieralisi@arm.com, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        mallikarjunappa.sangannavar@intel.com, srikanth.thokala@intel.com
-Subject: [PATCH] PCI: vmd: Use devm_kasprintf instead of simple kasprintf
-Date:   Tue, 31 May 2022 18:56:17 +0530
-Message-Id: <20220531132617.20517-1-subramanian.mohan@intel.com>
-X-Mailer: git-send-email 2.17.1
+        with ESMTP id S244657AbiEaIJs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 04:09:48 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E184490CEC;
+        Tue, 31 May 2022 01:09:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 94C53B80F96;
+        Tue, 31 May 2022 08:09:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49DA3C385A9;
+        Tue, 31 May 2022 08:09:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1653984584;
+        bh=RYpC6xoAQxlzwzTS1Q9qNjdKjQ7qaBCIuSSqtsnXLSA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=W1ConLa0fa4CSVyJdeiG/MvfrvK8aQ6HhtVkyfspn7uvFJDxNNOIcNyqLmAfKqTcO
+         EkRa2N9Ses3HUwH4CrDat1jsce69unKSvoYkDIDQwQqnYtoinOjxy+pHTc4ukWM/Gi
+         GOVRlheQSO57/Tfw11+rtubK4AoEvwzXLi0INwbCbZbBw6BfB36JcBDvgoN7LldXtf
+         NdYwbo7NuSILBQsj8f6cGY4crptgEmSZsDjcPGqb7FJfJ3K5fl4hjDqQpW8Tlzz6eL
+         iwvdFbfphy0PmCw+MbzVQa9ctwRLaqQAQQRLZcBzWeTrH04N/d0Kq3dpFN0Xp8kZXt
+         9ru/+Z/QAH3wg==
+Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-3043b3f7d8fso120808117b3.8;
+        Tue, 31 May 2022 01:09:44 -0700 (PDT)
+X-Gm-Message-State: AOAM533M6MX1rKOBrp9iTr/VHuG+iBY99xXLp1BcRLbH8YHXV0r+MgNf
+        LfoEK5cZG+amFsMYMNlcMduHoBHrzR46Vle5UtA=
+X-Google-Smtp-Source: ABdhPJyhJog8azsioErC+i5PlBgcKzbEGCvn4zseszGYzoUs1FVRvYrMO45NFlB3l1wsrjJ5hIWZQ9m0KHU6vN1LfV8=
+X-Received: by 2002:a81:28b:0:b0:30c:5e57:fac3 with SMTP id
+ 133-20020a81028b000000b0030c5e57fac3mr8140757ywc.249.1653984583406; Tue, 31
+ May 2022 01:09:43 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAK8P3a2_52JPnBWNvTTkFVwLxPAa7=NaQ4whwC1UeH_NYHeUKQ@mail.gmail.com>
+ <CAK8P3a0SpU1n+29KQxzKnPRvzmDE=L0V9RUpKxhemv=74kevcQ@mail.gmail.com>
+ <df5c406c-eec6-c340-2847-49670b7fe8bf@xen0n.name> <CAK8P3a3awFdB1-G65DC38NBuSTvo6SvFTaS0m9YBxunHjHjQvQ@mail.gmail.com>
+ <CAAhV-H6sNr-yo8brBFtzziH6k9Tby0dFp7yehK55SfH5HjZ8hQ@mail.gmail.com>
+ <358025d1-28e6-708b-d23d-3f22ae12a800@xen0n.name> <CAK8P3a1ge2bZS13ahm_LdO3jEcbtR4w3do-gLjggKvppqnBDkw@mail.gmail.com>
+ <CAAhV-H5NCUpR6aBtR9d7c9vW2KiHpk3iFQxj7BeTSS0boMz8PQ@mail.gmail.com>
+In-Reply-To: <CAAhV-H5NCUpR6aBtR9d7c9vW2KiHpk3iFQxj7BeTSS0boMz8PQ@mail.gmail.com>
+From:   Arnd Bergmann <arnd@kernel.org>
+Date:   Tue, 31 May 2022 10:09:26 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a2JgrW5a7_udCUWen-gOnJgVeRV2oAd-uq4VSuYkFUqNQ@mail.gmail.com>
+Message-ID: <CAK8P3a2JgrW5a7_udCUWen-gOnJgVeRV2oAd-uq4VSuYkFUqNQ@mail.gmail.com>
+Subject: Re: [musl] Re: [GIT PULL] asm-generic changes for 5.19
+To:     Huacai Chen <chenhuacai@kernel.org>
+Cc:     musl@lists.openwall.com, WANG Xuerui <kernel@xen0n.name>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        GNU C Library <libc-alpha@sourceware.org>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Marc Zyngier <maz@kernel.org>,
+        Masahiro Yamada <masahiroy@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Jianmin Lv <lvjianmin@loongson.cn>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Ard Biesheuvel <ardb@kernel.org>,
+        Huacai Chen <chenhuacai@loongson.cn>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Subramanian Mohan <subramanian.mohan@intel.com>
+On Tue, May 31, 2022 at 9:50 AM Huacai Chen <chenhuacai@kernel.org> wrote:
+> On Mon, May 30, 2022 at 11:56 PM Arnd Bergmann <arnd@kernel.org> wrote:
+> > On Mon, May 30, 2022 at 5:00 PM WANG Xuerui <kernel@xen0n.name> wrote:
+> > > Now I see
+> > > the loongarch-next HEAD is already rebased on top of what I believe to
+> > > be the current main branch, however I vaguely remember that it's not
+> > > good to base one's patches on top of "some random commit", so I wonder
+> > > whether the current branch state is appropriate for a PR?
+> >
+> > You are correct, a pull request should always be based on an -rc, orat least
+> > have the minimum set of dependencies. The branch was previously
+> > based on top of the spinlock implementation, which is still the best
+> > place to start here.
+> I have a difficult problem to select the base. Take swiotlb_init() as
+> an example: If I select 5.18-rc1, I should use swiotlb_init(1); if I
+> select Linus' latest tree, I should use swiotlb_init(true,
+> SWIOTLB_VERBOSE). However, if I select 5.18-rc1, linux-next will have
+> a build error because the code there expect swiotlb_init(true,
+> SWIOTLB_VERBOSE).
 
-Use devm_kasprintf instead of simple kasprintf to free the allocated memory
-automatically when the device is freed.
+Ok, I see. This is the kind of thing we normally prevent by having everything
+in linux-next for a few weeks before the merge window. How many issues
+like this are you aware of? If it's just the swiotlb, you could try merging
+the swiotlb branch that is in mainline now on top of the spinlock branch,
+and still get a minimum set of dependencies. If there are many more,
+then basing on top of the current mainline is probably less intrusive after
+all.
 
-Suggested-by: Srikanth Thokala <srikanth.thokala@intel.com>
-Signed-off-by: Subramanian Mohan <subramanian.mohan@intel.com>
-Acked-by: Nirmal Patel <nirmal.patel@linux.intel.com>
----
- drivers/pci/controller/vmd.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index eb05cceab964..7a72948e001f 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -897,7 +897,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	if (vmd->instance < 0)
- 		return vmd->instance;
- 
--	vmd->name = kasprintf(GFP_KERNEL, "vmd%d", vmd->instance);
-+	vmd->name = devm_kasprintf(&dev->dev, GFP_KERNEL, "vmd%d",
-+				   vmd->instance);
- 	if (!vmd->name) {
- 		err = -ENOMEM;
- 		goto out_release_instance;
-@@ -935,7 +936,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 
-  out_release_instance:
- 	ida_simple_remove(&vmd_instance_ida, vmd->instance);
--	kfree(vmd->name);
- 	return err;
- }
- 
-@@ -958,7 +958,6 @@ static void vmd_remove(struct pci_dev *dev)
- 	vmd_detach_resources(vmd);
- 	vmd_remove_irq_domain(vmd);
- 	ida_simple_remove(&vmd_instance_ida, vmd->instance);
--	kfree(vmd->name);
- }
- 
- #ifdef CONFIG_PM_SLEEP
--- 
-2.17.1
-
+       Arnd
