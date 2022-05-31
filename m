@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 187DDC43219
-	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 15:27:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ED1FC43217
+	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 15:27:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345677AbiEaP1D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 May 2022 11:27:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60910 "EHLO
+        id S1345680AbiEaP1F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 May 2022 11:27:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32818 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345654AbiEaP1A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 11:27:00 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CCC7F2FFCF;
-        Tue, 31 May 2022 08:26:57 -0700 (PDT)
+        with ESMTP id S1345669AbiEaP1C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 11:27:02 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0C1B3EAB0;
+        Tue, 31 May 2022 08:27:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654010817; x=1685546817;
+  t=1654010820; x=1685546820;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=nzVDpNATwEHU0sYxt+nP/8zslqJm3ZUayFeqWKdZEyU=;
-  b=ByRCogxqBP3IzbYOSomXE/2W5nGK04+I3lWmRhu1S2H7Vw9DU8VU5ke3
-   8NAd79IVTvIKy5oCrPwKO+yeZhQSJPwyrdeDqkBy34mYUgmkU6tV0dmyr
-   T1p4WBNGD7qYYc4pglPR/Fw5mSl///uN9qxpcMtnzHkFiLj96n1Z2S5oj
-   cUp80Df4DAQIpo3vyBCfl44zN+t5kwzquZKB8wv5Ru8ZQ7mJ5OsCqlbNW
-   GXniNjrbYQ/SMfLbvGNV//DCVF0Wq9a2t3NL0w1GaZR8lSCkCeuHv9T0/
-   VaG/92p2/x6WdFgwUeG5aPm/ktSz39fVH+18KzM3xBWPyKY5iBa+AjS48
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10364"; a="257356748"
+  bh=CRwHDt8aXJOkaw1hN2tb5kU85cFgebt1TiTvygZLCj8=;
+  b=OGOVZouzQwVOljOeVHdaWrEtUn9AWsB9D6AdzyzXc6zQPxKBgIffLlmj
+   +m5PByzDyBgwnAThgLhodS8m0GSx0ytLjjrAsS4kp7NuaLVmRstRyJh1g
+   2bQBYFNZwBqHK9XBSd+9Gsm5z12jUGZhAPBGdp2OWd3McTujGywJjke7W
+   zW3k4iALpN7pYTsnjCqdhW/mFVRfS5GJvP0TTzKkcYlBpivsgCy42BjFF
+   +TeHdvqWPqYkWvSQhCU2swgiee5htM/4dbf4+FBQUxkN83vkyXoRA0xmX
+   odBoEg3yqpVYksgFSG1EWmreg/cFNe3l6o2TD2MqFteyNkrlo4K3rFYPb
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10364"; a="275374326"
 X-IronPort-AV: E=Sophos;i="5.91,265,1647327600"; 
-   d="scan'208";a="257356748"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 08:26:57 -0700
+   d="scan'208";a="275374326"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 08:27:00 -0700
 X-IronPort-AV: E=Sophos;i="5.91,265,1647327600"; 
-   d="scan'208";a="720356899"
+   d="scan'208";a="755078902"
 Received: from mdossant-mobl1.amr.corp.intel.com (HELO localhost) ([10.212.154.135])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 08:26:56 -0700
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 08:27:00 -0700
 From:   ira.weiny@intel.com
 To:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,9 +46,9 @@ Cc:     Alison Schofield <alison.schofield@intel.com>,
         Dave Jiang <dave.jiang@intel.com>,
         Ben Widawsky <ben@bwidawsk.net>, linux-kernel@vger.kernel.org,
         linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH V9 4/9] cxl/pci: Create PCI DOE mailbox's for memory devices
-Date:   Tue, 31 May 2022 08:26:27 -0700
-Message-Id: <20220531152632.1397976-5-ira.weiny@intel.com>
+Subject: [PATCH V9 7/9] cxl/port: Introduce cxl_cdat_valid()
+Date:   Tue, 31 May 2022 08:26:30 -0700
+Message-Id: <20220531152632.1397976-8-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220531152632.1397976-1-ira.weiny@intel.com>
 References: <20220531152632.1397976-1-ira.weiny@intel.com>
@@ -60,225 +60,104 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-DOE mailbox objects will be needed for various mailbox communications
-with each memory device.
+The CDAT data is protected by a checksum and should be the proper
+length.
 
-Iterate each DOE mailbox capability and create PCI DOE mailbox objects
-as found.
-
-It is not anticipated that this is the final resting place for the
-iteration of the DOE devices.  The support of ports may drive this code
-into the pcie side.  In this imagined architecture the CXL port driver
-would then query into the PCI device for the DOE mailbox array.
-
-For now this is good enough for the endpoints and the split is similar
-to the envisioned architecture where getting the mailbox array is
-separated from the various protocol needs.  For example, it is not
-anticipated that the CDAT code will need to move because it is only
-needed by the cxl_ports.
-
-Likewise irq's are separated out in a similar design pattern to the
-PCIe port driver.  But a much simpler irq enabling flag is used and only
-DOE interrupts are supported.
+Introduce cxl_cdat_valid() to validate the data.  While at it check and
+store the sequence number.
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from V8:
-	Move PCI_DOE selection to CXL_BUS to support future patches
-	which move queries into the port code.
-	Remove Auxiliary device arch
-	Squash the functionality of the auxiliary driver into this
-	patch.
-	Split out the irq handling a bit.
+Changes from V8
+	Move code to cxl/core/pci.c
 
-Changes from V7:
-	Minor code clean ups
-	Rebased on cxl-pending
+Changes from V6
+	Change name to cxl_cdat_valid() as this validates all the CDAT
+		data not just the header
+	Add error and debug prints
 
-Changes from V6:
-	Move all the auxiliary device stuff to the CXL layer
-
-Changes from V5:
-	Split the CXL specific stuff off from the PCI DOE create
-	auxiliary device code.
+Changes from V5
+	New patch, split out
+	Update cdat_hdr_valid()
+		Remove revision and cs field parsing
+			There is no point in these
+		Add seq check and debug print.
 ---
- drivers/cxl/Kconfig  |   1 +
- drivers/cxl/cxlmem.h |   6 +++
- drivers/cxl/pci.c    | 111 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 118 insertions(+)
+ drivers/cxl/cdat.h     |  2 ++
+ drivers/cxl/core/pci.c | 36 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
-index f64e3984689f..7adaaf80b302 100644
---- a/drivers/cxl/Kconfig
-+++ b/drivers/cxl/Kconfig
-@@ -2,6 +2,7 @@
- menuconfig CXL_BUS
- 	tristate "CXL (Compute Express Link) Devices Support"
- 	depends on PCI
-+	select PCI_DOE
- 	help
- 	  CXL is a bus that is electrically compatible with PCI Express, but
- 	  layers three protocols on that signalling (CXL.io, CXL.cache, and
-diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
-index 60d10ee1e7fc..4d2764b865ab 100644
---- a/drivers/cxl/cxlmem.h
-+++ b/drivers/cxl/cxlmem.h
-@@ -191,6 +191,8 @@ struct cxl_endpoint_dvsec_info {
-  * @component_reg_phys: register base of component registers
-  * @info: Cached DVSEC information about the device.
-  * @serial: PCIe Device Serial Number
-+ * @doe_mbs: PCI DOE mailbox array
-+ * @num_mbs: Number of DOE mailboxes
-  * @mbox_send: @dev specific transport for transmitting mailbox commands
+diff --git a/drivers/cxl/cdat.h b/drivers/cxl/cdat.h
+index f5193a6a51fe..3d8945612511 100644
+--- a/drivers/cxl/cdat.h
++++ b/drivers/cxl/cdat.h
+@@ -90,10 +90,12 @@
   *
-  * See section 8.2.9.5.2 Capacity Configuration and Label Storage for
-@@ -224,6 +226,10 @@ struct cxl_dev_state {
- 	resource_size_t component_reg_phys;
- 	u64 serial;
- 
-+	bool doe_use_irq;
-+	struct pci_doe_mb **doe_mbs;
-+	int num_mbs;
-+
- 	int (*mbox_send)(struct cxl_dev_state *cxlds, struct cxl_mbox_cmd *cmd);
+  * @table: cache of CDAT table
+  * @length: length of cached CDAT table
++ * @seq: Last read Sequence number of the CDAT table
+  */
+ struct cxl_cdat {
+ 	void *table;
+ 	size_t length;
++	u32 seq;
  };
  
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 5a0ae46d4989..131f89dec8e7 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -8,6 +8,7 @@
- #include <linux/mutex.h>
- #include <linux/list.h>
- #include <linux/pci.h>
-+#include <linux/pci-doe.h>
- #include <linux/io.h>
- #include "cxlmem.h"
- #include "cxlpci.h"
-@@ -386,6 +387,113 @@ static int cxl_setup_regs(struct pci_dev *pdev, enum cxl_regloc_type type,
+ #endif /* !__CXL_CDAT_H__ */
+diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+index 4c25a7d7abfd..bb370df1cb6c 100644
+--- a/drivers/cxl/core/pci.c
++++ b/drivers/cxl/core/pci.c
+@@ -534,6 +534,40 @@ static int cxl_cdat_get_length(struct cxl_port *port, size_t *length)
  	return rc;
  }
  
-+static void cxl_pci_free_irq_vectors(void *data)
++static bool cxl_cdat_valid(struct device *dev, struct cxl_cdat *cdat)
 +{
-+	pci_free_irq_vectors(data);
-+}
-+
-+static void cxl_doe_destroy_mb(void *ds)
-+{
-+	struct cxl_dev_state *cxlds = ds;
++	u32 *table = cdat->table;
++	u8 *data8 = cdat->table;
++	u32 length, seq;
++	u8 check;
 +	int i;
 +
-+	for (i = 0; i < cxlds->num_mbs; i++) {
-+		if (cxlds->doe_mbs[i])
-+			pci_doe_destroy_mb(cxlds->doe_mbs[i]);
++	length = FIELD_GET(CDAT_HEADER_DW0_LENGTH, table[0]);
++	if ((length < CDAT_HEADER_LENGTH_BYTES) || (length > cdat->length)) {
++		dev_err(dev, "Invalid length %u (%zu-%zu)\n", length,
++			CDAT_HEADER_LENGTH_BYTES, cdat->length);
++		return false;
 +	}
++
++	for (check = 0, i = 0; i < length; i++)
++		check += data8[i];
++
++	dev_dbg(dev, "CDAT length %u CS %u\n", length, check);
++	if (check != 0) {
++		dev_err(dev, "Invalid checksum %u\n", check);
++		return false;
++	}
++
++	seq = FIELD_GET(CDAT_HEADER_DW3_SEQUENCE, table[3]);
++	/* Store the sequence for now. */
++	if (cdat->seq != seq) {
++		dev_info(dev, "CDAT seq change %x -> %x\n", cdat->seq, seq);
++		cdat->seq = seq;
++	}
++
++	return true;
 +}
 +
-+static void cxl_alloc_irq_vectors(struct cxl_dev_state *cxlds)
-+{
-+	struct device *dev = cxlds->dev;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	int num_irqs = 0;
-+	int off = 0;
-+	int rc;
-+
-+	/* Account for all the DOE vectors needed */
-+	pci_doe_for_each_off(pdev, off) {
-+		int irq = pci_doe_get_irq_num(pdev, off);
-+
-+		if (irq < 0)
-+			continue;
-+		num_irqs = max(num_irqs, irq + 1);
-+	}
-+
-+	/*
-+	 * Allocate enough vectors for the DOE's
-+	 */
-+	rc = pci_alloc_irq_vectors(pdev, num_irqs, num_irqs, PCI_IRQ_MSI |
-+							     PCI_IRQ_MSIX);
-+	if (rc != num_irqs) {
-+		pci_err(pdev, "Not enough interrupts; use polling\n");
-+		/* Some got allocated; clean them up */
-+		if (rc > 0)
-+			cxl_pci_free_irq_vectors(pdev);
-+		cxlds->doe_use_irq = false;
-+		return;
-+	}
-+
-+	rc = devm_add_action_or_reset(dev, cxl_pci_free_irq_vectors, pdev);
-+	if (rc) {
-+		cxlds->doe_use_irq = false;
-+		return;
-+	}
-+
-+	cxlds->doe_use_irq = true;
-+}
-+
-+/**
-+ * devm_cxl_pci_create_doe - Scan and set up DOE mailboxes
-+ *
-+ * @cxlds: The CXL device state
-+ *
-+ * RETURNS: 0 on success -ERRNO on failure.
-+ */
-+static int devm_cxl_pci_create_doe(struct cxl_dev_state *cxlds)
-+{
-+	struct device *dev = cxlds->dev;
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	u16 off = 0;
-+	int num_mbs = 0;
-+	int rc;
-+
-+	pci_doe_for_each_off(pdev, off)
-+		num_mbs++;
-+
-+	cxlds->doe_mbs = devm_kcalloc(dev, num_mbs, sizeof(*cxlds->doe_mbs),
-+				      GFP_KERNEL);
-+	if (!cxlds->doe_mbs)
-+		return -ENOMEM;
-+
-+	pci_doe_for_each_off(pdev, off) {
-+		struct pci_doe_mb *doe_mb;
-+		int irq = -1;
-+
-+		if (cxlds->doe_use_irq)
-+			irq = pci_doe_get_irq_num(pdev, off);
-+
-+		doe_mb = pci_doe_create_mb(pdev, off, irq);
-+		if (IS_ERR(doe_mb)) {
-+			pci_err(pdev,
-+				"Failed to create MB object for MB @ %x\n",
-+				off);
-+			doe_mb = NULL;
-+		}
-+
-+		cxlds->doe_mbs[cxlds->num_mbs] = doe_mb;
-+		cxlds->num_mbs++;
-+	}
-+
-+	rc = devm_add_action_or_reset(dev, cxl_doe_destroy_mb, cxlds);
-+	if (rc)
-+		return rc;
-+
-+	pci_info(pdev, "Configured %d DOE mailbox's\n", cxlds->num_mbs);
-+
-+	return 0;
-+}
-+
- static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ static int cxl_cdat_read_table(struct cxl_port *port,
+ 			       struct cxl_cdat *cdat)
  {
- 	struct cxl_register_map map;
-@@ -454,6 +562,9 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (IS_ERR(cxlmd))
- 		return PTR_ERR(cxlmd);
+@@ -581,6 +615,8 @@ static int cxl_cdat_read_table(struct cxl_port *port,
  
-+	cxl_alloc_irq_vectors(cxlds);
-+	devm_cxl_pci_create_doe(cxlds);
-+
- 	if (range_len(&cxlds->pmem_range) && IS_ENABLED(CONFIG_CXL_PMEM))
- 		rc = devm_cxl_add_nvdimm(&pdev->dev, cxlmd);
+ 	} while (entry_handle != 0xFFFF);
+ 
++	if (!rc && !cxl_cdat_valid(&port->dev, cdat))
++		return -EIO;
+ 	return rc;
+ }
  
 -- 
 2.35.1
