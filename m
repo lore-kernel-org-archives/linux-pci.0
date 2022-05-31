@@ -2,124 +2,185 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99AC6C433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 17:25:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE6DC433F5
+	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 17:57:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233775AbiEaRZS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 May 2022 13:25:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36362 "EHLO
+        id S1346724AbiEaR52 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 May 2022 13:57:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229930AbiEaRZR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 13:25:17 -0400
-Received: from beige.elm.relay.mailchannels.net (beige.elm.relay.mailchannels.net [23.83.212.16])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B58990CDB;
-        Tue, 31 May 2022 10:25:14 -0700 (PDT)
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 88C0D21D73;
-        Tue, 31 May 2022 17:25:12 +0000 (UTC)
-Received: from pdx1-sub0-mail-a312.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id AF12121FBC;
-        Tue, 31 May 2022 17:25:11 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1654017912; a=rsa-sha256;
-        cv=none;
-        b=cxqqB8RqZa/iqtbv3opLLeabodEeIzywVNEUnNzM4n4IfUQJNoA7hMkTMU57az/ZGVAVtJ
-        2vCpnYvpzJsz3TeZYJ86V8zHGVVO9atnK2OjYkS1YhFs76mBQ/JBJ1facXLqxfDMNgAnRo
-        rqf91E20yFPaFZ6/GeLmeJLHWe5MMJ0a0UX0XIp0W9ln9PPUL8AIWFoxxmJLW0rXynycRz
-        kkpSKpNBMaTaXd54BObZEold1tVrLLD2ziqnfYDTU0+aQhkZDHCTlb6v6Adv2n5asmarm0
-        4VhWJr7zEN86FP84PHZCE1dlojgxHeQewMHyPjuLcO/dMHQtjPPimx76vbwc4Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1654017911;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=r+iCa0G+5l2oLU1hDQ/hBTD6TF0JVzAdaVROMvYsjVE=;
-        b=4TTVmdGiPIRoLS9XG4JT7NaviDgGlfKfE04QrOUnkHp33gh27z9updHaqU5gR+A4J5ZTG3
-        poxHLaaORVYaPpbqS5+uxQJS+1pC7y7jukTuYkBxgt/nSiOoNK1h/JHz+WTsQatOVXpBOR
-        aeAlDPVq3ccE1iTLKLeL24LmNIVj3/ZvSZ8o+zOHuLtvjBY5gtg9MfzSjTQ+7xn0tZopLk
-        FKCpzypFJ6FBES4ir3oBkG/bRVICi9DQ/Vx4ETRclH0OurIyxHha81vHPTlQe8fJfhKRGO
-        ZkHqqEzS8cEmrjfSZWrIyAan6WDIig2uzeRCFZAEYBEmPATfZkisn/UYe3GLUA==
-ARC-Authentication-Results: i=1;
-        rspamd-77f9f854d9-qwfs7;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Spot-Shade: 0915ff0469342c1d_1654017912229_2223760134
-X-MC-Loop-Signature: 1654017912229:940560900
-X-MC-Ingress-Time: 1654017912229
-Received: from pdx1-sub0-mail-a312.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.124.238.93 (trex/6.7.1);
-        Tue, 31 May 2022 17:25:12 +0000
-Received: from offworld (unknown [104.36.31.105])
+        with ESMTP id S239219AbiEaR51 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 13:57:27 -0400
+X-Greylist: delayed 415 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 31 May 2022 10:57:24 PDT
+Received: from mail.bwidawsk.net (mail.bwidawsk.net [107.170.211.233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7402D33A13;
+        Tue, 31 May 2022 10:57:22 -0700 (PDT)
+Received: by mail.bwidawsk.net (Postfix, from userid 5001)
+        id 1E599123291; Tue, 31 May 2022 10:57:22 -0700 (PDT)
+Received: from mail.bwidawsk.net (c-24-20-163-23.hsd1.or.comcast.net [24.20.163.23])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dave@stgolabs.net)
-        by pdx1-sub0-mail-a312.dreamhost.com (Postfix) with ESMTPSA id 4LCK0k4vtNz3H;
-        Tue, 31 May 2022 10:25:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1654017911;
-        bh=r+iCa0G+5l2oLU1hDQ/hBTD6TF0JVzAdaVROMvYsjVE=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=XnO2M8HGW2PIyFH2/jOoBnuxVxx3UQY8Wxz3K+c1Evlx/w4aVVgXSTgWvUcFJBwj+
-         md+dndlhRZu127yWldNWwDFRWWyb21PiEp8LAgFm6QWYaWG7zU1PMhP64LXjJBcy2B
-         uDeUTIcKCD1BkCWA6PT9GjVA4fh3cIgmv51ycKt12PN7Qnpyeu/NVQDQk8ag/dOalu
-         km0YOD1WKToOk+dQCTgl7o663ZvheqEHhHXVvbjmnNume6BwabmrVjuTv+00SkGnXf
-         QqkjXPTbc32IkaAmhSE5JCSQTOsgNmqY7cHKQt2I6EBKxRHMUe+YnqVSRkdS8feb5+
-         YjV7jQ0SdrYLQ==
-Date:   Tue, 31 May 2022 10:25:07 -0700
-From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     "ira.weiny@intel.com" <ira.weiny@intel.com>
+        (Client did not present a certificate)
+        by mail.bwidawsk.net (Postfix) with ESMTPSA id B0F00120013;
+        Tue, 31 May 2022 10:57:17 -0700 (PDT)
+Date:   Tue, 31 May 2022 10:57:16 -0700
+From:   Ben Widawsky <ben@bwidawsk.net>
+To:     ira.weiny@intel.com
 Cc:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Cameron <Jonathan.Cameron@huawei.com>,
         Alison Schofield <alison.schofield@intel.com>,
         Vishal Verma <vishal.l.verma@intel.com>,
         Dave Jiang <dave.jiang@intel.com>,
-        Ben Widawsky <ben@bwidawsk.net>, linux-kernel@vger.kernel.org,
-        linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
-        a.manzanares@samsung.com
-Subject: Re: [PATCH v9 3/9] PCI: Create PCI library functions in support of
- DOE mailboxes.
-Message-ID: <20220531172507.5ert5tgwellpe7fx@offworld>
+        linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH V9 5/9] cxl/port: Find a DOE mailbox which supports CDAT
+Message-ID: <20220531175716.jlkwu7aerxh5ucte@mail.bwidawsk.net>
 References: <20220531152632.1397976-1-ira.weiny@intel.com>
- <20220531152632.1397976-4-ira.weiny@intel.com>
+ <20220531152632.1397976-6-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220531152632.1397976-4-ira.weiny@intel.com>
-User-Agent: NeoMutt/20220429
+In-Reply-To: <20220531152632.1397976-6-ira.weiny@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 31 May 2022, ira.weiny@intel.com wrote:
+On 22-05-31 08:26:28, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
+> 
+> Each CXL device may have multiple DOE mailbox capabilities and each
+> mailbox may support multiple protocols.  CXL port devices need to query
+> the CDAT information specifically.
+> 
+> Search the DOE mailboxes for one which supports the CDAT protocol.
+> Cache that mailbox to be used for future queries.
+> 
+> Only support memory devices at this time.
+> 
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> 
+> ---
+> Changes from V8
+> 	Incorporate feedback from Jonathan
+> 	Move all this to the cxl_port object
+> 
+> Changes from V7
+> 	Minor code clean ups
+> 
+> Changes from V6
+> 	Adjust for aux devices being a CXL only concept
+> 	Update commit msg.
+> 	Ensure devices iterated by auxiliary_find_device() are checked
+> 		to be DOE devices prior to checking for the CDAT
+> 		protocol
+> 	From Ben
+> 		Ensure reference from auxiliary_find_device() is dropped
+> ---
+>  drivers/cxl/core/pci.c  | 28 ++++++++++++++++++++++++++++
+>  drivers/cxl/core/port.c |  2 ++
+>  drivers/cxl/cxl.h       |  2 ++
+>  drivers/cxl/cxlpci.h    |  1 +
+>  4 files changed, 33 insertions(+)
+> 
+> diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+> index c4c99ff7b55e..5497a65bdcf3 100644
+> --- a/drivers/cxl/core/pci.c
+> +++ b/drivers/cxl/core/pci.c
+> @@ -4,11 +4,14 @@
+>  #include <linux/device.h>
+>  #include <linux/delay.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-doe.h>
+>  #include <cxlpci.h>
+>  #include <cxlmem.h>
+>  #include <cxl.h>
+>  #include "core.h"
+>  
+> +#define CXL_DOE_PROTOCOL_TABLE_ACCESS 2
+> +
+>  /**
+>   * DOC: cxl core pci
+>   *
+> @@ -458,3 +461,28 @@ int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm)
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_NS_GPL(cxl_hdm_decode_init, CXL);
+> +
+> +void cxl_find_cdat_mb(struct cxl_port *port)
 
->+static void doe_statemachine_work(struct work_struct *work)
->+{
->+	struct delayed_work *w = to_delayed_work(work);
->+	struct pci_doe_mb *doe_mb = container_of(w, struct pci_doe_mb,
->+						 statemachine);
->+	struct pci_dev *pdev = doe_mb->pdev;
->+	int offset = doe_mb->cap_offset;
->+	struct pci_doe_task *task;
->+	u32 val;
->+	int rc;
->+
->+	mutex_lock(&doe_mb->task_lock);
->+	task = doe_mb->cur_task;
->+	mutex_unlock(&doe_mb->task_lock);
+kdoc would be good for exported symbols IMO. Also if you can come up with a
+better verb than "find" for something that mutates the port's state, I think
+that would be beneficial.
 
-Instead of a mutex, would it be better to use a rwsem here to protect
-the state machine and allow for concurrent reads for the work callback?
-It is a general interface and a trivial change, but not sure how much
-performance is cared about.
+I'm not sure why this is exported yet, but I suppose I'll see soon :-)
 
-Thanks,
-Davidlohr
+> +{
+> +	struct device *dev = port->uport;
+> +	struct cxl_memdev *cxlmd;
+> +	struct cxl_dev_state *cxlds;
+> +	int i;
+> +
+> +	if (!is_cxl_memdev(dev))
+> +		return;
+> +
+> +	cxlmd = to_cxl_memdev(dev);
+> +	cxlds = cxlmd->cxlds;
+> +
+> +	for (i = 0; i < cxlds->num_mbs; i++) {
+> +		struct pci_doe_mb *cur = cxlds->doe_mbs[i];
+> +
+> +		if (pci_doe_supports_prot(cur, PCI_DVSEC_VENDOR_ID_CXL,
+> +					  CXL_DOE_PROTOCOL_TABLE_ACCESS)) {
+> +			port->cdat_mb = cur;
+> +			return;
+> +		}
+> +	}
+> +}
+> +EXPORT_SYMBOL_NS_GPL(cxl_find_cdat_mb, CXL);
+> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+> index ea60abda6500..2e2bd65c1024 100644
+> --- a/drivers/cxl/core/port.c
+> +++ b/drivers/cxl/core/port.c
+> @@ -461,6 +461,8 @@ struct cxl_port *devm_cxl_add_port(struct device *host, struct device *uport,
+>  	if (IS_ERR(port))
+>  		return port;
+>  
+> +	cxl_find_cdat_mb(port);
+> +
+>  	dev = &port->dev;
+>  	if (is_cxl_memdev(uport))
+>  		rc = dev_set_name(dev, "endpoint%d", port->id);
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index 140dc3278cde..0a86be589ffc 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -267,6 +267,7 @@ struct cxl_nvdimm {
+>   * @component_reg_phys: component register capability base address (optional)
+>   * @dead: last ep has been removed, force port re-creation
+>   * @depth: How deep this port is relative to the root. depth 0 is the root.
+> + * @cdat_mb: Mailbox which supports the CDAT protocol
+>   */
+>  struct cxl_port {
+>  	struct device dev;
+> @@ -278,6 +279,7 @@ struct cxl_port {
+>  	resource_size_t component_reg_phys;
+>  	bool dead;
+>  	unsigned int depth;
+> +	struct pci_doe_mb *cdat_mb;
+>  };
+>  
+>  /**
+> diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
+> index fce1c11729c2..366b21bd1a01 100644
+> --- a/drivers/cxl/cxlpci.h
+> +++ b/drivers/cxl/cxlpci.h
+> @@ -74,4 +74,5 @@ static inline resource_size_t cxl_regmap_to_base(struct pci_dev *pdev,
+>  int devm_cxl_port_enumerate_dports(struct cxl_port *port);
+>  struct cxl_dev_state;
+>  int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm);
+> +void cxl_find_cdat_mb(struct cxl_port *port);
+>  #endif /* __CXL_PCI_H__ */
+> -- 
+> 2.35.1
+> 
