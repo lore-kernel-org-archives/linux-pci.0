@@ -2,100 +2,133 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4C29C4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 17:07:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C31C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 31 May 2022 17:07:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346398AbiEaRHb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 May 2022 13:07:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36380 "EHLO
+        id S1346387AbiEaRHm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 May 2022 13:07:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346387AbiEaRHa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 13:07:30 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 532E3813FF;
-        Tue, 31 May 2022 10:07:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654016849; x=1685552849;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=NqozLsA3zOu8MYgmMLS1kw8UHYU8GaM+8XImuFdDSWY=;
-  b=l8/t4Psq5gzVPs+cT6Ef4aABrAtlUQrRrivdi2T7MduYWGctu7eSCZ8h
-   mK6fzMCN7M0EWFRal8jCDZYk+JIRn/RFIUlD2ghy0Es3ak01ZOu8ZVJEe
-   7YQYfmEI4oBuFVRqh0I/+Eqvpv4mbkqtdlknu9QaaJnSS0jXlUd4wkt+B
-   cGq19fH3mPRc11n6Mee0L8imGjKTCM8dCJDBb+6S8CkHYe/dRtEsGFO3Z
-   Tkn3eFDNzWg60GAqHH7FMDcoh79CECBL1QjzMnINB5pzZzJ7lapGoYm9c
-   X25D277kS8U2mV4cTheCmYQBTOct/6+YyCVibJjNLWGBhAzHLlHAOw0kT
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10364"; a="335980272"
-X-IronPort-AV: E=Sophos;i="5.91,265,1647327600"; 
-   d="scan'208";a="335980272"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 10:07:28 -0700
-X-IronPort-AV: E=Sophos;i="5.91,265,1647327600"; 
-   d="scan'208";a="551880444"
-Received: from alison-desk.jf.intel.com (HELO alison-desk) ([10.54.74.41])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2022 10:07:28 -0700
-Date:   Tue, 31 May 2022 10:07:43 -0700
-From:   Alison Schofield <alison.schofield@intel.com>
-To:     "Weiny, Ira" <ira.weiny@intel.com>
-Cc:     "Williams, Dan J" <dan.j.williams@intel.com>,
+        with ESMTP id S1346436AbiEaRHl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 May 2022 13:07:41 -0400
+Received: from bee.birch.relay.mailchannels.net (bee.birch.relay.mailchannels.net [23.83.209.14])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F149C8DDCC;
+        Tue, 31 May 2022 10:07:34 -0700 (PDT)
+X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
+Received: from relay.mailchannels.net (localhost [127.0.0.1])
+        by relay.mailchannels.net (Postfix) with ESMTP id 0DFE66C1FA6;
+        Tue, 31 May 2022 17:00:17 +0000 (UTC)
+Received: from pdx1-sub0-mail-a312.dreamhost.com (unknown [127.0.0.6])
+        (Authenticated sender: dreamhost)
+        by relay.mailchannels.net (Postfix) with ESMTPA id 0A8136C2114;
+        Tue, 31 May 2022 17:00:16 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1654016416; a=rsa-sha256;
+        cv=none;
+        b=QX2ksRbCwwylwUewYYzBAn4DV+az79n5Rc9lTFVsaETiYMaq9qBuFcwTLz+ouF+jbYtBJ8
+        bPeD0CoaU7fCDvQTA6us8lRyeV3Olet+GPxfMFSzlbNHG3uRWKnqN8WZIJ+vungxJxHv3M
+        O8zn+lqyjTjHGqfwYvo8fI5UH6S6VosRbV8H9WkFp5MN8zWjSi0GeO0ZHox03hXuBQC4Qp
+        VIEXZRYkTxHROea9SJpt/dNu+du9FWJWZExzbquW/tLtuV5pG+L+LcSIaocHfDhzjEj1/W
+        kj33rWiYJSQziEt2o4XOnbTN664gVeUxamKZ1W1zzdRKuBjMyBjMw2SX5kcTGg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mailchannels.net;
+        s=arc-2022; t=1654016416;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references:dkim-signature;
+        bh=xh6g3OnYgOARYnrm0HnNILhGZu8yEtDYkR54Gfjgl7k=;
+        b=4XA4G6+Het4QS/uEmG2Hffy7DMrUxMqgmUM+6bNTM7moCCJcZ1VAuwy76mqxELGjkvlCci
+        lXdYwWywsMhZv4EO6wDWlEjJ+/6um7/tUsw1VQCG1JK0hfsHe5+KWpt437SNAwRfaE3xsl
+        urS0DFGX98Fusme77gHCrHeksbzODQR33ozW9QnWq9aWHNcaKEfDjbWFEIXH7A+u9PzfIu
+        aj9m5WVaIR/92r0p9iBT+29/859hjm31RxZy0jHy854jiHVxHAahYrMDEarUq4lOwG/ou0
+        rLu1/uM0DEIOSwSZRW2wRGpFaByBpl4ImAk3B+xWgNu4NSeF6Esz2mGIXJoVRQ==
+ARC-Authentication-Results: i=1;
+        rspamd-77f9f854d9-ttcbd;
+        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
+X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
+X-MC-Relay: Neutral
+X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
+X-MailChannels-Auth-Id: dreamhost
+X-Society-Skirt: 7e4acaf972c84e96_1654016416565_595515388
+X-MC-Loop-Signature: 1654016416565:4149019227
+X-MC-Ingress-Time: 1654016416565
+Received: from pdx1-sub0-mail-a312.dreamhost.com (pop.dreamhost.com
+ [64.90.62.162])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
+        by 100.105.211.140 (trex/6.7.1);
+        Tue, 31 May 2022 17:00:16 +0000
+Received: from offworld (unknown [104.36.31.105])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: dave@stgolabs.net)
+        by pdx1-sub0-mail-a312.dreamhost.com (Postfix) with ESMTPSA id 4LCJRy34rRz3H;
+        Tue, 31 May 2022 10:00:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
+        s=dreamhost; t=1654016415;
+        bh=xh6g3OnYgOARYnrm0HnNILhGZu8yEtDYkR54Gfjgl7k=;
+        h=Date:From:To:Cc:Subject:Content-Type;
+        b=F4lT6yesUDFDgcPAs9cdLLpTsFA5xC0blgAX71tJOj7IUjAmo8fkG98E556WoOYIb
+         HWuEqcdGhxKWt3ShUP7m6e4XR4MkYgrx8q67klmn9xmtz6s9pdS8LjwgOgGDOBpTQn
+         RWP4S9G9kzIO7MGchFKkzVC2ZsZdF5vaWcRizWnuwR7iJe+6/6CBk87zEIDbwYhBAB
+         RypbhRdrbuZTxhROk30hABEI06ah8Oz70dAn5Sbi4kt4Iixlt8cBHCE2mzODbUUebS
+         XjBQOARdTp4xx/0zhUWUdxVGk0D+oCCDzXcFCLJgiaLfj6dHU6nRAy5L8OIMxr7cJ7
+         DrpNXkUy27bxw==
+Date:   Tue, 31 May 2022 10:00:11 -0700
+From:   Davidlohr Bueso <dave@stgolabs.net>
+To:     "ira.weiny@intel.com" <ira.weiny@intel.com>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        "Verma, Vishal L" <vishal.l.verma@intel.com>,
-        "Jiang, Dave" <dave.jiang@intel.com>,
-        Ben Widawsky <ben@bwidawsk.net>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V9 8/9] cxl/port: Retry reading CDAT on failure
-Message-ID: <20220531170743.GA1457068@alison-desk>
+        Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Ben Widawsky <ben@bwidawsk.net>, linux-kernel@vger.kernel.org,
+        linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+        a.manzanares@samsung.com
+Subject: Re: [PATCH v9 1/9] PCI: Add vendor ID for the PCI SIG
+Message-ID: <20220531170011.4rm654khkff66j2h@offworld>
 References: <20220531152632.1397976-1-ira.weiny@intel.com>
- <20220531152632.1397976-9-ira.weiny@intel.com>
+ <20220531152632.1397976-2-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20220531152632.1397976-9-ira.weiny@intel.com>
+In-Reply-To: <20220531152632.1397976-2-ira.weiny@intel.com>
+User-Agent: NeoMutt/20220429
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, May 31, 2022 at 08:26:31AM -0700, Ira Weiny wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
-> 
-> The CDAT read may fail for a number of reasons but mainly it is possible
-> to get different parts of a valid state.  The checksum in the CDAT table
-> protects against this.
-> 
-> Now that the cdat data is validated issue a retries if the CDAT read
-> fails.  For now 5 retries are implemented.
-> 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> 
-> ---
+On Tue, 31 May 2022, ira.weiny@intel.com wrote:
 
-snip
+>From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+>
+>This ID is used in DOE headers to identify protocols that are defined
+>within the PCI Express Base Specification, PCIe r6.0, sec 6.30.1.1 table
+>6-32.
+>
+>Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+>Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
-> +
-> +void read_cdat_data(struct cxl_port *port)
-> +{
-> +	int retries = 5;
-> +	int rc;
-> +
-> +	while (retries--) {
-> +		rc = __read_cdat_data(port);
-> +		if (!rc)
-> +			break;
-> +		dev_err(&port->dev,
-> +			"CDAT data read error rc=%d (retries %d)\n",
-> +			rc, retries);
-> +	}
+Reviewed-by: Davidlohr Bueso <dave@stgolabs.net>
 
-Perhaps dev_dbg() on retries and dev_err() only when retries are exhausted.
-
-
->  }
->  EXPORT_SYMBOL_NS_GPL(read_cdat_data, CXL);
-> -- 
-> 2.35.1
-> 
+>---
+> include/linux/pci_ids.h | 1 +
+> 1 file changed, 1 insertion(+)
+>
+>diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>index 0178823ce8c2..8af3b86206b1 100644
+>--- a/include/linux/pci_ids.h
+>+++ b/include/linux/pci_ids.h
+>@@ -151,6 +151,7 @@
+> #define PCI_CLASS_OTHERS		0xff
+>
+> /* Vendors and devices.  Sort key: vendor first, device next. */
+>+#define PCI_VENDOR_ID_PCI_SIG		0x0001
+>
+> #define PCI_VENDOR_ID_LOONGSON		0x0014
+>
+>
+>-- 
+>2.35.1
+>
