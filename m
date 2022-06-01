@@ -2,47 +2,47 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD54CCA471
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 13:55:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD783CCA468
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 13:55:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353730AbiFANzY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Jun 2022 09:55:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59398 "EHLO
+        id S1353839AbiFANzz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Jun 2022 09:55:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353737AbiFANzH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 09:55:07 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 031768A329;
-        Wed,  1 Jun 2022 06:54:25 -0700 (PDT)
+        with ESMTP id S1353725AbiFANzY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 09:55:24 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B39FC8B0A8;
+        Wed,  1 Jun 2022 06:54:37 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B0E3D615D3;
-        Wed,  1 Jun 2022 13:54:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55C92C34119;
-        Wed,  1 Jun 2022 13:54:24 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A58D5B81B07;
+        Wed,  1 Jun 2022 13:53:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6D191C3411E;
+        Wed,  1 Jun 2022 13:53:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654091665;
-        bh=y+ZCPCbodZGnjXfv4nC2fCqOJ8w4vtn6X4gFvwYmG9Q=;
+        s=k20201202; t=1654091606;
+        bh=g0u/pd5I5cajoFlJAmHmEkUnMh+QPi0LxEXCIF7xBjo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=leEA90g5CldM/nF/9bd+2E2lX2SJU5iNi/peZ4FK53nvveZuvPeMueuQxd8EHlEpz
-         RPLatDRkGRFV18qG4p3eeZKwq+ZaGd3T7rRkrfBb9ugtanXAF4vWzy1z8PqRQgUH1E
-         7PjOXOA4sdjvXy67O5QCao1xg6Hy/2+N4UdUcflHyslDpW9cZRSHJ4fYbSJlef9ttG
-         d/DF90G/iv3L98M2XIdZ7TDD9fu36g3ULciH/Xg+eifUGIGs4eNKYAoHLovjuIJcPw
-         AdP4dJPyj/TahArFPeIF6zSGHofkNf6DZDoRI8yEZEtzxP2d29SINIhC4IsJQw8/GJ
-         ulSBFFt7RSGAA==
+        b=o9rIzo2722E06tVxfnf9HyuvSU/8qyFg11Xoq7tcSP19eypi0E1MvlCjITjgZwC2S
+         EskR2yyroK+oL2EIRzuJi8LaskijpnwlvJJzvb6g8bFft79SkLagEXl8S9YVM/HPyO
+         dGHSdF4VR7xGahyg2lL6UbD4+nJcUChvqOp+FCIHEXpHWlJn3B/6jlemPwgxdBBL9g
+         nfyaP0brTuwimMLMU0tR4wpT8TZgW5S3T040Hzg9LCMPEaUgTfeglX2FiJIC7gClEc
+         Rm6OEbCRPkZxKRgqxQcCszbRGRaGxbzkAJ8/6hy/5hcf3L6mg35T62To9ULCouV+Bm
+         X2reNyqH2hFow==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+Cc:     Yicong Yang <yangyicong@hisilicon.com>,
+        Jay Zhou <jianjay.zhou@huawei.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.17 02/48] PCI/ASPM: Make Intel DG2 L1 acceptable latency unlimited
-Date:   Wed,  1 Jun 2022 09:53:35 -0400
-Message-Id: <20220601135421.2003328-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.18 31/49] PCI: Avoid pci_dev_lock() AB/BA deadlock with sriov_numvfs_store()
+Date:   Wed,  1 Jun 2022 09:51:55 -0400
+Message-Id: <20220601135214.2002647-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220601135421.2003328-1-sashal@kernel.org>
-References: <20220601135421.2003328-1-sashal@kernel.org>
+In-Reply-To: <20220601135214.2002647-1-sashal@kernel.org>
+References: <20220601135214.2002647-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,87 +51,89 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+From: Yicong Yang <yangyicong@hisilicon.com>
 
-[ Upstream commit 03038d84ace72678a9944524508f218a00377dc0 ]
+[ Upstream commit a91ee0e9fca9d7501286cfbced9b30a33e52740a ]
 
-Intel DG2 discrete graphics PCIe endpoints advertise L1 acceptable exit
-latency to be < 1us even though they can actually tolerate unlimited exit
-latencies just fine. Quirk the L1 acceptable exit latency for these
-endpoints to be unlimited so ASPM L1 can be enabled.
+The sysfs sriov_numvfs_store() path acquires the device lock before the
+config space access lock:
 
-[bhelgaas: use FIELD_GET/FIELD_PREP, wordsmith comment & commit log]
-Link: https://lore.kernel.org/r/20220405093810.76613-1-mika.westerberg@linux.intel.com
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+  sriov_numvfs_store
+    device_lock                 # A (1) acquire device lock
+    sriov_configure
+      vfio_pci_sriov_configure  # (for example)
+        vfio_pci_core_sriov_configure
+          pci_disable_sriov
+            sriov_disable
+              pci_cfg_access_lock
+                pci_wait_cfg    # B (4) wait for dev->block_cfg_access == 0
+
+Previously, pci_dev_lock() acquired the config space access lock before the
+device lock:
+
+  pci_dev_lock
+    pci_cfg_access_lock
+      dev->block_cfg_access = 1 # B (2) set dev->block_cfg_access = 1
+    device_lock                 # A (3) wait for device lock
+
+Any path that uses pci_dev_lock(), e.g., pci_reset_function(), may
+deadlock with sriov_numvfs_store() if the operations occur in the sequence
+(1) (2) (3) (4).
+
+Avoid the deadlock by reversing the order in pci_dev_lock() so it acquires
+the device lock before the config space access lock, the same as the
+sriov_numvfs_store() path.
+
+[bhelgaas: combined and adapted commit log from Jay Zhou's independent
+subsequent posting:
+https://lore.kernel.org/r/20220404062539.1710-1-jianjay.zhou@huawei.com]
+Link: https://lore.kernel.org/linux-pci/1583489997-17156-1-git-send-email-yangyicong@hisilicon.com/
+Also-posted-by: Jay Zhou <jianjay.zhou@huawei.com>
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 47 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+ drivers/pci/pci.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index da829274fc66..41aeaa235132 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -12,6 +12,7 @@
-  * file, where their drivers can use them.
-  */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d25122fbe98a..1af69e298ac3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5113,19 +5113,19 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
  
-+#include <linux/bitfield.h>
- #include <linux/types.h>
- #include <linux/kernel.h>
- #include <linux/export.h>
-@@ -5895,3 +5896,49 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1533, rom_bar_overlap_defect);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1536, rom_bar_overlap_defect);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1537, rom_bar_overlap_defect);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1538, rom_bar_overlap_defect);
-+
-+#ifdef CONFIG_PCIEASPM
-+/*
-+ * Several Intel DG2 graphics devices advertise that they can only tolerate
-+ * 1us latency when transitioning from L1 to L0, which may prevent ASPM L1
-+ * from being enabled.  But in fact these devices can tolerate unlimited
-+ * latency.  Override their Device Capabilities value to allow ASPM L1 to
-+ * be enabled.
-+ */
-+static void aspm_l1_acceptable_latency(struct pci_dev *dev)
-+{
-+	u32 l1_lat = FIELD_GET(PCI_EXP_DEVCAP_L1, dev->devcap);
-+
-+	if (l1_lat < 7) {
-+		dev->devcap |= FIELD_PREP(PCI_EXP_DEVCAP_L1, 7);
-+		pci_info(dev, "ASPM: overriding L1 acceptable latency from %#x to 0x7\n",
-+			 l1_lat);
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f80, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f81, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f82, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f83, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f84, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f85, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f86, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f87, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f88, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5690, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5691, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5692, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5693, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5694, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5695, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a0, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a1, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a2, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a3, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a4, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a5, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a6, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b0, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b1, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c0, aspm_l1_acceptable_latency);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c1, aspm_l1_acceptable_latency);
-+#endif
+ void pci_dev_lock(struct pci_dev *dev)
+ {
+-	pci_cfg_access_lock(dev);
+ 	/* block PM suspend, driver probe, etc. */
+ 	device_lock(&dev->dev);
++	pci_cfg_access_lock(dev);
+ }
+ EXPORT_SYMBOL_GPL(pci_dev_lock);
+ 
+ /* Return 1 on successful lock, 0 on contention */
+ int pci_dev_trylock(struct pci_dev *dev)
+ {
+-	if (pci_cfg_access_trylock(dev)) {
+-		if (device_trylock(&dev->dev))
++	if (device_trylock(&dev->dev)) {
++		if (pci_cfg_access_trylock(dev))
+ 			return 1;
+-		pci_cfg_access_unlock(dev);
++		device_unlock(&dev->dev);
+ 	}
+ 
+ 	return 0;
+@@ -5134,8 +5134,8 @@ EXPORT_SYMBOL_GPL(pci_dev_trylock);
+ 
+ void pci_dev_unlock(struct pci_dev *dev)
+ {
+-	device_unlock(&dev->dev);
+ 	pci_cfg_access_unlock(dev);
++	device_unlock(&dev->dev);
+ }
+ EXPORT_SYMBOL_GPL(pci_dev_unlock);
+ 
 -- 
 2.35.1
 
