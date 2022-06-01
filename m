@@ -2,111 +2,196 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C95A9CCA468
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 14:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 762BACCA468
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 14:28:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355475AbiFAOX3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Jun 2022 10:23:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43070 "EHLO
+        id S1355373AbiFAO2S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Jun 2022 10:28:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355312AbiFAOXJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 10:23:09 -0400
-Received: from beige.elm.relay.mailchannels.net (beige.elm.relay.mailchannels.net [23.83.212.16])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7273F506E;
-        Wed,  1 Jun 2022 07:12:39 -0700 (PDT)
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 43A4B6A259B;
-        Wed,  1 Jun 2022 14:12:35 +0000 (UTC)
-Received: from pdx1-sub0-mail-a312.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id B903E6A28B2;
-        Wed,  1 Jun 2022 14:12:34 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1654092754; a=rsa-sha256;
-        cv=none;
-        b=zvgdgSUGTwWUAEBXEtSBvYNZ7TtJIAtaRp5H6GYMGomhImSYKfinkKKKe3eVmEP+fSQ8qr
-        F71raoKMNSHN8E3mHNh03tU0eiCrxXrVuueBxIEB8A5/9fo5pZt/CRpAYBEOj8Kemh28ob
-        xV0R889ak7SZs2p8cIsOtRwd70Z4qi99RfbFNxuHnC3ed+luOS+m9BsOu9SmRR5PXMZBfV
-        3mEgESG4GeD40nSA1OaS0SgKLStjCtm27siCV0/nY4DVjJp/SkKFbyfSU5ZIIYYzcGkvAY
-        82cHXR9VgaurNVwLs6ue9TbI9dS2iy6qMbUNizTzZyO48zGkauzHWUk9GyMZrQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1654092754;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=yLYJaL9ORR9PYZ13P2JQqpUzPce3UQH19Ih6BN8oryg=;
-        b=0909y5q2CRn5v5TR0y7rq6Jj2CwZJREDe79Es0ZI3qiWyB0Iqv3pTVQ9O7C3bDPzHwnAQh
-        Rv0V9ZVp6ymkChqy0LbzO7tGUIR4mDHV/HIevg16cPMZet1m/V75K6kVxUewxjkQAdVtUH
-        kccRSrBfr5Fkd+yGGph1w8l6CBJlkijkBvZRIczRXrE9i3imEXx0UBXWT9VRw2cKZroKje
-        vxaDPg90vy+u71LylIw0gQXgGNFOQdWx6PSKg3zjyQtacNAWm/qSkX1xN0e488NNT8XCGc
-        6kC5xtjJzS7/FIgj9NPUjG25w76ZJXxUF/KWvNc2tvRPDEUPs0vnS+8tKbLr4Q==
-ARC-Authentication-Results: i=1;
-        rspamd-54ff499d4f-g4gpm;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Celery-Illegal: 52844d101a27ad83_1654092754999_416677461
-X-MC-Loop-Signature: 1654092754999:3585670684
-X-MC-Ingress-Time: 1654092754999
-Received: from pdx1-sub0-mail-a312.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.116.106.119 (trex/6.7.1);
-        Wed, 01 Jun 2022 14:12:34 +0000
-Received: from offworld (unknown [104.36.31.105])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dave@stgolabs.net)
-        by pdx1-sub0-mail-a312.dreamhost.com (Postfix) with ESMTPSA id 4LCrh11Kq1z2q;
-        Wed,  1 Jun 2022 07:12:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1654092754;
-        bh=uKVBDmeDT/2dQS6ktQaex3oOWU37YZa72inB1fxgwGI=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=jDlowyjFNsH2P2j4LwIiL0zuUbCC4TalwZm5TssLk3ms94qNuNDXlfZpJqx0Z0v3p
-         9V+p/9Ql3HLPxI98jmT3nzYESO4fE7LlIvgfVLQqeBfGq82y5otUfxSn3QJYyqrIn+
-         Yjna+xqGq/z+y5N34yK3eXMKIC5pVcM6owL9zWmVB0JRVZ9Ogu7WSV4BurE2JM8Xin
-         1tmSG+b0HChMdOALdXKlFMr2i6ZRQ0CVzdPVcHt/Ab2waTogOMQQje35x3T45F9FnP
-         LOsJqJqM4L/zZJx5t04n/DZupj6uX/TRDdG1FaC36ux+dge50eUZkJDd65eZCbg0MK
-         aotmCpXdBg5tw==
-Date:   Wed, 1 Jun 2022 06:59:09 -0700
-From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
+        with ESMTP id S1354839AbiFAO1z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 10:27:55 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CBC62C105;
+        Wed,  1 Jun 2022 07:23:28 -0700 (PDT)
+Received: from fraeml736-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LCrrg3xmHz685x5;
+        Wed,  1 Jun 2022 22:20:03 +0800 (CST)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ fraeml736-chm.china.huawei.com (10.206.15.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Wed, 1 Jun 2022 16:23:26 +0200
+Received: from localhost (10.202.226.42) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Wed, 1 Jun
+ 2022 15:23:25 +0100
+Date:   Wed, 1 Jun 2022 15:23:23 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Lukas Wunner <lukas@wunner.de>
+CC:     Ira Weiny <ira.weiny@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Christoph Hellwig <hch@infradead.org>,
         Alison Schofield <alison.schofield@intel.com>,
         Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Ben Widawsky <ben@bwidawsk.net>, linux-kernel@vger.kernel.org,
-        linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
-        a.manzanares@samsung.com
-Subject: Re: [PATCH v9 3/9] PCI: Create PCI library functions in support of
- DOE mailboxes.
-Message-ID: <20220601135909.mvnam4vvfmofpsdb@offworld>
-References: <20220531152632.1397976-1-ira.weiny@intel.com>
- <20220531152632.1397976-4-ira.weiny@intel.com>
- <20220531172507.5ert5tgwellpe7fx@offworld>
- <20220531175652.qog7xaqmypy36whu@offworld>
- <Ypbw3d/vUyMHGcBW@iweiny-desk3>
+        Ben Widawsky <ben.widawsky@intel.com>,
+        <linux-kernel@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH V8 03/10] PCI: Create PCI library functions in support
+ of DOE mailboxes.
+Message-ID: <20220601152323.00004b9e@Huawei.com>
+In-Reply-To: <20220601071808.GA19924@wunner.de>
+References: <20220414203237.2198665-1-ira.weiny@intel.com>
+        <20220414203237.2198665-4-ira.weiny@intel.com>
+        <20220530190657.GA14765@wunner.de>
+        <20220531113350.0000421e@Huawei.com>
+        <YpbWCYujYDEkMm1B@iweiny-desk3>
+        <20220601071808.GA19924@wunner.de>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <Ypbw3d/vUyMHGcBW@iweiny-desk3>
-User-Agent: NeoMutt/20220429
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.42]
+X-ClientProxiedBy: lhreml739-chm.china.huawei.com (10.201.108.189) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 31 May 2022, Ira Weiny wrote:
->Thinking about it I don't see a benefit to a rwlock.  We don't have multiple
->readers.
+On Wed, 1 Jun 2022 09:18:08 +0200
+Lukas Wunner <lukas@wunner.de> wrote:
 
-... but you have concurrent workqueues reading the value of cur_task.
+> On Tue, May 31, 2022 at 07:59:21PM -0700, Ira Weiny wrote:
+> > On Tue, May 31, 2022 at 11:33:50AM +0100, Jonathan Cameron wrote:  
+> > > On Mon, 30 May 2022 21:06:57 +0200 Lukas Wunner <lukas@wunner.de> wrote:  
+> > > > On Thu, Apr 14, 2022 at 01:32:30PM -0700, ira.weiny@intel.com wrote:  
+> > > > > +	/* First 2 dwords have already been read */
+> > > > > +	length -= 2;
+> > > > > +	/* Read the rest of the response payload */
+> > > > > +	for (i = 0; i < min(length, task->response_pl_sz / sizeof(u32)); i++) {
+> > > > > +		pci_read_config_dword(pdev, offset + PCI_DOE_READ,
+> > > > > +				      &task->response_pl[i]);
+> > > > > +		pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
+> > > > > +	}    
+> > > > 
+> > > > You need to check the Data Object Ready bit.  The device may clear the
+> > > > bit prematurely (e.g. as a result of a concurrent FLR or Conventional
+> > > > Reset).  You'll continue reading zero dwords from the mailbox and
+> > > > pretend success to the caller even though the response is truncated.
+> > > > 
+> > > > If you're concerned about performance when checking the bit on every
+> > > > loop iteration, checking it only on the last but one iteration should
+> > > > be sufficient to detect truncation.  
+> > > 
+> > > Good catch - I hate corner cases.  Thankfully this one is trivial to
+> > > check for.  
+> > 
+> > Ok looking at the spec:  Strictly speaking this needs to happen multiple
+> > times both in doe_statemachine_work() and inside pci_doe_recv_resp();
+> > not just in this loop.  :-(
+> > 
+> > This is because, the check in doe_statemachine_work() only covers the
+> > 1st dword read IIUC.  
+> 
+> The spec says "this bit indicates the DOE instance has a *data object*
+> available to be read by system firmware/software".
+> 
+> So, the entire object is available for reading, not just one dword.
 
-Thanks,
-Davidlohr
+Agreed
+
+> 
+> You've already got checks in place for the first two dwords which
+> cover reading an "all zeroes" response.  No need to amend them.
+> 
+> You only need to re-check the Data Object Ready bit on the last-but-one
+> dword in case the function was reset concurrently.  Per sec. 6.30.2,
+> "An FLR to a Function must result in the aborting of any DOE transfer
+> in progress."
+
+Ouch, isn't that racy as you can only check it slightly before reading the
+last dword and a reset could occur in between?
+
+> 
+> 
+> > > > > +static irqreturn_t pci_doe_irq_handler(int irq, void *data)
+> > > > > +{
+> > > > > +	struct pci_doe_mb *doe_mb = data;
+> > > > > +	struct pci_dev *pdev = doe_mb->pdev;
+> > > > > +	int offset = doe_mb->cap_offset;
+> > > > > +	u32 val;
+> > > > > +
+> > > > > +	pci_read_config_dword(pdev, offset + PCI_DOE_STATUS, &val);
+> > > > > +
+> > > > > +	/* Leave the error case to be handled outside IRQ */
+> > > > > +	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val)) {
+> > > > > +		mod_delayed_work(system_wq, &doe_mb->statemachine, 0);
+> > > > > +		return IRQ_HANDLED;
+> > > > > +	}
+> > > > > +
+> > > > > +	if (FIELD_GET(PCI_DOE_STATUS_INT_STATUS, val)) {
+> > > > > +		pci_write_config_dword(pdev, offset + PCI_DOE_STATUS,
+> > > > > +					PCI_DOE_STATUS_INT_STATUS);
+> > > > > +		mod_delayed_work(system_wq, &doe_mb->statemachine, 0);
+> > > > > +		return IRQ_HANDLED;
+> > > > > +	}
+> > > > > +
+> > > > > +	return IRQ_NONE;
+> > > > > +}    
+> > > > 
+> > > > PCIe 6.0, table 7-316 says that an interrupt is also raised when
+> > > > "the DOE Busy bit has been Cleared", yet such an interrupt is
+> > > > not handled here.  It is incorrectly treated as a spurious
+> > > > interrupt by returning IRQ_NONE.  The right thing to do
+> > > > is probably to wake the state machine in case it's polling
+> > > > for the Busy flag to clear.  
+> > > 
+> > > Ah. I remember testing this via a lot of hacking on the QEMU code
+> > > to inject the various races that can occur (it was really ugly to do).
+> > > 
+> > > Guess we lost the handling at some point.  I think your fix
+> > > is the right one.  
+> > 
+> > Perhaps I am missing something but digging into this more.  I disagree
+> > that the handler fails to handle this case.  If I read the spec correctly
+> > DOE Interrupt Status must be set when an interrupt is generated.
+> > The handler wakes the state machine in that case.  The state machine
+> > then checks for busy if there is work to be done.  
+> 
+> Right, I was mistaken, sorry for the noise.
+
+Ah. Makes sense - managed to confuse me too ;)
+I really don't like the absence of a status bit for the DOE busy bit has
+cleared interrupt source, but glad we did handle it.
+
+> 
+> 
+> > Normally we would not even need to check for status error.  But that is
+> > special cased because clearing that status is left to the state machine.  
+> 
+> That however looks wrong because the DOE Interrupt Status bit is never
+> cleared after a DOE Error is signaled.  The state machine performs an
+> explicit abort upon an error by setting the DOE Abort bit, but that
+> doesn't seem to clear DOE Interrupt Status:
+> 
+> Per section 6.30.2, "At any time, the system firmware/software is
+> permitted to set the DOE Abort bit in the DOE Control Register,
+> and the DOE instance must Clear the Data Object Ready bit,
+> if not already Clear, and Clear the DOE Error bit, if already Set,
+> in the DOE Status Register, within 1 second."
+> 
+> No mention of the DOE Interrupt Status bit, so we cannot assume that
+> it's cleared by a DOE Abort and we must clear it explicitly.
+
+Gah.
+
+Jonathan
+
+> 
+> Thanks,
+> 
+> Lukas
+> 
+
