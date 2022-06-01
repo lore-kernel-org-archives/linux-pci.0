@@ -2,152 +2,76 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A497CCA479
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 18:40:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D16EC433EF
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 20:45:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231907AbiFASkN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Jun 2022 14:40:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50634 "EHLO
+        id S230187AbiFAUpp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Jun 2022 16:45:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231779AbiFASkK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 14:40:10 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13942DFF55;
-        Wed,  1 Jun 2022 11:40:08 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 92515B81C23;
-        Wed,  1 Jun 2022 18:40:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7E30C385B8;
-        Wed,  1 Jun 2022 18:40:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654108806;
-        bh=vpZ1oNTlay8NWlxGY9rUMzeRkjnKLNWUB5LHGYBDV9E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SV4cmB3MpgVr8rN3mq/AgsHnJ59ZjgcffarURyAfkAdkEzNpXND21AvmUXs/TCSKG
-         JN6Kln9Qh2fKKoNGqhtzaeN3GVMD5O+WlHNEGZq1+TVFKTgXvUeTxpOC2opw2jzy3M
-         bzs+i28vGY/FzwHvhAo/7MfauYLqirVh5qrYbf/9uggvCsKOW9dGOrTbtu8Bly2ogq
-         gdOF0hMn+j3+XeZkNnzwCZiw7gyMKIj6V8TC3bRb8s5c+amjSWyv+xMo80ucbbrM+M
-         K8Ccnhjy4g9orAMgOh/NR3ZQR6ir+xGwf35PRNSGyFHOR15Ppn2g/2bRwSBc69z3WO
-         cpjY5uJWVEvrQ==
-Date:   Wed, 1 Jun 2022 11:40:03 -0700
-From:   Nathan Chancellor <nathan@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     iommu@lists.linux-foundation.org, x86@kernel.org,
-        Anshuman Khandual <anshuman.khandual@arm.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Lu Baolu <baolu.lu@linux.intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        linux-arm-kernel@lists.infradead.org,
-        xen-devel@lists.xenproject.org, linux-ia64@vger.kernel.org,
-        linux-mips@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, tboot-devel@lists.sourceforge.net,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 09/15] swiotlb: make the swiotlb_init interface more
- useful
-Message-ID: <Ypeyg2Dm/WfoKDZt@dev-arch.thelio-3990X>
-References: <20220404050559.132378-1-hch@lst.de>
- <20220404050559.132378-10-hch@lst.de>
- <YpehC7BwBlnuxplF@dev-arch.thelio-3990X>
- <20220601173441.GB27582@lst.de>
- <YpemDuzdoaO3rijX@Ryzen-9-3900X.>
- <20220601175743.GA28082@lst.de>
- <Yper7agk7XfCCQNa@dev-arch.thelio-3990X>
- <20220601182141.GA28309@lst.de>
+        with ESMTP id S229513AbiFAUpW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 16:45:22 -0400
+Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5025426271D;
+        Wed,  1 Jun 2022 13:32:21 -0700 (PDT)
+Received: by mail-yb1-f177.google.com with SMTP id v22so4924389ybd.5;
+        Wed, 01 Jun 2022 13:32:21 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Mi2KakMLN5Oolk1j9IuMk3Qtihd6Doqcyb4Wzf1iGb8=;
+        b=61Z+F7FfX1RTSXCWowX8VUIC3KzVuBfD3m75Cjl5bQltO0Fil4mRfmnTo0Ma5V4qfX
+         EUGQtT7wY/alYb72p/8asn23T25AzM+Lc5dCWeZ+HU2oE8+hgoSatWujwq5F5etLwTDN
+         IcDL76auIF23Fx53sZOwmeArmsy2b24aeSLN/Yti43TA6KtQDTLMk0z0fIX3ci/oSyxQ
+         tsTBiNa4riZNh93yb+fHzGoebmOXYG/0md/TUfxKra/28X95f3qQw1886NOtqUgKiW3g
+         2Tdx2XxU6kqpDitpkmLVVgfis5FF7lkfjJhHQSL8FDYiIkw+e5k5gUk5q6BLJYhdWpYH
+         zEHQ==
+X-Gm-Message-State: AOAM532w1UEJk5CU4x2IJvlfGkNlJ0P/BwZewF1Rdn6zkJEkD3OHDLMS
+        Qxm941MIh+PVqUknpcL0LOzq0MLVHQ==
+X-Google-Smtp-Source: ABdhPJwqckOQJ3oMBSt13P0tpXRYlnNBp7YUsO7ydUCg7j9OhqxwYVxJIbSGKXig+2EFQEhRTAc4tw==
+X-Received: by 2002:a05:6830:45:b0:60b:196a:c0d7 with SMTP id d5-20020a056830004500b0060b196ac0d7mr637703otp.314.1654113324745;
+        Wed, 01 Jun 2022 12:55:24 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id v1-20020a056830090100b00605fd407259sm1228404ott.3.2022.06.01.12.55.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Jun 2022 12:55:24 -0700 (PDT)
+Received: (nullmailer pid 328210 invoked by uid 1000);
+        Wed, 01 Jun 2022 19:55:23 -0000
+Date:   Wed, 1 Jun 2022 14:55:23 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        michals@xilinx.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2] dt-bindings: PCI: xilinx-cpm: Fix reg property order
+Message-ID: <20220601195523.GA328031-robh@kernel.org>
+References: <20220516102217.25960-1-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220601182141.GA28309@lst.de>
+In-Reply-To: <20220516102217.25960-1-bharat.kumar.gogada@xilinx.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jun 01, 2022 at 08:21:41PM +0200, Christoph Hellwig wrote:
-> On Wed, Jun 01, 2022 at 11:11:57AM -0700, Nathan Chancellor wrote:
-> > On Wed, Jun 01, 2022 at 07:57:43PM +0200, Christoph Hellwig wrote:
-> > > On Wed, Jun 01, 2022 at 10:46:54AM -0700, Nathan Chancellor wrote:
-> > > > On Wed, Jun 01, 2022 at 07:34:41PM +0200, Christoph Hellwig wrote:
-> > > > > Can you send me the full dmesg and the content of
-> > > > > /sys/kernel/debug/swiotlb/io_tlb_nslabs for a good and a bad boot?
-> > > > 
-> > > > Sure thing, they are attached! If there is anything else I can provide
-> > > > or test, I am more than happy to do so.
-> > > 
-> > > Nothing interesting.  But the performance numbers almost look like
-> > > swiotlb=force got ignored before (even if I can't explain why).
-> > 
-> > I was able to get my performance back with this diff but I don't know if
-> > this is a hack or a proper fix in the context of the series.
+On Mon, 16 May 2022 15:52:17 +0530, Bharat Kumar Gogada wrote:
+> All existing vendor DTSes are using "cpm_slcr" reg followed by "cfg" reg.
 > 
-> This looks good, but needs a little tweak.  I'd go for this variant of
-> it:
-
-Tested-by: Nathan Chancellor <nathan@kernel.org>
-
-Thanks a lot for the quick fix!
-
-> diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
-> index dfa1de89dc944..cb50f8d383606 100644
-> --- a/kernel/dma/swiotlb.c
-> +++ b/kernel/dma/swiotlb.c
-> @@ -192,7 +192,7 @@ void __init swiotlb_update_mem_attributes(void)
->  }
->  
->  static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
-> -				    unsigned long nslabs, bool late_alloc)
-> +		unsigned long nslabs, unsigned int flags, bool late_alloc)
->  {
->  	void *vaddr = phys_to_virt(start);
->  	unsigned long bytes = nslabs << IO_TLB_SHIFT, i;
-> @@ -203,8 +203,7 @@ static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
->  	mem->index = 0;
->  	mem->late_alloc = late_alloc;
->  
-> -	if (swiotlb_force_bounce)
-> -		mem->force_bounce = true;
-> +	mem->force_bounce = swiotlb_force_bounce || (flags & SWIOTLB_FORCE);
->  
->  	spin_lock_init(&mem->lock);
->  	for (i = 0; i < mem->nslabs; i++) {
-> @@ -275,8 +274,7 @@ void __init swiotlb_init_remap(bool addressing_limit, unsigned int flags,
->  		panic("%s: Failed to allocate %zu bytes align=0x%lx\n",
->  		      __func__, alloc_size, PAGE_SIZE);
->  
-> -	swiotlb_init_io_tlb_mem(mem, __pa(tlb), nslabs, false);
-> -	mem->force_bounce = flags & SWIOTLB_FORCE;
-> +	swiotlb_init_io_tlb_mem(mem, __pa(tlb), nslabs, flags, false);
->  
->  	if (flags & SWIOTLB_VERBOSE)
->  		swiotlb_print_info();
-> @@ -348,7 +346,7 @@ int swiotlb_init_late(size_t size, gfp_t gfp_mask,
->  
->  	set_memory_decrypted((unsigned long)vstart,
->  			     (nslabs << IO_TLB_SHIFT) >> PAGE_SHIFT);
-> -	swiotlb_init_io_tlb_mem(mem, virt_to_phys(vstart), nslabs, true);
-> +	swiotlb_init_io_tlb_mem(mem, virt_to_phys(vstart), nslabs, 0, true);
->  
->  	swiotlb_print_info();
->  	return 0;
-> @@ -835,8 +833,8 @@ static int rmem_swiotlb_device_init(struct reserved_mem *rmem,
->  
->  		set_memory_decrypted((unsigned long)phys_to_virt(rmem->base),
->  				     rmem->size >> PAGE_SHIFT);
-> -		swiotlb_init_io_tlb_mem(mem, rmem->base, nslabs, false);
-> -		mem->force_bounce = true;
-> +		swiotlb_init_io_tlb_mem(mem, rmem->base, nslabs, SWIOTLB_FORCE,
-> +				false);
->  		mem->for_alloc = true;
->  
->  		rmem->priv = mem;
+> This order is also suggested by node name which is pcie@fca10000 which
+> suggests that cpm_slcr register should be the first.
+> 
+> Driver itself is using devm_platform_ioremap_resource_byname() for both
+> names that's why there is no functional change even on description which
+> are using current order.
+> 
+> But still prefer to change order to cover currently used description.
+> Fixes: e22fadb1d014 ("PCI: xilinx-cpm: Add YAML schemas for Versal CPM Root Port")
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> ---
+>  .../devicetree/bindings/pci/xilinx-versal-cpm.yaml     | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
 > 
 
-Cheers,
-Nathan
+Applied, thanks!
