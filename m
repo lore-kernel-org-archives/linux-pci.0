@@ -2,138 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 763BBC433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 12:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC23CCA468
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 13:52:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352348AbiFAM2R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Jun 2022 08:28:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35946 "EHLO
+        id S1344238AbiFANw0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Jun 2022 09:52:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237528AbiFAM2N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 08:28:13 -0400
-Received: from alexa-out-sd-02.qualcomm.com (alexa-out-sd-02.qualcomm.com [199.106.114.39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 104DF6007D;
-        Wed,  1 Jun 2022 05:28:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1654086484; x=1685622484;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=hYwv9KiSWJpDdihwb1JCqCMCtB8qTNh2vqckWpz8dK8=;
-  b=bRJf59HUxlAl86GYMndO5qrHGoJHiu8970snoGyqFYuj3cPEZebraLyb
-   /cBcuNfVFXOtt7X8vLUeFUMJUnuklLnfb1vj7eYJ1mlO6O84dRo14az0C
-   IzVkblmhObXAVl5IPZxYrYt92GFGcyL6SOnEmEHJttg2WB7nyca1aV9lO
-   g=;
-Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by alexa-out-sd-02.qualcomm.com with ESMTP; 01 Jun 2022 05:28:03 -0700
-X-QCInternal: smtphost
-Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
-  by ironmsg01-sd.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Jun 2022 05:28:03 -0700
-Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
- nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.22; Wed, 1 Jun 2022 05:28:02 -0700
-Received: from [10.216.57.206] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.22; Wed, 1 Jun 2022
- 05:27:57 -0700
-Message-ID: <91b75542-8e4c-5b91-bbfd-38ffc456c12e@quicinc.com>
-Date:   Wed, 1 Jun 2022 17:57:53 +0530
+        with ESMTP id S1353367AbiFANwX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 09:52:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E447C31DC6;
+        Wed,  1 Jun 2022 06:52:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 85E72B81911;
+        Wed,  1 Jun 2022 13:52:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E422C3411D;
+        Wed,  1 Jun 2022 13:52:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654091538;
+        bh=y+ZCPCbodZGnjXfv4nC2fCqOJ8w4vtn6X4gFvwYmG9Q=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=VRYSjrTmJRxpClvcJYygpqrZmpsNM2ZeZZKugfwnbQMMS3tstiOTZftQUy5pFc1E1
+         39LaLGT9iUyYHH52dvQhtiMAp0OlB5kPzPE+UBWV/N+85R09erPwfM652cfSkJll/7
+         4Hoq+utWLAplFisqBRLl3c6gliwg5q1hFqMUIq7zNsjkEORL/r0j0gRJqsiDeYHl/Y
+         2bRE/hqHt9A6VGPUKBf2QBPHdtuBGxMaPFHXil34tvGn7Kz0hUMi9WhEMcbeZ424xU
+         SMyGGQ0LrIuJVJG0bpLNeE+0HZcac6PRbYSHG42F97YxgJ25fei375LuOT8Q21xilG
+         GXtzjEHkbZAqg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.18 02/49] PCI/ASPM: Make Intel DG2 L1 acceptable latency unlimited
+Date:   Wed,  1 Jun 2022 09:51:26 -0400
+Message-Id: <20220601135214.2002647-2-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220601135214.2002647-1-sashal@kernel.org>
+References: <20220601135214.2002647-1-sashal@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH v3] PCI/ASPM: Update LTR threshold based upon reported max
- latencies
-Content-Language: en-US
-To:     <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <quic_vbadigan@quicinc.com>,
-        <quic_ramkri@quicinc.com>, <manivannan.sadhasivam@linaro.org>,
-        <swboyd@chromium.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Rajat Jain <rajatja@google.com>, <vidyas@nvidia.com>,
-        <kenny@panix.com>
-References: <1646679549-12494-1-git-send-email-quic_pmaliset@quicinc.com>
- <1654086232-17055-1-git-send-email-quic_krichai@quicinc.com>
-From:   Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
-In-Reply-To: <1654086232-17055-1-git-send-email-quic_krichai@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc kenny, vidya]
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-On 6/1/2022 5:53 PM, Krishna chaitanya chundru wrote:
-> In ASPM driver, LTR threshold scale and value is updating based on
-> tcommon_mode and t_poweron values. In kioxia NVMe L1.2 is failing due to
-> LTR threshold scale and value is greater values than max snoop/non-snoop
-> value.
->
-> Based on PCIe r4.1, sec 5.5.1, L1.2 substate must be entered when
-> reported snoop/no-snoop values is greather than or equal to
-> LTR_L1.2_THRESHOLD value.
->
-> Suggested-by: Prasad Malisetty  <quic_pmaliset@quicinc.com>
-> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-> ---
->
-> I am takking this patch forward as prasad is no more working with our org.
->
-> Changes since v2:
-> 	- Replaced LTRME logic with max snoop/no-snoop latencies check.
-> Changes since v1:
-> 	- Added missing variable declaration in v1 patch
-> ---
->   drivers/pci/pcie/aspm.c | 22 +++++++++++++++++++++-
->   1 file changed, 21 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index a96b742..4a15e50 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -465,10 +465,19 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
->   	u32 ctl1 = 0, ctl2 = 0;
->   	u32 pctl1, pctl2, cctl1, cctl2;
->   	u32 pl1_2_enables, cl1_2_enables;
-> +	int ltr;
-> +	u16 max_snoop_lat = 0, max_nosnoop_lat = 0;
->   
->   	if (!(link->aspm_support & ASPM_STATE_L1_2_MASK))
->   		return;
->   
-> +	ltr = pci_find_ext_capability(child, PCI_EXT_CAP_ID_LTR);
-> +	if (!ltr)
-> +		return;
-> +
-> +	pci_read_config_word(child, ltr + PCI_LTR_MAX_SNOOP_LAT, &max_snoop_lat);
-> +	pci_read_config_word(child, ltr + PCI_LTR_MAX_NOSNOOP_LAT, &max_nosnoop_lat);
-> +
->   	/* Choose the greater of the two Port Common_Mode_Restore_Times */
->   	val1 = (parent_l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
->   	val2 = (child_l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
-> @@ -501,7 +510,18 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
->   	 */
->   	l1_2_threshold = 2 + 4 + t_common_mode + t_power_on;
->   	encode_l12_threshold(l1_2_threshold, &scale, &value);
-> -	ctl1 |= t_common_mode << 8 | scale << 29 | value << 16;
-> +
-> +	/*
-> +	 * If the max snoop and no snoop latencies are '0', then avoid updating scale
-> +	 * and value.
-> +	 *
-> +	 * Based on PCIe r4.1, sec 5.5.1, L1.2 substate must be entered when reported
-> +	 * snoop/no-snoop values is greather than or equal to LTR_L1.2_THRESHOLD value.
-> +	 */
-> +	if ((max_snoop_lat == 0) && (max_nosnoop_lat == 0))
-> +		ctl1 |= t_common_mode << 8;
-> +	else
-> +		ctl1 |= t_common_mode << 8 | scale << 29 | value << 16;
->   
->   	/* Some broken devices only support dword access to L1 SS */
->   	pci_read_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1, &pctl1);
+[ Upstream commit 03038d84ace72678a9944524508f218a00377dc0 ]
+
+Intel DG2 discrete graphics PCIe endpoints advertise L1 acceptable exit
+latency to be < 1us even though they can actually tolerate unlimited exit
+latencies just fine. Quirk the L1 acceptable exit latency for these
+endpoints to be unlimited so ASPM L1 can be enabled.
+
+[bhelgaas: use FIELD_GET/FIELD_PREP, wordsmith comment & commit log]
+Link: https://lore.kernel.org/r/20220405093810.76613-1-mika.westerberg@linux.intel.com
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/quirks.c | 47 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index da829274fc66..41aeaa235132 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -12,6 +12,7 @@
+  * file, where their drivers can use them.
+  */
+ 
++#include <linux/bitfield.h>
+ #include <linux/types.h>
+ #include <linux/kernel.h>
+ #include <linux/export.h>
+@@ -5895,3 +5896,49 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1533, rom_bar_overlap_defect);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1536, rom_bar_overlap_defect);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1537, rom_bar_overlap_defect);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1538, rom_bar_overlap_defect);
++
++#ifdef CONFIG_PCIEASPM
++/*
++ * Several Intel DG2 graphics devices advertise that they can only tolerate
++ * 1us latency when transitioning from L1 to L0, which may prevent ASPM L1
++ * from being enabled.  But in fact these devices can tolerate unlimited
++ * latency.  Override their Device Capabilities value to allow ASPM L1 to
++ * be enabled.
++ */
++static void aspm_l1_acceptable_latency(struct pci_dev *dev)
++{
++	u32 l1_lat = FIELD_GET(PCI_EXP_DEVCAP_L1, dev->devcap);
++
++	if (l1_lat < 7) {
++		dev->devcap |= FIELD_PREP(PCI_EXP_DEVCAP_L1, 7);
++		pci_info(dev, "ASPM: overriding L1 acceptable latency from %#x to 0x7\n",
++			 l1_lat);
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f80, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f81, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f82, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f83, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f84, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f85, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f86, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f87, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x4f88, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5690, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5691, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5692, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5693, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5694, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x5695, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a0, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a1, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a2, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a3, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a4, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a5, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56a6, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b0, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b1, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c0, aspm_l1_acceptable_latency);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c1, aspm_l1_acceptable_latency);
++#endif
+-- 
+2.35.1
+
