@@ -2,44 +2,46 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5422FC433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 13:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4F2CCA468
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Jun 2022 13:55:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353573AbiFANyw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Jun 2022 09:54:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59582 "EHLO
+        id S244906AbiFANzX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Jun 2022 09:55:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353735AbiFANyT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 09:54:19 -0400
+        with ESMTP id S1353794AbiFANzH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Jun 2022 09:55:07 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E95D8CB0F;
-        Wed,  1 Jun 2022 06:54:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 382448A32C;
+        Wed,  1 Jun 2022 06:54:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BA203615C7;
-        Wed,  1 Jun 2022 13:53:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50B52C341C5;
-        Wed,  1 Jun 2022 13:53:19 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7A8446149F;
+        Wed,  1 Jun 2022 13:53:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC688C385A5;
+        Wed,  1 Jun 2022 13:53:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654091600;
-        bh=Q2EBRsgfT+PTS/7GnCfPNIMf+eKY8QMFmv+If5+/aew=;
+        s=k20201202; t=1654091607;
+        bh=84IfR7RwwFTk8qrcm0SBcSTrKK/dW3sr/Vog+1TxXdk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=i7mFgnzkCelxJD/WLUUINWnIbMypIv2SG1WHougO0O1bXFYzrP0hRYvNgje2e8/b8
-         wvQ2AC3cofhbq9ZH9uWby70hoqgxNGbdY7D9YEbMoyZOuIdEdl5ZOhf5J2V1rFrTw+
-         9wH9o29YH0Om6PZVlUqmA+XTyVsce+h9sj/324ndcEMdcY1vYhUr666hcGrnuLWCyr
-         KUUIvZvIXszEF9urP3PrPePVdAGtH/4sPmZ4XQgWHTkHgAKdMTHYF+/226rIoafZCh
-         G6ePycHcngC2ev4PoQMCobbVzglqtFcd5ebhmY8TwYHznOGYk//IujlIXu/5tScaNU
-         Mx9Y29uGzZZlw==
+        b=fQKtI7FQpCa+Z+W2qYdvlSTQnyH5Y/o6e+SBc1b41UhIB7+pAdDa6Gy6dLQHfcqdB
+         0Gh3vntJYcz3KysLrCe2w/Hyenm5kIjWOQsbZO6CeV1AiqrtAPCm2ujZpv4cMHAsxz
+         fQzKVwa3sjfO6bQioJhF66+W4ieYYQ12M3OrEWpsJsDRSlSvbvFZDJi85cXMLT2fCL
+         E8NHl5hG3fXfOAuQCOP7W1QuBW8Pp0PBE/tcoaqozotQIkUSc+barWXPhtz1u3gfhL
+         mLfdz26+vSQIcdwmIIb2MAULj+OogyRzVDJvJHVFkLGX/FKzOu2/JknnyENCtEmAuR
+         PSCBFCMVPKm7g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Conor Dooley <conor.dooley@microchip.com>,
+Cc:     Parshuram Thombare <pthombar@cadence.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, daire.mcnamara@microchip.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.18 29/49] PCI: microchip: Add missing chained_irq_enter()/exit() calls
-Date:   Wed,  1 Jun 2022 09:51:53 -0400
-Message-Id: <20220601135214.2002647-29-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, kishon@ti.com,
+        tjoseph@cadence.com, bhelgaas@google.com,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.18 32/49] PCI: cadence: Clear FLR in device capabilities register
+Date:   Wed,  1 Jun 2022 09:51:56 -0400
+Message-Id: <20220601135214.2002647-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220601135214.2002647-1-sashal@kernel.org>
 References: <20220601135214.2002647-1-sashal@kernel.org>
@@ -51,80 +53,122 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Conor Dooley <conor.dooley@microchip.com>
+From: Parshuram Thombare <pthombar@cadence.com>
 
-[ Upstream commit 30097efa334a706f9021b9aee6efcddcfa44a78a ]
+[ Upstream commit 95b00f68209e2bc9f2ee9126afcebab451e0e9d8 ]
 
-Two of the chained IRQ handlers miss their
-chained_irq_enter()/chained_irq_exit() calls, so add them in to avoid
-potentially lost interrupts.
+Clear FLR (Function Level Reset) from device capabilities
+registers for all physical functions.
 
-Reported by: Bjorn Helgaas <bhelgaas@google.com>
-Link: https://lore.kernel.org/linux-pci/87h76b8nxc.wl-maz@kernel.org
-Link: https://lore.kernel.org/r/20220511095504.2273799-1-conor.dooley@microchip.com
-Signed-off-by: Conor Dooley <conor.dooley@microchip.com>
+During FLR, the Margining Lane Status and Margining Lane Control
+registers should not be reset, as per PCIe specification.
+However, the controller incorrectly resets these registers upon FLR.
+This causes PCISIG compliance FLR test to fail. Hence preventing
+all functions from advertising FLR support if flag quirk_disable_flr
+is set.
+
+Link: https://lore.kernel.org/r/1635165075-89864-1-git-send-email-pthombar@cadence.com
+Signed-off-by: Parshuram Thombare <pthombar@cadence.com>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-microchip-host.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/pci/controller/cadence/pci-j721e.c     |  3 +++
+ .../pci/controller/cadence/pcie-cadence-ep.c   | 18 +++++++++++++++++-
+ drivers/pci/controller/cadence/pcie-cadence.h  |  3 +++
+ 3 files changed, 23 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-index 29d8e81e4181..8175abed0f05 100644
---- a/drivers/pci/controller/pcie-microchip-host.c
-+++ b/drivers/pci/controller/pcie-microchip-host.c
-@@ -406,6 +406,7 @@ static void mc_pcie_enable_msi(struct mc_pcie *port, void __iomem *base)
- static void mc_handle_msi(struct irq_desc *desc)
- {
- 	struct mc_pcie *port = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	struct device *dev = port->dev;
- 	struct mc_msi *msi = &port->msi;
- 	void __iomem *bridge_base_addr =
-@@ -414,6 +415,8 @@ static void mc_handle_msi(struct irq_desc *desc)
- 	u32 bit;
- 	int ret;
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 768d33f9ebc8..a82f845cc4b5 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -69,6 +69,7 @@ struct j721e_pcie_data {
+ 	enum j721e_pcie_mode	mode;
+ 	unsigned int		quirk_retrain_flag:1;
+ 	unsigned int		quirk_detect_quiet_flag:1;
++	unsigned int		quirk_disable_flr:1;
+ 	u32			linkdown_irq_regfield;
+ 	unsigned int		byte_access_allowed:1;
+ };
+@@ -307,6 +308,7 @@ static const struct j721e_pcie_data j7200_pcie_rc_data = {
+ static const struct j721e_pcie_data j7200_pcie_ep_data = {
+ 	.mode = PCI_MODE_EP,
+ 	.quirk_detect_quiet_flag = true,
++	.quirk_disable_flr = true,
+ };
  
-+	chained_irq_enter(chip, desc);
-+
- 	status = readl_relaxed(bridge_base_addr + ISTATUS_LOCAL);
- 	if (status & PM_MSI_INT_MSI_MASK) {
- 		status = readl_relaxed(bridge_base_addr + ISTATUS_MSI);
-@@ -424,6 +427,8 @@ static void mc_handle_msi(struct irq_desc *desc)
- 						    bit);
- 		}
- 	}
-+
-+	chained_irq_exit(chip, desc);
- }
+ static const struct j721e_pcie_data am64_pcie_rc_data = {
+@@ -405,6 +407,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 			return -ENOMEM;
  
- static void mc_msi_bottom_irq_ack(struct irq_data *data)
-@@ -563,6 +568,7 @@ static int mc_allocate_msi_domains(struct mc_pcie *port)
- static void mc_handle_intx(struct irq_desc *desc)
- {
- 	struct mc_pcie *port = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	struct device *dev = port->dev;
- 	void __iomem *bridge_base_addr =
- 		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-@@ -570,6 +576,8 @@ static void mc_handle_intx(struct irq_desc *desc)
- 	u32 bit;
- 	int ret;
+ 		ep->quirk_detect_quiet_flag = data->quirk_detect_quiet_flag;
++		ep->quirk_disable_flr = data->quirk_disable_flr;
  
-+	chained_irq_enter(chip, desc);
-+
- 	status = readl_relaxed(bridge_base_addr + ISTATUS_LOCAL);
- 	if (status & PM_MSI_INT_INTX_MASK) {
- 		status &= PM_MSI_INT_INTX_MASK;
-@@ -581,6 +589,8 @@ static void mc_handle_intx(struct irq_desc *desc)
- 						    bit);
- 		}
- 	}
-+
-+	chained_irq_exit(chip, desc);
- }
+ 		cdns_pcie = &ep->pcie;
+ 		cdns_pcie->dev = dev;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index 88e05b9c2e5b..4b1c4bc4e003 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -565,7 +565,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct cdns_pcie *pcie = &ep->pcie;
+ 	struct device *dev = pcie->dev;
+-	int ret;
++	int max_epfs = sizeof(epc->function_num_map) * 8;
++	int ret, value, epf;
  
- static void mc_ack_intx_irq(struct irq_data *data)
+ 	/*
+ 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
+@@ -573,6 +574,21 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	 */
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, epc->function_num_map);
+ 
++	if (ep->quirk_disable_flr) {
++		for (epf = 0; epf < max_epfs; epf++) {
++			if (!(epc->function_num_map & BIT(epf)))
++				continue;
++
++			value = cdns_pcie_ep_fn_readl(pcie, epf,
++					CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET +
++					PCI_EXP_DEVCAP);
++			value &= ~PCI_EXP_DEVCAP_FLR;
++			cdns_pcie_ep_fn_writel(pcie, epf,
++					CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET +
++					PCI_EXP_DEVCAP, value);
++		}
++	}
++
+ 	ret = cdns_pcie_start_link(pcie);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to start link\n");
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index c8a27b6290ce..d9c785365da3 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -123,6 +123,7 @@
+ 
+ #define CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET	0x90
+ #define CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET	0xb0
++#define CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET	0xc0
+ #define CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET	0x200
+ 
+ /*
+@@ -357,6 +358,7 @@ struct cdns_pcie_epf {
+  *        minimize time between read and write
+  * @epf: Structure to hold info about endpoint function
+  * @quirk_detect_quiet_flag: LTSSM Detect Quiet min delay set as quirk
++ * @quirk_disable_flr: Disable FLR (Function Level Reset) quirk flag
+  */
+ struct cdns_pcie_ep {
+ 	struct cdns_pcie	pcie;
+@@ -372,6 +374,7 @@ struct cdns_pcie_ep {
+ 	spinlock_t		lock;
+ 	struct cdns_pcie_epf	*epf;
+ 	unsigned int		quirk_detect_quiet_flag:1;
++	unsigned int		quirk_disable_flr:1;
+ };
+ 
+ 
 -- 
 2.35.1
 
