@@ -2,263 +2,180 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E338CC433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jun 2022 07:09:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15FF6CCA478
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jun 2022 08:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231570AbiFBHJV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jun 2022 03:09:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58028 "EHLO
+        id S232347AbiFBI3w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jun 2022 04:29:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33478 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231563AbiFBHJV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2022 03:09:21 -0400
-Received: from mail-io1-xd29.google.com (mail-io1-xd29.google.com [IPv6:2607:f8b0:4864:20::d29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA56E55BF
-        for <linux-pci@vger.kernel.org>; Thu,  2 Jun 2022 00:09:17 -0700 (PDT)
-Received: by mail-io1-xd29.google.com with SMTP id 2so3994097iou.5
-        for <linux-pci@vger.kernel.org>; Thu, 02 Jun 2022 00:09:17 -0700 (PDT)
+        with ESMTP id S232295AbiFBI3u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2022 04:29:50 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFC9FD9A
+        for <linux-pci@vger.kernel.org>; Thu,  2 Jun 2022 01:29:46 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id n13-20020a17090a394d00b001e30a60f82dso8697849pjf.5
+        for <linux-pci@vger.kernel.org>; Thu, 02 Jun 2022 01:29:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=uBmkWfI4ZVmBcLAQ5cl+HDhIxHXnbcBq5V7TWbb5K+s=;
-        b=aA+i+o27C242N9Ue5EkWE5luiYClPIIV8fH7nC3PVX4f3lS+aJR9LON0Td+8XQV3bH
-         BEmSJfswlyAi1GZ1JW68dwsAYwZOfSPensQPABpEZv38ec5RdJ9e1QFEn24aITrSeHEP
-         3QYeLa4IWxsOO4mCvE9cr0qDvKhOCe5jWQTJVgUSDnRQEdqOuBSqaz+n6fTQ/ZlVwGve
-         IElK+LigM8KeVUdV7ocwmdF+Jen+1FvL3fR7gaizkRJxnvqcgRQImfLcpqhMnwFaY3Ul
-         5KpVkksLFDzPgSMJ54D9rpmVhIQIjAuQeSHqT/4oi1kcv+Q+XW2WF65zM2uvc4lMjpgC
-         5BdA==
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=qLE93fLBk76sb5feEZB3lwg0tckq9OyeKY/n0bkrWVI=;
+        b=RSkYj3WOKXwloda5tvOmqVsHsBOy9LS2cWoCJcwRQ2nd7TdqQ9ETsKz1SJG7p1Yru5
+         DtaOiVJALg+o8f3pNWpaR8ACvsAxa/ZZR7W8TjAcCJBoW7F2cKTIOG54iVZ9JKcyD7nv
+         9tblptL5satSidG+rDqAf1tAX4MI1F2r/Y1TsteEA09tUSnlsRVDwP/rQUx8RIceuPh6
+         CeB6WOj0QhOwvslDnLb3t0DophjrnY1vP6yA4ViEMTiogfVR3a8bIAqLF+r/c1miwTFt
+         uBDyKYE+eAHH1EOoCYVkVmlBnqJ2b6cwHgkzUhw4R3HHQAJ14wrUK2kMEhtSOCtS5QFd
+         cD8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=uBmkWfI4ZVmBcLAQ5cl+HDhIxHXnbcBq5V7TWbb5K+s=;
-        b=EdUVHGX2QAyazI7inGm+qqvGNGolPYsHXtqC9pLtrWpFVtbyei7jkIc9P+KBCRXkFt
-         I4Caynzo7EWtISnTkW5mZerHtP8f8vlfJ9+xlOv1Qics0e6sEN+zqEBkEdF3HQnVfXZq
-         apS2Jl1t5w1MbjMf8eBF0m9lv3FjxZd1uv69LfjqVIBOCTKE8klN8arOKJhuEo5SL+EQ
-         2TFufVzipTmHRUkRmWGKjVfbUSItZ9AXmxonCBXnGBkto/NPi4QpwvgSFVhM8Vi7OI+w
-         0sqKZWpn3EUjjjzwUbYTxlGGY+ePoxMwnvD4SwVf6R6OG4G41XQgTNbA3pClJPepcKjL
-         2jgA==
-X-Gm-Message-State: AOAM531Dg5t9+5WqGFJ+21usVqITR2ND72TOoTQf/UhZIOm5YsslpPPt
-        f4E9xYbskxdTc6r1Uya2HM8BFhJihCLlrQPXdj8=
-X-Google-Smtp-Source: ABdhPJyi4qEziFHSJM7Etv9UEMSzQ8fItzpJgEcAj+60dVP7sz09Wvynxq1fC1rEiSWyvYq3GHr4m2QPXW/bBV2EWoU=
-X-Received: by 2002:a05:6638:1692:b0:32e:e00f:ec2 with SMTP id
- f18-20020a056638169200b0032ee00f0ec2mr2280964jat.270.1654153757222; Thu, 02
- Jun 2022 00:09:17 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=qLE93fLBk76sb5feEZB3lwg0tckq9OyeKY/n0bkrWVI=;
+        b=zeLq4Yb5FN9TOvY1sEcN3iOTICLAEuZnLefJDqVYCrGKBbjlK78jkRfkcXzjTozHKN
+         znhxX1vdsx1JZpu7bUfG+XaMTM9FpN1dDzNldB+PT5fgYlXLRWJ/r+z3FXNEDE91vaCA
+         iLJdYzHbygdDj/hkcDroDrUHU96tQDmKCV68W5FyVg19NtcWmVkA8TmfSnJEcnGMkLe7
+         Ujh8becffMhNLQKuSRJLXIKJOmYzyHD4gwo7QYzjFkP/MIci27M2tgm7mCy6xqEzaZUX
+         J620zPRQEVKmdF2bRJTNNMZ0kvEZqIUBoEsR2S4mVvtk3bK9zpraKXeZtOsfyPLgY8RL
+         l5Iw==
+X-Gm-Message-State: AOAM533fA4qdXRlvGjR5XWlP/MgzAjWsguptJYw0z3OykfOJho97kb3E
+        sTQB+1aw1YLuqPPE+epyaydm
+X-Google-Smtp-Source: ABdhPJxinrA0W1VA+IL/O0ywNYDKGyJEBSUzZD2g4x110fuITrP1RNqA5h3zIXv0Od4GRXrdCjw4bw==
+X-Received: by 2002:a17:902:d2c2:b0:164:1047:5438 with SMTP id n2-20020a170902d2c200b0016410475438mr3755076plc.18.1654158586216;
+        Thu, 02 Jun 2022 01:29:46 -0700 (PDT)
+Received: from thinkpad ([220.158.159.212])
+        by smtp.gmail.com with ESMTPSA id a20-20020a621a14000000b0050dc762816asm2868478pfa.68.2022.06.02.01.29.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Jun 2022 01:29:45 -0700 (PDT)
+Date:   Thu, 2 Jun 2022 13:59:38 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
+Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        quic_vbadigan@quicinc.com, quic_ramkri@quicinc.com,
+        swboyd@chromium.org, Bjorn Helgaas <bhelgaas@google.com>,
+        "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Rajat Jain <rajatja@google.com>, vidyas@nvidia.com,
+        kenny@panix.com
+Subject: Re: [PATCH v3] PCI/ASPM: Update LTR threshold based upon reported
+ max latencies
+Message-ID: <20220602082938.GA4936@thinkpad>
+References: <1646679549-12494-1-git-send-email-quic_pmaliset@quicinc.com>
+ <1654086232-17055-1-git-send-email-quic_krichai@quicinc.com>
+ <91b75542-8e4c-5b91-bbfd-38ffc456c12e@quicinc.com>
 MIME-Version: 1.0
-References: <20220430084846.3127041-3-chenhuacai@loongson.cn> <20220531230437.GA793965@bhelgaas>
-In-Reply-To: <20220531230437.GA793965@bhelgaas>
-From:   Huacai Chen <chenhuacai@gmail.com>
-Date:   Thu, 2 Jun 2022 15:09:07 +0800
-Message-ID: <CAAhV-H5Z+shOsbT1Lf8qQs3Pa2J_PQ=XrEP+dejM9DbD7EiL_w@mail.gmail.com>
-Subject: Re: [PATCH V13 2/6] PCI: loongson: Add ACPI init support
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Huacai Chen <chenhuacai@loongson.cn>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Xuefeng Li <lixuefeng@loongson.cn>,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <91b75542-8e4c-5b91-bbfd-38ffc456c12e@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi, Bjorn,
+On Wed, Jun 01, 2022 at 05:57:53PM +0530, Krishna Chaitanya Chundru wrote:
+> [+cc kenny, vidya]
+> 
+> On 6/1/2022 5:53 PM, Krishna chaitanya chundru wrote:
+> > In ASPM driver, LTR threshold scale and value is updating based on
 
-On Wed, Jun 1, 2022 at 7:04 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Sat, Apr 30, 2022 at 04:48:42PM +0800, Huacai Chen wrote:
-> > Loongson PCH (LS7A chipset) will be used by both MIPS-based and
-> > LoongArch-based Loongson processors. MIPS-based Loongson uses FDT
-> > while LoongArch-base Loongson uses ACPI, this patch add ACPI init
-> > support for the driver in drivers/pci/controller/pci-loongson.c
-> > because it is currently FDT-only.
-> >
-> > LoongArch is a new RISC ISA, mainline support will come soon, and
-> > documentations are here (in translation):
-> >
-> > https://github.com/loongson/LoongArch-Documentation
-> >
-> > Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+s/is/are
+
+s/updating/updated
+
+> > tcommon_mode and t_poweron values. In kioxia NVMe L1.2 is failing due to
+> > LTR threshold scale and value is greater values than max snoop/non-snoop
+
+s/is/are
+
+> > value.
+> > 
+> > Based on PCIe r4.1, sec 5.5.1, L1.2 substate must be entered when
+> > reported snoop/no-snoop values is greather than or equal to
+> > LTR_L1.2_THRESHOLD value.
+> > 
+> > Suggested-by: Prasad Malisetty  <quic_pmaliset@quicinc.com>
+> > Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+
+If you are inheriting the patch from Prasad, then you should still give the
+authorship to him (unless the patch has changed significantly). You can add
+your S-o-b tag to convey that you are carrying the patch from him.
+
 > > ---
-> >  drivers/acpi/pci_mcfg.c               | 13 ++++++
-> >  drivers/pci/controller/Kconfig        |  2 +-
-> >  drivers/pci/controller/pci-loongson.c | 60 ++++++++++++++++++++++++++-
-> >  include/linux/pci-ecam.h              |  1 +
-> >  4 files changed, 73 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> > index 53cab975f612..860014b89b8e 100644
-> > --- a/drivers/acpi/pci_mcfg.c
-> > +++ b/drivers/acpi/pci_mcfg.c
-> > @@ -41,6 +41,8 @@ struct mcfg_fixup {
-> >  static struct mcfg_fixup mcfg_quirks[] = {
-> >  /*   { OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, ops, cfgres }, */
-> >
-> > +#ifdef CONFIG_ARM64
-> > +
-> >  #define AL_ECAM(table_id, rev, seg, ops) \
-> >       { "AMAZON", table_id, rev, seg, MCFG_BUS_ANY, ops }
-> >
-> > @@ -169,6 +171,17 @@ static struct mcfg_fixup mcfg_quirks[] = {
-> >       ALTRA_ECAM_QUIRK(1, 13),
-> >       ALTRA_ECAM_QUIRK(1, 14),
-> >       ALTRA_ECAM_QUIRK(1, 15),
-> > +#endif /* ARM64 */
->
-> The addition of the CONFIG_ARM64 #ifdefs should be its own separate
-> patch so it's not buried in this Loongson one.
-OK, thanks.
+> > 
+> > I am takking this patch forward as prasad is no more working with our org.
+> > 
+> > Changes since v2:
+> > 	- Replaced LTRME logic with max snoop/no-snoop latencies check.
+> > Changes since v1:
+> > 	- Added missing variable declaration in v1 patch
+> > ---
+> >   drivers/pci/pcie/aspm.c | 22 +++++++++++++++++++++-
+> >   1 file changed, 21 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> > index a96b742..4a15e50 100644
+> > --- a/drivers/pci/pcie/aspm.c
+> > +++ b/drivers/pci/pcie/aspm.c
+> > @@ -465,10 +465,19 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+> >   	u32 ctl1 = 0, ctl2 = 0;
+> >   	u32 pctl1, pctl2, cctl1, cctl2;
+> >   	u32 pl1_2_enables, cl1_2_enables;
+> > +	int ltr;
 
->
-> > +#ifdef CONFIG_LOONGARCH
-> > +#define LOONGSON_ECAM_MCFG(table_id, seg) \
-> > +     { "LOONGS", table_id, 1, seg, MCFG_BUS_ANY, &loongson_pci_ecam_ops }
-> > +
-> > +     LOONGSON_ECAM_MCFG("\0", 0),
-> > +     LOONGSON_ECAM_MCFG("LOONGSON", 0),
-> > +     LOONGSON_ECAM_MCFG("\0", 1),
-> > +     LOONGSON_ECAM_MCFG("LOONGSON", 1),
-> > +#endif /* LOONGARCH */
-> >  };
-> >
-> >  static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
-> > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> > index b8d96d38064d..9dbd73898b47 100644
-> > --- a/drivers/pci/controller/Kconfig
-> > +++ b/drivers/pci/controller/Kconfig
-> > @@ -293,7 +293,7 @@ config PCI_HYPERV_INTERFACE
-> >  config PCI_LOONGSON
-> >       bool "LOONGSON PCI Controller"
-> >       depends on MACH_LOONGSON64 || COMPILE_TEST
-> > -     depends on OF
-> > +     depends on OF || ACPI
-> >       depends on PCI_QUIRKS
-> >       default MACH_LOONGSON64
-> >       help
-> > diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
-> > index 0a947ace9478..adbfa4a2330f 100644
-> > --- a/drivers/pci/controller/pci-loongson.c
-> > +++ b/drivers/pci/controller/pci-loongson.c
-> > @@ -9,6 +9,8 @@
-> >  #include <linux/of_pci.h>
-> >  #include <linux/pci.h>
-> >  #include <linux/pci_ids.h>
-> > +#include <linux/pci-acpi.h>
-> > +#include <linux/pci-ecam.h>
-> >
-> >  #include "../pci.h"
-> >
-> > @@ -97,6 +99,18 @@ static void loongson_mrrs_quirk(struct pci_dev *dev)
-> >  }
-> >  DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, loongson_mrrs_quirk);
-> >
-> > +static struct loongson_pci *pci_bus_to_loongson_pci(struct pci_bus *bus)
-> > +{
-> > +     struct pci_config_window *cfg;
-> > +
-> > +     if (acpi_disabled)
-> > +             return (struct loongson_pci *)(bus->sysdata);
-> > +     else {
-> > +             cfg = bus->sysdata;
-> > +             return (struct loongson_pci *)(cfg->priv);
-> > +     }
-> > +}
-> > +
-> >  static void __iomem *cfg1_map(struct loongson_pci *priv, int bus,
-> >                               unsigned int devfn, int where)
-> >  {
-> > @@ -124,8 +138,10 @@ static void __iomem *pci_loongson_map_bus(struct pci_bus *bus, unsigned int devf
-> >                              int where)
-> >  {
-> >       unsigned char busnum = bus->number;
-> > -     struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
-> > -     struct loongson_pci *priv =  pci_host_bridge_priv(bridge);
-> > +     struct loongson_pci *priv = pci_bus_to_loongson_pci(bus);
-> > +
-> > +     if (pci_is_root_bus(bus))
-> > +             busnum = 0;
->
-> This is weird.  The comment just below says "For our hardware the root
-> bus is always bus 0."  Is that not true any more?  Why would you
-> override the bus number?
-The below comment should be fixed. For multi pci domain machines, the
-root bus number isn't always 0, so we should override it.
+This could be u16 too.
 
->
-> >       /*
-> >        * Do not read more than one device on the bus other than
-> > @@ -146,6 +162,8 @@ static void __iomem *pci_loongson_map_bus(struct pci_bus *bus, unsigned int devf
-> >       return NULL;
-> >  }
-> >
-> > +#ifdef CONFIG_OF
-> > +
-> >  static int loongson_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> >  {
-> >       int irq;
-> > @@ -259,3 +277,41 @@ static struct platform_driver loongson_pci_driver = {
-> >       .probe = loongson_pci_probe,
-> >  };
-> >  builtin_platform_driver(loongson_pci_driver);
-> > +
-> > +#endif
-> > +
-> > +#ifdef CONFIG_ACPI
-> > +
-> > +static int loongson_pci_ecam_init(struct pci_config_window *cfg)
-> > +{
-> > +     struct device *dev = cfg->parent;
-> > +     struct loongson_pci *priv;
-> > +     struct loongson_pci_data *data;
-> > +
-> > +     priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-> > +     if (!priv)
-> > +             return -ENOMEM;
-> > +
-> > +     data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
-> > +     if (!data)
-> > +             return -ENOMEM;
-> > +
-> > +     cfg->priv = priv;
-> > +     data->flags = FLAG_CFG1;
-> > +     priv->data = data;
-> > +     priv->cfg1_base = cfg->win - (cfg->busr.start << 16);
-> > +
-> > +     return 0;
-> > +}
-> > +
-> > +const struct pci_ecam_ops loongson_pci_ecam_ops = {
-> > +     .bus_shift = 16,
->
-> I can't remember the details of how this works.  The standard PCIe
-> ECAM has:
->
->   A[11:00] 12 bits of Register number/alignment
->   A[14:12]  3 bits of Function number
->   A[19:15]  5 bits of Device number
->   A[27:20]  8 bits of Bus number
->
-> Doesn't a bus_shift of 16 mean there are only 16 bits available for
-> the register number, function, and device?  So that would limit us to
-> 8 bits of register number?  Do we enforce that somewhere?
->
-> It seems like a limit on "where" should be enforced in
-> pci_ecam_map_bus() and other .map_bus() functions like
-> pci_loongson_map_bus().  Otherwise a config read at offset
-> 0x100 would read config space of the wrong device.
->
-> Krzysztof, do you remember how this works?
-After a quick glance, it seems pci_ecam_map_bus() should be changed. :)
+> > +	u16 max_snoop_lat = 0, max_nosnoop_lat = 0;
 
-Huacai
->
-> > +     .init      = loongson_pci_ecam_init,
-> > +     .pci_ops   = {
-> > +             .map_bus = pci_loongson_map_bus,
-> > +             .read    = pci_generic_config_read,
-> > +             .write   = pci_generic_config_write,
-> > +     }
-> > +};
+No need to initialize these variables.
+
+> >   	if (!(link->aspm_support & ASPM_STATE_L1_2_MASK))
+> >   		return;
+> > +	ltr = pci_find_ext_capability(child, PCI_EXT_CAP_ID_LTR);
+> > +	if (!ltr)
+> > +		return;
+
+Is this capability implemented always?
+
+> > +
+> > +	pci_read_config_word(child, ltr + PCI_LTR_MAX_SNOOP_LAT, &max_snoop_lat);
+> > +	pci_read_config_word(child, ltr + PCI_LTR_MAX_NOSNOOP_LAT, &max_nosnoop_lat);
+> > +
+> >   	/* Choose the greater of the two Port Common_Mode_Restore_Times */
+> >   	val1 = (parent_l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
+> >   	val2 = (child_l1ss_cap & PCI_L1SS_CAP_CM_RESTORE_TIME) >> 8;
+> > @@ -501,7 +510,18 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+> >   	 */
+> >   	l1_2_threshold = 2 + 4 + t_common_mode + t_power_on;
+> >   	encode_l12_threshold(l1_2_threshold, &scale, &value);
+> > -	ctl1 |= t_common_mode << 8 | scale << 29 | value << 16;
+> > +
+> > +	/*
+> > +	 * If the max snoop and no snoop latencies are '0', then avoid updating scale
+> > +	 * and value.
+> > +	 *
+
+This looks fine but...
+
+> > +	 * Based on PCIe r4.1, sec 5.5.1, L1.2 substate must be entered when reported
+> > +	 * snoop/no-snoop values is greather than or equal to LTR_L1.2_THRESHOLD value.
+
+s/is/are
+
+What about this? What if the snoop/nosnoop latencies are not equal to zero and
+lower than LTR_L1.2_THRESHOLD?
+
+Thanks,
+Mani
+
+> > +	 */
+> > +	if ((max_snoop_lat == 0) && (max_nosnoop_lat == 0))
+> > +		ctl1 |= t_common_mode << 8;
+> > +	else
+> > +		ctl1 |= t_common_mode << 8 | scale << 29 | value << 16;
+> >   	/* Some broken devices only support dword access to L1 SS */
+> >   	pci_read_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1, &pctl1);
+
+-- 
+மணிவண்ணன் சதாசிவம்
