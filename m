@@ -2,125 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A5D9C43334
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Jun 2022 06:49:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20AA0C43334
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Jun 2022 06:56:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229739AbiFBGtz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Jun 2022 02:49:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43576 "EHLO
+        id S231488AbiFBG4A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Jun 2022 02:56:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229737AbiFBGty (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2022 02:49:54 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95C85229B41;
-        Wed,  1 Jun 2022 23:49:52 -0700 (PDT)
-Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4LDGpV4mBKzKmHh;
-        Thu,  2 Jun 2022 14:49:38 +0800 (CST)
-Received: from dggpemm500018.china.huawei.com (7.185.36.111) by
- dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 2 Jun 2022 14:49:50 +0800
-Received: from localhost.localdomain (10.175.112.125) by
- dggpemm500018.china.huawei.com (7.185.36.111) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 2 Jun 2022 14:49:50 +0800
-From:   Ke Liu <liuke94@huawei.com>
-To:     <bhelgaas@google.com>
-CC:     <nirmal.patel@linux.intel.com>, <jonathan.derrick@linux.dev>,
-        <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
-        <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Ke Liu <liuke94@huawei.com>
-Subject: [PATCH v2] drivers: pci: Directly use ida_alloc()/free()
-Date:   Thu, 2 Jun 2022 07:11:15 +0000
-Message-ID: <20220602071115.3833935-1-liuke94@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S231182AbiFBGz6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Jun 2022 02:55:58 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EED35DBF8
+        for <linux-pci@vger.kernel.org>; Wed,  1 Jun 2022 23:55:57 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id o6-20020a17090a0a0600b001e2c6566046so8537148pjo.0
+        for <linux-pci@vger.kernel.org>; Wed, 01 Jun 2022 23:55:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=nathanrossi.com; s=google;
+        h=date:message-id:from:to:cc:subject:content-transfer-encoding
+         :mime-version;
+        bh=ak8tm6cSyofXH4NSo0o05XLV88OnObDuw/irZITZJvU=;
+        b=h9aa/kTq+ADsCg63i/CIxTkWwRJjqpDY9QrQlrlu2BdzqwlsmT4rVHBwDPBVjVkSVs
+         cW0fNTb6c8AlGdtufemN8Ps7ueUPrr1KdjZg/+7L8cyi9ZLgtI04Fp2OvJrwhiVt0xbF
+         1jsvLxDcoYaSXDLOnnGk4hMLxcW1rwqvbaeh/e5gJmDJAYLQTa8WGcqFs78KplnILOrf
+         K5ajmlu0Qy0oQcF/Fev9Eph9pDA1md07OwFnyz51/MaYUUp28C6C3FteHLTDIKlfivrD
+         85p/fu4bbo5WObeuftx5hQgQJ5Qo9ewjF9pmuT7dmcXXO8fXNKTHMB+7e4r3gNccQrkH
+         X1LA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:message-id:from:to:cc:subject
+         :content-transfer-encoding:mime-version;
+        bh=ak8tm6cSyofXH4NSo0o05XLV88OnObDuw/irZITZJvU=;
+        b=RGrPTAaREUN56fQOPXQm+xcXvXVIpIzbQKWFuOaruYSdM9KSmZeGcUcvo4Y45dhk3G
+         Oyz5dcirAk/9a2twGhLIYJcrQYAaGHCyr5uuE7LZkU/P8ReoqCJ66n9qjtUb2z2lLswb
+         hgLbvV4ukGLdQ7tPWnUIAKRMd5ZquOxsXsZBCi251Z9XRjN+DigzoRrz4e8Ow4lHAWIg
+         xxfjjX2JKZcr/bk2OhUDs2g1Bj3FRQT6zarrN0okk7KDt7quupo/DYWWZnfWj/IktRpP
+         Ugv/CxQErvXvmUr3SZ339UQuCKH6nMiBSJYHhcTK75a07Bn1+A7ldg82qpK4ei5EpRz3
+         fryA==
+X-Gm-Message-State: AOAM5302Jb0fTjJbZD7r/WgKsVEU9Qf07rkpHw5PQxueNU3FQYq+qI2k
+        Hdh4YIxJ41WLQxLvfb/QTe7VfT0SuPVsXg==
+X-Google-Smtp-Source: ABdhPJxrArf5KLRpV3wAL6QuQ+ibDlPrVvQutjXenWxhmMoCLJQ8SFzVqY4t9PeIRC6bZGvMAHCL5A==
+X-Received: by 2002:a17:903:244d:b0:166:3983:5569 with SMTP id l13-20020a170903244d00b0016639835569mr3393987pls.44.1654152956597;
+        Wed, 01 Jun 2022 23:55:56 -0700 (PDT)
+Received: from [127.0.1.1] (117-20-68-152.751444.bne.nbn.aussiebb.net. [117.20.68.152])
+        by smtp.gmail.com with UTF8SMTPSA id t15-20020a17090340cf00b0016168e90f2csm2555125pld.208.2022.06.01.23.55.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 01 Jun 2022 23:55:56 -0700 (PDT)
+Date:   Thu, 02 Jun 2022 06:55:44 +0000
+Message-Id: <20220602065544.2552771-1-nathan@nathanrossi.com>
+From:   Nathan Rossi <nathan@nathanrossi.com>
+To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Nathan Rossi <nathan@nathanrossi.com>,
+        Nathan Rossi <nathan.rossi@digi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI/ASPM: Wait for data link active after retraining
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.112.125]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemm500018.china.huawei.com (7.185.36.111)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use ida_alloc()/ida_free() instead of deprecated
-ida_simple_get()/ida_simple_remove().
+From: Nathan Rossi <nathan.rossi@digi.com>
 
-Signed-off-by: Ke Liu <liuke94@huawei.com>
+When retraining the link either the child or the parent device may have
+the data link layer state machine of the respective devices move out of
+the active state despite the physical link training being completed.
+Depending on how long is takes for the devices to return to the active
+state, the device may not be ready and any further reads/writes to the
+device can fail.
+
+This issue is present with the pci-mvebu controller paired with a device
+supporting ASPM but without advertising the Slot Clock, where during
+boot the pcie_aspm_cap_init call would cause common clocks to be made
+consistent and then retrain the link. However the data link layer would
+not be active before any device initialization (e.g. ASPM capability
+queries, BAR configuration) causing improper configuration of the device
+without error.
+
+To ensure the child device is accessible, after the link retraining use
+pcie_wait_for_link to perform the associated state checks and any needed
+delays.
+
+Signed-off-by: Nathan Rossi <nathan.rossi@digi.com>
 ---
-v2	fix sign-off name suggest by Bjorn Helgaas
+ drivers/pci/pcie/aspm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index a96b7424c9..4b8a1810be 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -288,7 +288,8 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
+ 		reg16 &= ~PCI_EXP_LNKCTL_CCC;
+ 	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
+ 
+-	if (pcie_retrain_link(link))
++	/* Retrain link and then wait for the link to become active */
++	if (pcie_retrain_link(link) && pcie_wait_for_link(parent, true))
+ 		return;
+ 
+ 	/* Training failed. Restore common clock configurations */
 ---
- drivers/pci/controller/vmd.c   | 6 +++---
- drivers/pci/switch/switchtec.c | 7 +++----
- 2 files changed, 6 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 94a14a3d7e55..49c72c2d8fe7 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -894,7 +894,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 		return -ENOMEM;
- 
- 	vmd->dev = dev;
--	vmd->instance = ida_simple_get(&vmd_instance_ida, 0, 0, GFP_KERNEL);
-+	vmd->instance = ida_alloc(&vmd_instance_ida, GFP_KERNEL);
- 	if (vmd->instance < 0)
- 		return vmd->instance;
- 
-@@ -935,7 +935,7 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	return 0;
- 
-  out_release_instance:
--	ida_simple_remove(&vmd_instance_ida, vmd->instance);
-+	ida_free(&vmd_instance_ida, vmd->instance);
- 	kfree(vmd->name);
- 	return err;
- }
-@@ -958,7 +958,7 @@ static void vmd_remove(struct pci_dev *dev)
- 	vmd_cleanup_srcu(vmd);
- 	vmd_detach_resources(vmd);
- 	vmd_remove_irq_domain(vmd);
--	ida_simple_remove(&vmd_instance_ida, vmd->instance);
-+	ida_free(&vmd_instance_ida, vmd->instance);
- 	kfree(vmd->name);
- }
- 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index c36c1238c604..75be4fe22509 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1376,8 +1376,7 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
- 	dev->groups = switchtec_device_groups;
- 	dev->release = stdev_release;
- 
--	minor = ida_simple_get(&switchtec_minor_ida, 0, 0,
--			       GFP_KERNEL);
-+	minor = ida_alloc(&switchtec_minor_ida, GFP_KERNEL);
- 	if (minor < 0) {
- 		rc = minor;
- 		goto err_put;
-@@ -1692,7 +1691,7 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
- err_devadd:
- 	stdev_kill(stdev);
- err_put:
--	ida_simple_remove(&switchtec_minor_ida, MINOR(stdev->dev.devt));
-+	ida_free(&switchtec_minor_ida, MINOR(stdev->dev.devt));
- 	put_device(&stdev->dev);
- 	return rc;
- }
-@@ -1704,7 +1703,7 @@ static void switchtec_pci_remove(struct pci_dev *pdev)
- 	pci_set_drvdata(pdev, NULL);
- 
- 	cdev_device_del(&stdev->cdev, &stdev->dev);
--	ida_simple_remove(&switchtec_minor_ida, MINOR(stdev->dev.devt));
-+	ida_free(&switchtec_minor_ida, MINOR(stdev->dev.devt));
- 	dev_info(&stdev->dev, "unregistered.\n");
- 	stdev_kill(stdev);
- 	put_device(&stdev->dev);
--- 
-2.25.1
-
+2.36.1
