@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 804BDC43334
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Jun 2022 13:57:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23C85C43334
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Jun 2022 13:57:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346988AbiFEN53 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Jun 2022 09:57:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40486 "EHLO
+        id S1349481AbiFEN5v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Jun 2022 09:57:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39568 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350712AbiFEN4A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jun 2022 09:56:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE79BE08D;
-        Sun,  5 Jun 2022 06:55:28 -0700 (PDT)
+        with ESMTP id S1351109AbiFEN5A (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Jun 2022 09:57:00 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2581511807;
+        Sun,  5 Jun 2022 06:55:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 46E1460FC0;
-        Sun,  5 Jun 2022 13:55:14 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9000DC3411E;
-        Sun,  5 Jun 2022 13:55:12 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 7D809CE0B7B;
+        Sun,  5 Jun 2022 13:55:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7ABF4C3411E;
+        Sun,  5 Jun 2022 13:55:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654437313;
-        bh=aUep4enDS2rEm1cqYLVP0bI+LmbTqMVDSvrpQnmDAJw=;
+        s=k20201202; t=1654437344;
+        bh=AzLneQJ6RKgiiFHnDU6X67BZCjd0VNWcD+IWb9X81rw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eIX7lBm9tXBBYjmYq1jEW8fP2kTPaWuIyNBD0mKaMLfDlnS5sM4xhFwbKBlYiFjzw
-         lCu1/6SNiXNJC3kNOaEugNGpAor97rTf4RXWigN9NgGCRj2ujFT80VFzQ/5moTVu8q
-         exBvkscsEvL3CSbjZS4RnUEgxf2wyrIeLd0R8HuWSffW9G6XLy8FXjbYaoQRZSLJqY
-         yaF57bvWGq4J9KV+rsC+qmGzLSm7+3lnAzmYgRuI8AFBvCgMepdcGfh07b8eX7j0zf
-         EIR/BtwQRhAOpHH/47spLEuxEgXkiDX3kvMJ7SmtUKqt2lVYqSOtHcvQZjv/zkmPs8
-         8icoNnslkFGqg==
+        b=g6E7Y0Kf0oie//i9+AUJLjfftnwtQi4lvXHuAbHKgN4JJwgyr+sKUNbRFHGL1cMjQ
+         3C7Imfkib9Gg53P1QXogRLXM6SGQWJwQ9D8YZi4cGCapoODiQFV6S0jZuBWbrfxO9K
+         J9BC7gaThqfz15tzwpvqYxg7i6NahZyQln6C8/c/KVmj5Xcfx6lfejUXH7lBB+oRgV
+         2WZFPQmuUaOdM0eiqEO6keqm+SUaCn/E+OzGyuV4GHZ1x4c8R4ZaOyFlgKBYen1LYa
+         5OMN42WuV8zv/Zw5+ztxolnaAoZ0IMUOYtr+pqTJDrSIUbAgg8ZrBPFc9u+/Kifh8k
+         STZ+qOgTAIeKQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Maciej W. Rozycki" <macro@orcam.me.uk>,
@@ -38,12 +38,12 @@ Cc:     "Maciej W. Rozycki" <macro@orcam.me.uk>,
         Sasha Levin <sashal@kernel.org>, bhelgaas@google.com,
         mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
         x86@kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH MANUALSEL 5.4 4/4] x86/PCI: Add PIRQ routing table range checks
-Date:   Sun,  5 Jun 2022 09:55:00 -0400
-Message-Id: <20220605135503.61690-4-sashal@kernel.org>
+Subject: [PATCH MANUALSEL 4.14 4/4] x86/PCI: Add PIRQ routing table range checks
+Date:   Sun,  5 Jun 2022 09:55:29 -0400
+Message-Id: <20220605135533.61835-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220605135503.61690-1-sashal@kernel.org>
-References: <20220605135503.61690-1-sashal@kernel.org>
+In-Reply-To: <20220605135533.61835-1-sashal@kernel.org>
+References: <20220605135533.61835-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -70,7 +70,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 12 insertions(+), 5 deletions(-)
 
 diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index d3a73f9335e1..2bf6d2c4874b 100644
+index c77f565a04f2..36193947a78f 100644
 --- a/arch/x86/pci/irq.c
 +++ b/arch/x86/pci/irq.c
 @@ -62,7 +62,8 @@ void (*pcibios_disable_irq)(struct pci_dev *dev) = pirq_disable_irq;
