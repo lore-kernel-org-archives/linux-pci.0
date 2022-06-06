@@ -2,21 +2,21 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAEA5CCA473
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F8EC433EF
 	for <linux-pci@archiver.kernel.org>; Mon,  6 Jun 2022 11:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235940AbiFFL5d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S235993AbiFFL5d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 6 Jun 2022 07:57:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56228 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235922AbiFFL5X (ORCPT
+        with ESMTP id S235920AbiFFL5X (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jun 2022 07:57:23 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7326FD9;
-        Mon,  6 Jun 2022 04:57:09 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4LGsQG5qs2zjXHJ;
-        Mon,  6 Jun 2022 19:56:06 +0800 (CST)
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EADAF196;
+        Mon,  6 Jun 2022 04:57:10 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4LGsPJ6mtJz1K9DZ;
+        Mon,  6 Jun 2022 19:55:16 +0800 (CST)
 Received: from localhost.localdomain (10.67.164.66) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -36,9 +36,9 @@ CC:     <helgaas@kernel.org>, <lorenzo.pieralisi@arm.com>,
         <iommu@lists.linux-foundation.org>, <prime.zeng@huawei.com>,
         <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
         <linuxarm@huawei.com>, <yangyicong@hisilicon.com>
-Subject: [PATCH v9 5/8] perf tool: Add support for HiSilicon PCIe Tune and Trace device driver
-Date:   Mon, 6 Jun 2022 19:55:52 +0800
-Message-ID: <20220606115555.41103-6-yangyicong@hisilicon.com>
+Subject: [PATCH v9 7/8] docs: trace: Add HiSilicon PTT device driver documentation
+Date:   Mon, 6 Jun 2022 19:55:54 +0800
+Message-ID: <20220606115555.41103-8-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20220606115555.41103-1-yangyicong@hisilicon.com>
 References: <20220606115555.41103-1-yangyicong@hisilicon.com>
@@ -53,434 +53,338 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Qi Liu <liuqi115@huawei.com>
+Document the introduction and usage of HiSilicon PTT device driver.
 
-HiSilicon PCIe tune and trace device (PTT) could dynamically tune
-the PCIe link's events, and trace the TLP headers).
-
-This patch add support for PTT device in perf tool, so users could
-use 'perf record' to get TLP headers trace data.
-
-Signed-off-by: Qi Liu <liuqi115@huawei.com>
 Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- tools/perf/arch/arm/util/auxtrace.c   |  63 +++++++++
- tools/perf/arch/arm/util/pmu.c        |   3 +
- tools/perf/arch/arm64/util/Build      |   2 +-
- tools/perf/arch/arm64/util/hisi-ptt.c | 187 ++++++++++++++++++++++++++
- tools/perf/util/auxtrace.c            |   1 +
- tools/perf/util/auxtrace.h            |   1 +
- tools/perf/util/hisi-ptt.h            |  19 +++
- 7 files changed, 275 insertions(+), 1 deletion(-)
- create mode 100644 tools/perf/arch/arm64/util/hisi-ptt.c
- create mode 100644 tools/perf/util/hisi-ptt.h
+ Documentation/trace/hisi-ptt.rst | 307 +++++++++++++++++++++++++++++++
+ Documentation/trace/index.rst    |   1 +
+ 2 files changed, 308 insertions(+)
+ create mode 100644 Documentation/trace/hisi-ptt.rst
 
-diff --git a/tools/perf/arch/arm/util/auxtrace.c b/tools/perf/arch/arm/util/auxtrace.c
-index 384c7cfda0fd..129ed72391a4 100644
---- a/tools/perf/arch/arm/util/auxtrace.c
-+++ b/tools/perf/arch/arm/util/auxtrace.c
-@@ -4,9 +4,11 @@
-  * Author: Mathieu Poirier <mathieu.poirier@linaro.org>
-  */
- 
-+#include <dirent.h>
- #include <stdbool.h>
- #include <linux/coresight-pmu.h>
- #include <linux/zalloc.h>
-+#include <api/fs/fs.h>
- 
- #include "../../../util/auxtrace.h"
- #include "../../../util/debug.h"
-@@ -14,6 +16,7 @@
- #include "../../../util/pmu.h"
- #include "cs-etm.h"
- #include "arm-spe.h"
-+#include "hisi-ptt.h"
- 
- static struct perf_pmu **find_all_arm_spe_pmus(int *nr_spes, int *err)
- {
-@@ -50,6 +53,52 @@ static struct perf_pmu **find_all_arm_spe_pmus(int *nr_spes, int *err)
- 	return arm_spe_pmus;
- }
- 
-+static struct perf_pmu **find_all_hisi_ptt_pmus(int *nr_ptts, int *err)
-+{
-+	const char *sysfs = sysfs__mountpoint();
-+	struct perf_pmu **hisi_ptt_pmus = NULL;
-+	struct dirent *dent;
-+	char path[PATH_MAX];
-+	DIR *dir = NULL;
-+	int idx = 0;
-+
-+	snprintf(path, PATH_MAX, "%s" EVENT_SOURCE_DEVICE_PATH, sysfs);
-+	dir = opendir(path);
-+	if (!dir) {
-+		pr_err("can't read directory '%s'\n", EVENT_SOURCE_DEVICE_PATH);
-+		*err = -EINVAL;
-+		goto out;
-+	}
-+
-+	while ((dent = readdir(dir))) {
-+		if (strstr(dent->d_name, HISI_PTT_PMU_NAME))
-+			(*nr_ptts)++;
-+	}
-+
-+	if (!(*nr_ptts))
-+		goto out;
-+
-+	hisi_ptt_pmus = zalloc(sizeof(struct perf_pmu *) * (*nr_ptts));
-+	if (!hisi_ptt_pmus) {
-+		pr_err("hisi_ptt alloc failed\n");
-+		*err = -ENOMEM;
-+		goto out;
-+	}
-+
-+	rewinddir(dir);
-+	while ((dent = readdir(dir))) {
-+		if (strstr(dent->d_name, HISI_PTT_PMU_NAME) && idx < (*nr_ptts)) {
-+			hisi_ptt_pmus[idx] = perf_pmu__find(dent->d_name);
-+			if (hisi_ptt_pmus[idx])
-+				idx++;
-+		}
-+	}
-+
-+out:
-+	closedir(dir);
-+	return hisi_ptt_pmus;
-+}
-+
- static struct perf_pmu *find_pmu_for_event(struct perf_pmu **pmus,
- 					   int pmu_nr, struct evsel *evsel)
- {
-@@ -71,17 +120,21 @@ struct auxtrace_record
- {
- 	struct perf_pmu	*cs_etm_pmu = NULL;
- 	struct perf_pmu **arm_spe_pmus = NULL;
-+	struct perf_pmu **hisi_ptt_pmus = NULL;
- 	struct evsel *evsel;
- 	struct perf_pmu *found_etm = NULL;
- 	struct perf_pmu *found_spe = NULL;
-+	struct perf_pmu *found_ptt = NULL;
- 	int auxtrace_event_cnt = 0;
- 	int nr_spes = 0;
-+	int nr_ptts = 0;
- 
- 	if (!evlist)
- 		return NULL;
- 
- 	cs_etm_pmu = perf_pmu__find(CORESIGHT_ETM_PMU_NAME);
- 	arm_spe_pmus = find_all_arm_spe_pmus(&nr_spes, err);
-+	hisi_ptt_pmus = find_all_hisi_ptt_pmus(&nr_ptts, err);
- 
- 	evlist__for_each_entry(evlist, evsel) {
- 		if (cs_etm_pmu && !found_etm)
-@@ -89,9 +142,13 @@ struct auxtrace_record
- 
- 		if (arm_spe_pmus && !found_spe)
- 			found_spe = find_pmu_for_event(arm_spe_pmus, nr_spes, evsel);
-+
-+		if (hisi_ptt_pmus && !found_ptt)
-+			found_ptt = find_pmu_for_event(hisi_ptt_pmus, nr_ptts, evsel);
- 	}
- 
- 	free(arm_spe_pmus);
-+	free(hisi_ptt_pmus);
- 
- 	if (found_etm)
- 		auxtrace_event_cnt++;
-@@ -99,6 +156,9 @@ struct auxtrace_record
- 	if (found_spe)
- 		auxtrace_event_cnt++;
- 
-+	if (found_ptt)
-+		auxtrace_event_cnt++;
-+
- 	if (auxtrace_event_cnt > 1) {
- 		pr_err("Concurrent AUX trace operation not currently supported\n");
- 		*err = -EOPNOTSUPP;
-@@ -111,6 +171,9 @@ struct auxtrace_record
- #if defined(__aarch64__)
- 	if (found_spe)
- 		return arm_spe_recording_init(err, found_spe);
-+
-+	if (found_ptt)
-+		return hisi_ptt_recording_init(err, found_ptt);
- #endif
- 
- 	/*
-diff --git a/tools/perf/arch/arm/util/pmu.c b/tools/perf/arch/arm/util/pmu.c
-index b8b23b9dc598..887c8addc491 100644
---- a/tools/perf/arch/arm/util/pmu.c
-+++ b/tools/perf/arch/arm/util/pmu.c
-@@ -10,6 +10,7 @@
- #include <linux/string.h>
- 
- #include "arm-spe.h"
-+#include "hisi-ptt.h"
- #include "../../../util/pmu.h"
- 
- struct perf_event_attr
-@@ -22,6 +23,8 @@ struct perf_event_attr
- #if defined(__aarch64__)
- 	} else if (strstarts(pmu->name, ARM_SPE_PMU_NAME)) {
- 		return arm_spe_pmu_default_config(pmu);
-+	} else if (strstarts(pmu->name, HISI_PTT_PMU_NAME)) {
-+		pmu->selectable = true;
- #endif
- 	}
- 
-diff --git a/tools/perf/arch/arm64/util/Build b/tools/perf/arch/arm64/util/Build
-index 9fcb4e68add9..337aa9bdf905 100644
---- a/tools/perf/arch/arm64/util/Build
-+++ b/tools/perf/arch/arm64/util/Build
-@@ -11,4 +11,4 @@ perf-$(CONFIG_LIBDW_DWARF_UNWIND) += unwind-libdw.o
- perf-$(CONFIG_AUXTRACE) += ../../arm/util/pmu.o \
- 			      ../../arm/util/auxtrace.o \
- 			      ../../arm/util/cs-etm.o \
--			      arm-spe.o mem-events.o
-+			      arm-spe.o mem-events.o hisi-ptt.o
-diff --git a/tools/perf/arch/arm64/util/hisi-ptt.c b/tools/perf/arch/arm64/util/hisi-ptt.c
+diff --git a/Documentation/trace/hisi-ptt.rst b/Documentation/trace/hisi-ptt.rst
 new file mode 100644
-index 000000000000..5340b88b66fa
+index 000000000000..0a3112244d40
 --- /dev/null
-+++ b/tools/perf/arch/arm64/util/hisi-ptt.c
-@@ -0,0 +1,187 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * HiSilicon PCIe Trace and Tuning (PTT) support
-+ * Copyright (c) 2022 HiSilicon Technologies Co., Ltd.
-+ */
++++ b/Documentation/trace/hisi-ptt.rst
+@@ -0,0 +1,307 @@
++.. SPDX-License-Identifier: GPL-2.0
 +
-+#include <linux/kernel.h>
-+#include <linux/types.h>
-+#include <linux/bitops.h>
-+#include <linux/log2.h>
-+#include <linux/zalloc.h>
-+#include <time.h>
++======================================
++HiSilicon PCIe Tune and Trace device
++======================================
 +
-+#include <internal/lib.h> // page_size
-+#include "../../../util/auxtrace.h"
-+#include "../../../util/cpumap.h"
-+#include "../../../util/debug.h"
-+#include "../../../util/event.h"
-+#include "../../../util/evlist.h"
-+#include "../../../util/evsel.h"
-+#include "../../../util/hisi-ptt.h"
-+#include "../../../util/pmu.h"
-+#include "../../../util/record.h"
-+#include "../../../util/session.h"
-+#include "../../../util/tsc.h"
++Introduction
++============
 +
-+#define KiB(x) ((x) * 1024)
-+#define MiB(x) ((x) * 1024 * 1024)
++HiSilicon PCIe tune and trace device (PTT) is a PCIe Root Complex
++integrated Endpoint (RCiEP) device, providing the capability
++to dynamically monitor and tune the PCIe link's events (tune),
++and trace the TLP headers (trace). The two functions are independent,
++but is recommended to use them together to analyze and enhance the
++PCIe link's performance.
 +
-+struct hisi_ptt_recording {
-+	struct auxtrace_record	itr;
-+	struct perf_pmu *hisi_ptt_pmu;
-+	struct evlist *evlist;
-+};
++On Kunpeng 930 SoC, the PCIe Root Complex is composed of several
++PCIe cores. Each PCIe core includes several Root Ports and a PTT
++RCiEP, like below. The PTT device is capable of tuning and
++tracing the links of the PCIe core.
++::
 +
-+static size_t
-+hisi_ptt_info_priv_size(struct auxtrace_record *itr __maybe_unused,
-+			struct evlist *evlist __maybe_unused)
-+{
-+	return HISI_PTT_AUXTRACE_PRIV_SIZE;
-+}
++          +--------------Core 0-------+
++          |       |       [   PTT   ] |
++          |       |       [Root Port]---[Endpoint]
++          |       |       [Root Port]---[Endpoint]
++          |       |       [Root Port]---[Endpoint]
++    Root Complex  |------Core 1-------+
++          |       |       [   PTT   ] |
++          |       |       [Root Port]---[ Switch ]---[Endpoint]
++          |       |       [Root Port]---[Endpoint] `-[Endpoint]
++          |       |       [Root Port]---[Endpoint]
++          +---------------------------+
 +
-+static int hisi_ptt_info_fill(struct auxtrace_record *itr,
-+			      struct perf_session *session,
-+			      struct perf_record_auxtrace_info *auxtrace_info,
-+			      size_t priv_size)
-+{
-+	struct hisi_ptt_recording *pttr =
-+			container_of(itr, struct hisi_ptt_recording, itr);
-+	struct perf_pmu *hisi_ptt_pmu = pttr->hisi_ptt_pmu;
++The PTT device driver registers one PMU device for each PTT device.
++The name of each PTT device is composed of 'hisi_ptt' prefix with
++the id of the SICL and the Core where it locates. The Kunpeng 930
++SoC encapsulates multiple CPU dies (SCCL, Super CPU Cluster) and
++IO dies (SICL, Super I/O Cluster), where there's one PCIe Root
++Complex for each SICL.
++::
 +
-+	if (priv_size != HISI_PTT_AUXTRACE_PRIV_SIZE)
-+		return -EINVAL;
++    /sys/devices/hisi_ptt<sicl_id>_<core_id>
 +
-+	if (!session->evlist->core.nr_mmaps)
-+		return -EINVAL;
++Tune
++====
 +
-+	auxtrace_info->type = PERF_AUXTRACE_HISI_PTT;
-+	auxtrace_info->priv[0] = hisi_ptt_pmu->type;
++PTT tune is designed for monitoring and adjusting PCIe link parameters (events).
++Currently we support events in 4 classes. The scope of the events
++covers the PCIe core to which the PTT device belongs.
 +
-+	return 0;
-+}
++Each event is presented as a file under $(PTT PMU dir)/tune, and
++a simple open/read/write/close cycle will be used to tune the event.
++::
 +
-+static int hisi_ptt_set_auxtrace_mmap_page(struct record_opts *opts)
-+{
-+	bool privileged = perf_event_paranoid_check(-1);
++    $ cd /sys/devices/hisi_ptt<sicl_id>_<core_id>/tune
++    $ ls
++    qos_tx_cpl    qos_tx_np    qos_tx_p
++    tx_path_rx_req_alloc_buf_level
++    tx_path_tx_req_alloc_buf_level
++    $ cat qos_tx_dp
++    1
++    $ echo 2 > qos_tx_dp
++    $ cat qos_tx_dp
++    2
 +
-+	if (!opts->full_auxtrace)
-+		return 0;
++Current value (numerical value) of the event can be simply read
++from the file, and the desired value written to the file to tune.
 +
-+	if (opts->full_auxtrace && !opts->auxtrace_mmap_pages) {
-+		if (privileged) {
-+			opts->auxtrace_mmap_pages = MiB(16) / page_size;
-+		} else {
-+			opts->auxtrace_mmap_pages = KiB(128) / page_size;
-+			if (opts->mmap_pages == UINT_MAX)
-+				opts->mmap_pages = KiB(256) / page_size;
-+		}
-+	}
++1. Tx path QoS control
++------------------------
 +
-+	/* Validate auxtrace_mmap_pages */
-+	if (opts->auxtrace_mmap_pages) {
-+		size_t sz = opts->auxtrace_mmap_pages * (size_t)page_size;
-+		size_t min_sz = KiB(8);
++The following files are provided to tune the QoS of the tx path of
++the PCIe core.
 +
-+		if (sz < min_sz || !is_power_of_2(sz)) {
-+			pr_err("Invalid mmap size for HISI PTT: must be at least %zuKiB and a power of 2\n",
-+			       min_sz / 1024);
-+			return -EINVAL;
-+		}
-+	}
++- qos_tx_cpl: weight of Tx completion TLPs
++- qos_tx_np: weight of Tx non-posted TLPs
++- qos_tx_p: weight of Tx posted TLPs
 +
-+	return 0;
-+}
++The weight influences the proportion of certain packets on the PCIe link.
++For example, for the storage scenario, increase the proportion
++of the completion packets on the link to enhance the performance as
++more completions are consumed.
 +
-+static int hisi_ptt_recording_options(struct auxtrace_record *itr,
-+				      struct evlist *evlist,
-+				      struct record_opts *opts)
-+{
-+	struct hisi_ptt_recording *pttr =
-+			container_of(itr, struct hisi_ptt_recording, itr);
-+	struct perf_pmu *hisi_ptt_pmu = pttr->hisi_ptt_pmu;
-+	struct evsel *evsel, *hisi_ptt_evsel = NULL;
-+	struct evsel *tracking_evsel;
-+	int err;
++The available tune data of these events is [0, 1, 2].
++Writing a negative value will return an error, and out of range
++values will be converted to 2. Note that the event value just
++indicates a probable level, but is not precise.
 +
-+	pttr->evlist = evlist;
-+	evlist__for_each_entry(evlist, evsel) {
-+		if (evsel->core.attr.type == hisi_ptt_pmu->type) {
-+			if (hisi_ptt_evsel) {
-+				pr_err("There may be only one " HISI_PTT_PMU_NAME "x event\n");
-+				return -EINVAL;
-+			}
-+			evsel->core.attr.freq = 0;
-+			evsel->core.attr.sample_period = 1;
-+			hisi_ptt_evsel = evsel;
-+			opts->full_auxtrace = true;
-+		}
-+	}
++2. Tx path buffer control
++-------------------------
 +
-+	err = hisi_ptt_set_auxtrace_mmap_page(opts);
-+	if (err)
-+		return err;
-+	/*
-+	 * To obtain the auxtrace buffer file descriptor, the auxtrace event
-+	 * must come first.
-+	 */
-+	evlist__to_front(evlist, hisi_ptt_evsel);
-+	evsel__set_sample_bit(hisi_ptt_evsel, TIME);
++Following files are provided to tune the buffer of tx path of the PCIe core.
 +
-+	/* Add dummy event to keep tracking */
-+	err = parse_events(evlist, "dummy:u", NULL);
-+	if (err)
-+		return err;
++- tx_path_rx_req_alloc_buf_level: watermark of Rx requested
++- tx_path_tx_req_alloc_buf_level: watermark of Tx requested
 +
-+	tracking_evsel = evlist__last(evlist);
-+	evlist__set_tracking_event(evlist, tracking_evsel);
++These events influence the watermark of the buffer allocated for each
++type. Rx means the inbound while Tx means outbound. The packets will
++be stored in the buffer first and then transmitted either when the
++watermark reached or when timed out. For a busy direction, you should
++increase the related buffer watermark to avoid frequently posting and
++thus enhance the performance. In most cases just keep the default value.
 +
-+	tracking_evsel->core.attr.freq = 0;
-+	tracking_evsel->core.attr.sample_period = 1;
-+	evsel__set_sample_bit(tracking_evsel, TIME);
++The available tune data of above events is [0, 1, 2].
++Writing a negative value will return an error, and out of range
++values will be converted to 2. Note that the event value just
++indicates a probable level, but is not precise.
 +
-+	return 0;
-+}
++Trace
++=====
 +
-+static u64 hisi_ptt_reference(struct auxtrace_record *itr __maybe_unused)
-+{
-+	return rdtsc();
-+}
++PTT trace is designed for dumping the TLP headers to the memory, which
++can be used to analyze the transactions and usage condition of the PCIe
++Link. You can choose to filter the traced headers by either requester ID,
++or those downstream of a set of Root Ports on the same core of the PTT
++device. It's also supported to trace the headers of certain type and of
++certain direction.
 +
-+static void hisi_ptt_recording_free(struct auxtrace_record *itr)
-+{
-+	struct hisi_ptt_recording *pttr =
-+			container_of(itr, struct hisi_ptt_recording, itr);
++You can use the perf command `perf record` to set the parameters, start
++trace and get the data. It's also supported to decode the trace
++data with `perf report`. The control parameters for trace is inputted
++as event code for each events, which will be further illustrated later.
++An example usage is like
++::
 +
-+	free(pttr);
-+}
++    $ perf record -e hisi_ptt0_2/filter=0x80001,type=1,direction=1,
++      format=1/ -- sleep 5
 +
-+struct auxtrace_record *hisi_ptt_recording_init(int *err,
-+						struct perf_pmu *hisi_ptt_pmu)
-+{
-+	struct hisi_ptt_recording *pttr;
++This will trace the TLP headers downstream root port 0000:00:10.1 (event
++code for event 'filter' is 0x80001) with type of posted TLP requests,
++direction of inbound and traced data format of 8DW.
 +
-+	if (!hisi_ptt_pmu) {
-+		*err = -ENODEV;
-+		return NULL;
-+	}
++1. filter
++---------
 +
-+	pttr = zalloc(sizeof(*pttr));
-+	if (!pttr) {
-+		*err = -ENOMEM;
-+		return NULL;
-+	}
++The TLP headers to trace can be filtered by the Root Ports or the requester
++ID of the endpoints, which are located on the same core of the PTT device.
++You can set the filter by specifying the `filter` parameter which is required
++to start the trace. The parameter value is 20 bit. The supported filters and
++related values are outputted through `available_root_port_filters` and
++`available_requester_filters` sysfs attributes for Root Ports and Requesters
++respectively.
++::
 +
-+	pttr->hisi_ptt_pmu = hisi_ptt_pmu;
-+	pttr->itr.pmu = hisi_ptt_pmu;
-+	pttr->itr.recording_options = hisi_ptt_recording_options;
-+	pttr->itr.info_priv_size = hisi_ptt_info_priv_size;
-+	pttr->itr.info_fill = hisi_ptt_info_fill;
-+	pttr->itr.free = hisi_ptt_recording_free;
-+	pttr->itr.reference = hisi_ptt_reference;
-+	pttr->itr.read_finish = auxtrace_record__read_finish;
-+	pttr->itr.alignment = 0;
++    $ cat available_root_port_filters
++    0000:00:10.0	0x80001
++    0000:00:11.0	0x80004
++    $ cat available_requester_filters
++    0000:01:00.0	0x00100
++    0000:01:00.1	0x00101
 +
-+	*err = 0;
-+	return &pttr->itr;
-+}
-diff --git a/tools/perf/util/auxtrace.c b/tools/perf/util/auxtrace.c
-index 511dd3caa1bc..c5ef322a30b8 100644
---- a/tools/perf/util/auxtrace.c
-+++ b/tools/perf/util/auxtrace.c
-@@ -1304,6 +1304,7 @@ int perf_event__process_auxtrace_info(struct perf_session *session,
- 	case PERF_AUXTRACE_S390_CPUMSF:
- 		err = s390_cpumsf_process_auxtrace_info(event, session);
- 		break;
-+	case PERF_AUXTRACE_HISI_PTT:
- 	case PERF_AUXTRACE_UNKNOWN:
- 	default:
- 		return -EINVAL;
-diff --git a/tools/perf/util/auxtrace.h b/tools/perf/util/auxtrace.h
-index cd0d25c2751c..71046ef2b750 100644
---- a/tools/perf/util/auxtrace.h
-+++ b/tools/perf/util/auxtrace.h
-@@ -48,6 +48,7 @@ enum auxtrace_type {
- 	PERF_AUXTRACE_CS_ETM,
- 	PERF_AUXTRACE_ARM_SPE,
- 	PERF_AUXTRACE_S390_CPUMSF,
-+	PERF_AUXTRACE_HISI_PTT,
- };
- 
- enum itrace_period_type {
-diff --git a/tools/perf/util/hisi-ptt.h b/tools/perf/util/hisi-ptt.h
-new file mode 100644
-index 000000000000..2db9b4056214
---- /dev/null
-+++ b/tools/perf/util/hisi-ptt.h
-@@ -0,0 +1,19 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * HiSilicon PCIe Trace and Tuning (PTT) support
-+ * Copyright (c) 2022 HiSilicon Technologies Co., Ltd.
-+ */
++Note that multiple Root Ports can be specified at one time, but only
++one Endpoint function can be specified in one trace. Specifying both
++Root Port and function at the same time is not supported.
 +
-+#ifndef INCLUDE__PERF_HISI_PTT_H__
-+#define INCLUDE__PERF_HISI_PTT_H__
++If no filter is available, reading the related filter sysfs attribute
++will get an empty string.
++::
 +
-+#define HISI_PTT_PMU_NAME		"hisi_ptt"
-+#define HISI_PTT_AUXTRACE_PRIV_SIZE	sizeof(u64)
++    $ cat available_root_port_filters
 +
-+struct auxtrace_record *hisi_ptt_recording_init(int *err,
-+						struct perf_pmu *hisi_ptt_pmu);
++    $ cat available_requester_filters
 +
-+int hisi_ptt_process_auxtrace_info(union perf_event *event,
-+				   struct perf_session *session);
++Currently the available filters are detected in driver's probe. If the supported
++devices are removed/added after probe, you may need to reload the driver to update
++the available filters.
 +
-+#endif
++2. type
++-------
++
++You can trace the TLP headers of certain types by specifying the `type`
++parameter, which is required to start the trace. The parameter value is
++8 bit. Current supported types and related values are shown below:
++
++- 8'b00000001: posted requests (P)
++- 8'b00000010: non-posted requests (NP)
++- 8'b00000100: completions (CPL)
++
++You can specify multiple types when tracing inbound TLP headers, but can only
++specify one when tracing outbound TLP headers.
++
++3. direction
++------------
++
++You can trace the TLP headers from certain direction, which is relative
++to the Root Port or the PCIe core, by specifying the `direction` parameter.
++This is optional and the default parameter is inbound. The parameter value
++is 4 bit. When the desired format is 4DW, directions and related values
++supported are shown below:
++
++- 4'b0000: inbound TLPs (P, NP, CPL)
++- 4'b0001: outbound TLPs (P, NP, CPL)
++- 4'b0010: outbound TLPs (P, NP, CPL) and inbound TLPs (P, NP, CPL B)
++- 4'b0011: outbound TLPs (P, NP, CPL) and inbound TLPs (CPL A)
++
++When the desired format is 8DW, directions and related values supported are
++shown below:
++
++- 4'b0000: reserved
++- 4'b0001: outbound TLPs (P, NP, CPL)
++- 4'b0010: inbound TLPs (P, NP, CPL B)
++- 4'b0011: inbound TLPs (CPL A)
++
++Inbound completions are classified into two types:
++
++- completion A (CPL A): completion of CHI/DMA/Native non-posted requests, except for CPL B
++- completion B (CPL B): completion of DMA remote2local and P2P non-posted requests
++
++4. format
++--------------
++
++You can change the format of the traced TLP headers by specifying the
++`format` parameter. The default format is 4DW. The parameter value is 4 bit.
++Current supported formats and related values are shown below:
++
++- 4'b0000: 4DW length per TLP header
++- 4'b0001: 8DW length per TLP header
++
++The traced TLP header format is different from the PCIe standard.
++
++When using the 8DW data format, the entire TLP header is logged
++(Header DW0-3 shown below). For example, the TLP header for Memory
++Reads with 64-bit addresses is shown in PCIe r5.0, Figure 2-17;
++the header for Configuration Requests is shown in Figure 2.20, etc.
++
++In addition, 8DW trace buffer entries contain a timestamp and
++possibly a prefix for a PASID TLP prefix (see Figure 6-20, PCIe r5.0).
++Otherwise this field will be all 0.
++
++The bit[31:11] of DW0 is always 0x1fffff, which can be
++used to distinguish the data format. 8DW format is like
++::
++
++    bits [                 31:11                 ][       10:0       ]
++         |---------------------------------------|-------------------|
++     DW0 [                0x1fffff               ][ Reserved (0x7ff) ]
++     DW1 [                       Prefix                              ]
++     DW2 [                     Header DW0                            ]
++     DW3 [                     Header DW1                            ]
++     DW4 [                     Header DW2                            ]
++     DW5 [                     Header DW3                            ]
++     DW6 [                   Reserved (0x0)                          ]
++     DW7 [                        Time                               ]
++
++When using the 4DW data format, DW0 of the trace buffer entry
++contains selected fields of DW0 of the TLP, together with a
++timestamp.  DW1-DW3 of the trace buffer entry contain DW1-DW3
++directly from the TLP header.
++
++4DW format is like
++::
++
++    bits [31:30] [ 29:25 ][24][23][22][21][    20:11   ][    10:0    ]
++         |-----|---------|---|---|---|---|-------------|-------------|
++     DW0 [ Fmt ][  Type  ][T9][T8][TH][SO][   Length   ][    Time    ]
++     DW1 [                     Header DW1                            ]
++     DW2 [                     Header DW2                            ]
++     DW3 [                     Header DW3                            ]
++
++5. memory management
++--------------------
++
++The traced TLP headers will be written to the memory allocated
++by the driver. The hardware accepts 4 DMA address with same size,
++and writes the buffer sequentially like below. If DMA addr 3 is
++finished and the trace is still on, it will return to addr 0.
++::
++
++    +->[DMA addr 0]->[DMA addr 1]->[DMA addr 2]->[DMA addr 3]-+
++    +---------------------------------------------------------+
++
++Driver will allocate each DMA buffer of 4MiB. The finished buffer
++will be copied to the perf AUX buffer allocated by the perf core.
++Once the AUX buffer is full while the trace is still on, driver
++will commit the AUX buffer first and then apply for a new one with
++the same size. The size of AUX buffer is default to 16MiB. User can
++adjust the size by specifying the `-m` parameter of the perf command.
++
++6. decoding
++-----------
++
++You can decode the traced data with `perf report -D` command (currently
++only support to dump the raw trace data). The traced data will be decoded
++according to the format described previously (take 8DW as an example):
++::
++
++    [...perf headers and other information]
++    . ... HISI PTT data: size 4194304 bytes
++    .  00000000: 00 00 00 00                                 Prefix
++    .  00000004: 01 00 00 60                                 Header DW0
++    .  00000008: 0f 1e 00 01                                 Header DW1
++    .  0000000c: 04 00 00 00                                 Header DW2
++    .  00000010: 40 00 81 02                                 Header DW3
++    .  00000014: 33 c0 04 00                                 Time
++    .  00000020: 00 00 00 00                                 Prefix
++    .  00000024: 01 00 00 60                                 Header DW0
++    .  00000028: 0f 1e 00 01                                 Header DW1
++    .  0000002c: 04 00 00 00                                 Header DW2
++    .  00000030: 40 00 81 02                                 Header DW3
++    .  00000034: 02 00 00 00                                 Time
++    .  00000040: 00 00 00 00                                 Prefix
++    .  00000044: 01 00 00 60                                 Header DW0
++    .  00000048: 0f 1e 00 01                                 Header DW1
++    .  0000004c: 04 00 00 00                                 Header DW2
++    .  00000050: 40 00 81 02                                 Header DW3
++    [...]
+diff --git a/Documentation/trace/index.rst b/Documentation/trace/index.rst
+index f9b7bcb5a630..dd423113b7b1 100644
+--- a/Documentation/trace/index.rst
++++ b/Documentation/trace/index.rst
+@@ -32,3 +32,4 @@ Linux Tracing Technologies
+    sys-t
+    coresight/index
+    user_events
++   hisi-ptt
 -- 
 2.24.0
 
