@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE9BC433EF
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Jun 2022 11:57:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8415BC43334
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Jun 2022 11:57:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235913AbiFFL5Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Jun 2022 07:57:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56584 "EHLO
+        id S235980AbiFFL51 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Jun 2022 07:57:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235953AbiFFL5V (ORCPT
+        with ESMTP id S235957AbiFFL5V (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Jun 2022 07:57:21 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36B6DC5;
-        Mon,  6 Jun 2022 04:57:08 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4LGsMf4hRtzRhh3;
-        Mon,  6 Jun 2022 19:53:50 +0800 (CST)
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 961AD10B;
+        Mon,  6 Jun 2022 04:57:09 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.57])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4LGsR26frKzpVnw;
+        Mon,  6 Jun 2022 19:56:46 +0800 (CST)
 Received: from localhost.localdomain (10.67.164.66) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Mon, 6 Jun 2022 19:57:01 +0800
+ 15.1.2375.24; Mon, 6 Jun 2022 19:57:03 +0800
 From:   Yicong Yang <yangyicong@hisilicon.com>
 To:     <gregkh@linuxfoundation.org>, <alexander.shishkin@linux.intel.com>,
         <leo.yan@linaro.org>, <james.clark@arm.com>, <will@kernel.org>,
@@ -36,9 +36,9 @@ CC:     <helgaas@kernel.org>, <lorenzo.pieralisi@arm.com>,
         <iommu@lists.linux-foundation.org>, <prime.zeng@huawei.com>,
         <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
         <linuxarm@huawei.com>, <yangyicong@hisilicon.com>
-Subject: [PATCH v9 1/8] iommu/arm-smmu-v3: Make default domain type of HiSilicon PTT device to identity
-Date:   Mon, 6 Jun 2022 19:55:48 +0800
-Message-ID: <20220606115555.41103-2-yangyicong@hisilicon.com>
+Subject: [PATCH v9 8/8] MAINTAINERS: Add maintainer for HiSilicon PTT driver
+Date:   Mon, 6 Jun 2022 19:55:55 +0800
+Message-ID: <20220606115555.41103-9-yangyicong@hisilicon.com>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20220606115555.41103-1-yangyicong@hisilicon.com>
 References: <20220606115555.41103-1-yangyicong@hisilicon.com>
@@ -53,56 +53,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The DMA operations of HiSilicon PTT device can only work properly with
-identical mappings. So add a quirk for the device to force the domain
-as passthrough.
+Add maintainer for driver and documentation of HiSilicon PTT device.
 
-Acked-by: Will Deacon <will@kernel.org>
 Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-index 88817a3376ef..e119ff8396c9 100644
---- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-+++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-@@ -2839,6 +2839,26 @@ static int arm_smmu_dev_disable_feature(struct device *dev,
- 	}
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a6d3bd9d2a8d..5893fde0cc82 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8936,6 +8936,13 @@ F:	Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+ F:	Documentation/admin-guide/perf/hisi-pmu.rst
+ F:	drivers/perf/hisilicon
  
-+/*
-+ * HiSilicon PCIe tune and trace device can be used to trace TLP headers on the
-+ * PCIe link and save the data to memory by DMA. The hardware is restricted to
-+ * use identity mapping only.
-+ */
-+#define IS_HISI_PTT_DEVICE(pdev)	((pdev)->vendor == PCI_VENDOR_ID_HUAWEI && \
-+					 (pdev)->device == 0xa12e)
++HISILICON PTT DRIVER
++M:	Yicong Yang <yangyicong@hisilicon.com>
++L:	linux-kernel@vger.kernel.org
++S:	Maintained
++F:	Documentation/trace/hisi-ptt.rst
++F:	drivers/hwtracing/ptt/
 +
-+static int arm_smmu_def_domain_type(struct device *dev)
-+{
-+	if (dev_is_pci(dev)) {
-+		struct pci_dev *pdev = to_pci_dev(dev);
-+
-+		if (IS_HISI_PTT_DEVICE(pdev))
-+			return IOMMU_DOMAIN_IDENTITY;
-+	}
-+
-+	return 0;
-+}
-+
- static struct iommu_ops arm_smmu_ops = {
- 	.capable		= arm_smmu_capable,
- 	.domain_alloc		= arm_smmu_domain_alloc,
-@@ -2856,6 +2876,7 @@ static struct iommu_ops arm_smmu_ops = {
- 	.sva_unbind		= arm_smmu_sva_unbind,
- 	.sva_get_pasid		= arm_smmu_sva_get_pasid,
- 	.page_response		= arm_smmu_page_response,
-+	.def_domain_type	= arm_smmu_def_domain_type,
- 	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
- 	.owner			= THIS_MODULE,
- 	.default_domain_ops = &(const struct iommu_domain_ops) {
+ HISILICON QM AND ZIP Controller DRIVER
+ M:	Zhou Wang <wangzhou1@hisilicon.com>
+ L:	linux-crypto@vger.kernel.org
 -- 
 2.24.0
 
