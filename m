@@ -2,174 +2,186 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D0B6C43334
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jun 2022 13:12:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29B36CCA483
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jun 2022 18:22:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241093AbiFGNMh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Jun 2022 09:12:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38342 "EHLO
+        id S1352899AbiFGSVu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Jun 2022 14:21:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244521AbiFGNMe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2022 09:12:34 -0400
-Received: from mail-il1-x132.google.com (mail-il1-x132.google.com [IPv6:2607:f8b0:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7F211EC63
-        for <linux-pci@vger.kernel.org>; Tue,  7 Jun 2022 06:12:31 -0700 (PDT)
-Received: by mail-il1-x132.google.com with SMTP id y16so14167539ili.13
-        for <linux-pci@vger.kernel.org>; Tue, 07 Jun 2022 06:12:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sartura-hr.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=mcxZtplXwk/Z+TT8W9hddhp2FUJFjSAJiAMtVESFwX4=;
-        b=1R9AiW1gY1VYK6kYFNaQEa0cCcVv0mg4PT8PsSFrmYE8qP50U/W8QnvoV8a3AAiuY/
-         6AE3+OpXx+GOb6NGUe8ynFndhTMVnvEd+lz2Ufhrj35oREogwN7e8iAHXyGibeX0qGQe
-         Mc3O1gPlG+6DN56TdUTVkO+LFlhq0niqSzLCQ+9IxXf3J157h8Ncm4NBLnm6M3LHv0Sw
-         IOvovO5h/4xOaWe8MHBozd6uGQENdjNERulvpkYnGKBDYA7j+M6905myRyL11P1J3v2z
-         CWFAj3Y3JgP7/y4FItqBEAw5Rd9w78cklOruPWiyG0Fz2W3oVXsI4xUJgPnD4USc75Vj
-         vG8g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=mcxZtplXwk/Z+TT8W9hddhp2FUJFjSAJiAMtVESFwX4=;
-        b=7TUyVKCd7VSYoqo9JqIe6Dwe6ROMADS5nHvLDld1RKRJqM1Zb/aXfkrNGXi5zVtn60
-         QPrIikgnJ/3E4MrrUrZ3nI855qUU9wNVSdzohqeCNl8U7gwHgUgx5L1jRqenxxNMZ6Tt
-         t8XBvUjsD8jYfZ1fYrOYhaoskNPisMpyfhi+M+plNWrVSTqzdhH+z1dgmmxOmn40PeAG
-         D4Onj8TbjM5G6DN/iV253rlc8jbC54bYIR+ZjWz6qHLYwCEV7gcBramphXjYQVih5TeX
-         pxcXtQD6ofKRau2q5boHcjiuz/aDyDF8LuITKClkxsvrYcRfd63gys6LBwE1d/8OgB9v
-         I/Ig==
-X-Gm-Message-State: AOAM533Mz5htjr4dgzvitqvDnvvXv3EacMCd7CuLjWFCDK2SBD1swHGo
-        HLxzlT2I65w0d4M8n2dtZ52nWABWTz65LQQKlc3o8Q==
-X-Google-Smtp-Source: ABdhPJw95CeU2MDQe4i7N7oPLkSanT5aQWwJEN3LpDbgGCXPYQoyGBGQkxeiSbtBzI0UNRW9Pns5C3y7Zo+8caz+foE=
-X-Received: by 2002:a05:6e02:19cc:b0:2d3:e20f:4959 with SMTP id
- r12-20020a056e0219cc00b002d3e20f4959mr17071989ill.40.1654607550608; Tue, 07
- Jun 2022 06:12:30 -0700 (PDT)
+        with ESMTP id S1352787AbiFGSRd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2022 14:17:33 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B6513CA15;
+        Tue,  7 Jun 2022 10:52:42 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B646CB82377;
+        Tue,  7 Jun 2022 17:52:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07015C36AFF;
+        Tue,  7 Jun 2022 17:52:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1654624359;
+        bh=VAG+3uL6h5kOCfu6AuzyUB7t+yIhbm19oEA/UYTLcX8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=GbCR1SehUt5fD9gqWxiNNLUc4PMWw2Ev9RA4UNoUTHur4xkfF6SfFqdXYqnPgvthU
+         cFTY15RPSus80M4c82oTgYMuHRc9wldPtiKzY5h1mCjwnX3/DSUXLvZX+Qc8fQ6FVG
+         cgCpNYCXx8g2JvvgnFg2QeFGLV5hdoljDgpJgMu/g24pyibUlwlvtGIFaQIs4IVjqt
+         YTND+lQ7gba4Sxnc5gL4mm1QiMaUc5Rbz7P6S16nVfgexupWICfOyznCSTRy4V5N/c
+         E4f1Ejiupg/+MEsUBiPgRF+294ZK0PFAZUD6eI53AMPQkN/PBXQ+gdaeQrrSmzlJzE
+         Icl4++TWDlSdA==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Cyril Brulebois <kibi@debian.org>,
+        Sasha Levin <sashal@kernel.org>, nsaenz@kernel.org,
+        jim2101024@gmail.com, f.fainelli@gmail.com, lpieralisi@kernel.org,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.18 63/68] Revert "PCI: brcmstb: Split brcm_pcie_setup() into two funcs"
+Date:   Tue,  7 Jun 2022 13:48:29 -0400
+Message-Id: <20220607174846.477972-63-sashal@kernel.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220607174846.477972-1-sashal@kernel.org>
+References: <20220607174846.477972-1-sashal@kernel.org>
 MIME-Version: 1.0
-References: <cover.1644234441.git.baruch@tkos.co.il> <20220412161259.GA7109@lpieralisi>
- <YnvCGD4RwuyPkTfK@lpieralisi>
-In-Reply-To: <YnvCGD4RwuyPkTfK@lpieralisi>
-From:   Robert Marko <robert.marko@sartura.hr>
-Date:   Tue, 7 Jun 2022 15:12:19 +0200
-Message-ID: <CA+HBbNFo9QCExiA9T4Mn4t5vvir79xF3R9F6OLZa0m5Bzpte3w@mail.gmail.com>
-Subject: Re: [PATCH v6 0/3] PCI: IPQ6018 platform support
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Baruch Siach <baruch@tkos.co.il>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Selvam Sathappan Periakaruppan <speriaka@codeaurora.org>,
-        Kathiravan T <kathirav@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "Bryan O'Donoghue" <pure.logic@nexus-software.ie>,
-        linux-pci@vger.kernel.org,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-tegra@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 11, 2022 at 4:03 PM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
->
-> On Tue, Apr 12, 2022 at 05:12:59PM +0100, Lorenzo Pieralisi wrote:
-> > On Mon, Feb 07, 2022 at 04:51:23PM +0200, Baruch Siach wrote:
-> > > This series adds support for the single PCIe lane on IPQ6018 SoCs. The code is
-> > > ported from downstream Codeaurora v5.4 kernel. The main difference from
-> > > downstream code is the split of PCIe registers configuration from .init to
-> > > .post_init, since it requires phy_power_on().
-> > >
-> > > Tested on IPQ6010 based hardware.
-> > >
-> > > Changes in v6:
-> > >
-> > >   * Drop DT patch applied to the qcom tree
-> > >
-> > >   * Normalize driver changes subject line
-> > >
-> > >   * Add a preparatory patch to rename PCIE_CAP_LINK1_VAL to PCIE_CAP_SLOT_VAL,
-> > >     and define it using PCI_EXP_SLTCAP_* macros
-> > >
-> > >   * Drop a vague comment about ASPM configuration
-> > >
-> > >   * Add a comment about the source of delay periods
-> > >
-> > > Changes in v5:
-> > >
-> > >   * Remove comments from qcom_pcie_init_2_9_0() (Bjorn Andersson)
-> > >
-> > > Changes in v4:
-> > >
-> > >   * Drop applied DT bits
-> > >
-> > >   * Add max-link-speed that was missing from the applied v2 patch
-> > >
-> > >   * Rebase the driver on v5.16-rc3
-> > >
-> > > Changes in v3:
-> > >
-> > >   * Drop applied patches
-> > >
-> > >   * Rely on generic code for speed setup
-> > >
-> > >   * Drop unused macros
-> > >
-> > >   * Formatting fixes
-> > >
-> > > Changes in v2:
-> > >
-> > >   * Add patch moving GEN3_RELATED macros to a common header
-> > >
-> > >   * Drop ATU configuration from pcie-qcom
-> > >
-> > >   * Remove local definition of common registers
-> > >
-> > >   * Use bulk clk and reset APIs
-> > >
-> > >   * Remove msi-parent from device-tree
-> > >
-> > > Baruch Siach (2):
-> > >   PCI: dwc: tegra: move GEN3_RELATED DBI register to common header
-> > >   PCI: qcom: Define slot capabilities using PCI_EXP_SLTCAP_*
-> > >
-> > > Selvam Sathappan Periakaruppan (1):
-> > >   PCI: qcom: Add IPQ60xx support
-> > >
-> > >  drivers/pci/controller/dwc/pcie-designware.h |   7 +
-> > >  drivers/pci/controller/dwc/pcie-qcom.c       | 155 ++++++++++++++++++-
-> > >  drivers/pci/controller/dwc/pcie-tegra194.c   |   6 -
-> > >  3 files changed, 160 insertions(+), 8 deletions(-)
-> >
-> > Hi Bjorn, Andy,
-> >
-> > any feedback on this series please ?
->
-> Any feedback on these patches please ?
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Finally dug the CP01, and for me, it works, so:
-Tested-by: Robert Marko <robert.marko@sartura.hr>
+[ Upstream commit f4fd559de3434c44bed1d2912bd0c75cfa42898b ]
 
-Can we finally get this merged or at least looked at.
-IPQ8074 will also benefit from this.
+This reverts commit 830aa6f29f07a4e2f1a947dfa72b3ccddb46dd21.
 
-Regards,
-Robert
->
-> Thanks,
-> Lorenzo
+This is part of a revert of the following commits:
 
+  11ed8b8624b8 ("PCI: brcmstb: Do not turn off WOL regulators on suspend")
+  93e41f3fca3d ("PCI: brcmstb: Add control of subdevice voltage regulators")
+  67211aadcb4b ("PCI: brcmstb: Add mechanism to turn on subdev regulators")
+  830aa6f29f07 ("PCI: brcmstb: Split brcm_pcie_setup() into two funcs")
 
+Cyril reported that 830aa6f29f07 ("PCI: brcmstb: Split brcm_pcie_setup()
+into two funcs"), which appeared in v5.17-rc1, broke booting on the
+Raspberry Pi Compute Module 4.  Apparently 830aa6f29f07 panics with an
+Asynchronous SError Interrupt, and after further commits here is a black
+screen on HDMI and no output on the serial console.
 
+This does not seem to affect the Raspberry Pi 4 B.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=215925
+Link: https://lore.kernel.org/r/20220511201856.808690-5-helgaas@kernel.org
+Reported-by: Cyril Brulebois <kibi@debian.org>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/controller/pcie-brcmstb.c | 65 +++++++++++----------------
+ 1 file changed, 26 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index 0e8346114a8d..e61058e13818 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -926,9 +926,16 @@ static inline int brcm_pcie_get_rc_bar2_size_and_offset(struct brcm_pcie *pcie,
+ 
+ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ {
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
+ 	u64 rc_bar2_offset, rc_bar2_size;
+ 	void __iomem *base = pcie->base;
+-	int ret, memc;
++	struct device *dev = pcie->dev;
++	struct resource_entry *entry;
++	bool ssc_good = false;
++	struct resource *res;
++	int num_out_wins = 0;
++	u16 nlw, cls, lnksta;
++	int i, ret, memc;
+ 	u32 tmp, burst, aspm_support;
+ 
+ 	/* Reset the bridge */
+@@ -1018,40 +1025,6 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
+ 	if (pcie->gen)
+ 		brcm_pcie_set_gen(pcie, pcie->gen);
+ 
+-	/* Don't advertise L0s capability if 'aspm-no-l0s' */
+-	aspm_support = PCIE_LINK_STATE_L1;
+-	if (!of_property_read_bool(pcie->np, "aspm-no-l0s"))
+-		aspm_support |= PCIE_LINK_STATE_L0S;
+-	tmp = readl(base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
+-	u32p_replace_bits(&tmp, aspm_support,
+-		PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK);
+-	writel(tmp, base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
+-
+-	/*
+-	 * For config space accesses on the RC, show the right class for
+-	 * a PCIe-PCIe bridge (the default setting is to be EP mode).
+-	 */
+-	tmp = readl(base + PCIE_RC_CFG_PRIV1_ID_VAL3);
+-	u32p_replace_bits(&tmp, 0x060400,
+-			  PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK);
+-	writel(tmp, base + PCIE_RC_CFG_PRIV1_ID_VAL3);
+-
+-	return 0;
+-}
+-
+-static int brcm_pcie_linkup(struct brcm_pcie *pcie)
+-{
+-	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
+-	struct device *dev = pcie->dev;
+-	void __iomem *base = pcie->base;
+-	struct resource_entry *entry;
+-	struct resource *res;
+-	int num_out_wins = 0;
+-	u16 nlw, cls, lnksta;
+-	bool ssc_good = false;
+-	u32 tmp;
+-	int ret, i;
+-
+ 	/* Unassert the fundamental reset */
+ 	pcie->perst_set(pcie, 0);
+ 
+@@ -1102,6 +1075,24 @@ static int brcm_pcie_linkup(struct brcm_pcie *pcie)
+ 		num_out_wins++;
+ 	}
+ 
++	/* Don't advertise L0s capability if 'aspm-no-l0s' */
++	aspm_support = PCIE_LINK_STATE_L1;
++	if (!of_property_read_bool(pcie->np, "aspm-no-l0s"))
++		aspm_support |= PCIE_LINK_STATE_L0S;
++	tmp = readl(base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
++	u32p_replace_bits(&tmp, aspm_support,
++		PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK);
++	writel(tmp, base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
++
++	/*
++	 * For config space accesses on the RC, show the right class for
++	 * a PCIe-PCIe bridge (the default setting is to be EP mode).
++	 */
++	tmp = readl(base + PCIE_RC_CFG_PRIV1_ID_VAL3);
++	u32p_replace_bits(&tmp, 0x060400,
++			  PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK);
++	writel(tmp, base + PCIE_RC_CFG_PRIV1_ID_VAL3);
++
+ 	if (pcie->ssc) {
+ 		ret = brcm_pcie_set_ssc(pcie);
+ 		if (ret == 0)
+@@ -1290,10 +1281,6 @@ static int brcm_pcie_resume(struct device *dev)
+ 	if (ret)
+ 		goto err_reset;
+ 
+-	ret = brcm_pcie_linkup(pcie);
+-	if (ret)
+-		goto err_reset;
+-
+ 	if (pcie->msi)
+ 		brcm_msi_set_regs(pcie->msi);
+ 
 -- 
-Robert Marko
-Staff Embedded Linux Engineer
-Sartura Ltd.
-Lendavska ulica 16a
-10000 Zagreb, Croatia
-Email: robert.marko@sartura.hr
-Web: www.sartura.hr
+2.35.1
+
