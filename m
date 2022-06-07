@@ -2,46 +2,47 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 887C8C433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jun 2022 18:22:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE013CCA487
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jun 2022 18:27:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348732AbiFGSWY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Jun 2022 14:22:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58058 "EHLO
+        id S1352953AbiFGSWT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Jun 2022 14:22:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352774AbiFGSRb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2022 14:17:31 -0400
+        with ESMTP id S1352754AbiFGSRa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2022 14:17:30 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 395D713C4F4;
-        Tue,  7 Jun 2022 10:52:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A45F13C1DA;
+        Tue,  7 Jun 2022 10:52:35 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id C7050B8236C;
-        Tue,  7 Jun 2022 17:52:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12342C36B00;
-        Tue,  7 Jun 2022 17:52:35 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C289DB82375;
+        Tue,  7 Jun 2022 17:52:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A74ACC34115;
+        Tue,  7 Jun 2022 17:52:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654624357;
-        bh=VTvq0DoklwJ8cuV8EuXnfHoOTTTgZ4Wt5bHyoeuOH9w=;
+        s=k20201202; t=1654624353;
+        bh=NdoOI/mdof+A4Uy4fR9Q85uef2kWgrggo63N4r2XOrk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kL0lDk0xn9C1AbGdHbJomC15eGnFncCTGVvFHeYjgP40m+K+XQNhyJZv7roWeVLbd
-         SPtm28c4LD781nMwi3a0h2o4NzBbZMhsnYrnYhIsZqX9bG/Zpi71qFKjZSUryAoaU3
-         pYcJZ3oJXcFy+qeVU85s1NLUlj01YvzPHHhQC9tYEwLjX9vhzAbvKYV1FcCyjXWKgQ
-         +NpYKKXFIhgz5eEfvmqb6sBH0po9u4RfvXup+E9W+FU5XJWBeJqXw6jbOQAIrG7Cgf
-         T5b0WBzeWiAkdaWmtJ4JgKDx0MFdWC4uy3DNfVs3F/R/x+rG8xEY4PwPkWKK+IM32d
-         /nHEtxvWejbzA==
+        b=OiQ8ttaQEIDZHO4BgNte3CzWmLn5BYB61eF6QhTkPTx4MoPfdiHNNuKDdcEVDWRa8
+         ScqUAFUbDv7QTnCce4PNGOnAVjq+Bm33e3AQ5T5ujEJ5tpVIFYLcAfqz3YCt27e9Cr
+         2FlKKSiky5uynDyF5seSO6IZinZcQFGjjJaU8kXaSTL2dJ5IVEr8T3Qv/fno0I/62T
+         nvEUgg/ewdENwt9R3LKkK8gEQUThjQ8DBtOwb+PcPVAf8MSusdzFxNZk67gjLjVmoX
+         Rn107JHjT3mK8Sr49dr543l2YN8KD+51mDD597W+y2ITeK1C13fkPPNVFUEXMgQIq+
+         QKDleXSkPPQSg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Cyril Brulebois <kibi@debian.org>,
         Sasha Levin <sashal@kernel.org>, jim2101024@gmail.com,
         nsaenz@kernel.org, f.fainelli@gmail.com, lpieralisi@kernel.org,
-        linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
+        p.zabel@pengutronix.de, linux-pci@vger.kernel.org,
+        linux-rpi-kernel@lists.infradead.org,
         linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.18 62/68] Revert "PCI: brcmstb: Add mechanism to turn on subdev regulators"
-Date:   Tue,  7 Jun 2022 13:48:28 -0400
-Message-Id: <20220607174846.477972-62-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.18 60/68] Revert "PCI: brcmstb: Do not turn off WOL regulators on suspend"
+Date:   Tue,  7 Jun 2022 13:48:26 -0400
+Message-Id: <20220607174846.477972-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220607174846.477972-1-sashal@kernel.org>
 References: <20220607174846.477972-1-sashal@kernel.org>
@@ -55,9 +56,9 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-[ Upstream commit 420be2f7ebe60c9ba3e332f5290017cd168e2bf8 ]
+[ Upstream commit 7894025c783ca36394d3afe49c8cfb4c830b82fe ]
 
-This reverts commit 67211aadcb4b968d0fdc57bc27240fa71500c2d4.
+This reverts commit 11ed8b8624b8085f706864b4addcd304b1e4fc38.
 
 This is part of a revert of the following commits:
 
@@ -75,122 +76,102 @@ screen on HDMI and no output on the serial console.
 This does not seem to affect the Raspberry Pi 4 B.
 
 Link: https://bugzilla.kernel.org/show_bug.cgi?id=215925
-Link: https://lore.kernel.org/r/20220511201856.808690-4-helgaas@kernel.org
+Link: https://lore.kernel.org/r/20220511201856.808690-2-helgaas@kernel.org
 Reported-by: Cyril Brulebois <kibi@debian.org>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 76 ---------------------------
- 1 file changed, 76 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 53 +++++----------------------
+ 1 file changed, 9 insertions(+), 44 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index fd464d38fecb..0e8346114a8d 100644
+index 375c0c40bbf8..3edd63735948 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -24,7 +24,6 @@
- #include <linux/pci.h>
- #include <linux/pci-ecam.h>
- #include <linux/printk.h>
--#include <linux/regulator/consumer.h>
- #include <linux/reset.h>
- #include <linux/sizes.h>
- #include <linux/slab.h>
-@@ -284,14 +283,6 @@ static const struct pcie_cfg_data bcm2711_cfg = {
- 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
+@@ -333,7 +333,6 @@ struct brcm_pcie {
+ 	void			(*bridge_sw_init_set)(struct brcm_pcie *pcie, u32 val);
+ 	bool			refusal_mode;
+ 	struct subdev_regulators *sr;
+-	bool			ep_wakeup_capable;
  };
  
--struct subdev_regulators {
--	unsigned int num_supplies;
--	struct regulator_bulk_data supplies[];
--};
--
--static int pci_subdev_regulators_add_bus(struct pci_bus *bus);
--static void pci_subdev_regulators_remove_bus(struct pci_bus *bus);
--
- struct brcm_msi {
- 	struct device		*dev;
- 	void __iomem		*base;
-@@ -445,71 +436,6 @@ static int brcm_pcie_set_ssc(struct brcm_pcie *pcie)
- 	return ssc && pll ? 0 : -EIO;
+ static inline bool is_bmips(const struct brcm_pcie *pcie)
+@@ -1351,21 +1350,9 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
+ 	pcie->bridge_sw_init_set(pcie, 1);
  }
  
--static void *alloc_subdev_regulators(struct device *dev)
+-static int pci_dev_may_wakeup(struct pci_dev *dev, void *data)
 -{
--	static const char * const supplies[] = {
--		"vpcie3v3",
--		"vpcie3v3aux",
--		"vpcie12v",
--	};
--	const size_t size = sizeof(struct subdev_regulators)
--		+ sizeof(struct regulator_bulk_data) * ARRAY_SIZE(supplies);
--	struct subdev_regulators *sr;
--	int i;
+-	bool *ret = data;
 -
--	sr = devm_kzalloc(dev, size, GFP_KERNEL);
--	if (sr) {
--		sr->num_supplies = ARRAY_SIZE(supplies);
--		for (i = 0; i < ARRAY_SIZE(supplies); i++)
--			sr->supplies[i].supply = supplies[i];
+-	if (device_may_wakeup(&dev->dev)) {
+-		*ret = true;
+-		dev_info(&dev->dev, "disable cancelled for wake-up device\n");
 -	}
--
--	return sr;
+-	return (int) *ret;
 -}
 -
--static int pci_subdev_regulators_add_bus(struct pci_bus *bus)
--{
--	struct device *dev = &bus->dev;
--	struct subdev_regulators *sr;
--	int ret;
--
--	if (!dev->of_node || !bus->parent || !pci_is_root_bus(bus->parent))
--		return 0;
--
--	if (dev->driver_data)
--		dev_err(dev, "dev.driver_data unexpectedly non-NULL\n");
--
--	sr = alloc_subdev_regulators(dev);
--	if (!sr)
--		return -ENOMEM;
--
--	dev->driver_data = sr;
--	ret = regulator_bulk_get(dev, sr->num_supplies, sr->supplies);
--	if (ret)
--		return ret;
--
--	ret = regulator_bulk_enable(sr->num_supplies, sr->supplies);
--	if (ret) {
--		dev_err(dev, "failed to enable regulators for downstream device\n");
--		return ret;
--	}
--
--	return 0;
--}
--
--static void pci_subdev_regulators_remove_bus(struct pci_bus *bus)
--{
--	struct device *dev = &bus->dev;
--	struct subdev_regulators *sr = dev->driver_data;
--
--	if (!sr || !bus->parent || !pci_is_root_bus(bus->parent))
--		return;
--
--	if (regulator_bulk_disable(sr->num_supplies, sr->supplies))
--		dev_err(dev, "failed to disable regulators for downstream device\n");
--	dev->driver_data = NULL;
--}
--
- /* Limits operation to a specific generation (1, 2, or 3) */
- static void brcm_pcie_set_gen(struct brcm_pcie *pcie, int gen)
+ static int brcm_pcie_suspend(struct device *dev)
  {
-@@ -853,8 +779,6 @@ static struct pci_ops brcm_pcie_ops = {
- 	.map_bus = brcm_pcie_map_conf,
- 	.read = pci_generic_config_read,
- 	.write = pci_generic_config_write,
--	.add_bus = pci_subdev_regulators_add_bus,
--	.remove_bus = pci_subdev_regulators_remove_bus,
- };
+ 	struct brcm_pcie *pcie = dev_get_drvdata(dev);
+-	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
+ 	int ret;
  
- static struct pci_ops brcm_pcie_ops32 = {
+ 	brcm_pcie_turn_off(pcie);
+@@ -1384,22 +1371,11 @@ static int brcm_pcie_suspend(struct device *dev)
+ 	}
+ 
+ 	if (pcie->sr) {
+-		/*
+-		 * Now turn off the regulators, but if at least one
+-		 * downstream device is enabled as a wake-up source, do not
+-		 * turn off regulators.
+-		 */
+-		pcie->ep_wakeup_capable = false;
+-		pci_walk_bus(bridge->bus, pci_dev_may_wakeup,
+-			     &pcie->ep_wakeup_capable);
+-		if (!pcie->ep_wakeup_capable) {
+-			ret = regulator_bulk_disable(pcie->sr->num_supplies,
+-						     pcie->sr->supplies);
+-			if (ret) {
+-				dev_err(dev, "Could not turn off regulators\n");
+-				reset_control_reset(pcie->rescal);
+-				return ret;
+-			}
++		ret = regulator_bulk_disable(pcie->sr->num_supplies, pcie->sr->supplies);
++		if (ret) {
++			dev_err(dev, "Could not turn off regulators\n");
++			reset_control_reset(pcie->rescal);
++			return ret;
+ 		}
+ 	}
+ 	clk_disable_unprepare(pcie->clk);
+@@ -1420,21 +1396,10 @@ static int brcm_pcie_resume(struct device *dev)
+ 		return ret;
+ 
+ 	if (pcie->sr) {
+-		if (pcie->ep_wakeup_capable) {
+-			/*
+-			 * We are resuming from a suspend.  In the suspend we
+-			 * did not disable the power supplies, so there is
+-			 * no need to enable them (and falsely increase their
+-			 * usage count).
+-			 */
+-			pcie->ep_wakeup_capable = false;
+-		} else {
+-			ret = regulator_bulk_enable(pcie->sr->num_supplies,
+-						    pcie->sr->supplies);
+-			if (ret) {
+-				dev_err(dev, "Could not turn on regulators\n");
+-				goto err_disable_clk;
+-			}
++		ret = regulator_bulk_enable(pcie->sr->num_supplies, pcie->sr->supplies);
++		if (ret) {
++			dev_err(dev, "Could not turn on regulators\n");
++			goto err_disable_clk;
+ 		}
+ 	}
+ 
 -- 
 2.35.1
 
