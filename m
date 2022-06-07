@@ -2,50 +2,49 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE821CCA489
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Jun 2022 18:27:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61278CCA486
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Jun 2022 18:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245401AbiFGSWV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Jun 2022 14:22:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42266 "EHLO
+        id S1350322AbiFGSbv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Jun 2022 14:31:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352733AbiFGSR3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2022 14:17:29 -0400
+        with ESMTP id S1351544AbiFGS3y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2022 14:29:54 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70C0B13C356;
-        Tue,  7 Jun 2022 10:52:37 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D93D17A8BD;
+        Tue,  7 Jun 2022 10:55:33 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B7406B8234A;
-        Tue,  7 Jun 2022 17:52:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B27EC34119;
-        Tue,  7 Jun 2022 17:52:33 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id E4089B82370;
+        Tue,  7 Jun 2022 17:55:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FD67C34115;
+        Tue,  7 Jun 2022 17:55:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654624355;
+        s=k20201202; t=1654624530;
         bh=2H2CyXv2Ye91YOMEfo5u5VeHXj+oImPJDnj3yXu5duQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LCVVU1CZ6vCuvgQxOj1lYIaqsi1cpyRGj61baZvzaZFSEuvP1X40idw5omONW5SMc
-         jDxiMDf9X0TBF+D2eNCfqoTw59OtTTfkhrGr9FQfZYwiPbDErH2enpGXBX4In4xwKN
-         K4T+CpfkN4Fo9NwAeUv9EXT0UegvqrHqfA4y33Cjdp8aSxW3muQnzJbrZ5H8LdW8R/
-         8Sl0ocisuRZiuQDTcf5ufrsTfKTH8K8henD3HAot/HRTn3Y+Kk3xF19tOH6/brCp/A
-         w9EQ7i7MMdKy/Y5g7wp5NMaudYzcTORrC5uPsivxxrq6I3euN3sLLesFlqwnbg1HjA
-         5QemsdCurdSJw==
+        b=NeuJpafQrcVdMkKL2i7xLuMmIwg+YrNs/4kZpgTkAXISadr/XdDXH9ZgUVnCxerKB
+         Phgt7UnxJl1/odvBjykKJ7Ni1SKryhVLSC6EQTIrDdUMgDjAqKH+/gQ3OcYdXp2cAh
+         jIapUkkU53kUNX5vpqoiVm+ZMJU18aQHsTlltMLM+T7gLhlLxunwzVLt2V3VhSkLQ6
+         LZ/HpBFEs7OlaGk8n1Hn6BqnN8esVT0SUZJ+YSFWFIR73AJLnkSM9uCTvtsrUj33en
+         RZip6X2T30NyfNaH9VzsTSbYJSD9JAIppW9ybg1x7OjavzKYqpXwIYx0454kBCvO71
+         2l6Qbg0qZuB6A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Cyril Brulebois <kibi@debian.org>,
-        Sasha Levin <sashal@kernel.org>, jim2101024@gmail.com,
-        nsaenz@kernel.org, f.fainelli@gmail.com, lpieralisi@kernel.org,
-        p.zabel@pengutronix.de, linux-pci@vger.kernel.org,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.18 61/68] Revert "PCI: brcmstb: Add control of subdevice voltage regulators"
-Date:   Tue,  7 Jun 2022 13:48:27 -0400
-Message-Id: <20220607174846.477972-61-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, nsaenz@kernel.org,
+        jim2101024@gmail.com, f.fainelli@gmail.com, lpieralisi@kernel.org,
+        p.zabel@pengutronix.de, linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.17 54/60] Revert "PCI: brcmstb: Add control of subdevice voltage regulators"
+Date:   Tue,  7 Jun 2022 13:52:51 -0400
+Message-Id: <20220607175259.478835-54-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220607174846.477972-1-sashal@kernel.org>
-References: <20220607174846.477972-1-sashal@kernel.org>
+In-Reply-To: <20220607175259.478835-1-sashal@kernel.org>
+References: <20220607175259.478835-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
