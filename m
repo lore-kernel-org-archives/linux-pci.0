@@ -2,85 +2,106 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A28ADCCA482
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jun 2022 01:03:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96AF7CCA48C
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jun 2022 01:03:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235203AbiFHBCs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Jun 2022 21:02:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49250 "EHLO
+        id S245096AbiFHBC7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Jun 2022 21:02:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1588478AbiFGXym (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2022 19:54:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FECA47075;
-        Tue,  7 Jun 2022 16:11:20 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3A4A461745;
-        Tue,  7 Jun 2022 23:11:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E9DCC3411E;
-        Tue,  7 Jun 2022 23:11:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654643479;
-        bh=y+QVg0F3fAIYsNxlSyZ9c31L5KgrkSOzkMmIiNJ4tBA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=J708mHBcV3ASHhE64eucN/0OCRphrtgeh9kQjlGhSOT4U0ZFoUwBXKyPChkTBPfxA
-         ngybZp2fvbz4/wudpP1WJxvoCNDimmb6mbgkZbqy2q+gO+Nz2gAqPM55dQGq1aExVM
-         LidHotx7s6IOD0qTW0RFSluJ9NT5PSFwO2ljiECXNMOQcx/9bhkEyszMDuyyckSK0X
-         15EyOC0uyANxJSj9C1Xq9vPm6nwT4mxLoyZD6+9m+202W7iJcIQ1FWjxLzP/J3CnPp
-         AzWyeBFiQ0pwINv6cS72lOUOISDxHl1PKxKVwHgGeIN8NbHEMnD3cF1GpRirUsubQ4
-         QbS0GdsPbc4KA==
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Helge Deller <deller@gmx.de>
-Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/2] video: fbdev: cirrusfb: Remove useless reference to PCI power management
-Date:   Tue,  7 Jun 2022 18:11:11 -0500
-Message-Id: <20220607231112.354165-2-helgaas@kernel.org>
+        with ESMTP id S1453996AbiFGXQP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Jun 2022 19:16:15 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 918D83BF6F0;
+        Tue,  7 Jun 2022 14:08:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654636138; x=1686172138;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=uaj2zVTRdbat138k5S+d3ScjGk5l9kGngqRsS56dZKs=;
+  b=OUa9P3Mkx4wSzDO2h7nDmqBqfwn/+H9lCeLrErRcLvt1+ZKs+qrFOeEo
+   jXfOAHgt9n2Dj2ywZDydyUfGm/ozWlVt+NI5LLXYn8cPCExVSjhQzOHpu
+   CsEdSDm2tYaL2i/4XP51EIWN8/VWG4A6FQA5AryBLI2kj1JEcQy/smeD2
+   LyFk+rUwUiJqAl49BedX7/MKAc4MdXBAk8QV0pJOg/PHzGFl1WvntZPZW
+   BerwY3/bcGeiGw2ohz55NsFTusVp17/OBd3cwchNphb7ocEqBzGQSvgB+
+   lAp4l3P+I2/Zp7BnCChdmeBADPdo0NZHQrXNip5jstXYasWcDNQ8BxApa
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10371"; a="257191733"
+X-IronPort-AV: E=Sophos;i="5.91,284,1647327600"; 
+   d="scan'208";a="257191733"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2022 14:08:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,284,1647327600"; 
+   d="scan'208";a="723522760"
+Received: from linux.intel.com ([10.54.29.200])
+  by fmsmga001.fm.intel.com with ESMTP; 07 Jun 2022 14:08:54 -0700
+Received: from rjingar-desk5.amr.corp.intel.com (unknown [10.209.92.238])
+        by linux.intel.com (Postfix) with ESMTP id A6FA8580A8B;
+        Tue,  7 Jun 2022 14:08:53 -0700 (PDT)
+From:   Rajvi Jingar <rajvi.jingar@linux.intel.com>
+To:     rafael.j.wysocki@intel.com, bhelgaas@google.com
+Cc:     rajvi.jingar@linux.intel.com, david.e.box@linux.intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: [PATCH v6 1/2] PCI/PM: refactor pci_pm_suspend_noirq()
+Date:   Tue,  7 Jun 2022 14:08:51 -0700
+Message-Id: <20220607210852.475863-1-rajvi.jingar@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220607231112.354165-1-helgaas@kernel.org>
-References: <20220607231112.354165-1-helgaas@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+The state of the device is saved during pci_pm_suspend_noirq(), if it
+has not already been saved, regardless of the skip_bus_pm flag value. So
+skip_bus_pm check is removed before saving the device state.
 
-PCI-specific power management (pci_driver.suspend and pci_driver.resume) is
-deprecated.  The cirrusfb driver has never implemented power management at
-all, but if it ever does, it should use the generic power management
-framework, not the PCI-specific hooks.
-
-Remove the commented-out references to the PCI-specific power management
-hooks.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Rajvi Jingar <rajvi.jingar@linux.intel.com>
+Suggested-by: David E. Box <david.e.box@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/video/fbdev/cirrusfb.c | 6 ------
- 1 file changed, 6 deletions(-)
+ v1 -> v2: add comments to the changes
+ v2 -> v3: move changelog after "---" marker
+ v3 -> v4: add "---" marker after changelog
+ v4 -> v5: no change
+ v5 -> v6: no change
+---
+ drivers/pci/pci-driver.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/video/fbdev/cirrusfb.c b/drivers/video/fbdev/cirrusfb.c
-index 3d47c347b897..51e072c03e1c 100644
---- a/drivers/video/fbdev/cirrusfb.c
-+++ b/drivers/video/fbdev/cirrusfb.c
-@@ -2184,12 +2184,6 @@ static struct pci_driver cirrusfb_pci_driver = {
- 	.id_table	= cirrusfb_pci_table,
- 	.probe		= cirrusfb_pci_register,
- 	.remove		= cirrusfb_pci_unregister,
--#ifdef CONFIG_PM
--#if 0
--	.suspend	= cirrusfb_pci_suspend,
--	.resume		= cirrusfb_pci_resume,
--#endif
--#endif
- };
- #endif /* CONFIG_PCI */
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 49238ddd39ee..1f64de3e5280 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -867,20 +867,14 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 		}
+ 	}
+ 
+-	if (pci_dev->skip_bus_pm) {
++	if (!pci_dev->state_saved) {
++		pci_save_state(pci_dev);
+ 		/*
+-		 * Either the device is a bridge with a child in D0 below it, or
+-		 * the function is running for the second time in a row without
+-		 * going through full resume, which is possible only during
+-		 * suspend-to-idle in a spurious wakeup case.  The device should
+-		 * be in D0 at this point, but if it is a bridge, it may be
+-		 * necessary to save its state.
++		 * If the device is a bridge with a child in D0 below it, it needs to
++		 * stay in D0, so check skip_bus_pm to avoid putting it into a
++		 * low-power state in that case.
+ 		 */
+-		if (!pci_dev->state_saved)
+-			pci_save_state(pci_dev);
+-	} else if (!pci_dev->state_saved) {
+-		pci_save_state(pci_dev);
+-		if (pci_power_manageable(pci_dev))
++		if (!pci_dev->skip_bus_pm && pci_power_manageable(pci_dev))
+ 			pci_prepare_to_sleep(pci_dev);
+ 	}
  
 -- 
 2.25.1
