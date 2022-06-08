@@ -2,209 +2,150 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10C85CCA47B
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jun 2022 10:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D34D4C43334
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jun 2022 13:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237075AbiFHKwy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Jun 2022 06:52:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58800 "EHLO
+        id S239974AbiFHNQe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Jun 2022 09:16:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237116AbiFHKwt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2022 06:52:49 -0400
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D9E0176D45
-        for <linux-pci@vger.kernel.org>; Wed,  8 Jun 2022 03:52:45 -0700 (PDT)
-Received: by mail-lf1-x132.google.com with SMTP id t25so32584741lfg.7
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jun 2022 03:52:44 -0700 (PDT)
+        with ESMTP id S239852AbiFHNQd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2022 09:16:33 -0400
+Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60A3A3BA55;
+        Wed,  8 Jun 2022 06:16:32 -0700 (PDT)
+Received: by mail-lj1-x231.google.com with SMTP id s13so22695464ljd.4;
+        Wed, 08 Jun 2022 06:16:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=z6yrtmOBco3WyChFHwByIszU0CSTBNUIahumUa0EHAM=;
-        b=XSE5oUuTDgtPlBtkzxuDPbNKJfqhw2afsEWuFApKMy8hPMeM6f8XwXMt2YatqNI/3/
-         JgAWmQ4DASl5zMggDcf91W1bU8DuP40ec5FBlz5pxX+NYXKb0LmJ8GmUmvmE2+R+aHAd
-         6WydVsDAc8gy5kwTiZGXtuzD4LpJblXNTRA1Lqq20+Uip/A7DvZwe+svm1HJY3vZ2IJJ
-         wDUAiGcKWV5YDKEABwouaudTw07uxFc927o1j/uznsjqDuVBITsx+Y3efhOuQq9VwWM2
-         1E64kkAT4YjIBJIQ96L+DRzjmVgxjwVwaEknHVWqxLZTsCipOASSbCuX5ORme2a0hpHL
-         D4EQ==
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qbE4NOSoSmz8Bk9zM8BJuuluMSrujcIpd2/DIXfe5UE=;
+        b=WKyiXeJLu4/8Chr1j17Br1vQyABHDAuyeJzKGzY39Jw+8OqPJ3qhT2ubPdKMKGfXwj
+         gUSHE9G1kZASr+rGuEtD9WoBScdzsuW3/Gr50xRGhS+6KCLo6RqDroN4lZIiAC+iSp47
+         lBZkd2lQFUs7rPyKCvVYxxOBfIZlKlfyXrLszhmYt+JFoc0PDQwb4gsAqHRX6nbV88ld
+         Tw6UIm+iNPu670/IccroXCI6vIL0jCQO2IyDKsveZfbKR7vQYsdS3FU2RlI9GhSeUstA
+         m+ehWbazzMRUaINfzdc+1uzlmVr6L9tPKa//kHBr4H9Mvlw8y2kTwNAka2ysUPkYjMTX
+         JYww==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=z6yrtmOBco3WyChFHwByIszU0CSTBNUIahumUa0EHAM=;
-        b=MsX1UXb8Bii2k5Bmq2tg/jhGDXaHzg0o0A4qWPM5fPY/8yOOr2/S4HE24bHEW6gARL
-         w/Q2B0QmudK0nxUxEP05bDk1G6E9yu9bYtRPZTbSlPkBQUZCNS+Y6n1XIl+nihQR3gxN
-         zB+T1zCFJmU3Rl94XpMebkTnzQalysodb9U8DCdygZQG35VPF28etI3C2//eH+bsNDyj
-         jGjnXrJZv2Tq2HiEMuVcMVgWbMwnsKVigufzlWQXrhcn5jE9TFMNzrJlEFCPZNHFAcBM
-         pZ7d+CkVTGQ2KBIfurx0lqrnKdpj/pjAmugEa4TtZYsWzqFsRNnlrzQQNgEvOVHkfdhg
-         0Czw==
-X-Gm-Message-State: AOAM531gXdkxTm/SJrtB+MZICqPLCevHXKMsq/XEjR6F+MA2QBb3mqrK
-        +5xDDAdS1gt659hHQZZgFDZZnw==
-X-Google-Smtp-Source: ABdhPJxtNE6Qqn4j890N067vYH1aIFVLlOFLq1pwuhn2LOVtBa0Y22HGvsmQPEmOHn9rTTKvVeBfLA==
-X-Received: by 2002:a05:6512:1293:b0:479:4bbb:f785 with SMTP id u19-20020a056512129300b004794bbbf785mr8994176lfs.170.1654685563404;
-        Wed, 08 Jun 2022 03:52:43 -0700 (PDT)
-Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id e9-20020a2e5009000000b002556b0cd5acsm3232337ljb.56.2022.06.08.03.52.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jun 2022 03:52:42 -0700 (PDT)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Stephen Boyd <swboyd@chromium.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Taniya Das <quic_tdas@quicinc.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Johan Hovold <johan+linaro@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-pci@vger.kernel.org, Johan Hovold <johan@kernel.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v11 4/5] PCI: qcom: Remove unnecessary pipe_clk handling
-Date:   Wed,  8 Jun 2022 13:52:37 +0300
-Message-Id: <20220608105238.2973600-5-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220608105238.2973600-1-dmitry.baryshkov@linaro.org>
-References: <20220608105238.2973600-1-dmitry.baryshkov@linaro.org>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=qbE4NOSoSmz8Bk9zM8BJuuluMSrujcIpd2/DIXfe5UE=;
+        b=tI84d8nLSI1VLxfjvPlcK9nbV7NgXb/D+NxmrY8gkQHJRHU9jDSZJ5TUBJzqM16LlF
+         DOcm6rh6FgpLlsuUOrv4EBqVOlXx0SZisPf7n9uuq/E1TYBeaPewV2HDs93X6Auy4bSb
+         789xVPNEjst8DLDS85xgXc2Fe6mdfxcjdLGQNMS2v0/ZrCdEPAwGgk6i+k9QZ5JJWto+
+         KfOsZHsiTtKAlcI9xMhWEnyesScya6eyTE8/v5nFNJmIMUNl2r9aIquLJmQAg3h3Kcir
+         kyvY0KqTa3mY5P5TP3aLFNqKjzDW/i2KP5EOHj3FM1vFYI8Bb0b1uIyD9+21TP7duCxg
+         obnw==
+X-Gm-Message-State: AOAM533t5Q/MWfAxsHmKkmzDvexbhYMj65MeugIWiV1xwFmyr2Of4csT
+        SpZsU5diZcDZn6aJvjzz505hTjDha/P3TCr/wME6MSitcr0=
+X-Google-Smtp-Source: ABdhPJzn8MTbffVX48UnKEU9mHiXPLfWoLfaoZ3pX8/r8S2KVnn+esJ5R3KHSlsIZsTZtkI4RJdQxv5UUg1acGfYt0o=
+X-Received: by 2002:a2e:b0c4:0:b0:255:6c75:36b3 with SMTP id
+ g4-20020a2eb0c4000000b002556c7536b3mr19893592ljl.212.1654694190646; Wed, 08
+ Jun 2022 06:16:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <CAGdb+H0qnC4noBa_=N3oQW88+dgXYtA7gqJ5qiD2g7Ywd+2K=Q@mail.gmail.com>
+ <20220523171517.32407-1-windy.bi.enflame@gmail.com>
+In-Reply-To: <20220523171517.32407-1-windy.bi.enflame@gmail.com>
+From:   Sheng Bi <windy.bi.enflame@gmail.com>
+Date:   Wed, 8 Jun 2022 21:16:23 +0800
+Message-ID: <CAGdb+H29Lw-aUkFuot0Cd0i4KnP9PcnBQhBeJ5DkNymc9RTQ-A@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: Fix no-op wait after secondary bus reset
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Lukas Wunner <lukas@wunner.de>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe PHY drivers (both QMP and PCIe2) already do clk_prepare_enable() /
-clk_prepare_disable() pipe_clk. Remove extra calls to enable/disable
-this clock from the PCIe driver, so that the PHY driver can manage the
-clock on its own.
+Hi Bjorn, Alex, Lukas,
 
-Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reviewed-by: Johan Hovold <johan+linaro@kernel.org>
-Tested-by: Johan Hovold <johan+linaro@kernel.org>
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 44 ++------------------------
- 1 file changed, 3 insertions(+), 41 deletions(-)
+Is this acceptable or anything needs to be improved?
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 2ea13750b492..8c1073452196 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -128,7 +128,6 @@ struct qcom_pcie_resources_2_3_2 {
- 	struct clk *master_clk;
- 	struct clk *slave_clk;
- 	struct clk *cfg_clk;
--	struct clk *pipe_clk;
- 	struct regulator_bulk_data supplies[QCOM_PCIE_2_3_2_MAX_SUPPLY];
- };
- 
-@@ -165,7 +164,6 @@ struct qcom_pcie_resources_2_7_0 {
- 	int num_clks;
- 	struct regulator_bulk_data supplies[2];
- 	struct reset_control *pci_reset;
--	struct clk *pipe_clk;
- 	struct clk *pipe_clk_src;
- 	struct clk *phy_pipe_clk;
- 	struct clk *ref_clk_src;
-@@ -597,8 +595,7 @@ static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
- 	if (IS_ERR(res->slave_clk))
- 		return PTR_ERR(res->slave_clk);
- 
--	res->pipe_clk = devm_clk_get(dev, "pipe");
--	return PTR_ERR_OR_ZERO(res->pipe_clk);
-+	return 0;
- }
- 
- static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
-@@ -613,13 +610,6 @@ static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- }
- 
--static void qcom_pcie_post_deinit_2_3_2(struct qcom_pcie *pcie)
--{
--	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
--
--	clk_disable_unprepare(res->pipe_clk);
--}
--
- static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
-@@ -694,22 +684,6 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
- 	return ret;
- }
- 
--static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
--{
--	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
--	struct dw_pcie *pci = pcie->pci;
--	struct device *dev = pci->dev;
--	int ret;
--
--	ret = clk_prepare_enable(res->pipe_clk);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable pipe clock\n");
--		return ret;
--	}
--
--	return 0;
--}
--
- static int qcom_pcie_get_resources_2_4_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
-@@ -1198,8 +1172,7 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 			return PTR_ERR(res->ref_clk_src);
- 	}
- 
--	res->pipe_clk = devm_clk_get(dev, "pipe");
--	return PTR_ERR_OR_ZERO(res->pipe_clk);
-+	return 0;
- }
- 
- static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
-@@ -1292,14 +1265,7 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
- 	if (pcie->cfg->pipe_clk_need_muxing)
- 		clk_set_parent(res->pipe_clk_src, res->phy_pipe_clk);
- 
--	return clk_prepare_enable(res->pipe_clk);
--}
--
--static void qcom_pcie_post_deinit_2_7_0(struct qcom_pcie *pcie)
--{
--	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
--
--	clk_disable_unprepare(res->pipe_clk);
-+	return 0;
- }
- 
- static int qcom_pcie_link_up(struct dw_pcie *pci)
-@@ -1449,9 +1415,7 @@ static const struct qcom_pcie_ops ops_1_0_0 = {
- static const struct qcom_pcie_ops ops_2_3_2 = {
- 	.get_resources = qcom_pcie_get_resources_2_3_2,
- 	.init = qcom_pcie_init_2_3_2,
--	.post_init = qcom_pcie_post_init_2_3_2,
- 	.deinit = qcom_pcie_deinit_2_3_2,
--	.post_deinit = qcom_pcie_post_deinit_2_3_2,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- };
- 
-@@ -1478,7 +1442,6 @@ static const struct qcom_pcie_ops ops_2_7_0 = {
- 	.deinit = qcom_pcie_deinit_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- 	.post_init = qcom_pcie_post_init_2_7_0,
--	.post_deinit = qcom_pcie_post_deinit_2_7_0,
- };
- 
- /* Qcom IP rev.: 1.9.0 */
-@@ -1488,7 +1451,6 @@ static const struct qcom_pcie_ops ops_1_9_0 = {
- 	.deinit = qcom_pcie_deinit_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- 	.post_init = qcom_pcie_post_init_2_7_0,
--	.post_deinit = qcom_pcie_post_deinit_2_7_0,
- 	.config_sid = qcom_pcie_config_sid_sm8250,
- };
- 
--- 
-2.35.1
+Thanks
+windy
 
+On Tue, May 24, 2022 at 1:15 AM Sheng Bi <windy.bi.enflame@gmail.com> wrote:
+>
+> pci_bridge_secondary_bus_reset() triggers SBR followed by 1 second sleep,
+> and then uses pci_dev_wait() for waiting device ready. The dev parameter
+> passes to the wait function is currently the bridge itself, but not the
+> device been reset.
+>
+> If we call pci_bridge_secondary_bus_reset() to trigger SBR to a device,
+> there is 1 second sleep but not waiting device ready, since the bridge
+> is always ready while resetting downstream devices. pci_dev_wait() here
+> is a no-op actually. This would be risky in the case which the device
+> becomes ready after more than 1 second, especially while hotplug enabled.
+> The late coming hotplug event after 1 second will trigger hotplug module
+> to remove/re-insert the device.
+>
+> Instead of waiting ready of bridge itself, changing to wait all the
+> downstream devices become ready with timeout PCIE_RESET_READY_POLL_MS
+> after SBR, considering all downstream devices are affected during SBR.
+> Once one of the devices doesn't reappear within the timeout, return
+> -ENOTTY to indicate SBR doesn't complete successfully.
+>
+> Fixes: 6b2f1351af56 ("PCI: Wait for device to become ready after secondary bus reset")
+> Signed-off-by: Sheng Bi <windy.bi.enflame@gmail.com>
+> ---
+>  drivers/pci/pci.c | 30 +++++++++++++++++++++++++++++-
+>  1 file changed, 29 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index eb7c0a08ff57..4653a9ae6e5b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5049,6 +5049,34 @@ void pci_bridge_wait_for_secondary_bus(struct pci_dev *dev)
+>         }
+>  }
+>
+> +static int pci_bridge_secondary_bus_wait(struct pci_dev *bridge, int timeout)
+> +{
+> +       struct pci_dev *dev;
+> +       unsigned long start_jiffies;
+> +
+> +       down_read(&pci_bus_sem);
+> +
+> +       if (!bridge->subordinate || list_empty(&bridge->subordinate->devices)) {
+> +               up_read(&pci_bus_sem);
+> +               return 0;
+> +       }
+> +
+> +       list_for_each_entry(dev, &bridge->subordinate->devices, bus_list) {
+> +               start_jiffies = jiffies;
+> +
+> +               if (timeout < 0 || pci_dev_wait(dev, "bus reset", timeout)) {
+> +                       up_read(&pci_bus_sem);
+> +                       return -ENOTTY;
+> +               }
+> +
+> +               timeout -= jiffies_to_msecs(jiffies - start_jiffies);
+> +       }
+> +
+> +       up_read(&pci_bus_sem);
+> +
+> +       return 0;
+> +}
+> +
+>  void pci_reset_secondary_bus(struct pci_dev *dev)
+>  {
+>         u16 ctrl;
+> @@ -5092,7 +5120,7 @@ int pci_bridge_secondary_bus_reset(struct pci_dev *dev)
+>  {
+>         pcibios_reset_secondary_bus(dev);
+>
+> -       return pci_dev_wait(dev, "bus reset", PCIE_RESET_READY_POLL_MS);
+> +       return pci_bridge_secondary_bus_wait(dev, PCIE_RESET_READY_POLL_MS);
+>  }
+>  EXPORT_SYMBOL_GPL(pci_bridge_secondary_bus_reset);
+>
+>
+> base-commit: 617c8a1e527fadaaec3ba5bafceae7a922ebef7e
+> --
+> 2.36.1
+>
