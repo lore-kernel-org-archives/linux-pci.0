@@ -2,157 +2,133 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FD0DC43334
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Jun 2022 08:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15393CCA47B
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Jun 2022 09:11:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229481AbiFHIaS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Jun 2022 04:30:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45176 "EHLO
+        id S234076AbiFHJK5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Jun 2022 05:10:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231970AbiFHI3K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2022 04:29:10 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD1B828CFB4;
-        Wed,  8 Jun 2022 00:52:24 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 00167B81B34;
-        Wed,  8 Jun 2022 07:52:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AC9BC3411D;
-        Wed,  8 Jun 2022 07:52:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1654674728;
-        bh=gS10ZB6Wtd0r48aPzfM0OfzrzAHMoUWP8IgQwbfbPzU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gMQYCPm4Uwx919OpTJB7WMivRIA3qIkcRuAFdU2j6jS8kb+AmP4qcFPr7Hvcb8Czh
-         XhGP7A1r19Q15qcXd8Dfy/c4c+f4UVgYYOoD1pmqc4gQkYBvTlk8lSfpX34cNZDxub
-         utN7l6+LDJ10ctfc2QApR5JUQNCQtviMeXHb2Z2pt5FbI0nTI4GEcgXWI9EapwmoEe
-         R44cPVkLKuFm7bYdi/SuBDjuOG2ey32mVd2bWJapR2/NBOCC7Ju30jHG4MMvYYYdlT
-         E0ZiZ22aC5ubANBYqNWz55BAzclmycI4W3bUTuXdAL2ZiHtiiSmENSSy+nwpXSdeFn
-         2LBy0Qt3pvYpw==
-Received: by pali.im (Postfix)
-        id 5BDA27D5; Wed,  8 Jun 2022 09:52:05 +0200 (CEST)
-Date:   Wed, 8 Jun 2022 09:52:05 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
-        Hajo Noerenberg <hajo-linux-bugzilla@noerenberg.de>,
-        linux-ide@vger.kernel.org
-Subject: Re: [Bug 216094] New: pci-mvebu: SATA HDDs via 88SE6121 AHCI fail
- with Marvell 88F6281 PCIe
-Message-ID: <20220608075205.wc55e33sxndpfrim@pali>
-References: <bug-216094-41252@https.bugzilla.kernel.org/>
- <20220607234937.GA356793@bhelgaas>
+        with ESMTP id S234206AbiFHJJl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Jun 2022 05:09:41 -0400
+Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 500CFC1EC9
+        for <linux-pci@vger.kernel.org>; Wed,  8 Jun 2022 01:29:50 -0700 (PDT)
+Received: by mail-lf1-x12c.google.com with SMTP id t25so32051457lfg.7
+        for <linux-pci@vger.kernel.org>; Wed, 08 Jun 2022 01:29:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=1SyqLbCgyXNySsIeInygogACTwvtbHAghMfis7Fhfw8=;
+        b=MkmQAJvYhqdjCbC1ly7iObXnqQ80RVKEIx09xfoH1jy8IKAMCpxv9M0ifSzzZ5mE20
+         15xRnCsSbS3Qfnrfg601x/dhVHbpiFWD+H5gT1un0cK8iGjhz7+mE7MkN9G8pciD5pgC
+         nLjYH4XwaPQ0Fg+RdTITcxFn59JAT6QQje3X57G8uSylP7KwWJs3eUpIFIsD6w+5VFVL
+         /zsp38yZP/pRtPkTY0J+xVHfUTquEounjf7ISVsN1y0XPE1tUA0pG0G3NI6fdDOx35lk
+         JqPU4rFduxi8eRe1Iv1e4VOGWTbDO8bOV7QRqdYMHQg9RWZCLvY/BANCgy6giAUJrKiS
+         c5kQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=1SyqLbCgyXNySsIeInygogACTwvtbHAghMfis7Fhfw8=;
+        b=6lsgQGogGnXJjr7+BXPfEmFvWhx5RKubjYGoMH7mNKibwInxiNWXaB+e8/OB2WBmM2
+         Jn9DCnxKYiBRUjtrtXLLazRaR87p+symKQNZCz1e7proXpbW3BPaHEqAOeyIo8U0dClF
+         LnK+GRbRv5PkKkPyiKVpfJr/pmOmxgJmd2g2+udR3hV6atWlEQ0WMxfg7tPOZi5XeQwI
+         E1pALGW/2zzJV6Iosi5jzbMhHp+xqUnhubd3K5JqTpOGmV6c/bDUX+SP/BLqX18Se7I1
+         D3AGHJAJ6I9aIfjA+8alQi2ujDPIsq/zC8e6QQxkQ6tbwr6e10ReImSY1BLyGpbrRZsH
+         c8Sw==
+X-Gm-Message-State: AOAM531wWTb2ufD601GKuE5hhCYTwmIJcBMzumQv/yMRRhH2i7/RMeTp
+        latmJEPN1Mz+h7xSnwcyUdQtMP5iraI/K4mGvGo=
+X-Google-Smtp-Source: ABdhPJyuYtN/gSRp8xwuX+eqt9bgjW2m+IKvUrZrXaYi5Wm57qB78KPu7WYIKDc7/+65OSyDbs5OBEQAXfc7qJlGCCs=
+X-Received: by 2002:a05:6512:e9c:b0:479:1fd9:1b94 with SMTP id
+ bi28-20020a0565120e9c00b004791fd91b94mr13867584lfb.591.1654676988547; Wed, 08
+ Jun 2022 01:29:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220607234937.GA356793@bhelgaas>
-User-Agent: NeoMutt/20180716
+References: <f336dd51-a6f2-4168-9e4b-1a6dc3d7da6a@www.fastmail.com> <20220604000712.GA118018@bhelgaas>
+In-Reply-To: <20220604000712.GA118018@bhelgaas>
+From:   Huacai Chen <chenhuacai@gmail.com>
+Date:   Wed, 8 Jun 2022 16:29:37 +0800
+Message-ID: <CAAhV-H6TYqB8SE=RR9UdDUdw5z6m3buZT=0aGFj+fFoQmyvNqg@mail.gmail.com>
+Subject: Re: [PATCH V13 4/6] PCI: loongson: Improve the MRRS quirk for LS7A
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Huacai Chen <chenhuacai@loongson.cn>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        =?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tuesday 07 June 2022 18:49:37 Bjorn Helgaas wrote:
-> On Tue, Jun 07, 2022 at 07:29:03AM +0000, bugzilla-daemon@kernel.org wrote:
-> > https://bugzilla.kernel.org/show_bug.cgi?id=216094
-> > 
-> >            Summary: pci-mvebu: SATA HDDs via 88SE6121 AHCI fail with
-> >                     Marvell 88F6281 PCIe
-> >     Kernel Version: 3.16 ... 5.10
-> >           Reporter: hajo-linux-bugzilla@noerenberg.de
-> >                 CC: pali@kernel.org
-> >         Regression: No
-> > 
-> > I would like to continue the SATA-related topic started with Pali
-> > Rohár at the U-Boot mailing list [1]. I have analysed the issue
-> > further and come the following conclusion that it is related to the
-> > PCIe subsystem:
-> > 
-> > SATA-2 and SATA-3 hard disks connected to a 88SE6121 (AHCI)
-> > controller, wired via PCIe to the 88F6281 SoC fail to operate
-> > ("failed to IDENTIFY" ... "qc timeout") when the pci-mvebu driver
-> > (Kernel 3.16 .. 5.10 Debian) is in use.
-> 
-> Please attach the complete dmesg logs showing this issue.
-> 
-> From your lspci output with v3.2, the SATA controller is at 00:01.0:
-> 
->   00:01.0 IDE [0101]: Marvell 88SE6121 SATA II
-> 
-> The v3.16 (with DTB) lspci output is essentially the same except the
-> controller is at 01:00.0:
+Hi, Bjorn, Jiaxun,
 
-Old kernel (incorrectly) reports Root Port and Endpoint device from the
-other end of the link to the same bus zero. Hence the difference in bus
-number between old kernel and new kernel.
+On Sat, Jun 4, 2022 at 8:07 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Fri, Jun 03, 2022 at 11:57:47PM +0100, Jiaxun Yang wrote:
+> > =E5=9C=A82022=E5=B9=B46=E6=9C=882=E6=97=A5=E5=85=AD=E6=9C=88 =E4=B8=8B=
+=E5=8D=885:20=EF=BC=8CBjorn Helgaas=E5=86=99=E9=81=93=EF=BC=9A.
+> > >
+> > > I'd really like to have a single implementation of whatever quirk
+> > > works around this.  I don't think we should have multiple copies
+> > > just because we assume some firmware takes care of part of this
+> > > for us.
+> > >
+> > Yeah that was my idea when I was writing the present version of
+> > workaround.  However in later LS7A revisions Loongson somehow raised
+> > MRRS for several PCIe controllers on chip to 1024 and other ports
+> > remains to be 256. Kernel have no way to aware of this change and we
+> > can only rely on firmware to set proper value.
+>
+> That's fine; we need a controller-specific way to find the limit
+> (whether it's fixed for all versions or discovered from firmware
+> settings or whatever).
+>
+> My hope is that given that controller-specific value, we can have a
+> single quirk that works on keystone, loongson, etc. to enforce the
+> limit on all relevant devices.  Some platform firmware might do that
+> configuration already, but it's OK if a generic quirk re-does it.
+>
+> I don't think it's worth having two quirks, one that does the
+> configuration, and another that relies on firmware having done it.
+I think it is better to let keystone and loongson to both use the
+no_inc_mrrs quirk.
 
->   01:00.0 IDE [0101]: Marvell 88SE6121 SATA II
-> 
-> The ahci driver is bound in both cases.  The PCI address and I/O port
-> assignment differences are of no consequence unless some mvebu driver
-> defect keeps them from working.
-> 
-> I think what we need is a complete dmesg log and DTB from the newest
-> possible kernel that fails, plus the same logs from the newest kernel
-> that works.
+Huacai
 
-+1
-
-> > More details:
-> > 
-> > - The problem does not exist in 2.6 and 3.16 kernels. With the old
-> > mach-kirkwood/pcie.c driver all SATA-2/3 hard disks work correctly.
-> > Especially with a 3.16 kernel it is possible to have identical
-> > ATA/AHCI drivers but try both PCIe drivers: without DTB ->
-> > mach-kirkwood -> SATA-2/3 HDDs work; with DTB -> mach-mvebu -> HDDs
-> > fail.
-
-So it looks like that issue is with DT based setup.
-
-Just by a chance, could you try to boot kernel with pcie_aspm=off or
-pci=nomsi cmdline options? There are some issues in driver/controller
-related to link retraining and MSI interrupts which ASPM kernel code can
-trigger.
-
-> > - The problem is specific to SATA-2/3 HDDs. Very old SATA-1-only
-> > HDDs work without problems. This might be related to the available
-> > data lanes, DMA or other bandwidth-related things -- I can only
-> > guess. Interestingly it does not help to limit SATA speed
-> > (libata.force=1.5G ...) with SATA-2/3 HDDs, only 'pure' SATA-1 HDDs
-> > work with pci-mvebu.
-> > 
-> > - The problem was identified with the Seagate Blackarmor NAS440
-> > hardware. Forum posts show that other users experience similar
-> > problems with the (very similar) Iomega ix4-200d NAS [2].
-> > 
-> > - Within patched U-Boot [3] all (Sata-1/2/3) HDDs always work. Same
-> > for the 88F6281 SoC onboard SATA ports (sata_mv - not connected via
-> > PCIe).
-> > 
-> > - The mach-kirkwood driver operates the 6281 as class "Host bridge
-> > [0600]" with Cap "Express (v1) Root Port", the mach-mvebu driver as
-> > class "PCI bridge [0604]" with "Express (v2) Root Port"
-> > [4][5][6][7]. Notably the v1/v2, cache line size 32/64 or the
-> > missing interrupt route might be a key difference.
-> > 
-> > From the sources I see that all PCI drivers (mach-kirkwood,
-> > mach-mvebu and U-Boot) do various unconventional 'magic' things
-> > (rewriting PCI class of the root complex, changing capabilitys, host
-> > emulation and so on). This is the point where I currently get lost
-> > and ask for your help.
-
-This 'magic' is there because of broken PCIe controller and its PCIe
-Root Port in all 32-bit Marvell SoCs.
-
-> > [1] https://lists.denx.de/pipermail/u-boot/2022-March/479197.html
-> > [2] https://forum.doozan.com/read.php?2,94079,95519#msg-95519
-> > [3] https://lists.denx.de/pipermail/u-boot/2022-March/479227.html
-> > [4] lspci Linux version 3.2.0-4-kirkwood mach-kirkwood/pci.c: HDDs ok
-> > [5] lspci Linux version 3.16.0-0.bpo.4-kirkwood - with DTB -> mvebu-pci: HDDs
-> > fail
-> > [6] lspci Linux version 3.16.0-0.bpo.4-kirkwood - without DTB ->
-> > mach-kirkwood/pci.c: HDDs ok
-> > [7] lspci Linux version 5.10.0-11-marvell (Debian bullseye) mvebu-pci: HDDs
-> > fail
+>
+> > I have no idea how Loongson achieved this in hardware. All those
+> > PCIe controllers are attached under the same AXI bus should share
+> > the same AXI to HyperTransport bridge as AXI slave behind a bus
+> > matrix. Perhaps instead of fixing error handling of their AXI
+> > protocol implementation they just increased the buffer size in AXI
+> > bridge so it can accomplish larger requests at one time.
+>
+> > >> In keystone=E2=80=99s case it=E2=80=99s likely that their firmware w=
+on=E2=80=99t do such thing, so
+> > >> their workaround shouldn=E2=80=99t be removed.
+> > >> And  no_inc_mrrs should be set for them to prevent device drivers mo=
+difying
+> > >> MRRS afterwards.
+> > >
+> > > I have the vague impression that this issue is related to an arm64 AX=
+I
+> > > bus property [2] or maybe a DesignWare controller property [3], so
+> > > this might affect several PCIe controller drivers.
+> >
+> > In my understanding it=E2=80=99s likely to be a AXI implementation issu=
+e.
+>
+> I know almost nothing about AXI, but this concerns me because it
+> sounds like other drivers could be affected.
+>
+> Bjorn
