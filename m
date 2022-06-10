@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87B95CCA47F
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 09:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0631DCCA486
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 09:06:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348546AbiFJJGV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1347639AbiFJJGV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 10 Jun 2022 05:06:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43280 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348475AbiFJJF7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 05:05:59 -0400
+        with ESMTP id S1344465AbiFJJGA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 05:06:00 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8C4CE939C0;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8C6A6274B7D;
         Fri, 10 Jun 2022 02:04:55 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id B77A716B0;
-        Fri, 10 Jun 2022 11:58:07 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com B77A716B0
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 20B1D16CB;
+        Fri, 10 Jun 2022 11:58:11 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 20B1D16CB
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654851487;
-        bh=veDlcRl7jIs2ROxKcxQDckuVHRbp1wddq59lNB/vP+U=;
+        d=baikalelectronics.ru; s=mail; t=1654851491;
+        bh=YoncPqpfxB/O+UIQ5udV/r13samFVrXcrXHOyNlvANA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=PWsV6xH81nTJZxyFcq3QsEg7Xe/OAdjIlNgWNSDW/xVU7Yx3blbvW9MUBlIyxfCqt
-         xOjhWgOP1AY09AGXZrOjl3emNCoxBBlAUF3BMHIGkg3EjF5vnwqmfUhQn87pjSlWDB
-         jDz5FV3LiEDfv29nrbJS7WFgmNT+lT88kQnsuZAY=
+        b=gsm7a/MFyE7RFg5b/a5dWPqv+yapOR66sIuaSfNuaixLoE7XEkTYaY9QKykDtAUwA
+         DsTgwa5+erOIjIHNhbdDWtNCCJ1SiE1wIOHpUPdBfofOcy91KK+iFxY+nXkWkFcNW7
+         VUKGYC4KgtmhcoDRQAHPGa/a3oyGMSwYR+aapw2U=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:57:15 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:57:18 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Serge Semin <fancer.lancer@gmail.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
@@ -43,9 +43,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 08/17] dt-bindings: PCI: dwc: Add reg/reg-names common properties
-Date:   Fri, 10 Jun 2022 11:56:56 +0300
-Message-ID: <20220610085706.15741-9-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v3 12/17] dt-bindings: PCI: dwc: Add Baikal-T1 PCIe Root Port bindings
+Date:   Fri, 10 Jun 2022 11:57:00 +0300
+Message-ID: <20220610085706.15741-13-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610085706.15741-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610085706.15741-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,243 +56,194 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Even though there is a more-or-less limited set of the CSR spaces can be
-defined for each DW PCIe controller the generic DT schema currently
-doesn't specify much limitations on the reg-space names used for one or
-another range. In order to prevent the vendor-specific controller schemas
-further deviation from the generic interface let's fix that by introducing
-the reg-names definition in the common DW PCIe DT-schema and preserving a
-generic "reg" and "reg-names" properties in there. New DW PCIe device
-DT-bindings are encouraged to use the generic set of the CSR spaces
-defined in the generic DW PCie DT-bindings, while the already available
-vendor-specific DT-bindings can refer to the common schema and define
-their own reg-spaces.
-
-Note the number of reg/reg-names items need to be changed in the DW PCIe
-EP DT-schema since aside with the "dbi" CSRs space these arrays can
-have "dbi2", "addr_space", "atu", etc ranges.
+Baikal-T1 SoC is equipped with DWC PCIe v4.60a Root Port controller, which
+link can be trained to work on up to Gen.3 speed over up to x4 lanes. The
+controller is supposed to be fed up with four clock sources: DBI
+peripheral clock, AXI application Tx/Rx clocks and external PHY/core
+reference clock generating the 100MHz signal. In addition to that the
+platform provide a way to reset each part of the controller:
+sticky/non-sticky bits, host controller core, PIPE interface, PCS/PHY and
+Hot/Power reset signal. The Root Port controller is equipped with multiple
+IRQ lines like MSI, system AER, PME, HP, Bandwidth change, Link
+equalization request and eDMA ones. The registers space is accessed over
+the DBI interface. There can be no more than four inbound or outbound iATU
+windows configured.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
-Changelog v3:
-- This is a new patch unpinned from the next one:
-  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
-  by the Rob' request. (@Rob)
-- Split up reg-names in the same way as the interrupt-names: common,
-  Root Port and Endpoint specific names. (@Rob)
-- Drop synonymous from the names list since the device schemas create
-  their own enumerations anyway.
+Changelog v2:
+- Rename 'syscon' property to 'baikal,bt1-syscon'.
+- Fix the 'compatible' property definition to being more specific about
+  what strings are supposed to be used. Due to that we had to add the
+  select property to evaluate the schema against the Baikal-T1 PCIe DT
+  nodes only.
 ---
- .../bindings/pci/snps,dw-pcie-common.yaml     | 76 +++++++++++++++++++
- .../bindings/pci/snps,dw-pcie-ep.yaml         | 34 +++++++--
- .../devicetree/bindings/pci/snps,dw-pcie.yaml | 27 +++++--
- 3 files changed, 124 insertions(+), 13 deletions(-)
+ .../bindings/pci/baikal,bt1-pcie.yaml         | 154 ++++++++++++++++++
+ 1 file changed, 154 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml
 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-index 0a524e916a9f..c6a55f90ddd5 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-@@ -17,6 +17,28 @@ description:
- select: false
- 
- properties:
+diff --git a/Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml b/Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml
+new file mode 100644
+index 000000000000..23bd1d0aa5c5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml
+@@ -0,0 +1,154 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/baikal,bt1-pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Baikal-T1 PCIe Root Port Controller
++
++maintainers:
++  - Serge Semin <fancer.lancer@gmail.com>
++
++description:
++  Embedded into Baikal-T1 SoC Root Complex controller. It's based on the
++  DWC RC PCIe v4.60a IP-core, which is configured to have just a single Root
++  Port function and is capable of establishing the link up to Gen.3 speed
++  on x4 lanes. It doesn't have embedded clock and reset control module, so
++  the proper interface initialization is supposed to be performed by software.
++
++select:
++  properties:
++    compatible:
++      contains:
++        const: baikal,bt1-pcie
++
++  required:
++    - compatible
++
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: baikal,bt1-pcie
++      - const: snps,dw-pcie-4.60a
++      - const: snps,dw-pcie
++
 +  reg:
 +    description:
-+      DWC PCIe CSR space is normally accessed over the dedicated Data Bus
-+      Interface - DBI. In accordance with the reference manual the register
-+      configuration space belongs to the Configuration-Dependent Module (CDM)
-+      and is split up into several sub-parts Standard PCIe configuration
-+      space, Port Logic Registers (PL), Shadow Config-space Registers,
-+      iATU/eDMA registers. The particular sub-space is selected by the
-+      CDM/ELBI (dbi_cs) and CS2 (dbi_cs2) signals (selector bits). Such
-+      configuration provides a flexible interface for the system engineers to
-+      either map the particular space at a desired MMIO address or just leave
-+      them in a contiguous memory space if pure Native or AXI Bridge DBI access
-+      is selected. Note the PCIe CFG-space, PL and Shadow registers are
-+      specific for each activated function, while the rest of the sub-spaces
-+      are common for all of them (if there are more than one).
-+    minItems: 2
-+    maxItems: 6
++      DBI, DBI2 and at least 4KB outbound iATU-capable region.
++    maxItems: 3
 +
 +  reg-names:
-+    minItems: 2
-+    maxItems: 6
++    minItems: 3
++    maxItems: 3
++    items:
++      enum: [ dbi, dbi2, config ]
 +
-   interrupts:
-     description:
-       There are two main sub-blocks which are normally capable of
-@@ -111,6 +133,60 @@ properties:
- additionalProperties: true
- 
- definitions:
-+  reg-names:
++  interrupts:
 +    description:
-+      CSR space names common for the DWC PCIe Root Port and Endpoint
-+      controllers.
-+    oneOf:
-+      - description:
-+          Basic DWC PCIe controller configuration-space accessible over
-+          the DBI interface. This memory space is either activated with
-+          CDM/ELBI = 0 and CS2 = 0 or is a contiguous memory region
-+          with all spaces. Note iATU/eDMA CSRs are indirectly accessible
-+          via the PL viewports on the DWC PCIe controllers older than
-+          v4.80a.
-+        const: dbi
-+      - description:
-+          Shadow DWC PCIe config-space registers. This space is selected
-+          by setting CDM/ELBI = 0 and CS2 = 1. This is an intermix of
-+          the PCI-SIG PCIe CFG-space with the shadow registers for some
-+          PCI Header space, PCI Standard and Extended Structures. It's
-+          mainly relevant for the end-point controller configuration,
-+          but still there are some shadow registers available for the
-+          Root Port mode too.
-+        const: dbi2
-+      - description:
-+          External Local Bus registers. It's an application-dependent
-+          registers normally defined by the platform engineers. The space
-+          can be selected by setting CDM/ELBI = 1 and CS2 = 0 wires or can
-+          be accessed over some platform-specific means (for instance
-+          as a part of a system controller).
-+        enum: [ elbi, app ]
-+      - description:
-+          iATU/eDMA registers common for all device functions. It's an
-+          unrolled memory space with the internal Address Translation
-+          Unit and Enhanced DMA, which is selected by setting CDM/ELBI = 1
-+          and CS2 = 1. For IP-core releases prior v4.80a, these registers
-+          have been programmed via an indirect addressing scheme using a
-+          set of viewport CSRs mapped into the PL space. Note iATU is
-+          normally mapped to the 0x0 address of this region, while eDMA
-+          is available at 0x80000 base address.
-+        const: atu
-+      - description:
-+          Platform-specific eDMA registers. Some platforms may have eDMA
-+          CSRs mapped in a non-standard base address. The registers offset
-+          can be changed or the MS/LS-bits of the address can be attached
-+          in an additional RTL block before the MEM-IO transactions reach
-+          the DW PCIe slave interface.
-+        const: dma
-+      - description:
-+          PHY/PCS configuration registers. Some platforms can have the
-+          PCS and PHY CSRs accessible over a dedicated memory mapped
-+          region, but mainly these registers are indirectly accessible
-+          either by means of the embedded PHY viewport schema or by some
-+          platform-specific method.
-+        const: phy
++      MSI, AER, PME, Hot-plug, Link Bandwidth Management, Link Equalization
++      request and eight Read/Write eDMA IRQ lines are available.
++    maxItems: 14
 +
-   interrupt-names:
-     description:
-       IRQ signal names common for the DWC PCIe Root Port and Endpoint
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index 5f12a6ac08d8..bfff723b529d 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -40,18 +40,25 @@ properties:
-           const: snps,dw-pcie-ep
- 
-   reg:
--    description: |
--      It should contain Data Bus Interface (dbi) and config registers for all
--      versions.
--      For designware core version >= 4.80, it may contain ATU address space.
-+    description:
-+      DBI, DBI2 reg-spaces and outbound memory window are required for the
-+      normal controller functioning. iATU memory IO region is also required
-+      if the space is unrolled (IP-core version >= 4.80a).
-     minItems: 2
--    maxItems: 4
-+    maxItems: 5
- 
-   reg-names:
-     minItems: 2
--    maxItems: 4
-+    maxItems: 5
-     items:
--      enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
-+      anyOf:
-+        - $ref: /schemas/pci/snps,dw-pcie-common.yaml#/definitions/reg-names
-+        - $ref: '#/definitions/reg-names'
-+    allOf:
-+      - contains:
-+          const: dbi
-+      - contains:
-+          const: addr_space
- 
-   interrupts:
-     description:
-@@ -77,6 +84,19 @@ required:
- 
- additionalProperties: true
- 
-+definitions:
-+  reg-names:
-+    description:
-+      DWC PCIe Endpoint specific CSR space names.
-+    oneOf:
-+      - description:
-+          Outbound iATU-capable memory-region which will be used to
-+          generate various application-specific traffic on the PCIe bus
-+          hierarchy. It's usage scenario depends on the endpoint
-+          functionality, for instance it can be used to create MSI(X)
-+          messages.
-+        const: addr_space
++  interrupt-names:
++    minItems: 14
++    maxItems: 14
++    items:
++      oneOf:
++        - pattern: '^dma[0-7]$'
++        - enum: [ msi, aer, pme, hp, bw_mg, l_eq ]
 +
- examples:
-   - |
-     pcie-ep@dfd00000 {
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index e0020b72288a..9e96c6d0ef48 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -40,10 +40,10 @@ properties:
-           const: snps,dw-pcie
- 
-   reg:
--    description: |
--      It should contain Data Bus Interface (dbi) and config registers for all
--      versions.
--      For designware core version >= 4.80, it may contain ATU address space.
++  clocks:
 +    description:
-+      At least DBI reg-space and peripheral devices CFG-space outbound window
-+      are required for the normal controller work. iATU memory IO region is
-+      also required if the space is unrolled (IP-core version >= 4.80a).
-     minItems: 2
-     maxItems: 5
- 
-@@ -51,8 +51,14 @@ properties:
-     minItems: 2
-     maxItems: 5
-     items:
--      enum: [ dbi, dbi2, config, atu, app, elbi, mgmt, ctrl, parf, cfg, link,
--              ulreg, smu, mpu, apb, phy ]
-+      anyOf:
-+        - $ref: /schemas/pci/snps,dw-pcie-common.yaml#/definitions/reg-names
-+        - $ref: '#/definitions/reg-names'
-+    allOf:
-+      - contains:
-+          const: dbi
-+      - contains:
-+          const: config
- 
-   interrupts:
-     description:
-@@ -82,6 +88,15 @@ required:
-   - reg-names
- 
- definitions:
-+  reg-names:
-+    description:
-+      DWC PCIe Root Port/Complex specific CSR space names.
-+    oneOf:
-+      - description:
-+          Outbound iATU-capable memory-region which will be used to access
-+          the peripheral PCIe devices configuration space.
-+        const: config
++      DBI (attached to the APB bus), AXI-bus master and slave interfaces
++      are fed up by the dedicated application clocks. A common reference
++      clock signal is supposed to be attached to the corresponding Ref-pad
++      of the SoC. It will be redistributed amongst the controller core
++      sub-modules (pipe, core, aux, etc).
++    minItems: 4
++    maxItems: 4
 +
-   interrupt-names:
-     description:
-       DWC PCIe Root Port/Complex specific IRQ signal names.
++  clock-names:
++    minItems: 4
++    maxItems: 4
++    items:
++      enum: [ dbi, mstr, slv, ref ]
++
++  resets:
++    description:
++      A comprehensive controller reset logic is supposed to be implemented
++      by software, so almost all the possible application and core reset
++      signals are exposed via the system CCU module.
++    minItems: 9
++    maxItems: 9
++
++  reset-names:
++    minItems: 9
++    maxItems: 9
++    items:
++      enum: [ mstr, slv, pwr, hot, phy, core, pipe, sticky, non-sticky ]
++
++  baikal,bt1-syscon:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description:
++      Phandle to the Baikal-T1 System Controller DT node. It's required to
++      access some additional PM, Reset-related and LTSSM signals.
++
++  num-lanes:
++    maximum: 4
++
++  max-link-speed:
++    maximum: 3
++
++  num-ob-windows:
++    const: 4
++
++  num-ib-windows:
++    const: 4
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - interrupts
++  - interrupt-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    pcie@1f052000 {
++      compatible = "baikal,bt1-pcie", "snps,dw-pcie-4.60a", "snps,dw-pcie";
++      device_type = "pci";
++      reg = <0x1f052000 0x1000>, <0x1f053000 0x1000>, <0x1bdbf000 0x1000>;
++      reg-names = "dbi", "dbi2", "config";
++      #address-cells = <3>;
++      #size-cells = <2>;
++      ranges = <0x81000000 0 0x00000000 0x1bdb0000 0 0x00008000>,
++               <0x82000000 0 0x20000000 0x08000000 0 0x13db0000>;
++      bus-range = <0x0 0xff>;
++
++      interrupts = <0 80 4>, <0 81 4>, <0 82 4>, <0 83 4>,
++                   <0 84 4>, <0 85 4>, <0 86 4>, <0 87 4>,
++                   <0 88 4>, <0 89 4>, <0 90 4>, <0 91 4>,
++                   <0 92 4>, <0 93 4>;
++      interrupt-names = "dma0", "dma1", "dma2", "dma3", "dma4", "dma5", "dma6",
++                        "dma7", "msi", "aer", "pme", "hp", "bw_mg", "l_eq";
++
++      clocks = <&ccu_sys 1>, <&ccu_axi 6>, <&ccu_axi 7>, <&clk_pcie>;
++      clock-names = "dbi", "mstr", "slv", "ref";
++
++      resets = <&ccu_axi 6>, <&ccu_axi 7>, <&ccu_sys 7>, <&ccu_sys 10>,
++               <&ccu_sys 4>, <&ccu_sys 6>, <&ccu_sys 5>, <&ccu_sys 8>,
++               <&ccu_sys 9>;
++      reset-names = "mstr", "slv", "pwr", "hot", "phy", "core", "pipe",
++                    "sticky", "non-sticky";
++
++      reset-gpios = <&port0 0 1>;
++
++      num-lanes = <4>;
++      max-link-speed = <3>;
++    };
++...
 -- 
 2.35.1
 
