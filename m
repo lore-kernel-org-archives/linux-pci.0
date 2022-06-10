@@ -2,176 +2,172 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 782EFCCA47B
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 20:23:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1369CC43334
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 21:14:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350652AbiFJUXq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Jun 2022 16:23:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38698 "EHLO
+        id S1350890AbiFJVOC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Jun 2022 17:14:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350650AbiFJUXM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 16:23:12 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5735E2A97F;
-        Fri, 10 Jun 2022 13:23:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1654892591; x=1686428591;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=4p2mctKPaIflcK+x1MadV6MB5YwRUZ8n0NuOLocL9vY=;
-  b=KidfmEIT8xIcM4WPl6MnN50D6ct3VQmw0VxDTyV/FR1FfPKWs7AWyqZj
-   erbhH3p3uQp7QWL75Ze0Kaw4r4sDfQ4eRhx2KcDrK0/oFeDGaduPGOkVG
-   XqS55JWxlJUn7WWclFxUiUSmsX8GAElq3mQdZAePKANkv4h0fs1Rpw+n5
-   T3yU+EsQi+HJLeFSn+ZRlBrgRegUNoltY2QAnhK/XL86MoicsuCLLd/DK
-   CaES8vb/KfAU+XcVp2kBEHXKxBWgajt6HIQ4EX/03kGHyecU6ODh7R0cG
-   eERjuZnIooh291VhaOeLe3A0FQmHuk0bndni8tzlEQDxtRg8dyVHVZxqy
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10374"; a="278871133"
-X-IronPort-AV: E=Sophos;i="5.91,291,1647327600"; 
-   d="scan'208";a="278871133"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2022 13:23:10 -0700
-X-IronPort-AV: E=Sophos;i="5.91,291,1647327600"; 
-   d="scan'208";a="566990423"
-Received: from pleung-mobl1.amr.corp.intel.com (HELO localhost) ([10.212.33.34])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2022 13:23:09 -0700
-From:   ira.weiny@intel.com
-To:     Dan Williams <dan.j.williams@intel.com>,
+        with ESMTP id S1350911AbiFJVN4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 17:13:56 -0400
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D022117063;
+        Fri, 10 Jun 2022 14:13:48 -0700 (PDT)
+Received: by mail-lf1-x12b.google.com with SMTP id w20so328625lfa.11;
+        Fri, 10 Jun 2022 14:13:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=+WVVm9hcoQebKnMQEz2CUXNeS0i4uoyXlCrD4W7Sr0Y=;
+        b=V+C4pC8SqzfTH6Iaawp235DJRVIZS2N+cxDdEhKxufC6aX/MVOofRtzAsGmEcQqWYt
+         5ERGOdbaJp1itw1qIzfQUh+JLcAjur4jNg4sWYw5V/4qA09WNrkGIWGJPAm7UkbELFth
+         O5Y+nvF+WVyVK0im9nRCrlbdkEMp9BZWj669wmcCdK2PJK8ECBNqVlldHpX4v+qjxoOp
+         lYcoGNHCVpqfYHo3MCy2VyZRnJ7eQFqOf9jXQa3PNN5CFQV6PXJ1uIFlw0V9okWriudB
+         TwB4Vw7UJihm1CwcZTxYI2x2F2nsF0BWBCKvlNV/j5sTQLnde27LbBiSN5SOv++SK/0p
+         S8mA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=+WVVm9hcoQebKnMQEz2CUXNeS0i4uoyXlCrD4W7Sr0Y=;
+        b=t9sYggZYApVTSXKN5MbeZLT5xgIEtlM9GXLMrxcL2z+nhGQvWXAcf7MoNHPl/xM6Ur
+         7XZXHtuquovUQ5xqv17slQFZSWGpyMR2skdtOJG7iWCtybOR0oPASjXgjHskG5KWTh6Q
+         FyJteVBSJdimKKHjil6i2vZqCzgup6K37FVUdVHRJUPi4tu/0sfCyH4KEb1MoBGv/FyF
+         dfPkOCRCAG53tlwvfsRIzedSTuDmPJY1xbkzfqRZiwpFWt+CzxOqp+Xhg0XmCdYZstsi
+         DjeEaW0cUVCpr8CanU/5ggKMdflBIWnzsOmJJKjI1QipnSCtd/blqAsvEGetrFXE7rsZ
+         0yCg==
+X-Gm-Message-State: AOAM532bUs/L3j2+vekXkvMIVT4DEWLtRqnC5ajW4gMYzX62Zu39JPlv
+        dCYazlqkZzG1UOc9QEaCyoE=
+X-Google-Smtp-Source: ABdhPJyvXYy81hLj3UEhHeroA/LIfcCYk32cRQExNWN/ZtgSuCtg+aV3gMvcTrIshMT4Ye6IERCMhQ==
+X-Received: by 2002:a05:6512:92c:b0:479:7a74:8427 with SMTP id f12-20020a056512092c00b004797a748427mr8940890lft.126.1654895627234;
+        Fri, 10 Jun 2022 14:13:47 -0700 (PDT)
+Received: from mobilestation ([95.79.189.214])
+        by smtp.gmail.com with ESMTPSA id x15-20020a2e9dcf000000b0025572941cc0sm79014ljj.113.2022.06.10.14.13.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Jun 2022 14:13:46 -0700 (PDT)
+Date:   Sat, 11 Jun 2022 00:13:44 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        linux-kernel@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Frank Li <Frank.Li@nxp.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        Ben Widawsky <bwidawsk@kernel.org>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH V11 7/8] cxl/port: Retry reading CDAT on failure
-Date:   Fri, 10 Jun 2022 13:22:58 -0700
-Message-Id: <20220610202259.3544623-8-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220610202259.3544623-1-ira.weiny@intel.com>
-References: <20220610202259.3544623-1-ira.weiny@intel.com>
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Simon Xue <xxm@rock-chips.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
+Subject: Re: [PATCH v3 11/17] dt-bindings: PCI: dwc: Apply common schema to
+ Rockchip DW PCIe nodes
+Message-ID: <20220610211344.xpax4ao3m22dwsyo@mobilestation>
+References: <20220610085706.15741-1-Sergey.Semin@baikalelectronics.ru>
+ <20220610085706.15741-12-Sergey.Semin@baikalelectronics.ru>
+ <1654866755.753412.1529404.nullmailer@robh.at.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <1654866755.753412.1529404.nullmailer@robh.at.kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Fri, Jun 10, 2022 at 07:12:35AM -0600, Rob Herring wrote:
+> On Fri, 10 Jun 2022 11:56:59 +0300, Serge Semin wrote:
+> > As the DT-bindings description states the Rockchip PCIe controller is
+> > based on the DW PCIe RP IP-core thus its DT-nodes are supposed to be
+> > compatible with the common DW PCIe controller schema. Let's make sure t=
+hey
+> > evaluated against it by referring to the snps,dw-pcie-common.yaml schema
+> > in the allOf sub-schemas composition.
+> >=20
+> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> >=20
+> > ---
+> >=20
+> > Changelog v3:
+> > - This is a new patch created on v3 lap of the series.
+> > ---
+> >  Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >=20
+>=20
+> My bot found errors running 'make DT_CHECKER_FLAGS=3D-m dt_binding_check'
+> on your patch (DT_CHECKER_FLAGS is new in v5.13):
+>=20
+> yamllint warnings/errors:
+>=20
 
-The CDAT read may fail for a number of reasons but mainly it is possible
-to get different parts of a valid state.  The checksum in the CDAT table
-protects against this.
+> dtschema/dtc warnings/errors:
+> ./Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml: Unable to =
+find schema file matching $id: http://devicetree.org/schemas/pci/snps,dw-pc=
+ie-common.yaml
+> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/=
+rockchip-dw-pcie.example.dtb: pcie@fe280000: False schema does not allow {'=
+compatible': ['rockchip,rk3568-pcie'], 'reg': [[3, 3229614080, 0, 3735552],=
+ [0, 4264034304, 0, 65536], [3, 2147483648, 0, 1048576]], 'reg-names': ['db=
+i', 'apb', 'config'], 'bus-range': [[32, 47]], 'clocks': [[4294967295, 143]=
+, [4294967295, 144], [4294967295, 145], [4294967295, 146], [4294967295, 147=
+]], 'clock-names': ['aclk_mst', 'aclk_slv', 'aclk_dbi', 'pclk', 'aux'], 'de=
+vice_type': ['pci'], 'linux,pci-domain': [[2]], 'max-link-speed': [[2]], 'm=
+si-map': [[8192, 4294967295, 8192, 4096]], 'num-lanes': [[2]], 'phys': [[42=
+94967295]], 'phy-names': ['pcie-phy'], 'power-domains': [[4294967295, 15]],=
+ 'ranges': [[2164260864, 0, 2155872256, 3, 2155872256, 0, 1048576], [219781=
+5296, 0, 2156920832, 3, 2156920832, 0, 1064304640]], 'resets': [[4294967295=
+, 193]], 'reset-names': ['pipe'], '#address-cells': [[3]], '#size-cells': [=
+[2]], '$nodename': ['pcie@fe280000']}
+> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree=
+/bindings/pci/rockchip-dw-pcie.yaml
 
-Now that the cdat data is validated, issue a retry if the CDAT read
-fails.  For now 5 retries are implemented.
+It's added in the framework of the patch:
+[PATCH v3 1/17] dt-bindings: PCI: dwc: Detach common RP/EP DT bindings
+of this series.
 
-Reviewed-by: Ben Widawsky <bwidawsk@kernel.org>
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+>=20
+> doc reference errors (make refcheckdocs):
+>=20
+> See https://patchwork.ozlabs.org/patch/
+>=20
+> This check can fail if there are any dependencies. The base for a patch
+> series is generally the most recent rc1.
+>=20
 
----
-Changes from V10
-	Pick up review tag and fix commit message
+> If you already ran 'make dt_binding_check' and didn't see the above
+> error(s), then make sure 'yamllint' is installed and dt-schema is up to
+> date:
+>=20
+> pip3 install dtschema --upgrade
 
-Changes from V9
-	Alison Schofield/Davidlohr Bueso
-		Print debug on each iteration and error only after failure
+Checked. No problem has been spotted:
+[fancer@mobilestation] kernel $ pip3 show dtschema | grep Version
+Version: 2022.5
+[fancer@mobilestation] kernel $ yamllint -v
+yamllint 1.25.0
+[fancer@mobilestation] kernel $ make -j8 ARCH=3Dmips CROSS_COMPILE=3Dmipsel=
+-baikal-linux- dt_binding_check DT_SCHEMA_FILES=3DDocumentation/devicetree/=
+bindings/pci/rockchip-dw-pcie.yaml
+  LINT    Documentation/devicetree/bindings
+  DTEX    Documentation/devicetree/bindings/pci/rockchip-dw-pcie.example.dts
+  CHKDT   Documentation/devicetree/bindings/processed-schema.json
+  SCHEMA  Documentation/devicetree/bindings/processed-schema.json
+  DTC     Documentation/devicetree/bindings/pci/rockchip-dw-pcie.example.dtb
+  CHECK   Documentation/devicetree/bindings/pci/rockchip-dw-pcie.example.dtb
+[fancer@mobilestation] kernel $
 
-Changes from V8
-	Move code to cxl/core/pci.c
+-Sergey
 
-Changes from V6
-	Move to pci.c
-	Fix retries count
-	Change to 5 retries
-
-Changes from V5:
-	New patch -- easy to push off or drop.
----
- drivers/cxl/core/pci.c | 40 +++++++++++++++++++++++++++++++---------
- 1 file changed, 31 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-index cb70287e2984..fd02bc7c0d97 100644
---- a/drivers/cxl/core/pci.c
-+++ b/drivers/cxl/core/pci.c
-@@ -617,19 +617,13 @@ static int cxl_cdat_read_table(struct device *dev,
- 	return rc;
- }
- 
--/**
-- * read_cdat_data - Read the CDAT data on this port
-- * @port: Port to read data from
-- *
-- * This call will sleep waiting for responses from the DOE mailbox.
-- */
--void read_cdat_data(struct cxl_port *port)
-+static int __read_cdat_data(struct cxl_port *port)
- {
- 	static struct pci_doe_mb *cdat_mb;
- 	struct device *dev = &port->dev;
- 	struct device *uport = port->uport;
- 	size_t cdat_length;
--	int ret;
-+	int ret = 0;
- 
- 	/*
- 	 * Ensure a reference on the underlying uport device which has the
-@@ -640,17 +634,21 @@ void read_cdat_data(struct cxl_port *port)
- 	cdat_mb = find_cdat_mb(uport);
- 	if (!cdat_mb) {
- 		dev_dbg(dev, "No CDAT mailbox\n");
-+		ret = -EIO;
- 		goto out;
- 	}
- 
- 	if (cxl_cdat_get_length(dev, cdat_mb, &cdat_length)) {
- 		dev_dbg(dev, "No CDAT length\n");
-+		ret = -EIO;
- 		goto out;
- 	}
- 
- 	port->cdat.table = devm_kzalloc(dev, cdat_length, GFP_KERNEL);
--	if (!port->cdat.table)
-+	if (!port->cdat.table) {
-+		ret = -ENOMEM;
- 		goto out;
-+	}
- 
- 	port->cdat.length = cdat_length;
- 	ret = cxl_cdat_read_table(dev, cdat_mb, &port->cdat);
-@@ -664,5 +662,29 @@ void read_cdat_data(struct cxl_port *port)
- 
- out:
- 	put_device(uport);
-+	return ret;
-+}
-+
-+/**
-+ * read_cdat_data - Read the CDAT data on this port
-+ * @port: Port to read data from
-+ *
-+ * This call will sleep waiting for responses from the DOE mailbox.
-+ */
-+void read_cdat_data(struct cxl_port *port)
-+{
-+	int retries = 5;
-+	int rc;
-+
-+	while (retries--) {
-+		rc = __read_cdat_data(port);
-+		if (!rc)
-+			return;
-+		dev_dbg(&port->dev,
-+			"CDAT data read error rc=%d (retries %d)\n",
-+			rc, retries);
-+	}
-+	dev_err(&port->dev, "CDAT data read failed after %d retries\n",
-+		retries);
- }
- EXPORT_SYMBOL_NS_GPL(read_cdat_data, CXL);
--- 
-2.35.1
-
+>=20
+> Please check and re-submit.
+>=20
