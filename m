@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FAC1CCA485
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF1ACCA486
 	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 08:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347467AbiFJI3h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Jun 2022 04:29:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60418 "EHLO
+        id S1347478AbiFJI3i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Jun 2022 04:29:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346690AbiFJI1r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 04:27:47 -0400
+        with ESMTP id S1347748AbiFJI1u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 04:27:50 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4EBA465D6;
-        Fri, 10 Jun 2022 01:26:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 00120AE4D;
+        Fri, 10 Jun 2022 01:26:12 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id E0A8F16A1;
-        Fri, 10 Jun 2022 11:26:39 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com E0A8F16A1
+        by mail.baikalelectronics.com (Postfix) with ESMTP id E14AE16A4;
+        Fri, 10 Jun 2022 11:26:43 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com E14AE16A4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654849599;
-        bh=pT6mSeQP4L1yqwlcHAGYKXBfkZ9Q5XYcmfpgvP/MfAg=;
+        d=baikalelectronics.ru; s=mail; t=1654849603;
+        bh=3MvYX2gSsYGdqr08ji+XGUNZWE/94NNXQE7xjF2HVRU=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=sRrQcLoEBs4LXUideMmJj6L6WA4t5+txhogZyfUOL2d2deVaW8vvgBBl/IZPntUkf
-         QL3S+BY0dl0qBkbOiQOntsNY7poS/Y12ug1MmWj5avribsx0X2OI1fTcFwuLC1E4kf
-         aX8hvTtHnKOZkQx7f9hRgu/uW50dWpdRpP4+WwuU=
+        b=VUVSJtb4WL9uxlfy/r9jqZJ4LI6dKSAO0kx98V4crgUG/uoFx2t+em+dD9FYpPaP4
+         aDBUDQ3nz8heLjRyj/2ze5Lc8aNJYmJhitkACAa7q2uuc3RHhMd4rYK2ZGhpvZOGYe
+         UFKAONuIq0aWXmOp5j4m6pCs+/FV1jBSYdz0Q0LQ=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:25:46 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:25:50 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -40,9 +40,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 14/18] PCI: dwc: Move io_cfg_atu_shared to the Root Port descriptor
-Date:   Fri, 10 Jun 2022 11:25:30 +0300
-Message-ID: <20220610082535.12802-15-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v4 16/18] PCI: dwc-plat: Simplify the probe method return value handling
+Date:   Fri, 10 Jun 2022 11:25:32 +0300
+Message-ID: <20220610082535.12802-17-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -53,75 +53,55 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-That flag is set if there is an outbound iATU window used for both PCIe
-peripheral config-space accesses and IO ports transfers. Since the flag
-semantic is purely Root Port specific, it's unused in neither the DW PCIe
-common code nor the DW PCIe Endpoint driver we can freely move it to the
-DW PCIe Root Port descriptor. Thus the pcie_port structure will be more
-coherent.
+The whole switch-case-logic implemented in the DWC PCIe RC/EP probe
+procedure doesn't seem well thought through. First of all the ret variable
+is unused in the EP-case and is only partly involved in the RC-case of the
+switch-case statement, which unnecessary complicates the code. Secondly
+the probe method will return zero if an unknown mode is detected. That is
+improbable situation since the OF-device data is initialized only with
+valid modes, but such code is still wrong at least from maintainability
+point of view. So let's convert the switch-case part of the probe function
+to being more coherent. We suggest to use the local ret variable to
+preserve the status of the case-clauses and return its value from the
+probe procedure after the work is done.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
+ drivers/pci/controller/dwc/pcie-designware-plat.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Changelog v4:
-- This is a new patch created on the v4 lap of the series.
----
- drivers/pci/controller/dwc/pcie-designware-host.c | 6 +++---
- drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index f57f456aa543..9da600b841a7 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -491,7 +491,7 @@ static int dw_pcie_rd_other_conf(struct pci_bus *bus, unsigned int devfn,
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 97de6ad7f9db..c6871bebf3fe 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -143,20 +143,21 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ 			return -ENODEV;
  
- 	ret = pci_generic_config_read(bus, devfn, where, size, val);
+ 		ret = dw_plat_add_pcie_port(dw_plat_pcie, pdev);
+-		if (ret < 0)
+-			return ret;
+ 		break;
+ 	case DW_PCIE_EP_TYPE:
+ 		if (!IS_ENABLED(CONFIG_PCIE_DW_PLAT_EP))
+ 			return -ENODEV;
  
--	if (!ret && pci->io_cfg_atu_shared)
-+	if (!ret && pp->cfg0_io_shared)
- 		dw_pcie_prog_outbound_atu(pci, 0, PCIE_ATU_TYPE_IO, pp->io_base,
- 					  pp->io_bus_addr, pp->io_size);
+ 		pci->ep.ops = &pcie_ep_ops;
+-		return dw_pcie_ep_init(&pci->ep);
++		ret = dw_pcie_ep_init(&pci->ep);
++		break;
+ 	default:
+ 		dev_err(dev, "INVALID device type %d\n", dw_plat_pcie->mode);
++		ret = -EINVAL;
++		break;
+ 	}
  
-@@ -507,7 +507,7 @@ static int dw_pcie_wr_other_conf(struct pci_bus *bus, unsigned int devfn,
+-	return 0;
++	return ret;
+ }
  
- 	ret = pci_generic_config_write(bus, devfn, where, size, val);
- 
--	if (!ret && pci->io_cfg_atu_shared)
-+	if (!ret && pp->cfg0_io_shared)
- 		dw_pcie_prog_outbound_atu(pci, 0, PCIE_ATU_TYPE_IO, pp->io_base,
- 					  pp->io_bus_addr, pp->io_size);
- 
-@@ -626,7 +626,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 							  PCIE_ATU_TYPE_IO, pp->io_base,
- 							  pp->io_bus_addr, pp->io_size);
- 			else
--				pci->io_cfg_atu_shared = true;
-+				pp->cfg0_io_shared = true;
- 		}
- 
- 		if (pci->num_ob_windows <= atu_idx)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 8ba239292634..13bffa3eaed6 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -179,6 +179,7 @@ struct dw_pcie_host_ops {
- 
- struct pcie_port {
- 	bool			has_msi_ctrl:1;
-+	bool			cfg0_io_shared:1;
- 	u64			cfg0_base;
- 	void __iomem		*va_cfg0_base;
- 	u32			cfg0_size;
-@@ -274,7 +275,6 @@ struct dw_pcie {
- 	int			link_gen;
- 	u8			n_fts[2];
- 	bool			iatu_unroll_enabled: 1;
--	bool			io_cfg_atu_shared: 1;
- };
- 
- #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
+ static const struct dw_plat_pcie_of_data dw_plat_pcie_rc_of_data = {
 -- 
 2.35.1
 
