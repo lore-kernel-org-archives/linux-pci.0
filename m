@@ -2,47 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 378BFCCA47F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 008FDC43334
 	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 08:29:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347370AbiFJI3e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Jun 2022 04:29:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47594 "EHLO
+        id S1346512AbiFJI3f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Jun 2022 04:29:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347644AbiFJI1q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 04:27:46 -0400
+        with ESMTP id S1347479AbiFJI1r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 04:27:47 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3CE202A3;
-        Fri, 10 Jun 2022 01:25:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DB69F5F76;
+        Fri, 10 Jun 2022 01:26:00 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 6F41EBD1;
-        Fri, 10 Jun 2022 11:26:35 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 6F41EBD1
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 6B34716A0;
+        Fri, 10 Jun 2022 11:26:38 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 6B34716A0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654849595;
-        bh=JD1oPiZAWSH2srGkuCaPH6/N1KlUYxj06tr7sZo7uHc=;
+        d=baikalelectronics.ru; s=mail; t=1654849599;
+        bh=KPuOVwi0cvFmfZI8ZO6CHQ/WVhFl8GOmzgX8MXxNTEg=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=ZFCvQhLR9bcyCG62CYwX4FaoB8JSBFaP9g7/dHLhYgzylWYVjUAKA1oZAt3xczJGn
-         jzhPL0xmcrepKsFcP3QoL9c7E1Bnp0FircPTgCix8kfTqWYJchE/PsTmhqWClSPPJz
-         3NQvVr0VATBppHTRWa93ZmsR1IRbML5n+FtVfLMI=
+        b=Ven35Z8y6h+XqxatQDpl/bdOE5CGJOaq0vrRX7cHa+Tdhb2w0WO4YByAqBlaf3mml
+         QQLxukPxSYC2bH/MNpAWMt6KbqyOX8z7rcq13LxoKO5lRTTVERUIAfuuZnOQgOLpbQ
+         EmsF0ROzoQ1/91/s3iOujC9IjKvaS3K2cQPbvc5o=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:25:43 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:25:46 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 09/18] PCI: dwc: Discard IP-core version checking on unrolled iATU detection
-Date:   Fri, 10 Jun 2022 11:25:25 +0300
-Message-ID: <20220610082535.12802-10-Sergey.Semin@baikalelectronics.ru>
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>,
+        <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v4 13/18] PCI: dwc: Add start_link/stop_link inliners
+Date:   Fri, 10 Jun 2022 11:25:29 +0300
+Message-ID: <20220610082535.12802-14-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -53,64 +57,188 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It's pretty much pointless. Even though unrolled version of the internal
-ATU has been indeed available since DWC PCIe v4.80a IP-core, there is no
-guarantee it was enabled during the IP-core configuration (Synopsys
-suggests to contact the Solvnet support for guidance of how to do that for
-the newer IP-cores). So the only reliable way to find out the unrolled
-iATU feature availability is indeed to check the iATU viewport register
-content. In accordance with the reference manual [1] if the register
-doesn't exist (unrolled iATU is enabled) it's content is fixed with
-0xff-s, otherwise it will contain some zeros. So we can freely drop the
-IP-core version checking in this matter then and use the
-dw_pcie_iatu_unroll_enabled() method only to detect whether iATU/eDMA
-space is unrolled.
+There are several places in the generic DW PCIe code where the
+platform-specific PCIe link start/stop methods are called after making
+sure the ops handler and the callbacks are specified. Instead of repeating
+the same pattern over and over let's define the static-inline methods in
+the DW PCIe header file and use them in the relevant parts of the driver.
 
-[1] DesignWare Cores, PCI Express Controller, Register Desciptions,
-v.4.90a, December 2016, p.855
+Note returning a negative error from the EP link start procedure if the
+start_link pointer isn't specified doesn't really make much sense since it
+perfectly normal to have such platform. Moreover even pci_epc_start()
+doesn't fail if no epc->ops->start callback is spotted. As a side-effect
+of this modification we can set the generic DW PCIe and Layerscape EP
+platform drivers free from the empty start_link callbacks and as such
+entirely dummy dw_pcie_ops instances.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-designware.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index ac966ed28c5b..e5c30695f664 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -600,15 +600,15 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+---
+
+Changelog v4:
+- This is a new patch created on the v4 lap of the series.
+---
+ drivers/pci/controller/dwc/pci-layerscape-ep.c    | 12 ------------
+ drivers/pci/controller/dwc/pcie-designware-ep.c   |  8 ++------
+ drivers/pci/controller/dwc/pcie-designware-host.c | 10 ++++------
+ drivers/pci/controller/dwc/pcie-designware-plat.c | 10 ----------
+ drivers/pci/controller/dwc/pcie-designware.h      | 14 ++++++++++++++
+ 5 files changed, 20 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+index 39f4664bd84c..ad99707b3b99 100644
+--- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
++++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+@@ -32,15 +32,6 @@ struct ls_pcie_ep {
+ 	const struct ls_pcie_ep_drvdata *drvdata;
+ };
  
- }
- 
--static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
-+static bool dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
- {
- 	u32 val;
- 
- 	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
- 	if (val == 0xffffffff)
--		return 1;
-+		return true;
- 
+-static int ls_pcie_establish_link(struct dw_pcie *pci)
+-{
 -	return 0;
-+	return false;
+-}
+-
+-static const struct dw_pcie_ops dw_ls_pcie_ep_ops = {
+-	.start_link = ls_pcie_establish_link,
+-};
+-
+ static const struct pci_epc_features*
+ ls_pcie_ep_get_features(struct dw_pcie_ep *ep)
+ {
+@@ -106,19 +97,16 @@ static const struct dw_pcie_ep_ops ls_pcie_ep_ops = {
+ 
+ static const struct ls_pcie_ep_drvdata ls1_ep_drvdata = {
+ 	.ops = &ls_pcie_ep_ops,
+-	.dw_pcie_ops = &dw_ls_pcie_ep_ops,
+ };
+ 
+ static const struct ls_pcie_ep_drvdata ls2_ep_drvdata = {
+ 	.func_offset = 0x20000,
+ 	.ops = &ls_pcie_ep_ops,
+-	.dw_pcie_ops = &dw_ls_pcie_ep_ops,
+ };
+ 
+ static const struct ls_pcie_ep_drvdata lx2_ep_drvdata = {
+ 	.func_offset = 0x8000,
+ 	.ops = &ls_pcie_ep_ops,
+-	.dw_pcie_ops = &dw_ls_pcie_ep_ops,
+ };
+ 
+ static const struct of_device_id ls_pcie_ep_of_match[] = {
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 7ad349c32082..15b8059544e3 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -435,8 +435,7 @@ static void dw_pcie_ep_stop(struct pci_epc *epc)
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+-	if (pci->ops && pci->ops->stop_link)
+-		pci->ops->stop_link(pci);
++	dw_pcie_stop_link(pci);
  }
  
- static void dw_pcie_iatu_detect_regions_unroll(struct dw_pcie *pci)
-@@ -680,9 +680,8 @@ void dw_pcie_iatu_detect(struct dw_pcie *pci)
- 	struct device *dev = pci->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
+ static int dw_pcie_ep_start(struct pci_epc *epc)
+@@ -444,10 +443,7 @@ static int dw_pcie_ep_start(struct pci_epc *epc)
+ 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
  
--	if (pci->version >= 0x480A || (!pci->version &&
--				       dw_pcie_iatu_unroll_enabled(pci))) {
--		pci->iatu_unroll_enabled = true;
-+	pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
-+	if (pci->iatu_unroll_enabled) {
- 		if (!pci->atu_base) {
- 			struct resource *res =
- 				platform_get_resource_byname(pdev, IORESOURCE_MEM, "atu");
+-	if (!pci->ops || !pci->ops->start_link)
+-		return -EINVAL;
+-
+-	return pci->ops->start_link(pci);
++	return dw_pcie_start_link(pci);
+ }
+ 
+ static const struct pci_epc_features*
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index fa107e8dd2ab..f57f456aa543 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -408,8 +408,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	dw_pcie_setup_rc(pp);
+ 
+-	if (!dw_pcie_link_up(pci) && pci->ops && pci->ops->start_link) {
+-		ret = pci->ops->start_link(pci);
++	if (!dw_pcie_link_up(pci)) {
++		ret = dw_pcie_start_link(pci);
+ 		if (ret)
+ 			goto err_free_msi;
+ 	}
+@@ -426,8 +426,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	return 0;
+ 
+ err_stop_link:
+-	if (pci->ops && pci->ops->stop_link)
+-		pci->ops->stop_link(pci);
++	dw_pcie_stop_link(pci);
+ 
+ err_free_msi:
+ 	if (pp->has_msi_ctrl)
+@@ -443,8 +442,7 @@ void dw_pcie_host_deinit(struct pcie_port *pp)
+ 	pci_stop_root_bus(pp->bridge->bus);
+ 	pci_remove_root_bus(pp->bridge->bus);
+ 
+-	if (pci->ops && pci->ops->stop_link)
+-		pci->ops->stop_link(pci);
++	dw_pcie_stop_link(pci);
+ 
+ 	if (pp->has_msi_ctrl)
+ 		dw_pcie_free_msi(pp);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 0c5de87d3cc6..abf1afac6064 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -36,15 +36,6 @@ static const struct of_device_id dw_plat_pcie_of_match[];
+ static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
+ };
+ 
+-static int dw_plat_pcie_establish_link(struct dw_pcie *pci)
+-{
+-	return 0;
+-}
+-
+-static const struct dw_pcie_ops dw_pcie_ops = {
+-	.start_link = dw_plat_pcie_establish_link,
+-};
+-
+ static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+@@ -140,7 +131,6 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	pci->dev = dev;
+-	pci->ops = &dw_pcie_ops;
+ 
+ 	dw_plat_pcie->pci = pci;
+ 	dw_plat_pcie->mode = mode;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 7d6e9b7576be..8ba239292634 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -365,6 +365,20 @@ static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
+ 	dw_pcie_writel_dbi(pci, reg, val);
+ }
+ 
++static inline int dw_pcie_start_link(struct dw_pcie *pci)
++{
++	if (pci->ops && pci->ops->start_link)
++		return pci->ops->start_link(pci);
++
++	return 0;
++}
++
++static inline void dw_pcie_stop_link(struct dw_pcie *pci)
++{
++	if (pci->ops && pci->ops->stop_link)
++		pci->ops->stop_link(pci);
++}
++
+ #ifdef CONFIG_PCIE_DW_HOST
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
 -- 
 2.35.1
 
