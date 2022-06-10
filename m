@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E992CCA47B
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 08:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FAC1CCA485
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 08:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347445AbiFJI3h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1347467AbiFJI3h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 10 Jun 2022 04:29:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42892 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347738AbiFJI1r (ORCPT
+        with ESMTP id S1346690AbiFJI1r (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 04:27:47 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 783DA659E;
-        Fri, 10 Jun 2022 01:25:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4EBA465D6;
+        Fri, 10 Jun 2022 01:26:02 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 68BBED5D;
-        Fri, 10 Jun 2022 11:26:37 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 68BBED5D
+        by mail.baikalelectronics.com (Postfix) with ESMTP id E0A8F16A1;
+        Fri, 10 Jun 2022 11:26:39 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com E0A8F16A1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654849597;
-        bh=wWJFJIoXIY9cJZYXUnF0posJc3lGCD8JeUSP5WNNlrw=;
+        d=baikalelectronics.ru; s=mail; t=1654849599;
+        bh=pT6mSeQP4L1yqwlcHAGYKXBfkZ9Q5XYcmfpgvP/MfAg=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=h9JYzX73XVSlESpq9hwVMobTgpG+aMSMxnhp3hvamE1nz3eTDUPrgl5Tru7OV7qIf
-         nm0Z2zcSJZ1DVsLYqk4a5nQx1zuM0e3BsLS2EpSwbUxuxIwbCR21qe/zJv0QRbHBlT
-         8x1/nDixWML6Tecn7gymAXb7/Vd3i2Ua8IeNyhd4=
+        b=sRrQcLoEBs4LXUideMmJj6L6WA4t5+txhogZyfUOL2d2deVaW8vvgBBl/IZPntUkf
+         QL3S+BY0dl0qBkbOiQOntsNY7poS/Y12ug1MmWj5avribsx0X2OI1fTcFwuLC1E4kf
+         aX8hvTtHnKOZkQx7f9hRgu/uW50dWpdRpP4+WwuU=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:25:45 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 11:25:46 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -40,9 +40,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 12/18] PCI: dwc: Re-use local pointer to the resource data
-Date:   Fri, 10 Jun 2022 11:25:28 +0300
-Message-ID: <20220610082535.12802-13-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v4 14/18] PCI: dwc: Move io_cfg_atu_shared to the Root Port descriptor
+Date:   Fri, 10 Jun 2022 11:25:30 +0300
+Message-ID: <20220610082535.12802-15-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -53,13 +53,12 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The dw_pcie_host_init() method has two instances of the resource structure
-pointers used in non-related places of the method. It's pointless to have
-two different local storages for them since the corresponding code is
-small and having resource specific names doesn't make it more readable.
-Let's convert these parts of the function to using just a common pointer
-to the resource structure instance. That shall make the code a bit nicer
-looking.
+That flag is set if there is an outbound iATU window used for both PCIe
+peripheral config-space accesses and IO ports transfers. Since the flag
+semantic is purely Root Port specific, it's unused in neither the DW PCIe
+common code nor the DW PCIe Endpoint driver we can freely move it to the
+DW PCIe Root Port descriptor. Thus the pcie_port structure will be more
+coherent.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
@@ -68,48 +67,61 @@ Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Changelog v4:
 - This is a new patch created on the v4 lap of the series.
 ---
- .../pci/controller/dwc/pcie-designware-host.c    | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 6 +++---
+ drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 24123f647fa9..fa107e8dd2ab 100644
+index f57f456aa543..9da600b841a7 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -293,17 +293,17 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct resource_entry *win;
- 	struct pci_host_bridge *bridge;
--	struct resource *cfg_res;
-+	struct resource *res;
- 	int ret;
+@@ -491,7 +491,7 @@ static int dw_pcie_rd_other_conf(struct pci_bus *bus, unsigned int devfn,
  
- 	raw_spin_lock_init(&pp->lock);
+ 	ret = pci_generic_config_read(bus, devfn, where, size, val);
  
--	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
--	if (cfg_res) {
--		pp->cfg0_size = resource_size(cfg_res);
--		pp->cfg0_base = cfg_res->start;
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-+	if (res) {
-+		pp->cfg0_size = resource_size(res);
-+		pp->cfg0_base = res->start;
+-	if (!ret && pci->io_cfg_atu_shared)
++	if (!ret && pp->cfg0_io_shared)
+ 		dw_pcie_prog_outbound_atu(pci, 0, PCIE_ATU_TYPE_IO, pp->io_base,
+ 					  pp->io_bus_addr, pp->io_size);
  
--		pp->va_cfg0_base = devm_pci_remap_cfg_resource(dev, cfg_res);
-+		pp->va_cfg0_base = devm_pci_remap_cfg_resource(dev, res);
- 		if (IS_ERR(pp->va_cfg0_base))
- 			return PTR_ERR(pp->va_cfg0_base);
- 	} else {
-@@ -312,8 +312,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	}
+@@ -507,7 +507,7 @@ static int dw_pcie_wr_other_conf(struct pci_bus *bus, unsigned int devfn,
  
- 	if (!pci->dbi_base) {
--		struct resource *dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
--		pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_res);
-+		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+		pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
- 		if (IS_ERR(pci->dbi_base))
- 			return PTR_ERR(pci->dbi_base);
- 	}
+ 	ret = pci_generic_config_write(bus, devfn, where, size, val);
+ 
+-	if (!ret && pci->io_cfg_atu_shared)
++	if (!ret && pp->cfg0_io_shared)
+ 		dw_pcie_prog_outbound_atu(pci, 0, PCIE_ATU_TYPE_IO, pp->io_base,
+ 					  pp->io_bus_addr, pp->io_size);
+ 
+@@ -626,7 +626,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 							  PCIE_ATU_TYPE_IO, pp->io_base,
+ 							  pp->io_bus_addr, pp->io_size);
+ 			else
+-				pci->io_cfg_atu_shared = true;
++				pp->cfg0_io_shared = true;
+ 		}
+ 
+ 		if (pci->num_ob_windows <= atu_idx)
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 8ba239292634..13bffa3eaed6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -179,6 +179,7 @@ struct dw_pcie_host_ops {
+ 
+ struct pcie_port {
+ 	bool			has_msi_ctrl:1;
++	bool			cfg0_io_shared:1;
+ 	u64			cfg0_base;
+ 	void __iomem		*va_cfg0_base;
+ 	u32			cfg0_size;
+@@ -274,7 +275,6 @@ struct dw_pcie {
+ 	int			link_gen;
+ 	u8			n_fts[2];
+ 	bool			iatu_unroll_enabled: 1;
+-	bool			io_cfg_atu_shared: 1;
+ };
+ 
+ #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
 -- 
 2.35.1
 
