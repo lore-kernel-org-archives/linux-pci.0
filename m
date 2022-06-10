@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFFD2C43334
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 09:16:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F0DCCA480
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Jun 2022 09:16:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348778AbiFJJQb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Jun 2022 05:16:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37942 "EHLO
+        id S1348143AbiFJJQh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Jun 2022 05:16:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347867AbiFJJPR (ORCPT
+        with ESMTP id S1344071AbiFJJPR (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Jun 2022 05:15:17 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5B2251BF161;
-        Fri, 10 Jun 2022 02:15:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 19F3E1F429D;
+        Fri, 10 Jun 2022 02:15:12 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id CFA3B16A7;
-        Fri, 10 Jun 2022 12:16:00 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com CFA3B16A7
+        by mail.baikalelectronics.com (Postfix) with ESMTP id C5D2B16A4;
+        Fri, 10 Jun 2022 12:15:58 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com C5D2B16A4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1654852560;
-        bh=e3EyAk+7yacSWKzsDPDE1YCtSYHfCjIEdfhOP/lUqQc=;
+        d=baikalelectronics.ru; s=mail; t=1654852558;
+        bh=2X2tj0g7BNrh6TEYb9Px1boK3zW3+LS2tBFfgKTpkMw=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=n6qpX1s3ObiosZG9MdZU9QxjrvoFmhxaoBxwB2dxkjsS13uEbEUdQh69n6M4y9qJo
-         j1ZzvNDEm+VVQJOY8NH6PizhF2zOzht7DH/gUzls/m3YLlUyaVK5tidtL4/KJ3IrgH
-         0EQZ6Fg75e+oV2EG2ueXMtW3kOq1PIbEljiH1SqQ=
+        b=qpBFX/4I3F9GwG6TqV2+bdl1hqy4urw/LVTfM37AtJbzwqWCtb5JlrMdrxp6jPdgo
+         H+8KweE5+/+5Z0LQOmqNOvsDiKe02mrDHMcB0suzSaYfGlVptLGnxHBhskxP+BhA6T
+         mqefWX5tDh6Dbjtc+gvqi7bOLavS045uESnwhkKg=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 12:15:08 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 10 Jun 2022 12:15:06 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -42,9 +42,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v3 06/24] dmaengine: dw-edma: Fix invalid interleaved xfers semantics
-Date:   Fri, 10 Jun 2022 12:14:41 +0300
-Message-ID: <20220610091459.17612-7-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v3 03/24] dmaengine: dw-edma: Convert ll/dt phys-address to PCIe bus/DMA address
+Date:   Fri, 10 Jun 2022 12:14:38 +0300
+Message-ID: <20220610091459.17612-4-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220610091459.17612-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220610091459.17612-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -55,107 +55,101 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The interleaved DMA transfer support added in commit 85e7518f42c8
-("dmaengine: dw-edma: Add device_prep_interleave_dma() support") seems
-contradicting to what the DMA-engine defines. The next conditional
-statements:
-	if (!xfer->xfer.il->numf)
-		return NULL;
-	if (xfer->xfer.il->numf > 0 && xfer->xfer.il->frame_size > 0)
-		return NULL;
-basically mean that numf can't be zero and frame_size must always be zero,
-otherwise the transfer won't be executed. But further the transfer
-execution method takes the frames size from the
-dma_interleaved_template.sgl[] array for each frame. That array in
-accordance with [1] is supposed to be of
-dma_interleaved_template.frame_size size, which as we discovered before
-the code expects to be zero. So judging by the dw_edma_device_transfer()
-implementation the method implies the dma_interleaved_template.sgl[] array
-being of dma_interleaved_template.numf size, which is wrong. Since the
-dw_edma_device_transfer() method doesn't permit
-dma_interleaved_template.frame_size being non-zero then actual multi-chunk
-interleaved transfer turns to be unsupported even though the code implies
-having it supported.
+In accordance with the dw_edma_region.paddr field semantics it is supposed
+to be initialized with a memory base address visible by the DW eDMA
+controller. If the DMA engine is embedded into the DW PCIe Host/EP
+controller, then the address should belong to the Local CPU/Application
+memory. If eDMA is remotely accessible across the PCIe bus via the PCIe
+memory IOs, then the address needs to be a part of the PCIe bus memory
+space. The later case hasn't been well covered in the corresponding
+glue-driver. Since in general the PCIe memory space doesn't have to match
+the CPU memory space and the pci_dev.resource[] arrays contain the
+resources defined in the CPU memory space, a proper conversion needs to be
+performed, otherwise either the driver won't properly work or much worse
+the memory corruption will happen. The conversion can be done by means of
+the pci_bus_address() method. Let's use it to retrieve the LL, DT and CSRs
+PCIe memory ranges.
 
-Let's fix that by adding a fully functioning support of the interleaved
-DMA transfers. First of all dma_interleaved_template.frame_size is
-supposed to be greater or equal to one thus having at least simple linear
-chunked frames. Secondly we can create a walk-through all over the chunks
-and frames just by initializing the number of the eDMA burst transactios
-as a multiple of dma_interleaved_template.numf and
-dma_interleaved_template.frame_size and getting the frame_size-modulo of
-the iteration step as an index of the dma_interleaved_template.sgl[]
-array. The rest of the dw_edma_device_transfer() method code can be left
-unchanged.
+Note in addition to that we need to extend the dw_edma_region.paddr field
+size. The field normally contains a memory range base address to be set in
+the DW eDMA Linked-List pointer register or as a base address of the
+Linked-List data buffer. In accordance with [1] the LL range is supposed
+to be created in the Local CPU/Application memory, but depending on the DW
+eDMA utilization the memory can be created as a part of the PCIe bus
+address space (as in the case of the DW PCIe EP prototype kit). Thus in
+the former case the dw_edma_region.paddr field should have the dma_addr_t
+type, while in the later one - pci_bus_addr_t. Seeing the corresponding
+CSRs are always 64-bits wide let's convert the dw_edma_region.paddr field
+type to be u64 and let the client code logic to make sure it has a valid
+address visible by the DW eDMA controller. For instance the DW eDMA PCIe
+glue-driver initializes the field with the addresses from the PCIe bus
+memory space.
 
-[1] include/linux/dmaengine.h: doc struct dma_interleaved_template
+[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    v.5.40a, March 2019, p.1103
 
-Fixes: 85e7518f42c8 ("dmaengine: dw-edma: Add device_prep_interleave_dma() support")
+Fixes: 41aaff2a2ac0 ("dmaengine: Add Synopsys eDMA IP PCIe glue-logic")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
+ drivers/dma/dw-edma/dw-edma-pcie.c | 8 ++++----
+ include/linux/dma/edma.h           | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 225eab58acb7..ef49deb5a7f3 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -333,6 +333,7 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 	struct dw_edma_chunk *chunk;
- 	struct dw_edma_burst *burst;
- 	struct dw_edma_desc *desc;
-+	size_t fsz = 0;
- 	u32 cnt = 0;
- 	int i;
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index d6b5e2463884..04c95cba1244 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -231,7 +231,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 			return -ENOMEM;
  
-@@ -382,9 +383,7 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 		if (xfer->xfer.sg.len < 1)
- 			return NULL;
- 	} else if (xfer->type == EDMA_XFER_INTERLEAVED) {
--		if (!xfer->xfer.il->numf)
--			return NULL;
--		if (xfer->xfer.il->numf > 0 && xfer->xfer.il->frame_size > 0)
-+		if (!xfer->xfer.il->numf || xfer->xfer.il->frame_size < 1)
- 			return NULL;
- 		if (!xfer->xfer.il->src_inc || !xfer->xfer.il->dst_inc)
- 			return NULL;
-@@ -414,10 +413,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 		cnt = xfer->xfer.sg.len;
- 		sg = xfer->xfer.sg.sgl;
- 	} else if (xfer->type == EDMA_XFER_INTERLEAVED) {
--		if (xfer->xfer.il->numf > 0)
--			cnt = xfer->xfer.il->numf;
--		else
--			cnt = xfer->xfer.il->frame_size;
-+		cnt = xfer->xfer.il->numf * xfer->xfer.il->frame_size;
-+		fsz = xfer->xfer.il->frame_size;
+ 		ll_region->vaddr += ll_block->off;
+-		ll_region->paddr = pdev->resource[ll_block->bar].start;
++		ll_region->paddr = pci_bus_address(pdev, ll_block->bar);
+ 		ll_region->paddr += ll_block->off;
+ 		ll_region->sz = ll_block->sz;
+ 
+@@ -240,7 +240,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 			return -ENOMEM;
+ 
+ 		dt_region->vaddr += dt_block->off;
+-		dt_region->paddr = pdev->resource[dt_block->bar].start;
++		dt_region->paddr = pci_bus_address(pdev, dt_block->bar);
+ 		dt_region->paddr += dt_block->off;
+ 		dt_region->sz = dt_block->sz;
  	}
+@@ -256,7 +256,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 			return -ENOMEM;
  
- 	for (i = 0; i < cnt; i++) {
-@@ -439,7 +436,7 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 		else if (xfer->type == EDMA_XFER_SCATTER_GATHER)
- 			burst->sz = sg_dma_len(sg);
- 		else if (xfer->type == EDMA_XFER_INTERLEAVED)
--			burst->sz = xfer->xfer.il->sgl[i].size;
-+			burst->sz = xfer->xfer.il->sgl[i % fsz].size;
+ 		ll_region->vaddr += ll_block->off;
+-		ll_region->paddr = pdev->resource[ll_block->bar].start;
++		ll_region->paddr = pci_bus_address(pdev, ll_block->bar);
+ 		ll_region->paddr += ll_block->off;
+ 		ll_region->sz = ll_block->sz;
  
- 		chunk->ll_region.sz += burst->sz;
- 		desc->alloc_sz += burst->sz;
-@@ -482,10 +479,9 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+@@ -265,7 +265,7 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 			return -ENOMEM;
  
- 		if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
- 			sg = sg_next(sg);
--		} else if (xfer->type == EDMA_XFER_INTERLEAVED &&
--			   xfer->xfer.il->frame_size > 0) {
-+		} else if (xfer->type == EDMA_XFER_INTERLEAVED) {
- 			struct dma_interleaved_template *il = xfer->xfer.il;
--			struct data_chunk *dc = &il->sgl[i];
-+			struct data_chunk *dc = &il->sgl[i % fsz];
+ 		dt_region->vaddr += dt_block->off;
+-		dt_region->paddr = pdev->resource[dt_block->bar].start;
++		dt_region->paddr = pci_bus_address(pdev, dt_block->bar);
+ 		dt_region->paddr += dt_block->off;
+ 		dt_region->sz = dt_block->sz;
+ 	}
+diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+index 8b134896c9ed..5ec7cf2f14fc 100644
+--- a/include/linux/dma/edma.h
++++ b/include/linux/dma/edma.h
+@@ -18,7 +18,7 @@
+ struct dw_edma;
  
- 			src_addr += burst->sz;
- 			if (il->src_sgl)
+ struct dw_edma_region {
+-	phys_addr_t	paddr;
++	u64		paddr;
+ 	void __iomem	*vaddr;
+ 	size_t		sz;
+ };
 -- 
 2.35.1
 
