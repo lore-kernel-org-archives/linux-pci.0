@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32B5DC43334
-	for <linux-pci@archiver.kernel.org>; Sun, 12 Jun 2022 10:18:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19DE5CCA47D
+	for <linux-pci@archiver.kernel.org>; Sun, 12 Jun 2022 10:18:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236022AbiFLKSx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 12 Jun 2022 06:18:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55496 "EHLO
+        id S235937AbiFLKSw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 12 Jun 2022 06:18:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235984AbiFLKSw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Jun 2022 06:18:52 -0400
-Received: from mail.tkos.co.il (wiki.tkos.co.il [84.110.109.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ED1422BCE;
-        Sun, 12 Jun 2022 03:18:51 -0700 (PDT)
+        with ESMTP id S232186AbiFLKSv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Jun 2022 06:18:51 -0400
+Received: from mail.tkos.co.il (golan.tkos.co.il [84.110.109.230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC2391D325;
+        Sun, 12 Jun 2022 03:18:50 -0700 (PDT)
 Received: from tarshish.tkos.co.il (unknown [10.0.8.3])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.tkos.co.il (Postfix) with ESMTPS id 828B944091D;
-        Sun, 12 Jun 2022 13:18:33 +0300 (IDT)
+        by mail.tkos.co.il (Postfix) with ESMTPS id 29882440871;
+        Sun, 12 Jun 2022 13:18:32 +0300 (IDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tkos.co.il;
-        s=default; t=1655029114;
-        bh=KuQXYgm8NThAIzb7Ikf1sLboR2SVHi9w/PFiSS2oBeM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YOp6x8CPE5LAHYBIj5eIocJB8SItVI5ytlhbXSpwGr5vTbkrRUM1qycjJQly1tftR
-         XqtDzOH82NvIPMCgvMwy60TwCzmKzCZOoWVrhj7hKFDw8cnetdpMIz6YL7qCogDua8
-         NsuYVmgNpcJ8AUld6hEGILMYfjuwoTpV6KebUKZaph7mrRjhymhIJ0Kj/tS6Nex10a
-         NPrMeIotyVKWdIcvhzAgWtq/fo6s8HV73UrkwAKxQoWtYDia90/Cf2L0NNLxAGHp3l
-         fhE6TeT62FvUQ6MR+TYJd4aWxnHBTu0u7Q2qnIcFnxlycx/FGscR58szcyn3qlJK/g
-         UXO7w3gmCKxnw==
+        s=default; t=1655029112;
+        bh=F94aNh3JlGBDRxuX6bcvrpui+k0ajuhAbaAtoXHdaz4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=PstxhpQ2j2zL3XgaOwUiUHxsE9eAiuy2IiU7fBvREIvKdgvqEgd5dXEF41ZxmDlHV
+         +h55M7mxikZ017Rgx9sTFXJVK+smeZdCsxB2KH2fZ4qv58XwhqeZHFU+hz7+q4+tr/
+         iHaod/SMzKZm4GnP+px3pl3XQHEauQPgwzkhSdf+nuF2PGz3ZaYeqgWxVx/Gl0nr0P
+         G2lMZI8ILiENAe/aHZ+Ii1/P56l1VU3+8txwbvLUn4iX1esyCcs1dz0ok4VJuwbZ6F
+         EGwuaxAF2158bHUG3p1ihGFjn7e75S2J3mgEGa4L5BzN6BmJqRUOpyk/6bNVuPmoJ7
+         MVsh0zVsvEezA==
 From:   Baruch Siach <baruch@tkos.co.il>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
         Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc:     Baruch Siach <baruch.siach@siklu.com>,
+Cc:     Baruch Siach <baruch@tkos.co.il>,
         Kathiravan T <quic_kathirav@quicinc.com>,
         Selvam Sathappan Periakaruppan <quic_speriaka@quicinc.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -47,12 +47,10 @@ Cc:     Baruch Siach <baruch.siach@siklu.com>,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org
-Subject: [PATCH v7 2/3] PCI: qcom: Define slot capabilities using PCI_EXP_SLTCAP_*
-Date:   Sun, 12 Jun 2022 13:18:34 +0300
-Message-Id: <27d2c59cc9a916754e0dc68f44447ecefe378410.1655028401.git.baruch@tkos.co.il>
+Subject: [PATCH v7 0/3] PCI: IPQ6018 platform support
+Date:   Sun, 12 Jun 2022 13:18:32 +0300
+Message-Id: <cover.1655028401.git.baruch@tkos.co.il>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <cover.1655028401.git.baruch@tkos.co.il>
-References: <cover.1655028401.git.baruch@tkos.co.il>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -60,55 +58,80 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Baruch Siach <baruch.siach@siklu.com>
+This series adds support for the single PCIe lane on IPQ6018 SoCs. The code is 
+ported from downstream Codeaurora v5.4 kernel. The main difference from 
+downstream code is the split of PCIe registers configuration from .init to 
+.post_init, since it requires phy_power_on().
 
-The PCIE_CAP_LINK1_VAL macro actually defines slot capabilities. Use
-PCI_EXP_SLTCAP_* macros to spell its value, and rename it to better
-describe its meaning.
+Tested on IPQ6010 based hardware.
 
-Signed-off-by: Baruch Siach <baruch.siach@siklu.com>
----
-v7:
-  Use FIELD_PREP for power limit and stale (Pali Rohár)
----
- drivers/pci/controller/dwc/pcie-qcom.c | 17 +++++++++++++++--
- 1 file changed, 15 insertions(+), 2 deletions(-)
+Changes in v7:
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 2ea13750b492..5ad9be6372f4 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -69,7 +69,20 @@
- #define PCIE20_AXI_MSTR_RESP_COMP_CTRL1		0x81c
- #define CFG_BRIDGE_SB_INIT			BIT(0)
- 
--#define PCIE_CAP_LINK1_VAL			0x2FD7F
-+#define PCIE_CAP_SLOT_POWER_LIMIT_VAL		FIELD_PREP(PCI_EXP_SLTCAP_SPLV, \
-+						250)
-+#define PCIE_CAP_SLOT_POWER_LIMIT_SCALE		FIELD_PREP(PCI_EXP_SLTCAP_SPLS, \
-+						1)
-+#define PCIE_CAP_SLOT_VAL			(PCI_EXP_SLTCAP_ABP | \
-+						PCI_EXP_SLTCAP_PCP | \
-+						PCI_EXP_SLTCAP_MRLSP | \
-+						PCI_EXP_SLTCAP_AIP | \
-+						PCI_EXP_SLTCAP_PIP | \
-+						PCI_EXP_SLTCAP_HPS | \
-+						PCI_EXP_SLTCAP_HPC | \
-+						PCI_EXP_SLTCAP_EIP | \
-+						PCIE_CAP_SLOT_POWER_LIMIT_VAL | \
-+						PCIE_CAP_SLOT_POWER_LIMIT_SCALE)
- 
- #define PCIE20_PARF_Q2A_FLUSH			0x1AC
- 
-@@ -1114,7 +1127,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
- 
- 	writel(PCI_COMMAND_MASTER, pci->dbi_base + PCI_COMMAND);
- 	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
--	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + offset + PCI_EXP_SLTCAP);
-+	writel(PCIE_CAP_SLOT_VAL, pci->dbi_base + offset + PCI_EXP_SLTCAP);
- 
- 	val = readl(pci->dbi_base + offset + PCI_EXP_LNKCAP);
- 	val &= ~PCI_EXP_LNKCAP_ASPMS;
+  * Use FIELD_PREP for power limit and scale fields
+
+  * Add Stanimir Varbanov to Cc
+
+  * Rebase on v5.19-rc1
+
+Changes in v6:
+
+  * Drop DT patch applied to the qcom tree
+
+  * Normalize driver changes subject line
+
+  * Add a preparatory patch to rename PCIE_CAP_LINK1_VAL to PCIE_CAP_SLOT_VAL,
+    and define it using PCI_EXP_SLTCAP_* macros
+
+  * Drop a vague comment about ASPM configuration
+
+  * Add a comment about the source of delay periods
+
+Changes in v5:
+
+  * Remove comments from qcom_pcie_init_2_9_0() (Bjorn Andersson)
+
+Changes in v4:
+
+  * Drop applied DT bits
+
+  * Add max-link-speed that was missing from the applied v2 patch
+
+  * Rebase the driver on v5.16-rc3
+
+Changes in v3:
+
+  * Drop applied patches
+
+  * Rely on generic code for speed setup
+
+  * Drop unused macros
+
+  * Formatting fixes
+
+Changes in v2:
+
+  * Add patch moving GEN3_RELATED macros to a common header
+
+  * Drop ATU configuration from pcie-qcom
+
+  * Remove local definition of common registers
+
+  * Use bulk clk and reset APIs
+
+  * Remove msi-parent from device-tree
+
+Baruch Siach (2):
+  PCI: dwc: tegra: move GEN3_RELATED DBI register to common header
+  PCI: qcom: Define slot capabilities using PCI_EXP_SLTCAP_*
+
+Selvam Sathappan Periakaruppan (1):
+  PCI: qcom: Add IPQ60xx support
+
+ drivers/pci/controller/dwc/pcie-designware.h |   7 +
+ drivers/pci/controller/dwc/pcie-qcom.c       | 157 ++++++++++++++++++-
+ drivers/pci/controller/dwc/pcie-tegra194.c   |   6 -
+ 3 files changed, 162 insertions(+), 8 deletions(-)
+
 -- 
 2.35.1
 
