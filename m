@@ -2,83 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23546C43334
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2C20CCA47D
 	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:54:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351051AbiFMUyp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jun 2022 16:54:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36464 "EHLO
+        id S1351095AbiFMUyq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jun 2022 16:54:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352330AbiFMUyZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:54:25 -0400
-Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93E412AE2E;
-        Mon, 13 Jun 2022 13:23:03 -0700 (PDT)
-Received: by mail-oi1-f176.google.com with SMTP id h187so9102394oif.4;
-        Mon, 13 Jun 2022 13:23:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=pWsit0XtntT6J2RTRZ0ujYWmdRDTbMZCbVmpGrfCYhA=;
-        b=DrGzYq5D9Y2CcEeM9Bd5UjW9DU11eGCY1W7+VI4JU2LyajBxb/5/JtUN1lT8z+QMUg
-         FveTy5nLgT5QNfemLV9Bx5PqsLqKesflDx7D1yzMw+P9W31CZxt6TH7qcdpqunEquvbM
-         192aDNy1EW1FWJmtsoHit0rRI+UnXHcJHH37mG4Mb9Yqc54ZBbYWMd1b9ot1HpMZU++X
-         rQfGH0YSdwX/qKzVIARuruKvVwZUn1hTCIQ4zlIiRzIkmqo5io+WOV51VLhoj2XIqlaK
-         qiHhcUiwzTdnsM56n097+hnSTcKkElH1oBuXUvbYQHhdOT4PF11nbNr1dGtXeAVGHlEL
-         HoDQ==
-X-Gm-Message-State: AOAM532kgN9CnIiKntm9V3/eEYkfvwrIyTbpk5Em4gvP4fmy3h3ACHPy
-        uCsw0Wjh3JcgyccOrbzu/g==
-X-Google-Smtp-Source: ABdhPJzo2BcmC/VIfVQzsrFJ8doyeGKwKmqH/pmvy+HKvx0w6Zh7cJYQumivPmCaX4tpdaBO6WF6gQ==
-X-Received: by 2002:a05:6808:11c7:b0:2f9:f96c:d0ee with SMTP id p7-20020a05680811c700b002f9f96cd0eemr266770oiv.134.1655151782945;
-        Mon, 13 Jun 2022 13:23:02 -0700 (PDT)
-Received: from robh.at.kernel.org ([2607:fb90:20d2:bb97:4381:7341:60ed:a4a1])
-        by smtp.gmail.com with ESMTPSA id go13-20020a056870da0d00b000f324b1e645sm4504754oab.22.2022.06.13.13.23.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jun 2022 13:23:02 -0700 (PDT)
-Received: (nullmailer pid 453 invoked by uid 1000);
-        Mon, 13 Jun 2022 20:10:43 -0000
-Date:   Mon, 13 Jun 2022 14:10:43 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Frank Li <Frank.Li@nxp.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 07/18] PCI: dwc: Add braces to the multi-line if-else
- statements
-Message-ID: <20220613201043.GC4188875-robh@kernel.org>
-References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
- <20220610082535.12802-8-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S1351439AbiFMUxc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:53:32 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10360B91;
+        Mon, 13 Jun 2022 13:16:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1655151406; x=1686687406;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=rtqhOIKVfrnY98rdPBZfGpki572ZKantyZmrTYaiCUk=;
+  b=EFSppI991TrHlQTLJe4TbPuC0YFST+UK9izwZzQt/4XfT2fsBjIHHTur
+   DvxP2pjD2RCZGAW0D/Z+NDFQl64mqOtrIyDdLrl7A/0cThG+3ln2A/Rh+
+   0m01UqGSxm8ohp0Q7nFupwv7N7GeCV6AVqch5O658XHAhvStYs3r79DzO
+   Uku6SJWyxBlN8Ij+DrtM8TdJU5a2nvrMx5jsgZY4b2iZp4e2t9bZTQYnY
+   JShwB0n0TIoQGGlhVKNJz4lBYznzS2IECtO24bXhQ7E+rvIvbPL1xoJoq
+   xOOJQNwkdLPktNic83CDCrMixBYChH0IjtQJ6uAqtivFafONKG86SybDb
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10377"; a="279445859"
+X-IronPort-AV: E=Sophos;i="5.91,297,1647327600"; 
+   d="scan'208";a="279445859"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Jun 2022 13:16:45 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.91,297,1647327600"; 
+   d="scan'208";a="557942595"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga006.jf.intel.com with ESMTP; 13 Jun 2022 13:16:42 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 4190F18F; Mon, 13 Jun 2022 23:16:45 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>, Ferry Toth <ftoth@exalondelft.nl>
+Subject: [PATCH v1 1/1] x86/PCI: Disable e820 usage for the resource allocation
+Date:   Mon, 13 Jun 2022 23:16:41 +0300
+Message-Id: <20220613201641.67640-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220610082535.12802-8-Sergey.Semin@baikalelectronics.ru>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 10, 2022 at 11:25:23AM +0300, Serge Semin wrote:
-> In accordance with [1] if there is at least one multi-line if-else
-> clause in the statement, then each clause will need to be surrounded by
-> the braces. The driver code violates that coding style rule in a few
-> places. Let's fix it.
-> 
-> [1] Documentation/process/coding-style.rst
-> 
-> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  drivers/pci/controller/dwc/pcie-designware-ep.c | 4 ++--
->  drivers/pci/controller/dwc/pcie-designware.c    | 3 ++-
->  2 files changed, 4 insertions(+), 3 deletions(-)
+The resource management improve for PCI on x86 broke booting of Intel MID
+platforms. It seems that the current code removes all available resources
+from the list and none of the PCI device may be initialized. Restore the
+old behaviour by force disabling the e820 usage for the resource allocation.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Fixes: 4c5e242d3e93 ("x86/PCI: Clip only host bridge windows for E820 regions")
+Depends-on: fa6dae5d8208 ("x86/PCI: Add kernel cmdline options to use/ignore E820 reserved regions")
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/x86/include/asm/pci_x86.h | 1 +
+ arch/x86/pci/acpi.c            | 2 +-
+ arch/x86/pci/intel_mid_pci.c   | 1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index f52a886d35cf..503f83fbc686 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -126,6 +126,7 @@ extern const struct pci_raw_ops *raw_pci_ext_ops;
+ extern const struct pci_raw_ops pci_mmcfg;
+ extern const struct pci_raw_ops pci_direct_conf1;
+ extern bool port_cf9_safe;
++extern bool pci_use_e820;
+ 
+ /* arch_initcall level */
+ #ifdef CONFIG_PCI_DIRECT
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index a4f43054bc79..ac2f220d50fc 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -20,7 +20,7 @@ struct pci_root_info {
+ #endif
+ };
+ 
+-static bool pci_use_e820 = true;
++bool pci_use_e820 = true;
+ static bool pci_use_crs = true;
+ static bool pci_ignore_seg;
+ 
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 8edd62206604..7869b86bff04 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -313,6 +313,7 @@ int __init intel_mid_pci_init(void)
+ 	pcibios_enable_irq = intel_mid_pci_irq_enable;
+ 	pcibios_disable_irq = intel_mid_pci_irq_disable;
+ 	pci_root_ops = intel_mid_pci_ops;
++	pci_use_e820 = false;
+ 	pci_soc_mode = 1;
+ 	/* Continue with standard init */
+ 	acpi_noirq_set();
+-- 
+2.35.1
+
