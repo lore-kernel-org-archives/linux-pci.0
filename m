@@ -2,86 +2,153 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3401C43334
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:56:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC69BC43334
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:59:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349913AbiFMU4n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jun 2022 16:56:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40250 "EHLO
+        id S1351443AbiFMU7w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jun 2022 16:59:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46070 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349028AbiFMUzs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:55:48 -0400
-Received: from mail-oa1-f52.google.com (mail-oa1-f52.google.com [209.85.160.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A85892BA;
-        Mon, 13 Jun 2022 13:28:37 -0700 (PDT)
-Received: by mail-oa1-f52.google.com with SMTP id 586e51a60fabf-fe51318ccfso10002325fac.0;
-        Mon, 13 Jun 2022 13:28:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=g+MycQEHVLS0G3Jp47J4dPsMXopl+aBAELiT0jx3BxM=;
-        b=y4wc3MZS3lXg4/ZTsle84DEZOq5pRu+BI/FI7ahMbz6Sg3g7HYzL++6qGONkPSMSCh
-         owhNYRs0vyTy5k/a9+ZR9+cOc6ECZ/kAaIF6j38VcpKED+Tc3cvqZJhjiM+OxcrFuALQ
-         XA1NQgPvW32RsbN1vqFdOJdTSvL7cEhRB3tADgGFtJQ9XQJatrNj3burFJkAakg1+myt
-         tBFJHVnEHBA8+n/SOPI8Ypy6i+WKavlAK9+OSiKZiaeHQWLEoa6IKLVhNWlww+jHzVLG
-         0ne+K01JWAfn50NQInye8pk5/x/J2CrW+nkuLTMKQx2wvTOzQ11r+jrY/dM4uc56yT3o
-         fOIg==
-X-Gm-Message-State: AJIora/19chDhdinKyTNz8ble6vE1FaAWx8DSivdMb27dgzkvzWNFxQt
-        IjMkvf7FrGQ4B1jamUmdvg==
-X-Google-Smtp-Source: AGRyM1tvwC9bduY8bxzqWREuAHNwiFAwzpSzRs1ILRb1JzaAGZb+YH0O1A7QOk6i0DmNy9eU8s/frA==
-X-Received: by 2002:a05:6870:46a6:b0:f5:ecd6:befb with SMTP id a38-20020a05687046a600b000f5ecd6befbmr331021oap.57.1655152116990;
-        Mon, 13 Jun 2022 13:28:36 -0700 (PDT)
-Received: from robh.at.kernel.org ([2607:fb90:20d2:bb97:4381:7341:60ed:a4a1])
-        by smtp.gmail.com with ESMTPSA id f8-20020a4ada48000000b0035eb4e5a6d6sm4057166oou.44.2022.06.13.13.28.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jun 2022 13:28:36 -0700 (PDT)
-Received: (nullmailer pid 30275 invoked by uid 1000);
-        Mon, 13 Jun 2022 20:28:32 -0000
-Date:   Mon, 13 Jun 2022 14:28:32 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Frank Li <Frank.Li@nxp.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 12/18] PCI: dwc: Re-use local pointer to the resource
- data
-Message-ID: <20220613202832.GA28636-robh@kernel.org>
-References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
- <20220610082535.12802-13-Sergey.Semin@baikalelectronics.ru>
+        with ESMTP id S1351811AbiFMU6k (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:58:40 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB9B113D7A;
+        Mon, 13 Jun 2022 13:34:09 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 20C7C60C20;
+        Mon, 13 Jun 2022 20:34:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36929C341C0;
+        Mon, 13 Jun 2022 20:34:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1655152448;
+        bh=vKRm/MvsQosL8IY46p4F0dMgF1MozYoagOOp7nUTpWM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Sczstjqhy0aTfGg56kx9fXboLiU//WictgU9p+6Co3uej7yi96+jQ8Fg+7yKaXaL7
+         ZgW1DIiCZSfL4DF3BbFQsKNOjsj7+uw7NfvVxknIHz2+LOUBjcFKO2QzvvM3DzpMXo
+         B4BGYWhA5UVcC07caqoLlG+T1Br574VI/ahox4AQZn2DpMLlbbhagINtsiT+5NDwuQ
+         +2GtdR5C42OqF9xfWJMmCSx3ByPkhxaVczXG0tdDMGD8Zgz3dOAF0jZ+oOqwpVD0Dx
+         UdIC5/Nt1WyNRMUUPn7x5PD0AC67yNDdOKc6cGrdJxTQqD1MukBUMynBZBomtJYC0K
+         hbYPBM0Y8eLRA==
+Date:   Mon, 13 Jun 2022 15:34:06 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
+        bhelgaas@google.com, krzk+dt@kernel.org, geert+renesas@glider.be,
+        magnus.damm@gmail.com, marek.vasut+renesas@gmail.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH 3/7] PCI: renesas: Add R-Car Gen4 PCIe Host support
+Message-ID: <20220613203406.GA714216@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220610082535.12802-13-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220613115712.2831386-4-yoshihiro.shimoda.uh@renesas.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 10, 2022 at 11:25:28AM +0300, Serge Semin wrote:
-> The dw_pcie_host_init() method has two instances of the resource structure
-> pointers used in non-related places of the method. It's pointless to have
-> two different local storages for them since the corresponding code is
-> small and having resource specific names doesn't make it more readable.
-> Let's convert these parts of the function to using just a common pointer
-> to the resource structure instance. That shall make the code a bit nicer
-> looking.
-> 
-> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> 
-> ---
-> 
-> Changelog v4:
-> - This is a new patch created on the v4 lap of the series.
-> ---
->  .../pci/controller/dwc/pcie-designware-host.c    | 16 ++++++++--------
->  1 file changed, 8 insertions(+), 8 deletions(-)
+On Mon, Jun 13, 2022 at 08:57:08PM +0900, Yoshihiro Shimoda wrote:
+> Add R-Car Gen4 PCIe Host support. This controller is based on
+> Synopsys Designware PCIe.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+You used "DesignWare" below, which I think is what Synopsys uses.
+
+> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> ---
+>  drivers/pci/controller/dwc/Kconfig            |   9 +
+>  drivers/pci/controller/dwc/Makefile           |   1 +
+>  .../pci/controller/dwc/pcie-rcar-gen4-host.c  | 235 ++++++++++++++++++
+>  drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 198 +++++++++++++++
+>  drivers/pci/controller/dwc/pcie-rcar-gen4.h   |  59 +++++
+>  5 files changed, 502 insertions(+)
+>  create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-host.c
+>  create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.c
+>  create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.h
+> 
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index 62ce3abf0f19..3ddccc9c38c5 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -384,4 +384,13 @@ config PCIE_FU740
+>  	  Say Y here if you want PCIe controller support for the SiFive
+>  	  FU740.
+>  
+> +config PCIE_RCAR_GEN4
+> +	bool "Renesas R-Car Gen4 PCIe Host controller"
+> +	depends on ARCH_RENESAS || COMPILE_TEST
+> +	depends on PCI_MSI_IRQ_DOMAIN
+> +	select PCIE_DW_HOST
+> +	help
+> +	  Say Y here if you want PCIe host controller support on R-Car Gen4 SoCs.
+> +	  This uses the DesignWare core.
+
+> +++ b/drivers/pci/controller/dwc/pcie-rcar-gen4-host.c
+> @@ -0,0 +1,235 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * PCIe host controller driver for Renesas R-Car Gen4 Series SoCs
+> + * Copyright (C) 2022 Renesas Electronics Corporation
+> + */
+> +
+> +#include <linux/interrupt.h>
+> +#include <linux/module.h>
+> +#include <linux/of_device.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +
+> +#include "pcie-rcar-gen4.h"
+> +#include "pcie-designware.h"
+> +
+> +/* ASPM L1 PM Substates */
+> +#define L1PSCAP(x)		(0x01bc + (x))
+
+Looks like the stuff in pcie-rcar-gen4.h.  Should this go there?
+
+> +	/* Set Max Link Width */
+
+Superfluous comment, since the function name says the same thing.
+
+> +	rcar_gen4_pcie_set_max_link_width(pci, pci->num_lanes);
+
+> +/* Link Capabilities - Maximum Link Width */
+> +#define  PCI_EXP_LNKCAP_MLW_X1	BIT(4)
+> +#define  PCI_EXP_LNKCAP_MLW_X2	BIT(5)
+> +#define  PCI_EXP_LNKCAP_MLW_X4	BIT(6)
+
+I think we should define these in include/uapi/linux/pci_regs.h.
+Use the same style as the other #defines there, i.e.,
+
+  #define  PCI_EXP_LNKCAP_MLW_X1  0x00000010
+  #define  PCI_EXP_LNKCAP_MLW_X2  0x00000020
+  #define  PCI_EXP_LNKCAP_MLW_X4  0x00000040
+
+> +/* Renesas-specific */
+> +#define PCIEMSR0		0x0000
+> +#define  BIFUR_MOD_SET_ON	(0x1 << 0)
+> +#define  DEVICE_TYPE_EP		(0x0 << 2)
+> +#define  DEVICE_TYPE_RC		(0x4 << 2)
+> +
+> +#define PCIEINTSTS0		0x0084
+> +#define PCIEINTSTS0EN		0x0310
+> +#define  MSI_CTRL_INT		BIT(26)
+> +#define  SMLH_LINK_UP		BIT(7)
+> +#define  RDLH_LINK_UP		BIT(6)
+
+Is there a reason to mix the "(0x1 << 0)" style and the "BIT(26)"
+styles?
+
+> +extern u32 rcar_gen4_pcie_readl(struct rcar_gen4_pcie *pcie, u32 reg);
+> +extern void rcar_gen4_pcie_writel(struct rcar_gen4_pcie *pcie, u32 reg, u32 val);
+> +extern void rcar_gen4_pcie_set_max_link_width(struct dw_pcie *pci, int num_lanes);
+> +extern int rcar_gen4_pcie_prepare(struct rcar_gen4_pcie *pcie);
+> +extern void rcar_gen4_pcie_unprepare(struct rcar_gen4_pcie *pcie);
+> +extern int rcar_gen4_pcie_pm_runtime_enable(struct device *dev);
+> +extern void rcar_gen4_pcie_pm_runtime_disable(struct device *dev);
+> +extern int rcar_gen4_pcie_devm_clk_and_reset_get(struct rcar_gen4_pcie *pcie,
+> +						 struct device *dev);
+> +extern struct rcar_gen4_pcie *rcar_gen4_pcie_devm_alloc(struct device *dev);
+
+Don't bother with "extern" on function declarations; this would be the
+only instance in drivers/pci/.
