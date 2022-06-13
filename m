@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B87C5CCA47D
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:55:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A6DCCA47F
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:55:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347719AbiFMUzj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jun 2022 16:55:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36102 "EHLO
+        id S1348080AbiFMUzn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jun 2022 16:55:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352261AbiFMUyT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:54:19 -0400
-Received: from mail-oo1-f46.google.com (mail-oo1-f46.google.com [209.85.161.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22A5E2A94B;
-        Mon, 13 Jun 2022 13:22:35 -0700 (PDT)
-Received: by mail-oo1-f46.google.com with SMTP id 4-20020a4a1404000000b0041bfe1a4cffso762050ood.0;
-        Mon, 13 Jun 2022 13:22:35 -0700 (PDT)
+        with ESMTP id S1352277AbiFMUyU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:54:20 -0400
+Received: from mail-oa1-f51.google.com (mail-oa1-f51.google.com [209.85.160.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B672A96C;
+        Mon, 13 Jun 2022 13:22:42 -0700 (PDT)
+Received: by mail-oa1-f51.google.com with SMTP id 586e51a60fabf-f2a4c51c45so9889752fac.9;
+        Mon, 13 Jun 2022 13:22:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=0cU1N9A1T1qgBn1lKK9HaI+TY1k8IeUOqJphJj6+O1w=;
-        b=WyAHgPnyMiXSovZ+PgOx9TNJBxl0psJAyTOykoAE69UXoRQEdOhXWzCXHHzUPLrC5O
-         n3/mq+TsUfV/wufIyQpg3IObdiduNo6dBn1Jak6XyVrLvthI2Wk99qdDH+sL/7f6dk1K
-         EFSXQ5BgwFQ3Wx2T6A34RXoaWK9pHiOurGgQMpHoT8WypTlmHK3zL415+Wpk6mXk0Bi8
-         DGBa+KNNhffAJ+EZt+AQjrrFAQFp9UmHoep+hb0DJb99cUl0FSR0MzndDPVUf1Te9TTV
-         kEnlaKIY6PHk6TW2fDexZxZJhF2225dXZ1vuJQpVlENeaiVWYjSWi95I7qyaSp7RYNnk
-         b1+Q==
-X-Gm-Message-State: AOAM5330ixY22sdKfUYfnPBe6pLYQf7jtAVjmIUvbLf5gFOCvtE3TyHo
-        ADS2G6PS/I4jyDufJtqfVQ==
-X-Google-Smtp-Source: ABdhPJwT2XUz5Smcb7K4j/V2wogweq9iNjCOSqWRPw8iUB34ic13DPfDUgWmQ0B2MNr30iIYNLb1mQ==
-X-Received: by 2002:a4a:378e:0:b0:41b:8cb6:b7bb with SMTP id r136-20020a4a378e000000b0041b8cb6b7bbmr614495oor.51.1655151754293;
-        Mon, 13 Jun 2022 13:22:34 -0700 (PDT)
+        bh=KWClgfWpgHG+VAivQTnsEGKmEl3BheN2a8JGL0usIbE=;
+        b=x71qOj9Dke4QPwcNw8orbLy973iV1rsHM5hgNxApmrJE/i4zqPSuovyQfgGwXrez92
+         vIUuhdtmJsTzg+E62m0ne8gaqzztvV/873LFliGnFSl3v/BXA7tqHPcu2d51XXgJsrSq
+         QBvnQhFv3QcMm4p+yiqDwJCsCFohVaKnjTsh5zlDIuGuA2XkbL7rkzjscxxVVRUO4Qxo
+         bUhNkh5bKU67BOBBgMYct6gzloSoISHCs8jw2PPJ4OzR5l6Fr2Or8ArdXyRMKEWwlGz1
+         N4ammCOa0+VtSIcwdO5AwXR8s/MxwOzIZR8neJc7imCfynbEzanwWr8vhhBKqnJ0JhRh
+         YN6A==
+X-Gm-Message-State: AJIora8+ESIvvZBDexq29bmap3YIBSWFU5WfDkk92iYnmaPq7BnT/+sJ
+        u848ni8oHHlBPSTDA4c6WuN1kQRUPQ==
+X-Google-Smtp-Source: AGRyM1uYY8kwAc52zC+3YVt186Rqlx1c75177h/UvxedvgIBWt2vywhFxGucs6f9z45JMqELRcEFAQ==
+X-Received: by 2002:a05:6870:c88a:b0:f2:8d92:318a with SMTP id er10-20020a056870c88a00b000f28d92318amr302337oab.281.1655151761607;
+        Mon, 13 Jun 2022 13:22:41 -0700 (PDT)
 Received: from robh.at.kernel.org ([2607:fb90:20d2:bb97:4381:7341:60ed:a4a1])
-        by smtp.gmail.com with ESMTPSA id nl7-20020a056871458700b000f5e89a9c60sm4471001oab.3.2022.06.13.13.22.32
+        by smtp.gmail.com with ESMTPSA id a21-20020a4ad1d5000000b0035eb4e5a6b2sm4211689oos.8.2022.06.13.13.22.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jun 2022 13:22:33 -0700 (PDT)
-Received: (nullmailer pid 17434 invoked by uid 1000);
-        Mon, 13 Jun 2022 20:20:47 -0000
-Date:   Mon, 13 Jun 2022 14:20:47 -0600
+        Mon, 13 Jun 2022 13:22:41 -0700 (PDT)
+Received: (nullmailer pid 7891 invoked by uid 1000);
+        Mon, 13 Jun 2022 20:15:01 -0000
+Date:   Mon, 13 Jun 2022 14:15:01 -0600
 From:   Rob Herring <robh@kernel.org>
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -52,48 +52,33 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 09/18] PCI: dwc: Discard IP-core version checking on
- unrolled iATU detection
-Message-ID: <20220613202047.GE4188875-robh@kernel.org>
+Subject: Re: [PATCH v4 08/18] PCI: dwc: Add trailing new-line literals to the
+ log messages
+Message-ID: <20220613201501.GD4188875-robh@kernel.org>
 References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
- <20220610082535.12802-10-Sergey.Semin@baikalelectronics.ru>
+ <20220610082535.12802-9-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220610082535.12802-10-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220610082535.12802-9-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 10, 2022 at 11:25:25AM +0300, Serge Semin wrote:
-> It's pretty much pointless. Even though unrolled version of the internal
-> ATU has been indeed available since DWC PCIe v4.80a IP-core, there is no
-> guarantee it was enabled during the IP-core configuration (Synopsys
-> suggests to contact the Solvnet support for guidance of how to do that for
-> the newer IP-cores). So the only reliable way to find out the unrolled
-> iATU feature availability is indeed to check the iATU viewport register
-> content. In accordance with the reference manual [1] if the register
-> doesn't exist (unrolled iATU is enabled) it's content is fixed with
-> 0xff-s, otherwise it will contain some zeros. So we can freely drop the
-> IP-core version checking in this matter then and use the
-> dw_pcie_iatu_unroll_enabled() method only to detect whether iATU/eDMA
-> space is unrolled.
-
-Are you sure that pre v4.80a, it is safe to read the register address? 
-Seems unlikely that the all 1s guarantee would be valid before the 
-feature ever existed. 
-
-
-> [1] DesignWare Cores, PCI Express Controller, Register Desciptions,
-> v.4.90a, December 2016, p.855
+On Fri, Jun 10, 2022 at 11:25:24AM +0300, Serge Semin wrote:
+> There are two places in the DW PCIe controller driver, which omit the
+> trailing newlines in the log info and warn messages. Not having them there
+> will cause leaving the messages in the printk ring buffer until a next
+> '\n'-terminated message is printed (it will consequently cause the buffer
+> flush). As it isn't what the corresponding code implies let's add the
+> new-line characters in the messages.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > ---
->  drivers/pci/controller/dwc/pcie-designware.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
-
-Assuming this works,
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
+>  drivers/pci/controller/dwc/pcie-designware.c      | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 
 Reviewed-by: Rob Herring <robh@kernel.org>
