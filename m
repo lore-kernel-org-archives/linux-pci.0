@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32644CCA480
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A469CCA47F
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:54:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350977AbiFMUyj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jun 2022 16:54:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36550 "EHLO
+        id S1351025AbiFMUyo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jun 2022 16:54:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352279AbiFMUyU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:54:20 -0400
-Received: from mail-ot1-f54.google.com (mail-ot1-f54.google.com [209.85.210.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D371D2872B;
-        Mon, 13 Jun 2022 13:22:46 -0700 (PDT)
-Received: by mail-ot1-f54.google.com with SMTP id e67-20020a9d01c9000000b0060c221b1420so5170439ote.0;
-        Mon, 13 Jun 2022 13:22:46 -0700 (PDT)
+        with ESMTP id S1352294AbiFMUyW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:54:22 -0400
+Received: from mail-oa1-f48.google.com (mail-oa1-f48.google.com [209.85.160.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 261F82AE21;
+        Mon, 13 Jun 2022 13:23:00 -0700 (PDT)
+Received: by mail-oa1-f48.google.com with SMTP id 586e51a60fabf-fe539f9afbso9904269fac.5;
+        Mon, 13 Jun 2022 13:23:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=kRE4DxNwjv4AxQ1uZcDHj0eGTvbkuAx+bI1tJP4tNF8=;
-        b=rcLxtbJrvJMZkY9P+bsX20fp0p9WZQpoDe3FLc6Yue6smpNla3i+T22rL6FPzNhBJj
-         +t4OM3C4i/JAU6kB2nDnPOcLJxbMnftpDQwoF4lTinJJ37AMpp6+PfcWT232DUbT/9C4
-         cOzLMZdf23oJdrBs7Z1PFdqhNLBTKz1ZL5aA7Z82lEkPMoAN3nqg6t75t68hyK+C+TVa
-         IXRXCP2JzvEA9dCdkaQEcaKysHF9kH40Z3zxMY3Xumda01CLItbiMoei9i9Ztv7hNf7k
-         a182M3jomipMY0bom/DduEOhesNhnQ5T/UU1gZFGAJ3sy5C5eErk8F6t4KxR3UaLnqYL
-         HlgQ==
-X-Gm-Message-State: AOAM532WDyvAexcgBzQ3huvwh1pWsdbu7NzJtVl24d8FVjSKprBREVcF
-        9FDFm7euAaVBR0zymF4LPw==
-X-Google-Smtp-Source: ABdhPJwFCeHBhkZZ3wgWk/c0LFQGgWIk9LDpt9EhgErOdrn2Gq3/2kfSJ/kP1kY3/1Bhzk0Ie/1qmw==
-X-Received: by 2002:a05:6830:3101:b0:60c:472b:7d44 with SMTP id b1-20020a056830310100b0060c472b7d44mr696526ots.139.1655151766157;
-        Mon, 13 Jun 2022 13:22:46 -0700 (PDT)
+        bh=hQtdW3mNzOqqAz0EIGKInm9VroMOpphYtVs06PrJmgg=;
+        b=sgWVxLxxBXD+0AClpuxc1bxB4LHbDwNmCNptgoJ+TE2iBMgj58gnu2+moAuzI0j+1b
+         9H67WcjRqwFE1si0Kq8C3fCgmPqLZwVG/xDOfjBeSIz5Je+1PcRyeyrWvdQJ4E2fRN6Q
+         ZdB0nEFVG5PH0iH0VW/egDcppdTLnVQBmmiozxyuoiT4Z/oKQMyeMECeoXuSdl1Cqk22
+         gwfFu/6DV0pHWVfGPZDnIRD/i1QqcRyEVN7/uk+XVle9EWwiXsvQEuz4OtQ6b8kIpzjQ
+         a7AITtbtscu11vY+xHVQOfPnxvkhb68hbnIPVhsK3I0ZjxupYWXVPFxx6tdXbdLcywhB
+         TmMA==
+X-Gm-Message-State: AJIora/l4nlkCUuFDm8x6g1AxwnSbRrQiJmmKngzVDZvTbUApbB7OGU/
+        0gRxOhgA+qrcfYmvlHEZxw==
+X-Google-Smtp-Source: AGRyM1vrWgRbbtIgkaNRth576iwAsSlwfWEsZWYqAZSEG7WmXUmtS7T2Ef2c7HYaOgH45FwPN+G1dA==
+X-Received: by 2002:a05:6870:c38c:b0:f1:ce0b:4dd3 with SMTP id g12-20020a056870c38c00b000f1ce0b4dd3mr349702oao.12.1655151779463;
+        Mon, 13 Jun 2022 13:22:59 -0700 (PDT)
 Received: from robh.at.kernel.org ([2607:fb90:20d2:bb97:4381:7341:60ed:a4a1])
-        by smtp.gmail.com with ESMTPSA id d67-20020aca3646000000b0032f0fd7e1f8sm3647731oia.39.2022.06.13.13.22.43
+        by smtp.gmail.com with ESMTPSA id e14-20020a056871044e00b000f3347daaa6sm4490557oag.9.2022.06.13.13.22.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jun 2022 13:22:45 -0700 (PDT)
-Received: (nullmailer pid 4193325 invoked by uid 1000);
-        Mon, 13 Jun 2022 20:09:58 -0000
-Date:   Mon, 13 Jun 2022 14:09:58 -0600
+        Mon, 13 Jun 2022 13:22:59 -0700 (PDT)
+Received: (nullmailer pid 4178168 invoked by uid 1000);
+        Mon, 13 Jun 2022 20:00:32 -0000
+Date:   Mon, 13 Jun 2022 14:00:32 -0600
 From:   Rob Herring <robh@kernel.org>
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,45 +46,56 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 05/18] PCI: dwc: Deallocate EPC memory on EP init error
-Message-ID: <20220613200958.GB4188875-robh@kernel.org>
+Subject: Re: [PATCH v4 02/18] PCI: dwc: Add unroll iATU space support to the
+ regions disable method
+Message-ID: <20220613200032.GA4174748-robh@kernel.org>
 References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
- <20220610082535.12802-6-Sergey.Semin@baikalelectronics.ru>
+ <20220610082535.12802-3-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220610082535.12802-6-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220610082535.12802-3-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 10, 2022 at 11:25:21AM +0300, Serge Semin wrote:
-> If the dw_pcie_ep_init() method fails to perform any action after the EPC
-> memory is initialized and the MSI memory region is allocated, the later
-> parts won't be undone thus causing the memory leak.  Let's fix that by
-> introducing the cleanup-on-error path in the dw_pcie_ep_init() method,
-> which will be taken should any consequent erroneous situation happens.
+On Fri, Jun 10, 2022 at 11:25:18AM +0300, Serge Semin wrote:
+> The dw_pcie_disable_atu() method was introduced in the commit f8aed6ec624f
+> ("PCI: dwc: designware: Add EP mode support"). Since then it hasn't
+> changed at all.  For all that time the method has supported the viewport
+> version of the iATU CSRs only. Basically it works for the DW PCIe IP-cores
+> older than v4.80a since the newer controllers are equipped with the
+> unrolled iATU/eDMA space. It means the methods using it like
+> pci_epc_ops.clear_bar and pci_epc_ops.unmap_addr callbacks just don't work
+> correctly for the DW PCIe controllers with unrolled iATU CSRs. The same
+> concerns the dw_pcie_setup_rc() method, which disables the outbound iATU
+> entries before re-initializing them.
 > 
-> Fixes: 2fd0c9d966cc ("PCI: designware-ep: Pre-allocate memory for MSI in dw_pcie_ep_init")
+> So in order to fix the problems denoted above let's convert the
+> dw_pcie_disable_atu() method to disabling the iATU inbound and outbound
+> regions in the unrolled iATU CSRs in case the DW PCIe controller has been
+> synthesized with the ones support. The former semantics will be remained
+> for the controller having iATU mapped over the viewport.
+> 
+> Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > 
 > ---
 > 
-> Changelog v2:
-> - This is a new patch create as a result of the discussion in:
->   Link: https://lore.kernel.org/linux-pci/20220324014836.19149-26-Sergey.Semin@baikalelectronics.ru
+> Changelog v3:
+> - Convert region variable type to u32 in order to fix the implicit type
+>   conversion peculiarity. (@kbot)
 > ---
->  .../pci/controller/dwc/pcie-designware-ep.c    | 18 ++++++++++++++++--
->  1 file changed, 16 insertions(+), 2 deletions(-)
+>  drivers/pci/controller/dwc/pcie-designware.c | 16 +++++++++++++---
+>  1 file changed, 13 insertions(+), 3 deletions(-)
 
 Reviewed-by: Rob Herring <robh@kernel.org>
-
