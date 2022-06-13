@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A6DCCA47F
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:55:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96D08C43334
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Jun 2022 20:55:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348080AbiFMUzn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Jun 2022 16:55:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40796 "EHLO
+        id S1346374AbiFMUzo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Jun 2022 16:55:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352277AbiFMUyU (ORCPT
+        with ESMTP id S1352282AbiFMUyU (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Jun 2022 16:54:20 -0400
-Received: from mail-oa1-f51.google.com (mail-oa1-f51.google.com [209.85.160.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B672A96C;
-        Mon, 13 Jun 2022 13:22:42 -0700 (PDT)
-Received: by mail-oa1-f51.google.com with SMTP id 586e51a60fabf-f2a4c51c45so9889752fac.9;
-        Mon, 13 Jun 2022 13:22:42 -0700 (PDT)
+Received: from mail-oi1-f179.google.com (mail-oi1-f179.google.com [209.85.167.179])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C4D52AC7E;
+        Mon, 13 Jun 2022 13:22:49 -0700 (PDT)
+Received: by mail-oi1-f179.google.com with SMTP id k24so9117843oij.2;
+        Mon, 13 Jun 2022 13:22:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=KWClgfWpgHG+VAivQTnsEGKmEl3BheN2a8JGL0usIbE=;
-        b=x71qOj9Dke4QPwcNw8orbLy973iV1rsHM5hgNxApmrJE/i4zqPSuovyQfgGwXrez92
-         vIUuhdtmJsTzg+E62m0ne8gaqzztvV/873LFliGnFSl3v/BXA7tqHPcu2d51XXgJsrSq
-         QBvnQhFv3QcMm4p+yiqDwJCsCFohVaKnjTsh5zlDIuGuA2XkbL7rkzjscxxVVRUO4Qxo
-         bUhNkh5bKU67BOBBgMYct6gzloSoISHCs8jw2PPJ4OzR5l6Fr2Or8ArdXyRMKEWwlGz1
-         N4ammCOa0+VtSIcwdO5AwXR8s/MxwOzIZR8neJc7imCfynbEzanwWr8vhhBKqnJ0JhRh
-         YN6A==
-X-Gm-Message-State: AJIora8+ESIvvZBDexq29bmap3YIBSWFU5WfDkk92iYnmaPq7BnT/+sJ
-        u848ni8oHHlBPSTDA4c6WuN1kQRUPQ==
-X-Google-Smtp-Source: AGRyM1uYY8kwAc52zC+3YVt186Rqlx1c75177h/UvxedvgIBWt2vywhFxGucs6f9z45JMqELRcEFAQ==
-X-Received: by 2002:a05:6870:c88a:b0:f2:8d92:318a with SMTP id er10-20020a056870c88a00b000f28d92318amr302337oab.281.1655151761607;
-        Mon, 13 Jun 2022 13:22:41 -0700 (PDT)
+        bh=csq1Brwm85wDHHJ8F9+1jbltwVssfeqZqd990Q48SpU=;
+        b=qaNg2S95U51E0CwSLWpzmwS/Uv5mpx9Ih6OsImtj7uriLIQKoxlA2qU87E2q6MKf0z
+         mfxum0188Ec8lVdeLj1G/GoNG4wDIft9VsGKZzqZ7qHIlFAaIl9GCJQZL+pJYE6NoMgY
+         d1mFRtH3Fzvua24fqY7YPa3o1Dto00qh2pwZ9uDYR+/bl5wb+oXXrUZWd3Pf0+GR/fIH
+         vk5HPW14wpH9R0T4gfwrcciFC+Bd4EJE530DzAFeCPv3NRIt8zqjOCh74kPw5DP2czRm
+         PhuZCEFkB0Ga07ISvZvcr6t2LB2AkqiokQ5+j2iiBMesVYHaJ1WTHtIzqUEiHRAKDNfH
+         g4ZA==
+X-Gm-Message-State: AOAM530RfvEhJvSbVVw3c5gjrzyMcpnCgkZNuY1B7QutHaoJB5Xe46gd
+        dLjgEMOxJQwahlb4/8ZvFw==
+X-Google-Smtp-Source: ABdhPJwqh+0nizUXE7cZXmebZZSj3Swb9VgtxqJ6GMc6OwHtSS1GC+AfPk0mzNzWIHxUe0lk4HuWbg==
+X-Received: by 2002:aca:1709:0:b0:32e:9220:a7f with SMTP id j9-20020aca1709000000b0032e92200a7fmr289077oii.120.1655151769177;
+        Mon, 13 Jun 2022 13:22:49 -0700 (PDT)
 Received: from robh.at.kernel.org ([2607:fb90:20d2:bb97:4381:7341:60ed:a4a1])
-        by smtp.gmail.com with ESMTPSA id a21-20020a4ad1d5000000b0035eb4e5a6b2sm4211689oos.8.2022.06.13.13.22.39
+        by smtp.gmail.com with ESMTPSA id b14-20020a4a9bce000000b0041bdf09d95dsm4202116ook.3.2022.06.13.13.22.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jun 2022 13:22:41 -0700 (PDT)
-Received: (nullmailer pid 7891 invoked by uid 1000);
-        Mon, 13 Jun 2022 20:15:01 -0000
-Date:   Mon, 13 Jun 2022 14:15:01 -0600
+        Mon, 13 Jun 2022 13:22:48 -0700 (PDT)
+Received: (nullmailer pid 19943 invoked by uid 1000);
+        Mon, 13 Jun 2022 20:22:23 -0000
+Date:   Mon, 13 Jun 2022 14:22:23 -0600
 From:   Rob Herring <robh@kernel.org>
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -52,33 +52,32 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 08/18] PCI: dwc: Add trailing new-line literals to the
- log messages
-Message-ID: <20220613201501.GD4188875-robh@kernel.org>
+Subject: Re: [PATCH v4 10/18] PCI: dwc: Convert Link-up status method to
+ using dw_pcie_readl_dbi()
+Message-ID: <20220613202223.GF4188875-robh@kernel.org>
 References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
- <20220610082535.12802-9-Sergey.Semin@baikalelectronics.ru>
+ <20220610082535.12802-11-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220610082535.12802-9-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220610082535.12802-11-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 10, 2022 at 11:25:24AM +0300, Serge Semin wrote:
-> There are two places in the DW PCIe controller driver, which omit the
-> trailing newlines in the log info and warn messages. Not having them there
-> will cause leaving the messages in the printk ring buffer until a next
-> '\n'-terminated message is printed (it will consequently cause the buffer
-> flush). As it isn't what the corresponding code implies let's add the
-> new-line characters in the messages.
+On Fri, Jun 10, 2022 at 11:25:26AM +0300, Serge Semin wrote:
+> While the rest of the generic DWC PCIe code is using the dedicated IO-mem
+> accessors, the dw_pcie_link_up() method for some unobvious reason directly
+> calls readl() to get PortLogic.DEBUG1 register content. Since the way the
+> dbi-bus is accessed can be platform-specific let's replace the direct dbi
+> memory space read procedure with the readl-wrapper invocation. Thus we'll
+> have a slightly more generic dw_pcie_link_up() method.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
->  drivers/pci/controller/dwc/pcie-designware.c      | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+>  drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
 Reviewed-by: Rob Herring <robh@kernel.org>
