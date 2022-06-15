@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1171CCA482
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jun 2022 16:12:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39960CCA481
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jun 2022 16:12:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348683AbiFOQMz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Jun 2022 12:12:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39772 "EHLO
+        id S1348837AbiFOQMy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Jun 2022 12:12:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229755AbiFOQMw (ORCPT
+        with ESMTP id S234028AbiFOQMw (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jun 2022 12:12:52 -0400
 Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 976491C108;
-        Wed, 15 Jun 2022 09:12:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97C5121813;
+        Wed, 15 Jun 2022 09:12:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Cc:To:From:content-disposition;
-        bh=CEsEo1LL0bapP/SgeXBMkHfYqc6Wv4poDHt3UT6FxEg=; b=Nn5f3rDAO5IH26Vm3tZC0/G00z
-        08nWaGa176sIR0AMP9ufpCFl8dqGInHVEIurBrhZxq8qyYDrYDC/FLwjHaP0xkmUhL0tsPpMFsnzC
-        TrHv4QKvFeifgNV5SXw6bzeBiEo5BMK1Wn4z1hGAMBkF+nRrTHuJRTK9R1MaGtIlhbHed9Xofrf+/
-        /E6cLO35IfpR+c+O/fl3k708ke9cdQ/QBKGT2Ot+27a8SgRnqOwwPWqIzU5BypTjVOfuD2fhybceo
-        a/BKPzddCviQTOWiZgVLC94Cl7+8/HNXYOTzmN6fEQW6XtzPv1NSvwCLPRKV2ZpBid/6o/AbJcz6B
-        VA4O9vnw==;
+        bh=dDcdCEaWGv/l2098gGlW8wOT/rK8fbKH3lNyefLy2uU=; b=jrRPehtQjnwFT9fc0jh95GHygA
+        bdV8reEzaqp9WJZ335mwCqqfi7aKzHcfq44yZsd+aV9wUibpB3xBhAto5o+j6yvnirP4cGWR5S39p
+        0XfCIhvUgy9ESkAaN7jtBYdJQNfWBEHDDPdl/8tgme6cpP+30ZChoOIeNm3TjGjCxU6KnwuMf+AIW
+        edsKz20JAl61eh+aPomqwRmCKt2oCpdHuAQot81N38CC2l2BwtrnjKP6eBsiZLBKhti56rrEZNJ9R
+        v7voaboUX7kQV65eKr7anMUK+TplynbGqVV1EGTf3xAGIrx9t9dWVp/Gjh2UDf62QHfpf5SloTH4v
+        ZZm2jk8w==;
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1o1VdP-0084iP-Uw; Wed, 15 Jun 2022 10:12:48 -0600
+        id 1o1VdN-0084iR-L8; Wed, 15 Jun 2022 10:12:47 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1o1VdI-0004ak-WE; Wed, 15 Jun 2022 10:12:41 -0600
+        id 1o1VdG-0004Zu-Ul; Wed, 15 Jun 2022 10:12:38 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -54,94 +54,76 @@ Cc:     Stephen Bates <sbates@raithlin.com>,
         Martin Oliveira <martin.oliveira@eideticom.com>,
         Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
         Ralph Campbell <rcampbell@nvidia.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Wed, 15 Jun 2022 10:12:28 -0600
-Message-Id: <20220615161233.17527-17-logang@deltatee.com>
+        Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>
+Date:   Wed, 15 Jun 2022 10:12:14 -0600
+Message-Id: <20220615161233.17527-3-logang@deltatee.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20220615161233.17527-1-logang@deltatee.com>
 References: <20220615161233.17527-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, jhubbard@nvidia.com, rcampbell@nvidia.com, logang@deltatee.com
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, iommu@lists.linux-foundation.org, sbates@raithlin.com, hch@lst.de, jgg@ziepe.ca, christian.koenig@amd.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, logang@deltatee.com, bhelgaas@google.com, jhubbard@nvidia.com, rcampbell@nvidia.com, kch@nvidia.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v7 16/21] block: add check when merging zone device pages
+Subject: [PATCH v7 02/21] PCI/P2PDMA: Attempt to set map_type if it has not been set
 X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Consecutive zone device pages should not be merged into the same sgl
-or bvec segment with other types of pages or if they belong to different
-pgmaps. Otherwise getting the pgmap of a given segment is not possible
-without scanning the entire segment. This helper returns true either if
-both pages are not zone device pages or both pages are zone device
-pages with the same pgmap.
+Attempt to find the mapping type for P2PDMA pages on the first
+DMA map attempt if it has not been done ahead of time.
 
-Add a helper to determine if zone device pages are mergeable and use
-this helper in page_is_mergeable().
+Previously, the mapping type was expected to be calculated ahead of
+time, but if pages are to come from userspace then there's no
+way to ensure the path was checked ahead of time.
+
+This change will calculate the mapping type if it hasn't pre-calculated
+so it is no longer invalid to call pci_p2pdma_map_sg() before the mapping
+type is calculated, so drop the WARN_ON when that is the case.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 ---
- block/bio.c        |  2 ++
- include/linux/mm.h | 23 +++++++++++++++++++++++
- 2 files changed, 25 insertions(+)
+ drivers/pci/p2pdma.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index f92d0223247b..a402a4760457 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -865,6 +865,8 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
- 		return false;
- 	if (xen_domain() && !xen_biovec_phys_mergeable(bv, page))
- 		return false;
-+	if (!zone_device_pages_have_same_pgmap(bv->bv_page, page))
-+		return false;
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 462b429ad243..4e8bc457e29a 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -854,6 +854,7 @@ static enum pci_p2pdma_map_type pci_p2pdma_map_type(struct dev_pagemap *pgmap,
+ 	struct pci_dev *provider = to_p2p_pgmap(pgmap)->provider;
+ 	struct pci_dev *client;
+ 	struct pci_p2pdma *p2pdma;
++	int dist;
  
- 	*same_page = ((vec_end_addr & PAGE_MASK) == page_addr);
- 	if (*same_page)
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 0bcb54ea503c..33b2f4d9fd0a 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1108,6 +1108,24 @@ static inline bool is_zone_device_page(const struct page *page)
- {
- 	return page_zonenum(page) == ZONE_DEVICE;
- }
+ 	if (!provider->p2pdma)
+ 		return PCI_P2PDMA_MAP_NOT_SUPPORTED;
+@@ -870,6 +871,10 @@ static enum pci_p2pdma_map_type pci_p2pdma_map_type(struct dev_pagemap *pgmap,
+ 		type = xa_to_value(xa_load(&p2pdma->map_types,
+ 					   map_types_idx(client)));
+ 	rcu_read_unlock();
 +
-+/*
-+ * Consecutive zone device pages should not be merged into the same sgl
-+ * or bvec segment with other types of pages or if they belong to different
-+ * pgmaps. Otherwise getting the pgmap of a given segment is not possible
-+ * without scanning the entire segment. This helper returns true either if
-+ * both pages are not zone device pages or both pages are zone device pages
-+ * with the same pgmap.
-+ */
-+static inline bool zone_device_pages_have_same_pgmap(const struct page *a,
-+						     const struct page *b)
-+{
-+	if (is_zone_device_page(a) != is_zone_device_page(b))
-+		return false;
-+	if (!is_zone_device_page(a))
-+		return true;
-+	return a->pgmap == b->pgmap;
-+}
- extern void memmap_init_zone_device(struct zone *, unsigned long,
- 				    unsigned long, struct dev_pagemap *);
- #else
-@@ -1115,6 +1133,11 @@ static inline bool is_zone_device_page(const struct page *page)
- {
- 	return false;
++	if (type == PCI_P2PDMA_MAP_UNKNOWN)
++		return calc_map_type_and_dist(provider, client, &dist, true);
++
+ 	return type;
  }
-+static inline bool zone_device_pages_have_same_pgmap(const struct page *a,
-+						     const struct page *b)
-+{
-+	return true;
-+}
- #endif
  
- static inline bool folio_is_zone_device(const struct folio *folio)
+@@ -912,7 +917,7 @@ int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
+ 	case PCI_P2PDMA_MAP_BUS_ADDR:
+ 		return __pci_p2pdma_map_sg(p2p_pgmap, dev, sg, nents);
+ 	default:
+-		WARN_ON_ONCE(1);
++		/* Mapping is not Supported */
+ 		return 0;
+ 	}
+ }
 -- 
 2.30.2
 
