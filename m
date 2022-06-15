@@ -2,204 +2,82 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F18DDCCA473
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Jun 2022 23:17:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED8CDCCA47D
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Jun 2022 23:17:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355385AbiFOXRI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Jun 2022 19:17:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59278 "EHLO
+        id S1357006AbiFOXRJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Jun 2022 19:17:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355290AbiFOXQm (ORCPT
+        with ESMTP id S1355329AbiFOXQm (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Jun 2022 19:16:42 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E626130F63;
-        Wed, 15 Jun 2022 16:16:30 -0700 (PDT)
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51D1631384;
+        Wed, 15 Jun 2022 16:16:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 9D2CDB821F7;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DF0E56199C;
+        Wed, 15 Jun 2022 23:16:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9671CC3411B;
         Wed, 15 Jun 2022 23:16:29 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFE03C3411A;
-        Wed, 15 Jun 2022 23:16:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655334988;
-        bh=8xHGKslATn5SqjbLCJ4pv8WkiU2h9ra44UFSzepa0O4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LptAqZnuuxzXUum9OA3hLJVkODGls+p+ImCwu4SD+XKPZerUrxIvbCX29Deq36orQ
-         JNPb7X3PI9WLkkHNq+ssl6laBiHAU6ed8rSVkMJkqaJ8/ZXEgd8SRKrZ0k5UEeVUz4
-         TQ3l55j/bAx1TZ4kVsT6t/NAlzUJzWjy8anzwMTG09rjxq0njJzeRTHYUka06+z6/v
-         FuF+grwf4xqPejHWzde3Nzl8E9jcwN5hNpgoA28faQfjLGdIrk8k4wcZqljge7JJq+
-         Om6n12GLcwA+UA3FXDfzhcTafaGtuDYIgHg87lDMF+RX0aVLxjvuhYYlQdv463zLWw
-         Ol2+YaGd7S9qg==
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Brown <broonie@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Fabio Estevam <festevam@gmail.com>,
-        Francesco Dolcini <francesco.dolcini@toradex.com>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
-        linux-imx@nxp.com, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v12 12/13] PCI: imx6: Do not hide phy driver callbacks and refine the error handling
-Date:   Wed, 15 Jun 2022 18:15:50 -0500
-Message-Id: <20220615231551.1054753-13-helgaas@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220615231551.1054753-1-helgaas@kernel.org>
-References: <20220615231551.1054753-1-helgaas@kernel.org>
+        s=k20201202; t=1655334990;
+        bh=uJDAbRhUne1VpqgJp+NbX5hEuKEciyjlBdAFfwtPGyo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=e1NrWr1wISPVX/Oc4CuOXXqOue8/yTb1uDlXZVqvC1gCx3LEOdyqg/jzqTONTGkv1
+         6ba4fWrvAbOBz8CQgEoWNN08NDunGqT3za13pdPvxlx6zhUsl8gVHPgNIzAKsxkKWU
+         oA+QUSZrp6ZIBv4ycORBTnqBPAjJFw/ibbuaXWLwAX5M95Ka+90fPu6xyD6z4z64PA
+         XTZQt4TNzczMZc+UfjrliYduQNquqZ/XMujw2gojUTVv3264OOYlkD4VM6IxbfXT7r
+         Dpb4f8E5ZAOx3VM4rCE6BPN+lVxcDreWjTbtvZj6TdUCczRtdXWHDVk3eqA6s4Go4C
+         TvXyGlN3C0N4g==
+Date:   Wed, 15 Jun 2022 17:16:26 -0600
+From:   Keith Busch <kbusch@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
+        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Yi Zhang <yi.zhang@redhat.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "mstowe@redhat.com" <mstowe@redhat.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: blktests failures with v5.19-rc1
+Message-ID: <YqpoSp2F+Shqvk/u@kbusch-mbp.dhcp.thefacebook.com>
+References: <20220614040044.rypyclhqfv5w4xy7@shindev>
+ <20220615194727.GA1022614@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220615194727.GA1022614@bhelgaas>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Richard Zhu <hongxing.zhu@nxp.com>
+On Wed, Jun 15, 2022 at 02:47:27PM -0500, Bjorn Helgaas wrote:
+> On Tue, Jun 14, 2022 at 04:00:45AM +0000, Shinichiro Kawasaki wrote:
+> > 
+> > Yeah, this WARN is confusing for us then it would be valuable to
+> > test by blktests not to repeat it. One point I wonder is: which test
+> > group the test case will it fall in? The nvme group could be the
+> > group to add, probably.
+> > 
+> > Another point I wonder is other kernel test suite than blktests.
+> > Don't we have more appropriate test suite to check PCI device
+> > rescan/remove race ? Such a test sounds more like a PCI bus
+> > sub-system test than block/storage test.
+> 
+> I'm not aware of such a test, but it would be nice to have one.
+> 
+> Can you share your qemu config so I can reproduce this locally?
+> 
+> Thanks for finding and reporting this!
 
-- Move the phy_power_on() to host_init and resume functions from
-  imx6_pcie_clk_enable().
-- Move the phy_init() to host_init and resume functions from
-  imx6_pcie_deassert_core_reset().
+Hi Bjorn,
 
-Refine the error handling in imx6_pcie_host_init() and
-imx6_pcie_resume_noirq() functions accordingly.
+This ought to be reproducible with any pci device that can be removed. Since we
+initially observed with nvme, you can try with such a device. A quick way to
+get one appearing in qemu is to add parameters:
 
-[bhelgaas: add "ret" back since it's used again]
-Link: https://lore.kernel.org/r/1655189942-12678-9-git-send-email-hongxing.zhu@nxp.com
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 70 +++++++++++++++++++++------
- 1 file changed, 56 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index b6e5420d67b6..bd736aff94a3 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -639,14 +639,6 @@ static int imx6_pcie_clk_enable(struct imx6_pcie *imx6_pcie)
- 		goto err_ref_clk;
- 	}
- 
--	switch (imx6_pcie->drvdata->variant) {
--	case IMX8MM:
--		if (phy_power_on(imx6_pcie->phy))
--			dev_err(dev, "unable to power on PHY\n");
--		break;
--	default:
--		break;
--	}
- 	/* allow the clocks to stabilize */
- 	usleep_range(200, 500);
- 	return 0;
-@@ -733,10 +725,6 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 	case IMX8MQ:
- 		reset_control_deassert(imx6_pcie->pciephy_reset);
- 		break;
--	case IMX8MM:
--		if (phy_init(imx6_pcie->phy))
--			dev_err(dev, "waiting for phy ready timeout!\n");
--		break;
- 	case IMX7D:
- 		reset_control_deassert(imx6_pcie->pciephy_reset);
- 
-@@ -772,6 +760,7 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 		usleep_range(200, 500);
- 		break;
- 	case IMX6Q:		/* Nothing to do */
-+	case IMX8MM:
- 		break;
- 	}
- 
-@@ -923,15 +912,39 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
- 
- 	imx6_pcie_assert_core_reset(imx6_pcie);
- 	imx6_pcie_init_phy(imx6_pcie);
-+	if (imx6_pcie->phy) {
-+		ret = phy_power_on(imx6_pcie->phy);
-+		if (ret) {
-+			dev_err(dev, "pcie phy power up failed.\n");
-+			return ret;
-+		}
-+	}
-+
- 	ret = imx6_pcie_deassert_core_reset(imx6_pcie);
- 	if (ret < 0) {
- 		dev_err(dev, "pcie host init failed: %d\n", ret);
--		return ret;
-+		goto err_phy_off;
-+	}
-+	if (imx6_pcie->phy) {
-+		ret = phy_init(imx6_pcie->phy);
-+		if (ret) {
-+			dev_err(dev, "waiting for phy ready timeout!\n");
-+			goto err_phy_init;
-+		}
- 	}
- 
- 	imx6_setup_phy_mpll(imx6_pcie);
- 
- 	return 0;
-+
-+err_phy_init:
-+	imx6_pcie_clk_disable(imx6_pcie);
-+	if (imx6_pcie->vpcie)
-+		regulator_disable(imx6_pcie->vpcie);
-+err_phy_off:
-+	if (imx6_pcie->phy)
-+		phy_power_off(imx6_pcie->phy);
-+	return ret;
- }
- 
- static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
-@@ -1029,18 +1042,47 @@ static int imx6_pcie_resume_noirq(struct device *dev)
- {
- 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
- 	struct pcie_port *pp = &imx6_pcie->pci->pp;
-+	int ret;
- 
- 	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_SUPPORTS_SUSPEND))
- 		return 0;
- 
- 	imx6_pcie_assert_core_reset(imx6_pcie);
- 	imx6_pcie_init_phy(imx6_pcie);
--	imx6_pcie_deassert_core_reset(imx6_pcie);
-+	if (imx6_pcie->phy) {
-+		ret = phy_power_on(imx6_pcie->phy);
-+		if (ret) {
-+			dev_err(dev, "pcie phy power up failed.\n");
-+			return ret;
-+		}
-+	}
-+
-+	ret = imx6_pcie_deassert_core_reset(imx6_pcie);
-+	if (ret < 0) {
-+		dev_err(dev, "pcie deassert core reset failed: %d.\n", ret);
-+		goto err_phy_off;
-+	} else if (imx6_pcie->phy) {
-+		ret = phy_init(imx6_pcie->phy);
-+		if (ret) {
-+			dev_err(dev, "pcie phy init failed.\n");
-+			goto err_phy_init;
-+		}
-+	}
-+
- 	dw_pcie_setup_rc(pp);
- 	if (imx6_pcie->link_is_up)
- 		imx6_pcie_start_link(imx6_pcie->pci);
- 
- 	return 0;
-+
-+err_phy_init:
-+	imx6_pcie_clk_disable(imx6_pcie);
-+	if (imx6_pcie->vpcie)
-+		regulator_disable(imx6_pcie->vpcie);
-+err_phy_off:
-+	if (imx6_pcie->phy)
-+		phy_power_off(imx6_pcie->phy);
-+	return ret;
- }
- #endif
- 
--- 
-2.25.1
-
+        -drive id=n,if=none,file=null-co://,format=raw \
+	-device nvme,serial=foobar,drive=n
