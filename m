@@ -2,178 +2,221 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD6CEC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 16 Jun 2022 08:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD5D1C43334
+	for <linux-pci@archiver.kernel.org>; Thu, 16 Jun 2022 11:52:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346235AbiFPIkB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 Jun 2022 04:40:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58124 "EHLO
+        id S229740AbiFPLv7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 Jun 2022 07:51:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229462AbiFPIkB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jun 2022 04:40:01 -0400
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07C925D64F
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jun 2022 01:40:00 -0700 (PDT)
-Received: by mail-wm1-x331.google.com with SMTP id z17so370003wmi.1
-        for <linux-pci@vger.kernel.org>; Thu, 16 Jun 2022 01:39:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=LvVSjwu55o8X8egWZU4iWsZIHVlVa9bVPksJ+MBzn7k=;
-        b=DgBiI+XAcThHX852u8IueujWgMvjgWOkE+ITD5jJYPNcVMp/rTnZ5dD3tibcaFiaUx
-         VkzBl9dsE4Hiu/z/fg8ZSjFHqAJ+NwN9uZAwRAQkoLJ+yLTU5+YFXQH1MLOLtBXYFjK7
-         c5XfrAPyQhlWqM0sYwv5/z05LpUIyVcAoxWt6pAQfxPkWR/MMo3pkv72+AF5JtCHJqiL
-         Lruy+U+6Dm+2Phm+QyD8jifRIcdGkxFWWmuDbANyb0wrY5r5ir1+RN6mMCJgC5vjJnJJ
-         MBPITJHIvBz5xUWuxd1cjYSq5JiNWoE7HOmipuKOi1fBpVBES0Pg2sVwDzk1ylMYPWaM
-         IJ4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=LvVSjwu55o8X8egWZU4iWsZIHVlVa9bVPksJ+MBzn7k=;
-        b=BOzJ4d3skePhaZcTtZ4HuG3APZPX60gPeaetcu17VDAnvdXFLIdAY0R4S89Go3b20Y
-         FSYDPmK/F8P51gBc6RIgdrZjXjfA7Jsl9wXzzYe365jj8S8dy48q0UZ5PM3g3cK0Runq
-         mACulRQBiuzOHTD/DMnhrmDm5dExHBn0TfVeQ3YbP5an62ZTOzoWwlGa/hdci1/IGx26
-         Zw7rvFs3FZcUOkUqqY9SktQaJQAQjMNW61mBUFBfP65Jei09pJl81llPFgKHJAkhviuI
-         eYcDRoxfDtQt2spnmEE4DwVOPfqCJG5xXxrd31BEJX9VwO8EHTOQDA/9KEpYK8lyyOMA
-         0hAg==
-X-Gm-Message-State: AJIora9F3FoRcOqLdXT5CWyE2Tox9d2JbM7ftQ4O4qn+tkuCdDLYSiiN
-        LX8qEH8tw24uzS+ei1wSMDlseMtVfhiCcUE1Wh0=
-X-Google-Smtp-Source: AGRyM1tD1Dmf9qbZ+itBVwWjX6u5/l97xRcLp23MLiO9Dmwu6Jn29GwDN5/EEPU0pGcQfinqJAf9MXhMOKT66Ryrj5g=
-X-Received: by 2002:a7b:c95a:0:b0:39c:4daa:4cdb with SMTP id
- i26-20020a7bc95a000000b0039c4daa4cdbmr3731298wml.31.1655368798420; Thu, 16
- Jun 2022 01:39:58 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAAhV-H6CpeEWw2VNv5eaMwbyvGTxzvuJzXzjJ8Wg3iggOM=DcQ@mail.gmail.com>
- <20220608193135.GA413879@bhelgaas>
-In-Reply-To: <20220608193135.GA413879@bhelgaas>
-From:   Huacai Chen <chenhuacai@gmail.com>
-Date:   Thu, 16 Jun 2022 16:39:46 +0800
-Message-ID: <CAAhV-H5uT+wDRkVbW_o1hG2u0rtv6FFABTymL1VdjMMD_UEN+Q@mail.gmail.com>
-Subject: Re: [PATCH V13 5/6] PCI: Add quirk for LS7A to avoid reboot failure
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Huacai Chen <chenhuacai@loongson.cn>,
+        with ESMTP id S229543AbiFPLv6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Jun 2022 07:51:58 -0400
+Received: from JPN01-TYC-obe.outbound.protection.outlook.com (mail-tycjpn01on2130.outbound.protection.outlook.com [40.107.114.130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6577D54BEC;
+        Thu, 16 Jun 2022 04:51:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Y5vzSLeHJyLf1ebbiQu6SRfEQ8A9FTSknECqGN8+9HBQMishp18bz5y3H8mNQc2sLRFRBgWVFepn7ESof0k2TWNAysi6z+LWqnaUXbXkh1KMt1aVPektBnCBST7jvuOTaObK20kccyTKixL23OHMwvaon7sbJY69NYjAIneLBtt02TuGVciH7yxITdTHjd+2IKvwQ+6YL0EoO2ev+sUb1l5lJSHhqmWGBdQdR5O6DaGe6pC80btX4V/SQ5ieOi4kXS6ggWuk7SO5TB2eEOSUCeTCKSbuLPPxHyCYkM8PsA5uKo2aNTI+H/22pSb1HIjfehPFrKN8JDhQ3HxClprDUA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=FJiFRWAPhelTRNjbQ55s9+KEXU3YHo7z5fnGMIf4VPI=;
+ b=Y9XnOyP0bcWV/7QnkfijVo5tK1RITUVacIAsfxUUYAybxJU31W/tYEULRfLmOLBv2y39oJ/w8w00uD+PshMcX43G9beWmZQ+VTUy2nG+rMl9GJ5p3vFMAlqZl2kiD1ntamsSlYost70IzjpGeB7xhHRplVPY5x+3cbN0/L40Jk3FZleCONSLhK4mVzUEekdpIxVj3ienK6djMkHonKuU8GaXAA3gPT+BoBV32teMXh3BlD+9GREgB5GUwKHh6zXuynAxQsbdsv0JCHhEmxyEzNkSN3fSFomCxMbwfcUHas5NsBeOortFGKPpqpnLBsRePHgd3gOpKXBvjjcrgLTAYg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=renesas.com; dmarc=pass action=none header.from=renesas.com;
+ dkim=pass header.d=renesas.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=renesas.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FJiFRWAPhelTRNjbQ55s9+KEXU3YHo7z5fnGMIf4VPI=;
+ b=E41PwaWHe0bKHPAlrbb72BWFL+q5mc0VhcgGtwrzEYniW8oojxyaZocQMYqrsWmuPbh9ZYvS/UKS8Q/nHWrfZLibT8df9mnNKWK5FCrs44gfAeyOh9h86YMt5DrO49SMVrCfJjiMxIm7Fg5ujYrSzJz9TuFKmBlKfbdkcMFUabU=
+Received: from TYBPR01MB5341.jpnprd01.prod.outlook.com
+ (2603:1096:404:8028::13) by TYWPR01MB9311.jpnprd01.prod.outlook.com
+ (2603:1096:400:1a1::13) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5353.14; Thu, 16 Jun
+ 2022 11:51:53 +0000
+Received: from TYBPR01MB5341.jpnprd01.prod.outlook.com
+ ([fe80::b596:754d:e595:bb2d]) by TYBPR01MB5341.jpnprd01.prod.outlook.com
+ ([fe80::b596:754d:e595:bb2d%6]) with mapi id 15.20.5353.013; Thu, 16 Jun 2022
+ 11:51:53 +0000
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+CC:     "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        =?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
         linux-pci <linux-pci@vger.kernel.org>,
-        Xuefeng Li <lixuefeng@loongson.cn>,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>
-Content-Type: text/plain; charset="UTF-8"
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Subject: RE: [PATCH 1/7] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
+Thread-Topic: [PATCH 1/7] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
+Thread-Index: AQHYfxzFdwwgJS7KZEGDDrndJUkmHq1QKz0AgAHEWyA=
+Date:   Thu, 16 Jun 2022 11:51:53 +0000
+Message-ID: <TYBPR01MB534130FE351F8FD201888EB1D8AC9@TYBPR01MB5341.jpnprd01.prod.outlook.com>
+References: <20220613115712.2831386-1-yoshihiro.shimoda.uh@renesas.com>
+ <20220613115712.2831386-2-yoshihiro.shimoda.uh@renesas.com>
+ <CAMuHMdVTq4P33P3MOim1USzQ7MFn_bGAkzf13CHN=VyMPsn3pA@mail.gmail.com>
+In-Reply-To: <CAMuHMdVTq4P33P3MOim1USzQ7MFn_bGAkzf13CHN=VyMPsn3pA@mail.gmail.com>
+Accept-Language: ja-JP, en-US
+Content-Language: ja-JP
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=renesas.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 3f19ebc6-74f9-4849-73da-08da4f8e9b1e
+x-ms-traffictypediagnostic: TYWPR01MB9311:EE_
+x-microsoft-antispam-prvs: <TYWPR01MB931134DA788BFB71829ABDD9D8AC9@TYWPR01MB9311.jpnprd01.prod.outlook.com>
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: C1edIeY3Te6Un49gVEIkrsL4UMn5ZwbjX5Kc8zcNFTtyNWIQkQky3AqaBJiBi2PRS9qs5f6chk8/9nsPHCciQwWUj5H1avzJazi4hDbtGaqjAeN0uVdMR0uHvbSOhIMCkNrPoYm5+qpEcUzCK79hh1moFZUWOd5VkgOfwLsYaU/yUiiSdna7KnvKXjE+pcZHYCrHvshDvaKpwgbvoS7iLMJTBywuq40QONsxHx1fdALNTbOvZwi+dC692D4atPh8VExvO4tkQ/pLPWBrPfgchH5QNx2asUtUEe8YDFlaGLwppv4fOQhOHn+FwMLgvwFK43m13aaZs4PBL93eWgFxnMWwIq+WoHm7VJdtMH24n5ywTGOkvEhi43Gx9HIOKIZi4CNOl59d9p5PtADiac31vaP0UDXODq3xJ05aJ0RRUMKLmXNa/qeXGXwhf7mWIyZMRO0ihy6Ed1Nz7TjVlQ7NBXVspWs4Oxg8m5Eycrt7EX24F2alV9XVJYxORdNi78CvED1XlHLXzPN2AxlYe5p9/oUUSSjz32WAQV9AMUo922y0SaGkVY4zXcIqbVYycITVikB1UVQtxuCc6bENqJsH5558rgES2MTkrhDZl0ApHS40FjcEZRi0I7vCsctI91TYJpi/zBNn6t22yIxqF7TbQnor2c3NCZhPPP6C2P7V+to8lNofX9Mi3Q4JPZMFTTP4n7JazRHZzOpYEyx1lToK0w==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYBPR01MB5341.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(76116006)(7696005)(2906002)(6506007)(64756008)(8676002)(66946007)(66556008)(4326008)(9686003)(71200400001)(66476007)(53546011)(33656002)(55016003)(6916009)(66446008)(508600001)(54906003)(7416002)(5660300002)(186003)(316002)(86362001)(38070700005)(8936002)(52536014)(83380400001)(122000001)(38100700002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 2
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-2?Q?GnQTy1BgFByOIJ26dURG6PHU35dk30PL7v39fpt1zYG+X5b4gmtmt6Jr2T?=
+ =?iso-8859-2?Q?9nUM5S1DHjLPMbiWO0r7yl9g160SGHs30gdHjowNIg3aLKCTIheYYaxlfA?=
+ =?iso-8859-2?Q?6KZXJKywWkIqLR0drVCu4aeO+AHxb87qCM9vgWgI8SAeJhKLiAEdXd5T/N?=
+ =?iso-8859-2?Q?5OmSDXIZuZVVCOS2PoPma24BnBP9nRHMZKPonQKAHq1KlS/DW8fQ+Weq++?=
+ =?iso-8859-2?Q?0BWt7M/VYaqPoTyFTMmb0A+jCPP9p4KEwjihDeqwz2hnaC1drKVDM5SBbM?=
+ =?iso-8859-2?Q?pODgWDxVS+QJnRJSaUgqSxr1jf0YUZxU/CXUW4RiSJo/FHVIDuX5x7/nIW?=
+ =?iso-8859-2?Q?xMUl02KhyWDcGEJPB5o894D4O3Zid5zYpv2ajobVRSU8xOvCHjktE2+Fxn?=
+ =?iso-8859-2?Q?JhbhD72vKVSZvNcNJLoFNdPPF8g5A/bQia8yNUc311GC1LcIbAwZC5Q/xG?=
+ =?iso-8859-2?Q?w1Mmg7tVwVtwalWJK0KoNt8OS0o0/m7TRiUjtRj+rCmBMiZoscTua0/Z+i?=
+ =?iso-8859-2?Q?Fs7K5JE8tqzqoGchdSVo9H6BYIR5tTPkrVCg3YROXynHQlSmAruE0GEcqC?=
+ =?iso-8859-2?Q?WCc4kxNTeBoZhLMGNV/TAnfcfO/Nla3CMeMmSGaUGeuYz2yFBi7axT/oLb?=
+ =?iso-8859-2?Q?RF3YeI8Fq5Yv+h/kIRY7nFh2C1Va/A+qRunQHGYHmQ/5FIKrNYdDbPFPfi?=
+ =?iso-8859-2?Q?RbN9ynrZTKhPMUa+r11VrOyUc35QJ6zjsjLLipnRqYr0cIZDyELLdybIag?=
+ =?iso-8859-2?Q?b1nguliEU6VjyfWUlJYq+xS7RWdnlz1Var2RXGNjZYeu2I73bw/B0vPbVK?=
+ =?iso-8859-2?Q?6T44LgpLH/bPzz7b3e041dQq4h1Z2L46f83zYfZ1oLJat+mUg4UjI/mVCX?=
+ =?iso-8859-2?Q?fKXRVwvj+WmbfO5lqRaq5LHNRLg3DAJit0yfJAD05jQzvvqJG8bJVSBcii?=
+ =?iso-8859-2?Q?fPx9KUwTi0AdSWf9x+NoUK6PSUooPl/iT5NCPxu0ndvtnxLoxkfFXT/Jvy?=
+ =?iso-8859-2?Q?Hpn6nUTPWwoIZcDFvdEJDRJK2yxsY0OhF+FOygJo4rJWZ00bGGFGeWIU6O?=
+ =?iso-8859-2?Q?JI0709YGNRON8F608xCVr9LGExOCejBJxvS8PXXNJZu5NhXVYM1FvjX7O8?=
+ =?iso-8859-2?Q?qF6l0Jlqv/w8V2MEM2h3ih3OUjdhKaFs23JxY2s8q+hsplvhZn+k8qVHuK?=
+ =?iso-8859-2?Q?GqK2ePgLQM2+CVn//KoY/IlHYsabCzim5D52UnW9msT539guG34ikqPwH3?=
+ =?iso-8859-2?Q?E+gwnLteR8UyNLW2UFjSUjjvSadZvM24NZjVZj24D+S5H/Ewqjh3vr/T/P?=
+ =?iso-8859-2?Q?P92j4/VNTUWhM7VWT+UCquctkyB3JiiWHCtC6sXU4jRx8SZz9Ru+Uey8tu?=
+ =?iso-8859-2?Q?xlViLBm8CHdaVO3qFsd26HDc+lCKhzIikBTsCPejc7+2mYFBpfVmNlMaHh?=
+ =?iso-8859-2?Q?MCtLtIV1EmVY+CCslWUr/EWA9C+ztNYjoVISimqpwEsNDNYf864+ztaVMQ?=
+ =?iso-8859-2?Q?epsof3/Y63VvkR/6UT5NkdOjLECmUuq4PPLuFCys08rVEi7DezJiecXKfy?=
+ =?iso-8859-2?Q?dNYuNm1IgM78CkIQmG5NHAOqgiZBW/83XetuEhXvZ7/POLPqS3jtIfhE1+?=
+ =?iso-8859-2?Q?c+2OMha8OItwprZ7qzGgR66UpbYd4GihwW/sOBwE1crVCawPWKztjNF0Cw?=
+ =?iso-8859-2?Q?F7Qc+1Z0pqXxJNoH9uUCbjr9QIej1wdhnDEX0Xc+TOmiabPkR05FDPkPNB?=
+ =?iso-8859-2?Q?Is20d7y1g7rYjPB7lJEDpUBKhG7kWy5snuz33NdGY8uREGHzfkK4cRs5KL?=
+ =?iso-8859-2?Q?hITWh+t6ieyTERnIiYhZ4sdJ0eBBJnKuq579mjT3E+u4S+iVGI5cPIRCIO?=
+ =?iso-8859-2?Q?IO?=
+x-ms-exchange-antispam-messagedata-1: +CYWo0oAJmAszoHvfZdvfb/YKV8JlNuQcaY=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: renesas.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: TYBPR01MB5341.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3f19ebc6-74f9-4849-73da-08da4f8e9b1e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Jun 2022 11:51:53.2448
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: wz8rMZyl/p13iit40ws82Kdb47msz1bh54Ibu4aR22UjElhenn8mVyriTYMIHdJ/F+JbU8X6qBG7TlaUk+4S21BkkPdoQjzPmrvLNOVvC0UN3kpCQtIZg6cl7nvk3erp
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWPR01MB9311
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi, Bjorn,
+Hi Geert-san,
 
-On Thu, Jun 9, 2022 at 3:31 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Wed, Jun 08, 2022 at 05:34:21PM +0800, Huacai Chen wrote:
-> > On Fri, Jun 3, 2022 at 12:29 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > On Thu, Jun 02, 2022 at 08:48:20PM +0800, Huacai Chen wrote:
-> > > > On Wed, Jun 1, 2022 at 7:35 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > On Sat, Apr 30, 2022 at 04:48:45PM +0800, Huacai Chen wrote:
-> > > > > > Commit cc27b735ad3a75574a ("PCI/portdrv: Turn off PCIe services
-> > > > > > during shutdown") causes poweroff/reboot failure on systems with
-> > > > > > LS7A chipset.  We found that if we remove "pci_command &=
-> > > > > > ~PCI_COMMAND_MASTER;" in do_pci_disable_device(), it can work
-> > > > > > well. The hardware engineer says that the root cause is that CPU
-> > > > > > is still accessing PCIe devices while poweroff/reboot, and if we
-> > > > > > disable the Bus Master Bit at this time, the PCIe controller
-> > > > > > doesn't forward requests to downstream devices, and also doesn't
-> > > > > > send TIMEOUT to CPU, which causes CPU wait forever (hardware
-> > > > > > deadlock). This behavior is a PCIe protocol violation (Bus
-> > > > > > Master should not be involved in CPU MMIO transactions), and it
-> > > > > > will be fixed in new revisions of hardware (add timeout
-> > > > > > mechanism for CPU read request, whether or not Bus Master bit is
-> > > > > > cleared).
-> > > > >
-> > > > > LS7A might have bugs in that clearing Bus Master Enable prevents the
-> > > > > root port from forwarding Memory or I/O requests in the downstream
-> > > > > direction.
-> > > > >
-> > > > > But this feels like a bit of a band-aid because we don't know exactly
-> > > > > what those requests are.  If we're removing the Root Port, I assume we
-> > > > > think we no longer need any devices *below* the Root Port.
-> > > > >
-> > > > > If that's not the case, e.g., if we still need to produce console
-> > > > > output or save state to a device, we probably should not be removing
-> > > > > the Root Port at all.
-> > > >
-> > > > Do you mean it is better to skip the whole pcie_port_device_remove()
-> > > > instead of just removing the "clear bus master" operation for the
-> > > > buggy hardware?
-> > >
-> > > No, that's not what I want at all.  That's just another band-aid to
-> > > avoid a problem without understanding what the problem is.
-> > >
-> > > My point is that apparently we remove a Root Port (which means we've
-> > > already removed any devices under it), and then we try to use a device
-> > > below the Root Port.  That seems broken.  I want to understand why we
-> > > try to use a device after we've removed it.
+Thank you for your review!
+
+> From: Geert Uytterhoeven, Sent: Wednesday, June 15, 2022 5:49 PM
+>=20
+> Hi Shimoda-san,
+>=20
+> On Mon, Jun 13, 2022 at 1:57 PM Yoshihiro Shimoda
+> <yoshihiro.shimoda.uh@renesas.com> wrote:
+> > Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+> > PCIe host module.
 > >
-> > I agree, and I think "why we try to use a device after remove it" is
-> > because the userspace programs don't know whether a device is
-> > "usable", so they just use it, at any time. Then it seems it is the
-> > responsibility of the device drivers to avoid the problem.
->
-> How is userspace able to use a device after the device is removed?
-> E.g., if userspace does a read/write to a device that has been
-> removed, the syscall should return error, not touch the missing
-> device.  If userspace mmaps a device, an access after the device has
-> been removed should fault, not do MMIO to the missing device.
-To give more details, let's take the graphics driver (e.g. amdgpu) as
-an example again. The userspace programs call printf() to display
-"shutting down xxx service" during shutdown/reboot. Or we can even
-simplify further, the kernel calls printk() to display something
-during shutdown/reboot. You know, printk() can happen at any time,
-even after we call pcie_port_device_remove() to disable the pcie port
-on the graphic card.
+> > Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+>=20
+> Thanks for your patch!
+>=20
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+> > @@ -0,0 +1,104 @@
+> > +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> > +# Copyright (C) 2022 Renesas Electronics Corp.
+> > +%YAML 1.2
+> > +---
+<snip>
+> > +title: Renesas R-Car Gen4 PCIe Host
+> > +
+> > +maintainers:
+> > +  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> > +
+> > +allOf:
+> > +  - $ref: snps,dw-pcie.yaml#
+> > +
+> > +properties:
+> > +  compatible:
+> > +    items:
+> > +      - const: renesas,r8a779f0-pcie   # R-Car S4-8
+> > +      - const: renesas,rcar-gen4-pcie  # R-Car Gen4
+> > +      - const: snps,dw-pcie
+> > +
+> > +  interrupts:
+> > +    maxItems: 6
+>=20
+> The R-Car S4 INTC Interrupt Mapping spreadsheet says there are 7.
+>=20
+>     items:
+>       - description: Other Errors
+>       - description: DMA Event
+>       - description: Correctable Error
+>       - description: Fatal Error
+>       - description: Non-Fatal Error
+>       - description: Reception of a ERR message from link partner
+>       - description: Reception of Vendor
+>=20
+> > +  interrupt-names:
+> > +    items:
+> > +      - const: msi
 
-The call stack is: printk() --> call_console_drivers() -->
-con->write() --> vt_console_print() --> fbcon_putcs()
+I think this should be "other" instead of msi.
 
-I think this is a scenario of "userspace programs (or kernel itself)
-don't know whether a device is 'usable', so they just use it, at any
-time"
+> Missing:
+>=20
+>       - const: dma
 
-And why does the graphic driver call .suspend() in its .shutdown() can
-fix the problem?
-One of the key operations in .suspend() is drm_fb_helper_set_suspend()
---> fb_set_suspend() --> info->state = FBINFO_STATE_SUSPENDED;
-This operation will cause fbcon_is_inactive() to return true, then
-refuse fbcon_putcs() to really write to the framebuffer.
+You're correct. I'll fix it.
 
-Huacai
+> > +      - const: err
+>=20
+> correctable?
 
+I think so. I'll fix it.
 
->
-> > Take radeon/amdgpu driver as an example, the .shutdown() of the
-> > callback can call suspend() to fix.
-> >
-> > But..., another problem is: There are many drivers "broken", not just
-> > radeon/amdgpu drivers (at least, the ahci driver is also "broken").
-> > Implementing the driver's .shutdown() correctly is nearly impossible
-> > for us, because we don't know the hardware details of so many devices.
-> > On the other hand, those drivers "just works" on most platforms, so
-> > the driver authors don't think they are "broken".
->
-> It sounds like you have analyzed this and have more details about
-> exactly how this happens.  Can you please share those details?  There
-> are a lot of steps in the middle that I don't understand yet.
->
-> Without those details, "userspace programs don't know whether a device
-> is 'usable', so they just use it, at any time" is kind of hand-wavey
-> and not very convincing.
->
-> > So, very sadly, we can only use a band-aid now. :(
-> >
-> > > If the scenario ends up being legitimate and unavoidable, fine -- we
-> > > can figure out a quirk to work around the fact the LS7A doesn't allow
-> > > that access after we clear Bus Master Enable.  But right now the
-> > > scenario smells like a latent bug, and leaving bus mastering enabled
-> > > just avoids it without fixing it.
-> > >
-> > > Bjorn
+Best regards,
+Yoshihiro Shimoda
+
+> > +      - const: fatal
+> > +      - const: nonfatal
+> > +      - const: lp
+> > +      - const: vndmsg
+>=20
+> Gr{oetje,eeting}s,
+>=20
+>                         Geert
+>=20
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m6=
+8k.org
+>=20
+> In personal conversations with technical people, I call myself a hacker. =
+But
+> when I'm talking to journalists I just say "programmer" or something like=
+ that.
+>                                 -- Linus Torvalds
