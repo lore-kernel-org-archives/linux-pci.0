@@ -2,115 +2,216 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77522C43334
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Jun 2022 13:12:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE62AC43334
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Jun 2022 18:44:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381356AbiFQNMD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Jun 2022 09:12:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58230 "EHLO
+        id S229952AbiFQSoo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Jun 2022 14:44:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235591AbiFQNMC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2022 09:12:02 -0400
-Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBF904C79E;
-        Fri, 17 Jun 2022 06:12:01 -0700 (PDT)
-Received: by mail-lj1-x22a.google.com with SMTP id b7so4688301ljr.6;
-        Fri, 17 Jun 2022 06:12:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=791oGUkmZnfRuTNKHAERlu6WE3+Htir8Ec5AhgIO5jI=;
-        b=Uq+N89keIW7OooF6H5l3twHzNknWg0rsgasWOSA+KIlAJAQBiNSuEzipg091uypJqV
-         4yUyQb3hr6i0zmYHcEDXqAd04/9DeCvxySQ4bHcNVCETQWIqJ64ycHD5Bomd4teVLSXN
-         T81Kv5I6+IWDAXPKS0zq6iBZ6P9x4x4QQnjGL2iv4KulnkPq0jgd0X3YGKCBc8sjfTN/
-         iPdQUWc9w+EczuY6ZdSRzuTZ/imwECG1Ivr++6XSjbMyjBgx3U08tFXN9fKmIH7NXZdZ
-         OtHvbvxmjgN0znPR5SlytNFht3zzy5r/OOokoqMlL7YCJQ8+fgf0eOsGtjduTVzO/F47
-         1B3Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=791oGUkmZnfRuTNKHAERlu6WE3+Htir8Ec5AhgIO5jI=;
-        b=pO8mPB9VXoEBPKwt4T4/3aWgeeBOG3D5ON85DKRo+jT1yyYGafXNZgaEigrnqnTVAk
-         VEIwp8BN5HHgNM65XkeZjToGR8b7aOh4DxEX8PIzgEgcK6GJGvqQfyiB1B+MtQWJKh6L
-         m+HK7VYzdf8NUdWgw4tt2V4ig+08657zc9GS9feZ86NK+xgdwydp9CKTRTHjAEcOc7mX
-         ftXjDKaEwlpONqQuklDKK2xCcO1Kb+pufbbnbV7n6Em/Ng3nS8srUUR/Xrh+sfj1Gvm6
-         JV9wPMnKiW7694juQEuiONg9Rj9yhH8df1XjMT+eFAKM2+hn2QmuqA4bYeRKGyBPRhcj
-         A19A==
-X-Gm-Message-State: AJIora8XqsyLEXBTI+sMQ3Xl4y04U0TYJV2FPBlIidFRMs3guZSTPd1K
-        55e0XtcWgz16TNE2MSSKQEw=
-X-Google-Smtp-Source: AGRyM1tTQ5Z4cmbsU8I+ncb7XGq/AEhisxWPA1C/k8qU1cIG5ASIW+LDwgLVDzfPfoOwTwzRajdvAQ==
-X-Received: by 2002:a2e:96c9:0:b0:258:ac98:5304 with SMTP id d9-20020a2e96c9000000b00258ac985304mr5149376ljj.382.1655471520033;
-        Fri, 17 Jun 2022 06:12:00 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id c13-20020a056512074d00b0047255d21104sm636227lfs.51.2022.06.17.06.11.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 06:11:59 -0700 (PDT)
-Date:   Fri, 17 Jun 2022 16:11:57 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Frank Li <Frank.Li@nxp.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 00/18] PCI: dwc: Various fixes and cleanups
-Message-ID: <20220617131157.wpxncriprazptnze@mobilestation>
-References: <20220617104143.yj2mlnj4twoxoeld@mobilestation>
- <20220617112922.GA1176883@bhelgaas>
+        with ESMTP id S229794AbiFQSon (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2022 14:44:43 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DE112DD51;
+        Fri, 17 Jun 2022 11:44:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1655491482; x=1687027482;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=1Gf9lLU9+H7jAY/ufwZLymJnmKu8v6RftFaAoJNXbsM=;
+  b=dNY3VZgCdbIiy6QbW6FyLAYMT9skBJIcEYZy2aIpFw+dTi1Lvh//HYJ9
+   NY4RRQIMxqmj33z46MmLbxNR66uspr+MzSW12xGGW8e7XbT3Rm+jyo9qu
+   /pEda3mmEVWwHXgrzFEzK8lq9DAKU9sY3eLtAf2zfyCzumkz5HF5V4lJi
+   OokLfrmdy7j/1SwvwGz5zzNzEmV9yjNUW29CAS/J8GN2LjTA+eTbCRnGg
+   Zs9fr1I76wDFAhRHtzuBc1cED4Z40W9LwQmYwPzkESdiCvjyRrQsOMjdw
+   tOsr9qLtCZLqXKP3sU5ZlKcFxLRcfzTYP+oaMYOIG58Ru+aNbVRxnXRxZ
+   Q==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10380"; a="262604622"
+X-IronPort-AV: E=Sophos;i="5.92,306,1650956400"; 
+   d="scan'208";a="262604622"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2022 11:44:42 -0700
+X-IronPort-AV: E=Sophos;i="5.92,306,1650956400"; 
+   d="scan'208";a="536919700"
+Received: from ecastill-mobl2.amr.corp.intel.com (HELO ldmartin-desk2) ([10.212.204.20])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jun 2022 11:44:41 -0700
+Date:   Fri, 17 Jun 2022 11:44:41 -0700
+From:   Lucas De Marchi <lucas.demarchi@intel.com>
+To:     Jani Nikula <jani.nikula@linux.intel.com>
+Cc:     priyanka.dandamudi@intel.com, matthew.auld@intel.com,
+        intel-gfx@lists.freedesktop.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [Intel-gfx] [PATCH 1/2] drm/i915: Add support for LMEM PCIe
+ resizable bar
+Message-ID: <20220617184441.7kbs4al7gmpxjuuy@ldmartin-desk2>
+X-Patchwork-Hint: comment
+References: <20220616151247.1192063-1-priyanka.dandamudi@intel.com>
+ <20220616151247.1192063-2-priyanka.dandamudi@intel.com>
+ <87fsk3vgey.fsf@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20220617112922.GA1176883@bhelgaas>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <87fsk3vgey.fsf@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 17, 2022 at 06:29:22AM -0500, Bjorn Helgaas wrote:
-> On Fri, Jun 17, 2022 at 01:41:43PM +0300, Serge Semin wrote:
-> > On Thu, Jun 16, 2022 at 03:03:16PM -0500, Bjorn Helgaas wrote:
-> > > On Fri, Jun 10, 2022 at 11:25:16AM +0300, Serge Semin wrote:
-> > > > This patchset is a first one in the series created in the framework of
-> > > > my Baikal-T1 PCIe/eDMA-related work:
-> > > > ...
-> 
-> > > This doesn't apply cleanly on v5.19-rc1 (my "main" branch).  v5.19-rc1
-> > > was tagged June 5, but apparently v4 was rebased to v5.18 and posted
-> > > June 10?  That's just a non-starter because many of these files were
-> > > changed during the merge window between v5.18 and v5.19-rc1.
-> > 
-> > Ok. I'll rebase it on top of v5.19-rcX on the next cycle.
-> 
+Cc'ing intel-pci, lkml, Bjorn
 
-> I merge things on topic branches based on -rc1, so there's no benefit
-> to rebasing to anything past that (at least for me).  Normally it
-> doesn't matter because very little will change between -rc1 and -rcX.
+On Fri, Jun 17, 2022 at 11:32:37AM +0300, Jani Nikula wrote:
+>On Thu, 16 Jun 2022, priyanka.dandamudi@intel.com wrote:
+>> From: Akeem G Abodunrin <akeem.g.abodunrin@intel.com>
+>>
+>> Add support for the local memory PICe resizable bar, so that
+>> local memory can be resized to the maximum size supported by the device,
+>> and mapped correctly to the PCIe memory bar. It is usual that GPU
+>> devices expose only 256MB BARs primarily to be compatible with 32-bit
+>> systems. So, those devices cannot claim larger memory BAR windows size due
+>> to the system BIOS limitation. With this change, it would be possible to
+>> reprogram the windows of the bridge directly above the requesting device
+>> on the same BAR type.
 
-Ok. rc1 it is then.
+There is a big caveat here that this may be too late as other drivers
+may have already mapped their BARs - so probably too late in the pci scan
+for it to be effective. In fact, after using this for a while, it seems
+to fail too often, particularly on CFL systems.
 
--Sergey
+Do we have any alternative to be done in the PCI subsystem during the
+scan?  There is other work in progress to allow i915 to use the rest of
+the device memory even with a smaller BAR, but it would be better if we
+can improve our chances of succeeding the resize.
 
-> 
-> > > I'll be looking for an ack from Jingoo and/or Gustavo, maintainers of
-> > > pcie-designware.c and related files.
-> > 
-> > Alas this will be very unluckily to happen. They have been inactive
-> > for more than four months on this and the rest of the patchsets
-> > (that's how long the patchsets have been hanging out on review).
-> > The last commit authored by Gustavo was the commit ce31ff786ddf
-> > ("PCI: dwc: Fix 'cast truncates bits from constant value'") posted
-> > in Sep 22, 2020 and no review activity afterwards. Jingoo' last
-> > ack was in Jun 25, 2019. So two and three years of silence accordingly
-> > doesn't give any hope on the sooner reaction from them.
-> 
-> Ok, thanks for the update.  I hadn't noticed that.
-> 
-> Bjorn
+thanks
+Lucas De Marchi
+
+
+>>
+>> Signed-off-by: Akeem G Abodunrin <akeem.g.abodunrin@intel.com>
+>> Signed-off-by: Michał Winiarski <michal.winiarski@intel.com>
+>> Cc: Stuart Summers <stuart.summers@intel.com>
+>> Cc: Michael J Ruhl <michael.j.ruhl@intel.com>
+>> Cc: Prathap Kumar Valsan <prathap.kumar.valsan@intel.com>
+>> Signed-off-by: Priyanka Dandamudi <priyanka.dandamudi@intel.com>
+>> Reviewed-by: Matthew Auld <matthew.auld@intel.com>
+>
+>Please see https://lore.kernel.org/r/87pmj8vesm.fsf@intel.com
+>
+>> ---
+>>  drivers/gpu/drm/i915/i915_driver.c | 92 ++++++++++++++++++++++++++++++
+>>  1 file changed, 92 insertions(+)
+>>
+>> diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
+>> index d26dcca7e654..4bdb471cb2e2 100644
+>> --- a/drivers/gpu/drm/i915/i915_driver.c
+>> +++ b/drivers/gpu/drm/i915/i915_driver.c
+>> @@ -303,6 +303,95 @@ static void sanitize_gpu(struct drm_i915_private *i915)
+>>  		__intel_gt_reset(to_gt(i915), ALL_ENGINES);
+>>  }
+>>
+>> +static void __release_bars(struct pci_dev *pdev)
+>> +{
+>> +	int resno;
+>> +
+>> +	for (resno = PCI_STD_RESOURCES; resno < PCI_STD_RESOURCE_END; resno++) {
+>> +		if (pci_resource_len(pdev, resno))
+>> +			pci_release_resource(pdev, resno);
+>> +	}
+>> +}
+>> +
+>> +static void
+>> +__resize_bar(struct drm_i915_private *i915, int resno, resource_size_t size)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(i915->drm.dev);
+>> +	int bar_size = pci_rebar_bytes_to_size(size);
+>> +	int ret;
+>> +
+>> +	__release_bars(pdev);
+>> +
+>> +	ret = pci_resize_resource(pdev, resno, bar_size);
+>> +	if (ret) {
+>> +		drm_info(&i915->drm, "Failed to resize BAR%d to %dM (%pe)\n",
+>> +			 resno, 1 << bar_size, ERR_PTR(ret));
+>> +		return;
+>> +	}
+>> +
+>> +	drm_info(&i915->drm, "BAR%d resized to %dM\n", resno, 1 << bar_size);
+>> +}
+>> +
+>> +/* BAR size starts from 1MB - 2^20 */
+>> +#define BAR_SIZE_SHIFT 20
+>> +static resource_size_t
+>> +__lmem_rebar_size(struct drm_i915_private *i915, int resno)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(i915->drm.dev);
+>> +	u32 rebar = pci_rebar_get_possible_sizes(pdev, resno);
+>> +	resource_size_t size;
+>> +
+>> +	if (!rebar)
+>> +		return 0;
+>> +
+>> +	size = 1ULL << (__fls(rebar) + BAR_SIZE_SHIFT);
+>> +
+>> +	if (size <= pci_resource_len(pdev, resno))
+>> +		return 0;
+>> +
+>> +	return size;
+>> +}
+>> +
+>> +#define LMEM_BAR_NUM 2
+>> +static void i915_resize_lmem_bar(struct drm_i915_private *i915)
+>> +{
+>> +	struct pci_dev *pdev = to_pci_dev(i915->drm.dev);
+>> +	struct pci_bus *root = pdev->bus;
+>> +	struct resource *root_res;
+>> +	resource_size_t rebar_size = __lmem_rebar_size(i915, LMEM_BAR_NUM);
+>> +	u32 pci_cmd;
+>> +	int i;
+>> +
+>> +	if (!rebar_size)
+>> +		return;
+>> +
+>> +	/* Find out if root bus contains 64bit memory addressing */
+>> +	while (root->parent)
+>> +		root = root->parent;
+>> +
+>> +	pci_bus_for_each_resource(root, root_res, i) {
+>> +		if (root_res && root_res->flags & (IORESOURCE_MEM |
+>> +					IORESOURCE_MEM_64) && root_res->start > 0x100000000ull)
+>> +			break;
+>> +	}
+>> +
+>> +	/* pci_resize_resource will fail anyways */
+>> +	if (!root_res) {
+>> +		drm_info(&i915->drm, "Can't resize LMEM BAR - platform support is missing\n");
+>> +		return;
+>> +	}
+>> +
+>> +	/* First disable PCI memory decoding references */
+>> +	pci_read_config_dword(pdev, PCI_COMMAND, &pci_cmd);
+>> +	pci_write_config_dword(pdev, PCI_COMMAND,
+>> +			       pci_cmd & ~PCI_COMMAND_MEMORY);
+>> +
+>> +	__resize_bar(i915, LMEM_BAR_NUM, rebar_size);
+>> +
+>> +	pci_assign_unassigned_bus_resources(pdev->bus);
+>> +	pci_write_config_dword(pdev, PCI_COMMAND, pci_cmd);
+>> +}
+>> +
+>>  /**
+>>   * i915_driver_early_probe - setup state not requiring device access
+>>   * @dev_priv: device private
+>> @@ -852,6 +941,9 @@ int i915_driver_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>
+>>  	disable_rpm_wakeref_asserts(&i915->runtime_pm);
+>>
+>> +	if (HAS_LMEM(i915))
+>> +		i915_resize_lmem_bar(i915);
+>> +
+>>  	intel_vgpu_detect(i915);
+>>
+>>  	ret = intel_gt_probe_all(i915);
+>
+>-- 
+>Jani Nikula, Intel Open Source Graphics Center
