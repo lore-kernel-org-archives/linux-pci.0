@@ -2,244 +2,169 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A819FC43334
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Jun 2022 10:42:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27867CCA47C
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Jun 2022 10:45:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381949AbiFQKmw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Jun 2022 06:42:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35476 "EHLO
+        id S1382025AbiFQKpQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Jun 2022 06:45:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1381712AbiFQKmu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2022 06:42:50 -0400
-Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F55013D27;
-        Fri, 17 Jun 2022 03:42:49 -0700 (PDT)
-Received: by mail-lj1-x231.google.com with SMTP id m25so4285867lji.11;
-        Fri, 17 Jun 2022 03:42:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=2oQIzR0PfOu4ep9bDei7u/w4ujjg4kwcIzD1w/IxZyk=;
-        b=Na93uyvlClyUGGJ5SV7k7+5MIv6NGrHqncgTV7osGwtKPZEsbpyqHFa8LJtmE/WD6d
-         w0u6ZfSo0Q8DrL2zjBxlpBRPCrFCRc1GjPGQsvkErIFJhRL+pqHBobN2vrw82DdXga69
-         WLcZdicd81W7utUIMaQ8DrWmqj/2uaTBdNrMpg896jRldYgX2S7/rFuks1EfstVc0Rsr
-         dxC8iEWeb8AkWUleBdUHgsiPjhpZ+MFyBut4rw/7YZvrqz0G+1j3vmdkLR1++mMowaI6
-         7AYWa+IDVIEZfqcP5E3DGVXHaFLKAe+P2u4JZCJgY5bIzSw4z9qNhrtmAM+8/nQeaFXi
-         uTEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=2oQIzR0PfOu4ep9bDei7u/w4ujjg4kwcIzD1w/IxZyk=;
-        b=3cXtyk6Yu48C2dDMXefMLDWlm0tyl/SdOU/3e8qKVrrvLrguJ0vK9c6Mf8rJS3xl05
-         VFpbmiZ0KUpeWozwV5T9kNzpYRKjeJknCC41G6zCCnOld9EvkbkfTjv9BeYv7ZkQYvJB
-         laVXl7vR1LCVTSBuwpDDVA8fO821nD6kyWu2Gy1Emrzp5YCUtS4Ozs5nA7/YjFvyrHgH
-         w8aHFZDCpT2XMvQSfXddh2PcfoFNAA9la0v3CgF3r1K+WKwLPR+WPMNMMa1fe+7Gn6VL
-         EezxVgyaIdkgk9Y7E0SGBNDcSQro3E2emdLnmLRwgGdeI+JZ3rJzkIztVC2wo3EZxdxz
-         40lA==
-X-Gm-Message-State: AJIora9eq9Yuago4UZi9EGgPY0XENNHir6q65Dy1ZxblVI3Ymg7VvlS8
-        +OVsWy2jvdAwgIEvicr1XMw=
-X-Google-Smtp-Source: AGRyM1vpxStGCJ4RFrP7LqFHTH35+PFukjx/RcVMtryVmSozxdQP1xBMFNBxR1wI/WbHrrID7NPVew==
-X-Received: by 2002:a2e:9252:0:b0:258:fc8b:490e with SMTP id v18-20020a2e9252000000b00258fc8b490emr4736792ljg.309.1655462567666;
-        Fri, 17 Jun 2022 03:42:47 -0700 (PDT)
-Received: from mobilestation ([95.79.189.214])
-        by smtp.gmail.com with ESMTPSA id d14-20020a2eb04e000000b0024f3d1dae7csm497886ljl.4.2022.06.17.03.42.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Jun 2022 03:42:47 -0700 (PDT)
-Date:   Fri, 17 Jun 2022 13:42:45 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Frank Li <Frank.Li@nxp.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 00/18] PCI: dwc: Various fixes and cleanups
-Message-ID: <20220617104245.urmnm4ndpqgxswu6@mobilestation>
-References: <20220610082535.12802-1-Sergey.Semin@baikalelectronics.ru>
- <20220610082919.4wetzo7wj4bnjp45@mobilestation>
- <20220616210456.GH2889@thinkpad>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220616210456.GH2889@thinkpad>
+        with ESMTP id S236113AbiFQKpP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Jun 2022 06:45:15 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A08DD6B655;
+        Fri, 17 Jun 2022 03:45:14 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 3B6D220000C;
+        Fri, 17 Jun 2022 12:45:13 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id CEC9020001F;
+        Fri, 17 Jun 2022 12:45:12 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 90B32180219B;
+        Fri, 17 Jun 2022 18:45:11 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
+        broonie@kernel.org, lorenzo.pieralisi@arm.com, festevam@gmail.com,
+        francesco.dolcini@toradex.com
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kernel@pengutronix.de, linux-imx@nxp.com
+Subject: [PATCH v13 0/15] PCI: imx6: refine codes and add the error propagation
+Date:   Fri, 17 Jun 2022 18:30:59 +0800
+Message-Id: <1655461874-16908-1-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 17, 2022 at 02:34:56AM +0530, Manivannan Sadhasivam wrote:
-> On Fri, Jun 10, 2022 at 11:29:19AM +0300, Serge Semin wrote:
-> > On Fri, Jun 10, 2022 at 11:25:16AM +0300, Serge Semin wrote:
-> > > This patchset is a first one in the series created in the framework of
-> > > my Baikal-T1 PCIe/eDMA-related work:
-> > > 
-> > > [1: In-progress v4] PCI: dwc: Various fixes and cleanups
-> > > Link: ---you are looking at it---
-> > > [2: In-progress v2] PCI: dwc: Add hw version and dma-ranges support
-> > > Link: https://lore.kernel.org/linux-pci/20220503214638.1895-1-Sergey.Semin@baikalelectronics.ru/
-> > > [3: In-progress v2] PCI: dwc: Add extended YAML-schema and Baikal-T1 support
-> > > Link: https://lore.kernel.org/linux-pci/20220503214638.1895-1-Sergey.Semin@baikalelectronics.ru/
-> > > [4: In-progress v2] dmaengine: dw-edma: Add RP/EP local DMA support
-> > > Link: https://lore.kernel.org/linux-pci/20220503225104.12108-1-Sergey.Semin@baikalelectronics.ru/
-> > > 
-> > > Note it is very recommended to merge the patchsets in the same order as
-> > > they are placed in the list above in order to prevent possible merge
-> > > conflicts. Nothing prevents them from being reviewed synchronously though.
-> > > Any tests are very welcome!
-> > > 
-> > > As it can be easily inferred from the patchset title, this series is about
-> > > the DW PCIe Root Port/Endpoint driver fixes and the code cleanups, where
-> > > fixes come before the cleanup patches. The patchset starts with adding the
-> > > stop_link() platform-specific method invocation in case of the PCIe host
-> > > probe procedure errors. It has been missing in the cleanup-on-error path
-> > > of the DW PCIe Host initialization method. After that the unrolled CSRs
-> > > layout is added to the iATU disable procedure. In third the disable iATU
-> > > procedure is fixed to be called only for the internal ATU as being
-> > > specific for the internal ATU implementation. Then the outbound iATU
-> > > extended region setup procedure is fixed to have the INCREASE_REGION_SIZE
-> > > flag set based on the limit-address - not the region size one. The last
-> > > but not least the CDM-check enabling procedure is fixed to be independent
-> > > from the non-related num_lanes field state.
-> > > 
-> > > Afterwards there is a series of cleanups. It concerns the changes like
-> > > adding braces to the multi-line if-else constructions, trailing new-lines
-> > > to the print format-string, dropping unnecessary version checking, and
-> > > various code simplifications and optimizations.
-> > > 
-> > > New features like adding two-level DT bindings abstraction, adding better
-> > > structured IP-core version interface, adding iATU regions size detection
-> > > and the PCIe regions verification procedure, adding dma-ranges support,
-> > > introducing a set of generic platform clocks and resets and finally adding
-> > > Baikal-T1 PCIe interface support will be submitted in the next part of the
-> > > series.
-> > > 
-> > > Link: https://lore.kernel.org/linux-pci/20220324012524.16784-1-Sergey.Semin@baikalelectronics.ru/
-> > > Changelog v2:
-> > > - Fix the end address of the example in the patch log with
-> > >   the INCREASE_REGION_SIZE flag usage fixup. It should be
-> > >   0x1000FFFF and not 0x0000FFFF (@Manivannan).
-> > > - Add the cleanup-on-error path to the dw_pcie_ep_init() function.
-> > >   (@Manivannan)
-> > > 
-> > > Link: https://lore.kernel.org/linux-pci/20220503212300.30105-1-Sergey.Semin@baikalelectronics.ru/
-> > > Changelog v3:
-> > > - Convert region variable type to u32 in order to fix the implicit type
-> > >   conversion peculiarity. (@kbot)
-> > > - Rebase onto v5.18-rc6.
-> > > 
-> > > Link: https://lore.kernel.org/linux-pci/20220517125058.18488-1-Sergey.Semin@baikalelectronics.ru/
-> > > Changelog v4:
-> > > - Move the patch "PCI: dwc: Deallocate EPC memory on EP init error" to
-> > >   being applied before the cleanup patches.
-> > 
-> > > - Add a new fixes patch: "PCI: dwc: Enable CDM-check independently from
-> > >   the num_lanes value".
-> > > - Add a new cleanup patch: "PCI: dwc: Organize local variables usage".
-> > > - Add a new cleanup patch: "PCI: dwc: Re-use local pointer to the
-> > >   resource data".
-> > > - Add a new cleanup patch: "PCI: dwc: Add start_link/stop_link inliners".
-> > > - Add a new cleanup patch: "PCI: dwc: Move io_cfg_atu_shared to the Root
-> > >   Port descriptor".
-> > > - Add a new cleanup patch: "PCI: dwc: Add dw_ prefix to the pcie_port
-> > >   structure name".
-> > > - Drop the patch "PCI: dwc: Don't use generic IO-ops for DBI-space
-> > >   access". (@Rob)
-> > > - Drop Manivannan tested tag from the changed patches.
-> > 
-> > @Mani, there are several brand new patches in this series and a few
-> > ones updated (@Rob requests). Could you please have a look at the
-> > patchset one more time?
-> > 
-> 
+This series patches refine pci-imx6 driver and do the following main changes.
+- Encapsulate the clock enable into one standalone function
+- Add the error propagation from host_init and resume
+- Turn off regulator when the system is in suspend mode
+- Let the probe successfully when link never comes up
+- Do not hide the phy driver callbacks in core reset and clk_enable.
+BTW, this series are verified on i.MX8MM EVK board when one NVME is used.
 
-> Yep, this is on my todo list. But I'm in a company wide meetup currently.
-> Will take a look once I'm back this weekend.
-> 
-> I'll also give this series (and other ones) a go on my hardware.
+Main changes from v12 to v13:
+- Call imx6_pcie_host_init() instead of duplicating codes in resume.
+- Move the regulator enable out of imx6_pcie_deassert_core_reset().
+  Re-format the error handling in imx6_pcie_deassert_core_reset()
+  and imx6_pcie_host_init() accordingly.
 
-Great! I'm looking forward to the result. Thanks.
+Main changes from v11 to v12 issued by Bjorn:
+- Add four intro patches to move code around to collect similar things
+  (PHY management, reset management) together.  This makes the first
+  diff to collect clock enables simpler because it's not cluttered with
+  unrelated things that didn't actually change.
+- Factor out ref clock disables so the disable function structure matches
+  the enable structure.
+- Drop unused "ret" from "Reduce resume time ..." to avoid bisection
+  hole, then add it back in "Do not hide phy driver ..." where we start
+  using it again.
+- Add patch to make imx6_pcie_clk_disable() symmetric with
+  imx6_pcie_clk_enable() in terms of enable/disable ordering.
 
--Sergey
+Main changes from v10 to v11:
+No code changes, just do the following operations refer to Bjorn's comments.
+  - Split #6 patch into two patches.
+  - Rebase to v5.19-rc1 based on for-next branch of Shawn's git.
 
-> 
-> Thanks,
-> Mani
-> 
-> > -Sergey
-> > 
-> > > - Rebase onto v5.18.
-> > > 
-> > > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > > Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
-> > > Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
-> > > Cc: Jingoo Han <jingoohan1@gmail.com>
-> > > Cc: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> > > Cc: "Krzysztof Wilczyński" <kw@linux.com>
-> > > Cc: Frank Li <Frank.Li@nxp.com>
-> > > Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > > Cc: linux-pci@vger.kernel.org
-> > > Cc: linux-kernel@vger.kernel.org
-> > > 
-> > > Serge Semin (18):
-> > >   PCI: dwc: Stop link in the host init error and de-initialization
-> > >   PCI: dwc: Add unroll iATU space support to the regions disable method
-> > >   PCI: dwc: Disable outbound windows for controllers with iATU
-> > >   PCI: dwc: Set INCREASE_REGION_SIZE flag based on limit address
-> > >   PCI: dwc: Deallocate EPC memory on EP init error
-> > >   PCI: dwc: Enable CDM-check independently from the num_lanes value
-> > >   PCI: dwc: Add braces to the multi-line if-else statements
-> > >   PCI: dwc: Add trailing new-line literals to the log messages
-> > >   PCI: dwc: Discard IP-core version checking on unrolled iATU detection
-> > >   PCI: dwc: Convert Link-up status method to using dw_pcie_readl_dbi()
-> > >   PCI: dwc: Organize local variables usage
-> > >   PCI: dwc: Re-use local pointer to the resource data
-> > >   PCI: dwc: Add start_link/stop_link inliners
-> > >   PCI: dwc: Move io_cfg_atu_shared to the Root Port descriptor
-> > >   PCI: dwc: Add dw_ prefix to the pcie_port structure name
-> > >   PCI: dwc-plat: Simplify the probe method return value handling
-> > >   PCI: dwc-plat: Discard unused regmap pointer
-> > >   PCI: dwc-plat: Drop dw_plat_pcie_of_match forward declaration
-> > > 
-> > >  drivers/pci/controller/dwc/pci-dra7xx.c       |  12 +-
-> > >  drivers/pci/controller/dwc/pci-exynos.c       |   6 +-
-> > >  drivers/pci/controller/dwc/pci-imx6.c         |   6 +-
-> > >  drivers/pci/controller/dwc/pci-keystone.c     |  20 ++--
-> > >  .../pci/controller/dwc/pci-layerscape-ep.c    |  12 --
-> > >  drivers/pci/controller/dwc/pci-layerscape.c   |   2 +-
-> > >  drivers/pci/controller/dwc/pci-meson.c        |   2 +-
-> > >  drivers/pci/controller/dwc/pcie-al.c          |   6 +-
-> > >  drivers/pci/controller/dwc/pcie-armada8k.c    |   4 +-
-> > >  drivers/pci/controller/dwc/pcie-artpec6.c     |   4 +-
-> > >  .../pci/controller/dwc/pcie-designware-ep.c   |  30 +++--
-> > >  .../pci/controller/dwc/pcie-designware-host.c | 104 ++++++++++--------
-> > >  .../pci/controller/dwc/pcie-designware-plat.c |  25 +----
-> > >  drivers/pci/controller/dwc/pcie-designware.c  |  72 +++++++-----
-> > >  drivers/pci/controller/dwc/pcie-designware.h  |  46 +++++---
-> > >  drivers/pci/controller/dwc/pcie-dw-rockchip.c |   4 +-
-> > >  drivers/pci/controller/dwc/pcie-fu740.c       |   2 +-
-> > >  drivers/pci/controller/dwc/pcie-histb.c       |  10 +-
-> > >  drivers/pci/controller/dwc/pcie-intel-gw.c    |   6 +-
-> > >  drivers/pci/controller/dwc/pcie-keembay.c     |   4 +-
-> > >  drivers/pci/controller/dwc/pcie-kirin.c       |   2 +-
-> > >  drivers/pci/controller/dwc/pcie-qcom.c        |   4 +-
-> > >  drivers/pci/controller/dwc/pcie-spear13xx.c   |   6 +-
-> > >  drivers/pci/controller/dwc/pcie-tegra194.c    |  22 ++--
-> > >  drivers/pci/controller/dwc/pcie-uniphier.c    |  10 +-
-> > >  drivers/pci/controller/dwc/pcie-visconti.c    |   6 +-
-> > >  26 files changed, 225 insertions(+), 202 deletions(-)
-> > > 
-> > > -- 
-> > > 2.35.1
-> > > 
-> 
-> -- 
-> மணிவண்ணன் சதாசிவம்
+Main changes from v9 to v10:
+- Add the "Reviewed-by: Lucas Stach <l.stach@pengutronix.de>" tag into #3
+  and #4 patches.
+- Refer to Bjorn's comments:
+  - refine the commit of the first patch
+  - keep alignment of the message format in the second patch
+  - More specific commit and subject of the #5 and #7 patches.
+- Move the regualtor_disable into suspend, turn off the regulator when bus
+  is powered off and system in suspend mode.
+- Let the driver probe successfully, return zero in imx6_pcie_start_link()
+  when PCIe link is down. 
+  In this link down scenario, only start the PCIe link training in resume
+  when the link is up before system suspend to avoid the long latency in
+  the link training period.
+- Don't hide phy driver callbacks in core reset and clk_enable, and refine
+  the error handling accordingly.
+- Drop the #8 patch of v9 series, since the clocks and powers are not gated
+  off anymore when link is down.
+
+Main changes from v8 to v9:
+- Don't change pcie-designware codes, and do the error exit process only in
+  pci-imx6 driver internally.
+- Move the phy driver callbacks to the proper places
+
+Main changes from v7 to v8:
+Regarding Bjorn's review comments.
+- Align the format of the dev_info message and refine commit log of
+  #6/7/8 patches.
+- Rename the err_reset_phy label, since there is no PHY reset in the out
+
+Main changes from v6 to v7:
+- Keep the regulator usage counter balance in the #5 patch of v6 series.
+
+Main changes from v5 to v6:
+- Refer to the following discussion with Fabio, fix the dump by his patch.
+  https://patchwork.kernel.org/project/linux-pci/patch/1641368602-20401-6-git-send-email-hongxing.zhu@nxp.com/
+  Refine and rebase this patch-set after Fabio' dump fix patch is merged.
+- Add one new #4 patch to disable i.MX6QDL REF clock too when disable clocks
+- Split the regulator refine codes into one standalone patch #5 in this version.
+
+Main changes from v4 to v5:
+- Since i.MX8MM PCIe support had been merged. Based on Lorenzo's git repos,
+  resend the patch-set after rebase.
+
+Main changes from v3 to v4:
+- Regarding Mark's comments, delete the regulator_is_enabled() check.
+- Squash #3 and #6 of v3 patch into #5 patch of v4 set.
+
+Main changes from v2 to v3:
+- Add "Reviewed-by: Lucas Stach <l.stach@pengutronix.de>" tag into
+  first two patches.
+- Add a Fixes tag into #3 patch.
+- Split the #4 of v2 to two patches, one is clock disable codes move,
+  the other one is the acutal clock unbalance fix.
+- Add a new host_exit() callback into dw_pcie_host_ops, then it could be
+  invoked to handle the unbalance issue in the error handling after
+  host_init() function when link is down.
+- Add a new host_exit() callback for i.MX PCIe driver to handle this case
+  in the error handling after host_init.
+
+Main changes from v1 to v2:
+Regarding Lucas' comments.
+  - Move the placement of the new imx6_pcie_clk_enable() to avoid the
+    forward declarition.
+  - Seperate the second patch of v1 patch-set to three patches.
+  - Use the module_param to replace the kernel command line.
+Regarding Bjorn's comments:
+  - Use the cover-letter for a multi-patch series.
+  - Correct the subject line, and refine the commit logs. For example,
+    remove the timestamp of the logs.
+
+Bjorn Helgaas (5):
+  PCI: imx6: Move imx6_pcie_grp_offset(), imx6_pcie_configure_type()
+    earlier
+  PCI: imx6: Move PHY management functions together
+  PCI: imx6: Move imx6_pcie_enable_ref_clk() earlier
+  PCI: imx6: Factor out ref clock disable to match enable
+  PCI: imx6: Disable clocks in reverse order of enable
+
+Richard Zhu (10):
+  PCI: imx6: Move imx6_pcie_clk_disable() earlier
+  PCI: imx6: Collect clock enables in imx6_pcie_clk_enable()
+  PCI: imx6: Propagate .host_init() errors to caller
+  PCI: imx6: Disable i.MX6QDL clock when disabling ref clocks
+  PCI: imx6: Call host init function directly in resume
+  PCI: imx6: Turn off regulator when system is in suspend mode
+  PCI: imx6: Move regulator enable out of
+    imx6_pcie_deassert_core_reset()
+  PCI: imx6: Mark the link down as non-fatal error
+  PCI: imx6: Reduce resume time by only starting link if it was up
+    before suspend
+  PCI: imx6: Do not hide phy driver callbacks and refine the error
+    handling
+
+drivers/pci/controller/dwc/pci-imx6.c | 574 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++------------------------------------------------------------------------------------------------
+1 file changed, 308 insertions(+), 266 deletions(-)
+
