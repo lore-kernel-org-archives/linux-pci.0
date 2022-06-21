@@ -2,83 +2,110 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 672E0C43334
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jun 2022 08:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C524AC433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jun 2022 08:55:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230362AbiFUIgp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jun 2022 04:36:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53470 "EHLO
+        id S1346820AbiFUIzT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jun 2022 04:55:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40264 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345537AbiFUIgn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jun 2022 04:36:43 -0400
-Received: from mail-qv1-f44.google.com (mail-qv1-f44.google.com [209.85.219.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51A7E22290;
-        Tue, 21 Jun 2022 01:36:42 -0700 (PDT)
-Received: by mail-qv1-f44.google.com with SMTP id c1so18949209qvi.11;
-        Tue, 21 Jun 2022 01:36:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=mCrifMlo157VPMmQRiT6jFW67xnyQ8WeHHx7w4rwSGc=;
-        b=2rLjrJnxpxp0xEZVe2nrGZtsSuYGcWZnclfukuNWRJ3+fQxeWkgf78CK3nvWiDAj0B
-         WrrQO7v2v+Z8zX5thbhVCy6CxTv72b0sOA+I//TA6r0ghmle9Oglr+YsZH6eo+/krxT2
-         VHInjjQA/KRP3H97PPFmkZmGDZa/8WF4HSPLX/5SHlo/7KnbIInZzQJ/k4qRtrBGa+M6
-         bg654P7kQCDtW9G7y6/dN9ZZUMDqht0BAOtKM9giUO1EdZ85cp/tHFQb/lkUtng7nNxd
-         Xu2f92pFV4q1EG9ImuNGSKU/QHiuIfTva8BzK7aLBjP8W28kCL62FXXqS2jR/cIfTQgB
-         FpHg==
-X-Gm-Message-State: AJIora9Rzt0uSmdWdPM9RIkjwbbKKKjN4NvyaNT48eDszJvpQEKqXc4L
-        fXXGhpM1MqZUbSEbk+Gri9HEZLpMl/MOnA==
-X-Google-Smtp-Source: AGRyM1vmy6JZgifJJ1muPHSqJRWQH+mBYzFeZy47FObm37PY1XfXYZ7rzUDNfLjwLbn9UPnKppgTnQ==
-X-Received: by 2002:a05:6214:d8b:b0:46b:a979:d9c with SMTP id e11-20020a0562140d8b00b0046ba9790d9cmr21917084qve.23.1655800601024;
-        Tue, 21 Jun 2022 01:36:41 -0700 (PDT)
-Received: from mail-yw1-f176.google.com (mail-yw1-f176.google.com. [209.85.128.176])
-        by smtp.gmail.com with ESMTPSA id bq38-20020a05620a46a600b006a785ba0c25sm13001804qkb.77.2022.06.21.01.36.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Jun 2022 01:36:40 -0700 (PDT)
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-317803b61e5so97911457b3.1;
-        Tue, 21 Jun 2022 01:36:40 -0700 (PDT)
-X-Received: by 2002:a0d:f801:0:b0:30f:f716:2950 with SMTP id
- i1-20020a0df801000000b0030ff7162950mr32597022ywf.358.1655800600138; Tue, 21
- Jun 2022 01:36:40 -0700 (PDT)
-MIME-Version: 1.0
-References: <20220621070145.4080147-1-windhl@126.com>
-In-Reply-To: <20220621070145.4080147-1-windhl@126.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 21 Jun 2022 10:36:29 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdU_=cWVr7pjYNbz+eO5R3S_H9nJyodRNkQ6uWYgQ_O-rA@mail.gmail.com>
-Message-ID: <CAMuHMdU_=cWVr7pjYNbz+eO5R3S_H9nJyodRNkQ6uWYgQ_O-rA@mail.gmail.com>
-Subject: Re: [PATCH] pci/controller/pcie-rcar-host: Hold the reference
- returned by of_find_matching_node
-To:     Liang He <windhl@126.com>
-Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        lpieralisi@kernel.org, Rob Herring <robh@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        with ESMTP id S1348565AbiFUIzI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jun 2022 04:55:08 -0400
+Received: from mail.tkos.co.il (mail.tkos.co.il [84.110.109.230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64EEA25EB4;
+        Tue, 21 Jun 2022 01:55:05 -0700 (PDT)
+Received: from tarshish.tkos.co.il (unknown [10.0.8.2])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.tkos.co.il (Postfix) with ESMTPS id C40594407DA;
+        Tue, 21 Jun 2022 11:54:39 +0300 (IDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tkos.co.il;
+        s=default; t=1655801680;
+        bh=/rQFltQbwW1NtS1kguqnicZH12kOh3aebtATb/mTZtY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=K89WwHjGMxO/tcmUAP6DyOb6mH8so44bT7pzNO0zGkyU4z1Nv8ws2DaqVjQa6pnt0
+         cvbcSrb3lK60Iia8dXPyzKZZwcDAW1bSubaMES/4nmJhGNf/0rvryElbpWSRyYnPlU
+         +zMdtKzC+os8bzhNCvf7QJKDj8KLst4niHP2lUZWRSj58ntx0XibLR9ca7+/8kdcaK
+         lt7SvjZCAli0a3QAiFIKBRT2sjK2EPluO2Rb7fDEqr7jeYLpZXQT9EVoIjaYbMlOLC
+         HApc5gGOfr/xFS0AKkGPjXv9AzL+15pF0PSEkklMbWVsjHZqaCjGc6evQsFcB9l9Vf
+         YQx9D2eknBVug==
+From:   Baruch Siach <baruch@tkos.co.il>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc:     Baruch Siach <baruch.siach@siklu.com>,
+        Rob Herring <robh@kernel.org>,
+        Kathiravan T <quic_kathirav@quicinc.com>,
+        Selvam Sathappan Periakaruppan <quic_speriaka@quicinc.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Rob Herring <robh+dt@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Robert Marko <robert.marko@sartura.hr>,
+        Bryan O'Donoghue <pure.logic@nexus-software.ie>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        Johan Hovold <johan@kernel.org>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org
+Subject: [PATCH v8 1/3] PCI: dwc: tegra: move GEN3_RELATED DBI register to common header
+Date:   Tue, 21 Jun 2022 11:54:52 +0300
+Message-Id: <1c2d5a7a139be81fa15f356b2380163dbdebdc09.1655799816.git.baruch@tkos.co.il>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <cover.1655799816.git.baruch@tkos.co.il>
+References: <cover.1655799816.git.baruch@tkos.co.il>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 21, 2022 at 9:47 AM Liang He <windhl@126.com> wrote:
-> In rcar_pcie_init(), we need to hold the reference returned by
-> of_find_matching_node() which is used to call of_node_put() for
-> refcount balance.
->
-> Signed-off-by: Liang He <windhl@126.com>
+From: Baruch Siach <baruch.siach@siklu.com>
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+These are common dwc macros that will be used for other platforms.
 
-Gr{oetje,eeting}s,
+Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Baruch Siach <baruch.siach@siklu.com>
+---
+ drivers/pci/controller/dwc/pcie-designware.h | 6 ++++++
+ drivers/pci/controller/dwc/pcie-tegra194.c   | 6 ------
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-                        Geert
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 7d6e9b7576be..ea87809ee298 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -74,6 +74,12 @@
+ #define PCIE_MSI_INTR0_MASK		0x82C
+ #define PCIE_MSI_INTR0_STATUS		0x830
+ 
++#define GEN3_RELATED_OFF			0x890
++#define GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL	BIT(0)
++#define GEN3_RELATED_OFF_GEN3_EQ_DISABLE	BIT(16)
++#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_SHIFT	24
++#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK	GENMASK(25, 24)
++
+ #define PCIE_PORT_MULTI_LANE_CTRL	0x8C0
+ #define PORT_MLTI_UPCFG_SUPPORT		BIT(7)
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index cc2678490162..0190786a24b8 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -191,12 +191,6 @@
+ #define GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC_MASK	GENMASK(23, 8)
+ #define GEN3_EQ_CONTROL_OFF_FB_MODE_MASK	GENMASK(3, 0)
+ 
+-#define GEN3_RELATED_OFF			0x890
+-#define GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL	BIT(0)
+-#define GEN3_RELATED_OFF_GEN3_EQ_DISABLE	BIT(16)
+-#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_SHIFT	24
+-#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK	GENMASK(25, 24)
+-
+ #define PORT_LOGIC_AMBA_ERROR_RESPONSE_DEFAULT	0x8D0
+ #define AMBA_ERROR_RESPONSE_CRS_SHIFT		3
+ #define AMBA_ERROR_RESPONSE_CRS_MASK		GENMASK(1, 0)
+-- 
+2.35.1
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
