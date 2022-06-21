@@ -2,91 +2,165 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FFD7C433EF
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jun 2022 09:05:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EFBCCCA47E
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jun 2022 11:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244107AbiFUJFs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jun 2022 05:05:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50244 "EHLO
+        id S1349264AbiFULXn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jun 2022 07:23:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236616AbiFUJFr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jun 2022 05:05:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06EF9DFA0;
-        Tue, 21 Jun 2022 02:05:47 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 97B1E6157D;
-        Tue, 21 Jun 2022 09:05:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFCC8C3411D;
-        Tue, 21 Jun 2022 09:05:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1655802346;
-        bh=7mNxfcNU8Owcc0AruDgkcVQfuiIuDtolzMAIpwihElE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=McOtBZ5BOzquTU+uRqVBdyq0Uf0OQj6hZqIPYEh7ZhqvU7Z2Yi/iNUlryqmKBuEIy
-         eTGa5ry0yUKo74jHsBV3jt617yUGDMbplA2kZXg90E8zoTC0z8DgHZ5IdLa+FaRzMd
-         y9oeQTVv/o46NQuGj1n7RMV8uNoknIZGYcd+sdgVvQZYnmR2oc3/T3VLEThqDdCjGk
-         w3puGa/9PMRYayTsBtZQ4VOlxLSWpe12/Ex42/x6e5zXTojekfeILFRIbJVCZsXLpX
-         3rNDpwIPnrDl59+JsBG1Im8Km4zGL498/7vOE+jrvZbz1POnaaksIswa2teWzMqRdq
-         Zpl24EzQqrviA==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1o3ZpL-0001fY-OQ; Tue, 21 Jun 2022 11:05:39 +0200
-Date:   Tue, 21 Jun 2022 11:05:39 +0200
-From:   Johan Hovold <johan@kernel.org>
-To:     Baruch Siach <baruch@tkos.co.il>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Selvam Sathappan Periakaruppan <quic_speriaka@quicinc.com>,
-        Rob Herring <robh@kernel.org>,
-        Robert Marko <robert.marko@sartura.hr>,
-        Baruch Siach <baruch.siach@siklu.com>,
-        Kathiravan T <quic_kathirav@quicinc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Bryan O'Donoghue <pure.logic@nexus-software.ie>,
-        Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
-        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v8 3/3] PCI: qcom: Add IPQ60xx support
-Message-ID: <YrGJ46ep4SJY5GNp@hovoldconsulting.com>
-References: <cover.1655799816.git.baruch@tkos.co.il>
- <f7f848653c99abbf9a0f877949a44e52329543ae.1655799816.git.baruch@tkos.co.il>
+        with ESMTP id S1349938AbiFULXg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jun 2022 07:23:36 -0400
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFCC038A4;
+        Tue, 21 Jun 2022 04:23:35 -0700 (PDT)
+Received: by mail-ed1-x532.google.com with SMTP id es26so17201750edb.4;
+        Tue, 21 Jun 2022 04:23:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=7QvLRXiq8Bnt0eVtULkdQpLTyiJt3SvSjod+5Ee1wHE=;
+        b=HMxM/aSlAuvaJsppaX7ddSubVt1WRfhY6JdmStM/lact7dWcIhwpBX7cz+FHKMJm6t
+         2HupTlKSz0UHEjqwnyxZx1HOJvnoyAivxWsEi8kTIgPsxu1mTbRYGAeE+twEt/wBycAi
+         m5+u5LKdDaif2kZxbUni7KGQKiXxONlXDlYtafEwt0gNn743reBmGHcJEmwoNig4EL1E
+         OttNdoPwbVgtBrnRtgy0NSUxQamjNPKlTrSyI8FeVJrVEpYglXBfg07kVMwnNMGj8xa5
+         DWzkvQHd5JFDkfY807CwqOe+f0w2VsRZHtJrh+eBTSxHDqKBljSoq6QPqOO2pg3r3Ii+
+         2DCw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=7QvLRXiq8Bnt0eVtULkdQpLTyiJt3SvSjod+5Ee1wHE=;
+        b=yPHTSrdhiapBHqipRWmZGQhW923uPCq7wwF9VggDMqXhrrvmrg9ETVyDZMZGhlS9qD
+         KeIFJHXc7cT/ZuxJyZ/hb2jst9Mo9M753qZZCOGPZpEdCeIykwMVt4Zi8i/IaNdYTH67
+         bFyzykRHbdQSfQ/y1y5AxHrFRkpUc15frD2GUsL8ZDjcKXdLE3T25I6JnkEDQ49ssuYo
+         DcnurzBwLwRGqBPdRtFUEcbOmF/mrfrYjs3GJerkr2JYUj5fxJJgPyY12esuMK+SNpaD
+         T2nx6cG2CKC2C2FVKp9F+JnvBPHF5rit1/vmSuWUfQRDFXU3WAwhzNS/SEufIkCXMzbt
+         D4rg==
+X-Gm-Message-State: AJIora/KPA0CNtLffWlacGOMQ3SVnFYpvPUERNBvsFybBFVWjkeLJP8X
+        hpfRJslqL+jH0oNfoQAr3Ik=
+X-Google-Smtp-Source: AGRyM1sL1ZkhLrEB/tV8w83l9vV8GuWECpMuHhwAq6ozTvxgrj1WCBu30JWPo8tUpOaWLX9Cpm7q7g==
+X-Received: by 2002:a05:6402:5388:b0:435:71b:5d44 with SMTP id ew8-20020a056402538800b00435071b5d44mr34535569edb.364.1655810614370;
+        Tue, 21 Jun 2022 04:23:34 -0700 (PDT)
+Received: from fedora.robimarko.hr (dh207-99-158.xnet.hr. [88.207.99.158])
+        by smtp.googlemail.com with ESMTPSA id a12-20020a50858c000000b0042617ba638esm12394840edh.24.2022.06.21.04.23.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jun 2022 04:23:33 -0700 (PDT)
+From:   Robert Marko <robimarko@gmail.com>
+To:     svarbanov@mm-sol.com, agross@kernel.org,
+        bjorn.andersson@linaro.org, lpieralisi@kernel.org, robh@kernel.org,
+        kw@linux.com, bhelgaas@google.com, p.zabel@pengutronix.de,
+        jingoohan1@gmail.com, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        johan+linaro@kernel.org
+Cc:     Robert Marko <robimarko@gmail.com>
+Subject: [PATCH v2] PCI: qcom: fix IPQ8074 Gen2 support
+Date:   Tue, 21 Jun 2022 13:23:30 +0200
+Message-Id: <20220621112330.448754-1-robimarko@gmail.com>
+X-Mailer: git-send-email 2.36.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f7f848653c99abbf9a0f877949a44e52329543ae.1655799816.git.baruch@tkos.co.il>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 21, 2022 at 11:54:54AM +0300, Baruch Siach wrote:
-> From: Selvam Sathappan Periakaruppan <quic_speriaka@quicinc.com>
-> 
-> IPQ60xx series of SoCs have one port of PCIe gen 3. Add support for that
-> platform.
-> 
-> The code is based on downstream[1] Codeaurora kernel v5.4 (branch
-> win.linuxopenwrt.2.0).
-> 
-> Split out the DBI registers access part from .init into .post_init. DBI
-> registers are only accessible after phy_power_on().
-> 
-> [1] https://source.codeaurora.org/quic/qsdk/oss/kernel/linux-ipq-5.4/
-> 
-> Reviewed-by: Rob Herring <robh@kernel.org>
-> Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-> Tested-by: Robert Marko <robert.marko@sartura.hr>
-> Signed-off-by: Selvam Sathappan Periakaruppan <quic_speriaka@quicinc.com>
-> Signed-off-by: Baruch Siach <baruch.siach@siklu.com>
+IPQ8074 has one Gen2 and one Gen3 port, currently the Gen2 port will
+cause the system to hang as its using DBI registers in the .init
+and those are only accesible after phy_power_on().
 
-Reviewed-by: Johan Hovold <johan+linaro@kernel.org>
+So solve this by splitting the DBI read/writes to .post_init.
 
-Johan
+Fixes: a0fd361db8e5 ("PCI: dwc: Move "dbi", "dbi2", and "addr_space" resource setup into common code")
+Signed-off-by: Robert Marko <robimarko@gmail.com>
+---
+Changes in v2:
+* Rebase onto next-20220621
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 48 +++++++++++++++-----------
+ 1 file changed, 28 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 51fed83484af..da6d79d61397 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1061,9 +1061,7 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+ 	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	int i, ret;
+-	u32 val;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
+ 		ret = reset_control_assert(res->rst[i]);
+@@ -1120,6 +1118,33 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+ 		goto err_clk_aux;
+ 	}
+ 
++	return 0;
++
++err_clk_aux:
++	clk_disable_unprepare(res->ahb_clk);
++err_clk_ahb:
++	clk_disable_unprepare(res->axi_s_clk);
++err_clk_axi_s:
++	clk_disable_unprepare(res->axi_m_clk);
++err_clk_axi_m:
++	clk_disable_unprepare(res->iface);
++err_clk_iface:
++	/*
++	 * Not checking for failure, will anyway return
++	 * the original failure in 'ret'.
++	 */
++	for (i = 0; i < ARRAY_SIZE(res->rst); i++)
++		reset_control_assert(res->rst[i]);
++
++	return ret;
++}
++
++static int qcom_pcie_post_init_2_3_3(struct qcom_pcie *pcie)
++{
++	struct dw_pcie *pci = pcie->pci;
++	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	u32 val;
++
+ 	writel(SLV_ADDR_SPACE_SZ,
+ 		pcie->parf + PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE);
+ 
+@@ -1147,24 +1172,6 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+ 		PCI_EXP_DEVCTL2);
+ 
+ 	return 0;
+-
+-err_clk_aux:
+-	clk_disable_unprepare(res->ahb_clk);
+-err_clk_ahb:
+-	clk_disable_unprepare(res->axi_s_clk);
+-err_clk_axi_s:
+-	clk_disable_unprepare(res->axi_m_clk);
+-err_clk_axi_m:
+-	clk_disable_unprepare(res->iface);
+-err_clk_iface:
+-	/*
+-	 * Not checking for failure, will anyway return
+-	 * the original failure in 'ret'.
+-	 */
+-	for (i = 0; i < ARRAY_SIZE(res->rst); i++)
+-		reset_control_assert(res->rst[i]);
+-
+-	return ret;
+ }
+ 
+ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
+@@ -1598,6 +1605,7 @@ static const struct qcom_pcie_ops ops_2_4_0 = {
+ static const struct qcom_pcie_ops ops_2_3_3 = {
+ 	.get_resources = qcom_pcie_get_resources_2_3_3,
+ 	.init = qcom_pcie_init_2_3_3,
++	.post_init = qcom_pcie_post_init_2_3_3,
+ 	.deinit = qcom_pcie_deinit_2_3_3,
+ 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
+-- 
+2.36.1
+
