@@ -2,136 +2,122 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C787C43334
-	for <linux-pci@archiver.kernel.org>; Tue, 21 Jun 2022 12:44:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88D93C43334
+	for <linux-pci@archiver.kernel.org>; Tue, 21 Jun 2022 14:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350556AbiFUMoU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 21 Jun 2022 08:44:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44876 "EHLO
+        id S1351186AbiFUOVG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 21 Jun 2022 10:21:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231252AbiFUMoT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jun 2022 08:44:19 -0400
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA90D12091
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jun 2022 05:44:17 -0700 (PDT)
-Received: by mail-ed1-x531.google.com with SMTP id eo8so19259113edb.0
-        for <linux-pci@vger.kernel.org>; Tue, 21 Jun 2022 05:44:17 -0700 (PDT)
+        with ESMTP id S1351375AbiFUOVF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Jun 2022 10:21:05 -0400
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61BDD222AD
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jun 2022 07:21:03 -0700 (PDT)
+Received: by mail-pl1-x631.google.com with SMTP id k14so1192229plh.4
+        for <linux-pci@vger.kernel.org>; Tue, 21 Jun 2022 07:21:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=uc5jJq0YvTzf8BEPMUgKkXPq5VOMLMXDxdKkAuvbItk=;
-        b=o51LpaWxCfqFP3YFV66q9y40X5oK1xKmN9I5bVSTSRV3Ue6tOFTcBotGnOvkcAkeSG
-         JWEuMhVcnHIviKxc+2GgZkmiJALfB8BlzdsSAe9d20F8H7fO+62VPXNVWD6oCHGgSY8z
-         +ZaSdxgU7R8eKt8KP2ie6HuPRGZLlefknuUK+XhMdmuN9BzV+/SoJcwr2WzdOdm8mD+P
-         oOAOGMlX7iy9zhl2MwrL/HOldGCYQTm5hksNGhq7ZKoy6UmGkQYA2mlbK//z5hPyWKzj
-         tcjVSqEmXu6NfJapXTca1fVPcZPXpmCcyGKBi2VwY5afvx6bXrBW4VmYoynDOk946vf4
-         Fwmg==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=GRsv7drQw2ERQmAVxWNghAdU2R4uu9ssy2NxQwDwrBY=;
+        b=xPGl4IrWQfBQ+vG7TfDRNd/W7uZAUYdEUW1d/Ce9gELIGxvW0hGjizDEuy7Qb5ekhZ
+         G38V2B1ArPHeoJdOKB7NLvcVVmkCi+9ebhkMn0m5qb/p2G/IU4uxqL767HKAsCdSpn0z
+         AQqJSRc4TOueI2xWf0iWbCC1tc89T9ZVeZvVbjsON+5r1FVTL63HUnUrkvQWmO5KyWjP
+         GJL5koutzAPB/P+OUhP8Nl/fIzSTiTyMUyONjbmTgl1R2Vprt/xi3Du0/a4BwAZJ5XPf
+         IsKML+8rLwfXoUASR5UfFemFKGcftYU4D2XAoHQsJEOeqRe6kOfZZick4yn5fVCC0gRd
+         SkHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=uc5jJq0YvTzf8BEPMUgKkXPq5VOMLMXDxdKkAuvbItk=;
-        b=t10wQc6D061a+mrtHfEiRp7r4EDFZluYTa1L8fTlKh6Vk3P6zPP1gwoisM80XcCrIQ
-         0sjNjg22zwfXBu6/2z+PbzZ31Y6PlxF56FFRFOFNxpKba0fQpa1+uANcPaRTd59XMOhQ
-         JcDlUIV2aOOQDstVqE197yLDCRqfqfoTF+rTHyUpcMiwhnGQWKZ+PPb0rgKFFr78vVZx
-         pmfSyvCdWvfmsKtWhMfwXvUzq/F5hKzTYK6bsUgivweKr93zKW0xIsRaJciYwUFoxbIj
-         ZI6hBw2WrPJKSEuGAsjVjPZ5RPJiI48pg/cwZ60Ig6UlN/nTaI8PB5yF8eBFYZD/QOWX
-         fF/A==
-X-Gm-Message-State: AJIora+cKMZ8S/D3XNGypZkHvqHYLRqNbLomiNoNSXtJo/Vjtr9KaR9m
-        2EEtBxJAaV/dxqV85aWzjAc2ww==
-X-Google-Smtp-Source: AGRyM1tUrw283B/iLAAXe1suE6fsNV78cf2NHCU5hHUcZcigWaiVbjFyK+RkskC+/2DrTKT7yzUUeQ==
-X-Received: by 2002:a05:6402:5c9:b0:420:aac6:257b with SMTP id n9-20020a05640205c900b00420aac6257bmr34794630edx.128.1655815456285;
-        Tue, 21 Jun 2022 05:44:16 -0700 (PDT)
-Received: from [192.168.0.220] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id u9-20020a1709061da900b006fe8c831632sm7585849ejh.73.2022.06.21.05.44.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 21 Jun 2022 05:44:15 -0700 (PDT)
-Message-ID: <4a58c6c4-be0e-e56c-2498-a14ba46b508d@linaro.org>
-Date:   Tue, 21 Jun 2022 14:44:14 +0200
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=GRsv7drQw2ERQmAVxWNghAdU2R4uu9ssy2NxQwDwrBY=;
+        b=kHV/YGzuHqloU+eayPqBMsKy1EvePBzOEhOVXgMwM+j88BhpshBxHvNvdyTOkL9FeW
+         gROeOBOF5zCQiZbgiKSWSJgJZsxI1z14ZVP0bHGKV9ZuQNV8iclSYHDE5deMP2mmg2PZ
+         6ktn/PdGWGvo1E3izdejaBZAnKpChiaJBwvNPcUoX3bdGVInK0i9gK2rBoaz9ZS7Vjfv
+         IDnjx2WeQ2dVR4XCOoQ2QVOHo9y+tUz69Ag+B8yK/jFX7160mZA2q3Cj/whubjB65dck
+         OJzu6r8IRhE1gpc2F81heiGTOjnlMd056hm4ahQl2Eao8lIat8Rpooq4mYzUGZpWAps9
+         HARw==
+X-Gm-Message-State: AJIora+UGubW7+QbKuZi8Fbwf38DMEDZWvZv0d17T55l7AClXomPK4c1
+        nLBkFrtrfrqRNKD04RQEjFJm
+X-Google-Smtp-Source: AGRyM1v+gUvbQCm70x6EpSUqIAzUuhdAyOQaY5QNN7y7FRuK+wRBdhAJGvjl+18PlInXO56vucELAw==
+X-Received: by 2002:a17:902:f391:b0:16a:2d12:152c with SMTP id f17-20020a170902f39100b0016a2d12152cmr7529281ple.102.1655821263380;
+        Tue, 21 Jun 2022 07:21:03 -0700 (PDT)
+Received: from thinkpad ([117.193.212.116])
+        by smtp.gmail.com with ESMTPSA id f11-20020a170902684b00b00163f3e91ea0sm210437pln.238.2022.06.21.07.21.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Jun 2022 07:21:02 -0700 (PDT)
+Date:   Tue, 21 Jun 2022 19:50:58 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     kishon@ti.com, lpieralisi@kernel.org, kw@linux.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] PCI: endpoint: Fix WARN() when an endpoint driver is
+ removed
+Message-ID: <20220621142058.GE17181@thinkpad>
+References: <20220621121147.3971001-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v3 1/5] dt-bindings: pci: Add ARTPEC-8 PCIe controller
-Content-Language: en-US
-To:     wangseok.lee@samsung.com,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "vkoul@kernel.org" <vkoul@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>,
-        "lars.persson@axis.com" <lars.persson@axis.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "kw@linux.com" <kw@linux.com>,
-        "linux-arm-kernel@axis.com" <linux-arm-kernel@axis.com>,
-        "kernel@axis.com" <kernel@axis.com>
-Cc:     Moon-Ki Jun <moonki.jun@samsung.com>,
-        Sang Min Kim <hypmean.kim@samsung.com>,
-        Dongjin Yang <dj76.yang@samsung.com>,
-        Yeeun Kim <yeeun119.kim@samsung.com>
-References: <f9a877ce-1e18-90f9-67e5-b6e67b3b4156@linaro.org>
- <8d806fc9-0067-2c8d-ec41-13787c7644a2@linaro.org>
- <20220614011616epcms2p7dcaa67c53b7df5802dd7a697e2d472d7@epcms2p7>
- <20220614012713epcms2p810386a5137fbcf6aefc41fe086badc0b@epcms2p8>
- <20220620075548epcms2p61182d9d7f41fadb1eb139b349bf7486d@epcms2p6>
- <CGME20220614011616epcms2p7dcaa67c53b7df5802dd7a697e2d472d7@epcms2p2>
- <20220621074244epcms2p23cb631babfb87e5abb416467fb66e521@epcms2p2>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20220621074244epcms2p23cb631babfb87e5abb416467fb66e521@epcms2p2>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220621121147.3971001-1-yoshihiro.shimoda.uh@renesas.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 21/06/2022 09:42, Wangseok Lee wrote:
->>>  
->>>  samsung,syscon-bus-s-fsys:
->>>    description:
->>>      Phandle to bus-s path of fsys block, this register
->>>      are used for enabling bus-s.
->>>    $ref: /schemas/types.yaml#/definitions/phandle
->>>  
->>>  samsung,syscon-bus-p-fsys:
->>>    description:
->>>      Phandle to bus-p path of fsys block, this register
->>>      are used for enabling bus-p.
->>>    $ref: /schemas/types.yaml#/definitions/phandle
->>
->> This two look unspecific and hacky workaround for missing drivers. Looks
->> like instead of implementing interconnect or clock driver, you decided
->> to poke some other registers. Why this cannot be an interconnect driver?
->>
->>
+On Tue, Jun 21, 2022 at 09:11:47PM +0900, Yoshihiro Shimoda wrote:
+> Add pci_epc_nop_release() for epc->dev.release. Otherwise,
+> WARN() happened when a PCIe endpoint driver is removed.
 > 
-> bus-s, bus-p is a register that exists in the sysreg of the fsys block.
-> It is the same block as "fsys-sysreg" but is separated separately in
-> hardware.
+>  Device 'e65d0000.pcie-ep' does not have a release() function, it is broken and must be fixed. See Documentation/core-api/kobject.rst.
+>  WARNING: CPU: 0 PID: 139 at drivers/base/core.c:2232 device_release+0x78/0x8c
+> 
 
-Two points here:
-1. If it is in FSYS, why it cannot be accessed with samsung,fsys-sysreg?
-2. If it is only register, shuld be described like this. You must
-describe item:
-https://elixir.bootlin.com/linux/v5.18-rc1/source/Documentation/devicetree/bindings/soc/samsung/exynos-usi.yaml#L42
+Hmm... So the core is correctly throwing the warning here but just using a NOP
+release function is not the right solution IMO.
 
-> So, get resource is performed separately from "fsys-sysreg".
-> They set pcie slave, dbi related control settings,
-> naming "bus-x" seems to be interconnect.
-> I will add this description to property.
-> I don't think it need to use the interconnect driver,
-> so please let me know your opinion.
+Currently, pci_epc_destroy() is handling all resource release including freeing
+the memory for epc. But I think the "kfree(epc)" should be moved to this
+release callback. Reason is quite obvious. Until the release() callback gets
+called, there would be a "epc" device instance floating around and we should not
+free it until then.
 
-Please document both in the bindings and in the driver usage of this
-register. Writing there "0" or "1" is not enough. If the documentation
-is good, I am fine with it. If the explanation is obfuscated/not
-sufficient, it will look like avoiding to implement a driver, which I
-don't want to accept.
+Thanks,
+Mani
 
-Best regards,
-Krzysztof
+> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> ---
+>  drivers/pci/endpoint/pci-epc-core.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 3bc9273d0a08..cb533821b072 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -746,6 +746,10 @@ void devm_pci_epc_destroy(struct device *dev, struct pci_epc *epc)
+>  }
+>  EXPORT_SYMBOL_GPL(devm_pci_epc_destroy);
+>  
+> +static void pci_epc_nop_release(struct device *dev)
+> +{
+> +}
+> +
+>  /**
+>   * __pci_epc_create() - create a new endpoint controller (EPC) device
+>   * @dev: device that is creating the new EPC
+> @@ -779,6 +783,7 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
+>  	device_initialize(&epc->dev);
+>  	epc->dev.class = pci_epc_class;
+>  	epc->dev.parent = dev;
+> +	epc->dev.release = pci_epc_nop_release;
+>  	epc->ops = ops;
+>  
+>  	ret = dev_set_name(&epc->dev, "%s", dev_name(dev));
+> -- 
+> 2.25.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
