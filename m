@@ -2,51 +2,49 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FFC0CCA48D
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jun 2022 04:20:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D7BCCA491
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jun 2022 04:20:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230061AbiFXEUP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Jun 2022 00:20:15 -0400
+        id S230476AbiFXEUR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Jun 2022 00:20:17 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229861AbiFXEUN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jun 2022 00:20:13 -0400
+        with ESMTP id S229914AbiFXEUO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jun 2022 00:20:14 -0400
 Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 184354FC5E;
-        Thu, 23 Jun 2022 21:20:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFF0351331;
+        Thu, 23 Jun 2022 21:20:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1656044412; x=1687580412;
+  t=1656044413; x=1687580413;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=VWqSrsF/8AtHIz6pbjjwt/1/bobrPOwTGS0iEZ53wBc=;
-  b=g5u2xSpdrKt8bzpQdU1GFMIFuaASSgAtEFPipZ80kSJoR4BxUcrsPc+o
-   Y2SxCR+/oOcMCUMmoGJkf6uv7s0soqW8NGCSFKomhRPtM8uN6uMKuAi9/
-   dhOFWQMB7/1zOON2zw0KDKlhnZGJmT+wc816ZYfvasrtyqx9ggyjMzFgY
-   MR83K4GeqqTy7hhU3Ww5HpV1Xqa+RdyKYGOoioE1bIC7rweUpq35XWVnX
-   aXC23rJhDfkKPlAK1J7+dCENTUc3KFkGwarrWJAV/CgnBCoo7HKJ7u+xO
-   Uh43N52PNKSuHR3bOa5mORVfgUafLVx2eznfLlGblICSeWenSvKIzHqSu
+  bh=fSlF2VXXQ0/DmGPCkefoOCnkko80YB8DFPEJHcVFEOI=;
+  b=a5mGJM3RRuWzEb0s+nbCmpKRueerrrv4xgbcsi9NGxx9eIa3wWULJlH4
+   rYRlKmBwcYG+iijIzOw3lfNI/7SYb8euzFDWbhzfk7F6HL7HiiTcP5Kh9
+   LOLoAWmsahXKryIoECL+/QcyRk/PxLJGiD43b4FFm6NU1VOE7hW5l/wUQ
+   Ehl2AyZFL7Dv+4a1dWYb+WDBMYGgwdsrEY4sl/5HamiYcM2MkV33pnKlK
+   EM28fh667URS7nPFaABdtXyJ/LiV2kEZ/nMzs6E+ug0TOX/Fh1Gn39+P+
+   KB1YIppRzgmlK2D527T2LuEFCdrAI0tjVhKIolhEgzE0RrQ2QYqL0nRwz
    Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10387"; a="367238005"
+X-IronPort-AV: E=McAfee;i="6400,9594,10387"; a="367238035"
 X-IronPort-AV: E=Sophos;i="5.92,218,1650956400"; 
-   d="scan'208";a="367238005"
+   d="scan'208";a="367238035"
 Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jun 2022 21:20:12 -0700
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jun 2022 21:20:13 -0700
 X-IronPort-AV: E=Sophos;i="5.92,218,1650956400"; 
-   d="scan'208";a="645092926"
+   d="scan'208";a="645092941"
 Received: from daharell-mobl2.amr.corp.intel.com (HELO dwillia2-xfh.intel.com) ([10.209.66.176])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jun 2022 21:20:11 -0700
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jun 2022 21:20:13 -0700
 From:   Dan Williams <dan.j.williams@intel.com>
 To:     linux-cxl@vger.kernel.org
 Cc:     nvdimm@lists.linux.dev, linux-pci@vger.kernel.org,
         patches@lists.linux.dev, hch@lst.de,
         Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@nvidia.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 33/46] resource: Introduce alloc_free_mem_region()
-Date:   Thu, 23 Jun 2022 21:19:37 -0700
-Message-Id: <20220624041950.559155-8-dan.j.williams@intel.com>
+        Ben Widawsky <bwidawsk@kernel.org>
+Subject: [PATCH 37/46] cxl/region: Allocate host physical address (HPA) capacity to new regions
+Date:   Thu, 23 Jun 2022 21:19:41 -0700
+Message-Id: <20220624041950.559155-12-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <165603869943.551046.3498980330327696732.stgit@dwillia2-xfh>
 References: <165603869943.551046.3498980330327696732.stgit@dwillia2-xfh>
@@ -56,323 +54,267 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The core of devm_request_free_mem_region() is a helper that searches for
-free space in iomem_resource and performs __request_region_locked() on
-the result of that search. The policy choices of the implementation
-conform to what CONFIG_DEVICE_PRIVATE users want which is memory that is
-immediately marked busy, and a preference to search for the first-fit
-free range in descending order from the top of the physical address
-space.
+After a region's interleave parameters (ways and granularity) are set,
+add a way for regions to allocate HPA from the free capacity in their
+decoder. The allocator for this capacity reuses the 'struct resource'
+based allocator used for CONFIG_DEVICE_PRIVATE.
 
-CXL has a need for a similar allocator, but with the following tweaks:
+Once the tuple of "ways, granularity, and size" is set the
+region configuration transitions to the CXL_CONFIG_INTERLEAVE_ACTIVE
+state which is a precursor to allowing endpoint decoders to be added to
+a region.
 
-1/ Search for free space in ascending order
-
-2/ Search for free space relative to a given CXL window
-
-3/ 'insert' rather than 'request' the new resource given downstream
-   drivers from the CXL Region driver (like the pmem or dax drivers) are
-   responsible for request_mem_region() when they activate the memory
-   range.
-
-Rework __request_free_mem_region() into get_free_mem_region() which
-takes a set of GFR_* (Get Free Region) flags to control the allocation
-policy (ascending vs descending), and "busy" policy (insert_resource()
-vs request_region()).
-
-Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
-Link: https://lore.kernel.org/linux-cxl/20220420143406.GY2120790@nvidia.com/
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@infradead.org>
+Co-developed-by: Ben Widawsky <bwidawsk@kernel.org>
+Signed-off-by: Ben Widawsky <bwidawsk@kernel.org>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- include/linux/ioport.h |   2 +
- kernel/resource.c      | 174 ++++++++++++++++++++++++++++++++---------
- mm/Kconfig             |   5 ++
- 3 files changed, 146 insertions(+), 35 deletions(-)
+ Documentation/ABI/testing/sysfs-bus-cxl |  25 ++++
+ drivers/cxl/Kconfig                     |   3 +
+ drivers/cxl/core/region.c               | 148 +++++++++++++++++++++++-
+ drivers/cxl/cxl.h                       |   2 +
+ 4 files changed, 177 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index ec5f71f7135b..ed03518347aa 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -329,6 +329,8 @@ struct resource *devm_request_free_mem_region(struct device *dev,
- 		struct resource *base, unsigned long size);
- struct resource *request_free_mem_region(struct resource *base,
- 		unsigned long size, const char *name);
-+struct resource *alloc_free_mem_region(struct resource *base,
-+		unsigned long size, unsigned long align, const char *name);
- 
- static inline void irqresource_disabled(struct resource *res, u32 irq)
- {
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 53a534db350e..9fc990274106 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -489,8 +489,9 @@ int __weak page_is_ram(unsigned long pfn)
- }
- EXPORT_SYMBOL_GPL(page_is_ram);
- 
--static int __region_intersects(resource_size_t start, size_t size,
--			unsigned long flags, unsigned long desc)
-+static int __region_intersects(struct resource *parent, resource_size_t start,
-+			       size_t size, unsigned long flags,
-+			       unsigned long desc)
- {
- 	struct resource res;
- 	int type = 0; int other = 0;
-@@ -499,7 +500,7 @@ static int __region_intersects(resource_size_t start, size_t size,
- 	res.start = start;
- 	res.end = start + size - 1;
- 
--	for (p = iomem_resource.child; p ; p = p->sibling) {
-+	for (p = parent->child; p ; p = p->sibling) {
- 		bool is_type = (((p->flags & flags) == flags) &&
- 				((desc == IORES_DESC_NONE) ||
- 				 (desc == p->desc)));
-@@ -543,7 +544,7 @@ int region_intersects(resource_size_t start, size_t size, unsigned long flags,
- 	int ret;
- 
- 	read_lock(&resource_lock);
--	ret = __region_intersects(start, size, flags, desc);
-+	ret = __region_intersects(&iomem_resource, start, size, flags, desc);
- 	read_unlock(&resource_lock);
- 
- 	return ret;
-@@ -1780,62 +1781,135 @@ void resource_list_free(struct list_head *head)
- }
- EXPORT_SYMBOL(resource_list_free);
- 
--#ifdef CONFIG_DEVICE_PRIVATE
--static struct resource *__request_free_mem_region(struct device *dev,
--		struct resource *base, unsigned long size, const char *name)
-+#ifdef CONFIG_GET_FREE_REGION
-+#define GFR_DESCENDING		(1UL << 0)
-+#define GFR_REQUEST_REGION	(1UL << 1)
-+#define GFR_DEFAULT_ALIGN (1UL << PA_SECTION_SHIFT)
-+
-+static resource_size_t gfr_start(struct resource *base, resource_size_t size,
-+				 resource_size_t align, unsigned long flags)
-+{
-+	if (flags & GFR_DESCENDING) {
-+		resource_size_t end;
-+
-+		end = min_t(resource_size_t, base->end,
-+			    (1ULL << MAX_PHYSMEM_BITS) - 1);
-+		return end - size + 1;
-+	}
-+
-+	return ALIGN(base->start, align);
-+}
-+
-+static bool gfr_continue(struct resource *base, resource_size_t addr,
-+			 resource_size_t size, unsigned long flags)
-+{
-+	if (flags & GFR_DESCENDING)
-+		return addr > size && addr >= base->start;
-+	return addr > addr - size &&
-+	       addr <= min_t(resource_size_t, base->end,
-+			     (1ULL << MAX_PHYSMEM_BITS) - 1);
-+}
-+
-+static resource_size_t gfr_next(resource_size_t addr, resource_size_t size,
-+				unsigned long flags)
-+{
-+	if (flags & GFR_DESCENDING)
-+		return addr - size;
-+	return addr + size;
-+}
-+
-+static void remove_free_mem_region(void *_res)
- {
--	resource_size_t end, addr;
-+	struct resource *res = _res;
-+
-+	if (res->parent)
-+		remove_resource(res);
-+	free_resource(res);
-+}
-+
-+static struct resource *
-+get_free_mem_region(struct device *dev, struct resource *base,
-+		    resource_size_t size, const unsigned long align,
-+		    const char *name, const unsigned long desc,
-+		    const unsigned long flags)
-+{
-+	resource_size_t addr;
- 	struct resource *res;
- 	struct region_devres *dr = NULL;
- 
--	size = ALIGN(size, 1UL << PA_SECTION_SHIFT);
--	end = min_t(unsigned long, base->end, (1UL << MAX_PHYSMEM_BITS) - 1);
--	addr = end - size + 1UL;
-+	size = ALIGN(size, align);
- 
- 	res = alloc_resource(GFP_KERNEL);
- 	if (!res)
- 		return ERR_PTR(-ENOMEM);
- 
--	if (dev) {
-+	if (dev && (flags & GFR_REQUEST_REGION)) {
- 		dr = devres_alloc(devm_region_release,
- 				sizeof(struct region_devres), GFP_KERNEL);
- 		if (!dr) {
- 			free_resource(res);
- 			return ERR_PTR(-ENOMEM);
- 		}
-+	} else if (dev) {
-+		if (devm_add_action_or_reset(dev, remove_free_mem_region, res))
-+			return ERR_PTR(-ENOMEM);
- 	}
- 
- 	write_lock(&resource_lock);
--	for (; addr > size && addr >= base->start; addr -= size) {
--		if (__region_intersects(addr, size, 0, IORES_DESC_NONE) !=
--				REGION_DISJOINT)
-+	for (addr = gfr_start(base, size, align, flags);
-+	     gfr_continue(base, addr, size, flags);
-+	     addr = gfr_next(addr, size, flags)) {
-+		if (__region_intersects(base, addr, size, 0, IORES_DESC_NONE) !=
-+		    REGION_DISJOINT)
- 			continue;
- 
--		if (__request_region_locked(res, &iomem_resource, addr, size,
--						name, 0))
--			break;
-+		if (flags & GFR_REQUEST_REGION) {
-+			if (__request_region_locked(res, &iomem_resource, addr,
-+						    size, name, 0))
-+				break;
- 
--		if (dev) {
--			dr->parent = &iomem_resource;
--			dr->start = addr;
--			dr->n = size;
--			devres_add(dev, dr);
--		}
-+			if (dev) {
-+				dr->parent = &iomem_resource;
-+				dr->start = addr;
-+				dr->n = size;
-+				devres_add(dev, dr);
-+			}
- 
--		res->desc = IORES_DESC_DEVICE_PRIVATE_MEMORY;
--		write_unlock(&resource_lock);
-+			res->desc = desc;
-+			write_unlock(&resource_lock);
+diff --git a/Documentation/ABI/testing/sysfs-bus-cxl b/Documentation/ABI/testing/sysfs-bus-cxl
+index 46d5295c1149..3658facc9944 100644
+--- a/Documentation/ABI/testing/sysfs-bus-cxl
++++ b/Documentation/ABI/testing/sysfs-bus-cxl
+@@ -294,3 +294,28 @@ Description:
+ 		(RW) Configures the number of devices participating in the
+ 		region is set by writing this value. Each device will provide
+ 		1/interleave_ways of storage for the region.
 +
 +
-+			/*
-+			 * A driver is claiming this region so revoke any
-+			 * mappings.
-+			 */
-+			revoke_iomem(res);
-+		} else {
-+			res->start = addr;
-+			res->end = addr + size - 1;
-+			res->name = name;
-+			res->desc = desc;
-+			res->flags = IORESOURCE_MEM;
++What:		/sys/bus/cxl/devices/regionZ/size
++Date:		May, 2022
++KernelVersion:	v5.20
++Contact:	linux-cxl@vger.kernel.org
++Description:
++		(RW) System physical address space to be consumed by the region.
++		When written to, this attribute will allocate space out of the
++		CXL root decoder's address space. When read the size of the
++		address space is reported and should match the span of the
++		region's resource attribute. Size shall be set after the
++		interleave configuration parameters.
 +
-+			/*
-+			 * Only succeed if the resource hosts an exclusive
-+			 * range after the insert
-+			 */
-+			if (__insert_resource(base, res) || res->child)
-+				break;
 +
-+			write_unlock(&resource_lock);
-+		}
- 
--		/*
--		 * A driver is claiming this region so revoke any mappings.
--		 */
--		revoke_iomem(res);
- 		return res;
- 	}
- 	write_unlock(&resource_lock);
- 
--	free_resource(res);
--	if (dr)
-+	if (flags & GFR_REQUEST_REGION) {
-+		free_resource(res);
- 		devres_free(dr);
-+	} else if (dev)
-+		devm_release_action(dev, remove_free_mem_region, res);
- 
- 	return ERR_PTR(-ERANGE);
- }
-@@ -1854,18 +1928,48 @@ static struct resource *__request_free_mem_region(struct device *dev,
- struct resource *devm_request_free_mem_region(struct device *dev,
- 		struct resource *base, unsigned long size)
- {
--	return __request_free_mem_region(dev, base, size, dev_name(dev));
-+	unsigned long flags = GFR_DESCENDING | GFR_REQUEST_REGION;
-+
-+	return get_free_mem_region(dev, base, size, GFR_DEFAULT_ALIGN,
-+				   dev_name(dev),
-+				   IORES_DESC_DEVICE_PRIVATE_MEMORY, flags);
- }
- EXPORT_SYMBOL_GPL(devm_request_free_mem_region);
- 
- struct resource *request_free_mem_region(struct resource *base,
- 		unsigned long size, const char *name)
- {
--	return __request_free_mem_region(NULL, base, size, name);
-+	unsigned long flags = GFR_DESCENDING | GFR_REQUEST_REGION;
-+
-+	return get_free_mem_region(NULL, base, size, GFR_DEFAULT_ALIGN, name,
-+				   IORES_DESC_DEVICE_PRIVATE_MEMORY, flags);
- }
- EXPORT_SYMBOL_GPL(request_free_mem_region);
- 
--#endif /* CONFIG_DEVICE_PRIVATE */
-+/**
-+ * alloc_free_mem_region - find a free region relative to @base
-+ * @base: resource that will parent the new resource
-+ * @size: size in bytes of memory to allocate from @base
-+ * @align: alignment requirements for the allocation
-+ * @name: resource name
-+ *
-+ * Buses like CXL, that can dynamically instantiate new memory regions,
-+ * need a method to allocate physical address space for those regions.
-+ * Allocate and insert a new resource to cover a free, unclaimed by a
-+ * descendant of @base, range in the span of @base.
-+ */
-+struct resource *alloc_free_mem_region(struct resource *base,
-+				       unsigned long size, unsigned long align,
-+				       const char *name)
-+{
-+	/* GFR_ASCENDING | GFR_INSERT_RESOURCE */
-+	unsigned long flags = 0;
-+
-+	return get_free_mem_region(NULL, base, size, align, name,
-+				   IORES_DESC_NONE, flags);
-+}
-+EXPORT_SYMBOL_NS_GPL(alloc_free_mem_region, CXL);
-+#endif /* CONFIG_GET_FREE_REGION */
- 
- static int __init strict_iomem(char *str)
- {
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 169e64192e48..a5b4fee2e3fd 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -994,9 +994,14 @@ config HMM_MIRROR
++What:		/sys/bus/cxl/devices/regionZ/resource
++Date:		May, 2022
++KernelVersion:	v5.20
++Contact:	linux-cxl@vger.kernel.org
++Description:
++		(RO) A region is a contiguous partition of a CXL root decoder
++		address space. Region capacity is allocated by writing to the
++		size attribute, the resulting physical address space determined
++		by the driver is reflected here. It is therefore not useful to
++		read this before writing a value to the size attribute.
+diff --git a/drivers/cxl/Kconfig b/drivers/cxl/Kconfig
+index aa2728de419e..74c2cd069d9d 100644
+--- a/drivers/cxl/Kconfig
++++ b/drivers/cxl/Kconfig
+@@ -105,6 +105,9 @@ config CXL_SUSPEND
+ config CXL_REGION
  	bool
- 	depends on MMU
- 
-+config GET_FREE_REGION
+ 	default CXL_BUS
++	# For MAX_PHYSMEM_BITS
 +	depends on SPARSEMEM
-+	bool
-+
- config DEVICE_PRIVATE
- 	bool "Unaddressable device memory (GPU memory, ...)"
- 	depends on ZONE_DEVICE
+ 	select MEMREGION
 +	select GET_FREE_REGION
  
- 	help
- 	  Allows creation of struct pages to represent unaddressable device
+ endif
+diff --git a/drivers/cxl/core/region.c b/drivers/cxl/core/region.c
+index 78af42454760..a604c24ff918 100644
+--- a/drivers/cxl/core/region.c
++++ b/drivers/cxl/core/region.c
+@@ -241,10 +241,150 @@ static ssize_t interleave_granularity_store(struct device *dev,
+ }
+ static DEVICE_ATTR_RW(interleave_granularity);
+ 
++static ssize_t resource_show(struct device *dev, struct device_attribute *attr,
++			     char *buf)
++{
++	struct cxl_region *cxlr = to_cxl_region(dev);
++	struct cxl_region_params *p = &cxlr->params;
++	u64 resource = -1ULL;
++	ssize_t rc;
++
++	rc = down_read_interruptible(&cxl_region_rwsem);
++	if (rc)
++		return rc;
++	if (p->res)
++		resource = p->res->start;
++	rc = sysfs_emit(buf, "%#llx\n", resource);
++	up_read(&cxl_region_rwsem);
++
++	return rc;
++}
++static DEVICE_ATTR_RO(resource);
++
++static int alloc_hpa(struct cxl_region *cxlr, resource_size_t size)
++{
++	struct cxl_root_decoder *cxlrd = to_cxl_root_decoder(cxlr->dev.parent);
++	struct cxl_region_params *p = &cxlr->params;
++	struct resource *res;
++	u32 remainder = 0;
++
++	lockdep_assert_held_write(&cxl_region_rwsem);
++
++	/* Nothing to do... */
++	if (p->res && resource_size(res) == size)
++		return 0;
++
++	/* To change size the old size must be freed first */
++	if (p->res)
++		return -EBUSY;
++
++	if (p->state >= CXL_CONFIG_INTERLEAVE_ACTIVE)
++		return -EBUSY;
++
++	if (!p->interleave_ways || !p->interleave_granularity)
++		return -ENXIO;
++
++	div_u64_rem(size, SZ_256M * p->interleave_ways, &remainder);
++	if (remainder)
++		return -EINVAL;
++
++	res = alloc_free_mem_region(cxlrd->res, size, SZ_256M,
++				    dev_name(&cxlr->dev));
++	if (IS_ERR(res)) {
++		dev_dbg(&cxlr->dev, "failed to allocate HPA: %ld\n",
++			PTR_ERR(res));
++		return PTR_ERR(res);
++	}
++
++	p->res = res;
++	p->state = CXL_CONFIG_INTERLEAVE_ACTIVE;
++
++	return 0;
++}
++
++static void cxl_region_iomem_release(struct cxl_region *cxlr)
++{
++	struct cxl_region_params *p = &cxlr->params;
++
++	if (device_is_registered(&cxlr->dev))
++		lockdep_assert_held_write(&cxl_region_rwsem);
++	if (p->res) {
++		remove_resource(p->res);
++		kfree(p->res);
++		p->res = NULL;
++	}
++}
++
++static int free_hpa(struct cxl_region *cxlr)
++{
++	struct cxl_region_params *p = &cxlr->params;
++
++	lockdep_assert_held_write(&cxl_region_rwsem);
++
++	if (!p->res)
++		return 0;
++
++	if (p->state >= CXL_CONFIG_ACTIVE)
++		return -EBUSY;
++
++	cxl_region_iomem_release(cxlr);
++	p->state = CXL_CONFIG_IDLE;
++	return 0;
++}
++
++static ssize_t size_store(struct device *dev, struct device_attribute *attr,
++			  const char *buf, size_t len)
++{
++	struct cxl_region *cxlr = to_cxl_region(dev);
++	u64 val;
++	int rc;
++
++	rc = kstrtou64(buf, 0, &val);
++	if (rc)
++		return rc;
++
++	rc = down_write_killable(&cxl_region_rwsem);
++	if (rc)
++		return rc;
++
++	if (val)
++		rc = alloc_hpa(cxlr, val);
++	else
++		rc = free_hpa(cxlr);
++	up_write(&cxl_region_rwsem);
++
++	if (rc)
++		return rc;
++
++	return len;
++}
++
++static ssize_t size_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	struct cxl_region *cxlr = to_cxl_region(dev);
++	struct cxl_region_params *p = &cxlr->params;
++	u64 size = 0;
++	ssize_t rc;
++
++	rc = down_read_interruptible(&cxl_region_rwsem);
++	if (rc)
++		return rc;
++	if (p->res)
++		size = resource_size(p->res);
++	rc = sysfs_emit(buf, "%#llx\n", size);
++	up_read(&cxl_region_rwsem);
++
++	return rc;
++}
++static DEVICE_ATTR_RW(size);
++
+ static struct attribute *cxl_region_attrs[] = {
+ 	&dev_attr_uuid.attr,
+ 	&dev_attr_interleave_ways.attr,
+ 	&dev_attr_interleave_granularity.attr,
++	&dev_attr_resource.attr,
++	&dev_attr_size.attr,
+ 	NULL,
+ };
+ 
+@@ -290,7 +430,11 @@ static struct cxl_region *to_cxl_region(struct device *dev)
+ 
+ static void unregister_region(void *dev)
+ {
+-	device_unregister(dev);
++	struct cxl_region *cxlr = to_cxl_region(dev);
++
++	device_del(dev);
++	cxl_region_iomem_release(cxlr);
++	put_device(dev);
+ }
+ 
+ static struct lock_class_key cxl_region_key;
+@@ -440,3 +584,5 @@ static ssize_t delete_region_store(struct device *dev,
+ 	return len;
+ }
+ DEVICE_ATTR_WO(delete_region);
++
++MODULE_IMPORT_NS(CXL);
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index 13ee04b00e0c..25960c1e4ebd 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -334,6 +334,7 @@ enum cxl_config_state {
+  * @uuid: unique id for persistent regions
+  * @interleave_ways: number of endpoints in the region
+  * @interleave_granularity: capacity each endpoint contributes to a stripe
++ * @res: allocated iomem capacity for this region
+  *
+  * State transitions are protected by the cxl_region_rwsem
+  */
+@@ -342,6 +343,7 @@ struct cxl_region_params {
+ 	uuid_t uuid;
+ 	int interleave_ways;
+ 	int interleave_granularity;
++	struct resource *res;
+ };
+ 
+ /**
 -- 
 2.36.1
 
