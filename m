@@ -2,37 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45ABEC433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 24 Jun 2022 09:20:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E794BCCA481
+	for <linux-pci@archiver.kernel.org>; Fri, 24 Jun 2022 09:20:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230397AbiFXJUM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 Jun 2022 05:20:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35798 "EHLO
+        id S231244AbiFXJUP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 Jun 2022 05:20:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230223AbiFXJUM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jun 2022 05:20:12 -0400
+        with ESMTP id S230487AbiFXJUO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Jun 2022 05:20:14 -0400
 Received: from alexa-out.qualcomm.com (alexa-out.qualcomm.com [129.46.98.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BA3662C1F;
-        Fri, 24 Jun 2022 02:20:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E6A762C1F;
+        Fri, 24 Jun 2022 02:20:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1656062411; x=1687598411;
-  h=from:to:cc:subject:date:message-id;
-  bh=+at1ion0jmCaEHaPRNIPCsavul3diOXNgKtClF5ocZU=;
-  b=Adi6wZZ7o9HuFKom+rjX/WWavS36ZGZonpPtVWmIIJJ1TIjLUi2y3zFA
-   JHcVuG0gnZIXXYM+eG/bTAU/rWDtMbLf/WFwnr6qETA3QER28HyywcQkW
-   4yBJc4+CiekM124XY8RRsKj3iCt5xZi8gczC/G5MDpVjO77CR/FSkXUvC
+  t=1656062413; x=1687598413;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references;
+  bh=Q1svlYeyyqQq3MRGkaUqc3mqMaV5+/q6SjdnIQUN0ks=;
+  b=NVdrf/5DgZk+dJMvSEf01c34ZfNw32GZby6kT1tPy+akAfm5TBpjGp2S
+   pKGgX0/TAr284L7+9Wv0XpTV8odpUB201rODC/zcq21T/FwmApF+gUO6K
+   k2A9buV7n3JYRZXSK0sW95tzXPxvgqV2N9tbLNJlzyAmNP3hB8wE8/x1u
    0=;
 Received: from ironmsg08-lv.qualcomm.com ([10.47.202.152])
-  by alexa-out.qualcomm.com with ESMTP; 24 Jun 2022 02:20:11 -0700
+  by alexa-out.qualcomm.com with ESMTP; 24 Jun 2022 02:20:13 -0700
 X-QCInternal: smtphost
 Received: from ironmsg01-blr.qualcomm.com ([10.86.208.130])
-  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/AES256-SHA; 24 Jun 2022 02:20:09 -0700
+  by ironmsg08-lv.qualcomm.com with ESMTP/TLS/AES256-SHA; 24 Jun 2022 02:20:11 -0700
 X-QCInternal: smtphost
 Received: from hu-krichai-hyd.qualcomm.com (HELO hu-sgudaval-hyd.qualcomm.com) ([10.213.110.37])
-  by ironmsg01-blr.qualcomm.com with ESMTP; 24 Jun 2022 14:49:54 +0530
+  by ironmsg01-blr.qualcomm.com with ESMTP; 24 Jun 2022 14:49:55 +0530
 Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id 627803CDE; Fri, 24 Jun 2022 14:49:54 +0530 (+0530)
+        id DB4383E39; Fri, 24 Jun 2022 14:49:54 +0530 (+0530)
 From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
 To:     helgaas@kernel.org
 Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
@@ -41,27 +42,45 @@ Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         quic_skananth@quicinc.com, quic_ramkri@quicinc.com,
         manivannan.sadhasivam@linaro.org, swboyd@chromium.org,
         dmitry.baryshkov@linaro.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Subject: [PATCH v1 0/3] PCI: qcom: sc7280: add missing clocks
-Date:   Fri, 24 Jun 2022 14:49:48 +0530
-Message-Id: <1656062391-14567-1-git-send-email-quic_krichai@quicinc.com>
+        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS)
+Subject: [PATCH v1 2/3] dt-bindings: pci: QCOM sc7280 add missing clocks.
+Date:   Fri, 24 Jun 2022 14:49:50 +0530
+Message-Id: <1656062391-14567-3-git-send-email-quic_krichai@quicinc.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1656062391-14567-1-git-send-email-quic_krichai@quicinc.com>
+References: <1656062391-14567-1-git-send-email-quic_krichai@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add missing pcie clocks support.
+Add missing clocks.
 
-Krishna chaitanya chundru (3):
-  PCI: qcom: Add missing sc7280 clocks in PCIe driver
-  dt-bindings: pci: QCOM sc7280 add missing clocks.
-  arm64: dts: qcom: sc7280: Add missing pcie clocks
-
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+---
  Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 2 ++
- arch/arm64/boot/dts/qcom/sc7280.dtsi                 | 4 ++++
- drivers/pci/controller/dwc/pcie-qcom.c               | 3 +++
- 3 files changed, 9 insertions(+)
+ 1 file changed, 2 insertions(+)
 
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 0b69b12..313b981 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -438,6 +438,8 @@ allOf:
+             - const: slave_q2a # Slave Q2A clock
+             - const: tbu # PCIe TBU clock
+             - const: ddrss_sf_tbu # PCIe SF TBU clock
++            - const: aggre0 # Aggre NoC PCIE CENTER SF AXI clock
++            - const: aggre1 # Aggre NoC PCIe1 AXI clock
+         resets:
+           maxItems: 1
+         reset-names:
 -- 
 2.7.4
 
