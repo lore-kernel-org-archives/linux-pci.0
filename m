@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9AE9CCA48C
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Jun 2022 12:24:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB046CCA489
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Jun 2022 12:24:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240693AbiF0MYj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Jun 2022 08:24:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58684 "EHLO
+        id S240698AbiF0MYi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Jun 2022 08:24:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240685AbiF0MYe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jun 2022 08:24:34 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9D36A2AF6;
-        Mon, 27 Jun 2022 05:24:33 -0700 (PDT)
+        with ESMTP id S240693AbiF0MYd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Jun 2022 08:24:33 -0400
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4BDFCBF62;
+        Mon, 27 Jun 2022 05:24:32 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.92,226,1650898800"; 
-   d="scan'208";a="125807850"
+   d="scan'208";a="124258818"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 27 Jun 2022 21:24:30 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 27 Jun 2022 21:24:29 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 2A5474290412;
-        Mon, 27 Jun 2022 21:24:30 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 806344290412;
+        Mon, 27 Jun 2022 21:24:29 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
         bhelgaas@google.com, krzk+dt@kernel.org, geert+renesas@glider.be,
@@ -28,9 +28,9 @@ To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v2 13/13] arm64: dts: renesas: r8a779f0: spider: Enable PCIe Host ch0
-Date:   Mon, 27 Jun 2022 21:24:17 +0900
-Message-Id: <20220627122417.809615-14-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v2 08/13] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
+Date:   Mon, 27 Jun 2022 21:24:12 +0900
+Message-Id: <20220627122417.809615-9-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220627122417.809615-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20220627122417.809615-1-yoshihiro.shimoda.uh@renesas.com>
@@ -40,86 +40,120 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable PCIe Host controller channel 0 on R-Car S4-8 Spider board.
+Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+PCIe endpoint module.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- .../boot/dts/renesas/r8a779f0-spider-cpu.dtsi | 39 +++++++++++++++++++
- 1 file changed, 39 insertions(+)
+ .../bindings/pci/rcar-gen4-pci-ep.yaml        | 99 +++++++++++++++++++
+ 1 file changed, 99 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
 
-diff --git a/arch/arm64/boot/dts/renesas/r8a779f0-spider-cpu.dtsi b/arch/arm64/boot/dts/renesas/r8a779f0-spider-cpu.dtsi
-index 81d178e69527..34db1b902af8 100644
---- a/arch/arm64/boot/dts/renesas/r8a779f0-spider-cpu.dtsi
-+++ b/arch/arm64/boot/dts/renesas/r8a779f0-spider-cpu.dtsi
-@@ -5,6 +5,7 @@
-  * Copyright (C) 2021 Renesas Electronics Corp.
-  */
- 
-+#include <dt-bindings/gpio/gpio.h>
- #include "r8a779f0.dtsi"
- 
- / {
-@@ -31,6 +32,28 @@ &extalr_clk {
- 	clock-frequency = <32768>;
- };
- 
-+&i2c0 {
-+	pinctrl-0 = <&i2c0_pins>;
-+	pinctrl-names = "default";
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+new file mode 100644
+index 000000000000..3850e7038620
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+@@ -0,0 +1,99 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2022 Renesas Electronics Corp.
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-ep.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+	status = "okay";
-+	clock-frequency = <400000>;
++title: Renesas R-Car Gen4 PCIe Endpoint
 +
-+	gpio_exp_20: gpio@20 {
-+		compatible = "ti,tca9554";
-+		reg = <0x20>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
++maintainers:
++  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 +
-+		pcie-perst-hog {
-+			gpio-hog;
-+			gpios = <0 GPIO_ACTIVE_HIGH>;
-+			output-high;
-+			line-name = "PCIE_PERSTn";
-+		};
-+	};
-+};
++allOf:
++  - $ref: snps,dw-pcie-ep.yaml#
 +
- &i2c4 {
- 	pinctrl-0 = <&i2c4_pins>;
- 	pinctrl-names = "default";
-@@ -46,15 +69,31 @@ eeprom@50 {
- 	};
- };
- 
-+&pciec0 {
-+	pinctrl-0 = <&pcie0_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
++properties:
++  compatible:
++    items:
++      - const: renesas,r8a779f0-pcie-ep   # R-Car S4-8
++      - const: renesas,rcar-gen4-pcie-ep  # R-Car Gen4
 +
- &pfc {
- 	pinctrl-0 = <&scif_clk_pins>;
- 	pinctrl-names = "default";
- 
-+	i2c0_pins: i2c0 {
-+		groups = "i2c0";
-+		function = "i2c0";
-+	};
++  reg:
++    maxItems: 4
 +
- 	i2c4_pins: i2c4 {
- 		groups = "i2c4";
- 		function = "i2c4";
- 	};
- 
-+	pcie0_pins: pcie0 {
-+		groups = "pcie0_clkreq_n";
-+		function = "pcie";
-+	};
++  reg-names:
++    items:
++      - const: dbi
++      - const: atu
++      - const: appl
++      - const: addr_space
 +
- 	scif3_pins: scif3 {
- 		groups = "scif3_data", "scif3_ctrl";
- 		function = "scif3";
++  interrupts:
++    maxItems: 7
++
++  interrupt-names:
++    items:
++      - const: others
++      - const: dma
++      - const: correctable
++      - const: fatal
++      - const: nonfatal
++      - const: lp
++      - const: vndmsg
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++  clocks:
++    maxItems: 1
++
++  max-link-speed: true
++
++  num-lanes: true
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - interrupts
++  - resets
++  - power-domains
++  - clocks
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a779f0-sysc.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie0_ep: pcie-ep@e65d0000 {
++            compatible = "renesas,r8a779f0-pcie-ep", "renesas,rcar-gen4-pcie-ep";
++            reg = <0 0xe65d0000 0 0x1000>, <0 0xe65d1000 0 0x1000>,
++                  <0 0xe65d3000 0 0x2000>, <0 0xfe000000 0 0x400000>;
++            reg-names = "dbi", "atu", "appl", "addr_space";
++            interrupts = <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 419 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 420 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 421 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "others", "dma", "correctable", "fatal",
++                              "nonfatal", "lp", "vndmsg";
++            clocks = <&cpg CPG_MOD 624>;
++            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++            resets = <&cpg 624>;
++            num-lanes = <2>;
++            max-link-speed = <2>;
++        };
++    };
 -- 
 2.25.1
 
