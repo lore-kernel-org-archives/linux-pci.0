@@ -2,82 +2,116 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFEB2C43334
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jun 2022 15:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E295C43334
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jun 2022 15:17:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345935AbiF1PQr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jun 2022 11:16:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49704 "EHLO
+        id S1347636AbiF1PRL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jun 2022 11:17:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348187AbiF1PQh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2022 11:16:37 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F35662F383;
-        Tue, 28 Jun 2022 08:16:35 -0700 (PDT)
-Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LXSkm1S5lz686LW;
-        Tue, 28 Jun 2022 23:12:32 +0800 (CST)
-Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
- fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 28 Jun 2022 17:16:33 +0200
-Received: from localhost (10.202.226.42) by lhreml710-chm.china.huawei.com
- (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 28 Jun
- 2022 16:16:32 +0100
-Date:   Tue, 28 Jun 2022 16:16:31 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-CC:     <linux-cxl@vger.kernel.org>, Ben Widawsky <bwidawsk@kernel.org>,
-        <hch@infradead.org>, <alison.schofield@intel.com>,
-        <nvdimm@lists.linux.dev>, <linux-pci@vger.kernel.org>,
-        <patches@lists.linux.dev>
-Subject: Re: [PATCH 03/46] cxl/hdm: Use local hdm variable
-Message-ID: <20220628161631.00007d50@Huawei.com>
-In-Reply-To: <165603872171.551046.913207574344536475.stgit@dwillia2-xfh>
-References: <165603869943.551046.3498980330327696732.stgit@dwillia2-xfh>
-        <165603872171.551046.913207574344536475.stgit@dwillia2-xfh>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
+        with ESMTP id S1347627AbiF1PRL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2022 11:17:11 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8807832057;
+        Tue, 28 Jun 2022 08:17:10 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E5E2960F42;
+        Tue, 28 Jun 2022 15:17:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25FE3C341CA;
+        Tue, 28 Jun 2022 15:17:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656429429;
+        bh=DBXqYXloIRq7gtt1JLSyQnXCazRN48PhRsR8N/Hm5gM=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=U9ghLwiOpO3l7qWKf0l2xK//4CSieUDO+YULkT4V5FbEPXWTevvVobxUArmx7sQT9
+         XPRrRNEkJiFDc/6zbgRwP5IfSlCpWgC8aZegpmLZUOY1sBp9nO5Z4enVR+aqVLj6mk
+         DsYqLw5G5IFlXyRQLGr22wmyhQGnahT/lm02kC7l+Q0gse/ereI2BFsJQ8z+YxMiFN
+         Ngw5tfSaftNXlV8eKs1bEl2kUW1RXpY3CxDMBZuBtbHudaxf8OfFZgzDl1b++yKnDo
+         dOvHADB+rJK3jeSgkrANht4XkaCyP1K/byCAyiU0vamLpkQy2W3vtBbYfi6JT2uKr/
+         sMrdXSbpcpjZg==
+Date:   Tue, 28 Jun 2022 10:17:07 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Serge Semin <fancer.lancer@gmail.com>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 17/17] PCI: dwc: Add Baikal-T1 PCIe controller support
+Message-ID: <20220628151707.GA1838891@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.42]
-X-ClientProxiedBy: lhreml712-chm.china.huawei.com (10.201.108.63) To
- lhreml710-chm.china.huawei.com (10.201.108.61)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220628122356.ao6b3usaiwtvz4s7@mobilestation>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 23 Jun 2022 19:45:21 -0700
-Dan Williams <dan.j.williams@intel.com> wrote:
+On Tue, Jun 28, 2022 at 03:23:56PM +0300, Serge Semin wrote:
+> Bjorn,
+> Do you have anything to say based on the notes below?
 
-> From: Ben Widawsky <bwidawsk@kernel.org>
-> 
-> Save a few characters and use the already initialized local variable.
-> 
-> Signed-off-by: Ben Widawsky <bwidawsk@kernel.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+I'm focused on the first series for now.
 
-> ---
->  drivers/cxl/core/hdm.c |    3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-> index bfc8ee876278..ba3d2d959c71 100644
-> --- a/drivers/cxl/core/hdm.c
-> +++ b/drivers/cxl/core/hdm.c
-> @@ -251,8 +251,7 @@ int devm_cxl_enumerate_decoders(struct cxl_hdm *cxlhdm)
->  			return PTR_ERR(cxld);
->  		}
->  
-> -		rc = init_hdm_decoder(port, cxld, target_map,
-> -				      cxlhdm->regs.hdm_decoder, i);
-> +		rc = init_hdm_decoder(port, cxld, target_map, hdm, i);
->  		if (rc) {
->  			put_device(&cxld->dev);
->  			failed++;
-> 
+> On Wed, Jun 22, 2022 at 08:04:37PM +0300, Serge Semin wrote:
+> > On Tue, Jun 21, 2022 at 01:29:41PM -0500, Bjorn Helgaas wrote:
+> > > On Mon, Jun 20, 2022 at 08:13:47PM +0300, Serge Semin wrote:
+> > > > On Wed, Jun 15, 2022 at 11:48:48AM -0500, Bjorn Helgaas wrote:
+> > > > > On Fri, Jun 10, 2022 at 11:57:05AM +0300, Serge Semin wrote:
 
+> > > > > > +struct dw_pcie_ops bt1_pcie_dw_ops = {
+> > > > > > +	.read_dbi = bt1_pcie_read_dbi,
+> > > > > > +	.write_dbi = bt1_pcie_write_dbi,
+> > > > > > +	.write_dbi2 = bt1_pcie_write_dbi2,
+> > > > > > +	.start_link = bt1_pcie_start_ltssm,
+> > > > > > +	.stop_link = bt1_pcie_stop_ltssm,
+> > > > > > +};
+> > > 
+> > > > > Please rename to "dw_pcie_ops" as most drivers use. 
+> > > > 
+> > > > IMO matching the structure and its instance names is not a good idea.
+> > > > Other than confusing objects nature, at the very least it forces you to
+> > > > violate the local namespace convention. Thus in the line of the
+> > > > dw_pcie->ops initialization it looks like you use some generic
+> > > > operations while in fact you just refer to the locally defined
+> > > > DW PCIe ops instance with the generic variable name. Moreover AFAICS
+> > > > the latest platform drivers mainly use the vendor-specific prefix in
+> > > > the dw_pcie_ops structure instance including the ones acked by you,
+> > > > Lorenzo and Gustavo. What makes my code any different from them?
+> > 
+> > > That's fair.  I suggest "bt1_pcie_ops" or "bt1_dw_pcie_ops" to match
+> > > the other drivers that include the driver name:
+> > > 
+> > >   intel_pcie_ops
+> > >   keembay_pcie_ops
+> > >   kirin_dw_pcie_ops
+> > >   tegra_dw_pcie_ops
+> > 
+> > +   ks_pcie_dw_pcie_ops
+> > 
+> > which is even further from the suggested names.)
+
+As I said, they're not 100% consistent, but they almost all end in
+"pcie_ops".  Yours ends in "pcie_dw_ops", which is why I suggested
+renaming to be similar to the others.
+
+I don't want to make a huge deal about this, but I do want as much
+similarity across drivers as possible.  I get that it doesn't benefit
+*you*, but it's a huge benefit to everybody else.
+
+> > > They're not 100% consistent, but hopefully we can at least not make
+> > > things *less* consistent.
+> > 
+> > I don't think we can make something less consistent if there is no real
+> > consistency.) There are at most five ops descriptors can be defined in
+> > the DW PCIe platform drivers:
