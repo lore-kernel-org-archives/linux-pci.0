@@ -2,145 +2,294 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBC51CCA481
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jun 2022 08:28:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E03C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jun 2022 10:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229842AbiF1I2E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jun 2022 04:28:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50754 "EHLO
+        id S1344523AbiF1K3Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jun 2022 06:29:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245592AbiF1I1g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2022 04:27:36 -0400
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD89DA47E
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jun 2022 01:27:33 -0700 (PDT)
-Received: by mail-wr1-x429.google.com with SMTP id i25so11003352wrc.13
-        for <linux-pci@vger.kernel.org>; Tue, 28 Jun 2022 01:27:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=DgEjfAoE6T+reUz3mii+858wYgEoE6WnFO0TC/3rlLE=;
-        b=Ftu5oHZ+CenECgEi7VBewvPpq9LIJOkJjiFCsfcBxoTbdeQfv7MLt+JKrCE0GIv1hc
-         lYhetcSmRtcokHXLCVa+qhl7nM95LMGmAG6muEh1cHghqGFfTyeqlAVD1eX6XaMwmqV3
-         TenqzmGw2in6AVfhGGEvktAkfiwxAbxLuWF5YRj+BUn7u5Fyvfc01N4z6SYA8BG+ek5W
-         vj1VS5IYNYThB8EL1IhBHHoxS8TEizerG1t7+A2EC8GuXsWc+jUZ6+SIJdqqeciIkgay
-         oXpdzM0yQPk7JjUWDgMcd6jp2Xd499baOItDPtN1qiqNLzEGoWZDLbFudkeq9uPNf/An
-         k07Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=DgEjfAoE6T+reUz3mii+858wYgEoE6WnFO0TC/3rlLE=;
-        b=ik1ewEzpxEJrZ5PsBC3vx225uUPiVQwKanSLP0CS2/KcIKWYqqLwvICjWVYkf7eCDO
-         EJp3ZDMQOFWk9MlB23Spqnthwh4WRTuPzsgZRHPfFHGYWvwlaH+7f3vT2m79pEPNIODe
-         czzwyZFMoEfT4GW9nRoygjQ98/euWnG9F9gioxzjqu4Az4Y/AFbbMg9oOKxL4ekoYjjO
-         IBISz+aYi3iPx/FJgMeDm++AD0mj+rlmL+UsjptW1d3xOzOSGRBgjizE90oOeior+sAy
-         hRQeLhpqfMXw/vSHgEacv5hm/QEzqR279GNC33Qs+l2g+kAVgKHTaVWxu9vvyFG8wUEs
-         x1PA==
-X-Gm-Message-State: AJIora+yBJdvNl9Wfzvpc78WY915QtSGJJWLxbMQ1vaBNkIwWdTEz4JZ
-        O7/ZGSLnV8DGbe42UEhMJ3Qh3g==
-X-Google-Smtp-Source: AGRyM1se0ar4caK08DoLfv6IoOmZZRXL7hoFYJiFY0G+pdv0azeGI/dKk1X+iwDro3Da/Dd5SKTLNA==
-X-Received: by 2002:adf:fe83:0:b0:21b:9cc6:4c91 with SMTP id l3-20020adffe83000000b0021b9cc64c91mr17053713wrr.414.1656404852313;
-        Tue, 28 Jun 2022 01:27:32 -0700 (PDT)
-Received: from [192.168.0.252] (xdsl-188-155-176-92.adslplus.ch. [188.155.176.92])
-        by smtp.gmail.com with ESMTPSA id m34-20020a05600c3b2200b003a03ae64f57sm16383538wms.8.2022.06.28.01.27.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 28 Jun 2022 01:27:31 -0700 (PDT)
-Message-ID: <7ab52c5f-6c48-6381-e0f3-a1d9572dc2a9@linaro.org>
-Date:   Tue, 28 Jun 2022 10:27:31 +0200
+        with ESMTP id S1344360AbiF1K3Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2022 06:29:25 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBA532E6BE;
+        Tue, 28 Jun 2022 03:29:23 -0700 (PDT)
+Received: from fraeml713-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LXLMN0YCcz6872t;
+        Tue, 28 Jun 2022 18:25:20 +0800 (CST)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ fraeml713-chm.china.huawei.com (10.206.15.32) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 28 Jun 2022 12:29:21 +0200
+Received: from localhost (10.202.226.42) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 28 Jun
+ 2022 11:29:20 +0100
+Date:   Tue, 28 Jun 2022 11:29:19 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     <linux-cxl@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-pci@vger.kernel.org>, <patches@lists.linux.dev>,
+        <hch@lst.de>, "Ben Widawsky" <bwidawsk@kernel.org>
+Subject: Re: [PATCH 35/46] cxl/region: Add a 'uuid' attribute
+Message-ID: <20220628112919.000067e6@Huawei.com>
+In-Reply-To: <20220624041950.559155-10-dan.j.williams@intel.com>
+References: <165603869943.551046.3498980330327696732.stgit@dwillia2-xfh>
+        <20220624041950.559155-10-dan.j.williams@intel.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: pci-exynos.c phy_init() usage
-Content-Language: en-US
-To:     Marek Szyprowski <m.szyprowski@samsung.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        Jingoo Han <jingoohan1@gmail.com>
-Cc:     =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org
-References: <20220624173541.GA1543581@bhelgaas>
- <CGME20220624180806eucas1p16a18d9598c0a08770b428cd58916b65d@eucas1p1.samsung.com>
- <c0c802c0-82e1-e7bb-48be-974ac23b5a15@linaro.org>
- <591f696f-b55c-d267-7fcb-74f7fd4a6900@samsung.com>
- <ae8cee69-2ca5-0b27-f6d5-0f9f74871fd8@linaro.org>
- <a7d73302-ce96-4adb-1981-fcde0ff03e87@samsung.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <a7d73302-ce96-4adb-1981-fcde0ff03e87@samsung.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.42]
+X-ClientProxiedBy: lhreml712-chm.china.huawei.com (10.201.108.63) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 28/06/2022 10:13, Marek Szyprowski wrote:
-> Hi Krzysztof,
+On Thu, 23 Jun 2022 21:19:39 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
+
+> From: Ben Widawsky <bwidawsk@kernel.org>
 > 
-> On 27.06.2022 12:47, Krzysztof Kozlowski wrote:
->> On 27/06/2022 12:30, Marek Szyprowski wrote:
->>> On 24.06.2022 20:07, Krzysztof Kozlowski wrote:
->>>> On 24/06/2022 19:35, Bjorn Helgaas wrote:
->>>>> In exynos_pcie_host_init() [1], we call:
->>>>>
->>>>>     phy_reset(ep->phy);
->>>>>     phy_power_on(ep->phy);
->>>>>     phy_init(ep->phy);
->>>>>
->>>>> The phy_init() function comment [2] says it must be called before
->>>>> phy_power_on().  Is exynos doing this backwards?
->>>> Looks like. I don't have Exynos hardware with a PCI, so cannot
->>>> test/fix/verify.
->>>>
->>>> Luckily for Exynos ;-) it's not alone in this pattern:
->>>> drivers/net/ethernet/marvell/sky2.c
->>>> drivers/usb/dwc2/platform.c
->>> I've checked that on the real hardware. Swapping the order of
->>> phy_power_on and phy_init breaks driver operation.
->>>
->>> However pci-exynos is the only driver that uses the phy-exynos-pcie, so
->>> we can simply swap the content of the init and power_on in the phy
->>> driver to adjust the code to the right order. power_on/init and
->>> exit/power_off are also called one after the other in pci-exynos,
->>> without any activity between them, so we can also simply move all
->>> operation to one pair of the callback, like power_on/off.
->>>
->>> Krzysztof, which solution would you prefer?
->> I think the real problem is that the Exynos PCIe phy init
->> (exynos5433_pcie_phy_init) performs parts of power on procedure, so the
->> code is mixed. Probably also the phy init could not happen earlier due
->> to gated clocks (ungated in exynos5433_pcie_phy_power_on).
->>
->> I would prefer to clean it up while ordering init+power_on, so figure
->> out more or less correct procedure.
->>
->> You can also look at Artpec-8 PHY - it seems using correct order
->> (init+reset):
->> https://lore.kernel.org/all/20220614011616epcms2p7dcaa67c53b7df5802dd7a697e2d472d7@epcms2p7/
+> The process of provisioning a region involves triggering the creation of
+> a new region object, pouring in the configuration, and then binding that
+> configured object to the region driver to start is operation. For
+> persistent memory regions the CXL specification mandates that it
+> identified by a uuid. Add an ABI for userspace to specify a region's
+> uuid.
 > 
-> I've played a bit with those register writes in exynos_pcie_phy and 
-> frankly speaking the currenly used (power_on + init) is the only 
-> sequence that works properly. I'm leaning to move everything to 
-> phy_init/exit. I really don't see how to split it into init + power_on 
-> callbacks.
+> Signed-off-by: Ben Widawsky <bwidawsk@kernel.org>
+> [djbw: simplify locking]
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-I was afraid it will be like this. I imagine that certain (not
-explicitly documented) init operations cannot even happen before power
-on, so this would be a lot of tries.
+I think this needs to be a little less restrictive as it currently errors
+out on trying to write the same UUID to the same region twice.
 
-I am fine with it. Thanks for doing it.
+Short cut that case and just return 0 if the UUID is same as already set.
 
+Thanks,
+
+Jonathan
+
+
+
+> ---
+>  Documentation/ABI/testing/sysfs-bus-cxl |  10 +++
+>  drivers/cxl/core/region.c               | 115 ++++++++++++++++++++++++
+>  drivers/cxl/cxl.h                       |  25 ++++++
+>  3 files changed, 150 insertions(+)
 > 
-> While touching this - I would also remove the phy_reset() call in the 
-> exynos-pcie driver. It is a left over from the old, obsoleted exynos5440 
-> pcie code, not implemented in the current phy driver, also only a few 
-> drivers use or implement it. IMHO it doesn't make sense to keep such 
-> dead code.
+> diff --git a/Documentation/ABI/testing/sysfs-bus-cxl b/Documentation/ABI/testing/sysfs-bus-cxl
+> index 9a4856066631..d30c95a758a9 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-cxl
+> +++ b/Documentation/ABI/testing/sysfs-bus-cxl
+> @@ -263,3 +263,13 @@ Contact:	linux-cxl@vger.kernel.org
+>  Description:
+>  		(WO) Write a string in the form 'regionZ' to delete that region,
+>  		provided it is currently idle / not bound to a driver.
+> +
+> +
+> +What:		/sys/bus/cxl/devices/regionZ/uuid
+> +Date:		May, 2022
+> +KernelVersion:	v5.20
+> +Contact:	linux-cxl@vger.kernel.org
+> +Description:
+> +		(RW) Write a unique identifier for the region. This field must
+> +		be set for persistent regions and it must not conflict with the
+> +		UUID of another region.
+> diff --git a/drivers/cxl/core/region.c b/drivers/cxl/core/region.c
+> index f2a0ead20ca7..f75978f846b9 100644
+> --- a/drivers/cxl/core/region.c
+> +++ b/drivers/cxl/core/region.c
+> @@ -5,6 +5,7 @@
+>  #include <linux/device.h>
+>  #include <linux/module.h>
+>  #include <linux/slab.h>
+> +#include <linux/uuid.h>
+>  #include <linux/idr.h>
+>  #include <cxl.h>
+>  #include "core.h"
+> @@ -17,10 +18,123 @@
+>   * Memory ranges, Regions represent the active mapped capacity by the HDM
+>   * Decoder Capability structures throughout the Host Bridges, Switches, and
+>   * Endpoints in the topology.
+> + *
+> + * Region configuration has ordering constraints. UUID may be set at any time
+> + * but is only visible for persistent regions.
+> + */
+> +
+> +/*
+> + * All changes to the interleave configuration occur with this lock held
+> + * for write.
+>   */
+> +static DECLARE_RWSEM(cxl_region_rwsem);
+>  
+>  static struct cxl_region *to_cxl_region(struct device *dev);
+>  
+> +static ssize_t uuid_show(struct device *dev, struct device_attribute *attr,
+> +			 char *buf)
+> +{
+> +	struct cxl_region *cxlr = to_cxl_region(dev);
+> +	struct cxl_region_params *p = &cxlr->params;
+> +	ssize_t rc;
+> +
+> +	rc = down_read_interruptible(&cxl_region_rwsem);
+> +	if (rc)
+> +		return rc;
+> +	rc = sysfs_emit(buf, "%pUb\n", &p->uuid);
+> +	up_read(&cxl_region_rwsem);
+> +
+> +	return rc;
+> +}
+> +
+> +static int is_dup(struct device *match, void *data)
+> +{
+> +	struct cxl_region_params *p;
+> +	struct cxl_region *cxlr;
+> +	uuid_t *uuid = data;
+> +
+> +	if (!is_cxl_region(match))
+> +		return 0;
+> +
+> +	lockdep_assert_held(&cxl_region_rwsem);
+> +	cxlr = to_cxl_region(match);
+> +	p = &cxlr->params;
+> +
+> +	if (uuid_equal(&p->uuid, uuid)) {
+> +		dev_dbg(match, "already has uuid: %pUb\n", uuid);
+> +		return -EBUSY;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static ssize_t uuid_store(struct device *dev, struct device_attribute *attr,
+> +			  const char *buf, size_t len)
+> +{
+> +	struct cxl_region *cxlr = to_cxl_region(dev);
+> +	struct cxl_region_params *p = &cxlr->params;
+> +	uuid_t temp;
+> +	ssize_t rc;
+> +
+> +	if (len != UUID_STRING_LEN + 1)
+> +		return -EINVAL;
+> +
+> +	rc = uuid_parse(buf, &temp);
+> +	if (rc)
+> +		return rc;
+> +
+> +	if (uuid_is_null(&temp))
+> +		return -EINVAL;
+> +
+> +	rc = down_write_killable(&cxl_region_rwsem);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = -EBUSY;
+> +	if (p->state >= CXL_CONFIG_ACTIVE)
+> +		goto out;
+> +
+> +	rc = bus_for_each_dev(&cxl_bus_type, NULL, &temp, is_dup);
+> +	if (rc < 0)
+> +		goto out;
+> +
+> +	uuid_copy(&p->uuid, &temp);
+> +out:
+> +	up_write(&cxl_region_rwsem);
+> +
+> +	if (rc)
+> +		return rc;
+> +	return len;
+> +}
+> +static DEVICE_ATTR_RW(uuid);
+> +
+> +static umode_t cxl_region_visible(struct kobject *kobj, struct attribute *a,
+> +				  int n)
+> +{
+> +	struct device *dev = kobj_to_dev(kobj);
+> +	struct cxl_region *cxlr = to_cxl_region(dev);
+> +
+> +	if (a == &dev_attr_uuid.attr && cxlr->mode != CXL_DECODER_PMEM)
+> +		return 0;
+> +	return a->mode;
+> +}
+> +
+> +static struct attribute *cxl_region_attrs[] = {
+> +	&dev_attr_uuid.attr,
+> +	NULL,
+> +};
+> +
+> +static const struct attribute_group cxl_region_group = {
+> +	.attrs = cxl_region_attrs,
+> +	.is_visible = cxl_region_visible,
+> +};
+> +
+> +static const struct attribute_group *region_groups[] = {
+> +	&cxl_base_attribute_group,
+> +	&cxl_region_group,
+> +	NULL,
+> +};
+> +
+>  static void cxl_region_release(struct device *dev)
+>  {
+>  	struct cxl_region *cxlr = to_cxl_region(dev);
+> @@ -32,6 +146,7 @@ static void cxl_region_release(struct device *dev)
+>  static const struct device_type cxl_region_type = {
+>  	.name = "cxl_region",
+>  	.release = cxl_region_release,
+> +	.groups = region_groups
+>  };
+>  
+>  bool is_cxl_region(struct device *dev)
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index 49b73b2e44a9..46a9f8acc602 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -288,18 +288,43 @@ struct cxl_root_decoder {
+>  	struct cxl_switch_decoder cxlsd;
+>  };
+>  
+> +/*
+> + * enum cxl_config_state - State machine for region configuration
+> + * @CXL_CONFIG_IDLE: Any sysfs attribute can be written freely
+> + * @CXL_CONFIG_ACTIVE: All targets have been added the region is now
+> + * active
+> + */
+> +enum cxl_config_state {
+> +	CXL_CONFIG_IDLE,
+> +	CXL_CONFIG_ACTIVE,
+> +};
+> +
+> +/**
+> + * struct cxl_region_params - region settings
+> + * @state: allow the driver to lockdown further parameter changes
+> + * @uuid: unique id for persistent regions
+> + *
+> + * State transitions are protected by the cxl_region_rwsem
+> + */
+> +struct cxl_region_params {
+> +	enum cxl_config_state state;
+> +	uuid_t uuid;
+> +};
+> +
+>  /**
+>   * struct cxl_region - CXL region
+>   * @dev: This region's device
+>   * @id: This region's id. Id is globally unique across all regions
+>   * @mode: Endpoint decoder allocation / access mode
+>   * @type: Endpoint decoder target type
+> + * @params: active + config params for the region
+>   */
+>  struct cxl_region {
+>  	struct device dev;
+>  	int id;
+>  	enum cxl_decoder_mode mode;
+>  	enum cxl_decoder_type type;
+> +	struct cxl_region_params params;
+>  };
+>  
+>  /**
 
-Sure, looks ok.
-
-Best regards,
-Krzysztof
