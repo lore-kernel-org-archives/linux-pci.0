@@ -2,285 +2,162 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03DE9CCA47E
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Jun 2022 16:52:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5452C43334
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Jun 2022 16:54:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235672AbiF1Qv6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Jun 2022 12:51:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36538 "EHLO
+        id S232288AbiF1QyG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Jun 2022 12:54:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347940AbiF1QuJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2022 12:50:09 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7DDB21F;
-        Tue, 28 Jun 2022 09:49:59 -0700 (PDT)
-Received: from fraeml739-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LXVtL4d0Fz687vm;
-        Wed, 29 Jun 2022 00:49:14 +0800 (CST)
-Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
- fraeml739-chm.china.huawei.com (10.206.15.220) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Tue, 28 Jun 2022 18:49:57 +0200
-Received: from localhost (10.202.226.42) by lhreml710-chm.china.huawei.com
- (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Tue, 28 Jun
- 2022 17:49:57 +0100
-Date:   Tue, 28 Jun 2022 17:49:55 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-CC:     <linux-cxl@vger.kernel.org>, Ben Widawsky <bwidawsk@kernel.org>,
-        <hch@infradead.org>, <alison.schofield@intel.com>,
-        <nvdimm@lists.linux.dev>, <linux-pci@vger.kernel.org>,
-        <patches@lists.linux.dev>
-Subject: Re: [PATCH 10/46] cxl/core: Define a 'struct cxl_root_decoder' for
- tracking CXL window resources
-Message-ID: <20220628174955.00005a53@Huawei.com>
-In-Reply-To: <165603877351.551046.12325060612893557716.stgit@dwillia2-xfh>
-References: <165603869943.551046.3498980330327696732.stgit@dwillia2-xfh>
-        <165603877351.551046.12325060612893557716.stgit@dwillia2-xfh>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
+        with ESMTP id S236564AbiF1Qwp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Jun 2022 12:52:45 -0400
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2049.outbound.protection.outlook.com [40.107.244.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE59821E18;
+        Tue, 28 Jun 2022 09:51:24 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=n+8PYzusqxYvR4l29TFgunYYIiB/h+i2+brkMiSmw+p+k2+uf8YEKTgaQp4bUqacK5WXfO6P1J6ivTYdnvlf5OOhynxHRGHX665atgukWFuE0UGaUwdfgMVd7/TLYb4VLbQEfzmW6LV4vNNmLww6zi1G3B8XqsZ3UzELgeTnWPg/EAdP6QNIFsdNnq0/lkkhU0xm57P3vIHvBF+xnZbf9WXDDYHK7lsBHTexAVSLV7wxZRzXU2b2VyLbfvBVaqRsI3RWQGS2Ok6o2rI/LXD7aJqNQ5VZuja6P2xXS34ghRwpWjhPbA1pau3ruYNKWwRq3Yv83iN8FmStIjzvHMBwCQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=QJ72MQ+1Ex+mmjjxNHxLHh+EokjldREt+Y+HQIcwi9k=;
+ b=QMEKqIE+aGnlz9POr/9CElfH1LJBIdypXrZY6ivGlQuN4DYCTo63sibzvXVvlSL88RZG20XGf4+SxEYaBrPrlTSfYCGZEKgzQzN9qeoDR2UspoU04sBjNNBZGrjjDozXjGfWKPw73N34dT+f1G3JYhWVqwSqErabY4cdNXGjeswa/PBr9/NfddkUuEL9hC7ztAYjD2LESLByoWMvITCwm+UziUTrAuOuMRm1GMXxS4B9T/IF5SWZ35DpWcayQeHGogDKH9mDbIDO1buz3xainGINfF9acQtwP4krckMqSwUNIvoMLYQpsRrHexK77KYllIYpPlNaLiM+Qxx4wQosDw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vmware.com; dmarc=pass action=none header.from=vmware.com;
+ dkim=pass header.d=vmware.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vmware.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QJ72MQ+1Ex+mmjjxNHxLHh+EokjldREt+Y+HQIcwi9k=;
+ b=IV+Jj9yNinJKCcF4SWoCyynK1iOwlJQxW02139ZTxwFE9f9h+4Gc2B0AHKKnyTAfErNtB1uOGM9BN+VtLzkdjxcTIc1S+6PwYU92eQT/C9YlQVDlZQaEjzIfYsKjVk8zs/CdxHvvNNgv/uF7niififJ0J3y66pyebEI5K/xFiOo=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vmware.com;
+Received: from PH0PR05MB8703.namprd05.prod.outlook.com (2603:10b6:510:bd::5)
+ by SJ0PR05MB7675.namprd05.prod.outlook.com (2603:10b6:a03:2ca::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.13; Tue, 28 Jun
+ 2022 16:51:23 +0000
+Received: from PH0PR05MB8703.namprd05.prod.outlook.com
+ ([fe80::dc16:cc4c:985a:89ec]) by PH0PR05MB8703.namprd05.prod.outlook.com
+ ([fe80::dc16:cc4c:985a:89ec%9]) with mapi id 15.20.5395.014; Tue, 28 Jun 2022
+ 16:51:23 +0000
+From:   Ajay Kaher <akaher@vmware.com>
+To:     bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
+        bp@alien8.de, dave.hansen@linux.intel.com
+Cc:     x86@kernel.org, hpa@zytor.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        rostedt@goodmis.org, namit@vmware.com, srivatsab@vmware.com,
+        srivatsa@csail.mit.edu, amakhalov@vmware.com, anishs@vmware.com,
+        vsirnapalli@vmware.com, akaher@vmware.com, er.ajay.kaher@gmail.com
+Subject: [PATCH] MMIO should have more priority then IO 
+Date:   Tue, 28 Jun 2022 21:59:21 +0530
+Message-Id: <1656433761-9163-1-git-send-email-akaher@vmware.com>
+X-Mailer: git-send-email 2.7.4
+Content-Type: text/plain
+X-ClientProxiedBy: BY5PR13CA0014.namprd13.prod.outlook.com
+ (2603:10b6:a03:180::27) To PH0PR05MB8703.namprd05.prod.outlook.com
+ (2603:10b6:510:bd::5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.42]
-X-ClientProxiedBy: lhreml712-chm.china.huawei.com (10.201.108.63) To
- lhreml710-chm.china.huawei.com (10.201.108.61)
-X-CFilter-Loop: Reflected
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: c0dd696f-0059-4f86-956d-08da59266ee8
+X-MS-TrafficTypeDiagnostic: SJ0PR05MB7675:EE_
+X-LD-Processed: b39138ca-3cee-4b4a-a4d6-cd83d9dd62f0,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: cUx4N0SH5CyOsbvvz3MR4Fuxk2yUVwsy2mBIsJcRjA9f+n7ceNhRNsMY54tSv5jVzv8Gwk24oS/HIxr8BJe081GEjJ73VHm92/f+OMSqL1sidIT0mJadHJJ1Bp0pkxr7Q30lVUJ0+jvE6dwF4I4TNVIM0zJ3pFV5P1XwrJfDuxit7WIKYJ2f2rYt7JeZRp+2WMaH8T7VoXjMewaemcHOY9AlfF2yGCsqp/3deGkw0LK077E4Ks+XfIWgEVZaUbc4fxB1ymwEaaKCzM3ABa++vdi4KqHVYNRRiB/xzcXGqMRuqVZ0mr5rZg6753xsa0/T6O7avPPl6ETRC7Q20YJFz+IPlKIQGPWeZW8rFSAgkoVijNVuLKHeZhIh3dL8pCTld7NCdhUBFgzPDgRuPq0ib5P/rTpC6ulpHetd++CibnoOM+/Jo3BBXE8XsStycUEivf6lWnmoRR8gbOt+LyVuVeZCiawYEtzJjL5NdQWkf08IpJQc0I4zGetG1LLhKERZwO3B6MWV9LZ/jU36kuL5BrvzT0cfKeCPoUY/Ss6SWX9u19Td1v1phQDwHise5WLsGIcJbr/HvcnXyn0En1AZmCHx8evuFpgIOXupBQYdqDRzTThZqQ7Jbumu7yWQCQzUiA4m/gVS5Kwda4fNT2nRxRKal4/NvDd4Lnwt/9HkXYzdBXrF6r8AnJaObOBHnGh/n8jBD3mFE81JG4fOsloqk8GeJKwxkxsPU+6mm0x7SSyk7iwH4lOmJW5VNLctbBjSE57IQwcA9kz1FTLe+3YJxCmkai9YN/AninRBW9kslNE=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR05MB8703.namprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(346002)(366004)(396003)(39860400002)(136003)(376002)(7416002)(6506007)(2906002)(66946007)(8676002)(66476007)(52116002)(4326008)(41300700001)(8936002)(26005)(478600001)(66556008)(38100700002)(38350700002)(86362001)(2616005)(5660300002)(6512007)(4743002)(186003)(36756003)(6486002)(316002)(83380400001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?cTZgb+36/LVmqUmGQpt4heDtxZm4u7XPJNiHoGt8Wa+jTLAnsoWyq0r7Gmer?=
+ =?us-ascii?Q?kTyBqO/mzTzAvmlKRuylGuMwPnZyeFJ19Nklwpq4CI9TvLsrQUVb5tS5hFs5?=
+ =?us-ascii?Q?pjR+BUxG6nKaiw8tg4rQ1kWdbLyYr6VoR4fpCU15PqDabfxVKKomMfjwBBnC?=
+ =?us-ascii?Q?zP/hgVAdGEQcWb5B0YmzAZBH3gDZ6nzbkJuzP/GzV+MHLVBpr7b6k9A5OadV?=
+ =?us-ascii?Q?gzQsubkuvvykydsqOpodM8sDGVafsDoegErolTvMYgFeRcaGfCJWvHogQ3Kw?=
+ =?us-ascii?Q?RTo3DvGxnV7g59z46Nn7XaAuzseKQSMjfWxyv1+k7KTTSpLVFtXxuOE3U3Wm?=
+ =?us-ascii?Q?wlthN7fcbrkW+e5zF5mr7oCfkHwuyrOmpFA3D9O9aQWXU8PTXKGyYkfPdckR?=
+ =?us-ascii?Q?vqsFw4KNKJ5YGF9x2VNZsQyg0NYvD9Qj/O0bKkgUXo/dZEuffjt9vIWTA9D+?=
+ =?us-ascii?Q?QWmyi/Ly7lmELmPAiJAZG57AZjylkRf55v3WvLCAr7dSof66EFRemSb9LCEK?=
+ =?us-ascii?Q?9UhMtv3jR6zR7ev3D2l3t+g39+VUhAkei3NEMhEbg2a4pVJfO/Tn4lvD/put?=
+ =?us-ascii?Q?Jxc5+qN5g1t2nkkhCHZaxube5ScU0/Wto7yGNCeSqQJM/oXh2TqqsJ0aJ2Om?=
+ =?us-ascii?Q?jwZfeA4xsloWBH8i7Fhhly033Dc85qco67KTotX+3CsQAszCWKVL1GCLZeG5?=
+ =?us-ascii?Q?kJisPiTNgalpJ4XYrse5u0fBJVSpsCZFY+hVQtP1H0eCuBWXRLKhOUaFey2m?=
+ =?us-ascii?Q?yuGfDfF4Lx7se3mwXDDaFV8+BRSJf0t6dTKE16/fOPujo1mHdu2CtjLdNToI?=
+ =?us-ascii?Q?PhJlu0LrOyzZ6IydHCBShMeIyq5+ID6o6FivV8n+YgVaCIKBMEAmoDhpxxia?=
+ =?us-ascii?Q?iCsaQPnkRmGz8Mp8UJJUDnXGW8Z/hv2Mqpdo1nZZt0PUNynfsRzHjQrrlFD9?=
+ =?us-ascii?Q?0Nsn0SdRoJdMcAKILPnmJMpOQO7r1rFN0VhjEbyKRueWhg0FSPsCJxfeokeQ?=
+ =?us-ascii?Q?GdKAHBA1yq9T4021QC5TqSbkpSBDg7t0h9rk9OzWiEUkHKHizk3Ksjs49z4w?=
+ =?us-ascii?Q?cNbD8s70QCrtg8bMD9dYC1/qP/cJWEVdy1JOw0US41Vp7UnSWH/pGEsfUcoj?=
+ =?us-ascii?Q?6LSr6tIwZbFRe8P0Ba1YmD3V2fGq/VgAe/NbqOk6Qx/VZzhjQlL2nBtRnheI?=
+ =?us-ascii?Q?FSiYhSQnL9dTdcwnxpLn0QC5Np6Oge3BcJmlDxhmva4OkwzQaSCxMDXvaHMS?=
+ =?us-ascii?Q?aR0PpT7gIg3F2XBCMVusy2ywkyn/yvbO0IJSbPuKix2WvctCOLKGo4ffup+K?=
+ =?us-ascii?Q?Km4QvR/Ougyrz3HagQeh7wwzW4oeuQxc8/dWsV+u/4fSahVuOytD+F1duunZ?=
+ =?us-ascii?Q?9nvyN8Uad5Zc33pxYtCh86CXuFgpvTGpBFUC6JpDhLgBQIhJExns/eVx+6le?=
+ =?us-ascii?Q?7X5KXdqaCmEGYRZ/S6DVwRIyj1vwX/+HLaZYCbs7NGlNdFiRO0TWB7UZ4/G8?=
+ =?us-ascii?Q?FmLR7H+3zYl6IEtNfivtDxVvdTSTjDbxeaY2mcymAZgNmy3C1/I8CTqIjO2r?=
+ =?us-ascii?Q?E/AQSXC8OuPS8g8WU7v9Y7T+NL7bIB6fsbJivEdR?=
+X-OriginatorOrg: vmware.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: c0dd696f-0059-4f86-956d-08da59266ee8
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR05MB8703.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jun 2022 16:51:23.2274
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: b39138ca-3cee-4b4a-a4d6-cd83d9dd62f0
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: RxEHav1X3wJHjgFkfaK5V5CXAFBzgWiwags7j5CMvXd1AgEMZJf4CuIqdzceMQdyFmbStOpDs2jj2zjIV3h25g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR05MB7675
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 23 Jun 2022 19:46:13 -0700
-Dan Williams <dan.j.williams@intel.com> wrote:
+Port IO instructions (PIO) are less efficient than MMIO (memory
+mapped I/O). They require twice as many PCI accesses and PIO
+instructions are serializing. As a result, MMIO should be preferred
+when possible over PIO.
 
-> Previously the target routing specifics of switch decoders were factored
-> out of 'struct cxl_decoder' into 'struct cxl_switch_decoder'.
-> 
-> This patch, 2 of 3, adds a 'struct cxl_root_decoder' as a superset of a
-> switch decoder that also track the associated CXL window platform
-> resource.
-> 
-> Note that the reason the resource for a given root decoder needs to be
-> looked up after the fact (i.e. after cxl_parse_cfmws() and
-> add_cxl_resource()) is because add_cxl_resource() may have merged CXL
-> windows in order to keep them at the top of the resource tree / decode
-> hierarchy.
+Bare metal test result
+1 million reads using raw_pci_read() took:
+PIO: 0.433153 Sec.
+MMIO: 0.268792 Sec.
 
-One trivial comment below that follows from earlier patch.
+Virtual Machine test result
+1 hundred thousand reads using raw_pci_read() took:
+PIO: 12.809 Sec.
+MMIO: took 8.517 Sec.
 
-Otherwise, I'll look again at this when I understand what the constraints
-of CXL windows are that you are dealing with.  I don't get why they might not
-be at the top of the resource tree without the merging!
+Signed-off-by: Ajay Kaher <akaher@vmware.com>
+---
+ arch/x86/pci/common.c          |  8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-> 
-> Co-developed-by: Ben Widawsky <bwidawsk@kernel.org>
-> Signed-off-by: Ben Widawsky <bwidawsk@kernel.org>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/cxl/acpi.c      |   40 ++++++++++++++++++++++++++++++++++++----
->  drivers/cxl/core/port.c |   43 +++++++++++++++++++++++++++++++++++++------
->  drivers/cxl/cxl.h       |   15 +++++++++++++--
->  3 files changed, 86 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
-> index 003fa4fde357..5972f380cdf2 100644
-> --- a/drivers/cxl/acpi.c
-> +++ b/drivers/cxl/acpi.c
-> @@ -82,7 +82,7 @@ static int cxl_parse_cfmws(union acpi_subtable_headers *header, void *arg,
->  	int target_map[CXL_DECODER_MAX_INTERLEAVE];
->  	struct cxl_cfmws_context *ctx = arg;
->  	struct cxl_port *root_port = ctx->root_port;
-> -	struct cxl_switch_decoder *cxlsd;
-> +	struct cxl_root_decoder *cxlrd;
->  	struct device *dev = ctx->dev;
->  	struct acpi_cedt_cfmws *cfmws;
->  	struct resource *cxl_res;
-> @@ -128,11 +128,11 @@ static int cxl_parse_cfmws(union acpi_subtable_headers *header, void *arg,
->  	if (rc)
->  		goto err_insert;
->  
-> -	cxlsd = cxl_root_decoder_alloc(root_port, ways);
-> -	if (IS_ERR(cxld))
-> +	cxlrd = cxl_root_decoder_alloc(root_port, ways);
-> +	if (IS_ERR(cxlrd))
->  		return 0;
->  
-> -	cxld = &cxlsd->cxld;
-> +	cxld = &cxlrd->cxlsd.cxld;
->  	cxld->flags = cfmws_to_decoder_flags(cfmws->restrictions);
->  	cxld->target_type = CXL_DECODER_EXPANDER;
->  	cxld->hpa_range = (struct range) {
-> @@ -375,6 +375,32 @@ static int add_cxl_resources(struct resource *cxl)
->  	return 0;
->  }
->  
-> +static int pair_cxl_resource(struct device *dev, void *data)
-> +{
-> +	struct resource *cxl_res = data;
-> +	struct resource *p;
-> +
-> +	if (!is_root_decoder(dev))
-> +		return 0;
-> +
-> +	for (p = cxl_res->child; p; p = p->sibling) {
-> +		struct cxl_root_decoder *cxlrd = to_cxl_root_decoder(dev);
-> +		struct cxl_decoder *cxld = &cxlrd->cxlsd.cxld;
-> +		struct resource res = {
-> +			.start = cxld->hpa_range.start,
-> +			.end = cxld->hpa_range.end,
-> +			.flags = IORESOURCE_MEM,
-> +		};
-> +
-> +		if (resource_contains(p, &res)) {
-> +			cxlrd->res = (struct resource *)p->desc;
-> +			break;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int cxl_acpi_probe(struct platform_device *pdev)
->  {
->  	int rc;
-> @@ -425,6 +451,12 @@ static int cxl_acpi_probe(struct platform_device *pdev)
->  	if (rc)
->  		return rc;
->  
-> +	/*
-> +	 * Populate the root decoders with their related iomem resource,
-> +	 * if present
-> +	 */
-> +	device_for_each_child(&root_port->dev, cxl_res, pair_cxl_resource);
-> +
->  	/*
->  	 * Root level scanned with host-bridge as dports, now scan host-bridges
->  	 * for their role as CXL uports to their CXL-capable PCIe Root Ports.
-> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-> index fd1cac13cd2e..abf3455c4eff 100644
-> --- a/drivers/cxl/core/port.c
-> +++ b/drivers/cxl/core/port.c
-> @@ -259,6 +259,23 @@ static void cxl_switch_decoder_release(struct device *dev)
->  	kfree(cxlsd);
->  }
->  
-> +struct cxl_root_decoder *to_cxl_root_decoder(struct device *dev)
-> +{
-> +	if (dev_WARN_ONCE(dev, !is_root_decoder(dev),
-> +			  "not a cxl_root_decoder device\n"))
-> +		return NULL;
-> +	return container_of(dev, struct cxl_root_decoder, cxlsd.cxld.dev);
-> +}
-> +EXPORT_SYMBOL_NS_GPL(to_cxl_root_decoder, CXL);
-> +
-> +static void cxl_root_decoder_release(struct device *dev)
-> +{
-> +	struct cxl_root_decoder *cxlrd = to_cxl_root_decoder(dev);
-> +
-> +	__cxl_decoder_release(&cxlrd->cxlsd.cxld);
-> +	kfree(cxlrd);
-> +}
-> +
->  static const struct device_type cxl_decoder_endpoint_type = {
->  	.name = "cxl_decoder_endpoint",
->  	.release = cxl_decoder_release,
-> @@ -273,7 +290,7 @@ static const struct device_type cxl_decoder_switch_type = {
->  
->  static const struct device_type cxl_decoder_root_type = {
->  	.name = "cxl_decoder_root",
-> -	.release = cxl_switch_decoder_release,
-> +	.release = cxl_root_decoder_release,
->  	.groups = cxl_decoder_root_attribute_groups,
->  };
->  
-> @@ -1218,9 +1235,23 @@ static struct cxl_decoder *cxl_decoder_alloc(struct cxl_port *port,
->  
->  	if (nr_targets) {
->  		struct cxl_switch_decoder *cxlsd;
-> +		struct cxl_root_decoder *cxlrd;
-> +
-> +		if (is_cxl_root(port)) {
-> +			alloc = kzalloc(struct_size(cxlrd, cxlsd.target,
-> +						    nr_targets),
-> +					GFP_KERNEL);
-> +			cxlrd = alloc;
-> +			if (cxlrd)
-> +				cxlsd = &cxlrd->cxlsd;
-> +			else
-> +				cxlsd = NULL;
-> +		} else {
-> +			alloc = kzalloc(struct_size(cxlsd, target, nr_targets),
-> +					GFP_KERNEL);
-> +			cxlsd = alloc;
-
-As earlier, I'd prefer you just handled errors when they happened rather than
-dancing onwards...
-
-> +		}
->  
-> -		alloc = kzalloc(struct_size(cxlsd, target, nr_targets), GFP_KERNEL);
-> -		cxlsd = alloc;
->  		if (cxlsd) {
->  			cxlsd->nr_targets = nr_targets;
->  			seqlock_init(&cxlsd->target_lock);
-> @@ -1279,8 +1310,8 @@ static struct cxl_decoder *cxl_decoder_alloc(struct cxl_port *port,
->   * firmware description of CXL resources into a CXL standard decode
->   * topology.
->   */
-> -struct cxl_switch_decoder *cxl_root_decoder_alloc(struct cxl_port *port,
-> -						  unsigned int nr_targets)
-> +struct cxl_root_decoder *cxl_root_decoder_alloc(struct cxl_port *port,
-> +						unsigned int nr_targets)
->  {
->  	struct cxl_decoder *cxld;
->  
-> @@ -1290,7 +1321,7 @@ struct cxl_switch_decoder *cxl_root_decoder_alloc(struct cxl_port *port,
->  	cxld = cxl_decoder_alloc(port, nr_targets);
->  	if (IS_ERR(cxld))
->  		return ERR_CAST(cxld);
-> -	return to_cxl_switch_decoder(&cxld->dev);
-> +	return to_cxl_root_decoder(&cxld->dev);
->  }
->  EXPORT_SYMBOL_NS_GPL(cxl_root_decoder_alloc, CXL);
->  
-> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-> index 7525b55b11bb..6dd1e4c57a67 100644
-> --- a/drivers/cxl/cxl.h
-> +++ b/drivers/cxl/cxl.h
-> @@ -253,6 +253,16 @@ struct cxl_switch_decoder {
->  	struct cxl_dport *target[];
->  };
->  
-> +/**
-> + * struct cxl_root_decoder - Static platform CXL address decoder
-> + * @res: host / parent resource for region allocations
-> + * @cxlsd: base cxl switch decoder
-> + */
-> +struct cxl_root_decoder {
-> +	struct resource *res;
-> +	struct cxl_switch_decoder cxlsd;
-
-Could be nice to those container of macros and just put the cxlsd first.
-
-> +};
-> +
->  /**
->   * enum cxl_nvdimm_brige_state - state machine for managing bus rescans
->   * @CXL_NVB_NEW: Set at bridge create and after cxl_pmem_wq is destroyed
-> @@ -368,10 +378,11 @@ struct cxl_dport *cxl_find_dport_by_dev(struct cxl_port *port,
->  					const struct device *dev);
->  
->  struct cxl_decoder *to_cxl_decoder(struct device *dev);
-> +struct cxl_root_decoder *to_cxl_root_decoder(struct device *dev);
->  bool is_root_decoder(struct device *dev);
->  bool is_endpoint_decoder(struct device *dev);
-> -struct cxl_switch_decoder *cxl_root_decoder_alloc(struct cxl_port *port,
-> -						  unsigned int nr_targets);
-> +struct cxl_root_decoder *cxl_root_decoder_alloc(struct cxl_port *port,
-> +						unsigned int nr_targets);
->  struct cxl_switch_decoder *cxl_switch_decoder_alloc(struct cxl_port *port,
->  						    unsigned int nr_targets);
->  int cxl_decoder_add(struct cxl_decoder *cxld, int *target_map);
-> 
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 3507f456f..0b3383d9c 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -40,20 +40,20 @@ const struct pci_raw_ops *__read_mostly raw_pci_ext_ops;
+ int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
+ 						int reg, int len, u32 *val)
+ {
++	if (raw_pci_ext_ops)
++		return raw_pci_ext_ops->read(domain, bus, devfn, reg, len, val);
+ 	if (domain == 0 && reg < 256 && raw_pci_ops)
+ 		return raw_pci_ops->read(domain, bus, devfn, reg, len, val);
+-	if (raw_pci_ext_ops)
+-		return raw_pci_ext_ops->read(domain, bus, devfn, reg, len, val);
+ 	return -EINVAL;
+ }
+ 
+ int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
+ 						int reg, int len, u32 val)
+ {
++	if (raw_pci_ext_ops)
++		return raw_pci_ext_ops->write(domain, bus, devfn, reg, len, val);
+ 	if (domain == 0 && reg < 256 && raw_pci_ops)
+ 		return raw_pci_ops->write(domain, bus, devfn, reg, len, val);
+-	if (raw_pci_ext_ops)
+-		return raw_pci_ext_ops->write(domain, bus, devfn, reg, len, val);
+ 	return -EINVAL;
+ }
+ 
+-- 
+2.30.0
 
