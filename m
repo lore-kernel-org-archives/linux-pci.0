@@ -2,170 +2,161 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59D05CCA491
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Jun 2022 14:12:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79BA9C433EF
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Jun 2022 14:21:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233472AbiF2OMp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Jun 2022 10:12:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41504 "EHLO
+        id S229523AbiF2OVJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Jun 2022 10:21:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233986AbiF2OMf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2022 10:12:35 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A0D82EA28;
-        Wed, 29 Jun 2022 07:12:34 -0700 (PDT)
+        with ESMTP id S229654AbiF2OVJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2022 10:21:09 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 455DC1B7AD;
+        Wed, 29 Jun 2022 07:21:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 4AB70CE2742;
-        Wed, 29 Jun 2022 14:12:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2554BC36AF2;
-        Wed, 29 Jun 2022 14:12:29 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D1E3060F6A;
+        Wed, 29 Jun 2022 14:21:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26B52C34114;
+        Wed, 29 Jun 2022 14:21:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656511949;
-        bh=BBR83r4Z8wYISqoy9N8mcRo90majWxT9oz32aYE16B4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gew/QVJJ/o5eGLVzrXqIw7oT9Dk9Rrn/kVBT+qcMXVua0irWxj/utDhGeiXF9OrGG
-         saeCu8T87R2lWeXzyt2IKpNsVlPhKTeUo6+dX2hQ+chlmf0vYlEWnSHmuNfLAnWOZI
-         4AgopHSEcpuijvC0BBDpJMDnBD43nNgoDJrP88sBmqwggq1uWeKHAW6P8f6HybXSsD
-         F8TrxmaC/FcIJCPYqo9VNMA2UJldNkxWMr909qFHGgEtWFWewGT8Xi1W70nKee/RiE
-         faq5hSuy+YLOfErfQOolgJOVM4EG9NqTHMUgdBMxZHa4tktzwh1DDmUHMJTfqUu/JX
-         oZgTsyLZw3VFQ==
+        s=k20201202; t=1656512467;
+        bh=OYKzPYxHTOMiN4mNEQ3kYHayFya3umGiQznKSLxwEz8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SX4DDeafZB2Em2q9yBygWmXs80vIeocbXTcr9hjy9ft9NrMM+2KpboJNjLtQ36K5L
+         slD4RlDhWfbmFcN7LC8IjGeLRWolnsvj1rSKMAgF715T7gzLqfS+5daLiEcVUMsW5l
+         xd0sg/iRH3T5KFh6OYf4lJiJTyppvcmE+M3O2NeD6UgqICqtEJyQe5swfqfi9RIvKA
+         YjSbfslE8IB3ZkaCyNcCEMHnGh9W0UyA3lN24AxUFtnuQq/+1W8mYj4EsNoGAo6Leh
+         Ykt7uym+0rxbrk7VEUxwMSWHL8KAcq9BX99yfyktImjRIIzfOuPgR3w4nSvrb4koVF
+         ti3WQC6Arut8Q==
 Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan+linaro@kernel.org>)
-        id 1o6YQf-0004lS-0X; Wed, 29 Jun 2022 16:12:29 +0200
-From:   Johan Hovold <johan+linaro@kernel.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Andy Gross <agross@kernel.org>,
+        (envelope-from <johan@kernel.org>)
+        id 1o6YYz-0004rF-U8; Wed, 29 Jun 2022 16:21:06 +0200
+Date:   Wed, 29 Jun 2022 16:21:05 +0200
+From:   Johan Hovold <johan@kernel.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH 08/10] PCI: qcom: Make all optional clocks optional
-Date:   Wed, 29 Jun 2022 16:09:58 +0200
-Message-Id: <20220629141000.18111-9-johan+linaro@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220629141000.18111-1-johan+linaro@kernel.org>
-References: <20220629141000.18111-1-johan+linaro@kernel.org>
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v15 5/7] dt-bindings: PCI: qcom: Support additional MSI
+ interrupts
+Message-ID: <Yrxf0QANRAeLCVAU@hovoldconsulting.com>
+References: <20220620112015.1600380-1-dmitry.baryshkov@linaro.org>
+ <20220620112015.1600380-6-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220620112015.1600380-6-dmitry.baryshkov@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The kernel is not a devicetree validator and does not need to re-encode
-information which is already available in the devicetree.
+On Mon, Jun 20, 2022 at 02:20:13PM +0300, Dmitry Baryshkov wrote:
+> On Qualcomm platforms each group of 32 MSI vectors is routed to the
+> separate GIC interrupt. Document mapping of additional interrupts.
+> 
+> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+> ---
+>  .../devicetree/bindings/pci/qcom,pcie.yaml    | 51 +++++++++++++++++--
+>  1 file changed, 48 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> index 0b69b12b849e..7e84063afe25 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> @@ -43,11 +43,12 @@ properties:
+>      maxItems: 5
+>  
+>    interrupts:
+> -    maxItems: 1
+> +    minItems: 1
+> +    maxItems: 8
+>  
+>    interrupt-names:
+> -    items:
+> -      - const: msi
+> +    minItems: 1
+> +    maxItems: 8
+>  
+>    # Common definitions for clocks, clock-names and reset.
+>    # Platform constraints are described later.
+> @@ -623,6 +624,50 @@ allOf:
+>          - resets
+>          - reset-names
+>  
+> +    # On newer chipsets support either 1 or 8 msi interrupts
+> +    # On older chipsets it's always 1 msi interrupt
+> +  - if:
+> +      properties:
+> +        compatibles:
 
-This is specifically true for the optional PCIe clocks, some of which
-are really interconnect clocks.
+This conditional always evaluates to false due to the typo in the
+property name here (plural "compatibles").
 
-Treat also the 2.7.0 optional clocks as truly optional instead of
-maintaining a list of clocks per compatible (including two compatible
-strings for the two identical controllers on sm8450) just to validate
-the devicetree.
+I've just posted a fix for this (and another bug just like it) as part
+of a series that depends on this series:
 
-Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 28 ++++----------------------
- 1 file changed, 4 insertions(+), 24 deletions(-)
+	https://lore.kernel.org/all/20220629141000.18111-1-johan+linaro@kernel.org/
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 8ab88e5743da..1a564f624bb1 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -189,10 +189,6 @@ struct qcom_pcie_ops {
- 
- struct qcom_pcie_cfg {
- 	const struct qcom_pcie_ops *ops;
--	unsigned int has_tbu_clk:1;
--	unsigned int has_ddrss_sf_tbu_clk:1;
--	unsigned int has_aggre0_clk:1;
--	unsigned int has_aggre1_clk:1;
- };
- 
- struct qcom_pcie {
-@@ -1140,14 +1136,6 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 	res->clks[idx++].id = "bus_master";
- 	res->clks[idx++].id = "bus_slave";
- 	res->clks[idx++].id = "slave_q2a";
--	if (pcie->cfg->has_tbu_clk)
--		res->clks[idx++].id = "tbu";
--	if (pcie->cfg->has_ddrss_sf_tbu_clk)
--		res->clks[idx++].id = "ddrss_sf_tbu";
--	if (pcie->cfg->has_aggre0_clk)
--		res->clks[idx++].id = "aggre0";
--	if (pcie->cfg->has_aggre1_clk)
--		res->clks[idx++].id = "aggre1";
- 
- 	num_clks = idx;
- 
-@@ -1155,6 +1143,10 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 	if (ret < 0)
- 		return ret;
- 
-+	res->clks[idx++].id = "tbu";
-+	res->clks[idx++].id = "ddrss_sf_tbu";
-+	res->clks[idx++].id = "aggre0";
-+	res->clks[idx++].id = "aggre1";
- 	res->clks[idx++].id = "noc_aggr_4";
- 	res->clks[idx++].id = "noc_aggr_south_sf";
- 	res->clks[idx++].id = "cnoc_qx";
-@@ -1463,17 +1455,14 @@ static const struct qcom_pcie_cfg ipq4019_cfg = {
- 
- static const struct qcom_pcie_cfg sa8540p_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_ddrss_sf_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sc8280xp_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_ddrss_sf_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sdm845_cfg = {
- 	.ops = &ops_2_7_0,
--	.has_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sm8150_cfg = {
-@@ -1485,31 +1474,22 @@ static const struct qcom_pcie_cfg sm8150_cfg = {
- 
- static const struct qcom_pcie_cfg sm8250_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_tbu_clk = true,
--	.has_ddrss_sf_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sm8450_pcie0_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_ddrss_sf_tbu_clk = true,
--	.has_aggre0_clk = true,
--	.has_aggre1_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sm8450_pcie1_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_ddrss_sf_tbu_clk = true,
--	.has_aggre1_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sc7280_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sc8180x_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_tbu_clk = true,
- };
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
--- 
-2.35.1
+Not sure if you need to respin a v16 just for this but otherwise it
+could be folded in here.
 
+> +          contains:
+> +            enum:
+> +              - qcom,pcie-msm8996
+> +              - qcom,pcie-sc7280
+> +              - qcom,pcie-sc8180x
+> +              - qcom,pcie-sdm845
+> +              - qcom,pcie-sm8150
+> +              - qcom,pcie-sm8250
+> +              - qcom,pcie-sm8450-pcie0
+> +              - qcom,pcie-sm8450-pcie1
+> +    then:
+> +      oneOf:
+> +        - properties:
+> +            interrupts:
+> +              maxItems: 1
+> +            interrupt-names:
+> +              items:
+> +                - const: msi
+> +        - properties:
+> +            interrupts:
+> +              minItems: 8
+> +            interrupt-names:
+> +              items:
+> +                - const: msi0
+> +                - const: msi1
+> +                - const: msi2
+> +                - const: msi3
+> +                - const: msi4
+> +                - const: msi5
+> +                - const: msi6
+> +                - const: msi7
+> +    else:
+> +      properties:
+> +        interrupts:
+> +          maxItems: 1
+> +        interrupt-names:
+> +          items:
+> +            - const: msi
+> +
+>  unevaluatedProperties: false
+>  
+>  examples:
+
+Johan
