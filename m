@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B931CCA489
-	for <linux-pci@archiver.kernel.org>; Wed, 29 Jun 2022 14:12:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C0B2CCA47C
+	for <linux-pci@archiver.kernel.org>; Wed, 29 Jun 2022 14:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234024AbiF2OMl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 Jun 2022 10:12:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41438 "EHLO
+        id S234031AbiF2OMm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 Jun 2022 10:12:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233936AbiF2OMb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2022 10:12:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A80E92F007;
-        Wed, 29 Jun 2022 07:12:30 -0700 (PDT)
+        with ESMTP id S233971AbiF2OMd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Jun 2022 10:12:33 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55F882E08E;
+        Wed, 29 Jun 2022 07:12:32 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4187E61EDC;
+        by ams.source.kernel.org (Postfix) with ESMTPS id DCF32B824B7;
         Wed, 29 Jun 2022 14:12:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08526C341CB;
-        Wed, 29 Jun 2022 14:12:28 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AE27C341CE;
+        Wed, 29 Jun 2022 14:12:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1656511949;
-        bh=BcVf9zGOO0RH2knLw0DhaZp1AodwzllZNO48giZBxQE=;
+        bh=v0eVaS3PBQTamh6cRAXZ5AqGfuYojlDjnveI93v18rE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LstHweX0rNQX9CxIVzoQVfmqlQEezAH/foe79ueSQ398Ts2G0dbTthNLvnO5teOVG
-         UMFow718sN5w+pmwPiG8r3bTNowOAeKy0p2j3I/4NTrsBgGsCnBVNAFlWFCR2WZEts
-         s3wC4ZGJ2PHCGQedsLTBwgYvDtXMhAWbUNyV3AQr7ELJPJY5J/izsrtOSzO5jOfN3T
-         rVYbPsL9aikgemhBcppTIW1nSWmhE2dG/pfZ7qmKM1A0PXq40R1iMXMC9f7BCNg5wp
-         xePHuSJ3KzsjcRJw40E1yuSXjxRuQE0k6iWSNmEZWb1ugBk1fYulWIx5ZoVA9zyeb0
-         Be2pr7ArMqrMw==
+        b=jIPyXyanWiEFs6QCHay6xZzD5iRqofl69DvTGzoudch6PR3bEji/pv1rvqcpm6XvR
+         U44YDKBIdgVq2anWg2rlCoX9vZcgsTmXS6aC0MsmpNnb/2tTH6Qz57v1iyZF2QmlOw
+         k10EuB5YvWHKBWhwQJezY/93Tat8SxNk9fRLaQPz5/cuHtf1lFWrBmGwkHBfEju1AR
+         /RP/U8Q5sp7wvXrCR7274LpHkE8UpYESu+R6EueWYyjh9+Ni9ZdsVsvJ/PWdQvH+Zg
+         YFnKZ4x5PpHBwUqJJJjGxwuaYFFTUONX973x1zv2On3eiSpFNLD5aD0bkzK31Wdmpu
+         bphks+e7Rx7uA==
 Received: from johan by xi.lan with local (Exim 4.94.2)
         (envelope-from <johan+linaro@kernel.org>)
-        id 1o6YQe-0004lA-Ep; Wed, 29 Jun 2022 16:12:28 +0200
+        id 1o6YQe-0004lN-TX; Wed, 29 Jun 2022 16:12:28 +0200
 From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>
@@ -47,9 +47,9 @@ Cc:     Rob Herring <robh+dt@kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH 02/10] dt-bindings: PCI: qcom: Fix msi-interrupt conditional
-Date:   Wed, 29 Jun 2022 16:09:52 +0200
-Message-Id: <20220629141000.18111-3-johan+linaro@kernel.org>
+Subject: [PATCH 07/10] PCI: qcom: Add support for SA8540P
+Date:   Wed, 29 Jun 2022 16:09:57 +0200
+Message-Id: <20220629141000.18111-8-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220629141000.18111-1-johan+linaro@kernel.org>
 References: <20220629141000.18111-1-johan+linaro@kernel.org>
@@ -59,27 +59,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fix the msi-interrupt conditional which always evaluated to false due to
-a misspelled property name ("compatibles" in plural).
+The SA8540P platform has five PCIe controllers: two 4-lane, two 2-lane
+and one 1-lane.
+
+Add a new "qcom,pcie-sa8540p" compatible string and reuse the 1.9.0 ops.
+
+Note that like for SC8280XP, the SA8540 controllers need two or three
+interconnect clocks to be enabled.
 
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index ed9f9462a758..a1b4fc70e162 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -628,7 +628,7 @@ allOf:
-     # On older chipsets it's always 1 msi interrupt
-   - if:
-       properties:
--        compatibles:
-+        compatible:
-           contains:
-             enum:
-               - qcom,pcie-msm8996
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index da3f1cdc4ba6..8ab88e5743da 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1461,6 +1461,11 @@ static const struct qcom_pcie_cfg ipq4019_cfg = {
+ 	.ops = &ops_2_4_0,
+ };
+ 
++static const struct qcom_pcie_cfg sa8540p_cfg = {
++	.ops = &ops_1_9_0,
++	.has_ddrss_sf_tbu_clk = true,
++};
++
+ static const struct qcom_pcie_cfg sc8280xp_cfg = {
+ 	.ops = &ops_1_9_0,
+ 	.has_ddrss_sf_tbu_clk = true,
+@@ -1626,6 +1631,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-ipq8074", .data = &ipq8074_cfg },
+ 	{ .compatible = "qcom,pcie-ipq4019", .data = &ipq4019_cfg },
+ 	{ .compatible = "qcom,pcie-qcs404", .data = &ipq4019_cfg },
++	{ .compatible = "qcom,pcie-sa8540p", .data = &sa8540p_cfg },
+ 	{ .compatible = "qcom,pcie-sdm845", .data = &sdm845_cfg },
+ 	{ .compatible = "qcom,pcie-sm8150", .data = &sm8150_cfg },
+ 	{ .compatible = "qcom,pcie-sm8250", .data = &sm8250_cfg },
 -- 
 2.35.1
 
