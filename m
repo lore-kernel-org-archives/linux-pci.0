@@ -2,121 +2,212 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E209EC433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Jun 2022 21:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87159C433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Jun 2022 21:49:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237641AbiF3V3G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Jun 2022 17:29:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48200 "EHLO
+        id S237388AbiF3Vs7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Jun 2022 17:48:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237582AbiF3V2k (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2022 17:28:40 -0400
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 164843700E;
-        Thu, 30 Jun 2022 14:28:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1656624520; x=1688160520;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=vov2D8XGLh7l4fzlqjW0FYaJ1gTowtT9oIai97+IhHY=;
-  b=lqc0a5cbBr/XdEfiZALSXhOhQpaT3KpFm4M8usVu2M16Y3M59+x7Ix6f
-   WvD4pWHxR/xWnm3VylAAlPYLTR+4Vptd+CydB0+GPSXPc1hSTuURp8kjR
-   qI56do2P/aC2Mjwgc1dkPG6UNnAjKQDN6YKv0S33VlUIzwd4UMU84c71T
-   c4hGz4GF17AC/sZwUi3c2/BLkI9kPRQQgqUs36ZLq2cMrx2H+UC9k6287
-   mMzAZlsPnZgw5Z3EoNOJXMhuiVdlb1as5JnbXf6zxLJimB7xLBkXV+TyQ
-   k33omhVDZcebYMs+EQxMu+7EarIHZIWtAIO/I8sGRtGqL5DQqE8XpsLrJ
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10394"; a="280021839"
-X-IronPort-AV: E=Sophos;i="5.92,235,1650956400"; 
-   d="scan'208";a="280021839"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jun 2022 14:28:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,235,1650956400"; 
-   d="scan'208";a="588945471"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga007.jf.intel.com with ESMTP; 30 Jun 2022 14:28:24 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 0B8D111E; Fri,  1 Jul 2022 00:28:30 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Wolfram Sang <wsa@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-pci@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net,
-        platform-driver-x86@vger.kernel.org
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
-        Mark Gross <markgross@kernel.org>
-Subject: [PATCH v1 1/5] ACPI: utils: Introduce acpi_match_video_device_handle() helper
-Date:   Fri,  1 Jul 2022 00:28:15 +0300
-Message-Id: <20220630212819.42958-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.35.1
+        with ESMTP id S234947AbiF3Vs6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2022 17:48:58 -0400
+Received: from mail-yb1-xb2c.google.com (mail-yb1-xb2c.google.com [IPv6:2607:f8b0:4864:20::b2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3E544F194
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2022 14:48:56 -0700 (PDT)
+Received: by mail-yb1-xb2c.google.com with SMTP id g4so744856ybg.9
+        for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2022 14:48:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ZN5bjp+CSDFhFhbJsMFmtuRpQ8ns1bw5njEINAKKyLk=;
+        b=J7oaHJZT3Fs9hj/qcvtSz8rvN2LErR8B66dk9tOh5cGjlZZdzRCh6uYuX1rq+s9sPE
+         5LBznQs1KlXahSAO2fMu9CVd8U/xFTD5COoswvJXqfsd11NuaknT9O0J/BhK1snAxjL9
+         wS88v9/n0JiqV1DtiZ6pCBNR8ZGE/dif8sgqPWL7eCP6Gw35aSfJhm1MfyJlpDW85Sxb
+         flMxDOQhFUxJM0YOze5thFgCSaHux5ObQ5hBrBIj80dYWrUnWEjaRvD4OaLuB4DvLeyi
+         MFtJxYG9O8nFSXWsdlyb4yGNGWwI5KggQgJDndhzsrpcFKmT1agUjK3MwC43+shMF82n
+         +LBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ZN5bjp+CSDFhFhbJsMFmtuRpQ8ns1bw5njEINAKKyLk=;
+        b=WuqyKtHzPwxPUvp2w+eUx3nrFj7LcOyo581sedd1lsIocMwO7fq3CGxFeIgDJV9X4d
+         4nkigFgAR/wiPt/8Fdm5hS19wI1QmCUsUZL/IIQxnzb1CFu+1l+yGOQ8CcFA0NLSrUOZ
+         llTx0fb0IiyB5dGhv/oYvY9yNp28VD7tqOB/L4GGvOuDiyeULf07VucQySPBUICKfK5i
+         ZYKxDB+h3tWzYz/NIbJmy4ccrOkgmfGhUUio+AIE9XTFamQ0o7eFNueH/c7pbLZUZbdX
+         WCBF1kOWT+IeBzdAu+w7w0/u4deMbN/FD6sZKxyAvW/Qf72A03D+/3slJVwXXAcDqlCo
+         xqrw==
+X-Gm-Message-State: AJIora99M79gpY8KpouV6dvt82lnb/JQlVwuRV5PDg9dmPyznTzuxRKN
+        QcmJvK0PTd43bEvQXUXoYhkGdog4CcWJD6Qgt53VOw==
+X-Google-Smtp-Source: AGRyM1t9VUuKPcYUfrI0T0KrCLOpyLtHS296XpXo8w+wslfbw9jclNlMK6VKWdORdjtq5OpxBXf5KlirrhUXTZFHkC4=
+X-Received: by 2002:a25:9947:0:b0:663:ec43:61eb with SMTP id
+ n7-20020a259947000000b00663ec4361ebmr11686355ybo.115.1656625736052; Thu, 30
+ Jun 2022 14:48:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <62bdec26.1c69fb81.46bc5.2d67@mx.google.com> <Yr3vEDDulZj1Dplv@sirena.org.uk>
+In-Reply-To: <Yr3vEDDulZj1Dplv@sirena.org.uk>
+From:   Saravana Kannan <saravanak@google.com>
+Date:   Thu, 30 Jun 2022 14:48:19 -0700
+Message-ID: <CAGETcx88M3Use8crFMTU=By3UVjjaJuP1_Ah7zsy_w=pNxc+6w@mail.gmail.com>
+Subject: Re: next/master bisection: baseline.bootrr.imx6q-pcie-pcie0-probed on kontron-pitx-imx8m
+To:     Mark Brown <broonie@kernel.org>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        kernelci-results@groups.io, bot@kernelci.org,
+        gtucker@collabora.com, Michael Walle <michael@walle.cc>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There are a couple of users that open code functionality of matching
-a given handle against ACPI video device IDs. The current approach
-duplicates ID table along with the matching code. Consolidate it
-under the acpi_match_video_device_handle() helper's hood.
+On Thu, Jun 30, 2022 at 11:44 AM Mark Brown <broonie@kernel.org> wrote:
+>
+> On Thu, Jun 30, 2022 at 11:32:06AM -0700, KernelCI bot wrote:
+>
+> The KernelCI bisection bot identified a failure to probe the PCI bus on
+> kontron-pitx-imx8m in -next resulting from commit (5a46079a96451 PM:
+> domains: Delete usage of driver_deferred_probe_check_state()) with at
+> least an arm64 defconfig+64K_PAGES.
+>
+> The only logging I see from PCI in the failing boot is:
+>
+>    <6>[    0.580973] PCI: CLS 0 bytes, default 64
+>
+> there's none of the host bridge enumeration starting with
+>
+>   <6>[    2.394399] imx6q-pcie 33800000.pcie: host bridge /soc@0/pcie@33800000 ranges:
+>   <6>[    2.396012] imx6q-pcie 33c00000.pcie: host bridge /soc@0/pcie@33c00000 ranges:
+>
+> that is seen with working boots.
+>
+> I've left the full bot report below, it's got a Reported-by tag, links
+> to more details including full boot logs and more.  The bot checked that
+> reverting the patch seems to fix the problem.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/acpi/utils.c | 19 +++++++++++++++++++
- include/linux/acpi.h |  2 ++
- 2 files changed, 21 insertions(+)
+Thanks for the report. I'll look into this alongside the issue Tony reported.
 
-diff --git a/drivers/acpi/utils.c b/drivers/acpi/utils.c
-index 3a9773a09e19..4800aba3b99c 100644
---- a/drivers/acpi/utils.c
-+++ b/drivers/acpi/utils.c
-@@ -929,6 +929,25 @@ static int __init acpi_backlight(char *str)
- }
- __setup("acpi_backlight=", acpi_backlight);
- 
-+static const struct acpi_device_id video_device_ids[] = {
-+	{ACPI_VIDEO_HID, 0},
-+	{}
-+};
-+
-+/**
-+ * acpi_match_video_device_handle - match handle against ACPI video device IDs
-+ * @handle: ACPI handle to match
-+ *
-+ * Return: true when matches, otherwise false.
-+ */
-+bool acpi_match_video_device_handle(acpi_handle handle)
-+{
-+	struct acpi_device *adev = acpi_fetch_acpi_dev(handle);
-+
-+	return adev && !acpi_match_device_ids(adev, video_device_ids);
-+}
-+EXPORT_SYMBOL(acpi_match_video_device_handle);
-+
- /**
-  * acpi_match_platform_list - Check if the system matches with a given list
-  * @plat: pointer to acpi_platform_list table terminated by a NULL entry
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 7b96a8bff6d2..c48e8a0df0cc 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -439,6 +439,8 @@ extern char *wmi_get_acpi_device_uid(const char *guid);
- 
- extern char acpi_video_backlight_string[];
- extern long acpi_is_video_device(acpi_handle handle);
-+extern bool acpi_match_video_device_handle(acpi_handle handle);
-+
- extern int acpi_blacklisted(void);
- extern void acpi_osi_setup(char *str);
- extern bool acpi_osi_is_win8(void);
--- 
-2.35.1
+-Saravana
 
+> > * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+> > * This automated bisection report was sent to you on the basis  *
+> > * that you may be involved with the breaking commit it has      *
+> > * found.  No manual investigation has been done to verify it,   *
+> > * and the root cause of the problem may be somewhere else.      *
+> > *                                                               *
+> > * If you do send a fix, please include this trailer:            *
+> > *   Reported-by: "kernelci.org bot" <bot@kernelci.org>          *
+> > *                                                               *
+> > * Hope this helps!                                              *
+> > * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+> >
+> > next/master bisection: baseline.bootrr.imx6q-pcie-pcie0-probed on kontron-pitx-imx8m
+> >
+> > Summary:
+> >   Start:      6cc11d2a17592 Add linux-next specific files for 20220630
+> >   Plain log:  https://storage.kernelci.org/next/master/next-20220630/arm64/defconfig+CONFIG_ARM64_64K_PAGES=y/gcc-10/lab-kontron/baseline-kontron-pitx-imx8m.txt
+> >   HTML log:   https://storage.kernelci.org/next/master/next-20220630/arm64/defconfig+CONFIG_ARM64_64K_PAGES=y/gcc-10/lab-kontron/baseline-kontron-pitx-imx8m.html
+> >   Result:     5a46079a96451 PM: domains: Delete usage of driver_deferred_probe_check_state()
+> >
+> > Checks:
+> >   revert:     PASS
+> >   verify:     PASS
+> >
+> > Parameters:
+> >   Tree:       next
+> >   URL:        https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+> >   Branch:     master
+> >   Target:     kontron-pitx-imx8m
+> >   CPU arch:   arm64
+> >   Lab:        lab-kontron
+> >   Compiler:   gcc-10
+> >   Config:     defconfig+CONFIG_ARM64_64K_PAGES=y
+> >   Test case:  baseline.bootrr.imx6q-pcie-pcie0-probed
+> >
+> > Breaking commit found:
+> >
+> > -------------------------------------------------------------------------------
+> > commit 5a46079a96451cfb15e4f5f01f73f7ba24ef851a
+> > Author: Saravana Kannan <saravanak@google.com>
+> > Date:   Wed Jun 1 00:06:57 2022 -0700
+> >
+> >     PM: domains: Delete usage of driver_deferred_probe_check_state()
+> >
+> >     Now that fw_devlink=on by default and fw_devlink supports
+> >     "power-domains" property, the execution will never get to the point
+> >     where driver_deferred_probe_check_state() is called before the supplier
+> >     has probed successfully or before deferred probe timeout has expired.
+> >
+> >     So, delete the call and replace it with -ENODEV.
+> >
+> >     Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> >     Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+> >     Signed-off-by: Saravana Kannan <saravanak@google.com>
+> >     Link: https://lore.kernel.org/r/20220601070707.3946847-2-saravanak@google.com
+> >     Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> >
+> > diff --git a/drivers/base/power/domain.c b/drivers/base/power/domain.c
+> > index 739e52cd4aba5..3e86772d5fac5 100644
+> > --- a/drivers/base/power/domain.c
+> > +++ b/drivers/base/power/domain.c
+> > @@ -2730,7 +2730,7 @@ static int __genpd_dev_pm_attach(struct device *dev, struct device *base_dev,
+> >               mutex_unlock(&gpd_list_lock);
+> >               dev_dbg(dev, "%s() failed to find PM domain: %ld\n",
+> >                       __func__, PTR_ERR(pd));
+> > -             return driver_deferred_probe_check_state(base_dev);
+> > +             return -ENODEV;
+> >       }
+> >
+> >       dev_dbg(dev, "adding to PM domain %s\n", pd->name);
+> > -------------------------------------------------------------------------------
+> >
+> >
+> > Git bisection log:
+> >
+> > -------------------------------------------------------------------------------
+> > git bisect start
+> > # good: [d9b2ba67917c18822c6a09af41c32fa161f1606b] Merge tag 'platform-drivers-x86-v5.19-3' of git://git.kernel.org/pub/scm/linux/kernel/git/pdx86/platform-drivers-x86
+> > git bisect good d9b2ba67917c18822c6a09af41c32fa161f1606b
+> > # bad: [6cc11d2a1759275b856e464265823d94aabd5eaf] Add linux-next specific files for 20220630
+> > git bisect bad 6cc11d2a1759275b856e464265823d94aabd5eaf
+> > # good: [7391068f14aafb8c5bb9d5aeb07ecfa55c89be42] Merge branch 'drm-next' of https://gitlab.freedesktop.org/agd5f/linux
+> > git bisect good 7391068f14aafb8c5bb9d5aeb07ecfa55c89be42
+> > # good: [17daf6a2ab5178cf52a20d1c85470ea4638d4310] Merge branch 'next' of git://git.kernel.org/pub/scm/virt/kvm/kvm.git
+> > git bisect good 17daf6a2ab5178cf52a20d1c85470ea4638d4310
+> > # bad: [a143ea0f3ce59385089e6e7b71b04fd0b5621bd8] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
+> > git bisect bad a143ea0f3ce59385089e6e7b71b04fd0b5621bd8
+> > # bad: [57b6609eb7251280cf9f34fdebf1244f10673749] Merge branch 'icc-next' of git://git.kernel.org/pub/scm/linux/kernel/git/djakov/icc.git
+> > git bisect bad 57b6609eb7251280cf9f34fdebf1244f10673749
+> > # bad: [eb3fd63a935b759df99bfe4a6b13c820204f81d3] Merge branch 'usb-next' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git
+> > git bisect bad eb3fd63a935b759df99bfe4a6b13c820204f81d3
+> > # good: [048914d1bed271f04f726b7f78d0bef8cd1809f5] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/sre/linux-hsi.git
+> > git bisect good 048914d1bed271f04f726b7f78d0bef8cd1809f5
+> > # good: [40a959d7042bb7711e404ad2318b30e9f92c6b9b] usb: host: ohci-ppc-of: Fix refcount leak bug
+> > git bisect good 40a959d7042bb7711e404ad2318b30e9f92c6b9b
+> > # good: [849f35422319a46c2a52289e2d5c85eb3346a921] Merge tag 'thunderbolt-for-v5.20-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/westeri/thunderbolt into usb-next
+> > git bisect good 849f35422319a46c2a52289e2d5c85eb3346a921
+> > # bad: [a52ed4866d2b90dd5e4ae9dabd453f3ed8fa3cbc] mwifiex: fix sleep in atomic context bugs caused by dev_coredumpv
+> > git bisect bad a52ed4866d2b90dd5e4ae9dabd453f3ed8fa3cbc
+> > # bad: [f516d01b9df2782b9399c44fa1d21c3d09211f8a] Revert "driver core: Set default deferred_probe_timeout back to 0."
+> > git bisect bad f516d01b9df2782b9399c44fa1d21c3d09211f8a
+> > # bad: [f8217275b57aa48d98cc42051c2aac34152718d6] net: mdio: Delete usage of driver_deferred_probe_check_state()
+> > git bisect bad f8217275b57aa48d98cc42051c2aac34152718d6
+> > # bad: [24a026f85241a01bbcfe1b263caeeaa9a79bab40] pinctrl: devicetree: Delete usage of driver_deferred_probe_check_state()
+> > git bisect bad 24a026f85241a01bbcfe1b263caeeaa9a79bab40
+> > # bad: [5a46079a96451cfb15e4f5f01f73f7ba24ef851a] PM: domains: Delete usage of driver_deferred_probe_check_state()
+> > git bisect bad 5a46079a96451cfb15e4f5f01f73f7ba24ef851a
+> > # first bad commit: [5a46079a96451cfb15e4f5f01f73f7ba24ef851a] PM: domains: Delete usage of driver_deferred_probe_check_state()
+> > -------------------------------------------------------------------------------
+> >
+> >
+> > -=-=-=-=-=-=-=-=-=-=-=-
+> > Groups.io Links: You receive all messages sent to this group.
+> > View/Reply Online (#28727): https://groups.io/g/kernelci-results/message/28727
+> > Mute This Topic: https://groups.io/mt/92093224/1131744
+> > Group Owner: kernelci-results+owner@groups.io
+> > Unsubscribe: https://groups.io/g/kernelci-results/unsub [broonie@kernel.org]
+> > -=-=-=-=-=-=-=-=-=-=-=-
+> >
+> >
