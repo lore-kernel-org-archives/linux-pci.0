@@ -2,137 +2,457 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C479C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Jun 2022 16:45:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C4D3C433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Jun 2022 17:05:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234372AbiF3QpA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Jun 2022 12:45:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49742 "EHLO
+        id S235881AbiF3RFs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Jun 2022 13:05:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233264AbiF3Qo7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2022 12:44:59 -0400
-Received: from bee.birch.relay.mailchannels.net (bee.birch.relay.mailchannels.net [23.83.209.14])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C89453EAA1
-        for <linux-pci@vger.kernel.org>; Thu, 30 Jun 2022 09:44:57 -0700 (PDT)
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 8D92F76206E;
-        Thu, 30 Jun 2022 16:29:06 +0000 (UTC)
-Received: from pdx1-sub0-mail-a214.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id F25F0762210;
-        Thu, 30 Jun 2022 16:29:05 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1656606546; a=rsa-sha256;
-        cv=none;
-        b=g6Rc7cs96fVc7E/heQfoRsmXE48/YQgx+IYoIgE1dULt8rRt/C8mCu3jF4MDf5xg8fKB34
-        TSBp28fBVjebrXgnIld4dJXtV8GCzC0T0Hs7gE2GtLw2u4Ci663J133FCTYIFkR7ikRYM8
-        ES53mdUZ3uZyIHhMh3AJeM93nVnfme9/5se0EhM4uapDX7QkN3l/14Rg+6gsaJo6yg7s47
-        OttR2Q49gq86E8NSgBacT49br9O8znMxVYAefLOC/dgae7BTUmOAkN3z5bF5ORra7Z6jKU
-        YQIZP3VxIC71juX4V5h2H2ShTvhtWkXUkMN2NVattdQg5zcvM67aKvPSquEkgA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1656606546;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=9Sb1glpRpYA85hAE32jopfAa1TP5g8OZqmLv3plg0Zk=;
-        b=Rhm4I7d4tiaKM6BLiv441UkhMLkKOwJaYbYdApGB71ko2uG0fz5odW5Dt+JCD+uHel1/OW
-        xpwArZ6dMLSebBKoiU5upm3mza9q/XHPt9OJk7vu1L8RVEWX1WECO0ubbV7psYxQxk7HX2
-        MM60ziTD6BTvKkdCjSJscsaBBlWAYi9WhuhZ9XbBwqfZx8t8T1OfRjy1FwIdCJPCmc9kbx
-        6CwTzLCW02L1Kx8O3W0S2/L9LZM/+0BHQ6lgtdBJSl9239P0FV966t3Q9SzFuZDNY3eYwR
-        1HuqsyNLiKzYxRuSt/kgW11bjR+b5C8JfS6ur7Wahe+ZNk5jx8bbPF+5NZ0/ug==
-ARC-Authentication-Results: i=1;
-        rspamd-689699966c-7cjd8;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Army-Little: 2a18faf73aee121d_1656606546412_1698224174
-X-MC-Loop-Signature: 1656606546412:1314743472
-X-MC-Ingress-Time: 1656606546412
-Received: from pdx1-sub0-mail-a214.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.116.106.91 (trex/6.7.1);
-        Thu, 30 Jun 2022 16:29:06 +0000
-Received: from offworld (unknown [104.36.25.13])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dave@stgolabs.net)
-        by pdx1-sub0-mail-a214.dreamhost.com (Postfix) with ESMTPSA id 4LYkL86Nrdz28;
-        Thu, 30 Jun 2022 09:29:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1656606545;
-        bh=9Sb1glpRpYA85hAE32jopfAa1TP5g8OZqmLv3plg0Zk=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=nnjlTuyuGFynXTWThk4sfTJ9a82f77dhLrXIaXH8hFYvhydWUv5cLlcfKNqwNZnbU
-         zeStXr6xJnKjhYUtYjczmItscESH7yIhSmm3/FPSlwmmi4ualjb9Xz3ZTcjgj1iJhd
-         2m1NHIV4dZSjL6OYOxa6vSnf2D5i9IVeEY7xz44NRHFA2Ajy4GA7nzTzZR74Qz57a/
-         2li1pDID/zNQAHcpy7ew3WY0t8BMaJRQS/VgVnYXcTvDXCkBoyWw3lpYiLeyRPt5HE
-         6d4FDewmA1OeTT2iGPyDw15I3qoiIcDCLLIjiZqffRdB+tHzzngRb1XajflB7CivLD
-         LBLpRwWvBTeBQ==
-Date:   Thu, 30 Jun 2022 09:14:06 -0700
-From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Ben Widawsky <bwidawsk@kernel.org>,
-        linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH V12 4/9] cxl/pci: Create PCI DOE mailbox's for memory
- devices
-Message-ID: <20220630161406.yglzoxn2va3bhts4@offworld>
-References: <20220628041527.742333-1-ira.weiny@intel.com>
- <20220628041527.742333-5-ira.weiny@intel.com>
- <20220628153317.00002e36@Huawei.com>
- <Yr01iZhuG5YHThDg@iweiny-desk3>
- <20220630163240.00003596@Huawei.com>
+        with ESMTP id S230223AbiF3RFs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2022 13:05:48 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5829C338B1;
+        Thu, 30 Jun 2022 10:05:46 -0700 (PDT)
+Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4LYl7V6mg1z687rC;
+        Fri,  1 Jul 2022 01:04:54 +0800 (CST)
+Received: from lhreml710-chm.china.huawei.com (10.201.108.61) by
+ fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 30 Jun 2022 19:05:43 +0200
+Received: from localhost (10.81.200.250) by lhreml710-chm.china.huawei.com
+ (10.201.108.61) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 30 Jun
+ 2022 18:05:43 +0100
+Date:   Thu, 30 Jun 2022 18:05:41 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     <linux-cxl@vger.kernel.org>, <nvdimm@lists.linux.dev>,
+        <linux-pci@vger.kernel.org>, <patches@lists.linux.dev>,
+        <hch@lst.de>
+Subject: Re: [PATCH 42/46] cxl/hdm: Commit decoder state to hardware
+Message-ID: <20220630180541.0000259c@Huawei.com>
+In-Reply-To: <20220624041950.559155-17-dan.j.williams@intel.com>
+References: <165603869943.551046.3498980330327696732.stgit@dwillia2-xfh>
+        <20220624041950.559155-17-dan.j.williams@intel.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20220630163240.00003596@Huawei.com>
-User-Agent: NeoMutt/20220429
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.81.200.250]
+X-ClientProxiedBy: lhreml754-chm.china.huawei.com (10.201.108.204) To
+ lhreml710-chm.china.huawei.com (10.201.108.61)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 30 Jun 2022, Jonathan Cameron wrote:
+On Thu, 23 Jun 2022 21:19:46 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
->On Wed, 29 Jun 2022 22:32:57 -0700 Ira Weiny <ira.weiny@intel.com> wrote:
+> After all the soft validation of the region has completed, convey the
+> region configuration to hardware while being careful to commit decoders
+> in specification mandated order. In addition to programming the endpoint
+> decoder base-addres, intereleave ways and granularity, the switch
+> decoder target lists are also established.
+> 
+> While the kernel can enforce spec-mandated commit order, it can not
+> enforce spec-mandated reset order. For example, the kernel can't stop
+> someone from removing an endpoint device that is occupying decoderN in a
+> switch decoder where decoderN+1 is also committed. To reset decoderN,
+> decoderN+1 must be torn down first. That "tear down the world"
+> implementation is saved for a follow-on patch.
+> 
+> Callback operations are provided for the 'commit' and 'reset'
+> operations. While those callbacks may prove useful for CXL accelerators
+> (Type-2 devices with memory) the primary motivation is to enable a
+> simple way for cxl_test to intercept those operations.
+> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
->> I _thought_ that we did not care if some mailboxes failed or not.
->
->I have a different view to Dan on this.  In my view if your hardware is
->not working in any way at all scream like mad don't carry on... Dan
->is keen to try to muddle onwards.
+Trivial comments only in this one.
 
-I am also of the idea of not carrying on upon any indication of failure.
+Jonathan
 
->>
->> If CDAT is not supported on any of the mailboxes found then CDAT will not show
->> up on sysfs (as per Dan's last comment).  If it was supported on a mailbox but
->> no data is found the sysfs will show up but be 0 length.
->>
->> At this layer I thought we agreed to skip over these errors.  If a protocol is
->> needed at a higher layer and it is not found on any of the mailboxes the errors
->> should show up in that layer.  In this series CDAT is not 100% necessary as
->> devices can work without it.  So the errors were mostly paper'ed over in favor
->> of just printing error messages and muddle on.
->>
->> The xa_insert() deserves a pci_err() though.
->
->That's probably the minimum we should do.  The xa_insert() failing is something
->horrible going wrong in our software / host afterall.
+> ---
+>  Documentation/ABI/testing/sysfs-bus-cxl |  16 ++
+>  drivers/cxl/core/hdm.c                  | 218 ++++++++++++++++++++++++
+>  drivers/cxl/core/port.c                 |   1 +
+>  drivers/cxl/core/region.c               | 189 ++++++++++++++++++--
+>  drivers/cxl/cxl.h                       |  11 ++
+>  tools/testing/cxl/test/cxl.c            |  46 +++++
+>  6 files changed, 471 insertions(+), 10 deletions(-)
+> 
 
-Yes. And in addition, devm_cxl_pci_create_doe() should return any error status, and
-cxl_pci_probe() can choose to omit any errors, but it's still better to have it.
+> diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
+> index 2ee62dde8b23..72f98f1a782c 100644
+> --- a/drivers/cxl/core/hdm.c
+> +++ b/drivers/cxl/core/hdm.c
+> @@ -129,6 +129,8 @@ struct cxl_hdm *devm_cxl_setup_hdm(struct cxl_port *port)
+>  		return ERR_PTR(-ENXIO);
+>  	}
+>  
+> +	dev_set_drvdata(&port->dev, cxlhdm);
 
-Thanks,
-Davidlohr
+Trivial, but dev == &port->dev I think so you might as well use dev.
+
+This feels like a bit of a hack as it just so happens nothing else is
+in the port drvdata.  Maybe it's better to add a pointer from
+port to cxlhdm?
+
+> +
+>  	return cxlhdm;
+>  }
+>  EXPORT_SYMBOL_NS_GPL(devm_cxl_setup_hdm, CXL);
+> @@ -444,6 +446,213 @@ int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, unsigned long long size)
+>  	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
+>  }
+>  
+
+> +static int cxl_decoder_commit(struct cxl_decoder *cxld)
+> +{
+> +	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
+> +	struct cxl_hdm *cxlhdm = dev_get_drvdata(&port->dev);
+> +	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+> +	int id = cxld->id, rc;
+> +	u64 base, size;
+> +	u32 ctrl;
+> +
+> +	if (cxld->flags & CXL_DECODER_F_ENABLE)
+> +		return 0;
+> +
+> +	if (port->commit_end + 1 != id) {
+> +		dev_dbg(&port->dev,
+> +			"%s: out of order commit, expected decoder%d.%d\n",
+> +			dev_name(&cxld->dev), port->id, port->commit_end + 1);
+> +		return -EBUSY;
+> +	}
+> +
+> +	down_read(&cxl_dpa_rwsem);
+> +	/* common decoder settings */
+> +	ctrl = readl(hdm + CXL_HDM_DECODER0_CTRL_OFFSET(cxld->id));
+> +	cxld_set_interleave(cxld, &ctrl);
+> +	cxld_set_type(cxld, &ctrl);
+> +	cxld_set_hpa(cxld, &base, &size);
+> +
+> +	writel(upper_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(base), hdm + CXL_HDM_DECODER0_BASE_LOW_OFFSET(id));
+> +	writel(upper_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_HIGH_OFFSET(id));
+> +	writel(lower_32_bits(size), hdm + CXL_HDM_DECODER0_SIZE_LOW_OFFSET(id));
+> +
+> +	if (is_switch_decoder(&cxld->dev)) {
+> +		struct cxl_switch_decoder *cxlsd =
+> +			to_cxl_switch_decoder(&cxld->dev);
+> +		void __iomem *tl_hi = hdm + CXL_HDM_DECODER0_TL_HIGH(id);
+> +		void __iomem *tl_lo = hdm + CXL_HDM_DECODER0_TL_LOW(id);
+> +		u64 targets;
+> +
+> +		rc = cxlsd_set_targets(cxlsd, &targets);
+> +		if (rc) {
+> +			dev_dbg(&port->dev, "%s: target configuration error\n",
+> +				dev_name(&cxld->dev));
+> +			goto err;
+> +		}
+> +
+> +		writel(upper_32_bits(targets), tl_hi);
+> +		writel(lower_32_bits(targets), tl_lo);
+> +	} else {
+> +		struct cxl_endpoint_decoder *cxled =
+> +			to_cxl_endpoint_decoder(&cxld->dev);
+> +		void __iomem *sk_hi = hdm + CXL_HDM_DECODER0_SKIP_HIGH(id);
+> +		void __iomem *sk_lo = hdm + CXL_HDM_DECODER0_SKIP_LOW(id);
+> +
+> +		writel(upper_32_bits(cxled->skip), sk_hi);
+> +		writel(lower_32_bits(cxled->skip), sk_lo);
+> +	}
+> +
+> +	writel(ctrl, hdm + CXL_HDM_DECODER0_CTRL_OFFSET(id));
+> +	up_read(&cxl_dpa_rwsem);
+> +
+> +	port->commit_end++;
+
+Obviously doesn't matter as resetting on error, but
+feels like the increment of commit_end++ should only follow
+succesful commit / await_commit();
+
+> +	rc = cxld_await_commit(hdm, cxld->id);
+> +err:
+> +	if (rc) {
+> +		dev_dbg(&port->dev, "%s: error %d committing decoder\n",
+> +			dev_name(&cxld->dev), rc);
+> +		cxld->reset(cxld);
+> +		return rc;
+> +	}
+> +	cxld->flags |= CXL_DECODER_F_ENABLE;
+> +
+> +	return 0;
+> +}
+> +
+> +static int cxl_decoder_reset(struct cxl_decoder *cxld)
+> +{
+> +	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
+> +	struct cxl_hdm *cxlhdm = dev_get_drvdata(&port->dev);
+> +	void __iomem *hdm = cxlhdm->regs.hdm_decoder;
+> +	int id = cxld->id;
+> +	u32 ctrl;
+> +
+> +	if ((cxld->flags & CXL_DECODER_F_ENABLE) ==  0)
+
+extra space after ==
+
+> +		return 0;
+> +
+
+...
+
+
+>  		
+> diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+> index 7034300e72b2..eee1615d2319 100644
+> --- a/drivers/cxl/core/port.c
+> +++ b/drivers/cxl/core/port.c
+> @@ -630,6 +630,7 @@ static struct cxl_port *cxl_port_alloc(struct device *uport,
+>  	port->component_reg_phys = component_reg_phys;
+>  	ida_init(&port->decoder_ida);
+>  	port->dpa_end = -1;
+> +	port->commit_end = -1;
+>  	xa_init(&port->dports);
+>  	xa_init(&port->endpoints);
+>  	xa_init(&port->regions);
+> diff --git a/drivers/cxl/core/region.c b/drivers/cxl/core/region.c
+> index 071b8cafe2bb..b90160c4f975 100644
+> --- a/drivers/cxl/core/region.c
+> +++ b/drivers/cxl/core/region.c
+> @@ -112,6 +112,168 @@ static ssize_t uuid_store(struct device *dev, struct device_attribute *attr,
+>  }
+>  static DEVICE_ATTR_RW(uuid);
+
+...
+
+
+> +static int cxl_region_decode_reset(struct cxl_region *cxlr, int count)
+> +{
+> +	struct cxl_region_params *p = &cxlr->params;
+> +	int i;
+> +
+> +	for (i = count - 1; i >= 0; i--) {
+> +		struct cxl_endpoint_decoder *cxled = p->targets[i];
+> +		struct cxl_memdev *cxlmd = cxled_to_memdev(cxled);
+> +		struct cxl_port *iter = cxled_to_port(cxled);
+> +		struct cxl_ep *ep;
+> +		int rc;
+> +
+> +		while (!is_cxl_root(to_cxl_port(iter->dev.parent)))
+> +			iter = to_cxl_port(iter->dev.parent);
+> +
+> +		for (ep = cxl_ep_load(iter, cxlmd); iter;
+> +		     iter = ep->next, ep = cxl_ep_load(iter, cxlmd)) {
+> +			struct cxl_region_ref *cxl_rr;
+> +			struct cxl_decoder *cxld;
+> +
+> +			cxl_rr = cxl_rr_load(iter, cxlr);
+> +			cxld = cxl_rr->decoder;
+> +			rc = cxld->reset(cxld);
+> +			if (rc)
+> +				return rc;
+> +		}
+> +
+> +		rc = cxled->cxld.reset(&cxled->cxld);
+> +		if (rc)
+> +			return rc;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int cxl_region_decode_commit(struct cxl_region *cxlr)
+> +{
+> +	struct cxl_region_params *p = &cxlr->params;
+> +	int i, rc;
+> +
+> +	for (i = 0; i < p->nr_targets; i++) {
+> +		struct cxl_endpoint_decoder *cxled = p->targets[i];
+> +		struct cxl_memdev *cxlmd = cxled_to_memdev(cxled);
+> +		struct cxl_region_ref *cxl_rr;
+> +		struct cxl_decoder *cxld;
+> +		struct cxl_port *iter;
+> +		struct cxl_ep *ep;
+> +
+> +		/* commit bottom up */
+> +		for (iter = cxled_to_port(cxled); !is_cxl_root(iter);
+> +		     iter = to_cxl_port(iter->dev.parent)) {
+> +			cxl_rr = cxl_rr_load(iter, cxlr);
+> +			cxld = cxl_rr->decoder;
+> +			rc = cxld->commit(cxld);
+> +			if (rc)
+> +				break;
+> +		}
+> +
+> +		if (is_cxl_root(iter))
+> +			continue;
+> +
+> +		/* teardown top down */
+
+Comment on why we are tearing down.  I guess because previous
+somehow didn't end up at the root?
+
+> +		for (ep = cxl_ep_load(iter, cxlmd); ep && iter;
+> +		     iter = ep->next, ep = cxl_ep_load(iter, cxlmd)) {
+> +			cxl_rr = cxl_rr_load(iter, cxlr);
+> +			cxld = cxl_rr->decoder;
+> +			cxld->reset(cxld);
+> +		}
+> +
+> +		cxled->cxld.reset(&cxled->cxld);
+> +		if (i == 0)
+> +			return rc;
+> +		break;
+> +	}
+> +
+> +	if (i >= p->nr_targets)
+> +		return 0;
+> +
+> +	/* undo the targets that were successfully committed */
+> +	cxl_region_decode_reset(cxlr, i);
+> +	return rc;
+> +}
+> +
+> +static ssize_t commit_store(struct device *dev, struct device_attribute *attr,
+> +			    const char *buf, size_t len)
+> +{
+> +	struct cxl_region *cxlr = to_cxl_region(dev);
+> +	struct cxl_region_params *p = &cxlr->params;
+> +	bool commit;
+> +	ssize_t rc;
+> +
+> +	rc = kstrtobool(buf, &commit);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = down_write_killable(&cxl_region_rwsem);
+> +	if (rc)
+> +		return rc;
+> +
+> +	/* Already in the requested state? */
+> +	if (commit && p->state >= CXL_CONFIG_COMMIT)
+> +		goto out;
+> +	if (!commit && p->state < CXL_CONFIG_COMMIT)
+> +		goto out;
+> +
+> +	/* Not ready to commit? */
+> +	if (commit && p->state < CXL_CONFIG_ACTIVE) {
+> +		rc = -ENXIO;
+> +		goto out;
+> +	}
+> +
+> +	if (commit)
+> +		rc = cxl_region_decode_commit(cxlr);
+> +	else {
+> +		p->state = CXL_CONFIG_RESET_PENDING;
+> +		up_write(&cxl_region_rwsem);
+> +		device_release_driver(&cxlr->dev);
+> +		down_write(&cxl_region_rwsem);
+> +
+> +		if (p->state == CXL_CONFIG_RESET_PENDING)
+
+What path results in that changing in last few lines?
+Perhaps a comment if there is something we need to protect against?
+
+
+> +			rc = cxl_region_decode_reset(cxlr, p->interleave_ways);
+> +	}
+> +
+> +	if (rc)
+> +		goto out;
+> +
+> +	if (commit)
+> +		p->state = CXL_CONFIG_COMMIT;
+> +	else if (p->state == CXL_CONFIG_RESET_PENDING)
+> +		p->state = CXL_CONFIG_ACTIVE;
+> +
+> +out:
+> +	up_write(&cxl_region_rwsem);
+> +
+> +	if (rc)
+> +		return rc;
+> +	return len;
+> +}
+
+
+...
+
+
+> diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+> index a93d7c4efd1a..fc14f6805f2c 100644
+> --- a/drivers/cxl/cxl.h
+> +++ b/drivers/cxl/cxl.h
+> @@ -54,6 +54,7 @@
+>  #define   CXL_HDM_DECODER0_CTRL_LOCK BIT(8)
+>  #define   CXL_HDM_DECODER0_CTRL_COMMIT BIT(9)
+>  #define   CXL_HDM_DECODER0_CTRL_COMMITTED BIT(10)
+> +#define   CXL_HDM_DECODER0_CTRL_COMMIT_ERROR BIT(11)
+>  #define   CXL_HDM_DECODER0_CTRL_TYPE BIT(12)
+>  #define CXL_HDM_DECODER0_TL_LOW(i) (0x20 * (i) + 0x24)
+>  #define CXL_HDM_DECODER0_TL_HIGH(i) (0x20 * (i) + 0x28)
+> @@ -257,6 +258,8 @@ enum cxl_decoder_type {
+>   * @target_type: accelerator vs expander (type2 vs type3) selector
+>   * @region: currently assigned region for this decoder
+>   * @flags: memory type capabilities and locking
+> + * @commit: device/decoder-type specific callback to commit settings to hw
+> + * @commit: device/decoder-type specific callback to reset hw settings
+
+@reset
+
+>  */
+>  struct cxl_decoder {
+>  	struct device dev;
+> @@ -267,6 +270,8 @@ struct cxl_decoder {
+>  	enum cxl_decoder_type target_type;
+>  	struct cxl_region *region;
+>  	unsigned long flags;
+> +	int (*commit)(struct cxl_decoder *cxld);
+> +	int (*reset)(struct cxl_decoder *cxld);
+>  };
+>  
+
+
+> diff --git a/tools/testing/cxl/test/cxl.c b/tools/testing/cxl/test/cxl.c
+> index 51d517fa62ee..94653201631c 100644
+> --- a/tools/testing/cxl/test/cxl.c
+> +++ b/tools/testing/cxl/test/cxl.c
+> @@ -429,6 +429,50 @@ static int map_targets(struct device *dev, void *data)
+>  	return 0;
+>  }
+>  
+
+...
+
+> +static int mock_decoder_reset(struct cxl_decoder *cxld)
+> +{
+> +	struct cxl_port *port = to_cxl_port(cxld->dev.parent);
+> +	int id = cxld->id;
+> +
+> +	if ((cxld->flags & CXL_DECODER_F_ENABLE) ==  0)
+
+bonus space after ==
+
+
+> +		return 0;
+> +
+> +	dev_dbg(&port->dev, "%s reset\n", dev_name(&cxld->dev));
+> +	if (port->commit_end != id) {
+> +		dev_dbg(&port->dev,
+> +			"%s: out of order reset, expected decoder%d.%d\n",
+> +			dev_name(&cxld->dev), port->id, port->commit_end);
+> +		return -EBUSY;
+> +	}
+> +
+> +	port->commit_end--;
+> +	cxld->flags &= ~CXL_DECODER_F_ENABLE;
+> +
+> +	return 0;
+> +}
+> 
+
