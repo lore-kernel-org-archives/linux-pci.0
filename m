@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 793BBCCA487
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Jun 2022 21:28:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FA8BCCA47F
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Jun 2022 21:28:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237580AbiF3V2k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Jun 2022 17:28:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48200 "EHLO
+        id S237561AbiF3V2o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Jun 2022 17:28:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237559AbiF3V2a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2022 17:28:30 -0400
+        with ESMTP id S237513AbiF3V2b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Jun 2022 17:28:31 -0400
 Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FB1950737;
-        Thu, 30 Jun 2022 14:28:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3838151B0C;
+        Thu, 30 Jun 2022 14:28:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1656624509; x=1688160509;
+  t=1656624510; x=1688160510;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=cVLSgdqy7Mp0ViPp4OflMAPYFT4f/Xn/28iMuk2xBgQ=;
-  b=CfivCdwlLoNgpZjzE8Eml0OXDdC1+o66ZllLG5mazizE6xj2v1e0Ew1/
-   GcVj07RO5ZO1Z9BvjTNyKgs6ET+YomsUyMnuaOrXs4BbTJmveuvmtFJeL
-   i2rFUV9d0DwJsZc2PfeQ/itDu5PwSS2jorcJJ88h+xQ81k46gpLU8Wl+F
-   uTm633XbZCuj+lfVoIzZOARnraV92WgiOnvYXaKQJEVX/An6YFs/ow7SP
-   afNaECp2lkWTKwWNvi3CTDREo9JlSD+ujhqo46PAWXOMUtmzojtF9kEue
-   dc3QPntOChwk3RuVte6Ob/FQ8jABdp5g3fEgRJLx47uZiIYyeoeaqoYgO
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10394"; a="265506575"
+  bh=B0VMjhosdrjMBEAvWD5hkIGzjJXjnMXp82dnbVLODJA=;
+  b=SbZiErPuFGnPQQUrbN1CttA0qoQGJMdR2/INfbA3FSETmtJwKLQe5/ZI
+   FYPXncaNdaRwtR+wydRLfOzk4RGao7hAPLzPY4kcKPoX6nFzAH9GWHDyD
+   rnPytUXty9QEz+CD9uqJGQqa/3wIz3lJzn5GYiC/r0FldUsXwmkSHZdOs
+   Lp92pHX01j3s3Ov1Fqvuia3GOlsj+KOlvvgJwZV7QGJUUA29NCQoqqfJE
+   /MZOMth9zT7vOzhFSuiYe+r69Y2pQBiDj1IeaUnAjPX7iMYmLGpP5qcqT
+   smNLAONWnksHoyKG+W/PRS1uXdlXtImsreHfe3b2tkAF0MRLC7ijvGkQQ
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10394"; a="265506576"
 X-IronPort-AV: E=Sophos;i="5.92,235,1650956400"; 
-   d="scan'208";a="265506575"
+   d="scan'208";a="265506576"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
   by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jun 2022 14:28:28 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.92,235,1650956400"; 
-   d="scan'208";a="591454757"
+   d="scan'208";a="591454759"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga002.jf.intel.com with ESMTP; 30 Jun 2022 14:28:24 -0700
+  by orsmga002.jf.intel.com with ESMTP; 30 Jun 2022 14:28:25 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 1FBE113C; Fri,  1 Jul 2022 00:28:31 +0300 (EEST)
+        id 339A61A0; Fri,  1 Jul 2022 00:28:31 +0300 (EEST)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
@@ -53,9 +53,9 @@ Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Henrique de Moraes Holschuh <hmh@hmh.eng.br>,
         Mark Gross <markgross@kernel.org>
-Subject: [PATCH v1 3/5] i2c: acpi: Convert to use acpi_match_video_device_handle() helper
-Date:   Fri,  1 Jul 2022 00:28:17 +0300
-Message-Id: <20220630212819.42958-3-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 5/5] platform/x86: thinkpad_acpi: Convert to use acpi_match_video_device_handle() helper
+Date:   Fri,  1 Jul 2022 00:28:19 +0300
+Message-Id: <20220630212819.42958-5-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220630212819.42958-1-andriy.shevchenko@linux.intel.com>
 References: <20220630212819.42958-1-andriy.shevchenko@linux.intel.com>
@@ -69,42 +69,24 @@ Replace open coded variant of acpi_match_video_device_handle() helper.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/i2c/i2c-core-acpi.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+ drivers/platform/x86/thinkpad_acpi.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/i2c/i2c-core-acpi.c b/drivers/i2c/i2c-core-acpi.c
-index 08b561f0709d..e6de54dec010 100644
---- a/drivers/i2c/i2c-core-acpi.c
-+++ b/drivers/i2c/i2c-core-acpi.c
-@@ -128,15 +128,6 @@ static int i2c_acpi_fill_info(struct acpi_resource *ares, void *data)
- 	return 1;
- }
- 
--static const struct acpi_device_id i2c_acpi_ignored_device_ids[] = {
--	/*
--	 * ACPI video acpi_devices, which are handled by the acpi-video driver
--	 * sometimes contain a SERIAL_TYPE_I2C ACPI resource, ignore these.
--	 */
--	{ ACPI_VIDEO_HID, 0 },
--	{}
--};
--
- static int i2c_acpi_do_lookup(struct acpi_device *adev,
- 			      struct i2c_acpi_lookup *lookup)
+diff --git a/drivers/platform/x86/thinkpad_acpi.c b/drivers/platform/x86/thinkpad_acpi.c
+index 22d4e8633e30..624cb9436522 100644
+--- a/drivers/platform/x86/thinkpad_acpi.c
++++ b/drivers/platform/x86/thinkpad_acpi.c
+@@ -748,9 +748,7 @@ static acpi_status __init tpacpi_acpi_handle_locate_callback(acpi_handle handle,
+ 			u32 level, void *context, void **return_value)
  {
-@@ -150,7 +141,11 @@ static int i2c_acpi_do_lookup(struct acpi_device *adev,
- 	if (!acpi_dev_ready_for_enumeration(adev))
- 		return -ENODEV;
+ 	if (!strcmp(context, "video")) {
+-		struct acpi_device *dev = acpi_fetch_acpi_dev(handle);
+-
+-		if (!dev || strcmp(ACPI_VIDEO_HID, acpi_device_hid(dev)))
++		if (!acpi_match_video_device_handle(handle))
+ 			return AE_OK;
+ 	}
  
--	if (acpi_match_device_ids(adev, i2c_acpi_ignored_device_ids) == 0)
-+	/*
-+	 * ACPI video devices, which are handled by the acpi-video driver,
-+	 * sometimes contain a SERIAL_TYPE_I2C ACPI resource, ignore these.
-+	 */
-+	if (acpi_match_video_device_handle(adev->handle))
- 		return -ENODEV;
- 
- 	memset(info, 0, sizeof(*info));
 -- 
 2.35.1
 
