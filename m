@@ -2,111 +2,70 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3AA1CCA47F
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Jul 2022 08:46:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D996FCCA47F
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Jul 2022 08:55:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233929AbiGAIqM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Jul 2022 04:46:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53734 "EHLO
+        id S234863AbiGAIzE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Jul 2022 04:55:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37432 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232323AbiGAIqM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2022 04:46:12 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D0407126B;
-        Fri,  1 Jul 2022 01:46:11 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EBBC7621BA;
-        Fri,  1 Jul 2022 08:46:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4044FC3411E;
-        Fri,  1 Jul 2022 08:46:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1656665170;
-        bh=d8YS2MfyIifK2eexLKF4rU7qHuCuM0M62Yrtfq5jCDI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OiP0RmofRuxnGV2te9aHbDTTi2PSWuFavTk5civOdJw67OkzxBMnn3p87wCYBt4G+
-         tWQzNjX2QjweJYAEFyv2rPPI5qALy0SXF4aLiSXtIcvvBSwspSacBFofei/fr94V/J
-         sg8/YVR2Etu/bWmXB93KOhZnENbkvml5+wGweFvW1l1kAGuQE+hpzWpuZ6nF7VToyX
-         FsiTEq0WJvAGQZUfbm7SKQG5Y+mH8mcC2R7kdmRQDtZ9e4cMVBGsqa+s6+l45YyCrp
-         jxoXuYPvaQkIMoGEXasVNAM5EYFa/hTlHAmyzAhjs68VZuJF87Tn6n/Hr0W3H9C1bO
-         MgjWsq5XpRJZA==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1o7CHy-0001hi-34; Fri, 01 Jul 2022 10:46:10 +0200
-Date:   Fri, 1 Jul 2022 10:46:10 +0200
-From:   Johan Hovold <johan@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Johan Hovold <johan+linaro@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 10/10] PCI: qcom: Sort device-id table
-Message-ID: <Yr60Ugswl8kKpbbT@hovoldconsulting.com>
-References: <20220629141000.18111-1-johan+linaro@kernel.org>
- <20220629141000.18111-11-johan+linaro@kernel.org>
- <0cb92a07-b310-ddc8-a705-522842a6939f@linaro.org>
+        with ESMTP id S234895AbiGAIzB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2022 04:55:01 -0400
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9625617AB2;
+        Fri,  1 Jul 2022 01:54:59 -0700 (PDT)
+X-IronPort-AV: E=Sophos;i="5.92,236,1650898800"; 
+   d="scan'208";a="126337061"
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie6.idc.renesas.com with ESMTP; 01 Jul 2022 17:54:59 +0900
+Received: from localhost.localdomain (unknown [10.166.15.32])
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id D2E3C43E0092;
+        Fri,  1 Jul 2022 17:54:58 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
+        bhelgaas@google.com, krzk+dt@kernel.org, geert+renesas@glider.be,
+        magnus.damm@gmail.com
+Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v3 01/13] PCI: Add PCI_EXP_LNKCAP_MLW macros
+Date:   Fri,  1 Jul 2022 17:54:08 +0900
+Message-Id: <20220701085420.870306-2-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220701085420.870306-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20220701085420.870306-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0cb92a07-b310-ddc8-a705-522842a6939f@linaro.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jul 01, 2022 at 10:40:52AM +0200, Krzysztof Kozlowski wrote:
-> On 29/06/2022 16:10, Johan Hovold wrote:
-> > Sort the device-id table entries alphabetically by compatible string to
-> > make it easier to find entries and add new ones.
-> > 
-> > Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
-> > ---
-> >  drivers/pci/controller/dwc/pcie-qcom.c | 12 ++++++------
-> >  1 file changed, 6 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> > index 567601679465..093f4d4bc15d 100644
-> > --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> > @@ -1572,23 +1572,23 @@ static int qcom_pcie_remove(struct platform_device *pdev)
-> >  }
-> >  
-> >  static const struct of_device_id qcom_pcie_match[] = {
-> > +	{ .compatible = "qcom,pcie-apq8064", .data = &cfg_2_1_0 },
-> >  	{ .compatible = "qcom,pcie-apq8084", .data = &cfg_1_0_0 },
-> >  	{ .compatible = "qcom,pcie-ipq8064", .data = &cfg_2_1_0 },
-> >  	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &cfg_2_1_0 },
-> > -	{ .compatible = "qcom,pcie-apq8064", .data = &cfg_2_1_0 },
-> > -	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
-> >  	{ .compatible = "qcom,pcie-ipq8074", .data = &cfg_2_3_3 },
-> >  	{ .compatible = "qcom,pcie-ipq4019", .data = &cfg_2_4_0 },
-> > -	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
-> > +	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
-> >  	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_1_9_0 },
-> > +	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
-> > +	{ .compatible = "qcom,pcie-sc8180x", .data = &cfg_1_9_0 },
-> > +	{ .compatible = "qcom,pcie-sc8280xp", .data = &cfg_1_9_0 },
-> >  	{ .compatible = "qcom,pcie-sdm845", .data = &cfg_2_7_0 },
-> >  	{ .compatible = "qcom,pcie-sm8150", .data = &cfg_1_9_0 },
-> >  	{ .compatible = "qcom,pcie-sm8250", .data = &cfg_1_9_0 },
-> > -	{ .compatible = "qcom,pcie-sc8180x", .data = &cfg_1_9_0 },
-> > -	{ .compatible = "qcom,pcie-sc8280xp", .data = &cfg_1_9_0 },
-> >  	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &cfg_1_9_0 },
-> >  	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
-> > -	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
-> > +	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
-> 
-> Idea is good but it is not sorted alphabetically (not entirely). Q goes
-> before S.
+Add macros defining Maximum Link Width bits in Link Capabilities
+Register.
 
-Heh. I blame the heat.
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ include/uapi/linux/pci_regs.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Johan
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 108f8523fa04..c619b108df06 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -538,6 +538,13 @@
+ #define  PCI_EXP_LNKCAP_SLS_16_0GB 0x00000004 /* LNKCAP2 SLS Vector bit 3 */
+ #define  PCI_EXP_LNKCAP_SLS_32_0GB 0x00000005 /* LNKCAP2 SLS Vector bit 4 */
+ #define  PCI_EXP_LNKCAP_SLS_64_0GB 0x00000006 /* LNKCAP2 SLS Vector bit 5 */
++#define  PCI_EXP_LNKCAP_MLW_X1	0x00000010 /* Maximum Link Width x1 */
++#define  PCI_EXP_LNKCAP_MLW_X2	0x00000020 /* Maximum Link Width x2 */
++#define  PCI_EXP_LNKCAP_MLW_X4	0x00000040 /* Maximum Link Width x4 */
++#define  PCI_EXP_LNKCAP_MLW_X8	0x00000080 /* Maximum Link Width x8 */
++#define  PCI_EXP_LNKCAP_MLW_X12	0x000000c0 /* Maximum Link Width x12 */
++#define  PCI_EXP_LNKCAP_MLW_X16	0x00000100 /* Maximum Link Width x16 */
++#define  PCI_EXP_LNKCAP_MLW_X32	0x00000200 /* Maximum Link Width x32 */
+ #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
+ #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
+ #define  PCI_EXP_LNKCAP_ASPM_L0S 0x00000400 /* ASPM L0s Support */
+-- 
+2.25.1
+
