@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D835CCA492
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Jul 2022 08:55:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E4D4CCA480
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Jul 2022 08:55:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235524AbiGAIzI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S235616AbiGAIzI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 1 Jul 2022 04:55:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37510 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234337AbiGAIzD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2022 04:55:03 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7FFD71A837;
-        Fri,  1 Jul 2022 01:55:01 -0700 (PDT)
+        with ESMTP id S235409AbiGAIzE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2022 04:55:04 -0400
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 633E91BEB8;
+        Fri,  1 Jul 2022 01:55:02 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.92,236,1650898800"; 
-   d="scan'208";a="124761350"
+   d="scan'208";a="126337079"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 01 Jul 2022 17:54:59 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 01 Jul 2022 17:55:00 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 553AA43E0093;
-        Fri,  1 Jul 2022 17:54:59 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 3D72E43E0093;
+        Fri,  1 Jul 2022 17:55:00 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
         bhelgaas@google.com, krzk+dt@kernel.org, geert+renesas@glider.be,
@@ -28,9 +28,9 @@ To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v3 04/13] PCI: dwc: Add reset_all_bars flag
-Date:   Fri,  1 Jul 2022 17:54:11 +0900
-Message-Id: <20220701085420.870306-5-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v3 11/13] MAINTAINERS: Update PCI DRIVER FOR RENESAS R-CAR for R-Car Gen4
+Date:   Fri,  1 Jul 2022 17:54:18 +0900
+Message-Id: <20220701085420.870306-12-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220701085420.870306-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20220701085420.870306-1-yoshihiro.shimoda.uh@renesas.com>
@@ -40,55 +40,25 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some PCIe endpoint drivers reset all BARs in each ep_init() ops.
-So, we can reset the BARs into the common code if the flag is set.
+Update this entry for R-Car Gen4's source code.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 10 ++++++++++
- drivers/pci/controller/dwc/pcie-designware.h    |  1 +
- 2 files changed, 11 insertions(+)
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 72158e6af378..439f92d7d284 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -85,6 +85,14 @@ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_reset_bar);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4004bf912c40..e7f8b14b08e3 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -15333,6 +15333,7 @@ L:	linux-renesas-soc@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/*rcar*
+ F:	drivers/pci/controller/*rcar*
++F:	drivers/pci/controller/dwc/*rcar*
  
-+static void dw_pcie_ep_reset_all_bars(struct dw_pcie *pci)
-+{
-+	enum pci_barno bar;
-+
-+	for (bar = BAR_0; bar < PCI_STD_NUM_BARS; bar++)
-+		dw_pcie_ep_reset_bar(pci, bar);
-+}
-+
- static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie_ep *ep, u8 func_no,
- 		u8 cap_ptr, u8 cap)
- {
-@@ -773,6 +781,8 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- 	if (ep->ops->ep_init)
- 		ep->ops->ep_init(ep);
-+	if (ep->reset_all_bars)
-+		dw_pcie_ep_reset_all_bars(pci);
- 
- 	ret = pci_epc_mem_init(epc, ep->phys_base, ep->addr_size,
- 			       ep->page_size);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 02dcc47749de..7018c2a7ca3b 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -243,6 +243,7 @@ struct dw_pcie_ep {
- 	void __iomem		*msi_mem;
- 	phys_addr_t		msi_mem_phys;
- 	struct pci_epf_bar	*epf_bar[PCI_STD_NUM_BARS];
-+	bool			reset_all_bars;
- };
- 
- struct dw_pcie_ops {
+ PCI DRIVER FOR SAMSUNG EXYNOS
+ M:	Jingoo Han <jingoohan1@gmail.com>
 -- 
 2.25.1
 
