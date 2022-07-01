@@ -2,65 +2,65 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99825CCA47F
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Jul 2022 20:11:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F9B9CCA479
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Jul 2022 20:11:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232310AbiGAULW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Jul 2022 16:11:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45618 "EHLO
+        id S232342AbiGAULX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Jul 2022 16:11:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45624 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231892AbiGAUKv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2022 16:10:51 -0400
+        with ESMTP id S231924AbiGAUKw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2022 16:10:52 -0400
 Received: from new2-smtp.messagingengine.com (new2-smtp.messagingengine.com [66.111.4.224])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F7BDBE35;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BB484F676;
         Fri,  1 Jul 2022 13:10:50 -0700 (PDT)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 88D6C5802F4;
-        Fri,  1 Jul 2022 16:01:41 -0400 (EDT)
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailnew.nyi.internal (Postfix) with ESMTP id C3753580314;
+        Fri,  1 Jul 2022 16:01:50 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute5.internal (MEProxy); Fri, 01 Jul 2022 16:01:41 -0400
+  by compute3.internal (MEProxy); Fri, 01 Jul 2022 16:01:50 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sholland.org; h=
         cc:cc:content-transfer-encoding:date:date:from:from:in-reply-to
         :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1656705701; x=1656712901; bh=0L
-        WuRMkphck+oUsETtbUMciB/g6XpbS+D68bi898KtM=; b=AqGoMTSNUno8lOmyDh
-        KCwBkoAA7CbRzCpTwUdrVZNLF/wgidvQ7dsm+84o2fZ7gQevOX9qgVYV5nm/9kgO
-        AMuQd8xE3VTWjlAJ7GrdD9VG7BV18Jcp9kKqlP10nOfIKsoMI+rW7kzM0NAfbTyC
-        NWr74D8Q3JSoeOaEx9LsHr33xds/373ohmcrmDKPwF8OjXUOpnM+aWDRtp6nuvq9
-        kg59XMZJPKD6+LWdXV+szMDXjt+Bh7ouD13imUf0Q05dynZ6LTdGmF8mVgEGl3Bl
-        ONZn3X292lorO+Z+uaZEodDFOzhGvINgJHQDr8YSLNCPUjVe/p4PN6U1+nlRcr03
-        GbWw==
+        :subject:subject:to:to; s=fm3; t=1656705710; x=1656712910; bh=GP
+        TgF7ArqFMLRWCMzAXk/iblC7hZOhNlz+8yGyXcVmI=; b=QpxRZ/QqCKAaTufwyd
+        lUjoM1KJpo2vAxdEuEjb/waTg16dZR9eragrRhhtwxuPLt0ECneX3zy6CNzBBx5c
+        Ygb4PPzfUzDV5VvtfKPQBAj8iCK8i+A3N0IvHHfLXEkCFny82EoJbTgg4N7U1bwk
+        TgxvTxE3rNtOE/fFih1K1eJ8kHseL1OspFJFfo5CJ04JSj1DGPwQ6FHwv0IhNoq4
+        EGKiBH64+38GGFPCSypyrkvUHdkYQuk9s/BixzzRoak4pO7Ob+kyqg83h69D4GAa
+        h3rUBxATwnOMT09jx3nmAk3wW/b1biR06qzg7OZv2+rzhWJ7Rr/DFMBhHTnlVHau
+        I+8A==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-transfer-encoding:date:date
         :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
         :message-id:mime-version:references:reply-to:sender:subject
         :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm2; t=1656705701; x=1656712901; bh=0LWuRMkphck+o
-        UsETtbUMciB/g6XpbS+D68bi898KtM=; b=oa1e9Su6i+EtxBIhYMfUYN1BBIh7+
-        NtLc3K9bSFNOEpdIhhM9orp+f/WF+uOfv1NI8kwLKLdemiOeS5HWJECGkfsHhJiH
-        /wrY8WMMNhZUZUQf87Y6I2nlwQL4IKXSCH2sx7h4StxNsLo412pY5+cK8XhqNURa
-        IF4psEvV+ZGo699etAF0/P+4jL5LalpbzQlttWsppbNEXfxA/dOghfaTOCAwlKrK
-        KEvs69E1t/EoreKt1IwBdd8N4B9H428Bsjz94BHuby3lv0Gnlfekvlya7hY+n98C
-        YWKS5+DGo6Bue2FdLbpuwQxoB2okv4DaH6kIF8BDFGbnyGUVJ78Jz+rvQ==
-X-ME-Sender: <xms:olK_YsFQaQWqF-aONlCFJ5uetgmJnec1thbISaSBgnaCH8jS6vgdlw>
-    <xme:olK_YlXkRgS5TvEifhOxL8eAll0aQOmledIk1hyN2rgNMA13JYmstRmbpGOaRmTU-
-    H2H_Gklvg3vNf_76g>
-X-ME-Received: <xmr:olK_YmLuD69cpfSzw-R4kmMPgu2jyauTWKCQHkDFAgmSZn9Gis4bbGNPIwkocA_DrrsH3sMvcbGjSDo8KSO7QZfNqsw4dV7PcL3l-1zAidbDC6DmKW4D1HlwVY3xH3m954qqMg>
+        :x-sasl-enc; s=fm2; t=1656705710; x=1656712910; bh=GPTgF7ArqFMLR
+        WCMzAXk/iblC7hZOhNlz+8yGyXcVmI=; b=bZV6JNZNCNgrHjWghrR9O98nWKlYN
+        DX/X53ob25+i0NwhRNBQiBLDVz6UVV3he1PXha4QFwp5yMwGnxpB7lu/UEE8Xi3o
+        OpXqvhbTbTBs7KDOhb4KUllG3Pk9Aa1vRSyBe3BCvgnGtLlZf/oqGEk+Jnl3BG85
+        OJ3xW7PAvFO/MhjF/+sAERp5XAdEzU4Ff5xnJ4prZbZoQYpU1kHRmjt2+C7DkY3Y
+        SuzrsxXUNapv8zup6IGTgy0/s8A+vKX+TshcO/FgHArWEelqqro6tFdd578sYzkL
+        51oiHdOk0YWBV5old0Q464FJ20N+qIDsdwwqcQx1JwG+SPenzYypJolkw==
+X-ME-Sender: <xms:rVK_YrvJiSYONF7CEdjhjFiA7NVNIz848Y6UWL1UvoW5Kk98rD32MA>
+    <xme:rVK_YscCQ56tn6Jbi-UrgbUXziNYammdhZwj9d_fRqjwZfFsyibvxpzulvyGyPE3l
+    nIcbwFWIb1gQ1IWRw>
+X-ME-Received: <xmr:rVK_YuxQ26_MlFVPAYRm9LQSezj1uAnQq_5KXA4VYKTypOMiEuKARbcRhSJ8ThL01GY8yOnOdaKMCYVbNpHMpQiFOxVUfyBzPfQ56dNPyDvXSxcf1rys5qct4CVmOEgcSJMg5A>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvfedrudehfedgudeggecutefuodetggdotefrod
     ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
     necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
     enucfjughrpefhvfevufffkffojghfggfgsedtkeertdertddtnecuhfhrohhmpefurghm
     uhgvlhcujfholhhlrghnugcuoehsrghmuhgvlhesshhhohhllhgrnhgurdhorhhgqeenuc
     ggtffrrghtthgvrhhnpedukeetueduhedtleetvefguddvvdejhfefudelgfduveeggeeh
-    gfdufeeitdevteenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfh
+    gfdufeeitdevteenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhepmhgrihhlfh
     hrohhmpehsrghmuhgvlhesshhhohhllhgrnhgurdhorhhg
-X-ME-Proxy: <xmx:olK_YuH3L90nAfoF2N8s9mi1lvzCGpKg5B0fSYH1opyql0hpPhTvBg>
-    <xmx:olK_YiV10CMXHptGh7LyGaSf02IoE_5CXIQLqvsRS8VJkIe4doHZvA>
-    <xmx:olK_YhO7Ax5bd7URto_P8m9sgMbfhMUEE1FQyOCxW1mjUcM8gkrmbw>
-    <xmx:pVK_YnWNuGw-JrwdgPZRMxAas6DoPrjYmDFLwWpctwyYTLAPtQGZKg>
+X-ME-Proxy: <xmx:rVK_YqPoiHG8AjDOChBFnFX08lnDDslPf8goJgdd_vLYsZ_FLe8BOw>
+    <xmx:rVK_Yr9D1WRuiQZL_UjTJVrGcywERxW5RhRT9Z-Yaao614z_XXjogg>
+    <xmx:rVK_YqUOpiANhp9VfUV7TJzOYKVezuEGDZevF5jxI4UHjJPlI9xzWA>
+    <xmx:rlK_Ylc6c0A6OatdG6ociNhXHzzYk5zr5HpOQTe8ZbFc30Ca9vzr-Q>
 Feedback-ID: i0ad843c9:Fastmail
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Fri,
- 1 Jul 2022 16:01:36 -0400 (EDT)
+ 1 Jul 2022 16:01:47 -0400 (EDT)
 From:   Samuel Holland <samuel@sholland.org>
 To:     Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@linutronix.de>
 Cc:     Samuel Holland <samuel@sholland.org>,
@@ -115,9 +115,9 @@ Cc:     Samuel Holland <samuel@sholland.org>,
         linux-parisc@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-sh@vger.kernel.org, linux-xtensa@linux-xtensa.org,
         x86@kernel.org, xen-devel@lists.xenproject.org
-Subject: [PATCH v3 4/8] genirq: Drop redundant irq_init_effective_affinity
-Date:   Fri,  1 Jul 2022 15:00:52 -0500
-Message-Id: <20220701200056.46555-5-samuel@sholland.org>
+Subject: [PATCH v3 6/8] genirq: Add and use an irq_data_update_affinity helper
+Date:   Fri,  1 Jul 2022 15:00:54 -0500
+Message-Id: <20220701200056.46555-7-samuel@sholland.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220701200056.46555-1-samuel@sholland.org>
 References: <20220701200056.46555-1-samuel@sholland.org>
@@ -127,47 +127,188 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It does exactly the same thing as irq_data_update_effective_affinity.
+Some architectures and irqchip drivers modify the cpumask returned by
+irq_data_get_affinity_mask, usually by copying in to it. This is
+problematic for uniprocessor configurations, where the affinity mask
+should be constant, as it is known at compile time.
+
+Add and use a setter for the affinity mask, following the pattern of
+irq_data_update_effective_affinity. This allows the getter function to
+return a const cpumask pointer.
 
 Signed-off-by: Samuel Holland <samuel@sholland.org>
 ---
 
 Changes in v3:
- - New patch to drop irq_init_effective_affinity
+ - New patch to introduce irq_data_update_affinity
 
- kernel/irq/manage.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+ arch/alpha/kernel/irq.c          | 2 +-
+ arch/ia64/kernel/iosapic.c       | 2 +-
+ arch/ia64/kernel/irq.c           | 4 ++--
+ arch/ia64/kernel/msi_ia64.c      | 4 ++--
+ arch/parisc/kernel/irq.c         | 2 +-
+ drivers/irqchip/irq-bcm6345-l1.c | 4 ++--
+ drivers/parisc/iosapic.c         | 2 +-
+ drivers/sh/intc/chip.c           | 2 +-
+ drivers/xen/events/events_base.c | 7 ++++---
+ include/linux/irq.h              | 6 ++++++
+ 10 files changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index 8c396319d5ac..40fe7806cc8c 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -205,16 +205,8 @@ static void irq_validate_effective_affinity(struct irq_data *data)
- 	pr_warn_once("irq_chip %s did not update eff. affinity mask of irq %u\n",
- 		     chip->name, data->irq);
+diff --git a/arch/alpha/kernel/irq.c b/arch/alpha/kernel/irq.c
+index f6d2946edbd2..15f2effd6baf 100644
+--- a/arch/alpha/kernel/irq.c
++++ b/arch/alpha/kernel/irq.c
+@@ -60,7 +60,7 @@ int irq_select_affinity(unsigned int irq)
+ 		cpu = (cpu < (NR_CPUS-1) ? cpu + 1 : 0);
+ 	last_cpu = cpu;
+ 
+-	cpumask_copy(irq_data_get_affinity_mask(data), cpumask_of(cpu));
++	irq_data_update_affinity(data, cpumask_of(cpu));
+ 	chip->irq_set_affinity(data, cpumask_of(cpu), false);
+ 	return 0;
  }
--
--static inline void irq_init_effective_affinity(struct irq_data *data,
--					       const struct cpumask *mask)
--{
--	cpumask_copy(irq_data_get_effective_affinity_mask(data), mask);
--}
- #else
- static inline void irq_validate_effective_affinity(struct irq_data *data) { }
--static inline void irq_init_effective_affinity(struct irq_data *data,
--					       const struct cpumask *mask) { }
+diff --git a/arch/ia64/kernel/iosapic.c b/arch/ia64/kernel/iosapic.c
+index 35adcf89035a..99300850abc1 100644
+--- a/arch/ia64/kernel/iosapic.c
++++ b/arch/ia64/kernel/iosapic.c
+@@ -834,7 +834,7 @@ iosapic_unregister_intr (unsigned int gsi)
+ 	if (iosapic_intr_info[irq].count == 0) {
+ #ifdef CONFIG_SMP
+ 		/* Clear affinity */
+-		cpumask_setall(irq_get_affinity_mask(irq));
++		irq_data_update_affinity(irq_get_irq_data(irq), cpu_all_mask);
+ #endif
+ 		/* Clear the interrupt information */
+ 		iosapic_intr_info[irq].dest = 0;
+diff --git a/arch/ia64/kernel/irq.c b/arch/ia64/kernel/irq.c
+index ecef17c7c35b..275b9ea58c64 100644
+--- a/arch/ia64/kernel/irq.c
++++ b/arch/ia64/kernel/irq.c
+@@ -57,8 +57,8 @@ static char irq_redir [NR_IRQS]; // = { [0 ... NR_IRQS-1] = 1 };
+ void set_irq_affinity_info (unsigned int irq, int hwid, int redir)
+ {
+ 	if (irq < NR_IRQS) {
+-		cpumask_copy(irq_get_affinity_mask(irq),
+-			     cpumask_of(cpu_logical_id(hwid)));
++		irq_data_update_affinity(irq_get_irq_data(irq),
++					 cpumask_of(cpu_logical_id(hwid)));
+ 		irq_redir[irq] = (char) (redir & 0xff);
+ 	}
+ }
+diff --git a/arch/ia64/kernel/msi_ia64.c b/arch/ia64/kernel/msi_ia64.c
+index df5c28f252e3..025e5133c860 100644
+--- a/arch/ia64/kernel/msi_ia64.c
++++ b/arch/ia64/kernel/msi_ia64.c
+@@ -37,7 +37,7 @@ static int ia64_set_msi_irq_affinity(struct irq_data *idata,
+ 	msg.data = data;
+ 
+ 	pci_write_msi_msg(irq, &msg);
+-	cpumask_copy(irq_data_get_affinity_mask(idata), cpumask_of(cpu));
++	irq_data_update_affinity(idata, cpumask_of(cpu));
+ 
+ 	return 0;
+ }
+@@ -132,7 +132,7 @@ static int dmar_msi_set_affinity(struct irq_data *data,
+ 	msg.address_lo |= MSI_ADDR_DEST_ID_CPU(cpu_physical_id(cpu));
+ 
+ 	dmar_msi_write(irq, &msg);
+-	cpumask_copy(irq_data_get_affinity_mask(data), mask);
++	irq_data_update_affinity(data, mask);
+ 
+ 	return 0;
+ }
+diff --git a/arch/parisc/kernel/irq.c b/arch/parisc/kernel/irq.c
+index 0fe2d79fb123..5ebb1771b4ab 100644
+--- a/arch/parisc/kernel/irq.c
++++ b/arch/parisc/kernel/irq.c
+@@ -315,7 +315,7 @@ unsigned long txn_affinity_addr(unsigned int irq, int cpu)
+ {
+ #ifdef CONFIG_SMP
+ 	struct irq_data *d = irq_get_irq_data(irq);
+-	cpumask_copy(irq_data_get_affinity_mask(d), cpumask_of(cpu));
++	irq_data_update_affinity(d, cpumask_of(cpu));
  #endif
  
- int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
-@@ -347,7 +339,7 @@ static bool irq_set_affinity_deactivated(struct irq_data *data,
- 		return false;
+ 	return per_cpu(cpu_data, cpu).txn_addr;
+diff --git a/drivers/irqchip/irq-bcm6345-l1.c b/drivers/irqchip/irq-bcm6345-l1.c
+index 142a7431745f..6899e37810a8 100644
+--- a/drivers/irqchip/irq-bcm6345-l1.c
++++ b/drivers/irqchip/irq-bcm6345-l1.c
+@@ -216,11 +216,11 @@ static int bcm6345_l1_set_affinity(struct irq_data *d,
+ 		enabled = intc->cpus[old_cpu]->enable_cache[word] & mask;
+ 		if (enabled)
+ 			__bcm6345_l1_mask(d);
+-		cpumask_copy(irq_data_get_affinity_mask(d), dest);
++		irq_data_update_affinity(d, dest);
+ 		if (enabled)
+ 			__bcm6345_l1_unmask(d);
+ 	} else {
+-		cpumask_copy(irq_data_get_affinity_mask(d), dest);
++		irq_data_update_affinity(d, dest);
+ 	}
+ 	raw_spin_unlock_irqrestore(&intc->lock, flags);
  
- 	cpumask_copy(desc->irq_common_data.affinity, mask);
--	irq_init_effective_affinity(data, mask);
-+	irq_data_update_effective_affinity(data, mask);
- 	irqd_set(data, IRQD_AFFINITY_SET);
- 	return true;
+diff --git a/drivers/parisc/iosapic.c b/drivers/parisc/iosapic.c
+index 8a3b0c3a1e92..3a8c98615634 100644
+--- a/drivers/parisc/iosapic.c
++++ b/drivers/parisc/iosapic.c
+@@ -677,7 +677,7 @@ static int iosapic_set_affinity_irq(struct irq_data *d,
+ 	if (dest_cpu < 0)
+ 		return -1;
+ 
+-	cpumask_copy(irq_data_get_affinity_mask(d), cpumask_of(dest_cpu));
++	irq_data_update_affinity(d, cpumask_of(dest_cpu));
+ 	vi->txn_addr = txn_affinity_addr(d->irq, dest_cpu);
+ 
+ 	spin_lock_irqsave(&iosapic_lock, flags);
+diff --git a/drivers/sh/intc/chip.c b/drivers/sh/intc/chip.c
+index 358df7510186..828d81e02b37 100644
+--- a/drivers/sh/intc/chip.c
++++ b/drivers/sh/intc/chip.c
+@@ -72,7 +72,7 @@ static int intc_set_affinity(struct irq_data *data,
+ 	if (!cpumask_intersects(cpumask, cpu_online_mask))
+ 		return -1;
+ 
+-	cpumask_copy(irq_data_get_affinity_mask(data), cpumask);
++	irq_data_update_affinity(data, cpumask);
+ 
+ 	return IRQ_SET_MASK_OK_NOCOPY;
  }
+diff --git a/drivers/xen/events/events_base.c b/drivers/xen/events/events_base.c
+index 46d9295d9a6e..5e8321f43cbd 100644
+--- a/drivers/xen/events/events_base.c
++++ b/drivers/xen/events/events_base.c
+@@ -528,9 +528,10 @@ static void bind_evtchn_to_cpu(evtchn_port_t evtchn, unsigned int cpu,
+ 	BUG_ON(irq == -1);
+ 
+ 	if (IS_ENABLED(CONFIG_SMP) && force_affinity) {
+-		cpumask_copy(irq_get_affinity_mask(irq), cpumask_of(cpu));
+-		cpumask_copy(irq_get_effective_affinity_mask(irq),
+-			     cpumask_of(cpu));
++		struct irq_data *data = irq_get_irq_data(irq);
++
++		irq_data_update_affinity(data, cpumask_of(cpu));
++		irq_data_update_effective_affinity(data, cpumask_of(cpu));
+ 	}
+ 
+ 	xen_evtchn_port_bind_to_cpu(evtchn, cpu, info->cpu);
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index 69ee4e2f36ce..adcfebceb777 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -884,6 +884,12 @@ static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
+ 	return d->common->affinity;
+ }
+ 
++static inline void irq_data_update_affinity(struct irq_data *d,
++					    const struct cpumask *m)
++{
++	cpumask_copy(d->common->affinity, m);
++}
++
+ static inline struct cpumask *irq_get_affinity_mask(int irq)
+ {
+ 	struct irq_data *d = irq_get_irq_data(irq);
 -- 
 2.35.1
 
