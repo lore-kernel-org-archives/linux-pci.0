@@ -2,542 +2,89 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE573CCA49B
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Jul 2022 08:55:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61AB1C433EF
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Jul 2022 09:16:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235436AbiGAIzM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Jul 2022 04:55:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37494 "EHLO
+        id S233444AbiGAJQy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Jul 2022 05:16:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232550AbiGAIzF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2022 04:55:05 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3DDDB1AF0B;
-        Fri,  1 Jul 2022 01:55:02 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="5.92,236,1650898800"; 
-   d="scan'208";a="126337076"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 01 Jul 2022 17:55:00 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 0050443E0093;
-        Fri,  1 Jul 2022 17:54:59 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
-        bhelgaas@google.com, krzk+dt@kernel.org, geert+renesas@glider.be,
-        magnus.damm@gmail.com
-Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v3 09/13] PCI: renesas: Add R-Car Gen4 PCIe Host support
-Date:   Fri,  1 Jul 2022 17:54:16 +0900
-Message-Id: <20220701085420.870306-10-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220701085420.870306-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20220701085420.870306-1-yoshihiro.shimoda.uh@renesas.com>
+        with ESMTP id S229510AbiGAJQx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Jul 2022 05:16:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDAD245784;
+        Fri,  1 Jul 2022 02:16:52 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 69993622C1;
+        Fri,  1 Jul 2022 09:16:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD02BC3411E;
+        Fri,  1 Jul 2022 09:16:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1656667011;
+        bh=DhfNjTp7qTEx9mtRGoA+910GZOE/wNjja5y2DtCrT2I=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hMGxohcSVomi7bpYODVdfH3TtjqunHREFt56QiK6mBbNiS9f7Ry99A11I4zeB9egu
+         uiaqGep0w54PJL5/ZZSuCNh9VJ+anwFs8SEjZ7qxCiXQkTCOaIwnX/7SkVfPKECgN9
+         7Whz6w9oBrgN8rf9RIuzE6znRQpxsbv+Vc0bHyA9MNAkb/diTupmmaes9m4GQ8VVt5
+         nsRmId7abF2mVLYgHSbsBrHdpbWQVGj8q2Po5TAEP+r0zh4Vf7S5Ai3BGuSG42RbSp
+         uc9JUPmwQ35JY2g8oqvw16X0LzAqryK4r/VRCtNwXluBa1VSocN52X0kUF4eyW9XWh
+         XAHBYzY5Lussw==
+Date:   Fri, 1 Jul 2022 10:16:46 +0100
+From:   Mark Brown <broonie@kernel.org>
+To:     Saravana Kannan <saravanak@google.com>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        kernelci-results@groups.io, bot@kernelci.org,
+        gtucker@collabora.com, Michael Walle <michael@walle.cc>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: next/master bisection: baseline.bootrr.imx6q-pcie-pcie0-probed
+ on kontron-pitx-imx8m
+Message-ID: <Yr67fvEPKmDTQfGz@sirena.org.uk>
+References: <62bdec26.1c69fb81.46bc5.2d67@mx.google.com>
+ <Yr3vEDDulZj1Dplv@sirena.org.uk>
+ <CAGETcx88M3Use8crFMTU=By3UVjjaJuP1_Ah7zsy_w=pNxc+6w@mail.gmail.com>
+ <CAGETcx_s+ui9wWA7OawojPbY95bLZE5pSmpK-34_kLZTzjf9Ew@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="4P/NYrk0ideGd8Y7"
+Content-Disposition: inline
+In-Reply-To: <CAGETcx_s+ui9wWA7OawojPbY95bLZE5pSmpK-34_kLZTzjf9Ew@mail.gmail.com>
+X-Cookie: Who is John Galt?
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add R-Car Gen4 PCIe Host support. This controller is based on
-Synopsys DesignWare PCIe.
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
----
- drivers/pci/controller/dwc/Kconfig            |   9 +
- drivers/pci/controller/dwc/Makefile           |   2 +
- .../pci/controller/dwc/pcie-rcar-gen4-host.c  | 195 ++++++++++++++++++
- drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 178 ++++++++++++++++
- drivers/pci/controller/dwc/pcie-rcar-gen4.h   |  61 ++++++
- 5 files changed, 445 insertions(+)
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-host.c
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.c
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.h
+--4P/NYrk0ideGd8Y7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 62ce3abf0f19..bee273968720 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -384,4 +384,13 @@ config PCIE_FU740
- 	  Say Y here if you want PCIe controller support for the SiFive
- 	  FU740.
- 
-+config PCIE_RCAR_GEN4
-+	tristate "Renesas R-Car Gen4 PCIe Host controller"
-+	depends on ARCH_RENESAS || COMPILE_TEST
-+	depends on PCI_MSI_IRQ_DOMAIN
-+	select PCIE_DW_HOST
-+	help
-+	  Say Y here if you want PCIe host controller support on R-Car Gen4 SoCs.
-+	  This uses the DesignWare core.
-+
- endmenu
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index 8ba7b67f5e50..108fcbc61d9b 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -25,6 +25,8 @@ obj-$(CONFIG_PCIE_TEGRA194) += pcie-tegra194.o
- obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
- obj-$(CONFIG_PCIE_UNIPHIER_EP) += pcie-uniphier-ep.o
- obj-$(CONFIG_PCIE_VISCONTI_HOST) += pcie-visconti.o
-+pcie-rcar-gen4-host-drv-objs := pcie-rcar-gen4.o pcie-rcar-gen4-host.o
-+obj-$(CONFIG_PCIE_RCAR_GEN4) += pcie-rcar-gen4-host-drv.o
- 
- # The following drivers are for devices that use the generic ACPI
- # pci_root.c driver but don't support standard ECAM config access.
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4-host.c b/drivers/pci/controller/dwc/pcie-rcar-gen4-host.c
-new file mode 100644
-index 000000000000..c76c163dc3b9
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4-host.c
-@@ -0,0 +1,195 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * PCIe host controller driver for Renesas R-Car Gen4 Series SoCs
-+ * Copyright (C) 2022 Renesas Electronics Corporation
-+ */
-+
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/of_device.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+
-+#include "pcie-rcar-gen4.h"
-+#include "pcie-designware.h"
-+
-+static int rcar_gen4_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	int ret;
-+	u32 val;
-+
-+	rcar_gen4_pcie_set_device_type(rcar, true, dw->num_lanes);
-+
-+	dw_pcie_dbi_ro_wr_en(dw);
-+
-+	/* Enable L1 Substates */
-+	val = dw_pcie_readl_dbi(dw, L1PSCAP(PCI_L1SS_CTL1));
-+	val &= ~PCI_L1SS_CTL1_L1SS_MASK;
-+	val |= PCI_L1SS_CTL1_PCIPM_L1_2 | PCI_L1SS_CTL1_PCIPM_L1_1 |
-+	       PCI_L1SS_CTL1_ASPM_L1_2 | PCI_L1SS_CTL1_ASPM_L1_1;
-+	dw_pcie_writel_dbi(dw, L1PSCAP(PCI_L1SS_CTL1), val);
-+
-+	rcar_gen4_pcie_disable_bar(dw, BAR0MASKF);
-+	rcar_gen4_pcie_disable_bar(dw, BAR1MASKF);
-+
-+	/* Set Root Control */
-+	val = dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_RTCTL));
-+	val |= PCI_EXP_RTCTL_SECEE | PCI_EXP_RTCTL_SENFEE |
-+	       PCI_EXP_RTCTL_SEFEE | PCI_EXP_RTCTL_PMEIE |
-+	       PCI_EXP_RTCTL_CRSSVE;
-+	dw_pcie_writel_dbi(dw, EXPCAP(PCI_EXP_RTCTL), val);
-+
-+	/* Set Interrupt Disable, SERR# Enable, Parity Error Response */
-+	val = dw_pcie_readl_dbi(dw, PCI_COMMAND);
-+	val |= PCI_COMMAND_PARITY | PCI_COMMAND_SERR |
-+	       PCI_COMMAND_INTX_DISABLE;
-+	dw_pcie_writel_dbi(dw, PCI_COMMAND, val);
-+
-+	/* Enable SERR */
-+	val = dw_pcie_readb_dbi(dw, PCI_BRIDGE_CONTROL);
-+	val |= PCI_BRIDGE_CTL_SERR;
-+	dw_pcie_writeb_dbi(dw, PCI_BRIDGE_CONTROL, val);
-+
-+	/* Device control */
-+	val = dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_DEVCTL));
-+	val |= PCI_EXP_DEVCTL_CERE | PCI_EXP_DEVCTL_NFERE |
-+	       PCI_EXP_DEVCTL_FERE | PCI_EXP_DEVCTL_URRE;
-+	dw_pcie_writel_dbi(dw, EXPCAP(PCI_EXP_DEVCTL), val);
-+
-+	dw_pcie_dbi_ro_wr_dis(dw);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		/* Enable MSI interrupt signal */
-+		val = readl(rcar->base + PCIEINTSTS0EN);
-+		val |= MSI_CTRL_INT;
-+		writel(val, rcar->base + PCIEINTSTS0EN);
-+	}
-+
-+	dw_pcie_setup_rc(pp);
-+
-+	dw_pcie_dbi_ro_wr_en(dw);
-+	rcar_gen4_pcie_set_max_link_width(dw, dw->num_lanes);
-+	dw_pcie_dbi_ro_wr_dis(dw);
-+
-+	if (!dw_pcie_link_up(dw)) {
-+		ret = dw->ops->start_link(dw);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/* Ignore errors, the link may come up later */
-+	if (dw_pcie_wait_for_link(dw))
-+		dev_info(dw->dev, "PCIe link down\n");
-+
-+	return 0;
-+}
-+
-+static const struct dw_pcie_host_ops rcar_gen4_pcie_host_ops = {
-+	.host_init = rcar_gen4_pcie_host_init,
-+};
-+
-+static int rcar_gen4_add_pcie_port(struct rcar_gen4_pcie *rcar,
-+				   struct platform_device *pdev)
-+{
-+	struct dw_pcie *dw = &rcar->dw;
-+	struct pcie_port *pp = &dw->pp;
-+	int ret;
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		pp->msi_irq = platform_get_irq_byname(pdev, "others");
-+		if (pp->msi_irq < 0)
-+			return pp->msi_irq;
-+	}
-+
-+	pp->ops = &rcar_gen4_pcie_host_ops;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void rcar_gen4_remove_pcie_port(struct rcar_gen4_pcie *rcar)
-+{
-+	dw_pcie_host_deinit(&rcar->dw.pp);
-+}
-+
-+static int rcar_gen4_pcie_get_resources(struct rcar_gen4_pcie *rcar,
-+					struct platform_device *pdev)
-+{
-+	struct dw_pcie *dw = &rcar->dw;
-+
-+	/* Renesas-specific registers */
-+	rcar->base = devm_platform_ioremap_resource_byname(pdev, "app");
-+	if (IS_ERR(rcar->base))
-+		return PTR_ERR(rcar->base);
-+
-+	return rcar_gen4_pcie_devm_reset_get(rcar, dw->dev);
-+}
-+
-+static int rcar_gen4_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct rcar_gen4_pcie *rcar;
-+	int err;
-+
-+	rcar = rcar_gen4_pcie_devm_alloc(dev);
-+	if (!rcar)
-+		return -ENOMEM;
-+
-+	err = rcar_gen4_pcie_get_resources(rcar, pdev);
-+	if (err < 0) {
-+		dev_err(dev, "failed to request resource: %d\n", err);
-+		return err;
-+	}
-+
-+	platform_set_drvdata(pdev, rcar);
-+
-+	err = rcar_gen4_pcie_prepare(rcar);
-+	if (err < 0)
-+		return err;
-+
-+	err = rcar_gen4_add_pcie_port(rcar, pdev);
-+	if (err < 0)
-+		goto err_add;
-+
-+	return 0;
-+
-+err_add:
-+	rcar_gen4_pcie_unprepare(rcar);
-+
-+	return err;
-+}
-+
-+static int rcar_gen4_pcie_remove(struct platform_device *pdev)
-+{
-+	struct rcar_gen4_pcie *rcar = platform_get_drvdata(pdev);
-+
-+	rcar_gen4_remove_pcie_port(rcar);
-+	rcar_gen4_pcie_unprepare(rcar);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id rcar_gen4_pcie_of_match[] = {
-+	{ .compatible = "renesas,rcar-gen4-pcie", },
-+	{},
-+};
-+
-+static struct platform_driver rcar_gen4_pcie_driver = {
-+	.driver = {
-+		.name = "pcie-rcar-gen4",
-+		.of_match_table = rcar_gen4_pcie_of_match,
-+	},
-+	.probe = rcar_gen4_pcie_probe,
-+	.remove = rcar_gen4_pcie_remove,
-+};
-+module_platform_driver(rcar_gen4_pcie_driver);
-+
-+MODULE_DESCRIPTION("Renesas R-Car Gen4 PCIe host controller driver");
-+MODULE_LICENSE("GPL");
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-new file mode 100644
-index 000000000000..fd9dc2c868eb
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -0,0 +1,178 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * PCIe host/endpoint controller driver for Renesas R-Car Gen4 Series SoCs
-+ * Copyright (C) 2022 Renesas Electronics Corporation
-+ */
-+
-+#include <linux/io.h>
-+#include <linux/of_device.h>
-+#include <linux/pci.h>
-+#include <linux/pm_runtime.h>
-+#include <linux/reset.h>
-+
-+#include "pcie-rcar-gen4.h"
-+#include "pcie-designware.h"
-+
-+/* Renesas-specific */
-+#define PCIERSTCTRL1		0x0014
-+#define  APP_HOLD_PHY_RST	BIT(16)
-+#define  APP_LTSSM_ENABLE	BIT(0)
-+
-+#define DWC_VERSION		0x520a
-+
-+static void rcar_gen4_pcie_ltssm_enable(struct rcar_gen4_pcie *rcar,
-+					bool enable)
-+{
-+	u32 val;
-+
-+	val = readl(rcar->base + PCIERSTCTRL1);
-+	if (enable) {
-+		val |= APP_LTSSM_ENABLE;
-+		val &= ~APP_HOLD_PHY_RST;
-+	} else {
-+		val &= ~APP_LTSSM_ENABLE;
-+		val |= APP_HOLD_PHY_RST;
-+	}
-+	writel(val, rcar->base + PCIERSTCTRL1);
-+}
-+
-+static int rcar_gen4_pcie_link_up(struct dw_pcie *dw)
-+{
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	u32 val, mask;
-+
-+	val = readl(rcar->base + PCIEINTSTS0);
-+	mask = RDLH_LINK_UP | SMLH_LINK_UP;
-+
-+	return (val & mask) == mask;
-+}
-+
-+static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
-+{
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+
-+	rcar_gen4_pcie_ltssm_enable(rcar, true);
-+
-+	return 0;
-+}
-+
-+static void rcar_gen4_pcie_stop_link(struct dw_pcie *dw)
-+{
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+
-+	rcar_gen4_pcie_ltssm_enable(rcar, false);
-+}
-+
-+void rcar_gen4_pcie_set_device_type(struct rcar_gen4_pcie *rcar, bool rc,
-+				    int num_lanes)
-+{
-+	u32 val;
-+
-+	val = readl(rcar->base + PCIEMSR0);
-+	if (rc)
-+		val |= DEVICE_TYPE_RC;
-+	else
-+		val |= DEVICE_TYPE_EP;
-+	if (num_lanes < 4)
-+		val |= BIFUR_MOD_SET_ON;
-+	writel(val, rcar->base + PCIEMSR0);
-+}
-+
-+void rcar_gen4_pcie_disable_bar(struct dw_pcie *dw, u32 bar_mask_reg)
-+{
-+	dw_pcie_writel_dbi(dw, SHADOW_REG(bar_mask_reg), 0x0);
-+}
-+
-+void rcar_gen4_pcie_set_max_link_width(struct dw_pcie *dw, int num_lanes)
-+{
-+	u32 val = dw_pcie_readl_dbi(dw, EXPCAP(PCI_EXP_LNKCAP));
-+
-+	val &= ~PCI_EXP_LNKCAP_MLW;
-+	switch (num_lanes) {
-+	case 1:
-+		val |= PCI_EXP_LNKCAP_MLW_X1;
-+		break;
-+	case 2:
-+		val |= PCI_EXP_LNKCAP_MLW_X2;
-+		break;
-+	case 4:
-+		val |= PCI_EXP_LNKCAP_MLW_X4;
-+		break;
-+	default:
-+		dev_info(dw->dev, "invalid num-lanes %d\n", num_lanes);
-+		val |= PCI_EXP_LNKCAP_MLW_X1;
-+		break;
-+	}
-+	dw_pcie_writel_dbi(dw, EXPCAP(PCI_EXP_LNKCAP), val);
-+}
-+
-+int rcar_gen4_pcie_prepare(struct rcar_gen4_pcie *rcar)
-+{
-+	struct device *dev = rcar->dw.dev;
-+	int err;
-+
-+	pm_runtime_enable(dev);
-+	err = pm_runtime_resume_and_get(dev);
-+	if (err < 0) {
-+		dev_err(dev, "%s: failed to resume/get Runtime PM\n", __func__);
-+		goto err_resume_and_get;
-+	}
-+
-+	err = reset_control_deassert(rcar->rst);
-+	if (err < 0) {
-+		dev_err(dev, "%s: failed to deassert reset_control\n", __func__);
-+		goto err_deassert;
-+	}
-+
-+	return 0;
-+
-+err_deassert:
-+	pm_runtime_put(dev);
-+
-+err_resume_and_get:
-+	pm_runtime_disable(dev);
-+
-+	return err;
-+}
-+
-+void rcar_gen4_pcie_unprepare(struct rcar_gen4_pcie *rcar)
-+{
-+	struct device *dev = rcar->dw.dev;
-+
-+	reset_control_assert(rcar->rst);
-+	pm_runtime_put(dev);
-+	pm_runtime_disable(dev);
-+}
-+
-+int rcar_gen4_pcie_devm_reset_get(struct rcar_gen4_pcie *rcar,
-+				  struct device *dev)
-+{
-+	rcar->rst = devm_reset_control_get(dev, NULL);
-+	if (IS_ERR(rcar->rst)) {
-+		dev_err(dev, "failed to get Cold-reset\n");
-+		return PTR_ERR(rcar->rst);
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.start_link = rcar_gen4_pcie_start_link,
-+	.stop_link = rcar_gen4_pcie_stop_link,
-+	.link_up = rcar_gen4_pcie_link_up,
-+};
-+
-+struct rcar_gen4_pcie *rcar_gen4_pcie_devm_alloc(struct device *dev)
-+{
-+	struct rcar_gen4_pcie *rcar;
-+
-+	rcar = devm_kzalloc(dev, sizeof(*rcar), GFP_KERNEL);
-+	if (!rcar)
-+		return NULL;
-+
-+	rcar->dw.dev = dev;
-+	rcar->dw.ops = &dw_pcie_ops;
-+	rcar->dw.version = DWC_VERSION;
-+
-+	return rcar;
-+}
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.h b/drivers/pci/controller/dwc/pcie-rcar-gen4.h
-new file mode 100644
-index 000000000000..7e743998e549
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.h
-@@ -0,0 +1,61 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * PCIe host/endpoint controller driver for Renesas R-Car Gen4 Series SoCs
-+ * Copyright (C) 2022 Renesas Electronics Corporation
-+ */
-+
-+#ifndef _PCIE_RCAR_GEN4_H_
-+#define _PCIE_RCAR_GEN4_H_
-+
-+#include <linux/io.h>
-+#include <linux/pci.h>
-+#include <linux/reset.h>
-+
-+#include "pcie-designware.h"
-+
-+/* PCI Express capability */
-+#define EXPCAP(x)		(0x0070 + (x))
-+/* ASPM L1 PM Substates */
-+#define L1PSCAP(x)		(0x01bc + (x))
-+/* PCI Shadow offset */
-+#define SHADOW_REG(x)		(0x2000 + (x))
-+/* BAR Mask registers */
-+#define BAR0MASKF		0x0010
-+#define BAR1MASKF		0x0014
-+#define BAR2MASKF		0x0018
-+#define BAR3MASKF		0x001c
-+#define BAR4MASKF		0x0020
-+#define BAR5MASKF		0x0024
-+
-+/* Renesas-specific */
-+#define PCIEMSR0		0x0000
-+#define  BIFUR_MOD_SET_ON	BIT(0)
-+#define  DEVICE_TYPE_EP		0
-+#define  DEVICE_TYPE_RC		BIT(4)
-+
-+#define PCIEINTSTS0		0x0084
-+#define PCIEINTSTS0EN		0x0310
-+#define  MSI_CTRL_INT		BIT(26)
-+#define  SMLH_LINK_UP		BIT(7)
-+#define  RDLH_LINK_UP		BIT(6)
-+
-+struct rcar_gen4_pcie {
-+	struct dw_pcie		dw;
-+	void __iomem		*base;
-+	struct reset_control	*rst;
-+};
-+#define to_rcar_gen4_pcie(x)	dev_get_drvdata((x)->dev)
-+
-+u32 rcar_gen4_pcie_readl(struct rcar_gen4_pcie *pcie, u32 reg);
-+void rcar_gen4_pcie_writel(struct rcar_gen4_pcie *pcie, u32 reg, u32 val);
-+void rcar_gen4_pcie_set_device_type(struct rcar_gen4_pcie *rcar, bool rc,
-+				    int num_lanes);
-+void rcar_gen4_pcie_disable_bar(struct dw_pcie *dw, u32 bar_mask_reg);
-+void rcar_gen4_pcie_set_max_link_width(struct dw_pcie *pci, int num_lanes);
-+int rcar_gen4_pcie_prepare(struct rcar_gen4_pcie *pcie);
-+void rcar_gen4_pcie_unprepare(struct rcar_gen4_pcie *pcie);
-+int rcar_gen4_pcie_devm_reset_get(struct rcar_gen4_pcie *pcie,
-+				  struct device *dev);
-+struct rcar_gen4_pcie *rcar_gen4_pcie_devm_alloc(struct device *dev);
-+
-+#endif /* _PCIE_RCAR_GEN4_H_ */
--- 
-2.25.1
+On Thu, Jun 30, 2022 at 06:02:04PM -0700, Saravana Kannan wrote:
 
+> The patch attached to that email will probably fix this issue. I
+> haven't dealt with Kernel CI bot before. Is there a way to get it to
+> test a patch?
+
+It is but I don't have access to do that - either the lab owner
+(Michael, CCed here) or Guillaume (also CCed) should be able to help
+there.
+
+--4P/NYrk0ideGd8Y7
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmK+u30ACgkQJNaLcl1U
+h9A0+Qf/eopE5aUapP2CKHQW0RBjoOvDwM9pk+eFkBZteYfcdBeS4fmthUZsmACM
+6tvIWbACmUJOtsS1g4DvVxiDcmFeKLFeEEkCRWRo3JECKKaw9/KeCx6HDhx0SGW1
+LUvqjpfTfb/W6VEHZtckdjlmvWD5BK4i7vp6dIoY5RIMWlSJcTDRUt/qNxpCVh3N
+W1iVN7TbRF2ymzIm70wHUTsFd4bguXZOiscYfoFC3nCY27T8j2tkyLg76w+DLYIa
+WhaSlAFoXcWuw10cxP2tLd/PbRxvhLkvu50hZ0W1f3wJx9xZ5NkRB7FHlU58hcTr
+djuOop95iGaKeAA6Li3ydrfT+HetJw==
+=kk6Y
+-----END PGP SIGNATURE-----
+
+--4P/NYrk0ideGd8Y7--
