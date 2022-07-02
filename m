@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C3B7C433EF
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Jul 2022 11:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6A5CCA47F
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Jul 2022 11:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231723AbiGBLHv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 2 Jul 2022 07:07:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37480 "EHLO
+        id S232116AbiGBLHw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 2 Jul 2022 07:07:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37510 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229446AbiGBLHu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 2 Jul 2022 07:07:50 -0400
+        with ESMTP id S231882AbiGBLHv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 2 Jul 2022 07:07:51 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34DA415A1F;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 060DD15A2A;
         Sat,  2 Jul 2022 04:07:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BDFC460C3F;
-        Sat,  2 Jul 2022 11:07:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 007F0C34114;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8657B60C86;
+        Sat,  2 Jul 2022 11:07:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C1AFC341CD;
         Sat,  2 Jul 2022 11:07:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1656760068;
-        bh=EL8lFPgfa0gTSpmdFqzAqi2G88NizQmx11K0ZM8LpBY=;
+        bh=HoY8a1pQ8+QTg3PV6dYwn+Zs/t2wHp535PSOQzabaig=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ku0joP9hVRaYI7/0QcRxgT++84V5zzltOQvcrYXc/d/ArBcWwznXGfi7xS7UVz/Yp
-         IVZ0sIAaH517DBvtJ7GmVJDSjm9cR70P+c5JNXadrGWvfNZ+/cBTeLACJKeiFw9xjK
-         RnQ1dq0hBaE0iWXf5HKCfXR76btl19a9y40REV3OzMK7GCt52Tk1j68gsObxXPjINa
-         oUoEITJW6TT34bKkixRGUI1YURvfBMvPBZlb9S/z8Hyi+e67nvRgl2wQZalqzzt2lU
-         68UVSqVXJi+spdfR82wyCDDuHX7jOLz75h/vVdkO6OPQhZyH1Mj6zXSLtyJiHgfKv+
-         iYJpAA5SNYfGg==
+        b=ljA+otHbIs93lLzFjuRvfpFijXlQQUQ4yzwHyPDkgSHy3BzqpWVZNh+lpWqgzD3qz
+         LXqWTaIy3Tw9BJDIgG+1gTLV/eAbBkpjVLhyGIPDgn11u4hXhSAt+NElki04UHIQfa
+         wdw5dgBryi2nbaJOV/qzh74mbrFghYi1ybUbZluJR9D3NhRUTcAG688xWKPHy/k8vr
+         unFXRwMNPFaIZB1IxosKNBfD7DnYh2qQG/ezfJw3gML6NT4rE8a5+rAtImXTerMluB
+         ati0aQPV93/0KQp+R+0E5mWKzk8lfu7cUVDFOrItwfJJQp729M19Lugl1ojWgLasal
+         dB5qHRSpkoUfw==
 Received: from mchehab by mail.kernel.org with local (Exim 4.95)
         (envelope-from <mchehab@kernel.org>)
-        id 1o7ayX-007gs3-Mc;
+        id 1o7ayX-007gs0-Lx;
         Sat, 02 Jul 2022 12:07:45 +0100
 From:   Mauro Carvalho Chehab <mchehab@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
@@ -45,9 +45,9 @@ Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 05/12] docs: PCI: pci-vntb-howto.rst: fix a title markup
-Date:   Sat,  2 Jul 2022 12:07:37 +0100
-Message-Id: <47ae1b19414346e6b07d57dbaf68a2b4cb273ccb.1656759989.git.mchehab@kernel.org>
+Subject: [PATCH 04/12] docs: PCI: pci-vntb-function.rst: Properly include ascii artwork
+Date:   Sat,  2 Jul 2022 12:07:36 +0100
+Message-Id: <9eeaa329cc4fa64829ff0bdaf8f10e68f7283ac7.1656759989.git.mchehab@kernel.org>
 X-Mailer: git-send-email 2.36.1
 In-Reply-To: <cover.1656759988.git.mchehab@kernel.org>
 References: <cover.1656759988.git.mchehab@kernel.org>
@@ -57,8 +57,10 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As warned by Sphinx:
-	Documentation/PCI/endpoint/pci-vntb-howto.rst:131: WARNING: Title underline too short.
+Adjust identation and add a "::" in order to properly mark the
+ascii artwork as a code block, fixing this warning:
+
+	Documentation/PCI/endpoint/pci-vntb-function.rst:82: WARNING: Unexpected indentation.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab@kernel.org>
 ---
@@ -66,22 +68,22 @@ Signed-off-by: Mauro Carvalho Chehab <mchehab@kernel.org>
 To avoid mailbombing on a large number of people, only mailing lists were C/C on the cover.
 See [PATCH 00/12] at: https://lore.kernel.org/all/cover.1656759988.git.mchehab@kernel.org/
 
- Documentation/PCI/endpoint/pci-vntb-howto.rst | 2 +-
+ Documentation/PCI/endpoint/pci-vntb-function.rst | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/PCI/endpoint/pci-vntb-howto.rst b/Documentation/PCI/endpoint/pci-vntb-howto.rst
-index b4a679144692..31a0bae868f9 100644
---- a/Documentation/PCI/endpoint/pci-vntb-howto.rst
-+++ b/Documentation/PCI/endpoint/pci-vntb-howto.rst
-@@ -128,7 +128,7 @@ RootComplex Device
- ==================
+diff --git a/Documentation/PCI/endpoint/pci-vntb-function.rst b/Documentation/PCI/endpoint/pci-vntb-function.rst
+index cad8013e8839..7b2ac70e2c57 100644
+--- a/Documentation/PCI/endpoint/pci-vntb-function.rst
++++ b/Documentation/PCI/endpoint/pci-vntb-function.rst
+@@ -58,7 +58,7 @@ It is same as PCI NTB Function driver
+ Scratchpad Registers:
+ ---------------------
  
- lspci Output at Host side
--------------------------
-+-------------------------
+-  It is appended after Config region.
++It is appended after Config region::
  
- Note that the devices listed here correspond to the values populated in
- "Creating pci-epf-ntb Device" section above::
+   +--------------------------------------------------+ Base
+   |                                                  |
 -- 
 2.36.1
 
