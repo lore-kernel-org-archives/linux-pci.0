@@ -2,109 +2,141 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84737C433EF
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Jul 2022 08:24:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD45CCA47F
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Jul 2022 10:22:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232465AbiGDIYp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Jul 2022 04:24:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36006 "EHLO
+        id S234070AbiGDKWC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Jul 2022 06:22:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45714 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232814AbiGDIYo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2022 04:24:44 -0400
-Received: from mail-lj1-x232.google.com (mail-lj1-x232.google.com [IPv6:2a00:1450:4864:20::232])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D61BAE57
-        for <linux-pci@vger.kernel.org>; Mon,  4 Jul 2022 01:24:43 -0700 (PDT)
-Received: by mail-lj1-x232.google.com with SMTP id s14so10174736ljs.3
-        for <linux-pci@vger.kernel.org>; Mon, 04 Jul 2022 01:24:43 -0700 (PDT)
+        with ESMTP id S234148AbiGDKVq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jul 2022 06:21:46 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F4ADDFE1
+        for <linux-pci@vger.kernel.org>; Mon,  4 Jul 2022 03:20:04 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id o31-20020a17090a0a2200b001ef7bd037bbso3804479pjo.0
+        for <linux-pci@vger.kernel.org>; Mon, 04 Jul 2022 03:20:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=p+S7IEqIFlGrwa9ha1rZwMS5b6Ko76QLTxmtMVng+o0=;
-        b=ET+svROc0kRSBzsphN6lV+fiE99qUBRkFDTdfQO8popcIesv5Sg5ruBoiqhcu2K6x8
-         7RKPAfdKNDDR0QBG3UFkyYBFzGMR4gyYSBS8rLl8QSPKD6kwm4UrI59FRhshhrJWxmOC
-         Skajcl0T6FHCms5N0tWvuvOsaLt2g1W2cZfeW0wT6we3EZH7rdVD/rF0rQ2Y2Xkuuedo
-         lOcZECTBAqV5TmwjAFVll7F31xOIefzV1eauOHjAYIG30RcMTC+b94ibArX4H0OQD4Xa
-         VA7RPkaxttRDbYD7J4Gko17dOpW01h1mlXtLBzqrlETjHD+NrF1nyNIIM589QTqmTDPz
-         xLmA==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=ui6jM4ZYL95jFXsEJNqQO63PcH9wdj9Z4AxG9QKXlsk=;
+        b=GvSzH22gCSolN+ML/4454VuP5xi7hCqYh3iBNj7BsSKVgA4TpvBHywhPCeoApnfRAJ
+         0ECxw1MihfcLw8YnRZA2hPIX6zybx/LfAnow6UC98HULCRrJIRMUhuMoS5nlkRAun+FG
+         bB1h36cBBBOr0fRSVpvhyJEgIeKP4HnUobKaQ2XrC1ooQTJ2/xziCatTAD4DXPFWc+6u
+         GaaW5Hra03vyAhoYBG0C9oiTMZnow424UlLfLNBXqV7yRwF9m/s0ivRa5i2eSJUoAvEC
+         ZJnrPg/8HP347f5WAyhrBBmymSsT2L/XCgFhSUNTahFG4GshJPafSwasZB8Ep60E1n1i
+         ZbTQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=p+S7IEqIFlGrwa9ha1rZwMS5b6Ko76QLTxmtMVng+o0=;
-        b=QSQMxHWEl7BKFnK7NtCadJf8V9YySUnEtXZn8lr3iPyXDH9kceUAQ7Cva7xgwvh5e9
-         ZzVDrvcahflrrBmACNuTn9f5ozm0nhIlm0D7gqZO2vbbVG0Fc1MdT57rSx80N46pFTih
-         D5rM4sxHq4luhFrc1XQAibSeUv7mc8vNImeniqKd54onZjGAU2FNUA9KnOZPbWKNrgEv
-         RHECGtgBLAVGWzCoHjN2DERc0L+zpTPswlOOXo5uvA3+L7y3dbDGs56wCNbF+Ufk6V00
-         PNNjMkrtDC6oKTfzwtx2Az5C6boyTdwj08FekeL4dANooF37Lh81Q3c6avKOhau/GVmY
-         ikNA==
-X-Gm-Message-State: AJIora+u31OgzF2XRJ9s2ua0SkRb/In6Wuc5SdouB1JSed81Aw0qrQVT
-        +h2SpVlF0cskoAKfqKFH1/VYQw==
-X-Google-Smtp-Source: AGRyM1tyR7hKl8KZrPk+PELfyl2ZxvulEyV/1280+7zmPSsgQfJMHv8ixxyf6H9rdpKYCTQ+OoNo4w==
-X-Received: by 2002:a2e:8795:0:b0:25a:926c:e45a with SMTP id n21-20020a2e8795000000b0025a926ce45amr16058386lji.438.1656923081757;
-        Mon, 04 Jul 2022 01:24:41 -0700 (PDT)
-Received: from [192.168.1.52] ([84.20.121.239])
-        by smtp.gmail.com with ESMTPSA id f4-20020a056512092400b0047fb0d5e049sm5038102lft.273.2022.07.04.01.24.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 04 Jul 2022 01:24:41 -0700 (PDT)
-Message-ID: <f7026a86-175f-67fd-2bae-2efaae966a13@linaro.org>
-Date:   Mon, 4 Jul 2022 10:24:39 +0200
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=ui6jM4ZYL95jFXsEJNqQO63PcH9wdj9Z4AxG9QKXlsk=;
+        b=bNaqAv641HGp0AlxlmkR7AmEZeOKxG4HFqjsJ0FUTZVKhr5U3Vej+/u+wVrkEy8/Xz
+         4mJCDWXxmGhkY3CafWO3RjPaTRlB8LTFscxBHqPVKou5pl1B9SczbIhdsVYlAwu/PFYM
+         fQWez+cKf2QQ1uTGIt+feoNSmCgyXbuLiOKYeHoQ8hCYUkKk8Vp7BQjYqsK3Y1RIwcYQ
+         hehsD+cYvByEa5edN5PP7yVJ4KPt2aZ0FYoshbJWWxhDzph/xUjl5dqwfFp2bAFsBTec
+         s0IH+vF4NXvAH4MbAwZjhYIVGHwJuS3uAUtnyfoR5gpR2LMDz718wByPz2J1BcLjcR/i
+         ourQ==
+X-Gm-Message-State: AJIora84cYaltKHj2XmQJpahm8JgusIsF5Y36BqKSjKMHYc8Nfvi+BCN
+        85NwoSHheUbxYYL/WYhACtTCdCBf+YwW
+X-Google-Smtp-Source: AGRyM1sZ6xYXHsOd/xbmmI/Ti9HJnupEePcXxzVWeGr7WZfxD0YPmcXQaXXzh9r+ytRnh49OAdR35g==
+X-Received: by 2002:a17:90b:4c0a:b0:1ec:e6b3:7690 with SMTP id na10-20020a17090b4c0a00b001ece6b37690mr35452668pjb.121.1656930003648;
+        Mon, 04 Jul 2022 03:20:03 -0700 (PDT)
+Received: from thinkpad ([220.158.158.244])
+        by smtp.gmail.com with ESMTPSA id u14-20020a170903124e00b0015ee60ef65bsm20742341plh.260.2022.07.04.03.19.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Jul 2022 03:20:01 -0700 (PDT)
+Date:   Mon, 4 Jul 2022 15:49:55 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Tom Rix <trix@redhat.com>
+Cc:     kishon@ti.com, lpieralisi@kernel.org, kw@linux.com,
+        bhelgaas@google.com, Frank.Li@nxp.com, jdmason@kudzu.us,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: endpoint: reduce several globals to statics
+Message-ID: <20220704101955.GD6560@thinkpad>
+References: <20220630210517.1825677-1-trix@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v2 3/3] arm64: dts: qcom: sc7280: Add missing aggre0,
- aggre1 clocks
-Content-Language: en-US
-To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        helgaas@kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mka@chromium.org,
-        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
-        quic_ramkri@quicinc.com, manivannan.sadhasivam@linaro.org,
-        swboyd@chromium.org, dmitry.baryshkov@linaro.org,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>
-References: <1656062391-14567-1-git-send-email-quic_krichai@quicinc.com>
- <1656691899-21315-1-git-send-email-quic_krichai@quicinc.com>
- <1656691899-21315-4-git-send-email-quic_krichai@quicinc.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <1656691899-21315-4-git-send-email-quic_krichai@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220630210517.1825677-1-trix@redhat.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 01/07/2022 18:11, Krishna chaitanya chundru wrote:
-> Add missing aggre0, aggre1 clocks to pcie node.
+On Thu, Jun 30, 2022 at 05:05:17PM -0400, Tom Rix wrote:
+> sparse reports
+> drivers/pci/endpoint/functions/pci-epf-vntb.c:956:10: warning: symbol 'pci_space' was not declared. Should it be static?
+> drivers/pci/endpoint/functions/pci-epf-vntb.c:975:5: warning: symbol 'pci_read' was not declared. Should it be static?
+> drivers/pci/endpoint/functions/pci-epf-vntb.c:984:5: warning: symbol 'pci_write' was not declared. Should it be static?
+> drivers/pci/endpoint/functions/pci-epf-vntb.c:989:16: warning: symbol 'vpci_ops' was not declared. Should it be static?
 > 
-> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+> These functions and variables are only used in pci-epf-vntb.c, so their storage
+> class specifiers should be static.
+> 
+> Fixes: ff32fac00d97 ("NTB: EPF: support NTB transfer between PCI RC and EP connection")
+> Signed-off-by: Tom Rix <trix@redhat.com>
+
+Commit subject should include "pci-epf-vntb" prefix. Otherwise it is not
+possible to guess which driver this patch touches (unless one reads commit
+description).
+
+With that fixed,
+
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+Thanks,
+Mani
+
 > ---
->  arch/arm64/boot/dts/qcom/sc7280.dtsi | 4 ++++
->  1 file changed, 4 insertions(+)
+> v2 : Change commit prefix
 > 
-> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> index e66fc67..a5ce095 100644
-> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> @@ -2043,6 +2043,8 @@
->  				 <&gcc GCC_PCIE_1_SLV_AXI_CLK>,
->  				 <&gcc GCC_PCIE_1_SLV_Q2A_AXI_CLK>,
->  				 <&gcc GCC_AGGRE_NOC_PCIE_TBU_CLK>,
-> +				 <&gcc GCC_AGGRE_NOC_PCIE_CENTER_SF_AXI_CLK>,
-> +				 <&gcc GCC_AGGRE_NOC_PCIE_1_AXI_CLK>,
->  				 <&gcc GCC_DDRSS_PCIE_SF_CLK>;
+> ---
+>  drivers/pci/endpoint/functions/pci-epf-vntb.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> index ebf7e243eefa..6f0775b1fec3 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> @@ -953,7 +953,7 @@ static struct config_group *epf_ntb_add_cfs(struct pci_epf *epf,
+>  
+>  #define VPCI_BUS_NUM 0x10
+>  
+> -uint32_t pci_space[] = {
+> +static uint32_t pci_space[] = {
+>  	(VNTB_VID | (VNTB_PID << 16)),	//DeviceID, Vendor ID
+>  	0,		// status, Command
+>  	0xffffffff,	// Class code, subclass, prog if, revision id
+> @@ -972,7 +972,7 @@ uint32_t pci_space[] = {
+>  	0,		//Max Lat, Min Gnt, interrupt pin, interrupt line
+>  };
+>  
+> -int pci_read(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val)
+> +static int pci_read(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val)
+>  {
+>  	if (devfn == 0) {
+>  		memcpy(val, ((uint8_t *)pci_space) + where, size);
+> @@ -981,12 +981,12 @@ int pci_read(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *
+>  	return -1;
+>  }
+>  
+> -int pci_write(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val)
+> +static int pci_write(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val)
+>  {
+>  	return 0;
+>  }
+>  
+> -struct pci_ops vpci_ops = {
+> +static struct pci_ops vpci_ops = {
+>  	.read = pci_read,
+>  	.write = pci_write,
+>  };
+> -- 
+> 2.27.0
+> 
 
-
-Still no.
-
-Please respond to comments first.
-
-Best regards,
-Krzysztof
+-- 
+மணிவண்ணன் சதாசிவம்
