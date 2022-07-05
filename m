@@ -2,62 +2,58 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5943CCA47F
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 15:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94CD4C433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 15:51:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230316AbiGEPvZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Jul 2022 11:51:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46882 "EHLO
+        id S232830AbiGEPvo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Jul 2022 11:51:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230379AbiGEPvA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 11:51:00 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 696471F605;
-        Tue,  5 Jul 2022 08:49:59 -0700 (PDT)
+        with ESMTP id S232949AbiGEPvF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 11:51:05 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA66C18E15;
+        Tue,  5 Jul 2022 08:50:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657036200; x=1688572200;
+  t=1657036207; x=1688572207;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=U3saHsgvYciwhLfxacVmiu3qWDreQ9A9gfZULUZztoM=;
-  b=BwdCA2jSr9nVyKKJhKuDRlAA+/s+Mxt2UjWkOWCvKrs0cmgmt9QjiOXi
-   GherXUgRmApQnimywSMMmOl73HTBuXet9WDDAIGnCXlJdcQbj0gW9n4b7
-   +fuceKb2kFj9B97NLAm/maA9gHLrsAYkwnOLz75RThrWNzRkL7KBqY0qS
-   s0kFcHP6VNT3+kUlXMTj3KRTIGKtbTBy4IwpCw/l8qCl7wI9DdeqK/cuW
-   FJyBEDIsPoDH0eessU1Da+Y9qunfqo75gXcvP0/24JkcEnjBJlTMzUsk9
-   T0x9f4yzjVQXvyeHtJ1leXbGW0yKt2S+xATaIxXXQ9zGkkXvpk7CtV4b6
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10398"; a="282143208"
+  bh=xrFja2ADE5qtMfXc+jWS05OGzDhcloppZSGS/q+/bMI=;
+  b=ZaSChbPZIUnrXjSTrZh5f4zwBGYHCLj7CBlpMfnOH1orRvsYom5HMR0m
+   YrN56vH80LWa8Z4XrNGwmPoKxNJQg7QJRZwrjvqB18SpE5KKV63Z8lri9
+   oAFSy4S0i1d6C47oZK625X5PAE4a8nTxBSRF3C3zRDwBsMKp6baFSyB22
+   fOcTNTMzmLiZ/yuF2RVrxTtdBocL6Lbr7WRwFsr98hxyrPM3BFkhiNQpk
+   kxutqCbIhBeNLW/IUJ8lCmSZNUpAiT6dl6IRj1qgOLswaVCNxBh9ouM3K
+   DOdSTSaLDvJ6icNe65SVM/NkSf3TuDC5n2486atTR813PngBsieP4xFYb
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10398"; a="263810333"
 X-IronPort-AV: E=Sophos;i="5.92,247,1650956400"; 
-   d="scan'208";a="282143208"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 08:49:59 -0700
+   d="scan'208";a="263810333"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 08:50:07 -0700
 X-IronPort-AV: E=Sophos;i="5.92,247,1650956400"; 
-   d="scan'208";a="650213996"
+   d="scan'208";a="543003422"
 Received: from amangla-mobl.amr.corp.intel.com (HELO localhost) ([10.255.0.184])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 08:49:57 -0700
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 08:50:04 -0700
 From:   ira.weiny@intel.com
 To:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>,
+Cc:     Ira Weiny <ira.weiny@intel.com>, Lukas Wunner <lukas@wunner.de>,
         Alison Schofield <alison.schofield@intel.com>,
         Vishal Verma <vishal.l.verma@intel.com>,
         Dave Jiang <dave.jiang@intel.com>,
         Ben Widawsky <bwidawsk@kernel.org>,
         linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH V13 5/9] driver-core: Introduce BIN_ATTR_ADMIN_{RO,RW}
-Date:   Tue,  5 Jul 2022 08:49:28 -0700
-Message-Id: <20220705154932.2141021-6-ira.weiny@intel.com>
+Subject: [PATCH V13 7/9] cxl/port: Introduce cxl_cdat_valid()
+Date:   Tue,  5 Jul 2022 08:49:30 -0700
+Message-Id: <20220705154932.2141021-8-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.35.3
 In-Reply-To: <20220705154932.2141021-1-ira.weiny@intel.com>
 References: <20220705154932.2141021-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -65,60 +61,110 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Many binary attributes need to limit access to CAP_SYS_ADMIN only; ie
-many binary attributes specify is_visible with 0400 or 0600.
+The CDAT data is protected by a checksum and should be the proper
+length.
 
-Make setting the permissions of such attributes more explicit by
-defining BIN_ATTR_ADMIN_{RO,RW}.
+Introduce cxl_cdat_valid() to validate the data.  While at it check and
+store the sequence number.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Suggested-by: Dan Williams <dan.j.williams@intel.com>
-Suggested-by: Krzysztof Wilczyński <kw@linux.com>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
-Changes from V12:
-	Pick up review tag
-	Bjorn:
-		NOTE: this has a lot of similarities to
-		https://lore.kernel.org/all/20210416205856.3234481-7-kw@linux.com/
-		I'm not sure why that patch was not picked up.  But I've
-		added Krzysztof as a suggested by if that is ok?
+Changes from V12
+	Jonathan:
+		Remove unneeded rc check.
 
-Changes from V11:
-	New Patch
+Changes from V8
+	Move code to cxl/core/pci.c
+
+Changes from V6
+	Change name to cxl_cdat_valid() as this validates all the CDAT
+		data not just the header
+	Add error and debug prints
+
+Changes from V5
+	New patch, split out
+	Update cdat_hdr_valid()
+		Remove revision and cs field parsing
+			There is no point in these
+		Add seq check and debug print.
 ---
- include/linux/sysfs.h | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/cxl/cdat.h     |  2 ++
+ drivers/cxl/core/pci.c | 37 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 39 insertions(+)
 
-diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
-index e3f1e8ac1f85..fd3fe5c8c17f 100644
---- a/include/linux/sysfs.h
-+++ b/include/linux/sysfs.h
-@@ -235,6 +235,22 @@ struct bin_attribute bin_attr_##_name = __BIN_ATTR_WO(_name, _size)
- #define BIN_ATTR_RW(_name, _size)					\
- struct bin_attribute bin_attr_##_name = __BIN_ATTR_RW(_name, _size)
+diff --git a/drivers/cxl/cdat.h b/drivers/cxl/cdat.h
+index c6a48ab326bf..39eb561081f2 100644
+--- a/drivers/cxl/cdat.h
++++ b/drivers/cxl/cdat.h
+@@ -91,10 +91,12 @@
+  *
+  * @table: cache of CDAT table
+  * @length: length of cached CDAT table
++ * @seq: Last read Sequence number of the CDAT table
+  */
+ struct cxl_cdat {
+ 	void *table;
+ 	size_t length;
++	u32 seq;
+ };
  
+ #endif /* !__CXL_CDAT_H__ */
+diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+index 9232b806d051..0a1620c302e1 100644
+--- a/drivers/cxl/core/pci.c
++++ b/drivers/cxl/core/pci.c
+@@ -531,6 +531,40 @@ static int cxl_cdat_get_length(struct device *dev,
+ 	return 0;
+ }
+ 
++static bool cxl_cdat_valid(struct device *dev, struct cxl_cdat *cdat)
++{
++	u32 *table = cdat->table;
++	u8 *data8 = cdat->table;
++	u32 length, seq;
++	u8 check;
++	int i;
 +
-+#define __BIN_ATTR_ADMIN_RO(_name, _size) {					\
-+	.attr	= { .name = __stringify(_name), .mode = 0400 },		\
-+	.read	= _name##_read,						\
-+	.size	= _size,						\
++	length = FIELD_GET(CDAT_HEADER_DW0_LENGTH, table[0]);
++	if ((length < CDAT_HEADER_LENGTH_BYTES) || (length > cdat->length)) {
++		dev_err(dev, "CDAT Invalid length %u (%zu-%zu)\n", length,
++			CDAT_HEADER_LENGTH_BYTES, cdat->length);
++		return false;
++	}
++
++	for (check = 0, i = 0; i < length; i++)
++		check += data8[i];
++
++	dev_dbg(dev, "CDAT length %u CS %u\n", length, check);
++	if (check != 0) {
++		dev_err(dev, "CDAT Invalid checksum %u\n", check);
++		return false;
++	}
++
++	seq = FIELD_GET(CDAT_HEADER_DW3_SEQUENCE, table[3]);
++	/* Store the sequence for now. */
++	if (cdat->seq != seq) {
++		dev_info(dev, "CDAT seq change %x -> %x\n", cdat->seq, seq);
++		cdat->seq = seq;
++	}
++
++	return true;
 +}
 +
-+#define __BIN_ATTR_ADMIN_RW(_name, _size)					\
-+	__BIN_ATTR(_name, 0600, _name##_read, _name##_write, _size)
+ static int cxl_cdat_read_table(struct device *dev,
+ 			       struct pci_doe_mb *cdat_mb,
+ 			       struct cxl_cdat *cdat)
+@@ -583,6 +617,9 @@ static int cxl_cdat_read_table(struct device *dev,
+ 		}
+ 	} while (entry_handle != CXL_DOE_TABLE_ACCESS_LAST_ENTRY);
+ 
++	if (!cxl_cdat_valid(dev, cdat))
++		return -EIO;
 +
-+#define BIN_ATTR_ADMIN_RO(_name, _size)					\
-+struct bin_attribute bin_attr_##_name = __BIN_ATTR_ADMIN_RO(_name, _size)
-+
-+#define BIN_ATTR_ADMIN_RW(_name, _size)					\
-+struct bin_attribute bin_attr_##_name = __BIN_ATTR_ADMIN_RW(_name, _size)
-+
- struct sysfs_ops {
- 	ssize_t	(*show)(struct kobject *, struct attribute *, char *);
- 	ssize_t	(*store)(struct kobject *, struct attribute *, const char *, size_t);
+ 	return 0;
+ }
+ 
 -- 
 2.35.3
 
