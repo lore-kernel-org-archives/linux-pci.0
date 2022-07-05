@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C508DCCA47C
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 23:22:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A83AACCA47C
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 23:22:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232506AbiGEXWP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Jul 2022 19:22:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37464 "EHLO
+        id S232775AbiGEXWR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Jul 2022 19:22:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231390AbiGEXWO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 19:22:14 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 350B2193F0;
-        Tue,  5 Jul 2022 16:22:13 -0700 (PDT)
+        with ESMTP id S232650AbiGEXWP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 19:22:15 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E50D19C26;
+        Tue,  5 Jul 2022 16:22:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657063333; x=1688599333;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=X3Cp7WNefgqvD2vUfXjmNNUWqDvy/vYXCkMcRrUovEI=;
-  b=cbERZAIOydj2QyO9FewOIsbniiOmpqU61VHMCq++eWRyQE8+2uj0rwCO
-   26o1FVj7PKEmY598gBu+tJ7WTG/nK3YvxbZQwaAevRdEK0pSQeRajD0KX
-   KVHFQePjmWJ72b0PbpWx9ebMiGDEP1aJFp+F0wX7RZqFKLqD8JpV4evpo
-   4kWD3hJj3dnBGtfBXhoZ6lYelTohSjVYSAxnqsA49wwI33xOFRWQZdoFd
-   rNSFh3nSSvfvZFE2Y8v8yvDZoYQtu6VmzbFxyhKu1osmN8IORvGpvG2b1
-   eRiCGIOdDqxY/KM0SsOOw4A09oJhje8UX/e4K1m44ZZohnTNhz02XIVI4
-   w==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10399"; a="282320888"
+  t=1657063335; x=1688599335;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=K+6zhrfQatJA+7vvvGNeZ5EhrPDLmRMbBvly8QQTcho=;
+  b=jGw7xr+EKA2kZIibMmh2l/t4fA/uEavqi5kM9yrHD2Mk4u7aDsFEVzIj
+   PJ+DGvjqfz1DvyzHlEozn7C2VZICZhvQsJzVwnNfH90UKBdgqBtSa09ti
+   zeU3bUhJe+LcP8yXz0iEFdptWtjfEtYC5eRdhvrII1Uolt4GuvmqXXtia
+   JxlN7g5e6dR4UWbnnwnDHUsS03rsnhPdWnGe7ZzsUjL9x275pAsQbHAST
+   SM7T2ZWdRk/65vUgat1805VlsZxNrGV45LBBbBhVozv21pjYo74rKX0S5
+   FDU1jTC5K0SGfa43cl6NUlMtAz8vH71bJJBe8prnHcnihRhCI2z7vJVQY
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10399"; a="263987402"
 X-IronPort-AV: E=Sophos;i="5.92,248,1650956400"; 
-   d="scan'208";a="282320888"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 16:22:08 -0700
+   d="scan'208";a="263987402"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 16:22:15 -0700
 X-IronPort-AV: E=Sophos;i="5.92,248,1650956400"; 
-   d="scan'208";a="620052149"
+   d="scan'208";a="660731827"
 Received: from adiazinf-mobl.amr.corp.intel.com (HELO localhost) ([10.255.0.103])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 16:22:05 -0700
+  by fmsmga004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 16:22:12 -0700
 From:   ira.weiny@intel.com
 To:     Dan Williams <dan.j.williams@intel.com>,
         Matthew Wilcox <willy@infradead.org>
@@ -46,10 +46,12 @@ Cc:     Ira Weiny <ira.weiny@intel.com>,
         Vishal Verma <vishal.l.verma@intel.com>,
         linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [RFC PATCH 0/3] Introduce devm_xa_init
-Date:   Tue,  5 Jul 2022 16:21:56 -0700
-Message-Id: <20220705232159.2218958-1-ira.weiny@intel.com>
+Subject: [RFC PATCH 2/3] pci/doe: Use devm_xa_init()
+Date:   Tue,  5 Jul 2022 16:21:58 -0700
+Message-Id: <20220705232159.2218958-3-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20220705232159.2218958-1-ira.weiny@intel.com>
+References: <20220705232159.2218958-1-ira.weiny@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -58,41 +60,49 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-This is submitted RFC for 2 reasons.  First I'm not quite sure where to place
-the call in the headers.  Second the use of the new call is dependent on some
-CXL code which was just been submitted.[0]  I want to get opinions on if this new
-call seems useful or just more confusing to the XArray interface.  If useful
-I'll respin after the CXL stuff lands and perhaps it can go through Dan's tree.
+The XArray being used to store the protocols does not even store
+allocated objects.
 
-While converting some CXL code to XArray a pattern emerged which seemed useful
-to codify.
+Use devm_xa_init() to automatically destroy the XArray when the PCI
+device goes away.
 
-In two different situations[1][2] an XArray was initialized in such a way that
-using devm_add_action() could be used to call xa_destroy() automatically.
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ drivers/pci/doe.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-In the first situation[1] the XArray was storing long values directly and in
-the other situation the pointers were allocated using device managed functions
-(devm_*).
-
-In these situations it seems that a device managed xa_init() would be useful.
-
-[0] https://lore.kernel.org/linux-cxl/20220705154932.2141021-1-ira.weiny@intel.com/
-[1] https://lore.kernel.org/linux-cxl/20220705154932.2141021-4-ira.weiny@intel.com/
-[2] https://lore.kernel.org/linux-cxl/20220705154932.2141021-5-ira.weiny@intel.com/
-
-
-
-Ira Weiny (3):
-  xarray: Introduce devm_xa_init()
-  pci/doe: Use devm_xa_init()
-  CXL/doe: Use devm_xa_init()
-
- drivers/base/core.c    | 20 ++++++++++++++++++++
- drivers/cxl/pci.c      |  8 +-------
- drivers/pci/doe.c      | 14 ++------------
- include/linux/device.h |  3 +++
- 4 files changed, 26 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+index 0b02f33ef994..aa36f459d375 100644
+--- a/drivers/pci/doe.c
++++ b/drivers/pci/doe.c
+@@ -386,13 +386,6 @@ static int pci_doe_cache_protocols(struct pci_doe_mb *doe_mb)
+ 	return 0;
+ }
+ 
+-static void pci_doe_xa_destroy(void *mb)
+-{
+-	struct pci_doe_mb *doe_mb = mb;
+-
+-	xa_destroy(&doe_mb->prots);
+-}
+-
+ static void pci_doe_destroy_workqueue(void *mb)
+ {
+ 	struct pci_doe_mb *doe_mb = mb;
+@@ -440,11 +433,8 @@ struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset)
+ 	doe_mb->pdev = pdev;
+ 	doe_mb->cap_offset = cap_offset;
+ 	init_waitqueue_head(&doe_mb->wq);
+-
+-	xa_init(&doe_mb->prots);
+-	rc = devm_add_action(dev, pci_doe_xa_destroy, doe_mb);
+-	if (rc)
+-		return ERR_PTR(rc);
++	if (devm_xa_init(dev, &doe_mb->prots))
++		return ERR_PTR(-ENOMEM);
+ 
+ 	doe_mb->work_queue = alloc_ordered_workqueue("DOE: [%x]", 0,
+ 						     doe_mb->cap_offset);
 -- 
 2.35.3
 
