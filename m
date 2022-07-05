@@ -2,179 +2,172 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A0BFC433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 10:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD7C6C433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 11:39:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230302AbiGEK6G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Jul 2022 06:58:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49294 "EHLO
+        id S230302AbiGELjj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Jul 2022 07:39:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47922 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232854AbiGEK5Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 06:57:25 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2062.outbound.protection.outlook.com [40.107.237.62])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F91815A32;
-        Tue,  5 Jul 2022 03:56:58 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FkcX2hMtVODCcSM3KqcO+J5KhYLPTFerIHzMKwSqr3h2K3AedDvKojPldStkvX+cl6xz8tmC8BLTzxR0NMJmz3D3ssLG7fJTbPKwxW03ylPkwxzmcdIB/memkUKsnO/JQghKRkOazxXSNulp80aHlqZBZ2Hh5r7YV95zXJ8u26Uru+YrDiaCk0JtguIbUiU7VAs+AYCdOx7WrLZfwolWlvZDh4kL1RZBqYIDj42w0otRH0vQBbQDXzlmko9L/fsu7QDn+t7C39tW8dVA51UNGFVf86htqZQ+gSgdwESZ+6xOkGIr43+gNesKzT/Z2dlQkGtr//fFssw+v+5SV0kaBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iJ5TflSQ9KYJaNuR+dVW1vtGQH4/39ZAzkIKtRAjm8w=;
- b=G/L99Db1qHu/TuqlvmC9u5U+0kNJznCbNX+aRupFJLRhKgKE1ah6ADHMQRINxsZSBPTrbLLQMNwkTkqceQ3Xn1BSsB/b/qia5v12wR3EZBYd9mqp5w3tr6/lWOtGgB5qP1f51W7MUGfMo1TpWuZMR4CK+sDnYFxOKGOc/WoSugrk0funHjUtDil9qxYTgTECtzvBvr/qIgSI3JLLLwxICtgtXD20qZEZ1rvso1ny4DvH2ZVi2TdPLWPsIhd4JNSYR0OYgSacQFwxiYzKwcKYbQlgWQZC7XtyqkvYGgNR3GTnYSyLXN5Zvp/zkncWiskp24LCBHm6Lr6PjEADy98grw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 149.199.62.198) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=xilinx.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=xilinx.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iJ5TflSQ9KYJaNuR+dVW1vtGQH4/39ZAzkIKtRAjm8w=;
- b=I14ygnlZ3L8CE1zm1giax/OiTbKUkG045jO87I1JVlAFFCm+EJnpWGQ4cXzQuyvjxrp2xYT22XEv7Jlj1KaU1jMTxjvUvdxh4UiAL2qcciR+Fliu1Kr5Kc5SqYfnk7XbOe04bBrJOKJkri6uw+hDmT2QJk6TWN+9sqJYxWrxNKQ=
-Received: from DS7PR05CA0019.namprd05.prod.outlook.com (2603:10b6:5:3b9::24)
- by BYAPR02MB4215.namprd02.prod.outlook.com (2603:10b6:a02:f4::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.15; Tue, 5 Jul
- 2022 10:56:55 +0000
-Received: from DM3NAM02FT037.eop-nam02.prod.protection.outlook.com
- (2603:10b6:5:3b9:cafe::61) by DS7PR05CA0019.outlook.office365.com
- (2603:10b6:5:3b9::24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.11 via Frontend
- Transport; Tue, 5 Jul 2022 10:56:54 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 149.199.62.198)
- smtp.mailfrom=xilinx.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=xilinx.com;
-Received-SPF: Pass (protection.outlook.com: domain of xilinx.com designates
- 149.199.62.198 as permitted sender) receiver=protection.outlook.com;
- client-ip=149.199.62.198; helo=xsj-pvapexch02.xlnx.xilinx.com; pr=C
-Received: from xsj-pvapexch02.xlnx.xilinx.com (149.199.62.198) by
- DM3NAM02FT037.mail.protection.outlook.com (10.13.4.166) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5395.14 via Frontend Transport; Tue, 5 Jul 2022 10:56:54 +0000
-Received: from xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) by
- xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Tue, 5 Jul 2022 03:56:54 -0700
-Received: from smtp.xilinx.com (172.19.127.95) by
- xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server id
- 15.1.2176.14 via Frontend Transport; Tue, 5 Jul 2022 03:56:54 -0700
-Envelope-to: linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- bhelgaas@google.com
-Received: from [10.140.9.2] (port=51530 helo=xhdbharatku40.xilinx.com)
-        by smtp.xilinx.com with esmtp (Exim 4.90)
-        (envelope-from <bharat.kumar.gogada@xilinx.com>)
-        id 1o8gEf-000FEX-Ko; Tue, 05 Jul 2022 03:56:54 -0700
-From:   Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <bhelgaas@google.com>, <michals@xilinx.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: [PATCH v6 1/2] dt-bindings: PCI: xilinx-cpm: Add Versal CPM5 Root Port
-Date:   Tue, 5 Jul 2022 16:26:45 +0530
-Message-ID: <20220705105646.16980-2-bharat.kumar.gogada@xilinx.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20220705105646.16980-1-bharat.kumar.gogada@xilinx.com>
-References: <20220705105646.16980-1-bharat.kumar.gogada@xilinx.com>
+        with ESMTP id S230106AbiGELjh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 07:39:37 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 89CC113FB5
+        for <linux-pci@vger.kernel.org>; Tue,  5 Jul 2022 04:39:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1657021174;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8pvPoWqIvsWl8w+U7M/aIkzJ6IsvvChEXLW+2arMSpA=;
+        b=POHx8hwJKryFHEE3EkiGctr28M/hwyoUEgmUmSXQRDETq2i+8dRYgEfBwHqjXk/pJNbeBV
+        E3SagL5r2xetGA8kfUtM31lcTDjZY3YetmQYKQD53yIqnp0etRKtnOg6/76wV/P341LUhV
+        WzKoDQfxhEv9U615G0m8uUyt1nrFaLk=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-628-7ebKNuA6O7mvRE5diT1GKg-1; Tue, 05 Jul 2022 07:39:33 -0400
+X-MC-Unique: 7ebKNuA6O7mvRE5diT1GKg-1
+Received: by mail-wr1-f72.google.com with SMTP id v23-20020adfa1d7000000b0021d620f5ef3so1262194wrv.16
+        for <linux-pci@vger.kernel.org>; Tue, 05 Jul 2022 04:39:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=8pvPoWqIvsWl8w+U7M/aIkzJ6IsvvChEXLW+2arMSpA=;
+        b=qgKhnTRaZ438MPGt2jM8j0veut5HaMJGtuKxm6klSFFYwbULuy7R092G9irIWARrKM
+         B6mWczVyvTEBrFqiAnosDGNFNdGgv7GOBpBdMmbsyNEcfCeDb9RLw86hesGPR936fSoz
+         L1swb8Efh1PskVehobFqg6UXmgVAO6GWZ2YxslJZKYMCFZ2c1epdEQQuxQLQHKgDPGDH
+         o+8FT9GwZFG8yf5IJjIr64hRtYTXqEljJTrqMaMc0ZCHABjxA6nb1tYeEz4m9KsRq61z
+         5ECOSXP95wkF59lrKAGJiOhkQWF0pAEudUEpmi6rpsGwrueijkeHCu5WL1Eeg8lifEuX
+         Df1A==
+X-Gm-Message-State: AJIora/IOYaTOiyIlKYRrehfmoW8gCm7HiSUdqzE1Q0REQ4bQ1ytVEO2
+        mY135Bcu3L0fok5mAl9Jg1mCKARrPSvnPVDu7UXqasWEUDeAGg10ccCMxAHFNZva9bBswVH/nks
+        Shi6K0pt0LyefLxeLeLo4
+X-Received: by 2002:a05:6000:2c6:b0:21b:ad25:9c1b with SMTP id o6-20020a05600002c600b0021bad259c1bmr32896925wry.391.1657021172233;
+        Tue, 05 Jul 2022 04:39:32 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1v0Xx92gGvcRWsPIv9KSF1jDKYn0dtMQRjt1Mnn2btgQx1vAX/n03Joqo41BFJ7DMb28aow1Q==
+X-Received: by 2002:a05:6000:2c6:b0:21b:ad25:9c1b with SMTP id o6-20020a05600002c600b0021bad259c1bmr32896901wry.391.1657021172014;
+        Tue, 05 Jul 2022 04:39:32 -0700 (PDT)
+Received: from [10.35.4.238] (bzq-82-81-161-50.red.bezeqint.net. [82.81.161.50])
+        by smtp.gmail.com with ESMTPSA id l3-20020a1c7903000000b003a04962ad3esm19548302wme.31.2022.07.05.04.39.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Jul 2022 04:39:31 -0700 (PDT)
+Message-ID: <86df559c732a796b2e3da0136a643a212826229f.camel@redhat.com>
+Subject: Re: [PATCHv2] vgaarb: Add module param to allow for choosing the
+ boot VGA device
+From:   Maxim Levitsky <mlevitsk@redhat.com>
+To:     Cal Peake <cp@absolutedigital.net>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Huacai Chen <chenhuacai@kernel.org>, linux-pci@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Cornelia Huck <cohuck@redhat.com>, kvm@vger.kernel.org
+Date:   Tue, 05 Jul 2022 14:39:29 +0300
+In-Reply-To: <17b4da8c-8847-857e-21ca-b8a53446c362@absolutedigital.net>
+References: <20220704213829.GA16883@bhelgaas>
+         <17b4da8c-8847-857e-21ca-b8a53446c362@absolutedigital.net>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.40.4 (3.40.4-5.fc34) 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 5074dda2-d94f-45ba-9683-08da5e7512e2
-X-MS-TrafficTypeDiagnostic: BYAPR02MB4215:EE_
-X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 9MjHeoph1Ya2naHkBC30nWT/KitVmIbcfbtupcMiK9zraBeYRf1FggtPQn0fJ8vkLvwehA82fs/loWbouDeG5tAMZ3WeZp90AzryH/umzbvS6g5LfQDPqNLksVbq/+Z2V1Xy9GaWHwdt+2Gj3m6yXhI45Gt7AWbIv1NYwxCXdPJSzvAeaqwyeKv0ivSHLzv1oKY9o1GRwRWUeEd990yGopS992NDhdKiJlhPZk/ZXRacAG2s8a5EuWq45DuiwlLyTk5zq1S7aRdruYtQpzHhgOqC4djn4X9xzed+ycIQJDzvZepAhE9EB2ck62FNPB+gkpbBEZWZohfhNWD3spEWThYOvuub7S72j320sNVM7ECwLWmx2mZMWr2v0amSqMU9duTZGXhX1pCMrbfyIBQhxlo97Hc9VnZ6am4wYhuB7e+HvcdrmTBZjsgYkngHbxiRBkoMRYoXllW3Fd/NPiXk/X9Mwc3pIk+APInbdbLQ+L+UNMDzaIRZeLLwbYTElhZbZdtCR2s4fyfsgjPoAZYvePfHvE+MhfhECZRdXq2h3RbdkiWf1D0YPl+yukUNQnlddh+rd1jTCUhdd766WzCsYq+4Crbdl7Er32JWghdgRIHYcWQg8j5cAGnDpE63BTMcOUpQ0LBDsOlXkmZLXFfaUlP8d/HI3LZrXHMiSzJOvBqLd4SvNau8lphNe6qjkL24r4SL1VprXumlT3h12tylqtcQpmCj0Itq28Qqx/O4IASY7vkV4yD0Jy8Pvlt17K+9XyQZTf8qc1Jisds0DqwfTSxPCS3LuaIeks3tZdhpjw/7BraFygumR2wqkkq7G6sfKKX7NlI7p7dW9Gzbq8KVQQTY4MWmrtJ9xdBBNJ0eKhQ=
-X-Forefront-Antispam-Report: CIP:149.199.62.198;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xsj-pvapexch02.xlnx.xilinx.com;PTR:unknown-62-198.xilinx.com;CAT:NONE;SFS:(13230016)(4636009)(136003)(396003)(376002)(346002)(39860400002)(46966006)(40470700004)(36840700001)(83380400001)(186003)(336012)(47076005)(426003)(70586007)(70206006)(8676002)(4326008)(103116003)(478600001)(9786002)(40460700003)(8936002)(5660300002)(82740400003)(356005)(7636003)(26005)(82310400005)(6666004)(41300700001)(36860700001)(40480700001)(107886003)(1076003)(2616005)(2906002)(7696005)(110136005)(54906003)(316002)(36756003)(102446001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: xilinx.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jul 2022 10:56:54.6589
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5074dda2-d94f-45ba-9683-08da5e7512e2
-X-MS-Exchange-CrossTenant-Id: 657af505-d5df-48d0-8300-c31994686c5c
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.62.198];Helo=[xsj-pvapexch02.xlnx.xilinx.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM3NAM02FT037.eop-nam02.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR02MB4215
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Xilinx Versal Premium series has CPM5 block which supports Root Port
-functionality at Gen5 speed.
+On Mon, 2022-07-04 at 19:07 -0400, Cal Peake wrote:
+> On Mon, 4 Jul 2022, Bjorn Helgaas wrote:
+> 
+> > I cc'd KVM folks in case they have anything to add here because I'm
+> > not a VFIO passthrough expert.
+> > 
+> > It sounds like the problem occurs when the VFIO driver claims the GPU.
+> > I assume that happens after boot, when setting up for the virtual
+> > machine?
+> 
+> No, this is during boot, long before a VM is launched. As you can kinda 
+> see from these lines from early on in the boot process:
+> 
+> [   22.066610] amdgpu 0000:0e:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=none:owns=none
+> [   25.726469] vfio-pci 0000:0f:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=io+mem:owns=none
+> 
+> The vfio-pci driver claims the device like it was a typical GPU driver, 
+> but since it isn't, the display output functionality of the card stops 
+> because part of the vfio-pci driver's job is to make sure the card is in 
+> an unused, preferably pristine-as-possible state for when the VM takes 
+> control of it.
+> 
+> If we go back earlier in the boot process, you'll see that second line again:
+> 
+> [    9.226635] vfio-pci 0000:0f:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=io+mem:owns=none
+> [    9.238385] vfio_pci: add [10de:1f06[ffffffff:ffffffff]] class 0x000000/00000000
+> [    9.251529] vfio_pci: add [10de:10f9[ffffffff:ffffffff]] class 0x000000/00000000
+> [    9.264328] vfio_pci: add [10de:1ada[ffffffff:ffffffff]] class 0x000000/00000000
+> [    9.277162] vfio_pci: add [10de:1adb[ffffffff:ffffffff]] class 0x000000/00000000
+> 
+> If that device is the one selected by the arbiter as boot device, then 
+> that is the point where display output stops and everything goes to black.
+> 
+> >  If so, is there a way to avoid the problem at run-time so the admin 
+> > doesn't have to decide at boot-time which GPU will be passed through to 
+> > a VM?
+> 
+> With the way that many people like me run this kind of setup, the 
+> passthrough GPU gets reserved at boot-time anyway with the passing of a 
+> line like:
+> 
+> vfio_pci.ids=10de:1f06,10de:10f9,10de:1ada,10de:1adb
+> 
+> on the kernel command-line from the bootloader. Doing a similar 
+> reservation for the host GPU with something like 'vgaarb.bootdev=0e:00.0' 
+> alongside it should be no big deal to anyone running a setup like this.
+> 
+> You can bind/unbind devices to the vfio-pci driver at run-time using 
+> sysfs[1], but as far as I can tell, there is no way to change the boot VGA 
+> device at run-time.
+> 
+> >  Is it possible or desirable to pass through GPU A to VM A, then after 
+> > VM A exits, pass through GPU B to VM B?
+> 
+> Yeah, there are many ways one can run this setup. Some run with a single 
+> GPU that gets passed-through and the host is headless. There's probably 
+> some with more than two GPUs with multiple VMs each getting their own.
+> 
+> The setup I'm running is pretty common: dedicated GPU for the host 
+> (doesn't need to be anything special, just needs to handle workstation 
+> duties) and a dedicated GPU for a Windows VM for gaming (something quite 
+> powerful for those high FPS :-)
+> 
+> As you can see, statically assigning the devices ahead of time is okay. 
+> The real problem (for me anyway) is there's no way in the UEFI/BIOS to 
+> tell the firmware which device should be used for boot. Sometimes it picks 
+> the first GPU, sometimes the second. If if picks wrong, I get an unusable 
+> system because the VGA arbiter deems the GPU selected by the firmware to 
+> be the best choice for boot VGA device.
+> 
 
-Add support for YAML schemas documentation for Versal CPM5 Root Port driver.
+My 0.2 semi unrelated cents:
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
----
- .../bindings/pci/xilinx-versal-cpm.yaml       | 38 ++++++++++++++++++-
- 1 file changed, 37 insertions(+), 1 deletion(-)
+On my desktop system I have two GPUS (AMD workstation GPU and a NVIDIA's gpu), 
+I sometimes use each of them (or even both) with VFIO,
 
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-index cca395317a4c..24ddc2855b94 100644
---- a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-+++ b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
-@@ -14,17 +14,23 @@ allOf:
- 
- properties:
-   compatible:
--    const: xlnx,versal-cpm-host-1.00
-+    enum:
-+      - xlnx,versal-cpm-host-1.00
-+      - xlnx,versal-cpm5-host
- 
-   reg:
-     items:
-       - description: CPM system level control and status registers.
-       - description: Configuration space region and bridge registers.
-+      - description: CPM5 control and status registers.
-+    minItems: 2
- 
-   reg-names:
-     items:
-       - const: cpm_slcr
-       - const: cfg
-+      - const: cpm_csr
-+    minItems: 2
- 
-   interrupts:
-     maxItems: 1
-@@ -95,4 +101,34 @@ examples:
-                                interrupt-controller;
-                        };
-                };
-+
-+               cpm5_pcie: pcie@fcdd0000 {
-+                       compatible = "xlnx,versal-cpm5-host";
-+                       device_type = "pci";
-+                       #address-cells = <3>;
-+                       #interrupt-cells = <1>;
-+                       #size-cells = <2>;
-+                       interrupts = <0 72 4>;
-+                       interrupt-parent = <&gic>;
-+                       interrupt-map-mask = <0 0 0 7>;
-+                       interrupt-map = <0 0 0 1 &pcie_intc_1 0>,
-+                                       <0 0 0 2 &pcie_intc_1 1>,
-+                                       <0 0 0 3 &pcie_intc_1 2>,
-+                                       <0 0 0 4 &pcie_intc_1 3>;
-+                       bus-range = <0x00 0xff>;
-+                       ranges = <0x02000000 0x0 0xe0000000 0x0 0xe0000000 0x0 0x10000000>,
-+                                <0x43000000 0x80 0x00000000 0x80 0x00000000 0x0 0x80000000>;
-+                       msi-map = <0x0 &its_gic 0x0 0x10000>;
-+                       reg = <0x00 0xfcdd0000 0x00 0x1000>,
-+                             <0x06 0x00000000 0x00 0x1000000>,
-+                             <0x00 0xfce20000 0x00 0x1000000>;
-+                       reg-names = "cpm_slcr", "cfg", "cpm_csr";
-+
-+                       pcie_intc_1: interrupt-controller {
-+                               #address-cells = <0>;
-+                               #interrupt-cells = <1>;
-+                               interrupt-controller;
-+                       };
-+               };
-+
-     };
--- 
-2.17.1
+But regardless of VFIO, I sometimes use one and sometimes another as my main GPU
+(I have all displays connected to each GPU, its quite complex setup with lot
+of cables and HDMI switches, but somehow it is actually quite robust)
+
+Choosing boot GPU would be nice to have. On my system I setup it in such way
+that AMD GPU gets to be the boot GPU (I don't remember if I blacklisted the
+nvidia driver or something for that), and I have a script to dynamicallly
+swith them prior to starting X if in a config file I created, I specified that
+I want the nvidia GPU to be the default.
+
+So this is a use case which doesn't involve VFIO.
+
+Best regards,
+	Maxim Levitsky
+
+
 
