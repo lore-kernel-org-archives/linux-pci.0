@@ -2,178 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9284EC433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 18:50:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A6B0C433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 19:51:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231234AbiGESu4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Jul 2022 14:50:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52566 "EHLO
+        id S229591AbiGETvc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Jul 2022 15:51:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230300AbiGESuz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 14:50:55 -0400
-Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB5AC18370;
-        Tue,  5 Jul 2022 11:50:54 -0700 (PDT)
-Received: by mail-yb1-f180.google.com with SMTP id 76so7842800ybd.0;
-        Tue, 05 Jul 2022 11:50:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=rEEp1avjtVpzd2rsIuvCf8awzg9kogoo/eZ9Po79gdw=;
-        b=7nJf6Nr24WQCYtyhTuUjddA2GsQqaAuNQJ0Dt+xvFDy7Th7ZuHAP6NqsbLnGfXe1uz
-         zGdg1XdDC3eL1xHXCNu+coKL9TjtzpEIgMsyMnSuG53mReozZyqAk0oximOWg4Y4oSnM
-         tmrhl9uyIGTb7xb4HHx+Hnpu7+F+PehbNY73f6SRowfnt5etTjSXHLNBax5ad79APcm2
-         rOPVT7vMPRCLVe/sgSn4aotCwJP02gx9OtmVIKNDVDD+HAtK7d3m6TSbSzRnfTM2WCi2
-         ijYl1kd7b02CekxddsVkFP2gZNYOR55UeEOW3iSDnfIfJiu+aY3TMm22A22VQReAlIeX
-         EygQ==
-X-Gm-Message-State: AJIora+27yAA4WGbIf/UQ/XP3Np4pJefReiKP92fd+cDM1aMERoZEihS
-        Ve5oJwDlSglWsXtk5hsW2niM9NUNIcGTZTqLJlg=
-X-Google-Smtp-Source: AGRyM1s+K+w9syS/4MUthIcayVyD+nAAsBHqrlB9RJMsRRD1+cb3mvFhbUNxWI/P5iK+pcwBsKRnGVi3K9dKqJ8GaC4=
-X-Received: by 2002:a25:ab81:0:b0:66e:3dc5:898c with SMTP id
- v1-20020a25ab81000000b0066e3dc5898cmr15271965ybi.81.1657047054027; Tue, 05
- Jul 2022 11:50:54 -0700 (PDT)
+        with ESMTP id S229516AbiGETvb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 15:51:31 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 832F71D0E6;
+        Tue,  5 Jul 2022 12:51:30 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 18407B8197D;
+        Tue,  5 Jul 2022 19:51:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 728DCC341C7;
+        Tue,  5 Jul 2022 19:51:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1657050687;
+        bh=FHSwCWE5Qqw8UZ5yAxfce6oaTgBWlJxEMNIl7ItdHGo=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=hsNjREwz7ClHCyhPShCaTaluPcAsVCtc33dMkOpkJzU88Cd4hBjaXvmyTCeowsHgq
+         Y9ScpDC4v2WlVhwd2afC3lwmhAFyjd3/MwIZ2L9vxW04MAQuGo3Wzf1JLF+mAuxo8j
+         HcMx5IrHg5zq/Lb0r+pzaMcMPSgSF2NRKo0dxqEIlnJ2F/lwCkSub/7kAzspu18EtD
+         UHiu9f27bYpNPgpPUnQj/FJX235A26qsIO0+iABwpUzzCyBBR07MeVtRCP51YGw8xB
+         PQJYgD6/uru1DPq10JSJP47Mwk8FBO8jj2cH7chMvt/M70BzNVWNYVIf5+O3CZ1udO
+         JB56OWi/DQO6A==
+Date:   Tue, 5 Jul 2022 14:51:25 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+        yuji2.ishikawa@toshiba.co.jp, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>
+Subject: Re: [PATCH] dt-bindings: pci: toshiba,visconti-pcie: Update the
+ common clock properties
+Message-ID: <20220705195125.GA78912@bhelgaas>
 MIME-Version: 1.0
-References: <20220607035158.308111-1-helgaas@kernel.org>
-In-Reply-To: <20220607035158.308111-1-helgaas@kernel.org>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 5 Jul 2022 20:50:43 +0200
-Message-ID: <CAJZ5v0idEvNRU5vmybRms4aQbBoUUH8CBRtaGT5O1bScND5ZSA@mail.gmail.com>
-Subject: Re: [PATCH] PM / wakeup: Unify device_init_wakeup() for PM_SLEEP and !PM_SLEEP
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Rafael J . Wysocki" <rafael@kernel.org>,
-        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220520085648.620703-1-nobuhiro1.iwamatsu@toshiba.co.jp>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 7, 2022 at 5:52 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> Previously the CONFIG_PM_SLEEP and !CONFIG_PM_SLEEP device_init_wakeup()
-> implementations differed in confusing ways:
->
->   - The PM_SLEEP version checked for a NULL device pointer and returned
->     -EINVAL, while the !PM_SLEEP version did not and would simply
->     dereference a NULL pointer.
->
->   - When called with "false", the !PM_SLEEP version cleared "capable" and
->     "enable" in the opposite order of the PM_SLEEP version.  That was
->     harmless because for !PM_SLEEP they're simple assignments, but it's
->     unnecessary confusion.
->
-> Use a simplified version of the PM_SLEEP implementation for both cases.
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Fri, May 20, 2022 at 05:56:48PM +0900, Nobuhiro Iwamatsu wrote:
+> The clock for this driver switched to the common clock controller driver.
+> Therefore, update common clock properties for PCIe controller in the binding
+> document.
+> 
+> Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+> Acked-by: Rob Herring <robh@kernel.org>
+
+Rob, does your ack mean you want me to pick this up?  It looks like
+you merged the original 17c1b16340f0 ("dt-bindings: pci: Add DT
+binding for Toshiba Visconti PCIe controller")?
+
 > ---
->  drivers/base/power/wakeup.c | 30 ------------------------------
->  include/linux/pm_wakeup.h   | 31 +++++++++++++++++++++++--------
->  2 files changed, 23 insertions(+), 38 deletions(-)
->
-> diff --git a/drivers/base/power/wakeup.c b/drivers/base/power/wakeup.c
-> index 11a4ffe91367..e3befa2c1b66 100644
-> --- a/drivers/base/power/wakeup.c
-> +++ b/drivers/base/power/wakeup.c
-> @@ -500,36 +500,6 @@ void device_set_wakeup_capable(struct device *dev, bool capable)
->  }
->  EXPORT_SYMBOL_GPL(device_set_wakeup_capable);
->
-> -/**
-> - * device_init_wakeup - Device wakeup initialization.
-> - * @dev: Device to handle.
-> - * @enable: Whether or not to enable @dev as a wakeup device.
-> - *
-> - * By default, most devices should leave wakeup disabled.  The exceptions are
-> - * devices that everyone expects to be wakeup sources: keyboards, power buttons,
-> - * possibly network interfaces, etc.  Also, devices that don't generate their
-> - * own wakeup requests but merely forward requests from one bus to another
-> - * (like PCI bridges) should have wakeup enabled by default.
-> - */
-> -int device_init_wakeup(struct device *dev, bool enable)
-> -{
-> -       int ret = 0;
-> -
-> -       if (!dev)
-> -               return -EINVAL;
-> -
-> -       if (enable) {
-> -               device_set_wakeup_capable(dev, true);
-> -               ret = device_wakeup_enable(dev);
-> -       } else {
-> -               device_wakeup_disable(dev);
-> -               device_set_wakeup_capable(dev, false);
-> -       }
-> -
-> -       return ret;
-> -}
-> -EXPORT_SYMBOL_GPL(device_init_wakeup);
-> -
->  /**
->   * device_set_wakeup_enable - Enable or disable a device to wake up the system.
->   * @dev: Device to handle.
-> diff --git a/include/linux/pm_wakeup.h b/include/linux/pm_wakeup.h
-> index 196a157456aa..77f4849e3418 100644
-> --- a/include/linux/pm_wakeup.h
-> +++ b/include/linux/pm_wakeup.h
-> @@ -109,7 +109,6 @@ extern struct wakeup_source *wakeup_sources_walk_next(struct wakeup_source *ws);
->  extern int device_wakeup_enable(struct device *dev);
->  extern int device_wakeup_disable(struct device *dev);
->  extern void device_set_wakeup_capable(struct device *dev, bool capable);
-> -extern int device_init_wakeup(struct device *dev, bool val);
->  extern int device_set_wakeup_enable(struct device *dev, bool enable);
->  extern void __pm_stay_awake(struct wakeup_source *ws);
->  extern void pm_stay_awake(struct device *dev);
-> @@ -167,13 +166,6 @@ static inline int device_set_wakeup_enable(struct device *dev, bool enable)
->         return 0;
->  }
->
-> -static inline int device_init_wakeup(struct device *dev, bool val)
-> -{
-> -       device_set_wakeup_capable(dev, val);
-> -       device_set_wakeup_enable(dev, val);
-> -       return 0;
-> -}
-> -
->  static inline bool device_may_wakeup(struct device *dev)
->  {
->         return dev->power.can_wakeup && dev->power.should_wakeup;
-> @@ -217,4 +209,27 @@ static inline void pm_wakeup_hard_event(struct device *dev)
->         return pm_wakeup_dev_event(dev, 0, true);
->  }
->
-> +/**
-> + * device_init_wakeup - Device wakeup initialization.
-> + * @dev: Device to handle.
-> + * @enable: Whether or not to enable @dev as a wakeup device.
-> + *
-> + * By default, most devices should leave wakeup disabled.  The exceptions are
-> + * devices that everyone expects to be wakeup sources: keyboards, power buttons,
-> + * possibly network interfaces, etc.  Also, devices that don't generate their
-> + * own wakeup requests but merely forward requests from one bus to another
-> + * (like PCI bridges) should have wakeup enabled by default.
-> + */
-> +static inline int device_init_wakeup(struct device *dev, bool enable)
-> +{
-> +       if (enable) {
-> +               device_set_wakeup_capable(dev, true);
-> +               return device_wakeup_enable(dev);
-> +       } else {
-> +               device_wakeup_disable(dev);
-> +               device_set_wakeup_capable(dev, false);
-> +               return 0;
-> +       }
-> +}
-> +
->  #endif /* _LINUX_PM_WAKEUP_H */
-> --
-
-Applied as 5.20 material, sorry for the delay.
-
-Thanks!
+>  .../devicetree/bindings/pci/toshiba,visconti-pcie.yaml         | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
+> index 30b6396d83c8..b9d0484606cc 100644
+> --- a/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
+> @@ -69,6 +69,7 @@ unevaluatedProperties: false
+>  
+>  examples:
+>    - |
+> +    #include <dt-bindings/clock/toshiba,tmpv770x.h>
+>      #include <dt-bindings/interrupt-controller/irq.h>
+>      #include <dt-bindings/interrupt-controller/arm-gic.h>
+>  
+> @@ -102,7 +103,7 @@ examples:
+>                   0 0 0 2 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
+>                   0 0 0 3 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
+>                   0 0 0 4 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
+> -            clocks = <&extclk100mhz>, <&clk600mhz>, <&clk25mhz>;
+> +            clocks = <&extclk100mhz>, <&pismu TMPV770X_CLK_PCIE_MSTR>, <&pismu TMPV770X_CLK_PCIE_AUX>;
+>              clock-names = "ref", "core", "aux";
+>              max-link-speed = <2>;
+>          };
+> -- 
+> 2.36.0
+> 
+> 
