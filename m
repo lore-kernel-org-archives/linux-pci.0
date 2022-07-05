@@ -2,88 +2,137 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CF08C433EF
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 22:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 333B2C433EF
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Jul 2022 23:22:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231151AbiGEWkh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Jul 2022 18:40:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40732 "EHLO
+        id S230043AbiGEXWN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Jul 2022 19:22:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229577AbiGEWkg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 18:40:36 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 000D511C01;
-        Tue,  5 Jul 2022 15:40:32 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 81A78B81A2F;
-        Tue,  5 Jul 2022 22:40:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D10CEC341C7;
-        Tue,  5 Jul 2022 22:40:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657060830;
-        bh=hEbghLYblxH/UBauKCEXYAU5I1HKf00F59oiSCPkrcQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=f1DD5lKUgguyL6QxQirLzWNd8mln/EgZOqhXMseu1076pHC1+uGpHJVJAZ+qtMvJ1
-         MSxOBEmx9xLyp/Cl9KXdr+achMOVXmjO2jxWQboGXt7BpwgC0nn0PGfWXM2Hg4yqPc
-         f2GLYEposMzq9iARoh+wUPT8YDFFszUeJjtkUk3adeJw0eFGR4G8s6GKNSqkw5W0cQ
-         8QKbGAedcxz1oV9fQCVyW1wPs5NjsU9hXPF/bZlNECcZhGlvhqQwuWpVt/OB0UydBK
-         T2FyGB9Ty+7MN5F1UhirlTy0hf07sTBs1BxvcUrALv6PlXx8OmQ0J/m1SpumTNCwIQ
-         xyUDLxhg8SAjg==
-Date:   Tue, 5 Jul 2022 17:40:28 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Shunsuke Mie <mie@igel.co.jp>
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Li Chen <lchen@ambarella.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: endpoint: Don't stop EP controller by EP function
-Message-ID: <20220705224028.GA90560@bhelgaas>
+        with ESMTP id S229635AbiGEXWM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jul 2022 19:22:12 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7B28193F0;
+        Tue,  5 Jul 2022 16:22:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1657063331; x=1688599331;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=zm0KOQVEYYEWOhSmHB8yhZfj2F0Gg29XPhX+LCnTORc=;
+  b=mdGOMkJ7d0uBXjLiAbhSyP1c1EpyP4APMNnYWw6HYRB4KrxGg3jJeVLR
+   D3RRrxIZ5D+4ajhBvFBO1Ca7qqb7Zxy+vxBZjHLdSfpj4k2LmCHpm05G6
+   2v2jodirotfgEY1ib51xFyAJqJYtIBRwFBWuxbr/9K9uYUqPYk2tC+y4v
+   sTsCol47M3BfKI+2CbtWSotrbRk64NS0T7mBGdKz5F2/YFZvq7AmqRTRy
+   glyfJX4a0lcC3JOTwLI6/D0KZ/foJktbnW+WDlkh1GrlIgc2oKmwxDJLA
+   Q/Dooof+X6TJBXUVFMY8ePuPiMYwHwETUa+4mL4+avZxDvLQpvcEx4KTg
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10399"; a="283593110"
+X-IronPort-AV: E=Sophos;i="5.92,248,1650956400"; 
+   d="scan'208";a="283593110"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 16:22:11 -0700
+X-IronPort-AV: E=Sophos;i="5.92,248,1650956400"; 
+   d="scan'208";a="597455659"
+Received: from adiazinf-mobl.amr.corp.intel.com (HELO localhost) ([10.255.0.103])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jul 2022 16:22:09 -0700
+From:   ira.weiny@intel.com
+To:     Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>
+Cc:     Ira Weiny <ira.weiny@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        linux-kernel@vger.kernel.org, linux-cxl@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: [RFC PATCH 1/3] xarray: Introduce devm_xa_init()
+Date:   Tue,  5 Jul 2022 16:21:57 -0700
+Message-Id: <20220705232159.2218958-2-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.35.3
+In-Reply-To: <20220705232159.2218958-1-ira.weiny@intel.com>
+References: <20220705232159.2218958-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220622040924.113279-1-mie@igel.co.jp>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jun 22, 2022 at 01:09:24PM +0900, Shunsuke Mie wrote:
-> For multi-function endpoint device, an ep function shouldn't stop EP
-> controller. Nomally the controller is stopped via configfs.
+From: Ira Weiny <ira.weiny@intel.com>
 
-Can you please clarify this for me?
+Many devices may have arrays of resources which are allocated with
+device managed functions.  The objects referenced by the XArray are
+therefore automatically destroyed without the need for the XArray.
 
-An endpoint function by itself wouldn't stop an endpoint controller.
+Introduce devm_xa_init() which takes care of the destruction of the
+XArray meta data automatically as well.
 
-I assume that some *operation* on an endpoint function currently stops
-the endpoint controller, but that operation should not stop the
-controller?
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
-I guess the operation is an "unbind" that detaches an EPF device from
-an EPC device?
+---
+The main issue I see with this is defining devm_xa_init() in device.h.
+This makes sense because a device is required to use the call.  However,
+I'm worried about if users will find the call there vs including it in
+xarray.h?
+---
+ drivers/base/core.c    | 20 ++++++++++++++++++++
+ include/linux/device.h |  3 +++
+ 2 files changed, 23 insertions(+)
 
-> Fixes: 349e7a85b25f ("PCI: endpoint: functions: Add an EP function to test PCI")
-> Signed-off-by: Shunsuke Mie <mie@igel.co.jp>
-> ---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 5b833f00e980..a5ed779b0a51 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -627,7 +627,6 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
->  
->  	cancel_delayed_work(&epf_test->cmd_handler);
->  	pci_epf_test_clean_dma_chan(epf_test);
-> -	pci_epc_stop(epc);
->  	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
->  		epf_bar = &epf->bar[bar];
->  
-> -- 
-> 2.17.1
-> 
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 2eede2ec3d64..8c5c20a62744 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -2609,6 +2609,26 @@ void devm_device_remove_groups(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(devm_device_remove_groups);
+ 
++static void xa_destroy_cb(void *xa)
++{
++	xa_destroy(xa);
++}
++
++/**
++ * devm_xa_init() - Device managed initialization of an empty XArray
++ * @dev: The device this xarray is associated with
++ * @xa: XArray
++ *
++ * Context: Any context
++ * Returns: 0 on success, -errno if the action fails to be set
++ */
++int devm_xa_init(struct device *dev, struct xarray *xa)
++{
++	xa_init(xa);
++	return devm_add_action(dev, xa_destroy_cb, xa);
++}
++EXPORT_SYMBOL(devm_xa_init);
++
+ static int device_add_attrs(struct device *dev)
+ {
+ 	struct class *class = dev->class;
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 073f1b0126ac..e06dc63e375b 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -27,6 +27,7 @@
+ #include <linux/uidgid.h>
+ #include <linux/gfp.h>
+ #include <linux/overflow.h>
++#include <linux/xarray.h>
+ #include <linux/device/bus.h>
+ #include <linux/device/class.h>
+ #include <linux/device/driver.h>
+@@ -978,6 +979,8 @@ int __must_check devm_device_add_group(struct device *dev,
+ void devm_device_remove_group(struct device *dev,
+ 			      const struct attribute_group *grp);
+ 
++int devm_xa_init(struct device *dev, struct xarray *xa);
++
+ /*
+  * Platform "fixup" functions - allow the platform to have their say
+  * about devices and actions that the general device layer doesn't
+-- 
+2.35.3
+
