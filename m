@@ -2,59 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C35CC43334
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 15:48:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B04CCA482
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 15:48:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234570AbiGFPsR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jul 2022 11:48:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43346 "EHLO
+        id S233017AbiGFPsX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jul 2022 11:48:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232981AbiGFPsA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 11:48:00 -0400
+        with ESMTP id S233867AbiGFPsC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 11:48:02 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AC37E2BB29
-        for <linux-pci@vger.kernel.org>; Wed,  6 Jul 2022 08:40:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C2A922BB30
+        for <linux-pci@vger.kernel.org>; Wed,  6 Jul 2022 08:40:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1657122050;
+        s=mimecast20190719; t=1657122054;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=EQWobngqBe6IZBHiTe5Vq583Hw8uyiCzbasFlNmig+o=;
-        b=dcF+Mw1+D/LjSt0n0sZaKiXfOQUAViz08w4L0raA9kNP4UVxaB9GDPtslDzYNr1Vq1qN3R
-        ET89kPLwMgJSds3uEPhdITA83FwBW1OnrtNNYOr9bfDdsrX+mwzB9tDXY/AXthC2474/JM
-        f5/mnx09CFtn7aUx6R05hnaf01T1pBo=
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
- [209.85.166.199]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=hOBngKK5ObcYp0aTM/eJADmU4zkvY2wG1pNNZ2Kjb4Y=;
+        b=a10f16dFXoeNw05eGRnG9kMKSE/tsujHuODJjrLuZsSf/ULwvhGE3ZZa3CCfKAQMVbUw6E
+        fiXhWMXcWYIlEEzPZTeUdJyUG5ar8rfCBpSRGi92Z1f7X1RBjgWgOgZ5tmsUJg7Sz/2ca4
+        CvqUIJVzbls/KRaOorqNAt2HhDs3/Ok=
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
+ [209.85.166.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-489-K3R9CzHrNpWL2WXuaFvPkQ-1; Wed, 06 Jul 2022 11:40:48 -0400
-X-MC-Unique: K3R9CzHrNpWL2WXuaFvPkQ-1
-Received: by mail-il1-f199.google.com with SMTP id h28-20020a056e021d9c00b002dc15a95f9cso4462604ila.2
-        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2022 08:40:47 -0700 (PDT)
+ us-mta-577-Aef06cIvPUWpvPgupK22hQ-1; Wed, 06 Jul 2022 11:40:51 -0400
+X-MC-Unique: Aef06cIvPUWpvPgupK22hQ-1
+Received: by mail-il1-f200.google.com with SMTP id d3-20020a056e02214300b002dc0d8abab3so5121447ilv.20
+        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2022 08:40:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
          :references:organization:mime-version:content-transfer-encoding;
-        bh=EQWobngqBe6IZBHiTe5Vq583Hw8uyiCzbasFlNmig+o=;
-        b=Grg+KdCB9EbvOECsLf1w8xgjpK7S2aN7UTO5pK3z3ap1sZsexQZRULHyvmdrwhOP45
-         PIEDvu1gNx5qsT7taRaLqbHV/qLECenGf2a9Yn6H/xQ6RXyKW3ZHjmKfSysZlWCoEc0g
-         o2VHebgzV+oI7Ny3gpNSd3uJt7dNRUCel28OfUdxxWCeIyr6TElL6UGSOB8FX5bEBYpq
-         KU3bc29pCwtVm6SbIsV34GhZu+sd0zyZai2zHVsrmHkq4R1YyYKvYyk6D0j5xMe/XU85
-         gsxVU/X7geEMNwp4+5eg92FPUp207SOnHU45BYLjuYJP9trT4ymayJ+IYbYuMYdP2ckt
-         MP6A==
-X-Gm-Message-State: AJIora92TNfSJlQACdaajtIa1VAQkj8Fej7nf2DLu+N9sEdzDt8dhUGC
-        LKTHnGP/cX5HJti0ACt0ab0QHD4cTzrq4pB+MaVijoCKjKUed/Q1GCVPRPNnWK2WKqOX5HhzzXe
-        RXRA3kzNzeeoI618dPgAB
-X-Received: by 2002:a92:a041:0:b0:2d7:7935:effa with SMTP id b1-20020a92a041000000b002d77935effamr23000474ilm.222.1657122046810;
-        Wed, 06 Jul 2022 08:40:46 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1t7pHOM4PDCPwuJ5q92vRgbxmezrBziN8I+uRP0y5FKdg39CYK7WijNHV4L2+SG99cOmuGmhg==
-X-Received: by 2002:a92:a041:0:b0:2d7:7935:effa with SMTP id b1-20020a92a041000000b002d77935effamr23000448ilm.222.1657122046476;
-        Wed, 06 Jul 2022 08:40:46 -0700 (PDT)
+        bh=hOBngKK5ObcYp0aTM/eJADmU4zkvY2wG1pNNZ2Kjb4Y=;
+        b=RbHsVpbOdVfY93aH4t8Vv9VA+oQ1uoh5R43dZfIYPbQvMwc0lsPMhgNM/8q8+ckm89
+         ZKLZn4hVGjdXxvh+hLnb6VRa2GUo7VfwuoMDTn6VPHofzLVwn7nsFfDWiEYowG473Lhi
+         GHJpZMeiXFqwFvUOyJwCGfbmNEx8OulaZ6j30uOrKR62srUuCGtkmoq+t0vCtVbzzlfF
+         gdZVo+jWqz3hyuxai1rU/zwGGmpAv5fGs3sLxG8QliVUVqCpQi5jS7fVEXHrltgTnN6V
+         DeWYF55BBAAiDC8drI3aENwl6IbDyd22npi7yzQt9zFlyazDiHQxd1zlIPmuDyKwWPIC
+         /2Hw==
+X-Gm-Message-State: AJIora8ODli3nADync3pkUHT0eZ3h/Nl4NIXeYRr0DJaZVvlVbrdx3eK
+        qpMijgLNrkzLk1qw9LYuzSWbz1EW9AEbIc9GQW1Tob87NBdNJSl7Dh8By7ygpg1aL5fnpvOdHi7
+        OEfM54s2yDqzFK14jBQda
+X-Received: by 2002:a05:6638:2651:b0:33e:b468:ece9 with SMTP id n17-20020a056638265100b0033eb468ece9mr15106871jat.85.1657122050738;
+        Wed, 06 Jul 2022 08:40:50 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1tGVw+lSRAIoA4x4g8L15GS3fsLZBAb9mQaFyjvIkhW6p55QeD0DJfDTS201tOSes4EYKjdeg==
+X-Received: by 2002:a05:6638:2651:b0:33e:b468:ece9 with SMTP id n17-20020a056638265100b0033eb468ece9mr15106847jat.85.1657122050465;
+        Wed, 06 Jul 2022 08:40:50 -0700 (PDT)
 Received: from redhat.com ([38.15.36.239])
-        by smtp.gmail.com with ESMTPSA id a17-20020a056e0208b100b002d955fab9dbsm14702119ilt.23.2022.07.06.08.40.45
+        by smtp.gmail.com with ESMTPSA id d12-20020a0566022bec00b0066958ec56d9sm17003884ioy.40.2022.07.06.08.40.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Jul 2022 08:40:46 -0700 (PDT)
-Date:   Wed, 6 Jul 2022 09:40:09 -0600
+        Wed, 06 Jul 2022 08:40:49 -0700 (PDT)
+Date:   Wed, 6 Jul 2022 09:39:45 -0600
 From:   Alex Williamson <alex.williamson@redhat.com>
 To:     Abhishek Sahu <abhsahu@nvidia.com>
 Cc:     Cornelia Huck <cohuck@redhat.com>,
@@ -67,11 +67,11 @@ Cc:     Cornelia Huck <cohuck@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
         <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 6/6] vfio/pci: Add support for virtual PME
-Message-ID: <20220706094009.6726cf6a.alex.williamson@redhat.com>
-In-Reply-To: <20220701110814.7310-7-abhsahu@nvidia.com>
+Subject: Re: [PATCH v4 1/6] vfio/pci: Mask INTx during runtime suspend
+Message-ID: <20220706093945.30d65ce6.alex.williamson@redhat.com>
+In-Reply-To: <20220701110814.7310-2-abhsahu@nvidia.com>
 References: <20220701110814.7310-1-abhsahu@nvidia.com>
-        <20220701110814.7310-7-abhsahu@nvidia.com>
+        <20220701110814.7310-2-abhsahu@nvidia.com>
 Organization: Red Hat
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -80,317 +80,164 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 1 Jul 2022 16:38:14 +0530
+On Fri, 1 Jul 2022 16:38:09 +0530
 Abhishek Sahu <abhsahu@nvidia.com> wrote:
 
-> If the PCI device is in low power state and the device requires
-> wake-up, then it can generate PME (Power Management Events). Mostly
-> these PME events will be propagated to the root port and then the
-> root port will generate the system interrupt. Then the OS should
-> identify the device which generated the PME and should resume
-> the device.
+> This patch adds INTx handling during runtime suspend/resume.
+> All the suspend/resume related code for the user to put the device
+> into the low power state will be added in subsequent patches.
 > 
-> We can implement a similar virtual PME framework where if the device
-> already went into the runtime suspended state and then there is any
-> wake-up on the host side, then it will send the virtual PME
-> notification to the guest. This virtual PME will be helpful for the cases
-> where the device will not be suspended again if there is any wake-up
-> triggered by the host. Following is the overall approach regarding
-> the virtual PME.
-> 
-> 1. Add one more event like VFIO_PCI_ERR_IRQ_INDEX named
->    VFIO_PCI_PME_IRQ_INDEX and do the required code changes to get/set
->    this new IRQ.
-> 
-> 2. From the guest side, the guest needs to enable eventfd for the
->    virtual PME notification.
-> 
-> 3. In the vfio-pci driver, the PME support bits are currently
->    virtualized and set to 0. We can set PME capability support for all
->    the power states. This PME capability support is independent of the
->    physical PME support.
-> 
-> 4. The PME enable (PME_En bit in Power Management Control/Status
->    Register) and PME status (PME_Status bit in Power Management
->    Control/Status Register) are also virtualized currently.
->    The write support for PME_En bit can be enabled.
-> 
-> 5. The PME_Status bit is a write-1-clear bit where the write with
->    zero value will have no effect and write with 1 value will clear the
->    bit. The write for this bit will be trapped inside
->    vfio_pm_config_write() similar to PCI_PM_CTRL write for PM_STATES.
-> 
-> 6. When the host gets a request for resuming the device other than from
->    low power exit feature IOCTL, then PME_Status bit will be set.
->    According to [PCIe v5 7.5.2.2],
->      "PME_Status - This bit is Set when the Function would normally
->       generate a PME signal. The value of this bit is not affected by
->       the value of the PME_En bit."
-> 
->    So even if PME_En bit is not set, we can set PME_Status bit.
-> 
-> 7. If the guest has enabled PME_En and registered for PME events
->    through eventfd, then the usage count will be incremented to prevent
->    the device to go into the suspended state and notify the guest through
->    eventfd trigger.
-> 
-> The virtual PME can help in handling physical PME also. When
-> physical PME comes, then also the runtime resume will be called. If
-> the guest has registered for virtual PME, then it will be sent in this
-> case also.
-> 
-> * Implementation for handling the virtual PME on the hypervisor:
-> 
-> If we take the implementation in Linux OS, then during runtime suspend
-> time, then it calls __pci_enable_wake(). It internally enables PME
-> through pci_pme_active() and also enables the ACPI side wake-up
-> through platform_pci_set_wakeup(). To handle the PME, the hypervisor has
-> the following two options:
-> 
-> 1. Create a virtual root port for the VFIO device and trigger
->    interrupt when the PME comes. It will call pcie_pme_irq() which will
->    resume the device.
-> 
-> 2. Create a virtual ACPI _PRW resource and associate it with the device
->    itself. In _PRW, any GPE (General Purpose Event) can be assigned for
->    the wake-up. When PME comes, then GPE can be triggered by the
->    hypervisor. GPE interrupt will call pci_acpi_wake_dev() function
->    internally and it will resume the device.
+> The INTx are shared among devices. Whenever any INTx interrupt comes
 
-Do we really need to implement PME emulation in the kernel or is it
-sufficient for userspace to simply register a one-shot eventfd when
-SET'ing the low power feature and QEMU can provide the PME emulation
-based on that signaling?  Thanks,
+"The INTx lines may be shared..."
 
-Alex
+> for the VFIO devices, then vfio_intx_handler() will be called for each
+> device. Inside vfio_intx_handler(), it calls pci_check_and_mask_intx()
 
+"...device sharing the interrupt."
+
+> and checks if the interrupt has been generated for the current device.
+> Now, if the device is already in the D3cold state, then the config space
+> can not be read. Attempt to read config space in D3cold state can
+> cause system unresponsiveness in a few systems. To prevent this, mask
+> INTx in runtime suspend callback and unmask the same in runtime resume
+> callback. If INTx has been already masked, then no handling is needed
+> in runtime suspend/resume callbacks. 'pm_intx_masked' tracks this, and
+> vfio_pci_intx_mask() has been updated to return true if INTx has been
+> masked inside this function.
+> 
+> For the runtime suspend which is triggered for the no user of VFIO
+> device, the is_intx() will return false and these callbacks won't do
+> anything.
+> 
+> The MSI/MSI-X are not shared so similar handling should not be
+> needed for MSI/MSI-X. vfio_msihandler() triggers eventfd_signal()
+> without doing any device-specific config access. When the user performs
+> any config access or IOCTL after receiving the eventfd notification,
+> then the device will be moved to the D0 state first before
+> servicing any request.
 > 
 > Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
 > ---
->  drivers/vfio/pci/vfio_pci_config.c | 39 +++++++++++++++++++++------
->  drivers/vfio/pci/vfio_pci_core.c   | 43 ++++++++++++++++++++++++------
->  drivers/vfio/pci/vfio_pci_intrs.c  | 18 +++++++++++++
->  include/linux/vfio_pci_core.h      |  2 ++
->  include/uapi/linux/vfio.h          |  1 +
->  5 files changed, 87 insertions(+), 16 deletions(-)
+>  drivers/vfio/pci/vfio_pci_core.c  | 37 +++++++++++++++++++++++++++----
+>  drivers/vfio/pci/vfio_pci_intrs.c |  6 ++++-
+>  include/linux/vfio_pci_core.h     |  3 ++-
+>  3 files changed, 40 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
-> index 21a4743d011f..a06375a03758 100644
-> --- a/drivers/vfio/pci/vfio_pci_config.c
-> +++ b/drivers/vfio/pci/vfio_pci_config.c
-> @@ -719,6 +719,20 @@ static int vfio_pm_config_write(struct vfio_pci_core_device *vdev, int pos,
->  	if (count < 0)
->  		return count;
->  
-> +	/*
-> +	 * PME_STATUS is write-1-clear bit. If PME_STATUS is 1, then clear the
-> +	 * bit in vconfig. The PME_STATUS is in the upper byte of the control
-> +	 * register and user can do single byte write also.
-> +	 */
-> +	if (offset <= PCI_PM_CTRL + 1 && offset + count > PCI_PM_CTRL + 1) {
-> +		if (le32_to_cpu(val) &
-> +		    (PCI_PM_CTRL_PME_STATUS >> (offset - PCI_PM_CTRL) * 8)) {
-> +			__le16 *ctrl = (__le16 *)&vdev->vconfig
-> +					[vdev->pm_cap_offset + PCI_PM_CTRL];
-> +			*ctrl &= ~cpu_to_le16(PCI_PM_CTRL_PME_STATUS);
-> +		}
-> +	}
-> +
->  	if (offset == PCI_PM_CTRL) {
->  		pci_power_t state;
->  
-> @@ -771,14 +785,16 @@ static int __init init_pci_cap_pm_perm(struct perm_bits *perm)
->  	 * the user change power state, but we trap and initiate the
->  	 * change ourselves, so the state bits are read-only.
->  	 *
-> -	 * The guest can't process PME from D3cold so virtualize PME_Status
-> -	 * and PME_En bits. The vconfig bits will be cleared during device
-> -	 * capability initialization.
-> +	 * The guest can't process physical PME from D3cold so virtualize
-> +	 * PME_Status and PME_En bits. These bits will be used for the
-> +	 * virtual PME between host and guest. The vconfig bits will be
-> +	 * updated during device capability initialization. PME_Status is
-> +	 * write-1-clear bit, so it is read-only. We trap and update the
-> +	 * vconfig bit manually during write.
->  	 */
->  	p_setd(perm, PCI_PM_CTRL,
->  	       PCI_PM_CTRL_PME_ENABLE | PCI_PM_CTRL_PME_STATUS,
-> -	       ~(PCI_PM_CTRL_PME_ENABLE | PCI_PM_CTRL_PME_STATUS |
-> -		 PCI_PM_CTRL_STATE_MASK));
-> +	       ~(PCI_PM_CTRL_STATE_MASK | PCI_PM_CTRL_PME_STATUS));
->  
->  	return 0;
->  }
-> @@ -1454,8 +1470,13 @@ static void vfio_update_pm_vconfig_bytes(struct vfio_pci_core_device *vdev,
->  	__le16 *pmc = (__le16 *)&vdev->vconfig[offset + PCI_PM_PMC];
->  	__le16 *ctrl = (__le16 *)&vdev->vconfig[offset + PCI_PM_CTRL];
->  
-> -	/* Clear vconfig PME_Support, PME_Status, and PME_En bits */
-> -	*pmc &= ~cpu_to_le16(PCI_PM_CAP_PME_MASK);
-> +	/*
-> +	 * Set the vconfig PME_Support bits. The PME_Status is being used for
-> +	 * virtual PME support and is not dependent upon the physical
-> +	 * PME support.
-> +	 */
-> +	*pmc |= cpu_to_le16(PCI_PM_CAP_PME_MASK);
-> +	/* Clear vconfig PME_Support and PME_En bits */
->  	*ctrl &= ~cpu_to_le16(PCI_PM_CTRL_PME_ENABLE | PCI_PM_CTRL_PME_STATUS);
->  }
->  
-> @@ -1582,8 +1603,10 @@ static int vfio_cap_init(struct vfio_pci_core_device *vdev)
->  		if (ret)
->  			return ret;
->  
-> -		if (cap == PCI_CAP_ID_PM)
-> +		if (cap == PCI_CAP_ID_PM) {
-> +			vdev->pm_cap_offset = pos;
->  			vfio_update_pm_vconfig_bytes(vdev, pos);
-> +		}
->  
->  		prev = &vdev->vconfig[pos + PCI_CAP_LIST_NEXT];
->  		pos = next;
 > diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 1ddaaa6ccef5..6c1225bc2aeb 100644
+> index a0d69ddaf90d..5948d930449b 100644
 > --- a/drivers/vfio/pci/vfio_pci_core.c
 > +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -319,14 +319,35 @@ static int vfio_pci_core_runtime_resume(struct device *dev)
->  	 *   the low power state or closed the device.
->  	 * - If there is device access on the host side.
->  	 *
-> -	 * For the second case, check if re-entry to the low power state is
-> -	 * allowed. If not, then increment the usage count so that runtime PM
-> -	 * framework won't suspend the device and set the 'pm_runtime_resumed'
-> -	 * flag.
-> +	 * For the second case:
-> +	 * - The virtual PME_STATUS bit will be set. If PME_ENABLE bit is set
-> +	 *   and user has registered for virtual PME events, then send the PME
-> +	 *   virtual PME event.
-> +	 * - Check if re-entry to the low power state is not allowed.
-> +	 *
-> +	 * For the above conditions, increment the usage count so that
-> +	 * runtime PM framework won't suspend the device and set the
-> +	 * 'pm_runtime_resumed' flag.
->  	 */
-> -	if (vdev->pm_runtime_engaged && !vdev->pm_runtime_reentry_allowed) {
-> -		pm_runtime_get_noresume(dev);
-> -		vdev->pm_runtime_resumed = true;
-> +	if (vdev->pm_runtime_engaged) {
-> +		bool pme_triggered = false;
-> +		__le16 *ctrl = (__le16 *)&vdev->vconfig
-> +				[vdev->pm_cap_offset + PCI_PM_CTRL];
-> +
-> +		*ctrl |= cpu_to_le16(PCI_PM_CTRL_PME_STATUS);
-> +		if (le16_to_cpu(*ctrl) & PCI_PM_CTRL_PME_ENABLE) {
-> +			mutex_lock(&vdev->igate);
-> +			if (vdev->pme_trigger) {
-> +				pme_triggered = true;
-> +				eventfd_signal(vdev->pme_trigger, 1);
-> +			}
-> +			mutex_unlock(&vdev->igate);
-> +		}
-> +
-> +		if (!vdev->pm_runtime_reentry_allowed || pme_triggered) {
-> +			pm_runtime_get_noresume(dev);
-> +			vdev->pm_runtime_resumed = true;
-> +		}
->  	}
->  	up_write(&vdev->memory_lock);
->  
-> @@ -586,6 +607,10 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
->  		eventfd_ctx_put(vdev->req_trigger);
->  		vdev->req_trigger = NULL;
->  	}
-> +	if (vdev->pme_trigger) {
-> +		eventfd_ctx_put(vdev->pme_trigger);
-> +		vdev->pme_trigger = NULL;
-> +	}
->  	mutex_unlock(&vdev->igate);
->  }
->  EXPORT_SYMBOL_GPL(vfio_pci_core_close_device);
-> @@ -639,7 +664,8 @@ static int vfio_pci_get_irq_count(struct vfio_pci_core_device *vdev, int irq_typ
->  	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX) {
->  		if (pci_is_pcie(vdev->pdev))
->  			return 1;
-> -	} else if (irq_type == VFIO_PCI_REQ_IRQ_INDEX) {
-> +	} else if (irq_type == VFIO_PCI_REQ_IRQ_INDEX ||
-> +		   irq_type == VFIO_PCI_PME_IRQ_INDEX) {
->  		return 1;
->  	}
->  
-> @@ -985,6 +1011,7 @@ long vfio_pci_core_ioctl(struct vfio_device *core_vdev, unsigned int cmd,
->  		switch (info.index) {
->  		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
->  		case VFIO_PCI_REQ_IRQ_INDEX:
-> +		case VFIO_PCI_PME_IRQ_INDEX:
->  			break;
->  		case VFIO_PCI_ERR_IRQ_INDEX:
->  			if (pci_is_pcie(vdev->pdev))
-> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-> index 1a37db99df48..db4180687a74 100644
-> --- a/drivers/vfio/pci/vfio_pci_intrs.c
-> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
-> @@ -639,6 +639,17 @@ static int vfio_pci_set_req_trigger(struct vfio_pci_core_device *vdev,
->  					       count, flags, data);
+> @@ -259,16 +259,45 @@ int vfio_pci_set_power_state(struct vfio_pci_core_device *vdev, pci_power_t stat
+>  	return ret;
 >  }
 >  
-> +static int vfio_pci_set_pme_trigger(struct vfio_pci_core_device *vdev,
-> +				    unsigned index, unsigned start,
-> +				    unsigned count, uint32_t flags, void *data)
+> +#ifdef CONFIG_PM
+> +static int vfio_pci_core_runtime_suspend(struct device *dev)
 > +{
-> +	if (index != VFIO_PCI_PME_IRQ_INDEX || start != 0 || count > 1)
-> +		return -EINVAL;
+> +	struct vfio_pci_core_device *vdev = dev_get_drvdata(dev);
 > +
-> +	return vfio_pci_set_ctx_trigger_single(&vdev->pme_trigger,
-> +					       count, flags, data);
+> +	/*
+> +	 * If INTx is enabled, then mask INTx before going into the runtime
+> +	 * suspended state and unmask the same in the runtime resume.
+> +	 * If INTx has already been masked by the user, then
+> +	 * vfio_pci_intx_mask() will return false and in that case, INTx
+> +	 * should not be unmasked in the runtime resume.
+> +	 */
+> +	vdev->pm_intx_masked = (is_intx(vdev) && vfio_pci_intx_mask(vdev));
+> +
+> +	return 0;
 > +}
 > +
->  int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
->  			    unsigned index, unsigned start, unsigned count,
->  			    void *data)
-> @@ -688,6 +699,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
->  			break;
->  		}
->  		break;
-> +	case VFIO_PCI_PME_IRQ_INDEX:
-> +		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
-> +		case VFIO_IRQ_SET_ACTION_TRIGGER:
-> +			func = vfio_pci_set_pme_trigger;
-> +			break;
-> +		}
-> +		break;
+> +static int vfio_pci_core_runtime_resume(struct device *dev)
+> +{
+> +	struct vfio_pci_core_device *vdev = dev_get_drvdata(dev);
+> +
+> +	if (vdev->pm_intx_masked)
+> +		vfio_pci_intx_unmask(vdev);
+> +
+> +	return 0;
+> +}
+> +#endif /* CONFIG_PM */
+> +
+>  /*
+> - * The dev_pm_ops needs to be provided to make pci-driver runtime PM working,
+> - * so use structure without any callbacks.
+> - *
+>   * The pci-driver core runtime PM routines always save the device state
+>   * before going into suspended state. If the device is going into low power
+>   * state with only with runtime PM ops, then no explicit handling is needed
+>   * for the devices which have NoSoftRst-.
+>   */
+> -static const struct dev_pm_ops vfio_pci_core_pm_ops = { };
+> +static const struct dev_pm_ops vfio_pci_core_pm_ops = {
+> +	SET_RUNTIME_PM_OPS(vfio_pci_core_runtime_suspend,
+> +			   vfio_pci_core_runtime_resume,
+> +			   NULL)
+> +};
+>  
+>  int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+>  {
+> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+> index 6069a11fb51a..1a37db99df48 100644
+> --- a/drivers/vfio/pci/vfio_pci_intrs.c
+> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
+> @@ -33,10 +33,12 @@ static void vfio_send_intx_eventfd(void *opaque, void *unused)
+>  		eventfd_signal(vdev->ctx[0].trigger, 1);
+>  }
+>  
+> -void vfio_pci_intx_mask(struct vfio_pci_core_device *vdev)
+> +/* Returns true if INTx has been masked by this function. */
+> +bool vfio_pci_intx_mask(struct vfio_pci_core_device *vdev)
+>  {
+>  	struct pci_dev *pdev = vdev->pdev;
+>  	unsigned long flags;
+> +	bool intx_masked = false;
+>  
+>  	spin_lock_irqsave(&vdev->irqlock, flags);
+>  
+> @@ -60,9 +62,11 @@ void vfio_pci_intx_mask(struct vfio_pci_core_device *vdev)
+>  			disable_irq_nosync(pdev->irq);
+>  
+>  		vdev->ctx[0].masked = true;
+> +		intx_masked = true;
 >  	}
 >  
->  	if (!func)
+>  	spin_unlock_irqrestore(&vdev->irqlock, flags);
+> +	return intx_masked;
+>  }
+
+
+There's certainly another path through this function that masks the
+interrupt, which makes the definition of this return value a bit
+confusing.  Wouldn't it be simpler not to overload the masked flag on
+the interrupt context like this and instead set a new flag on the vdev
+under irqlock to indicate the device is unable to generate interrupts.
+The irq handler would add a test of this flag before any tests that
+would access the device.  Thanks,
+
+Alex
+ 
+>  /*
 > diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index 18cc83b767b8..ee2646d820c2 100644
+> index 23c176d4b073..cdfd328ba6b1 100644
 > --- a/include/linux/vfio_pci_core.h
 > +++ b/include/linux/vfio_pci_core.h
-> @@ -102,6 +102,7 @@ struct vfio_pci_core_device {
->  	bool			bar_mmap_supported[PCI_STD_NUM_BARS];
->  	u8			*pci_config_map;
->  	u8			*vconfig;
-> +	u8			pm_cap_offset;
->  	struct perm_bits	*msi_perm;
->  	spinlock_t		irqlock;
->  	struct mutex		igate;
-> @@ -133,6 +134,7 @@ struct vfio_pci_core_device {
+> @@ -124,6 +124,7 @@ struct vfio_pci_core_device {
+>  	bool			needs_reset;
+>  	bool			nointx;
+>  	bool			needs_pm_restore;
+> +	bool			pm_intx_masked;
+>  	struct pci_saved_state	*pci_saved_state;
+>  	struct pci_saved_state	*pm_save;
 >  	int			ioeventfds_nr;
->  	struct eventfd_ctx	*err_trigger;
->  	struct eventfd_ctx	*req_trigger;
-> +	struct eventfd_ctx	*pme_trigger;
->  	struct list_head	dummy_resources_list;
->  	struct mutex		ioeventfds_lock;
->  	struct list_head	ioeventfds_list;
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 7e00de5c21ea..08170950d655 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -621,6 +621,7 @@ enum {
->  	VFIO_PCI_MSIX_IRQ_INDEX,
->  	VFIO_PCI_ERR_IRQ_INDEX,
->  	VFIO_PCI_REQ_IRQ_INDEX,
-> +	VFIO_PCI_PME_IRQ_INDEX,
->  	VFIO_PCI_NUM_IRQS
->  };
+> @@ -147,7 +148,7 @@ struct vfio_pci_core_device {
+>  #define is_irq_none(vdev) (!(is_intx(vdev) || is_msi(vdev) || is_msix(vdev)))
+>  #define irq_is(vdev, type) (vdev->irq_type == type)
 >  
+> -extern void vfio_pci_intx_mask(struct vfio_pci_core_device *vdev);
+> +extern bool vfio_pci_intx_mask(struct vfio_pci_core_device *vdev);
+>  extern void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev);
+>  
+>  extern int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev,
 
