@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85055CCA47C
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 10:43:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC67FC433EF
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 10:43:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232095AbiGFKn3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jul 2022 06:43:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56708 "EHLO
+        id S232876AbiGFKna (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jul 2022 06:43:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232155AbiGFKnZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 06:43:25 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F0ADB90;
+        with ESMTP id S232324AbiGFKn3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 06:43:29 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EEF1B6F;
         Wed,  6 Jul 2022 03:43:23 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id AC268B80A38;
+        by sin.source.kernel.org (Postfix) with ESMTPS id 4B838CE1EBC;
         Wed,  6 Jul 2022 10:43:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53876C341C0;
-        Wed,  6 Jul 2022 10:43:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 452CDC3411C;
+        Wed,  6 Jul 2022 10:43:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657104201;
-        bh=oSQ5IoQCNafIgt+niU4r6ol75/VtIeDzq3eFDS3Ask0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rN6woxYEGCMe3Bj483Cd0Py2FvFbFyUevtTqSvKf5IG11LZ/+X5W0l64NUiyTnnHX
-         ne5n2bEvUslXSlJHbhAHHNGwBcc1d6Qm9VmJfyLzdoIqVb8o8YRb4yfgdr93F5PDfr
-         5EvJxAYMmijGgnOBizFz4mJb63qUETpKd7dRqUuYeC3X1WzvsCbDyC3cwczmgbbG3E
-         dg/7kPtcdppdbNwLIxRn4nJjzso167pQ86rSmYhPFMHBmT2OGKmNkTt7Y+ftNLRcTU
-         vAPi+PJdeKyZ9rgYXxO1ka6yM9myqJTJ1AjjLNVBomynZhe5FYfvprXgTaOwiSu9cU
-         DKmpPea6PAxfA==
+        s=k20201202; t=1657104200;
+        bh=ZJU7+A8sh/C/YCWpWSHDj402O/F82gQIyYiqc8Vq+qE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=nh8cmyXUfOvYI6WT/AqaEO7/btmBNWEvYeHfvCxNxPIErrpWyhHpKR+fhDtiBlvfa
+         kT8ArZVV+1VD/6vlI01haiBNIlM+IlQtrAb/N+NaUp7z93wJLoENFaSD3my3yn0tS4
+         wMDuaZjjAlgQ5ROrTtALTzAF0Up4SJbomsO3rV4MVqdNQyCAOWd1wD1FYRlvNbTvUw
+         ydBkCWCUX67FXFmcmfwJ/lcrXbeEDhV9s7IxPHyhwMhgdb0IGACmK27xw9oNsNdbMV
+         If7giLMUEZpHlF1AReLsG27w2cYIcAr+1bDlGCJD8k46sn0/tXu5mq3V0+KBw4JBbJ
+         KJyiIeWlt7FYQ==
 Received: by pali.im (Postfix)
-        id 0D7ED7BA; Wed,  6 Jul 2022 12:43:21 +0200 (CEST)
+        id 41DC57BA; Wed,  6 Jul 2022 12:43:17 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Michael Ellerman <mpe@ellerman.id.au>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
@@ -43,12 +43,10 @@ To:     Michael Ellerman <mpe@ellerman.id.au>,
         Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 4/5] powerpc/pci: Disable filling pci-OF-bus-map for non-chrp/powermac
-Date:   Wed,  6 Jul 2022 12:43:07 +0200
-Message-Id: <20220706104308.5390-5-pali@kernel.org>
+Subject: [PATCH 0/5] powerpc/pci: Cleanup unused code and enable 256 PCI buses
+Date:   Wed,  6 Jul 2022 12:43:03 +0200
+Message-Id: <20220706104308.5390-1-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220706104308.5390-1-pali@kernel.org>
-References: <20220706104308.5390-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -56,79 +54,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Creating or filling pci-OF-bus-map property in the device-tree is
-deprecated since May 2006 [1] and was used only in old platforms like
-PowerMac.
+This patch series cleanup unused code by eliminating it at compile time
+and then enable usage of all 256 PCI buses per every PCI domain as
+currently PCI bus numbers have to be unique across all PCI domains.
+So first bus number of each PCI domain would be zero and not the bus
+number of the previous domain plus one. As such bus assignment changes
+BDF address of every PCI device on multi-domain system, this new
+"feature" is configurable by config option to prevent regressions.
 
-Currently kernel code handles it only for chrp and powermac code. So
-completely disable filling pci-OF-bus-map property for non-chrp and
-non-powermac platforms.
+Tested on Freescale P2020 board. Before this patch lspci reports:
 
-[1] - https://lore.kernel.org/linuxppc-dev/1148016268.13249.14.camel@localhost.localdomain/
+8000:00:00.0 PCI bridge: Freescale Semiconductor Inc P2020E (rev 21)
+8000:01:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02)
+9000:02:00.0 PCI bridge: Freescale Semiconductor Inc P2020E (rev 21)
+9000:03:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
+a000:04:00.0 PCI bridge: Freescale Semiconductor Inc P2020E (rev 21)
+a000:05:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac Wireless Network Adapter
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
----
- arch/powerpc/kernel/pci_32.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+With these patches and enabled config option it reports:
 
-diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
-index 3291af89cea4..2f7284b68f06 100644
---- a/arch/powerpc/kernel/pci_32.c
-+++ b/arch/powerpc/kernel/pci_32.c
-@@ -37,15 +37,12 @@ EXPORT_SYMBOL(isa_io_base);
- EXPORT_SYMBOL(pci_dram_offset);
- 
- static void fixup_cpc710_pci64(struct pci_dev* dev);
--static u8* pci_to_OF_bus_map;
- 
- /* By default, we don't re-assign bus numbers. We do this only on
-  * some pmacs
-  */
- static int pci_assign_all_buses;
- 
--static int pci_bus_count;
--
- /* This will remain NULL for now, until isa-bridge.c is made common
-  * to both 32-bit and 64-bit.
-  */
-@@ -65,6 +62,11 @@ fixup_cpc710_pci64(struct pci_dev* dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_IBM,	PCI_DEVICE_ID_IBM_CPC710_PCI64,	fixup_cpc710_pci64);
- 
-+#if defined(CONFIG_PPC_PMAC) || defined(CONFIG_PPC_CHRP)
-+
-+static u8* pci_to_OF_bus_map;
-+static int pci_bus_count;
-+
- /*
-  * Functions below are used on OpenFirmware machines.
-  */
-@@ -221,6 +223,8 @@ pci_create_OF_bus_map(void)
- }
- #endif
- 
-+#endif /* defined(CONFIG_PPC_PMAC) || defined(CONFIG_PPC_CHRP) */
-+
- void pcibios_setup_phb_io_space(struct pci_controller *hose)
- {
- 	unsigned long io_offset;
-@@ -252,6 +256,8 @@ static int __init pcibios_init(void)
- 		if (pci_assign_all_buses || next_busno <= hose->last_busno)
- 			next_busno = hose->last_busno + pcibios_assign_bus_offset;
- 	}
-+
-+#if defined(CONFIG_PPC_PMAC) || defined(CONFIG_PPC_CHRP)
- 	pci_bus_count = next_busno;
- 
- 	/* OpenFirmware based machines need a map of OF bus
-@@ -260,6 +266,7 @@ static int __init pcibios_init(void)
- 	 */
- 	if (pci_assign_all_buses)
- 		pcibios_make_OF_bus_map();
-+#endif
- 
- 	/* Call common code to handle resource allocation */
- 	pcibios_resource_survey();
+8000:00:00.0 PCI bridge: Freescale Semiconductor Inc P2020E (rev 21)
+8000:01:00.0 USB controller: Texas Instruments TUSB73x0 SuperSpeed USB 3.0 xHCI Host Controller (rev 02)
+9000:00:00.0 PCI bridge: Freescale Semiconductor Inc P2020E (rev 21)
+9000:01:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
+a000:00:00.0 PCI bridge: Freescale Semiconductor Inc P2020E (rev 21)
+a000:01:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac Wireless Network Adapter
+
+Now every PCIe Root Port is on bus zero and theoretically with enough
+multiport PCIe switches connected to every PCIe Root Port, it should be
+possible to have 256 PCI buses on every PCIe controller (as each is in
+own PCI domain) and therefore connect more PCIe cards as without these
+patches.
+
+Pali Rohár (5):
+  powerpc/pci: Hide pci_device_from_OF_node() for non-powermac code
+  powerpc/pci: Make pcibios_make_OF_bus_map() static
+  powerpc/pci: Hide pci_create_OF_bus_map() for non-chrp code
+  powerpc/pci: Disable filling pci-OF-bus-map for non-chrp/powermac
+  powerpc/pci: Add config option for using all 256 PCI buses
+
+ arch/powerpc/Kconfig                  | 11 +++++++++++
+ arch/powerpc/include/asm/pci-bridge.h |  4 ++++
+ arch/powerpc/kernel/pci_32.c          | 27 +++++++++++++++++++++------
+ arch/powerpc/kernel/pci_64.c          |  2 ++
+ 4 files changed, 38 insertions(+), 6 deletions(-)
+
 -- 
 2.20.1
 
