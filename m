@@ -2,59 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 507A4C433EF
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 15:48:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A061CCA47F
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 15:48:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234677AbiGFPsZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jul 2022 11:48:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43778 "EHLO
+        id S234699AbiGFPs3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jul 2022 11:48:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234104AbiGFPsD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 11:48:03 -0400
+        with ESMTP id S234130AbiGFPsG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 11:48:06 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D3A8E29C9D
-        for <linux-pci@vger.kernel.org>; Wed,  6 Jul 2022 08:40:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7A58333E1D
+        for <linux-pci@vger.kernel.org>; Wed,  6 Jul 2022 08:40:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1657122056;
+        s=mimecast20190719; t=1657122057;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=LEoUbxgsePf+OXuUNkCuNmp2U3FI3n3qfmJydYglPV4=;
-        b=izuvelDxI9LawtXwwSvKteCxk6Kom2DvkKAEM/tm5DtR8t+brKa6oIjsK+XEZVeFICPW41
-        FEF5QdQ4g+BYwtyhmsn/WcLAj3EIt34s7CLlCx8w4alRyfgYUHLGSskqsDE9S6A4Ef2Ald
-        OSya7DXK9j4DXmqfpjCxtRPbW6ToXTk=
-Received: from mail-io1-f72.google.com (mail-io1-f72.google.com
- [209.85.166.72]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=j2ouW0IJ50/LD/W4uln9u2YiN3e6DrWUMY1mn0yrjIw=;
+        b=dqo4amB+e8Aj07D/bHwtcmgI53+86j7yieCBUez1MEPIRGRVPAI/UQVsZKdlTD2O5zO8Ov
+        06vLFBunZxyAD9yMmFTTo1ECeYdEVrgZlrora0ii8BhHYbg//GZIn7TluxA/Ps0RR9CPCn
+        6KRcwQaRQxkmPie6Ky6aLGyjIfWqhHE=
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
+ [209.85.166.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-154-RjnugONSNnaVthHq_jAQgA-1; Wed, 06 Jul 2022 11:40:55 -0400
-X-MC-Unique: RjnugONSNnaVthHq_jAQgA-1
-Received: by mail-io1-f72.google.com with SMTP id b5-20020a05660214c500b0067530b15cc1so8334875iow.9
-        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2022 08:40:55 -0700 (PDT)
+ us-mta-56-4ZkdWw4uOLamOCNEVl74sA-1; Wed, 06 Jul 2022 11:40:53 -0400
+X-MC-Unique: 4ZkdWw4uOLamOCNEVl74sA-1
+Received: by mail-il1-f200.google.com with SMTP id x11-20020a056e021cab00b002dada9d2a50so7831735ill.15
+        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2022 08:40:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
          :references:organization:mime-version:content-transfer-encoding;
-        bh=LEoUbxgsePf+OXuUNkCuNmp2U3FI3n3qfmJydYglPV4=;
-        b=RS0LJ1PZ0sznLdUOGw7kdMWJNWY0EFhsQwZDA34rEQbZkYPWoMjdevMSCSgqR1KAcK
-         YDpbCrM2ylPtB/72Og9A7qD83eu39A6KYwQMeVY1by+4UW+2kLcZPPR488V8qnZ/FPDc
-         TaOgO0tDntBSN3IHSFQreVFdA3DqEPUwnYZcYcRGOMtM+rBSb/eRvd6WVAORpVDDbLus
-         IlskwQPVJkWJ/NSEBOsaomGy7PIxC4Y1Ge2HDb3mJCVwIbBK10RTktJiWa/EbvYBMC3E
-         UTrbbcjD6X2jGWpK9+hgzKTtiPOkP+UUfZuBni7rozE6gK3WrDR86MdJ/uiCUze6x00M
-         rBQg==
-X-Gm-Message-State: AJIora/H1Y98xgNCX4s45B6xDX/5RaSgwE2icmWQ7eqCGTTY15N+WoVk
-        yh33HMSoEQ8h927aw5xUJHIwWHbY5tPIP6lbpe6AUxRNugTmnZAim41yci+F9ng2/NXk9b9JeGR
-        9Ab+EI+bI11HOOQpcvzos
-X-Received: by 2002:a05:6602:1802:b0:675:7d87:aacf with SMTP id t2-20020a056602180200b006757d87aacfmr22783713ioh.110.1657122054790;
-        Wed, 06 Jul 2022 08:40:54 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1uw3J8g+FHvcgDOZiei+pAS2xPcEwiEhiLpXoXncwE3BpEJ7hqCd3vxBziEnUMPcby61f6v4w==
-X-Received: by 2002:a05:6602:1802:b0:675:7d87:aacf with SMTP id t2-20020a056602180200b006757d87aacfmr22783682ioh.110.1657122054454;
-        Wed, 06 Jul 2022 08:40:54 -0700 (PDT)
+        bh=j2ouW0IJ50/LD/W4uln9u2YiN3e6DrWUMY1mn0yrjIw=;
+        b=UddzfhA0ST2VVupTAUXhtQC63V+WbWvcmcV8sJTZQ2DZOhOJUhNa2XF4aQeeH365AH
+         joFyiul4pjTl+WjqCO3DY40SufDWtY5NNiACQSnxhXncQQ317sZ11Q+BfcxJpokYq0TH
+         +kNp/PXlY/wlVvYtDzp/MwJFmOAdwYlmUxE0t/tJzmB7Mm8PW4gCzdwsAskme0p3CG+Q
+         QLet3NjJw4Kav3BdoCi9xihL+Y1dMkLSlcHPr3AhDY6Sp9l9tyYZGHwEBM97uH5i3uXB
+         WteY6i/9uTPfCVkh5dSUDBbBlcWP+CJib2MLKle/tDNqrMmhCZPMulRv1pvL/30qvwVM
+         hD1w==
+X-Gm-Message-State: AJIora+121+TDbEaw4Hs+Pl1QV7Mg3Wir1Jm3FXjozwcCOP2OQ/oILds
+        jnx7oU4UxIwzLovuO1JwMXRI3JLMnnN7TJJhUMlHbFfXXwnEeqfqB/CHhsLRumwkzuTY45uvi/U
+        +lWGgJI5mw/Yz94R2mdUr
+X-Received: by 2002:a05:6e02:12ea:b0:2da:bb5b:bcc5 with SMTP id l10-20020a056e0212ea00b002dabb5bbcc5mr23192255iln.173.1657122052914;
+        Wed, 06 Jul 2022 08:40:52 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1tcoOJLG0ui9DJlli5fa1i8aU2HEA0SyRv0Q4XlNsbA+kQEcNsL6A+fZcImvzWzfsQBUSpTjg==
+X-Received: by 2002:a05:6e02:12ea:b0:2da:bb5b:bcc5 with SMTP id l10-20020a056e0212ea00b002dabb5bbcc5mr23192237iln.173.1657122052658;
+        Wed, 06 Jul 2022 08:40:52 -0700 (PDT)
 Received: from redhat.com ([38.15.36.239])
-        by smtp.gmail.com with ESMTPSA id d12-20020a0566022bec00b0066958ec56d9sm17003884ioy.40.2022.07.06.08.40.52
+        by smtp.gmail.com with ESMTPSA id d12-20020a0566022bec00b0066958ec56d9sm17003884ioy.40.2022.07.06.08.40.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Jul 2022 08:40:53 -0700 (PDT)
-Date:   Wed, 6 Jul 2022 09:40:21 -0600
+        Wed, 06 Jul 2022 08:40:51 -0700 (PDT)
+Date:   Wed, 6 Jul 2022 09:40:07 -0600
 From:   Alex Williamson <alex.williamson@redhat.com>
 To:     Abhishek Sahu <abhsahu@nvidia.com>
 Cc:     Cornelia Huck <cohuck@redhat.com>,
@@ -67,12 +67,12 @@ Cc:     Cornelia Huck <cohuck@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
         <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 5/6] vfio/pci: Prevent low power re-entry without
- guest driver
-Message-ID: <20220706094021.39b0ef73.alex.williamson@redhat.com>
-In-Reply-To: <20220701110814.7310-6-abhsahu@nvidia.com>
+Subject: Re: [PATCH v4 3/6] vfio: Increment the runtime PM usage count
+ during IOCTL call
+Message-ID: <20220706094007.12c33d63.alex.williamson@redhat.com>
+In-Reply-To: <20220701110814.7310-4-abhsahu@nvidia.com>
 References: <20220701110814.7310-1-abhsahu@nvidia.com>
-        <20220701110814.7310-6-abhsahu@nvidia.com>
+        <20220701110814.7310-4-abhsahu@nvidia.com>
 Organization: Red Hat
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -81,224 +81,202 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 1 Jul 2022 16:38:13 +0530
+On Fri, 1 Jul 2022 16:38:11 +0530
 Abhishek Sahu <abhsahu@nvidia.com> wrote:
 
-> Some devices (Like NVIDIA VGA or 3D controller) require driver
-> involvement each time before going into D3cold. In the regular flow,
-> the guest driver do all the required steps inside the guest OS and
-> then the IOCTL will be called for D3cold entry by the hypervisor. Now,
-> if there is any activity on the host side (For example user has run
-> lspci, dump the config space through sysfs, etc.), then the runtime PM
-> framework will resume the device first, perform the operation and then
-> suspend the device again. This second time suspend will be without
-> guest driver involvement. This patch adds the support to prevent
-> second-time runtime suspend if there is any wake-up. This prevention
-> is either based on the predefined vendor/class id list or the user can
-> specify the flag (VFIO_PM_LOW_POWER_REENTERY_DISABLE) during entry for
-> the same.
+> The vfio-pci based driver will have runtime power management
+> support where the user can put the device into the low power state
+> and then PCI devices can go into the D3cold state. If the device is
+> in the low power state and the user issues any IOCTL, then the
+> device should be moved out of the low power state first. Once
+> the IOCTL is serviced, then it can go into the low power state again.
+> The runtime PM framework manages this with help of usage count.
 > 
-> 'pm_runtime_reentry_allowed' flag tracks if this re-entry is allowed.
-> It will be set during the entry time.
-> 
-> 'pm_runtime_resumed' flag tracks if there is any wake-up before the
-> guest performs the wake-up. If re-entry is not allowed, then during
-> runtime resume, the runtime PM count will be incremented, and this
-> flag will be set. This flag will be checked during guest D3cold exit
-> and then skip the runtime PM-related handling if this flag is set.
-> 
-> During guest low power exit time, all vdev power-related flags are
-> accessed under 'memory_lock' and usage count will be incremented. The
-> resume will be triggered after releasing the lock since the runtime
-> resume callback again requires the lock. pm_runtime_get_noresume()/
-> pm_runtime_resume() have been used instead of
-> pm_runtime_resume_and_get() to handle the following scenario during
-> the race condition.
-> 
->  a. The guest triggered the low power exit.
->  b. The guest thread got the lock and cleared the vdev related
->     flags and released the locks.
->  c. Before pm_runtime_resume_and_get(), the host lspci thread got
->     scheduled and triggered the runtime resume.
->  d. Now, all the vdev related flags are cleared so there won't be
->     any extra handling inside the runtime resume.
->  e. The runtime PM put the device again into the suspended state.
->  f. The guest triggered pm_runtime_resume_and_get() got called.
-> 
-> So, at step (e), the suspend is happening without the guest driver
-> involvement. Now, by using pm_runtime_get_noresume() before releasing
-> 'memory_lock', the runtime PM framework can't suspend the device due
-> to incremented usage count.
+> One option was to add the runtime PM related API's inside vfio-pci
+> driver but some IOCTL (like VFIO_DEVICE_FEATURE) can follow a
+> different path and more IOCTL can be added in the future. Also, the
+> runtime PM will be added for vfio-pci based drivers variant currently,
+> but the other VFIO based drivers can use the same in the
+> future. So, this patch adds the runtime calls runtime-related API in
+> the top-level IOCTL function itself.
+>
+> For the VFIO drivers which do not have runtime power management
+> support currently, the runtime PM API's won't be invoked. Only for
+> vfio-pci based drivers currently, the runtime PM API's will be invoked
+> to increment and decrement the usage count.
 
-Nak, this policy should be implemented in userspace.  Thanks,
+Variant drivers can easily opt-out of runtime pm support by performing
+a gratuitous pm-get in their device-open function.
+ 
+> Taking this usage count incremented while servicing IOCTL will make
+> sure that the user won't put the device into low power state when any
+> other IOCTL is being serviced in parallel. Let's consider the
+> following scenario:
+> 
+>  1. Some other IOCTL is called.
+>  2. The user has opened another device instance and called the power
+>     management IOCTL for the low power entry.
+>  3. The power management IOCTL moves the device into the low power state.
+>  4. The other IOCTL finishes.
+> 
+> If we don't keep the usage count incremented then the device
+> access will happen between step 3 and 4 while the device has already
+> gone into the low power state.
+> 
+> The runtime PM API's should not be invoked for
+> VFIO_DEVICE_FEATURE_POWER_MANAGEMENT since this IOCTL itself performs
+> the runtime power management entry and exit for the VFIO device.
+
+I think the one-shot interface I proposed in the previous patch avoids
+the need for special handling for these feature ioctls.  Thanks,
 
 Alex
  
+> The pm_runtime_resume_and_get() will be the first call so its error
+> should not be propagated to user space directly. For example, if
+> pm_runtime_resume_and_get() can return -EINVAL for the cases where the
+> user has passed the correct argument. So the
+> pm_runtime_resume_and_get() errors have been masked behind -EIO.
+> 
 > Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
 > ---
->  drivers/vfio/pci/vfio_pci_core.c | 87 ++++++++++++++++++++++++++++++--
->  include/linux/vfio_pci_core.h    |  2 +
->  2 files changed, 84 insertions(+), 5 deletions(-)
+>  drivers/vfio/vfio.c | 82 ++++++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 74 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 8c17ca41d156..1ddaaa6ccef5 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -191,6 +191,20 @@ static bool vfio_pci_nointx(struct pci_dev *pdev)
->  	return false;
->  }
+> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+> index 61e71c1154be..61a8d9f7629a 100644
+> --- a/drivers/vfio/vfio.c
+> +++ b/drivers/vfio/vfio.c
+> @@ -32,6 +32,7 @@
+>  #include <linux/vfio.h>
+>  #include <linux/wait.h>
+>  #include <linux/sched/signal.h>
+> +#include <linux/pm_runtime.h>
+>  #include "vfio.h"
 >  
-> +static bool vfio_pci_low_power_reentry_allowed(struct pci_dev *pdev)
+>  #define DRIVER_VERSION	"0.3"
+> @@ -1333,6 +1334,39 @@ static const struct file_operations vfio_group_fops = {
+>  	.release	= vfio_group_fops_release,
+>  };
+>  
+> +/*
+> + * Wrapper around pm_runtime_resume_and_get().
+> + * Return error code on failure or 0 on success.
+> + */
+> +static inline int vfio_device_pm_runtime_get(struct vfio_device *device)
 > +{
-> +	/*
-> +	 * The NVIDIA display class requires driver involvement for every
-> +	 * D3cold entry. The audio and other classes can go into D3cold
-> +	 * without driver involvement.
-> +	 */
-> +	if (pdev->vendor == PCI_VENDOR_ID_NVIDIA &&
-> +	    ((pdev->class >> 16) == PCI_BASE_CLASS_DISPLAY))
-> +		return false;
+> +	struct device *dev = device->dev;
 > +
-> +	return true;
+> +	if (dev->driver && dev->driver->pm) {
+> +		int ret;
+> +
+> +		ret = pm_runtime_resume_and_get(dev);
+> +		if (ret < 0) {
+> +			dev_info_ratelimited(dev,
+> +				"vfio: runtime resume failed %d\n", ret);
+> +			return -EIO;
+> +		}
+> +	}
+> +
+> +	return 0;
 > +}
 > +
->  static void vfio_pci_probe_power_state(struct vfio_pci_core_device *vdev)
+> +/*
+> + * Wrapper around pm_runtime_put().
+> + */
+> +static inline void vfio_device_pm_runtime_put(struct vfio_device *device)
+> +{
+> +	struct device *dev = device->dev;
+> +
+> +	if (dev->driver && dev->driver->pm)
+> +		pm_runtime_put(dev);
+> +}
+> +
+>  /*
+>   * VFIO Device fd
+>   */
+> @@ -1607,6 +1641,8 @@ static int vfio_ioctl_device_feature(struct vfio_device *device,
 >  {
->  	struct pci_dev *pdev = vdev->pdev;
-> @@ -295,6 +309,27 @@ static int vfio_pci_core_runtime_resume(struct device *dev)
->  	if (vdev->pm_intx_masked)
->  		vfio_pci_intx_unmask(vdev);
+>  	size_t minsz = offsetofend(struct vfio_device_feature, flags);
+>  	struct vfio_device_feature feature;
+> +	int ret = 0;
+> +	u16 feature_cmd;
 >  
-> +	down_write(&vdev->memory_lock);
+>  	if (copy_from_user(&feature, arg, minsz))
+>  		return -EFAULT;
+> @@ -1626,28 +1662,51 @@ static int vfio_ioctl_device_feature(struct vfio_device *device,
+>  	    (feature.flags & VFIO_DEVICE_FEATURE_GET))
+>  		return -EINVAL;
+>  
+> -	switch (feature.flags & VFIO_DEVICE_FEATURE_MASK) {
+> +	feature_cmd = feature.flags & VFIO_DEVICE_FEATURE_MASK;
 > +
 > +	/*
-> +	 * The runtime resume callback will be called for one of the following
-> +	 * two cases:
-> +	 *
-> +	 * - If the user has called IOCTL explicitly to move the device out of
-> +	 *   the low power state or closed the device.
-> +	 * - If there is device access on the host side.
-> +	 *
-> +	 * For the second case, check if re-entry to the low power state is
-> +	 * allowed. If not, then increment the usage count so that runtime PM
-> +	 * framework won't suspend the device and set the 'pm_runtime_resumed'
-> +	 * flag.
+> +	 * The VFIO_DEVICE_FEATURE_POWER_MANAGEMENT itself performs the runtime
+> +	 * power management entry and exit for the VFIO device, so the runtime
+> +	 * PM API's should not be called for this feature.
 > +	 */
-> +	if (vdev->pm_runtime_engaged && !vdev->pm_runtime_reentry_allowed) {
-> +		pm_runtime_get_noresume(dev);
-> +		vdev->pm_runtime_resumed = true;
+> +	if (feature_cmd != VFIO_DEVICE_FEATURE_POWER_MANAGEMENT) {
+> +		ret = vfio_device_pm_runtime_get(device);
+> +		if (ret)
+> +			return ret;
 > +	}
-> +	up_write(&vdev->memory_lock);
 > +
->  	return 0;
->  }
->  #endif /* CONFIG_PM */
-> @@ -415,9 +450,12 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
->  	 */
->  	down_write(&vdev->memory_lock);
->  	if (vdev->pm_runtime_engaged) {
-> +		if (!vdev->pm_runtime_resumed) {
-> +			pm_runtime_get_noresume(&pdev->dev);
-> +			do_resume = true;
-> +		}
-> +		vdev->pm_runtime_resumed = false;
->  		vdev->pm_runtime_engaged = false;
-> -		pm_runtime_get_noresume(&pdev->dev);
-> -		do_resume = true;
+> +	switch (feature_cmd) {
+>  	case VFIO_DEVICE_FEATURE_MIGRATION:
+> -		return vfio_ioctl_device_feature_migration(
+> +		ret = vfio_ioctl_device_feature_migration(
+>  			device, feature.flags, arg->data,
+>  			feature.argsz - minsz);
+> +		break;
+>  	case VFIO_DEVICE_FEATURE_MIG_DEVICE_STATE:
+> -		return vfio_ioctl_device_feature_mig_device_state(
+> +		ret = vfio_ioctl_device_feature_mig_device_state(
+>  			device, feature.flags, arg->data,
+>  			feature.argsz - minsz);
+> +		break;
+>  	default:
+>  		if (unlikely(!device->ops->device_feature))
+> -			return -EINVAL;
+> -		return device->ops->device_feature(device, feature.flags,
+> -						   arg->data,
+> -						   feature.argsz - minsz);
+> +			ret = -EINVAL;
+> +		else
+> +			ret = device->ops->device_feature(
+> +				device, feature.flags, arg->data,
+> +				feature.argsz - minsz);
+> +		break;
 >  	}
->  	up_write(&vdev->memory_lock);
->  
-> @@ -1227,12 +1265,17 @@ static int vfio_pci_pm_validate_flags(u32 flags)
->  	if (!flags)
->  		return -EINVAL;
->  	/* Only valid flags should be set */
-> -	if (flags & ~(VFIO_PM_LOW_POWER_ENTER | VFIO_PM_LOW_POWER_EXIT))
-> +	if (flags & ~(VFIO_PM_LOW_POWER_ENTER | VFIO_PM_LOW_POWER_EXIT |
-> +		      VFIO_PM_LOW_POWER_REENTERY_DISABLE))
->  		return -EINVAL;
->  	/* Both enter and exit should not be set */
->  	if ((flags & (VFIO_PM_LOW_POWER_ENTER | VFIO_PM_LOW_POWER_EXIT)) ==
->  	    (VFIO_PM_LOW_POWER_ENTER | VFIO_PM_LOW_POWER_EXIT))
->  		return -EINVAL;
-> +	/* re-entry disable can only be set with enter */
-> +	if ((flags & VFIO_PM_LOW_POWER_REENTERY_DISABLE) &&
-> +	    !(flags & VFIO_PM_LOW_POWER_ENTER))
-> +		return -EINVAL;
->  
->  	return 0;
+> +
+> +	if (feature_cmd != VFIO_DEVICE_FEATURE_POWER_MANAGEMENT)
+> +		vfio_device_pm_runtime_put(device);
+> +
+> +	return ret;
 >  }
-> @@ -1255,10 +1298,17 @@ static int vfio_pci_core_feature_pm(struct vfio_device *device, u32 flags,
 >  
->  	if (flags & VFIO_DEVICE_FEATURE_GET) {
->  		down_read(&vdev->memory_lock);
-> -		if (vdev->pm_runtime_engaged)
-> +		if (vdev->pm_runtime_engaged) {
->  			vfio_pm.flags = VFIO_PM_LOW_POWER_ENTER;
-> -		else
-> +			if (!vdev->pm_runtime_reentry_allowed)
-> +				vfio_pm.flags |=
-> +					VFIO_PM_LOW_POWER_REENTERY_DISABLE;
-> +		} else {
->  			vfio_pm.flags = VFIO_PM_LOW_POWER_EXIT;
-> +			if (!vfio_pci_low_power_reentry_allowed(pdev))
-> +				vfio_pm.flags |=
-> +					VFIO_PM_LOW_POWER_REENTERY_DISABLE;
-> +		}
->  		up_read(&vdev->memory_lock);
+>  static long vfio_device_fops_unl_ioctl(struct file *filep,
+>  				       unsigned int cmd, unsigned long arg)
+>  {
+>  	struct vfio_device *device = filep->private_data;
+> +	int ret;
 >  
->  		if (copy_to_user(arg, &vfio_pm, sizeof(vfio_pm)))
-> @@ -1286,6 +1336,19 @@ static int vfio_pci_core_feature_pm(struct vfio_device *device, u32 flags,
->  		}
->  
->  		vdev->pm_runtime_engaged = true;
-> +		vdev->pm_runtime_resumed = false;
+>  	switch (cmd) {
+>  	case VFIO_DEVICE_FEATURE:
+> @@ -1655,7 +1714,14 @@ static long vfio_device_fops_unl_ioctl(struct file *filep,
+>  	default:
+>  		if (unlikely(!device->ops->ioctl))
+>  			return -EINVAL;
+> -		return device->ops->ioctl(device, cmd, arg);
 > +
-> +		/*
-> +		 * If there is any access when the device is in the runtime
-> +		 * suspended state, then the device will be resumed first
-> +		 * before access and then the device will be suspended again.
-> +		 * Check if this second time suspend is allowed and track the
-> +		 * same in 'pm_runtime_reentry_allowed' flag.
-> +		 */
-> +		vdev->pm_runtime_reentry_allowed =
-> +			vfio_pci_low_power_reentry_allowed(pdev) &&
-> +			!(vfio_pm.flags & VFIO_PM_LOW_POWER_REENTERY_DISABLE);
+> +		ret = vfio_device_pm_runtime_get(device);
+> +		if (ret)
+> +			return ret;
 > +
->  		up_write(&vdev->memory_lock);
->  		pm_runtime_put(&pdev->dev);
->  	} else if (vfio_pm.flags & VFIO_PM_LOW_POWER_EXIT) {
-> @@ -1296,6 +1359,20 @@ static int vfio_pci_core_feature_pm(struct vfio_device *device, u32 flags,
->  		}
+> +		ret = device->ops->ioctl(device, cmd, arg);
+> +		vfio_device_pm_runtime_put(device);
+> +		return ret;
+>  	}
+>  }
 >  
->  		vdev->pm_runtime_engaged = false;
-> +		if (vdev->pm_runtime_resumed) {
-> +			vdev->pm_runtime_resumed = false;
-> +			up_write(&vdev->memory_lock);
-> +			return 0;
-> +		}
-> +
-> +		/*
-> +		 * The 'memory_lock' will be acquired again inside the runtime
-> +		 * resume callback. So, increment the usage count inside the
-> +		 * lock and call pm_runtime_resume() after releasing the lock.
-> +		 * If there is any race condition between the wake-up generated
-> +		 * at the host and the current path. Then the incremented usage
-> +		 * count will prevent the device to go into the suspended state.
-> +		 */
->  		pm_runtime_get_noresume(&pdev->dev);
->  		up_write(&vdev->memory_lock);
->  		ret = pm_runtime_resume(&pdev->dev);
-> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-> index bf4823b008f9..18cc83b767b8 100644
-> --- a/include/linux/vfio_pci_core.h
-> +++ b/include/linux/vfio_pci_core.h
-> @@ -126,6 +126,8 @@ struct vfio_pci_core_device {
->  	bool			needs_pm_restore;
->  	bool			pm_intx_masked;
->  	bool			pm_runtime_engaged;
-> +	bool			pm_runtime_resumed;
-> +	bool			pm_runtime_reentry_allowed;
->  	struct pci_saved_state	*pci_saved_state;
->  	struct pci_saved_state	*pm_save;
->  	int			ioeventfds_nr;
 
