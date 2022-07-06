@@ -2,51 +2,53 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB53FC43334
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 10:22:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E935C43334
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 10:43:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232641AbiGFKWq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jul 2022 06:22:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36766 "EHLO
+        id S232240AbiGFKnZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jul 2022 06:43:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233147AbiGFKWW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 06:22:22 -0400
+        with ESMTP id S231194AbiGFKnY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 06:43:24 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B93F326124;
-        Wed,  6 Jul 2022 03:22:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAC89B49;
+        Wed,  6 Jul 2022 03:43:23 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 552BB61DFA;
-        Wed,  6 Jul 2022 10:22:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56115C3411C;
-        Wed,  6 Jul 2022 10:22:19 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5515861E54;
+        Wed,  6 Jul 2022 10:43:23 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90D47C341D0;
+        Wed,  6 Jul 2022 10:43:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657102939;
-        bh=SMQcYq8ni/D8jrt39kIE8+5UERyv9ocsQz7ZXYAUkIc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=txmb5oAobChslywtvbJ+gpAXqasBVWhd6fmlE51OsCkOYpAIPcblocnnezSWIrZCA
-         LmFXulu9mSy9W6fxEZTIiFiBYLAxpx4VQTG5BG7N++VYgmAPWq499lxsP2E+gadJg/
-         U7VJVjLZ2p2yylClQFtvinkB3mYF8fukQ9TAgp0aTPChyscJ9YH0F+o/LiayPDyhRS
-         7sDelXC3ceihiXBqc4dnA4Ex6lutvhNvKcuZ+l+FFhXDh1+HhlAxmBnoVdOCU92Yq0
-         ZdTRaEPN1YoAvu9tyl3Fp0KTwR3e1s/DRFbdr3mIHDOabZ6HbAg2nP5fR3CIyose/3
-         uecTIOhge4t3g==
+        s=k20201202; t=1657104202;
+        bh=j5IOHlX255HFSnaMvWUb7Q8STsC+hRHhN52ol+fdQ2A=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=tatURPUrAkHQIf+OcPOWiC9vJNvtxd9rvTQGIhwklmkCYBo2rzlpzyZCzdzB1Aiy2
+         AXxFRkxOKMd+vRdIjysrVF2IWc8DWZUOFQ96DwcjKHdGvNG3/auFx91IeORHMSwKCS
+         1GAk/jB75OIuOWU8Khm/96Hg+qbBpQYP0w4qtUegp7aAGsIfypGvioRP0juTktdTc3
+         bAbRzpwS/Cs8sP+tFhM9XsJnO/lAjU1MekIWk0ostbGadOJ67BRItfha/TJ/6wVoiY
+         9EWus6IwgsTmkHRSCebFHqPaX619oDqt5CnD9RwuoOahAlHhszNtYEV10hirpZ3ERk
+         2XDJjyFrnnWMw==
 Received: by pali.im (Postfix)
-        id D5CD77BA; Wed,  6 Jul 2022 12:22:16 +0200 (CEST)
+        id 1CDAD825; Wed,  6 Jul 2022 12:43:20 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Michael Ellerman <mpe@ellerman.id.au>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Paul Mackerras <paulus@samba.org>,
-        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Guowen Shan <gshan@redhat.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        =?UTF-8?q?C=C3=A9dric=20Le=20Goater?= <clg@kaod.org>,
+        Nick Child <nick.child@ibm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/2] powerpc/pci: Add config option for using OF 'reg' for PCI domain
-Date:   Wed,  6 Jul 2022 12:21:47 +0200
-Message-Id: <20220706102148.5060-1-pali@kernel.org>
+Subject: [PATCH 3/5] powerpc/pci: Hide pci_create_OF_bus_map() for non-chrp code
+Date:   Wed,  6 Jul 2022 12:43:06 +0200
+Message-Id: <20220706104308.5390-4-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220706104308.5390-1-pali@kernel.org>
+References: <20220706104308.5390-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -54,96 +56,49 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since commit 63a72284b159 ("powerpc/pci: Assign fixed PHB number based on
-device-tree properties"), powerpc kernel always fallback to PCI domain
-assignment from OF / Device Tree 'reg' property of the PCI controller.
+Function pci_create_OF_bus_map() is used only in chrp code.
+So hide it from all other platforms as it is unsed.
 
-In most cases 'reg' property is not zero and therefore there it cause that
-PCI domain zero is not present in system anymore.
-
-PCI code for other Linux architectures use increasing assignment of the PCI
-domain for individual controllers (assign the first free number), like it
-was also for powerpc prior mentioned commit. Also it starts numbering
-domains from zero.
-
-Upgrading powerpc kernels from LTS 4.4 version (which does not contain
-mentioned commit) to new LTS versions brings a change in domain assignment.
-
-It can be problematic for embedded machines with single PCIe controller
-where it is expected that PCIe card is connected on the domain zero.
-Also it can be problematic as that commit changes PCIe domains in
-multi-controller setup with fixed number of controller (without hotplug
-support).
-
-Originally that change was intended for powernv and pservers and specially
-server machines with more PCI domains or hot plug support.
-
-Fix this issue and introduce a new option CONFIG_PPC_PCI_DOMAIN_FROM_OF_REG.
-When this option is disabled then powerpc kernel would assign PCI domains
-in the similar way like it is doing kernel for other architectures,
-starting from zero and also how it was done prior that commit.
-
-This option is by default enabled for powernv and pseries platform for which
-was that commit originally intended.
-
-With this change upgrading kernels from LTS 4.4 version does not change PCI
-domain on smaller embedded platforms with fixed number of PCIe controllers.
-And also ensure that PCI domain zero is present as before that commit.
-
-Fixes: 63a72284b159 ("powerpc/pci: Assign fixed PHB number based on device-tree properties")
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
-Changes in v2:
-* Enable CONFIG_PPC_PCI_DOMAIN_FROM_OF_REG by default on powernv and pseries
----
- arch/powerpc/Kconfig             | 11 +++++++++++
- arch/powerpc/kernel/pci-common.c |  4 ++--
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ arch/powerpc/include/asm/pci-bridge.h | 2 ++
+ arch/powerpc/kernel/pci_32.c          | 2 ++
+ 2 files changed, 4 insertions(+)
 
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index f66084bc1dfe..053a88e84049 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -386,6 +386,17 @@ config PPC_OF_PLATFORM_PCI
- 	depends on PCI
- 	depends on PPC64 # not supported on 32 bits yet
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 98156932a1f5..e18c95f4e1d4 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -176,7 +176,9 @@ extern int pci_device_from_OF_node(struct device_node *node,
+ #endif
+ #ifndef CONFIG_PPC64
  
-+config PPC_PCI_DOMAIN_FROM_OF_REG
-+	bool "Use OF reg property for PCI domain"
-+	depends on PCI
-+	default y if PPC_PSERIES || PPC_POWERNV
-+	help
-+	  By default PCI domain for host bridge during its registration is
-+	  chosen as the lowest unused PCI domain number.
-+
-+	  When this option is enabled then PCI domain can be determined
-+	  also from lower bits of the OF / Device Tree 'reg' property.
-+
- config ARCH_SUPPORTS_UPROBES
- 	def_bool y
++#ifdef CONFIG_PPC_CHRP
+ extern void pci_create_OF_bus_map(void);
++#endif
  
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 068410cd54a3..7f959df34833 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -74,7 +74,6 @@ void __init set_pci_dma_ops(const struct dma_map_ops *dma_ops)
- static int get_phb_number(struct device_node *dn)
- {
- 	int ret, phb_id = -1;
--	u32 prop_32;
- 	u64 prop;
+ #else	/* CONFIG_PPC64 */
  
- 	/*
-@@ -83,7 +82,8 @@ static int get_phb_number(struct device_node *dn)
- 	 * reading "ibm,opal-phbid", only present in OPAL environment.
- 	 */
- 	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
--	if (ret) {
-+	if (ret && IS_ENABLED(CONFIG_PPC_PCI_DOMAIN_FROM_OF_REG)) {
-+		u32 prop_32;
- 		ret = of_property_read_u32_index(dn, "reg", 1, &prop_32);
- 		prop = prop_32;
+diff --git a/arch/powerpc/kernel/pci_32.c b/arch/powerpc/kernel/pci_32.c
+index df981294df29..3291af89cea4 100644
+--- a/arch/powerpc/kernel/pci_32.c
++++ b/arch/powerpc/kernel/pci_32.c
+@@ -194,6 +194,7 @@ int pci_device_from_OF_node(struct device_node *node, u8 *bus, u8 *devfn)
+ EXPORT_SYMBOL(pci_device_from_OF_node);
+ #endif
+ 
++#ifdef CONFIG_PPC_CHRP
+ /* We create the "pci-OF-bus-map" property now so it appears in the
+  * /proc device tree
+  */
+@@ -218,6 +219,7 @@ pci_create_OF_bus_map(void)
+ 		of_node_put(dn);
  	}
+ }
++#endif
+ 
+ void pcibios_setup_phb_io_space(struct pci_controller *hose)
+ {
 -- 
 2.20.1
 
