@@ -2,102 +2,202 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 006B2C43334
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 15:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C9BCCA473
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 15:48:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232418AbiGFPNs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jul 2022 11:13:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58400 "EHLO
+        id S234568AbiGFPsQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jul 2022 11:48:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231205AbiGFPNs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 11:13:48 -0400
-Received: from mail-lj1-x22d.google.com (mail-lj1-x22d.google.com [IPv6:2a00:1450:4864:20::22d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E81BC22525
-        for <linux-pci@vger.kernel.org>; Wed,  6 Jul 2022 08:13:46 -0700 (PDT)
-Received: by mail-lj1-x22d.google.com with SMTP id j23so2131562lji.13
-        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2022 08:13:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=QPBPWEhV2Vykab+FuRAUO/iMibCW6th1rjVx2QzcAa8=;
-        b=UBbtQKARyXdeKvpy36Jm9Brb7tYCsu9XKOsYXl/ZtvqvVAjIq8VXpxsok1OC1mY2nA
-         6YLnt8juwlycbIx5FPOGcYcwx0EPXnASDpuISFAB2W2ezCsq+r4d0Pj4FvNchlPQfEbk
-         TWpLIDW6JUcN7/zexsDF2KDjsSh7J0SD7G+CC0TuYcn1PDmmwQaD5JiBahL3fYqNEkKW
-         6gULkxdgME0KjGjeQPDevv1RDHFzMdnFhSff58WuP02EMTRkwH2H36/LA2cW6n98exC0
-         voMeuPrAwXFHK9JHTRnLnuTD3v0bm7p+vugqa8MtOFt1vDe6uRc7vbG/6/bIuu7Hbyjk
-         KeQg==
+        with ESMTP id S232916AbiGFPr6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 11:47:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0FB7E2A243
+        for <linux-pci@vger.kernel.org>; Wed,  6 Jul 2022 08:40:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1657122047;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Kw+hePrwDbzDiEREmLImOf93xliKHYFU7TLXwcjNYt0=;
+        b=g/SbmgoTsBp3R8D1/IvIET50znZBZGDzOHuxH0/yzovW+cODHeV7XajabAwegRS5A6Nhhh
+        MU0PO6F3IzIIHPFy9iAOThD1/Kg4c1kg745JbMPZgufhkgz9IdU1cBowoNuwsSvbU0vvyB
+        aLqN7Jy83xg0BLlcYIWpHnoqZOYX63M=
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com
+ [209.85.166.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-526-MEsgIbD_OiyPklBCW1ywmQ-1; Wed, 06 Jul 2022 11:40:46 -0400
+X-MC-Unique: MEsgIbD_OiyPklBCW1ywmQ-1
+Received: by mail-il1-f197.google.com with SMTP id x11-20020a056e021cab00b002dada9d2a50so7831539ill.15
+        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2022 08:40:45 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=QPBPWEhV2Vykab+FuRAUO/iMibCW6th1rjVx2QzcAa8=;
-        b=AEYO5SvQv+TiEeDWwy5HgRC9O0hc9wlqcIYqMbH4wvML1uuqpQE20YEu+rjq9XBEne
-         FWwzUs07uGa3SifltzbzX7vvoYM8sH2PP8LGzBhpUzv+ygg/cQdUQCKZqcIoIFsBzNkQ
-         SYgpzGBSDSzguyKPodT/oRHFAWUilQiCj1MNbhVN6kWfBwKHL5c++ah9Jn/1wFnfk/uO
-         Y3XCW3uzVosulDTgjmhCxZeR/+GCkFSzwdEXme4BLGyL8MYx50mpaBI84l/WWEo9XwTY
-         nQrq25klQg1Bj5of/Gv0TO3eci/OXd2NY4koqraoPHYPyqk5i9IDMLon5pmpaey27Uu3
-         Dafw==
-X-Gm-Message-State: AJIora/1g9W36PERJgcBlap7dtrgh8S/9mFn8DJVZV8IMXPweo3C4N+m
-        PfuGY98usI+v6jz9ScCfQYMs2w==
-X-Google-Smtp-Source: AGRyM1tH2oqsonL2G0A+++kLBn/3Imc+sqCOv8q++5fgWtIHiQlb9L3zrzfCr7LvxU1WmGk40HbeQg==
-X-Received: by 2002:a2e:b55a:0:b0:25d:485e:5d86 with SMTP id a26-20020a2eb55a000000b0025d485e5d86mr1561320ljn.194.1657120425306;
-        Wed, 06 Jul 2022 08:13:45 -0700 (PDT)
-Received: from [192.168.1.211] ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id e18-20020ac25472000000b0047fa941066bsm6313329lfn.96.2022.07.06.08.13.44
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 06 Jul 2022 08:13:44 -0700 (PDT)
-Message-ID: <ceaca6d7-958d-ade6-9ee5-5e70bc57bbd7@linaro.org>
-Date:   Wed, 6 Jul 2022 18:13:43 +0300
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
+         :references:organization:mime-version:content-transfer-encoding;
+        bh=Kw+hePrwDbzDiEREmLImOf93xliKHYFU7TLXwcjNYt0=;
+        b=dMizFq3QwZZWuIVoZg4zjEnV39cvIDpjKmYxkMlItfXwcKdyifpmDUlgTCsg1UMKUB
+         X052pYMq5blcHBjc3Sl3+KyTmG2QX30/v3UzIyCKDNOnAM2Z220KfDOvzcbBsRhLxBPy
+         x+2g9/uNBlzeBZ6LZXzdjPBfL5meC4lN47eTd7SoJ5JuFwGtSzUHqRU7uPRF+QdSiV3l
+         Dp/opLhRP64jc6zRy3uPQxoGLOylJhrBkF5Aai04KJCypdUnhD4k86kbrCgrLDGhaHsK
+         72NJZ1pRH/v6/dZZhE3tAVUrgjPckeqUgEgawlL36TasQbUqc2oDEHtZ6NuxIKYjKf5M
+         XUvQ==
+X-Gm-Message-State: AJIora/jrjVr6gMArMfOlFpzNn8Rh2oNkF8+F/GkqKNwtvmzSuplk07g
+        q6/bDR9qm+nun4+9XRBugvofAgRn8KC8RlI5QFptYGBQpyxf2Iv42QekNwcGofg5If/te/NUUtz
+        sMCePTSkMml0l1HPQ4++5
+X-Received: by 2002:a05:6e02:1b8d:b0:2dc:32dc:a03d with SMTP id h13-20020a056e021b8d00b002dc32dca03dmr2819800ili.261.1657122045314;
+        Wed, 06 Jul 2022 08:40:45 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1tJknWA5fe5K/3hOcpi9Lvkw/Sr30glLgGICdmPgj3KJLKzuRHboplxHCnha46TsS2+ft6XbQ==
+X-Received: by 2002:a05:6e02:1b8d:b0:2dc:32dc:a03d with SMTP id h13-20020a056e021b8d00b002dc32dca03dmr2819788ili.261.1657122044997;
+        Wed, 06 Jul 2022 08:40:44 -0700 (PDT)
+Received: from redhat.com ([38.15.36.239])
+        by smtp.gmail.com with ESMTPSA id a17-20020a056e0208b100b002d955fab9dbsm14702119ilt.23.2022.07.06.08.40.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Jul 2022 08:40:44 -0700 (PDT)
+Date:   Wed, 6 Jul 2022 09:39:59 -0600
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     Abhishek Sahu <abhsahu@nvidia.com>
+Cc:     Cornelia Huck <cohuck@redhat.com>,
+        Yishai Hadas <yishaih@nvidia.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Max Gurtovoy <mgurtovoy@nvidia.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 2/6] vfio: Add a new device feature for the power
+ management
+Message-ID: <20220706093959.3bd2cbbb.alex.williamson@redhat.com>
+In-Reply-To: <20220701110814.7310-3-abhsahu@nvidia.com>
+References: <20220701110814.7310-1-abhsahu@nvidia.com>
+        <20220701110814.7310-3-abhsahu@nvidia.com>
+Organization: Red Hat
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.10.0
-Subject: Re: [PATCH v4 0/2] PCI: Restrict pci transactions after pci suspend
-Content-Language: en-GB
-To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        helgaas@kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mka@chromium.org,
-        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
-        quic_ramkri@quicinc.com, manivannan.sadhasivam@linaro.org,
-        swboyd@chromium.org
-References: <1656684800-31278-1-git-send-email-quic_krichai@quicinc.com>
- <1657118425-10304-1-git-send-email-quic_krichai@quicinc.com>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-In-Reply-To: <1657118425-10304-1-git-send-email-quic_krichai@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 06/07/2022 17:40, Krishna chaitanya chundru wrote:
-> If the endpoint device state is D0 and irq's are not freed, then
-> kernel try to mask interrupts in system suspend path by writing
-> in to the vector table (for MSIX interrupts) and config space (for MSI's).
+On Fri, 1 Jul 2022 16:38:10 +0530
+Abhishek Sahu <abhsahu@nvidia.com> wrote:
+
+> This patch adds the new feature VFIO_DEVICE_FEATURE_POWER_MANAGEMENT
+> for the power management in the header file. The implementation for the
+> same will be added in the subsequent patches.
 > 
-> These transactions are initiated in the pm suspend after pcie clocks got
-> disabled as part of platform driver pm  suspend call. Due to it, these
-> transactions are resulting in un-clocked access and eventually to crashes.
+> With the standard registers, all power states cannot be achieved. The
+> platform-based power management needs to be involved to go into the
+> lowest power state. For all the platform-based power management, this
+> device feature can be used.
 > 
-> So added a logic in qcom driver to restrict these unclocked access.
-> And updated the logic to check the link state before masking
-> or unmasking the interrupts.
-
-Please do not send new versions as replies to previous ones. This breaks 
-threading for the reviewers.
-
-> Krishna chaitanya chundru (2):
->    PCI: qcom: Add system PM support
->    PCI: qcom: Restrict pci transactions after pci suspend
+> This device feature uses flags to specify the different operations. In
+> the future, if any more power management functionality is needed then
+> a new flag can be added to it. It supports both GET and SET operations.
 > 
->   drivers/pci/controller/dwc/pcie-designware-host.c |  14 ++-
->   drivers/pci/controller/dwc/pcie-qcom.c            | 121 +++++++++++++++++++++-
->   2 files changed, 131 insertions(+), 4 deletions(-)
+> Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
+> ---
+>  include/uapi/linux/vfio.h | 55 +++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 55 insertions(+)
+> 
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 733a1cddde30..7e00de5c21ea 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+> @@ -986,6 +986,61 @@ enum vfio_device_mig_state {
+>  	VFIO_DEVICE_STATE_RUNNING_P2P = 5,
+>  };
+>  
+> +/*
+> + * Perform power management-related operations for the VFIO device.
+> + *
+> + * The low power feature uses platform-based power management to move the
+> + * device into the low power state.  This low power state is device-specific.
+> + *
+> + * This device feature uses flags to specify the different operations.
+> + * It supports both the GET and SET operations.
+> + *
+> + * - VFIO_PM_LOW_POWER_ENTER flag moves the VFIO device into the low power
+> + *   state with platform-based power management.  This low power state will be
+> + *   internal to the VFIO driver and the user will not come to know which power
+> + *   state is chosen.  Once the user has moved the VFIO device into the low
+> + *   power state, then the user should not do any device access without moving
+> + *   the device out of the low power state.
 
+Except we're wrapping device accesses to make this possible.  This
+should probably describe how any discrete access will wake the device
+but ongoing access through mmaps will generate user faults.
 
--- 
-With best wishes
-Dmitry
+> + *
+> + * - VFIO_PM_LOW_POWER_EXIT flag moves the VFIO device out of the low power
+> + *    state.  This flag should only be set if the user has previously put the
+> + *    device into low power state with the VFIO_PM_LOW_POWER_ENTER flag.
+
+Indenting.
+
+> + *
+> + * - VFIO_PM_LOW_POWER_ENTER and VFIO_PM_LOW_POWER_EXIT are mutually exclusive.
+> + *
+> + * - VFIO_PM_LOW_POWER_REENTERY_DISABLE flag is only valid with
+> + *   VFIO_PM_LOW_POWER_ENTER.  If there is any access for the VFIO device on
+> + *   the host side, then the device will be moved out of the low power state
+> + *   without the user's guest driver involvement.  Some devices require the
+> + *   user's guest driver involvement for each low-power entry.  If this flag is
+> + *   set, then the re-entry to the low power state will be disabled, and the
+> + *   host kernel will not move the device again into the low power state.
+> + *   The VFIO driver internally maintains a list of devices for which low
+> + *   power re-entry is disabled by default and for those devices, the
+> + *   re-entry will be disabled even if the user has not set this flag
+> + *   explicitly.
+
+Wrong polarity.  The kernel should not maintain the policy.  By default
+every wakeup, whether from host kernel accesses or via user accesses
+that do a pm-get should signal a wakeup to userspace.  Userspace needs
+to opt-out of that wakeup to let the kernel automatically re-enter low
+power and userspace needs to maintain the policy for which devices it
+wants that to occur.
+
+> + *
+> + * For the IOCTL call with VFIO_DEVICE_FEATURE_GET:
+> + *
+> + * - VFIO_PM_LOW_POWER_ENTER will be set if the user has put the device into
+> + *   the low power state, otherwise, VFIO_PM_LOW_POWER_EXIT will be set.
+> + *
+> + * - If the device is in a normal power state currently, then
+> + *   VFIO_PM_LOW_POWER_REENTERY_DISABLE will be set for the devices where low
+> + *   power re-entry is disabled by default.  If the device is in the low power
+> + *   state currently, then VFIO_PM_LOW_POWER_REENTERY_DISABLE will be set
+> + *   according to the current transition.
+
+Very confusing semantics.
+
+What if the feature SET ioctl took an eventfd and that eventfd was one
+time use.  Calling the ioctl would setup the eventfd to notify the user
+on wakeup and call pm-put.  Any access to the device via host, ioctl,
+or region would be wrapped in pm-get/put and the pm-resume handler
+would perform the matching pm-get to balance the feature SET and signal
+the eventfd.  If the user opts-out by not providing a wakeup eventfd,
+then the pm-resume handler does not perform a pm-get.  Possibly we
+could even allow mmap access if a wake-up eventfd is provided.  The
+feature GET ioctl would be used to exit low power behavior and would be
+a no-op if the wakeup eventfd had already been signaled.  Thanks,
+
+Alex
+
+> + */
+> +struct vfio_device_feature_power_management {
+> +	__u32	flags;
+> +#define VFIO_PM_LOW_POWER_ENTER			(1 << 0)
+> +#define VFIO_PM_LOW_POWER_EXIT			(1 << 1)
+> +#define VFIO_PM_LOW_POWER_REENTERY_DISABLE	(1 << 2)
+> +	__u32	reserved;
+> +};
+> +
+> +#define VFIO_DEVICE_FEATURE_POWER_MANAGEMENT	3
+> +
+>  /* -------- API for Type1 VFIO IOMMU -------- */
+>  
+>  /**
+
