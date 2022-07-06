@@ -2,59 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C9BCCA473
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 15:48:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C35CC43334
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Jul 2022 15:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234568AbiGFPsQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Jul 2022 11:48:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43898 "EHLO
+        id S234570AbiGFPsR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Jul 2022 11:48:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232916AbiGFPr6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 11:47:58 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0FB7E2A243
-        for <linux-pci@vger.kernel.org>; Wed,  6 Jul 2022 08:40:48 -0700 (PDT)
+        with ESMTP id S232981AbiGFPsA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Jul 2022 11:48:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AC37E2BB29
+        for <linux-pci@vger.kernel.org>; Wed,  6 Jul 2022 08:40:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1657122047;
+        s=mimecast20190719; t=1657122050;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Kw+hePrwDbzDiEREmLImOf93xliKHYFU7TLXwcjNYt0=;
-        b=g/SbmgoTsBp3R8D1/IvIET50znZBZGDzOHuxH0/yzovW+cODHeV7XajabAwegRS5A6Nhhh
-        MU0PO6F3IzIIHPFy9iAOThD1/Kg4c1kg745JbMPZgufhkgz9IdU1cBowoNuwsSvbU0vvyB
-        aLqN7Jy83xg0BLlcYIWpHnoqZOYX63M=
-Received: from mail-il1-f197.google.com (mail-il1-f197.google.com
- [209.85.166.197]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=EQWobngqBe6IZBHiTe5Vq583Hw8uyiCzbasFlNmig+o=;
+        b=dcF+Mw1+D/LjSt0n0sZaKiXfOQUAViz08w4L0raA9kNP4UVxaB9GDPtslDzYNr1Vq1qN3R
+        ET89kPLwMgJSds3uEPhdITA83FwBW1OnrtNNYOr9bfDdsrX+mwzB9tDXY/AXthC2474/JM
+        f5/mnx09CFtn7aUx6R05hnaf01T1pBo=
+Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
+ [209.85.166.199]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-526-MEsgIbD_OiyPklBCW1ywmQ-1; Wed, 06 Jul 2022 11:40:46 -0400
-X-MC-Unique: MEsgIbD_OiyPklBCW1ywmQ-1
-Received: by mail-il1-f197.google.com with SMTP id x11-20020a056e021cab00b002dada9d2a50so7831539ill.15
-        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2022 08:40:45 -0700 (PDT)
+ us-mta-489-K3R9CzHrNpWL2WXuaFvPkQ-1; Wed, 06 Jul 2022 11:40:48 -0400
+X-MC-Unique: K3R9CzHrNpWL2WXuaFvPkQ-1
+Received: by mail-il1-f199.google.com with SMTP id h28-20020a056e021d9c00b002dc15a95f9cso4462604ila.2
+        for <linux-pci@vger.kernel.org>; Wed, 06 Jul 2022 08:40:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
          :references:organization:mime-version:content-transfer-encoding;
-        bh=Kw+hePrwDbzDiEREmLImOf93xliKHYFU7TLXwcjNYt0=;
-        b=dMizFq3QwZZWuIVoZg4zjEnV39cvIDpjKmYxkMlItfXwcKdyifpmDUlgTCsg1UMKUB
-         X052pYMq5blcHBjc3Sl3+KyTmG2QX30/v3UzIyCKDNOnAM2Z220KfDOvzcbBsRhLxBPy
-         x+2g9/uNBlzeBZ6LZXzdjPBfL5meC4lN47eTd7SoJ5JuFwGtSzUHqRU7uPRF+QdSiV3l
-         Dp/opLhRP64jc6zRy3uPQxoGLOylJhrBkF5Aai04KJCypdUnhD4k86kbrCgrLDGhaHsK
-         72NJZ1pRH/v6/dZZhE3tAVUrgjPckeqUgEgawlL36TasQbUqc2oDEHtZ6NuxIKYjKf5M
-         XUvQ==
-X-Gm-Message-State: AJIora/jrjVr6gMArMfOlFpzNn8Rh2oNkF8+F/GkqKNwtvmzSuplk07g
-        q6/bDR9qm+nun4+9XRBugvofAgRn8KC8RlI5QFptYGBQpyxf2Iv42QekNwcGofg5If/te/NUUtz
-        sMCePTSkMml0l1HPQ4++5
-X-Received: by 2002:a05:6e02:1b8d:b0:2dc:32dc:a03d with SMTP id h13-20020a056e021b8d00b002dc32dca03dmr2819800ili.261.1657122045314;
-        Wed, 06 Jul 2022 08:40:45 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1tJknWA5fe5K/3hOcpi9Lvkw/Sr30glLgGICdmPgj3KJLKzuRHboplxHCnha46TsS2+ft6XbQ==
-X-Received: by 2002:a05:6e02:1b8d:b0:2dc:32dc:a03d with SMTP id h13-20020a056e021b8d00b002dc32dca03dmr2819788ili.261.1657122044997;
-        Wed, 06 Jul 2022 08:40:44 -0700 (PDT)
+        bh=EQWobngqBe6IZBHiTe5Vq583Hw8uyiCzbasFlNmig+o=;
+        b=Grg+KdCB9EbvOECsLf1w8xgjpK7S2aN7UTO5pK3z3ap1sZsexQZRULHyvmdrwhOP45
+         PIEDvu1gNx5qsT7taRaLqbHV/qLECenGf2a9Yn6H/xQ6RXyKW3ZHjmKfSysZlWCoEc0g
+         o2VHebgzV+oI7Ny3gpNSd3uJt7dNRUCel28OfUdxxWCeIyr6TElL6UGSOB8FX5bEBYpq
+         KU3bc29pCwtVm6SbIsV34GhZu+sd0zyZai2zHVsrmHkq4R1YyYKvYyk6D0j5xMe/XU85
+         gsxVU/X7geEMNwp4+5eg92FPUp207SOnHU45BYLjuYJP9trT4ymayJ+IYbYuMYdP2ckt
+         MP6A==
+X-Gm-Message-State: AJIora92TNfSJlQACdaajtIa1VAQkj8Fej7nf2DLu+N9sEdzDt8dhUGC
+        LKTHnGP/cX5HJti0ACt0ab0QHD4cTzrq4pB+MaVijoCKjKUed/Q1GCVPRPNnWK2WKqOX5HhzzXe
+        RXRA3kzNzeeoI618dPgAB
+X-Received: by 2002:a92:a041:0:b0:2d7:7935:effa with SMTP id b1-20020a92a041000000b002d77935effamr23000474ilm.222.1657122046810;
+        Wed, 06 Jul 2022 08:40:46 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1t7pHOM4PDCPwuJ5q92vRgbxmezrBziN8I+uRP0y5FKdg39CYK7WijNHV4L2+SG99cOmuGmhg==
+X-Received: by 2002:a92:a041:0:b0:2d7:7935:effa with SMTP id b1-20020a92a041000000b002d77935effamr23000448ilm.222.1657122046476;
+        Wed, 06 Jul 2022 08:40:46 -0700 (PDT)
 Received: from redhat.com ([38.15.36.239])
-        by smtp.gmail.com with ESMTPSA id a17-20020a056e0208b100b002d955fab9dbsm14702119ilt.23.2022.07.06.08.40.44
+        by smtp.gmail.com with ESMTPSA id a17-20020a056e0208b100b002d955fab9dbsm14702119ilt.23.2022.07.06.08.40.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Jul 2022 08:40:44 -0700 (PDT)
-Date:   Wed, 6 Jul 2022 09:39:59 -0600
+        Wed, 06 Jul 2022 08:40:46 -0700 (PDT)
+Date:   Wed, 6 Jul 2022 09:40:09 -0600
 From:   Alex Williamson <alex.williamson@redhat.com>
 To:     Abhishek Sahu <abhsahu@nvidia.com>
 Cc:     Cornelia Huck <cohuck@redhat.com>,
@@ -67,12 +67,11 @@ Cc:     Cornelia Huck <cohuck@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
         <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 2/6] vfio: Add a new device feature for the power
- management
-Message-ID: <20220706093959.3bd2cbbb.alex.williamson@redhat.com>
-In-Reply-To: <20220701110814.7310-3-abhsahu@nvidia.com>
+Subject: Re: [PATCH v4 6/6] vfio/pci: Add support for virtual PME
+Message-ID: <20220706094009.6726cf6a.alex.williamson@redhat.com>
+In-Reply-To: <20220701110814.7310-7-abhsahu@nvidia.com>
 References: <20220701110814.7310-1-abhsahu@nvidia.com>
-        <20220701110814.7310-3-abhsahu@nvidia.com>
+        <20220701110814.7310-7-abhsahu@nvidia.com>
 Organization: Red Hat
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -81,123 +80,317 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 1 Jul 2022 16:38:10 +0530
+On Fri, 1 Jul 2022 16:38:14 +0530
 Abhishek Sahu <abhsahu@nvidia.com> wrote:
 
-> This patch adds the new feature VFIO_DEVICE_FEATURE_POWER_MANAGEMENT
-> for the power management in the header file. The implementation for the
-> same will be added in the subsequent patches.
+> If the PCI device is in low power state and the device requires
+> wake-up, then it can generate PME (Power Management Events). Mostly
+> these PME events will be propagated to the root port and then the
+> root port will generate the system interrupt. Then the OS should
+> identify the device which generated the PME and should resume
+> the device.
 > 
-> With the standard registers, all power states cannot be achieved. The
-> platform-based power management needs to be involved to go into the
-> lowest power state. For all the platform-based power management, this
-> device feature can be used.
+> We can implement a similar virtual PME framework where if the device
+> already went into the runtime suspended state and then there is any
+> wake-up on the host side, then it will send the virtual PME
+> notification to the guest. This virtual PME will be helpful for the cases
+> where the device will not be suspended again if there is any wake-up
+> triggered by the host. Following is the overall approach regarding
+> the virtual PME.
 > 
-> This device feature uses flags to specify the different operations. In
-> the future, if any more power management functionality is needed then
-> a new flag can be added to it. It supports both GET and SET operations.
+> 1. Add one more event like VFIO_PCI_ERR_IRQ_INDEX named
+>    VFIO_PCI_PME_IRQ_INDEX and do the required code changes to get/set
+>    this new IRQ.
 > 
-> Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
-> ---
->  include/uapi/linux/vfio.h | 55 +++++++++++++++++++++++++++++++++++++++
->  1 file changed, 55 insertions(+)
+> 2. From the guest side, the guest needs to enable eventfd for the
+>    virtual PME notification.
 > 
-> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
-> index 733a1cddde30..7e00de5c21ea 100644
-> --- a/include/uapi/linux/vfio.h
-> +++ b/include/uapi/linux/vfio.h
-> @@ -986,6 +986,61 @@ enum vfio_device_mig_state {
->  	VFIO_DEVICE_STATE_RUNNING_P2P = 5,
->  };
->  
-> +/*
-> + * Perform power management-related operations for the VFIO device.
-> + *
-> + * The low power feature uses platform-based power management to move the
-> + * device into the low power state.  This low power state is device-specific.
-> + *
-> + * This device feature uses flags to specify the different operations.
-> + * It supports both the GET and SET operations.
-> + *
-> + * - VFIO_PM_LOW_POWER_ENTER flag moves the VFIO device into the low power
-> + *   state with platform-based power management.  This low power state will be
-> + *   internal to the VFIO driver and the user will not come to know which power
-> + *   state is chosen.  Once the user has moved the VFIO device into the low
-> + *   power state, then the user should not do any device access without moving
-> + *   the device out of the low power state.
+> 3. In the vfio-pci driver, the PME support bits are currently
+>    virtualized and set to 0. We can set PME capability support for all
+>    the power states. This PME capability support is independent of the
+>    physical PME support.
+> 
+> 4. The PME enable (PME_En bit in Power Management Control/Status
+>    Register) and PME status (PME_Status bit in Power Management
+>    Control/Status Register) are also virtualized currently.
+>    The write support for PME_En bit can be enabled.
+> 
+> 5. The PME_Status bit is a write-1-clear bit where the write with
+>    zero value will have no effect and write with 1 value will clear the
+>    bit. The write for this bit will be trapped inside
+>    vfio_pm_config_write() similar to PCI_PM_CTRL write for PM_STATES.
+> 
+> 6. When the host gets a request for resuming the device other than from
+>    low power exit feature IOCTL, then PME_Status bit will be set.
+>    According to [PCIe v5 7.5.2.2],
+>      "PME_Status - This bit is Set when the Function would normally
+>       generate a PME signal. The value of this bit is not affected by
+>       the value of the PME_En bit."
+> 
+>    So even if PME_En bit is not set, we can set PME_Status bit.
+> 
+> 7. If the guest has enabled PME_En and registered for PME events
+>    through eventfd, then the usage count will be incremented to prevent
+>    the device to go into the suspended state and notify the guest through
+>    eventfd trigger.
+> 
+> The virtual PME can help in handling physical PME also. When
+> physical PME comes, then also the runtime resume will be called. If
+> the guest has registered for virtual PME, then it will be sent in this
+> case also.
+> 
+> * Implementation for handling the virtual PME on the hypervisor:
+> 
+> If we take the implementation in Linux OS, then during runtime suspend
+> time, then it calls __pci_enable_wake(). It internally enables PME
+> through pci_pme_active() and also enables the ACPI side wake-up
+> through platform_pci_set_wakeup(). To handle the PME, the hypervisor has
+> the following two options:
+> 
+> 1. Create a virtual root port for the VFIO device and trigger
+>    interrupt when the PME comes. It will call pcie_pme_irq() which will
+>    resume the device.
+> 
+> 2. Create a virtual ACPI _PRW resource and associate it with the device
+>    itself. In _PRW, any GPE (General Purpose Event) can be assigned for
+>    the wake-up. When PME comes, then GPE can be triggered by the
+>    hypervisor. GPE interrupt will call pci_acpi_wake_dev() function
+>    internally and it will resume the device.
 
-Except we're wrapping device accesses to make this possible.  This
-should probably describe how any discrete access will wake the device
-but ongoing access through mmaps will generate user faults.
-
-> + *
-> + * - VFIO_PM_LOW_POWER_EXIT flag moves the VFIO device out of the low power
-> + *    state.  This flag should only be set if the user has previously put the
-> + *    device into low power state with the VFIO_PM_LOW_POWER_ENTER flag.
-
-Indenting.
-
-> + *
-> + * - VFIO_PM_LOW_POWER_ENTER and VFIO_PM_LOW_POWER_EXIT are mutually exclusive.
-> + *
-> + * - VFIO_PM_LOW_POWER_REENTERY_DISABLE flag is only valid with
-> + *   VFIO_PM_LOW_POWER_ENTER.  If there is any access for the VFIO device on
-> + *   the host side, then the device will be moved out of the low power state
-> + *   without the user's guest driver involvement.  Some devices require the
-> + *   user's guest driver involvement for each low-power entry.  If this flag is
-> + *   set, then the re-entry to the low power state will be disabled, and the
-> + *   host kernel will not move the device again into the low power state.
-> + *   The VFIO driver internally maintains a list of devices for which low
-> + *   power re-entry is disabled by default and for those devices, the
-> + *   re-entry will be disabled even if the user has not set this flag
-> + *   explicitly.
-
-Wrong polarity.  The kernel should not maintain the policy.  By default
-every wakeup, whether from host kernel accesses or via user accesses
-that do a pm-get should signal a wakeup to userspace.  Userspace needs
-to opt-out of that wakeup to let the kernel automatically re-enter low
-power and userspace needs to maintain the policy for which devices it
-wants that to occur.
-
-> + *
-> + * For the IOCTL call with VFIO_DEVICE_FEATURE_GET:
-> + *
-> + * - VFIO_PM_LOW_POWER_ENTER will be set if the user has put the device into
-> + *   the low power state, otherwise, VFIO_PM_LOW_POWER_EXIT will be set.
-> + *
-> + * - If the device is in a normal power state currently, then
-> + *   VFIO_PM_LOW_POWER_REENTERY_DISABLE will be set for the devices where low
-> + *   power re-entry is disabled by default.  If the device is in the low power
-> + *   state currently, then VFIO_PM_LOW_POWER_REENTERY_DISABLE will be set
-> + *   according to the current transition.
-
-Very confusing semantics.
-
-What if the feature SET ioctl took an eventfd and that eventfd was one
-time use.  Calling the ioctl would setup the eventfd to notify the user
-on wakeup and call pm-put.  Any access to the device via host, ioctl,
-or region would be wrapped in pm-get/put and the pm-resume handler
-would perform the matching pm-get to balance the feature SET and signal
-the eventfd.  If the user opts-out by not providing a wakeup eventfd,
-then the pm-resume handler does not perform a pm-get.  Possibly we
-could even allow mmap access if a wake-up eventfd is provided.  The
-feature GET ioctl would be used to exit low power behavior and would be
-a no-op if the wakeup eventfd had already been signaled.  Thanks,
+Do we really need to implement PME emulation in the kernel or is it
+sufficient for userspace to simply register a one-shot eventfd when
+SET'ing the low power feature and QEMU can provide the PME emulation
+based on that signaling?  Thanks,
 
 Alex
 
-> + */
-> +struct vfio_device_feature_power_management {
-> +	__u32	flags;
-> +#define VFIO_PM_LOW_POWER_ENTER			(1 << 0)
-> +#define VFIO_PM_LOW_POWER_EXIT			(1 << 1)
-> +#define VFIO_PM_LOW_POWER_REENTERY_DISABLE	(1 << 2)
-> +	__u32	reserved;
-> +};
-> +
-> +#define VFIO_DEVICE_FEATURE_POWER_MANAGEMENT	3
-> +
->  /* -------- API for Type1 VFIO IOMMU -------- */
+> 
+> Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
+> ---
+>  drivers/vfio/pci/vfio_pci_config.c | 39 +++++++++++++++++++++------
+>  drivers/vfio/pci/vfio_pci_core.c   | 43 ++++++++++++++++++++++++------
+>  drivers/vfio/pci/vfio_pci_intrs.c  | 18 +++++++++++++
+>  include/linux/vfio_pci_core.h      |  2 ++
+>  include/uapi/linux/vfio.h          |  1 +
+>  5 files changed, 87 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci_config.c b/drivers/vfio/pci/vfio_pci_config.c
+> index 21a4743d011f..a06375a03758 100644
+> --- a/drivers/vfio/pci/vfio_pci_config.c
+> +++ b/drivers/vfio/pci/vfio_pci_config.c
+> @@ -719,6 +719,20 @@ static int vfio_pm_config_write(struct vfio_pci_core_device *vdev, int pos,
+>  	if (count < 0)
+>  		return count;
 >  
->  /**
+> +	/*
+> +	 * PME_STATUS is write-1-clear bit. If PME_STATUS is 1, then clear the
+> +	 * bit in vconfig. The PME_STATUS is in the upper byte of the control
+> +	 * register and user can do single byte write also.
+> +	 */
+> +	if (offset <= PCI_PM_CTRL + 1 && offset + count > PCI_PM_CTRL + 1) {
+> +		if (le32_to_cpu(val) &
+> +		    (PCI_PM_CTRL_PME_STATUS >> (offset - PCI_PM_CTRL) * 8)) {
+> +			__le16 *ctrl = (__le16 *)&vdev->vconfig
+> +					[vdev->pm_cap_offset + PCI_PM_CTRL];
+> +			*ctrl &= ~cpu_to_le16(PCI_PM_CTRL_PME_STATUS);
+> +		}
+> +	}
+> +
+>  	if (offset == PCI_PM_CTRL) {
+>  		pci_power_t state;
+>  
+> @@ -771,14 +785,16 @@ static int __init init_pci_cap_pm_perm(struct perm_bits *perm)
+>  	 * the user change power state, but we trap and initiate the
+>  	 * change ourselves, so the state bits are read-only.
+>  	 *
+> -	 * The guest can't process PME from D3cold so virtualize PME_Status
+> -	 * and PME_En bits. The vconfig bits will be cleared during device
+> -	 * capability initialization.
+> +	 * The guest can't process physical PME from D3cold so virtualize
+> +	 * PME_Status and PME_En bits. These bits will be used for the
+> +	 * virtual PME between host and guest. The vconfig bits will be
+> +	 * updated during device capability initialization. PME_Status is
+> +	 * write-1-clear bit, so it is read-only. We trap and update the
+> +	 * vconfig bit manually during write.
+>  	 */
+>  	p_setd(perm, PCI_PM_CTRL,
+>  	       PCI_PM_CTRL_PME_ENABLE | PCI_PM_CTRL_PME_STATUS,
+> -	       ~(PCI_PM_CTRL_PME_ENABLE | PCI_PM_CTRL_PME_STATUS |
+> -		 PCI_PM_CTRL_STATE_MASK));
+> +	       ~(PCI_PM_CTRL_STATE_MASK | PCI_PM_CTRL_PME_STATUS));
+>  
+>  	return 0;
+>  }
+> @@ -1454,8 +1470,13 @@ static void vfio_update_pm_vconfig_bytes(struct vfio_pci_core_device *vdev,
+>  	__le16 *pmc = (__le16 *)&vdev->vconfig[offset + PCI_PM_PMC];
+>  	__le16 *ctrl = (__le16 *)&vdev->vconfig[offset + PCI_PM_CTRL];
+>  
+> -	/* Clear vconfig PME_Support, PME_Status, and PME_En bits */
+> -	*pmc &= ~cpu_to_le16(PCI_PM_CAP_PME_MASK);
+> +	/*
+> +	 * Set the vconfig PME_Support bits. The PME_Status is being used for
+> +	 * virtual PME support and is not dependent upon the physical
+> +	 * PME support.
+> +	 */
+> +	*pmc |= cpu_to_le16(PCI_PM_CAP_PME_MASK);
+> +	/* Clear vconfig PME_Support and PME_En bits */
+>  	*ctrl &= ~cpu_to_le16(PCI_PM_CTRL_PME_ENABLE | PCI_PM_CTRL_PME_STATUS);
+>  }
+>  
+> @@ -1582,8 +1603,10 @@ static int vfio_cap_init(struct vfio_pci_core_device *vdev)
+>  		if (ret)
+>  			return ret;
+>  
+> -		if (cap == PCI_CAP_ID_PM)
+> +		if (cap == PCI_CAP_ID_PM) {
+> +			vdev->pm_cap_offset = pos;
+>  			vfio_update_pm_vconfig_bytes(vdev, pos);
+> +		}
+>  
+>  		prev = &vdev->vconfig[pos + PCI_CAP_LIST_NEXT];
+>  		pos = next;
+> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
+> index 1ddaaa6ccef5..6c1225bc2aeb 100644
+> --- a/drivers/vfio/pci/vfio_pci_core.c
+> +++ b/drivers/vfio/pci/vfio_pci_core.c
+> @@ -319,14 +319,35 @@ static int vfio_pci_core_runtime_resume(struct device *dev)
+>  	 *   the low power state or closed the device.
+>  	 * - If there is device access on the host side.
+>  	 *
+> -	 * For the second case, check if re-entry to the low power state is
+> -	 * allowed. If not, then increment the usage count so that runtime PM
+> -	 * framework won't suspend the device and set the 'pm_runtime_resumed'
+> -	 * flag.
+> +	 * For the second case:
+> +	 * - The virtual PME_STATUS bit will be set. If PME_ENABLE bit is set
+> +	 *   and user has registered for virtual PME events, then send the PME
+> +	 *   virtual PME event.
+> +	 * - Check if re-entry to the low power state is not allowed.
+> +	 *
+> +	 * For the above conditions, increment the usage count so that
+> +	 * runtime PM framework won't suspend the device and set the
+> +	 * 'pm_runtime_resumed' flag.
+>  	 */
+> -	if (vdev->pm_runtime_engaged && !vdev->pm_runtime_reentry_allowed) {
+> -		pm_runtime_get_noresume(dev);
+> -		vdev->pm_runtime_resumed = true;
+> +	if (vdev->pm_runtime_engaged) {
+> +		bool pme_triggered = false;
+> +		__le16 *ctrl = (__le16 *)&vdev->vconfig
+> +				[vdev->pm_cap_offset + PCI_PM_CTRL];
+> +
+> +		*ctrl |= cpu_to_le16(PCI_PM_CTRL_PME_STATUS);
+> +		if (le16_to_cpu(*ctrl) & PCI_PM_CTRL_PME_ENABLE) {
+> +			mutex_lock(&vdev->igate);
+> +			if (vdev->pme_trigger) {
+> +				pme_triggered = true;
+> +				eventfd_signal(vdev->pme_trigger, 1);
+> +			}
+> +			mutex_unlock(&vdev->igate);
+> +		}
+> +
+> +		if (!vdev->pm_runtime_reentry_allowed || pme_triggered) {
+> +			pm_runtime_get_noresume(dev);
+> +			vdev->pm_runtime_resumed = true;
+> +		}
+>  	}
+>  	up_write(&vdev->memory_lock);
+>  
+> @@ -586,6 +607,10 @@ void vfio_pci_core_close_device(struct vfio_device *core_vdev)
+>  		eventfd_ctx_put(vdev->req_trigger);
+>  		vdev->req_trigger = NULL;
+>  	}
+> +	if (vdev->pme_trigger) {
+> +		eventfd_ctx_put(vdev->pme_trigger);
+> +		vdev->pme_trigger = NULL;
+> +	}
+>  	mutex_unlock(&vdev->igate);
+>  }
+>  EXPORT_SYMBOL_GPL(vfio_pci_core_close_device);
+> @@ -639,7 +664,8 @@ static int vfio_pci_get_irq_count(struct vfio_pci_core_device *vdev, int irq_typ
+>  	} else if (irq_type == VFIO_PCI_ERR_IRQ_INDEX) {
+>  		if (pci_is_pcie(vdev->pdev))
+>  			return 1;
+> -	} else if (irq_type == VFIO_PCI_REQ_IRQ_INDEX) {
+> +	} else if (irq_type == VFIO_PCI_REQ_IRQ_INDEX ||
+> +		   irq_type == VFIO_PCI_PME_IRQ_INDEX) {
+>  		return 1;
+>  	}
+>  
+> @@ -985,6 +1011,7 @@ long vfio_pci_core_ioctl(struct vfio_device *core_vdev, unsigned int cmd,
+>  		switch (info.index) {
+>  		case VFIO_PCI_INTX_IRQ_INDEX ... VFIO_PCI_MSIX_IRQ_INDEX:
+>  		case VFIO_PCI_REQ_IRQ_INDEX:
+> +		case VFIO_PCI_PME_IRQ_INDEX:
+>  			break;
+>  		case VFIO_PCI_ERR_IRQ_INDEX:
+>  			if (pci_is_pcie(vdev->pdev))
+> diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+> index 1a37db99df48..db4180687a74 100644
+> --- a/drivers/vfio/pci/vfio_pci_intrs.c
+> +++ b/drivers/vfio/pci/vfio_pci_intrs.c
+> @@ -639,6 +639,17 @@ static int vfio_pci_set_req_trigger(struct vfio_pci_core_device *vdev,
+>  					       count, flags, data);
+>  }
+>  
+> +static int vfio_pci_set_pme_trigger(struct vfio_pci_core_device *vdev,
+> +				    unsigned index, unsigned start,
+> +				    unsigned count, uint32_t flags, void *data)
+> +{
+> +	if (index != VFIO_PCI_PME_IRQ_INDEX || start != 0 || count > 1)
+> +		return -EINVAL;
+> +
+> +	return vfio_pci_set_ctx_trigger_single(&vdev->pme_trigger,
+> +					       count, flags, data);
+> +}
+> +
+>  int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
+>  			    unsigned index, unsigned start, unsigned count,
+>  			    void *data)
+> @@ -688,6 +699,13 @@ int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev, uint32_t flags,
+>  			break;
+>  		}
+>  		break;
+> +	case VFIO_PCI_PME_IRQ_INDEX:
+> +		switch (flags & VFIO_IRQ_SET_ACTION_TYPE_MASK) {
+> +		case VFIO_IRQ_SET_ACTION_TRIGGER:
+> +			func = vfio_pci_set_pme_trigger;
+> +			break;
+> +		}
+> +		break;
+>  	}
+>  
+>  	if (!func)
+> diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
+> index 18cc83b767b8..ee2646d820c2 100644
+> --- a/include/linux/vfio_pci_core.h
+> +++ b/include/linux/vfio_pci_core.h
+> @@ -102,6 +102,7 @@ struct vfio_pci_core_device {
+>  	bool			bar_mmap_supported[PCI_STD_NUM_BARS];
+>  	u8			*pci_config_map;
+>  	u8			*vconfig;
+> +	u8			pm_cap_offset;
+>  	struct perm_bits	*msi_perm;
+>  	spinlock_t		irqlock;
+>  	struct mutex		igate;
+> @@ -133,6 +134,7 @@ struct vfio_pci_core_device {
+>  	int			ioeventfds_nr;
+>  	struct eventfd_ctx	*err_trigger;
+>  	struct eventfd_ctx	*req_trigger;
+> +	struct eventfd_ctx	*pme_trigger;
+>  	struct list_head	dummy_resources_list;
+>  	struct mutex		ioeventfds_lock;
+>  	struct list_head	ioeventfds_list;
+> diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> index 7e00de5c21ea..08170950d655 100644
+> --- a/include/uapi/linux/vfio.h
+> +++ b/include/uapi/linux/vfio.h
+> @@ -621,6 +621,7 @@ enum {
+>  	VFIO_PCI_MSIX_IRQ_INDEX,
+>  	VFIO_PCI_ERR_IRQ_INDEX,
+>  	VFIO_PCI_REQ_IRQ_INDEX,
+> +	VFIO_PCI_PME_IRQ_INDEX,
+>  	VFIO_PCI_NUM_IRQS
+>  };
+>  
 
