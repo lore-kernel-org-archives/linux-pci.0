@@ -2,55 +2,63 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3440CCA48A
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Jul 2022 13:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89EB2CCA482
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Jul 2022 13:48:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236031AbiGGNrz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Jul 2022 09:47:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40248 "EHLO
+        id S236149AbiGGNsn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Jul 2022 09:48:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236066AbiGGNrm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2022 09:47:42 -0400
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E3052656C
-        for <linux-pci@vger.kernel.org>; Thu,  7 Jul 2022 06:47:41 -0700 (PDT)
-Received: by mail-lf1-x132.google.com with SMTP id t25so31204992lfg.7
-        for <linux-pci@vger.kernel.org>; Thu, 07 Jul 2022 06:47:40 -0700 (PDT)
+        with ESMTP id S236150AbiGGNs3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2022 09:48:29 -0400
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B39BC10C0
+        for <linux-pci@vger.kernel.org>; Thu,  7 Jul 2022 06:48:27 -0700 (PDT)
+Received: by mail-lf1-x12a.google.com with SMTP id t19so30592659lfl.5
+        for <linux-pci@vger.kernel.org>; Thu, 07 Jul 2022 06:48:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=EJTA02/8QXX9XvDJhyvBrvr6FldFkxhecJWImdsVDeQ=;
-        b=vOXIUL85g9vcc+3/hiAIWqQUx5HG7miXRUckIx6dmpOj3wH8joyvvjAO5yMxu8nJOZ
-         f4n9bXd1mzhgHWgpTuRGPZg2DOHYtQU8GQdUbySLKL8yY+sOE9USpwwlBxOy+pTOwwYp
-         sliNN/MeKibL9hgdgyOyaURavdE4z+0Innytyesi99Bi5fx2yz0hcCq95W8QTJGoUOdN
-         kRoAetsOGX074uxAcLyC814I91ASJoDRd8ZBbkdIHrZb7zAXwaaIdg3mLJltuaND2LpL
-         oMdi2jaTq/z/vcZRMUMiHADUDa+/mmQlbKHDPfko5PAKrPhuRHlU+QJ8khb8Bq3deWX8
-         xNbQ==
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=DBYE62t8pFdFoOUZZxtZsy/B6bdHmLteYihwWaIB1Kg=;
+        b=tYzx4q4R0OlgoIthAymNpww128Z+VC/gBXUC9leEKTfoB4PrQQ9P3gk3HqCe0LWCfR
+         HRAcL0LMGtr8ebG+nm9InXeOxTA4i/ka3XcnevSMA1ZnzperHRCU1pWjGtaCXuwEMbhg
+         1MylyM1Q7A3qTj1AcPbNVr/RIZ4VZmoxrVMMf02t4QcZR4EMAgBta0u3oW/cBJBSBK8z
+         qkEmdnrPT7U8N1pqMgGpzs9SuC2p4KDS87gVTFQtBv/XcKH1POHKqIw71XF+GavzxYG/
+         ev3hYePs9fOqIqlH/76+NzGThT8zsUVw6yIWrVxr4JPqugs3KWcaXFUn9reYI1g0qqhA
+         KIWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=EJTA02/8QXX9XvDJhyvBrvr6FldFkxhecJWImdsVDeQ=;
-        b=C8snsBslmSt2ApHMASZkpzDrnQ/7eKG9D2GVxY1fWLMrCfvNqiKpvIvLRoOzOD21cz
-         Z502R+739hPawpC0okZjN6ftoKoJ8tIvomlCA2XiRtln2a4IcbNsCWhZTL+HGMAzOn3+
-         cOYkrtGI7eMAVRAK9NFY0DIBHW+h4o56QpXpYUhVWAWpD8CjNngVW74/j4ZKjEHPUJkJ
-         JV8hx8CtActQPQxHMHLd1XQ9UBItKgS1MhCWn7RMyDWQmuSeEf+KsAWUZG9fhhVyYh1P
-         Bc9Bji1pwI+gT0CCA25hUdYuBzpt+T4uExyzvoncD4v7NlOy+ln2bodmmqyL7hkm1mZJ
-         /uIw==
-X-Gm-Message-State: AJIora+9csh8f0dSxGKj7X7VW+DNKUzU3uav1ay8LpgLm1G//20RfVxp
-        Y9cncw4pFHKbI1QZwkS0Ehuu/g==
-X-Google-Smtp-Source: AGRyM1uLNjsMQzqAwj35DQt580kLg6qYr5oXQ7r3vDzmLNQ/fjVlYB3xUpt977GoIUwWy1CCQxRgew==
-X-Received: by 2002:a05:6512:1691:b0:47f:ae89:906f with SMTP id bu17-20020a056512169100b0047fae89906fmr29797908lfb.229.1657201659410;
-        Thu, 07 Jul 2022 06:47:39 -0700 (PDT)
-Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id u22-20020a197916000000b0047fa941067fsm6856966lfc.29.2022.07.07.06.47.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Jul 2022 06:47:38 -0700 (PDT)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=DBYE62t8pFdFoOUZZxtZsy/B6bdHmLteYihwWaIB1Kg=;
+        b=03eDYzmeCq5QyNlYUmQDB3X3ad6EJDNs6Y6htLvJD0xtOIaAbXD92icD0ob42h3wbC
+         P1OhV2xiJuHnC8SDEWfd52rHU+X9Mmqs2fNva86C2/2YzTM2kN1nZYzMVuHwEQzw5LE9
+         PtpcUE5VchweEL76Aw7poJbn4X/2jJobnD8h+oMQ/h1lOpAq7yTjvsUcoamYesSgRan4
+         7Tlwc9+1ETzf4CGXwp5TztnUV2kh9D/NmPfry6gq26CG7EgF43U1IEeaN+J/ZTVo1Q9D
+         zo5W61ikHXKT8nFE+T5vB6v/ivLymWhUJrqj5LvSf4ot/Fs2JvlsmIbIsYiQeqcZr090
+         8Dpw==
+X-Gm-Message-State: AJIora+asH06Ka+GL2mdjQYo8VcJPVfBfwit7APd7t6FzO4gCqSn08N2
+        IA3B2+sLN5ijxY29xGhqk9e1iA==
+X-Google-Smtp-Source: AGRyM1vJ0YPkGhxHH2SYhvGKGoaAkgxc+uDv0ISD57+3ZRYcYzs8S9E2RjaCl3HbeLcLjY4Q0ljJAw==
+X-Received: by 2002:a05:6512:131a:b0:488:33a7:de95 with SMTP id x26-20020a056512131a00b0048833a7de95mr3091433lfu.278.1657201706108;
+        Thu, 07 Jul 2022 06:48:26 -0700 (PDT)
+Received: from [192.168.1.211] ([37.153.55.125])
+        by smtp.gmail.com with ESMTPSA id e8-20020a05651236c800b0047f7464f1bbsm6841223lfs.116.2022.07.07.06.48.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 07 Jul 2022 06:48:25 -0700 (PDT)
+Message-ID: <cd073ee3-5573-11d3-aa29-344974a94531@linaro.org>
+Date:   Thu, 7 Jul 2022 16:48:24 +0300
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.10.0
+Subject: Re: [PATCH v16 5/6] dt-bindings: PCI: qcom: Support additional MSI
+ interrupts
+Content-Language: en-GB
+To:     Johan Hovold <johan@kernel.org>
+Cc:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
         Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Jingoo Han <jingoohan1@gmail.com>,
@@ -58,105 +66,66 @@ To:     Andy Gross <agross@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        Johan Hovold <johan@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         Rob Herring <robh@kernel.org>
-Subject: [PATCH v17 5/6] dt-bindings: PCI: qcom: Support additional MSI interrupts
-Date:   Thu,  7 Jul 2022 16:47:32 +0300
-Message-Id: <20220707134733.2436629-6-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220707134733.2436629-1-dmitry.baryshkov@linaro.org>
-References: <20220707134733.2436629-1-dmitry.baryshkov@linaro.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20220704152746.807550-1-dmitry.baryshkov@linaro.org>
+ <20220704152746.807550-6-dmitry.baryshkov@linaro.org>
+ <YsaT6fzySULqFt33@hovoldconsulting.com>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+In-Reply-To: <YsaT6fzySULqFt33@hovoldconsulting.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Qualcomm platforms each group of 32 MSI vectors is routed to the
-separate GIC interrupt. Document mapping of additional interrupts.
+On 07/07/2022 11:06, Johan Hovold wrote:
+> On Mon, Jul 04, 2022 at 06:27:45PM +0300, Dmitry Baryshkov wrote:
+>> On Qualcomm platforms each group of 32 MSI vectors is routed to the
+>> separate GIC interrupt. Document mapping of additional interrupts.
+>>
+>> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>> Reviewed-by: Rob Herring <robh@kernel.org>
+>> Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+>> ---
+>>   .../devicetree/bindings/pci/qcom,pcie.yaml    | 51 +++++++++++++++++--
+>>   1 file changed, 48 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+>> index c40ba753707c..ee5414522e3c 100644
+>> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+>> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Reviewed-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- .../devicetree/bindings/pci/qcom,pcie.yaml    | 51 +++++++++++++++++--
- 1 file changed, 48 insertions(+), 3 deletions(-)
+[...]
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index 9b3ebee938e8..a1b4fc70e162 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -43,11 +43,12 @@ properties:
-     maxItems: 5
- 
-   interrupts:
--    maxItems: 1
-+    minItems: 1
-+    maxItems: 8
- 
-   interrupt-names:
--    items:
--      - const: msi
-+    minItems: 1
-+    maxItems: 8
- 
-   # Common definitions for clocks, clock-names and reset.
-   # Platform constraints are described later.
-@@ -623,6 +624,50 @@ allOf:
-         - resets
-         - reset-names
- 
-+    # On newer chipsets support either 1 or 8 msi interrupts
-+    # On older chipsets it's always 1 msi interrupt
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            enum:
-+              - qcom,pcie-msm8996
-+              - qcom,pcie-sc7280
-+              - qcom,pcie-sc8180x
-+              - qcom,pcie-sdm845
-+              - qcom,pcie-sm8150
-+              - qcom,pcie-sm8250
-+              - qcom,pcie-sm8450-pcie0
-+              - qcom,pcie-sm8450-pcie1
-+    then:
-+      oneOf:
-+        - properties:
-+            interrupts:
-+              maxItems: 1
-+            interrupt-names:
-+              items:
-+                - const: msi
-+        - properties:
-+            interrupts:
-+              minItems: 8
-+            interrupt-names:
-+              items:
-+                - const: msi0
-+                - const: msi1
-+                - const: msi2
-+                - const: msi3
-+                - const: msi4
-+                - const: msi5
-+                - const: msi6
-+                - const: msi7
-+    else:
-+      properties:
-+        interrupts:
-+          maxItems: 1
-+        interrupt-names:
-+          items:
-+            - const: msi
-+
- unevaluatedProperties: false
- 
- examples:
+>> @@ -623,6 +624,50 @@ allOf:
+>>           - resets
+>>           - reset-names
+>>   
+>> +    # On newer chipsets support either 1 or 8 msi interrupts
+>> +    # On older chipsets it's always 1 msi interrupt
+>> +  - if:
+>> +      properties:
+>> +        compatibles:
+> 
+> This still has the misspelled property name here (plural s) so the
+> conditional is always false.
+> 
+> I know I included a fix for this in my follow-on series, but if you are
+> respinning the series anyway you should fix it up.
+
+Done, thanks a lot pointing me to it.
+
+> 
+>> +          contains:
+>> +            enum:
+>> +              - qcom,pcie-msm8996
+
+[...]
+
 -- 
-2.35.1
-
+With best wishes
+Dmitry
