@@ -2,97 +2,65 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3317C433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Jul 2022 12:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA9BC43334
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Jul 2022 13:14:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235384AbiGGM1y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Jul 2022 08:27:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57364 "EHLO
+        id S235166AbiGGNO3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Jul 2022 09:14:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235072AbiGGM1y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2022 08:27:54 -0400
-Received: from mail-io1-f53.google.com (mail-io1-f53.google.com [209.85.166.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61B052251F;
-        Thu,  7 Jul 2022 05:27:53 -0700 (PDT)
-Received: by mail-io1-f53.google.com with SMTP id v185so16632929ioe.11;
-        Thu, 07 Jul 2022 05:27:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject:date
-         :message-id;
-        bh=cMPT7f9qv5sQO6WNbfFTELIdIiXOvBw5cTsisXNHniQ=;
-        b=H1v4dAcR3R+lnwYPtIEQCKBk7xLj9VCoRBs0Y1HShtJqQDfLCIm17VSiC8FnDGT5b4
-         yW+uvtGzJlqQkD9mGjrkkcUMagPURP/6DMGcc74P5JDwxvUYEKOEBck2WE2Ii9Oyh5Tr
-         B/0KDpjRposrsw5ntBPJV44s36jTzTuRfdZJfcaMf9EkKYn82fHsI+/YsDoeXHtJB7ET
-         8IOYkYVZpx3+27XAEB4bNsv+wQ3vGBdbl2Ylm0x4naBVU1o80UIQgETYLEVhY7OOcS4r
-         Hx82jNbAJ5eWKLP1wRDPJKNfErDdP6HMK+npE35aYjUNf6CzwsHTGm9W8mxBck5v6GVX
-         sAkg==
-X-Gm-Message-State: AJIora+K1PVEpO/QX0l73UCIK67S+rDVFNfa3XNPEoIypmzKIpK3zP3A
-        r3oZieVND5qRKD863jmpLA==
-X-Google-Smtp-Source: AGRyM1tZlHGQo0cV0eRw2oO9lgiCjvxMu4CTwm0ERhDKTH/9dm5gg9bF2hOLr7xmiE2qJa9CFxMU5Q==
-X-Received: by 2002:a5e:a506:0:b0:66a:2cdc:e6f7 with SMTP id 6-20020a5ea506000000b0066a2cdce6f7mr25146629iog.113.1657196872555;
-        Thu, 07 Jul 2022 05:27:52 -0700 (PDT)
-Received: from robh.at.kernel.org ([98.38.210.73])
-        by smtp.gmail.com with ESMTPSA id z23-20020a05663803b700b00331c06bf620sm12890894jap.154.2022.07.07.05.27.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Jul 2022 05:27:52 -0700 (PDT)
-Received: (nullmailer pid 1454232 invoked by uid 1000);
-        Thu, 07 Jul 2022 12:27:51 -0000
-From:   Rob Herring <robh@kernel.org>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     kthota@nvidia.com, sagar.tv@gmail.com, lpieralisi@kernel.org,
-        bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
-        kishon@ti.com, robh+dt@kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, jonathanh@nvidia.com,
-        gustavo.pimentel@synopsys.com, linux-tegra@vger.kernel.org,
-        thierry.reding@gmail.com, mmaddireddy@nvidia.com,
-        jingoohan1@gmail.com, kw@linux.com, linux-kernel@vger.kernel.org
-In-Reply-To: <20220707081301.29961-4-vidyas@nvidia.com>
-References: <20220707081301.29961-1-vidyas@nvidia.com> <20220707081301.29961-4-vidyas@nvidia.com>
-Subject: Re: [PATCH V4 3/9] dt-bindings: PCI: tegra234: Add schema for tegra234 endpoint mode
-Date:   Thu, 07 Jul 2022 06:27:51 -0600
-Message-Id: <1657196871.476299.1454231.nullmailer@robh.at.kernel.org>
+        with ESMTP id S234888AbiGGNO2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2022 09:14:28 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C06F248CE;
+        Thu,  7 Jul 2022 06:14:27 -0700 (PDT)
+Received: from kwepemi500023.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Ldxdw3NFtzkWq1;
+        Thu,  7 Jul 2022 21:12:20 +0800 (CST)
+Received: from huawei.com (10.175.112.208) by kwepemi500023.china.huawei.com
+ (7.221.188.76) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 7 Jul
+ 2022 21:14:23 +0800
+From:   Peng Wu <wupeng58@huawei.com>
+To:     <kishon@ti.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+        <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <liwei391@huawei.com>, <wupeng58@huawei.com>
+Subject: [PATCH] PCI: endpoint: Fix a NULL vs IS_ERR() check in pci_epf_test_init_dma_chan()
+Date:   Thu, 7 Jul 2022 13:12:15 +0000
+Message-ID: <20220707131215.65075-1-wupeng58@huawei.com>
+X-Mailer: git-send-email 2.17.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.175.112.208]
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemi500023.china.huawei.com (7.221.188.76)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 07 Jul 2022 13:42:55 +0530, Vidya Sagar wrote:
-> Add support for PCIe controllers that operate in the endpoint mode
-> in tegra234 chipset.
-> 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> ---
-> V4:
-> * Rebased on top of previous patch
-> 
-> V3:
-> * New patch in this series
-> 
->  .../bindings/pci/nvidia,tegra194-pcie-ep.yaml | 123 +++++++++++++++++-
->  1 file changed, 117 insertions(+), 6 deletions(-)
-> 
+On failure, dma_request_channel() returns NULL and not a
+ERR_PTR() value. Fix return value checking by using is NULL.
 
-My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-on your patch (DT_CHECKER_FLAGS is new in v5.13):
+Signed-off-by: Peng Wu <wupeng58@huawei.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-yamllint warnings/errors:
-
-dtschema/dtc warnings/errors:
-/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: Unevaluated properties are not allowed ('nvidia,enable-ext-refclk' was unexpected)
-	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-
-doc reference errors (make refcheckdocs):
-
-See https://patchwork.ozlabs.org/patch/
-
-This check can fail if there are any dependencies. The base for a patch
-series is generally the most recent rc1.
-
-If you already ran 'make dt_binding_check' and didn't see the above
-error(s), then make sure 'yamllint' is installed and dt-schema is up to
-date:
-
-pip3 install dtschema --upgrade
-
-Please check and re-submit.
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 34aac220dd4c..eed6638ab71d 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -221,7 +221,7 @@ static int pci_epf_test_init_dma_chan(struct pci_epf_test *epf_test)
+ 	filter.dma_mask = BIT(DMA_MEM_TO_DEV);
+ 	dma_chan = dma_request_channel(mask, epf_dma_filter_fn, &filter);
+ 
+-	if (IS_ERR(dma_chan)) {
++	if (!dma_chan) {
+ 		dev_info(dev, "Failed to get private DMA tx channel. Falling back to generic one\n");
+ 		goto fail_back_rx;
+ 	}
+-- 
+2.17.1
 
