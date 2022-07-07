@@ -2,106 +2,80 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEE55C433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Jul 2022 15:40:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB4E9C43334
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Jul 2022 15:55:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235625AbiGGPkZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Jul 2022 11:40:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59712 "EHLO
+        id S231320AbiGGPzE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Jul 2022 11:55:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235470AbiGGPkZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2022 11:40:25 -0400
+        with ESMTP id S230380AbiGGPzE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2022 11:55:04 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BAE2E9A;
-        Thu,  7 Jul 2022 08:40:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2B9B1F621;
+        Thu,  7 Jul 2022 08:55:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A01246239B;
-        Thu,  7 Jul 2022 15:40:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 75E04C341C0;
-        Thu,  7 Jul 2022 15:40:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7FD57623AC;
+        Thu,  7 Jul 2022 15:55:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DDC9C3411E;
+        Thu,  7 Jul 2022 15:55:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657208423;
-        bh=KRAqPIGa6RCSu0JjXWHDhbJsoglo3H9ioTvcj879if8=;
+        s=k20201202; t=1657209302;
+        bh=MH13anBIQAlg7iuL9TMZMMak6LuWoaKYU6GCL/VxllM=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=KdWsEJtcBSgVVTjX4nc+e2dLbvMXdGLo1F2jebQFfn7uCzpkkCWQQn9LgWzXNA4T3
-         BMmpZFK/l6J5K4Jwywl7yvaw52+wBcjIxNWktAa29stJviqq/lfbeB5TLb04WuZojh
-         VRh/BuevVjqR3Cvly3e3T0cZBs3c5BdcP4ZGbQUlvXeopOUq/Lc9VgnxPW9O9l96yK
-         hg5dRpgymPwt/ynq36iUpx1ADXe9qL2hmXBHpAxKhMe7/xpuZhaGYudhq2Hq4warQI
-         aVQFtCaMGYxfOBzaM/rb2J29pK0P47IlgaK+6giJ3U/6+TXaujgs3zRa9MI5wiJH5U
-         Ru44Fx1OmOj6A==
-Date:   Thu, 7 Jul 2022 10:40:20 -0500
+        b=TklWbEmb0IG0ubepaaNE7fPRnsa3sXenPkN5azIZI5FwLByDHwIJw9Gw0B6IvR8iI
+         IFr/icbokCzhR8gBu7/n5IawiMNB3Gcqqb3gcAyO623fiPgsp3KBxtfxsN3E+fUWuP
+         agvAELktyYfZrNrV69aOtjG9kzl7SoEZlQPZK6v3fP0J6kz9xpfpoKyW9Z499c6euC
+         kJNZPdnP92xFzXj1a/p81ciX64dCN9mzkONdbdDQu4pNKM8iehrKOdu6J34WlCdZlt
+         05oe5NdKYsdR7KaKWMOtcu607eY/VZWOjkP0qKTbWFd089sahetVAcaL0XdSIUWUI6
+         6Hk1cTmu26Frw==
+Date:   Thu, 7 Jul 2022 10:55:00 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Stephen Boyd <swboyd@chromium.org>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Taniya Das <quic_tdas@quicinc.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Johan Hovold <johan+linaro@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-pci@vger.kernel.org, Johan Hovold <johan@kernel.org>
-Subject: Re: [PATCH v11 0/5] PCI: qcom: Rework pipe_clk/pipe_clk_src handling
-Message-ID: <20220707154020.GA305104@bhelgaas>
+To:     Martin Habets <habetsm.xilinx@gmail.com>
+Cc:     davem@davemloft.net, kuba@kernel.org, pabeni@redhat.com,
+        edumazet@google.com, netdev@vger.kernel.org,
+        ecree.xilinx@gmail.com, linux-pci@vger.kernel.org,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH net-next v2 0/2] sfc: Add EF100 BAR config support
+Message-ID: <20220707155500.GA305857@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e00b1317-9c2e-0b11-8c0b-1fa4a17e4761@linaro.org>
+In-Reply-To: <165719918216.28149.7678451615870416505.stgit@palantir17.mph.net>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 07, 2022 at 05:03:48PM +0300, Dmitry Baryshkov wrote:
-> On 16/06/2022 21:21, Bjorn Helgaas wrote:
-> > On Wed, Jun 08, 2022 at 01:52:33PM +0300, Dmitry Baryshkov wrote:
-> > > PCIe pipe clk (and some other clocks) must be parked to the "safe"
-> > > source (bi_tcxo) when corresponding GDSC is turned off and on again.
-> > > Currently this is handcoded in the PCIe driver by reparenting the
-> > > gcc_pipe_N_clk_src clock.
-
-> > > Dmitry Baryshkov (5):
-> > >    clk: qcom: regmap: add PHY clock source implementation
-> > >    clk: qcom: gcc-sm8450: use new clk_regmap_phy_mux_ops for PCIe pipe
-> > >      clocks
-> > >    clk: qcom: gcc-sc7280: use new clk_regmap_phy_mux_ops for PCIe pipe
-> > >      clocks
-> > >    PCI: qcom: Remove unnecessary pipe_clk handling
-> > >    PCI: qcom: Drop manual pipe_clk_src handling
-> > > 
-> > > 
-> > > Dmitry Baryshkov (5):
-> > >    clk: qcom: regmap: add PHY clock source implementation
-> > >    clk: qcom: gcc-sm8450: use new clk_regmap_phy_mux_ops for PCIe pipe
-> > >      clocks
-> > >    clk: qcom: gcc-sc7280: use new clk_regmap_phy_mux_ops for PCIe pipe
-> > >      clocks
-> > >    PCI: qcom: Remove unnecessary pipe_clk handling
-> > >    PCI: qcom: Drop manual pipe_clk_src handling
-> > > 
-> > >   drivers/clk/qcom/Makefile              |  1 +
-> > >   drivers/clk/qcom/clk-regmap-phy-mux.c  | 62 ++++++++++++++++++++
-> > >   drivers/clk/qcom/clk-regmap-phy-mux.h  | 33 +++++++++++
-> > >   drivers/clk/qcom/gcc-sc7280.c          | 49 +++++-----------
-> > >   drivers/clk/qcom/gcc-sm8450.c          | 49 +++++-----------
-> > >   drivers/pci/controller/dwc/pcie-qcom.c | 81 +-------------------------
-> > >   6 files changed, 127 insertions(+), 148 deletions(-)
-> > >   create mode 100644 drivers/clk/qcom/clk-regmap-phy-mux.c
-> > >   create mode 100644 drivers/clk/qcom/clk-regmap-phy-mux.h
-> > 
-> > I applied this to pci/ctrl/qcom for v5.20, thanks!
-> > 
-> > Clock folks (Bjorn A, Andy, Michael, Stephen), I assume you're OK with
-> > these being merged via the PCI tree.  Let me know if you prefer
-> > anything different.
+On Thu, Jul 07, 2022 at 02:07:07PM +0100, Martin Habets wrote:
+> The EF100 NICs allow for different register layouts of a PCI memory BAR.
+> This series provides the framework to switch this layout at runtime.
 > 
-> I noticed that this patchset is not a part of linux-next. Is it still
-> pending to be merged in 5.20?
+> Subsequent patch series will use this to add support for vDPA.
 
-It's still pending.  I currently have three separate qcom-related
-branches that need to be reconciled before I put them in -next.
+Normally drivers rely on the PCI Vendor and Device ID to learn the
+number of BARs and their layouts.  I guess this series implies that
+doesn't work on this device?  And the user needs to manually specify
+what kind of device this is?
 
-Bjorn
+I'm confused about how this is supposed to work.  What if the driver
+is built-in and claims a device before the user can specify the
+register layout?  What if the user specifies the wrong layout and the
+driver writes to the wrong registers?
+
+> ---
+> 
+> Martin Habets (2):
+>       sfc: Add EF100 BAR config support
+>       sfc: Implement change of BAR configuration
+> 
+> 
+>  drivers/net/ethernet/sfc/ef100_nic.c |   80 ++++++++++++++++++++++++++++++++++
+>  drivers/net/ethernet/sfc/ef100_nic.h |    6 +++
+>  2 files changed, 86 insertions(+)
+> 
+> --
+> Martin Habets <habetsm.xilinx@gmail.com>
+> 
+> 
