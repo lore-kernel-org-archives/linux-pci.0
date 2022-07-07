@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69563C433EF
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Jul 2022 18:39:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13D29C433EF
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Jul 2022 18:42:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231320AbiGGSjV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Jul 2022 14:39:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40436 "EHLO
+        id S236274AbiGGSmS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Jul 2022 14:42:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232221AbiGGSjU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2022 14:39:20 -0400
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10FAD23160
-        for <linux-pci@vger.kernel.org>; Thu,  7 Jul 2022 11:39:19 -0700 (PDT)
+        with ESMTP id S232221AbiGGSmR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Jul 2022 14:42:17 -0400
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 028FD2CDE2
+        for <linux-pci@vger.kernel.org>; Thu,  7 Jul 2022 11:42:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657219159; x=1688755159;
+  t=1657219336; x=1688755336;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=+96Djz/JWs3AKVeUQd9S57C32k8UaJsZqAava+pKuZM=;
-  b=C5ZsXRsqJ6I8wGykLEUz3f4Y535bs5x0EcLu45tgF6bosYv6sgKTNIMX
-   0KQoOlGj1Gc/awH01AXWNPpxIUvUksWUivRd8g4hSLWSIQWDDV8h2q7/E
-   wfX1usMa87txvZldLrQrirAUzIoG9vc/5IQ9TYCYJ57wMWjiauS4DFVHb
-   QRxXtmoFYBDE+CJWDfXzgVHTMQXO99+mddRdIM8t/vStzO+SdH5Fp22Jt
-   oOFpywNcvYzsWoOmz2zftxgtzX3eUjJLSXHCwHhXX0W0LI+83vyetc+xn
-   KZecks2TjN6ivYcMS6zaXcUcw2ct9Bztvf/JZre2IWvqXN5QyPYY8OX7s
-   Q==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10401"; a="272892721"
+  bh=OEbH6VKEZQm7xA9nusYbmueLXMaMFvttHnuicHLM7Uw=;
+  b=cnq7+VKI1rQ4WPXqMP2iOLKNAAHPfG0PkQyuH/rjmlF/sBP8PfTC9cQM
+   7PATRoACQCCvvDdqFJQ7YPghap8pSY86UJLRe6sxJEool7HPEZ1NGzTKi
+   ndNNToD3uMa+T15ALbNgbdnVDqyAwxO6k+KGgW3ery1BbB7S67cUqhi7W
+   Bx2Ly66cE0R2U1onbkRNUjHIiQ7FMvIuEWI0RnVt8fz+TIq+MWkszT+ex
+   ebBQqb7FTcYBaiWvFXFfZK7tPUu5pOb+WeoZrLS+Kfq4/5ucOGbgB0Gzo
+   roty+4zRXsdGLydxjrJ9kdBeXe/QlRBzf2AzIcqyR9VWfl4JyAMyB6upA
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10401"; a="370413002"
 X-IronPort-AV: E=Sophos;i="5.92,253,1650956400"; 
-   d="scan'208";a="272892721"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jul 2022 11:39:18 -0700
+   d="scan'208";a="370413002"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jul 2022 11:42:16 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.92,253,1650956400"; 
-   d="scan'208";a="696611560"
+   d="scan'208";a="543923471"
 Received: from dsa1.ch.intel.com ([143.182.137.99])
-  by fmsmga002.fm.intel.com with ESMTP; 07 Jul 2022 11:39:17 -0700
+  by orsmga003.jf.intel.com with ESMTP; 07 Jul 2022 11:42:15 -0700
 From:   Paul Luse <paul.e.luse@intel.com>
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, paul luse <paul.e.luse@intel.com>,
         Jing Liu <jing2.liu@intel.com>
-Subject: [PATCH v1] PCI: Add save and restore capability for TPH config space
-Date:   Thu,  7 Jul 2022 11:39:39 -0400
-Message-Id: <20220707153939.2339-1-paul.e.luse@intel.com>
+Subject: [PATCH v2] PCI: Add save and restore capability for TPH config space
+Date:   Thu,  7 Jul 2022 11:42:38 -0400
+Message-Id: <20220707154238.2536-1-paul.e.luse@intel.com>
 X-Mailer: git-send-email 2.34.3
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -145,7 +145,7 @@ index 5783a2f79e6a..c91986da9337 100644
 +obj-$(CONFIG_PCIE_TPH)		+= tph.o
 diff --git a/drivers/pci/pcie/tph.c b/drivers/pci/pcie/tph.c
 new file mode 100644
-index 000000000000..872e1936e3f3
+index 000000000000..c0d2f20b7d53
 --- /dev/null
 +++ b/drivers/pci/pcie/tph.c
 @@ -0,0 +1,93 @@
@@ -174,8 +174,8 @@ index 000000000000..872e1936e3f3
 +void pci_save_tph_state(struct pci_dev *dev)
 +{
 +	struct pci_cap_saved_state *save_state;
-+	int tph, num_entries, i, offset;
-+	u16 *st_entry;
++	int num_entries, i, offset;
++	u16 *st_entry, tph;
 +	u32 *cap;
 +
 +	tph = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_TPH);
