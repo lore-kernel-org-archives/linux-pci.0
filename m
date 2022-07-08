@@ -2,519 +2,257 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B1ACCA47B
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Jul 2022 17:02:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07B90C433EF
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Jul 2022 17:07:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238926AbiGHRC4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Jul 2022 13:02:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46338 "EHLO
+        id S237845AbiGHRHO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Jul 2022 13:07:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238927AbiGHRCz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2022 13:02:55 -0400
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2745621811;
-        Fri,  8 Jul 2022 10:02:53 -0700 (PDT)
-Received: by mail-ed1-x532.google.com with SMTP id e15so6644946edj.2;
-        Fri, 08 Jul 2022 10:02:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:from:to:cc:subject:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Jo+MPiWD4nmpEOoFmepSYwlHHa8Y6OFlf/1Y3eWrLdg=;
-        b=RQruHY7yOryEme/5h7DC0AaktobcY2qslGyxjtuwqHAvHZVlFxKTpbn8LUpcOArOkn
-         pzmP71eQMKeqDmhpVSmgdzJ/pzK9mXz2lwAhnFdSslX0sjqYhfPBNwB4C7vMrGDE79k2
-         5eQYeHMqLDV97s7deWSMrpqqPa293Tf54Dgb0m2w5liMYIqy9Z9qaJychl3euCuqPK/S
-         nliSUodeKMLleg609WXxhs/bS1xa/qjBn8hW7Dad/9N5PmSUCe1cUOOxDRKUuZOleO2j
-         ncVtf4/jpM/dGme/VJflRc3yJAlY8JYBJRXyhSB8pgdjIMKbRN3MxH0orF0FHKUl1bYC
-         9axg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:from:to:cc:subject:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Jo+MPiWD4nmpEOoFmepSYwlHHa8Y6OFlf/1Y3eWrLdg=;
-        b=dy2ZoYa/pO3OPXUc3fvw0roKpx9RBituN7KOjGgJAlsd06RmoZ5xC+hdUiLYGxLG8B
-         zACawFkXdWWfufiHgw9Vk3UVh40DGeDS9dZvqpx4EFPOvzuwQ0BuflgNt7X+x0ydcALN
-         PpGyqqAiTvrxDJEAMRCLkordhwBY9IZyEWcMh6FnOXGNZjbaD/v4pASfufTHxRGkECvI
-         zpzb0MZguYXa5uCsSw8X66a/ankBQF2TmloXZWqAQSP4n7v+uSAcIzCMVupOS63YE0H3
-         ZnifIdwu2gJ0+6pPyuIMIihDS3z8upeZdIiBbmynaSNanvAeaLOqEoVD1mmwnZS3U9k6
-         4L7w==
-X-Gm-Message-State: AJIora9IZQDWHubN8wcbaCRQfxR+2eO0uzbdTZ2jL38CnDgtQ1Q/MyFb
-        FirDbqk4trlZHxAkcnU2X4s=
-X-Google-Smtp-Source: AGRyM1tJ8gKpfPAgEgw4SDmyNmX75lTcq477Pe6qgfuvHK4Ea8eWswUpHDUBP/IKe6iG0WCtVnoUFg==
-X-Received: by 2002:a05:6402:2804:b0:439:83c2:8be2 with SMTP id h4-20020a056402280400b0043983c28be2mr6050766ede.292.1657299771207;
-        Fri, 08 Jul 2022 10:02:51 -0700 (PDT)
-Received: from Ansuel-xps. (93-42-70-190.ip85.fastwebnet.it. [93.42.70.190])
-        by smtp.gmail.com with ESMTPSA id b21-20020a17090630d500b00724261b592esm9259163ejb.186.2022.07.08.10.02.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Jul 2022 10:02:50 -0700 (PDT)
-Message-ID: <62c8633a.1c69fb81.f15e3.fbd0@mx.google.com>
-X-Google-Original-Message-ID: <YshjOC8Ip0sy4LRD@Ansuel-xps.>
-Date:   Fri, 8 Jul 2022 19:02:48 +0200
-From:   Christian Marangi <ansuelsmth@gmail.com>
-To:     Robert Marko <robimarko@gmail.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        lpieralisi@kernel.org, Rob Herring <robh@kernel.org>, kw@linux.com,
-        Bjorn Helgaas <bhelgaas@google.com>, p.zabel@pengutronix.de,
-        jingoohan1@gmail.com, linux-pci@vger.kernel.org,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        johan+linaro@kernel.org,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Subject: Re: [PATCH v4 2/2] PCI: qcom: Move all DBI register accesses after
- phy_power_on()
-References: <20220624104420.257368-2-robimarko@gmail.com>
- <20220707194139.GA328930@bhelgaas>
- <CAOX2RU6TFDtMW+3_rfqbUOy4AmEJh+8F8wPtLnJEBtpnzeMbdA@mail.gmail.com>
- <62c85fbf.1c69fb81.3ef7.d88d@mx.google.com>
+        with ESMTP id S237843AbiGHRHN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2022 13:07:13 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B494C61D57
+        for <linux-pci@vger.kernel.org>; Fri,  8 Jul 2022 10:07:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1657300031; x=1688836031;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=tVL7Guz7ap6xy8cfPnvhUpXmiAD+GHcZA7voLwnXY80=;
+  b=ZD96nSXYL9xWD/LJVOl63FMNdrp9Xpe5uOXPH95pjgAFkxoysnAA4IOD
+   lDCdTydGAq3Gty9Hv5wB3j41uolPSBewvLXfaaswTz3PC6RAhFKn0g2I1
+   9v7vNqk4f3nJA5jo8g3TlUrvTUJ7DJl5p2I/k46DeXoiHZAlX6WkbaVRg
+   N1T96FQVMCozuTvS0Xi7ozk3i89qN8B1botMIoCzOZ1QYiXkqizS0/5t/
+   dMjIFK9MHFjX3xZQ1PRsiL0TO4fRBVnDZ2qRbXG+aB/5uaoJq62y8xKr8
+   nKvDdar3zcOt2DP+lPiKCJ+ElQ5HV4lYuHX/aIoyLF38TZabtKn5BtoBz
+   A==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10402"; a="267362829"
+X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
+   d="scan'208";a="267362829"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jul 2022 10:07:11 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
+   d="scan'208";a="591628117"
+Received: from dsa1.ch.intel.com ([143.182.137.99])
+  by orsmga007.jf.intel.com with ESMTP; 08 Jul 2022 10:07:10 -0700
+From:   Paul Luse <paul.e.luse@intel.com>
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, paul luse <paul.e.luse@intel.com>,
+        Jing Liu <jing2.liu@intel.com>
+Subject: [PATCH v6] PCI: Add save and restore capability for TPH config space
+Date:   Fri,  8 Jul 2022 10:07:33 -0400
+Message-Id: <20220708140733.3582-1-paul.e.luse@intel.com>
+X-Mailer: git-send-email 2.34.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <62c85fbf.1c69fb81.3ef7.d88d@mx.google.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jul 08, 2022 at 06:47:57PM +0200, Christian Marangi wrote:
-> On Fri, Jul 08, 2022 at 06:39:37PM +0200, Robert Marko wrote:
-> > CC-ing Christian who did a lot of work on 2.1.0 (IPQ806x).
-> > 
-> > Regards,
-> > Robert
-> > 
-> > On Thu, 7 Jul 2022 at 21:41, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > >
-> > > On Fri, Jun 24, 2022 at 12:44:20PM +0200, Robert Marko wrote:
-> > > > IPQ8074 requires the PHY to be powered on before accessing DBI registers.
-> > > > It's not clear whether other variants have the same dependency, but there
-> > > > seems to be no reason for them to be different, so move all the DBI
-> > > > accesses from .init() to .post_init() so they are all after phy_power_on().
-> > > >
-> > > > Signed-off-by: Robert Marko <robimarko@gmail.com>
-> > >
-> > > Would any of the qcom driver folks care to review and ack this?
-> > > Stanimir, Andy, Bjorn A (from get_maintainer.pl)?
-> > >
-> 
-> Hi Bjorn,
-> I tested this on ipq806x and the current patch cause regression as pci
-> doesn't work anymore...
-> This is a before the patch [1] and this is an after [2].
-> 
-> As you notice the main problem here is
-> [    2.559962] qcom-pcie 1b700000.pci: Phy link never came up
-> 
-> The cause of this has already been bisected and actually it was a fixup
-> pushed some time ago for 2_1_0.
-> 
-> Uboot can leave the pci in an underfined state and this
-> writel(1, pcie->parf + PCIE20_PARF_PHY_CTRL);
-> is never called.
-> 
-> This is mandatory to a correct init and MUST be called before regulator
-> enable and reset deassert or the "Phy link never came up" problem is
-> triggered.
-> 
-> So to fix this we just have to have
-> writel(1, pcie->parf + PCIE20_PARF_PHY_CTRL);
-> in qcom_pcie_init_2_1_0 right after the reset_contro_assert.
-> 
-> This command is also present in qcom_pcie_init_2_3_2 where the same
-> exact reg is written so I assume 2_3_2 have the same regression and the
-> write must be placed in init and can't be moved to post_init.
-> 
-> Feel free to tell me how to proceed if I should post an additional patch
-> or you prefer Robi to respin this with the few lines reverted.
-> 
-> [1] https://gist.github.com/Ansuel/ec827319e585630356fc586273db6f0d
-> [2] https://gist.github.com/Ansuel/63fbcab2681cd28a61ec52d7874fa30d
->
+From: paul luse <paul.e.luse@intel.com>
 
-While testing this I notice something odd...
+The PCI subsystem does not currently save and restore the configuration
+space for the Transaction Layer Processing Hints (TPH) capability,
+leading to the possibility of configuration loss in some scenarios. For
+more information please refer to PCIe r6.0 sec 6.17.
 
-2_4_2 prepare the pipe clock only AFTER PCIe clocks and reset are
-enabled while in 2_1_0... That made me think there could be a problem
-with the current code of 2_1_0... A quick change made me discover that
-the problem is actually that we enable prepare_enable clock BEFORE the
-value is written in PCIE20_PARF_PHY_CTRL.
+This was discovered working on the Storage Performance Development Kit
+(SPDK) project (see https://spdk.io/) where we typically unbind devices
+from their native kernel driver and bind to VFIO for use with our own
+user space drivers. The process of binding to VFIO results in the loss
+of TPH settings due to the resulting PCI reset.
 
-By moving the clk_bulk_prepare_enable after the "enable PCIe clocks and
-resets" make the pci work with the current change...
+Co-developed-by: Jing Liu <jing2.liu@intel.com>
+Signed-off-by: Jing Liu <jing2.liu@intel.com>
+Signed-off-by: paul luse <paul.e.luse@intel.com>
+---
+Log: v1-v3: Misc review feedback before I knew to add a log
+ V4: changed tph declaration from int to u16
+ V5: removed TPH as a kernel option
+ V6: Updated commit message per feedback, added log
 
-So it could be that the current changes are correct and it's really just
-a bug in 2_1_0 enabling clock before writing the correct value...
+ drivers/pci/pci.c             |  2 +
+ drivers/pci/pci.h             |  4 ++
+ drivers/pci/pcie/Makefile     |  1 +
+ drivers/pci/pcie/tph.c        | 93 +++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c           |  1 +
+ include/uapi/linux/pci_regs.h |  2 +
+ 6 files changed, 103 insertions(+)
+ create mode 100644 drivers/pci/pcie/tph.c
 
-Tell me how to proceed... think at this point a good idea would be to
-create a separate patch and fix this for good.
-
-Also bonus question, should I drop the bulk_prepare_enable and follow
-the pattern of 2_3_2 and enable aux, cfg, master and slave in init and
-pipe in post init or I can keep it? (still have to test but I assume
-that it will work.)
-
-> > > > ---
-> > > > Changes in v4:
-> > > > * Move 2.7.0 accesses as well
-> > > > * Correct title and description (Bjorn)
-> > > > ---
-> > > >  drivers/pci/controller/dwc/pcie-qcom.c | 215 ++++++++++++++-----------
-> > > >  1 file changed, 119 insertions(+), 96 deletions(-)
-> > > >
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> > > > index 24708d5d817d..f1a156052fe7 100644
-> > > > --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> > > > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> > > > @@ -348,8 +348,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
-> > > >       struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
-> > > >       struct dw_pcie *pci = pcie->pci;
-> > > >       struct device *dev = pci->dev;
-> > > > -     struct device_node *node = dev->of_node;
-> > > > -     u32 val;
-> > > >       int ret;
-> > > >
-> > > >       /* reset the PCIe interface as uboot can leave it undefined state */
-> > > > @@ -360,8 +358,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
-> > > >       reset_control_assert(res->ext_reset);
-> > > >       reset_control_assert(res->phy_reset);
-> > > >
-> > > > -     writel(1, pcie->parf + PCIE20_PARF_PHY_CTRL);
-> > > > -
-> > > >       ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > >       if (ret < 0) {
-> > > >               dev_err(dev, "cannot enable regulators\n");
-> > > > @@ -408,6 +404,35 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
-> > > >       if (ret)
-> > > >               goto err_clks;
-> > > >
-> > > > +     return 0;
-> > > > +
-> > > > +err_clks:
-> > > > +     reset_control_assert(res->axi_reset);
-> > > > +err_deassert_axi:
-> > > > +     reset_control_assert(res->por_reset);
-> > > > +err_deassert_por:
-> > > > +     reset_control_assert(res->pci_reset);
-> > > > +err_deassert_pci:
-> > > > +     reset_control_assert(res->phy_reset);
-> > > > +err_deassert_phy:
-> > > > +     reset_control_assert(res->ext_reset);
-> > > > +err_deassert_ext:
-> > > > +     reset_control_assert(res->ahb_reset);
-> > > > +err_deassert_ahb:
-> > > > +     regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > > +
-> > > > +     return ret;
-> > > > +}
-> > > > +
-> > > > +static int qcom_pcie_post_init_2_1_0(struct qcom_pcie *pcie)
-> > > > +{
-> > > > +     struct dw_pcie *pci = pcie->pci;
-> > > > +     struct device *dev = pci->dev;
-> > > > +     struct device_node *node = dev->of_node;
-> > > > +     u32 val;
-> > > > +
-> > > > +     writel(1, pcie->parf + PCIE20_PARF_PHY_CTRL);
-> > > > +
-> > > >       /* enable PCIe clocks and resets */
-> > > >       val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-> > > >       val &= ~BIT(0);
-> > > > @@ -451,23 +476,6 @@ static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
-> > > >              pci->dbi_base + PCIE20_AXI_MSTR_RESP_COMP_CTRL1);
-> > > >
-> > > >       return 0;
-> > > > -
-> > > > -err_clks:
-> > > > -     reset_control_assert(res->axi_reset);
-> > > > -err_deassert_axi:
-> > > > -     reset_control_assert(res->por_reset);
-> > > > -err_deassert_por:
-> > > > -     reset_control_assert(res->pci_reset);
-> > > > -err_deassert_pci:
-> > > > -     reset_control_assert(res->phy_reset);
-> > > > -err_deassert_phy:
-> > > > -     reset_control_assert(res->ext_reset);
-> > > > -err_deassert_ext:
-> > > > -     reset_control_assert(res->ahb_reset);
-> > > > -err_deassert_ahb:
-> > > > -     regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > > -
-> > > > -     return ret;
-> > > >  }
-> > > >
-> > > >  static int qcom_pcie_get_resources_1_0_0(struct qcom_pcie *pcie)
-> > > > @@ -555,16 +563,6 @@ static int qcom_pcie_init_1_0_0(struct qcom_pcie *pcie)
-> > > >               goto err_slave;
-> > > >       }
-> > > >
-> > > > -     /* change DBI base address */
-> > > > -     writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-> > > > -
-> > > > -     if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> > > > -             u32 val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-> > > > -
-> > > > -             val |= BIT(31);
-> > > > -             writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-> > > > -     }
-> > > > -
-> > > >       return 0;
-> > > >  err_slave:
-> > > >       clk_disable_unprepare(res->slave_bus);
-> > > > @@ -580,6 +578,22 @@ static int qcom_pcie_init_1_0_0(struct qcom_pcie *pcie)
-> > > >       return ret;
-> > > >  }
-> > > >
-> > > > +static int qcom_pcie_post_init_1_0_0(struct qcom_pcie *pcie)
-> > > > +{
-> > > > +
-> > > > +     /* change DBI base address */
-> > > > +     writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-> > > > +
-> > > > +     if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> > > > +             u32 val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-> > > > +
-> > > > +             val |= BIT(31);
-> > > > +             writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-> > > > +     }
-> > > > +
-> > > > +     return 0;
-> > > > +}
-> > > > +
-> > > >  static void qcom_pcie_2_3_2_ltssm_enable(struct qcom_pcie *pcie)
-> > > >  {
-> > > >       u32 val;
-> > > > @@ -648,7 +662,6 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
-> > > >       struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
-> > > >       struct dw_pcie *pci = pcie->pci;
-> > > >       struct device *dev = pci->dev;
-> > > > -     u32 val;
-> > > >       int ret;
-> > > >
-> > > >       ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > > @@ -681,27 +694,6 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
-> > > >               goto err_slave_clk;
-> > > >       }
-> > > >
-> > > > -     /* enable PCIe clocks and resets */
-> > > > -     val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-> > > > -     val &= ~BIT(0);
-> > > > -     writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-> > > > -
-> > > > -     /* change DBI base address */
-> > > > -     writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-> > > > -
-> > > > -     /* MAC PHY_POWERDOWN MUX DISABLE  */
-> > > > -     val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
-> > > > -     val &= ~BIT(29);
-> > > > -     writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-> > > > -
-> > > > -     val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-> > > > -     val |= BIT(4);
-> > > > -     writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-> > > > -
-> > > > -     val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-> > > > -     val |= BIT(31);
-> > > > -     writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-> > > > -
-> > > >       return 0;
-> > > >
-> > > >  err_slave_clk:
-> > > > @@ -722,8 +714,30 @@ static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
-> > > >       struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
-> > > >       struct dw_pcie *pci = pcie->pci;
-> > > >       struct device *dev = pci->dev;
-> > > > +     u32 val;
-> > > >       int ret;
-> > > >
-> > > > +     /* enable PCIe clocks and resets */
-> > > > +     val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-> > > > +     val &= ~BIT(0);
-> > > > +     writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-> > > > +
-> > > > +     /* change DBI base address */
-> > > > +     writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-> > > > +
-> > > > +     /* MAC PHY_POWERDOWN MUX DISABLE  */
-> > > > +     val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
-> > > > +     val &= ~BIT(29);
-> > > > +     writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-> > > > +
-> > > > +     val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-> > > > +     val |= BIT(4);
-> > > > +     writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-> > > > +
-> > > > +     val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-> > > > +     val |= BIT(31);
-> > > > +     writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-> > > > +
-> > > >       ret = clk_prepare_enable(res->pipe_clk);
-> > > >       if (ret) {
-> > > >               dev_err(dev, "cannot prepare/enable pipe clock\n");
-> > > > @@ -837,7 +851,6 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
-> > > >       struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
-> > > >       struct dw_pcie *pci = pcie->pci;
-> > > >       struct device *dev = pci->dev;
-> > > > -     u32 val;
-> > > >       int ret;
-> > > >
-> > > >       ret = reset_control_assert(res->axi_m_reset);
-> > > > @@ -962,6 +975,33 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
-> > > >       if (ret)
-> > > >               goto err_clks;
-> > > >
-> > > > +     return 0;
-> > > > +
-> > > > +err_clks:
-> > > > +     reset_control_assert(res->ahb_reset);
-> > > > +err_rst_ahb:
-> > > > +     reset_control_assert(res->pwr_reset);
-> > > > +err_rst_pwr:
-> > > > +     reset_control_assert(res->axi_s_reset);
-> > > > +err_rst_axi_s:
-> > > > +     reset_control_assert(res->axi_m_sticky_reset);
-> > > > +err_rst_axi_m_sticky:
-> > > > +     reset_control_assert(res->axi_m_reset);
-> > > > +err_rst_axi_m:
-> > > > +     reset_control_assert(res->pipe_sticky_reset);
-> > > > +err_rst_pipe_sticky:
-> > > > +     reset_control_assert(res->pipe_reset);
-> > > > +err_rst_pipe:
-> > > > +     reset_control_assert(res->phy_reset);
-> > > > +err_rst_phy:
-> > > > +     reset_control_assert(res->phy_ahb_reset);
-> > > > +     return ret;
-> > > > +}
-> > > > +
-> > > > +static int qcom_pcie_post_init_2_4_0(struct qcom_pcie *pcie)
-> > > > +{
-> > > > +     u32 val;
-> > > > +
-> > > >       /* enable PCIe clocks and resets */
-> > > >       val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-> > > >       val &= ~BIT(0);
-> > > > @@ -984,26 +1024,6 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
-> > > >       writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-> > > >
-> > > >       return 0;
-> > > > -
-> > > > -err_clks:
-> > > > -     reset_control_assert(res->ahb_reset);
-> > > > -err_rst_ahb:
-> > > > -     reset_control_assert(res->pwr_reset);
-> > > > -err_rst_pwr:
-> > > > -     reset_control_assert(res->axi_s_reset);
-> > > > -err_rst_axi_s:
-> > > > -     reset_control_assert(res->axi_m_sticky_reset);
-> > > > -err_rst_axi_m_sticky:
-> > > > -     reset_control_assert(res->axi_m_reset);
-> > > > -err_rst_axi_m:
-> > > > -     reset_control_assert(res->pipe_sticky_reset);
-> > > > -err_rst_pipe_sticky:
-> > > > -     reset_control_assert(res->pipe_reset);
-> > > > -err_rst_pipe:
-> > > > -     reset_control_assert(res->phy_reset);
-> > > > -err_rst_phy:
-> > > > -     reset_control_assert(res->phy_ahb_reset);
-> > > > -     return ret;
-> > > >  }
-> > > >
-> > > >  static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
-> > > > @@ -1237,7 +1257,6 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
-> > > >       struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-> > > >       struct dw_pcie *pci = pcie->pci;
-> > > >       struct device *dev = pci->dev;
-> > > > -     u32 val;
-> > > >       int ret;
-> > > >
-> > > >       ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > > @@ -1271,6 +1290,28 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
-> > > >       /* Wait for reset to complete, required on SM8450 */
-> > > >       usleep_range(1000, 1500);
-> > > >
-> > > > +     return 0;
-> > > > +err_disable_clocks:
-> > > > +     clk_bulk_disable_unprepare(res->num_clks, res->clks);
-> > > > +err_disable_regulators:
-> > > > +     regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > > +
-> > > > +     return ret;
-> > > > +}
-> > > > +
-> > > > +static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
-> > > > +{
-> > > > +     struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-> > > > +
-> > > > +     clk_bulk_disable_unprepare(res->num_clks, res->clks);
-> > > > +     regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > > +}
-> > > > +
-> > > > +static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
-> > > > +{
-> > > > +     struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-> > > > +     u32 val;
-> > > > +
-> > > >       /* configure PCIe to RC mode */
-> > > >       writel(DEVICE_TYPE_RC, pcie->parf + PCIE20_PARF_DEVICE_TYPE);
-> > > >
-> > > > @@ -1297,27 +1338,6 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
-> > > >               writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-> > > >       }
-> > > >
-> > > > -     return 0;
-> > > > -err_disable_clocks:
-> > > > -     clk_bulk_disable_unprepare(res->num_clks, res->clks);
-> > > > -err_disable_regulators:
-> > > > -     regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > > -
-> > > > -     return ret;
-> > > > -}
-> > > > -
-> > > > -static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
-> > > > -{
-> > > > -     struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-> > > > -
-> > > > -     clk_bulk_disable_unprepare(res->num_clks, res->clks);
-> > > > -     regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-> > > > -}
-> > > > -
-> > > > -static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
-> > > > -{
-> > > > -     struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-> > > > -
-> > > >       /* Set pipe clock as clock source for pcie_pipe_clk_src */
-> > > >       if (pcie->cfg->pipe_clk_need_muxing)
-> > > >               clk_set_parent(res->pipe_clk_src, res->phy_pipe_clk);
-> > > > @@ -1569,6 +1589,7 @@ static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
-> > > >  static const struct qcom_pcie_ops ops_2_1_0 = {
-> > > >       .get_resources = qcom_pcie_get_resources_2_1_0,
-> > > >       .init = qcom_pcie_init_2_1_0,
-> > > > +     .post_init = qcom_pcie_post_init_2_1_0,
-> > > >       .deinit = qcom_pcie_deinit_2_1_0,
-> > > >       .ltssm_enable = qcom_pcie_2_1_0_ltssm_enable,
-> > > >  };
-> > > > @@ -1577,6 +1598,7 @@ static const struct qcom_pcie_ops ops_2_1_0 = {
-> > > >  static const struct qcom_pcie_ops ops_1_0_0 = {
-> > > >       .get_resources = qcom_pcie_get_resources_1_0_0,
-> > > >       .init = qcom_pcie_init_1_0_0,
-> > > > +     .post_init = qcom_pcie_post_init_1_0_0,
-> > > >       .deinit = qcom_pcie_deinit_1_0_0,
-> > > >       .ltssm_enable = qcom_pcie_2_1_0_ltssm_enable,
-> > > >  };
-> > > > @@ -1595,6 +1617,7 @@ static const struct qcom_pcie_ops ops_2_3_2 = {
-> > > >  static const struct qcom_pcie_ops ops_2_4_0 = {
-> > > >       .get_resources = qcom_pcie_get_resources_2_4_0,
-> > > >       .init = qcom_pcie_init_2_4_0,
-> > > > +     .post_init = qcom_pcie_post_init_2_4_0,
-> > > >       .deinit = qcom_pcie_deinit_2_4_0,
-> > > >       .ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
-> > > >  };
-> > > > --
-> > > > 2.36.1
-> > > >
-> 
-> -- 
-> 	Ansuel
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index cfaf40a540a8..158712bf3069 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1670,6 +1670,7 @@ int pci_save_state(struct pci_dev *dev)
+ 	pci_save_dpc_state(dev);
+ 	pci_save_aer_state(dev);
+ 	pci_save_ptm_state(dev);
++	pci_save_tph_state(dev);
+ 	return pci_save_vc_state(dev);
+ }
+ EXPORT_SYMBOL(pci_save_state);
+@@ -1782,6 +1783,7 @@ void pci_restore_state(struct pci_dev *dev)
+ 	pci_restore_rebar_state(dev);
+ 	pci_restore_dpc_state(dev);
+ 	pci_restore_ptm_state(dev);
++	pci_restore_tph_state(dev);
+ 
+ 	pci_aer_clear_status(dev);
+ 	pci_restore_aer_state(dev);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index e10cdec6c56e..e6214c8e8cb7 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -514,6 +514,10 @@ static inline void pci_restore_ptm_state(struct pci_dev *dev) { }
+ static inline void pci_disable_ptm(struct pci_dev *dev) { }
+ #endif
+ 
++void pci_save_tph_state(struct pci_dev *dev);
++void pci_restore_tph_state(struct pci_dev *dev);
++void pci_tph_init(struct pci_dev *dev);
++
+ unsigned long pci_cardbus_resource_alignment(struct resource *);
+ 
+ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
+index 5783a2f79e6a..1287ec65fb30 100644
+--- a/drivers/pci/pcie/Makefile
++++ b/drivers/pci/pcie/Makefile
+@@ -3,6 +3,7 @@
+ # Makefile for PCI Express features and port driver
+ 
+ pcieportdrv-y			:= portdrv_core.o portdrv_pci.o rcec.o
++obj-y                           += tph.o
+ 
+ obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
+ 
+diff --git a/drivers/pci/pcie/tph.c b/drivers/pci/pcie/tph.c
+new file mode 100644
+index 000000000000..c0d2f20b7d53
+--- /dev/null
++++ b/drivers/pci/pcie/tph.c
+@@ -0,0 +1,93 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * PCI Express Transaction Layer Packet Processing Hints
++ * Copyright (c) 2022, Intel Corporation.
++ */
++
++#include "../pci.h"
++
++static unsigned int pci_get_tph_st_num_entries(struct pci_dev *dev, u16 tph)
++{
++	int num_entries = 0;
++	u32 cap;
++
++	pci_read_config_dword(dev, tph + PCI_TPH_CAP, &cap);
++	if ((cap & PCI_TPH_CAP_LOC_MASK) == PCI_TPH_LOC_CAP) {
++		/* per PCI spec, table entries is encoded as N-1 */
++		num_entries = ((cap & PCI_TPH_CAP_ST_MASK) >> PCI_TPH_CAP_ST_SHIFT) + 1;
++	}
++
++	return num_entries;
++}
++
++void pci_save_tph_state(struct pci_dev *dev)
++{
++	struct pci_cap_saved_state *save_state;
++	int num_entries, i, offset;
++	u16 *st_entry, tph;
++	u32 *cap;
++
++	tph = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_TPH);
++	if (!tph)
++		return;
++
++	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_TPH);
++	if (!save_state)
++		return;
++
++	/* Save control register as well as all ST entries */
++	cap = &save_state->cap.data[0];
++	pci_read_config_dword(dev, tph + PCI_TPH_CTL, cap++);
++	st_entry = (u16 *)cap;
++	offset = PCI_TPH_ST_TBL;
++	num_entries = pci_get_tph_st_num_entries(dev, tph);
++	for (i = 0; i < num_entries; i++) {
++		pci_read_config_word(dev, tph + offset, st_entry++);
++		offset += sizeof(u16);
++	}
++}
++
++void pci_restore_tph_state(struct pci_dev *dev)
++{
++	struct pci_cap_saved_state *save_state;
++	int num_entries, i, offset;
++	u16 *st_entry, tph;
++	u32 *cap;
++
++	tph = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_TPH);
++	if (!tph)
++		return;
++
++	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_TPH);
++	if (!save_state)
++		return;
++
++	/* Restore control register as well as all ST entries */
++	cap = &save_state->cap.data[0];
++	pci_write_config_dword(dev, tph + PCI_TPH_CTL, *cap++);
++	st_entry = (u16 *)cap;
++	offset = PCI_TPH_ST_TBL;
++	num_entries = pci_get_tph_st_num_entries(dev, tph);
++	for (i = 0; i < num_entries; i++) {
++		pci_write_config_word(dev, tph + offset, *st_entry++);
++		offset += sizeof(u16);
++	}
++}
++
++void pci_tph_init(struct pci_dev *dev)
++{
++	int num_entries;
++	u32 save_size;
++	u16 tph;
++
++	if (!pci_is_pcie(dev))
++		return;
++
++	tph = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_TPH);
++	if (!tph)
++		return;
++
++	num_entries = pci_get_tph_st_num_entries(dev, tph);
++	save_size = sizeof(int) + num_entries * sizeof(u16);
++	pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_TPH, save_size);
++}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 17a969942d37..1f5da3dbf128 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2464,6 +2464,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_aer_init(dev);		/* Advanced Error Reporting */
+ 	pci_dpc_init(dev);		/* Downstream Port Containment */
+ 	pci_rcec_init(dev);		/* Root Complex Event Collector */
++	pci_tph_init(dev);              /* Transaction Layer Packet Processing Hints */
+ 
+ 	pcie_report_downtraining(dev);
+ 	pci_init_reset_methods(dev);
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 108f8523fa04..2d8b719adbab 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -1020,6 +1020,8 @@
+ #define   PCI_TPH_LOC_MSIX	0x400	/* in MSI-X */
+ #define PCI_TPH_CAP_ST_MASK	0x07FF0000	/* ST table mask */
+ #define PCI_TPH_CAP_ST_SHIFT	16	/* ST table shift */
++#define PCI_TPH_CTL             8       /* control offset */
++#define PCI_TPH_ST_TBL          0xc     /* ST table offset */
+ #define PCI_TPH_BASE_SIZEOF	0xc	/* size with no ST table */
+ 
+ /* Downstream Port Containment */
 -- 
-	Ansuel
+2.34.3
+
