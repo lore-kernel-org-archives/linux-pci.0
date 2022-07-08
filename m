@@ -2,257 +2,111 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07B90C433EF
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Jul 2022 17:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3BD2C43334
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Jul 2022 17:56:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237845AbiGHRHO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Jul 2022 13:07:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49656 "EHLO
+        id S238259AbiGHR4J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Jul 2022 13:56:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237843AbiGHRHN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2022 13:07:13 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B494C61D57
-        for <linux-pci@vger.kernel.org>; Fri,  8 Jul 2022 10:07:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657300031; x=1688836031;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=tVL7Guz7ap6xy8cfPnvhUpXmiAD+GHcZA7voLwnXY80=;
-  b=ZD96nSXYL9xWD/LJVOl63FMNdrp9Xpe5uOXPH95pjgAFkxoysnAA4IOD
-   lDCdTydGAq3Gty9Hv5wB3j41uolPSBewvLXfaaswTz3PC6RAhFKn0g2I1
-   9v7vNqk4f3nJA5jo8g3TlUrvTUJ7DJl5p2I/k46DeXoiHZAlX6WkbaVRg
-   N1T96FQVMCozuTvS0Xi7ozk3i89qN8B1botMIoCzOZ1QYiXkqizS0/5t/
-   dMjIFK9MHFjX3xZQ1PRsiL0TO4fRBVnDZ2qRbXG+aB/5uaoJq62y8xKr8
-   nKvDdar3zcOt2DP+lPiKCJ+ElQ5HV4lYuHX/aIoyLF38TZabtKn5BtoBz
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10402"; a="267362829"
-X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
-   d="scan'208";a="267362829"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jul 2022 10:07:11 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.92,256,1650956400"; 
-   d="scan'208";a="591628117"
-Received: from dsa1.ch.intel.com ([143.182.137.99])
-  by orsmga007.jf.intel.com with ESMTP; 08 Jul 2022 10:07:10 -0700
-From:   Paul Luse <paul.e.luse@intel.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, paul luse <paul.e.luse@intel.com>,
-        Jing Liu <jing2.liu@intel.com>
-Subject: [PATCH v6] PCI: Add save and restore capability for TPH config space
-Date:   Fri,  8 Jul 2022 10:07:33 -0400
-Message-Id: <20220708140733.3582-1-paul.e.luse@intel.com>
-X-Mailer: git-send-email 2.34.3
+        with ESMTP id S237887AbiGHR4I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2022 13:56:08 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B39065A467;
+        Fri,  8 Jul 2022 10:56:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=9hHckX53YDQa5nb13U0zKcPQMhp/7FlgpDGHpfNA0gQ=; b=LOVXAne1wYs5U555F1ZYS5Knvp
+        +BzllGqyR1JUwv6RrS9lbb22AG83oaviOmJkTnhQpJPnGdsKl9mwvrQ3LkCJzBg59N0ZnCUZKaCrx
+        DY9Eqd/z9jm2q5K6aOtmb8w5R3JRcJDyLqNC4S+cqBqgXVJF9xmyMVPoBre2prh+LX48/zYBVIDWO
+        S5QCrZwNcQUNaLKDReKwQqh89pXe1q4QEom2iYdI/z4yiBbHlvoct2FKGbe84Fr1VD9pT6tmhDIXK
+        SbzwS5yHQJf0v3+suaWduLeDF6G7oFw2L4x9nGzf62ueLAr6X/XbSzM+PSP5gJclYZfDKX82aHGyj
+        Bg6CvUww==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1o9sCc-003gX6-TH; Fri, 08 Jul 2022 17:55:42 +0000
+Date:   Fri, 8 Jul 2022 18:55:42 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Nadav Amit <namit@vmware.com>
+Cc:     Ajay Kaher <akaher@vmware.com>, Bjorn Helgaas <helgaas@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+        "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com" <hpa@zytor.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "rostedt@goodmis.org" <rostedt@goodmis.org>,
+        Srivatsa Bhat <srivatsab@vmware.com>,
+        "srivatsa@csail.mit.edu" <srivatsa@csail.mit.edu>,
+        Alexey Makhalov <amakhalov@vmware.com>,
+        Anish Swaminathan <anishs@vmware.com>,
+        Vasavi Sirnapalli <vsirnapalli@vmware.com>,
+        "er.ajay.kaher@gmail.com" <er.ajay.kaher@gmail.com>
+Subject: Re: [PATCH] MMIO should have more priority then IO
+Message-ID: <YshvnodeqmJV6uIJ@casper.infradead.org>
+References: <1656433761-9163-1-git-send-email-akaher@vmware.com>
+ <20220628180919.GA1850423@bhelgaas>
+ <25F843ED-7EB4-4D00-96CB-7DE1AC886460@vmware.com>
+ <YsgplrrJnk5Ly19z@casper.infradead.org>
+ <96D533E5-F3AF-4062-B095-8C143C307E37@vmware.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <96D533E5-F3AF-4062-B095-8C143C307E37@vmware.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: paul luse <paul.e.luse@intel.com>
+On Fri, Jul 08, 2022 at 04:45:00PM +0000, Nadav Amit wrote:
+> On Jul 8, 2022, at 5:56 AM, Matthew Wilcox <willy@infradead.org> wrote:
+> 
+> > And looking at the results above, it's not so much the PIO vs MMIO
+> > that makes a difference, it's the virtualisation. A mmio access goes
+> > from 269ns to 85us. Rather than messing around with preferring MMIO
+> > over PIO for config space, having an "enlightenment" to do config
+> > space accesses would be a more profitable path.
+> 
+> I am unfamiliar with the motivation for this patch, but I just wanted to
+> briefly regard the advice about enlightments.
+> 
+> “enlightenment”, AFAIK, is Microsoft’s term for "para-virtualization", so
+> let’s regard the generic term. I think that you consider the bare-metal
+> results as the possible results from a paravirtual machine, which is mostly
+> wrong. Para-virtualization usually still requires a VM-exit and for the most
+> part the hypervisor/host runs similar code for MMIO/hypercall (conceptually;
+> the code of paravirtual and fully-virtual devices is often different, but
+> IIUC, this is not what Ajay measured).
+> 
+> Para-virtualization could have *perhaps* helped to reduce the number of
+> PIO/MMIO and improve performance this way. If, for instance, all the
+> PIO/MMIO are done during initialization, a paravirtual interface can be use
+> to batch them together, and that would help. But it is more complicated to
+> get a performance benefit from paravirtualization if the PIO/MMIO accesses
+> are “spread”, for instance, done after each interrupt.
 
-The PCI subsystem does not currently save and restore the configuration
-space for the Transaction Layer Processing Hints (TPH) capability,
-leading to the possibility of configuration loss in some scenarios. For
-more information please refer to PCIe r6.0 sec 6.17.
+What kind of lousy programming interface requires you to do a config
+space access after every interrupt?  This is looney-tunes.
 
-This was discovered working on the Storage Performance Development Kit
-(SPDK) project (see https://spdk.io/) where we typically unbind devices
-from their native kernel driver and bind to VFIO for use with our own
-user space drivers. The process of binding to VFIO results in the loss
-of TPH settings due to the resulting PCI reset.
+You've used a lot of words to not answer the question that was so
+important that I asked it twice.  What's the use case, what's the
+workload that would benefit from this patch?
 
-Co-developed-by: Jing Liu <jing2.liu@intel.com>
-Signed-off-by: Jing Liu <jing2.liu@intel.com>
-Signed-off-by: paul luse <paul.e.luse@intel.com>
----
-Log: v1-v3: Misc review feedback before I knew to add a log
- V4: changed tph declaration from int to u16
- V5: removed TPH as a kernel option
- V6: Updated commit message per feedback, added log
-
- drivers/pci/pci.c             |  2 +
- drivers/pci/pci.h             |  4 ++
- drivers/pci/pcie/Makefile     |  1 +
- drivers/pci/pcie/tph.c        | 93 +++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c           |  1 +
- include/uapi/linux/pci_regs.h |  2 +
- 6 files changed, 103 insertions(+)
- create mode 100644 drivers/pci/pcie/tph.c
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index cfaf40a540a8..158712bf3069 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1670,6 +1670,7 @@ int pci_save_state(struct pci_dev *dev)
- 	pci_save_dpc_state(dev);
- 	pci_save_aer_state(dev);
- 	pci_save_ptm_state(dev);
-+	pci_save_tph_state(dev);
- 	return pci_save_vc_state(dev);
- }
- EXPORT_SYMBOL(pci_save_state);
-@@ -1782,6 +1783,7 @@ void pci_restore_state(struct pci_dev *dev)
- 	pci_restore_rebar_state(dev);
- 	pci_restore_dpc_state(dev);
- 	pci_restore_ptm_state(dev);
-+	pci_restore_tph_state(dev);
- 
- 	pci_aer_clear_status(dev);
- 	pci_restore_aer_state(dev);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index e10cdec6c56e..e6214c8e8cb7 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -514,6 +514,10 @@ static inline void pci_restore_ptm_state(struct pci_dev *dev) { }
- static inline void pci_disable_ptm(struct pci_dev *dev) { }
- #endif
- 
-+void pci_save_tph_state(struct pci_dev *dev);
-+void pci_restore_tph_state(struct pci_dev *dev);
-+void pci_tph_init(struct pci_dev *dev);
-+
- unsigned long pci_cardbus_resource_alignment(struct resource *);
- 
- static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index 5783a2f79e6a..1287ec65fb30 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -3,6 +3,7 @@
- # Makefile for PCI Express features and port driver
- 
- pcieportdrv-y			:= portdrv_core.o portdrv_pci.o rcec.o
-+obj-y                           += tph.o
- 
- obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
- 
-diff --git a/drivers/pci/pcie/tph.c b/drivers/pci/pcie/tph.c
-new file mode 100644
-index 000000000000..c0d2f20b7d53
---- /dev/null
-+++ b/drivers/pci/pcie/tph.c
-@@ -0,0 +1,93 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * PCI Express Transaction Layer Packet Processing Hints
-+ * Copyright (c) 2022, Intel Corporation.
-+ */
-+
-+#include "../pci.h"
-+
-+static unsigned int pci_get_tph_st_num_entries(struct pci_dev *dev, u16 tph)
-+{
-+	int num_entries = 0;
-+	u32 cap;
-+
-+	pci_read_config_dword(dev, tph + PCI_TPH_CAP, &cap);
-+	if ((cap & PCI_TPH_CAP_LOC_MASK) == PCI_TPH_LOC_CAP) {
-+		/* per PCI spec, table entries is encoded as N-1 */
-+		num_entries = ((cap & PCI_TPH_CAP_ST_MASK) >> PCI_TPH_CAP_ST_SHIFT) + 1;
-+	}
-+
-+	return num_entries;
-+}
-+
-+void pci_save_tph_state(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+	int num_entries, i, offset;
-+	u16 *st_entry, tph;
-+	u32 *cap;
-+
-+	tph = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_TPH);
-+	if (!tph)
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_TPH);
-+	if (!save_state)
-+		return;
-+
-+	/* Save control register as well as all ST entries */
-+	cap = &save_state->cap.data[0];
-+	pci_read_config_dword(dev, tph + PCI_TPH_CTL, cap++);
-+	st_entry = (u16 *)cap;
-+	offset = PCI_TPH_ST_TBL;
-+	num_entries = pci_get_tph_st_num_entries(dev, tph);
-+	for (i = 0; i < num_entries; i++) {
-+		pci_read_config_word(dev, tph + offset, st_entry++);
-+		offset += sizeof(u16);
-+	}
-+}
-+
-+void pci_restore_tph_state(struct pci_dev *dev)
-+{
-+	struct pci_cap_saved_state *save_state;
-+	int num_entries, i, offset;
-+	u16 *st_entry, tph;
-+	u32 *cap;
-+
-+	tph = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_TPH);
-+	if (!tph)
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_TPH);
-+	if (!save_state)
-+		return;
-+
-+	/* Restore control register as well as all ST entries */
-+	cap = &save_state->cap.data[0];
-+	pci_write_config_dword(dev, tph + PCI_TPH_CTL, *cap++);
-+	st_entry = (u16 *)cap;
-+	offset = PCI_TPH_ST_TBL;
-+	num_entries = pci_get_tph_st_num_entries(dev, tph);
-+	for (i = 0; i < num_entries; i++) {
-+		pci_write_config_word(dev, tph + offset, *st_entry++);
-+		offset += sizeof(u16);
-+	}
-+}
-+
-+void pci_tph_init(struct pci_dev *dev)
-+{
-+	int num_entries;
-+	u32 save_size;
-+	u16 tph;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	tph = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_TPH);
-+	if (!tph)
-+		return;
-+
-+	num_entries = pci_get_tph_st_num_entries(dev, tph);
-+	save_size = sizeof(int) + num_entries * sizeof(u16);
-+	pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_TPH, save_size);
-+}
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 17a969942d37..1f5da3dbf128 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2464,6 +2464,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_aer_init(dev);		/* Advanced Error Reporting */
- 	pci_dpc_init(dev);		/* Downstream Port Containment */
- 	pci_rcec_init(dev);		/* Root Complex Event Collector */
-+	pci_tph_init(dev);              /* Transaction Layer Packet Processing Hints */
- 
- 	pcie_report_downtraining(dev);
- 	pci_init_reset_methods(dev);
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 108f8523fa04..2d8b719adbab 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1020,6 +1020,8 @@
- #define   PCI_TPH_LOC_MSIX	0x400	/* in MSI-X */
- #define PCI_TPH_CAP_ST_MASK	0x07FF0000	/* ST table mask */
- #define PCI_TPH_CAP_ST_SHIFT	16	/* ST table shift */
-+#define PCI_TPH_CTL             8       /* control offset */
-+#define PCI_TPH_ST_TBL          0xc     /* ST table offset */
- #define PCI_TPH_BASE_SIZEOF	0xc	/* size with no ST table */
- 
- /* Downstream Port Containment */
--- 
-2.34.3
-
+> Para-virtauilzation and full-virtualization both have pros and cons.
+> Para-virtualization is many times more efficient, but requires the VM to
+> have dedicated device drivers for the matter. Try to run a less-common OS
+> than Linux and it would not work since the OS would not have drivers for the
+> paras-virtual devices. And even if you add support today for a para-virtual
+> devices, there are many deployed OSes that do not have such support, and you
+> would not be able to run them in a VM.
+> 
+> Regardless to virtualization, Ajay’s results show PIO is slower on
+> bare-metal, and according to his numbers by 165ns, which is significant.
+> Emulating PIO in hypervisors on x86 is inherently more complex than MMIO, so
+> the results he got would most likely happen on all hypervisors.
+> 
+> tl;dr: Let’s keep this discussion focused and put paravirtualization aside.
+> It is not a solution for all the problems in the world.
