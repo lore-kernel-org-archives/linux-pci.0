@@ -2,207 +2,393 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 087A3C43334
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Jul 2022 10:04:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B5EC43334
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Jul 2022 10:19:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237769AbiGHKEy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Jul 2022 06:04:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50840 "EHLO
+        id S237475AbiGHKT2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Jul 2022 06:19:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237576AbiGHKEv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2022 06:04:51 -0400
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32CC421E01;
-        Fri,  8 Jul 2022 03:04:51 -0700 (PDT)
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2689TC68005072;
-        Fri, 8 Jul 2022 10:03:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : content-type : in-reply-to :
- mime-version; s=corp-2021-07-09;
- bh=5pLPxSfVxyKstenSeJF5S36kf0san/dvZM+lTJUj5kk=;
- b=PA50aJSWEClK7uNepTEBZoL1lirjNs/B6KGo9hv+IgJJBjI6PrnU57gxCy/+qz2/vyQj
- oL0aTg5oA3vyQMa5i4vjthnyKQ6BWTpbc8hSzC0vhsKNARztRAH/NSsh9dW8f41s1/so
- h5x4py0i5Nyy4To7vgnyw4i4pepyPuSuElcTKvhwEliSRnJF5BIoM6faxeMhcKGZ71tu
- g6CK9oLrA1c0tCFliM/drLZbAOaKa4nWye+NvPyHRWT2dOAH5yfsktPPdZbnkumXqDVe
- vFnJqDCdS5VkE4w/NgvMoS8PEsTTgT8axv27cKNHj4hM8Pf0gEOvc6MehQ4ndh5dhJ+k bw== 
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3h4ubyqr0t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Jul 2022 10:03:43 +0000
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.16.1.2/8.16.1.2) with SMTP id 268A1thI017973;
-        Fri, 8 Jul 2022 10:03:41 GMT
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2170.outbound.protection.outlook.com [104.47.56.170])
-        by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com with ESMTP id 3h4ud9qcwg-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 08 Jul 2022 10:03:41 +0000
+        with ESMTP id S237238AbiGHKT1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jul 2022 06:19:27 -0400
+Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2088.outbound.protection.outlook.com [40.107.93.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 242AE17A81;
+        Fri,  8 Jul 2022 03:19:26 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TuiT5fxH64XD++PmsUHkgC7ckixWshUllFXzVoKD339c0SUUkEprR7RnhpyFoyYisCA3NgjigZj0XW0EB5megweHyiCr6hSkfjB4vmdtFZJIMeIcOup727hO99v4rU+KHGM2VxwCN0yEPdAuLSBVLjtDTX+2+alSVMxVUN1rOEFRoTOqCwuurnCJXuJ1xPpJDNTQHwg2CNYTSw5W3ZOLPO8s1GctuCHa9QH/Ddp/uuq+iey3U7OeI5ijPny7xK4dwWsD56h4gO5WjB52nrwuK9WvUAqgGj2AkqywRBgcs4ouzPFjlOii0aq44XhdilOpDJ5HsYjXYD41Haw5vgod9g==
+ b=QcrqwmYrcIn//JarQepsqMBN5zBOSon78ezP9/6f9BnmYcctOnMVbHqUSl2jZt0eO4ASTyAGS1lLH8Y82XQgyyJtxfG/36HhDGftNHJM2/PD/cjCN3d2GRdfLbbiZoi2nRcUEjCRSLUVOLFxctc+TY6WoXY1rvXcsrwonRt992FCHntNSWLVt2whUFSxzDu47Va/DIzTUaskmSTLGzEj67RiEGY7nUk10DvRNfSzArVfB80l8Os7MdxpDTgs+DfXe+fnPAGaFU5xiZMAxVSbBcttGrSH4iwnsChbjP6mAXoPj0P16FaQGq9hHb2ZcIpOo0NK5KXE6NsnfHu7sFj+gw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5pLPxSfVxyKstenSeJF5S36kf0san/dvZM+lTJUj5kk=;
- b=kn1SRlyC5i2qMq14iJp3u48Sc+6YLSyptZNqh+j52LiRAD4GE2LcttsO6tAENFsPKuzk0Ce08wCzR+lQG8YmiaOgDnuauDBR2FvBbWexvMMmaZ1Gtgall4dYhQ8nFYVBMV+c4a2xbe0iKblpnv5Lbi5/H/pOGmdYGjmGP1p+wxaosjR71LV5GqWcVa04uuscYArmjbbs+qiZZIVeTb6tTvgvlzG5R23qxAzaJ8iflf+0CtE45WIcD0krL0IkSbT/GPMV9C2DEQxNKh8rwrnxfyMJIVACZCMqqIyLV0YCRqAjFA2nxRbNB1uuBMsc2b+mBbGgrzbk6dvqLMZZkRVkOg==
+ bh=V/4Oyb/5p3wBPhZOzKjnt2emO2qnESK7tX4e6527oWk=;
+ b=Yd2yMud+oIU8MxjTP8s1s/YhSw9wM2k/zpylvYz/7CoKPx18Dv3edzr2r2qmJ0zuJKxpzyv97atT+o0rPjTghMynszPxKzb2GAiEhrp7MMBVSswInjltALRHNMxCS50xqGgNfDsRLmA6AunDEBk1c/1+q9cH8/y4c9mD5zxA0zAdk56qO5Uvk6ZBP7+MNywO77a4kw4A+uedecgnQTBaGvcVsJuR5JYrD7ZG/J6zvFoufnIXdn+WBKj9Ejm3CbrwZwT+C92dmva8WYdthU+YAdIN9iaVaHKi/QAD55MwBJX4I8KrjRMRvuFN/kKGPzRCvz78GARNAsNvj7dtrZ2C1A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5pLPxSfVxyKstenSeJF5S36kf0san/dvZM+lTJUj5kk=;
- b=d5aihqu/jeH907HQhVDkAIsIAk1o2UUnZLfhRzqbZs24b2LPJu/0i/iO9RegZ/usVjNRK7F6zKl0TV7RkbNtwNk5jSLgf7v7g1ni6mo16f9Ema6DtSWAvvMnjH5lMjvtoIAn4Dcxo3jB26XbdYBYv/P0T7VJlIaKMBVEZ26Hd3s=
-Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
- (2603:10b6:301:2d::28) by CH0PR10MB4924.namprd10.prod.outlook.com
- (2603:10b6:610:ca::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.20; Fri, 8 Jul
- 2022 10:03:37 +0000
-Received: from MWHPR1001MB2365.namprd10.prod.outlook.com
- ([fe80::5020:9b82:5917:40b]) by MWHPR1001MB2365.namprd10.prod.outlook.com
- ([fe80::5020:9b82:5917:40b%6]) with mapi id 15.20.5417.016; Fri, 8 Jul 2022
- 10:03:37 +0000
-Date:   Fri, 8 Jul 2022 13:02:19 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     Greg KH <gregkh@linuxfoundation.org>,
-        kernel test robot <lkp@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        virtualization@lists.linux-foundation.org,
-        usbb2k-api-dev@nongnu.org, tipc-discussion@lists.sourceforge.net,
-        target-devel@vger.kernel.org, sound-open-firmware@alsa-project.org,
-        samba-technical@lists.samba.org, rds-devel@oss.oracle.com,
-        patches@opensource.cirrus.com, osmocom-net-gprs@lists.osmocom.org,
-        openipmi-developer@lists.sourceforge.net, nvdimm@lists.linux.dev,
-        ntb@lists.linux.dev, netfilter-devel@vger.kernel.org,
-        netdev@vger.kernel.org, mjpeg-users@lists.sourceforge.net,
-        megaraidlinux.pdl@broadcom.com, linuxppc-dev@lists.ozlabs.org,
-        linux1394-devel@lists.sourceforge.net, linux-x25@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-unionfs@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-staging@lists.linux.dev, linux-serial@vger.kernel.org,
-        linux-sctp@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-samsung-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-phy@lists.infradead.org, linux-perf-users@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-parisc@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-nfc@lists.01.org, linux-mtd@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-mm@kvack.org,
-        linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org,
-        linux-leds@vger.kernel.org, linux-integrity@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-hwmon@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-fpga@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-efi@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-cxl@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-cifs@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org, linaro-mm-sig@lists.linaro.org,
-        legousb-devel@lists.sourceforge.net, kvm@vger.kernel.org,
-        keyrings@vger.kernel.org, isdn4linux@listserv.isdn4linux.de,
-        iommu@lists.linux.dev, iommu@lists.linux-foundation.org,
-        intel-wired-lan@lists.osuosl.org, greybus-dev@lists.linaro.org,
-        dri-devel@lists.freedesktop.org, dm-devel@redhat.com,
-        devicetree@vger.kernel.org, dev@openvswitch.org,
-        dccp@vger.kernel.org, damon@lists.linux.dev,
-        coreteam@netfilter.org, cgroups@vger.kernel.org,
-        ceph-devel@vger.kernel.org, ath11k@lists.infradead.org,
-        apparmor@lists.ubuntu.com, amd-gfx@lists.freedesktop.org,
-        alsa-devel@alsa-project.org,
-        accessrunner-general@lists.sourceforge.net
-Subject: Re: [linux-next:master] BUILD REGRESSION
- 088b9c375534d905a4d337c78db3b3bfbb52c4a0
-Message-ID: <20220708100219.GJ2338@kadam>
-References: <62c683a2.g1VSVt6BrQC6ZzOz%lkp@intel.com>
- <YsaUgfPbOg7WuBuB@kroah.com>
- <20220707140258.GA3492673@roeck-us.net>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220707140258.GA3492673@roeck-us.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-ClientProxiedBy: JNAP275CA0050.ZAFP275.PROD.OUTLOOK.COM (2603:1086:0:4e::10)
- To MWHPR1001MB2365.namprd10.prod.outlook.com (2603:10b6:301:2d::28)
+ bh=V/4Oyb/5p3wBPhZOzKjnt2emO2qnESK7tX4e6527oWk=;
+ b=Ki8dq4RcEjL5tKAlpH7JgUVypuy1IDwMK5hyx8B/+07/EsGpZZa0MkWXfJMdoaSeQ2NxVgjnp1WEU7zbPFwpnlznaPiDjb8ScN87gGL3eha7YWKadsdNPv3ZDNP52ceGAHM154lqSPh/6DWTQj//GzgtF7S2E+CmWh38aHc09cqXShF0pluTq4PtnU+yUP1bUXv1oi8wCqQsvq5vzlYXn0pAO8hBux4Zm5e31gDSZemKx0w152k1vRcrj+Ac5/L4nTcIS/L2BS9GAIkw4FsJJhE1RREmAs50a0c+iFe3HPP++GdKICRcem3+fZ7t+BF58b/waa8Fb48fvXrqBsTpIA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from BN8PR12MB2900.namprd12.prod.outlook.com (2603:10b6:408:69::18)
+ by IA1PR12MB6355.namprd12.prod.outlook.com (2603:10b6:208:3e1::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.21; Fri, 8 Jul
+ 2022 10:19:23 +0000
+Received: from BN8PR12MB2900.namprd12.prod.outlook.com
+ ([fe80::3904:2c16:b3b7:c5f3]) by BN8PR12MB2900.namprd12.prod.outlook.com
+ ([fe80::3904:2c16:b3b7:c5f3%5]) with mapi id 15.20.5395.022; Fri, 8 Jul 2022
+ 10:19:23 +0000
+Message-ID: <02f878e7-e83e-ff17-1cd4-c2d54eda4dbd@nvidia.com>
+Date:   Fri, 8 Jul 2022 15:49:10 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.2
+Subject: Re: [PATCH] PCI: designware-ep: Move DBI access to init_complete if
+ notifier is used
+Content-Language: en-US
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        kishon@ti.com, bhelgaas@google.com, robh@kernel.org,
+        lorenzo.pieralisi@arm.com
+Cc:     kw@linux.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Om Prakash Singh <omp@nvidia.com>
+References: <20220330060515.22328-1-manivannan.sadhasivam@linaro.org>
+ <20220427101820.GC2536@thinkpad> <20220707165751.GB5458@thinkpad>
+From:   Vidya Sagar <vidyas@nvidia.com>
+In-Reply-To: <20220707165751.GB5458@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: MA0PR01CA0064.INDPRD01.PROD.OUTLOOK.COM
+ (2603:1096:a01:ad::6) To BN8PR12MB2900.namprd12.prod.outlook.com
+ (2603:10b6:408:69::18)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 60888dca-74ab-415d-c312-08da60c91fbd
-X-MS-TrafficTypeDiagnostic: CH0PR10MB4924:EE_
+X-MS-Office365-Filtering-Correlation-Id: fa8e2592-09bf-4f89-cf72-08da60cb53d7
+X-MS-TrafficTypeDiagnostic: IA1PR12MB6355:EE_
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: QpeUnUA80G+bljAIjcJUjdGQmN5uY1eFjfrdzbA17ZIS3uabFZv6Hj1kGve2Lkd6ukSIrwiau9r0ovgbwx+dZEkKmEv6+vXYk4KZAt/MIhaL91UGE+paD/7pDhxzw4BYYVzzpcTlpWSU2EifziKfjy7zSFc7TnpneOwuqT8aeevBVsak78DiURzZSmtUYh/Qt36gA5/ksmagoLtxfOrwnwiX4glTSsn8t5yf7q4IzdByoZMhq0/OHP2LZ5gMTFtZ6UHjHdMMXGvblMy4nwFFyDxr86OS56TwXu8Un5G4D4DsBq8RB57WhWGKUtSyUbZZbVRFVkXmco1NenhtSk86OVpxyYHEtK55FxQsoFvpcV9t5yQLp1tE1ssb1OlZae0sqORl49xAPisMT7jN1cFGRywkbs4jxpVhNo8QYdWoQ3VACsB1KUJ93fDES9dLhmgaIFwDWA8dmP2LXuL1Pd+DFJJTLkU2NgkpHh5jR/cu2c2jTU6PpCMhJIrwzdDt8sfkR6UcBI76NJL0PW+PVyYni0a7Pe3rbeU1PW70RjKKv2/VmnwT8TE08KBGeDQFp1AHEmMbpH2SgzlQWxMvwgGWtM/6/xUqkCQd/CwrTTQo63A1MOH6B7syzqHOaHclI2HJeLiaHI3iu+zlJxnG2+klM626OprekeiAtpkpRWukWRhFT8PONEEVRTQsT2XM6vCyFIqckzuC+ioRgs4tOx6NIenPb/oTrABzGoY+mHsNaR1Q2HerdVNbOlkOvYEcJhoSs2/qCEmiEqL11HGPPZoOhtWl90u/pVoJWO8OqO1Cy/1JYLe4uJbmE6i1YFG6PeLI
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1001MB2365.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(7916004)(376002)(346002)(136003)(39860400002)(396003)(366004)(33716001)(33656002)(478600001)(41300700001)(44832011)(52116002)(6486002)(38100700002)(6506007)(316002)(54906003)(6666004)(4744005)(38350700002)(6916009)(2906002)(86362001)(66556008)(6512007)(66946007)(8676002)(7336002)(7366002)(7416002)(7406005)(26005)(9686003)(5660300002)(66476007)(186003)(4326008)(1076003)(83380400001)(8936002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: AWgXzw8HMNATelnD4ljl+SmMdLayjXJaoWVc5lqkOwH0+zds7PAuZILjA6+j5wR/St/fHKkFaUIV51cVDWfxusyJ31IyZrcHEwcr1gt+6j3r5a+fSh6V49NeOezT7qBZ7IteIObUcn3IDKsHcP5JGpu5b52bRAxbVo0N+wocOrnRuQPiv9CuZnnfDqwYXmpe4Ks3zYr4ztjCMMd3umnVLMuvRjoEWQxbUYcF6hAYbDHU6flHry2oLkPp3T0dmPIs53CzFDUlpdwfN3HQ5nLNb6KmsTRG5HRE3H8XW3o1loABMhtubzMfepInVUxh3R6P45JP+6KFY+kemRn7DTDeEYRPDXkAPbku/WwXTHV47cCitY8ORCwi0qbeKVemtHON9BK50NEpP82VyWi8lrff976jdb2/UOZnetW+shUkFr5ibyK3zTp3NfJjituASiPbfgeAb5d3ga53Z2BHrhL6r29glnkzD9y/ABTkujLhF+yU2VwsKqfbvTuQCi0eV8oa1Yoz4czzcprLfrZqSkMklYY8aMFJ5L0I6YGt1CukTnQcsjxXgkjLCRnX5E96jkoEkNzshaNH3dVMCtDz0MnC3+s6nmdUrEPIqeNzE+0GJjqWpjjcG0i53svbNrCRi6KRRTyIXq76jKeeV8EUgZ2TRyrrIhi3aAfiOI3pCPU/b1Jo8R0d6Mgzp447bWJED1c7A4zrnuYP5Msu0ADN72LL70k4q1ISRI+GlJAkmj+oM/gjxu8hO+eP0rxFK/W3h0QCcNLuR6+SIYSi4J70Djg0UNhwkR98mDSEruGKVgTnqItHItqwinAY0T5CG6vHPsQi8gHUAIU53ijSZC7Rg9PqGg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR12MB2900.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(376002)(346002)(366004)(136003)(39860400002)(396003)(83380400001)(31696002)(6666004)(41300700001)(54906003)(316002)(6512007)(186003)(8936002)(5660300002)(4326008)(2906002)(26005)(36756003)(6506007)(66946007)(107886003)(66476007)(6486002)(86362001)(31686004)(2616005)(8676002)(53546011)(38100700002)(478600001)(66556008)(43740500002)(45980500001);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?uG7EisZU53uo3Eyn1rAkH1Zp7prdDVjLvtewrji3nHaInhwwPqKJd8IS9Ml6?=
- =?us-ascii?Q?cCMDRE9xZtRy2ixvN9HtQCxQ6wyVdCMjht4JEfcGvVBGnhiqaHo4dtqdZQNj?=
- =?us-ascii?Q?TGMY5D1FDrgRGu1ZqSXbxw6awVGysMa0+MX66gOjQV085NsMve2O4eyl5F5y?=
- =?us-ascii?Q?1R/1hXNMky/piEnyu/AV2u9cPc8QXEEh5K/YB5xHM0lnOA68c0zycKWASuhL?=
- =?us-ascii?Q?Kla+gf2FV2JSVMUu/Ri/D4jFuSeza/bxZHWLcnm2ZsVWcrf0/LgByhqRjtSp?=
- =?us-ascii?Q?is7aqVU5aytLlmIcj33/i5SfhSOL6wtmqbxmSOEOtAVcsEJtIXON2a0hsur6?=
- =?us-ascii?Q?hsWV1BvYk4AATAbHUOntCKDw5fmW1Zb7JOZVwY9IVuxyRJroXe+t96bJLXrI?=
- =?us-ascii?Q?MssjNzxXj4Jypus/6TmDDUIrYr/PohLpQ7G33Mmk20Wl8iVHL8gXU0umskty?=
- =?us-ascii?Q?O4Hi9SohVBBFpOOh6t4TgJ/w2hGioWQ3sldG+lmRcJwb3j0MzuvquWbIKe1R?=
- =?us-ascii?Q?gnxXwQFlT03ge3rnLtt4I5eXee2ZugYaT8hbKKltmH00UW2rot4ogdsXX2iI?=
- =?us-ascii?Q?DNsESB9w2oxovD/ZQf1hpR0G4CNtCUS0CYB5QKnSBDpXPeXkQpoHeFzSSfjR?=
- =?us-ascii?Q?wLuWIMCwND+t3ovztoAdWN/UQtE5mMC0kkUBUToTTjIvLciDMD0PSNB6BJUe?=
- =?us-ascii?Q?w0PR0q9LRd1D/jkiavRKpLKgXzeczspq+Psu7R01u1srIE/QHzUUjYVl5f9a?=
- =?us-ascii?Q?L02x85oqudSEWTubWsX6ss1WfTqA+8NqL5ENwQjoi9UEoTolcwA7e2XUcwAO?=
- =?us-ascii?Q?ic9ZTDSAl8/AsX+2l6+qsgzLGODxDFe3K1ko9b4kwkQxpr9NU9z8O/MWDlAK?=
- =?us-ascii?Q?Dnlvq31Zf740z3fuyX3wN9p5/ha59mVpxZF+xjtVxT7DoDfkostGyBOBfUce?=
- =?us-ascii?Q?e6fdpEx92+LmFi1lzmVO4Ia+ECDiem6tXYEmQXIyfxx3Lw0RUCChVAujKWLo?=
- =?us-ascii?Q?oUy4+s0iF6iSny0nF8zOLNHqJzxvFEexDubf1ILb/3btBYa9NgUS5BOaIoA9?=
- =?us-ascii?Q?WqJ1H2aDG9Kic8ymHAc4FFqNBtuTucRoBG6Ms8LMqLNF0Vza4OaikcRksmX4?=
- =?us-ascii?Q?rgBMlDqx5pO3KFCTenU+qbHOBovKp6H6HnXn/7m/aF3l+ZqmdwuG77shGwxJ?=
- =?us-ascii?Q?u+KGV063dyQ+dCgsyvudHwbxefjBFDbkHK/Ybw0NmKX2mYGuv7jbzKnp7JDc?=
- =?us-ascii?Q?AF5HmXDQhKXZbO2HxUKsXY8vRrxFZhmbIJJMirc8HFwPS3gAzjzb+szX+vF7?=
- =?us-ascii?Q?xOUKc56091EkjOl6fcqQEf5AMF6UjW4HOZCLHO1S/4o81dPO+oVZQykyHGNa?=
- =?us-ascii?Q?fevSECWId0k6CwanCU7579YdUXJJMBRkComEJNrTAoR4lhftqLiI0U3rDdrj?=
- =?us-ascii?Q?Del01xUlm7N66LbqNEPYOHt8Vj9P+Nd4ahXQKeqyeKRQ+d5V2/xM7j6eGiim?=
- =?us-ascii?Q?CELTFADnEsTdWjQiE8bsPhByqbhH87XWEemEF1ulwsM6DII28FAYU+uBiySC?=
- =?us-ascii?Q?89eQCwECLDAfd9gxbLFLH7xJjKAclbo03RJxaMbLiExaPJ39HgBBQBjVroGH?=
- =?us-ascii?Q?Pw=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 60888dca-74ab-415d-c312-08da60c91fbd
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR1001MB2365.namprd10.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MUJQalNYVVMxREx6SXZTTzlJY3J0WllISXQ2UzVNMVU0a0dsWXFCVnBpOXFk?=
+ =?utf-8?B?K0plemw3QlFHaHRjUSt1bEJXWEs1QTNaRmczbW92Yy8vOGFFNkRteHlPUjho?=
+ =?utf-8?B?SGFBcXFDVDNNZEMvQjNaRWYwc0c3anR0VGhCYzZmZGFOSkNET2ZaSFdUVlA5?=
+ =?utf-8?B?N1NCSzNHcWl3cytiY1pPUUNYdEgrd0lPbzdFN0xGSEFFZW5neWhpQTg4Z3Ft?=
+ =?utf-8?B?YWY4enZTUElvUlUwSTZRN2pYcCtXbDJLNFhHNWtTb3owT1Y5STNXelJMY2tU?=
+ =?utf-8?B?d1h5Znd6MTI4dGlqbEMyUVVaWldKclg2dXcwLysweDloOVRVaG91cEFPbW93?=
+ =?utf-8?B?U2pBYzgzUitFcEtUSWFZZk1vK29ld3BFbXFCU1dXU1hJSEx6SzB4eFkxeFZa?=
+ =?utf-8?B?R0t4bU55anNoUWdOMU1JdnFQdVVGNmNqQU9jcklZOFlxM1l3WW5GUWFSenFW?=
+ =?utf-8?B?T201NWJ1VVFzaE9Ya3F3WDdxcUxqSk5uMWQyZEZBWUVXN2lieitpU3M5SUkv?=
+ =?utf-8?B?cHZvajg4d29FQklrNDV4NFd0c0pDMllUcDYycEprYklNNUhiL1RNZE5RTGVk?=
+ =?utf-8?B?ZTZGa0JlMUsyWXhPaUJJNFluNWpTdGEwUmJGMUR2ZkwvcVpsV1NSdGgxc3VW?=
+ =?utf-8?B?M1NFaEh2Nnpja0p3UElwTkNlTzBkVVpkVEkydjIvMFJPWTc5S0RCL0RxVDYw?=
+ =?utf-8?B?SlJWK3JwdXdPWFpKS2NqRXd3b1g2eEFUVVpnbmkrTUE4MXV0ckxISEZnSTYx?=
+ =?utf-8?B?MXYwcE8yYlhzR3VZQkwrdVprUGM3QlBMS2NScDZmdnN0enFWakNuaFRWZ3J1?=
+ =?utf-8?B?Nmc0bTFHQkZpQTIyZjBFeDdveVVZRTMwOHdHNDA0WmlGQ09kUW5yRXVWakNz?=
+ =?utf-8?B?RjlSbHRMZnBObDZmWEpEdVgrR2Q0Wmh4aGdvMW5ZeU03Z2NvclZVWmxKaThP?=
+ =?utf-8?B?MlQ1M0Q1Zzhacy80OUQwUEMyTUw0eEZXU2VhVW5XNnBjcmdkSmU3NEZXR3V6?=
+ =?utf-8?B?YysraWllR2dQU0dRRHFoUzdaOW1hck5VZ2hlMFNvbXliQ082clY0NTQ5OGxH?=
+ =?utf-8?B?MEFNdXBmR1lWakNNNmFTVG0vcVphSXRsU3IxZTRxK3c3b2QwVTFyOG55QUtx?=
+ =?utf-8?B?M2hxdWhvRGpwVnF3MHZyNmhYMW1VT2V5SFM3UTUveVNsZTUySG5TV1R2dXk2?=
+ =?utf-8?B?M09waTYza3lpcUZ3VTZ3T0FEVEc3VlpFYkpZMzBXZUJucVNRNHpWcGMvNlFl?=
+ =?utf-8?B?SkpBU3R3ZnFiRy9scGpKc3liQXNJZVFrQzY0TFJKQnZIV1UvNTJmR1hrMU9w?=
+ =?utf-8?B?TVhrMlJXRVR4UmxHVmV3RDc4cHMraEU3d1A1QTNEWitFZHNwdmFJQ2ZMS1pv?=
+ =?utf-8?B?MzcvNVkydmprTnFDcmpnV2lZQUxBZ1QvblN5V05FVVhsSGs0dDhHbm9jbW5n?=
+ =?utf-8?B?cTRqellTU1hJYWZpaHZ0dk5TYzYyT2E4TmpkRnNLNXI5b3hsTkVkYkNmTy96?=
+ =?utf-8?B?ajVNQTF6VEg0ZmwzTWhvOW8xNDhqZWYrMndoQncxN2kwMmt5NURlV3lRNlVX?=
+ =?utf-8?B?c2NEYzlxcVkxcjAyd3pNdE52YXo4bnhhU1RVUXIxY0ZVUVRYT3htbDQ2U3lH?=
+ =?utf-8?B?NVRzb05NZWc0WDI0WWdjSTBaQnloV25aRmdCWWZJeDdxdzRtNC8zVC80QThh?=
+ =?utf-8?B?bVJ2cFBPRVI2ajg4OTRXNHBhaFNOaGNGcnpxWjJSYkNVZmFLbWI5aE9UN3Z3?=
+ =?utf-8?B?SmVsTnNaNGs5V2Z6ZUtKUFM1Nm9waTh2VjRvenNjTXByMGVPNVJDd2F0S3ow?=
+ =?utf-8?B?bWFGelV6YW1VUFRWTXJFd3dZLzJPZzVIZSszMk5tL0JIb28vc29GNU04ZXoz?=
+ =?utf-8?B?dWM4ZndiUnJNZjNHaW5DN291Wk1FMzFFMUtoMFQvS2MvVGMrVU1pdnMwaGdl?=
+ =?utf-8?B?VFZTdHhPUHltTkZVVCtWMkZKTldUTjdtc2JQR3JTL1JNYldhVG1PR3puMVJ6?=
+ =?utf-8?B?SFZJM2tNUkp1WUFic0xCNGFVZk12TTQrbXE5Q0o2UEdYOEZMci9Xdkg5ZmJG?=
+ =?utf-8?B?eERTN1poUlRXT0ovbDQ2OFJmemlzRWJ5Z3dWdWFsTE1JcGQ5NjMxa2cvZ295?=
+ =?utf-8?Q?SXq4ftETTWaLp1uFgTeA8eHnn?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fa8e2592-09bf-4f89-cf72-08da60cb53d7
+X-MS-Exchange-CrossTenant-AuthSource: BN8PR12MB2900.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2022 10:03:37.5131
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jul 2022 10:19:23.1063
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Xmfxxd2ImvCkN86fhSrHry1xr1wVpvkQCd/kvXC28R2/OhB8G8NrxAgoSiTGxSTnG4h/h/BFA9rqzl+lMJyKXtKr24bFre3OPhNr8wLciI8=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR10MB4924
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.517,18.0.883
- definitions=2022-07-08_08:2022-06-28,2022-07-08 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 malwarescore=0
- mlxscore=0 spamscore=0 suspectscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2206140000
- definitions=main-2207080036
-X-Proofpoint-GUID: icb9VT_VTJOlnrB-CrUswsRECbryCeZq
-X-Proofpoint-ORIG-GUID: icb9VT_VTJOlnrB-CrUswsRECbryCeZq
+X-MS-Exchange-CrossTenant-UserPrincipalName: dTuqJJU12FehpAsmvK47XvL8HQRqOu/oFcmqG94UKXNTPifDlCF1v1BP7jQwoquTWGwX3TZc7WqS4/G7f3edHA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6355
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 07, 2022 at 07:02:58AM -0700, Guenter Roeck wrote:
-> and the NULL
-> dereferences in the binder driver are at the very least suspicious.
+I have a minor comment. Otherwise this patch looks fine.
+I verified it on Tegra194 and it works as expected.
 
-The NULL dereferences in binder are just nonsense Sparse annotations.
-They don't affect runtime.
+Reviewed-by: Vidya Sagar <vidyas@nvidia.com>
+Tested-by: Vidya Sagar <vidyas@nvidia.com>
 
-drivers/android/binder.c:1481:19-23: ERROR: from is NULL but dereferenced.
-drivers/android/binder.c:2920:29-33: ERROR: target_thread is NULL but dereferenced.
-drivers/android/binder.c:353:25-35: ERROR: node -> proc is NULL but dereferenced.
-drivers/android/binder.c:4888:16-20: ERROR: t is NULL but dereferenced.
+On 7/7/2022 10:27 PM, Manivannan Sadhasivam wrote:
+> External email: Use caution opening links or attachments
+> 
+> 
+> On Wed, Apr 27, 2022 at 03:48:26PM +0530, Manivannan Sadhasivam wrote:
+>> On Wed, Mar 30, 2022 at 11:35:15AM +0530, Manivannan Sadhasivam wrote:
+>>> For controllers supporting the CORE_INIT notifier, the resources are
+>>> supposed to be enabled in the init_complete function. Currently,
+>>> these controllers are enabling the resources during probe time due to
+>>> the DBI access happens in dw_pcie_ep_init().
+>>>
+>>> This creates the dependency with the host PCIe controller since the
+>>> resource enablement like PHY depends on host PCIe to be up. For the
+>>> standalone endpoint usecase, this would never work. So let's move all DBI
+>>> access to init_complete function if CORE_INIT notifier is used. For the
+>>> controllers those doesn't support this notifier, this change is a NO-OP.
+>>>
+>>> Cc: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+>>> Cc: Om Prakash Singh <omp@nvidia.com>
+>>> Cc: Vidya Sagar <vidyas@nvidia.com>
+>>> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+>>
+>> A gentle ping on this patch!
+>>
+> 
+> Ping again!
+> 
+> Thanks,
+> Mani
+> 
+>> Thanks,
+>> Mani
+>>
+>>> ---
+>>>   .../pci/controller/dwc/pcie-designware-ep.c   | 138 ++++++++++++------
+>>>   drivers/pci/controller/dwc/pcie-designware.h  |   1 +
+>>>   2 files changed, 94 insertions(+), 45 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>> index 0eda8236c125..fb2bf4bf5ba0 100644
+>>> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>> @@ -636,6 +636,63 @@ static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
+>>>      return 0;
+>>>   }
+>>>
+>>> +static int dw_pcie_iatu_config(struct dw_pcie_ep *ep)
 
-regards,
-dan carpenter
+How about using dw_pcie_ep_iatu_config() name? Just added 'ep' to be in 
+sync with other API names in this file.
 
+>>> +{
+>>> +   struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>> +   struct device *dev = pci->dev;
+>>> +   void *addr;
+>>> +
+>>> +   dw_pcie_iatu_detect(pci);
+>>> +
+>>> +   ep->ib_window_map = devm_kcalloc(dev,
+>>> +                                    BITS_TO_LONGS(pci->num_ib_windows),
+>>> +                                    sizeof(long),
+>>> +                                    GFP_KERNEL);
+>>> +   if (!ep->ib_window_map)
+>>> +           return -ENOMEM;
+>>> +
+>>> +   ep->ob_window_map = devm_kcalloc(dev,
+>>> +                                    BITS_TO_LONGS(pci->num_ob_windows),
+>>> +                                    sizeof(long),
+>>> +                                    GFP_KERNEL);
+>>> +   if (!ep->ob_window_map)
+>>> +           return -ENOMEM;
+>>> +
+>>> +   addr = devm_kcalloc(dev, pci->num_ob_windows, sizeof(phys_addr_t),
+>>> +                       GFP_KERNEL);
+>>> +   if (!addr)
+>>> +           return -ENOMEM;
+>>> +
+>>> +   ep->outbound_addr = addr;
+>>> +
+>>> +   return 0;
+>>> +}
+>>> +
+>>> +static int dw_pcie_ep_func_init(struct dw_pcie_ep *ep)
+>>> +{
+>>> +   struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>> +   struct dw_pcie_ep_func *ep_func;
+>>> +   struct pci_epc *epc = ep->epc;
+>>> +   struct device *dev = pci->dev;
+>>> +   u8 func_no;
+>>> +
+>>> +   for (func_no = 0; func_no < epc->max_functions; func_no++) {
+>>> +           ep_func = devm_kzalloc(dev, sizeof(*ep_func), GFP_KERNEL);
+>>> +           if (!ep_func)
+>>> +                   return -ENOMEM;
+>>> +
+>>> +           ep_func->func_no = func_no;
+>>> +           ep_func->msi_cap = dw_pcie_ep_find_capability(ep, func_no,
+>>> +                                                         PCI_CAP_ID_MSI);
+>>> +           ep_func->msix_cap = dw_pcie_ep_find_capability(ep, func_no,
+>>> +                                                          PCI_CAP_ID_MSIX);
+>>> +
+>>> +           list_add_tail(&ep_func->list, &ep->func_list);
+>>> +   }
+>>> +
+>>> +   return 0;
+>>> +}
+>>> +
+>>>   int dw_pcie_ep_init_complete(struct dw_pcie_ep *ep)
+>>>   {
+>>>      struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>> @@ -643,7 +700,22 @@ int dw_pcie_ep_init_complete(struct dw_pcie_ep *ep)
+>>>      unsigned int nbars;
+>>>      u8 hdr_type;
+>>>      u32 reg;
+>>> -   int i;
+>>> +   int ret, i;
+>>> +
+>>> +   if (ep->core_init_notifier) {
+>>> +           ret = dw_pcie_iatu_config(ep);
+>>> +           if (ret)
+>>> +                   return ret;
+>>> +   }
+>>> +
+>>> +   if (ep->core_init_notifier) {
+>>> +           ret = dw_pcie_ep_func_init(ep);
+>>> +           if (ret)
+>>> +                   return ret;
+>>> +
+>>> +           if (ep->ops->ep_init)
+>>> +                   ep->ops->ep_init(ep);
+>>> +   }
+>>>
+>>>      hdr_type = dw_pcie_readb_dbi(pci, PCI_HEADER_TYPE) &
+>>>                 PCI_HEADER_TYPE_MASK;
+>>> @@ -677,8 +749,6 @@ EXPORT_SYMBOL_GPL(dw_pcie_ep_init_complete);
+>>>   int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>>   {
+>>>      int ret;
+>>> -   void *addr;
+>>> -   u8 func_no;
+>>>      struct resource *res;
+>>>      struct pci_epc *epc;
+>>>      struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+>>> @@ -686,7 +756,12 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>>      struct platform_device *pdev = to_platform_device(dev);
+>>>      struct device_node *np = dev->of_node;
+>>>      const struct pci_epc_features *epc_features;
+>>> -   struct dw_pcie_ep_func *ep_func;
+>>> +
+>>> +   if (ep->ops->get_features) {
+>>> +           epc_features = ep->ops->get_features(ep);
+>>> +           if (epc_features->core_init_notifier)
+>>> +                   ep->core_init_notifier = true;
+>>> +   }
+>>>
+>>>      INIT_LIST_HEAD(&ep->func_list);
+>>>
+>>> @@ -708,7 +783,11 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>>              }
+>>>      }
+>>>
+>>> -   dw_pcie_iatu_detect(pci);
+>>> +   if (!ep->core_init_notifier) {
+>>> +           ret = dw_pcie_iatu_config(ep);
+>>> +           if (ret)
+>>> +                   return ret;
+>>> +   }
+>>>
+>>>      res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+>>>      if (!res)
+>>> @@ -717,26 +796,6 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>>      ep->phys_base = res->start;
+>>>      ep->addr_size = resource_size(res);
+>>>
+>>> -   ep->ib_window_map = devm_kcalloc(dev,
+>>> -                                    BITS_TO_LONGS(pci->num_ib_windows),
+>>> -                                    sizeof(long),
+>>> -                                    GFP_KERNEL);
+>>> -   if (!ep->ib_window_map)
+>>> -           return -ENOMEM;
+>>> -
+>>> -   ep->ob_window_map = devm_kcalloc(dev,
+>>> -                                    BITS_TO_LONGS(pci->num_ob_windows),
+>>> -                                    sizeof(long),
+>>> -                                    GFP_KERNEL);
+>>> -   if (!ep->ob_window_map)
+>>> -           return -ENOMEM;
+>>> -
+>>> -   addr = devm_kcalloc(dev, pci->num_ob_windows, sizeof(phys_addr_t),
+>>> -                       GFP_KERNEL);
+>>> -   if (!addr)
+>>> -           return -ENOMEM;
+>>> -   ep->outbound_addr = addr;
+>>> -
+>>>      if (pci->link_gen < 1)
+>>>              pci->link_gen = of_pci_get_max_link_speed(np);
+>>>
+>>> @@ -753,23 +812,15 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>>      if (ret < 0)
+>>>              epc->max_functions = 1;
+>>>
+>>> -   for (func_no = 0; func_no < epc->max_functions; func_no++) {
+>>> -           ep_func = devm_kzalloc(dev, sizeof(*ep_func), GFP_KERNEL);
+>>> -           if (!ep_func)
+>>> -                   return -ENOMEM;
+>>> -
+>>> -           ep_func->func_no = func_no;
+>>> -           ep_func->msi_cap = dw_pcie_ep_find_capability(ep, func_no,
+>>> -                                                         PCI_CAP_ID_MSI);
+>>> -           ep_func->msix_cap = dw_pcie_ep_find_capability(ep, func_no,
+>>> -                                                          PCI_CAP_ID_MSIX);
+>>> +   if (!ep->core_init_notifier) {
+>>> +           ret = dw_pcie_ep_func_init(ep);
+>>> +           if (ret)
+>>> +                   return ret;
+>>>
+>>> -           list_add_tail(&ep_func->list, &ep->func_list);
+>>> +           if (ep->ops->ep_init)
+>>> +                   ep->ops->ep_init(ep);
+>>>      }
+>>>
+>>> -   if (ep->ops->ep_init)
+>>> -           ep->ops->ep_init(ep);
+>>> -
+>>>      ret = pci_epc_mem_init(epc, ep->phys_base, ep->addr_size,
+>>>                             ep->page_size);
+>>>      if (ret < 0) {
+>>> @@ -784,12 +835,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+>>>              return -ENOMEM;
+>>>      }
+>>>
+>>> -   if (ep->ops->get_features) {
+>>> -           epc_features = ep->ops->get_features(ep);
+>>> -           if (epc_features->core_init_notifier)
+>>> -                   return 0;
+>>> -   }
+>>> +   if (!ep->core_init_notifier)
+>>> +           return dw_pcie_ep_init_complete(ep);
+>>>
+>>> -   return dw_pcie_ep_init_complete(ep);
+>>> +   return 0;
+>>>   }
+>>>   EXPORT_SYMBOL_GPL(dw_pcie_ep_init);
+>>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+>>> index 7d6e9b7576be..aadb14159df7 100644
+>>> --- a/drivers/pci/controller/dwc/pcie-designware.h
+>>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+>>> @@ -242,6 +242,7 @@ struct dw_pcie_ep {
+>>>      void __iomem            *msi_mem;
+>>>      phys_addr_t             msi_mem_phys;
+>>>      struct pci_epf_bar      *epf_bar[PCI_STD_NUM_BARS];
+>>> +   bool                    core_init_notifier;
+>>>   };
+>>>
+>>>   struct dw_pcie_ops {
+>>> --
+>>> 2.25.1
+>>>
+> 
+> --
+> மணிவண்ணன் சதாசிவம்
+> 
