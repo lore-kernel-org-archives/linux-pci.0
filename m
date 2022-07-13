@@ -2,63 +2,64 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C4CCC43334
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Jul 2022 09:01:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 006CCCCA488
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Jul 2022 09:01:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235929AbiGMJBb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:01:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44592 "EHLO
+        id S235913AbiGMJBe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Jul 2022 05:01:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44320 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235901AbiGMJBW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2022 05:01:22 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2084.outbound.protection.outlook.com [40.107.94.84])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3A5DE6337;
-        Wed, 13 Jul 2022 02:01:20 -0700 (PDT)
+        with ESMTP id S235908AbiGMJBX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2022 05:01:23 -0400
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2067.outbound.protection.outlook.com [40.107.237.67])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46889E6802;
+        Wed, 13 Jul 2022 02:01:21 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DswwfH916w6u/ZPYp2v4QT8vdQRuOGQO3p3vhXbAvhoLuMua0BKVSSulPyVzg3hpTRZL4lpbb2AydS0cA05qMDY1QInBUFPlBvHSlwccWANYGoOfP3cNZmu1qW7PuSaXyGq/E2Qdho1RyGeTjV+BJK/mpFBNPNmhQ6ZF+dlAx7owLDaUDcNZge5jBhuYhEysfPmcMMGp17GNfbmqQFbeUHd0rh3/APBjjQ3yY772Z1e8YFbw4l+5sfpNO9Pe3l9JjfxKk90ZUougCwyLZ2B4H8QeUcZKOIlntUBo2tU9VZWy6aKeaHhK5E8IFMx0e2pvv764Xs9C9+wXcJ6oQJrHUA==
+ b=GTr/b3F/GEAEX7e36eVf0x/w8tUhVoYDo81J1PztufdSfdDsZoWQtDtNg0GpuVSMflqbagLr1cX4qZWmj7lxM1/ftzHnEHXO1Hra0H2EQVe3qUPOTWa0rSCvkIbEX2MuCDSx94ltWWp4z/a/WCmwwMFpPVGLW41BGwhbdn61kvlXpbkqeLkP0d4DR1Raff/XReUkr02A4w8+6aVyiBcUzXUTY4Z+a86QItEPssPjuzfTszOXFKrJv/PMzPrJY5J5X++oOudZ6oTbMANjEHZkLqmMq/Iv/tOtCQmm8EtbQ9fRYPSbbYnvx2CGIRnxO4QeLm63rPsb3E8i7MLgzgirjQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=UGD7RO7zuiAZaIcXEiG3Hq279VTf8NmzJeZmrNtMw3I=;
- b=na52CwQr9QP5Cp2Xn9enqNAJmO6c6uoCBlpM3Q9cR3S5BtcOZXpUcpkgsXrpJPSvnmjuz6dhlbFJsfT7L77TDn5BYmeeO/Fu8aFhrTOgOAMzYWprYwc5LUAZR7BJ2+iSYfkxwZaM1zUgm6l0b5y7Dh1XRWkA8QwvSFCkph9+0SF1ZV5qYc+OA4JoezdMwwpqK0r5IaqXFCsUIzwY+//pH+k9PecXuc7EjRx61e3U/+YrwjEiPdFcgpjrRaFKiZ0rT/r898VN3YDIbCAcKOrcjP0bU0fgkqyNb51q55TtHb91QHSMIs9LLsPx//wMFu9Scvte/5ln1hYgMaltVaHmEQ==
+ bh=vM3WpLVsyyWWLhAplbZ44zgduNVkVCtHEQAoL0dE3ME=;
+ b=SadSMDD+wyVxK7LhoFxMAmrdA1EL5G2VGr5hY2ZBGULGHeA89YK9W7Qj+2AZG4jKqEDd4rGLYq+ylfaHlRpavmuE0rP91htnXaDA+Jadn9soXl+yYEbGU6JtRIltnCY1HHgDQq1fyebduKt3Dq8Sc50DH8rsHERe7FRbtXe037TiTMz+ozewIwkonL4HaPs4Z7hXoiMZuQJ47JqubbFdyIhGB6b1Wn0EDsvTJNvuKU253pUe2ozFLIAuoX9g5aRv1dFYsNqi957Rc+sD2RuXU2xUO2dZrLNIhU/aMH7V0liMM8QT62mpSuri65AqiZsk13u9qXl+WunbrzDx1I81SQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.235) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com; dmarc=pass
+ 12.22.5.234) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com; dmarc=pass
  (p=reject sp=reject pct=100) action=none header.from=nvidia.com; dkim=none
  (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UGD7RO7zuiAZaIcXEiG3Hq279VTf8NmzJeZmrNtMw3I=;
- b=WdX2d0WiEMTpStCDCL0DxiFIYTqU+d3Z9XqRFVawuQ1uy5h1J8GsrRJYNlRCB+GBDj3uSzkcFZChZG9gTDckEZ5Y0NmBgmCBthHfCF8ybULReqvd23FxsRVbjYMiK96/nBnIPDW7gEeWz+qbpe6oMjjNtpgU1Zw1C+5SEYZ/lAhVYRtrrZAl8mPrhk7vAMv8jWLwpnTTuBNg9qasqSlVaYreajxu4gd4brcHmXCS6kMYBKoh6/cuzjOAuVs9DFcTgSiL7vpHQ4oWRCSIGePbHhPxtLXoI9H3sN65iAlIeyjjS2pvuPrRV50oQoRY+l2yjnvQng0gHSBSF6ecAs3XCQ==
-Received: from MW4P221CA0001.NAMP221.PROD.OUTLOOK.COM (2603:10b6:303:8b::6) by
- BYAPR12MB3574.namprd12.prod.outlook.com (2603:10b6:a03:ae::16) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5417.23; Wed, 13 Jul 2022 09:01:17 +0000
-Received: from CO1NAM11FT038.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:8b:cafe::62) by MW4P221CA0001.outlook.office365.com
- (2603:10b6:303:8b::6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.15 via Frontend
- Transport; Wed, 13 Jul 2022 09:01:17 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.235)
+ bh=vM3WpLVsyyWWLhAplbZ44zgduNVkVCtHEQAoL0dE3ME=;
+ b=i2FlvJZf/Wv5kWsa3c/JNARvmk+IDKHgEDggmwkLmpvA3ChBYTFaLflAQVR3REjp29dKMmCWebglbZG/CypjRyQ5vjA2ydQUGuDWAD7Z+1Iox3GDbJUf6CVD54iovRv5Ot7/ADd7Fa5Zxxz0nTL4LtDhhpujR1YyECF3IH4VBTmibH7z/tTaJ0LAY+W0kwn/xoUziNVZz35CncTBDv0eLNBIvVrbWplAfeadv4yBCfQk9TCgk0fu+HqAVHhnIJ1la2omxVh6hcya/xtXaLJ6E9JTzjsdKhGhqopYgbUivoR2PNgjHknzjYG7WX84QYKHQ/hAgZTmdmU+DlSC43yIxg==
+Received: from BN0PR04CA0184.namprd04.prod.outlook.com (2603:10b6:408:e9::9)
+ by SN6PR12MB2784.namprd12.prod.outlook.com (2603:10b6:805:68::33) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.16; Wed, 13 Jul
+ 2022 09:01:20 +0000
+Received: from BN8NAM11FT045.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:e9:cafe::a0) by BN0PR04CA0184.outlook.office365.com
+ (2603:10b6:408:e9::9) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.20 via Frontend
+ Transport; Wed, 13 Jul 2022 09:01:19 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.234)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.235 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.235; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (12.22.5.235) by
- CO1NAM11FT038.mail.protection.outlook.com (10.13.174.231) with Microsoft SMTP
+ 12.22.5.234 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.234; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (12.22.5.234) by
+ BN8NAM11FT045.mail.protection.outlook.com (10.13.177.47) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.5438.12 via Frontend Transport; Wed, 13 Jul 2022 09:01:17 +0000
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by DRHQMAIL107.nvidia.com
- (10.27.9.16) with Microsoft SMTP Server (TLS) id 15.0.1497.32; Wed, 13 Jul
- 2022 09:01:14 +0000
-Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail204.nvidia.com
- (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.5438.12 via Frontend Transport; Wed, 13 Jul 2022 09:01:19 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL101.nvidia.com
+ (10.27.9.10) with Microsoft SMTP Server (TLS) id 15.0.1497.32; Wed, 13 Jul
+ 2022 09:01:02 +0000
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Wed, 13 Jul
- 2022 02:01:13 -0700
+ 2022 02:01:02 -0700
 Received: from vidyas-desktop.nvidia.com (10.127.8.9) by mail.nvidia.com
  (10.129.68.9) with Microsoft SMTP Server id 15.2.986.26 via Frontend
- Transport; Wed, 13 Jul 2022 02:01:09 -0700
+ Transport; Wed, 13 Jul 2022 02:00:57 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <bhelgaas@google.com>, <lpieralisi@kernel.org>,
         <robh+dt@kernel.org>, <krzysztof.kozlowski+dt@linaro.org>,
@@ -68,9 +69,9 @@ CC:     <kw@linux.com>, <kishon@ti.com>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
         <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V5 6/9] arm64: tegra: Enable PCIe slots in P3737-0000 board
-Date:   Wed, 13 Jul 2022 14:30:26 +0530
-Message-ID: <20220713090029.30395-7-vidyas@nvidia.com>
+Subject: [PATCH V5 4/9] arm64: tegra: Add regulators required for PCIe
+Date:   Wed, 13 Jul 2022 14:30:24 +0530
+Message-ID: <20220713090029.30395-5-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20220713090029.30395-1-vidyas@nvidia.com>
 References: <20220713090029.30395-1-vidyas@nvidia.com>
@@ -79,33 +80,29 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 18d7cdf9-e471-4cba-8295-08da64ae3f45
-X-MS-TrafficTypeDiagnostic: BYAPR12MB3574:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6b8a44b7-146e-4783-18ce-08da64ae409a
+X-MS-TrafficTypeDiagnostic: SN6PR12MB2784:EE_
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: w8vnI+RBoNAyoQvDPT59xoeiWMohzpff7DMEvguv/LpNrJk3SLGheDDvfMrYsEBkiR1RF0TfGFG1vmIkgV7m4wcWNWKJ81SdXJojQzRZz4dGM5I3ZAjt0X++mezpSD5k9hLSTHNYsnQnbExlrS/13Dy1uhzcHMk6mTKTVz2C6K/9ntbtV6+ASRz0W2Wdu9hmwdgdyLXPJjecEuBU6TN1U/HXZ0HZ0voWac1L7nwMyiHQxTe4HSKaddIxwleUbf+ZpGRgQAQc2iPcm+xO/Ji9yFVyNSXlqThRh2F/N/2mt5whkzsX/ySGVtcWYewrVgmv8a0Wbd6Ma4Q7vh9LiO/pm6AwNGKIa99+ZMPRnUoRQAcRvPd5XOYcajyvGr8imxM/+RZlzHYQuBEhA6cINzVJ9iAaTI560sU97/voGXFQLo2SgHpAS8UoT90LSgrPELbiqyD3UClopNB4wXRpNLvcmZDePHFhPAJn+FRl6+R+mHx45QysJvNUo6OvueaRJcRpQuepO5QY0pFAAybqVc3FHwumArrYOHmCc/2LtSaih7jPNst+FfxjDvGgoqbWbdXwgimXtoBmNERDCHskQw8ZUSL10LTCecIiYDnYTGqYlXoYQNvhIdpPbKh65NRlAP6qnVW+Ssib7Z2v/lrZTk/kcDiJuo8RyW2yWt/26wCk61AKFsR8CAVDRxx1EDtx3YPOk7oOxQ5ADqGF9dXu5NXtUcFo457QoEG3O5CebMapzER/a8yP33JkEQLDRVt6wH9739AjrFJHrnkE1edM4gDNUgbaTZXIWhJpK+zcA2OJLW7w0qhEhuYjg/tP5yFzBHmabpneKID6JRzK23MN58bW781ePOWlhVBo5GhZysvNlUt+4cz0yieE3BLSwyp/sKeL
-X-Forefront-Antispam-Report: CIP:12.22.5.235;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(346002)(136003)(376002)(396003)(46966006)(40470700004)(36840700001)(40460700003)(86362001)(82740400003)(83380400001)(336012)(8936002)(316002)(186003)(36860700001)(1076003)(47076005)(40480700001)(4326008)(110136005)(70206006)(8676002)(81166007)(54906003)(36756003)(426003)(70586007)(2616005)(5660300002)(2906002)(7696005)(26005)(7416002)(478600001)(356005)(82310400005)(6666004)(41300700001)(2101003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 3vFY4FVpjrQIdB4OwgE5QwVL+6NERGUHfKF1A/w446FnLJ7BcfCGHuvFzygWiXa7MSmH4XYouIpXGilA04DMLpWWw/khHT1l775/8oMn5fOiNRLCzew/U9hvM3FKk9kd1D0DmcZ8WCJgASJmWydTEMq+bcRw4OdEmOBcDOuLcnRMPaC3K5wgRWDyJW5fV1ZpiTwjHgLm9syQ3mhZ20rwbBJPZ7nf3hqsF4H40iMKnRBFV35U90GSI3cQu+AOpRnQ61FxjrsGAGkuZdkeT+HPpVIaX/O3Yf+Ijl5oNPLq5HVmhIr6EnjFSsnvd+g3Fv525BA+TIYPlSwwXG0AzDirZzYUCeC3Q1rylEts7TksUFQqG0fhMQWAjdGHHwevtGLvj9tkT06clvuYoL8NF6LR+cZpqqY/sCwa/V8q5EC2xg2fwEeSfLyXsrrim+oSNEbj8LGhZM2appK3dlZgiyFLPFs+kiw8R8sT5BE26sArY66zbV8/GJmx8hmZXoNKqspBz6sF+NwmMysYRrRwKsG2A3PBw1VQ++Sp+jC2tw+oQXaG75w/EJ7u69dqIVsBjyku9UTostmQ8DctdqMCUS7RCU05XdKHq/2Lu/zL5WCa36BDVGMIuNnv+PWBrogs8VGfSpTZR2L5YOcs0lU5oxKuwAwiBQ6dsnWqSxlAJIO+wzsiazm6u7CpVUwQRFdGSlAUtDDr/phyVvkjL68wVtt/Q9wWJhGBOA9HYbqb6vzBSPkQCAPcK905NfjMn1wRiuMV2fQkv0CvVTypr7cWf1q08gQqacy6n9GY3qK4huj0bUIEjCFwjxtYN0tpTtF8xNFFBawxhsY1yPs9a6jyyZLhXEpw3DLwBD9EQrCoAnpXX5GWK1WFX/CSZ0t/Gnu7jQgJ
+X-Forefront-Antispam-Report: CIP:12.22.5.234;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(136003)(376002)(346002)(39860400002)(396003)(40470700004)(36840700001)(46966006)(86362001)(6666004)(41300700001)(40460700003)(2906002)(82310400005)(478600001)(26005)(40480700001)(1076003)(8936002)(7696005)(7416002)(5660300002)(426003)(110136005)(81166007)(336012)(47076005)(36860700001)(70206006)(356005)(82740400003)(70586007)(54906003)(4326008)(36756003)(186003)(8676002)(2616005)(316002)(2101003)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2022 09:01:17.3234
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2022 09:01:19.5555
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 18d7cdf9-e471-4cba-8295-08da64ae3f45
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6b8a44b7-146e-4783-18ce-08da64ae409a
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.235];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT038.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.234];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT045.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB3574
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR12MB2784
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable PCIe controller nodes to enable respective PCIe slots on
-P3737-0000 board. Following is the ownership of slots by different
-PCIe controllers.
-Controller-1 : On-board Broadcom WiFi controller
-Controller-4 : M.2 Key-M slot
-Controller-5 : CEM form-factor x8 slot
+Add regulator supplies required for PCIe functionality. The supplies
+include 1.8V, 3.3V and 12V.
 
 Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
@@ -113,78 +110,62 @@ V5:
 * None
 
 V4:
-* Rebased on top of the previous patches
+* Addressed review comments from Krzysztof
+* Moved all regulator definitions to tegra234-p3701-0000.dtsi file
 
 V3:
-* Added 'vddio-pex-ctl-supply' property
-* Added a node for C5 controller's EndPoint mode
+* New patch in this series
 
-V2:
-* Addressed review comment from Krzysztof
+ .../boot/dts/nvidia/tegra234-p3701-0000.dtsi  | 36 +++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
- .../nvidia/tegra234-p3737-0000+p3701-0000.dts | 51 +++++++++++++++++++
- 1 file changed, 51 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/nvidia/tegra234-p3737-0000+p3701-0000.dts b/arch/arm64/boot/dts/nvidia/tegra234-p3737-0000+p3701-0000.dts
-index 02a10bb38562..dc11a4f4c10a 100644
---- a/arch/arm64/boot/dts/nvidia/tegra234-p3737-0000+p3701-0000.dts
-+++ b/arch/arm64/boot/dts/nvidia/tegra234-p3737-0000+p3701-0000.dts
-@@ -2111,4 +2111,55 @@ sound {
+diff --git a/arch/arm64/boot/dts/nvidia/tegra234-p3701-0000.dtsi b/arch/arm64/boot/dts/nvidia/tegra234-p3701-0000.dtsi
+index 798de9226ba5..9e4d72cfa69f 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra234-p3701-0000.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra234-p3701-0000.dtsi
+@@ -6,6 +6,42 @@ / {
+ 	model = "NVIDIA Jetson AGX Orin";
+ 	compatible = "nvidia,p3701-0000", "nvidia,tegra234";
  
- 		label = "NVIDIA Jetson AGX Orin APE";
- 	};
-+
-+	pcie@14100000 {
-+		status = "okay";
-+
-+		vddio-pex-ctl-supply = <&vdd_1v8_ao>;
-+
-+		phys = <&p2u_hsio_3>;
-+		phy-names = "p2u-0";
++	vdd_1v8_ls: regulator-vdd-1v8-ls {
++		compatible = "regulator-fixed";
++		regulator-name = "VDD_1V8_LS";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
 +	};
 +
-+	pcie@14160000 {
-+		status = "okay";
-+
-+		vddio-pex-ctl-supply = <&vdd_1v8_ao>;
-+
-+		phys = <&p2u_hsio_4>, <&p2u_hsio_5>, <&p2u_hsio_6>,
-+		       <&p2u_hsio_7>;
-+		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3";
++	vdd_1v8_ao: regulator-vdd-1v8-ao {
++		compatible = "regulator-fixed";
++		regulator-name = "VDD_1V8_AO";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
 +	};
 +
-+	pcie@141a0000 {
-+		status = "okay";
-+
-+		vddio-pex-ctl-supply = <&vdd_1v8_ls>;
-+		vpcie3v3-supply = <&vdd_3v3_pcie>;
-+		vpcie12v-supply = <&vdd_12v_pcie>;
-+
-+		phys = <&p2u_nvhs_0>, <&p2u_nvhs_1>, <&p2u_nvhs_2>,
-+		       <&p2u_nvhs_3>, <&p2u_nvhs_4>, <&p2u_nvhs_5>,
-+		       <&p2u_nvhs_6>, <&p2u_nvhs_7>;
-+		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3", "p2u-4",
-+			    "p2u-5", "p2u-6", "p2u-7";
++	vdd_3v3_pcie: regulator-vdd-3v3-pcie {
++		compatible = "regulator-fixed";
++		regulator-name = "VDD_3V3_PCIE";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio TEGRA234_MAIN_GPIO(Z, 2) GPIO_ACTIVE_HIGH>;
++		regulator-boot-on;
++		enable-active-high;
 +	};
 +
-+	pcie-ep@141a0000 {
-+		status = "disabled";
-+
-+		vddio-pex-ctl-supply = <&vdd_1v8_ls>;
-+
-+		reset-gpios = <&gpio TEGRA234_MAIN_GPIO(AF, 1) GPIO_ACTIVE_LOW>;
-+
-+		nvidia,refclk-select-gpios = <&gpio_aon
-+					      TEGRA234_AON_GPIO(AA, 4)
-+					      GPIO_ACTIVE_HIGH>;
-+
-+		phys = <&p2u_nvhs_0>, <&p2u_nvhs_1>, <&p2u_nvhs_2>,
-+		       <&p2u_nvhs_3>, <&p2u_nvhs_4>, <&p2u_nvhs_5>,
-+		       <&p2u_nvhs_6>, <&p2u_nvhs_7>;
-+		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3", "p2u-4",
-+			    "p2u-5", "p2u-6", "p2u-7";
++	vdd_12v_pcie: regulator-vdd-12v-pcie {
++		compatible = "regulator-fixed";
++		regulator-name = "VDD_12V_PCIE";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		gpio = <&gpio TEGRA234_MAIN_GPIO(A, 1) GPIO_ACTIVE_LOW>;
++		regulator-boot-on;
++		enable-active-low;
 +	};
- };
++
+ 	bus@0 {
+ 		spi@3270000 {
+ 			status = "okay";
 -- 
 2.34.1
 
