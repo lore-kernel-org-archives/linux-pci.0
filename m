@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF59CCA482
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Jul 2022 09:01:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C4CCC43334
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Jul 2022 09:01:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235916AbiGMJB2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Jul 2022 05:01:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44670 "EHLO
+        id S235929AbiGMJBb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Jul 2022 05:01:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235919AbiGMJBS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2022 05:01:18 -0400
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2048.outbound.protection.outlook.com [40.107.244.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12222ECB8A;
-        Wed, 13 Jul 2022 02:01:16 -0700 (PDT)
+        with ESMTP id S235901AbiGMJBW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jul 2022 05:01:22 -0400
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2084.outbound.protection.outlook.com [40.107.94.84])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3A5DE6337;
+        Wed, 13 Jul 2022 02:01:20 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=bgy0yREln65Gd7QjTxixftFcbqm2kLrgSvY0lEUmvzeGlDA9Lpbf73Ov4AQCiJbdO3yAC+zoljr8AFeFRDvkwjLroNeNCX2dfJ0tTY0EpgplTA+k0Rqjj5hCthy8LjH3bDv8V330VWOaVQFpNy+3z0hSoAMiBwMP31sf8mN1R5hB9t9R1o4HxB3dXCcDINarwSpFHYcgM6WVm4UuezqOYn1Of0Fo40aVry6h1B47MdgQbobI0zqUaOA/3cs9q9me8kKQ1P8by2SfC8j/PHlL+Gjqzl0S7ttlC6HPqH8gp6GZIf1lS9sgkIzu0l/y7X4Tf4fLGblUhfPRpcqGrJNX7g==
+ b=DswwfH916w6u/ZPYp2v4QT8vdQRuOGQO3p3vhXbAvhoLuMua0BKVSSulPyVzg3hpTRZL4lpbb2AydS0cA05qMDY1QInBUFPlBvHSlwccWANYGoOfP3cNZmu1qW7PuSaXyGq/E2Qdho1RyGeTjV+BJK/mpFBNPNmhQ6ZF+dlAx7owLDaUDcNZge5jBhuYhEysfPmcMMGp17GNfbmqQFbeUHd0rh3/APBjjQ3yY772Z1e8YFbw4l+5sfpNO9Pe3l9JjfxKk90ZUougCwyLZ2B4H8QeUcZKOIlntUBo2tU9VZWy6aKeaHhK5E8IFMx0e2pvv764Xs9C9+wXcJ6oQJrHUA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pv4vGuhhxpjSULlnF4DLGWVJuLPKFxYxpHhJoBQMibM=;
- b=WwnG2b5mmULBXRIbh9LCfU14o50iC77D2Qf5sNIHKKmtvCgnOnQP5svnRPVH0OyhKTunbPQFXLRQTngEQk+aPjQi1V/eokzrPUOeYlBVIp8zPg1vAJiRW1jZUjg6A31nqt+AaA9KZZAZ1fLghXvcNFAzuCHsqrF0seSRrKlktJGb6x42Wse5JD1hdwNo1/1PYSXn5zEmmYApCopYM/hQTRuJ51KNlHefJEsLwyXwWBNCxzVlQH2gO/HxSZA9cVJGA5zZqq4a2ETjXLEaBS7W3ebLzEG8OPc0Osm2l0Gdz1GXF9nwuHUe1BPrJNFd69uBr6h0bFWXXYgxnz0ZVzn+dg==
+ bh=UGD7RO7zuiAZaIcXEiG3Hq279VTf8NmzJeZmrNtMw3I=;
+ b=na52CwQr9QP5Cp2Xn9enqNAJmO6c6uoCBlpM3Q9cR3S5BtcOZXpUcpkgsXrpJPSvnmjuz6dhlbFJsfT7L77TDn5BYmeeO/Fu8aFhrTOgOAMzYWprYwc5LUAZR7BJ2+iSYfkxwZaM1zUgm6l0b5y7Dh1XRWkA8QwvSFCkph9+0SF1ZV5qYc+OA4JoezdMwwpqK0r5IaqXFCsUIzwY+//pH+k9PecXuc7EjRx61e3U/+YrwjEiPdFcgpjrRaFKiZ0rT/r898VN3YDIbCAcKOrcjP0bU0fgkqyNb51q55TtHb91QHSMIs9LLsPx//wMFu9Scvte/5ln1hYgMaltVaHmEQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  12.22.5.235) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com; dmarc=pass
  (p=reject sp=reject pct=100) action=none header.from=nvidia.com; dkim=none
@@ -28,18 +28,17 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pv4vGuhhxpjSULlnF4DLGWVJuLPKFxYxpHhJoBQMibM=;
- b=Zx8yyu1rABpJF9DAqaXFL0c16jocEysDOj6DO6JF98jSRC0svkZoq0e67JSnWIQgaCeHG/gBM+5Mi4ltx79EjJKNkDAlgkIFrKb6B+V8ZkkWEzZwkWO0+mJosE70LbPrR0ITh6q4xAXyWQuZrNAgxIPBPjVFeU+1jinEt/i6GZjJTuiEfo2pRVlALNchqf7yr8ZMMGc0GUuvtGpRm5JYj7yDmUw1BvpQ6VNpAEo6lnX8ijFSEO3BcfXNIJ2mHWrXi2TzIzCi/XzXXWtBu2xjhV3blA0655gvD7Q54dIFwh6MSqc+m9llLr7AvSQ+SXrnKArcl5FGwVg0d6pjx6OXng==
-Received: from MW4P221CA0028.NAMP221.PROD.OUTLOOK.COM (2603:10b6:303:8b::33)
- by BL3PR12MB6641.namprd12.prod.outlook.com (2603:10b6:208:38d::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.26; Wed, 13 Jul
- 2022 09:01:14 +0000
+ bh=UGD7RO7zuiAZaIcXEiG3Hq279VTf8NmzJeZmrNtMw3I=;
+ b=WdX2d0WiEMTpStCDCL0DxiFIYTqU+d3Z9XqRFVawuQ1uy5h1J8GsrRJYNlRCB+GBDj3uSzkcFZChZG9gTDckEZ5Y0NmBgmCBthHfCF8ybULReqvd23FxsRVbjYMiK96/nBnIPDW7gEeWz+qbpe6oMjjNtpgU1Zw1C+5SEYZ/lAhVYRtrrZAl8mPrhk7vAMv8jWLwpnTTuBNg9qasqSlVaYreajxu4gd4brcHmXCS6kMYBKoh6/cuzjOAuVs9DFcTgSiL7vpHQ4oWRCSIGePbHhPxtLXoI9H3sN65iAlIeyjjS2pvuPrRV50oQoRY+l2yjnvQng0gHSBSF6ecAs3XCQ==
+Received: from MW4P221CA0001.NAMP221.PROD.OUTLOOK.COM (2603:10b6:303:8b::6) by
+ BYAPR12MB3574.namprd12.prod.outlook.com (2603:10b6:a03:ae::16) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5417.23; Wed, 13 Jul 2022 09:01:17 +0000
 Received: from CO1NAM11FT038.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:8b:cafe::7c) by MW4P221CA0028.outlook.office365.com
- (2603:10b6:303:8b::33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5395.15 via Frontend
- Transport; Wed, 13 Jul 2022 09:01:14 +0000
+ (2603:10b6:303:8b:cafe::62) by MW4P221CA0001.outlook.office365.com
+ (2603:10b6:303:8b::6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5417.15 via Frontend
+ Transport; Wed, 13 Jul 2022 09:01:17 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.235)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -49,17 +48,17 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
 Received: from mail.nvidia.com (12.22.5.235) by
  CO1NAM11FT038.mail.protection.outlook.com (10.13.174.231) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.5438.12 via Frontend Transport; Wed, 13 Jul 2022 09:01:13 +0000
-Received: from rnnvmail205.nvidia.com (10.129.68.10) by DRHQMAIL107.nvidia.com
+ 15.20.5438.12 via Frontend Transport; Wed, 13 Jul 2022 09:01:17 +0000
+Received: from rnnvmail204.nvidia.com (10.129.68.6) by DRHQMAIL107.nvidia.com
  (10.27.9.16) with Microsoft SMTP Server (TLS) id 15.0.1497.32; Wed, 13 Jul
- 2022 09:00:56 +0000
-Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail205.nvidia.com
- (10.129.68.10) with Microsoft SMTP Server (version=TLS1_2,
+ 2022 09:01:14 +0000
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail204.nvidia.com
+ (10.129.68.6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Wed, 13 Jul
- 2022 02:00:55 -0700
+ 2022 02:01:13 -0700
 Received: from vidyas-desktop.nvidia.com (10.127.8.9) by mail.nvidia.com
  (10.129.68.9) with Microsoft SMTP Server id 15.2.986.26 via Frontend
- Transport; Wed, 13 Jul 2022 02:00:51 -0700
+ Transport; Wed, 13 Jul 2022 02:01:09 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <bhelgaas@google.com>, <lpieralisi@kernel.org>,
         <robh+dt@kernel.org>, <krzysztof.kozlowski+dt@linaro.org>,
@@ -69,9 +68,9 @@ CC:     <kw@linux.com>, <kishon@ti.com>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
         <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V5 3/9] dt-bindings: PCI: tegra234: Add schema for tegra234 endpoint mode
-Date:   Wed, 13 Jul 2022 14:30:23 +0530
-Message-ID: <20220713090029.30395-4-vidyas@nvidia.com>
+Subject: [PATCH V5 6/9] arm64: tegra: Enable PCIe slots in P3737-0000 board
+Date:   Wed, 13 Jul 2022 14:30:26 +0530
+Message-ID: <20220713090029.30395-7-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20220713090029.30395-1-vidyas@nvidia.com>
 References: <20220713090029.30395-1-vidyas@nvidia.com>
@@ -80,194 +79,112 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: dc2a15ef-b83c-44a7-4031-08da64ae3d34
-X-MS-TrafficTypeDiagnostic: BL3PR12MB6641:EE_
+X-MS-Office365-Filtering-Correlation-Id: 18d7cdf9-e471-4cba-8295-08da64ae3f45
+X-MS-TrafficTypeDiagnostic: BYAPR12MB3574:EE_
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Y7/BDc0En/04dza+6m6H4+yPIgAVU1NFE6mtMfTOzBPQX+VWp25+t+LSwRg3RQVmZM6ZzEGBTr0V1qoOeRpOyG6tWaXNcQJ6NBQg9EVEgOspHdduBdHVH4WIKM7NOId881Q1DIr/zAK5Mg98hWpru7Y+5jt5cJmVgWZ4IAaZT6rKuw1KS8pkiQ8pYsk5FG1OHC+1lfuAZZiVbMRgh7Zxuk5TL7AX8vMXWxRALlGaOzacd579gcTrwWbE+AX4W0BgaWuoE7brE2+fiS2LLISwIwf/4yRgnA2EWjr4GlTHHhy+CCbTEjt2u0LIE36EIQ+vKUEf1AJkPT5Vjvoz6knqfGuBM/cRenP8+Der/r9lfyLlRwVQ0/6bsJJ/WLIjCKw4Ll2kibYvs7nNLVzy2cSdOf58pD+FuyYgxSg5WbJOZ0Ys9i1wMv0fxsAUIpsCGAs5F7y7ALUVMaFDs2fbDzvf7SbMBMcfunXXZHb++p9v7shB2Sswo9bwuT6vEAOwL06+Ld/iy+Sn/gD/0iQbIt1KJBFUHDhPTOleoqeu6VKL6r72anGVBclXj5UZvfSU/5q59e4umwg0pzZIJXHyqtRNb3rpMQSWNKRuiM0TbYlmDWNb6HaqySuF2xmLwPItb4stGs89vXco6JLvAI1h2O3s6NEYdFHv7AyeX1AELeoiUo2RwuthAIpgSS2h0Sjm9Ul9BFsOtCQ+A356OkgmlrqFSiZu/8YkllCzRNEgFTGLztDt8sE2/Bg7Usx+JYvbc6B/SyMt6Jmha2XUDqJj5x++HNVoSeACTBBcFiVADtKhjEj91U40yS0H3oHBP0QZT3UQndopUnfqoJupFd7xqy2tiHeGVHbz4kGxytiVUN7wjlUnazEMiPb+nUqpXW3TIFa6
-X-Forefront-Antispam-Report: CIP:12.22.5.235;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(396003)(376002)(346002)(136003)(46966006)(40470700004)(36840700001)(47076005)(1076003)(336012)(426003)(110136005)(186003)(8676002)(40480700001)(6666004)(70206006)(8936002)(26005)(70586007)(54906003)(36756003)(4326008)(2616005)(83380400001)(7696005)(86362001)(478600001)(2906002)(40460700003)(316002)(82310400005)(36860700001)(41300700001)(5660300002)(7416002)(81166007)(82740400003)(356005)(2101003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: w8vnI+RBoNAyoQvDPT59xoeiWMohzpff7DMEvguv/LpNrJk3SLGheDDvfMrYsEBkiR1RF0TfGFG1vmIkgV7m4wcWNWKJ81SdXJojQzRZz4dGM5I3ZAjt0X++mezpSD5k9hLSTHNYsnQnbExlrS/13Dy1uhzcHMk6mTKTVz2C6K/9ntbtV6+ASRz0W2Wdu9hmwdgdyLXPJjecEuBU6TN1U/HXZ0HZ0voWac1L7nwMyiHQxTe4HSKaddIxwleUbf+ZpGRgQAQc2iPcm+xO/Ji9yFVyNSXlqThRh2F/N/2mt5whkzsX/ySGVtcWYewrVgmv8a0Wbd6Ma4Q7vh9LiO/pm6AwNGKIa99+ZMPRnUoRQAcRvPd5XOYcajyvGr8imxM/+RZlzHYQuBEhA6cINzVJ9iAaTI560sU97/voGXFQLo2SgHpAS8UoT90LSgrPELbiqyD3UClopNB4wXRpNLvcmZDePHFhPAJn+FRl6+R+mHx45QysJvNUo6OvueaRJcRpQuepO5QY0pFAAybqVc3FHwumArrYOHmCc/2LtSaih7jPNst+FfxjDvGgoqbWbdXwgimXtoBmNERDCHskQw8ZUSL10LTCecIiYDnYTGqYlXoYQNvhIdpPbKh65NRlAP6qnVW+Ssib7Z2v/lrZTk/kcDiJuo8RyW2yWt/26wCk61AKFsR8CAVDRxx1EDtx3YPOk7oOxQ5ADqGF9dXu5NXtUcFo457QoEG3O5CebMapzER/a8yP33JkEQLDRVt6wH9739AjrFJHrnkE1edM4gDNUgbaTZXIWhJpK+zcA2OJLW7w0qhEhuYjg/tP5yFzBHmabpneKID6JRzK23MN58bW781ePOWlhVBo5GhZysvNlUt+4cz0yieE3BLSwyp/sKeL
+X-Forefront-Antispam-Report: CIP:12.22.5.235;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(39860400002)(346002)(136003)(376002)(396003)(46966006)(40470700004)(36840700001)(40460700003)(86362001)(82740400003)(83380400001)(336012)(8936002)(316002)(186003)(36860700001)(1076003)(47076005)(40480700001)(4326008)(110136005)(70206006)(8676002)(81166007)(54906003)(36756003)(426003)(70586007)(2616005)(5660300002)(2906002)(7696005)(26005)(7416002)(478600001)(356005)(82310400005)(6666004)(41300700001)(2101003)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2022 09:01:13.9174
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jul 2022 09:01:17.3234
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: dc2a15ef-b83c-44a7-4031-08da64ae3d34
+X-MS-Exchange-CrossTenant-Network-Message-Id: 18d7cdf9-e471-4cba-8295-08da64ae3f45
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.235];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT038.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR12MB6641
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB3574
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for PCIe controllers that operate in the endpoint mode
-in tegra234 chipset.
+Enable PCIe controller nodes to enable respective PCIe slots on
+P3737-0000 board. Following is the ownership of slots by different
+PCIe controllers.
+Controller-1 : On-board Broadcom WiFi controller
+Controller-4 : M.2 Key-M slot
+Controller-5 : CEM form-factor x8 slot
 
 Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
 V5:
-* Addressed review comments from Rob
+* None
 
 V4:
-* Rebased on top of previous patch
+* Rebased on top of the previous patches
 
 V3:
-* New patch in this series
+* Added 'vddio-pex-ctl-supply' property
+* Added a node for C5 controller's EndPoint mode
 
- .../bindings/pci/nvidia,tegra194-pcie-ep.yaml | 97 ++++++++++++++++++-
- 1 file changed, 95 insertions(+), 2 deletions(-)
+V2:
+* Addressed review comment from Krzysztof
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-index 89402b43d9b5..cee11c576295 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-@@ -18,6 +18,7 @@ description: |
-   in root port mode or endpoint mode but one at a time.
+ .../nvidia/tegra234-p3737-0000+p3701-0000.dts | 51 +++++++++++++++++++
+ 1 file changed, 51 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/nvidia/tegra234-p3737-0000+p3701-0000.dts b/arch/arm64/boot/dts/nvidia/tegra234-p3737-0000+p3701-0000.dts
+index 02a10bb38562..dc11a4f4c10a 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra234-p3737-0000+p3701-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra234-p3737-0000+p3701-0000.dts
+@@ -2111,4 +2111,55 @@ sound {
  
-   On Tegra194, controllers C0, C4 and C5 support endpoint mode.
-+  On Tegra234, controllers C5, C6, C7 and C10 support endpoint mode.
- 
-   Note: On Tegra194's P2972-0000 platform, only C5 controller can be enabled to
-   operate in the endpoint mode because of the way the platform is designed.
-@@ -26,6 +27,7 @@ properties:
-   compatible:
-     enum:
-       - nvidia,tegra194-pcie-ep
-+      - nvidia,tegra234-pcie-ep
- 
-   reg:
-     items:
-@@ -96,7 +98,8 @@ properties:
-       A phandle to the node that controls power to the respective PCIe
-       controller and a specifier name for the PCIe controller.
- 
--      specifiers are defined in "include/dt-bindings/power/tegra194-powergate.h" file.
-+      Tegra194 specifiers are defined in "include/dt-bindings/power/tegra194-powergate.h" file.
-+      Tegra234 specifiers are defined in "include/dt-bindings/power/tegra234-powergate.h" file.
- 
-   interconnects:
-     items:
-@@ -116,17 +119,34 @@ properties:
-       Must contain a pair of phandle to BPMP controller node followed by
-       controller ID. Following are the controller IDs for each controller:
- 
-+      Tegra194
+ 		label = "NVIDIA Jetson AGX Orin APE";
+ 	};
 +
-         0: C0
-         1: C1
-         2: C2
-         3: C3
-         4: C4
-         5: C5
++	pcie@14100000 {
++		status = "okay";
 +
-+      Tegra234
++		vddio-pex-ctl-supply = <&vdd_1v8_ao>;
 +
-+        0 : C0
-+        1 : C1
-+        2 : C2
-+        3 : C3
-+        4 : C4
-+        5 : C5
-+        6 : C6
-+        7 : C7
-+        8 : C8
-+        9 : C9
-+        10: C10
++		phys = <&p2u_hsio_3>;
++		phy-names = "p2u-0";
++	};
 +
-     items:
-       - items:
-           - description: phandle to BPMP controller node
-           - description: PCIe controller ID
--            maximum: 5
-+            maximum: 10
- 
-   nvidia,aspm-cmrt-us:
-     description: Common Mode Restore Time for proper operation of ASPM to be
-@@ -146,6 +166,22 @@ properties:
-     maxItems: 1
-     description: GPIO used to enable REFCLK to controller from the host
- 
-+  nvidia,enable-ext-refclk:
-+    description: |
-+      This boolean property needs to be present if the controller is configured
-+      to receive Reference Clock from the host.
-+      NOTE:- This is applicable only for Tegra234.
++	pcie@14160000 {
++		status = "okay";
 +
-+    $ref: /schemas/types.yaml#/definitions/flag
++		vddio-pex-ctl-supply = <&vdd_1v8_ao>;
 +
-+  nvidia,enable-srns:
-+    description: |
-+      This boolean property needs to be present if the controller is configured
-+      to operate in SRNS (Separate Reference Clocks with No Spread-Spectrum Clocking).
-+      NOTE:- This is applicable only for Tegra234.
++		phys = <&p2u_hsio_4>, <&p2u_hsio_5>, <&p2u_hsio_6>,
++		       <&p2u_hsio_7>;
++		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3";
++	};
 +
-+    $ref: /schemas/types.yaml#/definitions/flag
++	pcie@141a0000 {
++		status = "okay";
 +
- allOf:
-   - $ref: /schemas/pci/snps,dw-pcie-ep.yaml#
- 
-@@ -223,3 +259,60 @@ examples:
-                         "p2u-5", "p2u-6", "p2u-7";
-         };
-     };
++		vddio-pex-ctl-supply = <&vdd_1v8_ls>;
++		vpcie3v3-supply = <&vdd_3v3_pcie>;
++		vpcie12v-supply = <&vdd_12v_pcie>;
 +
-+  - |
-+    #include <dt-bindings/clock/tegra234-clock.h>
-+    #include <dt-bindings/gpio/tegra234-gpio.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/power/tegra234-powergate.h>
-+    #include <dt-bindings/reset/tegra234-reset.h>
++		phys = <&p2u_nvhs_0>, <&p2u_nvhs_1>, <&p2u_nvhs_2>,
++		       <&p2u_nvhs_3>, <&p2u_nvhs_4>, <&p2u_nvhs_5>,
++		       <&p2u_nvhs_6>, <&p2u_nvhs_7>;
++		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3", "p2u-4",
++			    "p2u-5", "p2u-6", "p2u-7";
++	};
 +
-+    bus@0 {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+        ranges = <0x0 0x0 0x0 0x8 0x0>;
++	pcie-ep@141a0000 {
++		status = "disabled";
 +
-+        pcie-ep@141a0000 {
-+            compatible = "nvidia,tegra234-pcie-ep";
-+            power-domains = <&bpmp TEGRA234_POWER_DOMAIN_PCIEX8A>;
-+            reg = <0x00 0x141a0000 0x0 0x00020000>, /* appl registers (128K)      */
-+                  <0x00 0x3a040000 0x0 0x00040000>, /* iATU_DMA reg space (256K)  */
-+                  <0x00 0x3a080000 0x0 0x00040000>, /* DBI reg space (256K)       */
-+                  <0x27 0x40000000 0x4 0x00000000>; /* Address Space (16G)        */
-+            reg-names = "appl", "atu_dma", "dbi", "addr_space";
++		vddio-pex-ctl-supply = <&vdd_1v8_ls>;
 +
-+            interrupts = <GIC_SPI 53 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+            interrupt-names = "intr";
++		reset-gpios = <&gpio TEGRA234_MAIN_GPIO(AF, 1) GPIO_ACTIVE_LOW>;
 +
-+            clocks = <&bpmp TEGRA234_CLK_PEX1_C5_CORE>;
-+            clock-names = "core";
++		nvidia,refclk-select-gpios = <&gpio_aon
++					      TEGRA234_AON_GPIO(AA, 4)
++					      GPIO_ACTIVE_HIGH>;
 +
-+            resets = <&bpmp TEGRA234_RESET_PEX1_CORE_5_APB>,
-+                     <&bpmp TEGRA234_RESET_PEX1_CORE_5>;
-+            reset-names = "apb", "core";
-+
-+            nvidia,bpmp = <&bpmp 5>;
-+
-+            nvidia,enable-ext-refclk;
-+            nvidia,aspm-cmrt-us = <60>;
-+            nvidia,aspm-pwr-on-t-us = <20>;
-+            nvidia,aspm-l0s-entrance-latency-us = <3>;
-+
-+            vddio-pex-ctl-supply = <&p3701_vdd_1v8_ls>;
-+
-+            reset-gpios = <&gpio TEGRA234_MAIN_GPIO(AF, 1) GPIO_ACTIVE_LOW>;
-+
-+            nvidia,refclk-select-gpios = <&gpio_aon
-+                                          TEGRA234_AON_GPIO(AA, 4)
-+                                          GPIO_ACTIVE_HIGH>;
-+
-+            num-lanes = <8>;
-+
-+            phys = <&p2u_nvhs_0>, <&p2u_nvhs_1>, <&p2u_nvhs_2>,
-+                   <&p2u_nvhs_3>, <&p2u_nvhs_4>, <&p2u_nvhs_5>,
-+                   <&p2u_nvhs_6>, <&p2u_nvhs_7>;
-+
-+            phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3", "p2u-4",
-+                        "p2u-5", "p2u-6", "p2u-7";
-+        };
-+    };
++		phys = <&p2u_nvhs_0>, <&p2u_nvhs_1>, <&p2u_nvhs_2>,
++		       <&p2u_nvhs_3>, <&p2u_nvhs_4>, <&p2u_nvhs_5>,
++		       <&p2u_nvhs_6>, <&p2u_nvhs_7>;
++		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3", "p2u-4",
++			    "p2u-5", "p2u-6", "p2u-7";
++	};
+ };
 -- 
 2.34.1
 
