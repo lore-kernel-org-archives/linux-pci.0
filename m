@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBFBFCCA482
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAB08CCA481
 	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:14:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236489AbiGNHOI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 03:14:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50584 "EHLO
+        id S236682AbiGNHOJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 03:14:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236193AbiGNHOG (ORCPT
+        with ESMTP id S236175AbiGNHOG (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 03:14:06 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 564BB13E36;
-        Thu, 14 Jul 2022 00:14:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1D07DF5C;
+        Thu, 14 Jul 2022 00:14:04 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D1906B823BD;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 41CABB8226F;
         Thu, 14 Jul 2022 07:14:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E29D4C36B00;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6928C341C8;
         Thu, 14 Jul 2022 07:14:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657782842;
-        bh=KNfjHG2FyJpoLAMCe7DwEz36zNFmsZPwicDQwhgPQhs=;
+        s=k20201202; t=1657782841;
+        bh=dJs3ZHwES7dbmXTCPXTZO+fPyDl9njp4tIxHLvkFzr8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fIIwMjCSMERhQcTfJVsldnGWDsqoc2owXtlnCuk6qHvRT1KjwVQwheTgc3yHEbQmg
-         znqftCyEIbhvCP0joIwKkzrO99cYNHl/SDuiAru7h4+4IeLf+ILXS5bZvEKm8WsJOn
-         aq80rXHn81Uw3BH9CJJtDuL/d/H624ziMsJP/QD3SEzS+du3kAUExPJIFD1gwq9a9K
-         8y/Juos8zxLOWeqBwMMzYOAMD+QbA0K8dUVOo4zloWu2iiLs2eSHEi5PbMuB9ZG71k
-         fyXPi9ZH/3DlBQa8Aey7fDjQodDr4e3CUpQip6ztEDN99qRkU1Smj4DnCoEc9ZDUPR
-         x1N+n8cd2NQiQ==
+        b=ZKF7gJx0O3cMODWgLOzpV0/Ahxz6p9HmUaPS+xogeGvvBJj1eHiXx5FJgonej3xx2
+         RgMjihr6W8qiJFgFaG+VQelWjKs+ZOsnG1W/U1txp6h4qQFAu76WHOlEPZK1631QV9
+         RICFNJ0dCHytpiWQ92aWfJUU9BKaboisNVn9kgY/udqHebF5PsqEi5i0QMU3opUvwW
+         5kmmfMBWzfhgLkX8CNfqcyqdObRgVIrZv3d8FunXd7h54xsc/fEPYtrkbqhZlu91nr
+         nJVrkQkROQsIvxb7jStk1Wjae+NbIqBRX47R6FciaRcuPy8QoXtNYGA4m0VwCQeXLj
+         m9wwOTDumsafA==
 Received: from johan by xi.lan with local (Exim 4.94.2)
         (envelope-from <johan+linaro@kernel.org>)
-        id 1oBt30-0001mO-N2; Thu, 14 Jul 2022 09:14:06 +0200
+        id 1oBt30-0001m7-2L; Thu, 14 Jul 2022 09:14:06 +0200
 From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
@@ -49,9 +49,9 @@ Cc:     Rob Herring <robh+dt@kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH v2 8/8] PCI: qcom: Sort device-id table
-Date:   Thu, 14 Jul 2022 09:13:48 +0200
-Message-Id: <20220714071348.6792-9-johan+linaro@kernel.org>
+Subject: [PATCH v2 1/8] dt-bindings: PCI: qcom: Enumerate platforms with single msi interrupt
+Date:   Thu, 14 Jul 2022 09:13:41 +0200
+Message-Id: <20220714071348.6792-2-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220714071348.6792-1-johan+linaro@kernel.org>
 References: <20220714071348.6792-1-johan+linaro@kernel.org>
@@ -61,49 +61,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Sort the device-id table entries alphabetically by compatible string to
-make it easier to find entries and add new ones.
+Explicitly enumerate the older platforms that have a single msi host
+interrupt. This allows for adding further platforms with, for example,
+four msi interrupts without resorting to nested conditionals.
 
+Drop the redundant comment about older chipsets instead of moving it.
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ .../devicetree/bindings/pci/qcom,pcie.yaml      | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 8dddb72f8647..fea921cca8fa 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1749,24 +1749,24 @@ static int qcom_pcie_remove(struct platform_device *pdev)
- }
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 70984037df73..8142c891f18b 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -625,7 +625,6 @@ allOf:
+         - reset-names
  
- static const struct of_device_id qcom_pcie_match[] = {
-+	{ .compatible = "qcom,pcie-apq8064", .data = &cfg_2_1_0 },
- 	{ .compatible = "qcom,pcie-apq8084", .data = &cfg_1_0_0 },
-+	{ .compatible = "qcom,pcie-ipq6018", .data = &cfg_2_9_0 },
- 	{ .compatible = "qcom,pcie-ipq8064", .data = &cfg_2_1_0 },
- 	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &cfg_2_1_0 },
--	{ .compatible = "qcom,pcie-apq8064", .data = &cfg_2_1_0 },
--	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
- 	{ .compatible = "qcom,pcie-ipq8074", .data = &cfg_2_3_3 },
- 	{ .compatible = "qcom,pcie-ipq4019", .data = &cfg_2_4_0 },
-+	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
- 	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
- 	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_1_9_0 },
-+	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
-+	{ .compatible = "qcom,pcie-sc8180x", .data = &cfg_1_9_0 },
-+	{ .compatible = "qcom,pcie-sc8280xp", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sdm845", .data = &cfg_2_7_0 },
- 	{ .compatible = "qcom,pcie-sm8150", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sm8250", .data = &cfg_1_9_0 },
--	{ .compatible = "qcom,pcie-sc8180x", .data = &cfg_1_9_0 },
--	{ .compatible = "qcom,pcie-sc8280xp", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
--	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
--	{ .compatible = "qcom,pcie-ipq6018", .data = &cfg_2_9_0 },
- 	{ }
- };
- MODULE_DEVICE_TABLE(of, qcom_pcie_match);
+     # On newer chipsets support either 1 or 8 msi interrupts
+-    # On older chipsets it's always 1 msi interrupt
+   - if:
+       properties:
+         compatible:
+@@ -660,7 +659,21 @@ allOf:
+                 - const: msi5
+                 - const: msi6
+                 - const: msi7
+-    else:
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,pcie-apq8064
++              - qcom,pcie-apq8084
++              - qcom,pcie-ipq4019
++              - qcom,pcie-ipq6018
++              - qcom,pcie-ipq8064
++              - qcom,pcie-ipq8064-v2
++              - qcom,pcie-ipq8074
++              - qcom,pcie-qcs404
++    then:
+       properties:
+         interrupts:
+           maxItems: 1
 -- 
 2.35.1
 
