@@ -2,188 +2,216 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F20CCA47B
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:48:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A26A1CCA47B
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 09:29:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237614AbiGNHsS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 03:48:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44454 "EHLO
+        id S237575AbiGNJ3E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 05:29:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237612AbiGNHrn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 03:47:43 -0400
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1DAB3AB23;
-        Thu, 14 Jul 2022 00:47:15 -0700 (PDT)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 78BA21A2049;
-        Thu, 14 Jul 2022 09:47:14 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 12BDE1A2034;
-        Thu, 14 Jul 2022 09:47:14 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 6AD0F180327D;
-        Thu, 14 Jul 2022 15:47:12 +0800 (+08)
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
-        broonie@kernel.org, lorenzo.pieralisi@arm.com, festevam@gmail.com,
-        francesco.dolcini@toradex.com
-Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        kernel@pengutronix.de, linux-imx@nxp.com
-Subject: [PATCH v15 17/17] PCI: imx6: Reformat suspend callback to keep symmetric with resume
-Date:   Thu, 14 Jul 2022 15:31:09 +0800
-Message-Id: <1657783869-19194-18-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1657783869-19194-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1657783869-19194-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        with ESMTP id S237987AbiGNJ2r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 05:28:47 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42109E0EA;
+        Thu, 14 Jul 2022 02:28:45 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Lk8Hf6vSpzhZBQ;
+        Thu, 14 Jul 2022 17:26:06 +0800 (CST)
+Received: from localhost.localdomain (10.67.164.66) by
+ canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 14 Jul 2022 17:28:42 +0800
+From:   Yicong Yang <yangyicong@hisilicon.com>
+To:     <gregkh@linuxfoundation.org>, <alexander.shishkin@linux.intel.com>,
+        <leo.yan@linaro.org>, <james.clark@arm.com>, <will@kernel.org>,
+        <robin.murphy@arm.com>, <acme@kernel.org>, <peterz@infradead.org>,
+        <corbet@lwn.net>, <mathieu.poirier@linaro.org>,
+        <mark.rutland@arm.com>, <jonathan.cameron@huawei.com>,
+        <john.garry@huawei.com>
+CC:     <helgaas@kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <suzuki.poulose@arm.com>, <joro@8bytes.org>,
+        <shameerali.kolothum.thodi@huawei.com>, <mingo@redhat.com>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <linux-perf-users@vger.kernel.org>,
+        <iommu@lists.linux-foundation.org>, <iommu@lists.linux.dev>,
+        <linux-doc@vger.kernel.org>, <prime.zeng@huawei.com>,
+        <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
+        <linuxarm@huawei.com>, <yangyicong@hisilicon.com>
+Subject: [PATCH v10 0/8]  Add support for HiSilicon PCIe Tune and Trace device
+Date:   Thu, 14 Jul 2022 17:27:02 +0800
+Message-ID: <20220714092710.53486-1-yangyicong@hisilicon.com>
+X-Mailer: git-send-email 2.31.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.67.164.66]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ canpemm500009.china.huawei.com (7.192.105.203)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Create imx6_pcie_stop_link() and imx6_pcie_host_exit() functions.
-Encapsulate clocks, regulators disables and PHY uninitialization into
-imx6_pcie_host_exit().
+HiSilicon PCIe tune and trace device (PTT) is a PCIe Root Complex
+integrated Endpoint (RCiEP) device, providing the capability
+to dynamically monitor and tune the PCIe traffic (tune),
+and trace the TLP headers (trace).
 
-To keep suspend/resume symmetric as much as possible, invoke these two
-new created functions in suspend callback.
+PTT tune is designed for monitoring and adjusting PCIe link parameters.
+We provide several parameters of the PCIe link. Through the driver,
+user can adjust the value of certain parameter to affect the PCIe link
+for the purpose of enhancing the performance in certian situation.
 
-To be symmetric with imx6_pcie_host_exit(), move imx6_pcie_clk_enable()
-to imx6_pcie_host_init() from imx6_pcie_deassert_core_reset().
+PTT trace is designed for dumping the TLP headers to the memory, which
+can be used to analyze the transactions and usage condition of the PCIe
+Link. Users can choose filters to trace headers, by either requester
+ID, or those downstream of a set of Root Ports on the same core of the
+PTT device. It's also supported to trace the headers of certain type and
+of certain direction.
 
-Link: https://lore.kernel.org/r/1656645935-1370-18-git-send-email-hongxing.zhu@nxp.com
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/controller/dwc/pci-imx6.c | 62 ++++++++++++++++-----------
- 1 file changed, 37 insertions(+), 25 deletions(-)
+The driver registers a PMU device for each PTT device. The trace can
+be used through `perf record` and the traced headers can be decoded
+by `perf report`. The perf command support for the device is also
+added in this patchset. The tune can be used through the sysfs
+attributes of related PMU device. See the documentation for the
+detailed usage.
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 21e9101f63f0..b7a7e3465f28 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -703,13 +703,6 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- {
- 	struct dw_pcie *pci = imx6_pcie->pci;
- 	struct device *dev = pci->dev;
--	int ret;
--
--	ret = imx6_pcie_clk_enable(imx6_pcie);
--	if (ret) {
--		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
--		return ret;
--	}
- 
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX8MQ:
-@@ -904,6 +897,14 @@ static int imx6_pcie_start_link(struct dw_pcie *pci)
- 	return 0;
- }
- 
-+static void imx6_pcie_stop_link(struct dw_pcie *pci)
-+{
-+	struct device *dev = pci->dev;
-+
-+	/* Turn off PCIe LTSSM */
-+	imx6_pcie_ltssm_disable(dev);
-+}
-+
- static int imx6_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -923,11 +924,17 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
- 	imx6_pcie_assert_core_reset(imx6_pcie);
- 	imx6_pcie_init_phy(imx6_pcie);
- 
-+	ret = imx6_pcie_clk_enable(imx6_pcie);
-+	if (ret) {
-+		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
-+		goto err_reg_disable;
-+	}
-+
- 	if (imx6_pcie->phy) {
- 		ret = phy_power_on(imx6_pcie->phy);
- 		if (ret) {
- 			dev_err(dev, "pcie phy power up failed\n");
--			goto err_reg_disable;
-+			goto err_clk_disable;
- 		}
- 	}
- 
-@@ -941,24 +948,40 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
- 		ret = phy_init(imx6_pcie->phy);
- 		if (ret) {
- 			dev_err(dev, "waiting for phy ready timeout!\n");
--			goto err_clk_disable;
-+			goto err_phy_off;
- 		}
- 	}
- 	imx6_setup_phy_mpll(imx6_pcie);
- 
- 	return 0;
- 
--err_clk_disable:
--	imx6_pcie_clk_disable(imx6_pcie);
- err_phy_off:
- 	if (imx6_pcie->phy)
- 		phy_power_off(imx6_pcie->phy);
-+err_clk_disable:
-+	imx6_pcie_clk_disable(imx6_pcie);
- err_reg_disable:
- 	if (imx6_pcie->vpcie)
- 		regulator_disable(imx6_pcie->vpcie);
- 	return ret;
- }
- 
-+static void imx6_pcie_host_exit(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
-+
-+	if (imx6_pcie->phy) {
-+		if (phy_power_off(imx6_pcie->phy))
-+			dev_err(pci->dev, "unable to power off PHY\n");
-+		phy_exit(imx6_pcie->phy);
-+	}
-+	imx6_pcie_clk_disable(imx6_pcie);
-+
-+	if (imx6_pcie->vpcie)
-+		regulator_disable(imx6_pcie->vpcie);
-+}
-+
- static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
- 	.host_init = imx6_pcie_host_init,
- };
-@@ -1008,25 +1031,14 @@ static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
- static int imx6_pcie_suspend_noirq(struct device *dev)
- {
- 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-+	struct pcie_port *pp = &imx6_pcie->pci->pp;
- 
- 	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_SUPPORTS_SUSPEND))
- 		return 0;
- 
- 	imx6_pcie_pm_turnoff(imx6_pcie);
--	imx6_pcie_ltssm_disable(dev);
--	imx6_pcie_clk_disable(imx6_pcie);
--	switch (imx6_pcie->drvdata->variant) {
--	case IMX8MM:
--		if (phy_power_off(imx6_pcie->phy))
--			dev_err(dev, "unable to power off PHY\n");
--		phy_exit(imx6_pcie->phy);
--		break;
--	default:
--		break;
--	}
--
--	if (imx6_pcie->vpcie)
--		regulator_disable(imx6_pcie->vpcie);
-+	imx6_pcie_stop_link(imx6_pcie->pci);
-+	imx6_pcie_host_exit(pp);
- 
- 	return 0;
- }
+Change since v9:
+- Add sysfs ABI description documentation
+- Remove the controversial available_{root_port, requester}_filters sysfs file
+- Shorten 2 tune sysfs attributes name and add some comments
+- Move hisi_ptt_process_auxtrace_info() to Patch 6.
+- Add RB from Leo and Ack-by from Mathieu, thanks!
+Link: https://lore.kernel.org/lkml/20220606115555.41103-1-yangyicong@hisilicon.com/
+
+Change since v8:
+- Cleanups and one minor fix from Jonathan and John, thanks
+Link: https://lore.kernel.org/lkml/20220516125223.32012-1-yangyicong@hisilicon.com/
+
+Change since v7:
+- Configure the DMA in probe rather than in runtime. Also use devres to manage
+  PMU device as we have no order problem now
+- Refactor the config validation function per John and Leo
+- Use a spinlock hisi_ptt::pmu_lock instead of mutex to serialize the perf process
+  in pmu::start as it's in atomic context
+- Only commit the traced data when stop, per Leo and James
+- Drop the filter dynamically updating patch from this series to simply the review
+  of the driver. That patch will be send separately.
+- add a cpumask sysfs attribute and handle the cpu hotplug events, follow the
+  uncore PMU convention
+- Other cleanups and fixes, both in driver and perf tool
+Link: https://lore.kernel.org/lkml/20220407125841.3678-1-yangyicong@hisilicon.com/
+
+Change since v6:
+- Fix W=1 errors reported by lkp test, thanks
+
+Change since v5:
+- Squash the PMU patch into PATCH 2 suggested by John
+- refine the commit message of PATCH 1 and some comments
+Link: https://lore.kernel.org/lkml/20220308084930.5142-1-yangyicong@hisilicon.com/
+
+Change since v4:
+Address the comments from Jonathan, John and Ma Ca, thanks.
+- Use devm* also for allocating the DMA buffers
+- Remove the IRQ handler stub in Patch 2
+- Make functions waiting for hardware state return boolean
+- Manual remove the PMU device as it should be removed first
+- Modifier the orders in probe and removal to make them matched well
+- Make available {directions,type,format} array const and non-global
+- Using the right filter list in filters show and well protect the
+  list with mutex
+- Record the trace status with a boolean @started rather than enum
+- Optimize the process of finding the PTT devices of the perf-tool
+Link: https://lore.kernel.org/linux-pci/20220221084307.33712-1-yangyicong@hisilicon.com/
+
+Change since v3:
+Address the comments from Jonathan and John, thanks.
+- drop members in the common struct which can be get on the fly
+- reduce buffer struct and organize the buffers with array instead of list
+- reduce the DMA reset wait time to avoid long time busy loop
+- split the available_filters sysfs attribute into two files, for root port
+  and requester respectively. Update the documentation accordingly
+- make IOMMU mapping check earlier in probe to avoid race condition. Also
+  make IOMMU quirk patch prior to driver in the series
+- Cleanups and typos fixes from John and Jonathan
+Link: https://lore.kernel.org/linux-pci/20220124131118.17887-1-yangyicong@hisilicon.com/
+
+Change since v2:
+- address the comments from Mathieu, thanks.
+  - rename the directory to ptt to match the function of the device
+  - spinoff the declarations to a separate header
+  - split the trace function to several patches
+  - some other comments.
+- make default smmu domain type of PTT device to identity
+  Drop the RMR as it's not recommended and use an iommu_def_domain_type
+  quirk to passthrough the device DMA as suggested by Robin. 
+Link: https://lore.kernel.org/linux-pci/20211116090625.53702-1-yangyicong@hisilicon.com/
+
+Change since v1:
+- switch the user interface of trace to perf from debugfs
+- switch the user interface of tune to sysfs from debugfs
+- add perf tool support to start trace and decode the trace data
+- address the comments of documentation from Bjorn
+- add RMR[1] support of the device as trace works in RMR mode or
+  direct DMA mode. RMR support is achieved by common APIs rather
+  than the APIs implemented in [1].
+Link: https://lore.kernel.org/lkml/1618654631-42454-1-git-send-email-yangyicong@hisilicon.com/
+[1] https://lore.kernel.org/linux-acpi/20210805080724.480-1-shameerali.kolothum.thodi@huawei.com/
+
+Qi Liu (3):
+  perf tool: arm: Refactor event list iteration in
+    auxtrace_record__init()
+  perf tool: Add support for HiSilicon PCIe Tune and Trace device driver
+  perf tool: Add support for parsing HiSilicon PCIe Trace packet
+
+Yicong Yang (5):
+  iommu/arm-smmu-v3: Make default domain type of HiSilicon PTT device to
+    identity
+  hwtracing: hisi_ptt: Add trace function support for HiSilicon PCIe
+    Tune and Trace device
+  hwtracing: hisi_ptt: Add tune function support for HiSilicon PCIe Tune
+    and Trace device
+  docs: trace: Add HiSilicon PTT device driver documentation
+  MAINTAINERS: Add maintainer for HiSilicon PTT driver
+
+ .../ABI/testing/sysfs-devices-hisi_ptt        |   61 +
+ Documentation/trace/hisi-ptt.rst              |  298 +++++
+ Documentation/trace/index.rst                 |    1 +
+ MAINTAINERS                                   |    7 +
+ drivers/Makefile                              |    1 +
+ drivers/hwtracing/Kconfig                     |    2 +
+ drivers/hwtracing/ptt/Kconfig                 |   12 +
+ drivers/hwtracing/ptt/Makefile                |    2 +
+ drivers/hwtracing/ptt/hisi_ptt.c              | 1032 +++++++++++++++++
+ drivers/hwtracing/ptt/hisi_ptt.h              |  200 ++++
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c   |   21 +
+ tools/perf/arch/arm/util/auxtrace.c           |  116 +-
+ tools/perf/arch/arm/util/pmu.c                |    3 +
+ tools/perf/arch/arm64/util/Build              |    2 +-
+ tools/perf/arch/arm64/util/hisi-ptt.c         |  187 +++
+ tools/perf/util/Build                         |    2 +
+ tools/perf/util/auxtrace.c                    |    4 +
+ tools/perf/util/auxtrace.h                    |    1 +
+ tools/perf/util/hisi-ptt-decoder/Build        |    1 +
+ .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.c   |  164 +++
+ .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.h   |   31 +
+ tools/perf/util/hisi-ptt.c                    |  192 +++
+ tools/perf/util/hisi-ptt.h                    |   19 +
+ 23 files changed, 2339 insertions(+), 20 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-devices-hisi_ptt
+ create mode 100644 Documentation/trace/hisi-ptt.rst
+ create mode 100644 drivers/hwtracing/ptt/Kconfig
+ create mode 100644 drivers/hwtracing/ptt/Makefile
+ create mode 100644 drivers/hwtracing/ptt/hisi_ptt.c
+ create mode 100644 drivers/hwtracing/ptt/hisi_ptt.h
+ create mode 100644 tools/perf/arch/arm64/util/hisi-ptt.c
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/Build
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.h
+ create mode 100644 tools/perf/util/hisi-ptt.c
+ create mode 100644 tools/perf/util/hisi-ptt.h
+
 -- 
-2.25.1
+2.24.0
 
