@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0866ACCA47B
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:14:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB215CCA482
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:14:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235849AbiGNHOD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 03:14:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50484 "EHLO
+        id S235876AbiGNHOE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 03:14:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50492 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235651AbiGNHOD (ORCPT
+        with ESMTP id S235658AbiGNHOD (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 03:14:03 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9716A450;
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8948DF5C;
         Thu, 14 Jul 2022 00:14:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 47C6461B86;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6EEF761B9D;
         Thu, 14 Jul 2022 07:14:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AF94C34115;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B872EC385A5;
         Thu, 14 Jul 2022 07:14:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1657782841;
-        bh=+kNu+TdPD4M5/UQ/GUlnyvCp5J5nPFJiElj8Mfx/ybY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Ugj3jl+CI5oNOitBHE/1sJ0oCbaypOL7LNspQ9tnuCNIvEFSnvsIkrPh+ukeuFkf0
-         JPDU5FQC5WC71ge8yuL7Cvr1VJ2VuK65SvuPV7aR2WUoQcDt5VUO5kit2RvkU0yWPk
-         L1aDPqXlHRmdvFLGgNdQ4y3Y+rV+NtaWt0TJ6SfTGFnAht1Go8Aayg5zaEtxDETzc2
-         wuzR9lEfMTCkbiR/iv0bJY/wOSFZIfc87/NYc2sHhGJ9cEx3ixqpu5k/2hhbCodrKG
-         IIwp+WyADT9KCAXuQ0tdKlzKDdKVYo1yh2WMhxJR8Nr+AGTHfDaDqe96fYCiuw7Iy7
-         GTjz6CejlQqyA==
+        bh=l/IiNEET7CTOwgkkFphEZwnof+cr+/TdjVrGxeor7ec=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=W+N5HN53n1skZMonmVHvKhU5D8dlF5ibzbWygITivhym6vU9Ztq/Qo9X76l48xCzX
+         FrawY6+7iig/RZ4yKzYMh2D4nJAZPl9ragz9vjtZdvJqn1kUDsGcKQxEO3j/UQgQSi
+         RsOsqahCzHrz9g4fNlzeghHwPgtvRyhjoY6ep+BQx2fLkyn1EUX4nn+BOYYI0RMQFs
+         1XO6mn5cI6zyqHVm0QSOTC6+fY2ikINrIIqWRjHrEfHx/tU1h/XRXxfx5Rx/rHks7O
+         mxfBIKYAOci8sEPQ3Fn+64e9y14R5VSPNJDIuyZYpvqFjbN/eCD9Yy3ujlc6WZCxFX
+         I5RpDIqWTMAvA==
 Received: from johan by xi.lan with local (Exim 4.94.2)
         (envelope-from <johan+linaro@kernel.org>)
-        id 1oBt2z-0001m5-Ut; Thu, 14 Jul 2022 09:14:06 +0200
+        id 1oBt30-0001mB-8G; Thu, 14 Jul 2022 09:14:06 +0200
 From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
@@ -48,65 +48,57 @@ Cc:     Rob Herring <robh+dt@kernel.org>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH v2 0/8] PCI: qcom: Add support for SC8280XP and SA8540P
-Date:   Thu, 14 Jul 2022 09:13:40 +0200
-Message-Id: <20220714071348.6792-1-johan+linaro@kernel.org>
+        Johan Hovold <johan+linaro@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v2 3/8] dt-bindings: PCI: qcom: Add SA8540P to binding
+Date:   Thu, 14 Jul 2022 09:13:43 +0200
+Message-Id: <20220714071348.6792-4-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220714071348.6792-1-johan+linaro@kernel.org>
+References: <20220714071348.6792-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds support for the PCIe controllers found on SC8280XP and
-SA8540P.
+SA8540P is a new platform related to SC8280XP but which uses a single
+host interrupt for MSI routing.
 
-Included are also three patches that clean up the way the driver handles
-different IP revisions (e.g. by modelling optional clocks as being truly
-optional).
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
 
-These patches depend on the recently merged (but currently held off?)
-PIPE clock series:
-
-	https://lore.kernel.org/all/20220608105238.2973600-1-dmitry.baryshkov@linaro.org/
-
-as well as the about-to-be-merged MSI series (v17):
-
-	https://lore.kernel.org/all/20220707134733.2436629-6-dmitry.baryshkov@linaro.org/
-
-Note that the final patch in the PIPE clock series is currently missing
-from the pci/ctrl/qcom-pending branch:
-
-	https://lore.kernel.org/all/20220608105238.2973600-6-dmitry.baryshkov@linaro.org/
-
-Johan
-
-
-Changes in v2
- - drop the two DT schema fixes which have been applied by Bjorn H and
-   squashed into the MSI v17 series by Dmitry, respectively
- - rebase on pci/ctrl/qcom-pending (2022-07-14)
- - fix compatible sort order (Krzysztof)
- - amend commit message for first patch to clarify motivation
-   (Krzysztof)
- - add acks and reviewed-by tags from Dmitry, Krzysztof, Mani and Rob
-
-
-Johan Hovold (8):
-  dt-bindings: PCI: qcom: Enumerate platforms with single msi interrupt
-  dt-bindings: PCI: qcom: Add SC8280XP to binding
-  dt-bindings: PCI: qcom: Add SA8540P to binding
-  PCI: qcom: Add support for SC8280XP
-  PCI: qcom: Add support for SA8540P
-  PCI: qcom: Make all optional clocks optional
-  PCI: qcom: Clean up IP configurations
-  PCI: qcom: Sort device-id table
-
- .../devicetree/bindings/pci/qcom,pcie.yaml    |  70 +++++++++-
- drivers/pci/controller/dwc/pcie-qcom.c        | 121 +++++++-----------
- 2 files changed, 114 insertions(+), 77 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 577d166a7476..22a2aac4c23f 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -25,6 +25,7 @@ properties:
+       - qcom,pcie-ipq4019
+       - qcom,pcie-ipq8074
+       - qcom,pcie-qcs404
++      - qcom,pcie-sa8540p
+       - qcom,pcie-sc7280
+       - qcom,pcie-sc8180x
+       - qcom,pcie-sc8280xp
+@@ -603,6 +604,7 @@ allOf:
+         compatible:
+           contains:
+             enum:
++              - qcom,pcie-sa8540p
+               - qcom,pcie-sc8280xp
+     then:
+       properties:
+@@ -721,6 +723,7 @@ allOf:
+               - qcom,pcie-ipq8064-v2
+               - qcom,pcie-ipq8074
+               - qcom,pcie-qcs404
++              - qcom,pcie-sa8540p
+     then:
+       properties:
+         interrupts:
 -- 
 2.35.1
 
