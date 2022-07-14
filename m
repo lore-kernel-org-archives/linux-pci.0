@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C20C8CCA47B
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D4FFC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:48:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237600AbiGNHrl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 03:47:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43388 "EHLO
+        id S237661AbiGNHsA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 03:48:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237456AbiGNHrK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 03:47:10 -0400
-Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74DEC3A499;
-        Thu, 14 Jul 2022 00:47:09 -0700 (PDT)
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 6B8CE202189;
-        Thu, 14 Jul 2022 09:47:07 +0200 (CEST)
+        with ESMTP id S237562AbiGNHrY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 03:47:24 -0400
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 345C533E38;
+        Thu, 14 Jul 2022 00:47:11 -0700 (PDT)
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id B7E511A2049;
+        Thu, 14 Jul 2022 09:47:09 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 3B21B2021A6;
-        Thu, 14 Jul 2022 09:47:07 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 7D17D1A2056;
+        Thu, 14 Jul 2022 09:47:09 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 936BB180222A;
-        Thu, 14 Jul 2022 15:47:05 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id D4B06180222A;
+        Thu, 14 Jul 2022 15:47:07 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
         broonie@kernel.org, lorenzo.pieralisi@arm.com, festevam@gmail.com,
@@ -30,9 +30,9 @@ To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
 Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         kernel@pengutronix.de, linux-imx@nxp.com
-Subject: [PATCH v15 11/17] PCI: imx6: Move regulator enable out of imx6_pcie_deassert_core_reset()
-Date:   Thu, 14 Jul 2022 15:31:03 +0800
-Message-Id: <1657783869-19194-12-git-send-email-hongxing.zhu@nxp.com>
+Subject: [PATCH v15 13/17] PCI: imx6: Reduce resume time by only starting link if it was up before suspend
+Date:   Thu, 14 Jul 2022 15:31:05 +0800
+Message-Id: <1657783869-19194-14-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1657783869-19194-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1657783869-19194-1-git-send-email-hongxing.zhu@nxp.com>
@@ -41,90 +41,56 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move regulator enable out of imx6_pcie_deassert_core_reset(), since the
-regulator_enable() has nothing to do with imx6_pcie_deassert_core_reset().
+i.MX PCIe doesn't support hotplug. During resume, only start PCIe link
+training when the link was up before system suspend to avoid the long
+latency in the link training period.
 
-Link: https://lore.kernel.org/r/1656645935-1370-12-git-send-email-hongxing.zhu@nxp.com
+[bhelgaas: imx6_pcie_start_link() return value check removal moved to
+previous patch, pointed out by Lucas Stach <l.stach@pengutronix.de>]
+Link: https://lore.kernel.org/r/1656645935-1370-14-git-send-email-hongxing.zhu@nxp.com
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 36 ++++++++++++---------------
- 1 file changed, 16 insertions(+), 20 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 95815e4255d3..d263574e5c85 100644
+index 3ac4f2aa91c5..ad0933c3dc70 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -712,19 +712,10 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 	struct device *dev = pci->dev;
- 	int ret;
- 
--	if (imx6_pcie->vpcie) {
--		ret = regulator_enable(imx6_pcie->vpcie);
--		if (ret) {
--			dev_err(dev, "failed to enable vpcie regulator: %d\n",
--				ret);
--			return ret;
--		}
--	}
--
- 	ret = imx6_pcie_clk_enable(imx6_pcie);
- 	if (ret) {
- 		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
--		goto err_clks;
-+		return ret;
+@@ -67,6 +67,7 @@ struct imx6_pcie {
+ 	struct dw_pcie		*pci;
+ 	int			reset_gpio;
+ 	bool			gpio_active_high;
++	bool			link_is_up;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie_inbound_axi;
+@@ -881,11 +882,13 @@ static int imx6_pcie_start_link(struct dw_pcie *pci)
+ 		dev_info(dev, "Link: Gen2 disabled\n");
  	}
  
- 	switch (imx6_pcie->drvdata->variant) {
-@@ -783,15 +774,6 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 	}
- 
++	imx6_pcie->link_is_up = true;
+ 	tmp = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
+ 	dev_info(dev, "Link up, Gen%i\n", tmp & PCI_EXP_LNKSTA_CLS);
  	return 0;
--
--err_clks:
--	if (imx6_pcie->vpcie) {
--		ret = regulator_disable(imx6_pcie->vpcie);
--		if (ret)
--			dev_err(dev, "failed to disable vpcie regulator: %d\n",
--				ret);
--	}
--	return ret;
- }
  
- static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
-@@ -914,17 +896,31 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
- 	int ret;
+ err_reset_phy:
++	imx6_pcie->link_is_up = false;
+ 	dev_dbg(dev, "PHY DEBUG_R0=0x%08x DEBUG_R1=0x%08x\n",
+ 		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG0),
+ 		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG1));
+@@ -1032,7 +1035,9 @@ static int imx6_pcie_resume_noirq(struct device *dev)
+ 		return ret;
+ 	dw_pcie_setup_rc(pp);
  
-+	if (imx6_pcie->vpcie) {
-+		ret = regulator_enable(imx6_pcie->vpcie);
-+		if (ret) {
-+			dev_err(dev, "failed to enable vpcie regulator: %d\n",
-+				ret);
-+			return ret;
-+		}
-+	}
+-	imx6_pcie_start_link(imx6_pcie->pci);
++	if (imx6_pcie->link_is_up)
++		imx6_pcie_start_link(imx6_pcie->pci);
 +
- 	imx6_pcie_assert_core_reset(imx6_pcie);
- 	imx6_pcie_init_phy(imx6_pcie);
- 	ret = imx6_pcie_deassert_core_reset(imx6_pcie);
- 	if (ret < 0) {
- 		dev_err(dev, "pcie deassert core reset failed: %d\n", ret);
--		return ret;
-+		goto err_reg_disable;
- 	}
- 
- 	imx6_setup_phy_mpll(imx6_pcie);
- 
  	return 0;
-+
-+err_reg_disable:
-+	if (imx6_pcie->vpcie)
-+		regulator_disable(imx6_pcie->vpcie);
-+	return ret;
  }
- 
- static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
+ #endif
 -- 
 2.25.1
 
