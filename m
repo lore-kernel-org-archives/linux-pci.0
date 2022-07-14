@@ -2,175 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B50CCA487
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:15:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1869EC43334
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:47:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237420AbiGNHPI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 03:15:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50594 "EHLO
+        id S237309AbiGNHrA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 03:47:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42892 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236298AbiGNHOG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 03:14:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54DDF13E13;
-        Thu, 14 Jul 2022 00:14:05 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id B205EB8239C;
-        Thu, 14 Jul 2022 07:14:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF64CC36AFE;
-        Thu, 14 Jul 2022 07:14:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1657782842;
-        bh=4uwQ+5Sa8/+mZgYRsFMw8TpJuTjXcHgtiGl4eSjuKn4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mx4t05BMJdkRRt+/6apv9dXdTEAub3oRxLybyh/5kr9fKf0FhNUdUF7eVuWBZsfUA
-         vXZIzD5yBWedVPqP6NTDCv+ZwuTLTdaAF4aJAPb4L6TCOED3k33q+PeXEoJl5Vwitr
-         6Rugl7wO4QZC4iJnjBToLKtKTYdenoB1PJ8koLHlSZvKBUxyaS/iJ2a/a1d0MY7i5h
-         rFXLgDSqck+ZL10NW108gRXx6b7FDfhedV+owW5xDlwDngsWD563pQ4J+1b/iHZb4z
-         LBoTUvwPzLu0DwsoBabl0BwU+gLPKL2HLH2jK9E25bogEAiB8H31RB+lBacxqdtdbd
-         VF9EtLEAAg1lg==
-Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan+linaro@kernel.org>)
-        id 1oBt30-0001mH-GZ; Thu, 14 Jul 2022 09:14:06 +0200
-From:   Johan Hovold <johan+linaro@kernel.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Johan Hovold <johan+linaro@kernel.org>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v2 6/8] PCI: qcom: Make all optional clocks optional
-Date:   Thu, 14 Jul 2022 09:13:46 +0200
-Message-Id: <20220714071348.6792-7-johan+linaro@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220714071348.6792-1-johan+linaro@kernel.org>
-References: <20220714071348.6792-1-johan+linaro@kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S237351AbiGNHq6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 03:46:58 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 853E432EC4;
+        Thu, 14 Jul 2022 00:46:57 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 3F950202189;
+        Thu, 14 Jul 2022 09:46:56 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id CCD85202182;
+        Thu, 14 Jul 2022 09:46:55 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 303DD180327D;
+        Thu, 14 Jul 2022 15:46:54 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
+        broonie@kernel.org, lorenzo.pieralisi@arm.com, festevam@gmail.com,
+        francesco.dolcini@toradex.com
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        kernel@pengutronix.de, linux-imx@nxp.com
+Subject: [PATCH v15 01/17] PCI: imx6: Move imx6_pcie_grp_offset(), imx6_pcie_configure_type() earlier
+Date:   Thu, 14 Jul 2022 15:30:53 +0800
+Message-Id: <1657783869-19194-2-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1657783869-19194-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1657783869-19194-1-git-send-email-hongxing.zhu@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The kernel is not a devicetree validator and does not need to re-encode
-information which is already available in the devicetree.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-This is specifically true for the optional PCIe clocks, some of which
-are really interconnect clocks.
+Move imx6_pcie_grp_offset() and imx6_pcie_configure_type() earlier in the
+file since they depend on nothing and are used by several other functions
+that will be moved earlier.  No functional change intended.
 
-Treat also the 2.7.0 optional clocks as truly optional instead of
-maintaining a list of clocks per compatible (including two compatible
-strings for the two identical controllers on sm8450) just to validate
-the devicetree.
-
-Reviewed-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Link: https://lore.kernel.org/r/1656645935-1370-2-git-send-email-hongxing.zhu@nxp.com
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Richard Zhu <hongxing.zhu@nxp.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 28 ++++----------------------
- 1 file changed, 4 insertions(+), 24 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 50 +++++++++++++--------------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 699cd8b0f38e..1339f05bee65 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -212,10 +212,6 @@ struct qcom_pcie_ops {
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 7a285fb0f619..8653ca8cbfb9 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -146,6 +146,31 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN		BIT(5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN		BIT(3)
  
- struct qcom_pcie_cfg {
- 	const struct qcom_pcie_ops *ops;
--	unsigned int has_tbu_clk:1;
--	unsigned int has_ddrss_sf_tbu_clk:1;
--	unsigned int has_aggre0_clk:1;
--	unsigned int has_aggre1_clk:1;
- };
++static unsigned int imx6_pcie_grp_offset(const struct imx6_pcie *imx6_pcie)
++{
++	WARN_ON(imx6_pcie->drvdata->variant != IMX8MQ &&
++		imx6_pcie->drvdata->variant != IMX8MM);
++	return imx6_pcie->controller_id == 1 ? IOMUXC_GPR16 : IOMUXC_GPR14;
++}
++
++static void imx6_pcie_configure_type(struct imx6_pcie *imx6_pcie)
++{
++	unsigned int mask, val;
++
++	if (imx6_pcie->drvdata->variant == IMX8MQ &&
++	    imx6_pcie->controller_id == 1) {
++		mask = IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE;
++		val  = FIELD_PREP(IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE,
++				  PCI_EXP_TYPE_ROOT_PORT);
++	} else {
++		mask = IMX6Q_GPR12_DEVICE_TYPE;
++		val  = FIELD_PREP(IMX6Q_GPR12_DEVICE_TYPE,
++				  PCI_EXP_TYPE_ROOT_PORT);
++	}
++
++	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, mask, val);
++}
++
+ static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, bool exp_val)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+@@ -415,13 +440,6 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ 					imx6_pcie->gpio_active_high);
+ }
  
- struct qcom_pcie {
-@@ -1193,14 +1189,6 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 	res->clks[idx++].id = "bus_master";
- 	res->clks[idx++].id = "bus_slave";
- 	res->clks[idx++].id = "slave_q2a";
--	if (pcie->cfg->has_tbu_clk)
--		res->clks[idx++].id = "tbu";
--	if (pcie->cfg->has_ddrss_sf_tbu_clk)
--		res->clks[idx++].id = "ddrss_sf_tbu";
--	if (pcie->cfg->has_aggre0_clk)
--		res->clks[idx++].id = "aggre0";
--	if (pcie->cfg->has_aggre1_clk)
--		res->clks[idx++].id = "aggre1";
+-static unsigned int imx6_pcie_grp_offset(const struct imx6_pcie *imx6_pcie)
+-{
+-	WARN_ON(imx6_pcie->drvdata->variant != IMX8MQ &&
+-		imx6_pcie->drvdata->variant != IMX8MM);
+-	return imx6_pcie->controller_id == 1 ? IOMUXC_GPR16 : IOMUXC_GPR14;
+-}
+-
+ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+@@ -617,24 +635,6 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	}
+ }
  
- 	num_clks = idx;
- 
-@@ -1208,6 +1196,10 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 	if (ret < 0)
- 		return ret;
- 
-+	res->clks[idx++].id = "tbu";
-+	res->clks[idx++].id = "ddrss_sf_tbu";
-+	res->clks[idx++].id = "aggre0";
-+	res->clks[idx++].id = "aggre1";
- 	res->clks[idx++].id = "noc_aggr_4";
- 	res->clks[idx++].id = "noc_aggr_south_sf";
- 	res->clks[idx++].id = "cnoc_qx";
-@@ -1636,17 +1628,14 @@ static const struct qcom_pcie_cfg ipq4019_cfg = {
- 
- static const struct qcom_pcie_cfg sa8540p_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_ddrss_sf_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sc8280xp_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_ddrss_sf_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sdm845_cfg = {
- 	.ops = &ops_2_7_0,
--	.has_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sm8150_cfg = {
-@@ -1658,31 +1647,22 @@ static const struct qcom_pcie_cfg sm8150_cfg = {
- 
- static const struct qcom_pcie_cfg sm8250_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_tbu_clk = true,
--	.has_ddrss_sf_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sm8450_pcie0_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_ddrss_sf_tbu_clk = true,
--	.has_aggre0_clk = true,
--	.has_aggre1_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sm8450_pcie1_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_ddrss_sf_tbu_clk = true,
--	.has_aggre1_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sc7280_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sc8180x_cfg = {
- 	.ops = &ops_1_9_0,
--	.has_tbu_clk = true,
- };
- 
- static const struct qcom_pcie_cfg ipq6018_cfg = {
+-static void imx6_pcie_configure_type(struct imx6_pcie *imx6_pcie)
+-{
+-	unsigned int mask, val;
+-
+-	if (imx6_pcie->drvdata->variant == IMX8MQ &&
+-	    imx6_pcie->controller_id == 1) {
+-		mask   = IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE;
+-		val    = FIELD_PREP(IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE,
+-				    PCI_EXP_TYPE_ROOT_PORT);
+-	} else {
+-		mask = IMX6Q_GPR12_DEVICE_TYPE;
+-		val  = FIELD_PREP(IMX6Q_GPR12_DEVICE_TYPE,
+-				  PCI_EXP_TYPE_ROOT_PORT);
+-	}
+-
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, mask, val);
+-}
+-
+ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ {
+ 	switch (imx6_pcie->drvdata->variant) {
 -- 
-2.35.1
+2.25.1
 
