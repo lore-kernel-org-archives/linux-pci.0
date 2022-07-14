@@ -2,297 +2,109 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A44CCA47B
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 21:47:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F8DC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 23:16:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240996AbiGNVrw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 17:47:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44224 "EHLO
+        id S240955AbiGNXQR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 19:16:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236175AbiGNVru (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 17:47:50 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 469B270987;
-        Thu, 14 Jul 2022 14:47:35 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id g16-20020a17090a7d1000b001ea9f820449so9818125pjl.5;
-        Thu, 14 Jul 2022 14:47:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=QRpP4wv4SP78zMbJieYZRGjlucw4i6a87UghGmQ/Zos=;
-        b=B2OLa4zOVsBODJNEuPedPpYhqAC6E5akFsMuJOI4gK0l9wevU4FY6lAXZWg/E490LO
-         Qer2BTg8k06oidKAdl4bbK7PucbdS35jGoia38jJKnIGwwFYgpXO7/ZFvZbR4ryNyQW/
-         nW/vAPt8VQiAdQyKFaAoUOZ/HS74nbJ76wRg3pw8rH29AABeOwusSRNBFryQ7AOY4C/N
-         gewBhw7X9Xr8AIhjl/2RoyIAcbXcRO7ZDttBE3yFXuyqWgMFayDQhg1Y1DOcw+oycjIp
-         TAiVxyXnveBLY5UGOx3bkH8f8+lUD2DdbxqIRZF+8SpW8z6zCccovk31eoytICbPyy+T
-         UcVw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=QRpP4wv4SP78zMbJieYZRGjlucw4i6a87UghGmQ/Zos=;
-        b=03b0+lree6/tMZBWW5t06HMzMdu+5KjIdsH2VMFCMfYW6I6hWQz6YE3/nvp6GoZK+h
-         iKhhya6Ae2wIUU6/PnR8/e9JEeSgWQHykbTZu0z9vYgGTXv8g3dE+3TcVpjFZIB72t9m
-         cVl7wO7EUxXRvoHnUQXlyptffHhFQ0AmqNiZ+9IOx4Ya9qNh/IFtvanmIumhPWrTat2I
-         F4laGwweINSC0c4z08HdZDjLdVhtgkqts3EnvNOspOpixrPatViJmvY6dlVNETCC+zEU
-         5qNKD7qfqpO33zLWSRG6JsPllLERqY1sFQ4Gn0BxYz5pn2P8BQ9SK4HA60NbP1RBuqns
-         y8wg==
-X-Gm-Message-State: AJIora+l1UTFdFmNKaqj8wfF0KOBL4vRm1eF+gyOZ9r4CEh1nQVgx6aO
-        /h94SiitMQ4Xn/5TlYBtlPmR0k8qDAXXRA==
-X-Google-Smtp-Source: AGRyM1s5uz3FfXCDO2h1CS+7jUumhKELLfh0Co4Djiwfjnrm57JlmZLBsOxTuueDSz+6xS1jeqEDhA==
-X-Received: by 2002:a17:902:7807:b0:16b:e3d5:b2ce with SMTP id p7-20020a170902780700b0016be3d5b2cemr10039004pll.18.1657835254498;
-        Thu, 14 Jul 2022 14:47:34 -0700 (PDT)
-Received: from localhost ([2409:10:24a0:4700:e8ad:216a:2a9d:6d0c])
-        by smtp.gmail.com with ESMTPSA id f15-20020aa7968f000000b00528c22fbb45sm2219737pfk.141.2022.07.14.14.47.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 14 Jul 2022 14:47:34 -0700 (PDT)
-From:   Stafford Horne <shorne@gmail.com>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Stafford Horne <shorne@gmail.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>, Guo Ren <guoren@kernel.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org, linux-csky@vger.kernel.org,
-        linux-riscv@lists.infradead.org, linux-um@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Subject: [RFC PATCH 2/2] asm-generic: Add new pci.h and use it
-Date:   Fri, 15 Jul 2022 06:46:57 +0900
-Message-Id: <20220714214657.2402250-3-shorne@gmail.com>
-X-Mailer: git-send-email 2.36.1
-In-Reply-To: <20220714214657.2402250-1-shorne@gmail.com>
-References: <20220714214657.2402250-1-shorne@gmail.com>
+        with ESMTP id S240929AbiGNXQN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 19:16:13 -0400
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9299372EEC;
+        Thu, 14 Jul 2022 16:16:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1657840572; x=1689376572;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=AJL06bd9lQh2AmUSTEF0Un/ArSUeAQHW+QlFFAbUKbo=;
+  b=k6cf54BXfmyUyXnLvxzvQIMmUCAA9P7qep2Nzj0eosegfx7L8TlZjyZK
+   TvRmWDFMr332dgM6yF+yh3P3bqUa9SvIiqi77RqQM8kBlTcfkx+dbwa85
+   wNOonP9KmMqpcZxGtop2W0ZCCdTyYgdncC81W4rK1WXOpdnhnjVBi6laa
+   xb6nfTX8Ft0CqHl7f/m78vlgc42bhDrOQX4jiJ6YeYPRaO1hV/JollrVj
+   C/L1gf8Sq5v1rwVXbT1lmt0JVNZq8HalMbcn4vahKHVgLq8LwsV2hySEQ
+   idGtPmBY3DD/z63sgHkV61k6TWtE0pPhu+YocudLxtX5diydMb9dj7+Wi
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10408"; a="268676967"
+X-IronPort-AV: E=Sophos;i="5.92,272,1650956400"; 
+   d="scan'208";a="268676967"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2022 16:16:11 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.92,272,1650956400"; 
+   d="scan'208";a="738449838"
+Received: from linux.intel.com ([10.54.29.200])
+  by fmsmga001.fm.intel.com with ESMTP; 14 Jul 2022 16:16:11 -0700
+Received: from rjingar-desk5.amr.corp.intel.com (vicentes-mobl.amr.corp.intel.com [10.209.132.117])
+        by linux.intel.com (Postfix) with ESMTP id 20D9958092F;
+        Thu, 14 Jul 2022 16:16:11 -0700 (PDT)
+From:   Rajvi Jingar <rajvi.jingar@linux.intel.com>
+To:     rafael.j.wysocki@intel.com, bhelgaas@google.com
+Cc:     rajvi.jingar@linux.intel.com, david.e.box@linux.intel.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org
+Subject: [PATCH v2 2/2] PCI/PTM: fix to maintain pci_dev->ptm_enabled
+Date:   Thu, 14 Jul 2022 16:16:09 -0700
+Message-Id: <20220714231609.3962051-2-rajvi.jingar@linux.intel.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220714231609.3962051-1-rajvi.jingar@linux.intel.com>
+References: <20220714231609.3962051-1-rajvi.jingar@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The asm/pci.h used for many newer architectures share similar
-definitions.  Move the common parts to asm-generic/pci.h to allow for
-sharing code.
+pci_dev->ptm_enabled needs to be maintained to reflect the current PTM
+state of the device. In pci_ptm_disable(), clear ptm_enabled from
+'struct pci_dev' on disabling PTM state for the device.
+In pci_restore_ptm_state(), set dev->ptm_enabled based on the restored
+PTM state of the device.
 
-Two things to note are:
+Also, perform ptm_enabled check in pci_ptm_disable() to avoid config
+space access in case if PTM is already disabled for the device.
 
- - isa_dma_bridge_buggy, traditionally this is defined in asm/dma.h but
-   these architectures avoid creating that file and add the definition
-   to asm/pci.h.
- - ARCH_GENERIC_PCI_MMAP_RESOURCE, csky does not define this so we
-   undefine it after including asm-generic/pci.h.  Why doesn't csky
-   define it?
-
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
-Link: https://lore.kernel.org/lkml/CAK8P3a0JmPeczfmMBE__vn=Jbvf=nkbpVaZCycyv40pZNCJJXQ@mail.gmail.com/
-Signed-off-by: Stafford Horne <shorne@gmail.com>
+Signed-off-by: Rajvi Jingar <rajvi.jingar@linux.intel.com>
 ---
- arch/arm64/include/asm/pci.h | 18 ++--------------
- arch/csky/include/asm/pci.h  | 24 ++++------------------
- arch/riscv/include/asm/pci.h | 25 +++-------------------
- arch/um/include/asm/pci.h    | 24 ++--------------------
- include/asm-generic/pci.h    | 40 ++++++++++++++++++++++++++++++++++++
- 5 files changed, 51 insertions(+), 80 deletions(-)
- create mode 100644 include/asm-generic/pci.h
+ v1->v2:
+   - add ptm_enabled check in pci_ptm_disable().
+   - set the dev->ptm_enabled value in pci_restore_ptm_state().
+---
+ drivers/pci/pcie/ptm.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-index b33ca260e3c9..016eb6b46dc0 100644
---- a/arch/arm64/include/asm/pci.h
-+++ b/arch/arm64/include/asm/pci.h
-@@ -9,7 +9,6 @@
- #include <asm/io.h>
+diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+index 368a254e3124..8dc7d2285a0d 100644
+--- a/drivers/pci/pcie/ptm.c
++++ b/drivers/pci/pcie/ptm.c
+@@ -34,6 +34,9 @@ void pci_disable_ptm(struct pci_dev *dev)
+ 	int ptm;
+ 	u16 ctrl;
  
- #define PCIBIOS_MIN_IO		0x1000
--#define PCIBIOS_MIN_MEM		0
- 
- /*
-  * Set to 1 if the kernel should re-assign all PCI bus numbers
-@@ -18,21 +17,8 @@
- 	(pci_has_flag(PCI_REASSIGN_ALL_BUS))
- 
- #define arch_can_pci_mmap_wc() 1
--#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
- 
--extern int isa_dma_bridge_buggy;
--
--#ifdef CONFIG_PCI
--static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
--{
--	/* no legacy IRQ on arm64 */
--	return -ENODEV;
--}
--
--static inline int pci_proc_domain(struct pci_bus *bus)
--{
--	return 1;
--}
--#endif  /* CONFIG_PCI */
-+/* Generic PCI */
-+#include <asm-generic/pci.h>
- 
- #endif  /* __ASM_PCI_H */
-diff --git a/arch/csky/include/asm/pci.h b/arch/csky/include/asm/pci.h
-index ebc765b1f78b..44866c1ad461 100644
---- a/arch/csky/include/asm/pci.h
-+++ b/arch/csky/include/asm/pci.h
-@@ -9,26 +9,10 @@
- 
- #include <asm/io.h>
- 
--#define PCIBIOS_MIN_IO		0
--#define PCIBIOS_MIN_MEM		0
-+/* Generic PCI */
-+#include <asm-generic/pci.h>
- 
--/* C-SKY shim does not initialize PCI bus */
--#define pcibios_assign_all_busses() 1
--
--extern int isa_dma_bridge_buggy;
--
--#ifdef CONFIG_PCI
--static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
--{
--	/* no legacy IRQ on csky */
--	return -ENODEV;
--}
--
--static inline int pci_proc_domain(struct pci_bus *bus)
--{
--	/* always show the domain in /proc */
--	return 1;
--}
--#endif  /* CONFIG_PCI */
-+/* csky doesn't use generic pci resource mapping */
-+#undef ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- #endif  /* __ASM_CSKY_PCI_H */
-diff --git a/arch/riscv/include/asm/pci.h b/arch/riscv/include/asm/pci.h
-index 7fd52a30e605..12ce8150cfb0 100644
---- a/arch/riscv/include/asm/pci.h
-+++ b/arch/riscv/include/asm/pci.h
-@@ -12,29 +12,7 @@
- 
- #include <asm/io.h>
- 
--#define PCIBIOS_MIN_IO		0
--#define PCIBIOS_MIN_MEM		0
--
--/* RISC-V shim does not initialize PCI bus */
--#define pcibios_assign_all_busses() 1
--
--#define ARCH_GENERIC_PCI_MMAP_RESOURCE 1
--
--extern int isa_dma_bridge_buggy;
--
- #ifdef CONFIG_PCI
--static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
--{
--	/* no legacy IRQ on risc-v */
--	return -ENODEV;
--}
--
--static inline int pci_proc_domain(struct pci_bus *bus)
--{
--	/* always show the domain in /proc */
--	return 1;
--}
--
- #ifdef	CONFIG_NUMA
- 
- static inline int pcibus_to_node(struct pci_bus *bus)
-@@ -50,4 +28,7 @@ static inline int pcibus_to_node(struct pci_bus *bus)
- 
- #endif  /* CONFIG_PCI */
- 
-+/* Generic PCI */
-+#include <asm-generic/pci.h>
++	if (!dev->ptm_enabled)
++		return;
 +
- #endif  /* _ASM_RISCV_PCI_H */
-diff --git a/arch/um/include/asm/pci.h b/arch/um/include/asm/pci.h
-index da13fd5519ef..34fe4921b5fa 100644
---- a/arch/um/include/asm/pci.h
-+++ b/arch/um/include/asm/pci.h
-@@ -4,28 +4,8 @@
- #include <linux/types.h>
- #include <asm/io.h>
+ 	if (!pci_is_pcie(dev))
+ 		return;
  
--#define PCIBIOS_MIN_IO		0
--#define PCIBIOS_MIN_MEM		0
--
--#define pcibios_assign_all_busses() 1
--
--extern int isa_dma_bridge_buggy;
--
--#ifdef CONFIG_PCI
--static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
--{
--	/* no legacy IRQs */
--	return -ENODEV;
--}
--#endif
--
--#ifdef CONFIG_PCI_DOMAINS
--static inline int pci_proc_domain(struct pci_bus *bus)
--{
--	/* always show the domain in /proc */
--	return 1;
--}
--#endif  /* CONFIG_PCI */
-+/* Generic PCI */
-+#include <asm-generic/pci.h>
+@@ -44,6 +47,7 @@ void pci_disable_ptm(struct pci_dev *dev)
+ 	pci_read_config_word(dev, ptm + PCI_PTM_CTRL, &ctrl);
+ 	ctrl &= ~(PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT);
+ 	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, ctrl);
++	dev->ptm_enabled = 0;
+ }
  
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
- /*
-diff --git a/include/asm-generic/pci.h b/include/asm-generic/pci.h
-new file mode 100644
-index 000000000000..1aa4d7a08aca
---- /dev/null
-+++ b/include/asm-generic/pci.h
-@@ -0,0 +1,40 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+
-+#ifndef __ASM_GENERIC_PCI_H
-+#define __ASM_GENERIC_PCI_H
-+
-+#include <linux/types.h>
-+
-+#ifndef PCIBIOS_MIN_IO
-+#define PCIBIOS_MIN_IO		0
-+#endif
-+
-+#define PCIBIOS_MIN_MEM		0
-+
-+#ifndef pcibios_assign_all_busses
-+/* For bootloaders that do not initialize the PCI bus */
-+#define pcibios_assign_all_busses() 1
-+#endif
-+
-+extern int isa_dma_bridge_buggy;
-+
-+/* Enable generic resource mapping code in drivers/pci/ */
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
-+
-+#ifdef CONFIG_PCI
-+
-+static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
-+{
-+	/* no legacy ide irq support */
-+	return -ENODEV;
-+}
-+
-+static inline int pci_proc_domain(struct pci_bus *bus)
-+{
-+	/* always show the domain in /proc */
-+	return 1;
-+}
-+
-+#endif /* CONFIG_PCI */
-+
-+#endif /* __ASM_GENERIC_PCI_H */
+ void pci_save_ptm_state(struct pci_dev *dev)
+@@ -83,6 +87,7 @@ void pci_restore_ptm_state(struct pci_dev *dev)
+ 
+ 	cap = (u16 *)&save_state->cap.data[0];
+ 	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, *cap);
++	dev->ptm_enabled = !!(*cap & PCI_PTM_CTRL_ENABLE);
+ }
+ 
+ void pci_ptm_init(struct pci_dev *dev)
 -- 
-2.36.1
+2.25.1
 
