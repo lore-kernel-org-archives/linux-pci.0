@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F9EECCA47B
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:48:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3587EC43334
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 07:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237449AbiGNHsB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 03:48:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43840 "EHLO
+        id S237690AbiGNHsD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 03:48:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237560AbiGNHrY (ORCPT
+        with ESMTP id S237563AbiGNHrY (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 03:47:24 -0400
 Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55713A4A5;
-        Thu, 14 Jul 2022 00:47:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E77973A49B;
+        Thu, 14 Jul 2022 00:47:11 -0700 (PDT)
 Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 3BADD202185;
-        Thu, 14 Jul 2022 09:47:08 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 7CA6B202176;
+        Thu, 14 Jul 2022 09:47:10 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 025D9202192;
-        Thu, 14 Jul 2022 09:47:08 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 43515202179;
+        Thu, 14 Jul 2022 09:47:10 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id B3821180327D;
-        Thu, 14 Jul 2022 15:47:06 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 00CB8180327D;
+        Thu, 14 Jul 2022 15:47:08 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
         broonie@kernel.org, lorenzo.pieralisi@arm.com, festevam@gmail.com,
@@ -30,9 +30,9 @@ To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
 Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         kernel@pengutronix.de, linux-imx@nxp.com
-Subject: [PATCH v15 12/17] PCI: imx6: Mark the link down as non-fatal error
-Date:   Thu, 14 Jul 2022 15:31:04 +0800
-Message-Id: <1657783869-19194-13-git-send-email-hongxing.zhu@nxp.com>
+Subject: [PATCH v15 14/17] PCI: imx6: Do not hide PHY driver callbacks and refine the error handling
+Date:   Thu, 14 Jul 2022 15:31:06 +0800
+Message-Id: <1657783869-19194-15-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1657783869-19194-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1657783869-19194-1-git-send-email-hongxing.zhu@nxp.com>
@@ -41,66 +41,95 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If the PCIe link is down, return zero from imx6_pcie_start_link() so the
-driver will probe successfully.
+- Move the phy_power_on() to host_init from imx6_pcie_clk_enable().
+- Move the phy_init() to host_init from imx6_pcie_deassert_core_reset().
 
-[bhelgaas: drop imx6_pcie_start_link() return value check here instead of
-in next patch, pointed out by Lucas]
-Link: https://lore.kernel.org/r/1656645935-1370-13-git-send-email-hongxing.zhu@nxp.com
+Refine the error handling in imx6_pcie_host_init() accordingly.
+
+Link: https://lore.kernel.org/r/1656645935-1370-15-git-send-email-hongxing.zhu@nxp.com
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 36 +++++++++++++++++----------
+ 1 file changed, 23 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index d263574e5c85..3ac4f2aa91c5 100644
+index ad0933c3dc70..afb4d58fd693 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -836,7 +836,9 @@ static int imx6_pcie_start_link(struct dw_pcie *pci)
- 	/* Start LTSSM. */
- 	imx6_pcie_ltssm_enable(dev);
- 
--	dw_pcie_wait_for_link(pci);
-+	ret = dw_pcie_wait_for_link(pci);
-+	if (ret)
-+		goto err_reset_phy;
- 
- 	if (pci->link_gen == 2) {
- 		/* Allow Gen2 mode after the link is up. */
-@@ -872,7 +874,9 @@ static int imx6_pcie_start_link(struct dw_pcie *pci)
- 		}
- 
- 		/* Make sure link training is finished as well! */
--		dw_pcie_wait_for_link(pci);
-+		ret = dw_pcie_wait_for_link(pci);
-+		if (ret)
-+			goto err_reset_phy;
- 	} else {
- 		dev_info(dev, "Link: Gen2 disabled\n");
+@@ -639,14 +639,6 @@ static int imx6_pcie_clk_enable(struct imx6_pcie *imx6_pcie)
+ 		goto err_ref_clk;
  	}
-@@ -886,7 +890,7 @@ static int imx6_pcie_start_link(struct dw_pcie *pci)
- 		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG0),
- 		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG1));
- 	imx6_pcie_reset_phy(imx6_pcie);
--	return ret;
-+	return 0;
- }
  
- static int imx6_pcie_host_init(struct pcie_port *pp)
-@@ -1028,10 +1032,7 @@ static int imx6_pcie_resume_noirq(struct device *dev)
- 		return ret;
- 	dw_pcie_setup_rc(pp);
- 
--	ret = imx6_pcie_start_link(imx6_pcie->pci);
--	if (ret < 0)
--		dev_info(dev, "pcie link is down after resume.\n");
--
-+	imx6_pcie_start_link(imx6_pcie->pci);
+-	switch (imx6_pcie->drvdata->variant) {
+-	case IMX8MM:
+-		if (phy_power_on(imx6_pcie->phy))
+-			dev_err(dev, "unable to power on PHY\n");
+-		break;
+-	default:
+-		break;
+-	}
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
  	return 0;
- }
- #endif
+@@ -723,10 +715,6 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	case IMX8MQ:
+ 		reset_control_deassert(imx6_pcie->pciephy_reset);
+ 		break;
+-	case IMX8MM:
+-		if (phy_init(imx6_pcie->phy))
+-			dev_err(dev, "waiting for phy ready timeout!\n");
+-		break;
+ 	case IMX7D:
+ 		reset_control_deassert(imx6_pcie->pciephy_reset);
+ 
+@@ -762,6 +750,7 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 		usleep_range(200, 500);
+ 		break;
+ 	case IMX6Q:		/* Nothing to do */
++	case IMX8MM:
+ 		break;
+ 	}
+ 
+@@ -914,16 +903,37 @@ static int imx6_pcie_host_init(struct pcie_port *pp)
+ 
+ 	imx6_pcie_assert_core_reset(imx6_pcie);
+ 	imx6_pcie_init_phy(imx6_pcie);
++
++	if (imx6_pcie->phy) {
++		ret = phy_power_on(imx6_pcie->phy);
++		if (ret) {
++			dev_err(dev, "pcie phy power up failed\n");
++			goto err_reg_disable;
++		}
++	}
++
+ 	ret = imx6_pcie_deassert_core_reset(imx6_pcie);
+ 	if (ret < 0) {
+ 		dev_err(dev, "pcie deassert core reset failed: %d\n", ret);
+-		goto err_reg_disable;
++		goto err_phy_off;
+ 	}
+ 
++	if (imx6_pcie->phy) {
++		ret = phy_init(imx6_pcie->phy);
++		if (ret) {
++			dev_err(dev, "waiting for phy ready timeout!\n");
++			goto err_clk_disable;
++		}
++	}
+ 	imx6_setup_phy_mpll(imx6_pcie);
+ 
+ 	return 0;
+ 
++err_clk_disable:
++	imx6_pcie_clk_disable(imx6_pcie);
++err_phy_off:
++	if (imx6_pcie->phy)
++		phy_power_off(imx6_pcie->phy);
+ err_reg_disable:
+ 	if (imx6_pcie->vpcie)
+ 		regulator_disable(imx6_pcie->vpcie);
 -- 
 2.25.1
 
