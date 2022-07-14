@@ -2,51 +2,62 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F673C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 05:06:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D97CBC433EF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Jul 2022 05:12:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231570AbiGNFG1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 01:06:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50894 "EHLO
+        id S232501AbiGNFM4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 01:12:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57572 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232847AbiGNFGD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 01:06:03 -0400
-X-Greylist: delayed 329 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 13 Jul 2022 22:01:47 PDT
-Received: from cavan.codon.org.uk (irc.codon.org.uk [IPv6:2a00:1098:84:22e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4B9F1D0D6
-        for <linux-pci@vger.kernel.org>; Wed, 13 Jul 2022 22:01:47 -0700 (PDT)
-Received: by cavan.codon.org.uk (Postfix, from userid 1000)
-        id 0558340A56; Thu, 14 Jul 2022 05:56:13 +0100 (BST)
-Date:   Thu, 14 Jul 2022 05:56:13 +0100
-From:   Matthew Garrett <mjg59@srcf.ucam.org>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Manyi Li <limanyi@uniontech.com>, bhelgaas@google.com,
-        refactormyself@gmail.com, kw@linux.com, rajatja@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Vidya Sagar <vidyas@nvidia.com>
-Subject: Re: [PATCH] PCI/ASPM: Should not report ASPM support to BIOS if FADT
- indicates ASPM is unsupported
-Message-ID: <20220714045613.GA8720@srcf.ucam.org>
-References: <20220713112612.6935-1-limanyi@uniontech.com>
- <20220713182852.GA841582@bhelgaas>
- <CAAd53p7g2Md73=UU6Rp-TZkksc+H02KAX58bWCzsgQ__VwvJ+g@mail.gmail.com>
+        with ESMTP id S232656AbiGNFMz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 01:12:55 -0400
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08974EB2;
+        Wed, 13 Jul 2022 22:12:54 -0700 (PDT)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 8B49567373; Thu, 14 Jul 2022 07:12:48 +0200 (CEST)
+Date:   Thu, 14 Jul 2022 07:12:48 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org, iommu@lists.linux-foundation.org,
+        iommu@lists.linux.dev, Stephen Bates <sbates@raithlin.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Don Dutile <ddutile@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Minturn Dave B <dave.b.minturn@intel.com>,
+        Jason Ekstrand <jason@jlekstrand.net>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Xiong Jianxin <jianxin.xiong@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Martin Oliveira <martin.oliveira@eideticom.com>,
+        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
+        Ralph Campbell <rcampbell@nvidia.com>
+Subject: Re: [PATCH v8 01/13] lib/scatterlist: add flag for indicating
+ P2PDMA segments in an SGL
+Message-ID: <20220714051248.GA23381@lst.de>
+References: <20220708165104.5005-1-logang@deltatee.com> <20220708165104.5005-2-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAAd53p7g2Md73=UU6Rp-TZkksc+H02KAX58bWCzsgQ__VwvJ+g@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20220708165104.5005-2-logang@deltatee.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 14, 2022 at 11:20:26AM +0800, Kai-Heng Feng wrote:
+Do we need the dma_ prefix for the flags field?  That's just what it
+is used for now.
 
-> According to commit 387d37577fdd ("PCI: Don't clear ASPM bits when the
-> FADT declares it's unsupported"), the bit means "just use the ASPM
+Otherwise looks good:
 
-Yes, the assumption is that if the BIOS set up ASPM but FADT indicates 
-it's unsupported, just trust that the BIOS did the right thing and don't 
-interfere. It's been a long time, but when we were clearing the ASPM 
-bits in response to this FADT setting, a bunch of machines suddenly 
-started consuming a lot more power than when running Windows.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
