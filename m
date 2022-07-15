@@ -2,118 +2,125 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2C9ACCA481
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Jul 2022 08:09:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11453C43334
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Jul 2022 08:24:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231739AbiGOIJN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Jul 2022 04:09:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37074 "EHLO
+        id S230407AbiGOIYt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Jul 2022 04:24:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232128AbiGOIJL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2022 04:09:11 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3CA91CB0E;
-        Fri, 15 Jul 2022 01:09:10 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id o31-20020a17090a0a2200b001ef7bd037bbso5460905pjo.0;
-        Fri, 15 Jul 2022 01:09:10 -0700 (PDT)
+        with ESMTP id S229725AbiGOIYs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2022 04:24:48 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AD2124BFC
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jul 2022 01:24:47 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id y9so4048775pff.12
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jul 2022 01:24:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
+        d=linaro.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=rdXFs9dhHEmYQ1p1ijyoJFheXKNT53wMg7gaHyHajRs=;
-        b=CMwx5eWilpke9A9U9PysLhgq3oj9UQNtzcPAIT+GD2mwU7iJ5D9avNU4vepTupSqT5
-         Ry3WSe6U/gq91OuuORRb/PwxDxIV46EJ7yJtaxAgQnMfIv3ns8Y76socd7HtbYnes/vY
-         gibUanTNA1O/GuZaS6JvJ41aRLNRg6pFANQTP24fE9L2XNNlM00uKjaaYS59npH5iPf1
-         e6OGfvh9tPZwT4KJuDGDUYA5y0SfexTeU8QJaDPgdkA+SzVPJIZb666muYMf6uLfXwSr
-         Hp/flc16jmPROVMcXhQsS+ZXEY0+VF+sPF6rWzjq8zenyPKrFXYq/ExiPuHJc85+s8F0
-         1yrA==
+         :content-disposition:in-reply-to:user-agent;
+        bh=Zq/ENRoQXla91PhPgglndMgEOmTX2K4lBPbsP0r9Ao8=;
+        b=WV3I9/g+DoBl2rKdJzZIOZnex1O3fMhDD02zypuxlqAoAYyeFOCIm1mMiXJ5sH9Q6c
+         QfrkveEcQg27Fw80Ym55wh9PdHckQS6Ju+hIolFG+wuAvbXl4D5+Kz1rXRg176uKikkv
+         dvZAKadJysOVZckODLGocL0Rh5tW/egnDLlTLmKN1a3xUnrKa/pESEC5lT4Z9pQt0tRv
+         C8iSvXCiU5qVkSLGnIqbSjj0N4QgDgtjzoIiGTzi/6Ta1My4QCSTRiFLfVzen1o0++IY
+         QvIa5jujS1DV7VgKj7d1nkBxNfNPw6U9Vmse8k0ko5LmItAMbU0jYEh1kIbPpgC8HSss
+         rPdQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=rdXFs9dhHEmYQ1p1ijyoJFheXKNT53wMg7gaHyHajRs=;
-        b=pOZtfQdhoe4xW5lrU22I796qCbgFuJ1KjHNUujHuFClYe4BSVgDOl08otnGKwRQpfD
-         f0+5s8Myn6FgW5LtYorMKf3NNiVul/epfkfAylZYOlNSVYCPD6eSG3QDBGoAL73qkTye
-         Nu0dk9bEb8DyKmVfD7jxCfSOYwMhiUa/PM2w7CHyXlkQ6f7F7M6RSmYXWBSGL958eurX
-         eD2/zRsUvZjlzy4Z5Z+JCfpmO5kRCb2v4k723DTlbF3iztrNzRGp+8QkqveMDBS0VXG+
-         Vw8zIFpCv0eHHxL7Bt1EnfngrtH+SYqltTvq6ejSkAhelYbRfVbdlPK6+q6ceQcbxbtF
-         elcw==
-X-Gm-Message-State: AJIora84k56Khabpop5hRdWgGTGiGD8mTUtZ4HktZqbJ8sxGE1Bi9B0E
-        QzJdGCWRJtqSoF1M6fb2PVc=
-X-Google-Smtp-Source: AGRyM1srfbhQP54d3VOBFEBlurpmpSM2rwsylrne55YbDoqcDEgAyDzopM+ftR3vmVuJpDXcCkXP2Q==
-X-Received: by 2002:a17:90b:1bc7:b0:1f0:34e2:5c86 with SMTP id oa7-20020a17090b1bc700b001f034e25c86mr13954875pjb.136.1657872550151;
-        Fri, 15 Jul 2022 01:09:10 -0700 (PDT)
-Received: from debian.me (subs02-180-214-232-22.three.co.id. [180.214.232.22])
-        by smtp.gmail.com with ESMTPSA id a5-20020aa78e85000000b00525b61f4792sm3073193pfr.109.2022.07.15.01.09.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Jul 2022 01:09:09 -0700 (PDT)
-Received: by debian.me (Postfix, from userid 1000)
-        id 601A51008E0; Fri, 15 Jul 2022 15:09:06 +0700 (WIB)
-Date:   Fri, 15 Jul 2022 15:09:05 +0700
-From:   Bagas Sanjaya <bagasdotme@gmail.com>
-To:     Yicong Yang <yangyicong@hisilicon.com>
-Cc:     gregkh@linuxfoundation.org, alexander.shishkin@linux.intel.com,
-        leo.yan@linaro.org, james.clark@arm.com, will@kernel.org,
-        robin.murphy@arm.com, acme@kernel.org, peterz@infradead.org,
-        corbet@lwn.net, mathieu.poirier@linaro.org, mark.rutland@arm.com,
-        jonathan.cameron@huawei.com, john.garry@huawei.com,
-        helgaas@kernel.org, lorenzo.pieralisi@arm.com,
-        suzuki.poulose@arm.com, joro@8bytes.org,
-        shameerali.kolothum.thodi@huawei.com, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-perf-users@vger.kernel.org,
-        iommu@lists.linux-foundation.org, iommu@lists.linux.dev,
-        linux-doc@vger.kernel.org, prime.zeng@huawei.com,
-        liuqi115@huawei.com, zhangshaokun@hisilicon.com,
-        linuxarm@huawei.com
-Subject: Re: [PATCH v10 7/8] docs: trace: Add HiSilicon PTT device driver
- documentation
-Message-ID: <YtEgoZveaZJ3a7+4@debian.me>
-References: <20220714092710.53486-1-yangyicong@hisilicon.com>
- <20220714092710.53486-8-yangyicong@hisilicon.com>
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=Zq/ENRoQXla91PhPgglndMgEOmTX2K4lBPbsP0r9Ao8=;
+        b=l8rFeo4Aii9hnsAqCBUF+OHizK4q7nNLm3oGYW5kFVrBa2sWKB8wWgIqlBn6Y+929d
+         8Ih9Nnfy4h3sgLq0E3hcTumtiyC8LGFhJqQNZhFt7kScm7tXibpU/Z3nxYZUExWvD/y2
+         t6PrZgueX20WVzY/xoSDTrTyxlRV9LJIbraqnmNPhEklCAR1dMlx0Aur8nheP7hu/r+U
+         Gufnf9ouGzsuS+fkyRDUyoziylnmH2nb4gwn9vEPgP4zOYvdFUt/EP2wCoMxAcxMTC7w
+         vrCLbfZdlvdk5la7V8EZtzr/pIVGryAbXYYYHXnMwJk3Z3F14o2phrOgYRAAD5V4HIGI
+         +ffw==
+X-Gm-Message-State: AJIora++/+nJDnLsjo0Z9MhoHy5p+0q1wgV76iBFWdMKrxX0BW5sAnxX
+        TQeCpzNagX9mySux6aKjKsNE
+X-Google-Smtp-Source: AGRyM1vPh8pjtPYU81D/m9wIV5jmZRQ48TYfalrYpXHP1pXUAWlQTonOCipMZ3zFW80/A7ekVCcZWg==
+X-Received: by 2002:a63:190b:0:b0:416:10ee:3c7a with SMTP id z11-20020a63190b000000b0041610ee3c7amr11156440pgl.490.1657873486699;
+        Fri, 15 Jul 2022 01:24:46 -0700 (PDT)
+Received: from workstation ([117.248.1.85])
+        by smtp.gmail.com with ESMTPSA id g1-20020a17090a708100b001ef3cec7f47sm2828835pjk.52.2022.07.15.01.24.41
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 15 Jul 2022 01:24:46 -0700 (PDT)
+Date:   Fri, 15 Jul 2022 13:54:40 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, swboyd@chromium.org,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2] PCI: qcom: Allow L1 and its sub states
+Message-ID: <20220715082440.GB12197@workstation>
+References: <1654240730-31322-1-git-send-email-quic_krichai@quicinc.com>
+ <1655298939-392-1-git-send-email-quic_krichai@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220714092710.53486-8-yangyicong@hisilicon.com>
+In-Reply-To: <1655298939-392-1-git-send-email-quic_krichai@quicinc.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 14, 2022 at 05:27:09PM +0800, Yicong Yang wrote:
-> +1. Tx path QoS control
-> +------------------------
+On Wed, Jun 15, 2022 at 06:45:39PM +0530, Krishna chaitanya chundru wrote:
+> Allow L1 and its sub-states in the qcom pcie driver.
+> By default this is disabled in the hardware. So enabling it explicitly.
+> 
+
+You are enabling L1ss for controllers belonging to 2_7_0, so this should
+be mentioned in the commit message. Otherwise, it will imply that the
+L1ss is added for all controller versions.
+
+> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+> ---
+
+Change log should be added here for versions > 1.
+
+Thanks,
+Mani
+
+>  drivers/pci/controller/dwc/pcie-qcom.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 6ab9089..0d8efcc 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -41,6 +41,9 @@
+>  #define L23_CLK_RMV_DIS				BIT(2)
+>  #define L1_CLK_RMV_DIS				BIT(1)
+>  
+> +#define PCIE20_PARF_PM_CTRL			0x20
+> +#define REQ_NOT_ENTR_L1				BIT(5)
 > +
-<snip>
-> +2. Tx path buffer control
-> +-------------------------
+>  #define PCIE20_PARF_PHY_CTRL			0x40
+>  #define PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK	GENMASK(20, 16)
+>  #define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		((x) << 16)
+> @@ -1267,6 +1270,11 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
+>  	val |= BIT(4);
+>  	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
+>  
+> +	/* Enable L1 and L1ss */
+> +	val = readl(pcie->parf + PCIE20_PARF_PM_CTRL);
+> +	val &= ~REQ_NOT_ENTR_L1;
+> +	writel(val, pcie->parf + PCIE20_PARF_PM_CTRL);
 > +
-
-Shouldn't Tx in the headings above be lowercase (tx)?
-
-> +1. filter
-> +---------
-<snip>
-> +2. type
-> +-------
-<snip>
-> +3. direction
-> +------------
-<snip>
-> +4. format
-> +--------------
-<snip>
-> +5. memory management
-> +--------------------
-<snip>
-> +6. decoding
-> +-----------
-
-I think these headings above should use title case instead.
-
-Anyway, the documentation (htmldocs) builds successfully without new
-warnings.
-
-Reviewed-by: Bagas Sanjaya <bagasdotme@gmail.com>
-
--- 
-An old man doll... just what I always wanted! - Clara
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>  		val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
+>  		val |= BIT(31);
+> -- 
+> 2.7.4
+> 
