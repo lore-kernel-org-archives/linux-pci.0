@@ -2,129 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB03C43334
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Jul 2022 12:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C1C2C433EF
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Jul 2022 12:32:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234699AbiGOM2Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Jul 2022 08:28:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42142 "EHLO
+        id S229582AbiGOMca convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Jul 2022 08:32:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234052AbiGOM2E (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2022 08:28:04 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE83D82FA3;
-        Fri, 15 Jul 2022 05:28:02 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 26F8p324004117;
-        Fri, 15 Jul 2022 11:59:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=jReLj1U1PfgtLm6EGtYmbWuSw29A3TL63GS9rbvxQog=;
- b=QESqGkIg02S/xv+yiUSWyTr1p9rzFAe8J0Rs5eoxWKzPdXS6C2W/7A87seG2/qBpu2Dv
- aPEOLCVsG/gn+AHAxdkh0ts7Iypig3WQq4UDihFiY9EJZF/T8isLpT8ZnPVialZRY6UG
- oVUYQvWmNT43865czD1aDk4abnBwE5QQ8jkkwhvn9PichLiwZw6iWuYeiDo8L4b1ehAk
- 4iUuEC9WwAkte5tbs52OKtQgPzb3STV7hCN0EqV7PEDJsNIg9N/8XvNgQ+0Z6NSOTrd2
- ODSRERKh+mdsWdMsUxVs69PyAivoXUmwZr273FpoTDfCR53OzZmdhVErknz6HkXddQGM cQ== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3hay68sdt5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 15 Jul 2022 11:59:49 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 26FBxiqr007357;
-        Fri, 15 Jul 2022 11:59:44 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3h72rjjfhx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 15 Jul 2022 11:59:44 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 26FBxiG7007352;
-        Fri, 15 Jul 2022 11:59:44 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.37])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 26FBxi4Y007351;
-        Fri, 15 Jul 2022 11:59:44 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id 38B7A42E3; Fri, 15 Jul 2022 17:29:43 +0530 (+0530)
-From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
-To:     helgaas@kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mka@chromium.org,
-        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
-        quic_ramkri@quicinc.com, manivannan.sadhasivam@linaro.org,
-        swboyd@chromium.org, dmitry.baryshkov@linaro.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3] PCI: qcom: Allow L1 and its sub states
-Date:   Fri, 15 Jul 2022 17:29:25 +0530
-Message-Id: <1657886366-32685-1-git-send-email-quic_krichai@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: P4UbRrN_ykF2fK_iu9iffInOk0goZs4j
-X-Proofpoint-ORIG-GUID: P4UbRrN_ykF2fK_iu9iffInOk0goZs4j
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.883,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-07-15_04,2022-07-15_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 phishscore=0
- mlxlogscore=891 spamscore=0 malwarescore=0 suspectscore=0 mlxscore=0
- adultscore=0 impostorscore=0 priorityscore=1501 clxscore=1011
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2206140000 definitions=main-2207150053
+        with ESMTP id S229525AbiGOMc3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2022 08:32:29 -0400
+Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79D1713D65;
+        Fri, 15 Jul 2022 05:32:28 -0700 (PDT)
+Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-31bf3656517so45209557b3.12;
+        Fri, 15 Jul 2022 05:32:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=OjxnZb7meHcqrP1kpVMixA9ZvzRnaNtGWdUlQK9VV+M=;
+        b=GNQt0nYETwGug4NvYtq1njmDLF2jzfDzbYnBo/R+pBumV2+qYNqIwcjYXDskUZ8rGo
+         MjDWGSIu5xK5Wm2wEj0fGAWbH3qRn19N5aUNLMm58Tzxy+aBKJ2e/eISNklxr9FrQiDn
+         MzqhJ+pqrAIAfzQrfvBGAlyxuo9dY2+Pakcw+d6jVKy/C35DGB1JfATEJ/6O3KQ4O14n
+         JigHaXRwzcAx+YDzOnj3f5z45uDwiyR84HQTF55S4+kOfpt+g7zZESZf5p9hJZdzhpz+
+         9KgLLLvxuAHwFK5pCWUdM1jcY2YDHAlCQ1uEG4lU2ids3x/8mPgLYgPwuNY/J+EtSbii
+         P0RA==
+X-Gm-Message-State: AJIora+lv/3ZYlykD76T0vrdoNNKe/h5ePE2dNViWg8A6VAFtsKEKYEw
+        OhSw+4OTeIcYe03SCKt2RyK8YPph1VgR2yNcQln5fEcOeeA=
+X-Google-Smtp-Source: AGRyM1s++VDNfV3ZtENKhzMx6BK4IlNXSALHoNcFxPJGeuFyVGgf3QqnXWE9Kej9RrfsQd8N01hZjKxD6oq5n1kNOR0=
+X-Received: by 2002:a81:17d0:0:b0:31c:c5e2:fc1e with SMTP id
+ 199-20020a8117d0000000b0031cc5e2fc1emr15917280ywx.196.1657888347705; Fri, 15
+ Jul 2022 05:32:27 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220713112612.6935-1-limanyi@uniontech.com> <20220713182852.GA841582@bhelgaas>
+ <CAAd53p7g2Md73=UU6Rp-TZkksc+H02KAX58bWCzsgQ__VwvJ+g@mail.gmail.com>
+ <7305201c-eaf2-cb36-80fe-15174d3e33c7@uniontech.com> <20220715082945.GA10661@srcf.ucam.org>
+ <c8498fc1-854f-efdc-bbc8-3de67dcf6430@uniontech.com> <20220715093236.GA12020@srcf.ucam.org>
+ <62d14039.1c69fb81.86d3c.71c2SMTPIN_ADDED_BROKEN@mx.google.com>
+In-Reply-To: <62d14039.1c69fb81.86d3c.71c2SMTPIN_ADDED_BROKEN@mx.google.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Fri, 15 Jul 2022 14:32:16 +0200
+Message-ID: <CAJZ5v0hQezrqP8W0GBs8edqTLxZ=ZBmqYsevn57PUgnEDf0EXg@mail.gmail.com>
+Subject: Re: [PATCH] PCI/ASPM: Should not report ASPM support to BIOS if FADT
+ indicates ASPM is unsupported
+To:     Manyi Li <limanyi@uniontech.com>
+Cc:     Matthew Garrett <mjg59@srcf.ucam.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Rajat Jain <rajatja@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Allow L1 and its sub-states in the qcom pcie driver.
-By default this is disabled in the qcom specific hardware.
-So enabling it explicitly only for controllers belonging to
-2_7_0.
+On Fri, Jul 15, 2022 at 12:23 PM Manyi Li <limanyi@uniontech.com> wrote:
+>
+>
+>
+> On 2022/7/15 17:32, Matthew Garrett wrote:
+> > On Fri, Jul 15, 2022 at 05:19:25PM +0800, Manyi Li wrote:
+> >>
+> >>
+> >> On 2022/7/15 16:29, Matthew Garrett wrote:
+> >>> On Fri, Jul 15, 2022 at 03:40:36PM +0800, Manyi Li wrote:
+> >>>
+> >>>> Please see the details of this issus:
+> >>>> https://bugzilla.kernel.org/show_bug.cgi?id=216245
+> >>>
+> >>> Hmm. The only case where changing aspm_support_enabled to false should
+> >>> matter is in pcie_aspm_init_link_state(), where it looks like we'll
+> >>> potentially rewrite some registers even if aspm_disabled is true. I
+> >>> think in theory we shouldn't actually modify anything as a result, and
+> >>> the lspcis from the bug don't show any ASPM values having changed, but I
+> >>> don't trust Realtek hardware in the general case so maybe it gets upset
+> >>> here? If the proposed patch is to just set aspm_support_enabled to false
+> >>> when we see the FADT bit set then I think this is fine.
+> >>>
+> >>
+> >> "aspm_support_enabled" alse be used in calculate_support():
+> >> if (pcie_aspm_support_enabled())
+> >>      support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+> >> When set OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT, cause this AER
+> >> issue. I want don't set OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT when
+> >> we see the FADT bit set.
+> >
+> > Oh hm. Are you sure it's the OSC call that breaks it? I have some
+>
+> I don't sure.
+>
+> > recollection that I verified the behaviour of Windows here, but it's
+> > been over 10 years since I touched this so I could well be wrong. I can
+> > try to set up a test env to verify the behaviour of Windows when it
+> > comes to _OSC if the FADT says ASPM is unsupported.
+> >
+> but, I did a test，this modification also solves the problem:
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index d57cf8454b93..b3ea8e886d7c 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -494,8 +494,8 @@ static u32 calculate_support(void)
+>          support |= OSC_PCI_HPX_TYPE_3_SUPPORT;
+>       if (pci_ext_cfg_avail())
+>               support |= OSC_PCI_EXT_CONFIG_SUPPORT;
+> -    if (pcie_aspm_support_enabled())
+> -            support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+> +//  if (pcie_aspm_support_enabled())
+> +//          support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+>       if (pci_msi_enabled())
+>               support |= OSC_PCI_MSI_SUPPORT;
+>       if (IS_ENABLED(CONFIG_PCIE_EDR))
+>
+> This issue occur in the Notebook: ASUSTeK COMPUTER INC. X456UJ
+> (ASUS-NotebookSKU) Notebook
+>
+> log "AER: Corrected error received: 0000:00:1c.5" is in the device:
+> 00:1c.5 PCI bridge [0604]: Intel Corporation Sunrise Point-LP PCI
+> Express Root Port #6 [8086:9d15] (rev f1)
 
-This patch will not affect any link capability registers, this
-will allow the link transitions to L1 and its sub states only
-if they are already supported.
+So it looks like the BIOS sets ACPI_FADT_NO_ASPM and then happily
+grants control of ASPM via _OSC.  That's somewhat contradictory.
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-----
-
-Changes since v1 & v2:
-	- Update in the commit text only.
----
- drivers/pci/controller/dwc/pcie-qcom.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index a7202f0..5ef444f 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -41,6 +41,9 @@
- #define L23_CLK_RMV_DIS				BIT(2)
- #define L1_CLK_RMV_DIS				BIT(1)
- 
-+#define PCIE20_PARF_PM_CTRL			0x20
-+#define REQ_NOT_ENTR_L1				BIT(5)
-+
- #define PCIE20_PARF_PHY_CTRL			0x40
- #define PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK	GENMASK(20, 16)
- #define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		((x) << 16)
-@@ -1261,6 +1264,11 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
- 	val |= BIT(4);
- 	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
- 
-+	/* Enable L1 and L1ss */
-+	val = readl(pcie->parf + PCIE20_PARF_PM_CTRL);
-+	val &= ~REQ_NOT_ENTR_L1;
-+	writel(val, pcie->parf + PCIE20_PARF_PM_CTRL);
-+
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
- 		val |= BIT(31);
--- 
-2.7.4
-
+I would rather look at adjusting pcie_aspm_sanity_check() to this case
+instead of wholesale changing the way _OSC is handled at the host
+bridge level.
