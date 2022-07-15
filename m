@@ -2,47 +2,46 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7090C43334
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Jul 2022 00:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D130FC43334
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Jul 2022 00:02:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241025AbiGOACV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Jul 2022 20:02:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37540 "EHLO
+        id S241033AbiGOACf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Jul 2022 20:02:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37658 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241013AbiGOACU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 20:02:20 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E64872EDD;
-        Thu, 14 Jul 2022 17:02:18 -0700 (PDT)
+        with ESMTP id S241013AbiGOACe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jul 2022 20:02:34 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9025572EED;
+        Thu, 14 Jul 2022 17:02:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1657843338; x=1689379338;
+  t=1657843353; x=1689379353;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=JJqrcVjP4sirdUNzSuDkZbpLNqXGBwqEDLX3wI6q8lA=;
-  b=MWY8byjKgDT6SyCpilW9JO6VcuUEN25IkqiDeUnuCoQhqg1YWBjrGoa7
-   Sv2JRzyx2hc//2QDN4SH3mRvrrSag02uMQZA8xUKlhSIIMukUzruC3cDh
-   UxMxm93MEs3d8xNmq/EDBQuTxb9FLX2BlyThhqWtJLM14AzY3FQqUOcqI
-   3ikgl1eizEk2HubGuaQCxSc8zAYd2hgu4pRbSx+ZbzWI4XSn05PLaSGSp
-   wmVuO4vm0wxgbTT741/UPh4XCvH5JVkofQXvGOg+AFjXY9QbiVAdIJCkZ
-   AwUK5tv4CmQ9xB3OHq5CgfuyMMFldsFipbaEfeghw+cpjsIYI+oDG8VEr
-   A==;
-X-IronPort-AV: E=McAfee;i="6400,9594,10408"; a="347339249"
+  bh=7GZsp765NhD7A40eOR8AtSk30NgIqkrFvVTX1pphqJ8=;
+  b=QQdU2UymKAEDN9hdQ7e8oSVEoqVDRvh78TxC8V/Kp1B6iFUnM90VYzwn
+   keS4LDfSv9k9TCwyurN5FZi0fwVGFg37rwWFALOmsqvM/SF0mIyEa5zzY
+   Ob1MdrceI2fXkHyVRr1uNWNgWlByveg30b4ggH4og7yMahLKvMPbggW3p
+   i/n7htS4GVIPTuLiZosLrXO+gdLfFUOcOMSkvy6wzrqQrb0H5/pPGiHaC
+   C8f1tbdEWAdm0n+D+xPAou5jmyBKFc5yvF53IsOvSTb41ZhrhkvaYcsug
+   xMQjXwU/VqTSvzIuBaARvN2RYufv4WeLRJpI4l3+OGW6VtQQggofhOgp/
+   w==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10408"; a="311320656"
 X-IronPort-AV: E=Sophos;i="5.92,272,1650956400"; 
-   d="scan'208";a="347339249"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2022 17:01:34 -0700
+   d="scan'208";a="311320656"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2022 17:01:57 -0700
 X-IronPort-AV: E=Sophos;i="5.92,272,1650956400"; 
-   d="scan'208";a="628896664"
+   d="scan'208";a="923290629"
 Received: from jlcone-mobl1.amr.corp.intel.com (HELO dwillia2-xfh.jf.intel.com) ([10.209.2.90])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2022 17:01:34 -0700
-Subject: [PATCH v2 09/28] cxl/hdm: Add support for allocating DPA to an
- endpoint decoder
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2022 17:01:56 -0700
+Subject: [PATCH v2 13/28] cxl/port: Move dport tracking to an xarray
 From:   Dan Williams <dan.j.williams@intel.com>
 To:     linux-cxl@vger.kernel.org
 Cc:     hch@lst.de, nvdimm@lists.linux.dev, linux-pci@vger.kernel.org
-Date:   Thu, 14 Jul 2022 17:01:34 -0700
-Message-ID: <165784329399.1758207.16732038126938632700.stgit@dwillia2-xfh.jf.intel.com>
+Date:   Thu, 14 Jul 2022 17:01:56 -0700
+Message-ID: <165784331647.1758207.6345820282285119339.stgit@dwillia2-xfh.jf.intel.com>
 In-Reply-To: <165784324066.1758207.15025479284039479071.stgit@dwillia2-xfh.jf.intel.com>
 References: <165784324066.1758207.15025479284039479071.stgit@dwillia2-xfh.jf.intel.com>
 User-Agent: StGit/0.18-3-g996c
@@ -53,389 +52,291 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The region provisioning flow will roughly follow a sequence of:
+Reduce the complexity and the overhead of walking the topology to
+determine endpoint connectivity to root decoder interleave
+configurations.
 
-1/ Allocate DPA to a set of decoders
-
-2/ Allocate HPA to a region
-
-3/ Associate decoders with a region and validate that the DPA allocations
-   and topologies match the parameters of the region.
-
-For now, this change (step 1) arranges for DPA capacity to be allocated
-and deleted from non-committed decoders based on the decoder's mode /
-partition selection. Capacity is allocated from the lowest DPA in the
-partition and any 'pmem' allocation blocks out all remaining ram
-capacity in its 'skip' setting. DPA allocations are enforced in decoder
-instance order. I.e. decoder N + 1 always starts at a higher DPA than
-instance N, and deleting allocations must proceed from the
-highest-instance allocated decoder to the lowest.
+Note that cxl_detach_ep(), after it determines that the last @ep has
+departed and decides to delete the port, now needs to walk the dport
+array with the device_lock() held to remove entries. Previously
+list_splice_init() could be used atomically delete all dport entries at
+once and then perform entry tear down outside the lock. There is no
+list_splice_init() equivalent for the xarray.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Documentation/ABI/testing/sysfs-bus-cxl |   37 ++++++
- drivers/cxl/core/core.h                 |    7 +
- drivers/cxl/core/hdm.c                  |  180 +++++++++++++++++++++++++++++++
- drivers/cxl/core/port.c                 |   73 ++++++++++++-
- 4 files changed, 295 insertions(+), 2 deletions(-)
+ drivers/cxl/core/hdm.c  |    6 ++-
+ drivers/cxl/core/port.c |   85 ++++++++++++++++++++---------------------------
+ drivers/cxl/cxl.h       |   12 ++++---
+ 3 files changed, 47 insertions(+), 56 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-cxl b/Documentation/ABI/testing/sysfs-bus-cxl
-index b8ef8aedaf39..9b6cc7cdc73b 100644
---- a/Documentation/ABI/testing/sysfs-bus-cxl
-+++ b/Documentation/ABI/testing/sysfs-bus-cxl
-@@ -186,7 +186,7 @@ Date:		May, 2022
- KernelVersion:	v5.20
- Contact:	linux-cxl@vger.kernel.org
- Description:
--		(RO) When a CXL decoder is of devtype "cxl_decoder_endpoint" it
-+		(RW) When a CXL decoder is of devtype "cxl_decoder_endpoint" it
- 		translates from a host physical address range, to a device local
- 		address range. Device-local address ranges are further split
- 		into a 'ram' (volatile memory) range and 'pmem' (persistent
-@@ -195,3 +195,38 @@ Description:
- 		when a decoder straddles the volatile/persistent partition
- 		boundary, and 'none' indicates the decoder is not actively
- 		decoding, or no DPA allocation policy has been set.
-+
-+		'mode' can be written, when the decoder is in the 'disabled'
-+		state, with either 'ram' or 'pmem' to set the boundaries for the
-+		next allocation.
-+
-+
-+What:		/sys/bus/cxl/devices/decoderX.Y/dpa_resource
-+Date:		May, 2022
-+KernelVersion:	v5.20
-+Contact:	linux-cxl@vger.kernel.org
-+Description:
-+		(RO) When a CXL decoder is of devtype "cxl_decoder_endpoint",
-+		and its 'dpa_size' attribute is non-zero, this attribute
-+		indicates the device physical address (DPA) base address of the
-+		allocation.
-+
-+
-+What:		/sys/bus/cxl/devices/decoderX.Y/dpa_size
-+Date:		May, 2022
-+KernelVersion:	v5.20
-+Contact:	linux-cxl@vger.kernel.org
-+Description:
-+		(RW) When a CXL decoder is of devtype "cxl_decoder_endpoint" it
-+		translates from a host physical address range, to a device local
-+		address range. The range, base address plus length in bytes, of
-+		DPA allocated to this decoder is conveyed in these 2 attributes.
-+		Allocations can be mutated as long as the decoder is in the
-+		disabled state. A write to 'dpa_size' releases the previous DPA
-+		allocation and then attempts to allocate from the free capacity
-+		in the device partition referred to by 'decoderX.Y/mode'.
-+		Allocate and free requests can only be performed on the highest
-+		instance number disabled decoder with non-zero size. I.e.
-+		allocations are enforced to occur in increasing 'decoderX.Y/id'
-+		order and frees are enforced to occur in decreasing
-+		'decoderX.Y/id' order.
-diff --git a/drivers/cxl/core/core.h b/drivers/cxl/core/core.h
-index a0808cdaffba..5551b82b2da0 100644
---- a/drivers/cxl/core/core.h
-+++ b/drivers/cxl/core/core.h
-@@ -18,6 +18,13 @@ void __iomem *devm_cxl_iomap_block(struct device *dev, resource_size_t addr,
- 				   resource_size_t length);
- 
- struct dentry *cxl_debugfs_create_dir(const char *dir);
-+int cxl_dpa_set_mode(struct cxl_endpoint_decoder *cxled,
-+		     enum cxl_decoder_mode mode);
-+int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, unsigned long long size);
-+int cxl_dpa_free(struct cxl_endpoint_decoder *cxled);
-+resource_size_t cxl_dpa_size(struct cxl_endpoint_decoder *cxled);
-+resource_size_t cxl_dpa_resource_start(struct cxl_endpoint_decoder *cxled);
-+
- int cxl_memdev_init(void);
- void cxl_memdev_exit(void);
- void cxl_mbox_init(void);
 diff --git a/drivers/cxl/core/hdm.c b/drivers/cxl/core/hdm.c
-index 582f48141767..596b57fb60df 100644
+index 596b57fb60df..4a0325b02ca4 100644
 --- a/drivers/cxl/core/hdm.c
 +++ b/drivers/cxl/core/hdm.c
-@@ -182,6 +182,19 @@ static void cxl_dpa_release(void *cxled)
- 	up_write(&cxl_dpa_rwsem);
- }
+@@ -50,8 +50,9 @@ static int add_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
+ int devm_cxl_add_passthrough_decoder(struct cxl_port *port)
+ {
+ 	struct cxl_switch_decoder *cxlsd;
+-	struct cxl_dport *dport;
++	struct cxl_dport *dport = NULL;
+ 	int single_port_map[1];
++	unsigned long index;
  
-+/*
-+ * Must be called from context that will not race port device
-+ * unregistration, like decoder sysfs attribute methods
-+ */
-+static void devm_cxl_dpa_release(struct cxl_endpoint_decoder *cxled)
-+{
-+	struct cxl_port *port = cxled_to_port(cxled);
-+
-+	lockdep_assert_held_write(&cxl_dpa_rwsem);
-+	devm_remove_action(&port->dev, cxl_dpa_release, cxled);
-+	__cxl_dpa_release(cxled);
-+}
-+
- static int __cxl_dpa_reserve(struct cxl_endpoint_decoder *cxled,
- 			     resource_size_t base, resource_size_t len,
- 			     resource_size_t skipped)
-@@ -269,6 +282,173 @@ static int devm_cxl_dpa_reserve(struct cxl_endpoint_decoder *cxled,
- 	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
- }
+ 	cxlsd = cxl_switch_decoder_alloc(port, 1);
+ 	if (IS_ERR(cxlsd))
+@@ -59,7 +60,8 @@ int devm_cxl_add_passthrough_decoder(struct cxl_port *port)
  
-+resource_size_t cxl_dpa_size(struct cxl_endpoint_decoder *cxled)
-+{
-+	resource_size_t size = 0;
-+
-+	down_read(&cxl_dpa_rwsem);
-+	if (cxled->dpa_res)
-+		size = resource_size(cxled->dpa_res);
-+	up_read(&cxl_dpa_rwsem);
-+
-+	return size;
-+}
-+
-+resource_size_t cxl_dpa_resource_start(struct cxl_endpoint_decoder *cxled)
-+{
-+	resource_size_t base = -1;
-+
-+	down_read(&cxl_dpa_rwsem);
-+	if (cxled->dpa_res)
-+		base = cxled->dpa_res->start;
-+	up_read(&cxl_dpa_rwsem);
-+
-+	return base;
-+}
-+
-+int cxl_dpa_free(struct cxl_endpoint_decoder *cxled)
-+{
-+	struct cxl_port *port = cxled_to_port(cxled);
-+	struct device *dev = &cxled->cxld.dev;
-+	int rc;
-+
-+	down_write(&cxl_dpa_rwsem);
-+	if (!cxled->dpa_res) {
-+		rc = 0;
-+		goto out;
-+	}
-+	if (cxled->cxld.flags & CXL_DECODER_F_ENABLE) {
-+		dev_dbg(dev, "decoder enabled\n");
-+		rc = -EBUSY;
-+		goto out;
-+	}
-+	if (cxled->cxld.id != port->hdm_end) {
-+		dev_dbg(dev, "expected decoder%d.%d\n", port->id,
-+			port->hdm_end);
-+		rc = -EBUSY;
-+		goto out;
-+	}
-+	devm_cxl_dpa_release(cxled);
-+	rc = 0;
-+out:
-+	up_write(&cxl_dpa_rwsem);
-+	return rc;
-+}
-+
-+int cxl_dpa_set_mode(struct cxl_endpoint_decoder *cxled,
-+		     enum cxl_decoder_mode mode)
-+{
-+	struct cxl_memdev *cxlmd = cxled_to_memdev(cxled);
-+	struct cxl_dev_state *cxlds = cxlmd->cxlds;
-+	struct device *dev = &cxled->cxld.dev;
-+	int rc;
-+
-+	switch (mode) {
-+	case CXL_DECODER_RAM:
-+	case CXL_DECODER_PMEM:
+ 	device_lock_assert(&port->dev);
+ 
+-	dport = list_first_entry(&port->dports, typeof(*dport), list);
++	xa_for_each(&port->dports, index, dport)
 +		break;
-+	default:
-+		dev_dbg(dev, "unsupported mode: %d\n", mode);
-+		return -EINVAL;
-+	}
-+
-+	down_write(&cxl_dpa_rwsem);
-+	if (cxled->cxld.flags & CXL_DECODER_F_ENABLE) {
-+		rc = -EBUSY;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Only allow modes that are supported by the current partition
-+	 * configuration
-+	 */
-+	if (mode == CXL_DECODER_PMEM && !resource_size(&cxlds->pmem_res)) {
-+		dev_dbg(dev, "no available pmem capacity\n");
-+		rc = -ENXIO;
-+		goto out;
-+	}
-+	if (mode == CXL_DECODER_RAM && !resource_size(&cxlds->ram_res)) {
-+		dev_dbg(dev, "no available ram capacity\n");
-+		rc = -ENXIO;
-+		goto out;
-+	}
-+
-+	cxled->mode = mode;
-+	rc = 0;
-+out:
-+	up_write(&cxl_dpa_rwsem);
-+
-+	return rc;
-+}
-+
-+int cxl_dpa_alloc(struct cxl_endpoint_decoder *cxled, unsigned long long size)
-+{
-+	struct cxl_memdev *cxlmd = cxled_to_memdev(cxled);
-+	resource_size_t free_ram_start, free_pmem_start;
-+	struct cxl_port *port = cxled_to_port(cxled);
-+	struct cxl_dev_state *cxlds = cxlmd->cxlds;
-+	struct device *dev = &cxled->cxld.dev;
-+	resource_size_t start, avail, skip;
-+	struct resource *p, *last;
-+	int rc;
-+
-+	down_write(&cxl_dpa_rwsem);
-+	if (cxled->cxld.flags & CXL_DECODER_F_ENABLE) {
-+		dev_dbg(dev, "decoder enabled\n");
-+		rc = -EBUSY;
-+		goto out;
-+	}
-+
-+	for (p = cxlds->ram_res.child, last = NULL; p; p = p->sibling)
-+		last = p;
-+	if (last)
-+		free_ram_start = last->end + 1;
-+	else
-+		free_ram_start = cxlds->ram_res.start;
-+
-+	for (p = cxlds->pmem_res.child, last = NULL; p; p = p->sibling)
-+		last = p;
-+	if (last)
-+		free_pmem_start = last->end + 1;
-+	else
-+		free_pmem_start = cxlds->pmem_res.start;
-+
-+	if (cxled->mode == CXL_DECODER_RAM) {
-+		start = free_ram_start;
-+		avail = cxlds->ram_res.end - start + 1;
-+		skip = 0;
-+	} else if (cxled->mode == CXL_DECODER_PMEM) {
-+		resource_size_t skip_start, skip_end;
-+
-+		start = free_pmem_start;
-+		avail = cxlds->pmem_res.end - start + 1;
-+		skip_start = free_ram_start;
-+		skip_end = start - 1;
-+		skip = skip_end - skip_start + 1;
-+	} else {
-+		dev_dbg(dev, "mode not set\n");
-+		rc = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (size > avail) {
-+		dev_dbg(dev, "%pa exceeds available %s capacity: %pa\n", &size,
-+			cxled->mode == CXL_DECODER_RAM ? "ram" : "pmem",
-+			&avail);
-+		rc = -ENOSPC;
-+		goto out;
-+	}
-+
-+	rc = __cxl_dpa_reserve(cxled, start, size, skip);
-+out:
-+	up_write(&cxl_dpa_rwsem);
-+
-+	if (rc)
-+		return rc;
-+
-+	return devm_add_action_or_reset(&port->dev, cxl_dpa_release, cxled);
-+}
-+
- static int init_hdm_decoder(struct cxl_port *port, struct cxl_decoder *cxld,
- 			    int *target_map, void __iomem *hdm, int which,
- 			    u64 *dpa_base)
+ 	single_port_map[0] = dport->port_id;
+ 
+ 	return add_hdm_decoder(port, &cxlsd->cxld, single_port_map);
 diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-index 109611318760..fdc1be7db917 100644
+index 727d861e21db..b2c44e7ef6a8 100644
 --- a/drivers/cxl/core/port.c
 +++ b/drivers/cxl/core/port.c
-@@ -189,7 +189,76 @@ static ssize_t mode_show(struct device *dev, struct device_attribute *attr,
- 		return sysfs_emit(buf, "mixed\n");
- 	}
+@@ -452,6 +452,7 @@ static void cxl_port_release(struct device *dev)
+ 	xa_for_each(&port->endpoints, index, ep)
+ 		cxl_ep_remove(port, ep);
+ 	xa_destroy(&port->endpoints);
++	xa_destroy(&port->dports);
+ 	ida_free(&cxl_port_ida, port->id);
+ 	kfree(port);
  }
--static DEVICE_ATTR_RO(mode);
-+
-+static ssize_t mode_store(struct device *dev, struct device_attribute *attr,
-+			  const char *buf, size_t len)
-+{
-+	struct cxl_endpoint_decoder *cxled = to_cxl_endpoint_decoder(dev);
-+	enum cxl_decoder_mode mode;
-+	ssize_t rc;
-+
-+	if (sysfs_streq(buf, "pmem"))
-+		mode = CXL_DECODER_PMEM;
-+	else if (sysfs_streq(buf, "ram"))
-+		mode = CXL_DECODER_RAM;
-+	else
-+		return -EINVAL;
-+
-+	rc = cxl_dpa_set_mode(cxled, mode);
-+	if (rc)
-+		return rc;
-+
-+	return len;
-+}
-+static DEVICE_ATTR_RW(mode);
-+
-+static ssize_t dpa_resource_show(struct device *dev, struct device_attribute *attr,
-+			    char *buf)
-+{
-+	struct cxl_endpoint_decoder *cxled = to_cxl_endpoint_decoder(dev);
-+	u64 base = cxl_dpa_resource_start(cxled);
-+
-+	return sysfs_emit(buf, "%#llx\n", base);
-+}
-+static DEVICE_ATTR_RO(dpa_resource);
-+
-+static ssize_t dpa_size_show(struct device *dev, struct device_attribute *attr,
-+			     char *buf)
-+{
-+	struct cxl_endpoint_decoder *cxled = to_cxl_endpoint_decoder(dev);
-+	resource_size_t size = cxl_dpa_size(cxled);
-+
-+	return sysfs_emit(buf, "%pa\n", &size);
-+}
-+
-+static ssize_t dpa_size_store(struct device *dev, struct device_attribute *attr,
-+			      const char *buf, size_t len)
-+{
-+	struct cxl_endpoint_decoder *cxled = to_cxl_endpoint_decoder(dev);
-+	unsigned long long size;
-+	ssize_t rc;
-+
-+	rc = kstrtoull(buf, 0, &size);
-+	if (rc)
-+		return rc;
-+
-+	if (!IS_ALIGNED(size, SZ_256M))
-+		return -EINVAL;
-+
-+	rc = cxl_dpa_free(cxled);
-+	if (rc)
-+		return rc;
-+
-+	if (size == 0)
-+		return len;
-+
-+	rc = cxl_dpa_alloc(cxled, size);
-+	if (rc)
-+		return rc;
-+
-+	return len;
-+}
-+static DEVICE_ATTR_RW(dpa_size);
+@@ -581,7 +582,7 @@ static struct cxl_port *cxl_port_alloc(struct device *uport,
+ 	port->component_reg_phys = component_reg_phys;
+ 	ida_init(&port->decoder_ida);
+ 	port->hdm_end = -1;
+-	INIT_LIST_HEAD(&port->dports);
++	xa_init(&port->dports);
+ 	xa_init(&port->endpoints);
  
- static struct attribute *cxl_decoder_base_attrs[] = {
- 	&dev_attr_start.attr,
-@@ -242,6 +311,8 @@ static const struct attribute_group *cxl_decoder_switch_attribute_groups[] = {
- static struct attribute *cxl_decoder_endpoint_attrs[] = {
- 	&dev_attr_target_type.attr,
- 	&dev_attr_mode.attr,
-+	&dev_attr_dpa_size.attr,
-+	&dev_attr_dpa_resource.attr,
- 	NULL,
+ 	device_initialize(dev);
+@@ -711,17 +712,13 @@ static int match_root_child(struct device *dev, const void *match)
+ 		return 0;
+ 
+ 	port = to_cxl_port(dev);
+-	device_lock(dev);
+-	list_for_each_entry(dport, &port->dports, list) {
+-		iter = match;
+-		while (iter) {
+-			if (iter == dport->dport)
+-				goto out;
+-			iter = iter->parent;
+-		}
++	iter = match;
++	while (iter) {
++		dport = cxl_find_dport_by_dev(port, iter);
++		if (dport)
++			break;
++		iter = iter->parent;
+ 	}
+-out:
+-	device_unlock(dev);
+ 
+ 	return !!iter;
+ }
+@@ -745,9 +742,10 @@ EXPORT_SYMBOL_NS_GPL(find_cxl_root, CXL);
+ static struct cxl_dport *find_dport(struct cxl_port *port, int id)
+ {
+ 	struct cxl_dport *dport;
++	unsigned long index;
+ 
+ 	device_lock_assert(&port->dev);
+-	list_for_each_entry (dport, &port->dports, list)
++	xa_for_each(&port->dports, index, dport)
+ 		if (dport->port_id == id)
+ 			return dport;
+ 	return NULL;
+@@ -759,15 +757,15 @@ static int add_dport(struct cxl_port *port, struct cxl_dport *new)
+ 
+ 	device_lock_assert(&port->dev);
+ 	dup = find_dport(port, new->port_id);
+-	if (dup)
++	if (dup) {
+ 		dev_err(&port->dev,
+ 			"unable to add dport%d-%s non-unique port id (%s)\n",
+ 			new->port_id, dev_name(new->dport),
+ 			dev_name(dup->dport));
+-	else
+-		list_add_tail(&new->list, &port->dports);
+-
+-	return dup ? -EEXIST : 0;
++		return -EBUSY;
++	}
++	return xa_insert(&port->dports, (unsigned long)new->dport, new,
++			 GFP_KERNEL);
+ }
+ 
+ /*
+@@ -794,10 +792,8 @@ static void cxl_dport_remove(void *data)
+ 	struct cxl_dport *dport = data;
+ 	struct cxl_port *port = dport->port;
+ 
++	xa_erase(&port->dports, (unsigned long) dport->dport);
+ 	put_device(dport->dport);
+-	cond_cxl_root_lock(port);
+-	list_del(&dport->list);
+-	cond_cxl_root_unlock(port);
+ }
+ 
+ static void cxl_dport_unlink(void *data)
+@@ -849,7 +845,6 @@ struct cxl_dport *devm_cxl_add_dport(struct cxl_port *port,
+ 	if (!dport)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	INIT_LIST_HEAD(&dport->list);
+ 	dport->dport = dport_dev;
+ 	dport->port_id = port_id;
+ 	dport->component_reg_phys = component_reg_phys;
+@@ -1040,19 +1035,27 @@ EXPORT_SYMBOL_NS_GPL(cxl_endpoint_autoremove, CXL);
+  * for a port to be unregistered is when all memdevs beneath that port have gone
+  * through ->remove(). This "bottom-up" removal selectively removes individual
+  * child ports manually. This depends on devm_cxl_add_port() to not change is
+- * devm action registration order.
++ * devm action registration order, and for dports to have already been
++ * destroyed by reap_dports().
+  */
+-static void delete_switch_port(struct cxl_port *port, struct list_head *dports)
++static void delete_switch_port(struct cxl_port *port)
++{
++	devm_release_action(port->dev.parent, cxl_unlink_uport, port);
++	devm_release_action(port->dev.parent, unregister_port, port);
++}
++
++static void reap_dports(struct cxl_port *port)
+ {
+-	struct cxl_dport *dport, *_d;
++	struct cxl_dport *dport;
++	unsigned long index;
+ 
+-	list_for_each_entry_safe(dport, _d, dports, list) {
++	device_lock_assert(&port->dev);
++
++	xa_for_each(&port->dports, index, dport) {
+ 		devm_release_action(&port->dev, cxl_dport_unlink, dport);
+ 		devm_release_action(&port->dev, cxl_dport_remove, dport);
+ 		devm_kfree(&port->dev, dport);
+ 	}
+-	devm_release_action(port->dev.parent, cxl_unlink_uport, port);
+-	devm_release_action(port->dev.parent, unregister_port, port);
+ }
+ 
+ static struct cxl_ep *cxl_ep_load(struct cxl_port *port,
+@@ -1069,8 +1072,8 @@ static void cxl_detach_ep(void *data)
+ 	for (iter = &cxlmd->dev; iter; iter = grandparent(iter)) {
+ 		struct device *dport_dev = grandparent(iter);
+ 		struct cxl_port *port, *parent_port;
+-		LIST_HEAD(reap_dports);
+ 		struct cxl_ep *ep;
++		bool died = false;
+ 
+ 		if (!dport_dev)
+ 			break;
+@@ -1110,15 +1113,16 @@ static void cxl_detach_ep(void *data)
+ 			 * enumerated port. Block new cxl_add_ep() and garbage
+ 			 * collect the port.
+ 			 */
++			died = true;
+ 			port->dead = true;
+-			list_splice_init(&port->dports, &reap_dports);
++			reap_dports(port);
+ 		}
+ 		device_unlock(&port->dev);
+ 
+-		if (!list_empty(&reap_dports)) {
++		if (died) {
+ 			dev_dbg(&cxlmd->dev, "delete %s\n",
+ 				dev_name(&port->dev));
+-			delete_switch_port(port, &reap_dports);
++			delete_switch_port(port);
+ 		}
+ 		put_device(&port->dev);
+ 		device_unlock(&parent_port->dev);
+@@ -1297,23 +1301,6 @@ struct cxl_port *cxl_mem_find_port(struct cxl_memdev *cxlmd,
+ }
+ EXPORT_SYMBOL_NS_GPL(cxl_mem_find_port, CXL);
+ 
+-struct cxl_dport *cxl_find_dport_by_dev(struct cxl_port *port,
+-					const struct device *dev)
+-{
+-	struct cxl_dport *dport;
+-
+-	device_lock(&port->dev);
+-	list_for_each_entry(dport, &port->dports, list)
+-		if (dport->dport == dev) {
+-			device_unlock(&port->dev);
+-			return dport;
+-		}
+-
+-	device_unlock(&port->dev);
+-	return NULL;
+-}
+-EXPORT_SYMBOL_NS_GPL(cxl_find_dport_by_dev, CXL);
+-
+ static int decoder_populate_targets(struct cxl_switch_decoder *cxlsd,
+ 				    struct cxl_port *port, int *target_map)
+ {
+@@ -1324,7 +1311,7 @@ static int decoder_populate_targets(struct cxl_switch_decoder *cxlsd,
+ 
+ 	device_lock_assert(&port->dev);
+ 
+-	if (list_empty(&port->dports))
++	if (xa_empty(&port->dports))
+ 		return -EINVAL;
+ 
+ 	write_seqlock(&cxlsd->target_lock);
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index de5cb8288cd4..bf5f0c305115 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -344,7 +344,7 @@ struct cxl_port {
+ 	struct device *uport;
+ 	struct device *host_bridge;
+ 	int id;
+-	struct list_head dports;
++	struct xarray dports;
+ 	struct xarray endpoints;
+ 	struct cxl_dport *parent_dport;
+ 	struct ida decoder_ida;
+@@ -354,20 +354,24 @@ struct cxl_port {
+ 	unsigned int depth;
  };
  
++static inline struct cxl_dport *
++cxl_find_dport_by_dev(struct cxl_port *port, const struct device *dport_dev)
++{
++	return xa_load(&port->dports, (unsigned long)dport_dev);
++}
++
+ /**
+  * struct cxl_dport - CXL downstream port
+  * @dport: PCI bridge or firmware device representing the downstream link
+  * @port_id: unique hardware identifier for dport in decoder target list
+  * @component_reg_phys: downstream port component registers
+  * @port: reference to cxl_port that contains this downstream port
+- * @list: node for a cxl_port's list of cxl_dport instances
+  */
+ struct cxl_dport {
+ 	struct device *dport;
+ 	int port_id;
+ 	resource_size_t component_reg_phys;
+ 	struct cxl_port *port;
+-	struct list_head list;
+ };
+ 
+ /**
+@@ -410,8 +414,6 @@ bool schedule_cxl_memdev_detach(struct cxl_memdev *cxlmd);
+ struct cxl_dport *devm_cxl_add_dport(struct cxl_port *port,
+ 				     struct device *dport, int port_id,
+ 				     resource_size_t component_reg_phys);
+-struct cxl_dport *cxl_find_dport_by_dev(struct cxl_port *port,
+-					const struct device *dev);
+ 
+ struct cxl_decoder *to_cxl_decoder(struct device *dev);
+ struct cxl_root_decoder *to_cxl_root_decoder(struct device *dev);
 
