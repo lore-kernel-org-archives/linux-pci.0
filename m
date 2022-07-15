@@ -2,130 +2,99 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00F77C433EF
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Jul 2022 08:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67E7EC43334
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Jul 2022 09:26:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232911AbiGOIjU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Jul 2022 04:39:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60646 "EHLO
+        id S231754AbiGOJ0d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Jul 2022 05:26:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44240 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232915AbiGOIjL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2022 04:39:11 -0400
-Received: from mout.kundenserver.de (mout.kundenserver.de [217.72.192.73])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56BFE51416;
-        Fri, 15 Jul 2022 01:39:09 -0700 (PDT)
-Received: from mail-ot1-f51.google.com ([209.85.210.51]) by
- mrelayeu.kundenserver.de (mreue107 [213.165.67.113]) with ESMTPSA (Nemesis)
- id 1Mhl4Q-1nYpMx1O9A-00dosM; Fri, 15 Jul 2022 10:39:07 +0200
-Received: by mail-ot1-f51.google.com with SMTP id k8-20020a9d4b88000000b0061c7f8c4f77so2095004otf.10;
-        Fri, 15 Jul 2022 01:39:06 -0700 (PDT)
-X-Gm-Message-State: AJIora9ZfrV3bdROid6AD8wQL3PFzt++iQ2xe4ScwhMuGWO2zhZ88xap
-        t260M3+xVdEyWttA+X/tktJ88qKp3/feYInthCI=
-X-Google-Smtp-Source: AGRyM1tHW75qCujFy97ODmosD9Zq5/ZJz8LFlR+pPafKBIRkIjZ9IOLEvm6nWkFKYL4KxpjirK2nvE70QWAIuDMflXk=
-X-Received: by 2002:a25:73d1:0:b0:66e:aee4:feb3 with SMTP id
- o200-20020a2573d1000000b0066eaee4feb3mr13106300ybc.452.1657872578352; Fri, 15
- Jul 2022 01:09:38 -0700 (PDT)
+        with ESMTP id S229459AbiGOJ0b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jul 2022 05:26:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5C18E7A519
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jul 2022 02:26:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1657877189;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Cyx4Y/rgs0Wa/WcmYfTIRodZYO11O2cxtE3O0yBB4l4=;
+        b=GmnZcBgGpr1O1Nk+NCcVptj1YAcPsS5ttaOkz3hDRIS7m8fZ8VddGirY2VkjhkZbACBpu6
+        L8MT3i88uqlOuWEN1q6FehVmjjuuJRLcuN8IacC+fIkc3/2g9z6HhekR6zUFpfSOWMiGCg
+        EYMlI8BfHS5fJ/e+1mK/xV3wDmC0KF4=
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
+ [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-122-NhAfv62VPlSfQoPtFG2ckg-1; Fri, 15 Jul 2022 05:26:28 -0400
+X-MC-Unique: NhAfv62VPlSfQoPtFG2ckg-1
+Received: by mail-qt1-f200.google.com with SMTP id r5-20020ac85c85000000b0031ecf611c64so3317731qta.23
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jul 2022 02:26:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=Cyx4Y/rgs0Wa/WcmYfTIRodZYO11O2cxtE3O0yBB4l4=;
+        b=IT2o5D2XCslbtEAVs02I77B4QXy8Is8JXK0sZe0/MgfKL5CIoLJRm7UNkOWYu1Oc/j
+         ugolEYk2MlA+AWMsQgf8dBRUSWxh80EW1BiUbUsA249Bx9ggOcWa9Ht5cYiiTOokPaPB
+         uAvegzpXeNGRQFpRmUh4sktxIzuZV54o990Ls5JPD3lINo8GP7p/LLxaZE9EU3vYwvvZ
+         2I1vEoAxYGK5hCnqExTezStVSkcZXyYKeeuEYgfu54U+Qq8nrn30o63mGmSa7CIhZTQu
+         MgAqk14qtgoBFdZ6mp28i9Rh2zZiISJuH2thLczhoQ9ivMYJ2euIn6MkSUKD/vPnLCAq
+         7ylA==
+X-Gm-Message-State: AJIora//2OgAOvRZ2P7sTfGzXYs/LOoDsi9FpQHclTjnM3lSzbS+DAW/
+        W3qjTjxPMGTwkzH0mGjhTAtzrjaiuk2KEda+pGWMDPWeBeAB3D9Rjc6XW0eJcrs/4fw8/QeAVDd
+        3V1hFRSYIjGEzwt0Js9cg
+X-Received: by 2002:a05:620a:462a:b0:6b2:585c:16a6 with SMTP id br42-20020a05620a462a00b006b2585c16a6mr8850432qkb.631.1657877187933;
+        Fri, 15 Jul 2022 02:26:27 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1tb4kWhRfH7kMvJFXklN2hfIO1eVHUU+Mc1AZkI9TMXlrcPA8c3fAm5ySZDU+7KYvH9uBXnOw==
+X-Received: by 2002:a05:620a:462a:b0:6b2:585c:16a6 with SMTP id br42-20020a05620a462a00b006b2585c16a6mr8850422qkb.631.1657877187731;
+        Fri, 15 Jul 2022 02:26:27 -0700 (PDT)
+Received: from xps13 (c-98-239-145-235.hsd1.wv.comcast.net. [98.239.145.235])
+        by smtp.gmail.com with ESMTPSA id g14-20020a05620a40ce00b006af3bc9c6bbsm4297202qko.52.2022.07.15.02.26.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 Jul 2022 02:26:27 -0700 (PDT)
+Date:   Fri, 15 Jul 2022 05:26:26 -0400
+From:   Brian Masney <bmasney@redhat.com>
+To:     Johan Hovold <johan+linaro@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 8/8] PCI: qcom: Sort device-id table
+Message-ID: <YtEywsPAvJGQLAUu@xps13>
+References: <20220714071348.6792-1-johan+linaro@kernel.org>
+ <20220714071348.6792-9-johan+linaro@kernel.org>
+ <YtAny03L/RLk9nv6@xps13>
+ <YtEaqHT7NdXPhK+y@hovoldconsulting.com>
 MIME-Version: 1.0
-References: <20220714214657.2402250-1-shorne@gmail.com> <20220714214657.2402250-3-shorne@gmail.com>
-In-Reply-To: <20220714214657.2402250-3-shorne@gmail.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Fri, 15 Jul 2022 10:09:21 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a2_HKMf8nMcSkK1_jyCEHEdzz=YiRmPvN+ACbPTafXJzA@mail.gmail.com>
-Message-ID: <CAK8P3a2_HKMf8nMcSkK1_jyCEHEdzz=YiRmPvN+ACbPTafXJzA@mail.gmail.com>
-Subject: Re: [RFC PATCH 2/2] asm-generic: Add new pci.h and use it
-To:     Stafford Horne <shorne@gmail.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>, Guo Ren <guoren@kernel.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-csky@vger.kernel.org,
-        linux-riscv <linux-riscv@lists.infradead.org>,
-        linux-um <linux-um@lists.infradead.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        David Woodhouse <dwmw2@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:Nt52xjsJzLfJbx6bRziB8rKjrlCwthE2G6HtbRBCsNBt/zs2mo2
- R+zxCpzWBn+E9PRIJX9sfMfdZ2jE2MFo0nx40nPnt/KwgS5rY+jNF8OTtCszYlSR+DvY55Q
- N8/Q53v9N0+VyQGEsBoArO6QqUcFEg0pTflRtXN7VtD5MerfYTdmUDGldG1AzUHDwPbTmi3
- 2XGtKEqTZPyfR9FDnGlLQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:rYyucx0ZdqI=:rPmF0o7ogy9z6EtFl7IA7Q
- j/McKn5R/FIJ0+0/sN20bcGfqmONXGRRmTvP7LVDrzKVPveFiTULe2gkPGKzEkIMczsZ5RZvl
- 2qYhOPZUmtYqEuJuabNpBpo6Ciykp0/kmTYiAjaYljvlLqGx/sjmDJv6HdULJUAsWMxpjYTEw
- wsLC6xmeEzESPYpluUHhPsnR2XwmvqmcUUAubC9D+3MChqbfdxuHk4O5bTF7Kcoj5dsg3NW3H
- jHhynwT7qRT4p6eF/tfG9aMTSbVtRJp4x+MaVitnAiRiaXFYXPYu+9qPIoPbQy2VMUN3EPipF
- mWqHH6dB3xR1Ae8RZSNT+F0fbyCVM1a2FEHANAUzCa0MnyKl0Q7/hjpXMWrQCwYwc6UjiN89N
- 1CEL9hsDTTUS3U1b6iEXEDqL69G6UjtteEhaVhR1FVPXL1PlBJTzbzohRUUE/jOsyfUU37+YX
- ABfFnIC4BlyUxk89Q911u0a7585RD+s8UKrdT8gJRs+UlwDoxRsmY1ZBS5APZHoitpwjKX4II
- GVkpT6RNrvY+dpS5Hk3vxeQKAKEof3tBzwMwECk2HCNk2V/JPZbi0aW/6RMnLo/8VlfcBx8YO
- llwJmiSN2P/fnVe5RAJV7QnjUAHzqoammocfEl+BqQgxSeafNHxGrps7iNU/McitKPXbY+clj
- 8Z17D1VcrZK6CvDi/nvZn2Ka/uwr1IAOc5wLsojfRnxu5oagPNk3X8CUVxQCdkbzOxkVa3qbJ
- y2uMIRgmjD8TOC8qLtcSVSXhEyKPZl7XihFDKfea7sRGSYcX/tzvtJAaOBvtOrf5so5j9NZ0B
- Yrnhjjk/dXEqVvWfvTphGhuO9rc1KnZpNW3RqdRW/oxg5dKKzmgd/l40PX0Od75ZSo2X/CTKH
- hS4ccGAbxSsDH/Ehbh4Q==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YtEaqHT7NdXPhK+y@hovoldconsulting.com>
+User-Agent: Mutt/2.2.6 (2022-06-05)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jul 14, 2022 at 11:46 PM Stafford Horne <shorne@gmail.com> wrote:
->
-> The asm/pci.h used for many newer architectures share similar
-> definitions.  Move the common parts to asm-generic/pci.h to allow for
-> sharing code.
+On Fri, Jul 15, 2022 at 09:43:36AM +0200, Johan Hovold wrote:
+> If we only had some sort of machine that could sort strings for us... ;)
+> I'll rely on vim for this from now on.
+> 
+> Perhaps Bjorn H can fix that up when applying unless I'll be sending a
+> v3 for some other reason. This series still depends on the MSI rework to
+> be applied first.
+> 
+> Thanks for reviewing.
 
-This looks very nice, thanks for doing it!
+OK, sounds good... once it's fixed, my R-b can be added:
 
-> Two things to note are:
->
->  - isa_dma_bridge_buggy, traditionally this is defined in asm/dma.h but
->    these architectures avoid creating that file and add the definition
->    to asm/pci.h.
+Reviewed-by: Brian Masney <bmasney@redhat.com>
 
-I would prefer if we could just kill off this variable for non-x86, as it's
-only set to a nonzero value in two implementations that are both
-x86-specific and most of the references are gone. That does not have
-to be part of this series though, if you don't want to address it here, just
-add a comment to the new pci.h file.
-
->  - ARCH_GENERIC_PCI_MMAP_RESOURCE, csky does not define this so we
->    undefine it after including asm-generic/pci.h.  Why doesn't csky
->    define it?
-
-Adding David Woodhouse to Cc, as he introduced this interface. As I
-understand it, this was meant as a replacement for the old
-architecture specific pci_mmap_page_range interface, and is ideally
-used everywhere.
-
-It's probably something that slipped through the review of csky and
-should have been there.
-
-As an aside, it seems the pci_mmap_page_range() cleanup was
-left almost complete, with sparc being the only one left after
-David Miller found a problem with the generic code. Not sure if
-this was ever resolved:
-https://lore.kernel.org/lkml/1519887203.622.3.camel@infradead.org/t/#u
-
-> +#ifndef PCIBIOS_MIN_IO
-> +#define PCIBIOS_MIN_IO         0
-> +#endif
-> +
-> +#define PCIBIOS_MIN_MEM                0
-
-We should probably #ifdef both of these for consistency.
-
-> +static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
-> +{
-> +       /* no legacy ide irq support */
-> +       return -ENODEV;
-> +}
-
-And this can just go away now, according to what we found.
-
-        Arnd
