@@ -2,90 +2,77 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D3F7C43334
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jul 2022 10:00:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D28F4C433EF
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jul 2022 10:01:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237038AbiGSKAS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Jul 2022 06:00:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55048 "EHLO
+        id S234281AbiGSKBR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Jul 2022 06:01:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237012AbiGSKAQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2022 06:00:16 -0400
-Received: from mail.ispras.ru (mail.ispras.ru [83.149.199.84])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68E886341;
-        Tue, 19 Jul 2022 03:00:09 -0700 (PDT)
-Received: from localhost.localdomain (unknown [83.149.199.65])
-        by mail.ispras.ru (Postfix) with ESMTPS id A5ADF40D4004;
-        Tue, 19 Jul 2022 10:00:02 +0000 (UTC)
-From:   Andrey Strachuk <strochuk@ispras.ru>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Andrey Strachuk <strochuk@ispras.ru>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ldv-project@linuxtesting.org
-Subject: [PATCH] ACPI: remove useless comparisons in acpi_pci_link_check_possible(), acpi_pci_link_check_current()
-Date:   Tue, 19 Jul 2022 12:59:50 +0300
-Message-Id: <20220719095950.5420-1-strochuk@ispras.ru>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S232216AbiGSKBR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2022 06:01:17 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E122B4AB;
+        Tue, 19 Jul 2022 03:01:16 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 9887D200C38;
+        Tue, 19 Jul 2022 12:01:13 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 51CFA200C32;
+        Tue, 19 Jul 2022 12:01:13 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 63C0A180222C;
+        Tue, 19 Jul 2022 18:01:11 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
+        lorenzo.pieralisi@arm.com, shawnguo@kernel.org, kishon@ti.com,
+        kw@linux.com, frank.li@nxp.com
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        linux-imx@nxp.com
+Subject: [PATCH v1 0/10] Add iMX PCIe EP mode support
+Date:   Tue, 19 Jul 2022 17:45:29 +0800
+Message-Id: <1658223939-25478-1-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Local variable 'p' is initialized by an address
-of field of acpi_resource, so it does not make
-sense to compare 'p' with NULL.
+i.MX PCIe controller is one dual mode PCIe controller, and can work either
+as RC or EP.
+This series add the i.MX PCIe EP mode support. And had been verified on
+i.MX8MQ and i.MX8MM EVK boards.
+In the verification, one EVK board used as RC, the other one used as EP.
+Use the cross TX/RX differential cable connect the two PCIe ports of these
+two EVK boards.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
++-----------+                +------------+
+|   PCIe TX |<-------------->|PCIe RX     |
+|           |                |            |
+|EVK Board  |                |EVK Board   |
+|           |                |            |
+|   PCIe RX |<-------------->|PCIe TX     |
++-----------+                +------------+
 
-Signed-off-by: Andrey Strachuk <strochuk@ispras.ru>
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
----
- drivers/acpi/pci_link.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml |   2 +
+arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi             |  14 +++++++
+arch/arm64/boot/dts/freescale/imx8mm.dtsi                 |  20 ++++++++++
+arch/arm64/boot/dts/freescale/imx8mq-evk.dts              |  12 ++++++
+arch/arm64/boot/dts/freescale/imx8mq.dtsi                 |  27 +++++++++++++
+drivers/misc/pci_endpoint_test.c                          |   2 +
+drivers/pci/controller/dwc/Kconfig                        |  25 +++++++++++-
+drivers/pci/controller/dwc/pci-imx6.c                     | 180 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---------
+8 files changed, 263 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 58647051c948..aa1038b8aec4 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -95,7 +95,7 @@ static acpi_status acpi_pci_link_check_possible(struct acpi_resource *resource,
- 	case ACPI_RESOURCE_TYPE_IRQ:
- 		{
- 			struct acpi_resource_irq *p = &resource->data.irq;
--			if (!p || !p->interrupt_count) {
-+			if (!p->interrupt_count) {
- 				acpi_handle_debug(handle,
- 						  "Blank _PRS IRQ resource\n");
- 				return AE_OK;
-@@ -121,7 +121,7 @@ static acpi_status acpi_pci_link_check_possible(struct acpi_resource *resource,
- 		{
- 			struct acpi_resource_extended_irq *p =
- 			    &resource->data.extended_irq;
--			if (!p || !p->interrupt_count) {
-+			if (!p->interrupt_count) {
- 				acpi_handle_debug(handle,
- 						  "Blank _PRS EXT IRQ resource\n");
- 				return AE_OK;
-@@ -182,7 +182,7 @@ static acpi_status acpi_pci_link_check_current(struct acpi_resource *resource,
- 	case ACPI_RESOURCE_TYPE_IRQ:
- 		{
- 			struct acpi_resource_irq *p = &resource->data.irq;
--			if (!p || !p->interrupt_count) {
-+			if (!p->interrupt_count) {
- 				/*
- 				 * IRQ descriptors may have no IRQ# bits set,
- 				 * particularly those w/ _STA disabled
-@@ -197,7 +197,7 @@ static acpi_status acpi_pci_link_check_current(struct acpi_resource *resource,
- 		{
- 			struct acpi_resource_extended_irq *p =
- 			    &resource->data.extended_irq;
--			if (!p || !p->interrupt_count) {
-+			if (!p->interrupt_count) {
- 				/*
- 				 * extended IRQ descriptors must
- 				 * return at least 1 IRQ
--- 
-2.25.1
-
+[PATCH v1 01/10] dt-bindings: imx6q-pcie: Add iMX8MM PCIe EP mode
+[PATCH v1 02/10] dt-bindings: imx6q-pcie: Add iMX8MQ PCIe EP mode
+[PATCH v1 03/10] PCI: dwc: Kconfig: Add iMX PCIe EP mode support
+[PATCH v1 04/10] arm64: dts: Add iMX8MM PCIe EP support
+[PATCH v1 05/10] arm64: dts: Add iMX8MQ PCIe EP support
+[PATCH v1 06/10] arm64: dts: Add iMX8MM PCIe EP support on EVK board
+[PATCH v1 07/10] arm64: dts: Add iMX8MQ PCIe EP support on EVK board
+[PATCH v1 08/10] misc: pci_endpoint_test: Add iMX8 PCIe EP device
+[PATCH v1 09/10] PCI: imx6: Add iMX8MM PCIe EP mode
+[PATCH v1 10/10] PCI: imx6: Add iMX8MQ PCIe EP support
