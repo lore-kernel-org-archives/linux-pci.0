@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 951CACCA47F
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jul 2022 20:06:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFD1CCCA487
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jul 2022 20:06:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239518AbiGSUGc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Jul 2022 16:06:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56398 "EHLO
+        id S238237AbiGSUGd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Jul 2022 16:06:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238637AbiGSUGb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2022 16:06:31 -0400
-Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 253A225E9C
-        for <linux-pci@vger.kernel.org>; Tue, 19 Jul 2022 13:06:30 -0700 (PDT)
-Received: by mail-lj1-x22a.google.com with SMTP id by8so15092334ljb.13
-        for <linux-pci@vger.kernel.org>; Tue, 19 Jul 2022 13:06:30 -0700 (PDT)
+        with ESMTP id S239731AbiGSUGd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2022 16:06:33 -0400
+Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47022BF44
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jul 2022 13:06:32 -0700 (PDT)
+Received: by mail-lj1-x22c.google.com with SMTP id w17so18708215ljh.6
+        for <linux-pci@vger.kernel.org>; Tue, 19 Jul 2022 13:06:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CR4x547NI8VcvKHvRqVkj6OJDvRQX46zHm8TN7htZxM=;
-        b=h0GE+bUy0Bs2hG4KWpculmCmAtq9Tf91SzX5nS19z7bZ6Nd/D9A1nNawX1MxIebopt
-         LEiam3fmKidffAoIqhehXWRfYiEysJ8EF5ABZMN2eocl1WU+diF5L0593z9wCokRJboO
-         MOKRoTpv9hyGsZ/t3uSCczJwmj/WZJSDgWVydv+al4C+oRZC5432LMf/kd1L7E3iUSae
-         5NbyPF27HUbsrUh3a+GG9Pfu0xRz6MN+rC5pZSRHLiJ59Gm2Bpn2eSWyqX9LlAmwLIv9
-         hKKWL5dzyz9YkbT4DGj1I+mdvApk88qaFeKGuo5vAYWtVaogc49m8SFcncmTuDSM7xa8
-         AnVA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=khppLGtmeCurydu0up1OheYjo4gNvX+fB6BrZyQEiVc=;
+        b=f3ci2Ph/Jhy9qrO9K8itSvsLR/mRbIogP7DXOHWqE0DCiUlKt4CkJPJCoEx/SmmQD1
+         vPv0aqsdddYZXLoFwY08wnexr+v06LqtraxIDCIixFfd+s7rzRlUShQbwQp8l0ipKqbj
+         7zBEbPezv1vQuO4gMWx99HLWWdo5FAijE/5mKrOqB14TrBIhZSN5TkjCGvU8Vk04wdDw
+         /YoRxYHVkWGjXITtr8etj7S9yqhI7R/XJs9EuIyxTNG+UqYVphIDAIyChoZEU27g7qgy
+         Y0yXCF13Z2NBeFWj2wBCy2bhxyplCQIBQijE+pNblT/0zb5bu4zC2j1wJM3Q8+zpWSwR
+         w+qA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CR4x547NI8VcvKHvRqVkj6OJDvRQX46zHm8TN7htZxM=;
-        b=hpZihCm8s7X+5F2wGyop7B+Zjn/cpSOxAsOyDPoDtHw5/Its5EKYGQvWiap+FbuUWx
-         cJ529R/LYNjEzCWCVkrACztdUOtrHOMu4knuhUXW+jSssad/6RZ/5iExXb0+/8MKJX+p
-         Ztb4T09WAnsZWr2XOf8URu4GCM0ZjQVG1VmkSDoFmoo3rSWSokHMckJgmgPgCY0giwb0
-         6CI2Qr9Fy1RleEyORGcX0LNbXveL0ZNWiEkX2551cJB/yUCvMG8CHT7ZTv/T3UNdQwmv
-         Azh1tx6V+6HJlBoCGv1FmRIqi63POYiHgBowKq29e9KgwNG3SJQ7HiB+W8k/BKpMe9qm
-         MaiA==
-X-Gm-Message-State: AJIora/8MkvOkgF89BtQ4sCdJOE/5eehjVaZmYd9JKXtx947iDA9GdZ3
-        A8FLjo68qimxYtiYreg5TVrFsw==
-X-Google-Smtp-Source: AGRyM1uN2k7zHqAUY1+FSsTsYkFUJKD+P94mAnDMXjpNWqLKzendZ+rz/y7Oo1C738kWz/FQaNYvEQ==
-X-Received: by 2002:a05:651c:17a7:b0:25d:b518:bb38 with SMTP id bn39-20020a05651c17a700b0025db518bb38mr6278008ljb.114.1658261187858;
-        Tue, 19 Jul 2022 13:06:27 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=khppLGtmeCurydu0up1OheYjo4gNvX+fB6BrZyQEiVc=;
+        b=RPtFdzaXcUWjDSgqwfg9aqm4KSby/y0ez4Xvtp5xFy67L4AaeZv3NxhHfBOw5CzGNE
+         IXsIPuY1iOijh5UiiAK/BP/Is4KXwdxlR640KyHED1tDEAABNJyuwkb21gh9vm9o6ZO1
+         vgau0x8f8kCDLe4e6jo0fZOPejTF1XmQl4WGPbPLnl91bWFKkkto+V8YcUDnA/3J1GXe
+         MruwJXUyjPD2Y5RUAqZbsxyNi48bP6f5ih9f2VspfX14cFthAwg4Vbm5gbQE5XlgSeSW
+         olothMFb1UjH8U1jg6PqSgsR5yQf/KJ4oUNiH5aPXtIzKKUCIyeUOp6w8bSSirU+sYCc
+         wnpg==
+X-Gm-Message-State: AJIora97wz3cHwIaTGQCjXt1qll1XU0MtdwpZvQz3dnLfhUFdGz56IQU
+        jvHKdmLDX/Ska0C/NspSiAcFkQ==
+X-Google-Smtp-Source: AGRyM1sZ/OwrlRnWMejUVmyxZIIcInNZ6784Ms3BmHblS8+EmUXg+kcGc9fnwFkJSJEW4BTjYxt4wA==
+X-Received: by 2002:a2e:888e:0:b0:25d:8112:dfc7 with SMTP id k14-20020a2e888e000000b0025d8112dfc7mr16170633lji.270.1658261190609;
+        Tue, 19 Jul 2022 13:06:30 -0700 (PDT)
 Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id w16-20020a05651234d000b00485caa0f5dfsm3402324lfr.44.2022.07.19.13.06.27
+        by smtp.gmail.com with ESMTPSA id w16-20020a05651234d000b00485caa0f5dfsm3402324lfr.44.2022.07.19.13.06.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Jul 2022 13:06:27 -0700 (PDT)
+        Tue, 19 Jul 2022 13:06:30 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <bjorn.andersson@linaro.org>,
@@ -62,47 +62,41 @@ To:     Andy Gross <agross@kernel.org>,
 Cc:     Philipp Zabel <p.zabel@pengutronix.de>,
         Johan Hovold <johan@kernel.org>, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-phy@lists.infradead.org
-Subject: [RFC PATCH 0/4] PCI: qcom: support using the same PHY for both RC and EP
-Date:   Tue, 19 Jul 2022 23:06:22 +0300
-Message-Id: <20220719200626.976084-1-dmitry.baryshkov@linaro.org>
+Subject: [RFC PATCH 3/4] PCI: qcom: call phy_set_mode_ext()
+Date:   Tue, 19 Jul 2022 23:06:25 +0300
+Message-Id: <20220719200626.976084-4-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220719200626.976084-1-dmitry.baryshkov@linaro.org>
+References: <20220719200626.976084-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Programming of QMP PCIe PHYs slightly differs between RC and EP modes.
+Call phy_set_mode_ext() to notify the PHY driver that the PHY is being
+used in the RC mode.
 
-Currently both qcom and qcom-ep PCIe controllers setup the PHY in the
-default mode, making it impossible to select at runtime whether the PHY
-should be running in RC or in EP modes. Usually this is not an issue,
-since for most devices only the RC mode is used, while for some (SDX55)
-the EP mode is used without support for working as the RC.
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Some of the Qualcomm platforms would still benefit from being able to
-switch between RC and EP depending on the driver being used. While it is
-possible to use different compat strings for the PHY depending on the
-mode, it seems like an incorrect approach, since the PHY doesn't differ
-between usecases. It's the PCIe controller, who should decide how to
-configure the PHY.
-
-This patch series implements the ability to select between RC and EP
-modes, by allowing the PCIe QMP PHY driver to switch between
-programming tables.
-
-Dmitry Baryshkov (4):
-  phy: qcom-qmp-pcie: split register tables into primary and secondary
-    part
-  phy: qcom-qmp-pcie: suppor separate tables for EP mode
-  PCI: qcom: call phy_set_mode_ext()
-  PCI: qcom-ep: call phy_set_mode_ext()
-
- drivers/pci/controller/dwc/pcie-qcom-ep.c |   4 +
- drivers/pci/controller/dwc/pcie-qcom.c    |   4 +
- drivers/phy/qualcomm/phy-qcom-qmp-pcie.c  | 155 ++++++++++++----------
- 3 files changed, 96 insertions(+), 67 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 5ed164c2afa3..50bf3fefef7a 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1486,6 +1486,10 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+ 	if (ret)
+ 		return ret;
+ 
++	ret = phy_set_mode_ext(pcie->phy, PHY_MODE_PCIE, 0);
++	if (ret)
++		return ret;
++
+ 	ret = phy_power_on(pcie->phy);
+ 	if (ret)
+ 		goto err_deinit;
 -- 
 2.35.1
 
