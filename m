@@ -2,184 +2,138 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87270CCA486
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Jul 2022 10:01:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F75CC43334
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Jul 2022 10:17:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237481AbiGSKBr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Jul 2022 06:01:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56454 "EHLO
+        id S234329AbiGSKQ7 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Jul 2022 06:16:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237443AbiGSKBi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2022 06:01:38 -0400
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FB14371AF;
-        Tue, 19 Jul 2022 03:01:27 -0700 (PDT)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 3285B1A0AD4;
-        Tue, 19 Jul 2022 12:01:26 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id AF3A11A0AC9;
-        Tue, 19 Jul 2022 12:01:25 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 425FA181D0CA;
-        Tue, 19 Jul 2022 18:01:24 +0800 (+08)
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
-        lorenzo.pieralisi@arm.com, shawnguo@kernel.org, kishon@ti.com,
-        kw@linux.com, frank.li@nxp.com
-Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
-        linux-imx@nxp.com
-Subject: [PATCH v1 10/10] PCI: imx6: Add iMX8MQ PCIe EP support
-Date:   Tue, 19 Jul 2022 17:45:39 +0800
-Message-Id: <1658223939-25478-11-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1658223939-25478-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1658223939-25478-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        with ESMTP id S234156AbiGSKQ5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jul 2022 06:16:57 -0400
+Received: from mout.kundenserver.de (mout.kundenserver.de [212.227.126.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BDA51EED1;
+        Tue, 19 Jul 2022 03:16:55 -0700 (PDT)
+Received: from mail-yb1-f175.google.com ([209.85.219.175]) by
+ mrelayeu.kundenserver.de (mreue010 [213.165.67.97]) with ESMTPSA (Nemesis) id
+ 1M1YxX-1oFgMQ1lcZ-0031vq; Tue, 19 Jul 2022 12:16:53 +0200
+Received: by mail-yb1-f175.google.com with SMTP id i206so25632606ybc.5;
+        Tue, 19 Jul 2022 03:16:53 -0700 (PDT)
+X-Gm-Message-State: AJIora/Wzy4xy30TVZ+Wg9ZzRmOwDd/Jy+GdBmrF0JXNmqOZyufBobrX
+        qaGzbOuKlAnpXNXPfS3LTbwsx79t4G3uQwr6oXY=
+X-Google-Smtp-Source: AGRyM1ubUAN76zpgIRG/xXMeM9/Iaf5rCoaQuQqgmDkgW3aRsOAONqEMP0JapwejADTBc5iRrEQHpIlhTT6j48C15IQ=
+X-Received: by 2002:a25:808c:0:b0:670:7d94:f2a with SMTP id
+ n12-20020a25808c000000b006707d940f2amr3683944ybk.452.1658225812009; Tue, 19
+ Jul 2022 03:16:52 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220718202843.6766-1-maukka@ext.kapsi.fi> <20220718202843.6766-4-maukka@ext.kapsi.fi>
+ <CAK8P3a042yoLR0eqt4Bm0KH4X9SJhUsjKDh1S9M+MF6mU1mPNw@mail.gmail.com> <20220719094649.pzyrqdvm3fm5fqh2@pali>
+In-Reply-To: <20220719094649.pzyrqdvm3fm5fqh2@pali>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Tue, 19 Jul 2022 12:16:34 +0200
+X-Gmail-Original-Message-ID: <CAK8P3a1RpMQ5zdiH_jkydxDOCm6WyD7qqdN+5T+503tN4SnOqw@mail.gmail.com>
+Message-ID: <CAK8P3a1RpMQ5zdiH_jkydxDOCm6WyD7qqdN+5T+503tN4SnOqw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: mvebu: add support for orion5x
+To:     =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Mauri Sandberg <maukka@ext.kapsi.fi>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        DTML <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory CLEMENT <gregory.clement@bootlin.com>,
+        Russell King - ARM Linux <linux@armlinux.org.uk>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Provags-ID: V03:K1:jIxbetmla4q4Itug1nQpXGCdgfiBnGKqj5IWNlD8ZHEwNg1gm7J
+ xzHMemTB9zJeZn89YejyrMAvVQQKp9OfP6nkoXTND5X1X1eoUAdtS1z8CJABovlA11Xf/ia
+ ahA3iy40oIeueB67eR3PAMdA4+7dh5k88PAOp6V1ociWfDPr20r/iKGCTfuRNFR7mwJH0SC
+ I9d4PDMsnQFLO/StNIkaA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:1d8yY9ZiAco=:5qdDRYATVGnReQc41jKSmM
+ TLYnc1czNFG/hwKNsPa2KnkuUh5h1bLHJX1t3Ah2aoN3cPlwRtSh+nrnFwEsR2Uze1KfBJ2kS
+ bDOguiiEgvi9z6wCFeoThosMgA/klfVzkYtkeFrJ+3wsUnDsBrJ9kPjFa4DqaFA72M5x1uoSo
+ ss993GSTdKzS2WbkxpZ7ulh62QLSLSz2Tihi+c/ttFtR+X1ZGXBFebXuq5y4hsoq7pNd8sR3w
+ pbZzf8/G5GwzDsJDg5OC6v5h/o+WILICoOuIc1DHcxnEsIj21UjITfN1OakShD6xMmhxczBcB
+ YJiKeZmXQbz7xNz21YA9KnsfUvGBlSXeRoaT7L8hxP2h0CDgnflarfoj3tH/LNvt7M8vYRPeR
+ y3ZH7/kZ5b7RHBQlQzcKs8Ey3fdlcS59DCejLrmPNGG4cWsQp+W6hboJDrvLKyXS/FZxqrAVC
+ lHM2gd8GQOl5irxaO/DNM9k+woqrhKnayrL2QQe3DtnuUPNIMl/+tg9XqXGMYMH2uxVkVpYDk
+ FpOkvQJJZWbnLtVoWshUx73LSRaddSkR1jw7KGlbFWtfzqvhJF+ohsN269QxgZGt7OBhiisz5
+ 9FI8oKvZDXTQ/KnQ71Gm92JHGOkjB/o7xpq7Yt9uQU5F7UPe09BoANPxaoLW0x/82lRhp52po
+ dxjeWnq4ORq0V6RFPZpufGFSAAeS8xL6DmdiDKeahoGa+JnT8Qu1d5x43cJHlOM6JXenTgzjQ
+ PjfejlWmf0of3q/wsTRIqK+5ffnR2dC+IkZbuN22xNYlVgubMVH4RqJxCAu+IdrJTucdy0Hay
+ 0cop7nFLK/ZAnYn8LNhZgd/wiKhvqS3qQBq8Hpu+qJpHlmGe8UFwl7VOL7AwD/Q02koE/Afq3
+ PqW8ieCUjuW+gjfHYXQQ==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the iMX8MQ PCIe EP support
+On Tue, Jul 19, 2022 at 11:46 AM Pali Rohár <pali@kernel.org> wrote:
+> On Tuesday 19 July 2022 10:05:28 Arnd Bergmann wrote:
+> > > +/* Relevant only for Orion-1/Orion-NAS */
+> > > +#define ORION5X_PCIE_WA_PHYS_BASE      0xf0000000
+> > > +#define ORION5X_PCIE_WA_VIRT_BASE      IOMEM(0xfd000000)
+> >
+> > You should not need to hardcode these here. The ORION5X_PCIE_WA_PHYS_BASE
+> > should already be part of the DT binding.
+>
+> Of course! But the issue is that we do not know how to do this DT
+> binding. I have already wrote email with asking for help in which
+> property and which format should be this config range defined, but no
+> answer yet: https://lore.kernel.org/linux-pci/20220710225108.bgedria6igtqpz5l@pali/
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 34 +++++++++++++++++++++++----
- 1 file changed, 29 insertions(+), 5 deletions(-)
+Ah, I had not seen that email. Quoting from there:
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index ba4ac258c13d..1df634370291 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -52,6 +52,7 @@ enum imx6_pcie_variants {
- 	IMX8MQ,
- 	IMX8MM,
- 	IMX8MM_EP,
-+	IMX8MQ_EP,
- };
- 
- #define IMX6_PCIE_FLAG_IMX6_PHY			BIT(0)
-@@ -152,6 +153,7 @@ struct imx6_pcie {
- static unsigned int imx6_pcie_grp_offset(const struct imx6_pcie *imx6_pcie)
- {
- 	WARN_ON(imx6_pcie->drvdata->variant != IMX8MQ &&
-+		imx6_pcie->drvdata->variant != IMX8MQ_EP &&
- 		imx6_pcie->drvdata->variant != IMX8MM &&
- 		imx6_pcie->drvdata->variant != IMX8MM_EP);
- 	return imx6_pcie->controller_id == 1 ? IOMUXC_GPR16 : IOMUXC_GPR14;
-@@ -166,13 +168,22 @@ static void imx6_pcie_configure_type(struct imx6_pcie *imx6_pcie)
- 	else
- 		mode = PCI_EXP_TYPE_ROOT_PORT;
- 
--	if (imx6_pcie->drvdata->variant == IMX8MQ &&
--	    imx6_pcie->controller_id == 1) {
--		mask = IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE;
--		val  = FIELD_PREP(IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE, mode);
--	} else {
-+	switch (imx6_pcie->drvdata->variant) {
-+	case IMX8MQ:
-+	case IMX8MQ_EP:
-+		if (imx6_pcie->controller_id == 1) {
-+			mask = IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE;
-+			val  = FIELD_PREP(IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE,
-+					  mode);
-+		} else {
-+			mask = IMX6Q_GPR12_DEVICE_TYPE;
-+			val  = FIELD_PREP(IMX6Q_GPR12_DEVICE_TYPE, mode);
-+		}
-+		break;
-+	default:
- 		mask = IMX6Q_GPR12_DEVICE_TYPE;
- 		val  = FIELD_PREP(IMX6Q_GPR12_DEVICE_TYPE, mode);
-+		break;
- 	}
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, mask, val);
-@@ -314,6 +325,7 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
- 		 */
- 		break;
- 	case IMX8MQ:
-+	case IMX8MQ_EP:
- 		/*
- 		 * TODO: Currently this code assumes external
- 		 * oscillator is being used
-@@ -566,6 +578,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 	case IMX8MM:
- 	case IMX8MM_EP:
- 	case IMX8MQ:
-+	case IMX8MQ_EP:
- 		ret = clk_prepare_enable(imx6_pcie->pcie_aux);
- 		if (ret) {
- 			dev_err(dev, "unable to enable pcie_aux clock\n");
-@@ -611,6 +624,7 @@ static void imx6_pcie_disable_ref_clk(struct imx6_pcie *imx6_pcie)
- 	case IMX8MM:
- 	case IMX8MM_EP:
- 	case IMX8MQ:
-+	case IMX8MQ_EP:
- 		clk_disable_unprepare(imx6_pcie->pcie_aux);
- 		break;
- 	default:
-@@ -675,6 +689,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX7D:
- 	case IMX8MQ:
-+	case IMX8MQ_EP:
- 		reset_control_assert(imx6_pcie->pciephy_reset);
- 		fallthrough;
- 	case IMX8MM:
-@@ -716,6 +731,7 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX8MQ:
-+	case IMX8MQ_EP:
- 		reset_control_deassert(imx6_pcie->pciephy_reset);
- 		break;
- 	case IMX7D:
-@@ -803,6 +819,7 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
- 		break;
- 	case IMX7D:
- 	case IMX8MQ:
-+	case IMX8MQ_EP:
- 	case IMX8MM:
- 	case IMX8MM_EP:
- 		reset_control_deassert(imx6_pcie->apps_reset);
-@@ -823,6 +840,7 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
- 		break;
- 	case IMX7D:
- 	case IMX8MQ:
-+	case IMX8MQ_EP:
- 	case IMX8MM:
- 	case IMX8MM_EP:
- 		reset_control_assert(imx6_pcie->apps_reset);
-@@ -1264,6 +1282,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 					     "pcie_inbound_axi clock missing or invalid\n");
- 		break;
- 	case IMX8MQ:
-+	case IMX8MQ_EP:
- 		imx6_pcie->pcie_aux = devm_clk_get(dev, "pcie_aux");
- 		if (IS_ERR(imx6_pcie->pcie_aux))
- 			return dev_err_probe(dev, PTR_ERR(imx6_pcie->pcie_aux),
-@@ -1441,6 +1460,10 @@ static const struct imx6_pcie_drvdata drvdata[] = {
- 		.variant = IMX8MM_EP,
- 		.mode = DW_PCIE_EP_TYPE,
- 	},
-+	[IMX8MQ_EP] = {
-+		.variant = IMX8MQ_EP,
-+		.mode = DW_PCIE_EP_TYPE,
-+	},
- };
- 
- static const struct of_device_id imx6_pcie_of_match[] = {
-@@ -1451,6 +1474,7 @@ static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx8mq-pcie", .data = &drvdata[IMX8MQ], },
- 	{ .compatible = "fsl,imx8mm-pcie", .data = &drvdata[IMX8MM], },
- 	{ .compatible = "fsl,imx8mm-pcie-ep", .data = &drvdata[IMX8MM_EP], },
-+	{ .compatible = "fsl,imx8mq-pcie-ep", .data = &drvdata[IMX8MQ_EP], },
- 	{},
- };
- 
--- 
-2.25.1
+> So my question is: How to properly define config space range in device
+> tree file? In which device tree property and in which format? Please
+> note that this memory range of config space is PCIe root port specific
+> and it requires its own MBUS_ID() like memory range of PCIe MEM and PCIe
+> IO mapping. Please look e.g. at armada-385.dtsi how are MBUS_ID() used:
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm/boot/dts/armada-385.dtsi
 
+This is probably a question for Rob as the mvebu driver is a rather special
+case. Normally this would just be a 'reg' property of the host bridge,
+but I think
+in your case the root device is imaginary, and the ports under it are the
+actual hardware devices, so you'll probably have to do the same thing as
+the armada-385, translating the mbus ranges for the config space in the
+"ranges" property of the parent, and then referring to them by PCI
+MMIO addresses using the assigned-addresses property to pass the
+config-space registers as a second set of registers in addition to the
+first set.
+
+> > There is little practical difference
+> > here, but I see no value in taking the shortcut here either.
+> >
+> > For the ORION5X_PCIE_WA_VIRT_BASE, you rely on this to match the
+> > definition in arch/arm/mach-orion5x/common.c, and this is rather fragile.
+> >
+> > Instead, please use ioremap() to create a mapping at runtime. The ioremap()
+> > implementation on ARM is smart enough to reuse the address from the static
+> > mapping in common.c, but will also keep working if that should go away.
+>
+> I'm planning to work with Mauri on this, but current blocker is DT.
+
+Ok. It should not be hard to do this first, as you just need to pass the
+same physical address that you pass in the mbus setup, but I agree
+it's easier to do this afterwards to avoid having to rewrite it again.
+
+> > This is probably good enough here, though I think you could also use
+> > the trick from drivers/pci/ecam.c and map each bus at a time.
+> >
+> Yes, there are also helper functions like map bus and etc. which could
+> simplify this code. I'm planning to do cleanups once we have fully
+> working driver for Orion.
+
+Ok. This is probably not worth the effort if the old driver doesn't already
+do provide access to the high registers.
+
+      Arnd
