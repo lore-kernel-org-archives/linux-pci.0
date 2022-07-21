@@ -2,59 +2,59 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1045C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jul 2022 22:34:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0493CC43334
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jul 2022 22:35:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230293AbiGUWev (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Jul 2022 18:34:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42280 "EHLO
+        id S233655AbiGUWfB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Jul 2022 18:35:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229539AbiGUWeu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2022 18:34:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0587C77A66
-        for <linux-pci@vger.kernel.org>; Thu, 21 Jul 2022 15:34:48 -0700 (PDT)
+        with ESMTP id S229946AbiGUWe5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2022 18:34:57 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 22C2A7FE76
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jul 2022 15:34:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1658442888;
+        s=mimecast20190719; t=1658442895;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=FbHoTM5Rt91OdmCyo1W3xeRtGZ9iC9uA5MFK7g8w+Fg=;
-        b=Ks/h8aZhClK8Mk9OFL7G+GvG2Lee+T28pMQg03UYyqdtxjUpJ1usCuql1H8WRYvDTB86at
-        WuUjVSreMIpEuMUvcXYJPh4La+EHk4VYukIpOLW/ruNqc+DeTOz2opHqYJ/gQATxU4oiYQ
-        y1/r2mFbxbZIJ69TSkhAuSTbI3z2jaU=
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
- [209.85.166.199]) by relay.mimecast.com with ESMTP with STARTTLS
+        bh=bQio+55hxj6+t1WAQxWAmFxvlBH4CtIfnR9T5vDPgcw=;
+        b=IqTfNkm1qchlMBWPtJVW36B4705JY8BzWNkpP2SEwysToIzp2OV65IqafLBMSSYEKanlH+
+        cbpefx7eZ5cJ4KCwZpkEJoVnEo5TRy2OowuyqcH2bv7BiJJjz1+joNgSg8gyy8z6f0x0ZO
+        iT7xwhGknaCa6Z3EG3jSoKw2qWC3AI4=
+Received: from mail-il1-f198.google.com (mail-il1-f198.google.com
+ [209.85.166.198]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-9-MyiMM7VCNDSWWmaH4uwp2w-1; Thu, 21 Jul 2022 18:34:46 -0400
-X-MC-Unique: MyiMM7VCNDSWWmaH4uwp2w-1
-Received: by mail-il1-f199.google.com with SMTP id o9-20020a056e0214c900b002dc29c288bfso1643077ilk.3
-        for <linux-pci@vger.kernel.org>; Thu, 21 Jul 2022 15:34:46 -0700 (PDT)
+ us-mta-516-N9ALQMNwPVWrZlvfb-SjBw-1; Thu, 21 Jul 2022 18:34:54 -0400
+X-MC-Unique: N9ALQMNwPVWrZlvfb-SjBw-1
+Received: by mail-il1-f198.google.com with SMTP id f11-20020a056e02168b00b002dc8abbf7f9so1617773ila.12
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jul 2022 15:34:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
          :references:organization:mime-version:content-transfer-encoding;
-        bh=FbHoTM5Rt91OdmCyo1W3xeRtGZ9iC9uA5MFK7g8w+Fg=;
-        b=vMi59vU0wiXsLhDLxrn6ACeQgQiSLM9UHva4xe0jxmMFMBPysZQ6vqG5cDDZ8qX/Oa
-         7mpDq0xn38fi8sV27flBYlgv2qeQEh/qddljeHPUJin3k268OhPnP7FTGsI8QFjil/Mk
-         vA5iWyv2GfXF1Bz2kG0oiA9CWKGl/yI9M+EbA82h0spzGxTcnhHmyrFaNrbeJ3vXLfjf
-         tpuJ1p9WTxfGf+BdvozKRbcUKzT5Z70iALERpdW4ULbNOiOtwozItTT3evKHOj2A6aez
-         s6rxuEwWL2OKnvZ6u4B/JvkwwsplCSWNnDW+sv6JMhCeueNC3Hi4t4wAXZXEo1Ux6z2g
-         T8gQ==
-X-Gm-Message-State: AJIora882BGY865fiKGuhMTKHxdaaCpvoTLP5Iu+0IuLNSueR/F00ymJ
-        a1BEWdzHPjZt3M6LPsAN8RlW00wA7GIXzSyFS9scduC0mQi5P11pTjiTuML6UOiHtwAwmoKr+x/
-        wgnilCDZVRdBH6Cb8biwq
-X-Received: by 2002:a05:6638:3589:b0:33f:88f2:2545 with SMTP id v9-20020a056638358900b0033f88f22545mr311976jal.229.1658442885837;
-        Thu, 21 Jul 2022 15:34:45 -0700 (PDT)
-X-Google-Smtp-Source: AGRyM1u3YiP6JXEgjAKXrBeop0N46j1B+Tfjsl9+kS03iKFvuVf+mnHSNfypqaXgylDjjdtyx72oZQ==
-X-Received: by 2002:a05:6638:3589:b0:33f:88f2:2545 with SMTP id v9-20020a056638358900b0033f88f22545mr311963jal.229.1658442885478;
-        Thu, 21 Jul 2022 15:34:45 -0700 (PDT)
+        bh=bQio+55hxj6+t1WAQxWAmFxvlBH4CtIfnR9T5vDPgcw=;
+        b=WCVunNNz0eeQBH9/TOyDBikSPzKwM0/+WzT2KB45F2MD6zS7tLtpbxghS3w/yxQnsY
+         siMoaG+fjnwZv2WRLtKKB9JvgcHVmi/AtuY91C/dHu1m/icVEOEN9AeeIHS2DX7qTmEz
+         aNdUcnPeBL2VxX+BrJ+rgkVFh5PWsufDMz8TBO69x11IGhNRbPijqvi1rUyv3R5pV4ct
+         Svg0OXhdefxq8igM321sOH/WK6ZUCvyRDUWekFkxE7NhHZq614ZXCrhlQZ/WIz6zGqFs
+         1eCDGrxXnO9GB4xSCFOleg4OJHmPoQqSuMxMv/XBwII+BughuO+k5EGNLlQCGtEKfzFx
+         kcow==
+X-Gm-Message-State: AJIora/o0ANYModykhST5eXyRtrTQ/Je4IVg9oqONzEeBSEFp3SrgQa9
+        Qu2FAzN9261grXvY9JDtx7II9/u5UNjMFJ8hvHTQLueQzSP6bPG6P0sVwgoOD3wlKV9jHik210u
+        4J1ieOEZDmn+mvrHtEsJL
+X-Received: by 2002:a05:6e02:2168:b0:2dc:7313:c62e with SMTP id s8-20020a056e02216800b002dc7313c62emr250454ilv.220.1658442893507;
+        Thu, 21 Jul 2022 15:34:53 -0700 (PDT)
+X-Google-Smtp-Source: AGRyM1ulehtgJhid5KOUip5hnDSLWdR5VEHckEdwptR7hMFLjpLBbJ0zd2Oko5/1xv6SQrR78MEm7A==
+X-Received: by 2002:a05:6e02:2168:b0:2dc:7313:c62e with SMTP id s8-20020a056e02216800b002dc7313c62emr250442ilv.220.1658442893292;
+        Thu, 21 Jul 2022 15:34:53 -0700 (PDT)
 Received: from redhat.com ([38.15.36.239])
-        by smtp.gmail.com with ESMTPSA id x8-20020a0566022c4800b0067c09fd0b53sm1330034iov.21.2022.07.21.15.34.44
+        by smtp.gmail.com with ESMTPSA id m30-20020a026a5e000000b0034149185a92sm1297066jaf.148.2022.07.21.15.34.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Jul 2022 15:34:44 -0700 (PDT)
-Date:   Thu, 21 Jul 2022 16:34:42 -0600
+        Thu, 21 Jul 2022 15:34:52 -0700 (PDT)
+Date:   Thu, 21 Jul 2022 16:34:51 -0600
 From:   Alex Williamson <alex.williamson@redhat.com>
 To:     Abhishek Sahu <abhsahu@nvidia.com>
 Cc:     Cornelia Huck <cohuck@redhat.com>,
@@ -67,12 +67,12 @@ Cc:     Cornelia Huck <cohuck@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
         <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v5 5/5] vfio/pci: Implement
- VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY_WITH_WAKEUP
-Message-ID: <20220721163442.7d2ae47f.alex.williamson@redhat.com>
-In-Reply-To: <20220719121523.21396-6-abhsahu@nvidia.com>
+Subject: Re: [PATCH v5 2/5] vfio: Increment the runtime PM usage count
+ during IOCTL call
+Message-ID: <20220721163451.67cd9be8.alex.williamson@redhat.com>
+In-Reply-To: <20220719121523.21396-3-abhsahu@nvidia.com>
 References: <20220719121523.21396-1-abhsahu@nvidia.com>
-        <20220719121523.21396-6-abhsahu@nvidia.com>
+        <20220719121523.21396-3-abhsahu@nvidia.com>
 Organization: Red Hat
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -81,270 +81,147 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 19 Jul 2022 17:45:23 +0530
+On Tue, 19 Jul 2022 17:45:20 +0530
 Abhishek Sahu <abhsahu@nvidia.com> wrote:
 
-> This patch implements VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY_WITH_WAKEUP
-> device feature. In the VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY, if there is
-> any access for the VFIO device on the host side, then the device will
-> be moved out of the low power state without the user's guest driver
-> involvement. Once the device access has been finished, then the device
-> will be moved again into low power state. With the low power
-> entry happened through VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY_WITH_WAKEUP,
-> the device will not be moved back into the low power state and
-> a notification will be sent to the user by triggering wakeup eventfd.
+> The vfio-pci based drivers will have runtime power management
+> support where the user can put the device into the low power state
+> and then PCI devices can go into the D3cold state. If the device is
+> in the low power state and the user issues any IOCTL, then the
+> device should be moved out of the low power state first. Once
+> the IOCTL is serviced, then it can go into the low power state again.
+> The runtime PM framework manages this with help of usage count.
 > 
-> vfio_pci_core_pm_entry() will be called for both the variants of low
-> power feature entry so add an extra argument for wakeup eventfd context
-> and store locally in 'struct vfio_pci_core_device'.
+> One option was to add the runtime PM related API's inside vfio-pci
+> driver but some IOCTL (like VFIO_DEVICE_FEATURE) can follow a
+> different path and more IOCTL can be added in the future. Also, the
+> runtime PM will be added for vfio-pci based drivers variant currently,
+> but the other VFIO based drivers can use the same in the
+> future. So, this patch adds the runtime calls runtime-related API in
+> the top-level IOCTL function itself.
 > 
-> For the entry happened without wakeup eventfd, all the exit related
-> handling will be done by the LOW_POWER_EXIT device feature only.
-> When the LOW_POWER_EXIT will be called, then the vfio core layer
-> vfio_device_pm_runtime_get() will increment the usage count and will
-> resume the device. In the driver runtime_resume callback,
-> the 'pm_wake_eventfd_ctx' will be NULL so the vfio_pci_runtime_pm_exit()
-> will return early. Then vfio_pci_core_pm_exit() will again call
-> vfio_pci_runtime_pm_exit() and now the exit related handling will be done.
+> For the VFIO drivers which do not have runtime power management
+> support currently, the runtime PM API's won't be invoked. Only for
+> vfio-pci based drivers currently, the runtime PM API's will be invoked
+> to increment and decrement the usage count. In the vfio-pci drivers also,
+> the variant drivers can opt-out by incrementing the usage count during
+> device-open. The pm_runtime_resume_and_get() checks the device
+> current status and will return early if the device is already in the
+> ACTIVE state.
 > 
-> For the entry happened with wakeup eventfd, in the driver resume
-> callback, eventfd will be triggered and all the exit related handling will
-> be done. When vfio_pci_runtime_pm_exit() will be called by
-> vfio_pci_core_pm_exit(), then it will return early. But if the user has
-> disabled the runtime PM on the host side, the device will never go
-> runtime suspended state and in this case, all the exit related handling
-> will be done during vfio_pci_core_pm_exit() only. Also, the eventfd will
-> not be triggered since the device power state has not been changed by the
-> host driver.
+> Taking this usage count incremented while servicing IOCTL will make
+> sure that the user won't put the device into the low power state when any
+> other IOCTL is being serviced in parallel. Let's consider the
+> following scenario:
 > 
-> For vfio_pci_core_disable() also, all the exit related handling
-> needs to be done if user has closed the device after putting into
-> low power. In this case eventfd will not be triggered since
-> the device close has been initiated by the user only.
+>  1. Some other IOCTL is called.
+>  2. The user has opened another device instance and called the IOCTL for
+>     low power entry.
+>  3. The low power entry IOCTL moves the device into the low power state.
+>  4. The other IOCTL finishes.
+> 
+> If we don't keep the usage count incremented then the device
+> access will happen between step 3 and 4 while the device has already
+> gone into the low power state.
+> 
+> The pm_runtime_resume_and_get() will be the first call so its error
+> should not be propagated to user space directly. For example, if
+> pm_runtime_resume_and_get() can return -EINVAL for the cases where the
+> user has passed the correct argument. So the
+> pm_runtime_resume_and_get() errors have been masked behind -EIO.
 > 
 > Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
 > ---
->  drivers/vfio/pci/vfio_pci_core.c | 78 ++++++++++++++++++++++++++++++--
->  include/linux/vfio_pci_core.h    |  1 +
->  2 files changed, 74 insertions(+), 5 deletions(-)
+>  drivers/vfio/vfio.c | 52 ++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 49 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-> index 726a6f282496..dbe942bcaa67 100644
-> --- a/drivers/vfio/pci/vfio_pci_core.c
-> +++ b/drivers/vfio/pci/vfio_pci_core.c
-> @@ -259,7 +259,8 @@ int vfio_pci_set_power_state(struct vfio_pci_core_device *vdev, pci_power_t stat
->  	return ret;
->  }
+> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+> index bd84ca7c5e35..1d005a0a9d3d 100644
+> --- a/drivers/vfio/vfio.c
+> +++ b/drivers/vfio/vfio.c
+> @@ -32,6 +32,7 @@
+>  #include <linux/vfio.h>
+>  #include <linux/wait.h>
+>  #include <linux/sched/signal.h>
+> +#include <linux/pm_runtime.h>
+>  #include "vfio.h"
 >  
-> -static int vfio_pci_runtime_pm_entry(struct vfio_pci_core_device *vdev)
-> +static int vfio_pci_runtime_pm_entry(struct vfio_pci_core_device *vdev,
-> +				     struct eventfd_ctx *efdctx)
->  {
->  	/*
->  	 * The vdev power related flags are protected with 'memory_lock'
-> @@ -272,6 +273,7 @@ static int vfio_pci_runtime_pm_entry(struct vfio_pci_core_device *vdev)
->  	}
+>  #define DRIVER_VERSION	"0.3"
+> @@ -1335,6 +1336,39 @@ static const struct file_operations vfio_group_fops = {
+>  	.release	= vfio_group_fops_release,
+>  };
 >  
->  	vdev->pm_runtime_engaged = true;
-> +	vdev->pm_wake_eventfd_ctx = efdctx;
->  	pm_runtime_put_noidle(&vdev->pdev->dev);
->  	up_write(&vdev->memory_lock);
->  
-> @@ -295,21 +297,67 @@ static int vfio_pci_core_pm_entry(struct vfio_device *device, u32 flags,
->  	 * while returning from the ioctl and then the device can go into
->  	 * runtime suspended state.
->  	 */
-> -	return vfio_pci_runtime_pm_entry(vdev);
-> +	return vfio_pci_runtime_pm_entry(vdev, NULL);
->  }
->  
-> -static void vfio_pci_runtime_pm_exit(struct vfio_pci_core_device *vdev)
-> +static int
-> +vfio_pci_core_pm_entry_with_wakeup(struct vfio_device *device, u32 flags,
-> +				   void __user *arg, size_t argsz)
+> +/*
+> + * Wrapper around pm_runtime_resume_and_get().
+> + * Return error code on failure or 0 on success.
+> + */
+> +static inline int vfio_device_pm_runtime_get(struct vfio_device *device)
 > +{
-> +	struct vfio_pci_core_device *vdev =
-> +		container_of(device, struct vfio_pci_core_device, vdev);
-> +	struct vfio_device_low_power_entry_with_wakeup entry;
-> +	struct eventfd_ctx *efdctx;
-> +	int ret;
+> +	struct device *dev = device->dev;
 > +
-> +	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
-> +				 sizeof(entry));
-> +	if (ret != 1)
-> +		return ret;
+> +	if (dev->driver && dev->driver->pm) {
+> +		int ret;
 > +
-> +	if (copy_from_user(&entry, arg, sizeof(entry)))
-> +		return -EFAULT;
-> +
-> +	if (entry.wakeup_eventfd < 0)
-> +		return -EINVAL;
-> +
-> +	efdctx = eventfd_ctx_fdget(entry.wakeup_eventfd);
-> +	if (IS_ERR(efdctx))
-> +		return PTR_ERR(efdctx);
-> +
-> +	ret = vfio_pci_runtime_pm_entry(vdev, efdctx);
-> +	if (ret)
-> +		eventfd_ctx_put(efdctx);
-> +
-> +	return ret;
-> +}
-> +
-> +static void vfio_pci_runtime_pm_exit(struct vfio_pci_core_device *vdev,
-> +				     bool resume_callback)
->  {
->  	/*
->  	 * The vdev power related flags are protected with 'memory_lock'
->  	 * semaphore.
->  	 */
->  	down_write(&vdev->memory_lock);
-> +	if (resume_callback && !vdev->pm_wake_eventfd_ctx) {
-> +		up_write(&vdev->memory_lock);
-> +		return;
-> +	}
-> +
->  	if (vdev->pm_runtime_engaged) {
->  		vdev->pm_runtime_engaged = false;
->  		pm_runtime_get_noresume(&vdev->pdev->dev);
->  	}
->  
-> +	if (vdev->pm_wake_eventfd_ctx) {
-> +		if (resume_callback)
-> +			eventfd_signal(vdev->pm_wake_eventfd_ctx, 1);
-> +
-> +		eventfd_ctx_put(vdev->pm_wake_eventfd_ctx);
-> +		vdev->pm_wake_eventfd_ctx = NULL;
-> +	}
-> +
->  	up_write(&vdev->memory_lock);
->  }
->  
+> +		ret = pm_runtime_resume_and_get(dev);
+> +		if (ret < 0) {
 
-I find the pm_exit handling here confusing.  We only have one caller
-that can signal the eventfd, so it seems cleaner to me to have that
-caller do the eventfd signal.  We can then remove the arg to pm_exit
-and pull the core of it out to a pre-locked function for that call
-path.  Sometime like below (applies on top of this patch).  Also moved
-the intx unmasking until after the eventfd signaling.  What do you
-think?  Thanks,
+Nit, pm_runtime_resume_and_get() cannot return a positive value, it's
+either zero or -errno, so we could just test (ret).  Thanks,
 
 Alex
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index dbe942bcaa67..93169b7d6da2 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -332,32 +332,27 @@ vfio_pci_core_pm_entry_with_wakeup(struct vfio_device *device, u32 flags,
- 	return ret;
- }
- 
--static void vfio_pci_runtime_pm_exit(struct vfio_pci_core_device *vdev,
--				     bool resume_callback)
-+static void __vfio_pci_runtime_pm_exit(struct vfio_pci_core_device *vdev)
- {
--	/*
--	 * The vdev power related flags are protected with 'memory_lock'
--	 * semaphore.
--	 */
--	down_write(&vdev->memory_lock);
--	if (resume_callback && !vdev->pm_wake_eventfd_ctx) {
--		up_write(&vdev->memory_lock);
--		return;
--	}
--
- 	if (vdev->pm_runtime_engaged) {
- 		vdev->pm_runtime_engaged = false;
- 		pm_runtime_get_noresume(&vdev->pdev->dev);
--	}
--
--	if (vdev->pm_wake_eventfd_ctx) {
--		if (resume_callback)
--			eventfd_signal(vdev->pm_wake_eventfd_ctx, 1);
- 
--		eventfd_ctx_put(vdev->pm_wake_eventfd_ctx);
--		vdev->pm_wake_eventfd_ctx = NULL;
-+		if (vdev->pm_wake_eventfd_ctx) {
-+			eventfd_ctx_put(vdev->pm_wake_eventfd_ctx);
-+			vdev->pm_wake_eventfd_ctx = NULL;
-+		}
- 	}
-+}
- 
-+static void vfio_pci_runtime_pm_exit(struct vfio_pci_core_device *vdev)
-+{
-+	/*
-+	 * The vdev power related flags are protected with 'memory_lock'
-+	 * semaphore.
-+	 */
-+	down_write(&vdev->memory_lock);
-+	__vfio_pci_runtime_pm_exit(vdev);
- 	up_write(&vdev->memory_lock);
- }
- 
-@@ -373,22 +368,13 @@ static int vfio_pci_core_pm_exit(struct vfio_device *device, u32 flags,
- 		return ret;
- 
- 	/*
--	 * The device should already be resumed by the vfio core layer.
--	 * vfio_pci_runtime_pm_exit() will internally increment the usage
--	 * count corresponding to pm_runtime_put() called during low power
--	 * feature entry.
--	 *
--	 * For the low power entry happened with wakeup eventfd, there will
--	 * be two cases:
--	 *
--	 * 1. The device has gone into runtime suspended state. In this case,
--	 *    the runtime resume by the vfio core layer should already have
--	 *    performed all exit related handling and the
--	 *    vfio_pci_runtime_pm_exit() will return early.
--	 * 2. The device was in runtime active state. In this case, the
--	 *    vfio_pci_runtime_pm_exit() will do all the required handling.
-+	 * The device is always in the active state here due to pm wrappers
-+	 * around ioctls.  If the device had entered a low power state and
-+	 * pm_wake_eventfd_ctx is valid, vfio_pci_core_runtime_resume() has 
-+	 * already signaled the eventfd and exited low power mode itself.
-+	 * pm_runtime_engaged protects the redundant call here.
- 	 */
--	vfio_pci_runtime_pm_exit(vdev, false);
-+	vfio_pci_runtime_pm_exit(vdev);
- 	return 0;
- }
- 
-@@ -425,15 +411,19 @@ static int vfio_pci_core_runtime_resume(struct device *dev)
- {
- 	struct vfio_pci_core_device *vdev = dev_get_drvdata(dev);
- 
--	if (vdev->pm_intx_masked)
--		vfio_pci_intx_unmask(vdev);
--
- 	/*
--	 * Only for the low power entry happened with wakeup eventfd,
--	 * the vfio_pci_runtime_pm_exit() will perform exit related handling
--	 * and will trigger eventfd. For the other cases, it will return early.
-+	 * Resume with a pm_wake_eventfd_ctx signals the eventfd and exits
-+	 * low power mode.
- 	 */
--	vfio_pci_runtime_pm_exit(vdev, true);
-+	down_write(&vdev->memory_lock);
-+	if (vdev->pm_wake_eventfd_ctx) {
-+		eventfd_signal(vdev->pm_wake_eventfd_ctx, 1);
-+		__vfio_pci_runtime_pm_exit(vdev);
-+	}
-+	up_write(&vdev->memory_lock);
-+
-+	if (vdev->pm_intx_masked)
-+		vfio_pci_intx_unmask(vdev);
- 
- 	return 0;
- }
-@@ -553,7 +543,7 @@ void vfio_pci_core_disable(struct vfio_pci_core_device *vdev)
- 	 * the vfio_pci_set_power_state() will change the device power state
- 	 * to D0.
- 	 */
--	vfio_pci_runtime_pm_exit(vdev, false);
-+	vfio_pci_runtime_pm_exit(vdev);
- 	pm_runtime_resume(&pdev->dev);
- 
- 	/*
+> +			dev_info_ratelimited(dev,
+> +				"vfio: runtime resume failed %d\n", ret);
+> +			return -EIO;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Wrapper around pm_runtime_put().
+> + */
+> +static inline void vfio_device_pm_runtime_put(struct vfio_device *device)
+> +{
+> +	struct device *dev = device->dev;
+> +
+> +	if (dev->driver && dev->driver->pm)
+> +		pm_runtime_put(dev);
+> +}
+> +
+>  /*
+>   * VFIO Device fd
+>   */
+> @@ -1649,15 +1683,27 @@ static long vfio_device_fops_unl_ioctl(struct file *filep,
+>  				       unsigned int cmd, unsigned long arg)
+>  {
+>  	struct vfio_device *device = filep->private_data;
+> +	int ret;
+> +
+> +	ret = vfio_device_pm_runtime_get(device);
+> +	if (ret)
+> +		return ret;
+>  
+>  	switch (cmd) {
+>  	case VFIO_DEVICE_FEATURE:
+> -		return vfio_ioctl_device_feature(device, (void __user *)arg);
+> +		ret = vfio_ioctl_device_feature(device, (void __user *)arg);
+> +		break;
+> +
+>  	default:
+>  		if (unlikely(!device->ops->ioctl))
+> -			return -EINVAL;
+> -		return device->ops->ioctl(device, cmd, arg);
+> +			ret = -EINVAL;
+> +		else
+> +			ret = device->ops->ioctl(device, cmd, arg);
+> +		break;
+>  	}
+> +
+> +	vfio_device_pm_runtime_put(device);
+> +	return ret;
+>  }
+>  
+>  static ssize_t vfio_device_fops_read(struct file *filep, char __user *buf,
 
