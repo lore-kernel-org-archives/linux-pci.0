@@ -2,74 +2,305 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22600C433EF
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Jul 2022 12:24:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC6BCCCA487
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Jul 2022 13:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233004AbiGUMYG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Jul 2022 08:24:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33374 "EHLO
+        id S233930AbiGUNDf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Jul 2022 09:03:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229497AbiGUMYF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2022 08:24:05 -0400
-Received: from mail-oa1-x2e.google.com (mail-oa1-x2e.google.com [IPv6:2001:4860:4864:20::2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E71F21E1E;
-        Thu, 21 Jul 2022 05:24:04 -0700 (PDT)
-Received: by mail-oa1-x2e.google.com with SMTP id 586e51a60fabf-10d6e8990b9so2129146fac.7;
-        Thu, 21 Jul 2022 05:24:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ImwLpat+1sPYdOj7Iczdt+M/YFfAZGN24qOSHSTu1vc=;
-        b=fsnOG1id6H4i0ySXm6YWreNVF7KeIpTVioFDQOlXK3RiVgjb73e8Qa+QS9EGxb8ZeO
-         V1tm2lFPzYrFUBhZhKtUjijRYcdDEQQ/SviFPC4g1+EMei9t/bSL9Dh5vWVp3HW5r6Af
-         RQRUJhOBqNBN7n30ANShNkCd71QY+75ZSvSWlDOJKaj6IxVG5LyxI8zOFLC3khAfECQn
-         AhM3c+GzSVJh4+fI+/qXknh6qwE059yMnFjLuJ/oVcQPBlpStZdilSnboCDNCRlclvaN
-         lu6esVq/IN6Lckd2Co1AfFTJFknofaVhpla/PWbPZuigM44UYuIixtGQzLxk7CeXBCKs
-         g8OA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ImwLpat+1sPYdOj7Iczdt+M/YFfAZGN24qOSHSTu1vc=;
-        b=vF449iFt8JuQttLdBUf8AsUtwzV5YIHDPs/vBql5LJHL1mDzTki6MYjCBWDH/CiBH6
-         1AWZ0UI1J8j4gJpCqkIvVB8xi9MYSsschdSsWVu1+9owegPmffQv5BjOFe5/lePMLUT+
-         yGI2HBSvC3Fj1bDy5au1GSHSxgZPKUTwBQDwMLFviptEYW53S8RrSlPo5Ybac/wxNTAz
-         1BZ8nTTgrhPIgDbu86g35sd9m+45Q82khHRwE88/K8hoYxFlxZErxYLlose3cG7z4LtS
-         etEjqo2g5ygEfAX/VyJSDy8LXvbt9hPLJW+V78IdN8fC2GA3j23aczx6WeH9OvW7okkQ
-         OPgg==
-X-Gm-Message-State: AJIora+qevTYx/TYAdC5/xUJwctb6d9yqpDe13kumXZMo4jwD7t/Pb8j
-        7S6ZAjqIlY5GORIn/1CmQssok39qw8IpJARnvuY=
-X-Google-Smtp-Source: AGRyM1tEjr8y+gdoyIFOFwb1TodPOJkj9G4SjX5rY0CJ6zGtLqwRg8jjmzwVI7hfd/F8AgDcMrepZDGjx9iSpjrDcXM=
-X-Received: by 2002:a05:6870:2111:b0:e9:768:f288 with SMTP id
- f17-20020a056870211100b000e90768f288mr4980852oae.45.1658406243729; Thu, 21
- Jul 2022 05:24:03 -0700 (PDT)
+        with ESMTP id S233881AbiGUNDJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2022 09:03:09 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70E5574E3F;
+        Thu, 21 Jul 2022 06:02:57 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4LpXjq2npgzkXCn;
+        Thu, 21 Jul 2022 21:00:31 +0800 (CST)
+Received: from localhost.localdomain (10.67.164.66) by
+ canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 21 Jul 2022 21:02:55 +0800
+From:   <yangyicong@huawei.com>
+To:     <gregkh@linuxfoundation.org>, <alexander.shishkin@linux.intel.com>,
+        <leo.yan@linaro.org>, <james.clark@arm.com>, <will@kernel.org>,
+        <robin.murphy@arm.com>, <acme@kernel.org>, <peterz@infradead.org>,
+        <corbet@lwn.net>, <mathieu.poirier@linaro.org>,
+        <mark.rutland@arm.com>, <jonathan.cameron@huawei.com>,
+        <john.garry@huawei.com>
+CC:     <helgaas@kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <suzuki.poulose@arm.com>, <joro@8bytes.org>,
+        <shameerali.kolothum.thodi@huawei.com>, <mingo@redhat.com>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <linux-perf-users@vger.kernel.org>,
+        <iommu@lists.linux-foundation.org>, <iommu@lists.linux.dev>,
+        <linux-doc@vger.kernel.org>, <prime.zeng@huawei.com>,
+        <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
+        <linuxarm@huawei.com>, <yangyicong@hisilicon.com>,
+        <bagasdotme@gmail.com>
+Subject: [PATCH v11 3/8] hwtracing: hisi_ptt: Add tune function support for HiSilicon PCIe Tune and Trace device
+Date:   Thu, 21 Jul 2022 21:01:11 +0800
+Message-ID: <20220721130116.43366-4-yangyicong@huawei.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20220721130116.43366-1-yangyicong@huawei.com>
+References: <20220721130116.43366-1-yangyicong@huawei.com>
 MIME-Version: 1.0
-References: <CAHP4M8VuX6NrqyKQU1KS3DdTzZRQTdPK+nF0-eXXeQqhHyOypw@mail.gmail.com>
- <20220713181805.GA841376@bhelgaas> <CAHP4M8X67WSLMqe2qQrbODrg5oSLvR5fP4JVN+zeQafHizrOXA@mail.gmail.com>
- <ff345fdf-4398-0275-1e1d-f87e15b31d3a@ti.com>
-In-Reply-To: <ff345fdf-4398-0275-1e1d-f87e15b31d3a@ti.com>
-From:   Ajay Garg <ajaygargnsit@gmail.com>
-Date:   Thu, 21 Jul 2022 17:53:50 +0530
-Message-ID: <CAHP4M8WfngsoAAA=7CUeqEf2SME+4HvZ+9zAe-0pxOLmS62bAw@mail.gmail.com>
-Subject: Re: No controller seen in /sys/kernel/config/pci_ep/controllers
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.67.164.66]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ canpemm500009.china.huawei.com (7.192.105.203)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Thank you, that helps.
+From: Yicong Yang <yangyicong@hisilicon.com>
 
-> Not sure what exactly your use case is.
+Add tune function for the HiSilicon Tune and Trace device. The interface
+of tune is exposed through sysfs attributes of PTT PMU device.
 
-Nothing complicated, I was stuck on the first step of having the
-pci-controller in endpoint-mode :)
-Your reply has given me a direction : I will try and find a
-hardware/setup wherein I can have a pci-controller in endpoint-mode.
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Reviewed-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+---
+ drivers/hwtracing/ptt/hisi_ptt.c | 131 +++++++++++++++++++++++++++++++
+ drivers/hwtracing/ptt/hisi_ptt.h |  23 ++++++
+ 2 files changed, 154 insertions(+)
 
+diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
+index c64642097f8b..9133c86ac6af 100644
+--- a/drivers/hwtracing/ptt/hisi_ptt.c
++++ b/drivers/hwtracing/ptt/hisi_ptt.c
+@@ -25,6 +25,135 @@
+ /* Dynamic CPU hotplug state used by PTT */
+ static enum cpuhp_state hisi_ptt_pmu_online;
+ 
++static bool hisi_ptt_wait_tuning_finish(struct hisi_ptt *hisi_ptt)
++{
++	u32 val;
++
++	return !readl_poll_timeout(hisi_ptt->iobase + HISI_PTT_TUNING_INT_STAT,
++				  val, !(val & HISI_PTT_TUNING_INT_STAT_MASK),
++				  HISI_PTT_WAIT_POLL_INTERVAL_US,
++				  HISI_PTT_WAIT_TUNE_TIMEOUT_US);
++}
++
++static ssize_t hisi_ptt_tune_attr_show(struct device *dev,
++				       struct device_attribute *attr,
++				       char *buf)
++{
++	struct hisi_ptt *hisi_ptt = to_hisi_ptt(dev_get_drvdata(dev));
++	struct dev_ext_attribute *ext_attr;
++	struct hisi_ptt_tune_desc *desc;
++	u32 reg;
++	u16 val;
++
++	ext_attr = container_of(attr, struct dev_ext_attribute, attr);
++	desc = ext_attr->var;
++
++	mutex_lock(&hisi_ptt->tune_lock);
++
++	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
++	reg &= ~(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB);
++	reg |= FIELD_PREP(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB,
++			  desc->event_code);
++	writel(reg, hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
++
++	/* Write all 1 to indicates it's the read process */
++	writel(~0U, hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
++
++	if (!hisi_ptt_wait_tuning_finish(hisi_ptt)) {
++		mutex_unlock(&hisi_ptt->tune_lock);
++		return -ETIMEDOUT;
++	}
++
++	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
++	reg &= HISI_PTT_TUNING_DATA_VAL_MASK;
++	val = FIELD_GET(HISI_PTT_TUNING_DATA_VAL_MASK, reg);
++
++	mutex_unlock(&hisi_ptt->tune_lock);
++	return sysfs_emit(buf, "%u\n", val);
++}
++
++static ssize_t hisi_ptt_tune_attr_store(struct device *dev,
++					struct device_attribute *attr,
++					const char *buf, size_t count)
++{
++	struct hisi_ptt *hisi_ptt = to_hisi_ptt(dev_get_drvdata(dev));
++	struct dev_ext_attribute *ext_attr;
++	struct hisi_ptt_tune_desc *desc;
++	u32 reg;
++	u16 val;
++
++	ext_attr = container_of(attr, struct dev_ext_attribute, attr);
++	desc = ext_attr->var;
++
++	if (kstrtou16(buf, 10, &val))
++		return -EINVAL;
++
++	mutex_lock(&hisi_ptt->tune_lock);
++
++	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
++	reg &= ~(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB);
++	reg |= FIELD_PREP(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB,
++			  desc->event_code);
++	writel(reg, hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
++	writel(FIELD_PREP(HISI_PTT_TUNING_DATA_VAL_MASK, val),
++	       hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
++
++	if (!hisi_ptt_wait_tuning_finish(hisi_ptt)) {
++		mutex_unlock(&hisi_ptt->tune_lock);
++		return -ETIMEDOUT;
++	}
++
++	mutex_unlock(&hisi_ptt->tune_lock);
++	return count;
++}
++
++#define HISI_PTT_TUNE_ATTR(_name, _val, _show, _store)			\
++	static struct hisi_ptt_tune_desc _name##_desc = {		\
++		.name = #_name,						\
++		.event_code = _val,					\
++	};								\
++	static struct dev_ext_attribute hisi_ptt_##_name##_attr = {	\
++		.attr	= __ATTR(_name, 0600, _show, _store),		\
++		.var	= &_name##_desc,				\
++	}
++
++#define HISI_PTT_TUNE_ATTR_COMMON(_name, _val)		\
++	HISI_PTT_TUNE_ATTR(_name, _val,			\
++			   hisi_ptt_tune_attr_show,	\
++			   hisi_ptt_tune_attr_store)
++
++/*
++ * The value of the tuning event are composed of two parts: main event code
++ * in BIT[0,15] and subevent code in BIT[16,23]. For example, qox_tx_cpl is
++ * a subevent of 'Tx path QoS control'  * which for tuning the weight of Tx
++ * completion TLPs. See hisi_ptt.rst documentation for more information.
++ */
++#define HISI_PTT_TUNE_QOS_TX_CPL		(0x4 | (3 << 16))
++#define HISI_PTT_TUNE_QOS_TX_NP			(0x4 | (4 << 16))
++#define HISI_PTT_TUNE_QOS_TX_P			(0x4 | (5 << 16))
++#define HISI_PTT_TUNE_RX_ALLOC_BUF_LEVEL	(0x5 | (6 << 16))
++#define HISI_PTT_TUNE_TX_ALLOC_BUF_LEVEL	(0x5 | (7 << 16))
++
++HISI_PTT_TUNE_ATTR_COMMON(qos_tx_cpl, HISI_PTT_TUNE_QOS_TX_CPL);
++HISI_PTT_TUNE_ATTR_COMMON(qos_tx_np, HISI_PTT_TUNE_QOS_TX_NP);
++HISI_PTT_TUNE_ATTR_COMMON(qos_tx_p, HISI_PTT_TUNE_QOS_TX_P);
++HISI_PTT_TUNE_ATTR_COMMON(rx_alloc_buf_level, HISI_PTT_TUNE_RX_ALLOC_BUF_LEVEL);
++HISI_PTT_TUNE_ATTR_COMMON(tx_alloc_buf_level, HISI_PTT_TUNE_TX_ALLOC_BUF_LEVEL);
++
++static struct attribute *hisi_ptt_tune_attrs[] = {
++	&hisi_ptt_qos_tx_cpl_attr.attr.attr,
++	&hisi_ptt_qos_tx_np_attr.attr.attr,
++	&hisi_ptt_qos_tx_p_attr.attr.attr,
++	&hisi_ptt_rx_alloc_buf_level_attr.attr.attr,
++	&hisi_ptt_tx_alloc_buf_level_attr.attr.attr,
++	NULL,
++};
++
++static struct attribute_group hisi_ptt_tune_group = {
++	.name	= "tune",
++	.attrs	= hisi_ptt_tune_attrs,
++};
++
+ static u16 hisi_ptt_get_filter_val(u16 devid, bool is_port)
+ {
+ 	if (is_port)
+@@ -393,6 +522,7 @@ static struct attribute_group hisi_ptt_pmu_format_group = {
+ static const struct attribute_group *hisi_ptt_pmu_groups[] = {
+ 	&hisi_ptt_cpumask_attr_group,
+ 	&hisi_ptt_pmu_format_group,
++	&hisi_ptt_tune_group,
+ 	NULL
+ };
+ 
+@@ -719,6 +849,7 @@ static int hisi_ptt_register_pmu(struct hisi_ptt *hisi_ptt)
+ 	if (ret)
+ 		return ret;
+ 
++	mutex_init(&hisi_ptt->tune_lock);
+ 	spin_lock_init(&hisi_ptt->pmu_lock);
+ 
+ 	hisi_ptt->hisi_ptt_pmu = (struct pmu) {
+diff --git a/drivers/hwtracing/ptt/hisi_ptt.h b/drivers/hwtracing/ptt/hisi_ptt.h
+index 10446dce8a86..5beb1648c93a 100644
+--- a/drivers/hwtracing/ptt/hisi_ptt.h
++++ b/drivers/hwtracing/ptt/hisi_ptt.h
+@@ -12,6 +12,7 @@
+ #include <linux/bits.h>
+ #include <linux/cpumask.h>
+ #include <linux/list.h>
++#include <linux/mutex.h>
+ #include <linux/pci.h>
+ #include <linux/perf_event.h>
+ #include <linux/spinlock.h>
+@@ -22,6 +23,11 @@
+ /*
+  * The definition of the device registers and register fields.
+  */
++#define HISI_PTT_TUNING_CTRL		0x0000
++#define   HISI_PTT_TUNING_CTRL_CODE	GENMASK(15, 0)
++#define   HISI_PTT_TUNING_CTRL_SUB	GENMASK(23, 16)
++#define HISI_PTT_TUNING_DATA		0x0004
++#define   HISI_PTT_TUNING_DATA_VAL_MASK	GENMASK(15, 0)
+ #define HISI_PTT_TRACE_ADDR_SIZE	0x0800
+ #define HISI_PTT_TRACE_ADDR_BASE_LO_0	0x0810
+ #define HISI_PTT_TRACE_ADDR_BASE_HI_0	0x0814
+@@ -37,6 +43,8 @@
+ #define HISI_PTT_TRACE_INT_STAT		0x0890
+ #define   HISI_PTT_TRACE_INT_STAT_MASK	GENMASK(3, 0)
+ #define HISI_PTT_TRACE_INT_MASK		0x0894
++#define HISI_PTT_TUNING_INT_STAT	0x0898
++#define   HISI_PTT_TUNING_INT_STAT_MASK	BIT(0)
+ #define HISI_PTT_TRACE_WR_STS		0x08a0
+ #define   HISI_PTT_TRACE_WR_STS_WRITE	GENMASK(27, 0)
+ #define   HISI_PTT_TRACE_WR_STS_BUFFER	GENMASK(29, 28)
+@@ -59,6 +67,7 @@
+ #define HISI_PTT_RESET_TIMEOUT_US	10UL
+ #define HISI_PTT_RESET_POLL_INTERVAL_US	1UL
+ /* Poll timeout and interval for waiting hardware work to finish */
++#define HISI_PTT_WAIT_TUNE_TIMEOUT_US	1000000UL
+ #define HISI_PTT_WAIT_TRACE_TIMEOUT_US	100UL
+ #define HISI_PTT_WAIT_POLL_INTERVAL_US	10UL
+ 
+@@ -71,6 +80,18 @@
+ #define HISI_PTT_PMU_TYPE_MASK		GENMASK(31, 24)
+ #define HISI_PTT_PMU_FORMAT_MASK	GENMASK(35, 32)
+ 
++/**
++ * struct hisi_ptt_tune_desc - Describe tune event for PTT tune
++ * @hisi_ptt:   PTT device this tune event belongs to
++ * @name:       name of this event
++ * @event_code: code of the event
++ */
++struct hisi_ptt_tune_desc {
++	struct hisi_ptt *hisi_ptt;
++	const char *name;
++	u32 event_code;
++};
++
+ /**
+  * struct hisi_ptt_dma_buffer - Describe a single trace buffer of PTT trace.
+  *                              The detail of the data format is described
+@@ -143,6 +164,7 @@ struct hisi_ptt_pmu_buf {
+  * @hisi_ptt_pmu: the pum device of trace
+  * @iobase:       base IO address of the device
+  * @pdev:         pci_dev of this PTT device
++ * @tune_lock:    lock to serialize the tune process
+  * @pmu_lock:     lock to serialize the perf process
+  * @upper_bdf:    the upper BDF range of the PCI devices managed by this PTT device
+  * @lower_bdf:    the lower BDF range of the PCI devices managed by this PTT device
+@@ -156,6 +178,7 @@ struct hisi_ptt {
+ 	struct pmu hisi_ptt_pmu;
+ 	void __iomem *iobase;
+ 	struct pci_dev *pdev;
++	struct mutex tune_lock;
+ 	spinlock_t pmu_lock;
+ 	u32 upper_bdf;
+ 	u32 lower_bdf;
+-- 
+2.24.0
 
-Thanks and Regards,
-Ajay
