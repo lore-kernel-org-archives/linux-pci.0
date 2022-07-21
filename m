@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC6BCCCA487
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19748C433EF
 	for <linux-pci@archiver.kernel.org>; Thu, 21 Jul 2022 13:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233930AbiGUNDf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Jul 2022 09:03:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34524 "EHLO
+        id S233839AbiGUNDe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Jul 2022 09:03:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233881AbiGUNDJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2022 09:03:09 -0400
+        with ESMTP id S233877AbiGUNDI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2022 09:03:08 -0400
 Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70E5574E3F;
-        Thu, 21 Jul 2022 06:02:57 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4LpXjq2npgzkXCn;
-        Thu, 21 Jul 2022 21:00:31 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 958C774782;
+        Thu, 21 Jul 2022 06:02:56 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4LpXjp2QZbzkX7d;
+        Thu, 21 Jul 2022 21:00:30 +0800 (CST)
 Received: from localhost.localdomain (10.67.164.66) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 21 Jul 2022 21:02:55 +0800
+ 15.1.2375.24; Thu, 21 Jul 2022 21:02:54 +0800
 From:   <yangyicong@huawei.com>
 To:     <gregkh@linuxfoundation.org>, <alexander.shishkin@linux.intel.com>,
         <leo.yan@linaro.org>, <james.clark@arm.com>, <will@kernel.org>,
@@ -39,12 +39,10 @@ CC:     <helgaas@kernel.org>, <lorenzo.pieralisi@arm.com>,
         <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
         <linuxarm@huawei.com>, <yangyicong@hisilicon.com>,
         <bagasdotme@gmail.com>
-Subject: [PATCH v11 3/8] hwtracing: hisi_ptt: Add tune function support for HiSilicon PCIe Tune and Trace device
-Date:   Thu, 21 Jul 2022 21:01:11 +0800
-Message-ID: <20220721130116.43366-4-yangyicong@huawei.com>
+Subject: [PATCH v11 0/8] Add support for HiSilicon PCIe Tune and Trace device
+Date:   Thu, 21 Jul 2022 21:01:08 +0800
+Message-ID: <20220721130116.43366-1-yangyicong@huawei.com>
 X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20220721130116.43366-1-yangyicong@huawei.com>
-References: <20220721130116.43366-1-yangyicong@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -58,249 +56,170 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Yicong Yang <yangyicong@hisilicon.com>
 
-Add tune function for the HiSilicon Tune and Trace device. The interface
-of tune is exposed through sysfs attributes of PTT PMU device.
+HiSilicon PCIe tune and trace device (PTT) is a PCIe Root Complex
+integrated Endpoint (RCiEP) device, providing the capability
+to dynamically monitor and tune the PCIe traffic (tune),
+and trace the TLP headers (trace).
 
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- drivers/hwtracing/ptt/hisi_ptt.c | 131 +++++++++++++++++++++++++++++++
- drivers/hwtracing/ptt/hisi_ptt.h |  23 ++++++
- 2 files changed, 154 insertions(+)
+PTT tune is designed for monitoring and adjusting PCIe link parameters.
+We provide several parameters of the PCIe link. Through the driver,
+user can adjust the value of certain parameter to affect the PCIe link
+for the purpose of enhancing the performance in certian situation.
 
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
-index c64642097f8b..9133c86ac6af 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.c
-+++ b/drivers/hwtracing/ptt/hisi_ptt.c
-@@ -25,6 +25,135 @@
- /* Dynamic CPU hotplug state used by PTT */
- static enum cpuhp_state hisi_ptt_pmu_online;
- 
-+static bool hisi_ptt_wait_tuning_finish(struct hisi_ptt *hisi_ptt)
-+{
-+	u32 val;
-+
-+	return !readl_poll_timeout(hisi_ptt->iobase + HISI_PTT_TUNING_INT_STAT,
-+				  val, !(val & HISI_PTT_TUNING_INT_STAT_MASK),
-+				  HISI_PTT_WAIT_POLL_INTERVAL_US,
-+				  HISI_PTT_WAIT_TUNE_TIMEOUT_US);
-+}
-+
-+static ssize_t hisi_ptt_tune_attr_show(struct device *dev,
-+				       struct device_attribute *attr,
-+				       char *buf)
-+{
-+	struct hisi_ptt *hisi_ptt = to_hisi_ptt(dev_get_drvdata(dev));
-+	struct dev_ext_attribute *ext_attr;
-+	struct hisi_ptt_tune_desc *desc;
-+	u32 reg;
-+	u16 val;
-+
-+	ext_attr = container_of(attr, struct dev_ext_attribute, attr);
-+	desc = ext_attr->var;
-+
-+	mutex_lock(&hisi_ptt->tune_lock);
-+
-+	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
-+	reg &= ~(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB);
-+	reg |= FIELD_PREP(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB,
-+			  desc->event_code);
-+	writel(reg, hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
-+
-+	/* Write all 1 to indicates it's the read process */
-+	writel(~0U, hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
-+
-+	if (!hisi_ptt_wait_tuning_finish(hisi_ptt)) {
-+		mutex_unlock(&hisi_ptt->tune_lock);
-+		return -ETIMEDOUT;
-+	}
-+
-+	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
-+	reg &= HISI_PTT_TUNING_DATA_VAL_MASK;
-+	val = FIELD_GET(HISI_PTT_TUNING_DATA_VAL_MASK, reg);
-+
-+	mutex_unlock(&hisi_ptt->tune_lock);
-+	return sysfs_emit(buf, "%u\n", val);
-+}
-+
-+static ssize_t hisi_ptt_tune_attr_store(struct device *dev,
-+					struct device_attribute *attr,
-+					const char *buf, size_t count)
-+{
-+	struct hisi_ptt *hisi_ptt = to_hisi_ptt(dev_get_drvdata(dev));
-+	struct dev_ext_attribute *ext_attr;
-+	struct hisi_ptt_tune_desc *desc;
-+	u32 reg;
-+	u16 val;
-+
-+	ext_attr = container_of(attr, struct dev_ext_attribute, attr);
-+	desc = ext_attr->var;
-+
-+	if (kstrtou16(buf, 10, &val))
-+		return -EINVAL;
-+
-+	mutex_lock(&hisi_ptt->tune_lock);
-+
-+	reg = readl(hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
-+	reg &= ~(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB);
-+	reg |= FIELD_PREP(HISI_PTT_TUNING_CTRL_CODE | HISI_PTT_TUNING_CTRL_SUB,
-+			  desc->event_code);
-+	writel(reg, hisi_ptt->iobase + HISI_PTT_TUNING_CTRL);
-+	writel(FIELD_PREP(HISI_PTT_TUNING_DATA_VAL_MASK, val),
-+	       hisi_ptt->iobase + HISI_PTT_TUNING_DATA);
-+
-+	if (!hisi_ptt_wait_tuning_finish(hisi_ptt)) {
-+		mutex_unlock(&hisi_ptt->tune_lock);
-+		return -ETIMEDOUT;
-+	}
-+
-+	mutex_unlock(&hisi_ptt->tune_lock);
-+	return count;
-+}
-+
-+#define HISI_PTT_TUNE_ATTR(_name, _val, _show, _store)			\
-+	static struct hisi_ptt_tune_desc _name##_desc = {		\
-+		.name = #_name,						\
-+		.event_code = _val,					\
-+	};								\
-+	static struct dev_ext_attribute hisi_ptt_##_name##_attr = {	\
-+		.attr	= __ATTR(_name, 0600, _show, _store),		\
-+		.var	= &_name##_desc,				\
-+	}
-+
-+#define HISI_PTT_TUNE_ATTR_COMMON(_name, _val)		\
-+	HISI_PTT_TUNE_ATTR(_name, _val,			\
-+			   hisi_ptt_tune_attr_show,	\
-+			   hisi_ptt_tune_attr_store)
-+
-+/*
-+ * The value of the tuning event are composed of two parts: main event code
-+ * in BIT[0,15] and subevent code in BIT[16,23]. For example, qox_tx_cpl is
-+ * a subevent of 'Tx path QoS control'  * which for tuning the weight of Tx
-+ * completion TLPs. See hisi_ptt.rst documentation for more information.
-+ */
-+#define HISI_PTT_TUNE_QOS_TX_CPL		(0x4 | (3 << 16))
-+#define HISI_PTT_TUNE_QOS_TX_NP			(0x4 | (4 << 16))
-+#define HISI_PTT_TUNE_QOS_TX_P			(0x4 | (5 << 16))
-+#define HISI_PTT_TUNE_RX_ALLOC_BUF_LEVEL	(0x5 | (6 << 16))
-+#define HISI_PTT_TUNE_TX_ALLOC_BUF_LEVEL	(0x5 | (7 << 16))
-+
-+HISI_PTT_TUNE_ATTR_COMMON(qos_tx_cpl, HISI_PTT_TUNE_QOS_TX_CPL);
-+HISI_PTT_TUNE_ATTR_COMMON(qos_tx_np, HISI_PTT_TUNE_QOS_TX_NP);
-+HISI_PTT_TUNE_ATTR_COMMON(qos_tx_p, HISI_PTT_TUNE_QOS_TX_P);
-+HISI_PTT_TUNE_ATTR_COMMON(rx_alloc_buf_level, HISI_PTT_TUNE_RX_ALLOC_BUF_LEVEL);
-+HISI_PTT_TUNE_ATTR_COMMON(tx_alloc_buf_level, HISI_PTT_TUNE_TX_ALLOC_BUF_LEVEL);
-+
-+static struct attribute *hisi_ptt_tune_attrs[] = {
-+	&hisi_ptt_qos_tx_cpl_attr.attr.attr,
-+	&hisi_ptt_qos_tx_np_attr.attr.attr,
-+	&hisi_ptt_qos_tx_p_attr.attr.attr,
-+	&hisi_ptt_rx_alloc_buf_level_attr.attr.attr,
-+	&hisi_ptt_tx_alloc_buf_level_attr.attr.attr,
-+	NULL,
-+};
-+
-+static struct attribute_group hisi_ptt_tune_group = {
-+	.name	= "tune",
-+	.attrs	= hisi_ptt_tune_attrs,
-+};
-+
- static u16 hisi_ptt_get_filter_val(u16 devid, bool is_port)
- {
- 	if (is_port)
-@@ -393,6 +522,7 @@ static struct attribute_group hisi_ptt_pmu_format_group = {
- static const struct attribute_group *hisi_ptt_pmu_groups[] = {
- 	&hisi_ptt_cpumask_attr_group,
- 	&hisi_ptt_pmu_format_group,
-+	&hisi_ptt_tune_group,
- 	NULL
- };
- 
-@@ -719,6 +849,7 @@ static int hisi_ptt_register_pmu(struct hisi_ptt *hisi_ptt)
- 	if (ret)
- 		return ret;
- 
-+	mutex_init(&hisi_ptt->tune_lock);
- 	spin_lock_init(&hisi_ptt->pmu_lock);
- 
- 	hisi_ptt->hisi_ptt_pmu = (struct pmu) {
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.h b/drivers/hwtracing/ptt/hisi_ptt.h
-index 10446dce8a86..5beb1648c93a 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.h
-+++ b/drivers/hwtracing/ptt/hisi_ptt.h
-@@ -12,6 +12,7 @@
- #include <linux/bits.h>
- #include <linux/cpumask.h>
- #include <linux/list.h>
-+#include <linux/mutex.h>
- #include <linux/pci.h>
- #include <linux/perf_event.h>
- #include <linux/spinlock.h>
-@@ -22,6 +23,11 @@
- /*
-  * The definition of the device registers and register fields.
-  */
-+#define HISI_PTT_TUNING_CTRL		0x0000
-+#define   HISI_PTT_TUNING_CTRL_CODE	GENMASK(15, 0)
-+#define   HISI_PTT_TUNING_CTRL_SUB	GENMASK(23, 16)
-+#define HISI_PTT_TUNING_DATA		0x0004
-+#define   HISI_PTT_TUNING_DATA_VAL_MASK	GENMASK(15, 0)
- #define HISI_PTT_TRACE_ADDR_SIZE	0x0800
- #define HISI_PTT_TRACE_ADDR_BASE_LO_0	0x0810
- #define HISI_PTT_TRACE_ADDR_BASE_HI_0	0x0814
-@@ -37,6 +43,8 @@
- #define HISI_PTT_TRACE_INT_STAT		0x0890
- #define   HISI_PTT_TRACE_INT_STAT_MASK	GENMASK(3, 0)
- #define HISI_PTT_TRACE_INT_MASK		0x0894
-+#define HISI_PTT_TUNING_INT_STAT	0x0898
-+#define   HISI_PTT_TUNING_INT_STAT_MASK	BIT(0)
- #define HISI_PTT_TRACE_WR_STS		0x08a0
- #define   HISI_PTT_TRACE_WR_STS_WRITE	GENMASK(27, 0)
- #define   HISI_PTT_TRACE_WR_STS_BUFFER	GENMASK(29, 28)
-@@ -59,6 +67,7 @@
- #define HISI_PTT_RESET_TIMEOUT_US	10UL
- #define HISI_PTT_RESET_POLL_INTERVAL_US	1UL
- /* Poll timeout and interval for waiting hardware work to finish */
-+#define HISI_PTT_WAIT_TUNE_TIMEOUT_US	1000000UL
- #define HISI_PTT_WAIT_TRACE_TIMEOUT_US	100UL
- #define HISI_PTT_WAIT_POLL_INTERVAL_US	10UL
- 
-@@ -71,6 +80,18 @@
- #define HISI_PTT_PMU_TYPE_MASK		GENMASK(31, 24)
- #define HISI_PTT_PMU_FORMAT_MASK	GENMASK(35, 32)
- 
-+/**
-+ * struct hisi_ptt_tune_desc - Describe tune event for PTT tune
-+ * @hisi_ptt:   PTT device this tune event belongs to
-+ * @name:       name of this event
-+ * @event_code: code of the event
-+ */
-+struct hisi_ptt_tune_desc {
-+	struct hisi_ptt *hisi_ptt;
-+	const char *name;
-+	u32 event_code;
-+};
-+
- /**
-  * struct hisi_ptt_dma_buffer - Describe a single trace buffer of PTT trace.
-  *                              The detail of the data format is described
-@@ -143,6 +164,7 @@ struct hisi_ptt_pmu_buf {
-  * @hisi_ptt_pmu: the pum device of trace
-  * @iobase:       base IO address of the device
-  * @pdev:         pci_dev of this PTT device
-+ * @tune_lock:    lock to serialize the tune process
-  * @pmu_lock:     lock to serialize the perf process
-  * @upper_bdf:    the upper BDF range of the PCI devices managed by this PTT device
-  * @lower_bdf:    the lower BDF range of the PCI devices managed by this PTT device
-@@ -156,6 +178,7 @@ struct hisi_ptt {
- 	struct pmu hisi_ptt_pmu;
- 	void __iomem *iobase;
- 	struct pci_dev *pdev;
-+	struct mutex tune_lock;
- 	spinlock_t pmu_lock;
- 	u32 upper_bdf;
- 	u32 lower_bdf;
+PTT trace is designed for dumping the TLP headers to the memory, which
+can be used to analyze the transactions and usage condition of the PCIe
+Link. Users can choose filters to trace headers, by either requester
+ID, or those downstream of a set of Root Ports on the same core of the
+PTT device. It's also supported to trace the headers of certain type and
+of certain direction.
+
+The driver registers a PMU device for each PTT device. The trace can
+be used through `perf record` and the traced headers can be decoded
+by `perf report`. The perf command support for the device is also
+added in this patchset. The tune can be used through the sysfs
+attributes of related PMU device. See the documentation for the
+detailed usage.
+
+Change since v10:
+- Use title case in the documentation
+- Add RB from Bagas, thanks.
+Link: https://lore.kernel.org/lkml/20220714092710.53486-1-yangyicong@hisilicon.com/
+
+Change since v9:
+- Add sysfs ABI description documentation
+- Remove the controversial available_{root_port, requester}_filters sysfs file
+- Shorten 2 tune sysfs attributes name and add some comments
+- Move hisi_ptt_process_auxtrace_info() to Patch 6.
+- Add RB from Leo and Ack-by from Mathieu, thanks!
+Link: https://lore.kernel.org/lkml/20220606115555.41103-1-yangyicong@hisilicon.com/
+
+Change since v8:
+- Cleanups and one minor fix from Jonathan and John, thanks
+Link: https://lore.kernel.org/lkml/20220516125223.32012-1-yangyicong@hisilicon.com/
+
+Change since v7:
+- Configure the DMA in probe rather than in runtime. Also use devres to manage
+  PMU device as we have no order problem now
+- Refactor the config validation function per John and Leo
+- Use a spinlock hisi_ptt::pmu_lock instead of mutex to serialize the perf process
+  in pmu::start as it's in atomic context
+- Only commit the traced data when stop, per Leo and James
+- Drop the filter dynamically updating patch from this series to simply the review
+  of the driver. That patch will be send separately.
+- add a cpumask sysfs attribute and handle the cpu hotplug events, follow the
+  uncore PMU convention
+- Other cleanups and fixes, both in driver and perf tool
+Link: https://lore.kernel.org/lkml/20220407125841.3678-1-yangyicong@hisilicon.com/
+
+Change since v6:
+- Fix W=1 errors reported by lkp test, thanks
+
+Change since v5:
+- Squash the PMU patch into PATCH 2 suggested by John
+- refine the commit message of PATCH 1 and some comments
+Link: https://lore.kernel.org/lkml/20220308084930.5142-1-yangyicong@hisilicon.com/
+
+Change since v4:
+Address the comments from Jonathan, John and Ma Ca, thanks.
+- Use devm* also for allocating the DMA buffers
+- Remove the IRQ handler stub in Patch 2
+- Make functions waiting for hardware state return boolean
+- Manual remove the PMU device as it should be removed first
+- Modifier the orders in probe and removal to make them matched well
+- Make available {directions,type,format} array const and non-global
+- Using the right filter list in filters show and well protect the
+  list with mutex
+- Record the trace status with a boolean @started rather than enum
+- Optimize the process of finding the PTT devices of the perf-tool
+Link: https://lore.kernel.org/linux-pci/20220221084307.33712-1-yangyicong@hisilicon.com/
+
+Change since v3:
+Address the comments from Jonathan and John, thanks.
+- drop members in the common struct which can be get on the fly
+- reduce buffer struct and organize the buffers with array instead of list
+- reduce the DMA reset wait time to avoid long time busy loop
+- split the available_filters sysfs attribute into two files, for root port
+  and requester respectively. Update the documentation accordingly
+- make IOMMU mapping check earlier in probe to avoid race condition. Also
+  make IOMMU quirk patch prior to driver in the series
+- Cleanups and typos fixes from John and Jonathan
+Link: https://lore.kernel.org/linux-pci/20220124131118.17887-1-yangyicong@hisilicon.com/
+
+Change since v2:
+- address the comments from Mathieu, thanks.
+  - rename the directory to ptt to match the function of the device
+  - spinoff the declarations to a separate header
+  - split the trace function to several patches
+  - some other comments.
+- make default smmu domain type of PTT device to identity
+  Drop the RMR as it's not recommended and use an iommu_def_domain_type
+  quirk to passthrough the device DMA as suggested by Robin. 
+Link: https://lore.kernel.org/linux-pci/20211116090625.53702-1-yangyicong@hisilicon.com/
+
+Change since v1:
+- switch the user interface of trace to perf from debugfs
+- switch the user interface of tune to sysfs from debugfs
+- add perf tool support to start trace and decode the trace data
+- address the comments of documentation from Bjorn
+- add RMR[1] support of the device as trace works in RMR mode or
+  direct DMA mode. RMR support is achieved by common APIs rather
+  than the APIs implemented in [1].
+Link: https://lore.kernel.org/lkml/1618654631-42454-1-git-send-email-yangyicong@hisilicon.com/
+[1] https://lore.kernel.org/linux-acpi/20210805080724.480-1-shameerali.kolothum.thodi@huawei.com/
+
+Qi Liu (3):
+  perf tool: arm: Refactor event list iteration in
+    auxtrace_record__init()
+  perf tool: Add support for HiSilicon PCIe Tune and Trace device driver
+  perf tool: Add support for parsing HiSilicon PCIe Trace packet
+
+Yicong Yang (5):
+  iommu/arm-smmu-v3: Make default domain type of HiSilicon PTT device to
+    identity
+  hwtracing: hisi_ptt: Add trace function support for HiSilicon PCIe
+    Tune and Trace device
+  hwtracing: hisi_ptt: Add tune function support for HiSilicon PCIe Tune
+    and Trace device
+  docs: trace: Add HiSilicon PTT device driver documentation
+  MAINTAINERS: Add maintainer for HiSilicon PTT driver
+
+ .../ABI/testing/sysfs-devices-hisi_ptt        |   61 +
+ Documentation/trace/hisi-ptt.rst              |  298 +++++
+ Documentation/trace/index.rst                 |    1 +
+ MAINTAINERS                                   |    8 +
+ drivers/Makefile                              |    1 +
+ drivers/hwtracing/Kconfig                     |    2 +
+ drivers/hwtracing/ptt/Kconfig                 |   12 +
+ drivers/hwtracing/ptt/Makefile                |    2 +
+ drivers/hwtracing/ptt/hisi_ptt.c              | 1032 +++++++++++++++++
+ drivers/hwtracing/ptt/hisi_ptt.h              |  200 ++++
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c   |   21 +
+ tools/perf/arch/arm/util/auxtrace.c           |  116 +-
+ tools/perf/arch/arm/util/pmu.c                |    3 +
+ tools/perf/arch/arm64/util/Build              |    2 +-
+ tools/perf/arch/arm64/util/hisi-ptt.c         |  188 +++
+ tools/perf/util/Build                         |    2 +
+ tools/perf/util/auxtrace.c                    |    4 +
+ tools/perf/util/auxtrace.h                    |    1 +
+ tools/perf/util/hisi-ptt-decoder/Build        |    1 +
+ .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.c   |  164 +++
+ .../hisi-ptt-decoder/hisi-ptt-pkt-decoder.h   |   31 +
+ tools/perf/util/hisi-ptt.c                    |  192 +++
+ tools/perf/util/hisi-ptt.h                    |   19 +
+ 23 files changed, 2341 insertions(+), 20 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-devices-hisi_ptt
+ create mode 100644 Documentation/trace/hisi-ptt.rst
+ create mode 100644 drivers/hwtracing/ptt/Kconfig
+ create mode 100644 drivers/hwtracing/ptt/Makefile
+ create mode 100644 drivers/hwtracing/ptt/hisi_ptt.c
+ create mode 100644 drivers/hwtracing/ptt/hisi_ptt.h
+ create mode 100644 tools/perf/arch/arm64/util/hisi-ptt.c
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/Build
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.c
+ create mode 100644 tools/perf/util/hisi-ptt-decoder/hisi-ptt-pkt-decoder.h
+ create mode 100644 tools/perf/util/hisi-ptt.c
+ create mode 100644 tools/perf/util/hisi-ptt.h
+
 -- 
 2.24.0
 
