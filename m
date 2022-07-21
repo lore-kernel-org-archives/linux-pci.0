@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8999FCCA479
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF08BCCA48F
 	for <linux-pci@archiver.kernel.org>; Thu, 21 Jul 2022 13:03:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233939AbiGUNDg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Jul 2022 09:03:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35582 "EHLO
+        id S233944AbiGUNDh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Jul 2022 09:03:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233809AbiGUNDK (ORCPT
+        with ESMTP id S233846AbiGUNDK (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jul 2022 09:03:10 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E72A06EE82;
-        Thu, 21 Jul 2022 06:02:57 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4LpXjP0Xc6zjXMk;
-        Thu, 21 Jul 2022 21:00:09 +0800 (CST)
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12EE776472;
+        Thu, 21 Jul 2022 06:02:58 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4LpXjQ41C5z1M7vf;
+        Thu, 21 Jul 2022 21:00:10 +0800 (CST)
 Received: from localhost.localdomain (10.67.164.66) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 21 Jul 2022 21:02:54 +0800
+ 15.1.2375.24; Thu, 21 Jul 2022 21:02:55 +0800
 From:   <yangyicong@huawei.com>
 To:     <gregkh@linuxfoundation.org>, <alexander.shishkin@linux.intel.com>,
         <leo.yan@linaro.org>, <james.clark@arm.com>, <will@kernel.org>,
@@ -39,9 +39,9 @@ CC:     <helgaas@kernel.org>, <lorenzo.pieralisi@arm.com>,
         <liuqi115@huawei.com>, <zhangshaokun@hisilicon.com>,
         <linuxarm@huawei.com>, <yangyicong@hisilicon.com>,
         <bagasdotme@gmail.com>
-Subject: [PATCH v11 1/8] iommu/arm-smmu-v3: Make default domain type of HiSilicon PTT device to identity
-Date:   Thu, 21 Jul 2022 21:01:09 +0800
-Message-ID: <20220721130116.43366-2-yangyicong@huawei.com>
+Subject: [PATCH v11 4/8] perf tool: arm: Refactor event list iteration in auxtrace_record__init()
+Date:   Thu, 21 Jul 2022 21:01:12 +0800
+Message-ID: <20220721130116.43366-5-yangyicong@huawei.com>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20220721130116.43366-1-yangyicong@huawei.com>
 References: <20220721130116.43366-1-yangyicong@huawei.com>
@@ -56,58 +56,100 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yicong Yang <yangyicong@hisilicon.com>
+From: Qi Liu <liuqi115@huawei.com>
 
-The DMA operations of HiSilicon PTT device can only work properly with
-identical mappings. So add a quirk for the device to force the domain
-as passthrough.
+Add find_pmu_for_event() and use to simplify logic in
+auxtrace_record_init(). find_pmu_for_event() will be
+reused in subsequent patches.
 
-Acked-by: Will Deacon <will@kernel.org>
+Reviewed-by: Leo Yan <leo.yan@linaro.org>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Qi Liu <liuqi115@huawei.com>
 Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
 ---
- drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ tools/perf/arch/arm/util/auxtrace.c | 53 ++++++++++++++++++-----------
+ 1 file changed, 34 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-index 88817a3376ef..e119ff8396c9 100644
---- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-+++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
-@@ -2839,6 +2839,26 @@ static int arm_smmu_dev_disable_feature(struct device *dev,
- 	}
+diff --git a/tools/perf/arch/arm/util/auxtrace.c b/tools/perf/arch/arm/util/auxtrace.c
+index 5fc6a2a3dbc5..384c7cfda0fd 100644
+--- a/tools/perf/arch/arm/util/auxtrace.c
++++ b/tools/perf/arch/arm/util/auxtrace.c
+@@ -50,16 +50,32 @@ static struct perf_pmu **find_all_arm_spe_pmus(int *nr_spes, int *err)
+ 	return arm_spe_pmus;
  }
  
-+/*
-+ * HiSilicon PCIe tune and trace device can be used to trace TLP headers on the
-+ * PCIe link and save the data to memory by DMA. The hardware is restricted to
-+ * use identity mapping only.
-+ */
-+#define IS_HISI_PTT_DEVICE(pdev)	((pdev)->vendor == PCI_VENDOR_ID_HUAWEI && \
-+					 (pdev)->device == 0xa12e)
-+
-+static int arm_smmu_def_domain_type(struct device *dev)
++static struct perf_pmu *find_pmu_for_event(struct perf_pmu **pmus,
++					   int pmu_nr, struct evsel *evsel)
 +{
-+	if (dev_is_pci(dev)) {
-+		struct pci_dev *pdev = to_pci_dev(dev);
++	int i;
 +
-+		if (IS_HISI_PTT_DEVICE(pdev))
-+			return IOMMU_DOMAIN_IDENTITY;
++	if (!pmus)
++		return NULL;
++
++	for (i = 0; i < pmu_nr; i++) {
++		if (evsel->core.attr.type == pmus[i]->type)
++			return pmus[i];
 +	}
 +
-+	return 0;
++	return NULL;
 +}
 +
- static struct iommu_ops arm_smmu_ops = {
- 	.capable		= arm_smmu_capable,
- 	.domain_alloc		= arm_smmu_domain_alloc,
-@@ -2856,6 +2876,7 @@ static struct iommu_ops arm_smmu_ops = {
- 	.sva_unbind		= arm_smmu_sva_unbind,
- 	.sva_get_pasid		= arm_smmu_sva_get_pasid,
- 	.page_response		= arm_smmu_page_response,
-+	.def_domain_type	= arm_smmu_def_domain_type,
- 	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
- 	.owner			= THIS_MODULE,
- 	.default_domain_ops = &(const struct iommu_domain_ops) {
+ struct auxtrace_record
+ *auxtrace_record__init(struct evlist *evlist, int *err)
+ {
+-	struct perf_pmu	*cs_etm_pmu;
++	struct perf_pmu	*cs_etm_pmu = NULL;
++	struct perf_pmu **arm_spe_pmus = NULL;
+ 	struct evsel *evsel;
+-	bool found_etm = false;
++	struct perf_pmu *found_etm = NULL;
+ 	struct perf_pmu *found_spe = NULL;
+-	struct perf_pmu **arm_spe_pmus = NULL;
++	int auxtrace_event_cnt = 0;
+ 	int nr_spes = 0;
+-	int i = 0;
+ 
+ 	if (!evlist)
+ 		return NULL;
+@@ -68,24 +84,23 @@ struct auxtrace_record
+ 	arm_spe_pmus = find_all_arm_spe_pmus(&nr_spes, err);
+ 
+ 	evlist__for_each_entry(evlist, evsel) {
+-		if (cs_etm_pmu &&
+-		    evsel->core.attr.type == cs_etm_pmu->type)
+-			found_etm = true;
+-
+-		if (!nr_spes || found_spe)
+-			continue;
+-
+-		for (i = 0; i < nr_spes; i++) {
+-			if (evsel->core.attr.type == arm_spe_pmus[i]->type) {
+-				found_spe = arm_spe_pmus[i];
+-				break;
+-			}
+-		}
++		if (cs_etm_pmu && !found_etm)
++			found_etm = find_pmu_for_event(&cs_etm_pmu, 1, evsel);
++
++		if (arm_spe_pmus && !found_spe)
++			found_spe = find_pmu_for_event(arm_spe_pmus, nr_spes, evsel);
+ 	}
++
+ 	free(arm_spe_pmus);
+ 
+-	if (found_etm && found_spe) {
+-		pr_err("Concurrent ARM Coresight ETM and SPE operation not currently supported\n");
++	if (found_etm)
++		auxtrace_event_cnt++;
++
++	if (found_spe)
++		auxtrace_event_cnt++;
++
++	if (auxtrace_event_cnt > 1) {
++		pr_err("Concurrent AUX trace operation not currently supported\n");
+ 		*err = -EOPNOTSUPP;
+ 		return NULL;
+ 	}
 -- 
 2.24.0
 
