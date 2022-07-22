@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E4ECCA48A
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Jul 2022 11:08:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED0A7CCA48C
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Jul 2022 11:08:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234091AbiGVLID (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Jul 2022 07:08:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44118 "EHLO
+        id S234548AbiGVLIE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Jul 2022 07:08:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234237AbiGVLH7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jul 2022 07:07:59 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E7667A722B;
-        Fri, 22 Jul 2022 04:07:58 -0700 (PDT)
+        with ESMTP id S234301AbiGVLIA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Jul 2022 07:08:00 -0400
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8C88BA896D;
+        Fri, 22 Jul 2022 04:07:59 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.93,185,1654527600"; 
-   d="scan'208";a="127031985"
+   d="scan'208";a="128784530"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 22 Jul 2022 20:07:57 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 22 Jul 2022 20:07:57 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 5259A423A677;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id B5FB541FF8A7;
         Fri, 22 Jul 2022 20:07:57 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
@@ -28,9 +28,9 @@ To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v4 04/12] PCI: controller: dwc: Expose dw_pcie_ep_exit() to module
-Date:   Fri, 22 Jul 2022 20:07:36 +0900
-Message-Id: <20220722110744.2274466-5-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v4 07/12] PCI: dwc: Avoid reading a register to detect whether eDMA exists
+Date:   Fri, 22 Jul 2022 20:07:39 +0900
+Message-Id: <20220722110744.2274466-8-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220722110744.2274466-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20220722110744.2274466-1-yoshihiro.shimoda.uh@renesas.com>
@@ -40,25 +40,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Expose dw_pcie_ep_exit() to module.
+Since reading value of PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL was
+0x00000000 on one of SoCs (R-Car S4-8), it cannot find the eDMA.
+So, directly read the eDMA register if edma.red_base is not zero.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/dwc/pcie-designware.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 41afe8f2dd29..055058b6ff42 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -614,6 +614,7 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- 
- 	pci_epc_mem_exit(epc);
- }
-+EXPORT_SYMBOL_GPL(dw_pcie_ep_exit);
- 
- static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index e04128a22bbe..8a274953e25d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -839,8 +839,7 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
  {
+ 	u32 val;
+ 
+-	val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
+-	if (val == 0xFFFFFFFF && pci->edma.reg_base) {
++	if (pci->edma.reg_base) {
+ 		pci->edma.mf = EDMA_MF_EDMA_UNROLL;
+ 
+ 		val = dw_pcie_readl_dma(pci, PCIE_DMA_CTRL);
+@@ -848,6 +847,7 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+ 		pci->edma.mf = EDMA_MF_EDMA_LEGACY;
+ 
+ 		pci->edma.reg_base = pci->dbi_base + PCIE_DMA_VIEWPORT_BASE;
++		val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
+ 	} else {
+ 		return -ENODEV;
+ 	}
 -- 
 2.25.1
 
