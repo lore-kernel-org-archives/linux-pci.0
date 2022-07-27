@@ -2,93 +2,118 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A78DC04A68
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Jul 2022 12:33:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9323EC04A68
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Jul 2022 14:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232787AbiG0Mdl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Jul 2022 08:33:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48468 "EHLO
+        id S233497AbiG0OXn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Jul 2022 10:23:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232322AbiG0Mdk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jul 2022 08:33:40 -0400
-Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29AE12A8;
-        Wed, 27 Jul 2022 05:33:39 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4LtCqz6Gjgz4x1Y;
-        Wed, 27 Jul 2022 22:33:35 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ellerman.id.au;
-        s=201909; t=1658925217;
-        bh=QAuXrY/FPQVxrLMO9CIU4iIq7ob/dsZ+P55nLBcn+x8=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=IaAfhwx1qi/6yfin6Mq71kyaKRFN3i+L4jf4geCBX/RpPANKnQ5KeuBDbrrAN8t4F
-         Tww/GB1ILmM6xYFXbUJGOJNz3EvnRx75k8CmzVHfo8W0GG6yyCcvi3E6fsfiSFLlp7
-         SWvc4Wi6ncdoAVXoan9UVHYvvyUmIj21wKqcOXAlw03uy8YgbZ/j5pBEgs4T5gnAiT
-         QlsV9vl3C2QN19MTzNuCYz4cymt9HUAh2wkZzHLuAG/ljLyrSrD5t42qJZ6faADpbh
-         12L4FBwRJEaniYCGEFJPvdKhAeqoigrLgwArkt937QrsBLQb2WlKwEUXKSTbXqWLb/
-         qqjCKWU/HkRbg==
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     Pali =?utf-8?Q?Roh=C3=A1r?= <pali@kernel.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        "Guilherme G. Piccoli" <gpiccoli@igalia.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Guowen Shan <gshan@redhat.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] powerpc/pci: Add config option for using OF
- 'reg' for PCI domain
-In-Reply-To: <20220706102148.5060-1-pali@kernel.org>
-References: <20220706102148.5060-1-pali@kernel.org>
-Date:   Wed, 27 Jul 2022 22:33:32 +1000
-Message-ID: <87pmhqag6b.fsf@mpe.ellerman.id.au>
+        with ESMTP id S229957AbiG0OXm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jul 2022 10:23:42 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6CE81ADA0;
+        Wed, 27 Jul 2022 07:23:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658931821; x=1690467821;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=QDqJWX3QsIY+mVrjQjqamt6AMbOAQVyx8v1KjAUsHEM=;
+  b=KZ2SzJxwlUVPQEowgw/NnnmY3vF4gaL9UpHW79AyAIiilzyR+/zXGtRB
+   yZSQ9T0ZrXMzas2tHL88mjt9j9rH7h3SMv6UycGxMQv6TqZuzPx5CjHrb
+   VV1sRox5/D3m3/itnTD9MYBfml3MOr1+GBV3D3icMAXhcy4VKlcgffA17
+   +xvk8ZCxsleE3pteEJpVdZs7BAW/bwxipeM8tkJPd0XaqItiDYTTv9J7G
+   o+A6NXHkF/KH9LRzg82aquGyrsDGRfiK6h73azVzaIXt/cWs9ZSBknak1
+   +kkfvAkHgeH98ceMRHLzpSHSGKsD3tsCTE1VQD5uqdoUEvYCoc/A1tWQj
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10421"; a="275120443"
+X-IronPort-AV: E=Sophos;i="5.93,195,1654585200"; 
+   d="scan'208";a="275120443"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2022 07:23:40 -0700
+X-IronPort-AV: E=Sophos;i="5.93,195,1654585200"; 
+   d="scan'208";a="726942897"
+Received: from jkasten-mobl.amr.corp.intel.com (HELO [10.209.24.156]) ([10.209.24.156])
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2022 07:23:40 -0700
+Message-ID: <3dc43f00-0b01-1b02-74dc-6938f6db6e29@linux.intel.com>
+Date:   Wed, 27 Jul 2022 07:23:39 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Firefox/91.0 Thunderbird/91.11.0
+Subject: Re: [PATCH v1] PCI/DPC: Skip EDR init when BIOS disable OS native DPC
+Content-Language: en-US
+To:     Xiaochun Lee <lixiaochun.2888@163.com>, linux-pci@vger.kernel.org
+Cc:     bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        Xiaochun Lee <lixc17@lenovo.com>
+References: <1658919957-53006-1-git-send-email-lixiaochun.2888@163.com>
+From:   Sathyanarayanan Kuppuswamy 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <1658919957-53006-1-git-send-email-lixiaochun.2888@163.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Pali Roh=C3=A1r <pali@kernel.org> writes:
-> Since commit 63a72284b159 ("powerpc/pci: Assign fixed PHB number based on
-> device-tree properties"), powerpc kernel always fallback to PCI domain
-> assignment from OF / Device Tree 'reg' property of the PCI controller.
->
-> In most cases 'reg' property is not zero and therefore there it cause that
-> PCI domain zero is not present in system anymore.
->
-> PCI code for other Linux architectures use increasing assignment of the P=
-CI
-> domain for individual controllers (assign the first free number), like it
-> was also for powerpc prior mentioned commit. Also it starts numbering
-> domains from zero.
->
-> Upgrading powerpc kernels from LTS 4.4 version (which does not contain
-> mentioned commit) to new LTS versions brings a change in domain assignmen=
-t.
->
-> It can be problematic for embedded machines with single PCIe controller
-> where it is expected that PCIe card is connected on the domain zero.
-> Also it can be problematic as that commit changes PCIe domains in
-> multi-controller setup with fixed number of controller (without hotplug
-> support).
->
-> Originally that change was intended for powernv and pservers and specially
-> server machines with more PCI domains or hot plug support.
->
-> Fix this issue and introduce a new option CONFIG_PPC_PCI_DOMAIN_FROM_OF_R=
-EG.
+Hi,
 
-As I said in my previous reply, I don't want a config option for this.
+On 7/27/22 4:05 AM, Xiaochun Lee wrote:
+> From: Xiaochun Lee <lixc17@lenovo.com>
+> 
+> ACPI BIOS may disable OS native AER and DPC support to notify OS
+> that our platform doesn't support AER and DPC via the _OSC method.
+> BIOS also might leave the containment be accomplished purely in HW.
+> When firmware is set to non-aware OS DPC, we skip to install
+> EDR handler to an ACPI device.
 
-Adding an option now would revert the behaviour back to the way it was,
-which has the potential to break things, as you described.
+No, EDR is used when firmware controls the DPC.
 
-Maybe we shouldn't have changed the numbering to begin with, but it's
-been 6 years, so it's too late to change it back.
+When the Firmware owns Downstream Port Containment, it is expected to use
+the new “Error Disconnect Recover” notification to alert OSPM of a
+Downstream Port Containment event.
 
-cheers
+> 
+> Signed-off-by: Xiaochun Lee <lixc17@lenovo.com>
+> ---
+>  drivers/pci/pcie/edr.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/edr.c b/drivers/pci/pcie/edr.c
+> index a6b9b47..97a680b 100644
+> --- a/drivers/pci/pcie/edr.c
+> +++ b/drivers/pci/pcie/edr.c
+> @@ -19,6 +19,17 @@
+>  #define EDR_OST_SUCCESS			0x80
+>  #define EDR_OST_FAILED			0x81
+>  
+> +static int pcie_dpc_is_native(struct pci_dev *dev)
+> +{
+> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+> +
+> +	if (!dev->dpc_cap)
+> +		return 0;
+> +
+> +	return pcie_ports_dpc_native || host->native_dpc;
+> +}
+> +
+> +
+>  /*
+>   * _DSM wrapper function to enable/disable DPC
+>   * @pdev   : PCI device structure
+> @@ -212,6 +223,11 @@ void pci_acpi_add_edr_notifier(struct pci_dev *pdev)
+>  		return;
+>  	}
+>  
+> +	if (!pcie_dpc_is_native(pdev) && !pcie_aer_is_native(pdev)) {
+> +		pci_dbg(pdev, "OS doesn't control DPC, skipping EDR init\n");
+> +		return;
+> +	}
+> +
+>  	status = acpi_install_notify_handler(adev->handle, ACPI_SYSTEM_NOTIFY,
+>  					     edr_handle_event, pdev);
+>  	if (ACPI_FAILURE(status)) {
+
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
