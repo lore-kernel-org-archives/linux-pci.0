@@ -2,41 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97082C25B08
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:36:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E285DC25B0C
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:36:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231895AbiG1OgF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231970AbiG1OgF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 28 Jul 2022 10:36:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37798 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232552AbiG1OfY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:35:24 -0400
+        with ESMTP id S232758AbiG1OfU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:35:20 -0400
 Received: from mail.baikalelectronics.com (unknown [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6C1031D8;
-        Thu, 28 Jul 2022 07:35:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9D45C4F698;
+        Thu, 28 Jul 2022 07:34:50 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 3116F16D7;
-        Thu, 28 Jul 2022 17:37:24 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 3116F16D7
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 6FFD116D9;
+        Thu, 28 Jul 2022 17:37:13 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 6FFD116D9
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1659019044;
-        bh=+s7o1dgS7jcJL/33p7Pa1tcwz5jis+xOv5qW3LlQbsE=;
+        d=baikalelectronics.ru; s=mail; t=1659019033;
+        bh=4+FspBDrmkpEqQ53XZop0prYjV+tM5O/71NmIcbrgRQ=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=bGrO1wbsKdA4wWhF9fMgV7SiwCtLkaa9ZjnBPWUoSmV+0Zor9ysZMpksFRri1XiBG
-         /tZsI5DOefW2DdTJZPtSEtcj9ovLr/PTnrnBcsi7n1hjnqGqRWkbh+P1Dr5n2BAxHE
-         CXeQj18rw6Peld609I6smeNeR2EwvYBpn/BV9dk0=
+        b=lXW3bCxoehOZWFj1wEJhCvk2LwpoOR48p+n56JQFPSQ/aGAw2sTfwzRzBZUzUXrNw
+         fCB88Tl5dqtG7V/ddc2AWVzx3uHNn6KbC8F2Gd93otkcISq0PUJHLjN0iFgKmCjpvt
+         ZF6pC+vGuajiH5lqmgAVTyhFaRyqOSaOGw1IUMgw=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:34:59 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:34:48 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Simon Xue <xxm@rock-chips.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
@@ -45,12 +42,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-rockchip@lists.infradead.org>
-Subject: [PATCH v4 11/17] dt-bindings: PCI: dwc: Apply common schema to Rockchip DW PCIe nodes
-Date:   Thu, 28 Jul 2022 17:34:21 +0300
-Message-ID: <20220728143427.13617-12-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v4 03/17] dt-bindings: PCI: dwc: Add phys/phy-names common properties
+Date:   Thu, 28 Jul 2022 17:34:13 +0300
+Message-ID: <20220728143427.13617-4-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220728143427.13617-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220728143427.13617-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -61,39 +56,82 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As the DT-bindings description states the Rockchip PCIe controller is
-based on the DW PCIe RP IP-core thus its DT-nodes are supposed to be
-compatible with the common DW PCIe controller schema. Let's make sure they
-evaluated against it by referring to the snps,dw-pcie-common.yaml schema
-in the allOf sub-schemas composition.
+It's normal to have the DW PCIe RP/EP DT-nodes equipped with the explicit
+PHY phandle references. There can be up to 16 PHYs attach in accordance
+with the maximum number of supported PCIe lanes. Let's extend the common
+DW PCIe controller schema with the 'phys' and 'phy-names' properties
+definition. The PHY names are defined with the regexp pattern
+'^pcie([0-9]+|-?phy[0-9]*)?$' so to match the names currently supported by
+the DW PCIe platform drivers ("pcie": meson; "pciephy": qcom, imx6;
+"pcie-phy": uniphier, rockchip, spear13xx; "pcie": intel-gw; "pcie-phy%d":
+keystone, dra7xx; "pcie": histb, etc). Though the "pcie%d" format would
+the most preferable in this case.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
 Changelog v3:
-- This is a new patch created on v3 lap of the series.
+- This is a new patch unpinned from the next one:
+  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
+  by the Rob' request. (@Rob)
 ---
- Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../bindings/pci/snps,dw-pcie-common.yaml         | 15 +++++++++++++++
+ .../devicetree/bindings/pci/snps,dw-pcie-ep.yaml  |  3 +++
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml     |  3 +++
+ 3 files changed, 21 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-index bc0a9d1db750..2afdc43a27ed 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-@@ -14,10 +14,11 @@ maintainers:
- description: |+
-   RK3568 SoC PCIe host controller is based on the Synopsys DesignWare
-   PCIe IP and thus inherits all the common properties defined in
--  designware-pcie.txt.
-+  snps,dw-pcie-common.yaml.
- 
- allOf:
-   - $ref: /schemas/pci/pci-bus.yaml#
-+  - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+index 3e992b653d12..627a5d6625ba 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+@@ -17,6 +17,21 @@ description:
+ select: false
  
  properties:
-   compatible:
++  phys:
++    description:
++      There can be up to the number of possible lanes PHYs specified.
++      Obviously each specified PHY is supposed to be able to work in the
++      PCIe mode with a speed implied by the DWC PCIe controller it is
++      attached to.
++    minItems: 1
++    maxItems: 16
++
++  phy-names:
++    minItems: 1
++    maxItems: 16
++    items:
++      pattern: '^pcie([0-9]+|-?phy[0-9]*)?$'
++
+   reset-gpio:
+     deprecated: true
+     description:
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index 7d05dcba419b..dcd521aed213 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -52,4 +52,7 @@ examples:
+             <0xdfc01000 0x0001000>, /* IP registers 2 */
+             <0xd0000000 0x2000000>; /* Configuration space */
+       reg-names = "dbi", "dbi2", "addr_space";
++
++      phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
++      phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
+     };
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 2810e9b5cc8d..4a5c8b933b52 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -70,5 +70,8 @@ examples:
+ 
+       reset-gpios = <&port0 0 1>;
+ 
++      phys = <&pcie_phy>;
++      phy-names = "pcie";
++
+       num-lanes = <1>;
+     };
 -- 
 2.35.1
 
