@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC0DC19F2C
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:36:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE572C282E7
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:36:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232830AbiG1OgT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Jul 2022 10:36:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37758 "EHLO
+        id S232178AbiG1OgU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Jul 2022 10:36:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232053AbiG1OfW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:35:22 -0400
+        with ESMTP id S232805AbiG1Ofl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:35:41 -0400
 Received: from mail.baikalelectronics.com (unknown [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 665F650065;
-        Thu, 28 Jul 2022 07:34:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AE44BFEE;
+        Thu, 28 Jul 2022 07:35:08 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 420FF16D8;
-        Thu, 28 Jul 2022 17:37:19 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 420FF16D8
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 55BD016DD;
+        Thu, 28 Jul 2022 17:37:25 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 55BD016DD
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1659019039;
-        bh=bndcRK7whtsfmiDP8jRu1JWxK0C4AOmoZ70ofFSjgmM=;
+        d=baikalelectronics.ru; s=mail; t=1659019045;
+        bh=YoncPqpfxB/O+UIQ5udV/r13samFVrXcrXHOyNlvANA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=d3INbJ5hhq25jwrUbox9PLo995+0EGh73R1RWy2C7NQqVGL+f1vUnT//0sg1CawA7
-         MZy25Wmj2mFvyXfNh6tzRuYHRWO+0B6DRuWazDa8TzVn0m3DiX58oiaYKaVsD8cAaf
-         6vuoc93Sy3fUZObFQwJgs7/nIoHfTHYZWtBNxWEs=
+        b=HtqTzO0JDBb6CPWunvO3GBB4l7ACejGfQTke/yUAgLAcko/u5jKzCA+Za3zs3TpAo
+         WbCU8GtZ9puPu/EJ/hwYSBS18HVUtl6VRdtw2cNgDXxJeeyga4He9SLqTFybDYJO47
+         5ZeC5dpDXv89RfIWnKJ+Ahpz7zMe87A2LcTrFhdE=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:34:54 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:35:00 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Serge Semin <fancer.lancer@gmail.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
@@ -43,9 +43,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 07/17] dt-bindings: PCI: dwc: Add interrupts/interrupt-names common properties
-Date:   Thu, 28 Jul 2022 17:34:17 +0300
-Message-ID: <20220728143427.13617-8-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v4 12/17] dt-bindings: PCI: dwc: Add Baikal-T1 PCIe Root Port bindings
+Date:   Thu, 28 Jul 2022 17:34:22 +0300
+Message-ID: <20220728143427.13617-13-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220728143427.13617-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220728143427.13617-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,222 +56,194 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently the 'interrupts' and 'interrupt-names' are defined being too
-generic to really describe any actual IRQ interface. Moreover the DW PCIe
-End-point devices are left with no IRQ signals. All of that can be fixed
-by adding the IRQ-related properties to the common DW PCIe DT-schema and
-defining a common and device-specific set of the IRQ names in accordance
-with the hardware reference manual. Seeing there are common and dedicated
-IRQ signals for DW PCIe Root Port and End-point controllers we suggest to
-split the IRQ names up into two sets: common definitions available in the
-snps,dw-pcie-common.yaml schema and Root Port specific names defined in
-the snps,dw-pcie.yaml schema. The former one will be applied to both DW
-PCIe RP and EP controllers, while the later one - for the RP only.
+Baikal-T1 SoC is equipped with DWC PCIe v4.60a Root Port controller, which
+link can be trained to work on up to Gen.3 speed over up to x4 lanes. The
+controller is supposed to be fed up with four clock sources: DBI
+peripheral clock, AXI application Tx/Rx clocks and external PHY/core
+reference clock generating the 100MHz signal. In addition to that the
+platform provide a way to reset each part of the controller:
+sticky/non-sticky bits, host controller core, PIPE interface, PCS/PHY and
+Hot/Power reset signal. The Root Port controller is equipped with multiple
+IRQ lines like MSI, system AER, PME, HP, Bandwidth change, Link
+equalization request and eDMA ones. The registers space is accessed over
+the DBI interface. There can be no more than four inbound or outbound iATU
+windows configured.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
-Changelog v3:
-- This is a new patch unpinned from the next one:
-  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
-  by the Rob' request. (@Rob)
+Changelog v2:
+- Rename 'syscon' property to 'baikal,bt1-syscon'.
+- Fix the 'compatible' property definition to being more specific about
+  what strings are supposed to be used. Due to that we had to add the
+  select property to evaluate the schema against the Baikal-T1 PCIe DT
+  nodes only.
 ---
- .../bindings/pci/snps,dw-pcie-common.yaml     | 51 +++++++++++++++
- .../bindings/pci/snps,dw-pcie-ep.yaml         | 17 +++++
- .../devicetree/bindings/pci/snps,dw-pcie.yaml | 63 ++++++++++++++++++-
- 3 files changed, 128 insertions(+), 3 deletions(-)
+ .../bindings/pci/baikal,bt1-pcie.yaml         | 154 ++++++++++++++++++
+ 1 file changed, 154 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml
 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-index b2fbe886981b..0a524e916a9f 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-@@ -17,6 +17,25 @@ description:
- select: false
- 
- properties:
-+  interrupts:
-+    description:
-+      There are two main sub-blocks which are normally capable of
-+      generating interrupts. It's System Information Interface and MSI
-+      interface. While the former one has some common for the Host and
-+      Endpoint controllers IRQ-signals, the later interface is obviously
-+      Root Complex specific since it's responsible for the incoming MSI
-+      messages signalling. The System Information IRQ signals are mainly
-+      responsible for reporting the generic PCIe hierarchy and Root
-+      Complex events like VPD IO request, general AER, PME, Hot-plug, link
-+      bandwidth change, link equalization request, INTx asserted/deasserted
-+      Message detection, embedded DMA Tx/Rx/Error.
-+    minItems: 1
-+    maxItems: 26
+diff --git a/Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml b/Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml
+new file mode 100644
+index 000000000000..23bd1d0aa5c5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/baikal,bt1-pcie.yaml
+@@ -0,0 +1,154 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/baikal,bt1-pcie.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+  interrupt-names:
-+    minItems: 1
-+    maxItems: 26
++title: Baikal-T1 PCIe Root Port Controller
 +
-   phys:
-     description:
-       There can be up to the number of possible lanes PHYs specified.
-@@ -91,4 +110,36 @@ properties:
- 
- additionalProperties: true
- 
-+definitions:
-+  interrupt-names:
-+    description:
-+      IRQ signal names common for the DWC PCIe Root Port and Endpoint
-+      controllers.
-+    oneOf:
-+      - description:
-+          Controller request to read or write virtual product data
-+          from/to the VPD capability registers.
-+        const: vpd
-+      - description:
-+          Link Equalization Request flag is set in the Link Status 2
-+          register (applicable if the corresponding IRQ is enabled in
-+          the Link Control 3 register).
-+        const: l_eq
-+      - description:
-+          Indicates that the eDMA Tx/Rx transfer is complete or that an
-+          error has occurred on the corresponding channel. eDMA can have
-+          eight Tx (Write) and Rx (Read) eDMA channels thus supporting up
-+          to 16 IRQ signals all together. Write eDMA channels shall go
-+          first in the ordered row as per default edma_int[*] bus setup.
-+        pattern: '^dma([0-9]|1[0-5])?$'
-+      - description:
-+          PCIe protocol correctable error or a Data Path protection
-+          correctable error is detected by the automotive/safety
-+          feature.
-+        const: sft_ce
-+      - description:
-+          Indicates that the internal safety mechanism detected and
-+          uncorrectable error.
-+        const: sft_ue
++maintainers:
++  - Serge Semin <fancer.lancer@gmail.com>
 +
- ...
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index 9411366d6ca7..5f12a6ac08d8 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -53,6 +53,20 @@ properties:
-     items:
-       enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
- 
-+  interrupts:
-+    description:
-+      There is no mandatory IRQ signals for the normal controller functioning,
-+      but in addition to the native set the platforms may have a link- or
-+      PM-related IRQs specified.
-+    minItems: 1
-+    maxItems: 20
++description:
++  Embedded into Baikal-T1 SoC Root Complex controller. It's based on the
++  DWC RC PCIe v4.60a IP-core, which is configured to have just a single Root
++  Port function and is capable of establishing the link up to Gen.3 speed
++  on x4 lanes. It doesn't have embedded clock and reset control module, so
++  the proper interface initialization is supposed to be performed by software.
 +
-+  interrupt-names:
-+    minItems: 1
-+    maxItems: 20
++select:
++  properties:
++    compatible:
++      contains:
++        const: baikal,bt1-pcie
++
++  required:
++    - compatible
++
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++
++properties:
++  compatible:
 +    items:
-+      $ref: /schemas/pci/snps,dw-pcie-common.yaml#/definitions/interrupt-names
++      - const: baikal,bt1-pcie
++      - const: snps,dw-pcie-4.60a
++      - const: snps,dw-pcie
 +
-   max-functions:
-     maximum: 32
- 
-@@ -72,6 +86,9 @@ examples:
-             <0xd0000000 0x2000000>; /* Configuration space */
-       reg-names = "dbi", "dbi2", "addr_space";
- 
-+      interrupts = <23>, <24>;
-+      interrupt-names = "dma0", "dma1";
++  reg:
++    description:
++      DBI, DBI2 and at least 4KB outbound iATU-capable region.
++    maxItems: 3
 +
-       phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
-       phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
- 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index 8b2e3210e3e2..e0020b72288a 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -54,9 +54,23 @@ properties:
-       enum: [ dbi, dbi2, config, atu, app, elbi, mgmt, ctrl, parf, cfg, link,
-               ulreg, smu, mpu, apb, phy ]
- 
--  interrupts: true
--
--  interrupt-names: true
++  reg-names:
++    minItems: 3
++    maxItems: 3
++    items:
++      enum: [ dbi, dbi2, config ]
++
 +  interrupts:
 +    description:
-+      At least MSI interrupt signal is supposed to be specified for
-+      the DWC PCIe host controller.
-+    minItems: 1
-+    maxItems: 26
++      MSI, AER, PME, Hot-plug, Link Bandwidth Management, Link Equalization
++      request and eight Read/Write eDMA IRQ lines are available.
++    maxItems: 14
 +
 +  interrupt-names:
-+    minItems: 1
-+    maxItems: 26
++    minItems: 14
++    maxItems: 14
 +    items:
-+      anyOf:
-+        - $ref: /schemas/pci/snps,dw-pcie-common.yaml#/definitions/interrupt-names
-+        - $ref: '#/definitions/interrupt-names'
-+    allOf:
-+      - contains:
-+          const: msi
- 
-   clocks: true
- 
-@@ -67,6 +81,48 @@ required:
-   - reg
-   - reg-names
- 
-+definitions:
-+  interrupt-names:
-+    description:
-+      DWC PCIe Root Port/Complex specific IRQ signal names.
-+    oneOf:
-+      - description:
-+          DSP AXI MSI Interrupt detected. It gets de-asserted when there is
-+          no more MSI interrupt pending. The interrupt is relevant to the
-+          iMSI-RX - Integrated MSI Receiver (AXI bridge).
-+        const: msi
-+      - description:
-+          Legacy A/B/C/D interrupt signal. Basically it's triggered by
-+          receiving a Assert_INT{A,B,C,D}/Desassert_INT{A,B,C,D} message
-+          from the downstream device.
-+        pattern: "^int(a|b|c|d)$"
-+      - description:
-+          Error condition detected and a bit is set in the Root Error Status
-+          register of the AER capability. It's asserted when the RC
-+          internally generated an error or an error message is received by
-+          the RC.
-+        const: aer
-+      - description:
-+          PME message is received by the port. That means having the PME
-+          status bit set in the Root Status register (the event is
-+          supposed to be unmasked in the Root Control register).
-+        const: pme
-+      - description:
-+          Hot-plug event is detected. That is a bit has been set in the
-+          Slot Status register and the corresponding event is enabled in
-+          the Slot Control register.
-+        const: hp
-+      - description:
-+          Link Autonomous Bandwidth Status flag has been set in the Link
-+          Status register (the event is supposed to be unmasked in the
-+          Link Control register).
-+        const: bw_au
-+      - description:
-+          Bandwidth Management Status flag has been set in the Link
-+          Status register (the event is supposed to be unmasked in the
-+          Link Control register).
-+        const: bw_mg
++      oneOf:
++        - pattern: '^dma[0-7]$'
++        - enum: [ msi, aer, pme, hp, bw_mg, l_eq ]
 +
- examples:
-   - |
-     pcie@dfc00000 {
-@@ -82,6 +138,7 @@ examples:
-       bus-range = <0x0 0xff>;
- 
-       interrupts = <25>, <24>;
-+      interrupt-names = "msi", "hp";
-       #interrupt-cells = <1>;
- 
-       reset-gpios = <&port0 0 1>;
++  clocks:
++    description:
++      DBI (attached to the APB bus), AXI-bus master and slave interfaces
++      are fed up by the dedicated application clocks. A common reference
++      clock signal is supposed to be attached to the corresponding Ref-pad
++      of the SoC. It will be redistributed amongst the controller core
++      sub-modules (pipe, core, aux, etc).
++    minItems: 4
++    maxItems: 4
++
++  clock-names:
++    minItems: 4
++    maxItems: 4
++    items:
++      enum: [ dbi, mstr, slv, ref ]
++
++  resets:
++    description:
++      A comprehensive controller reset logic is supposed to be implemented
++      by software, so almost all the possible application and core reset
++      signals are exposed via the system CCU module.
++    minItems: 9
++    maxItems: 9
++
++  reset-names:
++    minItems: 9
++    maxItems: 9
++    items:
++      enum: [ mstr, slv, pwr, hot, phy, core, pipe, sticky, non-sticky ]
++
++  baikal,bt1-syscon:
++    $ref: /schemas/types.yaml#/definitions/phandle
++    description:
++      Phandle to the Baikal-T1 System Controller DT node. It's required to
++      access some additional PM, Reset-related and LTSSM signals.
++
++  num-lanes:
++    maximum: 4
++
++  max-link-speed:
++    maximum: 3
++
++  num-ob-windows:
++    const: 4
++
++  num-ib-windows:
++    const: 4
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - interrupts
++  - interrupt-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    pcie@1f052000 {
++      compatible = "baikal,bt1-pcie", "snps,dw-pcie-4.60a", "snps,dw-pcie";
++      device_type = "pci";
++      reg = <0x1f052000 0x1000>, <0x1f053000 0x1000>, <0x1bdbf000 0x1000>;
++      reg-names = "dbi", "dbi2", "config";
++      #address-cells = <3>;
++      #size-cells = <2>;
++      ranges = <0x81000000 0 0x00000000 0x1bdb0000 0 0x00008000>,
++               <0x82000000 0 0x20000000 0x08000000 0 0x13db0000>;
++      bus-range = <0x0 0xff>;
++
++      interrupts = <0 80 4>, <0 81 4>, <0 82 4>, <0 83 4>,
++                   <0 84 4>, <0 85 4>, <0 86 4>, <0 87 4>,
++                   <0 88 4>, <0 89 4>, <0 90 4>, <0 91 4>,
++                   <0 92 4>, <0 93 4>;
++      interrupt-names = "dma0", "dma1", "dma2", "dma3", "dma4", "dma5", "dma6",
++                        "dma7", "msi", "aer", "pme", "hp", "bw_mg", "l_eq";
++
++      clocks = <&ccu_sys 1>, <&ccu_axi 6>, <&ccu_axi 7>, <&clk_pcie>;
++      clock-names = "dbi", "mstr", "slv", "ref";
++
++      resets = <&ccu_axi 6>, <&ccu_axi 7>, <&ccu_sys 7>, <&ccu_sys 10>,
++               <&ccu_sys 4>, <&ccu_sys 6>, <&ccu_sys 5>, <&ccu_sys 8>,
++               <&ccu_sys 9>;
++      reset-names = "mstr", "slv", "pwr", "hot", "phy", "core", "pipe",
++                    "sticky", "non-sticky";
++
++      reset-gpios = <&port0 0 1>;
++
++      num-lanes = <4>;
++      max-link-speed = <3>;
++    };
++...
 -- 
 2.35.1
 
