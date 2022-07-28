@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C6E7C04A68
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18956C19F2D
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:29:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229862AbiG1O3e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Jul 2022 10:29:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57514 "EHLO
+        id S232130AbiG1O3f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Jul 2022 10:29:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231978AbiG1O3O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:29:14 -0400
+        with ESMTP id S231985AbiG1O32 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:29:28 -0400
 Received: from mail.baikalelectronics.com (unknown [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D306166118;
-        Thu, 28 Jul 2022 07:28:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2DF07675BA;
+        Thu, 28 Jul 2022 07:29:00 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 1D7FE5BC3;
-        Thu, 28 Jul 2022 17:31:17 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 1D7FE5BC3
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 1387C5BC8;
+        Thu, 28 Jul 2022 17:31:21 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 1387C5BC8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1659018677;
-        bh=N88OoMZKRV6JXPdySXLm56p1hMlYe/rmzVyzAT1y8Mo=;
+        d=baikalelectronics.ru; s=mail; t=1659018681;
+        bh=kTH6C5C5rfbmVRgZ1Ol9qYqwreqwX88JM6KrGJ4NuyM=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=Z+GeM7eZ29dGcJ1SW5ImbUBSmup4WYRV18GlpUvUV9kVl8hzwsKTNE3qAiVcCz/xt
-         TSpLtaTwpJNX9+laV5+xdVTslJtu6uYBKJyC/W4Ck0Sfx1OhPMqCkTkexTCcxur/E6
-         8XrG94IDOsKC320Gs+jye2xgTAUhsUmM1oPJ4UDs=
+        b=OdL7aLd7ZXKjwWau5bB3f39qR9BKKBLr+KGU2AtVVytN6yEPldl6olL6sC4P5xCJY
+         WKk5/rIr1i6h0B8hrzmJvd0FX1IXYrbwyHpbBoVJ8mhEjdpiCs36cX21nxVwikjU78
+         KV+lG+oAfQ8SovA0TR3uraEGTaC5xwtPk/nkQKhc=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:28:52 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:28:56 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -40,11 +40,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v4 08/24] dmaengine: dw-edma: Add PCIe bus address getter to the remote EP glue-driver
-Date:   Thu, 28 Jul 2022 17:28:25 +0300
-Message-ID: <20220728142841.12305-9-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v4 12/24] dmaengine: dw-edma: Add dw_edma prefix to the DebugFS nodes descriptor
+Date:   Thu, 28 Jul 2022 17:28:29 +0300
+Message-ID: <20220728142841.12305-13-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220728142841.12305-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220728142841.12305-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -55,59 +54,105 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In general the Synopsys PCIe EndPoint IP prototype kit can be attached to
-a PCIe bus with any PCIe Host controller including to the one with
-distinctive from CPU address space. Due to that we need to make sure that
-the source and destination addresses of the DMA-slave devices are properly
-converted to the PCIe bus address space, otherwise the DMA transaction
-will not only work as expected, but may cause the memory corruption with
-subsequent system crash. Let's do that by introducing a new
-dw_edma_pcie_address() method defined in the dw-edma-pcie.c, which will
-perform the denoted translation by using the pcibios_resource_to_bus()
-method.
+The rest of the locally defined and used methods and structures have
+dw_edma prefix in their names. It's right in accordance with the kernel
+coding style to follow the locally defined rule of naming. Let's add that
+prefix to the debugfs_entries structure too especially seeing it's name
+may be confusing as if that structure belongs to the global DebugFS space.
 
-Fixes: 41aaff2a2ac0 ("dmaengine: Add Synopsys eDMA IP PCIe glue-logic")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-By: Vinod Koul <vkoul@kernel.org>
-
 ---
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Note this patch depends on the patch "dmaengine: dw-edma: Add CPU to PCIe
-bus address translation" from this series.
----
- drivers/dma/dw-edma/dw-edma-pcie.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index 04c95cba1244..f530bacfd716 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -95,8 +95,23 @@ static int dw_edma_pcie_irq_vector(struct device *dev, unsigned int nr)
- 	return pci_irq_vector(to_pci_dev(dev), nr);
- }
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+index 6e7f3ef60ca7..2121ffc33cf3 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+@@ -46,7 +46,7 @@ static struct {
+ 	void					__iomem *end;
+ } lim[2][EDMA_V0_MAX_NR_CH];
  
-+static u64 dw_edma_pcie_address(struct device *dev, phys_addr_t cpu_addr)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct pci_bus_region region;
-+	struct resource res = {
-+		.flags = IORESOURCE_MEM,
-+		.start = cpu_addr,
-+		.end = cpu_addr,
-+	};
-+
-+	pcibios_resource_to_bus(pdev->bus, &region, &res);
-+	return region.start;
-+}
-+
- static const struct dw_edma_core_ops dw_edma_pcie_core_ops = {
- 	.irq_vector = dw_edma_pcie_irq_vector,
-+	.pci_address = dw_edma_pcie_address,
+-struct debugfs_entries {
++struct dw_edma_debugfs_entry {
+ 	const char				*name;
+ 	void __iomem				*reg;
  };
+@@ -94,7 +94,7 @@ static int dw_edma_debugfs_u32_get(void *data, u64 *val)
+ }
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_x32, dw_edma_debugfs_u32_get, NULL, "0x%08llx\n");
  
- static void dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
+-static void dw_edma_debugfs_create_x32(const struct debugfs_entries entries[],
++static void dw_edma_debugfs_create_x32(const struct dw_edma_debugfs_entry entries[],
+ 				       int nr_entries, struct dentry *dir)
+ {
+ 	int i;
+@@ -108,8 +108,7 @@ static void dw_edma_debugfs_create_x32(const struct debugfs_entries entries[],
+ static void dw_edma_debugfs_regs_ch(struct dw_edma_v0_ch_regs __iomem *regs,
+ 				    struct dentry *dir)
+ {
+-	int nr_entries;
+-	const struct debugfs_entries debugfs_regs[] = {
++	const struct dw_edma_debugfs_entry debugfs_regs[] = {
+ 		REGISTER(ch_control1),
+ 		REGISTER(ch_control2),
+ 		REGISTER(transfer_size),
+@@ -120,6 +119,7 @@ static void dw_edma_debugfs_regs_ch(struct dw_edma_v0_ch_regs __iomem *regs,
+ 		REGISTER(llp.lsb),
+ 		REGISTER(llp.msb),
+ 	};
++	int nr_entries;
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, dir);
+@@ -127,7 +127,7 @@ static void dw_edma_debugfs_regs_ch(struct dw_edma_v0_ch_regs __iomem *regs,
+ 
+ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ {
+-	const struct debugfs_entries debugfs_regs[] = {
++	const struct dw_edma_debugfs_entry debugfs_regs[] = {
+ 		/* eDMA global registers */
+ 		WR_REGISTER(engine_en),
+ 		WR_REGISTER(doorbell),
+@@ -148,7 +148,7 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 		WR_REGISTER(ch67_imwr_data),
+ 		WR_REGISTER(linked_list_err_en),
+ 	};
+-	const struct debugfs_entries debugfs_unroll_regs[] = {
++	const struct dw_edma_debugfs_entry debugfs_unroll_regs[] = {
+ 		/* eDMA channel context grouping */
+ 		WR_REGISTER_UNROLL(engine_chgroup),
+ 		WR_REGISTER_UNROLL(engine_hshake_cnt.lsb),
+@@ -191,7 +191,7 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 
+ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ {
+-	const struct debugfs_entries debugfs_regs[] = {
++	const struct dw_edma_debugfs_entry debugfs_regs[] = {
+ 		/* eDMA global registers */
+ 		RD_REGISTER(engine_en),
+ 		RD_REGISTER(doorbell),
+@@ -213,7 +213,7 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 		RD_REGISTER(ch45_imwr_data),
+ 		RD_REGISTER(ch67_imwr_data),
+ 	};
+-	const struct debugfs_entries debugfs_unroll_regs[] = {
++	const struct dw_edma_debugfs_entry debugfs_unroll_regs[] = {
+ 		/* eDMA channel context grouping */
+ 		RD_REGISTER_UNROLL(engine_chgroup),
+ 		RD_REGISTER_UNROLL(engine_hshake_cnt.lsb),
+@@ -256,7 +256,7 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 
+ static void dw_edma_debugfs_regs(void)
+ {
+-	const struct debugfs_entries debugfs_regs[] = {
++	const struct dw_edma_debugfs_entry debugfs_regs[] = {
+ 		REGISTER(ctrl_data_arb_prior),
+ 		REGISTER(ctrl),
+ 	};
 -- 
 2.35.1
 
