@@ -2,51 +2,50 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BC96C25B0F
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0757C19F2D
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:36:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232069AbiG1OgG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S232097AbiG1OgG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 28 Jul 2022 10:36:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37528 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38000 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232960AbiG1Ofr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:35:47 -0400
+        with ESMTP id S231776AbiG1OfU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:35:20 -0400
 Received: from mail.baikalelectronics.com (unknown [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 007041EAF6;
-        Thu, 28 Jul 2022 07:35:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 80FAC4F69D;
+        Thu, 28 Jul 2022 07:34:51 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id D2D7316D9;
-        Thu, 28 Jul 2022 17:37:28 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com D2D7316D9
+        by mail.baikalelectronics.com (Postfix) with ESMTP id DAD3F16D7;
+        Thu, 28 Jul 2022 17:37:14 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com DAD3F16D7
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1659019048;
-        bh=i/waHGtKQKFhCqcS560IwhPjpgOJJPcgx0R+yBtQBMg=;
+        d=baikalelectronics.ru; s=mail; t=1659019034;
+        bh=SxesLaHSxvB/8SPfCp3xsyvE7UyGSjtfp9V56Ruxkas=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=RXz91/9vMC+o9WpiuheQBoIZGJGd8IjrgQl5fe/tSgGlbOWJrokHc1XGSTSOltccZ
-         53tt0FviUlX38sjVpWAzzoaNzvt9/S3I0bbp4PIPFTdnTAWwPL5yOBbyRaymw0LXHF
-         Lk99YqYCTRxtsEJ8PfL3LseDuTELnUWJe3dqFt/Q=
+        b=KsZUzuU/45nF0athVrCh6GT8eB/T4Ga4vmr4hIzSYxHsSuPyhb6/rwXlaUXV2lIr2
+         NQJ4RQr/SnwVzmn+zyhzCgeyRENvzABZ9sbtN2E1UO7OBRqiNVZ8zm8Sd4lLDi77nd
+         3iUKFAokhpewE8wdeFSbPstxYMVc9OpRxeTNRYwk=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:35:03 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:34:49 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 15/17] PCI: dwc: Combine iATU detection procedures
-Date:   Thu, 28 Jul 2022 17:34:25 +0300
-Message-ID: <20220728143427.13617-16-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v4 04/17] dt-bindings: PCI: dwc: Add max-link-speed common property
+Date:   Thu, 28 Jul 2022 17:34:14 +0300
+Message-ID: <20220728143427.13617-5-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220728143427.13617-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220728143427.13617-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -57,89 +56,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since the iATU CSR region is now retrieved in the DW PCIe resources getter
-there is no much benefits in the iATU detection procedures splitting up.
-Therefore let's join the iATU unroll/viewport detection procedure with the
-rest of the iATU parameters detection code. The resultant method will be
-as coherent as before, while the redundant functions will be eliminated
-thus producing more readable code.
+In accordance with [1] DW PCIe controllers support up to Gen5 link speed.
+Let's add the max-link-speed property upper bound to 5 then. The DT
+bindings of the particular devices are expected to setup more strict
+constraint on that parameter.
+
+[1] Synopsys DesignWare Cores PCI Express Controller Databook, Version
+5.40a, March 2019, p. 27
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Rob Herring <robh@kernel.org>
 
 ---
 
 Changelog v3:
-- This is a new patch created on v3 lap of the series.
+- This is a new patch unpinned from the next one:
+  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
+  by the Rob' request. (@Rob)
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 39 +++++---------------
- 1 file changed, 10 insertions(+), 29 deletions(-)
+ Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml | 3 +++
+ Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml     | 2 ++
+ Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml        | 1 +
+ 3 files changed, 6 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 7625e43a97cb..d1e57ed17f5a 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -631,26 +631,21 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+index 627a5d6625ba..b2fbe886981b 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+@@ -45,6 +45,9 @@ properties:
+       the peripheral devices available on the PCIe bus.
+     maxItems: 1
  
- }
- 
--static bool dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
--{
--	u32 val;
--
--	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
--	if (val == 0xffffffff)
--		return true;
--
--	return false;
--}
--
--static void dw_pcie_iatu_detect_regions(struct dw_pcie *pci)
-+void dw_pcie_iatu_detect(struct dw_pcie *pci)
- {
- 	int max_region, ob, ib;
- 	u32 val, min, dir;
- 	u64 max;
- 
--	if (dw_pcie_cap_is(pci, IATU_UNROLL)) {
-+	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
-+	if (val == 0xFFFFFFFF) {
-+		dw_pcie_cap_set(pci, IATU_UNROLL);
++  max-link-speed:
++    maximum: 5
 +
- 		max_region = min((int)pci->atu_size / 512, 256);
- 	} else {
-+		pci->atu_base = pci->dbi_base + PCIE_ATU_VIEWPORT_BASE;
-+		pci->atu_size = PCIE_ATU_VIEWPORT_SIZE;
-+
- 		dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, 0xFF);
- 		max_region = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT) + 1;
- 	}
-@@ -692,23 +687,9 @@ static void dw_pcie_iatu_detect_regions(struct dw_pcie *pci)
- 	pci->num_ib_windows = ib;
- 	pci->region_align = 1 << fls(min);
- 	pci->region_limit = (max << 32) | (SZ_4G - 1);
--}
--
--void dw_pcie_iatu_detect(struct dw_pcie *pci)
--{
--	if (dw_pcie_iatu_unroll_enabled(pci)) {
--		dw_pcie_cap_set(pci, IATU_UNROLL);
--	} else {
--		pci->atu_base = pci->dbi_base + PCIE_ATU_VIEWPORT_BASE;
--		pci->atu_size = PCIE_ATU_VIEWPORT_SIZE;
--	}
--
--	dw_pcie_iatu_detect_regions(pci);
--
--	dev_info(pci->dev, "iATU unroll: %s\n", dw_pcie_cap_is(pci, IATU_UNROLL) ?
--		"enabled" : "disabled");
+   num-lanes:
+     description:
+       Number of PCIe link lanes to use. Can be omitted should the already
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index dcd521aed213..fc3b5d4ac245 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -55,4 +55,6 @@ examples:
  
--	dev_info(pci->dev, "iATU regions: %u ob, %u ib, align %uK, limit %lluG\n",
-+	dev_info(pci->dev, "iATU: unroll %s, %u ob, %u ib, align %uK, limit %lluG\n",
-+		 dw_pcie_cap_is(pci, IATU_UNROLL) ? "T" : "F",
- 		 pci->num_ob_windows, pci->num_ib_windows,
- 		 pci->region_align / SZ_1K, (pci->region_limit + 1) / SZ_1G);
- }
+       phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
+       phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
++
++      max-link-speed = <3>;
+     };
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 4a5c8b933b52..01cedf51e0f8 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -74,4 +74,5 @@ examples:
+       phy-names = "pcie";
+ 
+       num-lanes = <1>;
++      max-link-speed = <3>;
+     };
 -- 
 2.35.1
 
