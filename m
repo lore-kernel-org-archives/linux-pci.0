@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FAEC25B0D
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC0DC19F2C
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Jul 2022 14:36:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232814AbiG1OgR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Jul 2022 10:36:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33318 "EHLO
+        id S232830AbiG1OgT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Jul 2022 10:36:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232753AbiG1OfU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:35:20 -0400
+        with ESMTP id S232053AbiG1OfW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jul 2022 10:35:22 -0400
 Received: from mail.baikalelectronics.com (unknown [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A98744E602;
-        Thu, 28 Jul 2022 07:34:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 665F650065;
+        Thu, 28 Jul 2022 07:34:59 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id F33D816D7;
-        Thu, 28 Jul 2022 17:37:10 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com F33D816D7
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 420FF16D8;
+        Thu, 28 Jul 2022 17:37:19 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 420FF16D8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1659019031;
-        bh=c6Rwr1zo1CQaP/plRRyxV44o/9jLdyMZ1Y9zaCASysk=;
+        d=baikalelectronics.ru; s=mail; t=1659019039;
+        bh=bndcRK7whtsfmiDP8jRu1JWxK0C4AOmoZ70ofFSjgmM=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=NG1uufiy6usknm/ESpJwsylWAxLJ2PFrIdIQb28MzYmfBMNdezW+1dyWuItxK82nv
-         Xjz37W8VfBpe7Tmt2FIQftXDoxi1JuFP96OOjB/hCgUr9dWsyV4U/l10wDI01BuM/5
-         k5urQh5NPEnA5zDJBNLtnTyOB9xDDH6A49UfXkEk=
+        b=d3INbJ5hhq25jwrUbox9PLo995+0EGh73R1RWy2C7NQqVGL+f1vUnT//0sg1CawA7
+         MZy25Wmj2mFvyXfNh6tzRuYHRWO+0B6DRuWazDa8TzVn0m3DiX58oiaYKaVsD8cAaf
+         6vuoc93Sy3fUZObFQwJgs7/nIoHfTHYZWtBNxWEs=
 Received: from localhost (192.168.53.207) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:34:45 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Jul 2022 17:34:54 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -43,9 +43,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 01/17] dt-bindings: PCI: dwc: Detach common RP/EP DT bindings
-Date:   Thu, 28 Jul 2022 17:34:11 +0300
-Message-ID: <20220728143427.13617-2-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v4 07/17] dt-bindings: PCI: dwc: Add interrupts/interrupt-names common properties
+Date:   Thu, 28 Jul 2022 17:34:17 +0300
+Message-ID: <20220728143427.13617-8-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220728143427.13617-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220728143427.13617-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,17 +56,17 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently both DW PCIe Root Port and End-point DT bindings are defined as
-separate schemas. Carefully looking at them, at the hardware reference
-manuals and seeing there is a generic part of the driver used by the both
-RP and EP drivers we can greatly simplify the DW PCIe controller bindings
-by moving some of the properties into the common DT schema. It concerns
-the PERST GPIO control, number of lanes, number of iATU windows and CDM
-check properties. They will be defined in the snps,dw-pcie-common.yaml
-schema which will be referenced in the DW PCIe Root Port and End-point DT
-bindings in order to evaluate the common for both of these controllers
-properties. The rest of properties like reg{,-names}, clock{s,-names},
-reset{s,-names}, etc will be consolidate there in one of the next commits.
+Currently the 'interrupts' and 'interrupt-names' are defined being too
+generic to really describe any actual IRQ interface. Moreover the DW PCIe
+End-point devices are left with no IRQ signals. All of that can be fixed
+by adding the IRQ-related properties to the common DW PCIe DT-schema and
+defining a common and device-specific set of the IRQ names in accordance
+with the hardware reference manual. Seeing there are common and dedicated
+IRQ signals for DW PCIe Root Port and End-point controllers we suggest to
+split the IRQ names up into two sets: common definitions available in the
+snps,dw-pcie-common.yaml schema and Root Port specific names defined in
+the snps,dw-pcie.yaml schema. The former one will be applied to both DW
+PCIe RP and EP controllers, while the later one - for the RP only.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
@@ -77,200 +77,201 @@ Changelog v3:
   https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
   by the Rob' request. (@Rob)
 ---
- .../bindings/pci/snps,dw-pcie-common.yaml     | 76 +++++++++++++++++++
- .../bindings/pci/snps,dw-pcie-ep.yaml         | 31 +-------
- .../devicetree/bindings/pci/snps,dw-pcie.yaml | 33 +-------
- 3 files changed, 78 insertions(+), 62 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+ .../bindings/pci/snps,dw-pcie-common.yaml     | 51 +++++++++++++++
+ .../bindings/pci/snps,dw-pcie-ep.yaml         | 17 +++++
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml | 63 ++++++++++++++++++-
+ 3 files changed, 128 insertions(+), 3 deletions(-)
 
 diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-new file mode 100644
-index 000000000000..3e992b653d12
---- /dev/null
+index b2fbe886981b..0a524e916a9f 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
 +++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-@@ -0,0 +1,76 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/snps,dw-pcie-common.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Synopsys DWC PCIe RP/EP controller
-+
-+maintainers:
-+  - Jingoo Han <jingoohan1@gmail.com>
-+  - Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+
-+description:
-+  Generic Synopsys DesignWare PCIe Root Port and Endpoint controller
-+  properties.
-+
-+select: false
-+
-+properties:
-+  reset-gpio:
-+    deprecated: true
-+    description:
-+      Reference to the GPIO-controlled PERST# signal. It is used to reset all
-+      the peripheral devices available on the PCIe bus.
-+    maxItems: 1
-+
-+  reset-gpios:
-+    description:
-+      Reference to the GPIO-controlled PERST# signal. It is used to reset all
-+      the peripheral devices available on the PCIe bus.
-+    maxItems: 1
-+
-+  num-lanes:
-+    description:
-+      Number of PCIe link lanes to use. Can be omitted should the already
-+      brought up link is supposed to be preserved.
-+    maximum: 16
-+
-+  num-ob-windows:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    deprecated: true
-+    description:
-+      Number of outbound address translation windows. This parameter can be
-+      auto-detected based on the iATU memory writability. So there is no
-+      point in having a dedicated DT-property for it.
-+    maximum: 256
-+
-+  num-ib-windows:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    deprecated: true
-+    description:
-+      Number of inbound address translation windows. In the same way as
-+      for the outbound AT windows, this parameter can be auto-detected based
-+      on the iATU memory writability. There is no point having a dedicated
-+      DT-property for it either.
-+    maximum: 256
-+
-+  num-viewport:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    deprecated: true
-+    description:
-+      Number of outbound view ports configured in hardware. It's the same as
-+      the number of outbound AT windows.
-+    maximum: 256
-+
-+  snps,enable-cdm-check:
-+    $ref: /schemas/types.yaml#/definitions/flag
-+    description:
-+      Enable automatic checking of CDM (Configuration Dependent Module)
-+      registers for data corruption. CDM registers include standard PCIe
-+      configuration space registers, Port Logic registers, DMA and iATU
-+      registers. This feature has been available since DWC PCIe v4.80a.
-+
-+additionalProperties: true
-+
-+...
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index b78535040f04..eae60901d60e 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -15,6 +15,7 @@ description: |
- 
- allOf:
-   - $ref: /schemas/pci/pci-ep.yaml#
-+  - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
+@@ -17,6 +17,25 @@ description:
+ select: false
  
  properties:
-   compatible:
-@@ -36,36 +37,6 @@ properties:
++  interrupts:
++    description:
++      There are two main sub-blocks which are normally capable of
++      generating interrupts. It's System Information Interface and MSI
++      interface. While the former one has some common for the Host and
++      Endpoint controllers IRQ-signals, the later interface is obviously
++      Root Complex specific since it's responsible for the incoming MSI
++      messages signalling. The System Information IRQ signals are mainly
++      responsible for reporting the generic PCIe hierarchy and Root
++      Complex events like VPD IO request, general AER, PME, Hot-plug, link
++      bandwidth change, link equalization request, INTx asserted/deasserted
++      Message detection, embedded DMA Tx/Rx/Error.
++    minItems: 1
++    maxItems: 26
++
++  interrupt-names:
++    minItems: 1
++    maxItems: 26
++
+   phys:
+     description:
+       There can be up to the number of possible lanes PHYs specified.
+@@ -91,4 +110,36 @@ properties:
+ 
+ additionalProperties: true
+ 
++definitions:
++  interrupt-names:
++    description:
++      IRQ signal names common for the DWC PCIe Root Port and Endpoint
++      controllers.
++    oneOf:
++      - description:
++          Controller request to read or write virtual product data
++          from/to the VPD capability registers.
++        const: vpd
++      - description:
++          Link Equalization Request flag is set in the Link Status 2
++          register (applicable if the corresponding IRQ is enabled in
++          the Link Control 3 register).
++        const: l_eq
++      - description:
++          Indicates that the eDMA Tx/Rx transfer is complete or that an
++          error has occurred on the corresponding channel. eDMA can have
++          eight Tx (Write) and Rx (Read) eDMA channels thus supporting up
++          to 16 IRQ signals all together. Write eDMA channels shall go
++          first in the ordered row as per default edma_int[*] bus setup.
++        pattern: '^dma([0-9]|1[0-5])?$'
++      - description:
++          PCIe protocol correctable error or a Data Path protection
++          correctable error is detected by the automotive/safety
++          feature.
++        const: sft_ce
++      - description:
++          Indicates that the internal safety mechanism detected and
++          uncorrectable error.
++        const: sft_ue
++
+ ...
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index 9411366d6ca7..5f12a6ac08d8 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -53,6 +53,20 @@ properties:
      items:
        enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
  
--  reset-gpio:
--    description: GPIO pin number of PERST# signal
--    maxItems: 1
--    deprecated: true
--
--  reset-gpios:
--    description: GPIO controlled connection to PERST# signal
--    maxItems: 1
--
--  snps,enable-cdm-check:
--    type: boolean
--    description: |
--      This is a boolean property and if present enables
--      automatic checking of CDM (Configuration Dependent Module) registers
--      for data corruption. CDM registers include standard PCIe configuration
--      space registers, Port Logic registers, DMA and iATU (internal Address
--      Translation Unit) registers.
--
--  num-ib-windows:
--    $ref: /schemas/types.yaml#/definitions/uint32
--    maximum: 256
--    description: number of inbound address translation windows
--    deprecated: true
--
--  num-ob-windows:
--    $ref: /schemas/types.yaml#/definitions/uint32
--    maximum: 256
--    description: number of outbound address translation windows
--    deprecated: true
--
- required:
-   - reg
-   - reg-names
++  interrupts:
++    description:
++      There is no mandatory IRQ signals for the normal controller functioning,
++      but in addition to the native set the platforms may have a link- or
++      PM-related IRQs specified.
++    minItems: 1
++    maxItems: 20
++
++  interrupt-names:
++    minItems: 1
++    maxItems: 20
++    items:
++      $ref: /schemas/pci/snps,dw-pcie-common.yaml#/definitions/interrupt-names
++
+   max-functions:
+     maximum: 32
+ 
+@@ -72,6 +86,9 @@ examples:
+             <0xd0000000 0x2000000>; /* Configuration space */
+       reg-names = "dbi", "dbi2", "addr_space";
+ 
++      interrupts = <23>, <24>;
++      interrupt-names = "dma0", "dma1";
++
+       phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
+       phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
+ 
 diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index c90e5e2d25f6..75ff715a0153 100644
+index 8b2e3210e3e2..e0020b72288a 100644
 --- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
 +++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -15,6 +15,7 @@ description: |
- 
- allOf:
-   - $ref: /schemas/pci/pci-bus.yaml#
-+  - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
- 
- properties:
-   compatible:
-@@ -37,44 +38,12 @@ properties:
+@@ -54,9 +54,23 @@ properties:
        enum: [ dbi, dbi2, config, atu, app, elbi, mgmt, ctrl, parf, cfg, link,
                ulreg, smu, mpu, apb, phy ]
  
--  num-lanes:
--    description: |
--      number of lanes to use (this property should be specified unless
--      the link is brought already up in firmware)
--    maximum: 16
+-  interrupts: true
 -
--  reset-gpio:
--    description: GPIO pin number of PERST# signal
--    maxItems: 1
--    deprecated: true
--
--  reset-gpios:
--    description: GPIO controlled connection to PERST# signal
--    maxItems: 1
--
-   interrupts: true
- 
-   interrupt-names: true
+-  interrupt-names: true
++  interrupts:
++    description:
++      At least MSI interrupt signal is supposed to be specified for
++      the DWC PCIe host controller.
++    minItems: 1
++    maxItems: 26
++
++  interrupt-names:
++    minItems: 1
++    maxItems: 26
++    items:
++      anyOf:
++        - $ref: /schemas/pci/snps,dw-pcie-common.yaml#/definitions/interrupt-names
++        - $ref: '#/definitions/interrupt-names'
++    allOf:
++      - contains:
++          const: msi
  
    clocks: true
  
--  snps,enable-cdm-check:
--    type: boolean
--    description: |
--      This is a boolean property and if present enables
--      automatic checking of CDM (Configuration Dependent Module) registers
--      for data corruption. CDM registers include standard PCIe configuration
--      space registers, Port Logic registers, DMA and iATU (internal Address
--      Translation Unit) registers.
--
--  num-viewport:
--    $ref: /schemas/types.yaml#/definitions/uint32
--    maximum: 256
--    description: |
--      number of view ports configured in hardware. If a platform
--      does not specify it, the driver autodetects it.
--    deprecated: true
--
- additionalProperties: true
+@@ -67,6 +81,48 @@ required:
+   - reg
+   - reg-names
  
- required:
++definitions:
++  interrupt-names:
++    description:
++      DWC PCIe Root Port/Complex specific IRQ signal names.
++    oneOf:
++      - description:
++          DSP AXI MSI Interrupt detected. It gets de-asserted when there is
++          no more MSI interrupt pending. The interrupt is relevant to the
++          iMSI-RX - Integrated MSI Receiver (AXI bridge).
++        const: msi
++      - description:
++          Legacy A/B/C/D interrupt signal. Basically it's triggered by
++          receiving a Assert_INT{A,B,C,D}/Desassert_INT{A,B,C,D} message
++          from the downstream device.
++        pattern: "^int(a|b|c|d)$"
++      - description:
++          Error condition detected and a bit is set in the Root Error Status
++          register of the AER capability. It's asserted when the RC
++          internally generated an error or an error message is received by
++          the RC.
++        const: aer
++      - description:
++          PME message is received by the port. That means having the PME
++          status bit set in the Root Status register (the event is
++          supposed to be unmasked in the Root Control register).
++        const: pme
++      - description:
++          Hot-plug event is detected. That is a bit has been set in the
++          Slot Status register and the corresponding event is enabled in
++          the Slot Control register.
++        const: hp
++      - description:
++          Link Autonomous Bandwidth Status flag has been set in the Link
++          Status register (the event is supposed to be unmasked in the
++          Link Control register).
++        const: bw_au
++      - description:
++          Bandwidth Management Status flag has been set in the Link
++          Status register (the event is supposed to be unmasked in the
++          Link Control register).
++        const: bw_mg
++
+ examples:
+   - |
+     pcie@dfc00000 {
+@@ -82,6 +138,7 @@ examples:
+       bus-range = <0x0 0xff>;
+ 
+       interrupts = <25>, <24>;
++      interrupt-names = "msi", "hp";
+       #interrupt-cells = <1>;
+ 
+       reset-gpios = <&port0 0 1>;
 -- 
 2.35.1
 
