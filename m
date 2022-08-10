@@ -2,102 +2,133 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AF75C3F6B0
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Aug 2022 18:36:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AEA3C00140
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Aug 2022 21:27:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231786AbiHJSf5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Aug 2022 14:35:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41182 "EHLO
+        id S229867AbiHJV1V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Aug 2022 17:27:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232064AbiHJSfr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Aug 2022 14:35:47 -0400
-Received: from mail-pj1-x1049.google.com (mail-pj1-x1049.google.com [IPv6:2607:f8b0:4864:20::1049])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C013491F2
-        for <linux-pci@vger.kernel.org>; Wed, 10 Aug 2022 11:35:46 -0700 (PDT)
-Received: by mail-pj1-x1049.google.com with SMTP id kb4-20020a17090ae7c400b001f783657496so1538928pjb.6
-        for <linux-pci@vger.kernel.org>; Wed, 10 Aug 2022 11:35:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:from:subject:mime-version:message-id:date:from:to:cc;
-        bh=305tiOe9oqfqfsuvDZRVuWRx0yktJC9yjMeTcbY7cTg=;
-        b=rGd0cdEiDw0KumHSf9F3anHak5lXZZZ8eX+Hg9h1s3Z40zfYDS8FJmqJsz283SHp/P
-         3ava8NgnRz18ADKbGPa2joMOIjVsi2HSpSrgOuNAbbMwiWRtrspRTGWoxlyDmsWatJo0
-         dEV0DmaFTlWK+HeEzxIIIjWKQPVOFEZ0l1evJPrICGLNy0wpYmQFeNwmPlKccUHhKqlV
-         QaqbWjPgpLtHtHPpr5Gd16V+KMoktpgIjeT97kX51u8V8jSFrR48CmsrzkBzXdTnlc7z
-         3urzQYGBNfjeiKUtWEGC6YtSkyLizXm85o2UfJGHQv9jFAi/ux3Yun8+QEdgQMQWVvdB
-         Ae5Q==
+        with ESMTP id S229487AbiHJV1U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Aug 2022 17:27:20 -0400
+Received: from mail-io1-f44.google.com (mail-io1-f44.google.com [209.85.166.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15E1A252B8;
+        Wed, 10 Aug 2022 14:27:20 -0700 (PDT)
+Received: by mail-io1-f44.google.com with SMTP id h138so13228952iof.12;
+        Wed, 10 Aug 2022 14:27:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:from:subject:mime-version:message-id:date:x-gm-message-state
-         :from:to:cc;
-        bh=305tiOe9oqfqfsuvDZRVuWRx0yktJC9yjMeTcbY7cTg=;
-        b=zlircALT3inidyxterCi3sWnifiLf704Kp/nwJUfK+niLT/KvtU+3Tt0BoCeSpwFt3
-         ar81WFUmOjfysOGvNk+htJmBUkmqqKc+FHXp17tSmeF5YxjCoXOYBlqcn5P8PnTtleE0
-         P4qNOx5YY4X6Z61oS9lqWJ9bNnhsMWvxymC7Csnm/kDGJaauNHfSGgeCJXiQFUljUCk/
-         wSLSJNaT/XzSFOT/8kiuAOq2rL4DCEF1UvyFvrw4b7kxmnSKpRz+Om4DvWn4jgrhP1OK
-         //aZi9OC+IbzBJMp8ioL4eetDHyUAEmZaTmJ9/DwMcA0EJND9k7Vyk2bIqJSkCV9mB+3
-         8KmA==
-X-Gm-Message-State: ACgBeo0DC9rNeCysN5X6W0VioQqHeJHAmVByXVKY64cvzX9/zEmsP/VZ
-        pMIHwpP0GVfzrNhwe7eoRs/g8dasypNBkc7LU4k=
-X-Google-Smtp-Source: AA6agR69r+KIfDrtct6TRAUWQieOzXOCYueNDXbGFFMaqGfs64+LonwB5fKF1dJ+v51y3dQNaPmLyxiFv4bcR52NUvw=
-X-Received: from wmcvicker.c.googlers.com ([fda3:e722:ac3:cc00:7f:e700:c0a8:5ebe])
- (user=willmcvicker job=sendgmr) by 2002:a05:6a00:c96:b0:52e:979c:dd63 with
- SMTP id a22-20020a056a000c9600b0052e979cdd63mr28027369pfv.50.1660156545911;
- Wed, 10 Aug 2022 11:35:45 -0700 (PDT)
-Date:   Wed, 10 Aug 2022 18:35:33 +0000
-Message-Id: <20220810183536.1630940-1-willmcvicker@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.37.1.559.g78731f0fdb-goog
-Subject: [PATCH v2 0/2] PCI: dwc: Add support for 64-bit MSI target addresses
-From:   Will McVicker <willmcvicker@google.com>
-To:     Jingoo Han <jingoohan1@gmail.com>,
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
+        bh=y+69QJnuc+3EME9VXlV7VP2G/fIZkhFMddsu1TYmaZg=;
+        b=Ei7NHHljioTVAjiMCCW6V7m/MAxCWoBeffvUdmQLe0RmrRMnpP9iqlt7S0OLxmjssZ
+         G0v+F+G8Eh+PLvQAy1nIOYcAziXFLTv2jpYwU1tQQqLjiigyvorP4SUqkUgkm0J5y/je
+         eYXKGf2fsuvbT72gc7fnWfgJkzQDy+SZmq87LLPAIgyKmlknjCmCBUvt5JUj6130gJac
+         2+cmW+v6+YodvKU9hy7XaSpXujY7B2aGM8VzhPjc0DJCgg+UuJPhaxeSdpIkTMcnIQ3Y
+         8mTMwtj31vu/XMvEccTAu+m/7hbxaPRvqFqiVLHX47kRvs/9yanjlDxO3ej51JwhJVnj
+         ccZw==
+X-Gm-Message-State: ACgBeo3DKJu7hB+xKD5NWmEXt4afcHE84uW/Mq0TDbigNMI5LuR8WDCe
+        RyzdPhbY1/Rqt6p+5Np8UQ==
+X-Google-Smtp-Source: AA6agR40YwGaxaCyrLt+Oz0JOEYo/CzvUwtUDFilFjoawJQK2ji5nDwikoJh0YEBLBYTeq9CXug0EA==
+X-Received: by 2002:a02:c787:0:b0:342:7c31:5469 with SMTP id n7-20020a02c787000000b003427c315469mr14213786jao.270.1660166839287;
+        Wed, 10 Aug 2022 14:27:19 -0700 (PDT)
+Received: from robh.at.kernel.org ([64.188.179.248])
+        by smtp.gmail.com with ESMTPSA id a18-20020a027a12000000b0032e3b0933c6sm7877355jac.162.2022.08.10.14.27.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Aug 2022 14:27:18 -0700 (PDT)
+Received: (nullmailer pid 579718 invoked by uid 1000);
+        Wed, 10 Aug 2022 21:27:16 -0000
+Date:   Wed, 10 Aug 2022 15:27:16 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Will McVicker <willmcvicker@google.com>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        "=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=" <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Will McVicker <willmcvicker@google.com>
-Cc:     kernel-team@android.com, Vidya Sagar <vidyas@nvidia.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, kernel-team@android.com,
+        Vidya Sagar <vidyas@nvidia.com>,
         kernel test robot <lkp@intel.com>,
         "Isaac J . Manjarres" <isaacmanjarres@google.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v2 1/2] PCI: dwc: drop dependency on ZONE_DMA32
+Message-ID: <20220810212716.GA557589-robh@kernel.org>
+References: <20220810183536.1630940-1-willmcvicker@google.com>
+ <20220810183536.1630940-2-willmcvicker@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220810183536.1630940-2-willmcvicker@google.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+On Wed, Aug 10, 2022 at 06:35:34PM +0000, Will McVicker wrote:
+> Re-work the msi_msg DMA allocation logic to use dma_alloc_coherent()
+> which uses the coherent DMA mask to try and return an allocation within
+> the DMA mask limits. This allows kernel configurations that disable
+> ZONE_DMA32 to continue supporting a 32-bit DMA mask. Without this patch,
+> the PCIe host device will fail to probe when ZONE_DMA32 is disabled.
+> 
+> Fixes: 35797e672ff0 ("PCI: dwc: Fix MSI msi_msg DMA mapping")
+> Reported-by: Isaac J. Manjarres <isaacmanjarres@google.com>
+> Signed-off-by: Will McVicker <willmcvicker@google.com>
+> ---
+>  .../pci/controller/dwc/pcie-designware-host.c | 23 ++++++++-----------
+>  1 file changed, 9 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 7746f94a715f..8f2222f51671 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -272,9 +272,9 @@ static void dw_pcie_free_msi(struct dw_pcie_rp *pp)
+>  		struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>  		struct device *dev = pci->dev;
+>  
+> -		dma_unmap_page(dev, pp->msi_data, PAGE_SIZE, DMA_FROM_DEVICE);
+> -		if (pp->msi_page)
+> -			__free_page(pp->msi_page);
+> +		dma_free_coherent(dev, PAGE_SIZE, pp->msi_page, pp->msi_data);
+> +		pp->msi_data = 0;
+> +		pp->msi_page = NULL;
+>  	}
+>  }
+>  
+> @@ -375,22 +375,17 @@ static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
+>  						    dw_chained_msi_isr, pp);
+>  	}
+>  
+> -	ret = dma_set_mask(dev, DMA_BIT_MASK(32));
+> +	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
+>  	if (ret)
+>  		dev_warn(dev, "Failed to set DMA mask to 32-bit. Devices with only 32-bit MSI support may not work properly\n");
+>  
+> -	pp->msi_page = alloc_page(GFP_DMA32);
+> -	pp->msi_data = dma_map_page(dev, pp->msi_page, 0,
+> -				    PAGE_SIZE, DMA_FROM_DEVICE);
+> -	ret = dma_mapping_error(dev, pp->msi_data);
+> -	if (ret) {
+> -		dev_err(pci->dev, "Failed to map MSI data\n");
+> -		__free_page(pp->msi_page);
+> -		pp->msi_page = NULL;
+> +	pp->msi_page = dma_alloc_coherent(dev, PAGE_SIZE, &pp->msi_data,
+> +					  GFP_KERNEL);
 
-I have updated the patch series based on the build error reported by the
-kernel test robot which found an issues with the new inline function when
-PCIE_DW_HOST isn't set. Additionally, I have updated the DMA alloc error
-handling for the first patch which was reported to me directly by Isaac
-Manjarres. Basically, we don't need to check for a DMA mapping error since
-dma_alloc_coherent() will free the memory when a mapping error occurs.
+You can use the managed version, dmam_alloc_coherent(), and avoid the 
+freeing yourself. Also with that, I think you don't need 'msi_page'?
 
-Please take a look and let me know if you have any questions or concerns.
+Also, no need to alloc a whole page. A u32 or u64? should be fine. The 
+write never makes it to memory, so doesn't really matter.
 
-Thanks,
-Will
-
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Isaac J. Manjarres <isaacmanjarres@google.com>
-
-Will McVicker (2):
-  PCI: dwc: drop dependency on ZONE_DMA32
-  PCI: dwc: add support for 64-bit MSI target address
-
-v2:
-  * Fixed build error caught by kernel test robot
-  * Fixed error handling reported by Isaac Manjarres
-
- .../pci/controller/dwc/pcie-designware-host.c | 37 +++++++++++--------
- drivers/pci/controller/dwc/pcie-designware.c  |  9 +++++
- drivers/pci/controller/dwc/pcie-designware.h  |  1 +
- 3 files changed, 31 insertions(+), 16 deletions(-)
-
-
-base-commit: d4252071b97d2027d246f6a82cbee4d52f618b47
--- 
-2.37.1.559.g78731f0fdb-goog
-
+> +	if (!pp->msi_page) {
+> +		dev_err(dev, "Failed to alloc and map MSI data\n");
+>  		pp->msi_data = 0;
+>  		dw_pcie_free_msi(pp);
+> -
+> -		return ret;
+> +		return -ENOMEM;
+>  	}
+>  
+>  	return 0;
+> -- 
+> 2.37.1.559.g78731f0fdb-goog
+> 
