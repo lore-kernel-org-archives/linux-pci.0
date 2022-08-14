@@ -2,44 +2,44 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3144EC282E7
-	for <linux-pci@archiver.kernel.org>; Sun, 14 Aug 2022 15:52:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72D0DC25B0F
+	for <linux-pci@archiver.kernel.org>; Sun, 14 Aug 2022 15:52:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241963AbiHNPwl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:52:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53452 "EHLO
+        id S241971AbiHNPwn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 14 Aug 2022 11:52:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241760AbiHNPtQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Aug 2022 11:49:16 -0400
+        with ESMTP id S241973AbiHNPur (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Aug 2022 11:50:47 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6E8511161;
-        Sun, 14 Aug 2022 08:35:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B61791CFE6;
+        Sun, 14 Aug 2022 08:36:15 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 1F574B80B27;
-        Sun, 14 Aug 2022 15:35:35 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15AF0C433C1;
-        Sun, 14 Aug 2022 15:35:32 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 551DAB80B48;
+        Sun, 14 Aug 2022 15:36:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35A57C433D6;
+        Sun, 14 Aug 2022 15:36:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491333;
-        bh=s9lab+a5xifcAa284CeV2WZkDk2Ia40oFHO0Pen9x6Y=;
+        s=k20201202; t=1660491373;
+        bh=ort/3hcnaukUGsA7LDhSiF203JxpCct0qeqwR3Ahero=;
         h=From:To:Cc:Subject:Date:From;
-        b=OSkKEbbEPw4LPJxlDfumdO1ei5aP1uPksIRhb1gCwsH1VQdtDr94BCrxB1WdMBL6V
-         ZKamc9DmI3H2cQ91xdryoP2DcSJVRxFNiG+p5u/HRp8REptR7aCX9Df2AJThIqk5t+
-         GbmAK9ovAg3ED/2sif/AUrk0Egt1aSvkmj8k0YhThbGAxYl7Xg3s5c2JiuJTROaFan
-         FF6F3H2fbgmM0dVTu+K6S0cio0WEb8eLCKNg1zgkJjX139yYCH5PeL3UGxdwKrVdN4
-         AIm1iXk88wZDYIzbewcPj08xsSMVcfZKoNEb/ZUklSxGR9PLzt2QAEqIG37nbokSDa
-         KoJewzWZ8bxgw==
+        b=Di3LJx8eMt2Ccw1fOV/m5q8AZu5C1GtjgFMaFy5x7wj/Yb8suyFyaJYoRHbCRis1x
+         aZcnmxnzQ5heILYXtSqnDjQiFBSyEX6niHU/etpnmFzSps02bExI/kARQIyW3pc5Vs
+         6zVFN/LavynI0awIPITNk8I59e94wyoqq3ymvwYbMxyndpvoHrKxMN2LjnRIb1eg5M
+         m+fw8kipu4Fsdw1HmU+0MknVBTjBn9JTcC2gk3G3z0+MyA+9di8qLDRW8pPj4PURc1
+         i7RiWkANVwf1a+N6OWmVUGrSK7pUSsiG0zNQmwKvwg20yyPl8R64ANZ8yzHeTM7zPu
+         t7b5UTzMvag1g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Pavan Chebbi <pavan.chebbi@broadcom.com>,
         Michael Chan <michael.chan@broadcom.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 01/21] PCI: Add ACS quirk for Broadcom BCM5750x NICs
-Date:   Sun, 14 Aug 2022 11:35:11 -0400
-Message-Id: <20220814153531.2379705-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 01/13] PCI: Add ACS quirk for Broadcom BCM5750x NICs
+Date:   Sun, 14 Aug 2022 11:35:58 -0400
+Message-Id: <20220814153610.2380234-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
 X-stable: review
@@ -72,10 +72,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 2a4bc8df8563..8b98b7f3eb24 100644
+index 7cd38c9eaa02..f494e76faaa0 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -4943,6 +4943,9 @@ static const struct pci_dev_acs_enabled {
+@@ -4799,6 +4799,9 @@ static const struct pci_dev_acs_enabled {
  	{ PCI_VENDOR_ID_AMPERE, 0xE00C, pci_quirk_xgene_acs },
  	/* Broadcom multi-function device */
  	{ PCI_VENDOR_ID_BROADCOM, 0x16D7, pci_quirk_mf_endpoint_acs },
@@ -83,8 +83,8 @@ index 2a4bc8df8563..8b98b7f3eb24 100644
 +	{ PCI_VENDOR_ID_BROADCOM, 0x1751, pci_quirk_mf_endpoint_acs },
 +	{ PCI_VENDOR_ID_BROADCOM, 0x1752, pci_quirk_mf_endpoint_acs },
  	{ PCI_VENDOR_ID_BROADCOM, 0xD714, pci_quirk_brcm_acs },
- 	/* Amazon Annapurna Labs */
- 	{ PCI_VENDOR_ID_AMAZON_ANNAPURNA_LABS, 0x0031, pci_quirk_al_acs },
+ 	{ 0 }
+ };
 -- 
 2.35.1
 
