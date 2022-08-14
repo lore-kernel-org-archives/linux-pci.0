@@ -2,91 +2,189 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A37CC2BB45
-	for <linux-pci@archiver.kernel.org>; Sun, 14 Aug 2022 15:52:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0CB6C25B0F
+	for <linux-pci@archiver.kernel.org>; Sun, 14 Aug 2022 20:41:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241986AbiHNPwo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 14 Aug 2022 11:52:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55398 "EHLO
+        id S231950AbiHNUls (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 14 Aug 2022 16:41:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241904AbiHNPui (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Aug 2022 11:50:38 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B0BB15FEB;
-        Sun, 14 Aug 2022 08:35:56 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 45169B80B48;
-        Sun, 14 Aug 2022 15:35:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E398C433C1;
-        Sun, 14 Aug 2022 15:35:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660491354;
-        bh=tcc/9GT4Cx6LCF2rISrkHBzxNjQ+akbGEAC2Vt2oo7U=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aRP1wsiTmmwTRB6pFxUKVrJkrNRQNpDDFY/arUZrRfMXbpxNnziYWoUQHGzYkaK1y
-         wccZ8pGxJiYgAzFkiQTckc2sY+P59/xxM/Rw1auAd++co5Q81HhqpWYhYskoVA/YqD
-         EM0xksNB6Sk035rnCCX2thuwd2Rz4U8V/5qc9R5Wm2hkHbzeGeuszMJbeXgkGpUsIe
-         BSGrdvQUord2x5P30tPaAs4jnzE9+BG4sZIUzN3APk8KEjBl4Xjt1iL1Wx6JJ/degq
-         NjH1bXoZcvVHROo4RzmljkhnO3xSYaz//HyehGGU3bdErb13FEZrEz4cNB+5zubr2R
-         5D1NdOq60u2fA==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Huacai Chen <chenhuacai@loongson.cn>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, rafael@kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 13/21] PCI/ACPI: Guard ARM64-specific mcfg_quirks
-Date:   Sun, 14 Aug 2022 11:35:23 -0400
-Message-Id: <20220814153531.2379705-13-sashal@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220814153531.2379705-1-sashal@kernel.org>
-References: <20220814153531.2379705-1-sashal@kernel.org>
+        with ESMTP id S230388AbiHNUls (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Aug 2022 16:41:48 -0400
+Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2CEA15FC9;
+        Sun, 14 Aug 2022 13:41:43 -0700 (PDT)
+Received: by mail-oi1-f174.google.com with SMTP id u14so6875918oie.2;
+        Sun, 14 Aug 2022 13:41:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
+        bh=9Mv3SYsV787hG2zwBPi7bzT81bYQL5Y4bZ2g9jjPhSI=;
+        b=3Nz4UXQNVfZVqTaOhV9cjkr6lfEKJdp0mGXfNZl9HW2HP+uNZ4yy3nnXK2QolQNxEg
+         U9qgQYjHmipVEyyMQz4Ck+zIsJNRK+5x+ZCuZu3LsC8Fe3dyE/zuBEYMzCoKKS5rAS26
+         KLMLLB0O4jAG9ir7lB8hNU7Z78CYScZ00VOPi7/EfDbWin8UkQJQazl+8rNQoHcSQKDb
+         EUynKP3eQZUZGl/Oi9U0dXx3yN57CpvNll5QFGY/RXlzqeKdAwlJGMj3zuIeDHN5Lkhz
+         MPbk6wqBJ+GLAQ+25sV0FDf7TsdcNngE1HeBV/ecLPoVJkeFSw7enT0u+SOIU6wWGXKd
+         8/lA==
+X-Gm-Message-State: ACgBeo1JWhyoZw/cL8s2dHGWzRXpVMu3l+Jcx3iV0I+7aKSGZWUfkqfR
+        NrADyTYS3ekwAQakabNFTQ==
+X-Google-Smtp-Source: AA6agR4uHGL9LB7gP7Q+Ajfe9FgPloWZ0Sz4kuzRLczXQqy+Qp+hbqAqrIq7K9g49rj7+MI+CQqFBQ==
+X-Received: by 2002:a05:6808:10ce:b0:342:a33c:fcc with SMTP id s14-20020a05680810ce00b00342a33c0fccmr5836922ois.250.1660509702872;
+        Sun, 14 Aug 2022 13:41:42 -0700 (PDT)
+Received: from robh.at.kernel.org ([172.58.176.57])
+        by smtp.gmail.com with ESMTPSA id r14-20020a05687032ce00b0011b98fa9ab5sm396327oac.50.2022.08.14.13.41.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 14 Aug 2022 13:41:42 -0700 (PDT)
+Received: (nullmailer pid 672588 invoked by uid 1000);
+        Sun, 14 Aug 2022 20:41:38 -0000
+Date:   Sun, 14 Aug 2022 14:41:38 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Frank Li <Frank.Li@nxp.com>
+Cc:     maz@kernel.org, tglx@linutronix.de,
+        krzysztof.kozlowski+dt@linaro.org, shawnguo@kernel.org,
+        s.hauer@pengutronix.de, kw@linux.com, bhelgaas@google.com,
+        kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        peng.fan@nxp.com, aisheng.dong@nxp.com, jdmason@kudzu.us,
+        kernel@pengutronix.de, festevam@gmail.com, linux-imx@nxp.com,
+        kishon@ti.com, lorenzo.pieralisi@arm.com, ntb@lists.linux.dev,
+        lznuaa@gmail.com
+Subject: Re: [PATCH v4 3/4] dt-bindings: irqchip: imx mu work as msi
+ controller
+Message-ID: <20220814204138.GA664328-robh@kernel.org>
+References: <20220812215242.2255824-1-Frank.Li@nxp.com>
+ <20220812215242.2255824-4-Frank.Li@nxp.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220812215242.2255824-4-Frank.Li@nxp.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Huacai Chen <chenhuacai@loongson.cn>
+On Fri, Aug 12, 2022 at 04:52:41PM -0500, Frank Li wrote:
+> I.MX mu support generate irq by write a register. Provide msi controller
+> support so other driver such as PCI EP can use it by standard msi
+> interface as doorbell.
+> 
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> ---
+>  .../interrupt-controller/fsl,mu-msi.yaml      | 93 +++++++++++++++++++
+>  1 file changed, 93 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/interrupt-controller/fsl,mu-msi.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/interrupt-controller/fsl,mu-msi.yaml b/Documentation/devicetree/bindings/interrupt-controller/fsl,mu-msi.yaml
+> new file mode 100644
+> index 0000000000000..f60fa8b686879
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/interrupt-controller/fsl,mu-msi.yaml
+> @@ -0,0 +1,93 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/interrupt-controller/fsl,mu-msi.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: NXP i.MX Messaging Unit (MU) work as msi controller
+> +
+> +maintainers:
+> +  - Frank Li <Frank.Li@nxp.com>
+> +
+> +description: |
+> +  The Messaging Unit module enables two processors within the SoC to
+> +  communicate and coordinate by passing messages (e.g. data, status
+> +  and control) through the MU interface. The MU also provides the ability
+> +  for one processor (A side) to signal the other processor (B side) using
+> +  interrupts.
+> +
+> +  Because the MU manages the messaging between processors, the MU uses
+> +  different clocks (from each side of the different peripheral buses).
+> +  Therefore, the MU must synchronize the accesses from one side to the
+> +  other. The MU accomplishes synchronization using two sets of matching
+> +  registers (Processor A-facing, Processor B-facing).
+> +
+> +  MU can work as msi interrupt controller to do doorbell
+> +
+> +allOf:
+> +  - $ref: /schemas/interrupt-controller/msi-controller.yaml#
+> +
+> +properties:
+> +  compatible:
+> +    enum:
+> +      - fsl,imx6sx-mu-msi
+> +      - fsl,imx7ulp-mu-msi
+> +      - fsl,imx8ulp-mu-msi
+> +      - fsl,imx8ulp-mu-msi-s4
+> +
+> +  reg:
+> +    items:
+> +      - description: a side register base address
+> +      - description: b side register base address
+> +
+> +  reg-names:
+> +    items:
+> +      - const: a
+> +      - const: b
+> +
+> +  interrupts:
+> +    description: a side interrupt number.
 
-[ Upstream commit 40a6cc141b4b9580de140bcb3e893445708acc5d ]
+How many?
 
-Guard ARM64-specific quirks with CONFIG_ARM64 to avoid build errors,
-since mcfg_quirks will be shared by more than one architectures.
+> +
+> +  clocks:
+> +    maxItems: 1
+> +
+> +  power-domains:
+> +    items:
+> +      - description: a side power domain
+> +      - description: b side power domain
+> +
+> +  power-domain-names:
+> +    items:
+> +      - const: a
+> +      - const: b
+> +
+> +  interrupt-controller: true
+> +
+> +  msi-controller: true
 
-Link: https://lore.kernel.org/r/20220714124216.1489304-2-chenhuacai@loongson.cn
-Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/acpi/pci_mcfg.c | 3 +++
- 1 file changed, 3 insertions(+)
+#msi-cells?
 
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index 47e43c949825..ed2f880b63b5 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -41,6 +41,8 @@ struct mcfg_fixup {
- static struct mcfg_fixup mcfg_quirks[] = {
- /*	{ OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, ops, cfgres }, */
- 
-+#ifdef CONFIG_ARM64
-+
- #define AL_ECAM(table_id, rev, seg, ops) \
- 	{ "AMAZON", table_id, rev, seg, MCFG_BUS_ANY, ops }
- 
-@@ -162,6 +164,7 @@ static struct mcfg_fixup mcfg_quirks[] = {
- 	ALTRA_ECAM_QUIRK(1, 13),
- 	ALTRA_ECAM_QUIRK(1, 14),
- 	ALTRA_ECAM_QUIRK(1, 15),
-+#endif /* ARM64 */
- };
- 
- static char mcfg_oem_id[ACPI_OEM_ID_SIZE];
--- 
-2.35.1
+(Missing is treated as 0, but new bindings should be explicit)
 
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +  - interrupt-controller
+> +  - msi-controller
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/firmware/imx/rsrc.h>
+> +
+> +    lsio_mu12: msi-controller@5d270000 {
+
+Drop unused labels.
+
+> +        compatible = "fsl,imx6sx-mu-msi";
+> +        msi-controller;
+> +        interrupt-controller;
+> +        reg = <0x5d270000 0x10000>,     /* A side */
+> +              <0x5d300000 0x10000>;     /* B side */
+> +        reg-names = "a", "b";
+> +        interrupts = <GIC_SPI 191 IRQ_TYPE_LEVEL_HIGH>;
+> +        power-domains = <&pd IMX_SC_R_MU_12A>,
+> +                        <&pd IMX_SC_R_MU_12B>;
+> +        power-domain-names = "a", "b";
+> +    };
+> -- 
+> 2.35.1
+> 
+> 
