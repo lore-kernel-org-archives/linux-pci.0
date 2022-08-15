@@ -2,147 +2,246 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 608AFC00140
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Aug 2022 01:48:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B14C25B0D
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Aug 2022 02:28:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240795AbiHPBsb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Aug 2022 21:48:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44196 "EHLO
+        id S233574AbiHPC2a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Aug 2022 22:28:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231190AbiHPBrm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Aug 2022 21:47:42 -0400
-Received: from EUR02-HE1-obe.outbound.protection.outlook.com (mail-eopbgr10089.outbound.protection.outlook.com [40.107.1.89])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1453520263B;
-        Mon, 15 Aug 2022 14:40:20 -0700 (PDT)
+        with ESMTP id S232924AbiHPC2N (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Aug 2022 22:28:13 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEB002728FD;
+        Mon, 15 Aug 2022 15:43:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1660603413; x=1692139413;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=PhHwNmp9SCxFqvsJrs3OlTbnj9kJs1xFFTBfUuxKPHw=;
+  b=O6w8PWcm1Ak1psqDEbw0T+C/WOKkv5cR/5gDNjsCvGmLsBjR9XbKzt98
+   fyfJjRrCueIrVdAOQWgIRxxTCLqbeBca1v6hqohIlU3tzXRTOeMvmV/VP
+   NolBLx6RDa2kGij60KpglAxXLb2uK0vZ/AkMo/nQmB9SCldXk93c0XVv+
+   r4trLWSjgFbDIyU9LhfUeR2TZXhoiHiZEWdRWyXgeMSFsLjNbs05POHJM
+   c6YRNtjFdgqUWP/14uCjh1zE25BefVXrArrP8egXRf7OExEHfVHQ/ccOI
+   edWcbcx/F+opa+vD5Vqxn2ZK3xPm1R59q99kZSj72fFiRqruLblYVwREt
+   g==;
+X-IronPort-AV: E=McAfee;i="6400,9594,10440"; a="272464457"
+X-IronPort-AV: E=Sophos;i="5.93,239,1654585200"; 
+   d="scan'208";a="272464457"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Aug 2022 15:43:04 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,239,1654585200"; 
+   d="scan'208";a="674984532"
+Received: from orsmsx601.amr.corp.intel.com ([10.22.229.14])
+  by fmsmga004.fm.intel.com with ESMTP; 15 Aug 2022 15:43:04 -0700
+Received: from orsmsx607.amr.corp.intel.com (10.22.229.20) by
+ ORSMSX601.amr.corp.intel.com (10.22.229.14) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Mon, 15 Aug 2022 15:43:03 -0700
+Received: from orsmsx607.amr.corp.intel.com (10.22.229.20) by
+ ORSMSX607.amr.corp.intel.com (10.22.229.20) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28; Mon, 15 Aug 2022 15:43:03 -0700
+Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
+ orsmsx607.amr.corp.intel.com (10.22.229.20) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.28 via Frontend Transport; Mon, 15 Aug 2022 15:43:03 -0700
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (104.47.58.169)
+ by edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2375.28; Mon, 15 Aug 2022 15:43:02 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mE9MZJgE7bET3oMsKj/jWnmVFaGf4oyj8HQkWrTE3fvhjRba3vwvlNjd1WZyas+CDtVvmTW6fhzwM3Ju+QaQRpj112Uui9KNph1bw3dTlmZ4tlUwZ0w6P5W6xL6/fxeDsAhl5vSiZWCuKmkpG7B86QlzSmz1Rz5mmgQ5y2IRJ9OAC8O7rJkQjHf2bZdc/J5oGZRaBO+F8i+hgrgCCH2VxM6DpHuKkHXRmkGtZJjBnahMMrZX9bX9JvUxp0M3DWIZsKc0C5HeKWCfsdmHk7BojcKdGnwYQ7zY7nDzSoBuF5G0JT6rBLtfU1yRV4SlMSNlHlGu+nx9eaAzCPD8CjnIrA==
+ b=dCZHkui/5ycn1O8bKWJ1o/L8RpHRvbq9O5I5zOImBeThBXjXm6iDnkzSbwLj7ubMpL6Y/K4RLkUWQdjQK7exCYCM+wsmN//zyQe+G/HKbHJntaC+PjQHnWgOQ6hYTyprC5nRaFuNgN7kXaYzWey1sVu1ArwcuwNfBn1ceu9fgyP5pq7aL3ffP9gbn8klwDJASGzmTAy8sIcEQ7AxZVnIbVDo3tWpWaFwI9RjiAmkaUTaghPyRz+yp1ZS3zsifPaMXHmLfPysF8YTVARw+8nzu3QaVOQeW5Uxf0nsbWwbHaZ0L4dyKVPRkYeDY3OzFZ/CwBlGEbdTy4UziulwV8cVCw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PxyZmoQ4HPxt9JAZN3QVzBllZWpIazPpqniEWrzTllw=;
- b=lxewPW8SK910D67lWGNBEcbKhq4EvkfSnuoGwHeo5QbxNtlMeJGaeCHXUGTAR9YbRDw6u7P2T4vSU9BOWOUwXYqTGyxBkOMrPfda+f8VgcnmH+cd1yeHWUMatEcxTgacSAMbtvmQnmuHR/DKDm+KbxFvBaWhgPvYEh64DBLpbyq/HsD/mxDMhsDlEKKuvoy9RWBAGQjV7dX5LaP1P6z7tENrXbewtnDYGo9kZxGtizM1J1BRmZdRPzVL8buC2xjmMT93tetj+5Hvem6xTgYLjZE3gr01KmYIZMUo6W48seftJpqoOSzIKNKwN7EEY+ygMUWr4rL7uGmwwbw5CKAdmw==
+ bh=pHxoE0YjhCgN9rwPYWRMCuNBBhKQt3Jiy5cgQ9s1MnQ=;
+ b=WwWwI8UHnL0PYufCh1vG7zJ92K1a2OW6EeEoejnc7v8AVwugHPcxf20ilt+XlbwnDbSFvoPBG+fsoJBXVi9xk+VmhMQ5/mBuGV8jxRlizurxnBw83MWgEDzfMu68R6XJR95qM0Z7d0lq/t4kgMMXUgMkZ9p6/e86NKHngDGIrxJJ6u2H5pOw0e2nlCfDNfkxlyjDToC8sQjmSpyhB3b3f5klxSBRwn7VbtSZ3zl2/Bfo+bdKSmdfrLi6oO0p4AGCj7jXCFgh+Pj4TEwW2v23/tHZuAskieJvcBLbTl1eHwEcnnKhcfIBtZ1AeOYWebkTFmBFCjEYOPwNFDMVF+XrPQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PxyZmoQ4HPxt9JAZN3QVzBllZWpIazPpqniEWrzTllw=;
- b=HOMMuUB6+q+zQQk/9c/fU70wCj6c54dhkZj0gOI24AfonDQ8llo0z7Txp79fhyn2pA3j15Xav46FBjm3ZGutQ5PrYyfrjljnkGC8g/vn+VGGkNUcf245qnKsIpdTt1Cr0P10cieyQKa2klSg2B2UxjkTS7TKLAOI009AD2111+k=
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PAXPR04MB9186.eurprd04.prod.outlook.com (2603:10a6:102:232::18)
- by AM5PR0401MB2580.eurprd04.prod.outlook.com (2603:10a6:203:38::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5525.10; Mon, 15 Aug
- 2022 21:40:04 +0000
-Received: from PAXPR04MB9186.eurprd04.prod.outlook.com
- ([fe80::c5f1:b708:61db:a004]) by PAXPR04MB9186.eurprd04.prod.outlook.com
- ([fe80::c5f1:b708:61db:a004%5]) with mapi id 15.20.5504.028; Mon, 15 Aug 2022
- 21:40:04 +0000
-From:   Frank Li <Frank.Li@nxp.com>
-To:     maz@kernel.org, tglx@linutronix.de, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, shawnguo@kernel.org,
-        s.hauer@pengutronix.de, kw@linux.com, bhelgaas@google.com
-Cc:     linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        peng.fan@nxp.com, aisheng.dong@nxp.com, jdmason@kudzu.us,
-        kernel@pengutronix.de, festevam@gmail.com, linux-imx@nxp.com,
-        kishon@ti.com, lorenzo.pieralisi@arm.com, ntb@lists.linux.dev,
-        lznuaa@gmail.com
-Subject: [PATCH v5 1/4] irqchip: allow pass down .pm field at IRQCHIP_PLATFORM_DRIVER_END
-Date:   Mon, 15 Aug 2022 16:39:33 -0500
-Message-Id: <20220815213936.2380439-2-Frank.Li@nxp.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220815213936.2380439-1-Frank.Li@nxp.com>
-References: <20220815213936.2380439-1-Frank.Li@nxp.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: CY5PR15CA0006.namprd15.prod.outlook.com
- (2603:10b6:930:14::9) To PAXPR04MB9186.eurprd04.prod.outlook.com
- (2603:10a6:102:232::18)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
+ (2603:10b6:301:50::20) by DM4PR11MB6213.namprd11.prod.outlook.com
+ (2603:10b6:8:ae::17) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5504.28; Mon, 15 Aug
+ 2022 22:43:01 +0000
+Received: from MWHPR1101MB2126.namprd11.prod.outlook.com
+ ([fe80::9847:345e:4c5b:ca12]) by MWHPR1101MB2126.namprd11.prod.outlook.com
+ ([fe80::9847:345e:4c5b:ca12%6]) with mapi id 15.20.5504.028; Mon, 15 Aug 2022
+ 22:43:00 +0000
+Date:   Mon, 15 Aug 2022 15:42:57 -0700
+From:   Dan Williams <dan.j.williams@intel.com>
+To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        "Li, Ming" <ming4.li@intel.com>
+CC:     <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "Matthew Wilcox" <willy@infradead.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        "Alison Schofield" <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Ben Widawsky <bwidawsk@kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH V16 3/6] PCI/DOE: Add DOE mailbox support functions
+Message-ID: <62facbf166698_dfbc1294ad@dwillia2-xfh.jf.intel.com.notmuch>
+References: <20220719205249.566684-1-ira.weiny@intel.com>
+ <20220719205249.566684-4-ira.weiny@intel.com>
+ <a3f72cdd-884d-efa1-89e8-f9d6660bf760@intel.com>
+ <20220815105038.00000336@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20220815105038.00000336@huawei.com>
+X-ClientProxiedBy: BYAPR01CA0062.prod.exchangelabs.com (2603:10b6:a03:94::39)
+ To MWHPR1101MB2126.namprd11.prod.outlook.com (2603:10b6:301:50::20)
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6b51522d-36c5-4335-c199-08da7f06b6b2
-X-MS-TrafficTypeDiagnostic: AM5PR0401MB2580:EE_
+X-MS-Office365-Filtering-Correlation-Id: 960048cc-0002-4df9-4927-08da7f0f81d0
+X-MS-TrafficTypeDiagnostic: DM4PR11MB6213:EE_
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 24BcVxD3rPca4ujQiOFrqm+BC9kVnmII35aEoRLBKEZ8bTP18Vc5lzqYq+axJvz14JH2a5LrBbdnQ/4pMi7/1hxtu3/eQU7xOwaw3vUZ/cjNSTr3OFoUZxsJw/fJOer9D3P/1U/LxO881PuWRhK3cgxaMpYSRonkIeCfHJbWRNW8okaoVfaHbph+g69aYg7E1w0PlmbURbge0w3IsWNfRJoj2YiStQmS1GF9jhxuXvMW6MbUyUkCnO8FdY/JOciL7G0yNWJHlrWqzEyWGy7abrmp6l0bPw3/lZYzYkrnEXdjIGiKw2PfFSlJTGdDRUJk0EhEMQAT7WbHagP3j2EIYG2OyHryGXvwQn0cRmn3Ua1tLsQeUEl9NuyDxnZU23y/P7EL+93bxyCzckjhWhhKsCm5vW1ITgtse9/JFZCMi/9/hb1LMGz+vp0+fLujoMApioEhjT1EoU8lNqvBPOBw3S//AyWhdH+zZ9vTGfIRal2Ea4Q7AOMKi21+mquWTVUHnTf/tYew6lWrWzEP/uPLbuBRml4ud/OoQs0D9/cOhJqL+WH23tGBPYPhCaXWNlsd7uf3vkSCUIe9AgWC0cy107g6UfU7srNn7Vu06dNyJczNjTnebd34Ma2ZLjEo0uu879xH98zsu1fhDpSZ+FinqUgXAGryIjsNmdo6CW6mOI3CI8nRmfoENdzfFElPPqSznnGD6MEflSlSk2vj1sQDhzruthSYfGr8rs/b+9P7T6lsevfb0BSGbbWHwlwJC8zNm9ig/CnE3BdhEpBzo1V1sU3cTPqmyzFVZTVvrcyUNP77h/34cd+BiJWPcibWOHOj
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9186.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(366004)(376002)(136003)(39860400002)(396003)(346002)(83380400001)(478600001)(5660300002)(1076003)(36756003)(186003)(6486002)(2616005)(38350700002)(8936002)(86362001)(41300700001)(316002)(7416002)(6666004)(4326008)(8676002)(66476007)(38100700002)(66556008)(6506007)(6512007)(52116002)(2906002)(66946007)(26005)(142923001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: NOHzI8IsAuQPoZFMdTMYxT8kujEYk/XvEEWqcOwZryBDmjtq1KsUmnMwD16YxeMVbXAH9D8giq12/n5Yv4RZ78wcQvITYo+rVr+SZTgAZtGHvZ6GdXmmN6JlOQysT163AZ2oVZN58qEHjaPp8D++exPLrP1AD9Qw1+7HGzdBdk+MAJZZupn++T+7uYE2I8iR6QqNCF+Aj08odnUskf2tg/fI/ojy8NFHMr2mnOiL3LMa8ULi5wxCBIsYtZi2IfPwVEGSjvQpSHtgtGHQHimFhc0eE2lbodQ+ebxelW+j4mYm2qVs8uSbcJqcVS7dOuyTRQGCrqyFNALpMLa9Adwqf818yQsccFlXNfpNS4VRv87K6JkpIFMmfaSZelf4l9TXBot1TbeLi2hnTobGqWeU3rXCNNpgU2OBdf7ZtP6JWGf4o131hqtgIcJrV6jnAUa9ZIpJAdA1LIXb1bmuEsLjeWKUynmJ/IFqlaHZVN7MHgZhTib7M0QXT1uteSVwi9ZcWHuNQKvvz/OiFoWyk1ftZqhTHgqV286+Pm62J1klEmcSuu6yIPLJQJBG7gmLEyzZvxWlNUsb4ynatiDnVTDi1FjIRm2FGl/PGH8uzuXIEG5yo4Y8D5a/ucd7hQO/W081domZcIcUSu7HBQPoEgM6PkJsMTDIWw3NEmygAD7Iomgip87U5kMa7zmVF08gw46v5HcQCykfUc2UOreEaPnsZ7Yt0gYl4RQOM/fhjSpm8VMI+TG6/M/ty0K0iC1TgOx3
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR1101MB2126.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(376002)(39860400002)(396003)(346002)(136003)(366004)(6506007)(8676002)(86362001)(9686003)(4326008)(26005)(478600001)(38100700002)(6486002)(6512007)(41300700001)(6666004)(53546011)(83380400001)(186003)(2906002)(15650500001)(8936002)(82960400001)(5660300002)(6636002)(54906003)(316002)(110136005)(66946007)(66556008)(66476007);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?BjGVUjbg4q43hlsInv9oap3uRh1LN1PGvxKwZPfhjWvvV04y7+jW3/dpXS8s?=
- =?us-ascii?Q?DtynCstZfEYl8mplyeGcTtrjD1sp5eYGme8bWmwYTbs8Ab53NVlnspfXchIy?=
- =?us-ascii?Q?a4awwPmvGwb4+clHh0yfPOsOiRbgFXg7aaBmO/ZDcqaNbUzacadIfc5MHflD?=
- =?us-ascii?Q?aGWK+MS0KucAbOgKX/pKrEzIxXpm0IDWJrPYwTymvn7shkYMJ4ur/0ps19DY?=
- =?us-ascii?Q?OvePx1LPGqHz/zPh7t1JcjlfIQqjquYojLm0wh/wshA7KSKUwo/56o7n+cy2?=
- =?us-ascii?Q?bxspcj22+dcT3N1krc2ZuV+uY+bTWY3rGGRffAkjvjAyXNBpVI5lZ3lDRc9j?=
- =?us-ascii?Q?DuBB9cIYXbojr0ifYv5kCto44dpkATicB0zX/mUuMGpK4GExxtKhoXrcnscL?=
- =?us-ascii?Q?rA3x0tyWK37VehukhwVoLlp9KwEFnhCjW3qI7gHQuF6IlHNdtZJEFXTOfcbi?=
- =?us-ascii?Q?kkoQ8Bbagh3N+7IaKxvUXXqiQ9nffaB7TEX89aU83RvzDRMk2CsPkoPlzBrN?=
- =?us-ascii?Q?qvy5VB8hocY/fqXeXOYHOGrsxPXAa2h+jwlEKuk3xPDkCj239julSgTanTsd?=
- =?us-ascii?Q?DHqrNtODAxpSbptsvmmj3JkCo7ldYgepi2CugCmp9ywuXjQl8hEmbt3iRNTv?=
- =?us-ascii?Q?zjJmxrsDVS0rNWbLRCoMKx9AZriefHXwJejIfpifMJ0Oybyh/dnjPuLSmqWT?=
- =?us-ascii?Q?eFosyp0xv0ezXB3gOZq6Heg6BAzeVxyecIBifLFQJw3IqBckHzkd+86FHm0i?=
- =?us-ascii?Q?Upc9K8W7IRN8FzNKcGreb0nNDb3ER6sTPJm2LNGPxnDyCXBRJ6P9+gr9woc8?=
- =?us-ascii?Q?DhCaoKqEStnUFjkLUOiNgrsxM5mr07GkFeXagkCo7+Nmp6UAZBWcVfh1E3S9?=
- =?us-ascii?Q?N3rRhcR2PSeAmUQuyIM8AMUd8I11tW9yfGlYeC6caDj4ruOIXInutJ9B9D28?=
- =?us-ascii?Q?Wla47fLh05o46AAoQNzpWezx87gmlnKvcKifL2bg7/cthS3LWzczuUuSyEfN?=
- =?us-ascii?Q?lx+EiAoMx6cTKRm/i6xc4W0Wf80Hy4sy2pxoWGoyciHhqIzypnWp6g9EiqW/?=
- =?us-ascii?Q?6YFAyOJXlz1w9Ms+jnWIa+u02Vs9y38E3CmxWISjmPUyELjsceZ0q2wO+fsa?=
- =?us-ascii?Q?l8r9vzc1yEQ2FCQDrdc4bQE0tn+++AbM15KtpS2DOomvEY4fcQPPuPJKnHtZ?=
- =?us-ascii?Q?T8qAmNtvRYg6QUgivqsX8DJStFyzb6/ACC+tPvD3wYtgtN9Ff/m9Be9ofb3w?=
- =?us-ascii?Q?7hN9VZXbXozdSpLShmGGP+i/itQjCWwk3pZEIQsP4X4YpKcIdKuvR58PcU31?=
- =?us-ascii?Q?g4PeWjvo4Mwvw0GjiSnMYz76PvDX5riOkCQMlWcq7PUyjG59rJz6CoSg4jcf?=
- =?us-ascii?Q?uGB9lsmi87MHEZJ5+8joh2YQiRUOFMJYFHiFU/NlANdcnZjZQdNR7eG3Va/F?=
- =?us-ascii?Q?GA599QZZ5zrKMqAnr6wkDYzDA2kgQjTR9/UIzG3xqN659AXb3aGw1dVZA/q+?=
- =?us-ascii?Q?BMUiA795zbcdq5QssVayF/w9oWAYHyvjiKMTV5mbAv3P2IeUnrmV1V8XTNED?=
- =?us-ascii?Q?lmC5NT7po/CBZ6ZGDopYwLOMxF1rsn4BDTAQXciU?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6b51522d-36c5-4335-c199-08da7f06b6b2
-X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB9186.eurprd04.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?w1QXbvrh9pkDZqC8D6tg34mBxlxJgfqBcrvaOn7V+xQloA/Sk3iXjwlM91J8?=
+ =?us-ascii?Q?i+8XilYXbc4JkwFfGafXcFMT8uRtKO9uDzJc4+BNrQSeaM5jikYFqR6bSXPO?=
+ =?us-ascii?Q?j+8SfcWNJF6LY9cp05wGuYw7THO1WSE3ZmrCFHc2CfveUimhKJniuCmwAQRc?=
+ =?us-ascii?Q?teyoZlaPRPij6R2Jx4pVTAhclCyq7Fg3UOyiX+f2ML+A6GzokwV/WLRZEdjW?=
+ =?us-ascii?Q?fnwrEKnhyY55fhL9nu6xH0JfVPN2Nop3cO2TGRd2dWaA/w2sicY0XWtPU2RV?=
+ =?us-ascii?Q?GLFJ4bN2YkajLJA2IHH2JkONYnA+759kon5lk378/HA0kR1CZT8QpYx3texZ?=
+ =?us-ascii?Q?rJrTNiHmKdObQ00WSOf0QM9xVeXNhZ1Q/axNC9/KjsWQdlbM1kCbdQj1kS9J?=
+ =?us-ascii?Q?dIbcl0IVK7nSKVPFukbLonQJpe6dYXtP7ZkpcHJmHywZ65Kctd73gSOxsyJx?=
+ =?us-ascii?Q?dG+n36ro5VdlUDpwBmhiTVGJWOM/y6hbimUYpMN9vrX3ga0gNmIufJRJNgQQ?=
+ =?us-ascii?Q?HLQGuDfrNdxYg36Vyo66Nm6P7+8O8FQZRK9TOfbAZ0UTqQOPsSBzQxcawKIs?=
+ =?us-ascii?Q?fDTNDkj4zci36wUh97b8GbJgL3/aaVBkx7YPRj8+Qq8FIsB7k3jo2PO8Npng?=
+ =?us-ascii?Q?80vfEKeoLNJ78Wx+oKZljJ7b2MlYluT98qt6jvmpKDMSgjFsZp0MNHqzllux?=
+ =?us-ascii?Q?m6CPeIJvl+ioIbQl/sJjXSG72lG5oYFo47fQk6Xg6C6SHem+/jqdrLNOhRKS?=
+ =?us-ascii?Q?4sF184fsaQ29MZCMb6XqhgFvV0wtB1vUC0YPT4tE6IC3s+OjriJt7Q8Nf+ra?=
+ =?us-ascii?Q?69D5kA3pZJjiYLS46y1+U18vkJTjI8sFJabDKgdslfmUiKTQZBjW1qHoSzxr?=
+ =?us-ascii?Q?RySHWmAITJhuomA5aeeiMQdiVeotJU/sIHdWS8cu0SRZLmgtNgFUvvoDFvhp?=
+ =?us-ascii?Q?GhWWOdPMcbYoH3jlO2ViZW3ytFxh3dBbbXiiqvfOP4cDoWBNLxFq11Os/EVZ?=
+ =?us-ascii?Q?DM+4tClbHzRNinhOOuQWmd1l5ws4JRpzN3I1P1R974PxYGtghIqskISNM56V?=
+ =?us-ascii?Q?Aq4eZdDNfG2MC5zFzX8JMw0136b8dcBRoQMvEG0D6cvG5L29g07EfIua5FFw?=
+ =?us-ascii?Q?v3xGmLbVkY7i3UcHAdtU0Z2FURdRgaAkOUyFGoPEvKwZTHIJA5xIqXW+QIHd?=
+ =?us-ascii?Q?T61tbYiuZ9NX2Z/Y1JbibyM+LnTj87x7AEK1pvahUlbnfkZf+Mz9EXoyY0v3?=
+ =?us-ascii?Q?RH0/ndcS9zjpzIR35k23C7pzuY2pB27vsWX8X0GIOOP2urkug9bLPSsbtFZi?=
+ =?us-ascii?Q?JPHNtlBLStpCdlUUy3QdoxTn0EaIUCVYOB5ns9rbNfSzPZ+qwRXZ6WNrkXv6?=
+ =?us-ascii?Q?D1MwuF9UQOg45BGu1lYZe3Ej+12L8eUBXr5+m49lF7Kw02/xwqTU/g1xG2cJ?=
+ =?us-ascii?Q?eGu+XUjmWbci+903W0RSz5vkmNHHrdpor+IiPrnj8hR2EYVDGfu3THtnHmkr?=
+ =?us-ascii?Q?q4ATGONkGMQ5Vevzma5FwsR/2kKtxj++jIc/VnpBZ4whJ+DYa5CsdJ4KZvWq?=
+ =?us-ascii?Q?Lhm+GVIW3iYr4Vmal0xiZ7z23wyyUKeNFIgI4IH+etviV/2HEMihvtS7LL7k?=
+ =?us-ascii?Q?VQ=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 960048cc-0002-4df9-4927-08da7f0f81d0
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR1101MB2126.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2022 21:40:04.1639
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Aug 2022 22:43:00.7213
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 7kGclmAP5Sr8eJ9rvC8D04qDFVtdSJ0FQzvsSyB02+9dWQXv/8GSPbtAlKAnRlGlwvtypV5iX/d1pJdEvdz2vw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR0401MB2580
+X-MS-Exchange-CrossTenant-UserPrincipalName: K1j1OaKRP4gTzd2XxRD+30VVczT5wbjgaQcsGjrvh52F+UZGysynvCcuX5Jcu3sdAuHCYSh2/LoNLSqa+emuhvArz80q+k2IBN4wb8uS048=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR11MB6213
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-IRQCHIP_PLATFORM_DRIVER_* compilation define platform_driver
-for irqchip. But can't set .pm field of platform_driver.
-Added variadic macros to set .pm field or other field if need.
+Jonathan Cameron wrote:
+> On Mon, 15 Aug 2022 10:17:00 +0800
+> "Li, Ming" <ming4.li@intel.com> wrote:
+> 
+> > On 7/20/2022 4:52 AM, ira.weiny@intel.com wrote:
+> > > From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> > > 
+> > > Introduced in a PCIe r6.0, sec 6.30, DOE provides a config space based
+> > > mailbox with standard protocol discovery.  Each mailbox is accessed
+> > > through a DOE Extended Capability.
+> > > 
+> > > Each DOE mailbox must support the DOE discovery protocol in addition to
+> > > any number of additional protocols.
+> > > 
+> > > Define core PCIe functionality to manage a single PCIe DOE mailbox at a
+> > > defined config space offset.  Functionality includes iterating,
+> > > creating, query of supported protocol, and task submission.  Destruction
+> > > of the mailboxes is device managed.
+> > > 
+> > > Cc: "Li, Ming" <ming4.li@intel.com>
+> > > Cc: Bjorn Helgaas <helgaas@kernel.org>
+> > > Cc: Matthew Wilcox <willy@infradead.org>
+> > > Acked-by: Bjorn Helgaas <helgaas@kernel.org>
+> > > Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> > > Co-developed-by: Ira Weiny <ira.weiny@intel.com>
+> > > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > > 
+> > > ---  
+> > 
+> > > +/**
+> > > + * pci_doe_submit_task() - Submit a task to be processed by the state machine
+> > > + *
+> > > + * @doe_mb: DOE mailbox capability to submit to
+> > > + * @task: task to be queued
+> > > + *
+> > > + * Submit a DOE task (request/response) to the DOE mailbox to be processed.
+> > > + * Returns upon queueing the task object.  If the queue is full this function
+> > > + * will sleep until there is room in the queue.
+> > > + *
+> > > + * task->complete will be called when the state machine is done processing this
+> > > + * task.
+> > > + *
+> > > + * Excess data will be discarded.
+> > > + *
+> > > + * RETURNS: 0 when task has been successfully queued, -ERRNO on error
+> > > + */
+> > > +int pci_doe_submit_task(struct pci_doe_mb *doe_mb, struct pci_doe_task *task)
+> > > +{
+> > > +	if (!pci_doe_supports_prot(doe_mb, task->prot.vid, task->prot.type))
+> > > +		return -EINVAL;
+> > > +
+> > > +	/*
+> > > +	 * DOE requests must be a whole number of DW and the response needs to
+> > > +	 * be big enough for at least 1 DW
+> > > +	 */
+> > > +	if (task->request_pl_sz % sizeof(u32) ||
+> > > +	    task->response_pl_sz < sizeof(u32))
+> > > +		return -EINVAL;
+> > > +
+> > > +	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags))
+> > > +		return -EIO;
+> > > +
+> > > +	task->doe_mb = doe_mb;
+> > > +	INIT_WORK(&task->work, doe_statemachine_work);
+> > > +	queue_work(doe_mb->work_queue, &task->work);
+> > > +	return 0;
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(pci_doe_submit_task);  
+> > 
+> 
+> > I'm curious why there is not a sychronous function for DOE users. I
+> > think some protocols over DOE need a DOE sychrounous interface(e.g.
+> > SPDM, TDISP, IDE...). These protocols have to implement an sychronous
+> > function over pci_doe_submit_task() by themselves, maybe we can
+> > implement an generic sychronous function in PCI/DOE for these DOE
+> > users.
+> 
+> This came up during discussions of earlier versions of the series.
+> IIRC we decided to postpone adding a synchronous wrapper function
+> until there were more use cases.
 
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
----
- include/linux/irqchip.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Note that as far as I can see TDISP makes no requirement of the VMM nor
+TVM (trusted VM) to drive an SPDM session. All of that is handled by the
+TSM (TEE / Platform Security Manager) where the VMM is outside the trust
+boundary. The TVM only validates the contents of a
+GET_DEVICE_INTERFACE_REPORT which the TSM had negotiated with the DSM
+(Device Security Manager).
 
-diff --git a/include/linux/irqchip.h b/include/linux/irqchip.h
-index 3a091d0710ae1..d5e6024cb2a8c 100644
---- a/include/linux/irqchip.h
-+++ b/include/linux/irqchip.h
-@@ -44,7 +44,8 @@ static const struct of_device_id drv_name##_irqchip_match_table[] = {
- #define IRQCHIP_MATCH(compat, fn) { .compatible = compat,		\
- 				    .data = typecheck_irq_init_cb(fn), },
- 
--#define IRQCHIP_PLATFORM_DRIVER_END(drv_name)				\
-+
-+#define IRQCHIP_PLATFORM_DRIVER_END(drv_name, ...)			\
- 	{},								\
- };									\
- MODULE_DEVICE_TABLE(of, drv_name##_irqchip_match_table);		\
-@@ -56,6 +57,7 @@ static struct platform_driver drv_name##_driver = {			\
- 		.owner = THIS_MODULE,					\
- 		.of_match_table = drv_name##_irqchip_match_table,	\
- 		.suppress_bind_attrs = true,				\
-+		__VA_ARGS__						\
- 	},								\
- };									\
- builtin_platform_driver(drv_name##_driver)
--- 
-2.35.1
-
+All this to say its not clear that Linux needs to grow the capabilities
+listed above when it is expected to be outside the Trusted Compute
+Boundary.
