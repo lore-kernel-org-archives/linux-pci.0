@@ -2,64 +2,64 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EABAAC32771
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Aug 2022 05:14:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D13C2C3F6B0
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Aug 2022 05:14:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238258AbiHQFOP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Aug 2022 01:14:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54604 "EHLO
+        id S238156AbiHQFOg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Aug 2022 01:14:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238139AbiHQFOC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Aug 2022 01:14:02 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2083.outbound.protection.outlook.com [40.107.94.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99E475281C;
-        Tue, 16 Aug 2022 22:13:53 -0700 (PDT)
+        with ESMTP id S238139AbiHQFOT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Aug 2022 01:14:19 -0400
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2069.outbound.protection.outlook.com [40.107.95.69])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95B7D5F9AC;
+        Tue, 16 Aug 2022 22:14:06 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=UNjq+wfH5U/Ntb3W1EmI8Er1qDZoWrNq4z6Y2Ce/wlp9nNcAkeu7BPSLfW+rFiOD2vzmhmk+Msf8R8/flGjuLe6Dmu+0SDrmNiN5NAZg+6lOyjLeI3E/cGEy7jJNtCAcnqgpGl2sAd7WMBeah/DHeQmME2srkk4OjsaXMeiQnC6PzSpZyXXMmvAyyUxrrWPedTZR8H5qadN6WVMDReRLlaEBLlRPBohMXy7UZK9Gj55HqkWO3bBduW9bNn3n2ka6oxv2ki4IfCLnMcDNN/3cyym2OgUsUw5oVoDU87Hy2zbVYZ5oTCHiQTr56MQbhgYbgC65a/59sTpy8VT70RR5mg==
+ b=gLokerqDKB+N+TkiDUznX9u0xBuHMwP+WgaSUX4dRWCh5IpLfnBDEN2aHBOC0PzPjt/G3uLd/cXUMhQqp3wFAFzsLNjBkOEyNE1q8OQ1RhtldlmXRl/IbikSJpHass/uVEOQMSwtbGN9tXcu0+KmBln926S6h+mQB7JAecWWwnZ0BIm/+VDfFHVvGvwuVYN+DgLH4XJfrgU8j15pq+sYIGaUtgEXyiS4BvW1y74ew3alEHha5cTeSEujiR17ysiYOrLXkqYrjzew9MB0OBlZtDuRyn89oKirkawPMCu9TaMkI3wdctLkjZCB52TerlGAS2wXvuxEzRog2RlEx8MGOQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zYcq+020TEMkHIt1a9/l5HvK3tXtJOS63qlRHnAdzEM=;
- b=YOxg56qW8TlEqaUodgWokN+qcYJniXZKluvqMJDwCGhflp0bSqmpH06RcdH2z8yqNSw8TwpncOup5TXpvfgkjKnAYDuK7sH+FnslsdTERR7YuBh9bpkacGk9xmL8haY19+joUJh3ZdEBV9gQ6CkcXusHPax4Gek/SfPmAPq30suyCnwCVroLM9Ca3FVJGtI608cVSJEGIOxwAg1miZw9LyhWbze13P2PFkidUJoQ62psv0XXPD3bxifXL3in11Ddjv1KE41iqVKxQnJpYgI7xdhBV3sB3eDxiIsWDoAQPWbBrJfBDIry3LCK8vtE6fHWOe7SrPd30RMTxdIS+ANlBA==
+ bh=gIO9PjhHh1krEmGmOGxgIXksTnnmw9+s2zW89SduBB0=;
+ b=c+FEW18WWh1u059131gsUBw8F8swu92ZtvMCr7St0gaPx7UjDhsinIzlJpOJ1E4cZ7V9zl6CBoXFlhOxSgGYMz4cCAhyXgyX0bVL0xCMTPuzZy79lAueGbIpvOEUMhGgN0BmuXKIdc3DEfgrw+j/VW4bTjWDTK8zQBvOA9f1glVWg6IHQMnx+l/7+mgARvKzZvq9ej3tJ8XKeqtPehLac566ajlBoCVD4t8hZ6Bi0sBpkZei1+0Q0x7ZSK87lFG3kG6z6VUddfbkhf/oXrP3AbeQpO8qsI0zzxS4PjHpuHP77PmUfr9orfijjPRMft/3MCtEqECtDy6KzpJ66JqGSg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 12.22.5.236) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
+ 12.22.5.234) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zYcq+020TEMkHIt1a9/l5HvK3tXtJOS63qlRHnAdzEM=;
- b=Aea9/5Mr9iAo/tp89DZsMvTUsA68EcFsXf75Ll7SIRrCAdCVTRBrB7UnoFXP6Ui1ciyaKW/Wx9xxCpzmd8oQiXQHJzJwqzCzy9TWEGUnn5SVXd4F9fXYQ/ebaA3om+6b3se9AtwEGxCOY9Ak6TabSqUug1MN7YmsMicsPrqobmkjUq5UNNespC+CYDeV4xro3Ilhd0NLCEQPH5G4grY0OFUtPtFcWu1PnxqCcQa5NPdpoqgyST+7u0sZFqystuNnDXDr6AN1QGoFwxreXBdaT+N6xAbQa14tsEWoUDbxKdpH2qtrQjWsGYWxsHIlSJke1v+jA5hnAuKoNOGVupc6/g==
-Received: from DM6PR17CA0024.namprd17.prod.outlook.com (2603:10b6:5:1b3::37)
- by CY4PR12MB1926.namprd12.prod.outlook.com (2603:10b6:903:11b::11) with
+ bh=gIO9PjhHh1krEmGmOGxgIXksTnnmw9+s2zW89SduBB0=;
+ b=pz5Pf+nIMywFvTFOo0JaKZXASKCjWAC4bmFYFVqn04u4HBF8k7lyIDwafDIkHZD5kiRqVQWNR8EOlunyELNfYdftvW9PdBPfKwhO+RBhYo/b6UpehM9s32hxwfqwS58ovWuProxELSXy6GKOw9glXsSUnwJyJ4f+bDN9mR+ci8FqoadsB4uK2IXjeqsznFL+2ft8LORQuCcH0kzbcRQ0SW0T5TW4CXuAK1u6DW+pZY/+L+td0IaWpA5arlLuACWaET+Pt7/yZI2jUUty6w4UKdfRaOd0gOgiukm35zzxykDLqF5Kvnait5+uSxmCy/VPNafiTNJ9j70oQ5zkiqi0Yg==
+Received: from DM6PR13CA0050.namprd13.prod.outlook.com (2603:10b6:5:134::27)
+ by BYAPR12MB2901.namprd12.prod.outlook.com (2603:10b6:a03:138::32) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5504.17; Wed, 17 Aug
- 2022 05:13:51 +0000
-Received: from DM6NAM11FT020.eop-nam11.prod.protection.outlook.com
- (2603:10b6:5:1b3:cafe::2a) by DM6PR17CA0024.outlook.office365.com
- (2603:10b6:5:1b3::37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5525.19 via Frontend
- Transport; Wed, 17 Aug 2022 05:13:51 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.236)
+ 2022 05:14:03 +0000
+Received: from DM6NAM11FT041.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:134:cafe::6d) by DM6PR13CA0050.outlook.office365.com
+ (2603:10b6:5:134::27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5546.12 via Frontend
+ Transport; Wed, 17 Aug 2022 05:14:03 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 12.22.5.234)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 12.22.5.236 as permitted sender) receiver=protection.outlook.com;
- client-ip=12.22.5.236; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (12.22.5.236) by
- DM6NAM11FT020.mail.protection.outlook.com (10.13.172.224) with Microsoft SMTP
+ 12.22.5.234 as permitted sender) receiver=protection.outlook.com;
+ client-ip=12.22.5.234; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (12.22.5.234) by
+ DM6NAM11FT041.mail.protection.outlook.com (10.13.172.98) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.5546.15 via Frontend Transport; Wed, 17 Aug 2022 05:13:51 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by DRHQMAIL109.nvidia.com
- (10.27.9.19) with Microsoft SMTP Server (TLS) id 15.0.1497.38; Wed, 17 Aug
- 2022 05:13:50 +0000
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.5546.15 via Frontend Transport; Wed, 17 Aug 2022 05:14:03 +0000
+Received: from rnnvmail202.nvidia.com (10.129.68.7) by DRHQMAIL101.nvidia.com
+ (10.27.9.10) with Microsoft SMTP Server (TLS) id 15.0.1497.38; Wed, 17 Aug
+ 2022 05:14:02 +0000
+Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail202.nvidia.com
+ (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Tue, 16 Aug
- 2022 22:13:49 -0700
+ 2022 22:14:01 -0700
 Received: from nvidia-abhsahu-1.nvidia.com (10.127.8.12) by mail.nvidia.com
  (10.129.68.6) with Microsoft SMTP Server id 15.2.986.29 via Frontend
- Transport; Tue, 16 Aug 2022 22:13:44 -0700
+ Transport; Tue, 16 Aug 2022 22:13:55 -0700
 From:   Abhishek Sahu <abhsahu@nvidia.com>
 To:     Alex Williamson <alex.williamson@redhat.com>,
         Cornelia Huck <cohuck@redhat.com>,
@@ -73,9 +73,9 @@ CC:     Max Gurtovoy <mgurtovoy@nvidia.com>,
         <linux-kernel@vger.kernel.org>, <kvm@vger.kernel.org>,
         <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         Abhishek Sahu <abhsahu@nvidia.com>
-Subject: [PATCH v6 3/5] vfio/pci: Mask INTx during runtime suspend
-Date:   Wed, 17 Aug 2022 10:43:21 +0530
-Message-ID: <20220817051323.20091-4-abhsahu@nvidia.com>
+Subject: [PATCH v6 5/5] vfio/pci: Implement VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY_WITH_WAKEUP
+Date:   Wed, 17 Aug 2022 10:43:23 +0530
+Message-ID: <20220817051323.20091-6-abhsahu@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20220817051323.20091-1-abhsahu@nvidia.com>
 References: <20220817051323.20091-1-abhsahu@nvidia.com>
@@ -84,179 +84,191 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 183d0be0-ad67-45a0-50f4-08da800f45e6
-X-MS-TrafficTypeDiagnostic: CY4PR12MB1926:EE_
+X-MS-Office365-Filtering-Correlation-Id: bed82e95-dcdd-4bdb-cc38-08da800f4d07
+X-MS-TrafficTypeDiagnostic: BYAPR12MB2901:EE_
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: TlCOZxbEd+tjnk9AhI/Fw4J+gsmNX0Eu+LLpRMPP6DCIK5vJXEtRdRQ+fwV5bmywjKPBdUjQlSzTbMy4A0HOQzyYtIjuO5DVzX+RbVOuiBBGkQcG9EFfVZwfcIb07Xj2HSjsC9mxz8S7GkJejeZtv59dh7EpdIoZTCl1u7yw2dZbvpXZSjkxBSZjJkEfmX6Aq0ydzpS3cSZF8mZQgwp3r8sigSScA/oVW6SCp5hDGCEShn2J4C3cJn32q69mj6USKH0ZlkoJRhtD1pBkcZaSvLK10Z4qfFIVUrbRdFGyjRj/BPPS7NhuqyhUm0/sGfnY23nPWUQ9n+iG/e6elcnZKqDgK9OChrzB8bS48B6JVWV2EXP/clc+CF6bGdzNcWoyqm+4JSNR0aRHNuoZVv/211MZPtoTFJtAluUpYsewAMHoY2nU6k1tbuhhlbjn+RQHoqWpwifhbo/80MbaMQ1yWV1BEBAii4aRzCtVIfPnL1jlL+dfMiUdayMWcWSd9qJHTvM0H5C3HJW8Cumw/BjKDD9w7JZ9X+gFQHrNGS/NVE5vZZP14f2EwkRCd3h8rTPapr5KsauR95KsKc33ztDWL1TfavhM+K7+j+IeGqZaTfgo9zAJgKe4xt24FvS3TpwBKwozze6lkpC2ekhELYAhtdbdiaoeliFIiiuAdXRMYz2EDtkEPV5AnwaPJFzXO3g17JlX5/a1kgPeiulGrLVX1Yf9xP8F+EZFF48VyGrT4sodBQfS8Csxc+kbSkZJMxjf3etVo2s8kcfJQ5IFhvHxkfktmcgqak+fAi/bD7MWTizUGzTWu0ixXVPqle62+G2sDijx+DThwqAsObCQDZLF6A==
-X-Forefront-Antispam-Report: CIP:12.22.5.236;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(396003)(39860400002)(376002)(346002)(136003)(46966006)(40470700004)(36840700001)(47076005)(426003)(81166007)(8936002)(107886003)(2616005)(1076003)(336012)(83380400001)(8676002)(70206006)(15650500001)(2906002)(70586007)(5660300002)(7416002)(40480700001)(36756003)(4326008)(478600001)(110136005)(82310400005)(86362001)(316002)(54906003)(6666004)(41300700001)(7696005)(26005)(36860700001)(40460700003)(82740400003)(356005)(186003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: L6x4t6dX4Ny27YhT/utgmh0lNugzwFiYwExkFqQDN3nd5tfLxTtGumISNaoXuDUodrlfqPBB+vCaly+nZkhDixdt+FLi6XkVBxnOSidTNLDs2zIl4iva198SB5Qi98P2Xv9RjXxwQx8Jun6u7DUixB0NBLnOeN6JWEqA1Yz859+alnAMiMqXa/B/rUdWd96mTVEbv0kopoU45CZcy0u0k36b6ORF6UYXkOCyzyzguL57xZ03BCYKG9U3JGptIEb9vjCmVbO/twnz50xZ6qrOQMhboBwY1Cvw4I7moYwhPy1zE2IAAHs1w3xmU2rWqPGgrhWCoGlwk1dTJ7Vh761HpPVxO67XTPrZLHoFezID8R8NkpGe7Sil/bp/c70jZdCtMjZmX7sepPJkAFQid9xyCm/p8NFr+pe0KDPapxkh/SuDBMkh/jwULKhwQC18RXTVd8pirFQb6UN2gH35LK1TkhiMB2Cqigb7CompNYZ25MmIqZWw/4eRb4pHcDTuEjD5YotFWC3+9Asyi866E79yvl9+6DedOamsQ0k+u+FOSqKT/wwXg+/33E9qdGWkvWnz6EXSlD3beeRaSwxP2kAT5TfJvTAlab1leclX+7t/sZpWkocm+w1wOBGVRmsWQggVGMV8m6KCgu9qAtHGQigrOnxUMMIeRLBwWoP3BIX+ma9/jt+eJWgmxm2HZQ6KSf2tmJHsGEPYhXLHP8V3ioVV1o6bCJ11nwgR7OkxgJYYOL7efTO78ESRWaafTew9oGb9FHoS3NAHXx5c3ZqxFhIZOidA+VgGfgSmfi2kmedNlTXuY3YXTWSlUrd+VPcXhqg83q4DNhIIx4EooguGppbANA==
+X-Forefront-Antispam-Report: CIP:12.22.5.234;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:InfoNoRecords;CAT:NONE;SFS:(13230016)(4636009)(396003)(346002)(376002)(136003)(39860400002)(46966006)(40470700004)(36840700001)(107886003)(8676002)(70586007)(26005)(82310400005)(4326008)(82740400003)(110136005)(316002)(54906003)(40460700003)(81166007)(478600001)(40480700001)(70206006)(6666004)(356005)(7696005)(2616005)(86362001)(83380400001)(8936002)(41300700001)(36756003)(1076003)(5660300002)(7416002)(36860700001)(336012)(2906002)(426003)(47076005)(186003)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Aug 2022 05:13:51.0683
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Aug 2022 05:14:03.0318
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 183d0be0-ad67-45a0-50f4-08da800f45e6
+X-MS-Exchange-CrossTenant-Network-Message-Id: bed82e95-dcdd-4bdb-cc38-08da800f4d07
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.236];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT020.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[12.22.5.234];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT041.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR12MB1926
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR12MB2901
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch adds INTx handling during runtime suspend/resume.
-All the suspend/resume related code for the user to put the device
-into the low power state will be added in subsequent patches.
+This patch implements VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY_WITH_WAKEUP
+device feature. In the VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY, if there is
+any access for the VFIO device on the host side, then the device will
+be moved out of the low power state without the user's guest driver
+involvement. Once the device access has been finished, then the host
+can move the device again into low power state. With the low power
+entry happened through VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY_WITH_WAKEUP,
+the device will not be moved back into the low power state and
+a notification will be sent to the user by triggering wakeup eventfd.
 
-The INTx lines may be shared among devices. Whenever any INTx
-interrupt comes for the VFIO devices, then vfio_intx_handler() will be
-called for each device sharing the interrupt. Inside vfio_intx_handler(),
-it calls pci_check_and_mask_intx() and checks if the interrupt has
-been generated for the current device. Now, if the device is already
-in the D3cold state, then the config space can not be read. Attempt
-to read config space in D3cold state can cause system unresponsiveness
-in a few systems. To prevent this, mask INTx in runtime suspend callback,
-and unmask the same in runtime resume callback. If INTx has been already
-masked, then no handling is needed in runtime suspend/resume callbacks.
-'pm_intx_masked' tracks this, and vfio_pci_intx_mask() has been updated
-to return true if the INTx vfio_pci_irq_ctx.masked value is changed
-inside this function.
+vfio_pci_core_pm_entry() will be called for both the variants of low
+power feature entry so add an extra argument for wakeup eventfd context
+and store locally in 'struct vfio_pci_core_device'.
 
-For the runtime suspend which is triggered for the no user of VFIO
-device, the is_intx() will return false and these callbacks won't do
-anything.
+For the entry happened without wakeup eventfd, all the exit related
+handling will be done by the LOW_POWER_EXIT device feature only.
+When the LOW_POWER_EXIT will be called, then the vfio core layer
+vfio_device_pm_runtime_get() will increment the usage count and will
+resume the device. In the driver runtime_resume callback, the
+'pm_wake_eventfd_ctx' will be NULL. Then vfio_pci_core_pm_exit()
+will call vfio_pci_runtime_pm_exit() and all the exit related handling
+will be done.
 
-The MSI/MSI-X are not shared so similar handling should not be
-needed for MSI/MSI-X. vfio_msihandler() triggers eventfd_signal()
-without doing any device-specific config access. When the user performs
-any config access or IOCTL after receiving the eventfd notification,
-then the device will be moved to the D0 state first before
-servicing any request.
-
-Another option was to check this flag 'pm_intx_masked' inside
-vfio_intx_handler() instead of masking the interrupts. This flag
-is being set inside the runtime_suspend callback but the device
-can be in non-D3cold state (for example, if the user has disabled D3cold
-explicitly by sysfs, the D3cold is not supported in the platform, etc.).
-Also, in D3cold supported case, the device will be in D0 till the
-PCI core moves the device into D3cold. In this case, there is
-a possibility that the device can generate an interrupt. Adding check
-in the IRQ handler will not clear the IRQ status and the interrupt
-line will still be asserted. This can cause interrupt flooding.
+For the entry happened with wakeup eventfd, in the driver resume
+callback, eventfd will be triggered and all the exit related handling will
+be done. When vfio_pci_runtime_pm_exit() will be called by
+vfio_pci_core_pm_exit(), then it will return early.
+But if the runtime suspend has not happened on the host side, then
+all the exit related handling will be done in vfio_pci_core_pm_exit()
+only.
 
 Signed-off-by: Abhishek Sahu <abhsahu@nvidia.com>
 ---
- drivers/vfio/pci/vfio_pci_core.c  | 37 +++++++++++++++++++++++++++----
- drivers/vfio/pci/vfio_pci_intrs.c |  6 ++++-
- include/linux/vfio_pci_core.h     |  3 ++-
- 3 files changed, 40 insertions(+), 6 deletions(-)
+ drivers/vfio/pci/vfio_pci_core.c | 62 ++++++++++++++++++++++++++++++--
+ include/linux/vfio_pci_core.h    |  1 +
+ 2 files changed, 60 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index c8d3b0450fb3..a97fb8cbf903 100644
+index d7d3c4392f70..00d24243b89e 100644
 --- a/drivers/vfio/pci/vfio_pci_core.c
 +++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -260,16 +260,45 @@ int vfio_pci_set_power_state(struct vfio_pci_core_device *vdev, pci_power_t stat
+@@ -260,7 +260,8 @@ int vfio_pci_set_power_state(struct vfio_pci_core_device *vdev, pci_power_t stat
  	return ret;
  }
  
-+#ifdef CONFIG_PM
-+static int vfio_pci_core_runtime_suspend(struct device *dev)
-+{
-+	struct vfio_pci_core_device *vdev = dev_get_drvdata(dev);
-+
-+	/*
-+	 * If INTx is enabled, then mask INTx before going into the runtime
-+	 * suspended state and unmask the same in the runtime resume.
-+	 * If INTx has already been masked by the user, then
-+	 * vfio_pci_intx_mask() will return false and in that case, INTx
-+	 * should not be unmasked in the runtime resume.
-+	 */
-+	vdev->pm_intx_masked = (is_intx(vdev) && vfio_pci_intx_mask(vdev));
-+
-+	return 0;
-+}
-+
-+static int vfio_pci_core_runtime_resume(struct device *dev)
-+{
-+	struct vfio_pci_core_device *vdev = dev_get_drvdata(dev);
-+
-+	if (vdev->pm_intx_masked)
-+		vfio_pci_intx_unmask(vdev);
-+
-+	return 0;
-+}
-+#endif /* CONFIG_PM */
-+
- /*
-- * The dev_pm_ops needs to be provided to make pci-driver runtime PM working,
-- * so use structure without any callbacks.
-- *
-  * The pci-driver core runtime PM routines always save the device state
-  * before going into suspended state. If the device is going into low power
-  * state with only with runtime PM ops, then no explicit handling is needed
-  * for the devices which have NoSoftRst-.
-  */
--static const struct dev_pm_ops vfio_pci_core_pm_ops = { };
-+static const struct dev_pm_ops vfio_pci_core_pm_ops = {
-+	SET_RUNTIME_PM_OPS(vfio_pci_core_runtime_suspend,
-+			   vfio_pci_core_runtime_resume,
-+			   NULL)
-+};
- 
- int vfio_pci_core_enable(struct vfio_pci_core_device *vdev)
+-static int vfio_pci_runtime_pm_entry(struct vfio_pci_core_device *vdev)
++static int vfio_pci_runtime_pm_entry(struct vfio_pci_core_device *vdev,
++				     struct eventfd_ctx *efdctx)
  {
-diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
-index 6069a11fb51a..8b805d5d19e1 100644
---- a/drivers/vfio/pci/vfio_pci_intrs.c
-+++ b/drivers/vfio/pci/vfio_pci_intrs.c
-@@ -33,10 +33,12 @@ static void vfio_send_intx_eventfd(void *opaque, void *unused)
- 		eventfd_signal(vdev->ctx[0].trigger, 1);
- }
- 
--void vfio_pci_intx_mask(struct vfio_pci_core_device *vdev)
-+/* Returns true if the INTx vfio_pci_irq_ctx.masked value is changed. */
-+bool vfio_pci_intx_mask(struct vfio_pci_core_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
- 	unsigned long flags;
-+	bool masked_changed = false;
- 
- 	spin_lock_irqsave(&vdev->irqlock, flags);
- 
-@@ -60,9 +62,11 @@ void vfio_pci_intx_mask(struct vfio_pci_core_device *vdev)
- 			disable_irq_nosync(pdev->irq);
- 
- 		vdev->ctx[0].masked = true;
-+		masked_changed = true;
+ 	/*
+ 	 * The vdev power related flags are protected with 'memory_lock'
+@@ -273,6 +274,7 @@ static int vfio_pci_runtime_pm_entry(struct vfio_pci_core_device *vdev)
  	}
  
- 	spin_unlock_irqrestore(&vdev->irqlock, flags);
-+	return masked_changed;
+ 	vdev->pm_runtime_engaged = true;
++	vdev->pm_wake_eventfd_ctx = efdctx;
+ 	pm_runtime_put_noidle(&vdev->pdev->dev);
+ 	up_write(&vdev->memory_lock);
+ 
+@@ -296,7 +298,39 @@ static int vfio_pci_core_pm_entry(struct vfio_device *device, u32 flags,
+ 	 * while returning from the ioctl and then the device can go into
+ 	 * runtime suspended state.
+ 	 */
+-	return vfio_pci_runtime_pm_entry(vdev);
++	return vfio_pci_runtime_pm_entry(vdev, NULL);
++}
++
++static int
++vfio_pci_core_pm_entry_with_wakeup(struct vfio_device *device, u32 flags,
++				   void __user *arg, size_t argsz)
++{
++	struct vfio_pci_core_device *vdev =
++		container_of(device, struct vfio_pci_core_device, vdev);
++	struct vfio_device_low_power_entry_with_wakeup entry;
++	struct eventfd_ctx *efdctx;
++	int ret;
++
++	ret = vfio_check_feature(flags, argsz, VFIO_DEVICE_FEATURE_SET,
++				 sizeof(entry));
++	if (ret != 1)
++		return ret;
++
++	if (copy_from_user(&entry, arg, sizeof(entry)))
++		return -EFAULT;
++
++	if (entry.wakeup_eventfd < 0)
++		return -EINVAL;
++
++	efdctx = eventfd_ctx_fdget(entry.wakeup_eventfd);
++	if (IS_ERR(efdctx))
++		return PTR_ERR(efdctx);
++
++	ret = vfio_pci_runtime_pm_entry(vdev, efdctx);
++	if (ret)
++		eventfd_ctx_put(efdctx);
++
++	return ret;
  }
  
- /*
+ static void __vfio_pci_runtime_pm_exit(struct vfio_pci_core_device *vdev)
+@@ -304,6 +338,11 @@ static void __vfio_pci_runtime_pm_exit(struct vfio_pci_core_device *vdev)
+ 	if (vdev->pm_runtime_engaged) {
+ 		vdev->pm_runtime_engaged = false;
+ 		pm_runtime_get_noresume(&vdev->pdev->dev);
++
++		if (vdev->pm_wake_eventfd_ctx) {
++			eventfd_ctx_put(vdev->pm_wake_eventfd_ctx);
++			vdev->pm_wake_eventfd_ctx = NULL;
++		}
+ 	}
+ }
+ 
+@@ -331,7 +370,10 @@ static int vfio_pci_core_pm_exit(struct vfio_device *device, u32 flags,
+ 
+ 	/*
+ 	 * The device is always in the active state here due to pm wrappers
+-	 * around ioctls.
++	 * around ioctls. If the device had entered a low power state and
++	 * pm_wake_eventfd_ctx is valid, vfio_pci_core_runtime_resume() has
++	 * already signaled the eventfd and exited low power mode itself.
++	 * pm_runtime_engaged protects the redundant call here.
+ 	 */
+ 	vfio_pci_runtime_pm_exit(vdev);
+ 	return 0;
+@@ -370,6 +412,17 @@ static int vfio_pci_core_runtime_resume(struct device *dev)
+ {
+ 	struct vfio_pci_core_device *vdev = dev_get_drvdata(dev);
+ 
++	/*
++	 * Resume with a pm_wake_eventfd_ctx signals the eventfd and exit
++	 * low power mode.
++	 */
++	down_write(&vdev->memory_lock);
++	if (vdev->pm_wake_eventfd_ctx) {
++		eventfd_signal(vdev->pm_wake_eventfd_ctx, 1);
++		__vfio_pci_runtime_pm_exit(vdev);
++	}
++	up_write(&vdev->memory_lock);
++
+ 	if (vdev->pm_intx_masked)
+ 		vfio_pci_intx_unmask(vdev);
+ 
+@@ -1336,6 +1389,9 @@ int vfio_pci_core_ioctl_feature(struct vfio_device *device, u32 flags,
+ 		return vfio_pci_core_feature_token(device, flags, arg, argsz);
+ 	case VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY:
+ 		return vfio_pci_core_pm_entry(device, flags, arg, argsz);
++	case VFIO_DEVICE_FEATURE_LOW_POWER_ENTRY_WITH_WAKEUP:
++		return vfio_pci_core_pm_entry_with_wakeup(device, flags,
++							  arg, argsz);
+ 	case VFIO_DEVICE_FEATURE_LOW_POWER_EXIT:
+ 		return vfio_pci_core_pm_exit(device, flags, arg, argsz);
+ 	default:
 diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index 5579ece4347b..98c0af5b5bba 100644
+index d31cc9cc9c70..8bdf20cd94a9 100644
 --- a/include/linux/vfio_pci_core.h
 +++ b/include/linux/vfio_pci_core.h
-@@ -124,6 +124,7 @@ struct vfio_pci_core_device {
- 	bool			needs_reset;
- 	bool			nointx;
- 	bool			needs_pm_restore;
-+	bool			pm_intx_masked;
- 	struct pci_saved_state	*pci_saved_state;
- 	struct pci_saved_state	*pm_save;
+@@ -131,6 +131,7 @@ struct vfio_pci_core_device {
  	int			ioeventfds_nr;
-@@ -147,7 +148,7 @@ struct vfio_pci_core_device {
- #define is_irq_none(vdev) (!(is_intx(vdev) || is_msi(vdev) || is_msix(vdev)))
- #define irq_is(vdev, type) (vdev->irq_type == type)
- 
--void vfio_pci_intx_mask(struct vfio_pci_core_device *vdev);
-+bool vfio_pci_intx_mask(struct vfio_pci_core_device *vdev);
- void vfio_pci_intx_unmask(struct vfio_pci_core_device *vdev);
- 
- int vfio_pci_set_irqs_ioctl(struct vfio_pci_core_device *vdev,
+ 	struct eventfd_ctx	*err_trigger;
+ 	struct eventfd_ctx	*req_trigger;
++	struct eventfd_ctx	*pm_wake_eventfd_ctx;
+ 	struct list_head	dummy_resources_list;
+ 	struct mutex		ioeventfds_lock;
+ 	struct list_head	ioeventfds_list;
 -- 
 2.17.1
 
