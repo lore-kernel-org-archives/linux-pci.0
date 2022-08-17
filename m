@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F36C2BB41
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B58EC32773
 	for <linux-pci@archiver.kernel.org>; Wed, 17 Aug 2022 23:03:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242016AbiHQXDk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S242046AbiHQXDk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 17 Aug 2022 19:03:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34854 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231939AbiHQXDj (ORCPT
+        with ESMTP id S241908AbiHQXDj (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Aug 2022 19:03:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DED94A5708;
-        Wed, 17 Aug 2022 16:03:36 -0700 (PDT)
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11925A59A3;
+        Wed, 17 Aug 2022 16:03:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6FE4C60F60;
+        by ams.source.kernel.org (Postfix) with ESMTPS id C2081B81FF0;
         Wed, 17 Aug 2022 23:03:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A846DC43470;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55F48C433B5;
         Wed, 17 Aug 2022 23:03:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1660777415;
-        bh=KZLubd2ER143QJviW3BMyWdDW8TOYgbY/8Bd6Py8KhQ=;
+        bh=fekDNg1F4N2wBEf7RoTG3BeHW051EFSYazNh7Asi3Z4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DVauo0+sNwDDiDjJkbu0qgyk4GO5MzrJwxg5Wh85uF4lhGNiMGNXkaUBqqL48N8yN
-         a9E1iYxbHChar95PxG+i/BnKheJ4tr9fvbkqGTzIGEOTf55c1r9xm8Ij4d1i2AMDJ4
-         tX2JFDCxsxqmLQB56mBzT1sIWS941fVg3Gtmkh7cOYzHFCXH904N3Hghkh1VoVpkkj
-         aiiNZ+H3z8uI/4yAPGNoOfnMxOii/CdbZbLsAuB+Iep51MbbH3p6w+Fng/PVvI9mhc
-         Hu3oKJNKnG4tbLwpvTceXHSTKAFfMPBopQ+Pwvs3ygTaSUkZoLEK+GJdcge9QxOH1v
-         OyBA6GmI+4pqw==
+        b=lPokxyBzKMnKW8r7xusjkJRmM7NtARTr/Aj2BZBFZ5IPR+UPbR4RpxqjANXAagSVl
+         doOyrUZEfkMmHDvBL26XwMg44wiU0yloMMOg752WHG2UrmmrlUm59GkvJpiQdksuQV
+         u683XBUzRAH9UWZr1DNq9nX2svxeswlWNFRVbLpjwH2f4BBCQ0IN7cKJFsL5mgVMXV
+         oMF3qZAsq4kmpMXpKCanRIuNgvqYLleF2Zq5wKHeqwSgndTlsY+S6U6R2chHqYcTs2
+         LsF0VvR1Lt1zsuuIc2SiubHULZiV9kJ366rv5tJWAUY7BCm/RTmOmYz1OMknZlRw6g
+         FoOkRwTnONsUg==
 Received: by pali.im (Postfix)
-        id 6267977A; Thu, 18 Aug 2022 01:03:35 +0200 (CEST)
+        id 671912799; Thu, 18 Aug 2022 01:03:32 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
@@ -43,9 +43,9 @@ To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 4/4] ARM: dts: dove: Add definitions for PCIe error interrupts
-Date:   Thu, 18 Aug 2022 01:00:36 +0200
-Message-Id: <20220817230036.817-5-pali@kernel.org>
+Subject: [PATCH 1/4] dt-bindings: PCI: mvebu: Update information about error interrupt
+Date:   Thu, 18 Aug 2022 01:00:33 +0200
+Message-Id: <20220817230036.817-2-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220817230036.817-1-pali@kernel.org>
 References: <20220817230036.817-1-pali@kernel.org>
@@ -56,40 +56,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-First PCIe controller on Dove SoC reports error interrupt via IRQ 15
-and second PCIe controller via IRQ 17.
+mvebu error interrupt is triggered by any non-intx event, which is mainly
+some pcie error.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- arch/arm/boot/dts/dove.dtsi | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ Documentation/devicetree/bindings/pci/mvebu-pci.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm/boot/dts/dove.dtsi b/arch/arm/boot/dts/dove.dtsi
-index 70d45d2b1258..9aee3cfd3e98 100644
---- a/arch/arm/boot/dts/dove.dtsi
-+++ b/arch/arm/boot/dts/dove.dtsi
-@@ -122,8 +122,8 @@
- 				bus-range = <0x00 0xff>;
- 
- 				#interrupt-cells = <1>;
--				interrupt-names = "intx";
--				interrupts = <16>;
-+				interrupt-names = "intx", "error";
-+				interrupts = <16>, <15>;
- 				interrupt-map-mask = <0 0 0 7>;
- 				interrupt-map = <0 0 0 1 &pcie0_intc 0>,
- 						<0 0 0 2 &pcie0_intc 1>,
-@@ -151,8 +151,8 @@
- 				bus-range = <0x00 0xff>;
- 
- 				#interrupt-cells = <1>;
--				interrupt-names = "intx";
--				interrupts = <18>;
-+				interrupt-names = "intx", "error";
-+				interrupts = <18>, <17>;
- 				interrupt-map-mask = <0 0 0 7>;
- 				interrupt-map = <0 0 0 1 &pcie1_intc 0>,
- 						<0 0 0 2 &pcie1_intc 1>,
+diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+index 6d022a9d36ee..8f0bca42113f 100644
+--- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
++++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
+@@ -83,6 +83,7 @@ and the following optional properties:
+   specified will default to 100ms, as required by the PCIe specification.
+ - interrupt-names: list of interrupt names, supported are:
+    - "intx" - interrupt line triggered by one of the legacy interrupt
++   - "error" - interrupt line triggered by any other event (non-intx)
+ - interrupts or interrupts-extended: List of the interrupt sources which
+   corresponding to the "interrupt-names". If non-empty then also additional
+   'interrupt-controller' subnode must be defined.
 -- 
 2.20.1
 
