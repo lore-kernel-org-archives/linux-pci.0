@@ -2,46 +2,45 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DDD3C32772
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE316C28B2B
 	for <linux-pci@archiver.kernel.org>; Thu, 18 Aug 2022 13:52:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245312AbiHRNwG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S245314AbiHRNwG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 18 Aug 2022 09:52:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47244 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47298 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245314AbiHRNwD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Aug 2022 09:52:03 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14BC061B28
-        for <linux-pci@vger.kernel.org>; Thu, 18 Aug 2022 06:52:02 -0700 (PDT)
+        with ESMTP id S245274AbiHRNwF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Aug 2022 09:52:05 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D5F06170F
+        for <linux-pci@vger.kernel.org>; Thu, 18 Aug 2022 06:52:05 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 7D2A9CE205A
-        for <linux-pci@vger.kernel.org>; Thu, 18 Aug 2022 13:52:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 459DFC433C1;
-        Thu, 18 Aug 2022 13:51:57 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C1508B82179
+        for <linux-pci@vger.kernel.org>; Thu, 18 Aug 2022 13:52:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 207B4C433C1;
+        Thu, 18 Aug 2022 13:52:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1660830718;
-        bh=snynf6vI9g6lx4We//tC0xZE+ub4KkCEIjZQ8UQE3RI=;
+        s=k20201202; t=1660830722;
+        bh=HbKz24Nfhn6/cZiuUPLYNM9zdj4uhadCwjvhLdFM3nA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L/7pdxeGNMAk4J8yYcb0RTyZGxVMXMzjs0sxRBwb4aRaQfFqEqtv1UrnIpwVSeaMg
-         LywldMtf6NTx9JHk7GIWJgZTnvz6SvkpPNRvfOrVc6P50OU2Ff3Ph6NZeW775Q1CkO
-         exaWocxgWtcsSm+5yAJdj2Ctq+Ghh3le1dzaPkeYVcSUgaGhWBqIaFFZuaAydhH8bX
-         T/Oqtt1CTsYpyzGRU7PrJk5SeyQWdxRgknh14G0L/U0IcvS1t1wiZf6VPFlSg6nrnl
-         D5VG6ALHVVa/Io8nw9pyTQK8Ivfy46WAAaloqg5JjGELPNRQBX6lKLYtSMHdxtRNQq
-         g59mm+Lwt1Y4Q==
+        b=vIj9yTawYe15eFIn/SasT5q9CtieZbV3xFGVfraiKRr3ohpvteKHYHl2RCpla0N3Q
+         evprTZZW/rOqaFTkz1/BUl4ydzNeMZcECjvQJWOtd6TTEshExtzpPOim2/rltHX4bj
+         E0+kxqlyFEkj2j1ut/1wFvvsd/AIXNtC1sNC0PXbdDco/K7mNdmutgZ+4YjnxSty2q
+         +ZtrLRZDXajllxWjGbHqVyKbLdFyxyAR/35bxxP1JGmNIxmT6pSeQT7IREIXunvo/O
+         EPXBuKeugFWXxnqJKaRZX5NVDKIk0tcgfbDiFlXk56x4p59x/vX2sNxEW9tgAsKXXO
+         zV2xV9b7/fiAg==
 From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <helgaas@kernel.org>
 Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         pali@kernel.org, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Subject: [PATCH 07/11] PCI: aardvark: Add suspend to RAM support
-Date:   Thu, 18 Aug 2022 15:51:36 +0200
-Message-Id: <20220818135140.5996-8-kabel@kernel.org>
+Subject: [PATCH 09/11] PCI: aardvark: Don't write read-only bits explicitly in PCI_ERR_CAP register
+Date:   Thu, 18 Aug 2022 15:51:38 +0200
+Message-Id: <20220818135140.5996-10-kabel@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220818135140.5996-1-kabel@kernel.org>
 References: <20220818135140.5996-1-kabel@kernel.org>
@@ -52,77 +51,33 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Miquel Raynal <miquel.raynal@bootlin.com>
+The bits PCI_ERR_CAP_ECRC_GENC and PCI_ERR_CAP_ECRC_CHKC are read only,
+reporting the capability of ECRC. Don't write them explicitly, instead
+read the register (where they are set), and add the bits that enable
+these features.
 
-Add suspend and resume callbacks. We need to use the NOIRQ variants to
-ensure the controller's IRQ handlers are not run during suspend() /
-resume(), which could cause races.
-
-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-Signed-off-by: Pali Rohár <pali@kernel.org>
 Signed-off-by: Marek Behún <kabel@kernel.org>
 ---
-Changes since batch 5:
-- clarified commit message
-- changed to new macro NOIRQ_SYSTEM_SLEEP_PM_OPS, as was done for many
-  PCI controller drivers with commit 19b7858c3357 ("PCI: Convert to new
-  *_PM_OPS macros")
----
- drivers/pci/controller/pci-aardvark.c | 34 +++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 3beafc893969..e30a33a4ecc6 100644
+index 4855ac733484..e816ab726f66 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1890,6 +1890,39 @@ static int advk_pcie_setup_phy(struct advk_pcie *pcie)
- 	return ret;
- }
+@@ -584,9 +584,9 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg &= ~(PCI_COMMAND_IO | PCI_COMMAND_MEMORY | PCI_COMMAND_MASTER);
+ 	advk_writel(pcie, reg, PCIE_CORE_CMD_STATUS_REG);
  
-+static int advk_pcie_suspend(struct device *dev)
-+{
-+	struct advk_pcie *pcie = dev_get_drvdata(dev);
-+
-+	advk_pcie_disable_phy(pcie);
-+
-+	clk_disable_unprepare(pcie->clk);
-+
-+	return 0;
-+}
-+
-+static int advk_pcie_resume(struct device *dev)
-+{
-+	struct advk_pcie *pcie = dev_get_drvdata(dev);
-+	int ret;
-+
-+	ret = clk_prepare_enable(pcie->clk);
-+	if (ret)
-+		return ret;
-+
-+	ret = advk_pcie_enable_phy(pcie);
-+	if (ret)
-+		return ret;
-+
-+	advk_pcie_setup_hw(pcie);
-+
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops advk_pcie_dev_pm_ops = {
-+	NOIRQ_SYSTEM_SLEEP_PM_OPS(advk_pcie_suspend, advk_pcie_resume)
-+};
-+
- static int advk_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -2167,6 +2200,7 @@ static struct platform_driver advk_pcie_driver = {
- 	.driver = {
- 		.name = "advk-pcie",
- 		.of_match_table = advk_pcie_of_match_table,
-+		.pm = &advk_pcie_dev_pm_ops,
- 	},
- 	.probe = advk_pcie_probe,
- 	.remove = advk_pcie_remove,
+-	/* Set Advanced Error Capabilities and Control PF0 register */
+-	reg = PCI_ERR_CAP_ECRC_GENC | PCI_ERR_CAP_ECRC_GENE |
+-	      PCI_ERR_CAP_ECRC_CHKC | PCI_ERR_CAP_ECRC_CHKE;
++	/* Enable generation and checking of ECRC on Root Bridge */
++	reg = advk_readl(pcie, PCIE_CORE_PCIERR_CAP + PCI_ERR_CAP);
++	reg |= PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE;
+ 	advk_writel(pcie, reg, PCIE_CORE_PCIERR_CAP + PCI_ERR_CAP);
+ 
+ 	/* Set PCIe Device Control register */
 -- 
 2.35.1
 
