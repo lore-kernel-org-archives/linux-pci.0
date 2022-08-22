@@ -2,51 +2,50 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C37BC32792
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 18:49:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F941C3F6B0
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 18:49:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237853AbiHVStT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Aug 2022 14:49:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57208 "EHLO
+        id S237860AbiHVStU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Aug 2022 14:49:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237468AbiHVSsW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2022 14:48:22 -0400
+        with ESMTP id S237587AbiHVSsX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2022 14:48:23 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4AA363C16F;
-        Mon, 22 Aug 2022 11:47:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BA0534A832;
+        Mon, 22 Aug 2022 11:47:43 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id CF30DDA5;
-        Mon, 22 Aug 2022 21:50:54 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com CF30DDA5
+        by mail.baikalelectronics.com (Postfix) with ESMTP id D54A1DAC;
+        Mon, 22 Aug 2022 21:50:46 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com D54A1DAC
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1661194254;
-        bh=C8Sh1NFPmgJz0kT47sHrGXa63gzAbQ9yj6OMhQ2vQjQ=;
+        d=baikalelectronics.ru; s=mail; t=1661194246;
+        bh=1ZRqd/btC6EWjWyWRzbEbMh2qTwX0mhDhchvD7FViJI=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=YuRbcHKonXrg3M50SqChGxvFeSQr8hFe0SyqBE56kwtgG0RKOXyc+5MbwMHVeCQUu
-         Ki3t/k7FJ94zUKiNl+hV8bmcjwht47LI9OjtFvyUFhXMpW53TckEQkYAGwtbj3qlmp
-         rDZoZmQA0e/hDi3Vx8P+DIjmgRh87c3ndNRsKfYc=
+        b=WUNGqeP9Dv0JF4LVybtYnMbEz5Ip0yP4ODrNB3klvu0jU/0k8GE9AXNfpisKjOm/g
+         eCOPy66nkVabgDEkcuYOyXsVKQc0AA8LQTJmUbuvVNx4VuHEgYweGllnnQ5ZsjbK2x
+         ujpvKkF/FKtwm9K5WAbR1FnMBA4IHd+XFlfK8c08=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 22 Aug 2022 21:47:40 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 22 Aug 2022 21:47:32 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v5 19/20] PCI: dwc: Introduce generic platform clocks and resets
-Date:   Mon, 22 Aug 2022 21:47:00 +0300
-Message-ID: <20220822184701.25246-20-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v5 09/20] dt-bindings: PCI: dwc: Add interrupts/interrupt-names common properties
+Date:   Mon, 22 Aug 2022 21:46:50 +0300
+Message-ID: <20220822184701.25246-10-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -57,289 +56,235 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently almost each platform driver uses its own resets and clocks
-naming in order to get the corresponding descriptors. It makes the code
-harder to maintain and comprehend especially seeing the DWC PCIe core main
-resets and clocks signals set hasn't changed much for about at least one
-major IP-core release. So in order to organize things around these signals
-we suggest to create a generic interface for them in accordance with the
-naming introduced in the DWC PCIe IP-core reference manual:
+Currently the 'interrupts' and 'interrupt-names' are defined being too
+generic to really describe any actual IRQ interface. Moreover the DW PCIe
+End-point devices are left with no IRQ signals. All of that can be fixed
+by adding the IRQ-related properties to the common DW PCIe DT-schema and
+defining a common and device-specific set of the IRQ names in accordance
+with the hardware reference manual. Seeing there are common and dedicated
+IRQ signals for DW PCIe Root Port and End-point controllers we suggest to
+split the IRQ names up into two sets: common definitions available in the
+snps,dw-pcie-common.yaml schema and Root Port specific names defined in
+the snps,dw-pcie.yaml schema. The former one will be applied to both DW
+PCIe RP and EP controllers, while the later one - for the RP only.
 
-Application clocks:
-- "dbi"  - data bus interface clock (on some DWC PCIe platforms it's
-           referred as "pclk", "pcie", "sys", "ahb", "cfg", "iface",
-           "gio", "reg", "pcie_apb_sys");
-- "mstr" - AXI-bus master interface clock (some DWC PCIe glue drivers
-           refer to this clock as "port", "bus", "pcie_bus",
-           "bus_master/master_bus/axi_m", "pcie_aclk");
-- "slv"  - AXI-bus slave interface clock (also called as "port", "bus",
-           "pcie_bus", "bus_slave/slave_bus/axi_s", "pcie_aclk",
-           "pcie_inbound_axi").
-
-Core clocks:
-- "pipe" - core-PCS PIPE interface clock coming from external PHY (it's
-           normally named by the platform drivers as just "pipe");
-- "core" - primary clock of the controller (none of the platform drivers
-           declare such a clock but in accordance with the ref. manual
-           the devices may have it separately specified);
-- "aux"  - auxiliary PMC domain clock (it is named by some platforms as
-           "pcie_aux" and just "aux");
-- "ref"  - Generic reference clock (it is a generic clock source, which
-           can be used as a signal source for multiple interfaces, some
-           platforms call it as "ref", "general", "pcie_phy",
-           "pcie_phy_ref").
-
-Application resets:
-- "dbi"  - Data-bus interface reset (it's CSR interface clock and is
-           normally called as "apb" though technically it's not APB but
-           DWC PCIe-specific interface);
-- "mstr" - AXI-bus master reset (some platforms call it as "port", "apps",
-           "bus", "axi_m");
-- "slv"  - ABI-bus slave reset (some platforms call it as "port", "apps",
-           "bus", "axi_s").
-
-Core resets:
-- "non-sticky" - non-sticky CSR flags reset;
-- "sticky"     - sticky CSR flags reset;
-- "pipe"       - PIPE-interface (Core-PCS) logic reset (some platforms
-                 call it just "pipe");
-- "core"       - controller primary reset (resets everything except PMC
-                 module, some platforms refer to this signal as "soft",
-                 "pci");
-- "phy"        - PCS/PHY block reset (strictly speaking it is normally
-                 connected to the input of an external block, but the
-                 reference manual says it must be available for the PMC
-                 working correctly, some existing platforms call it
-                 "pciephy", "phy", "link");
-- "hot"        - PMC hot reset signal (also called as "sleep");
-- "pwr"        - cold reset signal (can be referred as "pwr", "turnoff").
-
-Bus reset:
-- "perst" - PCIe standard signal used to reset the PCIe peripheral
-            devices.
-
-As you can see each platform uses it's own naming for basically the same
-set of the signals. In the framework of this commit we suggest to add a
-set of the clocks and reset signals resources, corresponding names and
-identifiers for each denoted entity. At current stage the platforms will
-be able to use the provided infrastructure to automatically request all
-these resources and manipulate with them in the Host/EP init callbacks.
-Alas it isn't that easy to create a common cold/hot reset procedure due to
-too many platform-specifics in the procedure, like the external flags
-exposure and the delays requirement.
+Note since there are DW PCI-based vendor-specific DT-bindings with the
+custom names assigned to the same IRQ resources we have no much choice but
+to add them to the generic DT-schemas in order to have the schemas being
+applicable for such devices. Let's mark these names as deprecated so not
+to encourage the new DT-bindings to use them.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
 ---
 
 Changelog v3:
-- Add a method to at least request the generic clocks and resets. (@Rob)
-- Add GPIO-based PERST# signal support.
----
- drivers/pci/controller/dwc/pcie-designware.c | 91 ++++++++++++++++++++
- drivers/pci/controller/dwc/pcie-designware.h | 42 +++++++++
- 2 files changed, 133 insertions(+)
+- This is a new patch unpinned from the next one:
+  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
+  by the Rob' request. (@Rob)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index d31f9d41d5cb..1e06ccf2dc9e 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -10,7 +10,9 @@
+Changelog v5:
+- Add platform-specific interrupt names, but mark them as deprecated.
+---
+ .../bindings/pci/snps,dw-pcie-common.yaml     | 51 ++++++++++++++
+ .../bindings/pci/snps,dw-pcie-ep.yaml         | 17 +++++
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml | 67 ++++++++++++++++++-
+ 3 files changed, 132 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+index 5fc704138677..1b0ed8f4db6c 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+@@ -17,6 +17,25 @@ description:
+ select: false
  
- #include <linux/align.h>
- #include <linux/bitops.h>
-+#include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/ioport.h>
- #include <linux/of.h>
- #include <linux/of_platform.h>
-@@ -20,11 +22,89 @@
- #include "../../pci.h"
- #include "pcie-designware.h"
+ properties:
++  interrupts:
++    description:
++      There are two main sub-blocks which are normally capable of
++      generating interrupts. It's System Information Interface and MSI
++      interface. While the former one has some common for the Host and
++      Endpoint controllers IRQ-signals, the later interface is obviously
++      Root Complex specific since it's responsible for the incoming MSI
++      messages signalling. The System Information IRQ signals are mainly
++      responsible for reporting the generic PCIe hierarchy and Root
++      Complex events like VPD IO request, general AER, PME, Hot-plug, link
++      bandwidth change, link equalization request, INTx asserted/deasserted
++      Message detection, embedded DMA Tx/Rx/Error.
++    minItems: 1
++    maxItems: 26
++
++  interrupt-names:
++    minItems: 1
++    maxItems: 26
++
+   phys:
+     description:
+       There can be up to the number of possible lanes PHYs specified placed in
+@@ -95,4 +114,36 @@ properties:
  
-+static const char * const dw_pcie_app_clks[DW_PCIE_NUM_APP_CLKS] = {
-+	[DW_PCIE_DBI_CLK] = "dbi",
-+	[DW_PCIE_MSTR_CLK] = "mstr",
-+	[DW_PCIE_SLV_CLK] = "slv",
-+};
-+
-+static const char * const dw_pcie_core_clks[DW_PCIE_NUM_CORE_CLKS] = {
-+	[DW_PCIE_PIPE_CLK] = "pipe",
-+	[DW_PCIE_CORE_CLK] = "core",
-+	[DW_PCIE_AUX_CLK] = "aux",
-+	[DW_PCIE_REF_CLK] = "ref",
-+};
-+
-+static const char * const dw_pcie_app_rsts[DW_PCIE_NUM_APP_RSTS] = {
-+	[DW_PCIE_DBI_RST] = "dbi",
-+	[DW_PCIE_MSTR_RST] = "mstr",
-+	[DW_PCIE_SLV_RST] = "slv",
-+};
-+
-+static const char * const dw_pcie_core_rsts[DW_PCIE_NUM_CORE_RSTS] = {
-+	[DW_PCIE_NON_STICKY_RST] = "non-sticky",
-+	[DW_PCIE_STICKY_RST] = "sticky",
-+	[DW_PCIE_CORE_RST] = "core",
-+	[DW_PCIE_PIPE_RST] = "pipe",
-+	[DW_PCIE_PHY_RST] = "phy",
-+	[DW_PCIE_HOT_RST] = "hot",
-+	[DW_PCIE_PWR_RST] = "pwr",
-+};
-+
-+static int dw_pcie_get_clocks(struct dw_pcie *pci)
-+{
-+	int i, ret;
-+
-+	for (i = 0; i < DW_PCIE_NUM_APP_CLKS; i++)
-+		pci->app_clks[i].id = dw_pcie_app_clks[i];
-+
-+	for (i = 0; i < DW_PCIE_NUM_CORE_CLKS; i++)
-+		pci->core_clks[i].id = dw_pcie_core_clks[i];
-+
-+	ret = devm_clk_bulk_get_optional(pci->dev, DW_PCIE_NUM_APP_CLKS,
-+					 pci->app_clks);
-+	if (ret)
-+		return ret;
-+
-+	return devm_clk_bulk_get_optional(pci->dev, DW_PCIE_NUM_CORE_CLKS,
-+					  pci->core_clks);
-+}
-+
-+static int dw_pcie_get_resets(struct dw_pcie *pci)
-+{
-+	int i, ret;
-+
-+	for (i = 0; i < DW_PCIE_NUM_APP_RSTS; i++)
-+		pci->app_rsts[i].id = dw_pcie_app_rsts[i];
-+
-+	for (i = 0; i < DW_PCIE_NUM_CORE_RSTS; i++)
-+		pci->core_rsts[i].id = dw_pcie_core_rsts[i];
-+
-+	ret = devm_reset_control_bulk_get_optional_shared(pci->dev,
-+							  DW_PCIE_NUM_APP_RSTS,
-+							  pci->app_rsts);
-+	if (ret)
-+		return ret;
-+
-+	ret = devm_reset_control_bulk_get_optional_exclusive(pci->dev,
-+							     DW_PCIE_NUM_CORE_RSTS,
-+							     pci->core_rsts);
-+	if (ret)
-+		return ret;
-+
-+	pci->pe_rst = devm_gpiod_get_optional(pci->dev, "reset", GPIOD_OUT_HIGH);
-+	if (IS_ERR(pci->pe_rst))
-+		return PTR_ERR(pci->pe_rst);
-+
-+	return 0;
-+}
-+
- int dw_pcie_get_resources(struct dw_pcie *pci)
- {
- 	struct platform_device *pdev = to_platform_device(pci->dev);
- 	struct device_node *np = dev_of_node(pci->dev);
- 	struct resource *res;
-+	int ret;
+ additionalProperties: true
  
- 	if (!pci->dbi_base) {
- 		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-@@ -62,6 +142,17 @@ int dw_pcie_get_resources(struct dw_pcie *pci)
- 	if (!pci->atu_size)
- 		pci->atu_size = SZ_4K;
- 
-+	/* LLDD is supposed to manually switch the clocks and resets state */
-+	if (dw_pcie_cap_is(pci, REQ_RES)) {
-+		ret = dw_pcie_get_clocks(pci);
-+		if (ret)
-+			return ret;
++definitions:
++  interrupt-names:
++    description:
++      IRQ signal names common for the DWC PCIe Root Port and Endpoint
++      controllers.
++    oneOf:
++      - description:
++          Controller request to read or write virtual product data
++          from/to the VPD capability registers.
++        const: vpd
++      - description:
++          Link Equalization Request flag is set in the Link Status 2
++          register (applicable if the corresponding IRQ is enabled in
++          the Link Control 3 register).
++        const: l_eq
++      - description:
++          Indicates that the eDMA Tx/Rx transfer is complete or that an
++          error has occurred on the corresponding channel. eDMA can have
++          eight Tx (Write) and Rx (Read) eDMA channels thus supporting up
++          to 16 IRQ signals all together. Write eDMA channels shall go
++          first in the ordered row as per default edma_int[*] bus setup.
++        pattern: '^dma([0-9]|1[0-5])?$'
++      - description:
++          PCIe protocol correctable error or a Data Path protection
++          correctable error is detected by the automotive/safety
++          feature.
++        const: sft_ce
++      - description:
++          Indicates that the internal safety mechanism detected and
++          uncorrectable error.
++        const: sft_ue
 +
-+		ret = dw_pcie_get_resets(pci);
-+		if (ret)
-+			return ret;
-+	}
+ ...
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index 71dd19ae1060..a9e77339c3ff 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -41,6 +41,20 @@ properties:
+     items:
+       enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
+ 
++  interrupts:
++    description:
++      There is no mandatory IRQ signals for the normal controller functioning,
++      but in addition to the native set the platforms may have a link- or
++      PM-related IRQs specified.
++    minItems: 1
++    maxItems: 20
 +
- 	if (pci->link_gen < 1)
- 		pci->link_gen = of_pci_get_max_link_speed(np);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index d96c888f23ca..f5530069a204 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -13,10 +13,13 @@
- 
- #include <linux/bitfield.h>
- #include <linux/bitops.h>
-+#include <linux/clk.h>
- #include <linux/dma-mapping.h>
-+#include <linux/gpio/consumer.h>
- #include <linux/irq.h>
- #include <linux/msi.h>
- #include <linux/pci.h>
-+#include <linux/reset.h>
- 
- #include <linux/pci-epc.h>
- #include <linux/pci-epf.h>
-@@ -45,6 +48,7 @@
- 	 __dw_pcie_ver_cmp(_pci, TYPE_ ## _type, >=))
- 
- /* DWC PCIe controller capabilities */
-+#define DW_PCIE_CAP_REQ_RES		0
- #define DW_PCIE_CAP_IATU_UNROLL		1
- #define DW_PCIE_CAP_CDM_CHECK		2
- 
-@@ -233,6 +237,39 @@ enum dw_pcie_device_mode {
- 	DW_PCIE_RC_TYPE,
- };
- 
-+enum dw_pcie_app_clk {
-+	DW_PCIE_DBI_CLK,
-+	DW_PCIE_MSTR_CLK,
-+	DW_PCIE_SLV_CLK,
-+	DW_PCIE_NUM_APP_CLKS
-+};
++  interrupt-names:
++    minItems: 1
++    maxItems: 20
++    items:
++      $ref: /schemas/pci/snps,dw-pcie-common.yaml#/definitions/interrupt-names
 +
-+enum dw_pcie_core_clk {
-+	DW_PCIE_PIPE_CLK,
-+	DW_PCIE_CORE_CLK,
-+	DW_PCIE_AUX_CLK,
-+	DW_PCIE_REF_CLK,
-+	DW_PCIE_NUM_CORE_CLKS
-+};
-+
-+enum dw_pcie_app_rst {
-+	DW_PCIE_DBI_RST,
-+	DW_PCIE_MSTR_RST,
-+	DW_PCIE_SLV_RST,
-+	DW_PCIE_NUM_APP_RSTS
-+};
-+
-+enum dw_pcie_core_rst {
-+	DW_PCIE_NON_STICKY_RST,
-+	DW_PCIE_STICKY_RST,
-+	DW_PCIE_CORE_RST,
-+	DW_PCIE_PIPE_RST,
-+	DW_PCIE_PHY_RST,
-+	DW_PCIE_HOT_RST,
-+	DW_PCIE_PWR_RST,
-+	DW_PCIE_NUM_CORE_RSTS
-+};
-+
- struct dw_pcie_host_ops {
- 	int (*host_init)(struct dw_pcie_rp *pp);
- 	void (*host_deinit)(struct dw_pcie_rp *pp);
-@@ -333,6 +370,11 @@ struct dw_pcie {
- 	int			num_lanes;
- 	int			link_gen;
- 	u8			n_fts[2];
-+	struct clk_bulk_data	app_clks[DW_PCIE_NUM_APP_CLKS];
-+	struct clk_bulk_data	core_clks[DW_PCIE_NUM_CORE_CLKS];
-+	struct reset_control_bulk_data	app_rsts[DW_PCIE_NUM_APP_RSTS];
-+	struct reset_control_bulk_data	core_rsts[DW_PCIE_NUM_CORE_RSTS];
-+	struct gpio_desc		*pe_rst;
- };
+   max-functions:
+     maximum: 32
  
- #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
+@@ -60,6 +74,9 @@ examples:
+             <0xd0000000 0x2000000>; /* Configuration space */
+       reg-names = "dbi", "dbi2", "addr_space";
+ 
++      interrupts = <23>, <24>;
++      interrupt-names = "dma0", "dma1";
++
+       phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
+       phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
+ 
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 85861b71d9ff..3e46f74a591a 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -42,9 +42,27 @@ properties:
+       enum: [ dbi, dbi2, config, atu, atu_dma, app, appl, elbi, mgmt, ctrl,
+               parf, cfg, link, ulreg, smu, mpu, apb, phy ]
+ 
+-  interrupts: true
+-
+-  interrupt-names: true
++  interrupts:
++    description:
++      At least MSI interrupt signal is supposed to be specified for
++      the DWC PCIe host controller.
++    minItems: 1
++    maxItems: 26
++
++  interrupt-names:
++    minItems: 1
++    maxItems: 26
++    items:
++      oneOf:
++        - $ref: /schemas/pci/snps,dw-pcie-common.yaml#/definitions/interrupt-names
++        - $ref: '#/definitions/interrupt-names'
++        - deprecated: true
++          oneOf:
++            - description: See native "msi" IRQ for details
++              enum: [ intr ]
++    allOf:
++      - contains:
++          const: msi
+ 
+   clocks: true
+ 
+@@ -55,6 +73,48 @@ required:
+   - reg
+   - reg-names
+ 
++definitions:
++  interrupt-names:
++    description:
++      DWC PCIe Root Port/Complex specific IRQ signal names.
++    oneOf:
++      - description:
++          DSP AXI MSI Interrupt detected. It gets de-asserted when there is
++          no more MSI interrupt pending. The interrupt is relevant to the
++          iMSI-RX - Integrated MSI Receiver (AXI bridge).
++        const: msi
++      - description:
++          Legacy A/B/C/D interrupt signal. Basically it's triggered by
++          receiving a Assert_INT{A,B,C,D}/Desassert_INT{A,B,C,D} message
++          from the downstream device.
++        pattern: "^int(a|b|c|d)$"
++      - description:
++          Error condition detected and a bit is set in the Root Error Status
++          register of the AER capability. It's asserted when the RC
++          internally generated an error or an error message is received by
++          the RC.
++        const: aer
++      - description:
++          PME message is received by the port. That means having the PME
++          status bit set in the Root Status register (the event is
++          supposed to be unmasked in the Root Control register).
++        const: pme
++      - description:
++          Hot-plug event is detected. That is a bit has been set in the
++          Slot Status register and the corresponding event is enabled in
++          the Slot Control register.
++        const: hp
++      - description:
++          Link Autonomous Bandwidth Status flag has been set in the Link
++          Status register (the event is supposed to be unmasked in the
++          Link Control register).
++        const: bw_au
++      - description:
++          Bandwidth Management Status flag has been set in the Link
++          Status register (the event is supposed to be unmasked in the
++          Link Control register).
++        const: bw_mg
++
+ examples:
+   - |
+     pcie@dfc00000 {
+@@ -70,6 +130,7 @@ examples:
+       bus-range = <0x0 0xff>;
+ 
+       interrupts = <25>, <24>;
++      interrupt-names = "msi", "hp";
+       #interrupt-cells = <1>;
+ 
+       reset-gpios = <&port0 0 1>;
 -- 
 2.35.1
 
