@@ -2,51 +2,50 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8E0BC3F6B0
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 18:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BA0C32789
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 18:49:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237812AbiHVStL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Aug 2022 14:49:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54738 "EHLO
+        id S237823AbiHVStM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Aug 2022 14:49:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237698AbiHVSsM (ORCPT
+        with ESMTP id S237703AbiHVSsM (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2022 14:48:12 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 790AB24F2E;
-        Mon, 22 Aug 2022 11:47:52 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1417749B73;
+        Mon, 22 Aug 2022 11:47:39 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id 1E4C5DA4;
-        Mon, 22 Aug 2022 21:50:54 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 1E4C5DA4
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 31B01DA9;
+        Mon, 22 Aug 2022 21:50:45 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 31B01DA9
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1661194254;
-        bh=WT5RHILejfotZ238xy1IN0z+UtE1d8MWmFYTuBK7tos=;
+        d=baikalelectronics.ru; s=mail; t=1661194245;
+        bh=01sgRfAC3h/M1bbjqw+cS58MAG3eTq2dWGnLa4lwWFY=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=btHSZPIT3BZ+CSTJR84ZcAdqWnIlMxw29hnRYLuhtXiw/pew7zQHKzXaD5oDvhsoz
-         m/WYfJRB5fjYnOsa6fZV60w/oQKYSm0tyemiAXY2chTlGESUATjzhQUZh6E05F5mWa
-         VrdVJ4/fYpQE3OTF2VlrsAscr+bnb4eHem+yUsuA=
+        b=hV5KgS7M01lNIEKnE+MNjhDRgzqM4OykrbLEuBKMJ9HDRzpc481tGuCkDVGl1ChtL
+         eTxkmkIbFyMkhZOhvjdg2pF+aUldfILWvmmVCKA0T6nGmSmSJYWu2YWmvAvVWjnZUq
+         EIrBVymSNzddNkrYwVyp3nGLkuYtOPRNVBh0nZMQ=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 22 Aug 2022 21:47:39 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 22 Aug 2022 21:47:30 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v5 18/20] PCI: dwc: Combine iATU detection procedures
-Date:   Mon, 22 Aug 2022 21:46:59 +0300
-Message-ID: <20220822184701.25246-19-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v5 07/20] dt-bindings: PCI: dwc: Apply generic schema for generic device only
+Date:   Mon, 22 Aug 2022 21:46:48 +0300
+Message-ID: <20220822184701.25246-8-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -57,89 +56,122 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since the iATU CSR region is now retrieved in the DW PCIe resources getter
-there is no much benefits in the iATU detection procedures splitting up.
-Therefore let's join the iATU unroll/viewport detection procedure with the
-rest of the iATU parameters detection code. The resultant method will be
-as coherent as before, while the redundant functions will be eliminated
-thus producing more readable code.
+Having the generic compatible strings constraints with the 'any'+'generic
+string' semantic implicitly encourages either to add new DW PCIe-based
+DT-bindings with the generic compatible string attached or just forget
+about adding new DT-bindings since the corresponding DT-node will be
+evaluated anyway. Moreover having that semantic implemented in the
+generic DT-schema causes the DT-validation tool to apply the schema twice:
+first by implicit compatible-string-based selection and second by means of
+the 'allOf: [ $ref ]' statement. Let's fix all of that by dropping the
+compatible property constraints and selecting the generic DT-schema only
+for the purely generic DW PCIe DT-nodes. The later is required since there
+is a driver for such devices. (Though there are no such DT-nodes currently
+defined in the kernel DT sources.)
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Rob Herring <robh@kernel.org>
 
 ---
 
 Changelog v3:
-- This is a new patch created on v3 lap of the series.
----
- drivers/pci/controller/dwc/pcie-designware.c | 39 +++++---------------
- 1 file changed, 10 insertions(+), 29 deletions(-)
+- This is a new patch unpinned from the next one:
+  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
+  by the Rob' request. (@Rob)
+- Fix compatible property schema so one would work as expected: string
+  must contain either generic DW PCIe IP-core name or both generic and
+  equipped with IP-core version names.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index a8436027434d..d31f9d41d5cb 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -628,26 +628,21 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+Changelog v5:
+- Switch the patch from not-selecting the generic schemas to applying
+  them to the generic DW PCIe device nodes only.
+- Drop the generic compatible string used as fallback. (@Rob)
+---
+ .../devicetree/bindings/pci/snps,dw-pcie-ep.yaml | 16 ++++++++++------
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml    | 16 ++++++++++------
+ 2 files changed, 20 insertions(+), 12 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index fc3b5d4ac245..d04001248b53 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -13,16 +13,20 @@ maintainers:
+ description: |
+   Synopsys DesignWare PCIe host controller endpoint
  
- }
- 
--static bool dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
--{
--	u32 val;
--
--	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
--	if (val == 0xffffffff)
--		return true;
--
--	return false;
--}
--
--static void dw_pcie_iatu_detect_regions(struct dw_pcie *pci)
-+void dw_pcie_iatu_detect(struct dw_pcie *pci)
- {
- 	int max_region, ob, ib;
- 	u32 val, min, dir;
- 	u64 max;
- 
--	if (dw_pcie_cap_is(pci, IATU_UNROLL)) {
-+	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
-+	if (val == 0xFFFFFFFF) {
-+		dw_pcie_cap_set(pci, IATU_UNROLL);
++# Please create a separate DT-schema for your DWC PCIe Endpoint controller
++# and make sure it's assigned with the vendor-specific compatible string.
++select:
++  properties:
++    compatible:
++      const: snps,dw-pcie-ep
++  required:
++    - compatible
 +
- 		max_region = min((int)pci->atu_size / 512, 256);
- 	} else {
-+		pci->atu_base = pci->dbi_base + PCIE_ATU_VIEWPORT_BASE;
-+		pci->atu_size = PCIE_ATU_VIEWPORT_SIZE;
-+
- 		dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, 0xFF);
- 		max_region = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT) + 1;
- 	}
-@@ -689,23 +684,9 @@ static void dw_pcie_iatu_detect_regions(struct dw_pcie *pci)
- 	pci->num_ib_windows = ib;
- 	pci->region_align = 1 << fls(min);
- 	pci->region_limit = (max << 32) | (SZ_4G - 1);
--}
--
--void dw_pcie_iatu_detect(struct dw_pcie *pci)
--{
--	if (dw_pcie_iatu_unroll_enabled(pci)) {
--		dw_pcie_cap_set(pci, IATU_UNROLL);
--	} else {
--		pci->atu_base = pci->dbi_base + PCIE_ATU_VIEWPORT_BASE;
--		pci->atu_size = PCIE_ATU_VIEWPORT_SIZE;
--	}
--
--	dw_pcie_iatu_detect_regions(pci);
--
--	dev_info(pci->dev, "iATU unroll: %s\n", dw_pcie_cap_is(pci, IATU_UNROLL) ?
--		"enabled" : "disabled");
+ allOf:
+   - $ref: /schemas/pci/pci-ep.yaml#
+   - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
  
--	dev_info(pci->dev, "iATU regions: %u ob, %u ib, align %uK, limit %lluG\n",
-+	dev_info(pci->dev, "iATU: unroll %s, %u ob, %u ib, align %uK, limit %lluG\n",
-+		 dw_pcie_cap_is(pci, IATU_UNROLL) ? "T" : "F",
- 		 pci->num_ob_windows, pci->num_ib_windows,
- 		 pci->region_align / SZ_1K, (pci->region_limit + 1) / SZ_1G);
- }
+ properties:
+-  compatible:
+-    anyOf:
+-      - {}
+-      - const: snps,dw-pcie-ep
+-
+   reg:
+     description: |
+       It should contain Data Bus Interface (dbi) and config registers for all
+@@ -38,9 +42,9 @@ properties:
+       enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
+ 
+ required:
++  - compatible
+   - reg
+   - reg-names
+-  - compatible
+ 
+ additionalProperties: true
+ 
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index e787b9727589..85861b71d9ff 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -13,16 +13,20 @@ maintainers:
+ description: |
+   Synopsys DesignWare PCIe host controller
+ 
++# Please create a separate DT-schema for your DWC PCIe Root Port controller
++# and make sure it's assigned with the vendor-specific compatible string.
++select:
++  properties:
++    compatible:
++      const: snps,dw-pcie
++  required:
++    - compatible
++
+ allOf:
+   - $ref: /schemas/pci/pci-bus.yaml#
+   - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
+ 
+ properties:
+-  compatible:
+-    anyOf:
+-      - {}
+-      - const: snps,dw-pcie
+-
+   reg:
+     description: |
+       It should contain Data Bus Interface (dbi) and config registers for all
+@@ -47,9 +51,9 @@ properties:
+ additionalProperties: true
+ 
+ required:
++  - compatible
+   - reg
+   - reg-names
+-  - compatible
+ 
+ examples:
+   - |
 -- 
 2.35.1
 
