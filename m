@@ -2,40 +2,40 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE85EC3F6B0
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 00:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 427FCC32774
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 00:53:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232138AbiHVAwo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 21 Aug 2022 20:52:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55258 "EHLO
+        id S231976AbiHVAxH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 21 Aug 2022 20:53:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231976AbiHVAwn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 Aug 2022 20:52:43 -0400
-Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC44B205DC;
-        Sun, 21 Aug 2022 17:52:41 -0700 (PDT)
+        with ESMTP id S232156AbiHVAxF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 Aug 2022 20:53:05 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04E65205E8;
+        Sun, 21 Aug 2022 17:53:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661129561; x=1692665561;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=3ajrhKAlyLex9P+GmLBl7RTGdiFSwUZrPHfyulLogHQ=;
-  b=Xp00l8gWc7bTrF43yUwvkPg0W/fWb1Hwi3hgEf9S4hFu07ABcNm+hlGa
-   9KP2gvRyrJbEfB6N8ITkz/s+NIUbQ6i1JxfJeBKJCj37yVDmLNVKHfwuQ
-   pNHeO0HcGHcFchZjx56XKKTBylZVECrKYlflkpr7G8afakeNBVhdWGpMv
-   tBAzNdXEx6ewlPaQj0Ir9AF9E0hpsTgEjV26mpLaZRwrIuZ3gQ29f4z2m
-   7piJ+fS5WLvEo8VFqythFaiPghPQ99NVkrbup0qW+cv8SM7RNf792Lvpa
-   6Fzc+7v+ZmjEcNOK65MbscCDnn5x032YVBUtmUZNNZ/4OVzI4D00a9nnr
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10446"; a="319325792"
+  t=1661129582; x=1692665582;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=vAVd2DD6t9I+Xtmsril7vUCCDTiDliFF7Nj/PCNMHkc=;
+  b=fuP2Arglkj/rrQtGKf67SibUIet0qRKeKRn1TD4oBkD8ukzGnZjVHxtP
+   1LWFzd0CCmQApoh2H/SmvW4/q2yYAHS9SFPEKROTbaDiamkzO69jNlN+4
+   Qeu3ysQM1XhJ1BR8D5dCifbS+PPr+8UcZ8pZL7nssRxDC7+lOz823x8iB
+   R7/whcXs22UTrTEcPobKWyCXwIj9lza32H491S3dVBI89i/H+ihalysgC
+   AE0/CUmRPmh2J8O3dyFbCMNVFGMitTrULcvHkco//yZH8Anu2uc13xlyh
+   23B/EgkMVfNHEhrnAHWEOV0XC98I5U4zqdDYIxik00GTjYhy44PY+5laO
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10446"; a="294574753"
 X-IronPort-AV: E=Sophos;i="5.93,254,1654585200"; 
-   d="scan'208";a="319325792"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2022 17:52:41 -0700
+   d="scan'208";a="294574753"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2022 17:53:01 -0700
 X-IronPort-AV: E=Sophos;i="5.93,254,1654585200"; 
-   d="scan'208";a="784677829"
+   d="scan'208";a="669297118"
 Received: from iweiny-mobl.amr.corp.intel.com (HELO localhost) ([10.213.163.128])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2022 17:52:40 -0700
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2022 17:52:39 -0700
 From:   ira.weiny@intel.com
 To:     Dan Williams <dan.j.williams@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,12 +46,10 @@ Cc:     Ira Weiny <ira.weiny@intel.com>,
         Vishal Verma <vishal.l.verma@intel.com>,
         Ben Widawsky <bwidawsk@kernel.org>, linux-cxl@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] cxl/doe: Request exclusive DOE access
-Date:   Sun, 21 Aug 2022 20:52:37 -0400
-Message-Id: <20220822005237.540039-3-ira.weiny@intel.com>
+Subject: [PATCH 0/2] CXL: Taint user access to DOE mailbox config space
+Date:   Sun, 21 Aug 2022 20:52:35 -0400
+Message-Id: <20220822005237.540039-1-ira.weiny@intel.com>
 X-Mailer: git-send-email 2.37.2
-In-Reply-To: <20220822005237.540039-1-ira.weiny@intel.com>
-References: <20220822005237.540039-1-ira.weiny@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -60,47 +58,37 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-The PCIE Data Object Exchange (DOE) mailbox is a protocol run over
-configuration cycles.  It assumes one initiator at a time.  While the
-kernel has control of the mailbox user space writes could interfere with
-the kernel access.
+PCI config space access from user space has traditionally been unrestricted
+with writes being an understood risk for device operation.
 
-Mark DOE mailbox config space exclusive when iterated by the CXL driver.
+Unfortunately, device breakage or odd behavior from config writes lacks
+indicators that can leave driver writers confused when evaluating failures.
+This is especially true with the new PCIe Data Object Exchange (DOE) mailbox
+protocol where backdoor shenanigans from user space through things such as
+vendor defined protocols may affect device operation without complete breakage.
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- drivers/cxl/pci.c             | 5 +++++
- include/uapi/linux/pci_regs.h | 1 +
- 2 files changed, 6 insertions(+)
+Even though access should not be restricted it would be nice for driver writers
+to be able to flag critical parts of the config space such that interference
+from user space can be detected.
 
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index faeb5d9d7a7a..5b833eb91543 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -418,6 +418,11 @@ static void devm_cxl_pci_create_doe(struct cxl_dev_state *cxlds)
- 			continue;
- 		}
- 
-+		if (!pci_request_config_region_exclusive(pdev, off,
-+							 PCI_DOE_CAP_SIZE,
-+							 dev_name(dev)))
-+			pci_err(pdev, "Failed to exclude DOE registers\n");
-+
- 		if (xa_insert(&cxlds->doe_mbs, off, doe_mb, GFP_KERNEL)) {
- 			dev_err(dev, "xa_insert failed to insert MB @ %x\n",
- 				off);
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 57b8e2ffb1dd..f2396bcd09cc 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1119,6 +1119,7 @@
- #define  PCI_DOE_STATUS_DATA_OBJECT_READY	0x80000000  /* Data Object Ready */
- #define PCI_DOE_WRITE		0x10    /* DOE Write Data Mailbox Register */
- #define PCI_DOE_READ		0x14    /* DOE Read Data Mailbox Register */
-+#define PCI_DOE_CAP_SIZE	(0x14 + 4)	/* Size of this register block */
- 
- /* DOE Data Object - note not actually registers */
- #define PCI_DOE_DATA_OBJECT_HEADER_1_VID		0x0000ffff
+Introduce pci_request_config_region_exclusive() and use it in the CXL driver
+for DOE config space.
+
+Ira Weiny (2):
+  PCI: Allow drivers to request exclusive config regions
+  cxl/doe: Request exclusive DOE access
+
+ drivers/cxl/pci.c             |  5 +++++
+ drivers/pci/pci-sysfs.c       |  6 ++++++
+ drivers/pci/probe.c           |  6 ++++++
+ include/linux/ioport.h        |  2 ++
+ include/linux/pci.h           | 16 ++++++++++++++++
+ include/uapi/linux/pci_regs.h |  1 +
+ kernel/resource.c             | 13 ++++++++-----
+ 7 files changed, 44 insertions(+), 5 deletions(-)
+
+
+base-commit: 1cd8a2537eb07751d405ab7e2223f20338a90506
 -- 
 2.37.2
 
