@@ -2,150 +2,181 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0BCC32792
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 21:33:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A05F1C32792
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 21:57:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237335AbiHVVdU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Aug 2022 17:33:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55336 "EHLO
+        id S235042AbiHVV53 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Aug 2022 17:57:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236898AbiHVVdT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2022 17:33:19 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E4F6259;
-        Mon, 22 Aug 2022 14:33:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661203995; x=1692739995;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=KAwOGc5/RlMiec7gexR6wehKS1gvBgI3uejZUSQuJmc=;
-  b=n2ZrkOv+IbtOJRCBASy2ucqN+pYxo4S07sQr0hOS9ylMzjU5Xpwoc4VY
-   ygZMf8+/ztmev/XoFBgujat1L4fO2gltKWXdf9UKs+IlE9n9Q/HlifKFZ
-   Paqjh/XRhbD8/+62xEsRWdkZuOx7trd4LUahwCIpL7DHWGca2Kuqi8O4O
-   TpslBXRxaBmOHf7RyLV69rbGLkcM7xi0CsGEecK779MKP0an8lHKR/2gG
-   Z2njnsdMq7NRuF1c9WIlbH4J/hS3Iv5vOJyu0PS5RjMkoQxkPyzhHAuFe
-   qNNYjKvdig6HkN3KSOo/R9NO9UiX0w9nbT/583QGX01aMOAiLaVEB41RV
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10447"; a="355254843"
-X-IronPort-AV: E=Sophos;i="5.93,255,1654585200"; 
-   d="scan'208";a="355254843"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2022 14:33:14 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.93,255,1654585200"; 
-   d="scan'208";a="698435678"
-Received: from lkp-server01.sh.intel.com (HELO dd9b29378baa) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 22 Aug 2022 14:33:09 -0700
-Received: from kbuild by dd9b29378baa with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1oQF2i-0000jv-2J;
-        Mon, 22 Aug 2022 21:33:08 +0000
-Date:   Tue, 23 Aug 2022 05:32:54 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Frank Li <Frank.Li@nxp.com>, maz@kernel.org, tglx@linutronix.de,
-        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        shawnguo@kernel.org, s.hauer@pengutronix.de, kw@linux.com,
-        bhelgaas@google.com
-Cc:     kbuild-all@lists.01.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org, peng.fan@nxp.com, aisheng.dong@nxp.com,
-        jdmason@kudzu.us, kernel@pengutronix.de, festevam@gmail.com,
-        linux-imx@nxp.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
-        ntb@lists.linux.dev, lznuaa@gmail.com
-Subject: Re: [PATCH v7 4/4] PCI: endpoint: Add NTB MSI support
-Message-ID: <202208230543.fAaLXJy7-lkp@intel.com>
-References: <20220822155130.2491006-5-Frank.Li@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220822155130.2491006-5-Frank.Li@nxp.com>
+        with ESMTP id S230081AbiHVV51 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2022 17:57:27 -0400
+Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B150564D7;
+        Mon, 22 Aug 2022 14:57:26 -0700 (PDT)
+Received: by mail-ot1-f44.google.com with SMTP id l5-20020a05683004a500b0063707ff8244so8609555otd.12;
+        Mon, 22 Aug 2022 14:57:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=message-id:date:subject:references:in-reply-to:cc:to:from
+         :x-gm-message-state:from:to:cc;
+        bh=PdkIZjhOP4TvDPaY2zDpfYtQ/nCjxN0inguu0eaL+7k=;
+        b=SDmI+fY5BG+lz/3qa7JBYVdSRWCydsPcpn+oKq5ZVE2E0usbnQtNh5xLAc2ZWF+oyV
+         vpxkAAsTVX1RGN3QoO8JRVRiRNTNXQ+RwQGbTT7MpPL8BUP/BawF+deqgMT3zvof7/s3
+         cN2JT1nPlQ4fGa9tJJ3lxPDrpK9xxXj8bEMm/U/OyZMpqLUzZ1dzFqYZ/Q7kQdj2d0n+
+         U8ZPndSMa4Hi3Y0maUFjZ7XP5dA/zjlF+Peoj7zri16pU4GxusNt6URcuvuFq0JlDfzA
+         R26kVysF1AbdoX/F8E0WxSqW5R0uLqHhkhVHJxZ8eOr0bF7gOITb7fs8jw4rtJw4QhMO
+         49zg==
+X-Gm-Message-State: ACgBeo182/UqY2ID0UnzS37y88WU7Nf35z2a1PMu6/1eG+0zWKYQ0bpN
+        F+B3qaESz4/tneTiDT0cmg==
+X-Google-Smtp-Source: AA6agR52en3TcgQx4Fip4edqZpW5gFrLNHJzUDABegYmD68NdwLiTxNk0/hdM4PuOU8NYhoOxWR33Q==
+X-Received: by 2002:a05:6830:1017:b0:637:163a:38db with SMTP id a23-20020a056830101700b00637163a38dbmr8148680otp.89.1661205445272;
+        Mon, 22 Aug 2022 14:57:25 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id y6-20020a056871010600b00118687c3907sm3176119oab.24.2022.08.22.14.57.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 22 Aug 2022 14:57:24 -0700 (PDT)
+Received: (nullmailer pid 931362 invoked by uid 1000);
+        Mon, 22 Aug 2022 21:57:24 -0000
+From:   Rob Herring <robh@kernel.org>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        linux-pci@vger.kernel.org, Frank Li <Frank.Li@nxp.com>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        linux-kernel@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        devicetree@vger.kernel.org,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
+In-Reply-To: <20220822184701.25246-6-Sergey.Semin@baikalelectronics.ru>
+References: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru> <20220822184701.25246-6-Sergey.Semin@baikalelectronics.ru>
+Subject: Re: [PATCH v5 05/20] dt-bindings: PCI: dwc: Add phys/phy-names common properties
+Date:   Mon, 22 Aug 2022 16:57:24 -0500
+Message-Id: <1661205444.106003.931361.nullmailer@robh.at.kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Frank,
+On Mon, 22 Aug 2022 21:46:46 +0300, Serge Semin wrote:
+> It's normal to have the DW PCIe RP/EP DT-nodes equipped with the explicit
+> PHY phandle references. There can be up to 16 PHYs attach in accordance
+> with the maximum number of supported PCIe lanes. Let's extend the common
+> DW PCIe controller schema with the 'phys' and 'phy-names' properties
+> definition. The PHY names are defined with the regexp pattern
+> '^pcie([0-9]+|-?phy[0-9]*)?$' so to match the names currently supported by
+> the DW PCIe platform drivers ("pcie": meson; "pciephy": qcom, imx6;
+> "pcie-phy": uniphier, rockchip, spear13xx; "pcie": intel-gw; "pcie-phy%d":
+> keystone, dra7xx; "pcie": histb, etc). Though the "pcie%d" format would
+> the most preferable in this case.
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> 
+> ---
+> 
+> Changelog v3:
+> - This is a new patch unpinned from the next one:
+>   https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
+>   by the Rob' request. (@Rob)
+> 
+> Changelog v5:
+> - Add a note about having line-based PHY phandles order. (@Rob)
+> - Prefer 'pcie[0-9]+' PHY-names over the rest of the cases. (@Rob)
+> ---
+>  .../bindings/pci/snps,dw-pcie-common.yaml     | 19 +++++++++++++++++++
+>  .../bindings/pci/snps,dw-pcie-ep.yaml         |  3 +++
+>  .../devicetree/bindings/pci/snps,dw-pcie.yaml |  3 +++
+>  3 files changed, 25 insertions(+)
+> 
 
-I love your patch! Yet something to improve:
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
 
-[auto build test ERROR on jonmason-ntb/ntb-next]
-[also build test ERROR on robh/for-next linus/master v6.0-rc2 next-20220822]
-[cannot apply to tip/irq/core]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+yamllint warnings/errors:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Frank-Li/PCI-EP-driver-support-MSI-doorbell-from-host/20220822-235323
-base:   https://github.com/jonmason/ntb ntb-next
-config: microblaze-randconfig-r005-20220821 (https://download.01.org/0day-ci/archive/20220823/202208230543.fAaLXJy7-lkp@intel.com/config)
-compiler: microblaze-linux-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/d98704aefa5b57814d7b9b1b40160df34977b2b6
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Frank-Li/PCI-EP-driver-support-MSI-doorbell-from-host/20220822-235323
-        git checkout d98704aefa5b57814d7b9b1b40160df34977b2b6
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=microblaze SHELL=/bin/bash drivers/pci/endpoint/functions/
+dtschema/dtc warnings/errors:
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.example.dtb: pcie@14180000: phy-names: 'oneOf' conditional failed, one must be fixed:
+	'p2u-0' does not match '^pcie[0-9]+$'
+	'p2u-0' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-1' does not match '^pcie[0-9]+$'
+	'p2u-1' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-2' does not match '^pcie[0-9]+$'
+	'p2u-2' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-3' does not match '^pcie[0-9]+$'
+	'p2u-3' does not match '^pcie(-?phy[0-9]*)?$'
+	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.example.dtb: pcie@14180000: Unevaluated properties are not allowed ('#address-cells', '#interrupt-cells', '#size-cells', 'bus-range', 'device_type', 'interrupt-map', 'interrupt-map-mask', 'linux,pci-domain', 'num-lanes', 'ranges', 'supports-clkreq' were unexpected)
+	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.example.dtb: pcie@14160000: phy-names: 'oneOf' conditional failed, one must be fixed:
+	'p2u-0' does not match '^pcie[0-9]+$'
+	'p2u-0' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-1' does not match '^pcie[0-9]+$'
+	'p2u-1' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-2' does not match '^pcie[0-9]+$'
+	'p2u-2' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-3' does not match '^pcie[0-9]+$'
+	'p2u-3' does not match '^pcie(-?phy[0-9]*)?$'
+	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.example.dtb: pcie@14160000: Unevaluated properties are not allowed ('#address-cells', '#interrupt-cells', '#size-cells', 'bus-range', 'device_type', 'interrupt-map', 'interrupt-map-mask', 'linux,pci-domain', 'num-lanes', 'num-viewport', 'ranges' were unexpected)
+	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: phy-names: 'oneOf' conditional failed, one must be fixed:
+	'p2u-0' does not match '^pcie[0-9]+$'
+	'p2u-0' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-1' does not match '^pcie[0-9]+$'
+	'p2u-1' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-2' does not match '^pcie[0-9]+$'
+	'p2u-2' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-3' does not match '^pcie[0-9]+$'
+	'p2u-3' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-4' does not match '^pcie[0-9]+$'
+	'p2u-4' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-5' does not match '^pcie[0-9]+$'
+	'p2u-5' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-6' does not match '^pcie[0-9]+$'
+	'p2u-6' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-7' does not match '^pcie[0-9]+$'
+	'p2u-7' does not match '^pcie(-?phy[0-9]*)?$'
+	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: Unevaluated properties are not allowed ('num-lanes' was unexpected)
+	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: phy-names: 'oneOf' conditional failed, one must be fixed:
+	'p2u-0' does not match '^pcie[0-9]+$'
+	'p2u-0' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-1' does not match '^pcie[0-9]+$'
+	'p2u-1' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-2' does not match '^pcie[0-9]+$'
+	'p2u-2' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-3' does not match '^pcie[0-9]+$'
+	'p2u-3' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-4' does not match '^pcie[0-9]+$'
+	'p2u-4' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-5' does not match '^pcie[0-9]+$'
+	'p2u-5' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-6' does not match '^pcie[0-9]+$'
+	'p2u-6' does not match '^pcie(-?phy[0-9]*)?$'
+	'p2u-7' does not match '^pcie[0-9]+$'
+	'p2u-7' does not match '^pcie(-?phy[0-9]*)?$'
+	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
+/builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: Unevaluated properties are not allowed ('num-lanes' was unexpected)
+	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
 
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp@intel.com>
+doc reference errors (make refcheckdocs):
 
-All errors (new ones prefixed by >>):
+See https://patchwork.ozlabs.org/patch/
 
-   drivers/pci/endpoint/functions/pci-epf-vntb.c: In function 'epf_ntb_epc_msi_init':
->> drivers/pci/endpoint/functions/pci-epf-vntb.c:786:13: error: implicit declaration of function 'platform_msi_domain_alloc_irqs' [-Werror=implicit-function-declaration]
-     786 |         if (platform_msi_domain_alloc_irqs(&ntb->epf->dev,
-         |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   cc1: some warnings being treated as errors
+This check can fail if there are any dependencies. The base for a patch
+series is generally the most recent rc1.
 
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
 
-vim +/platform_msi_domain_alloc_irqs +786 drivers/pci/endpoint/functions/pci-epf-vntb.c
+pip3 install dtschema --upgrade
 
-   771	
-   772	static void epf_ntb_epc_msi_init(struct epf_ntb *ntb)
-   773	{
-   774		struct device *dev = &ntb->epf->dev;
-   775		struct irq_domain *domain;
-   776		int virq;
-   777		int ret;
-   778		int i;
-   779	
-   780		domain = dev_get_msi_domain(ntb->epf->epc->dev.parent);
-   781		if (!domain)
-   782			return;
-   783	
-   784		dev_set_msi_domain(dev, domain);
-   785	
- > 786		if (platform_msi_domain_alloc_irqs(&ntb->epf->dev,
-   787			ntb->db_count,
-   788			epf_ntb_write_msi_msg)) {
-   789			dev_info(dev, "Can't allocate MSI, fall back to poll mode\n");
-   790			return;
-   791		}
-   792	
-   793		dev_info(dev, "vntb use MSI as doorbell\n");
-   794	
-   795		for (i = 0; i < ntb->db_count; i++) {
-   796			virq = msi_get_virq(dev, i);
-   797			ret = devm_request_irq(dev, virq,
-   798				       epf_ntb_interrupt_handler, 0,
-   799				       "ntb", ntb);
-   800	
-   801			if (ret) {
-   802				dev_err(dev, "devm_request_irq() failure, fall back to poll mode\n");
-   803				ntb->epf_db_phy = 0;
-   804				break;
-   805			}
-   806	
-   807			if (!i)
-   808				ntb->msi_virqbase = virq;
-   809		}
-   810	}
-   811	
+Please check and re-submit.
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
