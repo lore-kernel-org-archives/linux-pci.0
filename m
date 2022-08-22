@@ -2,31 +2,31 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D692C3F6B0
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 18:48:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D303EC32774
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 18:48:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235927AbiHVSsZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Aug 2022 14:48:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55422 "EHLO
+        id S237762AbiHVSsn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Aug 2022 14:48:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236152AbiHVSry (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2022 14:47:54 -0400
+        with ESMTP id S237281AbiHVSsA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Aug 2022 14:48:00 -0400
 Received: from mail.baikalelectronics.com (mail.baikalelectronics.com [87.245.175.230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4FBB311164;
-        Mon, 22 Aug 2022 11:47:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 851FD120BF;
+        Mon, 22 Aug 2022 11:47:39 -0700 (PDT)
 Received: from mail (mail.baikal.int [192.168.51.25])
-        by mail.baikalelectronics.com (Postfix) with ESMTP id DBD8EDA6;
-        Mon, 22 Aug 2022 21:50:41 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com DBD8EDA6
+        by mail.baikalelectronics.com (Postfix) with ESMTP id 4FF6CDA8;
+        Mon, 22 Aug 2022 21:50:44 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.com 4FF6CDA8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1661194241;
-        bh=0SbRKXK6uzG4rIK+IfmQSCMmKXV6lPl24R2CGwwB6kE=;
+        d=baikalelectronics.ru; s=mail; t=1661194244;
+        bh=R7PMTAlTiRVaqbsWMKFcwY6iLCFj0mkKscGgWPeLDZ4=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=H8WVr6cFqEg69kbOM2j4qFfMwXupSpi98jyG/wStBpRFfqzdV8O5UGDcypzdZDQRS
-         pB7cpKa4dqZFWXHwn8YDwtWt3n7uCiOeuRKcnvuQSzfI+Y7K9+AKThdRF5Kaq3XahW
-         SVRYt0FogTB/KDG28NsNWkZddnbV89/Ri7H7xjpA=
+        b=mMxFrr2Fb1iAtM52XUVyoReRLwewuO8+Bh9MLHDQypPakS9iJ+7/JYJ/ZYM5+DKMw
+         pPmm0UWFyDdHP3Rs98S9eFgqIWzHndcjCAs5ZiSmTVmRhe/q0t6b77/c37Vy25zXMC
+         V7ffmjTFVDTgP41+lgY3FvZy42OnHn44GnTyVuzk=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 22 Aug 2022 21:47:27 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 22 Aug 2022 21:47:29 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -43,9 +43,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v5 04/20] dt-bindings: PCI: dwc: Remove bus node from the examples
-Date:   Mon, 22 Aug 2022 21:46:45 +0300
-Message-ID: <20220822184701.25246-5-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v5 06/20] dt-bindings: PCI: dwc: Add max-link-speed common property
+Date:   Mon, 22 Aug 2022 21:46:47 +0300
+Message-ID: <20220822184701.25246-7-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -56,8 +56,13 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It's absolutely redundant seeing by default each node is embedded into its
-own example-X node with address and size cells set to 1.
+In accordance with [1] DW PCIe controllers support up to Gen5 link speed.
+Let's add the max-link-speed property upper bound to 5 then. The DT
+bindings of the particular devices are expected to setup more strict
+constraint on that parameter.
+
+[1] Synopsys DesignWare Cores PCI Express Controller Databook, Version
+5.40a, March 2019, p. 27
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Rob Herring <robh@kernel.org>
@@ -69,78 +74,45 @@ Changelog v3:
   https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
   by the Rob' request. (@Rob)
 ---
- .../bindings/pci/snps,dw-pcie-ep.yaml         | 16 ++++-----
- .../devicetree/bindings/pci/snps,dw-pcie.yaml | 35 ++++++++++---------
- 2 files changed, 24 insertions(+), 27 deletions(-)
+ Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml | 3 +++
+ Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml     | 2 ++
+ Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml        | 1 +
+ 3 files changed, 6 insertions(+)
 
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+index e8d610d63ae2..5fc704138677 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+@@ -49,6 +49,9 @@ properties:
+       the peripheral devices available on the PCIe bus.
+     maxItems: 1
+ 
++  max-link-speed:
++    maximum: 5
++
+   num-lanes:
+     description:
+       Number of PCIe link lanes to use. Can be omitted if the already brought
 diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index eae60901d60e..7d05dcba419b 100644
+index dcd521aed213..fc3b5d4ac245 100644
 --- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
 +++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -46,14 +46,10 @@ additionalProperties: true
+@@ -55,4 +55,6 @@ examples:
  
- examples:
-   - |
--    bus {
--      #address-cells = <1>;
--      #size-cells = <1>;
--      pcie-ep@dfd00000 {
--        compatible = "snps,dw-pcie-ep";
--        reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
--              <0xdfc01000 0x0001000>, /* IP registers 2 */
--              <0xd0000000 0x2000000>; /* Configuration space */
--        reg-names = "dbi", "dbi2", "addr_space";
--      };
-+    pcie-ep@dfd00000 {
-+      compatible = "snps,dw-pcie-ep";
-+      reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-+            <0xdfc01000 0x0001000>, /* IP registers 2 */
-+            <0xd0000000 0x2000000>; /* Configuration space */
-+      reg-names = "dbi", "dbi2", "addr_space";
+       phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
+       phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
++
++      max-link-speed = <3>;
      };
 diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index 505b01e0a034..3fdc80453a85 100644
+index d9512f7f7124..e787b9727589 100644
 --- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
 +++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -53,21 +53,22 @@ required:
+@@ -74,4 +74,5 @@ examples:
+       phy-names = "pcie";
  
- examples:
-   - |
--    bus {
--      #address-cells = <1>;
--      #size-cells = <1>;
--      pcie@dfc00000 {
--        device_type = "pci";
--        compatible = "snps,dw-pcie";
--        reg = <0xdfc00000 0x0001000>, /* IP registers */
--              <0xd0000000 0x0002000>; /* Configuration space */
--        reg-names = "dbi", "config";
--        #address-cells = <3>;
--        #size-cells = <2>;
--        ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000>,
--                 <0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
--        interrupts = <25>, <24>;
--        #interrupt-cells = <1>;
--        num-lanes = <1>;
--      };
-+    pcie@dfc00000 {
-+      compatible = "snps,dw-pcie";
-+      device_type = "pci";
-+      reg = <0xdfc00000 0x0001000>, /* IP registers */
-+            <0xd0000000 0x0002000>; /* Configuration space */
-+      reg-names = "dbi", "config";
-+      #address-cells = <3>;
-+      #size-cells = <2>;
-+      ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000>,
-+               <0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
-+      bus-range = <0x0 0xff>;
-+
-+      interrupts = <25>, <24>;
-+      #interrupt-cells = <1>;
-+
-+      reset-gpios = <&port0 0 1>;
-+
-+      num-lanes = <1>;
+       num-lanes = <1>;
++      max-link-speed = <3>;
      };
 -- 
 2.35.1
