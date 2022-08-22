@@ -2,72 +2,232 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B5F6C00140
-	for <linux-pci@archiver.kernel.org>; Sun, 21 Aug 2022 15:20:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2001C00140
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Aug 2022 00:52:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231446AbiHUPUu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 21 Aug 2022 11:20:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55376 "EHLO
+        id S232013AbiHVAwo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 21 Aug 2022 20:52:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229561AbiHUPUt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 Aug 2022 11:20:49 -0400
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 321EC18353
-        for <linux-pci@vger.kernel.org>; Sun, 21 Aug 2022 08:20:48 -0700 (PDT)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL TLS DV RSA Mixed SHA256 2020 CA-1" (verified OK))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 6E79D2805B6D3;
-        Sun, 21 Aug 2022 17:20:44 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 620521FBF0; Sun, 21 Aug 2022 17:20:44 +0200 (CEST)
-Date:   Sun, 21 Aug 2022 17:20:44 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Krzysztof Wilczy??ski <kw@linux.com>, pali@kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 02/11] PCI: pciehp: Enable Command Completed Interrupt
- only if supported
-Message-ID: <20220821152044.GA31612@wunner.de>
-References: <20220818135140.5996-1-kabel@kernel.org>
- <20220818135140.5996-3-kabel@kernel.org>
+        with ESMTP id S231737AbiHVAwn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 Aug 2022 20:52:43 -0400
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E5DE201A8;
+        Sun, 21 Aug 2022 17:52:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1661129561; x=1692665561;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=KRMFK8euqKd0hKEpWRu0McaFqhVEfZNscDKSRuU3Zb4=;
+  b=ildmUuhC21HNS58ecfiucA/1l71PRDR1RIWUwTAhGaDsOY9rlgFydw8w
+   3M/EvSQjsPeE0aOs19D4I0bs6UHrj7SKgGnOutWCMG00hNf/T+FA3xqem
+   HnuqkB625mqJ45PjCzScq7CccXNC0Ig32MvOcVcNCaYLt5pR/lEe+4e0x
+   lwDtcvW3b4PSpzOl19E6U2XUQmOGfwd+4SvQldcgwXpVfLG7Yrjt/qVO8
+   Fy+MdMM3lUzKW4ahKRUJpGhozXZeRwLEI2juDK6IuyMU54Rx9fKJrUvdz
+   uZEppp1AD/FbKwDgbaO9YIKLdlev0g/MqcY8KDkC4KsA6xgWndP0Wkh0R
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10446"; a="319325790"
+X-IronPort-AV: E=Sophos;i="5.93,254,1654585200"; 
+   d="scan'208";a="319325790"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2022 17:52:40 -0700
+X-IronPort-AV: E=Sophos;i="5.93,254,1654585200"; 
+   d="scan'208";a="854306711"
+Received: from iweiny-mobl.amr.corp.intel.com (HELO localhost) ([10.213.163.128])
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Aug 2022 17:52:39 -0700
+From:   ira.weiny@intel.com
+To:     Dan Williams <dan.j.williams@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Ira Weiny <ira.weiny@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Ben Widawsky <bwidawsk@kernel.org>, linux-cxl@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 1/2] PCI: Allow drivers to request exclusive config regions
+Date:   Sun, 21 Aug 2022 20:52:36 -0400
+Message-Id: <20220822005237.540039-2-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20220822005237.540039-1-ira.weiny@intel.com>
+References: <20220822005237.540039-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20220818135140.5996-3-kabel@kernel.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 18, 2022 at 03:51:31PM +0200, Marek Behún wrote:
-> From: Pali Rohár <pali@kernel.org>
-> 
-> The No Command Completed Support bit in the Slot Capabilities register
-> indicates whether Command Completed Interrupt Enable is unsupported.
-> 
-> We already check whether No Command Completed Support bit is set in
-> pcie_wait_cmd(), and do not wait in this case.
-> 
-> Let's not enable this Command Completed Interrupt at all if NCCS is set,
-> so that when users dump configuration space from userspace, the dump
-> does not confuse them by saying that Command Completed Interrupt is not
-> supported, but it is enabled.
-> 
-> Signed-off-by: Pali Rohár <pali@kernel.org>
-> Signed-off-by: Marek Behún <kabel@kernel.org>
+From: Ira Weiny <ira.weiny@intel.com>
 
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
+PCI config space access from user space has traditionally been
+unrestricted with writes being an understood risk for device operation.
 
-I note however that this change isn't really necessary because CCIE
-"must be hardwired to 0b" "If Command Completed notification is not
-supported" per PCIe r6.0 sec 7.5.3.10.  It's purely a cosmetic issue.
+Unfortunately, device breakage or odd behavior from config writes lacks
+indicators that can leave driver writers confused when evaluating
+failures.  This is especially true with the new PCIe Data Object
+Exchange (DOE) mailbox protocol where backdoor shenanigans from user
+space through things such as vendor defined protocols may affect device
+operation without complete breakage.
 
-Thanks,
+A prior proposal restricted read and writes completely.[1]  Greg and
+Bjorn pointed out that proposal is flawed for a couple of reasons.
+First, lspci should always be allowed and should not interfere with any
+device operation.  Second, setpci is a valuable tool that is sometimes
+necessary and it should not be completely restricted.[2]  Finally
+methods exist for full lock of device access if required.
 
-Lukas
+Even though access should not be restricted it would be nice for driver
+writers to be able to flag critical parts of the config space such that
+interference from user space can be detected.
+
+Introduce pci_request_config_region_exclusive() to mark exclusive config
+regions.  Such regions trigger a warning and kernel taint if accessed
+via user space.
+
+[1] https://lore.kernel.org/all/161663543465.1867664.5674061943008380442.stgit@dwillia2-desk3.amr.corp.intel.com/
+[2] https://lore.kernel.org/all/YF8NGeGv9vYcMfTV@kroah.com/
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Suggested-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+
+---
+Changes from[1]:
+	Change name to pci_request_config_region_exclusive()
+	Don't flag reads at all.
+	Allow writes with a warn and taint of the kernel.
+	Update commit message
+	Forward port to latest tree.
+---
+ drivers/pci/pci-sysfs.c |  6 ++++++
+ drivers/pci/probe.c     |  6 ++++++
+ include/linux/ioport.h  |  2 ++
+ include/linux/pci.h     | 16 ++++++++++++++++
+ kernel/resource.c       | 13 ++++++++-----
+ 5 files changed, 38 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index fc804e08e3cb..de41d761bdf5 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -755,6 +755,12 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+ 	if (ret)
+ 		return ret;
+ 
++	if (resource_is_exclusive(&dev->config_resource, off,
++				  count)) {
++		pci_warn(dev, "Write to restricted range %llx detected", off);
++		add_taint(TAINT_USER, LOCKDEP_STILL_OK);
++	}
++
+ 	if (off > dev->cfg_size)
+ 		return 0;
+ 	if (off + count > dev->cfg_size) {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6280e780a48c..d81d7457058b 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2303,6 +2303,12 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ 	INIT_LIST_HEAD(&dev->bus_list);
+ 	dev->dev.type = &pci_dev_type;
+ 	dev->bus = pci_bus_get(bus);
++	dev->config_resource = (struct resource) {
++		.name = "PCI Config",
++		.start = 0,
++		.end = -1,
++	};
++
+ #ifdef CONFIG_PCI_MSI
+ 	raw_spin_lock_init(&dev->msi_lock);
+ #endif
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 616b683563a9..cf1de55d14da 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -312,6 +312,8 @@ extern void __devm_release_region(struct device *dev, struct resource *parent,
+ 				  resource_size_t start, resource_size_t n);
+ extern int iomem_map_sanity_check(resource_size_t addr, unsigned long size);
+ extern bool iomem_is_exclusive(u64 addr);
++extern bool resource_is_exclusive(struct resource *resource, u64 addr,
++				  resource_size_t size);
+ 
+ extern int
+ walk_system_ram_range(unsigned long start_pfn, unsigned long nr_pages,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 81a57b498f22..dde37bfa0ca5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -409,6 +409,7 @@ struct pci_dev {
+ 	 */
+ 	unsigned int	irq;
+ 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
++	struct resource config_resource;		 /* driver exclusive config ranges */
+ 
+ 	bool		match_driver;		/* Skip attaching driver */
+ 
+@@ -1406,6 +1407,21 @@ int pci_request_selected_regions(struct pci_dev *, int, const char *);
+ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+ void pci_release_selected_regions(struct pci_dev *, int);
+ 
++static inline __must_check struct resource *
++pci_request_config_region_exclusive(struct pci_dev *pdev, unsigned int offset,
++				    unsigned int len, const char *name)
++{
++	return __request_region(&pdev->config_resource, offset, len, name,
++				IORESOURCE_EXCLUSIVE);
++}
++
++static inline void pci_release_config_region(struct pci_dev *pdev,
++					     unsigned int offset,
++					     unsigned int len)
++{
++	__release_region(&pdev->config_resource, offset, len);
++}
++
+ /* drivers/pci/bus.c */
+ void pci_add_resource(struct list_head *resources, struct resource *res);
+ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 4c5e80b92f2f..82ed54cd1f0d 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -1707,18 +1707,15 @@ static int strict_iomem_checks;
+  *
+  * Returns true if exclusive to the kernel, otherwise returns false.
+  */
+-bool iomem_is_exclusive(u64 addr)
++bool resource_is_exclusive(struct resource *root, u64 addr, resource_size_t size)
+ {
+ 	const unsigned int exclusive_system_ram = IORESOURCE_SYSTEM_RAM |
+ 						  IORESOURCE_EXCLUSIVE;
+ 	bool skip_children = false, err = false;
+-	int size = PAGE_SIZE;
+ 	struct resource *p;
+ 
+-	addr = addr & PAGE_MASK;
+-
+ 	read_lock(&resource_lock);
+-	for_each_resource(&iomem_resource, p, skip_children) {
++	for_each_resource(root, p, skip_children) {
+ 		if (p->start >= addr + size)
+ 			break;
+ 		if (p->end < addr) {
+@@ -1757,6 +1754,12 @@ bool iomem_is_exclusive(u64 addr)
+ 	return err;
+ }
+ 
++bool iomem_is_exclusive(u64 addr)
++{
++	return resource_is_exclusive(&iomem_resource, addr & PAGE_MASK,
++				     PAGE_SIZE);
++}
++
+ struct resource_entry *resource_list_create_entry(struct resource *res,
+ 						  size_t extra_size)
+ {
+-- 
+2.37.2
+
