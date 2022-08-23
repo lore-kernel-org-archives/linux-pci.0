@@ -2,205 +2,160 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D1AC32772
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Aug 2022 13:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97BE3C32772
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Aug 2022 14:16:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241417AbiHWNRT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Aug 2022 09:17:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55826 "EHLO
+        id S241803AbiHWOQT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Aug 2022 10:16:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241498AbiHWNRA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Aug 2022 09:17:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9197213C711;
-        Tue, 23 Aug 2022 03:16:28 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id D6D9F612FE;
-        Tue, 23 Aug 2022 10:15:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E07D4C433D7;
-        Tue, 23 Aug 2022 10:15:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661249702;
-        bh=YlyUdt3AMwWGmcocJSmTMfSxMcAcfuJljUgfBgpkCDw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NTzzDFt18qvnlZKRj7G1kcjizrIuAWuPkER5VUyeGxeSfV+FSiO5gF6lpsFmHKQfn
-         8Do/K7rPgZ5Jp2zCr+3ZbIePCPqvkeZU8hj6N71EHHQKQDG5UOXqU2IYsamzN81K0z
-         neagTMLqKEC2egM6DuzE0zj1+JMpoe9942JCegS+yWV7bm7xh8M6QFNgLEWWY2Wcg0
-         gCg9425eFE4XWS18I/D/aQaBEunG42Aj2/XfzY1m2SCTkzJUK+z18xAQ6FCh0d/1MR
-         Lu85gSxw43y1hzZDnE82kVJRxntC540MquNfrOh4t+3HWmkinueU4CtrBrhFlvpwy9
-         7BNF6RjvAVcDA==
-Received: by pali.im (Postfix)
-        id 14E35621; Tue, 23 Aug 2022 12:14:59 +0200 (CEST)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI: pci-bridge-emul: Set position of PCI capabilities to real HW value
-Date:   Tue, 23 Aug 2022 12:14:39 +0200
-Message-Id: <20220823101439.24525-1-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220703104627.27058-1-pali@kernel.org>
-References: <20220703104627.27058-1-pali@kernel.org>
+        with ESMTP id S242898AbiHWOP2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Aug 2022 10:15:28 -0400
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F3ED2270B17;
+        Tue, 23 Aug 2022 04:28:40 -0700 (PDT)
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id CEBC7113E;
+        Tue, 23 Aug 2022 04:28:04 -0700 (PDT)
+Received: from [10.57.15.51] (unknown [10.57.15.51])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2D9293F70D;
+        Tue, 23 Aug 2022 04:27:59 -0700 (PDT)
+Message-ID: <1e63a581-14ae-b4b5-a5bf-ca8f09c33af6@arm.com>
+Date:   Tue, 23 Aug 2022 12:27:53 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101
+ Thunderbird/102.1.2
+Subject: Re: [PATCH v4 2/2] PCI: dwc: Add support for 64-bit MSI target
+ address
+Content-Language: en-GB
+To:     Will McVicker <willmcvicker@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     kernel-team@android.com, Vidya Sagar <vidyas@nvidia.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel test robot <lkp@intel.com>
+References: <20220812000327.3154251-1-willmcvicker@google.com>
+ <20220812000327.3154251-3-willmcvicker@google.com>
+From:   Robin Murphy <robin.murphy@arm.com>
+In-Reply-To: <20220812000327.3154251-3-willmcvicker@google.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-mvebu and aardvark HW have PCIe capabilities on different offset in PCI
-config space. Extend pci-bridge-emul.c code to allow setting custom driver
-custom value where PCIe capabilities starts.
+On 2022-08-12 01:03, Will McVicker wrote:
+> Since not all devices require a 32-bit MSI address, add support to the
+> PCIe host driver to allow setting the DMA mask to 64-bits. This allows
+> kernels to disable ZONE_DMA32 and bounce buffering (swiotlb) without
+> risking not being able to get a 32-bit address during DMA allocation.
+> Basically, in the slim chance that there are no 32-bit allocations
+> available, the current PCIe host driver will fail to allocate the
+> msi_msg page due to a DMA address overflow (seen in [1]). With this
+> patch, the PCIe device can advertise 64-bit support via its MSI
+> capabilities to hint to the PCIe host driver to set the DMA mask to
+> 64-bits.
 
-With this change PCIe capabilities of both drivers are reported at the same
-location as where they are reported by U-Boot - in their real HW offset.
+It doesn't matter so much what the host's own capabilities are, though, 
+what matters is that if you configure the MSI doorbell to decode some 
+64-bit address because you can, and later an endpoint shows up whose DMA 
+mask doesn't reach that address, you've broken MSIs for that endpoint. 
+While the host is probing, it cannot possibly know what future endpoint 
+drivers may or may not do.
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
----
-Changes in v2:
-* Rebase on top of v6.0-rc1, fix usage of PCIE_CAP_PCIEXP
----
- drivers/pci/controller/pci-aardvark.c |  1 +
- drivers/pci/controller/pci-mvebu.c    |  1 +
- drivers/pci/pci-bridge-emul.c         | 46 +++++++++++++++++----------
- drivers/pci/pci-bridge-emul.h         |  2 ++
- 4 files changed, 33 insertions(+), 17 deletions(-)
+Now, in the case where no ZONE_DMA{32} is configured, there's a fair 
+likelihood that addressing-constrained endpoints are probably going to 
+be broken in general, so that should not be fatal for the host. So *if* 
+we fail to allocate a 32-bit MSI address, *then* we should fall back to 
+a 64-bit one (when the host supports it), but to preserve compatibility 
+we still must always attempt the 32-bit allocation first (oh, if there 
+isn't a theme emerging here...)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 966c8b48bd96..4834198cc86b 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1078,6 +1078,7 @@ static int advk_sw_pci_bridge_init(struct advk_pcie *pcie)
- 	bridge->pcie_conf.rootcap = cpu_to_le16(PCI_EXP_RTCAP_CRSVIS);
- 
- 	bridge->has_pcie = true;
-+	bridge->pcie_start = PCIE_CORE_PCIEXP_CAP;
- 	bridge->data = pcie;
- 	bridge->ops = &advk_pci_bridge_emul_ops;
- 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index af915c951f06..0fdbb5585fec 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -946,6 +946,7 @@ static int mvebu_pci_bridge_emul_init(struct mvebu_pcie_port *port)
- 	bridge->subsystem_vendor_id = ssdev_id & 0xffff;
- 	bridge->subsystem_id = ssdev_id >> 16;
- 	bridge->has_pcie = true;
-+	bridge->pcie_start = PCIE_CAP_PCIEXP;
- 	bridge->data = port;
- 	bridge->ops = &mvebu_pci_bridge_emul_ops;
- 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index 9c2ca28e3ecf..dfbbe43ef518 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -22,11 +22,7 @@
- 
- #define PCI_BRIDGE_CONF_END	PCI_STD_HEADER_SIZEOF
- #define PCI_CAP_SSID_SIZEOF	(PCI_SSVID_DEVICE_ID + 2)
--#define PCI_CAP_SSID_START	PCI_BRIDGE_CONF_END
--#define PCI_CAP_SSID_END	(PCI_CAP_SSID_START + PCI_CAP_SSID_SIZEOF)
- #define PCI_CAP_PCIE_SIZEOF	(PCI_EXP_SLTSTA2 + 2)
--#define PCI_CAP_PCIE_START	PCI_CAP_SSID_END
--#define PCI_CAP_PCIE_END	(PCI_CAP_PCIE_START + PCI_CAP_PCIE_SIZEOF)
- 
- /**
-  * struct pci_bridge_reg_behavior - register bits behaviors
-@@ -324,7 +320,7 @@ pci_bridge_emul_read_ssid(struct pci_bridge_emul *bridge, int reg, u32 *value)
- 	switch (reg) {
- 	case PCI_CAP_LIST_ID:
- 		*value = PCI_CAP_ID_SSVID |
--			(bridge->has_pcie ? (PCI_CAP_PCIE_START << 8) : 0);
-+			((bridge->pcie_start > bridge->ssid_start) ? (bridge->pcie_start << 8) : 0);
- 		return PCI_BRIDGE_EMUL_HANDLED;
- 
- 	case PCI_SSVID_VENDOR_ID:
-@@ -365,12 +361,25 @@ int pci_bridge_emul_init(struct pci_bridge_emul *bridge,
- 	if (!bridge->pci_regs_behavior)
- 		return -ENOMEM;
- 
--	if (bridge->subsystem_vendor_id)
--		bridge->conf.capabilities_pointer = PCI_CAP_SSID_START;
--	else if (bridge->has_pcie)
--		bridge->conf.capabilities_pointer = PCI_CAP_PCIE_START;
--	else
--		bridge->conf.capabilities_pointer = 0;
-+	/* If ssid_start and pcie_start were not specified then choose the lowest possible value. */
-+	if (!bridge->ssid_start && !bridge->pcie_start) {
-+		if (bridge->subsystem_vendor_id)
-+			bridge->ssid_start = PCI_BRIDGE_CONF_END;
-+		if (bridge->has_pcie)
-+			bridge->pcie_start = bridge->ssid_start + PCI_CAP_SSID_SIZEOF;
-+	} else if (!bridge->ssid_start && bridge->subsystem_vendor_id) {
-+		if (bridge->pcie_start - PCI_BRIDGE_CONF_END >= PCI_CAP_SSID_SIZEOF)
-+			bridge->ssid_start = PCI_BRIDGE_CONF_END;
-+		else
-+			bridge->ssid_start = bridge->pcie_start + PCI_CAP_PCIE_SIZEOF;
-+	} else if (!bridge->pcie_start && bridge->has_pcie) {
-+		if (bridge->ssid_start - PCI_BRIDGE_CONF_END >= PCI_CAP_PCIE_SIZEOF)
-+			bridge->pcie_start = PCI_BRIDGE_CONF_END;
-+		else
-+			bridge->pcie_start = bridge->ssid_start + PCI_CAP_SSID_SIZEOF;
-+	}
-+
-+	bridge->conf.capabilities_pointer = min(bridge->ssid_start, bridge->pcie_start);
- 
- 	if (bridge->conf.capabilities_pointer)
- 		bridge->conf.status |= cpu_to_le16(PCI_STATUS_CAP_LIST);
-@@ -459,15 +468,17 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 		read_op = bridge->ops->read_base;
- 		cfgspace = (__le32 *) &bridge->conf;
- 		behavior = bridge->pci_regs_behavior;
--	} else if (reg >= PCI_CAP_SSID_START && reg < PCI_CAP_SSID_END && bridge->subsystem_vendor_id) {
-+	} else if (reg >= bridge->ssid_start && reg < bridge->ssid_start + PCI_CAP_SSID_SIZEOF &&
-+		   bridge->subsystem_vendor_id) {
- 		/* Emulated PCI Bridge Subsystem Vendor ID capability */
--		reg -= PCI_CAP_SSID_START;
-+		reg -= bridge->ssid_start;
- 		read_op = pci_bridge_emul_read_ssid;
- 		cfgspace = NULL;
- 		behavior = NULL;
--	} else if (reg >= PCI_CAP_PCIE_START && reg < PCI_CAP_PCIE_END && bridge->has_pcie) {
-+	} else if (reg >= bridge->pcie_start && reg < bridge->pcie_start + PCI_CAP_PCIE_SIZEOF &&
-+		   bridge->has_pcie) {
- 		/* Our emulated PCIe capability */
--		reg -= PCI_CAP_PCIE_START;
-+		reg -= bridge->pcie_start;
- 		read_op = bridge->ops->read_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
-@@ -538,9 +549,10 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 		write_op = bridge->ops->write_base;
- 		cfgspace = (__le32 *) &bridge->conf;
- 		behavior = bridge->pci_regs_behavior;
--	} else if (reg >= PCI_CAP_PCIE_START && reg < PCI_CAP_PCIE_END && bridge->has_pcie) {
-+	} else if (reg >= bridge->pcie_start && reg < bridge->pcie_start + PCI_CAP_PCIE_SIZEOF &&
-+		   bridge->has_pcie) {
- 		/* Our emulated PCIe capability */
--		reg -= PCI_CAP_PCIE_START;
-+		reg -= bridge->pcie_start;
- 		write_op = bridge->ops->write_pcie;
- 		cfgspace = (__le32 *) &bridge->pcie_conf;
- 		behavior = bridge->pcie_cap_regs_behavior;
-diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
-index 71392b67471d..2a0e59c7f0d9 100644
---- a/drivers/pci/pci-bridge-emul.h
-+++ b/drivers/pci/pci-bridge-emul.h
-@@ -131,6 +131,8 @@ struct pci_bridge_emul {
- 	struct pci_bridge_reg_behavior *pci_regs_behavior;
- 	struct pci_bridge_reg_behavior *pcie_cap_regs_behavior;
- 	void *data;
-+	u8 pcie_start;
-+	u8 ssid_start;
- 	bool has_pcie;
- 	u16 subsystem_vendor_id;
- 	u16 subsystem_id;
--- 
-2.20.1
+TBH this has come up enough times, and has enough subtle complexity, 
+that I think it's high time to factor this all out into a helper between 
+the PCI core code and the DMA API for "please give me a bus address 
+that's guaranteed not to conflict with any valid DMA address".
 
+Thanks,
+Robin.
+
+> [1] https://lore.kernel.org/all/Yo0soniFborDl7+C@google.com/
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Will McVicker <willmcvicker@google.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> ---
+>   drivers/pci/controller/dwc/pcie-designware-host.c | 14 ++++++++++++--
+>   drivers/pci/controller/dwc/pcie-designware.c      |  8 ++++++++
+>   drivers/pci/controller/dwc/pcie-designware.h      |  1 +
+>   3 files changed, 21 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 39f3b37d4033..d7831040791b 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -330,6 +330,8 @@ static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
+>   	u64 *msi_vaddr;
+>   	int ret;
+>   	u32 ctrl, num_ctrls;
+> +	bool msi_64bit = false;
+> +	u16 msi_capabilities;
+>   
+>   	for (ctrl = 0; ctrl < MAX_MSI_CTRLS; ctrl++)
+>   		pp->irq_mask[ctrl] = ~0;
+> @@ -367,9 +369,17 @@ static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
+>   						    dw_chained_msi_isr, pp);
+>   	}
+>   
+> -	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
+> +	msi_capabilities = dw_pcie_msi_capabilities(pci);
+> +	if (msi_capabilities & PCI_MSI_FLAGS_ENABLE)
+> +		msi_64bit = msi_capabilities & PCI_MSI_FLAGS_64BIT;
+> +
+> +	dev_dbg(dev, "Setting MSI DMA mask to %s-bit.\n",
+> +		msi_64bit ? "64" : "32");
+> +	ret = dma_set_mask_and_coherent(dev, msi_64bit ?
+> +					DMA_BIT_MASK(64) : DMA_BIT_MASK(32));
+>   	if (ret)
+> -		dev_warn(dev, "Failed to set DMA mask to 32-bit. Devices with only 32-bit MSI support may not work properly\n");
+> +		dev_warn(dev, "Failed to set DMA mask to %s-bit.\n",
+> +			 msi_64bit ? "64" : "32");
+>   
+>   	msi_vaddr = dmam_alloc_coherent(dev, sizeof(u64), &pp->msi_data,
+>   					GFP_KERNEL);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index c6725c519a47..650a7f22f9d0 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -82,6 +82,14 @@ u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap)
+>   }
+>   EXPORT_SYMBOL_GPL(dw_pcie_find_capability);
+>   
+> +u16 dw_pcie_msi_capabilities(struct dw_pcie *pci)
+> +{
+> +	u8 offset;
+> +
+> +	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_MSI);
+> +	return dw_pcie_readw_dbi(pci, offset + PCI_MSI_FLAGS);
+> +}
+> +
+>   static u16 dw_pcie_find_next_ext_capability(struct dw_pcie *pci, u16 start,
+>   					    u8 cap)
+>   {
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index a871ae7eb59e..45fcdfc8c035 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -332,6 +332,7 @@ void dw_pcie_version_detect(struct dw_pcie *pci);
+>   
+>   u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap);
+>   u16 dw_pcie_find_ext_capability(struct dw_pcie *pci, u8 cap);
+> +u16 dw_pcie_msi_capabilities(struct dw_pcie *pci);
+>   
+>   int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+>   int dw_pcie_write(void __iomem *addr, int size, u32 val);
