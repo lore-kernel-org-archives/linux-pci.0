@@ -2,205 +2,240 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24281C28D13
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Aug 2022 15:13:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6976C28D13
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Aug 2022 15:15:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237455AbiHYPNV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Aug 2022 11:13:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42818 "EHLO
+        id S241846AbiHYPP5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Aug 2022 11:15:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48236 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230072AbiHYPNT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Aug 2022 11:13:19 -0400
-Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 765DE5A3E4;
-        Thu, 25 Aug 2022 08:13:18 -0700 (PDT)
-Received: by mail-lf1-x131.google.com with SMTP id d8so16266685lfq.0;
-        Thu, 25 Aug 2022 08:13:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc;
-        bh=X/HJjwysbwPY5lP7z2XNqzIAkb64JXray4RDUjSnQ/E=;
-        b=eqUAj/ulLGt9fKA9X2CPCHPQjf16XH6ZbfZynema2QyRMvKMwPMqa1nQf/nm/j0Yer
-         GaqnozYsFW7kX/T00PRfVhchF/6CMdCQ1kVqktnNEiTweJ/xbQ/efxECtWGsz2k6MH57
-         Q7BFrsZUYMEBmYVPtOQcPkDOZ4nCwv4mMFhhsoOw671PL+gmQEKVBXH3kfvhF0M0zpuO
-         5l5A6lG/iLRbAHHcqkI44HNnVUIV5t6SVeHTAQ77Bc2E8hKr9r+s0yUCM9Wyroa3Xym7
-         jET8lru2kRRlSonG2xONqxvPYYkeJm0sa7UD3gqhTRgpy8KrXhyqbEp/w+AM++IWu2Kn
-         nvKw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc;
-        bh=X/HJjwysbwPY5lP7z2XNqzIAkb64JXray4RDUjSnQ/E=;
-        b=v0X3dxlZvffChl14AnQ2Nx9Ohwj4Pgx8OTntD9gU7zjst+LvfuYoN7R5ThN+c+04VU
-         O9eP3OJffx3m1GsU1fw1OvU0ZpEs5UYIVv6xXu//X8PFELOmooEIp1acADEyfDoHsqEg
-         o2RY8dT73/IoBzIyJfQTHCCzpWSuZIDqMtcAEufNukwXArkvhV1OlfvtokaJG8niyoRs
-         GWh9uIM0y1p0tV2a6EKoZ8B5ei6TTh50WCZ4EKWoV006lYpNYGTbSEX+fr0c3m9+2pya
-         IY+aRSWoQaxIe66WDRqSwtCSprIkxNGC27HaKqxvo2iRg3lIpgRxmQfyyu25KoXd7tP1
-         UHtA==
-X-Gm-Message-State: ACgBeo1itz09/9U9naasWsz6JHUpaDqVHAD44sWriywBrKsd1MkMH1zb
-        VM48swgcz/FnG0zeuJAr1R4=
-X-Google-Smtp-Source: AA6agR4h1iWUpc20LQ+4wYlO85M6Cr5yt6RX+MQK1HeajaoyfhxIAa55vq9Ftczgq4dODFiIrLVNHw==
-X-Received: by 2002:a05:6512:b9d:b0:48b:2567:4bad with SMTP id b29-20020a0565120b9d00b0048b25674badmr1325505lfv.9.1661440396732;
-        Thu, 25 Aug 2022 08:13:16 -0700 (PDT)
-Received: from mobilestation ([95.79.140.178])
-        by smtp.gmail.com with ESMTPSA id 19-20020a2eb953000000b00261d623d9ffsm297018ljs.134.2022.08.25.08.13.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Aug 2022 08:13:15 -0700 (PDT)
-Date:   Thu, 25 Aug 2022 18:13:13 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-pci@vger.kernel.org, Frank Li <Frank.Li@nxp.com>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-kernel@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        devicetree@vger.kernel.org,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
-Subject: Re: [PATCH v5 05/20] dt-bindings: PCI: dwc: Add phys/phy-names
- common properties
-Message-ID: <20220825151313.lyjhc3g3udabvr2r@mobilestation>
-References: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru>
- <20220822184701.25246-6-Sergey.Semin@baikalelectronics.ru>
- <1661205444.106003.931361.nullmailer@robh.at.kernel.org>
+        with ESMTP id S241797AbiHYPPz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Aug 2022 11:15:55 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E5E6564F;
+        Thu, 25 Aug 2022 08:15:47 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 60360B82A18;
+        Thu, 25 Aug 2022 15:15:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1078C433D7;
+        Thu, 25 Aug 2022 15:15:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661440544;
+        bh=UngkZdFzUgm4+n+1n85c2FXf5joe08toOBXh1ldxmWI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=u8N2eMGdOhh7ENZv9DdL7qFZogCam9mxgAxif9+llXeD5WORcI6rUXbNw7ikE8Ybh
+         0udwwNJI6tiILpSpzffzzPIdCMsGOsshCf9E4EfKiZXDG4abPHvZ/uEQmhG2vVKoUT
+         DHZxOKiT7lwb/xp8u7Pl41E34NhUixMtLr3wTht/kGf2k3pnNd7zKDDAbCXJCqJpUc
+         Ffg6kmuApdhFCvTZzOUqlr4ac4Hqb8bSaucX5XxO+MXzOXiKt03QlNxlOTvdSy/g8e
+         kVy4vVdBgz8I4yXAOjvicHBmGIGJ4wbkaX6D8M8aMTbveWP8SyatF6CAJD8OfzmlEw
+         Mtu6e+1qY/IBg==
+Date:   Thu, 25 Aug 2022 17:15:36 +0200
+From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
+To:     Mauri Sandberg <maukka@ext.kapsi.fi>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        bhelgaas@google.com, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, andrew@lunn.ch,
+        sebastian.hesselbarth@gmail.com, gregory.clement@bootlin.com,
+        linux@armlinux.org.uk, kw@linux.com, thomas.petazzoni@bootlin.com,
+        pali@kernel.org
+Subject: Re: [PATCH v2 2/2] PCI: mvebu: add support for orion5x
+Message-ID: <YweSGDN7rei2Ugwp@lpieralisi>
+References: <20220718202843.6766-1-maukka@ext.kapsi.fi>
+ <20220802173423.47230-1-maukka@ext.kapsi.fi>
+ <20220802173423.47230-3-maukka@ext.kapsi.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <1661205444.106003.931361.nullmailer@robh.at.kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220802173423.47230-3-maukka@ext.kapsi.fi>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Aug 22, 2022 at 04:57:24PM -0500, Rob Herring wrote:
-> On Mon, 22 Aug 2022 21:46:46 +0300, Serge Semin wrote:
-> > It's normal to have the DW PCIe RP/EP DT-nodes equipped with the explicit
-> > PHY phandle references. There can be up to 16 PHYs attach in accordance
-> > with the maximum number of supported PCIe lanes. Let's extend the common
-> > DW PCIe controller schema with the 'phys' and 'phy-names' properties
-> > definition. The PHY names are defined with the regexp pattern
-> > '^pcie([0-9]+|-?phy[0-9]*)?$' so to match the names currently supported by
-> > the DW PCIe platform drivers ("pcie": meson; "pciephy": qcom, imx6;
-> > "pcie-phy": uniphier, rockchip, spear13xx; "pcie": intel-gw; "pcie-phy%d":
-> > keystone, dra7xx; "pcie": histb, etc). Though the "pcie%d" format would
-> > the most preferable in this case.
-> > 
-> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> > 
-> > ---
-> > 
-> > Changelog v3:
-> > - This is a new patch unpinned from the next one:
-> >   https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
-> >   by the Rob' request. (@Rob)
-> > 
-> > Changelog v5:
-> > - Add a note about having line-based PHY phandles order. (@Rob)
-> > - Prefer 'pcie[0-9]+' PHY-names over the rest of the cases. (@Rob)
-> > ---
-> >  .../bindings/pci/snps,dw-pcie-common.yaml     | 19 +++++++++++++++++++
-> >  .../bindings/pci/snps,dw-pcie-ep.yaml         |  3 +++
-> >  .../devicetree/bindings/pci/snps,dw-pcie.yaml |  3 +++
-> >  3 files changed, 25 insertions(+)
-> > 
+On Tue, Aug 02, 2022 at 08:34:23PM +0300, Mauri Sandberg wrote:
+> Add support for orion5x PCIe controller.
 > 
-> My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
-> on your patch (DT_CHECKER_FLAGS is new in v5.13):
-> 
-> yamllint warnings/errors:
-> 
+> There is Orion-specific errata that config space via CF8/CFC registers
+> is broken. Workaround documented in errata documented (linked from above
+> documentation) does not work when DMA is used and instead other
 
-> dtschema/dtc warnings/errors:
-> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.example.dtb: pcie@14180000: phy-names: 'oneOf' conditional failed, one must be fixed:
-> 	'p2u-0' does not match '^pcie[0-9]+$'
-> 	'p2u-0' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-1' does not match '^pcie[0-9]+$'
-> 	'p2u-1' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-2' does not match '^pcie[0-9]+$'
-> 	'p2u-2' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-3' does not match '^pcie[0-9]+$'
-> 	'p2u-3' does not match '^pcie(-?phy[0-9]*)?$'
+Linked to which documentation ?
 
-Right. I've missed the Nvidia Tegra194 phy-names. I'll mark them as
-deprecated too. Meanwhile @Rob could you review the rest of the
-series?
+> undocumented workaround is needed which maps config space to memory
+> (and therefore avoids usage of broken CF8/CFC memory mapped registers).
+> 
+> Signed-off-by: Mauri Sandberg <maukka@ext.kapsi.fi>
+> Cc: Pali Rohár <pali@kernel.org>
+> ---
+> v1 -> v2:
+>  - do pcie related mvebu windows and remaps in pcie_setup()
+> ---
+>  arch/arm/mach-orion5x/common.c     | 13 -------
+>  arch/arm/mach-orion5x/pci.c        | 14 +++++++
+>  drivers/pci/controller/Kconfig     |  2 +-
+>  drivers/pci/controller/pci-mvebu.c | 59 ++++++++++++++++++++++++++++++
+>  4 files changed, 74 insertions(+), 14 deletions(-)
+> 
+> diff --git a/arch/arm/mach-orion5x/common.c b/arch/arm/mach-orion5x/common.c
+> index 7bcb41137bbf..9d8be5ce1266 100644
+> --- a/arch/arm/mach-orion5x/common.c
+> +++ b/arch/arm/mach-orion5x/common.c
+> @@ -231,19 +231,6 @@ void __init orion5x_init_early(void)
+>  
+>  void orion5x_setup_wins(void)
+>  {
+> -	/*
+> -	 * The PCIe windows will no longer be statically allocated
+> -	 * here once Orion5x is migrated to the pci-mvebu driver.
+> -	 */
+> -	mvebu_mbus_add_window_remap_by_id(ORION_MBUS_PCIE_IO_TARGET,
+> -					  ORION_MBUS_PCIE_IO_ATTR,
+> -					  ORION5X_PCIE_IO_PHYS_BASE,
+> -					  ORION5X_PCIE_IO_SIZE,
+> -					  ORION5X_PCIE_IO_BUS_BASE);
+> -	mvebu_mbus_add_window_by_id(ORION_MBUS_PCIE_MEM_TARGET,
+> -				    ORION_MBUS_PCIE_MEM_ATTR,
+> -				    ORION5X_PCIE_MEM_PHYS_BASE,
+> -				    ORION5X_PCIE_MEM_SIZE);
+>  	mvebu_mbus_add_window_remap_by_id(ORION_MBUS_PCI_IO_TARGET,
+>  					  ORION_MBUS_PCI_IO_ATTR,
+>  					  ORION5X_PCI_IO_PHYS_BASE,
+> diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
+> index 9574c73f3c03..7c4e2f355cc7 100644
+> --- a/arch/arm/mach-orion5x/pci.c
+> +++ b/arch/arm/mach-orion5x/pci.c
+> @@ -150,6 +150,20 @@ static int __init pcie_setup(struct pci_sys_data *sys)
+>  	 */
+>  	orion_pcie_setup(PCIE_BASE);
+>  
+> +	/*
+> +	 * The PCIe windows will no longer be statically allocated
+> +	 * here once Orion5x is migrated to the pci-mvebu driver.
+> +	 */
 
--Sergey
+Is this comment still relevant ? And more importantly, may I ask
+you why this code move in this hunk ? I think, whatever the reason
+is, that deserves a comment.
 
-> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.example.dtb: pcie@14180000: Unevaluated properties are not allowed ('#address-cells', '#interrupt-cells', '#size-cells', 'bus-range', 'device_type', 'interrupt-map', 'interrupt-map-mask', 'linux,pci-domain', 'num-lanes', 'ranges', 'supports-clkreq' were unexpected)
-> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.example.dtb: pcie@14160000: phy-names: 'oneOf' conditional failed, one must be fixed:
-> 	'p2u-0' does not match '^pcie[0-9]+$'
-> 	'p2u-0' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-1' does not match '^pcie[0-9]+$'
-> 	'p2u-1' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-2' does not match '^pcie[0-9]+$'
-> 	'p2u-2' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-3' does not match '^pcie[0-9]+$'
-> 	'p2u-3' does not match '^pcie(-?phy[0-9]*)?$'
-> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.example.dtb: pcie@14160000: Unevaluated properties are not allowed ('#address-cells', '#interrupt-cells', '#size-cells', 'bus-range', 'device_type', 'interrupt-map', 'interrupt-map-mask', 'linux,pci-domain', 'num-lanes', 'num-viewport', 'ranges' were unexpected)
-> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: phy-names: 'oneOf' conditional failed, one must be fixed:
-> 	'p2u-0' does not match '^pcie[0-9]+$'
-> 	'p2u-0' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-1' does not match '^pcie[0-9]+$'
-> 	'p2u-1' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-2' does not match '^pcie[0-9]+$'
-> 	'p2u-2' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-3' does not match '^pcie[0-9]+$'
-> 	'p2u-3' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-4' does not match '^pcie[0-9]+$'
-> 	'p2u-4' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-5' does not match '^pcie[0-9]+$'
-> 	'p2u-5' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-6' does not match '^pcie[0-9]+$'
-> 	'p2u-6' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-7' does not match '^pcie[0-9]+$'
-> 	'p2u-7' does not match '^pcie(-?phy[0-9]*)?$'
-> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: Unevaluated properties are not allowed ('num-lanes' was unexpected)
-> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: phy-names: 'oneOf' conditional failed, one must be fixed:
-> 	'p2u-0' does not match '^pcie[0-9]+$'
-> 	'p2u-0' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-1' does not match '^pcie[0-9]+$'
-> 	'p2u-1' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-2' does not match '^pcie[0-9]+$'
-> 	'p2u-2' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-3' does not match '^pcie[0-9]+$'
-> 	'p2u-3' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-4' does not match '^pcie[0-9]+$'
-> 	'p2u-4' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-5' does not match '^pcie[0-9]+$'
-> 	'p2u-5' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-6' does not match '^pcie[0-9]+$'
-> 	'p2u-6' does not match '^pcie(-?phy[0-9]*)?$'
-> 	'p2u-7' does not match '^pcie[0-9]+$'
-> 	'p2u-7' does not match '^pcie(-?phy[0-9]*)?$'
-> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-> /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.example.dtb: pcie-ep@141a0000: Unevaluated properties are not allowed ('num-lanes' was unexpected)
-> 	From schema: /builds/robherring/linux-dt-review/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-> 
-> doc reference errors (make refcheckdocs):
-> 
-> See https://patchwork.ozlabs.org/patch/
-> 
-> This check can fail if there are any dependencies. The base for a patch
-> series is generally the most recent rc1.
-> 
-> If you already ran 'make dt_binding_check' and didn't see the above
-> error(s), then make sure 'yamllint' is installed and dt-schema is up to
-> date:
-> 
-> pip3 install dtschema --upgrade
-> 
-> Please check and re-submit.
+> +	mvebu_mbus_add_window_remap_by_id(ORION_MBUS_PCIE_IO_TARGET,
+> +					  ORION_MBUS_PCIE_IO_ATTR,
+> +					  ORION5X_PCIE_IO_PHYS_BASE,
+> +					  ORION5X_PCIE_IO_SIZE,
+> +					  ORION5X_PCIE_IO_BUS_BASE);
+> +	mvebu_mbus_add_window_by_id(ORION_MBUS_PCIE_MEM_TARGET,
+> +				    ORION_MBUS_PCIE_MEM_ATTR,
+> +				    ORION5X_PCIE_MEM_PHYS_BASE,
+> +				    ORION5X_PCIE_MEM_SIZE);
+> +
+>  	/*
+>  	 * Check whether to apply Orion-1/Orion-NAS PCIe config
+>  	 * read transaction workaround.
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index b8d96d38064d..a249375837f0 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -5,7 +5,7 @@ menu "PCI controller drivers"
+>  
+>  config PCI_MVEBU
+>  	tristate "Marvell EBU PCIe controller"
+> -	depends on ARCH_MVEBU || ARCH_DOVE || COMPILE_TEST
+> +	depends on ARCH_MVEBU || ARCH_DOVE || ARCH_ORION5X || COMPILE_TEST
+>  	depends on MVEBU_MBUS
+>  	depends on ARM
+>  	depends on OF
+> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> index c1ffdb06c971..1d3052aa7e49 100644
+> --- a/drivers/pci/controller/pci-mvebu.c
+> +++ b/drivers/pci/controller/pci-mvebu.c
+> @@ -1487,6 +1487,54 @@ static int mvebu_pcie_parse_request_resources(struct mvebu_pcie *pcie)
+>  	return 0;
+>  }
+>  
+> +static int orion_pcie_rd_conf_wa(void __iomem *wa_base, struct pci_bus *bus,
+> +			  u32 devfn, int where, int size, u32 *val)
+> +{
+> +	*val = readl(wa_base + (PCIE_CONF_BUS(bus->number) |
+> +				PCIE_CONF_DEV(PCI_SLOT(devfn)) |
+> +				PCIE_CONF_FUNC(PCI_FUNC(devfn)) |
+> +				PCIE_CONF_REG(where)));
+> +
+> +	if (size == 1)
+> +		*val = (*val >> (8 * (where & 3))) & 0xff;
+> +	else if (size == 2)
+> +		*val = (*val >> (8 * (where & 3))) & 0xffff;
+> +
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +/* Relevant only for Orion-1/Orion-NAS */
+> +#define ORION5X_PCIE_WA_PHYS_BASE	0xf0000000
+> +#define ORION5X_PCIE_WA_VIRT_BASE	IOMEM(0xfd000000)
+> +#define ORION5X_PCIE_WA_SIZE		SZ_16M
+> +#define ORION_MBUS_PCIE_WA_TARGET	0x04
+> +#define ORION_MBUS_PCIE_WA_ATTR		0x79
+> +
+> +static int mvebu_pcie_child_rd_conf_wa(struct pci_bus *bus, u32 devfn, int where, int size, u32 *val)
+> +{
+> +	struct mvebu_pcie *pcie = bus->sysdata;
+> +	struct mvebu_pcie_port *port;
+> +
+> +	port = mvebu_pcie_find_port(pcie, bus, devfn);
+> +	if (!port)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	if (!mvebu_pcie_link_up(port))
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +	/*
+> +	 * We only support access to the non-extended configuration
+> +	 * space when using the WA access method (or we would have to
+> +	 * sacrifice 256M of CPU virtual address space.)
+
+Please expand the comment - future reviewers and developers may need
+this information to understand this choice, me included.
+
+Lorenzo
+
+> +	 */
+> +	if (where >= 0x100) {
+> +		*val = 0xffffffff;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +
+> +	return orion_pcie_rd_conf_wa(ORION5X_PCIE_WA_VIRT_BASE, bus, devfn, where, size, val);
+> +}
+> +
+>  static int mvebu_pcie_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+> @@ -1663,6 +1711,16 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+>  	bridge->align_resource = mvebu_pcie_align_resource;
+>  	bridge->map_irq = mvebu_pcie_map_irq;
+>  
+> +	if (of_machine_is_compatible("marvell,orion5x-88f5181")) {
+> +		dev_info(dev, "Applying Orion-1/Orion-NAS PCIe config read transaction workaround\n");
+> +
+> +		mvebu_pcie_child_ops.read = mvebu_pcie_child_rd_conf_wa;
+> +		mvebu_mbus_add_window_by_id(ORION_MBUS_PCIE_WA_TARGET,
+> +					    ORION_MBUS_PCIE_WA_ATTR,
+> +					    ORION5X_PCIE_WA_PHYS_BASE,
+> +					    ORION5X_PCIE_WA_SIZE);
+> +	}
+> +
+>  	return pci_host_probe(bridge);
+>  }
+>  
+> @@ -1733,6 +1791,7 @@ static const struct of_device_id mvebu_pcie_of_match_table[] = {
+>  	{ .compatible = "marvell,armada-370-pcie", },
+>  	{ .compatible = "marvell,dove-pcie", },
+>  	{ .compatible = "marvell,kirkwood-pcie", },
+> +	{ .compatible = "marvell,orion5x-pcie", },
+>  	{},
+>  };
+>  
+> -- 
+> 2.25.1
 > 
