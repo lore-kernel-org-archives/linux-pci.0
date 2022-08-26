@@ -2,170 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8FB9ECAAD2
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Aug 2022 06:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D91F5ECAAA3
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Aug 2022 07:11:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245020AbiHZG5D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Aug 2022 02:57:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37768 "EHLO
+        id S229922AbiHZHLE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Aug 2022 03:11:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244690AbiHZG4p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Aug 2022 02:56:45 -0400
-Received: from EUR05-DB8-obe.outbound.protection.outlook.com (mail-db8eur05on2088.outbound.protection.outlook.com [40.107.20.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46A7AD21ED;
-        Thu, 25 Aug 2022 23:56:42 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=JDpt5mNmbA3THfkXVFepvvKj4yjrpeZE83VbZnWhIcUVsuKQD0ZoJifkAIOoj7C+UEpy3411TBp3xscoXXkZmET5fiWkOi1M7XVKlxscUUpwTrBvO1JIOt1TocLuh3ibF+XBq49pceGtmBKrZMBZ2UVkJjevBENNyxH2JIcVlA8l191hlemMcMIUaImotGYk2cqmELBsWUFqgm8OP2+Wn/MuBDvIosWewqZuxRVZFG2noUvEjrb+gaYPd/aXwPGhYfRinixfMuEzFtaXaf+HJTpSzjsVjJDgBAz7o3IBkdH34p10v+96BhzApf3jx+aKg2wUmy++tTpJYKvQ2/Vsgw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VU+LP/vSUmecEF811FI1WI+e7xc+92dYmPQWYowj+gA=;
- b=mCmW9+FHWewBTD59tV77OkwIP+Z534tlpqYiORff2kSBc8jUrHiiGZRmPicaNB4m2aS+O9d6tOTONRQMdY44C8+6uulEE3+LtabgK5AxyFKRWFg2pWBQQihTtrbBQjIwKK2quFHO2tuQRsHXMbVHBe4YJ7F8GfMlXtztUqo3kKUBpZ85wW28b5VOdZvJehflEp1TLRJBN3OkCZTT+jkKOInbNq58kZ7jY2D+2BJLZIWzL03O6mSaLg318NRXUCa+xcrU0Z6N3aJDmi98QsGe/3B7NOp1gjHdyQv2SyJ2v64FYqFdPTWrRbZWGriWFTDN178BPHmjvWEv94RSa7Kcjw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VU+LP/vSUmecEF811FI1WI+e7xc+92dYmPQWYowj+gA=;
- b=lrtXgak0j797gCl3wx3RxNvmg85P6tU0VRv72k/lfGCOhHA0bRhyfS1zdIrlG4cIVsTkpXkmO0N46lal1F23uEvJiD0rwnCcvYYQrfylr6aTAQ8jkONsPpfVuloiRuQrDm01kFOc0U/2szaaAkTSSjCHW4fLMephr/jGahW3xQ4=
-Received: from AS8PR04MB8676.eurprd04.prod.outlook.com (2603:10a6:20b:42b::10)
- by PAXPR04MB8718.eurprd04.prod.outlook.com (2603:10a6:102:21d::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5566.15; Fri, 26 Aug
- 2022 06:56:35 +0000
-Received: from AS8PR04MB8676.eurprd04.prod.outlook.com
- ([fe80::13c:5622:af8a:b2da]) by AS8PR04MB8676.eurprd04.prod.outlook.com
- ([fe80::13c:5622:af8a:b2da%9]) with mapi id 15.20.5566.016; Fri, 26 Aug 2022
- 06:56:35 +0000
-From:   Hongxing Zhu <hongxing.zhu@nxp.com>
-To:     Alexander Stein <alexander.stein@ew.tq-group.com>
-CC:     "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "vkoul@kernel.org" <vkoul@kernel.org>,
-        Marcel Ziswiler <marcel.ziswiler@toradex.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "kernel@pengutronix.de" <kernel@pengutronix.de>,
-        dl-linux-imx <linux-imx@nxp.com>
-Subject: RE: [PATCH v1 0/2] Fix the wrong order of phy callbacks
-Thread-Topic: [PATCH v1 0/2] Fix the wrong order of phy callbacks
-Thread-Index: AQHYtisJvWRatmeqJkC37ps54LPbAa3AvRqAgAAHidA=
-Date:   Fri, 26 Aug 2022 06:56:35 +0000
-Message-ID: <AS8PR04MB867679A040E1926A93C5CE468C759@AS8PR04MB8676.eurprd04.prod.outlook.com>
-References: <1661173856-1192-1-git-send-email-hongxing.zhu@nxp.com>
- <4054884.5fSG56mABF@steina-w>
-In-Reply-To: <4054884.5fSG56mABF@steina-w>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 3cddf027-5e94-4314-ebba-08da87301dd1
-x-ms-traffictypediagnostic: PAXPR04MB8718:EE_
-x-ld-processed: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: +ufDEBMpSJ5C6kOBB/UfmDxkdRhRTI7IeKQo1YodIKwY48tzr993Bdc8IRUiS6w3+TS+mTIzWokLh7XZn4cXsKV/ZxYfO8yO6EBduOXZRPY6MafRhobpvECgXIyx6KseMGyQk3MDYB5m2Jl3CZxmtvFL7GuuZcSzDXNIG9zjgnnCe5Ayt/bKMhp6GmngtPpiLoFpxhqE5/9TZCh3SvnPtFs070D6YweGbLUahmv9x1f1OvCu90sRbJ9DbE20xu0/GDEptUemvDQtGbMoJLlC0Q/1a+fXkkXzTivyKuvJ5VGnHwo8Tw1D/5Ty036PjsU+UhxqRlpG4B8WrD3sVsJHa8vzj/oHQC425++pvJoPGo3Xl5AHCHDUBhePYXCBaAQEjoCBifwKegRJG2E54ObV3A//hN7L87GwaR9c44UXcmqPr1XAaGpfOoUBkiW/Yofdhwdi7nhEYBYsEAEp2hgQ7qRC1xkCuq9CInUXoJMFh1Nw3uOPP0SVz5POQVANNca+twOID/RjvQNQ9sPeYS9+ZGbutvQUVIWFk1ZLbwspqYJOa4ZBr3m6YVAkPxO4w7ephveE6daUK+4E4+yFQk3phLk+uutrxSGgBS9BMC5zidSKsMlDglzp9aPOLAFJqExzLxxOfhDlayqIzpcdYUbyhWY3Ph2VRXHU/+ftbDQeHD+w4uDQB47n8qYZcxv830AWiAdEP+c9G2TZLvZwfhm5+Uoxyg+QVe0SL4YsBcN7qpDe6ZnHNT3NSWatbCsRbZbXWqlW3hK9AyZUSNL1EZLnNMauzP0+9RApxDkDU0g9few=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8676.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230016)(4636009)(346002)(376002)(366004)(396003)(136003)(39860400002)(66476007)(52536014)(66446008)(66556008)(76116006)(66946007)(54906003)(55016003)(478600001)(5660300002)(8676002)(38100700002)(122000001)(4326008)(8936002)(6916009)(45080400002)(316002)(44832011)(7416002)(41300700001)(64756008)(26005)(53546011)(7696005)(2906002)(186003)(83380400001)(33656002)(6506007)(86362001)(71200400001)(38070700005)(9686003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?gb2312?B?bFpsVWNXU1NSQ1p4NEoyeGErTW5RTllhQnBLYzYrRHpNZFJUUG5sUWxuSERQ?=
- =?gb2312?B?TDNRSU1ZbVZnVG5PSnJEY1lpT1lvK3VKUkRzRnIxVVliblpGTnNvbVdzTm5K?=
- =?gb2312?B?L3lxSHpHd0Q1T05zL3F4ejVoOWdGK01NdDV4Y0U0QVphL2REME94N0NDYjNt?=
- =?gb2312?B?eU13bk5LMkVueGVPMXdYVytsZkpSMURieDluWTJGR3EwMXdGMkxZa1djMGJ4?=
- =?gb2312?B?d05TeUNxdHJlYmpubVZZdE9ndU50d2VkRThNWU51YjJZN01oNUw3T2xlTWl2?=
- =?gb2312?B?NE5ydEdreTAvY2wyMXJ2VnZyNi9ScHRhTTlFQnBDY3l3aGlkQ0N0VlU2MWxy?=
- =?gb2312?B?TjRaYWgwSDNGYzhLRDYrUzA0QlhhSytKN2RSOWJmb3AvZ2RqSDQ4aElwSkhk?=
- =?gb2312?B?a2pIU1NqUGVQT2U1aVZ1Rm9lN3htVjBUMFVTWHF3TGdQaW1sVlFEejIxQ0Mz?=
- =?gb2312?B?RjJnUXU4NXpmZUZSejhkdWJPekp1SUV4MjBZYXdoa1hMWXdIOTJGc0pkV2I5?=
- =?gb2312?B?bWpJY0txV29STi9KNER4TDA2aU9qV3pOWnJ4b3FhVE5aOUhyajRTUytYYkRN?=
- =?gb2312?B?WmljZlUxN09mNkE2UGpENXgxWXBtWGcrWFN0K2Z0V1FCRnZEbUlBMk95aUt1?=
- =?gb2312?B?Z2UwTmZZSDNLMWdpOTNiOEhnSkR2SkhmT2ZqM2lyVmd5aTYxY3BOaHdLd1BD?=
- =?gb2312?B?Z0J6VDkxZ1dWVzBRTlJvc1hGMmNmWWhSSS96ZUxXMXV0MkNIZHRoOEpkWC8w?=
- =?gb2312?B?TU41QWVFcEZVbTdnNUJUQW9QVm9ZL1NBY3hwQjloSTlVMDlTd3V1KzFZQUl5?=
- =?gb2312?B?NjNodzJVclg1NEpVS3dMWWpHSFBsYzRnM3RLT3U1U2d6TWxsbUVFN01TS0N1?=
- =?gb2312?B?Y1hEMVlIT0ZPazhGdWNDbXFwRmdicVIyK1ZhRjh2cytudDhxRFdub3Z2RFRh?=
- =?gb2312?B?T3hpQkZJVHR5RWpNN0lPT2s3R0NBYk5TN0dtOVBLb2NuQW8zY1drekdGZkR2?=
- =?gb2312?B?RVFmNUhyWkR6ZzVvWlg1bTloOGpWVkdWMWd1WlVwVjhzMU01ODBtcFB6Z1ZI?=
- =?gb2312?B?SW5uaHdQUnFKVkxENHJWYjcrZ0FtZVRTYlNrT2s3THg1Q2N0M3hGZ1YrN01D?=
- =?gb2312?B?L0Mzd2g4UU5PQnJJdEFKQ1FOMWFERjlTdjFZVFdET0kwS1pIT09zVyt1bDhK?=
- =?gb2312?B?THNLRzgrTVQvQ3BjMlhMTVRLL24yZ0hjcHdoWk4zWUpNS0lmb0w4QW5CUG9h?=
- =?gb2312?B?cXhJK3RReDZYVTV2TXFkL0VOTlFlY2Jkd2hRQmNzekxTdlFUOGFDLzdtajQ4?=
- =?gb2312?B?S2hjdnpOaUJ0a3JYRFVkanBkdnhKenVQeWhTSi9ycVVhSWE1d3FCUGY1dzV5?=
- =?gb2312?B?TXhKNURKcndIUXFDc0RJK1JCNi8veUc3eEVGZThySVhhSk83aWU2VFRNSDE3?=
- =?gb2312?B?OEdIL2x1aGQ5MlhLL2hIWnpNckovaFJsbGJDeXY5Vzd5UThmbklWaVRKZFhF?=
- =?gb2312?B?eHpOL1Bjd1dFN2RGUnBvdzdLZHAwUklSYzNuYS90dVFQcHltcHVrMjlEZ1pj?=
- =?gb2312?B?YUtpTEx2Ukt6cjNDMHRpTitFWUNjckx4eFFGR05aRXhmVURDK3VwUXFPQy82?=
- =?gb2312?B?S3BiRHNwNjZ4QVIzWnVqWm1KVENpLzJUZVhGa3RMeURRdjZjNDFPMnJLd2pq?=
- =?gb2312?B?cDYzK28yRThobFVMUjZVTEpNNFFPbWp1aGxKQmZUZUNPZmVBMjZ2bjhEaHBC?=
- =?gb2312?B?a1g3Vmo3RlhKVjRHQ29GVUNaVWlZYnA5VStZaUszSWp5Qi9USTZsTFJQNVZt?=
- =?gb2312?B?OUlGeXFMTmZUallTaE85Z2VKRFRTdjVPeThSelNGcE9XYTRnendSbkV0NjRG?=
- =?gb2312?B?UngzTSttUUtnRHNORWNCdUt1QlFWbUFyNWMzREk0RkJCa1pMK1lLNDU5cnl5?=
- =?gb2312?B?WkFramZqOGhBRkNVc3RucFh4R0RqdiswRU5aUkh2QnkzcStsS2ErbFdaTEVS?=
- =?gb2312?B?ei9XcGo5YmNxV0lxT2lxN3RPdzhubytieFFhN212U2NJeFlGbldrN3VFZmVD?=
- =?gb2312?B?eGNUZk9GYkt0QkI3RXhuSy9aRW02bmlUUkdlSXRpclRoYVZYSUUxOXg4WmEx?=
- =?gb2312?Q?vpvtrrwj0adEf1gl49Kp9GFaD?=
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+        with ESMTP id S245215AbiHZHK5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Aug 2022 03:10:57 -0400
+Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C862E1EC57
+        for <linux-pci@vger.kernel.org>; Fri, 26 Aug 2022 00:10:55 -0700 (PDT)
+Received: by mail-wr1-x429.google.com with SMTP id k9so755003wri.0
+        for <linux-pci@vger.kernel.org>; Fri, 26 Aug 2022 00:10:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc;
+        bh=Wk6ASekOjGWHwzdPH/KW6aUNU4MlaS+85Ve1j+puKOs=;
+        b=pRiDdYrLXUw1Ya7fKu91DJfxu/f9U+zY20DpJsAP/3OlSJYC5KaWEHNyJnaYzFQc48
+         z3flwYnJbt6bloYLLyVTw2Ipo84/gxMtoqih0/GUnQjXytzYpvhm0Pgcggw5puSUnssP
+         LHzIs0p6JVy+Z5jj3dVN77aXcPzmkb1iKGeNSdnhpnH6gmwFe91+GHsa2XOom7htPXHm
+         jx9d8dzp2w6LZy9JaitpKWCXoZh6OSGyVZ2XPaGAJjGJ1T/kMDTSqy+Wa+crMLIxNEe2
+         RN9pY2ASaJHZiMNYgV80Hjb1ep2B+y6xq9q2SsLA3Tc9zjnQoQVDokc5XQ7Q8f8IMrD3
+         VRDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc;
+        bh=Wk6ASekOjGWHwzdPH/KW6aUNU4MlaS+85Ve1j+puKOs=;
+        b=1EV2ar7cWZeBASCNTh3EaQXl6ij5WwiBWiEvwi1nlEfIfcRNl64Z8Bv+2HjXoDpGOa
+         ljEIu/eO1yXnqNmWK8HimU0vkHNp/YzMv+tnPFYnL45N5uObC8pDgED2H8/1B2UsHBS5
+         xxe8i1WCccSoq2AA15xFKEZEXdp1uYSzvUsprb2w0FO8EJie3M2kW9B4JfxHromFsrnL
+         VumkpZWnu1vdo+rOj9DJfZSg/CBcvurrKbIZIfcX/nyHQCl2qiRc2KoqyR+j2Y1HDWAP
+         rJqghbxZFWCeQ64LVlA27JJOnPT2ZfVsDq+DKXx5g9rcKmG+D2fLrNNaViYCpwy4X9NZ
+         B0Lw==
+X-Gm-Message-State: ACgBeo1ppfZzOxkxrU0GEsQi5fulru2nWC/wR+pzPk/Adt6HzcpMveeZ
+        UCbEbhIaOJr3+SIJJYEVYnA=
+X-Google-Smtp-Source: AA6agR6HYkDFzvv+DZYPIluooIiwsEdYN6WtA/pbVnK/YCeizt1B9gg4wJjGMCCGvF6VtOhek+08RA==
+X-Received: by 2002:a05:6000:2ce:b0:225:2c5f:3ba8 with SMTP id o14-20020a05600002ce00b002252c5f3ba8mr4205203wry.138.1661497854324;
+        Fri, 26 Aug 2022 00:10:54 -0700 (PDT)
+Received: from [192.168.178.21] (p4fc20ad4.dip0.t-ipconnect.de. [79.194.10.212])
+        by smtp.gmail.com with ESMTPSA id t63-20020a1c4642000000b003a673055e68sm8552519wma.0.2022.08.26.00.10.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 26 Aug 2022 00:10:53 -0700 (PDT)
+Message-ID: <640aea69-963b-9846-8e71-959417b5615e@gmail.com>
+Date:   Fri, 26 Aug 2022 09:10:50 +0200
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: AS8PR04MB8676.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3cddf027-5e94-4314-ebba-08da87301dd1
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Aug 2022 06:56:35.4666
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 11lWrQt1kLX9CAJ28Pbst3RHIl9HQ+JnidGMxvTEIqfr1umM7BFpsmYoA/3AtCgd69HCzTgnS2V2up+YisJhlA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8718
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [Bug 216373] New: Uncorrected errors reported for AMD GPU
+Content-Language: en-US
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Cc:     Xinhui Pan <Xinhui.Pan@amd.com>, regressions@lists.linux.dev,
+        David Airlie <airlied@linux.ie>, linux-pci@vger.kernel.org,
+        "Lazar, Lijo" <lijo.lazar@amd.com>, amd-gfx@lists.freedesktop.org,
+        Tom Seewald <tseewald@gmail.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Stefan Roese <sr@denx.de>
+References: <20220825174845.GA2857385@bhelgaas>
+From:   =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
+In-Reply-To: <20220825174845.GA2857385@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBbGV4YW5kZXIgU3RlaW4gPGFs
-ZXhhbmRlci5zdGVpbkBldy50cS1ncm91cC5jb20+DQo+IFNlbnQ6IDIwMjLE6jjUwjI2yNUgMTQ6
-MjYNCj4gVG86IEhvbmd4aW5nIFpodSA8aG9uZ3hpbmcuemh1QG54cC5jb20+DQo+IENjOiBsLnN0
-YWNoQHBlbmd1dHJvbml4LmRlOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOw0KPiBsb3JlbnpvLnBpZXJh
-bGlzaUBhcm0uY29tOyB2a291bEBrZXJuZWwub3JnOyBNYXJjZWwgWmlzd2lsZXINCj4gPG1hcmNl
-bC56aXN3aWxlckB0b3JhZGV4LmNvbT47IGtpc2hvbkB0aS5jb207DQo+IGxpbnV4LWFybS1rZXJu
-ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgSG9uZ3hpbmcgWmh1IDxob25neGluZy56aHVAbnhwLmNv
-bT47DQo+IGxpbnV4LXBoeUBsaXN0cy5pbmZyYWRlYWQub3JnOyBsaW51eC1wY2lAdmdlci5rZXJu
-ZWwub3JnOw0KPiBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGxpbnV4LWtl
-cm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+IGtlcm5lbEBwZW5ndXRyb25peC5kZTsgZGwtbGludXgt
-aW14IDxsaW51eC1pbXhAbnhwLmNvbT4NCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2MSAwLzJdIEZp
-eCB0aGUgd3Jvbmcgb3JkZXIgb2YgcGh5IGNhbGxiYWNrcw0KPiANCj4gSGVsbG8gUmljaGFyZCwN
-Cj4gDQo+IEFtIE1vbnRhZywgMjIuIEF1Z3VzdCAyMDIyLCAxNToxMDo1NCBDRVNUIHNjaHJpZWIg
-UmljaGFyZCBaaHU6DQo+ID4gUmVmZXIgWzFdLCBwaHlfaW5pdCgpIG11c3QgYmUgY2FsbGVkIGJl
-Zm9yZSBwaHlfcG93ZXJfb24oKS4NCj4gPiBUaGlzIHNlcmllcyB1c2VkIHRvIGZpeCB0aGUgd3Jv
-bmcgb3JkZXIgb2YgdGhlIHBoeV9pbml0KCkgYW5kDQo+ID4gcGh5X3Bvd2VyX29uKCksIGludHJv
-ZHVjZWQgYnkgY29tbWl0IDFhYTk3YjAwMjI1OCAoInBoeTogZnJlZXNjYWxlOg0KPiBwY2llOg0K
-PiA+IEluaXRpYWxpemUgdGhlIGlteDggcGNpZSBzdGFuZGFsb25lIHBoeSBkcml2ZXIiKSBUZXN0
-ZWQgb24gaS5NWDhNTSBFVksNCj4gPiBib2FyZCB3aGVuIG9uZSBOVk1FIGRldmljZSBpcyB1c2Vk
-Lg0KPiA+DQo+ID4gWzFdaHR0cHM6Ly9ldXIwMS5zYWZlbGlua3MucHJvdGVjdGlvbi5vdXRsb29r
-LmNvbS8/dXJsPWh0dHBzJTNBJTJGJTJGZw0KPiA+DQo+IGl0Lmtlcm5lbC5vcmclMkZwdWIlMkZz
-Y20lMkZsaW51eCUyRmtlcm5lbCUyRmdpdCUyRnRvcnZhbGRzJTJGbGludXguZ2kNCj4gPg0KPiB0
-JTJGdHJlZSUyRmQmYW1wO2RhdGE9MDUlN0MwMSU3Q2hvbmd4aW5nLnpodSU0MG54cC5jb20lN0M1
-NmMzNzANCj4gMmRiMWU3NA0KPiA+DQo+IDY3NjgyZWEwOGRhODcyYmRlMmYlN0M2ODZlYTFkM2Jj
-MmI0YzZmYTkyY2Q5OWM1YzMwMTYzNSU3QzAlN0MwDQo+ICU3QzYzNzk3DQo+ID4NCj4gMDkxOTcy
-MDcxMzEyMyU3Q1Vua25vd24lN0NUV0ZwYkdac2IzZDhleUpXSWpvaU1DNHdMakF3TURBaUxDDQo+
-IEpRSWpvaVYybHUNCj4gPg0KPiBNeklpTENKQlRpSTZJazFoYVd3aUxDSlhWQ0k2TW4wJTNEJTdD
-MzAwMCU3QyU3QyU3QyZhbXA7c2RhdGE9M2pqDQo+IHZuT0V4cw0KPiA+IHVFUzhBJTJGMmtUeGxZ
-VHVUZ2xOU0szVExZMkdBUjhUbU1pUSUzRCZhbXA7cmVzZXJ2ZWQ9MA0KPiA+IHJpdmVycy9waHkv
-cGh5LWNvcmUuYz9pZD12NS4xOS1yYzEjbjIzMw0KPiA+DQo+ID4gW1BBVENIIHYxIDEvMl0gUENJ
-OiBpbXg2OiBGaXggdGhlIHdyb25nIG9yZGVyIG9mIHBoeV9pbml0KCkgYW5kIFtQQVRDSA0KPiA+
-IHYxIDIvMl0gcGh5OiBmcmVlc2NhbGU6IGlteDhtLXBjaWU6IEZpeCB0aGUgd3Jvbmcgb3JkZXIg
-b2YNCj4gDQo+IFRvZ2V0aGVyIHdpdGggeW91ciBpbXg4bXAgcGF0Y2ggc2VyaWVzIG9uIFRRTWE4
-TVB4bCArIE1CYThNUHhMOg0KPiBUZXN0ZWQtYnk6IEFsZXhhbmRlciBTdGVpbiA8YWxleGFuZGVy
-LnN0ZWluQGV3LnRxLWdyb3VwLmNvbT4NCj4gDQpIaSBBbGV4YW5kZXI6DQpJdCdzIGdyZWF0LiBU
-aGFua3MgZm9yIHlvdXIga2luZGx5IGhlbHAuDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUN
-Cj4gVGhhbmtzIGFnYWluIQ0KPiBBbGV4YW5kZXINCj4gDQo+IA0KDQo=
+Am 25.08.22 um 19:48 schrieb Bjorn Helgaas:
+> On Thu, Aug 25, 2022 at 10:18:28AM +0200, Christian König wrote:
+>> Am 25.08.22 um 09:54 schrieb Lazar, Lijo:
+>>> On 8/25/2022 1:04 PM, Christian König wrote:
+>>>> Am 25.08.22 um 08:40 schrieb Stefan Roese:
+>>>>> On 24.08.22 16:45, Tom Seewald wrote:
+>>>>>> On Wed, Aug 24, 2022 at 12:11 AM Lazar, Lijo
+>>>>>> <lijo.lazar@amd.com> wrote:
+>>>>>>> Unfortunately, I don't have any NV platforms to test. Attached is an
+>>>>>>> 'untested-patch' based on your trace logs.
+>>>>>> ...
+>>>>> I did not follow this thread in depth, but FWICT the bug is solved now
+>>>>> with this patch. So is it correct, that the now fully enabled AER
+>>>>> support in the PCI subsystem in v6.0 helped detecting a bug in the AMD
+>>>>> GPU driver?
+>>>> It looks like it, but I'm not 100% sure about the rational behind it.
+>>>>
+>>>> Lijo can you explain more on this?
+>>>  From the trace, during gmc hw_init it takes this route -
+>>>
+>>> gart_enable -> amdgpu_gtt_mgr_recover -> amdgpu_gart_invalidate_tlb ->
+>>> amdgpu_device_flush_hdp -> amdgpu_asic_flush_hdp (non-ring based HDP
+>>> flush)
+>>>
+>>> HDP flush is done using remapped offset which is MMIO_REG_HOLE_OFFSET
+>>> (0x80000 - PAGE_SIZE)
+>>>
+>>> WREG32_NO_KIQ((adev->rmmio_remap.reg_offset +
+>>> KFD_MMIO_REMAP_HDP_MEM_FLUSH_CNTL) >> 2, 0);
+>>>
+>>> However, the remapping is not yet done at this point. It's done at a
+>>> later point during common block initialization. Access to the unmapped
+>>> offset '(0x80000 - PAGE_SIZE)' seems to come back as unsupported request
+>>> and reported through AER.
+>> That's interesting behavior. So far AER always indicated some kind of
+>> transmission error.
+>>
+>> When that happens as well on unmapped areas of the MMIO BAR then we need to
+>> keep that in mind.
+> AER can log many different kinds of errors, some related to hardware
+> issues and some related to software.
+>
+> PCI writes are normally posted and get no response, so AER is the main
+> way to find out about writes to unimplemented addresses.
+>
+> Reads do get a response, of course, and reads to unimplemented
+> addresses cause errors that most hardware turns into a ~0 data return
+> (in addition to reporting via AER if enabled).
+
+The issue is that previous hardware generations reported this through a 
+device specific interrupt.
+
+It's nice to see that this is finally standardized. I'm just wondering 
+if we could retire our hardware specific interrupt handler for this as well.
+
+Christian.
+
+>
+> Bjorn
+
