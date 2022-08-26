@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80B1BECAAD9
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Aug 2022 18:20:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75B78ECAAD6
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Aug 2022 18:20:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344462AbiHZSU3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Aug 2022 14:20:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55700 "EHLO
+        id S1345025AbiHZSUn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Aug 2022 14:20:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56946 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345003AbiHZSUM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Aug 2022 14:20:12 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B60F45019B
-        for <linux-pci@vger.kernel.org>; Fri, 26 Aug 2022 11:20:01 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id t11-20020a17090a510b00b001fac77e9d1fso8819878pjh.5
-        for <linux-pci@vger.kernel.org>; Fri, 26 Aug 2022 11:20:01 -0700 (PDT)
+        with ESMTP id S1345043AbiHZSUW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Aug 2022 14:20:22 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 474BC4CA01
+        for <linux-pci@vger.kernel.org>; Fri, 26 Aug 2022 11:20:16 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id i8-20020a17090a65c800b001fd602afda2so2444660pjs.4
+        for <linux-pci@vger.kernel.org>; Fri, 26 Aug 2022 11:20:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=FMZK2zbDyl55wonvxZo05JFqyO2/6cJpEjPTCWuWIWI=;
-        b=s1bHMc0t+EgY3JRHamFbe3O2W7KIQwgHUw9wruSHUsE7dwRznHeez60mroak5+DItd
-         uCAE7MOSTJuyW8nVbq9I564pWBEyIa41jJusbUayQUWoDGvAWuGogzVomkMxZ1QjMIAR
-         EeLE0LY0cVnfU2IJgXIewZJBTcYjZRvH1R2Rs/jQGZqkDePADEXQu7P1j0zoag7P1sXg
-         Ejpna3IBKuDXXE/a3tEaiMlWGIHVJLOOM07REKrHUKuO8ZuApRFuBlC/Czw/IHlih6Mz
-         qs9eVQVyNT6FcS0MnDy6vPL1emxlu/cdQKTBkdy0BfbcHodqT6B8vsoR81HQelzwjtDG
-         kYVA==
+        bh=LclRCur2+TmOph0Lw8Vjg5+TpaDfY+BX1hQtzMBpEmo=;
+        b=T9SGWQTdEyfQAne25oXT8b+Oh3UmqfibJ2wGfwm8wqwa3+VSVykB17damkom56QlS8
+         CRG+sFxcy6UAaQLsoOPsw+KZrN3/gR5jLY4QX5VU5CzG3gEwtQNRHomqfMXRXeflTZrD
+         uSI1fWygWyZlhs2CKg1WBJ7aczW8ahirbHuhzO0eNKcwVs3ejcKYDJ6c3AKrm8GgTAfl
+         YJ/iJS3sB9nVNXQKnwMrld673GdcUVbnTLubohR6/u4IkB/QzjgPbmwD7PSCUhEA3jKT
+         IOGzCKMEAeb0YShJp5/hxwllxNwJgDjcx6+lwvZjfsm/e1KF1xjhiME/xYev8IuBKzCe
+         dQ3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=FMZK2zbDyl55wonvxZo05JFqyO2/6cJpEjPTCWuWIWI=;
-        b=YApWLX5w3i644HZFX+Aea6RcuHUMWdOo//Lv/aQdLmiB2YT7deyTSneUlMBSpFc1J6
-         FazV73M6KJ3s2S7Yh6v46T9aP2b3spHNDQxIbBhXoWiOg4iuuBQCW2LTotx/S38wxp9P
-         EYOUCURe8tWEYW5e2ODre6cshaN1YbFYmBr1Uu5fEd2eXvTCk7VXRRCmCrjGFp/8IiNC
-         +I0bD6r4BR1RTQ1oiY7JPByRHCKwe2pkxL/mF99Jwuiqxph/o7kxN/6fL5D14f3YwGdC
-         LEoh+HwJoSGdYxeka/gyGF3RO2v/wKfwJ+9USyb021DQP2xhSN8Fgkeqt/IgooctLJ8y
-         ELtw==
-X-Gm-Message-State: ACgBeo0KlWVFonquz8+JJ3HC+6XTngBVjXucIrey7bOa2u9azWs8jbIy
-        ikV7jQN25CvcTCtlzaFcJ7wk
-X-Google-Smtp-Source: AA6agR7alkQWrE4//3h6rPpk3p0vMMc3NvIzKVWZN679umAD49dP1iV+0bBg3GO0nea//FM7CXrj5Q==
-X-Received: by 2002:a17:90b:1646:b0:1fb:7b7d:e7cc with SMTP id il6-20020a17090b164600b001fb7b7de7ccmr5545692pjb.79.1661538001213;
-        Fri, 26 Aug 2022 11:20:01 -0700 (PDT)
+        bh=LclRCur2+TmOph0Lw8Vjg5+TpaDfY+BX1hQtzMBpEmo=;
+        b=crjw67fQmK2lbs2VcVJKoFCQlPB/BEIkeGTi01WIiNjcD4HNBmf/5eFaxZG5PPQ2X3
+         +6h9vqq1n9ZvzB3PVDon5IpMtXCpdMLwWjd24q8IEcXq6Dqw5UL1bjv2i5OJm4FMy8X8
+         FnQi9VUmCI2452D9bWcZddUE3c/wYo93IRZikcOKvawQZLHgBg4LMeBg5zUjiju9JUIZ
+         geCL7qyudKEWUxRXVWkmmKNpo294iZkmlYulBTje2AjeHRbx2VjFiJzFee9+Q1SHuPh1
+         mt6k4rJ+KGVegX0hdZBY/AdlXz8UJX5Pn2bsebeHEkzBGAJhlQ3Fj1pOOX9eZZSewtvC
+         R+wA==
+X-Gm-Message-State: ACgBeo0C6LU2LiySdWrkQku5Kij2ElFYgTJj1cLQq40NCrIgNB48yI9u
+        ndCj/8vB2dkZbwfbrgR5Ku9N
+X-Google-Smtp-Source: AA6agR6SnQB/qzAP6m3kTDBVIuSWB5zPeOc62p4Q3RpoUCk8ToKh2VybfB4VrL0KotoyMUHGDwh98w==
+X-Received: by 2002:a17:903:d5:b0:173:3307:bcf with SMTP id x21-20020a17090300d500b0017333070bcfmr4811878plc.87.1661538015749;
+        Fri, 26 Aug 2022 11:20:15 -0700 (PDT)
 Received: from localhost.localdomain ([117.193.214.147])
-        by smtp.gmail.com with ESMTPSA id s5-20020a170902b18500b00173368e9dedsm1881868plr.252.2022.08.26.11.19.56
+        by smtp.gmail.com with ESMTPSA id s5-20020a170902b18500b00173368e9dedsm1881868plr.252.2022.08.26.11.20.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Aug 2022 11:20:00 -0700 (PDT)
+        Fri, 26 Aug 2022 11:20:15 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     lpieralisi@kernel.org, robh@kernel.org, andersson@kernel.org
 Cc:     kw@linux.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
@@ -55,9 +55,9 @@ Cc:     kw@linux.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
         krzysztof.kozlowski+dt@linaro.org, devicetree@vger.kernel.org,
         dmitry.baryshkov@linaro.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 05/11] PCI: qcom-ep: Disable IRQs during driver remove
-Date:   Fri, 26 Aug 2022 23:49:17 +0530
-Message-Id: <20220826181923.251564-6-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 08/11] PCI: qcom-ep: Make PERST separation optional
+Date:   Fri, 26 Aug 2022 23:49:20 +0530
+Message-Id: <20220826181923.251564-9-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220826181923.251564-1-manivannan.sadhasivam@linaro.org>
 References: <20220826181923.251564-1-manivannan.sadhasivam@linaro.org>
@@ -67,44 +67,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Disable the Global and PERST IRQs during driver remove to avoid getting
-spurious IRQs after resource deallocation.
+PERST separation is an optional debug feature used to collect the crash
+dump from the PCIe endpoint devices by the PCIe host when the endpoint
+crashes. This feature keeps the PCIe link up by separating the PCIe IP
+block from the SoC reset logic.
+
+Hence, make the property optional in the driver.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom-ep.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 54b927adf60a..98ef36e3a94d 100644
+index 54ac2fef8b88..4908f08bd90b 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -586,11 +586,11 @@ static int qcom_pcie_ep_enable_irq_resources(struct platform_device *pdev,
+@@ -216,8 +216,10 @@ static int qcom_pcie_ep_core_reset(struct qcom_pcie_ep *pcie_ep)
+  */
+ static void qcom_pcie_ep_configure_tcsr(struct qcom_pcie_ep *pcie_ep)
  {
- 	int irq, ret;
+-	regmap_write(pcie_ep->perst_map, pcie_ep->perst_en, 0);
+-	regmap_write(pcie_ep->perst_map, pcie_ep->perst_sep_en, 0);
++	if (pcie_ep->perst_map) {
++		regmap_write(pcie_ep->perst_map, pcie_ep->perst_en, 0);
++		regmap_write(pcie_ep->perst_map, pcie_ep->perst_sep_en, 0);
++	}
+ }
  
--	irq = platform_get_irq_byname(pdev, "global");
--	if (irq < 0)
--		return irq;
-+	pcie_ep->global_irq = platform_get_irq_byname(pdev, "global");
-+	if (pcie_ep->global_irq < 0)
-+		return pcie_ep->global_irq;
+ static int qcom_pcie_dw_link_up(struct dw_pcie *pci)
+@@ -463,8 +465,8 @@ static int qcom_pcie_ep_get_io_resources(struct platform_device *pdev,
  
--	ret = devm_request_threaded_irq(&pdev->dev, irq, NULL,
-+	ret = devm_request_threaded_irq(&pdev->dev, pcie_ep->global_irq, NULL,
- 					qcom_pcie_ep_global_irq_thread,
- 					IRQF_ONESHOT,
- 					"global_irq", pcie_ep);
-@@ -700,6 +700,9 @@ static int qcom_pcie_ep_remove(struct platform_device *pdev)
- {
- 	struct qcom_pcie_ep *pcie_ep = platform_get_drvdata(pdev);
+ 	syscon = of_parse_phandle(dev->of_node, "qcom,perst-regs", 0);
+ 	if (!syscon) {
+-		dev_err(dev, "Failed to parse qcom,perst-regs\n");
+-		return -EINVAL;
++		dev_dbg(dev, "PERST separation not available\n");
++		return 0;
+ 	}
  
-+	disable_irq(pcie_ep->global_irq);
-+	disable_irq(pcie_ep->perst_irq);
-+
- 	if (pcie_ep->link_status == QCOM_PCIE_EP_LINK_DISABLED)
- 		return 0;
- 
+ 	pcie_ep->perst_map = syscon_node_to_regmap(syscon);
 -- 
 2.25.1
 
