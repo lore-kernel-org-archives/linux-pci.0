@@ -2,196 +2,118 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 701D4C0502E
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Aug 2022 12:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE98ECAAD2
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Aug 2022 13:03:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229722AbiH0MrS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Aug 2022 08:47:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40172 "EHLO
+        id S232724AbiH0ND4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Aug 2022 09:03:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60114 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233184AbiH0Mo4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Aug 2022 08:44:56 -0400
+        with ESMTP id S231222AbiH0NDz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Aug 2022 09:03:55 -0400
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6EC1DC7
-        for <linux-pci@vger.kernel.org>; Sat, 27 Aug 2022 05:44:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90DCCD52
+        for <linux-pci@vger.kernel.org>; Sat, 27 Aug 2022 06:03:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1661604283;
+        s=mimecast20190719; t=1661605433;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=zNyRZOkSzWJ9EYhoio6oWAIWSR6y4SVpHgKEpnVly0g=;
-        b=SXicbRaX7ruTJV5B7Hx1IVqnCtSvZSyIHmzAtV4r14+J3b2H00Iv+qp1aurbByglTQBBfZ
-        KvwGjBAnwmB5LEa8udLSfC45ER5uqgcq2fOVWwdZsXBhOzRAES8YzuXPapTJV3M5LpZmET
-        z4rsrYQ9O0AUqV54A784CoCxztsKSLs=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-282-V27yyZ5DOmOFhhWaK6yrxA-1; Sat, 27 Aug 2022 08:44:42 -0400
-X-MC-Unique: V27yyZ5DOmOFhhWaK6yrxA-1
-Received: by mail-ed1-f72.google.com with SMTP id w19-20020a05640234d300b004482dd03feeso740331edc.0
-        for <linux-pci@vger.kernel.org>; Sat, 27 Aug 2022 05:44:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=mime-version:message-id:date:references:in-reply-to:subject:cc:to
-         :from:x-gm-message-state:from:to:cc;
-        bh=zNyRZOkSzWJ9EYhoio6oWAIWSR6y4SVpHgKEpnVly0g=;
-        b=KORRWiwV5/zV9tWlgHqhpZRIQDOIe+oOS6DEP5gToXNtKlHTG5zRNDdE9BhMjh0VXT
-         MwLL9xkEAzyeO5RVUxVx1bO6opTXs2yEmdd6PvJl1q8l93YIWC2EpsxJpgfwPVdtN4f6
-         F5f2FHz98IHQbhBU8bXm8bmk6kETHYkFC3B2lyfYQ6BFxoqwaenR3KnwtjB8HHblDFnx
-         KaeLL/dYVTwqj98Va5RiY+8gHzf0MVR7/sJFGG3PMLMzN+KoxAzIuhDpJ/AIkrP4OXEn
-         VHXMWU5+wW/mfUR6ZsDI70yHP5Jl4iH6zPyhK3YIzhXX1WCTPkN1GqpSsxzA89HJE6Xo
-         PREA==
-X-Gm-Message-State: ACgBeo3xQKmr493kwnIRSuWCZrxiS6B/EpAmeNyZdHiqqpl1EgVI5heh
-        Fp1vlkNnWMl1NekeNX8XRZU8hJzXlZdASnT9LQdkPpXNJadvwdBOMHab/OZBG6V2d/7g+Ypa/WE
-        u8WiBQm/ZgcxSUI6D+Rwu
-X-Received: by 2002:a05:6402:1769:b0:447:911f:976b with SMTP id da9-20020a056402176900b00447911f976bmr10127043edb.300.1661604281216;
-        Sat, 27 Aug 2022 05:44:41 -0700 (PDT)
-X-Google-Smtp-Source: AA6agR6vj29lcPuFbHHTDDtHSn5P5zzs852lz2t1xrhic61Dz/N0SAO3ArNPy/BmYfioHP+NzD+7QA==
-X-Received: by 2002:a05:6402:1769:b0:447:911f:976b with SMTP id da9-20020a056402176900b00447911f976bmr10127018edb.300.1661604280989;
-        Sat, 27 Aug 2022 05:44:40 -0700 (PDT)
-Received: from fedora (nat-2.ign.cz. [91.219.240.2])
-        by smtp.gmail.com with ESMTPSA id f23-20020a05640214d700b0043ba437fe04sm2758020edx.78.2022.08.27.05.44.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 27 Aug 2022 05:44:40 -0700 (PDT)
+         content-transfer-encoding:content-transfer-encoding;
+        bh=+EoogJmL1LdU4qsxdiA67NtSxsci+Hnk3sRJu9JBGyA=;
+        b=Y6pWvO+ZB1BNNArPV95p55azQ+D6Up5L2PSe2CJPwnPzFO/e3jUBBHNHGPcRV2n+mOXWru
+        d7vxrUdCxr/gCVbMWQ2E/yhKOhavwbNt370+2R2ef7ZyTiR+cKKTzJs3ZJEeb8+HsXpFXw
+        7zjmQhomtSUz0Wtz7ihYi94KmUP7t34=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-528-bwYhGl34OsejDyeO-4MToA-1; Sat, 27 Aug 2022 09:03:50 -0400
+X-MC-Unique: bwYhGl34OsejDyeO-4MToA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.rdu2.redhat.com [10.11.54.8])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DA5F6185A7BA;
+        Sat, 27 Aug 2022 13:03:49 +0000 (UTC)
+Received: from fedora.redhat.com (unknown [10.40.192.40])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id E20AAC15BB3;
+        Sat, 27 Aug 2022 13:03:46 +0000 (UTC)
 From:   Vitaly Kuznetsov <vkuznets@redhat.com>
-To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+To:     linux-hyperv@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         Wei Liu <wei.liu@kernel.org>,
         Deepak Rawat <drawat.floss@gmail.com>,
-        KY Srinivasan <kys@microsoft.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
         Haiyang Zhang <haiyangz@microsoft.com>,
         Stephen Hemminger <sthemmin@microsoft.com>,
-        Dexuan Cui <decui@microsoft.com>
-Subject: RE: [PATCH v2 2/3] Drivers: hv: Always reserve framebuffer region
- for Gen1 VMs
-In-Reply-To: <SN6PR2101MB1693BDB6EF855BCE594AE376D7729@SN6PR2101MB1693.namprd21.prod.outlook.com>
-References: <20220825090024.1007883-1-vkuznets@redhat.com>
- <20220825090024.1007883-3-vkuznets@redhat.com>
- <SN6PR2101MB1693BDB6EF855BCE594AE376D7729@SN6PR2101MB1693.namprd21.prod.outlook.com>
-Date:   Sat, 27 Aug 2022 14:44:39 +0200
-Message-ID: <87mtbpvoso.fsf@redhat.com>
+        Dexuan Cui <decui@microsoft.com>,
+        Michael Kelley <mikelley@microsoft.com>
+Subject: [PATCH v3 0/3] Drivers: hv: Avoid allocating MMIO from framebuffer region for other passed through PCI devices
+Date:   Sat, 27 Aug 2022 15:03:42 +0200
+Message-Id: <20220827130345.1320254-1-vkuznets@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.85 on 10.11.54.8
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-"Michael Kelley (LINUX)" <mikelley@microsoft.com> writes:
+Changes since v2:
+- Add Michael's R-b tags to PATCHes1-3 and Bjorn's A-b tag to PATCH1.
+- Commit messages tweaks [Michael].
 
-> From: Vitaly Kuznetsov <vkuznets@redhat.com> Sent: Thursday, August 25, 2022 2:00 AM
->> 
->> vmbus_reserve_fb() tries reserving framebuffer region iff
->> 'screen_info.lfb_base' is set. Gen2 VMs seem to have it set by EFI fb
->
-> Just so I'm clear, by "EFI fb" you mean the EFI layer code that sets
-> up the frame buffer before the Linux kernel ever boots, right?
-> You are not referring to the Linux kernel EFI framebuffer
-> driver, which may or may not be configured in the kernel.
+Passed through PCI device sometimes misbehave on Gen1 VMs when Hyper-V
+DRM driver is also loaded. Looking at IOMEM assignment, we can see e.g.
 
-My very shallow understanding is that initially, screen_info comes from
-boot_params and this depends on how Linux was booted. Kernel EFI
-framebuffer (when enabled), however, gets it first and can modify it
-(see efifb_setup()) before we get to analyze it in Vmbus.
+$ cat /proc/iomem
+...
+f8000000-fffbffff : PCI Bus 0000:00
+  f8000000-fbffffff : 0000:00:08.0
+    f8000000-f8001fff : bb8c4f33-2ba2-4808-9f7f-02f3b4da22fe
+...
+fe0000000-fffffffff : PCI Bus 0000:00
+  fe0000000-fe07fffff : bb8c4f33-2ba2-4808-9f7f-02f3b4da22fe
+    fe0000000-fe07fffff : 2ba2:00:02.0
+      fe0000000-fe07fffff : mlx4_core
 
->
->> (or, in some edge cases like kexec, the address where the buffer was
->> moved, see https://lore.kernel.org/all/20201014092429.1415040-1-kasong@redhat.com/
->> but on Gen1 VM it depends on bootloader behavior. With grub, it depends
->> on 'gfxpayload=' setting but in some cases it is observed to be zero.
->> Relying on 'screen_info.lfb_base' to reserve framebuffer region is
->> risky. Instead, it is possible to get the address from the dedicated
->> PCI device which is always present.
->> 
->> Check for legacy PCI video device presence and reserve the whole
->> region for framebuffer on Gen1 VMs.
->> 
->> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
->> ---
->>  drivers/hv/vmbus_drv.c | 46 +++++++++++++++++++++++++++++-------------
->>  1 file changed, 32 insertions(+), 14 deletions(-)
->> 
->> diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
->> index 23c680d1a0f5..536f68e563c6 100644
->> --- a/drivers/hv/vmbus_drv.c
->> +++ b/drivers/hv/vmbus_drv.c
->> @@ -35,6 +35,7 @@
->>  #include <linux/kernel.h>
->>  #include <linux/syscore_ops.h>
->>  #include <linux/dma-map-ops.h>
->> +#include <linux/pci.h>
->>  #include <clocksource/hyperv_timer.h>
->>  #include "hyperv_vmbus.h"
->> 
->> @@ -2262,26 +2263,43 @@ static int vmbus_acpi_remove(struct acpi_device *device)
->> 
->>  static void vmbus_reserve_fb(void)
->>  {
->> -	int size;
->> +	resource_size_t start = 0, size;
->> +	struct pci_dev *pdev;
->> +
->> +	if (efi_enabled(EFI_BOOT)) {
->> +		/* Gen2 VM: get FB base from EFI framebuffer */
->> +		start = screen_info.lfb_base;
->> +		size = max_t(__u32, screen_info.lfb_size, 0x800000);
->> +	} else {
->> +		/* Gen1 VM: get FB base from PCI */
->> +		pdev = pci_get_device(PCI_VENDOR_ID_MICROSOFT,
->> +				      PCI_DEVICE_ID_HYPERV_VIDEO, NULL);
->> +		if (!pdev)
->> +			return;
->> +
->> +		if (pdev->resource[0].flags & IORESOURCE_MEM) {
->> +			start = pci_resource_start(pdev, 0);
->> +			size = pci_resource_len(pdev, 0);
->> +		}
->> +
->> +		/*
->> +		 * Release the PCI device so hyperv_drm or hyperv_fb driver can
->> +		 * grab it later.
->> +		 */
->> +		pci_dev_put(pdev);
->> +	}
->> +
->> +	if (!start)
->> +		return;
->> +
->>  	/*
->>  	 * Make a claim for the frame buffer in the resource tree under the
->>  	 * first node, which will be the one below 4GB.  The length seems to
->>  	 * be underreported, particularly in a Generation 1 VM.  So start out
->>  	 * reserving a larger area and make it smaller until it succeeds.
->>  	 */
->> -
->> -	if (screen_info.lfb_base) {
->> -		if (efi_enabled(EFI_BOOT))
->> -			size = max_t(__u32, screen_info.lfb_size, 0x800000);
->> -		else
->> -			size = max_t(__u32, screen_info.lfb_size, 0x4000000);
->> -
->> -		for (; !fb_mmio && (size >= 0x100000); size >>= 1) {
->> -			fb_mmio = __request_region(hyperv_mmio,
->> -						   screen_info.lfb_base, size,
->> -						   fb_mmio_name, 0);
->> -		}
->> -	}
->> +	for (; !fb_mmio && (size >= 0x100000); size >>= 1)
->> +		fb_mmio = __request_region(hyperv_mmio, start, size, fb_mmio_name, 0);
->>  }
->> 
->>  /**
->> --
->> 2.37.1
->
-> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
->
+the interesting part is the 'f8000000' region as it is actually the
+VM's framebuffer:
 
-Thanks!
+$ lspci -v
+...
+0000:00:08.0 VGA compatible controller: Microsoft Corporation Hyper-V virtual VGA (prog-if 00 [VGA controller])
+	Flags: bus master, fast devsel, latency 0, IRQ 11
+	Memory at f8000000 (32-bit, non-prefetchable) [size=64M]
+...
+
+Recently merged commit a0ab5abced55 ("drm/hyperv : Removing the restruction of
+VRAM allocation with PCI bar size") improved the situation as resources,
+reserved through vmbus_allocate_mmio() can't be allocated twice:
+
+...
+f8000000-fffbffff : PCI Bus 0000:00
+  f8000000-fbffffff : 0000:00:08.0
+    f8000000-f8001fff : bb8c4f33-2ba2-4808-9f7f-02f3b4da22fe
+    f8100000-f88fffff : 5620e0c7-8062-4dce-aeb7-520c7ef76171
+...
+
+Always reserve FB region on Gen1 VMs (PATCH2) and make sure we never allocate
+anything besides framebuffer from there (PATCH3).
+
+Vitaly Kuznetsov (3):
+  PCI: Move PCI_VENDOR_ID_MICROSOFT/PCI_DEVICE_ID_HYPERV_VIDEO
+    definitions to pci_ids.h
+  Drivers: hv: Always reserve framebuffer region for Gen1 VMs
+  Drivers: hv: Never allocate anything besides framebuffer from
+    framebuffer memory region
+
+ drivers/gpu/drm/hyperv/hyperv_drm_drv.c       |  3 -
+ drivers/hv/vmbus_drv.c                        | 56 ++++++++++++++-----
+ .../net/ethernet/microsoft/mana/gdma_main.c   |  4 --
+ drivers/video/fbdev/hyperv_fb.c               |  4 --
+ include/linux/pci_ids.h                       |  3 +
+ 5 files changed, 44 insertions(+), 26 deletions(-)
 
 -- 
-Vitaly
+2.37.1
 
