@@ -2,118 +2,207 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02901ECAAD2
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Aug 2022 09:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9FFEECAAD2
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Aug 2022 12:46:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230427AbiH0J3l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Aug 2022 05:29:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45458 "EHLO
+        id S233083AbiH0Mqw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Aug 2022 08:46:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230176AbiH0J3k (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Aug 2022 05:29:40 -0400
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 467E131341;
-        Sat, 27 Aug 2022 02:29:38 -0700 (PDT)
-Received: from dggpemm500020.china.huawei.com (unknown [172.30.72.54])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4MFBFP2mrmzGpGr;
-        Sat, 27 Aug 2022 17:27:53 +0800 (CST)
-Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
- dggpemm500020.china.huawei.com (7.185.36.49) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Sat, 27 Aug 2022 17:29:36 +0800
-Received: from [10.174.178.174] (10.174.178.174) by
- dggpemm500007.china.huawei.com (7.185.36.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Sat, 27 Aug 2022 17:29:35 +0800
-Subject: Re: [PATCH -next 2/3] PCI: fix possible memory leak in error case in
- pci_register_host_bridge()
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        Rob Herring <robh@kernel.org>
-References: <20220826223810.GA2961041@bhelgaas>
-From:   Yang Yingliang <yangyingliang@huawei.com>
-Message-ID: <83f42399-6dc3-d227-bb48-891172e061f9@huawei.com>
-Date:   Sat, 27 Aug 2022 17:29:35 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        with ESMTP id S230190AbiH0Mqw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Aug 2022 08:46:52 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FEBC40E12
+        for <linux-pci@vger.kernel.org>; Sat, 27 Aug 2022 05:46:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1661604410;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=inruV9tiW8qwXrnkVI+Ao+ITZBbbO5sFc1aw762dWrY=;
+        b=AR4s0pdDMsMU1McxfZABuUAI0PgnZK5dXtD6za75yrSWMUuJ57xTTzbnhiBLZORsWCXTsF
+        G4JaKpwPiOpKU0BuuoPNOV9ccHnVAAZrgdEJRVxLN2oAgnpvWl6AfjXwL3b3c2b8e5YS7J
+        E/8pJfwLQJogsjYDv5isXHxfpWAZYHE=
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com
+ [209.85.208.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-492-nU86w7TrOcKP3yiYdd_43A-1; Sat, 27 Aug 2022 08:46:49 -0400
+X-MC-Unique: nU86w7TrOcKP3yiYdd_43A-1
+Received: by mail-ed1-f69.google.com with SMTP id w19-20020a05640234d300b004482dd03feeso742626edc.0
+        for <linux-pci@vger.kernel.org>; Sat, 27 Aug 2022 05:46:49 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=mime-version:message-id:date:references:in-reply-to:subject:cc:to
+         :from:x-gm-message-state:from:to:cc;
+        bh=inruV9tiW8qwXrnkVI+Ao+ITZBbbO5sFc1aw762dWrY=;
+        b=N9r/BtEpwpsAccpEzwCEgMM3FR52iwqe44KXduAfGz02vGAkbmtQoAZaSQrwsCYmaQ
+         6mclEImMxVJ0uW/YaKmafWa9iBGprs0P+/xuNUL3Dx/n4d72HDzcLFyy4mGgc6AHBdG/
+         1ISOYUk1vLjhVO7MbVWZ8WMUKKIlW0fMyeP3viZASmXP9giPm0/0mWOUbmFa3cC1VoUx
+         wNkJUBpWMQe80ajFzfw+/6xbSJJUNoT6m3+Mm9DCPqo+iurCeIZ/ggNsnoojJt5ID8yv
+         NRrvnQTgFG9mrHzbdOZZf1+N0jEKkr+oaTn7Q06LQQz86Iw0PmoT9z5KidDm6Ma43VnR
+         7rsg==
+X-Gm-Message-State: ACgBeo03NxWzbTgRYoNq52nD5QLpYZawdFGBT0VTIYS6J/pkEm70zuDa
+        UyP4bpE4EXt3iyQep4zPvGwcttKGew/Kz2tFQqzwaeVU8/nADZP3ElNEtAMUx3AF7UTLRSWqFnj
+        wOwS4pXDhAYQlAodEMz2N
+X-Received: by 2002:a17:907:6890:b0:73d:a567:568c with SMTP id qy16-20020a170907689000b0073da567568cmr8053178ejc.521.1661604408243;
+        Sat, 27 Aug 2022 05:46:48 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR5TSxNxFhHIWUgDFGh6o2o5A2lHYsq2gKou43zUNTrXz2A2rDfHNazARFNTXYh+19y8woSsTQ==
+X-Received: by 2002:a17:907:6890:b0:73d:a567:568c with SMTP id qy16-20020a170907689000b0073da567568cmr8053169ejc.521.1661604408027;
+        Sat, 27 Aug 2022 05:46:48 -0700 (PDT)
+Received: from fedora (nat-2.ign.cz. [91.219.240.2])
+        by smtp.gmail.com with ESMTPSA id cb11-20020a0564020b6b00b0044841a78c70sm104257edb.93.2022.08.27.05.46.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 27 Aug 2022 05:46:47 -0700 (PDT)
+From:   Vitaly Kuznetsov <vkuznets@redhat.com>
+To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        Deepak Rawat <drawat.floss@gmail.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: RE: [PATCH v2 3/3] Drivers: hv: Never allocate anything besides
+ framebuffer from framebuffer memory region
+In-Reply-To: <SN6PR2101MB16935E50795FAE1FA352C416D7729@SN6PR2101MB1693.namprd21.prod.outlook.com>
+References: <20220825090024.1007883-1-vkuznets@redhat.com>
+ <20220825090024.1007883-4-vkuznets@redhat.com>
+ <SN6PR2101MB16935E50795FAE1FA352C416D7729@SN6PR2101MB1693.namprd21.prod.outlook.com>
+Date:   Sat, 27 Aug 2022 14:46:46 +0200
+Message-ID: <87k06tvop5.fsf@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20220826223810.GA2961041@bhelgaas>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [10.174.178.174]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- dggpemm500007.china.huawei.com (7.185.36.183)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+"Michael Kelley (LINUX)" <mikelley@microsoft.com> writes:
 
-On 2022/8/27 6:38, Bjorn Helgaas wrote:
-> [+cc Arnd, Rob]
+> From: Vitaly Kuznetsov <vkuznets@redhat.com> Sent: Thursday, August 25, 2022 2:00 AM
+>> 
+>> Passed through PCI device sometimes misbehave on Gen1 VMs when Hyper-V
+>> DRM driver is also loaded. Looking at IOMEM assignment, we can see e.g.
+>> 
+>> $ cat /proc/iomem
+>> ...
+>> f8000000-fffbffff : PCI Bus 0000:00
+>>   f8000000-fbffffff : 0000:00:08.0
+>>     f8000000-f8001fff : bb8c4f33-2ba2-4808-9f7f-02f3b4da22fe
+>> ...
+>> fe0000000-fffffffff : PCI Bus 0000:00
+>>   fe0000000-fe07fffff : bb8c4f33-2ba2-4808-9f7f-02f3b4da22fe
+>>     fe0000000-fe07fffff : 2ba2:00:02.0
+>>       fe0000000-fe07fffff : mlx4_core
+>> 
+>> the interesting part is the 'f8000000' region as it is actually the
+>> VM's framebuffer:
+>> 
+>> $ lspci -v
+>> ...
+>> 0000:00:08.0 VGA compatible controller: Microsoft Corporation Hyper-V virtual VGA
+>> (prog-if 00 [VGA controller])
+>> 	Flags: bus master, fast devsel, latency 0, IRQ 11
+>> 	Memory at f8000000 (32-bit, non-prefetchable) [size=64M]
+>> ...
+>> 
+>>  hv_vmbus: registering driver hyperv_drm
+>>  hyperv_drm 5620e0c7-8062-4dce-aeb7-520c7ef76171: [drm] Synthvid Version major 3, minor 5
+>>  hyperv_drm 0000:00:08.0: vgaarb: deactivate vga console
+>>  hyperv_drm 0000:00:08.0: BAR 0: can't reserve [mem 0xf8000000-0xfbffffff]
+>>  hyperv_drm 5620e0c7-8062-4dce-aeb7-520c7ef76171: [drm] Cannot request framebuffer, boot fb still active?
+>> 
+>> Note: "Cannot request framebuffer" is not a fatal error in
+>> hyperv_setup_gen1() as the code assumes there's some other framebuffer
+>> device there but we actually have some other PCI device (mlx4 in this
+>> case) config space there!
 >
-> On Thu, Aug 25, 2022 at 08:27:52PM +0800, Yang Yingliang wrote:
->> If device_register() fails in pci_register_host_bridge(), the refcount
->> of bus device is leaked, so device name that set by dev_set_name() can
->> not be freed. Fix this by calling put_device() when device_register()
->> fails, so the device name will be freed in kobject_cleanup().
->>
->> Fixes: 37d6a0a6f470 ("PCI: Add pci_register_host_bridge() interface")
->> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+> My apologies for not getting around to commenting on the previous
+> version of this patch.  The function hyperv_setup_gen1() and the
+> "Cannot request framebuffer" message have gone away as of
+> commit a0ab5abced55.
+>
+
+True, will fix!
+
+>> 
+>> The problem appears to be that vmbus_allocate_mmio() can allocate from
+>> the reserved framebuffer region (fb_overlap_ok), however, if the
+>> request to allocate MMIO comes from some other device before
+>> framebuffer region is taken, it can happily use framebuffer region for
+>> it. 
+>
+> Interesting. I had never looked at the details of vmbus_allocate_mmio().
+> The semantics one might assume of a parameter named "fb_overlap_ok"
+> aren't implemented because !fb_overlap_ok essentially has no effect.   The
+> existing semantics are really "prefer_fb_overlap".  This patch implements
+> the expected and needed semantics, which is to not allocate from the frame
+> buffer space when !fb_overlap_ok.
+>
+> If that's an accurate high level summary, maybe this commit message
+> could describe it that way?  The other details you provide about what can
+> go wrong should still be included as well.
+
+That's acually a very good summary! Let me update the commit message,
+I'll be sending out v3 shortly.
+
+>
+>> Note, Gen2 VMs are usually unaffected by the issue because
+>> framebuffer region is already taken by EFI fb (in case kernel supports
+>> it) but Gen1 VMs may have this region unclaimed by the time Hyper-V PCI
+>> pass-through driver tries allocating MMIO space if Hyper-V DRM/FB drivers
+>> load after it. Devices can be brought up in any sequence so let's
+>> resolve the issue by always ignoring 'fb_mmio' region for non-FB
+>> requests, even if the region is unclaimed.
+>> 
+>> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
 >> ---
->>   drivers/pci/probe.c | 17 +++++++++++------
->>   1 file changed, 11 insertions(+), 6 deletions(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index e500eb9d6468..292d9da146ce 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -948,8 +948,17 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->>   	name = dev_name(&bus->dev);
->>   
->>   	err = device_register(&bus->dev);
->> -	if (err)
->> -		goto unregister;
->> +	if (err) {
->> +		/*
->> +		 * release_pcibus_dev() will decrease the refcount of bridge
->> +		 * device and free the memory of bus.
->> +		 * The memory of bus device name will be freed when the refcount
->> +		 * get to zero.
->> +		 */
->> +		put_device(&bus->dev);
->> +		device_unregister(&bridge->dev);
->> +		return err;
->> +	}
-> Calling put_device(X) after device_register(X) returns failure doesn't
-> need explanation because that's the standard pattern.  I think that
-> was just missing before.
+>>  drivers/hv/vmbus_drv.c | 10 +++++++++-
+>>  1 file changed, 9 insertions(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+>> index 536f68e563c6..3c833ea60db6 100644
+>> --- a/drivers/hv/vmbus_drv.c
+>> +++ b/drivers/hv/vmbus_drv.c
+>> @@ -2331,7 +2331,7 @@ int vmbus_allocate_mmio(struct resource **new, struct
+>> hv_device *device_obj,
+>>  			bool fb_overlap_ok)
+>>  {
+>>  	struct resource *iter, *shadow;
+>> -	resource_size_t range_min, range_max, start;
+>> +	resource_size_t range_min, range_max, start, end;
+>>  	const char *dev_n = dev_name(&device_obj->device);
+>>  	int retval;
+>> 
+>> @@ -2366,6 +2366,14 @@ int vmbus_allocate_mmio(struct resource **new, struct
+>> hv_device *device_obj,
+>>  		range_max = iter->end;
+>>  		start = (range_min + align - 1) & ~(align - 1);
+>>  		for (; start + size - 1 <= range_max; start += align) {
+>> +			end = start + size - 1;
+>> +
+>> +			/* Skip the whole fb_mmio region if not fb_overlap_ok */
+>> +			if (!fb_overlap_ok && fb_mmio &&
+>> +			    (((start >= fb_mmio->start) && (start <= fb_mmio->end)) ||
+>> +			     ((end >= fb_mmio->start) && (end <= fb_mmio->end))))
+>> +				continue;
+>> +
+>>  			shadow = __request_region(iter, start, size, NULL,
+>>  						  IORESOURCE_BUSY);
+>>  			if (!shadow)
+>> --
+>> 2.37.1
 >
-> In this error case, we previously did called put_device() for the
-> *bridge* instead of the bus.  That was likely a typo and seems like
-> the important thing here.
-put_device() for the bridge will be called in the callback of put for 
-the bus.
-So it doesn't call put bridge device here.
+> Other than my musings on the commit message,
+>
+> Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+>
 
-Thanks,
-Yang
->>   	pcibios_add_bus(bus);
->>   
->> @@ -1025,10 +1034,6 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->>   
->>   	return 0;
->>   
->> -unregister:
->> -	put_device(&bridge->dev);
->> -	device_unregister(&bridge->dev);
->> -
->>   free:
->>   	kfree(bus);
->>   	return err;
->> -- 
->> 2.25.1
->>
-> .
+Thanks!
+
+-- 
+Vitaly
+
