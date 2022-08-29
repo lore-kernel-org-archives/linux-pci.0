@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2F97ECAAD4
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Aug 2022 08:33:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18D50ECAAD4
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Aug 2022 08:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229836AbiH2Ic7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Aug 2022 04:32:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35794 "EHLO
+        id S229812AbiH2IdB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Aug 2022 04:33:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35890 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229684AbiH2Icz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Aug 2022 04:32:55 -0400
-Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDC3A57894;
-        Mon, 29 Aug 2022 01:32:54 -0700 (PDT)
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 296FD200FC8;
-        Mon, 29 Aug 2022 10:32:53 +0200 (CEST)
+        with ESMTP id S229819AbiH2Ic7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Aug 2022 04:32:59 -0400
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 984AD578BC;
+        Mon, 29 Aug 2022 01:32:57 -0700 (PDT)
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 2534B1A0FCA;
+        Mon, 29 Aug 2022 10:32:56 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id E2A3D200FAC;
-        Mon, 29 Aug 2022 10:32:52 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id DD2E91A0FBF;
+        Mon, 29 Aug 2022 10:32:55 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 02341181D0C0;
-        Mon, 29 Aug 2022 16:32:50 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id E26011820F59;
+        Mon, 29 Aug 2022 16:32:53 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     p.zabel@pengutronix.de, l.stach@pengutronix.de,
         bhelgaas@google.com, lorenzo.pieralisi@arm.com, robh@kernel.org,
@@ -32,56 +32,77 @@ To:     p.zabel@pengutronix.de, l.stach@pengutronix.de,
 Cc:     linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, kernel@pengutronix.de,
-        linux-imx@nxp.com
-Subject: [PATCH v4 0/6] Add iMX8MP PCIe support
-Date:   Mon, 29 Aug 2022 16:15:11 +0800
-Message-Id: <1661760917-9558-1-git-send-email-hongxing.zhu@nxp.com>
+        linux-imx@nxp.com, Richard Zhu <hongxing.zhu@nxp.com>
+Subject: [PATCH v4 2/6] dt-binding: phy: Add iMX8MP PCIe PHY binding
+Date:   Mon, 29 Aug 2022 16:15:13 +0800
+Message-Id: <1661760917-9558-3-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1661760917-9558-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1661760917-9558-1-git-send-email-hongxing.zhu@nxp.com>
 X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Based on the 6.0-rc1 of the pci/next branch. 
-This series adds the i.MX8MP PCIe support and tested on i.MX8MP
-EVK board when one PCIe NVME device is used.
+Add i.MX8MP PCIe PHY binding.
+On iMX8MM, the initialized default value of PERST bit(BIT3) of
+SRC_PCIEPHY_RCR is 1b'1.
+But i.MX8MP has one inversed default value 1b'0 of PERST bit.
 
-- i.MX8MP PCIe has reversed initial PERST bit value refer to i.MX8MQ/i.MX8MM.
-  Add the PHY PERST explicitly for i.MX8MP PCIe PHY.
-- Add the i.MX8MP PCIe PHY support in the i.MX8M PCIe PHY driver.
-  And share as much as possible codes with i.MX8MM PCIe PHY.
-- Add the i.MX8MP PCIe support in binding document, DTS files, and PCIe
-  driver.
+And the PERST bit should be kept 1b'1 after power and clocks are stable.
+So add one more PERST explicitly for i.MX8MP PCIe PHY.
 
-Main changes v3-->v4:
-- Regarding Phillip's suggestions, add fix tag into the first commit.
-- Add Reviewed and Tested tags.
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+Tested-by: Marek Vasut <marex@denx.de>
+Tested-by: Richard Leitner <richard.leitner@skidata.com>
+Tested-by: Alexander Stein <alexander.stein@ew.tq-group.com>
+---
+ .../bindings/phy/fsl,imx8-pcie-phy.yaml          | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-Main changes v2-->v3:
-- Fix the schema checking error in the PHY dt-binding patch.
-- Inspired by Lucas, the PLL configurations might not required when
-  external OSC is used as PCIe referrence clock. It's true. Remove all
-  the HSIO PLL bit manipulations, and PCIe works fine on i.MX8MP EVK board
-  with one NVME device is used.
-- Drop the #4 patch of v2, since it had been applied by Rob.
+diff --git a/Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml
+index b6421eedece3..692783c7fd69 100644
+--- a/Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml
+@@ -16,6 +16,7 @@ properties:
+   compatible:
+     enum:
+       - fsl,imx8mm-pcie-phy
++      - fsl,imx8mp-pcie-phy
+ 
+   reg:
+     maxItems: 1
+@@ -28,11 +29,16 @@ properties:
+       - const: ref
+ 
+   resets:
+-    maxItems: 1
++    minItems: 1
++    maxItems: 2
+ 
+   reset-names:
+-    items:
+-      - const: pciephy
++    oneOf:
++      - items:          # for iMX8MM
++          - const: pciephy
++      - items:          # for IMX8MP
++          - const: pciephy
++          - const: perst
+ 
+   fsl,refclk-pad-mode:
+     description: |
+@@ -60,6 +66,10 @@ properties:
+     description: A boolean property indicating the CLKREQ# signal is
+       not supported in the board design (optional)
+ 
++  power-domains:
++    description: PCIe PHY  power domain (optional).
++    maxItems: 1
++
+ required:
+   - "#phy-cells"
+   - compatible
+-- 
+2.25.1
 
-Main changes v1-->v2:
-- It's my fault forget including Vinod, re-send v2 after include Vinod
-  and linux-phy@lists.infradead.org.
-- List the basements of this patch-set. The branch, codes changes and so on.
-- Clean up some useless register and bit definitions in #3 patch.
-
-Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml |  16 +++++++--
-arch/arm64/boot/dts/freescale/imx8mp-evk.dts                 |  53 +++++++++++++++++++++++++++++
-arch/arm64/boot/dts/freescale/imx8mp.dtsi                    |  46 ++++++++++++++++++++++++-
-drivers/pci/controller/dwc/pci-imx6.c                        |  17 +++++++++-
-drivers/phy/freescale/phy-fsl-imx8m-pcie.c                   | 150 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++-------------------------
-drivers/reset/reset-imx7.c                                   |   1 +
-6 files changed, 232 insertions(+), 51 deletions(-)
-
-[PATCH v4 1/6] reset: imx7: Fix the iMX8MP PCIe PHY PERST support
-[PATCH v4 2/6] dt-binding: phy: Add iMX8MP PCIe PHY binding
-[PATCH v4 3/6] phy: freescale: imx8m-pcie: Add iMX8MP PCIe PHY
-[PATCH v4 4/6] arm64: dts: imx8mp: Add iMX8MP PCIe support
-[PATCH v4 5/6] arm64: dts: imx8mp-evk: Add PCIe support
-[PATCH v4 6/6] PCI: imx6: Add iMX8MP PCIe support
