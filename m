@@ -2,78 +2,140 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C44ECAAD1
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Aug 2022 16:46:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11717ECAAA1
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Aug 2022 16:58:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229559AbiH3Qqt convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Aug 2022 12:46:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58154 "EHLO
+        id S230378AbiH3Q6h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Aug 2022 12:58:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230035AbiH3Qqq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2022 12:46:46 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 477DCB5309
-        for <linux-pci@vger.kernel.org>; Tue, 30 Aug 2022 09:46:45 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <p.zabel@pengutronix.de>)
-        id 1oT4Nf-0002qT-EK; Tue, 30 Aug 2022 18:46:27 +0200
-Received: from [2a0a:edc0:0:900:1d::4e] (helo=lupine)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <p.zabel@pengutronix.de>)
-        id 1oT4Nd-002uAy-VN; Tue, 30 Aug 2022 18:46:25 +0200
-Received: from pza by lupine with local (Exim 4.94.2)
-        (envelope-from <p.zabel@pengutronix.de>)
-        id 1oT4Nd-000CJM-4G; Tue, 30 Aug 2022 18:46:25 +0200
-Message-ID: <569a5d63af850d4180546c2c25220cbb988846eb.camel@pengutronix.de>
-Subject: Re: [PATCH v5 4/7] reset: imx7: Fix the iMX8MP PCIe PHY PERST
- support
-From:   Philipp Zabel <p.zabel@pengutronix.de>
-To:     Richard Zhu <hongxing.zhu@nxp.com>, l.stach@pengutronix.de,
-        bhelgaas@google.com, lorenzo.pieralisi@arm.com, robh@kernel.org,
-        shawnguo@kernel.org, vkoul@kernel.org,
-        alexander.stein@ew.tq-group.com, marex@denx.de,
-        richard.leitner@linux.dev
-Cc:     linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
-        linux-imx@nxp.com
-Date:   Tue, 30 Aug 2022 18:46:25 +0200
-In-Reply-To: <1661845564-11373-5-git-send-email-hongxing.zhu@nxp.com>
-References: <1661845564-11373-1-git-send-email-hongxing.zhu@nxp.com>
-         <1661845564-11373-5-git-send-email-hongxing.zhu@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-User-Agent: Evolution 3.38.3-1 
+        with ESMTP id S230398AbiH3Q6e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2022 12:58:34 -0400
+Received: from mail-yb1-f172.google.com (mail-yb1-f172.google.com [209.85.219.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF7C7B69CF;
+        Tue, 30 Aug 2022 09:58:32 -0700 (PDT)
+Received: by mail-yb1-f172.google.com with SMTP id y197so429553yby.13;
+        Tue, 30 Aug 2022 09:58:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=QwTPzippv9nFknfyh2bt7Km8y3L5Y24/vUQnMoNu/zw=;
+        b=YNFZdZlfGNc4/e4qpIJTi5d6fY7hVg48oZmQDZtG5s+2/z0yJ3pZ4+so8DeQYRW8Sn
+         BwSlmDSAxC+4XjuaXHuo1Rw8SAWjcD9M9HKmL2qyDP+9NuHDzAZ8QDYkt+Pc/pXJvwFI
+         1+T86dhJ/SCBOMZoXjk+uuFp3DziusujNuC/jQ3qTVTjyEk92flJJZumR7NblpR+7aq1
+         qoJ/zP6c5oSfJEFtR1fRNUxqmY/cwCz3wZ4Uz7IbgpqtqeKpiYETxTOmcvvB2uzDJT4g
+         QtEW//LmL602bc1CB69l7qXL09HnMn81uSyPWg1lXSUzBCAsGaSioEi3S2MAcpZlQkyp
+         R+Lg==
+X-Gm-Message-State: ACgBeo0zhRqtKo2z77viDhLANW2zzJwsSjkdpvzHu1SgFHBlczSbAUmd
+        JS+zM8HlTVdJjbJnnPZNps8CAqaWxfQjWZYq/vw=
+X-Google-Smtp-Source: AA6agR7mtrFfiiYWCG6KyM2N/ARGZmXb9oaS4qpQFGTPfFI/HmT+X3xNmdn7/Sel5cGAE2qOC38m61YoCH88sHdJSIA=
+X-Received: by 2002:a25:664f:0:b0:66c:d0f4:36cc with SMTP id
+ z15-20020a25664f000000b0066cd0f436ccmr12426812ybm.482.1661878711809; Tue, 30
+ Aug 2022 09:58:31 -0700 (PDT)
 MIME-Version: 1.0
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: p.zabel@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+References: <20220830104913.1620539-2-rajvi.jingar@linux.intel.com> <20220830162529.GA106073@bhelgaas>
+In-Reply-To: <20220830162529.GA106073@bhelgaas>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Tue, 30 Aug 2022 18:58:20 +0200
+Message-ID: <CAJZ5v0jL812FKOJsmijE7gx5GEYp0hQ9+3UtQ_WUr-Uf5pgxAg@mail.gmail.com>
+Subject: Re: [RESEND PATCH v3 2/2] PCI/PTM: fix to maintain pci_dev->ptm_enabled
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Rajvi Jingar <rajvi.jingar@linux.intel.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        David Box <david.e.box@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On Tue, Aug 30, 2022 at 6:25 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> [+cc Kai-Heng]
+>
+> On Tue, Aug 30, 2022 at 03:49:13AM -0700, Rajvi Jingar wrote:
+> > pci_dev->ptm_enabled needs to be maintained to reflect the current PTM
+> > state of the device. In pci_ptm_disable(), clear ptm_enabled from
+> > 'struct pci_dev' on disabling PTM state for the device.
+> > In pci_restore_ptm_state(), set dev->ptm_enabled based on the restored
+> > PTM state of the device.
+> >
+> > In pci_ptm_disable(), perform ptm_enabled check to avoid config space
+> > access in case if PTM is already disabled for the device. ptm_enabled
+> > won't be set for non-PCIe devices so pci_is_pcie(dev) check is not
+> > needed anymore.
+>
+> This one sounds like it's supposed to fix something, but I'm not clear
+> exactly what.
+>
+> I have a vague memory of config accesses messing up a low power state.
+> But this is still completely magical and unmaintainable since AFAIK
+> there is nothing in the PCIe spec about avoiding config accesses when
+> PTM is disabled.
 
-On Di, 2022-08-30 at 15:46 +0800, Richard Zhu wrote:
-> On i.MX7/iMX8MM/iMX8MQ, the initialized default value of PERST bit(BIT3)
-> of SRC_PCIEPHY_RCR is 1b'1.
-> But i.MX8MP has one inversed default value 1b'0 of PERST bit.
-> 
-> And the PERST bit should be kept 1b'1 after power and clocks are stable.
-> So fix the i.MX8MP PCIe PHY PERST support here.
-> 
-> Fixes: e08672c03981 ("reset: imx7: Add support for i.MX8MP SoC")
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
-> Tested-by: Marek Vasut <marex@denx.de>
-> Tested-by: Richard Leitner <richard.leitner@skidata.com>
-> Tested-by: Alexander Stein <alexander.stein@ew.tq-group.com>
+Because ptm_enabled is expected to always reflect the hardware state,
+pci_disable_ptm() needs to be amended to clear it.  Also it is prudent
+to explicitly make it reflect the new hardware state in
+pci_restore_ptm_state().
 
-I've applied this patch to the reset/fixes branch.
+Then, pci_disable_ptm() can be made bail out if ptm_enabled is clear,
+because it has nothing to do then and the pci_is_pcie() check in there
+is not necessary, because ptm_enabled will never be set for devices
+that are not PCIe.
 
-regards
-Philipp
+> At the very least, we would need more details in the commit log and
+> a hint in the code about this.
+>
+> > Signed-off-by: Rajvi Jingar <rajvi.jingar@linux.intel.com>
+> > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  v1->v2:
+> >    - add ptm_enabled check in pci_ptm_disable().
+> >    - set the dev->ptm_enabled value in pci_restore_ptm_state().
+> >  v2->v3:
+> >    - remove pci_is_pcie(dev) check in pci_ptm_disable().
+> >    - add Reviewed-by tag in commit message
+> > ---
+> >  drivers/pci/pcie/ptm.c | 4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+> > index 368a254e3124..1ce241d4538f 100644
+> > --- a/drivers/pci/pcie/ptm.c
+> > +++ b/drivers/pci/pcie/ptm.c
+> > @@ -34,7 +34,7 @@ void pci_disable_ptm(struct pci_dev *dev)
+> >       int ptm;
+> >       u16 ctrl;
+> >
+> > -     if (!pci_is_pcie(dev))
+> > +     if (!dev->ptm_enabled)
+> >               return;
+>
+> This will conflict with a change Kai-Heng Feng and I have been working
+> on, but I can resolve it when applying.
+>
+> >       ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
+> > @@ -44,6 +44,7 @@ void pci_disable_ptm(struct pci_dev *dev)
+> >       pci_read_config_word(dev, ptm + PCI_PTM_CTRL, &ctrl);
+> >       ctrl &= ~(PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT);
+> >       pci_write_config_word(dev, ptm + PCI_PTM_CTRL, ctrl);
+> > +     dev->ptm_enabled = 0;
+> >  }
+> >
+> >  void pci_save_ptm_state(struct pci_dev *dev)
+> > @@ -83,6 +84,7 @@ void pci_restore_ptm_state(struct pci_dev *dev)
+> >
+> >       cap = (u16 *)&save_state->cap.data[0];
+> >       pci_write_config_word(dev, ptm + PCI_PTM_CTRL, *cap);
+> > +     dev->ptm_enabled = !!(*cap & PCI_PTM_CTRL_ENABLE);
+> >  }
+> >
+> >  void pci_ptm_init(struct pci_dev *dev)
+> > --
+> > 2.25.1
+> >
