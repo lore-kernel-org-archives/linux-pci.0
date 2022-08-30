@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20146ECAAA1
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Aug 2022 17:00:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A79E7ECAAD8
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Aug 2022 17:00:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231199AbiH3Q77 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Aug 2022 12:59:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53102 "EHLO
+        id S230135AbiH3RAa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Aug 2022 13:00:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231272AbiH3Q7g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2022 12:59:36 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41F8BB9594
-        for <linux-pci@vger.kernel.org>; Tue, 30 Aug 2022 09:59:22 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id l3so11701238plb.10
-        for <linux-pci@vger.kernel.org>; Tue, 30 Aug 2022 09:59:22 -0700 (PDT)
+        with ESMTP id S231195AbiH3Q74 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2022 12:59:56 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 140DDB9FA1
+        for <linux-pci@vger.kernel.org>; Tue, 30 Aug 2022 09:59:39 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id s206so11218002pgs.3
+        for <linux-pci@vger.kernel.org>; Tue, 30 Aug 2022 09:59:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=UaIe6nvb9frcJULOPfASw/VY+z26bpOj35NUY7Eb3q4=;
-        b=hitW9hbwLBSxHNayK49JF5ArwQqrJeOxOxW1C+UiyuIgpAH9ZR1mv06WLURY7HQ+VD
-         +2pZ6LIBbNBmyN9zegNKsarW2LgDyAujQ1Wqcp6CQo51mlfZTFGDjlUilznZWQvC2QVd
-         0Gjw7Y13K5zVXU0gBtq1X1zNQwKba0i/wdTsROv6i3Pk5H39bdGUDrGx9fRmNT0F74I+
-         m5r2ECNe6eAhJ9nsN4TEhyGj1GRWP9wPRYzLPqPUFaUpkLVFYxxBSc9hPV2KNI43bTyM
-         GZDXy8F/TsxWHb/S5asGuTXjKM9Bs5Dg5J1EnbLTP7Iewva2r33p3c5et+RjpZlGOZ53
-         1dqA==
+        bh=+nFPGJL9DaKSTkpdD0XYV1f18/EerKy4FdCtQJJTq78=;
+        b=lfYKqROpmRlpL3DqSB3zms6UXIsfrOhcyDkVHVwWGZBmQJlIujKVnDe0bdyC6sgfRj
+         ftdTGzaBqQWGuuFzl8lPLDYvJjVzlxtjCN+BwQZ7TBAYHiuT4y4OC3g+75WjH9btWhB5
+         8VdqYpb4VvouExkYDPiys+cnmABpX+b09ekFCYrpw3l46AZtwG/HNFXGGzZGfWBcKiUz
+         XjnV4OfrLh1NkRG3EcSURvdtK36MmvcpRG448GOo51Q2qqp1/CDjK+aC8qFeh27tdUmi
+         hJnXjjJWUZpkuKXakafiA+diQVRNxW72lCGXGj5UGubrUXlirQvHdqqq2CFiSp+jCDX9
+         fKpQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=UaIe6nvb9frcJULOPfASw/VY+z26bpOj35NUY7Eb3q4=;
-        b=ByLlR4d9LnpKSOkv2h9EETsjlkubmSkK6R8caQ8v9F7eQ18JFn6MBpqJ2S/HVl5QjW
-         9pmaXYKe6xv5pKGbfP1Uq8DPxP4IsQNBzWRMiW0bl9PHM8Bgk8mGKaTTpZ77wCk8KjwN
-         V21DyclVa602bS5STJHLHCdq+4g0ML2kXxI8Lv+N7R4RlLeIji87Ec1cFYw/f//xS8KF
-         gIpiZO393gyA8M1nGljvQcBnQnQUWwFU8DOg0rRmt/ZhEMf6DzCTjCrmQ1nR6y9CXkXS
-         YYSUtm8husS15CmH26BFpH+LGsu2W9sy0yiSschJMgL3y+IhMCRWux/Qgjs/bMxp4eFl
-         xHXw==
-X-Gm-Message-State: ACgBeo3p0vOIGG9G+e11aleWXiTaAgaFZ+curnFqKvACTP/uFyQHVLmc
-        rFRqpu6FswTOtxBTw/Dzs4Dq
-X-Google-Smtp-Source: AA6agR6OxuuAcOe3ofjgEL/FypzzZuaumsVigWO3yWd4uCKf96ZKLzSl+8j+IuditYFIgqFzG5WCNw==
-X-Received: by 2002:a17:902:f68d:b0:172:a34c:ff96 with SMTP id l13-20020a170902f68d00b00172a34cff96mr22025807plg.26.1661878761986;
-        Tue, 30 Aug 2022 09:59:21 -0700 (PDT)
+        bh=+nFPGJL9DaKSTkpdD0XYV1f18/EerKy4FdCtQJJTq78=;
+        b=tRpYYuawOs3qQ5GFAd0QgIqA4woTRKuT4CEkFgha+YAQvZfHDeKnyG8clN6hZ7vUtL
+         HgSreUeQQhBuU6EldUzP15K1W07M9CK1fycoxGL7udd7qfRVQFPOr8rjuOIW29706cpE
+         FLwKKEwr7qkiQtskpIAxTQeyWfpfpWFN7TMeZbG203EyDl29h6z4h18+vuPJN84idilw
+         gxbI+z4JGJytlGNw064vLLmSNubLiE6dBIpI9qax+FZM082LLUTMQPHZGyAIJiqvIA7H
+         sTQSdg26fLSzQT5117hxtK8q6gcJ1RbXhE6gZdbhPd8jR+tJNlfi+t88gpCvbKd2h815
+         al3w==
+X-Gm-Message-State: ACgBeo2ohvbOMl7CP896aa/T0ebRIP5HZTAjS6QZCecme6ZDtWMa2XAP
+        P4NrN07gFWzbnImDKxbFmMJI
+X-Google-Smtp-Source: AA6agR4UjtYECqhqxWpR8YXyyfnUouq0WDy0qcGXLSRGaEeA4KOLING/BPaATbhjwzc+TK8sBdHqCQ==
+X-Received: by 2002:a62:ed08:0:b0:537:17a6:57aa with SMTP id u8-20020a62ed08000000b0053717a657aamr22483376pfh.6.1661878773041;
+        Tue, 30 Aug 2022 09:59:33 -0700 (PDT)
 Received: from localhost.localdomain ([117.217.182.234])
-        by smtp.gmail.com with ESMTPSA id n59-20020a17090a5ac100b001f510175984sm8841261pji.41.2022.08.30.09.59.16
+        by smtp.gmail.com with ESMTPSA id n59-20020a17090a5ac100b001f510175984sm8841261pji.41.2022.08.30.09.59.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Aug 2022 09:59:21 -0700 (PDT)
+        Tue, 30 Aug 2022 09:59:32 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     lpieralisi@kernel.org, robh@kernel.org, andersson@kernel.org
 Cc:     kw@linux.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
@@ -54,11 +54,10 @@ Cc:     kw@linux.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
         konrad.dybcio@somainline.org, robh+dt@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, devicetree@vger.kernel.org,
         dmitry.baryshkov@linaro.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v2 07/11] dt-bindings: PCI: qcom-ep: Make PERST separation optional
-Date:   Tue, 30 Aug 2022 22:28:13 +0530
-Message-Id: <20220830165817.183571-8-manivannan.sadhasivam@linaro.org>
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 09/11] dt-bindings: PCI: qcom-ep: Define clocks per platform
+Date:   Tue, 30 Aug 2022 22:28:15 +0530
+Message-Id: <20220830165817.183571-10-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220830165817.183571-1-manivannan.sadhasivam@linaro.org>
 References: <20220830165817.183571-1-manivannan.sadhasivam@linaro.org>
@@ -68,32 +67,92 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PERST separation is an optional debug feature used to collect the crash
-dump from the PCIe endpoint devices by the PCIe host when the endpoint
-crashes. This feature keeps the PCIe link up by separating the PCIe IP
-block from the SoC reset logic.
+In preparation of adding the bindings for future SoCs, let's define the
+clocks per platform.
 
-So remove the corresponding property "qcom,perst-regs" from the required
-properties list.
-
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml | 1 -
- 1 file changed, 1 deletion(-)
+ .../devicetree/bindings/pci/qcom,pcie-ep.yaml | 51 ++++++++++++-------
+ 1 file changed, 32 insertions(+), 19 deletions(-)
 
 diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-index 3d23599e5e91..b728ede3f09f 100644
+index b728ede3f09f..a15e71491722 100644
 --- a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
 +++ b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-@@ -105,7 +105,6 @@ required:
-   - reg-names
-   - clocks
-   - clock-names
--  - qcom,perst-regs
-   - interrupts
-   - interrupt-names
-   - reset-gpios
+@@ -9,9 +9,6 @@ title: Qualcomm PCIe Endpoint Controller binding
+ maintainers:
+   - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+ 
+-allOf:
+-  - $ref: "pci-ep.yaml#"
+-
+ properties:
+   compatible:
+     const: qcom,sdx55-pcie-ep
+@@ -35,24 +32,10 @@ properties:
+       - const: mmio
+ 
+   clocks:
+-    items:
+-      - description: PCIe Auxiliary clock
+-      - description: PCIe CFG AHB clock
+-      - description: PCIe Master AXI clock
+-      - description: PCIe Slave AXI clock
+-      - description: PCIe Slave Q2A AXI clock
+-      - description: PCIe Sleep clock
+-      - description: PCIe Reference clock
++    maxItems: 7
+ 
+   clock-names:
+-    items:
+-      - const: aux
+-      - const: cfg
+-      - const: bus_master
+-      - const: bus_slave
+-      - const: slave_q2a
+-      - const: sleep
+-      - const: ref
++    maxItems: 7
+ 
+   qcom,perst-regs:
+     description: Reference to a syscon representing TCSR followed by the two
+@@ -112,6 +95,36 @@ required:
+   - reset-names
+   - power-domains
+ 
++allOf:
++  - $ref: pci-ep.yaml#
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,sdx55-pcie-ep
++    then:
++      properties:
++        clocks:
++          maxItems: 7
++          items:
++            - description: PCIe Auxiliary clock
++            - description: PCIe CFG AHB clock
++            - description: PCIe Master AXI clock
++            - description: PCIe Slave AXI clock
++            - description: PCIe Slave Q2A AXI clock
++            - description: PCIe Sleep clock
++            - description: PCIe Reference clock
++        clock-names:
++          items:
++            - const: aux
++            - const: cfg
++            - const: bus_master
++            - const: bus_slave
++            - const: slave_q2a
++            - const: sleep
++            - const: ref
++
+ unevaluatedProperties: false
+ 
+ examples:
 -- 
 2.25.1
 
