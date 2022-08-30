@@ -2,92 +2,151 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FF32ECAAD8
-	for <linux-pci@archiver.kernel.org>; Tue, 30 Aug 2022 17:01:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB32ECAAA1
+	for <linux-pci@archiver.kernel.org>; Tue, 30 Aug 2022 17:42:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229818AbiH3RBG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 Aug 2022 13:01:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53056 "EHLO
+        id S231331AbiH3RmB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 Aug 2022 13:42:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231337AbiH3RA2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2022 13:00:28 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 753B16C121
-        for <linux-pci@vger.kernel.org>; Tue, 30 Aug 2022 09:59:51 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id x23so11712674pll.7
-        for <linux-pci@vger.kernel.org>; Tue, 30 Aug 2022 09:59:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=7Z3u13rYQpnMB98SibwD18Rv6bC0Tn7F50N9xepOERw=;
-        b=sldTHnD1qgrZpMPHpc1hPZG8EsxLnZF132ClKRNUBn9xjfcdISQUHaSRPsK9Ez7dID
-         n/3DLtYZz6U94P7tTy8lIoUIeJmhhye099Y7QSnwkvm2Ps5EcSj/Uj3WJYiQfm9z78rF
-         CzJmqlgYAMidW9dafxB/dc2n4cHWdgFafkca2xIp9okVB/lNf/bvaa0Lcx0kODBRqo/B
-         WlVqg+vCj0qccdihUJ2pGwdfFz0//9UDH7JCz0e1jU1gYd9ykASqoV1X1NG/IUho3QiU
-         /p4fBEGQSaSprd7VWecqGwzwuJTxcS1DahcaE7vzE6JBBZh0dzsZ8DtLKQGAUOtJ21d8
-         bbnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc;
-        bh=7Z3u13rYQpnMB98SibwD18Rv6bC0Tn7F50N9xepOERw=;
-        b=ZshJCSxm4r1qm0IYFU3SBkKMmHrJjjoqWm2DBXQ0nlKjA+EI+IBiLepWm0OBn5j0Ww
-         KOlZM4Qx5MqGNdeyLrUOmdf9bHkAEHh16PimsbvaH/s7cK+1GC3y78JIjh280pitw1bu
-         c8zGZ9eHF3RDA3mEROMNstHmYXrQ8VOW8WE49TX5pOKgh/jHf+W5vzFFRZkKXaUgfi0n
-         jCekqIzMvQ9ZMboKfQMRY03ingwyQvy3RSC0fCuqS3qUgpQq1u2wDJklg+yi9n3zIWr7
-         fC9jAt10XBJuiTVnneplfMF2FI2RWGkOOvoI7OedayIQvTR+zRtxnFIhsIDiU4Gl8LC/
-         7G0w==
-X-Gm-Message-State: ACgBeo3ldWN14ogmmi+n963vyuKPLb/FgODA57/0ikR04Y1aS3WqTDd8
-        KfCT6iKwl1zyWrRaudOnlkmo
-X-Google-Smtp-Source: AA6agR4ZLBvQrgM2XBFylZu8fxpCao63txCa2/kmk9jdO5RVB55e818vG7ukPztVNGo9hdb2mz+ZXA==
-X-Received: by 2002:a17:902:e382:b0:173:36e4:ede6 with SMTP id g2-20020a170902e38200b0017336e4ede6mr21241607ple.139.1661878784846;
-        Tue, 30 Aug 2022 09:59:44 -0700 (PDT)
-Received: from localhost.localdomain ([117.217.182.234])
-        by smtp.gmail.com with ESMTPSA id n59-20020a17090a5ac100b001f510175984sm8841261pji.41.2022.08.30.09.59.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 30 Aug 2022 09:59:44 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     lpieralisi@kernel.org, robh@kernel.org, andersson@kernel.org
-Cc:     kw@linux.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        konrad.dybcio@somainline.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, devicetree@vger.kernel.org,
-        dmitry.baryshkov@linaro.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 11/11] PCI: qcom-ep: Add support for SM8450 SoC
-Date:   Tue, 30 Aug 2022 22:28:17 +0530
-Message-Id: <20220830165817.183571-12-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220830165817.183571-1-manivannan.sadhasivam@linaro.org>
-References: <20220830165817.183571-1-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S232073AbiH3Rln (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 Aug 2022 13:41:43 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84B20F43A2;
+        Tue, 30 Aug 2022 10:38:53 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5AFAA6117D;
+        Tue, 30 Aug 2022 17:37:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 79EAEC433C1;
+        Tue, 30 Aug 2022 17:37:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661881045;
+        bh=hZvLlOnL6yvpi8MoLMu1NOUQlpnm115KJD6h3xz3kYQ=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=K9lvo23yx93EcY9vHb7bwHgIC1VWsQ1EfJtvY2xWks3CAQDqBrhAEi+UOtHb3xn5i
+         0/hNGs2TzLP0LldhEpmvmtp+k74bfSWG0oaAgBdWac4jgeLeZdARcZyG+WMu/EVMG4
+         Nw5a1KGDnV4w8cQVp+MJGCSsNbS1UaSPbBcd5R84a6ieI7FYOIqOxoKUDj5aiR29nw
+         2/aVMtftL5wE1I9Ku3C23J893RZABS6LQb9Cn4aX28M62Rb3Da4R1zr8hiQjm26BpL
+         ajOzoClqNa/bIMKBLPVzGpcHiQbEYVhe1J7EMD16G4NsQi1/aCv2AxoCPV6gndEcqk
+         2ZavPaEXNINmA==
+Date:   Tue, 30 Aug 2022 12:37:23 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     Rajvi Jingar <rajvi.jingar@linux.intel.com>,
+        Rafael Wysocki <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        David Box <david.e.box@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: Re: [RESEND PATCH v3 2/2] PCI/PTM: fix to maintain
+ pci_dev->ptm_enabled
+Message-ID: <20220830173723.GA109210@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJZ5v0jL812FKOJsmijE7gx5GEYp0hQ9+3UtQ_WUr-Uf5pgxAg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for SM8450 SoC to the Qualcomm PCIe Endpoint Controller
-driver. The driver uses the same config as of the existing SDX55 chipset.
-So additional settings are not required.
+On Tue, Aug 30, 2022 at 06:58:20PM +0200, Rafael J. Wysocki wrote:
+> On Tue, Aug 30, 2022 at 6:25 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Aug 30, 2022 at 03:49:13AM -0700, Rajvi Jingar wrote:
+> > > pci_dev->ptm_enabled needs to be maintained to reflect the current PTM
+> > > state of the device. In pci_ptm_disable(), clear ptm_enabled from
+> > > 'struct pci_dev' on disabling PTM state for the device.
+> > > In pci_restore_ptm_state(), set dev->ptm_enabled based on the restored
+> > > PTM state of the device.
+> > >
+> > > In pci_ptm_disable(), perform ptm_enabled check to avoid config space
+> > > access in case if PTM is already disabled for the device. ptm_enabled
+> > > won't be set for non-PCIe devices so pci_is_pcie(dev) check is not
+> > > needed anymore.
+> >
+> > This one sounds like it's supposed to fix something, but I'm not clear
+> > exactly what.
+> >
+> > I have a vague memory of config accesses messing up a low power state.
+> > But this is still completely magical and unmaintainable since AFAIK
+> > there is nothing in the PCIe spec about avoiding config accesses when
+> > PTM is disabled.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 1 +
- 1 file changed, 1 insertion(+)
+I'm remembering this, which seemed like an ancestor of this patch:
+https://lore.kernel.org/r/CAJZ5v0gNy6YJA+RNTEyHBdoJK-jqKN60oU_k_LX4=cTuyoO2mg@mail.gmail.com
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 4908f08bd90b..fa1819c9f667 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -775,6 +775,7 @@ static int qcom_pcie_ep_remove(struct platform_device *pdev)
- 
- static const struct of_device_id qcom_pcie_ep_match[] = {
- 	{ .compatible = "qcom,sdx55-pcie-ep", },
-+	{ .compatible = "qcom,sm8450-pcie-ep", },
- 	{ }
- };
- 
--- 
-2.25.1
+This patch is queued up and does something similar (disabling PTM on
+all devices before suspend):
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=d878400c7d98
 
+Is d878400c7d98 enough to solve the functional issue, and this patch
+is basically a cleanup?  I think it's a nice cleanup and worth doing.
+
+I'm just trying to figure out the "avoid config space access" in the
+commit log.  If avoiding config space access is necessary, it needs
+more explanation.
+
+> Because ptm_enabled is expected to always reflect the hardware state,
+> pci_disable_ptm() needs to be amended to clear it.  Also it is prudent
+> to explicitly make it reflect the new hardware state in
+> pci_restore_ptm_state().
+>
+> Then, pci_disable_ptm() can be made bail out if ptm_enabled is clear,
+> because it has nothing to do then and the pci_is_pcie() check in there
+> is not necessary, because ptm_enabled will never be set for devices
+> that are not PCIe.
+>
+> > At the very least, we would need more details in the commit log and
+> > a hint in the code about this.
+> >
+> > > Signed-off-by: Rajvi Jingar <rajvi.jingar@linux.intel.com>
+> > > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > ---
+> > >  v1->v2:
+> > >    - add ptm_enabled check in pci_ptm_disable().
+> > >    - set the dev->ptm_enabled value in pci_restore_ptm_state().
+> > >  v2->v3:
+> > >    - remove pci_is_pcie(dev) check in pci_ptm_disable().
+> > >    - add Reviewed-by tag in commit message
+> > > ---
+> > >  drivers/pci/pcie/ptm.c | 4 +++-
+> > >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
+> > > index 368a254e3124..1ce241d4538f 100644
+> > > --- a/drivers/pci/pcie/ptm.c
+> > > +++ b/drivers/pci/pcie/ptm.c
+> > > @@ -34,7 +34,7 @@ void pci_disable_ptm(struct pci_dev *dev)
+> > >       int ptm;
+> > >       u16 ctrl;
+> > >
+> > > -     if (!pci_is_pcie(dev))
+> > > +     if (!dev->ptm_enabled)
+> > >               return;
+> >
+> > This will conflict with a change Kai-Heng Feng and I have been working
+> > on, but I can resolve it when applying.
+> >
+> > >       ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
+> > > @@ -44,6 +44,7 @@ void pci_disable_ptm(struct pci_dev *dev)
+> > >       pci_read_config_word(dev, ptm + PCI_PTM_CTRL, &ctrl);
+> > >       ctrl &= ~(PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT);
+> > >       pci_write_config_word(dev, ptm + PCI_PTM_CTRL, ctrl);
+> > > +     dev->ptm_enabled = 0;
+> > >  }
+> > >
+> > >  void pci_save_ptm_state(struct pci_dev *dev)
+> > > @@ -83,6 +84,7 @@ void pci_restore_ptm_state(struct pci_dev *dev)
+> > >
+> > >       cap = (u16 *)&save_state->cap.data[0];
+> > >       pci_write_config_word(dev, ptm + PCI_PTM_CTRL, *cap);
+> > > +     dev->ptm_enabled = !!(*cap & PCI_PTM_CTRL_ENABLE);
+> > >  }
+> > >
+> > >  void pci_ptm_init(struct pci_dev *dev)
+> > > --
+> > > 2.25.1
+> > >
