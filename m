@@ -2,102 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34AF1ECAAD1
-	for <linux-pci@archiver.kernel.org>; Wed, 31 Aug 2022 08:55:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E04E3ECAAD1
+	for <linux-pci@archiver.kernel.org>; Wed, 31 Aug 2022 09:17:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231696AbiHaIz6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 31 Aug 2022 04:55:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45984 "EHLO
+        id S230344AbiHaJRk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 31 Aug 2022 05:17:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231695AbiHaIzi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2022 04:55:38 -0400
+        with ESMTP id S229583AbiHaJRj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2022 05:17:39 -0400
 Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 86A921F2C5;
-        Wed, 31 Aug 2022 01:54:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 97BE77C53B;
+        Wed, 31 Aug 2022 02:17:38 -0700 (PDT)
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 013B1ED1;
-        Wed, 31 Aug 2022 01:54:30 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4FA65ED1;
+        Wed, 31 Aug 2022 02:17:44 -0700 (PDT)
 Received: from [10.57.15.237] (unknown [10.57.15.237])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0A32D3F71A;
-        Wed, 31 Aug 2022 01:54:20 -0700 (PDT)
-Message-ID: <98179709-1ece-61ab-d43a-fc38a4fd3f67@arm.com>
-Date:   Wed, 31 Aug 2022 09:54:14 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 8B8023F71A;
+        Wed, 31 Aug 2022 02:17:35 -0700 (PDT)
+Message-ID: <7a035b29-fca6-2650-c3c1-eedb3904c32d@arm.com>
+Date:   Wed, 31 Aug 2022 10:17:30 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101
  Thunderbird/102.2.0
-Subject: Re: [PATCH v5 20/20] PCI: dwc: Add Baikal-T1 PCIe controller support
+Subject: Re: [PATCH RESEND v5 22/24] dmaengine: dw-edma: Bypass dma-ranges
+ mapping for the local setup
 Content-Language: en-GB
-From:   Robin Murphy <robin.murphy@arm.com>
-To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Frank Li <Frank.Li@nxp.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, willmcvicker@google.com
-References: <20220822184701.25246-1-Sergey.Semin@baikalelectronics.ru>
- <20220822184701.25246-21-Sergey.Semin@baikalelectronics.ru>
- <YwzbARMkb/69+l2d@lpieralisi> <63a54a1b-66ba-9739-8217-13f75e602cd5@arm.com>
-In-Reply-To: <63a54a1b-66ba-9739-8217-13f75e602cd5@arm.com>
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        "iommu@lists.linux.dev" <iommu@lists.linux.dev>
+References: <20220822185332.26149-1-Sergey.Semin@baikalelectronics.ru>
+ <20220822185332.26149-23-Sergey.Semin@baikalelectronics.ru>
+From:   Robin Murphy <robin.murphy@arm.com>
+In-Reply-To: <20220822185332.26149-23-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2022-08-31 09:36, Robin Murphy wrote:
-> On 2022-08-29 16:28, Lorenzo Pieralisi wrote:
-> [...]
->>> +static int bt1_pcie_add_port(struct bt1_pcie *btpci)
->>> +{
->>> +    struct device *dev = &btpci->pdev->dev;
->>> +    int ret;
->>> +
->>> +    /*
->>> +     * DW PCIe Root Port controller is equipped with eDMA capable of
->>> +     * working with the 64-bit memory addresses.
->>> +     */
->>> +    ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
->>> +    if (ret)
->>> +        return ret;
->>
->> Is this the right place to set the DMA mask for the host controller
->> embedded DMA controller (actually, the dev pointer is the _host_
->> controller device) ?
->>
->> How this is going to play when combined with:
->>
->> https://lore.kernel.org/linux-pci/1e63a581-14ae-b4b5-a5bf-ca8f09c33af6@arm.com
->>
->> It is getting a bit confusing. I believe the code in the link
->> above sets the mask so that through the DMA API we are capable
->> of getting an MSI doorbell virtual address whose physical address
->> can be addressed by the endpoint; this through the DMA API.
->>
->> This patch is setting the DMA mask for a different reason, namely
->> setting the host controller embedded DMA controller addressing
->> capabilities.
->>
->> AFAICS - both approaches set the mask for the same device - now
->> the question is about which one is legitimate and how to handle
->> the other.
+On 2022-08-22 19:53, Serge Semin wrote:
+> DW eDMA doesn't perform any translation of the traffic generated on the
+> CPU/Application side. It just generates read/write AXI-bus requests with
+> the specified addresses. But in case if the dma-ranges DT-property is
+> specified for a platform device node, Linux will use it to map the CPU
+> memory regions into the DMAable bus ranges. This isn't what we want for
+> the eDMA embedded into the locally accessed DW PCIe Root Port and
+> End-point. In order to work that around let's set the chan_dma_dev flag
+> for each DW eDMA channel thus forcing the client drivers to getting a
+> custom dma-ranges-less parental device for the mappings.
 > 
-> Assuming the dw-edma-pcie driver is the relevant one, that already sets 
-> its own masks on its own device, so I also don't see why this is here.
+> Note it will only work for the client drivers using the
+> dmaengine_get_dma_device() method to get the parental DMA device.
 
-Ah, I just found the patch at [1], which further implies that this is 
-indeed completely bogus.
+No, this is nonsense. If the DMA engine is on the host side of the 
+bridge then it should not have anything to do with the PCI device at 
+all, it should be associated with the platform device, and thus any 
+range mapping on the bridge itself would be irrelevant anyway.
+
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Acked-By: Vinod Koul <vkoul@kernel.org>
+> 
+> ---
+> 
+> Changelog v2:
+> - Fix the comment a bit to being clearer. (@Manivannan)
+> 
+> Changelog v3:
+> - Conditionally set dchan->dev->device.dma_coherent field since it can
+>    be missing on some platforms. (@Manivannan)
+> - Remove Manivannan' rb and tb tags since the patch content has been
+>    changed.
+> ---
+>   drivers/dma/dw-edma/dw-edma-core.c | 20 ++++++++++++++++++++
+>   1 file changed, 20 insertions(+)
+> 
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> index 6a8282eaebaf..4f56149dc8d8 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -716,6 +716,26 @@ static int dw_edma_alloc_chan_resources(struct dma_chan *dchan)
+>   	if (chan->status != EDMA_ST_IDLE)
+>   		return -EBUSY;
+>   
+> +	/* Bypass the dma-ranges based memory regions mapping for the eDMA
+> +	 * controlled from the CPU/Application side since in that case
+> +	 * the local memory address is left untranslated.
+> +	 */
+> +	if (chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
+> +		dchan->dev->chan_dma_dev = true;
+> +
+> +#if defined(CONFIG_ARCH_HAS_SYNC_DMA_FOR_DEVICE) || \
+> +    defined(CONFIG_ARCH_HAS_SYNC_DMA_FOR_CPU) || \
+> +    defined(CONFIG_ARCH_HAS_SYNC_DMA_FOR_CPU_ALL)
+> +		dchan->dev->device.dma_coherent = chan->dw->chip->dev->dma_coherent;
+> +#endif
+> +
+> +		dma_coerce_mask_and_coherent(&dchan->dev->device,
+> +					     dma_get_mask(chan->dw->chip->dev));
+> +		dchan->dev->device.dma_parms = chan->dw->chip->dev->dma_parms;
+> +	} else {
+> +		dchan->dev->chan_dma_dev = false;
+> +	}
+
+NAK. Don't try to poke into DMA API internals and copy random partial 
+pieces between devices, it doesn't work properly (I can guess that your 
+system doesn't have an IOMMU...) and having to deal with ugly mess like 
+this in drivers just makes it harder for us to maintain the DMA API itself.
+
+Fair enough if you have good reason to create logical child devices to 
+represent individual DMA channels, but the correct way to handle that is 
+to keep the real parent device pointer around and use that for DMA API 
+calls.
 
 Robin.
 
-[1] 
-https://lore.kernel.org/dmaengine/20220822185332.26149-23-Sergey.Semin@baikalelectronics.ru/
+> +
+>   	pm_runtime_get(chan->dw->chip->dev);
+>   
+>   	return 0;
