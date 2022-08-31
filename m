@@ -2,45 +2,45 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8E12ECAAD4
-	for <linux-pci@archiver.kernel.org>; Wed, 31 Aug 2022 14:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C81FECAAD1
+	for <linux-pci@archiver.kernel.org>; Wed, 31 Aug 2022 14:20:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232002AbiHaOUj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 31 Aug 2022 10:20:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49218 "EHLO
+        id S232019AbiHaOU4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 31 Aug 2022 10:20:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50336 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231964AbiHaOUj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2022 10:20:39 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7712201B5
-        for <linux-pci@vger.kernel.org>; Wed, 31 Aug 2022 07:20:37 -0700 (PDT)
+        with ESMTP id S231964AbiHaOUz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 Aug 2022 10:20:55 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D380D3AE7C
+        for <linux-pci@vger.kernel.org>; Wed, 31 Aug 2022 07:20:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661955637; x=1693491637;
+  t=1661955654; x=1693491654;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=AcN6REUdOs+zrD82g5T9uQ9gVr520BbbpE2xvgbbsBA=;
-  b=GF9Prhp4i7DSd9D41R2FTK07MRZ0flUB8eaLFiohxDn979qFmWoRA3F+
-   HkkOt71Qx55HqDatDBie1qNSpFnEFk7Xfk5SExjpsje1DwMhO4zpRx6Y+
-   F4nGVfvoooCsY3KlCqleSQVEP+strRII2hTND02DaUHgD/LLZdjp0kUV3
-   mBO7f5d7/7VbYmXHrkBI7Cs8golyDJR+dCLnIJVVYhCOHB0+Y7bT+G1ZI
-   spej03oTeL00TIC7b0COYxn1CjAful/R2zxflTAoVSETbEooTLknnVqHw
-   9sXdrKexxBdpPPsuulyxRWYc6NvWDmxOxMEZam0yYSRDhiSxYduPIbTvI
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10456"; a="296737579"
+  bh=r6fhALA8khW9m42RP56IE3Tnoi9JGZrRS6KikXTN768=;
+  b=jJ7EgPHwCShxMk5SgTf3njd7XKpo/mypI7Zp1QyvzN9KM87lhZorzfTw
+   Zj9HA5Gt3UxJ6eVy6V7qEdXf0x3w+fltlCsGQW+4OFjO2vnR1MLIeM4Yd
+   jzqffwVq/n5cPlTwIBgtU6bGIod+PTvrKxbnziXa2hAVS0px5D8Vv19sY
+   jlFVQCDm/dzUWN1rYhT81RWMVNnR8Gn5scy8avRJQ+pr6WgoWLACqC69R
+   tqHRTR+BgCBRFJIdS8FCE9aoq816Gm8ZlMEQyVDRPz13WxC4In/mkTQ4G
+   Jwi3DBq1wUmmXXVTSj3JDUk8cbp1KElV0gWrGARQ1WafLaBnvCDrD7Q7M
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10456"; a="359415569"
 X-IronPort-AV: E=Sophos;i="5.93,278,1654585200"; 
-   d="scan'208";a="296737579"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2022 07:20:18 -0700
+   d="scan'208";a="359415569"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2022 07:20:54 -0700
 X-IronPort-AV: E=Sophos;i="5.93,278,1654585200"; 
-   d="scan'208";a="612108419"
+   d="scan'208";a="563047115"
 Received: from smile.fi.intel.com ([10.237.72.54])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2022 07:20:17 -0700
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2022 07:20:51 -0700
 Received: from andy by smile.fi.intel.com with local (Exim 4.96)
         (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1oTOZi-006Pm6-0m;
-        Wed, 31 Aug 2022 17:20:14 +0300
-Date:   Wed, 31 Aug 2022 17:20:14 +0300
+        id 1oTOYB-006PkK-0q;
+        Wed, 31 Aug 2022 17:18:39 +0300
+Date:   Wed, 31 Aug 2022 17:18:38 +0300
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     Mika Westerberg <mika.westerberg@linux.intel.com>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -48,56 +48,41 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Lukas Wunner <lukas@wunner.de>,
         Chris Chiu <chris.chiu@canonical.com>,
         linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/6] PCI: Allow for future resource expansion on initial
- root bus scan
-Message-ID: <Yw9uHmijqFUckyUr@smile.fi.intel.com>
+Subject: Re: [PATCH 3/6] PCI: Distribute available resources for root buses
+ too
+Message-ID: <Yw9tvs7KjZ4dMAlA@smile.fi.intel.com>
 References: <20220816100740.68667-1-mika.westerberg@linux.intel.com>
+ <20220816100740.68667-4-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220816100740.68667-1-mika.westerberg@linux.intel.com>
+In-Reply-To: <20220816100740.68667-4-mika.westerberg@linux.intel.com>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 16, 2022 at 01:07:34PM +0300, Mika Westerberg wrote:
-> Hi,
+On Tue, Aug 16, 2022 at 01:07:37PM +0300, Mika Westerberg wrote:
+> Currently we distribute the spare resources only upon hot-add so if
+> there are PCI devices connected already when the initial root bus scan
+> is done, and they have not been fully configured by the BIOS, we may end
+> up allocating resources just enough to cover only what is currently
+> there. If some of those devices are hotplug bridges themselves we do not
+> leave any additional resource space for future expansion.
 > 
-> The series works around an issue found on some Dell systems where
-> booting with Thunderbolt/USB4 devices connected the BIOS leaves some of
-> the PCIe devices unconfigured. If the connected devices that are not
-> configured have PCIe hotplug ports as well the initial root bus scan
-> only reserves the minimum amount of resources to them making any
-> expansion happening later impossible.
+> For this reason distribute the available resources for root buses too to
+> make this work the same way we do in the normal hotplug case.
 > 
-> We do already distribute the "spare" resources between hotplug ports on
-> hot-add but we have not done that upon the initial scan. The first three
-> patches make the initial root bus scan path to do the same.
-> 
-> The additional three patches are just a small cleanups that can be
-> applied separately too.
-> 
-> The related bug: https://bugzilla.kernel.org/show_bug.cgi?id=216000.
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=216000
+> Reported-by: Chris Chiu <chris.chiu@canonical.com>
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+> The diffstat is quite big here but this is due the fact that we move the
+> pci_assign_unassigned_root_bus_resources() below
+> pci_bridge_distribute_available_resources() so we can call it without
+> adding forward declaration.
 
-With split and squash or not, LGTM,
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-
-> Mika Westerberg (6):
->   PCI: Fix used_buses calculation in pci_scan_child_bus_extend()
->   PCI: Pass available buses also when the bridge is already configured
->   PCI: Distribute available resources for root buses too
->   PCI: Remove two unnecessary empty lines in pci_scan_child_bus_extend()
->   PCI: Fix typo in pci_scan_child_bus_extend()
->   PCI: Fix indentation in pci_bridge_distribute_available_resources()
-> 
->  drivers/pci/probe.c     |  13 +-
->  drivers/pci/setup-bus.c | 290 ++++++++++++++++++++++++----------------
->  2 files changed, 181 insertions(+), 122 deletions(-)
-> 
-> -- 
-> 2.35.1
-> 
+Perhaps you can split to move and actual update?
 
 -- 
 With Best Regards,
