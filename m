@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E94C67868
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Sep 2022 04:29:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 928D9C54EE9
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Sep 2022 04:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232699AbiIAE3x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Sep 2022 00:29:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38472 "EHLO
+        id S231290AbiIAE3u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Sep 2022 00:29:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232536AbiIAE3r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Sep 2022 00:29:47 -0400
-Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 790E992F7E;
-        Wed, 31 Aug 2022 21:20:34 -0700 (PDT)
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 874A82026AF;
-        Thu,  1 Sep 2022 06:20:32 +0200 (CEST)
+        with ESMTP id S232490AbiIAE3q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Sep 2022 00:29:46 -0400
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 622DF5B05E;
+        Wed, 31 Aug 2022 21:20:29 -0700 (PDT)
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id B442E1A438E;
+        Thu,  1 Sep 2022 06:20:26 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 508AE2026AE;
-        Thu,  1 Sep 2022 06:20:32 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 7D4311A4387;
+        Thu,  1 Sep 2022 06:20:26 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id DA5A6180222C;
-        Thu,  1 Sep 2022 12:20:29 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id DAE30181D0CA;
+        Thu,  1 Sep 2022 12:20:24 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     p.zabel@pengutronix.de, l.stach@pengutronix.de,
         bhelgaas@google.com, lorenzo.pieralisi@arm.com, robh@kernel.org,
@@ -33,9 +33,9 @@ Cc:     linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, kernel@pengutronix.de,
         linux-imx@nxp.com, Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v6 5/7] soc: imx: imx8mp-blk-ctrl: handle PCIe PHY resets
-Date:   Thu,  1 Sep 2022 12:02:38 +0800
-Message-Id: <1662004960-14071-6-git-send-email-hongxing.zhu@nxp.com>
+Subject: [PATCH v6 2/7] arm64: dts: imx8mp: Add iMX8MP PCIe support
+Date:   Thu,  1 Sep 2022 12:02:35 +0800
+Message-Id: <1662004960-14071-3-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1662004960-14071-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1662004960-14071-1-git-send-email-hongxing.zhu@nxp.com>
@@ -44,52 +44,84 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Lucas Stach <l.stach@pengutronix.de>
+Add i.MX8MP PCIe support.
 
-Dessert the PHY reset when powering up the domain and put it back
-into reset when the domain is powered down.
-
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+Tested-by: Marek Vasut <marex@denx.de>
+Tested-by: Richard Leitner <richard.leitner@skidata.com>
+Tested-by: Alexander Stein <alexander.stein@ew.tq-group.com>
 ---
- drivers/soc/imx/imx8mp-blk-ctrl.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ arch/arm64/boot/dts/freescale/imx8mp.dtsi | 43 +++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
 
-diff --git a/drivers/soc/imx/imx8mp-blk-ctrl.c b/drivers/soc/imx/imx8mp-blk-ctrl.c
-index 4ca2ede6871b..6c939d68ba9a 100644
---- a/drivers/soc/imx/imx8mp-blk-ctrl.c
-+++ b/drivers/soc/imx/imx8mp-blk-ctrl.c
-@@ -18,6 +18,8 @@
- #define GPR_REG0		0x0
- #define  PCIE_CLOCK_MODULE_EN	BIT(0)
- #define  USB_CLOCK_MODULE_EN	BIT(1)
-+#define  PCIE_PHY_APB_RST	BIT(4)
-+#define  PCIE_PHY_INIT_RST	BIT(5)
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp.dtsi b/arch/arm64/boot/dts/freescale/imx8mp.dtsi
+index fe178b7d063c..21a4cc417c81 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mp.dtsi
+@@ -5,6 +5,7 @@
  
- struct imx8mp_blk_ctrl_domain;
+ #include <dt-bindings/clock/imx8mp-clock.h>
+ #include <dt-bindings/power/imx8mp-power.h>
++#include <dt-bindings/reset/imx8mp-reset.h>
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/input/input.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+@@ -1084,6 +1085,17 @@ media_blk_ctrl: blk-ctrl@32ec0000 {
+ 				#power-domain-cells = <1>;
+ 			};
  
-@@ -75,6 +77,10 @@ static void imx8mp_hsio_blk_ctrl_power_on(struct imx8mp_blk_ctrl *bc,
- 	case IMX8MP_HSIOBLK_PD_PCIE:
- 		regmap_set_bits(bc->regmap, GPR_REG0, PCIE_CLOCK_MODULE_EN);
- 		break;
-+	case IMX8MP_HSIOBLK_PD_PCIE_PHY:
-+		regmap_set_bits(bc->regmap, GPR_REG0,
-+				PCIE_PHY_APB_RST | PCIE_PHY_INIT_RST);
-+		break;
- 	default:
- 		break;
- 	}
-@@ -90,6 +96,10 @@ static void imx8mp_hsio_blk_ctrl_power_off(struct imx8mp_blk_ctrl *bc,
- 	case IMX8MP_HSIOBLK_PD_PCIE:
- 		regmap_clear_bits(bc->regmap, GPR_REG0, PCIE_CLOCK_MODULE_EN);
- 		break;
-+	case IMX8MP_HSIOBLK_PD_PCIE_PHY:
-+		regmap_clear_bits(bc->regmap, GPR_REG0,
-+				  PCIE_PHY_APB_RST | PCIE_PHY_INIT_RST);
-+		break;
- 	default:
- 		break;
- 	}
++			pcie_phy: pcie-phy@32f00000 {
++				compatible = "fsl,imx8mp-pcie-phy";
++				reg = <0x32f00000 0x10000>;
++				resets = <&src IMX8MP_RESET_PCIEPHY>,
++					 <&src IMX8MP_RESET_PCIEPHY_PERST>;
++				reset-names = "pciephy", "perst";
++				power-domains = <&hsio_blk_ctrl IMX8MP_HSIOBLK_PD_PCIE_PHY>;
++				#phy-cells = <0>;
++				status = "disabled";
++			};
++
+ 			hsio_blk_ctrl: blk-ctrl@32f10000 {
+ 				compatible = "fsl,imx8mp-hsio-blk-ctrl", "syscon";
+ 				reg = <0x32f10000 0x24>;
+@@ -1099,6 +1111,37 @@ hsio_blk_ctrl: blk-ctrl@32f10000 {
+ 			};
+ 		};
+ 
++		pcie: pcie@33800000 {
++			compatible = "fsl,imx8mp-pcie";
++			reg = <0x33800000 0x400000>, <0x1ff00000 0x80000>;
++			reg-names = "dbi", "config";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			bus-range = <0x00 0xff>;
++			ranges =  <0x81000000 0 0x00000000 0x1ff80000 0 0x00010000>, /* downstream I/O 64KB */
++				  <0x82000000 0 0x18000000 0x18000000 0 0x07f00000>; /* non-prefetchable memory */
++			num-lanes = <1>;
++			num-viewport = <4>;
++			interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 2 &gic GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 3 &gic GIC_SPI 124 IRQ_TYPE_LEVEL_HIGH>,
++					<0 0 0 4 &gic GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
++			fsl,max-link-speed = <3>;
++			linux,pci-domain = <0>;
++			power-domains = <&hsio_blk_ctrl IMX8MP_HSIOBLK_PD_PCIE>;
++			resets = <&src IMX8MP_RESET_PCIE_CTRL_APPS_EN>,
++				 <&src IMX8MP_RESET_PCIE_CTRL_APPS_TURNOFF>;
++			reset-names = "apps", "turnoff";
++			phys = <&pcie_phy>;
++			phy-names = "pcie-phy";
++			status = "disabled";
++		};
++
+ 		gpu3d: gpu@38000000 {
+ 			compatible = "vivante,gc";
+ 			reg = <0x38000000 0x8000>;
 -- 
 2.25.1
 
