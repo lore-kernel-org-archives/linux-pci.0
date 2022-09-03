@@ -2,219 +2,136 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA564ECAAA1
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Sep 2022 23:59:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86C67ECAAA1
+	for <linux-pci@archiver.kernel.org>; Sat,  3 Sep 2022 02:13:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230262AbiIBX7a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Sep 2022 19:59:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46184 "EHLO
+        id S231494AbiICCNd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Sep 2022 22:13:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58102 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230269AbiIBX72 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Sep 2022 19:59:28 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ECA4D6C;
-        Fri,  2 Sep 2022 16:59:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662163162; x=1693699162;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=5SVxLeD0zbhXVLOjfZ0foEn8yzE1j75Wp+4aNHotkMc=;
-  b=JcIExIGMVxLupvu02WX9awW+PP9dGT/rJZ8RmqS05sDf8eFaQHp6iKuY
-   MtlDKr/oOvhzC5ehHD7ADC++OqpBJnDuc4nb4wTCOyYnk5Z5fY8HVJo7I
-   KvU9WFpwHc3X5VSrBc68rPsdI9AzjgFLP7dVq2FZFoQs54/OzcZ4EyOe7
-   PbNcRSDMEA1KBBceWiJqJjuG8Ci9rqZXacxztQV1tT9Ea78R09fO8vq25
-   eyZkaydFKAcd0i1XaFSKorU57p4XBNTr8SN6VsQ1Xo4VfahuK+sLppIEc
-   d+HdHRDkk+lD03LvKwiSWqqbXwz7RWXu0bP7ME57SdkJq/MkwVbj+N4hd
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10458"; a="279125482"
-X-IronPort-AV: E=Sophos;i="5.93,285,1654585200"; 
-   d="scan'208";a="279125482"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2022 16:59:21 -0700
-X-IronPort-AV: E=Sophos;i="5.93,285,1654585200"; 
-   d="scan'208";a="755423027"
-Received: from cgoff-mobl1.amr.corp.intel.com (HELO [10.209.53.13]) ([10.209.53.13])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2022 16:59:21 -0700
-Message-ID: <02dd4594-8055-cf14-8c62-ae8080b1caca@linux.intel.com>
-Date:   Fri, 2 Sep 2022 16:59:20 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Firefox/91.0 Thunderbird/91.11.0
-Subject: Re: [PATCH v2 3/3] PCI/PM: Always disable PTM for all devices during
- suspend
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Rajvi Jingar <rajvi.jingar@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Cc:     Koba Ko <koba.ko@canonical.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "David E . Box" <david.e.box@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-References: <20220902233543.390890-1-helgaas@kernel.org>
- <20220902233543.390890-4-helgaas@kernel.org>
-From:   Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20220902233543.390890-4-helgaas@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229508AbiICCNc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Sep 2022 22:13:32 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB590E42D3;
+        Fri,  2 Sep 2022 19:13:31 -0700 (PDT)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2831x4DK021313;
+        Sat, 3 Sep 2022 02:13:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=ZFXrryaYjDttXiD4SZkuchQKUakT1Az9vh77aUMaUWA=;
+ b=Qx9jlOjsxSzmmN8379fn1IqPtj1uiHCmWf5hSZtm6QkFFbUC6e98rHwsBmx9/mH+5cre
+ MMPJYMxKDe9G/ZKIvVOk1fDSq7wF2lAK8unKvDnDnhBidGvcVto8wwMciX+Os1tZjtr7
+ zGbs/kc9Ow/EuVPZ8rahj+Cia/+lPjT5v01siWn/LAGti80ONPKuXaSzwkuWPnjcYDOJ
+ 0Z59INO1u0FerZua8IIP2WIi6/6i13X20t/tC/5G37YIdkZJJWAk6DBJAyH0Mou2gv4i
+ oWtX8vj3poxsZBCuzO5020S+Ni1YYVw0UbjRY42Ldk/rNtbc6RhasCX+hwWYovHCZVRp dA== 
+Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jbj0m2307-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 03 Sep 2022 02:13:19 +0000
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 2832COXB005554;
+        Sat, 3 Sep 2022 02:13:15 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3j7cbktgw1-1;
+        Sat, 03 Sep 2022 02:13:15 +0000
+Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2832DETI006205;
+        Sat, 3 Sep 2022 02:13:14 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.37])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 2832D7nW006175;
+        Sat, 03 Sep 2022 02:13:14 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
+        id E6F6F447F; Sat,  3 Sep 2022 07:43:06 +0530 (+0530)
+From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
+To:     helgaas@kernel.org
+Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mka@chromium.org,
+        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, manivannan.sadhasivam@linaro.org,
+        swboyd@chromium.org, dmitry.baryshkov@linaro.org,
+        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS)
+Subject: [PATCH v3 2/3] dt-bindings: pci: QCOM Add missing sc7280 aggre0, aggre1 clocks
+Date:   Sat,  3 Sep 2022 07:43:03 +0530
+Message-Id: <1662171184-25211-3-git-send-email-quic_krichai@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1662171184-25211-1-git-send-email-quic_krichai@quicinc.com>
+References: <1662171184-25211-1-git-send-email-quic_krichai@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: 4frPmzU8UWmTee_u1N_lZuw2h219-Xtm
+X-Proofpoint-ORIG-GUID: 4frPmzU8UWmTee_u1N_lZuw2h219-Xtm
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
+ definitions=2022-09-02_08,2022-08-31_03,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ clxscore=1015 mlxscore=0 malwarescore=0 phishscore=0 spamscore=0
+ adultscore=0 impostorscore=0 suspectscore=0 lowpriorityscore=0 bulkscore=0
+ mlxlogscore=989 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2209030010
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add missing aggre0 and aggre1 clocks.
 
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+---
+changes since v2:
+	- Increase the max items of clock's in common properties.
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-On 9/2/22 4:35 PM, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> We want to disable PTM on Root Ports because that allows some chips, e.g.,
-> Intel mobile chips since Coffee Lake, to enter a lower-power PM state.
-> 
-> That means we also have to disable PTM on downstream devices.  PCIe r6.0,
-> sec 2.2.8, recommends that functions support generation of messages in
-> non-D0 states, so we have to assume Switch Upstream Ports or Endpoints may
-> send PTM Requests while in D1, D2, and D3hot.  A PTM message received by a
-> Downstream Port (including a Root Port) with PTM disabled must be treated
-> as an Unsupported Request (sec 6.21.3).
-> 
-> PTM was previously disabled only for Root Ports, and it was disabled in
-> pci_prepare_to_sleep(), which is not called at all if a driver supports
-> legacy PM or does its own state saving.
-> 
-> Instead, disable PTM early in pci_pm_suspend() and pci_pm_runtime_suspend()
-> so we do it in all cases.
-> 
-> Previously PTM was disabled *after* saving device state, so the state
-> restore on resume automatically re-enabled it.  Since we now disable PTM
-> *before* saving state, we must explicitly re-enable it.
-> 
-> Here's a sample of errors that occur when PTM is disabled only on the Root
-> Port.  With this topology:
-> 
->   0000:00:1d.0 Root Port            to [bus 08-71]
->   0000:08:00.0 Switch Upstream Port to [bus 09-71]
-> 
-> Kai-Heng reported errors like this:
-> 
->   pcieport 0000:00:1d.0: AER: Uncorrected (Non-Fatal) error received: 0000:00:1d.0
->   pcieport 0000:00:1d.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, (Requester ID)
->   pcieport 0000:00:1d.0:   device [8086:7ab0] error status/mask=00100000/00004000
->   pcieport 0000:00:1d.0:    [20] UnsupReq               (First)
->   pcieport 0000:00:1d.0: AER:   TLP Header: 34000000 08000052 00000000 00000000
-> 
-> Decoding TLP header 0x34...... (0011 0100b) and 0x08000052:
-> 
->   Fmt                         001b  4 DW header, no data
->   Type                     1 0100b  Msg (Local - Terminate at Receiver)
->   Requester ID  0x0800              Bus 08 Devfn 00.0
->   Message Code    0x52  0101 0010b  PTM Request
-> 
-> The 00:1d.0 Root Port logged an Unsupported Request error when it received
-> a PTM Request with Requester ID 08:00.0.
-> 
-> Fixes: a697f072f5da ("PCI: Disable PTM during suspend to save power")
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=215453
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=216210
-> Based-on: https://lore.kernel.org/r/20220706123244.18056-1-kai.heng.feng@canonical.com
-> Based-on-patch-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/pci-driver.c | 14 ++++++++++++++
->  drivers/pci/pci.c        | 20 --------------------
->  2 files changed, 14 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 2815922ac525..115febaa7e0b 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -772,6 +772,12 @@ static int pci_pm_suspend(struct device *dev)
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  
-> +	/*
-> +	 * Disabling PTM allows some systems, e.g., Intel mobile chips
-> +	 * since Coffee Lake, to enter a lower-power PM state.
-> +	 */
-> +	pci_disable_ptm(pci_dev);
-
-I think you can use "if (pci_dev->ptm_enabled)" check for pci_disable_ptm()
-as well. This will avoid unnecessary checks in pci_disable_ptm().
-
-> +
->  	pci_dev->skip_bus_pm = false;
->  
->  	if (pci_has_legacy_pm_support(pci_dev))
-> @@ -982,6 +988,9 @@ static int pci_pm_resume(struct device *dev)
->  	if (pci_dev->state_saved)
->  		pci_restore_standard_config(pci_dev);
->  
-> +	if (pci_dev->ptm_enabled)
-> +		pci_enable_ptm(pci_dev, NULL);
-> +
->  	if (pci_has_legacy_pm_support(pci_dev))
->  		return pci_legacy_resume(dev);
->  
-> @@ -1269,6 +1278,8 @@ static int pci_pm_runtime_suspend(struct device *dev)
->  	pci_power_t prev = pci_dev->current_state;
->  	int error;
->  
-> +	pci_disable_ptm(pci_dev);
-> +
->  	/*
->  	 * If pci_dev->driver is not set (unbound), we leave the device in D0,
->  	 * but it may go to D3cold when the bridge above it runtime suspends.
-> @@ -1331,6 +1342,9 @@ static int pci_pm_runtime_resume(struct device *dev)
->  	 */
->  	pci_pm_default_resume_early(pci_dev);
->  
-> +	if (pci_dev->ptm_enabled)
-> +		pci_enable_ptm(pci_dev, NULL);
-> +
->  	if (!pci_dev->driver)
->  		return 0;
->  
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 95bc329e74c0..b0e2968c8cca 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2706,16 +2706,6 @@ int pci_prepare_to_sleep(struct pci_dev *dev)
->  	if (target_state == PCI_POWER_ERROR)
->  		return -EIO;
->  
-> -	/*
-> -	 * There are systems (for example, Intel mobile chips since Coffee
-> -	 * Lake) where the power drawn while suspended can be significantly
-> -	 * reduced by disabling PTM on PCIe root ports as this allows the
-> -	 * port to enter a lower-power PM state and the SoC to reach a
-> -	 * lower-power idle state as a whole.
-> -	 */
-> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
-> -		pci_disable_ptm(dev);
-> -
->  	pci_enable_wake(dev, target_state, wakeup);
->  
->  	error = pci_set_power_state(dev, target_state);
-> @@ -2764,16 +2754,6 @@ int pci_finish_runtime_suspend(struct pci_dev *dev)
->  	if (target_state == PCI_POWER_ERROR)
->  		return -EIO;
->  
-> -	/*
-> -	 * There are systems (for example, Intel mobile chips since Coffee
-> -	 * Lake) where the power drawn while suspended can be significantly
-> -	 * reduced by disabling PTM on PCIe root ports as this allows the
-> -	 * port to enter a lower-power PM state and the SoC to reach a
-> -	 * lower-power idle state as a whole.
-> -	 */
-> -	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
-> -		pci_disable_ptm(dev);
-> -
->  	__pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
->  
->  	error = pci_set_power_state(dev, target_state);
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 0b69b12..b759465 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -53,11 +53,11 @@ properties:
+   # Platform constraints are described later.
+   clocks:
+     minItems: 3
+-    maxItems: 12
++    maxItems: 13
+ 
+   clock-names:
+     minItems: 3
+-    maxItems: 12
++    maxItems: 13
+ 
+   resets:
+     minItems: 1
+@@ -423,8 +423,8 @@ allOf:
+     then:
+       properties:
+         clocks:
+-          minItems: 11
+-          maxItems: 11
++          minItems: 13
++          maxItems: 13
+         clock-names:
+           items:
+             - const: pipe # PIPE clock
+@@ -437,6 +437,8 @@ allOf:
+             - const: bus_slave # Slave AXI clock
+             - const: slave_q2a # Slave Q2A clock
+             - const: tbu # PCIe TBU clock
++            - const: aggre0 # Aggre NoC PCIe CENTER SF AXI clock
++            - const: aggre1 # Aggre NoC PCIe1 AXI clock
+             - const: ddrss_sf_tbu # PCIe SF TBU clock
+         resets:
+           maxItems: 1
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+2.7.4
+
