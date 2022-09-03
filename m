@@ -2,112 +2,151 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B3D8C54EE9
-	for <linux-pci@archiver.kernel.org>; Sat,  3 Sep 2022 02:23:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC0E1C38145
+	for <linux-pci@archiver.kernel.org>; Sat,  3 Sep 2022 02:37:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231603AbiICCXM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Sep 2022 22:23:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44628 "EHLO
+        id S231274AbiICChp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Sep 2022 22:37:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231643AbiICCXJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Sep 2022 22:23:09 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2583EC4D6;
-        Fri,  2 Sep 2022 19:23:08 -0700 (PDT)
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2832MeOL009770;
-        Sat, 3 Sep 2022 02:23:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=tivaJlTFp135Es+g5Zh7B1kts8fobVwuZjH3Kv1aMZI=;
- b=autodhW7OyAc5t0lsxscPBzzJWoWKlTKnLimQ97s/Z8TPiXi9tISsLxYKdBJBi6BB5S9
- num2wZhGx4gHj0sq8pRkUurcaPchEdpKu+4yLp70opsZ6/vssx6rkarBDjK8FMous6TC
- +VLgradLehHtZ0tLYmo6nlNBSACbGh6vo13qq6cp+LYjNMYEvEXb0dtOg+qIpEmBi+8S
- kJ9mEYvUDXZtUnGwaefbJPUUoozPx31/3nN1KVMNey87MO6wNLDG/sOAM+PLDjjAf6bh
- r9nsnOEwO6h7Ryr2194uAjRsESY4HleISysfck3VNcbjijMBH05G4D3WOxt5KjBtZv8I uA== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3javjc68nr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sat, 03 Sep 2022 02:23:00 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 2832MuHQ016084;
-        Sat, 3 Sep 2022 02:22:56 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3j7cbktj0x-1;
-        Sat, 03 Sep 2022 02:22:56 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2832Mu7F016061;
-        Sat, 3 Sep 2022 02:22:56 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.37])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 2832Mt8O016054;
-        Sat, 03 Sep 2022 02:22:56 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id 9C1AA41B7; Sat,  3 Sep 2022 07:43:06 +0530 (+0530)
-From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
-To:     helgaas@kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mka@chromium.org,
-        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
-        quic_ramkri@quicinc.com, manivannan.sadhasivam@linaro.org,
-        swboyd@chromium.org, dmitry.baryshkov@linaro.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3 1/3] PCI: qcom: Add sc7280 aggre0, aggre1 and ddr sf tbu clocks in PCIe driver
-Date:   Sat,  3 Sep 2022 07:43:02 +0530
-Message-Id: <1662171184-25211-2-git-send-email-quic_krichai@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1662171184-25211-1-git-send-email-quic_krichai@quicinc.com>
-References: <1662171184-25211-1-git-send-email-quic_krichai@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 9-5BoIEICl9jzHXnj5JLm_wR-VZBk8Wg
-X-Proofpoint-ORIG-GUID: 9-5BoIEICl9jzHXnj5JLm_wR-VZBk8Wg
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.517,FMLib:17.11.122.1
- definitions=2022-09-02_08,2022-08-31_03,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- impostorscore=0 mlxscore=0 spamscore=0 phishscore=0 lowpriorityscore=0
- malwarescore=0 clxscore=1015 bulkscore=0 mlxlogscore=707 suspectscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2207270000 definitions=main-2209030010
+        with ESMTP id S231127AbiICCho (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Sep 2022 22:37:44 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67768E9900;
+        Fri,  2 Sep 2022 19:37:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1662172663; x=1693708663;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=DBINxE2RmRTTnJion59Lq21Ezb2oZIYPD4zBMbfH++g=;
+  b=ffpxRBevovi4KGrRpnofAPgzop3T4uVqmU6r7b30s1PnhYXuv2v0HUtP
+   aw2IXlqnA2/9y30hY4zZJRAjj8KkQqek0FVEege5zEv+BCO7h21RsinEh
+   VM4XDxVujM2pP6v4Cok84qzTMBbujT6c/w7TxFNI78qKHy/lWlM1ctOW3
+   oYS5J3CzelRsVUAfyHIEbbGaMTrOPAsab9UdxVcYnbfNvUQFcONefJnhm
+   tTGHEcqEDeTV5wqUJWXAOpU8uPZECXbqmuVf9gjy8S9rfbKQALwI8//U9
+   TruUFDIon/9SVFeqWoC41G4OUh9QH1uzr/D2vhp8ecvWi3Ts+BfgscLVs
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10458"; a="360080007"
+X-IronPort-AV: E=Sophos;i="5.93,286,1654585200"; 
+   d="scan'208";a="360080007"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2022 19:37:43 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.93,286,1654585200"; 
+   d="scan'208";a="646316339"
+Received: from lkp-server02.sh.intel.com (HELO 95dfd251caa2) ([10.239.97.151])
+  by orsmga001.jf.intel.com with ESMTP; 02 Sep 2022 19:37:39 -0700
+Received: from kbuild by 95dfd251caa2 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1oUJ2R-0000uM-0o;
+        Sat, 03 Sep 2022 02:37:39 +0000
+Date:   Sat, 3 Sep 2022 10:36:53 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        lpieralisi@kernel.org, robh@kernel.org, andersson@kernel.org
+Cc:     kbuild-all@lists.01.org, kw@linux.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, konrad.dybcio@somainline.org,
+        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        devicetree@vger.kernel.org, dmitry.baryshkov@linaro.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: Re: [PATCH v2 04/11] PCI: qcom-ep: Add eDMA support
+Message-ID: <202209031046.rOZKOVqT-lkp@intel.com>
+References: <20220830165817.183571-5-manivannan.sadhasivam@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220830165817.183571-5-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add missing aggre0, aggre1 and ddrs sf tbu clocks in PCIe driver.
+Hi Manivannan,
 
-If these clocks are not presenti, the PCIe link goes down in system suspend
-and resume.
+I love your patch! Yet something to improve:
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 3 +++
- 1 file changed, 3 insertions(+)
+[auto build test ERROR on robh/for-next]
+[also build test ERROR on linus/master v6.0-rc3 next-20220901]
+[cannot apply to helgaas-pci/next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 2ea1375..a7202f0 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1548,7 +1548,10 @@ static const struct qcom_pcie_cfg sm8450_pcie1_cfg = {
- static const struct qcom_pcie_cfg sc7280_cfg = {
- 	.ops = &ops_1_9_0,
- 	.has_tbu_clk = true,
-+	.has_ddrss_sf_tbu_clk = true,
- 	.pipe_clk_need_muxing = true,
-+	.has_aggre0_clk = true,
-+	.has_aggre1_clk = true,
- };
- 
- static const struct qcom_pcie_cfg sc8180x_cfg = {
+url:    https://github.com/intel-lab-lkp/linux/commits/Manivannan-Sadhasivam/Improvements-to-the-Qcom-PCIe-Endpoint-driver/20220831-010315
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
+config: arm-allyesconfig (https://download.01.org/0day-ci/archive/20220903/202209031046.rOZKOVqT-lkp@intel.com/config)
+compiler: arm-linux-gnueabi-gcc (GCC) 12.1.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/dec4c93b2077408cecddd53950905bf2411019b0
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Manivannan-Sadhasivam/Improvements-to-the-Qcom-PCIe-Endpoint-driver/20220831-010315
+        git checkout dec4c93b2077408cecddd53950905bf2411019b0
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   drivers/pci/controller/dwc/pcie-qcom-ep.c: In function 'qcom_pcie_ep_probe':
+>> drivers/pci/controller/dwc/pcie-qcom-ep.c:672:21: error: 'struct dw_pcie' has no member named 'edma'
+     672 |         pcie_ep->pci.edma.nr_irqs = 1;
+         |                     ^
+
+
+vim +672 drivers/pci/controller/dwc/pcie-qcom-ep.c
+
+   658	
+   659	static int qcom_pcie_ep_probe(struct platform_device *pdev)
+   660	{
+   661		struct device *dev = &pdev->dev;
+   662		struct qcom_pcie_ep *pcie_ep;
+   663		int ret;
+   664	
+   665		pcie_ep = devm_kzalloc(dev, sizeof(*pcie_ep), GFP_KERNEL);
+   666		if (!pcie_ep)
+   667			return -ENOMEM;
+   668	
+   669		pcie_ep->pci.dev = dev;
+   670		pcie_ep->pci.ops = &pci_ops;
+   671		pcie_ep->pci.ep.ops = &pci_ep_ops;
+ > 672		pcie_ep->pci.edma.nr_irqs = 1;
+   673		platform_set_drvdata(pdev, pcie_ep);
+   674	
+   675		ret = qcom_pcie_ep_get_resources(pdev, pcie_ep);
+   676		if (ret)
+   677			return ret;
+   678	
+   679		ret = qcom_pcie_enable_resources(pcie_ep);
+   680		if (ret) {
+   681			dev_err(dev, "Failed to enable resources: %d\n", ret);
+   682			return ret;
+   683		}
+   684	
+   685		ret = dw_pcie_ep_init(&pcie_ep->pci.ep);
+   686		if (ret) {
+   687			dev_err(dev, "Failed to initialize endpoint: %d\n", ret);
+   688			goto err_disable_resources;
+   689		}
+   690	
+   691		ret = qcom_pcie_ep_enable_irq_resources(pdev, pcie_ep);
+   692		if (ret)
+   693			goto err_disable_resources;
+   694	
+   695		return 0;
+   696	
+   697	err_disable_resources:
+   698		qcom_pcie_disable_resources(pcie_ep);
+   699	
+   700		return ret;
+   701	}
+   702	
+
 -- 
-2.7.4
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
