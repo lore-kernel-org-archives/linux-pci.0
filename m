@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F8FEECAAD5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C024DC6FA86
 	for <linux-pci@archiver.kernel.org>; Mon,  5 Sep 2022 07:19:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237284AbiIEHTh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Sep 2022 03:19:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46290 "EHLO
+        id S237314AbiIEHTi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Sep 2022 03:19:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237326AbiIEHTI (ORCPT
+        with ESMTP id S237324AbiIEHTI (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2022 03:19:08 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DDBAD41D16;
-        Mon,  5 Sep 2022 00:14:12 -0700 (PDT)
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 393044BD08;
+        Mon,  5 Sep 2022 00:14:13 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.93,290,1654527600"; 
-   d="scan'208";a="133728190"
+   d="scan'208";a="131687307"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 05 Sep 2022 16:13:09 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 05 Sep 2022 16:13:09 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 1376F4004468;
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id B6D184004465;
         Mon,  5 Sep 2022 16:13:09 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
@@ -27,11 +27,10 @@ To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
         magnus.damm@gmail.com
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v5 02/12] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
-Date:   Mon,  5 Sep 2022 16:12:47 +0900
-Message-Id: <20220905071257.1059436-3-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v5 07/12] PCI: dwc: Avoid reading a register to detect whether eDMA exists
+Date:   Mon,  5 Sep 2022 16:12:52 +0900
+Message-Id: <20220905071257.1059436-8-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220905071257.1059436-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20220905071257.1059436-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,121 +40,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
-PCIe endpoint module.
+Since reading value of PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL was
+0x00000000 on one of SoCs (R-Car S4-8), it cannot find the eDMA.
+So, directly read the eDMA register if edma.red_base is not zero.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- .../bindings/pci/rcar-gen4-pci-ep.yaml        | 99 +++++++++++++++++++
- 1 file changed, 99 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+ drivers/pci/controller/dwc/pcie-designware.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
-new file mode 100644
-index 000000000000..3850e7038620
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
-@@ -0,0 +1,99 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2022 Renesas Electronics Corp.
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-ep.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Renesas R-Car Gen4 PCIe Endpoint
-+
-+maintainers:
-+  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-+
-+allOf:
-+  - $ref: snps,dw-pcie-ep.yaml#
-+
-+properties:
-+  compatible:
-+    items:
-+      - const: renesas,r8a779f0-pcie-ep   # R-Car S4-8
-+      - const: renesas,rcar-gen4-pcie-ep  # R-Car Gen4
-+
-+  reg:
-+    maxItems: 4
-+
-+  reg-names:
-+    items:
-+      - const: dbi
-+      - const: atu
-+      - const: appl
-+      - const: addr_space
-+
-+  interrupts:
-+    maxItems: 7
-+
-+  interrupt-names:
-+    items:
-+      - const: others
-+      - const: dma
-+      - const: correctable
-+      - const: fatal
-+      - const: nonfatal
-+      - const: lp
-+      - const: vndmsg
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  resets:
-+    maxItems: 1
-+
-+  clocks:
-+    maxItems: 1
-+
-+  max-link-speed: true
-+
-+  num-lanes: true
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - interrupts
-+  - resets
-+  - power-domains
-+  - clocks
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/power/r8a779f0-sysc.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie0_ep: pcie-ep@e65d0000 {
-+            compatible = "renesas,r8a779f0-pcie-ep", "renesas,rcar-gen4-pcie-ep";
-+            reg = <0 0xe65d0000 0 0x1000>, <0 0xe65d1000 0 0x1000>,
-+                  <0 0xe65d3000 0 0x2000>, <0 0xfe000000 0 0x400000>;
-+            reg-names = "dbi", "atu", "appl", "addr_space";
-+            interrupts = <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 419 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 420 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 421 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-names = "others", "dma", "correctable", "fatal",
-+                              "nonfatal", "lp", "vndmsg";
-+            clocks = <&cpg CPG_MOD 624>;
-+            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
-+            resets = <&cpg 624>;
-+            num-lanes = <2>;
-+            max-link-speed = <2>;
-+        };
-+    };
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 72f9620a374d..08f91a6bbe4b 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -844,8 +844,7 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+ {
+ 	u32 val;
+ 
+-	val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
+-	if (val == 0xFFFFFFFF && pci->edma.reg_base) {
++	if (pci->edma.reg_base) {
+ 		pci->edma.mf = EDMA_MF_EDMA_UNROLL;
+ 
+ 		val = dw_pcie_readl_dma(pci, PCIE_DMA_CTRL);
+@@ -853,6 +852,7 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+ 		pci->edma.mf = EDMA_MF_EDMA_LEGACY;
+ 
+ 		pci->edma.reg_base = pci->dbi_base + PCIE_DMA_VIEWPORT_BASE;
++		val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
+ 	} else {
+ 		return -ENODEV;
+ 	}
 -- 
 2.25.1
 
