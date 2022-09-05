@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A01ECAAA1
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Sep 2022 08:02:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0447ECAAD5
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Sep 2022 08:02:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236474AbiIEICX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Sep 2022 04:02:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43122 "EHLO
+        id S236462AbiIEIC1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Sep 2022 04:02:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235891AbiIEICU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2022 04:02:20 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8C20474C0
-        for <linux-pci@vger.kernel.org>; Mon,  5 Sep 2022 01:02:19 -0700 (PDT)
+        with ESMTP id S236504AbiIEICY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2022 04:02:24 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4E1646DAD
+        for <linux-pci@vger.kernel.org>; Mon,  5 Sep 2022 01:02:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662364939; x=1693900939;
+  t=1662364942; x=1693900942;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=yUt7kimyDFp5iQ4HRnFUbUhLnRJMHEXFpKLhta7edCE=;
-  b=Akl7UdUb78Q9lljFRseVTtrtvl5qArNzs6ETOZzeZpM5FzlMX7Wp7x3j
-   2KNBlLUgdi23A91m7EjxhQ8NRIMbi0dKiVdRSAh3vTpP0+7jUT3rPToAb
-   mRIYFifQDOFVvDb3DjbB8Th1rlkMhCKx3gMYVw+wV4k4rVROqXBjLNQCP
-   QEGbzQvzqEB9raabAbI+OMA+tjmlN5MZQZGoiDqf+cAm0uzGbRBR2R2U1
-   Aypz8BkqN25P+TfcXmzdq1/4caixW6rdlZy6cUg03nT5wNEHj++phkEjE
-   46C6UQWRETRSrPyTbDf+pYxXEoWSW+v4bkbW+w8KxQhYqltw/TVnIM2DH
+  bh=xCq71ILO/+9H+27+C5zeVh+nJ6cK6g+cPM0DPH8ZZt0=;
+  b=Vr3ne4/9caTocn0TTLLyJzovg5+aZVd0Gbct4TeyV2REiZGfgPIYhkC2
+   H7Uz2QYdk9ZRcfG1PJ9VGplCUJyhELSvVjfqywiYWwY/zIRaMhPang/ab
+   /iIcmPRAxPtrcHjRrMzpqvasUOWfmA1GAb6F1XsXrz0xfBeF7mvz0VL0D
+   x/73zjguXM6lwbcSZWliUxDATwCRKwD2sAFRYWQbePN9LqPp+RrIppRnc
+   dsSzZvyM9smDYzo93nZO1DWVd4+OYs574jko51V/XiwP+0FWmuMW6IS18
+   WLf31U+SLodJjM7SOmGsZASrpLiZK9vwYu5WPYiCiczMzHFAEoAZQ41YC
    g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10460"; a="295073103"
+X-IronPort-AV: E=McAfee;i="6500,9779,10460"; a="283328134"
 X-IronPort-AV: E=Sophos;i="5.93,290,1654585200"; 
-   d="scan'208";a="295073103"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2022 01:02:19 -0700
+   d="scan'208";a="283328134"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2022 01:02:22 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.93,290,1654585200"; 
-   d="scan'208";a="590825806"
+   d="scan'208";a="564666880"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga006.jf.intel.com with ESMTP; 05 Sep 2022 01:02:17 -0700
+  by orsmga003.jf.intel.com with ESMTP; 05 Sep 2022 01:02:20 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id C3ED71C3; Mon,  5 Sep 2022 11:02:32 +0300 (EEST)
+        id E133919D; Mon,  5 Sep 2022 11:02:32 +0300 (EEST)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
@@ -47,9 +47,9 @@ Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         Chris Chiu <chris.chiu@canonical.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/6] PCI: Pass available buses also when the bridge is already configured
-Date:   Mon,  5 Sep 2022 11:02:28 +0300
-Message-Id: <20220905080232.36087-3-mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 6/6] PCI: Fix typo in pci_scan_child_bus_extend()
+Date:   Mon,  5 Sep 2022 11:02:32 +0300
+Message-Id: <20220905080232.36087-7-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220905080232.36087-1-mika.westerberg@linux.intel.com>
 References: <20220905080232.36087-1-mika.westerberg@linux.intel.com>
@@ -59,48 +59,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If some part of the PCI topology is already configured (by the boot
-firmware) but not all, and it includes hotplug bridges, we may need to
-extend the bus resources of those bridges to accommondate any future
-hotplugs too - in the same way we already do with normal hotplug case.
+Should be 'if' not 'of'. Fix this.
 
-For this reason pass the available busses to pci_scan_child_bus_extend()
-even when the bridge in question is already configured. This allows the
-bus allocation code to use these available buses to extend the possible
-hotplug bridges below.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=216000
-Reported-by: Chris Chiu <chris.chiu@canonical.com>
-Tested-by: Chris Chiu <chris.chiu@canonical.com>
 Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/probe.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 4f940dcd102c..86130926a74f 100644
+index 8f25deb6b763..b66fa42c4b1f 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -1297,7 +1297,7 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 
- 	if ((secondary || subordinate) && !pcibios_assign_all_busses() &&
- 	    !is_cardbus && !broken) {
--		unsigned int cmax;
-+		unsigned int cmax, buses;
- 
- 		/*
- 		 * Bus already configured by firmware, process it in the
-@@ -1322,7 +1322,8 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
- 			child->bridge_ctl = bctl;
- 		}
- 
--		cmax = pci_scan_child_bus(child);
-+		buses = subordinate - secondary;
-+		cmax = pci_scan_child_bus_extend(child, buses);
- 		if (cmax > subordinate)
- 			pci_warn(dev, "bridge has subordinate %02x but max busn %02x\n",
- 				 subordinate, cmax);
+@@ -2956,7 +2956,7 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
+ 	/*
+ 	 * Make sure a hotplug bridge has at least the minimum requested
+ 	 * number of buses but allow it to grow up to the maximum available
+-	 * bus number of there is room.
++	 * bus number if there is room.
+ 	 */
+ 	if (bus->self && bus->self->is_hotplug_bridge) {
+ 		used_buses = max_t(unsigned int, available_buses,
 -- 
 2.35.1
 
