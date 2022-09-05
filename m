@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5F76C6FA83
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Sep 2022 19:25:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ECD9C6FA8B
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Sep 2022 19:25:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231533AbiIETZS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Sep 2022 15:25:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42806 "EHLO
+        id S231872AbiIETZT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Sep 2022 15:25:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbiIETZR (ORCPT
+        with ESMTP id S229767AbiIETZR (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2022 15:25:17 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 969FD1A814;
-        Mon,  5 Sep 2022 12:25:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 818E51D315;
+        Mon,  5 Sep 2022 12:25:16 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 32C8B6130A;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1D7B26106D;
+        Mon,  5 Sep 2022 19:25:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CC51C43141;
         Mon,  5 Sep 2022 19:25:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69D98C43470;
-        Mon,  5 Sep 2022 19:25:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662405914;
-        bh=tnlQt8uAhD9MRbuUnIAmbky2iGpTR1k2zzQd6YiZe4Q=;
+        s=k20201202; t=1662405915;
+        bh=J12A2PV0eS7uwJxlm8tx2YP5rzJkWJMh3zeWWeeD28Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M6UNZUzL/kVaqNPtX59YFKzyhhy2UBOEwYlujhIpmWIoZyT4Bc2uYKh6a2Ivke5S0
-         194cZjBKV7JDTZEc/qiDxPXCY8Yr4dKQIz6MtPSaFnr4Ap5v5XWxY92m6zxuKbTcne
-         r3GoyMk6CsyzrBHZGJ05t1FjY3phIwvLrwD8E9/Le8V7GN9tP1CwwRP9zoomIjikM7
-         Lkmn9tPkQAJt3OKSni5GT8LrAFxHQ3u++LTEv9Qk/tJxtWhjlbHOY8t+ZzugujlVSx
-         HZyfMDvSmuEuJz1abagB/P7c6G7fHT9TQVsprpZULz8u+Lzhw/wn5BkZU1DETLaXZA
-         27AanXc0LL1Aw==
+        b=vHN32U7bYxKKnGx53sqeQBaqN8SpGNibaA8IBaIv28M5sbdeg4/gjnaCaVwWoh4cI
+         P/2WVU8QBfDYRIVxy/H2byFX9EtMakaSN53v0Atcx4zTVP6vEX8lJqy4QsUqXGsFT5
+         hekgXwzyoB47pqYpcMBMQLTgjvkx7oGVJohphFgOVV9dkc4U0NiXVDLJakIxuie+l/
+         OIsPXK7YPm7BAieB0nHP+yaACWcjNQGD8t6I7voVJozWyi5OoRAeLGYG7NiiV6l8WO
+         pP/bL+03R39kffVs9z7RvD4wqKSNZ4Z6kCqria4jgwEKJdTgPPUV9XevgQwRO/AcFC
+         u3JHPovUrSTSQ==
 Received: by pali.im (Postfix)
-        id 1145C20B1; Mon,  5 Sep 2022 21:25:12 +0200 (CEST)
+        id 165C77D7; Mon,  5 Sep 2022 21:25:15 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -47,9 +47,9 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Mauri Sandberg <maukka@ext.kapsi.fi>
 Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v3 1/7] ARM: orion: Move PCIe mbus window mapping from orion5x_setup_wins() to pcie_setup()
-Date:   Mon,  5 Sep 2022 21:23:04 +0200
-Message-Id: <20220905192310.22786-2-pali@kernel.org>
+Subject: [PATCH v3 4/7] PCI: mvebu: Remove unused busn member
+Date:   Mon,  5 Sep 2022 21:23:07 +0200
+Message-Id: <20220905192310.22786-5-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220905192310.22786-1-pali@kernel.org>
 References: <20220718202843.6766-1-maukka@ext.kapsi.fi>
@@ -61,68 +61,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This would allow to migrate Orion PCIe code to pci-mvebu.c driver as this
-driver reads mapping information from device tree files and does not relay
-on static mappings.
-
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
 Changes in v3:
-* Split it from pci-mvebu.c change to separate patch
+* New patch
 ---
- arch/arm/mach-orion5x/common.c | 13 -------------
- arch/arm/mach-orion5x/pci.c    | 14 ++++++++++++++
- 2 files changed, 14 insertions(+), 13 deletions(-)
+ drivers/pci/controller/pci-mvebu.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/arch/arm/mach-orion5x/common.c b/arch/arm/mach-orion5x/common.c
-index 2e711b7252c6..df5e7b237946 100644
---- a/arch/arm/mach-orion5x/common.c
-+++ b/arch/arm/mach-orion5x/common.c
-@@ -228,19 +228,6 @@ void __init orion5x_init_early(void)
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index 6ef8c1ee4cbb..d9e46bd7a4ec 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -96,7 +96,6 @@ struct mvebu_pcie {
+ 	struct resource io;
+ 	struct resource realio;
+ 	struct resource mem;
+-	struct resource busn;
+ 	int nports;
+ };
  
- void orion5x_setup_wins(void)
- {
--	/*
--	 * The PCIe windows will no longer be statically allocated
--	 * here once Orion5x is migrated to the pci-mvebu driver.
--	 */
--	mvebu_mbus_add_window_remap_by_id(ORION_MBUS_PCIE_IO_TARGET,
--					  ORION_MBUS_PCIE_IO_ATTR,
--					  ORION5X_PCIE_IO_PHYS_BASE,
--					  ORION5X_PCIE_IO_SIZE,
--					  ORION5X_PCIE_IO_BUS_BASE);
--	mvebu_mbus_add_window_by_id(ORION_MBUS_PCIE_MEM_TARGET,
--				    ORION_MBUS_PCIE_MEM_ATTR,
--				    ORION5X_PCIE_MEM_PHYS_BASE,
--				    ORION5X_PCIE_MEM_SIZE);
- 	mvebu_mbus_add_window_remap_by_id(ORION_MBUS_PCI_IO_TARGET,
- 					  ORION_MBUS_PCI_IO_ATTR,
- 					  ORION5X_PCI_IO_PHYS_BASE,
-diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
-index 888fdc9099c5..e0836be92f3f 100644
---- a/arch/arm/mach-orion5x/pci.c
-+++ b/arch/arm/mach-orion5x/pci.c
-@@ -147,6 +147,20 @@ static int __init pcie_setup(struct pci_sys_data *sys)
- 	 */
- 	orion_pcie_setup(PCIE_BASE);
- 
-+	/*
-+	 * The PCIe windows will no longer be statically allocated
-+	 * here once Orion5x is migrated to the pci-mvebu driver.
-+	 */
-+	mvebu_mbus_add_window_remap_by_id(ORION_MBUS_PCIE_IO_TARGET,
-+					  ORION_MBUS_PCIE_IO_ATTR,
-+					  ORION5X_PCIE_IO_PHYS_BASE,
-+					  ORION5X_PCIE_IO_SIZE,
-+					  ORION5X_PCIE_IO_BUS_BASE);
-+	mvebu_mbus_add_window_by_id(ORION_MBUS_PCIE_MEM_TARGET,
-+				    ORION_MBUS_PCIE_MEM_ATTR,
-+				    ORION5X_PCIE_MEM_PHYS_BASE,
-+				    ORION5X_PCIE_MEM_SIZE);
-+
- 	/*
- 	 * Check whether to apply Orion-1/Orion-NAS PCIe config
- 	 * read transaction workaround.
 -- 
 2.20.1
 
