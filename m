@@ -2,64 +2,61 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD568C6FA89
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Sep 2022 09:56:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1629ECAAD3
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Sep 2022 10:41:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236475AbiIEJ4r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Sep 2022 05:56:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50780 "EHLO
+        id S235960AbiIEKlM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Sep 2022 06:41:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236780AbiIEJ4f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2022 05:56:35 -0400
-Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A066322295;
-        Mon,  5 Sep 2022 02:56:32 -0700 (PDT)
-Received: by mail-lf1-x133.google.com with SMTP id z6so12339667lfu.9;
-        Mon, 05 Sep 2022 02:56:32 -0700 (PDT)
+        with ESMTP id S236504AbiIEKlL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Sep 2022 06:41:11 -0400
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A81D74C600
+        for <linux-pci@vger.kernel.org>; Mon,  5 Sep 2022 03:41:07 -0700 (PDT)
+Received: by mail-ej1-x62d.google.com with SMTP id se27so16192518ejb.8
+        for <linux-pci@vger.kernel.org>; Mon, 05 Sep 2022 03:41:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=RdubYDDix+oOh2a0h//nboO40BpZ5xfyyxVZCNAs3B0=;
-        b=et2BStfuMMuGC6Hmc0ahP2YMtl2IOvVs82z7fBLtShtRiNOLZEUcKr2FN+yvHNZxWj
-         hUQof0CelJPy6k645QZnNEtobw55lyLfO/xzbj7BHjhPUtrr6ZyyJrZD5+wJPU8x4s/V
-         wDTG6XP1BvwPE/YT5IW93WWtvTubg44nQ/U2m0Ukxn8zuXPeusqOLZkrZIQo7BaTII3T
-         tjpw7YIxVKZOVR6ozOO29YwJBQZS8KoqWz1HV/AEJBiJwCnjVlLgAcdY8jrwxwGrjJtw
-         gmvPsEX0owb2idPOc8tLiT8uceUOa827MJ139sBCmc4Km7ZtH35OknAdtVpmn61dpmua
-         LvYA==
+        d=linaro.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=9xdYuu62zn6DTVuFLIdNqNTZMNwzsKHXEqC14OZNWNU=;
+        b=FtboF37GSOE63UVBPDmVZNlKbNYdyQQTJ+s3UhSQJVLQL/lfTP9LWjRJrI2IirL10P
+         RMbzluYFwNJzfe1PcgqLCwlKFYldMq9paXhxYn0sYX271CaSDJZHidZ5q96JxBOSW2zn
+         lOaTLbWVAi26m6UIISjWArsPGILqnhZGi9fcT8kQksgDAK0cglTE62X2uT7bK8xfV6Jn
+         69jfdmKiWiZCu5sVLeXkE7kdKvJZrfswHvHuNhGjcoCD973h5vcRXPGP0giAbPSsgah9
+         jm2PSTYF7H/HxnDS4XHxekgDOaHjJVatxbEhAECSvMHM/cKDnbe76RrHLb0Ztl/YmXn8
+         00eQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=RdubYDDix+oOh2a0h//nboO40BpZ5xfyyxVZCNAs3B0=;
-        b=XYe7falFuPUINq8OKUEiYQ/aI22NbiDQESAyt22FWHsr87GRz2RcqhWsDaxMf1aVr8
-         thgcr5kuWwdUrZgSdTPdJ7d6L+i+4zpF+pScv5hKuMuCywrL+CpV+rdkj+tU8DPgUvOM
-         gWw12+JHT56Z/c4rGvu00Nf5QCtV4YHwnw+XXlX+110JvshiG8dUafvR4f47bPfo1awW
-         CWALFDi6dos16Xgl/xfB5w9hGdK2ySxicAAEV1WZz3Gbk3xJPYWynvp8JF0SDciRjzLS
-         kVdGUAE9gXO9X6LbViXBrGyHpKuhY1r39uTYOLLrft+xGrSJTFq2YqCaVO01eI71rBW1
-         9eWg==
-X-Gm-Message-State: ACgBeo2pPnYz468gee9hV+C8+BJwBXFDL28E4YJEKiFTtGrec4zzqbWm
-        /xiOMD+UeVlwiZ46k9Atk2Q=
-X-Google-Smtp-Source: AA6agR49m1znt1xCwEgykIjaaYQRJwjqD0WPTDOx4N16eYQFUBRnr5DGteFNKPh7H42GT7aHHRsE7g==
-X-Received: by 2002:a05:6512:13a4:b0:479:3b9f:f13c with SMTP id p36-20020a05651213a400b004793b9ff13cmr15342515lfa.380.1662371790521;
-        Mon, 05 Sep 2022 02:56:30 -0700 (PDT)
-Received: from [172.16.194.136] ([213.255.186.46])
-        by smtp.gmail.com with ESMTPSA id o4-20020ac25e24000000b004965e80b761sm40259lfg.224.2022.09.05.02.56.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 05 Sep 2022 02:56:30 -0700 (PDT)
-Message-ID: <0b051f7e-1754-cb69-c0df-0bae08c967fd@gmail.com>
-Date:   Mon, 5 Sep 2022 12:56:28 +0300
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date;
+        bh=9xdYuu62zn6DTVuFLIdNqNTZMNwzsKHXEqC14OZNWNU=;
+        b=HLPrep4LFJVcy2QMVA4t+WMLg2ifR9jy7kHrH6g/vB74jY5mlOrG+DVSjdIpTl2/Iq
+         QzjQgF/wA3Ha8eh32b+DJOK+ShtG2kGeAnWBjVcUp5d40vM9X93qC8qQA+MfsrmyDrnR
+         rZm9EMm6ZomgOT6oIPPF5c87p3koza4XrLBoMBcQpt6ZAVFTFOW1h/B2p5R5xUDA7Phs
+         TeBXhqNzbZb26X0nI55CD8+IJcCXGPzCozrCzhDaSLUUwqiY718JzXNGCAthaWufucqP
+         xUa2JzI++hW4032pPyGSqlxpqVwKyorGMstxQ+r175AheZrT9Y0IeT73UUzhh+O/2ETE
+         iDNQ==
+X-Gm-Message-State: ACgBeo3xxQK1KQMcztONd8wiN4JX4xR/e0pzqqquRp7ie98zXEqOMxFX
+        BtVvHpkOAkSgvJT5suRLl4PVQAhZwENUGBtY+kBHmQ==
+X-Google-Smtp-Source: AA6agR5WFwFd/TQ7W2jnfHYcXDAkiN6tuxUzvxuNvMwW96MkN6StF/cPpx6O6HJW2jg3g8odW82qLRa+WoEMj2LUhdw=
+X-Received: by 2002:a17:906:58c8:b0:6fe:91d5:18d2 with SMTP id
+ e8-20020a17090658c800b006fe91d518d2mr35853646ejs.190.1662374466240; Mon, 05
+ Sep 2022 03:41:06 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.12.0
-Subject: Re: [PATCH v1 09/11] regulator: bd9576: switch to using
- devm_fwnode_gpiod_get()
-Content-Language: en-US
-To:     Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
+References: <20220903-gpiod_get_from_of_node-remove-v1-0-b29adfb27a6c@gmail.com>
+ <20220903-gpiod_get_from_of_node-remove-v1-11-b29adfb27a6c@gmail.com>
+In-Reply-To: <20220903-gpiod_get_from_of_node-remove-v1-11-b29adfb27a6c@gmail.com>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Mon, 5 Sep 2022 12:40:55 +0200
+Message-ID: <CACRpkdbYc3vbgq26cXz4FYdzgDp-ro3fq=JGmuj9=cq+Zu13PQ@mail.gmail.com>
+Subject: Re: [PATCH v1 11/11] gpiolib: of: remove [devm_]gpiod_get_from_of_node()
+ APIs
+To:     Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc:     Thierry Reding <thierry.reding@gmail.com>,
         Mark Brown <broonie@kernel.org>,
+        Matti Vaittinen <mazziesaccount@gmail.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Claudiu Beznea <claudiu.beznea@microchip.com>,
         Liam Girdwood <lgirdwood@gmail.com>,
@@ -67,10 +64,9 @@ To:     Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Guenter Roeck <linux@roeck-us.net>,
         Miquel Raynal <miquel.raynal@bootlin.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
         Felipe Balbi <balbi@kernel.org>,
         Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         Daniel Vetter <daniel@ffwll.ch>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
@@ -85,41 +81,30 @@ To:     Dmitry Torokhov <dmitry.torokhov@gmail.com>,
         Rob Herring <robh@kernel.org>,
         Maxime Coquelin <mcoquelin.stm32@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>
-Cc:     linux-watchdog@vger.kernel.org, linux-usb@vger.kernel.org,
+        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>,
+        linux-watchdog@vger.kernel.org, linux-usb@vger.kernel.org,
         linux-gpio@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-tegra@vger.kernel.org, linux-mtd@lists.infradead.org,
         linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-stm32@st-md-mailman.stormreply.com,
         linux-arm-kernel@lists.infradead.org
-References: <20220903-gpiod_get_from_of_node-remove-v1-0-b29adfb27a6c@gmail.com>
- <20220903-gpiod_get_from_of_node-remove-v1-9-b29adfb27a6c@gmail.com>
-From:   Matti Vaittinen <mazziesaccount@gmail.com>
-In-Reply-To: <20220903-gpiod_get_from_of_node-remove-v1-9-b29adfb27a6c@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 9/5/22 09:31, Dmitry Torokhov wrote:
-> I would like to stop exporting OF-specific devm_gpiod_get_from_of_node()
-> so that gpiolib can be cleaned a bit, so let's switch to the generic
-> fwnode property API.
-> 
-> While at it switch the rest of the calls to read properties in
-> bd957x_probe() to the generic device property API as well.
-> 
+On Mon, Sep 5, 2022 at 8:31 AM Dmitry Torokhov
+<dmitry.torokhov@gmail.com> wrote:
+
+> Now that everyone is using [devm_]fwnode_gpiod_get[_index]() APIs, we no
+> longer need to expose OF-specific [devm_]gpiod_get_from_of_node().
+>
+> Note that we are keeping gpiod_get_from_of_node() but only as a private
+> to gpiolib function.
+>
 > Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-Reviewed-by: Matti Vaittinen <mazziesaccount@gmail.com>
-
-Thanks!
-
--- 
-Matti Vaittinen
-Linux kernel developer at ROHM Semiconductors
-Oulu Finland
-
-~~ When things go utterly wrong vim users can always type :help! ~~
+Yours,
+Linus Walleij
