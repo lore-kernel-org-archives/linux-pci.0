@@ -2,202 +2,124 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90874C6FA89
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Sep 2022 22:24:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A178C38145
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Sep 2022 22:41:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230089AbiIFWYt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Sep 2022 18:24:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49704 "EHLO
+        id S229851AbiIFWl2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Sep 2022 18:41:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230083AbiIFWYa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Sep 2022 18:24:30 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41EA4AEDA9;
-        Tue,  6 Sep 2022 15:24:15 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id E87D8CE18A3;
-        Tue,  6 Sep 2022 22:24:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10D77C43149;
-        Tue,  6 Sep 2022 22:24:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662503052;
-        bh=RqustZvweOUGMZRzXAxz1L58dl8uzoXmJZ6vgqdeZw0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WVzSCHFQefHgDDstD/MthGIhvD0pGHpJ+v3D2GtaJxL/NlaD0nIbblnfoctu7hbr6
-         QsFxSOS724ILyn1x6fALh2JzRt2SXKig/m8zF1D1Sx+ON/sefyroJkWXH6pWBGUzmO
-         Wuw9Ag22NPPAIZ1VXf5J0puU3BdLtM47iOrN6g/xOIaNgz96UegXZ49S+jmTKTxCKS
-         ausPxIZMnThbUldg0CLzLki/pwFQQQlKN8d6NFkypHEfDc2KbKqYrkIwLgRdyHU2xh
-         k88FISCnglQ7o6l59yluzs6ayy+NDGAMnmW7UobDyEZUHglQH3IVsRCrS4HHe1TA7+
-         WeqLHF3GL9mFQ==
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Rajvi Jingar <rajvi.jingar@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Cc:     Koba Ko <koba.ko@canonical.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "David E . Box" <david.e.box@linux.intel.com>,
-        Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3 09/10] PCI/PTM: Reorder functions in logical order
-Date:   Tue,  6 Sep 2022 17:23:50 -0500
-Message-Id: <20220906222351.64760-10-helgaas@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220906222351.64760-1-helgaas@kernel.org>
-References: <20220906222351.64760-1-helgaas@kernel.org>
+        with ESMTP id S229564AbiIFWl2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Sep 2022 18:41:28 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 409C3792F6;
+        Tue,  6 Sep 2022 15:41:27 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id z9-20020a17090a468900b001ffff693b27so11504666pjf.2;
+        Tue, 06 Sep 2022 15:41:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date;
+        bh=7NpfrCk+6A3z0LsR2jUu08sOxiRJrMwnOcQCIaNlAQE=;
+        b=fnZfa2SY63h0To/ZunyJoMLSLzjEHx8OFYvv/mdfiWDX1CkKIxHgVViAFQfzkqMAV9
+         lLRW+Fo7zuecm+NsXbCE0/nnjPh7t4U183741qgpCAr84bWLsNln5w8UoNKfWSETFJ4S
+         fPWwnPK6LNJGug7UqJotGixvVrS4N8U6B3R0i1y64jLuO1mMUmdSt5FL9cHfyTlIeNDb
+         vPM3i5kDgjE4ZDZd87JANfVa8mqWu/umTmzGwJctpD3CgV12LaEy00V5/rTtG/LjDA3X
+         3ZzgmubtffFxtC7sTLbAO82ZkYErMmBwd0g5NBk5dy8NtZW0qtkk2mfRJ4bgax0T0+GS
+         upSw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=7NpfrCk+6A3z0LsR2jUu08sOxiRJrMwnOcQCIaNlAQE=;
+        b=GHm82gu0+EhVOkyqz0j1CK3D7+z4SUIEq9oH9SZDtSYDx9IJIPQmT6GpUl7JSCR27D
+         Tpyn1pccZPuDhF+hWaNP0l+ajyq92P06AQ3nfiroHWz2hn0UsDohWdS6ggyMJQrEXDcf
+         1pxNjdwolY0F7bSST03YCx19jxUjwF1iPz5BFvk0fMl6T8kaMeH3caJ0+ciT3HjZy8sD
+         +zQ04F5Mh/eq6ppGb+BdDCEdUqZmubWiLRfCMnq0NrbXAmaEx6QDzfxOAB61crgrjS5N
+         wlXUx5U0dqAyR1N4fIBqDx4nybaEIWL3isI/p98oMCGBPhutLNqgabTOZJ1EBcqsSZYH
+         qbng==
+X-Gm-Message-State: ACgBeo0+Y0lAffh0ywjXiNvQv53Gi2OBoer8D2jRAsfblJmj+3BKgdQz
+        U2C/TxKJboMZaT6wHjbLAo4=
+X-Google-Smtp-Source: AA6agR7a3kLQBMn0Ka4nspJdGDzNm+jwOaTDY1aD+Liwcp05OMgI6xyBv+MKXF+LwG5VWq27jisE6w==
+X-Received: by 2002:a17:902:f686:b0:175:44a:c707 with SMTP id l6-20020a170902f68600b00175044ac707mr732672plg.62.1662504086502;
+        Tue, 06 Sep 2022 15:41:26 -0700 (PDT)
+Received: from google.com ([2620:15c:202:201:abc4:5d24:5a73:a96b])
+        by smtp.gmail.com with ESMTPSA id r12-20020aa7988c000000b0053612ec8859sm10689315pfl.209.2022.09.06.15.41.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Sep 2022 15:41:26 -0700 (PDT)
+Date:   Tue, 6 Sep 2022 15:41:23 -0700
+From:   Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
+Cc:     Shawn Guo <shawn.guo@linaro.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: mvebu: switch to using gpiod API
+Message-ID: <YxfMkzW+5W3Hm1dU@google.com>
+References: <20220906204301.3736813-1-dmitry.torokhov@gmail.com>
+ <20220906204301.3736813-2-dmitry.torokhov@gmail.com>
+ <20220906211628.6u4hbpn4shjcvqel@pali>
+ <Yxe7CJnIT5AiUilL@google.com>
+ <20220906214114.vj3v32dzwxz6uqik@pali>
+ <YxfBKkqce/IQQLk9@google.com>
+ <20220906220901.p2c44we7i4c35uvx@pali>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220906220901.p2c44we7i4c35uvx@pali>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, Sep 07, 2022 at 12:09:01AM +0200, Pali Rohár wrote:
+> On Tuesday 06 September 2022 14:52:42 Dmitry Torokhov wrote:
+> > On Tue, Sep 06, 2022 at 11:41:14PM +0200, Pali Rohár wrote:
+> > > On Tuesday 06 September 2022 14:26:32 Dmitry Torokhov wrote:
 
-pci_enable_ptm() and pci_disable_ptm() were separated.
-pci_save_ptm_state() and pci_restore_ptm_state() dangled at the top.  Move
-them to logical places.
+> > > would not be such easy as during startup we need to reset endpoint card.
+> > > Normally just putting it from reset, but if card was not reset state
+> > > prior probing driver then it is needed to first put it into reset...
+> > > 
+> > > I would fix it this issue after your patch is merged to prevent any
+> > > other merge conflicts.
+> > > 
+> > > How to tell devm_fwnode_gpiod_get() function that caller is not
+> > > interested in changing signal line? Just by changing GPIOD_OUT_HIGH to 0?
+> > 
+> > I think there are 2 options:
+> > 
+> > 1. Start with GPIOD_OUT_LOW (i.e. reset is explicitly deasserted), and
+> > then in powerup/powerdown you do explicit on/off transitions with proper
+> > timings.
+> 
+> PERST# is active-low. So deasserting means to put it into high state.
+> But device tree can specify if line is active-high as on some board
+> designs is GPIO output connected to inverter (or to level shifter with
+> additional logic of signal inversion). So what [GPIOD_]OUT_LOW means in
+> this context? Just it is needed that from driver point of view always
+> value 1 means reset active and 0 means reset inactive, independently of
+> double (triple?) inversions.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/ptm.c | 108 ++++++++++++++++++++---------------------
- 1 file changed, 54 insertions(+), 54 deletions(-)
+Think of GPIOD_OUT_LOW and GPIOD_OUT_HIGH as logical off and on, or
+logical deactivate/activate. Gpiolib will take into account declared
+polarity of the line when it drives the output, so for lines marked as
+GPIO_ACTIVE_HIGH GPIO_OUT_HIGH will result in line driven HIGH, whereas
+for lines marked as GPIO_ACTIVE_LOW GPIO_OUT_HIGH will result in the
+line being driven LOW.
 
-diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
-index d65f5af9700d..6c09e00a7b51 100644
---- a/drivers/pci/pcie/ptm.c
-+++ b/drivers/pci/pcie/ptm.c
-@@ -9,60 +9,6 @@
- #include <linux/pci.h>
- #include "../pci.h"
- 
--static void __pci_disable_ptm(struct pci_dev *dev)
--{
--	int ptm = dev->ptm_cap;
--	u16 ctrl;
--
--	if (!ptm)
--		return;
--
--	pci_read_config_word(dev, ptm + PCI_PTM_CTRL, &ctrl);
--	ctrl &= ~PCI_PTM_CTRL_ENABLE;
--	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, ctrl);
--}
--
--void pci_disable_ptm(struct pci_dev *dev)
--{
--	__pci_disable_ptm(dev);
--	dev->ptm_enabled = 0;
--}
--EXPORT_SYMBOL(pci_disable_ptm);
--
--void pci_save_ptm_state(struct pci_dev *dev)
--{
--	int ptm = dev->ptm_cap;
--	struct pci_cap_saved_state *save_state;
--	u16 *cap;
--
--	if (!ptm)
--		return;
--
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
--	if (!save_state)
--		return;
--
--	cap = (u16 *)&save_state->cap.data[0];
--	pci_read_config_word(dev, ptm + PCI_PTM_CTRL, cap);
--}
--
--void pci_restore_ptm_state(struct pci_dev *dev)
--{
--	int ptm = dev->ptm_cap;
--	struct pci_cap_saved_state *save_state;
--	u16 *cap;
--
--	if (!ptm)
--		return;
--
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
--	if (!save_state)
--		return;
--
--	cap = (u16 *)&save_state->cap.data[0];
--	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, *cap);
--}
--
- /*
-  * If the next upstream device supports PTM, return it; otherwise return
-  * NULL.  PTM Messages are local, so both link partners must support it.
-@@ -132,6 +78,40 @@ void pci_ptm_init(struct pci_dev *dev)
- 		pci_enable_ptm(dev, NULL);
- }
- 
-+void pci_save_ptm_state(struct pci_dev *dev)
-+{
-+	int ptm = dev->ptm_cap;
-+	struct pci_cap_saved_state *save_state;
-+	u16 *cap;
-+
-+	if (!ptm)
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!save_state)
-+		return;
-+
-+	cap = (u16 *)&save_state->cap.data[0];
-+	pci_read_config_word(dev, ptm + PCI_PTM_CTRL, cap);
-+}
-+
-+void pci_restore_ptm_state(struct pci_dev *dev)
-+{
-+	int ptm = dev->ptm_cap;
-+	struct pci_cap_saved_state *save_state;
-+	u16 *cap;
-+
-+	if (!ptm)
-+		return;
-+
-+	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!save_state)
-+		return;
-+
-+	cap = (u16 *)&save_state->cap.data[0];
-+	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, *cap);
-+}
-+
- static int __pci_enable_ptm(struct pci_dev *dev)
- {
- 	int ptm = dev->ptm_cap;
-@@ -193,6 +173,26 @@ int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
- }
- EXPORT_SYMBOL(pci_enable_ptm);
- 
-+static void __pci_disable_ptm(struct pci_dev *dev)
-+{
-+	int ptm = dev->ptm_cap;
-+	u16 ctrl;
-+
-+	if (!ptm)
-+		return;
-+
-+	pci_read_config_word(dev, ptm + PCI_PTM_CTRL, &ctrl);
-+	ctrl &= ~PCI_PTM_CTRL_ENABLE;
-+	pci_write_config_word(dev, ptm + PCI_PTM_CTRL, ctrl);
-+}
-+
-+void pci_disable_ptm(struct pci_dev *dev)
-+{
-+	__pci_disable_ptm(dev);
-+	dev->ptm_enabled = 0;
-+}
-+EXPORT_SYMBOL(pci_disable_ptm);
-+
- /*
-  * Disable PTM, but leave dev->ptm_enabled so we silently re-enable it on
-  * resume.
+Linus, do you think we should introduce GPIOD_OUT_INACTIVE /
+GPIOD_OUT_ACTIVE or GPIOD_OUT_DEASSERTED / GPIOD_OUT_ASSERTED and
+deprecate existing GPIOD_OUT_LOW and GPIO_OUT_HIGH?
+
+Thanks.
+
 -- 
-2.25.1
-
+Dmitry
