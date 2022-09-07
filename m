@@ -2,116 +2,223 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68166C6FA83
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Sep 2022 12:22:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8B6AC38145
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Sep 2022 15:20:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229882AbiIGMWe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Sep 2022 08:22:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35650 "EHLO
+        id S230362AbiIGPUM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Sep 2022 11:20:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229464AbiIGMWd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Sep 2022 08:22:33 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC1BE8C461
-        for <linux-pci@vger.kernel.org>; Wed,  7 Sep 2022 05:22:31 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id x14so6776844lfu.10
-        for <linux-pci@vger.kernel.org>; Wed, 07 Sep 2022 05:22:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date;
-        bh=U2CCV85EoOa7dwEFCiOXwg1HejjsrFPKLVkt4kwqjuQ=;
-        b=YRDGjXATGwZoZrdBw6I43z9W6gX3NTSqOFyW3suJJZdxbSd0cbRw8W9v0y2cbNGW5P
-         jAXr58i0dirqnMPI66row3CVgbtOImz8jpZEbXNUvhY1DTVltPrPMxgrmyx9HNBh4KTC
-         xaaRbsiDY2AAQtB5rmIbCohJyrl6QPTqHWVttSXBdik46tH0BomAJEPUJwi4n9LGNid/
-         XkZ58MzAY8v+X0cLEAaca1RYPUE3HZPObOBMiyUtlNjQCADYXBgIDLRsd9xRs6bZFM+A
-         uI/ueSQONiXmmOK2wkIA3TTaFwvKyda1dfuJDIr6xYylT1FQpf9UbsJgTaxz1Yj9csh3
-         pXrA==
+        with ESMTP id S230180AbiIGPUJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Sep 2022 11:20:09 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F10F1EEF6
+        for <linux-pci@vger.kernel.org>; Wed,  7 Sep 2022 08:20:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1662564005;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CHNdLB0NEs0hPJCPuKfDS5PXO0uKkxor3QlPHHKcdWM=;
+        b=eO1pjAiBcATknSb0PaZfYCnysEh5OgJKH2NMhVCcSbzoIG8sYVg43MKfYw3h8a3LUxWJ2T
+        cjwyURrL0yHuyRtZBUj7qyS68vruKkXHDIdSWzMEeSopspsCZ0fWJ9wFZJcLzHmt4kf28s
+        svDE67/wj6bcWtIsF6gQzaAJsxmuZOc=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-630-HWiTiXyTMG-KUWAGipIGLQ-1; Wed, 07 Sep 2022 11:20:04 -0400
+X-MC-Unique: HWiTiXyTMG-KUWAGipIGLQ-1
+Received: by mail-wm1-f70.google.com with SMTP id 203-20020a1c02d4000000b003a5f5bce876so10399977wmc.2
+        for <linux-pci@vger.kernel.org>; Wed, 07 Sep 2022 08:20:04 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=U2CCV85EoOa7dwEFCiOXwg1HejjsrFPKLVkt4kwqjuQ=;
-        b=gAubydfM2N2iB/Uct88Hmt++PQ1iP5AH+N/rlEN/naZEDzxp7NxX8nvf22HCjDiLM3
-         CCO54JmYbiPo2dOKXTnvu0UqBYRbPTG2E898rTL7VLEMpEmOZBV1h33Gl6KWXyiJOnwu
-         huX4GivSfeTU0PbLNBMxxbGpxklWV7O6qH4HKgL/N/el7k/uVuNW+iZcZ0DV1t2KIB5f
-         GO4SnruPqpQs85U+oCWK+YGiAvYjJcABCZTPsOrQjwSoDxx+woIK43vCqSGrtdVJH2gS
-         MY9X3y2hzO2moo1xQnEIALHyu/y/b8h7YF5ran0MMyDhRraAuFNo7jkcvOaPeI6oFvdQ
-         bWTg==
-X-Gm-Message-State: ACgBeo1sAjYbDtID5ubtee3T0CDTxytW0YP3ftlHuuUhk3nt+SIq0e0p
-        WGi/9/dXaJRRLqHlXM2tvHO4qA==
-X-Google-Smtp-Source: AA6agR45ZampRMHGXpWL20oWXDRzWXEgmPza7LlwbS/oHQgXzh6bY/TgbzPtMh4UHAfeOI8vvuB50A==
-X-Received: by 2002:ac2:4f02:0:b0:496:d15:ea89 with SMTP id k2-20020ac24f02000000b004960d15ea89mr978693lfr.69.1662553350347;
-        Wed, 07 Sep 2022 05:22:30 -0700 (PDT)
-Received: from [192.168.0.21] (78-11-189-27.static.ip.netia.com.pl. [78.11.189.27])
-        by smtp.gmail.com with ESMTPSA id u15-20020ac258cf000000b00497ab34bf5asm200013lfo.20.2022.09.07.05.22.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Sep 2022 05:22:29 -0700 (PDT)
-Message-ID: <cc00fad3-08fb-462a-12ac-73143aa4206f@linaro.org>
-Date:   Wed, 7 Sep 2022 14:22:28 +0200
+        h=content-transfer-encoding:mime-version:message-id:date:references
+         :in-reply-to:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=CHNdLB0NEs0hPJCPuKfDS5PXO0uKkxor3QlPHHKcdWM=;
+        b=z1Xb8wVJTnZJ2bgPWyp0pqNZTwq0MaTPuTyD4AZwMcNZ7jDqbTFYg1jEiv7PfKzLLn
+         d0RJ3+VssyBWRHIC+Up3bVgkeo2AhvI4myoogfnZqf7JZh6x2HgpAwuLZrG3wtasqrq1
+         a69Vug15tQB1kvWDVfHnc7aD87yITFv+EJ+sAMGnznc+0jmeERvdIeCE52vrLIz2AVv1
+         H8IPAjcfHCKrMsjDG1+lZ/FQEeaA6fIsyc90AQsvrETJDBQHUlUqEiUbS6SYGC4fI5R0
+         kzydiRR+n2BccDfJLSzo12bwH7LCYMbY7SbPGZt4+zhJTUPjUkbjRo/9yO49/6BWstXn
+         TT4A==
+X-Gm-Message-State: ACgBeo3+1evsM1fYf2tIFQQsqVlOvD1SZM3u16MUIu0nYZtxtnN7vulh
+        CWx6xJK+7RHk7SQooIILFFQodsO6k/BFDMT+KRRXc0T7HO68vStyQGj4Vdj6ZebRqUacrov4p0a
+        8xaTN8FYWTlg24Kxtscs/
+X-Received: by 2002:a5d:59ab:0:b0:228:28df:9193 with SMTP id p11-20020a5d59ab000000b0022828df9193mr2471688wrr.323.1662564003269;
+        Wed, 07 Sep 2022 08:20:03 -0700 (PDT)
+X-Google-Smtp-Source: AA6agR756qiCLKEbLM1iNnFKS+9y7GWIyNG66GDmPAE9ydBmmICwjU+sxM3SEVFU1scSKoLlwTZJ6g==
+X-Received: by 2002:a5d:59ab:0:b0:228:28df:9193 with SMTP id p11-20020a5d59ab000000b0022828df9193mr2471659wrr.323.1662564002953;
+        Wed, 07 Sep 2022 08:20:02 -0700 (PDT)
+Received: from fedora (nat-2.ign.cz. [91.219.240.2])
+        by smtp.gmail.com with ESMTPSA id f25-20020a1c6a19000000b003a840690609sm29360122wmc.36.2022.09.07.08.20.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Sep 2022 08:20:02 -0700 (PDT)
+From:   Vitaly Kuznetsov <vkuznets@redhat.com>
+To:     Ajay Kaher <akaher@vmware.com>
+Cc:     x86@kernel.org, hpa@zytor.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, rostedt@goodmis.org,
+        srivatsab@vmware.com, srivatsa@csail.mit.edu, amakhalov@vmware.com,
+        vsirnapalli@vmware.com, er.ajay.kaher@gmail.com,
+        willy@infradead.org, namit@vmware.com,
+        linux-hyperv@vger.kernel.org, kvm@vger.kernel.org,
+        jailhouse-dev@googlegroups.com, xen-devel@lists.xenproject.org,
+        acrn-dev@lists.projectacrn.org, helgaas@kernel.org,
+        bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
+        bp@alien8.de, dave.hansen@linux.intel.com
+Subject: Re: [PATCH v2] x86/PCI: Prefer MMIO over PIO on VMware hypervisor
+In-Reply-To: <1662448117-10807-1-git-send-email-akaher@vmware.com>
+References: <1662448117-10807-1-git-send-email-akaher@vmware.com>
+Date:   Wed, 07 Sep 2022 17:20:00 +0200
+Message-ID: <8735d3rz33.fsf@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH v3 3/3] arm64: dts: qcom: sc7280: Add missing aggre0,
- aggre1 clocks
-Content-Language: en-US
-To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        helgaas@kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mka@chromium.org,
-        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
-        quic_ramkri@quicinc.com, manivannan.sadhasivam@linaro.org,
-        swboyd@chromium.org, dmitry.baryshkov@linaro.org,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>
-References: <1662171184-25211-1-git-send-email-quic_krichai@quicinc.com>
- <1662171184-25211-4-git-send-email-quic_krichai@quicinc.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <1662171184-25211-4-git-send-email-quic_krichai@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 03/09/2022 04:13, Krishna chaitanya chundru wrote:
-> Add missing aggre0, aggre1 clocks.
-> 
-> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Ajay Kaher <akaher@vmware.com> writes:
+
+> During boot-time there are many PCI config reads, these could be performed
+> either using Port IO instructions (PIO) or memory mapped I/O (MMIO).
+>
+> PIO are less efficient than MMIO, they require twice as many PCI accesses
+> and PIO instructions are serializing. As a result, MMIO should be preferr=
+ed
+> when possible over PIO.
+>
+> Virtual Machine test result using VMware hypervisor
+> 1 hundred thousand reads using raw_pci_read() took:
+> PIO: 12.809 seconds
+> MMIO: 8.517 seconds (~33.5% faster then PIO)
+>
+> Currently, when these reads are performed by a virtual machine, they all
+> cause a VM-exit, and therefore each one of them induces a considerable
+> overhead.
+>
+> This overhead can be further improved, by mapping MMIO region of virtual
+> machine to memory area that holds the values that the =E2=80=9Cemulated h=
+ardware=E2=80=9D
+> is supposed to return. The memory region is mapped as "read-only=E2=80=9D=
+ in the
+> NPT/EPT, so reads from these regions would be treated as regular memory
+> reads. Writes would still be trapped and emulated by the hypervisor.
+>
+> Virtual Machine test result with above changes in VMware hypervisor
+> 1 hundred thousand read using raw_pci_read() took:
+> PIO: 12.809 seconds
+> MMIO: 0.010 seconds
+>
+> This helps to reduce virtual machine PCI scan and initialization time by
+> ~65%. In our case it reduced to ~18 mSec from ~55 mSec.
+>
+> MMIO is also faster than PIO on bare-metal systems, but due to some bugs
+> with legacy hardware and the smaller gains on bare-metal, it seems prudent
+> not to change bare-metal behavior.
+
+Out of curiosity, are we sure MMIO *always* works for other hypervisors
+besides Vmware? Various Hyper-V version can probably be tested (were
+they?) but with KVM it's much harder as PCI is emulated in VMM and
+there's certainly more than 1 in existence...
+
+>
+> Signed-off-by: Ajay Kaher <akaher@vmware.com>
 > ---
->  arch/arm64/boot/dts/qcom/sc7280.dtsi | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> index e66fc67..a5ce095 100644
-> --- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
-> @@ -2043,6 +2043,8 @@
->  				 <&gcc GCC_PCIE_1_SLV_AXI_CLK>,
->  				 <&gcc GCC_PCIE_1_SLV_Q2A_AXI_CLK>,
->  				 <&gcc GCC_AGGRE_NOC_PCIE_TBU_CLK>,
-> +				 <&gcc GCC_AGGRE_NOC_PCIE_CENTER_SF_AXI_CLK>,
-> +				 <&gcc GCC_AGGRE_NOC_PCIE_1_AXI_CLK>,
->  				 <&gcc GCC_DDRSS_PCIE_SF_CLK>;
->  
->  			clock-names = "pipe",
-> @@ -2055,6 +2057,8 @@
->  				      "bus_slave",
->  				      "slave_q2a",
->  				      "tbu",
-> +				      "aggre0",
-> +				      "aggre1",
->  				      "ddrss_sf_tbu";
->  
+> v1 -> v2:
+> Limit changes to apply only to VMs [Matthew W.]
+> ---
+>  arch/x86/pci/common.c | 45 +++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 45 insertions(+)
+>
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index ddb7986..1e5a8f7 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -20,6 +20,7 @@
+>  #include <asm/pci_x86.h>
+>  #include <asm/setup.h>
+>  #include <asm/irqdomain.h>
+> +#include <asm/hypervisor.h>
+>=20=20
+>  unsigned int pci_probe =3D PCI_PROBE_BIOS | PCI_PROBE_CONF1 | PCI_PROBE_=
+CONF2 |
+>  				PCI_PROBE_MMCONF;
+> @@ -57,14 +58,58 @@ int raw_pci_write(unsigned int domain, unsigned int b=
+us, unsigned int devfn,
+>  	return -EINVAL;
+>  }
+>=20=20
+> +#ifdef CONFIG_HYPERVISOR_GUEST
+> +static int vm_raw_pci_read(unsigned int domain, unsigned int bus, unsign=
+ed int devfn,
+> +						int reg, int len, u32 *val)
+> +{
+> +	if (raw_pci_ext_ops)
+> +		return raw_pci_ext_ops->read(domain, bus, devfn, reg, len, val);
+> +	if (domain =3D=3D 0 && reg < 256 && raw_pci_ops)
+> +		return raw_pci_ops->read(domain, bus, devfn, reg, len, val);
+> +	return -EINVAL;
+> +}
+> +
+> +static int vm_raw_pci_write(unsigned int domain, unsigned int bus, unsig=
+ned int devfn,
+> +						int reg, int len, u32 val)
+> +{
+> +	if (raw_pci_ext_ops)
+> +		return raw_pci_ext_ops->write(domain, bus, devfn, reg, len, val);
+> +	if (domain =3D=3D 0 && reg < 256 && raw_pci_ops)
+> +		return raw_pci_ops->write(domain, bus, devfn, reg, len, val);
+> +	return -EINVAL;
+> +}
 
-Same as binding - adding entries in the middle causes ABI issues.
+These look exactly like raw_pci_read()/raw_pci_write() but with inverted
+priority. We could've added a parameter but to be more flexible, I'd
+suggest we add a 'priority' field to 'struct pci_raw_ops' and make
+raw_pci_read()/raw_pci_write() check it before deciding what to use
+first. To be on the safe side, you can leave raw_pci_ops's priority
+higher than raw_pci_ext_ops's by default and only tweak it in
+arch/x86/kernel/cpu/vmware.c=20
 
-Best regards,
-Krzysztof
+> +#endif /* CONFIG_HYPERVISOR_GUEST */
+> +
+>  static int pci_read(struct pci_bus *bus, unsigned int devfn, int where, =
+int size, u32 *value)
+>  {
+> +#ifdef CONFIG_HYPERVISOR_GUEST
+> +	/*
+> +	 * MMIO is faster than PIO, but due to some bugs with legacy
+> +	 * hardware, it seems prudent to prefer MMIO for VMs and PIO
+> +	 * for bare-metal.
+> +	 */
+> +	if (!hypervisor_is_type(X86_HYPER_NATIVE))
+> +		return vm_raw_pci_read(pci_domain_nr(bus), bus->number,
+> +					 devfn, where, size, value);
+> +#endif /* CONFIG_HYPERVISOR_GUEST */
+> +
+>  	return raw_pci_read(pci_domain_nr(bus), bus->number,
+>  				 devfn, where, size, value);
+>  }
+>=20=20
+>  static int pci_write(struct pci_bus *bus, unsigned int devfn, int where,=
+ int size, u32 value)
+>  {
+> +#ifdef CONFIG_HYPERVISOR_GUEST
+> +	/*
+> +	 * MMIO is faster than PIO, but due to some bugs with legacy
+> +	 * hardware, it seems prudent to prefer MMIO for VMs and PIO
+> +	 * for bare-metal.
+> +	 */
+> +	if (!hypervisor_is_type(X86_HYPER_NATIVE))
+> +		return vm_raw_pci_write(pci_domain_nr(bus), bus->number,
+> +					  devfn, where, size, value);
+> +#endif /* CONFIG_HYPERVISOR_GUEST */
+> +
+>  	return raw_pci_write(pci_domain_nr(bus), bus->number,
+>  				  devfn, where, size, value);
+>  }
+
+--=20
+Vitaly
+
