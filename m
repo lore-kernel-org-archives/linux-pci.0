@@ -2,188 +2,106 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE52ECAAA1
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 09:06:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CAC9C6FA8A
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 09:14:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231852AbiIIJGK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Sep 2022 05:06:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58118 "EHLO
+        id S229455AbiIIJOn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Sep 2022 05:14:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231863AbiIIJFo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 05:05:44 -0400
-Received: from mail-yb1-xb2f.google.com (mail-yb1-xb2f.google.com [IPv6:2607:f8b0:4864:20::b2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A342A61E8
-        for <linux-pci@vger.kernel.org>; Fri,  9 Sep 2022 02:05:05 -0700 (PDT)
-Received: by mail-yb1-xb2f.google.com with SMTP id t184so1744564yba.4
-        for <linux-pci@vger.kernel.org>; Fri, 09 Sep 2022 02:05:05 -0700 (PDT)
+        with ESMTP id S229755AbiIIJOj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 05:14:39 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68EBE1CFCF
+        for <linux-pci@vger.kernel.org>; Fri,  9 Sep 2022 02:14:37 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id a8so1601378lff.13
+        for <linux-pci@vger.kernel.org>; Fri, 09 Sep 2022 02:14:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=e9oyM6c9eO+oX1i0ikmglldoQMouIxTI5tr1NuI9GT8=;
-        b=da8jwOMfsx5H05oRncihV5aFvyzpldWnjk6VRzdiJdjoiXpY+fCe9JssN6Nz9r+L+j
-         l9E4JVcp5pgWrIuipD6Pi6wcKO+xD+VxeNwfuFt6elE6UHvSev+WLO0vDrW/tLIznTIL
-         pDhzZzNph135gYHY2wx3yRTUBfbkz92m+AjchB4HbzuOoSIKq8dgKb1WAhflDbgHEbXY
-         ftwjMPa5bH9X96v79lvW7Je1K0OWgSPjvuOcjVadzfvMMakdATI1M68Gg6PzbT1hBWxD
-         jvBtOUUvWy5eJT0Fdxqw789DmY2q4uFclRA5L54De5cA0Z1HPHPMcwjpwr5m28TWxGz6
-         s6Hg==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
+        bh=mVdK7E4cY7cM5XQpQxkxfa74Zdst6+MVrVvVyV2J/ME=;
+        b=sZTsC4qmG3N4ZhlzVNgf2Cz+mT4hmqeYeHoq0nJoM+mtNj+UGnELed8RQwGArniXGR
+         YT9Drrj/vOf/DSssfXMSE211vG/ihKDBViaRjNiEpGO9pIeUUiYub+PDfqW10dQ+C0py
+         2BEL1Yb/Zo8uwUWeGfnpindD02vrpbHpLVnK357UV1+FcHf0s5kcQQ08NQQ+2o1qOV3N
+         MUfeRM4760T01DkPlrMv3oKimoShLhvcFMPvRS9M+dRcDB1FMK2qAR0KMLsBtdtrmA4a
+         YAMH3dXwNG8yld04wcA/oN14eueK+WkHgGD88tHHUV9Q0AgvI2wq6NPzvia/BLaVXk9J
+         21dQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=e9oyM6c9eO+oX1i0ikmglldoQMouIxTI5tr1NuI9GT8=;
-        b=dgJh11X8EvdReGf7QmDWnyJfX7A6XGK6BXKawmgsDzyacY0PAGK2Z5ClTH7QU1NRdC
-         I0fu+BW/UELgksPaTAqjWe/3ExrdxiWqmJMCfVjObHxfisJGjy/Dp1vR3/ofRIgJ69qF
-         9wXGKGiMshHzCM64h5j8H+UbG4Lkb99BqX/WzeIpM/cfkTHO9kY3q/opuonpUVqFisCC
-         lJx8aY2nm9LPcXZmHxWLp0xa7E6sIcwVxPXY2h2gL2HkgmKc8IU1oZeeZ03hLOd29i/s
-         ZJqQUW04UrPz0w0//X7taVPNKdphUXeSVgUlNmmgwrAvmPM3IXOTkbCdfNJMsLZ+z3DG
-         NMnw==
-X-Gm-Message-State: ACgBeo1vu6t+mEKG6/BNGkftGQPhR4wOw3UvyMkjHWM45ZidEsDmSXxw
-        X2PZITCE3gjZncKjQuyG0HWC04d2cL82OC++EHW+UA==
-X-Google-Smtp-Source: AA6agR60pT17TAOcus3ljp/+P1MMns0B4aTuhcTv8h8i4eJsYnX9f8UfuOksTxp7JfFCNnxnPWwh0eKuRzEoeHEZjnk=
-X-Received: by 2002:a25:5c3:0:b0:6a9:90fb:c9e6 with SMTP id
- 186-20020a2505c3000000b006a990fbc9e6mr10891297ybf.152.1662714304890; Fri, 09
- Sep 2022 02:05:04 -0700 (PDT)
-MIME-Version: 1.0
-References: <1662713084-8106-1-git-send-email-quic_krichai@quicinc.com> <1662713084-8106-4-git-send-email-quic_krichai@quicinc.com>
-In-Reply-To: <1662713084-8106-4-git-send-email-quic_krichai@quicinc.com>
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date;
+        bh=mVdK7E4cY7cM5XQpQxkxfa74Zdst6+MVrVvVyV2J/ME=;
+        b=7zG1ZU6X5/avSVDQ03T0WZnhEKPLhihuFFIMZ6t0aZEWdYpP3Yl4Wu+NtIogd4A1a7
+         zVn/rt9GpB00go0ite5yYpdbRD6ECL78xoJEqdGw9qclh0AMangVg9unCKHdsNgFpmlZ
+         wUj0BiFcJSTPwWt/CQa1V/GZ+hg0mS0oIvNPwZzV8kiryWvc+Krrp/UMHs7nA6hlEZC7
+         Cu3tH+xOHZD3cMlORSJ+0tZZMT5eej6TqlOG4oOLkpt6yrnNzbElvER+AxqQxZ6126UU
+         UzzUBvEWaCHGi/HoVWEYu3VKIz3lNDvcy0hbaxrmIIg8qywgZVNX/eizkY3uyTZ5yeNz
+         O8oQ==
+X-Gm-Message-State: ACgBeo0ZScBokMj5LDV61av74bX9FlEN78JXIysTaPUzU011lyiBZIyF
+        yfd6CE3Je8mkh4QcGgLRHHnu4Q==
+X-Google-Smtp-Source: AA6agR5GLSJc2/tZgMKnpxjUZbHhfQBcV4ocohEfkZI2hZeRI0rEjw/VZNAQ/8PcktlxZLsGQWYFYg==
+X-Received: by 2002:a05:6512:1115:b0:497:cd1:463 with SMTP id l21-20020a056512111500b004970cd10463mr3896511lfg.24.1662714875565;
+        Fri, 09 Sep 2022 02:14:35 -0700 (PDT)
+Received: from eriador.lan ([37.153.55.125])
+        by smtp.gmail.com with ESMTPSA id z26-20020a2e4c1a000000b0026acbb6ed1asm201615lja.66.2022.09.09.02.14.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 09 Sep 2022 02:14:34 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date:   Fri, 9 Sep 2022 12:04:53 +0300
-Message-ID: <CAA8EJppgaAuEDU44ePOt+ZWK0_rNsXHnE3WOEc9F-n=VE=3aVQ@mail.gmail.com>
-Subject: Re: [PATCH v6 3/5] phy: core: Add support for phy power down & power up
-To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mka@chromium.org, quic_vbadigan@quicinc.com,
-        quic_hemantk@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_skananth@quicinc.com, quic_ramkri@quicinc.com,
-        manivannan.sadhasivam@linaro.org, swboyd@chromium.org,
-        Kishon Vijay Abraham I <kishon@ti.com>,
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Vinod Koul <vkoul@kernel.org>,
-        "open list:GENERIC PHY FRAMEWORK" <linux-phy@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Philipp Zabel <p.zabel@pengutronix.de>,
+        Johan Hovold <johan@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org
+Subject: [PATCH v3 1/9] phy: define submodes for PCIe PHYs
+Date:   Fri,  9 Sep 2022 12:14:25 +0300
+Message-Id: <20220909091433.3715981-2-dmitry.baryshkov@linaro.org>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220909091433.3715981-1-dmitry.baryshkov@linaro.org>
+References: <20220909091433.3715981-1-dmitry.baryshkov@linaro.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 9 Sept 2022 at 11:45, Krishna chaitanya chundru
-<quic_krichai@quicinc.com> wrote:
->
-> Introducing phy power down/up callbacks for allowing to park the
-> link-state in L1ss without holding any PCIe resources during
-> system suspend.
->
-> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-> ---
->  drivers/phy/phy-core.c  | 30 ++++++++++++++++++++++++++++++
->  include/linux/phy/phy.h | 20 ++++++++++++++++++++
->  2 files changed, 50 insertions(+)
->
-> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-> index d93ddf1..1b0b757 100644
-> --- a/drivers/phy/phy-core.c
-> +++ b/drivers/phy/phy-core.c
-> @@ -441,6 +441,36 @@ int phy_set_speed(struct phy *phy, int speed)
->  }
->  EXPORT_SYMBOL_GPL(phy_set_speed);
->
-> +int phy_power_down(struct phy *phy)
-> +{
-> +       int ret;
-> +
-> +       if (!phy || !phy->ops->power_down)
-> +               return 0;
-> +
-> +       mutex_lock(&phy->mutex);
-> +       ret = phy->ops->power_down(phy);
-> +       mutex_unlock(&phy->mutex);
-> +
-> +       return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(phy_power_down);
-> +
-> +int phy_power_up(struct phy *phy)
-> +{
-> +       int ret;
-> +
-> +       if (!phy || !phy->ops->power_up)
-> +               return 0;
-> +
-> +       mutex_lock(&phy->mutex);
-> +       ret = phy->ops->power_up(phy);
-> +       mutex_unlock(&phy->mutex);
-> +
-> +       return ret;
-> +}
+Define two submodes to be used for the PCIe PHYs, where required.
 
-As it can be seen from the phy_power_off(), the PHY can be a shared
-resource, with the power_count counting the number of users that
-requested the PHY to be powered up. By introducing suc calls you break
-directly into this by allowing a single user to power down the PHY, no
-matter how many other users have requested the PHY to stay alive.
+Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+---
+ include/linux/phy/phy.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-> +EXPORT_SYMBOL_GPL(phy_power_up);
-> +
->  int phy_reset(struct phy *phy)
->  {
->         int ret;
-> diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-> index b141375..3a45f4d 100644
-> --- a/include/linux/phy/phy.h
-> +++ b/include/linux/phy/phy.h
-> @@ -76,6 +76,8 @@ union phy_configure_opts {
->   * @set_mode: set the mode of the phy
->   * @set_media: set the media type of the phy (optional)
->   * @set_speed: set the speed of the phy (optional)
-> + * @power_down: parking the phy in power down state
-> + * @power_up: pulling back the phy from power down
->   * @reset: resetting the phy
->   * @calibrate: calibrate the phy
->   * @release: ops to be performed while the consumer relinquishes the PHY
-> @@ -89,6 +91,8 @@ struct phy_ops {
->         int     (*set_mode)(struct phy *phy, enum phy_mode mode, int submode);
->         int     (*set_media)(struct phy *phy, enum phy_media media);
->         int     (*set_speed)(struct phy *phy, int speed);
-> +       int     (*power_down)(struct phy *phy);
-> +       int     (*power_up)(struct phy *phy);
->
->         /**
->          * @configure:
-> @@ -226,6 +230,8 @@ int phy_init(struct phy *phy);
->  int phy_exit(struct phy *phy);
->  int phy_power_on(struct phy *phy);
->  int phy_power_off(struct phy *phy);
-> +int phy_power_down(struct phy *phy);
-> +int phy_power_up(struct phy *phy);
->  int phy_set_mode_ext(struct phy *phy, enum phy_mode mode, int submode);
->  #define phy_set_mode(phy, mode) \
->         phy_set_mode_ext(phy, mode, 0)
-> @@ -349,6 +355,20 @@ static inline int phy_power_off(struct phy *phy)
->         return -ENOSYS;
->  }
->
-> +static inline int phy_power_down(struct phy *phy)
-> +{
-> +       if (!phy)
-> +               return 0;
-> +       return -ENOSYS;
-> +}
-> +
-> +static inline int phy_power_up(struct phy *phy)
-> +{
-> +       if (!phy)
-> +               return 0;
-> +       return -ENOSYS;
-> +}
-> +
->  static inline int phy_set_mode_ext(struct phy *phy, enum phy_mode mode,
->                                    int submode)
->  {
-> --
-> 2.7.4
->
-
-
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index b1413757fcc3..bd60c1a72988 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -45,6 +45,15 @@ enum phy_mode {
+ 	PHY_MODE_DP
+ };
+ 
++/*
++ * Submodes for the PHY_MODE_PCIE, allowing the host to select between RC (Root
++ * Complex) and EP (End Point) PHY modes.
++ */
++enum {
++	PHY_SUBMODE_PCIE_RC,
++	PHY_SUBMODE_PCIE_EP,
++};
++
+ enum phy_media {
+ 	PHY_MEDIA_DEFAULT,
+ 	PHY_MEDIA_SR,
 -- 
-With best wishes
-Dmitry
+2.35.1
+
