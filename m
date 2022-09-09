@@ -2,177 +2,187 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A23D3ECAAD5
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 07:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23ECDECAAD5
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 08:45:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231766AbiIIHrk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Sep 2022 03:47:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44356 "EHLO
+        id S230420AbiIIIpW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Sep 2022 04:45:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40740 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231432AbiIIHrP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 03:47:15 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4387E290D;
-        Fri,  9 Sep 2022 00:43:40 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EA1BE61ED4;
-        Fri,  9 Sep 2022 07:42:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D795EC433D7;
-        Fri,  9 Sep 2022 07:42:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1662709376;
-        bh=fX3uAg8WI8sIS3BxSEy1dFAlMXqykzIyR3bPWIiiy5Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=I9MJfu/DyopZa2FrUTmYMsJLSqL4s07q/tY2zzTNmMMYpBIMFKpCddCHUschDpy27
-         A6u8V5jeBRM/Aqd/GxAIZvNo73euiWznVWH8zfWUtMDthIlEduk/Coa80E3AQ11+yj
-         1lwf1BAGErjSRmykkjR2NCLyhKCoMPtfsl28KXxE=
-Date:   Fri, 9 Sep 2022 09:42:53 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        whitehat002 <hackyzh002@gmail.com>
-Subject: Re: [PATCH] PCI/ACPI: do not reference a pci device after it has
- been released
-Message-ID: <YxrufXoPZnKCxqRP@kroah.com>
-References: <20220428142854.1065953-1-gregkh@linuxfoundation.org>
- <20220428155858.GA14614@bhelgaas>
- <Ymq/W+KcWD9DKQr/@kroah.com>
- <CAJZ5v0hCiO6_deYnUK-5pfqE+fy1XLSUiBvkBgWw2nbqu9ggXA@mail.gmail.com>
- <CAJZ5v0itRry98=7X=NOmituD3VH=GYdY3REtrhx3ubH0wf=ckw@mail.gmail.com>
- <YrnHrF8WLy4296Z1@kroah.com>
- <CAJZ5v0hfdnRg0EqG2Zcp9=Kjq+P1NC45iudatisVL_G=QjOC+A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJZ5v0hfdnRg0EqG2Zcp9=Kjq+P1NC45iudatisVL_G=QjOC+A@mail.gmail.com>
+        with ESMTP id S231566AbiIIIpV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 04:45:21 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13839B40F6;
+        Fri,  9 Sep 2022 01:45:18 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 2898ZYsg028862;
+        Fri, 9 Sep 2022 08:45:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=h5AqmaynuKLrTLKn7227K3Xg6788QCt7Btwh+N/PpcM=;
+ b=Nt5JCnvYndxJby43+gdspaACzJOBNDItr3RWz9PQORF86sWqFmUTgDliJmR8sFdgTvXM
+ 2BLXAziIvVKCj582aAg7ZgsZNDNjlz4mlogtBaHO4X0NhCF0rAv5SX6Vhy2oENWUVWCl
+ 7g79yvjDlkjlWcivIVox3+iCa2AwN6ZEQmH7omZzG6JgcgbIMIBnIrFtvtbdMvxUziWG
+ PibTmYW9MpKKz5GGpAoE0E1HxCBqOoNwctlag6Xe2T5fubUcdGnFT3tSESbzoX6UiLen
+ zkSN5IeE80reFm8bZ92XvZcgRfdzSOYXoudfFDcq1hyMqnm5Z1NSjeR56xIlL24NHJdq aQ== 
+Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jfupq9e90-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 09 Sep 2022 08:45:08 +0000
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 2898j5I3014248;
+        Fri, 9 Sep 2022 08:45:05 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3jc00m8vq7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Fri, 09 Sep 2022 08:45:05 +0000
+Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 2898j42Q014222;
+        Fri, 9 Sep 2022 08:45:04 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.37])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 2898j4LL014214;
+        Fri, 09 Sep 2022 08:45:04 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
+        id 0302544AC; Fri,  9 Sep 2022 14:15:04 +0530 (+0530)
+From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
+To:     helgaas@kernel.org
+Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mka@chromium.org,
+        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, manivannan.sadhasivam@linaro.org,
+        swboyd@chromium.org, dmitry.baryshkov@linaro.org,
+        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        linux-phy@lists.infradead.org (open list:GENERIC PHY FRAMEWORK)
+Subject: [PATCH v6 3/5] phy: core: Add support for phy power down & power up
+Date:   Fri,  9 Sep 2022 14:14:42 +0530
+Message-Id: <1662713084-8106-4-git-send-email-quic_krichai@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1662713084-8106-1-git-send-email-quic_krichai@quicinc.com>
+References: <1662713084-8106-1-git-send-email-quic_krichai@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: __Wr50mEm9u1Riga9jMsOS-WY3lYLWLn
+X-Proofpoint-ORIG-GUID: __Wr50mEm9u1Riga9jMsOS-WY3lYLWLn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
+ definitions=2022-09-09_04,2022-09-09_01,2022-06-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 impostorscore=0
+ suspectscore=0 bulkscore=0 malwarescore=0 mlxlogscore=841
+ lowpriorityscore=0 spamscore=0 clxscore=1011 priorityscore=1501 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2207270000 definitions=main-2209090029
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 27, 2022 at 06:37:06PM +0200, Rafael J. Wysocki wrote:
-> On Mon, Jun 27, 2022 at 5:07 PM Greg Kroah-Hartman
-> <gregkh@linuxfoundation.org> wrote:
-> >
-> > On Thu, Apr 28, 2022 at 10:30:38PM +0200, Rafael J. Wysocki wrote:
-> > > On Thu, Apr 28, 2022 at 10:15 PM Rafael J. Wysocki <rafael@kernel.org> wrote:
-> > > >
-> > > > On Thu, Apr 28, 2022 at 6:22 PM Greg Kroah-Hartman
-> > > > <gregkh@linuxfoundation.org> wrote:
-> > > > >
-> > > > > On Thu, Apr 28, 2022 at 10:58:58AM -0500, Bjorn Helgaas wrote:
-> > > > > > On Thu, Apr 28, 2022 at 04:28:53PM +0200, Greg Kroah-Hartman wrote:
-> > > > > > > In acpi_get_pci_dev(), the debugging message for when a PCI bridge is
-> > > > > > > not found uses a pointer to a pci device whose reference has just been
-> > > > > > > dropped.  The chance that this really is a device that is now been
-> > > > > > > removed from the system is almost impossible to happen, but to be safe,
-> > > > > > > let's print out the debugging message based on the acpi root device
-> > > > > > > which we do have a valid reference to at the moment.
-> > > > > >
-> > > > > > This code was added by 497fb54f578e ("ACPI / PCI: Fix NULL pointer
-> > > > > > dereference in acpi_get_pci_dev() (rev. 2)").  Not sure if it's worth
-> > > > > > a Fixes: tag.
-> > > > >
-> > > > > Can't hurt, I'll add it for the v2 based on this review.
-> > > > >
-> > > > > >
-> > > > > > acpi_get_pci_dev() is used by only five callers, three of which are
-> > > > > > video/backlight related.  I'm always skeptical of one-off interfaces
-> > > > > > like this, but I don't know enough to propose any refactoring or other
-> > > > > > alternatives.
-> > > > > >
-> > > > > > I'll leave this for Rafael, but if I were applying I would silently
-> > > > > > touch up the subject to match convention:
-> > > > > >
-> > > > > >   PCI/ACPI: Do not reference PCI device after it has been released
-> > > > >
-> > > > > Much simpler, thanks.
-> > > > >
-> > > > > >
-> > > > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > > > > Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-> > > > > > > Cc: Len Brown <lenb@kernel.org>
-> > > > > > > Cc: linux-pci@vger.kernel.org
-> > > > > > > Cc: linux-acpi@vger.kernel.org
-> > > > > > > Reported-by: whitehat002 <hackyzh002@gmail.com>
-> > > > > > > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > > > > > > ---
-> > > > > > >  drivers/acpi/pci_root.c | 3 ++-
-> > > > > > >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > > > > > >
-> > > > > > > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > > > > > > index 6f9e75d14808..ecda378dbc09 100644
-> > > > > > > --- a/drivers/acpi/pci_root.c
-> > > > > > > +++ b/drivers/acpi/pci_root.c
-> > > > > > > @@ -303,7 +303,8 @@ struct pci_dev *acpi_get_pci_dev(acpi_handle handle)
-> > > > > > >              * case pdev->subordinate will be NULL for the parent.
-> > > > > > >              */
-> > > > > > >             if (!pbus) {
-> > > > > > > -                   dev_dbg(&pdev->dev, "Not a PCI-to-PCI bridge\n");
-> > > > > > > +                   dev_dbg(&root->device->dev,
-> > > > > > > +                           "dev %d, function %d is not a PCI-to-PCI bridge\n", dev, fn);
-> > > > > >
-> > > > > > This should use "%02x.%d" to be consistent with the dev_set_name() in
-> > > > > > pci_setup_device().
-> > > > >
-> > > > > Ah, missed that, will change it and send out a new version tomorrow.
-> > > >
-> > > > I would make the change below (modulo the gmail-induced wthite space
-> > > > breakage), though.
-> > >
-> > > That said ->
-> > >
-> > > > ---
-> > > >  drivers/acpi/pci_root.c |    5 +++--
-> > > >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > > >
-> > > > Index: linux-pm/drivers/acpi/pci_root.c
-> > > > ===================================================================
-> > > > --- linux-pm.orig/drivers/acpi/pci_root.c
-> > > > +++ linux-pm/drivers/acpi/pci_root.c
-> > > > @@ -295,8 +295,6 @@ struct pci_dev *acpi_get_pci_dev(acpi_ha
-> > > >              break;
-> > > >
-> > > >          pbus = pdev->subordinate;
-> > > > -        pci_dev_put(pdev);
-> > > > -
-> > > >          /*
-> > > >           * This function may be called for a non-PCI device that has a
-> > > >           * PCI parent (eg. a disk under a PCI SATA controller).  In that
-> > > > @@ -304,9 +302,12 @@ struct pci_dev *acpi_get_pci_dev(acpi_ha
-> > > >           */
-> > > >          if (!pbus) {
-> > > >              dev_dbg(&pdev->dev, "Not a PCI-to-PCI bridge\n");
-> > > > +            pci_dev_put(pdev);
-> > > >              pdev = NULL;
-> > > >              break;
-> > > >          }
-> > > > +
-> > > > +        pci_dev_put(pdev);
-> > >
-> > > -> we are going to use pbus after this and it is pdev->subordinate
-> > > which cannot survive without pdev AFAICS.
-> > >
-> > > Are we not concerned about this case?
-> >
-> > Good point.
-> >
-> > whitehat002, any ideas?  You found this issue but it really looks like
-> > it is not anything that can ever be hit, so how far do you want to go to
-> > unwind it?
-> 
-> I have an idea, sorry for the delay here.
-> 
-> I should be ready to post something tomorrow.
+Introducing phy power down/up callbacks for allowing to park the
+link-state in L1ss without holding any PCIe resources during
+system suspend.
 
-Was this ever posted?
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+---
+ drivers/phy/phy-core.c  | 30 ++++++++++++++++++++++++++++++
+ include/linux/phy/phy.h | 20 ++++++++++++++++++++
+ 2 files changed, 50 insertions(+)
 
-thanks,
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index d93ddf1..1b0b757 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -441,6 +441,36 @@ int phy_set_speed(struct phy *phy, int speed)
+ }
+ EXPORT_SYMBOL_GPL(phy_set_speed);
+ 
++int phy_power_down(struct phy *phy)
++{
++	int ret;
++
++	if (!phy || !phy->ops->power_down)
++		return 0;
++
++	mutex_lock(&phy->mutex);
++	ret = phy->ops->power_down(phy);
++	mutex_unlock(&phy->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(phy_power_down);
++
++int phy_power_up(struct phy *phy)
++{
++	int ret;
++
++	if (!phy || !phy->ops->power_up)
++		return 0;
++
++	mutex_lock(&phy->mutex);
++	ret = phy->ops->power_up(phy);
++	mutex_unlock(&phy->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(phy_power_up);
++
+ int phy_reset(struct phy *phy)
+ {
+ 	int ret;
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index b141375..3a45f4d 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -76,6 +76,8 @@ union phy_configure_opts {
+  * @set_mode: set the mode of the phy
+  * @set_media: set the media type of the phy (optional)
+  * @set_speed: set the speed of the phy (optional)
++ * @power_down: parking the phy in power down state
++ * @power_up: pulling back the phy from power down
+  * @reset: resetting the phy
+  * @calibrate: calibrate the phy
+  * @release: ops to be performed while the consumer relinquishes the PHY
+@@ -89,6 +91,8 @@ struct phy_ops {
+ 	int	(*set_mode)(struct phy *phy, enum phy_mode mode, int submode);
+ 	int	(*set_media)(struct phy *phy, enum phy_media media);
+ 	int	(*set_speed)(struct phy *phy, int speed);
++	int	(*power_down)(struct phy *phy);
++	int	(*power_up)(struct phy *phy);
+ 
+ 	/**
+ 	 * @configure:
+@@ -226,6 +230,8 @@ int phy_init(struct phy *phy);
+ int phy_exit(struct phy *phy);
+ int phy_power_on(struct phy *phy);
+ int phy_power_off(struct phy *phy);
++int phy_power_down(struct phy *phy);
++int phy_power_up(struct phy *phy);
+ int phy_set_mode_ext(struct phy *phy, enum phy_mode mode, int submode);
+ #define phy_set_mode(phy, mode) \
+ 	phy_set_mode_ext(phy, mode, 0)
+@@ -349,6 +355,20 @@ static inline int phy_power_off(struct phy *phy)
+ 	return -ENOSYS;
+ }
+ 
++static inline int phy_power_down(struct phy *phy)
++{
++	if (!phy)
++		return 0;
++	return -ENOSYS;
++}
++
++static inline int phy_power_up(struct phy *phy)
++{
++	if (!phy)
++		return 0;
++	return -ENOSYS;
++}
++
+ static inline int phy_set_mode_ext(struct phy *phy, enum phy_mode mode,
+ 				   int submode)
+ {
+-- 
+2.7.4
 
-greg k-h
