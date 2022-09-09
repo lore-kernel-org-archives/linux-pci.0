@@ -2,51 +2,53 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E215BECAAA1
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 20:16:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6E2FECAAD3
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 20:16:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230058AbiIIUQ1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Sep 2022 16:16:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34876 "EHLO
+        id S231987AbiIIUQd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Sep 2022 16:16:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231994AbiIIUQ0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 16:16:26 -0400
-Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21B271116F5
-        for <linux-pci@vger.kernel.org>; Fri,  9 Sep 2022 13:16:24 -0700 (PDT)
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 289KGKV7002085;
-        Fri, 9 Sep 2022 15:16:20 -0500
+        with ESMTP id S230116AbiIIUQc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 16:16:32 -0400
+Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFA4F1116D7
+        for <linux-pci@vger.kernel.org>; Fri,  9 Sep 2022 13:16:31 -0700 (PDT)
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 289KGQYr077202;
+        Fri, 9 Sep 2022 15:16:26 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1662754580;
-        bh=tFA0ATOgcSMbn1q0lgQEfJ9YWZR4cVjSev8XnXsgehk=;
-        h=From:To:CC:Subject:Date;
-        b=E637YVQ6bDbhDksM9ndp2AifVaTP/EN5P93NPWiJPgUGlPDkzBzZRsQmQvTG7/ULK
-         F4/+V8wiW/U/SXhlQN2wWy1pKkgydONTiMhbK8y5OpKr1PddbUkHHKUw2cLn0VJjlR
-         s487dvuaJ2szPeEAHvQ+OI4dECamZtPo+g2GQgUI=
+        s=ti-com-17Q1; t=1662754586;
+        bh=uagfZ7ld/ZxMyUZzuqYbVfc4XscqXBW0Tr7aYfikGiQ=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=DY2+jhBf5B/vtpZw8MovuuwY7/Dt0uldtSB2OPKjwZ4aA2ySB7bbLPfmlzgnDCvh/
+         PkRFyYDF4RqwQfPwCAthWSTqUWQ8xPGqhH8USTGZxp5H/UbDjrGueyP61Yuq+T0rU/
+         pcLa4SgoNKZ7syI/PeXzOpRliUVWJj31l367I7Xk=
 Received: from DLEE108.ent.ti.com (dlee108.ent.ti.com [157.170.170.38])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 289KGKG4045625
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 289KGQxC088274
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 9 Sep 2022 15:16:20 -0500
+        Fri, 9 Sep 2022 15:16:26 -0500
 Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE108.ent.ti.com
  (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6; Fri, 9 Sep
- 2022 15:16:19 -0500
+ 2022 15:16:25 -0500
 Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE107.ent.ti.com
  (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6 via
- Frontend Transport; Fri, 9 Sep 2022 15:16:19 -0500
+ Frontend Transport; Fri, 9 Sep 2022 15:16:25 -0500
 Received: from ubuntu.ent.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 289KGDp1071511;
-        Fri, 9 Sep 2022 15:16:15 -0500
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 289KGDp2071511;
+        Fri, 9 Sep 2022 15:16:20 -0500
 From:   Matt Ranostay <mranostay@ti.com>
 To:     <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
 CC:     <tjoseph@cadence.com>, <vigneshr@ti.com>, <kishon@ti.com>,
         Matt Ranostay <mranostay@ti.com>
-Subject: [PATCH 0/3] PCI: add 4x lane support for pci-j721e controllers
-Date:   Fri, 9 Sep 2022 13:16:04 -0700
-Message-ID: <20220909201607.3835-1-mranostay@ti.com>
+Subject: [PATCH 1/3] PCI: j721e: Add PCIe 4x lane selection support
+Date:   Fri, 9 Sep 2022 13:16:05 -0700
+Message-ID: <20220909201607.3835-2-mranostay@ti.com>
 X-Mailer: git-send-email 2.37.2
+In-Reply-To: <20220909201607.3835-1-mranostay@ti.com>
+References: <20220909201607.3835-1-mranostay@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -55,18 +57,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Adding of dditional support to Cadence PCIe controller (i.e. pci-j721e.c)
-for up to 4x lanes, and reworking of driver to define maximum lanes per
-board configuration.
+Increase LANE_COUNT_MASK to two-bit field that allows selection of
+4x lane PCIe which was previously limited to 2x lane support.
 
-Matt Ranostay (3):
-  PCI: j721e: Add PCIe 4x lane selection support
-  PCI: j721e: Add per platform maximum lane settings
-  PCI: j721e: Add warnings on num-lanes misconfiguration
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Matt Ranostay <mranostay@ti.com>
+Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
+---
+ drivers/pci/controller/cadence/pci-j721e.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/pci/controller/cadence/pci-j721e.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index a82f845cc4b5..62c2c70256b8 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -43,7 +43,7 @@ enum link_status {
+ };
+ 
+ #define J721E_MODE_RC			BIT(7)
+-#define LANE_COUNT_MASK			BIT(8)
++#define LANE_COUNT_MASK			GENMASK(9, 8)
+ #define LANE_COUNT(n)			((n) << 8)
+ 
+ #define GENERATION_SEL_MASK		GENMASK(1, 0)
 -- 
 2.37.2
 
