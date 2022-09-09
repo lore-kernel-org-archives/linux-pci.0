@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82BD9ECAAD5
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 20:25:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31CA1C6FA8B
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 20:25:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231136AbiIIUZU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Sep 2022 16:25:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50812 "EHLO
+        id S232099AbiIIUZW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Sep 2022 16:25:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229818AbiIIUZR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 16:25:17 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3877D9AFCF;
-        Fri,  9 Sep 2022 13:25:14 -0700 (PDT)
+        with ESMTP id S231627AbiIIUZT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 16:25:19 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6FBAADCEB;
+        Fri,  9 Sep 2022 13:25:17 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EA2A1B8262E;
-        Fri,  9 Sep 2022 20:25:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66654C433C1;
-        Fri,  9 Sep 2022 20:25:11 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 81344620DB;
+        Fri,  9 Sep 2022 20:25:16 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B28A5C433C1;
+        Fri,  9 Sep 2022 20:25:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662755111;
-        bh=xqULWsTalOs94hkmDd/bX7sHzFXKvkTiUGOJQyppO3s=;
+        s=k20201202; t=1662755115;
+        bh=H4Hvk9X1Yt7qkvWdBzft4a3QJFArMQTjPf+CJiLeiSg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S8P+RSBUMwdwMlJPY4+/pBk+RovC7nforXvQYK8FNfL0YXV9Oh/MY8ND0iZserc3a
-         MH4DXmeDtFbjzEceIhQVCuL27H0LJKejxzrVV80QV5j4PgdxadX74e8IvdYRjeSNTR
-         PjohfnBjdtsRW2vo5NIBQV6a9qwHgVxKz0FqSP3IfQ3nvSy88jzTdtPJQz84FX4C8U
-         PqsS36JkTUkWk5ZZvZEa3P6pxlsmCd2pxww/6wr46K8bzJdiJCL0gS+agJ+Z6bDo+m
-         OtWGeswdVYEQ16Y4gidDAuF5wCgcLXOjjXEwupgvrX2p+NfBDpx/2bht1Zer1EPKQ6
-         53RyotpRxUoEA==
+        b=N/bH2qIDnclzkBx0bhkg5Nu9Rft5zehfQWKNRgp3Eu1E2xoYYikeQaav6qI4lz4wU
+         B9RAK05YYSjQHmX2Ap/iV828hNB8wQYt4C08QU6eRyyFkXEDf2OolFsCh5yMEUuNST
+         9EZhs2vcnc+3jlEKhiZiGGwBKDiwxbJuecokuVmBwrTpR28A2yxN57qddKhdha+8Oo
+         hwZyLQ4/CpnBFp5tCUjrILT72LhSh4e3XFrTcqNWXWc1v7A0m5dI1rL5HoxkuBFdn9
+         mZISzZnNX6wO8BN70bfbCjOGNag9Q28lm5MlgSWtJDTGTa/dt/xcH3TVSm+kvdNn1M
+         AaJ1HqSSfoO7Q==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Rajvi Jingar <rajvi.jingar@linux.intel.com>,
@@ -42,9 +42,9 @@ Cc:     Koba Ko <koba.ko@canonical.com>,
         <sathyanarayanan.kuppuswamy@linux.intel.com>,
         linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
         linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v4 1/9] PCI/PTM: Cache PTM Capability offset
-Date:   Fri,  9 Sep 2022 15:24:57 -0500
-Message-Id: <20220909202505.314195-2-helgaas@kernel.org>
+Subject: [PATCH v4 3/9] PCI/PTM: Separate configuration and enable
+Date:   Fri,  9 Sep 2022 15:24:59 -0500
+Message-Id: <20220909202505.314195-4-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220909202505.314195-1-helgaas@kernel.org>
 References: <20220909202505.314195-1-helgaas@kernel.org>
@@ -56,152 +56,175 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Cache the PTM Capability offset instead of searching for it every time we
-enable/disable PTM or save/restore PTM state.  No functional change
-intended.
+PTM configuration and enabling were previously mixed together:
+pci_ptm_init() collected granularity info and enabled PTM for Root Ports
+and Switch Upstream Ports; pci_enable_ptm() did the same for Endpoints.
+
+Move everything related to the PTM Capability register to pci_ptm_init()
+for all devices, and everything related to the PTM Control register to
+pci_enable_ptm().
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pcie/ptm.c | 41 +++++++++++++++++------------------------
- include/linux/pci.h    |  1 +
- 2 files changed, 18 insertions(+), 24 deletions(-)
+ drivers/pci/pcie/ptm.c | 104 +++++++++++++++++++----------------------
+ 1 file changed, 49 insertions(+), 55 deletions(-)
 
 diff --git a/drivers/pci/pcie/ptm.c b/drivers/pci/pcie/ptm.c
-index 368a254e3124..85382c135885 100644
+index 0df6cdfe38b4..ba1d50c965fa 100644
 --- a/drivers/pci/pcie/ptm.c
 +++ b/drivers/pci/pcie/ptm.c
-@@ -31,13 +31,9 @@ static void pci_ptm_info(struct pci_dev *dev)
+@@ -99,25 +99,19 @@ static struct pci_dev *pci_upstream_ptm(struct pci_dev *dev)
+ 	return NULL;
+ }
  
- void pci_disable_ptm(struct pci_dev *dev)
- {
--	int ptm;
-+	u16 ptm = dev->ptm_cap;
- 	u16 ctrl;
- 
--	if (!pci_is_pcie(dev))
--		return;
--
--	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
- 	if (!ptm)
- 		return;
- 
-@@ -48,14 +44,10 @@ void pci_disable_ptm(struct pci_dev *dev)
- 
- void pci_save_ptm_state(struct pci_dev *dev)
- {
--	int ptm;
-+	u16 ptm = dev->ptm_cap;
- 	struct pci_cap_saved_state *save_state;
- 	u16 *cap;
- 
--	if (!pci_is_pcie(dev))
--		return;
--
--	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
- 	if (!ptm)
- 		return;
- 
-@@ -69,16 +61,15 @@ void pci_save_ptm_state(struct pci_dev *dev)
- 
- void pci_restore_ptm_state(struct pci_dev *dev)
- {
-+	u16 ptm = dev->ptm_cap;
- 	struct pci_cap_saved_state *save_state;
--	int ptm;
- 	u16 *cap;
- 
--	if (!pci_is_pcie(dev))
-+	if (!ptm)
- 		return;
- 
- 	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_PTM);
--	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
--	if (!save_state || !ptm)
-+	if (!save_state)
- 		return;
- 
- 	cap = (u16 *)&save_state->cap.data[0];
-@@ -87,7 +78,7 @@ void pci_restore_ptm_state(struct pci_dev *dev)
- 
++/*
++ * Find the PTM Capability (if present) and extract the information we need
++ * to use it.
++ */
  void pci_ptm_init(struct pci_dev *dev)
  {
--	int pos;
-+	u16 ptm;
- 	u32 cap, ctrl;
- 	u8 local_clock;
- 	struct pci_dev *ups;
-@@ -117,13 +108,14 @@ void pci_ptm_init(struct pci_dev *dev)
- 		return;
- 	}
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
--	if (!pos)
-+	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!ptm)
- 		return;
- 
-+	dev->ptm_cap = ptm;
- 	pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_PTM, sizeof(u16));
- 
--	pci_read_config_dword(dev, pos + PCI_PTM_CAP, &cap);
-+	pci_read_config_dword(dev, ptm + PCI_PTM_CAP, &cap);
- 	local_clock = (cap & PCI_PTM_GRANULARITY_MASK) >> 8;
- 
- 	/*
-@@ -148,7 +140,7 @@ void pci_ptm_init(struct pci_dev *dev)
- 	}
- 
- 	ctrl |= dev->ptm_granularity << 8;
--	pci_write_config_dword(dev, pos + PCI_PTM_CTRL, ctrl);
-+	pci_write_config_dword(dev, ptm + PCI_PTM_CTRL, ctrl);
- 	dev->ptm_enabled = 1;
- 
- 	pci_ptm_info(dev);
-@@ -156,18 +148,19 @@ void pci_ptm_init(struct pci_dev *dev)
- 
- int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
- {
--	int pos;
-+	u16 ptm;
- 	u32 cap, ctrl;
+ 	u16 ptm;
+-	u32 cap, ctrl;
+-	u8 local_clock;
++	u32 cap;
  	struct pci_dev *ups;
  
  	if (!pci_is_pcie(dev))
+ 		return;
+ 
+-	/*
+-	 * Enable PTM only on interior devices (root ports, switch ports,
+-	 * etc.) on the assumption that it causes no link traffic until an
+-	 * endpoint enables it.
+-	 */
+-	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ENDPOINT ||
+-	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END))
+-		return;
+-
+ 	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
+ 	if (!ptm)
+ 		return;
+@@ -126,76 +120,76 @@ void pci_ptm_init(struct pci_dev *dev)
+ 	pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_PTM, sizeof(u16));
+ 
+ 	pci_read_config_dword(dev, ptm + PCI_PTM_CAP, &cap);
+-	local_clock = (cap & PCI_PTM_GRANULARITY_MASK) >> 8;
++	dev->ptm_granularity = (cap & PCI_PTM_GRANULARITY_MASK) >> 8;
+ 
+ 	/*
+-	 * There's no point in enabling PTM unless it's enabled in the
+-	 * upstream device or this device can be a PTM Root itself.  Per
+-	 * the spec recommendation (PCIe r3.1, sec 7.32.3), select the
+-	 * furthest upstream Time Source as the PTM Root.
++	 * Per the spec recommendation (PCIe r6.0, sec 7.9.15.3), select the
++	 * furthest upstream Time Source as the PTM Root.  For Endpoints,
++	 * "the Effective Granularity is the maximum Local Clock Granularity
++	 * reported by the PTM Root and all intervening PTM Time Sources."
+ 	 */
+ 	ups = pci_upstream_ptm(dev);
+-	if (ups && ups->ptm_enabled) {
+-		ctrl = PCI_PTM_CTRL_ENABLE;
++	if (ups) {
+ 		if (ups->ptm_granularity == 0)
+ 			dev->ptm_granularity = 0;
+-		else if (ups->ptm_granularity > local_clock)
++		else if (ups->ptm_granularity > dev->ptm_granularity)
+ 			dev->ptm_granularity = ups->ptm_granularity;
+-	} else {
+-		if (cap & PCI_PTM_CAP_ROOT) {
+-			ctrl = PCI_PTM_CTRL_ENABLE | PCI_PTM_CTRL_ROOT;
+-			dev->ptm_root = 1;
+-			dev->ptm_granularity = local_clock;
+-		} else
+-			return;
++	} else if (cap & PCI_PTM_CAP_ROOT) {
++		dev->ptm_root = 1;
++	} else if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END) {
++
++		/*
++		 * Per sec 7.9.15.3, this should be the Local Clock
++		 * Granularity of the associated Time Source.  But it
++		 * doesn't say how to find that Time Source.
++		 */
++		dev->ptm_granularity = 0;
+ 	}
+ 
+-	ctrl |= dev->ptm_granularity << 8;
+-	pci_write_config_dword(dev, ptm + PCI_PTM_CTRL, ctrl);
+-	dev->ptm_enabled = 1;
+-
+-	pci_ptm_info(dev);
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
++	    pci_pcie_type(dev) == PCI_EXP_TYPE_UPSTREAM)
++		pci_enable_ptm(dev, NULL);
+ }
+ 
++/**
++ * pci_enable_ptm() - Enable Precision Time Measurement
++ * @dev: PCI device
++ * @granularity: pointer to return granularity
++ *
++ * Enable Precision Time Measurement for @dev.  If successful and
++ * @granularity is non-NULL, return the Effective Granularity.
++ *
++ * Return: zero if successful, or -EINVAL if @dev lacks a PTM Capability or
++ * is not a PTM Root and lacks an upstream path of PTM-enabled devices.
++ */
+ int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+ {
+-	u16 ptm;
+-	u32 cap, ctrl;
++	u16 ptm = dev->ptm_cap;
+ 	struct pci_dev *ups;
++	u32 ctrl;
+ 
+-	if (!pci_is_pcie(dev))
+-		return -EINVAL;
+-
+-	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
+ 	if (!ptm)
  		return -EINVAL;
  
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
--	if (!pos)
-+	ptm = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-+	if (!ptm)
- 		return -EINVAL;
- 
--	pci_read_config_dword(dev, pos + PCI_PTM_CAP, &cap);
-+	dev->ptm_cap = ptm;
-+	pci_read_config_dword(dev, ptm + PCI_PTM_CAP, &cap);
- 	if (!(cap & PCI_PTM_CAP_REQ))
- 		return -EINVAL;
- 
-@@ -192,7 +185,7 @@ int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+-	dev->ptm_cap = ptm;
+-	pci_read_config_dword(dev, ptm + PCI_PTM_CAP, &cap);
+-	if (!(cap & PCI_PTM_CAP_REQ))
+-		return -EINVAL;
+-
+ 	/*
+-	 * For a PCIe Endpoint, PTM is only useful if the endpoint can
+-	 * issue PTM requests to upstream devices that have PTM enabled.
+-	 *
+-	 * For Root Complex Integrated Endpoints, there is no upstream
+-	 * device, so there must be some implementation-specific way to
+-	 * associate the endpoint with a time source.
++	 * A device uses local PTM Messages to request time information
++	 * from a PTM Root that's farther upstream.  Every device along the
++	 * path must support PTM and have it enabled so it can handle the
++	 * messages.  Therefore, if this device is not a PTM Root, the
++	 * upstream link partner must have PTM enabled before we can enable
++	 * PTM.
+ 	 */
+-	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ENDPOINT) {
++	if (!dev->ptm_root) {
+ 		ups = pci_upstream_ptm(dev);
+ 		if (!ups || !ups->ptm_enabled)
+ 			return -EINVAL;
+-
+-		dev->ptm_granularity = ups->ptm_granularity;
+-	} else if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END) {
+-		dev->ptm_granularity = 0;
+-	} else
+-		return -EINVAL;
++	}
  
  	ctrl = PCI_PTM_CTRL_ENABLE;
  	ctrl |= dev->ptm_granularity << 8;
--	pci_write_config_dword(dev, pos + PCI_PTM_CTRL, ctrl);
-+	pci_write_config_dword(dev, ptm + PCI_PTM_CTRL, ctrl);
++	if (dev->ptm_root)
++		ctrl |= PCI_PTM_CTRL_ROOT;
++
+ 	pci_write_config_dword(dev, ptm + PCI_PTM_CTRL, ctrl);
  	dev->ptm_enabled = 1;
  
- 	pci_ptm_info(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 060af91bafcd..54be939023a3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -475,6 +475,7 @@ struct pci_dev {
- 	unsigned int	broken_cmd_compl:1;	/* No compl for some cmds */
- #endif
- #ifdef CONFIG_PCIE_PTM
-+	u16		ptm_cap;		/* PTM Capability */
- 	unsigned int	ptm_root:1;
- 	unsigned int	ptm_enabled:1;
- 	u8		ptm_granularity;
 -- 
 2.25.1
 
