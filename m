@@ -2,102 +2,106 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDB4DC6FA8D
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 09:14:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2B86C6FA82
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Sep 2022 09:17:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232129AbiIIJOv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Sep 2022 05:14:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55872 "EHLO
+        id S231189AbiIIJRD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Sep 2022 05:17:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232113AbiIIJOr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 05:14:47 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4172CB49C
-        for <linux-pci@vger.kernel.org>; Fri,  9 Sep 2022 02:14:45 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id bx38so1062155ljb.10
-        for <linux-pci@vger.kernel.org>; Fri, 09 Sep 2022 02:14:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=PvsPfs87gAZRtOiASIB84lPgqC16e4BE5MitB4Ro4vE=;
-        b=qov3whUhdo38OXpooMvsX1Qs5OGgXc9voMg70wTfWwKAeYXuMOzVJP59tls7WUZT4o
-         yNSY/b3JCkFuDLjapEA04zIKStUHyTIQXFNjaGPqNKtHHXhy7RdVYK9Z2cAY8kQ8uAWC
-         S+Jfq5n+9ITLUFWupmSGndRDue4k7EAxgzaLgkL3G7EzsvrawncdOlACledd5DPz0GR9
-         yuyyG57PV/vmJcWrt0xIOGXYLvUoDK+/q0oi9JeqhscmZQykY6wF461SvOGzT6NGrhay
-         byEpztXMfnAZXAXa0spWJQXc/Tu5cYU+EoMiv/FkGMciNZabMc5R2OKAk8C0NSAeu1A+
-         Buzg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=PvsPfs87gAZRtOiASIB84lPgqC16e4BE5MitB4Ro4vE=;
-        b=A7qNDa1dOuqkuXezYVciosaCZZoXjf086GVjaRLoDGeyN9ejrHLH1twLQJuy2Nbnhf
-         gP5o2TM2dwGYfUYHFD7DxFr0P7kuBxqJTWxymqZxQO3fz43fo9WkpZVX5ozPQ5DEIBdi
-         dYtI9WnSE4Cl2S+oq3ugWoBbSSO9EKvobC0nqs7+hNvf4ON6bZJ/h/8+UdHZnSS/jkeS
-         ZE/5KxjVBrNC6FFgO1Y10HXCQ/9DhP4dLnYGEM/TRXLqmgucIeK1GtXvHPW8MwdiJjn1
-         pTDABHu6D5L8xMpbTb1wAX8WcsKTwMKbZE3KwoYNT+FNG6KHk2SHT0oQ4e/5EBu/50Zq
-         T5mQ==
-X-Gm-Message-State: ACgBeo2dL3aVbgNPXcGz06RBrthkBE+ZeoQV9mE0fAWyCKPaRzLoYzZE
-        gWZfCjYBHMRFgikaGB1TbDYZ2A==
-X-Google-Smtp-Source: AA6agR75S6PFVot6XvjnyH/8hBrHN0ULhCBT2BAci0nWMcNKGTb/tnio5QwNlbUYevghrsdy1lQOBA==
-X-Received: by 2002:a05:651c:1cd:b0:261:bef9:ada8 with SMTP id d13-20020a05651c01cd00b00261bef9ada8mr3560707ljn.387.1662714883259;
-        Fri, 09 Sep 2022 02:14:43 -0700 (PDT)
-Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id z26-20020a2e4c1a000000b0026acbb6ed1asm201615lja.66.2022.09.09.02.14.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Sep 2022 02:14:42 -0700 (PDT)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        with ESMTP id S232131AbiIIJRB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Sep 2022 05:17:01 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 511DB132045;
+        Fri,  9 Sep 2022 02:16:53 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E48A861F5A;
+        Fri,  9 Sep 2022 09:16:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65B48C433C1;
+        Fri,  9 Sep 2022 09:16:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1662715012;
+        bh=4O6h/xQZqIuBQzPhhOTTiqKNTW0qd6wBALjJqR5vKlE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=YpMZIx+1qekDRo2fKtkWKz3sU73bOosnrh+umgZbwf2rnsCA+O4S+LXdDAkL4JxyI
+         ZGCJNUn4wpRC9F0xnt/3173SDv2drRPFuTSo0yA0VQd8IP9vSjofWOD9zyO9KBgwpQ
+         hye0kJepevwp90OUWtEEyAcCYr46Vt2rBn4hE3SZP1WeTKIffUPN6eOutwFsKya9EF
+         7p2/vhLLelh/7PDAihWfeUhJgRHo2N6QxBE8XFDn50WvmIyNT714k1ByMUuGiR1f1+
+         FwvUIr7m7bNCEDG6jNd4jX9iT5oh+bpYsDBTQ+JJrT+sHXRbLkuziWzb8776gKIZ2f
+         hswS2Vle/Azgg==
+Date:   Fri, 9 Sep 2022 11:16:45 +0200
+From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
+To:     Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc:     Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Marc Zyngier <maz@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Philipp Zabel <p.zabel@pengutronix.de>,
-        Johan Hovold <johan@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org
-Subject: [PATCH v3 8/9] PCI: qcom: Setup PHY to work in RC mode
-Date:   Fri,  9 Sep 2022 12:14:32 +0300
-Message-Id: <20220909091433.3715981-9-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220909091433.3715981-1-dmitry.baryshkov@linaro.org>
-References: <20220909091433.3715981-1-dmitry.baryshkov@linaro.org>
+        Hector Martin <marcan@marcan.st>,
+        Sven Peter <sven@svenpeter.dev>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: apple: do not leak reset GPIO on unbind/unload/error
+Message-ID: <YxsEfcTAw0v/JFes@lpieralisi>
+References: <YxatO5OaI2RpxQ2M@google.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YxatO5OaI2RpxQ2M@google.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Call phy_set_mode_ext() to notify the PHY driver that the PHY is being
-used in the RC mode.
+Nit: please capitalize beginning of the sentence in the subject - that's
+what we do for PCI controllers commits.
 
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 4 ++++
- 1 file changed, 4 insertions(+)
+"PCI: apple: Do not leak reset GPIO on unbind/unload/error"
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 66886dc6e777..32d58282bed0 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1494,6 +1494,10 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (ret)
- 		return ret;
- 
-+	ret = phy_set_mode_ext(pcie->phy, PHY_MODE_PCIE, PHY_SUBMODE_PCIE_RC);
-+	if (ret)
-+		goto err_deinit;
-+
- 	ret = phy_power_on(pcie->phy);
- 	if (ret)
- 		goto err_deinit;
--- 
-2.35.1
+On Mon, Sep 05, 2022 at 07:15:23PM -0700, Dmitry Torokhov wrote:
+> The driver allocates reset GPIO in apple_pcie_setup_port() but neither
+> releases the resource, nor uses devm API to have it released
+> automatically.
+> 
+> Let's fix this by switching to devm API. While at it let's use generic
+> devm_fwnode_gpiod_get() instead of OF-specific gpiod_get_from_of_node()
+> - this will allow us top stop exporting the latter down the road.
+> 
+> Fixes: 1e33888fbe44 ("PCI: apple: Add initial hardware bring-up")
 
+Should I take it via the PCI tree ? Usually we send fixes through -rcX
+only if the fix applies to code merged last merge window, which is not
+the case here, so I would queue if for v6.1.
+
+Lorenzo
+
+> Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+> ---
+> 
+> This patch has been pulled out of the series
+> https://lore.kernel.org/all/20220903-gpiod_get_from_of_node-remove-v1-0-b29adfb27a6c@gmail.com/
+> with updated justification (leak fix vs pure API deprecation).
+> 
+>  drivers/pci/controller/pcie-apple.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+> index a2c3c207a04b..66f37e403a09 100644
+> --- a/drivers/pci/controller/pcie-apple.c
+> +++ b/drivers/pci/controller/pcie-apple.c
+> @@ -516,8 +516,8 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+>  	u32 stat, idx;
+>  	int ret, i;
+>  
+> -	reset = gpiod_get_from_of_node(np, "reset-gpios", 0,
+> -				       GPIOD_OUT_LOW, "PERST#");
+> +	reset = devm_fwnode_gpiod_get(pcie->dev, of_fwnode_handle(np), "reset",
+> +				      GPIOD_OUT_LOW, "PERST#");
+>  	if (IS_ERR(reset))
+>  		return PTR_ERR(reset);
+>  
+> -- 
+> 2.37.2.789.g6183377224-goog
+> 
+> 
+> -- 
+> Dmitry
