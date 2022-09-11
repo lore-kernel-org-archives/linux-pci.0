@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1506FECAAA1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDEB5C6FA83
 	for <linux-pci@archiver.kernel.org>; Sun, 11 Sep 2022 11:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230071AbiIKLXV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 11 Sep 2022 07:23:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49632 "EHLO
+        id S230508AbiIKLXW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 11 Sep 2022 07:23:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231245AbiIKLXH (ORCPT
+        with ESMTP id S230174AbiIKLXH (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Sep 2022 07:23:07 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90F6ABE1C;
-        Sun, 11 Sep 2022 04:21:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E25772663;
+        Sun, 11 Sep 2022 04:21:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1F1D460F19;
-        Sun, 11 Sep 2022 11:21:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A256C43140;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4639060E9B;
         Sun, 11 Sep 2022 11:21:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 719BBC433D6;
+        Sun, 11 Sep 2022 11:21:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1662895313;
-        bh=N7owEzP5NvZJynNI25WOpOaC2G6rhimMiBnf+C0B694=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HlBYbiBxrmPCHTsiB2xysVnJRJcInnPGyfeEX9nm1//vS5/Iease/nIMxUilADOqE
-         LgQNxD47K4soa0/ZdNWkC1rwNCD+zKuFWhkY5n0A+PtUMK69IiFgZ0B/bujtVVTWIL
-         WzZ9GaRXYEe7kYKu+Q3Gpd6pge6TEsSZNYMVq9fetr7DkSypYl/pG+Budh9/GzOooN
-         TOPEjEYKyL+YN/wf7+m69jRNXhdVI+CmirPw0HPsSNrY0piSpp2lmxtJroahvgGpHr
-         Vcu3eUi58eNZpJ0FWoc5E6EfRk50oNdx9VclWb/I8VOotJQETJ8cTkj/oUDlB9od9R
-         EdOEBpo41BvBQ==
+        s=k20201202; t=1662895312;
+        bh=i/8RNdF4fIf2jIET0PhL9Ssf48I1ZP8JWvmjfkVVEAw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=F75H1/HAwJwME7QOAlR+0f2q8aCbLVzTysODEfr9C0K7A/QVLWQsPE1RjnSctw9LJ
+         a1B6KA3vZ83ieVksPIUI1YEzsYgf2VjGx6duxcpjv95CrjMv5uTwjFHyETkhJMEyL+
+         Ob7U43Rkb80ERbRlSotGf5rAOLPOXHbRYSI5Jv2DIuFQqxDkfkQ0loT85UVGRxdyx6
+         17I6ByzKbO3gLTN0tizqj3aaERz/Mbc1hTSB3z+Pk3BHFvJF4z7xINXVpNuonZphBQ
+         pSactYYc6yVKOhQ9XBSSqIppt2SbOuLnHG6Oqvt5NgA/VMHcVRV9zeELV1QDBir5by
+         m0KHqaVDruNCA==
 Received: by pali.im (Postfix)
-        id 13C16878; Sun, 11 Sep 2022 13:21:53 +0200 (CEST)
+        id AB127878; Sun, 11 Sep 2022 13:21:49 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -41,12 +41,10 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Sergio Paracuellos <sergio.paracuellos@gmail.com>,
         Matthias Brugger <matthias.bgg@gmail.com>
 Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [RFC PATCH 3/3] PCI: mt7621: Use PCI_CONF1_EXT_ADDRESS() macro
-Date:   Sun, 11 Sep 2022 13:20:24 +0200
-Message-Id: <20220911112024.14304-4-pali@kernel.org>
+Subject: [RFC PATCH 0/3] PCI: Introduce new PCI_CONF1_ADDRESS() and PCI_CONF1_EXT_ADDRESS() macros
+Date:   Sun, 11 Sep 2022 13:20:21 +0200
+Message-Id: <20220911112024.14304-1-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220911112024.14304-1-pali@kernel.org>
-References: <20220911112024.14304-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -54,36 +52,42 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Simplify pcie-mt7621.c driver code and use new PCI_CONF1_EXT_ADDRESS()
-macro for accessing PCIe config space.
+PCI controllers and lot of non-ECAM compliant PCIe controllers still use
+Intel PCI Configuration Mechanism #1 for accessing PCI config space.
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
----
- drivers/pci/controller/pcie-mt7621.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Native PCIe controller drivers invents its own macros which implements
+config space address calculation and in lof of cases it is just
+duplication of the same code.
 
-diff --git a/drivers/pci/controller/pcie-mt7621.c b/drivers/pci/controller/pcie-mt7621.c
-index 33eb37a2225c..28cde116cd27 100644
---- a/drivers/pci/controller/pcie-mt7621.c
-+++ b/drivers/pci/controller/pcie-mt7621.c
-@@ -25,6 +25,7 @@
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
- #include <linux/pci.h>
-+#include <linux/pci-conf1.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/reset.h>
-@@ -123,8 +124,7 @@ static inline void pcie_port_write(struct mt7621_pcie_port *port,
- static inline u32 mt7621_pcie_get_cfgaddr(unsigned int bus, unsigned int slot,
- 					 unsigned int func, unsigned int where)
- {
--	return (((where & 0xf00) >> 8) << 24) | (bus << 16) | (slot << 11) |
--		(func << 8) | (where & 0xfc) | 0x80000000;
-+	return PCI_CONF1_EXT_ADDRESS(bus, slot, func, where);
- }
- 
- static void __iomem *mt7621_pcie_map_bus(struct pci_bus *bus,
+PCIe ECAM address macro PCIE_ECAM_OFFSET() is already in include header
+file linux/pci-ecam.h and ECAM compliant drivers were already converted
+to use it.
+
+Do similar thing also for Intel PCI Configuration Mechanism #1.
+Introduce a new file linux/pci-conf1.h with PCI_CONF1_ADDRESS() and
+PCI_CONF1_EXT_ADDRESS() macros and convert two drivers pci-ftpci100.c
+and pcie-mt7621.c to use it.
+
+There are many more drivers which could be converted to this common
+macros. This is just RFC patch series and if you like it, I can look at
+conversion of other drivers.
+
+What do you think?
+
+Note that similar cleanup was applied for U-Boot PCI controller drivers:
+https://lore.kernel.org/u-boot/20211126104252.5443-1-pali@kernel.org/
+
+Pali Rohár (3):
+  PCI: Add standard PCI Config Address macros
+  PCI: ftpci100: Use PCI_CONF1_ADDRESS() macro
+  PCI: mt7621: Use PCI_CONF1_EXT_ADDRESS() macro
+
+ drivers/pci/controller/pci-ftpci100.c | 22 +++---------
+ drivers/pci/controller/pcie-mt7621.c  |  4 +--
+ include/linux/pci-conf1.h             | 51 +++++++++++++++++++++++++++
+ 3 files changed, 58 insertions(+), 19 deletions(-)
+ create mode 100644 include/linux/pci-conf1.h
+
 -- 
 2.20.1
 
