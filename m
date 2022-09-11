@@ -2,88 +2,88 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08104ECAAD3
-	for <linux-pci@archiver.kernel.org>; Sat, 10 Sep 2022 14:54:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1506FECAAA1
+	for <linux-pci@archiver.kernel.org>; Sun, 11 Sep 2022 11:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229464AbiIJOyN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 10 Sep 2022 10:54:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40260 "EHLO
+        id S230071AbiIKLXV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 11 Sep 2022 07:23:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229451AbiIJOyE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 10 Sep 2022 10:54:04 -0400
-Received: from mail-oa1-f44.google.com (mail-oa1-f44.google.com [209.85.160.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 011364457C;
-        Sat, 10 Sep 2022 07:54:01 -0700 (PDT)
-Received: by mail-oa1-f44.google.com with SMTP id 586e51a60fabf-11e9a7135easo11480343fac.6;
-        Sat, 10 Sep 2022 07:54:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=message-id:date:subject:references:in-reply-to:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date;
-        bh=ifo6TqrA2757G8HR38HLney0ZLAz01R6aY9dPCdXl3Y=;
-        b=k0oVd3dbSdyuqmjUmykogS9H32fNgp02tCg8uSK/Pm7zpEhuzUMoD0BMQUXkyF3Oxk
-         racPEyEATactf+oomg5iqQffKDRI186EqjQ4t+j41XyRe8gF5858VpOD6I7MMlaHWBBr
-         7Wz1DPA7S0PFNsXDu8TXc6IdJ98SDtd2yA5T5hOuQsZLTFBTyRSIZg2khzYz4mEy21LV
-         +mcmtQump+NLXvO1KA5q+1iz7VkS5/4bmVuQpcla8FbeqZBIL6u+BbAAJmRlYFjfDDJw
-         WUZsaZWss8Nq6hB15mE+XqmIzXJfxU5PdFwFQFsDhJJ5UU8UVG+w6f9BJe6LVXSdYlCA
-         MBwg==
-X-Gm-Message-State: ACgBeo0mKW5dIy1VeNfFUb1rXbuxejim0+EJbhZm3Pr4qjNzgi67TLri
-        3cvPDpkaprGpBSJueYKIwA==
-X-Google-Smtp-Source: AA6agR6hmwMiw/lR9B81JNdMbO+Ia+MDJeL8CcqEriha2MtNkYuBKBnxij76O3KxYU3E3dSWcCANaw==
-X-Received: by 2002:a05:6808:e8e:b0:34d:7829:135 with SMTP id k14-20020a0568080e8e00b0034d78290135mr5211741oil.252.1662821640212;
-        Sat, 10 Sep 2022 07:54:00 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id b9-20020a4aba09000000b0044b125e5dabsm1292104oop.35.2022.09.10.07.53.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 10 Sep 2022 07:53:59 -0700 (PDT)
-Received: (nullmailer pid 34703 invoked by uid 1000);
-        Sat, 10 Sep 2022 14:53:55 -0000
-From:   Rob Herring <robh@kernel.org>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     andersson@kernel.org, robh+dt@kernel.org,
-        devicetree@vger.kernel.org, lpieralisi@kernel.org,
-        linux-arm-msm@vger.kernel.org, konrad.dybcio@somainline.org,
-        krzysztof.kozlowski+dt@linaro.org, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        dmitry.baryshkov@linaro.org, kw@linux.com
-In-Reply-To: <20220910063045.16648-12-manivannan.sadhasivam@linaro.org>
-References: <20220910063045.16648-1-manivannan.sadhasivam@linaro.org> <20220910063045.16648-12-manivannan.sadhasivam@linaro.org>
-Subject: Re: [PATCH v3 11/12] dt-bindings: PCI: qcom-ep: Add support for SM8450 SoC
-Date:   Sat, 10 Sep 2022 09:53:55 -0500
-Message-Id: <1662821635.191877.34702.nullmailer@robh.at.kernel.org>
+        with ESMTP id S231245AbiIKLXH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Sep 2022 07:23:07 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90F6ABE1C;
+        Sun, 11 Sep 2022 04:21:54 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1F1D460F19;
+        Sun, 11 Sep 2022 11:21:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A256C43140;
+        Sun, 11 Sep 2022 11:21:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1662895313;
+        bh=N7owEzP5NvZJynNI25WOpOaC2G6rhimMiBnf+C0B694=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=HlBYbiBxrmPCHTsiB2xysVnJRJcInnPGyfeEX9nm1//vS5/Iease/nIMxUilADOqE
+         LgQNxD47K4soa0/ZdNWkC1rwNCD+zKuFWhkY5n0A+PtUMK69IiFgZ0B/bujtVVTWIL
+         WzZ9GaRXYEe7kYKu+Q3Gpd6pge6TEsSZNYMVq9fetr7DkSypYl/pG+Budh9/GzOooN
+         TOPEjEYKyL+YN/wf7+m69jRNXhdVI+CmirPw0HPsSNrY0piSpp2lmxtJroahvgGpHr
+         Vcu3eUi58eNZpJ0FWoc5E6EfRk50oNdx9VclWb/I8VOotJQETJ8cTkj/oUDlB9od9R
+         EdOEBpo41BvBQ==
+Received: by pali.im (Postfix)
+        id 13C16878; Sun, 11 Sep 2022 13:21:53 +0200 (CEST)
+From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Sergio Paracuellos <sergio.paracuellos@gmail.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [RFC PATCH 3/3] PCI: mt7621: Use PCI_CONF1_EXT_ADDRESS() macro
+Date:   Sun, 11 Sep 2022 13:20:24 +0200
+Message-Id: <20220911112024.14304-4-pali@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220911112024.14304-1-pali@kernel.org>
+References: <20220911112024.14304-1-pali@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 10 Sep 2022 12:00:44 +0530, Manivannan Sadhasivam wrote:
-> Add devicetree bindings support for SM8450 SoC. Only the clocks are
-> different on this platform, rest is same as SDX55.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie-ep.yaml | 39 +++++++++++++++++--
->  1 file changed, 36 insertions(+), 3 deletions(-)
-> 
+Simplify pcie-mt7621.c driver code and use new PCI_CONF1_EXT_ADDRESS()
+macro for accessing PCIe config space.
 
-Running 'make dtbs_check' with the schema in this patch gives the
-following warnings. Consider if they are expected or the schema is
-incorrect. These may not be new warnings.
+Signed-off-by: Pali Rohár <pali@kernel.org>
+---
+ drivers/pci/controller/pcie-mt7621.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Note that it is not yet a requirement to have 0 warnings for dtbs_check.
-This will change in the future.
-
-Full log is available here: https://patchwork.ozlabs.org/patch/
-
-
-pcie-ep@40000000: qcom,perst-regs:0: [27] is too short
-	arch/arm/boot/dts/qcom-sdx55-mtp.dtb
-
-pcie-ep@40000000: qcom,perst-regs:0: [28] is too short
-	arch/arm/boot/dts/qcom-sdx55-t55.dtb
-	arch/arm/boot/dts/qcom-sdx55-telit-fn980-tlb.dtb
-
-pcie-ep@40000000: Unevaluated properties are not allowed ('qcom,perst-regs' was unexpected)
-	arch/arm/boot/dts/qcom-sdx55-mtp.dtb
-	arch/arm/boot/dts/qcom-sdx55-t55.dtb
-	arch/arm/boot/dts/qcom-sdx55-telit-fn980-tlb.dtb
+diff --git a/drivers/pci/controller/pcie-mt7621.c b/drivers/pci/controller/pcie-mt7621.c
+index 33eb37a2225c..28cde116cd27 100644
+--- a/drivers/pci/controller/pcie-mt7621.c
++++ b/drivers/pci/controller/pcie-mt7621.c
+@@ -25,6 +25,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
+ #include <linux/pci.h>
++#include <linux/pci-conf1.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/reset.h>
+@@ -123,8 +124,7 @@ static inline void pcie_port_write(struct mt7621_pcie_port *port,
+ static inline u32 mt7621_pcie_get_cfgaddr(unsigned int bus, unsigned int slot,
+ 					 unsigned int func, unsigned int where)
+ {
+-	return (((where & 0xf00) >> 8) << 24) | (bus << 16) | (slot << 11) |
+-		(func << 8) | (where & 0xfc) | 0x80000000;
++	return PCI_CONF1_EXT_ADDRESS(bus, slot, func, where);
+ }
+ 
+ static void __iomem *mt7621_pcie_map_bus(struct pci_bus *bus,
+-- 
+2.20.1
 
