@@ -2,72 +2,119 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDA6BC6FA8B
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Sep 2022 17:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2926DC6FA82
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Sep 2022 17:36:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232661AbiIMROy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Sep 2022 13:14:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60972 "EHLO
+        id S233105AbiIMRgN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Sep 2022 13:36:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232564AbiIMRO2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2022 13:14:28 -0400
-Received: from mail-oa1-f47.google.com (mail-oa1-f47.google.com [209.85.160.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92448D021A;
-        Tue, 13 Sep 2022 09:02:52 -0700 (PDT)
-Received: by mail-oa1-f47.google.com with SMTP id 586e51a60fabf-127f5411b9cso33343951fac.4;
-        Tue, 13 Sep 2022 09:02:52 -0700 (PDT)
+        with ESMTP id S233125AbiIMRfz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Sep 2022 13:35:55 -0400
+Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FE4B979E6
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2022 09:25:52 -0700 (PDT)
+Received: by mail-wm1-x32c.google.com with SMTP id n8so2306247wmr.5
+        for <linux-pci@vger.kernel.org>; Tue, 13 Sep 2022 09:25:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=OKN8VlLuCDfiERxzI2+XM2BCjDBYdD0WSU7txH+oqhI=;
+        b=uRznjyTYGrqXpXwIJzlmIXQ25Hr8qtCVtmJMwp9zvx6YIJSIMRaU/ApNl1dXzKSlzW
+         0w7L46c0OJH/XxX4AhBDD787JHuoELtjuw9GFV9TNVSpTtMqjE2hv11kLsWh4x9lJi46
+         GCI5qDKHEkgq4wIkv4LFBTQI8XgOvZYLVUFBLgWQzJCfybmM2/c1yr8tmNZNt2mLTmp/
+         iKydIWrpBpYUJ+jbpPurldzcH6O58vXw8ZTyBiewsQf14tYfyG6fMDeVgjC+RPcNh+rp
+         jEJ3MltDE1TvhrOtSyl7FwOIzXHqyx/zOI8df8TiE70WlsO1W5jz5FY2Gp1JnQFMpyFt
+         bVWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date;
-        bh=GtTTov0T06uIiJuUKruKJyUrwBkCGa7vjtJb2xNlITY=;
-        b=PapFfJ+4oVw2KA6uxzEXi7s5X8aG/GfnBqcxeIglWTt9hBSwBkz6mhRaMyXOSIaa76
-         bkgyG2tM05ZjiEqopwoII1Xcfz85eifC7RTh/9kdv91eKZb/8X35a69MufDwlDawH0qn
-         ZhU5/3m47r/iK1LzENkfTwTwQRyrxwDoLoUjKc1OlG87sVKQCP53mIgBbyUdubD92den
-         dmw6Td8/mrh2U9gEYlkyH+4/HlgBodr1a7BKQCWdUljfvSEXKzMGp4dkNARfrBwiTaxx
-         kI61GdC+jmWYtCpUghL7VMkgu5poUFzSov4VxKjkaweCbiGwFMon9lR8yk+zOe7iv2vK
-         ACNw==
-X-Gm-Message-State: ACgBeo1MIOPkYm8503izW7X41caNas+w/t7vEj1qNNnD6d/AiXkM5XSc
-        XRm4pPQKqcIe8m8NoeZ3rofoX9Yfog==
-X-Google-Smtp-Source: AA6agR6UMqdbCDoRd6wsJDwcQyg7o1JLfwFQj1cvGvrGlJncB9YfGiNYIy7HsMNh1oqW9xxioxbFgw==
-X-Received: by 2002:a05:6808:1294:b0:344:9e65:915e with SMTP id a20-20020a056808129400b003449e65915emr1632255oiw.251.1663080272864;
-        Tue, 13 Sep 2022 07:44:32 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id v8-20020a4aaec8000000b00441b98453d8sm5483084oon.8.2022.09.13.07.44.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 13 Sep 2022 07:44:32 -0700 (PDT)
-Received: (nullmailer pid 3645311 invoked by uid 1000);
-        Tue, 13 Sep 2022 14:44:31 -0000
-Date:   Tue, 13 Sep 2022 09:44:31 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     andersson@kernel.org, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kw@linux.com, lpieralisi@kernel.org, bhelgaas@google.com,
-        konrad.dybcio@somainline.org, krzysztof.kozlowski+dt@linaro.org,
-        dmitry.baryshkov@linaro.org, linux-pci@vger.kernel.org,
-        robh+dt@kernel.org
-Subject: Re: [PATCH v3 11/12] dt-bindings: PCI: qcom-ep: Add support for
- SM8450 SoC
-Message-ID: <20220913144431.GA3645220-robh@kernel.org>
-References: <20220910063045.16648-1-manivannan.sadhasivam@linaro.org>
- <20220910063045.16648-12-manivannan.sadhasivam@linaro.org>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date;
+        bh=OKN8VlLuCDfiERxzI2+XM2BCjDBYdD0WSU7txH+oqhI=;
+        b=OFsEHV/UiddSUyqaVzXipJJaDWHV/1cH2N5TeiOmu6hf+nzo4DWfFA3YkUkKO0BxVi
+         7uZKxtdY13/4Lazf7xxoySVrjWizMxO/baZx66giLE8Q4ImHVY2cLhQcUONS6SvebMqq
+         CMoD99mmZ9VcrTvGeT7IGqO0LnSzenQd+RWIXE5e2zp6uS44+70YNNAcVUCLw0jCY6nN
+         xDuQViVcNCxDeu6SNsYZ8irDmMH0EyzcGqq3rcKOQqSj+RASxdplHw/QTsrapwmVPAdv
+         DpuuxnBhH8r2QnV9S2Db3cvsgcKU3KId+1Lf9nntPhiyvrbHdYUiTDMint3KglWS4OkF
+         sXJQ==
+X-Gm-Message-State: ACgBeo1zpNSRIdrf80RLFUA7NyvA6pOW8JS5ody09eyIPnUAylgaWfNX
+        Wg7OkM3ULwh+iaMHt7xPdhr7Vw==
+X-Google-Smtp-Source: AA6agR6m+cKtfWYfmOldGwLugLA9gLJ2qT8xWuOhJD/1NmvBke6ThGWFcraQyfDokvJeknozSLV1tg==
+X-Received: by 2002:a7b:c84f:0:b0:3b4:84c1:1e7 with SMTP id c15-20020a7bc84f000000b003b484c101e7mr125429wml.12.1663086351164;
+        Tue, 13 Sep 2022 09:25:51 -0700 (PDT)
+Received: from [10.119.22.201] ([89.101.193.68])
+        by smtp.gmail.com with ESMTPSA id i12-20020a1c540c000000b003b47ff3807fsm9364257wmb.5.2022.09.13.09.25.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 Sep 2022 09:25:50 -0700 (PDT)
+Message-ID: <d22ed818-1a8d-4af8-d41d-2268806f3dea@linaro.org>
+Date:   Tue, 13 Sep 2022 18:25:49 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220910063045.16648-12-manivannan.sadhasivam@linaro.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.0
+Subject: Re: [PATCH] dt-bindings: pci: qcom,pcie-ep: correct qcom,perst-regs
+Content-Language: en-US
+To:     Rob Herring <robh@kernel.org>
+Cc:     Manivannan Sadhasivam <mani@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+References: <20220911135547.23106-1-krzysztof.kozlowski@linaro.org>
+ <11e61fa5-f770-9c9f-23b9-3d1dcb205bc5@linaro.org>
+ <20220913152054.GA3736444-robh@kernel.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20220913152054.GA3736444-robh@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 10 Sep 2022 12:00:44 +0530, Manivannan Sadhasivam wrote:
-> Add devicetree bindings support for SM8450 SoC. Only the clocks are
-> different on this platform, rest is same as SDX55.
+On 13/09/2022 17:20, Rob Herring wrote:
+> On Sun, Sep 11, 2022 at 04:14:54PM +0200, Krzysztof Kozlowski wrote:
+>> On 11/09/2022 15:55, Krzysztof Kozlowski wrote:
+>>> qcom,perst-regs is an phandle array of one item with a phandle and its
+>>> arguments.
+>>>
+>>> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+>>> ---
+>>>  Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml | 6 ++++--
+>>>  1 file changed, 4 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
+>>> index 3d23599e5e91..077e002b07d3 100644
+>>> --- a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
+>>> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
+>>> @@ -60,8 +60,10 @@ properties:
+>>>                   enable registers
+>>>      $ref: "/schemas/types.yaml#/definitions/phandle-array"
+>>>      items:
+>>> -      minItems: 3
+>>> -      maxItems: 3
+>>> +      - items:
+>>> +          - description: Syscon to TCSR system registers
+>>> +          - description: Perst enable offset
+>>> +          - description: Perst separateion enable offset
+>>
+>> Unfortunately this still complains:
+>>
+>> qcom-sdx55-t55.dtb: pcie-ep@40000000: qcom,perst-regs:0: [28] is too short
+>>
+>>
+>> where 28 is the phandle...
 > 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie-ep.yaml | 39 +++++++++++++++++--
->  1 file changed, 36 insertions(+), 3 deletions(-)
-> 
+> Meaning the dt is wrong or there's a tooling issue?
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+I think tooling issue. I looked at this many times and code (schema and
+DTS) seems to be correct, but tool doesn't like it.
+
+
+Best regards,
+Krzysztof
