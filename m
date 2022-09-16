@@ -2,85 +2,83 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EECC0C32771
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Sep 2022 00:03:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C0BECAAD3
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Sep 2022 02:32:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229458AbiIPADS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Sep 2022 20:03:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49280 "EHLO
+        id S229562AbiIPCcx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Sep 2022 22:32:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229457AbiIPADR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2022 20:03:17 -0400
-X-Greylist: delayed 2037 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 15 Sep 2022 17:03:15 PDT
-Received: from outgoing2021.csail.mit.edu (outgoing2021.csail.mit.edu [128.30.2.78])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C567B52DF7
-        for <linux-pci@vger.kernel.org>; Thu, 15 Sep 2022 17:03:15 -0700 (PDT)
-Received: from [128.177.82.146] (helo=srivatsab-a02.vmware.com)
-        by outgoing2021.csail.mit.edu with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.95)
-        (envelope-from <srivatsa@csail.mit.edu>)
-        id 1oYyID-000q2X-RC;
-        Thu, 15 Sep 2022 19:29:13 -0400
-To:     Liang He <windhl@126.com>, jgross@suse.com,
-        virtualization@lists.linux-foundation.org
-Cc:     wangkelin2023@163.com, jan.kiszka@siemens.com,
-        Thomas Gleixner <tglx@linutronix.de>,
+        with ESMTP id S229627AbiIPCcw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Sep 2022 22:32:52 -0400
+X-Greylist: delayed 1887 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 15 Sep 2022 19:32:50 PDT
+Received: from m1550.mail.126.com (m1550.mail.126.com [220.181.15.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B429656B91
+        for <linux-pci@vger.kernel.org>; Thu, 15 Sep 2022 19:32:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
+        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=cy+LA
+        2w5x9ANkCDCsz88Hi3lIxJIOOYRtoFw6HjTG/s=; b=Wq9mJegFd3fx9ievPLVDw
+        g5DnaYUTbizeDErr4AdoIadZ28PqjXrio4fVhytDeScanR6G7awoDLUTSbcgyG3L
+        EIeDQdik4PkQ/CSZ9FAXWyAM6MURGA5s3ARJXeHIMcM8i8s2y4zbfuMqCrTICYPS
+        SzRUoCdx9rHUtf5KCclgGU=
+Received: from windhl$126.com ( [124.16.139.61, 14.29.82.34] ) by
+ ajax-webmail-wmsvr50 (Coremail) ; Fri, 16 Sep 2022 10:00:27 +0800 (CST)
+X-Originating-IP: [124.16.139.61, 14.29.82.34]
+Date:   Fri, 16 Sep 2022 10:00:27 +0800 (CST)
+From:   "Liang He" <windhl@126.com>
+To:     "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
+Cc:     jgross@suse.com, virtualization@lists.linux-foundation.org,
+        wangkelin2023@163.com, jan.kiszka@siemens.com,
+        "Thomas Gleixner" <tglx@linutronix.de>,
         jailhouse-dev@googlegroups.com, mark.rutland@arm.com,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         andy.shevchenko@gmail.com, robh+dt@kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
+        "Bjorn Helgaas" <bhelgaas@google.com>
+Subject: Re:Re: [PATCH] jailhouse: Hold reference returned from of_find_xxx
+ API
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20220113(9671e152)
+ Copyright (c) 2002-2022 www.mailtech.cn 126com
+In-Reply-To: <f7316f94-433f-d191-0379-423c22bec129@csail.mit.edu>
 References: <20220915022343.4001331-1-windhl@126.com>
-From:   "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
-Subject: Re: [PATCH] jailhouse: Hold reference returned from of_find_xxx API
-Message-ID: <f7316f94-433f-d191-0379-423c22bec129@csail.mit.edu>
-Date:   Thu, 15 Sep 2022 16:29:06 -0700
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.12.0
+ <f7316f94-433f-d191-0379-423c22bec129@csail.mit.edu>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 MIME-Version: 1.0
-In-Reply-To: <20220915022343.4001331-1-windhl@126.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Message-ID: <89a1b1f.165e.18344069cab.Coremail.windhl@126.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: MsqowADnPPG82CNjwf1tAA--.52003W
+X-CM-SenderInfo: hzlqvxbo6rjloofrz/1tbiuAl+F2JVlaGGMgABsu
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-[ Adding author and reviewers of commit 63338a38db95 ]
-
-On 9/14/22 7:23 PM, Liang He wrote:
-> In jailhouse_paravirt(), we should hold the reference returned from
-> of_find_compatible_node() which has increased the refcount and then
-> call of_node_put() with it when done.
-> 
-> Fixes: 63338a38db95 ("jailhouse: Provide detection for non-x86 systems")
-> Signed-off-by: Liang He <windhl@126.com>
-> Signed-off-by: Kelin Wang <wangkelin2023@163.com>
-> ---
->  include/linux/hypervisor.h | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/hypervisor.h b/include/linux/hypervisor.h
-> index 9efbc54e35e5..7fe1e8c6211c 100644
-> --- a/include/linux/hypervisor.h
-> +++ b/include/linux/hypervisor.h
-> @@ -27,7 +27,11 @@ static inline void hypervisor_pin_vcpu(int cpu)
->  
->  static inline bool jailhouse_paravirt(void)
->  {
-> -	return of_find_compatible_node(NULL, NULL, "jailhouse,cell");
-> +	struct device_node *np = of_find_compatible_node(NULL, NULL, "jailhouse,cell");
-> +
-> +	of_node_put(np);
-> +
-> +	return np;
->  }
->  
-
-Thank you for the fix, but returning a pointer from a function with a
-bool return type looks odd. Can we also fix that up please?
-
-
-Regards,
-Srivatsa
-VMware Photon OS
+CkF0IDIwMjItMDktMTYgMDc6Mjk6MDYsICJTcml2YXRzYSBTLiBCaGF0IiA8c3JpdmF0c2FAY3Nh
+aWwubWl0LmVkdT4gd3JvdGU6Cj4KPlsgQWRkaW5nIGF1dGhvciBhbmQgcmV2aWV3ZXJzIG9mIGNv
+bW1pdCA2MzMzOGEzOGRiOTUgXQo+Cj5PbiA5LzE0LzIyIDc6MjMgUE0sIExpYW5nIEhlIHdyb3Rl
+Ogo+PiBJbiBqYWlsaG91c2VfcGFyYXZpcnQoKSwgd2Ugc2hvdWxkIGhvbGQgdGhlIHJlZmVyZW5j
+ZSByZXR1cm5lZCBmcm9tCj4+IG9mX2ZpbmRfY29tcGF0aWJsZV9ub2RlKCkgd2hpY2ggaGFzIGlu
+Y3JlYXNlZCB0aGUgcmVmY291bnQgYW5kIHRoZW4KPj4gY2FsbCBvZl9ub2RlX3B1dCgpIHdpdGgg
+aXQgd2hlbiBkb25lLgo+PiAKPj4gRml4ZXM6IDYzMzM4YTM4ZGI5NSAoImphaWxob3VzZTogUHJv
+dmlkZSBkZXRlY3Rpb24gZm9yIG5vbi14ODYgc3lzdGVtcyIpCj4+IFNpZ25lZC1vZmYtYnk6IExp
+YW5nIEhlIDx3aW5kaGxAMTI2LmNvbT4KPj4gU2lnbmVkLW9mZi1ieTogS2VsaW4gV2FuZyA8d2Fu
+Z2tlbGluMjAyM0AxNjMuY29tPgo+PiAtLS0KPj4gIGluY2x1ZGUvbGludXgvaHlwZXJ2aXNvci5o
+IHwgNiArKysrKy0KPj4gIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDEgZGVsZXRp
+b24oLSkKPj4gCj4+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2h5cGVydmlzb3IuaCBiL2lu
+Y2x1ZGUvbGludXgvaHlwZXJ2aXNvci5oCj4+IGluZGV4IDllZmJjNTRlMzVlNS4uN2ZlMWU4YzYy
+MTFjIDEwMDY0NAo+PiAtLS0gYS9pbmNsdWRlL2xpbnV4L2h5cGVydmlzb3IuaAo+PiArKysgYi9p
+bmNsdWRlL2xpbnV4L2h5cGVydmlzb3IuaAo+PiBAQCAtMjcsNyArMjcsMTEgQEAgc3RhdGljIGlu
+bGluZSB2b2lkIGh5cGVydmlzb3JfcGluX3ZjcHUoaW50IGNwdSkKPj4gIAo+PiAgc3RhdGljIGlu
+bGluZSBib29sIGphaWxob3VzZV9wYXJhdmlydCh2b2lkKQo+PiAgewo+PiAtCXJldHVybiBvZl9m
+aW5kX2NvbXBhdGlibGVfbm9kZShOVUxMLCBOVUxMLCAiamFpbGhvdXNlLGNlbGwiKTsKPj4gKwlz
+dHJ1Y3QgZGV2aWNlX25vZGUgKm5wID0gb2ZfZmluZF9jb21wYXRpYmxlX25vZGUoTlVMTCwgTlVM
+TCwgImphaWxob3VzZSxjZWxsIik7Cj4+ICsKPj4gKwlvZl9ub2RlX3B1dChucCk7Cj4+ICsKPj4g
+KwlyZXR1cm4gbnA7Cj4+ICB9Cj4+ICAKPgo+VGhhbmsgeW91IGZvciB0aGUgZml4LCBidXQgcmV0
+dXJuaW5nIGEgcG9pbnRlciBmcm9tIGEgZnVuY3Rpb24gd2l0aCBhCj5ib29sIHJldHVybiB0eXBl
+IGxvb2tzIG9kZC4gQ2FuIHdlIGFsc28gZml4IHRoYXQgdXAgcGxlYXNlPwo+CgpUaGFua3MgZm9y
+IHlvdXIgcmV2aWV3LCBob3cgYWJvdXQgZm9sbG93aW5nIHBhdGNoOgoKLQlyZXR1cm4gb2ZfZmlu
+ZF9jb21wYXRpYmxlX25vZGUoTlVMTCwgTlVMTCwgImphaWxob3VzZSxjZWxsIik7CisJc3RydWN0
+IGRldmljZV9ub2RlICpucCA9IG9mX2ZpbmRfY29tcGF0aWJsZV9ub2RlKE5VTEwsIE5VTEwsICJq
+YWlsaG91c2UsY2VsbCIpOworCisJb2Zfbm9kZV9wdXQobnApOworCisJcmV0dXJuIChucD09TlVM
+TCk7Cgo+Cj5SZWdhcmRzLAo+U3JpdmF0c2EKPlZNd2FyZSBQaG90b24gT1MK
