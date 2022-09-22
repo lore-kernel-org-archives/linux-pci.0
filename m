@@ -2,153 +2,139 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A106C54EE9
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Sep 2022 16:39:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1DB1C54EE9
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Sep 2022 17:32:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232160AbiIVQjy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Sep 2022 12:39:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48164 "EHLO
+        id S229530AbiIVRcY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Sep 2022 13:32:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231880AbiIVQjp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2022 12:39:45 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2A574BA7B;
-        Thu, 22 Sep 2022 09:39:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:MIME-Version:Message-Id:Date:Cc:To:From
-        :references:content-disposition:in-reply-to;
-        bh=yEbEthdEqMoR6vIi3uu8gJTStkK9xaZth0zL3JgYr6M=; b=HifliSh6mq7K6mv42Jxq4CspDZ
-        PkfMY8i6TXWHUNH9Z7BsQdRo98oHauuGD9OK2FxaBH9ZUI7u5U0ZI+N1IHu2w0GMw0/7+qWfFMftP
-        hEIfoXcx1Fly+YRtzCoLOEAozIs/P8m6VHdqGDDLcbj8XfGUi3ry4QtwCI1qa45J5i7LIMWfjoe33
-        +nr1T0dc+PHilZ37pf3KFAWa35qRHgp2qQH2xgytuwRQkgXHHFJ6xh7i7mtad2u+JP8Mco19YfnYF
-        9o06j4joMdjFys+iEYyk/ajwU6F8vR6nqX2olmK+uVF1E5YS3fesLcwJm6NEZnko2XLzLwe2Oor09
-        A88X9GAQ==;
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1obPEf-00862a-HO; Thu, 22 Sep 2022 10:39:39 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1obPEa-0001rh-MA; Thu, 22 Sep 2022 10:39:32 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Don Dutile <ddutile@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Minturn Dave B <dave.b.minturn@intel.com>,
-        Jason Ekstrand <jason@jlekstrand.net>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Xiong Jianxin <jianxin.xiong@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Martin Oliveira <martin.oliveira@eideticom.com>,
-        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
-        Ralph Campbell <rcampbell@nvidia.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 22 Sep 2022 10:39:18 -0600
-Message-Id: <20220922163926.7077-1-logang@deltatee.com>
-X-Mailer: git-send-email 2.30.2
+        with ESMTP id S229930AbiIVRcX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2022 13:32:23 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0CE74105D4D;
+        Thu, 22 Sep 2022 10:32:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A2387B82444;
+        Thu, 22 Sep 2022 17:32:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16F94C433D6;
+        Thu, 22 Sep 2022 17:32:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1663867939;
+        bh=1Skf5wiBol+qGBVz6JasNK7icy4lAhhPx0SLST8QPpI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=eGu3JUSEuVFz1QcOmxcMhM48f8mxiQn4zee7aDnTEQEOrAHrHePtkHA8I188kLAbA
+         RdyLpQvP0kNPcjlIMkk6Wch055YUPjOFDBDw9aWqt5StVGoYtVIaIFcNCSFlzcdKqA
+         yWDKr/YbD3M0730Aqw8bMg1S1cXhPUArWtdBpBfZ8swnyL96llHB6DGhsPnaAkggrZ
+         dzHhmHU3xGotL1faI8WgyPcplaR9WzAEA00vl2HLhZHbUOb3boKv0prUaxvFICJMxk
+         Beovo7zhCbp1hhBGwE+6Lna+dUtoJ6wMwdH2wayQtL0lmbnxPOy/VzhwrkkX3quFLC
+         vrD1Gb0fhi9aw==
+Date:   Thu, 22 Sep 2022 12:32:17 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc:     Shuai Xue <xueshuai@linux.alibaba.com>, will@kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        rdunlap@infradead.org, robin.murphy@arm.com, mark.rutland@arm.com,
+        baolin.wang@linux.alibaba.com, zhuo.song@linux.alibaba.com,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1 2/3] drivers/perf: add DesignWare PCIe PMU driver
+Message-ID: <20220922173217.GA1316280@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, hch@lst.de, gregkh@linuxfoundation.org, jgg@ziepe.ca, christian.koenig@amd.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, jhubbard@nvidia.com, rcampbell@nvidia.com, sbates@raithlin.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v10 0/8] Userspace P2PDMA with O_DIRECT NVMe devices
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220922165820.000017b6@huawei.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On Thu, Sep 22, 2022 at 04:58:20PM +0100, Jonathan Cameron wrote:
+> On Sat, 17 Sep 2022 20:10:35 +0800
+> Shuai Xue <xueshuai@linux.alibaba.com> wrote:
+> 
+> > This commit adds the PCIe Performance Monitoring Unit (PMU) driver support
+> > for T-Head Yitian SoC chip. Yitian is based on the Synopsys PCI Express
+> > Core controller IP which provides statistics feature. The PMU is not a PCIe
+> > Root Complex integrated End Point(RCiEP) device but only register counters
+> > provided by each PCIe Root Port.
+> > 
+> > To facilitate collection of statistics the controller provides the
+> > following two features for each Root Port:
+> > 
+> > - Time Based Analysis (RX/TX data throughput and time spent in each
+> >   low-power LTSSM state)
+> > - Event counters (Error and Non-Error for lanes)
+> > 
+> > Note, only one counter for each type.
+> > 
+> > This driver add PMU devices for each PCIe Root Port. And the PMU device is
+> > named based the BDF of Root Port. For example,
+> > 
+> >     10:00.0 PCI bridge: Device 1ded:8000 (rev 01)
+> > 
+> > the PMU device name for this Root Port is pcie_bdf_100000.
+> > 
+> > Example usage of counting PCIe RX TLP data payload (Units of 16 bytes)::
+> > 
+> >     $# perf stat -a -e pcie_bdf_200/Rx_PCIe_TLP_Data_Payload/
+> > 
+> > average RX bandwidth can be calculated like this:
+> > 
+> >     PCIe TX Bandwidth = PCIE_TX_DATA * 16B / Measure_Time_Window
+> > 
+> > Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+> 
+> +CC linux-pci list and Bjorn.
 
-This is the latest P2PDMA userspace patch set. This version includes
-some cleanup from feedback of the last posting[1].
+Thanks, this is definitely of interest to linux-pci.
 
-This patch set enables userspace P2PDMA by allowing userspace to mmap()
-allocated chunks of the CMB. The resulting VMA can be passed only
-to O_DIRECT IO on NVMe backed files or block devices. A flag is added
-to GUP() in Patch 1, then Patches 2 through 6 wire this flag up based
-on whether the block queue indicates P2PDMA support. Patches 7
-creates the sysfs resource that can hand out the VMAs and Patch 8
-adds brief documentation for the new interface.
+> Question in here which I've been meaning to address for other reasons
+> around how to register 'extra features' on pci ports.
+> 
+> This particular PMU is in config space in a Vendor Specific Extended
+> Capability.
+> 
+> I've focused on that aspect for this review rather than the perf parts.
+> We'll need to figure that story out first as doing this from a bus walk
+> makes triggered of a platform driver is not the way I'd expect to see
+> this work.
 
-Feedback welcome.
+> > +static int dwc_pcie_pmu_discover(struct dwc_pcie_pmu_priv *priv)
+> > +{
+> > +	int val, where, index = 0;
+> > +	struct pci_dev *pdev = NULL;
+> > +	struct dwc_pcie_info_table *pcie_info;
+> > +
+> > +	priv->pcie_table =
+> > +	    devm_kcalloc(priv->dev, RP_NUM_MAX, sizeof(*pcie_info), GFP_KERNEL);
+> > +	if (!priv->pcie_table)
+> > +		return -EINVAL;
+> > +
+> > +	pcie_info = priv->pcie_table;
+> > +	while ((pdev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, pdev)) != NULL &&
+> > +	       index < RP_NUM_MAX) {
+> 
+> This having a driver than then walks the pci topology to find root ports and add
+> extra stuff to them is not a clean solution.
+> 
+> The probing should be driven from the existing PCI driver topology.
+> There are a bunch of new features we need to add to ports in the near future
+> anyway - this would just be another one.
+> Same problem exists for CXL CPMU perf devices - so far we only support those
+> on end points, partly because we need a clean way to probe them on pci ports.
+> 
+> Whatever we come up with there will apply here as well.
 
-This series is based on v6.0-rc6. A git branch is available here:
+I agree, I don't like to see more uses of pci_get_device() because it
+doesn't fit the driver model at all.  For one thing, it really screws
+up the hotplug model because this doesn't account for hot-added
+devices and there's no clear cleanup path for removal.
 
-  https://github.com/sbates130272/linux-p2pmem/  p2pdma_user_cmb_v10
+Hotplug is likely not an issue in this particular case, but it gets
+copied to places where it is an issue.
 
-Thanks,
+Maybe we need some kind of PCI core interface whereby drivers can
+register their interest in VSEC and/or DVSEC capabilities.
 
-Logan
-
-[1] https://lkml.kernel.org/r/20220825152425.6296-1-logang@deltatee.com
-
---
-
-Changes since v8:
-  - Rebased onto v6.0-rc6
-  - Reworked iov iter changes to reuse the code better and
-    name them without the _flags() prefix (per Christoph)
-  - Renamed a number of flags variables to gup_flags (per John)
-  - Minor fixups to the last documentation patch (from Greg and John)
-
-Changes since v7:
-  - Rebased onto v6.0-rc2, included reworking the iov_iter patch
-    due to changes there
-  - Drop the char device mmap implementation in favour of a sysfs
-    based interface. (per Christoph)
-
-Changes since v6:
-  - Rebase onto v5.19-rc1
-  - Rework how the pages are stored in the VMA per Jason's suggestion
-
-Changes since v5:
-  - Rebased onto v5.18-rc1 which includes Christophs cleanup to
-    free_zone_device_page() (similar to Ralph's patch).
-  - Fix bug with concurrent first calls to pci_p2pdma_vma_fault()
-    that caused a double allocation and lost p2p memory. Noticed
-    by Andrew Maier.
-  - Collected a Reviewed-by tag from Chaitanya.
-  - Numerous minor fixes to commit messages
-
---
-
-Logan Gunthorpe (8):
-  mm: introduce FOLL_PCI_P2PDMA to gate getting PCI P2PDMA pages
-  iov_iter: introduce iov_iter_get_pages_[alloc_]flags()
-  block: add check when merging zone device pages
-  lib/scatterlist: add check when merging zone device pages
-  block: set FOLL_PCI_P2PDMA in __bio_iov_iter_get_pages()
-  block: set FOLL_PCI_P2PDMA in bio_map_user_iov()
-  PCI/P2PDMA: Allow userspace VMA allocations through sysfs
-  ABI: sysfs-bus-pci: add documentation for p2pmem allocate
-
- Documentation/ABI/testing/sysfs-bus-pci |  10 ++
- block/bio.c                             |  11 ++-
- block/blk-map.c                         |   7 +-
- drivers/pci/p2pdma.c                    | 124 ++++++++++++++++++++++++
- include/linux/mm.h                      |   1 +
- include/linux/mmzone.h                  |  24 +++++
- include/linux/uio.h                     |   6 ++
- lib/iov_iter.c                          |  32 ++++--
- lib/scatterlist.c                       |  25 +++--
- mm/gup.c                                |  22 ++++-
- 10 files changed, 240 insertions(+), 22 deletions(-)
-
-
-base-commit: 521a547ced6477c54b4b0cc206000406c221b4d6
---
-2.30.2
+Bjorn
