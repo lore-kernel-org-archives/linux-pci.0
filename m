@@ -2,174 +2,622 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79CE3C6FA92
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Sep 2022 15:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB03C54EE9
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Sep 2022 15:58:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231479AbiIVPyW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Sep 2022 11:54:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41802 "EHLO
+        id S229926AbiIVP6a convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Sep 2022 11:58:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51468 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229794AbiIVPyU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2022 11:54:20 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE250F8C04;
-        Thu, 22 Sep 2022 08:54:19 -0700 (PDT)
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.5/8.17.1.5) with ESMTP id 28MDUWSf021785;
-        Thu, 22 Sep 2022 15:53:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=US13UxSFNQuHhq+dXkWL+HohYUtp82gPRRe3BJERysc=;
- b=bW9R+CkuNVB1UiU5dGGV+QIz0uWebcQlh1VDjZWXJBHXrem21bKtzbkrOalUGn+C2Mv7
- Z5eLrziimecoCYpopS/mqyqxqJVKjl337Ck4KH+Jp0DRT+p7smmiPfBceer+J/T5JDd8
- hMKWvM9lXKA081F0OwFYQo7HFnRQGn+ibBHtTsRM/HqSVlyR2Mz5ATPq6oWN3C4g0rgs
- 761mz/XCkTalhFAtDjJBIQvnlCY7ANbvHIU16RxwTUgqDHeKMpJ5PJ8IB7wjE4H/nH0I
- 4nSXKqaLTGqX95pERQchzVpend5D62mPn2YYPJrIVAPAcJOxOZfs6tVzReQIV0xefFZX xQ== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3jrq4r8kn6-3
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 22 Sep 2022 15:53:56 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 28MFdfXI025772
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 22 Sep 2022 15:39:41 GMT
-Received: from [10.216.47.110] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Thu, 22 Sep
- 2022 08:39:31 -0700
-Message-ID: <807730f9-0220-d297-dffd-929dde30d513@quicinc.com>
-Date:   Thu, 22 Sep 2022 21:09:28 +0530
+        with ESMTP id S229554AbiIVP63 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 22 Sep 2022 11:58:29 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2FB2E5FAA;
+        Thu, 22 Sep 2022 08:58:24 -0700 (PDT)
+Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4MYKdt4nq5z67PFn;
+        Thu, 22 Sep 2022 23:56:34 +0800 (CST)
+Received: from lhrpeml500005.china.huawei.com (7.191.163.240) by
+ fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2375.31; Thu, 22 Sep 2022 17:58:22 +0200
+Received: from localhost (10.81.208.231) by lhrpeml500005.china.huawei.com
+ (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 22 Sep
+ 2022 16:58:21 +0100
+Date:   Thu, 22 Sep 2022 16:58:20 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To:     Shuai Xue <xueshuai@linux.alibaba.com>
+CC:     <will@kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <rdunlap@infradead.org>,
+        <robin.murphy@arm.com>, <mark.rutland@arm.com>,
+        <baolin.wang@linux.alibaba.com>, <zhuo.song@linux.alibaba.com>,
+        <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v1 2/3] drivers/perf: add DesignWare PCIe PMU driver
+Message-ID: <20220922165820.000017b6@huawei.com>
+In-Reply-To: <20220917121036.14864-3-xueshuai@linux.alibaba.com>
+References: <20220917121036.14864-1-xueshuai@linux.alibaba.com>
+        <20220917121036.14864-3-xueshuai@linux.alibaba.com>
+X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.9.1
-Subject: Re: [PATCH v7 1/5] PCI: qcom: Add system suspend and resume support
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <mka@chromium.org>,
-        <quic_vbadigan@quicinc.com>, <quic_hemantk@quicinc.com>,
-        <quic_nitegupt@quicinc.com>, <quic_skananth@quicinc.com>,
-        <quic_ramkri@quicinc.com>, <manivannan.sadhasivam@linaro.org>,
-        <swboyd@chromium.org>, <dmitry.baryshkov@linaro.org>,
-        <svarbanov@mm-sol.com>, <agross@kernel.org>,
-        <andersson@kernel.org>, <konrad.dybcio@somainline.org>,
-        <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
-        <bhelgaas@google.com>, <linux-phy@lists.infradead.org>,
-        <vkoul@kernel.org>, <kishon@ti.com>, <mturquette@baylibre.com>,
-        <linux-clk@vger.kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, <linux-pm@vger.kernel.org>
-References: <20220921165601.GA1215223@bhelgaas>
-From:   Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
-In-Reply-To: <20220921165601.GA1215223@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: qy6KnT5DFSRzCuruOAI_w_U-p6xqbqlO
-X-Proofpoint-ORIG-GUID: qy6KnT5DFSRzCuruOAI_w_U-p6xqbqlO
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.895,Hydra:6.0.528,FMLib:17.11.122.1
- definitions=2022-09-22_08,2022-09-22_01,2022-06-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 adultscore=0
- mlxlogscore=999 bulkscore=0 suspectscore=0 phishscore=0 mlxscore=0
- priorityscore=1501 malwarescore=0 clxscore=1011 impostorscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2209130000 definitions=main-2209220106
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 8BIT
+X-Originating-IP: [10.81.208.231]
+X-ClientProxiedBy: lhrpeml100002.china.huawei.com (7.191.160.241) To
+ lhrpeml500005.china.huawei.com (7.191.163.240)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Sat, 17 Sep 2022 20:10:35 +0800
+Shuai Xue <xueshuai@linux.alibaba.com> wrote:
 
-On 9/21/2022 10:26 PM, Bjorn Helgaas wrote:
-> [+cc Rafael, linux-pm since this is real power management magic,
-> beginning of thread:
-> https://lore.kernel.org/all/1663669347-29308-1-git-send-email-quic_krichai@quicinc.com/
-> full patch since I trimmed too much of it:
-> https://lore.kernel.org/all/1663669347-29308-2-git-send-email-quic_krichai@quicinc.com/]
->
-> On Wed, Sep 21, 2022 at 03:23:35PM +0530, Krishna Chaitanya Chundru wrote:
->> On 9/20/2022 11:46 PM, Bjorn Helgaas wrote:
->>> On Tue, Sep 20, 2022 at 03:52:23PM +0530, Krishna chaitanya chundru wrote:
->>>> Add suspend and resume syscore ops.
->>>>
->>>> Few PCIe endpoints like NVMe and WLANs are always expecting the device
->>>> to be in D0 state and the link to be active (or in l1ss) all the time
->>>> (including in S3 state).
->>> What does this have to do with the patch?  I don't see any NVMe or
->>> WLAN patches here.
->> Existing NVMe driver expecting NVMe device to be in D0 during S3 also. If we
->> turn off the link in
->> suspend, the NVMe resume path is broken as the state machine is getting
->> reset in the NVMe device.
->> Due to this, the host driver state machine and the device state machine are
->> going out of sync, and all NVMe commands
->> after resumes are getting timed out.
->>
->> IIRC, Tegra is also facing this issue with NVMe.
->>
->> This issue has been discussed below threads:
->>
->> https://lore.kernel.org/all/Yl+6V3pWuyRYuVV8@infradead.org/T/
->>
->> https://lore.kernel.org/linux-nvme/20220201165006.3074615-1-kbusch@kernel.org/
-> The problem is that this commit log doesn't explain the problem and
-> doesn't give us anything to connect the NVMe and WLAN assumptions with
-> this special driver behavior.  There needs to be some explicit
-> property of NVMe and WLAN that the PM core or drivers like qcom can
-> use to tell whether the clocks can be turned off.
-Not only that NVMe is expecting the device state to be always in D0. So 
-any PCIe
-drivers should not turn off the link in suspend and do link retraining 
-in the resume.
-As this is considered a power cycle by the NVMe device and eventually 
-increases the
-wear of the NVMe flash.
+> This commit adds the PCIe Performance Monitoring Unit (PMU) driver support
+> for T-Head Yitian SoC chip. Yitian is based on the Synopsys PCI Express
+> Core controller IP which provides statistics feature. The PMU is not a PCIe
+> Root Complex integrated End Point(RCiEP) device but only register counters
+> provided by each PCIe Root Port.
+> 
+> To facilitate collection of statistics the controller provides the
+> following two features for each Root Port:
+> 
+> - Time Based Analysis (RX/TX data throughput and time spent in each
+>   low-power LTSSM state)
+> - Event counters (Error and Non-Error for lanes)
+> 
+> Note, only one counter for each type.
+> 
+> This driver add PMU devices for each PCIe Root Port. And the PMU device is
+> named based the BDF of Root Port. For example,
+> 
+>     10:00.0 PCI bridge: Device 1ded:8000 (rev 01)
+> 
+> the PMU device name for this Root Port is pcie_bdf_100000.
+> 
+> Example usage of counting PCIe RX TLP data payload (Units of 16 bytes)::
+> 
+>     $# perf stat -a -e pcie_bdf_200/Rx_PCIe_TLP_Data_Payload/
+> 
+> average RX bandwidth can be calculated like this:
+> 
+>     PCIe TX Bandwidth = PCIE_TX_DATA * 16B / Measure_Time_Window
+> 
+> Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
 
-We are trying to keep the device in D0 and also reduce the power 
-consumption when the system
-is in S3 by turning off clocks and phy with this patch series.
->
->>>> In qcom platform PCIe resources( clocks, phy etc..) can released
->>>> when the link is in L1ss to reduce the power consumption. So if the link
->>>> is in L1ss, release the PCIe resources. And when the system resumes,
->>>> enable the PCIe resources if they released in the suspend path.
->>> What's the connection with L1.x?  Links enter L1.x based on activity
->>> and timing.  That doesn't seem like a reliable indicator to turn PHYs
->>> off and disable clocks.
->> This is a Qcom PHY-specific feature (retaining the link state in L1.x with
->> clocks turned off).
->> It is possible only with the link being in l1.x. PHY can't retain the link
->> state in L0 with the
->> clocks turned off and we need to re-train the link if it's in L2 or L3. So
->> we can support this feature only with L1.x.
->> That is the reason we are taking l1.x as the trigger to turn off clocks (in
->> only suspend path).
-> This doesn't address my question.  L1.x is an ASPM feature, which
-> means hardware may enter or leave L1.x autonomously at any time
-> without software intervention.  Therefore, I don't think reading the
-> current state is a reliable way to decide anything.
-After the link enters the L1.x it will come out only if there is some 
-activity on the link.
-AS system is suspended and NVMe driver is also suspended( queues willÂ  
-freeze in suspend)
-who else can initiate any data. As long the link stays in L1ss we can 
-turn off clocks and phy.
-When the system resumes we turn off clocks and phy before resuming the 
-NVMe, this makes sure
-the clocks and phy are up before there is any activity to bring up the 
-link back to L0 state from L1.x.
->
->> ...
->>>> Its observed that access to Ep PCIe space to mask MSI/MSIX is happening
->>>> at the very late stage of suspend path (access by affinity changes while
->>>> making CPUs offline during suspend, this will happen after devices are
->>>> suspended (after all phases of suspend ops)). If we turn off clocks in
->>>> any PM callback, afterwards running into crashes due to un-clocked access
->>>> due to above mentioned MSI/MSIx access.
->>>> So, we are making use of syscore framework to turn off the PCIe clocks
->>>> which will be called after making CPUs offline.
++CC linux-pci list and Bjorn.
+
+Question in here which I've been meaning to address for other reasons
+around how to register 'extra features' on pci ports.
+
+This particular PMU is in config space in a Vendor Specific Extended
+Capability.
+
+I've focused on that aspect for this review rather than the perf parts.
+We'll need to figure that story out first as doing this from a bus walk
+makes triggered of a platform driver is not the way I'd expect to see
+this work.
+
+
+> diff --git a/drivers/perf/dwc_pcie_pmu.c b/drivers/perf/dwc_pcie_pmu.c
+> new file mode 100644
+> index 000000000000..81e534be13fa
+> --- /dev/null
+> +++ b/drivers/perf/dwc_pcie_pmu.c
+> @@ -0,0 +1,976 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Synopsys DesignWare PCIe PMU driver
+> + *
+> + * Copyright (C) 2021, 2022 Alibaba Inc.
+> + */
+> + 
+> +#include <linux/pci.h>
+> +#include <linux/bitfield.h>
+> +#include <linux/bitops.h>
+> +#include <linux/cpuhotplug.h>
+> +#include <linux/cpumask.h>
+> +#include <linux/device.h>
+> +#include <linux/errno.h>
+> +#include <linux/kernel.h>
+> +#include <linux/list.h>
+> +#include <linux/perf_event.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/smp.h>
+> +#include <linux/sysfs.h>
+> +#include <linux/types.h>
+> +
+> +#define DRV_NAME				"dwc_pcie_pmu"
+> +#define DEV_NAME				"dwc_pcie_pmu"
+Put these strings where they are used.  That's where people will look for them...
+
+> +#define RP_NUM_MAX				32 /* 2die * 4RC * 4Ctrol */
+
+This driver is 'almost' generic. So if you an avoid defines based on a particular
+platform that's definitely good!
+
+> +#define ATTRI_NAME_MAX_SIZE			32
+> +
+> +#define DWC_PCIE_VSEC_ID			0x02
+> +#define DWC_PCIE_VSEC_REV			0x04
+
+I wouldn't define the REV like this. Put the number inline so we
+can clearly see this is revision 4.  VSEC_ID won't change so a
+define for that is fine.
+
+
+> +
+> +#define DWC_PCIE_LINK_CAPABILITIES_REG		0xC
+This is PCIE spec defined.  Put these in a common header.
+> +#define DWC_PCIE_LANE_SHIFT			4
+> +#define DWC_PCIE_LANE_MASK			GENMASK(9, 4)
+> +
+> +#define DWC_PCIE_EVENT_CNT_CTRL			0x8
+> +#define DWC_PCIE__CNT_EVENT_SELECT_SHIFT	16
+
+Why double __?  If point is to separate register from fields, then
+naming works better
+DWC_PCIE_EVENT_CNT_CTRL_REG
+DWC_PCIE_EVENT_CNT_CTRL_EV_SELECT_MSK etc
+
+
+> +#define DWC_PCIE__CNT_EVENT_SELECT_MASK		GENMASK(27, 16)
+> +#define DWC_PCIE__CNT_LANE_SELECT_SHIFT		8
+> +#define DWC_PCIE__CNT_LANE_SELECT_MASK		GENMASK(11, 8)
+> +#define DWC_PCIE__CNT_STATUS_SHIFT		7
+> +#define DWC_PCIE__CNT_STATUS_MASK		BIT(7)
+> +#define DWC_PCIE__CNT_ENABLE_SHIFT		2
+
+With FIELD_PREP() / FIELD_GET() you should never need to define the shifts.
+They will be extracted from the masks as needed.
+
+> +#define DWC_PCIE__CNT_ENABLE_MASK		GENMASK(4, 2)
+> +#define DWC_PCIE_PER_EVENT_OFF			(0x1 << DWC_PCIE__CNT_ENABLE_SHIFT)
+FIELD_PREP() / FIELD_GET() combined with defines for the values.
+
+#define DWC_PCIE_CNT_ENABLE_MASK ...
+
+> +#define DWC_PCIE_PER_EVENT_ON			(0x3 << DWC_PCIE__CNT_ENABLE_SHIFT)
+> +#define DWC_PCIE_EVENT_CLEAR_MASK		GENMASK(1, 0)
+> +
+> +#define DWC_PCIE_EVENT_CNT_DATA			0xC
+> +
+> +#define DWC_PCIE_TIME_BASED_ANALYSIS_CTRL	0x10
+> +#define DWC_PCIE__TIME_BASED_REPORT_SELECT_SHIFT	24
+> +#define DWC_PCIE__TIME_BASED_REPORT_SELECT_MASK	GENMASK(31, 24)
+> +#define DWC_PCIE__TIME_BASED_DURATION_SHIFT	8
+> +#define DWC_PCIE__TIME_BASED_DURATION_SELECT	GENMASK(15, 8)
+> +#define DWC_PCIE_DURATION_MANUAL_CTRL		0x0
+> +#define DWC_PCIE_DURATION_1MS			0x1
+> +#define DWC_PCIE_DURATION_10MS			0x2
+> +#define DWC_PCIE_DURATION_100MS			0x3
+> +#define DWC_PCIE_DURATION_1S			0x4
+> +#define DWC_PCIE_DURATION_2S			0x5
+> +#define DWC_PCIE_DURATION_4S			0x6
+> +#define DWC_PCIE_DURATION_4US			0xff
+> +#define DWC_PCIE__TIME_BASED_COUNTER_ENABLE	1
+> +
+> +#define DWC_PCIE_TIME_BASED_ANALYSIS_DATA_REG_LOW	0x14
+> +#define DWC_PCIE_TIME_BASED_ANALYSIS_DATA_REG_HIGH	0x18
+> +
+> +/* Event attributes */
+> +#define DWC_PCIE_CONFIG_EVENTID			GENMASK(15, 0)
+> +#define DWC_PCIE_CONFIG_TYPE			GENMASK(19, 16)
+> +#define DWC_PCIE_CONFIG_LANE			GENMASK(27, 20)
+> +
+> +#define DWC_PCIE_EVENT_ID(event)	FIELD_GET(DWC_PCIE_CONFIG_EVENTID, (event)->attr.config)
+> +#define DWC_PCIE_EVENT_TYPE(event)	FIELD_GET(DWC_PCIE_CONFIG_TYPE, (event)->attr.config)
+> +#define DWC_PCIE_EVENT_LANE(event)	FIELD_GET(DWC_PCIE_CONFIG_LANE, (event)->attr.config)
+> +
+> +#define DWC_PCIE_PMU_HAS_REGISTER		1
+> +
+> +enum dwc_pcie_event_type {
+> +	DWC_PCIE_TYPE_INVALID,
+> +	DWC_PCIE_TIME_BASE_EVENT,
+> +	DWC_PCIE_LANE_EVENT,
+> +};
+> +
+> +struct dwc_event_counters {
+> +	const char name[32];
+> +	u32 event_id;
+> +};
+> +
+> +struct dwc_pcie_pmu {
+> +	struct hlist_node node;
+> +	unsigned int on_cpu;
+> +	struct pmu pmu;
+> +	struct device *dev;
+> +};
+> +
+> +struct dwc_pcie_info_table {
+> +	u32 bdf;
+> +	u32 cap_pos;
+> +	u32 num_lanes;
+> +	struct pci_dev *pdev;
+> +	struct dwc_pcie_pmu pcie_pmu;
+> +	u8 pmu_is_register;
+> +	struct perf_event *event;
+> +
+> +	struct dwc_pcie_event_attr *lane_event_attrs;
+> +	struct attribute **pcie_pmu_event_attrs;
+> +	struct attribute_group pcie_pmu_event_attrs_group;
+> +	const struct attribute_group *pcie_pmu_attr_groups[4];
+> +};
+> +
+> +struct dwc_pcie_pmu_priv {
+> +	struct device *dev;
+> +	u32 pcie_ctrl_num;
+> +	struct dwc_pcie_info_table *pcie_table;
+> +};
+> +
+> +#define DWC_PCIE_CREATE_BDF(seg, bus, dev, func)	\
+> +	(((seg) << 24) | (((bus) & 0xFF) << 16) | (((dev) & 0xFF) << 8) | (func))
+
+Superficially this looks pretty standard.  Why is is DWC specific?
+
+> +#define to_pcie_pmu(p) (container_of(p, struct dwc_pcie_pmu, pmu))
+
+Prefix that name.  I'm hopeful we'll have a PCI SIG defined PMU one
+day and when we do that macro belongs to that!
+to_dwc_pcie_pmu() is possibly fine.
+
+
+> +
+> +static struct platform_device *dwc_pcie_pmu_dev;
+> +static char *event_attr_name = "events";
+> +
+
+
+...
+
+> +
+> +static int dwc_pcie_find_ras_des_cap_position(struct pci_dev *pdev, int *pos)
+> +{
+> +	u32 header;
+> +	int vsec = 0;
+> +
+> +	while ((vsec = pci_find_next_ext_capability(pdev, vsec,
+> +						    PCI_EXT_CAP_ID_VNDR))) {
+
+This probably belongs in the PCI core in a similar fashion to the DVSEC
+helper.
+
+> +		pci_read_config_dword(pdev, vsec + PCI_VNDR_HEADER, &header);
+> +		/* Is the device part of a DesignWare Cores PCIe Controller ? */
+
+Good question... This code doesn't check that.  VSEC ID is matched only with
+the Vendor ID of the devices - unlike DVSEC where this would all be nice
+and local.
+
+> +		if (PCI_VNDR_HEADER_ID(header) == DWC_PCIE_VSEC_ID &&
+> +		    PCI_VNDR_HEADER_REV(header) == DWC_PCIE_VSEC_REV) {
+> +			*pos = vsec;
+> +			return 0;
+> +		}
+> +	}
+> +
+> +	return -ENODEV;
+> +}
+> +
+> +static int dwc_pcie_pmu_discover(struct dwc_pcie_pmu_priv *priv)
+> +{
+> +	int val, where, index = 0;
+> +	struct pci_dev *pdev = NULL;
+> +	struct dwc_pcie_info_table *pcie_info;
+> +
+> +	priv->pcie_table =
+> +	    devm_kcalloc(priv->dev, RP_NUM_MAX, sizeof(*pcie_info), GFP_KERNEL);
+> +	if (!priv->pcie_table)
+> +		return -EINVAL;
+> +
+> +	pcie_info = priv->pcie_table;
+> +	while ((pdev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, pdev)) != NULL &&
+> +	       index < RP_NUM_MAX) {
+
+This having a driver than then walks the pci topology to find root ports and add
+extra stuff to them is not a clean solution.
+
+The probing should be driven from the existing PCI driver topology.
+There are a bunch of new features we need to add to ports in the near future
+anyway - this would just be another one.
+Same problem exists for CXL CPMU perf devices - so far we only support those
+on end points, partly because we need a clean way to probe them on pci ports.
+
+Whatever we come up with there will apply here as well.
+
+
+> +		if (!pci_dev_is_rootport(pdev))
+> +			continue;
+> +
+> +		pcie_info[index].bdf = dwc_pcie_get_bdf(pdev);
+> +		pcie_info[index].pdev = pdev;
+Probably want a sanity check this has a vendor ID appropriate the VSEC you are about
+to look for.
+
+> +
+> +		if (dwc_pcie_find_ras_des_cap_position(pdev, &where))
+> +			continue;
+> +
+> +		pcie_info[index].cap_pos = where;
+> +
+> +		pci_read_config_dword(pdev,
+> +				pdev->pcie_cap + DWC_PCIE_LINK_CAPABILITIES_REG,
+> +				&val);
+> +		pcie_info[index].num_lanes =
+> +			(val & DWC_PCIE_LANE_MASK) >> DWC_PCIE_LANE_SHIFT;
+
+FIELD_GET()
+
+> +		index++;
+> +	}
+> +
+> +	if (!index)
+> +		return -ENODEV;
+> +
+> +	priv->pcie_ctrl_num = index;
+> +
+> +	return 0;
+> +}
+> +
+> +static inline int dwc_pcie_pmu_read_dword(struct dwc_pcie_info_table *pcie_info,
+> +					  u32 reg, u32 *val)
+> +{
+> +	return pci_read_config_dword(pcie_info->pdev, pcie_info->cap_pos + reg,
+> +				     val);
+> +}
+> +
+> +static inline int dwc_pcie_pmu_write_dword(struct dwc_pcie_info_table
+> +					   *pcie_info, u32 reg, u32 val)
+> +{
+> +	return pci_write_config_dword(pcie_info->pdev, pcie_info->cap_pos + reg,
+> +				      val);
+> +}
+
+These two wrappers don't add a lot so I would drop them.
+
+> +
+> +static int dwc_pcie_pmu_set_event_id(struct dwc_pcie_info_table *pcie_info,
+> +				     int event_id)
+> +{
+> +	int ret;
+> +	u32 val;
+> +
+> +	ret = dwc_pcie_pmu_read_dword(pcie_info, DWC_PCIE_EVENT_CNT_CTRL, &val);
+> +	if (ret) {
+> +		pci_err(pcie_info->pdev, "PCIe read fail\n");
+> +		return ret;
+> +	}
+> +
+> +	val &= ~DWC_PCIE__CNT_ENABLE_MASK;
+> +	val &= ~DWC_PCIE__CNT_EVENT_SELECT_MASK;
+> +	val |= event_id << DWC_PCIE__CNT_EVENT_SELECT_SHIFT;
+
+FIELD_PREP()
+
+> +
+> +	ret = dwc_pcie_pmu_write_dword(pcie_info, DWC_PCIE_EVENT_CNT_CTRL, val);
+> +	if (ret)
+> +		pci_err(pcie_info->pdev, "PCIe write fail\n");
+> +
+> +	return ret;
+> +}
+
+...
+
+> +
+> +static int dwc_pcie_pmu_read_base_time_counter(struct dwc_pcie_info_table
+> +					       *pcie_info, u64 *counter)
+> +{
+> +	u32 ret, val;
+> +
+> +	ret = dwc_pcie_pmu_read_dword(pcie_info,
+> +				      DWC_PCIE_TIME_BASED_ANALYSIS_DATA_REG_HIGH,
+> +				      &val);
+> +	if (ret) {
+> +		pci_err(pcie_info->pdev, "PCIe read fail\n");
+> +		return ret;
+> +	}
+> +
+> +	*counter = val;
+> +	*counter <<= 32;
+
+This looks like you could get ripping between the upper and lower dwords.
+What prevents that? Perhaps a comment to say why that's not a problem?
+
+> +
+> +	ret = dwc_pcie_pmu_read_dword(pcie_info,
+> +				      DWC_PCIE_TIME_BASED_ANALYSIS_DATA_REG_LOW,
+> +				      &val);
+> +	if (ret) {
+> +		pci_err(pcie_info->pdev, "PCIe read fail\n");
+> +		return ret;
+> +	}
+> +
+> +	*counter += val;
+> +
+> +	return ret;
+> +}
+...
+
+
+> +static int __dwc_pcie_pmu_probe(struct dwc_pcie_pmu_priv *priv,
+> +				struct dwc_pcie_info_table *pcie_info)
+> +{
+> +	int ret;
+> +	char *name;
+> +	struct dwc_pcie_pmu *pcie_pmu;
+> +	struct device *dev;
+> +
+> +	if (!pcie_info || !pcie_info->pdev) {
+> +		pci_err(pcie_info->pdev, "Input parameter is invalid\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	pcie_pmu = &pcie_info->pcie_pmu;
+> +	dev = &pcie_info->pdev->dev;
+> +
+> +	ret = dwc_pcie_pmu_attr_init(priv, pcie_info);
+> +	if (ret) {
+> +		pci_err(pcie_info->pdev, "PMU attr init fail ret=%d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	pcie_pmu->dev = dev;
+> +	pcie_pmu->pmu = (struct pmu) {
+> +		.module		= THIS_MODULE,
+> +		.task_ctx_nr	= perf_invalid_context,
+> +		.pmu_enable	= NULL,
+> +		.pmu_disable	= NULL,
+> +		.event_init	= dwc_pcie_pmu_event_init,
+> +		.add		= dwc_pcie_pmu_event_add,
+> +		.del		= dwc_pcie_pmu_event_del,
+> +		.start		= dwc_pcie_pmu_event_start,
+> +		.stop		= dwc_pcie_pmu_event_stop,
+> +		.read		= dwc_pcie_pmu_event_read,
+> +		.attr_groups	= pcie_info->pcie_pmu_attr_groups,
+> +		.capabilities	= PERF_PMU_CAP_NO_EXCLUDE,
+> +	};
+> +
+> +	name = devm_kasprintf(priv->dev, GFP_KERNEL, "pcie_bdf_%x",
+> +			      pcie_info->bdf);
+> +	if (!name)
+> +		return -ENOMEM;
+> +
+> +	/* Pick one CPU to be the preferred one to use */
+> +	pcie_pmu->on_cpu = raw_smp_processor_id();
+Above there are references to multiple dies.  Maybe at least make sure you
+are on a near by die? (I'm guessing at topology!)
+> +
+> +	ret = perf_pmu_register(&pcie_pmu->pmu, name, -1);
+> +	if (ret) {
+> +		pci_err(pcie_info->pdev, "Error %d registering PMU @%x\n", ret,
+> +				 pcie_info->bdf);
+> +		return ret;
+> +	}
+> +
+> +	pcie_info->pmu_is_register = DWC_PCIE_PMU_HAS_REGISTER;
+
+As below. I think you can drop this state info.
+
+> +
+> +	return ret;
+> +}
+> +
+> +static int dwc_pcie_pmu_remove(struct platform_device *pdev)
+> +{
+> +	struct dwc_pcie_pmu_priv *priv = platform_get_drvdata(pdev);
+> +	int index;
+> +	struct dwc_pcie_pmu *pcie_pmu;
+> +
+> +	for (index = 0; index < priv->pcie_ctrl_num; index++)
+> +		if (priv->pcie_table[index].pmu_is_register) {
+> +			pcie_pmu = &priv->pcie_table[index].pcie_pmu;
+> +			perf_pmu_unregister(&pcie_pmu->pmu);
+> +		}
+> +	return 0;
+> +}
+> +
+> +static int dwc_pcie_pmu_probe(struct platform_device *pdev)
+> +{
+> +	int ret = 0;
+
+Initialized in all paths where it is used. Compiler should be able to tell
+that so I doubt you need this to be set to 0 here.
+
+> +	int pcie_index;
+> +	struct dwc_pcie_pmu_priv *priv;
+> +
+> +	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
+> +	if (!priv)
+> +		return -ENOMEM;
+> +	priv->dev = &pdev->dev;
+> +	platform_set_drvdata(pdev, priv);
+> +
+> +	/* If PMU is not support on current platform, keep slient */
+> +	if (dwc_pcie_pmu_discover(priv))
+> +		return 0;
+> +
+> +	for (pcie_index = 0; pcie_index < priv->pcie_ctrl_num; pcie_index++) {
+> +		struct pci_dev *rp = priv->pcie_table[pcie_index].pdev;
+> +
+> +		ret = __dwc_pcie_pmu_probe(priv, &priv->pcie_table[pcie_index]);
+> +		if (ret) {
+> +			dev_err(&rp->dev, "PCIe PMU probe fail\n");
+> +			goto pmu_unregister;
+> +		}
+> +	}
+> +	dev_info(&pdev->dev, "PCIe PMUs registered\n");
+
+Noise in the logs.  There are lots of ways to know if we reached this point
+so this adds no value.
+
+> +
+> +	return 0;
+> +
+> +pmu_unregister:
+> +	dwc_pcie_pmu_remove(pdev);
+
+I'd much rather see the unwind here directly so we can clearly see that it undoes
+the result of errors in this function.  That removes the need to use the
+is_registered flag in the remove() function simplifying that flow as well.
+
+
+> +
+> +	return ret;
+> +}
+> +
+> +static struct platform_driver dwc_pcie_pmu_driver = {
+> +	.probe = dwc_pcie_pmu_probe,
+> +	.remove = dwc_pcie_pmu_remove,
+> +	.driver = {.name = DRV_NAME,},
+More common to format as
+	.driver = {
+		.name = "dwc_pcie_pmu",
+	},
+};
+Note use of string here.  Using a define just forces people to
+look for this in the wrong place.
+
+> +};
+> +
+> +static int __init dwc_pcie_pmu_init(void)
+> +{
+> +	int ret;
+> +
+> +	ret = platform_driver_register(&dwc_pcie_pmu_driver);
+> +
+> +	if (ret)
+> +		return ret;
+> +
+> +	dwc_pcie_pmu_dev =
+> +	    platform_device_register_simple(DEV_NAME, -1, NULL, 0);
+
+I'd normally expect to see the device created as a result of firmware
+description (ACPI DSDT / or Device tree)
+It is unusual to create a 'real' device directly in the driver
+init - that's normally reserved for various fake / software devices.
+
+
+> +	if (IS_ERR(dwc_pcie_pmu_dev)) {
+> +		platform_driver_unregister(&dwc_pcie_pmu_driver);
+> +		return PTR_ERR(dwc_pcie_pmu_dev);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void __exit dwc_pcie_pmu_exit(void)
+> +{
+> +	platform_device_unregister(dwc_pcie_pmu_dev);
+> +	platform_driver_unregister(&dwc_pcie_pmu_driver);
+> +}
+> +
+> +module_init(dwc_pcie_pmu_init);
+> +module_exit(dwc_pcie_pmu_exit);
+> +
+> +MODULE_DESCRIPTION("PMU driver for DesignWare Cores PCI Express Controller");
+> +MODULE_AUTHOR("xueshuai@linux.alibaba.com");
+> +MODULE_AUTHOR("yinxuan_cw@linux.alibaba.com");
+> +MODULE_LICENSE("GPL v2");
+
