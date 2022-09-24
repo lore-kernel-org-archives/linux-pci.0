@@ -2,112 +2,146 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59553C32771
-	for <linux-pci@archiver.kernel.org>; Sat, 24 Sep 2022 09:24:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18347C6FA86
+	for <linux-pci@archiver.kernel.org>; Sat, 24 Sep 2022 16:03:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233510AbiIXJY0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 24 Sep 2022 05:24:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46666 "EHLO
+        id S233895AbiIXQDK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 24 Sep 2022 12:03:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34352 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233492AbiIXJYY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2022 05:24:24 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82AB2139BE8;
-        Sat, 24 Sep 2022 02:24:23 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id CC02CB80B3C;
-        Sat, 24 Sep 2022 09:24:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58685C433C1;
-        Sat, 24 Sep 2022 09:24:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664011460;
-        bh=sHPgm7Bf+Utqg2hFFou3EDhEcuSIIzXwSlAILmNgHAU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TIuYjPB/+Rt6i6qzAkLmJ9X2HVFB/WRMRrv+JBkqDg8om4pdGFwvK0uUG8Y4JHst+
-         O8wSAC8d6qFurbDaseuyKqnoX02Smx9RULumCegYwjiIaaNand/QVwdxaz3JHW/3tq
-         EsGcq14MwISCbCIhbuYgYMArXUq8qqAu+MO0eqxd6Njtlhc3jY78NDh3PB/rRucA7H
-         54exG+Q29BfXcQMYf9DUBUdUs6d4kxeco2xvV9LEch6GNtMRIeKQHXCOnmR8Y2SMBz
-         ftYhKyateVlYVtKNT7aJL9j4EAx7Gdj8aeTpa+WUjFk8LWE6qyXQErW4JupafxOCaM
-         Wvrl72I4sJ7nA==
-Received: by pali.im (Postfix)
-        id C5F871231; Sat, 24 Sep 2022 11:24:17 +0200 (CEST)
-From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
+        with ESMTP id S233749AbiIXQDJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2022 12:03:09 -0400
+Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E602B386BA
+        for <linux-pci@vger.kernel.org>; Sat, 24 Sep 2022 09:03:05 -0700 (PDT)
+Received: by mail-lf1-x135.google.com with SMTP id i26so4600614lfp.11
+        for <linux-pci@vger.kernel.org>; Sat, 24 Sep 2022 09:03:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date;
+        bh=BucyVOTsY93CmgDyVGjJvCDbPEfzNq863eBEEbR0ty8=;
+        b=P8iGfXM7V6D4PZU/Rq9v2t6Wz7Ww4eUzr8f2CGVtC9TxKUOKUDT0Qn+cOXuqKmmfht
+         n/zW35BOL37tMg2mkRNgSHnoWHB/v6CbmVIsH81Cg9+Qt8yku2hzWapyVUu4qaMphlTo
+         x64l7DrN1M8ceHYp4ObS2L297GC4gsAYl13Efa4otrwxpb+t8LL4jYCoQBcJiXKJKd5y
+         G5z98gu7LMcENPuHjkqEUITbkQpJVKm/T2nnJAPi3qjVQzmobadAxUR/Ib+via5ROYM7
+         gEp8Vb7eoiBi06IEePKCIntawSR7cSTO97DBWesQ4aKyMUziLCwIIXQHO4MNcxDigBIr
+         mFxw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date;
+        bh=BucyVOTsY93CmgDyVGjJvCDbPEfzNq863eBEEbR0ty8=;
+        b=K9vtFx6+Uh7TJAYuQVHEJfb4mKTAk/0czCVjckMg0ZqsrtInfeQDjBwdBFosmCpa9K
+         +b4+wfBLeiu1pyLLAIAiyBiDSLZDIaafXho9koaCRLnNaE8bbUwM1bEpfjwA/QnTM1ON
+         FzYKzKmN7AiMzIN/ZA8YCAaCe6YyCOnLnOaOK6gB3PibTLmPvwU4vDJzifZDcq4/2rGW
+         K42LIqP2xf4AnLkTKJCx6HFf+XTb72HCkDJ06JdA7g9kOVdt1fVC3fa9QDc1N9MfKLy5
+         MYsMpzpT7tjQlrBj/x/ePlQc01ySqXTgyCY8n/CkdAhauEn4rBSbFAhZ7Nlnn8016L0X
+         u+vQ==
+X-Gm-Message-State: ACrzQf1xWlIz6obpKjHmG4WJyFTTi0CpPcigwANSKqFdKqckq6R9ESta
+        TKUV6YNw9/dZLWxRJZtSpM7/TA==
+X-Google-Smtp-Source: AMsMyM5+juhEb5OjwTdEs+P0qVZDQxw0PADVmXoMvEDJQAeFTGQ7aObsoWWWg7512TTP4B/tU9YgMA==
+X-Received: by 2002:a05:6512:3f8b:b0:492:d1ed:5587 with SMTP id x11-20020a0565123f8b00b00492d1ed5587mr5801675lfa.355.1664035384150;
+        Sat, 24 Sep 2022 09:03:04 -0700 (PDT)
+Received: from eriador.lumag.spb.ru ([95.161.222.31])
+        by smtp.gmail.com with ESMTPSA id 9-20020ac25f09000000b00499f9ba6af0sm1928015lfq.207.2022.09.24.09.03.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 24 Sep 2022 09:03:03 -0700 (PDT)
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+To:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@somainline.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Sergio Paracuellos <sergio.paracuellos@gmail.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/3] PCI: ftpci100: Use PCI_CONF1_ADDRESS() macro
-Date:   Sat, 24 Sep 2022 11:24:03 +0200
-Message-Id: <20220924092404.31776-3-pali@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20220924092404.31776-1-pali@kernel.org>
-References: <20220924092404.31776-1-pali@kernel.org>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Philipp Zabel <p.zabel@pengutronix.de>,
+        Johan Hovold <johan@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org
+Subject: [PATCH v4 0/6] PCI: qcom: Support using the same PHY for both RC and EP
+Date:   Sat, 24 Sep 2022 19:02:56 +0300
+Message-Id: <20220924160302.285875-1-dmitry.baryshkov@linaro.org>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Simplify pci-ftpci100.c driver code and use new PCI_CONF1_ADDRESS() macro
-for accessing PCI config space.
+Programming of QMP PCIe PHYs slightly differs between RC and EP modes.
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
----
- drivers/pci/controller/pci-ftpci100.c | 21 ++++-----------------
- 1 file changed, 4 insertions(+), 17 deletions(-)
+Currently both qcom and qcom-ep PCIe controllers setup the PHY in the
+default mode, making it impossible to select at runtime whether the PHY
+should be running in RC or in EP modes. Usually this is not an issue,
+since for most devices only the RC mode is used. Some devices (SDX55)
+currently support only the EP mode without supporting the RC mode (at
+this moment).
 
-diff --git a/drivers/pci/controller/pci-ftpci100.c b/drivers/pci/controller/pci-ftpci100.c
-index 88980a44461d..0cfd9d5a497c 100644
---- a/drivers/pci/controller/pci-ftpci100.c
-+++ b/drivers/pci/controller/pci-ftpci100.c
-@@ -103,13 +103,6 @@
- #define FARADAY_PCI_DMA_MEM2_BASE	0x00000000
- #define FARADAY_PCI_DMA_MEM3_BASE	0x00000000
- 
--/* Defines for PCI configuration command register */
--#define PCI_CONF_ENABLE		BIT(31)
--#define PCI_CONF_WHERE(r)	((r) & 0xFC)
--#define PCI_CONF_BUS(b)		(((b) & 0xFF) << 16)
--#define PCI_CONF_DEVICE(d)	(((d) & 0x1F) << 11)
--#define PCI_CONF_FUNCTION(f)	(((f) & 0x07) << 8)
--
- /**
-  * struct faraday_pci_variant - encodes IP block differences
-  * @cascaded_irq: this host has cascaded IRQs from an interrupt controller
-@@ -190,11 +183,8 @@ static int faraday_raw_pci_read_config(struct faraday_pci *p, int bus_number,
- 				       unsigned int fn, int config, int size,
- 				       u32 *value)
- {
--	writel(PCI_CONF_BUS(bus_number) |
--			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
--			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
--			PCI_CONF_WHERE(config) |
--			PCI_CONF_ENABLE,
-+	writel(PCI_CONF1_ADDRESS(bus_number, PCI_SLOT(fn),
-+				 PCI_FUNC(fn), config),
- 			p->base + FTPCI_CONFIG);
- 
- 	*value = readl(p->base + FTPCI_DATA);
-@@ -225,11 +215,8 @@ static int faraday_raw_pci_write_config(struct faraday_pci *p, int bus_number,
- {
- 	int ret = PCIBIOS_SUCCESSFUL;
- 
--	writel(PCI_CONF_BUS(bus_number) |
--			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
--			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
--			PCI_CONF_WHERE(config) |
--			PCI_CONF_ENABLE,
-+	writel(PCI_CONF1_ADDRESS(bus_number, PCI_SLOT(fn),
-+				 PCI_FUNC(fn), config),
- 			p->base + FTPCI_CONFIG);
- 
- 	switch (size) {
+Nevertheless some of the Qualcomm platforms (e.g. the aforementioned
+SDX55) would still benefit from being able to switch between RC and EP
+depending on the driver being used. While it is possible to use
+different compat strings for the PHY depending on the mode, it seems
+like an incorrect approach, since the PHY doesn't differ between
+usecases. It's the PCIe controller, who should decide how to configure
+the PHY.
+
+This patch series implements the ability to select between RC and EP
+modes, by allowing the PCIe QMP PHY driver to switch between
+programming tables.
+
+This patchseries depends on the header from the pre-6.1 phy/next. Thus
+after the 6.1 the PCIe patches can be applied independently of the PHY
+part.
+
+Changes since v3:
+- Rebased on top of phy/next to pick in newly defined
+  PHY_MODE_PCIE_RC/EP.
+- Renamed 'main' to 'common' and 'secondary' to 'extra' to reflect the
+  intention of the split (the 'common' tables and the 'extra for the ...
+  mode' tables).
+- Merged the 'pointer' patch into first and second patches to make them
+  more obvious.
+
+Changes since v2:
+- Added PHY_SUBMODE_PCIE_RC/EP defines (Vinod),
+- Changed `primary' table name to `main', added extra comments
+  describing that `secondary' are the additional tables, not required in
+  most of the cases (following the suggestion by Johan to rename
+  `primary' table),
+- Changed secondary tables into the pointers to stop wasting extra
+  memory (Vinod),
+- Split several functions for programming the PHY using these tables.
+
+Changes since v1:
+- Split the if(table) removal to the separate patch
+- Expanded commit messages and comments to provide additional details
+- Fixed build error on pcie-qcom.c
+- Added support for EP mode on sm8450 to demonstrate the usage of this
+  patchset
+
+Changes since RFC:
+- Fixed the compilation of PCIe EP driver,
+- Changed pri/sec names to primary and secondary,
+- Added comments regarding usage of secondary_rc/_ep fields.
+
+Dmitry Baryshkov (6):
+  phy: qcom-qmp-pcie: split register tables into common and extra parts
+  phy: qcom-qmp-pcie: split PHY programming to separate functions
+  phy: qcom-qmp-pcie: support separate tables for EP mode
+  phy: qcom-qmp-pcie: Support SM8450 PCIe1 PHY in EP mode
+  PCI: qcom: Setup PHY to work in RC mode
+  PCI: qcom-ep: Setup PHY to work in EP mode
+
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     |   5 +
+ drivers/pci/controller/dwc/pcie-qcom.c        |   5 +
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      | 298 +++++++++++++-----
+ .../qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h    |   1 +
+ 4 files changed, 229 insertions(+), 80 deletions(-)
+
 -- 
-2.20.1
+2.35.1
 
