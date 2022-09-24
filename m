@@ -2,233 +2,97 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39A78C6FA9A
-	for <linux-pci@archiver.kernel.org>; Sat, 24 Sep 2022 16:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F02C7C07E9D
+	for <linux-pci@archiver.kernel.org>; Sat, 24 Sep 2022 22:35:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233935AbiIXQDP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 24 Sep 2022 12:03:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34428 "EHLO
+        id S233935AbiIXWfi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 24 Sep 2022 18:35:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233928AbiIXQDL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2022 12:03:11 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9215C39B8F
-        for <linux-pci@vger.kernel.org>; Sat, 24 Sep 2022 09:03:09 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id j16so4676935lfg.1
-        for <linux-pci@vger.kernel.org>; Sat, 24 Sep 2022 09:03:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=M5n5dCOKuNZ01cFL9LjAdRZFGkruzMME2BozEvloAHI=;
-        b=yQeaw3gG80YxOqTM2BeEAyrcDnFfh5SQCLrNinO9S8q5RpsAnG+pOkB+hVvcgTt6Gy
-         nAYmjSQ3o2F/r900k73qFKoF5jM7OmiTaQ2ky//yUrCrkJz8PgQHqsXHVQapUWdfzrTf
-         rhOsN/GcTzvo0U1lvBcFwWfO20B6Nh3EjCZBbpHyQGwb+QBsUdbE6XkfQrd/MR4MwYmg
-         8RARP6kSpK+GmdcpJ0TuDYumKOjc9g1kWrpJ8JkiqmPPXSwqUsO/+ODvVolR4EWLXZaN
-         lbt2UaxNhyRGp0vWRLM4QN4Vpp2WcyMs0H3dNjUMvINjV9UgkZzA+h0p5mCn1pauWJlr
-         w0dw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=M5n5dCOKuNZ01cFL9LjAdRZFGkruzMME2BozEvloAHI=;
-        b=YXTKEXXY4gpbydI0sDsCh4anevwbDs9n+W/0el1z+mww8JuCGso4/iGfQ9yhmah1/w
-         Xb/bhUxJvm+/EEOIcTZ1b/cimtPoza1IJx37nTUS1pJ7VGqpUIdc+rtdS5GGecEWnEcL
-         zfJ7/O6HKT4YilF5q9umxRTaEYoGZHV5oXwXjktpCMOZkuKijP30oVAX3PPmSk33O2gu
-         oIkmI2gcTSdLvOU1Io4D8RZShr9fDcjGoIuiP9ZHT2FhXWTvBQhLGcL8CSlHtdj4+dJ2
-         gpvxTXAlkZkakwJtYxsNaxYSTK1nU+7dhDNZVhm1dhep/qz6HAzUak5PG1TNZcBtFFnF
-         KC9Q==
-X-Gm-Message-State: ACrzQf2eb/Dcp0ZBxWln7AWtXAJkpPkxNthQpJYpI81cRfEYDbNyGgct
-        YIkJqHwl0bVSJSkC11+OBnjOdQ==
-X-Google-Smtp-Source: AMsMyM6E5YAyujwi28hcEdBdNYnre6OFmBOsKzoPbIE4DmMx9E0GZ5NM9EXQIFPI2+jvDPP4f29caQ==
-X-Received: by 2002:ac2:46f9:0:b0:498:f633:8136 with SMTP id q25-20020ac246f9000000b00498f6338136mr5836122lfo.117.1664035387548;
-        Sat, 24 Sep 2022 09:03:07 -0700 (PDT)
-Received: from eriador.lumag.spb.ru ([95.161.222.31])
-        by smtp.gmail.com with ESMTPSA id 9-20020ac25f09000000b00499f9ba6af0sm1928015lfq.207.2022.09.24.09.03.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Sep 2022 09:03:07 -0700 (PDT)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Philipp Zabel <p.zabel@pengutronix.de>,
-        Johan Hovold <johan@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org
-Subject: [PATCH v4 4/6] phy: qcom-qmp-pcie: Support SM8450 PCIe1 PHY in EP mode
-Date:   Sat, 24 Sep 2022 19:03:00 +0300
-Message-Id: <20220924160302.285875-5-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220924160302.285875-1-dmitry.baryshkov@linaro.org>
-References: <20220924160302.285875-1-dmitry.baryshkov@linaro.org>
+        with ESMTP id S229660AbiIXWfh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2022 18:35:37 -0400
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 952542FFE9;
+        Sat, 24 Sep 2022 15:35:35 -0700 (PDT)
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 28OMZOWE122504;
+        Sat, 24 Sep 2022 17:35:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1664058924;
+        bh=Icw6d4OdZKqCcXq6wLYUsMbI5ceyx2wFeFx2Bd30FLg=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=hRjgamhkNAB5kFvXrfiyIY+4+OHDX3sCd36u+6nHWSv1Z0Lr12Q1cxnNQcpIo0jof
+         sONuvYigCx2URvMM52eiCMCgd5bZvrUh7LpYk7x2Zl4YSqZJHoME2XiYvReCzvn72H
+         g0bX7bLiEurteGAdWTHENKKhDoPc/2fMITq5o++M=
+Received: from DFLE115.ent.ti.com (dfle115.ent.ti.com [10.64.6.36])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 28OMZO92039821
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 24 Sep 2022 17:35:24 -0500
+Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE115.ent.ti.com
+ (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6; Sat, 24
+ Sep 2022 17:35:24 -0500
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE101.ent.ti.com
+ (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6 via
+ Frontend Transport; Sat, 24 Sep 2022 17:35:24 -0500
+Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 28OMZM58030391;
+        Sat, 24 Sep 2022 17:35:23 -0500
+From:   Matt Ranostay <mranostay@ti.com>
+To:     <bhelgaas@google.com>, <krzk@kernel.org>, <robh+dt@kernel.org>,
+        <kishon@ti.com>, <vigneshr@ti.com>
+CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        Matt Ranostay <mranostay@ti.com>
+Subject: [PATCH v2 1/2] dt-bindings: PCI: ti,j721e-pci-host: add interrupt controller definition
+Date:   Sat, 24 Sep 2022 15:35:16 -0700
+Message-ID: <20220924223517.123343-2-mranostay@ti.com>
+X-Mailer: git-send-email 2.38.0.rc0.52.gdda7228a83
+In-Reply-To: <20220924223517.123343-1-mranostay@ti.com>
+References: <20220924223517.123343-1-mranostay@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for using PCIe1 (gen4x2) in EP mode on SM8450. The tables to
-program are mostly common with the RC mode tables, so only register
-difference are split into separate RC and EP tables.
+Add missing 'interrupt-controller' property and related subnodes to resolve
+the following warning:
 
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+arch/arm64/boot/dts/ti/k3-j721s2-common-proc-board.dtb: pcie@2910000: Unevaluated properties are not allowed ('interrupt-controller' was unexpected)
+        From schema: Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+
+Signed-off-by: Matt Ranostay <mranostay@ti.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      | 78 +++++++++++++++----
- .../qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h    |  1 +
- 2 files changed, 64 insertions(+), 15 deletions(-)
+ .../devicetree/bindings/pci/ti,j721e-pci-host.yaml  | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-index 1fc23df59454..6dd4bc771979 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-@@ -1184,15 +1184,29 @@ static const struct qmp_phy_init_tbl sm8450_qmp_gen3x1_pcie_pcs_misc_tbl[] = {
- };
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+index 2115d5a3f0e1..0f5914a22c14 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+@@ -76,6 +76,19 @@ properties:
  
- static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_serdes_tbl[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_BIAS_EN_CLKBUFLR_EN, 0x14),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_IVCO, 0x0f),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP_EN, 0x46),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP_CFG, 0x04),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_VCO_TUNE_MAP, 0x02),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_HSCLK_SEL, 0x12),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_HSCLK_HS_SWITCH_SEL, 0x00),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CORECLK_DIV_MODE0, 0x0a),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CORECLK_DIV_MODE1, 0x04),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CMN_MISC1, 0x88),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CMN_CONFIG, 0x06),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CMN_MODE, 0x14),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_VCO_DC_LEVEL_CTRL, 0x0f),
-+};
-+
-+static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_rc_serdes_tbl[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SSC_PER1, 0x31),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SSC_PER2, 0x01),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SSC_STEP_SIZE1_MODE0, 0xde),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SSC_STEP_SIZE2_MODE0, 0x07),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SSC_STEP_SIZE1_MODE1, 0x97),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SSC_STEP_SIZE2_MODE1, 0x0c),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_BIAS_EN_CLKBUFLR_EN, 0x14),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CLK_ENABLE1, 0x90),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_IVCO, 0x0f),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CP_CTRL_MODE0, 0x06),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CP_CTRL_MODE1, 0x06),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_RCTRL_MODE0, 0x16),
-@@ -1200,8 +1214,6 @@ static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_serdes_tbl[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CCTRL_MODE0, 0x36),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CCTRL_MODE1, 0x36),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SYSCLK_EN_SEL, 0x08),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP_EN, 0x46),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP_CFG, 0x04),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP1_MODE0, 0x0a),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP2_MODE0, 0x1a),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP1_MODE1, 0x14),
-@@ -1214,17 +1226,8 @@ static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_serdes_tbl[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_DIV_FRAC_START1_MODE1, 0x55),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_DIV_FRAC_START2_MODE1, 0x55),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_DIV_FRAC_START3_MODE1, 0x05),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_VCO_TUNE_MAP, 0x02),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CLK_SELECT, 0x34),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_HSCLK_SEL, 0x12),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_HSCLK_HS_SWITCH_SEL, 0x00),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CORECLK_DIV_MODE0, 0x0a),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CORECLK_DIV_MODE1, 0x04),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CMN_MISC1, 0x88),
- 	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CORE_CLK_EN, 0x20),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CMN_CONFIG, 0x06),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CMN_MODE, 0x14),
--	QMP_PHY_INIT_CFG(QSERDES_V5_COM_VCO_DC_LEVEL_CTRL, 0x0f),
- };
+   msi-map: true
  
- static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_tx_tbl[] = {
-@@ -1292,14 +1295,44 @@ static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_pcs_tbl[] = {
- };
- 
- static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_pcs_misc_tbl[] = {
--	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_ENDPOINT_REFCLK_DRIVE, 0xc1),
--	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_OSC_DTCT_ACTIONS, 0x00),
- 	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_G4_EQ_CONFIG5, 0x02),
- 	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_EQ_CONFIG1, 0x16),
- 	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_RX_MARGINING_CONFIG3, 0x28),
- 	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_G4_PRE_GAIN, 0x2e),
- };
- 
-+static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_rc_pcs_misc_tbl[] = {
-+	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_ENDPOINT_REFCLK_DRIVE, 0xc1),
-+	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_OSC_DTCT_ACTIONS, 0x00),
-+};
++  interrupt-controller:
++    type: object
++    additionalProperties: false
 +
-+static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_ep_serdes_tbl[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_BG_TIMER, 0x02),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SYS_CLK_CTRL, 0x07),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CP_CTRL_MODE0, 0x27),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CP_CTRL_MODE1, 0x0a),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_RCTRL_MODE0, 0x17),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_RCTRL_MODE1, 0x19),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CCTRL_MODE0, 0x00),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CCTRL_MODE1, 0x03),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SYSCLK_EN_SEL, 0x00),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP1_MODE0, 0xff),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP2_MODE0, 0x04),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP1_MODE1, 0xff),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP2_MODE1, 0x09),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_DEC_START_MODE0, 0x19),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_DEC_START_MODE1, 0x28),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN0_MODE0, 0xfb),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN1_MODE0, 0x01),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN0_MODE1, 0xfb),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN1_MODE1, 0x01),
-+	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CORE_CLK_EN, 0x60),
-+};
++    properties:
++      interrupt-controller: true
 +
-+static const struct qmp_phy_init_tbl sm8450_qmp_gen4x2_pcie_ep_pcs_misc_tbl[] = {
-+	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_OSC_DTCT_MODE2_CONFIG5, 0x08),
-+};
++      '#interrupt-cells':
++        const: 1
 +
- struct qmp_phy_cfg_tables {
- 	const struct qmp_phy_init_tbl *serdes_tbl;
- 	int serdes_tbl_num;
-@@ -1851,6 +1884,21 @@ static const struct qmp_phy_cfg sm8450_qmp_gen4x2_pciephy_cfg = {
- 	.pcs_misc_tbl		= sm8450_qmp_gen4x2_pcie_pcs_misc_tbl,
- 	.pcs_misc_tbl_num	= ARRAY_SIZE(sm8450_qmp_gen4x2_pcie_pcs_misc_tbl),
- 	},
++      interrupts:
++        maxItems: 1
 +
-+	.extra_rc = &(struct qmp_phy_cfg_tables) {
-+	.serdes_tbl		= sm8450_qmp_gen4x2_pcie_rc_serdes_tbl,
-+	.serdes_tbl_num		= ARRAY_SIZE(sm8450_qmp_gen4x2_pcie_rc_serdes_tbl),
-+	.pcs_misc_tbl		= sm8450_qmp_gen4x2_pcie_rc_pcs_misc_tbl,
-+	.pcs_misc_tbl_num	= ARRAY_SIZE(sm8450_qmp_gen4x2_pcie_rc_pcs_misc_tbl),
-+	},
-+
-+	.extra_ep = &(struct qmp_phy_cfg_tables) {
-+	.serdes_tbl		= sm8450_qmp_gen4x2_pcie_ep_serdes_tbl,
-+	.serdes_tbl_num		= ARRAY_SIZE(sm8450_qmp_gen4x2_pcie_ep_serdes_tbl),
-+	.pcs_misc_tbl		= sm8450_qmp_gen4x2_pcie_ep_pcs_misc_tbl,
-+	.pcs_misc_tbl_num	= ARRAY_SIZE(sm8450_qmp_gen4x2_pcie_ep_pcs_misc_tbl),
-+	},
-+
- 	.clk_list		= sdm845_pciephy_clk_l,
- 	.num_clks		= ARRAY_SIZE(sdm845_pciephy_clk_l),
- 	.reset_list		= sdm845_pciephy_reset_l,
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h
-index 1eedf50cf9cb..c9fa90b45475 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h
-@@ -8,6 +8,7 @@
- 
- /* Only for QMP V5_20 PHY - PCIe PCS registers */
- #define QPHY_V5_20_PCS_PCIE_ENDPOINT_REFCLK_DRIVE	0x01c
-+#define QPHY_V5_20_PCS_PCIE_OSC_DTCT_MODE2_CONFIG5	0x084
- #define QPHY_V5_20_PCS_PCIE_OSC_DTCT_ACTIONS		0x090
- #define QPHY_V5_20_PCS_PCIE_EQ_CONFIG1			0x0a0
- #define QPHY_V5_20_PCS_PCIE_G4_EQ_CONFIG5		0x108
+ required:
+   - compatible
+   - reg
 -- 
-2.35.1
+2.38.0.rc0.52.gdda7228a83
 
