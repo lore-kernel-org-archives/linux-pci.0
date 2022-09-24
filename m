@@ -2,52 +2,52 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3A56C6FA94
-	for <linux-pci@archiver.kernel.org>; Sat, 24 Sep 2022 16:03:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEFF6C6FA97
+	for <linux-pci@archiver.kernel.org>; Sat, 24 Sep 2022 16:03:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233956AbiIXQDL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 24 Sep 2022 12:03:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34390 "EHLO
+        id S233892AbiIXQDO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 24 Sep 2022 12:03:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233871AbiIXQDK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2022 12:03:10 -0400
-Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A2C53A155
-        for <linux-pci@vger.kernel.org>; Sat, 24 Sep 2022 09:03:07 -0700 (PDT)
-Received: by mail-lj1-x22e.google.com with SMTP id b6so3106839ljr.10
-        for <linux-pci@vger.kernel.org>; Sat, 24 Sep 2022 09:03:07 -0700 (PDT)
+        with ESMTP id S233749AbiIXQDL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Sep 2022 12:03:11 -0400
+Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D733399D9
+        for <linux-pci@vger.kernel.org>; Sat, 24 Sep 2022 09:03:10 -0700 (PDT)
+Received: by mail-lj1-x22c.google.com with SMTP id c7so3091987ljm.12
+        for <linux-pci@vger.kernel.org>; Sat, 24 Sep 2022 09:03:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=5Fw2HWdlMkJhO3UC0znX6ahd5v6qxKMsjDOm0yRZsrg=;
-        b=Ic5WniG9E+e+bTFlBI8w1LvNb2y/C2zRUPlxP2fFTaD+swgTZmOjQ/sS6gbwvEzBFH
-         Gspt1VY8P7b3y8gXCY9y2W+wZBPpKaYfg/MEYciPh1Mjm5Wfb6oOtz7ORudtAP0RHXBN
-         RdBYxz3Q8NxhSBZ6+q3vDKnX8h7Zn5eLnI/6m8i67N8QfuN6ciWFnQdeYTYBneCdWnpW
-         IUM109P9OXS7auXiVXL5dRiMMPOWiouHkA9exp67azOESHVH/APF+v4M/U+SjrInZwga
-         AMxxP0r5+DKdvN/4yWD2BrRRh6a5DKGCZQY983isgPkCgUxTlz6XNZtkacRUDkmfRsQe
-         o7LA==
+        bh=3e3cQ74Y/JA5vVePYbQS/YusMBYX3fuhrdntX7uBS3U=;
+        b=KUvqDjmY6EuOVysiL1IAoJUyVxCGESqo2ysnLe7B2bagzto7dyFl72pP0ZiwwfZBkg
+         qOTfaDBx65yV6LoTMlxegEUgK0O56I0ustInI0N6XtpfxjX7R7ogNyzsIuWOob0S6tsu
+         elnFplzczGm9bzjvr0p2m5kMPrk6ti+if/OtNJsH0ikF8ynAU4jGWZWhl3z+dySKLTwX
+         1PbjTcUy0Qnk/TtA9Wq031WMk78tFLHt95leoMpf7cr84+/8kPE253CNMD4fUfaLE6wa
+         0PjQR5Ge0sTcvr1mUMrk9DiI8olFIrVokzLb8gX9LVoaBEM2+Husnkc/ned05NFE6vf6
+         a/iQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date;
-        bh=5Fw2HWdlMkJhO3UC0znX6ahd5v6qxKMsjDOm0yRZsrg=;
-        b=Jt8Em/ukd5LrO6W3JhDNEJcLPza6eRkt4MBe4tte0rDSQmpKX8p7fo7Up4S48CXrLe
-         7oDTfnbsCa8SatyMs4wVwZMH4c0td9uV4f7RgVNyuIgnQGqjqUUf61q7QLSBJeQJCvRk
-         Pzk8VXWMi6ZGDf9wO5wYF+1Hr9jQ2WnACYJ0Fx1vNdeQmWu6upHH7p+TCh8APxYqJH8Q
-         Lt060PRswZAalLdolW6u73zqZ/hbS6cjhs4eicoRjXAJVttB99IUiwlZ+zj2oGGwDFVX
-         9812/aPnZLJgnXymJt00IfahUNCzu+UoOUwP0uj+NBpVmiiIA2CIPeh9yfQHvKMpYB60
-         mZvw==
-X-Gm-Message-State: ACrzQf01T08ghwR5OpPbXElcSXAqu5QHWUIADcTQnbZJR2ZiHb/KjJ1l
-        FfpGC+NlBirdkztoUfnxxoNGHw==
-X-Google-Smtp-Source: AMsMyM7M2IxI4tauVrsGy1D2gHP8KO5950S7LC1ANkRMgbdrMgYnj6X6XZ2T7LDNU9sEdoDucfRIGw==
-X-Received: by 2002:a05:651c:234:b0:26c:77bf:8eb3 with SMTP id z20-20020a05651c023400b0026c77bf8eb3mr3313764ljn.178.1664035385780;
-        Sat, 24 Sep 2022 09:03:05 -0700 (PDT)
+        bh=3e3cQ74Y/JA5vVePYbQS/YusMBYX3fuhrdntX7uBS3U=;
+        b=aimh6T/CwSBjUaRfQu4PAsOnzpYWFGRzXflP+TXSKOQuhYn59TGxk91kdoTImsFgCA
+         +Dphs7dEsBSGYskdqtYMJlJRK7XVkbGGbiYI+bLPrlHczS5w+7dTjaw0y0D6fU/0eM7n
+         JceWRHYirELiTAsvgDGQuEPfd5EN2u9WDMnLhTcIvJdB1HmZlqr52UAQahje+L40v5Wa
+         jy9/pRyakFUZsX48jdSQ9Mb5y4kJwl74hXEn1LwU9baOA7W+QwXSeNR2QJ0X98nSu4Vz
+         LaRxwUH59vEF7JbI8lRV7esuWIt3MMbPUSkMMh7UUtN8yYTUCK1CdDZQGn2WbxrHaUOw
+         syPw==
+X-Gm-Message-State: ACrzQf1COYJ/E8k9mGBoBFPywu8gkPz73NT1qGzwUJXFgSkzx7lAeaTZ
+        h+oSoHnuqOs6RZB6wz4QdHKgow==
+X-Google-Smtp-Source: AMsMyM5XQors/dq+7LJVGbMfHKBDMa+6z5wIeH38QsMBoDVJGocnChEF/rch6EwppsF29MaDYb65OQ==
+X-Received: by 2002:a05:651c:2103:b0:25d:6478:2a57 with SMTP id a3-20020a05651c210300b0025d64782a57mr4779718ljq.496.1664035388407;
+        Sat, 24 Sep 2022 09:03:08 -0700 (PDT)
 Received: from eriador.lumag.spb.ru ([95.161.222.31])
-        by smtp.gmail.com with ESMTPSA id 9-20020ac25f09000000b00499f9ba6af0sm1928015lfq.207.2022.09.24.09.03.05
+        by smtp.gmail.com with ESMTPSA id 9-20020ac25f09000000b00499f9ba6af0sm1928015lfq.207.2022.09.24.09.03.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 Sep 2022 09:03:05 -0700 (PDT)
+        Sat, 24 Sep 2022 09:03:08 -0700 (PDT)
 From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
@@ -63,9 +63,9 @@ To:     Andy Gross <agross@kernel.org>,
 Cc:     Philipp Zabel <p.zabel@pengutronix.de>,
         Johan Hovold <johan@kernel.org>, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-phy@lists.infradead.org
-Subject: [PATCH v4 2/6] phy: qcom-qmp-pcie: split PHY programming to separate functions
-Date:   Sat, 24 Sep 2022 19:02:58 +0300
-Message-Id: <20220924160302.285875-3-dmitry.baryshkov@linaro.org>
+Subject: [PATCH v4 5/6] PCI: qcom: Setup PHY to work in RC mode
+Date:   Sat, 24 Sep 2022 19:03:01 +0300
+Message-Id: <20220924160302.285875-6-dmitry.baryshkov@linaro.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220924160302.285875-1-dmitry.baryshkov@linaro.org>
 References: <20220924160302.285875-1-dmitry.baryshkov@linaro.org>
@@ -75,130 +75,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Split the code using PHY programming tables into separate functions,
-which take a single struct qmp_phy_cfg_tables instance.
+Call phy_set_mode_ext() to notify the PHY driver that the PHY is being
+used in the RC mode.
 
 Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp-pcie.c | 80 ++++++++++++++----------
- 1 file changed, 48 insertions(+), 32 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-index 30806816c8b0..6e8c74585670 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-@@ -1877,15 +1877,53 @@ static void qmp_pcie_configure(void __iomem *base,
- 	qmp_pcie_configure_lane(base, regs, tbl, num, 0xff);
- }
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 66886dc6e777..1027281bd6ff 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -22,6 +22,7 @@
+ #include <linux/pci.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/platform_device.h>
++#include <linux/phy/pcie.h>
+ #include <linux/phy/phy.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+@@ -1494,6 +1495,10 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+ 	if (ret)
+ 		return ret;
  
--static int qmp_pcie_serdes_init(struct qmp_phy *qphy)
-+static void qmp_pcie_serdes_init(struct qmp_phy *qphy, const struct qmp_phy_cfg_tables *tables)
- {
- 	const struct qmp_phy_cfg *cfg = qphy->cfg;
- 	void __iomem *serdes = qphy->serdes;
- 
--	qmp_pcie_configure(serdes, cfg->regs, cfg->common.serdes_tbl, cfg->common.serdes_tbl_num);
--	qmp_pcie_configure(serdes, cfg->regs, cfg->extra->serdes_tbl, cfg->extra->serdes_tbl_num);
-+	if (!tables)
-+		return;
- 
--	return 0;
-+	qmp_pcie_configure(serdes, cfg->regs, tables->serdes_tbl, tables->serdes_tbl_num);
-+}
++	ret = phy_set_mode_ext(pcie->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_RC);
++	if (ret)
++		goto err_deinit;
 +
-+static void qmp_pcie_lanes_init(struct qmp_phy *qphy, const struct qmp_phy_cfg_tables *tables)
-+{
-+	const struct qmp_phy_cfg *cfg = qphy->cfg;
-+	void __iomem *tx = qphy->tx;
-+	void __iomem *rx = qphy->rx;
-+
-+	if (!tables)
-+		return;
-+
-+	qmp_pcie_configure_lane(tx, cfg->regs,
-+				tables->tx_tbl, tables->tx_tbl_num, 1);
-+
-+	if (cfg->lanes >= 2)
-+		qmp_pcie_configure_lane(qphy->tx2, cfg->regs,
-+					tables->tx_tbl, tables->tx_tbl_num, 2);
-+
-+	qmp_pcie_configure_lane(rx, cfg->regs,
-+				tables->rx_tbl, tables->rx_tbl_num, 1);
-+	if (cfg->lanes >= 2)
-+		qmp_pcie_configure_lane(qphy->rx2, cfg->regs,
-+					tables->rx_tbl, tables->rx_tbl_num, 2);
-+}
-+
-+static void qmp_pcie_pcs_init(struct qmp_phy *qphy, const struct qmp_phy_cfg_tables *tables)
-+{
-+	const struct qmp_phy_cfg *cfg = qphy->cfg;
-+	void __iomem *pcs = qphy->pcs;
-+	void __iomem *pcs_misc = qphy->pcs_misc;
-+
-+	if (!tables)
-+		return;
-+
-+	qmp_pcie_configure(pcs, cfg->regs,
-+			   tables->pcs_tbl, tables->pcs_tbl_num);
-+	qmp_pcie_configure(pcs_misc, cfg->regs,
-+			   tables->pcs_misc_tbl, tables->pcs_misc_tbl_num);
- }
- 
- static int qmp_pcie_init(struct phy *phy)
-@@ -1957,15 +1995,13 @@ static int qmp_pcie_power_on(struct phy *phy)
- 	struct qmp_phy *qphy = phy_get_drvdata(phy);
- 	struct qcom_qmp *qmp = qphy->qmp;
- 	const struct qmp_phy_cfg *cfg = qphy->cfg;
--	void __iomem *tx = qphy->tx;
--	void __iomem *rx = qphy->rx;
- 	void __iomem *pcs = qphy->pcs;
--	void __iomem *pcs_misc = qphy->pcs_misc;
- 	void __iomem *status;
- 	unsigned int mask, val, ready;
- 	int ret;
- 
--	qmp_pcie_serdes_init(qphy);
-+	qmp_pcie_serdes_init(qphy, &cfg->common);
-+	qmp_pcie_serdes_init(qphy, cfg->extra);
- 
- 	ret = clk_prepare_enable(qphy->pipe_clk);
- 	if (ret) {
-@@ -1974,31 +2010,11 @@ static int qmp_pcie_power_on(struct phy *phy)
- 	}
- 
- 	/* Tx, Rx, and PCS configurations */
--	qmp_pcie_configure_lane(tx, cfg->regs, cfg->common.tx_tbl, cfg->common.tx_tbl_num, 1);
--	qmp_pcie_configure_lane(tx, cfg->regs, cfg->extra->tx_tbl, cfg->extra->tx_tbl_num, 1);
--
--	if (cfg->lanes >= 2) {
--		qmp_pcie_configure_lane(qphy->tx2, cfg->regs, cfg->common.tx_tbl,
--					cfg->common.tx_tbl_num, 2);
--		qmp_pcie_configure_lane(qphy->tx2, cfg->regs, cfg->extra->tx_tbl,
--					cfg->extra->tx_tbl_num, 2);
--	}
--
--	qmp_pcie_configure_lane(rx, cfg->regs, cfg->common.rx_tbl, cfg->common.rx_tbl_num, 1);
--	qmp_pcie_configure_lane(rx, cfg->regs, cfg->extra->rx_tbl, cfg->extra->rx_tbl_num, 1);
--
--	if (cfg->lanes >= 2) {
--		qmp_pcie_configure_lane(qphy->rx2, cfg->regs, cfg->common.rx_tbl,
--					cfg->common.rx_tbl_num, 2);
--		qmp_pcie_configure_lane(qphy->rx2, cfg->regs, cfg->extra->rx_tbl,
--					cfg->extra->rx_tbl_num, 2);
--	}
--
--	qmp_pcie_configure(pcs, cfg->regs, cfg->common.pcs_tbl, cfg->common.pcs_tbl_num);
--	qmp_pcie_configure(pcs, cfg->regs, cfg->extra->pcs_tbl, cfg->extra->pcs_tbl_num);
-+	qmp_pcie_lanes_init(qphy, &cfg->common);
-+	qmp_pcie_lanes_init(qphy, cfg->extra);
- 
--	qmp_pcie_configure(pcs_misc, cfg->regs, cfg->common.pcs_misc_tbl, cfg->common.pcs_misc_tbl_num);
--	qmp_pcie_configure(pcs_misc, cfg->regs, cfg->extra->pcs_misc_tbl, cfg->extra->pcs_misc_tbl_num);
-+	qmp_pcie_pcs_init(qphy, &cfg->common);
-+	qmp_pcie_pcs_init(qphy, cfg->extra);
- 
- 	/*
- 	 * Pull out PHY from POWER DOWN state.
+ 	ret = phy_power_on(pcie->phy);
+ 	if (ret)
+ 		goto err_deinit;
 -- 
 2.35.1
 
