@@ -2,143 +2,135 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3AC0C6FA86
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Sep 2022 13:27:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9836C32771
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Sep 2022 13:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234224AbiIZN1K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Sep 2022 09:27:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44818 "EHLO
+        id S233752AbiIZN2A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Sep 2022 09:28:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231727AbiIZN0u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2022 09:26:50 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADCD5760E0
-        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2022 04:51:42 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0025460AB8
-        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2022 11:50:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D51EC433D6;
-        Mon, 26 Sep 2022 11:49:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664193002;
-        bh=Z/TIaNKp8bR7xnaGrhBToyQtEOEgcXRRRy1oqGRgqpQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YkyGBOxAEZe/9QeHc03sk6OKPHMwTaLe4TcqvgcJmQi9hlPGj0WuViQNWksSdtSF6
-         3Kez+72cB9XlquncxruvRZo4U0i7cjzedys1niSVhs9188UygMVOHw76KTAnQjCnSM
-         OMglBs0HCHLOC3qJhwaScSUcbND4TAKkdhFqVXKJfCYHvkDPsQa3BqD8evgZgp64wo
-         Dwt7dcss32WkuVtQjTYpIMD82STrjqwR5X1WQ51eu+vykhXlGbc7kD0Tb4AgkJc+3i
-         D2eDDgIcXDe1D8CpYGYkiZ6mfwJZY9GtPg2Z2ZL+p65+DgsAtvuR0uGRfDQ9vYBWCL
-         oSSV5iTqutzKw==
-Date:   Mon, 26 Sep 2022 13:49:55 +0200
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        pali@kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, tglx@linutronix.de
-Subject: Re: [PATCH 03/11] PCI: aardvark: Add support for DLLSC and hotplug
- interrupt
-Message-ID: <YzGR40/kmQX4ZNaS@lpieralisi>
-References: <20220818135140.5996-1-kabel@kernel.org>
- <20220818135140.5996-4-kabel@kernel.org>
- <YxtUR0+dBZut8QZH@lpieralisi>
- <87r10al6a0.wl-maz@kernel.org>
+        with ESMTP id S234106AbiIZN1f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2022 09:27:35 -0400
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on20600.outbound.protection.outlook.com [IPv6:2a01:111:f400:7eae::600])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E327C1D9829;
+        Mon, 26 Sep 2022 04:52:15 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=aISENHdsZjpT3wmCQApwiynAuSGzr6eNPYcw0CeQQbrP3ikBHIs6TKFU+i9uAnFzHtUMX4uiUYl9qaKEKrUJhfIbo2E4fbMVr49GQPG4EvEuWcaVbT9LHsagBmO2qzQlriBJm5N52kUkcNZApqOdsJH16cPsIp5I1VR3FL8/yrFGUoLnR/5Y0wtouBR7JA3CgaY5EzMtfbODTjj0ZcD7m1UoY2TTkWTTRCABPXFYLsG2rC32/rlOr6zSpeRs5ht9Vqktjp2F6kGUn2DhwyPoE7NIs8lw2uX5PCf2sZiZtd8gCHi7r+l/5eHaTQnvkYr2nsDkD9Lg+W5mKz6XDl1W3w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=N7jyd9c8Z/mWeykzYgXiX6AmqcPg+Jyx6oeJz6RiZOg=;
+ b=Vexp7tb63J9J/A5it8SAp/pD2biT3GE4ZsXbCXZJfFGIrLTH3fyRALVyac3Ep/KeZfFEMoLDY5IXgJxaLif5BoGuE61awqRwM2thA8wJSjfp3EOL+sdnWlPkYMgdjzsq7IIyXumTPfwGlKcrM1WV331z6fabpyWEaFUBpnIxKG6jufoz0YifZI6WMLM9yhmIbl/gnEpjdD24ZwRn6nSOZ3HmbrsOxvsuvf+kbp/JeeYQ9jWIf30wxBPI4udiVueBEEiAioR//J8M6s7nEfivom69xAMAPOjxSdyudYdIqWOfjbDZ9cBgig+p8LnsJrZnEnkdymA0xCv9zGh2R7Pkog==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.160) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=N7jyd9c8Z/mWeykzYgXiX6AmqcPg+Jyx6oeJz6RiZOg=;
+ b=IEWyGMONmwrH5hMxIuBG3B1pq3KIUMlHywJJEOMdHCMW9MZR0MRPjBqEoM5A/7Q9ku6w92MTEW5w0Gs9UAqRk0NiPwfjKai8e8507R5BQX5fMYsSN4XubisZvaChDmCTDTmpNAv/YIobmElJJC2CIPnG60CZzGr9TWnFCTPASPFlm8xZCZYF/Rsr7mWBhFSgIY5HaFP4ZfOwlKWMG0vFrnElq9nbmtA5d3Us9vapToGkY7gMZ9LUgjDUO9tL8QMVoIjIu/MwtLhYo65yiXTqqn2vqs+wgFNFtW35TXFQ6tOoE6FFZtG6bI9JkIYWJygBUq4O0WEo8/uUzM0DbWjm4A==
+Received: from DM6PR17CA0013.namprd17.prod.outlook.com (2603:10b6:5:1b3::26)
+ by CY5PR12MB6179.namprd12.prod.outlook.com (2603:10b6:930:24::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.24; Mon, 26 Sep
+ 2022 11:50:59 +0000
+Received: from DM6NAM11FT098.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:1b3:cafe::76) by DM6PR17CA0013.outlook.office365.com
+ (2603:10b6:5:1b3::26) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.26 via Frontend
+ Transport; Mon, 26 Sep 2022 11:50:59 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.160) by
+ DM6NAM11FT098.mail.protection.outlook.com (10.13.173.61) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5654.14 via Frontend Transport; Mon, 26 Sep 2022 11:50:59 +0000
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by mail.nvidia.com
+ (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Mon, 26 Sep
+ 2022 04:50:53 -0700
+Received: from rnnvmail202.nvidia.com (10.129.68.7) by rnnvmail203.nvidia.com
+ (10.129.68.9) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Mon, 26 Sep
+ 2022 04:50:52 -0700
+Received: from vidyas-desktop.nvidia.com (10.127.8.9) by mail.nvidia.com
+ (10.129.68.7) with Microsoft SMTP Server id 15.2.986.29 via Frontend
+ Transport; Mon, 26 Sep 2022 04:50:47 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
+        <bhelgaas@google.com>, <thierry.reding@gmail.com>,
+        <jonathanh@nvidia.com>, <kishon@ti.com>, <vkoul@kernel.org>,
+        <mani@kernel.org>, <Sergey.Semin@baikalelectronics.ru>,
+        <ffclaire1224@gmail.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-phy@lists.infradead.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <sagar.tv@gmail.com>
+Subject: [PATCH V2 1/9] PCI: tegra194: Use devm_gpiod_get_optional() to parse "nvidia,refclk-select"
+Date:   Mon, 26 Sep 2022 17:20:30 +0530
+Message-ID: <20220926115038.24727-2-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20220926115038.24727-1-vidyas@nvidia.com>
+References: <20220926115038.24727-1-vidyas@nvidia.com>
+X-NVConfidentiality: public
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <87r10al6a0.wl-maz@kernel.org>
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT098:EE_|CY5PR12MB6179:EE_
+X-MS-Office365-Filtering-Correlation-Id: fa3c006e-0337-444b-77ac-08da9fb56104
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: wjunhXroR4DwHWWWhsPsnvCGPK+uxPJ8/pJT7Yke4+froriSqWGLOi73oBTbWk2BuR01aREgbTEH1LYa4aMyPHQqoHa/XrG6RLfthhCsEdOlRcb2W/XodbzafuaIeVfF1ct0JWfQeMNFA+qh8XeHyZt3a79OPeiwpk9u9Yg8TFTXHS1+5MgHVQUDZgSvyy0+EQrqaSABaA6doqENgt4e309xwWEJ13ZMkH3ExmB3tJYHBS7DcqsiD7w2L557URvxcTxx01i/YZRvkNvNdW/yKGpQntqc0nMtgGjS0OBn8L5YJQvfikAxJE/8QNo4536DqYHZ2tFtRgjGHdL6IpAuK6Pfz6d+ezhib2I3FeU9B1sQtoBd2dF9zIv3TnSNBUlZZ5P412xRyC9lTry9r8GRiCGf3qNCTXIOcReyvxBy9qXrwAxFIXpmz7LON5+NddUbKp+QKLIampK6kSYfs221K8iM4mY+uJCUN20Wu1YQBZIBu4oSN8JUQJRcwieQIaTaC+lLCViRJCkech3PuDS0keETMoBDLiiKz51w8WQAylD/10kaZGuL/kmI74ZSvpynhMwu445ou5SBA8sTL33/P28hB4iz3ccijH2EilQmGXOQorZMibqLYB2FHsXM4RQ0fUrDIXvTQgbLPwmWVzVx2G5veJMuoeStjgnhUnE4Dpbt5hsUniYF1fm1NxTHex/mNtajc4bAR2FgdZUcfFdsHQ4hFdcGO4ydBI+QiHN2z1EL0mnqKBC24jfPGcq8eufBln/SG64OiH9ObwhtzxN5AWdIvJhIAvZzqN5a7bZ14FQ=
+X-Forefront-Antispam-Report: CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230022)(4636009)(396003)(376002)(136003)(39860400002)(346002)(451199015)(46966006)(36840700001)(40470700004)(70586007)(7416002)(70206006)(4744005)(82740400003)(8936002)(5660300002)(40460700003)(36756003)(7636003)(86362001)(2906002)(921005)(356005)(26005)(1076003)(2616005)(7696005)(186003)(6666004)(336012)(83380400001)(41300700001)(478600001)(40480700001)(426003)(82310400005)(8676002)(4326008)(316002)(36860700001)(110136005)(54906003)(47076005);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Sep 2022 11:50:59.0520
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: fa3c006e-0337-444b-77ac-08da9fb56104
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT098.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6179
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Sep 17, 2022 at 10:05:59AM +0100, Marc Zyngier wrote:
-> Hi Lorenzo,
-> 
-> On Fri, 09 Sep 2022 15:57:11 +0100,
-> Lorenzo Pieralisi <lpieralisi@kernel.org> wrote:
-> > 
-> > [+Marc, Thomas - I can't merge this code without them reviewing it,
-> > I am not sure at all you can mix the timer/IRQ code the way you do]
-> > 
-> > On Thu, Aug 18, 2022 at 03:51:32PM +0200, Marek Behún wrote:
-> > > From: Pali Rohár <pali@kernel.org>
-> > > 
-> > > Add support for Data Link Layer State Change in the emulated slot
-> > > registers and hotplug interrupt via the emulated root bridge.
-> > > 
-> > > This is mainly useful for when an error causes link down event. With
-> > > this change, drivers can try recovery.
-> > > 
-> > > Link down state change can be implemented because Aardvark supports Link
-> > > Down event interrupt. Use it for signaling that Data Link Layer Link is
-> > > not active anymore via Hot-Plug Interrupt on emulated root bridge.
-> > > 
-> > > Link up interrupt is not available on Aardvark, but we check for whether
-> > > link is up in the advk_pcie_link_up() function. By triggering Hot-Plug
-> > > Interrupt from this function we achieve Link up event, so long as the
-> > > function is called (which it is after probe and when rescanning).
-> > > Although it is not ideal, it is better than nothing.
-> > 
-> > So before even coming to the code review: this patch does two things.
-> > 
-> > 1) It adds support for handling the Link down state
-> > 2) It adds some code to emulate a Link-up event
-> > 
-> > Now, for (2). IIUC you are adding code to make sure that an HP
-> > event is triggered if advk_pcie_link_up() is called and it
-> > detects a Link-down->Link-up transition, that has to be notified
-> > through an HP event.
-> > 
-> > If that's correct, you have to explain to me please what this is
-> > actually achieving and a specific scenario where we want this to be
-> > implemented, in fine details; then we add it to the commit log.
-> > 
-> > That aside, the interaction of the timer and the IRQ domain code
-> > must be reviewed by Marc and Thomas to make sure this is not
-> > a gross violation of the respective subsystems usage.
-> 
-> I don't see anything being a "gross violation" here, at least from an
-> interrupt subsystem perspective. In a way, this is synthesising an
-> interrupt on the back of some other event, and as long as the context
-> is somehow appropriate (something that looks like an interrupt when
-> pretending there is one), this should be OK. Other subsystems such as
-> i2c GPIO expanders do similar things.
+The GPIO DT property "nvidia,refclk-select" to select the PCIe reference
+clock is optional. Use devm_gpiod_get_optional() to get it.
 
-Right, thanks.
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+V2:
+* None
 
-> The one thing I'm dubious about is the frequency of the timer. Asking
-> for a poll of the link every jiffy is bound to be expensive, and it
-> would be good to relax this as much as possible, specially on low-end
-> HW such as this, where every cycle counts. It is always going to be a
-> "best effort" thing, and the commit message doesn't say what's the
-> actual grace period to handle this (the spec probably has one).
+ drivers/pci/controller/dwc/pcie-tegra194.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-AFAICS, the code does not poll the link. It sets a timer only if
-the link is checked (eg upon PCI bus forced rescan or config access)
-the link is up and it was down, to emulate a HP IRQ.
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 2600304522eb..941fdb23e02f 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1176,9 +1176,9 @@ static int tegra_pcie_dw_parse_dt(struct tegra_pcie_dw *pcie)
+ 		return err;
+ 	}
+ 
+-	pcie->pex_refclk_sel_gpiod = devm_gpiod_get(pcie->dev,
+-						    "nvidia,refclk-select",
+-						    GPIOD_OUT_HIGH);
++	pcie->pex_refclk_sel_gpiod = devm_gpiod_get_optional(pcie->dev,
++							     "nvidia,refclk-select",
++							     GPIOD_OUT_HIGH);
+ 	if (IS_ERR(pcie->pex_refclk_sel_gpiod)) {
+ 		int err = PTR_ERR(pcie->pex_refclk_sel_gpiod);
+ 		const char *level = KERN_ERR;
+-- 
+2.17.1
 
-> I guess this patch could do with being split between handling link
-> down and link up events, but that's for you to decide.
-
-It is fine for me as-is even though its logic could be simplified
-by the split.
-
-Thanks,
-Lorenzo
-
-> Thanks,
-> 
-> 	M.
-> 
-> -- 
-> Without deviation from the norm, progress is not possible.
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
