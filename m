@@ -2,112 +2,96 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44FD4C6FA93
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Sep 2022 17:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D497C32771
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Sep 2022 18:10:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231309AbiIZR5g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Sep 2022 13:57:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47128 "EHLO
+        id S229889AbiIZSKL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Sep 2022 14:10:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229826AbiIZR5H (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2022 13:57:07 -0400
-Received: from mail-lj1-x235.google.com (mail-lj1-x235.google.com [IPv6:2a00:1450:4864:20::235])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32BC74D829
-        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2022 10:34:43 -0700 (PDT)
-Received: by mail-lj1-x235.google.com with SMTP id h3so8309191lja.1
-        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2022 10:34:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=qNP6ThRLpHNI/EUjMpjjuQG55s6ZxCbGqJcYBGEJHG4=;
-        b=D241F1ruvGGAEpCL0UxqPIIzUojP8zxvdNFGSfGxOKiwcjhFKisVC/TsvqXfMYrkXw
-         xQ5+/ItFJ5s0KyyLw9lvJL4VjEAzuZ2/RIAk9bk/djI9tx6xozuwHUUZKAGeLWGzj+YF
-         y2u7fJlZJmIXijPbCwfS5VhUJbtM+wauaZQik3cWcgL0eJVePyF6SUFooTv3tZGO8k+8
-         bAKWilh3BoAi5tOMq5hEiYO01WFl+NmGNt3BQbAO33NBnAavtQUMQmRZ6izfaJKvyKrD
-         du8dn/XHpOo4jUgmSvcne7VL/7Jt2TMP6KnMTeYBS9ZAuYzun7Pb6DGF7q9wZgE3UW1G
-         W0OA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date;
-        bh=qNP6ThRLpHNI/EUjMpjjuQG55s6ZxCbGqJcYBGEJHG4=;
-        b=Q7O0LI+3ilIaQv0zCS8SVL+9GfYDpmH3Yqsiwzq5NilYF4zudOD9X7bihWj66EaRCH
-         MJuJyTbYMqPprS/bqfyuP9bMgm55GN+cCmAoDJbXxsGy3PaxJO14lGG2GwyKSSbfomOd
-         YTCEHdfvTHf7VyusIyzjb/0u+8nN/39eZ2Py4g7v6rTBNP8+jQTVXgbrxDhHj/f3U+iJ
-         p/ufqCP1ny1WpfPrnvzg1SPYxS2sHPEcP4PajR/kolNmpoFu9++yWqDm5n8Jhtdjx/hn
-         37UKlQIZmDpZAI13VQT92KL4TnIyET8HlISus26RT0kjy2FpodYIWLp7xVg2JFLq5p+E
-         J4Qg==
-X-Gm-Message-State: ACrzQf3KEg6OatILAyyfxuKBkeKWAbZfnwNoWIZ05Q/+k5qxLS/IWDB+
-        JJQMSDXLU8S9H+OuhOyUEOekFQ==
-X-Google-Smtp-Source: AMsMyM7LrmvhClw5NVJoD/nWT17WiMh50/6toM504DFeDEb2bcd+5q1FYQTr/d+5XGmaMXdSm7TEyA==
-X-Received: by 2002:a05:651c:4ca:b0:26c:50be:5df6 with SMTP id e10-20020a05651c04ca00b0026c50be5df6mr7896118lji.177.1664213681585;
-        Mon, 26 Sep 2022 10:34:41 -0700 (PDT)
-Received: from eriador.lan ([37.153.55.125])
-        by smtp.gmail.com with ESMTPSA id v8-20020a2ea448000000b0026ad1da0dc3sm2402640ljn.122.2022.09.26.10.34.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Sep 2022 10:34:41 -0700 (PDT)
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Philipp Zabel <p.zabel@pengutronix.de>,
-        Johan Hovold <johan@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v5 5/5] PCI: qcom-ep: Setup PHY to work in EP mode
-Date:   Mon, 26 Sep 2022 20:34:35 +0300
-Message-Id: <20220926173435.881688-6-dmitry.baryshkov@linaro.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220926173435.881688-1-dmitry.baryshkov@linaro.org>
-References: <20220926173435.881688-1-dmitry.baryshkov@linaro.org>
+        with ESMTP id S230148AbiIZSJn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2022 14:09:43 -0400
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0AC0E4623F
+        for <linux-pci@vger.kernel.org>; Mon, 26 Sep 2022 10:56:01 -0700 (PDT)
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 28QHttwu097082;
+        Mon, 26 Sep 2022 12:55:55 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1664214955;
+        bh=sWx2wPx8jCdiJkLyI83h46G/mn17QkErirFk1IPmVPI=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=yreYnYHN8L4/gyn2L/OgITwRSE/HKodDaU+r7pvxEgp13W10cUuiJW37WJSTlb6J4
+         0wP+LKAJH0s14y93uw5sfsnMhVZ+ukvNK7rrRjtUCKtJ2LSsrBSNJv/B6xIbuqBUKJ
+         lHpcqvkI42VefGpmjjgKozFPJpHhgireXZ+kB9iA=
+Received: from DFLE112.ent.ti.com (dfle112.ent.ti.com [10.64.6.33])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 28QHttNU061291
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 26 Sep 2022 12:55:55 -0500
+Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6; Mon, 26
+ Sep 2022 12:55:55 -0500
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE106.ent.ti.com
+ (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6 via
+ Frontend Transport; Mon, 26 Sep 2022 12:55:55 -0500
+Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 28QHtqhN037777;
+        Mon, 26 Sep 2022 12:55:54 -0500
+From:   Matt Ranostay <mranostay@ti.com>
+To:     <kishon@ti.com>, <vigneshr@ti.com>, <bhelgaas@google.com>,
+        <robh@kernel.org>, <lpieralisi@kernel.org>
+CC:     <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <nm@ti.com>,
+        Matt Ranostay <mranostay@ti.com>
+Subject: [PATCH v2 3/3] PCI: j721e: Add warnings on num-lanes misconfiguration
+Date:   Mon, 26 Sep 2022 10:55:38 -0700
+Message-ID: <20220926175538.362018-4-mranostay@ti.com>
+X-Mailer: git-send-email 2.38.0.rc0.52.gdda7228a83
+In-Reply-To: <20220926175538.362018-1-mranostay@ti.com>
+References: <20220926175538.362018-1-mranostay@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Call phy_set_mode_ext() to notify the PHY driver that the PHY is being
-used in the EP mode.
+Added dev_warn messages to alert of devicetree misconfigurations
+for incorrect num-lanes setting, or the lack of one being defined.
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Matt Ranostay <mranostay@ti.com>
+Signed-off-by: Vignesh Raghavendra <vigneshr@ti.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/pci/controller/cadence/pci-j721e.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index ec99116ad05c..8dcfeed24424 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -13,6 +13,7 @@
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
- #include <linux/mfd/syscon.h>
-+#include <linux/phy/pcie.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/pm_domain.h>
-@@ -240,6 +241,10 @@ static int qcom_pcie_enable_resources(struct qcom_pcie_ep *pcie_ep)
- 	if (ret)
- 		goto err_disable_clk;
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 0a537f2d5078..ee0ab04ca66e 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -441,8 +441,17 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 	pcie->user_cfg_base = base;
  
-+	ret = phy_set_mode_ext(pcie_ep->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_EP);
-+	if (ret)
-+		goto err_phy_exit;
+ 	ret = of_property_read_u32(node, "num-lanes", &num_lanes);
+-	if (ret || num_lanes > data->max_lanes)
++	if (ret) {
++		dev_warn(dev, "no num-lanes defined, defaulting to 1\n");
+ 		num_lanes = 1;
++	}
 +
- 	ret = phy_power_on(pcie_ep->phy);
- 	if (ret)
- 		goto err_phy_exit;
++	if (num_lanes > data->max_lanes) {
++		dev_warn(dev, "defined num-lanes %d is greater than the "
++			      "allowed maximum of %d, defaulting to 1\n",
++			      num_lanes, data->max_lanes);
++		num_lanes = 1;
++	}
+ 	pcie->num_lanes = num_lanes;
+ 
+ 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48)))
 -- 
-2.35.1
+2.38.0.rc0.52.gdda7228a83
 
