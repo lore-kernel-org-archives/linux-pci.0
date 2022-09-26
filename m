@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 976BAC07E9D
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Sep 2022 12:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A228C32771
+	for <linux-pci@archiver.kernel.org>; Mon, 26 Sep 2022 12:46:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233701AbiIZMp2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Sep 2022 08:45:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46988 "EHLO
+        id S236643AbiIZMqr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Sep 2022 08:46:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234994AbiIZMpI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2022 08:45:08 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2058.outbound.protection.outlook.com [40.107.94.58])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9E2E122A53;
-        Mon, 26 Sep 2022 04:21:21 -0700 (PDT)
+        with ESMTP id S235594AbiIZMq1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Sep 2022 08:46:27 -0400
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on20602.outbound.protection.outlook.com [IPv6:2a01:111:f400:7e83::602])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F83312C1E7;
+        Mon, 26 Sep 2022 04:22:33 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NPk/bUeD+cAy4VJnsR9rjA2TiXxfijD8rXdgSx9qHXneTe5En0ymq6vpMW7lHJE+qK5ZxmRZb9sklDz5DviIyOcrOHlxVpvNbR1OFuHvWfdyDmOOfc1Acge3TjTLIRdqGFD6uXvD55QpQZ79Bi031QeSQ5zy7ksfo2TV9O1tiRHfiMjlGqh2f3LXMtsd0qddXnxx4dhbpU01uyLNZjatsYqzrv9I9G+xTcdQWbcwYrkPKmTBPxXeZy/9oM4BSJh8tkVyFjzoYwpfedfBo8FLEIBTfN3Owaejaesqen80grYD3orX67L4YReFzDGlp3tcFMM3gmk1fcxpQJaaEypgSw==
+ b=WZ646eksIQ55R0Q2n4hC3OjcyWhl+wZXAUIJCJErBoQtCGjbtO0fRWwZJmiMaJiwE10gklAEX+gHYAcAkB1lKShu26u/8gHhhEmYF3IlZEMSeRduuM/aOXj7BlEDlqMsqXxKGGlmOF1eF/FJ4TWElZVewCjEDEn3saH8LSeqWUX7TUqMa0Hzeyh4YOV93z48hg4wF9XKGeUTbdgj840KbagPuVR2BnWr6fDALjRo8F84ZZriWiHqAXx2O8J55QJK76VnB/ROtBCUltSI4IM51zRKiJUEdd7e3G5jhYJviAvkOeTn5xXKGV/St46Oslg5hAeSkrBMLhG1jcVvIHU06A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=r5eze5+YQWrios3rmHq1T6wZRccDM2AX/gMN4BMlYSc=;
- b=GNDvkgt28yk8vZhQX6RvsfHKB7pndaHnE6Cqp6j5b2Fse4viHep3v+SRkj4hHOgEbHWx6ktugi4SS8o4z7fw2fq40mwPnTn0zWuNcTEqL5csKA+t4HpVNpSDxa9UHofweieMOonvQ4YHt0yEOVgUOqcjOcIlPAJHKAQYb7GNgiVhhvtkJw0f60jmA/QnlF8/nHEF3R9/qZRSr3C1/v0LG4JLkTF8EglTVi7xIOK9d1AhHjHnOTM00TfLs83EvB9OnKs0GrOAqF2FMGozMUqd4kR0ovdvS4P23aHM80xNzoSvCvsaj6RUYHx3v+ty20/jQRAwZlhbeUHUbKDZYiE76g==
+ bh=4aIetMs+MwwAxyYeVs8PJrfVcFCyU5mV12z4iXx9oWU=;
+ b=Zi+ynmy4+EzfVuDjh89xIGEsEu6UkVqLpD4N1LYaMXhSBCYqHPcG1PrlFM55kQ9rD/x/Nw9fZVyxNKoHWYM+mhpu5cgTcJNfCHE+aTYhibmGSvhY+flNSqZD1mwLAiCTnNHPpbeuX37R8cw+9Hh/QDcksNZQuXxWaDvrM76LpuDHaFimyuGR87rC4acED+RaOs60eZAnJnWVGTr0Y6ffCdgPYnorX35nRH3NzE0LpwZOzlZ8cpZGr46r5WFCVs4LSECL+lR5ikCOJbb0ldYK1/HZHq6WL5bjY5JUoZDCUQ8G+bIt+bgx1FVd02ibAbPXKNSdAeDI76Rza/SP2mQV5A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.117.160) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -28,18 +28,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r5eze5+YQWrios3rmHq1T6wZRccDM2AX/gMN4BMlYSc=;
- b=d8rd0ELZQyzeZPc4pJ9MSNl6cPIrb8A+BXuX/xRZIy08iA+OqlMPqov1u3/POTSkT76mvlnCfbqOZrCrCtgmCqLQRyoFURASMe9gG/GvbtiwvG0N9063cv+wN3PNlfFhmu9FtddVoq4SjcL6Kl4JSetq+I+7WV6xXrHSEkC/FIItEWj69lLofAlLXI921P/Wx5t2+ei35dmz/l+fJMJQ3RL7urJW2XOdE+oPN6GQfKoITlQCfGwZ385EutHEEkqZ1aUlxW6QnP3R7nZdb4WksMOfnnKEntzPZ48RCbo+TYWyIzSQxzEBVB6HqQWAAYkyjTLR9Q9JmLhbmE1nqZIZgQ==
-Received: from MW4PR04CA0259.namprd04.prod.outlook.com (2603:10b6:303:88::24)
- by IA0PR12MB7697.namprd12.prod.outlook.com (2603:10b6:208:433::19) with
+ bh=4aIetMs+MwwAxyYeVs8PJrfVcFCyU5mV12z4iXx9oWU=;
+ b=c7xclNqgEFtbjbao7yVysUyrcPvPUZlvO5l1ehYGuVPDbeGzNxwIiW38oViw58hgY67HJGkCsGs6QBJn9IDFw/L3ukYjQMoNtlQa4BwLb7r8flWi9hGRXF11ToJc0vJ5PuVHHfEdPjf38V47WyjioFFZLFPYq3/npsjzFDfUTDs2UAJtv4wkYZSUUC2O+N2J1ghq4MNktb0zk2RTHbCmRQfK40Nrq0MCax87wtTAkPNnnpvU8JCFLx2R1/AmItyMPdcrzjm1sjPQP2o758yuDVGTb21fU7uCM1c6M7LEfrRrgBWHj6avnXlxgVaO4FAzLVgq9ywoAZk9ISPtkWq8EA==
+Received: from DM6PR21CA0010.namprd21.prod.outlook.com (2603:10b6:5:174::20)
+ by MW4PR12MB7215.namprd12.prod.outlook.com (2603:10b6:303:228::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.26; Mon, 26 Sep
- 2022 11:10:36 +0000
-Received: from CO1NAM11FT032.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:88:cafe::95) by MW4PR04CA0259.outlook.office365.com
- (2603:10b6:303:88::24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.25 via Frontend
- Transport; Mon, 26 Sep 2022 11:10:36 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5654.14; Mon, 26 Sep
+ 2022 11:19:40 +0000
+Received: from DM6NAM11FT025.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:174:cafe::bb) by DM6PR21CA0010.outlook.office365.com
+ (2603:10b6:5:174::20) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5709.0 via Frontend
+ Transport; Mon, 26 Sep 2022 11:19:40 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -47,20 +47,24 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.117.160 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.117.160) by
- CO1NAM11FT032.mail.protection.outlook.com (10.13.174.218) with Microsoft SMTP
+ DM6NAM11FT025.mail.protection.outlook.com (10.13.172.197) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5654.14 via Frontend Transport; Mon, 26 Sep 2022 11:10:36 +0000
+ 15.20.5654.14 via Frontend Transport; Mon, 26 Sep 2022 11:19:40 +0000
 Received: from rnnvmail202.nvidia.com (10.129.68.7) by mail.nvidia.com
  (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Mon, 26 Sep
- 2022 04:10:25 -0700
-Received: from rnnvmail202.nvidia.com (10.129.68.7) by rnnvmail202.nvidia.com
- (10.129.68.7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Mon, 26 Sep
- 2022 04:10:24 -0700
+ 2022 04:19:31 -0700
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ rnnvmail202.nvidia.com (10.129.68.7) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Mon, 26 Sep 2022 04:19:30 -0700
+Received: from drhqmail201.nvidia.com (10.126.190.180) by
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.986.29; Mon, 26 Sep 2022 04:19:30 -0700
 Received: from vidyas-desktop.nvidia.com (10.127.8.9) by mail.nvidia.com
- (10.129.68.7) with Microsoft SMTP Server id 15.2.986.29 via Frontend
- Transport; Mon, 26 Sep 2022 04:10:21 -0700
+ (10.126.190.180) with Microsoft SMTP Server id 15.2.986.29 via Frontend
+ Transport; Mon, 26 Sep 2022 04:19:27 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
         <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
@@ -68,51 +72,68 @@ To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
 CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
         <sagar.tv@gmail.com>
-Subject: [PATCH V2 0/2] Disable PTM for endpoint mode
-Date:   Mon, 26 Sep 2022 16:40:15 +0530
-Message-ID: <20220926111017.12655-1-vidyas@nvidia.com>
+Subject: [PATCH V2] PCI: dwc: Fix n_fts[] array overrun
+Date:   Mon, 26 Sep 2022 16:49:23 +0530
+Message-ID: <20220926111923.22487-1-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20220919143123.28250-1-vidyas@nvidia.com>
+References: <20220919143123.28250-1-vidyas@nvidia.com>
 X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1NAM11FT032:EE_|IA0PR12MB7697:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8706f26f-e741-4227-a760-08da9fafbcf7
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT025:EE_|MW4PR12MB7215:EE_
+X-MS-Office365-Filtering-Correlation-Id: eba42414-1336-4ea2-39bc-08da9fb10127
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 0d2oCeeCidAk6RqyEkbnmbn46uIRE6nrrBtWNzGOlHE234LskQZbheYsD/8B/f5NoJM1EjeA/MZq3Xm4lTwbs5HlnKXzgDtQAOz6lqLWu+e7pu5c4dXD/3AG5t0cs4ytJN4gNbyMIgU5RbomaefahC4clpwFweW1dhsEFmw+9oMi8GT068BJQtpOocnc11UiY38K7ke7Ac9Krnc4SGDu6d+UiZACYP/QdeTmZWrXQmx3Jt4hBQRuOBqGN2Yxq2S307izWmcg+9MSUV5gJSlziqFMZgkH70aP7DM15l5n0gOTQMJSGILWTQ9ED+RUk7DOekpy7l6LE9gK89pcMpdaP07Bg3lX/HTbMbLVTAuEHyL+E8Uofpgy/HHuQGPtT33a8G/J++Lb9lSlRFzjeH3JBxL4do4frVNqBKXS1zLwtvrMqPFI7Nwpr2kbh/rzB7LQc+YppA1N9c73ozJ971YK9tvkAT+et6ZA70SodXKOlDnlItIkaZDT5VEuWc8fqGYciAETs9dJEoxUDBNy/BVWPLQlnfybyUuHau7Xl88vYxnv3r8OBjrOIUa3G/GuAr9nZgv4t42ObreNfd0BtenHHjVpZy1j4IOeG0fzeXy2D0C+SEJXbRHcW63xSgkc7wbc81NCHw8pydL6KNH4RP5XUv2uj683TcZTRyosETlpS9019T6AvmfzVR1FcXEGgFHhApNaHKn9P74k6oGq4se8onKKU2R1rJ+BpgvL6yRkENgGoE8DZFqcydKdyNa1wEbUVUmwOyIv0xo7XaWBE3HbFQ==
-X-Forefront-Antispam-Report: CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230022)(4636009)(346002)(136003)(376002)(39860400002)(396003)(451199015)(46966006)(40470700004)(36840700001)(82740400003)(316002)(54906003)(356005)(40480700001)(7636003)(110136005)(40460700003)(8936002)(5660300002)(4744005)(36756003)(86362001)(8676002)(4326008)(70206006)(70586007)(2906002)(41300700001)(2616005)(26005)(82310400005)(426003)(47076005)(186003)(1076003)(336012)(6666004)(478600001)(7696005)(36860700001)(83380400001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: zRo4WH1vMli67WQsskTeACu12y3NIOBXjbfKL5JsI/fKSWPbge2D8oWeBXF2FHZBmdaxwq4TvAt8NkViACxBkOOfb6HtVpueQHHoDy10efwkaS+DTZecb8pHPicqG4yy8D2U/c77TKMh0tnaGqI4g1mXI+3m6qL4aDTJXEOOrqmY/cNl9kXyNSwwGFDc4DeaOrcmacl+38KgERS9zsqgAS/yTNOGfYh9/vheWh1X0raql+yKEf8z/s3Fw9mPSbaOI1APguZiZg5KvCWgIEbgJdO70OqEGVbFqofCQu7oFL3ww58PYwUWOVohQRV9hMKcdxpYccvSTb0IyWnLi8u6a9wJfeuYXERzfAkqOYZy4gIezi1jkBgPtjcs4hRffoP100YY6HQzdiCAXs21HGlbkEiYHhi/Q7rBoO3SRF8IHzX0WPE8qP4SYpTN0bupHJjWzIvVUUXSCBY8/NjWcpzBufqSrmIX09GfyFWH+Zkqz4ziG8RXnxMdsZZTol6eUK3guFPgchvsJ4cPQt9G7/H4m94qL47pu2pCVDoSZmAOBcX+VuZRps61admwiVWGhCFXX6l2HhMmhmT5NOUNksRhvaoWXjsq5u3M2HfL/NuF96H49JUiHqqjrLAgG9jANACb39aGBX61d9EVbWuyx6/paBzPQ+D1AVOZFNM+XjFtwou6vWwo0trbqmvgyZj+yq1SCDOvSVtpJZmiCJtmL4w2NRA0qtdbNqz/fIboPvNUCR3ARIBJbhCQOnAhso9rcxjCE39rDbd0lXNNqTrhS1yePQ==
+X-Forefront-Antispam-Report: CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230022)(4636009)(136003)(376002)(396003)(39860400002)(346002)(451199015)(46966006)(36840700001)(40470700004)(26005)(40480700001)(5660300002)(1076003)(8936002)(7696005)(6666004)(110136005)(336012)(54906003)(2616005)(186003)(426003)(8676002)(40460700003)(70206006)(70586007)(2906002)(86362001)(4326008)(316002)(41300700001)(36860700001)(83380400001)(82310400005)(47076005)(478600001)(36756003)(356005)(7636003)(82740400003);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Sep 2022 11:10:36.3849
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Sep 2022 11:19:40.2159
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8706f26f-e741-4227-a760-08da9fafbcf7
+X-MS-Exchange-CrossTenant-Network-Message-Id: eba42414-1336-4ea2-39bc-08da9fb10127
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT032.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT025.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB7697
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB7215
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series contains patches to disable PTM for endpoint mode
-as the PCIe compliance tool requires the PTM be disabled for the endpoint
-mode.
+commit aeaa0bfe89654 ("PCI: dwc: Move N_FTS setup to common setup")
+incorrectly uses pci->link_gen in deriving the index to the
+n_fts[] array also introducing the issue of accessing beyond the
+boundaries of array for greater than Gen-2 speeds. This change fixes
+that issue.
 
+Fixes: aeaa0bfe8965 ("PCI: dwc: Move N_FTS setup to common setup")
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+---
 V2:
-* Addressed review comments from Jingoo Han
+* Addressed review comments from Bjorn
+* Added "Acked-by: Jingoo Han <jingoohan1@gmail.com>"
 
-Vidya Sagar (2):
-  PCI: Add PCI_PTM_CAP_RES macro
-  PCI: designware-ep: Disable PTM capabilities for EP mode
+ drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- .../pci/controller/dwc/pcie-designware-ep.c    | 18 ++++++++++++++++++
- include/uapi/linux/pci_regs.h                  |  1 +
- 2 files changed, 19 insertions(+)
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 650a7f22f9d0..3df687667f27 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -649,7 +649,7 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	if (pci->n_fts[1]) {
+ 		val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
+ 		val &= ~PORT_LOGIC_N_FTS_MASK;
+-		val |= pci->n_fts[pci->link_gen - 1];
++		val |= pci->n_fts[1];
+ 		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
+ 	}
+ 
 -- 
 2.17.1
 
