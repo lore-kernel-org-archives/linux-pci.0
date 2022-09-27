@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE310C6FA83
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 14:20:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3247AC54EE9
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 14:20:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230444AbiI0OUG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Sep 2022 10:20:06 -0400
+        id S232151AbiI0OUX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Sep 2022 10:20:23 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232057AbiI0OTy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 10:19:54 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D643979FF
-        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2022 07:19:40 -0700 (PDT)
+        with ESMTP id S232159AbiI0OUC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 10:20:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A209FB286F
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2022 07:19:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 7229EB81C01
-        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2022 14:19:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8122FC433C1;
-        Tue, 27 Sep 2022 14:19:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4B81E619A2
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2022 14:19:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 12B41C433C1;
+        Tue, 27 Sep 2022 14:19:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664288377;
-        bh=PUps/ldFkt1/yI6ZmwNvDNq7YAuTSGdZNC88IA2kSQk=;
+        s=k20201202; t=1664288385;
+        bh=ftDwjJuJM+DkNC+0FTyMWCZEExUs1HVzpUV1moRdYIY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YY7vZap89PBZyec+jMI/NGAhNvUYS9qfnkV7j3mcoBw/lfgS9yHkMvQ5SFGDOVqwH
-         I6L+zLrrMY9JKRxBuBiqy0IJjLzpAqHmAKVEP3eU2QXHs6FjHcTZxwK10L3SZr0gTW
-         oF/U4kzwL8lY0/zzvLwGGIyMh9mx8GLPuRO1QwUdxfkQGn54aN1SvCeft0adKCxpYC
-         aYS1FoA5koY7GS/LUteWRKL8p1IxJ38bmuXHzgIDga/FHsv8GwOgk+PW7jCf7b1Q8T
-         eHUQs/ZqYjHChb8846B4C07EJ6Tv/cIiH9da1IUqp+5dZxLe1PaO3m1wuOD+7hK7wN
-         xSRoiPiXHxxGg==
+        b=RyfdlPXgjR/wgvtmV98QsDIssHerX/o24IZzFzAOVUhDKnGL3A624zApBUbIZKcDm
+         VlC9QKqkK4F0LhPuuhnVEItWn9tC5RIz5Lpi/qGHejgoZsnhE1xq42+FLMDdGDKuI1
+         g7t3bcdmVH+3txsg/BBho4wVevmSO2Zxu4NRJl/m6VjweY2CwlIu8+IoOP4GbMBiFY
+         veqOZQJPtie0i+h6L6BWcjSxOp2ObuR727t++fOgjiB9UH4G+WvDi9RHqfOPZvdS7k
+         U3J/ni3hpXygaDEGa0k2zYC6vdJlbmK0QQANmxCKEwrjm1xx1VxevQPwS1DunNuqv7
+         IGNn4fdgxo39g==
 From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>,
@@ -38,9 +38,9 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Subject: [PATCH v2 03/10] PCI: aardvark: Send Set_Slot_Power_Limit message
-Date:   Tue, 27 Sep 2022 16:19:19 +0200
-Message-Id: <20220927141926.8895-4-kabel@kernel.org>
+Subject: [PATCH v2 07/10] PCI: aardvark: Replace custom PCIE_CORE_ERR_CAPCTL_* macros by linux/pci_regs.h macros
+Date:   Tue, 27 Sep 2022 16:19:23 +0200
+Message-Id: <20220927141926.8895-8-kabel@kernel.org>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220927141926.8895-1-kabel@kernel.org>
 References: <20220927141926.8895-1-kabel@kernel.org>
@@ -53,143 +53,46 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Pali Rohár <pali@kernel.org>
 
-Emulate Slot PowerLimit Scale and Value bits in the Slot Capabilities
-register of the emulated bridge and if slot power limit value is
-defined, send that Set_Slot_Power_Limit message via Message Generation
-Control Register in Link Up handler on link up event.
-
-Slot power limit value is read from device-tree property
-'slot-power-limit-milliwatt'. If this property is not specified, we
-treat it as "Slot Capabilities register has not yet been initialized".
-
-According to PCIe Base specification 3.0, when transitioning from a
-non-DL_Up Status to a DL_Up Status, the Port must initiate the
-transmission of a Set_Slot_Power_Limit Message to the other component
-on the Link to convey the value programmed in the Slot Power Limit
-Scale and Value fields of the Slot Capabilities register. This
-transmission is optional if the Slot Capabilities register has not
-yet been initialized.
+Kernel already has these macros defined under different names.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 Signed-off-by: Marek Behún <kabel@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 51 ++++++++++++++++++++++++---
- 1 file changed, 47 insertions(+), 4 deletions(-)
+ drivers/pci/controller/pci-aardvark.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 31da28ebc5d1..03e318bc171f 100644
+index e30a33a4ecc6..4855ac733484 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -213,6 +213,11 @@ enum {
- };
- 
- #define VENDOR_ID_REG				(LMI_BASE_ADDR + 0x44)
-+#define PME_MSG_GEN_CTRL			(LMI_BASE_ADDR + 0x220)
-+#define     SEND_SET_SLOT_POWER_LIMIT		BIT(13)
-+#define     SEND_PME_TURN_OFF			BIT(14)
-+#define     SLOT_POWER_LIMIT_DATA_SHIFT		16
-+#define     SLOT_POWER_LIMIT_DATA_MASK		GENMASK(25, 16)
- 
- /* PCIe core controller registers */
- #define CTRL_CORE_BASE_ADDR			0x18000
-@@ -285,6 +290,8 @@ struct advk_pcie {
- 	raw_spinlock_t msi_irq_lock;
- 	DECLARE_BITMAP(msi_used, MSI_IRQ_NUM);
- 	struct mutex msi_used_lock;
-+	u8 slot_power_limit_value;
-+	u8 slot_power_limit_scale;
- 	int link_gen;
- 	bool link_was_up;
- 	struct timer_list link_irq_timer;
-@@ -317,8 +324,9 @@ static inline bool advk_pcie_link_up(struct advk_pcie *pcie)
- {
- 	/* check if LTSSM is in normal operation - some L* state */
- 	u8 ltssm_state = advk_pcie_ltssm_state(pcie);
-+	u16 slotsta, slotctl;
-+	u32 slotpwr, val;
- 	bool link_is_up;
--	u16 slotsta;
- 
- 	link_is_up = ltssm_state >= LTSSM_L0 && ltssm_state < LTSSM_DISABLED;
- 
-@@ -332,6 +340,27 @@ static inline bool advk_pcie_link_up(struct advk_pcie *pcie)
- 		pcie->bridge.pcie_conf.slotsta = cpu_to_le16(slotsta);
- 
- 		mod_timer(&pcie->link_irq_timer, jiffies + 1);
+@@ -37,11 +37,7 @@
+ #define PCIE_CORE_DEV_REV_REG					0x8
+ #define PCIE_CORE_PCIEXP_CAP					0xc0
+ #define PCIE_CORE_PCIERR_CAP					0x100
+-#define PCIE_CORE_ERR_CAPCTL_REG				0x118
+-#define     PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX			BIT(5)
+-#define     PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX_EN			BIT(6)
+-#define     PCIE_CORE_ERR_CAPCTL_ECRC_CHCK			BIT(7)
+-#define     PCIE_CORE_ERR_CAPCTL_ECRC_CHCK_RCV			BIT(8)
 +
-+		/*
-+		 * According to PCIe Base specification 3.0, when transitioning
-+		 * from a non-DL_Up Status to a DL_Up Status, the Port must
-+		 * initiate the transmission of a Set_Slot_Power_Limit Message
-+		 * to the other component on the Link to convey the value
-+		 * programmed in the Slot Power Limit Scale and Value fields of
-+		 * the Slot Capabilities register. This transmission is optional
-+		 * if the Slot Capabilities register has not yet been
-+		 * initialized.
-+		 */
-+		slotctl = le16_to_cpu(pcie->bridge.pcie_conf.slotctl);
-+		slotpwr = FIELD_GET(PCI_EXP_SLTCAP_SPLV | PCI_EXP_SLTCAP_SPLS,
-+				    le32_to_cpu(pcie->bridge.pcie_conf.slotcap));
-+		if (!(slotctl & PCI_EXP_SLTCTL_ASPL_DISABLE) && slotpwr) {
-+			val = advk_readl(pcie, PME_MSG_GEN_CTRL);
-+			val &= ~SLOT_POWER_LIMIT_DATA_MASK;
-+			val |= slotpwr << SLOT_POWER_LIMIT_DATA_SHIFT;
-+			val |= SEND_SET_SLOT_POWER_LIMIT;
-+			advk_writel(pcie, val, PME_MSG_GEN_CTRL);
-+		}
- 	}
+ /* PIO registers base address and register offsets */
+ #define PIO_BASE_ADDR				0x4000
+ #define PIO_CTRL				(PIO_BASE_ADDR + 0x0)
+@@ -589,11 +585,9 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	advk_writel(pcie, reg, PCIE_CORE_CMD_STATUS_REG);
  
- 	return link_is_up;
-@@ -944,8 +973,9 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+ 	/* Set Advanced Error Capabilities and Control PF0 register */
+-	reg = PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX |
+-		PCIE_CORE_ERR_CAPCTL_ECRC_CHK_TX_EN |
+-		PCIE_CORE_ERR_CAPCTL_ECRC_CHCK |
+-		PCIE_CORE_ERR_CAPCTL_ECRC_CHCK_RCV;
+-	advk_writel(pcie, reg, PCIE_CORE_ERR_CAPCTL_REG);
++	reg = PCI_ERR_CAP_ECRC_GENC | PCI_ERR_CAP_ECRC_GENE |
++	      PCI_ERR_CAP_ECRC_CHKC | PCI_ERR_CAP_ECRC_CHKE;
++	advk_writel(pcie, reg, PCIE_CORE_PCIERR_CAP + PCI_ERR_CAP);
  
- 	case PCI_EXP_SLTCTL: {
- 		u16 slotctl = le16_to_cpu(bridge->pcie_conf.slotctl);
--		/* Only emulation of HPIE and DLLSCE bits is provided */
--		slotctl &= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_DLLSCE;
-+		/* Only emulation of HPIE, DLLSCE and ASPLD bits is provided */
-+		slotctl &= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_DLLSCE |
-+			   PCI_EXP_SLTCTL_ASPL_DISABLE;
- 		bridge->pcie_conf.slotctl = cpu_to_le16(slotctl);
- 		break;
- 	}
-@@ -1109,9 +1139,13 @@ static int advk_sw_pci_bridge_init(struct advk_pcie *pcie)
- 	 * Set physical slot number to 1 since there is only one port and zero
- 	 * value is reserved for ports within the same silicon as Root Port
- 	 * which is not our case.
-+	 *
-+	 * Set slot power limit.
- 	 */
- 	slotcap = PCI_EXP_SLTCAP_NCCS | PCI_EXP_SLTCAP_HPC |
--		  FIELD_PREP(PCI_EXP_SLTCAP_PSN, 1);
-+		  FIELD_PREP(PCI_EXP_SLTCAP_PSN, 1) |
-+		  FIELD_PREP(PCI_EXP_SLTCAP_SPLV, pcie->slot_power_limit_value) |
-+		  FIELD_PREP(PCI_EXP_SLTCAP_SPLS, pcie->slot_power_limit_scale);
- 	bridge->pcie_conf.slotcap = cpu_to_le32(slotcap);
- 	bridge->pcie_conf.slotsta = cpu_to_le16(PCI_EXP_SLTSTA_PDS);
- 
-@@ -1837,6 +1871,7 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	struct advk_pcie *pcie;
- 	struct pci_host_bridge *bridge;
- 	struct resource_entry *entry;
-+	u32 slot_power_limit;
- 	int ret, irq;
- 
- 	bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct advk_pcie));
-@@ -1957,6 +1992,14 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	else
- 		pcie->link_gen = ret;
- 
-+	slot_power_limit = of_pci_get_slot_power_limit(dev->of_node,
-+						       &pcie->slot_power_limit_value,
-+						       &pcie->slot_power_limit_scale);
-+	if (slot_power_limit)
-+		dev_info(dev, "Slot Power Limit: %u.%uW\n",
-+			 slot_power_limit / 1000,
-+			 (slot_power_limit / 100) % 10);
-+
- 	ret = advk_pcie_setup_phy(pcie);
- 	if (ret)
- 		return ret;
+ 	/* Set PCIe Device Control register */
+ 	reg = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
 -- 
 2.35.1
 
