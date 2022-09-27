@@ -2,145 +2,75 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0238AC6FA83
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 08:55:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B585FC07E9D
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 09:09:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229779AbiI0Iz0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Sep 2022 04:55:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36772 "EHLO
+        id S229801AbiI0JJy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Sep 2022 05:09:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229567AbiI0IzZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 04:55:25 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5466E58B6D;
-        Tue, 27 Sep 2022 01:55:24 -0700 (PDT)
+        with ESMTP id S229472AbiI0JJx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 05:09:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D84BE5B7B5;
+        Tue, 27 Sep 2022 02:09:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DFF6F6174F;
-        Tue, 27 Sep 2022 08:55:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 517D0C433C1;
-        Tue, 27 Sep 2022 08:55:19 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6F97A61765;
+        Tue, 27 Sep 2022 09:09:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 570AAC433D6;
+        Tue, 27 Sep 2022 09:09:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664268923;
-        bh=9CEZSGxZXu10IfLWzBonZeqKa3qHuekmxQGhNgMxu3o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=o54hJYec0DnzxPLdHbiag+mJdkcPVG/7Ra1RmjUyvX20WlL71ez6+wxlEL4dQ3X0o
-         3sRaPcYTQqwLCw5IvwDCaJLgUWDC+dYP2kobN1zEBMGg7nS0M5JvNNRCrE9ZRB7iGE
-         PZHH9fnNu/Z544Sv7ztMIVvGHRo3pyvg62yOuqdVSEUUPff+o+mWHL7A5gdpaTaCQj
-         CAlb3w3Prul0PnD+Fkr2gsB0ehLEi0wuarXGzAtrJdIgqQ/4WlheuDmvw3pReUKGWB
-         yh4XZXrx5+wMbb007pamlbittAT5vtUVZhWwZU9sYL5h6XDqERiAyyIXbpo0yqd0Ff
-         EhjFM2rZAGLBg==
-Date:   Tue, 27 Sep 2022 10:55:15 +0200
+        s=k20201202; t=1664269790;
+        bh=EWbMZHKTMYken4F8JD7i0ndrYShdQA5tQ02UkQ9AlcI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=LvxP901oWdRcaSwbyeje69HYrPiaB8QNyeisvqQijkau7Hk0bHHQpHjkEFHBzEZOU
+         rwp1V2aN/TvlijSWwLu0A2FjF5z39Qe5+otZs+4fcHTDKRYSmoC9K0XwJbleJY6qDJ
+         4zfj0TRtNueGVqH3KLqgAGkrIbpltR7DRh4rIfRs6oVp6U4z5M3ZwgFEDkjT868TEF
+         m86uGcwVE3qMrs8TbkeRBy11+8lqmNvpLUzhXCSwuxwKBTPDwsmig75PLqlyMAdKYa
+         6mREcILldx/s2ktJb9awGWsz+IFz1Z/C15m2WaeSjM8bmMBTSx424wTaKLHnTYvYtp
+         GUufzqu39/r1A==
 From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Johan Hovold <johan@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org
-Subject: Re: [PATCH v5 0/5] PCI: qcom: Support using the same PHY for both RC
- and EP
-Message-ID: <YzK6c2g0bgwyvZ+O@lpieralisi>
-References: <20220926173435.881688-1-dmitry.baryshkov@linaro.org>
+To:     Sergio Paracuellos <sergio.paracuellos@gmail.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/3] PCI: Introduce new PCI_CONF1_ADDRESS() and PCI_CONF1_EXT_ADDRESS() macros
+Date:   Tue, 27 Sep 2022 11:09:45 +0200
+Message-Id: <166426977267.72332.7243947648115345777.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220924092404.31776-1-pali@kernel.org>
+References: <20220924092404.31776-1-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220926173435.881688-1-dmitry.baryshkov@linaro.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 26, 2022 at 08:34:30PM +0300, Dmitry Baryshkov wrote:
-> Programming of QMP PCIe PHYs slightly differs between RC and EP modes.
+On Sat, 24 Sep 2022 11:24:01 +0200, Pali Rohár wrote:
+> PCI controllers and lot of non-ECAM compliant PCIe controllers still use
+> Intel PCI Configuration Mechanism #1 for accessing PCI config space.
 > 
-> Currently both qcom and qcom-ep PCIe controllers setup the PHY in the
-> default mode, making it impossible to select at runtime whether the PHY
-> should be running in RC or in EP modes. Usually this is not an issue,
-> since for most devices only the RC mode is used. Some devices (SDX55)
-> currently support only the EP mode without supporting the RC mode (at
-> this moment).
+> Native PCIe controller drivers invents its own macros which implements
+> config space address calculation and in lof of cases it is just
+> duplication of the same code.
 > 
-> Nevertheless some of the Qualcomm platforms (e.g. the aforementioned
-> SDX55) would still benefit from being able to switch between RC and EP
-> depending on the driver being used. While it is possible to use
-> different compat strings for the PHY depending on the mode, it seems
-> like an incorrect approach, since the PHY doesn't differ between
-> usecases. It's the PCIe controller, who should decide how to configure
-> the PHY.
-> 
-> This patch series implements the ability to select between RC and EP
-> modes, by allowing the PCIe QMP PHY driver to switch between
-> programming tables.
-> 
-> This patchseries depends on the header from the pre-6.1 phy/next. Thus
-> after the 6.1 the PCIe patches can be applied independently of the PHY
-> part.
+> [...]
 
-I assume then it is better for me to ACK the PCI patches so
-that they can be pulled into the PHY tree, right ?
+Applied to pci/misc, thanks!
 
+[1/3] PCI: Add standard PCI Config Address macros
+      https://git.kernel.org/lpieralisi/pci/c/8a9b7ef74369
+[2/3] PCI: ftpci100: Use PCI_CONF1_ADDRESS() macro
+      https://git.kernel.org/lpieralisi/pci/c/f75a27dc6c07
+[3/3] PCI: mt7621: Use PCI_CONF1_EXT_ADDRESS() macro
+      https://git.kernel.org/lpieralisi/pci/c/2301a3e1a566
+
+Thanks,
 Lorenzo
-
-> Changes since v4:
-> - Fixed the possible oops in probe (Johan)
-> - Renamed the tables struct and individual table fields (Johan)
-> - Squashed the 'separate funtions' patch to lower the possible
->   confusion.
-> 
-> Changes since v3:
-> - Rebased on top of phy/next to pick in newly defined
->   PHY_MODE_PCIE_RC/EP.
-> - Renamed 'main' to 'common' and 'secondary' to 'extra' to reflect the
->   intention of the split (the 'common' tables and the 'extra for the ...
->   mode' tables).
-> - Merged the 'pointer' patch into first and second patches to make them
->   more obvious.
-> 
-> Changes since v2:
-> - Added PHY_SUBMODE_PCIE_RC/EP defines (Vinod),
-> - Changed `primary' table name to `main', added extra comments
->   describing that `secondary' are the additional tables, not required in
->   most of the cases (following the suggestion by Johan to rename
->   `primary' table),
-> - Changed secondary tables into the pointers to stop wasting extra
->   memory (Vinod),
-> - Split several functions for programming the PHY using these tables.
-> 
-> Changes since v1:
-> - Split the if(table) removal to the separate patch
-> - Expanded commit messages and comments to provide additional details
-> - Fixed build error on pcie-qcom.c
-> - Added support for EP mode on sm8450 to demonstrate the usage of this
->   patchset
-> 
-> Changes since RFC:
-> - Fixed the compilation of PCIe EP driver,
-> - Changed pri/sec names to primary and secondary,
-> - Added comments regarding usage of secondary_rc/_ep fields.
-> 
-> Dmitry Baryshkov (5):
->   phy: qcom-qmp-pcie: split register tables into common and extra parts
->   phy: qcom-qmp-pcie: support separate tables for EP mode
->   phy: qcom-qmp-pcie: Support SM8450 PCIe1 PHY in EP mode
->   PCI: qcom: Setup PHY to work in RC mode
->   PCI: qcom-ep: Setup PHY to work in EP mode
-> 
->  drivers/pci/controller/dwc/pcie-qcom-ep.c     |   5 +
->  drivers/pci/controller/dwc/pcie-qcom.c        |   5 +
->  drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      | 523 +++++++++++-------
->  .../qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h    |   1 +
->  4 files changed, 335 insertions(+), 199 deletions(-)
-> 
-> -- 
-> 2.35.1
-> 
