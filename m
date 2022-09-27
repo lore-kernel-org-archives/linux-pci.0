@@ -2,39 +2,39 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5699BC6FA86
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 08:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48EAFC6FA83
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 08:17:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229508AbiI0INv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Sep 2022 04:13:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56010 "EHLO
+        id S230159AbiI0IRM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Sep 2022 04:17:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229735AbiI0INe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 04:13:34 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BA62ABF27;
-        Tue, 27 Sep 2022 01:09:03 -0700 (PDT)
+        with ESMTP id S230226AbiI0IQw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 04:16:52 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D72183641F;
+        Tue, 27 Sep 2022 01:15:47 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id D740BCE1763;
-        Tue, 27 Sep 2022 08:09:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD08FC433D6;
-        Tue, 27 Sep 2022 08:08:58 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7487DB80AD9;
+        Tue, 27 Sep 2022 08:15:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10349C433D6;
+        Tue, 27 Sep 2022 08:15:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664266139;
-        bh=Mb19XfGnPCcnwswVS6PF2KmTYQWlJKV6Z8OZtSEzClo=;
+        s=k20201202; t=1664266545;
+        bh=FZg9AeA4UkTjA9OnzBdxptxRWgoL9SJpqAjfj4pKr3I=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=n2XhKXo4qdh4EP/FiVyhKpJbNfTSadbk6ffhXzLFpCd5LdkuJKrvrGxDZNSMZPUDr
-         f+GVP1PIIdazNdmzgwRA5JnM7y0wWw/r2kXiEZ2eAlsZPZ1nwI3q6IAZ8JXhFE9tt7
-         AhVh5u8vPwP7uoG3jSqUF5TW8RNxY3ZeVh8l1R7yrfrAkDED1u2RvoApRZf/GIjJPM
-         tUXFy0jnsjig/CyhzDfHcoVLUxF6JPKFyhE5QrGkveHIWSMj2Eh4nnWz3erMHmBWbS
-         vBEBpQI/JvT9WcUFlri1/BbkNYTjsv/HxemmwbbRAxTocCSlog8Fk8UCBfwx6DX9YZ
-         1lapEghthd67g==
+        b=ejt/WDlhvbW7IshGeu75MCmsOm40K41R3CDOoQghaHktP17AgJSasPWj16YGGw6SF
+         K5adwvapO82uaItX2QKgd88GvG4W0T1btP+QHGLKpu5E21+o9Eg0Rtds0oWtIcVmwA
+         mkr6oWcagEdGA7fHMeni8kMXZkXM//1Fqe8aw3UWPHtAtZ1BuQpH6CcCxLQcHEh+1J
+         Rf3HRAAol/epRnUjX57UkCuvu1A9E52ybhstYKvHe6VjzDXd3CWoPyc9Q96srtLsZi
+         VizEwd2uxvMxUzP5LvvJ1voVArDj9orKbORSTpu0xq2FPN2lBoXAZKhLqTt0MsTdsF
+         vzf6si6ftNSzg==
 Received: from johan by xi.lan with local (Exim 4.94.2)
         (envelope-from <johan@kernel.org>)
-        id 1od5eK-0005Ts-QN; Tue, 27 Sep 2022 10:09:04 +0200
-Date:   Tue, 27 Sep 2022 10:09:04 +0200
+        id 1od5kt-0005Vu-1E; Tue, 27 Sep 2022 10:15:51 +0200
+Date:   Tue, 27 Sep 2022 10:15:51 +0200
 From:   Johan Hovold <johan@kernel.org>
 To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 Cc:     Andy Gross <agross@kernel.org>,
@@ -51,97 +51,56 @@ Cc:     Andy Gross <agross@kernel.org>,
         Philipp Zabel <p.zabel@pengutronix.de>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-phy@lists.infradead.org
-Subject: Re: [PATCH v5 2/5] phy: qcom-qmp-pcie: support separate tables for
- EP mode
-Message-ID: <YzKvoN6hplGOKzsr@hovoldconsulting.com>
+Subject: Re: [PATCH v5 4/5] PCI: qcom: Setup PHY to work in RC mode
+Message-ID: <YzKxN/tyt/yY3RoZ@hovoldconsulting.com>
 References: <20220926173435.881688-1-dmitry.baryshkov@linaro.org>
- <20220926173435.881688-3-dmitry.baryshkov@linaro.org>
+ <20220926173435.881688-5-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220926173435.881688-3-dmitry.baryshkov@linaro.org>
+In-Reply-To: <20220926173435.881688-5-dmitry.baryshkov@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 26, 2022 at 08:34:32PM +0300, Dmitry Baryshkov wrote:
-> The PCIe QMP PHY requires different programming sequences when being
-> used for the RC (Root Complex) or for the EP (End Point) modes. Allow
-> selecting the submode and thus selecting a set of PHY programming
-> tables.
-> 
-> Since the RC and EP modes share common some common init sequence, the
-> common sequence is kept in the main table and the sequence differences
-> are pushed to the extra tables.
+On Mon, Sep 26, 2022 at 08:34:34PM +0300, Dmitry Baryshkov wrote:
+> Call phy_set_mode_ext() to notify the PHY driver that the PHY is being
+> used in the RC mode.
 > 
 > Signed-off-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-> ---
->  drivers/phy/qualcomm/phy-qcom-qmp-pcie.c | 47 +++++++++++++++++++++---
->  1 file changed, 41 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> index dc8f0f236212..dd7911879b10 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> @@ -14,6 +14,7 @@
->  #include <linux/of.h>
->  #include <linux/of_device.h>
->  #include <linux/of_address.h>
-> +#include <linux/phy/pcie.h>
->  #include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
->  #include <linux/regulator/consumer.h>
-> @@ -1320,10 +1321,14 @@ struct qmp_phy_cfg {
->  	/* Main init sequence for PHY blocks - serdes, tx, rx, pcs */
->  	const struct qmp_phy_cfg_tables tables;
->  	/*
-> -	 * Additional init sequence for PHY blocks, providing additional
-> -	 * register programming. Unless required it can be left omitted.
-> +	 * Additional init sequences for PHY blocks, providing additional
-> +	 * register programming. They are used for providing separate sequences
-> +	 * for the Root Complex and for the End Point usecases.
-
-"use cases", drop the second "for the".
-
-
-> +	 *
-> +	 * If EP mode is not supported, both tables can be left empty.
-
-s/empty/unset/
-
->  	 */
->  	const struct qmp_phy_cfg_tables *tables_rc;
-> +	const struct qmp_phy_cfg_tables *tables_ep;
->  
->  	/* clock ids to be requested */
->  	const char * const *clk_list;
-
-> +static int qmp_pcie_set_mode(struct phy *phy,
-> +				 enum phy_mode mode, int submode)
-
-No need for line break.
-
-> +{
-> +	struct qmp_phy *qphy = phy_get_drvdata(phy);
-> +
-> +	switch (submode) {
-> +	case PHY_MODE_PCIE_RC:
-> +	case PHY_MODE_PCIE_EP:
-> +		qphy->mode = submode;
-> +		break;
-> +	default:
-> +		dev_err(&phy->dev, "Unuspported submode %d\n", submode);
-
-You forgot to fix the "unsupported" typo.
-
-> +		return -EINVAL;
-> +	}
-> +
-> +	return 0;
-> +}
-
-Looks good otherwise:
 
 Reviewed-by: Johan Hovold <johan+linaro@kernel.org>
+
+I believe you forgot to add Jingoo Han's tag:
+
+	https://lore.kernel.org/all/CAPOBaE548e669mbg5vM+ZoAgOz+g4eKRRODcRXRX-r+cdMf1yQ@mail.gmail.com/
+
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 66886dc6e777..1027281bd6ff 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/phy/pcie.h>
+>  #include <linux/phy/phy.h>
+>  #include <linux/regulator/consumer.h>
+>  #include <linux/reset.h>
+> @@ -1494,6 +1495,10 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+>  	if (ret)
+>  		return ret;
+>  
+> +	ret = phy_set_mode_ext(pcie->phy, PHY_MODE_PCIE, PHY_MODE_PCIE_RC);
+> +	if (ret)
+> +		goto err_deinit;
+> +
+>  	ret = phy_power_on(pcie->phy);
+>  	if (ret)
+>  		goto err_deinit;
 
 Johan
