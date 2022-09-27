@@ -2,160 +2,101 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA719C54EE9
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 14:26:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 853A3C07E9D
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 15:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231625AbiI0O0k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Sep 2022 10:26:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46090 "EHLO
+        id S232130AbiI0P2P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Sep 2022 11:28:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32990 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231537AbiI0O0j (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 10:26:39 -0400
-Received: from mail-m971.mail.163.com (mail-m971.mail.163.com [123.126.97.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E19FA49B68;
-        Tue, 27 Sep 2022 07:26:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=4S5XBiFjDZg4gx2Ocx
-        QfUQjnQwfdPOoTKn7C7OGJNZc=; b=DPK/qDxDbMUvYQ/cTLcYRaUN/ZCMN5xq6x
-        h7PtMricsucf9NV0yxKSLVpM3Dn28vATg/qAPU9gBo1+yvXbeD5mr/q2wqHK/78a
-        qFCsFPBRcoCnkHY9KdIJipMQiV+V5l0FVk052hJYUGuc3d81qm8y16eDC5H8YxLc
-        03U+6UB2U=
-Received: from os-l3a203-yehs1-dev01.localdomain (unknown [103.244.59.1])
-        by smtp1 (Coremail) with SMTP id GdxpCgC3vKTjBzNjs5TAfw--.37703S2;
-        Tue, 27 Sep 2022 22:25:41 +0800 (CST)
-From:   Xiaochun Lee <lixiaochun.2888@163.com>
-To:     nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev
-Cc:     lpieralisi@kernel.org, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lkp@intel.com, xiaocli@redhat.com,
-        Xiaochun Lee <lixc17@lenovo.com>
-Subject: [PATCH v2 1/1] PCI: Set no io resource for bridges that behind VMD controller
-Date:   Tue, 27 Sep 2022 22:16:06 +0800
-Message-Id: <1664288166-7432-1-git-send-email-lixiaochun.2888@163.com>
-X-Mailer: git-send-email 1.8.3.1
-X-CM-TRANSID: GdxpCgC3vKTjBzNjs5TAfw--.37703S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxXrW5KF4DAryfJF1UKFy5CFg_yoWrtFWDpF
-        4agr45Zr48XFy7tws3uwn7CFWFvFs2yFWYyry3KwnIva1UCFyUZr9IyFyjgF4UJF1Dt343
-        X3Z5GrykuayDAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jeHq7UUUUU=
-X-Originating-IP: [103.244.59.1]
-X-CM-SenderInfo: 5ol0xtprfk30aosymmi6rwjhhfrp/1tbioAWJQFjSPgyEjgAAse
+        with ESMTP id S232054AbiI0P2D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 11:28:03 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0F7D1B348F;
+        Tue, 27 Sep 2022 08:27:56 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8635DB81C5B;
+        Tue, 27 Sep 2022 15:27:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3BF2C433C1;
+        Tue, 27 Sep 2022 15:27:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664292474;
+        bh=CjW2AN+Ns/4UkIYVLzkQVu05g1VFuqqL8TsZ16gUCiU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=G8pFAzbwfdtfmmaqK33lZ2OGoMucfWPApXvcXYd5qlrohRakBeU2Ajmdvggm7M27M
+         33GwSGkmUp4EtQ3Ods9DhloQJfqkvBAy4LayIjSh6rdDTjHfNCK+2Ou8PlEN0NaXlL
+         rxI2CPfjrCaB/XvpU3XjaqdY8nGDwYzTye0ooZ0nB4qhKwopg2ETPBz2OHht/YYAHF
+         HXG5De57FiNFaCC8oeoIqTM6z+WVOvYMyDuoI24bAUiJkYGh0oVU9eA1GFgjFgSZFC
+         raRKWON/qBfQkWIkrTJeEf+WfGjWBz6UK7iEqKnv9RDw/sP4UO5SGc5gr+JoXu8i+c
+         qichXszpNcc6w==
+Date:   Tue, 27 Sep 2022 17:27:42 +0200
+From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
+To:     Marc Zyngier <maz@kernel.org>
+Cc:     Johan Hovold <johan@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Johan Hovold <johan+linaro@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        linux-pci@vger.kernel.org,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Ley Foon Tan <ley.foon.tan@intel.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: Why set .suppress_bind_attrs even though .remove() implemented?
+Message-ID: <YzMWbmWWul1AhpuR@lpieralisi>
+References: <YtqllIHY/R/BbR3V@hovoldconsulting.com>
+ <20220722143858.GA1818206@bhelgaas>
+ <Yt6Z3cBrVy1lVTp1@hovoldconsulting.com>
+ <87czdtxnfn.wl-maz@kernel.org>
+ <Yt60WNVNEVHgzSuN@hovoldconsulting.com>
+ <87zggxaye8.wl-maz@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87zggxaye8.wl-maz@kernel.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Xiaochun Lee <lixc17@lenovo.com>
+On Mon, Jul 25, 2022 at 06:35:27PM +0100, Marc Zyngier wrote:
 
-When enable VMDs on Intel CPUs, VMD controllers(8086:28c0) be
-recognized by VMD driver and there are many failed messages of
-BAR 13 when scan the bridges and assign IO resource behind it
-as listed below, the bridge wants to get 0x6000 as its IO
-resource, but there is no IO resources on the host bridge.
+[...]
 
-VMD host bridge resources:
-vmd 0000:e2:00.5: PCI host bridge to bus 10001:00
-pci_bus 10001:00: root bus resource [bus 00-1f]
-pci_bus 10001:00: root bus resource [mem 0xf4000000-0xf5ffffff]
-pci_bus 10001:00: root bus resource [mem 0x29ffff02010-0x29fffffffff 64bit]
-pci_bus 10001:00: scanning bus
+> > That is precisely the way I've been testing it and everything appears
+> > to be tore down as it should.
+> >
+> > And a PCI driver that has been unbound should have released its
+> > resources, or that's a driver bug. Right?
+> 
+> But that's the thing: you can easily remove part of the infrastructure
+> without the endpoint driver even noticing. It may not happen in your
+> particular case if removing the RC driver will also nuke the endpoints
+> in the process, but I can't see this is an absolute guarantee. The
+> crash pointed to by an earlier email is symptomatic of it.
+> 
+> > And for the OF INTx case you mentioned earlier, aren't those mapped by
+> > PCI core and could in theory be released by core as well?
+> 
+> Potentially, though I haven't tried to follow the life cycle of those.
+> The whole thing is pretty fragile, and this sort of resource is rarely
+> expected to be removed...
 
-Read bridge IO resource:
-pci 10001:00:02.0: PCI bridge to [bus 01]
-pci 10001:00:02.0:   bridge window [io  0x1000-0x6fff]
-pci 10001:00:03.0: PCI bridge to [bus 02]
-pci 10001:00:03.0:   bridge window [io  0x1000-0x6fff]
+This made me notice that we don't undo the actions (ie bridge->map_irq())
+executed in pci_assign_irq() in pci_device_remove(); I don't think this
+can be right and that's already a candidate for a fix.
 
-Failed messages of BAR#13:
-pci 10001:00:02.0: BAR 13: no space for [io  size 0x6000]
-pci 10001:00:02.0: BAR 13: failed to assign [io  size 0x6000]
-pci 10001:00:03.0: BAR 13: no space for [io  size 0x6000]
-pci 10001:00:03.0: BAR 13: failed to assign [io  size 0x6000]
+It is not necessarily related to this thread topic, though I believe,
+in an _ideal_ world, removing a bridge should guarantee that all
+the downstream devices (ie drivers) had a chance of freeing/disposing
+the resources they allocated. This in theory; I totally understand
+Marc's point of view here and we should make up our mind about what
+we want to do on host bridge removal policy - this will take me more
+time to get to the bottom of it.
 
-VMD-enabled root ports use
-Enhanced Configuration Access Mechanism (ECAM) access
-PCI Express configuration space, and offer VMD_CFGBAR as
-base of PCI Express configuration space for the bridges
-behind it. The configuration space includes IO resources,
-but these IO resources are not actually used on X86,
-it can result in BAR#13 assign IO resource failed.
-Therefor,clear IO resources by setting an IO base value
-greater than limit to these bridges here, so in this case,
-we can leverage kernel parameter "pci=hpiosize=0KB" to
-avoid this failed messages show up.
-
-Signed-off-by: Xiaochun Lee <lixc17@lenovo.com>
----
- drivers/pci/quirks.c | 60 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 60 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4944798e75b5..efecf12e8059 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5956,3 +5956,63 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b1, aspm_l1_acceptable_latency
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c0, aspm_l1_acceptable_latency);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c1, aspm_l1_acceptable_latency);
- #endif
-+
-+#if defined(CONFIG_X86_64) || defined(CONFIG_X86)
-+
-+#ifdef CONFIG_UML_X86
-+#define is_vmd(bus)             false
-+#endif /* CONFIG_UML_X86 */
-+
-+/*
-+ * VMD-enabled root ports use Enhanced Configuration Access Mechanism (ECAM)
-+ * access PCI Express configuration space, and offer VMD_CFGBAR as the
-+ * base of PCI Express configuration space for the bridges behind it.
-+ * The configuration space includes IO resources, but these IO
-+ * resources are not actually used on X86, and it can result
-+ * in BAR#13 assign IO resource failed. Therefor, clear IO resources
-+ * by setting an IO base value greater than limit to these bridges here,
-+ * so in this case, append kernel parameter "pci=hpiosize=0KB" can avoid
-+ * the BAR#13 failed messages show up.
-+ */
-+static void quirk_vmd_no_iosize(struct pci_dev *bridge)
-+{
-+	u8 io_base_lo, io_limit_lo;
-+	u16 io_low;
-+	u32 io_upper16;
-+	unsigned long io_mask,  base, limit;
-+
-+	io_mask = PCI_IO_RANGE_MASK;
-+	if (bridge->io_window_1k)
-+		io_mask = PCI_IO_1K_RANGE_MASK;
-+
-+	/* VMD Domain */
-+	if (is_vmd(bridge->bus) && bridge->is_hotplug_bridge) {
-+		pci_read_config_byte(bridge, PCI_IO_BASE, &io_base_lo);
-+		pci_read_config_byte(bridge, PCI_IO_LIMIT, &io_limit_lo);
-+		base = (io_base_lo & io_mask) << 8;
-+		limit = (io_limit_lo & io_mask) << 8;
-+		/* if there are defined io ports behind the bridge on x86,
-+		 * we clear it, since there is only 64KB IO resource on it,
-+		 * beyond that, hotplug io bridges don't needs IO port resource,
-+		 * such as NVMes attach on it. So the corresponding range must be
-+		 * turned off by writing base value greater than limit to the
-+		 * bridge's base/limit registers.
-+		 */
-+		if (limit >= base) {
-+			/* Clear upper 16 bits of I/O base/limit */
-+			io_upper16 = 0;
-+			/* set base value greater than limit */
-+			io_low = 0x00f0;
-+
-+			/* Temporarily disable the I/O range before updating PCI_IO_BASE */
-+			pci_write_config_dword(bridge, PCI_IO_BASE_UPPER16, 0x0000ffff);
-+			/* Update lower 16 bits of I/O base/limit */
-+			pci_write_config_word(bridge, PCI_IO_BASE, io_low);
-+			/* Update upper 16 bits of I/O base/limit */
-+			pci_write_config_dword(bridge, PCI_IO_BASE_UPPER16, io_upper16);
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID,
-+		PCI_CLASS_BRIDGE_PCI, 8, quirk_vmd_no_iosize);
-+#endif
--- 
-2.37.3
-
+Lorenzo
