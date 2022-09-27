@@ -2,175 +2,160 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22EB4C6FA82
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 14:20:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA719C54EE9
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 14:26:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230402AbiI0OUj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Sep 2022 10:20:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57520 "EHLO
+        id S231625AbiI0O0k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Sep 2022 10:26:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232149AbiI0OUW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 10:20:22 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 391001822C4
-        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2022 07:19:53 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 705A6619E3
-        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2022 14:19:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38EA0C433D7;
-        Tue, 27 Sep 2022 14:19:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664288391;
-        bh=VWlDeVNSF8K5y9LwrhrOTt+8IGNO/UVbQ6FhhVMO6zE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RSgYvBOgzUo4uVzOaUGi/dh2K6IdbhJwzywq+hxZ5fPfxOvuVXLfHEMdtykaWgEoe
-         uJbk+tr2h0Rcltgeo+Xjc+pa7D35Gx/z2utnMud8aOdtCHSwOHNNFjk78WhbN3+1ya
-         4ZL7lTb4W4+qoCqnpmAzyCrKVIdLXcfOpjyG2WBXbg2XRFurwQLm9azF6E+Lo8AwZZ
-         s3Lk5q7S0Ofd8Q81Hnc9Qjm4hR+wsWPzIvJzw279qwL9rnck2uOElrJbdoQ+fJ8vOl
-         5WsjGeS3o1EOZYp8Ag+AOquimT+1td+158loCLv9aP9LhzazOdhzUvRPQRz8HOKiEL
-         smtTQ6UuBjhLw==
-From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Gregory CLEMENT <gregory.clement@bootlin.com>, pali@kernel.org,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Subject: [PATCH v2 10/10] PCI: aardvark: Cleanup some register macros
-Date:   Tue, 27 Sep 2022 16:19:26 +0200
-Message-Id: <20220927141926.8895-11-kabel@kernel.org>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220927141926.8895-1-kabel@kernel.org>
-References: <20220927141926.8895-1-kabel@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S231537AbiI0O0j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 10:26:39 -0400
+Received: from mail-m971.mail.163.com (mail-m971.mail.163.com [123.126.97.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E19FA49B68;
+        Tue, 27 Sep 2022 07:26:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id; bh=4S5XBiFjDZg4gx2Ocx
+        QfUQjnQwfdPOoTKn7C7OGJNZc=; b=DPK/qDxDbMUvYQ/cTLcYRaUN/ZCMN5xq6x
+        h7PtMricsucf9NV0yxKSLVpM3Dn28vATg/qAPU9gBo1+yvXbeD5mr/q2wqHK/78a
+        qFCsFPBRcoCnkHY9KdIJipMQiV+V5l0FVk052hJYUGuc3d81qm8y16eDC5H8YxLc
+        03U+6UB2U=
+Received: from os-l3a203-yehs1-dev01.localdomain (unknown [103.244.59.1])
+        by smtp1 (Coremail) with SMTP id GdxpCgC3vKTjBzNjs5TAfw--.37703S2;
+        Tue, 27 Sep 2022 22:25:41 +0800 (CST)
+From:   Xiaochun Lee <lixiaochun.2888@163.com>
+To:     nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev
+Cc:     lpieralisi@kernel.org, robh@kernel.org, kw@linux.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, lkp@intel.com, xiaocli@redhat.com,
+        Xiaochun Lee <lixc17@lenovo.com>
+Subject: [PATCH v2 1/1] PCI: Set no io resource for bridges that behind VMD controller
+Date:   Tue, 27 Sep 2022 22:16:06 +0800
+Message-Id: <1664288166-7432-1-git-send-email-lixiaochun.2888@163.com>
+X-Mailer: git-send-email 1.8.3.1
+X-CM-TRANSID: GdxpCgC3vKTjBzNjs5TAfw--.37703S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxXrW5KF4DAryfJF1UKFy5CFg_yoWrtFWDpF
+        4agr45Zr48XFy7tws3uwn7CFWFvFs2yFWYyry3KwnIva1UCFyUZr9IyFyjgF4UJF1Dt343
+        X3Z5GrykuayDAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jeHq7UUUUU=
+X-Originating-IP: [103.244.59.1]
+X-CM-SenderInfo: 5ol0xtprfk30aosymmi6rwjhhfrp/1tbioAWJQFjSPgyEjgAAse
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Pali Rohár <pali@kernel.org>
+From: Xiaochun Lee <lixc17@lenovo.com>
 
-Define SPEED_GEN_* macros with correct PCIE_GEN_SEL_SHIFT.
+When enable VMDs on Intel CPUs, VMD controllers(8086:28c0) be
+recognized by VMD driver and there are many failed messages of
+BAR 13 when scan the bridges and assign IO resource behind it
+as listed below, the bridge wants to get 0x6000 as its IO
+resource, but there is no IO resources on the host bridge.
 
-Simplify macro for setting root complex mode (use BIT instead of
-MSK + SHIFT).
+VMD host bridge resources:
+vmd 0000:e2:00.5: PCI host bridge to bus 10001:00
+pci_bus 10001:00: root bus resource [bus 00-1f]
+pci_bus 10001:00: root bus resource [mem 0xf4000000-0xf5ffffff]
+pci_bus 10001:00: root bus resource [mem 0x29ffff02010-0x29fffffffff 64bit]
+pci_bus 10001:00: scanning bus
 
-Rename PCIE_MSG_PM_PME_MASK to PCIE_ISR0_MSG_PM_PME to match existing
-naming convention, rename PCIE_ISR0_MSI_INT_PENDING to PCIE_ISR0_MSI_INT
-as it is used for both interrupt mask and pending bit.
+Read bridge IO resource:
+pci 10001:00:02.0: PCI bridge to [bus 01]
+pci 10001:00:02.0:   bridge window [io  0x1000-0x6fff]
+pci 10001:00:03.0: PCI bridge to [bus 02]
+pci 10001:00:03.0:   bridge window [io  0x1000-0x6fff]
 
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Signed-off-by: Marek Behún <kabel@kernel.org>
+Failed messages of BAR#13:
+pci 10001:00:02.0: BAR 13: no space for [io  size 0x6000]
+pci 10001:00:02.0: BAR 13: failed to assign [io  size 0x6000]
+pci 10001:00:03.0: BAR 13: no space for [io  size 0x6000]
+pci 10001:00:03.0: BAR 13: failed to assign [io  size 0x6000]
+
+VMD-enabled root ports use
+Enhanced Configuration Access Mechanism (ECAM) access
+PCI Express configuration space, and offer VMD_CFGBAR as
+base of PCI Express configuration space for the bridges
+behind it. The configuration space includes IO resources,
+but these IO resources are not actually used on X86,
+it can result in BAR#13 assign IO resource failed.
+Therefor,clear IO resources by setting an IO base value
+greater than limit to these bridges here, so in this case,
+we can leverage kernel parameter "pci=hpiosize=0KB" to
+avoid this failed messages show up.
+
+Signed-off-by: Xiaochun Lee <lixc17@lenovo.com>
 ---
- drivers/pci/controller/pci-aardvark.c | 28 +++++++++++++--------------
- 1 file changed, 13 insertions(+), 15 deletions(-)
+ drivers/pci/quirks.c | 60 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 73a604f70f06..11afafe71e3d 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -66,11 +66,10 @@
- #define PCIE_CORE_CTRL0_REG			(CONTROL_BASE_ADDR + 0x0)
- #define     PCIE_GEN_SEL_MSK			0x3
- #define     PCIE_GEN_SEL_SHIFT			0x0
--#define     SPEED_GEN_1				0
--#define     SPEED_GEN_2				1
--#define     SPEED_GEN_3				2
--#define     IS_RC_MSK				1
--#define     IS_RC_SHIFT				2
-+#define     SPEED_GEN_1				(0 << PCIE_GEN_SEL_SHIFT)
-+#define     SPEED_GEN_2				(1 << PCIE_GEN_SEL_SHIFT)
-+#define     SPEED_GEN_3				(2 << PCIE_GEN_SEL_SHIFT)
-+#define     IS_RC				BIT(2)
- #define     LANE_CNT_MSK			0x18
- #define     LANE_CNT_SHIFT			0x3
- #define     LANE_COUNT_1			(0 << LANE_CNT_SHIFT)
-@@ -95,16 +94,16 @@
- #define     PCIE_CORE_REF_CLK_RX_ENABLE		BIT(2)
- #define PCIE_MSG_LOG_REG			(CONTROL_BASE_ADDR + 0x30)
- #define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
--#define PCIE_MSG_PM_PME_MASK			BIT(7)
- #define PCIE_ISR0_MASK_REG			(CONTROL_BASE_ADDR + 0x44)
--#define     PCIE_ISR0_MSI_INT_PENDING		BIT(24)
- #define     PCIE_ISR0_LINK_DOWN			BIT(1)
-+#define     PCIE_ISR0_MSG_PM_PME		BIT(7)
- #define     PCIE_ISR0_CORR_ERR			BIT(11)
- #define     PCIE_ISR0_NFAT_ERR			BIT(12)
- #define     PCIE_ISR0_FAT_ERR			BIT(13)
- #define     PCIE_ISR0_ERR_MASK			GENMASK(13, 11)
- #define     PCIE_ISR0_INTX_ASSERT(val)		BIT(16 + (val))
- #define     PCIE_ISR0_INTX_DEASSERT(val)	BIT(20 + (val))
-+#define     PCIE_ISR0_MSI_INT			BIT(24)
- #define     PCIE_ISR0_ALL_MASK			GENMASK(31, 0)
- #define PCIE_ISR1_REG				(CONTROL_BASE_ADDR + 0x48)
- #define PCIE_ISR1_MASK_REG			(CONTROL_BASE_ADDR + 0x4C)
-@@ -546,7 +545,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 
- 	/* Set PCI global control register to RC mode */
- 	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
--	reg |= (IS_RC_MSK << IS_RC_SHIFT);
-+	reg |= IS_RC;
- 	advk_writel(pcie, reg, PCIE_CORE_CTRL0_REG);
- 
- 	/*
-@@ -633,7 +632,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 
- 	/* Unmask summary MSI interrupt */
- 	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--	reg &= ~PCIE_ISR0_MSI_INT_PENDING;
-+	reg &= ~PCIE_ISR0_MSI_INT;
- 	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
- 
- 	/* Unmask Link Down interrupt */
-@@ -643,7 +642,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
- 
- 	/* Unmask PME interrupt for processing of PME requester */
- 	reg = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--	reg &= ~PCIE_MSG_PM_PME_MASK;
-+	reg &= ~PCIE_ISR0_MSG_PM_PME;
- 	advk_writel(pcie, reg, PCIE_ISR0_MASK_REG);
- 
- 	/* Enable summary interrupt for GIC SPI source */
-@@ -1661,7 +1660,7 @@ static void advk_pcie_handle_pme(struct advk_pcie *pcie)
- {
- 	u32 requester = advk_readl(pcie, PCIE_MSG_LOG_REG) >> 16;
- 
--	advk_writel(pcie, PCIE_MSG_PM_PME_MASK, PCIE_ISR0_REG);
-+	advk_writel(pcie, PCIE_ISR0_MSG_PM_PME, PCIE_ISR0_REG);
- 
- 	/*
- 	 * PCIE_MSG_LOG_REG contains the last inbound message, so store
-@@ -1700,8 +1699,7 @@ static void advk_pcie_handle_msi(struct advk_pcie *pcie)
- 			dev_err_ratelimited(&pcie->pdev->dev, "unexpected MSI 0x%02x\n", msi_idx);
- 	}
- 
--	advk_writel(pcie, PCIE_ISR0_MSI_INT_PENDING,
--		    PCIE_ISR0_REG);
-+	advk_writel(pcie, PCIE_ISR0_MSI_INT, PCIE_ISR0_REG);
- }
- 
- static void advk_pcie_handle_int(struct advk_pcie *pcie)
-@@ -1720,7 +1718,7 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
- 	isr1_status = isr1_val & ((~isr1_mask) & PCIE_ISR1_ALL_MASK);
- 
- 	/* Process PME interrupt as the first one to do not miss PME requester id */
--	if (isr0_status & PCIE_MSG_PM_PME_MASK)
-+	if (isr0_status & PCIE_ISR0_MSG_PM_PME)
- 		advk_pcie_handle_pme(pcie);
- 
- 	/* Process ERR interrupt */
-@@ -1756,7 +1754,7 @@ static void advk_pcie_handle_int(struct advk_pcie *pcie)
- 	}
- 
- 	/* Process MSI interrupts */
--	if (isr0_status & PCIE_ISR0_MSI_INT_PENDING)
-+	if (isr0_status & PCIE_ISR0_MSI_INT)
- 		advk_pcie_handle_msi(pcie);
- 
- 	/* Process legacy interrupts */
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 4944798e75b5..efecf12e8059 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5956,3 +5956,63 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b1, aspm_l1_acceptable_latency
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c0, aspm_l1_acceptable_latency);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c1, aspm_l1_acceptable_latency);
+ #endif
++
++#if defined(CONFIG_X86_64) || defined(CONFIG_X86)
++
++#ifdef CONFIG_UML_X86
++#define is_vmd(bus)             false
++#endif /* CONFIG_UML_X86 */
++
++/*
++ * VMD-enabled root ports use Enhanced Configuration Access Mechanism (ECAM)
++ * access PCI Express configuration space, and offer VMD_CFGBAR as the
++ * base of PCI Express configuration space for the bridges behind it.
++ * The configuration space includes IO resources, but these IO
++ * resources are not actually used on X86, and it can result
++ * in BAR#13 assign IO resource failed. Therefor, clear IO resources
++ * by setting an IO base value greater than limit to these bridges here,
++ * so in this case, append kernel parameter "pci=hpiosize=0KB" can avoid
++ * the BAR#13 failed messages show up.
++ */
++static void quirk_vmd_no_iosize(struct pci_dev *bridge)
++{
++	u8 io_base_lo, io_limit_lo;
++	u16 io_low;
++	u32 io_upper16;
++	unsigned long io_mask,  base, limit;
++
++	io_mask = PCI_IO_RANGE_MASK;
++	if (bridge->io_window_1k)
++		io_mask = PCI_IO_1K_RANGE_MASK;
++
++	/* VMD Domain */
++	if (is_vmd(bridge->bus) && bridge->is_hotplug_bridge) {
++		pci_read_config_byte(bridge, PCI_IO_BASE, &io_base_lo);
++		pci_read_config_byte(bridge, PCI_IO_LIMIT, &io_limit_lo);
++		base = (io_base_lo & io_mask) << 8;
++		limit = (io_limit_lo & io_mask) << 8;
++		/* if there are defined io ports behind the bridge on x86,
++		 * we clear it, since there is only 64KB IO resource on it,
++		 * beyond that, hotplug io bridges don't needs IO port resource,
++		 * such as NVMes attach on it. So the corresponding range must be
++		 * turned off by writing base value greater than limit to the
++		 * bridge's base/limit registers.
++		 */
++		if (limit >= base) {
++			/* Clear upper 16 bits of I/O base/limit */
++			io_upper16 = 0;
++			/* set base value greater than limit */
++			io_low = 0x00f0;
++
++			/* Temporarily disable the I/O range before updating PCI_IO_BASE */
++			pci_write_config_dword(bridge, PCI_IO_BASE_UPPER16, 0x0000ffff);
++			/* Update lower 16 bits of I/O base/limit */
++			pci_write_config_word(bridge, PCI_IO_BASE, io_low);
++			/* Update upper 16 bits of I/O base/limit */
++			pci_write_config_dword(bridge, PCI_IO_BASE_UPPER16, io_upper16);
++		}
++	}
++}
++DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID,
++		PCI_CLASS_BRIDGE_PCI, 8, quirk_vmd_no_iosize);
++#endif
 -- 
-2.35.1
+2.37.3
 
