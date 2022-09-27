@@ -2,111 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E26EC6FA92
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 13:59:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 562F1C54EE9
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Sep 2022 14:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233039AbiI0N7Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Sep 2022 09:59:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57062 "EHLO
+        id S231382AbiI0OTf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Sep 2022 10:19:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233009AbiI0N6k (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 09:58:40 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50C38146610;
-        Tue, 27 Sep 2022 06:58:39 -0700 (PDT)
-Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4McLm45ks9z688Z6;
-        Tue, 27 Sep 2022 21:57:24 +0800 (CST)
-Received: from lhrpeml500005.china.huawei.com (7.191.163.240) by
- fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Tue, 27 Sep 2022 15:58:37 +0200
-Received: from localhost (10.202.226.42) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 27 Sep
- 2022 14:58:37 +0100
-Date:   Tue, 27 Sep 2022 14:58:36 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To:     <ira.weiny@intel.com>
-CC:     Dan Williams <dan.j.williams@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        "Ben Widawsky" <bwidawsk@kernel.org>, <linux-cxl@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH V3 2/2] cxl/doe: Request exclusive DOE access
-Message-ID: <20220927145836.0000572e@huawei.com>
-In-Reply-To: <20220926215711.2893286-3-ira.weiny@intel.com>
-References: <20220926215711.2893286-1-ira.weiny@intel.com>
-        <20220926215711.2893286-3-ira.weiny@intel.com>
-X-Mailer: Claws Mail 4.0.0 (GTK+ 3.24.29; i686-w64-mingw32)
+        with ESMTP id S231835AbiI0OTc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Sep 2022 10:19:32 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBC122BC8
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2022 07:19:31 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7398A619EB
+        for <linux-pci@vger.kernel.org>; Tue, 27 Sep 2022 14:19:31 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2989AC433C1;
+        Tue, 27 Sep 2022 14:19:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1664288370;
+        bh=TqW0UwINqhnNZuaWMGDZ5GwxrhxmTz6HVjmYbKvZi+c=;
+        h=From:To:Cc:Subject:Date:From;
+        b=iqg6NuCEAYHZ+bcDrupY9CM4LimhL5AC7x3ZLUEL7kQ9NAOGwcmhHJgvxbDdVewVh
+         28lwe4V0uJGW928/Q3cvtkMIeG4XMpznSr2PZjvTzRNk0qc5o64WS5tnoo5G9i/i6T
+         kQL+NG26g7smDi8nBvlFXqdplwsWmed/liyYQKNZEhzNX/2gPYD65c8jwJO0uffyDA
+         qUTRlCGHQqxMxd5Q9gML7l6SYxbnRkyiHEfqOEQ9aAfUil+5DG02s80TfuqiNUK2pm
+         9LrqLiXR2z6Ao0SKNJ00475ZLJ/EJePZqG4cGE86HRoG9A+mhh+cv5m6GvcfDEPlUB
+         eIdtEGy93RZRw==
+From:   =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Gregory CLEMENT <gregory.clement@bootlin.com>, pali@kernel.org,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
+Subject: [PATCH v2 00/10] PCI: aardvark controller changes BATCH 6
+Date:   Tue, 27 Sep 2022 16:19:16 +0200
+Message-Id: <20220927141926.8895-1-kabel@kernel.org>
+X-Mailer: git-send-email 2.35.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.42]
-X-ClientProxiedBy: lhrpeml500004.china.huawei.com (7.191.163.9) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 26 Sep 2022 14:57:11 -0700
-ira.weiny@intel.com wrote:
+Hello Lorenzo,
 
-> From: Ira Weiny <ira.weiny@intel.com>
-> 
-> The PCIE Data Object Exchange (DOE) mailbox is a protocol run over
-> configuration cycles.  It assumes one initiator at a time.  While the
-> kernel has control of the mailbox user space writes could interfere with
-> the kernel access.
-> 
-> Mark DOE mailbox config space exclusive when iterated by the CXL driver.
-> 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-I wonder a bit on whether the failure should be fatal given that something
-very odd would be required for it to fail.
+here comes v2 of batch 6 of Aardvark patches.
+The original version can be found on the mailing list archives [1].
 
-I'm not that bothered though.
+Changes since v1:
+- dropped first patch,
+    PCI: pciehp: Enable DLLSC interrupt only if supported
+  since it is not a dependency for this series and Lukas Wunner
+  considers the change without value
+- added more explanation to patches 2 and 6 (previously 3 and 7)
 
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Marek
 
-> 
-> ---
-> Changes from V2:
-> 	Jonathan:
-> 		s/PCI_DOE_CAP_SIZE/PCI_DOE_CAP_SIZEOF
-> 		Set PCI_DOE_CAP_SIZEOF directly
-> ---
->  drivers/cxl/pci.c             | 5 +++++
->  include/uapi/linux/pci_regs.h | 1 +
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index faeb5d9d7a7a..621a0522b554 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -418,6 +418,11 @@ static void devm_cxl_pci_create_doe(struct cxl_dev_state *cxlds)
->  			continue;
->  		}
->  
-> +		if (!pci_request_config_region_exclusive(pdev, off,
-> +							 PCI_DOE_CAP_SIZEOF,
-> +							 dev_name(dev)))
-> +			pci_err(pdev, "Failed to exclude DOE registers\n");
-> +
->  		if (xa_insert(&cxlds->doe_mbs, off, doe_mb, GFP_KERNEL)) {
->  			dev_err(dev, "xa_insert failed to insert MB @ %x\n",
->  				off);
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 57b8e2ffb1dd..82a03ea954af 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -1119,6 +1119,7 @@
->  #define  PCI_DOE_STATUS_DATA_OBJECT_READY	0x80000000  /* Data Object Ready */
->  #define PCI_DOE_WRITE		0x10    /* DOE Write Data Mailbox Register */
->  #define PCI_DOE_READ		0x14    /* DOE Read Data Mailbox Register */
-> +#define PCI_DOE_CAP_SIZEOF	0x18	/* Size of DOE register block */
->  
->  /* DOE Data Object - note not actually registers */
->  #define PCI_DOE_DATA_OBJECT_HEADER_1_VID		0x0000ffff
+[1] https://lore.kernel.org/linux-pci/20220818135140.5996-1-kabel@kernel.org/
+
+Marek Behún (2):
+  PCI: aardvark: Don't write read-only bits explicitly in PCI_ERR_CAP
+    register
+  PCI: aardvark: Explicitly disable Marvell strict ordering
+
+Miquel Raynal (2):
+  PCI: aardvark: Add clock support
+  PCI: aardvark: Add suspend to RAM support
+
+Pali Rohár (6):
+  PCI: pciehp: Enable Command Completed Interrupt only if supported
+  PCI: aardvark: Add support for DLLSC and hotplug interrupt
+  PCI: aardvark: Send Set_Slot_Power_Limit message
+  arm64: dts: armada-3720-turris-mox: Define slot-power-limit-milliwatt
+    for PCIe
+  PCI: aardvark: Replace custom PCIE_CORE_ERR_CAPCTL_* macros by
+    linux/pci_regs.h macros
+  PCI: aardvark: Cleanup some register macros
+
+ .../dts/marvell/armada-3720-turris-mox.dts    |   1 +
+ drivers/pci/controller/Kconfig                |   3 +
+ drivers/pci/controller/pci-aardvark.c         | 258 +++++++++++++++---
+ drivers/pci/hotplug/pciehp_hpc.c              |   4 +-
+ 4 files changed, 232 insertions(+), 34 deletions(-)
+
+-- 
+2.35.1
 
