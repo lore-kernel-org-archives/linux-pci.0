@@ -2,87 +2,86 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57676C32771
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Sep 2022 09:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B86CC04A95
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Sep 2022 10:24:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233831AbiI1Jbw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Sep 2022 05:31:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43154 "EHLO
+        id S229640AbiI1KYp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Sep 2022 06:24:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233860AbiI1Jbb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Sep 2022 05:31:31 -0400
-Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57B47D33EE;
-        Wed, 28 Sep 2022 02:31:29 -0700 (PDT)
+        with ESMTP id S232518AbiI1KYo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Sep 2022 06:24:44 -0400
+Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40FA513F49;
+        Wed, 28 Sep 2022 03:24:41 -0700 (PDT)
 Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 28S9VEo9115810;
-        Wed, 28 Sep 2022 04:31:14 -0500
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 28SAOaGO099816;
+        Wed, 28 Sep 2022 05:24:36 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1664357474;
-        bh=bamV10jgSCholN4PmlvQuQ/l4nJvgo3gp0ydKye83mQ=;
+        s=ti-com-17Q1; t=1664360676;
+        bh=ck6rNhKL1X9AY2+RHr/dMv1FGjWx989F3Vfr8HMWRb8=;
         h=From:To:CC:Subject:Date;
-        b=saYZB4wbOeT8hn7A/mGHXvDCYMooWyRu4C7WjW3bCXQyO/nsenqpLLLGQH159AY5S
-         XQ2J027m7FQpeSKAs8Kg5l9ZUIsK50HW707pe15NnjRNYMMEU4o07p5YetPdqNpU3w
-         AoeAX7qxwgrRZCLCffj4dKkBGa8csl6jDuKYd+mE=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 28S9VELk064227
+        b=ULm62cHHQnQdKyDreMU0Eh53UD3MskCCrB5M9CDEjl10xHZ9V/h8oysJh7SI/R9Vj
+         kO0VkEqxS0hDk4aSf+EawRHnExE+iGmtjIn9n/6apPy/or99vTncPcrt4PZPlxH5Zt
+         aURFsk9QMsE0a3s4+2VWbMlvNKJIpuE+RNagtKWI=
+Received: from DLEE106.ent.ti.com (dlee106.ent.ti.com [157.170.170.36])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 28SAOa67090316
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 28 Sep 2022 04:31:14 -0500
-Received: from DLEE104.ent.ti.com (157.170.170.34) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 28 Sep 2022 05:24:36 -0500
+Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE106.ent.ti.com
+ (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6; Wed, 28
- Sep 2022 04:31:13 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2022 05:24:35 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE115.ent.ti.com
+ (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6 via
- Frontend Transport; Wed, 28 Sep 2022 04:31:13 -0500
+ Frontend Transport; Wed, 28 Sep 2022 05:24:35 -0500
 Received: from a0393678ub.dal.design.ti.com (ileaxei01-snat.itg.ti.com [10.180.69.5])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 28S9VAei045260;
-        Wed, 28 Sep 2022 04:31:10 -0500
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 28SAOWaC095050;
+        Wed, 28 Sep 2022 05:24:33 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>
 CC:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Rob Herring <robh@kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-omap@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
+        <linux-kernel@vger.kernel.org>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2] MAINTAINERS: Add Vignesh Raghavendra as maintainer of TI DRA7XX/J721E PCI driver
-Date:   Wed, 28 Sep 2022 15:01:05 +0530
-Message-ID: <20220928093105.23073-1-kishon@ti.com>
+Subject: [PATCH] MAINTAINERS: Update Kishon's email address in PCI endpoint subsystem
+Date:   Wed, 28 Sep 2022 15:54:31 +0530
+Message-ID: <20220928102431.658-1-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Vignesh Raghavendra as maintainer of TI DRA7XX/J721E PCI driver.
+Update Kishon's email address in PCI endpoint subsystem maintainer
+entry and mark him as reviewer.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
-Change from v1:
-Added "PCI" in the subject and commit log.
-
  MAINTAINERS | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index aef4632f4e87..ffad3f1dfe9c 100644
+index ffad3f1dfe9c..9dc9a4aa2301 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -15667,7 +15667,7 @@ F:	Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
- F:	drivers/pci/controller/dwc/*designware*
+@@ -15684,9 +15684,9 @@ F:	Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+ F:	drivers/pci/controller/pci-v3-semi.c
  
- PCI DRIVER FOR TI DRA7XX/J721E
+ PCI ENDPOINT SUBSYSTEM
 -M:	Kishon Vijay Abraham I <kishon@ti.com>
-+M:	Vignesh Raghavendra <vigneshr@ti.com>
- L:	linux-omap@vger.kernel.org
+ M:	Lorenzo Pieralisi <lpieralisi@kernel.org>
+ R:	Krzysztof Wilczyński <kw@linux.com>
++R:	Kishon Vijay Abraham I <kishon@kernel.org>
  L:	linux-pci@vger.kernel.org
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Supported
+ Q:	https://patchwork.kernel.org/project/linux-pci/list/
 -- 
 2.17.1
 
