@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A5DBC32771
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Sep 2022 15:55:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA10C6FA90
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Sep 2022 15:55:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234127AbiI1PzO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Sep 2022 11:55:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45508 "EHLO
+        id S234185AbiI1PzP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Sep 2022 11:55:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234078AbiI1PzJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Sep 2022 11:55:09 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66B777EFCC;
-        Wed, 28 Sep 2022 08:55:07 -0700 (PDT)
+        with ESMTP id S234084AbiI1PzK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Sep 2022 11:55:10 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C025075CFE;
+        Wed, 28 Sep 2022 08:55:08 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C69F261F0E;
-        Wed, 28 Sep 2022 15:55:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2949CC433D6;
+        by ams.source.kernel.org (Postfix) with ESMTPS id 81166B82118;
+        Wed, 28 Sep 2022 15:55:07 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24AC4C433C1;
         Wed, 28 Sep 2022 15:55:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1664380506;
-        bh=hz7buZETgB+MH/jgJl89cmN6D+RYIk5iKsv8v2DxjEc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=EwhA4L9jFQesimIVWXLTqy0g4TeNp8b4tObhZpmuzsR9Y1Feznh02o+SJ2QWBGYG2
-         JwVkPArhxptBMdMKGowZGot5Hob0OnxS28gI9oiACiDqn7zrgMMRQ3DjFJBujyMT5Z
-         /fMBlttkyOnlehva6+zAiCMbIYX3qGpqODuFxfvK/fJuEXln1/yI6mPuq1jYTSJV0L
-         uz/G0ekfa87zSjEMmldgdTZU+gfZ4IjB2rNujSc8+fGrKaM0BR5W13jHUNGRbGXuyS
-         8KzIi6pxi1O5L4YNQb0Tfkhux0uy3cgh1GdiC+BCDN6UBAbPFvjYgXZoi4yp3dG9AA
-         EQoqrD07v+g8w==
+        bh=19kRek0Nz/9dwB2Md/XXV+wwHSf8yk35FNl7Vooy73E=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=WAFJ9lBYsnTSpIwaiRaxIPRbLW1l2YWc8XmwdFpYAgA3Pm/qSOYKqhsiTGegfSBc4
+         nCCXulw0M3rA6zJ2ZpPwXs+rd3AHzdmzHIYn8TpQ9309JgLTsZYTLOesvoynC1rUCt
+         MYTb4nmRizlLpF+cizq1c27mC9lXY8qDlS49GTbrk2l7u28yhWqUNXo+lBw4zu4O0y
+         M8pua8XkBVPTrUBDuHrh8XYKG13rn7EVlLnBEtVgcZmlIzM62h5yGMdXT7UNoYzxPk
+         /rFpKm6ehQf2qWVv0qO1TK6XPcTlsTXR8L+9E6nypMCmQw4yinEDvTYl3gewvUClfv
+         XGXdJNRzoJAag==
 Received: from johan by xi.lan with local (Exim 4.94.2)
         (envelope-from <johan+linaro@kernel.org>)
-        id 1odZOx-0005e6-W3; Wed, 28 Sep 2022 17:55:12 +0200
+        id 1odZOy-0005eA-Sw; Wed, 28 Sep 2022 17:55:12 +0200
 From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Stanimir Varbanov <svarbanov@mm-sol.com>
@@ -45,41 +45,45 @@ Cc:     Andy Gross <agross@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
         linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH v3 0/2] PCI: qcom: Drop unused post_deinit callback
-Date:   Wed, 28 Sep 2022 17:54:19 +0200
-Message-Id: <20220928155421.21660-1-johan+linaro@kernel.org>
+Subject: [PATCH v3 2/2] PCI: qcom: Rename host-init error label
+Date:   Wed, 28 Sep 2022 17:54:21 +0200
+Message-Id: <20220928155421.21660-3-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20220928155421.21660-1-johan+linaro@kernel.org>
+References: <20220928155421.21660-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series drops the badly named post_deinit callback which is unused
-after merging the PIPE clock series. Included is also a related
-error-label cleanup.
+Use a more descriptive name for the reset host-init error label for
+consistency.
 
-Since the modular driver patch is held off for a while still, I've
-rebased these cleanups so that they might make it into 6.1.
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Johan
-
-
-Changes in v3
- - drop dependency on patch making the driver modular
-
-Changes in v2
- - keep the post_init() callback which is being repurposed for DBI
-   accesses
-
-
-Johan Hovold (2):
-  PCI: qcom: Drop unused post_deinit callback
-  PCI: qcom: Rename host-init error label
-
- drivers/pci/controller/dwc/pcie-qcom.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 8d6df0db4ebb..f711acacaeaf 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1512,12 +1512,12 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+ 	if (pcie->cfg->ops->config_sid) {
+ 		ret = pcie->cfg->ops->config_sid(pcie);
+ 		if (ret)
+-			goto err;
++			goto err_assert_reset;
+ 	}
+ 
+ 	return 0;
+ 
+-err:
++err_assert_reset:
+ 	qcom_ep_reset_assert(pcie);
+ err_disable_phy:
+ 	phy_power_off(pcie->phy);
 -- 
 2.35.1
 
