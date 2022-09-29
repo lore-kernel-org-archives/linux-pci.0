@@ -2,68 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E346EC07E9D
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Sep 2022 08:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C618EC04A95
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Sep 2022 08:56:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235208AbiI2Irm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Sep 2022 04:47:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52030 "EHLO
+        id S234259AbiI2I4g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Sep 2022 04:56:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235444AbiI2Irk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2022 04:47:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76957133CAB;
-        Thu, 29 Sep 2022 01:47:38 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 18A2DB821F2;
-        Thu, 29 Sep 2022 08:47:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48122C433B5;
-        Thu, 29 Sep 2022 08:47:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664441255;
-        bh=Vv10LeELwgV/jutorQpxnf35fil0pkpxpZIhlnO4P6g=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=chP0iiA73P2n30Eg3s5Epk8D+7V78RiIgMLKS5z7xC1llAunDJLsYl+qLFtcyWYfM
-         tPku0dDDbnpD68NEVPcskvQ3Eo9F6uHSIBro6jFlUCGVgXFl35Q703Cdd7Cf3jp4eO
-         4Cck7s/CkcujpkKNhbz8phnx1Ift4MTph9E59Crkgv7PJNumQ3kYI9a3sQUSb26ZLf
-         kd7XNrnXI1oIILz83P5ZyAZCikl9M14wCl2sGD1wgVCEMgo2FvYOkEL9AjxEzixZxg
-         vx3+l5rqJa50Pk7JSLJaDMix65Bm3NJqsk70MG8seq7l9v9pj0oy7zN+3uM+nMsxmV
-         OWzL8ALaHzFpw==
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>
-Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Use PCI_CONF1_EXT_ADDRESS() macro
-Date:   Thu, 29 Sep 2022 10:47:30 +0200
-Message-Id: <166444123034.167287.381471789619893320.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220928121911.14994-1-pali@kernel.org>
-References: <20220928121911.14994-1-pali@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S235463AbiI2I4W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2022 04:56:22 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ABD4128A2E;
+        Thu, 29 Sep 2022 01:56:11 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 6600D21BF61;
+        Thu, 29 Sep 2022 10:56:10 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 061EB21BF5B;
+        Thu, 29 Sep 2022 10:56:10 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 25F0A181D0CB;
+        Thu, 29 Sep 2022 16:56:08 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     vkoul@kernel.org, p.zabel@pengutronix.de, l.stach@pengutronix.de,
+        bhelgaas@google.com, lorenzo.pieralisi@arm.com, robh@kernel.org,
+        shawnguo@kernel.org, alexander.stein@ew.tq-group.com,
+        marex@denx.de, richard.leitner@linux.dev
+Cc:     linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        linux-imx@nxp.com
+Subject: [PATCH v10 0/4] Add the iMX8MP PCIe support
+Date:   Thu, 29 Sep 2022 16:36:58 +0800
+Message-Id: <1664440622-18556-1-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 28 Sep 2022 14:19:11 +0200, Pali Rohár wrote:
-> Simplify pci-tegra.c driver code and use new PCI_CONF1_EXT_ADDRESS() macro
-> for accessing PCI config space.
-> 
-> 
+Based on the 6.0-rc1 of the pci/next branch. 
+This series adds the i.MX8MP PCIe support and tested on i.MX8MP
+EVK board when one PCIe NVME device is used.
 
-Applied to pci/misc, thanks!
+- i.MX8MP PCIe has reversed initial PERST bit value refer to i.MX8MQ/i.MX8MM.
+  Add the PHY PERST explicitly for i.MX8MP PCIe PHY.
+- Add the i.MX8MP PCIe PHY support in the i.MX8M PCIe PHY driver.
+  And share as much as possible codes with i.MX8MM PCIe PHY.
+- Add the i.MX8MP PCIe support in binding document, DTS files, and PCIe
+  driver.
 
-[1/1] PCI: tegra: Use PCI_CONF1_EXT_ADDRESS() macro
-      https://git.kernel.org/lpieralisi/pci/c/8bb7ff12a914
+Main changes v9-->v10:
+- Refer to Vinod's review comments, drop the array, and use the static data
+  structure directly in the drvdata definition.
 
-Thanks,
-Lorenzo
+Main changes v8-->v9:
+- Split the PHY driver changes into three patches.
+  - To keep the format consistent, re-define the PHY_CMN_REG75, and remove
+    two useless BIT definitions.
+  - Refine the i.MX8MM PCIe PHY driver, let it more reviewable, flexible,
+    and easy to expand.
+  - Add the i.MX8MP PCIe PHY support.
+- Only PHY related patches in v9, Since the others patches had been merged
+  by Phillipp/Shawn/Lorenzo.
+
+Main changes v7-->v8:
+- Add the Reviewed-by tag, no other changes.
+  Only two patches in v8, Since the others patches had been merged by
+  Phillipp/Shawn/Lorenzo.
+
+Main changes v6-->v7:
+- Add "Reviewed-by: Lucas Stach <l.stach@pengutronix.de>" into first three
+  patches.
+- Use "const *char" to replace the static allocation.
+
+Main changes v5-->v6:
+- To avoid code duplication when find the gpr syscon regmap, add the
+  gpr compatible into the drvdata.
+- Add one missing space before one curly brace in 3/7 of v5 series.
+- 4/7 of v5 had been applied by Phillipp, thanks. For ease of tests, still
+  keep it in v6.
+
+Main changes v4-->v5:
+- Use Lucas' approach, let blk-ctrl driver do the hsio-mix resets.
+- Fetch the iomuxc-gpr regmap by the different phandles.
+
+Main changes v3-->v4:
+- Regarding Phillipp's suggestions, add fix tag into the first commit.
+- Add Reviewed and Tested tags.
+
+Main changes v2-->v3:
+- Fix the schema checking error in the PHY dt-binding patch.
+- Inspired by Lucas, the PLL configurations might not required when
+  external OSC is used as PCIe referrence clock. It's true. Remove all
+  the HSIO PLL bit manipulations, and PCIe works fine on i.MX8MP EVK board
+  with one NVME device is used.
+- Drop the #4 patch of v2, since it had been applied by Rob.
+
+Main changes v1-->v2:
+- It's my fault forget including Vinod, re-send v2 after include Vinod
+  and linux-phy@lists.infradead.org.
+- List the basements of this patch-set. The branch, codes changes and so on.
+- Clean up some useless register and bit definitions in #3 patch.
+
+Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml |  16 ++++++++--
+drivers/phy/freescale/phy-fsl-imx8m-pcie.c                   | 140 ++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------
+2 files changed, 106 insertions(+), 50 deletions(-)
+
+[PATCH v10 1/4] dt-binding: phy: Add i.MX8MP PCIe PHY binding
+[PATCH v10 2/4] phy: freescale: imx8m-pcie: Refine register
+[PATCH v10 3/4] phy: freescale: imx8m-pcie: Refine i.MX8MM PCIe PHY
+[PATCH v10 4/4] phy: freescale: imx8m-pcie: Add i.MX8MP PCIe PHY
