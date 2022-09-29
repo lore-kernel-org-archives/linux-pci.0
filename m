@@ -2,53 +2,51 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B42C07E9D
-	for <linux-pci@archiver.kernel.org>; Thu, 29 Sep 2022 08:36:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E346EC07E9D
+	for <linux-pci@archiver.kernel.org>; Thu, 29 Sep 2022 08:47:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235541AbiI2IgJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 29 Sep 2022 04:36:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54528 "EHLO
+        id S235208AbiI2Irm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 29 Sep 2022 04:47:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52030 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234979AbiI2IgJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2022 04:36:09 -0400
+        with ESMTP id S235444AbiI2Irk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Sep 2022 04:47:40 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DE4BB1E4;
-        Thu, 29 Sep 2022 01:36:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76957133CAB;
+        Thu, 29 Sep 2022 01:47:38 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 58A28B823C0;
-        Thu, 29 Sep 2022 08:36:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC2E9C433C1;
-        Thu, 29 Sep 2022 08:36:01 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 18A2DB821F2;
+        Thu, 29 Sep 2022 08:47:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48122C433B5;
+        Thu, 29 Sep 2022 08:47:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664440565;
-        bh=IWwdb6bfrNTHaSDjZf5Zq6LcjfEfOxyQQ8/I4mwHavo=;
+        s=k20201202; t=1664441255;
+        bh=Vv10LeELwgV/jutorQpxnf35fil0pkpxpZIhlnO4P6g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ijdINw9nLYF2UOHTUk5P4A3xkIU5T+G0Y1Ktvgt0izJmndOK29JzovTOV5PM4gH99
-         hjBSqpO55R53I6FpRHEDFV54A0OrUFwuJfdlQYXgHqF4KfGkQcNRFmfNjQvS+4DdFB
-         wDs6VlbWjiXWhyDpOQHrQxiZgee6Vs7C40yJZD2hjkRqzNTCdxlM8URmS8XtIfOtOY
-         o2WKoH1u49PXWBBdOMM7VVgKHUAYWzMxFC/zjvTVlDVnEoM6aPTRnj4a8ZQmwC6Y9G
-         rEpFGREjf3tTItKnxD/3CtHTtJ25Eavftnd9L4JPOCeIPBFEhG3nVCzoYQLinnK9kB
-         NPt5j8HJojq9A==
+        b=chP0iiA73P2n30Eg3s5Epk8D+7V78RiIgMLKS5z7xC1llAunDJLsYl+qLFtcyWYfM
+         tPku0dDDbnpD68NEVPcskvQ3Eo9F6uHSIBro6jFlUCGVgXFl35Q703Cdd7Cf3jp4eO
+         4Cck7s/CkcujpkKNhbz8phnx1Ift4MTph9E59Crkgv7PJNumQ3kYI9a3sQUSb26ZLf
+         kd7XNrnXI1oIILz83P5ZyAZCikl9M14wCl2sGD1wgVCEMgo2FvYOkEL9AjxEzixZxg
+         vx3+l5rqJa50Pk7JSLJaDMix65Bm3NJqsk70MG8seq7l9v9pj0oy7zN+3uM+nMsxmV
+         OWzL8ALaHzFpw==
 From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Johan Hovold <johan+linaro@kernel.org>
-Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        linux-arm-msm@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@somainline.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+To:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v3 0/2] PCI: qcom: Drop unused post_deinit callback
-Date:   Thu, 29 Sep 2022 10:35:59 +0200
-Message-Id: <166444053875.166182.16168492318251008339.b4-ty@kernel.org>
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: Use PCI_CONF1_EXT_ADDRESS() macro
+Date:   Thu, 29 Sep 2022 10:47:30 +0200
+Message-Id: <166444123034.167287.381471789619893320.b4-ty@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220928155421.21660-1-johan+linaro@kernel.org>
-References: <20220928155421.21660-1-johan+linaro@kernel.org>
+In-Reply-To: <20220928121911.14994-1-pali@kernel.org>
+References: <20220928121911.14994-1-pali@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
@@ -56,22 +54,16 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 28 Sep 2022 17:54:19 +0200, Johan Hovold wrote:
-> This series drops the badly named post_deinit callback which is unused
-> after merging the PIPE clock series. Included is also a related
-> error-label cleanup.
+On Wed, 28 Sep 2022 14:19:11 +0200, Pali Rohár wrote:
+> Simplify pci-tegra.c driver code and use new PCI_CONF1_EXT_ADDRESS() macro
+> for accessing PCI config space.
 > 
-> Since the modular driver patch is held off for a while still, I've
-> rebased these cleanups so that they might make it into 6.1.
 > 
-> [...]
 
-Applied to pci/qcom, thanks!
+Applied to pci/misc, thanks!
 
-[1/2] PCI: qcom: Drop unused post_deinit callback
-      https://git.kernel.org/lpieralisi/pci/c/b623023225ab
-[2/2] PCI: qcom: Rename host-init error label
-      https://git.kernel.org/lpieralisi/pci/c/0e4d9a5cc767
+[1/1] PCI: tegra: Use PCI_CONF1_EXT_ADDRESS() macro
+      https://git.kernel.org/lpieralisi/pci/c/8bb7ff12a914
 
 Thanks,
 Lorenzo
