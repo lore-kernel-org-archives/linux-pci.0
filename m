@@ -2,41 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42C5CC433F5
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Oct 2022 18:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C432C433F5
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Oct 2022 18:21:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229943AbiJCSKH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Oct 2022 14:10:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51746 "EHLO
+        id S229563AbiJCSV4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Oct 2022 14:21:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229972AbiJCSKE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Oct 2022 14:10:04 -0400
+        with ESMTP id S229461AbiJCSVy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Oct 2022 14:21:54 -0400
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A8471209E;
-        Mon,  3 Oct 2022 11:09:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE894DF83;
+        Mon,  3 Oct 2022 11:21:53 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 87825B81203;
-        Mon,  3 Oct 2022 18:09:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD545C433D6;
-        Mon,  3 Oct 2022 18:09:55 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8F280B81205;
+        Mon,  3 Oct 2022 18:21:52 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2F10C433C1;
+        Mon,  3 Oct 2022 18:21:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664820596;
-        bh=ANqFI6xslOGdcFDVAOiICDsxXBMTCaKi13Ycp8pVIR8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=KPHRzHlWh1OPUagG4uwrYFJlVJRRNFCam8EqLQCMYmXat2XL0n5epL0Z7L4NJu0iI
-         n32bD1rCeEqJ7ipwWNDJojRYW+NdpqCbvD2jjHaJO3e5bz8XtlsDYhrqLGOh2vZ0QQ
-         If/q3ezlan3MHHGsWQnEK+xAqbI0STq9CrWerzRI9U986HYrCU3aVRZg2AI5HKCArO
-         1EM0nQBRUp8VQZodOmWDn/gfeuqBRc2v4Amr0Lm/8xb+hWlppeD10CvHuW2L4DKEWz
-         Ng1hr9DbIKH+53tfitlwZZ2oZT1T1zOlO8Hq1NjPIVQcXkCV8gGSfoXPmwNLfWXtKF
-         a7ozlM0JggbYA==
-Date:   Mon, 3 Oct 2022 13:09:49 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jonathan Derrick <jonathan.derrick@linux.dev>
-Cc:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>,
-        Vidya Sagar <vidyas@nvidia.com>, bhelgaas@google.com,
+        s=k20201202; t=1664821311;
+        bh=fAj+g9SbF66P5R+DbPuZP8fh8Mob0CfnwzQ0Qn/TP7Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IkB7q/DCsAAZ23yI0jUQlTAvUoLoYjwOnizq91SMfhEXL4eacXEHN5L4bza/ANR2Y
+         wDGNF1/eLmYkCRdBTjNOSU1/Q/lkXNupti+tF+XwHjBxxypJlN7QcfSp78nB7dc9Dt
+         bKgQGL3uD26oBPJk0j4/nuWZ40E4wLDWs5k4eKgSnQ3S6cgN2J0NKxXVz8m8K+b+xz
+         /maJDdZeaaxf5F6OvcRu/z1M5alT+t0TiTp5qzQVH+HtckOeMpB5SeLMlX0e5b2RWf
+         erGgRFc//rgUHW1elFJRt8MwyZ7BZFNIiG2CyxubvW2/wZt+BbhH3Mujlls2Q1/S91
+         AID9dBN3qS7/A==
+Received: by pali.im (Postfix)
+        id 03D56742; Mon,  3 Oct 2022 20:21:47 +0200 (CEST)
+Date:   Mon, 3 Oct 2022 20:21:47 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Jonathan Derrick <jonathan.derrick@linux.dev>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Lukas Wunner <lukas@wunner.de>, bhelgaas@google.com,
         robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
         lpieralisi@kernel.org, kw@linux.com, thierry.reding@gmail.com,
         jonathanh@nvidia.com, mani@kernel.org,
@@ -44,37 +46,45 @@ Cc:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
         linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
         kthota@nvidia.com, mmaddireddy@nvidia.com, sagar.tv@gmail.com,
-        Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>
+        Marek =?utf-8?B?QmVow7pu?= <kabel@kernel.org>
 Subject: Re: [PATCH V1 0/4] GPIO based PCIe Hot-Plug support
-Message-ID: <20221003180949.GA2104321@bhelgaas>
+Message-ID: <20221003182147.jp5gn2jpnf4gucdl@pali>
+References: <2a465222-342a-418b-95af-9948f6ce9065@linux.dev>
+ <20221003180949.GA2104321@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <2a465222-342a-418b-95af-9948f6ce9065@linux.dev>
+In-Reply-To: <20221003180949.GA2104321@bhelgaas>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Oct 01, 2022 at 05:50:07PM -0600, Jonathan Derrick wrote:
-> On 10/1/2022 10:20 AM, Pali Rohár wrote:
-> ...
+On Monday 03 October 2022 13:09:49 Bjorn Helgaas wrote:
+> On Sat, Oct 01, 2022 at 05:50:07PM -0600, Jonathan Derrick wrote:
+> > On 10/1/2022 10:20 AM, Pali RohÃ¡r wrote:
+> > ...
+> 
+> > > Would not it better to rather synthesise PCIe Slot Capabilities support
+> > > in your PCIe Root Port device (e.g. via pci-bridge-emul.c) and then let
+> > > existing PCI hotplug code to take care for hotplugging? Because it
+> > > already implements all required stuff for re-scanning, registering and
+> > > unregistering PCIe devices for Root Ports with Slot Capabilities. And I
+> > > think that there is no need to have just another (GPIO based)
+> > > implementation of PCI hotplug.
+> >
+> > I did that a few years ago (rejected), but can attest to the robustness of
+> > the pcie hotplug code on non-hotplug slots.
+> > https://lwn.net/Articles/811988/
+> 
+> I think the thread is here:
+> https://lore.kernel.org/linux-pci/1581120007-5280-1-git-send-email-jonathan.derrick@intel.com/
+> and I'm sorry that my response came across as "rejected".  I intended
+> it as "this is good ideas and good work and we should keep going".
+> 
+> Bjorn
 
-> > Would not it better to rather synthesise PCIe Slot Capabilities support
-> > in your PCIe Root Port device (e.g. via pci-bridge-emul.c) and then let
-> > existing PCI hotplug code to take care for hotplugging? Because it
-> > already implements all required stuff for re-scanning, registering and
-> > unregistering PCIe devices for Root Ports with Slot Capabilities. And I
-> > think that there is no need to have just another (GPIO based)
-> > implementation of PCI hotplug.
->
-> I did that a few years ago (rejected), but can attest to the robustness of
-> the pcie hotplug code on non-hotplug slots.
-> https://lwn.net/Articles/811988/
-
-I think the thread is here:
-https://lore.kernel.org/linux-pci/1581120007-5280-1-git-send-email-jonathan.derrick@intel.com/
-and I'm sorry that my response came across as "rejected".  I intended
-it as "this is good ideas and good work and we should keep going".
-
-Bjorn
+Nice! So we have consensus that this is a good idea. Anyway, if you need
+help with designing something here, please let me know as I have good
+understanding of all (just two) consumers of pci-bridge-emul.c driver.
