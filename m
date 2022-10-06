@@ -2,95 +2,89 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19EC4C433F5
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Oct 2022 16:27:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B0CBC433FE
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Oct 2022 16:50:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230417AbiJFQ1Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Oct 2022 12:27:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34824 "EHLO
+        id S231499AbiJFQud (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Oct 2022 12:50:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230216AbiJFQ1Y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2022 12:27:24 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDB40CE9BE;
-        Thu,  6 Oct 2022 09:27:23 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id 13so5778822ejn.3;
-        Thu, 06 Oct 2022 09:27:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=1kXYRJVvVuB6/yCg+mLXa+n2OpJV2ALpI5+bxh3cOos=;
-        b=CyGVdpIRf0cbkRRlaQmlIM4GbYrItWETO4moUB0zABjHGn+1Bb5HHwCCrwYBQSdG1z
-         YC0Mo0XlKB75VeUZ/tJLkKEazynqHAdt2RXqbZQ7RFv78GUf5L3UQVLsOU6zdZEwiZac
-         SBrkH5q2D8PZcWVlYrSSPu5iu5DNoO+XHQPihtd1TbNlapY8sRyKQqe9zKr/w/PEqZHR
-         x0rPhaaRYuIGeVx/OGinB2GIMhzjl+TxEqwMsa/r4HYIyXFoF3EMA4Tvj4SsNs8OmWK5
-         eD4wxZUqXbkkCQdkaKwPpGze4+jRMB4c54N9Tg/zx6n75XD1KXS/NRKR8cw9YpZv9dVv
-         sDXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date;
-        bh=1kXYRJVvVuB6/yCg+mLXa+n2OpJV2ALpI5+bxh3cOos=;
-        b=zuiVJwCK7UnxbiwsavaEu6NbgpD9ouHRemYkLT3FJyMLSue6f19lRDIgAi0DGfKTqV
-         AuKwMXP96XifSamyh39aGwnu0+ZjG1ssEBYzH0ToEPJUdzwFK5wPOyBLGQYUgZk4Gjuq
-         C1RAMjwCt/HqRi5AWby9EK2fOqxSrYHTiVvoxjsaIRtYEJsKjayMpmVJSl6lvNytWOBs
-         xMoVrqrf70cnFle6Z7VybGkNgQVE5GQLoa4ct4p7KcbyncIXfK1Ddp2W/s2C7JcGWQMD
-         impKFTrSZ+pwi3CK+JDAVQrakCooFGgCZUtl/6pdd0WY1h71qKguLKUKFlAYFsokUjtz
-         /c8A==
-X-Gm-Message-State: ACrzQf18h8NT1S6uH3fplsi0l6hnX2/Rycv5x65VaGTeA6eSXixwVFbC
-        GWZRpN1mqOQNI0zHhvk7lnbG/4ibRUfYNv+8ex4=
-X-Google-Smtp-Source: AMsMyM6gC7LkWalsDjJCsF+lKGjCe9nrQw7x15pqRpmn46ydjr2W6YgI0uNqMQX0BN+RkIlpHUqujS6nxpuUk5qDvvg=
-X-Received: by 2002:a17:907:6087:b0:78d:2d1c:c050 with SMTP id
- ht7-20020a170907608700b0078d2d1cc050mr538377ejc.481.1665073642415; Thu, 06
- Oct 2022 09:27:22 -0700 (PDT)
+        with ESMTP id S229636AbiJFQuc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2022 12:50:32 -0400
+X-Greylist: delayed 16799 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 06 Oct 2022 09:50:30 PDT
+Received: from 20.mo550.mail-out.ovh.net (20.mo550.mail-out.ovh.net [188.165.45.168])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDE8FBC479
+        for <linux-pci@vger.kernel.org>; Thu,  6 Oct 2022 09:50:30 -0700 (PDT)
+Received: from player714.ha.ovh.net (unknown [10.109.156.164])
+        by mo550.mail-out.ovh.net (Postfix) with ESMTP id 9199E211A2
+        for <linux-pci@vger.kernel.org>; Thu,  6 Oct 2022 12:00:38 +0000 (UTC)
+Received: from sk2.org (82-65-25-201.subs.proxad.net [82.65.25.201])
+        (Authenticated sender: steve@sk2.org)
+        by player714.ha.ovh.net (Postfix) with ESMTPSA id 3C67B2F572EBE;
+        Thu,  6 Oct 2022 12:00:35 +0000 (UTC)
+Authentication-Results: garm.ovh; auth=pass (GARM-102R004facaee04-fba3-4d9d-bada-ccf9502b03c9,
+                    1B208DD073E4D188871243D3B3D058A636382E4D) smtp.auth=steve@sk2.org
+X-OVh-ClientIp: 82.65.25.201
+From:   Stephen Kitt <steve@sk2.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Stephen Kitt <steve@sk2.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH] PCI/ASPM: Call pcie_aspm_sanity_check() as late as possible
+Date:   Thu,  6 Oct 2022 13:59:50 +0200
+Message-Id: <20221006115950.821736-1-steve@sk2.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-References: <20221006153440.18049-1-jgross@suse.com>
-In-Reply-To: <20221006153440.18049-1-jgross@suse.com>
-From:   Jason Andryuk <jandryuk@gmail.com>
-Date:   Thu, 6 Oct 2022 12:27:09 -0400
-Message-ID: <CAKf6xpvUat2HP_WO=LSxLC46=KN2exSmqn+DWHTN74HK6H2HLQ@mail.gmail.com>
-Subject: Re: [PATCH v2] xen/pcifront: move xenstore config scanning into sub-function
-To:     Juergen Gross <jgross@suse.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Ovh-Tracer-Id: 14079941288775550566
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvfedrfeeihedggeejucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgggfestdekredtredttdenucfhrhhomhepufhtvghphhgvnhcumfhithhtuceoshhtvghvvgesshhkvddrohhrgheqnecuggftrfgrthhtvghrnhepudevveffvdfgledvgfekveefvedvheeuuedvgeejudfggeeuhffgvddtieevvdeinecuffhomhgrihhnpehsthgrtghkvgigtghhrghnghgvrdgtohhmnecukfhppedtrddtrddtrddtpdekvddrieehrddvhedrvddtudenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhhouggvpehsmhhtphhouhhtpdhhvghlohepphhlrgihvghrjedugedrhhgrrdhovhhhrdhnvghtpdhinhgvtheptddrtddrtddrtddpmhgrihhlfhhrohhmpehsthgvvhgvsehskhdvrdhorhhgpdhnsggprhgtphhtthhopedupdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdpoffvtefjohhsthepmhhoheehtd
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 6, 2022 at 11:35 AM Juergen Gross <jgross@suse.com> wrote:
->
-> pcifront_try_connect() and pcifront_attach_devices() share a large
-> chunk of duplicated code for reading the config information from
-> Xenstore, which only differs regarding calling pcifront_rescan_root()
-> or pcifront_scan_root().
->
-> Put that code into a new sub-function. It is fine to always call
-> pcifront_rescan_root() from that common function, as it will fallback
-> to pcifront_scan_root() if the domain/bus combination isn't known
-> yet (and pcifront_scan_root() should never be called for an already
-> kneon domain/bus combination anyway). In order to avoid duplicate
+In pcie_aspm_init_link_state(), a number of checks are made to
+determine whether the function should proceed, before the result of
+the call to pcie_aspm_sanity_check() is actually used. The latter
+function doesn't change any state, it only reports a result, so
+calling it later doesn't make any difference to the state of the
+devices or the information we have about them. But having the call
+early reportedly can cause null-pointer dereferences; see
+https://unix.stackexchange.com/q/322337 for one example with
+pcie_aspm=off (this was reported in 2016, but the relevant code hasn't
+changed since then).
 
-known
+This moves the call to pcie_aspm_sanity_check() just before the result
+is actually used, giving all the other checks a chance to run first.
 
-> messages for the fallback case move the check for domain/bus not knwon
+Signed-off-by: Stephen Kitt <steve@sk2.org>
+---
+ drivers/pci/pcie/aspm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-known
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index a8aec190986c..38df439568b7 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -889,7 +889,7 @@ static void pcie_aspm_update_sysfs_visibility(struct pci_dev *pdev)
+ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ {
+ 	struct pcie_link_state *link;
+-	int blacklist = !!pcie_aspm_sanity_check(pdev);
++	int blacklist;
+ 
+ 	if (!aspm_support_enabled)
+ 		return;
+@@ -923,6 +923,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 	 * upstream links also because capable state of them can be
+ 	 * update through pcie_aspm_cap_init().
+ 	 */
++	blacklist = !!pcie_aspm_sanity_check(pdev);
+ 	pcie_aspm_cap_init(link, blacklist);
+ 
+ 	/* Setup initial Clock PM state */
 
-> to the beginning of pcifront_rescan_root().
->
-> While at it fix the error reporting in case the root-xx node had the
-> wrong format.
->
-> As the return value of pcifront_try_connect() and
-> pcifront_attach_devices() are not used anywhere make those functions
-> return void. As an additional bonus this removes the dubious return
-> of -EFAULT in case of an unexpected driver state.
->
-> Signed-off-by: Juergen Gross <jgross@suse.com>
+base-commit: 833477fce7a14d43ae4c07f8ddc32fa5119471a2
+-- 
+2.30.2
 
-Reviewed-by: Jason Andryuk <jandryuk@gmail.com>
