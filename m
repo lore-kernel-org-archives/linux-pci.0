@@ -2,298 +2,92 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A01C433F5
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Oct 2022 15:34:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EEACC433FE
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Oct 2022 16:06:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231558AbiJFPes (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Oct 2022 11:34:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51096 "EHLO
+        id S231645AbiJFQGN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Oct 2022 12:06:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230421AbiJFPeq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2022 11:34:46 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFBFB13F0C;
-        Thu,  6 Oct 2022 08:34:43 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        with ESMTP id S231792AbiJFQGI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2022 12:06:08 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EF7859259;
+        Thu,  6 Oct 2022 09:06:03 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id BB72821A16;
-        Thu,  6 Oct 2022 15:34:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1665070481; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=jPrMuJyteEIaUOmAxhKdlol+IAYiy0Vmj2454XJWMy8=;
-        b=ufgn8i3nxA5/MEDL7VtUUswRfhdGfm6Au6MkuPeCGpldPf1wdEsKPw4y0C1xnal641rKAl
-        4EnXbxIjU/HKfnwYcMycaVulG0IOgPD5v0Am7GH7SD4E+T57Bt9mwiNLRVM+xeA3C69+pE
-        TFbMS5xFYhnczjE+pagxg/8fpMVioWg=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 724B41376E;
-        Thu,  6 Oct 2022 15:34:41 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 7nQUGZH1PmNGCwAAMHmgww
-        (envelope-from <jgross@suse.com>); Thu, 06 Oct 2022 15:34:41 +0000
-From:   Juergen Gross <jgross@suse.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org
-Subject: [PATCH v2] xen/pcifront: move xenstore config scanning into sub-function
-Date:   Thu,  6 Oct 2022 17:34:40 +0200
-Message-Id: <20221006153440.18049-1-jgross@suse.com>
-X-Mailer: git-send-email 2.35.3
+        by sin.source.kernel.org (Postfix) with ESMTPS id D51C7CE16E7;
+        Thu,  6 Oct 2022 16:06:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE91BC433C1;
+        Thu,  6 Oct 2022 16:05:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665072360;
+        bh=f94pwl0hhMrqUms4ljEoV8OAyf65irTFica1hj68xmg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=cCF7994xhD3I4nm71UhUBzFiCkXsaLcSgd51R0nt99nKX5++plUdNttaNKDfrrGta
+         RH+RyCkz/VjsAXoCVEzfCwWz1runKitrCqq022ezyZ4Vh2KUi15MjdG6AIeki6rmmZ
+         TBUxuACTuhRZM3Rs6w0YaswmXiR42uBgwjKd/rWycoojrFKPODtCg6yFfhats8vDp8
+         36SGLOEHUkR00auFg00N0/9P4K03D2IjgkjljFwuMAJrue0oPMxo6qBXfL6q4B2LCs
+         /Zn7KYkygMRgl6c26Qpe2GXcSwjLt91/2IVwjjSlxQuPJr3n6dkr2msFlJ5edQEcoj
+         1iAuis9YByYmQ==
+Date:   Thu, 6 Oct 2022 11:05:58 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Vadym Kochan <vadym.kochan@plvision.eu>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Elad Nachman <enachman@marvell.com>,
+        Yuval Shaia <yshaia@marvell.com>, raza <raza@marvell.com>
+Subject: Re: [PATCH 1/2] PCI: armada8k: Add AC5 SoC support
+Message-ID: <20221006160558.GA2467717@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221006111110.8574-2-vadym.kochan@plvision.eu>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pcifront_try_connect() and pcifront_attach_devices() share a large
-chunk of duplicated code for reading the config information from
-Xenstore, which only differs regarding calling pcifront_rescan_root()
-or pcifront_scan_root().
+On Thu, Oct 06, 2022 at 02:11:09PM +0300, Vadym Kochan wrote:
+> From: raza <raza@marvell.com>
+> 
+> pcie-armada8k driver is utilized to serve also AC5.
+> Driver assumes interrupt mask registers are located in the same address in
+> both CPUs.
+> This assumption is incorrect - fix it for AC5.
 
-Put that code into a new sub-function. It is fine to always call
-pcifront_rescan_root() from that common function, as it will fallback
-to pcifront_scan_root() if the domain/bus combination isn't known
-yet (and pcifront_scan_root() should never be called for an already
-kneon domain/bus combination anyway). In order to avoid duplicate
-messages for the fallback case move the check for domain/bus not knwon
-to the beginning of pcifront_rescan_root().
+Rewrap into one paragraph or add blank lines between paragraphs.
 
-While at it fix the error reporting in case the root-xx node had the
-wrong format.
+> Co-developed-by: Yuval Shaia <yshaia@marvell.com>
+> Signed-off-by: Yuval Shaia <yshaia@marvell.com>
+> Signed-off-by: raza <raza@marvell.com>
 
-As the return value of pcifront_try_connect() and
-pcifront_attach_devices() are not used anywhere make those functions
-return void. As an additional bonus this removes the dubious return
-of -EFAULT in case of an unexpected driver state.
+Real name for "raza"?  See this:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst?id=v5.18#n407
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
-V2:
-- always call pcifront_rescan_root() (Jason Andryuk)
----
- drivers/pci/xen-pcifront.c | 143 ++++++++++---------------------------
- 1 file changed, 37 insertions(+), 106 deletions(-)
+> +		/* Set the PCIe master AxCache attributes */
+> +		dw_pcie_writel_dbi(pci, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
+> +		dw_pcie_writel_dbi(pci, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
 
-diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-index 689271c4245c..601efdceae63 100644
---- a/drivers/pci/xen-pcifront.c
-+++ b/drivers/pci/xen-pcifront.c
-@@ -521,24 +521,14 @@ static int pcifront_rescan_root(struct pcifront_device *pdev,
- 	int err;
- 	struct pci_bus *b;
- 
--#ifndef CONFIG_PCI_DOMAINS
--	if (domain != 0) {
--		dev_err(&pdev->xdev->dev,
--			"PCI Root in non-zero PCI Domain! domain=%d\n", domain);
--		dev_err(&pdev->xdev->dev,
--			"Please compile with CONFIG_PCI_DOMAINS\n");
--		return -EINVAL;
--	}
--#endif
--
--	dev_info(&pdev->xdev->dev, "Rescanning PCI Frontend Bus %04x:%02x\n",
--		 domain, bus);
--
- 	b = pci_find_bus(domain, bus);
- 	if (!b)
- 		/* If the bus is unknown, create it. */
- 		return pcifront_scan_root(pdev, domain, bus);
- 
-+	dev_info(&pdev->xdev->dev, "Rescanning PCI Frontend Bus %04x:%02x\n",
-+		 domain, bus);
-+
- 	err = pcifront_scan_bus(pdev, domain, bus, b);
- 
- 	/* Claim resources before going "live" with our devices */
-@@ -819,76 +809,73 @@ static int pcifront_publish_info(struct pcifront_device *pdev)
- 	return err;
- }
- 
--static int pcifront_try_connect(struct pcifront_device *pdev)
-+static void pcifront_connect(struct pcifront_device *pdev)
- {
--	int err = -EFAULT;
-+	int err;
- 	int i, num_roots, len;
- 	char str[64];
- 	unsigned int domain, bus;
- 
--
--	/* Only connect once */
--	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
--	    XenbusStateInitialised)
--		goto out;
--
--	err = pcifront_connect_and_init_dma(pdev);
--	if (err && err != -EEXIST) {
--		xenbus_dev_fatal(pdev->xdev, err,
--				 "Error setting up PCI Frontend");
--		goto out;
--	}
--
- 	err = xenbus_scanf(XBT_NIL, pdev->xdev->otherend,
- 			   "root_num", "%d", &num_roots);
- 	if (err == -ENOENT) {
- 		xenbus_dev_error(pdev->xdev, err,
- 				 "No PCI Roots found, trying 0000:00");
--		err = pcifront_scan_root(pdev, 0, 0);
-+		err = pcifront_rescan_root(pdev, 0, 0);
- 		if (err) {
- 			xenbus_dev_fatal(pdev->xdev, err,
- 					 "Error scanning PCI root 0000:00");
--			goto out;
-+			return;
- 		}
- 		num_roots = 0;
- 	} else if (err != 1) {
--		if (err == 0)
--			err = -EINVAL;
--		xenbus_dev_fatal(pdev->xdev, err,
-+		xenbus_dev_fatal(pdev->xdev, err >= 0 ? -EINVAL : err,
- 				 "Error reading number of PCI roots");
--		goto out;
-+		return;
- 	}
- 
- 	for (i = 0; i < num_roots; i++) {
- 		len = snprintf(str, sizeof(str), "root-%d", i);
--		if (unlikely(len >= (sizeof(str) - 1))) {
--			err = -ENOMEM;
--			goto out;
--		}
-+		if (unlikely(len >= (sizeof(str) - 1)))
-+			return;
- 
- 		err = xenbus_scanf(XBT_NIL, pdev->xdev->otherend, str,
- 				   "%x:%x", &domain, &bus);
- 		if (err != 2) {
--			if (err >= 0)
--				err = -EINVAL;
--			xenbus_dev_fatal(pdev->xdev, err,
-+			xenbus_dev_fatal(pdev->xdev, err >= 0 ? -EINVAL : err,
- 					 "Error reading PCI root %d", i);
--			goto out;
-+			return;
- 		}
- 
--		err = pcifront_scan_root(pdev, domain, bus);
-+		err = pcifront_rescan_root(pdev, domain, bus);
- 		if (err) {
- 			xenbus_dev_fatal(pdev->xdev, err,
- 					 "Error scanning PCI root %04x:%02x",
- 					 domain, bus);
--			goto out;
-+			return;
- 		}
- 	}
- 
--	err = xenbus_switch_state(pdev->xdev, XenbusStateConnected);
-+	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
-+}
- 
--out:
--	return err;
-+static void pcifront_try_connect(struct pcifront_device *pdev)
-+{
-+	int err;
-+
-+	/* Only connect once */
-+	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
-+	    XenbusStateInitialised)
-+		return;
-+
-+	err = pcifront_connect_and_init_dma(pdev);
-+	if (err && err != -EEXIST) {
-+		xenbus_dev_fatal(pdev->xdev, err,
-+				 "Error setting up PCI Frontend");
-+		return;
-+	}
-+
-+	pcifront_connect(pdev);
- }
- 
- static int pcifront_try_disconnect(struct pcifront_device *pdev)
-@@ -914,67 +901,11 @@ static int pcifront_try_disconnect(struct pcifront_device *pdev)
- 	return err;
- }
- 
--static int pcifront_attach_devices(struct pcifront_device *pdev)
-+static void pcifront_attach_devices(struct pcifront_device *pdev)
- {
--	int err = -EFAULT;
--	int i, num_roots, len;
--	unsigned int domain, bus;
--	char str[64];
--
--	if (xenbus_read_driver_state(pdev->xdev->nodename) !=
-+	if (xenbus_read_driver_state(pdev->xdev->nodename) ==
- 	    XenbusStateReconfiguring)
--		goto out;
--
--	err = xenbus_scanf(XBT_NIL, pdev->xdev->otherend,
--			   "root_num", "%d", &num_roots);
--	if (err == -ENOENT) {
--		xenbus_dev_error(pdev->xdev, err,
--				 "No PCI Roots found, trying 0000:00");
--		err = pcifront_rescan_root(pdev, 0, 0);
--		if (err) {
--			xenbus_dev_fatal(pdev->xdev, err,
--					 "Error scanning PCI root 0000:00");
--			goto out;
--		}
--		num_roots = 0;
--	} else if (err != 1) {
--		if (err == 0)
--			err = -EINVAL;
--		xenbus_dev_fatal(pdev->xdev, err,
--				 "Error reading number of PCI roots");
--		goto out;
--	}
--
--	for (i = 0; i < num_roots; i++) {
--		len = snprintf(str, sizeof(str), "root-%d", i);
--		if (unlikely(len >= (sizeof(str) - 1))) {
--			err = -ENOMEM;
--			goto out;
--		}
--
--		err = xenbus_scanf(XBT_NIL, pdev->xdev->otherend, str,
--				   "%x:%x", &domain, &bus);
--		if (err != 2) {
--			if (err >= 0)
--				err = -EINVAL;
--			xenbus_dev_fatal(pdev->xdev, err,
--					 "Error reading PCI root %d", i);
--			goto out;
--		}
--
--		err = pcifront_rescan_root(pdev, domain, bus);
--		if (err) {
--			xenbus_dev_fatal(pdev->xdev, err,
--					 "Error scanning PCI root %04x:%02x",
--					 domain, bus);
--			goto out;
--		}
--	}
--
--	xenbus_switch_state(pdev->xdev, XenbusStateConnected);
--
--out:
--	return err;
-+		pcifront_connect(pdev);
- }
- 
- static int pcifront_detach_devices(struct pcifront_device *pdev)
--- 
-2.35.3
+Rewrap to fit in 80 columns like the rest of the file.
 
+> +static u32 ac5_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
+> +			     u32 reg, size_t size)
+> +{
+> +	u32 val;
+> +
+> +	/* Handle AC5 ATU access */
+> +	if ((reg & ~0xfffff) == 0x300000) {
+> +		reg &= 0xfffff;
+> +		reg = 0xc000 | (0x200 * (reg >> 9)) | (reg & 0xff);
+> +	} else if ((reg & 0xfffff000) == PCIE_VENDOR_REGS_OFFSET)
+> +		reg += 0x8000; /* PCIE_VENDOR_REGS_OFFSET in ac5 is 0x10000 */
+
+There are lots of magic numbers here; looks like there should be some
+#defines or something.
+
+Bjorn
