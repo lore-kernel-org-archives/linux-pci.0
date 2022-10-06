@@ -2,159 +2,168 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE93EC433FE
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Oct 2022 10:08:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2508DC433FE
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Oct 2022 11:12:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231269AbiJFKIi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Oct 2022 06:08:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60056 "EHLO
+        id S231501AbiJFLMb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Oct 2022 07:12:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230511AbiJFKIe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2022 06:08:34 -0400
-Received: from mx1.tq-group.com (mx1.tq-group.com [93.104.207.81])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B34138B2F2;
-        Thu,  6 Oct 2022 03:08:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
-  t=1665050913; x=1696586913;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=iYEdCNesRlQWbZglMDlT/Pm4/qGqVLhxqobtVJx/fHc=;
-  b=Dp4eib/dvH/Lmz8pvgdwPFhGNlsfK98ZXRMcYFjaiq2MFK+OwZHHBWgV
-   wvPNh3QcyHLwW0hPOym+54pL6npEhRVyuvvF2tlRDjpqRKkxvYYwsmPKo
-   FaXFUJmghz0RhEHdUVlcjxiLW+1820FB594T8a/p8ogqJG1Pb+uPoggFQ
-   G5hS1v46DggIWTY8DhuldzINTO9IqA/X4Q8waXyYv1h//qhGAJdDFIwsI
-   v3YMdrsslW9zNGKYixKywCEvhKlTYf5NCM37QVs5bSbiu+XbeQoEvFjsP
-   p8cEZzwgzt/DuNioCuGHsJwbt7DUAhvPy1n0K++WWoGsXNbVxAZ40Y+Cw
-   w==;
-X-IronPort-AV: E=Sophos;i="5.95,163,1661810400"; 
-   d="scan'208";a="26592554"
-Received: from unknown (HELO tq-pgp-pr1.tq-net.de) ([192.168.6.15])
-  by mx1-pgp.tq-group.com with ESMTP; 06 Oct 2022 12:08:30 +0200
-Received: from mx1.tq-group.com ([192.168.6.7])
-  by tq-pgp-pr1.tq-net.de (PGP Universal service);
-  Thu, 06 Oct 2022 12:08:30 +0200
-X-PGP-Universal: processed;
-        by tq-pgp-pr1.tq-net.de on Thu, 06 Oct 2022 12:08:30 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
-  t=1665050910; x=1696586910;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=iYEdCNesRlQWbZglMDlT/Pm4/qGqVLhxqobtVJx/fHc=;
-  b=NlaC3R03tm8Y3jG6ruvBcQ6JFaRqQzCw4R35Ct6vT8r71WJzDrKximQm
-   R4tar3f+nJp0D2Rz8ydIoh3ugY1SFWwsjLkb/y48x+MiojhbIuliXVDYx
-   UHNvDlh8IYFg/fIkfefMVq9D1Z+hyOsTAp6ZyToXAnzPZko8GxqK+vSzv
-   qvGpLi70lg1QI/rx6fyWKldTKhdsVI88fhY3dY/bPLn0qMhpc7AS9jqsA
-   A324Ad8npY0Rz18Qj+HlMJvKDOWkUZxLHj+Pv7UBYDzt4jxv8sydRinvR
-   I3hFs0jJrwRW58v2q3Du/USRSj6xpg9deBetD+at3LnwsrJwLT1T2vuk6
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.95,163,1661810400"; 
-   d="scan'208";a="26592553"
-Received: from vtuxmail01.tq-net.de ([10.115.0.20])
-  by mx1.tq-group.com with ESMTP; 06 Oct 2022 12:08:30 +0200
-Received: from steina-w.localnet (unknown [10.123.49.11])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        by vtuxmail01.tq-net.de (Postfix) with ESMTPSA id 79D43280056;
-        Thu,  6 Oct 2022 12:08:30 +0200 (CEST)
-From:   Alexander Stein <alexander.stein@ew.tq-group.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Korneliusz Osmenda <korneliuszo@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Guard pci_create_sysfs_dev_files with atomic value
-Date:   Thu, 06 Oct 2022 12:08:27 +0200
-Message-ID: <5610142.DvuYhMxLoT@steina-w>
-Organization: TQ-Systems GmbH
-In-Reply-To: <4469eba2-188b-aab7-07d1-5c77313fc42f@gmail.com>
-References: <4469eba2-188b-aab7-07d1-5c77313fc42f@gmail.com>
+        with ESMTP id S231523AbiJFLM3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Oct 2022 07:12:29 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D1AD11C06
+        for <linux-pci@vger.kernel.org>; Thu,  6 Oct 2022 04:12:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1665054743; x=1696590743;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=zPIL/lEMP4iW4B5XaQ0E10Fd07wq8a4CkaAPO8nDbbo=;
+  b=KYBahLPGpKEFRqo2Ky8k/76cWywrgR2HVunj6wk/eAAV3HyH4WP2bIHH
+   2lH3AZGa1FH9e6eniRzokMjTyfWSn60v7ttl8GuvlHlbmfABq1ZoqWec/
+   YJW+Nc1vuuQd3GImueTNkF29qitGsV2vGcfq3/Su8epC2Dad5SnLtVsOI
+   D8lmfax+C/+3angvROQSKjwKk54K62qEEPg4oHBJcvtn2TZjm3y9mz2vW
+   jmdT6nFAD1JIzJx320nyJyIJ8F0fzYsxYYUiGwc/k1e751CgKlj4vzUYn
+   ncFTys8TZbX+CfEZ/8llcOdDRc5eSqMLVSWnDAuHn3zAEUFgh8sENwtM4
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10491"; a="304995338"
+X-IronPort-AV: E=Sophos;i="5.95,163,1661842800"; 
+   d="scan'208";a="304995338"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2022 04:12:21 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10491"; a="657872255"
+X-IronPort-AV: E=Sophos;i="5.95,163,1661842800"; 
+   d="scan'208";a="657872255"
+Received: from lkp-server01.sh.intel.com (HELO 3c15167049b7) ([10.239.97.150])
+  by orsmga001.jf.intel.com with ESMTP; 06 Oct 2022 04:12:20 -0700
+Received: from kbuild by 3c15167049b7 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1ogOnb-00007D-1o;
+        Thu, 06 Oct 2022 11:12:19 +0000
+Date:   Thu, 06 Oct 2022 19:12:10 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [helgaas-pci:next] BUILD SUCCESS
+ 17fc2a3f41b37596bbcf1e6b765f0620a8f34c9a
+Message-ID: <633eb80a.MSVPIWcYcctfsLNZ%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+branch HEAD: 17fc2a3f41b37596bbcf1e6b765f0620a8f34c9a  Merge branch 'pci/misc'
 
-Am Montag, 29. August 2022, 21:14:43 CEST schrieb Korneliusz Osmenda:
-> On Gateworks Ventana there is a number of PCI devices and:
->   - imx6_pcie_probe takes longer than start of late init
->   - pci_sysfs_init sets up flag sysfs_initialized
->   - pci_sysfs_init initializes already found devices
->   - imx6_pcie_probe tries to reinitialize device
-> 
-> Bug: https://bugzilla.kernel.org/show_bug.cgi?id=215515
-> 
-> Signed-off-by: Korneliusz Osmenda <korneliuszo@gmail.com>
-> ---
->   drivers/pci/pci-sysfs.c | 6 ++++++
->   include/linux/pci.h     | 2 ++
->   2 files changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index fc804e08e3cb..a6648239e235 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1378,6 +1378,9 @@ int __must_check pci_create_sysfs_dev_files(struct
-> pci_dev *pdev)
->   	if (!sysfs_initialized)
->   		return -EACCES;
-> 
-> +	if (atomic_cmpxchg(&pdev->sysfs_init_cnt,0,1) == 1)
-> +		return 0;		/* already added */
-> +
->   	return pci_create_resource_files(pdev);
->   }
-> 
-> @@ -1392,6 +1395,9 @@ void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
->   	if (!sysfs_initialized)
->   		return;
-> 
-> +	if (atomic_cmpxchg(&pdev->sysfs_init_cnt,1,0) == 0)
-> +		return;		/* already removed */
-> +
->   	pci_remove_resource_files(pdev);
->   }
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 060af91bafcd..5477de2ef057 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -465,6 +465,8 @@ struct pci_dev {
->   	pci_dev_flags_t dev_flags;
->   	atomic_t	enable_cnt;	/* pci_enable_device has been 
-called */
-> 
-> +	atomic_t	sysfs_init_cnt;	/* pci_create_sysfs_dev_files has 
-been called */
-> +
->   	u32		saved_config_space[16]; /* Config space saved 
-at suspend time */
->   	struct hlist_head saved_cap_space;
->   	int		rom_attr_enabled;	/* Display of ROM 
-attribute enabled? */
+elapsed time: 721m
 
-Is there any feedback here? I'm hitting the same issue on TQMa6x+MBa6x.
-Having this patch applied my PCIe device using several bridges is detected 
-fine.
+configs tested: 92
+configs skipped: 2
 
-root@tqma6-common:~# lspci
-00:00.0 PCI bridge: Synopsys, Inc. DWC_usb3 / PCIe bridge (rev 01)
-01:00.0 PCI bridge: Pericom Semiconductor Device a303 (rev 03)
-02:01.0 PCI bridge: Pericom Semiconductor Device a303 (rev 03)
-02:02.0 PCI bridge: Pericom Semiconductor Device a303 (rev 03)
-03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 
-PCI Express Gigabit Ethernet Controller (rev 0c)
-04:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 
-PCI Express Gigabit Ethernet Controller (rev 0c)
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-root@tqma6-common:~# lspci -t
--[0000:00]---00.0-[01-ff]----00.0-[02-04]--+-01.0-[03]----00.0
-                                           \-02.0-[04]----00.0
+gcc tested configs:
+um                             i386_defconfig
+um                           x86_64_defconfig
+arc                                 defconfig
+x86_64                          rhel-8.3-func
+alpha                               defconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                           rhel-8.3-kvm
+x86_64                              defconfig
+x86_64                         rhel-8.3-kunit
+powerpc                          allmodconfig
+m68k                             allmodconfig
+x86_64                               rhel-8.3
+x86_64                           rhel-8.3-syz
+sh                               allmodconfig
+arc                              allyesconfig
+mips                             allyesconfig
+i386                 randconfig-a011-20221003
+alpha                            allyesconfig
+i386                 randconfig-a012-20221003
+powerpc                           allnoconfig
+i386                 randconfig-a013-20221003
+m68k                             allyesconfig
+i386                 randconfig-a015-20221003
+i386                 randconfig-a016-20221003
+i386                 randconfig-a014-20221003
+arm                                 defconfig
+x86_64                           allyesconfig
+s390                                defconfig
+x86_64               randconfig-a011-20221003
+arm64                            allyesconfig
+arm                              allyesconfig
+s390                             allmodconfig
+x86_64               randconfig-a015-20221003
+i386                                defconfig
+x86_64               randconfig-a014-20221003
+x86_64               randconfig-a012-20221003
+x86_64               randconfig-a013-20221003
+x86_64               randconfig-a016-20221003
+s390                             allyesconfig
+ia64                             allmodconfig
+riscv                randconfig-r042-20221003
+arc                  randconfig-r043-20221003
+arc                  randconfig-r043-20221002
+s390                 randconfig-r044-20221003
+i386                             allyesconfig
+arm                     eseries_pxa_defconfig
+mips                         cobalt_defconfig
+openrisc                            defconfig
+nios2                            alldefconfig
+csky                              allnoconfig
+alpha                             allnoconfig
+arc                               allnoconfig
+riscv                             allnoconfig
+powerpc                     taishan_defconfig
+powerpc                       eiger_defconfig
+loongarch                        alldefconfig
+powerpc                 mpc85xx_cds_defconfig
+parisc                generic-64bit_defconfig
+i386                          randconfig-c001
+mips                 randconfig-c004-20221002
+arc                           tb10x_defconfig
+um                               alldefconfig
+mips                         bigsur_defconfig
+mips                        bcm47xx_defconfig
+arm                          simpad_defconfig
+i386                          debian-10.3-kvm
+i386                        debian-10.3-kunit
+i386                         debian-10.3-func
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
 
-Best regards,
-Alexander
+clang tested configs:
+i386                 randconfig-a003-20221003
+i386                 randconfig-a002-20221003
+x86_64               randconfig-a003-20221003
+x86_64               randconfig-a005-20221003
+i386                 randconfig-a001-20221003
+x86_64               randconfig-a002-20221003
+x86_64               randconfig-a001-20221003
+x86_64               randconfig-a004-20221003
+x86_64               randconfig-a006-20221003
+i386                 randconfig-a006-20221003
+i386                 randconfig-a004-20221003
+i386                 randconfig-a005-20221003
+hexagon              randconfig-r041-20221003
+riscv                randconfig-r042-20221002
+hexagon              randconfig-r041-20221002
+s390                 randconfig-r044-20221002
+hexagon              randconfig-r045-20221002
+hexagon              randconfig-r045-20221003
+x86_64                        randconfig-k001
 
-
-
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
