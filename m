@@ -2,78 +2,92 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0C28C433FE
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Oct 2022 19:32:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06896C433F5
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Oct 2022 19:36:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229815AbiJGTc6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Oct 2022 15:32:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49178 "EHLO
+        id S229538AbiJGTgg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Oct 2022 15:36:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229840AbiJGTc5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Oct 2022 15:32:57 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 793442B27E;
-        Fri,  7 Oct 2022 12:32:56 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0B39361747;
-        Fri,  7 Oct 2022 19:32:56 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AAFDC433D6;
-        Fri,  7 Oct 2022 19:32:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665171175;
-        bh=V3eErinl3SskgtvkBOxmRnMnVmgrOAHOP2OxO4FJ8bY=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=OkKKyRGJiOyTSqTASZtOdm41aEgDvZVfgO4FzM4wABUz2qXGrq/zS/60nG0X3BnNH
-         efbBi7BWwkb1yjwkHQxFonPPC8BZxNUJRH3FOnjpvD8gb63xXma+GPQ1HVJRjmWZnM
-         rxIfP+Z3Nu5e8/tbp/lB9D4UF5fSZxPQlZhlj8Wb9snJFZkGe85ChGwz7PkGr+hUAi
-         vjoa5LFwC+HEQ5eoBnbzQwNXNzsz9gfqYv1d1OAreYJc7sW8XZSyjlH9Jrf2QerAzP
-         Krjm/b4RzcPnir/zqmyX8G/Gya+JWeXkJ47N1gzrCTtu0XNwPHu/EkPXl+DF1alX4/
-         wvhyq0WUsKHHA==
-Date:   Fri, 7 Oct 2022 14:32:53 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jim Quinlan <jim2101024@gmail.com>
-Cc:     linux-pci@vger.kernel.org,
+        with ESMTP id S229811AbiJGTge (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Oct 2022 15:36:34 -0400
+Received: from mail-qv1-xf2e.google.com (mail-qv1-xf2e.google.com [IPv6:2607:f8b0:4864:20::f2e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 519D8100BD9;
+        Fri,  7 Oct 2022 12:36:33 -0700 (PDT)
+Received: by mail-qv1-xf2e.google.com with SMTP id mx8so3695221qvb.8;
+        Fri, 07 Oct 2022 12:36:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=zT+O0QTiUdGcu5fC+oP0NDvqRtFHHQvCkGaAkhwWHIM=;
+        b=QZzbJAVg4gJHSRBIeJsh9srTdDG/mC6KUiT1/ZODb+OB/axESaJz/5W+hhGEOM619E
+         PZvvttamZyoatc4n1BXHEUvD1Um/W5UK9fRarf4dq9QVhCWp+D2KOLQXvr/z/WDIomsb
+         16Cw+4p6GzHe3EDRETnJ0eq03WJWtwa/jA0g2pPhUmAHbUXubqqDSnaGhrHERAbuxLqW
+         cVzSFGL/by+v8rD8zLzlWC7Y23JODljwnjXne83NJGnMj9Yg9KPYCXdsBgrsSvDeNEzG
+         4Voi2zIt4f2HPtG6+xTDgF+BzZk4AvQtSzeFaq5qUk6yvcCDIQYBXTZnHa8614qUWoQh
+         O6sw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zT+O0QTiUdGcu5fC+oP0NDvqRtFHHQvCkGaAkhwWHIM=;
+        b=8SQAVQRPLFrl7EeqdIuC5P2WLJGDGYE/24VfE2tTzHMujcmg/ed0RJDJmCNND06oGQ
+         01jcJieZSqgDa9Gwku8L4lzISy8e7GA55ILgBZrsZn6e7THDJnO35/t+bWNy3AKM4qkH
+         Ggq/FByk6LRnSEhlL9tClVY88PQqly2SvlGszA8+LzPR6ZT7yvO4WO8RaMjewy5R7noq
+         5I6hSfy4Q2Kcqi0KgYB2UbdaxZHP3QVAyKMNu1F+ZjsQALtKQsqTvuL+doqWQzRYLTBy
+         xCQhhqfsxB0RZRJ8n9WrVMi24V/VRnZGjsf3xfoaMDM9wN6UW1IZLMX9TopTljp+DsyQ
+         L1hg==
+X-Gm-Message-State: ACrzQf1pvckkfRk1Rg7vHE3HGg/WtiH7WTahP8z0yQoGpP/1Jxxft/82
+        lczq+IT/fKkLColBKaRw3dA=
+X-Google-Smtp-Source: AMsMyM7fbhFjefNeCTZ2HYs/Zh0cApdxSjziQfBuB7lYZLPDLzvnuIgzMW+UGKNYSLZm2xvMNkr9aQ==
+X-Received: by 2002:a05:6214:dc2:b0:4b1:7f96:50dd with SMTP id 2-20020a0562140dc200b004b17f9650ddmr5629094qvt.34.1665171392449;
+        Fri, 07 Oct 2022 12:36:32 -0700 (PDT)
+Received: from [10.67.48.245] ([192.19.223.252])
+        by smtp.googlemail.com with ESMTPSA id c20-20020ac86614000000b003447c4f5aa5sm2715018qtp.24.2022.10.07.12.36.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 07 Oct 2022 12:36:31 -0700 (PDT)
+Message-ID: <26ccc8e3-c40b-e77a-134c-4175694c587d@gmail.com>
+Date:   Fri, 7 Oct 2022 12:36:28 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.11.0
+Subject: Re: [PATCH v1 1/5] PCI: brcmstb: Enable Multi-MSI
+Content-Language: en-US
+To:     Jim Quinlan <jim2101024@gmail.com>, linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenz@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Cyril Brulebois <kibi@debian.org>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
-        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-rpi-kernel@lists.infradead.org>,
         "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
         <linux-arm-kernel@lists.infradead.org>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 5/5] PCI: brcmstb: Set RCB_{MPS,64B}_MODE bits
-Message-ID: <20221007193253.GA2643566@bhelgaas>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221006220322.33000-6-jim2101024@gmail.com>
+References: <20221006220322.33000-1-jim2101024@gmail.com>
+ <20221006220322.33000-2-jim2101024@gmail.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+In-Reply-To: <20221006220322.33000-2-jim2101024@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 06, 2022 at 06:03:21PM -0400, Jim Quinlan wrote:
-> Set RCB_MPS mode bit so that data for PCIe read requests up to the size of
-> the Maximum Payload Size (MPS) are returned in one completion,
+On 10/6/22 15:03, Jim Quinlan wrote:
+> We always wanted to enable Multi-MSI but didn't have a test device until
+> recently.  In addition, there are some devices out there that will ask for
+> multiple MSI but refuse to work if they are only granted one.
+> 
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
 
-> and data for
-> PCIe read requests greater than the MPS are split at the specified Read
-> Completion Boundary setting.
-
-I think this second part is required by PCIe r6.0, sec 2.3.1.1,
-regardless of the setting of RCB_MPS, isn't it?
-
-> Set RCB_64B so that read compeletion boudnary is 64B.
-
-To match usage in spec and above and fix typos,
-
-s/that read compeletion boudnary/the Read Completion Boundary/
-
-Bjorn
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+-- 
+Florian
