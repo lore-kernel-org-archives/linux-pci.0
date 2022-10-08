@@ -2,199 +2,120 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81803C433FE
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Oct 2022 02:43:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F5DFC433F5
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Oct 2022 02:52:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229552AbiJHCnp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Oct 2022 22:43:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54906 "EHLO
+        id S229587AbiJHCwI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Oct 2022 22:52:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229547AbiJHCnl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Oct 2022 22:43:41 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 753669082D;
-        Fri,  7 Oct 2022 19:43:33 -0700 (PDT)
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4MkqCs1Z0RzpVXp;
-        Sat,  8 Oct 2022 10:40:25 +0800 (CST)
-Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
- dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Sat, 8 Oct 2022 10:43:31 +0800
-Received: from huawei.com (10.175.104.170) by dggpemm500007.china.huawei.com
- (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Sat, 8 Oct
- 2022 10:43:31 +0800
-From:   Zhuang Shengen <zhuangshengen@huawei.com>
-To:     <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <arei.gonglei@huawei.com>, <jianjay.zhou@huawei.com>
-Subject: [PATCH] iov: support enable pci sriov concurrently
-Date:   Sat, 8 Oct 2022 10:42:11 +0800
-Message-ID: <20221008024211.1582521-1-zhuangshengen@huawei.com>
-X-Mailer: git-send-email 2.23.0
+        with ESMTP id S229513AbiJHCwF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Oct 2022 22:52:05 -0400
+Received: from loongson.cn (mail.loongson.cn [114.242.206.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 96D63BC60A;
+        Fri,  7 Oct 2022 19:52:03 -0700 (PDT)
+Received: from loongson-pc.loongson.cn (unknown [10.20.42.32])
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8AxTWvG5UBjIB8oAA--.19935S3;
+        Sat, 08 Oct 2022 10:51:51 +0800 (CST)
+From:   Jianmin Lv <lvjianmin@loongson.cn>
+To:     Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <maz@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, loongarch@lists.linux.dev,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Huacai Chen <chenhuacai@loongson.cn>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Len Brown <lenb@kernel.org>, rafael@kernel.org,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH V2 1/2] irqchip/loongson-pch-pic: Support to set irq type for ACPI path
+Date:   Sat,  8 Oct 2022 10:51:49 +0800
+Message-Id: <20221008025150.10734-2-lvjianmin@loongson.cn>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20221008025150.10734-1-lvjianmin@loongson.cn>
+References: <20221008025150.10734-1-lvjianmin@loongson.cn>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.175.104.170]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemm500007.china.huawei.com (7.185.36.183)
-X-CFilter-Loop: Reflected
+X-CM-TRANSID: AQAAf8AxTWvG5UBjIB8oAA--.19935S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar47XF1xCF4UuF1xWrWDtwb_yoW8tFy3pF
+        WY9a1ayr4xJFy7Zr1DCa18Wr15AwnakFW7KF4rAw129wsrCr4fAF17uFy7Zr9xAF43AF4U
+        ZrsYvF4Uua47uF7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUU9a1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
+        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
+        IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1l84ACjcxK6I8E
+        87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVWxJr0_GcWle2I262IYc4
+        CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_
+        Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x
+        0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc2xS
+        Y4AK6svPMxAIw28IcxkI7VAKI48JMxAIw28IcVCjz48v1sIEY20_XrWUJr1UMxC20s026x
+        CaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_
+        JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r
+        1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_
+        Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8Jr
+        UvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
+X-CM-SenderInfo: 5oymxthqpl0qxorr0wxvrqhubq/
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable SRIOV concurrently with many different PFs in userspace
-will get warnings below:
-Warning 1:
-sysfs: cannot create duplicate filename
-'/devices/pci0000:30/0000:30:02.0/pci_bus/0000:32'
-Call Trace:
- dump_stack+0x6f/0xab
- sysfs_warn_dup+0x56/0x70
- sysfs_create_dir_ns+0x80/0x90
- kobject_add_internal+0xa0/0x2b0
- kobject_add+0x71/0xd0
- device_add+0x126/0x630
- pci_add_new_bus+0x17c/0x4b0
- pci_iov_add_virtfn+0x336/0x390
- sriov_enable+0x26e/0x450
- virtio_pci_sriov_configure+0x61/0xc0 [virtio_pci]
-Warning 2:
-proc_dir_entry 'pci/33' already registered
-WARNING: CPU: 71 PID: 893 at fs/proc/generic.c:360
-proc_register+0xf8/0x130
-Call Trace:
- proc_mkdir_data+0x5d/0x80
- pci_proc_attach_device+0xe9/0x120
- pci_bus_add_device+0x33/0x90
- pci_iov_add_virtfn+0x375/0x390
- sriov_enable+0x26e/0x450
- virtio_pci_sriov_configure+0x61/0xc0 [virtio_pci]
+For ACPI path, the translate callback used IRQ_TYPE_NONE and ignored
+the irq type in fwspec->param[1]. For supporting to set type for
+irqs of the irqdomain, fwspec->param[1] should be used to get irq
+type.
 
-The reason is:
-1）different VFs may create the same pci bus number and try to add new bus
-concurrently in virtfn_add_bus.
-2）different VFs may create '/proc/bus/pci/bus_number' directory using the
-same bus number in pci_proc_attach_device concurrently.
+On Loongson platform, the irq trigger type of PCI devices is
+high level, so high level triggered type is inputed to acpi_register_gsi
+when create irq mapping for PCI devices.
 
-Add new lock when creating new bus, hold device_lock when creating
-'/proc/bus/pci/bus_number' directory in pci_proc_attach_device to fix them
-
-Signed-off-by: Zhuang Shengen <zhuangshengen@huawei.com>
-Signed-off-by: Jay Zhou <jianjay.zhou@huawei.com>
+Signed-off-by: Jianmin Lv <lvjianmin@loongson.cn>
 ---
- drivers/pci/iov.c   |  7 ++++++-
- drivers/pci/probe.c | 26 ++++++++++++++++++++++++++
- drivers/pci/proc.c  |  6 +++++-
- include/linux/pci.h |  2 ++
- 4 files changed, 39 insertions(+), 2 deletions(-)
+ drivers/acpi/pci_irq.c                 | 6 ++++--
+ drivers/irqchip/irq-loongson-pch-pic.c | 9 ++++++++-
+ 2 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 952217572113..6d113ea64ba8 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -127,11 +127,16 @@ static struct pci_bus *virtfn_add_bus(struct pci_bus *bus, int busnr)
- 	if (bus->number == busnr)
- 		return bus;
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 08e15774fb9f..ff30ceca2203 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -387,13 +387,15 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 	u8 pin;
+ 	int triggering = ACPI_LEVEL_SENSITIVE;
+ 	/*
+-	 * On ARM systems with the GIC interrupt model, level interrupts
++	 * On ARM systems with the GIC interrupt model, or LoongArch
++	 * systems with the LPIC interrupt model, level interrupts
+ 	 * are always polarity high by specification; PCI legacy
+ 	 * IRQs lines are inverted before reaching the interrupt
+ 	 * controller and must therefore be considered active high
+ 	 * as default.
+ 	 */
+-	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
++	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ||
++		       acpi_irq_model == ACPI_IRQ_MODEL_LPIC ?
+ 				      ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
+ 	char *link = NULL;
+ 	char link_desc[16];
+diff --git a/drivers/irqchip/irq-loongson-pch-pic.c b/drivers/irqchip/irq-loongson-pch-pic.c
+index c01b9c257005..5576c97fec85 100644
+--- a/drivers/irqchip/irq-loongson-pch-pic.c
++++ b/drivers/irqchip/irq-loongson-pch-pic.c
+@@ -159,11 +159,18 @@ static int pch_pic_domain_translate(struct irq_domain *d,
+ 		return -EINVAL;
  
-+	/*
-+	 * vf will find existing bus at most case; if not existing, it should
-+	 * go through slow path to create new bus with locked to support enable SRIOV
-+	 * concurrently with different PFs in userspace.
-+	 */
- 	child = pci_find_bus(pci_domain_nr(bus), busnr);
- 	if (child)
- 		return child;
- 
--	child = pci_add_new_bus(bus, NULL, busnr);
-+	child = pci_add_new_bus_locked(bus, NULL, busnr);
- 	if (!child)
- 		return NULL;
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c5286b027f00..bfbd47a3ba73 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -25,6 +25,8 @@
- #define CARDBUS_LATENCY_TIMER	176	/* secondary latency timer */
- #define CARDBUS_RESERVE_BUSNR	3
- 
-+DEFINE_MUTEX(add_bus_mutex);
+ 	if (of_node) {
++		if (fwspec->param_count < 2)
++			return -EINVAL;
 +
- static struct resource busn_resource = {
- 	.name	= "PCI busn",
- 	.start	= 0,
-@@ -1170,6 +1172,30 @@ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- }
- EXPORT_SYMBOL(pci_add_new_bus);
- 
-+struct pci_bus *pci_add_new_bus_locked(struct pci_bus *parent, struct pci_dev *dev,
-+				       int busnr)
-+{
-+	struct pci_bus *child;
+ 		*hwirq = fwspec->param[0] + priv->ht_vec_base;
+ 		*type = fwspec->param[1] & IRQ_TYPE_SENSE_MASK;
+ 	} else {
+ 		*hwirq = fwspec->param[0] - priv->gsi_base;
+-		*type = IRQ_TYPE_NONE;
 +
-+	mutex_lock(&add_bus_mutex);
-+	child = pci_find_bus(pci_domain_nr(parent), busnr);
-+	if (child) {
-+		mutex_unlock(&add_bus_mutex);
-+		return child;
-+	}
-+
-+	child = pci_alloc_child_bus(parent, dev, busnr);
-+	if (child) {
-+		down_write(&pci_bus_sem);
-+		list_add_tail(&child->node, &parent->children);
-+		up_write(&pci_bus_sem);
-+	}
-+	mutex_unlock(&add_bus_mutex);
-+
-+	return child;
-+}
-+EXPORT_SYMBOL(pci_add_new_bus_locked);
-+
- static void pci_enable_crs(struct pci_dev *pdev)
- {
- 	u16 root_cap = 0;
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index f967709082d6..f927263c2fe0 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -421,6 +421,7 @@ int pci_proc_attach_device(struct pci_dev *dev)
- 	if (!proc_initialized)
- 		return -EACCES;
- 
-+	device_lock(&bus->dev);
- 	if (!bus->procdir) {
- 		if (pci_proc_domain(bus)) {
- 			sprintf(name, "%04x:%02x", pci_domain_nr(bus),
-@@ -429,9 +430,12 @@ int pci_proc_attach_device(struct pci_dev *dev)
- 			sprintf(name, "%02x", bus->number);
- 		}
- 		bus->procdir = proc_mkdir(name, proc_bus_pci_dir);
--		if (!bus->procdir)
-+		if (!bus->procdir) {
-+			device_unlock(&bus->dev);
- 			return -ENOMEM;
-+		}
++		if (fwspec->param_count > 1)
++			*type = fwspec->param[1] & IRQ_TYPE_SENSE_MASK;
++		else
++			*type = IRQ_TYPE_NONE;
  	}
-+	device_unlock(&bus->dev);
  
- 	sprintf(name, "%02x.%x", PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
- 	e = proc_create_data(name, S_IFREG | S_IRUGO | S_IWUSR, bus->procdir,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5da0846aa3c1..bfe2a2e74af6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1112,6 +1112,8 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
-+struct pci_bus *pci_add_new_bus_locked(struct pci_bus *parent, struct pci_dev *dev,
-+				       int busnr);
- struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
- 				 const char *name,
- 				 struct hotplug_slot *hotplug);
+ 	return 0;
 -- 
-2.27.0
+2.31.1
 
