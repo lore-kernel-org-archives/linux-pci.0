@@ -2,88 +2,82 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB0E0C4332F
-	for <linux-pci@archiver.kernel.org>; Sun,  9 Oct 2022 06:45:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E7E7C433F5
+	for <linux-pci@archiver.kernel.org>; Sun,  9 Oct 2022 11:29:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229947AbiJIGpE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 9 Oct 2022 02:45:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58764 "EHLO
+        id S229721AbiJIL3T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 9 Oct 2022 07:29:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229928AbiJIGoy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Oct 2022 02:44:54 -0400
-Received: from loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 71C1665C1;
-        Sat,  8 Oct 2022 23:44:51 -0700 (PDT)
-Received: from loongson-pc.loongson.cn (unknown [10.20.42.32])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8DxX+DPbUJjsykpAA--.19711S4;
-        Sun, 09 Oct 2022 14:44:31 +0800 (CST)
-From:   Jianmin Lv <lvjianmin@loongson.cn>
-To:     Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <maz@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, loongarch@lists.linux.dev,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        Huacai Chen <chenhuacai@loongson.cn>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <lenb@kernel.org>, rafael@kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH V3 2/4] irqchip/loongson-pch-pic: fix translate callback for DT path
-Date:   Sun,  9 Oct 2022 14:44:29 +0800
-Message-Id: <20221009064431.18839-3-lvjianmin@loongson.cn>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20221009064431.18839-1-lvjianmin@loongson.cn>
-References: <20221009064431.18839-1-lvjianmin@loongson.cn>
+        with ESMTP id S229657AbiJIL3S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Oct 2022 07:29:18 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C9362A972;
+        Sun,  9 Oct 2022 04:29:16 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A71B2B80C69;
+        Sun,  9 Oct 2022 11:29:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38947C433D6;
+        Sun,  9 Oct 2022 11:29:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665314953;
+        bh=vjwaWeOlMX3AXv00pHdrrZPTNy9wxfJuYCETlr7ieZM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IqjlW8nBjloqFH8JHuTzphiAdHVa9RdwDlJRDQgTnGvYaZdcRLXm2xsio/D2DrUwj
+         l92uUMBdLiJ1s0MyVONvHNNw33FYyJjvZMZeJlEIIOi/bE3OgMmw7uhGuQF1CuVa3V
+         r6JDC8Evq4uAN09HpEUbpg5e3L5opcnA65oOdtV20W+pzRf/1Ig5roRmhi6EF6d8EZ
+         PoCMdnGYHmaPR2oqjoOIePtVanPw0VpDdiojK3E0RF9ttFcj1TAZ23/0GA6D/lMm0e
+         CRQj4aEH4FnIU4wJoc1A0fM/OY7aqJZKneLn9+VBYVAzXBVYBw4pYQyo+oBgj+MOXL
+         QzSdtf0PVradw==
+Received: by pali.im (Postfix)
+        id 90B427C1; Sun,  9 Oct 2022 13:29:10 +0200 (CEST)
+Date:   Sun, 9 Oct 2022 13:29:10 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Andrew Lunn <andrew@lunn.ch>, Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Marek =?utf-8?B?QmVow7pu?= <marek.behun@nic.cz>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Assign PCI domain by ida_alloc()
+Message-ID: <20221009112910.ycwrwzogws2dtnaq@pali>
+References: <20220818163756.qmyopspdn5xywe5s@pali>
+ <20220818165220.GA2378685@bhelgaas>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf8DxX+DPbUJjsykpAA--.19711S4
-X-Coremail-Antispam: 1UD129KBjvdXoW7Xr15GF4rZr43JFyxZF1rCrg_yoWktrg_uF
-        1SqFn3Kw17Zr1Iq3y8Kr4rXFy7ta4Du3WvkFs5Aay5WayUXayxAr1Svw4fJa9rGFWUAF1f
-        C395ur1xZF4I9jkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUba8Fc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
-        wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
-        vE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwA2z4x0Y4vEx4A2
-        jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
-        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
-        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
-        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc2xSY4AK
-        6svPMxAIw28IcxkI7VAKI48JMxAIw28IcVCjz48v1sIEY20_XrWUJr1UMxC20s026xCaFV
-        Cjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWl
-        x4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r
-        1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_
-        JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcS
-        sGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: 5oymxthqpl0qxorr0wxvrqhubq/
+In-Reply-To: <20220818165220.GA2378685@bhelgaas>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In DT path of translate callback, if fwspec->param_count==1
-and of_node is non-null, fwspec->param[1] will be accessed,
-which is introduced from previous commit bcdd75c596c8
-(irqchip/loongson-pch-pic: Add ACPI init support).
+On Thursday 18 August 2022 11:52:20 Bjorn Helgaas wrote:
+> On Thu, Aug 18, 2022 at 06:37:56PM +0200, Pali Rohár wrote:
+> > On Thursday 18 August 2022 16:59:33 Andrew Lunn wrote:
+> > > On Thu, Aug 18, 2022 at 03:50:09PM +0200, Pali Rohár wrote:
+> > > > PING?
+> > > 
+> > > Pretty much anything sent during the merge window, and just before the
+> > > merge window gets thrown away. Please rebase onto the current pci tree
+> > > and repost.
+> > 
+> > Please write it pretty clear that you are not interested in those
+> > patches, and not hiding this info behind asking me after month of
+> > waiting for another work of rebase with sending them at eight o'clock
+> > during full moon. It is pretty ridiculous how to say "go away". Thanks.
+> 
+> Nobody is saying "go away".  I apologize that I haven't had time to
+> look at this yet.
+> 
+> It's still in patchwork [1], and if it still applies cleanly to
+> v6.0-rc1, you don't need to do anything.  If it requires rebasing to
+> apply cleanly, it will expedite things if you do that.
+> 
+> Bjorn
+> 
+> [1] https://patchwork.kernel.org/project/linux-pci/patch/20220714184130.5436-1-pali@kernel.org/
 
-Before the patch, for non-null of_node, translate callback
-(use irq_domain_translate_twocell) will return -EINVAL if
-fwspec->param_count < 2, so the check in the patch is added.
-
-Fixes: bcdd75c596c8 ("irqchip/loongson-pch-pic: Add ACPI init support")
-Signed-off-by: Jianmin Lv <lvjianmin@loongson.cn>
----
- drivers/irqchip/irq-loongson-pch-pic.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/irqchip/irq-loongson-pch-pic.c b/drivers/irqchip/irq-loongson-pch-pic.c
-index c01b9c257005..03493cda65a3 100644
---- a/drivers/irqchip/irq-loongson-pch-pic.c
-+++ b/drivers/irqchip/irq-loongson-pch-pic.c
-@@ -159,6 +159,9 @@ static int pch_pic_domain_translate(struct irq_domain *d,
- 		return -EINVAL;
- 
- 	if (of_node) {
-+		if (fwspec->param_count < 2)
-+			return -EINVAL;
-+
- 		*hwirq = fwspec->param[0] + priv->ht_vec_base;
- 		*type = fwspec->param[1] & IRQ_TYPE_SENSE_MASK;
- 	} else {
--- 
-2.31.1
-
+It applies cleanly on v6.0-rc1.
