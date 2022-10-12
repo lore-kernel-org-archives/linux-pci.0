@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37031C43219
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Oct 2022 18:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A5FAC43217
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Oct 2022 18:14:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229727AbiJLSOl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Oct 2022 14:14:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34952 "EHLO
+        id S229733AbiJLSOo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Oct 2022 14:14:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229619AbiJLSOh (ORCPT
+        with ESMTP id S229620AbiJLSOh (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Oct 2022 14:14:37 -0400
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1anam02on2042.outbound.protection.outlook.com [40.107.96.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EF98FE753;
-        Wed, 12 Oct 2022 11:14:34 -0700 (PDT)
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1anam02on2062.outbound.protection.outlook.com [40.107.96.62])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14DD2FE75A;
+        Wed, 12 Oct 2022 11:14:35 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=iuEkcufm6+UZNlrGQnDyWdN19dqooqrtFuNCUvJMuBQWNy4+vOzGOVW5voh8z1rRtavgR8DlcPBzWlBTXkv4W2kfNw1b2juupgixEVsssiBvMr8l26mVH1+axtCWx+KC0vXZnG8jhs7AgAiCWEL+O6YLYKpn2Gkmzyhhd8BqmcrugboI+xtQsmobxt8+inNmwjftV5NEJ7QKC+XV+VYJBqch1dPMOVtXfVQRZVulO5jgteuek8yp1sldAZ6G8WXF6rfzMfGAA4uWib+zwPlpmYF9z6tZ+FylOc0ddesJst9jJ+tdzmOIVtzBicQOQGITo0sMoNcrA4y88lFdpv6rrg==
+ b=Gp7CpRyCnsXlFtEOtRi+kcPk5/aSNWtQ7YXXkjeJF9pHAAJ0Fi5qX5DheqBhogD719pPs7TKVykE2SE9AJLCgDmKfI+ZKCn1TqeLT+7DleUlpY9WNDLhFfGG0x/cUbuc103OjtxAWx3YyRnjwI9EcIy0uNYM7pbSWFHAHhhQZQFsOJTyFIC8e16sZtRHIGjYEnL2jC/UnrMqI7EMzVv0REdx85Fm6QaOLR9JgKv7S7yvTOEOvQW0K8GbCOkpm1eIdUTDVqJCSMwLh2j5AE9MIV0CKDiHacHJkEarY/NlbtbaaYJZGg15DbPXYJz7F23je+GUixp0wwi7RBTNy895WA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xwUky5xzCZdLokAp9ICIRIBgt01TVBb5+zih1zRv8P0=;
- b=QH41iUa0Tsc+49yFTXW2JuwVQzsF9jTzBSc+9OKBf/yNUqgKX2tMrw6iK3CL8wkIFawLCQqzpOMjvebU0XgNRyaGAYDifC2vSGNWWtDwJ7wdQBKi3IfZEZa3GO+dOB0q2UfhW1z/lC/Fd3QAvR5O6Qy0FV5cVI4+myI9XC0SIQ6A+2I6VJFuGFkJd6fVussuHRMGXbKrqSlX6r5nvMyyMo1hN+we0uZBRoOFw3/dh4sXP5AJnY/WAtg8RsIdqL9olOMPqeMsSC9fKCI9w2bzqEeTjWCv6bzK9WSrQnefFU+CPz8DNJr7igwqStQi6YeY/t++cMRwPLt4vx/iWoFHIQ==
+ bh=GyFfnoyng2I6wWzTJJ3eMqzGxm8D/1xhnn35e0+/7Tk=;
+ b=FEJ4DmlBnoHgWKQhAx3KL+L+cSbjbx+l1WKu8kymqgQm81w+WDNY1zBacuWt21Mscbhmk1HwjvGe0HA8Rb7Ez0AB0eqCapgYooNlCrAe3auFLAXA2uuLQezMQen0eerE1QvHjtFEed8b2NClNFtfWucFibhE66hzRd13wURQ2Rq7TRWbV2WehXCV5FSweygKfcZcnL/auc5EoRqBx5iJFDH4oESE1tjNvR46YH6bkHGv1wLbdNaEQGkTGfqZOOpUrThxUcfrHlvwUCv+8cyc37Xk8cK6WPEdy05WmgMnAoUCvub4oKFqqxJ8Ttsi/8sSjG9edcjEBjJx019Ifwa7Mg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xwUky5xzCZdLokAp9ICIRIBgt01TVBb5+zih1zRv8P0=;
- b=Wx0xHRnhN6k4qnhEHFs/dywAEj3wywo82ixEyjWE/ufGSf7zB1rkdS+kT9WiMvP4vGfffqsDcY47nosib8umKkkeKU8JhyC5MQWSrU2iZhN6NWGkwe3CFeEV6mfNCjq22Ncy16JTnbStgeQsk+7Cpm11mmyVIDNI5NN8fJnD/Ok=
-Received: from DM6PR03CA0060.namprd03.prod.outlook.com (2603:10b6:5:100::37)
- by MN2PR12MB4190.namprd12.prod.outlook.com (2603:10b6:208:1dd::24) with
+ bh=GyFfnoyng2I6wWzTJJ3eMqzGxm8D/1xhnn35e0+/7Tk=;
+ b=fsNI4SVDcuLi6WsXCVKnawOH4m8AvxItajYsJY9wYiPpeMWKMVqNzobANnH0MyG9UGye6Ne2cQX+UUhVQp1mPy3+PQaDjH1J/UUTMJjbXarWKBVCTzNyshXapx163EWXvS2syPp72fPa/mpRI0Qauug+8R/yULzJ6nLmjuv05QY=
+Received: from DM6PR18CA0033.namprd18.prod.outlook.com (2603:10b6:5:15b::46)
+ by BN9PR12MB5337.namprd12.prod.outlook.com (2603:10b6:408:102::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5709.22; Wed, 12 Oct
- 2022 18:14:30 +0000
-Received: from DM6NAM11FT080.eop-nam11.prod.protection.outlook.com
- (2603:10b6:5:100:cafe::29) by DM6PR03CA0060.outlook.office365.com
- (2603:10b6:5:100::37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5709.22 via Frontend
- Transport; Wed, 12 Oct 2022 18:14:30 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5709.21; Wed, 12 Oct
+ 2022 18:14:32 +0000
+Received: from DM6NAM11FT099.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:15b:cafe::11) by DM6PR18CA0033.outlook.office365.com
+ (2603:10b6:5:15b::46) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5709.19 via Frontend
+ Transport; Wed, 12 Oct 2022 18:14:32 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -46,20 +46,16 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
- DM6NAM11FT080.mail.protection.outlook.com (10.13.173.105) with Microsoft SMTP
+ DM6NAM11FT099.mail.protection.outlook.com (10.13.172.241) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5723.20 via Frontend Transport; Wed, 12 Oct 2022 18:14:30 +0000
-Received: from SATLEXMB05.amd.com (10.181.40.146) by SATLEXMB04.amd.com
+ 15.20.5723.20 via Frontend Transport; Wed, 12 Oct 2022 18:14:32 +0000
+Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Wed, 12 Oct
- 2022 13:14:29 -0500
-Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB05.amd.com
- (10.181.40.146) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.28; Wed, 12 Oct
- 2022 13:14:29 -0500
+ 2022 13:14:32 -0500
 Received: from xsjlizhih40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server id 15.1.2375.28 via Frontend
- Transport; Wed, 12 Oct 2022 13:14:28 -0500
+ Transport; Wed, 12 Oct 2022 13:14:31 -0500
 From:   Lizhi Hou <lizhi.hou@amd.com>
 To:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <robh@kernel.org>,
@@ -68,215 +64,278 @@ CC:     Lizhi Hou <lizhi.hou@amd.com>, <clement.leger@bootlin.com>,
         <max.zhen@amd.com>, <sonal.santan@amd.com>, <larry.liu@amd.com>,
         <brian.xu@amd.com>, <stefano.stabellini@xilinx.com>,
         <trix@redhat.com>
-Subject: [PATCH RFC V2 0/3] Generate device tree node for pci devices
-Date:   Wed, 12 Oct 2022 11:13:57 -0700
-Message-ID: <1665598440-47410-1-git-send-email-lizhi.hou@amd.com>
+Subject: [PATCH RFC V2 2/3] PCI: Create device tree node for selected devices
+Date:   Wed, 12 Oct 2022 11:13:59 -0700
+Message-ID: <1665598440-47410-3-git-send-email-lizhi.hou@amd.com>
 X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1665598440-47410-1-git-send-email-lizhi.hou@amd.com>
+References: <1665598440-47410-1-git-send-email-lizhi.hou@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6NAM11FT080:EE_|MN2PR12MB4190:EE_
-X-MS-Office365-Filtering-Correlation-Id: be2a687c-da4d-4beb-c98f-08daac7d9b4d
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT099:EE_|BN9PR12MB5337:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2169858a-9368-476f-ebbf-08daac7d9cc0
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: kRJXtFeeBwEhiDtDtr4qiBqqmWCW3GLuEKXLst8ejHrvxUXMDDamFXP0hnbyNt3lfkypMsdHJzZoSf45lHNIZTfETtXRQLzayOFlYitvVk26OUMzrtBE2LAW+yJ9e/R6rogrFXwXdFGE/mfrDdxSPi2voa0HaGjTIccJop9EMku+ZZGxz6sOqKeJCyE3842mBtkmXhJuIv1ot62OA1AAYMylXnOgeJIB64UfkrjUezyiQlVInWsC24PNYSpC5FhtiVqaLB36kFJNfnC7JGDP6v/xoqUohIbZl5m3SodiYiAW/yP/a70hMCSchNqhkrFwmbyjLaXdR9KVs71LzYX2i8FUoppFqR5Y+8Ft8CyknZgbdVqDaMGzKPrS4wNMj3PbkhMf7VUvdWzElw3hJkYBSYdPTQDV/XeDAuRY7lkx+kzelCye0sbZlnJl236VhevPisycEXzkABMd8My2YmU+xxUWmkndi/hvCe2xB7YhEp+uUl+I4RbmgT2DFJ0v5vDsJYbHt+BnRPUUfa8TeDinKjaSOcaqlkMzTwte5rKg8oZdQSf4Z9+p2o7lWp00d59jdAhg36Ptg9H+Ja7bsJFpf2kcIRH082sWzAPf6GhgP02zBy8D1VP7klA0of4icxtcRhlIINK2icf/d3EM1+esH7DewgnDJOZA55FdofpZCNrQF5JpytY/v+6XD68qvESi3L97wki59Sasaiec37Rmg1fkk5DvzryGJkTRAuhK7MEdRN2A70l8A9RawYk8s1XhgVM2jBMs/cSAmjih1Cml+waS49eMKN6vNFwz7peCGkm0SMS6M6k5A1K6vJyTdEHZqIz1qgIsh7cC3jaxbBtaRFuDX2zxBZWb1n2HoTSk5oIo2fd3UPLAE8DVVd4fb+kK
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(396003)(346002)(39860400002)(136003)(376002)(451199015)(46966006)(40470700004)(36840700001)(82310400005)(966005)(8936002)(478600001)(40480700001)(44832011)(41300700001)(2906002)(5660300002)(356005)(70206006)(81166007)(70586007)(8676002)(4326008)(26005)(82740400003)(36756003)(336012)(110136005)(54906003)(36860700001)(40460700003)(2616005)(316002)(426003)(6666004)(86362001)(83380400001)(47076005)(186003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: CVZOqaIWVf6wcKoeVnq/NEigEHwo6YO/pvJfJ+Afv96qXd8G+rBbyB+n3WOh4K1DA/jNoo5ZqrAJUwV/uqG0SHuFWY24ewFzDrRuPuTORjRegmoJBU5CgkG/UL0w6MyokS9R+E61Q1CK/mnakZQjaxqUw58lmyMXuo6gOnWcl3ihdA8wyEHETTyq5bt8VhzKMoJWI/rN4Jv1eXG24ZG4fw21gKBAWBtjKq+XwT7VNsD4IvP7XrGnacUnoUakdGJxUm/yRXU5v3Gw2Fywkc3YYrFuWFT+5iGYN9ZYy1McTnPJ9r8vsMJ/Gv4aSPy/lhLgRHFBktRd2wEFXr4/TACH5HeKv5GTownaBKZEYeVtN53vRG023MG27V7G85kQa9FseqO+btp14mvzO8UJ5qUSIsrFK37ZV/UL+IkqaEooQn3w/KDNq4v1cSiWzYyg6FNOxuQL/oNkyUgR6MU5nxCTl/LOZJo9QlAa4cm0Fl64vdnw0IYYZQAoru63i+QdfeFL1h/tLtB4pMlgpCAOSLgOan9XJYjeydXjR41PptDyXekjUbnxqED1lcigmC4yTxA/QioO8/NhjG6KbXP9dbdS1M33lNNjfGfn9XGt63pmtCK5jeah/m39b/PzTRLzTLqsbBgyD0hpmfmTaS2hL2SoVsdTRfOHnWx1jH0+5f7T+vWJL0kxI8pc6NdD8lev/ngrpDY3rJ8AQi1TRItG+GqeDSiw9rj99xen7/b7Y1aO2oQJ4pjx+XyT8KzqnBEZt1XjkJyBOiNIVe2IVjqtTizLE3K4Y+fml/TuCGK/SEz8EQI=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(346002)(376002)(396003)(136003)(451199015)(36840700001)(40470700004)(46966006)(36860700001)(426003)(54906003)(316002)(83380400001)(356005)(2906002)(47076005)(82740400003)(82310400005)(81166007)(44832011)(86362001)(70586007)(8676002)(70206006)(4326008)(8936002)(5660300002)(41300700001)(2616005)(40460700003)(336012)(186003)(26005)(40480700001)(110136005)(478600001)(6666004)(36756003)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Oct 2022 18:14:30.2021
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Oct 2022 18:14:32.6343
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: be2a687c-da4d-4beb-c98f-08daac7d9b4d
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2169858a-9368-476f-ebbf-08daac7d9cc0
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT080.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT099.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4190
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5337
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series introduces OF overlay support for PCI devices which
-primarily addresses two use cases. First, it provides a data driven method
-to describe hardware peripherals that are present in a PCI endpoint and
-hence can be accessed by the PCI host. Second, it allows reuse of a OF
-compatible driver -- often used in SoC platforms -- in a PCI host based
-system.
+The PCIe endpoint device such as Xilinx Alveo PCIe card maps the register
+spaces from multiple hardware peripherals to its PCIe BAR. Normally,
+the PCI core discovers devices and BARs using the PCI enumeration process.
+There is no infrastructure to discover the hardware peripherals that are
+present in a PCI device, and which can be accessed through the PCI BARs.
 
-There are 2 series devices rely on this patch:
+For Alveo PCIe card, the card firmware provides a flattened device tree to
+describe the hardware peripherals on its BARs. The Alveo card driver can
+load this flattened device tree and leverage device tree framework to
+generate platform devices for the hardware peripherals eventually.
 
-  1) Xilinx Alveo Accelerator cards (FPGA based device)
-  2) Microchip LAN9662 Ethernet Controller
+Apparently, the device tree framework requires a device tree node for the
+PCIe device. Thus, it can generate the device tree nodes for hardware
+peripherals underneath. Because PCIe is self discoverable bus, there might
+not be a device tree node created for PCIe devices. This patch is to add
+support to generate device tree node for PCIe devices. It introduces a
+kernel option. When the option is turned on, the kernel will generate
+device tree nodes for PCI bridges unconditionally. It will also generate
+a device tree node for Xilinx Alveo U50 by using PCI quirks. The generated
+device tree nodes do not have any property. The future patches will add
+necessary properties.
 
-     Please see: https://lore.kernel.org/lkml/20220427094502.456111-1-clement.leger@bootlin.com/
+Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
+Signed-off-by: Sonal Santan <sonal.santan@amd.com>
+Signed-off-by: Max Zhen <max.zhen@amd.com>
+Signed-off-by: Brian Xu <brian.xu@amd.com>
+---
+ drivers/pci/Kconfig         | 12 ++++++++
+ drivers/pci/bus.c           |  2 ++
+ drivers/pci/msi/irqdomain.c |  6 ++--
+ drivers/pci/of.c            | 61 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci-driver.c    |  3 +-
+ drivers/pci/pci.h           | 16 ++++++++++
+ drivers/pci/quirks.c        | 11 +++++++
+ drivers/pci/remove.c        |  1 +
+ 8 files changed, 109 insertions(+), 3 deletions(-)
 
-Normally, the PCI core discovers PCI devices and their BARs using the
-PCI enumeration process. However, the process does not provide a way to
-discover the hardware peripherals that are present in a PCI device, and
-which can be accessed through the PCI BARs. Also, the enumeration process
-does not provide a way to associate MSI-X vectors of a PCI device with the
-hardware peripherals that are present in the device. PCI device drivers
-often use header files to describe the hardware peripherals and their
-resources as there is no standard data driven way to do so. This patch
-series proposes to use flattened device tree blob to describe the
-peripherals in a data driven way. Based on previous discussion, using
-device tree overlay is the best way to unflatten the blob and populate
-platform devices. To use device tree overlay, there are three obvious
-problems that need to be resolved.
-
-First, we need to create a base tree for non-DT system such as x86_64. A
-patch series has been submitted for this:
-https://lore.kernel.org/lkml/20220624034327.2542112-1-frowand.list@gmail.com/
-https://lore.kernel.org/lkml/20220216050056.311496-1-lizhi.hou@xilinx.com/
-
-Second, a device tree node corresponding to the PCI endpoint is required
-for overlaying the flattened device tree blob for that PCI endpoint.
-Because PCI is a self-discoverable bus, a device tree node is usually not
-created for PCI devices. This series adds support to generate a device
-tree node for a PCI device which advertises itself using PCI quirks
-infrastructure.
-
-Third, we need to generate device tree nodes for PCI bridges since a child
-PCI endpoint may choose to have a device tree node created.
-
-This patch series is made up of three patches.
-
-The first patch is adding OF interface to create or destroy OF node
-dynamically.
-
-The second patch introduces a kernel option, CONFIG_DYNAMIC_PCI_OF_NODEX.
-When the option is turned on, the kernel will generate device tree nodes
-for all PCI bridges unconditionally. The patch also shows how to use the
-PCI quirks infrastructure, DECLARE_PCI_FIXUP_FINAL to generate a device
-tree node for a device. Specifically, the patch generates a device tree
-node for Xilinx Alveo U50 PCIe accelerator device. The generated device
-tree nodes do not have any property.
-
-The third patch adds basic properties ('reg', 'compatible' and
-'device_type') to the dynamically generated device tree nodes. More
-properties can be added in the future.
-
-Here is the example of device tree nodes generated within the ARM64 QEMU.
-# lspci -t    
--[0000:00]-+-00.0
-           +-01.0-[01]--
-           +-01.1-[02]----00.0
-           +-01.2-[03]----00.0
-           +-01.3-[04]----00.0
-           +-01.4-[05]----00.0
-           +-01.5-[06]--
-           +-01.6-[07]--
-           +-01.7-[08]--
-           +-02.0-[09-0b]----00.0-[0a-0b]----00.0-[0b]--+-00.0
-           |                                            \-00.1
-           +-02.1-[0c]--
-           \-03.0-[0d-0e]----00.0-[0e]----01.0
-
-# tree /sys/firmware/devicetree/base/pcie\@10000000/
-/sys/firmware/devicetree/base/pcie@10000000/
-|-- #address-cells
-|-- #interrupt-cells
-|-- #size-cells
-|-- bus-range
-|-- compatible
-|-- device_type
-|-- dma-coherent
-|-- interrupt-map
-|-- interrupt-map-mask
-|-- linux,pci-domain
-|-- msi-parent
-|-- name
-|-- pci@1,0
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@1,1
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@1,2
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@1,3
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@1,4
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@1,5
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@1,6
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@1,7
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@2,0
-|   |-- compatible
-|   |-- device_type
-|   |-- pci@0,0
-|   |   |-- compatible
-|   |   |-- device_type
-|   |   |-- pci@0,0
-|   |   |   |-- compatible
-|   |   |   |-- dev@0,0
-|   |   |   |   |-- compatible
-|   |   |   |   `-- reg
-|   |   |   |-- dev@0,1
-|   |   |   |   |-- compatible
-|   |   |   |   `-- reg
-|   |   |   |-- device_type
-|   |   |   `-- reg
-|   |   `-- reg
-|   `-- reg
-|-- pci@2,1
-|   |-- compatible
-|   |-- device_type
-|   `-- reg
-|-- pci@3,0
-|   |-- compatible
-|   |-- device_type
-|   |-- pci@0,0
-|   |   |-- compatible
-|   |   |-- device_type
-|   |   `-- reg
-|   `-- reg
-|-- ranges
-`-- reg
-
-Changes since RFC v1:
-- Added one patch to create basic properties.
-- To move DT related code out of PCI subsystem, replaced of_node_alloc()
-  with of_create_node()/of_destroy_node()
-
-Lizhi Hou (3):
-  of: dynamic: Add of_create_node() and of_destroy_node()
-  PCI: Create device tree node for selected devices
-  PCI: Add basic properties for dynamically generated PCI OF node
-
- drivers/of/dynamic.c        |  80 ++++++++++++++++
- drivers/pci/Kconfig         |  12 +++
- drivers/pci/Makefile        |   1 +
- drivers/pci/bus.c           |   2 +
- drivers/pci/msi/irqdomain.c |   6 +-
- drivers/pci/of.c            |  69 ++++++++++++++
- drivers/pci/of_property.c   | 177 ++++++++++++++++++++++++++++++++++++
- drivers/pci/pci-driver.c    |   3 +-
- drivers/pci/pci.h           |  17 ++++
- drivers/pci/quirks.c        |  11 +++
- drivers/pci/remove.c        |   1 +
- include/linux/of.h          |   4 +
- 12 files changed, 380 insertions(+), 3 deletions(-)
- create mode 100644 drivers/pci/of_property.c
-
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 55c028af4bd9..8243a92fd97d 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -198,6 +198,18 @@ config PCI_HYPERV
+ 	  The PCI device frontend driver allows the kernel to import arbitrary
+ 	  PCI devices from a PCI backend to support PCI driver domains.
+ 
++config PCI_DYNAMIC_OF_NODES
++	bool "Device tree node for PCI devices"
++	depends on OF
++	select OF_DYNAMIC
++	help
++	  This option enables support for generating device tree nodes for some
++	  PCI devices. Thus, the driver of this kind can load and overlay
++	  flattened device tree for its downstream devices.
++
++	  Once this option is selected, the device tree nodes will be generated
++	  for all PCI/PCIE bridges.
++
+ choice
+ 	prompt "PCI Express hierarchy optimization setting"
+ 	default PCIE_BUS_DEFAULT
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 3cef835b375f..8507cc32b61d 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -316,6 +316,8 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	 */
+ 	pcibios_bus_add_device(dev);
+ 	pci_fixup_device(pci_fixup_final, dev);
++	if (pci_is_bridge(dev))
++		of_pci_make_dev_node(dev);
+ 	pci_create_sysfs_dev_files(dev);
+ 	pci_proc_attach_device(dev);
+ 	pci_bridge_d3_update(dev);
+diff --git a/drivers/pci/msi/irqdomain.c b/drivers/pci/msi/irqdomain.c
+index e9cf318e6670..eeaf44169bfd 100644
+--- a/drivers/pci/msi/irqdomain.c
++++ b/drivers/pci/msi/irqdomain.c
+@@ -230,8 +230,10 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+ 
+ 	of_node = irq_domain_get_of_node(domain);
+-	rid = of_node ? of_msi_map_id(&pdev->dev, of_node, rid) :
+-			iort_msi_map_id(&pdev->dev, rid);
++	if (of_node && !of_node_check_flag(of_node, OF_DYNAMIC))
++		rid = of_msi_map_id(&pdev->dev, of_node, rid);
++	else
++		rid = iort_msi_map_id(&pdev->dev, rid);
+ 
+ 	return rid;
+ }
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 196834ed44fe..83e042f495a6 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -469,6 +469,8 @@ static int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *
+ 		} else {
+ 			/* We found a P2P bridge, check if it has a node */
+ 			ppnode = pci_device_to_OF_node(ppdev);
++			if (of_node_check_flag(ppnode, OF_DYNAMIC))
++				ppnode = NULL;
+ 		}
+ 
+ 		/*
+@@ -599,6 +601,65 @@ int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge)
+ 	return pci_parse_request_of_pci_ranges(dev, bridge);
+ }
+ 
++#if IS_ENABLED(CONFIG_PCI_DYNAMIC_OF_NODES)
++
++void of_pci_remove_node(struct pci_dev *pdev)
++{
++	struct device_node *dt_node;
++
++	dt_node = pci_device_to_OF_node(pdev);
++	if (!dt_node || !of_node_check_flag(dt_node, OF_DYNAMIC))
++		return;
++	pdev->dev.of_node = NULL;
++
++	of_destroy_node(dt_node);
++}
++
++void of_pci_make_dev_node(struct pci_dev *pdev)
++{
++	struct device_node *parent, *dt_node;
++	const char *pci_type = "dev";
++	char *full_name;
++
++	/*
++	 * if there is already a device tree node linked to this device,
++	 * return immediately.
++	 */
++	if (pci_device_to_OF_node(pdev))
++		return;
++
++	/* check if there is device tree node for parent device */
++	if (!pdev->bus->self)
++		parent = pdev->bus->dev.of_node;
++	else
++		parent = pdev->bus->self->dev.of_node;
++	if (!parent)
++		return;
++
++	if (pci_is_bridge(pdev))
++		pci_type = "pci";
++
++	full_name = kasprintf(GFP_KERNEL, "%s@%x,%x", pci_type,
++			      PCI_SLOT(pdev->devfn),
++			      PCI_FUNC(pdev->devfn));
++	if (!full_name)
++		goto failed;
++
++	dt_node = of_create_node(parent, full_name, NULL);
++	if (!dt_node)
++		goto failed;
++
++	kfree(full_name);
++
++	pdev->dev.of_node = dt_node;
++
++	return;
++
++failed:
++	kfree(full_name);
++}
++#endif
++
+ #endif /* CONFIG_PCI */
+ 
+ /**
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 49238ddd39ee..1540c4c9a770 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1628,7 +1628,8 @@ static int pci_dma_configure(struct device *dev)
+ 	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
+ 
+ 	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
+-	    bridge->parent->of_node) {
++	    bridge->parent->of_node &&
++	    !of_node_check_flag(bridge->parent->of_node, OF_DYNAMIC)) {
+ 		ret = of_dma_configure(dev, bridge->parent->of_node, true);
+ 	} else if (has_acpi_companion(bridge)) {
+ 		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 785f31086313..e0a11497b1ad 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -678,6 +678,22 @@ static inline int devm_of_pci_bridge_init(struct device *dev, struct pci_host_br
+ 
+ #endif /* CONFIG_OF */
+ 
++#ifdef CONFIG_PCI_DYNAMIC_OF_NODES
++void of_pci_make_dev_node(struct pci_dev *pdev);
++void of_pci_remove_node(struct pci_dev *pdev);
++
++#else
++static inline void
++of_pci_make_dev_node(struct pci_dev *pdev)
++{
++}
++
++static inline void
++of_pci_remove_node(struct pci_dev *pdev)
++{
++}
++#endif /* CONFIG_OF_DYNAMIC */
++
+ #ifdef CONFIG_PCIEAER
+ void pci_no_aer(void);
+ void pci_aer_init(struct pci_dev *dev);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 4944798e75b5..5d76932f59ec 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5956,3 +5956,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56b1, aspm_l1_acceptable_latency
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c0, aspm_l1_acceptable_latency);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x56c1, aspm_l1_acceptable_latency);
+ #endif
++
++/*
++ * For PCI device which have multiple downstream devices, its driver may use
++ * a flattened device tree to describe the downstream devices.
++ * To overlay the flattened device tree, the PCI device and all its ancestor
++ * devices need to have device tree nodes on system base device tree. Thus,
++ * before driver probing, it might need to add a device tree node as the final
++ * fixup.
++ */
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_XILINX, 0x5020, of_pci_make_dev_node);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_XILINX, 0x5021, of_pci_make_dev_node);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 4c54c75050dc..0eaa9d9a3609 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -23,6 +23,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 		device_release_driver(&dev->dev);
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
++		of_pci_remove_node(dev);
+ 
+ 		pci_dev_assign_added(dev, false);
+ 	}
 -- 
 2.17.1
 
