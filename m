@@ -2,164 +2,131 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DD41C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 18:45:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00658C4332F
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 18:45:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232242AbiJMSpD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Oct 2022 14:45:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32988 "EHLO
+        id S232182AbiJMSp1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Oct 2022 14:45:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232355AbiJMSn5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2022 14:43:57 -0400
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2061b.outbound.protection.outlook.com [IPv6:2a01:111:f400:7eaa::61b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F81765D1;
-        Thu, 13 Oct 2022 11:42:04 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SUN6F+uuswwJQ6fTe7zoocqoVCJftyfPS5Aykj5X1iI0sft0PSVWsuQ1Tbbx4MdiuCZwE+oFxQt2QO2iKrPo3/BDETkYqcT/PuA74kxoaQaG35kMdXpYkRSN1UH6HfIZj61vDPE8fsQfDwi98DeysJe0Sk1H3b+amQtbxmDKwQ8bimQcY8JCqNMtmDEc2f5ay0A7yHIqNnKCrBzTkKGB+d4j4khKyPmLRHPSlrqrrbrGX/ZltUNS/bCcQscUWgakevTk6VVAh0nXKlDssl0E15qPLhfiyxgPL6cz6rAcAZYxdzCLwglh+yx0BtLWxdnyR9QZvy/V20NILKCypga6XQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+OYl6hX3/oChjrgjuOaGFWyc0+88Bn9/AYVGZVWF5mc=;
- b=lyoFcKL5aWLRmFdl8O5sodHlJFVSixlTU4c6QCcxQ9m1b5lSzDzv1Rg6QTBZZ2fvZkFqpjb1G2z5cgPJxM3XCl3hvzgytTs8g+Up42cnVnL+yhBtihe9Y2TjZ/5/kKKxdiM9nydpfk31utOijgHIrvMEwFgMeEr3r3OXEjHHMQtO3I1TxJZ+afsLXXydFrQhMWLvvMxA6P8Yfnz0nN6JPqlOIQEC4+vDGFWTXk5egssml+xn5FQfrZ+D4JwcwEN6jBz5FJKYmzwr5Pae/hrdJVIQEZXNNMe9RwmAAhPz1iM0XZ9vn74z6ZkdnEOYAVN1a1YE1txNVh1uRoDVmy/boA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.233) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+OYl6hX3/oChjrgjuOaGFWyc0+88Bn9/AYVGZVWF5mc=;
- b=QX2O/DwP8jXqMelbv+SPkQZ1NRy0bZluS7eiI543uWkr1OcPt/eRS6ntPae/wwHcOI4Cdruv3aqu1Z5VG0tVELpLcjFjWyxoJPhFecjGpkjRzoDL/hiCMQ0eMxJj5kbl3c/XPVavm5Sr8Vp5ZQb6DCZ/Ky5ONQ7ux2BrT3Z6FaNZdIpz1x0Yku3hPb6Ti3FsLPNP4Gyl+sIY+OMhIRdiLZnnGWJrSjVmdcMtUMUR0Q8wOAgiN9IjiER/YVlMbsqVuV+qZrbNDyp4IVH9VsEpqNVzciA8IW94QHWp7zuyAE/sIreKEhYq5SZij84fB7VTH411VjYGjhLZMfmMyHc6cg==
-Received: from DM6PR05CA0048.namprd05.prod.outlook.com (2603:10b6:5:335::17)
- by PH7PR12MB5709.namprd12.prod.outlook.com (2603:10b6:510:1e0::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5709.21; Thu, 13 Oct
- 2022 18:41:21 +0000
-Received: from DM6NAM11FT061.eop-nam11.prod.protection.outlook.com
- (2603:10b6:5:335:cafe::ec) by DM6PR05CA0048.outlook.office365.com
- (2603:10b6:5:335::17) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5723.11 via Frontend
- Transport; Thu, 13 Oct 2022 18:41:20 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.233) by
- DM6NAM11FT061.mail.protection.outlook.com (10.13.173.138) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5723.20 via Frontend Transport; Thu, 13 Oct 2022 18:41:20 +0000
-Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
- (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Thu, 13 Oct
- 2022 11:41:15 -0700
-Received: from drhqmail203.nvidia.com (10.126.190.182) by
- drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Thu, 13 Oct 2022 11:41:14 -0700
-Received: from vidyas-desktop.nvidia.com (10.127.8.9) by mail.nvidia.com
- (10.126.190.182) with Microsoft SMTP Server id 15.2.986.29 via Frontend
- Transport; Thu, 13 Oct 2022 11:41:10 -0700
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
-        <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>, <kishon@ti.com>, <vkoul@kernel.org>,
-        <mani@kernel.org>, <Sergey.Semin@baikalelectronics.ru>,
-        <ffclaire1224@gmail.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-phy@lists.infradead.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <sagar.tv@gmail.com>
-Subject: [PATCH V3 20/21] dt-bindings: PCI: tegra194: Add monitor clock support
-Date:   Fri, 14 Oct 2022 00:08:53 +0530
-Message-ID: <20221013183854.21087-21-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20221013183854.21087-1-vidyas@nvidia.com>
-References: <20221013183854.21087-1-vidyas@nvidia.com>
-X-NVConfidentiality: public
+        with ESMTP id S232367AbiJMSn6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2022 14:43:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48812188A9B
+        for <linux-pci@vger.kernel.org>; Thu, 13 Oct 2022 11:42:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1665686451;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=8pkajZPOZxDkGw1RxC1xTCn1Bly76di5EaF0TtIpiUE=;
+        b=GCAbyGEXHs0zSHPJ1OwSZ6Cg4eAjy3E84xI8H7iMuImrh6Z8klKCGa/9INTanWG+5+Yb8q
+        fB8GfH8Pn4c9+34JJdkk1fIdQSXAy47UHR8aL9gZpw8LOKOemK1asv8YZ1nFL9/hodMeps
+        frkcw5DvRiWFEBywPnCySL+X6c7+l1I=
+Received: from mail-oa1-f72.google.com (mail-oa1-f72.google.com
+ [209.85.160.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-668-NQoW4AJ1PQyG6dibaIltWg-1; Thu, 13 Oct 2022 14:40:50 -0400
+X-MC-Unique: NQoW4AJ1PQyG6dibaIltWg-1
+Received: by mail-oa1-f72.google.com with SMTP id 586e51a60fabf-1321b118ba0so1482371fac.19
+        for <linux-pci@vger.kernel.org>; Thu, 13 Oct 2022 11:40:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8pkajZPOZxDkGw1RxC1xTCn1Bly76di5EaF0TtIpiUE=;
+        b=5C9VgkJexPJqj/K/1Kx+bZmBZNfZ4TPLMEn8aNoUxvrHKP826k9Ts52IRgQlsIw3kr
+         5BtUQsv4XB66K7xLfKO6ktiSM8P35Jr8DgrXnEw7IQcm7CXurhNWncC4riDBxlURGanC
+         JyJyPBE0qnkqSrOP6LaJnYjG65pSZh/71UBf40Q1VJA49ZIrVX90G5EJ7r43pLEt1GGE
+         +l6vkGCHnuBndJrz8yy6ZXwSR6Nzt/+iZli5XE4ULutSGXSjiRDUZyffvwAuHSJo7KXI
+         asefadenahCJhZ+QZwz3R5wirNORrN1SpGCaYAP2+gV95FGcx6ttxosSbZMuTN5aXffK
+         vq6A==
+X-Gm-Message-State: ACrzQf3VJS2QLxU61cDs0zPTKg/G8ELLR27P9QsAWNZDKRwLQRff77ns
+        YVGW6EYBgqakqFjmn1yxsf/FBEQCHsuUa9il9CNOW0NmfSoh4lnpewYP74N5BnnGxEdJyy5atgR
+        /JJLJzQTB97ntYPFvUPIo
+X-Received: by 2002:a05:6830:2647:b0:659:edd8:3fcd with SMTP id f7-20020a056830264700b00659edd83fcdmr681885otu.344.1665686449488;
+        Thu, 13 Oct 2022 11:40:49 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM5zsqe12qXgtGqOG3X4aAkxg5HN1AkA2/2fmrv6WsfdypDLxNxz0oYk6/aTlQR85OUwZLjPpA==
+X-Received: by 2002:a05:6830:2647:b0:659:edd8:3fcd with SMTP id f7-20020a056830264700b00659edd83fcdmr681866otu.344.1665686449258;
+        Thu, 13 Oct 2022 11:40:49 -0700 (PDT)
+Received: from localhost.localdomain ([2804:1b3:a801:9473:d360:c737:7c9c:d52b])
+        by smtp.gmail.com with ESMTPSA id v13-20020a05683024ad00b006618ad77a63sm244521ots.74.2022.10.13.11.40.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Oct 2022 11:40:48 -0700 (PDT)
+From:   Leonardo Bras <leobras@redhat.com>
+To:     Steffen Klassert <steffen.klassert@secunet.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Juri Lelli <juri.lelli@redhat.com>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        Dietmar Eggemann <dietmar.eggemann@arm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+        Daniel Bristot de Oliveira <bristot@redhat.com>,
+        Valentin Schneider <vschneid@redhat.com>,
+        Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Leonardo Bras <leobras@redhat.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Phil Auld <pauld@redhat.com>,
+        Antoine Tenart <atenart@kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Wang Yufen <wangyufen@huawei.com>, mtosatti@redhat.com
+Cc:     linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH v2 0/4] CPU isolation improvements
+Date:   Thu, 13 Oct 2022 15:40:25 -0300
+Message-Id: <20221013184028.129486-1-leobras@redhat.com>
+X-Mailer: git-send-email 2.38.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6NAM11FT061:EE_|PH7PR12MB5709:EE_
-X-MS-Office365-Filtering-Correlation-Id: 29b66c5d-8da7-4b57-7170-08daad4a85b4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 5IdSbKPRTJkE+mvyASrLxqQKH/H1WCIxP3B1/IR9pRTpOP0oiAhlVTQ/o2ARKomfF2Xcr8pzkYzo4iKM9tiOWjGILmLzP6gR4jX4zYS5XZ7etENLAapuCY4ykEdTKLBMT5MbWQNQoVU8zM1xa7i3ULiIyDnyGz2V+bE0KWRBHSrcabTSD0MkzucajJXK+jjpeIcn0ahoJOsf36VwtLYoJKE7OQRlDnjb5UW0zL2fQoz34wFZ51VDP5EDyVsW4N2pioG+32ikVSzaE3Y4SCrFaff2oYENcijNAiivlPv6jHPBXBgGwJMebvOMY47J6iIFGqcNtxGkhbdwkM921ZLEQdtZkDSd7L3y3ldOUx8fCnYOzkHPyKPr+syDQjxQ+nmoZc6ci9VE804NRyCKIep/rMlFE77XKStO4LTsKVBL9IyXvISI1a90TOZKsPJmt0kjtiNJ0x9RUv0MxUb4+OhnddZf4ET0UKnUh8gjowEC575XU/LFyri+E8Dfptv2lg1KLq237gkO5cCJWzWjNrFEBTo8YZm/s92fx0YCYcvPbbEQUvt+9WNKnMhJCg6C9SBZGqc/TSr5apJf3OF7a3vzH/msaP45MQ8YagIZ3uDRCvu5OkBFGO++fIz2dERGbdpCK0fZ2WmNPnOfhBcUhiW6goQNcuA9PEkbdYZsU2uX9HhBOaHt103I7ZJ/qb7kPP3wJiu9bQnVvOhxXYpg3SkTavzDzZVzf+0763ZsTRI11X5kvi52rI01OHeVD4zviK/GUpARWQ3DVH5BAJhH+JL5G9rIjc2YIchbLeYYrqIeJxg=
-X-Forefront-Antispam-Report: CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230022)(4636009)(346002)(376002)(136003)(396003)(39860400002)(451199015)(46966006)(40470700004)(36840700001)(54906003)(356005)(7416002)(921005)(70206006)(70586007)(82740400003)(7636003)(2906002)(5660300002)(40460700003)(8936002)(41300700001)(36860700001)(8676002)(26005)(4326008)(110136005)(2616005)(1076003)(336012)(478600001)(6666004)(7696005)(316002)(186003)(83380400001)(47076005)(82310400005)(426003)(36756003)(40480700001)(86362001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2022 18:41:20.7320
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 29b66c5d-8da7-4b57-7170-08daad4a85b4
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT061.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB5709
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Tegra supports PCIe core clock monitoring for any rate changes that may be
-happening because of the link speed changes. This is useful in tracking
-any changes in the core clock that are not initiated by the software.
+Patch 1 removes some noise from isolation.c
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
-V3:
-* This is a new patch in this series
+Patch 2 adds some information about the housekeeping flags and a short
+description on what to expect from the HK functions. I would really like 
+some feedback on this one, since I got all that from the flags usage, and 
+maybe I am misreading stuff.
 
- .../devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml    | 6 +++++-
- .../devicetree/bindings/pci/nvidia,tegra194-pcie.yaml       | 6 +++++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+In patch 3, I am suggesting making isolcpus have both the _DOMAIN flag and 
+the _WQ flag, so the _DOMAIN flag is not responsible for isolating cpus on 
+workqueue operations anymore. This will avoid AND'ing both those bitmaps 
+every time we need to check for Workqueue isolation, simplifying code and 
+avoiding cpumask allocation in most cases. 
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-index a24fb8307d29..7c6900802f04 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie-ep.yaml
-@@ -55,12 +55,16 @@ properties:
-       - const: intr
- 
-   clocks:
-+    minItems: 1
-     items:
--      - description: module clock
-+      - description: module's core clock
-+      - description: module's monitor clock
- 
-   clock-names:
-+    minItems: 1
-     items:
-       - const: core
-+      - const: core_m
- 
-   resets:
-     items:
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-index 75da3e8eecb9..aaaa238e6dc1 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-@@ -54,12 +54,16 @@ properties:
-       - const: msi
- 
-   clocks:
-+    minItems: 1
-     items:
--      - description: module clock
-+      - description: module's core clock
-+      - description: module's monitor clock
- 
-   clock-names:
-+    minItems: 1
-     items:
-       - const: core
-+      - const: core_m
- 
-   resets:
-     items:
+Maybe I am missing something in this move, so please provide feedback.
+
+In patch 4 I use the results from patch 3 and I disallow pcrypt to schedule 
+work in cpus that are not enabled for workqueue housekeeping, meaning there 
+will be less work done in those isolated cpus.
+
+Best regards,
+Leo
+
+Leonardo Bras (4):
+  sched/isolation: Fix style issues reported by checkpatch
+  sched/isolation: Improve documentation
+  sched/isolation: Add HK_TYPE_WQ to isolcpus=domain
+  crypto/pcrypt: Do not use isolated CPUs for callback
+
+ crypto/pcrypt.c                 |  9 +++++---
+ drivers/pci/pci-driver.c        | 13 +----------
+ include/linux/sched/isolation.h | 38 ++++++++++++++++++++-------------
+ kernel/sched/isolation.c        |  4 ++--
+ kernel/workqueue.c              |  1 -
+ net/core/net-sysfs.c            |  1 -
+ 6 files changed, 32 insertions(+), 34 deletions(-)
+
 -- 
-2.17.1
+2.38.0
 
