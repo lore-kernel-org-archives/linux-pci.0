@@ -2,40 +2,39 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30B91C43217
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 06:39:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03AACC4332F
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 06:39:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229454AbiJMGjN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Oct 2022 02:39:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50994 "EHLO
+        id S229686AbiJMGjV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Oct 2022 02:39:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229548AbiJMGjM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2022 02:39:12 -0400
-X-Greylist: delayed 360 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 12 Oct 2022 23:39:11 PDT
+        with ESMTP id S229657AbiJMGjR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2022 02:39:17 -0400
 Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.84])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC28713B8C5;
-        Wed, 12 Oct 2022 23:39:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1665642436;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB67A139E67;
+        Wed, 12 Oct 2022 23:39:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1665642447;
     s=strato-dkim-0002; d=ibv-augsburg.de;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=Zf6K0w0MwGi6+CgAd+H4XVP5QSRyk5X8tLOscIzRNgY=;
-    b=YdjxwH9ktRPpuiHNYwPIp5dw4BwRrrLNCPNbXlspgpYEx8a364IuqjNo6mwyxg6slw
-    wiP0H48X9tbyLjnF9f/wP1zMEuHQcuS+SXTfhaTH1k/fAiWqCQbe5ekk2aGBRUWgxcko
-    ZiBk1r+v3D8FzTRgoHxAW3+/I3crLzwozbfdmYCrDlD0I5ipJ7FfHgb4rOcKAbwcTGG9
-    HMhXdhVkSbZ7t4HgrO2ah69Ap1psV4HpQojUQkGe0qNwZ63/ZoHuEqXkn5wb2vYE+Q1I
-    dhHoSLkVNut7oSTbJ3/VdqDEbGK0K9FyY65iKtPUKa/WBjFNUZeh52Z27rdEBmt0z175
-    ZW+w==
+    bh=T2sxiAy8yMu84bcZbky/5CvmTsSFzanDcbu9cCBIsQ4=;
+    b=Z4xRsbjzhNQMLN2JYlkbETVc7PvedX0LTCSrE0HkxXJBDuBYjzcFhjmxM6eNTOjVen
+    821w/sxRlB1KpFuI84xATMHxtwkH2+0ZngEdSjVzd2uewn77lbYQV2Q1aKzGIKCKCWwa
+    VMFK53O+7s5xHUYgSt18zTO2WMTmAyJik51hbNhChFkwFMI/KuAx7SF4TO/Xy4sT87Ru
+    e0FjwQ5lbKgr0dVCiN+WztkgfVeLO6ekaRy+uOsYjh0uujFfGTkN87wdw8WajjLFU84y
+    R2HUeKnvnKNAls6tl5r637JPOG7s61bs9L3ujwwF2CtpuILKfGBAU1pgcCPyAUrLFMha
+    2cnw==
 Authentication-Results: strato.com;
     dkim=none
 X-RZG-AUTH: ":KGMJfE6heLGk8b3w7Oa1fDtXwBjeDczIOHPRx8yNRKhFG/cxcP9dNdI9SxioDT8RvZMqtMfbyXFLOT+8odoEkA=="
-X-RZG-CLASS-ID: mo01
+X-RZG-CLASS-ID: mo02
 Received: from localhost.localdomain
     by smtp.strato.de (RZmta 48.2.0 DYNA|AUTH)
-    with ESMTPSA id R6cb4ey9D6RGC0X
+    with ESMTPSA id R6cb4ey9D6RRC0b
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-    Thu, 13 Oct 2022 08:27:16 +0200 (CEST)
+    Thu, 13 Oct 2022 08:27:27 +0200 (CEST)
 From:   Dominic Rath <dominic.rath@ibv-augsburg.de>
 To:     robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
         tjoseph@cadence.com
@@ -44,9 +43,9 @@ Cc:     bhelgaas@google.com, lpieralisi@kernel.org, nm@ti.com,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Alexander Bahle <bahle@ibv-augsburg.de>,
         Dominic Rath <rath@ibv-augsburg.de>
-Subject: [PATCH 1/3] dt-bindings: PCI: cdns: Add PHY latency properties
-Date:   Thu, 13 Oct 2022 08:26:47 +0200
-Message-Id: <20221013062649.303184-2-dominic.rath@ibv-augsburg.de>
+Subject: [PATCH 3/3] arm64: dts: ti: k3-am64-main: Add latency DT binding
+Date:   Thu, 13 Oct 2022 08:26:49 +0200
+Message-Id: <20221013062649.303184-4-dominic.rath@ibv-augsburg.de>
 X-Mailer: git-send-email 2.36.0
 In-Reply-To: <20221013062649.303184-1-dominic.rath@ibv-augsburg.de>
 References: <20221013062649.303184-1-dominic.rath@ibv-augsburg.de>
@@ -58,112 +57,40 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Alexander Bahle <bahle@ibv-augsburg.de>
 
-Add "cdns,tx-phy-latency-ps" and "cdns,rx-phy-latency-ps" DT bindings for
-setting the PCIe PHY latencies.
-The properties expect a list of uint32 PHY latencies in picoseconds for
-every supported speed starting at PCIe Gen1, e.g.:
+Add DT bindings for the PCIe PHY latencies in host and endpoint mode.
+Setting these improves the PTM timestamp accuracy.
 
-  max-link-speed = <2>;
-  tx-phy-latency-ps = <100000 200000>; /* Gen1: 100ns, Gen2: 200ns */
-  rx-phy-latency-ps = <150000 250000>; /* Gen1: 150ns, Gen2: 250ns */
-
-There should be a value for every supported speed.
+The values are taken from the Link below.
 
 Signed-off-by: Alexander Bahle <bahle@ibv-augsburg.de>
 Signed-off-by: Dominic Rath <rath@ibv-augsburg.de>
+Link: https://e2e.ti.com/support/processors-group/processors/f/processors-forum/998749/am6442-details-regarding-ptm-implementation
 ---
- .../bindings/pci/cdns,cdns-pcie-ep.yaml       |  2 ++
- .../bindings/pci/cdns,cdns-pcie-host.yaml     |  2 ++
- .../devicetree/bindings/pci/cdns-pcie-ep.yaml | 20 +++++++++++++++++++
- .../bindings/pci/cdns-pcie-host.yaml          | 20 +++++++++++++++++++
- 4 files changed, 44 insertions(+)
+ arch/arm64/boot/dts/ti/k3-am64-main.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-index e6ef1012a580..ce239da3a592 100644
---- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-@@ -45,6 +45,8 @@ examples:
-                 max-functions = /bits/ 8 <8>;
-                 phys = <&pcie_phy0>;
-                 phy-names = "pcie-phy";
-+                cdns,tx-phy-latency-ps = <138800 69400>;
-+                cdns,rx-phy-latency-ps = <185200 92600>;
-         };
-     };
- ...
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-index 293b8ec318bc..a7f4e3909c51 100644
---- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-host.yaml
-@@ -70,6 +70,8 @@ examples:
+diff --git a/arch/arm64/boot/dts/ti/k3-am64-main.dtsi b/arch/arm64/boot/dts/ti/k3-am64-main.dtsi
+index d6aa23681bbe..032abb343c36 100644
+--- a/arch/arm64/boot/dts/ti/k3-am64-main.dtsi
++++ b/arch/arm64/boot/dts/ti/k3-am64-main.dtsi
+@@ -855,6 +855,8 @@ pcie0_rc: pcie@f102000 {
+ 		ranges = <0x01000000 0x00 0x68001000  0x00 0x68001000  0x00 0x0010000>,
+ 			 <0x02000000 0x00 0x68011000  0x00 0x68011000  0x00 0x7fef000>;
+ 		dma-ranges = <0x02000000 0x0 0x0 0x0 0x0 0x00000010 0x0>;
++		cdns,tx-phy-latency-ps = <138800 69400>;
++		cdns,rx-phy-latency-ps = <185200 92600>;
+ 	};
  
-             phys = <&pcie_phy0>;
-             phy-names = "pcie-phy";
-+            cdns,tx-phy-latency-ps = <138800 69400>;
-+            cdns,rx-phy-latency-ps = <185200 92600>;
-         };
-     };
- ...
-diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
-index baeafda36ebe..95ea273372d1 100644
---- a/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns-pcie-ep.yaml
-@@ -21,4 +21,24 @@ properties:
-     maximum: 32
-     default: 32
+ 	pcie0_ep: pcie-ep@f102000 {
+@@ -873,6 +875,8 @@ pcie0_ep: pcie-ep@f102000 {
+ 		clocks = <&k3_clks 114 0>;
+ 		clock-names = "fck";
+ 		max-functions = /bits/ 8 <1>;
++		cdns,tx-phy-latency-ps = <138800 69400>;
++		cdns,rx-phy-latency-ps = <185200 92600>;
+ 	};
  
-+  cdns,tx-phy-latency-ps:
-+    description:
-+      The PHY latencies for the TX direction applied to the PTM timestamps. Most
-+      PCIe PHYs have asynchronous latencies for their RX and TX paths. To obtain
-+      accurate PTM timestamps, the PCIe PTM specification requires that the time
-+      at which the first serial bit is present on the serial lines be taken.
-+      Should contain picosecond latency values for each supported speed,
-+      starting with Gen1 latency.
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+
-+  cdns,rx-phy-latency-ps:
-+    description:
-+      The PHY latencies for the RX direction applied to the PTM timestamps. Most
-+      PCIe PHYs have asynchronous latencies for their RX and TX paths. To obtain
-+      accurate PTM timestamps, the PCIe PTM specification requires that the time
-+      at which the first serial bit is present on the serial lines be taken.
-+      Should contain picosecond latency values for each supported speed,
-+      starting with Gen1 latency.
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+
- additionalProperties: true
-diff --git a/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
-index a944f9bfffff..66f5a6449e1e 100644
---- a/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml
-@@ -32,6 +32,26 @@ properties:
-     default: 32
-     deprecated: true
- 
-+  cdns,tx-phy-latency-ps:
-+    description:
-+      The PHY latencies for the TX direction applied to the PTM timestamps. Most
-+      PCIe PHYs have asynchronous latencies for their RX and TX paths. To obtain
-+      accurate PTM timestamps, the PCIe PTM specification requires that the time
-+      at which the first serial bit is present on the serial lines be taken.
-+      Should contain picosecond latency values for each supported speed,
-+      starting with Gen1 latency.
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+
-+  cdns,rx-phy-latency-ps:
-+    description:
-+      The PHY latencies for the RX direction applied to the PTM timestamps. Most
-+      PCIe PHYs have asynchronous latencies for their RX and TX paths. To obtain
-+      accurate PTM timestamps, the PCIe PTM specification requires that the time
-+      at which the first serial bit is present on the serial lines be taken.
-+      Should contain picosecond latency values for each supported speed,
-+      starting with Gen1 latency.
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+
-   msi-parent: true
- 
- additionalProperties: true
+ 	epwm0: pwm@23000000 {
 -- 
 2.36.0
 
