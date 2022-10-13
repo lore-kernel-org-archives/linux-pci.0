@@ -2,156 +2,142 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 197CBC4332F
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 17:28:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 861BEC43219
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 18:04:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229772AbiJMR2r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Oct 2022 13:28:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47682 "EHLO
+        id S230284AbiJMSEm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Oct 2022 14:04:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbiJMR2q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2022 13:28:46 -0400
-Received: from mail-il1-x136.google.com (mail-il1-x136.google.com [IPv6:2607:f8b0:4864:20::136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B1C745F70;
-        Thu, 13 Oct 2022 10:28:45 -0700 (PDT)
-Received: by mail-il1-x136.google.com with SMTP id q18so1294804ils.12;
-        Thu, 13 Oct 2022 10:28:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=xW1hGhhG1a+jZESpJXTZ+May2tEDBDYQoIz1i9vNh40=;
-        b=da5n71lPLMztDLCID6RIPDr1X+8jEDhO2W9JXZdaE3MGwAgs7L1PSlKod5ZxNQkrjS
-         6Knk4TplvnW+sE+2v0fm1SfX6bSMlHMFcQ001NUp5kG0oXbXQfC61ldVV1HoOBXZrnQX
-         P6diRw2Pi2wSFnix/OhE5xfTdMVBgQ5vRVn5f5q6DJGEKK1li2ULILktzQ5DPmop45as
-         TM/Dt2tz7NcvB2sIphw16IxZxDU92RVg5lBawhiYQe1i2C9nHozcF6qdg0WyH/0te4Y4
-         3va8lA5pwaqPrb7RuAySh5latEgxV+RgQbO8lXToFNNZx78P+HPmrBjnXul9KBCfoXxE
-         IS+Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=xW1hGhhG1a+jZESpJXTZ+May2tEDBDYQoIz1i9vNh40=;
-        b=K09cyOC2PHNeDuHggEKG6dzxS0KeXiQFQk3kkmOpcwOUqcvq5dF93CqOn4P8XoyT21
-         rSEems0smuIWObQuyg5K+dCUj0jkyWhkQwmc85BYg04/2Q+XMorgNYBoJDghLiDaUTX/
-         hc4yBvcFAkhYClAd1yaKpBJ5HRtruCWJFr8T4Qwd00owOAJgZM6sOI6BMZ0Orrt0gvgn
-         EXfzhbvi3IxpbdR3/UGvOAUocbe1tMcAB+Wd8euC/LUukSBY8QuSOITlaGkZrBPORt82
-         d7jJd9U97NhgJCyvJLyR36pVCGkhAWHNDD6UvtPofVF5Wh2dtQfznhSJ33qqDHkDJTTz
-         +FqA==
-X-Gm-Message-State: ACrzQf12KPpXviA+YUtBC3B5mHqMdoBWGlDz25pSy1370Pky3/EUPGRS
-        h0iU1LMBxTwsHrCyqm4/MdY=
-X-Google-Smtp-Source: AMsMyM5tMJzDXtwtLS2rKteGqKwUTreLeuR4hV29JfDDw9coo46UJ7wQ18NLhDrAUGUmhG0ddURaaw==
-X-Received: by 2002:a05:6e02:19ce:b0:2fc:3a29:f89f with SMTP id r14-20020a056e0219ce00b002fc3a29f89fmr524762ill.219.1665682125034;
-        Thu, 13 Oct 2022 10:28:45 -0700 (PDT)
-Received: from ?IPV6:2600:1700:2442:6db0:dfd:8f05:49f2:c057? ([2600:1700:2442:6db0:dfd:8f05:49f2:c057])
-        by smtp.gmail.com with ESMTPSA id z44-20020a0293af000000b00363a5566a3bsm178635jah.90.2022.10.13.10.28.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 13 Oct 2022 10:28:44 -0700 (PDT)
-Message-ID: <c427fd85-3746-bf26-e4a3-9b2aa53f6572@gmail.com>
-Date:   Thu, 13 Oct 2022 12:28:42 -0500
+        with ESMTP id S231133AbiJMSDb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2022 14:03:31 -0400
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2082.outbound.protection.outlook.com [40.107.243.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD6F8152C71;
+        Thu, 13 Oct 2022 11:03:16 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=EtSiHpFQAfCdqfxDssCXKn9uLogbugEAfGJ8y6eVC5LKcy079tmqHBCv6ZrJpMhp9obe+Et5NDRPWMxKCn90JHq4yBk5sHDIW7bNWHxh9OghLkZZaCIViBT76POOxJAEw4XprjJt4YyMlN8GsHFTm6fa3WFLXvadrqZv03gJvZb/XoM7f3bFDYNbZcRIBdcv7y9LzOjOnFtf8O1zkaBSOGCvqBg8AS08LFaK/bm0iEKYWBqhVfZQmnsUVS63SZlG7nes2Av4FZGtKitQaErFArB1bDwOwcclLbgLHxL9s15MXGgGsJyFlvQJ2hMT3SwHYBXUn40/QJ8TmJMqk9VsnQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Ue/wl7jK7mpk+I0nfBhUsQp8iyn7yd0Y19aWd3/wRr0=;
+ b=GL6f7GiP3H3GSxxv4SPjM6NFY2Sp6S6CL9W1T8QtdMuLEZbfzX/LEJ/EkWTktgNxNsPdbkoT9i2rHlRGlW66olUMCokE5oXEOGU64PHUrnBCE0yDhkJsm58TEgd17jMMX7gxJA7QIOLJtfA+leONHLLUBsIg/DzteLCHwrx6HnqkIghu3HcRihCU8SRtXvv3CMGxbjXtvv8BU63SLGwc8LUIb/FKjfDGKy6UF1XtKGCN/Gg+hceVypyS+pb+qc9WSEFTLY9elHz/rvdFgx1pmx9Icdo+M+0KY0Y+Uir8FcsJKH+Sfw8/sGN+K86R0wLYZS/kXG7jl4ESTXBs0SQCvg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Ue/wl7jK7mpk+I0nfBhUsQp8iyn7yd0Y19aWd3/wRr0=;
+ b=dwb7bVKhq2AXMaF5LrKbyD2KbOAqp8CmjofsVAy4tf7TUxMnOPooa6kNUX4z3OnNYz6UCdItaWdzfXQXBe3b8+zq6431Jb2koX4mMFXeGWpwEYYQJnVzdGh+DeFDbDy9OMWnaeNO8BlKJMpkrZePSX0ujonIs2nVerujAYYP3UDIbtfXesextOBcOmlr2s5hZ2b4JYt5HjM/AMlLLA06yQpKeowqmUFgIZn1HktPfvzmpcrNKrZUwhRbUmQP5xX4fR9Ct1hoy7OQjMiGsfKpIE5pyyLaGaIyraMR4uLHyjUoccsfU/L1Kpq4kAc1OAIGfrvLU6jNrnGIwLvMMmbdvw==
+Received: from MW4PR04CA0118.namprd04.prod.outlook.com (2603:10b6:303:83::33)
+ by MN0PR12MB6293.namprd12.prod.outlook.com (2603:10b6:208:3c2::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5709.21; Thu, 13 Oct
+ 2022 17:57:58 +0000
+Received: from CO1NAM11FT072.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:83:cafe::b0) by MW4PR04CA0118.outlook.office365.com
+ (2603:10b6:303:83::33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5723.26 via Frontend
+ Transport; Thu, 13 Oct 2022 17:57:57 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ CO1NAM11FT072.mail.protection.outlook.com (10.13.174.106) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.5723.20 via Frontend Transport; Thu, 13 Oct 2022 17:57:57 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Thu, 13 Oct
+ 2022 10:57:41 -0700
+Received: from rnnvmail203.nvidia.com (10.129.68.9) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.29; Thu, 13 Oct
+ 2022 10:57:41 -0700
+Received: from vidyas-desktop.nvidia.com (10.127.8.9) by mail.nvidia.com
+ (10.129.68.9) with Microsoft SMTP Server id 15.2.986.29 via Frontend
+ Transport; Thu, 13 Oct 2022 10:57:36 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
+        <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
+        <bhelgaas@google.com>, <mani@kernel.org>,
+        <Sergey.Semin@baikalelectronics.ru>, <dmitry.baryshkov@linaro.org>,
+        <linmq006@gmail.com>, <ffclaire1224@gmail.com>
+CC:     <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <linux-pci@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
+Subject: [PATCH V5 3/3] PCI: tegra194: Refactor EP initialization completion
+Date:   Thu, 13 Oct 2022 23:27:12 +0530
+Message-ID: <20221013175712.7539-4-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20221013175712.7539-1-vidyas@nvidia.com>
+References: <20221013175712.7539-1-vidyas@nvidia.com>
+X-NVConfidentiality: public
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH RFC 0/2] Generate device tree node for pci devicesgain,
-Content-Language: en-US
-To:     =?UTF-8?B?Q2zDqW1lbnQgTMOpZ2Vy?= <clement.leger@bootlin.com>
-Cc:     Lizhi Hou <lizhi.hou@amd.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh@kernel.org, helgaas@kernel.org, max.zhen@amd.com,
-        sonal.santan@amd.com, larry.liu@amd.com, brian.xu@amd.com,
-        stefano.stabellini@xilinx.com, trix@redhat.com
-References: <1661809417-11370-1-git-send-email-lizhi.hou@amd.com>
- <1d9faa2e-e3fc-d104-c85f-4035233848d6@gmail.com>
- <ca35a14d-501d-265e-b196-a87e1e994cd0@amd.com>
- <78211af5-171c-ef4f-a8c2-17f63dc479bc@gmail.com>
- <20221010104210.68edf825@fixe.home>
- <0d571d21-507d-fcc5-bf58-d02f958de28a@gmail.com>
- <20221013100245.14c509ec@fixe.home>
-From:   Frank Rowand <frowand.list@gmail.com>
-In-Reply-To: <20221013100245.14c509ec@fixe.home>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1NAM11FT072:EE_|MN0PR12MB6293:EE_
+X-MS-Office365-Filtering-Correlation-Id: 57a65003-5fc0-43c9-9e87-08daad44763c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: VUs/jkYoLcMeRRaHrU27zHVl5XQm15N8q9IBB5UEcHF6XOt1r1bIw+s74CpehKTbL7hzUMkHoyY01XYdkVbTm6bS09pue5ZXvpwjPsPaenE5GgcIxTOux/Apwhr5tTa1eV9xW4g5H/suSf9SOoyhtQtJGo3lHtSAfpO70PPMY1Cz2ij4uJgqqIe6FizCEZkmbiNuwd/lv6SYO0fa6D03UL0XC2/c3Bw9e0rQKKWldix8RToJ2kIKHBrYQWHxM50dWZpI/9nTqGdPaLEsC0GODaYTRlUMNNaQEjBfyOfXjQyKBWBxUlVDD+xTjaAl4bm7cGN7iBLaasmTaiRvlxbj2COUZPvRKK0UYeR/Ooc5LbUoRLe3OBS73Kl04DNoyDxbUedQILrQbe7viQuIQuE3dMqcw9D1gHbkl22o8RabZC9vTvEM+IQyvj0lef/56JYqA7Etc1I/bBLpJBc61YjL0Dz4Cyv3hgLk+ZYTW4c+YUfn7hXuzeHzBd1hfpC+VYcRPZQzZ4yEFEEJq+Xp+KLqIcHU032MydwpSjBNH+g99QsjS1i1xv7yVd6KKE2Y16pyzdyCvNaD6P37uIv/sUoVUy/d7tWPcbeubvrHZdKZcveyooAlF/V/SqmAc5LoB7PC9F++z2wnqgC+DnOZ04ngIl4Bd2Fguhy0YjlqeV/CGm85OkqXVml0g3JlNe5BGklgDuF6xcu1KQlQ8fCB0Z7eJhArM1AQouGx7XX2gDlbzuHfbZPFFh8Vc1XSEuhhiY1hYTL41A4wMDTc9D7ZUqiHKBc/dussBBs/jv7/tKyPQIw=
+X-Forefront-Antispam-Report: CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(136003)(346002)(396003)(376002)(451199015)(40470700004)(46966006)(36840700001)(110136005)(356005)(82740400003)(7696005)(7636003)(921005)(41300700001)(40480700001)(40460700003)(36756003)(82310400005)(6666004)(4326008)(8676002)(7416002)(8936002)(26005)(86362001)(316002)(70586007)(70206006)(1076003)(336012)(36860700001)(54906003)(5660300002)(478600001)(186003)(2616005)(426003)(83380400001)(47076005)(2906002);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2022 17:57:57.7537
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 57a65003-5fc0-43c9-9e87-08daad44763c
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT072.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6293
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/13/22 03:02, Clément Léger wrote:
-> Le Thu, 13 Oct 2022 01:05:26 -0500,
-> Frank Rowand <frowand.list@gmail.com> a écrit :
-> 
->>> This would also require two different descriptions of the same card
->>> (for ACPI and device-tree) and would require the final user to create a
->>> specific overlay for its device based on the PCI slots the card is
->>> plugged in.  
->>
->> One of the many missing pieces of overlay support.  There have been several
->> discussion of how to describe a "socket" in a device tree that a device
->> could be plugged into, where a single device tree subtree .dtb could be
->> relocated to one or more different socket locations.  Thus in this
->> case a single overlay could be relocated to various PCI slots.
->>
->> I don't expect be getting involved in any future efforts around sockets
->> (see my following comment for why).
->>
->>>
->>> The solution we proposed (Lizhi and I) allows to overcome these
->>> problems and is way easier to use. Fixing the potential bugs that might
->>> exists in the overlay layer seems a way better idea that just pushing  
->>
->> It is not potential bugs.  The current run time overlay implementation is
->> proof of concept quality and completeness.  It is not production ready.
->>
->> I got an opportunity for early retirement a couple of weeks ago.  My first
->> inclination was to continue the same level of device tree maintainership,
->> but I am quickly realizing that there are other activities that I would
->> like to devote my time and energy to.  I will continue to support Rob with
->> minor patch reviews and testing, and potentially finishing up some
->> improvements to unittest.  On the other hand, bringing run time overlay
->> support to product quality would be a major investment of my time that I
->> am not willing to continue.
-> 
-> Hi Frank,
-> 
-> This explains your position on the overlay support and I can
-> certainly understand it ! Regarding the fact that it would enter
+Call only dw_pcie_ep_init_notify() which internally takes care of calling
+dw_pcie_ep_init_complete() to notify about the EP initialization
+completion to the DWC EP framework.
 
-No, my position on the technical aspects of overlay support is totally
-unchanged.
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+V5:
+* None
 
-The only thing that has changed is that my time will not be available to
-assist in future overlay related work.  The burden for this will fall
-more on Rob than it has in the past.
+V4:
+* New patch in this series
 
+ drivers/pci/controller/dwc/pcie-tegra194.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-> "production", the devices we are talking about are not really
-> widespread yet? This would be a good opportunity to gather feedback
-> early and improve the support gradually. We could probably even be able
-> to support improvements in the overlay code if needed I guess.
-
-That is avoiding my point about the current implementation being
-proof of concept.
-
--Frank
-
-> 
-> Thanks for your honest answer,
-> 
-> Clément
-> 
->>
->> So I am leaving major overlay issues in the capable hands of Rob.  I may
->> chime in from time to time when I can do so without requiring too much of
->> my time.
->>
->> -Frank
->>
->>> that away to the bootloader level. Moreover, this kind of devices is
->>> likely to be more common with the increasing popularity of FPGA and a
->>> proper solution must be found.
->>>   
-> 
-> 
-> 
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 1b6b437823d2..2600304522eb 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -1885,14 +1885,12 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
+ 	val = (upper_32_bits(ep->msi_mem_phys) & MSIX_ADDR_MATCH_HIGH_OFF_MASK);
+ 	dw_pcie_writel_dbi(pci, MSIX_ADDR_MATCH_HIGH_OFF, val);
+ 
+-	ret = dw_pcie_ep_init_complete(ep);
++	ret = dw_pcie_ep_init_notify(ep);
+ 	if (ret) {
+ 		dev_err(dev, "Failed to complete initialization: %d\n", ret);
+ 		goto fail_init_complete;
+ 	}
+ 
+-	dw_pcie_ep_init_notify(ep);
+-
+ 	/* Program the private control to allow sending LTR upstream */
+ 	if (pcie->of_data->has_ltr_req_fix) {
+ 		val = appl_readl(pcie, APPL_LTR_MSG_2);
+-- 
+2.17.1
 
