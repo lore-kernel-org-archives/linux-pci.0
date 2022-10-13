@@ -2,173 +2,144 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A629BC4321E
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 18:49:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C59C4332F
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 18:59:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229684AbiJMStu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Oct 2022 14:49:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54232 "EHLO
+        id S229813AbiJMS73 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Oct 2022 14:59:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232495AbiJMStO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2022 14:49:14 -0400
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on20629.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe5b::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AA4D3B70C;
-        Thu, 13 Oct 2022 11:47:52 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nnRMxG0PDaYWbOfkv4vwyDSfolXjkde25IyRFq2hL5+edRjQHvZf/RGOrnGtqy16mto52GXmjpCSEZIWJRLsw6DCpf/7CsLU4I/FSSRClU60CxK/1saptgai+/Il8v0xM1WBGVlgPUmm9c6JVsCf+CKCUdLWMe5FXSpxdQFrtRCvs7mOWEZM2WozVKvw3F8FmXG+zXBrASF1sInQIPdmlR6TALyBtslwD4QbrZVS3kWCf8h1CBLXPohK1B/Zh2+fcUd7vkqbrSRke1Y7BXcwDzUvfub7hMmT2LzUKWWlSpuDl01zsfomLuJoG/UZDT2e4nQHZNLJPu0HcaE5ArTBmw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+bXebElS7MWyWIU/lLGwPuIvaTTVF7LsfxdEit/+aa8=;
- b=PgYsUmWEA2Byuf1tjTS+Wr6mU7MXtWDeFE/cABAm0LtHD/MHtgMgb9tc4M7+JtceJXo2BZ45tkTylpTrairTJCH2mwh46IvFuLg8FuJ6CV+QmmusEyjTsDei5NTVGlM7UxGQ/8opTbOgUiWupcJq4SngFjwDGsFbwhMAd+/kxsoScEQ5HtqRTfAQ6q4oesmHtHu75DS2UgGQbuODpn+tobAENO8sVAwpMqheSKruB3TeSEjNa4rR7pAb5RaHGqhcmaJ5V3lUOuRB93gy4/63HCB/h3cLp02IbIkX4jSlixt9xtnrW4HQimiZRd8cZFb74C4i727JcE7KnYYiItkIAw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+bXebElS7MWyWIU/lLGwPuIvaTTVF7LsfxdEit/+aa8=;
- b=r0iHytgO5kyn1aAXoAdJH7zyH7la1i5PFjNIeBSU/b8p1knRsNW97E9NNbGjSkzB3bcVcluelcW/Ea052fQyEZLzE4vTHEYAA+oSfXEvAbREQg8IgGvJLZs4IRbV1iItMXeQr4OFX5gjPcAOWK9q161noAFNCIl03Qb+dlRZGpXx/AzMqVk3kRx6Wc7XxTtqVTBAMPcNbPuothwN854sYylY3t0xK0FH5IuNdYvXX86XeiGPdjxKfcCQ1dQRvAqbgTw0FzttZeVYSHX5jXByqbXQWN393u0hSuZpdbYrEVsJM0WL0rJ8oE/K0RJxJ2iLD8hLFJRjLBBv86JzMB537g==
-Received: from BN9PR03CA0943.namprd03.prod.outlook.com (2603:10b6:408:108::18)
- by BN9PR12MB5147.namprd12.prod.outlook.com (2603:10b6:408:118::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5723.26; Thu, 13 Oct
- 2022 18:40:47 +0000
-Received: from BN8NAM11FT027.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:108:cafe::f5) by BN9PR03CA0943.outlook.office365.com
- (2603:10b6:408:108::18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5723.26 via Frontend
- Transport; Thu, 13 Oct 2022 18:40:47 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- BN8NAM11FT027.mail.protection.outlook.com (10.13.177.96) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5723.20 via Frontend Transport; Thu, 13 Oct 2022 18:40:46 +0000
-Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.26; Thu, 13 Oct
- 2022 11:40:36 -0700
-Received: from drhqmail203.nvidia.com (10.126.190.182) by
- drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.29; Thu, 13 Oct 2022 11:40:35 -0700
-Received: from vidyas-desktop.nvidia.com (10.127.8.9) by mail.nvidia.com
- (10.126.190.182) with Microsoft SMTP Server id 15.2.986.29 via Frontend
- Transport; Thu, 13 Oct 2022 11:40:31 -0700
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
-        <bhelgaas@google.com>, <thierry.reding@gmail.com>,
-        <jonathanh@nvidia.com>, <kishon@ti.com>, <vkoul@kernel.org>,
-        <mani@kernel.org>, <Sergey.Semin@baikalelectronics.ru>,
-        <ffclaire1224@gmail.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-phy@lists.infradead.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <sagar.tv@gmail.com>
-Subject: [PATCH V3 14/21] PCI: tegra194: Allow system suspend when the Endpoint link is not up
-Date:   Fri, 14 Oct 2022 00:08:47 +0530
-Message-ID: <20221013183854.21087-15-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20221013183854.21087-1-vidyas@nvidia.com>
-References: <20221013183854.21087-1-vidyas@nvidia.com>
-X-NVConfidentiality: public
+        with ESMTP id S230157AbiJMS6Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Oct 2022 14:58:16 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C823E09CD
+        for <linux-pci@vger.kernel.org>; Thu, 13 Oct 2022 11:56:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1665687361;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aO9uwyAWNrITIE0HcaM8sZnAKHxlA4eUnkHhusC4UKE=;
+        b=Y7ytDSHUmkDNW18udAVhbDK5gZoj98wkOUavs4fRprAV7qwp9z9TEOXk+lpFvB5hLq+t24
+        Mzgmwu7GTglhMB2TKF97gk5j5N7JV85w+DQBrwZ0sN+cZfT28TWL2deXvEp2JRwfAVS1It
+        dYRzC9d3CSZq8IO+Yfr8qAnWo0dQHlo=
+Received: from mail-oi1-f198.google.com (mail-oi1-f198.google.com
+ [209.85.167.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-571-_9y3kMYFPe-zbGdg27cwCQ-1; Thu, 13 Oct 2022 14:41:15 -0400
+X-MC-Unique: _9y3kMYFPe-zbGdg27cwCQ-1
+Received: by mail-oi1-f198.google.com with SMTP id j186-20020aca3cc3000000b003542949670eso1090316oia.6
+        for <linux-pci@vger.kernel.org>; Thu, 13 Oct 2022 11:41:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=aO9uwyAWNrITIE0HcaM8sZnAKHxlA4eUnkHhusC4UKE=;
+        b=Hl9q7BlrW1ebKpGqOhYNZpO3pGzjPGxniTSZS8hCE2hAqQ9h+duT4eVzcOONrh1X41
+         5O4l2TyC7/I8njEeLtCk1qaCyCIR3gGZ5zT0dLJfvc1X0Va0TJd5R25Z86J8Cu3Cae4a
+         kCJVAVkojDirTvfrJ6cG2fStVaUR9+7yXr0w24hXKo/OQ4Q9KW3AIisg7MNyCkowiNV/
+         MJAfnqMJNk3NENR5gdsq8uU5TwT2JGIOPzrFD+7JtiLW8Vf57yw+PwhZ3A0GCJL4i5uE
+         5dkLetVb9i4FI6J9pH1ookEiS0OHxJjo+gBIaZQdnDETx53bAHG4tmMwGVUT9TY/7EIb
+         Ehwg==
+X-Gm-Message-State: ACrzQf3XLKQRVhQmPRSIZvkfuyy6Q/PRsm/+29AtXia7HietJXUFWj96
+        N9ixkm4rXI7YHRM+7lGHKtYFqnxy77FVC9C1lUKmu4EGGbpIX7GQ/LWyyDxzxMEUVQ/U5qydQwV
+        vZiki2og6BHRcD2ee73D3
+X-Received: by 2002:a05:6870:596:b0:12d:91cd:cf36 with SMTP id m22-20020a056870059600b0012d91cdcf36mr6446060oap.84.1665686474649;
+        Thu, 13 Oct 2022 11:41:14 -0700 (PDT)
+X-Google-Smtp-Source: AMsMyM52k3vKtIVGL+BfBIsY/ib9UZWiX3f2GV5v2CeLaUkMNUjAO0cLO7Cc3TLwdOlxaDtAQIvz/Q==
+X-Received: by 2002:a05:6870:596:b0:12d:91cd:cf36 with SMTP id m22-20020a056870059600b0012d91cdcf36mr6446050oap.84.1665686474448;
+        Thu, 13 Oct 2022 11:41:14 -0700 (PDT)
+Received: from localhost.localdomain ([2804:1b3:a801:9473:d360:c737:7c9c:d52b])
+        by smtp.gmail.com with ESMTPSA id v13-20020a05683024ad00b006618ad77a63sm244521ots.74.2022.10.13.11.41.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 13 Oct 2022 11:41:14 -0700 (PDT)
+From:   Leonardo Bras <leobras@redhat.com>
+To:     Steffen Klassert <steffen.klassert@secunet.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Juri Lelli <juri.lelli@redhat.com>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        Dietmar Eggemann <dietmar.eggemann@arm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+        Daniel Bristot de Oliveira <bristot@redhat.com>,
+        Valentin Schneider <vschneid@redhat.com>,
+        Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Leonardo Bras <leobras@redhat.com>,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Phil Auld <pauld@redhat.com>,
+        Antoine Tenart <atenart@kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Wang Yufen <wangyufen@huawei.com>, mtosatti@redhat.com
+Cc:     linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH v2 4/4] crypto/pcrypt: Do not use isolated CPUs for callback
+Date:   Thu, 13 Oct 2022 15:40:29 -0300
+Message-Id: <20221013184028.129486-5-leobras@redhat.com>
+X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20221013184028.129486-1-leobras@redhat.com>
+References: <20221013184028.129486-1-leobras@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT027:EE_|BN9PR12MB5147:EE_
-X-MS-Office365-Filtering-Correlation-Id: f5492732-131d-41d9-da2f-08daad4a7193
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: weHfSMUYOIFpHsz2RS1b+Vy93QLGuPxdmvqhYqwO3qqyCkX4gyYQ0jMbeH+/c9FnOyqFhNelu57lSu4DdmHxYC5DTWWZgC4nFIswjRy7rewTUHADrHp4WW/p0eQ6UwaPDJqvs2yJcaprlrtCeRbSJ1Q3pt9GFWqIbeHi9Azfgm9xD2gmND8lFr15gFxjWpE7NLQmZbwLui6t8GIdD1AGnPrHMy+pAvvAse77xb8Zjp4wb1AcV11mcUVPoihWr1VRUBII965ay2UYPEz8RFElQlqSqanG7fHySyykmk+99YTPrfq8z8iPUMaBk/ToW/DiflADLIltUal21Ewh0EZVZYKTrHRXdAg5XFj0Al80pX2mB5GSPQVitDNRm3drehf9cGOTh1KWNcetDJJK8gNWwPGpLwm4d/ol6ZECydiabwL7GNoVoTNOO33sfiB1OTXvdNCzwQmy9/8wJoqoMpmPtbiq0Gxdd6AMYtPVw2QCj5ZspMFRLXtPlB8Fvk13ulo5MRjJtoFT61HA9Obt9HHnFfN6BtKFZtSLjiwpq/Vn7qg7RWjG0Thfkya9uFVZYzsUbUj1hBF8h7QpniDs+R940yKkeiezdcIDEemI+Ig2RFFFVDj3+kvhZdrLWzLGysFS/znMC7IAZkzVQvfkX9ZpbjQXsvyQ0SHYRgX5Yq69CYOqZNZkAb3HmAYFuzkbmrupX3OlwL7tdyWiEBAWyKnDFTCzL5Na/55Gmu7F62/7d0A87doHnQUWGuh4bQEDm9XewTlhDZuLfIcBlysC5IId0zl/lx/ik0EpWdksXK0lpTk=
-X-Forefront-Antispam-Report: CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230022)(4636009)(346002)(396003)(136003)(39860400002)(376002)(451199015)(40470700004)(36840700001)(46966006)(336012)(186003)(2616005)(47076005)(1076003)(83380400001)(7636003)(921005)(356005)(86362001)(7416002)(36860700001)(82740400003)(426003)(2906002)(5660300002)(41300700001)(40460700003)(4326008)(15650500001)(8936002)(40480700001)(82310400005)(110136005)(8676002)(6666004)(478600001)(26005)(7696005)(316002)(54906003)(70206006)(70586007)(36756003);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Oct 2022 18:40:46.8859
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f5492732-131d-41d9-da2f-08daad4a7193
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT027.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5147
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Only a Root port initiates the L2 sequence. PCIe link is kept in L2 state
-during suspend. If Endpoint mode is enabled and the link is up, the
-software cannot proceed with suspend. However, when the PCIe Endpoint
-driver is probed, but the PCIe link is not up, Tegra can go into suspend
-state. So, allow system to suspend in this case.
+Currently pcrypt_aead_init_tfm() will pick callback cpus (ctx->cb_cpu)
+from any online cpus. Later padata_reorder() will queue_work_on() the
+chosen cb_cpu.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+This is undesired if the chosen cb_cpu is listed as isolated (i.e. using
+isolcpus=... or nohz_full=... kernel parameters), since the work queued
+will interfere with the workload on the isolated cpu.
+
+Make sure isolated cpus are not used for pcrypt.
+
+Signed-off-by: Leonardo Bras <leobras@redhat.com>
 ---
-V3:
-* This is a new patch in this series
+ crypto/pcrypt.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
- drivers/pci/controller/dwc/pcie-tegra194.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 78ee0f713e71..e6fd713e9868 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -2425,8 +2425,14 @@ static int tegra_pcie_dw_suspend_late(struct device *dev)
- 	u32 val;
+diff --git a/crypto/pcrypt.c b/crypto/pcrypt.c
+index 9d10b846ccf73..0162629a03957 100644
+--- a/crypto/pcrypt.c
++++ b/crypto/pcrypt.c
+@@ -16,6 +16,7 @@
+ #include <linux/kobject.h>
+ #include <linux/cpu.h>
+ #include <crypto/pcrypt.h>
++#include <linux/sched/isolation.h>
  
- 	if (pcie->of_data->mode == DW_PCIE_EP_TYPE) {
--		dev_err(dev, "Failed to Suspend as Tegra PCIe is in EP mode\n");
--		return -EPERM;
-+		disable_irq(pcie->pex_rst_irq);
-+
-+		if (pcie->ep_state == EP_STATE_ENABLED) {
-+			dev_err(dev, "Tegra PCIe is in EP mode, suspend not allowed");
-+			return -EPERM;
-+		} else {
-+			return 0;
-+		}
- 	}
+ static struct padata_instance *pencrypt;
+ static struct padata_instance *pdecrypt;
+@@ -175,13 +176,15 @@ static int pcrypt_aead_init_tfm(struct crypto_aead *tfm)
+ 	struct pcrypt_instance_ctx *ictx = aead_instance_ctx(inst);
+ 	struct pcrypt_aead_ctx *ctx = crypto_aead_ctx(tfm);
+ 	struct crypto_aead *cipher;
++	const cpumask_t *hk_wq = housekeeping_cpumask(HK_TYPE_WQ);
  
- 	if (!pcie->link_state && !pcie->slot_pluggable)
-@@ -2448,6 +2454,9 @@ static int tegra_pcie_dw_suspend_noirq(struct device *dev)
- {
- 	struct tegra_pcie_dw *pcie = dev_get_drvdata(dev);
+ 	cpu_index = (unsigned int)atomic_inc_return(&ictx->tfm_count) %
+-		    cpumask_weight(cpu_online_mask);
++		    cpumask_weight_and(hk_wq, cpu_online_mask);
  
-+	if (pcie->of_data->mode == DW_PCIE_EP_TYPE)
-+		return 0;
-+
- 	if (!pcie->link_state && !pcie->slot_pluggable)
- 		return 0;
+-	ctx->cb_cpu = cpumask_first(cpu_online_mask);
++	ctx->cb_cpu = cpumask_first_and(hk_wq, cpu_online_mask);
+ 	for (cpu = 0; cpu < cpu_index; cpu++)
+-		ctx->cb_cpu = cpumask_next(ctx->cb_cpu, cpu_online_mask);
++		ctx->cb_cpu = cpumask_next_and(ctx->cb_cpu, hk_wq,
++					       cpu_online_mask);
  
-@@ -2463,6 +2472,9 @@ static int tegra_pcie_dw_resume_noirq(struct device *dev)
- 	struct tegra_pcie_dw *pcie = dev_get_drvdata(dev);
- 	int ret;
+ 	cipher = crypto_spawn_aead(&ictx->spawn);
  
-+	if (pcie->of_data->mode == DW_PCIE_EP_TYPE)
-+		return 0;
-+
- 	if (!pcie->link_state && !pcie->slot_pluggable)
- 		return 0;
- 
-@@ -2495,8 +2507,8 @@ static int tegra_pcie_dw_resume_early(struct device *dev)
- 	u32 val;
- 
- 	if (pcie->of_data->mode == DW_PCIE_EP_TYPE) {
--		dev_err(dev, "Suspend is not supported in EP mode");
--		return -ENOTSUPP;
-+		enable_irq(pcie->pex_rst_irq);
-+		return 0;
- 	}
- 
- 	if (!pcie->link_state && !pcie->slot_pluggable)
 -- 
-2.17.1
+2.38.0
 
