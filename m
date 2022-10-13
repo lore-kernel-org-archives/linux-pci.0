@@ -2,116 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2396C4332F
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 01:14:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 799B3C4332F
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Oct 2022 02:06:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229890AbiJMBOg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Oct 2022 21:14:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38500 "EHLO
+        id S229519AbiJMCGx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Oct 2022 22:06:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232439AbiJMBNz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Oct 2022 21:13:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E415DFA2;
-        Wed, 12 Oct 2022 18:12:33 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DA498616D1;
-        Thu, 13 Oct 2022 00:44:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03566C43470;
-        Thu, 13 Oct 2022 00:44:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665621886;
-        bh=DKXGPgqaiPkIBCBB26ELdj+CVTTMyMJ9i/fnIjLcUSQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Dd8sa6U0NOxibXKaQPEphZ/krmhRr7n/v6yTSTggiHzhkANlzBGhvELS7Lc0sh0xC
-         QVq0tY3jJIkGA72yx9C//YeMqqngoNAyhC/IBtyDk9akrtRxupxyB6/3thQHA/ICRn
-         mvll3qWTTRY9TXaUhroH0/6ctovHTbOsRPHqNdVTZhGHJygefMwtlstZQEp5XaqebW
-         w9i5JInzE1jJx7D3ZXzvda+TPBDV85RLS3EJGfhe/K23HkKbQukeC0sQ30+segWurZ
-         P1jXEFp17hWIh3cW2D8XmvBlSvrfAmpBeteq9pN1Ul4mFn4P2U3YkCsuAmmpOq0D8X
-         D6CeUf8YcsmdA==
-Date:   Wed, 12 Oct 2022 19:44:44 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
-Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mka@chromium.org,
-        quic_vbadigan@quicinc.com, quic_hemantk@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
-        quic_ramkri@quicinc.com, manivannan.sadhasivam@linaro.org,
-        swboyd@chromium.org, dmitry.baryshkov@linaro.org,
-        svarbanov@mm-sol.com, agross@kernel.org, andersson@kernel.org,
-        konrad.dybcio@somainline.org, lpieralisi@kernel.org,
-        robh@kernel.org, kw@linux.com, bhelgaas@google.com,
-        linux-phy@lists.infradead.org, vkoul@kernel.org, kishon@ti.com,
-        mturquette@baylibre.com, linux-clk@vger.kernel.org,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, linux-pm@vger.kernel.org,
-        Marc Zyngier <maz@kernel.org>,
-        Kevin Rowland <kevin.p.rowland@gmail.com>
-Subject: Re: [PATCH v7 1/5] PCI: qcom: Add system suspend and resume support
-Message-ID: <20221013004444.GA3135316@bhelgaas>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <04ace1ae-26d0-4157-b7eb-8dff29895180@quicinc.com>
+        with ESMTP id S229471AbiJMCGw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Oct 2022 22:06:52 -0400
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADC87122BED;
+        Wed, 12 Oct 2022 19:06:51 -0700 (PDT)
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 4A7AD1B1B09;
+        Thu, 13 Oct 2022 04:06:50 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 1058E1B1ADB;
+        Thu, 13 Oct 2022 04:06:50 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 71F911802204;
+        Thu, 13 Oct 2022 10:06:48 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     vkoul@kernel.org, a.fatoum@pengutronix.de, p.zabel@pengutronix.de,
+        l.stach@pengutronix.de, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, robh@kernel.org, shawnguo@kernel.org,
+        alexander.stein@ew.tq-group.com, marex@denx.de,
+        richard.leitner@linux.dev
+Cc:     linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        linux-imx@nxp.com
+Subject: [PATCH RESEND v12 0/4] Add the iMX8MP PCIe support
+Date:   Thu, 13 Oct 2022 09:46:58 +0800
+Message-Id: <1665625622-20551-1-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Marc, Kevin]
+Re-base to the pci-v6.1-changes of pci/next branch. 
+Update the cover-letter, and re-send the v12 patch-set.
+This series adds the i.MX8MP PCIe support and tested on i.MX8MP
+EVK board when one PCIe NVME device is used.
 
-On Wed, Oct 12, 2022 at 07:36:52PM +0530, Krishna Chaitanya Chundru wrote:
-> On 10/6/2022 2:43 AM, Bjorn Helgaas wrote:
+- i.MX8MP PCIe has reversed initial PERST bit value refer to i.MX8MQ/i.MX8MM.
+  Add the PHY PERST explicitly for i.MX8MP PCIe PHY.
+- Add the i.MX8MP PCIe PHY support in the i.MX8M PCIe PHY driver.
+  And share as much as possible codes with i.MX8MM PCIe PHY.
+- Add the i.MX8MP PCIe support in binding document, DTS files, and PCIe
+  driver.
 
-[I'm declaring quote text bankruptcy and dropping the huge wall of
-text.  The IRQ affinity change you mention seems to be the critical
-issue :)]
+Main changes v11-->v12:
+ - In the local down kernel(6.0-rc7 plus local codes) PM tests, i.MX8MP
+   PCIe encounters link failure.
+   To resolve this failure, the resets of i.MX8MP PCIe PHY should be always
+   kept 1b'1. Merge the fix into v12 patches here.
 
-> > The PCIe spec clearly envisions Refclk being turned off
-> > (sec 5.5.3.3.1) and PHYs being powered off (sec 5.5.3.2) while in
-> > L1.2.
-> > 
-> > I've been assuming L1.2 exit (which includes Refclk being turned on
-> > and PHYs being powered up) is completely handled by hardware, but it
-> > sounds like the Qcom controller needs software assistance which fields
-> > an interrupt when CLKREQ# is asserted and turns on Refclk and the
-> > PHYs?
-> > 
-> > 5.5.3 does say "All Link and PHY state must be maintained during L1.2,
-> > or must be restored upon exit using implementation specific means",
-> > and maybe Qcom counts as using implementation specific means.
-> > 
-> > I *am* concerned about whether software can do the L1.2 exit fast
-> > enough, but the biggest reason I'm struggling with this is because
-> > using the syscore framework to work around IRQ affinity changes that
-> > happen late in suspend just seems kind of kludgy and it doesn't seem
-> > like it fits cleanly in the power management model.
-> 
-> Can you please suggest any another way to work around IRQ affinity
-> changes.
+Main changes v10-->v11:
+Refer to Ahmad's comments do the following changes;
+ - Correct the spell mistake and refine the commit log.
+ - Make codes indent by the member name
+ - Use the dev_err_probe replace the dev_err.
 
-One of your earlier patches [1] made dw_msi_mask_irq() look like this:
+Main changes v9-->v10:
+- Refer to Vinod's review comments, drop the array, and use the static data
+  structure directly in the drvdata definition.
 
-  static void dw_msi_mask_irq(struct irq_data *d)
-  {
-    struct pcie_port *pp = irq_data_get_irq_chip_data(d->parent_data);
-    struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+Main changes v8-->v9:
+- Split the PHY driver changes into three patches.
+  - To keep the format consistent, re-define the PHY_CMN_REG75, and remove
+    two useless BIT definitions.
+  - Refine the i.MX8MM PCIe PHY driver, let it more reviewable, flexible,
+    and easy to expand.
+  - Add the i.MX8MP PCIe PHY support.
+- Only PHY related patches in v9, Since the others patches had been merged
+  by Phillipp/Shawn/Lorenzo [1].
 
-    if (dw_pcie_link_up(pci))
-	    pci_msi_mask_irq(d);
+Main changes v7-->v8:
+- Add the Reviewed-by tag, no other changes.
+  Only two patches in v8, Since the others patches had been merged by
+  Phillipp/Shawn/Lorenzo [1].
 
-    irq_chip_mask_parent(d);
-  }
+<snipped.>
 
-That was an awful lot like Marc's suggestion [2] that the
-pci_msi_mask_irq() should be redundant.
+[1]
+Shawn's tree
+d50650500064 arm64: dts: imx8mp-evk: Add PCIe support
+9e65987b9584 arm64: dts: imx8mp: Add iMX8MP PCIe support
+5506018d3dec soc: imx: imx8mp-blk-ctrl: handle PCIe PHY resets
 
-If it's truly redundant, maybe pci_msi_mask_irq() can be removed
-from dw_msi_mask_irq() (and other similar *_mask_irq()
-implementations) completely?
+Philipp's tree
+051d9eb40388 reset: imx7: Fix the iMX8MP PCIe PHY PERST support
 
-Bjorn
+Documentation/devicetree/bindings/phy/fsl,imx8-pcie-phy.yaml |  16 ++++++++--
+drivers/phy/freescale/phy-fsl-imx8m-pcie.c                   | 142 ++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------
+2 files changed, 106 insertions(+), 52 deletions(-)
 
-[1] https://lore.kernel.org/r/1659526134-22978-3-git-send-email-quic_krichai@quicinc.com
-[2] https://lore.kernel.org/linux-pci/86k05m7dkr.wl-maz@kernel.org/
+[RESEND v12 1/4] dt-binding: phy: Add i.MX8MP PCIe PHY binding
+[RESEND v12 2/4] phy: freescale: imx8m-pcie: Refine register
+[RESEND v12 3/4] phy: freescale: imx8m-pcie: Refine i.MX8MM PCIe PHY
+[RESEND v12 4/4] phy: freescale: imx8m-pcie: Add i.MX8MP PCIe PHY
