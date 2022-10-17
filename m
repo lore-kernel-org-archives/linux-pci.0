@@ -2,214 +2,172 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA1E0C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Oct 2022 07:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBBD5C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Oct 2022 07:16:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230122AbiJQHJP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Oct 2022 03:09:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38808 "EHLO
+        id S230076AbiJQHQu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Oct 2022 03:16:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230153AbiJQHJN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2022 03:09:13 -0400
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9955257E1F;
-        Mon, 17 Oct 2022 00:09:08 -0700 (PDT)
-X-UUID: 3389be396c8b4e0eb4bb273337964771-20221017
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=D2S3DQgWXod379+3uCrDiDKGjcHd4CLUQw64HdfRMJ8=;
-        b=g0LCPdX+G3mJQrSAv5fLm3CmiM+Q3zN+UIBdkEa0PNO7WMaYq9PLENxE4fxu+OSX8PMXuqZUV2vEP++ERv2gxMQwlSwZgjNhTcERVf86BRvVKNPML/grF3/W/9vFxmNtTHGg7oTZszcI9MdBIMkb0kCGpg2nedoplAuRXDRpnXo=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.11,REQID:b0d37d92-0f87-4b25-a3b1-d8a139d86fc8,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:39a5ff1,CLOUDID:a52393db-0379-47b3-a5dd-2ef5001d380a,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: 3389be396c8b4e0eb4bb273337964771-20221017
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <tinghan.shen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1120094907; Mon, 17 Oct 2022 15:09:02 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.194) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Mon, 17 Oct 2022 15:09:00 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Mon, 17 Oct 2022 15:09:00 +0800
-From:   Tinghan Shen <tinghan.shen@mediatek.com>
-To:     Ryder Lee <ryder.lee@mediatek.com>,
-        Jianjun Wang <jianjun.wang@mediatek.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <Project_Global_Chrome_Upstream_Group@mediatek.com>,
-        TingHan Shen <tinghan.shen@mediatek.com>
-Subject: [PATCH v1 1/3] dt-bindings: PCI: mediatek-gen3: Add iommu and power-domain support
-Date:   Mon, 17 Oct 2022 15:08:56 +0800
-Message-ID: <20221017070858.13902-2-tinghan.shen@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20221017070858.13902-1-tinghan.shen@mediatek.com>
-References: <20221017070858.13902-1-tinghan.shen@mediatek.com>
+        with ESMTP id S229845AbiJQHQu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Oct 2022 03:16:50 -0400
+Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B2E8DFE1;
+        Mon, 17 Oct 2022 00:16:48 -0700 (PDT)
+Received: (Authenticated sender: clement.leger@bootlin.com)
+        by mail.gandi.net (Postfix) with ESMTPSA id 3476AFF80C;
+        Mon, 17 Oct 2022 07:16:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1665991007;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=M0nk7kpBU9Ge0Ax0EsSJwP9PLjOsDnBYJ9iK2UXCG+U=;
+        b=bs1LNpWTaKNNDL9DTKUCYbVf4CngVvnJmNulOHIMEY8b5QAOhngpae06hIGw1INcP0HzpY
+        pz/jgPDzseZuI9Mh/TVyTYuhvwr6iJeIaew63IfYMwtuAdj9J24WbKFlDZBJNJC49BLp9Z
+        NUTdOh+4KSB0bWPe3YQL/7B+6Lszg3GDIhyZfCiQ56L3kYJnZhlrF6SCnXQo5yx5QTOxhR
+        c7TzhOhpSBst1/+QGqls6knN68J5N3KtPBgf0gRseYVvHaDedvvJZRNCupY3sTqYiwo8xt
+        sSNn9Gs56sPf1PrK6sIj8pC3HqvQdh1KIkJhK8SEdL6BRbXh8jvFYkNLmbj9cQ==
+Date:   Mon, 17 Oct 2022 09:18:20 +0200
+From:   =?UTF-8?B?Q2zDqW1lbnQgTMOpZ2Vy?= <clement.leger@bootlin.com>
+To:     Frank Rowand <frowand.list@gmail.com>
+Cc:     Rob Herring <robh@kernel.org>, Lizhi Hou <lizhi.hou@amd.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, helgaas@kernel.org, max.zhen@amd.com,
+        sonal.santan@amd.com, larry.liu@amd.com, brian.xu@amd.com,
+        stefano.stabellini@xilinx.com, trix@redhat.com,
+        "Steen.Hegelund@microchip.com" <Steen.Hegelund@microchip.com>,
+        "Horatiu.Vultur@microchip.com" <Horatiu.Vultur@microchip.com>,
+        "Allan.Nielsen@microchip.com" <Allan.Nielsen@microchip.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>
+Subject: Re: [PATCH RFC 0/2] Generate device tree node for pci devicesgain,
+Message-ID: <20221017091820.07144242@fixe.home>
+In-Reply-To: <fbfb817c-6f09-32d0-fafc-7d37618e2886@gmail.com>
+References: <1661809417-11370-1-git-send-email-lizhi.hou@amd.com>
+        <1d9faa2e-e3fc-d104-c85f-4035233848d6@gmail.com>
+        <ca35a14d-501d-265e-b196-a87e1e994cd0@amd.com>
+        <78211af5-171c-ef4f-a8c2-17f63dc479bc@gmail.com>
+        <20221010104210.68edf825@fixe.home>
+        <0d571d21-507d-fcc5-bf58-d02f958de28a@gmail.com>
+        <20221013100245.14c509ec@fixe.home>
+        <c427fd85-3746-bf26-e4a3-9b2aa53f6572@gmail.com>
+        <CAL_Jsq+aiJbrna6kpvb9k=KWUwMH-k8_Y_W1+HkJpHyGEee7NA@mail.gmail.com>
+        <fbfb817c-6f09-32d0-fafc-7d37618e2886@gmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.34; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jianjun Wang <jianjun.wang@mediatek.com>
+Le Fri, 14 Oct 2022 13:52:50 -0500,
+Frank Rowand <frowand.list@gmail.com> a =C3=A9crit :
 
-Add iommu and power-domain support, and add examples for MT8195, which
-has two PCIe ports with different clocks and phys.
+> On 10/14/22 12:33, Rob Herring wrote:
+> > On Thu, Oct 13, 2022 at 12:28 PM Frank Rowand <frowand.list@gmail.com> =
+wrote: =20
+> >>
+> >> On 10/13/22 03:02, Cl=C3=A9ment L=C3=A9ger wrote: =20
+> >>> Le Thu, 13 Oct 2022 01:05:26 -0500,
+> >>> Frank Rowand <frowand.list@gmail.com> a =C3=A9crit :
+> >>> =20
+> >>>>> This would also require two different descriptions of the same card
+> >>>>> (for ACPI and device-tree) and would require the final user to crea=
+te a
+> >>>>> specific overlay for its device based on the PCI slots the card is
+> >>>>> plugged in. =20
+> >>>>
+> >>>> One of the many missing pieces of overlay support.  There have been =
+several
+> >>>> discussion of how to describe a "socket" in a device tree that a dev=
+ice
+> >>>> could be plugged into, where a single device tree subtree .dtb could=
+ be
+> >>>> relocated to one or more different socket locations.  Thus in this
+> >>>> case a single overlay could be relocated to various PCI slots.
+> >>>>
+> >>>> I don't expect be getting involved in any future efforts around sock=
+ets
+> >>>> (see my following comment for why).
+> >>>> =20
+> >>>>>
+> >>>>> The solution we proposed (Lizhi and I) allows to overcome these
+> >>>>> problems and is way easier to use. Fixing the potential bugs that m=
+ight
+> >>>>> exists in the overlay layer seems a way better idea that just pushi=
+ng =20
+> >>>>
+> >>>> It is not potential bugs.  The current run time overlay implementati=
+on is
+> >>>> proof of concept quality and completeness.  It is not production rea=
+dy.
+> >>>>
+> >>>> I got an opportunity for early retirement a couple of weeks ago.  My=
+ first
+> >>>> inclination was to continue the same level of device tree maintainer=
+ship,
+> >>>> but I am quickly realizing that there are other activities that I wo=
+uld
+> >>>> like to devote my time and energy to.  I will continue to support Ro=
+b with
+> >>>> minor patch reviews and testing, and potentially finishing up some
+> >>>> improvements to unittest.  On the other hand, bringing run time over=
+lay
+> >>>> support to product quality would be a major investment of my time th=
+at I
+> >>>> am not willing to continue. =20
+> >>>
+> >>> Hi Frank,
+> >>>
+> >>> This explains your position on the overlay support and I can
+> >>> certainly understand it ! Regarding the fact that it would enter =20
+> >>
+> >> No, my position on the technical aspects of overlay support is totally
+> >> unchanged.
+> >>
+> >> The only thing that has changed is that my time will not be available =
+to
+> >> assist in future overlay related work.  The burden for this will fall
+> >> more on Rob than it has in the past. =20
+> >=20
+> > s/Rob/someone that steps up to maintain the overlay code/
+> >  =20
+> >>> "production", the devices we are talking about are not really
+> >>> widespread yet? This would be a good opportunity to gather feedback
+> >>> early and improve the support gradually. We could probably even be ab=
+le
+> >>> to support improvements in the overlay code if needed I guess. =20
+> >>
+> >> That is avoiding my point about the current implementation being
+> >> proof of concept. =20
+> >  =20
+>=20
+>=20
+> > I think it would be better to talk in terms of under what conditions
+> > the overlay support is adequate (for production) rather than a blanket
+> > statement that it is not-production ready.  =20
+>=20
+> I sort of agree.  Use of run time overlays has been narrowly supported
+> for use by a limited set of very cautious developers in a very constrained
+> usage.
 
-Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
-Signed-off-by: TingHan Shen <tinghan.shen@mediatek.com>
----
- .../bindings/pci/mediatek-pcie-gen3.yaml      | 115 ++++++++++++++++++
- 1 file changed, 115 insertions(+)
+As a first working point, could we potentially restrict drivers to only
+insert an overlay but not remove it ? It would be quite limited, but
+as you pointed out, the multiple load/unload (or FPGA reconfiguration)
+will only happen during development. Under "normal" condition, we could
+expect the FPGA to be configured once during the system runtime. The
+same goes for our PCI card which uses an existing SoC, we can probably
+assume that it is going to be plugged once for all during the system
+runtime.
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-index c00be39af64e..089074b5fa95 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-@@ -70,6 +70,12 @@ properties:
-     minItems: 1
-     maxItems: 8
- 
-+  iommu-map:
-+    maxItems: 1
-+
-+  iommu-map-mask:
-+    maxItems: 1
-+
-   resets:
-     minItems: 1
-     maxItems: 2
-@@ -107,6 +113,9 @@ properties:
-     items:
-       - const: pcie-phy
- 
-+  power-domains:
-+    maxItems: 1
-+
-   '#interrupt-cells':
-     const: 1
- 
-@@ -191,3 +200,109 @@ examples:
-             };
-         };
-     };
-+
-+  - |
-+    #include <dt-bindings/clock/mt8195-clk.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+    #include <dt-bindings/memory/mt8195-memory-port.h>
-+    #include <dt-bindings/phy/phy.h>
-+    #include <dt-bindings/power/mt8195-power.h>
-+
-+    bus {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie0: pcie@112f0000 {
-+            compatible = "mediatek,mt8195-pcie", "mediatek,mt8192-pcie";
-+            device_type = "pci";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            reg = <0x00 0x112f0000 0x00 0x4000>;
-+            reg-names = "pcie-mac";
-+            interrupts = <GIC_SPI 791 IRQ_TYPE_LEVEL_HIGH 0>;
-+            bus-range = <0x00 0xff>;
-+            ranges = <0x81000000 0x00 0x20000000 0x00
-+                      0x20000000 0x00 0x200000>,
-+                     <0x82000000 0x00 0x20200000 0x00
-+                      0x20200000 0x00 0x3e00000>;
-+
-+            iommu-map = <0 &iommu_infra IOMMU_PORT_INFRA_PCIE0 0x2>;
-+            iommu-map-mask = <0x0>;
-+
-+            clocks = <&infracfg_ao CLK_INFRA_AO_PCIE_PL_P_250M_P0>,
-+                     <&infracfg_ao CLK_INFRA_AO_PCIE_TL_26M>,
-+                     <&infracfg_ao CLK_INFRA_AO_PCIE_TL_96M>,
-+                     <&infracfg_ao CLK_INFRA_AO_PCIE_TL_32K>,
-+                     <&infracfg_ao CLK_INFRA_AO_PCIE_PERI_26M>,
-+                     <&pericfg_ao CLK_PERI_AO_PCIE_P0_MEM>;
-+            clock-names = "pl_250m", "tl_26m", "tl_96m",
-+                          "tl_32k", "peri_26m", "peri_mem";
-+            assigned-clocks = <&topckgen CLK_TOP_TL>;
-+            assigned-clock-parents = <&topckgen CLK_TOP_MAINPLL_D4_D4>;
-+
-+            phys = <&pciephy>;
-+            phy-names = "pcie-phy";
-+
-+            power-domains = <&spm MT8195_POWER_DOMAIN_PCIE_MAC_P0>;
-+
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0x7>;
-+            interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-+                            <0 0 0 2 &pcie_intc0 1>,
-+                            <0 0 0 3 &pcie_intc0 2>,
-+                            <0 0 0 4 &pcie_intc0 3>;
-+            pcie_intc0: interrupt-controller {
-+                      #address-cells = <0>;
-+                      #interrupt-cells = <1>;
-+                      interrupt-controller;
-+            };
-+        };
-+
-+        pcie1: pcie@112f8000 {
-+            compatible = "mediatek,mt8195-pcie", "mediatek,mt8192-pcie";
-+            device_type = "pci";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            reg = <0x00 0x112f8000 0x00 0x4000>;
-+            reg-names = "pcie-mac";
-+            interrupts = <GIC_SPI 792 IRQ_TYPE_LEVEL_HIGH 0>;
-+            bus-range = <0x00 0xff>;
-+            ranges = <0x81000000 0x00 0x24000000 0x00
-+                      0x24000000 0x00 0x200000>,
-+                     <0x82000000 0x00 0x24200000 0x00
-+                      0x24200000 0x00 0x3e00000>;
-+
-+            iommu-map = <0 &iommu_infra IOMMU_PORT_INFRA_PCIE1 0x2>;
-+            iommu-map-mask = <0x0>;
-+
-+            clocks = <&infracfg_ao CLK_INFRA_AO_PCIE_PL_P_250M_P1>,
-+                     <&clk26m>,
-+                     <&infracfg_ao CLK_INFRA_AO_PCIE_TL_96M>,
-+                     <&clk26m>,
-+                     <&infracfg_ao CLK_INFRA_AO_PCIE_PERI_26M>,
-+                     /* Designer has connect pcie1 with peri_mem_p0 clock */
-+                     <&pericfg_ao CLK_PERI_AO_PCIE_P0_MEM>;
-+            clock-names = "pl_250m", "tl_26m", "tl_96m",
-+                          "tl_32k", "peri_26m", "peri_mem";
-+            assigned-clocks = <&topckgen CLK_TOP_TL_P1>;
-+            assigned-clock-parents = <&topckgen CLK_TOP_MAINPLL_D4_D4>;
-+
-+            phys = <&u3port1 PHY_TYPE_PCIE>;
-+            phy-names = "pcie-phy";
-+
-+            power-domains = <&spm MT8195_POWER_DOMAIN_PCIE_MAC_P1>;
-+
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0x7>;
-+            interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-+                            <0 0 0 2 &pcie_intc1 1>,
-+                            <0 0 0 3 &pcie_intc1 2>,
-+                            <0 0 0 4 &pcie_intc1 3>;
-+            pcie_intc1: interrupt-controller {
-+                      #address-cells = <0>;
-+                      #interrupt-cells = <1>;
-+                      interrupt-controller;
-+            };
-+        };
-+    };
--- 
-2.18.0
+This would limit the problems that might happen due to dynamic
+insertion/removal of the overlay.
 
+--=20
+Cl=C3=A9ment L=C3=A9ger,
+Embedded Linux and Kernel engineer at Bootlin
+https://bootlin.com
