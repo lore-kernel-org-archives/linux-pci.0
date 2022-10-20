@@ -2,44 +2,41 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50195C4321E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14085C43219
 	for <linux-pci@archiver.kernel.org>; Thu, 20 Oct 2022 11:19:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229838AbiJTLTq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S230331AbiJTLTq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 20 Oct 2022 07:19:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51660 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51676 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230131AbiJTLTo (ORCPT
+        with ESMTP id S229868AbiJTLTo (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Oct 2022 07:19:44 -0400
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9F96D2E7;
-        Thu, 20 Oct 2022 04:19:35 -0700 (PDT)
-X-UUID: d6324221b4c8432aa2fd7fb945db3303-20221020
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6D5D17055;
+        Thu, 20 Oct 2022 04:19:36 -0700 (PDT)
+X-UUID: 1809ec0bc4104ccebfb3e2ab4eee0f08-20221020
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=o1UOZUfKHRFNreNnfb8QigkcTVnukydqA2mmXzDsqKY=;
-        b=WX4skekIxrD9ESdnkoEGcwov57c7AZJTuZGY/Ox2a5b35FmDZVlVwCItDhH66Ev6fR4upmvbYI24cgkn6/AknaA8e3kTfxFCsVcVrjZWhHFkSvRiJUU1XjuU5KPqWCzd0aFSvSuQu0K+EMIxcOPgBibId0q89QOwUgXL8l8I8Ic=;
+        h=Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=5evy1vxNCjxdkl74PuIn+c5ti6HjltIHHQ78bDlgo4o=;
+        b=eFUm1n32WywqOYeuz7F6GEnoYyZLWl7H4lXp4U0lxaH7QECN3xvlFbe2e4xr/oMWfMz7Y+LKjQsRe+4urhL7R9MOnraDJKIyoPgyoCyi23a1PwhVHi9Hzu9AFZAcvznFlpZg1JnCoF1V4q6dwDuPIgI8pKpYCLfIYdXXzzz58K8=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.12,REQID:31dbd1a1-f9ac-4ba8-89f8-1d150768cba5,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-        :release,TS:95
-X-CID-INFO: VERSION:1.1.12,REQID:31dbd1a1-f9ac-4ba8-89f8-1d150768cba5,IP:0,URL
-        :0,TC:0,Content:0,EDM:0,RT:0,SF:95,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTION
-        :quarantine,TS:95
-X-CID-META: VersionHash:62cd327,CLOUDID:0ae46ca4-ebb2-41a8-a87c-97702aaf2e20,B
-        ulkID:221020191931XVBKLZPW,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48,TC:n
-        il,Content:0,EDM:-3,IP:nil,URL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
-X-UUID: d6324221b4c8432aa2fd7fb945db3303-20221020
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
+X-CID-O-INFO: VERSION:1.1.12,REQID:0f135c70-fa64-4fdc-805f-a351fdd740e6,IP:0,U
+        RL:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+        :release,TS:-5
+X-CID-META: VersionHash:62cd327,CLOUDID:12e46ca4-ebb2-41a8-a87c-97702aaf2e20,B
+        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
+        RL:11|1,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0
+X-UUID: 1809ec0bc4104ccebfb3e2ab4eee0f08-20221020
+Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw02.mediatek.com
         (envelope-from <tinghan.shen@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1106162124; Thu, 20 Oct 2022 19:19:28 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1606574240; Thu, 20 Oct 2022 19:19:28 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.792.15; Thu, 20 Oct 2022 19:19:27 +0800
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
+ Thu, 20 Oct 2022 19:19:26 +0800
 Received: from mtksdccf07.mediatek.inc (172.21.84.99) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Thu, 20 Oct 2022 19:19:27 +0800
+ 15.2.792.15 via Frontend Transport; Thu, 20 Oct 2022 19:19:26 +0800
 From:   Tinghan Shen <tinghan.shen@mediatek.com>
 To:     Ryder Lee <ryder.lee@mediatek.com>,
         Jianjun Wang <jianjun.wang@mediatek.com>,
@@ -51,11 +48,10 @@ CC:     <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <Project_Global_Chrome_Upstream_Group@mediatek.com>,
-        Tinghan Shen <tinghan.shen@mediatek.com>,
-        Irui Wang <irui.wang@mediatek.com>
-Subject: [PATCH v2 3/3] arm64: dts: mt8195: Add venc node
-Date:   Thu, 20 Oct 2022 19:19:25 +0800
-Message-ID: <20221020111925.30002-4-tinghan.shen@mediatek.com>
+        TingHan Shen <tinghan.shen@mediatek.com>
+Subject: [PATCH v2 1/3] dt-bindings: PCI: mediatek-gen3: Support mt8195
+Date:   Thu, 20 Oct 2022 19:19:23 +0800
+Message-ID: <20221020111925.30002-2-tinghan.shen@mediatek.com>
 X-Mailer: git-send-email 2.18.0
 In-Reply-To: <20221020111925.30002-1-tinghan.shen@mediatek.com>
 References: <20221020111925.30002-1-tinghan.shen@mediatek.com>
@@ -66,49 +62,57 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add venc node for mt8195 SoC.
+From: Jianjun Wang <jianjun.wang@mediatek.com>
 
-Signed-off-by: Irui Wang <irui.wang@mediatek.com>
-Signed-off-by: Tinghan Shen <tinghan.shen@mediatek.com>
+In order to support mt8195 pcie node, update the yaml to support new
+properties of iommu and power-domain, and update the reset-names
+property to allow only one 'mac' name.
+
+Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+Signed-off-by: TingHan Shen <tinghan.shen@mediatek.com>
 ---
- arch/arm64/boot/dts/mediatek/mt8195.dtsi | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ .../bindings/pci/mediatek-pcie-gen3.yaml         | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt8195.dtsi b/arch/arm64/boot/dts/mediatek/mt8195.dtsi
-index 2128fa007480..0779666c187c 100644
---- a/arch/arm64/boot/dts/mediatek/mt8195.dtsi
-+++ b/arch/arm64/boot/dts/mediatek/mt8195.dtsi
-@@ -2170,6 +2170,30 @@
- 			power-domains = <&spm MT8195_POWER_DOMAIN_VENC>;
- 		};
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+index c00be39af64e..af271018b134 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+@@ -70,14 +70,21 @@ properties:
+     minItems: 1
+     maxItems: 8
  
-+		venc: video-codec@1a020000 {
-+			compatible = "mediatek,mt8195-vcodec-enc";
-+			reg = <0 0x1a020000 0 0x10000>;
-+			iommus = <&iommu_vdo M4U_PORT_L19_VENC_RCPU>,
-+				 <&iommu_vdo M4U_PORT_L19_VENC_REC>,
-+				 <&iommu_vdo M4U_PORT_L19_VENC_BSDMA>,
-+				 <&iommu_vdo M4U_PORT_L19_VENC_SV_COMV>,
-+				 <&iommu_vdo M4U_PORT_L19_VENC_RD_COMV>,
-+				 <&iommu_vdo M4U_PORT_L19_VENC_CUR_LUMA>,
-+				 <&iommu_vdo M4U_PORT_L19_VENC_CUR_CHROMA>,
-+				 <&iommu_vdo M4U_PORT_L19_VENC_REF_LUMA>,
-+				 <&iommu_vdo M4U_PORT_L19_VENC_REF_CHROMA>;
-+			interrupts = <GIC_SPI 341 IRQ_TYPE_LEVEL_HIGH 0>;
-+			mediatek,scp = <&scp>;
-+			clocks = <&vencsys CLK_VENC_VENC>;
-+			clock-names = "venc_sel";
-+			assigned-clocks = <&topckgen CLK_TOP_VENC>;
-+			assigned-clock-parents = <&topckgen CLK_TOP_UNIVPLL_D4>;
-+			power-domains = <&spm MT8195_POWER_DOMAIN_VENC>;
-+			#address-cells = <2>;
-+			#size-cells = <2>;
-+			dma-ranges = <0x1 0x0 0x0 0x40000000 0x0 0xfff00000>;
-+		};
++  iommu-map:
++    maxItems: 1
 +
- 		vencsys_core1: clock-controller@1b000000 {
- 			compatible = "mediatek,mt8195-vencsys_core1";
- 			reg = <0 0x1b000000 0 0x1000>;
++  iommu-map-mask:
++    maxItems: 1
++
+   resets:
+     minItems: 1
+     maxItems: 2
+ 
+   reset-names:
+-    minItems: 1
+-    items:
+-      - const: phy
++    oneOf:
++      - items:
++          - const: phy
++          - const: mac
+       - const: mac
+ 
+   clocks:
+@@ -107,6 +114,9 @@ properties:
+     items:
+       - const: pcie-phy
+ 
++  power-domains:
++    maxItems: 1
++
+   '#interrupt-cells':
+     const: 1
+ 
 -- 
 2.18.0
 
