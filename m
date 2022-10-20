@@ -2,102 +2,52 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99623C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Oct 2022 08:22:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C38CAC433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Oct 2022 08:34:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229583AbiJTIWO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Oct 2022 04:22:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34460 "EHLO
+        id S229932AbiJTIdw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Oct 2022 04:33:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36438 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230280AbiJTIWK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Oct 2022 04:22:10 -0400
-Received: from loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6FB6215B110;
-        Thu, 20 Oct 2022 01:22:07 -0700 (PDT)
-Received: from loongson.cn (unknown [10.20.42.32])
-        by gateway (Coremail) with SMTP id _____8BxLtsuBVFjJvwAAA--.5004S3;
-        Thu, 20 Oct 2022 16:22:06 +0800 (CST)
-Received: from loongson-pc.loongson.cn (unknown [10.20.42.32])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8CxLuItBVFjxM4BAA--.7555S3;
-        Thu, 20 Oct 2022 16:22:05 +0800 (CST)
-From:   Jianmin Lv <lvjianmin@loongson.cn>
-To:     Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <maz@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, loongarch@lists.linux.dev,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        Huacai Chen <chenhuacai@loongson.cn>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <lenb@kernel.org>, rafael@kernel.org,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH V4 1/4] ACPI / PCI: fix LPIC IRQ model default PCI IRQ polarity
-Date:   Thu, 20 Oct 2022 16:22:02 +0800
-Message-Id: <20221020082205.20505-2-lvjianmin@loongson.cn>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20221020082205.20505-1-lvjianmin@loongson.cn>
-References: <20221020082205.20505-1-lvjianmin@loongson.cn>
+        with ESMTP id S230310AbiJTIdk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Oct 2022 04:33:40 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24BBC18D46A;
+        Thu, 20 Oct 2022 01:33:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=hXsc0sdlIU5QVxWOjwDA/OdPGD
+        5viVGzmheqQ1L3FtZTlB1a9PilNtiawMz3pmfaJuDwzeB3UFqF/embVGiRRDzsQ4d6/G95XSflKnw
+        DQ4PvBVTC/+OFN6BpVAmxZDvrBkhl858eoag5yti10khG+qvOKZV05YBE4Vg0HFt4cFYULjh4F2W2
+        JIyoXdNLAjHReOtGL9zHwMY5guOGegmLIOuzF0VuL4ULk2PnlPpu9C4kpsNtTc16MOpsdfVeWoGjG
+        Lr/H9m4UKikcZrNo/HHYEMhLqor98EUkonLCvaOaVBYL0OTfhasBJeBHmqFCQIOVpbZeDI95tQkEo
+        0aolS6EA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1olQzg-00CFuX-OI; Thu, 20 Oct 2022 08:33:36 +0000
+Date:   Thu, 20 Oct 2022 01:33:36 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, Stefan Roese <sr@denx.de>,
+        Lukas Wunner <lukas@wunner.de>,
+        Jan Kiszka <jan.kiszka@siemens.com>,
+        Stuart Hayes <stuart.w.hayes@gmail.com>,
+        Keith Busch <kbusch@kernel.org>, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/3] PCI/portdrv: Squash into portdrv.c
+Message-ID: <Y1EH4PX390EMp7/j@infradead.org>
+References: <20221019204127.44463-1-helgaas@kernel.org>
+ <20221019204127.44463-2-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf8CxLuItBVFjxM4BAA--.7555S3
-X-CM-SenderInfo: 5oymxthqpl0qxorr0wxvrqhubq/
-X-Coremail-Antispam: 1Uk129KBjvJXoWxJrW3XFW3ZFWfZFyktFWxXrb_yoW8ArWxpF
-        ZF93Wayr48tFs8XwsFk3WxZry5J3Z3Cryjkrs5Cw4Uua1Dur4IqFyxWFW3Jr98WFZrZa1U
-        ZryYyw48Way7uFJanT9S1TB71UUUUj7qnTZGkaVYY2UrUUUUj1kv1TuYvTs0mT0YCTnIWj
-        qI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUIcSsGvfJTRUUU
-        bS8YFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s
-        1l1IIY67AEw4v_JF0_JFyl8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
-        wVC0I7IYx2IY67AKxVW8JVW5JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwA2z4
-        x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6xkF7I0E14v26F4UJVW0owAa
-        w2AFwI0_JF0_Jw1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqjxCEc2xF0cIa020Ex4CE44
-        I27wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2
-        jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262
-        kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwCFI7km
-        07C267AKxVWUAVWUtwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r
-        1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWU
-        CVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r
-        1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1U
-        YxBIdaVFxhVjvjDU0xZFpf9x07jr6p9UUUUU=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221019204127.44463-2-helgaas@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On LoongArch ACPI based systems, the PCI devices (e.g. sata
-controlers and PCI-to-to PCI bridge controlers) existed in
-Loongson chipsets output high-level interrupt signal to the
-interrupt controller they connected to, while the IRQs are
-active low from the perspective of PCI(in 2.2.6. Interrupt
-Pins, "Interrupts on PCI are optional and defined as level
-sensitive, asserted low), which means that the interrupt
-output of PCI devices plugged into PCI-to-to PCI bridges of
-Loongson chipset will be also converted to high-level. So
-high level triggered type is required to be passed to
-acpi_register_gsi() when creating mappings for PCI devices.
+Looks good:
 
-Signed-off-by: Jianmin Lv <lvjianmin@loongson.cn>
----
- drivers/acpi/pci_irq.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 08e15774fb9f..ff30ceca2203 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -387,13 +387,15 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 	u8 pin;
- 	int triggering = ACPI_LEVEL_SENSITIVE;
- 	/*
--	 * On ARM systems with the GIC interrupt model, level interrupts
-+	 * On ARM systems with the GIC interrupt model, or LoongArch
-+	 * systems with the LPIC interrupt model, level interrupts
- 	 * are always polarity high by specification; PCI legacy
- 	 * IRQs lines are inverted before reaching the interrupt
- 	 * controller and must therefore be considered active high
- 	 * as default.
- 	 */
--	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ?
-+	int polarity = acpi_irq_model == ACPI_IRQ_MODEL_GIC ||
-+		       acpi_irq_model == ACPI_IRQ_MODEL_LPIC ?
- 				      ACPI_ACTIVE_HIGH : ACPI_ACTIVE_LOW;
- 	char *link = NULL;
- 	char link_desc[16];
--- 
-2.31.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
