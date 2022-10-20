@@ -2,44 +2,44 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF040C43219
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Oct 2022 17:58:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB5F2C43217
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Oct 2022 17:58:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229718AbiJTR6b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Oct 2022 13:58:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53562 "EHLO
+        id S230093AbiJTR6o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Oct 2022 13:58:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53650 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbiJTR6a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Oct 2022 13:58:30 -0400
-Received: from na01-obe.outbound.protection.outlook.com (mail-westcentralusazon11022023.outbound.protection.outlook.com [40.93.200.23])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0405A199F4A;
-        Thu, 20 Oct 2022 10:58:29 -0700 (PDT)
+        with ESMTP id S229996AbiJTR6f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Oct 2022 13:58:35 -0400
+Received: from na01-obe.outbound.protection.outlook.com (mail-westcentralusazon11022020.outbound.protection.outlook.com [40.93.200.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3749A199F5D;
+        Thu, 20 Oct 2022 10:58:34 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lmvhNkBCc/lnveXm898BUcfxzo+nODD77nqIR1IjeQofUMNxf3VaCsakcfoqyxf7DxTXZ+n5yQJAS6O6zHiZAI/8dW3478Q1nuNFiYbo4Bv1S8hNPIBKGN6NRSDl5/9B13TKq2aJ9yHs4Ssp+KH+ZoCCBsZtCuk6ohMQE7S74RLVstqPOPxDXFzcMzbQREAZfzFt5lm5GC1fE6i003ypH4tsD19wSnT3XRtaZBvuvxsDzCw4Pt057tQULP+os0WTU9x9gVufFSrjwKAibri1XinMO9/IsMq1XBATrPMG18+0mwyoks0AMqn4CsCQXC7hTmsGf5tL3ffcS3YW7aI8ag==
+ b=UG7bi673NeFE5higFOwrg+SLY3QllNwg4VUOKUYo3M+aYn8+IsLUZ1lq2QIwBgys/bysa9xOE4r/xtN39qrIQfGrfyaZyIV9T6VEv0Nacqnmak7ZKlDuGgQF8tUe/Z4vL84Yk78bdkMpPpL2/azNqZdGWrnBgcK8eOhBhvVPk7EWCU+XdYixIPqG2jSfUFzeDyQkXkYDBAIjlZQcLwvTX8QhtfRFdPNcqGVhmpZ8vEwcxQWF3vppOV2UleMqRllZodhUTBemWvH3SYtOiTQ/+lb2S5cgo1ORxV0KCJhRKgkQc/RM6Rh3i1r8OJ8QfjV6Fxw5IDvQliV3uV3pxq2tSQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qPFQFBJ2cy3ptAG94AF8myzZ+oHcLnbdNyGAmv7MIzY=;
- b=d7FcQtP9aXY5P9ZOOxHyeTUJVV+ZD+Dfu469/M9/HmnMfxRQH2sZ48+5aCfuHkXt8P7IsC7bkWhZKGcOkyYDjZy92fTdV+RF1VcYhk5n+DqJTCrrF5UAxhCF2GW/P40hb7OL12TqJka7gRI9FEk0Y0FBE+zPKZkzuBraGqcEPJ24tqfNQhm2/an1lNIVfZbeTEypquIfw6JgAij75LFcfguuYQL0R6V9bVa8YtlIzQO2kSNFH4FBIsRmMOKQYKyHD3oob/z1/rf4bPPIqrMsKFBIHrI+5XP9ssKqAJuOzbZVXqptp/yd/9Tsn1Cqyy+YkQ5ZXNgXr/rkrcn9T1MVcA==
+ bh=PJO2AMMOaQWBR+6ivU1oD2mPgZ8IalvVP13hhcOhvlM=;
+ b=FjzjP8emD1c3ap5Q2VHIPw1JIvcxnxFs4u6TMZ3azVyhwCpBbiU4c5vLAyBmzSEfJsjq6z/mFdSXMCYFoeul4ofrb1bgUsd0CSuCsCyponojtMffK3R77t4AfjCvJHKNQzppv7xO41bC/pC6Kk5oAdmh4fnNnUUYoE2I4dZ/9zu5qdbYdBN4pNjTnDSflm2/3iKoGIqj3RT0xBKgrH1h65xFOTfWI967yXgl3SnGH0Bxc3u+tDfR2eU2S7cjKXBDjfkSzpXSxUfjEYOflo/quKF+/FMho7WuR5eXoRtvMSvGqFC1HY33H1n0fyNDYgdxCPgbiRmA/kLkVs3aj1eR0Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microsoft.com; dmarc=pass action=none
  header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qPFQFBJ2cy3ptAG94AF8myzZ+oHcLnbdNyGAmv7MIzY=;
- b=IK1LYIczikzzumQ5UAp4NLuHNcIil/+RFAS/mN1XXqZVSHjrCf1MswMZUzjlS8eriEyuCkPQgcIzSds7XrwCttER7rgGIuKJiItP5EMjAGuzvqKOz6WEWpDcXECt9npN5kALyppnaTeA5tEpyAeofe1SH3Hqa7SDLWsFQUPcbV0=
+ bh=PJO2AMMOaQWBR+6ivU1oD2mPgZ8IalvVP13hhcOhvlM=;
+ b=jc+bvVRyI4NlB2EwQ0+GYv8UA7WypRCC1+MyQXSmtdflZ5tT+fQCF6iX0Xa0XAfYsfPvs8dGcDn/MzUpx4dpFgVX6xXdxia2NMvijD7yyiPaPlWbVH9CIrmcIW6BAmaCfGVRFXI0s6HM+NW4fJtk4F8rzRgRLUcqo0HBad+0HcU=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=microsoft.com;
 Received: from DM6PR21MB1370.namprd21.prod.outlook.com (2603:10b6:5:16b::28)
  by MW4PR21MB1857.namprd21.prod.outlook.com (2603:10b6:303:74::12) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.17; Thu, 20 Oct
- 2022 17:58:25 +0000
+ 2022 17:58:21 +0000
 Received: from DM6PR21MB1370.namprd21.prod.outlook.com
  ([fe80::be79:e2dc:1dba:44fa]) by DM6PR21MB1370.namprd21.prod.outlook.com
  ([fe80::be79:e2dc:1dba:44fa%3]) with mapi id 15.20.5723.019; Thu, 20 Oct 2022
- 17:58:25 +0000
+ 17:58:21 +0000
 From:   Michael Kelley <mikelley@microsoft.com>
 To:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
         sthemmin@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
@@ -59,12 +59,10 @@ To:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
         linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
         iommu@lists.linux.dev
 Cc:     mikelley@microsoft.com
-Subject: [PATCH 02/12] x86/ioapic: Gate decrypted mapping on cc_platform_has() attribute
-Date:   Thu, 20 Oct 2022 10:57:05 -0700
-Message-Id: <1666288635-72591-3-git-send-email-mikelley@microsoft.com>
+Subject: [PATCH 00/12] Add PCI pass-thru support to Hyper-V Confidential VMs
+Date:   Thu, 20 Oct 2022 10:57:03 -0700
+Message-Id: <1666288635-72591-1-git-send-email-mikelley@microsoft.com>
 X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1666288635-72591-1-git-send-email-mikelley@microsoft.com>
-References: <1666288635-72591-1-git-send-email-mikelley@microsoft.com>
 Content-Type: text/plain
 X-ClientProxiedBy: MW4PR02CA0021.namprd02.prod.outlook.com
  (2603:10b6:303:16d::31) To DM6PR21MB1370.namprd21.prod.outlook.com
@@ -73,111 +71,211 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DM6PR21MB1370:EE_|MW4PR21MB1857:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9db358de-a263-4117-ea11-08dab2c4af91
+X-MS-Office365-Filtering-Correlation-Id: 04065d67-ebf4-49b3-b260-08dab2c4acc8
 X-LD-Processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: zrSbdrQ7y7RyiqAaqk7qcG1PKbmWmmf2gZiH9JgPp7x9L/b+dHabbn7UhxIvsSGy+Kf3pqUalakPxrpRSwnFtYps5H2J1BK+gXzKZCJNODkLrN6H5SjLoZcd0fvMJq7o3V+3pcRdo8NKAf31d9bL14Dt4WwiuOX8ttRYAqXeAMkkYDrnxCxfdJnBFdhaVf2Q3/5v54nr4dBf0H65yM8l//QhFOE08AVijosBg8UbT0cxu7axDkxi7bvUUB8GaUUIUPc/jPfxhEZbD9Ny+3rmM94xAJTTCObfk6XuvhD3Uj2UTalI9VCK0tYMF0af7ZFVmFFaRGir0XLNpSnXVHojhnbykxvsgs0vU8ifExrDh59pHnV5qSOhNPwwMxjklY7VZENe9lMzx6wPKM3BTMDA0Ea6P8CELyHjH5quDsncIquy7j4LGKnXz3nXDvaxoVeKUlb5Dqxh+mZKJ0622z4Cj4eVSbAi/E/yRu+veVFnRvpUq47T1vQbuj1XPUiDTEvoVaPdvIMnfwLbQ1il4ZS3b/x2bH3V4KHqZNcVLtdsz7aNlKPBSB7X7dSZUdalKf2VDe9TOAlbtFoofXFHUqFWvojf7msiLNFx3b9Fby9XIsncAgawYrPf90SORi6k8EQGxPMtDeRjve94PY8LryFiYQdzZKt+949YwzF5NtszmsBJVFZ2ODyf9YszZfUBRQdeObHwb0oXYQ3Y1kDJjmXh8e6PYrdu2YHvalgrOheKUq0jvWfSrbXcPi54k62LsgZmHGf+iKdxMcbURDW7qoePEC88/i5n7Xb77nJ1+z/HPGy5z7aj1o0zBDq765pTQU/FIrU3J4zBldhak9vZrSqYJw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(136003)(346002)(376002)(396003)(39860400002)(451199015)(186003)(6512007)(6666004)(107886003)(83380400001)(7416002)(52116002)(26005)(2906002)(5660300002)(6506007)(66556008)(41300700001)(8676002)(478600001)(8936002)(316002)(4326008)(66476007)(66946007)(6486002)(10290500003)(82950400001)(36756003)(86362001)(2616005)(7406005)(82960400001)(38100700002)(38350700002)(921005);DIR:OUT;SFP:1102;
+X-Microsoft-Antispam-Message-Info: bLz5gKCLJszVeSWSEKeyPNA1BaA+a67j+ag+J99PMeDm/gPI9yUZcw/D5s8DodYv9pW6EDcwAEb9u2fimJ0b8fAxpgFLphcsXPQbRDH/XuL7FogveXiIZqB4JfNviIfW8Ac7V4dBFekUJF33W6G87Du7DMrMsfdd8W46uIxO9Dal6F8/K3fKLAdmEVXPpc4mD4HDjKTxkHoQsp1kBJqr5w9BliEjIqOPj+kqcV6FaUVOrVmCUVCb830JoMBD/ppIcfjXNvVoVZSNNn/fhLcwpW/Jg0Kea8QSjD0g0NSgqRNQXoRcd8UYEVGY45rwrD6IB7PTJR/rX6ef+65f2UZ+BGEix2XpT5VbjILnrCA+z/qiqR6oylrM0LvysIr1SXD085xiV9Suk/w0Oe0CvW/m3N18UV8zHXbIXk20ByRgDSJ5Lw52WBM4FriA5A7IMRpMBLUAkLFVahZyBxae9KV8fHftnIFZnXaS4Ky9JKLgWUnkdFAyG8ROQKhAt9ZALubXCGeYVz/KDmilOTEX8AG5XKS+pKMgh6yNRLo355pKZzcAbMTe61CIS071mZDd4IgIym3rLtb4/nO/gR4kZlqpItM0I4n1k80kSywvqfVOgrlq2QHANa7+sOPWQiaXG6i1ok/6OrDiUHfoiJPtQdotOGI7kHy1r4ZWs9fs3od3LvyTh8ZnpzmQPoXiQrqbI4w14p58iDX8qHek2d36yZEsK25rXS3bJCxpvbj/QeOSFTnESrKsrBo+TFOgdxGcbq9ZBVLIHRU8smPu3EVEQX8UoK8GhJr9XTKleQRiuBLuvWOIcCd0e/0stbmPaLLfqW+Otwl2HW9YZgtEKsC7KewOsZakMrJp1OFeGWJopHidZpJkaA3+OuP7m+ni4zedbrhkQqRnUrvZ62oLNS/HS3Z1aA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(136003)(346002)(376002)(396003)(39860400002)(451199015)(186003)(6512007)(6666004)(107886003)(83380400001)(7416002)(52116002)(26005)(2906002)(5660300002)(6506007)(66556008)(41300700001)(8676002)(478600001)(966005)(8936002)(316002)(4326008)(66476007)(66946007)(6486002)(10290500003)(82950400001)(36756003)(86362001)(2616005)(7406005)(82960400001)(38100700002)(38350700002)(921005);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?wgQ0kXLr14ZHtrrea7b2Cq2FNSjWvg+I/OxrgKVpkgb16N+qyurJ2oAXXeN+?=
- =?us-ascii?Q?Y/wrjSN1f5sJmzBLYcQX8Qvx2azYJ58Xytqf2Yz7Ci+uw8LSHafFNgtZjifF?=
- =?us-ascii?Q?SVTzPDlaL1bX1yIv0Ibx5W9RlzY74JRo/1pyrwTwZQ67XpnlkiIJ15suPCzA?=
- =?us-ascii?Q?2kxU6Yv0n4ttumiQxstUo8pxzPnJJBXfntYwKYybspl+0IuVZaryVXHhWjV6?=
- =?us-ascii?Q?9wkX2eQMwk3anlDXDHNmzsh5f00x6GMXQhVzFs0qtT6sGJHJfuIdcnenZAfF?=
- =?us-ascii?Q?/qBXV6VJrvyeIe2cOvXBUcqWXZCTICoSzMMTKszQkTw32cpS8UIL7395LGRm?=
- =?us-ascii?Q?C3FkQ7YgDqgsH9rLokwYnLQ7+3bZPz0PIJt1IJCaswAeyDlHR7sJNMqL9bmG?=
- =?us-ascii?Q?88mTaEUpcEPRZy/E/0RPAc/CR/VwEdzNMOSPHFaxlCmi6X61gncc84LEbs8w?=
- =?us-ascii?Q?QxRzBlJXDHVGaLY/QILGKK29ORa+EnuQZ4f1RPRPU+pc91ro9Hw7HfQFXwM3?=
- =?us-ascii?Q?Wwd7+yPzLiXLQ7tcARrWrUBrfsI0aS3+4GhNm64GHmLdq1CxuITNAKG8q+oE?=
- =?us-ascii?Q?okVDVshlz2JmEdoy9yA5+Y1PlDUjXf+pjKW/SreGJx8IQg+LaEEFxRkaBqoq?=
- =?us-ascii?Q?gTNrFWqCGM3KIWfGbatlzMyPLaGJRLtWPdXUIsNj1jTyp0D8dJuOiUBZJk/6?=
- =?us-ascii?Q?XExAkOIe+rGMK5Bmh2loguFAya3HyrLFTXxMD6T1/NZ3sK2iqXMuu6eA+5Qk?=
- =?us-ascii?Q?0EVNTwMz2Fr4cnSEgXwRPzCnGixHCdQHR6zcHJOJt1AW1VgOyDN4zCcctaOS?=
- =?us-ascii?Q?zcEH46N5LwMu11F+xvr56HTuYfisHsL3NpRSA6qh6vGqiLaM6W+oYZ+AkQcz?=
- =?us-ascii?Q?s2nNvW3TuZviZLIBe+5vVTrl3R2cVuEEyb25Xc0Zc8XUUhLBmcN96KkZPTBu?=
- =?us-ascii?Q?y9Jchdw4iAAaVzEjMKwQxrywBNiqOEN3n9sOqps6PoTGL8ylRDbvRtdSbwZv?=
- =?us-ascii?Q?BGmJSHcHzFLV50Wl/akk10xxLe5lCkL4sNNq9gZq0X3HTOsf26SHKFrYVN0X?=
- =?us-ascii?Q?SPWKXoP2Fu+k3Yg0UnKVyUecwYtoe8XuyeIgrK6Nv2+drhwLpaAVkv3+20Uf?=
- =?us-ascii?Q?HJoiXIMkWnw6YvDOx2Yi6FdXxcFazX3NgHBWHDckRcejWpxwb/8XLjpsX0mR?=
- =?us-ascii?Q?1OSY2/ZH8lPsqxQmFGxh5GxvHQp6d54RT6P4Kzgy5wFMNZnz3UBENRa/K37S?=
- =?us-ascii?Q?VGdJzXx3LDtpP1+jYcoBBqSYMthVHpx80EjGjygYAzzyGM2kh7OkHAm+u6Zu?=
- =?us-ascii?Q?hnRw8fm3rHhPSoe8/F7yHmtG0WPD9ZM3Lqg3W+DF0MsnrfaNfifCENlnsBC6?=
- =?us-ascii?Q?q35lwXKODoS8Dt5xOI6yFZHAymG8IgB2nRoGhHImNopHug9V78gI/hQCujUd?=
- =?us-ascii?Q?Dljqnqaf+wrE4aYdmB0wX0wGFiujaPkIWsGuocfHr9mTJLzdljwxEeCRcsn6?=
- =?us-ascii?Q?0Sw7zGAtWViCc8j2eKCIgjjAZNqUpmq6NKSWX2WTvrpol1NDbe2CwgimOPgu?=
- =?us-ascii?Q?/ZuEvz2VDy2t/gtobOkUdU6Zug8zkR//JUMenBIi?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EUbuR0GqWShKof4aAuM1EB7pX5FwRAfJtzJTZV0gxKRIepCW5V4fBetDRPmA?=
+ =?us-ascii?Q?gIOzEyFbK62marEJFimWSRoubKL75pCVInxYbkOHzKR61tkRWdZmTwv921Mw?=
+ =?us-ascii?Q?esHurGmkf5q3PrH0l0cwepaLWQrDhEHZkBwXqTA6i1UeRp9Ddeodrl7owFL8?=
+ =?us-ascii?Q?sUowYVF3EQl8kBgWEWr6YTyfIrOQlXPeHOCDjLpD/CvUWC8/un/A+x51NSY5?=
+ =?us-ascii?Q?u+Uyzrtm+Y6XXBvyUOrdjPMAX9WC5jIQhwsgoSqZVhO1VodIcbj2K4K+Xadp?=
+ =?us-ascii?Q?qcHvejvJRLYKXQqiZdendwRviBxQusRR05pt2X3MpBxm4vbLbHNojujLrNQ6?=
+ =?us-ascii?Q?zs8E16jlZqErJr1RIJNF8O31fMy3BKRBRtXA6l1Gp+xtcN6KDgKG5B7QoDf5?=
+ =?us-ascii?Q?P/l4DlL4SzHYytZVRx4SqSTuNPjmVyI5P4Z+aGW5uMCnuOUPnni8cHYdwyHe?=
+ =?us-ascii?Q?8Lug0qwQTR31GTmZhcMMaVJJ2vP9bVqty8Zolvw4mGVGkOlxn3EndlfRMF/q?=
+ =?us-ascii?Q?oPFjzNK3zraVDbSOWhH/q3WtzjPCaYNXDE0+qjg/7DQbZe78xfdIT7vf4Iub?=
+ =?us-ascii?Q?n6FSQQlEtOJRaVU/Z553fE6OlJO5W/DxrItEfsGVzW2OGW/j390W7sc2Uk+1?=
+ =?us-ascii?Q?EeEsPYrZdudW94y51icmC0dqsN27OAQbf24I3WbWbtUZNb4WfNLAc0VJvOph?=
+ =?us-ascii?Q?1A7CY7nAjH7vTNgmG8khK8lN98GA39tms2WJZu+0teUIdtmi4QqB58bMTFTW?=
+ =?us-ascii?Q?wpHzItfoPCAfmatvJqR1ieZTYkZJVKNYfIZektL6ektcRXnqbUmU1HauUx2P?=
+ =?us-ascii?Q?2tAjozoq7T2nYWMWlEofXkrF2PMvMBo9BZaI3tgPcaxRznX8F07oDPlQ0ZEs?=
+ =?us-ascii?Q?od08TGSa44HOyse0yhEqne7BT8t3meR2sjfHhjlQP3ev7VGboxYU03eQMoMK?=
+ =?us-ascii?Q?99cQ15A8DVwbyIcDAu3je8GSlE0cW3XbIN+xZ0yQ7uIzzTBdiH7ZGK0jNIPh?=
+ =?us-ascii?Q?CSApQjT7/pRct4PrhSP98pLKKZTA6I69lsVNzTdAhfR9U/b82T7b38kxI+zy?=
+ =?us-ascii?Q?uhxvoCB/wSUhe/Vh6f+tVxIv4soVbqa4ZfDDf4U4F0HPB6Mz4wVCduI2NviZ?=
+ =?us-ascii?Q?F2P6XboW1xJhxrlx2uCa6o90Dv/pGpJEpTjjE1x1XTvw0Uks2JWU5N1vGIyj?=
+ =?us-ascii?Q?d1ytwB0n3PIfGcTmaN2UPgGq+evyBLB1hqvOn6nRO8Rfy6rCXiSMjk6snatw?=
+ =?us-ascii?Q?/U9Awjg/mzH8LYp8gD5Q4Dydglbaktp2FOaSTbUNgB0UaGAM+bJh4/vi6O7Z?=
+ =?us-ascii?Q?9ERIepwWL6/Gh/CfxzBwqPRoggB5KxCWNqDAM4i5T8YDashmaFCObjVPziM4?=
+ =?us-ascii?Q?WghEatA+oGj/wNynC0IiK7J710BmQyQjiwqSDWJW1vikHZBcmonR71tbRTCM?=
+ =?us-ascii?Q?lvab99387/h/yc4q77CBmIAORGYyZQVblEjQhWM6Pkzf6/o9kLGPRZFz9gX9?=
+ =?us-ascii?Q?/CEckT8UN4I1c8PHF+3cusCZuH6BZqFcopT6qkf9VgqHyrp68VnBCQzu6ctO?=
+ =?us-ascii?Q?Yic1zjb6TkIcSJjaKuh+OMQR/7wFPkCTPrBBaLxP?=
 X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9db358de-a263-4117-ea11-08dab2c4af91
+X-MS-Exchange-CrossTenant-Network-Message-Id: 04065d67-ebf4-49b3-b260-08dab2c4acc8
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1370.namprd21.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2022 17:58:25.7455
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2022 17:58:21.0858
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 8Y1g9Un+cEQ2h7ORI9rfj8GXvsXH6+d/F+/QNpbKmVZbuEbrqvIrhWjQENud+dfpZjAUosbWwKGLL7e180FzAQ==
+X-MS-Exchange-CrossTenant-UserPrincipalName: MedxN3Q9jXrig+m36wt2nONqruYGQf8ehnleHpMQlz6x0qsHXJBdA+vk+2CTbQMhCrmRHTd7jxDX5cNYKkrYbw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB1857
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Current code always maps the IOAPIC as shared (decrypted) in a
-confidential VM. But Hyper-V guest VMs on AMD SEV-SNP with vTOM
-enabled use a paravisor running in VMPL0 to emulate the IOAPIC.
-In such a case, the IOAPIC must be accessed as private (encrypted).
+This patch series adds support for PCI pass-thru devices to Hyper-V
+Confidential VMs (also called "Isolation VMs"). But in preparation, it
+first changes how private (encrypted) vs. shared (decrypted) memory is
+handled in Hyper-V SEV-SNP guest VMs. The new approach builds on the
+confidential computing (coco) mechanisms introduced in the 5.19 kernel
+for TDX support and significantly reduces the amount of Hyper-V specific
+code. Furthermore, with this new approach a proposed RFC patch set for
+generic DMA layer functionality[1] is no longer necessary.
 
-Fix this by gating the IOAPIC decrypted mapping on a new
-cc_platform_has() attribute that a subsequent patch in the series
-will set only for Hyper-V guests. The new attribute is named
-somewhat generically because similar paravisor emulation cases
-may arise in the future.
+Background
+==========
+Hyper-V guests on AMD SEV-SNP hardware have the option of using the
+"virtual Top Of Memory" (vTOM) feature specified by the SEV-SNP
+architecture. With vTOM, shared vs. private memory accesses are
+controlled by splitting the guest physical address space into two
+halves.  vTOM is the dividing line where the uppermost bit of the
+physical address space is set; e.g., with 47 bits of guest physical
+address space, vTOM is 0x40000000000 (bit 46 is set).  Guest phyiscal
+memory is accessible at two parallel physical addresses -- one below
+vTOM and one above vTOM.  Accesses below vTOM are private (encrypted)
+while accesses above vTOM are shared (decrypted). In this sense, vTOM
+is like the GPA.SHARED bit in Intel TDX.
 
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
----
- arch/x86/kernel/apic/io_apic.c |  3 ++-
- include/linux/cc_platform.h    | 13 +++++++++++++
- 2 files changed, 15 insertions(+), 1 deletion(-)
+In Hyper-V's use of vTOM, the normal guest OS runs at VMPL2, while
+a Hyper-V provided "paravisor" runs at VMPL0 in the guest VM. (VMPL is
+Virtual Machine Privilege Level. See AMD's SEV-SNP spec for more
+details.) The paravisor provides emulation for various system devices
+like the I/O APIC as part of the guest VM.  Accesses to such devices
+made by the normal guest OS trap to the paravisor and are emulated in
+the guest VM context instead of in the Hyper-V host. This emulation is
+invisible to the normal guest OS, but with the quirk that memory mapped
+I/O accesses to these devices must be treated as private, not shared as
+would be the case for other device accesses.
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index a868b76..d2c1bf7 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2686,7 +2686,8 @@ static void io_apic_set_fixmap(enum fixed_addresses idx, phys_addr_t phys)
- 	 * Ensure fixmaps for IOAPIC MMIO respect memory encryption pgprot
- 	 * bits, just like normal ioremap():
- 	 */
--	flags = pgprot_decrypted(flags);
-+	if (!cc_platform_has(CC_ATTR_HAS_PARAVISOR))
-+		flags = pgprot_decrypted(flags);
- 
- 	__set_fixmap(idx, phys, flags);
- }
-diff --git a/include/linux/cc_platform.h b/include/linux/cc_platform.h
-index cb0d6cd..b6c4a79 100644
---- a/include/linux/cc_platform.h
-+++ b/include/linux/cc_platform.h
-@@ -90,6 +90,19 @@ enum cc_attr {
- 	 * Examples include TDX Guest.
- 	 */
- 	CC_ATTR_HOTPLUG_DISABLED,
-+
-+	/**
-+	 * @CC_ATTR_HAS_PARAVISOR: Guest VM is running with a paravisor
-+	 *
-+	 * The platform/OS is running as a guest/virtual machine with
-+	 * a paravisor in VMPL0. Having a paravisor affects things
-+	 * like whether the I/O APIC is emulated and operates in the
-+	 * encrypted or decrypted portion of the guest physical address
-+	 * space.
-+	 *
-+	 * Examples include Hyper-V SEV-SNP guests using vTOM.
-+	 */
-+	CC_ATTR_HAS_PARAVISOR,
- };
- 
- #ifdef CONFIG_ARCH_HAS_CC_PLATFORM
+Support for Hyper-V guests using vTOM was added to the Linux kernel
+in two patch sets[2][3]. This support treats the vTOM bit as part of
+the physical address.  For accessing shared (decrypted) memory, the core
+approach is to create a second kernel virtual mapping that maps to
+parallel physical addresses above vTOM, while leaving the original
+mapping unchanged.  Most of the code for creating that second virtual
+mapping is confined to Hyper-V specific areas, but there are are also
+changes to generic swiotlb code.
+
+Changes in this patch set
+=========================
+In preparation for supporting PCI pass-thru devices, this patch set
+changes the core approach for handling vTOM. In the new approach,
+the vTOM bit is treated as a protection flag, and not as part of
+the physical address. This new approach is like the approach for
+the GPA.SHARED bit in Intel TDX.  Furthermore, there's no need to
+create a second kernel virtual mapping.  When memory is changed
+between private and shared using set_memory_decrypted() and
+set_memory_encrypted(), the PTEs for the existing kernel mapping
+are changed to add or remove the vTOM bit just as with TDX.  The
+hypercalls to change the memory status on the host side are made
+using the existing callback mechanism. Everything just works, with
+a minor tweak to map the I/O APIC to use private accesses as mentioned
+above.
+
+With the new handling of vTOM in place, existing Hyper-V code that
+creates the second kernel virtual mapping still works, but it is now
+redundant as the original kernel virtual mapping (as updated) maps
+to the same physical address. To simplify things going forward, this
+patch set removes the code that creates the second kernel virtual
+mapping. And since a second kernel virtual mapping is no longer
+needed, the changes to the DMA layer proposed as an RFC[1] are no
+longer needed.
+
+Finally, to support PCI pass-thru in a Confidential VM, Hyper-V
+requires that all accesses to PCI config space be emulated using
+a hypercall.  This patch set adds functions to invoke those
+hypercalls and uses them in the config space access functions
+in the Hyper-V PCI driver. Lastly, the Hyper-V PCI driver is
+marked as allowed to be used in a Confidential VM.  The Hyper-V
+PCI driver has been hardened against a malicious Hyper-V in a
+previous patch set.[4]
+
+Patch Organization
+==================
+Patch 1 fixes a bug in __ioremap_caller() that affects the
+existing Hyper-V code after the change to treat the vTOM bit as
+a protection flag. Fixing the bug allows the old code to continue
+to run until later patches in the series remove or update it.
+This sequencing avoids the need to enable the new approach and
+remove the old code in a single large patch.
+
+Patch 2 handles the I/O APIC quirk by defining a new CC_ATTR enum
+member that is set only when running on Hyper-V.
+
+Patch 3 does some simple reordering of code to facilitate Patch 5.
+
+Patch 4 tweaks calls to vmap_pfn() in the old Hyper-V code that
+are deleted in later patches in the series. Like Patch 1, this
+patch helps avoid the need to enable the new approach and remove
+the old code in a single large patch.
+
+Patch 5 enables the new approach to handling vTOM for Hyper-V
+guest VMs.
+
+Patches 6 thru 9 remove existing code for creating a second
+kernel virtual mapping.
+
+Patch 10 updates existing code so that it no longer assumes that
+the vTOM bit is part of the physical address.
+
+Patch 11 adds the new hypercalls for accessing MMIO Config Space.
+
+Patch 12 updates the PCI Hyper-V driver to use the new hypercalls
+and enables the PCI Hyper-V driver to be used in a Confidential VM.
+
+[1] https://lore.kernel.org/lkml/20220706195027.76026-1-parri.andrea@gmail.com/
+[2] https://lore.kernel.org/all/20211025122116.264793-1-ltykernel@gmail.com/
+[3] https://lore.kernel.org/all/20211213071407.314309-1-ltykernel@gmail.com/
+[4] https://lore.kernel.org/all/20220511223207.3386-1-parri.andrea@gmail.com/
+
+Michael Kelley (12):
+  x86/ioremap: Fix page aligned size calculation in __ioremap_caller()
+  x86/ioapic: Gate decrypted mapping on cc_platform_has() attribute
+  x86/hyperv: Reorder code in prep for subsequent patch
+  Drivers: hv: Explicitly request decrypted in vmap_pfn() calls
+  x86/hyperv: Change vTOM handling to use standard coco mechanisms
+  swiotlb: Remove bounce buffer remapping for Hyper-V
+  Drivers: hv: vmbus: Remove second mapping of VMBus monitor pages
+  Drivers: hv: vmbus: Remove second way of mapping ring buffers
+  hv_netvsc: Remove second mapping of send and recv buffers
+  Drivers: hv: Don't remap addresses that are above shared_gpa_boundary
+  PCI: hv: Add hypercalls to read/write MMIO space
+  PCI: hv: Enable PCI pass-thru devices in Confidential VMs
+
+ arch/x86/coco/core.c                |  10 +-
+ arch/x86/hyperv/hv_init.c           |   7 +-
+ arch/x86/hyperv/ivm.c               | 121 ++++++++++----------
+ arch/x86/include/asm/hyperv-tlfs.h  |   3 +
+ arch/x86/include/asm/mshyperv.h     |   8 +-
+ arch/x86/kernel/apic/io_apic.c      |   3 +-
+ arch/x86/kernel/cpu/mshyperv.c      |  22 ++--
+ arch/x86/mm/ioremap.c               |   2 +-
+ arch/x86/mm/pat/set_memory.c        |   6 +-
+ drivers/hv/Kconfig                  |   1 -
+ drivers/hv/channel_mgmt.c           |   2 +-
+ drivers/hv/connection.c             | 113 +++++--------------
+ drivers/hv/hv.c                     |  23 ++--
+ drivers/hv/hv_common.c              |  11 --
+ drivers/hv/hyperv_vmbus.h           |   2 -
+ drivers/hv/ring_buffer.c            |  62 ++++-------
+ drivers/net/hyperv/hyperv_net.h     |   2 -
+ drivers/net/hyperv/netvsc.c         |  48 +-------
+ drivers/pci/controller/pci-hyperv.c | 215 +++++++++++++++++++++++++-----------
+ include/asm-generic/hyperv-tlfs.h   |  22 ++++
+ include/asm-generic/mshyperv.h      |   2 -
+ include/linux/cc_platform.h         |  13 +++
+ include/linux/swiotlb.h             |   2 -
+ kernel/dma/swiotlb.c                |  45 +-------
+ 24 files changed, 343 insertions(+), 402 deletions(-)
+
 -- 
 1.8.3.1
 
