@@ -2,138 +2,204 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B14C43217
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Oct 2022 06:40:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AF98C4332F
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Oct 2022 06:48:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230141AbiJUGk1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Oct 2022 02:40:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38560 "EHLO
+        id S230096AbiJUGr4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Oct 2022 02:47:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229515AbiJUGkZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Oct 2022 02:40:25 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A070112A96;
-        Thu, 20 Oct 2022 23:40:22 -0700 (PDT)
+        with ESMTP id S230081AbiJUGrw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Oct 2022 02:47:52 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2283242C9A;
+        Thu, 20 Oct 2022 23:47:48 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E688EB82ADA;
-        Fri, 21 Oct 2022 06:40:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4B59C433D6;
-        Fri, 21 Oct 2022 06:40:19 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 75E2D601D2;
+        Fri, 21 Oct 2022 06:47:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3732C433B5;
+        Fri, 21 Oct 2022 06:47:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666334419;
-        bh=sSDsv8sNrV4MWlFb62YOB+RVifnK0tCFSxdozhi2KE4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aksXMaxXMeRvPuoZU14QDKDiGuGGTwPIhJul2Z60muawg8b7ekV6ZDVQQeeJ9+9cq
-         9R1szce+/cZdhvcZx9xGVe2M2/qKnpBPIy02FrsDgUVNxkqeiU+/yoAgTxITqBhbNz
-         N1FOsikN0SJHBXA4OrLaFSQyGl48X1X2whKpKnGrTO5vj4dnUe/jr4Z7tpbos4L3Lo
-         UpYBe483uJYXHFYQXFVD2YE2J5Mm3nbPnTYEuP9nNoKLFdEKxyf5xwfZegEfkmJi73
-         m92DLrkkhhk2/SQT+Hoe7aWlqUhnNvcvbD+dreLWEfwXP5gPFldV0fsEQzYsYnWcGT
-         YiurHGZvac48Q==
+        s=k20201202; t=1666334867;
+        bh=eTZxC1jB3/0V0Rfdced1bkYKZ1MT7sUu1FOTOt8PolQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=rRPlIRnOPhzMeB6r2V5WpRI38L/sUcuGWNXwbuxeqVmZJUJJGEDr8OwqSSrW9fkLG
+         EHPqh79YREql28uu+U4qACvVhcUmShrYVch1nLLjMZnrGJvlwyToAOp2ChtnrfYy0T
+         QjXqbD4rIHjAWC8V7pVCiELsG/RQC8ayfStX1k2tUuEy3VK86c3Ej1YtRESwyXXE1m
+         7pZU9zLSMqGtQk7fD1xQndAa9SiMkjZm7+0l8U8bMeofhe87iMzg4GkwzQ59XK5ANB
+         YcWlJegft5yoUFUt2CoASsvH4DBybXMwtTkOH7A1eK6vGJyL+RLoVaqmqmW7+oFHeK
+         AHx/XtL8g4Tjw==
 Received: from johan by xi.lan with local (Exim 4.94.2)
-        (envelope-from <johan@kernel.org>)
-        id 1ollhN-0001Z7-Ju; Fri, 21 Oct 2022 08:40:05 +0200
-Date:   Fri, 21 Oct 2022 08:40:05 +0200
-From:   Johan Hovold <johan@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Johan Hovold <johan+linaro@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Andy Gross <agross@kernel.org>,
+        (envelope-from <johan+linaro@kernel.org>)
+        id 1olloc-0001fW-GM; Fri, 21 Oct 2022 08:47:34 +0200
+From:   Johan Hovold <johan+linaro@kernel.org>
+To:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@somainline.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Manivannan Sadhasivam <mani@kernel.org>,
         Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        quic_vbadigan@quicinc.com, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] dt-bindings: PCI: qcom: Add SC8280XP/SA8540P
- interconnects
-Message-ID: <Y1I+xQDpvedLXNHf@hovoldconsulting.com>
-References: <20221017112449.2146-1-johan+linaro@kernel.org>
- <20221017112449.2146-2-johan+linaro@kernel.org>
- <010b6de2-5df6-77c9-2f04-43f2edc89ff2@linaro.org>
- <Y1D/Vaa/3zKP4Cxj@hovoldconsulting.com>
- <972db8bd-e45a-47b1-c2c4-008c279c6b59@linaro.org>
+        quic_vbadigan@quicinc.com, Brian Masney <bmasney@redhat.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Johan Hovold <johan+linaro@kernel.org>
+Subject: [PATCH v2 2/2] PCI: qcom: Add basic interconnect support
+Date:   Fri, 21 Oct 2022 08:46:16 +0200
+Message-Id: <20221021064616.6380-3-johan+linaro@kernel.org>
+X-Mailer: git-send-email 2.37.3
+In-Reply-To: <20221021064616.6380-1-johan+linaro@kernel.org>
+References: <20221021064616.6380-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <972db8bd-e45a-47b1-c2c4-008c279c6b59@linaro.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 20, 2022 at 08:29:02AM -0400, Krzysztof Kozlowski wrote:
-> On 20/10/2022 03:57, Johan Hovold wrote:
-> > On Wed, Oct 19, 2022 at 10:37:31AM -0400, Krzysztof Kozlowski wrote:
-> >> On 17/10/2022 07:24, Johan Hovold wrote:
-> >>> Add the missing SC8280XP/SA8540P "pcie-mem" and "cpu-pcie" interconnect
-> >>> paths to the bindings.
-> >>>
-> >>> Fixes: 76d777ae045e ("dt-bindings: PCI: qcom: Add SC8280XP to binding")
-> >>> Fixes: 76c4207f4085 ("dt-bindings: PCI: qcom: Add SA8540P to binding")
-> >>> Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
-> >>> ---
-> >>>  .../devicetree/bindings/pci/qcom,pcie.yaml    | 25 +++++++++++++++++++
-> >>>  1 file changed, 25 insertions(+)
-> >>>
-> >>> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-> >>> index 22a2aac4c23f..a55434f95edd 100644
-> >>> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-> >>> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+On Qualcomm platforms like SC8280XP and SA8540P, interconnect bandwidth
+must be requested before enabling interconnect clocks.
 
-> > Are you suggesting something like moving the names to the common
-> > constraints for now:
-> > 
-> >   interconnects:
-> >     maxItems: 2
-> > 
-> >   interconnect-names:
-> >     items:
-> >       - const: pcie-mem
-> >       - const: cpu-pcie
-> > 
-> > and then in the allOf:
-> > 
-> >   - if:
-> >       properties:
-> >         compatible:
-> >           contains:
-> >             enum:
-> >               - qcom,pcie-sa8540p
-> >               - qcom,pcie-sc8280xp
-> >     then:
-> >       required:
-> >         - interconnects
-> >         - interconnect-names
-> >     else:
-> >       properties:
-> >         interconnects: false
-> >         interconnect-names: false
-> > 
-> > This way we'd catch anyone adding interconnects to a DTS without first
-> > updating the bindings, but it also seems to go against the idea of
-> > bindings fully describing the hardware by saying that no other platforms
-> > have interconnects (when they actually do even if we don't describe it
-> > just yet).
-> 
-> You can add a comment to the else like "TODO: Not described yet". I
-> would prefer to have specific but incomplete bindings, instead of loose
-> one which later might cause people adding whatever names they like.
-> 
-> > Or should we do the above but without the else clause to have some
-> > constraints in place on the names at least?
-> 
-> This would work as well if you think the names are applicable for other
-> devices.
+Add basic support for managing an optional "pcie-mem" interconnect path
+by setting a low constraint before enabling clocks and updating it after
+the link is up.
 
-I think that's a reasonable assumption so I'll go with this alternative.
+Note that it is not possible for a controller driver to set anything but
+a maximum peak bandwidth as expected average bandwidth will vary with
+use case and actual use (and power policy?). This very much remains an
+unresolved problem with the interconnect framework.
 
-Thanks!
+Also note that no constraint is set for the SC8280XP/SA8540P "cpu-pcie"
+path for now as it is not clear what an appropriate constraint would be
+(and the system does not crash when left unspecified).
 
-Johan
+Fixes: 70574511f3fc ("PCI: qcom: Add support for SC8280XP")
+Reviewed-by: Brian Masney <bmasney@redhat.com>
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 76 ++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
+
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 7db94a22238d..0c13f976626f 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -12,6 +12,7 @@
+ #include <linux/crc8.h>
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
++#include <linux/interconnect.h>
+ #include <linux/interrupt.h>
+ #include <linux/io.h>
+ #include <linux/iopoll.h>
+@@ -224,6 +225,7 @@ struct qcom_pcie {
+ 	union qcom_pcie_resources res;
+ 	struct phy *phy;
+ 	struct gpio_desc *reset;
++	struct icc_path *icc_mem;
+ 	const struct qcom_pcie_cfg *cfg;
+ };
+ 
+@@ -1644,6 +1646,74 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.start_link = qcom_pcie_start_link,
+ };
+ 
++static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
++{
++	struct dw_pcie *pci = pcie->pci;
++	int ret;
++
++	pcie->icc_mem = devm_of_icc_get(pci->dev, "pcie-mem");
++	if (IS_ERR(pcie->icc_mem)) {
++		ret = PTR_ERR(pcie->icc_mem);
++		return ret;
++	}
++
++	/*
++	 * Some Qualcomm platforms require interconnect bandwidth constraints
++	 * to be set before enabling interconnect clocks.
++	 *
++	 * Set an initial peak bandwidth corresponding to single-lane Gen 1
++	 * for the pcie-mem path.
++	 */
++	ret = icc_set_bw(pcie->icc_mem, 0, MBps_to_icc(250));
++	if (ret) {
++		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
++			ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static void qcom_pcie_icc_update(struct qcom_pcie *pcie)
++{
++	struct dw_pcie *pci = pcie->pci;
++	u32 offset, status, bw;
++	int speed, width;
++	int ret;
++
++	if (!pcie->icc_mem)
++		return;
++
++	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
++
++	/* Only update constraints if link is up. */
++	if (!(status & PCI_EXP_LNKSTA_DLLLA))
++		return;
++
++	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, status);
++	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, status);
++
++	switch (speed) {
++	case 1:
++		bw = MBps_to_icc(250);
++		break;
++	case 2:
++		bw = MBps_to_icc(500);
++		break;
++	default:
++	case 3:
++		bw = MBps_to_icc(985);
++		break;
++	}
++
++	ret = icc_set_bw(pcie->icc_mem, 0, width * bw);
++	if (ret) {
++		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
++			ret);
++	}
++}
++
+ static int qcom_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -1704,6 +1774,10 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_pm_runtime_put;
+ 	}
+ 
++	ret = qcom_pcie_icc_init(pcie);
++	if (ret)
++		goto err_pm_runtime_put;
++
+ 	ret = pcie->cfg->ops->get_resources(pcie);
+ 	if (ret)
+ 		goto err_pm_runtime_put;
+@@ -1722,6 +1796,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_phy_exit;
+ 	}
+ 
++	qcom_pcie_icc_update(pcie);
++
+ 	return 0;
+ 
+ err_phy_exit:
+-- 
+2.37.3
+
