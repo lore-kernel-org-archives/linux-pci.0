@@ -2,132 +2,127 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECF93FA373D
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Oct 2022 15:51:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 446DBC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Oct 2022 17:41:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229565AbiJUPu7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Oct 2022 11:50:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41608 "EHLO
+        id S230259AbiJURlb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Oct 2022 13:41:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbiJUPus (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Oct 2022 11:50:48 -0400
-Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B37B17FD63
-        for <linux-pci@vger.kernel.org>; Fri, 21 Oct 2022 08:50:37 -0700 (PDT)
-Received: by mail-ot1-x32d.google.com with SMTP id v40-20020a056830092800b00661e37421c2so2064375ott.3
-        for <linux-pci@vger.kernel.org>; Fri, 21 Oct 2022 08:50:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=semihalf.com; s=google;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3RXItDXJ/Ml3IUjXg4GmR8kWvZb6b9L0vGRz8r8mXDs=;
-        b=Q1uHvIr/Me3XlWSUlN3kNiSLqHDIBgh3dc2YVpZhOmViER/b8asp6FMQohe7f8O5rK
-         OPjoOtF/SGmlPYNYXmoq8zrmMvlkTyBZL3LJ4JTaVI1VuWlFeG+6hRQeeZC9kqfgtW3A
-         h3HFHnsrTiX6Sf2gr9+Be2OtRQd2fDkWMISvvNHPAX5whlKbzFapUX/fwOR7uqXb/F5A
-         bjLhiM1yj9bJjJ6LUCT6009WQWoBOd61vxpXCt/BBmshvD2jUZilKE9K8qAhDPYECmPD
-         pvYND6ECYnNRV3KSMfQb5YDuprTnJcp2ilIrILQ9+xxc2zx5v64o9l3gAJzgzS5e9osP
-         ZpXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3RXItDXJ/Ml3IUjXg4GmR8kWvZb6b9L0vGRz8r8mXDs=;
-        b=agWANNoG6MOQnukprMk7CEeZ+OkCh0UR+tRzu6N/yIyX5aGY7qkmNELD043QT3bzR5
-         tDgEkJv+Pqbbk2xpx32juHlvosyjl82n/IQSSqI86VOpE2M2lM4RUyClEzh1/sD4XDDJ
-         zzp5e7Ufa1CkdWeWGNoz5RRoCZMlvvU/kHRBXT0UTjZkWqTI3z404Kt0xzrREiDX4Rvh
-         jYA0SjUnB37yJduhdR13qgN8hz1hOYmdBsIIYvfM+X5rL1URfWspUsFLHIU/+lgCwsO4
-         LdN5ko5irom6AzrKKV2bgr2INlcZinKVrMfAyhh3ENcHVE2/me9mQJQJXlVt8wO0GuG+
-         rV/g==
-X-Gm-Message-State: ACrzQf0/p6sF7P06S1WnN0Zm/laI3P8DmWlXAhFMmbMyp2VNnfrOA+Ue
-        qatVe4kdsB8pZtDPYkr3rzStn16yOmCoQP1lnGV/Bq8JjdSzMQ==
-X-Google-Smtp-Source: AMsMyM4wHAFcilTO9hMOnlaVMmagzB5Km/M7N/n/4pRk22LaNUomks0PkJLBB1nKN/aBXBVWjOyzl78un5ODX9VIyGA=
-X-Received: by 2002:a05:6902:705:b0:6bd:3822:78c3 with SMTP id
- k5-20020a056902070500b006bd382278c3mr17271586ybt.225.1666366847425; Fri, 21
- Oct 2022 08:40:47 -0700 (PDT)
+        with ESMTP id S229574AbiJURl3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Oct 2022 13:41:29 -0400
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2C3943E47;
+        Fri, 21 Oct 2022 10:41:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=deltatee.com; s=20200525; h=Subject:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Cc:To:From:content-disposition;
+        bh=89QTElwZFXRfggrOmp22BVYbNApHwJCc7/AtxsSaqyQ=; b=DUFJL4ob6bvKEwDSE4GWtIirYS
+        X97GxPsQU/8gpPukGv4stsVhpCVMpaZfqfjtZunkmVXWQISTg/R/BOcVA3pa7CZfACS0bNB43mpI+
+        c4OTnsrV1MciXZB4TbndO5a7ikBN/fz/wDgukCPrwSjCFtZ9ZyqxXcPgPcEnqgfdFeSTZyfCOy53l
+        RxY+GZLkNNPiCm5OAKU8w+xesdg2eMT/Wb02k7Pdlz/yKsq/T6ahDZumCPpUSmcZ/3oCl/3HEMwwC
+        cKWDtI+6VVeKGW1kms9Qbz0IR8J14E2KIWUlJDjVvyMCgYEjQLZ/KBKnSkVH95V20TixmWMKF5dVk
+        bcv8KLUw==;
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1olw1K-00DoI1-5N; Fri, 21 Oct 2022 11:41:23 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.94.2)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1olw1G-0001tO-8W; Fri, 21 Oct 2022 11:41:18 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-mm@kvack.org
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Don Dutile <ddutile@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Minturn Dave B <dave.b.minturn@intel.com>,
+        Jason Ekstrand <jason@jlekstrand.net>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Xiong Jianxin <jianxin.xiong@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Martin Oliveira <martin.oliveira@eideticom.com>,
+        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
+        Ralph Campbell <rcampbell@nvidia.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Fri, 21 Oct 2022 11:41:14 -0600
+Message-Id: <20221021174116.7200-8-logang@deltatee.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20221021174116.7200-1-logang@deltatee.com>
+References: <20221021174116.7200-1-logang@deltatee.com>
 MIME-Version: 1.0
-References: <CAFJ_xbq0cxcH-cgpXLU4Mjk30+muWyWm1aUZGK7iG53yaLBaQg@mail.gmail.com>
- <20221021111935.GB28729@wunner.de> <CAFJ_xboDuFiACjECO0UmYz5y9TCz4rTRPmrxeVMup7r9816dTg@mail.gmail.com>
- <CAOs-w0KRYh-=gTb0Ed5iYAMs92AYtV_oEei5OgezgKGfwfiBYg@mail.gmail.com>
-In-Reply-To: <CAOs-w0KRYh-=gTb0Ed5iYAMs92AYtV_oEei5OgezgKGfwfiBYg@mail.gmail.com>
-From:   =?UTF-8?Q?Rados=C5=82aw_Biernacki?= <rad@semihalf.com>
-Date:   Fri, 21 Oct 2022 17:40:31 +0200
-Message-ID: <CAOs-w0KNvzfT9tSzXUZeoRthMBt1rgDf-arXY6uvkNJpNBrxBQ@mail.gmail.com>
-Subject: Re: [BUG] Intel Apollolake: PCIe bridge "loses" capabilities after
- entering D3Cold state
-To:     Lukasz Majczak <lma@semihalf.com>, Vidya Sagar <vidyas@nvidia.com>
-Cc:     Lukas Wunner <lukas@wunner.de>, bhelgaas@google.com,
-        Rajat Jain <rajatja@google.com>, upstream@semihalf.com,
-        linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, hch@lst.de, gregkh@linuxfoundation.org, jgg@ziepe.ca, christian.koenig@amd.com, ddutile@redhat.com, willy@infradead.org, daniel.vetter@ffwll.ch, jason@jlekstrand.net, dave.hansen@linux.intel.com, helgaas@kernel.org, dan.j.williams@intel.com, dave.b.minturn@intel.com, jianxin.xiong@intel.com, ira.weiny@intel.com, robin.murphy@arm.com, martin.oliveira@eideticom.com, ckulkarnilinux@gmail.com, jhubbard@nvidia.com, rcampbell@nvidia.com, sbates@raithlin.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH v11 7/9] block: set FOLL_PCI_P2PDMA in bio_map_user_iov()
+X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
->> pt., 21 pa=C5=BA 2022 o 13:19 Lukas Wunner <lukas@wunner.de> napisa=C5=
-=82(a):
->> >
->> > On Fri, Oct 21, 2022 at 12:17:35PM +0200, Lukasz Majczak wrote:
->> > > While working with Vidya???s patch I have noticed that after
->> > > suspend/resume cycle on my Chromebook (Apollolake) PCIe bridge loses
->> > > its capabilities - the missing part is:
->> > >
->> > > Capabilities: [200 v1] L1 PM Substates
->> > > L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Subs=
-tates+
->> > >   PortCommonModeRestoreTime=3D40us PortTPowerOnTime=3D10us
->> > > L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
->> > >    T_CommonMode=3D40us LTR1.2_Threshold=3D98304ns
->> > > L1SubCtl2: T_PwrOn=3D60us
->> > >
->> > > Digging more I???ve found out that entering D3Cold state causes this
->> >
->> > You mean the capability is gone from lspci after D3cold?
->> >
->> > My understanding is that BIOS is responsible for populating config spa=
-ce.
->> > So this sounds like a BIOS bug.  What's the BIOS vendor and version?
->> > (dmesg | grep DMI)
->> >
->> > Thanks,
->> >
->> > Lukas
->>
->> Hi Lukasz
->>
->> here is the DMI
->>
->> localhost ~ # dmesg | grep DMI
->> [    0.000000] DMI: Google Coral/Coral, BIOS Google_Coral.10068.81.0 11/=
-27/2018
->> [    0.155420] ACPI: Added _OSI(Linux-Lenovo-NV-HDMI-Audio)
->> [    0.447820] [drm] DMI info: DMI_BIOS_VENDOR coreboot
->> [    0.447828] [drm] DMI info: DMI_BIOS_VERSION Google_Coral.10068.81.0
->> [    0.447832] [drm] DMI info: DMI_BIOS_DATE 11/27/2018
->> [    0.447835] [drm] DMI info: DMI_BIOS_RELEASE 4.0
->> [    0.447838] [drm] DMI info: DMI_SYS_VENDOR Google
->> [    0.447841] [drm] DMI info: DMI_PRODUCT_NAME Coral
->> [    0.447844] [drm] DMI info: DMI_PRODUCT_VERSION rev3
->> [    0.447848] [drm] DMI info: DMI_PRODUCT_FAMILY Google_Coral
->>
->> Yes, you are right and in our internal discussion the vendor (Intel)
->> has proposed a firmware patch, although I couldn't verified that the
->> issue is limited only to the given firmware/bios, so decided to send
->> this email.
->>
->> Best regards,
->> Lukasz
+When a bio's queue supports PCI P2PDMA, set FOLL_PCI_P2PDMA for
+iov_iter_get_pages_flags(). This allows PCI P2PDMA pages to be
+passed from userspace and enables the NVMe passthru requests to
+use P2PDMA pages.
 
-Lukasz, Vidya, is the change in behaviour in V4 intentional fix for
-mentioned problems with missing devices after D3cold or unintentional
-side effects.
-Or from another angle, can we base on this behaviour as a hotfix for
-problems with missing devices?
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+---
+ block/blk-map.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-As far as I understand we probably still should update FW in the fleet
-of devices, right?
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 34735626b00f..8750f82d7da4 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -267,6 +267,7 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
+ {
+ 	unsigned int max_sectors = queue_max_hw_sectors(rq->q);
+ 	unsigned int nr_vecs = iov_iter_npages(iter, BIO_MAX_VECS);
++	unsigned int gup_flags = 0;
+ 	struct bio *bio;
+ 	int ret;
+ 	int j;
+@@ -278,6 +279,9 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
+ 	if (bio == NULL)
+ 		return -ENOMEM;
+ 
++	if (blk_queue_pci_p2pdma(rq->q))
++		gup_flags |= FOLL_PCI_P2PDMA;
++
+ 	while (iov_iter_count(iter)) {
+ 		struct page **pages, *stack_pages[UIO_FASTIOV];
+ 		ssize_t bytes;
+@@ -286,11 +290,11 @@ static int bio_map_user_iov(struct request *rq, struct iov_iter *iter,
+ 
+ 		if (nr_vecs <= ARRAY_SIZE(stack_pages)) {
+ 			pages = stack_pages;
+-			bytes = iov_iter_get_pages2(iter, pages, LONG_MAX,
+-							nr_vecs, &offs);
++			bytes = iov_iter_get_pages(iter, pages, LONG_MAX,
++						   nr_vecs, &offs, gup_flags);
+ 		} else {
+-			bytes = iov_iter_get_pages_alloc2(iter, &pages,
+-							LONG_MAX, &offs);
++			bytes = iov_iter_get_pages_alloc(iter, &pages,
++						LONG_MAX, &offs, gup_flags);
+ 		}
+ 		if (unlikely(bytes <= 0)) {
+ 			ret = bytes ? bytes : -EFAULT;
+-- 
+2.30.2
 
-ps: Sorry for top-posting in the previous email, I forgot to switch my
-gmail client.
