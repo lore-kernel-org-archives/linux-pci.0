@@ -2,105 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6476FC433FE
-	for <linux-pci@archiver.kernel.org>; Sat, 22 Oct 2022 09:02:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D00B3C04A95
+	for <linux-pci@archiver.kernel.org>; Sat, 22 Oct 2022 09:07:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231696AbiJVJCz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 22 Oct 2022 05:02:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33694 "EHLO
+        id S232690AbiJVJHr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 22 Oct 2022 05:07:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234989AbiJVJBb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Oct 2022 05:01:31 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1165B2F82C4;
-        Sat, 22 Oct 2022 01:17:12 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0259860B6B;
-        Sat, 22 Oct 2022 08:06:13 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66F93C433D7;
-        Sat, 22 Oct 2022 08:06:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666425972;
-        bh=0sc7pZ0kQbpvTSEgZwUB5XBCnmITI1rrNWQTuHQ/qqI=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=jWTd6UfwV5jSwf9RzNKM3PEVuQd7ABwLDPhl41KZjwVeaOICugwADv/ExK0iSEEpD
-         Ei+by3btZkM5xJWabuYfWHeqg9F9yewRpqapyfji9NHKiLzOd/BCT+RIz/7Mmn7+qQ
-         hBjtbb1bxrRtOfynABPXPWr5WnVlCHXIHpb6cBaSjl3g/GZP7TxYthKgq/5MnzT0SQ
-         0H5SC8HWiUQIp6XVyqoeJ/A5ci0UyFb9dU04o8nphudFFuV4MSVfhJSx7Q0xg091YV
-         nEEcy337NxsHE0j36FIH5sgrW05x6ooj2E5/aXVkFxgNhvFPH6HW4OcQhVfczkEXVV
-         qn4CboXOd9GiQ==
-Received: by mail-ed1-f42.google.com with SMTP id e18so13797707edj.3;
-        Sat, 22 Oct 2022 01:06:12 -0700 (PDT)
-X-Gm-Message-State: ACrzQf3tIhBFquF1e5lnoRy9xUSzV2JZUBGArcMuY+lWo3htGV796mXU
-        ZHRhgzRIAHEhvpHgGEJbgAhdgj1Mc2ICL8AsNlo=
-X-Google-Smtp-Source: AMsMyM5emVi0xiH/tcLk8WIfKcO6mBG6El1sDLRfAWJwDsTRbazvgH+a8vqAbytV7mhHndxHo9l+sidtvpnDv3t7wGg=
-X-Received: by 2002:a17:907:a06e:b0:79f:e42d:8d54 with SMTP id
- ia14-20020a170907a06e00b0079fe42d8d54mr2885325ejc.72.1666425970661; Sat, 22
- Oct 2022 01:06:10 -0700 (PDT)
-MIME-Version: 1.0
-References: <20221022075955.11726-1-lvjianmin@loongson.cn>
-In-Reply-To: <20221022075955.11726-1-lvjianmin@loongson.cn>
-From:   Huacai Chen <chenhuacai@kernel.org>
-Date:   Sat, 22 Oct 2022 16:05:58 +0800
-X-Gmail-Original-Message-ID: <CAAhV-H7DrvgXwuGe5ayAKjP2YdNPoaT3xZg1vU2RDjReNkV9PQ@mail.gmail.com>
-Message-ID: <CAAhV-H7DrvgXwuGe5ayAKjP2YdNPoaT3xZg1vU2RDjReNkV9PQ@mail.gmail.com>
-Subject: Re: [PATCH V5 0/4] irqchip: Support to set irq type for ACPI path
-To:     Jianmin Lv <lvjianmin@loongson.cn>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Marc Zyngier <maz@kernel.org>, linux-kernel@vger.kernel.org,
-        loongarch@lists.linux.dev, Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        with ESMTP id S233505AbiJVJHX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Oct 2022 05:07:23 -0400
+Received: from loongson.cn (mail.loongson.cn [114.242.206.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 87C552E00A3;
+        Sat, 22 Oct 2022 01:21:27 -0700 (PDT)
+Received: from loongson.cn (unknown [10.20.42.32])
+        by gateway (Coremail) with SMTP id _____8Dxfbf8olNjOJ0BAA--.2006S3;
+        Sat, 22 Oct 2022 15:59:56 +0800 (CST)
+Received: from loongson-pc.loongson.cn (unknown [10.20.42.32])
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8Dx_1f7olNjLlUDAA--.13337S5;
+        Sat, 22 Oct 2022 15:59:55 +0800 (CST)
+From:   Jianmin Lv <lvjianmin@loongson.cn>
+To:     Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <maz@kernel.org>
+Cc:     linux-kernel@vger.kernel.org, loongarch@lists.linux.dev,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
         Huacai Chen <chenhuacai@loongson.cn>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Len Brown <lenb@kernel.org>, rafael@kernel.org,
         linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH V5 3/4] irqchip/loongson-pch-pic: Support to set IRQ type for ACPI path
+Date:   Sat, 22 Oct 2022 15:59:54 +0800
+Message-Id: <20221022075955.11726-4-lvjianmin@loongson.cn>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20221022075955.11726-1-lvjianmin@loongson.cn>
+References: <20221022075955.11726-1-lvjianmin@loongson.cn>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: AQAAf8Dx_1f7olNjLlUDAA--.13337S5
+X-CM-SenderInfo: 5oymxthqpl0qxorr0wxvrqhubq/
+X-Coremail-Antispam: 1Uk129KBjvJXoW7Ar47tr4UJrWfGw48KryxuFg_yoW8GF4UpF
+        W5Cr4avwsrJry7Cw1Fkw4kG343A3s7tFW7KF4UtFnaqrn7G3s5AF1UuFWv9rn5ZFWfAF12
+        qanYqFW5ua43AFDanT9S1TB71UUUUj7qnTZGkaVYY2UrUUUUj1kv1TuYvTs0mT0YCTnIWj
+        qI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUIcSsGvfJTRUUU
+        bSxYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s
+        1l1IIY67AEw4v_JF0_JFyl8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+        wVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwA2z4
+        x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6xkF7I0E14v26r4UJVWxJr1l
+        n4kS14v26r126r1DM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2x26I8E6x
+        ACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1q6rW5McIj6I8E
+        87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxV
+        Aaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1l4IxY
+        O2xFxVAFwI0_JF0_Jw1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGV
+        WUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_
+        Xr0_Ar1lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rV
+        WUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4U
+        JbIYCTnIWIevJa73UjIFyTuYvjxU4eMKDUUUU
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For the whole series:
-Reviewed-by: Huacai Chen <chenhuacai@loongson.cn>
+For ACPI path, the translate callback used IRQ_TYPE_NONE and ignored
+the IRQ type in fwspec->param[1]. For supporting to set type for
+IRQs of the irqdomain, fwspec->param[1] should be used to get IRQ
+type.
 
-On Sat, Oct 22, 2022 at 4:00 PM Jianmin Lv <lvjianmin@loongson.cn> wrote:
->
-> For ACPI path of pch-pic and liointc driver, setting irq
-> type is not supported yet, so the patch series add code
-> to implement it.
->
-> And a bug in translate callback of irqchip/loongson-pch-pic, which
-> is introduced by previous patch, is fixed.
->
-> GSI for legacy irqs of PCI devices are mapped in pch-pic domain, after
-> supporting setting_irq_type for pch-pic domain, we add the workaround
-> for LoongArch based PCI controller with high-level trigger intterrupt
-> so that the high-level trigger type is passed into acpi_register_gsi().
->
-> V1 -> V2
-> - Change comment information and fix a bug for DT path in patch[1].
->
-> V2 -> V3
-> - Separate original patch[1] to three patches[1][2][3].
->
-> V3 -> V4
-> - Improve commit log
->
-> V4 -> V5
-> - Improve commit log for patch[1]
->
-> Jianmin Lv (4):
->   ACPI / PCI: fix LPIC IRQ model default PCI IRQ polarity
->   irqchip/loongson-pch-pic: fix translate callback for DT path
->   irqchip/loongson-pch-pic: Support to set IRQ type for ACPI path
->   irqchip/loongson-liointc: Support to set IRQ type for ACPI path
->
->  drivers/acpi/pci_irq.c                 |  6 ++++--
->  drivers/irqchip/irq-loongson-liointc.c |  7 ++++++-
->  drivers/irqchip/irq-loongson-pch-pic.c | 14 ++++++++++----
->  3 files changed, 20 insertions(+), 7 deletions(-)
->
-> --
-> 2.31.1
->
->
+Signed-off-by: Jianmin Lv <lvjianmin@loongson.cn>
+---
+ drivers/irqchip/irq-loongson-pch-pic.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/irqchip/irq-loongson-pch-pic.c b/drivers/irqchip/irq-loongson-pch-pic.c
+index 03493cda65a3..a26a3f59d4a5 100644
+--- a/drivers/irqchip/irq-loongson-pch-pic.c
++++ b/drivers/irqchip/irq-loongson-pch-pic.c
+@@ -155,9 +155,6 @@ static int pch_pic_domain_translate(struct irq_domain *d,
+ 	struct pch_pic *priv = d->host_data;
+ 	struct device_node *of_node = to_of_node(fwspec->fwnode);
+ 
+-	if (fwspec->param_count < 1)
+-		return -EINVAL;
+-
+ 	if (of_node) {
+ 		if (fwspec->param_count < 2)
+ 			return -EINVAL;
+@@ -165,8 +162,14 @@ static int pch_pic_domain_translate(struct irq_domain *d,
+ 		*hwirq = fwspec->param[0] + priv->ht_vec_base;
+ 		*type = fwspec->param[1] & IRQ_TYPE_SENSE_MASK;
+ 	} else {
++		if (fwspec->param_count < 1)
++			return -EINVAL;
++
+ 		*hwirq = fwspec->param[0] - priv->gsi_base;
+-		*type = IRQ_TYPE_NONE;
++		if (fwspec->param_count > 1)
++			*type = fwspec->param[1] & IRQ_TYPE_SENSE_MASK;
++		else
++			*type = IRQ_TYPE_NONE;
+ 	}
+ 
+ 	return 0;
+-- 
+2.31.1
+
