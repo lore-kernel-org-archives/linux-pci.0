@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13203FA373E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB4CFECAAA1
 	for <linux-pci@archiver.kernel.org>; Sun, 23 Oct 2022 17:02:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230475AbiJWRCw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 23 Oct 2022 13:02:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36726 "EHLO
+        id S230335AbiJWRCz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 23 Oct 2022 13:02:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230468AbiJWRCv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Oct 2022 13:02:51 -0400
-Received: from mxout3.routing.net (mxout3.routing.net [IPv6:2a03:2900:1:a::8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C097767C92;
-        Sun, 23 Oct 2022 10:02:49 -0700 (PDT)
+        with ESMTP id S230478AbiJWRCw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Oct 2022 13:02:52 -0400
+Received: from mxout1.routing.net (mxout1.routing.net [IPv6:2a03:2900:1:a::a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 399965597;
+        Sun, 23 Oct 2022 10:02:51 -0700 (PDT)
 Received: from mxbox2.masterlogin.de (unknown [192.168.10.89])
-        by mxout3.routing.net (Postfix) with ESMTP id BBD56605C3;
-        Sun, 23 Oct 2022 17:02:47 +0000 (UTC)
+        by mxout1.routing.net (Postfix) with ESMTP id 5DE374026F;
+        Sun, 23 Oct 2022 17:02:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1666544567;
+        s=20200217; t=1666544569;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=rwFE1JpvVkZhLIb5aKidjKDQSmDh1ZnGM4I9BlBkkQ0=;
-        b=alwcOCNkQtKqt/7V445bxa60qOfa5UV59BT4a32jeGPRkwkcxDMqzhVGH0TVru4LLcAHAs
-        MaTr24wkkSaITF6YXJ7xBs3Oqn76V6+n+ttD0T/KMEGxAsOID5BZntT9b7sDDY3D/W8kln
-        E2DEQMSIJtv+QXa1uSd9sh17OE0EFL8=
+        bh=eWQAyMiyLzRjICRckdk9i8etw2ozKINbfjBDA1F++Do=;
+        b=YpLBExZbOZiWWo4PCJib0wv7vZGXwRFeIvhqjrwDGbwI20KyvCqWOs+7KALnjuMK8YkkVf
+        0K2TX4DNbVQcNOevXi0BPkkYjbpfUZAc4kiuVklwwRuUsHVxPFJXYTEEUvBEj5k9Oxpbdi
+        /QvL4Rx4b0p4KFzX+b+8sCOpI2Mazc8=
 Received: from frank-G5.. (fttx-pool-80.245.79.234.bambit.de [80.245.79.234])
-        by mxbox2.masterlogin.de (Postfix) with ESMTPSA id ED33C100671;
-        Sun, 23 Oct 2022 17:02:46 +0000 (UTC)
+        by mxbox2.masterlogin.de (Postfix) with ESMTPSA id 803AB100671;
+        Sun, 23 Oct 2022 17:02:48 +0000 (UTC)
 From:   Frank Wunderlich <linux@fw-web.de>
 To:     linux-mediatek@lists.infradead.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
@@ -43,102 +43,65 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 1/3] dt-bindings: PCI: mediatek-gen3: add SoC based clock config
-Date:   Sun, 23 Oct 2022 19:02:32 +0200
-Message-Id: <20221023170234.83621-2-linux@fw-web.de>
+Subject: [PATCH 3/3] dt-bindings: PCI: mediatek-gen3: add mt7986 clock config
+Date:   Sun, 23 Oct 2022 19:02:34 +0200
+Message-Id: <20221023170234.83621-4-linux@fw-web.de>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20221023170234.83621-1-linux@fw-web.de>
 References: <20221023170234.83621-1-linux@fw-web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Mail-ID: 7c9c4be7-094d-4990-85c5-a3a195e083f8
+X-Mail-ID: 4dd0b3e8-60f4-4111-8ab6-3e4dc2df3d56
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Frank Wunderlich <frank-w@public-files.de>
 
-The PCIe driver covers different SOC which needing different clock
-configs. Define them based on compatible.
+MT7986 needs 4 clocks for PCIe, define them in binding.
 
 Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
 ---
- .../bindings/pci/mediatek-pcie-gen3.yaml      | 48 ++++++++++++++-----
- 1 file changed, 36 insertions(+), 12 deletions(-)
+ .../bindings/pci/mediatek-pcie-gen3.yaml         | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-index c00be39af64e..af0d2201746d 100644
+index 3662422b38ea..e6020e684c00 100644
 --- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
 +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-@@ -43,9 +43,6 @@ description: |+
-   each set has its own address for MSI message, and supports 32 MSI vectors
-   to generate interrupt.
+@@ -79,9 +79,11 @@ properties:
+       - const: mac
  
--allOf:
--  - $ref: /schemas/pci/pci-bus.yaml#
--
- properties:
-   compatible:
-     oneOf:
-@@ -84,15 +81,7 @@ properties:
+   clocks:
++    minItems: 4
      maxItems: 6
  
    clock-names:
--    items:
--      - const: pl_250m
--      - const: tl_26m
--      - const: tl_96m
--      - const: tl_32k
--      - const: peri_26m
--      - enum:
--          - top_133m        # for MT8192
--          - peri_mem        # for MT8188/MT8195
-+    maxItems: 6
++    minItems: 4
+     maxItems: 6
  
    assigned-clocks:
-     maxItems: 1
-@@ -138,6 +127,41 @@ required:
-   - '#interrupt-cells'
-   - interrupt-controller
- 
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            const: mediatek,mt8192-mmc
-+    then:
-+      properties:
-+        clock-names:
-+          items:
-+            - const: pl_250m
-+            - const: tl_26m
-+            - const: tl_96m
-+            - const: tl_32k
-+            - const: peri_26m
-+            - const: top_133m
+@@ -162,6 +164,20 @@ allOf:
+             - const: tl_32k
+             - const: peri_26m
+             - const: peri_mem
 +  - if:
 +      properties:
 +        compatible:
 +          contains:
 +            enum:
-+              - mediatek,mt8188-pcie
-+              - mediatek,mt8195-pcie
++              - mediatek,mt7986-pcie
 +    then:
 +      properties:
 +        clock-names:
 +          items:
 +            - const: pl_250m
 +            - const: tl_26m
-+            - const: tl_96m
-+            - const: tl_32k
 +            - const: peri_26m
-+            - const: peri_mem
-+
++            - const: top_133m
+ 
  unevaluatedProperties: false
  
- examples:
 -- 
 2.34.1
 
