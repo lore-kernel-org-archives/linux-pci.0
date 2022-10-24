@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C656C38A2D
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Oct 2022 08:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72581FA3740
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Oct 2022 08:28:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230407AbiJXI2e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Oct 2022 04:28:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55774 "EHLO
+        id S230522AbiJXI2m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Oct 2022 04:28:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55820 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230288AbiJXI2R (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 04:28:17 -0400
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6E5C50718;
-        Mon, 24 Oct 2022 01:27:52 -0700 (PDT)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id ADAF51B8F42;
-        Mon, 24 Oct 2022 10:27:18 +0200 (CEST)
+        with ESMTP id S230337AbiJXI2U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 04:28:20 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3DEB1CFF6;
+        Mon, 24 Oct 2022 01:28:13 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 40DBB220E61;
+        Mon, 24 Oct 2022 10:27:24 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 75B801B8F3B;
-        Mon, 24 Oct 2022 10:27:18 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id D9604220E93;
+        Mon, 24 Oct 2022 10:27:23 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 0DD901834868;
-        Mon, 24 Oct 2022 16:27:16 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 21D631820F58;
+        Mon, 24 Oct 2022 16:27:22 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
         lorenzo.pieralisi@arm.com, shawnguo@kernel.org, kishon@ti.com,
@@ -31,9 +31,9 @@ Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, kernel@pengutronix.de,
         linux-imx@nxp.com
-Subject: [RESEND v4 10/14] misc: pci_endpoint_test: Add i.MX8 PCIe EP device support
-Date:   Mon, 24 Oct 2022 16:06:39 +0800
-Message-Id: <1666598803-1912-11-git-send-email-hongxing.zhu@nxp.com>
+Subject: [RESEND v4 14/14] PCI: imx6: Add i.MX8MP PCIe EP support
+Date:   Mon, 24 Oct 2022 16:06:43 +0800
+Message-Id: <1666598803-1912-15-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1666598803-1912-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1666598803-1912-1-git-send-email-hongxing.zhu@nxp.com>
@@ -42,34 +42,127 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Set the DEVICE_ID of i.MX8 PCIe and add i.MX8 PCIE EP device support in
-pci_endpoint_test driver.
+Add the i.MX8MP PCIe EP support.
 
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 ---
- drivers/misc/pci_endpoint_test.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/controller/dwc/pci-imx6.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 11530b4ec389..e2687229955d 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -72,6 +72,7 @@
- #define PCI_DEVICE_ID_TI_J7200			0xb00f
- #define PCI_DEVICE_ID_TI_AM64			0xb010
- #define PCI_DEVICE_ID_LS1088A			0x80c0
-+#define PCI_DEVICE_ID_IMX8			0x0808
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 3f01cf3776ec..3f04b9ebfd0f 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -54,6 +54,7 @@ enum imx6_pcie_variants {
+ 	IMX8MP,
+ 	IMX8MQ_EP,
+ 	IMX8MM_EP,
++	IMX8MP_EP,
+ };
  
- #define is_am654_pci_dev(pdev)		\
- 		((pdev)->device == PCI_DEVICE_ID_TI_AM654)
-@@ -980,6 +981,7 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0),
- 	  .driver_data = (kernel_ulong_t)&default_data,
+ #define IMX6_PCIE_FLAG_IMX6_PHY			BIT(0)
+@@ -158,7 +159,8 @@ static unsigned int imx6_pcie_grp_offset(const struct imx6_pcie *imx6_pcie)
+ 		imx6_pcie->drvdata->variant != IMX8MQ_EP &&
+ 		imx6_pcie->drvdata->variant != IMX8MM &&
+ 		imx6_pcie->drvdata->variant != IMX8MM_EP &&
+-		imx6_pcie->drvdata->variant != IMX8MP);
++		imx6_pcie->drvdata->variant != IMX8MP &&
++		imx6_pcie->drvdata->variant != IMX8MP_EP);
+ 	return imx6_pcie->controller_id == 1 ? IOMUXC_GPR16 : IOMUXC_GPR14;
+ }
+ 
+@@ -323,6 +325,7 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ 	case IMX8MM:
+ 	case IMX8MM_EP:
+ 	case IMX8MP:
++	case IMX8MP_EP:
+ 		/*
+ 		 * The PHY initialization had been done in the PHY
+ 		 * driver, break here directly.
+@@ -584,6 +587,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 	case IMX8MQ:
+ 	case IMX8MQ_EP:
+ 	case IMX8MP:
++	case IMX8MP_EP:
+ 		ret = clk_prepare_enable(imx6_pcie->pcie_aux);
+ 		if (ret) {
+ 			dev_err(dev, "unable to enable pcie_aux clock\n");
+@@ -631,6 +635,7 @@ static void imx6_pcie_disable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 	case IMX8MQ:
+ 	case IMX8MQ_EP:
+ 	case IMX8MP:
++	case IMX8MP_EP:
+ 		clk_disable_unprepare(imx6_pcie->pcie_aux);
+ 		break;
+ 	default:
+@@ -701,6 +706,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	case IMX8MM:
+ 	case IMX8MM_EP:
+ 	case IMX8MP:
++	case IMX8MP_EP:
+ 		reset_control_assert(imx6_pcie->apps_reset);
+ 		break;
+ 	case IMX6SX:
+@@ -779,6 +785,7 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	case IMX8MM:
+ 	case IMX8MM_EP:
+ 	case IMX8MP:
++	case IMX8MP_EP:
+ 		break;
+ 	}
+ 
+@@ -831,6 +838,7 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
+ 	case IMX8MM:
+ 	case IMX8MM_EP:
+ 	case IMX8MP:
++	case IMX8MP_EP:
+ 		reset_control_deassert(imx6_pcie->apps_reset);
+ 		break;
+ 	}
+@@ -853,6 +861,7 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
+ 	case IMX8MM:
+ 	case IMX8MM_EP:
+ 	case IMX8MP:
++	case IMX8MP_EP:
+ 		reset_control_assert(imx6_pcie->apps_reset);
+ 		break;
+ 	}
+@@ -1104,6 +1113,7 @@ static int imx6_add_pcie_ep(struct imx6_pcie *imx6_pcie,
+ 	switch (imx6_pcie->drvdata->variant) {
+ 	case IMX8MQ_EP:
+ 	case IMX8MM_EP:
++	case IMX8MP_EP:
+ 		pcie_dbi2_offset = SZ_1M;
+ 		break;
+ 	default:
+@@ -1318,6 +1328,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 	case IMX8MM:
+ 	case IMX8MM_EP:
+ 	case IMX8MP:
++	case IMX8MP_EP:
+ 		imx6_pcie->pcie_aux = devm_clk_get(dev, "pcie_aux");
+ 		if (IS_ERR(imx6_pcie->pcie_aux))
+ 			return dev_err_probe(dev, PTR_ERR(imx6_pcie->pcie_aux),
+@@ -1487,6 +1498,11 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+ 		.mode = DW_PCIE_EP_TYPE,
+ 		.gpr = "fsl,imx8mm-iomuxc-gpr",
  	},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_IMX8),},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, PCI_DEVICE_ID_LS1088A),
- 	  .driver_data = (kernel_ulong_t)&default_data,
- 	},
++	[IMX8MP_EP] = {
++		.variant = IMX8MP_EP,
++		.mode = DW_PCIE_EP_TYPE,
++		.gpr = "fsl,imx8mp-iomuxc-gpr",
++	},
+ };
+ 
+ static const struct of_device_id imx6_pcie_of_match[] = {
+@@ -1499,6 +1515,7 @@ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx8mp-pcie", .data = &drvdata[IMX8MP], },
+ 	{ .compatible = "fsl,imx8mq-pcie-ep", .data = &drvdata[IMX8MQ_EP], },
+ 	{ .compatible = "fsl,imx8mm-pcie-ep", .data = &drvdata[IMX8MM_EP], },
++	{ .compatible = "fsl,imx8mp-pcie-ep", .data = &drvdata[IMX8MP_EP], },
+ 	{},
+ };
+ 
 -- 
 2.25.1
 
