@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57BFBFA3742
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Oct 2022 08:28:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 711A6C38A2D
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Oct 2022 08:28:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230423AbiJXI22 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Oct 2022 04:28:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55896 "EHLO
+        id S230432AbiJXI23 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Oct 2022 04:28:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230403AbiJXI2C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 04:28:02 -0400
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0B154E632;
-        Mon, 24 Oct 2022 01:27:50 -0700 (PDT)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id D52C21B8F26;
-        Mon, 24 Oct 2022 10:27:13 +0200 (CEST)
+        with ESMTP id S230406AbiJXI2D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 04:28:03 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 542CB4E613;
+        Mon, 24 Oct 2022 01:27:52 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 148E4220EAE;
+        Mon, 24 Oct 2022 10:27:16 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 9D99A1B8F3A;
-        Mon, 24 Oct 2022 10:27:13 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id D89AA220E59;
+        Mon, 24 Oct 2022 10:27:15 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id DBDA71820F58;
-        Mon, 24 Oct 2022 16:27:11 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 704241834868;
+        Mon, 24 Oct 2022 16:27:14 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
         lorenzo.pieralisi@arm.com, shawnguo@kernel.org, kishon@ti.com,
@@ -31,9 +31,9 @@ Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, kernel@pengutronix.de,
         linux-imx@nxp.com
-Subject: [RESEND v4 06/14] arm64: dts: Add i.MX8MQ PCIe EP support
-Date:   Mon, 24 Oct 2022 16:06:35 +0800
-Message-Id: <1666598803-1912-7-git-send-email-hongxing.zhu@nxp.com>
+Subject: [RESEND v4 08/14] arm64: dts: Add i.MX8MP PCIe EP support
+Date:   Mon, 24 Oct 2022 16:06:37 +0800
+Message-Id: <1666598803-1912-9-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1666598803-1912-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1666598803-1912-1-git-send-email-hongxing.zhu@nxp.com>
@@ -42,51 +42,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add i.MX8MQ PCIe EP support.
+Add i.MX8MP PCIe EP support.
 
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 ---
- arch/arm64/boot/dts/freescale/imx8mq.dtsi | 27 +++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ arch/arm64/boot/dts/freescale/imx8mp.dtsi | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/freescale/imx8mq.dtsi b/arch/arm64/boot/dts/freescale/imx8mq.dtsi
-index 19eaa523564d..93871804b282 100644
---- a/arch/arm64/boot/dts/freescale/imx8mq.dtsi
-+++ b/arch/arm64/boot/dts/freescale/imx8mq.dtsi
-@@ -1581,6 +1581,33 @@ pcie1: pcie@33c00000 {
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp.dtsi b/arch/arm64/boot/dts/freescale/imx8mp.dtsi
+index bb916a0948a8..53d376e14b88 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mp.dtsi
+@@ -1192,6 +1192,25 @@ pcie: pcie@33800000 {
  			status = "disabled";
  		};
  
-+		pcie1_ep: pcie_ep@33c00000 {
-+			compatible = "fsl,imx8mq-pcie-ep";
-+			reg = <0x33c00000 0x000400000>,
-+			      <0x20000000 0x08000000>;
++		pcie_ep: pcie_ep@33800000 {
++			compatible = "fsl,imx8mp-pcie-ep";
++			reg = <0x33800000 0x000400000>, <0x18000000 0x08000000>;
 +			reg-names = "regs", "addr_space";
 +			num-lanes = <1>;
-+			interrupts = <GIC_SPI 80 IRQ_TYPE_LEVEL_HIGH>;
++			interrupts = <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>; /* eDMA */
 +			interrupt-names = "dma";
-+			fsl,max-link-speed = <2>;
-+			power-domains = <&pgc_pcie>;
-+			resets = <&src IMX8MQ_RESET_PCIEPHY2>,
-+				 <&src IMX8MQ_RESET_PCIE2_CTRL_APPS_EN>,
-+				 <&src IMX8MQ_RESET_PCIE2_CTRL_APPS_TURNOFF>;
-+			reset-names = "pciephy", "apps", "turnoff";
-+			assigned-clocks = <&clk IMX8MQ_CLK_PCIE2_CTRL>,
-+					  <&clk IMX8MQ_CLK_PCIE2_PHY>,
-+					  <&clk IMX8MQ_CLK_PCIE2_AUX>;
-+			assigned-clock-parents = <&clk IMX8MQ_SYS2_PLL_250M>,
-+						 <&clk IMX8MQ_SYS2_PLL_100M>,
-+						 <&clk IMX8MQ_SYS1_PLL_80M>;
-+			assigned-clock-rates = <250000000>, <100000000>,
-+					       <10000000>;
++			fsl,max-link-speed = <3>;
++			power-domains = <&hsio_blk_ctrl IMX8MP_HSIOBLK_PD_PCIE>;
++			resets = <&src IMX8MP_RESET_PCIE_CTRL_APPS_EN>,
++				 <&src IMX8MP_RESET_PCIE_CTRL_APPS_TURNOFF>;
++			reset-names = "apps", "turnoff";
++			phys = <&pcie_phy>;
++			phy-names = "pcie-phy";
 +			num-ib-windows = <4>;
 +			num-ob-windows = <4>;
 +			status = "disabled";
 +		};
 +
- 		gic: interrupt-controller@38800000 {
- 			compatible = "arm,gic-v3";
- 			reg = <0x38800000 0x10000>,	/* GIC Dist */
+ 		gpu3d: gpu@38000000 {
+ 			compatible = "vivante,gc";
+ 			reg = <0x38000000 0x8000>;
 -- 
 2.25.1
 
