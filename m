@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38CA6FA3742
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Oct 2022 08:28:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1933FECDFA1
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Oct 2022 08:28:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230396AbiJXI2X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Oct 2022 04:28:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55770 "EHLO
+        id S230463AbiJXI2Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Oct 2022 04:28:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230374AbiJXI17 (ORCPT
+        with ESMTP id S230379AbiJXI17 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 04:27:59 -0400
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBC3652DF7;
-        Mon, 24 Oct 2022 01:27:46 -0700 (PDT)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id B5FC91B8F2C;
-        Mon, 24 Oct 2022 10:27:09 +0200 (CEST)
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FE7E233AB;
+        Mon, 24 Oct 2022 01:27:50 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 8AB14220E9A;
+        Mon, 24 Oct 2022 10:27:12 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 7D4CE1B8F26;
-        Mon, 24 Oct 2022 10:27:09 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 5CB2B220EB0;
+        Mon, 24 Oct 2022 10:27:12 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id B3E99180226C;
-        Mon, 24 Oct 2022 16:27:07 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 509ED180226C;
+        Mon, 24 Oct 2022 16:27:10 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     l.stach@pengutronix.de, bhelgaas@google.com, robh+dt@kernel.org,
         lorenzo.pieralisi@arm.com, shawnguo@kernel.org, kishon@ti.com,
@@ -31,9 +31,9 @@ Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, kernel@pengutronix.de,
         linux-imx@nxp.com
-Subject: [RESEND v4 03/14] dt-bindings: imx6q-pcie: Add i.MX8MP PCIe EP mode compatible string
-Date:   Mon, 24 Oct 2022 16:06:32 +0800
-Message-Id: <1666598803-1912-4-git-send-email-hongxing.zhu@nxp.com>
+Subject: [RESEND v4 05/14] arm64: dts: Add i.MX8MM PCIe EP support on EVK board
+Date:   Mon, 24 Oct 2022 16:06:34 +0800
+Message-Id: <1666598803-1912-6-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1666598803-1912-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1666598803-1912-1-git-send-email-hongxing.zhu@nxp.com>
@@ -42,26 +42,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add i.MX8MP PCIe endpoint mode compatible string.
+Add i.MX8MM PCIe EP support on EVK board.
 
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-Acked-by: Rob Herring <robh@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-index 114e11b62195..d79cbc55064a 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
-@@ -29,6 +29,7 @@ properties:
-       - fsl,imx8mp-pcie
-       - fsl,imx8mm-pcie-ep
-       - fsl,imx8mq-pcie-ep
-+      - fsl,imx8mp-pcie-ep
+diff --git a/arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi b/arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi
+index 7d6317d95b13..d43eb2eb23bf 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mm-evk.dtsi
+@@ -380,6 +380,20 @@ &sai2 {
+ 	status = "okay";
+ };
  
-   reg:
-     items:
++&pcie0_ep{
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pcie0>;
++	clocks = <&clk IMX8MM_CLK_PCIE1_ROOT>, <&clk IMX8MM_CLK_PCIE1_AUX>,
++		 <&pcie0_refclk>;
++	clock-names = "pcie", "pcie_aux", "pcie_bus";
++	assigned-clocks = <&clk IMX8MM_CLK_PCIE1_AUX>,
++			  <&clk IMX8MM_CLK_PCIE1_CTRL>;
++	assigned-clock-rates = <10000000>, <250000000>;
++	assigned-clock-parents = <&clk IMX8MM_SYS_PLL2_50M>,
++				 <&clk IMX8MM_SYS_PLL2_250M>;
++	status = "disabled";
++};
++
+ &sai3 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_sai3>;
 -- 
 2.25.1
 
