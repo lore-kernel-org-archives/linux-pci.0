@@ -2,68 +2,100 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 639BEC38A2D
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Oct 2022 22:45:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32C07C67871
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Oct 2022 22:50:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232006AbiJXWph (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Oct 2022 18:45:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42768 "EHLO
+        id S229810AbiJXWuJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Oct 2022 18:50:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230188AbiJXWpE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 18:45:04 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB7828B2CF;
-        Mon, 24 Oct 2022 14:07:33 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 87F2B68B05; Mon, 24 Oct 2022 17:00:12 +0200 (CEST)
-Date:   Mon, 24 Oct 2022 17:00:11 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Don Dutile <ddutile@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Minturn Dave B <dave.b.minturn@intel.com>,
-        Jason Ekstrand <jason@jlekstrand.net>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Xiong Jianxin <jianxin.xiong@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Martin Oliveira <martin.oliveira@eideticom.com>,
-        Chaitanya Kulkarni <ckulkarnilinux@gmail.com>,
-        Ralph Campbell <rcampbell@nvidia.com>,
-        Stephen Bates <sbates@raithlin.com>
-Subject: Re: [PATCH v11 1/9] mm: allow multiple error returns in
- try_grab_page()
-Message-ID: <20221024150011.GA26338@lst.de>
-References: <20221021174116.7200-1-logang@deltatee.com> <20221021174116.7200-2-logang@deltatee.com>
+        with ESMTP id S230305AbiJXWt1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 18:49:27 -0400
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9ABF16B65C
+        for <linux-pci@vger.kernel.org>; Mon, 24 Oct 2022 14:11:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id AB5F9CE1626
+        for <linux-pci@vger.kernel.org>; Mon, 24 Oct 2022 20:45:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0D3DC433D7;
+        Mon, 24 Oct 2022 20:45:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666644336;
+        bh=QKzuXrExD6Y4a2PJjuLvU/WiHn9m3W/7UuBFYy5WFMk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=RKudoxf02Y3pKhn8O4gBjRmoyke3gXAIKoFazPyGrUJVYn9PSzcTGcMaMtdsvjwAY
+         bfkMEW8bDOXAftt9QRzXByuDPyenr7iJaHeKPMNqBaI3lvepwNfmnmWjzy8xFQtFHh
+         1kVJjqDul8CRueHzmylkBbGZBKF/wvv64VhUT878RdB25NTEwYjK/ruLJaX+tfIwvd
+         hFPwFCrzW7k6dQwHxCQLDSnxkTtcqAmDpMuyG8JVqczoj+YIybp2IouJVmQbnPaNxn
+         TA38JrUeMfp9ts1CnkZWDFbpnBWCMCUsC4lXIR957J2TP0fhpuw7VrnWtmeQZ9S5wH
+         xtbnu60xycsxA==
+Date:   Mon, 24 Oct 2022 15:45:34 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     francisco.munoz.ruiz@linux.intel.com
+Cc:     lorenzo.pieralisi@arm.com, jonathan.derrick@linux.dev,
+        linux-pci@vger.kernel.org,
+        Nirmal Patel <nirmal.patel@linux.intel.com>
+Subject: Re: [PATCH] PCI: vmd: Fix secondary bus reset for Intel bridges
+Message-ID: <20221024204534.GA589134@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221021174116.7200-2-logang@deltatee.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20220923203757.4918-1-francisco.munoz.ruiz@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Oct 21, 2022 at 11:41:08AM -0600, Logan Gunthorpe wrote:
-> In order to add checks for P2PDMA memory into try_grab_page(), expand
-> the error return from a bool to an int/error code. Update all the
-> callsites handle change in usage.
+On Fri, Sep 23, 2022 at 01:37:57PM -0700, francisco.munoz.ruiz@linux.intel.com wrote:
+> From: Francisco Munoz <francisco.munoz.ruiz@linux.intel.com>
 > 
-> Also remove the WARN_ON_ONCE() call at the callsites seeing there
-> already is a WARN_ON_ONCE() inside the function if it fails.
+> The reset was never applied in the current implementation because Intel
+> Bridges owned by VMD are parentless. Internally, the reset API applies
+> a reset to the parent of the pci device supplied as argument, but in this
+> case it failed because there wasn't a parent. This change feeds a child
+> device of an Intel Bridge to the reset API and internally the reset is
+> applied to its parent.
+
+What kind of problem does this fix?  I guess some devices below a VMD
+need to be reset before we can use them?
+
+As a rule, Linux doesn't reset PCI devices at boot, so I'm just
+wondering what's different about these.
+
+If this fixes a problem, it's also nice if we can include a symptom in
+the commit log so if people are seeing the problem, they can find the
+solution, or distros can tell whether they need to include it.
+
+> Signed-off-by: Francisco Munoz <francisco.munoz.ruiz@linux.intel.com>
+> Reviewed-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+> ---
+>  drivers/pci/controller/vmd.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
 > 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-
-Looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index e06e9f4fc50f..34d6ba675440 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+> @@ -859,8 +859,16 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+>  
+>  	pci_scan_child_bus(vmd->bus);
+>  	vmd_domain_reset(vmd);
+> -	list_for_each_entry(child, &vmd->bus->children, node)
+> -		pci_reset_bus(child->self);
+> +
+> +	list_for_each_entry(child, &vmd->bus->children, node) {
+> +		if (!list_empty(&child->devices)) {
+> +			pci_reset_bus(list_first_entry(&child->devices,
+> +						       struct pci_dev,
+> +						       bus_list));
+> +			break;
+> +		}
+> +	}
+> +
+>  	pci_assign_unassigned_bus_resources(vmd->bus);
+>  
+>  	/*
+> -- 
+> 2.25.1
+> 
