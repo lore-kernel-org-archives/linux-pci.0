@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1196FA373F
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 06:53:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BFD8FA3740
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 06:53:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231394AbiJYGx5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Oct 2022 02:53:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53410 "EHLO
+        id S231406AbiJYGx6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Oct 2022 02:53:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231367AbiJYGxy (ORCPT
+        with ESMTP id S231376AbiJYGxy (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 02:53:54 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2066.outbound.protection.outlook.com [40.107.94.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE61C4332A;
-        Mon, 24 Oct 2022 23:53:52 -0700 (PDT)
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2068.outbound.protection.outlook.com [40.107.94.68])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B896D58507;
+        Mon, 24 Oct 2022 23:53:50 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fb74m58qKYf33zF2Is5CSesvCtN5VkQ8gAOOtCi1zZ1wESv8YS5ZHYnZ4XbU/6CtPVvmzlhP2Mp0h+sXcD32qVJ8YTdG0DqpjKjIdfOFifaBK/oF8ey4PcUy++WCi2tOxWHrnNYcsJzjNN8zMzGr8bNUWDykJoz8nfHw4RFbYZySJC1PFXj8MBFDYiPZ/CbARe7Bk58yGBfTH6CpJ1F5J7w/KqmYLMUyA9vITQXtHFQ8WVO53SLYz90UxvN4Bt2YfEDEp3TAp+t8MKxs5K3uIQHqicRdr+t+znCZ+0PW+vhDa5Nuy22bSdm6+ZS2pAHLvn5QLyPWwpH/jt4YZwJyaA==
+ b=VXawekAEqTzoUq4gje3kqpdRcdSrsv9ms2O/4i7nTAKAp8uInH0c9t6+E0oBZqACrJZGl6nCafTjn9AuS2CdEP2214SSRp5qCr/6ztCNyvQnVGvYMVsgblfP9wWfGi/TDhyaq4SLrWem55t874x0p7o7XGUCfVY3RUqSSslQk89o94+UzH97/nncozNSvgJtQB1alUicugeLtpDfzZBQd0KUJsIK/EP22MKTVpCxHxiF1Wi6hntb2VrEjndPA6fO6UNfkYJjPXNP3Ol/hcOGMOIWYhBW5xa+HVtjMwHv7n+U1F0Z2XrFLxqS9IR1dHbvJBptIQYDytFRBGRSLbMadA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=UH/cfqf9ieuKLueHLHhaOcJB6Bv30CVf3bh3wwEhjIA=;
- b=N2IBSDXvaweFkbKW6GR2LlV2HzZnaTBtFqf4z/pX3gj4BJZCvTBla6ePo3qzTuIVdXftRt15El+ERgCP6IPP4rWL9x8wDp/toQ9G5FGuL0zFg17YRf4zGVFodDHm4dzA+lLtl7RpBfEVCx3tMdjYukDhVLbDP1toak+Bk4UTf1Q4gsu+mAUE6qKmHbB56cZc2V/eNVtN85/uKghvsvv7ju+wbeBn5s6v8kJyjXFRSm13LJjoNn1JyojGIZt5ZkF1UeialRJQ+G+YWwRbsnrnG9tWPLiLvzZ/gp3ejXMDoxDysECHH0xoo2DbJd6DcyZN+iJRUEpVU3wAKsC7pri+rg==
+ bh=goNxu6pBKIuoYleAH24z7RYLds0YoEJz6olkIaC6uB4=;
+ b=PMmTgjDmLxwXhcSatUG7lVMyKce9G2XOv99/gWiB4hCcbac6PmWFlDra3kQ8lkAQnWw+f5MbJecUqECzb+TsKBwa0obTwKtlGlaP7wygUnkHu/f7cq7M6Hwr4UhOUt1OPiMgIDtm6td28Ay/tvio0MJWyJzlN03A84oySZmcAEIPiYzLNz+ZN+dBw/GLFy5fcICkuDYwD/GmePIIa7Q9JANFHuoGjL32TBJFNA4JuXasn0iAWAD+BcMU7O6lYFxNLBmEE32bHrYHLSkhurmop06Tt6pIuRvZWnwZX7W2gUHG4dZ9jJr4Cl2sBpoMReiM2wOJoiEqTTAD26dpm9LxvQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UH/cfqf9ieuKLueHLHhaOcJB6Bv30CVf3bh3wwEhjIA=;
- b=miZDp6/SVgateYEdAUper6stg5CKenVfiw/Pt1lfqR/GOvaYLdzP63ePofIBBWq8s8aZnDDxHt5BSdcjM6u0RYCqLIZ6fxUFQMCxr70og4w8M4eBjGsGPZ2YAlvAG38EQW91Lo93kctX8MTQCzI+IYPml57oyIuSFna8Tc24Q7c=
-Received: from DS7PR05CA0079.namprd05.prod.outlook.com (2603:10b6:8:57::9) by
- BL1PR12MB5239.namprd12.prod.outlook.com (2603:10b6:208:315::24) with
+ bh=goNxu6pBKIuoYleAH24z7RYLds0YoEJz6olkIaC6uB4=;
+ b=IhwpJW3iSptmWA5IGQ/VP6OIjPLbL+YwJIO06sE8aHyuSvgcjNN3IVVj9csu5Oz9FT/FL7kTNHOq4tysUaMdKXywiaKIbBs7dXNKw+BN4E3tzI0VgoY4ZwdBgZuGgo2gXbzlsmcp87a0KF1syW2RRnYhv+0MUdB37vSGkQKg22E=
+Received: from DS7PR03CA0206.namprd03.prod.outlook.com (2603:10b6:5:3b6::31)
+ by IA1PR12MB6626.namprd12.prod.outlook.com (2603:10b6:208:3a2::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.28; Tue, 25 Oct
- 2022 06:53:50 +0000
-Received: from DM6NAM11FT026.eop-nam11.prod.protection.outlook.com
- (2603:10b6:8:57:cafe::b6) by DS7PR05CA0079.outlook.office365.com
- (2603:10b6:8:57::9) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5769.8 via Frontend
- Transport; Tue, 25 Oct 2022 06:53:50 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.23; Tue, 25 Oct
+ 2022 06:53:48 +0000
+Received: from DM6NAM11FT014.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:3b6:cafe::13) by DS7PR03CA0206.outlook.office365.com
+ (2603:10b6:5:3b6::31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.28 via Frontend
+ Transport; Tue, 25 Oct 2022 06:53:48 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -46,25 +46,25 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
- DM6NAM11FT026.mail.protection.outlook.com (10.13.172.161) with Microsoft SMTP
+ DM6NAM11FT014.mail.protection.outlook.com (10.13.173.132) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5746.16 via Frontend Transport; Tue, 25 Oct 2022 06:53:50 +0000
+ 15.20.5746.16 via Frontend Transport; Tue, 25 Oct 2022 06:53:48 +0000
 Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 25 Oct
- 2022 01:53:49 -0500
+ 2022 01:53:43 -0500
 Received: from xhdbharatku40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server id 15.1.2375.31 via Frontend
- Transport; Tue, 25 Oct 2022 01:53:46 -0500
+ Transport; Tue, 25 Oct 2022 01:53:08 -0500
 From:   Thippeswamy Havalige <thippeswamy.havalige@amd.com>
 To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <krzysztof.kozlowski@linaro.org>
 CC:     <bhelgaas@google.com>, <michals@xilinx.com>, <robh+dt@kernel.org>,
         <lorenzo.pieralisi@arm.com>, <bharat.kumar.gogada@amd.com>,
         "Thippeswamy Havalige" <thippeswamy.havalige@amd.com>
-Subject: [PATCH 06/13] microblaze/PCI: Remove unused allocation & free of PCI host bridge structure
-Date:   Tue, 25 Oct 2022 12:22:07 +0530
-Message-ID: <20221025065214.4663-7-thippeswamy.havalige@amd.com>
+Subject: [PATCH 04/13] microblaze/PCI: Remove unused PCI legacy IO's access on a bus
+Date:   Tue, 25 Oct 2022 12:22:05 +0530
+Message-ID: <20221025065214.4663-5-thippeswamy.havalige@amd.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20221025065214.4663-1-thippeswamy.havalige@amd.com>
 References: <20221025065214.4663-1-thippeswamy.havalige@amd.com>
@@ -72,122 +72,208 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6NAM11FT026:EE_|BL1PR12MB5239:EE_
-X-MS-Office365-Filtering-Correlation-Id: 304f5851-1a0e-4d50-9752-08dab655ac3e
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT014:EE_|IA1PR12MB6626:EE_
+X-MS-Office365-Filtering-Correlation-Id: f83630a2-5429-4c3c-b347-08dab655ab1b
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 8Gw17mJxEDPptZf/ce2yGk1qGPeBaZXmAsJ4etBikbIeN0NYwhHgg6aeyiTLd279vlbba8E+GTbPI+mgPepX7hOI05yVAwUSvq6IJTt4pgz4JR02OGzBpMMDMWOjEHfCJXnVG8hUWBpNZOM7dq6zaJxh16FvEr3RZejDhOryPmoZagZcPkLAc4aEY7avSzHLEqhIuwYir4SkXMR+Jxzc/7Rv9y4eOKVzLWYq6jp0D2M7gvEXQySngm1Rvz/OxLiuODZzzQWo6duUHD+BoIj5ftjT6m4Jkec7M1lNf454/QRrg/WAcuYlSTKR3QBN18nYtRAZQLug+E3mW9KgqFCA2pueFUV3y8lO/UJZa8c8I3mQLmpH6Kq6nVz9cmkxhLHc391f7N6fo6Nd/Aq7iwV8Z722jMteKZ05dIpW6LrI5pLvDEsfYDlLEO0WlApjd4Ra0i41PO41kfHhxZJIKydci5gvGbzqNMs3CRGtlIteoImJl1nnXIn4oyxchmMcjxdMdfaugO736L1sh0/jBW4RWFcV9dOnQmI2czLBSi20Yeubzs6GVzpWDp5DoNw2fE+LGKIrT4ZGjiOrGWoov686SJ15gTST0A2N6me9zSLG9pEtzVPwD13iyKFrhIty2U0Bzl4yqRFFW0WN1AImcgxDj8NPWqwL2a+YOtZFHXAWKsQhby2S36Ls87MfzQ+J1utVU4rSU2nl9CMwxulITPZQkmdniOs3zTb5YD9Kj5XpHCHONx81fipnwQZPguMlUbTAMgMBsY8imimrvMnz3Y9bdnWALXkzEjZy0LkGJNcZLVS8DhuiCaU35L4jTzL+Nq0LupgHwgpse7THoKNtafGMZw==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(136003)(396003)(39860400002)(346002)(376002)(451199015)(36840700001)(40470700004)(46966006)(82310400005)(2906002)(36756003)(2616005)(70206006)(70586007)(44832011)(5660300002)(82740400003)(8676002)(36860700001)(8936002)(41300700001)(4326008)(110136005)(54906003)(6666004)(40480700001)(86362001)(47076005)(316002)(478600001)(26005)(186003)(1076003)(336012)(81166007)(356005)(40460700003)(426003)(83380400001)(21314003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: 8Qs+qBJPEwld0JyuqBDlet/QhSDpBW6TMElngewMZHfUzQcTdAMuRzY5mS9RuyXZM+vGS/PCFjSlUYl+Wej5mnNo8Xr04/7I79ZcDvqJGYZw6lBM61NrUE7op2sGREReQow7LYRiC+TUv01JvYaEHzazJUj+PQzp5oO7K2CeUAh+Snw+QlxS6Ah+jvPTcDKIpItcT6TTnp4uonIFd8e8R3fnrLxiFnWvDrbRLqv/IkwKy4vIGEvj1ANIo7hGhq1v8tsZ5WNZ2BQztwC4EuQE+3EmPtx+Amsrn7GrdWqM5m85HTQkImGo0sSmdx2X6HGbrN3FGteYxxBhVHbkrwxIwxA+0JugW/Qp7joFYDvmkhxMUN143OJz5w+BNb6l4NBwWkAKc4kiLsnd5aY7ghG7zsj2qdncdpDvDav2mQzdCkmvmXfAKilU14IzuRnSgkrQ+e0VtVYddZN7RlXs+GjNMcwiUiSx7cA8d9v4kVFLH3bO2rQVjTbLIpEyPHulGfagg1/NtySYPiUxB8VEGDDxV+aosPz/aYyih+Ovc2oNms+nODCoXGMPUu9O3WesMQOM9AZHVALkDH4MtUVMtn3mbEtvIvytfF4WfqfbLDJ++IbBMuzdA4OdnYZPCFuaS3uiskSF2k6wwRH0t/WWmxUxbP9yElpnK6yP8VFfDpJXfKx4GbbkoEqjw4YC3r2lCty5dMc1fQzfq7wrHCSRlWVggoB+6K1+uwllb80LMAnS9/AFlSm5KtWOM5b5e34/gYUiX5BlFi9amkhUDcySf7UNE/AOWFy00VY68p1+Xb83XyE=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(136003)(346002)(39860400002)(376002)(396003)(451199015)(40470700004)(36840700001)(46966006)(1076003)(2906002)(83380400001)(186003)(47076005)(336012)(40460700003)(4326008)(8676002)(81166007)(26005)(41300700001)(356005)(82310400005)(86362001)(36756003)(110136005)(316002)(82740400003)(54906003)(40480700001)(36860700001)(8936002)(426003)(478600001)(70586007)(44832011)(2616005)(70206006)(5660300002)(6666004)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Oct 2022 06:53:50.3823
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Oct 2022 06:53:48.4759
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 304f5851-1a0e-4d50-9752-08dab655ac3e
+X-MS-Exchange-CrossTenant-Network-Message-Id: f83630a2-5429-4c3c-b347-08dab655ab1b
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT026.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT014.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5239
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6626
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Remove unused allocation and freeing of PCI host bridge structure.
+Remove PCI legacy read,write and mmap access IO's
+on a bus
 
 Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
 ---
- arch/microblaze/include/asm/pci-bridge.h |  5 -----
- arch/microblaze/pci/pci-common.c         | 29 -----------------------------
- arch/microblaze/pci/xilinx_pci.c         |  6 ------
- 3 files changed, 40 deletions(-)
+ arch/microblaze/include/asm/pci.h |  10 ---
+ arch/microblaze/pci/pci-common.c  | 140 --------------------------------------
+ 2 files changed, 150 deletions(-)
 
-diff --git a/arch/microblaze/include/asm/pci-bridge.h b/arch/microblaze/include/asm/pci-bridge.h
-index 252bcc1..018c632 100644
---- a/arch/microblaze/include/asm/pci-bridge.h
-+++ b/arch/microblaze/include/asm/pci-bridge.h
-@@ -25,7 +25,6 @@ static inline int pcibios_vaddr_is_ioport(void __iomem *address)
-  */
- struct pci_controller {
- 	struct pci_bus *bus;
--	char is_dynamic;
- 	struct device_node *dn;
- 	struct list_head list_node;
- 	struct device *parent;
-@@ -98,9 +97,5 @@ extern void setup_indirect_pci(struct pci_controller *hose,
- 			       resource_size_t cfg_addr,
- 			       resource_size_t cfg_data, u32 flags);
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index d905280..34337e2 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -48,16 +48,6 @@
+ #define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
+ #define arch_can_pci_mmap_io()		1
  
--/* Allocate & free a PCI host bridge structure */
--extern struct pci_controller *pcibios_alloc_controller(struct device_node *dev);
--extern void pcibios_free_controller(struct pci_controller *phb);
+-extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
+-			   size_t count);
+-extern int pci_legacy_write(struct pci_bus *bus, loff_t port, u32 val,
+-			   size_t count);
+-extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+-				      struct vm_area_struct *vma,
+-				      enum pci_mmap_state mmap_state);
 -
- #endif	/* __KERNEL__ */
- #endif	/* _ASM_MICROBLAZE_PCI_BRIDGE_H */
+-#define HAVE_PCI_LEGACY	1
+-
+ extern void pcibios_resource_survey(void);
+ 
+ struct file;
 diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 12764df0..2965892 100644
+index 6ccaf33..ef4a9fc 100644
 --- a/arch/microblaze/pci/pci-common.c
 +++ b/arch/microblaze/pci/pci-common.c
-@@ -38,9 +38,6 @@
- static DEFINE_SPINLOCK(hose_spinlock);
- LIST_HEAD(hose_list);
+@@ -146,146 +146,6 @@ int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
+ 	return 0;
+ }
  
--/* XXX kill that some day ... */
--static int global_phb_number;		/* Global phb counter */
--
- /* ISA Memory physical address */
- resource_size_t isa_mem_base;
- 
-@@ -49,32 +46,6 @@
- 
- static int pci_bus_count;
- 
--struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+-/* This provides legacy IO read access on a bus */
+-int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val, size_t size)
 -{
--	struct pci_controller *phb;
+-	unsigned long offset;
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-	struct resource *rp = &hose->io_resource;
+-	void __iomem *addr;
 -
--	phb = zalloc_maybe_bootmem(sizeof(struct pci_controller), GFP_KERNEL);
--	if (!phb)
--		return NULL;
--	spin_lock(&hose_spinlock);
--	phb->global_number = global_phb_number++;
--	list_add_tail(&phb->list_node, &hose_list);
--	spin_unlock(&hose_spinlock);
--	phb->dn = dev;
--	phb->is_dynamic = mem_init_done;
--	return phb;
--}
+-	/* Check if port can be supported by that bus. We only check
+-	 * the ranges of the PHB though, not the bus itself as the rules
+-	 * for forwarding legacy cycles down bridges are not our problem
+-	 * here. So if the host bridge supports it, we do it.
+-	 */
+-	offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-	offset += port;
 -
--void pcibios_free_controller(struct pci_controller *phb)
--{
--	spin_lock(&hose_spinlock);
--	list_del(&phb->list_node);
--	spin_unlock(&hose_spinlock);
+-	if (!(rp->flags & IORESOURCE_IO))
+-		return -ENXIO;
+-	if (offset < rp->start || (offset + size) > rp->end)
+-		return -ENXIO;
+-	addr = hose->io_base_virt + port;
 -
--	if (phb->is_dynamic)
--		kfree(phb);
--}
--
- static resource_size_t pcibios_io_size(const struct pci_controller *hose)
- {
- 	return resource_size(&hose->io_resource);
-diff --git a/arch/microblaze/pci/xilinx_pci.c b/arch/microblaze/pci/xilinx_pci.c
-index f1a5112..3fa16e3 100644
---- a/arch/microblaze/pci/xilinx_pci.c
-+++ b/arch/microblaze/pci/xilinx_pci.c
-@@ -97,12 +97,6 @@ void __init xilinx_pci_init(void)
- 		return;
- 	}
- 
--	hose = pcibios_alloc_controller(pci_node);
--	if (!hose) {
--		pr_err("xilinx-pci: pcibios_alloc_controller() failed\n");
--		return;
+-	switch (size) {
+-	case 1:
+-		*((u8 *)val) = in_8(addr);
+-		return 1;
+-	case 2:
+-		if (port & 1)
+-			return -EINVAL;
+-		*((u16 *)val) = in_le16(addr);
+-		return 2;
+-	case 4:
+-		if (port & 3)
+-			return -EINVAL;
+-		*((u32 *)val) = in_le32(addr);
+-		return 4;
 -	}
+-	return -EINVAL;
+-}
 -
- 	/* Setup config space */
- 	setup_indirect_pci(hose, r.start + XPLB_PCI_ADDR,
- 			   r.start + XPLB_PCI_DATA,
+-/* This provides legacy IO write access on a bus */
+-int pci_legacy_write(struct pci_bus *bus, loff_t port, u32 val, size_t size)
+-{
+-	unsigned long offset;
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-	struct resource *rp = &hose->io_resource;
+-	void __iomem *addr;
+-
+-	/* Check if port can be supported by that bus. We only check
+-	 * the ranges of the PHB though, not the bus itself as the rules
+-	 * for forwarding legacy cycles down bridges are not our problem
+-	 * here. So if the host bridge supports it, we do it.
+-	 */
+-	offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-	offset += port;
+-
+-	if (!(rp->flags & IORESOURCE_IO))
+-		return -ENXIO;
+-	if (offset < rp->start || (offset + size) > rp->end)
+-		return -ENXIO;
+-	addr = hose->io_base_virt + port;
+-
+-	/* WARNING: The generic code is idiotic. It gets passed a pointer
+-	 * to what can be a 1, 2 or 4 byte quantity and always reads that
+-	 * as a u32, which means that we have to correct the location of
+-	 * the data read within those 32 bits for size 1 and 2
+-	 */
+-	switch (size) {
+-	case 1:
+-		out_8(addr, val >> 24);
+-		return 1;
+-	case 2:
+-		if (port & 1)
+-			return -EINVAL;
+-		out_le16(addr, val >> 16);
+-		return 2;
+-	case 4:
+-		if (port & 3)
+-			return -EINVAL;
+-		out_le32(addr, val);
+-		return 4;
+-	}
+-	return -EINVAL;
+-}
+-
+-/* This provides legacy IO or memory mmap access on a bus */
+-int pci_mmap_legacy_page_range(struct pci_bus *bus,
+-			       struct vm_area_struct *vma,
+-			       enum pci_mmap_state mmap_state)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-	resource_size_t offset =
+-		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
+-	resource_size_t size = vma->vm_end - vma->vm_start;
+-	struct resource *rp;
+-
+-	pr_debug("pci_mmap_legacy_page_range(%04x:%02x, %s @%llx..%llx)\n",
+-		 pci_domain_nr(bus), bus->number,
+-		 mmap_state == pci_mmap_mem ? "MEM" : "IO",
+-		 (unsigned long long)offset,
+-		 (unsigned long long)(offset + size - 1));
+-
+-	if (mmap_state == pci_mmap_mem) {
+-		/* Hack alert !
+-		 *
+-		 * Because X is lame and can fail starting if it gets an error
+-		 * trying to mmap legacy_mem (instead of just moving on without
+-		 * legacy memory access) we fake it here by giving it anonymous
+-		 * memory, effectively behaving just like /dev/zero
+-		 */
+-		if ((offset + size) > hose->isa_mem_size) {
+-			pr_debug("Process %s (pid:%d) mapped non-existing PCI",
+-				current->comm, current->pid);
+-			pr_debug("legacy memory for 0%04x:%02x\n",
+-				pci_domain_nr(bus), bus->number);
+-			if (vma->vm_flags & VM_SHARED)
+-				return shmem_zero_setup(vma);
+-			return 0;
+-		}
+-		offset += hose->isa_mem_phys;
+-	} else {
+-		unsigned long io_offset = (unsigned long)hose->io_base_virt -
+-								_IO_BASE;
+-		unsigned long roffset = offset + io_offset;
+-		rp = &hose->io_resource;
+-		if (!(rp->flags & IORESOURCE_IO))
+-			return -ENXIO;
+-		if (roffset < rp->start || (roffset + size) > rp->end)
+-			return -ENXIO;
+-		offset += hose->io_base_phys;
+-	}
+-	pr_debug(" -> mapping phys %llx\n", (unsigned long long)offset);
+-
+-	vma->vm_pgoff = offset >> PAGE_SHIFT;
+-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+-	return remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			       vma->vm_end - vma->vm_start,
+-			       vma->vm_page_prot);
+-}
+-
+ void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 			  const struct resource *rsrc,
+ 			  resource_size_t *start, resource_size_t *end)
 -- 
 1.8.3.1
 
