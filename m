@@ -2,69 +2,69 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F6EFA3740
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 06:54:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22C4DC38A2D
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 06:54:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231433AbiJYGyK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Oct 2022 02:54:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53806 "EHLO
+        id S231468AbiJYGyL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Oct 2022 02:54:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231504AbiJYGyH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 02:54:07 -0400
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2050.outbound.protection.outlook.com [40.107.220.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D9E743323;
-        Mon, 24 Oct 2022 23:54:04 -0700 (PDT)
+        with ESMTP id S231441AbiJYGyA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 02:54:00 -0400
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2086.outbound.protection.outlook.com [40.107.223.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB5DA43301;
+        Mon, 24 Oct 2022 23:53:58 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=NKGZ+hVHz7CM13uZavl4ohtF0qeaJHaXHI+imRaNqSxkKP4GDG7FqRi1jwcOC1MFTF1aP/RNLmSIPhy7Ciahiry+F5VVLWpeSpHknDDcNgop68rjNVkG4vX+hpQdm5XLmt/wTsJo3ueB61cYi+5h8+JRySPPl0XqzhSurn598YrUhQSFmQxfuFYZszfoPTShpKKfs0BuDVbfJxeEISiDFLtSex0LGUtT9xpUOWs27NySb8XFd5c0VWULp5JMJNBDMimFXNPFr+zKkhi95CxZQ0P+cSK9lP7Cz751KJ4EeEBQb8nbAmhPImM3ecX3CMOGYaZLYEgZSn2qnCW8Nqf/ZQ==
+ b=aKFvQBEZfEDR63gRjhomQ3lidc7TFn6I1+IVDu0J9sBaPJK5hFQU+5lZbH4NxXZIZ2IvZq8EZ6uNluf6Wx/4xIOahgvigGO6h9zaa6x0qKQvrbnDI+6hrXY3FGVezVtYqnB6+6GjFpAN8fUcotIEvnWovgfwKdGOxGFPew0ffYQSeiKLFNeLzBMIThmxVXjxyEw+O326dto7hoQm/iw7IAY03zNeUSz4nOYtAcsJm3MwRGt1e+1CKYU8fr2QofZncIJMiyhKXppGVXpZsIVOzlLAPRjgM2f74y0al/0VaHIHnHWcBG2TPURpRPzcobKD/zaENPsiWcrQNoGf2P4d8g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Htx3gIc80b32CjNddX8xJD26o9LADLRUJpXyr/y/+3g=;
- b=NBVMOLD1GtoemfPwAGKd7LK99nt2770w1oSy4Q61qA3s/WghKVi5FQBheBmq+yFzQ8gloh63/g3syJyTIfvsmjShTSj0rf/TNqik31SUBsyU8vXHfGn2xuu4j7HOOqEj/nBJjdNufNK5o0p3RASqFQZLyb2J4VmHe+DYDD/85qoc1VRNSVbFMGbTHmPTsa7uvyVRWpPvNQsTbT66pphzSsE8EFKn/ic6SXxm0frupQVNWxFfh9Giu3g1fDIAhMPFTH+iM58EvFgR42b5M/apejkgj4ip87LxwZi6s8xzTRQ7DMfNMomBX3Hvd3fNLs9frjGFekbQZXO3jtlf8vR19Q==
+ bh=5OlJneRi2U1pLc3VrOTJl+hE6sjfNt4he202WZf6aDQ=;
+ b=LQrPSsl0vEMmw9Q8iUnHMF02J8l4opiYEwkKtQTPxSOSWrQsfHDasIukY4QnrSpPKEUMiAGMupYHrgHM8t6IrZ0cQc+8CvFYzn14LdhRv6G8OcK5HT7EyLn6tERgsfP7RTU/7TyY3qArwF+rnKJw2GZTgqG12eM+LUvJyf3rNj+eiwQ467W4rQ/2ToABdhSjA66ZWvh52qeBWs4+I773Lezvgvu1WKnFzd0FIpKVrEQLMHzfqj7jIy9oaryoncl8criSINCpATU2e4z7lFTuRFwX4Qcw0ANGBa44dMrznmlGRBdvPlp0erlQGV7WJXI2XygenfWDzpkx5GtCA7WY6g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Htx3gIc80b32CjNddX8xJD26o9LADLRUJpXyr/y/+3g=;
- b=gpb0C4PnMtl72DCdW1azN3Kq6+oZ9TS69tEG1GqkXeAV3nIPLKy8PlIzc+afEz6MQQNFymx7t3VR9Ples7sUTXy9zVqMmjQtSuKLXUCyMetMp2gkyCl9K7fgqM811yOzHGoHEfCJIlWW+rI+38c8fWI9vA9tVZVWBDK/BVPE7UI=
-Received: from DS7PR03CA0024.namprd03.prod.outlook.com (2603:10b6:5:3b8::29)
- by CH0PR12MB5155.namprd12.prod.outlook.com (2603:10b6:610:ba::8) with
+ bh=5OlJneRi2U1pLc3VrOTJl+hE6sjfNt4he202WZf6aDQ=;
+ b=O3ojNyFSMX6HBr8p6MiMvOK7uv4K9J9v98wXfPpiScnE9r6LrnhLwwOjeIjCX+Pa6CSmlvNEN2fx8wwYibteFsdbVfLDbZQ71Pitof4ua8SCpVTHvCakhw1PnF7DTtv3NgArusKnVhpko+k4xF5mdT/gv4iBSZm6VdmuOhQ4p5U=
+Received: from DM6PR07CA0083.namprd07.prod.outlook.com (2603:10b6:5:337::16)
+ by PH0PR12MB5605.namprd12.prod.outlook.com (2603:10b6:510:129::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.28; Tue, 25 Oct
- 2022 06:54:03 +0000
-Received: from DM6NAM11FT064.eop-nam11.prod.protection.outlook.com
- (2603:10b6:5:3b8:cafe::79) by DS7PR03CA0024.outlook.office365.com
- (2603:10b6:5:3b8::29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.21; Tue, 25 Oct
+ 2022 06:53:56 +0000
+Received: from DM6NAM11FT107.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:337:cafe::79) by DM6PR07CA0083.outlook.office365.com
+ (2603:10b6:5:337::16) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5746.28 via Frontend
- Transport; Tue, 25 Oct 2022 06:54:02 +0000
+ Transport; Tue, 25 Oct 2022 06:53:56 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
 Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
-Received: from SATLEXMB03.amd.com (165.204.84.17) by
- DM6NAM11FT064.mail.protection.outlook.com (10.13.172.234) with Microsoft SMTP
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ DM6NAM11FT107.mail.protection.outlook.com (10.13.172.142) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5746.16 via Frontend Transport; Tue, 25 Oct 2022 06:54:02 +0000
-Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.5746.16 via Frontend Transport; Tue, 25 Oct 2022 06:53:56 +0000
+Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 25 Oct
- 2022 01:54:02 -0500
+ 2022 01:53:55 -0500
 Received: from xhdbharatku40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server id 15.1.2375.31 via Frontend
- Transport; Tue, 25 Oct 2022 01:53:59 -0500
+ Transport; Tue, 25 Oct 2022 01:53:53 -0500
 From:   Thippeswamy Havalige <thippeswamy.havalige@amd.com>
 To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <krzysztof.kozlowski@linaro.org>
 CC:     <bhelgaas@google.com>, <michals@xilinx.com>, <robh+dt@kernel.org>,
         <lorenzo.pieralisi@arm.com>, <bharat.kumar.gogada@amd.com>,
         "Thippeswamy Havalige" <thippeswamy.havalige@amd.com>
-Subject: [PATCH 10/13] microblaze/PCI: Remove unused sys_pciconfig_iobase() and et al declaration
-Date:   Tue, 25 Oct 2022 12:22:11 +0530
-Message-ID: <20221025065214.4663-11-thippeswamy.havalige@amd.com>
+Subject: [PATCH 08/13] microblaze/PCI: Remove unused PCI Indirect ops
+Date:   Tue, 25 Oct 2022 12:22:09 +0530
+Message-ID: <20221025065214.4663-9-thippeswamy.havalige@amd.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20221025065214.4663-1-thippeswamy.havalige@amd.com>
 References: <20221025065214.4663-1-thippeswamy.havalige@amd.com>
@@ -72,136 +72,295 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6NAM11FT064:EE_|CH0PR12MB5155:EE_
-X-MS-Office365-Filtering-Correlation-Id: 91b62dc9-3d1d-4093-9e29-08dab655b3b1
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT107:EE_|PH0PR12MB5605:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3ddbd582-d17a-40f8-e37c-08dab655affb
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Fsz3MJwfAkv9I0dkM3T8DYXFooPFMF6ov1JwdnybMybVPov5EwHuzf06U0hAf/+LtbsRSdcennCgcFZ0yTWdT16UqYDAoURjuXpdEUQxTFmPne+PZ2gxmFY17RU1VSjAe1QToarKndSX2Jr/xr9PkUzqe5/iRg1UDNjHkLpymBu0CHIOhJLTRdyJYMJifX/GuAExkQye62HfciJjWiF6xMM/YTyjEQBU8J+SPFGCuJqStURTQxxlv95REV/6JoObFgAP6XhCTfPVY6b4Q6YLdcTm8HygT2zzIN9jkbUM1QZFfvIcPVPjs3GP+TQoD0cXC2A4b34uWcpmKRvmgc1iVwMi0ezBw1DqtI22ROhpRHb3C+6ZjkUkXoph9nGywZEz/y2HG10WWx03BSHbxvn/dq9Lninw+gbWsoy4Sm8HseA3QHViKvthWgDUisKeVZigiL+wz3Tgwkyr0GlK6ZFh2eX5F8eIXZnXgj9jHSY3m0ZdVfTfLPviNJNJzftgjS4jfT01zEc1hTB5BI2nH+RM9LDm1Jn3j61uQOr6jZOSoGqA8vwSDvyuITkddyqPgmxV+Hf2obTV1odiQ5nu2w6aJ4DVaXZpFb6K9rYfjf7HR+wURtVb0023s+BKnDXRIxLxeyFrH4ed9ZJlAxEClaBcLfEOitoAi636YjfvBqTSmumG9QEBpD3bYeexFa+HgnhoCl/b6G49Gu6YOWyal8Ku8z9zUcGBpqEwNivQgH9U4uticFQ9wtMDgiktP8TdS1alPhHjNs/ueWJv9cLzLgEz9ZJCWXDOz90T8y/K/e9HVnTt1tU77M+EM2mpsXR7ECOE
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(136003)(39860400002)(346002)(376002)(396003)(451199015)(40470700004)(46966006)(36840700001)(83380400001)(86362001)(478600001)(1076003)(70586007)(36756003)(4326008)(6666004)(8676002)(41300700001)(316002)(5660300002)(26005)(8936002)(54906003)(110136005)(40460700003)(44832011)(40480700001)(426003)(47076005)(336012)(186003)(2906002)(2616005)(82310400005)(70206006)(356005)(81166007)(36860700001)(82740400003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: +5EnBRXirMoK9BpifcIfrVz6YsbyTABVfEvLFLNpQiBRGEJ/5s2nY5jMboUpmQgAN8e89VqwoNYF7hGb+Os0mwp0PBm5fT0RcfI9M/xz5f9JLwbJW7b6mq4VWKwyfiQwZ45kah403MNBjPsHA2Xl5hZSYWhpn84hFPhehtjU+ax9YpVibtCnDjJgtf+38ACz1zSnTdSFp6S+TxD6bAEy6DQyRRJymT2fPjSakm+GPheo3/IV513xmK2/rMHEKi34X4Zo0MKgbolixA7G7lPwzBkWC+7XATPDDeX6o1fmWCsoJ9DzZGhbYkPOlYCkG1YZYItS+GTwqPzrOgnHvgpzXlEkprw5LOrN/Y2M5brjlSEPFA5dKG7FwtV4yxlGeTLTWec5/7Sf/yQC2SWSv4TegQNaclHuFcfIHKpIz8sj/ye30PLfc+Ab40XO2XgWdmGMR667bGUasvjN+iGMBNgHDFGzIr29XMFrwCyr+pqHExBM6MwVcnvfImlh3owK6QoWeAmajJCXY/PwgRgd2TnNYFckLo8GDhS5Yr0i1Ct83HhB70q7GJg7u9XBBYT3LYSWUwVMxizhwi4Y37KN5qOhX4Sx2MxdpmkFnre8RnvaJny/7iOtdjNznk/Zb0agHYVoCzH9DZFhfgQYBFPI9B0OcPO8ug+Pfdu0/dxZTTbJNzBh3UEKG/cYWLnj+/68MWu4v0fArEVgNogaNeTeoxCwHaZJD+dMmmpJXkSkzF2xyLmGF5qS8hpSZ3lOiKe+rlEjNbbDiBA0zP+12nOM71i6fegs4rg+Qy4Cz7xQ631PC8WRbEwhX2UsyX061p5qyX3i
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(376002)(346002)(396003)(136003)(451199015)(46966006)(36840700001)(40470700004)(36860700001)(8676002)(44832011)(316002)(41300700001)(54906003)(110136005)(4326008)(40480700001)(8936002)(70206006)(70586007)(5660300002)(82740400003)(6666004)(478600001)(2616005)(1076003)(186003)(26005)(426003)(83380400001)(356005)(81166007)(40460700003)(47076005)(86362001)(336012)(82310400005)(36756003)(2906002)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Oct 2022 06:54:02.8802
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Oct 2022 06:53:56.6717
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 91b62dc9-3d1d-4093-9e29-08dab655b3b1
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ddbd582-d17a-40f8-e37c-08dab655affb
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT064.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT107.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB5155
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB5605
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Removed unused code which provides information of various
-I/O regions.
+Remove unused variants of PCI indirect handling.
 
 Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
 ---
- arch/microblaze/include/asm/pci-bridge.h |  8 ------
- arch/microblaze/include/asm/pci.h        |  7 -----
- arch/microblaze/pci/pci-common.c         | 44 --------------------------------
- 3 files changed, 59 deletions(-)
+ arch/microblaze/include/asm/pci-bridge.h |  34 -------
+ arch/microblaze/pci/Makefile             |   2 +-
+ arch/microblaze/pci/indirect_pci.c       | 158 -------------------------------
+ arch/microblaze/pci/xilinx_pci.c         |   6 --
+ 4 files changed, 1 insertion(+), 199 deletions(-)
+ delete mode 100644 arch/microblaze/pci/indirect_pci.c
 
 diff --git a/arch/microblaze/include/asm/pci-bridge.h b/arch/microblaze/include/asm/pci-bridge.h
-index cd9ae71..9c89ae4 100644
+index 170369d..cd9ae71 100644
 --- a/arch/microblaze/include/asm/pci-bridge.h
 +++ b/arch/microblaze/include/asm/pci-bridge.h
-@@ -29,17 +29,9 @@ struct pci_controller {
- 	struct list_head list_node;
- 	struct device *parent;
+@@ -32,8 +32,6 @@ struct pci_controller {
+ 	int first_busno;
+ 	int last_busno;
  
--	int first_busno;
--	int last_busno;
+-	int self_busno;
 -
  	void __iomem *io_base_virt;
  	resource_size_t io_base_phys;
  
--	/* Some machines (PReP) have a non 1:1 mapping of
--	 * the PCI memory space in the CPU bus space
+@@ -42,34 +40,6 @@ struct pci_controller {
+ 	 */
+ 	resource_size_t pci_mem_offset;
+ 
+-	struct pci_ops *ops;
+-	unsigned int __iomem *cfg_addr;
+-	void __iomem *cfg_data;
+-
+-	/*
+-	 * Used for variants of PCI indirect handling and possible quirks:
+-	 *  SET_CFG_TYPE - used on 4xx or any PHB that does explicit type0/1
+-	 *  EXT_REG - provides access to PCI-e extended registers
+-	 *  SURPRESS_PRIMARY_BUS - we suppress the setting of PCI_PRIMARY_BUS
+-	 *   on Freescale PCI-e controllers since they used the PCI_PRIMARY_BUS
+-	 *   to determine which bus number to match on when generating type0
+-	 *   config cycles
+-	 *  NO_PCIE_LINK - the Freescale PCI-e controllers have issues with
+-	 *   hanging if we don't have link and try to do config cycles to
+-	 *   anything but the PHB.  Only allow talking to the PHB if this is
+-	 *   set.
+-	 *  BIG_ENDIAN - cfg_addr is a big endian register
+-	 *  BROKEN_MRM - the 440EPx/GRx chips have an errata that causes hangs
+-	 *   on the PLB4.  Effectively disable MRM commands by setting this.
 -	 */
--	resource_size_t pci_mem_offset;
+-#define INDIRECT_TYPE_SET_CFG_TYPE		0x00000001
+-#define INDIRECT_TYPE_EXT_REG		0x00000002
+-#define INDIRECT_TYPE_SURPRESS_PRIMARY_BUS	0x00000004
+-#define INDIRECT_TYPE_NO_PCIE_LINK		0x00000008
+-#define INDIRECT_TYPE_BIG_ENDIAN		0x00000010
+-#define INDIRECT_TYPE_BROKEN_MRM		0x00000020
+-	u32 indirect_type;
 -
  	/* Currently, we limit ourselves to 1 IO range and 3 mem
  	 * ranges since the common pci_bus structure can't handle more
  	 */
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index 6da7523..52d572d 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -21,13 +21,6 @@
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
- 
--/* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
--#define IOBASE_BRIDGE_NUMBER	0
--#define IOBASE_MEMORY		1
--#define IOBASE_IO		2
--#define IOBASE_ISA_IO		3
--#define IOBASE_ISA_MEM		4
--
- /*
-  * Set this to 1 if you want the kernel to re-assign all PCI
-  * bus numbers (don't do that on ppc64 yet !)
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 555281c..a1de853 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -38,9 +38,6 @@
- static DEFINE_SPINLOCK(hose_spinlock);
- LIST_HEAD(hose_list);
- 
--/* ISA Memory physical address */
--resource_size_t isa_mem_base;
--
- unsigned long isa_io_base;
- EXPORT_SYMBOL(isa_io_base);
- 
-@@ -92,44 +89,3 @@ int pci_proc_domain(struct pci_bus *bus)
- {
- 	return pci_domain_nr(bus);
+@@ -91,9 +61,5 @@ static inline int isa_vaddr_is_ioport(void __iomem *address)
  }
+ #endif /* CONFIG_PCI */
+ 
+-extern void setup_indirect_pci(struct pci_controller *hose,
+-			       resource_size_t cfg_addr,
+-			       resource_size_t cfg_data, u32 flags);
 -
--static struct pci_controller *pci_bus_to_hose(int bus)
--{
--	struct pci_controller *hose, *tmp;
--
--	list_for_each_entry_safe(hose, tmp, &hose_list, list_node)
--		if (bus >= hose->first_busno && bus <= hose->last_busno)
--			return hose;
--	return NULL;
--}
--
--/* Provide information on locations of various I/O regions in physical
-- * memory.  Do this on a per-card basis so that we choose the right
-- * root bridge.
-- * Note that the returned IO or memory base is a physical address
+ #endif	/* __KERNEL__ */
+ #endif	/* _ASM_MICROBLAZE_PCI_BRIDGE_H */
+diff --git a/arch/microblaze/pci/Makefile b/arch/microblaze/pci/Makefile
+index 0251c20..3cbdf25 100644
+--- a/arch/microblaze/pci/Makefile
++++ b/arch/microblaze/pci/Makefile
+@@ -3,5 +3,5 @@
+ # Makefile
+ #
+ 
+-obj-$(CONFIG_PCI)		+= pci-common.o indirect_pci.o iomap.o
++obj-$(CONFIG_PCI)		+= pci-common.o iomap.o
+ obj-$(CONFIG_PCI_XILINX)	+= xilinx_pci.o
+diff --git a/arch/microblaze/pci/indirect_pci.c b/arch/microblaze/pci/indirect_pci.c
+deleted file mode 100644
+index 1caf7d3..0000000
+--- a/arch/microblaze/pci/indirect_pci.c
++++ /dev/null
+@@ -1,158 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0-or-later
+-/*
+- * Support for indirect PCI bridges.
+- *
+- * Copyright (C) 1998 Gabriel Paubert.
 - */
 -
--long sys_pciconfig_iobase(long which, unsigned long bus, unsigned long devfn)
+-#include <linux/kernel.h>
+-#include <linux/pci.h>
+-#include <linux/delay.h>
+-#include <linux/string.h>
+-#include <linux/init.h>
+-
+-#include <linux/io.h>
+-#include <asm/pci-bridge.h>
+-
+-static int
+-indirect_read_config(struct pci_bus *bus, unsigned int devfn, int offset,
+-		     int len, u32 *val)
 -{
--	struct pci_controller *hose;
--	long result = -EOPNOTSUPP;
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-	volatile void __iomem *cfg_data;
+-	u8 cfg_type = 0;
+-	u32 bus_no, reg;
 -
--	hose = pci_bus_to_hose(bus);
--	if (!hose)
--		return -ENODEV;
--
--	switch (which) {
--	case IOBASE_BRIDGE_NUMBER:
--		return (long)hose->first_busno;
--	case IOBASE_MEMORY:
--		return (long)hose->pci_mem_offset;
--	case IOBASE_IO:
--		return (long)hose->io_base_phys;
--	case IOBASE_ISA_IO:
--		return (long)isa_io_base;
--	case IOBASE_ISA_MEM:
--		return (long)isa_mem_base;
+-	if (hose->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK) {
+-		if (bus->number != hose->first_busno)
+-			return PCIBIOS_DEVICE_NOT_FOUND;
+-		if (devfn != 0)
+-			return PCIBIOS_DEVICE_NOT_FOUND;
 -	}
 -
--	return result;
+-	if (hose->indirect_type & INDIRECT_TYPE_SET_CFG_TYPE)
+-		if (bus->number != hose->first_busno)
+-			cfg_type = 1;
+-
+-	bus_no = (bus->number == hose->first_busno) ?
+-			hose->self_busno : bus->number;
+-
+-	if (hose->indirect_type & INDIRECT_TYPE_EXT_REG)
+-		reg = ((offset & 0xf00) << 16) | (offset & 0xfc);
+-	else
+-		reg = offset & 0xfc; /* Only 3 bits for function */
+-
+-	if (hose->indirect_type & INDIRECT_TYPE_BIG_ENDIAN)
+-		out_be32(hose->cfg_addr, (0x80000000 | (bus_no << 16) |
+-			 (devfn << 8) | reg | cfg_type));
+-	else
+-		out_le32(hose->cfg_addr, (0x80000000 | (bus_no << 16) |
+-			 (devfn << 8) | reg | cfg_type));
+-
+-	/*
+-	 * Note: the caller has already checked that offset is
+-	 * suitably aligned and that len is 1, 2 or 4.
+-	 */
+-	cfg_data = hose->cfg_data + (offset & 3); /* Only 3 bits for function */
+-	switch (len) {
+-	case 1:
+-		*val = in_8(cfg_data);
+-		break;
+-	case 2:
+-		*val = in_le16(cfg_data);
+-		break;
+-	default:
+-		*val = in_le32(cfg_data);
+-		break;
+-	}
+-	return PCIBIOS_SUCCESSFUL;
 -}
+-
+-static int
+-indirect_write_config(struct pci_bus *bus, unsigned int devfn, int offset,
+-		      int len, u32 val)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-	volatile void __iomem *cfg_data;
+-	u8 cfg_type = 0;
+-	u32 bus_no, reg;
+-
+-	if (hose->indirect_type & INDIRECT_TYPE_NO_PCIE_LINK) {
+-		if (bus->number != hose->first_busno)
+-			return PCIBIOS_DEVICE_NOT_FOUND;
+-		if (devfn != 0)
+-			return PCIBIOS_DEVICE_NOT_FOUND;
+-	}
+-
+-	if (hose->indirect_type & INDIRECT_TYPE_SET_CFG_TYPE)
+-		if (bus->number != hose->first_busno)
+-			cfg_type = 1;
+-
+-	bus_no = (bus->number == hose->first_busno) ?
+-			hose->self_busno : bus->number;
+-
+-	if (hose->indirect_type & INDIRECT_TYPE_EXT_REG)
+-		reg = ((offset & 0xf00) << 16) | (offset & 0xfc);
+-	else
+-		reg = offset & 0xfc;
+-
+-	if (hose->indirect_type & INDIRECT_TYPE_BIG_ENDIAN)
+-		out_be32(hose->cfg_addr, (0x80000000 | (bus_no << 16) |
+-			 (devfn << 8) | reg | cfg_type));
+-	else
+-		out_le32(hose->cfg_addr, (0x80000000 | (bus_no << 16) |
+-			 (devfn << 8) | reg | cfg_type));
+-
+-	/* suppress setting of PCI_PRIMARY_BUS */
+-	if (hose->indirect_type & INDIRECT_TYPE_SURPRESS_PRIMARY_BUS)
+-		if ((offset == PCI_PRIMARY_BUS) &&
+-			(bus->number == hose->first_busno))
+-			val &= 0xffffff00;
+-
+-	/* Workaround for PCI_28 Errata in 440EPx/GRx */
+-	if ((hose->indirect_type & INDIRECT_TYPE_BROKEN_MRM) &&
+-			offset == PCI_CACHE_LINE_SIZE) {
+-		val = 0;
+-	}
+-
+-	/*
+-	 * Note: the caller has already checked that offset is
+-	 * suitably aligned and that len is 1, 2 or 4.
+-	 */
+-	cfg_data = hose->cfg_data + (offset & 3);
+-	switch (len) {
+-	case 1:
+-		out_8(cfg_data, val);
+-		break;
+-	case 2:
+-		out_le16(cfg_data, val);
+-		break;
+-	default:
+-		out_le32(cfg_data, val);
+-		break;
+-	}
+-
+-	return PCIBIOS_SUCCESSFUL;
+-}
+-
+-static struct pci_ops indirect_pci_ops = {
+-	.read = indirect_read_config,
+-	.write = indirect_write_config,
+-};
+-
+-void __init
+-setup_indirect_pci(struct pci_controller *hose,
+-		   resource_size_t cfg_addr,
+-		   resource_size_t cfg_data, u32 flags)
+-{
+-	resource_size_t base = cfg_addr & PAGE_MASK;
+-	void __iomem *mbase;
+-
+-	mbase = ioremap(base, PAGE_SIZE);
+-	hose->cfg_addr = mbase + (cfg_addr & ~PAGE_MASK);
+-	if ((cfg_data & PAGE_MASK) != base)
+-		mbase = ioremap(cfg_data & PAGE_MASK, PAGE_SIZE);
+-	hose->cfg_data = mbase + (cfg_data & ~PAGE_MASK);
+-	hose->ops = &indirect_pci_ops;
+-	hose->indirect_type = flags;
+-}
+diff --git a/arch/microblaze/pci/xilinx_pci.c b/arch/microblaze/pci/xilinx_pci.c
+index 3fa16e3..5dc4182 100644
+--- a/arch/microblaze/pci/xilinx_pci.c
++++ b/arch/microblaze/pci/xilinx_pci.c
+@@ -83,7 +83,6 @@ static void xilinx_pci_fixup_bridge(struct pci_dev *dev)
+  */
+ void __init xilinx_pci_init(void)
+ {
+-	struct pci_controller *hose;
+ 	struct resource r;
+ 	void __iomem *pci_reg;
+ 	struct device_node *pci_node;
+@@ -97,11 +96,6 @@ void __init xilinx_pci_init(void)
+ 		return;
+ 	}
+ 
+-	/* Setup config space */
+-	setup_indirect_pci(hose, r.start + XPLB_PCI_ADDR,
+-			   r.start + XPLB_PCI_DATA,
+-			   INDIRECT_TYPE_SET_CFG_TYPE);
+-
+ 	/* Set the max bus number to 255, and bus/subbus no's to 0 */
+ 	pci_reg = of_iomap(pci_node, 0);
+ 	WARN_ON(!pci_reg);
 -- 
 1.8.3.1
 
