@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5CA4FA373E
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 20:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07364FA3742
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 20:39:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232731AbiJYUjQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Oct 2022 16:39:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37872 "EHLO
+        id S232878AbiJYUjR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Oct 2022 16:39:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232207AbiJYUjO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 16:39:14 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0267D25A6;
-        Tue, 25 Oct 2022 13:39:12 -0700 (PDT)
+        with ESMTP id S232888AbiJYUjP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 16:39:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03CEAD03AA;
+        Tue, 25 Oct 2022 13:39:14 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A3630B81EAC;
-        Tue, 25 Oct 2022 20:39:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F874C433D6;
-        Tue, 25 Oct 2022 20:39:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9635561939;
+        Tue, 25 Oct 2022 20:39:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA65BC433C1;
+        Tue, 25 Oct 2022 20:39:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666730350;
-        bh=LL+baUOB7lW6465yZqZsrPVV98M/NczV4Of/t7DTfVg=;
+        s=k20201202; t=1666730354;
+        bh=eKHajaFPUWFcahp2dCsnvEJvSfJoqHc/LouZANgGWxA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hOKB+YW0cPiewh7GS3QZKPXq613lrbQWi1B3nMzqMfeEhLc79CcMmWIn3+ANnFhl1
-         I24wya5Zq4J98LnRl8s669mcQ0LUw55+ed9lK7oay/GGxciBzRAfBhBnVzspCUhbzp
-         4XTuuLd1KyncAWYC1/04s6rBHwk0mq7fL5IhVF4Y3l1C7885iAPum54cNNpc6VTVi9
-         zR4ejQTYLw5r8TLPFmQe0B9eOOTyMW4MhW4/u9ffoZX6WKZy5bPr87GmpeAuMJfTCV
-         HLc8qoJxlCME77dC2hR+eAAqXpFqh9/b9SUABTN9bMxRPyFCXFqGP1/z1IWhlCs854
-         fPb+JSJE6jEuQ==
+        b=Ue1ItoRnu0SGGKifXtX8/BOQCE5RlSxjOh72lh1UAlf7++SLT1PIXarNnwTHdSLI4
+         CtzCDgMAD0/cK7zpVttgolq67WApv/pz94yGPGjEbOpMnxn+UrSQ7ZfKmGnBZtCxV8
+         Cc/NncDWwMwztb4RfVBL0wka5Mklf6flf9LpvCRJ5Ge3InJJ7+wifnLdqcB55Lxb5f
+         6KWI8y4SD+5Vek7NNCXL6OwnGB4W/wbT6DI3K92qdPuJZ7+AqTSW6ZftpiMjTSqqpU
+         dS6Y79nwfSt2Z0BngaTp3zKD7zAybnZrWgAET0/W12O/9E/qopzxJ9eDxVsftE9g0c
+         mKHoFjOoDg5Fw==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     David Airlie <airlied@redhat.com>
 Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
@@ -39,9 +39,9 @@ Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
         linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 6/8] agp/amd64: Update to DEFINE_SIMPLE_DEV_PM_OPS()
-Date:   Tue, 25 Oct 2022 15:38:50 -0500
-Message-Id: <20221025203852.681822-7-helgaas@kernel.org>
+Subject: [PATCH v2 8/8] agp/via: Update to DEFINE_SIMPLE_DEV_PM_OPS()
+Date:   Tue, 25 Oct 2022 15:38:52 -0500
+Message-Id: <20221025203852.681822-9-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221025203852.681822-1-helgaas@kernel.org>
 References: <20221025203852.681822-1-helgaas@kernel.org>
@@ -63,33 +63,33 @@ Convert to DEFINE_SIMPLE_DEV_PM_OPS().  No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/char/agp/amd64-agp.c | 6 ++----
+ drivers/char/agp/via-agp.c | 6 ++----
  1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/char/agp/amd64-agp.c b/drivers/char/agp/amd64-agp.c
-index 84a4aa9312cf..ce8651436609 100644
---- a/drivers/char/agp/amd64-agp.c
-+++ b/drivers/char/agp/amd64-agp.c
-@@ -588,9 +588,7 @@ static void agp_amd64_remove(struct pci_dev *pdev)
- 	agp_bridges_found--;
+diff --git a/drivers/char/agp/via-agp.c b/drivers/char/agp/via-agp.c
+index b2f484f527fb..bc5140af2dcb 100644
+--- a/drivers/char/agp/via-agp.c
++++ b/drivers/char/agp/via-agp.c
+@@ -489,9 +489,7 @@ static void agp_via_remove(struct pci_dev *pdev)
+ 	agp_put_bridge(bridge);
  }
  
--#define agp_amd64_suspend NULL
+-#define agp_via_suspend NULL
 -
--static int __maybe_unused agp_amd64_resume(struct device *dev)
-+static int agp_amd64_resume(struct device *dev)
+-static int __maybe_unused agp_via_resume(struct device *dev)
++static int agp_via_resume(struct device *dev)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct agp_bridge_data *bridge = dev_get_drvdata(dev);
  
-@@ -727,7 +725,7 @@ static const struct pci_device_id agp_amd64_pci_promisc_table[] = {
- 	{ }
- };
+@@ -551,7 +549,7 @@ static const struct pci_device_id agp_via_pci_table[] = {
  
--static SIMPLE_DEV_PM_OPS(agp_amd64_pm_ops, agp_amd64_suspend, agp_amd64_resume);
-+static DEFINE_SIMPLE_DEV_PM_OPS(agp_amd64_pm_ops, NULL, agp_amd64_resume);
+ MODULE_DEVICE_TABLE(pci, agp_via_pci_table);
  
- static struct pci_driver agp_amd64_pci_driver = {
- 	.name		= "agpgart-amd64",
+-static SIMPLE_DEV_PM_OPS(agp_via_pm_ops, agp_via_suspend, agp_via_resume);
++static DEFINE_SIMPLE_DEV_PM_OPS(agp_via_pm_ops, NULL, agp_via_resume);
+ 
+ static struct pci_driver agp_via_pci_driver = {
+ 	.name		= "agpgart-via",
 -- 
 2.25.1
 
