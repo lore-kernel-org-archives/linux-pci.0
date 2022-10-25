@@ -2,100 +2,122 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 571CCFA3743
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 20:04:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44D01FA373E
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 20:39:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232576AbiJYUEE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Oct 2022 16:04:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58578 "EHLO
+        id S232240AbiJYUjD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Oct 2022 16:39:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230327AbiJYUED (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 16:04:03 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FDA311A951;
-        Tue, 25 Oct 2022 13:04:03 -0700 (PDT)
+        with ESMTP id S230057AbiJYUjC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 16:39:02 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46C7061DBB;
+        Tue, 25 Oct 2022 13:39:02 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D9988B81EC9;
-        Tue, 25 Oct 2022 20:04:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 759C5C433C1;
-        Tue, 25 Oct 2022 20:03:54 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D34DA61B8A;
+        Tue, 25 Oct 2022 20:39:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09E56C433D6;
+        Tue, 25 Oct 2022 20:39:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666728240;
-        bh=ydeW7eA2NXW+5grO0NpeP3U1RnuzRINX/JYx6xdDNJk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=c/y6sBxBC/QTm/bKfHGdyAV72PYZcPBZjPPeJPC7JSSYsRIjZCNo2ukddtCYzfZml
-         RIvad+xpLP5OBp9B3fYDudUrVHUKGB++0Oa2cbVaDxjmuyPKd/YD9uPpL/4CQ8c5hz
-         LtM8I5yiXL9LiL/oSCQ0CR8OHRzsYuUaStw0syC6FreC6/LWMqdkVKbR1ZCObTolcF
-         n2IGOIXEUcWyDh1ACd3NiOdJvEhFLvUB2BTUjOwCOlzVW36lUw9G8/sCj0dc1/Khj9
-         RgRm3swgc8EeOs/68mD/Gvai5JagAmhmgd2Yk7c0TT/FcLAr9SCnbaprwxj5LmB7hA
-         hj02jgP9H8LJw==
-Date:   Tue, 25 Oct 2022 21:03:51 +0100
-From:   Conor Dooley <conor@kernel.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Tom Joseph <tjoseph@cadence.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Toan Le <toan@os.amperecomputing.com>,
-        Joyce Ooi <joyce.ooi@intel.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Conor Dooley <conor.dooley@microchip.com>,
-        Daire McNamara <daire.mcnamara@microchip.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>,
-        Michal Simek <michal.simek@amd.com>,
-        bcm-kernel-feedback-list@broadcom.com, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-tegra@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-rockchip@lists.infradead.org,
+        s=k20201202; t=1666730341;
+        bh=9BVyvHpCzFYNdZ3nJvRlGSWnz3qxu4Z4JfrHxC45mlk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=qBbuxxY38N33cQ/3BYsV0hJWID/Npq535lOhs3s3GHFA+eOZJkQFwyRO6QGKNvAWw
+         4OxvHZVKfIZcDS6cmW7s5k4h/o4eX/8rbBUzRAfMVVaHvRIlmBTTmBFo5A5PPfxvCi
+         SBYnWqE4tVNK3GbGFuSShSlqsy3hIirBQOW7HzdkzHY6zorVc3EukzWS3QCe0UmxCl
+         1Jf3+j+1RgXXXvRZ+36ky/5VZ+pm3q+3zF+AJGYpJXf8oFXp87XLJFKBnWPl7DHMKU
+         AY5ngkYBrZMwHM9C0MtSKZ1rWFYlW93VI7VqsImEml8vJZug+S9SXaWfFxMNzkiXYL
+         kpVqdYCkYHWsg==
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     David Airlie <airlied@redhat.com>
+Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 0/4] PCI: Remove unnecessary <linux/of_irq.h> includes
-Message-ID: <Y1hBJ+b4xmBRtrvF@spud>
-References: <20221025185147.665365-1-helgaas@kernel.org>
+Subject: [PATCH v2 1/8] agp/efficeon: Convert to generic power management
+Date:   Tue, 25 Oct 2022 15:38:45 -0500
+Message-Id: <20221025203852.681822-2-helgaas@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221025203852.681822-1-helgaas@kernel.org>
+References: <20221025203852.681822-1-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221025185147.665365-1-helgaas@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 25, 2022 at 01:51:43PM -0500, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Many host controller drivers #include <linux/of_irq.h> even though they
-> don't need it.  Remove the unnecessary #includes.
-> 
-> v1: https://lore.kernel.org/all/20221019195452.37606-1-helgaas@kernel.org/
-> 
-> Changes from v1 to v2:
->   - Include <linux/irqdomain.h> explicitly in altera-msi and microchip,
->     which don't need <linux/of_irq.h> itself, but relied on it to include
->     <linux/irqdomain.h>
->   - Include <linux/irqdomain.h> explicitly in mvebu, which needs both it
->     and <linux/of_irq.h>
-> 
-> Bjorn Helgaas (4):
->   PCI: altera-msi: Include <linux/irqdomain.h> explicitly
->   PCI: microchip: Include <linux/irqdomain.h> explicitly
->   PCI: mvebu: Include <linux/irqdomain.h> explicitly
->   PCI: Remove unnecessary <linux/of_irq.h> includes
+From: Bjorn Helgaas <bhelgaas@google.com>
 
->  drivers/pci/controller/pcie-microchip-host.c | 2 +-
+Convert agpgart-efficeon from legacy PCI power management to the generic
+power management framework.
 
-Hey Bjorn, actually did the build this time rather than visually
-inspecting... For the microchip bits:
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
-Thanks!
+Previously agpgart-efficeon used legacy PCI power management, which means
+agp_efficeon_suspend() and agp_efficeon_resume() were responsible for both
+device-specific things and generic PCI things like saving and restoring
+config space and managing power state.
+
+In this case, agp_efficeon_suspend() was empty, and agp_efficeon_resume()
+already did only device-specific things, so simply convert it to take a
+struct device * instead of a struct pci_dev *.
+
+Based on 0aeddbd0cb07 ("via-agp: convert to generic power management") by
+Vaibhav Gupta <vaibhavgupta40@gmail.com>.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/char/agp/efficeon-agp.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/char/agp/efficeon-agp.c b/drivers/char/agp/efficeon-agp.c
+index c53f0f9ef5b0..f28d42319269 100644
+--- a/drivers/char/agp/efficeon-agp.c
++++ b/drivers/char/agp/efficeon-agp.c
+@@ -412,18 +412,11 @@ static void agp_efficeon_remove(struct pci_dev *pdev)
+ 	agp_put_bridge(bridge);
+ }
+ 
+-#ifdef CONFIG_PM
+-static int agp_efficeon_suspend(struct pci_dev *dev, pm_message_t state)
+-{
+-	return 0;
+-}
+-
+-static int agp_efficeon_resume(struct pci_dev *pdev)
++static int agp_efficeon_resume(struct device *dev)
+ {
+ 	printk(KERN_DEBUG PFX "agp_efficeon_resume()\n");
+ 	return efficeon_configure();
+ }
+-#endif
+ 
+ static const struct pci_device_id agp_efficeon_pci_table[] = {
+ 	{
+@@ -437,6 +430,8 @@ static const struct pci_device_id agp_efficeon_pci_table[] = {
+ 	{ }
+ };
+ 
++static DEFINE_SIMPLE_DEV_PM_OPS(agp_efficeon_pm_ops, NULL, agp_efficeon_resume);
++
+ MODULE_DEVICE_TABLE(pci, agp_efficeon_pci_table);
+ 
+ static struct pci_driver agp_efficeon_pci_driver = {
+@@ -444,10 +439,7 @@ static struct pci_driver agp_efficeon_pci_driver = {
+ 	.id_table	= agp_efficeon_pci_table,
+ 	.probe		= agp_efficeon_probe,
+ 	.remove		= agp_efficeon_remove,
+-#ifdef CONFIG_PM
+-	.suspend	= agp_efficeon_suspend,
+-	.resume		= agp_efficeon_resume,
+-#endif
++	.driver.pm	= &agp_efficeon_pm_ops,
+ };
+ 
+ static int __init agp_efficeon_init(void)
+-- 
+2.25.1
 
