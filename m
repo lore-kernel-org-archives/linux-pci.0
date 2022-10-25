@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 709A2C38A2D
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 20:39:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 960C8FA373E
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 20:39:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232445AbiJYUjG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Oct 2022 16:39:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37688 "EHLO
+        id S231356AbiJYUjJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Oct 2022 16:39:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37700 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231482AbiJYUjD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 16:39:03 -0400
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8412AC4B9;
-        Tue, 25 Oct 2022 13:39:02 -0700 (PDT)
+        with ESMTP id S232481AbiJYUjG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Oct 2022 16:39:06 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8CA9AC4B9;
+        Tue, 25 Oct 2022 13:39:05 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 532D6CE1C10;
-        Tue, 25 Oct 2022 20:39:01 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1190BC433C1;
-        Tue, 25 Oct 2022 20:38:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6561B61B8C;
+        Tue, 25 Oct 2022 20:39:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C2C3C433B5;
+        Tue, 25 Oct 2022 20:39:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666730339;
-        bh=pNxIekC28wfpOc5Ypgdt8TBFN8v88QrFVDS9wqoB4fk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=RqSfv94sp39rY9R6dfnKNtA2yzyyL+taF+AKAbt1StMoVeHrtOmoZ8ZmMBXJ3krGy
-         M280K4bsUBIoOIHOGnsOcYDpHG4zzHCwDB2UlH1lj9XqKQQ/c59IeIWCxRi/So+So1
-         9YdUIZBVduYEZ2X9LjSbAmi+lV5q17+kcrwyC8SYNJdPS5iw4NwroUyds1T3C6z0Cj
-         8dGKvrKF3RoP70esMxj9xNR3mEfVfRJFsKoSZ2eei4mESQfW7/WTW8UllreUfuXm2l
-         n3F06FCCOIHuqCd4/nW8IrlGIyY/pdfabLlj4WNAyoXrpyK0r8S/p+trjChtqiu1fm
-         Dar8mob5nL9SA==
+        s=k20201202; t=1666730344;
+        bh=bnYxHxTDl/z/W50ryG9bLwzmSvCiz6uSDgFkbYd/EOA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=quKfNtmqtPTPLTrZWSAl0cLEuhgcf/eTZn6PkksPzNTkKRdt9LLiEKmtPfTHEfH9o
+         0b7yfbmDsdU0GCaUDTH4lMcyUwMh/EyH0E2X38RtiyvIQ9X84gteB04KfLVHlzXheT
+         mOboh9mPuZvMcO6kQh9A8c7mvPpYnLV1r3+8OTz+qopU/CPFFbeCBUczRsFa29YRQ1
+         h3zgO/hd0veku1Pxl8zzSRHy3UAwl0y5xkICWjD7n7QvTbHirRdKAPXGHMTlXrnYh+
+         Gd56kvaSS9CTpc58lccQxt77LbhVxUY6YY4Z6yoylZGawZZOXMx1bGVNwz6zGay2zB
+         fHTtavjyJWgew==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     David Airlie <airlied@redhat.com>
 Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
@@ -39,10 +39,12 @@ Cc:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
         linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 0/8] agp: Convert to generic power management
-Date:   Tue, 25 Oct 2022 15:38:44 -0500
-Message-Id: <20221025203852.681822-1-helgaas@kernel.org>
+Subject: [PATCH v2 3/8] agp/amd-k7: Convert to generic power management
+Date:   Tue, 25 Oct 2022 15:38:47 -0500
+Message-Id: <20221025203852.681822-4-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221025203852.681822-1-helgaas@kernel.org>
+References: <20221025203852.681822-1-helgaas@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -51,38 +53,105 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Vaibhav converted several AGP drivers from legacy PCI power management to
-generic power management [1].  This series converts the rest of them.
+Convert agpgart-amdk7 from legacy PCI power management to the generic power
+management framework.
 
-v1 posted at [2].
+Previously agpgart-amdk7 used legacy PCI power management, and
+agp_amdk7_suspend() and agp_amdk7_resume() were responsible for both
+device-specific things and generic PCI things like saving and restoring
+config space and managing power state:
 
-Changes from v1 to v2:
-  - Convert from SIMPLE_DEV_PM_OPS() (which is deprecated) to
-    DEFINE_SIMPLE_DEV_PM_OPS() and remove __maybe_unused annotations.
+  agp_amdk7_suspend
+    pci_save_state                         <-- generic PCI
+    pci_set_power_state                    <-- generic PCI
 
-[1] https://lore.kernel.org/all/20210112080924.1038907-1-vaibhavgupta40@gmail.com/#t
-[2] https://lore.kernel.org/all/20220607034340.307318-1-helgaas@kernel.org/
+  agp_amdk7_resume
+    pci_set_power_state(PCI_D0)            <-- generic PCI
+    pci_restore_state                      <-- generic PCI
+    amd_irongate_driver.configure          <-- device-specific
 
-Bjorn Helgaas (8):
-  agp/efficeon: Convert to generic power management
-  agp/intel: Convert to generic power management
-  agp/amd-k7: Convert to generic power management
-  agp/ati: Convert to generic power management
-  agp/nvidia: Convert to generic power management
-  agp/amd64: Update to DEFINE_SIMPLE_DEV_PM_OPS()
-  agp/sis: Update to DEFINE_SIMPLE_DEV_PM_OPS()
-  agp/via: Update to DEFINE_SIMPLE_DEV_PM_OPS()
+Convert to generic power management where the PCI bus PM methods do the
+generic PCI things, and the driver needs only the device-specific part,
+i.e.,
 
- drivers/char/agp/amd-k7-agp.c   | 24 ++++--------------------
- drivers/char/agp/amd64-agp.c    |  6 ++----
- drivers/char/agp/ati-agp.c      | 22 ++++------------------
- drivers/char/agp/efficeon-agp.c | 16 ++++------------
- drivers/char/agp/intel-agp.c    | 11 +++++------
- drivers/char/agp/nvidia-agp.c   | 24 ++++--------------------
- drivers/char/agp/sis-agp.c      |  7 ++-----
- drivers/char/agp/via-agp.c      |  6 ++----
- 8 files changed, 27 insertions(+), 89 deletions(-)
+  suspend_devices_and_enter
+    dpm_suspend_start(PMSG_SUSPEND)
+      pci_pm_suspend                       # PCI bus .suspend() method
+        agp_amdk7_suspend                  <-- not needed at all; removed
+    suspend_enter
+      dpm_suspend_noirq(PMSG_SUSPEND)
+        pci_pm_suspend_noirq               # PCI bus .suspend_noirq() method
+          pci_save_state                   <-- generic PCI
+          pci_prepare_to_sleep             <-- generic PCI
+            pci_set_power_state
+    ...
+    dpm_resume_end(PMSG_RESUME)
+      pci_pm_resume                        # PCI bus .resume() method
+        pci_restore_standard_config
+          pci_set_power_state(PCI_D0)      <-- generic PCI
+          pci_restore_state                <-- generic PCI
+        agp_amdk7_resume                   # driver->pm->resume
+          amd_irongate_driver.configure    <-- device-specific
 
+Based on 0aeddbd0cb07 ("via-agp: convert to generic power management") by
+Vaibhav Gupta <vaibhavgupta40@gmail.com>.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/char/agp/amd-k7-agp.c | 24 ++++--------------------
+ 1 file changed, 4 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/char/agp/amd-k7-agp.c b/drivers/char/agp/amd-k7-agp.c
+index 2b2095542816..55397ba765d2 100644
+--- a/drivers/char/agp/amd-k7-agp.c
++++ b/drivers/char/agp/amd-k7-agp.c
+@@ -488,26 +488,11 @@ static void agp_amdk7_remove(struct pci_dev *pdev)
+ 	agp_put_bridge(bridge);
+ }
+ 
+-#ifdef CONFIG_PM
+-
+-static int agp_amdk7_suspend(struct pci_dev *pdev, pm_message_t state)
++static int agp_amdk7_resume(struct device *dev)
+ {
+-	pci_save_state(pdev);
+-	pci_set_power_state(pdev, pci_choose_state(pdev, state));
+-
+-	return 0;
+-}
+-
+-static int agp_amdk7_resume(struct pci_dev *pdev)
+-{
+-	pci_set_power_state(pdev, PCI_D0);
+-	pci_restore_state(pdev);
+-
+ 	return amd_irongate_driver.configure();
+ }
+ 
+-#endif /* CONFIG_PM */
+-
+ /* must be the same order as name table above */
+ static const struct pci_device_id agp_amdk7_pci_table[] = {
+ 	{
+@@ -539,15 +524,14 @@ static const struct pci_device_id agp_amdk7_pci_table[] = {
+ 
+ MODULE_DEVICE_TABLE(pci, agp_amdk7_pci_table);
+ 
++static DEFINE_SIMPLE_DEV_PM_OPS(agp_amdk7_pm_ops, NULL, agp_amdk7_resume);
++
+ static struct pci_driver agp_amdk7_pci_driver = {
+ 	.name		= "agpgart-amdk7",
+ 	.id_table	= agp_amdk7_pci_table,
+ 	.probe		= agp_amdk7_probe,
+ 	.remove		= agp_amdk7_remove,
+-#ifdef CONFIG_PM
+-	.suspend	= agp_amdk7_suspend,
+-	.resume		= agp_amdk7_resume,
+-#endif
++	.driver.pm	= &agp_amdk7_pm_ops,
+ };
+ 
+ static int __init agp_amdk7_init(void)
 -- 
 2.25.1
 
