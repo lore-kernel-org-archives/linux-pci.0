@@ -2,54 +2,54 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27282C67871
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 01:19:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8879C67871
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Oct 2022 01:20:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230327AbiJYBTx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Oct 2022 21:19:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58500 "EHLO
+        id S231394AbiJYBUB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Oct 2022 21:20:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231782AbiJYBT3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 21:19:29 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2FFC658E;
-        Mon, 24 Oct 2022 17:44:12 -0700 (PDT)
+        with ESMTP id S231804AbiJYBTe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Oct 2022 21:19:34 -0400
+Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B87812AE0;
+        Mon, 24 Oct 2022 17:44:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666658652; x=1698194652;
+  t=1666658671; x=1698194671;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=qZzEbgnI+IiYGCDWjiOk6pRpfVWyVLmJiJjhJ8Aas6k=;
-  b=BwGQLUl9DDnxzENZWqrhhE9I8bVh6OuIlqmoLTzH5+mUE72/LQjAEKbV
-   TSqhNDX86TN7887Vpo0grbcNjECIbIvRU2L8vjYw99zeEg5iNNciZWwyt
-   /eAuBMWHQHUA7abUa9G93yb4xAaiuXbqvfvwrItvosz7K2xzOH6nlzV/R
-   CITJaYpZ7c8IE8BwvkA2TuVRinU65imoeUEsQ3901gwer6R8dp0fnLZo9
-   qABSqUsbkYT/zc05ubaSLJ3UiDKo68nw34wrfogIPlzqE4DgRNxZ65zfK
-   /0vv1WIgKmpGR2HUHJ7vg1wMBIk9gsy+ByqTPLM01Kje6B2/YXltQAryr
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="369623633"
+  bh=fN9HAQE3rJNLtGFESkED7VR9H0aD8zu7Jg563TgKGYI=;
+  b=dp4hkADL/2VK1H8NY6RSWv0UrC//dbB1X7mOgeLrCY4voEwGxOc86RL/
+   InPAXoqujVrubjtiM0OuvzT5pkDaJfpr9UrWxZdacXR+u2NIAaRaAIxdc
+   h5tqh00v6jz2lf+r+oc+4s2UBSopslmkFNnvy4K0J4S+mda5TBLVeXisH
+   lGHUr7/vDHxXZOlya6W86pJYAsztUgVibGxeFNdYn6I3ScpaOSrdnIeX9
+   fE2djQtyR+g3IYmgTptxd5Qga2oBksRx+AgFaf+T1PFwdEz4ngMMuj1V6
+   JOQc/6WZo9WD/5GOCDVkfFM3JTY5s0uMd/akYtiAoZQwzpukriTrpxH6z
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="371771375"
 X-IronPort-AV: E=Sophos;i="5.95,210,1661842800"; 
-   d="scan'208";a="369623633"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 17:44:12 -0700
+   d="scan'208";a="371771375"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2022 17:44:13 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="664728638"
+X-IronPort-AV: E=McAfee;i="6500,9779,10510"; a="631454276"
 X-IronPort-AV: E=Sophos;i="5.95,210,1661842800"; 
-   d="scan'208";a="664728638"
+   d="scan'208";a="631454276"
 Received: from linux.intel.com ([10.54.29.200])
-  by orsmga001.jf.intel.com with ESMTP; 24 Oct 2022 17:44:11 -0700
+  by orsmga002.jf.intel.com with ESMTP; 24 Oct 2022 17:44:12 -0700
 Received: from debox1-desk4.intel.com (unknown [10.209.125.134])
-        by linux.intel.com (Postfix) with ESMTP id A25FF580D42;
-        Mon, 24 Oct 2022 17:44:11 -0700 (PDT)
+        by linux.intel.com (Postfix) with ESMTP id A5440580DC8;
+        Mon, 24 Oct 2022 17:44:12 -0700 (PDT)
 From:   "David E. Box" <david.e.box@linux.intel.com>
 To:     nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
         lorenzo.pieralisi@arm.com, hch@infradead.org, kw@linux.com,
         robh@kernel.org, bhelgaas@google.com, david.e.box@linux.intel.com,
         michael.a.bottini@intel.com, rafael@kernel.org, me@adhityamohan.in
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH V7 1/4] PCI/ASPM: Add pci_enable_link_state()
-Date:   Mon, 24 Oct 2022 17:44:08 -0700
-Message-Id: <20221025004411.2910026-2-david.e.box@linux.intel.com>
+Subject: [PATCH V7 4/4] PCI: vmd: Add quirk to configure PCIe ASPM and LTR
+Date:   Mon, 24 Oct 2022 17:44:11 -0700
+Message-Id: <20221025004411.2910026-5-david.e.box@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221025004411.2910026-1-david.e.box@linux.intel.com>
 References: <20221025004411.2910026-1-david.e.box@linux.intel.com>
@@ -59,138 +59,169 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Michael Bottini <michael.a.bottini@linux.intel.com>
+On some platforms, PCIe ports reserved for VMD use are not visible to BIOS
+and therefore not configured to enable PCIe ASPM or LTR values (which BIOS
+will configure if they are not set). Lack of this programming results in
+high power consumption on laptops as reported in several open bugzillas.
+For the affected platforms use pci_enable_link_state to set the allowed
+link states for devices on the root ports. Also set the LTR value to the
+maximum value needed for the SoC.
 
-Add pci_enable_link_state() to allow devices to change the default BIOS
-configured states. Clears the BIOS default settings then sets the new
-states and reconfigures the link under the semaphore. Also add
-PCIE_LINK_STATE_ALL macro for convenience for callers that want to enable
-all link states.
+This workaround applies to Rocket Lake, Tiger Lake, Alder Lake, and Raptor
+Lake, though the latter has already implemented LTR configuring in BIOS.
+Future products will move ASPM configuration back to BIOS.
 
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=212355
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=215063
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=213717
 Signed-off-by: Michael Bottini <michael.a.bottini@linux.intel.com>
 Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Jon Derrick <jonathan.derrick@linux.dev>
+Reviewed-by: Nirmal Patel <nirmal.patel@linux.intel.com>
 ---
- V7
-  - Fix description as suggested by Bjorn
-  - Rename function to pci_enable_link_state
+ drivers/pci/controller/vmd.c | 74 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 68 insertions(+), 6 deletions(-)
 
- V6
-  - No change
- V5
-  - Rename to pci_enable_default_link_state and model after
-    pci_disable_link_state() as suggested by Bjorn.
-  - Add helper PCIE_LINK_STATE_ALL which sets bits for all links states and
-    clock pm.
-  - Clarify commit language to indicate the function changes the default
-    link states (not ASPM policy).
- V4
-  - Refactor vmd_enable_apsm() to exit early, making the lines shorter
-    and more readable. Suggested by Christoph.
- V3
-  - No changes
- V2
-  - Use return status to print pci_info message if ASPM cannot be enabled.
-  - Add missing static declaration, caught by lkp@intel.com
- 
- drivers/pci/pcie/aspm.c | 54 +++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h     |  7 ++++++
- 2 files changed, 61 insertions(+)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 53a1fa306e1e..339c686a5094 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -1181,6 +1181,60 @@ int pci_disable_link_state(struct pci_dev *pdev, int state)
- }
- EXPORT_SYMBOL(pci_disable_link_state);
- 
-+/**
-+ * pci_enable_link_state - Clear and set the default device link state so that
-+ * the link may be allowed to enter the specified states. Note that if the
-+ * BIOS didn't grant ASPM control to the OS, this does nothing because we can't
-+ * touch the LNKCTL register. Also note that this does not enable states
-+ * disabled by pci_disable_link_state(). Return 0 or a negative errno.
-+ *
-+ * @pdev: PCI device
-+ * @state: Mask of ASPM link states to enable
-+ */
-+int pci_enable_link_state(struct pci_dev *pdev, int state)
-+{
-+	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index a53d88fd820c..bb7e9195bc18 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -66,10 +66,19 @@ enum vmd_features {
+ 	 * interrupt handling.
+ 	 */
+ 	VMD_FEAT_CAN_BYPASS_MSI_REMAP		= (1 << 4),
 +
-+	if (!link)
-+		return -EINVAL;
 +	/*
-+	 * A driver requested that ASPM be enabled on this device, but
-+	 * if we don't have permission to manage ASPM (e.g., on ACPI
-+	 * systems we have to observe the FADT ACPI_FADT_NO_ASPM bit and
-+	 * the _OSC method), we can't honor that request.
++	 * Enable ASPM on the PCIE root ports and set the default LTR of the
++	 * storage devices on platforms where these values are not configured by
++	 * BIOS. This is needed for laptops, which require these settings for
++	 * proper power management of the SoC.
 +	 */
-+	if (aspm_disabled) {
-+		pci_warn(pdev, "can't override BIOS ASPM; OS doesn't have ASPM control\n");
-+		return -EPERM;
-+	}
++	VMD_FEAT_BIOS_PM_QUIRK		= (1 << 5),
+ };
+ 
+ struct vmd_device_data {
+ 	enum vmd_features features;
++	u16 ltr;
+ };
+ 
+ static DEFINE_IDA(vmd_instance_ida);
+@@ -713,6 +722,45 @@ static void vmd_copy_host_bridge_flags(struct pci_host_bridge *root_bridge,
+ 	vmd_bridge->native_dpc = root_bridge->native_dpc;
+ }
+ 
++/*
++ * Enable ASPM and LTR settings on devices that aren't configured by BIOS.
++ */
++static int vmd_pm_enable_quirk(struct pci_dev *pdev, void *userdata)
++{
++	struct vmd_device_data *info = userdata;
++	u32 ltr_reg;
++	int pos;
 +
-+	down_read(&pci_bus_sem);
-+	mutex_lock(&aspm_lock);
-+	link->aspm_default = 0;
-+	if (state & PCIE_LINK_STATE_L0S)
-+		link->aspm_default |= ASPM_STATE_L0S;
-+	if (state & PCIE_LINK_STATE_L1)
-+		/* L1 PM substates require L1 */
-+		link->aspm_default |= ASPM_STATE_L1 | ASPM_STATE_L1SS;
-+	if (state & PCIE_LINK_STATE_L1_1)
-+		link->aspm_default |= ASPM_STATE_L1_1;
-+	if (state & PCIE_LINK_STATE_L1_2)
-+		link->aspm_default |= ASPM_STATE_L1_2;
-+	if (state & PCIE_LINK_STATE_L1_1_PCIPM)
-+		link->aspm_default |= ASPM_STATE_L1_1_PCIPM;
-+	if (state & PCIE_LINK_STATE_L1_2_PCIPM)
-+		link->aspm_default |= ASPM_STATE_L1_2_PCIPM;
-+	pcie_config_aspm_link(link, policy_to_aspm_state(link));
++	if (!(info->features & VMD_FEAT_BIOS_PM_QUIRK))
++		return 0;
 +
-+	link->clkpm_default = (state & PCIE_LINK_STATE_CLKPM) ? 1 : 0;
-+	pcie_set_clkpm(link, policy_to_clkpm_state(link));
-+	mutex_unlock(&aspm_lock);
-+	up_read(&pci_bus_sem);
++	pci_enable_link_state(pdev, PCIE_LINK_STATE_ALL);
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_LTR);
++	if (!pos)
++		return 0;
++
++	/*
++	 * Skip if the max snoop LTR is non-zero, indicating BIOS has set it
++	 * so the LTR quirk is not needed.
++	 */
++	pci_read_config_dword(pdev, pos + PCI_LTR_MAX_SNOOP_LAT, &ltr_reg);
++	if (!!(ltr_reg & (PCI_LTR_VALUE_MASK | PCI_LTR_SCALE_MASK)))
++		return 0;
++
++	/*
++	 * Set the default values to the maximum required by the platform to
++	 * allow the deepest power management savings. Write as a DWORD where
++	 * the lower word is the max snoop latency and the upper word is the
++	 * max non-snoop latency.
++	 */
++	ltr_reg = (info->ltr << 16) | info->ltr;
++	pci_write_config_dword(pdev, pos + PCI_LTR_MAX_SNOOP_LAT, ltr_reg);
++	pci_info(pdev, "VMD: Default LTR value set by driver\n");
 +
 +	return 0;
 +}
-+EXPORT_SYMBOL(pci_enable_link_state);
 +
- static int pcie_aspm_set_policy(const char *val,
- 				const struct kernel_param *kp)
+ static int vmd_enable_domain(struct vmd_dev *vmd, struct vmd_device_data *info)
  {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2bda4a4e47e8..8c35f15e6012 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1651,10 +1651,15 @@ extern bool pcie_ports_native;
- #define PCIE_LINK_STATE_L1_2		BIT(4)
- #define PCIE_LINK_STATE_L1_1_PCIPM	BIT(5)
- #define PCIE_LINK_STATE_L1_2_PCIPM	BIT(6)
-+#define PCIE_LINK_STATE_ALL		(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |\
-+					 PCIE_LINK_STATE_CLKPM | PCIE_LINK_STATE_L1_1 |\
-+					 PCIE_LINK_STATE_L1_2 | PCIE_LINK_STATE_L1_1_PCIPM |\
-+					 PCIE_LINK_STATE_L1_2_PCIPM)
+ 	struct pci_sysdata *sd = &vmd->sysdata;
+@@ -868,6 +916,8 @@ static int vmd_enable_domain(struct vmd_dev *vmd, struct vmd_device_data *info)
+ 		pci_reset_bus(child->self);
+ 	pci_assign_unassigned_bus_resources(vmd->bus);
  
- #ifdef CONFIG_PCIEASPM
- int pci_disable_link_state(struct pci_dev *pdev, int state);
- int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
-+int pci_enable_link_state(struct pci_dev *pdev, int state);
- void pcie_no_aspm(void);
- bool pcie_aspm_support_enabled(void);
- bool pcie_aspm_enabled(struct pci_dev *pdev);
-@@ -1663,6 +1668,8 @@ static inline int pci_disable_link_state(struct pci_dev *pdev, int state)
- { return 0; }
- static inline int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
- { return 0; }
-+static inline int pci_enable_link_state(struct pci_dev *pdev, int state)
-+{ return 0; }
- static inline void pcie_no_aspm(void) { }
- static inline bool pcie_aspm_support_enabled(void) { return false; }
- static inline bool pcie_aspm_enabled(struct pci_dev *pdev) { return false; }
++	pci_walk_bus(vmd->bus, vmd_pm_enable_quirk, info);
++
+ 	/*
+ 	 * VMD root buses are virtual and don't return true on pci_is_pcie()
+ 	 * and will fail pcie_bus_configure_settings() early. It can instead be
+@@ -1016,42 +1066,54 @@ static const struct pci_device_id vmd_ids[] = {
+ 		(kernel_ulong_t)&(struct vmd_device_data) {
+ 			.features = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				    VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				    VMD_FEAT_OFFSET_FIRST_VECTOR,
++				    VMD_FEAT_OFFSET_FIRST_VECTOR |
++				    VMD_FEAT_BIOS_PM_QUIRK,
++			.ltr = 0x1003, /* 3145728 ns */
+ 		},
+ 	},
+ 	{PCI_VDEVICE(INTEL, 0x4c3d),
+ 		(kernel_ulong_t)&(struct vmd_device_data) {
+ 			.features = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				    VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				    VMD_FEAT_OFFSET_FIRST_VECTOR,
++				    VMD_FEAT_OFFSET_FIRST_VECTOR |
++				    VMD_FEAT_BIOS_PM_QUIRK,
++			.ltr = 0x1003, /* 3145728 ns */
+ 		},
+ 	},
+ 	{PCI_VDEVICE(INTEL, 0xa77f),
+ 		(kernel_ulong_t)&(struct vmd_device_data) {
+ 			.features = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				    VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				    VMD_FEAT_OFFSET_FIRST_VECTOR,
++				    VMD_FEAT_OFFSET_FIRST_VECTOR |
++				    VMD_FEAT_BIOS_PM_QUIRK,
++			.ltr = 0x1003, /* 3145728 ns */
+ 		},
+ 	},
+ 	{PCI_VDEVICE(INTEL, 0x7d0b),
+ 		(kernel_ulong_t)&(struct vmd_device_data) {
+ 			.features = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				    VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				    VMD_FEAT_OFFSET_FIRST_VECTOR,
++				    VMD_FEAT_OFFSET_FIRST_VECTOR |
++				    VMD_FEAT_BIOS_PM_QUIRK,
++			.ltr = 0x1003, /* 3145728 ns */
+ 		},
+ 	},
+ 	{PCI_VDEVICE(INTEL, 0xad0b),
+ 		(kernel_ulong_t)&(struct vmd_device_data) {
+ 			.features = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				    VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				    VMD_FEAT_OFFSET_FIRST_VECTOR,
++				    VMD_FEAT_OFFSET_FIRST_VECTOR |
++				    VMD_FEAT_BIOS_PM_QUIRK,
++			.ltr = 0x1003, /* 3145728 ns */
+ 		},
+ 	},
+ 	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_9A0B),
+ 		(kernel_ulong_t)&(struct vmd_device_data) {
+ 			.features = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+ 				    VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				    VMD_FEAT_OFFSET_FIRST_VECTOR,
++				    VMD_FEAT_OFFSET_FIRST_VECTOR |
++				    VMD_FEAT_BIOS_PM_QUIRK,
++			.ltr = 0x1003, /* 3145728 ns */
+ 		},
+ 	},
+ 	{0,}
 -- 
 2.25.1
 
