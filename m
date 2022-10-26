@@ -2,166 +2,109 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE38C38A2D
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Oct 2022 11:51:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83F70C433FE
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Oct 2022 12:33:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233571AbiJZLu6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Oct 2022 07:50:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46744 "EHLO
+        id S233471AbiJZMdn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Oct 2022 08:33:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233632AbiJZLuz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Oct 2022 07:50:55 -0400
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 509D39A2BB
-        for <linux-pci@vger.kernel.org>; Wed, 26 Oct 2022 04:50:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666785054; x=1698321054;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=Rt61yAleuqHiCLnHJK9yiw00AyxkWwxjtvbTwBwqP2k=;
-  b=dgOPhJ0/fPLXaCJPznq+HzFf9hDm1tw1UclsWiVDoyqN/aQB4DLyJdDM
-   oLsehjt0O4RhMdEJAP2qoZtBwvzlc3Mo5j7qmysuvnMf9Kx354ELz7bie
-   KtckRoMxm7GSmjriL4C01NyQ1F4drr7cIgO74bijO6PLBq9e0vFg8kZAW
-   IuIv9K5Xmvy/W6BbJb/Me5AeR9E4D8tNA4OcmF+JIV2nPVKplT2jwDIAU
-   ji7SoXdFmeZO1b5w2hnm+b1QhSPU0IaxCWwFrDkisS9rJgrFmTan+u/9z
-   LrBAkwcXnE2m1g+MJsW6h+s9K+uOdfdCfplZJEKlTwBjgnGwyzPfivick
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10511"; a="291229211"
-X-IronPort-AV: E=Sophos;i="5.95,214,1661842800"; 
-   d="scan'208";a="291229211"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Oct 2022 04:50:51 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10511"; a="609923899"
-X-IronPort-AV: E=Sophos;i="5.95,214,1661842800"; 
-   d="scan'208";a="609923899"
-Received: from lkp-server02.sh.intel.com (HELO b6d29c1a0365) ([10.239.97.151])
-  by orsmga006.jf.intel.com with ESMTP; 26 Oct 2022 04:50:50 -0700
-Received: from kbuild by b6d29c1a0365 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1onevp-0007My-1v;
-        Wed, 26 Oct 2022 11:50:49 +0000
-Date:   Wed, 26 Oct 2022 19:49:58 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:pci/pm] BUILD SUCCESS
- c946287d8e2fde04c73d6a7bc8a9713a7d84b16b
-Message-ID: <63591ee6.6bX+PX61cf10nj10%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S233150AbiJZMdm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Oct 2022 08:33:42 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9514073936;
+        Wed, 26 Oct 2022 05:33:41 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 56B00B8212F;
+        Wed, 26 Oct 2022 12:33:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76D92C433C1;
+        Wed, 26 Oct 2022 12:33:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666787619;
+        bh=1oQIC/cEy+BOnB6qVZCAUuyMhZUjMaoO2CL7d79n42k=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=MkhUuZ4R24oHo5gcthD/4oPGb+VW8T8sm1LSjL0hHEzT9Bb/3OGFs7KrTYXf/o44O
+         WQnOxrRYa9CK5XmryT2epofDD3UX1XH5KcB8wyoWNN7HmP2wtvbjoPXrAE7K8dHAVp
+         IXEqBid+aksXgIJfJ7rUnq6QUw5JhIpuKj446uAPtnL1mktK9UognPJDBe9T7rkJ/A
+         ysQaowqW9Xh5YaqXgYdF3p7Dtm2AByLJaOhH5CtpmOyVeDW/mSoX0nmoPyE3isAGSp
+         dzEBGKMNiS0nNhIyLCw1uSSn36DodrC06ESR0XHRbydkqNFRsXLRRX6xqQFDUo4DwP
+         JcQolSq6ACWOQ==
+Date:   Wed, 26 Oct 2022 14:33:31 +0200
+From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
+To:     Jon Hunter <jonathanh@nvidia.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Vidya Sagar <vidyas@nvidia.com>, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, robh@kernel.org, kw@linux.com,
+        bhelgaas@google.com, treding@nvidia.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kthota@nvidia.com,
+        mmaddireddy@nvidia.com, sagar.tv@gmail.com,
+        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>
+Subject: Re: [PATCH V1] PCI: dwc: Use dev_info for PCIe link down event
+ logging
+Message-ID: <Y1kpG0l05uMueM9Y@lpieralisi>
+References: <20221018164329.GA3808783@bhelgaas>
+ <8670e757-7275-57eb-3f5c-0a21ba354e37@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+In-Reply-To: <8670e757-7275-57eb-3f5c-0a21ba354e37@nvidia.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/pm
-branch HEAD: c946287d8e2fde04c73d6a7bc8a9713a7d84b16b  PCI/PM: Remove unused 'state' parameter to pci_legacy_suspend_late()
+On Wed, Oct 26, 2022 at 12:39:13PM +0100, Jon Hunter wrote:
+> Hi Lorenzo,
+> 
+> On 18/10/2022 17:43, Bjorn Helgaas wrote:
+> > On Tue, Oct 18, 2022 at 07:21:54AM +0100, Jon Hunter wrote:
+> > > Hi Bjorn,
+> > > 
+> > > On 13/09/2022 11:12, Vidya Sagar wrote:
+> > > > Some of the platforms (like Tegra194 and Tegra234) have open slots and
+> > > > not having an endpoint connected to the slot is not an error.
+> > > > So, changing the macro from dev_err to dev_info to log the event.
+> > > > 
+> > > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> > > > ---
+> > > >    drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+> > > >    1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> > > > index 650a7f22f9d0..25154555aa7a 100644
+> > > > --- a/drivers/pci/controller/dwc/pcie-designware.c
+> > > > +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> > > > @@ -456,7 +456,7 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+> > > >    	}
+> > > >    	if (retries >= LINK_WAIT_MAX_RETRIES) {
+> > > > -		dev_err(pci->dev, "Phy link never came up\n");
+> > > > +		dev_info(pci->dev, "Phy link never came up\n");
+> > > >    		return -ETIMEDOUT;
+> > > >    	}
+> > > 
+> > > 
+> > > Are you OK to take this change?
+> > 
+> > When this came up, Lorenzo was in the middle of a big move and I was
+> > covering for him while he was unavailable.  But he's back, and I'm
+> > sure he will resolve this soon.
+> > 
+> > Personally I'm OK either way.
+> > 
+> > Bjorn
+> 
+> 
+> Can we come to a conclusion on this?
+> 
+> We have tests that fail when errors/warning messages are reported. We can
+> choose to ignore these errors, but given that this is not an error in this
+> case, we were thinking it is better to make it informational.
 
-elapsed time: 724m
+I understood.
 
-configs tested: 90
-configs skipped: 2
+We are at v6.1-rc2, this patch is not a fix, we will handle it for the
+v6.2 merge window.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-um                             i386_defconfig
-um                           x86_64_defconfig
-arc                                 defconfig
-alpha                               defconfig
-s390                             allmodconfig
-s390                                defconfig
-powerpc                          allmodconfig
-mips                             allyesconfig
-powerpc                           allnoconfig
-sh                               allmodconfig
-s390                             allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                           rhel-8.3-syz
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-x86_64                           rhel-8.3-kvm
-ia64                             allmodconfig
-x86_64                              defconfig
-i386                                defconfig
-i386                          randconfig-a014
-i386                          randconfig-a012
-i386                          randconfig-a016
-x86_64                               rhel-8.3
-x86_64                           allyesconfig
-x86_64               randconfig-a014-20221024
-x86_64               randconfig-a013-20221024
-x86_64               randconfig-a012-20221024
-x86_64               randconfig-a011-20221024
-x86_64               randconfig-a015-20221024
-arc                              allyesconfig
-x86_64               randconfig-a016-20221024
-alpha                            allyesconfig
-i386                             allyesconfig
-arc                  randconfig-r043-20221023
-arc                  randconfig-r043-20221025
-arm64                            allyesconfig
-arm                                 defconfig
-arm                              allyesconfig
-m68k                             allyesconfig
-m68k                             allmodconfig
-i386                          debian-10.3-kvm
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
-arm                       omap2plus_defconfig
-arm                              allmodconfig
-nios2                         3c120_defconfig
-powerpc                    klondike_defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-riscv                    nommu_k210_defconfig
-riscv                             allnoconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-i386                 randconfig-a011-20221024
-i386                 randconfig-a014-20221024
-i386                 randconfig-a015-20221024
-i386                 randconfig-a016-20221024
-i386                 randconfig-a012-20221024
-i386                 randconfig-a013-20221024
-ia64                          tiger_defconfig
-powerpc                   motionpro_defconfig
-sh                         ecovec24_defconfig
-sh                        sh7785lcr_defconfig
-mips                     decstation_defconfig
-arm                         axm55xx_defconfig
-powerpc                       holly_defconfig
-arm                           viper_defconfig
-i386                          randconfig-c001
-arc                  randconfig-r043-20221024
-s390                 randconfig-r044-20221024
-riscv                randconfig-r042-20221024
-
-clang tested configs:
-i386                          randconfig-a013
-i386                          randconfig-a011
-i386                          randconfig-a015
-riscv                randconfig-r042-20221023
-hexagon              randconfig-r041-20221023
-hexagon              randconfig-r045-20221023
-s390                 randconfig-r044-20221023
-mips                malta_qemu_32r6_defconfig
-arm                        spear3xx_defconfig
-x86_64               randconfig-a005-20221024
-x86_64               randconfig-a002-20221024
-x86_64               randconfig-a006-20221024
-x86_64               randconfig-a001-20221024
-x86_64               randconfig-a004-20221024
-x86_64               randconfig-a003-20221024
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-x86_64                        randconfig-k001
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Thanks,
+Lorenzo
