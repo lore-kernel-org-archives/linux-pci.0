@@ -2,239 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4943C38A2D
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Oct 2022 08:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C7EC38A2D
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Oct 2022 09:39:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235138AbiJ0I5k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Oct 2022 04:57:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39628 "EHLO
+        id S233858AbiJ0JjP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Oct 2022 05:39:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57844 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235064AbiJ0I5j (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2022 04:57:39 -0400
-Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A17C7159A15;
-        Thu, 27 Oct 2022 01:57:37 -0700 (PDT)
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 29R8vLTG036224;
-        Thu, 27 Oct 2022 03:57:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1666861041;
-        bh=WSphPNCMMomakVlZKExO4pe91Ws671ehmxCpzjw9FJE=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=SKDucDQPsSzL9OU20l13/sVNnajffg25sAoEZpTno2eYLCI6pv1A59kRD+1uwqX1c
-         X9AfQx+OZWaHHHPGlU88CYZ3CKkwuG+N8nYaIDMPXxnN+GE1n4vQg1oy0XOOYHFoCz
-         /r39JsRd9YZvjmrHswofkzVfp+gtUDveoz58d2bI=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 29R8vLxK006138
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 27 Oct 2022 03:57:21 -0500
-Received: from DLEE102.ent.ti.com (157.170.170.32) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6; Thu, 27
- Oct 2022 03:57:21 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE102.ent.ti.com
- (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6 via
- Frontend Transport; Thu, 27 Oct 2022 03:57:21 -0500
-Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 29R8vKIL047278;
-        Thu, 27 Oct 2022 03:57:20 -0500
-From:   Achal Verma <a-verma1@ti.com>
-To:     Tom Joseph <tjoseph@cadence.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Wilczy_ski <kw@linux.com>,
+        with ESMTP id S233600AbiJ0JjO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2022 05:39:14 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E0EB786CE;
+        Thu, 27 Oct 2022 02:39:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 0EAE0B8255A;
+        Thu, 27 Oct 2022 09:39:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 032D4C433D6;
+        Thu, 27 Oct 2022 09:39:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666863549;
+        bh=v+g7pRKxDyhhfF+WuOK6H0OrXUtvUEoGhM5OK8fa3kY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jq+V9llT5CXJFTjov0+0v9i74yYRTIbvZFh9oFHComZQkdc0qVMQO5YL8t4qaiNkU
+         mPOXvS4Sl+AvQimGl+u0/jVpQCAgqciwPlMr+Z0fwXhYtZtwdutDJ/S753AUyyw3eo
+         rr9XaXTe85cufXENy7927rR8JvLoCLsakXnbGGC/LlrauGMXI+Dl8Rsz1ygy162Ewt
+         SqRRkwDOVe/bzqfA522oCTwBUKaCG+ekCMtr8vV1SNueB9MGgr1so1oDjroDaY1r6C
+         UsFhb42pIYzNJSkk6TsVF1Zn0nTnVtII0/uH1QORF07Qvj4cDklndDd0I8Loamm6is
+         IWHC+UdDR4kbA==
+Date:   Thu, 27 Oct 2022 11:39:02 +0200
+From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Jon Hunter <jonathanh@nvidia.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Krzysztof Wilczynski <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Achal Verma <a-verma1@ti.com>,
-        Milind Parab <mparab@cadence.com>
-Subject: [PATCH 1/2] PCI: cadence: Add support to build pcie-cadence library as module.
-Date:   Thu, 27 Oct 2022 14:27:17 +0530
-Message-ID: <20221027085718.291510-2-a-verma1@ti.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221027085718.291510-1-a-verma1@ti.com>
-References: <20221027085718.291510-1-a-verma1@ti.com>
+        Thierry Reding <treding@nvidia.com>,
+        PCI <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Krishna Thota <kthota@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        sagar.tv@gmail.com
+Subject: Re: [PATCH V1] PCI: dwc: Use dev_info for PCIe link down event
+ logging
+Message-ID: <Y1pRtoLdWsDONsok@lpieralisi>
+References: <b1c243b0-2e6e-3254-eff0-a5276020a320@nvidia.com>
+ <20220913200746.GA619956@bhelgaas>
+ <20220914062411.GD16459@workstation>
+ <CAL_JsqLbr4O_BHb8s-Px4S0OOY23qhFkN32cKBctc_BFakSBzA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAL_JsqLbr4O_BHb8s-Px4S0OOY23qhFkN32cKBctc_BFakSBzA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support to build pcie-cadence library as module.
+On Thu, Sep 15, 2022 at 09:16:27AM -0500, Rob Herring wrote:
+> On Wed, Sep 14, 2022 at 1:24 AM Manivannan Sadhasivam
+> <manivannan.sadhasivam@linaro.org> wrote:
+> >
+> > On Tue, Sep 13, 2022 at 03:07:46PM -0500, Bjorn Helgaas wrote:
+> > > On Tue, Sep 13, 2022 at 06:00:30PM +0100, Jon Hunter wrote:
+> > > > On 13/09/2022 17:51, Manivannan Sadhasivam wrote:
+> > > > > On Tue, Sep 13, 2022 at 03:42:37PM +0530, Vidya Sagar wrote:
+> > > > > > Some of the platforms (like Tegra194 and Tegra234) have open slots and
+> > > > > > not having an endpoint connected to the slot is not an error.
+> > > > > > So, changing the macro from dev_err to dev_info to log the event.
+> > > > >
+> > > > > But the link up not happening is an actual error and -ETIMEDOUT is being
+> > > > > returned. So I don't think the log severity should be changed.
+> > > >
+> > > > Yes it is an error in the sense it is a timeout, but reporting an error
+> > > > because nothing is attached to a PCI slot seems a bit noisy. Please note
+> > > > that a similar change was made by the following commit and it also seems
+> > > > appropriate here ...
+> > > >
+> > > > commit 4b16a8227907118e011fb396022da671a52b2272
+> > > > Author: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> > > > Date:   Tue Jun 18 23:32:06 2019 +0530
+> > > >
+> > > >     PCI: tegra: Change link retry log level to debug
+> > > >
+> > > >
+> > > > BTW, we check for error messages in the dmesg output and this is a new error
+> > > > seen as of Linux v6.0 and so this was flagged in a test. We can ignore the
+> > > > error, but in this case it seem more appropriate to make this a info or
+> > > > debug level print.
+> > >
+> > > Can you tell whether there's a device present, e.g., via Slot Status
+> > > Presence Detect?  If there's nothing in the slot, I don't know why we
+> > > would print anything at all.  If a card is present but there's no
+> > > link, that's probably worthy of dev_info() or even dev_err().
+> > >
+> >
+> > I don't think all form factors allow for the PRSNT pin to be wired up,
+> > so we cannot know if the device is actually present in the slot or not all
+> > the time. Maybe we should do if the form factor supports it?
+> >
+> > > I guess if you can tell the slot is empty, there's no point in even
+> > > trying to start the link, so you could avoid both the message and the
+> > > timeout by not even calling dw_pcie_wait_for_link().
+> >
+> > Right. There is an overhead of waiting for ~1ms during boot.
+> 
+> Async probe should mitigate that, right? Saravana is working toward
+> making that the default instead of opt in, but you could opt in now.
 
-Signed-off-by: Achal Verma <a-verma1@ti.com>
----
- drivers/pci/controller/cadence/Kconfig             | 6 +++---
- drivers/pci/controller/cadence/pcie-cadence-ep.c   | 4 ++++
- drivers/pci/controller/cadence/pcie-cadence-host.c | 5 +++++
- drivers/pci/controller/cadence/pcie-cadence.c      | 9 +++++++++
- drivers/pci/controller/cadence/pcie-cadence.h      | 4 ++--
- 5 files changed, 23 insertions(+), 5 deletions(-)
+I read this as "trying to bring the link up is mandatory because
+we can't detect an empty slot, therefore ~1ms delay during boot
+is unavoidable" and on that Rob's suggestion applies.
 
-diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
-index 5d30564190e1..693c41fe32ce 100644
---- a/drivers/pci/controller/cadence/Kconfig
-+++ b/drivers/pci/controller/cadence/Kconfig
-@@ -4,16 +4,16 @@ menu "Cadence PCIe controllers support"
- 	depends on PCI
- 
- config PCIE_CADENCE
--	bool
-+	tristate
- 
- config PCIE_CADENCE_HOST
--	bool
-+	tristate
- 	depends on OF
- 	select IRQ_DOMAIN
- 	select PCIE_CADENCE
- 
- config PCIE_CADENCE_EP
--	bool
-+	tristate
- 	depends on OF
- 	depends on PCI_ENDPOINT
- 	select PCIE_CADENCE
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index b8b655d4047e..598b2b9c5969 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/delay.h>
- #include <linux/kernel.h>
-+#include <linux/module.h>
- #include <linux/of.h>
- #include <linux/pci-epc.h>
- #include <linux/platform_device.h>
-@@ -741,3 +742,6 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_ep_setup);
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index 940c7dd701d6..84754c63df34 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/delay.h>
- #include <linux/kernel.h>
-+#include <linux/module.h>
- #include <linux/list_sort.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -70,6 +71,7 @@ void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 
- 	return rc->cfg_base + (where & 0xfff);
- }
-+EXPORT_SYMBOL_GPL(cdns_pci_map_bus);
- 
- static struct pci_ops cdns_pcie_host_ops = {
- 	.map_bus	= cdns_pci_map_bus,
-@@ -542,3 +544,6 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_host_setup);
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index 13c4032ca379..8e3a86578284 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -4,6 +4,7 @@
- // Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
- 
- #include <linux/kernel.h>
-+#include <linux/module.h>
- 
- #include "pcie-cadence.h"
- 
-@@ -22,6 +23,7 @@ void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
- 
- 	cdns_pcie_writel(pcie, CDNS_PCIE_LTSSM_CONTROL_CAP, ltssm_control_cap);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_detect_quiet_min_delay_set);
- 
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
- 				   u32 r, bool is_io,
-@@ -99,6 +101,7 @@ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_set_outbound_region);
- 
- void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
- 						  u8 busnr, u8 fn,
-@@ -133,6 +136,7 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_set_outbound_region_for_normal_msg);
- 
- void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
- {
-@@ -145,6 +149,7 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), 0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_reset_outbound_region);
- 
- void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
- {
-@@ -155,6 +160,7 @@ void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
- 		phy_exit(pcie->phy[i]);
- 	}
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_disable_phy);
- 
- int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
- {
-@@ -242,6 +248,7 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_init_phy);
- 
- static int cdns_pcie_suspend_noirq(struct device *dev)
- {
-@@ -270,3 +277,5 @@ const struct dev_pm_ops cdns_pcie_pm_ops = {
- 	NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
- 				  cdns_pcie_resume_noirq)
- };
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 190786e47df9..65b330c28299 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -514,7 +514,7 @@ static inline bool cdns_pcie_link_up(struct cdns_pcie *pcie)
- 	return true;
- }
- 
--#ifdef CONFIG_PCIE_CADENCE_HOST
-+#if IS_ENABLED(CONFIG_PCIE_CADENCE_HOST)
- int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
- void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			       int where);
-@@ -531,7 +531,7 @@ static inline void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int d
- }
- #endif
- 
--#ifdef CONFIG_PCIE_CADENCE_EP
-+#if IS_ENABLED(CONFIG_PCIE_CADENCE_EP)
- int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep);
- #else
- static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
--- 
-2.17.1
+Just to understand where this thread is going. The suggestion
+above does not change the aim of this patch, that seems reasonable
+to me and it makes sense even if/when what Rob is suggesting is
+implemented.
 
+Is that correct ?
+
+Thanks,
+Lorenzo
