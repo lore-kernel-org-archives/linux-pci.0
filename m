@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA3AEFA373D
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Oct 2022 08:57:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA7F8FA373E
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Oct 2022 08:57:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235101AbiJ0I5j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Oct 2022 04:57:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39612 "EHLO
+        id S233669AbiJ0I5i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Oct 2022 04:57:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234173AbiJ0I5i (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2022 04:57:38 -0400
-Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6CB2E159A0B;
-        Thu, 27 Oct 2022 01:57:37 -0700 (PDT)
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 29R8vK5P054058;
-        Thu, 27 Oct 2022 03:57:20 -0500
+        with ESMTP id S233815AbiJ0I5h (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2022 04:57:37 -0400
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA31CCABCF;
+        Thu, 27 Oct 2022 01:57:36 -0700 (PDT)
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 29R8vNHe012991;
+        Thu, 27 Oct 2022 03:57:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1666861040;
-        bh=Awevj19YTqJDXvTjsPtw7D4zHpBiZJxzCr+c7G9q6NA=;
-        h=From:To:CC:Subject:Date;
-        b=gpyp/0Jm4Ws5Ca4Xke/X+mazm6Ai/0vwb2t9ve75Byervueg9Nd/rLg+Fz63wrFPX
-         /O0Q5R3JV4aFLOoc+zy9JsFS77goz15opk2JzhNCQb/+X8N2X/2mRAwl/LlIs7DwUz
-         q0+N7EJEdzswFDxT63HFHWheW2ZxYVhfF03h/blA=
+        s=ti-com-17Q1; t=1666861043;
+        bh=gFm8sp5qf1A44g2gxMYqAMGX+E0SVtEIzHzqkRWo0No=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=O2HbS3KP16Z42F1Ss5oASFT6z5Uf7Yhj7kVSPDrzXSbuP7htGC9EieYhDKxkVTr4c
+         59pwnI9HXNxiru1GNhZRSOdgwF0JYsWflwJKd64FSS2OJTxzURxVGvavxJuMVoa2UV
+         0n2k1GH9EcQUMncoFkTDKc1fGh08IiPsuphWvak4=
 Received: from DLEE112.ent.ti.com (dlee112.ent.ti.com [157.170.170.23])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 29R8vKDL122957
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 29R8vNL2006154
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 27 Oct 2022 03:57:20 -0500
-Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE112.ent.ti.com
+        Thu, 27 Oct 2022 03:57:23 -0500
+Received: from DLEE112.ent.ti.com (157.170.170.23) by DLEE112.ent.ti.com
  (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6; Thu, 27
- Oct 2022 03:57:19 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE109.ent.ti.com
- (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
+ Oct 2022 03:57:22 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE112.ent.ti.com
+ (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6 via
- Frontend Transport; Thu, 27 Oct 2022 03:57:19 -0500
-Received: from localhost (ileaxei01-snat2.itg.ti.com [10.180.69.6])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 29R8vIFS082141;
-        Thu, 27 Oct 2022 03:57:19 -0500
+ Frontend Transport; Thu, 27 Oct 2022 03:57:22 -0500
+Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 29R8vLos082245;
+        Thu, 27 Oct 2022 03:57:22 -0500
 From:   Achal Verma <a-verma1@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -52,10 +52,12 @@ CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Achal Verma <a-verma1@ti.com>,
         Milind Parab <mparab@cadence.com>
-Subject: [PATCH 0/2] Add support to build pci-j721e as a module.
-Date:   Thu, 27 Oct 2022 14:27:16 +0530
-Message-ID: <20221027085718.291510-1-a-verma1@ti.com>
+Subject: [PATCH 2/2] PCI: j721e: Add support to build pci-j721e as module.
+Date:   Thu, 27 Oct 2022 14:27:18 +0530
+Message-ID: <20221027085718.291510-3-a-verma1@ti.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221027085718.291510-1-a-verma1@ti.com>
+References: <20221027085718.291510-1-a-verma1@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -64,21 +66,61 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Patch series add support to build pci-j721e as module (requires
-pcie-cadence library to be built as module).
+Add support to build pci-j721e as module.
 
-Achal Verma (2):
-  PCI: cadence: Add support to build pcie-cadence library as module.
-  PCI: j721e: Add support to build pci-j721e as module.
+Signed-off-by: Achal Verma <a-verma1@ti.com>
+---
+ drivers/pci/controller/cadence/Kconfig     | 6 +++---
+ drivers/pci/controller/cadence/pci-j721e.c | 6 +++++-
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
- drivers/pci/controller/cadence/Kconfig             | 12 ++++++------
- drivers/pci/controller/cadence/pci-j721e.c         |  6 +++++-
- drivers/pci/controller/cadence/pcie-cadence-ep.c   |  4 ++++
- drivers/pci/controller/cadence/pcie-cadence-host.c |  5 +++++
- drivers/pci/controller/cadence/pcie-cadence.c      |  9 +++++++++
- drivers/pci/controller/cadence/pcie-cadence.h      |  4 ++--
- 6 files changed, 31 insertions(+), 9 deletions(-)
-
+diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
+index 693c41fe32ce..54464c9b3b29 100644
+--- a/drivers/pci/controller/cadence/Kconfig
++++ b/drivers/pci/controller/cadence/Kconfig
+@@ -43,10 +43,10 @@ config PCIE_CADENCE_PLAT_EP
+ 	  different vendors SoCs.
+ 
+ config PCI_J721E
+-	bool
++	tristate
+ 
+ config PCI_J721E_HOST
+-	bool "TI J721E PCIe platform host controller"
++	tristate "TI J721E PCIe platform host controller"
+ 	depends on OF
+ 	select PCIE_CADENCE_HOST
+ 	select PCI_J721E
+@@ -56,7 +56,7 @@ config PCI_J721E_HOST
+ 	  core.
+ 
+ config PCI_J721E_EP
+-	bool "TI J721E PCIe platform endpoint controller"
++	tristate "TI J721E PCIe platform endpoint controller"
+ 	depends on OF
+ 	depends on PCI_ENDPOINT
+ 	select PCIE_CADENCE_EP
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index a82f845cc4b5..48c6e5b8da53 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -13,6 +13,7 @@
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/mfd/syscon.h>
++#include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_device.h>
+ #include <linux/of_irq.h>
+@@ -566,4 +567,7 @@ static struct platform_driver j721e_pcie_driver = {
+ 		.suppress_bind_attrs = true,
+ 	},
+ };
+-builtin_platform_driver(j721e_pcie_driver);
++module_platform_driver(j721e_pcie_driver);
++
++MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
++MODULE_LICENSE("GPL v2");
 -- 
 2.17.1
 
