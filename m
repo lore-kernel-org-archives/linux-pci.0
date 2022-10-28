@@ -2,83 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 766B3FA373D
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Oct 2022 02:38:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D68FFA373D
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Oct 2022 02:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236436AbiJ1CiB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Oct 2022 22:38:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49558 "EHLO
+        id S236503AbiJ1CsE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Oct 2022 22:48:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236185AbiJ1Ch3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2022 22:37:29 -0400
-Received: from m12-11.163.com (m12-11.163.com [220.181.12.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 766E0A474;
-        Thu, 27 Oct 2022 19:37:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=zqkmr
-        0wA7VhQA95CKLsLqZlQw5p80Szn0PM+lT5Es9U=; b=Jn2N7yUuCkWpV+D6wJUsq
-        QlXBH73ICQNd2e74cmEbhfANjsZaNAsAHPGP5ff8cZbmlkBkHEuCFfII5/RQJr8B
-        LAlsKha++y6hz6lIJFpa3rfu11Cwji7Ag7TDFuigYIgPAiqCk5n5qgFrqM1p3F5A
-        US09HfBkKlFJ2IM4MrZPpY=
-Received: from jbd-ThinkPad-X1-Nano-Gen-1.. (unknown [223.104.77.214])
-        by smtp7 (Coremail) with SMTP id C8CowADXe9VaQFtjLOfMOQ--.4894S2;
-        Fri, 28 Oct 2022 10:37:16 +0800 (CST)
-From:   Slark Xiao <slark_xiao@163.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Slark Xiao <slark_xiao@163.com>
-Subject: [PATCH v2] PCI: Add vendor ID for Quectel and Cinterion
-Date:   Fri, 28 Oct 2022 10:37:11 +0800
-Message-Id: <20221028023711.4196-1-slark_xiao@163.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S234884AbiJ1CsD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2022 22:48:03 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9597BC78E
+        for <linux-pci@vger.kernel.org>; Thu, 27 Oct 2022 19:48:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1666925282; x=1698461282;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=3gQaPG9QHRJsZ0YDSxql8xkwP1tX9MRGEJmBfkMJ3p8=;
+  b=gJev4ocyvzCQX2ivDcRiISnH1/NuHc/OMC8r4KuBtikmeVHr67Ypez1t
+   /GKldB/KbSc3kTONiQZVCk/QFtdOr9UbcR9Blf/wWrbKca+uezWKJZcJ8
+   n+5lujyYzU24nd7lq0AWxWJXaY8P4cGRyX3GI2JgnTch6f0K27xFrf6aT
+   kwP63KyRTsJ4AtvPBaMSJrnYJGUetsuIfA3VV0aGZbefMPPqGJq0ta53a
+   Myv3PqAYsSJCrMlZepK0ATxM0t+z8zAL4C+HBUmhx26fnyrCaoc20X2T8
+   E6uF/kR1aoUcqVNWUicKKdZ0qfQ+aeFNT3ksfvPqjWVmimC3/pAYhjjRp
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="308384916"
+X-IronPort-AV: E=Sophos;i="5.95,219,1661842800"; 
+   d="scan'208";a="308384916"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2022 19:48:02 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10513"; a="665915265"
+X-IronPort-AV: E=Sophos;i="5.95,219,1661842800"; 
+   d="scan'208";a="665915265"
+Received: from lkp-server02.sh.intel.com (HELO b6d29c1a0365) ([10.239.97.151])
+  by orsmga001.jf.intel.com with ESMTP; 27 Oct 2022 19:48:00 -0700
+Received: from kbuild by b6d29c1a0365 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1ooFPc-0009Ou-0z;
+        Fri, 28 Oct 2022 02:48:00 +0000
+Date:   Fri, 28 Oct 2022 10:47:47 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
+Subject: [lpieralisi-pci:pci/misc] BUILD SUCCESS
+ 6acd25cc98ce0c9ee4fefdaf44fc8bca534b26e5
+Message-ID: <635b42d3.16kbYUlkEE8NXhwi%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: C8CowADXe9VaQFtjLOfMOQ--.4894S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ZF1UWw47tFy5CF4DZF4rAFb_yoW8GryfpF
-        s8CrWktr48JFW7Gw1vyr1DWF9FvFs0kFn8AF1agw4F9F47Xw48XryUArs0kryagFs2qrW5
-        XF1DCws0ga4DXw7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pioUDkUUUUU=
-X-Originating-IP: [223.104.77.214]
-X-CM-SenderInfo: xvod2y5b0lt0i6rwjhhfrp/1tbiRxyoZFc7ZFzyLAAAsd
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In MHI driver, there are some companies product still do not have their
- own PCI vendor macro. So we add it here to make the code neat. Ref ID
- could be found in link https://pcisig.com/membership/member-companies
- and https://pciids.sourceforge.net/pci.ids . Thales use Cinterion as
-their IOT modem card's trademark. So you will find 0x1269 belongs to
-Thales. Actually, Cinterion belongs to Gemalto, and Gemalto belongs to
- Thales.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git pci/misc
+branch HEAD: 6acd25cc98ce0c9ee4fefdaf44fc8bca534b26e5  PCI: pci-epf-test: Register notifier if only core_init_notifier is enabled
 
-Signed-off-by: Slark Xiao <slark_xiao@163.com>
----
- include/linux/pci_ids.h | 4 ++++
- 1 file changed, 4 insertions(+)
+elapsed time: 723m
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index b362d90eb9b0..9e2b6286f53f 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1765,6 +1765,8 @@
- #define PCI_VENDOR_ID_SATSAGEM		0x1267
- #define PCI_DEVICE_ID_SATSAGEM_NICCY	0x1016
- 
-+#define PCI_VENDOR_ID_CINTERION		0x1269	/* Celluar Modules*/
-+
- #define PCI_VENDOR_ID_ENSONIQ		0x1274
- #define PCI_DEVICE_ID_ENSONIQ_CT5880	0x5880
- #define PCI_DEVICE_ID_ENSONIQ_ES1370	0x5000
-@@ -2585,6 +2587,8 @@
- #define PCI_VENDOR_ID_TEKRAM		0x1de1
- #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
- 
-+#define PCI_VENDOR_ID_QUECTEL		0x1eac
-+
- #define PCI_VENDOR_ID_TEHUTI		0x1fc9
- #define PCI_DEVICE_ID_TEHUTI_3009	0x3009
- #define PCI_DEVICE_ID_TEHUTI_3010	0x3010
+configs tested: 58
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+powerpc                          allmodconfig
+mips                             allyesconfig
+arc                                 defconfig
+powerpc                           allnoconfig
+um                             i386_defconfig
+sh                               allmodconfig
+x86_64                              defconfig
+um                           x86_64_defconfig
+alpha                               defconfig
+x86_64                               rhel-8.3
+s390                                defconfig
+m68k                             allmodconfig
+s390                             allmodconfig
+arc                              allyesconfig
+x86_64                           allyesconfig
+alpha                            allyesconfig
+m68k                             allyesconfig
+x86_64                           rhel-8.3-syz
+ia64                             allmodconfig
+i386                                defconfig
+x86_64                         rhel-8.3-kunit
+x86_64                           rhel-8.3-kvm
+riscv                randconfig-r042-20221026
+s390                             allyesconfig
+i386                          randconfig-a001
+arc                  randconfig-r043-20221026
+x86_64                          rhel-8.3-func
+i386                          randconfig-a003
+x86_64                    rhel-8.3-kselftests
+s390                 randconfig-r044-20221026
+i386                          randconfig-a005
+arm                                 defconfig
+x86_64                        randconfig-a004
+i386                          randconfig-a014
+i386                          randconfig-a012
+x86_64                        randconfig-a002
+i386                             allyesconfig
+i386                          randconfig-a016
+x86_64                        randconfig-a006
+arm64                            allyesconfig
+arm                              allyesconfig
+x86_64                        randconfig-a013
+x86_64                        randconfig-a011
+x86_64                        randconfig-a015
+
+clang tested configs:
+hexagon              randconfig-r045-20221026
+hexagon              randconfig-r041-20221026
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+i386                          randconfig-a013
+i386                          randconfig-a011
+x86_64                        randconfig-a005
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+i386                          randconfig-a015
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+
 -- 
-2.34.1
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
