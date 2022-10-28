@@ -2,97 +2,78 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05977FA3742
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Oct 2022 03:18:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A243ECAAA1
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Oct 2022 03:27:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235830AbiJ1DSp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Oct 2022 23:18:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52042 "EHLO
+        id S235908AbiJ1D1j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Oct 2022 23:27:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235783AbiJ1DSK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2022 23:18:10 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3101DA8CFB
-        for <linux-pci@vger.kernel.org>; Thu, 27 Oct 2022 20:18:09 -0700 (PDT)
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Mz70S18G1zmVcy;
-        Fri, 28 Oct 2022 11:13:12 +0800 (CST)
-Received: from dggpemm500007.china.huawei.com (7.185.36.183) by
- dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Fri, 28 Oct 2022 11:18:04 +0800
-Received: from huawei.com (10.175.103.91) by dggpemm500007.china.huawei.com
- (7.185.36.183) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 28 Oct
- 2022 11:18:03 +0800
-From:   Yang Yingliang <yangyingliang@huawei.com>
-To:     <linux-pci@vger.kernel.org>
-CC:     <yinghai@kernel.org>, <bhelgaas@google.com>,
-        <rafael.j.wysocki@intel.com>, <yangyingliang@huawei.com>
-Subject: [PATCH] PCI: fix handle error case in pci_alloc_child_bus()
-Date:   Fri, 28 Oct 2022 11:17:09 +0800
-Message-ID: <20221028031709.3120927-1-yangyingliang@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S235886AbiJ1D1h (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Oct 2022 23:27:37 -0400
+X-Greylist: delayed 1809 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 27 Oct 2022 20:27:35 PDT
+Received: from m1390.mail.163.com (m1390.mail.163.com [220.181.13.90])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id ADC1C6B64B;
+        Thu, 27 Oct 2022 20:27:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=ChfsP
+        hSBHVJpAeVptbDBbTdrVkeaHzjzfQ3nICLGKio=; b=N6DxnqDcqoh6BOjxHU/d9
+        9E6U3xIXBHq6HGvvafe8E1EGtk3DejzvlX/DqDc6OcxzzyML9VUrHe6dp4qtDH+7
+        cJw68H8+K55//DmnqWr21yB9frBucqzVlHmvXFz8dUIZLnNc50cNvIstGuY2ZJ9x
+        +80aKhfQe9mn88TPC/SqYU=
+Received: from slark_xiao$163.com ( [223.104.77.214] ) by
+ ajax-webmail-wmsvr90 (Coremail) ; Fri, 28 Oct 2022 10:41:55 +0800 (CST)
+X-Originating-IP: [223.104.77.214]
+Date:   Fri, 28 Oct 2022 10:41:55 +0800 (CST)
+From:   "Slark Xiao" <slark_xiao@163.com>
+To:     "Bjorn Helgaas" <helgaas@kernel.org>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re:Re: [PATCH] PCI: Add vendor ID for Quectel and Cinterion
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20220113(9671e152)
+ Copyright (c) 2002-2022 www.mailtech.cn 163com
+In-Reply-To: <20221027142742.GA826519@bhelgaas>
+References: <20221027142742.GA826519@bhelgaas>
+X-NTES-SC: AL_QuydBPWZu0Eq4yaRZekWkkcRjuo+UMC0vfgh249fPJs0pSr/www5QX57MEDZ1t2MOymVsRmZbTJx0slFZrhoU5nmRCR0rlnB/9q+lWjAvlKH
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.103.91]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemm500007.china.huawei.com (7.185.36.183)
-X-CFilter-Loop: Reflected
+Message-ID: <5ef2b67c.fb2.1841c77abf2.Coremail.slark_xiao@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: WsGowABnJv10QVtjkdVEAA--.15727W
+X-CM-SenderInfo: xvod2y5b0lt0i6rwjhhfrp/xtbCdQSoZGBbF8ys6AACsb
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If device_register() returns error in pci_alloc_child_bus(), but it's not
-handled, the 'bridge->subordinate' points a bus that is not registered,
-it will lead kernel crash because of trying to delete unregistered device
-in pci_remove_bus_device().
-
-Unable to handle kernel NULL pointer dereference at virtual address 0000000000000108
-CPU: 48 PID: 38377 Comm: bash Kdump: loaded Tainted: G        W          6.1.0-rc1+ #172
-Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.58 10/24/2018
-pstate: 60000005 (nZCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-pc : device_del+0x54/0x3d0
-lr : device_del+0x37c/0x3d0
-Call trace:
- device_del+0x54/0x3d0
- device_unregister+0x24/0x78
- pci_remove_bus+0x90/0xa0
- pci_remove_bus_device+0x128/0x138
- pci_stop_and_remove_bus_device_locked+0x2c/0x40
- remove_store+0xa4/0xb
-
-Beside, the 'child' allocated by pci_alloc_bus() and the name allocated by
-dev_set_name() need be freed, and also the refcount of bridge and of_node
-which is get in pci_alloc_child_bus() need be put.
-
-Fix these by setting 'bridge->subordinate' to NULL and calling put_device(),
-if device_register() returns error, and return NULL in pci_alloc_child_bus().
-
-Fixes: 4f535093cf8f ("PCI: Put pci_dev in device tree as early as possible")
-Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
----
- drivers/pci/probe.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 792dfee9cfd7..afd564f49f06 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1139,7 +1139,11 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- add_dev:
- 	pci_set_bus_msi_domain(child);
- 	ret = device_register(&child->dev);
--	WARN_ON(ret < 0);
-+	if (WARN_ON(ret < 0)) {
-+		bridge->subordinate = NULL;
-+		put_device(&child->dev);
-+		return NULL;
-+	}
- 
- 	pcibios_add_bus(child);
- 
--- 
-2.25.1
-
+CgoKCgoKCgoKCgoKCgoKCkF0IDIwMjItMTAtMjcgMjI6Mjc6NDIsICJCam9ybiBIZWxnYWFzIiA8
+aGVsZ2Fhc0BrZXJuZWwub3JnPiB3cm90ZToKPk9uIFRodSwgT2N0IDI3LCAyMDIyIGF0IDA3OjUx
+OjIzUE0gKzA4MDAsIFNsYXJrIFhpYW8gd3JvdGU6Cj4+IEluIE1ISSBkcml2ZXIsIHRoZXJlIGFy
+ZSBzb21lIGNvbXBhbmllcyBwcm9kdWN0IHN0aWxsCj4+IGRvIG5vdCBoYXZlIHRoZWlyIG93biBQ
+Q0kgdmVuZG9yIG1hY3JvLiBTbyB3ZSBhZGQgaXQKPj4gaGVyZSB0byBtYWtlIHRoZSBjb2RlIG5l
+YXQuIFJlZiBJRCBjb3VsZCBiZSBmb3VuZCBpbgo+PiBsaW5rIGh0dHBzOi8vcGNpc2lnLmNvbS9t
+ZW1iZXJzaGlwL21lbWJlci1jb21wYW5pZXMuCj4KPlJld3JhcCB0byBmaWxsIDc1IGNvbHVtbnMu
+Cj4KPlBvc3QgYWxvbmcgd2l0aCB0aGUgcGF0Y2ggdGhhdCB1c2VzIHRoZSBkZWZpbml0aW9ucy4K
+Pgo+PiBTaWduZWQtb2ZmLWJ5OiBTbGFyayBYaWFvIDxzbGFya194aWFvQDE2My5jb20+Cj4+IC0t
+LQo+PiAgaW5jbHVkZS9saW51eC9wY2lfaWRzLmggfCA0ICsrKysKPj4gIDEgZmlsZSBjaGFuZ2Vk
+LCA0IGluc2VydGlvbnMoKykKPj4gCj4+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L3BjaV9p
+ZHMuaCBiL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCj4+IGluZGV4IGIzNjJkOTBlYjliMC4uZTNi
+ZmVhMDZiOTBlIDEwMDY0NAo+PiAtLS0gYS9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaAo+PiArKysg
+Yi9pbmNsdWRlL2xpbnV4L3BjaV9pZHMuaAo+PiBAQCAtMTcyLDYgKzE3MiwxMCBAQAo+PiAgI2Rl
+ZmluZSBQQ0lfREVWSUNFX0lEX0JFUktPTV9BNFQJCTB4ZmZhNAo+PiAgI2RlZmluZSBQQ0lfREVW
+SUNFX0lEX0JFUktPTV9TQ0lURUxfUVVBRFJPCTB4ZmZhOAo+PiAgCj4+ICsjZGVmaW5lIFBDSV9W
+RU5ET1JfSURfQ0lOVEVSSU9OCQkweDEyNjkKPgo+VGhlIFVSTCBhYm92ZSBzYXlzIDB4MTI2OSBi
+ZWxvbmdzIHRvIFRoYWxlcy4gIE1heWJlIGFkZCBhIGNvbW1lbnQgdG8KPnRoYXQgZWZmZWN0LCBz
+aW1pbGFyIHRvIHRoZSBvbmUgZm9yIFBDSV9WRU5ET1JfSURfQ0IuCj4KPj4gKyNkZWZpbmUgUENJ
+X1ZFTkRPUl9JRF9RVUVDVEVMCQkweDFlYWMKPgo+Qm90aCBuZXcgZGVmaW5pdGlvbnMgbG9vayBs
+aWtlIHRoZXkncmUgZHJvcHBlZCBpbiBhIHJhbmRvbSBsb2NhdGlvbi4KPlBsZWFzZSBtb3ZlIHRo
+ZW0gc28gdGhlIHZlbmRvciBJRHMgaW4gdGhlIGZpbGUgcmVtYWluIHNvcnRlZCBieQo+bnVtZXJp
+YyB2YWx1ZS4KPgpIaSBCam9ybiwKICBWMiB2ZXJzaW9uIGlzIHNlbnQuIEkgYWRkIGV4cGxhbmF0
+aW9uIGFib3V0IHRoZSByZWxhdGlvbnNoaXAgYmV0d2VlbiBUaGFsZXMgCmFuZCBDSW50ZXJpb24u
+IEFuZCBJIGp1c3QgIGZpbmQgdGhlc2UgVklEcyBhcmUgc29ydGVkIGJ5IG51bWVyaWMsIHNvIEkg
+Zml4IGl0IGluIHYyLgoKVGhhbmtzLiAKPj4gICNkZWZpbmUgUENJX1ZFTkRPUl9JRF9DT01QQVEJ
+CTB4MGUxMQo+PiAgI2RlZmluZSBQQ0lfREVWSUNFX0lEX0NPTVBBUV9UT0tFTlJJTkcJMHgwNTA4
+Cj4+ICAjZGVmaW5lIFBDSV9ERVZJQ0VfSURfQ09NUEFRX1RBQ0hZT04JMHhhMGZjCj4+IC0tIAo+
+PiAyLjM0LjEKPj4gCg==
