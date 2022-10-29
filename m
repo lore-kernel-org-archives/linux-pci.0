@@ -2,32 +2,32 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59257FA3745
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Oct 2022 17:58:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB5DAC433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Oct 2022 17:58:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbiJ2R63 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Oct 2022 13:58:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50688 "EHLO
+        id S229824AbiJ2R6n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 29 Oct 2022 13:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229711AbiJ2R60 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Oct 2022 13:58:26 -0400
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.22])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9308459EB9;
-        Sat, 29 Oct 2022 10:58:23 -0700 (PDT)
+        with ESMTP id S229711AbiJ2R6k (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Oct 2022 13:58:40 -0400
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57D2859E9D;
+        Sat, 29 Oct 2022 10:58:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=public-files.de;
-        s=s31663417; t=1667066289;
-        bh=gbLUknNhYDzToI8QX7zIFAAM+RoOhWqq4U9N2tWYqrY=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=J05y90sHfOuBW1dagMH1QWKbygXKo3NM4skXufIWKzOJ50SGhdfo0k3Qvs99hOT9N
-         Ig0ftYRsTbhyrnlOI0x/6JsqTxYqbAVGdZ7XeE6pq+Cyh5fC19AgDDbevyRcyitnFg
-         aOpdgdFJzazkN3qB8tmRb0pE7zLiPVYA3WE8zdImrOn+uxMZqRRqMzEEQWLUQc+Dss
-         zaZ0tXiLE15RohZqms/Kj7p0vOVQlA4HJETmLIYrp3wE/CJyIWtWc22uuQ1V10fpD5
-         5YdTGBi9fDRX7kCCDYirdRn1eCAgb46eTW3v1wclgy0YmczgTg0rq1vq6C8XAQN70w
-         3COzWQo/bgSPQ==
+        s=s31663417; t=1667066288;
+        bh=Kycf1XZFridgEvLb9sjdHDeiaD0OdfNkXClfb9amqkM=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
+        b=UsPVdHkaWEBcPgy9htvvrIQT3hEkQwmUwDBPienJyCYI+AtAFEhMYnchSg8bVHpDE
+         KXGiLaczW5z8F2ZboyrXCSFynY+6bkbIbLnKTwp+/Aqnt+FbCV8ZdxoHFdgfWZ9MnK
+         HACV4Ez82Q7R36/mUfZfaqoyfC9UV4A/9f5VOG7fVgYM5A/eTtlGyi28D9naCaoRpT
+         YJqOjIaNvjYrBP4LpsQHOlAjZW7A0z5dk9MdZh1lVI2h2Cy0fCqzHF7Ef8C/J3FMMA
+         38lV5nO+8naQVvGfkT5FZND5kgDVFdd7p8F4tP2FV0VBF5zLfwSxv2DeGpt0dVo1Yo
+         rIV5o45YLi4uA==
 X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
 Received: from frank-G5 ([217.61.156.178]) by mail.gmx.net (mrgmx105
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1MDywu-1owVan1VqO-009zKI; Sat, 29
- Oct 2022 19:58:09 +0200
+ [212.227.17.168]) with ESMTPSA (Nemesis) id 1MXGvG-1oYnny346I-00YeoW; Sat, 29
+ Oct 2022 19:58:08 +0200
 From:   Frank Wunderlich <frank-w@public-files.de>
 To:     linux-mediatek@lists.infradead.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
@@ -39,93 +39,55 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v3 2/2] dt-bindings: PCI: mediatek-gen3: add support for mt7986
-Date:   Sat, 29 Oct 2022 19:58:06 +0200
-Message-Id: <20221029175806.14899-3-frank-w@public-files.de>
+Subject: [PATCH v3 0/2] rework mtk pcie-gen3 bindings and support mt7986
+Date:   Sat, 29 Oct 2022 19:58:04 +0200
+Message-Id: <20221029175806.14899-1-frank-w@public-files.de>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221029175806.14899-1-frank-w@public-files.de>
-References: <20221029175806.14899-1-frank-w@public-files.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:M/8pyPHZeBy0oSZJMA11WuM41/YmWM8SAUTdo0nAh26A+VhWuFN
- VUrLwFwRtVtMl8Lb05bPaTo6Ly7GqelfUJIRpUtyiGaeczpB914xJ1gKujlpp9R4hjAyqtz
- c66xvAbooTVN5TZQc+zo8C9BSplX8Rf0GxzI16qRaIaye2irKh7FWdHy/Oz/bzjaJAJf+Q3
- q769wPKHXM4npSkXp1F9A==
-UI-OutboundReport: notjunk:1;M01:P0:sEB2PEL8bqg=;ekmgBYoYBWf9sUt1XO4Psf+cuK5
- 2lyAB5EiVbpwX2rCsOIEuIY14q/9synZZ38f6UWvsLJXML4H/tjrvgZNnnDwnad5F1N1jlBum
- sW+G9WnUTgc/BtUoGuogvnH07Og0csQ10MCThKItQbD5v9sZ+oHz4WaqfXeip6L2uP/+q8bw/
- 2nblADu9rtaNLkZuKOZzCJ6c7mDHmn84+BBGy79SjVImXJW20pNF0GUOy7TGVqPAWN/NWv/3A
- NYILctiWtjbHixqQSpho/XP4TNh4vSAHDQ67fuvAEal1lxrtvvCCgEOK8CS6Hq+ByKKYC8iMR
- gM4TTwEpJ/boYXmc6x+JiiewGajvO1HMT5iaQ6zOTPsARkbe9EGpeFj+RH7Mxupne32v+DGXE
- vPhpSx+WJk28T69aSzaX7WUsZ0NIdtSOYUNlocALIaR6RZwy66a35KEAvadckHtxo+y97rR1Z
- 0MrKFEnHCykWPA78jKMlA4I/bPSo0TjInvq7ogGom7NuOYj/ITF/U/4tgeCMBZ124PW7lpk2P
- PptZDy1U19aLRaFg/qTz7raHccn2SaBoujH/JLtam9CPPho27gCnvclgr6j0Td0NYQcyxBuX+
- 225OXpzDKElNn1w5Y1ZpQVhTgFaUPyKOKHc0lqwODdOwvu+MZ6YfVsI/16zX5714dG/AoJLT3
- YJlSMDnpw7ytqn/OyhDP8ynurM0LmPmxHbZ7xIUMv8BTQDwUWov7yAO1fhOa9ZoeKBSVIiQun
- LUcPwvFhL+jpbc5cijskbDTIBUtp+V36njUwydMdXAcKkvjOpqDAOwxXIVNSV/nZCy4tWz5Oz
- 7S0lqWIWBSavjXpAxSmlzVcOg3E14e8Lcq61l4p9RXF+kimQ4knSSItoayZrCV7xj3b9t48Dm
- DV6tIHcdMYAovyj78trKZglcgWVqYTOmwz9oXoQ+PUpcc+WFd4jAuBjr5Ma0ZBtL1kG0lp83E
- ndS3I6yjgflfUOjGWeEjSnk927w=
+X-Provags-ID: V03:K1:O8JulodXz6iNhGWFYBR5Cj6XqvHcQPN5n3A5elUNyc8v/6ddcN+
+ 3m5Eu5scvKIpc/c0Kt2FhLfHZW5dLloOapBj6o6pCcZp1yom0ODWRqPJgcsGktaEY9JP3/M
+ WJUYzqPrCZKNv+8Dd/xhS+wsYl6mCFjbwVC+0+4rJ76MwbE3AHJ0gM4jNrxe7SteSvFKp8f
+ 58ctIM3jobvwp6YsPlh0g==
+UI-OutboundReport: notjunk:1;M01:P0:OqLcNjY3+us=;ZQkvU2y4h+VNqF0k6uFxn4tIBJz
+ 5lrhIWbcICbr+bMK9s0/2SAc1pzkYvfefzP+K91+7WS9TTDMYFJfZTCsU/27nCi4VQIGTAPKW
+ ItbQnOzxKsZLQBpBslHH4ZIVYoeM09UA175b39Q5DX/CYvKQL6blmp4rrSBwPbau/EP4qgXQL
+ Aweh9eBkE1iuVFdHVi0ajHsVOzX0fnICRG3YWCD++fSbZmlNshwGMXHLUkysNTAihOYK5snbE
+ QPCB3mg9yJFR7IGysXo3iUjxIn4vq4A5onWUMgFO2KuaCylCs5AyFnxWfvllpB1W86w1XsbE/
+ 7P2ehVxeneM7W8dLUJYpumSw9jqmRHoqs0HASxsJH8llhLQHq4NmxADUEsTgvA/kxlayoWZ8Q
+ srG4d8oafS0dXL/Rif70joKXFE9M00UattmjsfcG/Jklugu26slYv/cWtJFu10oUxf2zjX6jX
+ bPB/BtvIMh47Yq3uW3KyBo0rg7zSJZ5AMh9zYkn9AMrKocUT95du0xAE88Q0g2cU1j9wQDjWc
+ NqYZgxzHtNEVZKsRPgyReYw9fC+1OEzuzI09rnE2k5e5y5dC/iwaBKGfT8Czk++q8r+NKg83o
+ G0DYHcqpjBAvPK4kfra1uKfoCn3kBTx9U0ydFMfJRUHb2TSCAtnhsUqzKcdBvtwbQF5RDqcOD
+ BsFtmr6u3XV5n3oJiY5o42oH8owrWi57++QuyUjI+lEmmg3lkfdE5K2NLKILaFsW3Lpw2d1JG
+ o7nZ4YsZW5u+uXZl/cDIsg0dysbJzl/o8E+q6FgwK0JYj298vaASGmNyVOoC8jbPUu544T9OL
+ J8vjL4f24ZmEFqha6omdjRvPM+jeZOdpQ7/lAVGnG3UwIfm4Cjpm/iwtRNifnpzccVqMh235i
+ BlmnWJlv8nRUOdc+zDoSvhCPscOybAdXl8TGtQshppD7YKyo2jrAeDckV2lRYpu8vDSxDYOuD
+ 2BiOTg==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add compatible string and clock-definition for mt7986. It needs 4 clocks
-for PCIe, define them in binding.
+This Series prepares support for mt7986 PCIe which is basicly gen3 PCIe
+but with slightly differnt clock configuration.
 
-Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
-=2D--
+To make differences better to read i split the exiting bindings which
+has already different settings with a compatible switch and then add a
+new one for mt7986.
+
 v2:
-- squashed patch 2+3 (compatible and clock definition)
-=2D--
- .../bindings/pci/mediatek-pcie-gen3.yaml        | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+- fixed typo in part 1 (SoC based config)
+- squashed part2+3 (compatible and clock config for mt7986)
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml=
- b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-index 5d7369debff2..f7a02019daea 100644
-=2D-- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
-@@ -48,6 +48,7 @@ properties:
-     oneOf:
-       - items:
-           - enum:
-+              - mediatek,mt7986-pcie
-               - mediatek,mt8188-pcie
-               - mediatek,mt8195-pcie
-           - const: mediatek,mt8192-pcie
-@@ -78,9 +79,11 @@ properties:
-       - const: mac
+v3:
+- fixed problem with fallback-compatible not compatible to main
 
-   clocks:
-+    minItems: 4
-     maxItems: 6
+Frank Wunderlich (2):
+  dt-bindings: PCI: mediatek-gen3: add SoC based clock config
+  dt-bindings: PCI: mediatek-gen3: add support for mt7986
 
-   clock-names:
-+    minItems: 4
-     maxItems: 6
-
-   assigned-clocks:
-@@ -160,6 +163,20 @@ allOf:
-             - const: tl_32k
-             - const: peri_26m
-             - const: peri_mem
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            enum:
-+              - mediatek,mt7986-pcie
-+    then:
-+      properties:
-+        clock-names:
-+          items:
-+            - const: pl_250m
-+            - const: tl_26m
-+            - const: peri_26m
-+            - const: top_133m
-
- unevaluatedProperties: false
+ .../bindings/pci/mediatek-pcie-gen3.yaml      | 64 +++++++++++++++----
+ 1 file changed, 52 insertions(+), 12 deletions(-)
 
 =2D-
 2.34.1
