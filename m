@@ -2,298 +2,103 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91A60FA3743
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Nov 2022 05:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5A9C433FE
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Nov 2022 06:11:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229799AbiKAFVd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Nov 2022 01:21:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42054 "EHLO
+        id S229817AbiKAGLT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Nov 2022 02:11:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbiKAFVc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2022 01:21:32 -0400
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2074.outbound.protection.outlook.com [40.107.93.74])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA8C6140ED;
-        Mon, 31 Oct 2022 22:21:29 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=mT2CZDbAkoiq5WeXIIWevZ+F3wk+r9JJ6sGpE4FodyjofiJCsfdkR4LGgVm58kyvIrkGlvRx0TDe/9lPfgeLh3ZdCAcmVS3Scu9l4pAeNRn0U87XzhIC5HSXUL61xd2JAh278KtWiY63fW6eDYaQYkpauvW4D10BQxu+3S/EjGfYdO1IXrFvRiAce18JSx5vNSw52EeJ2rCsK7/NGD0kx4mwj0Y9TNYINtdn2kGV4kTHp5b2Guu08fDzMx5Opz8xUSSrcfBMdFKOahZKEIiXb+f3kTaxSsVUczAGGLaF64eO8FJqtswzDMUE8Hk2Q9eFsZrQ4WqvKgOKW27d3ZOjbw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JmFE5m3c6/JIG4LoFb+XfEt9pQiJh8aS0MmE6VbICjI=;
- b=NaXVWldoefcnHqKRkmn4WESLOQ+XCAxZ6ek0K3WBZPpftTIhiTz26jgddj75Tagrl1EREeTTcIID+I6C8XWC7UeizYga2q6bltyFz67MhfYyiMLdDW3Cb60FHKuHkTZ3APhVbFStLzJsyEovuCQT6ONgTUXUN7TuKNkjAdNDfOXaqIPGMujpsSzh420qnr5ld8CLWFsN+lYl/8QOQjdfBwCGlld2jb1vnmBK+4vNTqkrjTHBuOQzzzMQbQyVYYr+qvNi3aWIOTx3xzI0rFQEgJI1Md78JgcAC+fZTvIitewWWioMJ0BcVYLY+r0U0cbBNU1R5ZnJrhue3LJHsaoBjg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JmFE5m3c6/JIG4LoFb+XfEt9pQiJh8aS0MmE6VbICjI=;
- b=2isOeClH35k3c1nJzk7canFUYTtHKYZfl6uuIEAHW33+WAPdSFWlrEIgnYBRmsrRKCS1xxABIk0pzCtQJk75cb9yFfLQd+atzLXfy2ZNpoOc67ydMHq8DKuFnDRlfXWxNoJpgfaQwo7MuryV4pS2dqYsj+JPKe1jvBSwHZk57YM=
-Received: from MW4PR04CA0081.namprd04.prod.outlook.com (2603:10b6:303:6b::26)
- by PH8PR12MB6867.namprd12.prod.outlook.com (2603:10b6:510:1ca::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5769.16; Tue, 1 Nov
- 2022 05:21:27 +0000
-Received: from CO1NAM11FT090.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:6b:cafe::b5) by MW4PR04CA0081.outlook.office365.com
- (2603:10b6:303:6b::26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5769.19 via Frontend
- Transport; Tue, 1 Nov 2022 05:21:27 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1NAM11FT090.mail.protection.outlook.com (10.13.175.152) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5769.14 via Frontend Transport; Tue, 1 Nov 2022 05:21:27 +0000
-Received: from SATLEXMB05.amd.com (10.181.40.146) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 1 Nov
- 2022 00:21:18 -0500
-Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB05.amd.com
- (10.181.40.146) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 1 Nov
- 2022 00:21:06 -0500
-Received: from xhdarjunv40.xilinx.com (10.180.168.240) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server id 15.1.2375.31 via Frontend
- Transport; Tue, 1 Nov 2022 00:21:04 -0500
-From:   Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <krzysztof.kozlowski@linaro.org>
-CC:     <bhelgaas@google.com>, <michals@xilinx.com>, <robh+dt@kernel.org>,
-        <nagaradhesh.yeleswarapu@amd.com>, <bharat.kumar.gogada@amd.com>,
-        Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-Subject: [PATCH v2 1/2] dt-bindings: PCI: xilinx-pcie: Convert to YAML schemas of Xilinx AXI PCIe Root Port Bridge
-Date:   Tue, 1 Nov 2022 10:50:48 +0530
-Message-ID: <20221101052049.3946283-1-thippeswamy.havalige@amd.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229515AbiKAGLS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2022 02:11:18 -0400
+Received: from m1353.mail.163.com (m1353.mail.163.com [220.181.13.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B0D99FD12;
+        Mon, 31 Oct 2022 23:11:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=gabve
+        hFwyr56t3SCmvrhSqVpo5PbUibG67yyXZP1J28=; b=fsll5eA1DKFIQTuANHYqg
+        0rZo1tcI5+kIqYb9aw3Xf4pUUGO/IS5k7ohfMrYeeELkUddYwcbOijVCTrJFovuw
+        pUu7OIoEnCnmLe9vr10PCWhR+seaFBcjE+2B/D7yyUilM1ZGG1RtgX7tzY8i5z1Q
+        CCEoL+p7cpuoPoy3eIq4Bs=
+Received: from slark_xiao$163.com ( [223.104.68.52] ) by
+ ajax-webmail-wmsvr53 (Coremail) ; Tue, 1 Nov 2022 14:09:57 +0800 (CST)
+X-Originating-IP: [223.104.68.52]
+Date:   Tue, 1 Nov 2022 14:09:57 +0800 (CST)
+From:   "Slark Xiao" <slark_xiao@163.com>
+To:     "Greg KH" <gregkh@linuxfoundation.org>
+Cc:     mani@kernel.org, quic_hemantk@quicinc.com, bhelgaas@google.com,
+        loic.poulain@linaro.org, dnlplm@gmail.com, yonglin.tan@outlook.com,
+        mhi@lists.linux.dev, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re:Re: [PATCH v3] PCI: Add vendor ID for QUECTEL
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version XT5.0.13 build 20220113(9671e152)
+ Copyright (c) 2002-2022 www.mailtech.cn 163com
+In-Reply-To: <Y2Ckm79PgcTcVVne@kroah.com>
+References: <20221101021052.7532-1-slark_xiao@163.com>
+ <Y2Ckm79PgcTcVVne@kroah.com>
+X-NTES-SC: AL_QuydBf6TvUEi4SabbOkWkkcRjuo+UMC0vfgh249fPJs0tSrgxCQbYVBGHkH/18uRORqinzedTwRMy/pzWLB+Za9UYtlBILM/Kdf/2eAiS5kU
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GBK
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1NAM11FT090:EE_|PH8PR12MB6867:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6a585cfa-d7b2-4af6-0e92-08dabbc8ed25
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: fkAGsWcYVjiZIU6D7EZ107NMiuO1yMxunsL6dvgfXgpfOrGQafH9HzBrUgZjVPkbiJd6w1YBLYhea2FSOXu7+IbOJS1cbQ3NOPRlM227LW2jdUsOKVq0XcTWdEBFnTgz+tsG1mp2rVd1yyLEQBjlL3fx3T+qvVKcsIMxkqL9g8WIFNx58Yck6zy/a6Xd18sa/y+2P5PnJ2x9yzJ+RUWkDOMOs0k6/x429JhsYddX8sNPs/9nMMxa7674vEvZ+owWiuN3Sy/qeoCzg6leYKD6rYtB5Ygz429SrBw7b+IHWjSqDmNqvWFzKzdni2hqbgfF9UMaQsuly25rQ19NOymiZRlCvGRxdgF8Og6tVwG5r+qpQxlZiU18+o+edVrFKToEHk2Mca0eIt3LT84GO+Tpeb51RlI7QdbgoIK2a4LyoUWGBmlqijC6kTlWqm/7xfgFWZf+In4dkGh2i5N5JyMdj32Eihr2lF0/2CpdA8ClDKn5j78VPZ5pgU5sLIQLRLfWyf8foa7nVxmxdU/fiYBElA/pbgpkjhUA7AQUIZ32uAQ+ZB2qwWzgnTirre+oktgniupcHhnpXl4GDx5JbigoL/e96cJZvqUf4OsX8UYp/rBGtFZTzBuQvwvAcnrsZAhOmd0jq7Zd6yRtcF0FghtiKKHyZPjikbb+zXpnGJDMDPZpcDSM+ZuIMRd6r0VA8LxhYjQRM4J1oT9Tdielg/DakfKD6azcjhtvzPq0h/bSe+s1M34MbaT/FK6/RYHLjX2E4M3VyWlicSKKh6DMxwNZcuwuWPM7sxtToDDuIRzVg1nQOtbuV0ez2RVX4KmHnfQ3JQc9IJfQehOAJffv+i6/RMGrJOngMq800PwjLDe79qDmFQeQZlb5aAjy6LWqwkYR
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(346002)(376002)(396003)(136003)(451199015)(46966006)(36840700001)(40470700004)(5660300002)(82310400005)(966005)(478600001)(82740400003)(86362001)(110136005)(54906003)(4326008)(44832011)(70206006)(70586007)(83380400001)(36860700001)(6666004)(8676002)(40460700003)(8936002)(316002)(186003)(1076003)(36756003)(426003)(47076005)(81166007)(2906002)(356005)(2616005)(26005)(41300700001)(336012)(40480700001)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Nov 2022 05:21:27.1266
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6a585cfa-d7b2-4af6-0e92-08dabbc8ed25
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT090.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6867
+Message-ID: <3af61b4.1f11.18431cf918d.Coremail.slark_xiao@163.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID: NcGowAAHF5k1uGBjM_tVAA--.9648W
+X-CM-SenderInfo: xvod2y5b0lt0i6rwjhhfrp/xtbBDQGsZFaELltSCQABs5
+X-Coremail-Antispam: 1U5529EdanIXcx71UUUUU7vcSsGvfC2KfnxnUU==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert to YAML dtschemas of Xilinx AXI PCIe Root Port Bridge
-dt binding.
-
-Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
----
- .../devicetree/bindings/pci/xilinx-pcie.txt   | 88 -------------------
- .../bindings/pci/xlnx,axi-pcie-host.yaml      | 87 ++++++++++++++++++
- 2 files changed, 87 insertions(+), 88 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/xilinx-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
-
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-deleted file mode 100644
-index fd57a81180a4..000000000000
---- a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-+++ /dev/null
-@@ -1,88 +0,0 @@
--* Xilinx AXI PCIe Root Port Bridge DT description
--
--Required properties:
--- #address-cells: Address representation for root ports, set to <3>
--- #size-cells: Size representation for root ports, set to <2>
--- #interrupt-cells: specifies the number of cells needed to encode an
--	interrupt source. The value must be 1.
--- compatible: Should contain "xlnx,axi-pcie-host-1.00.a"
--- reg: Should contain AXI PCIe registers location and length
--- device_type: must be "pci"
--- interrupts: Should contain AXI PCIe interrupt
--- interrupt-map-mask,
--  interrupt-map: standard PCI properties to define the mapping of the
--	PCI interface to interrupt numbers.
--- ranges: ranges for the PCI memory regions (I/O space region is not
--	supported by hardware)
--	Please refer to the standard PCI bus binding document for a more
--	detailed explanation
--
--Optional properties for Zynq/Microblaze:
--- bus-range: PCI bus numbers covered
--
--Interrupt controller child node
--+++++++++++++++++++++++++++++++
--Required properties:
--- interrupt-controller: identifies the node as an interrupt controller
--- #address-cells: specifies the number of cells needed to encode an
--	address. The value must be 0.
--- #interrupt-cells: specifies the number of cells needed to encode an
--	interrupt source. The value must be 1.
--
--NOTE:
--The core provides a single interrupt for both INTx/MSI messages. So,
--created a interrupt controller node to support 'interrupt-map' DT
--functionality.  The driver will create an IRQ domain for this map, decode
--the four INTx interrupts in ISR and route them to this domain.
--
--
--Example:
--++++++++
--Zynq:
--	pci_express: axi-pcie@50000000 {
--		#address-cells = <3>;
--		#size-cells = <2>;
--		#interrupt-cells = <1>;
--		compatible = "xlnx,axi-pcie-host-1.00.a";
--		reg = < 0x50000000 0x1000000 >;
--		device_type = "pci";
--		interrupts = < 0 52 4 >;
--		interrupt-map-mask = <0 0 0 7>;
--		interrupt-map = <0 0 0 1 &pcie_intc 1>,
--				<0 0 0 2 &pcie_intc 2>,
--				<0 0 0 3 &pcie_intc 3>,
--				<0 0 0 4 &pcie_intc 4>;
--		ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
--
--		pcie_intc: interrupt-controller {
--			interrupt-controller;
--			#address-cells = <0>;
--			#interrupt-cells = <1>;
--		};
--	};
--
--
--Microblaze:
--	pci_express: axi-pcie@10000000 {
--		#address-cells = <3>;
--		#size-cells = <2>;
--		#interrupt-cells = <1>;
--		compatible = "xlnx,axi-pcie-host-1.00.a";
--		reg = <0x10000000 0x4000000>;
--		device_type = "pci";
--		interrupt-parent = <&microblaze_0_intc>;
--		interrupts = <1 2>;
--		interrupt-map-mask = <0 0 0 7>;
--		interrupt-map = <0 0 0 1 &pcie_intc 1>,
--				<0 0 0 2 &pcie_intc 2>,
--				<0 0 0 3 &pcie_intc 3>,
--				<0 0 0 4 &pcie_intc 4>;
--		ranges = <0x02000000 0x00000000 0x80000000 0x80000000 0x00000000 0x10000000>;
--
--		pcie_intc: interrupt-controller {
--			interrupt-controller;
--			#address-cells = <0>;
--			#interrupt-cells = <1>;
--		};
--
--	};
-diff --git a/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml b/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
-new file mode 100644
-index 000000000000..fc0761a7a2e2
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
-@@ -0,0 +1,87 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/xlnx,axi-pcie-host.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Xilinx AXI PCIe Root Port Bridge
-+
-+maintainers:
-+  - Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+
-+properties:
-+  compatible:
-+    const: xlnx,axi-pcie-host-1.00.a
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts:
-+    maxItems: 1
-+
-+  ranges:
-+    items:
-+      - description: |
-+          ranges for the PCI memory regions (I/O space region is not
-+          supported by hardware)
-+
-+  "#interrupt-cells":
-+    const: 1
-+
-+  interrupt-controller:
-+    description: identifies the node as an interrupt controller
-+    type: object
-+    properties:
-+      "interrupt-controller": true
-+      "#address-cells":
-+        const: 0
-+      "#interrupt-cells":
-+        const: 1
-+
-+    required:
-+      - 'interrupt-controller'
-+      - '#address-cells'
-+      - '#interrupt-cells'
-+
-+    additionalProperties: false
-+
-+required:
-+  - compatible
-+  - reg
-+  - ranges
-+  - interrupts
-+  - interrupt-map
-+  - "#interrupt-cells"
-+  - interrupt-controller
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+
-+    zynq:
-+        pci_express: pcie@50000000 {
-+            compatible = "xlnx,axi-pcie-host-1.00.a";
-+            reg = < 0x50000000 0x1000000 >;
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            #interrupt-cells = <1>;
-+            device_type = "pci";
-+            interrupts = < GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH >;
-+            interrupt-map-mask = <0 0 0 7>;
-+            interrupt-map = <0 0 0 1 &pcie_intc 1>,
-+                            <0 0 0 2 &pcie_intc 2>,
-+                            <0 0 0 3 &pcie_intc 3>,
-+                            <0 0 0 4 &pcie_intc 4>;
-+            ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
-+            pcie_intc: interrupt-controller {
-+                interrupt-controller;
-+                #address-cells = <0>;
-+                #interrupt-cells = <1>;
-+            };
-+        };
--- 
-2.25.1
-
+CgoKCgoKCgoKCgoKCgoKCkF0IDIwMjItMTEtMDEgMTI6NDY6MTksICJHcmVnIEtIIiA8Z3JlZ2to
+QGxpbnV4Zm91bmRhdGlvbi5vcmc+IHdyb3RlOgo+T24gVHVlLCBOb3YgMDEsIDIwMjIgYXQgMTA6
+MTA6NTJBTSArMDgwMCwgU2xhcmsgWGlhbyB3cm90ZToKPj4gbiBNSEkgZHJpdmVyLCB0aGVyZSBh
+cmUgc29tZSBjb21wYW5pZXMnIHByb2R1Y3Qgc3RpbGwgZG8gbm90IGhhdmUgdGhlaXIKPj4gb3du
+IFBDSSB2ZW5kb3IgbWFjcm8uIFNvIHdlIGFkZCBpdCBoZXJlIHRvIG1ha2UgdGhlIGNvZGUgbmVh
+dC4gUmVmIElECj4+IGNvdWxkIGJlIGZvdW5kIGluIGxpbmsgaHR0cHM6Ly9wY2lzaWcuY29tL21l
+bWJlcnNoaXAvbWVtYmVyLWNvbXBhbmllcy4KPj4gCj4+IFNpZ25lZC1vZmYtYnk6IFNsYXJrIFhp
+YW8gPHNsYXJrX3hpYW9AMTYzLmNvbT4KPj4gLS0tCj4+IHYzOiBTZXBhcmF0ZSBkaWZmZXJlbnQg
+dmVuZG9ycyBpbnRvIGRpZmZlcmVudCBwYXRjaC4KPj4gCj4+IHYyOiBVcGRhdGUgdmVuZG9yIElE
+IHRvIHRoZSByaWdodCBsb2NhdGlvbiBzb3J0ZWQgYnkgbnVtZXJpYyB2YWx1ZS4KPj4gLS0tCj4+
+ICBkcml2ZXJzL2J1cy9taGkvaG9zdC9wY2lfZ2VuZXJpYy5jIHwgNiArKystLS0KPj4gIGluY2x1
+ZGUvbGludXgvcGNpX2lkcy5oICAgICAgICAgICAgfCAyICsrCj4+ICAyIGZpbGVzIGNoYW5nZWQs
+IDUgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkKPj4gCj4+IGRpZmYgLS1naXQgYS9kcml2
+ZXJzL2J1cy9taGkvaG9zdC9wY2lfZ2VuZXJpYy5jIGIvZHJpdmVycy9idXMvbWhpL2hvc3QvcGNp
+X2dlbmVyaWMuYwo+PiBpbmRleCBjYWE0Y2UyOGNmOWUuLjgxYWU5YzQ5Y2UyYSAxMDA2NDQKPj4g
+LS0tIGEvZHJpdmVycy9idXMvbWhpL2hvc3QvcGNpX2dlbmVyaWMuYwo+PiArKysgYi9kcml2ZXJz
+L2J1cy9taGkvaG9zdC9wY2lfZ2VuZXJpYy5jCj4+IEBAIC01NTUsMTEgKzU1NSwxMSBAQCBzdGF0
+aWMgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgbWhpX3BjaV9pZF90YWJsZVtdID0gewo+PiAg
+CQkuZHJpdmVyX2RhdGEgPSAoa2VybmVsX3Vsb25nX3QpICZtaGlfdGVsaXRfZm45OTBfaW5mbyB9
+LAo+PiAgCXsgUENJX0RFVklDRShQQ0lfVkVORE9SX0lEX1FDT00sIDB4MDMwOCksCj4+ICAJCS5k
+cml2ZXJfZGF0YSA9IChrZXJuZWxfdWxvbmdfdCkgJm1oaV9xY29tX3NkeDY1X2luZm8gfSwKPj4g
+LQl7IFBDSV9ERVZJQ0UoMHgxZWFjLCAweDEwMDEpLCAvKiBFTTEyMFItR0wgKHNkeDI0KSAqLwo+
+PiArCXsgUENJX0RFVklDRShQQ0lfVkVORE9SX0lEX1FVRUNURUwsIDB4MTAwMSksIC8qIEVNMTIw
+Ui1HTCAoc2R4MjQpICovCj4+ICAJCS5kcml2ZXJfZGF0YSA9IChrZXJuZWxfdWxvbmdfdCkgJm1o
+aV9xdWVjdGVsX2VtMXh4X2luZm8gfSwKPj4gLQl7IFBDSV9ERVZJQ0UoMHgxZWFjLCAweDEwMDIp
+LCAvKiBFTTE2MFItR0wgKHNkeDI0KSAqLwo+PiArCXsgUENJX0RFVklDRShQQ0lfVkVORE9SX0lE
+X1FVRUNURUwsIDB4MTAwMiksIC8qIEVNMTYwUi1HTCAoc2R4MjQpICovCj4+ICAJCS5kcml2ZXJf
+ZGF0YSA9IChrZXJuZWxfdWxvbmdfdCkgJm1oaV9xdWVjdGVsX2VtMXh4X2luZm8gfSwKPj4gLQl7
+IFBDSV9ERVZJQ0UoMHgxZWFjLCAweDIwMDEpLCAvKiBFTTEyMFItR0wgZm9yIEZDQ0wgKHNkeDI0
+KSAqLwo+PiArCXsgUENJX0RFVklDRShQQ0lfVkVORE9SX0lEX1FVRUNURUwsIDB4MjAwMSksIC8q
+IEVNMTIwUi1HTCBmb3IgRkNDTCAoc2R4MjQpICovCj4+ICAJCS5kcml2ZXJfZGF0YSA9IChrZXJu
+ZWxfdWxvbmdfdCkgJm1oaV9xdWVjdGVsX2VtMXh4X2luZm8gfSwKPj4gIAkvKiBUOTlXMTc1IChz
+ZHg1NSksIEJvdGggZm9yIGVTSU0gYW5kIE5vbi1lU0lNICovCj4+ICAJeyBQQ0lfREVWSUNFKFBD
+SV9WRU5ET1JfSURfRk9YQ09OTiwgMHhlMGFiKSwKPj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGlu
+dXgvcGNpX2lkcy5oIGIvaW5jbHVkZS9saW51eC9wY2lfaWRzLmgKPj4gaW5kZXggYjM2MmQ5MGVi
+OWIwLi4zYzkxNDYxYmNmZTQgMTAwNjQ0Cj4+IC0tLSBhL2luY2x1ZGUvbGludXgvcGNpX2lkcy5o
+Cj4+ICsrKyBiL2luY2x1ZGUvbGludXgvcGNpX2lkcy5oCj4+IEBAIC0yNTg1LDYgKzI1ODUsOCBA
+QAo+PiAgI2RlZmluZSBQQ0lfVkVORE9SX0lEX1RFS1JBTQkJMHgxZGUxCj4+ICAjZGVmaW5lIFBD
+SV9ERVZJQ0VfSURfVEVLUkFNX0RDMjkwCTB4ZGMyOQo+PiAgCj4+ICsjZGVmaW5lIFBDSV9WRU5E
+T1JfSURfUVVFQ1RFTAkJMHgxZWFjCj4KPldoeSBkaWQgeW91IGlnbm9yZSB0aGUgY29tbWVudCBh
+dCB0aGUgdG9wIG9mIHRoaXMgZmlsZSBzYXlpbmcgdGhhdCBuZXcKPmVudHJpZXMgYXJlIG5vdCBu
+ZWVkZWQgdG8gYmUgYWRkZWQsIGVzcGVjaWFsbHkgZm9yIGp1c3Qgb25lIHVzZXI/Cj4KPnRoYW5r
+cywKPgo+Z3JlZyBrLWgKSGkgR3JlZywKIEFjdHVhbGx5IEkgZGlkbid0IHNlZSB0aGlzIG5vdGlj
+ZSBiZWZvcmUgY29tbWl0dGluZyB0aGlzIHBhdGNoLiBJIGV2ZW4gZGlzY3Vzc2VkIAppdCB3aXRo
+IHRoZSBtYWludGFpbmVyIGZvciBzZXZlcmFsIHRpbWVzIGFuZCBub2JvZHkgc2hvdyBtZSB0aGlz
+IHJ1bGUuCkkgaGF2ZSBhIGNvbmNlcm4sIHNvbWUgSU9UIG1vZHVsZSB2ZW5kb3JzLCBsaWtlIFFV
+RUNURUwsIENJTlRFUklPTihUSEFMRVMpLApTSUVSUkEsUk9MTElORyBhbmQgc28gb24sIHRoZXkg
+b25seSBwcm9kdWNlIElPVCBtb2R1bGVzIHdpdGhvdXQgb3RoZXIgCmhhcmR3YXJlIHdpdGggUENJ
+ZSAgaW50ZXJmYWNlLCBhbmQgdGhleSBhcHBsaWVkIGZvciB0aGVpciBvd24gVklELiBCdXQgdGhl
+eQpjYW4ndCBnZXQgYSB0aGVpciBvd24gVkVORE9SIE1BUkNPPyBUaGlzIHNlZW1zIHVucmVhc29u
+YWJsZS4KVGhpcyBjaGFuZ2Ugc2hvdWxkIGJlIGhhcm1sZXNzIGFuZCAgbWFrZSB0aGUgY29kZSBu
+ZWF0LgpUaGlzIGlzIG15IG9waW5pb24uCgpUaGFua3MKU2xhcmsgWGlhbwo=
