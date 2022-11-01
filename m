@@ -2,181 +2,105 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D469C433FE
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Nov 2022 07:47:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CAF0C433FE
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Nov 2022 08:18:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229819AbiKAHr5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Nov 2022 03:47:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58316 "EHLO
+        id S229789AbiKAISw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Nov 2022 04:18:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbiKAHr4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2022 03:47:56 -0400
-Received: from smtp.smtpout.orange.fr (smtp-11.smtpout.orange.fr [80.12.242.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 201FF17E2B
-        for <linux-pci@vger.kernel.org>; Tue,  1 Nov 2022 00:47:54 -0700 (PDT)
-Received: from [192.168.1.18] ([86.243.100.34])
-        by smtp.orange.fr with ESMTPA
-        id pm00o8nsx42kJpm00oEoLN; Tue, 01 Nov 2022 08:47:53 +0100
-X-ME-Helo: [192.168.1.18]
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Tue, 01 Nov 2022 08:47:53 +0100
-X-ME-IP: 86.243.100.34
-Message-ID: <67fdf851-961d-2f4b-591f-4939e1937e68@wanadoo.fr>
-Date:   Tue, 1 Nov 2022 08:47:51 +0100
+        with ESMTP id S229767AbiKAISv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Nov 2022 04:18:51 -0400
+Received: from mx1.tq-group.com (mx1.tq-group.com [93.104.207.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1358913E3F
+        for <linux-pci@vger.kernel.org>; Tue,  1 Nov 2022 01:18:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
+  t=1667290730; x=1698826730;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=VxmOCBHt2Q4/KSgdaoSHMuS+Z0XKovciEuh7B9eatWE=;
+  b=Bmxey7znivWlSHF59l/QQiQ9f6+wAa0LVsg4obe36eCSz81Tx0PROAmb
+   GVlllr4mj0ipt3EM6fQFg10ItoIP1Xivnp+Ho/j29mbqZnJeZy3BCoxS3
+   vLD4dNob3wcWGcbGpPxtbDWwwfnRdUzqf8pjeoPjQ0iqi+yU0TgF0Z5fu
+   HaLZDar+QQ+lxT9gyUjmo2VWWMA0J6NM6520zVlWmiz/DPUgFfgUwQOqm
+   V/3T2x8DXs9eC97iaL6O5jOR0UiaO27XgTDR9UnsUYPsm4eQA+bYafJho
+   pJeQJv3uKYo2lPy2j9b8QAEnAXeHN7k/a8IrBf5UDagTW8v37hOkT2PtJ
+   w==;
+X-IronPort-AV: E=Sophos;i="5.95,230,1661810400"; 
+   d="scan'208";a="27082943"
+Received: from unknown (HELO tq-pgp-pr1.tq-net.de) ([192.168.6.15])
+  by mx1-pgp.tq-group.com with ESMTP; 01 Nov 2022 09:18:48 +0100
+Received: from mx1.tq-group.com ([192.168.6.7])
+  by tq-pgp-pr1.tq-net.de (PGP Universal service);
+  Tue, 01 Nov 2022 09:18:48 +0100
+X-PGP-Universal: processed;
+        by tq-pgp-pr1.tq-net.de on Tue, 01 Nov 2022 09:18:48 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=tq-group.com; i=@tq-group.com; q=dns/txt; s=key1;
+  t=1667290728; x=1698826728;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=VxmOCBHt2Q4/KSgdaoSHMuS+Z0XKovciEuh7B9eatWE=;
+  b=J2siX6eU4ySCCaqZN3Vr581xX4T6spebMbMA4cZ+MhAQvJAdhM56hmM0
+   jkmuQ8ar9G5AQ+/3fQ1G98/IdqBRwFJvl/q1KxFEJeoQ1xCXYkz+DFmu/
+   TbtcjexWriajy2BOvNjhd2F9pFWyThZ1lQRy4Ebd8JUIOKg6GTQ00ReJL
+   Cm0PwuJ+M81BjKKpIZoPIgPf0LX08/wGdVKB/qci37U923KO3o9Wrw3LY
+   VmLlkc+V6njN5JjVWZgMmqAYTqwQt7LTDE3VYWLelCebWtrbfjhWaqfCD
+   Nt9+QQvMZ/mv/rAUCCCKpMtJ+xR07LVyYIrsGO1Cx1bQEg+Bq/672Nk1a
+   A==;
+X-IronPort-AV: E=Sophos;i="5.95,230,1661810400"; 
+   d="scan'208";a="27082942"
+Received: from vtuxmail01.tq-net.de ([10.115.0.20])
+  by mx1.tq-group.com with ESMTP; 01 Nov 2022 09:18:47 +0100
+Received: from steina-w.tq-net.de (unknown [10.123.53.21])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by vtuxmail01.tq-net.de (Postfix) with ESMTPSA id A21EE280056;
+        Tue,  1 Nov 2022 09:18:47 +0100 (CET)
+From:   Alexander Stein <alexander.stein@ew.tq-group.com>
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Alexander Stein <alexander.stein@ew.tq-group.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 1/1] PCI: dwc: reduce log severity level if no link came up
+Date:   Tue,  1 Nov 2022 09:18:44 +0100
+Message-Id: <20221101081844.265264-1-alexander.stein@ew.tq-group.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.2.2
-Subject: Re: [PATCH RFC V2 1/3] of: dynamic: Add of_create_node() and
- of_destroy_node()
-To:     Lizhi Hou <lizhi.hou@amd.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh@kernel.org, frowand.list@gmail.com, helgaas@kernel.org
-Cc:     clement.leger@bootlin.com, max.zhen@amd.com, sonal.santan@amd.com,
-        larry.liu@amd.com, brian.xu@amd.com, stefano.stabellini@xilinx.com,
-        trix@redhat.com
-References: <1665598440-47410-1-git-send-email-lizhi.hou@amd.com>
- <1665598440-47410-2-git-send-email-lizhi.hou@amd.com>
-Content-Language: fr
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-In-Reply-To: <1665598440-47410-2-git-send-email-lizhi.hou@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Le 12/10/2022 à 20:13, Lizhi Hou a écrit :
-> of_create_node() creates device node and apply to base tree dynamically.
-> The parent device node and full name are required for creating the node.
-> And the caller can also provide a property array for the node.
-> 
-> Inside this function, it creates a changeset. Then the new device node
-> and properties are added to the changeset and applied to base tree. The
-> pointer of this changeset is saved in device node private data.
-> 
-> of_destroy_node() removes the node created by of_create_node() from the
-> base tree and free it. It gets the changeset pointer from device node
-> private data and call of_changeset_destroy() to free everything.
-> 
-> Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
-> Signed-off-by: Sonal Santan <sonal.santan@amd.com>
-> Signed-off-by: Max Zhen <max.zhen@amd.com>
-> Signed-off-by: Brian Xu <brian.xu@amd.com>
-> ---
->   drivers/of/dynamic.c | 80 ++++++++++++++++++++++++++++++++++++++++++++
->   include/linux/of.h   |  4 +++
->   2 files changed, 84 insertions(+)
-> 
-> diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
-> index cd3821a6444f..eca28b723706 100644
-> --- a/drivers/of/dynamic.c
-> +++ b/drivers/of/dynamic.c
-> @@ -934,3 +934,83 @@ int of_changeset_action(struct of_changeset *ocs, unsigned long action,
->   	return 0;
->   }
->   EXPORT_SYMBOL_GPL(of_changeset_action);
-> +
-> +/**
-> + * of_create_node - Dynamically create a device node and apply it to base tree
-> + *
-> + * @parent: Pointer to parent device node
-> + * @full_name: Full name of device node
-> + * @props: Pointer to property array
-> + *
-> + * Return: Pointer to the created device node or NULL in case of an error.
-> + */
-> +struct device_node *of_create_node(struct device_node *parent,
-> +				   const char *full_name,
-> +				   struct property *props)
-> +{
-> +	struct of_changeset *cset;
-> +	struct property *new_pp;
-> +	struct device_node *np;
-> +	int ret, i;
-> +
-> +	cset = kzalloc(sizeof(*cset), GFP_KERNEL);
+Commit 14c4ad125cf9 ("PCI: dwc: Log link speed and width if it comes up")
+changed the severity from info to error. If no device is attached this
+error always is recorded which is not an error in this case.
 
-Hi,
+Fixes: 14c4ad125cf9 ("PCI: dwc: Log link speed and width if it comes up")
+Signed-off-by: Alexander Stein <alexander.stein@ew.tq-group.com>
+---
+ drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-kmalloc() would be enough. of_changeset_init() below already calls 
-memset().
-
-> +	if (!cset)
-> +		return NULL;
-> +
-> +	of_changeset_init(cset);
-> +
-> +	np = __of_node_dup(NULL, full_name);
-> +	if (!np)
-> +		goto failed;
-
-'cset' seems to be leaking if __of_node_dup() fails.
-
-> +	np->parent = parent;
-> +
-> +	ret = of_changeset_attach_node(cset, np);
-> +	if (ret)
-> +		goto failed;
-> +
-> +	if (props) {
-> +		for (i = 0; props[i].name; i++) {
-> +			new_pp = __of_prop_dup(&props[i], GFP_KERNEL);
-> +			if (!new_pp)
-> +				goto failed;
-> +			ret = of_changeset_add_property(cset, np, new_pp);
-> +			if (ret) {
-> +				kfree(new_pp->name);
-> +				kfree(new_pp->value);
-> +				kfree(new_pp);
-> +				goto failed;
-> +			}
-> +		}
-> +	}
-> +
-> +	ret = of_changeset_apply(cset);
-> +	if (ret)
-> +		goto failed;
-> +
-> +	np->data = cset;
-> +
-> +	return np;
-> +
-> +failed:
-> +	of_changeset_destroy(cset);
-> +	if (np)
-> +		of_node_put(np);
-> +
-> +	return NULL;
-> +}
-> +
-> +/**
-> + * of_destroy_node - Destroy a dynamically created device node
-> + *
-> + * @np: Pointer to dynamically created device node
-> + *
-> + */
-> +void of_destroy_node(struct device_node *np)
-> +{
-> +	struct of_changeset *cset;
-> +
-> +	cset = (struct of_changeset *)np->data;
-> +	of_changeset_destroy(cset);
-> +	of_node_put(np);
-> +	kfree(cset);
-> +}
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index 766d002bddb9..493ef957c1a8 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -1475,6 +1475,10 @@ extern int of_changeset_revert(struct of_changeset *ocs);
->   extern int of_changeset_action(struct of_changeset *ocs,
->   		unsigned long action, struct device_node *np,
->   		struct property *prop);
-> +struct device_node *of_create_node(struct device_node *parent,
-> +				   const char *full_name,
-> +				   struct property *props);
-> +void of_destroy_node(struct device_node *np);
->   
->   static inline int of_changeset_attach_node(struct of_changeset *ocs,
->   		struct device_node *np)
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 9e4d96e5a3f5a..432aead68d1fd 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -448,7 +448,7 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
+ 	}
+ 
+ 	if (retries >= LINK_WAIT_MAX_RETRIES) {
+-		dev_err(pci->dev, "Phy link never came up\n");
++		dev_info(pci->dev, "Phy link never came up\n");
+ 		return -ETIMEDOUT;
+ 	}
+ 
+-- 
+2.34.1
 
