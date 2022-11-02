@@ -2,185 +2,121 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6CD7C43217
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Nov 2022 17:37:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20BCBC4332F
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Nov 2022 21:57:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230345AbiKBRhh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Nov 2022 13:37:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33872 "EHLO
+        id S229688AbiKBV5w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Nov 2022 17:57:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229772AbiKBRhe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Nov 2022 13:37:34 -0400
-Received: from beige.elm.relay.mailchannels.net (beige.elm.relay.mailchannels.net [23.83.212.16])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF21E2E68F;
-        Wed,  2 Nov 2022 10:37:32 -0700 (PDT)
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id C6A126C2042;
-        Wed,  2 Nov 2022 17:37:31 +0000 (UTC)
-Received: from pdx1-sub0-mail-a225 (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id 03C5D6C2376;
-        Wed,  2 Nov 2022 17:37:31 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1667410651; a=rsa-sha256;
-        cv=none;
-        b=mBvmOt9b5IL2+BiX++E+PCamD+0uUOEMHu8lz+YXwplwzdj7dpuHj0FVjM6pKOKQrMNlaw
-        eGRXsP+C5C3jRY3ElmGUWkiX4JP9O8uaWXgOKGQlII1FeS5l1/Bii5+N/gEOJyDM7F/qQx
-        Jzmq4/32+8da6bL7TQT0jRMHLenOhFeCuZ70ZCXkagcyx6mGgv29/r43C95PcMNzNOkvqn
-        ql3HGAQiRdojVXuWVVoRkpwzEVCLZF+y34dzHuLONgyng1uaudByw2HewNOAFMYNMoX1m8
-        15ixnsX6N52veQKsbhO/AmuxMftt8pMkF0hDcqOMeL5dk+xbhfEPTJ1Lzf52lg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1667410651;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=2NoUxIpLTDZ8lDvlY/HWORKVP66zScBnVQ1cm5Vtqow=;
-        b=IJB+2OLKVm96s8NQVB30fV5hQnH8qRLk+c2r2zoQ5X0c+cYE4pDUBE4JGM3ZNdYGzQqQ0F
-        WFIVoVMoZ7sdrz5Lnrfw2W0cdpmQuS3MqA1ssGEUkoqax6CcPJvZ+XZENPWCOjblzmC02y
-        wopm1Kgz/NXw55yCQSkBUh8vnunMV5W8UNyWL/hqdd1+qjJBD3jyPt6aoDxAB3jaipzdhE
-        9vXAykISYYsFJKNMRxDCkPJMPS18AKuTSDCFwErZ6JMz4fpFHukgaqnu6ZY7epY5N+BuMj
-        B8oLunfRTzb+7088r9aTvlVJ4iiQpmnZ/hzMmB1pJ0+9bG5zbckE9oEk4e7fiw==
-ARC-Authentication-Results: i=1;
-        rspamd-7fb88f4dd5-nc5q9;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Power-Versed: 79a5dbd969deb7c1_1667410651472_1928156444
-X-MC-Loop-Signature: 1667410651472:1870974050
-X-MC-Ingress-Time: 1667410651472
-Received: from pdx1-sub0-mail-a225 (pop.dreamhost.com [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.105.95.137 (trex/6.7.1);
-        Wed, 02 Nov 2022 17:37:31 +0000
-Received: from offworld (ip72-199-50-187.sd.sd.cox.net [72.199.50.187])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S229548AbiKBV5w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Nov 2022 17:57:52 -0400
+Received: from phobos.denx.de (phobos.denx.de [IPv6:2a01:238:438b:c500:173d:9f52:ddab:ee01])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56F06DF1A;
+        Wed,  2 Nov 2022 14:57:51 -0700 (PDT)
+Received: from tr.lan (ip-86-49-120-218.bb.vodafone.cz [86.49.120.218])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: dave@stgolabs.net)
-        by pdx1-sub0-mail-a225 (Postfix) with ESMTPSA id 4N2YxP2pmYz3C;
-        Wed,  2 Nov 2022 10:37:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1667410650;
-        bh=2NoUxIpLTDZ8lDvlY/HWORKVP66zScBnVQ1cm5Vtqow=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=HZ0t0e+BBK8h4WOCCysLyhqnMvrxvtvAxGyesobxPJKRAwEwT/uwQ3jTQN1NvxPWL
-         Woyjd/N2j4pIiiNJMYInalM1fV2MVLDYR4UkdB5Mt1nUBaf+G+X4YL58hkCUQCqIel
-         5iQTKMvqAFI5S9RSa5dYyZfnZZbYzuZ77gulwm6aeb4W7oITQjaS0c7bRtyenaA//x
-         avr1psxPYFyTJtdf+mXzUyiKyF3Xn4fpb2TOQyaOS2DiYbTmDb8g2v8bazdoy3c8oW
-         hAH7/WWOtWb2WjTMa7dGoAqfa7qRk4WRk9rk6sewbzfPnZx9JsAFmY4mSnZ1XtoN1i
-         /jpmxtsRIXZFA==
-Date:   Wed, 2 Nov 2022 10:15:24 -0700
-From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>, dave.jiang@intel.com,
-        alison.schofield@intel.com, bwidawsk@kernel.org,
-        vishal.l.verma@intel.com, a.manzanares@samsung.com,
-        linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] cxl/pci: Add generic MSI-X/MSI irq support
-Message-ID: <20221102171524.thsz2kwtirhxn7ee@offworld>
-References: <20221024133633.00000467@huawei.com>
- <20221025232535.GA579167@bhelgaas>
+        (Authenticated sender: marex@denx.de)
+        by phobos.denx.de (Postfix) with ESMTPSA id 4949385087;
+        Wed,  2 Nov 2022 22:57:49 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=denx.de;
+        s=phobos-20191101; t=1667426269;
+        bh=pOflOZxdJSm/WBBfigL88V8kiLJCuonMLusq12XCQ5M=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=kt4Ot33hrw3uV36AIbR7+ABGridXE+r4OHHmtF8WsmgL5D1zza+91FqIxQv1mqMth
+         /UJbOGzVTpgcsyJikSL3MVBvXQ/jm+eVAKJbNGT3UdnpitD/eaJdpQnsDNVPqdkOb2
+         8hI9aBjMjbYv7CRotbyOdzgsFIXfsN2n4/Jao6MSKPTAqc/WsKbAJsNvbSkFUhk/Qn
+         j1quVhS7wVxBox4gbbvsi8qUPikaLBU5JwGUGOJTRs9EeLwIBn1BlzgtsBD7y2FN9x
+         69n/RNGvZz1Sqo8DEghOXOcXC3wYBc0QB2G7LfEnz0d24Nzxbgh3Ao6qVQifCBGCAc
+         C2Uww1JEC6QkQ==
+From:   Marek Vasut <marex@denx.de>
+To:     devicetree@vger.kernel.org
+Cc:     linux-pci@vger.kernel.org, Marek Vasut <marex@denx.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Shawn Guo <shawnguo@kernel.org>,
+        linux-arm-kernel@lists.infradead.org,
+        NXP Linux Team <linux-imx@nxp.com>
+Subject: [PATCH 3/3] dt-bindings: imx6q-pcie: Handle more resets on legacy platforms
+Date:   Wed,  2 Nov 2022 22:57:29 +0100
+Message-Id: <20221102215729.147335-3-marex@denx.de>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221102215729.147335-1-marex@denx.de>
+References: <20221102215729.147335-1-marex@denx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20221025232535.GA579167@bhelgaas>
-User-Agent: NeoMutt/20220429
+Content-Transfer-Encoding: 8bit
+X-Virus-Scanned: clamav-milter 0.103.6 at phobos.denx.de
+X-Virus-Status: Clean
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 25 Oct 2022, Bjorn Helgaas wrote:
+The i.MX6 and i.MX7D does not use block controller to toggle PCIe
+reset, hence the PCIe DT description contains three reset entries
+on these older SoCs. Add this exception into the binding document.
 
->> In short that calls:
->> /* Allocate the maximum possible number of MSI/MSI-X vectors */
->> nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSI_ENTRIES,
->>			PCI_IRQ_MSIX | PCI_IRQ_MSI);
->>
->> /* See how many and which Interrupt Message Numbers we actually use */
->> nvec = pcie_message_numbers(dev, mask, &pme, &aer, &dpc);
->>
->> if (nvec != nr_entries) {
->>	pci_free_irq_vectors(dev);
->>
->>	nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
->>			PCI_IRQ_MSIX | PCI_IRQ_MSI);
->> }
->>
->> My worry here is that the implicit assumption is that the vectors
->> won't move if we reduce the overall number of vectors we are asking
->> for...
+Signed-off-by: Marek Vasut <marex@denx.de>
+---
+Cc: Fabio Estevam <festevam@gmail.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Shawn Guo <shawnguo@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: NXP Linux Team <linux-imx@nxp.com>
+To: devicetree@vger.kernel.org
+---
+ .../bindings/pci/fsl,imx6q-pcie.yaml          | 22 +++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
 
-This would also apply to what is currently in portdrv machinery, no?
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+index fc8d4d7b80b38..12c7baba489aa 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+@@ -69,13 +69,12 @@ properties:
+       required properties for imx7d-pcie and imx8mq-pcie.
+ 
+   resets:
+-    maxItems: 3
++    maxItems: 2
+     description: Phandles to PCIe-related reset lines exposed by SRC
+       IP block. Additional required by imx7d-pcie and imx8mq-pcie.
+ 
+   reset-names:
+     items:
+-      - const: pciephy
+       - const: apps
+       - const: turnoff
+ 
+@@ -262,6 +261,25 @@ allOf:
+                The phandle pointing to the DISPLAY domain for imx6sx-pcie, to
+                PCIE_PHY power domain for imx7d-pcie and imx8mq-pcie.
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - fsl,imx6q-pcie
++              - fsl,imx6sx-pcie
++              - fsl,imx6qp-pcie
++              - fsl,imx7d-pcie
++    then:
++      properties:
++        resets:
++          maxItems: 3
++        reset-names:
++          items:
++            - const: pciephy
++            - const: apps
++            - const: turnoff
++
+ examples:
+   - |
+     #include <dt-bindings/clock/imx6qdl-clock.h>
+-- 
+2.35.1
 
->>
->> However, imagine the case that we have a feature the driver doesn't
->> know about that was previously at a higher vector.  After reducing
->> the vectors allocated the hardware might decide that feature needs
->> its own vector whereas some others can be combined.  Hence we'd end
->> up with a less than ideal packing for the features we actually
->> support.
->>
->> Could do something iterative to solve this if it actually matters
->> (increase number of vectors until the layout matches what we get
->> with max possible vectors).
-
-Maybe do a bounded retry loop until we get stable value?
-
-retry = 1;
-do {
-	pci_alloc_irq_vectors(1, 32);
-	nvecs = get_max_msgnum(); // max(pmu, events, mbox, isolation)
-	pci_free_irq_vectors();
-
-	pci_alloc_irq_vectors(nvecs, nvecs);
-	new_nvecs = get_max_msgnum();
-
-	if (likely(new_nvecs == nvecs))
-		return 0;
-
-	pci_free_irq_vectors();
-}  while (retry--);
-
-return -1; // no irq support
-
-But yeah I'm not sure how much we actually care about this. But if so,
-it  also might be worth re-visiting the generic table thing, as if
-nothing else it can standalone co-exist and avoid allocating any irqs
-altogether if we know a-priori that there is no irq support.
-
->
->Is this cxl code allocating vectors for devices that might also be
->claimed by portdrv?  I assume not because that sounds like a problem.
->
->Ugh.  I always feel like the portdrv design must be sub-optimal
->because this seems so hard to do cleanly.
->
->pci_alloc_irq_vectors() has a lot of magic inside it and is great for
->most drivers, but the PCIe service IRQs are definitely unusual and
->maybe it's not the best fit for this situation.
->
->If I understand correctly, Interrupt Message Numbers for all these
->PCIe services (hotplug, AER, DPC, etc) are restricted to 0-31 for both
->MSI and MSI-X, and the reason we don't just allocate 32 vectors all
->the time is to avoid consuming too many IRQs.
-
-Most CXL features that can have irqs will normally use only the first 16,
-with the exception of isolation (cxl 3.0), which per the spec is up to 32.
-
->The MSI case is ugly because the Interrupt Message Number can change
->when we set Multiple Message Enable.  Maybe we can separate it out and
->have a less than optimal solution for this case, like allocating one
->or two vectors and polling if that's not enough.  I expect most
->devices will support MSI-X.
-
-Would only supporting MSI-X be so terrible?
-
-Thanks,
-Davidlohr
