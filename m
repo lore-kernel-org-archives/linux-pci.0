@@ -2,280 +2,179 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F1C6C4332F
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Nov 2022 16:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 946B7C4332F
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Nov 2022 17:29:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232022AbiKBQuQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Nov 2022 12:50:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53864 "EHLO
+        id S231484AbiKBR3O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Nov 2022 13:29:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232047AbiKBQt6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Nov 2022 12:49:58 -0400
-Received: from mail-oa1-f51.google.com (mail-oa1-f51.google.com [209.85.160.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 418DB12D3C;
-        Wed,  2 Nov 2022 09:49:17 -0700 (PDT)
-Received: by mail-oa1-f51.google.com with SMTP id 586e51a60fabf-1322d768ba7so20934724fac.5;
-        Wed, 02 Nov 2022 09:49:17 -0700 (PDT)
+        with ESMTP id S231512AbiKBR3L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Nov 2022 13:29:11 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF8E21130;
+        Wed,  2 Nov 2022 10:29:09 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id z5-20020a17090a8b8500b00210a3a2364fso4021502pjn.0;
+        Wed, 02 Nov 2022 10:29:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=XngaLyoddCmH4VlYM2PfyFy1z8QIlSHJsQqMTNSL+fY=;
+        b=LFmDcNdVJo4K4/FarOGyy+iYSahg3fpZVoW20EDjy0GMIKfgTNw8fvtAhQ15msH1Qk
+         VHt/frVwIRzA+95aTCRBawF42Gjwv69pcfAiYAtFa+IxWw2c0L81a72SzNLI/zhYVV0t
+         K0ZHQnNrJhHrs41sUlChWL8od2BcBx7+xb65Sk1Jcosp5Emqdq+E1yeRQzcf4I9RGVys
+         8ZCwtkteD0c7nGMW6HOZLCT7XbRkNkFFlndsU3/uIegcdYqiHKLssHEw65pubDMfcOz6
+         H3vQiqJ9dW6NCjeFtTBEAmTHFWCogGMbqctU+cPtFHx9OfivrJ2DvIF1PBdYIYi7VXf1
+         hMPw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8cGQLnaWKabO+ARonzneZWAwfnDm0JeN7UBRoJVIGgY=;
-        b=VXXF5f7DD+rsd2MJ96/hiBvpVnXwsPrh+dWVZQtNL5xFKn3ZRYvWFHKUpD3kCJ5HOB
-         bugi1js1bzkLFnxLaY7P9ZjY77WDeVF8L5+qoUV3bXw10ZTpHEYZLwSNQgfLNU0orCDB
-         V8Eh4euNHrJf07RS01K/+f7GhSQe3ihE0GlDbq2F23gfjbRISt1htBx5sZMB3PIL0Ywz
-         BXnqK2QsngkjPaIx1K/0MfDppMjO3CZ8zoMTnXzuyiKX0Q6os9nXHEGuxrVagKmnbCVw
-         thMz38z3YHx4Wu/lSPF0C6M3F0PZKe93mRP7Cx9AIDBPsff34R4YbFmctP5qsxBG1X3h
-         9bmg==
-X-Gm-Message-State: ACrzQf26vbvgOwD/PMkUQbNMjh6W7YwnXmeQeGA/YOXqT+60non+d0pw
-        YIq28WICyfc8FQ/yo78Vyg==
-X-Google-Smtp-Source: AMsMyM7FLBDTlI91OuH7aKx5Z9jQAKCRyJuEaial3vb9kSGPR3QEqEobZWs58ZzY3S4cxJ+MXqNcNA==
-X-Received: by 2002:a05:6870:c08a:b0:132:dc3a:ecdf with SMTP id c10-20020a056870c08a00b00132dc3aecdfmr16378663oad.299.1667407756373;
-        Wed, 02 Nov 2022 09:49:16 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id w7-20020a0568080d4700b003546fada8f6sm4703745oik.12.2022.11.02.09.49.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Nov 2022 09:49:15 -0700 (PDT)
-Received: (nullmailer pid 4025588 invoked by uid 1000);
-        Wed, 02 Nov 2022 16:49:17 -0000
-Date:   Wed, 2 Nov 2022 11:49:17 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, krzysztof.kozlowski@linaro.org,
-        bhelgaas@google.com, michals@xilinx.com,
-        nagaradhesh.yeleswarapu@amd.com, bharat.kumar.gogada@amd.com
-Subject: Re: [PATCH v2 1/2] dt-bindings: PCI: xilinx-pcie: Convert to YAML
- schemas of Xilinx AXI PCIe Root Port Bridge
-Message-ID: <20221102164917.GA4019302-robh@kernel.org>
-References: <20221101052049.3946283-1-thippeswamy.havalige@amd.com>
+        h=content-transfer-encoding:in-reply-to:from:references:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=XngaLyoddCmH4VlYM2PfyFy1z8QIlSHJsQqMTNSL+fY=;
+        b=rszwyG6zHme+cXKv/nV3uJZLtZ/1sqOF6SNhzKcPXjyv35ctpTEIoQ8p5UvGa4fZkK
+         DsNDtfxhNQhMl7UgYIgpMppSvipA/GXuwDN7m5Os2WuYmK8N8bTORTKfXyqfd+wH+fqr
+         aJgphCxJ+j7WFebJw6WjNkVfWbANTqIN1awXxm+9Ls5IDAZIuddccvAmVRJkOJ5QHW3P
+         JiuKnG2KAURXtf3iL23J7QvkaZ8OMgV/PwN445T6kJHzglCxwtroLSIsevtbqX63v8DK
+         FsBhcbABj6Ift+SpgkRE8A/kgGUyyAd9GpJCvRcQGoe77JV7aTtWXPBMp5qd+qKCMecd
+         YD5w==
+X-Gm-Message-State: ACrzQf26OX4C+3hfPW1fYnXy80mduJP4py5TIjLXnetNGUgDIXSmiEYg
+        KVatFTG1pqQH24U2pVLxXUM=
+X-Google-Smtp-Source: AMsMyM468ueCiGPw9Rp6pG6tj4yCN+Kg/96HSi3gaDaAY7Jy/SDnxCyzS2YodJhnzcubFb/rCwO4cw==
+X-Received: by 2002:a17:902:ab89:b0:186:7cfc:cde8 with SMTP id f9-20020a170902ab8900b001867cfccde8mr26293355plr.9.1667410149118;
+        Wed, 02 Nov 2022 10:29:09 -0700 (PDT)
+Received: from ?IPV6:2404:f801:0:5:8000::75b? ([2404:f801:9000:1a:efea::75b])
+        by smtp.gmail.com with ESMTPSA id d6-20020a170903230600b0016f196209c9sm8651878plh.123.2022.11.02.10.28.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Nov 2022 10:29:08 -0700 (PDT)
+Message-ID: <b0aa0d72-d3f3-93a9-1fa9-553c1c0351ee@gmail.com>
+Date:   Thu, 3 Nov 2022 01:28:54 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221101052049.3946283-1-thippeswamy.havalige@amd.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH 03/12] x86/hyperv: Reorder code in prep for subsequent
+ patch
+Content-Language: en-US
+To:     Michael Kelley <mikelley@microsoft.com>, hpa@zytor.com,
+        kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, luto@kernel.org,
+        peterz@infradead.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, lpieralisi@kernel.org,
+        robh@kernel.org, kw@linux.com, bhelgaas@google.com, arnd@arndb.de,
+        hch@infradead.org, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
+        Tianyu.Lan@microsoft.com, kirill.shutemov@linux.intel.com,
+        sathyanarayanan.kuppuswamy@linux.intel.com, ak@linux.intel.com,
+        isaku.yamahata@intel.com, dan.j.williams@intel.com,
+        jane.chu@oracle.com, seanjc@google.com, tony.luck@intel.com,
+        x86@kernel.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        iommu@lists.linux.dev
+References: <1666288635-72591-1-git-send-email-mikelley@microsoft.com>
+ <1666288635-72591-4-git-send-email-mikelley@microsoft.com>
+From:   Tianyu Lan <ltykernel@gmail.com>
+In-Reply-To: <1666288635-72591-4-git-send-email-mikelley@microsoft.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 01, 2022 at 10:50:48AM +0530, Thippeswamy Havalige wrote:
-> Convert to YAML dtschemas of Xilinx AXI PCIe Root Port Bridge
-> dt binding.
+On 10/21/2022 1:57 AM, Michael Kelley wrote:
+> Reorder some code as preparation for a subsequent patch.  No
+> functional change.
 > 
-> Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+> Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+
+Reviewed-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 > ---
->  .../devicetree/bindings/pci/xilinx-pcie.txt   | 88 -------------------
->  .../bindings/pci/xlnx,axi-pcie-host.yaml      | 87 ++++++++++++++++++
->  2 files changed, 87 insertions(+), 88 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/pci/xilinx-pcie.txt
->  create mode 100644 Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
+>   arch/x86/hyperv/ivm.c | 68 +++++++++++++++++++++++++--------------------------
+>   1 file changed, 34 insertions(+), 34 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-> deleted file mode 100644
-> index fd57a81180a4..000000000000
-> --- a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-> +++ /dev/null
-> @@ -1,88 +0,0 @@
-> -* Xilinx AXI PCIe Root Port Bridge DT description
+> diff --git a/arch/x86/hyperv/ivm.c b/arch/x86/hyperv/ivm.c
+> index 1dbcbd9..f33c67e 100644
+> --- a/arch/x86/hyperv/ivm.c
+> +++ b/arch/x86/hyperv/ivm.c
+> @@ -235,40 +235,6 @@ void hv_ghcb_msr_read(u64 msr, u64 *value)
+>   EXPORT_SYMBOL_GPL(hv_ghcb_msr_read);
+>   #endif
+>   
+> -enum hv_isolation_type hv_get_isolation_type(void)
+> -{
+> -	if (!(ms_hyperv.priv_high & HV_ISOLATION))
+> -		return HV_ISOLATION_TYPE_NONE;
+> -	return FIELD_GET(HV_ISOLATION_TYPE, ms_hyperv.isolation_config_b);
+> -}
+> -EXPORT_SYMBOL_GPL(hv_get_isolation_type);
 > -
-> -Required properties:
-> -- #address-cells: Address representation for root ports, set to <3>
-> -- #size-cells: Size representation for root ports, set to <2>
-> -- #interrupt-cells: specifies the number of cells needed to encode an
-> -	interrupt source. The value must be 1.
-> -- compatible: Should contain "xlnx,axi-pcie-host-1.00.a"
-> -- reg: Should contain AXI PCIe registers location and length
-> -- device_type: must be "pci"
-> -- interrupts: Should contain AXI PCIe interrupt
-> -- interrupt-map-mask,
-> -  interrupt-map: standard PCI properties to define the mapping of the
-> -	PCI interface to interrupt numbers.
-> -- ranges: ranges for the PCI memory regions (I/O space region is not
-> -	supported by hardware)
-> -	Please refer to the standard PCI bus binding document for a more
-> -	detailed explanation
+> -/*
+> - * hv_is_isolation_supported - Check system runs in the Hyper-V
+> - * isolation VM.
+> - */
+> -bool hv_is_isolation_supported(void)
+> -{
+> -	if (!cpu_feature_enabled(X86_FEATURE_HYPERVISOR))
+> -		return false;
 > -
-> -Optional properties for Zynq/Microblaze:
-> -- bus-range: PCI bus numbers covered
+> -	if (!hypervisor_is_type(X86_HYPER_MS_HYPERV))
+> -		return false;
 > -
-> -Interrupt controller child node
-> -+++++++++++++++++++++++++++++++
-> -Required properties:
-> -- interrupt-controller: identifies the node as an interrupt controller
-> -- #address-cells: specifies the number of cells needed to encode an
-> -	address. The value must be 0.
-> -- #interrupt-cells: specifies the number of cells needed to encode an
-> -	interrupt source. The value must be 1.
+> -	return hv_get_isolation_type() != HV_ISOLATION_TYPE_NONE;
+> -}
 > -
-> -NOTE:
-> -The core provides a single interrupt for both INTx/MSI messages. So,
-> -created a interrupt controller node to support 'interrupt-map' DT
-> -functionality.  The driver will create an IRQ domain for this map, decode
-> -the four INTx interrupts in ISR and route them to this domain.
+> -DEFINE_STATIC_KEY_FALSE(isolation_type_snp);
 > -
+> -/*
+> - * hv_isolation_type_snp - Check system runs in the AMD SEV-SNP based
+> - * isolation VM.
+> - */
+> -bool hv_isolation_type_snp(void)
+> -{
+> -	return static_branch_unlikely(&isolation_type_snp);
+> -}
 > -
-> -Example:
-> -++++++++
-> -Zynq:
-> -	pci_express: axi-pcie@50000000 {
-> -		#address-cells = <3>;
-> -		#size-cells = <2>;
-> -		#interrupt-cells = <1>;
-> -		compatible = "xlnx,axi-pcie-host-1.00.a";
-> -		reg = < 0x50000000 0x1000000 >;
-> -		device_type = "pci";
-> -		interrupts = < 0 52 4 >;
-> -		interrupt-map-mask = <0 0 0 7>;
-> -		interrupt-map = <0 0 0 1 &pcie_intc 1>,
-> -				<0 0 0 2 &pcie_intc 2>,
-> -				<0 0 0 3 &pcie_intc 3>,
-> -				<0 0 0 4 &pcie_intc 4>;
-> -		ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
-> -
-> -		pcie_intc: interrupt-controller {
-> -			interrupt-controller;
-> -			#address-cells = <0>;
-> -			#interrupt-cells = <1>;
-> -		};
-> -	};
-> -
-> -
-> -Microblaze:
-> -	pci_express: axi-pcie@10000000 {
-> -		#address-cells = <3>;
-> -		#size-cells = <2>;
-> -		#interrupt-cells = <1>;
-> -		compatible = "xlnx,axi-pcie-host-1.00.a";
-> -		reg = <0x10000000 0x4000000>;
-> -		device_type = "pci";
-> -		interrupt-parent = <&microblaze_0_intc>;
-> -		interrupts = <1 2>;
-> -		interrupt-map-mask = <0 0 0 7>;
-> -		interrupt-map = <0 0 0 1 &pcie_intc 1>,
-> -				<0 0 0 2 &pcie_intc 2>,
-> -				<0 0 0 3 &pcie_intc 3>,
-> -				<0 0 0 4 &pcie_intc 4>;
-> -		ranges = <0x02000000 0x00000000 0x80000000 0x80000000 0x00000000 0x10000000>;
-> -
-> -		pcie_intc: interrupt-controller {
-> -			interrupt-controller;
-> -			#address-cells = <0>;
-> -			#interrupt-cells = <1>;
-> -		};
-> -
-> -	};
-> diff --git a/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml b/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
-> new file mode 100644
-> index 000000000000..fc0761a7a2e2
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
-> @@ -0,0 +1,87 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/xlnx,axi-pcie-host.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+>   /*
+>    * hv_mark_gpa_visibility - Set pages visible to host via hvcall.
+>    *
+> @@ -387,3 +353,37 @@ void hv_unmap_memory(void *addr)
+>   {
+>   	vunmap(addr);
+>   }
 > +
-> +title: Xilinx AXI PCIe Root Port Bridge
+> +enum hv_isolation_type hv_get_isolation_type(void)
+> +{
+> +	if (!(ms_hyperv.priv_high & HV_ISOLATION))
+> +		return HV_ISOLATION_TYPE_NONE;
+> +	return FIELD_GET(HV_ISOLATION_TYPE, ms_hyperv.isolation_config_b);
+> +}
+> +EXPORT_SYMBOL_GPL(hv_get_isolation_type);
 > +
-> +maintainers:
-> +  - Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+> +/*
+> + * hv_is_isolation_supported - Check system runs in the Hyper-V
+> + * isolation VM.
+> + */
+> +bool hv_is_isolation_supported(void)
+> +{
+> +	if (!cpu_feature_enabled(X86_FEATURE_HYPERVISOR))
+> +		return false;
 > +
-> +allOf:
-> +  - $ref: /schemas/pci/pci-bus.yaml#
+> +	if (!hypervisor_is_type(X86_HYPER_MS_HYPERV))
+> +		return false;
 > +
-> +properties:
-> +  compatible:
-> +    const: xlnx,axi-pcie-host-1.00.a
+> +	return hv_get_isolation_type() != HV_ISOLATION_TYPE_NONE;
+> +}
 > +
-> +  reg:
-> +    maxItems: 1
+> +DEFINE_STATIC_KEY_FALSE(isolation_type_snp);
 > +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  ranges:
-> +    items:
-> +      - description: |
-> +          ranges for the PCI memory regions (I/O space region is not
-> +          supported by hardware)
-> +
-> +  "#interrupt-cells":
-> +    const: 1
-> +
-> +  interrupt-controller:
-> +    description: identifies the node as an interrupt controller
-> +    type: object
-
-       additionalProperties: false
-
-> +    properties:
-> +      "interrupt-controller": true
-
-Don't need quotes.
-
-> +      "#address-cells":
-> +        const: 0
-
-blank line
-
-> +      "#interrupt-cells":
-> +        const: 1
-> +
-> +    required:
-> +      - 'interrupt-controller'
-> +      - '#address-cells'
-> +      - '#interrupt-cells'
-> +
-> +    additionalProperties: false
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - ranges
-> +  - interrupts
-> +  - interrupt-map
-> +  - "#interrupt-cells"
-> +  - interrupt-controller
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +    #include <dt-bindings/interrupt-controller/irq.h>
-> +
-> +    zynq:
-
-Odd, but I guess a valid label because they can appear about anywhere or 
-multiple labels in the same place.
-
-Drop and adjust the indentation.
-
-> +        pci_express: pcie@50000000 {
-
-Drop unused labels.
-
-> +            compatible = "xlnx,axi-pcie-host-1.00.a";
-> +            reg = < 0x50000000 0x1000000 >;
-> +            #address-cells = <3>;
-> +            #size-cells = <2>;
-> +            #interrupt-cells = <1>;
-> +            device_type = "pci";
-> +            interrupts = < GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH >;
-> +            interrupt-map-mask = <0 0 0 7>;
-> +            interrupt-map = <0 0 0 1 &pcie_intc 1>,
-> +                            <0 0 0 2 &pcie_intc 2>,
-> +                            <0 0 0 3 &pcie_intc 3>,
-> +                            <0 0 0 4 &pcie_intc 4>;
-> +            ranges = < 0x02000000 0 0x60000000 0x60000000 0 0x10000000 >;
-> +            pcie_intc: interrupt-controller {
-> +                interrupt-controller;
-> +                #address-cells = <0>;
-> +                #interrupt-cells = <1>;
-> +            };
-> +        };
-> -- 
-> 2.25.1
-> 
-> 
+> +/*
+> + * hv_isolation_type_snp - Check system runs in the AMD SEV-SNP based
+> + * isolation VM.
+> + */
+> +bool hv_isolation_type_snp(void)
+> +{
+> +	return static_branch_unlikely(&isolation_type_snp);
+> +}
