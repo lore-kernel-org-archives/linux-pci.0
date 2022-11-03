@@ -2,176 +2,137 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 680F6C433FE
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Nov 2022 09:00:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F379FC4332F
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Nov 2022 09:11:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231290AbiKCJAt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Nov 2022 05:00:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57972 "EHLO
+        id S229742AbiKCJLm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Nov 2022 05:11:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34092 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230376AbiKCJAs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Nov 2022 05:00:48 -0400
-Received: from loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8FF1C5F66;
-        Thu,  3 Nov 2022 02:00:46 -0700 (PDT)
-Received: from loongson.cn (unknown [10.20.42.77])
-        by gateway (Coremail) with SMTP id _____8Axjrc9g2Nj3zAEAA--.9608S3;
-        Thu, 03 Nov 2022 17:00:45 +0800 (CST)
-Received: from loongson-PC.loongson.cn (unknown [10.20.42.77])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8BxoOI4g2NjSJMLAA--.33260S2;
-        Thu, 03 Nov 2022 17:00:44 +0800 (CST)
-From:   Liu Peibao <liupeibao@loongson.cn>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>
-Cc:     chenhuacai@loongson.cn, lvjianmin@loongson.cn,
-        zhuyinbo@loongson.cn, liupeibao@loongson.cn,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] PCI: loongson: add skip-scan property for child DT node
-Date:   Thu,  3 Nov 2022 17:00:39 +0800
-Message-Id: <20221103090040.836-1-liupeibao@loongson.cn>
-X-Mailer: git-send-email 2.20.1
+        with ESMTP id S229708AbiKCJLj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Nov 2022 05:11:39 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F85CDE85
+        for <linux-pci@vger.kernel.org>; Thu,  3 Nov 2022 02:11:38 -0700 (PDT)
+Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=[IPv6:::1])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <l.stach@pengutronix.de>)
+        id 1oqWG6-0004Sh-Fm; Thu, 03 Nov 2022 10:11:34 +0100
+Message-ID: <8561d5ac952d39bf3d1923ca9e3fa651ab1bb531.camel@pengutronix.de>
+Subject: Re: [PATCH v1] PCI: imx6: Keep the GPIO regulator always on
+From:   Lucas Stach <l.stach@pengutronix.de>
+To:     Richard Zhu <hongxing.zhu@nxp.com>, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com
+Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        linux-imx@nxp.com
+Date:   Thu, 03 Nov 2022 10:11:33 +0100
+In-Reply-To: <1667455698-14578-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1667455698-14578-1-git-send-email-hongxing.zhu@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.40.4 (3.40.4-1.fc34) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf8BxoOI4g2NjSJMLAA--.33260S2
-X-CM-SenderInfo: xolx1vpled0qxorr0wxvrqhubq/1tbiAQATCmNiXeMWTAADs+
-X-Coremail-Antispam: 1Uk129KBjvJXoWxZF15JFW7Zr1xtw48tFyxZrb_yoW5ZryxpF
-        W5Aay3Kr48Kr1IgwnYq3yUCr1a9an7Z3s3JFZ7C3sFgr9Iv340gry8JF1Yy3ySkrW8WF4a
-        qryqgr48CF4UAF7anT9S1TB71UUUUjUqnTZGkaVYY2UrUUUUj1kv1TuYvTs0mT0YCTnIWj
-        qI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUIcSsGvfJTRUUU
-        bfAYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s
-        1l1IIY67AEw4v_Jrv_JF1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
-        wVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwA2z4
-        x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6xkF7I0E14v26F4UJVW0owAa
-        w2AFwI0_Jrv_JF1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqjxCEc2xF0cIa020Ex4CE44
-        I27wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JF0_Jw1lYx0Ex4A2
-        jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262
-        kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwCFI7km
-        07C267AKxVWUXVWUAwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r
-        1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWU
-        JVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r
-        1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUv
-        cSsGvfC2KfnxnUUI43ZEXa7IU8HKZJUUUUU==
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
+X-SA-Exim-Mail-From: l.stach@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI Controller of 2k1000 could not mask devices by
-setting vender id & device id in configuration space header
-as invalid values. When there are pins shareble between
-the platform device and PCI device, if the platform device
-is preferred, we should not scan this PCI device. In the
-above scene, add "skip-scan" property in DT node of this
-PCI device.
+Am Donnerstag, dem 03.11.2022 um 14:08 +0800 schrieb Richard Zhu:
+> Since vpcie regulator is one GPIO regulator, used to control the
+> VPCIe_3V3 and power up remote PCIe EP device.
+> 
+> Some WIFI modules load their firmware once in probe, and can't be
+> powered off during suspend. Otherwise, these WIFI modules wouldn't be
+> functional anymore after resume back.
 
-Signed-off-by: Liu Peibao <liupeibao@loongson.cn>
----
- drivers/pci/controller/pci-loongson.c | 62 +++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
+I would call this a bug in the WiFi driver.
 
-diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
-index 05c50408f13b..4b97963977c7 100644
---- a/drivers/pci/controller/pci-loongson.c
-+++ b/drivers/pci/controller/pci-loongson.c
-@@ -40,11 +40,21 @@ struct loongson_pci_data {
- 	struct pci_ops *ops;
- };
- 
-+#ifdef CONFIG_OF
-+struct mask_entry {
-+	struct list_head entry;
-+	unsigned int devfn;
-+};
-+#endif
-+
- struct loongson_pci {
- 	void __iomem *cfg0_base;
- 	void __iomem *cfg1_base;
- 	struct platform_device *pdev;
- 	const struct loongson_pci_data *data;
-+#ifdef CONFIG_OF
-+	struct list_head masklist;
-+#endif
- };
- 
- /* Fixup wrong class code in PCIe bridges */
-@@ -194,6 +204,20 @@ static void __iomem *pci_loongson_map_bus(struct pci_bus *bus,
- 			return NULL;
- 	}
- 
-+#ifdef CONFIG_OF
-+	/* Don't access devices in masklist */
-+	if (pci_is_root_bus(bus)) {
-+		struct list_head *list;
-+		struct mask_entry *entry;
-+
-+		list_for_each(list, &priv->masklist) {
-+			entry = list_entry(list, struct mask_entry, entry);
-+			if (devfn == entry->devfn)
-+				return NULL;
-+		}
-+	}
-+#endif
-+
- 	/* CFG0 can only access standard space */
- 	if (where < PCI_CFG_SPACE_SIZE && priv->cfg0_base)
- 		return cfg0_map(priv, bus, devfn, where);
-@@ -206,6 +230,41 @@ static void __iomem *pci_loongson_map_bus(struct pci_bus *bus,
- }
- 
- #ifdef CONFIG_OF
-+/*
-+ * The PCI Controller of 2k1000 could not mask devices by
-+ * setting vender id & device id in configuration space
-+ * header as invalid values. When there are pins shareble
-+ * between the platform device and PCI device, if the
-+ * platform device is preferred, we should not scan this
-+ * PCI device. In the above scene, add "skip-scan" property
-+ * in the device tree node of this PCI device.
-+ */
-+static int setup_masklist(struct loongson_pci *priv)
-+{
-+	struct device *dev = &priv->pdev->dev;
-+	struct device_node *dn, *parent = dev->of_node;
-+	struct mask_entry *entry;
-+	int devfn;
-+
-+	INIT_LIST_HEAD(&priv->masklist);
-+
-+	for_each_child_of_node(parent, dn) {
-+		if (of_property_read_bool(dn, "skip-scan")) {
-+			devfn = of_pci_get_devfn(dn);
-+			if (devfn < 0)
-+				continue;
-+
-+			entry = devm_kzalloc(dev, sizeof(entry), GFP_KERNEL);
-+			if (!entry)
-+				return -ENOMEM;
-+
-+			entry->devfn = devfn;
-+			list_add_tail(&entry->entry, &priv->masklist);
-+		}
-+	}
-+
-+	return 0;
-+}
- 
- static int loongson_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
- {
-@@ -305,6 +364,9 @@ static int loongson_pci_probe(struct platform_device *pdev)
- 		}
- 	}
- 
-+	if (setup_masklist(priv))
-+		return -ENOMEM;
-+
- 	bridge->sysdata = priv;
- 	bridge->ops = priv->data->ops;
- 	bridge->map_irq = loongson_map_irq;
--- 
-2.20.1
+I think we need to walk down the PCIe hierarchy to see if it is safe to
+disable the PCIe regulator. When all devices in the hierarchy are in
+D3hot state, we can safely put the whole hierarchy into D3cold by
+removing power. When any of the devices connected to the  RC are in a
+state other than D3hot, we need to keep the regulator enabled, as those
+devices may need power in suspend to implement wakeups or other
+functionality that should be available during suspend.
+
+Regards,
+Lucas
+
+> 
+> So, keep this regulator always on in the probe.
+> 
+> Fixes: a4bb720eeb1e ("PCI: imx6: Turn off regulator when system is in suspend mode")
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 24 ++++++++----------------
+>  1 file changed, 8 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 2616585ca5f8..94a89bbf381d 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -926,22 +926,13 @@ static int imx6_pcie_host_init(struct dw_pcie_rp *pp)
+>  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
+>  	int ret;
+>  
+> -	if (imx6_pcie->vpcie) {
+> -		ret = regulator_enable(imx6_pcie->vpcie);
+> -		if (ret) {
+> -			dev_err(dev, "failed to enable vpcie regulator: %d\n",
+> -				ret);
+> -			return ret;
+> -		}
+> -	}
+> -
+>  	imx6_pcie_assert_core_reset(imx6_pcie);
+>  	imx6_pcie_init_phy(imx6_pcie);
+>  
+>  	ret = imx6_pcie_clk_enable(imx6_pcie);
+>  	if (ret) {
+>  		dev_err(dev, "unable to enable pcie clocks: %d\n", ret);
+> -		goto err_reg_disable;
+> +		return ret;
+>  	}
+>  
+>  	if (imx6_pcie->phy) {
+> @@ -974,9 +965,6 @@ static int imx6_pcie_host_init(struct dw_pcie_rp *pp)
+>  		phy_exit(imx6_pcie->phy);
+>  err_clk_disable:
+>  	imx6_pcie_clk_disable(imx6_pcie);
+> -err_reg_disable:
+> -	if (imx6_pcie->vpcie)
+> -		regulator_disable(imx6_pcie->vpcie);
+>  	return ret;
+>  }
+>  
+> @@ -991,9 +979,6 @@ static void imx6_pcie_host_exit(struct dw_pcie_rp *pp)
+>  		phy_exit(imx6_pcie->phy);
+>  	}
+>  	imx6_pcie_clk_disable(imx6_pcie);
+> -
+> -	if (imx6_pcie->vpcie)
+> -		regulator_disable(imx6_pcie->vpcie);
+>  }
+>  
+>  static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
+> @@ -1263,6 +1248,13 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  		if (PTR_ERR(imx6_pcie->vpcie) != -ENODEV)
+>  			return PTR_ERR(imx6_pcie->vpcie);
+>  		imx6_pcie->vpcie = NULL;
+> +	} else {
+> +		ret = regulator_enable(imx6_pcie->vpcie);
+> +		if (ret) {
+> +			dev_err(dev, "failed to enable vpcie regulator: %d\n",
+> +				ret);
+> +			return ret;
+> +		}
+>  	}
+>  
+>  	imx6_pcie->vph = devm_regulator_get_optional(&pdev->dev, "vph");
+
 
