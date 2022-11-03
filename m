@@ -2,44 +2,44 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F32A3C41535
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Nov 2022 16:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DDFFC47089
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Nov 2022 16:47:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232193AbiKCQrk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Nov 2022 12:47:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45820 "EHLO
+        id S232267AbiKCQrn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Nov 2022 12:47:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232533AbiKCQrL (ORCPT
+        with ESMTP id S232536AbiKCQrL (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Nov 2022 12:47:11 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D23F119C36;
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE08119C3D;
         Thu,  3 Nov 2022 09:46:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1667493997; x=1699029997;
+  t=1667493998; x=1699029998;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=S2RJPvl3baq0S1jZ0H3vH8ZxE7YEfK7nHVPBJ+ytMMo=;
-  b=lO7TO6JpEQmdte24eS13Rj4ZhkG5XSLR2S3dsQoATCqQxjND3mn7ZvBD
-   EtjUhfRE8GUISw6ClCiv1GCPQIRMRj2UPATGvolTW5z236mk/P/YWf8sl
-   m3aoWczVvuaggh18no5pQ6zwt8JhRfT+L5mkOdum7dwjeT5HO1pZ1WvLZ
-   U7gtZjhSzJXVpcNEzU8eaayVeQsR+DKskp1joqzR1cbkrETuZr3YwHM5U
-   eLs4vt9vw4+AzB/ZTIxwDxqdgj5NQ/ya1Bwo8zbRhI3u5LciN5Sd35h7J
-   e5tGPzIXOZhot/ZdJPeDYfvaLdKP/WZDDlU4AQnmiVXbbFb/dqzFMTCvX
+  bh=NhBC+PjScBp2IdaVXcj0juh1+PhjepKM9lxMzcbPhAU=;
+  b=ZdyafDzSEAMw86F6xtdYHYzjq9E3bq9SA2H3+U5Irs+qM9GQNr9YpElX
+   vB2O/9rXJfGoz3UrOINQQ++uimoaPOPj9oxwb2n5A8eE1ekcIwr0p7q/j
+   sxdU4cpBjFZ7e77Tx/HWV0i33aJcIq1Kb1RSXhuvG+YDmsY8vAELGDWJz
+   CSRenxb5bfgWRtm/+7kIrE0IBQJmIFCTRd+DjlY+QDgARwXb1iqAD30/U
+   3Hxq9QvBp7CJWoSROx+LAmmK61qYl9l80uMgoBFdCg4Z+HEIc3R7dx1LJ
+   /V22rH/t/Xfpk9UMmGn3lIBj/SoPJq2y2LRYD8f1M9saKwzlG6o6x/pBd
    Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10520"; a="373970816"
+X-IronPort-AV: E=McAfee;i="6500,9779,10520"; a="297198943"
 X-IronPort-AV: E=Sophos;i="5.96,134,1665471600"; 
-   d="scan'208";a="373970816"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2022 09:46:37 -0700
+   d="scan'208";a="297198943"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2022 09:46:36 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10520"; a="629408025"
+X-IronPort-AV: E=McAfee;i="6500,9779,10520"; a="809735385"
 X-IronPort-AV: E=Sophos;i="5.96,134,1665471600"; 
-   d="scan'208";a="629408025"
+   d="scan'208";a="809735385"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga007.jf.intel.com with ESMTP; 03 Nov 2022 09:46:29 -0700
+  by orsmga005.jf.intel.com with ESMTP; 03 Nov 2022 09:46:29 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id AA5DF1E5; Thu,  3 Nov 2022 18:46:52 +0200 (EET)
+        id C452A2B7; Thu,  3 Nov 2022 18:46:52 +0200 (EET)
 From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To:     =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic@digikod.net>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
@@ -66,9 +66,9 @@ Cc:     Miguel Ojeda <ojeda@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Stefano Stabellini <sstabellini@kernel.org>,
         Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>
-Subject: [PATCH v2 2/4] PCI: Split pci_bus_for_each_resource_p() out of pci_bus_for_each_resource()
-Date:   Thu,  3 Nov 2022 18:46:42 +0200
-Message-Id: <20221103164644.70554-3-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 4/4] pcmcia: Convert to use pci_bus_for_each_resource_p()
+Date:   Thu,  3 Nov 2022 18:46:44 +0200
+Message-Id: <20221103164644.70554-5-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20221103164644.70554-1-andriy.shevchenko@linux.intel.com>
 References: <20221103164644.70554-1-andriy.shevchenko@linux.intel.com>
@@ -78,216 +78,59 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Refactor pci_bus_for_each_resource() in the same way as it's done in
-pci_dev_for_each_resource() case. This will allow to hide iterator
-inside the loop, where it's not used otherwise.
-
-No functional changes intended.
+The pci_bus_for_each_resource_p() hides the iterator loop since
+it may be not used otherwise. With this, we may drop that iterator
+variable definition.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- .clang-format                      |  1 +
- drivers/pci/bus.c                  |  7 +++----
- drivers/pci/hotplug/shpchp_sysfs.c |  8 ++++----
- drivers/pci/pci.c                  |  5 ++---
- drivers/pci/probe.c                |  2 +-
- drivers/pci/setup-bus.c            | 10 ++++------
- include/linux/pci.h                | 14 ++++++++++----
- 7 files changed, 25 insertions(+), 22 deletions(-)
+ drivers/pcmcia/rsrc_nonstatic.c | 9 +++------
+ drivers/pcmcia/yenta_socket.c   | 3 +--
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/.clang-format b/.clang-format
-index 08d579fea6cf..b61fd8791346 100644
---- a/.clang-format
-+++ b/.clang-format
-@@ -520,6 +520,7 @@ ForEachMacros:
-   - 'of_property_for_each_string'
-   - 'of_property_for_each_u32'
-   - 'pci_bus_for_each_resource'
-+  - 'pci_bus_for_each_resource_p'
-   - 'pci_dev_for_each_resource'
-   - 'pci_dev_for_each_resource_p'
-   - 'pci_doe_for_each_off'
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 3cef835b375f..fc8e9c11c5f2 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -161,13 +161,13 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
- 		void *alignf_data,
- 		struct pci_bus_region *region)
+diff --git a/drivers/pcmcia/rsrc_nonstatic.c b/drivers/pcmcia/rsrc_nonstatic.c
+index ad1141fddb4c..9d92d4bb6239 100644
+--- a/drivers/pcmcia/rsrc_nonstatic.c
++++ b/drivers/pcmcia/rsrc_nonstatic.c
+@@ -934,7 +934,7 @@ static int adjust_io(struct pcmcia_socket *s, unsigned int action, unsigned long
+ static int nonstatic_autoadd_resources(struct pcmcia_socket *s)
  {
--	int i, ret;
- 	struct resource *r, avail;
- 	resource_size_t max;
-+	int ret;
- 
- 	type_mask |= IORESOURCE_TYPE_BITS;
- 
--	pci_bus_for_each_resource(bus, r, i) {
-+	pci_bus_for_each_resource_p(bus, r) {
- 		resource_size_t min_used = min;
- 
- 		if (!r)
-@@ -264,9 +264,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
- 	struct resource *res = &dev->resource[idx];
- 	struct resource orig_res = *res;
- 	struct resource *r;
--	int i;
- 
--	pci_bus_for_each_resource(bus, r, i) {
-+	pci_bus_for_each_resource_p(bus, r) {
- 		resource_size_t start, end;
- 
- 		if (!r)
-diff --git a/drivers/pci/hotplug/shpchp_sysfs.c b/drivers/pci/hotplug/shpchp_sysfs.c
-index 64beed7a26be..ff04f0c5e7c3 100644
---- a/drivers/pci/hotplug/shpchp_sysfs.c
-+++ b/drivers/pci/hotplug/shpchp_sysfs.c
-@@ -24,16 +24,16 @@
- static ssize_t show_ctrl(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct pci_dev *pdev;
--	int index, busnr;
  	struct resource *res;
- 	struct pci_bus *bus;
- 	size_t len = 0;
-+	int busnr;
+-	int i, done = 0;
++	int done = 0;
  
- 	pdev = to_pci_dev(dev);
- 	bus = pdev->subordinate;
- 
- 	len += sysfs_emit_at(buf, len, "Free resources: memory\n");
--	pci_bus_for_each_resource(bus, res, index) {
-+	pci_bus_for_each_resource_p(bus, res) {
- 		if (res && (res->flags & IORESOURCE_MEM) &&
- 				!(res->flags & IORESOURCE_PREFETCH)) {
- 			len += sysfs_emit_at(buf, len,
-@@ -43,7 +43,7 @@ static ssize_t show_ctrl(struct device *dev, struct device_attribute *attr, char
- 		}
- 	}
- 	len += sysfs_emit_at(buf, len, "Free resources: prefetchable memory\n");
--	pci_bus_for_each_resource(bus, res, index) {
-+	pci_bus_for_each_resource_p(bus, res) {
- 		if (res && (res->flags & IORESOURCE_MEM) &&
- 			       (res->flags & IORESOURCE_PREFETCH)) {
- 			len += sysfs_emit_at(buf, len,
-@@ -53,7 +53,7 @@ static ssize_t show_ctrl(struct device *dev, struct device_attribute *attr, char
- 		}
- 	}
- 	len += sysfs_emit_at(buf, len, "Free resources: IO\n");
--	pci_bus_for_each_resource(bus, res, index) {
-+	pci_bus_for_each_resource_p(bus, res) {
- 		if (res && (res->flags & IORESOURCE_IO)) {
- 			len += sysfs_emit_at(buf, len,
- 					     "start = %8.8llx, length = %8.8llx\n",
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2127aba3550b..ff5b34337dab 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -782,9 +782,8 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- {
- 	const struct pci_bus *bus = dev->bus;
- 	struct resource *r;
--	int i;
- 
--	pci_bus_for_each_resource(bus, r, i) {
-+	pci_bus_for_each_resource_p(bus, r) {
- 		if (!r)
- 			continue;
- 		if (resource_contains(r, res)) {
-@@ -802,7 +801,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 			 * be both a positively-decoded aperture and a
- 			 * subtractively-decoded region that contain the BAR.
- 			 * We want the positively-decoded one, so this depends
--			 * on pci_bus_for_each_resource() giving us those
-+			 * on pci_bus_for_each_resource_p() giving us those
- 			 * first.
- 			 */
- 			return r;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b66fa42c4b1f..3662e867a124 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -533,7 +533,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- 	pci_read_bridge_mmio_pref(child);
- 
- 	if (dev->transparent) {
--		pci_bus_for_each_resource(child->parent, res, i) {
-+		pci_bus_for_each_resource_p(child->parent, res) {
- 			if (res && res->flags) {
- 				pci_bus_add_resource(child, res,
- 						     PCI_SUBTRACTIVE_DECODE);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 336d6e6ef76a..83b2f308be7e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -770,9 +770,8 @@ static struct resource *find_bus_resource_of_type(struct pci_bus *bus,
- 						  unsigned long type)
- {
- 	struct resource *r, *r_assigned = NULL;
--	int i;
- 
--	pci_bus_for_each_resource(bus, r, i) {
-+	pci_bus_for_each_resource_p(bus, r) {
- 		if (r == &ioport_resource || r == &iomem_resource)
- 			continue;
- 		if (r && (r->flags & type_mask) == type && !r->parent)
-@@ -1204,7 +1203,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			additional_mmio_pref_size = 0;
- 	struct resource *pref;
- 	struct pci_host_bridge *host;
--	int hdr_type, i, ret;
-+	int hdr_type, ret;
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
-@@ -1228,7 +1227,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		host = to_pci_host_bridge(bus->bridge);
- 		if (!host->size_windows)
- 			return;
--		pci_bus_for_each_resource(bus, pref, i)
-+		pci_bus_for_each_resource_p(bus, pref)
- 			if (pref && (pref->flags & IORESOURCE_PREFETCH))
- 				break;
- 		hdr_type = -1;	/* Intentionally invalid - not a PCI device. */
-@@ -1333,12 +1332,11 @@ EXPORT_SYMBOL(pci_bus_size_bridges);
- 
- static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
- {
--	int i;
- 	struct resource *parent_r;
- 	unsigned long mask = IORESOURCE_IO | IORESOURCE_MEM |
- 			     IORESOURCE_PREFETCH;
- 
--	pci_bus_for_each_resource(b, parent_r, i) {
-+	pci_bus_for_each_resource_p(b, parent_r) {
- 		if (!parent_r)
- 			continue;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3940435fa90a..165e4713360f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1433,10 +1433,16 @@ int devm_request_pci_bus_resources(struct device *dev,
- /* Temporary until new and working PCI SBR API in place */
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- 
--#define pci_bus_for_each_resource(bus, res, i)				\
--	for (i = 0;							\
--	    (res = pci_bus_resource_n(bus, i)) || i < PCI_BRIDGE_RESOURCE_NUM; \
--	     i++)
-+#define __pci_bus_for_each_resource(bus, res, __i, vartype)			\
-+	for (vartype __i = 0;							\
-+	     res = pci_bus_resource_n(bus, __i), __i < PCI_BRIDGE_RESOURCE_NUM;	\
-+	     __i++)
+ 	if (!s->cb_dev || !s->cb_dev->bus)
+ 		return -ENODEV;
+@@ -960,12 +960,9 @@ static int nonstatic_autoadd_resources(struct pcmcia_socket *s)
+ 	 */
+ 	if (s->cb_dev->bus->number == 0)
+ 		return -EINVAL;
+-
+-	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
+-		res = s->cb_dev->bus->resource[i];
+-#else
+-	pci_bus_for_each_resource(s->cb_dev->bus, res, i) {
+ #endif
 +
-+#define pci_bus_for_each_resource(bus, res, i)					\
-+	__pci_bus_for_each_resource(bus, res, i, )
-+
-+#define pci_bus_for_each_resource_p(bus, res)					\
-+	__pci_bus_for_each_resource(bus, res, i, unsigned int)
++	pci_bus_for_each_resource_p(s->cb_dev->bus, res) {
+ 		if (!res)
+ 			continue;
  
- int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 			struct resource *res, resource_size_t size,
+diff --git a/drivers/pcmcia/yenta_socket.c b/drivers/pcmcia/yenta_socket.c
+index 3966a6ceb1ac..b200f2b99a7a 100644
+--- a/drivers/pcmcia/yenta_socket.c
++++ b/drivers/pcmcia/yenta_socket.c
+@@ -673,9 +673,8 @@ static int yenta_search_res(struct yenta_socket *socket, struct resource *res,
+ 			    u32 min)
+ {
+ 	struct resource *root;
+-	int i;
+ 
+-	pci_bus_for_each_resource(socket->dev->bus, root, i) {
++	pci_bus_for_each_resource_p(socket->dev->bus, root) {
+ 		if (!root)
+ 			continue;
+ 
 -- 
 2.35.1
 
