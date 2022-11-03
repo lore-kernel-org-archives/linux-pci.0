@@ -2,120 +2,111 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B0EC4332F
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Nov 2022 18:30:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 106BEC4332F
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Nov 2022 18:49:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231652AbiKCSas (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Nov 2022 14:30:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58654 "EHLO
+        id S229750AbiKCStO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Nov 2022 14:49:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42454 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231395AbiKCSaq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Nov 2022 14:30:46 -0400
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A492AE42;
-        Thu,  3 Nov 2022 11:29:53 -0700 (PDT)
-Received: by mail-pf1-f171.google.com with SMTP id b185so2400986pfb.9;
-        Thu, 03 Nov 2022 11:29:53 -0700 (PDT)
+        with ESMTP id S229445AbiKCStN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Nov 2022 14:49:13 -0400
+Received: from mail-qv1-xf30.google.com (mail-qv1-xf30.google.com [IPv6:2607:f8b0:4864:20::f30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2572A5FCB;
+        Thu,  3 Nov 2022 11:49:11 -0700 (PDT)
+Received: by mail-qv1-xf30.google.com with SMTP id i12so1766246qvs.2;
+        Thu, 03 Nov 2022 11:49:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RgFweYo8BPv/simqwg3LitRGCnbkeK6PBgZnWlFwSt0=;
+        b=YfVj6TbmVYuK4sXs/J284r/DTNdatQdTQnYEdrpdPPb1Rd+uB3g4jXDJjcd0bOglOj
+         FcKnolF5l1VbZGm7mQDVQe1FeoFtcVj1dYIyfdqWn8PB78ZiOLH2GXIESIMRUr2r+QYg
+         Kp7T0PXMWJmhlzrAdNvmMOCxqLC1GPSHDtuJoiAUempt+gdRuWpyPb/lkWICxO8z2U7x
+         pT1qJ8Mydrdlo+02kXP96jrT00bqGKLiZmSfqtrC1sevb9eYZcoRRLJ7CSGccLw5RKWh
+         IMBlMYsOUiR/wuhxBiLJHUjzj1fNwHxgjO4ey0Tas3ZUnwJz0wpmSgdau9KqYwygThaU
+         sjag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pZjEyPGh7N/ck24vh/VKMs5s50UIlOa2pgI4ml3dqpA=;
-        b=wBIG6peM6DO5VkovFmK5TgeyvBa7jO8i95AVxC7AtHb7w6gbuyIVitJya39P0iaTJu
-         0sT6wJ6o5hrKmNgXieS+gzsrfy5btgpKT6RZ2nSrQgaYhFueAGWUyUmm4pYpUFvbsiPn
-         7oY6sqqszRlqiSokONWdNzFxaCSIc2FNrRUGQ7cCDsbMzfsGB791jzVb+LyoHWF36yoK
-         2TrOYBVCI2uJxj7oZe3gEUTXw/Rl59c8yO59nawy3Xsh/YPXHqATxcpUZtOmF5C2qQIm
-         d3+Ra3gi/m/RggvdOLbYJ/bpD4AHpoa2ao5th4mbUqIqD3J+HACVkCz5DRhVVTeNcERI
-         z7qQ==
-X-Gm-Message-State: ACrzQf3EhY2IWYhRFKNYyvinf1CSPHo9OLMWzdjT9rya749d8zsmYHdq
-        YaY05A38KU+b5JFp2N8rNLs=
-X-Google-Smtp-Source: AMsMyM4MMb94EAGz1kO2Q0DRDyjidkdmznJiyzQZ8JfQK1Y1FbZfy+aOFpE2yYDeDmYpBxRHuxCHKQ==
-X-Received: by 2002:aa7:8c15:0:b0:56b:ead2:3950 with SMTP id c21-20020aa78c15000000b0056bead23950mr32086578pfd.77.1667500192405;
-        Thu, 03 Nov 2022 11:29:52 -0700 (PDT)
-Received: from rocinante (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id o14-20020a170902d4ce00b0018157b415dbsm1034089plg.63.2022.11.03.11.29.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Nov 2022 11:29:51 -0700 (PDT)
-Date:   Fri, 4 Nov 2022 03:29:44 +0900
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     Dominik Brodowski <linux@dominikbrodowski.net>,
-        =?utf-8?Q?Micka=C3=ABl_Sala=C3=BCn?= <mic@digikod.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org,
-        linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mips@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-        xen-devel@lists.xenproject.org, Miguel Ojeda <ojeda@kernel.org>,
-        Richard Henderson <richard.henderson@linaro.org>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>
-Subject: Re: [PATCH v2 4/4] pcmcia: Convert to use
- pci_bus_for_each_resource_p()
-Message-ID: <Y2QImB0OLakzz1+F@rocinante>
-References: <20221103164644.70554-1-andriy.shevchenko@linux.intel.com>
- <20221103164644.70554-5-andriy.shevchenko@linux.intel.com>
- <Y2P0XCNJvTVuziO7@owl.dominikbrodowski.net>
- <Y2P2ja26ikNecTsv@smile.fi.intel.com>
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=RgFweYo8BPv/simqwg3LitRGCnbkeK6PBgZnWlFwSt0=;
+        b=SBf9Ui8AC0ftax8JZ6nI+Da4sR721N6a56VU668lEcIxz6fC3/HP4FClY7Glc+dtNL
+         SMF2ehkjgoihE3Z63Liol3CDofRqxQDIUzdSCK8ceYHDtkiLMym6yR+MhcQFJWF8fAn6
+         /aoDzPkz7w2bnHvcizH22vTKvjmFbb+ctR0bdl16zXAQIjEgjU2p2xwYGvomYxYD16Jc
+         wv6yxWuHcO4WhrTRpR/ZPHAlxAZ/yQOHt8jJ5/7ugubxtDZXTa6epfmQna2+QG7HMsDT
+         hmb2rjmT+OXsQDT3rXih2nFoul8F+os/P/BACLHuMfg+gkb7M5gH4xFBB66JQt8I8gmM
+         MaDg==
+X-Gm-Message-State: ACrzQf3f6FYqOLeLtDhPoFO6nJpVRhIbBqj7C2iySTz3+ZDCLe4784S4
+        x0rqdAkz9uUztFSl6CvRoFk=
+X-Google-Smtp-Source: AMsMyM7H34w6zt9aB0ytsxTAd8VZba1ZEApMzwB9wYsRBodisO4s/uNaNVjJLHnbJXdZb1+CXDxpBw==
+X-Received: by 2002:ad4:5963:0:b0:4bc:1a6b:2011 with SMTP id eq3-20020ad45963000000b004bc1a6b2011mr11235383qvb.79.1667501350205;
+        Thu, 03 Nov 2022 11:49:10 -0700 (PDT)
+Received: from [10.67.48.245] ([192.19.223.252])
+        by smtp.googlemail.com with ESMTPSA id bl12-20020a05620a1a8c00b006ed61f18651sm1280476qkb.16.2022.11.03.11.49.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 03 Nov 2022 11:49:09 -0700 (PDT)
+Message-ID: <6535ae14-3b09-3b17-d121-b75f433045fb@gmail.com>
+Date:   Thu, 3 Nov 2022 11:48:56 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <Y2P2ja26ikNecTsv@smile.fi.intel.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.2.2
+Subject: Re: [PATCH v2 5/5] PCI: brcmstb: Set RCB_{MPS,64B}_MODE bits
+Content-Language: en-US
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Jim Quinlan <james.quinlan@broadcom.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc:     Jim Quinlan <jim2101024@gmail.com>, linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cyril Brulebois <kibi@debian.org>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20221014192730.GA3488778@bhelgaas>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+In-Reply-To: <20221014192730.GA3488778@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
-
-[...]
-> > > -
-> > > -	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
-> > > -		res = s->cb_dev->bus->resource[i];
-> > > -#else
-> > > -	pci_bus_for_each_resource(s->cb_dev->bus, res, i) {
-> > >  #endif
-> > > +
-> > > +	pci_bus_for_each_resource_p(s->cb_dev->bus, res) {
-> > >  		if (!res)
-> > >  			continue;
-> > 
-> > Doesn't this remove the proper iterator for X86? Even if that is the right
-> > thing to do, it needs an explict explanation.
+On 10/14/22 12:27, Bjorn Helgaas wrote:
+> On Fri, Oct 14, 2022 at 03:16:35PM -0400, Jim Quinlan wrote:
+>> On Thu, Oct 13, 2022 at 10:12 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> On Tue, Oct 11, 2022 at 02:42:10PM -0400, Jim Quinlan wrote:
+>>>> Set RCB_MPS mode bit so that data for PCIe read requests up to the size of
+>>>> the Maximum Payload Size (MPS) are returned in one completion, and data for
+>>>> PCIe read requests greater than the MPS are split at the specified Read
+>>>> Completion Boundary setting.
+>>>>
+>>>> Set RCB_64B so that the Read Compeletion Boundary is 64B.
+>>>
+>>> s/Compeletion/Completion/
+>>
+>> Hi Bjorn,
+>>
+>> TIL that checkpatch.pl only flags misspelled words only if they match
+>> its list of misspelled words.
+>> I've modified my checkpatch.pl wrapper script to use aspell to better
+>> address my typos.
+>> At any rate, do you mind if I add some new commits for V3?
 > 
-> I dunno what was in 2010, but reading code now I have found no differences in
-> the logic on how resources are being iterated in these two pieces of code.
+> Fine with me, I think Lorenzo will look at these again after v6.1-rc1
+> is tagged this weekend.
 
-This code is over a decade old (13 years old to be precise) and there was
-something odd between Bjorn's and Jesse's patches, as per:
+Lorenzo, any chance to get those patches reviewed and/or merged? Thanks!
+-- 
+Florian
 
-  89a74ecccd1f ("PCI: add pci_bus_for_each_resource(), remove direct bus->resource[] refs")
-  cf26e8dc4194 ("pcmcia: do not autoadd root PCI bus resources")
-
-> But fine, I will add a line to a commit message about this change.
-
-I wouldn't, personally.  The change you are proposing is self-explanatory
-and somewhat in-line with what is there already - unless I am also reading
-the current implementation wrong.
-
-That said, Dominik is the maintainer of PCMCIA driver, so his is the last
-word, so to speak. :)
-
-> Considering this is done, can you issue your conditional tag so I will
-> incorporate it in v3?
-
-No need, really.  Again, unless Dominik thinks otherwise.
-
-	Krzysztof
