@@ -2,591 +2,149 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C54C4321E
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Nov 2022 03:24:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4CF4C433FE
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Nov 2022 03:59:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230372AbiKCDYd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Nov 2022 23:24:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60468 "EHLO
+        id S229457AbiKCD71 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Nov 2022 23:59:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48610 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229823AbiKCDYc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Nov 2022 23:24:32 -0400
-Received: from mail-ot1-f47.google.com (mail-ot1-f47.google.com [209.85.210.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0D6F25D1;
-        Wed,  2 Nov 2022 20:24:30 -0700 (PDT)
-Received: by mail-ot1-f47.google.com with SMTP id a13-20020a9d6e8d000000b00668d65fc44fso323314otr.9;
-        Wed, 02 Nov 2022 20:24:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=date:subject:message-id:references:in-reply-to:cc:to:from
-         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Zgv3PbuKB+L8alkWZel870ilNzStDSgxBp5rRuA1StU=;
-        b=8A0Fe+b5GolIjrBzKlJAcaneouvDGKZ/geVnKjncdYgSYydHgB7pcOAfTDl2YMJBkx
-         HdeZPzWfs3CyrRBOIhjHjvGqQcI2V5iVtITyHPBQNa1ha7Kjzk9ZrWe/Al9N5Nj1mM8M
-         I+8bDwzVDG6oJ82n3hJNdsoWbqeTbkQ87X0zA3zYCPraBoZJmsXroe1WbpDHhmHh46N6
-         iTO0ZtCYyn2UUrFRYBX+8Ow2Qa6yR6otafye5KcIfqRLsu0aAI8ToulCppoNz4vyV+nK
-         OqsLSp20PADesSsEbpoZ86iiY6RFm3vaQzOnwTNPCBEuH+pwZ6FAcpZG0mYknKbJsNds
-         rzCQ==
-X-Gm-Message-State: ACrzQf2JiD0Zg9PQZxEdvoUkf7wEfyeylltyuxoe7AJdCVcjyBSTpbBm
-        7RYT/3mrIqLgMPyr0eRvtw==
-X-Google-Smtp-Source: AMsMyM5XLvxCYyfV1kM0Pwzmcahm5lWUSoIIvn7F29stvqME+HYBVq79PjW7Kb78oEGjok+5u7K7GQ==
-X-Received: by 2002:a05:6830:44a0:b0:661:a94d:e7c with SMTP id r32-20020a05683044a000b00661a94d0e7cmr13588098otv.35.1667445870102;
-        Wed, 02 Nov 2022 20:24:30 -0700 (PDT)
-Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id y1-20020a056830108100b00660fe564e12sm5610813oto.58.2022.11.02.20.24.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Nov 2022 20:24:29 -0700 (PDT)
-Received: (nullmailer pid 1062671 invoked by uid 1000);
-        Thu, 03 Nov 2022 03:24:28 -0000
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229551AbiKCD7Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Nov 2022 23:59:25 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5556D1166
+        for <linux-pci@vger.kernel.org>; Wed,  2 Nov 2022 20:59:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1667447964; x=1698983964;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=TAZc29P8R3rXTNXCUT3dUc7JEoFeSbBvBpgEBmDHVJk=;
+  b=Q3h3m4xgFdk0b6CX0F4xpgYBzgjQookxHQTn4Y7gvKMy6EBQwhHs55l8
+   Sgw9XxfeOIg3jkkuokbK+3qvNZ6G0Z5nZZ+qKU24XNCVRD5+m1eyRzGPf
+   iak9yOoaaphbXBJgafhVq8KPqVKulv/YfyOMNIcL50TvehxbZ2BPnRK9K
+   k1pkLiZreAoCQSo1eLi6yNeVLDnVBOBfy70+6hfj4kruindy8VQwsFobu
+   SLZLWSjhiKcGZRkAusbvIMeK3ifnC0c91k2VBJyyUT39KAggcLWueJ+tE
+   4Nr/E2qSGwSOYuvKIJem6g0KjH+teZSSQtc1f/knfA/dmMnx0k3KX3uDS
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10519"; a="297033971"
+X-IronPort-AV: E=Sophos;i="5.95,235,1661842800"; 
+   d="scan'208";a="297033971"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2022 20:59:23 -0700
+X-IronPort-AV: E=McAfee;i="6500,9779,10519"; a="740020404"
+X-IronPort-AV: E=Sophos;i="5.95,235,1661842800"; 
+   d="scan'208";a="740020404"
+Received: from fmmunozr-mobl1.amr.corp.intel.com (HELO [10.212.75.165]) ([10.212.75.165])
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2022 20:59:23 -0700
+Message-ID: <f4ed9c02-12b2-bd7b-f9e6-6583a082ac77@linux.intel.com>
+Date:   Wed, 2 Nov 2022 20:58:52 -0700
 MIME-Version: 1.0
-From:   Rob Herring <robh@kernel.org>
-To:     Marek Vasut <marex@denx.de>
-Cc:     linux-arm-kernel@lists.infradead.org,
-        NXP Linux Team <linux-imx@nxp.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Fabio Estevam <festevam@gmail.com>
-In-Reply-To: <20221102215729.147335-3-marex@denx.de>
-References: <20221102215729.147335-1-marex@denx.de>
- <20221102215729.147335-3-marex@denx.de>
-Message-Id: <166744542835.1050796.1160256342926288779.robh@kernel.org>
-Subject: Re: [PATCH 3/3] dt-bindings: imx6q-pcie: Handle more resets on legacy
- platforms
-Date:   Wed, 02 Nov 2022 22:24:28 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.1
+Subject: Re: [PATCH V2] PCI: vmd: Fix secondary bus reset for Intel bridges
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     lorenzo.pieralisi@arm.com, jonathan.derrick@linux.dev,
+        linux-pci@vger.kernel.org,
+        Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Myron Stowe <myron.stowe@redhat.com>
+References: <20221102234221.GA8153@bhelgaas>
+Content-Language: en-US
+From:   "Munoz Ruiz, Francisco" <francisco.munoz.ruiz@linux.intel.com>
+In-Reply-To: <20221102234221.GA8153@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Thanks for including Alex and Myron.
 
-On Wed, 02 Nov 2022 22:57:29 +0100, Marek Vasut wrote:
-> The i.MX6 and i.MX7D does not use block controller to toggle PCIe
-> reset, hence the PCIe DT description contains three reset entries
-> on these older SoCs. Add this exception into the binding document.
+On 11/2/2022 4:42 PM, Bjorn Helgaas wrote:
+> [+cc Alex, Myron]
 > 
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> ---
-> Cc: Fabio Estevam <festevam@gmail.com>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Richard Zhu <hongxing.zhu@nxp.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Shawn Guo <shawnguo@kernel.org>
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: NXP Linux Team <linux-imx@nxp.com>
-> To: devicetree@vger.kernel.org
-> ---
->  .../bindings/pci/fsl,imx6q-pcie.yaml          | 22 +++++++++++++++++--
->  1 file changed, 20 insertions(+), 2 deletions(-)
+> On Mon, Oct 31, 2022 at 02:45:01PM -0700, francisco.munoz.ruiz@linux.intel.com wrote:
+>> From: Francisco Munoz <francisco.munoz.ruiz@linux.intel.com>
+>>
+>> The reset was never applied in the current implementation because Intel
+>> Bridges owned by VMD are parentless. Internally, pci_reset_bus applies
+>> a reset to the parent of the pci device supplied as argument, but in this
+>> case it failed because there wasn't a parent.
+>>
+>> In more detail, this change allows the VMD driver to enumerate NVMe devices
+>> in pass-through configurations when host reboots are performed. Commit id
+>> “6aab5622296b990024ee67dd7efa7d143e7558d0” attempted to fix this, but
+>> later we discovered that the code inside pci_reset_bus wasn’t triggering
+>> secondary bus resets.  Therefore, we updated the parameters passed to
+>> it, and now NVMe SSDs attached to VMD bridges are properly enumerated in
+>> VT-d pass-through scenarios.
 > 
+> Did you mean "guest reboots" above?  If the *host* reboots, I assume
+> everybody (host and guests) starts over, so a reset wouldn't really
+> apply.
+> 
+Correct, I meant guest reboots.
+> Is the scenario that the VMD device is passed through to a guest, and
+> the guest OS is running vmd_probe() and vmd_enable_domain()?
+> 
+> I thought VFIO already had something to reset devices between guests.
+> But maybe this is different because from the point of view of VFIO,
+> the pass-through happens only once, and during that single session,
+> the guest OS reboots several times, so you want vmd_probe() to reset
+> the downstream devices?
+Right, this change just makes sure pci_bus_reset(), introduced in 
+6aab5622296b ("PCI: vmd: Clean up domain before enumeration"), is sending
+pci_bridge_secondary_bus_reset().
 
-Running 'make dtbs_check' with the schema in this patch gives the
-following warnings. Consider if they are expected or the schema is
-incorrect. These may not be new warnings.
-
-Note that it is not yet a requirement to have 0 warnings for dtbs_check.
-This will change in the future.
-
-Full log is available here: https://patchwork.ozlabs.org/patch/
-
-
-pcie@1ffc000: Unevaluated properties are not allowed ('disable-gpio' was unexpected)
-	arch/arm/boot/dts/imx6dl-emcon-avari.dtb
-	arch/arm/boot/dts/imx6q-emcon-avari.dtb
-
-pcie@33800000: clock-names:1: 'pcie_bus' was expected
-	arch/arm64/boot/dts/freescale/imx8mm-beacon-kit.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-beacon-kit.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-data-modul-edm-sbc.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-data-modul-edm-sbc.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-ddr4-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-ddr4-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-mx8menlo.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-mx8menlo.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-phyboard-polis-rdk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-phyboard-polis-rdk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-tqma8mqml-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-tqma8mqml-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw71xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw71xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw72xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw72xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw73xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw73xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7901.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7901.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7902.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7902.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7903.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7903.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7904.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7904.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-venice-gw74xx.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-venice-gw74xx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33800000: clock-names:2: 'pcie_aux' was expected
-	arch/arm64/boot/dts/freescale/imx8mm-beacon-kit.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-data-modul-edm-sbc.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-ddr4-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-mx8menlo.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-phyboard-polis-rdk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-tqma8mqml-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw71xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw72xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw73xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7901.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7902.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7903.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7904.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-venice-gw74xx.dtb
-
-pcie@33800000: clock-names:2: 'pcie_bus' is not one of ['pcie_phy', 'pcie_aux']
-	arch/arm64/boot/dts/freescale/imx8mm-beacon-kit.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-data-modul-edm-sbc.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-ddr4-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-mx8menlo.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-phyboard-polis-rdk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-tqma8mqml-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw71xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw72xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw73xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7901.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7902.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7903.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7904.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-venice-gw74xx.dtb
-
-pcie@33800000: clock-names:3: 'pcie_aux' was expected
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33800000: clock-names:3: 'pcie_bus' is not one of ['pcie_inbound_axi', 'pcie_aux']
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33800000: reset-names:0: 'apps' was expected
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-	arch/arm/boot/dts/imx7d-cl-som-imx7.dtb
-	arch/arm/boot/dts/imx7d-colibri-aster.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-aster.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-eval-v3.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-iris.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-iris-v2.dtb
-	arch/arm/boot/dts/imx7d-colibri-eval-v3.dtb
-	arch/arm/boot/dts/imx7d-colibri-iris.dtb
-	arch/arm/boot/dts/imx7d-colibri-iris-v2.dtb
-	arch/arm/boot/dts/imx7d-flex-concentrator.dtb
-	arch/arm/boot/dts/imx7d-flex-concentrator-mfg.dtb
-	arch/arm/boot/dts/imx7d-mba7.dtb
-	arch/arm/boot/dts/imx7d-meerkat96.dtb
-	arch/arm/boot/dts/imx7d-nitrogen7.dtb
-	arch/arm/boot/dts/imx7d-pico-dwarf.dtb
-	arch/arm/boot/dts/imx7d-pico-hobbit.dtb
-	arch/arm/boot/dts/imx7d-pico-nymph.dtb
-	arch/arm/boot/dts/imx7d-pico-pi.dtb
-	arch/arm/boot/dts/imx7d-remarkable2.dtb
-	arch/arm/boot/dts/imx7d-sbc-imx7.dtb
-	arch/arm/boot/dts/imx7d-sdb.dtb
-	arch/arm/boot/dts/imx7d-sdb-reva.dtb
-	arch/arm/boot/dts/imx7d-sdb-sht11.dtb
-	arch/arm/boot/dts/imx7d-smegw01.dtb
-	arch/arm/boot/dts/imx7d-zii-rmu2.dtb
-	arch/arm/boot/dts/imx7d-zii-rpu2.dtb
-
-pcie@33800000: reset-names:1: 'turnoff' was expected
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-	arch/arm/boot/dts/imx7d-cl-som-imx7.dtb
-	arch/arm/boot/dts/imx7d-colibri-aster.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-aster.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-eval-v3.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-iris.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-iris-v2.dtb
-	arch/arm/boot/dts/imx7d-colibri-eval-v3.dtb
-	arch/arm/boot/dts/imx7d-colibri-iris.dtb
-	arch/arm/boot/dts/imx7d-colibri-iris-v2.dtb
-	arch/arm/boot/dts/imx7d-flex-concentrator.dtb
-	arch/arm/boot/dts/imx7d-flex-concentrator-mfg.dtb
-	arch/arm/boot/dts/imx7d-mba7.dtb
-	arch/arm/boot/dts/imx7d-meerkat96.dtb
-	arch/arm/boot/dts/imx7d-nitrogen7.dtb
-	arch/arm/boot/dts/imx7d-pico-dwarf.dtb
-	arch/arm/boot/dts/imx7d-pico-hobbit.dtb
-	arch/arm/boot/dts/imx7d-pico-nymph.dtb
-	arch/arm/boot/dts/imx7d-pico-pi.dtb
-	arch/arm/boot/dts/imx7d-remarkable2.dtb
-	arch/arm/boot/dts/imx7d-sbc-imx7.dtb
-	arch/arm/boot/dts/imx7d-sdb.dtb
-	arch/arm/boot/dts/imx7d-sdb-reva.dtb
-	arch/arm/boot/dts/imx7d-sdb-sht11.dtb
-	arch/arm/boot/dts/imx7d-smegw01.dtb
-	arch/arm/boot/dts/imx7d-zii-rmu2.dtb
-	arch/arm/boot/dts/imx7d-zii-rpu2.dtb
-
-pcie@33800000: reset-names: ['pciephy', 'apps', 'turnoff'] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-	arch/arm/boot/dts/imx7d-cl-som-imx7.dtb
-	arch/arm/boot/dts/imx7d-colibri-aster.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-aster.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-eval-v3.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-iris.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-iris-v2.dtb
-	arch/arm/boot/dts/imx7d-colibri-eval-v3.dtb
-	arch/arm/boot/dts/imx7d-colibri-iris.dtb
-	arch/arm/boot/dts/imx7d-colibri-iris-v2.dtb
-	arch/arm/boot/dts/imx7d-flex-concentrator.dtb
-	arch/arm/boot/dts/imx7d-flex-concentrator-mfg.dtb
-	arch/arm/boot/dts/imx7d-mba7.dtb
-	arch/arm/boot/dts/imx7d-meerkat96.dtb
-	arch/arm/boot/dts/imx7d-nitrogen7.dtb
-	arch/arm/boot/dts/imx7d-pico-dwarf.dtb
-	arch/arm/boot/dts/imx7d-pico-hobbit.dtb
-	arch/arm/boot/dts/imx7d-pico-nymph.dtb
-	arch/arm/boot/dts/imx7d-pico-pi.dtb
-	arch/arm/boot/dts/imx7d-remarkable2.dtb
-	arch/arm/boot/dts/imx7d-sbc-imx7.dtb
-	arch/arm/boot/dts/imx7d-sdb.dtb
-	arch/arm/boot/dts/imx7d-sdb-reva.dtb
-	arch/arm/boot/dts/imx7d-sdb-sht11.dtb
-	arch/arm/boot/dts/imx7d-smegw01.dtb
-	arch/arm/boot/dts/imx7d-zii-rmu2.dtb
-	arch/arm/boot/dts/imx7d-zii-rpu2.dtb
-
-pcie@33800000: resets: [[34, 26], [34, 28], [34, 29]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-
-pcie@33800000: resets: [[35, 26], [35, 28], [35, 29]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-
-pcie@33800000: resets: [[36, 26], [36, 28], [36, 29]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-
-pcie@33800000: resets: [[37, 20], [37, 22], [37, 25]] is too long
-	arch/arm/boot/dts/imx7d-cl-som-imx7.dtb
-	arch/arm/boot/dts/imx7d-meerkat96.dtb
-	arch/arm/boot/dts/imx7d-remarkable2.dtb
-	arch/arm/boot/dts/imx7d-sbc-imx7.dtb
-	arch/arm/boot/dts/imx7d-smegw01.dtb
-	arch/arm/boot/dts/imx7d-zii-rmu2.dtb
-
-pcie@33800000: resets: [[39, 26], [39, 28], [39, 29]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33800000: resets: [[40, 20], [40, 22], [40, 25]] is too long
-	arch/arm/boot/dts/imx7d-zii-rpu2.dtb
-
-pcie@33800000: resets: [[41, 20], [41, 22], [41, 25]] is too long
-	arch/arm/boot/dts/imx7d-mba7.dtb
-
-pcie@33800000: resets: [[41, 26], [41, 28], [41, 29]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-
-pcie@33800000: resets: [[42, 20], [42, 22], [42, 25]] is too long
-	arch/arm/boot/dts/imx7d-flex-concentrator.dtb
-	arch/arm/boot/dts/imx7d-flex-concentrator-mfg.dtb
-
-pcie@33800000: resets: [[42, 26], [42, 28], [42, 29]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-
-pcie@33800000: resets: [[43, 20], [43, 22], [43, 25]] is too long
-	arch/arm/boot/dts/imx7d-pico-dwarf.dtb
-	arch/arm/boot/dts/imx7d-pico-nymph.dtb
-
-pcie@33800000: resets: [[44, 20], [44, 22], [44, 25]] is too long
-	arch/arm/boot/dts/imx7d-pico-hobbit.dtb
-	arch/arm/boot/dts/imx7d-pico-pi.dtb
-	arch/arm/boot/dts/imx7d-sdb.dtb
-	arch/arm/boot/dts/imx7d-sdb-reva.dtb
-	arch/arm/boot/dts/imx7d-sdb-sht11.dtb
-
-pcie@33800000: resets: [[45, 20], [45, 22], [45, 25]] is too long
-	arch/arm/boot/dts/imx7d-nitrogen7.dtb
-
-pcie@33800000: resets: [[45, 26], [45, 28], [45, 29]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-
-pcie@33800000: resets: [[50, 20], [50, 22], [50, 25]] is too long
-	arch/arm/boot/dts/imx7d-colibri-aster.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-aster.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-eval-v3.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-iris.dtb
-	arch/arm/boot/dts/imx7d-colibri-emmc-iris-v2.dtb
-	arch/arm/boot/dts/imx7d-colibri-eval-v3.dtb
-	arch/arm/boot/dts/imx7d-colibri-iris.dtb
-	arch/arm/boot/dts/imx7d-colibri-iris-v2.dtb
-
-pcie@33800000: resets: [[50, 26], [50, 28], [50, 29]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-
-pcie@33800000: Unevaluated properties are not allowed ('clock-names' was unexpected)
-	arch/arm64/boot/dts/freescale/imx8mm-beacon-kit.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-data-modul-edm-sbc.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-ddr4-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-mx8menlo.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-phyboard-polis-rdk.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-tqma8mqml-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw71xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw72xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw73xx-0x.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7901.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7902.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7903.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-venice-gw7904.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-nonwifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dahlia.dtb
-	arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-dev.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mp-venice-gw74xx.dtb
-
-pcie@33800000: Unevaluated properties are not allowed ('epdev_on-supply', 'hard-wired', 'reset-names', 'resets' were unexpected)
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-
-pcie@33800000: Unevaluated properties are not allowed ('reset-names', 'resets' were unexpected)
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: 'bus-range' is a required property
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: clock-names:1: 'pcie_bus' was expected
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: clock-names:3: 'pcie_aux' was expected
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: clock-names:3: 'pcie_bus' is not one of ['pcie_inbound_axi', 'pcie_aux']
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: reset-names:0: 'apps' was expected
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: reset-names:1: 'turnoff' was expected
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: reset-names: ['pciephy', 'apps', 'turnoff'] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: resets: [[34, 34], [34, 36], [34, 37]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-
-pcie@33c00000: resets: [[35, 34], [35, 36], [35, 37]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-
-pcie@33c00000: resets: [[36, 34], [36, 36], [36, 37]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-
-pcie@33c00000: resets: [[39, 34], [39, 36], [39, 37]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
-pcie@33c00000: resets: [[41, 34], [41, 36], [41, 37]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-
-pcie@33c00000: resets: [[42, 34], [42, 36], [42, 37]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-
-pcie@33c00000: resets: [[45, 34], [45, 36], [45, 37]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-
-pcie@33c00000: resets: [[50, 34], [50, 36], [50, 37]] is too long
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-
-pcie@33c00000: Unevaluated properties are not allowed ('epdev_on-supply', 'hard-wired', 'reset-names', 'resets' were unexpected)
-	arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dtb
-
-pcie@33c00000: Unevaluated properties are not allowed ('reset-names', 'resets' were unexpected)
-	arch/arm64/boot/dts/freescale/imx8mq-evk.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-hummingboard-pulse.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-devkit.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-librem5-r4.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-phanbell.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-thor96.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-rmb3.dtb
-	arch/arm64/boot/dts/freescale/imx8mq-zii-ultra-zest.dtb
-
+I'll issue a v3 with the suggestions below.
+> 
+> Should this have a Fixes: tag for 6aab5622296b?
+> 
+> s/pci/PCI/ above in English text.
+> 
+> Also add "()" after function names.
+> 
+> Use the typical 12-char SHA1 + subject citation, e.g., 6aab5622296b
+> ("PCI: vmd: Clean up domain before enumeration").
+> 
+>> Signed-off-by: Francisco Munoz <francisco.munoz.ruiz@linux.intel.com>
+>> Reviewed-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+>> ---
+>>  drivers/pci/controller/vmd.c | 12 ++++++++++--
+>>  1 file changed, 10 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+>> index e06e9f4fc50f..34d6ba675440 100644
+>> --- a/drivers/pci/controller/vmd.c
+>> +++ b/drivers/pci/controller/vmd.c
+>> @@ -859,8 +859,16 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+>>  
+>>  	pci_scan_child_bus(vmd->bus);
+>>  	vmd_domain_reset(vmd);
+>> -	list_for_each_entry(child, &vmd->bus->children, node)
+>> -		pci_reset_bus(child->self);
+>> +
+>> +	list_for_each_entry(child, &vmd->bus->children, node) {
+>> +		if (!list_empty(&child->devices)) {
+>> +			pci_reset_bus(list_first_entry(&child->devices,
+>> +						       struct pci_dev,
+>> +						       bus_list));
+>> +			break;
+>> +		}
+>> +	}
+>> +
+>>  	pci_assign_unassigned_bus_resources(vmd->bus);
+>>  
+>>  	/*
+>> -- 
+>> 2.25.1
+>>
+>> Hi Bjorn,
+>>
+>> I updated the commit message with more details. Hopefully, this will 
+>> clarify its purpose.
+>>
+>> Thanks,
+>> Francisco.
+Thanks!
