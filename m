@@ -2,71 +2,171 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD4D4C4332F
-	for <linux-pci@archiver.kernel.org>; Sat,  5 Nov 2022 07:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01997C433FE
+	for <linux-pci@archiver.kernel.org>; Sun,  6 Nov 2022 23:25:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229472AbiKEHbl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 5 Nov 2022 03:31:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60466 "EHLO
+        id S230107AbiKFXZl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 6 Nov 2022 18:25:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229453AbiKEHbk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Nov 2022 03:31:40 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5190063F3;
-        Sat,  5 Nov 2022 00:31:39 -0700 (PDT)
+        with ESMTP id S229453AbiKFXZj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 6 Nov 2022 18:25:39 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B226664C0;
+        Sun,  6 Nov 2022 15:25:38 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0CED9B80E8E;
-        Sat,  5 Nov 2022 07:31:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40265C433D6;
-        Sat,  5 Nov 2022 07:31:35 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 45A4C60DD7;
+        Sun,  6 Nov 2022 23:25:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4DEE6C433D6;
+        Sun,  6 Nov 2022 23:25:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667633496;
-        bh=+e82QwnlQfSIsUJDjMJySUyMNXUabk+lGetzUjH2/bU=;
+        s=k20201202; t=1667777137;
+        bh=8QTjaoznKmYvPhqQLhP3/+GZ18ZGgT5Ym5i6QFRuXrQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=OLkEs9ppKFjVxwCh1LIIULE/4g2VkqNadV5dzy3Kw2FC+Tj6CycZpmvRuCD2gvgTd
-         PAYFatyZ1ip/KXUsA5P6ngc81eJVbDp947/4OcuG6PhfY+NlqK3Xpr/FEsyXaWUX2p
-         asUNDQBqhSrC3d8zunfsfRsXUB8UHVW6spxJ0qESjcg8WFOPalHT6uTkMxNLXmY+5J
-         J2JtVatseguai4EmOh2ja+PpJYL2AV/NlbCAIKVIeIyQZ32fVF7xBXd/614/tYTn+e
-         YUzAfEmBq7c3wlnLSwqqrSzGBut8OM9mU9RwVwr2iveXBpFPl3QxNZsdCgoDfNPdeF
-         rs9SfSESxoRIQ==
-Date:   Sat, 5 Nov 2022 13:01:32 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     John Thomson <git@johnthomson.fastmail.com.au>
-Cc:     Sergio Paracuellos <sergio.paracuellos@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        b=BOAH4PEV6QSz+GT34lJH3ok4phfLX9JGn1t4PZqmRGgVdneH64+IgQttyVwCgc5+B
+         uEPG4Y1k3KFijlYrIQI3Omt31Q0hVmDXDGHIwoz5GDfqR73Sj+lOGmurQPg7Mrk2kF
+         mUj/yLxwGS0j5FyH7oCB6KzRh91KqtxZ8/2Zuld9NrRJmnsbikOSyh8nspVivtAl/C
+         PzOw191RQH+Na/pTiuKT7D5kywZMPs00VYdReaSKvjsMP5VcFs/fUAge0eKHHEI7uz
+         P0EjAsIwLiV70HvJvMluA6/NwxowyEHKZOhl08yfj3MgFOzVLYdy6l3AO/jKn4RKf6
+         slIAXb+pjpqrA==
+Received: by pali.im (Postfix)
+        id 5C3AC858; Mon,  7 Nov 2022 00:25:34 +0100 (CET)
+Date:   Mon, 7 Nov 2022 00:25:34 +0100
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        =?utf-8?B?QXLEsW7DpyDDnE5BTA==?= <arinc.unal@arinc9.com>,
-        linux-phy@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] phy: ralink: mt7621-pci: add sentinel to quirks table
-Message-ID: <Y2YRVBMqtSVDum8l@matsya>
-References: <20221104205242.3440388-1-git@johnthomson.fastmail.com.au>
- <20221104205242.3440388-2-git@johnthomson.fastmail.com.au>
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Use devm_request_irq() for registering
+ interrupt handler
+Message-ID: <20221106232534.iqzjehhumxzocwru@pali>
+References: <20220524122817.7199-1-pali@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221104205242.3440388-2-git@johnthomson.fastmail.com.au>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220524122817.7199-1-pali@kernel.org>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 05-11-22, 06:52, John Thomson wrote:
-> With mt7621 soc_dev_attr fixed to register the soc as a device,
-> kernel will experience an oops in soc_device_match_attr
+On Tuesday 24 May 2022 14:28:17 Pali Rohár wrote:
+> Same as in commit a3b69dd0ad62 ("Revert "PCI: aardvark: Rewrite IRQ code to
+> chained IRQ handler"") for pci-aardvark driver, use devm_request_irq()
+> instead of chained IRQ handler in pci-mvebu.c driver.
 > 
-> This quirk test was introduced in the staging driver in
-> commit 9445ccb3714c ("staging: mt7621-pci-phy: add quirks for 'E2'
-> revision using 'soc_device_attribute'"). The staging driver was removed,
-> and later re-added in commit d87da32372a0 ("phy: ralink: Add PHY driver
-> for MT7621 PCIe PHY") for kernel 5.11
+> This change fixes affinity support and allows to pin interrupts from
+> different PCIe controllers to different CPU cores.
+> 
+> Fixes: ec075262648f ("PCI: mvebu: Implement support for legacy INTx interrupts")
+> Signed-off-by: Pali Rohár <pali@kernel.org>
+> ---
+> Hello Bjorn! This is basically same issue as for pci-aardvark.c:
+> https://lore.kernel.org/linux-pci/20220515125815.30157-1-pali@kernel.org/#t
 
-Applied, thanks
+Hello! Half year passed since introduced commit in Fixes line, issue is
+still there and for pci-mvebu.c was not fixed yet. For pci-aardvark.c
+was fixed.
 
--- 
-~Vinod
+I do not see any progress in alternative solution for this issue and
+therefore this patch is still relevant.
+
+Moreover requirement to use devm_request_irq() is needed also for other
+pci-mvebu.c patches which are waiting on the list, due to nature of
+shared interrupt line. For example:
+https://lore.kernel.org/linux-pci/20220830123639.4zpvvvlrsaqs2rls@pali/
+
+> I tested this patch with pci=nomsi in cmdline (to force kernel to use
+> legacy intx instead of MSI) on A385 and checked that I can set affinity
+> via /proc/irq/XX/smp_affinity file for every mvebu pcie controller to
+> different CPU and legacy interrupts from different cards/controllers
+> were handled by different CPUs.
+> 
+> I think that this is important on Armada XP platforms which have many
+> independent PCIe controllers (IIRC up to 10) and many cores (up to 4).
+> ---
+>  drivers/pci/controller/pci-mvebu.c | 30 +++++++++++++++++-------------
+>  1 file changed, 17 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+> index 8f76d4bda356..de67ea39fea5 100644
+> --- a/drivers/pci/controller/pci-mvebu.c
+> +++ b/drivers/pci/controller/pci-mvebu.c
+> @@ -1017,16 +1017,13 @@ static int mvebu_pcie_init_irq_domain(struct mvebu_pcie_port *port)
+>  	return 0;
+>  }
+>  
+> -static void mvebu_pcie_irq_handler(struct irq_desc *desc)
+> +static irqreturn_t mvebu_pcie_irq_handler(int irq, void *arg)
+>  {
+> -	struct mvebu_pcie_port *port = irq_desc_get_handler_data(desc);
+> -	struct irq_chip *chip = irq_desc_get_chip(desc);
+> +	struct mvebu_pcie_port *port = arg;
+>  	struct device *dev = &port->pcie->pdev->dev;
+>  	u32 cause, unmask, status;
+>  	int i;
+>  
+> -	chained_irq_enter(chip, desc);
+> -
+>  	cause = mvebu_readl(port, PCIE_INT_CAUSE_OFF);
+>  	unmask = mvebu_readl(port, PCIE_INT_UNMASK_OFF);
+>  	status = cause & unmask;
+> @@ -1040,7 +1037,7 @@ static void mvebu_pcie_irq_handler(struct irq_desc *desc)
+>  			dev_err_ratelimited(dev, "unexpected INT%c IRQ\n", (char)i+'A');
+>  	}
+>  
+> -	chained_irq_exit(chip, desc);
+> +	return status ? IRQ_HANDLED : IRQ_NONE;
+>  }
+>  
+>  static int mvebu_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> @@ -1490,9 +1487,20 @@ static int mvebu_pcie_probe(struct platform_device *pdev)
+>  				mvebu_pcie_powerdown(port);
+>  				continue;
+>  			}
+> -			irq_set_chained_handler_and_data(irq,
+> -							 mvebu_pcie_irq_handler,
+> -							 port);
+> +
+> +			ret = devm_request_irq(dev, irq, mvebu_pcie_irq_handler,
+> +					       IRQF_SHARED | IRQF_NO_THREAD,
+> +					       port->name, port);
+> +			if (ret) {
+> +				dev_err(dev, "%s: cannot register interrupt handler: %d\n",
+> +					port->name, ret);
+> +				irq_domain_remove(port->intx_irq_domain);
+> +				pci_bridge_emul_cleanup(&port->bridge);
+> +				devm_iounmap(dev, port->base);
+> +				port->base = NULL;
+> +				mvebu_pcie_powerdown(port);
+> +				continue;
+> +			}
+>  		}
+>  
+>  		/*
+> @@ -1599,7 +1607,6 @@ static int mvebu_pcie_remove(struct platform_device *pdev)
+>  
+>  	for (i = 0; i < pcie->nports; i++) {
+>  		struct mvebu_pcie_port *port = &pcie->ports[i];
+> -		int irq = port->intx_irq;
+>  
+>  		if (!port->base)
+>  			continue;
+> @@ -1615,9 +1622,6 @@ static int mvebu_pcie_remove(struct platform_device *pdev)
+>  		/* Clear all interrupt causes. */
+>  		mvebu_writel(port, ~PCIE_INT_ALL_MASK, PCIE_INT_CAUSE_OFF);
+>  
+> -		if (irq > 0)
+> -			irq_set_chained_handler_and_data(irq, NULL, NULL);
+> -
+>  		/* Remove IRQ domains. */
+>  		if (port->intx_irq_domain)
+>  			irq_domain_remove(port->intx_irq_domain);
+> -- 
+> 2.20.1
+> 
