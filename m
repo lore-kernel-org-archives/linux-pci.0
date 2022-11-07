@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D734C433FE
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:14:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08862C4167E
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:14:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231790AbiKGVOb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Nov 2022 16:14:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60964 "EHLO
+        id S233396AbiKGVO3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Nov 2022 16:14:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233416AbiKGVOK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:14:10 -0500
+        with ESMTP id S233397AbiKGVOJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:14:09 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C98B73F076;
-        Mon,  7 Nov 2022 13:11:06 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 92E8F3F050;
+        Mon,  7 Nov 2022 13:11:05 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 1903AE0ECE;
-        Tue,  8 Nov 2022 00:04:48 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id AD957E0ECB;
+        Tue,  8 Nov 2022 00:04:45 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=rzMZupkEEXFysQHXF0y712yApjgBZMtEMe6Jr0GcLg4=; b=jDlEQeaLoF9j
-        /2z/CZdoBn5gz5eExntHtCy2NnRh9d9vGG6KN5iey/l7Y54zDr+6ofhwALVpFXgb
-        0EddMmoW/SgCVd0JFXTBoPGFg3blnBrjsxv6FaK6HZ08WtxC5VT26xwdHVDY1Ltw
-        OhSaZx3Y9yZ3WHPf8KEpwMrVlF8sQ7Q=
+         bh=dHUTIza7SlJbIGU8HS4l4Y7B/K1DiYT1tSK1KgzAgns=; b=OlyiKAHjLmpp
+        5AGXmfx/PeDm2X2hbJa08gmN1kKh7MbMJTKj4yDi3TZI2Dm+wLVEvvglyI3hVpYC
+        ih7jBhL7OB2Sd3OeVEulOg4v7akLtVcNW46+pkC7ch+0ssiTXF3VfI0ZxKI1nbBT
+        1CIkRlC0rLYRbWkLEiC8PSocZ2lNQv4=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 092F4E0E6A;
-        Tue,  8 Nov 2022 00:04:48 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 9C780E0E6A;
+        Tue,  8 Nov 2022 00:04:45 +0300 (MSK)
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 8 Nov 2022 00:04:47 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 8 Nov 2022 00:04:44 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -47,9 +47,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         caihuoqing <caihuoqing@baidu.com>, <linux-pci@vger.kernel.org>,
         <dmaengine@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v6 05/24] dmaengine: dw-edma: Don't permit non-inc interleaved xfers
-Date:   Tue, 8 Nov 2022 00:04:19 +0300
-Message-ID: <20221107210438.1515-6-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v6 02/24] dmaengine: dw-edma: Release requested IRQs on failure
+Date:   Tue, 8 Nov 2022 00:04:16 +0300
+Message-ID: <20221107210438.1515-3-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20221107210438.1515-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221107210438.1515-1-Sergey.Semin@baikalelectronics.ru>
@@ -62,55 +62,59 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DW eDMA controller always increments both source and destination
-addresses. Permitting DMA interleaved transfers with no src_inc/dst_inc
-flags set may lead to unexpected behaviour for the device users. Let's fix
-that by terminating the interleaved transfers if at least one of the
-dma_interleaved_template.{src_inc,dst_inc} flag is initialized with false
-value. Note in addition to that we need to increase the source and
-destination addresses accordingly after each iteration.
+From very beginning of the DW eDMA driver live in the kernel the method
+dw_edma_irq_request() hasn't been designed quite correct. In case if the
+request_irq() method fails to initialize the IRQ handler at some point the
+previously requested IRQs will be left initialized. It's prune to errors
+up to the system crash. Let's fix that by releasing the previously
+requested IRQs in the cleanup-on-error path of the dw_edma_irq_request()
+function.
 
-Fixes: 85e7518f42c8 ("dmaengine: dw-edma: Add device_prep_interleave_dma() support")
+Fixes: e63d79d1ffcd ("dmaengine: Add Synopsys eDMA IP core driver")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-by: Vinod Koul <vkoul@kernel.org>
+
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+
+Changelog v2:
+- This is a new patch added in v2 iteration of the series.
+---
+ drivers/dma/dw-edma/dw-edma-core.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 778d91d9fc1b..35588e14f79a 100644
+index c54b24ff5206..a8c1bd9c7ae9 100644
 --- a/drivers/dma/dw-edma/dw-edma-core.c
 +++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -385,6 +385,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 			return NULL;
- 		if (xfer->xfer.il->numf > 0 && xfer->xfer.il->frame_size > 0)
- 			return NULL;
-+		if (!xfer->xfer.il->src_inc || !xfer->xfer.il->dst_inc)
-+			return NULL;
- 	} else {
- 		return NULL;
- 	}
-@@ -484,15 +486,13 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 			struct dma_interleaved_template *il = xfer->xfer.il;
- 			struct data_chunk *dc = &il->sgl[i];
- 
--			if (il->src_sgl) {
--				src_addr += burst->sz;
-+			src_addr += burst->sz;
-+			if (il->src_sgl)
- 				src_addr += dmaengine_get_src_icg(il, dc);
+@@ -893,10 +893,8 @@ static int dw_edma_irq_request(struct dw_edma *dw,
+ 						dw_edma_interrupt_read,
+ 					  IRQF_SHARED, dw->name,
+ 					  &dw->irq[i]);
+-			if (err) {
+-				dw->nr_irqs = i;
+-				return err;
 -			}
++			if (err)
++				goto err_irq_free;
  
--			if (il->dst_sgl) {
--				dst_addr += burst->sz;
-+			dst_addr += burst->sz;
-+			if (il->dst_sgl)
- 				dst_addr += dmaengine_get_dst_icg(il, dc);
--			}
- 		}
+ 			if (irq_get_msi_desc(irq))
+ 				get_cached_msi_msg(irq, &dw->irq[i].msi);
+@@ -905,6 +903,14 @@ static int dw_edma_irq_request(struct dw_edma *dw,
+ 		dw->nr_irqs = i;
  	}
+ 
++	return 0;
++
++err_irq_free:
++	for  (i--; i >= 0; i--) {
++		irq = chip->ops->irq_vector(dev, i);
++		free_irq(irq, &dw->irq[i]);
++	}
++
+ 	return err;
+ }
  
 -- 
 2.38.0
