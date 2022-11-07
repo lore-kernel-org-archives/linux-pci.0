@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C07EDC43219
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:11:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFBAAC4332F
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:11:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233438AbiKGVLd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Nov 2022 16:11:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53590 "EHLO
+        id S233444AbiKGVLf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Nov 2022 16:11:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231580AbiKGVKk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:10:40 -0500
+        with ESMTP id S233393AbiKGVKm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:10:42 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7F15F2EF1D;
-        Mon,  7 Nov 2022 13:07:32 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 585592E9FB;
+        Mon,  7 Nov 2022 13:07:33 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 84692E0EC6;
-        Mon,  7 Nov 2022 23:50:33 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id EE1C7E0EBF;
+        Mon,  7 Nov 2022 23:50:17 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=uTaJVnBQCVho34bEIQW4LI3oXUiWeZL1YbD9SQeQ2ao=; b=mpPBgDeyv/uN
-        v91RjmT7+cH1y6czQmGqjos8hLrLJWZd8gSqbsZveC1ncDoj569nE7ROl4u0/pg8
-        IO0UsN1w4mRHbkNwFVxewvlRdhwKeWzNg6vWncWMV5dNke1jLj6FiSmJNwfsEB9l
-        zSY0VTl7A5TB2nXkKc4EAqeNkHsN+ds=
+         bh=f3HmE+YUxq4Lafv6aqVMdTE5GMZ5MpJe5vrdZl4j4hM=; b=Am1st8CDHAlf
+        IwS+FWhtjCm90CEQevXG4fOz/I4mfvlr1hTG1mNphMHy2jzF1fx7vuj1aiazwYxS
+        m0Itnb2WcDNM1vL4QD1tZfE+1luKQuMpM5i6cAH4+jXkif9fKdSdmnQfj6vl8t0i
+        0PB7jK17jKpLsFLJGRHyCN7JHOKp+JM=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 714EFE0E1D;
-        Mon,  7 Nov 2022 23:50:33 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id DEEDAE0E1D;
+        Mon,  7 Nov 2022 23:50:17 +0300 (MSK)
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 7 Nov 2022 23:50:32 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 7 Nov 2022 23:50:17 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -38,21 +38,20 @@ To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Cai Huoqing <cai.huoqing@linux.dev>,
         Robin Murphy <robin.murphy@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Frank Li <Frank.Li@nxp.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         caihuoqing <caihuoqing@baidu.com>, Vinod Koul <vkoul@kernel.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v6 18/20] PCI: dwc: Combine iATU detection procedures
-Date:   Mon, 7 Nov 2022 23:49:32 +0300
-Message-ID: <20221107204934.32655-19-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v6 11/20] dt-bindings: PCI: dwc: Add clocks/resets common properties
+Date:   Mon, 7 Nov 2022 23:49:25 +0300
+Message-ID: <20221107204934.32655-12-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20221107204934.32655-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221107204934.32655-1-Sergey.Semin@baikalelectronics.ru>
@@ -65,89 +64,209 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since the iATU CSR region is now retrieved in the DW PCIe resources getter
-there is no much benefits in the iATU detection procedures splitting up.
-Therefore let's join the iATU unroll/viewport detection procedure with the
-rest of the iATU parameters detection code. The resultant method will be
-as coherent as before, while the redundant functions will be eliminated
-thus producing more readable code.
+DW PCIe RP/EP reference manuals explicit define all the clocks and reset
+requirements in [1] and [2]. Seeing the DW PCIe vendor-specific
+DT-bindings have already started assigning random names to the same set of
+the clocks and resets lines, let's define a generic names sets and add
+them to the DW PCIe common DT-schema.
+
+Note since there are DW PCI-based vendor-specific DT-bindings with the
+custom names assigned to the same clocks and resets resources we have no
+much choice but to add them to the generic DT-schemas in order to have the
+schemas being applicable for such devices. These names are marked as
+vendor-specific and should be avoided being used in new bindings in favor
+of the generic names.
+
+[1] Synopsys DesignWare Cores PCI Express Controller Databook - DWC PCIe
+Root Port, Version 5.40a, March 2019, p.55 - 78.
+[2] Synopsys DesignWare Cores PCI Express Controller Databook - DWC PCIe
+Endpoint, Version 5.40a, March 2019, p.58 - 81.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Rob Herring <robh@kernel.org>
 
 ---
 
 Changelog v3:
-- This is a new patch created on v3 lap of the series.
----
- drivers/pci/controller/dwc/pcie-designware.c | 39 +++++---------------
- 1 file changed, 10 insertions(+), 29 deletions(-)
+- This is a new patch unpinned from the next one:
+  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
+  by the Rob' request. (@Rob)
+- Drop synonymous from the names list since the device schemas create
+  their own enumerations anyway.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index a8436027434d..d31f9d41d5cb 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -628,26 +628,21 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+Changelog v5:
+- Add platform-specific clock/reset names, but mark them as deprecated.
+
+Changelog v6:
+- Move the common *-names definitions to the RP/EP schemas. Thus drop
+  the 'definitions' property. (@Rob)
+- Drop the 'deprecated' keywords from the vendor-specific names. (@Rob)
+---
+ .../bindings/pci/snps,dw-pcie-common.yaml     | 120 ++++++++++++++++++
+ .../bindings/pci/snps,dw-pcie-ep.yaml         |   6 +
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |   2 -
+ 3 files changed, 126 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+index 13c41cd50e54..4d9efcea3859 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+@@ -58,6 +58,126 @@ properties:
+     minItems: 1
+     maxItems: 26
  
- }
- 
--static bool dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
--{
--	u32 val;
--
--	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
--	if (val == 0xffffffff)
--		return true;
--
--	return false;
--}
--
--static void dw_pcie_iatu_detect_regions(struct dw_pcie *pci)
-+void dw_pcie_iatu_detect(struct dw_pcie *pci)
- {
- 	int max_region, ob, ib;
- 	u32 val, min, dir;
- 	u64 max;
- 
--	if (dw_pcie_cap_is(pci, IATU_UNROLL)) {
-+	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
-+	if (val == 0xFFFFFFFF) {
-+		dw_pcie_cap_set(pci, IATU_UNROLL);
++  clocks:
++    description:
++      DWC PCIe reference manual explicitly defines a set of the clocks required
++      to get the controller working correctly. In general all of them can
++      be divided into two groups':' application and core clocks. Note the
++      platforms may have some of the clock sources unspecified in case if the
++      corresponding domains are fed up from a common clock source.
++    minItems: 1
++    maxItems: 7
 +
- 		max_region = min((int)pci->atu_size / 512, 256);
- 	} else {
-+		pci->atu_base = pci->dbi_base + PCIE_ATU_VIEWPORT_BASE;
-+		pci->atu_size = PCIE_ATU_VIEWPORT_SIZE;
++  clock-names:
++    minItems: 1
++    maxItems: 7
++    items:
++      oneOf:
++        - description:
++            Data Bus Interface (DBI) clock. Clock signal for the AXI-bus
++            interface of the Configuration-Dependent Module, which is
++            basically the set of the controller CSRs.
++          const: dbi
++        - description:
++            Application AXI-bus Master interface clock. Basically this is
++            a clock for the controller DMA interface (PCI-to-CPU).
++          const: mstr
++        - description:
++            Application AXI-bus Slave interface clock. This is a clock for
++            the CPU-to-PCI memory IO interface.
++          const: slv
++        - description:
++            Controller Core-PCS PIPE interface clock. It's normally
++            supplied by an external PCS-PHY.
++          const: pipe
++        - description:
++            Controller Primary clock. It's assumed that all controller input
++            signals (except resets) are synchronous to this clock.
++          const: core
++        - description:
++            Auxiliary clock for the controller PMC domain. The controller
++            partitioning implies having some parts to operate with this
++            clock in some power management states.
++          const: aux
++        - description:
++            Generic reference clock. In case if there are several
++            interfaces fed up with a common clock source it's advisable to
++            define it with this name (for instance pipe, core and aux can
++            be connected to a single source of the periodic signal).
++          const: ref
++        - description:
++            Clock for the PHY registers interface. Originally this is
++            a PHY-viewport-based interface, but some platform may have
++            specifically designed one.
++          const: phy_reg
++        - description:
++            Vendor-specific clock names. Consider using the generic names
++            above for new bindings.
++          oneOf:
++            - description: See native 'dbi' clock for details
++              enum: [ pcie, pcie_apb_sys, aclk_dbi ]
++            - description: See native 'mstr/slv' clock for details
++              enum: [ pcie_bus, pcie_inbound_axi, pcie_aclk, aclk_mst, aclk_slv ]
++            - description: See native 'pipe' clock for details
++              enum: [ pcie_phy, pcie_phy_ref, link ]
++            - description: See native 'aux' clock for details
++              enum: [ pcie_aux ]
++            - description: See native 'ref' clock for details.
++              enum: [ gio ]
++            - description: See nativs 'phy_reg' clock for details
++              enum: [ pcie_apb_phy, pclk ]
 +
- 		dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, 0xFF);
- 		max_region = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT) + 1;
- 	}
-@@ -689,23 +684,9 @@ static void dw_pcie_iatu_detect_regions(struct dw_pcie *pci)
- 	pci->num_ib_windows = ib;
- 	pci->region_align = 1 << fls(min);
- 	pci->region_limit = (max << 32) | (SZ_4G - 1);
--}
--
--void dw_pcie_iatu_detect(struct dw_pcie *pci)
--{
--	if (dw_pcie_iatu_unroll_enabled(pci)) {
--		dw_pcie_cap_set(pci, IATU_UNROLL);
--	} else {
--		pci->atu_base = pci->dbi_base + PCIE_ATU_VIEWPORT_BASE;
--		pci->atu_size = PCIE_ATU_VIEWPORT_SIZE;
--	}
--
--	dw_pcie_iatu_detect_regions(pci);
--
--	dev_info(pci->dev, "iATU unroll: %s\n", dw_pcie_cap_is(pci, IATU_UNROLL) ?
--		"enabled" : "disabled");
++  resets:
++    description:
++      DWC PCIe reference manual explicitly defines a set of the reset
++      signals required to be de-asserted to properly activate the controller
++      sub-parts. All of these signals can be divided into two sub-groups':'
++      application and core resets with respect to the main sub-domains they
++      are supposed to reset. Note the platforms may have some of these signals
++      unspecified in case if they are automatically handled or aggregated into
++      a comprehensive control module.
++    minItems: 1
++    maxItems: 10
++
++  reset-names:
++    minItems: 1
++    maxItems: 10
++    items:
++      oneOf:
++        - description: Data Bus Interface (DBI) domain reset
++          const: dbi
++        - description: AXI-bus Master interface reset
++          const: mstr
++        - description: AXI-bus Slave interface reset
++          const: slv
++        - description: Application-dependent interface reset
++          const: app
++        - description: Controller Non-sticky CSR flags reset
++          const: non-sticky
++        - description: Controller sticky CSR flags reset
++          const: sticky
++        - description: PIPE-interface (Core-PCS) logic reset
++          const: pipe
++        - description:
++            Controller primary reset (resets everything except PMC module)
++          const: core
++        - description: PCS/PHY block reset
++          const: phy
++        - description: PMC hot reset signal
++          const: hot
++        - description: Cold reset signal
++          const: pwr
++        - description:
++            Vendor-specific reset names. Consider using the generic names
++            above for new bindings.
++          oneOf:
++            - description: See native 'app' reset for details
++              enum: [ apps, gio, apb ]
++            - description: See native 'phy' reset for details
++              enum: [ pciephy, link ]
++            - description: See native 'pwr' reset for details
++              enum: [ turnoff ]
++
+   phys:
+     description:
+       There can be up to the number of possible lanes PHYs specified placed in
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index f4d7eb2dec4d..8fc2151691a4 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -180,6 +180,12 @@ examples:
+       interrupts = <23>, <24>;
+       interrupt-names = "dma0", "dma1";
  
--	dev_info(pci->dev, "iATU regions: %u ob, %u ib, align %uK, limit %lluG\n",
-+	dev_info(pci->dev, "iATU: unroll %s, %u ob, %u ib, align %uK, limit %lluG\n",
-+		 dw_pcie_cap_is(pci, IATU_UNROLL) ? "T" : "F",
- 		 pci->num_ob_windows, pci->num_ib_windows,
- 		 pci->region_align / SZ_1K, (pci->region_limit + 1) / SZ_1G);
- }
++      clocks = <&sys_clk 12>, <&sys_clk 24>;
++      clock-names = "dbi", "ref";
++
++      resets = <&sys_rst 12>, <&sys_rst 24>;
++      reset-names = "dbi", "phy";
++
+       phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
+       phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
+ 
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 59d3bbb5883a..c62c8fe517ae 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -195,8 +195,6 @@ properties:
+       - contains:
+           const: msi
+ 
+-  clocks: true
+-
+ additionalProperties: true
+ 
+ required:
 -- 
 2.38.0
 
