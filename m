@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2851CC43217
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:05:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AEB2C4332F
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:05:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233226AbiKGVFF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Nov 2022 16:05:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51918 "EHLO
+        id S233227AbiKGVFH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Nov 2022 16:05:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233202AbiKGVEx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:04:53 -0500
+        with ESMTP id S233019AbiKGVEy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:04:54 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4155B95B0;
-        Mon,  7 Nov 2022 13:04:52 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E1F9B4AF;
+        Mon,  7 Nov 2022 13:04:53 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 5B8B0E0ED2;
-        Tue,  8 Nov 2022 00:04:51 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 0311AE0ED6;
+        Tue,  8 Nov 2022 00:04:53 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=i6O9o4yDi7/snQiNJiC/KbijP8l6lD/EmPOpHaR5ahM=; b=uvqbh7Gz2Q+t
-        zon4nm7ID8tuJXSscY2zgo7E45E9NkDjSBK92bToQPt+0wJzBMjC3nCGwAl7laND
-        tSz3sQixbls7rDQue0OsG78PU80L8g4+39INTvXSEL+xoTQ9xV0/tUMzreiX5t1E
-        ixI6ND73+LWUDMYeLJeL8vJ9gVwnbok=
+         bh=ebZ7bECwj4uIS+Wr76IarWoE+fOKacyhZBTc9zE842I=; b=vlcgOPu8VvpW
+        TFbEwiNDo6sOoFxrJBesXBAY4q406FZNtE40FtEF1a4Tv9bp1WuO5z93mp9ARGmo
+        jzGnhZmgqIhXlA4h62WxpjUsJv/RyDxr9GWt8ctRWLlzNfRYsu6Ztq0WU1NTxWK0
+        hHO5dHe5jED3sEgMo9XGG0jWiOZ/KEE=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 4E85AE0E6A;
-        Tue,  8 Nov 2022 00:04:51 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id E3B3DE0ED5;
+        Tue,  8 Nov 2022 00:04:52 +0300 (MSK)
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 8 Nov 2022 00:04:50 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 8 Nov 2022 00:04:52 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -45,11 +45,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         caihuoqing <caihuoqing@baidu.com>, <linux-pci@vger.kernel.org>,
-        <dmaengine@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v6 09/24] dmaengine: dw-edma: Drop chancnt initialization
-Date:   Tue, 8 Nov 2022 00:04:23 +0300
-Message-ID: <20221107210438.1515-10-Sergey.Semin@baikalelectronics.ru>
+        <dmaengine@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6 11/24] dmaengine: dw-edma: Stop checking debugfs_create_*() return value
+Date:   Tue, 8 Nov 2022 00:04:25 +0300
+Message-ID: <20221107210438.1515-12-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20221107210438.1515-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221107210438.1515-1-Sergey.Semin@baikalelectronics.ru>
@@ -62,32 +61,107 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DMA device drivers aren't supposed to initialize the dma_device.chancnt
-field. It will be done by the DMA-engine core in accordance with number of
-added virtual DMA-channels. Pre-initializing it with some value causes
-having a wrong number of channels printed in the device summary.
+First of all they never return NULL. So checking their return value for
+being not NULL just pointless. Secondly the DebugFS subsystem is designed
+in a way to be used as simple as possible. So if one of the
+debugfs_create_*() method in a hierarchy fails, the following methods will
+just silently return the passed erroneous parental dentry. Finally the
+code is supposed to be working no matter whether anything DebugFS-related
+fails. So in order to make code simpler and DebugFS-independent let's drop
+the debugfs_create_*() methods return value checking in the same way as
+the most of the kernel drivers do.
 
-Fixes: e63d79d1ffcd ("dmaengine: Add Synopsys eDMA IP core driver")
+Note in order to preserve some memory space we suggest to skip the DebugFS
+nodes initialization if the file system in unavailable.
+
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-by: Vinod Koul <vkoul@kernel.org>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 6c9f95a8e397..ecd3e8f7ac5d 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -817,7 +817,6 @@ static int dw_edma_channel_setup(struct dw_edma *dw, bool write,
- 	dma->src_addr_widths = BIT(DMA_SLAVE_BUSWIDTH_4_BYTES);
- 	dma->dst_addr_widths = BIT(DMA_SLAVE_BUSWIDTH_4_BYTES);
- 	dma->residue_granularity = DMA_RESIDUE_GRANULARITY_DESCRIPTOR;
--	dma->chancnt = cnt;
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+index 8e61810dea4b..6e7f3ef60ca7 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+@@ -100,9 +100,8 @@ static void dw_edma_debugfs_create_x32(const struct debugfs_entries entries[],
+ 	int i;
  
- 	/* Set DMA channel callbacks */
- 	dma->dev = chip->dev;
+ 	for (i = 0; i < nr_entries; i++) {
+-		if (!debugfs_create_file_unsafe(entries[i].name, 0444, dir,
+-						entries[i].reg,	&fops_x32))
+-			break;
++		debugfs_create_file_unsafe(entries[i].name, 0444, dir,
++					   entries[i].reg, &fops_x32);
+ 	}
+ }
+ 
+@@ -168,8 +167,6 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 	char name[16];
+ 
+ 	regs_dir = debugfs_create_dir(WRITE_STR, dir);
+-	if (!regs_dir)
+-		return;
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
+@@ -184,8 +181,6 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 		snprintf(name, sizeof(name), "%s:%d", CHANNEL_STR, i);
+ 
+ 		ch_dir = debugfs_create_dir(name, regs_dir);
+-		if (!ch_dir)
+-			return;
+ 
+ 		dw_edma_debugfs_regs_ch(&regs->type.unroll.ch[i].wr, ch_dir);
+ 
+@@ -237,8 +232,6 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 	char name[16];
+ 
+ 	regs_dir = debugfs_create_dir(READ_STR, dir);
+-	if (!regs_dir)
+-		return;
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
+@@ -253,8 +246,6 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 		snprintf(name, sizeof(name), "%s:%d", CHANNEL_STR, i);
+ 
+ 		ch_dir = debugfs_create_dir(name, regs_dir);
+-		if (!ch_dir)
+-			return;
+ 
+ 		dw_edma_debugfs_regs_ch(&regs->type.unroll.ch[i].rd, ch_dir);
+ 
+@@ -273,8 +264,6 @@ static void dw_edma_debugfs_regs(void)
+ 	int nr_entries;
+ 
+ 	regs_dir = debugfs_create_dir(REGISTERS_STR, dw->debugfs);
+-	if (!regs_dir)
+-		return;
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
+@@ -285,6 +274,9 @@ static void dw_edma_debugfs_regs(void)
+ 
+ void dw_edma_v0_debugfs_on(struct dw_edma *_dw)
+ {
++	if (!debugfs_initialized())
++		return;
++
+ 	dw = _dw;
+ 	if (!dw)
+ 		return;
+@@ -294,8 +286,6 @@ void dw_edma_v0_debugfs_on(struct dw_edma *_dw)
+ 		return;
+ 
+ 	dw->debugfs = debugfs_create_dir(dw->name, NULL);
+-	if (!dw->debugfs)
+-		return;
+ 
+ 	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->chip->mf);
+ 	debugfs_create_u16("wr_ch_cnt", 0444, dw->debugfs, &dw->wr_ch_cnt);
 -- 
 2.38.0
 
