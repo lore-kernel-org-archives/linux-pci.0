@@ -2,140 +2,94 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C50A4C4332F
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 20:41:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5F4C433FE
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:04:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231910AbiKGUld (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Nov 2022 15:41:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37080 "EHLO
+        id S232448AbiKGVEs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Nov 2022 16:04:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231500AbiKGUlc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 15:41:32 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B691B5FD2
-        for <linux-pci@vger.kernel.org>; Mon,  7 Nov 2022 12:41:31 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5A5FB612CA
-        for <linux-pci@vger.kernel.org>; Mon,  7 Nov 2022 20:41:31 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85005C433D6;
-        Mon,  7 Nov 2022 20:41:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667853690;
-        bh=WrLmPf0nSCckPSVfWs+75psk8D7qhBlFegHx1j72tqw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=qBkk53ZYFtD6AfoMw5fcqeJKFxuBxkGf8DWPxFZacNtOlLwtEZ1rPoXLfcXZEtNcK
-         ZJSccpWOTvbLdcVcUm8bq0XqMI5OpfrlnXPWQNEX1SGVsv71E/gtEO6ailuZd7Q4cH
-         HXHu7+VgMxWzF54lqGDk5iZujVt6tl8coUnSNVuFWLxGcqPX98IqFxxEpYmRBsR4qA
-         0QaGpp+3xHdjYNt0MQhWPnxZfJoDeZD0bsR6bSSFu5pTf9Em1SlBoBZxeD6SiAlPQz
-         oBgHAYx1SaWmjxANf9nU1PlPnlIkY4+etXYJis9117eRo1zkup484aolGuPsTHMKjL
-         S0cBePOqGJdfA==
-Date:   Mon, 7 Nov 2022 14:41:29 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     James Puthukattukaran <james.puthukattukaran@oracle.com>
-Cc:     Lukas Wunner <lukas@wunner.de>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: sysfs interface to force power off
-Message-ID: <20221107204129.GA417338@bhelgaas>
+        with ESMTP id S232112AbiKGVEr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:04:47 -0500
+Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AA88265A2;
+        Mon,  7 Nov 2022 13:04:45 -0800 (PST)
+Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id B4D60E0ECA;
+        Tue,  8 Nov 2022 00:04:44 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        baikalelectronics.ru; h=cc:cc:content-transfer-encoding
+        :content-type:content-type:date:from:from:in-reply-to:message-id
+        :mime-version:references:reply-to:subject:subject:to:to; s=post;
+         bh=+RQYTNSVFqSXSnfofJxrlYw10sh63Bj5j4KYzlzhFvA=; b=QrprN2SkX9cW
+        m97ytnW5MucEot9EtQSWr4ijX/hmzs1RPBiKex+0DnpvE6FUz9cpTKvpuNw1mS7y
+        1bUvWu9LJwwDLerAcUeFw+S+jyl7KpsutIQ9Zx1ofq7XDliSvGQ1ellLGMcPxY+b
+        XZNui4udY3Upk9sPDafy0Z3HhuaikPU=
+Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id A5027E0E6A;
+        Tue,  8 Nov 2022 00:04:44 +0300 (MSK)
+Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 8 Nov 2022 00:04:44 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        caihuoqing <caihuoqing@baidu.com>, <linux-pci@vger.kernel.org>,
+        <dmaengine@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6 01/24] dmaengine: Fix dma_slave_config.dst_addr description
+Date:   Tue, 8 Nov 2022 00:04:15 +0300
+Message-ID: <20221107210438.1515-2-Sergey.Semin@baikalelectronics.ru>
+X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20221107210438.1515-1-Sergey.Semin@baikalelectronics.ru>
+References: <20221107210438.1515-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e0a2c30b-7741-4a89-1f7a-aa5eb7c5e4e3@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [192.168.168.10]
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Lukas, Hans]
+Most likely due to a copy-paste mistake the dst_addr member of the
+dma_slave_config structure has been marked as ignored if the !source!
+address belong to the memory. That is relevant to the src_addr field of
+the structure while the dst_addr field as containing a destination device
+address is supposed to be ignored if the destination is the CPU memory.
+Let's fix the field description accordingly.
 
-On Fri, Nov 04, 2022 at 07:08:34PM -0400, James Puthukattukaran wrote:
-> Looking to solve a problem where we have nvme drives that are hung
-> in the field and we are not sure of the root cause but the working
-> theory is that the controller is "bad" and not responding properly
-> to commands. The nvme driver times out on outstanding IO requests
-> and as part of recovery, attempts to reset the controller and
-> reinitialize the device. The reset controller also hangs like here
-> --   
-> 
-> ernel:info: [10419813.132341] Workqueue: nvme-reset-wq nvme_reset_work [nvme]
-> kernel:warning: [10419813.132342] Call Trace:
-> kernel:warning: [10419813.132345]  __schedule+0x2bc/0x89b
-> kernel:warning: [10419813.132348]  schedule+0x36/0x7c
-> kernel:warning: [10419813.132351]  blk_mq_freeze_queue_wait+0x4b/0xaa
-> kernel:warning: [10419813.132353]  ? remove_wait_queue+0x60/0x60
-> kernel:warning: [10419813.132359]  nvme_wait_freeze+0x33/0x50 [nvme_core]
-> kernel:warning: [10419813.132362]  nvme_reset_work+0x802/0xd84 [nvme]
-> kernel:warning: [10419813.132364]  ? __switch_to_asm+0x40/0x62
-> kernel:warning: [10419813.132365]  ? __switch_to_asm+0x34/0x62
-> kernel:warning: [10419813.132367]  ? __switch_to+0x9b/0x505
-> kernel:warning: [10419813.132368]  ? __switch_to_asm+0x40/0x62
-> kernel:warning: [10419813.132370]  ? __switch_to_asm+0x40/0x62
-> kernel:warning: [10419813.132372]  process_one_work+0x169/0x399
-> kernel:warning: [10419813.132374]  worker_thread+0x4d/0x3e5
-> kernel:warning: [10419813.132377]  kthread+0x105/0x138
-> kernel:warning: [10419813.132379]  ? rescuer_thread+0x380/0x375
-> kernel:warning: [10419813.132380]  ? kthread_bind+0x20/0x15
-> kernel:warning: [10419813.132382]  ret_from_fork+0x24/0x49
-> ...
-> 
-> So, I tried to hot power off the device via
-> "echo 0 > /sys/bus/pci/slots/X/power" -- the thread also hangs
-> waiting for the nvme reset thread to finish (like so) -- 
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Vinod Koul <vkoul@kernel.org>
+---
+ include/linux/dmaengine.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Looks like this "power" sysfs file could use some documentation.  I
-couldn't find anything in Documentation/ABI/testing/ that seems to
-cover it.
+diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+index c923f4e60f24..0c020682d894 100644
+--- a/include/linux/dmaengine.h
++++ b/include/linux/dmaengine.h
+@@ -394,7 +394,7 @@ enum dma_slave_buswidth {
+  * should be read (RX), if the source is memory this argument is
+  * ignored.
+  * @dst_addr: this is the physical address where DMA slave data
+- * should be written (TX), if the source is memory this argument
++ * should be written (TX), if the destination is memory this argument
+  * is ignored.
+  * @src_addr_width: this is the width in bytes of the source (RX)
+  * register where DMA data shall be read. If the source
+-- 
+2.38.0
 
-> kernel:warning: [10419813.158116]  __schedule+0x2bc/0x89b
-> kernel:warning: [10419813.158119]  schedule+0x36/0x7c
-> kernel:warning: [10419813.158122]  schedule_timeout+0x1f6/0x31f
-> kernel:warning: [10419813.158124]  ? sched_clock_cpu+0x11/0xa5
-> kernel:warning: [10419813.158126]  ? try_to_wake_up+0x59/0x505
-> kernel:warning: [10419813.158130]  wait_for_completion+0x12b/0x18a
-> kernel:warning: [10419813.158132]  ? wake_up_q+0x80/0x73
-> kernel:warning: [10419813.158134]  flush_work+0x122/0x1a7
-> kernel:warning: [10419813.158137]  ? wake_up_worker+0x30/0x2b
-> kernel:warning: [10419813.158141]  nvme_remove+0x71/0x100 [nvme]
-> kernel:warning: [10419813.158146]  pci_device_remove+0x3e/0xb6
-> kernel:warning: [10419813.158149]  device_release_driver_internal+0x134/0x1eb
-> kernel:warning: [10419813.158151]  device_release_driver+0x12/0x14
-> kernel:warning: [10419813.158155]  pci_stop_bus_device+0x7c/0x96
-> kernel:warning: [10419813.158158]  pci_stop_bus_device+0x39/0x96
-> kernel:warning: [10419813.158164]  pci_stop_and_remove_bus_device+0x12/0x1d
-> kernel:warning: [10419813.158167]  pciehp_unconfigure_device+0x7a/0x1d7
-> kernel:warning: [10419813.158169]  pciehp_disable_slot+0x52/0xca
-> kernel:warning: [10419813.158171]  pciehp_sysfs_disable_slot+0x67/0x112
-> kernel:warning: [10419813.158174]  disable_slot+0x12/0x14
-> kernel:warning: [10419813.158175]  power_write_file+0x6e/0xf8
-> kernel:warning: [10419813.158179]  pci_slot_attr_store+0x24/0x2e
-> kernel:warning: [10419813.158180]  sysfs_kf_write+0x3f/0x46
-> kernel:warning: [10419813.158182]  kernfs_fop_write+0x124/0x1a3
-> kernel:warning: [10419813.158184]  __vfs_write+0x3a/0x16d
-> kernel:warning: [10419813.158187]  ? audit_filter_syscall+0x33/0xce
-> kernel:warning: [10419813.158189]  vfs_write+0xb2/0x1a1
-> 
-> Is there a way to force power off the device instead of the
-> "graceful" approach? Obviously, we don't want to reset the system
-> and don't have physical access to the device.  
-> 
-> Would it make sense to create a "force power off" in
-> /sys/bus/pci/slots/X which basically 
 
-> a) Sets completion timeout mask (CTO) (for outstanding IO requests
->    not causing a fatal error due to CTOs; not an issue for DPCs I
->    would think)
-> b) power off the slot 
-> c) enable CTO mask
-> d) unconfigure the device via pciehp_unconfigure_device
-
-So I assume the existing sysfs slot "power" interface would do what
-you want except that nvme_remove() hangs?
-
-There might be some improvement to make in nvme_remove(); maybe it
-doesn't correctly detect I/O errors or something.
-
-But maybe there's *also* a case to be made for an interface like you
-suggest.  Lukas, Hans, any reaction to this?
-
-Bjorn
