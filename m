@@ -2,87 +2,162 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA0E0C43217
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:25:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81675C4332F
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:26:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233095AbiKGVZT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Nov 2022 16:25:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46866 "EHLO
+        id S232816AbiKGV0S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Nov 2022 16:26:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233423AbiKGVY7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:24:59 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C291C6166;
-        Mon,  7 Nov 2022 13:24:51 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 686416133B;
-        Mon,  7 Nov 2022 21:24:51 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7BB23C433D7;
-        Mon,  7 Nov 2022 21:24:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1667856290;
-        bh=aDYUDBRKYJhW0QdBRWePo9Vh6t2wi/BTZhR4jWzocYg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=spPPT0k0QQM4+Gf9GGqT0QYTSyWgX6KyJpOZfvUmJwv3p3cj3ZSXGANP/qVLZzcqc
-         2NqSl8qqG377+wxiJo8aC4++dj2S1vI3MMgQ1nGdRRHvCVxiyq/NWq7AxjoD2hISTa
-         COQ74f/07+7CIZVXH1nQfINb0lV/i/GdrDyWB9QH/ZJqssNijnXEJTytG1gWAFFFPS
-         HlaGGSOnciOy6LKSu0gwvefAPUdBWA38VFkqZuW25BCuCltLBzAi9gl/Q+vx+tT5qu
-         XMTFE/W20LhYE8PQBwYvTVozU2o3lDmLi1+jKifTudn59hhYv6xHjahU8z5IAx6542
-         ZLga3sXGRGU4Q==
-Date:   Mon, 7 Nov 2022 15:24:48 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Yipeng Zou <zouyipeng@huawei.com>
-Cc:     rafael@kernel.org, lenb@kernel.org, bhelgaas@google.com,
-        tn@semihalf.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/ACPI: use ACPI Method Name macro directly
-Message-ID: <20221107212448.GA421592@bhelgaas>
+        with ESMTP id S233227AbiKGV0K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:26:10 -0500
+Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B47F22ED78;
+        Mon,  7 Nov 2022 13:26:02 -0800 (PST)
+Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id BC317E0EB3;
+        Mon,  7 Nov 2022 23:50:10 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        baikalelectronics.ru; h=cc:cc:content-transfer-encoding
+        :content-type:content-type:date:from:from:in-reply-to:message-id
+        :mime-version:references:reply-to:subject:subject:to:to; s=post;
+         bh=ZO2KozCesJXMnFVF7RMoOEcLvdjeR1lQvgddDu9E7xA=; b=pI0Ca+Cu275k
+        btMPAjqeWL59JgcwmLtyjrOfMIqxiYHykkNDRWcO608ZuQ/J6hEc5stMI2dcWn+x
+        A9oc6PglnIbw+OsHccGoL/o71fHsGbqz8LSo9/gFrteqrgtklrbwLmzHbwNsNyj+
+        THu+Araju8bKoYqBXxx5tSDJ5k0eTuU=
+Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id A6316E0E1D;
+        Mon,  7 Nov 2022 23:50:10 +0300 (MSK)
+Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 7 Nov 2022 23:50:10 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        caihuoqing <caihuoqing@baidu.com>, Vinod Koul <vkoul@kernel.org>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6 05/20] dt-bindings: PCI: dwc: Add phys/phy-names common properties
+Date:   Mon, 7 Nov 2022 23:49:19 +0300
+Message-ID: <20221107204934.32655-6-Sergey.Semin@baikalelectronics.ru>
+X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20221107204934.32655-1-Sergey.Semin@baikalelectronics.ru>
+References: <20221107204934.32655-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221104032430.186424-1-zouyipeng@huawei.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [192.168.168.10]
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 04, 2022 at 11:24:30AM +0800, Yipeng Zou wrote:
-> It's convenience to find all at once, use METHOD_NAME__UID as path string.
-> 
-> Fixes: 169de969c018 ("PCI/ACPI: Provide acpi_get_rc_resources() for ARM64 platform")
-> Signed-off-by: Yipeng Zou <zouyipeng@huawei.com>
+It's normal to have the DW PCIe RP/EP DT-nodes equipped with the explicit
+PHY phandle references. There can be up to 16 PHYs attach in accordance
+with the maximum number of supported PCIe lanes. Let's extend the common
+DW PCIe controller schema with the 'phys' and 'phy-names' properties
+definition. There two types PHY names are defined: preferred generic names
+'^pcie[0-9]+$' and non-preferred vendor-specific names
+'^pcie([0-9]+|-?phy[0-9]*)?$' so to match the names currently supported by
+the DW PCIe platform drivers ("pcie": meson; "pciephy": qcom, imx6;
+"pcie-phy": uniphier, rockchip, spear13xx; "pcie": intel-gw; "pcie-phy%d":
+keystone, dra7xx; "pcie": histb, etc).
 
-Applied to pci/misc for v6.2, thanks!
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 
-I dropped the "Fixes:" tag because there's no reason to backport this
-to any older kernels.
+---
 
-I assume you're doing the same for other instances?
+Changelog v3:
+- This is a new patch unpinned from the next one:
+  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
+  by the Rob' request. (@Rob)
 
-  drivers/acpi/acpi_processor.c:          status = acpi_evaluate_integer(handle, "_UID", NULL, &uid);
-  drivers/acpi/dock.c:                                    "_UID", NULL, &lbuf);
-  drivers/acpi/processor_pdc.c:           status = acpi_evaluate_integer(handle, "_UID", NULL, &tmp);
-  drivers/perf/hisilicon/hisi_uncore_hha_pmu.c:                                          "_UID", NULL, &id);
-  drivers/xen/xen-acpi-processor.c:               status = acpi_evaluate_integer(handle, "_UID", NULL, &tmp);
+Changelog v5:
+- Add a note about having line-based PHY phandles order. (@Rob)
+- Prefer 'pcie[0-9]+' PHY-names over the rest of the cases. (@Rob)
 
-> ---
->  drivers/pci/pci-acpi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index a46fec776ad7..068d6745bf98 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -67,7 +67,7 @@ static acpi_status acpi_match_rc(acpi_handle handle, u32 lvl, void *context,
->  	unsigned long long uid;
->  	acpi_status status;
->  
-> -	status = acpi_evaluate_integer(handle, "_UID", NULL, &uid);
-> +	status = acpi_evaluate_integer(handle, METHOD_NAME__UID, NULL, &uid);
->  	if (ACPI_FAILURE(status) || uid != *segment)
->  		return AE_CTRL_DEPTH;
->  
-> -- 
-> 2.17.1
-> 
+Changelog v6:
+- Add the Nvidia Tegra194-specific "p2u-[0-7]" phy-names too. (@DT-tbot)
+- Drop 'deprecated' keywords from the vendor-specific names. (@Rob)
+---
+ .../bindings/pci/snps,dw-pcie-common.yaml     | 24 +++++++++++++++++++
+ .../bindings/pci/snps,dw-pcie-ep.yaml         |  3 +++
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |  3 +++
+ 3 files changed, 30 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+index 554c2804c608..91d24e400dfc 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+@@ -17,6 +17,30 @@ description:
+ select: false
+ 
+ properties:
++  phys:
++    description:
++      There can be up to the number of possible lanes PHYs specified placed in
++      the phandle array in the line-based order. Obviously each the specified
++      PHYs are supposed to be able to work in the PCIe mode with a speed
++      implied by the DWC PCIe controller they are attached to.
++    minItems: 1
++    maxItems: 16
++
++  phy-names:
++    minItems: 1
++    maxItems: 16
++    oneOf:
++      - description: Generic PHY names
++        items:
++          pattern: '^pcie[0-9]+$'
++      - description:
++          Vendor-specific PHY names. Consider using the generic
++          names above for new bindings.
++        items:
++          oneOf:
++            - pattern: '^pcie(-?phy[0-9]*)?$'
++            - pattern: '^p2u-[0-7]$'
++
+   reset-gpio:
+     deprecated: true
+     description:
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index 7d05dcba419b..dcd521aed213 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -52,4 +52,7 @@ examples:
+             <0xdfc01000 0x0001000>, /* IP registers 2 */
+             <0xd0000000 0x2000000>; /* Configuration space */
+       reg-names = "dbi", "dbi2", "addr_space";
++
++      phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
++      phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
+     };
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 3fdc80453a85..d9512f7f7124 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -70,5 +70,8 @@ examples:
+ 
+       reset-gpios = <&port0 0 1>;
+ 
++      phys = <&pcie_phy>;
++      phy-names = "pcie";
++
+       num-lanes = <1>;
+     };
+-- 
+2.38.0
+
+
