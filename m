@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37E8AC4167D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD7B9C4167E
 	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:11:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233453AbiKGVLg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Nov 2022 16:11:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55964 "EHLO
+        id S233461AbiKGVLh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Nov 2022 16:11:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233367AbiKGVKm (ORCPT
+        with ESMTP id S233395AbiKGVKm (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:10:42 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1A0F12EF23;
-        Mon,  7 Nov 2022 13:07:34 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8DCB260D1;
+        Mon,  7 Nov 2022 13:07:35 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 86D35E0EB0;
-        Mon,  7 Nov 2022 23:50:06 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 00B31E0EB6;
+        Mon,  7 Nov 2022 23:50:14 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=HyW6/ZEfdMIjyVd6RmQI2cfW+nTlMYta7dcdqt97nWw=; b=vQMPOnOs9Yiw
-        WvTIYNqooQx1bSXFSGgBdTUybh0zID003SELj+JsfDpxzhNE/6mSHpJPlDrGswsS
-        ClPliDoy61iFxNnqqWj2h+7YYUPP/cyBvAuSKB9F+vrEU7GAxKO3pthhAhYupMtx
-        PzGhK14uJZHUoliL3ahC7WkB5/iPmEA=
+         bh=neoC6HAqykf+aAmIKQOtE//6Q8f4fvxJ3wDvQYuI8ac=; b=iCZmtsRoHGXU
+        +tAAkA44229+xCHWREKhLosljw96v6/2AjIjU5Sx0pfgqtH0uqcVslSZKdwrCsr7
+        kH/nCdoE/y1izocYa4IUHGyuFYaGfweZo2DsHm064iNuLzAVeKbsBgmfVDiJ7+X3
+        zzuxe+X1g2pYrTwLferKNQ3jgzqwj+w=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 7769CE0E1D;
-        Mon,  7 Nov 2022 23:50:06 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id E4E76E0E1D;
+        Mon,  7 Nov 2022 23:50:13 +0300 (MSK)
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 7 Nov 2022 23:50:06 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 7 Nov 2022 23:50:13 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -38,8 +38,7 @@ To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Cai Huoqing <cai.huoqing@linux.dev>,
         Robin Murphy <robin.murphy@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
@@ -49,11 +48,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         caihuoqing <caihuoqing@baidu.com>, Vinod Koul <vkoul@kernel.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 02/20] dt-bindings: visconti-pcie: Fix interrupts array max constraints
-Date:   Mon, 7 Nov 2022 23:49:16 +0300
-Message-ID: <20221107204934.32655-3-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6 08/20] dt-bindings: PCI: dwc: Add max-functions EP property
+Date:   Mon, 7 Nov 2022 23:49:22 +0300
+Message-ID: <20221107204934.32655-9-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20221107204934.32655-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221107204934.32655-1-Sergey.Semin@baikalelectronics.ru>
@@ -66,51 +64,47 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In accordance with the way the device DT-node is actually defined in
-arch/arm64/boot/dts/toshiba/tmpv7708.dtsi and the way the device is probed
-by the DW PCIe driver there are two IRQs it actually has. It's MSI IRQ the
-DT-bindings lack. Let's extend the interrupts property constraints then
-and fix the schema example so one would be acceptable by the actual device
-DT-bindings.
+In accordance with [1] the CX_NFUNC IP-core synthesize parameter is
+responsible for the number of physical functions to support in the EP
+mode. Its upper limit is 32. Let's use it to constrain the number of
+PCIe functions the DW PCIe EP DT-nodes can advertise.
 
-Fixes: 17c1b16340f0 ("dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller")
+[1] Synopsys DesignWare Cores PCI Express Controller Databook - DWC PCIe
+Endpoint, Version 5.40a, March 2019, p. 887.
+
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Acked-by: Rob Herring <robh@kernel.org>
-Acked-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+Reviewed-by: Rob Herring <robh@kernel.org>
 
 ---
 
-Changelog v5:
-- This is a new patch added on the v5 release of the patchset.
+Changelog v3:
+- This is a new patch unpinned from the next one:
+  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
+  by the Rob' request. (@Rob)
 ---
- .../devicetree/bindings/pci/toshiba,visconti-pcie.yaml     | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
-index 48ed227fc5b9..53da2edd7c9a 100644
---- a/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
-@@ -36,7 +36,7 @@ properties:
-       - const: mpu
- 
-   interrupts:
--    maxItems: 1
-+    maxItems: 2
- 
-   clocks:
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index d04001248b53..71dd19ae1060 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -41,6 +41,9 @@ properties:
      items:
-@@ -94,8 +94,9 @@ examples:
-             #interrupt-cells = <1>;
-             ranges = <0x81000000 0 0x40000000 0 0x40000000 0 0x00010000>,
-                      <0x82000000 0 0x50000000 0 0x50000000 0 0x20000000>;
--            interrupts = <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
--            interrupt-names = "intr";
-+            interrupts = <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-names = "msi", "intr";
-             interrupt-map-mask = <0 0 0 7>;
-             interrupt-map =
-                 <0 0 0 1 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
+       enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
+ 
++  max-functions:
++    maximum: 32
++
+ required:
+   - compatible
+   - reg
+@@ -61,4 +64,5 @@ examples:
+       phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
+ 
+       max-link-speed = <3>;
++      max-functions = /bits/ 8 <4>;
+     };
 -- 
 2.38.0
 
