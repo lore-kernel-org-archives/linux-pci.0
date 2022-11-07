@@ -2,191 +2,201 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73A92C4332F
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:14:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A9FFC4332F
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Nov 2022 21:15:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233524AbiKGVOg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Nov 2022 16:14:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35016 "EHLO
+        id S233313AbiKGVPn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Nov 2022 16:15:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233446AbiKGVOM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:14:12 -0500
-Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B1FD632BAF;
-        Mon,  7 Nov 2022 13:11:07 -0800 (PST)
-Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 0AF16E0EDC;
-        Tue,  8 Nov 2022 00:04:59 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        baikalelectronics.ru; h=cc:cc:content-transfer-encoding
-        :content-type:content-type:date:from:from:in-reply-to:message-id
-        :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=SpBP4Fn4J/GfthicQi7qndLt0cTXxxszspP5qS5v4TM=; b=Jg79k1EQTNQu
-        q6xoVhiSTWq3DWyXji+pTJPNS9M32n54fWZzciOkjEAJjHCcg/dqENZuBjrVMZpj
-        ToJa/lhjnFWW8FmCbGia0a1gVB0/SOOiidO0qR9YxZQCaY4ysogOPstse1JBg6zo
-        pprrYTLn4YEN2ZHjcrOXJp8rnbXs7tg=
-Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id EE9BBE0ED3;
-        Tue,  8 Nov 2022 00:04:58 +0300 (MSK)
-Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 8 Nov 2022 00:04:58 +0300
-From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        with ESMTP id S233462AbiKGVPW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Nov 2022 16:15:22 -0500
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50A1660D1;
+        Mon,  7 Nov 2022 13:11:39 -0800 (PST)
+Received: by mail-lf1-x12d.google.com with SMTP id f37so18471882lfv.8;
+        Mon, 07 Nov 2022 13:11:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=zaHch3W2dHBQ7wKVvRQE27rjvYWFoOJ5zCs8+an7Ey0=;
+        b=pZIpX1DA0QwBB6bnAU9YT3pfgjJX/moijyhD143qSf9Mc2rMZ4B5DbxEsXHzQ33yWY
+         cn/PZPBARO8xmivefTpKTYSLCRp5YbH17NJtiMyk1QNS0hOdm5xHhXK9tJ0DfaLzmXVR
+         4DNIx906025NDHf8ZWYQ53Pd1ClUhRk1vGTLwnawyw+8PE0lSmjzDl6S1DYPWTM3zl9J
+         zSyK6VQl+5V2TgGnr1d8mk64R3zKIC7E0xGoPgXBrD22nxR8Vac3V1qURzt7g9bZbtoQ
+         pel+Cx8odbbpHEWK0YNU+EVy4UyUUMUOdEkzsnC/iZx+tLxwWnDsQywgFcxqa5AmE/3M
+         Mdqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zaHch3W2dHBQ7wKVvRQE27rjvYWFoOJ5zCs8+an7Ey0=;
+        b=nHmsnBTdPxSMEVfYpdbjFC1LjaRHNktI0Fa7CHO60gROkQk7fE/mh9u7KiaTxdwwyr
+         GrFwrCbIgSzHpb+SWTaYcngM+v8QHGANs8gMJjP7ep2IpLL5nG+Vd6pm++ZLr91a+DN8
+         7tGYqWyHB6Ow/1C/89JWb8Qr5NsAmf2F9R/wrUtfhUq9aPAmlwM/ML+JC1StfnYJjspz
+         7Lj4rJi8XYOnRp02GGXtBuVukf6gZXGx2estfBY8MtNX8nPkA8tOBTogzq8mmKL2gblT
+         KsTjjuBuzSn+63BZIk4Kk2EdAOOTD9T0WNAquUIuoP/s65lxx6rnCpCyYYyOeWKxEWRo
+         lEwQ==
+X-Gm-Message-State: ACrzQf0EbP4UoL+Eci4Ijr1T1oOBhI0Uo6pu+gQBgL3GhVeq60915y6v
+        HkJZv+Uy1wfSJtnOMmXxqu8=
+X-Google-Smtp-Source: AMsMyM71NQA5p8P69QH+EfvJRPphtCKPZH2RmMjrMmlPl5adNf/lbxKBkYi94ri6O4VS0g64E0FWfA==
+X-Received: by 2002:a05:6512:2203:b0:4ad:5fbb:a58d with SMTP id h3-20020a056512220300b004ad5fbba58dmr17586460lfu.287.1667855497394;
+        Mon, 07 Nov 2022 13:11:37 -0800 (PST)
+Received: from mobilestation ([95.79.133.202])
+        by smtp.gmail.com with ESMTPSA id v12-20020a2ea60c000000b0026fb5525ee4sm1407813ljp.116.2022.11.07.13.11.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 07 Nov 2022 13:11:37 -0800 (PST)
+Date:   Tue, 8 Nov 2022 00:11:34 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Robin Murphy <robin.murphy@arm.com>, Vinod Koul <vkoul@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Cai Huoqing <cai.huoqing@linux.dev>,
         Robin Murphy <robin.murphy@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>, Frank Li <Frank.Li@nxp.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Serge Semin <fancer.lancer@gmail.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        caihuoqing <caihuoqing@baidu.com>, <linux-pci@vger.kernel.org>,
-        <dmaengine@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v6 18/24] dmaengine: dw-edma: Use DMA-engine device DebugFS subdirectory
-Date:   Tue, 8 Nov 2022 00:04:32 +0300
-Message-ID: <20221107210438.1515-19-Sergey.Semin@baikalelectronics.ru>
-X-Mailer: git-send-email 2.38.0
-In-Reply-To: <20221107210438.1515-1-Sergey.Semin@baikalelectronics.ru>
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        caihuoqing <caihuoqing@baidu.com>, linux-pci@vger.kernel.org,
+        dmaengine@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 22/24] dmaengine: dw-edma: Bypass dma-ranges mapping
+ for the local setup
+Message-ID: <20221107211134.wxaqi2sew6aejxne@mobilestation>
 References: <20221107210438.1515-1-Sergey.Semin@baikalelectronics.ru>
+ <20221107210438.1515-23-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [192.168.168.10]
-X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221107210438.1515-23-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since all DW eDMA read and write channels are now installed in a framework
-of a single DMA-engine device, we can freely move all the DW eDMA-specific
-DebugFS nodes into a ready-to-use DMA-engine DebugFS subdirectory. It's
-created during the DMA-device registration and can be found in the
-dma_device.dbg_dev_root field.
+On Tue, Nov 08, 2022 at 12:04:36AM +0300, Serge Semin wrote:
+> DW eDMA doesn't perform any translation of the traffic generated on the
+> CPU/Application side. It just generates read/write AXI-bus requests with
+> the specified addresses. But in case if the dma-ranges DT-property is
+> specified for a platform device node, Linux will use it to create a
+> mapping the PCIe-bus regions into the CPU memory ranges. This isn't what
+> we want for the eDMA embedded into the locally accessed DW PCIe Root Port
+> and End-point. In order to work that around let's set the chan_dma_dev
+> flag for each DW eDMA channel thus forcing the client drivers to getting a
+> custom dma-ranges-less parental device for the mappings.
+> 
+> Note it will only work for the client drivers using the
+> dmaengine_get_dma_device() method to get the parental DMA device.
 
-Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Acked-by: Vinod Koul <vkoul@kernel.org>
----
- drivers/dma/dw-edma/dw-edma-core.c       |  3 ---
- drivers/dma/dw-edma/dw-edma-core.h       |  3 ---
- drivers/dma/dw-edma/dw-edma-v0-core.c    |  5 -----
- drivers/dma/dw-edma/dw-edma-v0-core.h    |  1 -
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 16 ++++------------
- drivers/dma/dw-edma/dw-edma-v0-debugfs.h |  5 -----
- 6 files changed, 4 insertions(+), 29 deletions(-)
+@Robin, we particularly need you opinion on this patch. I did as you
+said: call *_dma_configure() method to initialize the child device and
+set the DMA-mask here instead of the platform driver.
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index c3ecae4287d0..58808bec4148 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -1038,9 +1038,6 @@ int dw_edma_remove(struct dw_edma_chip *chip)
- 		list_del(&chan->vc.chan.device_node);
- 	}
- 
--	/* Turn debugfs off */
--	dw_edma_v0_core_debugfs_off(dw);
--
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(dw_edma_remove);
-diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index b576a8fff45a..e3ad3e372b55 100644
---- a/drivers/dma/dw-edma/dw-edma-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -111,9 +111,6 @@ struct dw_edma {
- 	raw_spinlock_t			lock;		/* Only for legacy */
- 
- 	struct dw_edma_chip             *chip;
--#ifdef CONFIG_DEBUG_FS
--	struct dentry			*debugfs;
--#endif /* CONFIG_DEBUG_FS */
- };
- 
- struct dw_edma_sg {
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
-index 77e6cfe52e0a..66f296daac5a 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
-@@ -504,8 +504,3 @@ void dw_edma_v0_core_debugfs_on(struct dw_edma *dw)
- {
- 	dw_edma_v0_debugfs_on(dw);
- }
--
--void dw_edma_v0_core_debugfs_off(struct dw_edma *dw)
--{
--	dw_edma_v0_debugfs_off(dw);
--}
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.h b/drivers/dma/dw-edma/dw-edma-v0-core.h
-index 75aec6d31b21..ab96a1f48080 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-v0-core.h
-@@ -23,6 +23,5 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first);
- int dw_edma_v0_core_device_config(struct dw_edma_chan *chan);
- /* eDMA debug fs callbacks */
- void dw_edma_v0_core_debugfs_on(struct dw_edma *dw);
--void dw_edma_v0_core_debugfs_off(struct dw_edma *dw);
- 
- #endif /* _DW_EDMA_V0_CORE_H */
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-index e6cf608d121b..d12c607433bf 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-@@ -268,7 +268,7 @@ static void dw_edma_debugfs_regs(struct dw_edma *dw)
- 	struct dentry *regs_dent;
- 	int nr_entries;
- 
--	regs_dent = debugfs_create_dir(REGISTERS_STR, dw->debugfs);
-+	regs_dent = debugfs_create_dir(REGISTERS_STR, dw->dma.dbg_dev_root);
- 
- 	nr_entries = ARRAY_SIZE(debugfs_regs);
- 	dw_edma_debugfs_create_x32(dw, debugfs_regs, nr_entries, regs_dent);
-@@ -282,17 +282,9 @@ void dw_edma_v0_debugfs_on(struct dw_edma *dw)
- 	if (!debugfs_initialized())
- 		return;
- 
--	dw->debugfs = debugfs_create_dir(dw->name, NULL);
--
--	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->chip->mf);
--	debugfs_create_u16("wr_ch_cnt", 0444, dw->debugfs, &dw->wr_ch_cnt);
--	debugfs_create_u16("rd_ch_cnt", 0444, dw->debugfs, &dw->rd_ch_cnt);
-+	debugfs_create_u32("mf", 0444, dw->dma.dbg_dev_root, &dw->chip->mf);
-+	debugfs_create_u16("wr_ch_cnt", 0444, dw->dma.dbg_dev_root, &dw->wr_ch_cnt);
-+	debugfs_create_u16("rd_ch_cnt", 0444, dw->dma.dbg_dev_root, &dw->rd_ch_cnt);
- 
- 	dw_edma_debugfs_regs(dw);
- }
--
--void dw_edma_v0_debugfs_off(struct dw_edma *dw)
--{
--	debugfs_remove_recursive(dw->debugfs);
--	dw->debugfs = NULL;
--}
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-index 3391b86edf5a..fb3342d97d6d 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-@@ -13,15 +13,10 @@
- 
- #ifdef CONFIG_DEBUG_FS
- void dw_edma_v0_debugfs_on(struct dw_edma *dw);
--void dw_edma_v0_debugfs_off(struct dw_edma *dw);
- #else
- static inline void dw_edma_v0_debugfs_on(struct dw_edma *dw)
- {
- }
--
--static inline void dw_edma_v0_debugfs_off(struct dw_edma *dw)
--{
--}
- #endif /* CONFIG_DEBUG_FS */
- 
- #endif /* _DW_EDMA_V0_DEBUG_FS_H */
--- 
-2.38.0
+@Vinoud, @Manivannan I had to drop your tags from this patch since its
+content had been significantly changed.
 
+-Sergey
 
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> 
+> ---
+> 
+> Changelog v2:
+> - Fix the comment a bit to being clearer. (@Manivannan)
+> 
+> Changelog v3:
+> - Conditionally set dchan->dev->device.dma_coherent field since it can
+>   be missing on some platforms. (@Manivannan)
+> - Remove Manivannan' rb and tb tags since the patch content has been
+>   changed.
+> 
+> Changelog v6:
+> - Directly call *_dma_configure() method on the child device used for
+>   the DMA buffers mapping. (@Robin)
+> - Explicitly set the DMA-mask of the child device in the channel
+>   allocation proecedure. (@Robin)
+> - Drop @Manivannan and @Vinod rb- and ab-tags due to significant patch
+>   content change.
+> ---
+>  drivers/dma/dw-edma/dw-edma-core.c | 44 ++++++++++++++++++++++++++++++
+>  1 file changed, 44 insertions(+)
+> 
+> diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+> index e3671bfbe186..846518509753 100644
+> --- a/drivers/dma/dw-edma/dw-edma-core.c
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -6,9 +6,11 @@
+>   * Author: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>   */
+>  
+> +#include <linux/acpi.h>
+>  #include <linux/module.h>
+>  #include <linux/device.h>
+>  #include <linux/kernel.h>
+> +#include <linux/of_device.h>
+>  #include <linux/dmaengine.h>
+>  #include <linux/err.h>
+>  #include <linux/interrupt.h>
+> @@ -711,10 +713,52 @@ static irqreturn_t dw_edma_interrupt_common(int irq, void *data)
+>  static int dw_edma_alloc_chan_resources(struct dma_chan *dchan)
+>  {
+>  	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> +	struct device *dev = chan->dw->chip->dev;
+> +	int ret;
+>  
+>  	if (chan->status != EDMA_ST_IDLE)
+>  		return -EBUSY;
+>  
+> +	/* Bypass the dma-ranges based memory regions mapping for the eDMA
+> +	 * controlled from the CPU/Application side since in that case
+> +	 * the local memory address is left untranslated.
+> +	 */
+> +	if (chan->dw->chip->flags & DW_EDMA_CHIP_LOCAL) {
+> +		ret = dma_coerce_mask_and_coherent(&dchan->dev->device,
+> +						   DMA_BIT_MASK(64));
+> +		if (ret) {
+> +			ret = dma_coerce_mask_and_coherent(&dchan->dev->device,
+> +							   DMA_BIT_MASK(32));
+> +			if (ret)
+> +				return ret;
+> +		}
+> +
+> +		if (dev_of_node(dev)) {
+> +			struct device_node *node = dev_of_node(dev);
+> +
+> +			ret = of_dma_configure(&dchan->dev->device, node, true);
+> +		} else if (has_acpi_companion(dev)) {
+> +			struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
+> +
+> +			ret = acpi_dma_configure(&dchan->dev->device,
+> +						 acpi_get_dma_attr(adev));
+> +		} else {
+> +			ret = -EINVAL;
+> +		}
+> +
+> +		if (ret)
+> +			return ret;
+> +
+> +		if (dchan->dev->device.dma_range_map) {
+> +			kfree(dchan->dev->device.dma_range_map);
+> +			dchan->dev->device.dma_range_map = NULL;
+> +		}
+> +
+> +		dchan->dev->chan_dma_dev = true;
+> +	} else {
+> +		dchan->dev->chan_dma_dev = false;
+> +	}
+> +
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.38.0
+> 
+> 
