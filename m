@@ -2,71 +2,57 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01DFCC433FE
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Nov 2022 09:32:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FB5FC4332F
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Nov 2022 09:32:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229731AbiKIJcP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Nov 2022 04:32:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37268 "EHLO
+        id S229981AbiKIJc2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Nov 2022 04:32:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229835AbiKIJcM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2022 04:32:12 -0500
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B03BD220DA;
-        Wed,  9 Nov 2022 01:32:11 -0800 (PST)
-Received: from kwepemi500008.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4N6fqj18HGzHvXn;
-        Wed,  9 Nov 2022 17:31:45 +0800 (CST)
-Received: from huawei.com (10.67.175.83) by kwepemi500008.china.huawei.com
- (7.221.188.139) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 9 Nov
- 2022 17:32:09 +0800
-From:   ruanjinjie <ruanjinjie@huawei.com>
-To:     <jdmason@kudzu.us>, <dave.jiang@intel.com>, <allenbh@gmail.com>,
-        <lpieralisi@kernel.org>, <kw@linux.com>, <mani@kernel.org>,
-        <kishon@kernel.org>, <bhelgaas@google.com>, <ntb@lists.linux.dev>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <ruanjinjie@huawei.com>
-Subject: [PATCH] NTB: EPF: fix possible memory leak in pci_vntb_probe()
-Date:   Wed, 9 Nov 2022 17:28:52 +0800
-Message-ID: <20221109092852.3549528-1-ruanjinjie@huawei.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S229835AbiKIJc1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2022 04:32:27 -0500
+X-Greylist: delayed 88597 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 09 Nov 2022 01:32:26 PST
+Received: from mail.lokoho.com (mail.lokoho.com [217.61.105.98])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B779322B04
+        for <linux-pci@vger.kernel.org>; Wed,  9 Nov 2022 01:32:26 -0800 (PST)
+Received: by mail.lokoho.com (Postfix, from userid 1001)
+        id D2D1F829EF; Tue,  8 Nov 2022 08:55:40 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=lokoho.com; s=mail;
+        t=1667897747; bh=Z0N5VlX9/JlryGOL5I747Le9USomZJCRNNGRT3LbbKc=;
+        h=Date:From:To:Subject:From;
+        b=l3N/v8e8SQxsY5m4GO5sPHF8pZoRAOriQ72c6A2F2dHKKbnJq2DLEbv68DxDgI05I
+         ajbNUNVLq/h9OQT4rdt0XfFSbunIchwfdnkkTcGjc2hmwosO51imj028OZo6bZVcHP
+         rKshFJtMsRd9tKiF0GG+qel4r3iDgv8q89MgAlf5IQnNwpj4JRKOIFl36LWKAyRZar
+         Yhp2PC/wNYQOTpjKKeNStStc8mAQvjpAQu55InFLGP4YJQibWjj0daQnckBLi66j2i
+         lpHVkFVT8syWc/nanUvm1kVrXfm+t/I8lMPe3wsGkGSbnkgffCuw8hKPFffu04VBAD
+         VMjJN7l41cBHA==
+Received: by mail.lokoho.com for <linux-pci@vger.kernel.org>; Tue,  8 Nov 2022 08:55:33 GMT
+Message-ID: <20221108074500-0.1.24.5nx2.0.sfpx2bm9tn@lokoho.com>
+Date:   Tue,  8 Nov 2022 08:55:33 GMT
+From:   "Adam Charachuta" <adam.charachuta@lokoho.com>
+To:     <linux-pci@vger.kernel.org>
+Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania?=
+X-Mailer: mail.lokoho.com
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.67.175.83]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- kwepemi500008.china.huawei.com (7.221.188.139)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As ntb_register_device() don't handle error of device_register(),
-if ntb_register_device() returns error in pci_vntb_probe(), name of kobject
-which is allocated in dev_set_name() called in device_add() is leaked.
+Dzie=C5=84 dobry,
 
-As comment of device_add() says, it should call put_device() to drop the
-reference count that was set in device_initialize()
-when it fails, so the name can be freed in kobject_cleanup().
+zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
+=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
+o dalszych rozm=C3=B3w.=20
 
-Signed-off-by: ruanjinjie <ruanjinjie@huawei.com>
----
- drivers/pci/endpoint/functions/pci-epf-vntb.c | 1 +
- 1 file changed, 1 insertion(+)
+Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
+=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
+=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
+strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-index 0ea85e1d292e..5aeb028281aa 100644
---- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-@@ -1266,6 +1266,7 @@ static int pci_vntb_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return 0;
- 
- err_register_dev:
-+	put_device(&ndev->ntb.dev);
- 	return -EINVAL;
- }
- 
--- 
-2.25.1
+Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
 
+
+Pozdrawiam
+Adam Charachuta
