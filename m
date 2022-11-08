@@ -2,176 +2,133 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90235C433FE
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Nov 2022 21:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBA5EC433FE
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Nov 2022 22:30:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229463AbiKHVX3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Nov 2022 16:23:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47320 "EHLO
+        id S230328AbiKHWan (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Nov 2022 17:30:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229781AbiKHVX1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2022 16:23:27 -0500
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2054.outbound.protection.outlook.com [40.107.93.54])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4FB621B1;
-        Tue,  8 Nov 2022 13:23:25 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZTYrjxsdY3ZWAJla9PFZKJxOR/h6PSltcDrw+WirPNNifB/IEpT8rGHTKV0nmfp8jF8DjxVMr9s7ls55PcvmSM8y8sOHZ2hILNHA5aIC5+oF8RiDIt8x7RX4637kQjVqQHkBKnYCjuYH4nQo8L/dUC81tgAwGw8IdwmTdPXS/CtVI9zBGHXIUhea5Fcy740AinEUgcZkxCJkTWnwHyT8MyGMN7TiPyRNHmBD7A/8VUHsv0e/xXvyvdH+Qy6o1jPUXN2TXBeP3zArNoAjjFdZabDJ43EQqpsTlR5cDKgwSEFfa4OGZjSEzAKh4nDlP0BLEN1iZgiE4D9ISbuv1xTgxw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=odZzxDeh1zcp76hiTbsRYGkPv6bL7N13q9oyJD7M7E8=;
- b=WzTT3PM53fC0mkZpgHjwTr6D9NwH3t+nltao4hZ1FAKc7HYdPFYMNuqtd4OQ45OYsOTp0n+8DOa4V4BVHCmjm5Y5khHoY2zTk2xaZ4aSqBW7NSz0ehXyxE6Ht8AGnQ4q1B0t6JPc5oPVmwkTDPG6nekhhL3ytCLjWZn/xOniEdkPlObb8SB4AV90tHEpZj2yMEtqvaOhOg19VLvv/QhbhDV1Jgkz8QH79v1JK6+f+jRp1p43AURV6PD9bkdW195HA3fxOg0T1i/V/TIBjTSIugd/MxqAm2vvEll4wvYsJ/5lp3t61dCbYIieoT9goHTbrjQoZDJ/MCRaT/PvomPLaQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=odZzxDeh1zcp76hiTbsRYGkPv6bL7N13q9oyJD7M7E8=;
- b=l3lflR169bonYijzi4DL5yCU8hcojkw+UiIm148G0qvL+8G1GhRfHFkKFx58bj4w7nEolnVrUt69Ayf6TyjVercXa81X9ZycwSlxEDWtyhxfDyTWrAJZo405RGZ5n+oY+fpz4mSeVOruTzVkfvhqvLbQ4NUBaht+IkF75AnxkjM=
-Received: from MW3PR06CA0007.namprd06.prod.outlook.com (2603:10b6:303:2a::12)
- by DM4PR12MB6591.namprd12.prod.outlook.com (2603:10b6:8:8e::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.22; Tue, 8 Nov
- 2022 21:23:22 +0000
-Received: from CO1NAM11FT025.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:2a:cafe::7a) by MW3PR06CA0007.outlook.office365.com
- (2603:10b6:303:2a::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.22 via Frontend
- Transport; Tue, 8 Nov 2022 21:23:22 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1NAM11FT025.mail.protection.outlook.com (10.13.175.232) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5791.20 via Frontend Transport; Tue, 8 Nov 2022 21:23:22 +0000
-Received: from SATLEXMB06.amd.com (10.181.40.147) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 8 Nov
- 2022 14:50:50 -0600
-Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB06.amd.com
- (10.181.40.147) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Tue, 8 Nov
- 2022 14:50:49 -0600
-Received: from [172.19.74.144] (10.180.168.240) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server id 15.1.2375.31 via Frontend
- Transport; Tue, 8 Nov 2022 14:50:48 -0600
-Message-ID: <ad614a7b-2a40-31a0-a624-779403d91498@amd.com>
-Date:   Tue, 8 Nov 2022 12:50:43 -0800
+        with ESMTP id S230341AbiKHWaP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Nov 2022 17:30:15 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EFD051C00;
+        Tue,  8 Nov 2022 14:29:47 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2E623617A3;
+        Tue,  8 Nov 2022 22:29:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5F00BC433D6;
+        Tue,  8 Nov 2022 22:29:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667946586;
+        bh=BqvLW4jV5m1Bw96AoPI7MuAfx2h0xX+8YgylNPLrHPk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=ALUXgK44ZlDy0Hq1JR65VSfRXW0YJEhV1L57HIyNALpCiXaedEt2EiQIlXZmytvMb
+         P7KANRx4MVmAgcYLibZnaI5nYHBpVk9QtRmCsvE9qS/CJENQCoiA9aZNGIfIAJqhbS
+         WFVnSh93jYn4RmX8alKaebzoNU+3ufrs0YNhbHM5YwRrMs5EavX/r0BApua83/yLtR
+         LBl+98l5WSe47pbVmTJO28XR/UYFQTAXhoGXvZAfi02qqqC3aJqNUA9/ScmgNgRakW
+         u6BRMgp6+LGEg+tsO8qj+09+uIhXGUMf260kQLjH6p89Q5PYLIbo9BlRgSAh1FI2Di
+         hAt+MWp3lOSBw==
+Date:   Tue, 8 Nov 2022 16:29:44 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Nathan Rossi <nathan@nathanrossi.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Nathan Rossi <nathan.rossi@digi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI/ASPM: Wait for data link active after retraining
+Message-ID: <20221108222944.GA504625@bhelgaas>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.11.0
-Subject: Re: [PATCH RFC V3 2/2] PCI: Create device tree node for selected
- devices
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <robh@kernel.org>,
-        <frowand.list@gmail.com>, <clement.leger@bootlin.com>,
-        <max.zhen@amd.com>, <sonal.santan@amd.com>, <larry.liu@amd.com>,
-        <brian.xu@amd.com>, <stefano.stabellini@xilinx.com>,
-        <trix@redhat.com>
-References: <20221107210559.GA419452@bhelgaas>
-From:   Lizhi Hou <lizhi.hou@amd.com>
-In-Reply-To: <20221107210559.GA419452@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1NAM11FT025:EE_|DM4PR12MB6591:EE_
-X-MS-Office365-Filtering-Correlation-Id: 31cb8d0d-9958-4073-7acf-08dac1cf76c7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: k2N/sEIIo20KuYbKlPWgIv3mg7g36+b66kEe7eLB0BcHer8hWsnI3hpPLx/LxJiHTTH7argh+zmk4iLWakmB9/kXT+VS+sUxCRXNBb3cpPpG8He8ggO+3PozcQwl2ytnzM6DNQU1rrRitqvmqymca/IJi1Gx3yIQ+1o5qkLtlRbmntiRA+0Ew42tqsWBzhYb9Q2Oc0tMFJCzoIv11i7k3zr1GkkBI0jao+kH8nYoXVOUrGAzOhvqwi0drAifujgaDApRtkFvqRH+/sqOVvivVhqCvKsx4x3sQVzpC1K+xkFK/Td+IW5INHMVa7GvfOcu+kyePIYl0RgvPLDkLixUUisLBtdMlJnx1biNrJXH4w9NdYW5Dxpp7sDhE0alwx4Ny1ZuihhshEk69IX6XMz5QK86NfoDGsQYYfYypW0PfgZpSRSRMmDVtQE2ImMTGreN5eZatP5xqkEJOcDnR6/JlaIJnMWy+wQ/XZ0yca7kkV6IHqyz910NSjLPa/RjsVcw8HfFjev7FQuFYSRdqX87N+M/D+kTzX2Q0/2BCUMUbFKDip6O7N1rT2SbL3Y8xpJo7GrSXg5XHhGDDRdNgaXKgaooHLVGLj+ZKWLbRkl191RTqGZzM2lUuVMs7Rx8AXfGHOasMA8kgcdZkl0vBVzsTmUXFd9WAQ4O3dA9zwJUSq9kdi/rMoER+/4klxqXBfL7PmbVAyRYl4RaKLpT2EDdCPtv4VxGqjnYfDJv0dod8to6u9KVeAL9vaQBMiViDde2FmThg7aScx59ryyWQwlYwcvqN4jtF+esXK0W9ys++3zzyQbnXhtT5JWFmmY0dutSiDa6SRxmdCctXhXZk4+ZlA==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(396003)(39860400002)(136003)(376002)(346002)(451199015)(36840700001)(46966006)(40470700004)(44832011)(2616005)(6916009)(478600001)(47076005)(70586007)(426003)(8936002)(26005)(54906003)(41300700001)(186003)(4326008)(8676002)(83380400001)(5660300002)(336012)(2906002)(70206006)(31696002)(40480700001)(86362001)(82310400005)(36756003)(356005)(36860700001)(81166007)(6666004)(316002)(82740400003)(53546011)(31686004)(16576012)(40460700003)(43740500002)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Nov 2022 21:23:22.0115
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 31cb8d0d-9958-4073-7acf-08dac1cf76c7
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT025.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6591
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20220602065544.2552771-1-nathan@nathanrossi.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+On Thu, Jun 02, 2022 at 06:55:44AM +0000, Nathan Rossi wrote:
+> From: Nathan Rossi <nathan.rossi@digi.com>
+> 
+> When retraining the link either the child or the parent device may have
+> the data link layer state machine of the respective devices move out of
+> the active state despite the physical link training being completed.
+> Depending on how long is takes for the devices to return to the active
+> state, the device may not be ready and any further reads/writes to the
+> device can fail.
+> 
+> This issue is present with the pci-mvebu controller paired with a device
+> supporting ASPM but without advertising the Slot Clock, where during
+> boot the pcie_aspm_cap_init call would cause common clocks to be made
+> consistent and then retrain the link. However the data link layer would
+> not be active before any device initialization (e.g. ASPM capability
+> queries, BAR configuration) causing improper configuration of the device
+> without error.
+> 
+> To ensure the child device is accessible, after the link retraining use
+> pcie_wait_for_link to perform the associated state checks and any needed
+> delays.
+> 
+> Signed-off-by: Nathan Rossi <nathan.rossi@digi.com>
+> ---
+>  drivers/pci/pcie/aspm.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index a96b7424c9..4b8a1810be 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -288,7 +288,8 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
+>  		reg16 &= ~PCI_EXP_LNKCTL_CCC;
+>  	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
+>  
+> -	if (pcie_retrain_link(link))
+> +	/* Retrain link and then wait for the link to become active */
+> +	if (pcie_retrain_link(link) && pcie_wait_for_link(parent, true))
 
-Thanks for your comments. I will fix all these with next submission.
+pcie_retrain_link() waits for PCI_EXP_LNKSTA_LT (Link Training) to be
+cleared, which means the LTSSM has exited the Configuration/Recovery
+state.  pcie_wait_for_link() waits for PCI_EXP_LNKSTA_DLLLA (Data Link
+Layer Link Active) to be set, which means the link is in DL_Active.
 
-Lizhi
+I don't see an explicit procedure in the spec for determining when
+a link retrain is complete, but from PCIe r6.0, sec 6.2.11 (DPC):
 
-On 11/7/22 13:05, Bjorn Helgaas wrote:
-> On Fri, Nov 04, 2022 at 08:24:14AM -0700, Lizhi Hou wrote:
->> The PCIe endpoint device such as Xilinx Alveo PCIe card maps the register
->> spaces from multiple hardware peripherals to its PCIe BAR. Normally,
->> the PCI core discovers devices and BARs using the PCI enumeration process.
->> There is no infrastructure to discover the hardware peripherals that are
->> present in a PCI device, and which can be accessed through the PCI BARs.
->>
->> For Alveo PCIe card, the card firmware provides a flattened device tree to
->> describe the hardware peripherals on its BARs. The Alveo card driver can
->> load this flattened device tree and leverage device tree framework to
->> generate platform devices for the hardware peripherals eventually.
->>
->> Apparently, the device tree framework requires a device tree node for the
->> PCIe device. Thus, it can generate the device tree nodes for hardware
->> peripherals underneath. Because PCIe is self discoverable bus, there might
->> not be a device tree node created for PCIe devices. This patch is to add
->> support to generate device tree node for PCIe devices. It introduces a
->> kernel option. When the option is turned on, the kernel will generate
-> Specify the kernel option here.  These last two sentences should
-> probably be a separate paragraph because they say specifically what
-> this patch does.
->
->> device tree nodes for PCI bridges unconditionally.
->> It will also generate
->> a device tree node for Xilinx Alveo U50 by using PCI quirks.
-> I think I would split the Xilinx Alveo U50 quirk to a separate patch
-> from the infrastructure and make this patch more generic.
->
->> +config PCI_DYNAMIC_OF_NODES
->> +	bool "Device tree node for PCI devices"
->> +	depends on OF
->> +	select OF_DYNAMIC
->> +	help
->> +	  This option enables support for generating device tree nodes for some
->> +	  PCI devices. Thus, the driver of this kind can load and overlay
->> +	  flattened device tree for its downstream devices.
->> +
->> +	  Once this option is selected, the device tree nodes will be generated
->> +	  for all PCI/PCIE bridges.
-> PCI/PCIe
->
-> Actually, in this context (and in the commit log), you should just say
-> "PCI" because there's nothing PCIe-specific here.
->
->> +void of_pci_make_dev_node(struct pci_dev *pdev)
->> +{
->> +	struct device_node *parent, *dt_node = NULL;
->> +	const char *pci_type = "dev";
->> +	struct of_changeset *cset;
->> +	const char *full_name;
->> +	int ret;
->> +
->> +	/*
->> +	 * if there is already a device tree node linked to this device,
->> +	 * return immediately.
-> s/if there/If there/
->
->> +	 */
->> +	if (pci_device_to_OF_node(pdev))
->> +		return;
->> +
->> +	/* check if there is device tree node for parent device */
-> s/check/Check/
->
-> Follow the style of the file, which is "capitalize English sentences."
+  After software releases the Downstream Port from DPC, the Port’s
+  LTSSM must transition to the Detect state, where the Link will
+  attempt to retrain. Software can use Data Link Layer State Changed
+  interrupts, DL_ACTIVE ERR_COR signaling, or both, to signal when the
+  Link reaches the DL_Active state again.
+
+and sec 6.6:
+
+  On the completion of Link Training (entering the DL_Active state,
+  see Section 3.2), a component must be able to receive and process
+  TLPs and DLLPs.
+
+The only use mentioned in the spec for the Link Training bit is the
+implementation note in sec 7.5.3.7 about avoiding race conditions when
+using the Retrain Link bit, where software should poll Link Training
+until it returns to zero before setting the Retrain Link bit to change
+link parameters.
+
+And I think you're absolutely right that what we *want* here is the
+data link layer DL_Active state, not just the link layer L0 state.
+
+This all makes me think that checking the Link Training bit might be
+the wrong thing to begin with.
+
+Of course, the Data Link Layer Link Active bit wasn't added until PCIe
+r1.1, and even now it's optional.  Without it, I don't know if there's
+a way to make sure the link is in DL_Active.
+
+Maybe pcie_retrain_link() should wait for Data Link Layer Link Active
+if it is supported, and use the existing behavior of waiting for Link
+Training to be cleared otherwise?
+
+>  		return;
+>  
+>  	/* Training failed. Restore common clock configurations */
+> ---
+> 2.36.1
