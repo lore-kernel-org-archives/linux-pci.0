@@ -2,156 +2,169 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75759C4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Nov 2022 23:21:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65905C43217
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Nov 2022 23:28:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235414AbiKRXVV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Nov 2022 18:21:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58266 "EHLO
+        id S235346AbiKRX2S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Nov 2022 18:28:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230136AbiKRXVD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2022 18:21:03 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E13A97C6BC
-        for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2022 15:09:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1668812962;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=fqxYlPjStId8INOMKlUIJ9udLA0AzXzEw7XWCP07sCA=;
-        b=G/hndHszeqOi0w1O0SbIeqj88uA+gyob1eLtPg28ec+ES9is4eLb/h6tXW3wFcKoM1iNOX
-        XyaekhLaHtCHbwRca4dc1c7qZPJ1mm5AsNNhS15GTEycYiNVq4DZU224ocwIBAjTryBUmm
-        EZnys65rMjwQEFsp80cJHRjI+3HLZJU=
-Received: from mail-io1-f71.google.com (mail-io1-f71.google.com
- [209.85.166.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-362-WoL8ltlKM12BFQ4S2vqfWQ-1; Fri, 18 Nov 2022 18:09:21 -0500
-X-MC-Unique: WoL8ltlKM12BFQ4S2vqfWQ-1
-Received: by mail-io1-f71.google.com with SMTP id z15-20020a5e860f000000b006c09237cc06so3393146ioj.21
-        for <linux-pci@vger.kernel.org>; Fri, 18 Nov 2022 15:09:20 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:subject:cc:to
-         :from:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fqxYlPjStId8INOMKlUIJ9udLA0AzXzEw7XWCP07sCA=;
-        b=wHRDbBhI5PuoutIaCyYc19VVgqxAu8KvLazdVRwRMIJmUYRVGV/6E29qOeQ+6dSQzN
-         t0IS1kt+1lR+/ioPm2CtimiUosICNguErjT1PHVaD57sf7x8ZtFEAtdzyfASQY5Jz0MG
-         5uFd4VO8xmnmWBFIdJSvtY/29COdY+8iz+0Ivqw16FBhdGSKfiBJBZ3o+0x2fiFOXaDU
-         NphbjTx8tk8X/lq4funyEBQno10fBKtulDkmV+QzUjsULa4km+YuOQvNwkyl4RUdV/Lz
-         fakJPpVmZQIKC3Lkzff9YFQ8rApr8+rL2PcqXj02GhvvtpA91f6g/38IY09/NJ8DX5LF
-         jsqg==
-X-Gm-Message-State: ANoB5pl3+R+xVo9uSK9ABL+tpeNi0tXCoGw6SUrAareEXQdl3lAkHLo1
-        2+ZUX5v5AmDFTmWRhFYZf8i+r4VxQjX0KPOYR8kVe3PC21cHk4k04XlF+DgvL19SsaYo18hR4x7
-        JUfqbJFPuWBRABLo5wTCDb17WmbaMPBwO45b7OMO/f4Cq2vOuDZPyLg6MIPXUW7i3XKmFIbQGgT
-        eOTLm5xw==
-X-Received: by 2002:a05:6638:e8e:b0:365:ca83:bafb with SMTP id p14-20020a0566380e8e00b00365ca83bafbmr4266503jas.272.1668812959528;
-        Fri, 18 Nov 2022 15:09:19 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf7f3wAGkAooZ4pgGTzbQ8zzFPutM7VEf7MWtlfseJLOvhAGCmYD1Viv5Pey1FXFSlTBLf+UZw==
-X-Received: by 2002:a05:6638:e8e:b0:365:ca83:bafb with SMTP id p14-20020a0566380e8e00b00365ca83bafbmr4266495jas.272.1668812959204;
-        Fri, 18 Nov 2022 15:09:19 -0800 (PST)
-Received: from redhat.com ([38.15.36.239])
-        by smtp.gmail.com with ESMTPSA id g17-20020a056e02131100b0030249f369f7sm1631332ilr.82.2022.11.18.15.09.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Nov 2022 15:09:18 -0800 (PST)
-Date:   Fri, 18 Nov 2022 16:09:16 -0700
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc:     <linux-kernel@vger.kernel.org>, christian.koenig@amd.com
-Subject: [RFC] Resizable BARs vs bridges with BARs
-Message-ID: <20221118160916.7e165306.alex.williamson@redhat.com>
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.34; x86_64-redhat-linux-gnu)
+        with ESMTP id S235747AbiKRX1l (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2022 18:27:41 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AF02BEB55;
+        Fri, 18 Nov 2022 15:15:28 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 8F468B825A6;
+        Fri, 18 Nov 2022 23:15:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4275BC43146;
+        Fri, 18 Nov 2022 23:15:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668813326;
+        bh=WZ8PKekF+dncjbvSjEZDmCUz4Gtb/LLsdxmayfMcHhY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=uUiNErb6Tgnfb5oEusUI+JFCYQV1AQQE05w7FhzIsK2QfXqv5WsrIBGnaJv18JYvC
+         US6ufr5tGWw4TNPSFjoVvPs7U73mqwT1Iif0fsS9HXuEbFaQoIp9RziFSIfk2BPtoE
+         8l5WjmxXsF7+ApkuRNUWknyBnVBp4pvUXVu8CxIOSuojIfmmxBescMXFY6IZVe1blp
+         AJJ8nA9+lDruS2WhwLVsVCcGwMAA7v822zB/DmdeFXNSPcHARY4PQoJnUkiOA7XuZE
+         ddwQAvFkqqhmpHMN9HEF3cuyJhmo7NkpzDNBR0yjGLXO1VC2dp/SMfJS5h2xPCjZfo
+         8tIBa4wckr4xg==
+Received: by mail-lf1-f52.google.com with SMTP id bp15so10541638lfb.13;
+        Fri, 18 Nov 2022 15:15:26 -0800 (PST)
+X-Gm-Message-State: ANoB5pk03BMWnt68Eu6iKHesJ7pILzzmNNtc8Ev2I1DvHdIKt6CiRULP
+        YenaMt0ae2YeAgbs2Xp5S0OYCuxAn+mjCaVZoQ==
+X-Google-Smtp-Source: AA0mqf7ny5ZctZuI1Cpiin0JrEQILuNcodrW4ZzJpLZW7EwRw7CspieqMwRy4PVq7H6JZQt+lTyd0ysP9CVMaXrkZpU=
+X-Received: by 2002:ac2:442f:0:b0:4a2:8d76:abaa with SMTP id
+ w15-20020ac2442f000000b004a28d76abaamr3212413lfl.74.1668813323939; Fri, 18
+ Nov 2022 15:15:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+References: <20221118190126.100895-1-linux@fw-web.de> <20221118190126.100895-12-linux@fw-web.de>
+ <CAL_JsqKiRzRToSzk3q+csWR5DEZjZpQWChqZ3mH8MLruvfe=Dw@mail.gmail.com> <99114D73-22EF-43CD-848E-88A37B29B953@public-files.de>
+In-Reply-To: <99114D73-22EF-43CD-848E-88A37B29B953@public-files.de>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Tue, 8 Nov 2022 08:45:49 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqKz1qQFZnStLnApraJvp=-cQoW6x5=p7-GBcftYKVMErg@mail.gmail.com>
+Message-ID: <CAL_JsqKz1qQFZnStLnApraJvp=-cQoW6x5=p7-GBcftYKVMErg@mail.gmail.com>
+Subject: Re: [PATCH v6 11/11] arm64: dts: mt7986: add BPI-R3 nand/nor overlays
+To:     frank-w@public-files.de
+Cc:     Frank Wunderlich <linux@fw-web.de>,
+        linux-mediatek@lists.infradead.org,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Chunfeng Yun <chunfeng.yun@mediatek.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Bo Jiao <Bo.Jiao@mediatek.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-phy@lists.infradead.org, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On Fri, Nov 18, 2022 at 4:05 PM Frank Wunderlich
+<frank-w@public-files.de> wrote:
+>
+> Am 18. November 2022 22:39:52 MEZ schrieb Rob Herring <robh+dt@kernel.org>:
+> >On Fri, Nov 18, 2022 at 1:01 PM Frank Wunderlich <linux@fw-web.de> wrote:
+> >>
+> >> From: Frank Wunderlich <frank-w@public-files.de>
+> >>
+> >> Add devicetree overlays for using nand and nor on BPI-R3.
+> >
+> >Can you not tell at runtime which one you booted from? If not, how
+> >does one choose which overlay to apply? If you can, why not populate
+> >both nodes and enable the right one? IMO, if all h/w is present, it
+> >should all be in the DT. Selecting what h/w to use is a separate
+> >problem and overlays aren't a great solution for that.
+>
+> It is not the decision about bootdevice,more available devices.
+>
+> Only 1 spi device (nand OR nor) is available
+> at boottime as they share same spi bus and
+> chipselect is set via hw jumper.
+> Both nodes have reg 0,which is imho not
+> supported in linux.
 
-I'm trying to get resizable BARs working in a configuration where my
-root bus resources provide plenty of aperture for the BAR:
+As long as one is set to disabled, it should be fine.
 
-pci_bus 0000:5d: root bus resource [io  0x8000-0x9fff window]
-pci_bus 0000:5d: root bus resource [mem 0xb8800000-0xc5ffffff window]
-pci_bus 0000:5d: root bus resource [mem 0xb000000000-0xbfffffffff window] <<<
-pci_bus 0000:5d: root bus resource [bus 5d-7f]
 
-But resizing fails with -ENOSPC.  The topology looks like this:
+> I choosed overlays to add the right spi
+> device on the right mmc device where
+> similar selection happens (see patch 10).
+> Either sd OR emmc can be used (1 mmc
+> controller,first 4bits from bus switched by
+> hardware jumper).But for mmc i use it as
+> base fdt because i see mmc as primary
+> device which holds rootfs too. Nand/nor is
+> imho helping device for accessing emmc or
+> like rescue system (only uboot).
 
- +-[0000:5d]-+-00.0-[5e-61]----00.0-[5f-61]--+-01.0-[60]----00.0  Intel Corporation DG2 [Arc A380]
-                                             \-04.0-[61]----00.0  Intel Corporation Device 4f92
+No way to read the jumper state or know what you booted from I gues?
 
-The BIOS is not fluent in resizable BARs and only programs the root
-port with a small aperture:
+> I probe in uboot if emmc is available (mmc
+>  partconf) and choose emmc else sd. For
+>  spi i try with sf command to check for nor,if
+>  this does not work i apply nand overlay.
 
-5d:00.0 PCI bridge: Intel Corporation Sky Lake-E PCI Express Root Port A (rev 07) (prog-if 00 [Normal decode])
-        Bus: primary=5d, secondary=5e, subordinate=61, sec-latency=0
-        I/O behind bridge: 0000f000-00000fff [disabled]
-        Memory behind bridge: b9000000-ba0fffff [size=17M]
-        Prefetchable memory behind bridge: 000000bfe0000000-000000bff07fffff [size=264M]
-        Kernel driver in use: pcieport
+Instead of applying overlays, wouldn't just changing 'status' be easier?
 
-The trouble comes on the upstream PCIe switch port:
+>
+> >> Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+> >> ---
+> >> maybe rename to dtso?
+> >>
+> >> "kbuild: Allow DTB overlays to built from .dtso named source files"
+> >> https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git/commit/?h=dt/next&id=363547d2191cbc32ca954ba75d72908712398ff2
+>
+> Should i do this?
 
-5e:00.0 PCI bridge: Intel Corporation Device 4fa1 (rev 01) (prog-if 00 [Normal decode])
-   >>>  Region 0: Memory at b010000000 (64-bit, prefetchable)
-        Bus: primary=5e, secondary=5f, subordinate=61, sec-latency=0
-        I/O behind bridge: 0000f000-00000fff [disabled]
-        Memory behind bridge: b9000000-ba0fffff [size=17M]
-        Prefetchable memory behind bridge: 000000bfe0000000-000000bfefffffff [size=256M]
-        Kernel driver in use: pcieport
+Yes. .dts -> .dtbo is going to be removed.
 
-Note region 0 of this bridge, which is 64-bit, prefetchable and
-therefore conflicts with the same type for the resizable BAR on the GPU:
+> >> more comments about the dt overlay-support:
+> >>
+> >> https://patchwork.kernel.org/comment/25092116/
+> >> https://patchwork.kernel.org/comment/25085681/
+>
+> Daniel suggest define sd/emmc as overlay too...with way you mention below we could create 4 full fdt without applying overlays in uboot.
 
-60:00.0 VGA compatible controller: Intel Corporation DG2 [Arc A380] (rev 05) (prog-if 00 [VGA controller])
-        Region 0: Memory at b9000000 (64-bit, non-prefetchable) [disabled] [size=16M]
-        Region 2: Memory at bfe0000000 (64-bit, prefetchable) [disabled] [size=256M]
-        Expansion ROM at <ignored> [disabled]
-        Capabilities: [420 v1] Physical Resizable BAR
-                BAR 2: current size: 256MB, supported: 256MB 512MB 1GB 2GB 4GB 8GB
+Yes, but if you are going to do that, then you can just do all this
+with includes.
 
-It's a shame that the hardware designers didn't mark the upstream port
-BAR as non-prefetchable to avoid it living in the same resource
-aperture as the resizable BAR on the downstream device.  In any case,
-it's my understanding that our bridge drivers don't generally make use
-of bridge BARs.  I think we can test whether a driver has done a
-pci_request_region() or equivalent by looking for the IORESOURCE_BUSY
-flag, but I also suspect this is potentially racy.
+> >> --- a/arch/arm64/boot/dts/mediatek/Makefile
+> >> +++ b/arch/arm64/boot/dts/mediatek/Makefile
+> >> @@ -8,6 +8,8 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += mt6797-x20-dev.dtb
+> >>  dtb-$(CONFIG_ARCH_MEDIATEK) += mt7622-rfb1.dtb
+> >>  dtb-$(CONFIG_ARCH_MEDIATEK) += mt7622-bananapi-bpi-r64.dtb
+> >>  dtb-$(CONFIG_ARCH_MEDIATEK) += mt7986a-bananapi-bpi-r3-emmc.dtb
+> >> +dtb-$(CONFIG_ARCH_MEDIATEK) += mt7986a-bananapi-bpi-r3-nand.dtbo
+> >> +dtb-$(CONFIG_ARCH_MEDIATEK) += mt7986a-bananapi-bpi-r3-nor.dtbo
+> >
+> >These need rules to apply them to the base dtb(s). You just need:
+> >
+> >full.dtb := base.dtb overlay.dtb
+> >dtb-y += full.dtb
+>
+> I would prefer to do this in bootloader to allow all 4 possible configurations:
+>
+> Sd+nand
+> Sd+nor
+> Emmc+nand
+> Emmc+nor
 
-The patch below works for me, allowing the new resourceN_resize sysfs
-attribute to resize the root port window within the provided bus
-window.  Is this the right answer?  How can we make it feel less
-sketchy?  Thanks,
+That's fine. The purpose here is to document what the overlays apply
+to, check that they actually apply, and validate them when applied
+(unless someone wants to figure out all the issues with validating
+just an overlay and make that work). You for example have an
+undocumented compatible in yours (denx,fit).
 
-Alex
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b4096598dbcb..8c332a08174d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -2137,13 +2137,19 @@ int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
- 	next = bridge;
- 	do {
- 		bridge = next;
--		for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END;
-+		for (i = PCI_STD_RESOURCES; i < PCI_BRIDGE_RESOURCE_END;
- 		     i++) {
- 			struct resource *res = &bridge->resource[i];
- 
- 			if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
- 				continue;
- 
-+			if (i < PCI_STD_NUM_BARS) {
-+				if (!(res->flags & IORESOURCE_BUSY))
-+					pci_release_resource(bridge, i);
-+				continue;
-+			}
-+
- 			/* Ignore BARs which are still in use */
- 			if (res->child)
- 				continue;
-
+Rob
