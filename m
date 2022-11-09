@@ -2,55 +2,53 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C0EAC4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E584C433FE
 	for <linux-pci@archiver.kernel.org>; Wed,  9 Nov 2022 08:26:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229687AbiKII0T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S229526AbiKII0T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 9 Nov 2022 03:26:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39292 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229526AbiKII0S (ORCPT
+        with ESMTP id S229669AbiKII0S (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2022 03:26:18 -0500
 Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5562F13D16
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5569013D33
         for <linux-pci@vger.kernel.org>; Wed,  9 Nov 2022 00:26:17 -0800 (PST)
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 2A98QAx5052768;
-        Wed, 9 Nov 2022 02:26:10 -0600
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 2A98Q1tP052743;
+        Wed, 9 Nov 2022 02:26:01 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1667982370;
-        bh=GHfym5VUelnLfwN2zUltoRzyF5Nvyun+NgNchnLJugs=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=P5/+qh27IMS22b/nz/f8LLQuPaxrWTW6O/SW7U/+TGEevSFyHhLE7AM+lJzNE6YEF
-         RYvEQ1hJhp/0E8R/I+qqgTlG2VxO1m7SYYP8Xb7Vce1xxB+3t+XXAT4EoHTpMZjXZw
-         k1PZqY81NwkXWuYIy1V3TNOwFqzliILDLGV0s7r0=
-Received: from DFLE115.ent.ti.com (dfle115.ent.ti.com [10.64.6.36])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 2A98QAfP015991
+        s=ti-com-17Q1; t=1667982361;
+        bh=mo5PdU3cTV74KFAnDyxjJPzU2AfRa0t29F94To7rIac=;
+        h=From:To:CC:Subject:Date;
+        b=k+xjjFoha8h35yW79n3e1JvSiNer5SUlQF6hbcwGnUQHU5wbwefLwYzijeCgQR9X9
+         rr092HlC0NvjwEaIqKlQGfvpGmLA/j+8dU0skDFH921zIp0PvOlJw+k5IKG6R3Eir3
+         57LpsDygUhoP2XsVpaTYkV4UoygoSdUFDy/caXYc=
+Received: from DLEE112.ent.ti.com (dlee112.ent.ti.com [157.170.170.23])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 2A98Q1ux007564
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 9 Nov 2022 02:26:10 -0600
-Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+        Wed, 9 Nov 2022 02:26:01 -0600
+Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE112.ent.ti.com
+ (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6; Wed, 9 Nov
- 2022 02:26:10 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+ 2022 02:26:00 -0600
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE111.ent.ti.com
+ (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.6 via
- Frontend Transport; Wed, 9 Nov 2022 02:26:10 -0600
-Received: from localhost (ileaxei01-snat2.itg.ti.com [10.180.69.6])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 2A98Q78m014421;
-        Wed, 9 Nov 2022 02:26:09 -0600
+ Frontend Transport; Wed, 9 Nov 2022 02:26:00 -0600
+Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 2A98PvR3106309;
+        Wed, 9 Nov 2022 02:25:59 -0600
 From:   Matt Ranostay <mranostay@ti.com>
 To:     <vigneshr@ti.com>, <lpieralisi@kernel.org>, <robh@kernel.org>,
         <kw@linux.com>, <bhelgaas@google.com>
 CC:     <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Matt Ranostay <mranostay@ti.com>
-Subject: [PATCH v5 2/4] PCI: j721e: Add PCIe 4x lane selection support
-Date:   Wed, 9 Nov 2022 00:25:54 -0800
-Message-ID: <20221109082556.29265-3-mranostay@ti.com>
+Subject: [PATCH v5 0/4] PCI: add 4x lane support for pci-j721e controllers
+Date:   Wed, 9 Nov 2022 00:25:52 -0800
+Message-ID: <20221109082556.29265-1-mranostay@ti.com>
 X-Mailer: git-send-email 2.38.GIT
-In-Reply-To: <20221109082556.29265-1-mranostay@ti.com>
-References: <20221109082556.29265-1-mranostay@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -59,61 +57,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for setting of two-bit field that allows selection of 4x
-lane PCIe which was previously limited to only 2x lanes.
+Adding of dditional support to Cadence PCIe controller (i.e. pci-j721e.c)
+for up to 4x lanes, and reworking of driver to define maximum lanes per
+board configuration.
 
-Signed-off-by: Matt Ranostay <mranostay@ti.com>
-Reviewed-by: Vignesh Raghavendra <vigneshr@ti.com>
----
- drivers/pci/controller/cadence/pci-j721e.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+Changes from v1:
+* Reworked 'PCI: j721e: Add PCIe 4x lane selection support' to not cause
+  regressions on 1-2x lane platforms
 
-diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
-index 875224d34958..efd065bc0104 100644
---- a/drivers/pci/controller/cadence/pci-j721e.c
-+++ b/drivers/pci/controller/cadence/pci-j721e.c
-@@ -43,7 +43,6 @@ enum link_status {
- };
- 
- #define J721E_MODE_RC			BIT(7)
--#define LANE_COUNT_MASK			BIT(8)
- #define LANE_COUNT(n)			((n) << 8)
- 
- #define GENERATION_SEL_MASK		GENMASK(1, 0)
-@@ -53,6 +52,7 @@ struct j721e_pcie {
- 	struct clk		*refclk;
- 	u32			mode;
- 	u32			num_lanes;
-+	u32			max_lanes;
- 	void __iomem		*user_cfg_base;
- 	void __iomem		*intd_cfg_base;
- 	u32			linkdown_irq_regfield;
-@@ -206,11 +206,15 @@ static int j721e_pcie_set_lane_count(struct j721e_pcie *pcie,
- {
- 	struct device *dev = pcie->cdns_pcie->dev;
- 	u32 lanes = pcie->num_lanes;
-+	u32 mask = GENMASK(8, 8);
- 	u32 val = 0;
- 	int ret;
- 
-+	if (pcie->max_lanes == 4)
-+		mask = GENMASK(9, 8);
-+
- 	val = LANE_COUNT(lanes - 1);
--	ret = regmap_update_bits(syscon, offset, LANE_COUNT_MASK, val);
-+	ret = regmap_update_bits(syscon, offset, mask, val);
- 	if (ret)
- 		dev_err(dev, "failed to set link count\n");
- 
-@@ -440,6 +444,8 @@ static int j721e_pcie_probe(struct platform_device *pdev)
- 	ret = of_property_read_u32(node, "num-lanes", &num_lanes);
- 	if (ret || num_lanes > data->max_lanes)
- 		num_lanes = 1;
-+
-+	pcie->max_lanes = data->max_lanes;
- 	pcie->num_lanes = num_lanes;
- 
- 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48)))
+Changes from v2:
+* Correct dev_warn format string from %d to %u since lane count is a unsigned
+  integer
+* Update CC list
+
+Changes from v3:
+* Use the max_lanes setting per chip for the mask size required since bootloader
+  could have set num_lanes to a higher value that the device tree which would leave
+  in an undefined state
+* Reorder patches do the previous change to not break bisect
+* Remove line breaking for dev_warn to allow better grepping and since no strict
+  80 columns anymore
+
+Changes from v4:
+* Correct invalid settings for j7200 PCIe RC + EP
+* Add j784s4 configuration for selection of 4x lanes
+
+Matt Ranostay (4):
+  PCI: j721e: Add per platform maximum lane settings
+  PCI: j721e: Add PCIe 4x lane selection support
+  PCI: j721e: add j784s4 PCIe configuration
+  PCI: j721e: Add warnings on num-lanes misconfiguration
+
+ drivers/pci/controller/cadence/pci-j721e.c | 51 +++++++++++++++++++---
+ 1 file changed, 46 insertions(+), 5 deletions(-)
+
 -- 
 2.38.GIT
 
