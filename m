@@ -2,615 +2,376 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A31F4C4321E
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Nov 2022 01:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D01ACC433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Nov 2022 03:31:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229806AbiKJBmp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Nov 2022 20:42:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40722 "EHLO
+        id S232664AbiKJDbQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Nov 2022 22:31:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232383AbiKJBmm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2022 20:42:42 -0500
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1anam02on2071.outbound.protection.outlook.com [40.107.96.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED4E827902;
-        Wed,  9 Nov 2022 17:42:38 -0800 (PST)
+        with ESMTP id S232658AbiKJDbI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Nov 2022 22:31:08 -0500
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EE072ED77;
+        Wed,  9 Nov 2022 19:31:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1668051065; x=1699587065;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=4I8sc8jUq+9aF97KjuhlcVlqbzsmDp6dCbE2hmVhT+E=;
+  b=WpJYkUwq3dLEY3Nh80qJfJlj+JWDqm03KIRuYXH7YBsCKg6PQu6gmCjl
+   yk84i5bkv7pNPhWm8i11Nfchl0PZTV9w2TEPruwsmgL7vVE0zfP5PkTTg
+   pXnFY/yTfGPZCXxDg+ZqMQITnH5DoDGDdGYTSa9eGPC04lqSnHUylkzD8
+   KdR9Fa+SUyFn+24NXmNDaycgMClo03O6wRGzffI3OFcmDRrRq18vT6RGK
+   v83fYnzYONKLIkMc2vwgzPvw/bdCmNzgwmgblPaDM1LsiWpYnq6ayneQ4
+   4Axor93S25LH+bU9nvlRe6i0q1zlnsPfFs8CwNCtbndf/R8v8hf5Z7cP9
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10526"; a="337948340"
+X-IronPort-AV: E=Sophos;i="5.96,152,1665471600"; 
+   d="scan'208";a="337948340"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2022 19:31:04 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10526"; a="639447803"
+X-IronPort-AV: E=Sophos;i="5.96,152,1665471600"; 
+   d="scan'208";a="639447803"
+Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
+  by fmsmga007.fm.intel.com with ESMTP; 09 Nov 2022 19:31:04 -0800
+Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 9 Nov 2022 19:31:03 -0800
+Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
+ ORSMSX610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Wed, 9 Nov 2022 19:31:03 -0800
+Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
+ orsmsx610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31 via Frontend Transport; Wed, 9 Nov 2022 19:31:03 -0800
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (104.47.57.47) by
+ edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2375.31; Wed, 9 Nov 2022 19:31:02 -0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=W1KPW4SFLcekNfRbTuJa/3gbLwkODTVhif6YdQFq7moYOL11m5nDABcbvoj62zWATsTXxlSdglhQ1cruzdueUEE1tKqk0lY+IEtOhQGfBDuW0/gz6rJ0wR0zxcGFND0lMNFrgKBwOXltjZVlVxtOmjPstdK4MTIiSwnWG6d9/jTLSEIfXN3swdHeAx2roTPxMGmIExWD/y/0yi4KcUEelVydVYx0xQQw6yJGKtXMi7v0MmgHT5N6c7Ucustv2cxpDF/dqVx4az1uKqVrDjPVAGUxy6hs08GVWehhP1qAWijYMW1jZpUt7oEvoR3zhQ1ISGWH+ZTsR0RB6yo41oEXXg==
+ b=ZrP/ZQElVrALgx7HgBeM2Edc52Ipuzuq0Vupfwi2oH9IzWFLvBTFONjHXXEj4J5rIDSQY7TDpyqLWH+y90D3IdYOYp3qhRy3vsXwBzAsCf6PACUDNBsd013tcRDKN0fllkJADVZEI7PvcVVesTRUC0NqTKF3UVWCmMbtOwTXM/WmwxZheAPllhtszZ/SqffMdSk62njx/SL+Fc5nSZKERNSuKwMx2g6Egtlvq2/VuD8iqcTOqThZTNa5PIOLVPCyMsNpeAfZf+KsDCX6Y+yjjXW92yTO6MFKeFscpqq/4PVBd6o2ELPwClz6lgMDV/OSEqdM6m5nXSuLLe9JOFzRLg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dJIodgobuFSEiYutNZJPpoYNjCH+jxg0AXEvGGQuU24=;
- b=Z78dPOAtH15Sg6FMKZitCr7KpmsuvcXf7UYf+52zZlsspuRbgUTPL+MRlp2epVJyUTM2yI1gom0O2FcZEjGUIiTRGsJlu4JOfFMvtTYL1YjhDzS3ELVcnacpXa4/3ElAxzhlSgvovZ/bZwbU+bVtvDHWiqrS/pqhG4ALMQ0x/tFUwh6gN1pQIom5xlTI9kdHCtt/Rrt8u9c4CBkuPSh3fXG34wzJVHKgPsCIB3Qp7mpu5hiz1Lt5Wwh3gX03Th8w6+sWixc+EoIWkBOpvdygdyfsJMVApvAoI7+9Itc5eD4y4skFBNyjUK4/LZ9MMUdZQiUojLjYbv3aFvNLzJSPwA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dJIodgobuFSEiYutNZJPpoYNjCH+jxg0AXEvGGQuU24=;
- b=ZZlcFBdR54ciql+qyKWgYcN7WRvVjpwnBKhOD+zk66pJJNtvCikSbAo3aVjwAUXqoSSg7VAj2JgqSoE/cuuFOjOlS6aiwfIc0HeJGkoDOk12j8HxZdENFO6z3C7O3uUYSpunwEMcY9Ci1ZR5Yt6s4+1h+ZsFLvxHdewOeqftIB0=
-Received: from CY5PR17CA0056.namprd17.prod.outlook.com (2603:10b6:930:12::10)
- by PH7PR12MB5595.namprd12.prod.outlook.com (2603:10b6:510:135::20) with
+ bh=KyCjCyV7N/sOeRbxLTk9KDmdcW0TOoMKv0aubxDssBQ=;
+ b=heEhJpFzJ9jhz1D/idIE0XBv1MhhQ9F6V5E7GASksYW2iJK/mkKWXQERUq3fwDAG5mae1b+X+S/gY9mhm03bCUJ0RXTGrL2pAztbtESlR9ClYRrzGuwcriMY70JIMF3aVu8E40gA573334yAYDKsNbgYREBFSYCfxHQwz0LhKxndxfG4sfPUXgJBbvgrxw4UzhVR0mWtHlmH8o9Ktp1L6R4xwN+zV/nDHKaC5PqUWLNVq8HaqTaG/XkzTmNpSR4YzOeZP4C9NpncpAxI9JqdIWmFfKxDJqZvhRWjM/6EN/D4aFgrauyZJQP6KJ7KldKIvQ4bUlvDMWR3/+sdMt4hoQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from SA1PR11MB6733.namprd11.prod.outlook.com (2603:10b6:806:25c::17)
+ by MN2PR11MB4695.namprd11.prod.outlook.com (2603:10b6:208:260::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.27; Thu, 10 Nov
- 2022 01:42:36 +0000
-Received: from CY4PEPF0000B8E9.namprd05.prod.outlook.com
- (2603:10b6:930:12:cafe::1a) by CY5PR17CA0056.outlook.office365.com
- (2603:10b6:930:12::10) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5791.22 via Frontend
- Transport; Thu, 10 Nov 2022 01:42:36 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CY4PEPF0000B8E9.mail.protection.outlook.com (10.167.241.5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5813.11 via Frontend Transport; Thu, 10 Nov 2022 01:42:36 +0000
-Received: from SATLEXMB08.amd.com (10.181.40.132) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 9 Nov
- 2022 19:42:30 -0600
-Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB08.amd.com
- (10.181.40.132) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Wed, 9 Nov
- 2022 17:42:30 -0800
-Received: from xsjlizhih40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server id 15.1.2375.31 via Frontend
- Transport; Wed, 9 Nov 2022 19:42:29 -0600
-From:   Lizhi Hou <lizhi.hou@amd.com>
-To:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <robh@kernel.org>,
-        <frowand.list@gmail.com>, <helgaas@kernel.org>
-CC:     Lizhi Hou <lizhi.hou@amd.com>, <clement.leger@bootlin.com>,
-        <max.zhen@amd.com>, <sonal.santan@amd.com>, <larry.liu@amd.com>,
-        <brian.xu@amd.com>, <stefano.stabellini@xilinx.com>,
-        <trix@redhat.com>
-Subject: [PATCH RFC V4 2/3] PCI: Create device tree node for selected devices
-Date:   Wed, 9 Nov 2022 17:42:17 -0800
-Message-ID: <1668044538-27334-3-git-send-email-lizhi.hou@amd.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1668044538-27334-1-git-send-email-lizhi.hou@amd.com>
-References: <1668044538-27334-1-git-send-email-lizhi.hou@amd.com>
+ 2022 03:30:59 +0000
+Received: from SA1PR11MB6733.namprd11.prod.outlook.com
+ ([fe80::5236:c530:cc10:68f]) by SA1PR11MB6733.namprd11.prod.outlook.com
+ ([fe80::5236:c530:cc10:68f%4]) with mapi id 15.20.5791.027; Thu, 10 Nov 2022
+ 03:30:59 +0000
+Date:   Wed, 9 Nov 2022 19:30:53 -0800
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
+CC:     Davidlohr Bueso <dave@stgolabs.net>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        <dave.jiang@intel.com>, <alison.schofield@intel.com>,
+        <bwidawsk@kernel.org>, <vishal.l.verma@intel.com>,
+        <a.manzanares@samsung.com>, <linux-cxl@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/2] cxl/pci: Add generic MSI-X/MSI irq support
+Message-ID: <Y2xwbYEKKc9KXUDy@iweiny-desk3>
+References: <20221024133633.00000467@huawei.com>
+ <20221025232535.GA579167@bhelgaas>
+ <20221102171524.thsz2kwtirhxn7ee@offworld>
+ <Y2MAdaCES+aUc2QH@iweiny-desk3>
+ <20221103001833.n2gsoflnji3pcsfr@offworld>
+ <20221103180916.00000bae@Huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20221103180916.00000bae@Huawei.com>
+X-ClientProxiedBy: SJ0PR13CA0096.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c5::11) To SA1PR11MB6733.namprd11.prod.outlook.com
+ (2603:10b6:806:25c::17)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000B8E9:EE_|PH7PR12MB5595:EE_
-X-MS-Office365-Filtering-Correlation-Id: 18fb3631-90e9-4c9a-ea28-08dac2bcd85d
+X-MS-TrafficTypeDiagnostic: SA1PR11MB6733:EE_|MN2PR11MB4695:EE_
+X-MS-Office365-Filtering-Correlation-Id: 884bd3c7-e2e8-43ff-5c00-08dac2cbfc65
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: SQim75+hwsqBv6lQcdAbXdOoc2CE48LmqdtN4W4jwvYUyqUhOjNOgiKYvxryf5i1EKNuM4mIl2rQi1Zpkh2yvbmCzWrGl444Z5EGTKcL+i9m/VYX7A5q2oqSAsN35FsaTEXMmLJiaCdiIfHZd8+/ZEf26hghVnS3Pylxq1l7JlqCX2EuGyP6qK0qBXFVcdNJ0TzqVeklQJHzdEyDnPFC0BaRaT9ZOaqeFmcGWvohsXH3srkNScmzltX6TEwH58gHq0H5OeiCP+Gawc2lFEXOHAwWp9WYQ+ek0mJmdPXc0qiGSa6qxpvBn2UaqM++d+DB6h6x6Tz96mbx50UjP3ZbVbDmiz4vDePTmnPUXoVa21kWGkKofWA9pKDpsV1VcsmUdF99H2HBZurupaFpuvb097p+kmL/105QEQKAB7Ilo7S7Tc6z6t44hc/1hOphWIZe6wNtYVrfBDQYLZ3lfJDYut80DrlKr5Pd3UEkDpN7Byb5vqtuDO0nKgGkiVIK6mmp7CHWzD4ePeyEPVppnb8JVAxRF+WnlBo9LCjkZfH+8RDfd3gVIRgZtuNX/LpBsqeX+d65YDkWC02EBHakxIVhr5yf7sMnMSopow3sx8HdV1yYHz2jP5DBJvETziBspFlizqS2to+uv6QPviMLzq32Yv0yYVFYynhWTSWM+wAVTjaYv4850GjSzrpm2TbChUF9lbvxrpg3zKvUvPIgCvmiMDX8jHBxseuVlklbVBq3GgHkkNMchEVbnzoeA49JtZj/1Xq7viCnAFHOYmGorhoG18RIxCzwvMepHecMSUGv524bdx2l9V+f0u0v6+rX/DOx
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(346002)(376002)(396003)(136003)(451199015)(36840700001)(46966006)(40470700004)(2616005)(8676002)(26005)(54906003)(40460700003)(110136005)(316002)(36756003)(8936002)(2906002)(82310400005)(356005)(82740400003)(81166007)(186003)(36860700001)(30864003)(40480700001)(70206006)(41300700001)(70586007)(4326008)(44832011)(336012)(47076005)(83380400001)(86362001)(426003)(5660300002)(6666004)(478600001)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2022 01:42:36.5082
+X-Microsoft-Antispam-Message-Info: HWa1W/VX7HsirYZp/BrGOIb83vFmf2OttbFwJ5NtcsDlZO86c9H3gfs//sd1kTFbOghCCGGC58SZC/601zJPvfXjfnHkr45MXqLyP6Pn1TS73Ly83W9kFtzS+vIMrmFVlDRen0y/LsE9hzgbZHtjuBwXpd8O1OammJvz0UyB8ef/VBJLlyuPZUAeeYR0fUVEAJTX8wZWC7IhRfXvtaaeF4R/9k9PYo2q7XXN6WevRWa2M+qloquUtNWowt0ST0a1tGaTfBTyhY/5t3s59AvpQI24AhYKXfa46LTKv2m5/ennoIBOzy1mq5p9LUM/Oz9vDq/YXVM/tUoGg3kH/rmo8aRQbBRyEXCbQocNFSkoiZWocR80oHolkzpPvwicxy4GBCIPDr7FU53d4ZVIE2Kwwf5q/Z8dvAwJ/AWLZa7bIUUEK+t0/LgBW7DvyYCY73fAK2bqMOWQb1Vn4rKmK4QNmB7vFkLJVQ2/uUDe8wf5svu8zj/AKYJRsXyDA+KCzxd1mlmf/EZq9PZp+NZIqqLRJZP32RucJi0Wqkej4NA6wFua0wxgX2Wu7r3qZkEC9jMTu4ARpDCxGtwEbUnwxbHiU+/CTS5L4AQe+URWbpLp/IsEdRSd+REZfyWB3iR9EN3g51eOFkIdiJvNbR8RBHkxwDicWt+nUm82Hcu8FaPMC1iU8BAvyaL/rRgYB7VPC+f/HutRsZ/xaeTwGLQs/lsRVKD/VST9ZZqa/6X/kHLnjinYsldBznIP6R9gqdYeI2Em
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SA1PR11MB6733.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(7916004)(346002)(376002)(136003)(39860400002)(366004)(396003)(451199015)(66476007)(66556008)(38100700002)(8676002)(82960400001)(53546011)(66946007)(316002)(4326008)(44832011)(6506007)(83380400001)(2906002)(41300700001)(9686003)(186003)(6512007)(86362001)(5660300002)(26005)(7416002)(8936002)(6486002)(478600001)(54906003)(6666004)(6916009)(33716001)(41533002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?CVUIclMQSFVc9k8BtHfuDOYWGjdzI36KnpSXS12TFBB6aSgi9Jyc0ubOo278?=
+ =?us-ascii?Q?UTPwGlNv9Idjly/lIgUpH7wXiGCt/xtTWqETaIofBKXA8RL3ZU80Glu2848n?=
+ =?us-ascii?Q?3en33poC5OYWS4lUyv1Aeo4Jm2+/SXJAn/6rDxYBpAVhY0OYBa40G7F+Dd+x?=
+ =?us-ascii?Q?YoUlyTm2xpmkX0T+QnN/bhJitQEWPZe1TXF5hzmmolr+o/Ci4qrskvZc2Cwr?=
+ =?us-ascii?Q?Gpr64uFn223ZkoxSEhHeZZsq+Ca/ujmotd1j6faLGSHleGmDTlagI0yn7pCf?=
+ =?us-ascii?Q?q7UA8C0AKvYwuckgztFATJLnV8OM4ZxMtW29FmCq7Kg7LmgIYEnceiiWi7aC?=
+ =?us-ascii?Q?BKP1/w3yT2+0DUeSgZTMI6Uy17lrsNoMWcxdj4cdym5mXtQFtHYJZIXellMV?=
+ =?us-ascii?Q?YyzJEVkRm6RlJf9ZcUXKG54kS1ZY9wIho0IaXMkp++Hd7ENTa8xzlaLXlEM+?=
+ =?us-ascii?Q?dRHf4vkVAsEFdfz2A+xGuxqA+VdvRLRJauVKBbAjA2fkoI0t9pZIf4WL6tZ3?=
+ =?us-ascii?Q?xqvEdW/682m97y/q5hK28q8q/OKr0K+xp9xSFF65cVrHktOFwV1IQvlOTfgf?=
+ =?us-ascii?Q?dpFSMd/7Ry+YzmuN/l2ltAgsKveq9iFDqenmFDmjvNmSw0zIU+bZbzXP67au?=
+ =?us-ascii?Q?YE7G9IyuPP0VCWrhVYE4rIiRTmz5FcKYd1j+rsOPYDwVfMKShU+PR8sJcTtu?=
+ =?us-ascii?Q?nkqZaSdUrk+wFaK6P3+wKoR+9ER1y0owaepM6oKXoPz2ALmX4pfnYBcr6Nz3?=
+ =?us-ascii?Q?WUQgjntly0fvbEYuXNbwZUaBdgkxn2BrnTNZiexYDmSz2QZFc6bVyZeA6fds?=
+ =?us-ascii?Q?VxzvnhPvTcEXFcdf2y5T9B6de+ET+9pW+tq5MA847b4+QjY+E2a+1DXzjxTt?=
+ =?us-ascii?Q?3hsHVsdkKMylJ7sK1Thl22vxqyRXdMUBDzDF9KnCKQVyaNi/3yBj1Fw5iHNf?=
+ =?us-ascii?Q?npMlILEerzR4wwlEnaWKYRakE56uOc9Y2XjWFA+lmXHP0CH39wIK1BiYhiJJ?=
+ =?us-ascii?Q?86OoeGkGh5mCDelJsFkb7YGcDlXM/5mqlx1pEjVGhA/1SV7VLrTrbxO7IB4s?=
+ =?us-ascii?Q?iMlY/r/79MsWxYhRCaxIosBWaIoN++iaSbm5sqkDyRKU20bIGgWxvWblLZK6?=
+ =?us-ascii?Q?FXZPrhfDMfP5Q/PnXBr4/JR+KvmwYGU/7nUMiNWyjUq47+jiko0FvrBGKhdP?=
+ =?us-ascii?Q?lOU4Mv2cPXwAcMBaAyyZj7PQUvy/ifLhPMQ7MWvs3tjBzmQ6J3cZ1CcN2Mcc?=
+ =?us-ascii?Q?7RNr0CkzLuarJ0FXsaladiEOasdULDQIhePP0BlN7LjNBQLo2vbPjcFDbKGM?=
+ =?us-ascii?Q?eAuEknhyPTkritrWqDAG6Ta2YWrdxknBXDgSERJ0IHvPe9PnKZu5Vb14lvkh?=
+ =?us-ascii?Q?tY4ldNpNUMZker9w2uat7GkA9nwYpSfmxkiq88HAnNy5GmWoPgp64AnFWuAK?=
+ =?us-ascii?Q?CdigwV/WwkAtIGZIseOjSeEYfUh5DgqdSnAXbxj52Rwrjn1ZcRQ73ZuIiINn?=
+ =?us-ascii?Q?jUZ6NHNOeKkXjFwLat7uovIEj48r9cqiCwKgM4QozOx1SrG9kB3gkNeuBnuC?=
+ =?us-ascii?Q?CfMado8Ti5QEvgaX0njp/lU66K06fuOy/oFD0F/9?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 884bd3c7-e2e8-43ff-5c00-08dac2cbfc65
+X-MS-Exchange-CrossTenant-AuthSource: SA1PR11MB6733.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2022 03:30:59.7184
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 18fb3631-90e9-4c9a-ea28-08dac2bcd85d
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000B8E9.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB5595
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: AvlVG+8Dq9ULTZTVTjDjWrAV7Hlc0jPb552RkfgOwX3FNYgSTWMm+zb8N3RxeHcBeXBi8gSw5Eutd1cs5Or0Vw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR11MB4695
+X-OriginatorOrg: intel.com
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI endpoint device such as Xilinx Alveo PCI card maps the register
-spaces from multiple hardware peripherals to its PCI BAR. Normally,
-the PCI core discovers devices and BARs using the PCI enumeration process.
-There is no infrastructure to discover the hardware peripherals that are
-present in a PCI device, and which can be accessed through the PCI BARs.
+On Thu, Nov 03, 2022 at 06:09:16PM +0000, Jonathan Cameron wrote:
+> On Wed, 2 Nov 2022 17:18:33 -0700
+> Davidlohr Bueso <dave@stgolabs.net> wrote:
+> 
+> > On Wed, 02 Nov 2022, Ira Weiny wrote:
+> > 
+> > >On Wed, Nov 02, 2022 at 10:15:24AM -0700, Davidlohr Bueso wrote:  
+> > >> Most CXL features that can have irqs will normally use only the first 16,
+> > >> with the exception of isolation (cxl 3.0), which per the spec is up to 32.  
+> > >
+> > >Dan, Dave, and I were discussing this and we agree.  For now the only things
+> > >people are working on are within the first 16 so why not just request 16 as the
+> > >max for now?  
+> > 
+> > It is a fair compromise, yes.
+> 
+> works for me.
 
-For Alveo PCI card, the card firmware provides a flattened device tree to
-describe the hardware peripherals on its BARs. The Alveo card driver can
-load this flattened device tree and leverage device tree framework to
-generate platform devices for the hardware peripherals eventually.
+I made what I thought would be a simple change to your patch and built this
+into my series.
 
-Apparently, the device tree framework requires a device tree node for the
-PCI device. Thus, it can generate the device tree nodes for hardware
-peripherals underneath. Because PCI is self discoverable bus, there might
-not be a device tree node created for PCI devices. This patch is to add
-support to generate device tree node for PCI devices.
+Unfortunately the following does not work with the current Qemu.
 
-Added a kernel option. When the option is turned on, the kernel will
-generate device tree nodes for PCI bridges unconditionally.
+/*
+ * NOTE: Currently all the functions which are enabled for CXL require their
+ * vectors to be in the first 16.  Allocate this number as the min/max.
+ */
+#define CXL_PCI_REQUIRED_VECTORS 16
 
-Initially, the basic properties are added for the dynamically generated
-device tree nodes.
+...
 
-Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
-Signed-off-by: Sonal Santan <sonal.santan@amd.com>
-Signed-off-by: Max Zhen <max.zhen@amd.com>
-Reviewed-by: Brian Xu <brian.xu@amd.com>
+        rc = pci_alloc_irq_vectors(pdev, CXL_PCI_REQUIRED_VECTORS,            
+                                   CXL_PCI_REQUIRED_VECTORS,
+                                   PCI_IRQ_MSIX | PCI_IRQ_MSI);
+
+This is because Qemu CXL devices only support (with the event changes I have
+made) 8 msg numbers.  So the code fails to allocate any vectors.
+
+I guess I should have known better.  But allocating something less than 16 I
+guess needs to be allowed.
+
+But that also means that beyond knowing _if_ irq's have been enabled I think
+each CXL feature needs to know the number of vectors allocated so they can
+ensure their msg numbers are going to work.
+
+So how about the following as a diff to this patch?
+
+In the event code I have then used the nr_irq_vecs field to determine if I
+should enable the irq for each log.
+
+If you are ok with it I'm going to squash it into your patch and send out a new
+version of the event log series.
+
+Thanks,
+Ira
+
+
+From 105561243c800442a2b7ff39b931e73b0a89bc34 Mon Sep 17 00:00:00 2001
+From: Ira Weiny <ira.weiny@intel.com>
+Date: Wed, 9 Nov 2022 12:35:07 -0800
+Subject: [PATCH] squash: Allocate up to a static 16 vectors.
+
+This covers the current desired features which CXL needs now.
 ---
- drivers/pci/Kconfig         |  12 ++
- drivers/pci/Makefile        |   1 +
- drivers/pci/bus.c           |   2 +
- drivers/pci/msi/irqdomain.c |   6 +-
- drivers/pci/of.c            |  71 ++++++++++
- drivers/pci/of_property.c   | 256 ++++++++++++++++++++++++++++++++++++
- drivers/pci/pci-driver.c    |   3 +-
- drivers/pci/pci.h           |  19 +++
- drivers/pci/remove.c        |   1 +
- 9 files changed, 368 insertions(+), 3 deletions(-)
- create mode 100644 drivers/pci/of_property.c
+ drivers/cxl/cxlmem.h |  4 +--
+ drivers/cxl/cxlpci.h |  6 ++++
+ drivers/cxl/pci.c    | 68 +++++++++-----------------------------------
+ 3 files changed, 22 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 55c028af4bd9..126c31b79718 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -198,6 +198,18 @@ config PCI_HYPERV
- 	  The PCI device frontend driver allows the kernel to import arbitrary
- 	  PCI devices from a PCI backend to support PCI driver domains.
+diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
+index 78ff6dca3c4b..03da4f8f74d3 100644
+--- a/drivers/cxl/cxlmem.h
++++ b/drivers/cxl/cxlmem.h
+@@ -212,7 +212,7 @@ struct cxl_endpoint_dvsec_info {
+  * @info: Cached DVSEC information about the device.
+  * @serial: PCIe Device Serial Number
+  * @doe_mbs: PCI DOE mailbox array
+- * @has_irq: PCIe MSI-X/MSI support
++ * @nr_irq_vecs: Number of MSI-X/MSI vectors available
+  * @mbox_send: @dev specific transport for transmitting mailbox commands
+  *
+  * See section 8.2.9.5.2 Capacity Configuration and Label Storage for
+@@ -249,7 +249,7 @@ struct cxl_dev_state {
  
-+config PCI_DYNAMIC_OF_NODES
-+	bool "Device tree node for PCI devices"
-+	depends on OF
-+	select OF_DYNAMIC
-+	help
-+	  This option enables support for generating device tree nodes for some
-+	  PCI devices. Thus, the driver of this kind can load and overlay
-+	  flattened device tree for its downstream devices.
-+
-+	  Once this option is selected, the device tree nodes will be generated
-+	  for all PCI bridges.
-+
- choice
- 	prompt "PCI Express hierarchy optimization setting"
- 	default PCIE_BUS_DEFAULT
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 2680e4c92f0a..cc8b4e01e29d 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -32,6 +32,7 @@ obj-$(CONFIG_PCI_P2PDMA)	+= p2pdma.o
- obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
- obj-$(CONFIG_VGA_ARB)		+= vgaarb.o
- obj-$(CONFIG_PCI_DOE)		+= doe.o
-+obj-$(CONFIG_PCI_DYNAMIC_OF_NODES) += of_property.o
+ 	struct xarray doe_mbs;
  
- # Endpoint library must be initialized before its users
- obj-$(CONFIG_PCI_ENDPOINT)	+= endpoint/
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 3cef835b375f..8507cc32b61d 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -316,6 +316,8 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	 */
- 	pcibios_bus_add_device(dev);
- 	pci_fixup_device(pci_fixup_final, dev);
-+	if (pci_is_bridge(dev))
-+		of_pci_make_dev_node(dev);
- 	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
- 	pci_bridge_d3_update(dev);
-diff --git a/drivers/pci/msi/irqdomain.c b/drivers/pci/msi/irqdomain.c
-index e9cf318e6670..eeaf44169bfd 100644
---- a/drivers/pci/msi/irqdomain.c
-+++ b/drivers/pci/msi/irqdomain.c
-@@ -230,8 +230,10 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+-	bool has_irq;
++	int nr_irq_vecs;
  
- 	of_node = irq_domain_get_of_node(domain);
--	rid = of_node ? of_msi_map_id(&pdev->dev, of_node, rid) :
--			iort_msi_map_id(&pdev->dev, rid);
-+	if (of_node && !of_node_check_flag(of_node, OF_DYNAMIC))
-+		rid = of_msi_map_id(&pdev->dev, of_node, rid);
-+	else
-+		rid = iort_msi_map_id(&pdev->dev, rid);
+ 	int (*mbox_send)(struct cxl_dev_state *cxlds, struct cxl_mbox_cmd *cmd);
+ };
+diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
+index eec597dbe763..b7f4e2f417d3 100644
+--- a/drivers/cxl/cxlpci.h
++++ b/drivers/cxl/cxlpci.h
+@@ -53,6 +53,12 @@
+ #define	    CXL_DVSEC_REG_LOCATOR_BLOCK_ID_MASK			GENMASK(15, 8)
+ #define     CXL_DVSEC_REG_LOCATOR_BLOCK_OFF_LOW_MASK		GENMASK(31, 16)
  
- 	return rid;
- }
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 196834ed44fe..fb60b04f0b93 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -469,6 +469,8 @@ static int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *
- 		} else {
- 			/* We found a P2P bridge, check if it has a node */
- 			ppnode = pci_device_to_OF_node(ppdev);
-+			if (of_node_check_flag(ppnode, OF_DYNAMIC))
-+				ppnode = NULL;
- 		}
- 
- 		/*
-@@ -599,6 +601,75 @@ int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge)
- 	return pci_parse_request_of_pci_ranges(dev, bridge);
- }
- 
-+#if IS_ENABLED(CONFIG_PCI_DYNAMIC_OF_NODES)
-+
-+void of_pci_remove_node(struct pci_dev *pdev)
-+{
-+	struct device_node *dt_node;
-+
-+	dt_node = pci_device_to_OF_node(pdev);
-+	if (!dt_node || !of_node_check_flag(dt_node, OF_DYNAMIC))
-+		return;
-+	pdev->dev.of_node = NULL;
-+
-+	of_destroy_node(dt_node);
-+}
-+
-+void of_pci_make_dev_node(struct pci_dev *pdev)
-+{
-+	struct device_node *parent, *dt_node = NULL;
-+	const char *pci_type = "dev";
-+	struct of_changeset *cset;
-+	const char *full_name;
-+	int ret;
-+
-+	/*
-+	 * If there is already a device tree node linked to this device,
-+	 * return immediately.
-+	 */
-+	if (pci_device_to_OF_node(pdev))
-+		return;
-+
-+	/* Check if there is device tree node for parent device */
-+	if (!pdev->bus->self)
-+		parent = pdev->bus->dev.of_node;
-+	else
-+		parent = pdev->bus->self->dev.of_node;
-+	if (!parent)
-+		return;
-+
-+	if (pci_is_bridge(pdev))
-+		pci_type = "pci";
-+
-+	full_name = kasprintf(GFP_KERNEL, "%pOF/%s@%x,%x", parent, pci_type,
-+			      PCI_SLOT(pdev->devfn), PCI_FUNC(pdev->devfn));
-+	if (!full_name)
-+		goto failed;
-+
-+	dt_node = of_create_node(parent, full_name, &cset);
-+	if (!dt_node)
-+		goto failed;
-+	kfree(full_name);
-+
-+	ret = of_pci_add_properties(pdev, cset, dt_node);
-+	if (ret)
-+		goto failed;
-+
-+	ret = of_changeset_apply(cset);
-+	if (ret)
-+		goto failed;
-+
-+	pdev->dev.of_node = dt_node;
-+
-+	return;
-+
-+failed:
-+	if (dt_node)
-+		of_destroy_node(dt_node);
-+	kfree(full_name);
-+}
-+#endif
-+
- #endif /* CONFIG_PCI */
- 
- /**
-diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
-new file mode 100644
-index 000000000000..cc66fa7517e0
---- /dev/null
-+++ b/drivers/pci/of_property.c
-@@ -0,0 +1,256 @@
-+// SPDX-License-Identifier: GPL-2.0+
 +/*
-+ * Copyright (C) 2022, Advanced Micro Devices, Inc.
++ * NOTE: Currently all the functions which are enabled for CXL require their
++ * vectors to be in the first 16.  Use this as the max.
 + */
++#define CXL_PCI_REQUIRED_VECTORS 16
 +
-+#include <linux/pci.h>
-+#include <linux/of.h>
-+#include <linux/bitfield.h>
-+#include <linux/bits.h>
-+#include "pci.h"
-+
-+struct of_pci_addr_pair {
-+	__be32		phys_hi;
-+	__be32		phys_mid;
-+	__be32		phys_lo;
-+	__be32		size_hi;
-+	__be32		size_lo;
-+};
-+
-+struct of_pci_range {
-+	__be32		child_addr_hi;
-+	__be32		child_addr_mid;
-+	__be32		child_addr_lo;
-+	__be32		parent_addr_hi;
-+	__be32		parent_addr_mid;
-+	__be32		parent_addr_lo;
-+	__be32		size_hi;
-+	__be32		size_lo;
-+};
-+
-+#define OF_PCI_ADDR_SPACE_CONFIG	0x0
-+#define OF_PCI_ADDR_SPACE_IO		0x1
-+#define OF_PCI_ADDR_SPACE_MEM32		0x2
-+#define OF_PCI_ADDR_SPACE_MEM64		0x3
-+
-+#define OF_PCI_ADDR_FIELD_NONRELOC	BIT(31)
-+#define OF_PCI_ADDR_FIELD_SS		GENMASK(25, 24)
-+#define OF_PCI_ADDR_FIELD_PREFETCH	BIT(30)
-+#define OF_PCI_ADDR_FIELD_BUS		GENMASK(23, 16)
-+#define OF_PCI_ADDR_FIELD_DEV		GENMASK(15, 11)
-+#define OF_PCI_ADDR_FIELD_FUNC		GENMASK(10, 8)
-+#define OF_PCI_ADDR_FIELD_REG		GENMASK(7, 0)
-+
-+#define OF_PCI_ADDR_HI			GENMASK_ULL(63, 32)
-+#define OF_PCI_ADDR_LO			GENMASK_ULL(31, 0)
-+#define OF_PCI_SIZE_HI			GENMASK_ULL(63, 32)
-+#define OF_PCI_SIZE_LO			GENMASK_ULL(31, 0)
-+
-+#define OF_PCI_ADDRESS_CELLS		3
-+#define OF_PCI_SIZE_CELLS		2
-+
-+enum of_pci_prop_compatible {
-+	PROP_COMPAT_PCI_VVVV_DDDD,
-+	PROP_COMPAT_PCICLASS_CCSSPP,
-+	PROP_COMPAT_PCICLASS_CCSS,
-+	PROP_COMPAT_NUM,
-+};
-+
-+static int of_pci_prop_device_type(struct pci_dev *pdev,
-+				   struct of_changeset *ocs,
-+				   struct device_node *np)
-+{
-+	return of_changeset_add_prop_string(ocs, np, "device_type", "pci");
-+}
-+
-+static int of_pci_prop_address_cells(struct pci_dev *pdev,
-+				     struct of_changeset *ocs,
-+				     struct device_node *np)
-+{
-+	return of_changeset_add_prop_u32(ocs, np, "#address_cells",
-+					 OF_PCI_ADDRESS_CELLS);
-+}
-+
-+static int of_pci_prop_size_cells(struct pci_dev *pdev,
-+				  struct of_changeset *ocs,
-+				  struct device_node *np)
-+{
-+	return of_changeset_add_prop_u32(ocs, np, "#size_cells",
-+					 OF_PCI_SIZE_CELLS);
-+}
-+
-+static int of_pci_set_addr_flags(struct resource *res, u32 *addr_hi)
-+{
-+	u32 ss;
-+
-+	if (res->flags & IORESOURCE_IO)
-+		ss = OF_PCI_ADDR_SPACE_IO;
-+	else if (res->flags & IORESOURCE_MEM_64)
-+		ss = OF_PCI_ADDR_SPACE_MEM64;
-+	else if (res->flags & IORESOURCE_MEM)
-+		ss = OF_PCI_ADDR_SPACE_MEM32;
-+	else
-+		return -EINVAL;
-+
-+	*addr_hi &= ~(OF_PCI_ADDR_FIELD_SS | OF_PCI_ADDR_FIELD_PREFETCH);
-+	if (res->flags & IORESOURCE_PREFETCH)
-+		*addr_hi |= OF_PCI_ADDR_FIELD_PREFETCH;
-+
-+	*addr_hi |= ss;
-+
-+	return 0;
-+}
-+
-+static int of_pci_prop_ranges(struct pci_dev *pdev, struct of_changeset *ocs,
-+			      struct device_node *np)
-+{
-+	struct of_pci_range rp[PCI_BRIDGE_RESOURCE_NUM];
-+	struct resource *res;
-+	int i = 0, j, ret;
-+	u64 val64;
-+	u32 val;
-+
-+	res = &pdev->resource[PCI_BRIDGE_RESOURCES];
-+	for (j = 0; j < PCI_BRIDGE_RESOURCE_NUM; j++) {
-+		if (!resource_size(&res[j]))
-+			continue;
-+
-+		val = OF_PCI_ADDR_FIELD_NONRELOC;
-+		if (of_pci_set_addr_flags(&res[j], &val))
-+			continue;
-+
-+		rp[i].parent_addr_hi = cpu_to_be32(val);
-+
-+		val64 = res[j].start;
-+		rp[i].parent_addr_mid =
-+			cpu_to_be32(FIELD_GET(OF_PCI_ADDR_HI, val64));
-+		rp[i].parent_addr_lo =
-+			cpu_to_be32(FIELD_GET(OF_PCI_ADDR_LO, val64));
-+
-+		val64 = resource_size(&res[j]);
-+		rp[i].size_hi = cpu_to_be32(FIELD_GET(OF_PCI_SIZE_HI, val64));
-+		rp[i].size_lo = cpu_to_be32(FIELD_GET(OF_PCI_SIZE_LO, val64));
-+
-+		rp[i].child_addr_hi = rp[i].parent_addr_hi;
-+		rp[i].child_addr_mid = rp[i].parent_addr_mid;
-+		rp[i].child_addr_lo = rp[i].parent_addr_lo;
-+		i++;
-+	}
-+
-+	ret = of_changeset_add_prop_u32_array(ocs, np, "ranges", (u32 *)rp,
-+					      i * sizeof(*rp) / sizeof(u32));
-+
-+	return ret;
-+}
-+
-+static int of_pci_prop_reg(struct pci_dev *pdev, struct of_changeset *ocs,
-+			   struct device_node *np)
-+{
-+	struct of_pci_addr_pair *reg;
-+	int i = 1, resno, ret = 0;
-+	u32 reg_val, base_addr;
-+	resource_size_t sz;
-+
-+	reg = kzalloc(sizeof(*reg) * (PCI_STD_NUM_BARS + 1), GFP_KERNEL);
-+	if (!reg)
-+		return -ENOMEM;
-+
-+	reg_val = FIELD_PREP(OF_PCI_ADDR_FIELD_SS, OF_PCI_ADDR_SPACE_CONFIG) |
-+		FIELD_PREP(OF_PCI_ADDR_FIELD_BUS, pdev->bus->number) |
-+		FIELD_PREP(OF_PCI_ADDR_FIELD_DEV, PCI_SLOT(pdev->devfn)) |
-+		FIELD_PREP(OF_PCI_ADDR_FIELD_FUNC, PCI_FUNC(pdev->devfn));
-+	reg[0].phys_hi = cpu_to_be32(reg_val);
-+
-+	base_addr = PCI_BASE_ADDRESS_0;
-+	for (resno = PCI_STD_RESOURCES; resno <= PCI_STD_RESOURCE_END;
-+	     resno++, base_addr += 4) {
-+		sz = pci_resource_len(pdev, resno);
-+		if (!sz)
-+			continue;
-+
-+		ret = of_pci_set_addr_flags(&pdev->resource[resno], &reg_val);
-+		if (!ret)
-+			continue;
-+
-+		reg_val &= ~OF_PCI_ADDR_FIELD_REG;
-+		reg_val |= FIELD_PREP(OF_PCI_ADDR_FIELD_REG, base_addr);
-+		reg[i].phys_hi = cpu_to_be32(reg_val);
-+		reg[i].size_hi = cpu_to_be32(FIELD_GET(OF_PCI_SIZE_HI, sz));
-+		reg[i].size_lo = cpu_to_be32(FIELD_GET(OF_PCI_SIZE_LO, sz));
-+		i++;
-+	}
-+
-+	ret = of_changeset_add_prop_u32_array(ocs, np, "reg", (u32 *)reg,
-+					      i * sizeof(*reg) / sizeof(u32));
-+	kfree(reg);
-+
-+	return ret;
-+}
-+
-+static int of_pci_prop_compatible(struct pci_dev *pdev,
-+				  struct of_changeset *ocs,
-+				  struct device_node *np)
-+{
-+	const char *compat_strs[PROP_COMPAT_NUM] = { 0 };
-+	int i, ret;
-+
-+	compat_strs[PROP_COMPAT_PCI_VVVV_DDDD] =
-+		kasprintf(GFP_KERNEL, "pci%x,%x", pdev->vendor, pdev->device);
-+	compat_strs[PROP_COMPAT_PCICLASS_CCSSPP] =
-+		kasprintf(GFP_KERNEL, "pciclass,%06x", pdev->class);
-+	compat_strs[PROP_COMPAT_PCICLASS_CCSS] =
-+		kasprintf(GFP_KERNEL, "pciclass,%04x", pdev->class >> 8);
-+
-+	ret = of_changeset_add_prop_string_array(ocs, np, "compatible",
-+						 compat_strs, PROP_COMPAT_NUM);
-+	for (i = 0; i < PROP_COMPAT_NUM; i++)
-+		kfree(compat_strs[i]);
-+
-+	return ret;
-+}
-+
-+static int (*of_pci_endpoint_props[])(struct pci_dev *pdev,
-+				      struct of_changeset *ocs,
-+				      struct device_node *np) = {
-+	of_pci_prop_reg,
-+	of_pci_prop_compatible,
-+	NULL
-+};
-+
-+static int (*of_pci_bridge_props[])(struct pci_dev *pdev,
-+				    struct of_changeset *ocs,
-+				    struct device_node *np) = {
-+	of_pci_prop_device_type,
-+	of_pci_prop_address_cells,
-+	of_pci_prop_size_cells,
-+	of_pci_prop_ranges,
-+	of_pci_prop_reg,
-+	of_pci_prop_compatible,
-+	NULL
-+};
-+
-+int of_pci_add_properties(struct pci_dev *pdev, struct of_changeset *ocs,
-+			  struct device_node *np)
-+{
-+	int (**prop_func)(struct pci_dev *pdev, struct of_changeset *ocs,
-+			  struct device_node *np);
-+	int i, ret;
-+
-+	if (pci_is_bridge(pdev))
-+		prop_func = of_pci_bridge_props;
-+	else
-+		prop_func = of_pci_endpoint_props;
-+
-+	for (i = 0; prop_func[i]; i++) {
-+		ret = prop_func[i](pdev, ocs, np);
-+		if (ret) {
-+			/*
-+			 * The added properties will be released when the
-+			 * changeset is destroyed.
-+			 */
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 49238ddd39ee..1540c4c9a770 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1628,7 +1628,8 @@ static int pci_dma_configure(struct device *dev)
- 	bridge = pci_get_host_bridge_device(to_pci_dev(dev));
- 
- 	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
--	    bridge->parent->of_node) {
-+	    bridge->parent->of_node &&
-+	    !of_node_check_flag(bridge->parent->of_node, OF_DYNAMIC)) {
- 		ret = of_dma_configure(dev, bridge->parent->of_node, true);
- 	} else if (has_acpi_companion(bridge)) {
- 		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 785f31086313..bd81dc4ca04f 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -678,6 +678,25 @@ static inline int devm_of_pci_bridge_init(struct device *dev, struct pci_host_br
- 
- #endif /* CONFIG_OF */
- 
-+struct of_changeset;
-+
-+#ifdef CONFIG_PCI_DYNAMIC_OF_NODES
-+void of_pci_make_dev_node(struct pci_dev *pdev);
-+void of_pci_remove_node(struct pci_dev *pdev);
-+int of_pci_add_properties(struct pci_dev *pdev, struct of_changeset *ocs,
-+			  struct device_node *np);
-+#else
-+static inline void
-+of_pci_make_dev_node(struct pci_dev *pdev)
-+{
-+}
-+
-+static inline void
-+of_pci_remove_node(struct pci_dev *pdev)
-+{
-+}
-+#endif /* CONFIG_PCI_DYNAMIC_OF_NODES */
-+
- #ifdef CONFIG_PCIEAER
- void pci_no_aer(void);
- void pci_aer_init(struct pci_dev *dev);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 4c54c75050dc..0eaa9d9a3609 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -23,6 +23,7 @@ static void pci_stop_dev(struct pci_dev *dev)
- 		device_release_driver(&dev->dev);
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
-+		of_pci_remove_node(dev);
- 
- 		pci_dev_assign_added(dev, false);
+ /* Register Block Identifier (RBI) */
+ enum cxl_regloc_type {
+ 	CXL_REGLOC_RBI_EMPTY = 0,
+diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+index 9dc32b802594..e0d511575b45 100644
+--- a/drivers/cxl/pci.c
++++ b/drivers/cxl/pci.c
+@@ -428,71 +428,34 @@ static void devm_cxl_pci_create_doe(struct cxl_dev_state *cxlds)
  	}
+ }
+ 
+-/**
+- * struct cxl_irq_cap - CXL feature that is capable of receiving MSI-X/MSI irqs.
+- *
+- * @name: Name of the device/component generating this interrupt.
+- * @get_max_msgnum: Get the feature's largest interrupt message number.  If the
+- *		    feature does not have the Interrupt Supported bit set, then
+- *		    return -1.
+- */
+-struct cxl_irq_cap {
+-	const char *name;
+-	int (*get_max_msgnum)(struct cxl_dev_state *cxlds);
+-};
+-
+-static const struct cxl_irq_cap cxl_irq_cap_table[] = {
+-	NULL
+-};
+-
+ static void cxl_pci_free_irq_vectors(void *data)
+ {
+ 	pci_free_irq_vectors(data);
+ }
+ 
+-/*
+- * Attempt to allocate the largest amount of necessary vectors.
+- *
+- * Returns 0 upon a successful allocation of *all* vectors, or a
+- * negative value otherwise.
+- */
+-static int cxl_pci_alloc_irq_vectors(struct cxl_dev_state *cxlds)
++static void cxl_pci_alloc_irq_vectors(struct cxl_dev_state *cxlds)
+ {
+ 	struct device *dev = cxlds->dev;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+-	int rc, i, vectors = -1;
+-
+-	for (i = 0; i < ARRAY_SIZE(cxl_irq_cap_table); i++) {
+-		int irq;
+-
+-		if (!cxl_irq_cap_table[i].get_max_msgnum)
+-			continue;
+-
+-		irq = cxl_irq_cap_table[i].get_max_msgnum(cxlds);
+-		vectors = max_t(int, irq, vectors);
+-	}
+-
+-	/*
+-	 * Semantically lack of irq support is not an error, but we
+-	 * still fail to allocate, so return negative.
+-	 */
+-	if (vectors == -1)
+-		return -1;
++	int nvecs;
++	int rc;
+ 
+-	vectors++;
+-	rc = pci_alloc_irq_vectors(pdev, vectors, vectors,
++	nvecs = pci_alloc_irq_vectors(pdev, 1, CXL_PCI_REQUIRED_VECTORS,
+ 				   PCI_IRQ_MSIX | PCI_IRQ_MSI);
+-	if (rc < 0)
+-		return rc;
+-
+-	if (rc != vectors) {
++	if (nvecs < 0) {
+ 		dev_dbg(dev, "Not enough interrupts; use polling instead.\n");
++		return;
++	}
++
++	rc = devm_add_action_or_reset(dev, cxl_pci_free_irq_vectors, pdev);
++	if (rc) {
++		dev_dbg(dev, "Device managed call failed; interrupts disabled.\n");
+ 		/* some got allocated, clean them up */
+ 		cxl_pci_free_irq_vectors(pdev);
+-		return -ENOSPC;
++		return;
+ 	}
+ 
+-	return devm_add_action_or_reset(dev, cxl_pci_free_irq_vectors, pdev);
++	cxlds->nr_irq_vecs = nvecs;
+ }
+ 
+ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+@@ -561,10 +524,7 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (rc)
+ 		return rc;
+ 
+-	if (!cxl_pci_alloc_irq_vectors(cxlds)) {
+-		cxlds->has_irq = true;
+-	} else
+-		cxlds->has_irq = false;
++	cxl_pci_alloc_irq_vectors(cxlds);
+ 
+ 	cxlmd = devm_cxl_add_memdev(cxlds);
+ 	if (IS_ERR(cxlmd))
+
+base-commit: aae703b02f92bde9264366c545e87cec451de471
+prerequisite-patch-id: e3c882f3fce0872c2259538d00ad798236ec251f
+prerequisite-patch-id: a8faa71e6d79cb30eae9b863349f0cb5ffa55b05
+prerequisite-patch-id: f8e6edeb4a1d8bc4b34a509cb3d4a625becdf1b3
+prerequisite-patch-id: 665a2b5af761a3f50e20da2fa8e5fdc9df13969d
+prerequisite-patch-id: 5cd9f56597f9c8637201193849f68811a94d2309
+prerequisite-patch-id: 89be9f2bd84118682b9b37e4f3a6e057fd4ad0d6
+prerequisite-patch-id: 3de731a18a28c32572bf65f38e8eb2fb927e4f56
 -- 
-2.17.1
+2.37.2
 
