@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0F3DC43217
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Nov 2022 19:53:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F6DC43219
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Nov 2022 19:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230320AbiKJTxf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Nov 2022 14:53:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46694 "EHLO
+        id S230467AbiKJTxe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Nov 2022 14:53:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231207AbiKJTxc (ORCPT
+        with ESMTP id S230422AbiKJTxc (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2022 14:53:32 -0500
-Received: from resqmta-h1p-028593.sys.comcast.net (resqmta-h1p-028593.sys.comcast.net [IPv6:2001:558:fd02:2446::7])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 583B548752
+Received: from resdmta-h1p-028597.sys.comcast.net (resdmta-h1p-028597.sys.comcast.net [IPv6:2001:558:fd02:2446::d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EDBA47336
         for <linux-pci@vger.kernel.org>; Thu, 10 Nov 2022 11:53:19 -0800 (PST)
 Received: from resomta-h1p-027912.sys.comcast.net ([96.102.179.201])
-        by resqmta-h1p-028593.sys.comcast.net with ESMTP
-        id tC1fouOrcAj3ltDZYogyp9; Thu, 10 Nov 2022 19:50:48 +0000
+        by resdmta-h1p-028597.sys.comcast.net with ESMTP
+        id tCeRofXGGwwPvtDZYoNduH; Thu, 10 Nov 2022 19:50:48 +0000
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=comcastmailservice.net; s=20211018a; t=1668109848;
-        bh=uZ0DssvlJMaoYvlaYu/eog/eR5+SHYKYU+32z9Q9ZIw=;
+        bh=Way0DAlL2ACj9a+XKDlJAFMBT/Xv2jTSB4J5Mymp4EY=;
         h=Received:Received:From:To:Subject:Date:Message-Id:MIME-Version:
          Xfinity-Spam-Result;
-        b=PT9AMIyO//Us2zznBwAkRFZmqnBpwM7r/fJVUPDr09cbr2RuT5W76cRToqYxdZTia
-         p8hrX1iCoHzLn/XZqJoG3XQ5yNb6qSXF8zQsDE8ebmrE4uZBw+2gjOdmCEujRPwfee
-         gV+sNurSQexmqbUg5InLvPA/KYLE0W8zblYl40uY5jSg8YpXjQxMlErf/icFBuuOlg
-         Ni+Zt8LOjDu3EBOGdJVshYFwquv0AFlgH+wuJ2DdzjQ7JMZh9kPw0iJPM/73mC6llG
-         tAh74e+PmV3+cDI99gmy2XFl0fRe17yvJNCqvS/2vkuZlNGP1WvNiRzSGUUJDaLkW3
-         2AgfX9Y6RaFkg==
+        b=Jd6DCUAG1EkFhnB4AtYmQsa2gV+f9s1dU+Qe29DVxNiCCp1H1JKQ325+arJXxBaP5
+         rM0o/eaJ35AcKCpgUsZ4GYYiXedDt3XPoBojxGbI9WXoPzAB+2Hu5W+f+p/OJSYE2m
+         WugCtQmLeouW7Qdni7pvejpSQfID/9HWDqZ7B8JSyoxyosJpHZ4QPPdmPTRp+wzgJs
+         hZgCi2xhs8qxi1uwIEYWFaOdIq+4tomSW5ii12obDBNy3x8BlCKQjNR/75A/AcSRLs
+         oaua5iy6WkCNy9i8wKIa7VmQPCjdygtLARKu1ZNzpkYoYt/5fIw9hwSR4ep6BQ3F2E
+         GSQcsqLRQKaGw==
 Received: from jderrick-mobl4.amr.corp.intel.com ([71.205.181.50])
         by resomta-h1p-027912.sys.comcast.net with ESMTPA
-        id tDZ4oZTHiVTvltDZFokli2; Thu, 10 Nov 2022 19:50:30 +0000
-X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvgedrfeeggddufeduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomheplfhonhgrthhhrghnucffvghrrhhitghkuceojhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvqeenucggtffrrghtthgvrhhnpedtteeljeffgfffveehhfetveefuedvheevffffhedtjeeuvdevgfeftddtheeftdenucfkphepjedurddvtdehrddukedurdehtdenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhephhgvlhhopehjuggvrhhrihgtkhdqmhhosghlgedrrghmrhdrtghorhhprdhinhhtvghlrdgtohhmpdhinhgvthepjedurddvtdehrddukedurdehtddpmhgrihhlfhhrohhmpehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvhdpnhgspghrtghpthhtohepkedprhgtphhtthhopehvihguhigrshesnhhvihguihgrrdgtohhmpdhrtghpthhtohepmhgrnhhisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlohhrvghniihordhpihgvrhgrlhhishhisegrrhhmrdgtohhmpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinh
+        id tDZ4oZTHiVTvltDZDoklht; Thu, 10 Nov 2022 19:50:28 +0000
+X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvgedrfeeggddufeduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomheplfhonhgrthhhrghnucffvghrrhhitghkuceojhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvqeenucggtffrrghtthgvrhhnpedtteeljeffgfffveehhfetveefuedvheevffffhedtjeeuvdevgfeftddtheeftdenucfkphepjedurddvtdehrddukedurdehtdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehjuggvrhhrihgtkhdqmhhosghlgedrrghmrhdrtghorhhprdhinhhtvghlrdgtohhmpdhinhgvthepjedurddvtdehrddukedurdehtddpmhgrihhlfhhrohhmpehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvhdpnhgspghrtghpthhtohepkedprhgtphhtthhopehvihguhigrshesnhhvihguihgrrdgtohhmpdhrtghpthhtohepmhgrnhhisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlohhrvghniihordhpihgvrhgrlhhishhisegrrhhmrdgtohhmpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinh
  hugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehluhhkrghsseifuhhnnhgvrhdruggvpdhrtghpthhtohepphgrlhhisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvh
 X-Xfinity-VMeta: sc=-100.00;st=legit
 From:   Jonathan Derrick <jonathan.derrick@linux.dev>
@@ -42,9 +42,9 @@ Cc:     Manivannan Sadhasivam <mani@kernel.org>,
         <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         Jonathan Derrick <jonathan.derrick@linux.dev>
-Subject: [PATCH v2 3/7] PCI: pciehp: Expose the poll loop to other drivers
-Date:   Thu, 10 Nov 2022 12:50:11 -0700
-Message-Id: <20221110195015.207-4-jonathan.derrick@linux.dev>
+Subject: [PATCH v2 1/7] PCI: Allow for indirecting capability registers
+Date:   Thu, 10 Nov 2022 12:50:09 -0700
+Message-Id: <20221110195015.207-2-jonathan.derrick@linux.dev>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20221110195015.207-1-jonathan.derrick@linux.dev>
 References: <20221110195015.207-1-jonathan.derrick@linux.dev>
@@ -54,63 +54,109 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Abstract the poll loop into an 'events pending' check and a 'handle
-events' method in order to allow another driver to call the polling
-loop.
+Allow another driver to provide alternative operations when doing
+capability register reads and writes. The intention is to have
+pcie_bridge_emul provide alternate handlers for the Slot Capabilities, Slot
+Control, and Slot Status registers. Alternate handlers can return > 0 if
+unhandled, errno on error, or 0 on success. This could potentially be
+used to handle quirks in a different manner.
 
 Signed-off-by: Jonathan Derrick <jonathan.derrick@linux.dev>
 ---
- drivers/pci/hotplug/pciehp.h     |  2 ++
- drivers/pci/hotplug/pciehp_hpc.c | 16 +++++++++++++---
- 2 files changed, 15 insertions(+), 3 deletions(-)
+ drivers/pci/access.c | 29 +++++++++++++++++++++++++++++
+ include/linux/pci.h  | 11 +++++++++++
+ 2 files changed, 40 insertions(+)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index e0a614acee05..e221f5d12ad5 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -157,6 +157,8 @@ struct controller {
- #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
- #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 708c7529647f..dbfea6824bd4 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -424,6 +424,17 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
+ 		return ret;
+ 	}
  
-+bool pciehp_events_pending(struct controller *ctrl);
-+void pciehp_handle_events(struct controller *ctrl);
- void pciehp_request(struct controller *ctrl, int action);
- void pciehp_handle_button_press(struct controller *ctrl);
- void pciehp_handle_disable_request(struct controller *ctrl);
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 040ae076ec0e..f711448e0a70 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -764,6 +764,17 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 	return ret;
++	if (dev->caps_rw_ops) {
++		u32 reg;
++		ret = dev->caps_rw_ops->read(dev, pos, 4, &reg);
++		if (!ret) {
++			*val = reg & 0xffff;
++			return ret;
++		} else if (ret < 0) {
++			return ret;
++		}
++	}
++
+ 	/*
+ 	 * For Functions that do not implement the Slot Capabilities,
+ 	 * Slot Status, and Slot Control registers, these spaces must
+@@ -459,6 +470,12 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
+ 		return ret;
+ 	}
+ 
++	if (dev->caps_rw_ops) {
++		ret = dev->caps_rw_ops->read(dev, pos, 4, val);
++		if (ret <= 0)
++			return ret;
++	}
++
+ 	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
+ 	    pos == PCI_EXP_SLTSTA)
+ 		*val = PCI_EXP_SLTSTA_PDS;
+@@ -475,6 +492,12 @@ int pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
+ 	if (!pcie_capability_reg_implemented(dev, pos))
+ 		return 0;
+ 
++	if (dev->caps_rw_ops) {
++		int ret = dev->caps_rw_ops->write(dev, pos, 2, val);
++		if (ret <= 0)
++			return ret;
++	}
++
+ 	return pci_write_config_word(dev, pci_pcie_cap(dev) + pos, val);
  }
+ EXPORT_SYMBOL(pcie_capability_write_word);
+@@ -487,6 +510,12 @@ int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
+ 	if (!pcie_capability_reg_implemented(dev, pos))
+ 		return 0;
  
-+bool pciehp_events_pending(struct controller *ctrl)
-+{
-+	return pciehp_isr(IRQ_NOTCONNECTED, ctrl) == IRQ_WAKE_THREAD ||
-+	       atomic_read(&ctrl->pending_events);
-+}
++	if (dev->caps_rw_ops) {
++		int ret = dev->caps_rw_ops->write(dev, pos, 4, val);
++		if (ret <= 0)
++			return ret;
++	}
 +
-+void pciehp_handle_events(struct controller *ctrl)
-+{
-+	pciehp_ist(IRQ_NOTCONNECTED, ctrl);
-+}
+ 	return pci_write_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+ }
+ EXPORT_SYMBOL(pcie_capability_write_dword);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2bda4a4e47e8..ff47ef83ab38 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -311,6 +311,15 @@ struct pci_vpd {
+ 	u8		cap;
+ };
+ 
++/*
++ * Capability reads/write redirect
++ * Returns 0, errno, or > 0 if unhandled
++ */
++struct caps_rw_ops {
++	int (*read)(struct pci_dev *dev, int pos, int len, u32 *val);
++	int (*write)(struct pci_dev *dev, int pos, int len, u32 val);
++};
 +
- static int pciehp_poll(void *data)
- {
- 	struct controller *ctrl = data;
-@@ -772,9 +783,8 @@ static int pciehp_poll(void *data)
+ struct irq_affinity;
+ struct pcie_link_state;
+ struct pci_sriov;
+@@ -523,6 +532,8 @@ struct pci_dev {
  
- 	while (!kthread_should_stop()) {
- 		/* poll for interrupt events or user requests */
--		while (pciehp_isr(IRQ_NOTCONNECTED, ctrl) == IRQ_WAKE_THREAD ||
--		       atomic_read(&ctrl->pending_events))
--			pciehp_ist(IRQ_NOTCONNECTED, ctrl);
-+		while (pciehp_events_pending(ctrl))
-+			pciehp_handle_events(ctrl);
+ 	/* These methods index pci_reset_fn_methods[] */
+ 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
++
++	struct caps_rw_ops *caps_rw_ops;
+ };
  
- 		if (pciehp_poll_time <= 0 || pciehp_poll_time > 60)
- 			pciehp_poll_time = 2; /* clamp to sane value */
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
 -- 
 2.30.2
 
