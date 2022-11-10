@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F6DC43219
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Nov 2022 19:53:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2793AC4167B
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Nov 2022 19:53:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230467AbiKJTxe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Nov 2022 14:53:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46690 "EHLO
+        id S229566AbiKJTxh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Nov 2022 14:53:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230422AbiKJTxc (ORCPT
+        with ESMTP id S231250AbiKJTxc (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2022 14:53:32 -0500
 Received: from resdmta-h1p-028597.sys.comcast.net (resdmta-h1p-028597.sys.comcast.net [IPv6:2001:558:fd02:2446::d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EDBA47336
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BBDA4876B
         for <linux-pci@vger.kernel.org>; Thu, 10 Nov 2022 11:53:19 -0800 (PST)
 Received: from resomta-h1p-027912.sys.comcast.net ([96.102.179.201])
         by resdmta-h1p-028597.sys.comcast.net with ESMTP
-        id tCeRofXGGwwPvtDZYoNduH; Thu, 10 Nov 2022 19:50:48 +0000
+        id t6rzofAFOwwPvtDZYoNduM; Thu, 10 Nov 2022 19:50:48 +0000
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=comcastmailservice.net; s=20211018a; t=1668109848;
-        bh=Way0DAlL2ACj9a+XKDlJAFMBT/Xv2jTSB4J5Mymp4EY=;
+        bh=zccPbXOs+Je83CkegCNzQLUUfDjEU/+RJ69WLlkTgqU=;
         h=Received:Received:From:To:Subject:Date:Message-Id:MIME-Version:
          Xfinity-Spam-Result;
-        b=Jd6DCUAG1EkFhnB4AtYmQsa2gV+f9s1dU+Qe29DVxNiCCp1H1JKQ325+arJXxBaP5
-         rM0o/eaJ35AcKCpgUsZ4GYYiXedDt3XPoBojxGbI9WXoPzAB+2Hu5W+f+p/OJSYE2m
-         WugCtQmLeouW7Qdni7pvejpSQfID/9HWDqZ7B8JSyoxyosJpHZ4QPPdmPTRp+wzgJs
-         hZgCi2xhs8qxi1uwIEYWFaOdIq+4tomSW5ii12obDBNy3x8BlCKQjNR/75A/AcSRLs
-         oaua5iy6WkCNy9i8wKIa7VmQPCjdygtLARKu1ZNzpkYoYt/5fIw9hwSR4ep6BQ3F2E
-         GSQcsqLRQKaGw==
+        b=uwSnCEFGMYmYTLR0v1pyiI3AmVjuQb4WmLo5iG7dW3tnavD0UI6rBA8UhnUu5uaXZ
+         V6M69kun0e6IejQaVyOed8ax6kznH8ckki2Yx+aRX9zAOfAXZPT7K3tJE0ln1dbQ31
+         WlCquJDELMi2jTt6XeVYEO2LDsLPRyLY3DcZ0sWOmKDaBqBfFYEgTq/M2uU4CjHSUU
+         9yw21qpZy1dosVLJvU6otraw38F5+KFdvf8HkVdzFJx2H26DaGRQJM9enfMIL3B4pi
+         IKq6MYAwPLEZLxMA3Iu2mTkPupdN1IzIP+oFmIU192kz6mc4WgRhckGeNv5vvv3Shb
+         RZYwsQox+dqhA==
 Received: from jderrick-mobl4.amr.corp.intel.com ([71.205.181.50])
         by resomta-h1p-027912.sys.comcast.net with ESMTPA
-        id tDZ4oZTHiVTvltDZDoklht; Thu, 10 Nov 2022 19:50:28 +0000
-X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvgedrfeeggddufeduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomheplfhonhgrthhhrghnucffvghrrhhitghkuceojhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvqeenucggtffrrghtthgvrhhnpedtteeljeffgfffveehhfetveefuedvheevffffhedtjeeuvdevgfeftddtheeftdenucfkphepjedurddvtdehrddukedurdehtdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehjuggvrhhrihgtkhdqmhhosghlgedrrghmrhdrtghorhhprdhinhhtvghlrdgtohhmpdhinhgvthepjedurddvtdehrddukedurdehtddpmhgrihhlfhhrohhmpehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvhdpnhgspghrtghpthhtohepkedprhgtphhtthhopehvihguhigrshesnhhvihguihgrrdgtohhmpdhrtghpthhtohepmhgrnhhisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlohhrvghniihordhpihgvrhgrlhhishhisegrrhhmrdgtohhmpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinh
+        id tDZ4oZTHiVTvltDZIokliE; Thu, 10 Nov 2022 19:50:32 +0000
+X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvgedrfeeggddufeduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomheplfhonhgrthhhrghnucffvghrrhhitghkuceojhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvqeenucggtffrrghtthgvrhhnpedtteeljeffgfffveehhfetveefuedvheevffffhedtjeeuvdevgfeftddtheeftdenucfkphepjedurddvtdehrddukedurdehtdenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhephhgvlhhopehjuggvrhhrihgtkhdqmhhosghlgedrrghmrhdrtghorhhprdhinhhtvghlrdgtohhmpdhinhgvthepjedurddvtdehrddukedurdehtddpmhgrihhlfhhrohhmpehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvhdpnhgspghrtghpthhtohepkedprhgtphhtthhopehvihguhigrshesnhhvihguihgrrdgtohhmpdhrtghpthhtohepmhgrnhhisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlohhrvghniihordhpihgvrhgrlhhishhisegrrhhmrdgtohhmpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinh
  hugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehluhhkrghsseifuhhnnhgvrhdruggvpdhrtghpthhtohepphgrlhhisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvh
 X-Xfinity-VMeta: sc=-100.00;st=legit
 From:   Jonathan Derrick <jonathan.derrick@linux.dev>
@@ -42,9 +42,9 @@ Cc:     Manivannan Sadhasivam <mani@kernel.org>,
         <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
         =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         Jonathan Derrick <jonathan.derrick@linux.dev>
-Subject: [PATCH v2 1/7] PCI: Allow for indirecting capability registers
-Date:   Thu, 10 Nov 2022 12:50:09 -0700
-Message-Id: <20221110195015.207-2-jonathan.derrick@linux.dev>
+Subject: [PATCH v2 5/7] PCI: pci-bridge-emul: Provide a helper to set behavior
+Date:   Thu, 10 Nov 2022 12:50:13 -0700
+Message-Id: <20221110195015.207-6-jonathan.derrick@linux.dev>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20221110195015.207-1-jonathan.derrick@linux.dev>
 References: <20221110195015.207-1-jonathan.derrick@linux.dev>
@@ -54,109 +54,72 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Allow another driver to provide alternative operations when doing
-capability register reads and writes. The intention is to have
-pcie_bridge_emul provide alternate handlers for the Slot Capabilities, Slot
-Control, and Slot Status registers. Alternate handlers can return > 0 if
-unhandled, errno on error, or 0 on success. This could potentially be
-used to handle quirks in a different manner.
+Add a handler to set behavior of a PCI or PCIe register. Add the
+appropriate enums to specify the register's Read-Only, Read-Write, and
+Write-1-to-Clear behaviors.
 
 Signed-off-by: Jonathan Derrick <jonathan.derrick@linux.dev>
 ---
- drivers/pci/access.c | 29 +++++++++++++++++++++++++++++
- include/linux/pci.h  | 11 +++++++++++
- 2 files changed, 40 insertions(+)
+ drivers/pci/pci-bridge-emul.c | 19 +++++++++++++++++++
+ drivers/pci/pci-bridge-emul.h | 10 ++++++++++
+ 2 files changed, 29 insertions(+)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 708c7529647f..dbfea6824bd4 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -424,6 +424,17 @@ int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
- 		return ret;
- 	}
- 
-+	if (dev->caps_rw_ops) {
-+		u32 reg;
-+		ret = dev->caps_rw_ops->read(dev, pos, 4, &reg);
-+		if (!ret) {
-+			*val = reg & 0xffff;
-+			return ret;
-+		} else if (ret < 0) {
-+			return ret;
-+		}
-+	}
-+
- 	/*
- 	 * For Functions that do not implement the Slot Capabilities,
- 	 * Slot Status, and Slot Control registers, these spaces must
-@@ -459,6 +470,12 @@ int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
- 		return ret;
- 	}
- 
-+	if (dev->caps_rw_ops) {
-+		ret = dev->caps_rw_ops->read(dev, pos, 4, val);
-+		if (ret <= 0)
-+			return ret;
-+	}
-+
- 	if (pci_is_pcie(dev) && pcie_downstream_port(dev) &&
- 	    pos == PCI_EXP_SLTSTA)
- 		*val = PCI_EXP_SLTSTA_PDS;
-@@ -475,6 +492,12 @@ int pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
- 	if (!pcie_capability_reg_implemented(dev, pos))
- 		return 0;
- 
-+	if (dev->caps_rw_ops) {
-+		int ret = dev->caps_rw_ops->write(dev, pos, 2, val);
-+		if (ret <= 0)
-+			return ret;
-+	}
-+
- 	return pci_write_config_word(dev, pci_pcie_cap(dev) + pos, val);
- }
- EXPORT_SYMBOL(pcie_capability_write_word);
-@@ -487,6 +510,12 @@ int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
- 	if (!pcie_capability_reg_implemented(dev, pos))
- 		return 0;
- 
-+	if (dev->caps_rw_ops) {
-+		int ret = dev->caps_rw_ops->write(dev, pos, 4, val);
-+		if (ret <= 0)
-+			return ret;
-+	}
-+
- 	return pci_write_config_dword(dev, pci_pcie_cap(dev) + pos, val);
- }
- EXPORT_SYMBOL(pcie_capability_write_dword);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2bda4a4e47e8..ff47ef83ab38 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -311,6 +311,15 @@ struct pci_vpd {
- 	u8		cap;
+diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
+index 9334b2dd4764..3c1a683ece66 100644
+--- a/drivers/pci/pci-bridge-emul.c
++++ b/drivers/pci/pci-bridge-emul.c
+@@ -46,6 +46,25 @@ struct pci_bridge_reg_behavior {
+ 	u32 w1c;
  };
  
-+/*
-+ * Capability reads/write redirect
-+ * Returns 0, errno, or > 0 if unhandled
-+ */
-+struct caps_rw_ops {
-+	int (*read)(struct pci_dev *dev, int pos, int len, u32 *val);
-+	int (*write)(struct pci_dev *dev, int pos, int len, u32 val);
++void pci_bridge_emul_set_reg_behavior(struct pci_bridge_emul *bridge,
++				      bool pcie, int reg, u32 val,
++				      enum pci_bridge_emul_reg_behavior type)
++{
++	struct pci_bridge_reg_behavior *behavior;
++
++	if (pcie)
++		behavior = &bridge->pcie_cap_regs_behavior[reg / 4];
++	else
++		behavior = &bridge->pci_regs_behavior[reg / 4];
++
++	if (type == PCI_BRIDGE_EMUL_REG_BEHAVIOR_RO)
++		behavior->ro = val;
++	else if (type == PCI_BRIDGE_EMUL_REG_BEHAVIOR_RW)
++		behavior->rw = val;
++	else /* PCI_BRIDGE_EMUL_REG_BEHAVIOR_W1C */
++		behavior->w1c = val;
++}
++
+ static const
+ struct pci_bridge_reg_behavior pci_regs_behavior[PCI_STD_HEADER_SIZEOF / 4] = {
+ 	[PCI_VENDOR_ID / 4] = { .ro = ~0 },
+diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
+index 2a0e59c7f0d9..b2401d58518c 100644
+--- a/drivers/pci/pci-bridge-emul.h
++++ b/drivers/pci/pci-bridge-emul.h
+@@ -72,6 +72,12 @@ struct pci_bridge_emul;
+ typedef enum { PCI_BRIDGE_EMUL_HANDLED,
+ 	       PCI_BRIDGE_EMUL_NOT_HANDLED } pci_bridge_emul_read_status_t;
+ 
++enum pci_bridge_emul_reg_behavior {
++	PCI_BRIDGE_EMUL_REG_BEHAVIOR_RO,
++	PCI_BRIDGE_EMUL_REG_BEHAVIOR_RW,
++	PCI_BRIDGE_EMUL_REG_BEHAVIOR_W1C,
 +};
 +
- struct irq_affinity;
- struct pcie_link_state;
- struct pci_sriov;
-@@ -523,6 +532,8 @@ struct pci_dev {
+ struct pci_bridge_emul_ops {
+ 	/*
+ 	 * Called when reading from the regular PCI bridge
+@@ -161,4 +167,8 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
+ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+ 			       int size, u32 value);
  
- 	/* These methods index pci_reset_fn_methods[] */
- 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
++void pci_bridge_emul_set_reg_behavior(struct pci_bridge_emul *bridge,
++				      bool pcie, int reg, u32 val,
++				      enum pci_bridge_emul_reg_behavior type);
 +
-+	struct caps_rw_ops *caps_rw_ops;
- };
- 
- static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+ #endif /* __PCI_BRIDGE_EMUL_H__ */
 -- 
 2.30.2
 
