@@ -2,144 +2,196 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0886C4321E
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Nov 2022 19:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EA3EC43217
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Nov 2022 20:17:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229757AbiKJTxi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Nov 2022 14:53:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46770 "EHLO
+        id S231734AbiKJURI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Nov 2022 15:17:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231262AbiKJTxc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2022 14:53:32 -0500
-Received: from resdmta-h1p-028598.sys.comcast.net (resdmta-h1p-028598.sys.comcast.net [IPv6:2001:558:fd02:2446::e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72B0B48770
-        for <linux-pci@vger.kernel.org>; Thu, 10 Nov 2022 11:53:19 -0800 (PST)
-Received: from resomta-h1p-027912.sys.comcast.net ([96.102.179.201])
-        by resdmta-h1p-028598.sys.comcast.net with ESMTP
-        id tC1fo6ojOpchHtDZYoLN1D; Thu, 10 Nov 2022 19:50:48 +0000
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=comcastmailservice.net; s=20211018a; t=1668109848;
-        bh=NLTClUwuOqPb+DvZnmkPWSVY7cPj58FgQv8QIi+tOjY=;
-        h=Received:Received:From:To:Subject:Date:Message-Id:MIME-Version:
-         Xfinity-Spam-Result;
-        b=kAyw+IFh8QzXJh/D8lEvh5kTU9KLSZ9sd88a2FE5QRToVPVeC3zvTpav5/+TTuOBZ
-         rYHNyRVNziuwpmr+2XSQKxLjlJ+qq71P97i4izyad/0/MsCUo189Q0WD11mZuch4Iq
-         PgT9AKTf0xdOAhSBfwuyAt11rKUeZCpsGAfTU2mS1CxniLSwrA/aYpaMZZC4h/I9ha
-         d3dkTcHXVPIqa3MZ/jT5Ybvd6dB8FT4bjOHlyjiVY0ROKd8ffNhc+nbEP+KuAs0C4I
-         Tg/O353UDIXTyYc6geY28fOBhN4k7Y5vzpQR8ewMr+6FcBmWja02okYVEq35Pd5xfZ
-         3eXf3sqvIjmag==
-Received: from jderrick-mobl4.amr.corp.intel.com ([71.205.181.50])
-        by resomta-h1p-027912.sys.comcast.net with ESMTPA
-        id tDZ4oZTHiVTvltDZEoklhz; Thu, 10 Nov 2022 19:50:29 +0000
-X-Xfinity-VAAS: gggruggvucftvghtrhhoucdtuddrgedvgedrfeeggddufeduucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuvehomhgtrghsthdqtfgvshhipdfqfgfvpdfpqffurfetoffkrfenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomheplfhonhgrthhhrghnucffvghrrhhitghkuceojhhonhgrthhhrghnrdguvghrrhhitghksehlihhnuhigrdguvghvqeenucggtffrrghtthgvrhhnpedtteeljeffgfffveehhfetveefuedvheevffffhedtjeeuvdevgfeftddtheeftdenucfkphepjedurddvtdehrddukedurdehtdenucevlhhushhtvghrufhiiigvpedunecurfgrrhgrmhephhgvlhhopehjuggvrhhrihgtkhdqmhhosghlgedrrghmrhdrtghorhhprdhinhhtvghlrdgtohhmpdhinhgvthepjedurddvtdehrddukedurdehtddpmhgrihhlfhhrohhmpehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvhdpnhgspghrtghpthhtohepkedprhgtphhtthhopehvihguhigrshesnhhvihguihgrrdgtohhmpdhrtghpthhtohepmhgrnhhisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlohhrvghniihordhpihgvrhgrlhhishhisegrrhhmrdgtohhmpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinh
- hugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehluhhkrghsseifuhhnnhgvrhdruggvpdhrtghpthhtohepphgrlhhisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehjohhnrghthhgrnhdruggvrhhrihgtkheslhhinhhugidruggvvh
-X-Xfinity-VMeta: sc=-100.00;st=legit
-From:   Jonathan Derrick <jonathan.derrick@linux.dev>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     Manivannan Sadhasivam <mani@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        <linux-pci@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Jonathan Derrick <jonathan.derrick@linux.dev>
-Subject: [PATCH v2 2/7] PCI: Add pcie_port_slot_emulated stub
-Date:   Thu, 10 Nov 2022 12:50:10 -0700
-Message-Id: <20221110195015.207-3-jonathan.derrick@linux.dev>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20221110195015.207-1-jonathan.derrick@linux.dev>
-References: <20221110195015.207-1-jonathan.derrick@linux.dev>
+        with ESMTP id S230012AbiKJURH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Nov 2022 15:17:07 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DBAB53EED
+        for <linux-pci@vger.kernel.org>; Thu, 10 Nov 2022 12:16:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1668111362;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PkpNiTy02Kl92bzGrUkAFIk/Fo/N4N8FwYswcHibr9s=;
+        b=F75NC5ncTK85u2hlvmi4F7IcjisMee9DXcF+tsL62Z/TVM5kBnzK+c3pgmGV9ClA7nlRuq
+        uBr+x5LFMXFCtDzMdadB7jSgwTsogr7bNi4PQj70Gyu3TUHIARvTL0bjAA/cEouVpV+LOz
+        tCDHYN4dFydhPlx/qXTj6/vgQIG+dm4=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-111-MhbvQ4BRM-uROACk5N8wqg-1; Thu, 10 Nov 2022 15:16:01 -0500
+X-MC-Unique: MhbvQ4BRM-uROACk5N8wqg-1
+Received: by mail-wr1-f69.google.com with SMTP id s7-20020adfa287000000b00236c367fcddso635840wra.6
+        for <linux-pci@vger.kernel.org>; Thu, 10 Nov 2022 12:16:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PkpNiTy02Kl92bzGrUkAFIk/Fo/N4N8FwYswcHibr9s=;
+        b=L4t2K5yujqXXI7/LU5djbrEgEq8Uv2r5ko/T+8+xcNefIJnlSVwwFvKU/XWD/gMO74
+         Cz3DGEOYyMRn4ID8b23n1fiLXb7BsRxWTTwoDZ+IdmrVE1Zj+LKCY9bxEn2aQYxD4j4B
+         1epS3WB4plYP4mUgCquUzB9E9UyoY9tbUX/jazXIfPKuZrJWlJrJ9P1kokh3Es657JJh
+         T/5izjx0VASUsVGhEXxtR2LvK7a58BN+VEiTqXdLmPH2uqq7TIJETWqs7UNmTHb+v69G
+         HANz6amULJf4bbwMaXtsnwsRHxj6g/cKajxcZAS7Q/G8CZos6Czry5wgWnoI+kr5zuMM
+         1cwg==
+X-Gm-Message-State: ACrzQf1vpB4i5OYuIJWCDWrEEOeClBoPWyL7+VhdOJGspV+CrxTRltBC
+        JTimtgIWFVcUXBJ425TTB0xidIzELMzhUx8IN/yNOQzprjaudWjKE+YTrGjddqDJQosz22tnqjU
+        0ZlliLRnya4+R4hJdoNyR
+X-Received: by 2002:a5d:59ae:0:b0:236:6861:a89d with SMTP id p14-20020a5d59ae000000b002366861a89dmr43774499wrr.437.1668111359830;
+        Thu, 10 Nov 2022 12:15:59 -0800 (PST)
+X-Google-Smtp-Source: AMsMyM6S3ENztY75wDSVKFfDNx9eFsb13CNbSGZAMisdkZIMlXDXXSCYTktknl3xbMoyl64iAmazgg==
+X-Received: by 2002:a5d:59ae:0:b0:236:6861:a89d with SMTP id p14-20020a5d59ae000000b002366861a89dmr43774490wrr.437.1668111359531;
+        Thu, 10 Nov 2022 12:15:59 -0800 (PST)
+Received: from redhat.com ([2.52.3.250])
+        by smtp.gmail.com with ESMTPSA id p16-20020adfe610000000b002364c77bc96sm86110wrm.33.2022.11.10.12.15.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 10 Nov 2022 12:15:58 -0800 (PST)
+Date:   Thu, 10 Nov 2022 15:15:55 -0500
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Wei Gong <gongwei833x@gmail.com>, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] pci: fix device presence detection for VFs
+Message-ID: <20221110144700-mutt-send-email-mst@kernel.org>
+References: <20221108044819.GA861843@zander>
+ <20221110193547.GA631336@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221110193547.GA631336@bhelgaas>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the checks to allow an emulated slot. An emulated slot will use
-native Hotplug, AER, and PME services. It also needs to specify itself
-as a hotplug bridge in order for bridge sizing to account for hotplug
-reserved windows.
+On Thu, Nov 10, 2022 at 01:35:47PM -0600, Bjorn Helgaas wrote:
+> Hi Wei,
+> 
+> I can't quite parse this.  Is the problem that you had some virtio I/O
+> in progress, you wrote "0" to /sys/.../sriov_numvfs, and the virtio
+> I/O operation hangs?
 
-Signed-off-by: Jonathan Derrick <jonathan.derrick@linux.dev>
----
- drivers/pci/pci-acpi.c          | 3 +++
- drivers/pci/pcie/portdrv_core.c | 9 ++++++---
- drivers/pci/probe.c             | 2 +-
- include/linux/pci.h             | 2 ++
- 4 files changed, 12 insertions(+), 4 deletions(-)
+I think so. I also think that just attempting to
+remove the module or to unbind the driver from it
+will have the same effect.
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index a46fec776ad7..77a3c9e39966 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -798,6 +798,9 @@ bool pciehp_is_native(struct pci_dev *bridge)
- 	if (!IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
- 		return false;
- 
-+	if (pcie_port_slot_emulated(bridge))
-+		return true;
-+
- 	pcie_capability_read_dword(bridge, PCI_EXP_SLTCAP, &slot_cap);
- 	if (!(slot_cap & PCI_EXP_SLTCAP_HPC))
- 		return false;
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 1ac7fec47d6f..b3c1e7d4ff10 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -209,7 +209,8 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	int services = 0;
- 
- 	if (dev->is_hotplug_bridge &&
--	    (pcie_ports_native || host->native_pcie_hotplug)) {
-+	    (pcie_ports_native || pcie_port_slot_emulated(dev) ||
-+	     host->native_pcie_hotplug)) {
- 		services |= PCIE_PORT_SERVICE_HP;
- 
- 		/*
-@@ -222,14 +223,16 @@ static int get_port_device_capability(struct pci_dev *dev)
- 
- #ifdef CONFIG_PCIEAER
- 	if (dev->aer_cap && pci_aer_available() &&
--	    (pcie_ports_native || host->native_aer))
-+	    (pcie_ports_native || pcie_port_slot_emulated(dev) ||
-+	     host->native_aer))
- 		services |= PCIE_PORT_SERVICE_AER;
- #endif
- 
- 	/* Root Ports and Root Complex Event Collectors may generate PMEs */
- 	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
- 	     pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
--	    (pcie_ports_native || host->native_pme)) {
-+	    (pcie_ports_native || pcie_port_slot_emulated(dev) ||
-+	     host->native_pme)) {
- 		services |= PCIE_PORT_SERVICE_PME;
- 
- 		/*
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b66fa42c4b1f..86ac4d223eba 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1574,7 +1574,7 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
- 	u32 reg32;
- 
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32);
--	if (reg32 & PCI_EXP_SLTCAP_HPC)
-+	if (reg32 & PCI_EXP_SLTCAP_HPC || pcie_port_slot_emulated(pdev))
- 		pdev->is_hotplug_bridge = 1;
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ff47ef83ab38..09f704337955 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1655,6 +1655,8 @@ extern bool pcie_ports_native;
- #define pcie_ports_native	false
- #endif
- 
-+#define pcie_port_slot_emulated(dev) false
-+
- #define PCIE_LINK_STATE_L0S		BIT(0)
- #define PCIE_LINK_STATE_L1		BIT(1)
- #define PCIE_LINK_STATE_CLKPM		BIT(2)
+> Is there any indication to the user, e.g., softlockup oops?
+> 
+> More questions below.
+> 
+> On Tue, Nov 08, 2022 at 04:52:16AM +0000, Wei Gong wrote:
+> 
+> > according to sriov's protocol specification vendor_id and
+> > device_id field in all VFs return FFFFh when read
+> > so when vf devs is in the pci_device_is_present,it will be
+> > misjudged as surprise removeal
+> > 
+> > when io is issued on the vf, normally disable virtio_blk vf
+> > devs,at this time the disable opration will hang. and virtio
+> > blk dev io hang.
+> >
+> > task:bash            state:D stack:    0 pid: 1773 ppid:  1241 flags:0x00004002
+> > Call Trace:
+> >  <TASK>
+> >  __schedule+0x2ee/0x900
+> >  schedule+0x4f/0xc0
+> >  blk_mq_freeze_queue_wait+0x69/0xa0
+> >  ? wait_woken+0x80/0x80
+> >  blk_mq_freeze_queue+0x1b/0x20
+> >  blk_cleanup_queue+0x3d/0xd0
+> >  virtblk_remove+0x3c/0xb0 [virtio_blk]
+> >  virtio_dev_remove+0x4b/0x80
+> >  device_release_driver_internal+0x103/0x1d0
+> >  device_release_driver+0x12/0x20
+> >  bus_remove_device+0xe1/0x150
+> >  device_del+0x192/0x3f0
+> >  device_unregister+0x1b/0x60
+> >  unregister_virtio_device+0x18/0x30
+> >  virtio_pci_remove+0x41/0x80
+> >  pci_device_remove+0x3e/0xb0
+> >  device_release_driver_internal+0x103/0x1d0
+> >  device_release_driver+0x12/0x20
+> >  pci_stop_bus_device+0x79/0xa0
+> >  pci_stop_and_remove_bus_device+0x13/0x20
+> >  pci_iov_remove_virtfn+0xc5/0x130
+> >  ? pci_get_device+0x4a/0x60
+> >  sriov_disable+0x33/0xf0
+> >  pci_disable_sriov+0x26/0x30
+> >  virtio_pci_sriov_configure+0x6f/0xa0
+> >  sriov_numvfs_store+0x104/0x140
+> >  dev_attr_store+0x17/0x30
+> >  sysfs_kf_write+0x3e/0x50
+> >  kernfs_fop_write_iter+0x138/0x1c0
+> >  new_sync_write+0x117/0x1b0
+> >  vfs_write+0x185/0x250
+> >  ksys_write+0x67/0xe0
+> >  __x64_sys_write+0x1a/0x20
+> >  do_syscall_64+0x61/0xb0
+> >  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> > RIP: 0033:0x7f21bd1f3ba4
+> > RSP: 002b:00007ffd34a24188 EFLAGS: 00000202 ORIG_RAX: 0000000000000001
+> > RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f21bd1f3ba4
+> > RDX: 0000000000000002 RSI: 0000560305040800 RDI: 0000000000000001
+> > RBP: 0000560305040800 R08: 000056030503fd50 R09: 0000000000000073
+> > R10: 00000000ffffffff R11: 0000000000000202 R12: 0000000000000002
+> > R13: 00007f21bd2de760 R14: 00007f21bd2da5e0 R15: 00007f21bd2d99e0
+> > 
+> > when virtio_blk is performing io, as long as there two stages of:
+> > 1. dispatch io. queue_usage_counter++;
+> > 2. io is completed after receiving the interrupt. queue_usage_counter--;
+> > 
+> > disable virtio_blk vfs:
+> >   if(!pci_device_is_present(pci_dev))
+> >     virtio_break_device(&vp_dev->vdev);
+> > virtqueue for vf devs will be marked broken.
+> > the interrupt notification io is end. Since it is judged that the
+> > virtqueue has been marked as broken, the completed io will not be
+> > performed.
+> > So queue_usage_counter will not be cleared.
+> > when the disk is removed at the same time, the queue will be frozen,
+> > and you must wait for the queue_usage_counter to be cleared.
+> > Therefore, it leads to the removeal of hang.
+> 
+> I want to follow along in the code, but I need some hints.
+> 
+> "queue_usage_counter" looks like it's supposed to be a symbol, but I
+> can't find it.
+
+I think it refers to q->q_usage_counter in blk core.
+
+> Where (which function) is the I/O dispatched and queue_usage_counter
+> incremented?  Where is queue_usage_counter decremented?
+> 
+> Prior to this change pci_device_is_present(VF) returned "false"
+> (because the VF Vendor ID is 0xffff); after the change it will return
+> "true" (because it will look at the PF Vendor ID instead).
+> 
+> Previously virtio_pci_remove() called virtio_break_device().  I guess
+> that meant the virtio I/O operation will never be completed?
+> 
+> But if we don't call virtio_break_device(), the virtio I/O operation
+> *will* be completed?
+> 
+> Bjorn
+
+It's completed anyway - nothing special happened at the device
+level - but driver does not detect it.
+
+Calling virtio_break_device will mark all queues as broken, as
+a result attempts to check whether operation completed
+will return false.
+
+This probably means we need to work on handling surprise removal
+better in virtio blk - since it looks like actual suprise
+removal will hang too. But that I think is a separate issue.
+
 -- 
-2.30.2
+MST
 
