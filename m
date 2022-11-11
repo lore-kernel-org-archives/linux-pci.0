@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E015C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:08:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44672C43219
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:08:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234372AbiKKOH6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:07:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52488 "EHLO
+        id S234380AbiKKOIA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:08:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234667AbiKKOHU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:20 -0500
+        with ESMTP id S234671AbiKKOHV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:21 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B58D8C5AB;
-        Fri, 11 Nov 2022 06:00:05 -0800 (PST)
-Message-ID: <20221111135206.912428659@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1609678790;
+        Fri, 11 Nov 2022 06:00:06 -0800 (PST)
+Message-ID: <20221111135207.141746268@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175138;
+        s=2020; t=1668175144;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=R8X/63rO52IiLYrJWmoKP44/nsK9YU8Bw0NawruV3mM=;
-        b=Y52rqaQEowoXK/iAaqizlNsaSh0oGgd/a2CSd9kNrKCUACWq3K4y1MEHQ79xbRBO5GCPZX
-        zHR8gAjtWFOfTwqZPAyo+PRVSm0yyRrVGts7i5VCy8S6uP8t8KG2MQTaDjThMpwx3gPGdT
-        euDKXvr7PHJIDZx17ucFSDMJaaIXb8Fc4L5uIxNx6FoI6/fEDYlktY3r4vonDErIbR6XAX
-        P3NRkGqZNOJqNI02KbNNmLNMSm7Z8/7tr1sGevwdBR4QfrQQShrB2aXLIiCv19gHce9O0N
-        X4KnpFldpX19pJfEpfAYtCnKXFaJHhWCt9rhhOx6EaqmnP9aVwcopECtTEmIDw==
+         references:references; bh=Hc23zLtu5ea7f06ZX0yBhdnBmnsVxTw6REgVU2riWiY=;
+        b=42yudJdWm1GBF0qeQko2qjcCBQGWp704OoCaA2Duj3ffaAdFxluaieurmyeFgW5WD30f+F
+        zQQXERPvDKRIJvi6UXCcIdh0uUxCn/nGVXElRX2YuSU1NBQV3WCo6RV7e8QsTnzOPAATI9
+        yH0zr8Eg/mWgalGYNtsdRjDyx0e/JTWGqM7+zjUDraTvZEZ3dWB/HOaRyYsVrNkl/EaMbj
+        BoemjMTtfiihowzI6O/G7RC0d3nNmmFxbObT8I2hZNgceq/RHKfiXf38doz8ofcZNMODLm
+        zQvX0Y0b2qNlhDJLD7YBtBlSqN0hLHbiGXMrPznt/u1rFQEmUi446qgs30YXEQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175138;
+        s=2020e; t=1668175144;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=R8X/63rO52IiLYrJWmoKP44/nsK9YU8Bw0NawruV3mM=;
-        b=XFYTHHgf0o68nsruCxfjPdNiXmxoJFLRr9y1Civxd+7+YxtAi9o894oPl4FN6Y7obsuevL
-        ifNGvA2yZQ0UewAw==
+         references:references; bh=Hc23zLtu5ea7f06ZX0yBhdnBmnsVxTw6REgVU2riWiY=;
+        b=+1YN7GL1MYKxIXx1Jhob9oeQmeNJ0NZMOkpPvjqPzysl1i/27WnN0OQS3FyrNWMZxOz22E
+        +XljTMitC5BJ7OBQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,96 +50,228 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 29/33] PCI/MSI: Provide pci_ims_alloc/free_irq()
+Subject: [patch 33/33] irqchip: Add IDXD Interrupt Message Store driver
 References: <20221111133158.196269823@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:58:57 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:59:03 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Single vector allocation which allocates the next free index in the IMS
-space. The free function releases.
+Provide a driver for the Intel IDXD IMS implementation. The implementation
+uses a large message store array in device memory.
 
-All allocated vectors are released also via pci_free_vectors() which is
-also releasing MSI/MSI-X vectors.
+The IMS domain implementation is minimal and just provides the required
+irq_chip callbacks and one domain callback which prepares the MSI
+descriptor which is allocated by the core for easy usage in the irq_chip
+callbacks.
+
+The necessary iobase is stored in the irqdomain and the PASID which is
+required for operation is handed in via msi_dev_cookie in the allocation
+function.
+
+Not much to see here. A few lines of code and a filled in template is all
+what's needed.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/api.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h   |    3 +++
- 2 files changed, 53 insertions(+)
+ drivers/irqchip/Kconfig                    |    7 +
+ drivers/irqchip/Makefile                   |    1 
+ drivers/irqchip/irq-pci-intel-idxd.c       |  143 +++++++++++++++++++++++++++++
+ include/linux/irqchip/irq-pci-intel-idxd.h |   22 ++++
+ 4 files changed, 173 insertions(+)
 
---- a/drivers/pci/msi/api.c
-+++ b/drivers/pci/msi/api.c
-@@ -361,6 +361,56 @@ const struct cpumask *pci_irq_get_affini
- EXPORT_SYMBOL(pci_irq_get_affinity);
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -695,4 +695,11 @@ config SUNPLUS_SP7021_INTC
+ 	  chained controller, routing all interrupt source in P-Chip to
+ 	  the primary controller on C-Chip.
  
- /**
-+ * pci_ims_alloc_irq - Allocate an interrupt on a PCI/IMS interrupt domain
-+ * @dev:	The PCI device to operate on
-+ * @cookie:	Pointer to an IMS implementation specific device cookie
-+ *		(PASID, queue id, pointer...). The cookie content is stored
-+ *		in the MSI descriptor for the interrupt chip callbacks or
-+ *		domain specific setup functions
-+ * @affdesc:	Optional pointer to an interrupt affinity descriptor
-+ *
-+ * Return: A struct msi_map
-+ *
-+ *	On success msi_map::index contains the allocated index (>= 0) and
-+ *	msi_map::virq the allocated Linux interrupt number (> 0).
-+ *
-+ *	On fail msi_map::index contains the error code and msi_map::virq
-+ *	is set to 0.
-+ *
-+ * Note: There is no index for IMS allocations as IMS is an implementation
-+ *	 specific storage and does not have any direct associations between
-+ *	 index, which might be a pure software construct, and device
-+ *	 functionality. This association is established by the driver either
-+ *	 via the index - if there is a hardware table - or in case of purely
-+ *	 software managed IMS implementation the association happens via
-+ *	 the irq_write_msi_msg() callback of the implementation specific
-+ *	 interrupt chip, which utilizes the provided @cookie to store the MSI
-+ *	 message in the appropriate place.
++config PCI_INTEL_IDXD_IMS
++	tristate "Intel IDXD Interrupt Message Store controller"
++	depends on PCI_MSI
++	help
++	  Support for Intel IDXD IMS Interrupt Message Store controller
++	  with IMS slot storage in a slot array in device memory
++
+ endmenu
+--- a/drivers/irqchip/Makefile
++++ b/drivers/irqchip/Makefile
+@@ -121,3 +121,4 @@ obj-$(CONFIG_IRQ_IDT3243X)		+= irq-idt32
+ obj-$(CONFIG_APPLE_AIC)			+= irq-apple-aic.o
+ obj-$(CONFIG_MCHP_EIC)			+= irq-mchp-eic.o
+ obj-$(CONFIG_SUNPLUS_SP7021_INTC)	+= irq-sp7021-intc.o
++obj-$(CONFIG_PCI_INTEL_IDXD_IMS)	+= irq-pci-intel-idxd.o
+--- /dev/null
++++ b/drivers/irqchip/irq-pci-intel-idxd.c
+@@ -0,0 +1,143 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Interrupt chip and domain for Intel IDXD with hardware array based
++ * interrupt message store (IMS).
 + */
-+struct msi_map pci_ims_alloc_irq(struct pci_dev *dev, union msi_dev_cookie *cookie,
-+				 const struct irq_affinity_desc *affdesc)
-+{
-+	return msi_domain_alloc_irq_at(&dev->dev, MSI_SECONDARY_DOMAIN, MSI_ANY_INDEX,
-+				       affdesc, cookie);
-+}
-+EXPORT_SYMBOL_GPL(pci_ims_alloc_irq);
++#include <linux/device.h>
++#include <linux/irq.h>
++#include <linux/irqdomain.h>
++#include <linux/msi.h>
++#include <linux/pci.h>
++
++#include <linux/irqchip/irq-pci-intel-idxd.h>
++
++MODULE_LICENSE("GPL");
 +
 +/**
-+ * pci_ims_free_irq - Allocate an interrupt on a PCI/IMS interrupt domain
-+ *		      which was allocated via pci_ims_alloc_irq()
-+ * @dev:	The PCI device to operate on
-+ * @map:	A struct msi_map describing the interrupt to free as
-+ *		returned from pci_ims_alloc_irq()
++ * struct ims_slot - The hardware layout of a slot in the memory table
++ * @address_lo:	Lower 32bit address
++ * @address_hi:	Upper 32bit address
++ * @data:	Message data
++ * @ctrl:	Control word
 + */
-+void pci_ims_free_irq(struct pci_dev *dev, struct msi_map map)
++struct ims_slot {
++	u32	address_lo;
++	u32	address_hi;
++	u32	data;
++	u32	ctrl;
++} __packed;
++
++/* Bit to mask the interrupt in the control word */
++#define CTRL_VECTOR_MASKBIT	BIT(0)
++/* Bit to enable PASID in the control word */
++#define CTRL_PASID_ENABLE	BIT(3)
++/* Position of PASID.LSB in the control word */
++#define CTRL_PASID_SHIFT	12
++
++static inline void iowrite32_and_flush(u32 value, void __iomem *addr)
 +{
-+	if (WARN_ON_ONCE(map.index < 0 || !map.virq))
-+		return;
-+	msi_domain_free_irqs_range(&dev->dev, MSI_SECONDARY_DOMAIN, map.index, map.index);
++	iowrite32(value, addr);
++	ioread32(addr);
 +}
-+EXPORT_SYMBOL_GPL(pci_ims_free_irq);
++
++static void idxd_mask(struct irq_data *data)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct ims_slot __iomem *slot = desc->data.iobase;
++	u32 cval = desc->data.cookie.value;
++
++	iowrite32_and_flush(cval | CTRL_VECTOR_MASKBIT, &slot->ctrl);
++}
++
++static void idxd_unmask(struct irq_data *data)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct ims_slot __iomem *slot = desc->data.iobase;
++	u32 cval = desc->data.cookie.value;
++
++	iowrite32_and_flush(cval, &slot->ctrl);
++}
++
++static void idxd_write_msi_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct ims_slot __iomem *slot = desc->data.iobase;
++
++	iowrite32(msg->address_lo, &slot->address_lo);
++	iowrite32(msg->address_hi, &slot->address_hi);
++	iowrite32_and_flush(msg->data, &slot->data);
++}
++
++static void idxd_shutdown(struct irq_data *data)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++	struct ims_slot __iomem *slot = desc->data.iobase;
++
++	iowrite32(0, &slot->address_lo);
++	iowrite32(0, &slot->address_hi);
++	iowrite32(0, &slot->data);
++	iowrite32_and_flush(CTRL_VECTOR_MASKBIT, &slot->ctrl);
++}
++
++static void idxd_prepare_desc(struct irq_domain *domain, msi_alloc_info_t *arg,
++			      struct msi_desc *desc)
++{
++	struct msi_domain_info *info = domain->host_data;
++	struct ims_slot __iomem *slot;
++
++	/* Set up the slot address for the irq_chip callbacks */
++	slot = (__force struct ims_slot __iomem *) info->data;
++	slot += desc->msi_index;
++	desc->data.iobase = slot;
++
++	/* Mask the interrupt for paranoia sake */
++	iowrite32_and_flush(CTRL_VECTOR_MASKBIT, &slot->ctrl);
++
++	/*
++	 * The caller provided PASID. Shift it to the proper position
++	 * and set the PASID enable bit.
++	 */
++	desc->data.cookie.value <<= CTRL_PASID_SHIFT;
++	desc->data.cookie.value |= CTRL_PASID_ENABLE;
++
++	arg->hwirq = desc->msi_index;
++}
++
++static const struct msi_domain_template idxd_ims_template = {
++	.chip = {
++		.name			= "PCI-IDXD",
++		.irq_mask		= idxd_mask,
++		.irq_unmask		= idxd_unmask,
++		.irq_write_msi_msg	= idxd_write_msi_msg,
++		.irq_shutdown		= idxd_shutdown,
++		.flags			= IRQCHIP_ONESHOT_SAFE,
++	},
++
++	.ops = {
++		.prepare_desc		= idxd_prepare_desc,
++	},
++
++	.info = {
++		.flags			= MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS |
++					  MSI_FLAG_FREE_MSI_DESCS |
++					  MSI_FLAG_PCI_IMS,
++		.bus_token		= DOMAIN_BUS_PCI_DEVICE_IMS,
++	},
++};
 +
 +/**
-  * pci_free_irq_vectors() - Free previously allocated IRQs for a device
-  * @dev: the PCI device to operate on
-  *
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2485,6 +2485,9 @@ struct msi_domain_template;
- 
- bool pci_create_ims_domain(struct pci_dev *pdev, const struct msi_domain_template *template,
- 			   unsigned int hwsize, void *data);
-+struct msi_map pci_ims_alloc_irq(struct pci_dev *pdev, union msi_dev_cookie *cookie,
-+				 const struct irq_affinity_desc *affdesc);
-+void pci_ims_free_irq(struct pci_dev *pdev, struct msi_map map);
- 
- #include <linux/dma-mapping.h>
- 
++ * pci_intel_idxd_create_ims_domain - Create a IDXD IMS domain
++ * @pdev:	IDXD PCI device to operate on
++ * @slots:	Pointer to the mapped slot memory arrray
++ * @nr_slots:	The number of slots in the array
++ *
++ * Returns: True on success, false otherwise
++ *
++ * The domain is automatically destroyed when the @pdev is destroyed
++ */
++bool pci_intel_idxd_create_ims_domain(struct pci_dev *pdev, void __iomem *slots,
++				      unsigned int nr_slots)
++{
++	return pci_create_ims_domain(pdev, &idxd_ims_template, nr_slots, (__force void *)slots);
++}
++EXPORT_SYMBOL_GPL(pci_intel_idxd_create_ims_domain);
+--- /dev/null
++++ b/include/linux/irqchip/irq-pci-intel-idxd.h
+@@ -0,0 +1,22 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* (C) Copyright 2022 Thomas Gleixner <tglx@linutronix.de> */
++
++#ifndef _LINUX_IRQCHIP_IRQ_PCI_INTEL_IDXD_H
++#define _LINUX_IRQCHIP_IRQ_PCI_INTEL_IDXD_H
++
++#include <linux/msi_api.h>
++#include <linux/bits.h>
++#include <linux/types.h>
++
++/*
++ * Conveniance macro to wrap the PASID for interrupt allocation
++ * via pci_ims_alloc_irq(pdev, INTEL_IDXD_DEV_COOKIE(pasid))
++ */
++#define INTEL_IDXD_DEV_COOKIE(pasid)	(union msi_dev_cookie) { .value = (pasid), }
++
++struct pci_dev;
++
++bool pci_intel_idxd_create_ims_domain(struct pci_dev *pdev, void __iomem *slots,
++				      unsigned int nr_slots);
++
++#endif
 
