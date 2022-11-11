@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5BD5C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 13:58:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2654BC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 13:58:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234125AbiKKN6R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 08:58:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59624 "EHLO
+        id S234144AbiKKN65 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 08:58:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233581AbiKKN5C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 08:57:02 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F92D701AD;
-        Fri, 11 Nov 2022 05:55:19 -0800 (PST)
-Message-ID: <20221111122015.865042356@linutronix.de>
+        with ESMTP id S233783AbiKKN4G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 08:56:06 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6D7D657FF;
+        Fri, 11 Nov 2022 05:55:01 -0800 (PST)
+Message-ID: <20221111122015.214792769@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668174918;
+        s=2020; t=1668174900;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=KlmWSrD822PE2zOCQUPKNeyY1BUX75wWYBCy1LY/Ddo=;
-        b=uOX0P7JY4JDZrhpHSa4G1IGNcgMKKOEotn3WaD7e11QG/6dfy0hAWm6VlqdtkgWxscy2j2
-        vg8RZD2L7my03vFnseCP0zLzRVNFtmog03/OZWe8j+dCe3360GRdm7D7Ro+eFucXWe1cGt
-        B1TbYs1Kn3thlD7fo2rbFIumODHXMAxjO1WybkfUU98oPmOGMfEeOcgke6duFUhpjCZKei
-        OKjgabNkcGtNWaX2DdmfmLk843sFhP8s/1IrxWyfYUmW6Aek0x8nC5F0XV+DOF6doD4AUQ
-        pelYpWuMy5qNR57TeK4q2muF+jZFU5A0mAMkigQCBXCSX0sc7psCpSz6yuOhBg==
+         references:references; bh=gj8+JLvsSB7JkfjvtAibAPolzK16OEvGxNAST4u+PB8=;
+        b=XKPL2kgfTpBrkdRq/Zqnr5TZtcoLiZS8HUTfm0kQkuYgegQYsqUwtY5csl9/CyJkrPrCEz
+        A9uxOuIvrfntnY2DKbdKMXmf4ksC0QTVqS9OdMAlOAOQgCdzLXVMmX1JcCPAEBhdSB5mBf
+        nhdD2+t2116iU5IqwotSXCD6AhM6aj2Y0RdnX73ut/xTahJDDpijcYHst0UpgmkbhE6eFJ
+        UPSG4e0XWUziwhZY+cmfTYsgkNtc8sB9PEd/1aKnPYelYUCQtxFzSfMjWN7EeHPb0ht7Ss
+        04ZIAgydyt5L4gwlXCajkYRprDuhpS7NFJtkyRCbyY3urky7Pc8pU8t+6DhEDA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668174918;
+        s=2020e; t=1668174900;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=KlmWSrD822PE2zOCQUPKNeyY1BUX75wWYBCy1LY/Ddo=;
-        b=IbSEAj1FCCNGEuhGibqJgPyd7PCqcVB4JEhzyivG+QUYDdfm3d+uCQ5/9YQCI9bNGUKlUx
-        zljP/0HV6LO8O0BA==
+         references:references; bh=gj8+JLvsSB7JkfjvtAibAPolzK16OEvGxNAST4u+PB8=;
+        b=U39CZCreXp6akmR3rKYVXRdbqs3XmuPdImd4hF/P0sSdCshaJKWtTXiiq6gHDDA3yj+rKA
+        b2RkkjTtCy75QgDw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,132 +48,144 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>,
+        "Ahmed S. Darwish" <darwi@linutronix.de>,
+        Reinette Chatre <reinette.chatre@intel.com>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Christophe Leroy <christophe.leroy@csgroup.eu>,
-        linuxppc-dev@lists.ozlabs.org,
-        "Ahmed S. Darwish" <darwi@linutronix.de>,
-        Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 39/39] x86/apic: Remove X86_IRQ_ALLOC_CONTIGUOUS_VECTORS
+        linuxppc-dev@lists.ozlabs.org
+Subject: [patch 28/39] PCI/MSI: Move pci_irq_get_affinity() to api.c
 References: <20221111120501.026511281@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:55:17 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:54:59 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that the PCI/MSI core code does early checking for multi-MSI support
-X86_IRQ_ALLOC_CONTIGUOUS_VECTORS is not required anymore.
+From: Ahmed S. Darwish <darwi@linutronix.de>
 
-Remove the flag and rely on MSI_FLAG_MULTI_PCI_MSI.
+To distangle the maze in msi.c, all exported device-driver MSI APIs are
+now to be grouped in one file, api.c.
 
+Move pci_irq_get_affinity() and let its kernel-doc match rest of the
+file.
+
+Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
----
- arch/x86/include/asm/irqdomain.h    |    4 +---
- arch/x86/kernel/apic/msi.c          |    6 ++----
- arch/x86/kernel/apic/vector.c       |    4 ----
- drivers/iommu/amd/iommu.c           |    7 -------
- drivers/iommu/intel/irq_remapping.c |    7 -------
- drivers/pci/controller/pci-hyperv.c |   15 +--------------
- 6 files changed, 4 insertions(+), 39 deletions(-)
 
---- a/arch/x86/include/asm/irqdomain.h
-+++ b/arch/x86/include/asm/irqdomain.h
-@@ -7,9 +7,7 @@
+---
+ drivers/pci/msi/api.c | 43 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/msi/msi.c | 38 --------------------------------------
+ 2 files changed, 43 insertions(+), 38 deletions(-)
+---
+diff --git a/drivers/pci/msi/api.c b/drivers/pci/msi/api.c
+index 653a61868ae6..473df7ba0584 100644
+--- a/drivers/pci/msi/api.c
++++ b/drivers/pci/msi/api.c
+@@ -9,6 +9,7 @@
+  */
  
- #ifdef CONFIG_X86_LOCAL_APIC
- enum {
--	/* Allocate contiguous CPU vectors */
--	X86_IRQ_ALLOC_CONTIGUOUS_VECTORS		= 0x1,
--	X86_IRQ_ALLOC_LEGACY				= 0x2,
-+	X86_IRQ_ALLOC_LEGACY				= 0x1,
- };
+ #include <linux/export.h>
++#include <linux/irq.h>
  
- extern int x86_fwspec_is_ioapic(struct irq_fwspec *fwspec);
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -161,12 +161,10 @@ int pci_msi_prepare(struct irq_domain *d
- 		    msi_alloc_info_t *arg)
- {
- 	init_irq_alloc_info(arg, NULL);
--	if (to_pci_dev(dev)->msix_enabled) {
-+	if (to_pci_dev(dev)->msix_enabled)
- 		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSIX;
--	} else {
-+	else
- 		arg->type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
--		arg->flags |= X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
--	}
+ #include "msi.h"
  
- 	return 0;
- }
---- a/arch/x86/kernel/apic/vector.c
-+++ b/arch/x86/kernel/apic/vector.c
-@@ -539,10 +539,6 @@ static int x86_vector_alloc_irqs(struct
- 	if (disable_apic)
- 		return -ENXIO;
- 
--	/* Currently vector allocator can't guarantee contiguous allocations */
--	if ((info->flags & X86_IRQ_ALLOC_CONTIGUOUS_VECTORS) && nr_irqs > 1)
--		return -ENOSYS;
--
- 	/*
- 	 * Catch any attempt to touch the cascade interrupt on a PIC
- 	 * equipped system.
---- a/drivers/iommu/amd/iommu.c
-+++ b/drivers/iommu/amd/iommu.c
-@@ -3297,13 +3297,6 @@ static int irq_remapping_alloc(struct ir
- 	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_PCI_MSI)
- 		return -EINVAL;
- 
--	/*
--	 * With IRQ remapping enabled, don't need contiguous CPU vectors
--	 * to support multiple MSI interrupts.
--	 */
--	if (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI)
--		info->flags &= ~X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
--
- 	sbdf = get_devid(info);
- 	if (sbdf < 0)
- 		return -EINVAL;
---- a/drivers/iommu/intel/irq_remapping.c
-+++ b/drivers/iommu/intel/irq_remapping.c
-@@ -1337,13 +1337,6 @@ static int intel_irq_remapping_alloc(str
- 	if (nr_irqs > 1 && info->type != X86_IRQ_ALLOC_TYPE_PCI_MSI)
- 		return -EINVAL;
- 
--	/*
--	 * With IRQ remapping enabled, don't need contiguous CPU vectors
--	 * to support multiple MSI interrupts.
--	 */
--	if (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI)
--		info->flags &= ~X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
--
- 	ret = irq_domain_alloc_irqs_parent(domain, virq, nr_irqs, arg);
- 	if (ret < 0)
- 		return ret;
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -611,20 +611,7 @@ static unsigned int hv_msi_get_int_vecto
- 	return cfg->vector;
- }
- 
--static int hv_msi_prepare(struct irq_domain *domain, struct device *dev,
--			  int nvec, msi_alloc_info_t *info)
--{
--	int ret = pci_msi_prepare(domain, dev, nvec, info);
--
--	/*
--	 * By using the interrupt remapper in the hypervisor IOMMU, contiguous
--	 * CPU vectors is not needed for multi-MSI
--	 */
--	if (info->type == X86_IRQ_ALLOC_TYPE_PCI_MSI)
--		info->flags &= ~X86_IRQ_ALLOC_CONTIGUOUS_VECTORS;
--
--	return ret;
--}
-+#define hv_msi_prepare		pci_msi_prepare
+@@ -251,6 +252,48 @@ int pci_irq_vector(struct pci_dev *dev, unsigned int nr)
+ EXPORT_SYMBOL(pci_irq_vector);
  
  /**
-  * hv_arch_irq_unmask() - "Unmask" the IRQ by setting its current
++ * pci_irq_get_affinity() - Get a device interrupt vector affinity
++ * @dev: the PCI device to operate on
++ * @nr:  device-relative interrupt vector index (0-based); has different
++ *       meanings, depending on interrupt mode
++ *         MSI-X        the index in the MSI-X vector table
++ *         MSI          the index of the enabled MSI vectors
++ *         INTx         must be 0
++ *
++ * Return: MSI/MSI-X vector affinity, NULL if @nr is out of range or if
++ * the MSI(-X) vector was allocated without explicit affinity
++ * requirements (e.g., by pci_enable_msi(), pci_enable_msix_range(), or
++ * pci_alloc_irq_vectors() without the %PCI_IRQ_AFFINITY flag). Return a
++ * generic set of CPU ids representing all possible CPUs available
++ * during system boot if the device is in legacy INTx mode.
++ */
++const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
++{
++	int idx, irq = pci_irq_vector(dev, nr);
++	struct msi_desc *desc;
++
++	if (WARN_ON_ONCE(irq <= 0))
++		return NULL;
++
++	desc = irq_get_msi_desc(irq);
++	/* Non-MSI does not have the information handy */
++	if (!desc)
++		return cpu_possible_mask;
++
++	/* MSI[X] interrupts can be allocated without affinity descriptor */
++	if (!desc->affinity)
++		return NULL;
++
++	/*
++	 * MSI has a mask array in the descriptor.
++	 * MSI-X has a single mask.
++	 */
++	idx = dev->msi_enabled ? nr : 0;
++	return &desc->affinity[idx].mask;
++}
++EXPORT_SYMBOL(pci_irq_get_affinity);
++
++/**
+  * pci_free_irq_vectors() - Free previously allocated IRQs for a device
+  * @dev: the PCI device to operate on
+  *
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 6fa90d07d2e4..d78646d1c116 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -854,44 +854,6 @@ int __pci_enable_msix_range(struct pci_dev *dev,
+ 	}
+ }
+ 
+-/**
+- * pci_irq_get_affinity - return the affinity of a particular MSI vector
+- * @dev:	PCI device to operate on
+- * @nr:		device-relative interrupt vector index (0-based).
+- *
+- * @nr has the following meanings depending on the interrupt mode:
+- *   MSI-X:	The index in the MSI-X vector table
+- *   MSI:	The index of the enabled MSI vectors
+- *   INTx:	Must be 0
+- *
+- * Return: A cpumask pointer or NULL if @nr is out of range
+- */
+-const struct cpumask *pci_irq_get_affinity(struct pci_dev *dev, int nr)
+-{
+-	int idx, irq = pci_irq_vector(dev, nr);
+-	struct msi_desc *desc;
+-
+-	if (WARN_ON_ONCE(irq <= 0))
+-		return NULL;
+-
+-	desc = irq_get_msi_desc(irq);
+-	/* Non-MSI does not have the information handy */
+-	if (!desc)
+-		return cpu_possible_mask;
+-
+-	/* MSI[X] interrupts can be allocated without affinity descriptor */
+-	if (!desc->affinity)
+-		return NULL;
+-
+-	/*
+-	 * MSI has a mask array in the descriptor.
+-	 * MSI-X has a single mask.
+-	 */
+-	idx = dev->msi_enabled ? nr : 0;
+-	return &desc->affinity[idx].mask;
+-}
+-EXPORT_SYMBOL(pci_irq_get_affinity);
+-
+ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+ {
+ 	return to_pci_dev(desc->dev);
 
