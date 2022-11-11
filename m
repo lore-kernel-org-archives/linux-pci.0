@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D7DEC43217
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:03:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69F4DC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:03:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234272AbiKKODF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:03:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42260 "EHLO
+        id S234276AbiKKODG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:03:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234604AbiKKOCd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:02:33 -0500
+        with ESMTP id S234049AbiKKOB1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:01:27 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94BA290946;
-        Fri, 11 Nov 2022 05:57:47 -0800 (PST)
-Message-ID: <20221111132707.173697815@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E483456EFD;
+        Fri, 11 Nov 2022 05:57:02 -0800 (PST)
+Message-ID: <20221111132706.782035109@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175030;
+        s=2020; t=1668175018;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=g3DkOoVQZpocmCUdq743KlTbhHv6STUDcTyWXV9U3+I=;
-        b=aIItsgd6QfmXuUPWKRxsYxONfAJgL9uVoASBkaYxs2wjJHlixMwKFfJRCF8K9A+D31pisa
-        MF9Nl4iDgg8GRSE21VmWAaH8qgz9FkpcW2zB3Bya+OYBIGfYZax/LyfTJlEynEw7qDfHDN
-        KBSbl3lvOhkfLyUuRV4G4faz7s3KFuSwzimL4nZemSjmtjcidz+q3wVSimYsM6w3V98U5W
-        piHemsJjopiBIWhnQTWvLEpToT2m6CJdj5CXJ7Z7mBLQVs0zbOmtPWrr9NmTHT6ISHYDhP
-        eWn8a5ymvIZBfo344tbW8Z6t/DwAeoAfPKuSYsKLwepmsY2zVF8Wa+HmR1iYdA==
+         references:references; bh=OEm4xrpV1/zN+pLVIqTY/U3g2kts6NtvCQ7+3pqs27w=;
+        b=SScVgFEb6wG2lTtqGM0ZFdaTJrHV7Ww/Su+jFjx+DFChy8814YcApoHs2dEJyvkVCaamaI
+        vcn1GruBS5Q2kFXS1c3HxKXa/AAeSqdsEZYqniJvRjvk/xzn+YzuJj+mNjR1UrOo3cY5vJ
+        llDRCq5HFYytDyxBjS8PFqvPg0dJkYhqquiAHauJjz9o9HNDs78IUG/PXbTxg04e/25jED
+        5BRS0J5t92lNoBB08yXVa7OWAem5tl3i773wfDnELWYLKXw/XSwEqDwYDzOQbUqe1fnKnL
+        hXkxEo4ZesJrPDl+pOTE5yKwC0yVcAuZ8dGAX9KpmsUPUhme309DNtYLdRCOAA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175030;
+        s=2020e; t=1668175018;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=g3DkOoVQZpocmCUdq743KlTbhHv6STUDcTyWXV9U3+I=;
-        b=UmDlpU1zhkMhauM+traZAmMlpDfASpvgDh3+0I9OXUats9OlNn1+S2URzDSoBb4d1OVT5+
-        79iU5xGCNr+0a2CQ==
+         references:references; bh=OEm4xrpV1/zN+pLVIqTY/U3g2kts6NtvCQ7+3pqs27w=;
+        b=+rqfyeRDjpbi1FcT4xPx1AMLcUAMy0x2ZTyXUj7Ncx2mhlOXKOT/CciiL89olxLaMIZfbR
+        6PQ1Jw4nETR3MkBw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,126 +50,177 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 20/20] genirq/msi: Remove unused alloc/free interfaces
+Subject: [patch 13/20] genirq/msi: Make msi_add_simple_msi_descs() device domain aware
 References: <20221111131813.914374272@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:57:09 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:56:58 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that all users are converted remove the old interfaces.
+Allocating simple interrupt descriptors in the core code has to be multi
+device aware for the upcoming PCI/IMS support.
+
+Change the interfaces to take a domain id into account. Use the internal
+control struct for transport of arguments.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h |    7 ----
- kernel/irq/msi.c    |   73 ----------------------------------------------------
- 2 files changed, 80 deletions(-)
+ kernel/irq/msi.c |   99 +++++++++++++++++++++++++++++++------------------------
+ 1 file changed, 57 insertions(+), 42 deletions(-)
 
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -475,13 +475,6 @@ int msi_domain_set_affinity(struct irq_d
- struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
- 					 struct msi_domain_info *info,
- 					 struct irq_domain *parent);
--int msi_domain_alloc_irqs_descs_locked(struct irq_domain *domain, struct device *dev,
--				       int nvec);
--int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
--			  int nvec);
--
--void msi_domain_free_irqs_descs_locked(struct irq_domain *domain, struct device *dev);
--void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev);
- 
- int msi_domain_alloc_irqs_range_locked(struct device *dev, unsigned int domid,
- 				       unsigned int first, unsigned int last);
 --- a/kernel/irq/msi.c
 +++ b/kernel/irq/msi.c
-@@ -1176,51 +1176,6 @@ int msi_domain_alloc_irqs_all_locked(str
- 	return msi_domain_alloc_locked(dev, &ctrl);
+@@ -154,39 +154,6 @@ int msi_domain_insert_msi_desc(struct de
+ 	return msi_insert_desc(dev, desc, domid, init_desc->msi_index);
  }
  
 -/**
-- * msi_domain_alloc_irqs_descs_locked - Allocate interrupts from a MSI interrupt domain
-- * @domain:	The domain to allocate from
-- * @dev:	Pointer to device struct of the device for which the interrupts
-- *		are allocated
-- * @nvec:	The number of interrupts to allocate
+- * msi_add_simple_msi_descs - Allocate and initialize MSI descriptors
+- * @dev:	Pointer to the device for which the descriptors are allocated
+- * @index:	Index for the first MSI descriptor
+- * @ndesc:	Number of descriptors to allocate
 - *
-- * Must be invoked from within a msi_lock_descs() / msi_unlock_descs()
-- * pair. Use this for MSI irqdomains which implement their own vector
-- * allocation/free.
-- *
-- * Return: %0 on success or an error code.
+- * Return: 0 on success or an appropriate failure code.
 - */
--int msi_domain_alloc_irqs_descs_locked(struct irq_domain *domain, struct device *dev,
--				       int nvec)
+-static int msi_add_simple_msi_descs(struct device *dev, unsigned int index, unsigned int ndesc)
 -{
--	struct msi_ctrl ctrl = {
--		.domid	= MSI_DEFAULT_DOMAIN,
--		.first	= 0,
--		.last	= MSI_MAX_INDEX,
--		.nirqs	= nvec,
--	};
--
--	return msi_domain_alloc_locked(dev, &ctrl);
--}
--
--/**
-- * msi_domain_alloc_irqs - Allocate interrupts from a MSI interrupt domain
-- * @domain:	The domain to allocate from
-- * @dev:	Pointer to device struct of the device for which the interrupts
-- *		are allocated
-- * @nvec:	The number of interrupts to allocate
-- *
-- * Return: %0 on success or an error code.
-- */
--int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev, int nvec)
--{
+-	unsigned int idx, last = index + ndesc - 1;
+-	struct msi_desc *desc;
 -	int ret;
 -
--	msi_lock_descs(dev);
--	ret = msi_domain_alloc_irqs_descs_locked(domain, dev, nvec);
--	msi_unlock_descs(dev);
+-	lockdep_assert_held(&dev->msi.data->mutex);
+-
+-	for (idx = index; idx <= last; idx++) {
+-		desc = msi_alloc_desc(dev, 1, NULL);
+-		if (!desc)
+-			goto fail_mem;
+-		ret = msi_insert_desc(dev, desc, MSI_DEFAULT_DOMAIN, idx);
+-		if (ret)
+-			goto fail;
+-	}
+-	return 0;
+-
+-fail_mem:
+-	ret = -ENOMEM;
+-fail:
+-	msi_free_msi_descs_range(dev, index, last);
 -	return ret;
 -}
 -
- static void __msi_domain_free_irqs(struct device *dev, struct irq_domain *domain,
- 				   struct msi_ctrl *ctrl)
+ static bool msi_desc_match(struct msi_desc *desc, enum msi_desc_filter filter)
  {
-@@ -1347,34 +1302,6 @@ void msi_domain_free_irqs_all(struct dev
- 	msi_unlock_descs(dev);
+ 	switch (filter) {
+@@ -255,6 +222,45 @@ void msi_domain_free_msi_descs_range(str
+ 	msi_domain_free_descs(dev, &ctrl);
  }
  
--/**
-- * msi_domain_free_irqs_descs_locked - Free interrupts from a MSI interrupt @domain associated to @dev
-- * @domain:	The domain to managing the interrupts
-- * @dev:	Pointer to device struct of the device for which the interrupts
-- *		are free
-- *
-- * Must be invoked from within a msi_lock_descs() / msi_unlock_descs()
-- * pair. Use this for MSI irqdomains which implement their own vector
-- * allocation.
-- */
--void msi_domain_free_irqs_descs_locked(struct irq_domain *domain, struct device *dev)
--{
--	msi_domain_free_irqs_range_locked(dev, MSI_DEFAULT_DOMAIN, 0, MSI_MAX_INDEX);
--}
--
--/**
-- * msi_domain_free_irqs - Free interrupts from a MSI interrupt @domain associated to @dev
-- * @domain:	The domain to managing the interrupts
-- * @dev:	Pointer to device struct of the device for which the interrupts
-- *		are free
-- */
--void msi_domain_free_irqs(struct irq_domain *domain, struct device *dev)
--{
--	msi_lock_descs(dev);
--	msi_domain_free_irqs_descs_locked(domain, dev);
--	msi_unlock_descs(dev);
--}
--
++/**
++ * msi_domain_add_simple_msi_descs - Allocate and initialize MSI descriptors
++ * @dev:	Pointer to the device for which the descriptors are allocated
++ * @ctrl:	Allocation control struct
++ *
++ * Return: 0 on success or an appropriate failure code.
++ */
++static int msi_domain_add_simple_msi_descs(struct device *dev, struct msi_ctrl *ctrl)
++{
++	struct msi_desc *desc;
++	unsigned int idx;
++	int ret, baseidx;
++
++	lockdep_assert_held(&dev->msi.data->mutex);
++
++	if (!msi_ctrl_valid(dev, ctrl))
++		return -EINVAL;
++
++	baseidx = msi_get_domain_base_index(dev, ctrl->domid);
++	if (baseidx < 0)
++		return baseidx;
++
++	for (idx = ctrl->first; idx <= ctrl->last; idx++) {
++		desc = msi_alloc_desc(dev, 1, NULL);
++		if (!desc)
++			goto fail_mem;
++		ret = msi_insert_desc(dev, desc, ctrl->domid, idx);
++		if (ret)
++			goto fail;
++	}
++	return 0;
++
++fail_mem:
++	ret = -ENOMEM;
++fail:
++	msi_domain_free_descs(dev, ctrl);
++	return ret;
++}
++
+ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	*msg = entry->msg;
+@@ -821,15 +827,19 @@ int msi_domain_populate_irqs(struct irq_
+ {
+ 	struct msi_domain_info *info = domain->host_data;
+ 	struct msi_domain_ops *ops = info->ops;
++	struct msi_ctrl ctrl = {
++		.domid	= MSI_DEFAULT_DOMAIN,
++		.first  = virq_base,
++		.last	= virq_base + nvec - 1,
++	};
+ 	struct msi_desc *desc;
+ 	int ret, virq;
+ 
+-	if (WARN_ON_ONCE(virq_base >= MSI_MAX_INDEX ||
+-			 (virq_base + nvec) >= MSI_MAX_INDEX))
++	if (!msi_ctrl_valid(dev, &ctrl))
+ 		return 0;
+ 
+ 	msi_lock_descs(dev);
+-	ret = msi_add_simple_msi_descs(dev, virq_base, nvec);
++	ret = msi_domain_add_simple_msi_descs(dev, &ctrl);
+ 	if (ret)
+ 		goto unlock;
+ 
+@@ -850,7 +860,7 @@ int msi_domain_populate_irqs(struct irq_
+ fail:
+ 	for (--virq; virq >= virq_base; virq--)
+ 		irq_domain_free_irqs_common(domain, virq, 1);
+-	msi_free_msi_descs_range(dev, virq_base, virq_base + nvec - 1);
++	msi_domain_free_descs(dev, &ctrl);
+ unlock:
+ 	msi_unlock_descs(dev);
+ 	return ret;
+@@ -1024,14 +1034,19 @@ static int __msi_domain_alloc_irqs(struc
+ 	return 0;
+ }
+ 
+-static int msi_domain_add_simple_msi_descs(struct msi_domain_info *info,
+-					   struct device *dev,
+-					   unsigned int num_descs)
++static int msi_domain_alloc_simple_msi_descs(struct device *dev,
++					     struct msi_domain_info *info,
++					     unsigned int num_descs)
+ {
++	struct msi_ctrl ctrl = {
++		.domid	= MSI_DEFAULT_DOMAIN,
++		.last	= num_descs - 1,
++	};
++
+ 	if (!(info->flags & MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS))
+ 		return 0;
+ 
+-	return msi_add_simple_msi_descs(dev, 0, num_descs);
++	return msi_domain_add_simple_msi_descs(dev, &ctrl);
+ }
+ 
  /**
-  * msi_get_domain_info - Get the MSI interrupt domain info for @domain
-  * @domain:	The interrupt domain to retrieve data from
+@@ -1062,7 +1077,7 @@ int msi_domain_alloc_irqs_descs_locked(s
+ 	}
+ 
+ 	/* Frees allocated descriptors in case of failure. */
+-	ret = msi_domain_add_simple_msi_descs(info, dev, nvec);
++	ret = msi_domain_alloc_simple_msi_descs(dev, info, nvec);
+ 	if (ret)
+ 		return ret;
+ 
 
