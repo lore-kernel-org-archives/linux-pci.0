@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92696C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:07:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 766BDC43219
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:07:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234196AbiKKOH4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:07:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52308 "EHLO
+        id S234305AbiKKOH5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:07:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234506AbiKKOHB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:01 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE2E48BA88;
-        Fri, 11 Nov 2022 05:59:50 -0800 (PST)
-Message-ID: <20221111135205.836259395@linutronix.de>
+        with ESMTP id S234661AbiKKOHU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:20 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 389458BAAE;
+        Fri, 11 Nov 2022 06:00:05 -0800 (PST)
+Message-ID: <20221111135206.855773120@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175107;
+        s=2020; t=1668175136;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=IySA7q2kc9s+Hs2L8EoPsrfP4Hl32p6yL0Sk0XoI7lE=;
-        b=JhXIZ3xsgiGBibsCVxO6poVIfqA3RfwjsYLK6ETSgHmOBOnf5lZkYicqflqh4WKiAHTvbE
-        tb77jodb251i75+vdbnBVrFd1xap2qLNb8EnYl09l/gQr1BKA8LyQOxGDUDJ0SAeQ5xbfL
-        nb3HjnkMhdlldRQrseLQwCxqopB96aa+3px1xjzEYCzOR/8aqKLoiRl2bNTlEeZOYVy9MF
-        YQwtbyIgmY7bRlOqKni3FAFVxyW6Xo9XbFvsnQA89gJsVec57EkqJunAok4tXo3JsY9rsp
-        sKoFm95RLojk+LWAC16cKgADNk0kDD9DfPqAPtx86VcTSa0IOjA3vuSDKwWTXQ==
+         references:references; bh=c9JDBZM977tVyvqvJg00lI013oKo3dOFRASxZv3UZ8g=;
+        b=q2n47ka+68YaG2yfEg3JjMEqBvlfMw+HAAVmfrlUIzHf/hVn9tC4G73cZH4sgE7h/hFhjp
+        qxr3IfDx24nO5xUGb25jZsF0uKHf179qiyWk6lnRbX9ILRvabBtWuvIOwXldNT9ZBboTTs
+        PgdDqWxOIddAEFSFwb9SIv72XNuMb97d7jG9xpGK1Kf4xJsicv8HuVfpfsjCC5vffZ1jxj
+        xGsZR88YLVNmL6HOn9Jk995+vgSrk+02/4prrg4niVOZMbiTPpuZa+1FT4amlFv4ihFRn9
+        LHfFmb8m13vorv94hbuxTzs8dTzTOjYSHaVvHAMRj/iOrf/KyUs0dVPhfV6xgQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175107;
+        s=2020e; t=1668175136;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=IySA7q2kc9s+Hs2L8EoPsrfP4Hl32p6yL0Sk0XoI7lE=;
-        b=xlQZ+n5DInBwbdrr1qkyYkeaiT8YEj8UaNfj+sy/2EmMN33nWc8Ei0pO6FAJYG1FlmPaYo
-        DkCche6zOoSLFwAA==
+         references:references; bh=c9JDBZM977tVyvqvJg00lI013oKo3dOFRASxZv3UZ8g=;
+        b=g5YUbC+wZzhZLEQOjK7d4wtRAIdgARUsULHH+Sh+bi8sCZJAGFGrXCJgknnzYPLyDxVsDB
+        LfqJdBHAqn2s+8Ag==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,150 +50,160 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 10/33] PCI/MSI: Split __pci_write_msi_msg()
+Subject: [patch 28/33] PCI/MSI: Provide IMS (Interrupt Message Store) support
 References: <20221111133158.196269823@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:58:27 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:58:55 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The upcoming per device MSI domains will create different domains for MSI
-and MSI-X. Split the write message function into MSI and MSI-X helpers so
-they can be used by those new domain functions seperately.
+IMS (Interrupt Message Store) is a new specification which allows
+implementation specific storage of MSI messages contrary to the
+strict standard specified MSI and MSI-X message stores.
 
-Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
+This requires new device specific interrupt domains to handle the
+implementation defined storage which can be an array in device memory or
+host/guest memory which is shared with hardware queues.
+
+Add a function to create IMS domains for PCI devices. IMS domains are using
+the new per device domain mechanism and are configured by the device driver
+via a template. IMS domains are created as secondary device domains so they
+work side on side with MSI[-X] on the same device.
+
+The IMS domains have a few constraints:
+
+  - The index space is managed by the core code.
+
+    Device memory based IMS provides a storage array with a fixed size
+    which obviously requires an index. But there is no association between
+    index and functionality so the core can randomly allocate an index in
+    the array.
+
+    Queue memory based IMS does not have the concept of an index as the
+    storage is somewhere in memory. In that case the index is purely
+    software based to keep track of the allocations.
+
+  - There is no requirement for consecutive index ranges
+
+    This is currently a limitation of the MSI core and can be implemented
+    if there is a justified use case by changing the internal storage from
+    xarray to maple_tree. For now it's single vector allocation.
+
+  - The interrupt chip must provide the following callbacks:
+
+  	- irq_mask()
+	- irq_unmask()
+	- irq_write_msi_msg()
+
+   - The interrupt chip must provide the following optional callbacks
+     when the irq_mask(), irq_unmask() and irq_write_msi_msg() callbacks
+     cannot operate directly on hardware, e.g. in the case that the
+     interrupt message store is in queue memory:
+
+     	- irq_bus_lock()
+	- irq_bus_unlock()
+
+     These callbacks are invoked from preemptible task context and are
+     allowed to sleep. In this case the mandatory callbacks above just
+     store the information. The irq_bus_unlock() callback is supposed to
+     make the change effective before returning.
+
+   - Interrupt affinity setting is handled by the underlying parent
+     interrupt domain and communicated to the IMS domain via
+     irq_write_msi_msg(). IMS domains cannot have a irq_set_affinity()
+     callback. That's a reasonable restriction similar to the PCI/MSI
+     device domain implementations.
+
+The domain is automatically destroyed when the PCI device is removed.
+
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/pci/msi/msi.c |  104 +++++++++++++++++++++++++-------------------------
- 1 file changed, 54 insertions(+), 50 deletions(-)
+ drivers/pci/msi/irqdomain.c |   59 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h         |    5 +++
+ 2 files changed, 64 insertions(+)
 
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -180,6 +180,58 @@ void __pci_read_msi_msg(struct msi_desc
- 	}
+--- a/drivers/pci/msi/irqdomain.c
++++ b/drivers/pci/msi/irqdomain.c
+@@ -355,6 +355,65 @@ bool pci_msi_domain_supports(struct pci_
+ 	return (supported & feature_mask) == feature_mask;
  }
  
-+static inline void pci_write_msg_msi(struct pci_dev *dev, struct msi_desc *desc,
-+				     struct msi_msg *msg)
++/**
++ * pci_create_ims_domain - Create a secondary IMS domain for a PCI device
++ * @pdev:	The PCI device to operate on
++ * @template:	The MSI info template which describes the domain
++ * @hwsize:	The size of the hardware entry table or 0 if the domain
++ *		is purely software managed
++ * @data:	Optional pointer to domain specific data to be stored
++ *		in msi_domain_info::data
++ *
++ * Return: True on success, false otherwise
++ *
++ * A IMS domain is expected to have the following constraints:
++ *	- The index space is managed by the core code
++ *
++ *	- There is no requirement for consecutive index ranges
++ *
++ *	- The interrupt chip must provide the following callbacks:
++ *		- irq_mask()
++ *		- irq_unmask()
++ *		- irq_write_msi_msg()
++ *
++ *	- The interrupt chip must provide the following optional callbacks
++ *	  when the irq_mask(), irq_unmask() and irq_write_msi_msg() callbacks
++ *	  cannot operate directly on hardware, e.g. in the case that the
++ *	  interrupt message store is in queue memory:
++ *		- irq_bus_lock()
++ *		- irq_bus_unlock()
++ *
++ *	  These callbacks are invoked from preemptible task context and are
++ *	  allowed to sleep. In this case the mandatory callbacks above just
++ *	  store the information. The irq_bus_unlock() callback is supposed
++ *	  to make the change effective before returning.
++ *
++ *     - Interrupt affinity setting is handled by the underlying parent
++ *	 interrupt domain and communicated to the IMS domain via
++ *	 irq_write_msi_msg().
++ *
++ * The domain is automatically destroyed when the PCI device is removed.
++ */
++bool pci_create_ims_domain(struct pci_dev *pdev, const struct msi_domain_template *template,
++			   unsigned int hwsize, void *data)
 +{
-+	int pos = dev->msi_cap;
-+	u16 msgctl;
++	struct irq_domain *domain = dev_get_msi_domain(&pdev->dev);
 +
-+	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+	msgctl &= ~PCI_MSI_FLAGS_QSIZE;
-+	msgctl |= desc->pci.msi_attrib.multiple << 4;
-+	pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
++	if (!domain || !irq_domain_is_msi_parent(domain))
++		return -ENOTSUPP;
 +
-+	pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_LO, msg->address_lo);
-+	if (desc->pci.msi_attrib.is_64) {
-+		pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,  msg->address_hi);
-+		pci_write_config_word(dev, pos + PCI_MSI_DATA_64, msg->data);
-+	} else {
-+		pci_write_config_word(dev, pos + PCI_MSI_DATA_32, msg->data);
-+	}
-+	/* Ensure that the writes are visible in the device */
-+	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
++	if (template->info.bus_token != DOMAIN_BUS_PCI_DEVICE_IMS ||
++	    !(template->info.flags & MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS) ||
++	    !(template->info.flags & MSI_FLAG_FREE_MSI_DESCS) ||
++	    !template->chip.irq_mask || !template->chip.irq_unmask ||
++	    !template->chip.irq_write_msi_msg || template->chip.irq_set_affinity)
++		return -EINVAL;
++
++	return msi_create_device_irq_domain(&pdev->dev, MSI_SECONDARY_DOMAIN, template,
++					    hwsize, data, NULL);
 +}
++EXPORT_SYMBOL_GPL(pci_create_ims_domain);
 +
-+static inline void pci_write_msg_msix(struct msi_desc *desc, struct msi_msg *msg)
-+{
-+	void __iomem *base = pci_msix_desc_addr(desc);
-+	u32 ctrl = desc->pci.msix_ctrl;
-+	bool unmasked = !(ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT);
-+
-+	if (desc->pci.msi_attrib.is_virtual)
-+		return;
-+	/*
-+	 * The specification mandates that the entry is masked
-+	 * when the message is modified:
-+	 *
-+	 * "If software changes the Address or Data value of an
-+	 * entry while the entry is unmasked, the result is
-+	 * undefined."
-+	 */
-+	if (unmasked)
-+		pci_msix_write_vector_ctrl(desc, ctrl | PCI_MSIX_ENTRY_CTRL_MASKBIT);
-+
-+	writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
-+	writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
-+	writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
-+
-+	if (unmasked)
-+		pci_msix_write_vector_ctrl(desc, ctrl);
-+
-+	/* Ensure that the writes are visible in the device */
-+	readl(base + PCI_MSIX_ENTRY_DATA);
-+}
-+
- void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
-@@ -187,63 +239,15 @@ void __pci_write_msi_msg(struct msi_desc
- 	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
- 		/* Don't touch the hardware now */
- 	} else if (entry->pci.msi_attrib.is_msix) {
--		void __iomem *base = pci_msix_desc_addr(entry);
--		u32 ctrl = entry->pci.msix_ctrl;
--		bool unmasked = !(ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT);
--
--		if (entry->pci.msi_attrib.is_virtual)
--			goto skip;
--
--		/*
--		 * The specification mandates that the entry is masked
--		 * when the message is modified:
--		 *
--		 * "If software changes the Address or Data value of an
--		 * entry while the entry is unmasked, the result is
--		 * undefined."
--		 */
--		if (unmasked)
--			pci_msix_write_vector_ctrl(entry, ctrl | PCI_MSIX_ENTRY_CTRL_MASKBIT);
--
--		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
--		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
--		writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
--
--		if (unmasked)
--			pci_msix_write_vector_ctrl(entry, ctrl);
--
--		/* Ensure that the writes are visible in the device */
--		readl(base + PCI_MSIX_ENTRY_DATA);
-+		pci_write_msg_msix(entry, msg);
- 	} else {
--		int pos = dev->msi_cap;
--		u16 msgctl;
--
--		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
--		msgctl &= ~PCI_MSI_FLAGS_QSIZE;
--		msgctl |= entry->pci.msi_attrib.multiple << 4;
--		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
--
--		pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_LO,
--				       msg->address_lo);
--		if (entry->pci.msi_attrib.is_64) {
--			pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,
--					       msg->address_hi);
--			pci_write_config_word(dev, pos + PCI_MSI_DATA_64,
--					      msg->data);
--		} else {
--			pci_write_config_word(dev, pos + PCI_MSI_DATA_32,
--					      msg->data);
--		}
--		/* Ensure that the writes are visible in the device */
--		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+		pci_write_msg_msi(dev, entry, msg);
- 	}
+ /*
+  * Users of the generic MSI infrastructure expect a device to have a single ID,
+  * so with DMA aliases we have to pick the least-worst compromise. Devices with
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2481,6 +2481,11 @@ static inline bool pci_is_thunderbolt_at
+ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
+ #endif
  
--skip:
- 	entry->msg = *msg;
++struct msi_domain_template;
++
++bool pci_create_ims_domain(struct pci_dev *pdev, const struct msi_domain_template *template,
++			   unsigned int hwsize, void *data);
++
+ #include <linux/dma-mapping.h>
  
- 	if (entry->write_msi_msg)
- 		entry->write_msi_msg(entry, entry->write_msi_msg_data);
--
- }
- 
- void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg)
+ #define pci_printk(level, pdev, fmt, arg...) \
 
