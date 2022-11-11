@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69F4DC433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CEB0C433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:05:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234276AbiKKODG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:03:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44992 "EHLO
+        id S234373AbiKKOFB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:05:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234049AbiKKOB1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:01:27 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E483456EFD;
-        Fri, 11 Nov 2022 05:57:02 -0800 (PST)
-Message-ID: <20221111132706.782035109@linutronix.de>
+        with ESMTP id S234108AbiKKOEl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:04:41 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3783889F93;
+        Fri, 11 Nov 2022 05:58:52 -0800 (PST)
+Message-ID: <20221111135205.309731052@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175018;
+        s=2020; t=1668175093;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=OEm4xrpV1/zN+pLVIqTY/U3g2kts6NtvCQ7+3pqs27w=;
-        b=SScVgFEb6wG2lTtqGM0ZFdaTJrHV7Ww/Su+jFjx+DFChy8814YcApoHs2dEJyvkVCaamaI
-        vcn1GruBS5Q2kFXS1c3HxKXa/AAeSqdsEZYqniJvRjvk/xzn+YzuJj+mNjR1UrOo3cY5vJ
-        llDRCq5HFYytDyxBjS8PFqvPg0dJkYhqquiAHauJjz9o9HNDs78IUG/PXbTxg04e/25jED
-        5BRS0J5t92lNoBB08yXVa7OWAem5tl3i773wfDnELWYLKXw/XSwEqDwYDzOQbUqe1fnKnL
-        hXkxEo4ZesJrPDl+pOTE5yKwC0yVcAuZ8dGAX9KpmsUPUhme309DNtYLdRCOAA==
+         references:references; bh=x3hIqu1krW0wya/Cp5B9blgpcq3/YMthZGe6CW4aay0=;
+        b=Cl5Cge90NeD11tWuUxPPNdqZbeOuu4BQbbJMd3s9+G4WD0B9jm0X3WAOhAy2+ZIQ5xgVeY
+        nPgODgSeTnlOzkTqejTq7e1tsTPXmPTG07cumpYKhU+huUjnB0PgzxC+HKe9O4D4kWOFDH
+        GhQ0dJ890Y7W+YCJL9W8srS/HxDfxc2jEFyKjBp9PM8QeGxpdXM7Uwr93MATI+dlCynZ9K
+        NPEn5kuFfG9Ka8zpB2HV86db979qP7UD18U+LQpUbq+rMjeoyToZjYkybfI2Rfo27lxpA6
+        E8LdRZHmeYCL1FIrZKAKpmHrfX7CygBkvkO9B1lGvGrHLvhYpy4+9twcRYbBIQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175018;
+        s=2020e; t=1668175093;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=OEm4xrpV1/zN+pLVIqTY/U3g2kts6NtvCQ7+3pqs27w=;
-        b=+rqfyeRDjpbi1FcT4xPx1AMLcUAMy0x2ZTyXUj7Ncx2mhlOXKOT/CciiL89olxLaMIZfbR
-        6PQ1Jw4nETR3MkBw==
+         references:references; bh=x3hIqu1krW0wya/Cp5B9blgpcq3/YMthZGe6CW4aay0=;
+        b=vJI5ABKsNoBbr9nzBicoj0rOjr0qz69urGN0yNn0bnfvWmNvrsRfmT6zwZYg8ATxc4NGuw
+        2IqzREvpGLwcaRBA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,177 +50,117 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 13/20] genirq/msi: Make msi_add_simple_msi_descs() device domain aware
-References: <20221111131813.914374272@linutronix.de>
+Subject: [patch 01/33] genirq/msi: Rearrange MSI domain flags
+References: <20221111133158.196269823@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:56:58 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:58:12 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Allocating simple interrupt descriptors in the core code has to be multi
-device aware for the upcoming PCI/IMS support.
+These flags got added as necessary and have no obvious structure. For
+feature support checks and masking it's convenient to have two blocks of
+flags:
 
-Change the interfaces to take a domain id into account. Use the internal
-control struct for transport of arguments.
+   1) Flags to control the internal behaviour like allocating/freeing
+      MSI descriptors. Those flags do not need any support from the
+      underlying MSI parent domain. They are mostly under the control
+      of the outermost domain which implements the actual MSI support.
+
+   2) Flags to expose features, e.g. PCI multi-MSI or requirements
+      which can depend on a underlying domain.
+
+No functional change.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- kernel/irq/msi.c |   99 +++++++++++++++++++++++++++++++------------------------
- 1 file changed, 57 insertions(+), 42 deletions(-)
+ include/linux/msi.h |   49 ++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 34 insertions(+), 15 deletions(-)
 
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -154,39 +154,6 @@ int msi_domain_insert_msi_desc(struct de
- 	return msi_insert_desc(dev, desc, domid, init_desc->msi_index);
- }
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -24,6 +24,8 @@
+ #include <linux/xarray.h>
+ #include <linux/mutex.h>
+ #include <linux/list.h>
++#include <linux/bits.h>
++
+ #include <asm/msi.h>
  
--/**
-- * msi_add_simple_msi_descs - Allocate and initialize MSI descriptors
-- * @dev:	Pointer to the device for which the descriptors are allocated
-- * @index:	Index for the first MSI descriptor
-- * @ndesc:	Number of descriptors to allocate
-- *
-- * Return: 0 on success or an appropriate failure code.
-- */
--static int msi_add_simple_msi_descs(struct device *dev, unsigned int index, unsigned int ndesc)
--{
--	unsigned int idx, last = index + ndesc - 1;
--	struct msi_desc *desc;
--	int ret;
--
--	lockdep_assert_held(&dev->msi.data->mutex);
--
--	for (idx = index; idx <= last; idx++) {
--		desc = msi_alloc_desc(dev, 1, NULL);
--		if (!desc)
--			goto fail_mem;
--		ret = msi_insert_desc(dev, desc, MSI_DEFAULT_DOMAIN, idx);
--		if (ret)
--			goto fail;
--	}
--	return 0;
--
--fail_mem:
--	ret = -ENOMEM;
--fail:
--	msi_free_msi_descs_range(dev, index, last);
--	return ret;
--}
--
- static bool msi_desc_match(struct msi_desc *desc, enum msi_desc_filter filter)
- {
- 	switch (filter) {
-@@ -255,6 +222,45 @@ void msi_domain_free_msi_descs_range(str
- 	msi_domain_free_descs(dev, &ctrl);
- }
+ /* Dummy shadow structures if an architecture does not define them */
+@@ -428,7 +430,16 @@ struct msi_domain_info {
+ 	void				*data;
+ };
  
-+/**
-+ * msi_domain_add_simple_msi_descs - Allocate and initialize MSI descriptors
-+ * @dev:	Pointer to the device for which the descriptors are allocated
-+ * @ctrl:	Allocation control struct
+-/* Flags for msi_domain_info */
++/*
++ * Flags for msi_domain_info
 + *
-+ * Return: 0 on success or an appropriate failure code.
++ * Bit 0-15:	Generic MSI functionality which is not subject to restriction
++ *		by parent domains
++ *
++ * Bit 16-31:	Functionality which depends on the underlying parent domain and
++ *		can be masked out by msi_parent_ops::init_dev_msi_info() when
++ *		a device MSI domain is initialized.
 + */
-+static int msi_domain_add_simple_msi_descs(struct device *dev, struct msi_ctrl *ctrl)
-+{
-+	struct msi_desc *desc;
-+	unsigned int idx;
-+	int ret, baseidx;
+ enum {
+ 	/*
+ 	 * Init non implemented ops callbacks with default MSI domain
+@@ -440,33 +451,41 @@ enum {
+ 	 * callbacks.
+ 	 */
+ 	MSI_FLAG_USE_DEF_CHIP_OPS	= (1 << 1),
+-	/* Support multiple PCI MSI interrupts */
+-	MSI_FLAG_MULTI_PCI_MSI		= (1 << 2),
+-	/* Support PCI MSIX interrupts */
+-	MSI_FLAG_PCI_MSIX		= (1 << 3),
+ 	/* Needs early activate, required for PCI */
+-	MSI_FLAG_ACTIVATE_EARLY		= (1 << 4),
++	MSI_FLAG_ACTIVATE_EARLY		= (1 << 2),
+ 	/*
+ 	 * Must reactivate when irq is started even when
+ 	 * MSI_FLAG_ACTIVATE_EARLY has been set.
+ 	 */
+-	MSI_FLAG_MUST_REACTIVATE	= (1 << 5),
+-	/* Is level-triggered capable, using two messages */
+-	MSI_FLAG_LEVEL_CAPABLE		= (1 << 6),
++	MSI_FLAG_MUST_REACTIVATE	= (1 << 3),
+ 	/* Populate sysfs on alloc() and destroy it on free() */
+-	MSI_FLAG_DEV_SYSFS		= (1 << 7),
+-	/* MSI-X entries must be contiguous */
+-	MSI_FLAG_MSIX_CONTIGUOUS	= (1 << 8),
++	MSI_FLAG_DEV_SYSFS		= (1 << 4),
+ 	/* Allocate simple MSI descriptors */
+-	MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS	= (1 << 9),
++	MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS	= (1 << 5),
+ 	/* Free MSI descriptors */
+-	MSI_FLAG_FREE_MSI_DESCS		= (1 << 10),
++	MSI_FLAG_FREE_MSI_DESCS		= (1 << 6),
+ 	/*
+ 	 * Quirk to handle MSI implementations which do not provide
+ 	 * masking. Currently known to affect x86, but has to be partially
+ 	 * handled in the core MSI code.
+ 	 */
+-	MSI_FLAG_NOMASK_QUIRK		= (1 << 11),
++	MSI_FLAG_NOMASK_QUIRK		= (1 << 7),
 +
-+	lockdep_assert_held(&dev->msi.data->mutex);
++	/* Mask for the generic functionality */
++	MSI_GENERIC_FLAGS_MASK		= GENMASK(15, 0),
 +
-+	if (!msi_ctrl_valid(dev, ctrl))
-+		return -EINVAL;
++	/* Mask for the domain specific functionality */
++	MSI_DOMAIN_FLAGS_MASK		= GENMASK(31, 16),
 +
-+	baseidx = msi_get_domain_base_index(dev, ctrl->domid);
-+	if (baseidx < 0)
-+		return baseidx;
++	/* Support multiple PCI MSI interrupts */
++	MSI_FLAG_MULTI_PCI_MSI		= (1 << 16),
++	/* Support PCI MSIX interrupts */
++	MSI_FLAG_PCI_MSIX		= (1 << 17),
++	/* Is level-triggered capable, using two messages */
++	MSI_FLAG_LEVEL_CAPABLE		= (1 << 18),
++	/* MSI-X entries must be contiguous */
++	MSI_FLAG_MSIX_CONTIGUOUS	= (1 << 19),
 +
-+	for (idx = ctrl->first; idx <= ctrl->last; idx++) {
-+		desc = msi_alloc_desc(dev, 1, NULL);
-+		if (!desc)
-+			goto fail_mem;
-+		ret = msi_insert_desc(dev, desc, ctrl->domid, idx);
-+		if (ret)
-+			goto fail;
-+	}
-+	return 0;
-+
-+fail_mem:
-+	ret = -ENOMEM;
-+fail:
-+	msi_domain_free_descs(dev, ctrl);
-+	return ret;
-+}
-+
- void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- {
- 	*msg = entry->msg;
-@@ -821,15 +827,19 @@ int msi_domain_populate_irqs(struct irq_
- {
- 	struct msi_domain_info *info = domain->host_data;
- 	struct msi_domain_ops *ops = info->ops;
-+	struct msi_ctrl ctrl = {
-+		.domid	= MSI_DEFAULT_DOMAIN,
-+		.first  = virq_base,
-+		.last	= virq_base + nvec - 1,
-+	};
- 	struct msi_desc *desc;
- 	int ret, virq;
+ };
  
--	if (WARN_ON_ONCE(virq_base >= MSI_MAX_INDEX ||
--			 (virq_base + nvec) >= MSI_MAX_INDEX))
-+	if (!msi_ctrl_valid(dev, &ctrl))
- 		return 0;
- 
- 	msi_lock_descs(dev);
--	ret = msi_add_simple_msi_descs(dev, virq_base, nvec);
-+	ret = msi_domain_add_simple_msi_descs(dev, &ctrl);
- 	if (ret)
- 		goto unlock;
- 
-@@ -850,7 +860,7 @@ int msi_domain_populate_irqs(struct irq_
- fail:
- 	for (--virq; virq >= virq_base; virq--)
- 		irq_domain_free_irqs_common(domain, virq, 1);
--	msi_free_msi_descs_range(dev, virq_base, virq_base + nvec - 1);
-+	msi_domain_free_descs(dev, &ctrl);
- unlock:
- 	msi_unlock_descs(dev);
- 	return ret;
-@@ -1024,14 +1034,19 @@ static int __msi_domain_alloc_irqs(struc
- 	return 0;
- }
- 
--static int msi_domain_add_simple_msi_descs(struct msi_domain_info *info,
--					   struct device *dev,
--					   unsigned int num_descs)
-+static int msi_domain_alloc_simple_msi_descs(struct device *dev,
-+					     struct msi_domain_info *info,
-+					     unsigned int num_descs)
- {
-+	struct msi_ctrl ctrl = {
-+		.domid	= MSI_DEFAULT_DOMAIN,
-+		.last	= num_descs - 1,
-+	};
-+
- 	if (!(info->flags & MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS))
- 		return 0;
- 
--	return msi_add_simple_msi_descs(dev, 0, num_descs);
-+	return msi_domain_add_simple_msi_descs(dev, &ctrl);
- }
- 
- /**
-@@ -1062,7 +1077,7 @@ int msi_domain_alloc_irqs_descs_locked(s
- 	}
- 
- 	/* Frees allocated descriptors in case of failure. */
--	ret = msi_domain_add_simple_msi_descs(info, dev, nvec);
-+	ret = msi_domain_alloc_simple_msi_descs(dev, info, nvec);
- 	if (ret)
- 		return ret;
- 
+ int msi_domain_set_affinity(struct irq_data *data, const struct cpumask *mask,
 
