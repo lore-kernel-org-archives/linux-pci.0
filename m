@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BFD1C43217
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:06:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CBAAC43219
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:06:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234402AbiKKOGp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S233758AbiKKOGp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 11 Nov 2022 09:06:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50510 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234215AbiKKOGV (ORCPT
+        with ESMTP id S234421AbiKKOGV (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:06:21 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9091598BB8;
-        Fri, 11 Nov 2022 05:59:40 -0800 (PST)
-Message-ID: <20221111135206.346985384@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C59698BAB;
+        Fri, 11 Nov 2022 05:59:39 -0800 (PST)
+Message-ID: <20221111135206.176832734@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175121;
+        s=2020; t=1668175117;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=UQ8wGaxCGGl6i2FWioqhnvUbaJkzVnC/Tizkv4RadYs=;
-        b=InbvRLz2xiE1xSxHfoXRhru+XjEM5gfiGxuSEQ7Lcj/JvYVrWqnuRqCyOQbXgOZP3a+IrX
-        afUht5oZxyk+AaXMsRFzV3gSY/hfw8vB9zcjWVluI96CJyotpxAVAo7mMcKjj54m9ID8aq
-        muBCRnwtZ+4h/QIWJzK4dJnmMiBw/06/XhL8AxiR/qvLsmXNeHzJn01//ekakzNVQLEW2A
-        enPEZxfcPxnxGzRc58QjjccMWsTbjSD3j5FMH6qVY/a4RRpkrBOYYz21mYNHPexZWNmQfo
-        JKHFdxdT926RfGjIssN/mFK3I9DtOzBaQjuryH4M8Cvl05TXDLJpa+1WW38zqA==
+         references:references; bh=5F8g3aU97Z6Kyag3K9E0SkLjFZeBlcTh6td6sXBxDio=;
+        b=hCvxiEaR/ftuotSJ0rYpX9FRCRgNZLSo95zdWBQdsnkEYM1gPKuvor7QttQXEhc3wEUl2J
+        tCgESho46z75o1KylEAfxB0NtqE77Zv3BQYrTzBaRV0oUWQX7kxYjRBUlIIdvnKvt9rGK9
+        uNgrjCFEo8DgwHtVpvdBjp6ddRr4NIJsRYgyD9b4912zEy5SGflKmDZfz8sQvhA0mA/mmL
+        8+k3GlgGYmjazzPD72KAwhHoeDUSv2lKu6MROuTAzwNjR4WPsyaP/cPYNH9rxfXqk035AD
+        YU2wQbsaRczXTO8MmEEGHw+5t3RgxOlMlYCicHQEvBO8X4W36mVtLxSW36KIHw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175122;
+        s=2020e; t=1668175117;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=UQ8wGaxCGGl6i2FWioqhnvUbaJkzVnC/Tizkv4RadYs=;
-        b=CZMuJlTc7yrU0Fd0ZAHupzdYF1YUnHqpbn+7nNNm+rX7yFmAGQs8NV5Ytqm12bxK2u1hDq
-        ATinmN2jvy4w6rBg==
+         references:references; bh=5F8g3aU97Z6Kyag3K9E0SkLjFZeBlcTh6td6sXBxDio=;
+        b=bQm0H15x7Ua74erk+n6WWSeiGvKswNMLCGweks81shRQ5KQt3rLPVxQv+pjfAIRmc2p7kU
+        g+v+hc98ICgkbtAw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,110 +50,102 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 19/33] genirq/msi: Provide msi_desc::msi_data
+Subject: [patch 16/33] iommu/amd: Switch to MSI base domains
 References: <20221111133158.196269823@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:58:41 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:58:36 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The upcoming support for PCI/IMS requires to store some information related
-to the message handling in the MSI descriptor, e.g. PASID or a pointer to a
-queue.
-
-Provide a generic storage struct which maps over the existing PCI specific
-storage which means the size of struct msi_desc is not getting bigger.
-
-It contains a iomem pointer for device memory based IMS and a union of a
-u64 and a void pointer which allows the device specific IMS implementations
-to store the necessary information.
-
-The iomem pointer is set up by the domain allocation functions.
-
-The data union msi_dev_cookie is going to be handed in when allocating an
-interrupt on an IMS domain so the irq chip callbacks of the IMS domain have
-the necessary per vector information available. It also comes in handy when
-cleaning up the platform MSI code for wire to MSI bridges which need to
-hand down the type information to the underlying interrupt domain.
-
-For the core code the cookie is opaque and meaningless. It just stores it
-during an allocation through the upcoming interfaces for IMS and wire to
-MSI brigdes.
+Remove the global PCI/MSI irqdomain implementation and provide the required
+MSI parent ops so the PCI/MSI code can detect the new parent and setup per
+device domains.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h     |   19 ++++++++++++++++++-
- include/linux/msi_api.h |   17 +++++++++++++++++
- 2 files changed, 35 insertions(+), 1 deletion(-)
+ arch/x86/kernel/apic/msi.c          |    1 +
+ drivers/iommu/amd/amd_iommu_types.h |    1 -
+ drivers/iommu/amd/iommu.c           |   19 +++++++++++++------
+ include/linux/irqdomain_defs.h      |    1 +
+ 4 files changed, 15 insertions(+), 7 deletions(-)
 
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -121,6 +121,19 @@ struct pci_msi_desc {
- 	};
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -218,6 +218,7 @@ static bool x86_init_dev_msi_info(struct
+ 		info->flags |= MSI_FLAG_NOMASK_QUIRK;
+ 		break;
+ 	case DOMAIN_BUS_DMAR:
++	case DOMAIN_BUS_AMDVI:
+ 		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+--- a/drivers/iommu/amd/amd_iommu_types.h
++++ b/drivers/iommu/amd/amd_iommu_types.h
+@@ -734,7 +734,6 @@ struct amd_iommu {
+ 	u8 max_counters;
+ #ifdef CONFIG_IRQ_REMAP
+ 	struct irq_domain *ir_domain;
+-	struct irq_domain *msi_domain;
+ 
+ 	struct amd_irte_ops *irte_ops;
+ #endif
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -815,7 +815,7 @@ amd_iommu_set_pci_msi_domain(struct devi
+ 	    !pci_dev_has_default_msi_parent_domain(to_pci_dev(dev)))
+ 		return;
+ 
+-	dev_set_msi_domain(dev, iommu->msi_domain);
++	dev_set_msi_domain(dev, iommu->ir_domain);
+ }
+ 
+ #else /* CONFIG_IRQ_REMAP */
+@@ -3648,6 +3648,12 @@ static struct irq_chip amd_ir_chip = {
+ 	.irq_compose_msi_msg	= ir_compose_msi_msg,
  };
  
-+/**
-+ * struct msi_desc_data - Generic MSI descriptor data
-+ * @iobase:     Pointer to the IOMEM base adress for interrupt callbacks
-+ * @cookie:	Device cookie provided at allocation time
-+ *
-+ * The content of this data is implementation defined, e.g. PCI/IMS
-+ * implementations will define the meaning of the data.
-+ */
-+struct msi_desc_data {
-+	void			__iomem *iobase;
-+	union msi_dev_cookie	cookie;
++static const struct msi_parent_ops amdvi_msi_parent_ops = {
++	.supported_flags	= X86_VECTOR_MSI_FLAGS_SUPPORTED | MSI_FLAG_MULTI_PCI_MSI,
++	.prefix			= "IR-",
++	.init_dev_msi_info	= msi_parent_init_dev_msi_info,
 +};
 +
- #define MSI_MAX_INDEX		((unsigned int)USHRT_MAX)
+ int amd_iommu_create_irq_domain(struct amd_iommu *iommu)
+ {
+ 	struct fwnode_handle *fn;
+@@ -3655,16 +3661,17 @@ int amd_iommu_create_irq_domain(struct a
+ 	fn = irq_domain_alloc_named_id_fwnode("AMD-IR", iommu->index);
+ 	if (!fn)
+ 		return -ENOMEM;
+-	iommu->ir_domain = irq_domain_create_tree(fn, &amd_ir_domain_ops, iommu);
++	iommu->ir_domain = irq_domain_create_hierarchy(arch_get_ir_parent_domain(), 0, 0,
++						       fn, &amd_ir_domain_ops, iommu);
+ 	if (!iommu->ir_domain) {
+ 		irq_domain_free_fwnode(fn);
+ 		return -ENOMEM;
+ 	}
  
- /**
-@@ -138,6 +151,7 @@ struct pci_msi_desc {
-  *
-  * @msi_index:	Index of the msi descriptor
-  * @pci:	PCI specific msi descriptor data
-+ * @data:	Generic MSI descriptor data
-  */
- struct msi_desc {
- 	/* Shared device/bus type independent data */
-@@ -157,7 +171,10 @@ struct msi_desc {
- 	void *write_msi_msg_data;
- 
- 	u16				msi_index;
--	struct pci_msi_desc		pci;
-+	union {
-+		struct pci_msi_desc	pci;
-+		struct msi_desc_data	data;
-+	};
- };
- 
- /*
---- a/include/linux/msi_api.h
-+++ b/include/linux/msi_api.h
-@@ -19,6 +19,23 @@ enum msi_domain_ids {
- };
- 
- /**
-+ * union msi_dev_cookie - MSI device cookie
-+ * @value:	u64 value store
-+ * @ptr:	Pointer
-+ *
-+ * This data is handed to the IMS allocation function and stored
-+ * in the MSI descriptor for the interrupt chip callbacks.
-+ *
-+ * The content of this data is implementation defined, e.g. PCI/IMS
-+ * implementations will define the meaning of the data, e.g. PASID or a
-+ * pointer to queue memory.
-+ */
-+union msi_dev_cookie {
-+	u64	value;
-+	void	*ptr;
-+};
+-	iommu->ir_domain->parent = arch_get_ir_parent_domain();
+-	iommu->msi_domain = arch_create_remap_msi_irq_domain(iommu->ir_domain,
+-							     "AMD-IR-MSI",
+-							     iommu->index);
++	irq_domain_update_bus_token(iommu->ir_domain,  DOMAIN_BUS_AMDVI);
++	iommu->ir_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
++	iommu->ir_domain->msi_parent_ops = &amdvi_msi_parent_ops;
 +
-+/**
-  * msi_map - Mapping between MSI index and Linux interrupt number
-  * @index:	The MSI index, e.g. slot in the MSI-X table or
-  *		a software managed index if >= 0. If negative
+ 	return 0;
+ }
+ 
+--- a/include/linux/irqdomain_defs.h
++++ b/include/linux/irqdomain_defs.h
+@@ -24,6 +24,7 @@ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_PCI_DEVICE_MSI,
+ 	DOMAIN_BUS_PCI_DEVICE_MSIX,
+ 	DOMAIN_BUS_DMAR,
++	DOMAIN_BUS_AMDVI,
+ };
+ 
+ #endif /* _LINUX_IRQDOMAIN_DEFS_H */
 
