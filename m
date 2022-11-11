@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEBAC4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:07:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92696C433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:07:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234184AbiKKOHz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:07:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52564 "EHLO
+        id S234196AbiKKOH4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:07:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234602AbiKKOHM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:12 -0500
+        with ESMTP id S234506AbiKKOHB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:01 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC7C78A8D5;
-        Fri, 11 Nov 2022 06:00:01 -0800 (PST)
-Message-ID: <20221111135206.406883343@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE2E48BA88;
+        Fri, 11 Nov 2022 05:59:50 -0800 (PST)
+Message-ID: <20221111135205.836259395@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175123;
+        s=2020; t=1668175107;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=cGLnImP++QaosYDzBZBUnGto50NkhFSNjBnCsi02MnQ=;
-        b=qfvperWGjkfJNozEsSouIgE/VudvhsIG+is6vXIvkjLnCjmFki9GuooJijW/Cpw6Qc+yDt
-        qIXGBdaoV4Zeh5D6WGe19uU39+vMnK6XMJzCY4jzDKeWfMLyA103H++zWnsFbqQTHP3MIm
-        PkLVBpHRAQimzZJ1O3wPmXgumKW8NGCNmc4FsUa6XzpmC1UD7sZ1SKD2cZH0cXjm99iBjI
-        F1f6fFs0r3O6aTYjC6xt03EcNAe/OvYD5OLQ3oACZM+pkVrSiFPfQ6G5Z8ArVHIn3QOHR/
-        A7Z22jQVC/K94tgBn4t2mWhn0rqB1wMkTrlM8Ryd3+qtvxpeQ/MX0GN29/pmaQ==
+         references:references; bh=IySA7q2kc9s+Hs2L8EoPsrfP4Hl32p6yL0Sk0XoI7lE=;
+        b=JhXIZ3xsgiGBibsCVxO6poVIfqA3RfwjsYLK6ETSgHmOBOnf5lZkYicqflqh4WKiAHTvbE
+        tb77jodb251i75+vdbnBVrFd1xap2qLNb8EnYl09l/gQr1BKA8LyQOxGDUDJ0SAeQ5xbfL
+        nb3HjnkMhdlldRQrseLQwCxqopB96aa+3px1xjzEYCzOR/8aqKLoiRl2bNTlEeZOYVy9MF
+        YQwtbyIgmY7bRlOqKni3FAFVxyW6Xo9XbFvsnQA89gJsVec57EkqJunAok4tXo3JsY9rsp
+        sKoFm95RLojk+LWAC16cKgADNk0kDD9DfPqAPtx86VcTSa0IOjA3vuSDKwWTXQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175123;
+        s=2020e; t=1668175107;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=cGLnImP++QaosYDzBZBUnGto50NkhFSNjBnCsi02MnQ=;
-        b=v3L5zUf2VLairh9ucPPjVk/k1bfNBGpvEaxB1GV5CF1yCXHMMLFwnrchUDBnz30PbLtKuc
-        J63HQhQgwqN53MDg==
+         references:references; bh=IySA7q2kc9s+Hs2L8EoPsrfP4Hl32p6yL0Sk0XoI7lE=;
+        b=xlQZ+n5DInBwbdrr1qkyYkeaiT8YEj8UaNfj+sy/2EmMN33nWc8Ei0pO6FAJYG1FlmPaYo
+        DkCche6zOoSLFwAA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,72 +50,150 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 20/33] genirq/msi: Provide msi_domain_ops::prepare_desc()
+Subject: [patch 10/33] PCI/MSI: Split __pci_write_msi_msg()
 References: <20221111133158.196269823@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:58:43 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:58:27 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The existing MSI domain ops msi_prepare() and set_desc() turned out to be
-unsuitable for implementing IMS support.
+The upcoming per device MSI domains will create different domains for MSI
+and MSI-X. Split the write message function into MSI and MSI-X helpers so
+they can be used by those new domain functions seperately.
 
-msi_prepare() does not operate on the MSI descriptors. set_desc() lacks
-an irq_domain pointer and has a completely different purpose.
-
-Introduce a prepare_desc() op which allows IMS implementations to amend an
-MSI descriptor which was allocated by the core code, e.g. by adjusting the
-iomem base or adding some data based on the allocated index. This is way
-better than requiring that all IMS domain implementations preallocate the
-MSI descriptor and then allocate the interrupt.
-
+Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h |    6 +++++-
- kernel/irq/msi.c    |    3 +++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/pci/msi/msi.c |  104 +++++++++++++++++++++++++-------------------------
+ 1 file changed, 54 insertions(+), 50 deletions(-)
 
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -379,6 +379,8 @@ struct msi_domain_info;
-  * @msi_init:		Domain specific init function for MSI interrupts
-  * @msi_free:		Domain specific function to free a MSI interrupts
-  * @msi_prepare:	Prepare the allocation of the interrupts in the domain
-+ * @prepare_desc:	Optional function to prepare the allocated MSI descriptor
-+ *			in the domain
-  * @set_desc:		Set the msi descriptor for an interrupt
-  * @domain_alloc_irqs:	Optional function to override the default allocation
-  *			function.
-@@ -390,7 +392,7 @@ struct msi_domain_info;
-  * @get_hwirq, @msi_init and @msi_free are callbacks used by the underlying
-  * irqdomain.
-  *
-- * @msi_check, @msi_prepare and @set_desc are callbacks used by the
-+ * @msi_check, @msi_prepare, @prepare_desc and @set_desc are callbacks used by the
-  * msi_domain_alloc/free_irqs*() variants.
-  *
-  * @domain_alloc_irqs, @domain_free_irqs can be used to override the
-@@ -413,6 +415,8 @@ struct msi_domain_ops {
- 	int		(*msi_prepare)(struct irq_domain *domain,
- 				       struct device *dev, int nvec,
- 				       msi_alloc_info_t *arg);
-+	void		(*prepare_desc)(struct irq_domain *domain, msi_alloc_info_t *arg,
-+					struct msi_desc *desc);
- 	void		(*set_desc)(msi_alloc_info_t *arg,
- 				    struct msi_desc *desc);
- 	int		(*domain_alloc_irqs)(struct irq_domain *domain,
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -1275,6 +1275,9 @@ static int __msi_domain_alloc_irqs(struc
- 		if (WARN_ON_ONCE(allocated >= ctrl->nirqs))
- 			return -EINVAL;
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -180,6 +180,58 @@ void __pci_read_msi_msg(struct msi_desc
+ 	}
+ }
  
-+		if (ops->prepare_desc)
-+			ops->prepare_desc(domain, &arg, desc);
++static inline void pci_write_msg_msi(struct pci_dev *dev, struct msi_desc *desc,
++				     struct msi_msg *msg)
++{
++	int pos = dev->msi_cap;
++	u16 msgctl;
 +
- 		ops->set_desc(&arg, desc);
++	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
++	msgctl &= ~PCI_MSI_FLAGS_QSIZE;
++	msgctl |= desc->pci.msi_attrib.multiple << 4;
++	pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
++
++	pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_LO, msg->address_lo);
++	if (desc->pci.msi_attrib.is_64) {
++		pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,  msg->address_hi);
++		pci_write_config_word(dev, pos + PCI_MSI_DATA_64, msg->data);
++	} else {
++		pci_write_config_word(dev, pos + PCI_MSI_DATA_32, msg->data);
++	}
++	/* Ensure that the writes are visible in the device */
++	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
++}
++
++static inline void pci_write_msg_msix(struct msi_desc *desc, struct msi_msg *msg)
++{
++	void __iomem *base = pci_msix_desc_addr(desc);
++	u32 ctrl = desc->pci.msix_ctrl;
++	bool unmasked = !(ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT);
++
++	if (desc->pci.msi_attrib.is_virtual)
++		return;
++	/*
++	 * The specification mandates that the entry is masked
++	 * when the message is modified:
++	 *
++	 * "If software changes the Address or Data value of an
++	 * entry while the entry is unmasked, the result is
++	 * undefined."
++	 */
++	if (unmasked)
++		pci_msix_write_vector_ctrl(desc, ctrl | PCI_MSIX_ENTRY_CTRL_MASKBIT);
++
++	writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
++	writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
++	writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
++
++	if (unmasked)
++		pci_msix_write_vector_ctrl(desc, ctrl);
++
++	/* Ensure that the writes are visible in the device */
++	readl(base + PCI_MSIX_ENTRY_DATA);
++}
++
+ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+@@ -187,63 +239,15 @@ void __pci_write_msi_msg(struct msi_desc
+ 	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->pci.msi_attrib.is_msix) {
+-		void __iomem *base = pci_msix_desc_addr(entry);
+-		u32 ctrl = entry->pci.msix_ctrl;
+-		bool unmasked = !(ctrl & PCI_MSIX_ENTRY_CTRL_MASKBIT);
+-
+-		if (entry->pci.msi_attrib.is_virtual)
+-			goto skip;
+-
+-		/*
+-		 * The specification mandates that the entry is masked
+-		 * when the message is modified:
+-		 *
+-		 * "If software changes the Address or Data value of an
+-		 * entry while the entry is unmasked, the result is
+-		 * undefined."
+-		 */
+-		if (unmasked)
+-			pci_msix_write_vector_ctrl(entry, ctrl | PCI_MSIX_ENTRY_CTRL_MASKBIT);
+-
+-		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
+-		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
+-		writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
+-
+-		if (unmasked)
+-			pci_msix_write_vector_ctrl(entry, ctrl);
+-
+-		/* Ensure that the writes are visible in the device */
+-		readl(base + PCI_MSIX_ENTRY_DATA);
++		pci_write_msg_msix(entry, msg);
+ 	} else {
+-		int pos = dev->msi_cap;
+-		u16 msgctl;
+-
+-		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
+-		msgctl &= ~PCI_MSI_FLAGS_QSIZE;
+-		msgctl |= entry->pci.msi_attrib.multiple << 4;
+-		pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
+-
+-		pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_LO,
+-				       msg->address_lo);
+-		if (entry->pci.msi_attrib.is_64) {
+-			pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_HI,
+-					       msg->address_hi);
+-			pci_write_config_word(dev, pos + PCI_MSI_DATA_64,
+-					      msg->data);
+-		} else {
+-			pci_write_config_word(dev, pos + PCI_MSI_DATA_32,
+-					      msg->data);
+-		}
+-		/* Ensure that the writes are visible in the device */
+-		pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
++		pci_write_msg_msi(dev, entry, msg);
+ 	}
  
- 		virq = __irq_domain_alloc_irqs(domain, -1, desc->nvec_used,
+-skip:
+ 	entry->msg = *msg;
+ 
+ 	if (entry->write_msi_msg)
+ 		entry->write_msi_msg(entry, entry->write_msi_msg_data);
+-
+ }
+ 
+ void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg)
 
