@@ -2,69 +2,192 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09AE3C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 11:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 718D2C4332F
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 11:02:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233252AbiKKLBh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 06:01:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58474 "EHLO
+        id S233297AbiKKLCG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 06:02:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233297AbiKKLBf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 06:01:35 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50E9D1EEDD
-        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2022 03:01:33 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E236261F70
-        for <linux-pci@vger.kernel.org>; Fri, 11 Nov 2022 11:01:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65879C433C1;
-        Fri, 11 Nov 2022 11:01:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668164492;
-        bh=t1Wsq8qQI5fgAj4CmUn5cyppdE4undjmcH8oCPL3XMA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=T5kHf8WJDrEf0hJIyVSx4GoE++aLOPpVJanG1zsLaLRkGSkRB3i2P1fFqV6WxuMq3
-         LtJUkyqbFxvQpikYUQYnE65wWs5ZcQMlcXmQyD6RgQYcuhrrVUfNuw9sinGwINLrHw
-         iR9G5iENkIoOqVqeKgeq3iys+B0UBblhD1Odrdg9y8cnxv1rtYzdrVKDwVh+R22dqC
-         +yJ7iB2cV9xTcEm5Va2MXEavjmM0bH8SY6pSEQfqoKxhcINkT0nC78k+zp0X+lyArf
-         yG0DpZFTB94gh+tGn7Di6rpYtJWn9DtOnPLIBFwwdCb/TRR0K9qZxS7IFCpKcgf69p
-         W10mdApXEzneA==
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Nirmal Patel <nirmal.patel@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        acelan.kao@canonical.com, Liang_Xiao1@Dell.com,
-        Francisco Munoz <francisco.munoz.ruiz@linux.intel.com>
-Subject: Re: [PATCH v2] PCI: vmd: Disable MSI remapping after suspend
-Date:   Fri, 11 Nov 2022 12:01:27 +0100
-Message-Id: <166816447125.204404.14576437175253719672.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221109142652.450998-1-nirmal.patel@linux.intel.com>
-References: <20221109142652.450998-1-nirmal.patel@linux.intel.com>
+        with ESMTP id S233744AbiKKLCF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 06:02:05 -0500
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B63A4B7E6;
+        Fri, 11 Nov 2022 03:02:04 -0800 (PST)
+Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4N7whT3RCkz685b0;
+        Fri, 11 Nov 2022 18:59:53 +0800 (CST)
+Received: from lhrpeml500005.china.huawei.com (7.191.163.240) by
+ fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Fri, 11 Nov 2022 12:02:02 +0100
+Received: from localhost (10.45.151.252) by lhrpeml500005.china.huawei.com
+ (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Fri, 11 Nov
+ 2022 11:02:01 +0000
+Date:   Fri, 11 Nov 2022 11:02:00 +0000
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Yicong Yang <yangyicong@huawei.com>
+CC:     Shaokun Zhang <zhangshaokun@hisilicon.com>, <liuqi6124@gmail.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Will Deacon <will@kernel.org>,
+        "Mark Rutland" <mark.rutland@arm.com>, <bagasdotme@gmail.com>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-doc@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxarm@huawei.com>, <f.fangjian@huawei.com>,
+        <prime.zeng@huawei.com>, <shenyang39@huawei.com>
+Subject: Re: [PATCH v2 4/4] Documentation: perf: Indent filter options list
+ of hisi-pcie-pmu
+Message-ID: <20221111110200.000047fd@Huawei.com>
+In-Reply-To: <20221110085109.45227-5-yangyicong@huawei.com>
+References: <20221110085109.45227-1-yangyicong@huawei.com>
+        <20221110085109.45227-5-yangyicong@huawei.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.45.151.252]
+X-ClientProxiedBy: lhrpeml500004.china.huawei.com (7.191.163.9) To
+ lhrpeml500005.china.huawei.com (7.191.163.240)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 9 Nov 2022 07:26:52 -0700, Nirmal Patel wrote:
-> MSI remapping is disabled by VMD driver for Intel's Icelake and
-> newer systems in order to improve performance by setting
-> VMCONFIG_MSI_REMAP. By design VMCONFIG_MSI_REMAP register is cleared
-> by firmware during boot. The same register gets cleared when system
-> is put in S3 power state. VMD driver needs to set this register again
-> in order to avoid interrupt issues with devices behind VMD if MSI
-> remapping was disabled before.
+On Thu, 10 Nov 2022 16:51:09 +0800
+Yicong Yang <yangyicong@huawei.com> wrote:
+
+> From: Bagas Sanjaya <bagasdotme@gmail.com>
 > 
-> [...]
+> The "Filter options" list have a rather ugly indentation. Also, the first
+> paragraph after list name is rendered without separator (as continuation
+> from the name).
+> 
+> Align the list by indenting the list items and add a blank line
+> separator for each list name.
+> 
+> Fixes: c8602008e247 ("docs: perf: Add description for HiSilicon PCIe PMU driver")
+> Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+Annoying though it is to do, this should be a precusors to the changes added earlier
+in this series - or drop the fixes tag. I'd argue that 'ugly' isn't something that
+we need to potentially backport fixes to.
 
-Applied to pci/vmd, thanks!
+Change itself looks fine though.
 
-[1/1] PCI: vmd: Disable MSI remapping after suspend
-      https://git.kernel.org/lpieralisi/pci/c/d899aa668498
+> ---
+>  .../admin-guide/perf/hisi-pcie-pmu.rst        | 80 ++++++++++---------
+>  1 file changed, 43 insertions(+), 37 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/perf/hisi-pcie-pmu.rst b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+> index b3615230a4f6..7e863662e2d4 100644
+> --- a/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+> +++ b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
+> @@ -48,62 +48,68 @@ Filter options
+>  --------------
+>  
+>  1. Target filter
+> -PMU could only monitor the performance of traffic downstream target Root Ports
+> -or downstream target Endpoint. PCIe PMU driver support "port" and "bdf"
+> -interfaces for users, and these two interfaces aren't supported at the same
+> -time.
+>  
+> --port
+> -"port" filter can be used in all PCIe PMU events, target Root Port can be
+> -selected by configuring the 16-bits-bitmap "port". Multi ports can be selected
+> -for AP-layer-events, and only one port can be selected for TL/DL-layer-events.
+> +   PMU could only monitor the performance of traffic downstream target Root
+> +   Ports or downstream target Endpoint. PCIe PMU driver support "port" and
+> +   "bdf" interfaces for users, and these two interfaces aren't supported at the
+> +   same time.
+>  
+> -For example, if target Root Port is 0000:00:00.0 (x8 lanes), bit0 of bitmap
+> -should be set, port=0x1; if target Root Port is 0000:00:04.0 (x4 lanes),
+> -bit8 is set, port=0x100; if these two Root Ports are both monitored, port=0x101.
+> +   - port
+>  
+> -Example usage of perf::
+> +     "port" filter can be used in all PCIe PMU events, target Root Port can be
+> +     selected by configuring the 16-bits-bitmap "port". Multi ports can be
+> +     selected for AP-layer-events, and only one port can be selected for
+> +     TL/DL-layer-events.
+>  
+> -  $# perf stat -e hisi_pcie0_core0/rx_mwr_latency,port=0x1/ sleep 5
+> +     For example, if target Root Port is 0000:00:00.0 (x8 lanes), bit0 of
+> +     bitmap should be set, port=0x1; if target Root Port is 0000:00:04.0 (x4
+> +     lanes), bit8 is set, port=0x100; if these two Root Ports are both
+> +     monitored, port=0x101.
+>  
+> --bdf
+> +     Example usage of perf::
+>  
+> -"bdf" filter can only be used in bandwidth events, target Endpoint is selected
+> -by configuring BDF to "bdf". Counter only counts the bandwidth of message
+> -requested by target Endpoint.
+> +       $# perf stat -e hisi_pcie0_core0/rx_mwr_latency,port=0x1/ sleep 5
+>  
+> -For example, "bdf=0x3900" means BDF of target Endpoint is 0000:39:00.0.
+> +   - bdf
+>  
+> -Example usage of perf::
+> +     "bdf" filter can only be used in bandwidth events, target Endpoint is
+> +     selected by configuring BDF to "bdf". Counter only counts the bandwidth of
+> +     message requested by target Endpoint.
+> +
+> +     For example, "bdf=0x3900" means BDF of target Endpoint is 0000:39:00.0.
+>  
+> -  $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,bdf=0x3900/ sleep 5
+> +     Example usage of perf::
+> +
+> +       $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,bdf=0x3900/ sleep 5
+>  
+>  2. Trigger filter
+> -Event statistics start when the first time TLP length is greater/smaller
+> -than trigger condition. You can set the trigger condition by writing "trig_len",
+> -and set the trigger mode by writing "trig_mode". This filter can only be used
+> -in bandwidth events.
+>  
+> -For example, "trig_len=4" means trigger condition is 2^4 DW, "trig_mode=0"
+> -means statistics start when TLP length > trigger condition, "trig_mode=1"
+> -means start when TLP length < condition.
+> +   Event statistics start when the first time TLP length is greater/smaller
+> +   than trigger condition. You can set the trigger condition by writing
+> +   "trig_len", and set the trigger mode by writing "trig_mode". This filter can
+> +   only be used in bandwidth events.
+>  
+> -Example usage of perf::
+> +   For example, "trig_len=4" means trigger condition is 2^4 DW, "trig_mode=0"
+> +   means statistics start when TLP length > trigger condition, "trig_mode=1"
+> +   means start when TLP length < condition.
+>  
+> -  $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,trig_len=0x4,trig_mode=1/ sleep 5
+> +   Example usage of perf::
+> +
+> +     $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,trig_len=0x4,trig_mode=1/ sleep 5
+>  
+>  3. Threshold filter
+> -Counter counts when TLP length within the specified range. You can set the
+> -threshold by writing "thr_len", and set the threshold mode by writing
+> -"thr_mode". This filter can only be used in bandwidth events.
+>  
+> -For example, "thr_len=4" means threshold is 2^4 DW, "thr_mode=0" means
+> -counter counts when TLP length >= threshold, and "thr_mode=1" means counts
+> -when TLP length < threshold.
+> +   Counter counts when TLP length within the specified range. You can set the
+> +   threshold by writing "thr_len", and set the threshold mode by writing
+> +   "thr_mode". This filter can only be used in bandwidth events.
+>  
+> -Example usage of perf::
+> +   For example, "thr_len=4" means threshold is 2^4 DW, "thr_mode=0" means
+> +   counter counts when TLP length >= threshold, and "thr_mode=1" means counts
+> +   when TLP length < threshold.
+> +
+> +   Example usage of perf::
+>  
+> -  $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,thr_len=0x4,thr_mode=1/ sleep 5
+> +     $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,thr_len=0x4,thr_mode=1/ sleep 5
+>  
+>  4. TLP Length filter
+>  
 
-Thanks,
-Lorenzo
