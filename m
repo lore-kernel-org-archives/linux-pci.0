@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C008C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:01:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E38AC4332F
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:01:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234253AbiKKOBe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:01:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42222 "EHLO
+        id S234186AbiKKOBs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:01:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233758AbiKKOAz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:00:55 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA23A845EB;
-        Fri, 11 Nov 2022 05:56:50 -0800 (PST)
-Message-ID: <20221111132706.445074807@linutronix.de>
+        with ESMTP id S234005AbiKKOA6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:00:58 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8B59121271;
+        Fri, 11 Nov 2022 05:56:53 -0800 (PST)
+Message-ID: <20221111132706.556889434@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175009;
+        s=2020; t=1668175012;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=92MQH4tsGJzqVWHKcfiMvA7FJnwUvqItKIXp1ZsQCJ8=;
-        b=bvPrN6axkYTIF2LbeMNOe+mUeY17g00ZVWsa3pBdSu3JEOoPUTytFVkIan722oupR0E7B8
-        ruRapWOMWrJnnYI6lGRY5eZ5BMgE+JQ0g6EuuHihNqcEPk0o4RN6udnD7mss2kBRsBdJc0
-        gYys914sOey8OInhnHJYWb1pj3v9Xe8Av3jxGR7q7R2LrZ9J4tvCjHe4rrqWdf7PNxehCT
-        Rwt/PNz4/H3CqOboErI5qstR8Nj6gtyNJA2EvgzgLSQsIEkyao9Tx5oEHMZ25BwHZt1Qtu
-        HWGGfZczAhaZot6RLR3/JsNNtO9TZ3j5M1Ix/sEsQXWkFN2JH1cVGAV2pMtBwA==
+         references:references; bh=TkOvIxWq7blX++8C4usdFqhmn0pf5LlrWLBigdC6jNU=;
+        b=QwvsjN+SeJTunL4JDRi3zuYoEkPYRBE3sGQtDBitAJztwrnQqvJFDprVJ3r+G23bUHKTXz
+        WVnLTw5f30eDVfgihTfJPYh/Z0QsjvMKw0FT4fEiroiX9FQQRB/8S59doOI0R+CVgPo2Ij
+        HcLqirBVszrOQRk/9x7L5bfx3ZMse96fIUFurtJqHM7ZxxOKTJm6Vtjt6BgEVeszKHG4VH
+        Zi9+KnBbJNUfAlznj2A0WtgtSI3seDWQFduF5C3BGlCDTdk+RzJklqNTZo67B5WY4Z60+k
+        695kbAKVQ2MzHgWCxy8XHJHwnSSyLy8JdX6CUPZFaY6qQVf6NhgpZrLnLuOzfQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175009;
+        s=2020e; t=1668175012;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=92MQH4tsGJzqVWHKcfiMvA7FJnwUvqItKIXp1ZsQCJ8=;
-        b=ohCWCJWinKORAyxBehsGXZErXCxGj/Qm9pNCGlsXZYTqFOTm3xGwzE6xksuSIkIbBUGinG
-        KrSSQtP+7bRjbUCw==
+         references:references; bh=TkOvIxWq7blX++8C4usdFqhmn0pf5LlrWLBigdC6jNU=;
+        b=8rRBWR4SmnZKR1bVKLF8pwofRIJbqCo+qdlwtD/+742M8HKIZZrdG3K1eaeFfog27xHxWo
+        L9y1Jro0COuGinAw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,120 +50,102 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 07/20] genirq/msi: Add pointers for per device irq domains
+Subject: [patch 09/20] genirq/msi: Make msi_get_virq() device domain aware
 References: <20221111131813.914374272@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:56:48 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:56:51 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With the upcoming per device MSI interrupt domain support it is necessary
-to store the domain pointers per device.
+From: Ahmed S. Darwish <darwi@linutronix.de>
 
-Instead of delegating that storage to device drivers or subsystems create a
-storage array in struct msi_device_data which will also take care of
-tearing down the irq domains when msi_device_data is cleaned up via devres.
+In preparation of the upcoming per device multi MSI domain support, change
+the interface to support lookups based on domain id and zero based index
+within the domain.
 
-The interfaces into the MSI core will be changed from irqdomain pointer
-based interfaces to domain id based interfaces to support multiple MSI
-domains on a single device (e.g. PCI/MSI[-X] and PCI/IMS.
-
-Once the per device domain support is complete the irq domain pointer in
-struct device::msi.domain will not longer contain a pointer to the "global"
-MSI domain. It will contain a pointer to the MSI parent domain instead.
-
-It would be a horrible maze of conditionals to evaluate all over the place
-which domain pointer should be used, i.e. the "global" one in
-device::msi::domain or one from the internal pointer array.
-
-To avoid this evaluate in msi_setup_device_data() whether the irq domain
-which is associated to a device is a "global" or a parent MSI domain. If it
-is global then copy the pointer into the first entry in the irqdomain
-pointer array.
-
-This allows to convert interfaces and implementation to domain ids while
-keeping everything existing working.
-
+Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h     |    3 +++
- include/linux/msi_api.h |    8 ++++++++
- kernel/irq/msi.c        |   14 ++++++++++++++
- 3 files changed, 25 insertions(+)
+ include/linux/msi_api.h |   14 +++++++++++++-
+ kernel/irq/msi.c        |   24 ++++++++++++++++++------
+ 2 files changed, 31 insertions(+), 7 deletions(-)
 
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -77,6 +77,7 @@ struct msi_desc;
- struct pci_dev;
- struct platform_msi_priv_data;
- struct device_attribute;
-+struct irq_domain;
- 
- void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-@@ -176,6 +177,7 @@ enum msi_desc_filter {
-  * @mutex:		Mutex protecting the MSI descriptor store
-  * @__store:		Xarray for storing MSI descriptor pointers
-  * @__iter_idx:		Index to search the next entry for iterators
-+ * @__irqdomains:	Per device interrupt domains
-  */
- struct msi_device_data {
- 	unsigned long			properties;
-@@ -183,6 +185,7 @@ struct msi_device_data {
- 	struct mutex			mutex;
- 	struct xarray			__store;
- 	unsigned long			__iter_idx;
-+	struct irq_domain		*__irqdomains[MSI_MAX_DEVICE_IRQDOMAINS];
- };
- 
- int msi_setup_device_data(struct device *dev);
 --- a/include/linux/msi_api.h
 +++ b/include/linux/msi_api.h
-@@ -10,6 +10,14 @@
+@@ -18,6 +18,18 @@ enum msi_domain_ids {
+ 	MSI_MAX_DEVICE_IRQDOMAINS,
+ };
  
- struct device;
- 
-+/*
-+ * Per device interrupt domain related constants.
-+ */
-+enum msi_domain_ids {
-+	MSI_DEFAULT_DOMAIN,
-+	MSI_MAX_DEVICE_IRQDOMAINS,
-+};
+-unsigned int msi_get_virq(struct device *dev, unsigned int index);
++unsigned int msi_domain_get_virq(struct device *dev, unsigned int domid, unsigned int index);
 +
- unsigned int msi_get_virq(struct device *dev, unsigned int index);
++/**
++ * msi_get_virq - Lookup the Linux interrupt number for a MSI index on the default interrupt domain
++ * @dev:	Device for which the lookup happens
++ * @index:	The MSI index to lookup
++ *
++ * Return: The Linux interrupt number on success (> 0), 0 if not found
++ */
++static inline unsigned int msi_get_virq(struct device *dev, unsigned int index)
++{
++	return msi_domain_get_virq(dev, MSI_DEFAULT_DOMAIN, index);
++}
  
  #endif
 --- a/kernel/irq/msi.c
 +++ b/kernel/irq/msi.c
-@@ -21,6 +21,18 @@
+@@ -351,25 +351,37 @@ struct msi_desc *msi_next_desc(struct de
+ EXPORT_SYMBOL_GPL(msi_next_desc);
  
- static inline int msi_sysfs_create_group(struct device *dev);
- 
-+static inline void msi_setup_default_irqdomain(struct device *dev, struct msi_device_data *md)
-+{
-+	if (!dev->msi.domain)
-+		return;
-+	/*
-+	 * If @dev::msi::domain is a global MSI domain, copy the pointer
-+	 * into the domain array to avoid conditionals all over the place.
-+	 */
-+	if (!irq_domain_is_msi_parent(dev->msi.domain))
-+		md->__irqdomains[MSI_DEFAULT_DOMAIN] = dev->msi.domain;
-+}
-+
  /**
-  * msi_alloc_desc - Allocate an initialized msi_desc
-  * @dev:	Pointer to the device for which this is allocated
-@@ -213,6 +225,8 @@ int msi_setup_device_data(struct device
- 		return ret;
- 	}
+- * msi_get_virq - Return Linux interrupt number of a MSI interrupt
++ * msi_domain_get_virq - Lookup the Linux interrupt number for a MSI index on a interrupt domain
+  * @dev:	Device to operate on
++ * @domid:	Domain ID of the interrupt domain associated to the device
+  * @index:	MSI interrupt index to look for (0-based)
+  *
+  * Return: The Linux interrupt number on success (> 0), 0 if not found
+  */
+-unsigned int msi_get_virq(struct device *dev, unsigned int index)
++unsigned int msi_domain_get_virq(struct device *dev, unsigned int domid, unsigned int index)
+ {
+ 	struct msi_desc *desc;
+ 	unsigned int ret = 0;
+-	bool pcimsi;
++	bool pcimsi = false;
++	int base;
  
-+	msi_setup_default_irqdomain(dev, md);
+ 	if (!dev->msi.data)
+ 		return 0;
+ 
+-	pcimsi = dev_is_pci(dev) ? to_pci_dev(dev)->msi_enabled : false;
++	if (WARN_ON_ONCE(index >= MSI_MAX_INDEX))
++		return 0;
 +
- 	xa_init(&md->__store);
- 	mutex_init(&md->mutex);
- 	dev->msi.data = md;
++	/* This check is only valid for the PCI default MSI domain */
++	if (dev_is_pci(dev) && domid == MSI_DEFAULT_DOMAIN)
++		pcimsi = to_pci_dev(dev)->msi_enabled;
+ 
+ 	msi_lock_descs(dev);
+-	desc = xa_load(&dev->msi.data->__store, pcimsi ? 0 : index);
++
++	base = msi_get_domain_base_index(dev, domid);
++	if (base < 0)
++		return 0;
++
++	desc = xa_load(&dev->msi.data->__store, base + pcimsi ? 0 : index);
+ 	if (desc && desc->irq) {
+ 		/*
+ 		 * PCI-MSI has only one descriptor for multiple interrupts.
+@@ -386,7 +398,7 @@ unsigned int msi_get_virq(struct device
+ 	msi_unlock_descs(dev);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(msi_get_virq);
++EXPORT_SYMBOL_GPL(msi_domain_get_virq);
+ 
+ #ifdef CONFIG_SYSFS
+ static struct attribute *msi_dev_attrs[] = {
 
