@@ -2,350 +2,183 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F0EEC4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 05:37:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62CB5C43217
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 06:22:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231777AbiKKFh2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 00:37:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58838 "EHLO
+        id S232815AbiKKGW3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 01:22:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47962 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230232AbiKKFh0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 00:37:26 -0500
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam04on2065.outbound.protection.outlook.com [40.107.101.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC01864A2B;
-        Thu, 10 Nov 2022 21:37:24 -0800 (PST)
+        with ESMTP id S232784AbiKKGW0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 01:22:26 -0500
+Received: from na01-obe.outbound.protection.outlook.com (mail-eastusazon11022018.outbound.protection.outlook.com [52.101.53.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42F8E663FB;
+        Thu, 10 Nov 2022 22:22:24 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aPL9G6eY8bx1ZIL/f2TP2Kn1CzDw1jQ/7uhRqYbhjFx3CmizR/Keq+wH8hUfW3RtOyE0MgesypQ/XVg9Oima8aXoLToz6jRFvqqfVprNInxg444xeq0mLNT3SkLjpVU5GGEZdTHLrdUvKM+voOwJsmrmLufV3VnDIoeGKLK/l1sCKo1qYMYLA+moSyvGSvaHlfq7gG2gKq0sGCE/csrmHY7/3KSmxnVSR/aVE0Ni0XhRsqiFdu9KVF8vRWQIuwXOe+QNtr5/wqzKE3RtybHScDiunVK/kB95mq+54Kqyv4QLr6jRzt0zX3t7lBI3tVoVyFLJpipAAtL4uWlRzeQL7Q==
+ b=RMcBWMbKBOl0gTR43MuD/6CkRQDi9YQYWASKE8jQWJJ9TR1l6rQ0rLuoaD9BgnnLqWlK0im22P8OHa7Ua8xjD85Np0WoZexi/s16YVjL+jOi2M8K2LvFH1IsZqKUmkrkpXWXSEwS3GYBuKIFVpiYZA+CbRScibHGihfE4wMYJe6OyBro5qIPAN5r5E7JpQYI1FLt8jWMOwTkHbbRVUNxBbhj3o+gEcAjS0KvinzoOIyP91cn1IxNf1saXhLo6cdo+u5OugL7riRxr8bCOrdyqkPxRB7KJZ6rhu5XwalKAyib0kpg0Ub3frAIjTEC5YU1X4e2gKZwcnHQJ7K90IVDHg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=taz/J4gZ722glgLXRIimXriPXeEAZv1K5B1ajraYkf4=;
- b=h2R8oK8/wP56gDZVnlRxKR3PcmthVqL54KDQJ4is6IHJGLljz3Di4A4kKDm7AjH7IZKk4/8Bff97GlikqdneRcVWWgWhweiX1Dz6ROceu2t7HC2UEPJl6D8mjNs0a9n5miFcKa7RdMkp2kO3tVpS2JGWRRtNG53qdaaB4bxGgVciOuP9Seaq52t4hJ+Ryg7l1U5ht58PxLXgJnrLgwGvOO5VhDW5mKB5Sur/SULM4ozkWl9VWwdG+eTopNj8zNa9xVurp/oFlezKVGLB0lb+dOh3BoVc/4e/TkePArnZs8iTiGzDyez20DtMo+Oqb8Wf7YE8Dv5elVtfr+pRleLnaA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ bh=8OcaeMt/u9wYn2yxcRzom+6u54BPUvchqecBRIxcVm4=;
+ b=PjJVYA5y+dEffQ9Zz8cXxCQmIRWZJbFmp+N2llI1a1KKic22eKZYI6+R5wbYQQe+ixPP0QzUN8258KAgWgBms+DggZUzOaK9a2+D81aJk5myM+t3e53VTtex3QcvxSAwBC1G9rm1YXspDwQUc2WeVzxJi7DQZyO9bxeKBL7xgIg/aYlChlnKnQcH2r1fkutZIxYa8vtDUpnOm6y2iZNIl+cybwGsiaR6lUvOixEPl0vYS72J6FRA3zfH7we590Q2iscm7WQbqYV0UMRrvm8repd/CZuZALrOK9rcMFlrmCYBMD4nZKxT0p0EWWI7wuEfT2VAw8RPmJkf/iEQDknxXw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=taz/J4gZ722glgLXRIimXriPXeEAZv1K5B1ajraYkf4=;
- b=msp68y0o6Z+bSvXzs2OSlG04xeUJWBHVqqMsu0fs0XGXRHMpgRt00P+bjZvoL8p8+/xFYi6Nng4oJ0G4TRstkT0tuMGuug0YJ/bv35RM6FxawQKOXZPdILbzRr/DsgPrWo0rY3jqhmGFaePHDwZ+OCzkH4Y2OvY7ZrGuYE1mt/c=
-Received: from DM5PR07CA0092.namprd07.prod.outlook.com (2603:10b6:4:ae::21) by
- PH7PR12MB5904.namprd12.prod.outlook.com (2603:10b6:510:1d8::19) with
+ bh=8OcaeMt/u9wYn2yxcRzom+6u54BPUvchqecBRIxcVm4=;
+ b=H7WU6C6Oh2TMZF+Qzk8SWcmzU2SvWb04XoKdjWxGRLdWESdao1Wvn8KlcRREFr7klyPHACatj0UiCb7m7N1RP6IH3OIM9q6Uk+ZJcKyeMwSPPRXUZ8ewop0z9BkOoLWIlcIABXm01BmxnDzxLw5lYjUv2V3iTrmt38GZd5E9K1c=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+Received: from DM6PR21MB1370.namprd21.prod.outlook.com (2603:10b6:5:16b::28)
+ by MW4PR21MB1857.namprd21.prod.outlook.com (2603:10b6:303:74::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5813.13; Fri, 11 Nov
- 2022 05:37:22 +0000
-Received: from DM6NAM11FT089.eop-nam11.prod.protection.outlook.com
- (2603:10b6:4:ae:cafe::7) by DM5PR07CA0092.outlook.office365.com
- (2603:10b6:4:ae::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5676.24 via Frontend
- Transport; Fri, 11 Nov 2022 05:37:22 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- DM6NAM11FT089.mail.protection.outlook.com (10.13.173.82) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.5813.12 via Frontend Transport; Fri, 11 Nov 2022 05:37:21 +0000
-Received: from SATLEXMB08.amd.com (10.181.40.132) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 10 Nov
- 2022 23:37:21 -0600
-Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB08.amd.com
- (10.181.40.132) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Thu, 10 Nov
- 2022 21:37:20 -0800
-Received: from xhdarjunv40.xilinx.com (10.180.168.240) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server id 15.1.2375.31 via Frontend
- Transport; Thu, 10 Nov 2022 23:37:18 -0600
-From:   Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <krzysztof.kozlowski@linaro.org>
-CC:     <bhelgaas@google.com>, <michals@xilinx.com>, <robh+dt@kernel.org>,
-        <nagaradhesh.yeleswarapu@amd.com>, <bharat.kumar.gogada@amd.com>,
-        Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-Subject: [PATCH v6 2/2] dt-bindings: PCI: xilinx-nwl: Convert to YAML schemas of Xilinx NWL PCIe Root Port Bridge
-Date:   Fri, 11 Nov 2022 11:07:09 +0530
-Message-ID: <20221111053709.1474323-2-thippeswamy.havalige@amd.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221111053709.1474323-1-thippeswamy.havalige@amd.com>
-References: <20221111053709.1474323-1-thippeswamy.havalige@amd.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5834.2; Fri, 11 Nov
+ 2022 06:22:14 +0000
+Received: from DM6PR21MB1370.namprd21.prod.outlook.com
+ ([fe80::c3e3:a6ef:232c:299b]) by DM6PR21MB1370.namprd21.prod.outlook.com
+ ([fe80::c3e3:a6ef:232c:299b%7]) with mapi id 15.20.5834.002; Fri, 11 Nov 2022
+ 06:22:14 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, luto@kernel.org,
+        peterz@infradead.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, lpieralisi@kernel.org,
+        robh@kernel.org, kw@linux.com, bhelgaas@google.com, arnd@arndb.de,
+        hch@infradead.org, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
+        Tianyu.Lan@microsoft.com, kirill.shutemov@linux.intel.com,
+        sathyanarayanan.kuppuswamy@linux.intel.com, ak@linux.intel.com,
+        isaku.yamahata@intel.com, dan.j.williams@intel.com,
+        jane.chu@oracle.com, seanjc@google.com, tony.luck@intel.com,
+        x86@kernel.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        iommu@lists.linux.dev
+Cc:     mikelley@microsoft.com
+Subject: [PATCH v2 02/12] x86/ioapic: Gate decrypted mapping on cc_platform_has() attribute
+Date:   Thu, 10 Nov 2022 22:21:31 -0800
+Message-Id: <1668147701-4583-3-git-send-email-mikelley@microsoft.com>
+X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1668147701-4583-1-git-send-email-mikelley@microsoft.com>
+References: <1668147701-4583-1-git-send-email-mikelley@microsoft.com>
 Content-Type: text/plain
-X-EOPAttributedMessage: 0
+X-ClientProxiedBy: MW4PR04CA0329.namprd04.prod.outlook.com
+ (2603:10b6:303:82::34) To DM6PR21MB1370.namprd21.prod.outlook.com
+ (2603:10b6:5:16b::28)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6NAM11FT089:EE_|PH7PR12MB5904:EE_
-X-MS-Office365-Filtering-Correlation-Id: 044035c6-9f35-4a6b-302d-08dac3a6ce53
+X-MS-TrafficTypeDiagnostic: DM6PR21MB1370:EE_|MW4PR21MB1857:EE_
+X-MS-Office365-Filtering-Correlation-Id: e5f819b8-a68f-4569-c9ed-08dac3ad12c2
+X-LD-Processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: nyuJHZtf5eub8/f+WXaXpgHTXPoFn2ft+V8xQOL1Z226WLw4Cilk+24+wAbd21w9R0Y8zMC2l01pNcVO/10qAYgMfhuI+ANl1KyujtC1qq173xpOSYlejyNz3TuaAU/4mb+E7ms+/N8SDzNO2kCRGyQALCkrdo4qsTkwAqTt2Kr+6y113XbsucL0sikahOY2A0h8IHJAiZwlEHPiMSdMUsNNJ+ubSPoTy9kEMYtvkXrTum7OJatEM35H5NWuDcVUwWk4X3jko1r6+nl3GA7IxO47jMyslKUs301cdkpOj9xW2EVMlVApbTse/ggTbdTFbWxMAeg8yWkxXSllz3uFsJ1gn/bDLzD3wXiSABuRanc+h2XFbuLguaMVGn2U73Wg88u8V1vh3kgsr+FlNV9zA5bGf8GzWulNux81XjZnRoytFWNRuiNRk2mX+CzWyC1AS6SepUFUHJsd1FUAaYzhzK7bhc/hOSz98sEpFroWiyHtPgz2rKlO7Q9euqUlKpg8hbMXCh0w3YsZOB3qPWY8kKDPUO4umBzDBrCkUrgWVinJ+92AxZvKyCk1XB0Up3F15wHhAOEylnWm4WAZgOLokj2cdALfm6KsICWiQ8+6o9D4PHwgqOURndwGPLXRgR21SyKa4P/fgl4hZKhYXOfps3QVvz7ikeLpOSW+ondFyW8EcMZilHOtiXdNvjM8QEFnAr6D6i5rNZvxyWoRTpx3ERkH6AtQJp5Cc1YZKySiFch5KMpwlHGNJNJ9RkTkweJhiTJWfD+x00f9/dUs51DfoPygGHK0CoWyb5rw28OAZmYjkzQ/j5MoFF6fmlEI9EhMVCmC6jKG4ta22c9xDsXZupnXgrXlkBZFh9SRYHUTs0hht+Q3XbFRcWTQdZ57veIJ
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230022)(4636009)(396003)(376002)(39860400002)(346002)(136003)(451199015)(46966006)(40470700004)(36840700001)(86362001)(36756003)(36860700001)(5660300002)(8936002)(44832011)(2906002)(47076005)(2616005)(1076003)(336012)(426003)(186003)(83380400001)(82740400003)(356005)(81166007)(54906003)(4326008)(110136005)(316002)(82310400005)(478600001)(40480700001)(40460700003)(8676002)(41300700001)(70586007)(70206006)(966005)(26005)(6666004)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2022 05:37:21.9111
+X-Microsoft-Antispam-Message-Info: UJtq86ry/vEbYzqSqkbP2e7HDBlzZa7in6TGb6fzURJDIUdq6Fm5nA88Sw6GYiPgq8gyGzSixyHjk+pOCOLcoYH0nkvlHa+++SK2wplIVdoQ01BKl7ghphXoMEjh6RToVBTZ6a74X0lRsc4pcwvFZR2qFuMl2qQOjQ+iZ7cCp66KQ4tKAoeeCWfDWbTk89Glwk98jHSJxnx2t1X1hvNH2DHCdSYk0XpP5hiO5YEbNlfbIliDDiApEOWXtf1EK1862C3JMytMZTUuJmhQ6zDlQHwdl9YNDY+xoC+6OHKefSR2nJZYdrfc2OccFk+dCrrShYVAgNEX2f3iKKzG+bXIQDHROaDxQrMqEHMh+7Hnw77FSUFJ2SN4W+7vf9OrcKQ3MB+ijqpahrTSWMNKJwqOzNZNMpfRct1niEiZ4V0s99FmVM0EmDGlTRmLznPSdk2wtwsjgveXucKrAbiSAFxCijt7hMwvMoJi8tC0OqQte0vGzjB12IEZAzLfUNY6oRVhqQsMiFYNh3LdYiGmc5RXmbCUaist69XG/nrWC2kAMQ8gXuSMRxv+FbMz5ys0CXq4IFRs8y2HFvC9eS7g9pCwoAcGXHjukZanchKuGtjupIMLU5hTDM6bnE/wWPyDXwltWUlRkXpno8KIq4k9+sdFpiljOk5vTo5iO1LjNpzyOS9lwlqko1HkmwZR7Um8SGIpvBcgUF7vZ/jueAsHRRhCEPE2jiT8y2yw0KnY264JeGhoFWAqkcK95wFD5Sa3QVkfg343BYNIFeGZROCStcbhPN4ECTfD9BVjbzRZ9yq0BuLmIVDpPDzKnQty9Py33suw5Na7QqD24YwbaTOuFvcBxg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(39860400002)(346002)(376002)(366004)(136003)(396003)(451199015)(83380400001)(52116002)(26005)(6666004)(6512007)(186003)(38100700002)(107886003)(2616005)(7406005)(2906002)(316002)(7416002)(6506007)(10290500003)(6486002)(66946007)(66476007)(5660300002)(8936002)(41300700001)(8676002)(4326008)(66556008)(478600001)(38350700002)(36756003)(86362001)(921005)(82960400001)(82950400001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Nh+v0WkPJj4vMR/VScDAW9JXeXPIMtWP1pYrcNyZFp7CV7u36TDTIG5tnPIy?=
+ =?us-ascii?Q?iVKUXE4pdqi/9ILRA9+VKhFZGEoH4BKCamiQALiquY0p2l/tVUqrOau+m8jy?=
+ =?us-ascii?Q?Da8eQ+nvI5tmgkWyEuHNsEUsGmVF7MLNqy6Sv7yO4MNA0TGKYmw8li4MnJ/f?=
+ =?us-ascii?Q?jobF9pJOvFviVYvHDy8/p7iBf0yGmzZJ3usTESFROfljubW0WoZtpYB0tYqA?=
+ =?us-ascii?Q?3bMeb4kUvmwSQU/gRv+kpI0hJx3yQ86FCzjReeem+ATcfjk0ydfAVRWacPGS?=
+ =?us-ascii?Q?MiktzGmKfWY9roSy6LDN560xKzvgZvC78uG0itvIsKYhQoSkquflpozWy5jg?=
+ =?us-ascii?Q?WleUb+je9uwUaN6pB4+Z42HtOO/U3d5XzI6/Qq/e3MGGiHz2IhNTw44cqSUl?=
+ =?us-ascii?Q?UHDXjU0SRTfJ0Cm4YEx3CsL0sF9gjfUfi4lc7ZhgTR6DlI7cF23WyIq220HF?=
+ =?us-ascii?Q?wvc9mQWaJU3OOz+Y6W8HUfDeGcW/dZaj01fjQstxo/xdDzlv1VbqYjgwKTla?=
+ =?us-ascii?Q?6HVbOTAH/zsBnV0D9qDkNoQ3oCRUgIKu5sMkKN0eruVBgAso6lNNEXbQd000?=
+ =?us-ascii?Q?UFz1K2U1yRySJDt3ybaZUvqDlugGY/tORrf2X3U8wALrGS5zY0PF5nRQwToJ?=
+ =?us-ascii?Q?5awv+dj7uAz2bE4KBmJB+la96ANtByaisu8DW+Esj0fIgbl6EERWp6MK4tf6?=
+ =?us-ascii?Q?MI/dafsdWji5X+BT6ZHrIT3DC7ZNyUpGVHw3528utEzElSp1kxW9ExDyfr1E?=
+ =?us-ascii?Q?jBamFMWVZyDkCzjN5ny0qNUha19qbum3d9jYOf8lyoQzVn1vyWRsAaXDdhvV?=
+ =?us-ascii?Q?BEbVPkDGAFYDoD45Fin29sF/mXMtbukVKng49YQjN80sfGgwGn4uXYGox+F7?=
+ =?us-ascii?Q?q6cDL3PLcez2jQ2KarSXBZxV5Nf9al6ayA9QN/YyFt/r9sQTX1ENaFpyPPL7?=
+ =?us-ascii?Q?k6Nvesi5eUM0ljqV4678trWygIuO7H2jdetKpr/cbUGqQeHZseZQPLcRUl3E?=
+ =?us-ascii?Q?g9eMNNoDNoNcJ8xjaTPeYVfocEjDvno3rEIrIaBJjRJWjxzP+7jytHAZh2WK?=
+ =?us-ascii?Q?wKQDGvubsk01qLY3I6+8zikLrMCa771A9YkljjFXEFJ08b8el9RL60cIiCAU?=
+ =?us-ascii?Q?eTJZ4mRRvnbo1L8hCt1SaiIyhb3Xj+YR0Sa6B9vW0/Ngqad6mjjS1Rz4zlOr?=
+ =?us-ascii?Q?+efI5YshrbPhXrE0UGHP+l83KZhAZhJQsgA1XMZ4Jv+EYkbgpZBp1BKO9I24?=
+ =?us-ascii?Q?2LQXF6mNzIZdO6meN9CkYvv4JLrF1+alMqDI3PUEn9C9WEqIz9atELNbWIfr?=
+ =?us-ascii?Q?Tap2kuZ0FOkZ/SawmFXymPDyzvT7MCRuKfnYN8KA2vwc4Ogj+XBSa4op4xzD?=
+ =?us-ascii?Q?HFObhr8umwqlVsYlES+b7xk8IQO4Qzxf1lI4Vs1CZ51S2uk3feGVXss7XXpg?=
+ =?us-ascii?Q?Q5olYfsmiGs78ccsuxgS83tX1XCOjwA7yAgbwMWjpVc6wwaOqABk//JWV7sj?=
+ =?us-ascii?Q?Pn863w/lhjGTg1194OpF/xDHHstuMTt9yaZLxKYixwXS5gwoLQoxfhmNdHk9?=
+ =?us-ascii?Q?+6XWwTk/rL/S/WI1dKQ4V4CILoDel4RF7Fehi/EgHMiY8OjrzeU/dFbHg/4M?=
+ =?us-ascii?Q?9g=3D=3D?=
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e5f819b8-a68f-4569-c9ed-08dac3ad12c2
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1370.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Nov 2022 06:22:13.9891
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 044035c6-9f35-4a6b-302d-08dac3a6ce53
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT089.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB5904
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: F5ZGfvO9AJ0eB4++BJ9L+a7Sy6FwfIh8OXjs2EuR5V19H9l/us+D+xzPH7+fIHTlnWw7ZvneK41cW+8SJriudg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB1857
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert to YAML schemas for Xilinx NWL PCIe Root Port Bridge
-dt binding.
+Current code always maps the IOAPIC as shared (decrypted) in a
+confidential VM. But Hyper-V guest VMs on AMD SEV-SNP with vTOM
+enabled use a paravisor running in VMPL0 to emulate the IOAPIC.
+In such a case, the IOAPIC must be accessed as private (encrypted).
 
-Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+Fix this by gating the IOAPIC decrypted mapping on a new
+cc_platform_has() attribute that a subsequent patch in the series
+will set only for Hyper-V guests. The new attribute is named
+somewhat generically because similar paravisor emulation cases
+may arise in the future.
+
+Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+Reviewed-by: Wei Liu <wei.liu@kernel.org>
 ---
-changes in v6:
-Added maxItems to clocks property.
+ arch/x86/kernel/apic/io_apic.c |  3 ++-
+ include/linux/cc_platform.h    | 13 +++++++++++++
+ 2 files changed, 15 insertions(+), 1 deletion(-)
 
- .../bindings/pci/xilinx-nwl-pcie.txt          |  73 ---------
- .../bindings/pci/xlnx,nwl-pcie.yaml           | 149 ++++++++++++++++++
- 2 files changed, 149 insertions(+), 73 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml
-
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
-deleted file mode 100644
-index f56f8c58c5d9..000000000000
---- a/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
-+++ /dev/null
-@@ -1,73 +0,0 @@
--* Xilinx NWL PCIe Root Port Bridge DT description
--
--Required properties:
--- compatible: Should contain "xlnx,nwl-pcie-2.11"
--- #address-cells: Address representation for root ports, set to <3>
--- #size-cells: Size representation for root ports, set to <2>
--- #interrupt-cells: specifies the number of cells needed to encode an
--	interrupt source. The value must be 1.
--- reg: Should contain Bridge, PCIe Controller registers location,
--	configuration space, and length
--- reg-names: Must include the following entries:
--	"breg": bridge registers
--	"pcireg": PCIe controller registers
--	"cfg": configuration space region
--- device_type: must be "pci"
--- interrupts: Should contain NWL PCIe interrupt
--- interrupt-names: Must include the following entries:
--	"msi1, msi0": interrupt asserted when an MSI is received
--	"intx": interrupt asserted when a legacy interrupt is received
--	"misc": interrupt asserted when miscellaneous interrupt is received
--- interrupt-map-mask and interrupt-map: standard PCI properties to define the
--	mapping of the PCI interface to interrupt numbers.
--- ranges: ranges for the PCI memory regions (I/O space region is not
--	supported by hardware)
--	Please refer to the standard PCI bus binding document for a more
--	detailed explanation
--- msi-controller: indicates that this is MSI controller node
--- msi-parent:  MSI parent of the root complex itself
--- legacy-interrupt-controller: Interrupt controller device node for Legacy
--	interrupts
--	- interrupt-controller: identifies the node as an interrupt controller
--	- #interrupt-cells: should be set to 1
--	- #address-cells: specifies the number of cells needed to encode an
--		address. The value must be 0.
--
--Optional properties:
--- dma-coherent: present if DMA operations are coherent
--- clocks: Input clock specifier. Refer to common clock bindings
--
--Example:
--++++++++
--
--nwl_pcie: pcie@fd0e0000 {
--	#address-cells = <3>;
--	#size-cells = <2>;
--	compatible = "xlnx,nwl-pcie-2.11";
--	#interrupt-cells = <1>;
--	msi-controller;
--	device_type = "pci";
--	interrupt-parent = <&gic>;
--	interrupts = <0 114 4>, <0 115 4>, <0 116 4>, <0 117 4>, <0 118 4>;
--	interrupt-names = "msi0", "msi1", "intx", "dummy", "misc";
--	interrupt-map-mask = <0x0 0x0 0x0 0x7>;
--	interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc 0x1>,
--			<0x0 0x0 0x0 0x2 &pcie_intc 0x2>,
--			<0x0 0x0 0x0 0x3 &pcie_intc 0x3>,
--			<0x0 0x0 0x0 0x4 &pcie_intc 0x4>;
--
--	msi-parent = <&nwl_pcie>;
--	reg = <0x0 0xfd0e0000 0x0 0x1000>,
--	      <0x0 0xfd480000 0x0 0x1000>,
--	      <0x80 0x00000000 0x0 0x1000000>;
--	reg-names = "breg", "pcireg", "cfg";
--	ranges = <0x02000000 0x00000000 0xe0000000 0x00000000 0xe0000000 0x00000000 0x10000000  /* non-prefetchable memory */
--		  0x43000000 0x00000006 0x00000000 0x00000006 0x00000000 0x00000002 0x00000000>;/* prefetchable memory */
--
--	pcie_intc: legacy-interrupt-controller {
--		interrupt-controller;
--		#address-cells = <0>;
--		#interrupt-cells = <1>;
--	};
--
--};
-diff --git a/Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml b/Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml
-new file mode 100644
-index 000000000000..897602559b37
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml
-@@ -0,0 +1,149 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/xlnx,nwl-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+index a868b76..d2c1bf7 100644
+--- a/arch/x86/kernel/apic/io_apic.c
++++ b/arch/x86/kernel/apic/io_apic.c
+@@ -2686,7 +2686,8 @@ static void io_apic_set_fixmap(enum fixed_addresses idx, phys_addr_t phys)
+ 	 * Ensure fixmaps for IOAPIC MMIO respect memory encryption pgprot
+ 	 * bits, just like normal ioremap():
+ 	 */
+-	flags = pgprot_decrypted(flags);
++	if (!cc_platform_has(CC_ATTR_HAS_PARAVISOR))
++		flags = pgprot_decrypted(flags);
+ 
+ 	__set_fixmap(idx, phys, flags);
+ }
+diff --git a/include/linux/cc_platform.h b/include/linux/cc_platform.h
+index cb0d6cd..b6c4a79 100644
+--- a/include/linux/cc_platform.h
++++ b/include/linux/cc_platform.h
+@@ -90,6 +90,19 @@ enum cc_attr {
+ 	 * Examples include TDX Guest.
+ 	 */
+ 	CC_ATTR_HOTPLUG_DISABLED,
 +
-+title: Xilinx NWL PCIe Root Port Bridge
-+
-+maintainers:
-+  - Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+  - $ref: /schemas/interrupt-controller/msi-controller.yaml#
-+
-+properties:
-+  compatible:
-+    const: xlnx,nwl-pcie-2.11
-+
-+  reg:
-+    items:
-+      - description: PCIe bridge registers location.
-+      - description: PCIe Controller registers location.
-+      - description: PCIe Configuration space region.
-+
-+  reg-names:
-+    items:
-+      - const: breg
-+      - const: pcireg
-+      - const: cfg
-+
-+  interrupts:
-+    items:
-+      - description: interrupt asserted when miscellaneous interrupt is received
-+      - description: unused interrupt(dummy)
-+      - description: interrupt asserted when a legacy interrupt is received
-+      - description: msi1 interrupt asserted when an MSI is received
-+      - description: msi0 interrupt asserted when an MSI is received
-+
-+  interrupt-names:
-+    items:
-+      - const: misc
-+      - const: dummy
-+      - const: intx
-+      - const: msi1
-+      - const: msi0
-+
-+  interrupt-map-mask:
-+    items:
-+      - const: 0
-+      - const: 0
-+      - const: 0
-+      - const: 7
-+
-+  "#interrupt-cells":
-+    const: 1
-+
-+  msi-parent:
-+    description: MSI controller the device is capable of using.
-+
-+  interrupt-map:
-+    maxItems: 4
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  iommus:
-+    maxItems: 1
-+
-+  dma-coherent:
-+    description: optional, only needed if DMA operations are coherent.
-+
-+  clocks:
-+    maxItems: 1
-+    description: optional, input clock specifier.
-+
-+  legacy-interrupt-controller:
-+    description: Interrupt controller node for handling legacy PCI interrupts.
-+    type: object
-+    properties:
-+      "#address-cells":
-+        const: 0
-+
-+      "#interrupt-cells":
-+        const: 1
-+
-+      "interrupt-controller": true
-+
-+    required:
-+      - "#address-cells"
-+      - "#interrupt-cells"
-+      - interrupt-controller
-+
-+    additionalProperties: false
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - interrupts
-+  - "#interrupt-cells"
-+  - interrupt-map
-+  - interrupt-map-mask
-+  - msi-controller
-+  - power-domains
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+    #include <dt-bindings/power/xlnx-zynqmp-power.h>
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+        nwl_pcie: pcie@fd0e0000 {
-+            compatible = "xlnx,nwl-pcie-2.11";
-+            reg = <0x0 0xfd0e0000 0x0 0x1000>,
-+                  <0x0 0xfd480000 0x0 0x1000>,
-+                  <0x80 0x00000000 0x0 0x1000000>;
-+            reg-names = "breg", "pcireg", "cfg";
-+            ranges = <0x02000000 0x0 0xe0000000 0x0 0xe0000000 0x0 0x10000000>,
-+                     <0x43000000 0x00000006 0x0 0x00000006 0x0 0x00000002 0x0>;
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            #interrupt-cells = <1>;
-+            msi-controller;
-+            device_type = "pci";
-+            interrupt-parent = <&gic>;
-+            interrupts = <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 116 IRQ_TYPE_EDGE_RISING>,
-+                         <GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 115 IRQ_TYPE_EDGE_RISING>,
-+                         <GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-names = "misc", "dummy", "intx", "msi1", "msi0";
-+            interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+            interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc 0x1>,
-+                            <0x0 0x0 0x0 0x2 &pcie_intc 0x2>,
-+                            <0x0 0x0 0x0 0x3 &pcie_intc 0x3>,
-+                            <0x0 0x0 0x0 0x4 &pcie_intc 0x4>;
-+            msi-parent = <&nwl_pcie>;
-+            power-domains = <&zynqmp_firmware PD_PCIE>;
-+            iommus = <&smmu 0x4d0>;
-+            pcie_intc: legacy-interrupt-controller {
-+                interrupt-controller;
-+                #address-cells = <0>;
-+                #interrupt-cells = <1>;
-+            };
-+        };
-+    };
++	/**
++	 * @CC_ATTR_HAS_PARAVISOR: Guest VM is running with a paravisor
++	 *
++	 * The platform/OS is running as a guest/virtual machine with
++	 * a paravisor in VMPL0. Having a paravisor affects things
++	 * like whether the I/O APIC is emulated and operates in the
++	 * encrypted or decrypted portion of the guest physical address
++	 * space.
++	 *
++	 * Examples include Hyper-V SEV-SNP guests using vTOM.
++	 */
++	CC_ATTR_HAS_PARAVISOR,
+ };
+ 
+ #ifdef CONFIG_ARCH_HAS_CC_PLATFORM
 -- 
-2.25.1
+1.8.3.1
 
