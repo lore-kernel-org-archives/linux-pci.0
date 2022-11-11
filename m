@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 878F8C4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:07:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40F23C433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:07:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234104AbiKKOHw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:07:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50444 "EHLO
+        id S234151AbiKKOHx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:07:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234531AbiKKOHE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:04 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C0808BA91;
-        Fri, 11 Nov 2022 05:59:54 -0800 (PST)
-Message-ID: <20221111135206.521387616@linutronix.de>
+        with ESMTP id S234597AbiKKOHM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:12 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 505496B385;
+        Fri, 11 Nov 2022 06:00:01 -0800 (PST)
+Message-ID: <20221111135206.064632154@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175126;
+        s=2020; t=1668175114;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=LtweMGx7oKuU2/h3mTO1bStczI1HafJrlhjPsVZ18gQ=;
-        b=Ctm1DuFDy0HMJYdK9qCz1YVmZZR5lyZM+sN3sOYYfE75QgQVFJMayaXVW+5l8ZSJwAPuN+
-        +GSlJ5SO58Gg6TnKKUONA4rPqWgn0Hy2gQZD3WTmbMv4P9TqKVaO8Q/t/quIGF1od/zCVM
-        nqtFqwQC8F669AYvhxpu1URqit3Qvut11TVNde3tib92Gp0sUpa8Vfe95FIlG0JsqOVutD
-        bSeIuJFnobA1p+MMuRRUSdneNUz9tYhawMrl/V2m6HYR1AoVHvQiPqGxsWpP30STvlrqQQ
-        kKwASJfN4/OhiWltGqJIu3aeAszVDUK6pckOimNXlcc/BgKcRazi8y3tdpv5OA==
+         references:references; bh=Jo+Ej5dmACRlWZx5RMiCIg5tBFJl/q1kQRy9S2DmWGI=;
+        b=Ny7+vAREPPCwIb4SEAunOoc5gfpUXWhhVjVEO7akx4k3pNWK7sZ1x3o/geLljQiaWKLdiW
+        2+okWO9nGxMx9cfHoXGBYSjQAHZXcrEejnoEHKy1jUo4MU57VZkOacK7GCl/IEGjU3xSjL
+        8mPu/0miUdDZEBHnAgbvcqgjSdiig6UrPUBqk8d0+dcCS7cr3IOLhWGm7SsljfydJyArQD
+        x5TSy4c5ua9e8Pwd9w5caKwMhJw4acUO+95MHMkSshR7n5hsnsVp3MJiqwTqQU71PRU87b
+        gE1oaIMabjg7MLIPzgZmX/B0klZqefbQQKNjWzRdbvhqMsJL44/KhaeKOMxUPA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175126;
+        s=2020e; t=1668175114;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=LtweMGx7oKuU2/h3mTO1bStczI1HafJrlhjPsVZ18gQ=;
-        b=nv8txJEj8304vPLR4WxDND2n+tA605ka1X9Eieo9KDRFXP8JJT6fDJKSRkumhizd/TVqVD
-        FQvjzajS4jVYlrDQ==
+         references:references; bh=Jo+Ej5dmACRlWZx5RMiCIg5tBFJl/q1kQRy9S2DmWGI=;
+        b=xpFmkKIPMMhrAQdxPoIQkUj5EeO3nmajnXg0EnjnVOhP5P7p4IUZO5gKWLHXM+zcl4P8cb
+        bOaoIZE9UC5FDmCg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,43 +50,64 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 22/33] genirq/msi: Provide MSI_FLAG_MSIX_ALLOC_DYN
+Subject: [patch 14/33] PCI/MSI: Remove unused pci_dev_has_special_msi_domain()
 References: <20221111133158.196269823@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:58:46 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:58:33 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Provide a new MSI feature flag in preparation for dynamic MSIX allocation
-after the initial MSI-X enable has been done.
+The check for special MSI domains like VMD which prevents the interrupt
+remapping code to overwrite device::msi::domain is not longer required and
+has been replaced by an x86 specific version which is aware of MSI parent
+domains.
 
-This needs to be an explicit MSI interrupt domain feature because quite
-some implementations (both interrupt domains and legacy allocation mode)
-have clear expectations that the allocation code is only invoked when MSI-X
-is about to be enabled. They either talk to hypervisors or do some other
-work and are not prepared to be invoked on an already MSI-X enabled device.
-
-This is also explicit MSI-X only because rewriting the size of the MSI
-entries is only possible when disabling MSI which in turn might cause lost
-interrupts on the device.
+Remove it.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/msi/irqdomain.c |   21 ---------------------
+ include/linux/msi.h         |    2 --
+ 2 files changed, 23 deletions(-)
 
+--- a/drivers/pci/msi/irqdomain.c
++++ b/drivers/pci/msi/irqdomain.c
+@@ -414,24 +414,3 @@ struct irq_domain *pci_msi_get_device_do
+ 					     DOMAIN_BUS_PCI_MSI);
+ 	return dom;
+ }
+-
+-/**
+- * pci_dev_has_special_msi_domain - Check whether the device is handled by
+- *				    a non-standard PCI-MSI domain
+- * @pdev:	The PCI device to check.
+- *
+- * Returns: True if the device irqdomain or the bus irqdomain is
+- * non-standard PCI/MSI.
+- */
+-bool pci_dev_has_special_msi_domain(struct pci_dev *pdev)
+-{
+-	struct irq_domain *dom = dev_get_msi_domain(&pdev->dev);
+-
+-	if (!dom)
+-		dom = dev_get_msi_domain(&pdev->bus->dev);
+-
+-	if (!dom)
+-		return true;
+-
+-	return dom->bus_token != DOMAIN_BUS_PCI_MSI;
+-}
 --- a/include/linux/msi.h
 +++ b/include/linux/msi.h
-@@ -523,7 +523,8 @@ enum {
- 	MSI_FLAG_LEVEL_CAPABLE		= (1 << 18),
- 	/* MSI-X entries must be contiguous */
- 	MSI_FLAG_MSIX_CONTIGUOUS	= (1 << 19),
+@@ -599,8 +599,6 @@ struct irq_domain *pci_msi_create_irq_do
+ 					     struct irq_domain *parent);
+ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev);
+-bool pci_dev_has_special_msi_domain(struct pci_dev *pdev);
 -
-+	/* PCI/MSI-X vectors can be dynamically allocated/freed post MSI-X enable */
-+	MSI_FLAG_PCI_MSIX_ALLOC_DYN	= (1 << 20),
- };
+ #endif /* CONFIG_GENERIC_MSI_IRQ */
  
- /**
+ #endif /* LINUX_MSI_H */
 
