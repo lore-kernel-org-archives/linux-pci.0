@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03980C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 878F8C4332F
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234082AbiKKOHv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:07:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52630 "EHLO
+        id S234104AbiKKOHw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:07:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234464AbiKKOGX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:06:23 -0500
+        with ESMTP id S234531AbiKKOHE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:07:04 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B49D8A8E6;
-        Fri, 11 Nov 2022 05:59:41 -0800 (PST)
-Message-ID: <20221111135205.543363889@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C0808BA91;
+        Fri, 11 Nov 2022 05:59:54 -0800 (PST)
+Message-ID: <20221111135206.521387616@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175099;
+        s=2020; t=1668175126;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=Oak79lo/7cHcPMXn18Hj8VarinH9SEGY40y7VRfsAjo=;
-        b=pBqdNgbAzXxUKGKDj7jLQp+M8aHV+AWaaXqgcvSxV4Fof+m+6qNtNARkiEOYaQs3PtUzWR
-        1hmh5rRhqmQgYwvRWYkWH6Q6J8SkydOIXNsk07GmGyKdl/B7AxwDSDE0X9U1NGwwxwDwv6
-        YgZ7+WLSHMdAa2sFWlAaUAzVt99uBErWvOG9yx6iA8ykogkwtVmWeyucCeep5E6DUE049k
-        CHNIVaUJg4njEDJi+1nHAm3kAQXQeKQuAD/brmbWZYa7HDxUJ5JykEHrQbL9e5OKvOZWsR
-        DH13DwLpownYGkEqSwnQqgwp9QQlsYL2f442XAmdjEghnbHVI9BaMvXQvevHkg==
+         references:references; bh=LtweMGx7oKuU2/h3mTO1bStczI1HafJrlhjPsVZ18gQ=;
+        b=Ctm1DuFDy0HMJYdK9qCz1YVmZZR5lyZM+sN3sOYYfE75QgQVFJMayaXVW+5l8ZSJwAPuN+
+        +GSlJ5SO58Gg6TnKKUONA4rPqWgn0Hy2gQZD3WTmbMv4P9TqKVaO8Q/t/quIGF1od/zCVM
+        nqtFqwQC8F669AYvhxpu1URqit3Qvut11TVNde3tib92Gp0sUpa8Vfe95FIlG0JsqOVutD
+        bSeIuJFnobA1p+MMuRRUSdneNUz9tYhawMrl/V2m6HYR1AoVHvQiPqGxsWpP30STvlrqQQ
+        kKwASJfN4/OhiWltGqJIu3aeAszVDUK6pckOimNXlcc/BgKcRazi8y3tdpv5OA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175099;
+        s=2020e; t=1668175126;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=Oak79lo/7cHcPMXn18Hj8VarinH9SEGY40y7VRfsAjo=;
-        b=mLJW7vo/nLUrPNcPAXXjSyIpq9qHGaPEIyrq6QBonl09L4LHa9MTGtdYktNIsqmLIUIrAL
-        D7El80NCOTi87CAw==
+         references:references; bh=LtweMGx7oKuU2/h3mTO1bStczI1HafJrlhjPsVZ18gQ=;
+        b=nv8txJEj8304vPLR4WxDND2n+tA605ka1X9Eieo9KDRFXP8JJT6fDJKSRkumhizd/TVqVD
+        FQvjzajS4jVYlrDQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,78 +50,43 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 05/33] genirq/msi: Split msi_create_irq_domain()
+Subject: [patch 22/33] genirq/msi: Provide MSI_FLAG_MSIX_ALLOC_DYN
 References: <20221111133158.196269823@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:58:19 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:58:46 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Split the functionality of msi_create_irq_domain() so it can
-be reused for creating per device irq domains.
+Provide a new MSI feature flag in preparation for dynamic MSIX allocation
+after the initial MSI-X enable has been done.
 
-No functional change.
+This needs to be an explicit MSI interrupt domain feature because quite
+some implementations (both interrupt domains and legacy allocation mode)
+have clear expectations that the allocation code is only invoked when MSI-X
+is about to be enabled. They either talk to hypervisors or do some other
+work and are not prepared to be invoked on an already MSI-X enabled device.
+
+This is also explicit MSI-X only because rewriting the size of the MSI
+entries is only possible when disabling MSI which in turn might cause lost
+interrupts on the device.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- kernel/irq/msi.c |   32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
+ include/linux/msi.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -795,17 +795,10 @@ static void msi_domain_update_chip_ops(s
- 		chip->irq_set_affinity = msi_domain_set_affinity;
- }
- 
--/**
-- * msi_create_irq_domain - Create an MSI interrupt domain
-- * @fwnode:	Optional fwnode of the interrupt controller
-- * @info:	MSI domain info
-- * @parent:	Parent irq domain
-- *
-- * Return: pointer to the created &struct irq_domain or %NULL on failure
-- */
--struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
--					 struct msi_domain_info *info,
--					 struct irq_domain *parent)
-+static struct irq_domain *__msi_create_irq_domain(struct fwnode_handle *fwnode,
-+						  struct msi_domain_info *info,
-+						  unsigned int flags,
-+						  struct irq_domain *parent)
- {
- 	struct irq_domain *domain;
- 
-@@ -813,7 +806,7 @@ struct irq_domain *msi_create_irq_domain
- 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
- 		msi_domain_update_chip_ops(info);
- 
--	domain = irq_domain_create_hierarchy(parent, IRQ_DOMAIN_FLAG_MSI, 0,
-+	domain = irq_domain_create_hierarchy(parent, flags | IRQ_DOMAIN_FLAG_MSI, 0,
- 					     fwnode, &msi_domain_ops, info);
- 
- 	if (domain) {
-@@ -826,6 +819,21 @@ struct irq_domain *msi_create_irq_domain
- }
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -523,7 +523,8 @@ enum {
+ 	MSI_FLAG_LEVEL_CAPABLE		= (1 << 18),
+ 	/* MSI-X entries must be contiguous */
+ 	MSI_FLAG_MSIX_CONTIGUOUS	= (1 << 19),
+-
++	/* PCI/MSI-X vectors can be dynamically allocated/freed post MSI-X enable */
++	MSI_FLAG_PCI_MSIX_ALLOC_DYN	= (1 << 20),
+ };
  
  /**
-+ * msi_create_irq_domain - Create an MSI interrupt domain
-+ * @fwnode:	Optional fwnode of the interrupt controller
-+ * @info:	MSI domain info
-+ * @parent:	Parent irq domain
-+ *
-+ * Return: pointer to the created &struct irq_domain or %NULL on failure
-+ */
-+struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
-+					 struct msi_domain_info *info,
-+					 struct irq_domain *parent)
-+{
-+	return __msi_create_irq_domain(fwnode, info, 0, parent);
-+}
-+
-+/**
-  * msi_parent_init_dev_msi_info - Delegate initialization of device MSI info to parent domain
-  * @dev:		The device for which the domain should be created
-  * @domain:		The domain which delegates
 
