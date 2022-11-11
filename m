@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07C28C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE9BC433FE
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Nov 2022 14:05:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234054AbiKKOF2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Nov 2022 09:05:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43296 "EHLO
+        id S234226AbiKKOFy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Nov 2022 09:05:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234226AbiKKOFE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:05:04 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6A2889FB6;
-        Fri, 11 Nov 2022 05:59:04 -0800 (PST)
-Message-ID: <20221111135205.486390836@linutronix.de>
+        with ESMTP id S234250AbiKKOFc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Nov 2022 09:05:32 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 783938B47C;
+        Fri, 11 Nov 2022 05:59:17 -0800 (PST)
+Message-ID: <20221111135205.601563808@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1668175098;
+        s=2020; t=1668175101;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=wvq/UAWBnWLIn373I3iZtaQ+G1F0GV+IlK6QQPaFqcU=;
-        b=Oi5Fm2esocx23HpZQOPMAz84HbKkki4TfiPD2o+PYIJeY+Q3tFA9Ao+RfshJWWoNuc+u83
-        bKF5cP8o156ZnFlGZkUhlEUrC9Y4fZESVghFE6K/Cnny8Cy34pBdT0U96HrURFPZaAkUdC
-        KzJkWiwshMmaxz8rSSvZMvJ4GmZld0YC6orJF+DI5Ysvov4AhNEKvAom8RVUMUtdRdKewQ
-        c95eHw09X2ramu0QIwfUTXmwbzokyWT3IA44aD9+mt25iUbhmGcHVyhC+6Ed1PedgbU1/g
-        TY12GFZoi3OhRO6QqmPnmREhT1shvepahKntwBqgjuOfgp98yC+K+Uc+0sv/hw==
+         references:references; bh=xdXQN8DRlFx/ul31qn4JSIb+1+AWkLgJWGGnxBYyOqY=;
+        b=WtVC2QIqbLK6P3xlT6wSY/JDFKu3lLwNilN3JNp6QWP3khbi+wL1jnS3qudRT0exHV45Th
+        AiZuYZQFD2qoXVI6pwnM45xMVYxj8JDFuqsQ0IEdsrmjyBBzNzP+Ws5gnSXnwJKGJEXSAu
+        1t2hYbGBDr9Srww34ao6RhbukK+QDbiG4urD4dmz88hvUuukH7c8H6uaMEmsyis1izFGtO
+        p0+uQPdOV22UvUt12EuUwkzqJmmi4FC0uNLhkb2i2bHg9IbGA7eDJ6u5wtqZf3DmPTvm9B
+        3RBDoSYtugSy3lM7gLKl2tK1AeDBhOQu1hhuBVzVLJjQzuEnUo/WcapNeprYLQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1668175098;
+        s=2020e; t=1668175101;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=wvq/UAWBnWLIn373I3iZtaQ+G1F0GV+IlK6QQPaFqcU=;
-        b=L0f1/AJbwQ15elJ92Io5gqA0ZWGqy0dco6cbPo5Pk3o4px+alA0hfzKHSG4K/nGQJDbBtL
-        UExpj31mr8BvYLDw==
+         references:references; bh=xdXQN8DRlFx/ul31qn4JSIb+1+AWkLgJWGGnxBYyOqY=;
+        b=UYTcQJebJYMtepSbazMw2A4Q5zsWOluoAV6RD556tCbHR6nMrpe/rZqwIzBPiMJmYyliDG
+        f4QET080a9aGrwAA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -50,41 +50,44 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>,
         Reinette Chatre <reinette.chatre@intel.com>
-Subject: [patch 04/33] genirq/msi: Add size info to struct msi_domain_info
+Subject: [patch 06/33] genirq/irqdomain: Add irq_domain::dev for per device
+ MSI domains
 References: <20221111133158.196269823@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 11 Nov 2022 14:58:17 +0100 (CET)
+Date:   Fri, 11 Nov 2022 14:58:20 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To allow proper range checking especially for dynamic allocations add a
-size field to struct msi_domain_info. If the field is 0 then the size is
-unknown or unlimited (up to MSI_MAX_INDEX) to provide backwards
-compability.
+Per device domains require the device pointer of the device which
+instantiated the domain for some purposes. Add the pointer to struct
+irq_domain. It will be used in the next step which provides the
+infrastructure to create per device MSI domains.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h |    2 ++
- 1 file changed, 2 insertions(+)
+ include/linux/irqdomain.h |    4 ++++
+ 1 file changed, 4 insertions(+)
 
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -410,6 +410,7 @@ struct msi_domain_ops {
-  * struct msi_domain_info - MSI interrupt domain data
-  * @flags:		Flags to decribe features and capabilities
-  * @bus_token:		The domain bus token
-+ * @hwsize:		The hardware table size (0 if unknown/unlimited)
-  * @ops:		The callback data structure
-  * @chip:		Optional: associated interrupt chip
-  * @chip_data:		Optional: associated interrupt chip data
-@@ -421,6 +422,7 @@ struct msi_domain_ops {
- struct msi_domain_info {
- 	u32				flags;
+--- a/include/linux/irqdomain.h
++++ b/include/linux/irqdomain.h
+@@ -132,6 +132,9 @@ struct irq_domain_chip_generic;
+  * @gc:		Pointer to a list of generic chips. There is a helper function for
+  *		setting up one or more generic chips for interrupt controllers
+  *		drivers using the generic chip library which uses this pointer.
++ * @dev:	Pointer to the device which instantiated the irqdomain
++ *		With per device irq domains this is not necessarily the same
++ *		as @pm_dev.
+  * @pm_dev:	Pointer to a device that can be utilized for power management
+  *		purposes related to the irq domain.
+  * @parent:	Pointer to parent irq_domain to support hierarchy irq_domains
+@@ -155,6 +158,7 @@ struct irq_domain {
+ 	struct fwnode_handle		*fwnode;
  	enum irq_domain_bus_token	bus_token;
-+	unsigned int			hwsize;
- 	struct msi_domain_ops		*ops;
- 	struct irq_chip			*chip;
- 	void				*chip_data;
+ 	struct irq_domain_chip_generic	*gc;
++	struct device			*dev;
+ 	struct device			*pm_dev;
+ #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
+ 	struct irq_domain		*parent;
 
