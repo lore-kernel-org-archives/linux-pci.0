@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20CDCC3A589
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 09:15:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F5FC43217
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 09:15:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234784AbiKLJPs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 12 Nov 2022 04:15:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52844 "EHLO
+        id S234774AbiKLJPu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 12 Nov 2022 04:15:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52852 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234508AbiKLJPm (ORCPT
+        with ESMTP id S234683AbiKLJPm (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2022 04:15:42 -0500
-Received: from mxout1.routing.net (mxout1.routing.net [IPv6:2a03:2900:1:a::a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46D071582F;
-        Sat, 12 Nov 2022 01:15:37 -0800 (PST)
+Received: from mxout2.routing.net (mxout2.routing.net [IPv6:2a03:2900:1:a::b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2CF217042;
+        Sat, 12 Nov 2022 01:15:40 -0800 (PST)
 Received: from mxbox3.masterlogin.de (unknown [192.168.10.78])
-        by mxout1.routing.net (Postfix) with ESMTP id 028FF3FF3B;
-        Sat, 12 Nov 2022 09:15:35 +0000 (UTC)
+        by mxout2.routing.net (Postfix) with ESMTP id F188360449;
+        Sat, 12 Nov 2022 09:15:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1668244535;
+        s=20200217; t=1668244539;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=wARWjXaekHXd+qoR6cih6bO82ffPMj6tdvVNWGcPmCQ=;
-        b=lfZHMkUDmepqCe5Ny4OohuDOC/wbqoWmz9OCU/jQUCSrsjqifv7Yjdhu/T7k7o1xTPb1b1
-        2VsMWWvIDWFVMeuOm4vNKp+9TtmOp06uyhr9o5Jg8EKAGEnSf1ug01q+UJ74fWrR0W6yOl
-        jVQ5RjXuwG1Unq1rHquK9A11lhIYvfc=
+        bh=NeLnuvum3jUmZEq04v6lfVUx02YHsRA5xFbxWTDqAZw=;
+        b=kph56ItsEfXV5GUvtEk8fPOJQJb9wm9QxyCs4Yqh/lnyMdLCLI1wkokY03WCY0Gb3P+ejb
+        x+uovfnH9VydaKKQCpIBIYrw9grjskfwSspJ9T6aPv6V3y4h4T3UuV3UNFLvQC7fCeGUfi
+        U0uT94cec8PxziVbPWuhNvTqfjlbLBk=
 Received: from frank-G5.. (fttx-pool-157.180.227.41.bambit.de [157.180.227.41])
-        by mxbox3.masterlogin.de (Postfix) with ESMTPSA id E9A4A360D0E;
-        Sat, 12 Nov 2022 09:15:33 +0000 (UTC)
+        by mxbox3.masterlogin.de (Postfix) with ESMTPSA id DBF3E36065F;
+        Sat, 12 Nov 2022 09:15:37 +0000 (UTC)
 From:   Frank Wunderlich <linux@fw-web.de>
 To:     linux-mediatek@lists.infradead.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
@@ -48,60 +48,80 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         Bo Jiao <Bo.Jiao@mediatek.com>, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
-        linux-phy@lists.infradead.org, linux-usb@vger.kernel.org
-Subject: [PATCH v4 01/11] arm64: dts: mt7986: move wed_pcie node
-Date:   Sat, 12 Nov 2022 10:15:08 +0100
-Message-Id: <20221112091518.7846-2-linux@fw-web.de>
+        linux-phy@lists.infradead.org, linux-usb@vger.kernel.org,
+        Rob Herring <robh@kernel.org>
+Subject: [PATCH v4 05/11] dt-bindings: PCI: mediatek-gen3: add support for mt7986
+Date:   Sat, 12 Nov 2022 10:15:12 +0100
+Message-Id: <20221112091518.7846-6-linux@fw-web.de>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20221112091518.7846-1-linux@fw-web.de>
 References: <20221112091518.7846-1-linux@fw-web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Mail-ID: 43985d64-a28d-4a3c-a1dc-63718da2295f
+X-Mail-ID: 0c30f0d1-0b1f-48d0-afa9-4e610343be72
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Frank Wunderlich <frank-w@public-files.de>
 
-Move the wed_pcie node to have node aligned by address.
+Add compatible string and clock-definition for mt7986. It needs 4 clocks
+for PCIe, define them in binding.
 
-Fixes: 00b9903996b3 ("arm64: dts: mediatek: mt7986: add support for Wireless Ethernet Dispatch")
 Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- arch/arm64/boot/dts/mediatek/mt7986a.dtsi | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+v2:
+- squashed patch 2+3 (compatible and clock definition)
+---
+ .../bindings/pci/mediatek-pcie-gen3.yaml        | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-index a22e10e89ab9..afc01abfa99c 100644
---- a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-+++ b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-@@ -112,6 +112,12 @@ infracfg: infracfg@10001000 {
- 			#clock-cells = <1>;
- 		};
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+index 5d7369debff2..f7a02019daea 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+@@ -48,6 +48,7 @@ properties:
+     oneOf:
+       - items:
+           - enum:
++              - mediatek,mt7986-pcie
+               - mediatek,mt8188-pcie
+               - mediatek,mt8195-pcie
+           - const: mediatek,mt8192-pcie
+@@ -78,9 +79,11 @@ properties:
+       - const: mac
  
-+		wed_pcie: wed-pcie@10003000 {
-+			compatible = "mediatek,mt7986-wed-pcie",
-+				     "syscon";
-+			reg = <0 0x10003000 0 0x10>;
-+		};
-+
- 		topckgen: topckgen@1001b000 {
- 			compatible = "mediatek,mt7986-topckgen", "syscon";
- 			reg = <0 0x1001B000 0 0x1000>;
-@@ -257,12 +263,6 @@ ethsys: syscon@15000000 {
- 			 #reset-cells = <1>;
- 		};
+   clocks:
++    minItems: 4
+     maxItems: 6
  
--		wed_pcie: wed-pcie@10003000 {
--			compatible = "mediatek,mt7986-wed-pcie",
--				     "syscon";
--			reg = <0 0x10003000 0 0x10>;
--		};
--
- 		wed0: wed@15010000 {
- 			compatible = "mediatek,mt7986-wed",
- 				     "syscon";
+   clock-names:
++    minItems: 4
+     maxItems: 6
+ 
+   assigned-clocks:
+@@ -160,6 +163,20 @@ allOf:
+             - const: tl_32k
+             - const: peri_26m
+             - const: peri_mem
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - mediatek,mt7986-pcie
++    then:
++      properties:
++        clock-names:
++          items:
++            - const: pl_250m
++            - const: tl_26m
++            - const: peri_26m
++            - const: top_133m
+ 
+ unevaluatedProperties: false
+ 
 -- 
 2.34.1
 
