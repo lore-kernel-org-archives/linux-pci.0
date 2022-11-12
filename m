@@ -2,35 +2,33 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C34E6C4321E
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 09:15:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3483C43217
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 09:20:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234820AbiKLJPz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 12 Nov 2022 04:15:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52882 "EHLO
+        id S230170AbiKLJUP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 12 Nov 2022 04:20:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234739AbiKLJPq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2022 04:15:46 -0500
-Received: from mxout2.routing.net (mxout2.routing.net [IPv6:2a03:2900:1:a::b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBE6E15FF5;
-        Sat, 12 Nov 2022 01:15:44 -0800 (PST)
-Received: from mxbox3.masterlogin.de (unknown [192.168.10.78])
-        by mxout2.routing.net (Postfix) with ESMTP id 256E460479;
-        Sat, 12 Nov 2022 09:15:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1668244543;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RY8+9ND4n/9TSXTqXvKked5EltzRypGczAsVjbvOd7o=;
-        b=mSfWgvsx9xZv9eIrM30SPE/I1H+Dc4VMu6GKOuN+iA6UVdlqUO+Qw6zX9OXCv6BwV73Pt+
-        kuI/o30Kvj7G1z+e0eFN4AjaFfzSBch7Xo7Wr8ZPQvOFpnJ3YzmZuTrKG9cdwaaPf55UrM
-        0+jPvweJ4x+HAAP8jhLvQoKpeZcS808=
-Received: from frank-G5.. (fttx-pool-157.180.227.41.bambit.de [157.180.227.41])
-        by mxbox3.masterlogin.de (Postfix) with ESMTPSA id 0D27636065F;
-        Sat, 12 Nov 2022 09:15:41 +0000 (UTC)
-From:   Frank Wunderlich <linux@fw-web.de>
+        with ESMTP id S234700AbiKLJUM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2022 04:20:12 -0500
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA155DEC8;
+        Sat, 12 Nov 2022 01:20:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=public-files.de;
+        s=s31663417; t=1668244777;
+        bh=tuqut74UZqWZODN1QpAhPVRlE49i8ImsqmOIOqF0/qo=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=Lt3QdQ3tyYgD9SudXw0ZjqHbx9PKGycyoiiLILga9dNvnWpy6W9wV7+eJs5q3D1IH
+         eirSZCw50+2O1NCqyMNJuFybHxznr56S1eAKQMqJcGSpsJ5TrF/ZHSa5e+09XeVs2g
+         JC20Loz1sQayusdOdTgtoFj29+BRLVoakEjrkVhQOa4/2fkXW5D7qQCFosESPUiUnJ
+         50oOyFzPaQIxW/LOMdHp3evxWWilqkT7pfeZd36dWZS2/PuzCs09pFlDboazIFhrT1
+         narnI4/mqQe8KN65NoHZ/btyZMamA0wzpOTAfiwHhPDMYjGlW4zYxPR4swGZYOYeB1
+         yUuIFFuGxyykA==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from frank-G5 ([157.180.227.41]) by mail.gmx.net (mrgmx005
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1MNKm0-1odnKE3Y7u-00OrcK; Sat, 12
+ Nov 2022 10:19:36 +0100
+From:   Frank Wunderlich <frank-w@public-files.de>
 To:     linux-mediatek@lists.infradead.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
         Ryder Lee <ryder.lee@mediatek.com>,
@@ -48,147 +46,213 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         Bo Jiao <Bo.Jiao@mediatek.com>, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
-        linux-phy@lists.infradead.org, linux-usb@vger.kernel.org,
-        Sam Shih <sam.shih@mediatek.com>,
-        Jieyy Yang <jieyy.yang@mediatek.com>
-Subject: [PATCH v4 09/11] arm64: dts: mt7986: add pcie related device nodes
-Date:   Sat, 12 Nov 2022 10:15:16 +0100
-Message-Id: <20221112091518.7846-10-linux@fw-web.de>
+        linux-phy@lists.infradead.org, linux-usb@vger.kernel.org
+Subject: [PATCH v4 11/11] arm64: dts: mt7986: add BPI-R3 nand/nor overlays
+Date:   Sat, 12 Nov 2022 10:19:23 +0100
+Message-Id: <20221112091923.9562-2-frank-w@public-files.de>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221112091518.7846-1-linux@fw-web.de>
-References: <20221112091518.7846-1-linux@fw-web.de>
+In-Reply-To: <20221112091923.9562-1-frank-w@public-files.de>
+References: <20221112091923.9562-1-frank-w@public-files.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Mail-ID: facedc48-9d5f-451f-bc74-ce9662f350ab
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:kKjaW9aI7wAg0CdKWw9t+9h2N0yWI8C1ic20qYJbFdx1SXsJukP
+ uPR44ZUAe6EWerEtW0dXW5xmg1XUkpe6B1L5fA2n02283EId0pWWnwzL23CEwzx4ps2gFt0
+ P0J7XfxpftQfZVSUxyCieVNqNLgs8raCEFVFYV6YR41GDvWOuvQR7FQWC+CIONmjUZ7ONXK
+ KsLi4v3N1mpziL3jyXgng==
+UI-OutboundReport: notjunk:1;M01:P0:ard/iJETmyI=;KPC3jaRpk4xcD3byMkdfvKRcTIv
+ xWie5/oLRUaj8Zjk7ca2wpGRmzITD+Q6pBjXB99CTvr+enrJ50vZyLltQ9tK2ViNBYQDgCsYY
+ 6vlhtB3ZYemsLwazxPp8HxkT3EMbUO40BKZqGjvIkdLMkpZevM6KT9vIyPIw5wo2Aw9I2TgpJ
+ aL7DBl/t9UQxqRYcm8vdhX3g5OPiEKZBYW270MjM5YLzfe9pSJFgNhvCj3zwPWC9r8N4QP0sc
+ IMY3HKsx5+AAz9ZGo70INMz6glEQEJjKHrBd/zPz6xAEGdlaY3LvELPz15B916ELH3+GL3Y5C
+ db0RdLWG9ALfAVjsjD+RTvPqjqjB7LGZOym6xetErXbuks2758is0UYmWBpgg5b2MyvLGby9p
+ HDoPrPHAksy1j5XnGaKxKTFw99HXP2SK87Am3HzFUSlYUtwJhVDuruHDAG0nmMqGa03MMPPwj
+ B5Uz5k6f+/Xklbgj9pWSjbpvWeSNs7z6ly37bdm2SQnjnY6CnT0fcpRoqKD5U8BWuesF1OHHr
+ 5rq0KjUC23Js8qTxRo1vjrgowNto1QDh5jAH6b7qGatYUGqcvpUTCTIuVUVZOffv29DORqQj3
+ iqd6FQl9Jhi/KFc/dV/Jhe0eiuudpj//a0nHeEe3c42hSzqdFd8cVSN4iP26raGjGm1m4zRDj
+ NmWCZ2iEvKbaZwUwwGQgaDYjb1Qj166ogyhECwwRzacP+EWel4BkiBcCHidKYTyfYRh9l9nvH
+ 1jTPJmBaVJSHYg3P9xYV4EpdY5uHtMO9NMzL2QmQu7IpEbzIIHehxJREdVsxJcmJ0P3U1/6AD
+ dmP82ZZsnV7BZ5Uro0LGSNDc4JsSIlmwG465Suo2Z+jijq+KUm4gQ3JWuDHVZbHbRAeQQnyqQ
+ Oq3Uw3SkfnQqEC2HFApmltc7K3pveVYdo6tf3LkUlfQmGVtNRGu3v04DMfChbmqV2/vL0v3Me
+ bgXFl0P6TlFQwPqvqeZIwm9zGx0=
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sam Shih <sam.shih@mediatek.com>
+Add devicetree overlays for using nand and nor on BPI-R3.
 
-This patch adds PCIe support for MT7986.
-
-Signed-off-by: Jieyy Yang <jieyy.yang@mediatek.com>
-Signed-off-by: Sam Shih <sam.shih@mediatek.com>
 Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+=2D--
+maybe rename to dtso?
 
----
-changes compared to sams original version:
+"kbuild: Allow DTB overlays to built from .dtso named source files"
+https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git/commit/?h=
+=3Ddt/next&id=3D363547d2191cbc32ca954ba75d72908712398ff2
+=2D--
+v4:
+- drop compile-comment from overlays
+- add author-information to dt-overlays
+=2D--
+ arch/arm64/boot/dts/mediatek/Makefile         |  2 +
+ .../mediatek/mt7986a-bananapi-bpi-r3-nand.dts | 55 +++++++++++++++
+ .../mediatek/mt7986a-bananapi-bpi-r3-nor.dts  | 69 +++++++++++++++++++
+ 3 files changed, 126 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-n=
+and.dts
+ create mode 100644 arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-n=
+or.dts
 
-- add clock-names to pcie node
-- update clocks to new binding
----
-bindings-patches:
-https://patchwork.kernel.org/project/linux-mediatek/list/?series=690172
----
- arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts | 16 ++++++
- arch/arm64/boot/dts/mediatek/mt7986a.dtsi    | 52 ++++++++++++++++++++
- 2 files changed, 68 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts b/arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts
-index e1a0331aaa5f..01fa08c57c39 100644
---- a/arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts
-+++ b/arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts
-@@ -102,6 +102,15 @@ &mmc0 {
- 	non-removable;
- 	no-sd;
- 	no-sdio;
-+};
+diff --git a/arch/arm64/boot/dts/mediatek/Makefile b/arch/arm64/boot/dts/m=
+ediatek/Makefile
+index e8902f2cc58f..d42208c4090d 100644
+=2D-- a/arch/arm64/boot/dts/mediatek/Makefile
++++ b/arch/arm64/boot/dts/mediatek/Makefile
+@@ -8,6 +8,8 @@ dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt6797-x20-dev.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt7622-rfb1.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt7622-bananapi-bpi-r64.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt7986a-bananapi-bpi-r3-emmc.dtb
++dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt7986a-bananapi-bpi-r3-nand.dtbo
++dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt7986a-bananapi-bpi-r3-nor.dtbo
+ dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt7986a-bananapi-bpi-r3-sd.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt7986a-rfb.dtb
+ dtb-$(CONFIG_ARCH_MEDIATEK) +=3D mt7986b-rfb.dtb
+diff --git a/arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-nand.dts=
+ b/arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-nand.dts
+new file mode 100644
+index 000000000000..15ee8c568f3c
+=2D-- /dev/null
++++ b/arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-nand.dts
+@@ -0,0 +1,55 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR MIT) */
++/*
++ * Authors: Daniel Golle <daniel@makrotopia.org>
++ *          Frank Wunderlich <frank-w@public-files.de>
++ */
 +
-+&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_pins>;
-+	status = "okay";
-+};
++/dts-v1/;
++/plugin/;
 +
-+&pcie_phy {
- 	status = "okay";
- };
- 
-@@ -164,6 +173,13 @@ conf-rst {
- 		};
- 	};
- 
-+	pcie_pins: pcie-pins {
-+		mux {
-+			function = "pcie";
-+			groups = "pcie_clk", "pcie_wake", "pcie_pereset";
++/ {
++	compatible =3D "bananapi,bpi-r3", "mediatek,mt7986a";
++
++	fragment@0 {
++		target-path =3D "/soc/spi@1100a000";
++		__overlay__ {
++			#address-cells =3D <1>;
++			#size-cells =3D <0>;
++			spi_nand: spi_nand@0 {
++				compatible =3D "spi-nand";
++				reg =3D <0>;
++				spi-max-frequency =3D <10000000>;
++				spi-tx-buswidth =3D <4>;
++				spi-rx-buswidth =3D <4>;
++
++				partitions {
++					compatible =3D "fixed-partitions";
++					#address-cells =3D <1>;
++					#size-cells =3D <1>;
++
++					partition@0 {
++						label =3D "bl2";
++						reg =3D <0x0 0x80000>;
++						read-only;
++					};
++
++					partition@80000 {
++						label =3D "reserved";
++						reg =3D <0x80000 0x300000>;
++					};
++
++					partition@380000 {
++						label =3D "fip";
++						reg =3D <0x380000 0x200000>;
++						read-only;
++					};
++
++					partition@580000 {
++						label =3D "ubi";
++						reg =3D <0x580000 0x7a80000>;
++					};
++				};
++			};
 +		};
 +	};
++};
+diff --git a/arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-nor.dts =
+b/arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-nor.dts
+new file mode 100644
+index 000000000000..f18643a9089c
+=2D-- /dev/null
++++ b/arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-nor.dts
+@@ -0,0 +1,69 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR MIT) */
++/*
++ * Authors: Daniel Golle <daniel@makrotopia.org>
++ *          Frank Wunderlich <frank-w@public-files.de>
++ */
 +
- 	spi_flash_pins: spi-flash-pins {
- 		mux {
- 			function = "spi";
-diff --git a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-index 4b85a645fd55..97cef0fd9d8f 100644
---- a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-+++ b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-@@ -8,6 +8,7 @@
- #include <dt-bindings/interrupt-controller/arm-gic.h>
- #include <dt-bindings/clock/mt7986-clk.h>
- #include <dt-bindings/reset/mt7986-resets.h>
-+#include <dt-bindings/phy/phy.h>
- 
- / {
- 	interrupt-parent = <&gic>;
-@@ -319,6 +320,57 @@ mmc0: mmc@11230000 {
- 			status = "disabled";
- 		};
- 
-+		pcie: pcie@11280000 {
-+			compatible = "mediatek,mt7986-pcie",
-+				     "mediatek,mt8192-pcie";
-+			device_type = "pci";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			reg = <0x00 0x11280000 0x00 0x4000>;
-+			reg-names = "pcie-mac";
-+			interrupts = <GIC_SPI 168 IRQ_TYPE_LEVEL_HIGH>;
-+			bus-range = <0x00 0xff>;
-+			ranges = <0x82000000 0x00 0x20000000 0x00
-+				  0x20000000 0x00 0x10000000>;
-+			clocks = <&infracfg CLK_INFRA_IPCIE_PIPE_CK>,
-+				 <&infracfg CLK_INFRA_IPCIE_CK>,
-+				 <&infracfg CLK_INFRA_IPCIER_CK>,
-+				 <&infracfg CLK_INFRA_IPCIEB_CK>;
-+			clock-names = "pl_250m", "tl_26m", "peri_26m", "top_133m";
-+			status = "disabled";
++/dts-v1/;
++/plugin/;
 +
-+			phys = <&pcie_port PHY_TYPE_PCIE>;
-+			phy-names = "pcie-phy";
++/ {
++	compatible =3D "bananapi,bpi-r3", "mediatek,mt7986a";
 +
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc 0>,
-+					<0 0 0 2 &pcie_intc 1>,
-+					<0 0 0 3 &pcie_intc 2>,
-+					<0 0 0 4 &pcie_intc 3>;
-+			pcie_intc: interrupt-controller {
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+				interrupt-controller;
++	fragment@0 {
++		target-path =3D "/soc/spi@1100a000";
++		__overlay__ {
++			#address-cells =3D <1>;
++			#size-cells =3D <0>;
++			flash@0 {
++				compatible =3D "jedec,spi-nor";
++				reg =3D <0>;
++				spi-max-frequency =3D <10000000>;
++
++				partitions {
++					compatible =3D "fixed-partitions";
++					#address-cells =3D <1>;
++					#size-cells =3D <1>;
++
++					partition@0 {
++						label =3D "bl2";
++						reg =3D <0x0 0x20000>;
++						read-only;
++					};
++
++					partition@20000 {
++						label =3D "reserved";
++						reg =3D <0x20000 0x20000>;
++					};
++
++					partition@40000 {
++						label =3D "u-boot-env";
++						reg =3D <0x40000 0x40000>;
++					};
++
++					partition@80000 {
++						label =3D "reserved2";
++						reg =3D <0x80000 0x80000>;
++					};
++
++					partition@100000 {
++						label =3D "fip";
++						reg =3D <0x100000 0x80000>;
++						read-only;
++					};
++
++					partition@180000 {
++						label =3D "recovery";
++						reg =3D <0x180000 0xa80000>;
++					};
++
++					partition@c00000 {
++						label =3D "fit";
++						reg =3D <0xc00000 0x1400000>;
++						compatible =3D "denx,fit";
++					};
++				};
 +			};
 +		};
-+
-+		pcie_phy: t-phy@11c00000 {
-+			compatible = "mediatek,mt7986-tphy",
-+				     "mediatek,generic-tphy-v2";
-+			#address-cells = <2>;
-+			#size-cells = <2>;
-+			ranges;
-+			status = "disabled";
-+
-+			pcie_port: pcie-phy@11c00000 {
-+				reg = <0 0x11c00000 0 0x20000>;
-+				clocks = <&clk40m>;
-+				clock-names = "ref";
-+				#phy-cells = <1>;
-+			};
-+		};
-+
- 		usb_phy: t-phy@11e10000 {
- 			compatible = "mediatek,mt7986-tphy",
- 				     "mediatek,generic-tphy-v2";
--- 
++	};
++};
+=2D-
 2.34.1
 
