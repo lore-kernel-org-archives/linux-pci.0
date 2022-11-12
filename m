@@ -2,107 +2,116 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2892C43217
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 14:30:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19F41C43219
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 14:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231252AbiKLOan (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 12 Nov 2022 09:30:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43666 "EHLO
+        id S234063AbiKLOau (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 12 Nov 2022 09:30:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234884AbiKLOam (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2022 09:30:42 -0500
+        with ESMTP id S234933AbiKLOas (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2022 09:30:48 -0500
 Received: from crane.ash.relay.mailchannels.net (crane.ash.relay.mailchannels.net [23.83.222.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C56F81A82E;
-        Sat, 12 Nov 2022 06:30:35 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CD721C12A;
+        Sat, 12 Nov 2022 06:30:44 -0800 (PST)
 X-Sender-Id: dreamhost|x-authsender|ian@linux.cowan.aero
 Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 4F84642068;
-        Sat, 12 Nov 2022 14:30:32 +0000 (UTC)
+        by relay.mailchannels.net (Postfix) with ESMTP id 184503C1EA7;
+        Sat, 12 Nov 2022 14:30:41 +0000 (UTC)
 Received: from pdx1-sub0-mail-a218.dreamhost.com (unknown [127.0.0.6])
         (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id D29E042075;
-        Sat, 12 Nov 2022 14:30:31 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1668263431; a=rsa-sha256;
+        by relay.mailchannels.net (Postfix) with ESMTPA id AEEE73C1997;
+        Sat, 12 Nov 2022 14:30:40 +0000 (UTC)
+ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1668263440; a=rsa-sha256;
         cv=none;
-        b=HCL1BAe1H/pzDrmFmWsj09mX0qwNjoLNeHGTxPhDTtih2wB7n+nwok5WdmrKxHnKWk00Kl
-        S4AiNOsxpBvwFRqFZzCwhFo1hqdMKrnEuxOeXsYqke4cGTp0ummjXdYKDp90WDFrd0C0H7
-        fmRRxCpNSL62T9wRbFXFLbzC6i8HNHTFF7f4bv5ljBW0YAcrHPIoS6efGNGjhIFvMqmo6t
-        +5AgFZMwicsx6Vpy8lR6PTx9EpSPuH6JZt1ZxtEa7lTNYqcugXBBFK638mTLssv0pPB+fc
-        H73dzHX6EXWks1F9RrlOEPewTYzSV4PG33Y0s61bWtDdJ+CK6KLcFFwNkCxgUg==
+        b=rpyE8bGpSAdXfK7sLzn/u2LW+TiC0NZxTKL5Ic0LAQhSoHQWvDjaCMPSmLYHL7l62wpYYK
+        ujNPepQxeCaVjLFy1nutWx1I6jYEF8E26qmDjTodt25HpORSo/yjNXeWe4aduhnm9vUNHz
+        Mp+fIiCEEnnm58m58cZ5vXmB6oCXrfRO6T2xDf+HiOZ7OPWB8PxWGKUXiP5ztfzKXsOjvw
+        h4Uh3VkIHmfEB2BCt2Mp570I1v07M9iuVpu7eNeQ+G1wx7AZwmR+Kt3KUQNBN5F4jI3+UK
+        X0TkCmrjoIoOAFiy+7m9YKu4nyH+J27o7ykf/L3hS13bYuNr79aZxubE4UTZOw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
  d=mailchannels.net;
-        s=arc-2022; t=1668263431;
+        s=arc-2022; t=1668263440;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:dkim-signature;
-        bh=mW17fZSHLBiDKN0vvyrLRRUmL3lhsMJhAt2HzFGSejY=;
-        b=Prz8dkb7lN8KKeeE6CkmLLZDYgSRUqtug1CtWEO7AtkvB5OVt8tWUtA9nILOt+6Eso/Xg2
-        BfPJjux0853ORrQ1RflIUhoCTotvAaCHlbLPSlnDnnBPeG0jui3LR7dy7lhoQiBk93sEGq
-        NI3ZmG5Yew1DH5orGqyvq27Bg62i6oLucpS2UHW88eqtIeTEAxAZZd/3hjhvj4DG/T5cpp
-        nk8Nl7aL/lpW7UhWTbRguTeyRs9TQgjzV1MFkHBbu7+OS0tZilab9CkEQT0v59lmuVFhLG
-        h3xSce3MUN54jugC03AXq6BvqCzLOSCItbKepd6v0gdXq8zgthvAUn7EzZiAng==
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references:dkim-signature;
+        bh=ZldjB1QXpaMaa585PwQA9L52Y7Bh6VzfKf1mPIq62YA=;
+        b=1+3NLPGjx8DQi0OLIwfyBGFeyg1JIDdWwL2km7sbj8pwR1BkctQxoYUYPikqtWqeekmeS5
+        QmdE4zL5isV1f4Isvr7dmDyrgXvT/FIvb7jG0Kw8yrmyH6aL0QspUSwOswJlibQ/IrITAH
+        H56S+FLyE/P7k273bAtG6MaeI8PbY18o2hKkjU+7zRm8LRmcXF7vUxuvM0B2MuBCigxfPD
+        PqHZMJYZWau9Y5aeS1uebVgCIBdaBPrE0zkDDTvPg0K3Dr5TzFiUGSl44U2REywm8q9htG
+        8Pd98ZBdj9wL8bdoSbGEy86LGv+ZxOfM80Yasdw4lVGJ6SjBGuH3BASQ6JMsrQ==
 ARC-Authentication-Results: i=1;
-        rspamd-7f9bbcf788-s7lzd;
+        rspamd-7f9bbcf788-nvvnz;
         auth=pass smtp.auth=dreamhost smtp.mailfrom=ian@linux.cowan.aero
 X-Sender-Id: dreamhost|x-authsender|ian@linux.cowan.aero
 X-MC-Relay: Neutral
 X-MailChannels-SenderId: dreamhost|x-authsender|ian@linux.cowan.aero
 X-MailChannels-Auth-Id: dreamhost
-X-Lettuce-Abiding: 2c043aca72c057ef_1668263432105_2405489284
-X-MC-Loop-Signature: 1668263432105:464200031
-X-MC-Ingress-Time: 1668263432105
+X-Cooperative-Slimy: 71e11c3d6d4e732d_1668263440953_2366251542
+X-MC-Loop-Signature: 1668263440953:951357203
+X-MC-Ingress-Time: 1668263440953
 Received: from pdx1-sub0-mail-a218.dreamhost.com (pop.dreamhost.com
  [64.90.62.162])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.109.196.213 (trex/6.7.1);
-        Sat, 12 Nov 2022 14:30:32 +0000
+        by 100.116.179.71 (trex/6.7.1);
+        Sat, 12 Nov 2022 14:30:40 +0000
 Received: from rhino.lan (dsl-50-5-144-34.fuse.net [50.5.144.34])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: ian@linux.cowan.aero)
-        by pdx1-sub0-mail-a218.dreamhost.com (Postfix) with ESMTPSA id 4N8dK31RSvz1M;
-        Sat, 12 Nov 2022 06:30:31 -0800 (PST)
+        by pdx1-sub0-mail-a218.dreamhost.com (Postfix) with ESMTPSA id 4N8dKD0NLfz5y;
+        Sat, 12 Nov 2022 06:30:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.cowan.aero;
-        s=dreamhost; t=1668263431;
-        bh=mW17fZSHLBiDKN0vvyrLRRUmL3lhsMJhAt2HzFGSejY=;
+        s=dreamhost; t=1668263440;
+        bh=ZldjB1QXpaMaa585PwQA9L52Y7Bh6VzfKf1mPIq62YA=;
         h=From:To:Cc:Subject:Date:Content-Transfer-Encoding;
-        b=re4lm+fkEqqzkw6hVZVtSC/qj9RJ6i2Yq1kMYFf9kxcc5qTuqRYK4+PWDQwrgvmBE
-         ZBGyX5eF/PIWZ4DyJAWXPDZvTDW2fn2anaIKs3NnAaiGx4mVdpsLVVqUzDJvojXADC
-         mJ6yO2EhGY9RH90eY7qDOG+2zFqPow7T5JZJM8ceuVxa9PRyff4gq7vHzZyInRvQvv
-         xdNjkuQunAMxqXajb2pEUlWrNgvt+uKi92pfZxLMQoc7DRBEOfwVS0paOhBkNzthOg
-         xxerRL0JRJAs6PceyhAq5AQ/Naj7dTGWbT9Q+auMA0zud32cGK1yePfAabagwNbGdN
-         KfIRRyXPdU2pA==
+        b=tbCXFW7ibaOJkjeQHBa0rmK36vceGZEN6sP9Wx4b+sP2qW+I1EQW9r2Q95itCIBSI
+         bHydwg12xMOgTVryJi4f3bCwRdvRbZKvpiobMPgaoKXNyVQt87+YoBUVPH9G7bmyOU
+         RZJqye4wQ2vYpTjVEeeC/2zl2VykmuEA9JP0INpy3lVU75L7N9RslY3Ke+SknwG5SM
+         0Wk7BpIarrovz2MZSWVMHDHt9FjOODdWROM68j6fJV3FjRAEe9hBptyAbpFYDCcv3B
+         m2OxRhlaLaLG64Qv/ohOBjpRPwbk6qWYd6jt8v8oZN38COF/U2SGUinzbnQi4NLDr6
+         H2JMzN6NegD9w==
 From:   Ian Cowan <ian@linux.cowan.aero>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Ian Cowan <ian@linux.cowan.aero>
-Subject: [PATCH 0/3] PCI: SHPC: removed unused get_mode1_ECC_cap callback
-Date:   Sat, 12 Nov 2022 09:28:56 -0500
-Message-Id: <20221112142859.319733-1-ian@linux.cowan.aero>
+Subject: [PATCH 3/3] PCI: SHPC: update todo
+Date:   Sat, 12 Nov 2022 09:28:59 -0500
+Message-Id: <20221112142859.319733-4-ian@linux.cowan.aero>
 X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20221112142859.319733-1-ian@linux.cowan.aero>
+References: <20221112142859.319733-1-ian@linux.cowan.aero>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the SHPC module, the get_mode1_ECC_cap callback is never used from
-the hpc_ops struct, so this patch series removes that callback from both the
-definition of the struct and the definition of the shpchp_hps_ops
-struct. Additionally, this removes the reference in the TODO of the SHPC
-module.
+This removes the note in the todo regarding the removal of the
+->get_mode1_ECC_cap callback.
 
-Ian Cowan (3):
-  PCI: SHPC: remove unused get_mode1_ECC_cap callback declaration
-  PCI: SHPC: remove unused get_mode1_ECC_cap callback from definition
-  PCI: SHPC: update todo
+Signed-off-by: Ian Cowan <ian@linux.cowan.aero>
+---
+ drivers/pci/hotplug/TODO | 3 ---
+ 1 file changed, 3 deletions(-)
 
- drivers/pci/hotplug/TODO         |  3 ---
- drivers/pci/hotplug/shpchp.h     |  1 -
- drivers/pci/hotplug/shpchp_hpc.c | 18 ------------------
- 3 files changed, 22 deletions(-)
-
+diff --git a/drivers/pci/hotplug/TODO b/drivers/pci/hotplug/TODO
+index 88f217c82b4f..fdb8dd6ea24d 100644
+--- a/drivers/pci/hotplug/TODO
++++ b/drivers/pci/hotplug/TODO
+@@ -58,9 +58,6 @@ shpchp:
+   pciehp with commit 82a9e79ef132 ("PCI: pciehp: remove hpc_ops").  Clarify
+   if there was a specific reason not to apply the same change to shpchp.
+ 
+-* The ->get_mode1_ECC_cap callback in shpchp_hpc_ops is never invoked.
+-  Why was it introduced?  Can it be removed?
+-
+ * The hardirq handler shpc_isr() queues events on a workqueue.  It can be
+   simplified by converting it to threaded IRQ handling.  Use pciehp as a
+   template.
 -- 
 2.38.1
 
