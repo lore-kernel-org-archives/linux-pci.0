@@ -2,33 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 333EAC433FE
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 09:15:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A499FC43217
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 09:15:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234711AbiKLJPo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 12 Nov 2022 04:15:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52834 "EHLO
+        id S234747AbiKLJPq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 12 Nov 2022 04:15:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230344AbiKLJPl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2022 04:15:41 -0500
+        with ESMTP id S234387AbiKLJPm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2022 04:15:42 -0500
 Received: from mxout3.routing.net (mxout3.routing.net [IPv6:2a03:2900:1:a::8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E958BE3A;
-        Sat, 12 Nov 2022 01:15:36 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B255815FF0;
+        Sat, 12 Nov 2022 01:15:38 -0800 (PST)
 Received: from mxbox3.masterlogin.de (unknown [192.168.10.78])
-        by mxout3.routing.net (Postfix) with ESMTP id 10353604CC;
-        Sat, 12 Nov 2022 09:15:34 +0000 (UTC)
+        by mxout3.routing.net (Postfix) with ESMTP id ED28C60552;
+        Sat, 12 Nov 2022 09:15:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1668244534;
+        s=20200217; t=1668244537;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=8h7HnuaIbJzS+1bSDsJciWFXEu36biz2822mlX20rAg=;
-        b=UPzPkiLVH4L2++lfu6zi7oUxA268Vr2ju1R+3f2m/ygukvVgXaWrE6m+bkH9cR0mcI+NIj
-        lnzjGcQHWRCJpioXY7EQkMBP+iuU+JihfHO5m48yVXDCbsOt+/N4mHMuj8+zfvQbczNNHl
-        yL747nbEtwLFdA+2JgzENhWT57d19Es=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SEI4bX6ZbGFvxrOMba7516wjM479jvcDqzWDjK5rS6g=;
+        b=wwj2Si6ikFdLcbZtgtvYsw7RKUqXdPHDwkJFs+g/H+cKUn/LSVqr2zUOC1Vh43n5nn+PfF
+        lUk/fptLRb6ZlK3i31sDtPN/rIdNEDkEg45aoKWki/yrxBFVbNwk+Fq6Zf3Ts3JrOV+VsP
+        Uz1sub/MaQVfXSa1QxNvcOKnhCvCQ38=
 Received: from frank-G5.. (fttx-pool-157.180.227.41.bambit.de [157.180.227.41])
-        by mxbox3.masterlogin.de (Postfix) with ESMTPSA id 931A4360217;
-        Sat, 12 Nov 2022 09:15:31 +0000 (UTC)
+        by mxbox3.masterlogin.de (Postfix) with ESMTPSA id DEE04360D0E;
+        Sat, 12 Nov 2022 09:15:35 +0000 (UTC)
 From:   Frank Wunderlich <linux@fw-web.de>
 To:     linux-mediatek@lists.infradead.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
@@ -48,85 +49,40 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-phy@lists.infradead.org, linux-usb@vger.kernel.org
-Subject: [PATCH v4 00/11] Add BananaPi R3
-Date:   Sat, 12 Nov 2022 10:15:07 +0100
-Message-Id: <20221112091518.7846-1-linux@fw-web.de>
+Subject: [PATCH v4 03/11] dt-bindings: usb: mtk-xhci: add support for mt7986
+Date:   Sat, 12 Nov 2022 10:15:10 +0100
+Message-Id: <20221112091518.7846-4-linux@fw-web.de>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20221112091518.7846-1-linux@fw-web.de>
+References: <20221112091518.7846-1-linux@fw-web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Mail-ID: 0a530238-cec0-442a-b8de-6e8f0e31b058
+X-Mail-ID: 5285a62d-990c-4c48-be6a-b2182c6881ef
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Frank Wunderlich <frank-w@public-files.de>
 
-This Series adds some Nodes to mt7986 devicetree and the BananaPi R3
+Add compatible string for mt7986.
 
-This version is rebased on Matthias' DTS64 next Branch from 2022/11/11.
+Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+---
+ Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-i included sams series for mt7986 DTS with small changes
-https://patchwork.kernel.org/project/linux-mediatek/cover/20220427124741.18245-1-sam.shih@mediatek.com/
-
-i had run full dtbs-check but i end up with some strange warnings in
-ethernet-node that should not come up as phy-handle and sfp/managed
-properties are already defined.
-
-phy-handle made optional
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/net/mediatek,net.yaml#n265
-
-property sfp/managed (which is included for mac subnode in yaml above):
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/net/ethernet-controller.yaml#n137
-
-changes:
-v4:
-- dropped RFC prefix
-- rebase on matthias' mtk dts-next (for 6.2) branch
-- added author information to overlays
-- fixed sfp binding error
-- added fix for moving wed_pcie node
-- readded missing compatible patches
-v3:
-- changed mmc pull-ups
-- added patch for board binding (sent separately before)
-- added pcie node in mt7986 (not yet again in r3)
-- added dt overlays
-
-
-Frank Wunderlich (7):
-  arm64: dts: mt7986: move wed_pcie node
-  dt-bindings: phy: mediatek,tphy: add support for mt7986
-  dt-bindings: usb: mtk-xhci: add support for mt7986
-  dt-bindings: PCI: mediatek-gen3: add SoC based clock config
-  dt-bindings: PCI: mediatek-gen3: add support for mt7986
-  arm64: dts: mt7986: add Bananapi R3
-  arm64: dts: mt7986: add BPI-R3 nand/nor overlays
-
-Sam Shih (4):
-  arm64: dts: mt7986: add spi related device nodes
-  arm64: dts: mt7986: add usb related device nodes
-  arm64: dts: mt7986: add mmc related device nodes
-  arm64: dts: mt7986: add pcie related device nodes
-
- .../bindings/pci/mediatek-pcie-gen3.yaml      |  64 ++-
- .../bindings/phy/mediatek,tphy.yaml           |   1 +
- .../bindings/usb/mediatek,mtk-xhci.yaml       |   1 +
- arch/arm64/boot/dts/mediatek/Makefile         |   4 +
- .../mediatek/mt7986a-bananapi-bpi-r3-emmc.dts |  31 ++
- .../mediatek/mt7986a-bananapi-bpi-r3-nand.dts |  55 +++
- .../mediatek/mt7986a-bananapi-bpi-r3-nor.dts  |  69 +++
- .../mediatek/mt7986a-bananapi-bpi-r3-sd.dts   |  25 +
- .../dts/mediatek/mt7986a-bananapi-bpi-r3.dtsi | 458 ++++++++++++++++++
- arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts  | 166 +++++++
- arch/arm64/boot/dts/mediatek/mt7986a.dtsi     | 162 ++++++-
- arch/arm64/boot/dts/mediatek/mt7986b-rfb.dts  |  63 +++
- 12 files changed, 1081 insertions(+), 18 deletions(-)
- create mode 100644 arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-emmc.dts
- create mode 100644 arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-nand.dts
- create mode 100644 arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-nor.dts
- create mode 100644 arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3-sd.dts
- create mode 100644 arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3.dtsi
-
+diff --git a/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml b/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
+index 939623867a64..a3c37944c630 100644
+--- a/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
++++ b/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
+@@ -28,6 +28,7 @@ properties:
+           - mediatek,mt7622-xhci
+           - mediatek,mt7623-xhci
+           - mediatek,mt7629-xhci
++          - mediatek,mt7986-xhci
+           - mediatek,mt8173-xhci
+           - mediatek,mt8183-xhci
+           - mediatek,mt8186-xhci
 -- 
 2.34.1
 
