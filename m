@@ -2,106 +2,102 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5959FC433FE
-	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 11:28:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C429BC433FE
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 13:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235207AbiKML20 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 13 Nov 2022 06:28:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53414 "EHLO
+        id S235310AbiKMNrT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 13 Nov 2022 08:47:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235231AbiKML20 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2022 06:28:26 -0500
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8033139
-        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2022 03:28:23 -0800 (PST)
-Received: by mail-pl1-x62a.google.com with SMTP id p21so7752812plr.7
-        for <linux-pci@vger.kernel.org>; Sun, 13 Nov 2022 03:28:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=KoeJ7l1SeItyiH/i7rqoeuzAnNEGB7ufNahWeuc/2i8=;
-        b=hyRwbqJypEjLrhxR1mu7l25ZMVFjClGBDwQGLpvf3LTQ1Iauz5AuSeMzA3GBRFTqRK
-         8om0JGLmWPKYHmWNBE988cTx1O3hAL87jF6sNn8xBaGusH1nn2BXNf6Dbh1DB+YaKKPY
-         lwNlMxYSYzn6I2lwYZp7lm/L4H18u8HPGTAPisIfW56HkK7crOrs3vN9rXnM+bWoa78G
-         TdFHhQIHeAO+OS6Xc7VV6dcxFmrU9s1AZq5q/AfjreEK008Kb/5zz7CJ7pF1MIXs05GH
-         NFomB2yCJ5g1WbQNP9nmFCVag+ZdZgJBgltPxp4fIE7TJpviL6eSBGCGoUkLJmBVZ0oI
-         dprQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=KoeJ7l1SeItyiH/i7rqoeuzAnNEGB7ufNahWeuc/2i8=;
-        b=VMZJ7B1us8jDr3FVj9bSfjB7EKH4E/8Ah4J3eTly+M80txOevSqTA1NIqE5TBoF4YE
-         9OWCr3PbG5oJQwGbLlY/XT+QPfRzNFI679HdZ20OORoWF4k8Hh+y2jKQfgbRwXgnTrAX
-         hEwKIZAm37Z2vNuXJiHH24fTimfnS0QhvoqMEqWLNKzKJYBQdvmMj4V4shpINccHG/f3
-         C5csuOT/NZxU7AkShJUAzNF/PRpOCK5f6TUrKTEpkVniaiW670cK48qF2G6cgJrh5XBe
-         QKh6nM1l8VhnL0ZwgCY8fX4UMG0tO0feINqOu3PCE0b9Lo3QErtEgZSEonv56ePnWoV/
-         qxMw==
-X-Gm-Message-State: ANoB5pnBDtlnQxDbY8PKGsWNfRwi0IQDiHTHsNU2+st1Q4jP8ACFcMZB
-        h0owa23fMOpAMqWCCKMBgA8=
-X-Google-Smtp-Source: AA0mqf72/Y93b6xSZtxf8dHURrAphQabFGOERypD9D3ZogVxzmX2Y01HF3XnLFbZHIvDd+Dd3LuB5A==
-X-Received: by 2002:a17:903:324d:b0:180:4030:1c7d with SMTP id ji13-20020a170903324d00b0018040301c7dmr9703173plb.99.1668338903293;
-        Sun, 13 Nov 2022 03:28:23 -0800 (PST)
-Received: from localhost.localdomain ([220.244.252.98])
-        by smtp.gmail.com with ESMTPSA id z68-20020a633347000000b0046fe658a903sm3987439pgz.94.2022.11.13.03.28.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 13 Nov 2022 03:28:22 -0800 (PST)
-From:   Albert Zhou <albert.zhou.50@gmail.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, lukas@wunner.de,
-        mika.westerberg@linux.intel.com
-Subject: [PATCH v2 2/2] pci: pcie: add dependency info to Kconfig
-Date:   Sun, 13 Nov 2022 22:28:11 +1100
-Message-Id: <20221113112811.22266-3-albert.zhou.50@gmail.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221113112811.22266-1-albert.zhou.50@gmail.com>
-References: <20221113112811.22266-1-albert.zhou.50@gmail.com>
+        with ESMTP id S235214AbiKMNrS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2022 08:47:18 -0500
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0B756430;
+        Sun, 13 Nov 2022 05:47:16 -0800 (PST)
+Received: from kwepemi100025.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4N9DDK5rcKzqSNJ;
+        Sun, 13 Nov 2022 21:43:29 +0800 (CST)
+Received: from [10.174.148.223] (10.174.148.223) by
+ kwepemi100025.china.huawei.com (7.221.188.158) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.31; Sun, 13 Nov 2022 21:47:13 +0800
+Message-ID: <0b2202bf-18d3-b288-9605-279208165080@huawei.com>
+Date:   Sun, 13 Nov 2022 21:47:12 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [RFC 0/4] pci/sriov: support VFs dynamic addition
+To:     Leon Romanovsky <leon@kernel.org>
+CC:     <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <jianjay.zhou@huawei.com>,
+        <zhuangshengen@huawei.com>, <arei.gonglei@huawei.com>,
+        <yechuan@huawei.com>, <huangzhichao@huawei.com>,
+        <xiehong@huawei.com>
+References: <20221111142722.1172-1-longpeng2@huawei.com>
+ <Y256ty6xGyUpkFn9@unreal>
+From:   "Longpeng (Mike, Cloud Infrastructure Service Product Dept.)" 
+        <longpeng2@huawei.com>
+In-Reply-To: <Y256ty6xGyUpkFn9@unreal>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.148.223]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ kwepemi100025.china.huawei.com (7.221.188.158)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Thunderbolt and USB4 PCIe cards require the hotplug feature. This is now
-recorded in the help message for HOTPLUG_PCI_PCIE. Further, PCIEPORTBUS
-and HOTPLUG_PCI_PCIE are defaulted to Y if USB4 is selected.
+Hi leon,
 
-Signed-off-by: Albert Zhou <albert.zhou.50@gmail.com>
----
- drivers/pci/pcie/Kconfig | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+在 2022/11/12 0:39, Leon Romanovsky 写道:
+> On Fri, Nov 11, 2022 at 10:27:18PM +0800, Longpeng(Mike) wrote:
+>> From: Longpeng <longpeng2@huawei.com>
+>>
+>> We can enable SRIOV and add VFs by /sys/bus/pci/devices/..../sriov_numvfs, but
+>> this operation needs to spend lots of time if there has a large amount of VFs.
+>>                                                              
+>> For example, if the machine has 10 PFs and 250 VFs per-PF, enable all the VFs
+>> concurrently would cost about 200-250ms. However most of them are not need to be
+>> used at the moment, so we can enable SRIOV first but add VFs on demand.
+> 
+> It is unclear what took 200-250ms, is it physical VF creation or bind of
+> the driver to these VFs?
+>
+It is neither. In our test, we already created physical VFs before, so 
+we skipped the 100ms waiting when writing PCI_SRIOV_CTRL. And our driver 
+only probes PF, it just returns an error if the function is VF.
 
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index 788ac8df3f9d..6c54a4512e2b 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -4,20 +4,21 @@
- #
- config PCIEPORTBUS
- 	bool "PCI Express Port Bus support"
-+	default y if USB4
- 	help
- 	  This enables PCI Express Port Bus support. Users can then enable
- 	  support for Native Hot-Plug, Advanced Error Reporting, Power
- 	  Management Events, and Downstream Port Containment.
--
- #
- # Include service Kconfig here
- #
- config HOTPLUG_PCI_PCIE
- 	bool "PCI Express Hotplug driver"
- 	depends on HOTPLUG_PCI && PCIEPORTBUS
-+	default y if USB4
- 	help
- 	  Say Y here if you have a motherboard that supports PCI Express Native
--	  Hotplug
-+	  Hotplug. Thunderbolt and USB4 PCIe cards require Hotplug.
- 
- 	  When in doubt, say N.
- 
--- 
-2.34.1
+The hotspot is the sriov_add_vfs (but no driver probe in fact) which is 
+a long procedure. Each step costs only a little, but the total cost is 
+not acceptable in some time-sensitive cases.
 
+What’s more, the sriov_add_vfs adds the VFs of a PF one by one. So we 
+can mostly support 10 concurrent calls if there has 10 PFs.
+
+> If the latter, you can try with sriov_drivers_autoprobe set to true. This is how
+> ennoblement of large SR-IOV systems is done.
+>  > Also PCI spec declares "VF enable" bit, which is applicable to all VFs
+> associated to that PF, see section "9.3.3.3.1 VF Enable".
+> 
+> Thanks
+> 
+>>
+>> This series introduces two interfaces:
+>> 1. sriov_numvfs_no_scan: enable SRIOV without add the VFs.
+>> 2. sriov_scan_vf_id: add a specific VF.
+>>
+>> Longpeng (4):
+>>    pci/sriov: extract sriov_numvfs common helper
+>>    pci/sriov: add vf_bitmap to mark the vf id allocation
+>>    pci/sriov: add sriov_numfs_no_scan interface
+>>    pci/sriov: add sriov_scan_vf_id interface
+>>
+>>   drivers/pci/iov.c | 162 +++++++++++++++++++++++++++++++++++++++++-----
+>>   drivers/pci/pci.h |   1 +
+>>   2 files changed, 148 insertions(+), 15 deletions(-)
+>>
+>> -- 
+>> 2.23.0
+>>
+> .
