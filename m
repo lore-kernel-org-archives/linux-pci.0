@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 204AFC43219
-	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 19:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 834DFC4332F
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 19:15:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235449AbiKMTOy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 13 Nov 2022 14:14:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46256 "EHLO
+        id S235490AbiKMTOz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 13 Nov 2022 14:14:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233792AbiKMTOw (ORCPT
+        with ESMTP id S229692AbiKMTOw (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2022 14:14:52 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 30672DF77;
-        Sun, 13 Nov 2022 11:14:49 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1410F2AE2;
+        Sun, 13 Nov 2022 11:14:46 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 467AAE0EAD;
-        Sun, 13 Nov 2022 22:14:48 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 9A87AE0EAB;
+        Sun, 13 Nov 2022 22:14:45 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=ESKKPvExVNUjds5TEXhGaRrmVjCaghntvf5jLZVtrUA=; b=MCEq9/99BXaq
-        ry7F4h/8eLobE+wxTDW0+s++xL7vUYt23WO6hytXWwjERdW6sHpVv9ZHZpnUCyI5
-        GTEC8pwCumj87qp1zDdBfNf3W5h+/64ZWHJrFei4+K568Y6JTolTRJxxzHrV0z6P
-        0FBKll1CGeolAy3tLATCA3+DFGLHFEM=
+         bh=BOM0V5Is2ED4//ZjRwtHVU+vDn2+frnhrGV5L/Nfxbc=; b=oza/jI73YmMj
+        iBmn9GUHcWRUaAliNyaat5vi8uZoV3bN3O4t+9zlaaQ70veJISd3zITApay5MXF6
+        8JqZ8q260hgK4/DnWLfxkCRd9zbrf7JaTEyAjo+Zt8s2QbIehmGs/yRJKcKdo1pq
+        lhtXmaFGjUM/1ANBULtombKbb0zVoUw=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 384BDE0E6A;
-        Sun, 13 Nov 2022 22:14:48 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 8B768E0E6A;
+        Sun, 13 Nov 2022 22:14:45 +0300 (MSK)
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Sun, 13 Nov 2022 22:14:47 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Sun, 13 Nov 2022 22:14:44 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -38,7 +38,8 @@ To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Cai Huoqing <cai.huoqing@linux.dev>,
         Robin Murphy <robin.murphy@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
@@ -48,10 +49,11 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         caihuoqing <caihuoqing@baidu.com>, Vinod Koul <vkoul@kernel.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 04/20] dt-bindings: PCI: dwc: Remove bus node from the examples
-Date:   Sun, 13 Nov 2022 22:12:45 +0300
-Message-ID: <20221113191301.5526-5-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v7 02/20] dt-bindings: visconti-pcie: Fix interrupts array max constraints
+Date:   Sun, 13 Nov 2022 22:12:43 +0300
+Message-ID: <20221113191301.5526-3-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221113191301.5526-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221113191301.5526-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,92 +66,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It's absolutely redundant seeing by default each node is embedded into its
-own example-X node with address and size cells set to 1.
+In accordance with the way the device DT-node is actually defined in
+arch/arm64/boot/dts/toshiba/tmpv7708.dtsi and the way the device is probed
+by the DW PCIe driver there are two IRQs it actually has. It's MSI IRQ the
+DT-bindings lack. Let's extend the interrupts property constraints then
+and fix the schema example so one would be acceptable by the actual device
+DT-bindings.
 
+Fixes: 17c1b16340f0 ("dt-bindings: pci: Add DT binding for Toshiba Visconti PCIe controller")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Rob Herring <robh@kernel.org>
+Acked-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
 
 ---
 
-Changelog v3:
-- This is a new patch unpinned from the next one:
-  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
-  by the Rob' request. (@Rob)
+Changelog v5:
+- This is a new patch added on the v5 release of the patchset.
 ---
- .../bindings/pci/snps,dw-pcie-ep.yaml         | 16 ++++-----
- .../devicetree/bindings/pci/snps,dw-pcie.yaml | 35 ++++++++++---------
- 2 files changed, 24 insertions(+), 27 deletions(-)
+ .../devicetree/bindings/pci/toshiba,visconti-pcie.yaml     | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index eae60901d60e..7d05dcba419b 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -46,14 +46,10 @@ additionalProperties: true
+diff --git a/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
+index 48ed227fc5b9..53da2edd7c9a 100644
+--- a/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/toshiba,visconti-pcie.yaml
+@@ -36,7 +36,7 @@ properties:
+       - const: mpu
  
- examples:
-   - |
--    bus {
--      #address-cells = <1>;
--      #size-cells = <1>;
--      pcie-ep@dfd00000 {
--        compatible = "snps,dw-pcie-ep";
--        reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
--              <0xdfc01000 0x0001000>, /* IP registers 2 */
--              <0xd0000000 0x2000000>; /* Configuration space */
--        reg-names = "dbi", "dbi2", "addr_space";
--      };
-+    pcie-ep@dfd00000 {
-+      compatible = "snps,dw-pcie-ep";
-+      reg = <0xdfc00000 0x0001000>, /* IP registers 1 */
-+            <0xdfc01000 0x0001000>, /* IP registers 2 */
-+            <0xd0000000 0x2000000>; /* Configuration space */
-+      reg-names = "dbi", "dbi2", "addr_space";
-     };
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index 505b01e0a034..3fdc80453a85 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -53,21 +53,22 @@ required:
+   interrupts:
+-    maxItems: 1
++    maxItems: 2
  
- examples:
-   - |
--    bus {
--      #address-cells = <1>;
--      #size-cells = <1>;
--      pcie@dfc00000 {
--        device_type = "pci";
--        compatible = "snps,dw-pcie";
--        reg = <0xdfc00000 0x0001000>, /* IP registers */
--              <0xd0000000 0x0002000>; /* Configuration space */
--        reg-names = "dbi", "config";
--        #address-cells = <3>;
--        #size-cells = <2>;
--        ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000>,
--                 <0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
--        interrupts = <25>, <24>;
--        #interrupt-cells = <1>;
--        num-lanes = <1>;
--      };
-+    pcie@dfc00000 {
-+      compatible = "snps,dw-pcie";
-+      device_type = "pci";
-+      reg = <0xdfc00000 0x0001000>, /* IP registers */
-+            <0xd0000000 0x0002000>; /* Configuration space */
-+      reg-names = "dbi", "config";
-+      #address-cells = <3>;
-+      #size-cells = <2>;
-+      ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000>,
-+               <0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
-+      bus-range = <0x0 0xff>;
-+
-+      interrupts = <25>, <24>;
-+      #interrupt-cells = <1>;
-+
-+      reset-gpios = <&port0 0 1>;
-+
-+      num-lanes = <1>;
-     };
+   clocks:
+     items:
+@@ -94,8 +94,9 @@ examples:
+             #interrupt-cells = <1>;
+             ranges = <0x81000000 0 0x40000000 0 0x40000000 0 0x00010000>,
+                      <0x82000000 0 0x50000000 0 0x50000000 0 0x20000000>;
+-            interrupts = <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
+-            interrupt-names = "intr";
++            interrupts = <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "msi", "intr";
+             interrupt-map-mask = <0 0 0 7>;
+             interrupt-map =
+                 <0 0 0 1 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
 -- 
 2.38.1
 
