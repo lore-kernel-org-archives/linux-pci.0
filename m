@@ -2,92 +2,85 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C33E6C43217
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Nov 2022 20:14:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3398C4332F
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 07:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231404AbiKLUOC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 12 Nov 2022 15:14:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39752 "EHLO
+        id S234971AbiKMHzd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 13 Nov 2022 02:55:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37666 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230147AbiKLUOC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Nov 2022 15:14:02 -0500
-Received: from mx-out.tlen.pl (mx-out.tlen.pl [193.222.135.148])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DB4A12092
-        for <linux-pci@vger.kernel.org>; Sat, 12 Nov 2022 12:14:00 -0800 (PST)
-Received: (wp-smtpd smtp.tlen.pl 4821 invoked from network); 12 Nov 2022 21:07:16 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=o2.pl; s=1024a;
-          t=1668283636; bh=loH1W2wKycWcNMDjsgektwUyaNDFHlHO5th0/v6bRmw=;
-          h=Subject:To:Cc:From;
-          b=egiq0jsRFmHMDiNfMFvMUBgqj5BDQ5X+lvuVFIyXA5M/rniZMizsr4bhOjx8FAWNN
-           x6aZk2v6sI5h3RYl/cblVuoQhVgCnoq80vOEwkpxVdlz5GoMgtdppIQSjy/eXJTy4a
-           U/sC2ojO2XaPvQnNq/dTUPWoFMxtaGLR3J1wULns=
-Received: from aaey149.neoplus.adsl.tpnet.pl (HELO [192.168.1.22]) (mat.jonczyk@o2.pl@[83.4.128.149])
-          (envelope-sender <mat.jonczyk@o2.pl>)
-          by smtp.tlen.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <helgaas@kernel.org>; 12 Nov 2022 21:07:16 +0100
-Message-ID: <35cfe433-bafa-9aeb-20ad-2f275f585b6c@o2.pl>
-Date:   Sat, 12 Nov 2022 21:07:15 +0100
+        with ESMTP id S229753AbiKMHzc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2022 02:55:32 -0500
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D23210B71
+        for <linux-pci@vger.kernel.org>; Sat, 12 Nov 2022 23:55:31 -0800 (PST)
+Received: by mail-pf1-x429.google.com with SMTP id 130so8423639pfu.8
+        for <linux-pci@vger.kernel.org>; Sat, 12 Nov 2022 23:55:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=T4uD8BX3BTbrD8CUBFH4HzycR9pDFousN+7wrmW/Hm0=;
+        b=fGULN1ouuQUIsQ/hcdURNJGXB0xDGNjKz02gyV4MyWV8mYbk0YZD+iQcjXb/2/fahE
+         kYCYNso3wHBCF465FE9Eh/6MoNLvgX0AGcf/80ADHlgPLthoe8P/xysm6D/Mbejrs2IG
+         7CRPjXzLStVE4OR5xQbimkynz3GOVRvDVWLIsPXHxI/RVV5s+aZfXw4e6in2/9zmTnFs
+         hLYkjXZZuqCUv9Iq5Zs0o5RjQB+OImWaCqYcUOefi9fOe7GwGo1PZjRMNmXDPIsHqVJc
+         dMOQAYWZS9AcOomwo0rwy3MdT+2wjActWp1TnywfS4xB14GzA6RK4eWsDKsyxjC7tsuW
+         kPHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=T4uD8BX3BTbrD8CUBFH4HzycR9pDFousN+7wrmW/Hm0=;
+        b=aYX7tHlxADSbdut0F1+nMKDuNs+Fzq9LKpXoXfEHf9Czkv3fVG3Op7Vlsxlcn4HmFH
+         oKwCssizbuMf7n43Gy6s+rIZrbdT23m0+yACYA0YL3gmfholT20Krh81gB/zRsOdNxRf
+         Z5fjTisrVLtisRh4zHrZFM1pJgA1ZwA9rEyq3U94xbVORdNxCYPv2ZXsqm/B968zriL3
+         dLqA9viFJeRE2x+jVKza1zyWyeBuafew0xPVIwT/kV+P7urvgDIYunYLVs7ihlbUnLq1
+         qLyH71m2fK59rcs68lEuZDrDS2FDfALObA9MWbOm55FYGYPdOw8We0uys+ED6PkGRt/U
+         QLoA==
+X-Gm-Message-State: ANoB5pnU+BjSztRpzF4UMPT71QCqm8SkuRaGo7qdU9fkzilEHuB+S5fV
+        31xTZJw8uUh34uHkCaAYtGbZAbGXz2Wouw==
+X-Google-Smtp-Source: AA0mqf52Fr1a1ksQJnUM/4tHRlfllEkMHP6uMQnruPC5hLTvI70ThRp+m2kBTRgrRZ7Md6+WAk/bkA==
+X-Received: by 2002:a62:7955:0:b0:56b:e64c:5c7e with SMTP id u82-20020a627955000000b0056be64c5c7emr9396214pfc.18.1668326131042;
+        Sat, 12 Nov 2022 23:55:31 -0800 (PST)
+Received: from localhost.localdomain ([220.244.252.98])
+        by smtp.gmail.com with ESMTPSA id a2-20020a1709027e4200b001714e7608fdsm4650384pln.256.2022.11.12.23.55.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 12 Nov 2022 23:55:30 -0800 (PST)
+From:   Albert Zhou <albert.zhou.50@gmail.com>
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org
+Subject: [PATCH] pci: hotplug: add info to Kconfig
+Date:   Sun, 13 Nov 2022 18:55:25 +1100
+Message-Id: <20221113075525.2557-1-albert.zhou.50@gmail.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Subject: Re: [PATCH v2] acpi,pci: handle duplicate IRQ routing entries
- returned from _PRT
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <lenb@kernel.org>, Borislav Petkov <bp@suse.de>,
-        Jean Delvare <jdelvare@suse.com>, linux-i2c@vger.kernel.org
-References: <20221112002023.GA764787@bhelgaas>
-Content-Language: en-GB
-From:   =?UTF-8?Q?Mateusz_Jo=c5=84czyk?= <mat.jonczyk@o2.pl>
-In-Reply-To: <20221112002023.GA764787@bhelgaas>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-WP-MailID: 13e9072270332344864b56994e464f72
-X-WP-AV: skaner antywirusowy Poczty o2
-X-WP-SPAM: NO 0000000 [QbNF]                               
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-W dniu 12.11.2022 o 01:20, Bjorn Helgaas pisze:
-> [+cc Jean, linux-i2c]
->
-> On Sat, Sep 17, 2022 at 11:09:44AM +0200, Mateusz Jończyk wrote:
->> On some platforms, the ACPI _PRT function returns duplicate interrupt
->> routing entries. Linux uses the first matching entry, but sometimes the
->> second matching entry contains the correct interrupt vector.
-> Rafael, Jean, what do you think about this?  It seems like kind of a
-> lot of infrastructure to deal with this oddness, but I'm not really
-> opposed to it.
->
-> This is in i2c-i801.c, which seems to have some support for polling;
-> maybe it could make smart enough to complain and automatically switch
-> to polling if a timeout occurs.
->
-> Or maybe we scan the entire _PRT and let the match win (instead of the
-> first as we do today).
->
-> Or ...?
->
-> Google finds a lot of hits for "i801_smbus" "timeout waiting for
-> interrupt", but I can't tell whether they're a similar _PRT issue or
-> something else.
->
->> This happens on a Dell Latitude E6500 laptop with the i2c-i801 Intel
->> SMBus controller. This controller was nonfunctional unless its interrupt
->> usage was disabled (using the "disable_features=0x10" module parameter).
+Add informative comment that Thunderbolt requires PCI Hotplug.
+---
+ drivers/pci/hotplug/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hello,
+diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
+index 840a84bb5ee2..a6dccb958254 100644
+--- a/drivers/pci/hotplug/Kconfig
++++ b/drivers/pci/hotplug/Kconfig
+@@ -9,7 +9,7 @@ menuconfig HOTPLUG_PCI
+ 	help
+ 	  Say Y here if you have a motherboard with a PCI Hotplug controller.
+ 	  This allows you to add and remove PCI cards while the machine is
+-	  powered up and running.
++	  powered up and running. Thunderbolt requires PCI Hotplug.
+ 
+ 	  When in doubt, say N.
+ 
 
-I have prepared a lean patch that only prints a warning when there are
-two matching entries in the table returned from _PRT (I will send it in the
-next e-mail). Perhaps it could be merged and then after a release or two
-it will be known how widespread this problem is.
-
-Greetings,
-
-Mateusz
+base-commit: fef7fd48922d11b22620e19f9c9101647bfe943d
+-- 
+2.34.1
 
