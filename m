@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77E1BC4332F
-	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 19:15:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 802A2C3A5A3
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 19:15:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235602AbiKMTPG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 13 Nov 2022 14:15:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46274 "EHLO
+        id S235497AbiKMTO4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 13 Nov 2022 14:14:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46250 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235416AbiKMTOx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2022 14:14:53 -0500
+        with ESMTP id S235317AbiKMTOw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2022 14:14:52 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0FCAADF78;
-        Sun, 13 Nov 2022 11:14:51 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1639EDEC2;
+        Sun, 13 Nov 2022 11:14:46 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 95371E0EAE;
-        Sun, 13 Nov 2022 22:14:49 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id DC4D2E0EAA;
+        Sun, 13 Nov 2022 22:14:44 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=rOBfhHGbZnU03AIcqB7AElA/Nr65kjuLbDHdO0rEAiY=; b=HlTwLkBf/lDI
-        fmcPnyqBdSZCJMgjH34ggM7i/o63+oOA6OyJ33W3oRCgZNbZsQj2C0Ye7/Ky2Khm
-        Hv76w41qzcYx3pZV4p6qIX6JCnQVYAImP1GIBM5Dg7nEqyjatuDyc8OI9BqDcQ+P
-        qgHb3I5YFm7k2QQxibWEYzqiGmi87Vo=
+         bh=HAbPpyQXjz8ylsqMTZ03ZjBo19Ye/nkDntALZaYQcTI=; b=MdsG/jrPr/Nh
+        jgBXP9IN3550UJm78IBv4xU/Ne4mbJuQqwFTQufpJdA21N13fSKLcdjf1N5p50l9
+        cXZtuIAoKo++6UpdJ9RAgkysnOj1bhTMmdmNmFCoQ8VBf8OS+O4o5VhDzv26ZOMU
+        cKsEuLvwG/fYvcglxlFeDNktNdcLPPA=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 87DDDE0E6A;
-        Sun, 13 Nov 2022 22:14:49 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id C8416E0E6A;
+        Sun, 13 Nov 2022 22:14:44 +0300 (MSK)
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Sun, 13 Nov 2022 22:14:48 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Sun, 13 Nov 2022 22:14:44 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -38,7 +38,14 @@ To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Cai Huoqing <cai.huoqing@linux.dev>,
         Robin Murphy <robin.murphy@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
@@ -48,10 +55,12 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         caihuoqing <caihuoqing@baidu.com>, Vinod Koul <vkoul@kernel.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 05/20] dt-bindings: PCI: dwc: Add phys/phy-names common properties
-Date:   Sun, 13 Nov 2022 22:12:46 +0300
-Message-ID: <20221113191301.5526-6-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>,
+        Alexander Stein <alexander.stein@ew.tq-group.com>,
+        <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v7 01/20] dt-bindings: imx6q-pcie: Fix clock names for imx6sx and imx8mq
+Date:   Sun, 13 Nov 2022 22:12:42 +0300
+Message-ID: <20221113191301.5526-2-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221113191301.5526-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221113191301.5526-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,100 +73,103 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It's normal to have the DW PCIe RP/EP DT-nodes equipped with the explicit
-PHY phandle references. There can be up to 16 PHYs attach in accordance
-with the maximum number of supported PCIe lanes. Let's extend the common
-DW PCIe controller schema with the 'phys' and 'phy-names' properties
-definition. There two types PHY names are defined: preferred generic names
-'^pcie[0-9]+$' and non-preferred vendor-specific names
-'^pcie([0-9]+|-?phy[0-9]*)?$' so to match the names currently supported by
-the DW PCIe platform drivers ("pcie": meson; "pciephy": qcom, imx6;
-"pcie-phy": uniphier, rockchip, spear13xx; "pcie": intel-gw; "pcie-phy%d":
-keystone, dra7xx; "pcie": histb, etc).
+Originally as it was defined the legacy bindings the pcie_inbound_axi and
+pcie_aux clock names were supposed to be used in the fsl,imx6sx-pcie and
+fsl,imx8mq-pcie devices respectively. But the bindings conversion has been
+incorrectly so now the fourth clock name is defined as "pcie_inbound_axi
+for imx6sx-pcie, pcie_aux for imx8mq-pcie", which is completely wrong.
+Let's fix that by conditionally apply the clock-names constraints based on
+the compatible string content.
 
+Fixes: 751ca492f131 ("dt-bindings: PCI: imx6: convert the imx pcie controller to dtschema")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Alexander Stein <alexander.stein@ew.tq-group.com>
 
 ---
-
-Changelog v3:
-- This is a new patch unpinned from the next one:
-  https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
-  by the Rob' request. (@Rob)
 
 Changelog v5:
-- Add a note about having line-based PHY phandles order. (@Rob)
-- Prefer 'pcie[0-9]+' PHY-names over the rest of the cases. (@Rob)
+- This is a new patch added on the v5 release of the patchset.
 
-Changelog v6:
-- Add the Nvidia Tegra194-specific "p2u-[0-7]" phy-names too. (@DT-tbot)
-- Drop 'deprecated' keywords from the vendor-specific names. (@Rob)
+Changelog v7:
+- Move the allOf clause to the bottom of the bindings. (@Krzysztof)
+- Get back the names to the clock-names property and make sure the
+  platform-specific name constraint is applied in the allOf clause.
+  (@Rob)
 ---
- .../bindings/pci/snps,dw-pcie-common.yaml     | 24 +++++++++++++++++++
- .../bindings/pci/snps,dw-pcie-ep.yaml         |  3 +++
- .../devicetree/bindings/pci/snps,dw-pcie.yaml |  3 +++
- 3 files changed, 30 insertions(+)
+ .../bindings/pci/fsl,imx6q-pcie.yaml          | 46 +++++++++++++++++--
+ 1 file changed, 42 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-index 554c2804c608..91d24e400dfc 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
-@@ -17,6 +17,30 @@ description:
- select: false
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+index 376e739bcad4..49b4f7a32e71 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+@@ -14,9 +14,6 @@ description: |+
+   This PCIe host controller is based on the Synopsys DesignWare PCIe IP
+   and thus inherits all the common properties defined in snps,dw-pcie.yaml.
  
+-allOf:
+-  - $ref: /schemas/pci/snps,dw-pcie.yaml#
+-
  properties:
-+  phys:
-+    description:
-+      There can be up to the number of possible lanes PHYs specified placed in
-+      the phandle array in the line-based order. Obviously each the specified
-+      PHYs are supposed to be able to work in the PCIe mode with a speed
-+      implied by the DWC PCIe controller they are attached to.
-+    minItems: 1
-+    maxItems: 16
-+
-+  phy-names:
-+    minItems: 1
-+    maxItems: 16
-+    oneOf:
-+      - description: Generic PHY names
-+        items:
-+          pattern: '^pcie[0-9]+$'
-+      - description:
-+          Vendor-specific PHY names. Consider using the generic
-+          names above for new bindings.
-+        items:
-+          oneOf:
-+            - pattern: '^pcie(-?phy[0-9]*)?$'
-+            - pattern: '^p2u-[0-7]$'
-+
-   reset-gpio:
-     deprecated: true
-     description:
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index 7d05dcba419b..dcd521aed213 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -52,4 +52,7 @@ examples:
-             <0xdfc01000 0x0001000>, /* IP registers 2 */
-             <0xd0000000 0x2000000>; /* Configuration space */
-       reg-names = "dbi", "dbi2", "addr_space";
-+
-+      phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
-+      phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
-     };
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index 3fdc80453a85..d9512f7f7124 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -70,5 +70,8 @@ examples:
+   compatible:
+     enum:
+@@ -61,7 +58,7 @@ properties:
+       - const: pcie
+       - const: pcie_bus
+       - const: pcie_phy
+-      - const: pcie_inbound_axi for imx6sx-pcie, pcie_aux for imx8mq-pcie
++      - enum: [ pcie_inbound_axi, pcie_aux ]
  
-       reset-gpios = <&port0 0 1>;
+   num-lanes:
+     const: 1
+@@ -175,6 +172,47 @@ required:
+   - clocks
+   - clock-names
  
-+      phys = <&pcie_phy>;
-+      phy-names = "pcie";
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: fsl,imx6sx-pcie
++    then:
++      properties:
++        clock-names:
++          items:
++            - {}
++            - {}
++            - {}
++            - const: pcie_inbound_axi
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: fsl,imx8mq-pcie
++    then:
++      properties:
++        clock-names:
++          items:
++            - {}
++            - {}
++            - {}
++            - const: pcie_aux
++  - if:
++      properties:
++        compatible:
++          not:
++            contains:
++              enum:
++                - fsl,imx6sx-pcie
++                - fsl,imx8mq-pcie
++    then:
++      properties:
++        clock-names:
++          maxItems: 3
 +
-       num-lanes = <1>;
-     };
+ unevaluatedProperties: false
+ 
+ examples:
 -- 
 2.38.1
 
