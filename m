@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50070C41535
-	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 19:15:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77E1BC4332F
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Nov 2022 19:15:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235596AbiKMTPF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 13 Nov 2022 14:15:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46278 "EHLO
+        id S235602AbiKMTPG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 13 Nov 2022 14:15:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235400AbiKMTOx (ORCPT
+        with ESMTP id S235416AbiKMTOx (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Nov 2022 14:14:53 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 65EE3DF86;
-        Sun, 13 Nov 2022 11:14:52 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0FCAADF78;
+        Sun, 13 Nov 2022 11:14:51 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id F21C2E0EB0;
-        Sun, 13 Nov 2022 22:14:51 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 95371E0EAE;
+        Sun, 13 Nov 2022 22:14:49 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=8LlkqqiVv/lhmjc3kta/QC77O8du5LeEjhq3BGupOjM=; b=F/9UTlj8n963
-        U6rFJ/lYN4nRD6udMnyjFUQmSlS2AoVz3nIPunDMS0WsEDKJtvEApZ4pvr1/GUfp
-        3g8S13KnEof6dQewO08YKd7VZxKcb2cfdKXSdOFvt2BZYK4sq5NxQxs/90JxxMVz
-        i1gMnRUZTXhP3wO6xu7WavDyVAyAnIQ=
+         bh=rOBfhHGbZnU03AIcqB7AElA/Nr65kjuLbDHdO0rEAiY=; b=HlTwLkBf/lDI
+        fmcPnyqBdSZCJMgjH34ggM7i/o63+oOA6OyJ33W3oRCgZNbZsQj2C0Ye7/Ky2Khm
+        Hv76w41qzcYx3pZV4p6qIX6JCnQVYAImP1GIBM5Dg7nEqyjatuDyc8OI9BqDcQ+P
+        qgHb3I5YFm7k2QQxibWEYzqiGmi87Vo=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id E4B4FE0E6A;
-        Sun, 13 Nov 2022 22:14:51 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 87DDDE0E6A;
+        Sun, 13 Nov 2022 22:14:49 +0300 (MSK)
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Sun, 13 Nov 2022 22:14:51 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Sun, 13 Nov 2022 22:14:48 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Rob Herring <robh+dt@kernel.org>, Rob Herring <robh@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -49,9 +49,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         caihuoqing <caihuoqing@baidu.com>, Vinod Koul <vkoul@kernel.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 07/20] dt-bindings: PCI: dwc: Apply generic schema for generic device only
-Date:   Sun, 13 Nov 2022 22:12:48 +0300
-Message-ID: <20221113191301.5526-8-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v7 05/20] dt-bindings: PCI: dwc: Add phys/phy-names common properties
+Date:   Sun, 13 Nov 2022 22:12:46 +0300
+Message-ID: <20221113191301.5526-6-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221113191301.5526-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221113191301.5526-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,18 +64,16 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Having the generic compatible strings constraints with the 'any'+'generic
-string' semantic implicitly encourages either to add new DW PCIe-based
-DT-bindings with the generic compatible string attached or just forget
-about adding new DT-bindings since the corresponding DT-node will be
-evaluated anyway. Moreover having that semantic implemented in the
-generic DT-schema causes the DT-validation tool to apply the schema twice:
-first by implicit compatible-string-based selection and second by means of
-the 'allOf: [ $ref ]' statement. Let's fix all of that by dropping the
-compatible property constraints and selecting the generic DT-schema only
-for the purely generic DW PCIe DT-nodes. The later is required since there
-is a driver for such devices. (Though there are no such DT-nodes currently
-defined in the kernel DT sources.)
+It's normal to have the DW PCIe RP/EP DT-nodes equipped with the explicit
+PHY phandle references. There can be up to 16 PHYs attach in accordance
+with the maximum number of supported PCIe lanes. Let's extend the common
+DW PCIe controller schema with the 'phys' and 'phy-names' properties
+definition. There two types PHY names are defined: preferred generic names
+'^pcie[0-9]+$' and non-preferred vendor-specific names
+'^pcie([0-9]+|-?phy[0-9]*)?$' so to match the names currently supported by
+the DW PCIe platform drivers ("pcie": meson; "pciephy": qcom, imx6;
+"pcie-phy": uniphier, rockchip, spear13xx; "pcie": intel-gw; "pcie-phy%d":
+keystone, dra7xx; "pcie": histb, etc).
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Rob Herring <robh@kernel.org>
@@ -86,101 +84,80 @@ Changelog v3:
 - This is a new patch unpinned from the next one:
   https://lore.kernel.org/linux-pci/20220503214638.1895-2-Sergey.Semin@baikalelectronics.ru/
   by the Rob' request. (@Rob)
-- Fix compatible property schema so one would work as expected: string
-  must contain either generic DW PCIe IP-core name or both generic and
-  equipped with IP-core version names.
 
 Changelog v5:
-- Switch the patch from not-selecting the generic schemas to applying
-  them to the generic DW PCIe device nodes only.
-- Drop the generic compatible string used as fallback. (@Rob)
----
- .../devicetree/bindings/pci/snps,dw-pcie-ep.yaml | 16 ++++++++++------
- .../devicetree/bindings/pci/snps,dw-pcie.yaml    | 16 ++++++++++------
- 2 files changed, 20 insertions(+), 12 deletions(-)
+- Add a note about having line-based PHY phandles order. (@Rob)
+- Prefer 'pcie[0-9]+' PHY-names over the rest of the cases. (@Rob)
 
+Changelog v6:
+- Add the Nvidia Tegra194-specific "p2u-[0-7]" phy-names too. (@DT-tbot)
+- Drop 'deprecated' keywords from the vendor-specific names. (@Rob)
+---
+ .../bindings/pci/snps,dw-pcie-common.yaml     | 24 +++++++++++++++++++
+ .../bindings/pci/snps,dw-pcie-ep.yaml         |  3 +++
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |  3 +++
+ 3 files changed, 30 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+index 554c2804c608..91d24e400dfc 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+@@ -17,6 +17,30 @@ description:
+ select: false
+ 
+ properties:
++  phys:
++    description:
++      There can be up to the number of possible lanes PHYs specified placed in
++      the phandle array in the line-based order. Obviously each the specified
++      PHYs are supposed to be able to work in the PCIe mode with a speed
++      implied by the DWC PCIe controller they are attached to.
++    minItems: 1
++    maxItems: 16
++
++  phy-names:
++    minItems: 1
++    maxItems: 16
++    oneOf:
++      - description: Generic PHY names
++        items:
++          pattern: '^pcie[0-9]+$'
++      - description:
++          Vendor-specific PHY names. Consider using the generic
++          names above for new bindings.
++        items:
++          oneOf:
++            - pattern: '^pcie(-?phy[0-9]*)?$'
++            - pattern: '^p2u-[0-7]$'
++
+   reset-gpio:
+     deprecated: true
+     description:
 diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index fc3b5d4ac245..d04001248b53 100644
+index 7d05dcba419b..dcd521aed213 100644
 --- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
 +++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -13,16 +13,20 @@ maintainers:
- description: |
-   Synopsys DesignWare PCIe host controller endpoint
- 
-+# Please create a separate DT-schema for your DWC PCIe Endpoint controller
-+# and make sure it's assigned with the vendor-specific compatible string.
-+select:
-+  properties:
-+    compatible:
-+      const: snps,dw-pcie-ep
-+  required:
-+    - compatible
+@@ -52,4 +52,7 @@ examples:
+             <0xdfc01000 0x0001000>, /* IP registers 2 */
+             <0xd0000000 0x2000000>; /* Configuration space */
+       reg-names = "dbi", "dbi2", "addr_space";
 +
- allOf:
-   - $ref: /schemas/pci/pci-ep.yaml#
-   - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
- 
- properties:
--  compatible:
--    anyOf:
--      - {}
--      - const: snps,dw-pcie-ep
--
-   reg:
-     description: |
-       It should contain Data Bus Interface (dbi) and config registers for all
-@@ -38,9 +42,9 @@ properties:
-       enum: [dbi, dbi2, config, atu, addr_space, link, atu_dma, appl]
- 
- required:
-+  - compatible
-   - reg
-   - reg-names
--  - compatible
- 
- additionalProperties: true
- 
++      phys = <&pcie_phy0>, <&pcie_phy1>, <&pcie_phy2>, <&pcie_phy3>;
++      phy-names = "pcie0", "pcie1", "pcie2", "pcie3";
+     };
 diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index e787b9727589..85861b71d9ff 100644
+index 3fdc80453a85..d9512f7f7124 100644
 --- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
 +++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -13,16 +13,20 @@ maintainers:
- description: |
-   Synopsys DesignWare PCIe host controller
+@@ -70,5 +70,8 @@ examples:
  
-+# Please create a separate DT-schema for your DWC PCIe Root Port controller
-+# and make sure it's assigned with the vendor-specific compatible string.
-+select:
-+  properties:
-+    compatible:
-+      const: snps,dw-pcie
-+  required:
-+    - compatible
+       reset-gpios = <&port0 0 1>;
+ 
++      phys = <&pcie_phy>;
++      phy-names = "pcie";
 +
- allOf:
-   - $ref: /schemas/pci/pci-bus.yaml#
-   - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
- 
- properties:
--  compatible:
--    anyOf:
--      - {}
--      - const: snps,dw-pcie
--
-   reg:
-     description: |
-       It should contain Data Bus Interface (dbi) and config registers for all
-@@ -47,9 +51,9 @@ properties:
- additionalProperties: true
- 
- required:
-+  - compatible
-   - reg
-   - reg-names
--  - compatible
- 
- examples:
-   - |
+       num-lanes = <1>;
+     };
 -- 
 2.38.1
 
