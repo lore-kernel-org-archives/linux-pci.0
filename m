@@ -2,135 +2,115 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EA27C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Nov 2022 18:42:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C30C4167D
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Nov 2022 18:58:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235636AbiKNSmc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Nov 2022 13:42:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37204 "EHLO
+        id S236525AbiKNS6P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Nov 2022 13:58:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44008 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236525AbiKNSma (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2022 13:42:30 -0500
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E35C27FC5;
-        Mon, 14 Nov 2022 10:42:30 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id q9so11844796pfg.5;
-        Mon, 14 Nov 2022 10:42:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CpTIatzX4u0/HTzbO8qsPMYL1u0QJMJqvc+Ay+4dShg=;
-        b=oN+4b9T+Dew1mTgGEMv9v9FGxRc9HQYBG2w0r75hfEZbSYdp48q14k6Pgbs14/03J/
-         3g9/jxgfkSV32KvT6B1q7GeWDLFoU5mzEVv7y3kRTsFVn5FLr9PeGNpPBHtM13HG//95
-         qtBOBxti2sTb4tCSH340vG3TeYxZ22+ImmeokryBGDCUKe0+hAAs9eIw5r6+45QfmzJj
-         ecJ4aoF6+YekNk+Qyq+pIE6pJXFOE9kw5YEnTxomRWo/wvZF5yGN4cvfr/u2MTLUsbtT
-         YzVsmh2/EzQlUWaUJmxe+m94vTHK+/DC3NQibibmwfHuQpb1zIyoMYWxm+FyS9ezqH2Q
-         YwFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=CpTIatzX4u0/HTzbO8qsPMYL1u0QJMJqvc+Ay+4dShg=;
-        b=PWjVhRwK93z1sfbUGrVCszWERm5yzrXND/qrM+m7cWcbgabi+X76SzxH8rLx461wXf
-         KwNwJFR3g5g/RoQ/swYdjfa/Z69NWsvRQiI4qmrUK9y5NptpQnqUQ+Iegn+HG1nZuB66
-         tG+tHsPiSiv3S0ObuoNZmRaiX+Dd8NTez85c54pTqwXeKlogvzEIDcfF7ZumoyS5vM1q
-         wi/CjMjwCHKRUrQGUIZuY61zS0FlPBtCubsO3iY+49SZSHDK6JsujYGsvJQETq4yrW4g
-         eypcklchk0DPJMl+UGy9pnFBlzXdSKmynBa6RBRu2q9SQHfK7OBV40mkoiewqa5Gfn4d
-         dt3A==
-X-Gm-Message-State: ANoB5plzvqZZWLZ4R1yfk5u5y+taTRz4gxuWkO185Ne7A2sC6ucaEyGX
-        xL2QaHaj9VGgCaFt2+A8VRO6Rc1acXk=
-X-Google-Smtp-Source: AA0mqf6kHjQZNow4sM/pm272u3Td0bf10ylBH/gZBS3wr5AONc9syi+cyupcpd1CF+jL1Wbc0+OhXg==
-X-Received: by 2002:a05:6a00:c8b:b0:56e:d7f4:3c49 with SMTP id a11-20020a056a000c8b00b0056ed7f43c49mr15014102pfv.50.1668451349537;
-        Mon, 14 Nov 2022 10:42:29 -0800 (PST)
-Received: from google.com ([2620:15c:9d:2:5c17:fc5a:f127:5bb5])
-        by smtp.gmail.com with ESMTPSA id c27-20020a631c5b000000b0046ec7beb53esm6203376pgm.8.2022.11.14.10.42.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Nov 2022 10:42:28 -0800 (PST)
-Date:   Mon, 14 Nov 2022 10:42:25 -0800
-From:   Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [v2 PATCH] PCI: aardvark: switch to using devm_gpiod_get_optional()
-Message-ID: <Y3KMEZFv6dpxA+Gv@google.com>
+        with ESMTP id S229484AbiKNS6K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2022 13:58:10 -0500
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B9971CFD1;
+        Mon, 14 Nov 2022 10:58:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1668452288; x=1699988288;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=EaNuN468AX7oVVNzygbZKjeVdiuKUVO8jdpIxMpvwBE=;
+  b=GlUNU2HwIQvRlT1qXEhiDcwxNbPnZR4MonvxxZT7Xc0wBuUPib2XJH6/
+   a6TTFGUvE5vGmxXKbgiiDWuJiEvp7W94ecNolPwFN3tldFSP0iclExoAN
+   QEYJIQf9cd/A4IJ7qraUHIl9qGKK//fuihWWwihU1Gd8jm5+kE9VUrVSh
+   a0BhaG0YXmskoyz8YurHpbvi6+bpnkUoegi8a/pnmSylqZnbvE5C7z3n0
+   Wix7ZkDzWMxklQMENkLTdQ4KVoPz12w4VlRApJvQ3jYqpJqa5HzMtrej3
+   Z/2fohoofWjvo3e0UUL+c0XGK5jigXbAaniu4i+H6yTrkras/2bVXL+Lx
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10531"; a="338843396"
+X-IronPort-AV: E=Sophos;i="5.96,164,1665471600"; 
+   d="scan'208";a="338843396"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2022 10:58:07 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10531"; a="638607277"
+X-IronPort-AV: E=Sophos;i="5.96,164,1665471600"; 
+   d="scan'208";a="638607277"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga002.jf.intel.com with ESMTP; 14 Nov 2022 10:58:00 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id E1657346; Mon, 14 Nov 2022 20:58:24 +0200 (EET)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic@digikod.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        Juergen Gross <jgross@suse.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, sparclinux@vger.kernel.org,
+        linux-pci@vger.kernel.org, xen-devel@lists.xenproject.org
+Cc:     Miguel Ojeda <ojeda@kernel.org>,
+        Richard Henderson <richard.henderson@linaro.org>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>
+Subject: [PATCH v3 3/4] EISA: Convert to use pci_bus_for_each_resource_p()
+Date:   Mon, 14 Nov 2022 20:58:21 +0200
+Message-Id: <20221114185822.65038-4-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221114185822.65038-1-andriy.shevchenko@linux.intel.com>
+References: <20221114185822.65038-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Switch the driver to the generic version of gpiod API (and away from
-OF-specific variant), so that we can stop exporting
-devm_gpiod_get_from_of_node().
+The pci_bus_for_each_resource_p() hides the iterator loop since
+it may be not used otherwise. With this, we may drop that iterator
+variable definition.
 
-Acked-by: Pali Rohár <pali@kernel.org>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
+ drivers/eisa/pci_eisa.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-v2:
- - collected reviewed-by/acked-by tags
- - updated commit description to remove incorrect assumption of why
-   devm_gpiod_get_from_of_node() was used in the first place
-
-This is the last user of devm_gpiod_get_from_of_node() in the mainline
-(next), it would be great to have it in so that we can remove the API in
-the next release cycle.
-
-Thanks!
-
-
- drivers/pci/controller/pci-aardvark.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index ba36bbc5897d..5ecfac23c9fc 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1859,20 +1859,19 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
+diff --git a/drivers/eisa/pci_eisa.c b/drivers/eisa/pci_eisa.c
+index 930c2332c3c4..907b86384396 100644
+--- a/drivers/eisa/pci_eisa.c
++++ b/drivers/eisa/pci_eisa.c
+@@ -20,8 +20,8 @@ static struct eisa_root_device pci_eisa_root;
  
--	pcie->reset_gpio = devm_gpiod_get_from_of_node(dev, dev->of_node,
--						       "reset-gpios", 0,
--						       GPIOD_OUT_LOW,
--						       "pcie1-reset");
-+	pcie->reset_gpio = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
- 	ret = PTR_ERR_OR_ZERO(pcie->reset_gpio);
- 	if (ret) {
--		if (ret == -ENOENT) {
--			pcie->reset_gpio = NULL;
--		} else {
--			if (ret != -EPROBE_DEFER)
--				dev_err(dev, "Failed to get reset-gpio: %i\n",
--					ret);
--			return ret;
--		}
-+		if (ret != -EPROBE_DEFER)
-+			dev_err(dev, "Failed to get reset-gpio: %i\n",
-+				ret);
-+		return ret;
-+	}
-+
-+	ret = gpiod_set_consumer_name(pcie->reset_gpio, "pcie1-reset");
-+	if (ret) {
-+		dev_err(dev, "Failed to set reset gpio name: %d\n", ret);
-+		return ret;
- 	}
+ static int __init pci_eisa_init(struct pci_dev *pdev)
+ {
+-	int rc, i;
+ 	struct resource *res, *bus_res = NULL;
++	int rc;
  
- 	ret = of_pci_get_max_link_speed(dev->of_node);
+ 	if ((rc = pci_enable_device (pdev))) {
+ 		dev_err(&pdev->dev, "Could not enable device\n");
+@@ -38,7 +38,7 @@ static int __init pci_eisa_init(struct pci_dev *pdev)
+ 	 * eisa_root_register() can only deal with a single io port resource,
+ 	*  so we use the first valid io port resource.
+ 	 */
+-	pci_bus_for_each_resource(pdev->bus, res, i)
++	pci_bus_for_each_resource_p(pdev->bus, res)
+ 		if (res && (res->flags & IORESOURCE_IO)) {
+ 			bus_res = res;
+ 			break;
 -- 
-2.38.1.431.g37b22c650d-goog
+2.35.1
 
-
--- 
-Dmitry
