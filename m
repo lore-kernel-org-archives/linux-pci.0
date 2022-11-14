@@ -2,71 +2,132 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D21DC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Nov 2022 10:58:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD659C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Nov 2022 11:07:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235905AbiKNK6b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Nov 2022 05:58:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53594 "EHLO
+        id S236624AbiKNLHH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Nov 2022 06:07:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236041AbiKNK6a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2022 05:58:30 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4F5E7657;
-        Mon, 14 Nov 2022 02:58:28 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8F68DB80DE4;
-        Mon, 14 Nov 2022 10:58:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B9DBC433D6;
-        Mon, 14 Nov 2022 10:58:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668423506;
-        bh=tO/eLpT16vXEE/iAh4KKX6vzv3SYcIBqarX+crWY80s=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V46KsAsV5wjYw1WY0qja3/f+J06lkP+LMTYOQuyjTLVrv4jLkwGgnrFBy7DQI6Jhi
-         z9wgBxZFgQQKY3mg8+km8Kb8L+pcmHCg1wtxeNQQMGpwNFVj4cs9eQy8ztLJ+P1zYE
-         JWSm9Lo2UFI/bc7ALqe3lkg7TgR2byfFhUsts749aG4PFcOePG7di8C2RJbp03Yxbb
-         lI6bqNPky0S7osF9o9kRgSmGUdI6p01wxUlkia9Hzty5vh1SQ1n6sUwjwMZj4WxrRl
-         JuM47rnP/fhPkjdYECqc07Ah34dM7L9e6+HIAVukjvHSGjdu0k0p23RhAtM9ueub61
-         twgifmOjve8UQ==
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Shawn Guo <shawn.guo@linaro.org>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-kernel@vger.kernel.org
-Subject: Re: (subset) [PATCH 1/2] PCI: histb: switch to using gpiod API
-Date:   Mon, 14 Nov 2022 11:58:15 +0100
-Message-Id: <166842347910.24264.12306903018237110796.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220906204301.3736813-1-dmitry.torokhov@gmail.com>
-References: <20220906204301.3736813-1-dmitry.torokhov@gmail.com>
+        with ESMTP id S236006AbiKNLHC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2022 06:07:02 -0500
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63CBD1EEED
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2022 03:07:00 -0800 (PST)
+Received: by mail-pj1-x1030.google.com with SMTP id m14-20020a17090a3f8e00b00212dab39bcdso13467160pjc.0
+        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2022 03:07:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=MkiR3wHiiW1PYTQ7TE0X6JrLq1vnHDKlS/zuy1ypUvQ=;
+        b=ZyksGHtPdVe30jSTgBir0r6zjbL2u5GpgzS6sid5bMO3qTdKn3E/3GkV/i3dPVbdIk
+         RsGErEozMC3CakHQBZoiCYtATnxPpYCBd+IucCJ9ZuaQSWUq4pfCBp/NTMDK/Cv7qXw9
+         5soHBfyk3f0ZRFpK1JDNpN8a3MUnSPhZcDjP7hcLzQmyTOB7zBY2NIhRn5NJB3i88QEW
+         uHe3xe3Cp+S6p9sz5gne5a/sseMiLdvXDYwRxYM/upoVE/afbaOLEji0SIlHpKOngidm
+         uO/Ito79czfU+1qwEEdq9xI5eXwdEsfaysfzdHOeIBwIpL5qwMg9hT40U3hyBJLxpup5
+         FHAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=MkiR3wHiiW1PYTQ7TE0X6JrLq1vnHDKlS/zuy1ypUvQ=;
+        b=gpE82ieqE6UDjqRQRRwOOjmMIcFGSSCGwkxaSbNA77L8ti31bxFNDOuhD1RMWR9XzQ
+         1ft1n2e8EzDPrxq+hfQgciRyKH3JWzBoFA1M78TkKH+4EyGB2R3uc/NIOxbK7uB1QUIG
+         Axi56jRTCNkm64DwPKwlwx+m+DkEDfu1vvxKLCCCkwG8sWo3gl5tKtBGJ18LatWrY8wq
+         gvSD1DEQbRd2cF1+PP1vDeb4eCDBuZ/pUeipbC5D9TuGfTEsd181AZ1sGo1aZB7fjxTk
+         5LcvHeW4XT/OAcPtwrd+ruqcxSf5dMvkStkbIixzyK0bukbVzLvYK6FWS62MUiwmX7ur
+         Brnw==
+X-Gm-Message-State: ANoB5pkVl20yMPs/OSFQZbktEluZ2LUONzHbEjp0oUbIJniGR5LXyngH
+        jZ5pwbuTH8gAXgpjYGX1yJ1T
+X-Google-Smtp-Source: AA0mqf5eoKaaLhLXcQHHPo+28RlJ+upBEvK/afNrX2kqhp8MLM29+9/SV1+DyMsD+pEiLuFQDG7UuA==
+X-Received: by 2002:a17:902:7843:b0:187:282c:9b9c with SMTP id e3-20020a170902784300b00187282c9b9cmr13283212pln.29.1668424019854;
+        Mon, 14 Nov 2022 03:06:59 -0800 (PST)
+Received: from thinkpad ([117.248.0.54])
+        by smtp.gmail.com with ESMTPSA id y2-20020a62ce02000000b0056bbd286cf4sm6362246pfg.167.2022.11.14.03.06.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Nov 2022 03:06:58 -0800 (PST)
+Date:   Mon, 14 Nov 2022 16:36:54 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     vidyas@nvidia.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kw@linux.com, robh@kernel.org, lpieralisi@kernel.org,
+        bhelgaas@google.com
+Subject: Re: [PATCH v4 2/5] PCI: tegra194: Move dw_pcie_ep_linkup() to
+ threaded IRQ handler
+Message-ID: <20221114110654.GL3869@thinkpad>
+References: <20221025145101.116393-1-manivannan.sadhasivam@linaro.org>
+ <20221025145101.116393-3-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221025145101.116393-3-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 6 Sep 2022 13:43:00 -0700, Dmitry Torokhov wrote:
-> This patch switches the driver away from legacy gpio/of_gpio API to
-> gpiod API, and removes use of of_get_named_gpio_flags() which I want to
-> make private to gpiolib.
+On Tue, Oct 25, 2022 at 08:20:58PM +0530, Manivannan Sadhasivam wrote:
+> dw_pcie_ep_linkup() may take more time to execute depending on the EPF
+> driver implementation. Calling this API in the hard IRQ handler is not
+> encouraged since the hard IRQ handlers are supposed to complete quickly.
 > 
+> So move the dw_pcie_ep_linkup() call to threaded IRQ handler.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+>  drivers/pci/controller/dwc/pcie-tegra194.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+> index 1b6b437823d2..a0d231b7a435 100644
+> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
+> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+> @@ -287,6 +287,7 @@ struct tegra_pcie_dw {
+>  	struct gpio_desc *pex_refclk_sel_gpiod;
+>  	unsigned int pex_rst_irq;
+>  	int ep_state;
+> +	long link_status;
+>  };
+>  
+>  static inline struct tegra_pcie_dw *to_tegra_pcie(struct dw_pcie *pci)
+> @@ -450,9 +451,13 @@ static void pex_ep_event_hot_rst_done(struct tegra_pcie_dw *pcie)
+>  static irqreturn_t tegra_pcie_ep_irq_thread(int irq, void *arg)
+>  {
+>  	struct tegra_pcie_dw *pcie = arg;
+> +	struct dw_pcie_ep *ep = &pcie->pci.ep;
+>  	struct dw_pcie *pci = &pcie->pci;
+>  	u32 val, speed;
+>  
+> +	if (test_and_clear_bit(0, &pcie->link_status))
+> +		dw_pcie_ep_linkup(ep);
+> +
+>  	speed = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA) &
+>  		PCI_EXP_LNKSTA_CLS;
+>  	clk_set_rate(pcie->core_clk, pcie_gen_freq[speed - 1]);
+> @@ -499,7 +504,6 @@ static irqreturn_t tegra_pcie_ep_irq_thread(int irq, void *arg)
+>  static irqreturn_t tegra_pcie_ep_hard_irq(int irq, void *arg)
+>  {
+>  	struct tegra_pcie_dw *pcie = arg;
+> -	struct dw_pcie_ep *ep = &pcie->pci.ep;
+>  	int spurious = 1;
+>  	u32 status_l0, status_l1, link_status;
+>  
+> @@ -515,7 +519,8 @@ static irqreturn_t tegra_pcie_ep_hard_irq(int irq, void *arg)
+>  			link_status = appl_readl(pcie, APPL_LINK_STATUS);
+>  			if (link_status & APPL_LINK_STATUS_RDLH_LINK_UP) {
+>  				dev_dbg(pcie->dev, "Link is up with Host\n");
+> -				dw_pcie_ep_linkup(ep);
+> +				set_bit(0, &pcie->link_status);
+> +				return IRQ_WAKE_THREAD;
+>  			}
+>  		}
+>  
+> -- 
+> 2.25.1
 > 
 
-Applied to pci/dwc, thanks!
-
-[1/2] PCI: histb: switch to using gpiod API
-      https://git.kernel.org/lpieralisi/pci/c/1d26a55fbeb9
-
-Thanks,
-Lorenzo
+-- 
+மணிவண்ணன் சதாசிவம்
