@@ -2,68 +2,126 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8105AC4321E
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Nov 2022 17:46:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2CE0C4332F
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Nov 2022 18:01:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231209AbiKORqk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Nov 2022 12:46:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44192 "EHLO
+        id S231327AbiKOSBY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Nov 2022 13:01:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232555AbiKORqj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2022 12:46:39 -0500
+        with ESMTP id S231596AbiKOSAy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2022 13:00:54 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11869DFF3;
-        Tue, 15 Nov 2022 09:46:39 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6530E2B0;
+        Tue, 15 Nov 2022 10:00:18 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9789961967;
-        Tue, 15 Nov 2022 17:46:38 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34B3AC4347C;
-        Tue, 15 Nov 2022 17:46:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0B60661977;
+        Tue, 15 Nov 2022 18:00:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F9A3C433C1;
+        Tue, 15 Nov 2022 18:00:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668534398;
-        bh=4ujkqMZtjuv2jX4dXqOndyqS/F6K/3aRLsjDLMf/yAQ=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=eRRL+ZRd6zlrnWjAA5+PniHYairQ18AGiqIg8Z5YiqtzRsF+X9EQp5G1XcssRFLjY
-         kWKN6WNwxcWMlberi1kztQHJyqfDKx0M3koYYl7TGDzlOSXfAwnfR1d6buYGcY5sbv
-         x+PUEfSKNVnv7+KHbFZLNydoucE3t5GjZQoZPhH60x6vzoWdsDCypBvRsCCwNLqdQ1
-         w7dwTRWriLlfUjhPdoW4q8D2ykuWgZYPO/fWPUMorqvqCIPUuqs0rUzMnVGP+bLRGk
-         NNDYYLt42olIs3Pldb6nTKHhr7mmyVLYEhVLcCfAhIe3ddJYQxrsBZIAsgM/lvBNrQ
-         nvYNS2IGgCMGA==
-From:   Bjorn Andersson <andersson@kernel.org>
-To:     Andy Gross <agross@kernel.org>, krzysztof.kozlowski+dt@linaro.org,
-        linux-kernel@vger.kernel.org, bhelgaas@google.com,
-        svarbanov@mm-sol.com, linux-arm-msm@vger.kernel.org,
-        konrad.dybcio@linaro.org, linux-pci@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        robh+dt@kernel.org, devicetree@vger.kernel.org
-Subject: Re: (subset) [PATCH 1/4] dt-bindings: PCI: qcom: add MSM8998 specific compatible
-Date:   Tue, 15 Nov 2022 11:46:31 -0600
-Message-Id: <166853438866.1276519.11595015532315610699.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.37.1
-In-Reply-To: <20221115125310.184012-1-krzysztof.kozlowski@linaro.org>
-References: <20221115125310.184012-1-krzysztof.kozlowski@linaro.org>
+        s=k20201202; t=1668535217;
+        bh=QXsDGTguq09mN4sSHHgpPG8/brgbzE21EVYdVSJ3uzU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fxKlIIGq9uCKDSt9xkJtoEQs1wHMD2r/lfp4TJ2f74OQUWrwNXgBsMGeJzJT7nHlH
+         Ij9cJd4ztD2DdoT+VJxwc76ja6wpK+PE6Fa0JA51vmm1WvZla+kF1fg+pvOOTq2k41
+         VNN721p6VXYAugsrZeh030J5NnIT3oxdtSSIgX6dK3ZU6E3MJID6GNCZtFDqV7nr01
+         k9Yqvy4YM3OqzkreHA6ErDDhI0RfIO2pLdDHayHdTBiqe4K/SJ1k2NBKEn236Nem/O
+         ON2w9Qsqxc8/j1yGkpE8qoI9Gx0RMMuuwJ1ggcJNPnU+K7NFrq1uyL4lHrnGsAY9ZF
+         1tYXMXwCOh5Ag==
+Received: by pali.im (Postfix)
+        id 4DFCE805; Tue, 15 Nov 2022 19:00:14 +0100 (CET)
+Date:   Tue, 15 Nov 2022 19:00:14 +0100
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [v2 PATCH] PCI: aardvark: switch to using
+ devm_gpiod_get_optional()
+Message-ID: <20221115180014.ktutpo37vxwde4cy@pali>
+References: <Y3KMEZFv6dpxA+Gv@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <Y3KMEZFv6dpxA+Gv@google.com>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 15 Nov 2022 13:53:07 +0100, Krzysztof Kozlowski wrote:
-> Add new compatible for MSM8998 (compatible with MSM8996) to allow
-> further customizing if needed and to accurately describe the hardware.
+On Monday 14 November 2022 10:42:25 Dmitry Torokhov wrote:
+> Switch the driver to the generic version of gpiod API (and away from
+> OF-specific variant), so that we can stop exporting
+> devm_gpiod_get_from_of_node().
+> 
+> Acked-by: Pali Rohár <pali@kernel.org>
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+> ---
+> 
+> v2:
+>  - collected reviewed-by/acked-by tags
+>  - updated commit description to remove incorrect assumption of why
+>    devm_gpiod_get_from_of_node() was used in the first place
+> 
+> This is the last user of devm_gpiod_get_from_of_node() in the mainline
+> (next), it would be great to have it in so that we can remove the API in
+> the next release cycle.
+> 
+> Thanks!
+
+Just a note that more aardvark patches are waiting on the list.
+
+> 
+>  drivers/pci/controller/pci-aardvark.c | 23 +++++++++++------------
+>  1 file changed, 11 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index ba36bbc5897d..5ecfac23c9fc 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -1859,20 +1859,19 @@ static int advk_pcie_probe(struct platform_device *pdev)
+>  		return ret;
+>  	}
+>  
+> -	pcie->reset_gpio = devm_gpiod_get_from_of_node(dev, dev->of_node,
+> -						       "reset-gpios", 0,
+> -						       GPIOD_OUT_LOW,
+> -						       "pcie1-reset");
+> +	pcie->reset_gpio = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
+>  	ret = PTR_ERR_OR_ZERO(pcie->reset_gpio);
+>  	if (ret) {
+> -		if (ret == -ENOENT) {
+> -			pcie->reset_gpio = NULL;
+> -		} else {
+> -			if (ret != -EPROBE_DEFER)
+> -				dev_err(dev, "Failed to get reset-gpio: %i\n",
+> -					ret);
+> -			return ret;
+> -		}
+> +		if (ret != -EPROBE_DEFER)
+> +			dev_err(dev, "Failed to get reset-gpio: %i\n",
+> +				ret);
+> +		return ret;
+> +	}
+> +
+> +	ret = gpiod_set_consumer_name(pcie->reset_gpio, "pcie1-reset");
+> +	if (ret) {
+> +		dev_err(dev, "Failed to set reset gpio name: %d\n", ret);
+> +		return ret;
+>  	}
+>  
+>  	ret = of_pci_get_max_link_speed(dev->of_node);
+> -- 
+> 2.38.1.431.g37b22c650d-goog
 > 
 > 
-
-Applied, thanks!
-
-[3/4] arm64: dts: msm8998: add MSM8998 specific compatible
-      commit: 0d70d5f6614e15bdc269b630b7f884889568b1bb
-[4/4] arm64: dts: msm8998: unify PCIe clock order withMSM8996
-      commit: b132731bb936cfe0ee26790eeb51572d12dbf854
-
-Best regards,
--- 
-Bjorn Andersson <andersson@kernel.org>
+> -- 
+> Dmitry
