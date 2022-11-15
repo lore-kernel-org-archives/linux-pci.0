@@ -2,126 +2,91 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A1AC433FE
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Nov 2022 18:01:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3239DC433FE
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Nov 2022 18:08:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230347AbiKOSBY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Nov 2022 13:01:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51524 "EHLO
+        id S231168AbiKOSIJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Nov 2022 13:08:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236796AbiKOSA6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2022 13:00:58 -0500
+        with ESMTP id S232820AbiKOSH5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Nov 2022 13:07:57 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D362531235;
-        Tue, 15 Nov 2022 10:00:22 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D522713F73;
+        Tue, 15 Nov 2022 10:07:38 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8DDE9B81A59;
-        Tue, 15 Nov 2022 18:00:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DDA4C433B5;
-        Tue, 15 Nov 2022 18:00:20 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 7CF04B81A5F;
+        Tue, 15 Nov 2022 18:07:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7EBEC433C1;
+        Tue, 15 Nov 2022 18:07:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668535220;
-        bh=V+CDw9Lkisi0pVuYP/vfuaiILE7103hOmqneHcdz7K4=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=DpXCK2plJGNPu+0M8wHbEdKu/WJY4aLUaFyzENRpJWF9UhGvFSyuTVswdjCNMTCc7
-         0VBrULhtgPAfyKxtw0znCGEzu29uv4GtsBJGO8+ieSg1/usokIxocCTT/oVG9P+Svl
-         r7bMwijJTWWcoI1jRTmVCAZrqkpLUGqBVqEd2i8fdIsqRW3FcBxgaiS/2V1vQgFy+P
-         KBYscfgywKJDSbyaG95Nl1mf9nwF825DqCRlmuQNDfUK4GkfUPMfR/QqbQZFOOFy9G
-         AVg/pedgdi64bq17xeT6MOLLLbhwH8mCwwqQwwHyc359WJuK/QMp/6RCduNnqZuJR+
-         Ervg/LYaRer0g==
-Received: by mail-lj1-f170.google.com with SMTP id u2so18565322ljl.3;
-        Tue, 15 Nov 2022 10:00:20 -0800 (PST)
-X-Gm-Message-State: ANoB5pk4ymGSGobNp8w3eRdrv94uQLQBRpc+zZz2LQVAhi2agHJucZPb
-        s+7YJgv4lO0h2EO1V7LqgPyEuT52UzTUMmE77g==
-X-Google-Smtp-Source: AA0mqf4zsHpIKzELoBNtkrNEltVvWv6+X5mMUF7dvrGkfZPdg/U6t9+lLgKOIerV413GobUiXZJXyeo65Y4F6JleoLU=
-X-Received: by 2002:a2e:a80b:0:b0:275:1343:df71 with SMTP id
- l11-20020a2ea80b000000b002751343df71mr6791315ljq.215.1668535218200; Tue, 15
- Nov 2022 10:00:18 -0800 (PST)
+        s=k20201202; t=1668535656;
+        bh=gVYcutXI++9bdrHBHueMBmsjqWSHjeoLZDZVF1qz2gY=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Kj7PrOhLg29hSgQ0mhZwTHKYN6ylN97waXxxyCaBF9rHt/ZmxWNR0yjFiG0VWZNBO
+         7s6k6oaT/B4M6iA8qN9H9hmXAdr2jaYHY8FxJemnY9fSFMhtRaYpNoMYO2d56BZOQb
+         qLDX6au8eVes2feP8rqwd4HC9EoOomckazimxAtkgSH2IvBMWjOBxnJFevFqH27pMg
+         XDaML34HV0P5635S0Jp0Ri0GG35qf+mzDZ9WZJXTVl+kxM/SwjVO4qrh9p2a99PM5E
+         vpWJtrjI/jAg1SLOJGYOdwbKxE+JfY9Wxb4zXiv+kXRXGDkMYh6PTMGFfBNEylgsRt
+         kRTtgyUorBxRA==
+Date:   Tue, 15 Nov 2022 12:07:34 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] PCI: Drop controller CONFIG_OF dependencies
+Message-ID: <20221115180734.GA999206@bhelgaas>
 MIME-Version: 1.0
-References: <20221114155333.234496-1-jonathanh@nvidia.com> <20221114155333.234496-2-jonathanh@nvidia.com>
- <20221115020136.GA3973578-robh@kernel.org> <f8148686-796f-62a6-e424-733966f7db0b@nvidia.com>
-In-Reply-To: <f8148686-796f-62a6-e424-733966f7db0b@nvidia.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Tue, 15 Nov 2022 12:00:09 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+HWqLLk5dwYxNc0sKuiguT1DeTSFke+GSML5UACD=yFA@mail.gmail.com>
-Message-ID: <CAL_Jsq+HWqLLk5dwYxNc0sKuiguT1DeTSFke+GSML5UACD=yFA@mail.gmail.com>
-Subject: Re: [PATCH V3 1/2] dt-bindings: PCI: tegra234: Add ECAM support
-To:     Jon Hunter <jonathanh@nvidia.com>
-Cc:     Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-tegra@vger.kernel.org, vidyas@nvidia.com,
-        mmaddireddy@nvidia.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAMuHMdVnJZGqwnC0fZTwyb1GT5Nu+4K9LND4CXU96cvYG+qEgg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 15, 2022 at 10:03 AM Jon Hunter <jonathanh@nvidia.com> wrote:
->
->
-> On 15/11/2022 02:01, Rob Herring wrote:
-> > On Mon, Nov 14, 2022 at 03:53:32PM +0000, Jon Hunter wrote:
-> >> From: Vidya Sagar <vidyas@nvidia.com>
-> >>
-> >> Add support for ECAM aperture that is only supported for Tegra234
-> >> devices.
-> >>
-> >> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> >> Co-developed-by: Jon Hunter <jonathanh@nvidia.com>
-> >> Signed-off-by: Jon Hunter <jonathanh@nvidia.com>
-> >> ---
-> >> Changes since V2:
-> >> - Avoid duplication of reg items and reg-names
-> >> Changes since V1:
-> >> - Restricted the ECAM aperture to only Tegra234 devices that support it.
-> >>
-> >>   .../bindings/pci/nvidia,tegra194-pcie.yaml    | 34 +++++++++++++++++--
-> >>   .../devicetree/bindings/pci/snps,dw-pcie.yaml |  2 +-
-> >>   2 files changed, 33 insertions(+), 3 deletions(-)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-> >> index 75da3e8eecb9..fe81d52c7277 100644
-> >> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-> >> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.yaml
-> >> @@ -27,6 +27,7 @@ properties:
-> >>         - nvidia,tegra234-pcie
-> >>
-> >>     reg:
-> >> +    minItems: 4
-> >>       items:
-> >>         - description: controller's application logic registers
-> >>         - description: configuration registers
-> >> @@ -35,13 +36,16 @@ properties:
-> >>             available for software access.
-> >>         - description: aperture where the Root Port's own configuration
-> >>             registers are available.
-> >> +      - description: aperture to access the configuration space through ECAM.
-> >>
-> >>     reg-names:
-> >> +    minItems: 4
-> >>       items:
-> >>         - const: appl
-> >>         - const: config
-> >>         - const: atu_dma
-> >>         - const: dbi
-> >> +      - const: ecam
+On Tue, Nov 15, 2022 at 04:56:10PM +0100, Geert Uytterhoeven wrote:
+> On Tue, Oct 25, 2022 at 9:16 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > From: Bjorn Helgaas <bhelgaas@google.com>
 > >
-> > Wouldn't this be mutually exclusive with 'config'? 'config' is not
-> > really h/w, but an just an iATU window typically.
->
-> Yes that is true, however, I was chatting with Sagar and we really need
-> both ranges to be defined.
->
-> > Where's the driver change to use this?
->
-> For Linux there is not one. However, we need this for our port of the
-> EDK2 bootloader [0] that parses device-tree and can support booting
-> Linux with either device-tree or ACPI. We wanted to have a common
-> device-tree we can use for EDK2 and Linux.
+> > Many drivers depend on OF interfaces, so they won't be functional if
+> > CONFIG_OF is not set.  But OF provides stub functions in that case, so drop
+> > the OF dependencies so we can at least compile-test the drivers.
 
-Ok, makes sense.
+> > --- a/drivers/pci/controller/Kconfig
+> > +++ b/drivers/pci/controller/Kconfig
+> > @@ -8,7 +8,6 @@ config PCI_MVEBU
+> >         depends on ARCH_MVEBU || ARCH_DOVE || COMPILE_TEST
+> >         depends on MVEBU_MBUS
+> >         depends on ARM
+> > -       depends on OF
+> 
+> This is exactly why we have the COMPILE_TEST symbol.
+> There is no point in bothering all users who configure kernels with
+> questions about drivers that won't function anyway due to missing
+> dependencies, unless the user explicitly wants to do compile-testing.
+> 
+> So all of these should become:
+> 
+>     depends on OF || COMPILE_TEST
 
-Acked-by: Rob Herring <robh@kernel.org>
+Oh, yes, thanks for pointing this out, I totally blew it here.  I
+dropped this while we figure it out.
+
+Do you have a preference between this:
+
+  depends on ARCH_MVEBU || ARCH_DOVE || COMPILE_TEST
+  depends on OF || COMPILE_TEST
+
+and this:
+
+  depends on ((ARCH_MVEBU || ARCH_DOVE) && OF) || COMPILE_TEST
+
+The latter seems more common and doesn't repeat "COMPILE_TEST", but I
+can see advantages to the former.
+
+Bjorn
