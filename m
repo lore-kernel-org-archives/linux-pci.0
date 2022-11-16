@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27E39C433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 16:17:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C13C4332F
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 16:19:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238109AbiKPQRS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Nov 2022 11:17:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53408 "EHLO
+        id S232548AbiKPQTH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Nov 2022 11:19:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234365AbiKPQQN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 11:16:13 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84A8E56EDE;
-        Wed, 16 Nov 2022 08:16:10 -0800 (PST)
+        with ESMTP id S234465AbiKPQSn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 11:18:43 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A11D49B69;
+        Wed, 16 Nov 2022 08:18:42 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 3E4F4B81DE0;
-        Wed, 16 Nov 2022 16:16:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A00C0C433D6;
-        Wed, 16 Nov 2022 16:16:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B21CA61EB5;
+        Wed, 16 Nov 2022 16:18:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D73DAC433D6;
+        Wed, 16 Nov 2022 16:18:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668615367;
-        bh=daqN+TaDb/bSmSJCgw2QBCWIjklwZ5qKeZ/7wNq+Inc=;
+        s=k20201202; t=1668615521;
+        bh=xsQa1DiNL/6zsloEcEu6Ukvgx+aoLHbVelli9P0JdkE=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=E/p7vvP8Hy/m5lAFkBMaDtEqMRn7aY24wPzTdpLb7atnYOk0BrihJ7tGS7ZKZ1tkD
-         Pbf/zb6g3GA/b1U+wmieDkTypbG4oZPoUuP2BSDmbpcsdsIlrYCeyAXtcy6FaOBUxM
-         qPVFeo5AvC0raMaTOJ57xs8GCrEyAqUJBG04wCZkEEWy73Ua3/SuZ7uGO2ux5Qm76N
-         eOZ5ENS3sh49roWO4yWOgMiPtSaCt0rolXw3Kgj4WcJxEADyZHsdDaUqsi1u9Axvix
-         ooR2jxZxI0P2zsnV3pH7+XrzvD2eqDQo5S4DjZcwYR5/ca8VHDNZE/RMZgbd4S1IGo
-         NJZATK9b/jpYA==
-Date:   Wed, 16 Nov 2022 10:16:06 -0600
+        b=FlscaLWaTxDQUiFYrKfxiw8Is512INpNfhSwD6LYRM/LnWLISkfHWVCN+HI/HB9Py
+         CsOhz4ZFu9t7L185gW+tLdKnqOtA3Vi5HLkuAa1nZI7K6BAv9o39vy1Lv1qTxuBuGQ
+         KyiF119c19UlukBK0owCVhyFtkaOtpHJI6YvfTw/wRpXfbq0DchoKF8zCS3SR5PP3q
+         ZwhtzlykAPL9KZKn5sXdOJ5n5ZirM7s3EoBn1D84oSCdfUjX2DfIIqirJqJOU53hDC
+         R07my9UXS+C1zX0eVsWpoRdG26lfCPZWHT7PBdtjzRHCgNFiNEyVCzm12MEAqnv7fj
+         ixetgCl6U1k3g==
+Date:   Wed, 16 Nov 2022 10:18:39 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Thomas Gleixner <tglx@linutronix.de>
 Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
@@ -53,214 +53,114 @@ Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
         Michael Ellerman <mpe@ellerman.id.au>,
         Christophe Leroy <christophe.leroy@csgroup.eu>,
         linuxppc-dev@lists.ozlabs.org
-Subject: Re: [patch 18/39] PCI/MSI: Move mask and unmask helpers to msi.h
-Message-ID: <20221116161606.GA1114894@bhelgaas>
+Subject: Re: [patch 20/39] PCI/MSI: Move pci_enable_msi() API to api.c
+Message-ID: <20221116161839.GA1115061@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221111122014.640052354@linutronix.de>
+In-Reply-To: <20221111122014.755178149@linutronix.de>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 11, 2022 at 02:54:43PM +0100, Thomas Gleixner wrote:
+On Fri, Nov 11, 2022 at 02:54:46PM +0100, Thomas Gleixner wrote:
 > From: Ahmed S. Darwish <darwi@linutronix.de>
 > 
-> The upcoming support for per device MSI interrupt domains needs to share
-> some of the inline helpers with the MSI implementation.
+> To distangle the maze in msi.c all exported device-driver MSI APIs are now
+> to be grouped in one file, api.c.
 > 
-> Move them to the header file.
+> Move pci_enable_msi() and make its kernel-doc comprehensive.
 > 
 > Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
 > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
+Nit: suggest "disentangle" or "untangle" for "distangle" here and in
+subsequent patches.
+
 > ---
->  drivers/pci/msi/msi.c | 61 +--------------------------------------
->  drivers/pci/msi/msi.h | 83 +++++++++++++++++++++++++++++++++++++++++++++-------
->  2 files changed, 74 insertions(+), 70 deletions(-)
+>  drivers/pci/msi/api.c | 23 +++++++++++++++++++++++
+>  drivers/pci/msi/msi.c | 14 ++------------
+>  drivers/pci/msi/msi.h |  1 +
+>  3 files changed, 26 insertions(+), 12 deletions(-)
 > ---
+> diff --git a/drivers/pci/msi/api.c b/drivers/pci/msi/api.c
+> index 7485942cbe5d..63d7f8f6a284 100644
+> --- a/drivers/pci/msi/api.c
+> +++ b/drivers/pci/msi/api.c
+> @@ -13,6 +13,29 @@
+>  #include "msi.h"
+>  
+>  /**
+> + * pci_enable_msi() - Enable MSI interrupt mode on device
+> + * @dev: the PCI device to operate on
+> + *
+> + * Legacy device driver API to enable MSI interrupts mode on device and
+> + * allocate a single interrupt vector. On success, the allocated vector
+> + * Linux IRQ will be saved at @dev->irq. The driver must invoke
+> + * pci_disable_msi() on cleanup.
+> + *
+> + * NOTE: The newer pci_alloc_irq_vectors() / pci_free_irq_vectors() API
+> + * pair should, in general, be used instead.
+> + *
+> + * Return: 0 on success, errno otherwise
+> + */
+> +int pci_enable_msi(struct pci_dev *dev)
+> +{
+> +	int rc = __pci_enable_msi_range(dev, 1, 1, NULL);
+> +	if (rc < 0)
+> +		return rc;
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(pci_enable_msi);
+> +
+> +/**
+>   * pci_disable_msi() - Disable MSI interrupt mode on device
+>   * @dev: the PCI device to operate on
+>   *
 > diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-> index 160af9f01669..5c310df55d0d 100644
+> index 4a1300b74518..98f07ad9af62 100644
 > --- a/drivers/pci/msi/msi.c
 > +++ b/drivers/pci/msi/msi.c
-> @@ -16,7 +16,7 @@
->  static int pci_msi_enable = 1;
->  int pci_msi_ignore_mask;
+> @@ -790,8 +790,8 @@ void pci_disable_msix(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pci_disable_msix);
 >  
-> -static noinline void pci_msi_update_mask(struct msi_desc *desc, u32 clear, u32 set)
-> +void pci_msi_update_mask(struct msi_desc *desc, u32 clear, u32 set)
+> -static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+> -				  struct irq_affinity *affd)
+> +int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+> +			   struct irq_affinity *affd)
 >  {
->  	raw_spinlock_t *lock = &to_pci_dev(desc->dev)->msi_lock;
->  	unsigned long flags;
-> @@ -32,65 +32,6 @@ static noinline void pci_msi_update_mask(struct msi_desc *desc, u32 clear, u32 s
->  	raw_spin_unlock_irqrestore(lock, flags);
+>  	int nvec;
+>  	int rc;
+> @@ -844,16 +844,6 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  	}
 >  }
 >  
-> -static inline void pci_msi_mask(struct msi_desc *desc, u32 mask)
+> -/* deprecated, don't use */
+> -int pci_enable_msi(struct pci_dev *dev)
 > -{
-> -	pci_msi_update_mask(desc, 0, mask);
+> -	int rc = __pci_enable_msi_range(dev, 1, 1, NULL);
+> -	if (rc < 0)
+> -		return rc;
+> -	return 0;
 > -}
+> -EXPORT_SYMBOL(pci_enable_msi);
 > -
-> -static inline void pci_msi_unmask(struct msi_desc *desc, u32 mask)
-> -{
-> -	pci_msi_update_mask(desc, mask, 0);
-> -}
-> -
-> -static inline void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
-> -{
-> -	return desc->pci.mask_base + desc->msi_index * PCI_MSIX_ENTRY_SIZE;
-> -}
-> -
-> -/*
-> - * This internal function does not flush PCI writes to the device.  All
-> - * users must ensure that they read from the device before either assuming
-> - * that the device state is up to date, or returning out of this file.
-> - * It does not affect the msi_desc::msix_ctrl cache either. Use with care!
-> - */
-> -static void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
-> -{
-> -	void __iomem *desc_addr = pci_msix_desc_addr(desc);
-> -
-> -	if (desc->pci.msi_attrib.can_mask)
-> -		writel(ctrl, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
-> -}
-> -
-> -static inline void pci_msix_mask(struct msi_desc *desc)
-> -{
-> -	desc->pci.msix_ctrl |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
-> -	pci_msix_write_vector_ctrl(desc, desc->pci.msix_ctrl);
-> -	/* Flush write to device */
-> -	readl(desc->pci.mask_base);
-> -}
-> -
-> -static inline void pci_msix_unmask(struct msi_desc *desc)
-> -{
-> -	desc->pci.msix_ctrl &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
-> -	pci_msix_write_vector_ctrl(desc, desc->pci.msix_ctrl);
-> -}
-> -
-> -static void __pci_msi_mask_desc(struct msi_desc *desc, u32 mask)
-> -{
-> -	if (desc->pci.msi_attrib.is_msix)
-> -		pci_msix_mask(desc);
-> -	else
-> -		pci_msi_mask(desc, mask);
-> -}
-> -
-> -static void __pci_msi_unmask_desc(struct msi_desc *desc, u32 mask)
-> -{
-> -	if (desc->pci.msi_attrib.is_msix)
-> -		pci_msix_unmask(desc);
-> -	else
-> -		pci_msi_unmask(desc, mask);
-> -}
-> -
->  /**
->   * pci_msi_mask_irq - Generic IRQ chip callback to mask PCI/MSI interrupts
->   * @data:	pointer to irqdata associated to that interrupt
+>  static int __pci_enable_msix_range(struct pci_dev *dev,
+>  				   struct msix_entry *entries, int minvec,
+>  				   int maxvec, struct irq_affinity *affd,
 > diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
-> index fc92603b33e1..d8f62d911f08 100644
+> index 634879277349..00bb98d5bb0e 100644
 > --- a/drivers/pci/msi/msi.h
 > +++ b/drivers/pci/msi/msi.h
-> @@ -8,21 +8,67 @@
->  int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
->  void pci_msi_teardown_msi_irqs(struct pci_dev *dev);
+> @@ -87,6 +87,7 @@ static inline __attribute_const__ u32 msi_multi_mask(struct msi_desc *desc)
+>  /* MSI internal functions invoked from the public APIs */
+>  void pci_msi_shutdown(struct pci_dev *dev);
+>  void pci_free_msi_irqs(struct pci_dev *dev);
+> +int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec, struct irq_affinity *affd);
 >  
-> -#ifdef CONFIG_PCI_MSI_ARCH_FALLBACKS
-> -int pci_msi_legacy_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-> -void pci_msi_legacy_teardown_msi_irqs(struct pci_dev *dev);
-> -#else
-> -static inline int pci_msi_legacy_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-> +/* Mask/unmask helpers */
-> +void pci_msi_update_mask(struct msi_desc *desc, u32 clear, u32 set);
-> +
-> +static inline void pci_msi_mask(struct msi_desc *desc, u32 mask)
->  {
-> -	WARN_ON_ONCE(1);
-> -	return -ENODEV;
-> +	pci_msi_update_mask(desc, 0, mask);
->  }
->  
-> -static inline void pci_msi_legacy_teardown_msi_irqs(struct pci_dev *dev)
-> +static inline void pci_msi_unmask(struct msi_desc *desc, u32 mask)
->  {
-> -	WARN_ON_ONCE(1);
-> +	pci_msi_update_mask(desc, mask, 0);
-> +}
-> +
-> +static inline void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
-> +{
-> +	return desc->pci.mask_base + desc->msi_index * PCI_MSIX_ENTRY_SIZE;
-> +}
-> +
-> +/*
-> + * This internal function does not flush PCI writes to the device.  All
-> + * users must ensure that they read from the device before either assuming
-> + * that the device state is up to date, or returning out of this file.
-> + * It does not affect the msi_desc::msix_ctrl cache either. Use with care!
-> + */
-> +static inline void pci_msix_write_vector_ctrl(struct msi_desc *desc, u32 ctrl)
-> +{
-> +	void __iomem *desc_addr = pci_msix_desc_addr(desc);
-> +
-> +	if (desc->pci.msi_attrib.can_mask)
-> +		writel(ctrl, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
-> +}
-> +
-> +static inline void pci_msix_mask(struct msi_desc *desc)
-> +{
-> +	desc->pci.msix_ctrl |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
-> +	pci_msix_write_vector_ctrl(desc, desc->pci.msix_ctrl);
-> +	/* Flush write to device */
-> +	readl(desc->pci.mask_base);
-> +}
-> +
-> +static inline void pci_msix_unmask(struct msi_desc *desc)
-> +{
-> +	desc->pci.msix_ctrl &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
-> +	pci_msix_write_vector_ctrl(desc, desc->pci.msix_ctrl);
-> +}
-> +
-> +static inline void __pci_msi_mask_desc(struct msi_desc *desc, u32 mask)
-> +{
-> +	if (desc->pci.msi_attrib.is_msix)
-> +		pci_msix_mask(desc);
-> +	else
-> +		pci_msi_mask(desc, mask);
-> +}
-> +
-> +static inline void __pci_msi_unmask_desc(struct msi_desc *desc, u32 mask)
-> +{
-> +	if (desc->pci.msi_attrib.is_msix)
-> +		pci_msix_unmask(desc);
-> +	else
-> +		pci_msi_unmask(desc, mask);
->  }
-> -#endif
->  
->  /*
->   * PCI 2.3 does not specify mask bits for each MSI interrupt.  Attempting to
-> @@ -37,3 +83,20 @@ static inline __attribute_const__ u32 msi_multi_mask(struct msi_desc *desc)
->  		return 0xffffffff;
->  	return (1 << (1 << desc->pci.msi_attrib.multi_cap)) - 1;
->  }
-> +
-> +/* Legacy (!IRQDOMAIN) fallbacks */
-> +#ifdef CONFIG_PCI_MSI_ARCH_FALLBACKS
-> +int pci_msi_legacy_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-> +void pci_msi_legacy_teardown_msi_irqs(struct pci_dev *dev);
-> +#else
-> +static inline int pci_msi_legacy_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-> +{
-> +	WARN_ON_ONCE(1);
-> +	return -ENODEV;
-> +}
-> +
-> +static inline void pci_msi_legacy_teardown_msi_irqs(struct pci_dev *dev)
-> +{
-> +	WARN_ON_ONCE(1);
-> +}
-> +#endif
+>  /* Legacy (!IRQDOMAIN) fallbacks */
+>  #ifdef CONFIG_PCI_MSI_ARCH_FALLBACKS
 > 
