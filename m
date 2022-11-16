@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C5EC433FE
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 16:15:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48795C433FE
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 16:16:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234176AbiKPQPw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Nov 2022 11:15:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53156 "EHLO
+        id S230495AbiKPQQj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Nov 2022 11:16:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233672AbiKPQPv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 11:15:51 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F8C74D5E1;
-        Wed, 16 Nov 2022 08:15:50 -0800 (PST)
+        with ESMTP id S233672AbiKPQQi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 11:16:38 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45D0BD135;
+        Wed, 16 Nov 2022 08:16:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id 7BB71CE1BBB;
-        Wed, 16 Nov 2022 16:15:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A606C433D6;
-        Wed, 16 Nov 2022 16:15:46 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id F0A29B81DD9;
+        Wed, 16 Nov 2022 16:16:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 710E8C433D7;
+        Wed, 16 Nov 2022 16:16:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668615346;
-        bh=sDJKa1fbG0u3Us3nL6jtxWazW2/yIEjiBXrsp/ZezNI=;
+        s=k20201202; t=1668615393;
+        bh=HKxr8zLYChmpKmEgFK/DS1349l9alJF5Gnf+RtqbRKw=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=OKLQAXunR0A8tOp3VcPtuOkm+Fb0sHJnqyryDeFuwlCNZXpvXInros6PSED8376eZ
-         IBexbk15bbBAN/CfADlMufcqkmkWw6VXAz9VYupLJ4TgYr2A5AD1mX2byD7cPqT1Vj
-         LGeKraHBrWKWwFbCgk94zdAjCm1WoA+1WwuEOlx7B1udWeFdG4VadEko0xYYydS2Eu
-         BNSE0qfMHIvhe7yuA1sQiBzZUjdvk3v3+q7EMfl1FWZBI1D1KDW16Gpg9AZNoePjCd
-         IUbfeGRLsFunbPknRv0RhY9W8ziRmH2o+xa7hahtABjosB43Dxe9cl9/XwAzh/xkT0
-         uGk0NsCdAk7WQ==
-Date:   Wed, 16 Nov 2022 10:15:45 -0600
+        b=O/1bOW6slARzGBe4GQp+TzNVY6L56EyLiI0ViADp2jaoacrXpxpkmK8BvSkc6a6DD
+         komJ5b5YgoHY+8w27O/8+kHsHbZ0CYCkKs5ObR0fwjL8KPPCFl5Mtf3ARaV+FA8cIw
+         C1ntKsyZbajZglguIu6z4RHwyHdBfRoRNzJSjN+4aCmuqPl3BVklSR2V7CxoebxHr4
+         yvJ4GlAgtNM7OCtUo3gbdPpreYYY2NA/oBmoJX4VxYvGLqepn2gINYz2+ekvu+b/pI
+         S5qu5deYE0FW5MSqBwzhv5eY/qPzf9oXdY83wugY8PVBFFNoNr10qaTbwe2fJ8j5XS
+         fXsfH9fcXqkCg==
+Date:   Wed, 16 Nov 2022 10:16:32 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Thomas Gleixner <tglx@linutronix.de>
 Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
@@ -53,47 +53,180 @@ Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
         Michael Ellerman <mpe@ellerman.id.au>,
         Christophe Leroy <christophe.leroy@csgroup.eu>,
         linuxppc-dev@lists.ozlabs.org
-Subject: Re: [patch 17/39] PCI/MSI: Get rid of externs in msi.h
-Message-ID: <20221116161545.GA1114836@bhelgaas>
+Subject: Re: [patch 19/39] PCI/MSI: Move pci_disable_msi() to api.c
+Message-ID: <20221116161632.GA1114946@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221111122014.582175082@linutronix.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221111122014.696798036@linutronix.de>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 11, 2022 at 02:54:42PM +0100, Thomas Gleixner wrote:
+On Fri, Nov 11, 2022 at 02:54:45PM +0100, Thomas Gleixner wrote:
 > From: Ahmed S. Darwish <darwi@linutronix.de>
 > 
-> Follow the style of <linux/pci.h>
+> msi.c is a maze of randomly sorted functions which makes the code
+> unreadable. As a first step split the driver visible API and the internal
+> implementation which also allows proper API documentation via one file.
 > 
+> Create drivers/pci/msi/api.c to group all exported device-driver PCI/MSI
+> APIs in one C file.
+> 
+> Begin by moving pci_disable_msi() there and add kernel-doc for the function
+> as appropriate.
+> 
+> Suggested-by: Thomas Gleixner <tglx@linutronix.de>
 > Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
 > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
 > ---
->  drivers/pci/msi/msi.h |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
+>  drivers/pci/msi/Makefile |  3 +--
+>  drivers/pci/msi/api.c    | 37 +++++++++++++++++++++++++++++++++++++
+>  drivers/pci/msi/msi.c    | 22 +++++-----------------
+>  drivers/pci/msi/msi.h    |  4 ++++
+>  4 files changed, 47 insertions(+), 19 deletions(-)
+>  create mode 100644 drivers/pci/msi/api.c
+> ---
+> diff --git a/drivers/pci/msi/Makefile b/drivers/pci/msi/Makefile
+> index 4e0a7e07965e..839ff72d72a8 100644
+> --- a/drivers/pci/msi/Makefile
+> +++ b/drivers/pci/msi/Makefile
+> @@ -2,6 +2,5 @@
+>  #
+>  # Makefile for the PCI/MSI
+>  obj-$(CONFIG_PCI)			+= pcidev_msi.o
+> -obj-$(CONFIG_PCI_MSI)			+= msi.o
+> -obj-$(CONFIG_PCI_MSI)			+= irqdomain.o
+> +obj-$(CONFIG_PCI_MSI)			+= api.o msi.o irqdomain.o
+>  obj-$(CONFIG_PCI_MSI_ARCH_FALLBACKS)	+= legacy.o
+> diff --git a/drivers/pci/msi/api.c b/drivers/pci/msi/api.c
+> new file mode 100644
+> index 000000000000..7485942cbe5d
+> --- /dev/null
+> +++ b/drivers/pci/msi/api.c
+> @@ -0,0 +1,37 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * PCI MSI/MSI-X — Exported APIs for device drivers
+> + *
+> + * Copyright (C) 2003-2004 Intel
+> + * Copyright (C) Tom Long Nguyen (tom.l.nguyen@intel.com)
+> + * Copyright (C) 2016 Christoph Hellwig.
+> + * Copyright (C) 2022 Linutronix GmbH
+> + */
+> +
+> +#include <linux/export.h>
+> +
+> +#include "msi.h"
+> +
+> +/**
+> + * pci_disable_msi() - Disable MSI interrupt mode on device
+> + * @dev: the PCI device to operate on
+> + *
+> + * Legacy device driver API to disable MSI interrupt mode on device,
+> + * free earlier allocated interrupt vectors, and restore INTx emulation.
+> + * The PCI device Linux IRQ (@dev->irq) is restored to its default
+> + * pin-assertion IRQ. This is the cleanup pair of pci_enable_msi().
+> + *
+> + * NOTE: The newer pci_alloc_irq_vectors() / pci_free_irq_vectors() API
+> + * pair should, in general, be used instead.
+> + */
+> +void pci_disable_msi(struct pci_dev *dev)
+> +{
+> +	if (!pci_msi_enabled() || !dev || !dev->msi_enabled)
+> +		return;
+> +
+> +	msi_lock_descs(&dev->dev);
+> +	pci_msi_shutdown(dev);
+> +	pci_free_msi_irqs(dev);
+> +	msi_unlock_descs(&dev->dev);
+> +}
+> +EXPORT_SYMBOL(pci_disable_msi);
+> diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+> index 5c310df55d0d..4a1300b74518 100644
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -163,7 +163,7 @@ void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_write_msi_msg);
+>  
+> -static void free_msi_irqs(struct pci_dev *dev)
+> +void pci_free_msi_irqs(struct pci_dev *dev)
+>  {
+>  	pci_msi_teardown_msi_irqs(dev);
+>  
+> @@ -413,7 +413,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec,
+>  
+>  err:
+>  	pci_msi_unmask(entry, msi_multi_mask(entry));
+> -	free_msi_irqs(dev);
+> +	pci_free_msi_irqs(dev);
+>  fail:
+>  	dev->msi_enabled = 0;
+>  unlock:
+> @@ -531,7 +531,7 @@ static int msix_setup_interrupts(struct pci_dev *dev, void __iomem *base,
+>  	goto out_unlock;
+>  
+>  out_free:
+> -	free_msi_irqs(dev);
+> +	pci_free_msi_irqs(dev);
+>  out_unlock:
+>  	msi_unlock_descs(&dev->dev);
+>  	kfree(masks);
+> @@ -680,7 +680,7 @@ int pci_msi_vec_count(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pci_msi_vec_count);
+>  
+> -static void pci_msi_shutdown(struct pci_dev *dev)
+> +void pci_msi_shutdown(struct pci_dev *dev)
+>  {
+>  	struct msi_desc *desc;
+>  
+> @@ -701,18 +701,6 @@ static void pci_msi_shutdown(struct pci_dev *dev)
+>  	pcibios_alloc_irq(dev);
+>  }
+>  
+> -void pci_disable_msi(struct pci_dev *dev)
+> -{
+> -	if (!pci_msi_enable || !dev || !dev->msi_enabled)
+> -		return;
+> -
+> -	msi_lock_descs(&dev->dev);
+> -	pci_msi_shutdown(dev);
+> -	free_msi_irqs(dev);
+> -	msi_unlock_descs(&dev->dev);
+> -}
+> -EXPORT_SYMBOL(pci_disable_msi);
+> -
+>  /**
+>   * pci_msix_vec_count - return the number of device's MSI-X table entries
+>   * @dev: pointer to the pci_dev data structure of MSI-X device function
+> @@ -797,7 +785,7 @@ void pci_disable_msix(struct pci_dev *dev)
+>  
+>  	msi_lock_descs(&dev->dev);
+>  	pci_msix_shutdown(dev);
+> -	free_msi_irqs(dev);
+> +	pci_free_msi_irqs(dev);
+>  	msi_unlock_descs(&dev->dev);
+>  }
+>  EXPORT_SYMBOL(pci_disable_msix);
+> diff --git a/drivers/pci/msi/msi.h b/drivers/pci/msi/msi.h
+> index d8f62d911f08..634879277349 100644
 > --- a/drivers/pci/msi/msi.h
 > +++ b/drivers/pci/msi/msi.h
-> @@ -5,12 +5,12 @@
+> @@ -84,6 +84,10 @@ static inline __attribute_const__ u32 msi_multi_mask(struct msi_desc *desc)
+>  	return (1 << (1 << desc->pci.msi_attrib.multi_cap)) - 1;
+>  }
 >  
->  #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
->  
-> -extern int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-> -extern void pci_msi_teardown_msi_irqs(struct pci_dev *dev);
-> +int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-> +void pci_msi_teardown_msi_irqs(struct pci_dev *dev);
->  
+> +/* MSI internal functions invoked from the public APIs */
+> +void pci_msi_shutdown(struct pci_dev *dev);
+> +void pci_free_msi_irqs(struct pci_dev *dev);
+> +
+>  /* Legacy (!IRQDOMAIN) fallbacks */
 >  #ifdef CONFIG_PCI_MSI_ARCH_FALLBACKS
-> -extern int pci_msi_legacy_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-> -extern void pci_msi_legacy_teardown_msi_irqs(struct pci_dev *dev);
-> +int pci_msi_legacy_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-> +void pci_msi_legacy_teardown_msi_irqs(struct pci_dev *dev);
->  #else
->  static inline int pci_msi_legacy_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
->  {
+>  int pci_msi_legacy_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
 > 
