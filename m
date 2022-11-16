@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA102C43217
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 21:49:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54106C4321E
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 21:49:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237885AbiKPVto (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Nov 2022 16:49:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51340 "EHLO
+        id S238422AbiKPVtq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Nov 2022 16:49:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231342AbiKPVtW (ORCPT
+        with ESMTP id S233394AbiKPVtW (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 16:49:22 -0500
-Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A83A61BB4;
-        Wed, 16 Nov 2022 13:48:48 -0800 (PST)
-Received: by mail-ej1-x62f.google.com with SMTP id k2so435890ejr.2;
-        Wed, 16 Nov 2022 13:48:48 -0800 (PST)
+Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D84F606BE;
+        Wed, 16 Nov 2022 13:48:51 -0800 (PST)
+Received: by mail-ej1-x635.google.com with SMTP id kt23so366077ejc.7;
+        Wed, 16 Nov 2022 13:48:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=zruJLlJ8a35SxUsYi/AnlLXhcK2EHytmRl4aws2VY94=;
-        b=kyOPa3lUh60eEhkr7o+pUaMMxRLpUAQ66gaxw/uWejMMCBj8tDKY8zuIDzxcgDunA8
-         c0UwTpD2B1qVIssHrAzEFQghHwFQk6RS6HJe8Jcc2GUXrAYDSmOBFv7XPF+kvbT1/Hkr
-         pXjR28HbBEz2EqrH6hrhEljm+pUYcaMF8Hj/Snks7Ic0R80fs3PFaRBIR7zmvrBkf/0w
-         vao5nlgmEUsbzfxGzfNCwuCIpjS3HWRaSrpadF6jqOAFegsmniw875kFDjTbz4XWV7eG
-         +QIc32uVacO9U2ggGz1D4i1B5k6b0DOBz/YbftVyNZCVmksdgnkYT+ZqCAcsnXROIGau
-         Y9VA==
+        bh=1EGkalAXlOl0NBxY3u6qgvGXD8V2PCW1rraeENgVJy4=;
+        b=aKUwugI5mskqa5YPH3g1gI19s3UWD8lZaR5dSzti/olgcPy0DImSlcg3pxj7jBKtxx
+         NjIY1Hj247RiMHtGQPY6sL1OeelROOI+W8uKZoURysEZSf2sharXsZinAO+eLcugC+dU
+         jyVVXguDhCHzgmRqxf5FTfojf9apGYO8OuUF7dzyka6WEKs+LGaEchvccypDteG52OZF
+         37qq49sqK0Nn016eZrEZWWdg+6M4xyuyUIVnzPlj8YHdXBJRsUC3lFWnTFW8ZltRO8Tj
+         hw1XotPnfqvXmNAg+l4wVOXNweWqD0vhzrEoNF6T8ZDx/Nnu5HRBWa6a0FBfm0EJZGue
+         EWrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=zruJLlJ8a35SxUsYi/AnlLXhcK2EHytmRl4aws2VY94=;
-        b=mgX70CH1fkyANQm+PnSmJq/6cwvowl5FmbVNQqD3R8GVNVWWvMRBs5mdFyZWBCnikE
-         zIfYodOiCBSQAqbwVCRBghAt7zxRlgQe10Kg7+ndBu5N2mq7vKaUiIXBaW6vJD8sU+To
-         mzeVq/huL40F+Av/aZKo63Inh33v5/+svjjdOu35SU7i34e+9oe0oAk+qLpvG4H+mxG+
-         RmhZfTwemJl2KF4rcWTjnxhJRSuFUqkk3x6X0oqza/hY/YOpYxyljygEak83JCr4/7Oc
-         jA+JAFBuopGMDIxF6WZqU89yA10wy/1DqQqIekdXKdG+DM+uFrkijNDTLuMod87D4528
-         X+aA==
-X-Gm-Message-State: ANoB5pn7fr2co46fUJccwH/flshV1U/BG1yc0Ci0d2aveGio643eIbTY
-        tkzyHmstUh2DLN0oN2Uu4XM=
-X-Google-Smtp-Source: AA0mqf71o5kWi/Zk9aWkbFyHvNX37a6arAehFk3futij85Uf2EAp50i3ceddljJPLJEF38UCRkCpyw==
-X-Received: by 2002:a17:906:ccd0:b0:7a3:28c7:5835 with SMTP id ot16-20020a170906ccd000b007a328c75835mr19881415ejb.32.1668635327065;
-        Wed, 16 Nov 2022 13:48:47 -0800 (PST)
+        bh=1EGkalAXlOl0NBxY3u6qgvGXD8V2PCW1rraeENgVJy4=;
+        b=c5J+G67sdsdPZZTllBUT3iD9/cauSOR4oyxTUQbADTs+7dmWU/5KYatOCfeLfFw5pe
+         R/pQtGnuA6EQzRiIh5/mfxqhcTjUA2XqoKFLGONAgKGvKjORfApiF7fw+PctgZUmbJ4l
+         DAaPZduEwZpT2x2bdoAkitBqQFf62iMTUHqeFEzDI92GZzwuPRDJwKV6IqWIA3KqqQZB
+         1QzZl+oaaOvVxr/zsQEFPmjoCVrOqe8FEo/AnrRl9ZtF06SuLJZubEKwpQBA1ARKO5az
+         dsXrsJD+Em8L5ugs/TyLR3JglM1yxyCE1tmwYiIGcDjlw62lr63b+qwqaoR2YXv9aMvf
+         wnZg==
+X-Gm-Message-State: ANoB5pkRFsud8fkkhFWluvWF16b0qJE0C0LFAGxllLgT+B9esljJUQjX
+        9DrYxqQZEJDY442QV/1OqNY=
+X-Google-Smtp-Source: AA0mqf6ktQzbxViWEiE+WI9awnLuzAJHFsWq5qxOdtYEsmckhTvf8kQWh1F8U6adB2rtKwlS487qTA==
+X-Received: by 2002:a17:906:c013:b0:78d:ff14:63f9 with SMTP id e19-20020a170906c01300b0078dff1463f9mr18717505ejz.516.1668635329595;
+        Wed, 16 Nov 2022 13:48:49 -0800 (PST)
 Received: from fedora.. (dh207-99-145.xnet.hr. [88.207.99.145])
-        by smtp.googlemail.com with ESMTPSA id b14-20020aa7dc0e000000b00462e1d8e914sm7931341edu.68.2022.11.16.13.48.45
+        by smtp.googlemail.com with ESMTPSA id b14-20020aa7dc0e000000b00462e1d8e914sm7931341edu.68.2022.11.16.13.48.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Nov 2022 13:48:46 -0800 (PST)
+        Wed, 16 Nov 2022 13:48:49 -0800 (PST)
 From:   Robert Marko <robimarko@gmail.com>
 To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
         bhelgaas@google.com, robh+dt@kernel.org,
@@ -58,9 +58,9 @@ To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     Robert Marko <robimarko@gmail.com>
-Subject: [PATCH 3/9] arm64: dts: qcom: ipq8074: correct Gen2 PCIe ranges
-Date:   Wed, 16 Nov 2022 22:48:35 +0100
-Message-Id: <20221116214841.1116735-3-robimarko@gmail.com>
+Subject: [PATCH 5/9] dt-bindings: PCI: qcom: alphabetically sort compatibles
+Date:   Wed, 16 Nov 2022 22:48:37 +0100
+Message-Id: <20221116214841.1116735-5-robimarko@gmail.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221116214841.1116735-1-robimarko@gmail.com>
 References: <20221116214841.1116735-1-robimarko@gmail.com>
@@ -70,32 +70,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Current ranges property set in Gen2 PCIe node is incorrect, replace it
-with the downstream 5.4 QCA kernel value.
+Sort the compatibles list alphabetically for maintenance.
 
-Fixes: 33057e1672fe ("ARM: dts: ipq8074: Add pcie nodes")
 Signed-off-by: Robert Marko <robimarko@gmail.com>
 ---
- arch/arm64/boot/dts/qcom/ipq8074.dtsi | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/ipq8074.dtsi b/arch/arm64/boot/dts/qcom/ipq8074.dtsi
-index 9503dfb25d50..b1decedbd080 100644
---- a/arch/arm64/boot/dts/qcom/ipq8074.dtsi
-+++ b/arch/arm64/boot/dts/qcom/ipq8074.dtsi
-@@ -808,9 +808,9 @@ pcie1: pci@10000000 {
- 			phy-names = "pciephy";
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 2f851c804bb0..1e94c210429a 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -17,13 +17,14 @@ description: |
+ properties:
+   compatible:
+     enum:
+-      - qcom,pcie-ipq8064
+-      - qcom,pcie-ipq8064-v2
+       - qcom,pcie-apq8064
+       - qcom,pcie-apq8084
+-      - qcom,pcie-msm8996
+       - qcom,pcie-ipq4019
++      - qcom,pcie-ipq6018
++      - qcom,pcie-ipq8064
++      - qcom,pcie-ipq8064-v2
+       - qcom,pcie-ipq8074
++      - qcom,pcie-msm8996
+       - qcom,pcie-qcs404
+       - qcom,pcie-sa8540p
+       - qcom,pcie-sc7280
+@@ -34,7 +35,6 @@ properties:
+       - qcom,pcie-sm8250
+       - qcom,pcie-sm8450-pcie0
+       - qcom,pcie-sm8450-pcie1
+-      - qcom,pcie-ipq6018
  
- 			ranges = <0x81000000 0 0x10200000 0x10200000
--				  0 0x100000   /* downstream I/O */
--				  0x82000000 0 0x10300000 0x10300000
--				  0 0xd00000>; /* non-prefetchable memory */
-+				  0 0x10000>,   /* downstream I/O */
-+				 <0x82000000 0 0x10220000 0x10220000
-+				  0 0xfde0000>; /* non-prefetchable memory */
- 
- 			interrupts = <GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH>;
- 			interrupt-names = "msi";
+   reg:
+     minItems: 4
 -- 
 2.38.1
 
