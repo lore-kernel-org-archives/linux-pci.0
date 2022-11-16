@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DA66C4167E
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 21:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 975E1C4332F
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 21:49:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238559AbiKPVts (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Nov 2022 16:49:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51358 "EHLO
+        id S233067AbiKPVtt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Nov 2022 16:49:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232506AbiKPVtW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 16:49:22 -0500
-Received: from mail-ej1-x62a.google.com (mail-ej1-x62a.google.com [IPv6:2a00:1450:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CECFC5985A;
-        Wed, 16 Nov 2022 13:48:49 -0800 (PST)
-Received: by mail-ej1-x62a.google.com with SMTP id f18so394128ejz.5;
-        Wed, 16 Nov 2022 13:48:49 -0800 (PST)
+        with ESMTP id S237493AbiKPVtZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 16:49:25 -0500
+Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4A7464A0B;
+        Wed, 16 Nov 2022 13:48:52 -0800 (PST)
+Received: by mail-ej1-x62e.google.com with SMTP id ft34so293373ejc.12;
+        Wed, 16 Nov 2022 13:48:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=loIeYsbIfqk2P074OtBAWf7HGIfr867twQZf+5G/rew=;
-        b=aPwVJ/UR6Vnv1p3AHkmaOpKOfKdqgLvC9LfsqTKgWaMIkZ+QNqK2KBxgGm1z/pJsaZ
-         rAlxfgPSpk9MbN0DNg1hphCCUYuSISDN9PsuF3W3J3mpKzSBW8xGhyQvcCnpVb0C36cl
-         zOKEDC8aQrmuxO2m9fdDj7GZsPUaoZVbgdgudCsSIdaZYOAXkCs6EQKv25mitRFa/bHc
-         YMpTxzmbWRzTC+IGhDZzZCKDsVT7n4txBGFSe+pWRWMp+mEk5juxJLLUGI9YPZTiiBLH
-         msD0waPDZjyjRGkPnJc4mQR3hnPPrd/cfEKGmypxd4NPezjsm5/a3LQ77t5YhB03uxOU
-         WRPQ==
+        bh=XhziJCTfYAX8UUJF9yrOBjkYfO4Z58hl4/PJ9cRFK4w=;
+        b=UUMk7NQBXC5/9LZf7ADWWbk9osjPr8vfYJv38i/fOPerGi9Zoymk2VDn1LhA+rnyaC
+         kA/xL3ISUlvrmWQD5kFI0jvHJSAT5rY/uKabJ9sCmePt4MtilwKARl2ts/a79WKL/Xbo
+         /SG9UUK18iNE8aczwGzWtwMOVzBkoOIBArcR1FpMe9eoCpBiZSabkLu1s+wCHfPvCEoc
+         bZ1EhOYsQTi0MCN6GQHzEXnap+oWDoyUdTCjXQA2IUSpuW9GmCGNpDZPP5fZiOVURRK0
+         qFqUc//R4HSFHS+y41NrAqcs4LHMy0Pc5bszP1bjY4Wwyv4SiMqdf5pwnuXIzQF+T5D7
+         yNZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=loIeYsbIfqk2P074OtBAWf7HGIfr867twQZf+5G/rew=;
-        b=YE8dJ0DPKn1sueoX0xFXdGmb2HEKZLYmsJuZ+Th3yCzf8qdfjcG3p+5l6qTQy3W+vH
-         f/Zl7evJah/EZGf3WxTeVaNX6S9RJVdJpleqjk6+SgHIp9+LKU2V9Ou6In4IPrWRiZMq
-         yPRX0ddU6rRbDahWRNDfp61Xtuxx5dWEFdGY4VrVFexojq8ipgyDX/5yPWlqrdxDJFEP
-         zX5cg3WxGiV7Dd5jw6rlICv4UoerX/5ICwTBBTzGCTZ5nYNw0uykugZsMYKwbtY9UN1G
-         GXZUPZmmwUz6Ijw8HmSvVxoCsuE9O1nfrsG3Dqgk4Ip39MhAYWcPn90LeOjSAxety6GC
-         EuWQ==
-X-Gm-Message-State: ANoB5pmXPjGOr+h9RXc0VvnThgZtdjyPz7QghhAWi1pzHyJMdJjyDvze
-        tdUZVwK+LfMpSs2u48CJ2qk=
-X-Google-Smtp-Source: AA0mqf7yO//UJKXGudN4u0MPQe8SLmp39YTSF9gtSAzsDRwB/WN65OyI7e+EzGo6XowVfnaNtKOCew==
-X-Received: by 2002:a17:906:1c85:b0:7ae:ca2f:171d with SMTP id g5-20020a1709061c8500b007aeca2f171dmr18160540ejh.353.1668635328326;
-        Wed, 16 Nov 2022 13:48:48 -0800 (PST)
+        bh=XhziJCTfYAX8UUJF9yrOBjkYfO4Z58hl4/PJ9cRFK4w=;
+        b=FD3S3GZq4DnwYiCFvNPrgOGcrh/KEXpcflVhkjPYXCnHx3vICDfEKNd9mpomKtWIw6
+         6rmCHkxSZgQOmm9GmeklkhU/5r1cjCk2F7PaotvJ0+kjF8KrsqZA1C2I1GExuiRbCTfH
+         n7AIoXOL/vKjC4/Mn39l79Bpng3u/nz0x6OWAtHs2+rvT8731LK1w4ivZgKf8hxNdvTK
+         s6ubbJSTJC5UL7obVfCBVBLM/LbzeAbFnTYi82TsnKLBd32RwdzohnQ7uSROj0S1Huea
+         8PamERemJyPzRxucphVEUUOP481SEgAfaKY/Q0A4k9orKkE7HUTIKY50bXupHlnw2Ric
+         GAUg==
+X-Gm-Message-State: ANoB5pnfsqtwjczl3ghT7Il4N9DJJZNuXiJOFVxz9LuP24BIVmrwMno6
+        ThCbZWjLWvQ646JRqsxF33E=
+X-Google-Smtp-Source: AA0mqf6lf+eRn0xeqmUf15BFfitqsO2LECPSj5DIqQv/ZTymECngkzjTdQU5zcJMIo6ykre2bwOiIA==
+X-Received: by 2002:a17:906:b755:b0:78d:b8b3:f027 with SMTP id fx21-20020a170906b75500b0078db8b3f027mr18775352ejb.439.1668635332428;
+        Wed, 16 Nov 2022 13:48:52 -0800 (PST)
 Received: from fedora.. (dh207-99-145.xnet.hr. [88.207.99.145])
-        by smtp.googlemail.com with ESMTPSA id b14-20020aa7dc0e000000b00462e1d8e914sm7931341edu.68.2022.11.16.13.48.47
+        by smtp.googlemail.com with ESMTPSA id b14-20020aa7dc0e000000b00462e1d8e914sm7931341edu.68.2022.11.16.13.48.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Nov 2022 13:48:47 -0800 (PST)
+        Wed, 16 Nov 2022 13:48:52 -0800 (PST)
 From:   Robert Marko <robimarko@gmail.com>
 To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
         bhelgaas@google.com, robh+dt@kernel.org,
@@ -58,9 +58,9 @@ To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     Robert Marko <robimarko@gmail.com>
-Subject: [PATCH 4/9] arm64: dts: qcom: ipq8074: set Gen2 PCIe pcie max-link-speed
-Date:   Wed, 16 Nov 2022 22:48:36 +0100
-Message-Id: <20221116214841.1116735-4-robimarko@gmail.com>
+Subject: [PATCH 7/9] PCI: qcom: add support for IPQ8074 Gen3 port
+Date:   Wed, 16 Nov 2022 22:48:39 +0100
+Message-Id: <20221116214841.1116735-7-robimarko@gmail.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221116214841.1116735-1-robimarko@gmail.com>
 References: <20221116214841.1116735-1-robimarko@gmail.com>
@@ -70,27 +70,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the generic 'max-link-speed' property to describe the Gen2 PCIe link
-generation limit.
-This allows the generic DWC code to configure the link speed correctly.
+IPQ8074 has one Gen2 and one Gen3 port, with Gen2 port already supported.
+Add compatible for Gen3 port which uses the same controller as IPQ6018.
 
 Signed-off-by: Robert Marko <robimarko@gmail.com>
 ---
- arch/arm64/boot/dts/qcom/ipq8074.dtsi | 1 +
+ drivers/pci/controller/dwc/pcie-qcom.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/ipq8074.dtsi b/arch/arm64/boot/dts/qcom/ipq8074.dtsi
-index b1decedbd080..585e5f0a139d 100644
---- a/arch/arm64/boot/dts/qcom/ipq8074.dtsi
-+++ b/arch/arm64/boot/dts/qcom/ipq8074.dtsi
-@@ -801,6 +801,7 @@ pcie1: pci@10000000 {
- 			linux,pci-domain = <1>;
- 			bus-range = <0x00 0xff>;
- 			num-lanes = <1>;
-+			max-link-speed = <2>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 77e5dc7b88ad..97e8510c53fb 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1817,6 +1817,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-ipq8064", .data = &cfg_2_1_0 },
+ 	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &cfg_2_1_0 },
+ 	{ .compatible = "qcom,pcie-ipq8074", .data = &cfg_2_3_3 },
++	{ .compatible = "qcom,pcie-ipq8074-gen3", .data = &cfg_2_9_0 },
+ 	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
+ 	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
+ 	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_1_9_0 },
 -- 
 2.38.1
 
