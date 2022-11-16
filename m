@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82AB8C4332F
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 16:30:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65423C4332F
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 16:31:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229834AbiKPQax (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Nov 2022 11:30:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43972 "EHLO
+        id S234077AbiKPQbN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Nov 2022 11:31:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236124AbiKPQ3U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 11:29:20 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF3166279;
-        Wed, 16 Nov 2022 08:23:29 -0800 (PST)
+        with ESMTP id S233846AbiKPQae (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 11:30:34 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3898261745;
+        Wed, 16 Nov 2022 08:24:28 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 4D863B81DE2;
-        Wed, 16 Nov 2022 16:23:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B018DC433D6;
-        Wed, 16 Nov 2022 16:23:23 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id 75FDECE1BE5;
+        Wed, 16 Nov 2022 16:24:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A2D3C43151;
+        Wed, 16 Nov 2022 16:24:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668615804;
-        bh=2nU4MOObR9A/jOY+gjTU6v5hsEY4DPvkpe3RAEIYrlw=;
+        s=k20201202; t=1668615864;
+        bh=KtY9Vs/brf6w8qE0/o2ebQAHWrfi6LuL4OCBYWS1b/w=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=OCEybreaEgPYv/BqqRQ3ZprA2wF/mVzqFWMumzorrbm9PwwgyP2gavOSf3bXBTbLE
-         ePQqu0Hxh+lTVX6IwG1qssPlkUNH0UhWlk2gmyGNirw24RU/a0IUz/57H2ulW1ImpD
-         CrAkBgVxk8hU5EJt2bYGJWmJiLaVQNmU0Y6VTWTg8uxTgd4Ah3ryYfAnoqbk7I2QuD
-         XHa1mYUrVQkZWcgA4nU8ME8AdPQQNueWAnSJj137wmV1aNju4nKcmF1DS85e6CVYu7
-         TA8/Obo8DyRGKKtBELLz9s749ma9CqfVHJ1VvOyWOO5kPua5q5sj4VGjXmvVzskirS
-         xnbhC+QUV1wvw==
-Date:   Wed, 16 Nov 2022 10:23:22 -0600
+        b=OsAR5tUMX+89dO25+e1oBaNX+VGOE54GjAZOeyQYzbZTqgTpNZPlC7Zf0Qy0SimWL
+         OR8t+btKVpMvqEQ2V7aoAZN1zMjTQCRrK8WO5AVFz/X8LqfPWIRfiLYx7B9ez2Li1x
+         NP++bYoQ8hvu729w4z5dH2whv3CJCLy6w/xF27iMn12m008IlvYWFnrvIvDGMtohSP
+         Qd6I11EqTQKaL3+Y4S0xJbyXIyRL3xDNLy1DOi1v45qWxTG45M3xoCgIlj3dBMQk7k
+         Zy92tOMVgmRKIk+cihrJp3nIEtIdrW9BrFRb27cgnQ5SzXTHkivURkBvDJ8YCfNGMu
+         AqP9aJE9VxrtA==
+Date:   Wed, 16 Nov 2022 10:24:23 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Thomas Gleixner <tglx@linutronix.de>
 Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
@@ -53,183 +53,79 @@ Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
         Michael Ellerman <mpe@ellerman.id.au>,
         Christophe Leroy <christophe.leroy@csgroup.eu>,
         linuxppc-dev@lists.ozlabs.org
-Subject: Re: [patch 23/39] PCI/MSI: Move pci_alloc_irq_vectors_affinity() to
- api.c
-Message-ID: <20221116162322.GA1115421@bhelgaas>
+Subject: Re: [patch 25/39] PCI/MSI: Move pci_free_irq_vectors() to api.c
+Message-ID: <20221116162423.GA1115645@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221111122014.927531290@linutronix.de>
+In-Reply-To: <20221111122015.042870570@linutronix.de>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 11, 2022 at 02:54:51PM +0100, Thomas Gleixner wrote:
+On Fri, Nov 11, 2022 at 02:54:54PM +0100, Thomas Gleixner wrote:
 > From: Ahmed S. Darwish <darwi@linutronix.de>
 > 
 > To distangle the maze in msi.c, all exported device-driver MSI APIs are
 > now to be grouped in one file, api.c.
 > 
-> Move pci_alloc_irq_vectors_affinity() and let its kernel-doc reference
-> pci_alloc_irq_vectors() documentation added in parent commit.
+> Move pci_free_irq_vectors() and make its kernel-doc comprehensive.
 > 
 > Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
 > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-One question below.
-
 > ---
->  drivers/pci/msi/api.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/pci/msi/msi.c | 65 +----------------------------------------------------
->  2 files changed, 59 insertions(+), 65 deletions(-)
+>  drivers/pci/msi/api.c | 15 +++++++++++++++
+>  drivers/pci/msi/msi.c | 13 -------------
+>  2 files changed, 15 insertions(+), 13 deletions(-)
 > ---
 > diff --git a/drivers/pci/msi/api.c b/drivers/pci/msi/api.c
-> index 1714905943fb..8546749afa6e 100644
+> index 0f1ec87e3f9f..2ff2a9ccfc47 100644
 > --- a/drivers/pci/msi/api.c
 > +++ b/drivers/pci/msi/api.c
-> @@ -123,3 +123,62 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->  					      flags, NULL);
+> @@ -205,3 +205,18 @@ int pci_irq_vector(struct pci_dev *dev, unsigned int nr)
+>  	return irq ? irq : -EINVAL;
 >  }
->  EXPORT_SYMBOL(pci_alloc_irq_vectors);
+>  EXPORT_SYMBOL(pci_irq_vector);
 > +
 > +/**
-> + * pci_alloc_irq_vectors_affinity() - Allocate multiple device interrupt
-> + *                                    vectors with affinity requirements
-> + * @dev:      the PCI device to operate on
-> + * @min_vecs: minimum required number of vectors (must be >= 1)
-> + * @max_vecs: maximum desired number of vectors
-> + * @flags:    allocation flags, as in pci_alloc_irq_vectors()
-> + * @affd:     affinity requirements (can be %NULL).
+> + * pci_free_irq_vectors() - Free previously allocated IRQs for a device
+> + * @dev: the PCI device to operate on
 > + *
-> + * Same as pci_alloc_irq_vectors(), but with the extra @affd parameter.
-> + * Check that function docs, and &struct irq_affinity, for more details.
-
-Is "&struct irq_affinity" some kernel-doc syntax, or is the "&"
-superfluous?
-
+> + * Undo the interrupt vector allocations and possible device MSI/MSI-X
+> + * enablement earlier done through pci_alloc_irq_vectors_affinity() or
+> + * pci_alloc_irq_vectors().
 > + */
-> +int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
-> +				   unsigned int max_vecs, unsigned int flags,
-> +				   struct irq_affinity *affd)
+> +void pci_free_irq_vectors(struct pci_dev *dev)
 > +{
-> +	struct irq_affinity msi_default_affd = {0};
-> +	int nvecs = -ENOSPC;
-> +
-> +	if (flags & PCI_IRQ_AFFINITY) {
-> +		if (!affd)
-> +			affd = &msi_default_affd;
-> +	} else {
-> +		if (WARN_ON(affd))
-> +			affd = NULL;
-> +	}
-> +
-> +	if (flags & PCI_IRQ_MSIX) {
-> +		nvecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
-> +						affd, flags);
-> +		if (nvecs > 0)
-> +			return nvecs;
-> +	}
-> +
-> +	if (flags & PCI_IRQ_MSI) {
-> +		nvecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, affd);
-> +		if (nvecs > 0)
-> +			return nvecs;
-> +	}
-> +
-> +	/* use legacy IRQ if allowed */
-> +	if (flags & PCI_IRQ_LEGACY) {
-> +		if (min_vecs == 1 && dev->irq) {
-> +			/*
-> +			 * Invoke the affinity spreading logic to ensure that
-> +			 * the device driver can adjust queue configuration
-> +			 * for the single interrupt case.
-> +			 */
-> +			if (affd)
-> +				irq_create_affinity_masks(1, affd);
-> +			pci_intx(dev, 1);
-> +			return 1;
-> +		}
-> +	}
-> +
-> +	return nvecs;
+> +	pci_disable_msix(dev);
+> +	pci_disable_msi(dev);
 > +}
-> +EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
+> +EXPORT_SYMBOL(pci_free_irq_vectors);
 > diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-> index 6700ef1c734e..a028774f438d 100644
+> index 38ad2fe4b85c..ed8caf5ac99f 100644
 > --- a/drivers/pci/msi/msi.c
 > +++ b/drivers/pci/msi/msi.c
-> @@ -887,71 +887,6 @@ int __pci_enable_msix_range(struct pci_dev *dev,
+> @@ -887,19 +887,6 @@ int __pci_enable_msix_range(struct pci_dev *dev,
 >  }
 >  
 >  /**
-> - * pci_alloc_irq_vectors_affinity - allocate multiple IRQs for a device
+> - * pci_free_irq_vectors - free previously allocated IRQs for a device
 > - * @dev:		PCI device to operate on
-> - * @min_vecs:		minimum number of vectors required (must be >= 1)
-> - * @max_vecs:		maximum (desired) number of vectors
-> - * @flags:		flags or quirks for the allocation
-> - * @affd:		optional description of the affinity requirements
 > - *
-> - * Allocate up to @max_vecs interrupt vectors for @dev, using MSI-X or MSI
-> - * vectors if available, and fall back to a single legacy vector
-> - * if neither is available.  Return the number of vectors allocated,
-> - * (which might be smaller than @max_vecs) if successful, or a negative
-> - * error code on error. If less than @min_vecs interrupt vectors are
-> - * available for @dev the function will fail with -ENOSPC.
-> - *
-> - * To get the Linux IRQ number used for a vector that can be passed to
-> - * request_irq() use the pci_irq_vector() helper.
+> - * Undoes the allocations and enabling in pci_alloc_irq_vectors().
 > - */
-> -int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
-> -				   unsigned int max_vecs, unsigned int flags,
-> -				   struct irq_affinity *affd)
+> -void pci_free_irq_vectors(struct pci_dev *dev)
 > -{
-> -	struct irq_affinity msi_default_affd = {0};
-> -	int nvecs = -ENOSPC;
-> -
-> -	if (flags & PCI_IRQ_AFFINITY) {
-> -		if (!affd)
-> -			affd = &msi_default_affd;
-> -	} else {
-> -		if (WARN_ON(affd))
-> -			affd = NULL;
-> -	}
-> -
-> -	if (flags & PCI_IRQ_MSIX) {
-> -		nvecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
-> -						affd, flags);
-> -		if (nvecs > 0)
-> -			return nvecs;
-> -	}
-> -
-> -	if (flags & PCI_IRQ_MSI) {
-> -		nvecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, affd);
-> -		if (nvecs > 0)
-> -			return nvecs;
-> -	}
-> -
-> -	/* use legacy IRQ if allowed */
-> -	if (flags & PCI_IRQ_LEGACY) {
-> -		if (min_vecs == 1 && dev->irq) {
-> -			/*
-> -			 * Invoke the affinity spreading logic to ensure that
-> -			 * the device driver can adjust queue configuration
-> -			 * for the single interrupt case.
-> -			 */
-> -			if (affd)
-> -				irq_create_affinity_masks(1, affd);
-> -			pci_intx(dev, 1);
-> -			return 1;
-> -		}
-> -	}
-> -
-> -	return nvecs;
+> -	pci_disable_msix(dev);
+> -	pci_disable_msi(dev);
 > -}
-> -EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
+> -EXPORT_SYMBOL(pci_free_irq_vectors);
 > -
 > -/**
->   * pci_free_irq_vectors - free previously allocated IRQs for a device
->   * @dev:		PCI device to operate on
->   *
+>   * pci_irq_get_affinity - return the affinity of a particular MSI vector
+>   * @dev:	PCI device to operate on
+>   * @nr:		device-relative interrupt vector index (0-based).
 > 
