@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D935C4167B
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 14:00:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BC44C4321E
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Nov 2022 14:00:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233676AbiKPOAW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Nov 2022 09:00:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38132 "EHLO
+        id S231231AbiKPOAY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Nov 2022 09:00:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37828 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233666AbiKPN6S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 08:58:18 -0500
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E065264A5;
-        Wed, 16 Nov 2022 05:55:21 -0800 (PST)
+        with ESMTP id S233406AbiKPN6T (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Nov 2022 08:58:19 -0500
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83348303C0;
+        Wed, 16 Nov 2022 05:55:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1668606920; x=1700142920;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=h5DisrySeivO+9ObvShvEku9XKX1a+6JwPj8X269yOw=;
-  b=EaprPu+Ow2V8N3uQFgvwdb9OaoVUXupzC9+k6BSNnL0kcEtKJf+WVRPV
-   hlrCT77j8Bp3Ne3qI8IgujlBumY5pUS6y3fS3eIGcjGJE2eaiz96XDdTn
-   Zk9D9a4qZS9df630XI/ybwThXWELVhotDlGEetbJk1iuvEaLNMYfx4cF7
-   Raay46KALSZTEbV6ykaPwK00ElTebzYgiT1TdHw3LbW+YzN02lKclPqTt
-   0l0IRrV59hdtC+BIWVmyA3x5/k1CnPCk+JaaaAwohIcOyhNBubl7a+1Ey
-   Z+GJJzefSQu6ps/yGrV4T4ch8U8FJSkmFrR9wBnW+xdflm7KzehRGcogn
-   A==;
+  t=1668606930; x=1700142930;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=gnyeTosH+4bNeTqmiTiA3jrblmnF4auGWZMR6U3XjvQ=;
+  b=BHTisShogmS6l79GHc/bQ9MjXPg9vKuSZhuzEjuIQqQo/DwulRh4IoIW
+   0C6J/3bFeNnJcIyzGpVxpf3INyiF4PxxOK1n8KvSdqN/KPsN7FU/Md4hj
+   j2MKZUvcsZALuY1CFe29/2ov9De+7psPRDlJ0MBgvioUWrc+5mcfRx1Jq
+   WTbpugjUWsGLj+CUfBc8rlk0XXz9cHNL1KUi0VcKRq/xzdjh7cRp/zma0
+   2a40MKOFVgtH+Da/qD6pPIU0hSTxwnggP+P3idN3qS9FG2P6hgHMuYLBV
+   9N3go/TaQdrSlnRWxGfBZZDX6zk7AI6JyCl4Cs6c1tO/kWIMriyjoRt1j
+   w==;
 X-IronPort-AV: E=Sophos;i="5.96,167,1665471600"; 
-   d="scan'208";a="200047079"
+   d="scan'208";a="183798607"
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 16 Nov 2022 06:55:20 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 16 Nov 2022 06:55:15 -0700
 Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
  chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.12; Wed, 16 Nov 2022 06:55:19 -0700
+ 15.1.2507.12; Wed, 16 Nov 2022 06:55:09 -0700
 Received: from daire-X570.amer.actel.com (10.10.115.15) by
  chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server id
- 15.1.2507.12 via Frontend Transport; Wed, 16 Nov 2022 06:55:16 -0700
+ 15.1.2507.12 via Frontend Transport; Wed, 16 Nov 2022 06:55:06 -0700
 From:   <daire.mcnamara@microchip.com>
 To:     <conor.dooley@microchip.com>, <robh+dt@kernel.org>,
         <krzysztof.kozlowski+dt@linaro.org>, <paul.walmsley@sifive.com>,
@@ -46,12 +46,10 @@ To:     <conor.dooley@microchip.com>, <robh+dt@kernel.org>,
         <linux-riscv@lists.infradead.org>, <devicetree@vger.kernel.org>,
         <linux-pci@vger.kernel.org>
 CC:     Daire McNamara <daire.mcnamara@microchip.com>
-Subject: [PATCH v1 2/9] PCI: microchip: Correct the DED and SEC interrupt bit offsets
-Date:   Wed, 16 Nov 2022 13:54:57 +0000
-Message-ID: <20221116135504.258687-3-daire.mcnamara@microchip.com>
+Subject: [PATCH v1 0/9] PCI: microchip: Partition address translations
+Date:   Wed, 16 Nov 2022 13:54:55 +0000
+Message-ID: <20221116135504.258687-1-daire.mcnamara@microchip.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221116135504.258687-1-daire.mcnamara@microchip.com>
-References: <20221116135504.258687-1-daire.mcnamara@microchip.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -61,38 +59,67 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Daire McNamara <daire.mcnamara@microchip.com>
 
-The SEC and DED interrupt bits were the wrong way round so the SEC
-interrupt handler attempted to mask, unmask, and clear the DED interrupt
-and vice versa. Correct the bit offsets so each interrupt handler
-operates properly.
+Microchip PolarFire SoC is a 64-bit device and has DDR starting at
+0x80000000 and 0x1000000000. Its PCIe rootport is connected to the CPU
+Coreplex via an FPGA fabric. The AXI connections between the Coreplex and
+the fabric are 64-bit and the AXI connections between the fabric and the
+rootport are 32-bit.  For the CPU CorePlex to act as an AXI-Master to the
+PCIe devices and for the PCIe devices to act as bus masters to DDR at these
+base addresses, the fabric can be customised to add/remove offsets for bits
+38-32 in each direction. These offsets, if present, vary with each
+customer's design.
 
-Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
-Signed-off-by: Conor Dooley <conor.dooley@microchip.com>
----
- drivers/pci/controller/pcie-microchip-host.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+To support this variety, the rootport driver must know how much address
+translation (both inbound and outbound) is performed by a particular
+customer design and how much address translation must be provided by the
+rootport.
 
-diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-index 80e7554722ca..30153fd1a2b3 100644
---- a/drivers/pci/controller/pcie-microchip-host.c
-+++ b/drivers/pci/controller/pcie-microchip-host.c
-@@ -165,12 +165,12 @@
- #define EVENT_PCIE_DLUP_EXIT			2
- #define EVENT_SEC_TX_RAM_SEC_ERR		3
- #define EVENT_SEC_RX_RAM_SEC_ERR		4
--#define EVENT_SEC_AXI2PCIE_RAM_SEC_ERR		5
--#define EVENT_SEC_PCIE2AXI_RAM_SEC_ERR		6
-+#define EVENT_SEC_PCIE2AXI_RAM_SEC_ERR		5
-+#define EVENT_SEC_AXI2PCIE_RAM_SEC_ERR		6
- #define EVENT_DED_TX_RAM_DED_ERR		7
- #define EVENT_DED_RX_RAM_DED_ERR		8
--#define EVENT_DED_AXI2PCIE_RAM_DED_ERR		9
--#define EVENT_DED_PCIE2AXI_RAM_DED_ERR		10
-+#define EVENT_DED_PCIE2AXI_RAM_DED_ERR		9
-+#define EVENT_DED_AXI2PCIE_RAM_DED_ERR		10
- #define EVENT_LOCAL_DMA_END_ENGINE_0		11
- #define EVENT_LOCAL_DMA_END_ENGINE_1		12
- #define EVENT_LOCAL_DMA_ERROR_ENGINE_0		13
+This patchset contains a parent/child dma-ranges scheme suggested by Rob
+Herring. It creates an FPGA PCIe parent bus which wraps the PCIe rootport
+and implements a parsing scheme where the root port identifies what address
+translations are performed by the FPGA fabric parent bus, and what
+address translations must be done by the rootport itself.
+
+See https://lore.kernel.org/linux-pci/20220902142202.2437658-1-daire.mcnamara@microchip.com/
+for the relevant previous patch submission discussion.
+
+It also re-partitions the probe() and init() functions as suggested by
+Bjorn Helgaas to make them more maintainable as the init() function had
+become too large.
+
+It also contains some minor fixes and clean-ups that are pre-requisites:
+- to align register, offset, and mask names with the hardware documentation
+  and to have the register definitions appear in the same order as in the
+  hardware documentation;
+- to harvest the MSI information from the hardware configuration register
+  as these depend on the FPGA fabric design and can vary with different
+  customer designs;
+- to clean up interrupt initialisation to make it more maintainable;
+- to fix SEC and DED interrupt handling.
+
+I expect Conor will take the dts patch via the soc tree once the PCIe parts
+of the series are accepted.
+
+Conor Dooley (1):
+  riscv: dts: microchip: add parent ranges and dma-ranges for IKRD
+    v2022.09
+
+Daire McNamara (8):
+  PCI: microchip: Align register, offset, and mask names with hw docs
+  PCI: microchip: Correct the DED and SEC interrupt bit offsets
+  PCI: microchip: Enable event handlers to access bridge and ctrl ptrs
+  PCI: microchip: Clean up initialisation of interrupts
+  PCI: microchip: Gather MSI information from hardware config registers
+  PCI: microchip: Re-partition code between probe() and init()
+  PCI: microchip: Partition outbound address translation
+  PCI: microchip: Partition inbound address translation
+
+ .../dts/microchip/mpfs-icicle-kit-fabric.dtsi |  62 +-
+ drivers/pci/controller/pcie-microchip-host.c  | 676 +++++++++++++-----
+ 2 files changed, 522 insertions(+), 216 deletions(-)
+
+
+base-commit: 3c1f24109dfc4fb1a3730ed237e50183c6bb26b3
 -- 
 2.25.1
 
