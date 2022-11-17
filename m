@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A14C43217
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Nov 2022 16:28:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE6C4C4332F
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Nov 2022 16:28:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240579AbiKQQ2c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Nov 2022 11:28:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36656 "EHLO
+        id S240619AbiKQQ2d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Nov 2022 11:28:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240598AbiKQQ1m (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Nov 2022 11:27:42 -0500
-Received: from mxout1.routing.net (mxout1.routing.net [IPv6:2a03:2900:1:a::a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10E50786EF;
-        Thu, 17 Nov 2022 08:27:36 -0800 (PST)
+        with ESMTP id S240618AbiKQQ1o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Nov 2022 11:27:44 -0500
+Received: from mxout3.routing.net (mxout3.routing.net [IPv6:2a03:2900:1:a::8])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 076C27C011;
+        Thu, 17 Nov 2022 08:27:38 -0800 (PST)
 Received: from mxbox2.masterlogin.de (unknown [192.168.10.89])
-        by mxout1.routing.net (Postfix) with ESMTP id ED00840326;
-        Thu, 17 Nov 2022 16:27:34 +0000 (UTC)
+        by mxout3.routing.net (Postfix) with ESMTP id 421D462628;
+        Thu, 17 Nov 2022 16:27:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1668702455;
+        s=20200217; t=1668702457;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=46LdQBOByeZuglrOcnrqp2nEUUTk+5YvyMsAuNPulHE=;
-        b=U3xj54lWfq8U8m/PMRmkgw36GAWiQEeWrmOBYJozFxOvf58aEvgTPcNdeHoIGFbrF80EYu
-        AftSJSzBG0cRiVnNGuGd3PzMN2VK+cAeKb49lhaHsAKqnzsFFiISKILQDI1HzO3JgmZ+z0
-        PNPOmssEZq3D0Ny12KjoxaQ6Vg7Y/sc=
+        bh=zorltqywtJvpH+5vDOCm8ouz6cvEkR6i53PVbOSwOJs=;
+        b=JMOenCf1BZ7VBovSL8w7R6EffCuNTrC3ljboeJ+DZqT/2xA3YO/+rcqa7mG7eGf+LrUigd
+        8838WuxXoresOC10bkR5Udb9gih1hYragnwpRtgk0p0by1QSLzgfjMs3QiECIe3Qe1wJCx
+        krz6s55+p09qKFxLB3296XuKe0ZSwVw=
 Received: from frank-G5.. (fttx-pool-80.245.75.65.bambit.de [80.245.75.65])
-        by mxbox2.masterlogin.de (Postfix) with ESMTPSA id AEDB0100767;
-        Thu, 17 Nov 2022 16:27:33 +0000 (UTC)
+        by mxbox2.masterlogin.de (Postfix) with ESMTPSA id F0B8A100501;
+        Thu, 17 Nov 2022 16:27:35 +0000 (UTC)
 From:   Frank Wunderlich <linux@fw-web.de>
 To:     linux-mediatek@lists.infradead.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
@@ -49,62 +49,46 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-phy@lists.infradead.org, linux-usb@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
         AngeloGioacchino Del Regno 
         <angelogioacchino.delregno@collabora.com>
-Subject: [PATCH v5 01/11] arm64: dts: mt7986: move wed_pcie node
-Date:   Thu, 17 Nov 2022 17:27:18 +0100
-Message-Id: <20221117162728.20608-2-linux@fw-web.de>
+Subject: [PATCH v5 03/11] dt-bindings: usb: mtk-xhci: add support for mt7986
+Date:   Thu, 17 Nov 2022 17:27:20 +0100
+Message-Id: <20221117162728.20608-4-linux@fw-web.de>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20221117162728.20608-1-linux@fw-web.de>
 References: <20221117162728.20608-1-linux@fw-web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Mail-ID: d5899a80-0129-4e1c-945f-0b56946d8b8e
+X-Mail-ID: d8cc6aad-2523-4429-9dc7-7de00f7b5bc4
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Frank Wunderlich <frank-w@public-files.de>
 
-Move the wed_pcie node to have node aligned by address.
+Add compatible string for mt7986.
 
-Fixes: 00b9903996b3 ("arm64: dts: mediatek: mt7986: add support for Wireless Ethernet Dispatch")
 Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Chunfeng Yun <chunfeng.yun@mediatek.com>
 Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 ---
- arch/arm64/boot/dts/mediatek/mt7986a.dtsi | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-index a22e10e89ab9..afc01abfa99c 100644
---- a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-+++ b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-@@ -112,6 +112,12 @@ infracfg: infracfg@10001000 {
- 			#clock-cells = <1>;
- 		};
- 
-+		wed_pcie: wed-pcie@10003000 {
-+			compatible = "mediatek,mt7986-wed-pcie",
-+				     "syscon";
-+			reg = <0 0x10003000 0 0x10>;
-+		};
-+
- 		topckgen: topckgen@1001b000 {
- 			compatible = "mediatek,mt7986-topckgen", "syscon";
- 			reg = <0 0x1001B000 0 0x1000>;
-@@ -257,12 +263,6 @@ ethsys: syscon@15000000 {
- 			 #reset-cells = <1>;
- 		};
- 
--		wed_pcie: wed-pcie@10003000 {
--			compatible = "mediatek,mt7986-wed-pcie",
--				     "syscon";
--			reg = <0 0x10003000 0 0x10>;
--		};
--
- 		wed0: wed@15010000 {
- 			compatible = "mediatek,mt7986-wed",
- 				     "syscon";
+diff --git a/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml b/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
+index 939623867a64..a3c37944c630 100644
+--- a/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
++++ b/Documentation/devicetree/bindings/usb/mediatek,mtk-xhci.yaml
+@@ -28,6 +28,7 @@ properties:
+           - mediatek,mt7622-xhci
+           - mediatek,mt7623-xhci
+           - mediatek,mt7629-xhci
++          - mediatek,mt7986-xhci
+           - mediatek,mt8173-xhci
+           - mediatek,mt8183-xhci
+           - mediatek,mt8186-xhci
 -- 
 2.34.1
 
