@@ -2,176 +2,138 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACA3AC43217
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Nov 2022 08:42:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80B89C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Nov 2022 08:45:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239598AbiKQImg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Nov 2022 03:42:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42576 "EHLO
+        id S239648AbiKQIpn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Nov 2022 03:45:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239324AbiKQImd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Nov 2022 03:42:33 -0500
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB5FA7340C;
-        Thu, 17 Nov 2022 00:42:31 -0800 (PST)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4NCYGm6b1RzqSLX;
-        Thu, 17 Nov 2022 16:38:40 +0800 (CST)
-Received: from localhost.localdomain (10.67.164.66) by
- canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Thu, 17 Nov 2022 16:42:29 +0800
-From:   Yicong Yang <yangyicong@huawei.com>
-To:     Shaokun Zhang <zhangshaokun@hisilicon.com>, <liuqi6124@gmail.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Will Deacon <will@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        <jonathan.cameron@huawei.com>, <bagasdotme@gmail.com>
-CC:     <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-doc@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linuxarm@huawei.com>, <f.fangjian@huawei.com>,
-        <prime.zeng@huawei.com>, <shenyang39@huawei.com>
-Subject: [PATCH v3 3/4] Documentation: perf: Indent filter options list of hisi-pcie-pmu
-Date:   Thu, 17 Nov 2022 16:41:35 +0800
-Message-ID: <20221117084136.53572-4-yangyicong@huawei.com>
-X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20221117084136.53572-1-yangyicong@huawei.com>
-References: <20221117084136.53572-1-yangyicong@huawei.com>
+        with ESMTP id S239635AbiKQIpP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Nov 2022 03:45:15 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A2B75131C;
+        Thu, 17 Nov 2022 00:45:05 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1668674702;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=MFD4940PdGeyc4AycwTJ7Rt3IIqMoidCx43MEiDgKO8=;
+        b=kqBokhCHAotNmU+TSkdOcKWyM1/wnNaGUoMkcHb+RsWz3C/lY+B79sn+yqdH1QqGEd3dRL
+        OcCowdcDYZFW5GK6M+fp38J6ZWJA3ezRunOT1NGputDqgizUollQLGngmoVPmplggENdsE
+        buR2+9ejzgSdvtNPidMwx51raKkiWoBQhK2syksNlLHd1wcFXMiVgeoXuKyTRoSb4ALfne
+        8wE+2fwCRu9L0Hhv1GyGtxnx2bi/wnJ8OSSjTAybeCA2CKj9JttEHSN2FmbLvAc8xFsZnx
+        0zfPD7WR7c7WiHz5T+ZJ7aBg8acagaPnbUl+Z4AQF3hydkEgpxH6CnoNCdIG9w==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1668674702;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=MFD4940PdGeyc4AycwTJ7Rt3IIqMoidCx43MEiDgKO8=;
+        b=6I0AWqHA8sWxjMJBVsjmucVVAUGrlP0tM/8kTWAYwM21uvnv5BbpzS4ODOCgLPBdmx2BCE
+        OQiobakl4xvr1VDg==
+To:     Jason Gunthorpe <jgg@nvidia.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
+        Allen Hubbe <allenbh@gmail.com>,
+        "Ahmed S. Darwish" <darwi@linutronix.de>,
+        Reinette Chatre <reinette.chatre@intel.com>
+Subject: Re: [patch 08/20] genirq/msi: Make MSI descriptor iterators device
+ domain aware
+In-Reply-To: <Y3WCN2bAvBvbp/w5@nvidia.com>
+References: <20221111131813.914374272@linutronix.de>
+ <20221111132706.500733944@linutronix.de> <Y3UtlTwIka6n0RuT@nvidia.com>
+ <87wn7uo7io.ffs@tglx> <Y3WCN2bAvBvbp/w5@nvidia.com>
+Date:   Thu, 17 Nov 2022 09:45:02 +0100
+Message-ID: <87zgcqm0kx.ffs@tglx>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.67.164.66]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500009.china.huawei.com (7.192.105.203)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bagas Sanjaya <bagasdotme@gmail.com>
+On Wed, Nov 16 2022 at 20:37, Jason Gunthorpe wrote:
+> On Wed, Nov 16, 2022 at 11:32:15PM +0100, Thomas Gleixner wrote:
+>> On Wed, Nov 16 2022 at 14:36, Jason Gunthorpe wrote:
+>> > On Fri, Nov 11, 2022 at 02:56:50PM +0100, Thomas Gleixner wrote:
+>> >> To support multiple MSI interrupt domains per device it is necessary to
+>> >> segment the xarray MSI descriptor storage. Each domain gets up to
+>> >> MSI_MAX_INDEX entries.
+>> >
+>> > This kinds of suggests that the new per-device MSI domains should hold
+>> > this storage instead of per-device xarray?
+>> 
+>> No, really not. This would create random storage in random driver places
+>> instead of having a central storage place which is managed by the core
+>> code. We've had that back in the days when every architecture had it's
+>> own magic place to store and manage interrupt descriptors. Seen that,
+>> mopped it up and never want to go back.
+>
+> I don't mean shift it into the msi_domain driver logic, I just mean
+> stick an xarray in the struct msi_domain that the core code, and only
+> the core code, manages.
+>
+> But I suppose, on reflection, the strong reason not to do this is that
+> the msi_descriptor array is per-device, and while it would work OK
+> with per-device msi_domains we still have the legacy of global msi
+> domains and thus still need a per-device place to store the global msi
+> domain's per-device descriptors.
 
-The "Filter options" list have a rather ugly indentation. Also, the first
-paragraph after list name is rendered without separator (as continuation
-from the name).
+I tried several approaches but all of them ended up having slightly
+different code pathes and decided to keep everything the same from
+legacy arch over global MSI and the modern per device MSI models.
 
-Align the list by indenting the list items and add a blank line
-separator for each list name.
+Due to that some of the constructs are slightly awkward, but the
+important outcome for me was that I ended up with as many shared code
+pathes as possible. Having separate code pathes for all variants is for
+one causing code bloat and what's worse it's a guarantee for divergance
+and maintenance nightmares. As this is setup/teardown management code
+and not the fancy hotpath where we really want to spare cycles, I went
+for the unified model.
 
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- .../admin-guide/perf/hisi-pcie-pmu.rst        | 80 ++++++++++---------
- 1 file changed, 43 insertions(+), 37 deletions(-)
+> You could have as many secondary domains as is required this way. Few
+> drivers would ever use a secondary domain, so it not really a big deal
+> for them to hold the pointer lifetime.
+>
+>> So what are you concerned about?
+>
+> Mostly API clarity, I find it very un-kernly to swap a clear pointer
+> for an ID #. We loose typing, the APIs become less clear and we now
+> have to worry about ID allocation policy if we ever need more than 2.
 
-diff --git a/Documentation/admin-guide/perf/hisi-pcie-pmu.rst b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
-index bbe66480ff85..645f08f65429 100644
---- a/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
-+++ b/Documentation/admin-guide/perf/hisi-pcie-pmu.rst
-@@ -48,59 +48,65 @@ Filter options
- --------------
- 
- 1. Target filter
--PMU could only monitor the performance of traffic downstream target Root Ports
--or downstream target Endpoint. PCIe PMU driver support "port" and "bdf"
--interfaces for users, and these two interfaces aren't supported at the same
--time.
- 
---port
--"port" filter can be used in all PCIe PMU events, target Root Port can be
--selected by configuring the 16-bits-bitmap "port". Multi ports can be selected
--for AP-layer-events, and only one port can be selected for TL/DL-layer-events.
-+   PMU could only monitor the performance of traffic downstream target Root
-+   Ports or downstream target Endpoint. PCIe PMU driver support "port" and
-+   "bdf" interfaces for users, and these two interfaces aren't supported at the
-+   same time.
- 
--For example, if target Root Port is 0000:00:00.0 (x8 lanes), bit0 of bitmap
--should be set, port=0x1; if target Root Port is 0000:00:04.0 (x4 lanes),
--bit8 is set, port=0x100; if these two Root Ports are both monitored, port=0x101.
-+   - port
- 
--Example usage of perf::
-+     "port" filter can be used in all PCIe PMU events, target Root Port can be
-+     selected by configuring the 16-bits-bitmap "port". Multi ports can be
-+     selected for AP-layer-events, and only one port can be selected for
-+     TL/DL-layer-events.
- 
--  $# perf stat -e hisi_pcie0_core0/rx_mwr_latency,port=0x1/ sleep 5
-+     For example, if target Root Port is 0000:00:00.0 (x8 lanes), bit0 of
-+     bitmap should be set, port=0x1; if target Root Port is 0000:00:04.0 (x4
-+     lanes), bit8 is set, port=0x100; if these two Root Ports are both
-+     monitored, port=0x101.
- 
---bdf
-+     Example usage of perf::
- 
--"bdf" filter can only be used in bandwidth events, target Endpoint is selected
--by configuring BDF to "bdf". Counter only counts the bandwidth of message
--requested by target Endpoint.
-+       $# perf stat -e hisi_pcie0_core0/rx_mwr_latency,port=0x1/ sleep 5
- 
--For example, "bdf=0x3900" means BDF of target Endpoint is 0000:39:00.0.
-+   - bdf
- 
--Example usage of perf::
-+     "bdf" filter can only be used in bandwidth events, target Endpoint is
-+     selected by configuring BDF to "bdf". Counter only counts the bandwidth of
-+     message requested by target Endpoint.
-+
-+     For example, "bdf=0x3900" means BDF of target Endpoint is 0000:39:00.0.
-+
-+     Example usage of perf::
- 
--  $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,bdf=0x3900/ sleep 5
-+       $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,bdf=0x3900/ sleep 5
- 
- 2. Trigger filter
--Event statistics start when the first time TLP length is greater/smaller
--than trigger condition. You can set the trigger condition by writing "trig_len",
--and set the trigger mode by writing "trig_mode". This filter can only be used
--in bandwidth events.
- 
--For example, "trig_len=4" means trigger condition is 2^4 DW, "trig_mode=0"
--means statistics start when TLP length > trigger condition, "trig_mode=1"
--means start when TLP length < condition.
-+   Event statistics start when the first time TLP length is greater/smaller
-+   than trigger condition. You can set the trigger condition by writing
-+   "trig_len", and set the trigger mode by writing "trig_mode". This filter can
-+   only be used in bandwidth events.
- 
--Example usage of perf::
-+   For example, "trig_len=4" means trigger condition is 2^4 DW, "trig_mode=0"
-+   means statistics start when TLP length > trigger condition, "trig_mode=1"
-+   means start when TLP length < condition.
-+
-+   Example usage of perf::
- 
--  $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,trig_len=0x4,trig_mode=1/ sleep 5
-+     $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,trig_len=0x4,trig_mode=1/ sleep 5
- 
- 3. Threshold filter
--Counter counts when TLP length within the specified range. You can set the
--threshold by writing "thr_len", and set the threshold mode by writing
--"thr_mode". This filter can only be used in bandwidth events.
- 
--For example, "thr_len=4" means threshold is 2^4 DW, "thr_mode=0" means
--counter counts when TLP length >= threshold, and "thr_mode=1" means counts
--when TLP length < threshold.
-+   Counter counts when TLP length within the specified range. You can set the
-+   threshold by writing "thr_len", and set the threshold mode by writing
-+   "thr_mode". This filter can only be used in bandwidth events.
- 
--Example usage of perf::
-+   For example, "thr_len=4" means threshold is 2^4 DW, "thr_mode=0" means
-+   counter counts when TLP length >= threshold, and "thr_mode=1" means counts
-+   when TLP length < threshold.
-+
-+   Example usage of perf::
- 
--  $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,thr_len=0x4,thr_mode=1/ sleep 5
-+     $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,thr_len=0x4,thr_mode=1/ sleep 5
--- 
-2.24.0
+I don't see an issue with that.
 
+  id = msi_create_device_domain(dev, &template, ...);
+  
+is not much different from:
+
+  ptr = msi_create_device_domain(dev, &template, ...);
+
+But it makes a massive difference vs. encapsulation and pointer leakage.
+
+If you have a stale ID then you can't do harm, a stale pointer very much
+so.
+
+Aside of that once pointers are available people insist on fiddling in
+the guts. As I'm mopping up behind driver writers for the last twenty
+years now, my confidence in them is pretty close to zero.
+
+So I rather be defensive and work towards encapsulation where ever its
+possible. Interrupts are a source of hard to debug subtle bugs, so
+taking the tinkerers the tools away to cause them is a good thing IMO.
+
+Thanks,
+
+        tglx
