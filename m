@@ -2,50 +2,50 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FB6BC433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Nov 2022 17:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42462C4332F
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Nov 2022 17:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235215AbiKRRIs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Nov 2022 12:08:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45352 "EHLO
+        id S235335AbiKRRJL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Nov 2022 12:09:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235170AbiKRRIr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2022 12:08:47 -0500
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D07C9220EF;
-        Fri, 18 Nov 2022 09:08:45 -0800 (PST)
+        with ESMTP id S235224AbiKRRJK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2022 12:09:10 -0500
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE772701B1;
+        Fri, 18 Nov 2022 09:09:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668791326; x=1700327326;
+  t=1668791349; x=1700327349;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=a+p4UrFUd5m75xnByDXKd3xUXY3Gfo1m0/ZGhmEz9fo=;
-  b=aV6qo64hGCHYoLX2+/9HRTo5+mpuH9ZLqbmDEyHoHjSaQEFKUnWbsSIa
-   xUsMRkePqylfFOTN9f4s4SU1rCUrkZlc+P8at7jRnVvNJDA8Qw1CymK/v
-   oq7BBUlE9oC1KyX9dxXMRMUPyPrYSt+dYmzKBXXMmLzScjUlf2802TpKx
-   2E/lz2lU0hQrxND8wrhC1f9DfXrPDFnu63IdbRT4cA65kHl0IEWLqNx4H
-   0pCHbtbJiziunQGZ4pEbiqVwcURkZNR6Q5YUnYE2/u86DoCvwG4+A+xeF
-   TsM+4Ok/s5W4o1NHhaMHyqaW4tjJpa1Y6qngZprsJrmcNl/Sf7mazaKwA
+  bh=e2QHRfiu8f+Jdd+htf/CMAkOlQJDiFc8YQXAZJZ7SBY=;
+  b=dl5gEwzmvKdFFdLA9s5VelNIRMprGIDYKK1vSiBC8YnxsLnNeXbtMFER
+   hZo9RfUltQwNucWrFIm7xrS956QNozc8cMA7Pjn+RO+M8aC1tpnVq4EVr
+   XfBgBQVy1yF26dYKd3SlWlkQQ5nFUnWWn+/8JHCFlibD6QcjO+GQu4Toc
+   dn4ePX4diwwLMW1NbFP5BqfnSQ1M6Txxt9NZN2R8NXB3Wc5IbnAnX/GoP
+   tcElAltWFNQTupYYBAiq2w1mU9g+IyAPn1A4buk+iSQkc5EU6bt81Q1ZF
+   EblU4bXoopk/OHuOgv5GxzqXTDaszNgKJDySb/HhYYjSAeCPDOWkVEGn/
    A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="375315755"
+X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="399469781"
 X-IronPort-AV: E=Sophos;i="5.96,174,1665471600"; 
-   d="scan'208";a="375315755"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 09:08:21 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="703807663"
+   d="scan'208";a="399469781"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 09:09:09 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="765224277"
 X-IronPort-AV: E=Sophos;i="5.96,174,1665471600"; 
-   d="scan'208";a="703807663"
+   d="scan'208";a="765224277"
 Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 09:08:20 -0800
-Subject: [PATCH v3 03/11] cxl/pci: Kill cxl_map_regs()
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 09:09:08 -0800
+Subject: [PATCH v3 11/11] cxl/pci: Add callback to log AER correctable error
 From:   Dave Jiang <dave.jiang@intel.com>
 To:     linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     dan.j.williams@intel.com, ira.weiny@intel.com,
         vishal.l.verma@intel.com, alison.schofield@intel.com,
         Jonathan.Cameron@huawei.com, rostedt@goodmis.org,
         terry.bowman@amd.com, bhelgaas@google.com
-Date:   Fri, 18 Nov 2022 10:08:20 -0700
-Message-ID: <166879130031.674819.8764262180897782841.stgit@djiang5-desk3.ch.intel.com>
+Date:   Fri, 18 Nov 2022 10:09:08 -0700
+Message-ID: <166879134802.674819.8577415268687156421.stgit@djiang5-desk3.ch.intel.com>
 In-Reply-To: <166879123216.674819.3578187187954311721.stgit@djiang5-desk3.ch.intel.com>
 References: <166879123216.674819.3578187187954311721.stgit@djiang5-desk3.ch.intel.com>
 User-Agent: StGit/1.4
@@ -56,59 +56,50 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Dan Williams <dan.j.williams@intel.com>
+Add AER error handler callback to read the correctable error status
+register for the CXL device. Log the error as a trace event and clear the
+error.
 
-The component registers are currently unused by the cxl_pci driver.
-Only the physical address base of the component registers is conveyed to
-the cxl_mem driver. Just call cxl_map_device_registers() directly.
-
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Suggested-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- drivers/cxl/pci.c |   23 +----------------------
- 1 file changed, 1 insertion(+), 22 deletions(-)
+ drivers/cxl/pci.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
 diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 621a0522b554..350da1241d3a 100644
+index dad69110291d..b394fd227949 100644
 --- a/drivers/cxl/pci.c
 +++ b/drivers/cxl/pci.c
-@@ -347,27 +347,6 @@ static int cxl_probe_regs(struct pci_dev *pdev, struct cxl_register_map *map)
- 	return 0;
+@@ -621,10 +621,30 @@ static void cxl_error_resume(struct pci_dev *pdev)
+ 		 dev->driver ? "successful" : "failed");
  }
  
--static int cxl_map_regs(struct cxl_dev_state *cxlds, struct cxl_register_map *map)
--{
--	struct device *dev = cxlds->dev;
--	struct pci_dev *pdev = to_pci_dev(dev);
--
--	switch (map->reg_type) {
--	case CXL_REGLOC_RBI_COMPONENT:
--		cxl_map_component_regs(pdev, &cxlds->regs.component, map);
--		dev_dbg(dev, "Mapping component registers...\n");
--		break;
--	case CXL_REGLOC_RBI_MEMDEV:
--		cxl_map_device_regs(pdev, &cxlds->regs.device_regs, map);
--		dev_dbg(dev, "Probing device registers...\n");
--		break;
--	default:
--		break;
--	}
--
--	return 0;
--}
--
- static int cxl_setup_regs(struct pci_dev *pdev, enum cxl_regloc_type type,
- 			  struct cxl_register_map *map)
- {
-@@ -466,7 +445,7 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (rc)
- 		return rc;
++static void cxl_correctable_error_log(struct pci_dev *pdev)
++{
++	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
++	struct cxl_memdev *cxlmd = cxlds->cxlmd;
++	struct device *dev = &cxlmd->dev;
++	void __iomem *addr;
++	u32 status;
++
++	if (!cxlds->regs.ras)
++		return;
++
++	addr = cxlds->regs.ras + CXL_RAS_CORRECTABLE_STATUS_OFFSET;
++	status = le32_to_cpu(readl(addr));
++	if (status & CXL_RAS_CORRECTABLE_STATUS_MASK) {
++		writel(status & CXL_RAS_CORRECTABLE_STATUS_MASK, addr);
++		trace_cxl_aer_correctable_error(dev_name(dev), status);
++	}
++}
++
+ static const struct pci_error_handlers cxl_error_handlers = {
+ 	.error_detected	= cxl_error_detected,
+ 	.slot_reset	= cxl_slot_reset,
+ 	.resume		= cxl_error_resume,
++	.cor_error_log	= cxl_correctable_error_log,
+ };
  
--	rc = cxl_map_regs(cxlds, &map);
-+	rc = cxl_map_device_regs(pdev, &cxlds->regs.device_regs, &map);
- 	if (rc)
- 		return rc;
- 
+ static struct pci_driver cxl_pci_driver = {
 
 
