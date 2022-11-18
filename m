@@ -2,51 +2,50 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE16C433FE
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Nov 2022 17:09:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02A61C43217
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Nov 2022 17:10:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232926AbiKRRJt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Nov 2022 12:09:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45964 "EHLO
+        id S242200AbiKRRK4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Nov 2022 12:10:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241673AbiKRRJt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2022 12:09:49 -0500
-Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B955B6E549;
-        Fri, 18 Nov 2022 09:09:45 -0800 (PST)
+        with ESMTP id S235353AbiKRRKd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2022 12:10:33 -0500
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68CB48DA4D;
+        Fri, 18 Nov 2022 09:10:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668791385; x=1700327385;
+  t=1668791411; x=1700327411;
   h=subject:from:to:cc:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=PZVQOuzflumOZG6X5ju+iVoAQoD4JXjS8m19EL6tpSU=;
-  b=I9FoEWTj0DSoKDmR86KnLeJjlMG9piazMvAHDG5DRWOQnAQGOmqxaMFA
-   5YhO89H92NvGZ37B1wlhI4PV0vRmBiPHtxTq27L8ahNS1iRKMMI5WPtKk
-   7pycOMmmLCNlqzJfGz9c+ALbqEB87+XQClZ4c8tcx+AduPvw2XSxpgIfI
-   eitXjo6LSt7rHtDiSXwdNI0BpxwMV4/4HDlhAoDj00/HG5NfC1YwkNe9c
-   EnwJRFlX/ZZBGybzCgSpHZ00YHldwaiQUERjyakAY2mRmgGnI8aN6eSD2
-   xZPVQIZ4VdTy3ryPOwJRsEjzLkfSfDX798zGBcCI3S2jPEt3Us/7TrBdv
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="293572957"
+  bh=gbkvbhnSKvKTQQqWpVobm/e78uQ2ZbkqQ+P+clQwc9o=;
+  b=mAkunmrY5sHgCW3UjmL5aJatrpxkJJgpC8vjOfsXg5Wh1E5XLeIz3upj
+   /JIq+qcQCj2jO02RsgY7DWuwMOl1dqIFE3eraVqwu96lIKhv2KZLMqyXq
+   8Gps1ONGKDh+5vRmSzV7xdzi/eUcAPlfXsokmz7FGNWKYXG44ZZTCCyGN
+   /kYwS6h3PCoZJ1XAGZgjDVSb2aDAzE2MR9C21yoAZEhB8YeADR1m3E3F1
+   TOpbPbR+scXQHre/0nWi2hoExTwomIo5uM04TanX4rXV2HMTCUpoICQ4R
+   Q7zaPjCVqpoqBzMKJRsMXOAmXnlUPrDFjswTRNjb1pDULnC/SLq7diWiB
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="313195467"
 X-IronPort-AV: E=Sophos;i="5.96,174,1665471600"; 
-   d="scan'208";a="293572957"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 09:08:27 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="703807725"
+   d="scan'208";a="313195467"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 09:08:57 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="765224190"
 X-IronPort-AV: E=Sophos;i="5.96,174,1665471600"; 
-   d="scan'208";a="703807725"
+   d="scan'208";a="765224190"
 Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 09:08:26 -0800
-Subject: [PATCH v3 04/11] cxl/core/regs: Make cxl_map_{component,
- device}_regs() device generic
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 09:08:56 -0800
+Subject: [PATCH v3 09/11] cxl/pci: Add (hopeful) error handling support
 From:   Dave Jiang <dave.jiang@intel.com>
 To:     linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     dan.j.williams@intel.com, ira.weiny@intel.com,
         vishal.l.verma@intel.com, alison.schofield@intel.com,
         Jonathan.Cameron@huawei.com, rostedt@goodmis.org,
         terry.bowman@amd.com, bhelgaas@google.com
-Date:   Fri, 18 Nov 2022 10:08:26 -0700
-Message-ID: <166879130616.674819.6251433579640936736.stgit@djiang5-desk3.ch.intel.com>
+Date:   Fri, 18 Nov 2022 10:08:55 -0700
+Message-ID: <166879133596.674819.10879693357035405104.stgit@djiang5-desk3.ch.intel.com>
 In-Reply-To: <166879123216.674819.3578187187954311721.stgit@djiang5-desk3.ch.intel.com>
 References: <166879123216.674819.3578187187954311721.stgit@djiang5-desk3.ch.intel.com>
 User-Agent: StGit/1.4
@@ -59,264 +58,248 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-There is no need to carry the barno and the block offset through the
-stack, just convert them to a resource base immediately.
+Add nominal error handling that tears down CXL.mem in response to error
+notifications that imply a device reset. Given some CXL.mem may be
+operating as System RAM, there is a high likelihood that these error
+events are fatal. However, if the system survives the notification the
+expectation is that the driver behavior is equivalent to a hot-unplug
+and re-plug of an endpoint.
+
+Note that this does not change the mask values from the default. That
+awaits CXL _OSC support to determine whether platform firmware is in
+control of the mask registers.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
- drivers/cxl/core/pci.c  |    3 +--
- drivers/cxl/core/port.c |    2 +-
- drivers/cxl/core/regs.c |   40 +++++++++++++++++++++++-----------------
- drivers/cxl/cxl.h       |   14 ++++++--------
- drivers/cxl/cxlpci.h    |    9 ---------
- drivers/cxl/pci.c       |   25 ++++++-------------------
- 6 files changed, 37 insertions(+), 56 deletions(-)
+ drivers/cxl/core/memdev.c |    1 
+ drivers/cxl/cxl.h         |    1 
+ drivers/cxl/cxlmem.h      |    2 +
+ drivers/cxl/pci.c         |  136 +++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 140 insertions(+)
 
-diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
-index 9240df53ed87..2a8a88d38533 100644
---- a/drivers/cxl/core/pci.c
-+++ b/drivers/cxl/core/pci.c
-@@ -54,8 +54,7 @@ static int match_add_dports(struct pci_dev *pdev, void *data)
- 		dev_dbg(&port->dev, "failed to find component registers\n");
+diff --git a/drivers/cxl/core/memdev.c b/drivers/cxl/core/memdev.c
+index 20ce488a7754..a74a93310d26 100644
+--- a/drivers/cxl/core/memdev.c
++++ b/drivers/cxl/core/memdev.c
+@@ -344,6 +344,7 @@ struct cxl_memdev *devm_cxl_add_memdev(struct cxl_dev_state *cxlds)
+ 	 * needed as this is ordered with cdev_add() publishing the device.
+ 	 */
+ 	cxlmd->cxlds = cxlds;
++	cxlds->cxlmd = cxlmd;
  
- 	port_num = FIELD_GET(PCI_EXP_LNKCAP_PN, lnkcap);
--	dport = devm_cxl_add_dport(port, &pdev->dev, port_num,
--				   cxl_regmap_to_base(pdev, &map));
-+	dport = devm_cxl_add_dport(port, &pdev->dev, port_num, map.resource);
- 	if (IS_ERR(dport)) {
- 		ctx->error = PTR_ERR(dport);
- 		return PTR_ERR(dport);
-diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
-index bffde862de0b..2c78b28dbcc6 100644
---- a/drivers/cxl/core/port.c
-+++ b/drivers/cxl/core/port.c
-@@ -1236,7 +1236,7 @@ static resource_size_t find_component_registers(struct device *dev)
- 	pdev = to_pci_dev(dev);
- 
- 	cxl_find_regblock(pdev, CXL_REGLOC_RBI_COMPONENT, &map);
--	return cxl_regmap_to_base(pdev, &map);
-+	return map.resource;
- }
- 
- static int add_port_attach_ep(struct cxl_memdev *cxlmd,
-diff --git a/drivers/cxl/core/regs.c b/drivers/cxl/core/regs.c
-index f03ede86412d..e4b0d52ac3a1 100644
---- a/drivers/cxl/core/regs.c
-+++ b/drivers/cxl/core/regs.c
-@@ -186,17 +186,13 @@ void __iomem *devm_cxl_iomap_block(struct device *dev, resource_size_t addr,
- 	return ret_val;
- }
- 
--int cxl_map_component_regs(struct pci_dev *pdev,
--			   struct cxl_component_regs *regs,
-+int cxl_map_component_regs(struct device *dev, struct cxl_component_regs *regs,
- 			   struct cxl_register_map *map)
- {
--	struct device *dev = &pdev->dev;
- 	resource_size_t phys_addr;
- 	resource_size_t length;
- 
--	phys_addr = pci_resource_start(pdev, map->barno);
--	phys_addr += map->block_offset;
--
-+	phys_addr = map->resource;
- 	phys_addr += map->component_map.hdm_decoder.offset;
- 	length = map->component_map.hdm_decoder.size;
- 	regs->hdm_decoder = devm_cxl_iomap_block(dev, phys_addr, length);
-@@ -207,13 +203,11 @@ int cxl_map_component_regs(struct pci_dev *pdev,
- }
- EXPORT_SYMBOL_NS_GPL(cxl_map_component_regs, CXL);
- 
--int cxl_map_device_regs(struct pci_dev *pdev,
-+int cxl_map_device_regs(struct device *dev,
- 			struct cxl_device_regs *regs,
- 			struct cxl_register_map *map)
- {
--	resource_size_t phys_addr =
--		pci_resource_start(pdev, map->barno) + map->block_offset;
--	struct device *dev = &pdev->dev;
-+	resource_size_t phys_addr = map->resource;
- 	struct mapinfo {
- 		struct cxl_reg_map *rmap;
- 		void __iomem **addr;
-@@ -243,13 +237,24 @@ int cxl_map_device_regs(struct pci_dev *pdev,
- }
- EXPORT_SYMBOL_NS_GPL(cxl_map_device_regs, CXL);
- 
--static void cxl_decode_regblock(u32 reg_lo, u32 reg_hi,
-+static bool cxl_decode_regblock(struct pci_dev *pdev, u32 reg_lo, u32 reg_hi,
- 				struct cxl_register_map *map)
- {
--	map->block_offset = ((u64)reg_hi << 32) |
--			    (reg_lo & CXL_DVSEC_REG_LOCATOR_BLOCK_OFF_LOW_MASK);
--	map->barno = FIELD_GET(CXL_DVSEC_REG_LOCATOR_BIR_MASK, reg_lo);
-+	int bar = FIELD_GET(CXL_DVSEC_REG_LOCATOR_BIR_MASK, reg_lo);
-+	u64 offset = ((u64)reg_hi << 32) |
-+		     (reg_lo & CXL_DVSEC_REG_LOCATOR_BLOCK_OFF_LOW_MASK);
-+
-+	if (offset > pci_resource_len(pdev, bar)) {
-+		dev_warn(&pdev->dev,
-+			 "BAR%d: %pr: too small (offset: %pa, type: %d)\n", bar,
-+			 &pdev->resource[bar], &offset, map->reg_type);
-+		return false;
-+	}
-+
- 	map->reg_type = FIELD_GET(CXL_DVSEC_REG_LOCATOR_BLOCK_ID_MASK, reg_lo);
-+	map->resource = pci_resource_start(pdev, bar) + offset;
-+	map->max_size = pci_resource_len(pdev, bar) - offset;
-+	return true;
- }
- 
- /**
-@@ -269,7 +274,7 @@ int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
- 	u32 regloc_size, regblocks;
- 	int regloc, i;
- 
--	map->block_offset = U64_MAX;
-+	map->resource = CXL_RESOURCE_NONE;
- 	regloc = pci_find_dvsec_capability(pdev, PCI_DVSEC_VENDOR_ID_CXL,
- 					   CXL_DVSEC_REG_LOCATOR);
- 	if (!regloc)
-@@ -287,13 +292,14 @@ int cxl_find_regblock(struct pci_dev *pdev, enum cxl_regloc_type type,
- 		pci_read_config_dword(pdev, regloc, &reg_lo);
- 		pci_read_config_dword(pdev, regloc + 4, &reg_hi);
- 
--		cxl_decode_regblock(reg_lo, reg_hi, map);
-+		if (!cxl_decode_regblock(pdev, reg_lo, reg_hi, map))
-+			continue;
- 
- 		if (map->reg_type == type)
- 			return 0;
- 	}
- 
--	map->block_offset = U64_MAX;
-+	map->resource = CXL_RESOURCE_NONE;
- 	return -ENODEV;
- }
- EXPORT_SYMBOL_NS_GPL(cxl_find_regblock, CXL);
+ 	cdev = &cxlmd->cdev;
+ 	rc = cdev_device_add(cdev, dev);
 diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-index 3ab81ad9d2e5..c46db87f4ad5 100644
+index d453aeb92cb0..ff203073c8a2 100644
 --- a/drivers/cxl/cxl.h
 +++ b/drivers/cxl/cxl.h
-@@ -191,17 +191,17 @@ struct cxl_device_reg_map {
- /**
-  * struct cxl_register_map - DVSEC harvested register block mapping parameters
-  * @base: virtual base of the register-block-BAR + @block_offset
-- * @block_offset: offset to start of register block in @barno
-+ * @resource: physical resource base of the register block
-+ * @max_size: maximum mapping size to perform register search
-  * @reg_type: see enum cxl_regloc_type
-- * @barno: PCI BAR number containing the register block
-  * @component_map: cxl_reg_map for component registers
-  * @device_map: cxl_reg_maps for device registers
+@@ -136,6 +136,7 @@ static inline int ways_to_cxl(unsigned int ways, u8 *iw)
+ #define CXL_RAS_CORRECTABLE_MASK_OFFSET 0x10
+ #define   CXL_RAS_CORRECTABLE_MASK_MASK GENMASK(6, 0)
+ #define CXL_RAS_CAP_CONTROL_OFFSET 0x14
++#define CXL_RAS_CAP_CONTROL_FE_MASK GENMASK(5, 0)
+ #define CXL_RAS_HEADER_LOG_OFFSET 0x18
+ #define CXL_RAS_CAPABILITY_LENGTH 0x58
+ 
+diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
+index 88e3a8e54b6a..b3117fd67f42 100644
+--- a/drivers/cxl/cxlmem.h
++++ b/drivers/cxl/cxlmem.h
+@@ -186,6 +186,7 @@ struct cxl_endpoint_dvsec_info {
+  * Currently only memory devices are represented.
+  *
+  * @dev: The device associated with this CXL state
++ * @cxlmd: The device representing the CXL.mem capabilities of @dev
+  * @regs: Parsed register blocks
+  * @cxl_dvsec: Offset to the PCIe device DVSEC
+  * @payload_size: Size of space for payload
+@@ -218,6 +219,7 @@ struct cxl_endpoint_dvsec_info {
   */
- struct cxl_register_map {
- 	void __iomem *base;
--	u64 block_offset;
-+	resource_size_t resource;
-+	resource_size_t max_size;
- 	u8 reg_type;
--	u8 barno;
- 	union {
- 		struct cxl_component_reg_map component_map;
- 		struct cxl_device_reg_map device_map;
-@@ -212,11 +212,9 @@ void cxl_probe_component_regs(struct device *dev, void __iomem *base,
- 			      struct cxl_component_reg_map *map);
- void cxl_probe_device_regs(struct device *dev, void __iomem *base,
- 			   struct cxl_device_reg_map *map);
--int cxl_map_component_regs(struct pci_dev *pdev,
--			   struct cxl_component_regs *regs,
-+int cxl_map_component_regs(struct device *dev, struct cxl_component_regs *regs,
- 			   struct cxl_register_map *map);
--int cxl_map_device_regs(struct pci_dev *pdev,
--			struct cxl_device_regs *regs,
-+int cxl_map_device_regs(struct device *dev, struct cxl_device_regs *regs,
- 			struct cxl_register_map *map);
+ struct cxl_dev_state {
+ 	struct device *dev;
++	struct cxl_memdev *cxlmd;
  
- enum cxl_regloc_type;
-diff --git a/drivers/cxl/cxlpci.h b/drivers/cxl/cxlpci.h
-index eec597dbe763..920909791bb9 100644
---- a/drivers/cxl/cxlpci.h
-+++ b/drivers/cxl/cxlpci.h
-@@ -62,15 +62,6 @@ enum cxl_regloc_type {
- 	CXL_REGLOC_RBI_TYPES
- };
- 
--static inline resource_size_t cxl_regmap_to_base(struct pci_dev *pdev,
--						 struct cxl_register_map *map)
--{
--	if (map->block_offset == U64_MAX)
--		return CXL_RESOURCE_NONE;
--
--	return pci_resource_start(pdev, map->barno) + map->block_offset;
--}
--
- int devm_cxl_port_enumerate_dports(struct cxl_port *port);
- struct cxl_dev_state;
- int cxl_hdm_decode_init(struct cxl_dev_state *cxlds, struct cxl_hdm *cxlhdm);
+ 	struct cxl_regs regs;
+ 	int cxl_dvsec;
 diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 350da1241d3a..8cad9d5fd49a 100644
+index 0f36a5861a7b..dad69110291d 100644
 --- a/drivers/cxl/pci.c
 +++ b/drivers/cxl/pci.c
-@@ -276,35 +276,22 @@ static int cxl_pci_setup_mailbox(struct cxl_dev_state *cxlds)
- 
- static int cxl_map_regblock(struct pci_dev *pdev, struct cxl_register_map *map)
- {
--	void __iomem *addr;
--	int bar = map->barno;
- 	struct device *dev = &pdev->dev;
--	resource_size_t offset = map->block_offset;
- 
--	/* Basic sanity check that BAR is big enough */
--	if (pci_resource_len(pdev, bar) < offset) {
--		dev_err(dev, "BAR%d: %pr: too small (offset: %pa)\n", bar,
--			&pdev->resource[bar], &offset);
--		return -ENXIO;
--	}
--
--	addr = pci_iomap(pdev, bar, 0);
--	if (!addr) {
-+	map->base = ioremap(map->resource, map->max_size);
-+	if (!map->base) {
- 		dev_err(dev, "failed to map registers\n");
- 		return -ENOMEM;
+@@ -9,6 +9,7 @@
+ #include <linux/list.h>
+ #include <linux/pci.h>
+ #include <linux/pci-doe.h>
++#include <linux/aer.h>
+ #include <linux/io.h>
+ #include "cxlmem.h"
+ #include "cxlpci.h"
+@@ -404,6 +405,11 @@ static void devm_cxl_pci_create_doe(struct cxl_dev_state *cxlds)
  	}
- 
--	dev_dbg(dev, "Mapped CXL Memory Device resource bar %u @ %pa\n",
--		bar, &offset);
--
--	map->base = addr + map->block_offset;
-+	dev_dbg(dev, "Mapped CXL Memory Device resource %pa\n", &map->resource);
- 	return 0;
  }
  
- static void cxl_unmap_regblock(struct pci_dev *pdev,
- 			       struct cxl_register_map *map)
++static void disable_aer(void *pdev)
++{
++	pci_disable_pcie_error_reporting(pdev);
++}
++
+ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
  {
--	pci_iounmap(pdev, map->base - map->block_offset);
-+	iounmap(map->base);
- 	map->base = NULL;
- }
+ 	struct cxl_register_map map;
+@@ -425,6 +431,7 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	cxlds = cxl_dev_state_create(&pdev->dev);
+ 	if (IS_ERR(cxlds))
+ 		return PTR_ERR(cxlds);
++	pci_set_drvdata(pdev, cxlds);
  
-@@ -445,7 +432,7 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (rc)
- 		return rc;
+ 	cxlds->serial = pci_get_dsn(pdev);
+ 	cxlds->cxl_dvsec = pci_find_dvsec_capability(
+@@ -479,6 +486,14 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (IS_ERR(cxlmd))
+ 		return PTR_ERR(cxlmd);
  
--	rc = cxl_map_device_regs(pdev, &cxlds->regs.device_regs, &map);
-+	rc = cxl_map_device_regs(&pdev->dev, &cxlds->regs.device_regs, &map);
- 	if (rc)
- 		return rc;
++	if (cxlds->regs.ras) {
++		pci_enable_pcie_error_reporting(pdev);
++		rc = devm_add_action_or_reset(&pdev->dev, disable_aer, pdev);
++		if (rc)
++			return rc;
++	}
++	pci_save_state(pdev);
++
+ 	if (resource_size(&cxlds->pmem_res) && IS_ENABLED(CONFIG_CXL_PMEM))
+ 		rc = devm_cxl_add_nvdimm(&pdev->dev, cxlmd);
  
-@@ -458,7 +445,7 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (rc)
- 		dev_warn(&pdev->dev, "No component registers (%d)\n", rc);
+@@ -492,10 +507,131 @@ static const struct pci_device_id cxl_mem_pci_tbl[] = {
+ };
+ MODULE_DEVICE_TABLE(pci, cxl_mem_pci_tbl);
  
--	cxlds->component_reg_phys = cxl_regmap_to_base(pdev, &map);
-+	cxlds->component_reg_phys = map.resource;
- 
- 	devm_cxl_pci_create_doe(cxlds);
- 
++/* CXL spec rev3.0 8.2.4.16.1 */
++static void header_log_copy(struct cxl_dev_state *cxlds, u32 *log)
++{
++	void __iomem *addr;
++	u32 *log_addr;
++	int i, log_u32_size = CXL_HEADERLOG_SIZE / sizeof(u32);
++
++	addr = cxlds->regs.ras + CXL_RAS_HEADER_LOG_OFFSET;
++	log_addr = log;
++
++	for (i = 0; i < log_u32_size; i++) {
++		*log_addr = readl(addr);
++		log_addr++;
++		addr += sizeof(u32);
++	}
++}
++
++/*
++ * Log the state of the RAS status registers and prepare them to log the
++ * next error status. Return 1 if reset needed.
++ */
++static bool cxl_report_and_clear(struct cxl_dev_state *cxlds)
++{
++	struct cxl_memdev *cxlmd = cxlds->cxlmd;
++	struct device *dev = &cxlmd->dev;
++	u32 hl[CXL_HEADERLOG_SIZE_U32];
++	void __iomem *addr;
++	u32 status;
++	u32 fe;
++
++	if (!cxlds->regs.ras)
++		return false;
++
++	addr = cxlds->regs.ras + CXL_RAS_UNCORRECTABLE_STATUS_OFFSET;
++	status = le32_to_cpu(readl(addr));
++	if (!(status & CXL_RAS_UNCORRECTABLE_STATUS_MASK))
++		return false;
++
++	/* If multiple errors, log header points to first error from ctrl reg */
++	if (hweight32(status) > 1) {
++		addr = cxlds->regs.ras + CXL_RAS_CAP_CONTROL_OFFSET;
++		fe = BIT(le32_to_cpu(readl(addr)) & CXL_RAS_CAP_CONTROL_FE_MASK);
++	} else {
++		fe = status;
++	}
++
++	header_log_copy(cxlds, hl);
++	trace_cxl_aer_uncorrectable_error(dev_name(dev), status, fe, hl);
++	writel(status & CXL_RAS_UNCORRECTABLE_STATUS_MASK, addr);
++
++	return true;
++}
++
++static pci_ers_result_t cxl_error_detected(struct pci_dev *pdev,
++					   pci_channel_state_t state)
++{
++	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
++	struct cxl_memdev *cxlmd = cxlds->cxlmd;
++	struct device *dev = &cxlmd->dev;
++	bool ue;
++
++	/*
++	 * A frozen channel indicates an impending reset which is fatal to
++	 * CXL.mem operation, and will likely crash the system. On the off
++	 * chance the situation is recoverable dump the status of the RAS
++	 * capability registers and bounce the active state of the memdev.
++	 */
++	ue = cxl_report_and_clear(cxlds);
++
++	switch (state) {
++	case pci_channel_io_normal:
++		if (ue) {
++			device_release_driver(dev);
++			return PCI_ERS_RESULT_NEED_RESET;
++		}
++		return PCI_ERS_RESULT_CAN_RECOVER;
++	case pci_channel_io_frozen:
++		dev_warn(&pdev->dev,
++			 "%s: frozen state error detected, disable CXL.mem\n",
++			 dev_name(dev));
++		device_release_driver(dev);
++		return PCI_ERS_RESULT_NEED_RESET;
++	case pci_channel_io_perm_failure:
++		dev_warn(&pdev->dev,
++			 "failure state error detected, request disconnect\n");
++		return PCI_ERS_RESULT_DISCONNECT;
++	}
++	return PCI_ERS_RESULT_NEED_RESET;
++}
++
++static pci_ers_result_t cxl_slot_reset(struct pci_dev *pdev)
++{
++	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
++	struct cxl_memdev *cxlmd = cxlds->cxlmd;
++	struct device *dev = &cxlmd->dev;
++
++	dev_info(&pdev->dev, "%s: restart CXL.mem after slot reset\n",
++		 dev_name(dev));
++	pci_restore_state(pdev);
++	if (device_attach(dev) <= 0)
++		return PCI_ERS_RESULT_DISCONNECT;
++	return PCI_ERS_RESULT_RECOVERED;
++}
++
++static void cxl_error_resume(struct pci_dev *pdev)
++{
++	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
++	struct cxl_memdev *cxlmd = cxlds->cxlmd;
++	struct device *dev = &cxlmd->dev;
++
++	dev_info(&pdev->dev, "%s: error resume %s\n", dev_name(dev),
++		 dev->driver ? "successful" : "failed");
++}
++
++static const struct pci_error_handlers cxl_error_handlers = {
++	.error_detected	= cxl_error_detected,
++	.slot_reset	= cxl_slot_reset,
++	.resume		= cxl_error_resume,
++};
++
+ static struct pci_driver cxl_pci_driver = {
+ 	.name			= KBUILD_MODNAME,
+ 	.id_table		= cxl_mem_pci_tbl,
+ 	.probe			= cxl_pci_probe,
++	.err_handler		= &cxl_error_handlers,
+ 	.driver	= {
+ 		.probe_type	= PROBE_PREFER_ASYNCHRONOUS,
+ 	},
 
 
