@@ -2,104 +2,126 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A8EBC4332F
-	for <linux-pci@archiver.kernel.org>; Sat, 19 Nov 2022 02:21:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5ED7C433FE
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Nov 2022 02:21:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235187AbiKSCVC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Nov 2022 21:21:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59544 "EHLO
+        id S234501AbiKSCVa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Nov 2022 21:21:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234785AbiKSCUP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2022 21:20:15 -0500
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 416DBBFF75;
-        Fri, 18 Nov 2022 18:14:34 -0800 (PST)
+        with ESMTP id S232999AbiKSCUw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Nov 2022 21:20:52 -0500
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C7F0B9725;
+        Fri, 18 Nov 2022 18:14:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668824074; x=1700360074;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=FPwCs4xHcQTXiVXND4z/V3aCDgSreh+hoUAN8m3BBv8=;
-  b=GZbVq49r0zfpeKWivs0r1G59+H31p2Qw6y5fWLOU93ECPwKLvnS+eNHz
-   C/SaWPbV2vMd5el6o9fDhPpCg9LI151s+7IiohSXown6OTlJRt9BlDsXI
-   LJ3hn5D49CzKBmZc+9L3VCsVLAgU3O2qIF1DFkjdV4TOuPNttXcyi4Qyi
-   tdNquZyEYk6RlbR03xS05gqmaKjeIqjKakoRU3Vh4+9PRcoSnSBRl1zkS
-   K0KbcD/DBcRehKSXHpZ+XXoFmnCkCcZUylsh3Chsgk4Cuq/FGjJ4DiM+y
-   dHyTI9EhL79AwaAxQw8Jm2wBeQfDf5Eky54pdweOjDilW57Getdn2RlIj
+  t=1668824082; x=1700360082;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=Axh+ZBumwlo0dW64PCUDUQPBaXXqzQOyDLHu/ClAkI4=;
+  b=KlphkqrQjOPCzJIwoV5iSbnk9qeH9xn+kOnr0JmPictWAhYukME8rClm
+   Wq+EkBfFNiLrfluCk6Zyf80afsrj2M2x99+zvqeKhBiWFZ6Raq/9gZdck
+   Q0WwTdDkCfEKwON4mrnxv7Znm73yeJIrTKoL1zJ+9bt0YMrINC13/b54j
+   4AFON9Qu8BPH6b9I3q8yk2qIaxzGsn83RwDXdq/fT9YJwy7f7e+1AHE2e
+   kcG7zKn2nRYv1NH2rIyp3ZuCj573dpOG/FcF8jqLzwkL4Ta95QDDn0SS9
+   jO3CsvOi5XRPeE5PaTVvPn/6X6rmiBlBSAPLct6DD+ecom/Q0lr8vucQI
    w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="314431166"
+X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="310913056"
 X-IronPort-AV: E=Sophos;i="5.96,175,1665471600"; 
-   d="scan'208";a="314431166"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 18:14:11 -0800
+   d="scan'208";a="310913056"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2022 18:14:13 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="640427290"
+X-IronPort-AV: E=McAfee;i="6500,9779,10535"; a="729440803"
 X-IronPort-AV: E=Sophos;i="5.96,175,1665471600"; 
-   d="scan'208";a="640427290"
+   d="scan'208";a="729440803"
 Received: from linux.intel.com ([10.54.29.200])
-  by orsmga002.jf.intel.com with ESMTP; 18 Nov 2022 18:14:11 -0800
+  by FMSMGA003.fm.intel.com with ESMTP; 18 Nov 2022 18:14:12 -0800
 Received: from debox1-desk4.lan (unknown [10.252.138.169])
-        by linux.intel.com (Postfix) with ESMTP id 7DADE580A6C;
-        Fri, 18 Nov 2022 18:14:11 -0800 (PST)
+        by linux.intel.com (Postfix) with ESMTP id 65612580DDF;
+        Fri, 18 Nov 2022 18:14:12 -0800 (PST)
 From:   "David E. Box" <david.e.box@linux.intel.com>
 To:     nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
         lorenzo.pieralisi@arm.com, hch@infradead.org, kw@linux.com,
         robh@kernel.org, bhelgaas@google.com, david.e.box@linux.intel.com,
         michael.a.bottini@intel.com, rafael@kernel.org, me@adhityamohan.in
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH V8 RESEND 0/4] PCI: vmd: Enable PCIe ASPM and LTR on select
-Date:   Fri, 18 Nov 2022 18:14:07 -0800
-Message-Id: <20221119021411.1383248-1-david.e.box@linux.intel.com>
+Subject: [PATCH V8 RESEND 3/4] PCI: vmd: Create feature grouping for client products
+Date:   Fri, 18 Nov 2022 18:14:10 -0800
+Message-Id: <20221119021411.1383248-4-david.e.box@linux.intel.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20221119021411.1383248-1-david.e.box@linux.intel.com>
+References: <20221119021411.1383248-1-david.e.box@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds a work around for enabling PCIe ASPM and for setting PCIe
-LTR values on VMD reserved root ports on select platforms. While
-configuration of these capabilities is usually done by BIOS, on these
-platforms these capabilities will not be configured because the ports are
-not visible to BIOS. This was part of an initial design that expected the
-driver to completely handle the ports, including power management. However
-on Linux those ports are still managed by the PCIe core, which has the
-expectation that they adhere to device standards including BIOS
-configuration, leading to this problem.
+Simplify the device ID list by creating a grouping of features shared by
+client products.
 
-The target platforms are Tiger Lake, Alder Lake, and Raptor Lake though the
-latter has already implemented support for configuring the LTR values.
-Meteor Lake is expected add BIOS ASPM support, eliminating the future need
-for this work around.
+Suggested-by: Jon Derrick <jonathan.derrick@linux.dev>
+Signed-off-by: David E. Box <david.e.box@linux.intel.com>
+---
 
-Note, the driver programs the LTRs because BIOS would also normally do this
-for devices that do not set them by default. Without this, SoC power
-management would be blocked on those platform. This SoC specific value is
-the maximum latency required to allow the SoC to enter the deepest power
-state.
+ V8 - New patch.
 
-This patch addresses the following open bugzillas on VMD enabled laptops
-that cannot enter low power states.
+ drivers/pci/controller/vmd.c | 28 ++++++++++------------------
+ 1 file changed, 10 insertions(+), 18 deletions(-)
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=212355
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=215063
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=213717
-
-David E. Box (3):
-  PCI: vmd: Use PCI_VDEVICE in device list
-  PCI: vmd: Create feature grouping for client products
-  PCI: vmd: Add quirk to configure PCIe ASPM and LTR
-
-Michael Bottini (1):
-  PCI/ASPM: Add pci_enable_link_state()
-
- drivers/pci/controller/vmd.c | 96 ++++++++++++++++++++++++++----------
- drivers/pci/pcie/aspm.c      | 54 ++++++++++++++++++++
- include/linux/pci.h          |  7 +++
- 3 files changed, 131 insertions(+), 26 deletions(-)
-
-
-base-commit: 094226ad94f471a9f19e8f8e7140a09c2625abaa
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index 9dedca714c18..86f3085db014 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -68,6 +68,10 @@ enum vmd_features {
+ 	VMD_FEAT_CAN_BYPASS_MSI_REMAP		= (1 << 4),
+ };
+ 
++#define VMD_FEATS_CLIENT	(VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |	\
++				 VMD_FEAT_HAS_BUS_RESTRICTIONS |	\
++				 VMD_FEAT_OFFSET_FIRST_VECTOR)
++
+ static DEFINE_IDA(vmd_instance_ida);
+ 
+ /*
+@@ -1001,29 +1005,17 @@ static const struct pci_device_id vmd_ids[] = {
+ 				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+ 				VMD_FEAT_CAN_BYPASS_MSI_REMAP,},
+ 	{PCI_VDEVICE(INTEL, 0x467f),
+-		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+-				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++		.driver_data = VMD_FEATS_CLIENT,},
+ 	{PCI_VDEVICE(INTEL, 0x4c3d),
+-		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+-				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++		.driver_data = VMD_FEATS_CLIENT,},
+ 	{PCI_VDEVICE(INTEL, 0xa77f),
+-		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+-				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++		.driver_data = VMD_FEATS_CLIENT,},
+ 	{PCI_VDEVICE(INTEL, 0x7d0b),
+-		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+-				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++		.driver_data = VMD_FEATS_CLIENT,},
+ 	{PCI_VDEVICE(INTEL, 0xad0b),
+-		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+-				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++		.driver_data = VMD_FEATS_CLIENT,},
+ 	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_9A0B),
+-		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
+-				VMD_FEAT_HAS_BUS_RESTRICTIONS |
+-				VMD_FEAT_OFFSET_FIRST_VECTOR,},
++		.driver_data = VMD_FEATS_CLIENT,},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, vmd_ids);
 -- 
 2.34.1
 
