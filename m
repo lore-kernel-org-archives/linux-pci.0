@@ -2,139 +2,111 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E7EFC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Nov 2022 11:06:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87900C4332F
+	for <linux-pci@archiver.kernel.org>; Sun, 20 Nov 2022 20:10:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236566AbiKNLGQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Nov 2022 06:06:16 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60838 "EHLO
+        id S229924AbiKTUKO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 20 Nov 2022 15:10:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236271AbiKNLGP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Nov 2022 06:06:15 -0500
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A41131EED3
-        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2022 03:06:14 -0800 (PST)
-Received: by mail-pl1-x633.google.com with SMTP id io19so9726774plb.8
-        for <linux-pci@vger.kernel.org>; Mon, 14 Nov 2022 03:06:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:cc:to:from:date:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=KfFvid/s/EazTIm5SJZ8j+8OoeKKY3JzPToO5BRuUw4=;
-        b=QPewNo2ksaUisA6qY43wocst55uxRBFul8b1t4eaKbBKQ3hZCkBH+oeKN7kGV0+2vV
-         x1kC34OUKfeDbonXRNyhwR50iucLrgoZLboIRZv3Eb7M3iVnc+V2pU0WEtonimSnNPXt
-         Kb6MRwcAY96NVeoRFUFNJtB/4471P8ob5cCWmkT/lDTwUja5LNRkmIEkH21/nZ0PZ51h
-         KZMdNmdpyNy9zHzCDWdaf8Kaowl9plBGgjyb3psgtFOACQRfSstdW4vKl8lq/fdLo9kS
-         ZbBKXfYpgTWgrjb2hw2q+zhKNWmLymI1jdqctKC8PpjpqbRTQL85cd9CWj3eDIy2nuWI
-         sDjg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:content-disposition:mime-version
-         :message-id:cc:to:from:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=KfFvid/s/EazTIm5SJZ8j+8OoeKKY3JzPToO5BRuUw4=;
-        b=z49mJG6Sd45AEYxMjrpuycP+HabuNSN0UFiS78nMV9beZgHgvi35n8tAXaeBEitqEA
-         3OR3BURJKsC4g3V03jlkz51VfR/20dvD3dicu71tkx0SDiWSuGiAWISnotlk8sz2CYlc
-         hQvTsKHInGMsNMnC78Uw0PSVFlHDovKPM/4lGy9zscVSW3SyQ6ZHe0Lb1pojdtaw5mkl
-         GFw2irkCGggj99YJUKXcLfZkFX08RmlCeLuRBKSTGO2/C2pBAYPJ78pMFMLUoeI6o59D
-         d2Ep1lkOIOqEALNOe78oM07tgJvgIr7q++Kl47xxoEjqbslcDsvebJ9QmiXZzKf4XFGT
-         Ppeg==
-X-Gm-Message-State: ANoB5pl1QCYIwLxWxqrAukIeeU+8zP0RG4jW1EmR24Sps9HWvHkIhKPu
-        hyNTaM/HEiFmnhPKpK7s0YDRID4KcxIo
-X-Google-Smtp-Source: AA0mqf5iGyOp1bdT7o4fiJvNrahYywkH4PXJpd2e3cUjFCPXEO4+SggeuqOW1kUhyGBIb6XUm5TvAQ==
-X-Received: by 2002:a17:902:a508:b0:188:9542:515 with SMTP id s8-20020a170902a50800b0018895420515mr13404204plq.102.1668423974133;
-        Mon, 14 Nov 2022 03:06:14 -0800 (PST)
-Received: from thinkpad ([117.248.0.54])
-        by smtp.gmail.com with ESMTPSA id k15-20020aa7998f000000b0056bd95259d6sm6435405pfh.189.2022.11.14.03.06.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Nov 2022 03:06:13 -0800 (PST)
-Date:   Mon, 14 Nov 2022 16:36:07 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     vidyas@nvidia.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kw@linux.com, robh@kernel.org, vigneshr@ti.com, kishon@kernel.org,
-        lpieralisi@kernel.org, bhelgaas@google.com
-Message-ID: <20221114110607.GK3869@thinkpad>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229926AbiKTUJ5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 20 Nov 2022 15:09:57 -0500
+Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com [66.111.4.25])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36AEE2F397;
+        Sun, 20 Nov 2022 12:09:04 -0800 (PST)
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+        by mailout.nyi.internal (Postfix) with ESMTP id C24665C005B;
+        Sun, 20 Nov 2022 15:09:01 -0500 (EST)
+Received: from imap48 ([10.202.2.98])
+  by compute5.internal (MEProxy); Sun, 20 Nov 2022 15:09:01 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:date:feedback-id
+        :feedback-id:from:from:in-reply-to:message-id:mime-version
+        :reply-to:sender:subject:subject:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1668974941; x=
+        1669061341; bh=A/l1Y0qAN4hTYqzDIPOQtrpLivbhrove9YLZsjDBhXY=; b=N
+        hb9+fYrrigI3KxlY/Xw+wwrh6mktNlLsNpp1wZLwIGqB1B2JtlV83df3Syq/fv6U
+        DY43+W9JA5FipwBbm7e3CflcgGL3ybluWQvqag22ucC0/SUsXGMqkAY79F5fRnQ+
+        nx8IJoboDUWORpH/lwaZyzVniympVlUqGqvVjrRAHaYgnWBfCvHXp9Ibmg8X3FNR
+        vbaOYDzvQtaQbEhjn4W13LXjwmmIJBm6ts1ObFnk8dLBJfXbRe6RH7hrlyCKHlg2
+        uWFLkvKRPcCu7NBe1mB/GdzsMM6n/IlFdex2yu1LIO8kIJKTgnb8jAZTv+YLzWUE
+        8sX0xM70zN86NFJgxisOw==
+X-ME-Sender: <xms:XYl6Y8t4iF2FtDL21rfqdGvf7DIDGTeIduwo60ChBM76xNlMsDVWPg>
+    <xme:XYl6Y5fsuxw5fl106vN6fYr4fGtX4OC7s6f3vcO6RXgkrdGMe-EYryzT5vVFQCw9L
+    D7nVHDhlgxXcvVabJE>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvgedrheeggddutdelucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenuchmihhsshhinhhgucfvqfcufhhivghlugculdeftd
+    dmnecujfgurhepofgfggfkfffhufgtsehttdertderredtnecuhfhrohhmpehthhhomhgr
+    shcuoehthhhomhgrshesphhouhhrrhhivghlrdhorhhgqeenucggtffrrghtthgvrhhnpe
+    fftedtffekieffjeetteelieehgeekvdevleehheejfeevfefgffegfeefveeludenucff
+    ohhmrghinhepkhgvrhhnvghlrdhorhhgpdhfrhgvvgiivghsrdhsohhfthifrghrvgenuc
+    evlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehthhhomhgr
+    shesphhouhhrrhhivghlrdhorhhg
+X-ME-Proxy: <xmx:XYl6Y3y-Jxfhiqpz3Klus1WKdbDQjdOsgCYLRyyTjXzjV1CY2kTDAw>
+    <xmx:XYl6Y_PuQvhH2m-DodW9LscMm2a7gHN45iOSUDHXPD2KpG4NrhorbQ>
+    <xmx:XYl6Y8_TdRXKQyJGF7F9rKTclKlZxFzhgWLrPNHqXr6KiHZ6dlCK_g>
+    <xmx:XYl6Y-Lrc92Hyltj9pAnlkdLFFkPrKiC92B98wbeRVoOvSecLUo6ew>
+Feedback-ID: i1ac9442a:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 3785C31A0063; Sun, 20 Nov 2022 15:09:01 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.7.0-alpha0-1115-g8b801eadce-fm-20221102.001-g8b801ead
+Mime-Version: 1.0
+Message-Id: <364007fe-1575-4609-a183-835ca1015d77@app.fastmail.com>
+Date:   Sun, 20 Nov 2022 21:08:37 +0100
+From:   thomas <thomas@pourriel.org>
+Subject: [Bug] NVME controller down (Seagate FireCuda 530)
+Content-Type: text/plain
+To:     unlisted-recipients:; (no To-header on input)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Bcc: 
-Subject: Re: [PATCH v4 2/5] PCI: tegra194: Move dw_pcie_ep_linkup() to
- threaded IRQ handler
-Reply-To: 
-In-Reply-To: <20221025145101.116393-3-manivannan.sadhasivam@linaro.org>
+Hello,
 
-On Tue, Oct 25, 2022 at 08:20:58PM +0530, Manivannan Sadhasivam wrote:
-> dw_pcie_ep_linkup() may take more time to execute depending on the EPF
-> driver implementation. Calling this API in the hard IRQ handler is not
-> encouraged since the hard IRQ handlers are supposed to complete quickly.
-> 
-> So move the dw_pcie_ep_linkup() call to threaded IRQ handler.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Following a recommendation from https://bugzilla.kernel.org/show_bug.cgi?id=216709 , I'm posting this here, in the hope that it finds a resolution.
 
-Vidya, could you please review this patch?
+# ISSUE DESCRIPTION
+A few seconds after GNOME is started, the NVME drive that is mounted (but which is not used to boot from) is inacessible. dmesg output is:
 
-Thanks,
-Mani
+> [  281.692677] nvme nvme0: controller is down; will reset: CSTS=0xffffffff,
+> PCI_STATUS=0x10
+> [  281.778102] nvme 0000:04:00.0: enabling device (0000 -> 0002)
+> [  281.778436] nvme nvme0: Removing after probe failure status: -19
+> [  281.797929] nvme0n1: detected capacity change from 3907029168 to 0
+> [  281.797947] blk_update_request: I/O error, dev nvme0n1, sector 2786568960
+> op 0x1:(WRITE) flags 0x103000 phys_seg 1 prio class 0
+> [  281.797972] Buffer I/O error on dev nvme0n1p3, logical block 308281696,
+> lost async page write
+> [  281.850852] FAT-fs (nvme0n1p4): unable to read boot sector to mark fs as
+> dirty
+> [  343.901432] EXT4-fs warning (device nvme0n1p3):
+> htree_dirblock_to_tree:1067: inode #77070337: lblock 0: comm ls: error -5
+> reading directory block
+> [  343.902354] EXT4-fs error (device nvme0n1p3): __ext4_find_entry:1658:
+> inode #77070337: comm test-nvme-write: reading directory lblock 0
+> [  350.028540] Aborting journal on device nvme0n1p3-8.
+> [  350.028548] Buffer I/O error on dev nvme0n1p3, logical block 223903744,
+> lost sync page write
+> [  350.028554] JBD2: Error -5 detected when updating journal superblock for
+> nvme0n1p3-8.
 
-> ---
->  drivers/pci/controller/dwc/pcie-tegra194.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> index 1b6b437823d2..a0d231b7a435 100644
-> --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> @@ -287,6 +287,7 @@ struct tegra_pcie_dw {
->  	struct gpio_desc *pex_refclk_sel_gpiod;
->  	unsigned int pex_rst_irq;
->  	int ep_state;
-> +	long link_status;
->  };
->  
->  static inline struct tegra_pcie_dw *to_tegra_pcie(struct dw_pcie *pci)
-> @@ -450,9 +451,13 @@ static void pex_ep_event_hot_rst_done(struct tegra_pcie_dw *pcie)
->  static irqreturn_t tegra_pcie_ep_irq_thread(int irq, void *arg)
->  {
->  	struct tegra_pcie_dw *pcie = arg;
-> +	struct dw_pcie_ep *ep = &pcie->pci.ep;
->  	struct dw_pcie *pci = &pcie->pci;
->  	u32 val, speed;
->  
-> +	if (test_and_clear_bit(0, &pcie->link_status))
-> +		dw_pcie_ep_linkup(ep);
-> +
->  	speed = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA) &
->  		PCI_EXP_LNKSTA_CLS;
->  	clk_set_rate(pcie->core_clk, pcie_gen_freq[speed - 1]);
-> @@ -499,7 +504,6 @@ static irqreturn_t tegra_pcie_ep_irq_thread(int irq, void *arg)
->  static irqreturn_t tegra_pcie_ep_hard_irq(int irq, void *arg)
->  {
->  	struct tegra_pcie_dw *pcie = arg;
-> -	struct dw_pcie_ep *ep = &pcie->pci.ep;
->  	int spurious = 1;
->  	u32 status_l0, status_l1, link_status;
->  
-> @@ -515,7 +519,8 @@ static irqreturn_t tegra_pcie_ep_hard_irq(int irq, void *arg)
->  			link_status = appl_readl(pcie, APPL_LINK_STATUS);
->  			if (link_status & APPL_LINK_STATUS_RDLH_LINK_UP) {
->  				dev_dbg(pcie->dev, "Link is up with Host\n");
-> -				dw_pcie_ep_linkup(ep);
-> +				set_bit(0, &pcie->link_status);
-> +				return IRQ_WAKE_THREAD;
->  			}
->  		}
->  
-> -- 
-> 2.25.1
-> 
 
--- 
-மணிவண்ணன் சதாசிவம்
+# WHAT I'VE TRIED (without much luck)
+- I've managed to install ZorinOS several times on the drive, so the drive works long enough to have everything copied and installed.
+- On the first 2 Samsung drives, I've managed to install Windows. I did not try with the latest drive.
+- This is the 3rd drive I'm testing (tried with 2 Samsung 970 EVO plus 2To before, and now with a Seagate FireCuda 530 2To)
+- I've tried with either kernel parameter pcie_aspm=off or nvme_core.default_ps_max_latency_us=0 and finally with both, but I get the same result in all 3 cases.
+- I've also tried with various values for nvme_core.default_ps_max_latency_us (starting with 5500)
+- If I boot from the drive, starting in recovery mode, and resuming normal start, seems to postpone a bit the freeze of the system but only by a few minutes. But it still freezes.
+
+
+# SOFTWARE / HARDWARE
+- Linux Kernel : 5.15.0-53-generic
+- Distribution : Zorin OS 16.2
+- Motherboard : GIGABYTE B550 AORUS Elite V2 
+- NVME Drive : Seagate FireCuda 530 2To (latest firmware)
+- CPU : AMD Ryzen 5700X
+
+Thomas.
