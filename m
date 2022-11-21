@@ -2,36 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E78BC433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:45:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32E70C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230143AbiKUOpg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:45:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33916 "EHLO
+        id S231823AbiKUOq3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:46:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231777AbiKUOpI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:45:08 -0500
+        with ESMTP id S231836AbiKUOqN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:46:13 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30AB7D0892;
-        Mon, 21 Nov 2022 06:40:03 -0800 (PST)
-Message-ID: <20221121140048.534395323@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A6EC8CA9;
+        Mon, 21 Nov 2022 06:40:37 -0800 (PST)
+Message-ID: <20221121135653.208611233@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041574;
+        s=2020; t=1669041568;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=C+l3aMd1UpaHQsZc5/Vr1+tQOoVWd1U/GSVn/k0pohc=;
-        b=WZfo13zi3BCAgNxewO+cS7nrTD8Mnhb1NbDbk3rBNcd1RI+C2jqp/ofu+uCLJ/5smPxjS2
-        DdU53REQSsLDryvdSn4jWds0RIZsgIpL1h8EuGYBx8+P6E0AScjRpdJxJKOp8ITfluWs0n
-        Wqj3EgGiFhwIkzgOfjZHrJ9t8VnYi5hr0qOM++fJDJqVdFe87Fx9VdC0bh1dG9AnmsFfvB
-        m4Wr7uQXCngnKHpBP+qnOI7YHsfGOi5zbtcRgzP8Bq7L6IDPyi6z6NotGige2rTP5xcEdY
-        bh44iFTO9VDnxoXsGMz4OnjrHb7pN5OYh6iuVIi/yZ3I7RJZ4xuodtHfkyV/vg==
+         to:to:cc:cc; bh=9fJ4Mb63/Xks6zZDq8ZHkxVKQmV+67DHF6G9VxNNEMw=;
+        b=P3GT4t5Qng4wzeDGck0U3hd0s0dYvQU63G5ARPCPWkQE2ex/u/o70xly4N37+54IR40L01
+        NwlK2E4M2laTDGpPMA888lXOcUnxIjXqUOynggZsqtK3D132ZbzCyTD5h6BGrqgE9/+LYJ
+        xm+uCjOvCyWmi76eKKyM/RRt/MqXn77GLzm3fZ5MMCb6q7uWITMKK+bv7DBSReyXtDER3A
+        /fYHWKtK4sCaarBPQ+71DAFvy9DHtpNOfLnAcT+4K37ws4cSZ1SRYLNrh1mcxAlYVhas3G
+        7blYOTNQcnhM96YEj8l3VnssCDSXB4DOVsylFHOMmHAn/fBfuuARCJ17KXYCSQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041574;
+        s=2020e; t=1669041568;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=C+l3aMd1UpaHQsZc5/Vr1+tQOoVWd1U/GSVn/k0pohc=;
-        b=RnSWq2rd3aL/RH88+Ocv83BFbW5wGXqdOpB9BP1wIJCWDFtUurrVBgdIwCoqh1hHqielUK
-        tRoWzYrmwFNEw9DA==
+         to:to:cc:cc; bh=9fJ4Mb63/Xks6zZDq8ZHkxVKQmV+67DHF6G9VxNNEMw=;
+        b=vAUxo5Ousu1yuMqQq339jI3qmjB2P0X+PepWYfo+0LgUTo+RUdYIvL43TcqyqQyRqBmZ3S
+        5wCkan+Z3OWMWaBA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
@@ -59,69 +57,82 @@ Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
         Shawn Guo <shawnguo@kernel.org>,
         Sascha Hauer <s.hauer@pengutronix.de>,
         Fabio Estevam <festevam@gmail.com>
-Subject: [patch V2 04/40] irqchip/gic-v2m: Mark a few functions __init
-References: <20221121135653.208611233@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:39:33 +0100 (CET)
+Subject: [patch V2 00/40] genirq, irqchip: Convert ARM MSI handling to per
+ device MSI domains
+Date:   Mon, 21 Nov 2022 15:39:28 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-They are all part of the init sequence.
+This builds on top of the per device MSI work which can be found here:
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Marc Zyngier <maz@kernel.org>
+  https://lore.kernel.org/all/20221121083657.157152924@linutronix.de
+
+and is available from git:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git devmsi-v2-part3
+
+This series converts the ARM MSI handling, especially the platform MSI
+mechanics, to use per device MSI domains instead of the weird indirection
+through platform MSI domains.
+
+This also takes a different and less convoluted approach to the 'wire to
+MSI' bridges by providing special MSI allocation/free functions which are
+invoked from irq_create_fwspec_mapping() and irq_dispose_mapping() which
+avoids the extra entry point msi_domain_populate_irqs() and its layering
+violations.
+
+The series has been tested on various systems (Ampere, Hisilicon HIP05,
+ThunderX2, MVEBU MCBIN) but there is no full coverage yet.
+
+Thanks to Marc, Mark and Robin for running this on their machines and
+aiding with decoding the initial wreckage. Special thanks go to Marc for
+patiently guiding me through the insanity of OF/ACPI related to this.
+
+The series is also available from git:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git devmsi-v2-arm
+
+The work was done to validate that the design decisions for per device MSI
+domains and the related data structures are up to the task to handle the
+ARM oddities. The design held up, it was just necessary to extend some of
+the data structures to handle the ARM specifics in a sane way, but there
+was no fundamental shortcoming.
+
+Thanks,
+
+	tglx
 ---
- drivers/irqchip/irq-gic-v2m.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -263,7 +263,7 @@ static struct msi_domain_info gicv2m_pms
- 	.chip	= &gicv2m_pmsi_irq_chip,
- };
- 
--static void gicv2m_teardown(void)
-+static void __init gicv2m_teardown(void)
- {
- 	struct v2m_data *v2m, *tmp;
- 
-@@ -278,7 +278,7 @@ static void gicv2m_teardown(void)
- 	}
- }
- 
--static int gicv2m_allocate_domains(struct irq_domain *parent)
-+static __init int gicv2m_allocate_domains(struct irq_domain *parent)
- {
- 	struct irq_domain *inner_domain, *pci_domain, *plat_domain;
- 	struct v2m_data *v2m;
-@@ -405,7 +405,7 @@ static int __init gicv2m_init_one(struct
- 	return ret;
- }
- 
--static const struct of_device_id gicv2m_device_id[] = {
-+static __initconst struct of_device_id gicv2m_device_id[] = {
- 	{	.compatible	= "arm,gic-v2m-frame",	},
- 	{},
- };
-@@ -455,7 +455,7 @@ static int __init gicv2m_of_init(struct
- #ifdef CONFIG_ACPI
- static int acpi_num_msi;
- 
--static struct fwnode_handle *gicv2m_get_fwnode(struct device *dev)
-+static __init struct fwnode_handle *gicv2m_get_fwnode(struct device *dev)
- {
- 	struct v2m_data *data;
- 
-@@ -470,7 +470,7 @@ static struct fwnode_handle *gicv2m_get_
- 	return data->fwnode;
- }
- 
--static bool acpi_check_amazon_graviton_quirks(void)
-+static __init bool acpi_check_amazon_graviton_quirks(void)
- {
- 	static struct acpi_table_madt *madt;
- 	acpi_status status;
-
+ b/drivers/base/platform-msi.c                 |  354 +++-----------------------
+ b/drivers/dma/mv_xor_v2.c                     |    8 
+ b/drivers/dma/qcom/hidma.c                    |    6 
+ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c |    5 
+ b/drivers/irqchip/Kconfig                     |    8 
+ b/drivers/irqchip/Makefile                    |    4 
+ b/drivers/irqchip/irq-gic-common.h            |    3 
+ b/drivers/irqchip/irq-gic-msi-lib.c           |  136 +++++++++
+ b/drivers/irqchip/irq-gic-msi-lib.h           |   27 +
+ b/drivers/irqchip/irq-gic-v2m.c               |   93 ++----
+ b/drivers/irqchip/irq-gic-v3-its-msi-parent.c |  207 +++++++++++++++
+ b/drivers/irqchip/irq-gic-v3-its.c            |    4 
+ b/drivers/irqchip/irq-gic-v3-mbi.c            |  137 ++--------
+ b/drivers/irqchip/irq-gic-v3.c                |    6 
+ b/drivers/irqchip/irq-imx-mu-msi.c            |   53 +--
+ b/drivers/irqchip/irq-mbigen.c                |   98 ++-----
+ b/drivers/irqchip/irq-mvebu-gicp.c            |   44 +--
+ b/drivers/irqchip/irq-mvebu-icu.c             |  278 ++++++++------------
+ b/drivers/irqchip/irq-mvebu-odmi.c            |   39 +-
+ b/drivers/irqchip/irq-mvebu-sei.c             |   52 +--
+ b/drivers/irqchip/irq-ti-sci-inta.c           |    2 
+ b/drivers/mailbox/bcm-flexrm-mailbox.c        |    8 
+ b/drivers/pci/msi/irqdomain.c                 |   30 ++
+ b/drivers/perf/arm_smmuv3_pmu.c               |    4 
+ b/include/linux/acpi_iort.h                   |    4 
+ b/include/linux/irqdomain.h                   |   17 +
+ b/include/linux/irqdomain_defs.h              |    2 
+ b/include/linux/msi.h                         |   81 +----
+ b/kernel/irq/irqdomain.c                      |   26 +
+ b/kernel/irq/msi.c                            |  253 ++++++++++++------
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c      |  202 --------------
+ drivers/irqchip/irq-gic-v3-its-platform-msi.c |  163 -----------
+ 32 files changed, 1021 insertions(+), 1333 deletions(-)
