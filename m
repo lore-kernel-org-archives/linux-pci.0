@@ -2,34 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32E70C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:46:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EA83C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:46:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231823AbiKUOq3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:46:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33802 "EHLO
+        id S230495AbiKUOqj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:46:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231836AbiKUOqN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:46:13 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A6EC8CA9;
-        Mon, 21 Nov 2022 06:40:37 -0800 (PST)
-Message-ID: <20221121135653.208611233@linutronix.de>
+        with ESMTP id S231135AbiKUOqT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:46:19 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2269D2347;
+        Mon, 21 Nov 2022 06:40:44 -0800 (PST)
+Message-ID: <20221121140048.659849460@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041568;
+        s=2020; t=1669041576;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=9fJ4Mb63/Xks6zZDq8ZHkxVKQmV+67DHF6G9VxNNEMw=;
-        b=P3GT4t5Qng4wzeDGck0U3hd0s0dYvQU63G5ARPCPWkQE2ex/u/o70xly4N37+54IR40L01
-        NwlK2E4M2laTDGpPMA888lXOcUnxIjXqUOynggZsqtK3D132ZbzCyTD5h6BGrqgE9/+LYJ
-        xm+uCjOvCyWmi76eKKyM/RRt/MqXn77GLzm3fZ5MMCb6q7uWITMKK+bv7DBSReyXtDER3A
-        /fYHWKtK4sCaarBPQ+71DAFvy9DHtpNOfLnAcT+4K37ws4cSZ1SRYLNrh1mcxAlYVhas3G
-        7blYOTNQcnhM96YEj8l3VnssCDSXB4DOVsylFHOMmHAn/fBfuuARCJ17KXYCSQ==
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         references:references; bh=s+g/QPbklxPzM4FZ4SYWZR5FPe67LrDVUw7p5TgGo7M=;
+        b=ztMtjC8CMfgn0ofL21t85GjPjHPmJj0DI3J8Wj1MfBlR/rPA9bWrNAj8tRTWNu+JZ4F+Rz
+        Y6kYfSLLdpSwYVpuJp1Pnvt4t1kSSGDOheLoI98NvBg9myVGmqCGdHBLyq/fMYdeyfOfTM
+        kEy3hloOeLgpVrxfdIRbR6F4oveg0ZdHqBfXPT5u96Bbr4eWrtGqJSP2tDKYN1oGAs+6TK
+        3DGkJ4NCruCBMMprw16iBMfMjAZCKI4HSW400IL3L/FKElF72mUKNWSm+eI/FTQsT24ZmF
+        AyQiTWfrn4XFXV+0+RUbb6HJ6PAgCYbHDfwif+JU6rYW7oaG7gT4cpvJ/xThAQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041568;
+        s=2020e; t=1669041576;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=9fJ4Mb63/Xks6zZDq8ZHkxVKQmV+67DHF6G9VxNNEMw=;
-        b=vAUxo5Ousu1yuMqQq339jI3qmjB2P0X+PepWYfo+0LgUTo+RUdYIvL43TcqyqQyRqBmZ3S
-        5wCkan+Z3OWMWaBA==
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         references:references; bh=s+g/QPbklxPzM4FZ4SYWZR5FPe67LrDVUw7p5TgGo7M=;
+        b=B/8rXcQr4Eb6KRVesJ4zp0ATD6W2MViFL5MUAP3df6qU9aw5XXOTz46aiq58JCAE1M2DQ1
+        I72PpkA6DPvOwmAQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
@@ -57,82 +59,106 @@ Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
         Shawn Guo <shawnguo@kernel.org>,
         Sascha Hauer <s.hauer@pengutronix.de>,
         Fabio Estevam <festevam@gmail.com>
-Subject: [patch V2 00/40] genirq, irqchip: Convert ARM MSI handling to per
- device MSI domains
-Date:   Mon, 21 Nov 2022 15:39:28 +0100 (CET)
+Subject: [patch V2 06/40] PCI/MSI: Provide static key for parent mask/unmask
+References: <20221121135653.208611233@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Date:   Mon, 21 Nov 2022 15:39:36 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This builds on top of the per device MSI work which can be found here:
+Most ARM(64) PCI/MSI domains mask and unmask in the parent domain after or
+before the PCI mask/unmask operation takes place. So there are more than a
+dozen of the same wrapper implementation all over the place.
 
-  https://lore.kernel.org/all/20221121083657.157152924@linutronix.de
+Don't make the same mistake with the new per device PCI/MSI domains and
+provide a static key which lets the domain implementation enable this
+sequence in the PCI/MSI code.
 
-and is available from git:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git devmsi-v2-part3
-
-This series converts the ARM MSI handling, especially the platform MSI
-mechanics, to use per device MSI domains instead of the weird indirection
-through platform MSI domains.
-
-This also takes a different and less convoluted approach to the 'wire to
-MSI' bridges by providing special MSI allocation/free functions which are
-invoked from irq_create_fwspec_mapping() and irq_dispose_mapping() which
-avoids the extra entry point msi_domain_populate_irqs() and its layering
-violations.
-
-The series has been tested on various systems (Ampere, Hisilicon HIP05,
-ThunderX2, MVEBU MCBIN) but there is no full coverage yet.
-
-Thanks to Marc, Mark and Robin for running this on their machines and
-aiding with decoding the initial wreckage. Special thanks go to Marc for
-patiently guiding me through the insanity of OF/ACPI related to this.
-
-The series is also available from git:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tglx/devel.git devmsi-v2-arm
-
-The work was done to validate that the design decisions for per device MSI
-domains and the related data structures are up to the task to handle the
-ARM oddities. The design held up, it was just necessary to extend some of
-the data structures to handle the ARM specifics in a sane way, but there
-was no fundamental shortcoming.
-
-Thanks,
-
-	tglx
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- b/drivers/base/platform-msi.c                 |  354 +++-----------------------
- b/drivers/dma/mv_xor_v2.c                     |    8 
- b/drivers/dma/qcom/hidma.c                    |    6 
- b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c |    5 
- b/drivers/irqchip/Kconfig                     |    8 
- b/drivers/irqchip/Makefile                    |    4 
- b/drivers/irqchip/irq-gic-common.h            |    3 
- b/drivers/irqchip/irq-gic-msi-lib.c           |  136 +++++++++
- b/drivers/irqchip/irq-gic-msi-lib.h           |   27 +
- b/drivers/irqchip/irq-gic-v2m.c               |   93 ++----
- b/drivers/irqchip/irq-gic-v3-its-msi-parent.c |  207 +++++++++++++++
- b/drivers/irqchip/irq-gic-v3-its.c            |    4 
- b/drivers/irqchip/irq-gic-v3-mbi.c            |  137 ++--------
- b/drivers/irqchip/irq-gic-v3.c                |    6 
- b/drivers/irqchip/irq-imx-mu-msi.c            |   53 +--
- b/drivers/irqchip/irq-mbigen.c                |   98 ++-----
- b/drivers/irqchip/irq-mvebu-gicp.c            |   44 +--
- b/drivers/irqchip/irq-mvebu-icu.c             |  278 ++++++++------------
- b/drivers/irqchip/irq-mvebu-odmi.c            |   39 +-
- b/drivers/irqchip/irq-mvebu-sei.c             |   52 +--
- b/drivers/irqchip/irq-ti-sci-inta.c           |    2 
- b/drivers/mailbox/bcm-flexrm-mailbox.c        |    8 
- b/drivers/pci/msi/irqdomain.c                 |   30 ++
- b/drivers/perf/arm_smmuv3_pmu.c               |    4 
- b/include/linux/acpi_iort.h                   |    4 
- b/include/linux/irqdomain.h                   |   17 +
- b/include/linux/irqdomain_defs.h              |    2 
- b/include/linux/msi.h                         |   81 +----
- b/kernel/irq/irqdomain.c                      |   26 +
- b/kernel/irq/msi.c                            |  253 ++++++++++++------
- drivers/irqchip/irq-gic-v3-its-pci-msi.c      |  202 --------------
- drivers/irqchip/irq-gic-v3-its-platform-msi.c |  163 -----------
- 32 files changed, 1021 insertions(+), 1333 deletions(-)
+ drivers/pci/msi/irqdomain.c |   30 ++++++++++++++++++++++++++++++
+ include/linux/msi.h         |    2 ++
+ 2 files changed, 32 insertions(+)
+
+--- a/drivers/pci/msi/irqdomain.c
++++ b/drivers/pci/msi/irqdomain.c
+@@ -148,17 +148,45 @@ static void pci_device_domain_set_desc(m
+ 	arg->hwirq = desc->msi_index;
+ }
+ 
++static DEFINE_STATIC_KEY_FALSE(pci_msi_mask_unmask_parent);
++
++/**
++ * pci_device_msi_mask_unmask_parent_enable - Enable propagation of mask/unmask
++ *					      to the parent interrupt chip
++ *
++ * For MSI parent interrupt domains which want to mask at the parent interrupt
++ * chip too.
++ */
++void pci_device_msi_mask_unmask_parent_enable(void)
++{
++	static_branch_enable(&pci_msi_mask_unmask_parent);
++}
++
++static __always_inline void cond_mask_parent(struct irq_data *data)
++{
++	if (static_branch_unlikely(&pci_msi_mask_unmask_parent))
++		irq_chip_mask_parent(data);
++}
++
++static __always_inline void cond_unmask_parent(struct irq_data *data)
++{
++	if (static_branch_unlikely(&pci_msi_mask_unmask_parent))
++		irq_chip_unmask_parent(data);
++}
++
+ static void pci_mask_msi(struct irq_data *data)
+ {
+ 	struct msi_desc *desc = irq_data_get_msi_desc(data);
+ 
+ 	pci_msi_mask(desc, BIT(data->irq - desc->irq));
++	cond_mask_parent(data);
+ }
+ 
+ static void pci_unmask_msi(struct irq_data *data)
+ {
+ 	struct msi_desc *desc = irq_data_get_msi_desc(data);
+ 
++	cond_unmask_parent(data);
+ 	pci_msi_unmask(desc, BIT(data->irq - desc->irq));
+ }
+ 
+@@ -195,10 +223,12 @@ static struct msi_domain_template pci_ms
+ static void pci_mask_msix(struct irq_data *data)
+ {
+ 	pci_msix_mask(irq_data_get_msi_desc(data));
++	cond_mask_parent(data);
+ }
+ 
+ static void pci_unmask_msix(struct irq_data *data)
+ {
++	cond_unmask_parent(data);
+ 	pci_msix_unmask(irq_data_get_msi_desc(data));
+ }
+ 
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -653,12 +653,14 @@ struct irq_domain *pci_msi_create_irq_do
+ 					     struct irq_domain *parent);
+ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev);
++void pci_device_msi_mask_unmask_parent_enable(void);
+ #else /* CONFIG_PCI_MSI */
+ static inline struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+ {
+ 	return NULL;
+ }
+ static inline void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg) { }
++static inline void pci_device_msi_mask_unmask_parent_enable(void) { }
+ #endif /* !CONFIG_PCI_MSI */
+ 
+ #endif /* LINUX_MSI_H */
+
