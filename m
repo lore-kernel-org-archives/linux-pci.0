@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 747F9C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AB6C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:55:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232052AbiKUOwL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:52:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43764 "EHLO
+        id S230124AbiKUOzs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:55:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231583AbiKUOv3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:51:29 -0500
+        with ESMTP id S229802AbiKUOze (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:55:34 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6D49CC14F;
-        Mon, 21 Nov 2022 06:43:05 -0800 (PST)
-Message-ID: <20221121140049.869552976@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52873CFBB1;
+        Mon, 21 Nov 2022 06:45:16 -0800 (PST)
+Message-ID: <20221121140048.849246242@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041600;
+        s=2020; t=1669041580;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=xyHYGKctzapqcwVCamY5mahGti+qtoWlQCKXBDiKFt0=;
-        b=rDwKpB01+rCK8J7VXGmEhRfLP1SRXCnN5dxy8BSik5JwQV7s7rCjq0zB8BLqpgU52ktUvW
-        vYx2VR5j3hCkU10uTutRdhLn4vOGH7blsijn+96D/J5t3bKFxK/sJQmm0kXqRIvAaDYZfz
-        1mrKdXvpULXQV2EXO4PebLRgdGChhj0SQmF5gG1oKNmzseCsKFLwrYHzEejQP52QQkotTB
-        8XlH5Wc54Uvd6guZtvNvUM+UHmCObezyrBwPPUk6SfGiLGCTuECwX5UnNZQov0vm/C8F96
-        dZnQF2VN8VasBAtUAR52eq3R3XYacvm36iHV8741U0Kb98ny8CXMBSGfiWu8/Q==
+         references:references; bh=UZS11zTOR4JGS38C/7fpGOXRWJz4E7s7evBEbCg06U4=;
+        b=IWtyqOfanQvxMKLKPN7fGmW0o2xzn3gxDdqo42IMVg9Go9jVble5nrAW32WLYffMsexzIe
+        6xZqA8JwqEwxsd5s+n34HYkK4IQE/I7b5mubvR1xwecgbiLsWt+LqUXg+Nm6hAA2gZEW9l
+        eYaVC9A321U0BFH4+X+7frVNI8v+mymmOD2j6yvTyjiMo/N9GSjfxTg2nkBR8tdcplOKXY
+        V/FnCfBUHON7jcCpS0UpPjeSSog9cxOizd4H2nuU2F58W6IaOHoCccVypBg+JbuXx/Jbon
+        c1qX/CWJeig/KNzt2AtIBaVjFMwfnCknfMtszTsI8iJeJCuRmA0fc3MdXtiEoQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041600;
+        s=2020e; t=1669041580;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=xyHYGKctzapqcwVCamY5mahGti+qtoWlQCKXBDiKFt0=;
-        b=2PZYGJY8+jeOeEMJY+W/LOxDqNJoVFuQ3TdnCjxYZImn9RY2Grk5oAm5G4jFOciN48TUR0
-        erCH2g7O0Xbz57Bw==
+         references:references; bh=UZS11zTOR4JGS38C/7fpGOXRWJz4E7s7evBEbCg06U4=;
+        b=OrC9JZmx1rLqXQ93KbSuzak2wSNsDqJQEtHxMHymOfW7NHPiReiyEOeokmJ7IE84OTcH94
+        HsxU9DQJTVOibgDg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
@@ -59,31 +59,59 @@ Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
         Shawn Guo <shawnguo@kernel.org>,
         Sascha Hauer <s.hauer@pengutronix.de>,
         Fabio Estevam <festevam@gmail.com>
-Subject: [patch V2 25/40] irqchip/gic-msi-lib: Prepare for DOMAIN_BUS_WIRED_TO_MSI
+Subject: [patch V2 09/40] genirq/msi: Extend msi_parent_ops
 References: <20221121135653.208611233@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:39:59 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:39:39 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the new bus token to the accepted list of child domain tokens.
+Supporting per device MSI domains on ARM64 and the zoo of interrupt
+mechanisms needs a bit more information than what the initial x86
+implementation provides.
+
+Add the following fields:
+
+  - required_flags: 	The flags which a parent domain requires to be set
+  - bus_select_token:	The bus token of the parent domain for select()
+  - bus_select_mask:	A bitmask of supported child domain bus types
+
+This allows to provide library functions which can be shared between
+various interrupt chip implementations and avoids replicating mostly
+similar code all over the place.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/irqchip/irq-gic-msi-lib.c |    2 ++
- 1 file changed, 2 insertions(+)
+ include/linux/msi.h |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
---- a/drivers/irqchip/irq-gic-msi-lib.c
-+++ b/drivers/irqchip/irq-gic-msi-lib.c
-@@ -68,6 +68,8 @@ bool gic_msi_lib_init_dev_msi_info(struc
- 		/* Core managed MSI descriptors */
- 		info->flags = MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS | MSI_FLAG_FREE_MSI_DESCS;
- 		break;
-+	case DOMAIN_BUS_WIRED_TO_MSI:
-+		break;
- 	default:
- 		/*
- 		 * This should never be reached. See
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -556,6 +556,14 @@ enum {
+  * struct msi_parent_ops - MSI parent domain callbacks and configuration info
+  *
+  * @supported_flags:	Required: The supported MSI flags of the parent domain
++ * @required_flags:	Optional: The required MSI flags of the parent MSI domain
++ *			Mandatory for ARM_GIC_MSI_LIB users
++ * @bus_select_token:	Optional: The bus token of the real parent domain for
++ *			irq_domain::select()
++ *			Mandatory for ARM_GIC_MSI_LIB users
++ * @bus_select_mask:	Optional: A mask of supported BUS_DOMAINs for
++ *			irq_domain::select()
++ *			Mandatory for ARM_GIC_MSI_LIB users
+  * @prefix:		Optional: Prefix for the domain and chip name
+  * @init_dev_msi_info:	Required: Callback for MSI parent domains to setup parent
+  *			domain specific domain flags, domain ops and interrupt chip
+@@ -563,6 +571,9 @@ enum {
+  */
+ struct msi_parent_ops {
+ 	u32		supported_flags;
++	u32		required_flags;
++	u32		bus_select_token;
++	u32		bus_select_mask;
+ 	const char	*prefix;
+ 	bool		(*init_dev_msi_info)(struct device *dev, struct irq_domain *domain,
+ 					     struct irq_domain *msi_parent_domain,
 
