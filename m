@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62CA3C43217
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:37:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B7CC43219
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:37:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230156AbiKUOhN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:37:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47830 "EHLO
+        id S230453AbiKUOhO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:37:14 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231272AbiKUOgl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:36:41 -0500
+        with ESMTP id S230086AbiKUOgp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:36:45 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A504DC6D13;
-        Mon, 21 Nov 2022 06:36:28 -0800 (PST)
-Message-ID: <20221121083325.898535631@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45A86C6BFE;
+        Mon, 21 Nov 2022 06:36:41 -0800 (PST)
+Message-ID: <20221121083326.451412447@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041387;
+        s=2020; t=1669041399;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=9rEv0ZCHRcbwfGXHvRaB+26Gs3i0vHsf2KEnMS96bjY=;
-        b=GXvys4RNHQ7h0QJBqveM//QK3VblBKRZ4eYHP/cRMku42RLzjX3JH3BHs7zUb5U/ORz0Qn
-        N/TjGTvzSeYuMzUs3dVZUk7xyyDqIZD7+dy/qhNkL/ggGFqlVZb4G+lODo4RrmjkA0pLsE
-        DXFG8m0zubDhD9Qz+DOsxZR6jxULosiRgtLhI3HKwk3k601W1wPVdNf9bvxFOndczykdZW
-        PLQMuQ9BMlXYsARIKsuQCR0r5ZuInW1CMdeYh/vRpwlFsPwFiIVT/UZe7GSZ53s870/4pS
-        ZJp3wL0ucDww9DednLFrLw2+oEbJVvjebsyGeh7/YoO/rYDFIXSVqTGyIvWsyQ==
+         references:references; bh=g4QPlbf/kZK7IE6hnczsu6AmVOXaYfuEpjg2N6VHa1U=;
+        b=JhNtr/myl7sTYsZkFaNXoZvsyFXwR7OsO5tGwrf0hUhsIoeB2vfgzbvdci+jZxbbxYU4Yn
+        GrjMKBmOUYe4nZ8i1eFehzLYDcKYq8LzTeTZIwcnnquXm1pOgxbvJUhtbuQ2Fptk1+I4qF
+        UGBT2sakYMRQVqr6f9jaunHUaCESHQ8o/LvCu3m5Yh9Nd7Jtv38FrUfIon3dVuZL3JWjKc
+        wEX5aW6srGp9g4I0Q/svAouCR3HqFXrg3YS4Cld57SSDV0JCZ2BhbCdsfkAhVLE8TkIr2A
+        qY0x+Kv8PHFpj2XcTfRXWTxJGE8/hXNlqVSS2U9vr6vi/1KSjJCoCHliy+oJWw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041387;
+        s=2020e; t=1669041399;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=9rEv0ZCHRcbwfGXHvRaB+26Gs3i0vHsf2KEnMS96bjY=;
-        b=/ryo2wZZtD3zkaTdpxsEJC9pzfQODO2gG/rLr9x6xv7NCtw5ssyjyawTKgkSyCSIBjSgiM
-        iNZJtqjUellQKGCw==
+         references:references; bh=g4QPlbf/kZK7IE6hnczsu6AmVOXaYfuEpjg2N6VHa1U=;
+        b=R4JlIJg7yrPBj1VvEB0zM08yCyUsfvtNcRcEXwT0rxRbiBaMx9pM6gugtWAraRu71rFZH/
+        zi5XsKplaUbLuGAg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,63 +48,48 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V2 07/21] genirq/msi: Check for invalid MSI parent domain usage
+Subject: [patch V2 17/21] PCI/MSI: Use msi_domain_alloc/free_irqs_all_locked()
 References: <20221121083210.309161925@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:36:27 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:36:39 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the upcoming per device MSI domain concept the MSI parent domains are
-not allowed to be used as regular MSI domains where the MSI allocation/free
-operations are applicable.
+Switch to the new domain id aware interfaces to phase out the previous
+ones.
 
-Add appropriate checks.
+This uses the _all() variants of the MSI allocation/free interfaces
+because due to potentially sparse indices of the preallocated MSI
+descriptors describing the range precisely is not possible.
+
+No functional change.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-V2: Made the error return understandable. (Kevin)
----
- kernel/irq/msi.c |   17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ drivers/pci/msi/irqdomain.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -937,13 +937,21 @@ int msi_domain_alloc_irqs_descs_locked(s
+--- a/drivers/pci/msi/irqdomain.c
++++ b/drivers/pci/msi/irqdomain.c
+@@ -14,7 +14,7 @@ int pci_msi_setup_msi_irqs(struct pci_de
  
- 	lockdep_assert_held(&dev->msi.data->mutex);
+ 	domain = dev_get_msi_domain(&dev->dev);
+ 	if (domain && irq_domain_is_hierarchy(domain))
+-		return msi_domain_alloc_irqs_descs_locked(domain, &dev->dev, nvec);
++		return msi_domain_alloc_irqs_all_locked(&dev->dev, MSI_DEFAULT_DOMAIN, nvec);
  
-+	if (WARN_ON_ONCE(irq_domain_is_msi_parent(domain))) {
-+		ret = -EINVAL;
-+		goto free;
-+	}
-+
-+	/* Frees allocated descriptors in case of failure. */
- 	ret = msi_domain_add_simple_msi_descs(info, dev, nvec);
- 	if (ret)
--		return ret;
-+		goto free;
- 
- 	ret = ops->domain_alloc_irqs(domain, dev, nvec);
--	if (ret)
--		msi_domain_free_irqs_descs_locked(domain, dev);
-+	if (!ret)
-+		return 0;
-+free:
-+	msi_domain_free_irqs_descs_locked(domain, dev);
- 	return ret;
+ 	return pci_msi_legacy_setup_msi_irqs(dev, nvec, type);
  }
+@@ -25,7 +25,7 @@ void pci_msi_teardown_msi_irqs(struct pc
  
-@@ -1013,6 +1021,9 @@ void msi_domain_free_irqs_descs_locked(s
- 
- 	lockdep_assert_held(&dev->msi.data->mutex);
- 
-+	if (WARN_ON_ONCE(irq_domain_is_msi_parent(domain)))
-+		return;
-+
- 	ops->domain_free_irqs(domain, dev);
- 	if (ops->msi_post_free)
- 		ops->msi_post_free(domain, dev);
+ 	domain = dev_get_msi_domain(&dev->dev);
+ 	if (domain && irq_domain_is_hierarchy(domain)) {
+-		msi_domain_free_irqs_descs_locked(domain, &dev->dev);
++		msi_domain_free_irqs_all_locked(&dev->dev, MSI_DEFAULT_DOMAIN);
+ 	} else {
+ 		pci_msi_legacy_teardown_msi_irqs(dev);
+ 		msi_free_msi_descs(&dev->dev);
 
