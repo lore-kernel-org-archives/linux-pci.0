@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2658EC433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA51C4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:51:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231718AbiKUOvf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:51:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40806 "EHLO
+        id S229526AbiKUOv4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:51:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230218AbiKUOvB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:51:01 -0500
+        with ESMTP id S231860AbiKUOvV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:51:21 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F16D5C847B;
-        Mon, 21 Nov 2022 06:42:55 -0800 (PST)
-Message-ID: <20221121140050.259338252@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3920D5A16;
+        Mon, 21 Nov 2022 06:43:01 -0800 (PST)
+Message-ID: <20221121140050.577105827@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041607;
+        s=2020; t=1669041613;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=LVm6nNGwtgSWM//zSE7+IPj0DIZ/wlOjErT0DctjfGc=;
-        b=XMY0/aklG+0k/tRYaPhi5x90nI4mKx0Ql4nnjWc3HnN51vG9bxj8tKRyrjPGICq0Kx+JXj
-        ejhE8rAsnVIcPxDJM4Lfp0m6UkRjAqh1QmZMH8JGzeUNb5i4NXbAEt+XZOVMQWZ6KecqV7
-        bOg9RSyqozz2tJQps+SNw5KRe7GlGCmdA2U5o5YjUxfYDi/Lznho1QRke6RxbnJpa18jP0
-        WvhDA/oTGuSbhd568PqYOwelQifrT7UgkT5p1qlZBJ8Y/oF9nV7/7NAJIVknw7Em2Ek9SH
-        1yzAiO3Y5VjV2NCghkU4A5j85MNWCEpJkx94r4omrJOHlz6eRfhCmwRTB8MQUg==
+         references:references; bh=iMSiO35Q4nvqZnp/wnDAlFhYvzI37wmUM9mH/DHSckY=;
+        b=KSocjNeRJrC3ExVVlFIpdGXfkPZikicdmxhwqpVLEvE02aVnHCgmWUiumDo5550RX0DqfP
+        3AXLtn4ahhEdl/FmzyKSDljzwyCNLfmCVI9BhE2UOC391CLPc8plNzamAQll3Dvy8lUcJh
+        Vm7/9jRpBiVvHQLy+5DICLjH7pOnd+sC8lXGTq1mSWfwfKcm8dUnNG940HupgIW2+tp5jx
+        5XeC3gmMnG3E0T+13QDLA17qT7ZZ+CMIRaSDZTekgJcAR3jv+dHDPmKUY0mHdxr/OcMhCk
+        E5XtyDzG7dKgXEo6nZZuc3ciYBUlV4ion9s9CG1JLIhA6T6wyBPItw8VgM10zQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041607;
+        s=2020e; t=1669041613;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=LVm6nNGwtgSWM//zSE7+IPj0DIZ/wlOjErT0DctjfGc=;
-        b=4tDuoDhUQ8Gc4et3llk3JdGY/T8p2yInJQLbvxnH91jqoTvRhbM+Uyj9miSI0uImQC2Guu
-        XuL2dT19oPmENYCQ==
+         references:references; bh=iMSiO35Q4nvqZnp/wnDAlFhYvzI37wmUM9mH/DHSckY=;
+        b=TvgWE26In1d44LFP7SA1WqKMrQFhhbqs7Wl4wsrLhksZY8jBfZXbJ9kHiv9CSa9ubjdwf6
+        WJFNOnZVQsFwdZBg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
@@ -59,11 +59,11 @@ Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
         Shawn Guo <shawnguo@kernel.org>,
         Sascha Hauer <s.hauer@pengutronix.de>,
         Fabio Estevam <festevam@gmail.com>
-Subject: [patch V2 31/40] irqchip/gic-v2m: Switch to device MSI
+Subject: [patch V2 36/40] irqchip/mvebu-odmi: Switch to parent MSI
 References: <20221121135653.208611233@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:40:07 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:40:13 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -72,166 +72,101 @@ All platform MSI users and the PCI/MSI code handle per device MSI domains
 when the irqdomain associated to the device provides MSI parent
 functionality.
 
-Remove the "global" PCI/MSI and platform domain related code and provide
-the MSI parent functionality by filling in msi_parent_ops.
+Remove the "global" platform domain related code and provide the MSI parent
+functionality by filling in msi_parent_ops.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Marc Zyngier <maz@kernel.org>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Gregory Clement <gregory.clement@bootlin.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 ---
- drivers/irqchip/Kconfig       |    1 
- drivers/irqchip/irq-gic-v2m.c |   82 ++++++++++++------------------------------
- 2 files changed, 25 insertions(+), 58 deletions(-)
+ drivers/irqchip/Kconfig          |    1 +
+ drivers/irqchip/irq-mvebu-odmi.c |   39 ++++++++++++++++++---------------------
+ 2 files changed, 19 insertions(+), 21 deletions(-)
 
 --- a/drivers/irqchip/Kconfig
 +++ b/drivers/irqchip/Kconfig
-@@ -25,6 +25,7 @@ config ARM_GIC_V2M
+@@ -381,6 +381,7 @@ config MVEBU_ICU
+ 
+ config MVEBU_ODMI
  	bool
- 	depends on PCI
- 	select ARM_GIC
 +	select ARM_GIC_MSI_LIB
- 	select PCI_MSI
+ 	select GENERIC_MSI_IRQ
  
- config GIC_NON_BANKED
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -26,6 +26,8 @@
- #include <linux/irqchip/arm-gic.h>
- #include <linux/irqchip/arm-gic-common.h>
- 
+ config MVEBU_PIC
+--- a/drivers/irqchip/irq-mvebu-odmi.c
++++ b/drivers/irqchip/irq-mvebu-odmi.c
+@@ -17,6 +17,9 @@
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/slab.h>
++
 +#include "irq-gic-msi-lib.h"
 +
- /*
- * MSI_TYPER:
- *     [31:26] Reserved
-@@ -72,31 +74,6 @@ struct v2m_data {
- 	u32 flags;		/* v2m flags for specific implementation */
- };
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
  
--static void gicv2m_mask_msi_irq(struct irq_data *d)
--{
--	pci_msi_mask_irq(d);
--	irq_chip_mask_parent(d);
--}
--
--static void gicv2m_unmask_msi_irq(struct irq_data *d)
--{
--	pci_msi_unmask_irq(d);
--	irq_chip_unmask_parent(d);
--}
--
--static struct irq_chip gicv2m_msi_irq_chip = {
--	.name			= "MSI",
--	.irq_mask		= gicv2m_mask_msi_irq,
--	.irq_unmask		= gicv2m_unmask_msi_irq,
--	.irq_eoi		= irq_chip_eoi_parent,
--};
--
--static struct msi_domain_info gicv2m_msi_domain_info = {
--	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--		   MSI_FLAG_PCI_MSIX | MSI_FLAG_MULTI_PCI_MSI),
--	.chip	= &gicv2m_msi_irq_chip,
--};
--
- static phys_addr_t gicv2m_get_msi_addr(struct v2m_data *v2m, int hwirq)
- {
- 	if (v2m->flags & GICV2M_GRAVITON_ADDRESS_ONLY)
-@@ -230,6 +207,7 @@ static void gicv2m_irq_domain_free(struc
+ #define GICP_ODMIN_SET			0x40
+@@ -141,27 +144,29 @@ static void odmi_irq_domain_free(struct
  }
  
- static const struct irq_domain_ops gicv2m_domain_ops = {
-+	.select			= gic_msi_lib_irq_domain_select,
- 	.alloc			= gicv2m_irq_domain_alloc,
- 	.free			= gicv2m_irq_domain_free,
+ static const struct irq_domain_ops odmi_domain_ops = {
++	.select	= gic_msi_lib_irq_domain_select,
+ 	.alloc	= odmi_irq_domain_alloc,
+ 	.free	= odmi_irq_domain_free,
  };
-@@ -250,19 +228,6 @@ static bool is_msi_spi_valid(u32 base, u
- 	return true;
- }
  
--static struct irq_chip gicv2m_pmsi_irq_chip = {
--	.name			= "pMSI",
+-static struct irq_chip odmi_msi_irq_chip = {
+-	.name	= "ODMI",
 -};
--
--static struct msi_domain_ops gicv2m_pmsi_ops = {
++#define ODMI_MSI_FLAGS_REQUIRED  (MSI_FLAG_USE_DEF_DOM_OPS |	\
++				  MSI_FLAG_USE_DEF_CHIP_OPS)
+ 
+-static struct msi_domain_ops odmi_msi_ops = {
 -};
--
--static struct msi_domain_info gicv2m_pmsi_domain_info = {
++#define ODMI_MSI_FLAGS_SUPPORTED (MSI_GENERIC_FLAGS_MASK)
+ 
+-static struct msi_domain_info odmi_msi_domain_info = {
 -	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
--	.ops	= &gicv2m_pmsi_ops,
--	.chip	= &gicv2m_pmsi_irq_chip,
--};
--
- static void __init gicv2m_teardown(void)
- {
- 	struct v2m_data *v2m, *tmp;
-@@ -278,17 +243,32 @@ static void __init gicv2m_teardown(void)
- 	}
- }
- 
-+#define GICV2M_MSI_FLAGS_REQUIRED  (MSI_FLAG_USE_DEF_DOM_OPS |	\
-+				    MSI_FLAG_USE_DEF_CHIP_OPS)
-+
-+#define GICV2M_MSI_FLAGS_SUPPORTED (MSI_GENERIC_FLAGS_MASK |	\
-+				    MSI_FLAG_PCI_MSIX      |	\
-+				    MSI_FLAG_MULTI_PCI_MSI)
-+
-+static struct msi_parent_ops gicv2m_msi_parent_ops = {
-+	.supported_flags	= GICV2M_MSI_FLAGS_SUPPORTED,
-+	.required_flags		= GICV2M_MSI_FLAGS_REQUIRED,
-+	.bus_select_token	= DOMAIN_BUS_NEXUS,
-+	.bus_select_mask	= MATCH_PCI_MSI | MATCH_PLATFORM_MSI,
-+	.prefix			= "GICv2m-",
+-	.ops	= &odmi_msi_ops,
+-	.chip	= &odmi_msi_irq_chip,
++static const struct msi_parent_ops odmi_msi_parent_ops = {
++	.supported_flags	= ODMI_MSI_FLAGS_SUPPORTED,
++	.required_flags		= ODMI_MSI_FLAGS_REQUIRED,
++	.bus_select_token	= DOMAIN_BUS_GENERIC_MSI,
++	.bus_select_mask	= MATCH_PLATFORM_MSI,
++	.prefix			= "ODMI-",
 +	.init_dev_msi_info	= gic_msi_lib_init_dev_msi_info,
-+};
-+
- static __init int gicv2m_allocate_domains(struct irq_domain *parent)
+ };
+ 
+ static int __init mvebu_odmi_init(struct device_node *node,
+ 				  struct device_node *parent)
  {
--	struct irq_domain *inner_domain, *pci_domain, *plat_domain;
+-	struct irq_domain *inner_domain, *plat_domain;
 +	struct irq_domain *inner_domain;
- 	struct v2m_data *v2m;
+ 	int ret, i;
  
- 	v2m = list_first_entry_or_null(&v2m_nodes, struct v2m_data, entry);
- 	if (!v2m)
- 		return 0;
+ 	if (of_property_read_u32(node, "marvell,odmi-frames", &odmis_count))
+@@ -206,19 +211,11 @@ static int __init mvebu_odmi_init(struct
+ 	}
  
--	inner_domain = irq_domain_create_tree(v2m->fwnode,
--					      &gicv2m_domain_ops, v2m);
-+	inner_domain = irq_domain_create_tree(v2m->fwnode, &gicv2m_domain_ops, v2m);
- 	if (!inner_domain) {
- 		pr_err("Failed to create GICv2m domain\n");
- 		return -ENOMEM;
-@@ -296,22 +276,8 @@ static __init int gicv2m_allocate_domain
- 
- 	irq_domain_update_bus_token(inner_domain, DOMAIN_BUS_NEXUS);
- 	inner_domain->parent = parent;
--	pci_domain = pci_msi_create_irq_domain(v2m->fwnode,
--					       &gicv2m_msi_domain_info,
--					       inner_domain);
--	plat_domain = platform_msi_create_irq_domain(v2m->fwnode,
--						     &gicv2m_pmsi_domain_info,
+ 	inner_domain->parent = irq_find_host(parent);
+-
+-	plat_domain = platform_msi_create_irq_domain(of_node_to_fwnode(node),
+-						     &odmi_msi_domain_info,
 -						     inner_domain);
--	if (!pci_domain || !plat_domain) {
--		pr_err("Failed to create MSI domains\n");
--		if (plat_domain)
--			irq_domain_remove(plat_domain);
--		if (pci_domain)
--			irq_domain_remove(pci_domain);
--		irq_domain_remove(inner_domain);
--		return -ENOMEM;
+-	if (!plat_domain) {
+-		ret = -ENOMEM;
+-		goto err_remove_inner;
 -	}
 -
++	irq_domain_update_bus_token(inner_domain, DOMAIN_BUS_GENERIC_MSI);
 +	inner_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
-+	inner_domain->msi_parent_ops = &gicv2m_msi_parent_ops;
++	inner_domain->msi_parent_ops = &odmi_msi_parent_ops;
  	return 0;
- }
  
-@@ -512,7 +478,7 @@ acpi_parse_madt_msi(union acpi_subtable_
- 		pr_info("applying Amazon Graviton quirk\n");
- 		res.end = res.start + SZ_8K - 1;
- 		flags |= GICV2M_GRAVITON_ADDRESS_ONLY;
--		gicv2m_msi_domain_info.flags &= ~MSI_FLAG_MULTI_PCI_MSI;
-+		gicv2m_msi_parent_ops.supported_flags &= ~MSI_FLAG_MULTI_PCI_MSI;
- 	}
- 
- 	if (m->flags & ACPI_MADT_OVERRIDE_SPI_VALUES) {
+-err_remove_inner:
+-	irq_domain_remove(inner_domain);
+ err_unmap:
+ 	for (i = 0; i < odmis_count; i++) {
+ 		struct odmi_data *odmi = &odmis[i];
 
