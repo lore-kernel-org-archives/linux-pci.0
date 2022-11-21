@@ -2,91 +2,114 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E3E1C4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:48:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB6D8C43219
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:48:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230082AbiKUOsP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:48:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59442 "EHLO
+        id S229772AbiKUOsQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:48:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231951AbiKUOq6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:46:58 -0500
-Received: from mail.skyhub.de (mail.skyhub.de [IPv6:2a01:4f8:190:11c2::b:1457])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D606D2884;
-        Mon, 21 Nov 2022 06:41:09 -0800 (PST)
-Received: from zn.tnic (p200300ea9733e725329c23fffea6a903.dip0.t-ipconnect.de [IPv6:2003:ea:9733:e725:329c:23ff:fea6:a903])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 0AD131EC071C;
-        Mon, 21 Nov 2022 15:40:20 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
-        t=1669041620;
+        with ESMTP id S232322AbiKUOrp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:47:45 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED255D32A1;
+        Mon, 21 Nov 2022 06:41:51 -0800 (PST)
+Message-ID: <20221121140049.237988384@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1669041587;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
-        bh=nVucUSR5GH+aVD4prFamu5Vccjb3OajaJg/HmkV7Mj8=;
-        b=KbhkHJom/jPEXkOOB0ksRGlXRvaPN64pFM19VgqxWWS/I8T8+Wvwgb65IlH9gx86/7jqiy
-        JMeYBafODuLLjQmbvBN9VY+Fm4p50pWQfE1HtbiXqRbjOj7xStksIebcL2vX3AjMPskz1K
-        rnXFY9bEkIFAJlXDFQVDct0oZnFWDbU=
-Date:   Mon, 21 Nov 2022 15:40:19 +0100
-From:   Borislav Petkov <bp@alien8.de>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, luto@kernel.org,
-        peterz@infradead.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, lpieralisi@kernel.org,
-        robh@kernel.org, kw@linux.com, bhelgaas@google.com, arnd@arndb.de,
-        hch@infradead.org, m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, tglx@linutronix.de,
-        mingo@redhat.com, dave.hansen@linux.intel.com,
-        Tianyu.Lan@microsoft.com, kirill.shutemov@linux.intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com, ak@linux.intel.com,
-        isaku.yamahata@intel.com, dan.j.williams@intel.com,
-        jane.chu@oracle.com, seanjc@google.com, tony.luck@intel.com,
-        x86@kernel.org, linux-kernel@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        iommu@lists.linux.dev
-Subject: Re: [Patch v3 05/14] x86/mm: Handle decryption/re-encryption of
- bss_decrypted consistently
-Message-ID: <Y3uN07qSlGqo0dNO@zn.tnic>
-References: <1668624097-14884-1-git-send-email-mikelley@microsoft.com>
- <1668624097-14884-6-git-send-email-mikelley@microsoft.com>
+         references:references; bh=+qksWd2+ccMmqLte5f9aPSVt++7qKd9jnyVMQkZ0blc=;
+        b=xNNxpN26XOiNIK1Emk3fcyWh3Vb/rxCZ0KWmilAmnOPvM3r3PacwAhHwcxWLgmtpZHhkQT
+        jP1VcrkI+iuvdmrHbvA47gHQfzgsy4m8umj+7PyAzo2FmgcCP1HMMMgv7T/3b08eUmVJeO
+        sR4nlMurDfJwTe8mCfL51Bbz59fDcgzICgAnIdBOhAwBJW4H1hiPqpuoq3/23ArbJn7eSY
+        RmHg7NUPNAeDkSD9MWAknTB0EIJXw7l5hRclFHMCrvG7uYh7odHdOGPR+T8RR0BHTYfrm9
+        QKc+AlIq/03LfRAjYZg57tSNUnnCp+/OV3jYzxpxwrwPhpOZee4bgaYgzpUzOA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1669041587;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         references:references; bh=+qksWd2+ccMmqLte5f9aPSVt++7qKd9jnyVMQkZ0blc=;
+        b=Jxt9EtE53tlRD9+hwUci8tAYYQ/g44FiV1TIMRiPipyRbRpVhKUZI8JvvGxXeO5KPFtp22
+        POKx8P2tmAR7O3DQ==
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Ammar Faizi <ammarfaizi2@gnuweeb.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Vinod Koul <vkoul@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Shameerali Kolothum Thodi 
+        <shameerali.kolothum.thodi@huawei.com>,
+        Zenghui Yu <yuzenghui@huawei.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>
+Subject: [patch V2 15/40] irqchip/gic-msi-lib: Prepare for DEVICE MSI to
+ replace platform MSI
+References: <20221121135653.208611233@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <1668624097-14884-6-git-send-email-mikelley@microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Date:   Mon, 21 Nov 2022 15:39:47 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 16, 2022 at 10:41:28AM -0800, Michael Kelley wrote:
-> Current code in sme_postprocess_startup() decrypts the bss_decrypted
-> section when sme_me_mask is non-zero.  But code in
-> mem_encrypt_free_decrytped_mem() re-encrypts the unused portion based
-			^^
+Add the prerequisites for DEVICE MSI into the shared select() and child
+domain init function. These domains are really trivial and just provide a
+custom irq chip callback to write the MSI message.
 
-letters flipped.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ drivers/irqchip/irq-gic-msi-lib.c |   13 +++++++++++++
+ drivers/irqchip/irq-gic-msi-lib.h |    2 ++
+ 2 files changed, 15 insertions(+)
 
-> @@ -513,10 +513,14 @@ void __init mem_encrypt_free_decrypted_mem(void)
->  	npages = (vaddr_end - vaddr) >> PAGE_SHIFT;
->  
->  	/*
-> -	 * The unused memory range was mapped decrypted, change the encryption
-> -	 * attribute from decrypted to encrypted before freeing it.
-> +	 * If the unused memory range was mapped decrypted, change the encryption
-> +	 * attribute from decrypted to encrypted before freeing it. Base the
-> +	 * re-encryption on the same condition used for the decryption in
-> +	 * sme_postprocess_startup(). Higher level abstractions, such as
-> +	 * CC_ATTR_MEM_ENCRYPT, aren't necessarily equivalent in a Hyper-V VM
-> +	 * using vTOM, where sme_me_mask is always zero.
+--- a/drivers/irqchip/irq-gic-msi-lib.c
++++ b/drivers/irqchip/irq-gic-msi-lib.c
+@@ -55,6 +55,19 @@ bool gic_msi_lib_init_dev_msi_info(struc
+ 
+ 		pci_device_msi_mask_unmask_parent_enable();
+ 		break;
++	case DOMAIN_BUS_DEVICE_IMS:
++		/*
++		 * Per device IMS should never have any MSI feature bits
++		 * set. It's sole purpose is to create a dumb interrupt
++		 * chip which has a device specific irq_write_msi_msg()
++		 * callback.
++		 */
++		if (WARN_ON_ONCE(info->flags))
++			return false;
++
++		/* Core managed MSI descriptors */
++		info->flags = MSI_FLAG_ALLOC_SIMPLE_MSI_DESCS | MSI_FLAG_FREE_MSI_DESCS;
++		break;
+ 	default:
+ 		/*
+ 		 * This should never be reached. See
+--- a/drivers/irqchip/irq-gic-msi-lib.h
++++ b/drivers/irqchip/irq-gic-msi-lib.h
+@@ -15,6 +15,8 @@
+ #define MATCH_PCI_MSI		(0)
+ #endif
+ 
++#define MATCH_PLATFORM_MSI	BIT(DOMAIN_BUS_PLATFORM_MSI)
++
+ int gic_msi_lib_irq_domain_select(struct irq_domain *d, struct irq_fwspec *fwspec,
+ 				  enum irq_domain_bus_token bus_token);
+ 
 
-Good, an example why one needs to pay attention here.
-
-Thx.
-
--- 
-Regards/Gruss,
-    Boris.
-
-https://people.kernel.org/tglx/notes-about-netiquette
