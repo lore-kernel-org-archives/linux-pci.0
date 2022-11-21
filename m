@@ -2,101 +2,99 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEACFC43219
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 775ADC4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:45:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231919AbiKUOo7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:44:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60714 "EHLO
+        id S231429AbiKUOpE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:45:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231911AbiKUOom (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:44:42 -0500
-Received: from mail.skyhub.de (mail.skyhub.de [5.9.137.197])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24DB7CFEAF;
-        Mon, 21 Nov 2022 06:39:49 -0800 (PST)
-Received: from zn.tnic (p200300ea9733e725329c23fffea6a903.dip0.t-ipconnect.de [IPv6:2003:ea:9733:e725:329c:23ff:fea6:a903])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 98D451EC071C;
-        Mon, 21 Nov 2022 15:39:15 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
-        t=1669041555;
+        with ESMTP id S231912AbiKUOoq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:44:46 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B109CFEB1;
+        Mon, 21 Nov 2022 06:39:52 -0800 (PST)
+Message-ID: <20221121140048.344525618@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1669041570;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
-        bh=+osXJY2QXTYeyNKIAKOMhij/UAd21czb/7vY0ki9kpc=;
-        b=VZ+XKQnbaEmRfwdIHK9ZzB/ZSuhoZHvDxVRg+GB4AUBk82YT9fu1EMg9MZ31xOwrEH269C
-        OWAZnc7TETiDIMavhyueeZdptLH2SupS3CpiCK6EyHrJhxWGBj/9DiYtq9lE3ke7Do3yw6
-        Hl/mQULTVCjJ4lh7tKV+hpBGpX+O2Ec=
-Date:   Mon, 21 Nov 2022 15:39:11 +0100
-From:   Borislav Petkov <bp@alien8.de>
-To:     "Michael Kelley (LINUX)" <mikelley@microsoft.com>
-Cc:     Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        "hpa@zytor.com" <hpa@zytor.com>, KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "edumazet@google.com" <edumazet@google.com>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "pabeni@redhat.com" <pabeni@redhat.com>,
-        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-        "robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "ak@linux.intel.com" <ak@linux.intel.com>,
-        "isaku.yamahata@intel.com" <isaku.yamahata@intel.com>,
-        "Williams, Dan J" <dan.j.williams@intel.com>,
-        "jane.chu@oracle.com" <jane.chu@oracle.com>,
-        "seanjc@google.com" <seanjc@google.com>,
-        "tony.luck@intel.com" <tony.luck@intel.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "iommu@lists.linux.dev" <iommu@lists.linux.dev>
-Subject: Re: [Patch v3 05/14] x86/mm: Handle decryption/re-encryption of
- bss_decrypted consistently
-Message-ID: <Y3uNj0z26EjkHeCn@zn.tnic>
-References: <1668624097-14884-1-git-send-email-mikelley@microsoft.com>
- <1668624097-14884-6-git-send-email-mikelley@microsoft.com>
- <01d7c7cc-bd4e-ee9b-f5b2-73ea367e602f@linux.intel.com>
- <BYAPR21MB1688A31ED795ED1B5ACB6D26D7099@BYAPR21MB1688.namprd21.prod.outlook.com>
+         references:references; bh=VMdi78Ph2ZKt//IeQ4f995Y7xixQx0PVMNetg0nGRuE=;
+        b=s1lueuqmL8rn1uMzqRQQRUHs8j8k/PkQkr2FJayzUfJfBRzHMwnhKu/4YzxQRoJorfRzoU
+        8rw39T93j+gaLV9OPwyttucgaKM38hHBhQJgqU3caAg8N5/683w2esfJcfBgzRKouh0wqq
+        a+G20BwLFXT7fvCEYMziNoTp/uL+/VDnwrWStO4yh0G5zMRoGqKi/+pHIPtHx/RanKrwjP
+        8NkqmtSrNGxN2RYeso48vaUquk7W2L35QPy68rsQ3zB9H/0cN4oGgvyinCf0YQyKt7EZ3U
+        OcHFgGyNHeUEHAwZJJsyciQhX8cXeoblH6XN/iaO6a5x4BW6mnqLQKydoyl2Hg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1669041570;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         references:references; bh=VMdi78Ph2ZKt//IeQ4f995Y7xixQx0PVMNetg0nGRuE=;
+        b=MBeTqTJkLdnku5CLyv6f0wHkET+DFJKaoKtmUAmidr2fZ2eYNfvQPhyph1fu65IpXbLV59
+        jqtVa9JpyObax5AA==
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Ammar Faizi <ammarfaizi2@gnuweeb.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Vinod Koul <vkoul@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Shameerali Kolothum Thodi 
+        <shameerali.kolothum.thodi@huawei.com>,
+        Zenghui Yu <yuzenghui@huawei.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>
+Subject: [patch V2 01/40] irqchip/irq-mvebu-icu: Fix works by chance pointer
+ assignment
+References: <20221121135653.208611233@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <BYAPR21MB1688A31ED795ED1B5ACB6D26D7099@BYAPR21MB1688.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Date:   Mon, 21 Nov 2022 15:39:29 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 18, 2022 at 02:55:32AM +0000, Michael Kelley (LINUX) wrote:
-> But I had not thought about TDX.  In the TDX case, it appears that
-> sme_postprocess_startup() will not decrypt the bss_decrypted section.
-> The corresponding mem_encrypt_free_decrypted_mem() is a no-op unless
-> CONFIG_AMD_MEM_ENCRYPT is set.  But maybe if someone builds a
-> kernel image that supports both TDX and AMD encryption, it could break
+Assigning a void pointer which points to a struct to two different data
+types only works by chance if the second type is the first member of the
+struct.
 
-sme_me_mask better be 0 on a kernel with both built in and running as a
-TDX guest.
+Replace this works by chance code by using the primary struct pointer.
 
--- 
-Regards/Gruss,
-    Boris.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Gregory Clement <gregory.clement@bootlin.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+---
+ drivers/irqchip/irq-mvebu-icu.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-https://people.kernel.org/tglx/notes-about-netiquette
+--- a/drivers/irqchip/irq-mvebu-icu.c
++++ b/drivers/irqchip/irq-mvebu-icu.c
+@@ -151,9 +151,9 @@ static int
+ mvebu_icu_irq_domain_translate(struct irq_domain *d, struct irq_fwspec *fwspec,
+ 			       unsigned long *hwirq, unsigned int *type)
+ {
+-	struct mvebu_icu_msi_data *msi_data = platform_msi_get_host_data(d);
+-	struct mvebu_icu *icu = platform_msi_get_host_data(d);
+ 	unsigned int param_count = static_branch_unlikely(&legacy_bindings) ? 3 : 2;
++	struct mvebu_icu_msi_data *msi_data = platform_msi_get_host_data(d);
++	struct mvebu_icu *icu = msi_data->icu;
+ 
+ 	/* Check the count of the parameters in dt */
+ 	if (WARN_ON(fwspec->param_count != param_count)) {
+
