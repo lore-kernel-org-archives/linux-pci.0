@@ -2,116 +2,134 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70DA3C433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 16:50:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8104C43217
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 17:04:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230362AbiKUQuX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 11:50:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44308 "EHLO
+        id S229969AbiKUREZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 12:04:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230308AbiKUQuQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 11:50:16 -0500
-X-Greylist: delayed 573 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 21 Nov 2022 08:50:15 PST
-Received: from osmtp.xiscosoft.net (osmtp.xiscosoft.net [5.135.184.108])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15AD521251
-        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2022 08:50:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=klondike.es;
-        s=xiscosoft_net; t=1669048837; x=1670258437;
-        bh=js2LHMKLow50y1NDsDdJlb0AbdCa2FUViUgjQ8BJYMw=;
-        h=From:Subject:To:Cc:Content-Type:Content-Transfer-Encoding:
-         Message-Id:Date:From:Subject:To:Cc:Date:Reply-To:Content-Type:
-         Sender:Message-ID:References:In-Reply-To:Content-Base:
-         Content-Location:Content-features:Content-Disposition:
-         Content-Alternative:Content-MD5:Content-Duration:
-         Content-Transfer-Encoding:Content-Language:MIME-Version:Content-ID:
-         Content-Description:Autocrypt:List-Id:List-Help:List-Unsubscribe:
-         List-Unsubscribe-Post:List-Subscribe:List-Post:List-Owner:
-         List-Archive:Original-Message-ID:Require-Recipient-Valid-Since:
-         Solicitation:Organization:Jabber-ID:Auto-Submitted;
-        b=Gg9jv/Yk9mVi0mNU/3sWjkXE5GOO7BbjHUAanPZA/tqOkEbcHk3pelFf4zRRt/xPr
-         js937pLW/nlajYDUhgkkco91WKNbedZjpb91yb00erxIkCwGFYygUaAlPmj8m2/WRJ
-         rWoHPyI+vVAZtFLlQRNqdQ0fOXNr1M+oMK+KynPE1JKdwsh/V85rpfBblp4Fcnv0aj
-         /hvGbab1Vm8h6BYpGZaD5fDtXxPtl31Dosm6Jsj2lZR19nPPVA8pD/AhHtJLvIeoXI
-         P4gSfep3tvEKQ/rQFT0kzAuFmZ9Wda/DLV+uAEfcfUSpxZv9XDXDCAXcoC50xyIIHl
-         WXquRTKSK4i6g==
-From:   Francisco Blas Izquierdo Riera (klondike) <klondike@klondike.es>
-Subject: [PATCH v2] PCI: Add DMA alias for Intel Corporation 8 Series HECI
-To:     linux-pci@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=UTF-8
+        with ESMTP id S229915AbiKUREZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 12:04:25 -0500
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4116D79378;
+        Mon, 21 Nov 2022 09:04:24 -0800 (PST)
+Received: by mail-wm1-x330.google.com with SMTP id t25-20020a1c7719000000b003cfa34ea516so10718120wmi.1;
+        Mon, 21 Nov 2022 09:04:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NoFx71q/N+0qvQAXga+00ibSeehFlmzztyqyJ4eQ8tU=;
+        b=SOzH1U73ZCGPIl43YAXV6NsMIfqJufbn/wt/jIDoIOp6GOyDnyNUbweXEzy6k7i/GC
+         U7kDF6zkGTZJaKsG8HlSLw6o4jH+zrzamUK2ttsK/v0Ev0UHeFKF0cgO56PL/UfJ/VJq
+         P5tegS169frMGQLFONlxqSDw7DKPL4qSX28m2Y8oxjCQK9OaNMfJcmdEA58NrNYCcXMD
+         tVeexNRwQNzZfTAaPFiTj34BZsAFgPj6pDjykwWIRKBwlD0kuFXmIK8+OSHKMvwmpdIz
+         xqrzkxoEMdn0qCvI3EfBZ+LkJcoeDhsKeEQYm3cS36/rtajPjkuv9RSkbX50qFpzKnan
+         569A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=NoFx71q/N+0qvQAXga+00ibSeehFlmzztyqyJ4eQ8tU=;
+        b=NZZsSDuHCCaa1UHue9r6x4vrjP6SZCm9iuTOHBTaLkS4VywgVMMQ6ySXIF0d3BlEuO
+         RhlLJVVpA+FGhmPlKzWTG+if/gR71PigSII7wJeBfy5Bgbs3EgRNManjNF87Lyu3cKqA
+         VRyZPu4K0UVhRCKh47lSu/JYau7JFfZ8cydo7xz+Byz2bT6XNAQ2yAIakCrAiImONZlp
+         XkSDVGdYbXCn0ydlotTq43Mzv/rnhZTX1V7n+JcgqVsW5igGAED3gt0NHzCTkO4dFSoe
+         qINo4POl7iAbfvvba+GnAB3fDstw8yY878zxTF/QuZtBcjQyhFQisk4smesZlQXCquBT
+         bC5A==
+X-Gm-Message-State: ANoB5pnuQ+LeelLUL5FGc88+ljPk/bLy31MCCYWhiBo7tE4FwQQtvFMm
+        wbsd7B6/NeVqV7hHEptJKVxUM9W9SLA=
+X-Google-Smtp-Source: AA0mqf7NevCCp2kHDxm/siKILqFB87Rj2TAPdnv2R9chC5DSXsq7GJxVOqlYf2BRJ2sM75AZqf8HGg==
+X-Received: by 2002:a05:600c:35c8:b0:3cf:cf89:2f02 with SMTP id r8-20020a05600c35c800b003cfcf892f02mr2889036wmq.2.1669050262379;
+        Mon, 21 Nov 2022 09:04:22 -0800 (PST)
+Received: from [192.168.1.131] ([207.188.167.132])
+        by smtp.gmail.com with ESMTPSA id g17-20020a05600c4ed100b003c701c12a17sm21447872wmq.12.2022.11.21.09.04.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 21 Nov 2022 09:04:20 -0800 (PST)
+Message-ID: <a257049b-d3a8-e0ac-d887-5bb0420579ad@gmail.com>
+Date:   Mon, 21 Nov 2022 18:04:18 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v6 01/11] arm64: dts: mt7986: move wed_pcie node
+Content-Language: en-US
+To:     Frank Wunderlich <linux@fw-web.de>,
+        linux-mediatek@lists.infradead.org
+Cc:     Frank Wunderlich <frank-w@public-files.de>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Chunfeng Yun <chunfeng.yun@mediatek.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Bo Jiao <Bo.Jiao@mediatek.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-phy@lists.infradead.org, linux-usb@vger.kernel.org,
+        AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>
+References: <20221118190126.100895-1-linux@fw-web.de>
+ <20221118190126.100895-2-linux@fw-web.de>
+From:   Matthias Brugger <matthias.bgg@gmail.com>
+In-Reply-To: <20221118190126.100895-2-linux@fw-web.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20221121164037.8C73110BB536@smtp.xiscosoft.net>
-Date:   Mon, 21 Nov 2022 17:40:37 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI: Add function 7 DMA alias quirk for Intel Corporation 8 Series HECI.
-
-Intel Corporation 8 Series HECIs include support for a CRB TPM 2.0
-device. When the device is enabled on the BIOS, the TPM 2.0 device is
-detected but the IOMMU prevents it from being accessed.
-
-Even on a computer with a fixed DMAR table, device initialization
-fails with DMA errors:
-  DMAR: DRHD: handling fault status reg 3
-  DMAR: [DMA Read NO_PASID] Request device [00:16.7] fault addr 0xdceff000 [fault reason 0x06] PTE Read access is not set
-  DMAR: DRHD: handling fault status reg 2
-  DMAR: [DMA Write NO_PASID] Request device [00:16.7] fault addr 0xdceff000 [fault reason 0x05] PTE Write access is not set
-  DMAR: DRHD: handling fault status reg 2
-  DMAR: [DMA Write NO_PASID] Request device [00:16.7] fault addr 0xdceff000 [fault reason 0x05] PTE Write access is not set
-  tpm tpm0: Operation Timed out
-  DMAR: DRHD: handling fault status reg 3
-  tpm tpm0: Operation Timed out
-  tpm_crb: probe of MSFT0101:00 failed with error -62
-
-After patching the DMAR table and adding this patch, the TPM 2.0
-device is initialized correctly and no DMA errors appear. Accessing
-the TPM 2.0 PCR banks also works as expected.
-
-Since most Haswell computers supporting this do not seem to have a
-valid DMAR table patching the table with an appropriate RMRR is
-usually also needed. I have published a blogpost describing the
-process.
-
-This patch currently adds the alias only for function 0. Since this
-is the only function I have seen provided by the HECI on actual
-hardware.
 
 
-V2: Resent using a sendmail to fix tab mangling made by Thunderbird.
+On 18/11/2022 20:01, Frank Wunderlich wrote:
+> From: Frank Wunderlich <frank-w@public-files.de>
+> 
+> Move the wed_pcie node to have node aligned by address.
+> 
+> Fixes: 00b9903996b3 ("arm64: dts: mediatek: mt7986: add support for Wireless Ethernet Dispatch")
+> Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+> Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=108251
-Link: https://klondike.es/klog/2022/11/21/patching-the-acpi-dmar-table-to-allow-tpm2-0/
-Reported-by: Pierre Chifflier <chifflier@gmail.com>
-Tested-by: Francisco Blas Izquierdo Riera (klondike) <klondike@klondike.es>
-Signed-off-by: Francisco Blas Izquierdo Riera <klondike@klondike.es>
-Suggested-by: Baolu Lu <baolu.lu@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: stable@vger.kernel.org
+Applied, thanks!
 
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4162,6 +4162,22 @@
- 			 0x0122, /* Plextor M6E (Marvell 88SS9183)*/
- 			 quirk_dma_func1_alias);
- 
-+static void quirk_dma_func7_alias(struct pci_dev *dev)
-+{
-+	if (PCI_FUNC(dev->devfn) == 0)
-+		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 7), 1);
-+}
-+
-+/*
-+ * Certain HECIs in Haswell systems support TPM 2.0. Unfortunately they
-+ * perform DMA using the hidden function 7. Fixing this requires this
-+ * alias and a patch of the DMAR ACPI table to include the appropriate
-+ *  MTRR.
-+ * https://bugzilla.kernel.org/show_bug.cgi?id=108251
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9c3a,
-+			 quirk_dma_func7_alias);
-+
- /*
-  * Some devices DMA with the wrong devfn, not just the wrong function.
-  * quirk_fixed_dma_alias() uses this table to create fixed aliases, where
+> ---
+>   arch/arm64/boot/dts/mediatek/mt7986a.dtsi | 12 ++++++------
+>   1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
+> index a22e10e89ab9..afc01abfa99c 100644
+> --- a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
+> +++ b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
+> @@ -112,6 +112,12 @@ infracfg: infracfg@10001000 {
+>   			#clock-cells = <1>;
+>   		};
+>   
+> +		wed_pcie: wed-pcie@10003000 {
+> +			compatible = "mediatek,mt7986-wed-pcie",
+> +				     "syscon";
+> +			reg = <0 0x10003000 0 0x10>;
+> +		};
+> +
+>   		topckgen: topckgen@1001b000 {
+>   			compatible = "mediatek,mt7986-topckgen", "syscon";
+>   			reg = <0 0x1001B000 0 0x1000>;
+> @@ -257,12 +263,6 @@ ethsys: syscon@15000000 {
+>   			 #reset-cells = <1>;
+>   		};
+>   
+> -		wed_pcie: wed-pcie@10003000 {
+> -			compatible = "mediatek,mt7986-wed-pcie",
+> -				     "syscon";
+> -			reg = <0 0x10003000 0 0x10>;
+> -		};
+> -
+>   		wed0: wed@15010000 {
+>   			compatible = "mediatek,mt7986-wed",
+>   				     "syscon";
