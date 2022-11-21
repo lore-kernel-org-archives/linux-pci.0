@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C9FDC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C74FC433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:37:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231532AbiKUOhX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:37:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47646 "EHLO
+        id S231216AbiKUOhZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:37:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229884AbiKUOgn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:36:43 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26229C72E2;
-        Mon, 21 Nov 2022 06:36:35 -0800 (PST)
-Message-ID: <20221121083326.172418628@linutronix.de>
+        with ESMTP id S230357AbiKUOgq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:36:46 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0683C76A6;
+        Mon, 21 Nov 2022 06:36:43 -0800 (PST)
+Message-ID: <20221121083326.562323643@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041393;
+        s=2020; t=1669041402;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=A5WJRb2/4teczUo5tLJ1BYRZTZjOFdwhWlgYTs4xkWo=;
-        b=GqcsxI4UBE4uCcl41WHYFRRjiTlVU3Rty+qxgKvdKG2bvTdRbVKRURNgNxXS3TGRw6OyIV
-        wUYQq5i4ItodyAogUXTBzcHuHa1MjHoY4Vvy3j7k/nQ1nXWD+UPs17Z5NYQ4vc8R3V+brM
-        XCETZUE4KCPo8z7gsWMz7KQUMW9tyGTP8vDT69Ns+Qb/ViLa5SYzKf6HO1vcn7RXbuuW/V
-        1J0ybhVeHoSA5VwIAynQUeCYYPb8kPWET5qWThLRgWFbToHJBL/bv9dEEIGv+lZWANfQgi
-        l1MIEgMHavoXdPPJ9C2QJuQu6ljOv2YdFDHz44AWHMgG9yIRjwyUIqpHmxfJMg==
+         references:references; bh=Dc0ZFlk2JAPmF0v24u3+k7yycgC6/ipKg9qXDEwD/vU=;
+        b=VaFlFjBDVa6HJIaY2cjyzQLRAvezi2uSZ+cBOuDTxCVMmoHTN6adMFOUrGJEzxSBjOHzTD
+        IQsDEqMDdQUp0SRI6nlodNzN4jeE/jgE5dtLQjCtdYJTu8F7QCsgySYaIWicqhP3/m6Uk8
+        77ZO4ZPdMaLayxnyk5eSvKarJsPpctkv7/3X4hVm2zu2Bc04CRpLD9P0LWKIAnlxj+HAO7
+        vA2OrMMx5OFxcMzgBieRWfqeAM2eoKUjEm5UMkY7rYpQDyzdpD9Xv+wDzxkhfL7iF0Pdkn
+        zmwEMwBAwPyE8nWUDMxL3Mj6LWG3F4G9fsTvpDYOMKx6IwsFBPjk8wtS/fIHOw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041393;
+        s=2020e; t=1669041402;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=A5WJRb2/4teczUo5tLJ1BYRZTZjOFdwhWlgYTs4xkWo=;
-        b=bP6WwDkZXkBORZ2Vav6whh5bDM9I958EHSnWwhNTHSuWRimb4swaIHfet++FUEnDbiovOk
-        ldRkeQ3UG39FD4DA==
+         references:references; bh=Dc0ZFlk2JAPmF0v24u3+k7yycgC6/ipKg9qXDEwD/vU=;
+        b=Su3d0lcfmOFRa+bdpPmWSdcHlphAcY6+INF+dRNd/JtIJhIX4d+Lv6AK1iO2DYU/fVzQkR
+        99rdhYMi5TtbEcBQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,126 +48,73 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V2 12/21] genirq/msi: Make descriptor allocation device domain aware
+Subject: [patch V2 19/21] bus: fsl-mc-msi: Switch to domain id aware interfaces
 References: <20221121083210.309161925@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:36:33 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:36:42 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Change the descriptor allocation and insertion functions to take a domain
-id to prepare for the upcoming multi MSI domain per device support.
+Switch to the new domain id aware interfaces to phase out the previous
+ones.
+
+Get rid of the MSI descriptor and domain checks as the core code detects
+these issues anyway.
+
+No functional change.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h |   16 +++++++++++++++-
- kernel/irq/msi.c    |   34 +++++++++++++++++++++++++---------
- 2 files changed, 40 insertions(+), 10 deletions(-)
+ drivers/bus/fsl-mc/fsl-mc-msi.c |   25 +++----------------------
+ 1 file changed, 3 insertions(+), 22 deletions(-)
 
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -278,7 +278,21 @@ static inline void msi_desc_set_iommu_co
- }
- #endif
+--- a/drivers/bus/fsl-mc/fsl-mc-msi.c
++++ b/drivers/bus/fsl-mc/fsl-mc-msi.c
+@@ -213,21 +213,8 @@ struct irq_domain *fsl_mc_find_msi_domai
  
--int msi_insert_msi_desc(struct device *dev, struct msi_desc *init_desc);
-+int msi_domain_insert_msi_desc(struct device *dev, unsigned int domid,
-+			       struct msi_desc *init_desc);
-+/**
-+ * msi_insert_msi_desc - Allocate and initialize a MSI descriptor in the
-+ *			 default irqdomain and insert it at @init_desc->msi_index
-+ * @dev:	Pointer to the device for which the descriptor is allocated
-+ * @init_desc:	Pointer to an MSI descriptor to initialize the new descriptor
-+ *
-+ * Return: 0 on success or an appropriate failure code.
-+ */
-+static inline int msi_insert_msi_desc(struct device *dev, struct msi_desc *init_desc)
-+{
-+	return msi_domain_insert_msi_desc(dev, MSI_DEFAULT_DOMAIN, init_desc);
-+}
-+
- void msi_free_msi_descs_range(struct device *dev, unsigned int first_index, unsigned int last_index);
- 
- /**
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -63,7 +63,7 @@ static int msi_get_domain_base_index(str
-  * Return: pointer to allocated &msi_desc on success or %NULL on failure
-  */
- static struct msi_desc *msi_alloc_desc(struct device *dev, int nvec,
--					const struct irq_affinity_desc *affinity)
-+				       const struct irq_affinity_desc *affinity)
+ int fsl_mc_msi_domain_alloc_irqs(struct device *dev,  unsigned int irq_count)
  {
- 	struct msi_desc *desc = kzalloc(sizeof(*desc), GFP_KERNEL);
+-	struct irq_domain *msi_domain;
+-	int error;
++	int error = msi_setup_device_data(dev);
  
-@@ -88,27 +88,42 @@ static void msi_free_desc(struct msi_des
- 	kfree(desc);
- }
+-	msi_domain = dev_get_msi_domain(dev);
+-	if (!msi_domain)
+-		return -EINVAL;
+-
+-	error = msi_setup_device_data(dev);
+-	if (error)
+-		return error;
+-
+-	msi_lock_descs(dev);
+-	if (msi_first_desc(dev, MSI_DESC_ALL))
+-		error = -EINVAL;
+-	msi_unlock_descs(dev);
+ 	if (error)
+ 		return error;
  
--static int msi_insert_desc(struct msi_device_data *md, struct msi_desc *desc, unsigned int index)
-+static int msi_insert_desc(struct device *dev, struct msi_desc *desc,
-+			   unsigned int domid, unsigned int index)
+@@ -235,7 +222,7 @@ int fsl_mc_msi_domain_alloc_irqs(struct
+ 	 * NOTE: Calling this function will trigger the invocation of the
+ 	 * its_fsl_mc_msi_prepare() callback
+ 	 */
+-	error = msi_domain_alloc_irqs(msi_domain, dev, irq_count);
++	error = msi_domain_alloc_irqs_range(dev, MSI_DEFAULT_DOMAIN, 0, irq_count - 1);
+ 
+ 	if (error)
+ 		dev_err(dev, "Failed to allocate IRQs\n");
+@@ -244,11 +231,5 @@ int fsl_mc_msi_domain_alloc_irqs(struct
+ 
+ void fsl_mc_msi_domain_free_irqs(struct device *dev)
  {
--	int ret;
-+	struct msi_device_data *md = dev->msi.data;
-+	int baseidx, ret;
-+
-+	baseidx = msi_get_domain_base_index(dev, domid);
-+	if (baseidx < 0) {
-+		ret = baseidx;
-+		goto fail;
-+	}
- 
- 	desc->msi_index = index;
-+	index += baseidx;
- 	ret = xa_insert(&md->__store, index, desc, GFP_KERNEL);
- 	if (ret)
--		msi_free_desc(desc);
-+		goto fail;
-+	return 0;
-+
-+fail:
-+	msi_free_desc(desc);
- 	return ret;
+-	struct irq_domain *msi_domain;
+-
+-	msi_domain = dev_get_msi_domain(dev);
+-	if (!msi_domain)
+-		return;
+-
+-	msi_domain_free_irqs(msi_domain, dev);
++	msi_domain_free_irqs_all(dev, MSI_DEFAULT_DOMAIN);
  }
- 
- /**
-- * msi_insert_msi_desc - Allocate and initialize a MSI descriptor and
-- *			 insert it at @init_desc->msi_index
-+ * msi_domain_insert_msi_desc - Allocate and initialize a MSI descriptor and
-+ *				insert it at @init_desc->msi_index
-  *
-  * @dev:	Pointer to the device for which the descriptor is allocated
-+ * @domid:	The id of the interrupt domain to which the desriptor is added
-  * @init_desc:	Pointer to an MSI descriptor to initialize the new descriptor
-  *
-  * Return: 0 on success or an appropriate failure code.
-  */
--int msi_insert_msi_desc(struct device *dev, struct msi_desc *init_desc)
-+int msi_domain_insert_msi_desc(struct device *dev, unsigned int domid,
-+			       struct msi_desc *init_desc)
- {
- 	struct msi_desc *desc;
- 
-@@ -120,7 +135,8 @@ int msi_insert_msi_desc(struct device *d
- 
- 	/* Copy type specific data to the new descriptor. */
- 	desc->pci = init_desc->pci;
--	return msi_insert_desc(dev->msi.data, desc, init_desc->msi_index);
-+
-+	return msi_insert_desc(dev, desc, domid, init_desc->msi_index);
- }
- 
- /**
-@@ -143,7 +159,7 @@ static int msi_add_simple_msi_descs(stru
- 		desc = msi_alloc_desc(dev, 1, NULL);
- 		if (!desc)
- 			goto fail_mem;
--		ret = msi_insert_desc(dev->msi.data, desc, idx);
-+		ret = msi_insert_desc(dev, desc, MSI_DEFAULT_DOMAIN, idx);
- 		if (ret)
- 			goto fail;
- 	}
 
