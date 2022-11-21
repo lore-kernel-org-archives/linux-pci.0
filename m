@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77A50C4321E
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:48:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC7AC352A1
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230252AbiKUOsR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:48:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40272 "EHLO
+        id S230497AbiKUOsS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:48:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232269AbiKUOri (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:47:38 -0500
+        with ESMTP id S232213AbiKUOre (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:47:34 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8BABD2F59;
-        Mon, 21 Nov 2022 06:41:44 -0800 (PST)
-Message-ID: <20221121140049.174962982@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D28B3D2987;
+        Mon, 21 Nov 2022 06:41:40 -0800 (PST)
+Message-ID: <20221121140048.785620505@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041586;
+        s=2020; t=1669041578;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=wpFVnFupwg4o33fIjYqnuqldVKOyyxjOYBrih4TBtQU=;
-        b=SERGv/Fbd39x/hdUreW55ndXJtC2q2O7Jkei4iwfbm0kM3aZeVm19OOUHFg7yWi/DMoB4N
-        g/UxJILBAZlGuOfZJcHpPxqJ8ypBmSx2fi+w2EIXGVORrsfQ7ymvKOEhqFe0I19Z1J4KUW
-        FBpQdt/mv4Cjp8pV3ZeC/UEXTvqPDZHB5MNLXGvMLP7VhVy/qbhR392jvl5CISBHpJSQyK
-        ZThIvZqJIlW8Jk0+N7sppyLFxKtnsBvRRRSPazvXw1NkP24jyYKxrP5q4a0TReDc2027qb
-        j2fJZVqcPQY8hUG+RG4nQqRaHAlX0WJOK+qpGItLbXmezfCXXxu9feH6f0PXnw==
+         references:references; bh=lryKCdg7QeE0MhY5O2OfgLlItEx02Ny9/G/YzdpvlKM=;
+        b=EvfA4ChliMdUWDqFwD48kq3Hg0yw0bqkMrO1I5BIckFvTPdega+p+b5VYOwVlM76jwFHLW
+        adCBGVY5fe7qKOI6TX/hnojOb8TxywOTUDg2KFJhXFkRtxZTII+5r4mx5Ciip9wBI81VVG
+        zy9EX16+9f55IyVJUjCOfcB+aK6H+7Nw/cM89SZ5K8p9r+kgk4PRC6HwFWq22aScexZWKh
+        6xT3b8avmlv/OraRbE5S/3bFXs1w8qx2z7bK03svjMgz7699ieamCuRwOo0lPHIiRWhhag
+        qejNDCdn9UdihbEkhouzH5Vhtc7XjquHuIV2zbaaFqSBCxsaLHtSrog9RJZqGw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041586;
+        s=2020e; t=1669041578;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=wpFVnFupwg4o33fIjYqnuqldVKOyyxjOYBrih4TBtQU=;
-        b=kgQKet4VZypDMHKSO3o5Vo8EbU/wOHAA/kdev/tYCRnZmh53/GH9k3Uv8+aLwfsorSiKq9
-        dozg8x6v7HcbHHBw==
+         references:references; bh=lryKCdg7QeE0MhY5O2OfgLlItEx02Ny9/G/YzdpvlKM=;
+        b=eKAUQqZWCQ4VtNX8iVvvP7N4sbQ/Pq5wipjeK7yYD6tszP4D450UAP/9XSiZgzOVuUq9mE
+        GiklmwXIgED4jwAw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
@@ -59,31 +59,36 @@ Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
         Shawn Guo <shawnguo@kernel.org>,
         Sascha Hauer <s.hauer@pengutronix.de>,
         Fabio Estevam <festevam@gmail.com>
-Subject: [patch V2 14/40] genirq/irqdomain: Add BUS_DOMAIN_DEVICE_MSI
+Subject: [patch V2 08/40] genirq/irqdomain: Remove the param count restriction
+ from select()
 References: <20221121135653.208611233@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:39:46 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:39:38 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a new domain bus token to prepare for device MSI which aims to replace
-the existing platform MSI maze.
+Now that the GIC-v3 callback can handle invocation with a fwspec parameter
+count of 0 lift the restriction in the core code and invoke select()
+unconditionally when the domain provides it.
+
+Preparatory change for per device MSI domains.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/irqdomain_defs.h |    1 +
- 1 file changed, 1 insertion(+)
+ kernel/irq/irqdomain.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/include/linux/irqdomain_defs.h
-+++ b/include/linux/irqdomain_defs.h
-@@ -26,6 +26,7 @@ enum irq_domain_bus_token {
- 	DOMAIN_BUS_DMAR,
- 	DOMAIN_BUS_AMDVI,
- 	DOMAIN_BUS_PCI_DEVICE_IMS,
-+	DOMAIN_BUS_DEVICE_IMS,
- };
- 
- #endif /* _LINUX_IRQDOMAIN_DEFS_H */
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -417,7 +417,7 @@ struct irq_domain *irq_find_matching_fws
+ 	 */
+ 	mutex_lock(&irq_domain_mutex);
+ 	list_for_each_entry(h, &irq_domain_list, link) {
+-		if (h->ops->select && fwspec->param_count)
++		if (h->ops->select)
+ 			rc = h->ops->select(h, fwspec, bus_token);
+ 		else if (h->ops->match)
+ 			rc = h->ops->match(h, to_of_node(fwnode), bus_token);
 
