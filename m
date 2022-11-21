@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C5B6C43217
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:37:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 492D4C4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:37:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230376AbiKUOhP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:37:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47616 "EHLO
+        id S231226AbiKUOhS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:37:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231240AbiKUOgk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:36:40 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45D1163CC;
-        Mon, 21 Nov 2022 06:36:26 -0800 (PST)
-Message-ID: <20221121083325.794346723@linutronix.de>
+        with ESMTP id S231279AbiKUOgm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:36:42 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F2E1C7210;
+        Mon, 21 Nov 2022 06:36:32 -0800 (PST)
+Message-ID: <20221121083326.056299459@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041384;
+        s=2020; t=1669041391;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=5KOdOFErPOp6C7y41wmv9AEPY8LdxWiLCXWagjX0LQo=;
-        b=haQMldzFjmkYzIKzl0buWuioeUdG3ipmHGvSoCdp4PTxoH+E0zllOk407xEqX/FPxFvXZw
-        SHdagyp2CIPIBWHHXK+YQFfIhNwYxKOGTPQYRB53frUY38164440fDcieiL2nXJpUn9/Ha
-        ynGPjdO1YmU5iLbAnXlJA6Z1n9oT1BoS1mbrM4htaLjRwlUfSiunL/AvOfRH85kQGomsRq
-        eGXQfNUl9lK1inNjTuCbPLV8Jzyawst4PyUcByboVNmvpHUE/StFXY4fu7dd9K8VMrm0M0
-        kR7vPr6+NgVqqg1l1QgU+eS66aEuv85qu0sBQuIGEs88NNgMzfcrVx+GJJcI9g==
+         references:references; bh=XKtpijacgcV8/nCTByztO8f4qnhUrmimBQl8oQuyrjc=;
+        b=fmTlkmLmeCpYnQ2H384C1kftB37lQDAfjPUvbAxzkY6TKz4z1CMnXEhYFYOBbKR90REmp9
+        /Fbn+ghuUprcA0TS1MngifG+Hcf8OksUXJ3Q8E59tSyKCUe10iXuJQKzWZ02s4lJ/Dknmv
+        83HZoU36SrSzuabJ3Kifdcmq8iw1OckNtYx3tAV1COuknF81ZPFdqCaQF7AsNJKTCqG+YW
+        pNI/LfXMbN7LQJxZUx6vB5tsJritM8Ymon9DE4g8uuXnR0lWgKN1ex/MZe0Z29i1d3gWo/
+        l5aJeQHmbAXvwAsp2jY2wHw9Wc43dpuzYW+pjbr8xMNUQldRA1WZ4i+jBdF5Iw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041384;
+        s=2020e; t=1669041391;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=5KOdOFErPOp6C7y41wmv9AEPY8LdxWiLCXWagjX0LQo=;
-        b=XELV3RIw2uCnyajDA/yPX3948niuq2PrCPyxuWtwlDvfTH6apAXM5pU/JirIUkUC26s2sF
-        COE0xQU6YqNEPyAA==
+         references:references; bh=XKtpijacgcV8/nCTByztO8f4qnhUrmimBQl8oQuyrjc=;
+        b=SUifxZ3Y0/AmPPpqvb6faM2hoCT6jLvDLeTgZ+9bYVKXEnuEhV/NLYlTe15YSGbT4T66N+
+        RIi40TUBSFPM9uDQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,99 +48,111 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>,
-        Jason Gunthorpe <jgg@nvidia.com>
-Subject: [patch V2 05/21] genirq/irqdomain: Provide IRQ_DOMAIN_FLAG_MSI_PARENT
+        "Ahmed S. Darwish" <darwi@linutronix.de>
+Subject: [patch V2 10/21] genirq/msi: Make msi_get_virq() device domain aware
 References: <20221121083210.309161925@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:36:24 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:36:30 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The new PCI/IMS (Interrupt Message Store) functionality is allowing
-hardware vendors to provide implementation specific storage for the MSI
-messages. This can be device memory and also host/guest memory, e.g. in
-queue memory which is shared with the hardware.
+From: Ahmed S. Darwish <darwi@linutronix.de>
 
-This requires device specific MSI interrupt domains, which cannot be
-achieved by expanding the existing PCI/MSI interrupt domain concept which is
-a global interrupt domain shared by all PCI devices on a particular (IOMMU)
-segment:
+In preparation of the upcoming per device multi MSI domain support, change
+the interface to support lookups based on domain id and zero based index
+within the domain.
 
-                                         |--- device 1
-     [Vector]---[Remapping]---[PCI/MSI]--|...
-                                         |--- device N
-
-This works because the PCI/MSI[-X] space is uniform, but falls apart with
-PCI/IMS which is implementation defined and must be available along with
-PCI/MSI[-X] on the same device.
-
-To support PCI/MSI[-X] plus PCI/IMS on the same device it is required to
-rework the PCI/MSI interrupt domain hierarchy concept in the following way:
-
-                              |--- [PCI/MSI] device 1
-     [Vector]---[Remapping]---|...
-                              |--- [PCI/MSI] device N
-
-That allows in the next step to create multiple interrupt domains per device:
-
-
-                              |--- [PCI/MSI] device 1
-                              |--- [PCI/IMS] device 1
-     [Vector]---[Remapping]---|...
-                              |--- [PCI/MSI] device N
-                              |--- [PCI/IMS] device N
-
-So the domain which previously created the global PCI/MSI domain must now
-act as parent domain for the per device domains.
-
-The hierarchy depth is the same as before, but the PCI/MSI domains are then
-device specific and not longer global.
-
-Provide IRQ_DOMAIN_FLAG_MSI_PARENT, which allows to identify these parent
-domains, along with helpers to query it.
-
+Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- include/linux/irqdomain.h |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -189,6 +189,9 @@ enum {
- 	/* Irq domain doesn't translate anything */
- 	IRQ_DOMAIN_FLAG_NO_MAP		= (1 << 6),
+V2: Fix the locking leak and the operator precedence issue (kernel robot)
+---
+ include/linux/msi_api.h |   14 +++++++++++++-
+ kernel/irq/msi.c        |   27 +++++++++++++++++++++------
+ 2 files changed, 34 insertions(+), 7 deletions(-)
+
+--- a/include/linux/msi_api.h
++++ b/include/linux/msi_api.h
+@@ -18,6 +18,18 @@ enum msi_domain_ids {
+ 	MSI_MAX_DEVICE_IRQDOMAINS,
+ };
  
-+	/* Irq domain is a MSI parent domain */
-+	IRQ_DOMAIN_FLAG_MSI_PARENT	= (1 << 8),
+-unsigned int msi_get_virq(struct device *dev, unsigned int index);
++unsigned int msi_domain_get_virq(struct device *dev, unsigned int domid, unsigned int index);
 +
- 	/*
- 	 * Flags starting from IRQ_DOMAIN_FLAG_NONCORE are reserved
- 	 * for implementation specific purposes and ignored by the
-@@ -551,6 +554,11 @@ static inline bool irq_domain_is_msi_rem
- 
- extern bool irq_domain_hierarchical_is_msi_remap(struct irq_domain *domain);
- 
-+static inline bool irq_domain_is_msi_parent(struct irq_domain *domain)
++/**
++ * msi_get_virq - Lookup the Linux interrupt number for a MSI index on the default interrupt domain
++ * @dev:	Device for which the lookup happens
++ * @index:	The MSI index to lookup
++ *
++ * Return: The Linux interrupt number on success (> 0), 0 if not found
++ */
++static inline unsigned int msi_get_virq(struct device *dev, unsigned int index)
 +{
-+	return domain->flags & IRQ_DOMAIN_FLAG_MSI_PARENT;
++	return msi_domain_get_virq(dev, MSI_DEFAULT_DOMAIN, index);
 +}
-+
- #else	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
- static inline int irq_domain_alloc_irqs(struct irq_domain *domain,
- 			unsigned int nr_irqs, int node, void *arg)
-@@ -596,6 +604,12 @@ irq_domain_hierarchical_is_msi_remap(str
+ 
+ #endif
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -351,25 +351,38 @@ struct msi_desc *msi_next_desc(struct de
+ EXPORT_SYMBOL_GPL(msi_next_desc);
+ 
+ /**
+- * msi_get_virq - Return Linux interrupt number of a MSI interrupt
++ * msi_domain_get_virq - Lookup the Linux interrupt number for a MSI index on a interrupt domain
+  * @dev:	Device to operate on
++ * @domid:	Domain ID of the interrupt domain associated to the device
+  * @index:	MSI interrupt index to look for (0-based)
+  *
+  * Return: The Linux interrupt number on success (> 0), 0 if not found
+  */
+-unsigned int msi_get_virq(struct device *dev, unsigned int index)
++unsigned int msi_domain_get_virq(struct device *dev, unsigned int domid, unsigned int index)
  {
- 	return false;
- }
-+
-+static inline bool irq_domain_is_msi_parent(struct irq_domain *domain)
-+{
-+	return false;
-+}
-+
- #endif	/* CONFIG_IRQ_DOMAIN_HIERARCHY */
+ 	struct msi_desc *desc;
+ 	unsigned int ret = 0;
+-	bool pcimsi;
++	bool pcimsi = false;
++	int base;
  
- #else /* CONFIG_IRQ_DOMAIN */
+ 	if (!dev->msi.data)
+ 		return 0;
+ 
+-	pcimsi = dev_is_pci(dev) ? to_pci_dev(dev)->msi_enabled : false;
++	if (WARN_ON_ONCE(index > MSI_MAX_INDEX))
++		return 0;
++
++	/* This check is only valid for the PCI default MSI domain */
++	if (dev_is_pci(dev) && domid == MSI_DEFAULT_DOMAIN)
++		pcimsi = to_pci_dev(dev)->msi_enabled;
+ 
+ 	msi_lock_descs(dev);
+-	desc = xa_load(&dev->msi.data->__store, pcimsi ? 0 : index);
++
++	base = msi_get_domain_base_index(dev, domid);
++	if (base < 0)
++		goto unlock;
++
++	base += pcimsi ? 0 : index;
++	desc = xa_load(&dev->msi.data->__store, base);
+ 	if (desc && desc->irq) {
+ 		/*
+ 		 * PCI-MSI has only one descriptor for multiple interrupts.
+@@ -383,10 +396,12 @@ unsigned int msi_get_virq(struct device
+ 			ret = desc->irq;
+ 		}
+ 	}
++
++unlock:
+ 	msi_unlock_descs(dev);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(msi_get_virq);
++EXPORT_SYMBOL_GPL(msi_domain_get_virq);
+ 
+ #ifdef CONFIG_SYSFS
+ static struct attribute *msi_dev_attrs[] = {
 
