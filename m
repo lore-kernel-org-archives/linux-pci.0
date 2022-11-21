@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 857ECC433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:41:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2036AC4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:41:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231797AbiKUOlN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:41:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48874 "EHLO
+        id S231926AbiKUOlP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:41:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230495AbiKUOjc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:39:32 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1248BC76AC;
-        Mon, 21 Nov 2022 06:38:25 -0800 (PST)
-Message-ID: <20221121091328.131771866@linutronix.de>
+        with ESMTP id S231828AbiKUOj7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:39:59 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B808AC80FB;
+        Mon, 21 Nov 2022 06:38:27 -0800 (PST)
+Message-ID: <20221121091328.236473819@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041503;
+        s=2020; t=1669041506;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=QDMaEx7ktXTUaBjXhcwy3JcriisNhamDQjdxbqkUVcQ=;
-        b=0U8XVxBRJ8Vp/L2pbxJS5DkmJ6EglhHxDqHc/FFNSt/z9Z4FW7zwXXFTf0FPzf439iVdsB
-        Vi/OCNdvyipjwXFMBOitBBWNy4808ajkdGXK+CmlMQuw7kBnbuIpJGqY7EbkdxiAx0EXsN
-        py372Iz/61ExERDtt0PTJQtdf5XxwhubaqpQRjrgdY5oiWwZm9pJchwGbyyGhpXnWADmAV
-        ywMOUCJYy5gsLM5QLXsmHabar4bF2357T7+kWqgDO+uhrdQmr0kfzZwSflaB3y1eOiUBbd
-        xSuh9xfuF6Ktgawg/rpmL8w66w5UD91M/99IrMezDnC/70mr7YSz43WeKFR/rQ==
+         references:references; bh=vuCfp3+0SFn3kyyf+6t5pZzLC+oocOyU3+0CroYzbSc=;
+        b=Yg+8EfB0o47msNysn1k4RIEvMk4PKjJ/EtKbJJs1ESh4pVXoedf3RCnlxK7UoYNzCBH+ZZ
+        sxSrNNFNCw6mp8+qeF6Agx990r1jaBUCb2yH8jkV+lmNji6UQejygwaeLxnRelW4NN6elQ
+        5weU8MGbOqb+MkQGiQPLt05u+IZB0rXS1tFsXgL3PXPU9vRWNvwpkD50aVZAjK1cKIAoYg
+        W0mDC+bCQ8yo9bisVhksFlKTm2qP97tZMZpR9MEelx97xm/TbUgUQu3rQw0dTeRslFiDj0
+        yhWGNapN+pY5ollPgVE/YHISoAUPWAGdWLMPPldS31l45NEUpOdd/UbLoLpqKQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041503;
+        s=2020e; t=1669041506;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=QDMaEx7ktXTUaBjXhcwy3JcriisNhamDQjdxbqkUVcQ=;
-        b=+vKigeORtD6RIyVV9dLEHEachwRvpZSi1kWUpZyKjFTLZUEY67FAAdK/UDwbrEVFi9ASJr
-        kj6KeXgh3eKjG4CQ==
+         references:references; bh=vuCfp3+0SFn3kyyf+6t5pZzLC+oocOyU3+0CroYzbSc=;
+        b=WX0QowPnzLAI27QygZUlE4lr7KZkT5x9fkHH4mm+WN52FVoVpdEy1qoQmRnaf2WZngn660
+        9yBjskh2q7f1QTDw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,45 +48,33 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V2 30/33] x86/apic/msi: Enable PCI/IMS
+Subject: [patch V2 32/33] iommu/amd: Enable PCI/IMS
 References: <20221121083657.157152924@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:38:23 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:38:26 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable IMS in the domain init and allocation mapping code, but do not
-enable it on the vector domain as discussed in various threads on LKML.
-
-The interrupt remap domains can expand this setting like they do with
-PCI multi MSI.
+PCI/IMS works like PCI/MSI-X in the remapping. Just add the feature flag.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- arch/x86/kernel/apic/msi.c |    5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/iommu/amd/iommu.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -184,6 +184,7 @@ static int x86_msi_prepare(struct irq_do
- 		alloc->type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
- 		return 0;
- 	case DOMAIN_BUS_PCI_DEVICE_MSIX:
-+	case DOMAIN_BUS_PCI_DEVICE_IMS:
- 		alloc->type = X86_IRQ_ALLOC_TYPE_PCI_MSIX;
- 		return 0;
- 	default:
-@@ -230,6 +231,10 @@ static bool x86_init_dev_msi_info(struct
- 	case DOMAIN_BUS_PCI_DEVICE_MSI:
- 	case DOMAIN_BUS_PCI_DEVICE_MSIX:
- 		break;
-+	case DOMAIN_BUS_PCI_DEVICE_IMS:
-+		if (!(pops->supported_flags & MSI_FLAG_PCI_IMS))
-+			return false;
-+		break;
- 	default:
- 		WARN_ON_ONCE(1);
- 		return false;
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -3649,7 +3649,9 @@ static struct irq_chip amd_ir_chip = {
+ };
+ 
+ static const struct msi_parent_ops amdvi_msi_parent_ops = {
+-	.supported_flags	= X86_VECTOR_MSI_FLAGS_SUPPORTED | MSI_FLAG_MULTI_PCI_MSI,
++	.supported_flags	= X86_VECTOR_MSI_FLAGS_SUPPORTED |
++				  MSI_FLAG_MULTI_PCI_MSI |
++				  MSI_FLAG_PCI_IMS,
+ 	.prefix			= "IR-",
+ 	.init_dev_msi_info	= msi_parent_init_dev_msi_info,
+ };
 
