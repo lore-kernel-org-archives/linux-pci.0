@@ -2,211 +2,161 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46E0DC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 11:39:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B470CC4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 11:41:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231318AbiKULjc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 06:39:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38006 "EHLO
+        id S231366AbiKULld (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 06:41:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231321AbiKULjI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 06:39:08 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1548D13D02;
-        Mon, 21 Nov 2022 03:37:47 -0800 (PST)
-Received: from frapeml100008.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4NG50d1zJkz6H7YQ;
-        Mon, 21 Nov 2022 19:35:13 +0800 (CST)
-Received: from lhrpeml500005.china.huawei.com (7.191.163.240) by
- frapeml100008.china.huawei.com (7.182.85.131) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.31; Mon, 21 Nov 2022 12:37:45 +0100
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.31; Mon, 21 Nov
- 2022 11:37:44 +0000
-Date:   Mon, 21 Nov 2022 11:37:43 +0000
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Dave Jiang <dave.jiang@intel.com>
-CC:     <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <dan.j.williams@intel.com>, <ira.weiny@intel.com>,
-        <vishal.l.verma@intel.com>, <alison.schofield@intel.com>,
-        <rostedt@goodmis.org>, <terry.bowman@amd.com>,
-        <bhelgaas@google.com>
-Subject: Re: [PATCH v3 08/11] cxl/pci: add tracepoint events for CXL RAS
-Message-ID: <20221121113743.000075b6@Huawei.com>
-In-Reply-To: <166879132997.674819.12112190531427523276.stgit@djiang5-desk3.ch.intel.com>
-References: <166879123216.674819.3578187187954311721.stgit@djiang5-desk3.ch.intel.com>
-        <166879132997.674819.12112190531427523276.stgit@djiang5-desk3.ch.intel.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
+        with ESMTP id S231309AbiKULku (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 06:40:50 -0500
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D030B7F5
+        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2022 03:40:44 -0800 (PST)
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20221121114042epoutp03196211f76d05725a66d89f040c305723~plrVjHeD30989809898epoutp03b
+        for <linux-pci@vger.kernel.org>; Mon, 21 Nov 2022 11:40:42 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20221121114042epoutp03196211f76d05725a66d89f040c305723~plrVjHeD30989809898epoutp03b
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1669030842;
+        bh=JAjDOi0UPBRuQmw/4iptna7NRf/JlL41ndKpEzYFly0=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=tOXXb0fJDGjW0la6WF+97EUwqp8wjDkeDvVKpd8u1pF1+aYc7oTTo8+UgM4nFjOcs
+         7bo4tS0NRmOOb8u8Pcc4LALXv0ALe4ZNCn1pE1lei1AFgdjOVbfWaUisZZrXAKoybg
+         LBaiXiCAnsRi7nieYnwuOYcVXE1eOFZuvWRGmNfU=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20221121114041epcas5p15cb082216d3d85dc735e10fec6c12d7b~plrUz3E5H0823008230epcas5p1j;
+        Mon, 21 Nov 2022 11:40:41 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.177]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4NG56w51qsz4x9Pv; Mon, 21 Nov
+        2022 11:40:40 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        1A.AC.39477.8B36B736; Mon, 21 Nov 2022 20:40:40 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+        20221121104714epcas5p27508b91010c72117dd7116fc387b382f~pk8pO18NA1910019100epcas5p2a;
+        Mon, 21 Nov 2022 10:47:14 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20221121104714epsmtrp1af1d090f12c8ed21d5c7dfcf7b8f9719~pk8pNhkuC2438624386epsmtrp1P;
+        Mon, 21 Nov 2022 10:47:14 +0000 (GMT)
+X-AuditID: b6c32a4a-259fb70000019a35-e1-637b63b851c6
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        CE.4B.14392.1375B736; Mon, 21 Nov 2022 19:47:13 +0900 (KST)
+Received: from cheetah.sa.corp.samsungelectronics.net (unknown
+        [107.109.115.53]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20221121104710epsmtip18f866e7d637eafa26ab0fb923b4208e0~pk8ltSTLF1013310133epsmtip1s;
+        Mon, 21 Nov 2022 10:47:09 +0000 (GMT)
+From:   Shradha Todi <shradha.t@samsung.com>
+To:     bhelgaas@google.com, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, kishon@ti.com, vkoul@kernel.org,
+        lpieralisi@kernel.org, kw@linux.com, mani@kernel.org,
+        arnd@arndb.de, gregkh@linuxfoundation.org, alim.akhtar@samsung.com,
+        ajaykumar.rs@samsung.com, rcsekar@samsung.com,
+        sriranjani.p@samsung.com, bharat.uppal@samsung.com,
+        s.prashar@samsung.com, aswani.reddy@samsung.com,
+        pankaj.dubey@samsung.com, p.rajanbabu@samsung.com,
+        niyas.ahmed@samsung.com, chanho61.park@samsung.com
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        Shradha Todi <shradha.t@samsung.com>
+Subject: [PATCH 0/6] Add PCIe support for Tesla FSD SoC
+Date:   Mon, 21 Nov 2022 16:22:04 +0530
+Message-Id: <20221121105210.68596-1-shradha.t@samsung.com>
+X-Mailer: git-send-email 2.17.1
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrKJsWRmVeSWpSXmKPExsWy7bCmpu6O5Opkg5trFC0OvD/IYvFg3jY2
+        i7+TjrFbHNq8ld3i2ssL7BZLmjIsLu/Xtph/5ByrRfPi9WwWF572sFn0vXjIbNHQ85vV4vKu
+        OWwWZ+cdZ7OYsOobi0XLnxYWiwMfVjFaPJnyiNXi6MZgi0Vbv7BbzLqwg9Wide8Rdot5O+Yy
+        WvQerrW4/WYdq8XOOyeYHaQ8fv+axOixYFOpx6ZVnWwed67tYfN4cmU6k8f+uWvYPTYvqffo
+        27KK0eP4je1MHp83yQVwRWXbZKQmpqQWKaTmJeenZOal2yp5B8c7x5uaGRjqGlpamCsp5CXm
+        ptoqufgE6Lpl5gA9rqRQlphTChQKSCwuVtK3synKLy1JVcjILy6xVUotSMkpMCnQK07MLS7N
+        S9fLSy2xMjQwMDIFKkzIzvh99zdrwXWBiucXnRoYu3i7GDk5JARMJK4tWcLYxcjFISSwm1Hi
+        yJq57BDOJ0aJiZfvskI43xglHv2aCVTGAday+7sORHwvo8Sia7egOlqZJDbe72cGmcsmoCXR
+        +LULzBYR+MQs8X2aFUgRs8ACRomHN1YygiSEBcwlDi2ZzgZiswioSsyd+5AJxOYVsJI4uW4r
+        E8SB8hKrNxxgBmmWELjDIbHvyxo2iISLxJmTh5ghbGGJV8e3sEPYUhIv+9ug7HSJlZtnQNXk
+        SHzbvARqqL3EgStzWEDeYRbQlFi/Sx8iLCsx9dQ6sBJmAT6J3t9PoMp5JXbMg7GVJb783cMC
+        YUtKzDt2mRXC9pCYt+oF2CohgViJT1PXsE9glJ2FsGEBI+MqRsnUguLc9NRi0wKjvNRyeEQl
+        5+duYgSnZy2vHYwPH3zQO8TIxMF4iFGCg1lJhLc+pjpZiDclsbIqtSg/vqg0J7X4EKMpMMwm
+        MkuJJucDM0ReSbyhiaWBiZmZmYmlsZmhkjjv4hlayUIC6YklqdmpqQWpRTB9TBycUg1MK5ov
+        2rMeOedQdP5/ZM0p1ZkdDj/8vK+7Xzxl82axQ+iDL7u3bCzIMirufJCtUfRMOa4t6u/W+/7N
+        RoIffy5NivsjtCRr1yURiXsTq/YF8bEx1C2fpuHJdD59s6Ts6s2u4f4fVT/Yr/+RVJf0rV2v
+        8HSLxnWfZR+eTUpJ+p+0rsmBYQ930ontrJsMfzarTvw3+8aH7145ckyZa/yW3HvNaN5uulrn
+        YejN1yHqU68ZHTGdURb0YfNUzpC7oa1Mq2Zd9Yn8JBR1caHma1PuOXvNl0/SuZ6nl3/sgP7W
+        S1GcOwTOndv9w2NO1qrdwuJGB6v4n28tDj9YmxPCki/n/eLOyyOtBomuoeXL4uSvqHuWKrEU
+        ZyQaajEXFScCAPcRoG1YBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrILMWRmVeSWpSXmKPExsWy7bCSnK5heHWyQf9pY4sD7w+yWDyYt43N
+        4u+kY+wWhzZvZbe49vICu8WSpgyLy/u1LeYfOcdq0bx4PZvFhac9bBZ9Lx4yWzT0/Ga1uLxr
+        DpvF2XnH2SwmrPrGYtHyp4XF4sCHVYwWT6Y8YrU4ujHYYtHWL+wWsy7sYLVo3XuE3WLejrmM
+        Fr2Hay1uv1nHarHzzglmBymP378mMXos2FTqsWlVJ5vHnWt72DyeXJnO5LF/7hp2j81L6j36
+        tqxi9Dh+YzuTx+dNcgFcUVw2Kak5mWWpRfp2CVwZv+/+Zi24LlDx/KJTA2MXbxcjB4eEgInE
+        7u86XYxcHEICuxkl7kzsZOli5ASKS0p8vriOCcIWllj57zk7RFEzk8TuvnOMIAk2AS2Jxq9d
+        zCAJEYEeFonZW++AVTELLGGU2Hx3DxtIlbCAucShJdPBbBYBVYm5cx+CjeUVsJI4uW4r1Ap5
+        idUbDjBPYORZwMiwilEytaA4Nz232LDAMC+1XK84Mbe4NC9dLzk/dxMjOFa0NHcwbl/1Qe8Q
+        IxMH4yFGCQ5mJRFekWOVyUK8KYmVValF+fFFpTmpxYcYpTlYlMR5L3SdjBcSSE8sSc1OTS1I
+        LYLJMnFwSjUwTf1poTnNZP/+3UdlN7mwmO26+vKf3blXLzq3L1ZlfDhX9dC8dwU3jwWuZnzP
+        fI7hU7fT/SslT+8oblwwV5754dOidIYC8Q1h/Nu2hjD46wVrrGnk03zQH10quuLmddbVT6c0
+        VuZz7QgNLFyR/r1Aq++m6awpR5dyuUxym2znsntCm/PSi85tulfTi35+q/XeeVHmWPf/lWve
+        CK7u6d11p9B0xtS7be7tii/KXitz973TO7nHfYuLedeW35fO7nsSVyru0Kf88AYn/132FTXa
+        +2R2eP178L2FP3h7fvjRF4lbHua15ZzcJpz1PFnzsKNYQg/rrJ4bdxs5eTw/r7J4d/354vnV
+        L9byH6t4fYUv4ZoSS3FGoqEWc1FxIgDh3o1HBAMAAA==
+X-CMS-MailID: 20221121104714epcas5p27508b91010c72117dd7116fc387b382f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
 X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20221121104714epcas5p27508b91010c72117dd7116fc387b382f
+References: <CGME20221121104714epcas5p27508b91010c72117dd7116fc387b382f@epcas5p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 18 Nov 2022 10:08:49 -0700
-Dave Jiang <dave.jiang@intel.com> wrote:
+FSD platform has three instances of DesignWare based PCIe IP,
+one is in FSYS0 block and other two in FSYS1 block.
+This patch series add required DT binding, DT file modifications,
+Controller driver support and PHY driver support for the same.
 
-> Add tracepoint events for recording the CXL uncorrectable and correctable
-> errors. For uncorrectable errors, there is additional data of 512B from
-> the header log register (CXL spec rev3 8.2.4.16.7). The trace event will
-> intake a dynamic array that will dump the entire Header Log data. If
-> multiple errors are set in the status register, then the
-> 'first error' field (CXL spec rev3 v8.2.4.16.6) is read from the Error
-> Capabilities and Control Register in order to determine the error.
-> 
-> This implementation does not include CXL IDE Error details.
-> 
-> Cc: Steven Rostedt <rostedt@goodmis.org>
-> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-With the stuff Steven raised tidied up this looks good to me now.
-
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+This series needs following three patches to be merged before
+this patchset
+[1]: https://www.spinics.net/lists/netdev/msg854161.html
+[2]: https://www.spinics.net/lists/netdev/msg854158.html
+[3]: https://lore.kernel.org/all/20221013104024.50179-2-p.rajanbabu@samsung.com/
 
 
+Shradha Todi (6):
+  dt-bindings: phy: Add PCIe PHY bindings for FSD
+  dt-bindings: PCI: Add PCIe controller bindings for FSD
+  PCI: dwc: fsd: Add FSD PCIe Controller driver support
+  phy: tesla-pcie: Add PCIe PHY driver support for FSD
+  arm64: dts: fsd: Add PCIe support for Tesla FSD SoC
+  misc: pci_endpoint_test: Add driver data for FSD PCIe controllers
 
-> ---
->  drivers/cxl/pci.c          |    2 +
->  include/trace/events/cxl.h |  110 ++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 112 insertions(+)
->  create mode 100644 include/trace/events/cxl.h
-> 
-> diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-> index 9428f3e0d99b..0f36a5861a7b 100644
-> --- a/drivers/cxl/pci.c
-> +++ b/drivers/cxl/pci.c
-> @@ -13,6 +13,8 @@
->  #include "cxlmem.h"
->  #include "cxlpci.h"
->  #include "cxl.h"
-> +#define CREATE_TRACE_POINTS
-> +#include <trace/events/cxl.h>
->  
->  /**
->   * DOC: cxl pci
-> diff --git a/include/trace/events/cxl.h b/include/trace/events/cxl.h
-> new file mode 100644
-> index 000000000000..f8e95d977133
-> --- /dev/null
-> +++ b/include/trace/events/cxl.h
-> @@ -0,0 +1,110 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM cxl
-> +
-> +#if !defined(_CXL_EVENTS_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define _CXL_EVENTS_H
-> +
-> +#include <linux/tracepoint.h>
-> +
-> +#define CXL_HEADERLOG_SIZE		SZ_512
-> +#define CXL_HEADERLOG_SIZE_U32		SZ_512 / sizeof(u32)
-> +
-> +#define CXL_RAS_UC_CACHE_DATA_PARITY	BIT(0)
-> +#define CXL_RAS_UC_CACHE_ADDR_PARITY	BIT(1)
-> +#define CXL_RAS_UC_CACHE_BE_PARITY	BIT(2)
-> +#define CXL_RAS_UC_CACHE_DATA_ECC	BIT(3)
-> +#define CXL_RAS_UC_MEM_DATA_PARITY	BIT(4)
-> +#define CXL_RAS_UC_MEM_ADDR_PARITY	BIT(5)
-> +#define CXL_RAS_UC_MEM_BE_PARITY	BIT(6)
-> +#define CXL_RAS_UC_MEM_DATA_ECC		BIT(7)
-> +#define CXL_RAS_UC_REINIT_THRESH	BIT(8)
-> +#define CXL_RAS_UC_RSVD_ENCODE		BIT(9)
-> +#define CXL_RAS_UC_POISON		BIT(10)
-> +#define CXL_RAS_UC_RECV_OVERFLOW	BIT(11)
-> +#define CXL_RAS_UC_INTERNAL_ERR		BIT(14)
-> +#define CXL_RAS_UC_IDE_TX_ERR		BIT(15)
-> +#define CXL_RAS_UC_IDE_RX_ERR		BIT(16)
-> +
-> +#define show_uc_errs(status)	__print_flags(status, " | ",		  \
-> +	{ CXL_RAS_UC_CACHE_DATA_PARITY, "Cache Data Parity Error" },	  \
-> +	{ CXL_RAS_UC_CACHE_ADDR_PARITY, "Cache Address Parity Error" },	  \
-> +	{ CXL_RAS_UC_CACHE_BE_PARITY, "Cache Byte Enable Parity Error" }, \
-> +	{ CXL_RAS_UC_CACHE_DATA_ECC, "Cache Data ECC Error" },		  \
-> +	{ CXL_RAS_UC_MEM_DATA_PARITY, "Memory Data Parity Error" },	  \
-> +	{ CXL_RAS_UC_MEM_ADDR_PARITY, "Memory Address Parity Error" },	  \
-> +	{ CXL_RAS_UC_MEM_BE_PARITY, "Memory Byte Enable Parity Error" },  \
-> +	{ CXL_RAS_UC_MEM_DATA_ECC, "Memory Data ECC Error" },		  \
-> +	{ CXL_RAS_UC_REINIT_THRESH, "REINIT Threshold Hit" },		  \
-> +	{ CXL_RAS_UC_RSVD_ENCODE, "Received Unrecognized Encoding" },	  \
-> +	{ CXL_RAS_UC_POISON, "Received Poison From Peer" },		  \
-> +	{ CXL_RAS_UC_RECV_OVERFLOW, "Receiver Overflow" },		  \
-> +	{ CXL_RAS_UC_INTERNAL_ERR, "Component Specific Error" },	  \
-> +	{ CXL_RAS_UC_IDE_TX_ERR, "IDE Tx Error" },			  \
-> +	{ CXL_RAS_UC_IDE_RX_ERR, "IDE Rx Error" }			  \
-> +)
-> +
-> +TRACE_EVENT(cxl_aer_uncorrectable_error,
-> +	TP_PROTO(const char *dev_name, u32 status, u32 fe, u32 *hl),
-> +	TP_ARGS(dev_name, status, fe, hl),
-> +	TP_STRUCT__entry(
-> +		__string(dev_name, dev_name)
-> +		__field(u32, status)
-> +		__field(u32, first_error)
-> +		__dynamic_array(u32, header_log, CXL_HEADERLOG_SIZE_U32)
-> +	),
-> +	TP_fast_assign(
-> +		__assign_str(dev_name, dev_name);
-> +		__entry->status = status;
-> +		__entry->first_error = fe;
-> +		/*
-> +		 * Embed the 512B headerlog data for user app retrieval and
-> +		 * parsing, but no need to print this in the trace buffer.
-> +		 */
-> +		memcpy(__get_dynamic_array(header_log), hl, CXL_HEADERLOG_SIZE);
-> +	),
-> +	TP_printk("%s: status: '%s' first_error: '%s'",
-> +		  __get_str(dev_name),
-> +		  show_uc_errs(__entry->status),
-> +		  show_uc_errs(__entry->first_error)
-> +	)
-> +);
-> +
-> +#define CXL_RAS_CE_CACHE_DATA_ECC	BIT(0)
-> +#define CXL_RAS_CE_MEM_DATA_ECC		BIT(1)
-> +#define CXL_RAS_CE_CRC_THRESH		BIT(2)
-> +#define CXL_RAS_CE_CACHE_POISON		BIT(3)
-> +#define CXL_RAS_CE_MEM_POISON		BIT(4)
-> +#define CXL_RAS_CE_PHYS_LAYER_ERR	BIT(5)
-> +
-> +#define show_ce_errs(status)	__print_flags(status, " | ",			\
-> +	{ CXL_RAS_CE_CACHE_DATA_ECC, "Cache Data ECC Error" },			\
-> +	{ CXL_RAS_CE_MEM_DATA_ECC, "Memory Data Ecc Error" },			\
-> +	{ CXL_RAS_CE_CRC_THRESH, "CRC Threshold Hit" },				\
-> +	{ CXL_RAS_CE_CACHE_POISON, "Received Cache Poison From Peer" },		\
-> +	{ CXL_RAS_CE_MEM_POISON, "Received Memory Poison From Peer" },		\
-> +	{ CXL_RAS_CE_PHYS_LAYER_ERR, "Received Error From Physical Layer" }	\
-> +)
-> +
-> +TRACE_EVENT(cxl_aer_correctable_error,
-> +	TP_PROTO(const char *dev_name, u32 status),
-> +	TP_ARGS(dev_name, status),
-> +	TP_STRUCT__entry(
-> +		__string(dev_name, dev_name)
-> +		__field(u32, status)
-> +	),
-> +	TP_fast_assign(
-> +		__assign_str(dev_name, dev_name);
-> +		__entry->status = status;
-> +	),
-> +	TP_printk("%s: status: '%s'",
-> +		  __get_str(dev_name), show_ce_errs(__entry->status)
-> +	)
-> +);
-> +
-> +#endif /* _CXL_EVENTS_H */
-> +
-> +/* This part must be outside protection */
-> +#undef TRACE_INCLUDE_FILE
-> +#define TRACE_INCLUDE_FILE cxl
-> +#include <trace/define_trace.h>
-> 
-> 
+ .../bindings/pci/tesla,pcie-fsd-ep.yaml       |  107 ++
+ .../bindings/pci/tesla,pcie-fsd.yaml          |  117 ++
+ .../bindings/phy/phy-tesla-pcie.yaml          |   75 ++
+ arch/arm64/boot/dts/tesla/fsd-evb.dts         |   48 +
+ arch/arm64/boot/dts/tesla/fsd-pinctrl.dtsi    |   65 ++
+ arch/arm64/boot/dts/tesla/fsd.dtsi            |  171 +++
+ drivers/misc/pci_endpoint_test.c              |    3 +
+ drivers/pci/controller/dwc/Kconfig            |   35 +
+ drivers/pci/controller/dwc/Makefile           |    1 +
+ drivers/pci/controller/dwc/pcie-fsd.c         | 1021 +++++++++++++++++
+ drivers/phy/samsung/Kconfig                   |   10 +
+ drivers/phy/samsung/Makefile                  |    1 +
+ drivers/phy/samsung/phy-tesla-pcie.c          |  397 +++++++
+ include/linux/pci_ids.h                       |    2 +
+ 14 files changed, 2053 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/tesla,pcie-fsd-ep.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/tesla,pcie-fsd.yaml
+ create mode 100644 Documentation/devicetree/bindings/phy/phy-tesla-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-fsd.c
+ create mode 100644 drivers/phy/samsung/phy-tesla-pcie.c
+
+-- 
+2.17.1
 
