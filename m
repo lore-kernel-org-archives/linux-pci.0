@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E132CC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:41:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 857ECC433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:41:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231442AbiKUOlB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:41:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48608 "EHLO
+        id S231797AbiKUOlN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:41:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231714AbiKUOjY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:39:24 -0500
+        with ESMTP id S230495AbiKUOjc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:39:32 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F270EC846A;
-        Mon, 21 Nov 2022 06:38:26 -0800 (PST)
-Message-ID: <20221121091328.184455059@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1248BC76AC;
+        Mon, 21 Nov 2022 06:38:25 -0800 (PST)
+Message-ID: <20221121091328.131771866@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041505;
+        s=2020; t=1669041503;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=SuhbIxDBU+pgQkYaRbDZDx3XYR1ZMR159u+r/p3oNuI=;
-        b=1psr2+6PEXY3YBQmmhtpss+e/EXa3fcuidPDiz2U/W/zlXsB2qLo8iCUiCbS/WujW3vE+h
-        OXmLxsn8RCKMB14O6J4EekalasMdPu5542sb/8pz9abolCY9H2piNBDYa6c0a7lp+hRzoz
-        fDbLxngNyek74VO0HsgdxY8ojuKCW0YldMTPdi+egcKZDdPxJDvehtF4066jgo1+3juDb8
-        q2LDrF4ftSwgbcXMmFNKh1gZuUo4Qj8lh64UQF8VFe1V5J6cYYY91uAYV6zLY5eXU/8kZ3
-        V8wBr9qz0yqwUrtTI6VQ7A7IbugtHPhbhK8pcaAFQlE31nxaTvGPchh741n2TQ==
+         references:references; bh=QDMaEx7ktXTUaBjXhcwy3JcriisNhamDQjdxbqkUVcQ=;
+        b=0U8XVxBRJ8Vp/L2pbxJS5DkmJ6EglhHxDqHc/FFNSt/z9Z4FW7zwXXFTf0FPzf439iVdsB
+        Vi/OCNdvyipjwXFMBOitBBWNy4808ajkdGXK+CmlMQuw7kBnbuIpJGqY7EbkdxiAx0EXsN
+        py372Iz/61ExERDtt0PTJQtdf5XxwhubaqpQRjrgdY5oiWwZm9pJchwGbyyGhpXnWADmAV
+        ywMOUCJYy5gsLM5QLXsmHabar4bF2357T7+kWqgDO+uhrdQmr0kfzZwSflaB3y1eOiUBbd
+        xSuh9xfuF6Ktgawg/rpmL8w66w5UD91M/99IrMezDnC/70mr7YSz43WeKFR/rQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041505;
+        s=2020e; t=1669041503;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=SuhbIxDBU+pgQkYaRbDZDx3XYR1ZMR159u+r/p3oNuI=;
-        b=Rn8pzIZk+L7xOktcHzTRG9gckCOFAhYH4n4XxaFboCMQqeHg4TQPOweQ7JbeSWvSySHefJ
-        N4ipPb0kY1QPg9Aw==
+         references:references; bh=QDMaEx7ktXTUaBjXhcwy3JcriisNhamDQjdxbqkUVcQ=;
+        b=+vKigeORtD6RIyVV9dLEHEachwRvpZSi1kWUpZyKjFTLZUEY67FAAdK/UDwbrEVFi9ASJr
+        kj6KeXgh3eKjG4CQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,33 +48,45 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V2 31/33] iommu/vt-d: Enable PCI/IMS
+Subject: [patch V2 30/33] x86/apic/msi: Enable PCI/IMS
 References: <20221121083657.157152924@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:38:24 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:38:23 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI/IMS works like PCI/MSI-X in the remapping. Just add the feature flag.
+Enable IMS in the domain init and allocation mapping code, but do not
+enable it on the vector domain as discussed in various threads on LKML.
+
+The interrupt remap domains can expand this setting like they do with
+PCI multi MSI.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/iommu/intel/irq_remapping.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ arch/x86/kernel/apic/msi.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
---- a/drivers/iommu/intel/irq_remapping.c
-+++ b/drivers/iommu/intel/irq_remapping.c
-@@ -1429,7 +1429,9 @@ static const struct irq_domain_ops intel
- };
- 
- static const struct msi_parent_ops dmar_msi_parent_ops = {
--	.supported_flags	= X86_VECTOR_MSI_FLAGS_SUPPORTED | MSI_FLAG_MULTI_PCI_MSI,
-+	.supported_flags	= X86_VECTOR_MSI_FLAGS_SUPPORTED |
-+				  MSI_FLAG_MULTI_PCI_MSI |
-+				  MSI_FLAG_PCI_IMS,
- 	.prefix			= "IR-",
- 	.init_dev_msi_info	= msi_parent_init_dev_msi_info,
- };
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -184,6 +184,7 @@ static int x86_msi_prepare(struct irq_do
+ 		alloc->type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
+ 		return 0;
+ 	case DOMAIN_BUS_PCI_DEVICE_MSIX:
++	case DOMAIN_BUS_PCI_DEVICE_IMS:
+ 		alloc->type = X86_IRQ_ALLOC_TYPE_PCI_MSIX;
+ 		return 0;
+ 	default:
+@@ -230,6 +231,10 @@ static bool x86_init_dev_msi_info(struct
+ 	case DOMAIN_BUS_PCI_DEVICE_MSI:
+ 	case DOMAIN_BUS_PCI_DEVICE_MSIX:
+ 		break;
++	case DOMAIN_BUS_PCI_DEVICE_IMS:
++		if (!(pops->supported_flags & MSI_FLAG_PCI_IMS))
++			return false;
++		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 		return false;
 
