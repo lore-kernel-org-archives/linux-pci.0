@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 775ADC4332F
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:45:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E78BC433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:45:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231429AbiKUOpE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:45:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33854 "EHLO
+        id S230143AbiKUOpg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:45:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231912AbiKUOoq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:44:46 -0500
+        with ESMTP id S231777AbiKUOpI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:45:08 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B109CFEB1;
-        Mon, 21 Nov 2022 06:39:52 -0800 (PST)
-Message-ID: <20221121140048.344525618@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30AB7D0892;
+        Mon, 21 Nov 2022 06:40:03 -0800 (PST)
+Message-ID: <20221121140048.534395323@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041570;
+        s=2020; t=1669041574;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=VMdi78Ph2ZKt//IeQ4f995Y7xixQx0PVMNetg0nGRuE=;
-        b=s1lueuqmL8rn1uMzqRQQRUHs8j8k/PkQkr2FJayzUfJfBRzHMwnhKu/4YzxQRoJorfRzoU
-        8rw39T93j+gaLV9OPwyttucgaKM38hHBhQJgqU3caAg8N5/683w2esfJcfBgzRKouh0wqq
-        a+G20BwLFXT7fvCEYMziNoTp/uL+/VDnwrWStO4yh0G5zMRoGqKi/+pHIPtHx/RanKrwjP
-        8NkqmtSrNGxN2RYeso48vaUquk7W2L35QPy68rsQ3zB9H/0cN4oGgvyinCf0YQyKt7EZ3U
-        OcHFgGyNHeUEHAwZJJsyciQhX8cXeoblH6XN/iaO6a5x4BW6mnqLQKydoyl2Hg==
+         references:references; bh=C+l3aMd1UpaHQsZc5/Vr1+tQOoVWd1U/GSVn/k0pohc=;
+        b=WZfo13zi3BCAgNxewO+cS7nrTD8Mnhb1NbDbk3rBNcd1RI+C2jqp/ofu+uCLJ/5smPxjS2
+        DdU53REQSsLDryvdSn4jWds0RIZsgIpL1h8EuGYBx8+P6E0AScjRpdJxJKOp8ITfluWs0n
+        Wqj3EgGiFhwIkzgOfjZHrJ9t8VnYi5hr0qOM++fJDJqVdFe87Fx9VdC0bh1dG9AnmsFfvB
+        m4Wr7uQXCngnKHpBP+qnOI7YHsfGOi5zbtcRgzP8Bq7L6IDPyi6z6NotGige2rTP5xcEdY
+        bh44iFTO9VDnxoXsGMz4OnjrHb7pN5OYh6iuVIi/yZ3I7RJZ4xuodtHfkyV/vg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041570;
+        s=2020e; t=1669041574;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=VMdi78Ph2ZKt//IeQ4f995Y7xixQx0PVMNetg0nGRuE=;
-        b=MBeTqTJkLdnku5CLyv6f0wHkET+DFJKaoKtmUAmidr2fZ2eYNfvQPhyph1fu65IpXbLV59
-        jqtVa9JpyObax5AA==
+         references:references; bh=C+l3aMd1UpaHQsZc5/Vr1+tQOoVWd1U/GSVn/k0pohc=;
+        b=RnSWq2rd3aL/RH88+Ocv83BFbW5wGXqdOpB9BP1wIJCWDFtUurrVBgdIwCoqh1hHqielUK
+        tRoWzYrmwFNEw9DA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
@@ -59,42 +59,69 @@ Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
         Shawn Guo <shawnguo@kernel.org>,
         Sascha Hauer <s.hauer@pengutronix.de>,
         Fabio Estevam <festevam@gmail.com>
-Subject: [patch V2 01/40] irqchip/irq-mvebu-icu: Fix works by chance pointer
- assignment
+Subject: [patch V2 04/40] irqchip/gic-v2m: Mark a few functions __init
 References: <20221121135653.208611233@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:39:29 +0100 (CET)
+Date:   Mon, 21 Nov 2022 15:39:33 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Assigning a void pointer which points to a struct to two different data
-types only works by chance if the second type is the first member of the
-struct.
-
-Replace this works by chance code by using the primary struct pointer.
+They are all part of the init sequence.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Andrew Lunn <andrew@lunn.ch>
-Cc: Gregory Clement <gregory.clement@bootlin.com>
-Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Marc Zyngier <maz@kernel.org>
 ---
- drivers/irqchip/irq-mvebu-icu.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/irqchip/irq-gic-v2m.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
---- a/drivers/irqchip/irq-mvebu-icu.c
-+++ b/drivers/irqchip/irq-mvebu-icu.c
-@@ -151,9 +151,9 @@ static int
- mvebu_icu_irq_domain_translate(struct irq_domain *d, struct irq_fwspec *fwspec,
- 			       unsigned long *hwirq, unsigned int *type)
- {
--	struct mvebu_icu_msi_data *msi_data = platform_msi_get_host_data(d);
--	struct mvebu_icu *icu = platform_msi_get_host_data(d);
- 	unsigned int param_count = static_branch_unlikely(&legacy_bindings) ? 3 : 2;
-+	struct mvebu_icu_msi_data *msi_data = platform_msi_get_host_data(d);
-+	struct mvebu_icu *icu = msi_data->icu;
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -263,7 +263,7 @@ static struct msi_domain_info gicv2m_pms
+ 	.chip	= &gicv2m_pmsi_irq_chip,
+ };
  
- 	/* Check the count of the parameters in dt */
- 	if (WARN_ON(fwspec->param_count != param_count)) {
+-static void gicv2m_teardown(void)
++static void __init gicv2m_teardown(void)
+ {
+ 	struct v2m_data *v2m, *tmp;
+ 
+@@ -278,7 +278,7 @@ static void gicv2m_teardown(void)
+ 	}
+ }
+ 
+-static int gicv2m_allocate_domains(struct irq_domain *parent)
++static __init int gicv2m_allocate_domains(struct irq_domain *parent)
+ {
+ 	struct irq_domain *inner_domain, *pci_domain, *plat_domain;
+ 	struct v2m_data *v2m;
+@@ -405,7 +405,7 @@ static int __init gicv2m_init_one(struct
+ 	return ret;
+ }
+ 
+-static const struct of_device_id gicv2m_device_id[] = {
++static __initconst struct of_device_id gicv2m_device_id[] = {
+ 	{	.compatible	= "arm,gic-v2m-frame",	},
+ 	{},
+ };
+@@ -455,7 +455,7 @@ static int __init gicv2m_of_init(struct
+ #ifdef CONFIG_ACPI
+ static int acpi_num_msi;
+ 
+-static struct fwnode_handle *gicv2m_get_fwnode(struct device *dev)
++static __init struct fwnode_handle *gicv2m_get_fwnode(struct device *dev)
+ {
+ 	struct v2m_data *data;
+ 
+@@ -470,7 +470,7 @@ static struct fwnode_handle *gicv2m_get_
+ 	return data->fwnode;
+ }
+ 
+-static bool acpi_check_amazon_graviton_quirks(void)
++static __init bool acpi_check_amazon_graviton_quirks(void)
+ {
+ 	static struct acpi_table_madt *madt;
+ 	acpi_status status;
 
