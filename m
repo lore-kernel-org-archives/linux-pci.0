@@ -2,78 +2,175 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EBDC4321E
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78BB4C433FE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:57:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229984AbiKUO4h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:56:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52010 "EHLO
+        id S229896AbiKUO5r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:57:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230417AbiKUO4G (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:56:06 -0500
-Received: from mail.skyhub.de (mail.skyhub.de [IPv6:2a01:4f8:190:11c2::b:1457])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09A9ECDFD5;
-        Mon, 21 Nov 2022 06:46:27 -0800 (PST)
-Received: from zn.tnic (p200300ea9733e725329c23fffea6a903.dip0.t-ipconnect.de [IPv6:2003:ea:9733:e725:329c:23ff:fea6:a903])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 728E61EC071C;
-        Mon, 21 Nov 2022 15:46:25 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
-        t=1669041985;
+        with ESMTP id S231959AbiKUO4i (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:56:38 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE77CD14E1;
+        Mon, 21 Nov 2022 06:47:22 -0800 (PST)
+Message-ID: <20221121140050.514874045@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1669041612;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
-        bh=xCGd6hIfxBt7cfQnfEqxSw7FPCqLC4Ck4a/q2jKRpXs=;
-        b=LYt3r1VGYpjFq2eY/1Ig8EB3IqiCf4tNl8mN6dMAnrQpepWGDiaxtPiv4BXj0A6jaCD+Kg
-        K6ao66qLGGIogTA7O/cDGBLmoMgFJB0PO40fxjVY3RQwJbP6X4+tmXifRdjlV9jvmVnhxt
-        RisyrBR0wBFbkpZYBwrRyZoAITaTgGY=
-Date:   Mon, 21 Nov 2022 15:46:25 +0100
-From:   Borislav Petkov <bp@alien8.de>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, luto@kernel.org,
-        peterz@infradead.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, lpieralisi@kernel.org,
-        robh@kernel.org, kw@linux.com, bhelgaas@google.com, arnd@arndb.de,
-        hch@infradead.org, m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, tglx@linutronix.de,
-        mingo@redhat.com, dave.hansen@linux.intel.com,
-        Tianyu.Lan@microsoft.com, kirill.shutemov@linux.intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com, ak@linux.intel.com,
-        isaku.yamahata@intel.com, dan.j.williams@intel.com,
-        jane.chu@oracle.com, seanjc@google.com, tony.luck@intel.com,
-        x86@kernel.org, linux-kernel@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        iommu@lists.linux.dev
-Subject: Re: [Patch v3 06/14] init: Call mem_encrypt_init() after Hyper-V
- hypercall init is done
-Message-ID: <Y3uPQTKDnD+/tv6g@zn.tnic>
-References: <1668624097-14884-1-git-send-email-mikelley@microsoft.com>
- <1668624097-14884-7-git-send-email-mikelley@microsoft.com>
+         references:references; bh=MWbome5dgm/wPYmMLcr+2vFNZotgfJG19zwD6ENHzgY=;
+        b=HWoN44KmyafpTrxe6ukQ35xbvm2lQnIatKWOJR3CwzpHyHqEYi9TXM7ThjDPAcL9JTQN9d
+        GJ5JUinAXVGHRQ5+Q/N7VLn0f5O9V8ziXYy3EvYUXzKbOZm5hfaWP0bvefbsXcRdm1O1VM
+        crxRUVEGA6HTVP18CgeaMRijMvzn4mDrmSTkrq3t8FmkJj6UWMBp2p/ibCZWDtTNig3odc
+        UjAG1XojBBej4P4fDiBC+Qbyhrz1os+epccZTyxiPWvmd+w2APnl/iFXaK9bq+4HD78h/T
+        Dbh4W2Dya68SQqxY5hBVMPu+/rxic19kP4fW9Kn5xIZY0h7zGC18GqToNhpuFg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1669041612;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         references:references; bh=MWbome5dgm/wPYmMLcr+2vFNZotgfJG19zwD6ENHzgY=;
+        b=aS68KBaR83xW3NNx1pE5zTjxAqACHvln9C6Du58Up/9KL0ohcWRLbx3uCul7Y6Dp0o8dYC
+        g64BrRAEntnflfBA==
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Ammar Faizi <ammarfaizi2@gnuweeb.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Vinod Koul <vkoul@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Shameerali Kolothum Thodi 
+        <shameerali.kolothum.thodi@huawei.com>,
+        Zenghui Yu <yuzenghui@huawei.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>
+Subject: [patch V2 35/40] irqchip/mvebu-gicp: Switch to MSI parent
+References: <20221121135653.208611233@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <1668624097-14884-7-git-send-email-mikelley@microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Date:   Mon, 21 Nov 2022 15:40:12 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 16, 2022 at 10:41:29AM -0800, Michael Kelley wrote:
-> Fix this by moving mem_encrypt_init() after late_time_init() and
-> related clock initializations. The intervening initializations don't
-> do any I/O that requires the swiotlb, so moving mem_encrypt_init()
-> slightly later has no impact.
+All platform MSI users and the PCI/MSI code handle per device MSI domains
+when the irqdomain associated to the device provides MSI parent
+functionality.
 
-I hope you're right. Our boot ordering is fragile as hell. But
-mem_encrypt_init() doesn't do a whole lot of important setup - that has
-happened a lot earlier already - so I'm not too worried.
+Remove the "global" platform domain related code and provide the MSI parent
+functionality by filling in msi_parent_ops.
 
-But we'll see what breaks in wider testing.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Gregory Clement <gregory.clement@bootlin.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+---
+ drivers/irqchip/Kconfig          |    1 
+ drivers/irqchip/irq-mvebu-gicp.c |   44 ++++++++++++++++-----------------------
+ 2 files changed, 20 insertions(+), 25 deletions(-)
 
--- 
-Regards/Gruss,
-    Boris.
+--- a/drivers/irqchip/Kconfig
++++ b/drivers/irqchip/Kconfig
+@@ -373,6 +373,7 @@ config MSCC_OCELOT_IRQ
+ 	select GENERIC_IRQ_CHIP
+ 
+ config MVEBU_GICP
++	select ARM_GIC_MSI_LIB
+ 	bool
+ 
+ config MVEBU_ICU
+--- a/drivers/irqchip/irq-mvebu-gicp.c
++++ b/drivers/irqchip/irq-mvebu-gicp.c
+@@ -17,6 +17,8 @@
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+ 
++#include "irq-gic-msi-lib.h"
++
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+ 
+ #define GICP_SETSPI_NSR_OFFSET	0x0
+@@ -145,32 +147,32 @@ static void gicp_irq_domain_free(struct
+ }
+ 
+ static const struct irq_domain_ops gicp_domain_ops = {
++	.select	= gic_msi_lib_irq_domain_select,
+ 	.alloc	= gicp_irq_domain_alloc,
+ 	.free	= gicp_irq_domain_free,
+ };
+ 
+-static struct irq_chip gicp_msi_irq_chip = {
+-	.name		= "GICP",
+-	.irq_set_type	= irq_chip_set_type_parent,
+-	.flags		= IRQCHIP_SUPPORTS_LEVEL_MSI,
+-};
++#define GICP_MSI_FLAGS_REQUIRED  (MSI_FLAG_USE_DEF_DOM_OPS |	\
++				  MSI_FLAG_USE_DEF_CHIP_OPS)
+ 
+-static struct msi_domain_ops gicp_msi_ops = {
+-};
++#define GICP_MSI_FLAGS_SUPPORTED (MSI_GENERIC_FLAGS_MASK |	\
++				  MSI_FLAG_LEVEL_CAPABLE)
+ 
+-static struct msi_domain_info gicp_msi_domain_info = {
+-	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+-		   MSI_FLAG_LEVEL_CAPABLE),
+-	.ops	= &gicp_msi_ops,
+-	.chip	= &gicp_msi_irq_chip,
++static const struct msi_parent_ops gicp_msi_parent_ops = {
++	.supported_flags	= GICP_MSI_FLAGS_SUPPORTED,
++	.required_flags		= GICP_MSI_FLAGS_REQUIRED,
++	.bus_select_token       = DOMAIN_BUS_GENERIC_MSI,
++	.bus_select_mask	= MATCH_PLATFORM_MSI,
++	.prefix			= "GICP-",
++	.init_dev_msi_info	= gic_msi_lib_init_dev_msi_info,
+ };
+ 
+ static int mvebu_gicp_probe(struct platform_device *pdev)
+ {
+-	struct mvebu_gicp *gicp;
+-	struct irq_domain *inner_domain, *plat_domain, *parent_domain;
++	struct irq_domain *inner_domain, *parent_domain;
+ 	struct device_node *node = pdev->dev.of_node;
+ 	struct device_node *irq_parent_dn;
++	struct mvebu_gicp *gicp;
+ 	int ret, i;
+ 
+ 	gicp = devm_kzalloc(&pdev->dev, sizeof(*gicp), GFP_KERNEL);
+@@ -233,17 +235,9 @@ static int mvebu_gicp_probe(struct platf
+ 	if (!inner_domain)
+ 		return -ENOMEM;
+ 
+-
+-	plat_domain = platform_msi_create_irq_domain(of_node_to_fwnode(node),
+-						     &gicp_msi_domain_info,
+-						     inner_domain);
+-	if (!plat_domain) {
+-		irq_domain_remove(inner_domain);
+-		return -ENOMEM;
+-	}
+-
+-	platform_set_drvdata(pdev, gicp);
+-
++	irq_domain_update_bus_token(inner_domain, DOMAIN_BUS_GENERIC_MSI);
++	inner_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
++	inner_domain->msi_parent_ops = &gicp_msi_parent_ops;
+ 	return 0;
+ }
+ 
 
-https://people.kernel.org/tglx/notes-about-netiquette
