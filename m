@@ -2,192 +2,78 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E47ABC433FE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:56:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EBDC4321E
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Nov 2022 14:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231307AbiKUO4R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Nov 2022 09:56:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51238 "EHLO
+        id S229984AbiKUO4h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Nov 2022 09:56:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52010 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231233AbiKUOz6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:55:58 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35730C845D;
-        Mon, 21 Nov 2022 06:45:57 -0800 (PST)
-Message-ID: <20221121140048.974974729@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669041582;
+        with ESMTP id S230417AbiKUO4G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Nov 2022 09:56:06 -0500
+Received: from mail.skyhub.de (mail.skyhub.de [IPv6:2a01:4f8:190:11c2::b:1457])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09A9ECDFD5;
+        Mon, 21 Nov 2022 06:46:27 -0800 (PST)
+Received: from zn.tnic (p200300ea9733e725329c23fffea6a903.dip0.t-ipconnect.de [IPv6:2003:ea:9733:e725:329c:23ff:fea6:a903])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 728E61EC071C;
+        Mon, 21 Nov 2022 15:46:25 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
+        t=1669041985;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=J680i1QxtZBBm/698AYzrsmPCp2I4TQ8+mHi4G7lF8s=;
-        b=YEAcDoKFN2i4HVtKWLa93Rn3Nps5WvYcJZWF3OQBX/wCxYsjmB3/W+naIybJwtc5JKRWMu
-        UiDIX9UCYQAVjw5qQ3wTY1RKTVq1L3eSAF5jkp3pxvkByrs8Mw+MIwt92R/E9yxF8XEaYa
-        gJJRkH6mQ/tDvHAcA99s1suZuo5qEGBJp7IbGLZNRmD3T9uK7Gtq9xyOynHKBwFkbAeisF
-        xoyGgmi95Qk+/TpW8JTT5VqDyoul3M71V6SXNTkLj/avRKqqmt+j1Di39KiBLgt2R7Nq/R
-        0jeTEzL1ermxR4Z92SKpXbPimZTev/TvBiGMhTmZk+nLRQwcAq3HetmEAsO3gA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669041582;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=J680i1QxtZBBm/698AYzrsmPCp2I4TQ8+mHi4G7lF8s=;
-        b=CXynxs3icGJRX156kuitvZRrXMV4gIhHiX9TrvNmBx4NWbVOitTheb3WrmiC6M5iVzAKJ8
-        68QizqSKkXZAc4Cw==
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     LKML <linux-kernel@vger.kernel.org>
-Cc:     Will Deacon <will@kernel.org>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Marc Zyngier <maz@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Ammar Faizi <ammarfaizi2@gnuweeb.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
-        Santosh Shilimkar <ssantosh@kernel.org>,
-        linux-arm-kernel@lists.infradead.org,
-        Vinod Koul <vkoul@kernel.org>, Sinan Kaya <okaya@kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Shameerali Kolothum Thodi 
-        <shameerali.kolothum.thodi@huawei.com>,
-        Zenghui Yu <yuzenghui@huawei.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>
-Subject: [patch V2 11/40] irqchip/gic-v3-its: Provide MSI parent infrastructure
-References: <20221121135653.208611233@linutronix.de>
+         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
+        bh=xCGd6hIfxBt7cfQnfEqxSw7FPCqLC4Ck4a/q2jKRpXs=;
+        b=LYt3r1VGYpjFq2eY/1Ig8EB3IqiCf4tNl8mN6dMAnrQpepWGDiaxtPiv4BXj0A6jaCD+Kg
+        K6ao66qLGGIogTA7O/cDGBLmoMgFJB0PO40fxjVY3RQwJbP6X4+tmXifRdjlV9jvmVnhxt
+        RisyrBR0wBFbkpZYBwrRyZoAITaTgGY=
+Date:   Mon, 21 Nov 2022 15:46:25 +0100
+From:   Borislav Petkov <bp@alien8.de>
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, luto@kernel.org,
+        peterz@infradead.org, davem@davemloft.net, edumazet@google.com,
+        kuba@kernel.org, pabeni@redhat.com, lpieralisi@kernel.org,
+        robh@kernel.org, kw@linux.com, bhelgaas@google.com, arnd@arndb.de,
+        hch@infradead.org, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com, tglx@linutronix.de,
+        mingo@redhat.com, dave.hansen@linux.intel.com,
+        Tianyu.Lan@microsoft.com, kirill.shutemov@linux.intel.com,
+        sathyanarayanan.kuppuswamy@linux.intel.com, ak@linux.intel.com,
+        isaku.yamahata@intel.com, dan.j.williams@intel.com,
+        jane.chu@oracle.com, seanjc@google.com, tony.luck@intel.com,
+        x86@kernel.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        iommu@lists.linux.dev
+Subject: Re: [Patch v3 06/14] init: Call mem_encrypt_init() after Hyper-V
+ hypercall init is done
+Message-ID: <Y3uPQTKDnD+/tv6g@zn.tnic>
+References: <1668624097-14884-1-git-send-email-mikelley@microsoft.com>
+ <1668624097-14884-7-git-send-email-mikelley@microsoft.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date:   Mon, 21 Nov 2022 15:39:42 +0100 (CET)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <1668624097-14884-7-git-send-email-mikelley@microsoft.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To support per device MSI domains the ITS must provide MSI parent domain
-functionality.
+On Wed, Nov 16, 2022 at 10:41:29AM -0800, Michael Kelley wrote:
+> Fix this by moving mem_encrypt_init() after late_time_init() and
+> related clock initializations. The intervening initializations don't
+> do any I/O that requires the swiotlb, so moving mem_encrypt_init()
+> slightly later has no impact.
 
-Provide the basic skeleton for this:
+I hope you're right. Our boot ordering is fragile as hell. But
+mem_encrypt_init() doesn't do a whole lot of important setup - that has
+happened a lot earlier already - so I'm not too worried.
 
-   - msi_parent_ops
-   - child domain init callback
-   - the MSI parent flag set in irqdomain::flags
+But we'll see what breaks in wider testing.
 
-This does not make ITS a functional parent domain as there is no bit set in
-the bus_select_mask yet, but it provides the base to implement PCI and
-platform MSI support gradualy on top.
+-- 
+Regards/Gruss,
+    Boris.
 
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Marc Zyngier <maz@kernel.org>
----
- drivers/irqchip/Kconfig                     |    1 
- drivers/irqchip/Makefile                    |    2 -
- drivers/irqchip/irq-gic-common.h            |    3 ++
- drivers/irqchip/irq-gic-v3-its-msi-parent.c |   30 ++++++++++++++++++++++++++++
- drivers/irqchip/irq-gic-v3-its.c            |    4 +++
- 5 files changed, 39 insertions(+), 1 deletion(-)
-
---- a/drivers/irqchip/Kconfig
-+++ b/drivers/irqchip/Kconfig
-@@ -42,6 +42,7 @@ config ARM_GIC_V3
- config ARM_GIC_V3_ITS
- 	bool
- 	select GENERIC_MSI_IRQ
-+	select ARM_GIC_MSI_LIB
- 	default ARM_GIC_V3
- 
- config ARM_GIC_V3_ITS_PCI
---- a/drivers/irqchip/Makefile
-+++ b/drivers/irqchip/Makefile
-@@ -33,7 +33,7 @@ obj-$(CONFIG_ARCH_REALVIEW)		+= irq-gic-
- obj-$(CONFIG_ARM_GIC_MSI_LIB)		+= irq-gic-msi-lib.o
- obj-$(CONFIG_ARM_GIC_V2M)		+= irq-gic-v2m.o
- obj-$(CONFIG_ARM_GIC_V3)		+= irq-gic-v3.o irq-gic-v3-mbi.o irq-gic-common.o
--obj-$(CONFIG_ARM_GIC_V3_ITS)		+= irq-gic-v3-its.o irq-gic-v3-its-platform-msi.o irq-gic-v4.o
-+obj-$(CONFIG_ARM_GIC_V3_ITS)		+= irq-gic-v3-its.o irq-gic-v3-its-platform-msi.o irq-gic-v4.o irq-gic-v3-its-msi-parent.o
- obj-$(CONFIG_ARM_GIC_V3_ITS_PCI)	+= irq-gic-v3-its-pci-msi.o
- obj-$(CONFIG_ARM_GIC_V3_ITS_FSL_MC)	+= irq-gic-v3-its-fsl-mc-msi.o
- obj-$(CONFIG_PARTITION_PERCPU)		+= irq-partition-percpu.o
---- a/drivers/irqchip/irq-gic-common.h
-+++ b/drivers/irqchip/irq-gic-common.h
-@@ -8,6 +8,7 @@
- 
- #include <linux/of.h>
- #include <linux/irqdomain.h>
-+#include <linux/msi.h>
- #include <linux/irqchip/arm-gic-common.h>
- 
- struct gic_quirk {
-@@ -28,4 +29,6 @@ void gic_enable_quirks(u32 iidr, const s
- void gic_enable_of_quirks(const struct device_node *np,
- 			  const struct gic_quirk *quirks, void *data);
- 
-+extern const struct msi_parent_ops gic_v3_its_msi_parent_ops;
-+
- #endif /* _IRQ_GIC_COMMON_H */
---- /dev/null
-+++ b/drivers/irqchip/irq-gic-v3-its-msi-parent.c
-@@ -0,0 +1,30 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+// Copyright (C) 2022 Linutronix GmbH
-+// Copyright (C) 2022 Intel
-+
-+#include "irq-gic-common.h"
-+#include "irq-gic-msi-lib.h"
-+
-+#define ITS_MSI_FLAGS_REQUIRED  (MSI_FLAG_USE_DEF_DOM_OPS |	\
-+				 MSI_FLAG_USE_DEF_CHIP_OPS)
-+
-+#define ITS_MSI_FLAGS_SUPPORTED (MSI_GENERIC_FLAGS_MASK |	\
-+				 MSI_FLAG_PCI_MSIX      |	\
-+				 MSI_FLAG_MULTI_PCI_MSI)
-+
-+static bool its_init_dev_msi_info(struct device *dev, struct irq_domain *domain,
-+				  struct irq_domain *real_parent, struct msi_domain_info *info)
-+{
-+	if (!gic_msi_lib_init_dev_msi_info(dev, domain, real_parent, info))
-+		return false;
-+
-+	return true;
-+}
-+
-+const struct msi_parent_ops gic_v3_its_msi_parent_ops = {
-+	.supported_flags	= ITS_MSI_FLAGS_SUPPORTED,
-+	.required_flags		= ITS_MSI_FLAGS_REQUIRED,
-+	.bus_select_token	= DOMAIN_BUS_NEXUS,
-+	.prefix			= "ITS-",
-+	.init_dev_msi_info	= its_init_dev_msi_info,
-+};
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -38,6 +38,7 @@
- #include <asm/exception.h>
- 
- #include "irq-gic-common.h"
-+#include "irq-gic-msi-lib.h"
- 
- #define ITS_FLAGS_CMDQ_NEEDS_FLUSHING		(1ULL << 0)
- #define ITS_FLAGS_WORKAROUND_CAVIUM_22375	(1ULL << 1)
-@@ -3656,6 +3657,7 @@ static void its_irq_domain_free(struct i
- }
- 
- static const struct irq_domain_ops its_domain_ops = {
-+	.select			= gic_msi_lib_irq_domain_select,
- 	.alloc			= its_irq_domain_alloc,
- 	.free			= its_irq_domain_free,
- 	.activate		= its_irq_domain_activate,
-@@ -4918,6 +4920,8 @@ static int its_init_domain(struct fwnode
- 	inner_domain->parent = its_parent;
- 	irq_domain_update_bus_token(inner_domain, DOMAIN_BUS_NEXUS);
- 	inner_domain->flags |= its->msi_domain_flags;
-+	inner_domain->msi_parent_ops = &gic_v3_its_msi_parent_ops;
-+	inner_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
- 	info->ops = &its_msi_domain_ops;
- 	info->data = its;
- 	inner_domain->host_data = info;
-
+https://people.kernel.org/tglx/notes-about-netiquette
