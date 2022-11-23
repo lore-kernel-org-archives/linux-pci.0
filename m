@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA5DC3A59F
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Nov 2022 21:58:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD02C4332F
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Nov 2022 22:11:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236071AbiKWV6h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Nov 2022 16:58:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35950 "EHLO
+        id S229648AbiKWWLg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Nov 2022 17:11:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235336AbiKWV6f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2022 16:58:35 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 215F765E44;
-        Wed, 23 Nov 2022 13:58:34 -0800 (PST)
+        with ESMTP id S229518AbiKWWLP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Nov 2022 17:11:15 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 688E5134762;
+        Wed, 23 Nov 2022 14:09:45 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A4571B82503;
-        Wed, 23 Nov 2022 21:58:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF829C433C1;
-        Wed, 23 Nov 2022 21:58:28 +0000 (UTC)
+        by sin.source.kernel.org (Postfix) with ESMTPS id D8B07CE27FF;
+        Wed, 23 Nov 2022 22:09:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77468C433C1;
+        Wed, 23 Nov 2022 22:09:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669240711;
-        bh=/4n+Spc+ltblmwtJHhvxBgY8u1GVTKc0G55iQgfMppE=;
+        s=k20201202; t=1669241382;
+        bh=RNQMCQJlao0O78KP1S5ZJEIcmbnaSDXpMdfAnkuD1dQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=hP++qYrUtKfpPY16ErGKEilq8Mh5rSyLoG2hoX+Ex5QUAvNeKzYF2E/0kemchntJy
-         NTNxJwEM82TonQJnp7wgLYDln6Zb3U/85dWtE7moUbtcpk+rWa90kvw90HPpHLIVYB
-         1MrjEY+Ctpz3tuDfhdX7SCLA29fdBn+RTjulxSCPC3WnbznkaTZJs/ELs47sC6DUfT
-         we2R0RApfTCZ3sSIuse8XnBbwHq96/nmJQe9eu8m7ScLD0RRuVmZqbxNHsNAoJNrhy
-         DFEG5xUR1TaTBDHtYkJO/Mn6oEE6FVe/gEIjsENem1Y1MUiV6VaSR0gP/ECmndBmrl
-         jK+h81MRbvonA==
-Date:   Wed, 23 Nov 2022 21:58:26 +0000
+        b=HlSic7OwrqRXFCwtUgfY6/1AFG/uzp6TRyqc/bScHhUtAtqW+/5YlS8ft929XhYDF
+         fIlfPXff0RzTKsWqoOREG8UqjC+/L1H/dPpzw9b2lEeoeg1AYwArpKlXy2IZx0B5+B
+         DASDM3ZZ6fsuuocHv6Mu1DzRJpTHTTgaZC8tz8n6XH8RY07yIrNoW/l0q2dG0Vdzee
+         GHnagyX4Lk58jj2RYNxbBAo3f2is5Q/D2GZz/SxfosalAaWcHEOWT+hVVFp9wQb6FG
+         M1Xc/HhpTAxS6x9oFMkpv8b6XuYPXCxZw+jXVflo8Nz1elYRV6SUDZRMmQj7ZG01Hf
+         qFEXlVQdbSJvw==
+Date:   Wed, 23 Nov 2022 22:09:36 +0000
 From:   Conor Dooley <conor@kernel.org>
 To:     daire.mcnamara@microchip.com
 Cc:     conor.dooley@microchip.com, robh+dt@kernel.org,
@@ -39,249 +39,206 @@ Cc:     conor.dooley@microchip.com, robh+dt@kernel.org,
         palmer@dabbelt.com, aou@eecs.berkeley.edu, lpieralisi@kernel.org,
         kw@linux.com, bhelgaas@google.com, linux-riscv@lists.infradead.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1 4/9] PCI: microchip: Clean up initialisation of
- interrupts
-Message-ID: <Y36Xgr7NobqA2BCh@spud>
+Subject: Re: [PATCH v1 5/9] PCI: microchip: Gather MSI information from
+ hardware config registers
+Message-ID: <Y36aIJoIoMDe+KZV@spud>
 References: <20221116135504.258687-1-daire.mcnamara@microchip.com>
- <20221116135504.258687-5-daire.mcnamara@microchip.com>
+ <20221116135504.258687-6-daire.mcnamara@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221116135504.258687-5-daire.mcnamara@microchip.com>
+In-Reply-To: <20221116135504.258687-6-daire.mcnamara@microchip.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 16, 2022 at 01:54:59PM +0000, daire.mcnamara@microchip.com wrote:
+On Wed, Nov 16, 2022 at 01:55:00PM +0000, daire.mcnamara@microchip.com wrote:
 > From: Daire McNamara <daire.mcnamara@microchip.com>
 > 
-> Refactor interrupt handling in _init() function into
-> disable_interrupts(), init_interrupts(), clear_sec_errors() and clear
-> ded_errors().  It was unwieldy and prone to bugs. Then clearly disable
-> interrupts as soon as possible and only enable interrupts after address
-> translation errors are setup to prevent spurious axi2pcie and pcie2axi
-              ^^^^^^
-Is that meant to read "after address translation is" or "after address
-translation handling is"?
+> The PCIe root complex on PolarFire SoC is configured at bitstream creation
+> time using Libero.  Key MSI-related parameters include the number of
+> MSIs (1/2/4/8/16/32) and the MSI address. In the device driver, extract
+> this information from hw registers at init time, and use it to configure
 
-> translation errors being reported
+I don't know the answer here, so I am not being difficult:
+Does the HSS program them in based on the XML produced alongside the
+bitstream, or is that information encoded in the bitstream itself?
+
+> MSI system, including configuring MSI capability structure correctly in
+> configuration space.
 > 
 > Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
 > Signed-off-by: Conor Dooley <conor.dooley@microchip.com>
 > ---
->  drivers/pci/controller/pcie-microchip-host.c | 148 ++++++++++++-------
->  1 file changed, 92 insertions(+), 56 deletions(-)
+>  drivers/pci/controller/pcie-microchip-host.c | 73 +++++++++++---------
+>  1 file changed, 40 insertions(+), 33 deletions(-)
 > 
 > diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-> index a81e6d25e347..ecd4d3f3e3d4 100644
+> index ecd4d3f3e3d4..faecf419ad6f 100644
 > --- a/drivers/pci/controller/pcie-microchip-host.c
 > +++ b/drivers/pci/controller/pcie-microchip-host.c
-> @@ -986,39 +986,65 @@ static int mc_pcie_setup_windows(struct platform_device *pdev,
->  	return 0;
+> @@ -20,8 +20,7 @@
+>  #include "../pci.h"
+>  
+>  /* Number of MSI IRQs */
+> -#define MC_NUM_MSI_IRQS				32
+> -#define MC_NUM_MSI_IRQS_CODED			5
+> +#define MC_MAX_NUM_MSI_IRQS			32
+>  
+>  /* PCIe Bridge Phy and Controller Phy offsets */
+>  #define MC_PCIE1_BRIDGE_ADDR			0x00008000u
+> @@ -31,6 +30,11 @@
+>  #define MC_PCIE_CTRL_ADDR			(MC_PCIE1_CTRL_ADDR)
+>  
+>  /* PCIe Bridge Phy Regs */
+> +#define PCIE_PCI_IRQ_DW0			0xa8
+> +#define  MSIX_CAP_MASK				BIT(31)
+> +#define  NUM_MSI_MSGS_MASK			GENMASK(6, 4)
+> +#define  NUM_MSI_MSGS_SHIFT			4
+> +
+>  #define IMASK_LOCAL				0x180
+>  #define  DMA_END_ENGINE_0_MASK			0x00000000u
+>  #define  DMA_END_ENGINE_0_SHIFT			0
+> @@ -79,7 +83,6 @@
+>  #define IMASK_HOST				0x188
+>  #define ISTATUS_HOST				0x18c
+>  #define IMSI_ADDR				0x190
+> -#define  MSI_ADDR				0x190
+>  #define ISTATUS_MSI				0x194
+>  
+>  /* PCIe Master table init defines */
+> @@ -156,8 +159,6 @@
+>  
+>  /* PCIe Config space MSI capability structure */
+>  #define MC_MSI_CAP_CTRL_OFFSET			0xe0u
+> -#define  MC_MSI_MAX_Q_AVAIL			(MC_NUM_MSI_IRQS_CODED << 1)
+> -#define  MC_MSI_Q_SIZE				(MC_NUM_MSI_IRQS_CODED << 4)
+>  
+>  /* Events */
+>  #define EVENT_PCIE_L2_EXIT			0
+> @@ -257,7 +258,7 @@ struct mc_msi {
+>  	struct irq_domain *dev_domain;
+>  	u32 num_vectors;
+>  	u64 vector_phy;
+> -	DECLARE_BITMAP(used, MC_NUM_MSI_IRQS);
+> +	DECLARE_BITMAP(used, MC_MAX_NUM_MSI_IRQS);
+>  };
+>  
+>  struct mc_pcie {
+> @@ -380,25 +381,29 @@ static struct {
+>  
+>  static char poss_clks[][5] = { "fic0", "fic1", "fic2", "fic3" };
+>  
+> -static void mc_pcie_enable_msi(struct mc_pcie *port, void __iomem *base)
+> +static void mc_pcie_fixup_ecam(struct mc_pcie *port, void __iomem *ecam)
+>  {
+>  	struct mc_msi *msi = &port->msi;
+> -	u32 cap_offset = MC_MSI_CAP_CTRL_OFFSET;
+> -	u16 msg_ctrl = readw_relaxed(base + cap_offset + PCI_MSI_FLAGS);
+> -
+> -	msg_ctrl |= PCI_MSI_FLAGS_ENABLE;
+> -	msg_ctrl &= ~PCI_MSI_FLAGS_QMASK;
+> -	msg_ctrl |= MC_MSI_MAX_Q_AVAIL;
+> -	msg_ctrl &= ~PCI_MSI_FLAGS_QSIZE;
+> -	msg_ctrl |= MC_MSI_Q_SIZE;
+> -	msg_ctrl |= PCI_MSI_FLAGS_64BIT;
+> -
+> -	writew_relaxed(msg_ctrl, base + cap_offset + PCI_MSI_FLAGS);
+> -
+> +	u16 reg;
+> +	u8 queue_size;
+> +
+> +	/* fixup msi enable flag */
+> +	reg = readw_relaxed(ecam + MC_MSI_CAP_CTRL_OFFSET + PCI_MSI_FLAGS);
+> +	reg |= PCI_MSI_FLAGS_ENABLE;
+> +	writew_relaxed(reg, ecam + MC_MSI_CAP_CTRL_OFFSET + PCI_MSI_FLAGS);
+> +
+> +	/* fixup msi queue flags */
+> +	queue_size = reg & PCI_MSI_FLAGS_QMASK;
+> +	queue_size >>= 1;
+> +	reg &= ~PCI_MSI_FLAGS_QSIZE;
+> +	reg |= queue_size << 4;
+
+Could you please explain where the >> 1 & << 4 come from? Maybe it's
+sufficient to just make them defines, or the comment here could be
+expanded on.
+
+> +	writew_relaxed(reg, ecam + MC_MSI_CAP_CTRL_OFFSET + PCI_MSI_FLAGS);
+> +
+> +	/* fixup msi addr fields */
+>  	writel_relaxed(lower_32_bits(msi->vector_phy),
+> -		       base + cap_offset + PCI_MSI_ADDRESS_LO);
+> +		       ecam + MC_MSI_CAP_CTRL_OFFSET + PCI_MSI_ADDRESS_LO);
+>  	writel_relaxed(upper_32_bits(msi->vector_phy),
+> -		       base + cap_offset + PCI_MSI_ADDRESS_HI);
+> +		       ecam + MC_MSI_CAP_CTRL_OFFSET + PCI_MSI_ADDRESS_HI);
 >  }
 >  
-> -static int mc_platform_init(struct pci_config_window *cfg)
-> +static inline void mc_clear_secs(struct mc_pcie *port)
+>  static void mc_handle_msi(struct irq_desc *desc)
+> @@ -471,10 +476,7 @@ static int mc_irq_msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
 >  {
-> -	struct device *dev = cfg->parent;
-> -	struct platform_device *pdev = to_platform_device(dev);
-> -	struct mc_pcie *port;
-> -	void __iomem *bridge_base_addr;
-> -	void __iomem *ctrl_base_addr;
-> -	int ret;
-> -	int irq;
-> -	int i, intx_irq, msi_irq, event_irq;
-> +	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
-> +
-> +	writel_relaxed(GENMASK(15, 0), ctrl_base_addr + SEC_ERROR_INT);
-
-I think it'd be nice if the GENMASK()s in this function and below were
-#defined above somewhere.
-
-> +	writel_relaxed(0, ctrl_base_addr + SEC_ERROR_EVENT_CNT);
-> +}
-> +
-> +static inline void mc_clear_deds(struct mc_pcie *port)
-> +{
-> +	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
-> +
-> +	writel_relaxed(GENMASK(15, 0), ctrl_base_addr + DED_ERROR_INT);
-> +	writel_relaxed(0, ctrl_base_addr + DED_ERROR_EVENT_CNT);
-> +}
-> +
-> +static void mc_disable_interrupts(struct mc_pcie *port)
-> +{
-> +	void __iomem *bridge_base_addr = port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-> +	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
->  	u32 val;
-> -	int err;
+>  	struct mc_pcie *port = domain->host_data;
+>  	struct mc_msi *msi = &port->msi;
+> -	void __iomem *bridge_base_addr =
+> -		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
+>  	unsigned long bit;
+> -	u32 val;
 >  
-> -	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-> -	if (!port)
-> -		return -ENOMEM;
-> -	port->dev = dev;
-> +	/* ensure ecc bypass is enabled */
-> +	val = ECC_CONTROL_TX_RAM_ECC_BYPASS | ECC_CONTROL_RX_RAM_ECC_BYPASS |
-> +		ECC_CONTROL_PCIE2AXI_RAM_ECC_BYPASS | ECC_CONTROL_AXI2PCIE_RAM_ECC_BYPASS;
-
-Pedantic maybe, but could we format this as:
-		ECC_CONTROL_TX_RAM_ECC_BYPASS |
-		ECC_CONTROL_RX_RAM_ECC_BYPASS |
-		ECC_CONTROL_PCIE2AXI_RAM_ECC_BYPASS |
-		ECC_CONTROL_AXI2PCIE_RAM_ECC_BYPASS;
-And the same below for the PCIE_EVENT_FOO stuff, I think it'd make
-things a bit easier on the eye.
-
-Anyways, SEC and DED stuff that I usually see on startup are gone - at
-least on the setup I have :)
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
-
-> +	writel_relaxed(val, ctrl_base_addr + ECC_CONTROL);
+>  	mutex_lock(&msi->lock);
+>  	bit = find_first_zero_bit(msi->used, msi->num_vectors);
+> @@ -488,11 +490,6 @@ static int mc_irq_msi_domain_alloc(struct irq_domain *domain, unsigned int virq,
+>  	irq_domain_set_info(domain, virq, bit, &mc_msi_bottom_irq_chip,
+>  			    domain->host_data, handle_edge_irq, NULL, NULL);
 >  
-> -	ret = mc_pcie_init_clks(dev);
-> -	if (ret) {
-> -		dev_err(dev, "failed to get clock resources, error %d\n", ret);
-> -		return -ENODEV;
-> -	}
-> +	/* disable sec errors and clear any outstanding */
-> +	writel_relaxed(GENMASK(15, 0), ctrl_base_addr + SEC_ERROR_INT_MASK);
-> +	mc_clear_secs(port);
+> -	/* Enable MSI interrupts */
+> -	val = readl_relaxed(bridge_base_addr + IMASK_LOCAL);
+> -	val |= PM_MSI_INT_MSI_MASK;
+> -	writel_relaxed(val, bridge_base_addr + IMASK_LOCAL);
+> -
+>  	mutex_unlock(&msi->lock);
 >  
-> -	port->axi_base_addr = devm_platform_ioremap_resource(pdev, 1);
-> -	if (IS_ERR(port->axi_base_addr))
-> -		return PTR_ERR(port->axi_base_addr);
-> +	/* disable ded errors and clear any outstanding */
-> +	writel_relaxed(GENMASK(15, 0), ctrl_base_addr + DED_ERROR_INT_MASK);
-> +	mc_clear_deds(port);
+>  	return 0;
+> @@ -1102,6 +1099,7 @@ static int mc_platform_init(struct pci_config_window *cfg)
+>  	void __iomem *bridge_base_addr;
+>  	void __iomem *ctrl_base_addr;
+>  	int ret;
+> +	u32 val;
 >  
-> -	bridge_base_addr = port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-> -	ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
-> +	/* disable local interrupts and clear any outstanding */
-> +	writel_relaxed(0, bridge_base_addr + IMASK_LOCAL);
-> +	writel_relaxed(GENMASK(31, 0), bridge_base_addr + ISTATUS_LOCAL);
-> +	writel_relaxed(GENMASK(31, 0), bridge_base_addr + ISTATUS_MSI);
-> +
-> +	/* disable PCIe events and clear any outstanding */
-> +	val = PCIE_EVENT_INT_L2_EXIT_INT | PCIE_EVENT_INT_HOTRST_EXIT_INT |
-> +	      PCIE_EVENT_INT_DLUP_EXIT_INT | PCIE_EVENT_INT_L2_EXIT_INT_MASK |
-> +	      PCIE_EVENT_INT_HOTRST_EXIT_INT_MASK |
-> +	      PCIE_EVENT_INT_DLUP_EXIT_INT_MASK;
-> +	writel_relaxed(val, ctrl_base_addr + PCIE_EVENT_INT);
-> +
-> +	/* disable host interrupts and clear any outstanding */
-> +	writel_relaxed(0, bridge_base_addr + IMASK_HOST);
-> +	writel_relaxed(GENMASK(31, 0), bridge_base_addr + ISTATUS_HOST);
-> +}
-> +
-> +static int mc_init_interrupts(struct platform_device *pdev, struct mc_pcie *port)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	int irq;
-> +	int i, intx_irq, msi_irq, event_irq;
-> +	int ret;
+>  	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+>  	if (!port)
+> @@ -1123,11 +1121,20 @@ static int mc_platform_init(struct pci_config_window *cfg)
+>  	bridge_base_addr = port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
+>  	ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
 >  
 > -	port->msi.vector_phy = MSI_ADDR;
 > -	port->msi.num_vectors = MC_NUM_MSI_IRQS;
->  	ret = mc_pcie_init_irq_domains(port);
->  	if (ret) {
->  		dev_err(dev, "failed creating IRQ domains\n");
-> @@ -1036,11 +1062,11 @@ static int mc_platform_init(struct pci_config_window *cfg)
->  			return -ENXIO;
->  		}
->  
-> -		err = devm_request_irq(dev, event_irq, mc_event_handler,
-> +		ret = devm_request_irq(dev, event_irq, mc_event_handler,
->  				       0, event_cause[i].sym, port);
-> -		if (err) {
-> +		if (ret) {
->  			dev_err(dev, "failed to request IRQ %d\n", event_irq);
-> -			return err;
-> +			return ret;
->  		}
->  	}
->  
-> @@ -1065,44 +1091,54 @@ static int mc_platform_init(struct pci_config_window *cfg)
->  	/* Plug the main event chained handler */
->  	irq_set_chained_handler_and_data(irq, mc_handle_event, port);
+> +	/* allow enabling msi by disabling msi-x */
+> +	val = readl(bridge_base_addr + PCIE_PCI_IRQ_DW0);
+> +	val &= ~MSIX_CAP_MASK;
+> +	writel(val, bridge_base_addr + PCIE_PCI_IRQ_DW0);
+> +
+> +	/* pick num vectors from design */
+> +	val = readl(bridge_base_addr + PCIE_PCI_IRQ_DW0);
+> +	val &= NUM_MSI_MSGS_MASK;
+> +	val >>= NUM_MSI_MSGS_SHIFT;
+> +
+> +	port->msi.num_vectors = 1 << val;
 >  
 > -	/* Hardware doesn't setup MSI by default */
 > -	mc_pcie_enable_msi(port, cfg->win);
-> +	return 0;
-> +}
->  
-> -	val = readl_relaxed(bridge_base_addr + IMASK_LOCAL);
-> -	val |= PM_MSI_INT_INTX_MASK;
-> -	writel_relaxed(val, bridge_base_addr + IMASK_LOCAL);
-> +static int mc_platform_init(struct pci_config_window *cfg)
-> +{
-> +	struct device *dev = cfg->parent;
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct mc_pcie *port;
-> +	void __iomem *bridge_base_addr;
-> +	void __iomem *ctrl_base_addr;
-> +	int ret;
->  
-> -	writel_relaxed(val, ctrl_base_addr + ECC_CONTROL);
-> +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-> +	if (!port)
-> +		return -ENOMEM;
-> +	port->dev = dev;
->  
-> -	val = PCIE_EVENT_INT_L2_EXIT_INT |
-> -	      PCIE_EVENT_INT_HOTRST_EXIT_INT |
-> -	      PCIE_EVENT_INT_DLUP_EXIT_INT;
-> -	writel_relaxed(val, ctrl_base_addr + PCIE_EVENT_INT);
-> +	ret = mc_pcie_init_clks(dev);
-> +	if (ret) {
-> +		dev_err(dev, "failed to get clock resources, error %d\n", ret);
-> +		return -ENODEV;
-> +	}
->  
-> -	val = SEC_ERROR_INT_TX_RAM_SEC_ERR_INT |
-> -	      SEC_ERROR_INT_RX_RAM_SEC_ERR_INT |
-> -	      SEC_ERROR_INT_PCIE2AXI_RAM_SEC_ERR_INT |
-> -	      SEC_ERROR_INT_AXI2PCIE_RAM_SEC_ERR_INT;
-> -	writel_relaxed(val, ctrl_base_addr + SEC_ERROR_INT);
-> -	writel_relaxed(0, ctrl_base_addr + SEC_ERROR_INT_MASK);
-> -	writel_relaxed(0, ctrl_base_addr + SEC_ERROR_EVENT_CNT);
-> +	port->axi_base_addr = devm_platform_ioremap_resource(pdev, 1);
-> +	if (IS_ERR(port->axi_base_addr))
-> +		return PTR_ERR(port->axi_base_addr);
->  
-> -	val = DED_ERROR_INT_TX_RAM_DED_ERR_INT |
-> -	      DED_ERROR_INT_RX_RAM_DED_ERR_INT |
-> -	      DED_ERROR_INT_PCIE2AXI_RAM_DED_ERR_INT |
-> -	      DED_ERROR_INT_AXI2PCIE_RAM_DED_ERR_INT;
-> -	writel_relaxed(val, ctrl_base_addr + DED_ERROR_INT);
-> -	writel_relaxed(0, ctrl_base_addr + DED_ERROR_INT_MASK);
-> -	writel_relaxed(0, ctrl_base_addr + DED_ERROR_EVENT_CNT);
-> +	mc_disable_interrupts(port);
->  
-> -	writel_relaxed(0, bridge_base_addr + IMASK_HOST);
-> -	writel_relaxed(GENMASK(31, 0), bridge_base_addr + ISTATUS_HOST);
-> +	bridge_base_addr = port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-> +	ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
-> +
-> +	port->msi.vector_phy = MSI_ADDR;
-> +	port->msi.num_vectors = MC_NUM_MSI_IRQS;
-> +
-> +	/* Hardware doesn't setup MSI by default */
-> +	mc_pcie_enable_msi(port, cfg->win);
+> +	/* pick vector address from design */
+
+"Design" might make sense to you or I, but I think you could expand this
+comment for the lay reader. Copy-paste from the commit message maybe
+hah.
+
+Anyways, as with the rest of the series - I'm just nitpicking.
+Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+
+> +	port->msi.vector_phy = readl_relaxed(bridge_base_addr + IMSI_ADDR);
 >  
 >  	/* Configure Address Translation Table 0 for PCIe config space */
 >  	mc_pcie_setup_window(bridge_base_addr, 0, cfg->res.start & 0xffffffff,
->  			     cfg->res.start, resource_size(&cfg->res));
->  
-> -	return mc_pcie_setup_windows(pdev, port);
-> +	ret = mc_pcie_setup_windows(pdev, port);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* address translation is up; safe to enable interrupts */
-> +	return mc_init_interrupts(pdev, port);
->  }
->  
->  static const struct pci_ecam_ops mc_ecam_ops = {
 > -- 
 > 2.25.1
 > 
