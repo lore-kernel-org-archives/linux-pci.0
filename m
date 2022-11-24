@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D1EC43217
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E30B1C433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:26:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229814AbiKXX0E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Nov 2022 18:26:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43226 "EHLO
+        id S229815AbiKXX0G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Nov 2022 18:26:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229700AbiKXXZc (ORCPT
+        with ESMTP id S229852AbiKXXZc (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:25:32 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8035687A7A;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B52487A4B;
         Thu, 24 Nov 2022 15:24:53 -0800 (PST)
-Message-ID: <20221124230314.513924920@linutronix.de>
+Message-ID: <20221124230314.634800247@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669332279;
+        s=2020; t=1669332282;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=7CXvgfTszY3LslvHbPboJUjb59ZlVQ1XORNlFYSydbs=;
-        b=N8JY1BopCBWBKj7Vr8Dj29yJcik0JUGEEXlWibsw7QBp62HFKSvFAkLbxb3ubw1iSIlzKO
-        Isc7U5NZaVolNkdr7V9qwH3GPmWfD0Zz/gAT7hMlH+qYgpWP6YTvOzTpynFQgTbjukK9KA
-        3ET1XLezTGft+Bi5HSlcPJWpkM28UydEQCsUPGIVWw+/mQ/0x7Zwd0UsAhhTE/HrDZr8u9
-        +mM2dBa+G7RzJKi/e0Ob6lLx5Liq6MYSr+hkF8bIZtvvklWxxfLxx30JlUu/swpbNHj+4m
-        mGk33UMatSi8vSMH9Il1gJhFdOB2QYQlTfX0ut9ZQP/MRohP02/bz++/JPy2Lg==
+         references:references; bh=/bVC6uqxnLqu0Y//SpNf+743RFr9freD3IllzYYvzRs=;
+        b=LpPOaaDwHZYwDoWrBh78D3zUIwxSjimPtAOu/tPF0S2oh5sXnZx2Tr4YLd+qSpkfZOnt0e
+        G4UoAjBSKWdvJ9L+YHyjjlWqk6o+l/KXbXb3PRfSPTeHXhX2gg7XFSvXirYvWjxpJMTGjz
+        qFHK6xcw0vi2Plsr4yHAj5VELdqIJhqNgt8cTe9Kup9LnTDHuaG6POcJrCcAvEd3ftvGKT
+        37pGD8DFVFtfgRlkaLR/rEP1W10Kmu6D657LZkWrd2BHWdKRM/GnSsrdG3EX0+KrsWbeg2
+        vp40fCdG4bNacUn5vrqA4VXrhp/wcvJm0Fs1jndHfjO+tw4CtwzqYkV+MiFoEg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669332279;
+        s=2020e; t=1669332282;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=7CXvgfTszY3LslvHbPboJUjb59ZlVQ1XORNlFYSydbs=;
-        b=eDPpZT95WzAUA5Bh/gAALDkn7f3DggzbAacEbgr1Nxd/CTSI4c0VOO20MUN+caGx803/EP
-        YTigjd6OVcqZIJBA==
+         references:references; bh=/bVC6uqxnLqu0Y//SpNf+743RFr9freD3IllzYYvzRs=;
+        b=CTcoM8EiN7ZY3uGsPfrf0GylpUS86RJuoIsAyua/PJdMTJcQWZnGJAas2rjz5gUZxmerYJ
+        L1gwxV0XFWtF79Dg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -49,11 +49,12 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>,
         "Ahmed S. Darwish" <darwi@linutronix.de>
-Subject: [patch V3 19/22] platform-msi: Switch to the domain id aware MSI interfaces
+Subject: [patch V3 21/22] oc: ti: ti_sci_inta_msi: Switch to domain id aware
+ MSI functions
 References: <20221124225331.464480443@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 25 Nov 2022 00:24:38 +0100 (CET)
+Date:   Fri, 25 Nov 2022 00:24:41 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -61,32 +62,40 @@ X-Mailing-List: linux-pci@vger.kernel.org
 From: Ahmed S. Darwish <darwi@linutronix.de>
 
 Switch to the new domain id aware interfaces to phase out the previous
-ones. No functional change.
+ones. Remove the domain check as it happens in the core code now.
+
+No functional change.
 
 Signed-off-by: Ahmed S. Darwish <darwi@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- drivers/base/platform-msi.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/soc/ti/ti_sci_inta_msi.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
---- a/drivers/base/platform-msi.c
-+++ b/drivers/base/platform-msi.c
-@@ -213,7 +213,7 @@ int platform_msi_domain_alloc_irqs(struc
- 	if (err)
- 		return err;
- 
--	err = msi_domain_alloc_irqs(dev->msi.domain, dev, nvec);
-+	err = msi_domain_alloc_irqs_range(dev, MSI_DEFAULT_DOMAIN, 0, nvec - 1);
- 	if (err)
- 		platform_msi_free_priv_data(dev);
- 
-@@ -227,7 +227,7 @@ EXPORT_SYMBOL_GPL(platform_msi_domain_al
-  */
- void platform_msi_domain_free_irqs(struct device *dev)
+--- a/drivers/soc/ti/ti_sci_inta_msi.c
++++ b/drivers/soc/ti/ti_sci_inta_msi.c
+@@ -93,13 +93,8 @@ int ti_sci_inta_msi_domain_alloc_irqs(st
+ 				      struct ti_sci_resource *res)
  {
--	msi_domain_free_irqs(dev->msi.domain, dev);
-+	msi_domain_free_irqs_all(dev, MSI_DEFAULT_DOMAIN);
- 	platform_msi_free_priv_data(dev);
- }
- EXPORT_SYMBOL_GPL(platform_msi_domain_free_irqs);
+ 	struct platform_device *pdev = to_platform_device(dev);
+-	struct irq_domain *msi_domain;
+ 	int ret, nvec;
+ 
+-	msi_domain = dev_get_msi_domain(dev);
+-	if (!msi_domain)
+-		return -EINVAL;
+-
+ 	if (pdev->id < 0)
+ 		return -ENODEV;
+ 
+@@ -114,7 +109,8 @@ int ti_sci_inta_msi_domain_alloc_irqs(st
+ 		goto unlock;
+ 	}
+ 
+-	ret = msi_domain_alloc_irqs_descs_locked(msi_domain, dev, nvec);
++	/* Use alloc ALL as it's unclear whether there are gaps in the indices */
++	ret = msi_domain_alloc_irqs_all_locked(dev, MSI_DEFAULT_DOMAIN, nvec);
+ 	if (ret)
+ 		dev_err(dev, "Failed to allocate IRQs %d\n", ret);
+ unlock:
 
