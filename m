@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED377C4167D
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:28:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2417C43217
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:28:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229686AbiKXX2r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Nov 2022 18:28:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43046 "EHLO
+        id S229755AbiKXX2s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Nov 2022 18:28:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229899AbiKXX2f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:28:35 -0500
+        with ESMTP id S229925AbiKXX2g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:28:36 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60ACDBFF64;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EB0BA4647;
         Thu, 24 Nov 2022 15:26:54 -0800 (PST)
-Message-ID: <20221124232326.326410494@linutronix.de>
+Message-ID: <20221124232326.209212272@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669332374;
+        s=2020; t=1669332370;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=cFx6dbaS3ynUGuWTq2v8hXwBFa/HBDy+17s0E2mkPoM=;
-        b=31K5q8uMuBncINZnLxPkhytuZEEXrW9lk0LdW6v3qDdvlw2PUjFKemzgH5YU8uEMr6zOCz
-        mQQgK/1O//+uOU9hKmvMuo3lRgaisQFZC/qyQVHnfUZA7nhR0aUxf2n5GdcJuRqlOa8Pzx
-        HzF+S8MFzbZnZp4F7vket2pvkCZxlRcwHQDn9ENI9xi7hLjgL5rfXBKJz0qqVoffFhPYYH
-        BeJVbFixw9uMF+IYOEhAk5da3hIkuoXvEICPY/q2cQGRG4SLuDRAervbnrlziMQ+8/1jfc
-        KanIfjMThPO9/ciqXi7uVCWKveu2lzPaw+wKZ3rJxOTj/k6blJN8C3TWSpLf/Q==
+         references:references; bh=5F8g3aU97Z6Kyag3K9E0SkLjFZeBlcTh6td6sXBxDio=;
+        b=0QMWvruGb02j676y+kWV25htNvaj8TmHud0EjmSbeC/1Le4CRZC4eKuKyi2LcekxOhbpTQ
+        qsZxoMGfFuGD3tdd3E8AdpdU9tROBwv/dRDavxeAAlV9Bk5YQkK3wH5lr6cBip285YMFtE
+        QNqJzcEV+jr8AmC/lVxDvC9JEYGL4IhhFbGOxjGY9Z4DAJJStmfdt0DEuqCgCwnNrMYUJk
+        I30R0A6wmSIjW9PEW9JCB4xquVWzv7LAgP4Xucsw/LYVkA8MIbkAjwFOOXjbqpFYMDYGmr
+        gnNma2d3IrQu++q3SPqnzeEm8LuRq/046CTN99GKR5nENMDqIuZdJX6eqRrs3g==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669332374;
+        s=2020e; t=1669332370;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=cFx6dbaS3ynUGuWTq2v8hXwBFa/HBDy+17s0E2mkPoM=;
-        b=kicHVkBwhMOxAjBHtI5ZkgE0oos+EEIN5rtJ/aaOwuNNNa3ML2NdxyuZ+k0klKqWjbRLZd
-        t0xNj4Vu7AN/BdAw==
+         references:references; bh=5F8g3aU97Z6Kyag3K9E0SkLjFZeBlcTh6td6sXBxDio=;
+        b=ClTfWrEIaY4P9KjStHk0kUB1gM3OS1WdjBMYYFGyuGxQI38LBrOm11KiYhGmCnOAVorooc
+        jCWQ/zZcLoaqqaCw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,44 +48,102 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V3 18/33] genirq/msi: Provide struct msi_map
+Subject: [patch V3 16/33] iommu/amd: Switch to MSI base domains
 References: <20221124230505.073418677@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 25 Nov 2022 00:26:13 +0100 (CET)
+Date:   Fri, 25 Nov 2022 00:26:10 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-A simple struct to hold a MSI index / Linux interrupt number pair. It will
-be returned from the dynamic vector allocation function and handed back to
-the corresponding free() function.
+Remove the global PCI/MSI irqdomain implementation and provide the required
+MSI parent ops so the PCI/MSI code can detect the new parent and setup per
+device domains.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi_api.h |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ arch/x86/kernel/apic/msi.c          |    1 +
+ drivers/iommu/amd/amd_iommu_types.h |    1 -
+ drivers/iommu/amd/iommu.c           |   19 +++++++++++++------
+ include/linux/irqdomain_defs.h      |    1 +
+ 4 files changed, 15 insertions(+), 7 deletions(-)
 
---- a/include/linux/msi_api.h
-+++ b/include/linux/msi_api.h
-@@ -18,6 +18,19 @@ enum msi_domain_ids {
- 	MSI_MAX_DEVICE_IRQDOMAINS,
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -218,6 +218,7 @@ static bool x86_init_dev_msi_info(struct
+ 		info->flags |= MSI_FLAG_NOMASK_QUIRK;
+ 		break;
+ 	case DOMAIN_BUS_DMAR:
++	case DOMAIN_BUS_AMDVI:
+ 		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+--- a/drivers/iommu/amd/amd_iommu_types.h
++++ b/drivers/iommu/amd/amd_iommu_types.h
+@@ -734,7 +734,6 @@ struct amd_iommu {
+ 	u8 max_counters;
+ #ifdef CONFIG_IRQ_REMAP
+ 	struct irq_domain *ir_domain;
+-	struct irq_domain *msi_domain;
+ 
+ 	struct amd_irte_ops *irte_ops;
+ #endif
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -815,7 +815,7 @@ amd_iommu_set_pci_msi_domain(struct devi
+ 	    !pci_dev_has_default_msi_parent_domain(to_pci_dev(dev)))
+ 		return;
+ 
+-	dev_set_msi_domain(dev, iommu->msi_domain);
++	dev_set_msi_domain(dev, iommu->ir_domain);
+ }
+ 
+ #else /* CONFIG_IRQ_REMAP */
+@@ -3648,6 +3648,12 @@ static struct irq_chip amd_ir_chip = {
+ 	.irq_compose_msi_msg	= ir_compose_msi_msg,
  };
  
-+/**
-+ * msi_map - Mapping between MSI index and Linux interrupt number
-+ * @index:	The MSI index, e.g. slot in the MSI-X table or
-+ *		a software managed index if >= 0. If negative
-+ *		the allocation function failed and it contains
-+ *		the error code.
-+ * @virq:	The associated Linux interrupt number
-+ */
-+struct msi_map {
-+	int	index;
-+	int	virq;
++static const struct msi_parent_ops amdvi_msi_parent_ops = {
++	.supported_flags	= X86_VECTOR_MSI_FLAGS_SUPPORTED | MSI_FLAG_MULTI_PCI_MSI,
++	.prefix			= "IR-",
++	.init_dev_msi_info	= msi_parent_init_dev_msi_info,
 +};
 +
- unsigned int msi_domain_get_virq(struct device *dev, unsigned int domid, unsigned int index);
+ int amd_iommu_create_irq_domain(struct amd_iommu *iommu)
+ {
+ 	struct fwnode_handle *fn;
+@@ -3655,16 +3661,17 @@ int amd_iommu_create_irq_domain(struct a
+ 	fn = irq_domain_alloc_named_id_fwnode("AMD-IR", iommu->index);
+ 	if (!fn)
+ 		return -ENOMEM;
+-	iommu->ir_domain = irq_domain_create_tree(fn, &amd_ir_domain_ops, iommu);
++	iommu->ir_domain = irq_domain_create_hierarchy(arch_get_ir_parent_domain(), 0, 0,
++						       fn, &amd_ir_domain_ops, iommu);
+ 	if (!iommu->ir_domain) {
+ 		irq_domain_free_fwnode(fn);
+ 		return -ENOMEM;
+ 	}
  
- /**
+-	iommu->ir_domain->parent = arch_get_ir_parent_domain();
+-	iommu->msi_domain = arch_create_remap_msi_irq_domain(iommu->ir_domain,
+-							     "AMD-IR-MSI",
+-							     iommu->index);
++	irq_domain_update_bus_token(iommu->ir_domain,  DOMAIN_BUS_AMDVI);
++	iommu->ir_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
++	iommu->ir_domain->msi_parent_ops = &amdvi_msi_parent_ops;
++
+ 	return 0;
+ }
+ 
+--- a/include/linux/irqdomain_defs.h
++++ b/include/linux/irqdomain_defs.h
+@@ -24,6 +24,7 @@ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_PCI_DEVICE_MSI,
+ 	DOMAIN_BUS_PCI_DEVICE_MSIX,
+ 	DOMAIN_BUS_DMAR,
++	DOMAIN_BUS_AMDVI,
+ };
+ 
+ #endif /* _LINUX_IRQDOMAIN_DEFS_H */
 
