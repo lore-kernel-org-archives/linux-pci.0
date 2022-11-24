@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4EE2C433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:28:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB150C47088
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:28:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229852AbiKXX2t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Nov 2022 18:28:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43550 "EHLO
+        id S229463AbiKXX2v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Nov 2022 18:28:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229820AbiKXX2h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:28:37 -0500
+        with ESMTP id S229890AbiKXX2e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:28:34 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 476FDBEB56;
-        Thu, 24 Nov 2022 15:26:55 -0800 (PST)
-Message-ID: <20221124232326.267353814@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7965A314C;
+        Thu, 24 Nov 2022 15:26:52 -0800 (PST)
+Message-ID: <20221124232326.093093200@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669332372;
+        s=2020; t=1669332367;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=T4PJKhvy3BXQPG8m3pythcilM8fEjCtnrP9dFwguEN8=;
-        b=tE5N3oRKOjAHX3105MXBVaC6+dWNgZIv/gC3SLPLHGV9ku6tiH8UgVNUZUw4eUi0hNUsdF
-        J4MDDtMgIfGtViejpi7MDiZj4o5R9Cun9n19TmVjFqsd2lSdjJ8U3ZE56rrCl1Mght7U2c
-        deEGJKrWNzqvaHaMd+gQbQ7IZlslZK9UlFovTBdBWvbIw5Z/vxMPcsdAlXxgckkku25wK+
-        RBs2mjNbi8XYLRVY6Hxo+ptdaQlOttulx6RpewYFyQQqVoUEjxBpp/G35yIT7XMJ54MZwI
-        RcrJpPbg7DrgvXme31A3Y8AOJN/GxqkIS4/jr+Bv7cb2p88X0Do4knWgM2djOw==
+         references:references; bh=yBkAsYnt2I7B5+/On6wDlCIdm7qhkb9RizMNRpsl694=;
+        b=HrvsEqLsToIp55l3cj4SBWy8qS2MjQlZnu+8IatPQjHQbT5uVUsqrUHw9nH6PpX/P/PkWz
+        TnGpDhRs1+2PE4R3ZHDZ1dRucY0efo1AYOp1P7WF0EEvbuXHGnnh6Yu41N5zq1dqKiTFGp
+        vFFxvKBl6IKDjA5e9loUG+K23k4c4D2zEDkm9cenDZiLLkyYxQwEpkbVld2RId3hYK2eTF
+        b2xKPBf4BemHdE9mVtPyjoYZEraUmFmNltveXAtSkoHCEldWQrYyf+ts7Ghify5lufLdsm
+        ux+UqPSxSlKE87V+xdu/TBe9bXdUlCVlgqrMLBhYIqlieOz6rGJUOW/LU+t6AA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669332372;
+        s=2020e; t=1669332367;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=T4PJKhvy3BXQPG8m3pythcilM8fEjCtnrP9dFwguEN8=;
-        b=cNANfcEEQE27ODvsgqRrQZDo0i8y9EQqNxujvg/ptmFNjv5/jDyNf8h1PL4mo3ZyDmEnbC
-        AE6aJCfbovNKWNAg==
+         references:references; bh=yBkAsYnt2I7B5+/On6wDlCIdm7qhkb9RizMNRpsl694=;
+        b=llw9Gy4LLy7Jis6eY6x6b5HwgSNES0ZONTNs/hP8H+ArWsmIZZ/Q3JtM3eohnehUT/kcMN
+        idqiyWXU1AMeo9Dw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,93 +48,64 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V3 17/33] x86/apic/msi: Remove arch_create_remap_msi_irq_domain()
+Subject: [patch V3 14/33] PCI/MSI: Remove unused pci_dev_has_special_msi_domain()
 References: <20221124230505.073418677@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 25 Nov 2022 00:26:12 +0100 (CET)
+Date:   Fri, 25 Nov 2022 00:26:07 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-and related code which is not longer required now that the interrupt remap
-code has been converted to MSI parent domains.
+The check for special MSI domains like VMD which prevents the interrupt
+remapping code to overwrite device::msi::domain is not longer required and
+has been replaced by an x86 specific version which is aware of MSI parent
+domains.
+
+Remove it.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/x86/include/asm/irq_remapping.h |    4 ---
- arch/x86/kernel/apic/msi.c           |   42 -----------------------------------
- 2 files changed, 1 insertion(+), 45 deletions(-)
+ drivers/pci/msi/irqdomain.c |   21 ---------------------
+ include/linux/msi.h         |    1 -
+ 2 files changed, 22 deletions(-)
 
---- a/arch/x86/include/asm/irq_remapping.h
-+++ b/arch/x86/include/asm/irq_remapping.h
-@@ -44,10 +44,6 @@ extern int irq_remapping_reenable(int);
- extern int irq_remap_enable_fault_handling(void);
- extern void panic_if_irq_remap(const char *msg);
- 
--/* Create PCI MSI/MSIx irqdomain, use @parent as the parent irqdomain. */
--extern struct irq_domain *
--arch_create_remap_msi_irq_domain(struct irq_domain *par, const char *n, int id);
--
- /* Get parent irqdomain for interrupt remapping irqdomain */
- static inline struct irq_domain *arch_get_ir_parent_domain(void)
- {
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -277,7 +277,7 @@ void __init x86_create_pci_msi_domain(vo
- 	x86_pci_msi_default_domain = x86_init.irqs.create_pci_msi_domain();
+--- a/drivers/pci/msi/irqdomain.c
++++ b/drivers/pci/msi/irqdomain.c
+@@ -414,24 +414,3 @@ struct irq_domain *pci_msi_get_device_do
+ 					     DOMAIN_BUS_PCI_MSI);
+ 	return dom;
  }
- 
--/* Keep around for hyperV and the remap code below */
-+/* Keep around for hyperV */
- int pci_msi_prepare(struct irq_domain *domain, struct device *dev, int nvec,
- 		    msi_alloc_info_t *arg)
- {
-@@ -291,46 +291,6 @@ int pci_msi_prepare(struct irq_domain *d
- }
- EXPORT_SYMBOL_GPL(pci_msi_prepare);
- 
--#ifdef CONFIG_IRQ_REMAP
--static struct msi_domain_ops pci_msi_domain_ops = {
--	.msi_prepare	= pci_msi_prepare,
--};
 -
--static struct irq_chip pci_msi_ir_controller = {
--	.name			= "IR-PCI-MSI",
--	.irq_unmask		= pci_msi_unmask_irq,
--	.irq_mask		= pci_msi_mask_irq,
--	.irq_ack		= irq_chip_ack_parent,
--	.irq_retrigger		= irq_chip_retrigger_hierarchy,
--	.flags			= IRQCHIP_SKIP_SET_WAKE |
--				  IRQCHIP_AFFINITY_PRE_STARTUP,
--};
--
--static struct msi_domain_info pci_msi_ir_domain_info = {
--	.flags		= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--			  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
--	.ops		= &pci_msi_domain_ops,
--	.chip		= &pci_msi_ir_controller,
--	.handler	= handle_edge_irq,
--	.handler_name	= "edge",
--};
--
--struct irq_domain *arch_create_remap_msi_irq_domain(struct irq_domain *parent,
--						    const char *name, int id)
+-/**
+- * pci_dev_has_special_msi_domain - Check whether the device is handled by
+- *				    a non-standard PCI-MSI domain
+- * @pdev:	The PCI device to check.
+- *
+- * Returns: True if the device irqdomain or the bus irqdomain is
+- * non-standard PCI/MSI.
+- */
+-bool pci_dev_has_special_msi_domain(struct pci_dev *pdev)
 -{
--	struct fwnode_handle *fn;
--	struct irq_domain *d;
+-	struct irq_domain *dom = dev_get_msi_domain(&pdev->dev);
 -
--	fn = irq_domain_alloc_named_id_fwnode(name, id);
--	if (!fn)
--		return NULL;
--	d = pci_msi_create_irq_domain(fn, &pci_msi_ir_domain_info, parent);
--	if (!d)
--		irq_domain_free_fwnode(fn);
--	return d;
+-	if (!dom)
+-		dom = dev_get_msi_domain(&pdev->bus->dev);
+-
+-	if (!dom)
+-		return true;
+-
+-	return dom->bus_token != DOMAIN_BUS_PCI_MSI;
 -}
--#endif
--
- #ifdef CONFIG_DMAR_TABLE
- /*
-  * The Intel IOMMU (ab)uses the high bits of the MSI address to contain the
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -609,7 +609,6 @@ struct irq_domain *pci_msi_create_irq_do
+ 					     struct irq_domain *parent);
+ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev);
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev);
+-bool pci_dev_has_special_msi_domain(struct pci_dev *pdev);
+ #else /* CONFIG_PCI_MSI */
+ static inline struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+ {
 
