@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0BF7C4167D
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:30:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD566C43217
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:30:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229958AbiKXXaa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Nov 2022 18:30:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49638 "EHLO
+        id S230138AbiKXXav (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Nov 2022 18:30:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229939AbiKXX3y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:29:54 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54E394EC04;
-        Thu, 24 Nov 2022 15:27:57 -0800 (PST)
-Message-ID: <20221124232326.846169830@linutronix.de>
+        with ESMTP id S230003AbiKXXaA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:30:00 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDD9A87A71;
+        Thu, 24 Nov 2022 15:28:00 -0800 (PST)
+Message-ID: <20221124232327.022658817@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669332388;
+        s=2020; t=1669332393;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=dO4Zi35OCCA7gHzDk5+sx7+ILHZnBqLXkJXZcofiSSc=;
-        b=vJ1ivInEGxFXD/cLi/XsGMd7gWG3RnRzT+bSNGmuipyBQatFEozxsYSg5LRSwEK/Eq2OGc
-        OcPZYezbgEk1I2kXpuhyaEuj0tB7dluO75I6L1kZj6tUTve7qwKfhpEeKFOT+s8jrEFKJ6
-        QgJbaoCRSf0CKbYhEwISJNcGkuS8tucvIV6BPn16Z0Xj8/uFke4AZmOdBBeBUvcTUKencz
-        SMhwViegYUJhy6BdiD1OzlcV7Z/OStEKHq+JW/nnJS1Skp45uU0TPFRZVOLBpZWC4bKpVa
-        99SQHyP2TDlfCyrY6ySUAiPLwhJZdBnCzeO2GnIPzYluWwmdxWAo8nNJWL94og==
+         references:references; bh=QDMaEx7ktXTUaBjXhcwy3JcriisNhamDQjdxbqkUVcQ=;
+        b=zUr0QOYxgwDD1PsVVViqo27E4EsaPMbR4ALz9TfU0GC5htAX5nGPC6kA6mGwt93eEzunFY
+        SV6YNVcQFPTwSfCmcVnJLHcVKJmea/9hHBZcbkFnnBWcMWqs62jdSUBSHL4N8+ePtaCL8B
+        FFaR0KtJcel6lPaAZYtNjpTGRXpt7dKubo3WLJ9W9CX6n/h3XV/bLSg1oc9TgjhDZPwb3j
+        GlFZSKS9M6+gjUjkWy8BNAyRLYckcl+6G3bOpAq+nxGJOsnvl2SLurpDuWo6Cz631V9AIs
+        05lrfrLGyMspEnMnsIubC+CzKiuF3CoVpv4qB6h5U1urATybLK6JYPIujJWWNQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669332388;
+        s=2020e; t=1669332393;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=dO4Zi35OCCA7gHzDk5+sx7+ILHZnBqLXkJXZcofiSSc=;
-        b=bodUHha1Sn8a5HfJeWq5ctT/b+kcYXaQkmaIOJsbXjkGurYIaUgFYmHM5Y9v+EeKW61q2K
-        teWGRf0CdndccABw==
+         references:references; bh=QDMaEx7ktXTUaBjXhcwy3JcriisNhamDQjdxbqkUVcQ=;
+        b=e02d3EkPUlNpaELh4mxVVoCi+mQ7c03Dpuxx2rMxLiCJ+d8w3kCUnmnKMKavOjEADyVpy5
+        OPe7q2W2AgbVSkBQ==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,62 +48,45 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V3 27/33] genirq/msi: Provide constants for PCI/IMS support
+Subject: [patch V3 30/33] x86/apic/msi: Enable PCI/IMS
 References: <20221124230505.073418677@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 25 Nov 2022 00:26:28 +0100 (CET)
+Date:   Fri, 25 Nov 2022 00:26:32 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Provide the necessary constants for PCI/IMS support:
+Enable IMS in the domain init and allocation mapping code, but do not
+enable it on the vector domain as discussed in various threads on LKML.
 
-  - A new bus token for MSI irqdomain identification
-  - A MSI feature flag for the MSI irqdomains to signal support
-  - A secondary domain id
-
-The latter expands the device internal domain pointer storage array from 1
-to 2 entries. That extra pointer is mostly unused today, but the
-alternative solutions would not be free either and would introduce more
-complexity all over the place. Trade the 8bytes for simplicity.
+The interrupt remap domains can expand this setting like they do with
+PCI multi MSI.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/irqdomain_defs.h |    1 +
- include/linux/msi.h            |    2 ++
- include/linux/msi_api.h        |    1 +
- 3 files changed, 4 insertions(+)
+ arch/x86/kernel/apic/msi.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
---- a/include/linux/irqdomain_defs.h
-+++ b/include/linux/irqdomain_defs.h
-@@ -25,6 +25,7 @@ enum irq_domain_bus_token {
- 	DOMAIN_BUS_PCI_DEVICE_MSIX,
- 	DOMAIN_BUS_DMAR,
- 	DOMAIN_BUS_AMDVI,
-+	DOMAIN_BUS_PCI_DEVICE_IMS,
- };
- 
- #endif /* _LINUX_IRQDOMAIN_DEFS_H */
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -559,6 +559,8 @@ enum {
- 	MSI_FLAG_MSIX_CONTIGUOUS	= (1 << 19),
- 	/* PCI/MSI-X vectors can be dynamically allocated/freed post MSI-X enable */
- 	MSI_FLAG_PCI_MSIX_ALLOC_DYN	= (1 << 20),
-+	/* Support for PCI/IMS */
-+	MSI_FLAG_PCI_IMS		= (1 << 21),
- };
- 
- /**
---- a/include/linux/msi_api.h
-+++ b/include/linux/msi_api.h
-@@ -15,6 +15,7 @@ struct device;
-  */
- enum msi_domain_ids {
- 	MSI_DEFAULT_DOMAIN,
-+	MSI_SECONDARY_DOMAIN,
- 	MSI_MAX_DEVICE_IRQDOMAINS,
- };
- 
+--- a/arch/x86/kernel/apic/msi.c
++++ b/arch/x86/kernel/apic/msi.c
+@@ -184,6 +184,7 @@ static int x86_msi_prepare(struct irq_do
+ 		alloc->type = X86_IRQ_ALLOC_TYPE_PCI_MSI;
+ 		return 0;
+ 	case DOMAIN_BUS_PCI_DEVICE_MSIX:
++	case DOMAIN_BUS_PCI_DEVICE_IMS:
+ 		alloc->type = X86_IRQ_ALLOC_TYPE_PCI_MSIX;
+ 		return 0;
+ 	default:
+@@ -230,6 +231,10 @@ static bool x86_init_dev_msi_info(struct
+ 	case DOMAIN_BUS_PCI_DEVICE_MSI:
+ 	case DOMAIN_BUS_PCI_DEVICE_MSIX:
+ 		break;
++	case DOMAIN_BUS_PCI_DEVICE_IMS:
++		if (!(pops->supported_flags & MSI_FLAG_PCI_IMS))
++			return false;
++		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 		return false;
 
