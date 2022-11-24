@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E7DC433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 465FFC433FE
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:36:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229876AbiKXXfj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Nov 2022 18:35:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60072 "EHLO
+        id S230071AbiKXXgP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Nov 2022 18:36:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230095AbiKXXf0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:35:26 -0500
+        with ESMTP id S229832AbiKXXgC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:36:02 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24514A2883;
-        Thu, 24 Nov 2022 15:31:46 -0800 (PST)
-Message-ID: <20221124232325.738047902@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3CDC116AA8;
+        Thu, 24 Nov 2022 15:32:07 -0800 (PST)
+Message-ID: <20221124232325.917219885@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669332358;
+        s=2020; t=1669332363;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=MxT52QfeG/NT2BA2XnRso0NWmZQGQnhH9yEiG1ZbsIM=;
-        b=rzNt/s64LZ9a80Jio7t/Pir3vg0mIG5LsgimCWVrmkl7G/4ehoDgsvRxrzObYSSf3LSIGM
-        yAJUTQKnsTxQZ1WF+nBpy98jUVIAg5b23gQs3ChumbfI/MV8zQh9j+RzIMIcKgPUPbwKhy
-        MHEObd2TPTduz84DwpW3Dolo/j1oBJxz3CpxIcXUU8kpWj1yz7g743tVCS/cwsL9if4ZxX
-        PaaGODwRhzM9l3lX8Ekjfp9EPdtui3KHKG1PgNUNwMjuL005h8krACYm9CMqbK1urEavZM
-        OJWgTdmkPvXCww4Z4lUGJVYh9wuc+rlmiaDxQFbfdPIr5bZfuTnhHGARLH3goA==
+         references:references; bh=/ACIVj3Kux3YVP+JKXyXfLBMvNMP5EOMeimbPlaFLJQ=;
+        b=BsKbsW1SxIOI3uIIk1XAIrdhEqrqbHncgrocGX9Uh2YWGWVfMlj2O+PN8VYUYNIq0qZ2Ay
+        A9eUTO7Y79lWaVpR//G51TZ+CebF9CLLQuwFq12Y4ZjtHbFlI8FfU/PS1vLDzw/vr8k2yK
+        R25WIFL3ItTAodR/56Sbqi5K8lBnIbuFwfcGzQKlLVEbmtKc/shnbHyruPAjOxQyEYfFNW
+        aEKuw2uz9cpTeDcnyyScSx3V7GUezDsnMAf25sbvSpOt7WbVWcMTcw7JrQcGRI3xE0MfQ/
+        e34GT/Wn8HrKOWDLB5KP53Qpyk9dsYEtnV9fRqv6oFUj4suIw+fmJ6hPg9gIsw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669332358;
+        s=2020e; t=1669332363;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=MxT52QfeG/NT2BA2XnRso0NWmZQGQnhH9yEiG1ZbsIM=;
-        b=dPMpS7gRpstwKeMvYNv/vsLOAMsakSmDEPVkSaUgvmOTMm0QcW/fOQPttnSESjCHWwCrsN
-        2l6GTCIB+RAkL9CA==
+         references:references; bh=/ACIVj3Kux3YVP+JKXyXfLBMvNMP5EOMeimbPlaFLJQ=;
+        b=LpEqpWKsx5hfed/pW/S8H+NTS72hnkS7dFww6SXUe5jHOBr+9zaeOuaPLondJsu/P79pqN
+        hKCH+lWyvnEmReDg==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,70 +48,53 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V3 08/33] genirq/msi: Provide msi_match_device_domain()
+Subject: [patch V3 11/33] genirq/msi: Provide BUS_DEVICE_PCI_MSI[X]
 References: <20221124230505.073418677@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 25 Nov 2022 00:25:57 +0100 (CET)
+Date:   Fri, 25 Nov 2022 00:26:02 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Provide an interface to match a per device domain bus token. This allows to
-query which type of domain is installed for a particular domain id. Will be
-used for PCI to avoid frequent create/remove cycles for the MSI resp. MSI-X
-domains.
+Provide new bus tokens for the upcoming per device PCI/MSI and PCI/MSIX
+interrupt domains.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/msi.h |    3 +++
- kernel/irq/msi.c    |   25 +++++++++++++++++++++++++
- 2 files changed, 28 insertions(+)
+ include/linux/irqdomain_defs.h |    2 ++
+ kernel/irq/msi.c               |    4 ++++
+ 2 files changed, 6 insertions(+)
 
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -553,6 +553,9 @@ bool msi_create_device_irq_domain(struct
- 				  void *chip_data);
- void msi_remove_device_irq_domain(struct device *dev, unsigned int domid);
+--- a/include/linux/irqdomain_defs.h
++++ b/include/linux/irqdomain_defs.h
+@@ -21,6 +21,8 @@ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_TI_SCI_INTA_MSI,
+ 	DOMAIN_BUS_WAKEUP,
+ 	DOMAIN_BUS_VMD_MSI,
++	DOMAIN_BUS_PCI_DEVICE_MSI,
++	DOMAIN_BUS_PCI_DEVICE_MSIX,
+ };
  
-+bool msi_match_device_irq_domain(struct device *dev, unsigned int domid,
-+				 enum irq_domain_bus_token bus_token);
-+
- int msi_domain_alloc_irqs_range_locked(struct device *dev, unsigned int domid,
- 				       unsigned int first, unsigned int last);
- int msi_domain_alloc_irqs_range(struct device *dev, unsigned int domid,
+ #endif /* _LINUX_IRQDOMAIN_DEFS_H */
 --- a/kernel/irq/msi.c
 +++ b/kernel/irq/msi.c
-@@ -987,6 +987,31 @@ void msi_remove_device_irq_domain(struct
- 	msi_unlock_descs(dev);
- }
+@@ -1122,6 +1122,8 @@ static bool msi_check_reservation_mode(s
  
-+/**
-+ * msi_match_device_irq_domain - Match a device irq domain against a bus token
-+ * @dev:	Pointer to the device
-+ * @domid:	Domain id
-+ * @bus_token:	Bus token to match against the domain bus token
-+ *
-+ * Return: True if device domain exists and bus tokens match.
-+ */
-+bool msi_match_device_irq_domain(struct device *dev, unsigned int domid,
-+				 enum irq_domain_bus_token bus_token)
-+{
-+	struct msi_domain_info *info;
-+	struct irq_domain *domain;
-+	bool ret = false;
-+
-+	msi_lock_descs(dev);
-+	domain = msi_get_device_domain(dev, domid);
-+	if (domain && irq_domain_is_msi_device(domain)) {
-+		info = domain->host_data;
-+		ret = info->bus_token == bus_token;
-+	}
-+	msi_unlock_descs(dev);
-+	return ret;
-+}
-+
- int msi_domain_prepare_irqs(struct irq_domain *domain, struct device *dev,
- 			    int nvec, msi_alloc_info_t *arg)
+ 	switch(domain->bus_token) {
+ 	case DOMAIN_BUS_PCI_MSI:
++	case DOMAIN_BUS_PCI_DEVICE_MSI:
++	case DOMAIN_BUS_PCI_DEVICE_MSIX:
+ 	case DOMAIN_BUS_VMD_MSI:
+ 		break;
+ 	default:
+@@ -1147,6 +1149,8 @@ static int msi_handle_pci_fail(struct ir
  {
+ 	switch(domain->bus_token) {
+ 	case DOMAIN_BUS_PCI_MSI:
++	case DOMAIN_BUS_PCI_DEVICE_MSI:
++	case DOMAIN_BUS_PCI_DEVICE_MSIX:
+ 	case DOMAIN_BUS_VMD_MSI:
+ 		if (IS_ENABLED(CONFIG_PCI_MSI))
+ 			break;
 
