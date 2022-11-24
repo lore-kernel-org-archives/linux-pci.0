@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8361C4321E
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3482C43217
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:27:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229922AbiKXX1u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Nov 2022 18:27:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42702 "EHLO
+        id S229812AbiKXX1v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Nov 2022 18:27:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229728AbiKXX1W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:27:22 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 319A5CFA6C;
-        Thu, 24 Nov 2022 15:26:15 -0800 (PST)
-Message-ID: <20221124232325.618807601@linutronix.de>
+        with ESMTP id S229689AbiKXX1Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:27:24 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F00818B11A;
+        Thu, 24 Nov 2022 15:26:16 -0800 (PST)
+Message-ID: <20221124232325.501144862@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669332355;
+        s=2020; t=1669332351;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=xdXQN8DRlFx/ul31qn4JSIb+1+AWkLgJWGGnxBYyOqY=;
-        b=Vlm0wQdGH0cvpPDw9AF5vvmxmHq927pTmvBgDIh99qQEiq4jdu45fdvTx1D3Tt1fiEpHs4
-        yBKGesX7U/LcOMMDk560CEY4/+3YlGzH18XsNFqHPKJBTL8tenQ6rpdd9nJQFly+geH9/b
-        FZPnfCKKqrLNjCqS0yNKP0vsht/dzlVVxMBs8mPoG3H9krJ8RyGg6S3WJuMSIZP8KIQoQ2
-        Ot1aa4guG2NkztvZUKwJMaWDK1/mzwa1qIcaIPkSniBe5F0yCYotBEYxtkiEoq8w3Tlgyr
-        zpRy7fhJ/hs9cZjEl7nPk5HxayStXhsuB8cLUBHaMDFt5AewPu7o/7f2C99pbg==
+         references:references; bh=KKwu6EVH8ruKNrQNXAsaHWUDYRK2+tT7uRCo5fxd1Vs=;
+        b=zBLb/Ox7OJ0VV/3WNc7cfyfHZRZ9kH0LXxBr9yvermW/Cdpi8j9vMj4pORxOMop+qv+3ul
+        M3AvejZVya/4s3APJ5vXtUlaJcaOCznMcq98LQlTnrztPkg7iPWCmwtABH316vm/9aC1fC
+        ks8b27Ofl/d9YGQMDbfUXGZvyGv4kNz+92aLF6Pufvcw1JP+GlRb+eLDaGiyy5/XlBY9UX
+        zLb7mUcRS+p6qPgYkrHpBqO9htQGC889H1qiM8jIbPYu4WH2G9ouMebAgnAwc4evmStG79
+        Ykn//ds95V5V1BUEPoKLhHNj65WBzT9Zd4Losv9sn6OxOZipDmatJuJbWy+N5A==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669332355;
+        s=2020e; t=1669332351;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=xdXQN8DRlFx/ul31qn4JSIb+1+AWkLgJWGGnxBYyOqY=;
-        b=AVFno4In/9G6BVel7cWwEfGpIFeOHiNWGDWUDht/TIbuCqDY3yB+KyZvAACsUcKa/1xU0S
-        Rcjkwulq8PRkUHDQ==
+         references:references; bh=KKwu6EVH8ruKNrQNXAsaHWUDYRK2+tT7uRCo5fxd1Vs=;
+        b=U714pILZM40FuHR0FKCS8MjRY15jpHxDIzBby9AK0wRMzB+f2fhZeyenVKgAS965j0wNDK
+        FLef1Gx9MlMtcsBA==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,44 +48,67 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V3 06/33] genirq/irqdomain: Add irq_domain::dev for per device
- MSI domains
+Subject: [patch V3 04/33] genirq/msi: Add size info to struct msi_domain_info
 References: <20221124230505.073418677@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 25 Nov 2022 00:25:54 +0100 (CET)
+Date:   Fri, 25 Nov 2022 00:25:51 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Per device domains require the device pointer of the device which
-instantiated the domain for some purposes. Add the pointer to struct
-irq_domain. It will be used in the next step which provides the
-infrastructure to create per device MSI domains.
+To allow proper range checking especially for dynamic allocations add a
+size field to struct msi_domain_info. If the field is 0 then the size is
+unknown or unlimited (up to MSI_MAX_INDEX) to provide backwards
+compability.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/irqdomain.h |    4 ++++
- 1 file changed, 4 insertions(+)
+V3: Move the initialization into the common domain creation code
+---
+ include/linux/msi.h |    5 +++++
+ kernel/irq/msi.c    |   11 +++++++++++
+ 2 files changed, 16 insertions(+)
 
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -132,6 +132,9 @@ struct irq_domain_chip_generic;
-  * @gc:		Pointer to a list of generic chips. There is a helper function for
-  *		setting up one or more generic chips for interrupt controllers
-  *		drivers using the generic chip library which uses this pointer.
-+ * @dev:	Pointer to the device which instantiated the irqdomain
-+ *		With per device irq domains this is not necessarily the same
-+ *		as @pm_dev.
-  * @pm_dev:	Pointer to a device that can be utilized for power management
-  *		purposes related to the irq domain.
-  * @parent:	Pointer to parent irq_domain to support hierarchy irq_domains
-@@ -155,6 +158,7 @@ struct irq_domain {
- 	struct fwnode_handle		*fwnode;
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -422,6 +422,10 @@ struct msi_domain_ops {
+  * struct msi_domain_info - MSI interrupt domain data
+  * @flags:		Flags to decribe features and capabilities
+  * @bus_token:		The domain bus token
++ * @hwsize:		The hardware table size or the software index limit.
++ *			If 0 then the size is considered unlimited and
++ *			gets initialized to the maximum software index limit
++ *			by the domain creation code.
+  * @ops:		The callback data structure
+  * @chip:		Optional: associated interrupt chip
+  * @chip_data:		Optional: associated interrupt chip data
+@@ -433,6 +437,7 @@ struct msi_domain_ops {
+ struct msi_domain_info {
+ 	u32				flags;
  	enum irq_domain_bus_token	bus_token;
- 	struct irq_domain_chip_generic	*gc;
-+	struct device			*dev;
- 	struct device			*pm_dev;
- #ifdef	CONFIG_IRQ_DOMAIN_HIERARCHY
- 	struct irq_domain		*parent;
++	unsigned int			hwsize;
+ 	struct msi_domain_ops		*ops;
+ 	struct irq_chip			*chip;
+ 	void				*chip_data;
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -773,6 +773,17 @@ struct irq_domain *msi_create_irq_domain
+ {
+ 	struct irq_domain *domain;
+ 
++	if (info->hwsize > MSI_XA_DOMAIN_SIZE)
++		return NULL;
++
++	/*
++	 * Hardware size 0 is valid for backwards compatibility and for
++	 * domains which are not backed by a hardware table. Grant the
++	 * maximum index space.
++	 */
++	if (!info->hwsize)
++		info->hwsize = MSI_XA_DOMAIN_SIZE;
++
+ 	msi_domain_update_dom_ops(info);
+ 	if (info->flags & MSI_FLAG_USE_DEF_CHIP_OPS)
+ 		msi_domain_update_chip_ops(info);
 
