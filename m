@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11CDBC433FE
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:30:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0BF7C4167D
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Nov 2022 23:30:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230120AbiKXXac (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Nov 2022 18:30:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54102 "EHLO
+        id S229958AbiKXXaa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Nov 2022 18:30:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229972AbiKXX35 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:29:57 -0500
+        with ESMTP id S229939AbiKXX3y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Nov 2022 18:29:54 -0500
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A8EA59856;
-        Thu, 24 Nov 2022 15:27:58 -0800 (PST)
-Message-ID: <20221124232326.961711347@linutronix.de>
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54E394EC04;
+        Thu, 24 Nov 2022 15:27:57 -0800 (PST)
+Message-ID: <20221124232326.846169830@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1669332391;
+        s=2020; t=1669332388;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=5RTULcrzALXI6kqcCTFqzHeG98y1iAErZ2LN9kOhvOw=;
-        b=z4DbH4XIv1kmxippL2hPCp96iWQYpvohT0sVRs5PG25Df35z6ugkXIfB7ahEPFJDmqmTG8
-        d+ztRHLzC6WuX9awOb1syNuT1Gwlk5hXRUPg9I8cxvNlYjP7+ARyMHQgLdf0Fj6a9LpvSh
-        ungaxTUr3kpRsxm9k0OrPtpQErNPJ0W9CitB7HN8OksxBa+eJhm9F9CzTix/QI7/2enWmG
-        9biQXQElJUVHE9wwSCjT1Q9F+qMpaqdlPo/D+ykmdBRAeRs8v3kTjWcW/8NSyQtp3UjwRl
-        jLS6X0EssAFpy97oIDN6b1cLAzXnJm9XOEoI4Jxxt414qNeKpZT7ySuguLS4pw==
+         references:references; bh=dO4Zi35OCCA7gHzDk5+sx7+ILHZnBqLXkJXZcofiSSc=;
+        b=vJ1ivInEGxFXD/cLi/XsGMd7gWG3RnRzT+bSNGmuipyBQatFEozxsYSg5LRSwEK/Eq2OGc
+        OcPZYezbgEk1I2kXpuhyaEuj0tB7dluO75I6L1kZj6tUTve7qwKfhpEeKFOT+s8jrEFKJ6
+        QgJbaoCRSf0CKbYhEwISJNcGkuS8tucvIV6BPn16Z0Xj8/uFke4AZmOdBBeBUvcTUKencz
+        SMhwViegYUJhy6BdiD1OzlcV7Z/OStEKHq+JW/nnJS1Skp45uU0TPFRZVOLBpZWC4bKpVa
+        99SQHyP2TDlfCyrY6ySUAiPLwhJZdBnCzeO2GnIPzYluWwmdxWAo8nNJWL94og==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1669332391;
+        s=2020e; t=1669332388;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         references:references; bh=5RTULcrzALXI6kqcCTFqzHeG98y1iAErZ2LN9kOhvOw=;
-        b=lu6X+IMJmfOSIvBVNI1TXB/n/jyz7pQkN3zGH7jqRBV8dTnepVR3Op1rS8fkLO0RNNiDI5
-        HpAX+FhR+yvzvXCA==
+         references:references; bh=dO4Zi35OCCA7gHzDk5+sx7+ILHZnBqLXkJXZcofiSSc=;
+        b=bodUHha1Sn8a5HfJeWq5ctT/b+kcYXaQkmaIOJsbXjkGurYIaUgFYmHM5Y9v+EeKW61q2K
+        teWGRf0CdndccABw==
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
@@ -48,99 +48,62 @@ Cc:     x86@kernel.org, Joerg Roedel <joro@8bytes.org>,
         Logan Gunthorpe <logang@deltatee.com>,
         Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
         Allen Hubbe <allenbh@gmail.com>
-Subject: [patch V3 29/33] PCI/MSI: Provide pci_ims_alloc/free_irq()
+Subject: [patch V3 27/33] genirq/msi: Provide constants for PCI/IMS support
 References: <20221124230505.073418677@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 25 Nov 2022 00:26:31 +0100 (CET)
+Date:   Fri, 25 Nov 2022 00:26:28 +0100 (CET)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Single vector allocation which allocates the next free index in the IMS
-space. The free function releases.
+Provide the necessary constants for PCI/IMS support:
 
-All allocated vectors are released also via pci_free_vectors() which is
-also releasing MSI/MSI-X vectors.
+  - A new bus token for MSI irqdomain identification
+  - A MSI feature flag for the MSI irqdomains to signal support
+  - A secondary domain id
+
+The latter expands the device internal domain pointer storage array from 1
+to 2 entries. That extra pointer is mostly unused today, but the
+alternative solutions would not be free either and would introduce more
+complexity all over the place. Trade the 8bytes for simplicity.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
-V3: s/cookie/icookie/ (Kevin)
----
- drivers/pci/msi/api.c |   50 ++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h   |    3 +++
- 2 files changed, 53 insertions(+)
+ include/linux/irqdomain_defs.h |    1 +
+ include/linux/msi.h            |    2 ++
+ include/linux/msi_api.h        |    1 +
+ 3 files changed, 4 insertions(+)
 
---- a/drivers/pci/msi/api.c
-+++ b/drivers/pci/msi/api.c
-@@ -361,6 +361,56 @@ const struct cpumask *pci_irq_get_affini
- EXPORT_SYMBOL(pci_irq_get_affinity);
+--- a/include/linux/irqdomain_defs.h
++++ b/include/linux/irqdomain_defs.h
+@@ -25,6 +25,7 @@ enum irq_domain_bus_token {
+ 	DOMAIN_BUS_PCI_DEVICE_MSIX,
+ 	DOMAIN_BUS_DMAR,
+ 	DOMAIN_BUS_AMDVI,
++	DOMAIN_BUS_PCI_DEVICE_IMS,
+ };
+ 
+ #endif /* _LINUX_IRQDOMAIN_DEFS_H */
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -559,6 +559,8 @@ enum {
+ 	MSI_FLAG_MSIX_CONTIGUOUS	= (1 << 19),
+ 	/* PCI/MSI-X vectors can be dynamically allocated/freed post MSI-X enable */
+ 	MSI_FLAG_PCI_MSIX_ALLOC_DYN	= (1 << 20),
++	/* Support for PCI/IMS */
++	MSI_FLAG_PCI_IMS		= (1 << 21),
+ };
  
  /**
-+ * pci_ims_alloc_irq - Allocate an interrupt on a PCI/IMS interrupt domain
-+ * @dev:	The PCI device to operate on
-+ * @icookie:	Pointer to an IMS implementation specific cookie for this
-+ *		IMS instance (PASID, queue ID, pointer...).
-+ *		The cookie content is copied into the MSI descriptor for the
-+ *		interrupt chip callbacks or domain specific setup functions.
-+ * @affdesc:	Optional pointer to an interrupt affinity descriptor
-+ *
-+ * There is no index for IMS allocations as IMS is an implementation
-+ * specific storage and does not have any direct associations between
-+ * index, which might be a pure software construct, and device
-+ * functionality. This association is established by the driver either via
-+ * the index - if there is a hardware table - or in case of purely software
-+ * managed IMS implementation the association happens via the
-+ * irq_write_msi_msg() callback of the implementation specific interrupt
-+ * chip, which utilizes the provided @icookie to store the MSI message in
-+ * the appropriate place.
-+ *
-+ * Return: A struct msi_map
-+ *
-+ *	On success msi_map::index contains the allocated index (>= 0) and
-+ *	msi_map::virq the allocated Linux interrupt number (> 0).
-+ *
-+ *	On fail msi_map::index contains the error code and msi_map::virq
-+ *	is set to 0.
-+ */
-+struct msi_map pci_ims_alloc_irq(struct pci_dev *dev, union msi_instance_cookie *icookie,
-+				 const struct irq_affinity_desc *affdesc)
-+{
-+	return msi_domain_alloc_irq_at(&dev->dev, MSI_SECONDARY_DOMAIN, MSI_ANY_INDEX,
-+				       affdesc, icookie);
-+}
-+EXPORT_SYMBOL_GPL(pci_ims_alloc_irq);
-+
-+/**
-+ * pci_ims_free_irq - Allocate an interrupt on a PCI/IMS interrupt domain
-+ *		      which was allocated via pci_ims_alloc_irq()
-+ * @dev:	The PCI device to operate on
-+ * @map:	A struct msi_map describing the interrupt to free as
-+ *		returned from pci_ims_alloc_irq()
-+ */
-+void pci_ims_free_irq(struct pci_dev *dev, struct msi_map map)
-+{
-+	if (WARN_ON_ONCE(map.index < 0 || !map.virq))
-+		return;
-+	msi_domain_free_irqs_range(&dev->dev, MSI_SECONDARY_DOMAIN, map.index, map.index);
-+}
-+EXPORT_SYMBOL_GPL(pci_ims_free_irq);
-+
-+/**
-  * pci_free_irq_vectors() - Free previously allocated IRQs for a device
-  * @dev: the PCI device to operate on
-  *
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2491,6 +2491,9 @@ struct msi_domain_template;
- 
- bool pci_create_ims_domain(struct pci_dev *pdev, const struct msi_domain_template *template,
- 			   unsigned int hwsize, void *data);
-+struct msi_map pci_ims_alloc_irq(struct pci_dev *pdev, union msi_instance_cookie *icookie,
-+				 const struct irq_affinity_desc *affdesc);
-+void pci_ims_free_irq(struct pci_dev *pdev, struct msi_map map);
- 
- #include <linux/dma-mapping.h>
+--- a/include/linux/msi_api.h
++++ b/include/linux/msi_api.h
+@@ -15,6 +15,7 @@ struct device;
+  */
+ enum msi_domain_ids {
+ 	MSI_DEFAULT_DOMAIN,
++	MSI_SECONDARY_DOMAIN,
+ 	MSI_MAX_DEVICE_IRQDOMAINS,
+ };
  
 
