@@ -2,114 +2,173 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72FCCC4167D
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Nov 2022 23:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD680C46467
+	for <linux-pci@archiver.kernel.org>; Sat, 26 Nov 2022 14:30:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229514AbiKYXgu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Nov 2022 18:36:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55914 "EHLO
+        id S229628AbiKZOaZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 26 Nov 2022 09:30:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229601AbiKYXgs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Nov 2022 18:36:48 -0500
-Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0B4C218A8;
-        Fri, 25 Nov 2022 15:36:47 -0800 (PST)
-Received: by mail-ej1-x62c.google.com with SMTP id ha10so13324818ejb.3;
-        Fri, 25 Nov 2022 15:36:47 -0800 (PST)
+        with ESMTP id S229622AbiKZOaY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 26 Nov 2022 09:30:24 -0500
+Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BB4D1BEB7
+        for <linux-pci@vger.kernel.org>; Sat, 26 Nov 2022 06:30:23 -0800 (PST)
+Received: by mail-lf1-x134.google.com with SMTP id be13so10898270lfb.4
+        for <linux-pci@vger.kernel.org>; Sat, 26 Nov 2022 06:30:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=53pASLo6U2zzYHdiGPJru2sei7EMeIsybEcbugHJMGw=;
-        b=aNmO4iy1jEBOxe4hLQffwUBwh9RXL7ogbj5yuKyKDk+Xzpa9rmxmLXt65tfNv5wpIX
-         zCIgP3UXxPHLUlvesV043w+pnVAvv6aeeguf3WSjGGxzBGh+aGFCYvAO2eYViSso1InR
-         eOGZh6VgaeO+Dmvu0OMjrZ0zg4rQqCRarVo3050M4z3zqJJCa0+ynj6CUT3S+u+xB6b0
-         vn0mNPQGaf68AAHuzsCi7zOUJm60aMjynS55gdF+ou7JUayNoM4xyAM+nJwCMhQWg9XQ
-         JoCTXbY/uWDqaBgF7oYHso/i7h9fojytw30ODsNPAnbkRuWDT8FHy4rdPIF3rXMBPTMf
-         AFlw==
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0FH6Qg/jduzi6PwcFvP6hRcgcF3jb6cJugtkH2wA03k=;
+        b=GZqbKSqt+e1ftphMnBrAMi19b1u4IAdImBmNTWqJrX8rdn1oVuFBFKOAfvvO64bKdM
+         NMKq6OpVDdPfw275d9Ldd19+I67ocoK8A0PLAKOoK3TKN78kVwSVYM1gfmZEORB3LoxU
+         ZEM09KjqYmuGjq9NTAGC6y3w6aA+Mkh5LE5mDZs0eyiQDPTK1s2WtUlH6KqTScWXCaLX
+         nzFPUN7+4E4TOPrRpcQE4eTJJowwJlA6OT71zDN8sbFl1ldqK3w/Ng4OFOi9OzYbeQkj
+         hXkh21S4ZmZ99b+vdxzxyRqAclye5TvOgH8dw3cVsw9Dlhqg7W3uvYAe1tqrYpra9qxV
+         +evQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=53pASLo6U2zzYHdiGPJru2sei7EMeIsybEcbugHJMGw=;
-        b=WIRDxrmoBezLK0KNCXAEA4ASMhgbZpyMo/ocEBVcTVY7OQfYcx0Pcc3CRoOQpePLLd
-         0U+TmAV8GolW0AbMt57HmUIbaMu+El5GlMeYWjR65l3yJUuTzf1x3CkvDsSlWmnwIQ3v
-         JeYGwrJ9Y4LE1y1aquTDCpUvtSLIMjNjgEmFE406DHs+U3S698kEesPFDCnG+pX2xfyu
-         Sjf5ST1u3NF+0PUdRby2A2a+DabA3mh5FCmJJ+rWVIgoIBl1hNGBEn+DtZE77B7WL5qb
-         HKwYRO2OgNzpVyGrZnZRgigECQPDlrJq2L6C8bIIHaJir+wwvJ1WKGAGlRVbEZITxe/0
-         1H0w==
-X-Gm-Message-State: ANoB5pn/JLzzcrXZbPeJ4i9cUGe2BaMXPbHycYlo/BZwC89LIRE0CBO6
-        FLmU2C12g4FxYRbW2S8SubM4EKtRyfXXCu35GMI=
-X-Google-Smtp-Source: AA0mqf45bdEJiOxhbUnLhIigBT0GjU47GsHYZmyiWPQnPoGEsgOfGs0TvhtmfqACF3pOoGPbacknnLPg3TD8cSTM64A=
-X-Received: by 2002:a17:907:a709:b0:79f:cd7c:e861 with SMTP id
- vw9-20020a170907a70900b0079fcd7ce861mr33399680ejc.339.1669419406346; Fri, 25
- Nov 2022 15:36:46 -0800 (PST)
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0FH6Qg/jduzi6PwcFvP6hRcgcF3jb6cJugtkH2wA03k=;
+        b=rrfT/g/TdI7X8qO/aUZlvbcvEFx8Eqd4+1EFubHgrtBgoG08JSpAKKe6SKt2aWD248
+         PILWD15bS1izbywOyJGPhwDZ9y6TilLrV41r11mQoNlp8dC3p/3CFJ4ShujLrlRhiaR5
+         iWgKBeTpZFgncnbqKTyAgmqTslOl0r0rCBZ6wcrRWOa7IHCl6x583bB67PApaiMCmG2u
+         8FHxbsNEKp32jGNH44ZMkdvByZNESyfqfDUyFHJeStawCDgNL0zdfSEElKey3jjHwwy0
+         3902BaTbAJ5qmkUQCE1qBDVxzZe8eRta/ydB+TN27Ccr76cyrJ31SVmXX2cfOohZoNum
+         hVXA==
+X-Gm-Message-State: ANoB5pm5v0H7OfMVTvPHkb+fGdjjeSePwZu7+Z5qj8ZmLjOhyxy1P5So
+        39wx2ujznA4TT6Wm/DCByXKKHQ==
+X-Google-Smtp-Source: AA0mqf6OQNKG/3n825nCEeCAO06Iv5aI6Uk1mOESWJou2dOgsKu3cRwImPUH9aEIreGzTmYNvODxFA==
+X-Received: by 2002:ac2:5453:0:b0:4a2:2c23:a6d4 with SMTP id d19-20020ac25453000000b004a22c23a6d4mr13687688lfn.257.1669473021404;
+        Sat, 26 Nov 2022 06:30:21 -0800 (PST)
+Received: from [192.168.0.20] (088156142067.dynamic-2-waw-k-3-2-0.vectranet.pl. [88.156.142.67])
+        by smtp.gmail.com with ESMTPSA id p11-20020ac24ecb000000b004b50ae0bfe8sm262741lfr.208.2022.11.26.06.30.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 26 Nov 2022 06:30:21 -0800 (PST)
+Message-ID: <2b399e95-70c9-0213-90e6-95f377976e95@linaro.org>
+Date:   Sat, 26 Nov 2022 15:30:19 +0100
 MIME-Version: 1.0
-References: <20221117-b4-amlogic-bindings-convert-v1-0-3f025599b968@linaro.org>
- <20221117-b4-amlogic-bindings-convert-v1-6-3f025599b968@linaro.org>
-In-Reply-To: <20221117-b4-amlogic-bindings-convert-v1-6-3f025599b968@linaro.org>
-From:   Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date:   Sat, 26 Nov 2022 00:36:35 +0100
-Message-ID: <CAFBinCAmV7wuPq8y+g0YKxZ0W1G8_=WgY+E3OT9WT62eDkxXqw@mail.gmail.com>
-Subject: Re: [PATCH 06/12] dt-bindings: rtc: convert rtc-meson.txt to dt-schema
-To:     Neil Armstrong <neil.armstrong@linaro.org>
-Cc:     Jakub Kicinski <kuba@kernel.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Eric Dumazet <edumazet@google.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Jerome Brunet <jbrunet@baylibre.com>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-media@vger.kernel.org, netdev@vger.kernel.org,
-        linux-amlogic@lists.infradead.org, linux-mmc@vger.kernel.org,
-        linux-rtc@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-watchdog@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.5.0
+Subject: Re: [PATCH v7 1/5] dt-bindings: PCI: ti,j721e-pci-*: add checks for
+ num-lanes
+Content-Language: en-US
+To:     Matt Ranostay <mranostay@ti.com>, rogerq@kernel.org,
+        lpieralisi@kernel.org, robh@kernel.org, kw@linux.com,
+        bhelgaas@google.com, vigneshr@ti.com, tjoseph@cadence.com,
+        sergio.paracuellos@gmail.com, pthombar@cadence.com,
+        linux-pci@vger.kernel.org
+Cc:     devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20221124081221.1206167-1-mranostay@ti.com>
+ <20221124081221.1206167-2-mranostay@ti.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20221124081221.1206167-2-mranostay@ti.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Neil,
+On 24/11/2022 09:12, Matt Ranostay wrote:
+> Add num-lanes schema checks based on compatible string on available lanes
+> for that platform.
+> 
+> Signed-off-by: Matt Ranostay <mranostay@ti.com>
+> ---
+>  .../bindings/pci/ti,j721e-pci-ep.yaml         | 28 +++++++++++++++++--
+>  .../bindings/pci/ti,j721e-pci-host.yaml       | 28 +++++++++++++++++--
+>  2 files changed, 50 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+> index 10e6eabdff53..1aeea168d3d0 100644
+> --- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+> +++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+> @@ -10,9 +10,6 @@ title: TI J721E PCI EP (PCIe Wrapper)
+>  maintainers:
+>    - Kishon Vijay Abraham I <kishon@ti.com>
+>  
+> -allOf:
+> -  - $ref: "cdns-pcie-ep.yaml#"
+> -
+>  properties:
+>    compatible:
+>      oneOf:
+> @@ -65,6 +62,31 @@ properties:
+>      items:
+>        - const: link_state
+>  
+> +allOf:
+> +  - $ref: "cdns-pcie-ep.yaml#"
 
-On Fri, Nov 18, 2022 at 3:33 PM Neil Armstrong
-<neil.armstrong@linaro.org> wrote:
->
-> Convert the Amlogic Meson6 RTC bindings to dt-schema.
->
-> Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
-With the comment below addressed please add my:
-Reviewed-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+While moving it, drop the quotes.
 
-[...]
-> +        mac@0 {
-> +            reg = <0 6>;
-> +        };
-My understanding is that here you want to showcase the nvmem integration.
-This IP block only supports 4 bytes of NVMEM. Instead of using MAC
-(which is not what's stored here, the suspend firmware uses it
-instead) I'd just use something like:
-data@0 {
-  reg = <0x0 4>;
-};
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - ti,am64-pcie-ep
+> +    then:
+> +      properties:
+> +        num-lanes:
+> +          minimum: 1
+> +          maximum: 1
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - ti,j7200-pcie-ep
+> +            - ti,j721e-pcie-ep
+> +    then:
+> +      properties:
+> +        num-lanes:
+> +          minimum: 1
+> +          maximum: 2
+> +
+>  required:
+>    - compatible
+>    - reg
+> diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+> index b0513b197d08..8eca0d08303f 100644
+> --- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+> +++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+> @@ -10,9 +10,6 @@ title: TI J721E PCI Host (PCIe Wrapper)
+>  maintainers:
+>    - Kishon Vijay Abraham I <kishon@ti.com>
+>  
+> -allOf:
+> -  - $ref: "cdns-pcie-host.yaml#"
+> -
+>  properties:
+>    compatible:
+>      oneOf:
+> @@ -98,6 +95,31 @@ properties:
+>        interrupts:
+>          maxItems: 1
+>  
+> +allOf:
+> +  - $ref: "cdns-pcie-host.yaml#"
+
+Same here.
+
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - ti,am64-pcie-host
+> +    then:
+> +      properties:
+> +        num-lanes:
+
+const: 1
+
 
 
 Best regards,
-Martin
+Krzysztof
+
