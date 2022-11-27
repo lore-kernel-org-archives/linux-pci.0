@@ -2,193 +2,92 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE7BC46467
-	for <linux-pci@archiver.kernel.org>; Sun, 27 Nov 2022 11:42:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E5CC4332F
+	for <linux-pci@archiver.kernel.org>; Sun, 27 Nov 2022 23:36:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229733AbiK0LmM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 27 Nov 2022 06:42:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41966 "EHLO
+        id S229575AbiK0XgH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 27 Nov 2022 18:36:07 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41018 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229628AbiK0Ll7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Nov 2022 06:41:59 -0500
-Received: from mxout3.routing.net (mxout3.routing.net [IPv6:2a03:2900:1:a::8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B39CFBC28;
-        Sun, 27 Nov 2022 03:41:57 -0800 (PST)
-Received: from mxbulk.masterlogin.de (unknown [192.168.10.85])
-        by mxout3.routing.net (Postfix) with ESMTP id CAD72604B0;
-        Sun, 27 Nov 2022 11:41:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1669549316;
+        with ESMTP id S229533AbiK0XgH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Nov 2022 18:36:07 -0500
+Received: from relay11.mail.gandi.net (relay11.mail.gandi.net [217.70.178.231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE1D7B869
+        for <linux-pci@vger.kernel.org>; Sun, 27 Nov 2022 15:36:04 -0800 (PST)
+Received: (Authenticated sender: gregory.clement@bootlin.com)
+        by mail.gandi.net (Postfix) with ESMTPSA id C8C32100004;
+        Sun, 27 Nov 2022 23:36:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1669592163;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7w7+yEBl4vGwjIjE10iuV0TWKv2sdao0DcaahtfY9sY=;
-        b=oD/gCF3xW70yhsIugzeZq+m+yZ2T2jrU8mkPnQAjQDERNIZUjkGtKb010VoaGH3u8OgW/9
-        YF9qw5+olfPIadukPf3VzuxovV/hCHCUx3TntKDrUjfTSfCKujQ2CvkbB0/t7rLi1eRqjH
-        Sh+rbyv/hm/GKdKoo1ozkY2X37x6OsI=
-Received: from frank-G5.. (fttx-pool-217.61.157.144.bambit.de [217.61.157.144])
-        by mxbulk.masterlogin.de (Postfix) with ESMTPSA id 78A68122713;
-        Sun, 27 Nov 2022 11:41:55 +0000 (UTC)
-From:   Frank Wunderlich <linux@fw-web.de>
-To:     linux-mediatek@lists.infradead.org
-Cc:     Frank Wunderlich <frank-w@public-files.de>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Jianjun Wang <jianjun.wang@mediatek.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Chunfeng Yun <chunfeng.yun@mediatek.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-phy@lists.infradead.org, linux-usb@vger.kernel.org,
-        Sam Shih <sam.shih@mediatek.com>,
-        Jieyy Yang <jieyy.yang@mediatek.com>,
-        AngeloGioacchino Del Regno 
-        <angelogioacchino.delregno@collabora.com>
-Subject: [next v7 7/8] arm64: dts: mt7986: add pcie related device nodes
-Date:   Sun, 27 Nov 2022 12:41:41 +0100
-Message-Id: <20221127114142.156573-8-linux@fw-web.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221127114142.156573-1-linux@fw-web.de>
-References: <20221127114142.156573-1-linux@fw-web.de>
+        bh=8eMRJl5sTuIkPBcRNM8NFzVjAYsmGrDM3jIU4r/70Ck=;
+        b=gz7de+4rn1ILNiAOhvtTLoTccYZfORNUC8hNA3oDTg0AZ/G+flcyu0PWgTMkv7rT0HPMYJ
+        08nspse8SdmPpMADmxyTBGqs+I8YhFiv1qCh8ekB2XaTsSTvE58+Lbri1WbprVDuSo4gd3
+        nttMpSamtJrsLPq+X1muFhwlGrKwe5szuYBDK+5C5kWP92uv/Fr7HqmKhpxnw41nvjFlsP
+        hq1nDrh1iaNtWn2869lQAe3YU4nChnnjDXEzHabeurmkDbvX5wJIXuU/bd3+bu21M9wXLp
+        3UzyWFFDPFzDiNcTMPUyHL07ow3GjTiV6JscmaQeJkhwYdnhldRkDUgVX/SQwg==
+From:   Gregory CLEMENT <gregory.clement@bootlin.com>
+To:     Marek =?utf-8?Q?Beh=C3=BAn?= <kabel@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, pali@kernel.org,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Marek =?utf-8?Q?Beh=C3=BAn?= <kabel@kernel.org>
+Subject: Re: [PATCH v2 04/10] arm64: dts: armada-3720-turris-mox: Define
+ slot-power-limit-milliwatt for PCIe
+In-Reply-To: <20220927141926.8895-5-kabel@kernel.org>
+References: <20220927141926.8895-1-kabel@kernel.org>
+ <20220927141926.8895-5-kabel@kernel.org>
+Date:   Mon, 28 Nov 2022 00:36:02 +0100
+Message-ID: <87ilj09di5.fsf@BL-laptop>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sam Shih <sam.shih@mediatek.com>
+Marek Beh=C3=BAn <kabel@kernel.org> writes:
 
-This patch adds PCIe support for MT7986.
+> From: Pali Roh=C3=A1r <pali@kernel.org>
+>
+> PCIe Slot Power Limit on Turris Mox is 10W.
+>
+> Signed-off-by: Pali Roh=C3=A1r <pali@kernel.org>
+> Signed-off-by: Marek Beh=C3=BAn <kabel@kernel.org>
 
-Signed-off-by: Jieyy Yang <jieyy.yang@mediatek.com>
-Signed-off-by: Sam Shih <sam.shih@mediatek.com>
-Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
----
-changes compared to sams original version:
+Applied on mvebu/dt64
 
-- add clock-names to pcie node
-- update clocks to new binding
----
-bindings-patches:
-https://patchwork.kernel.org/project/linux-mediatek/list/?series=690172
----
- arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts | 16 ++++++
- arch/arm64/boot/dts/mediatek/mt7986a.dtsi    | 52 ++++++++++++++++++++
- 2 files changed, 68 insertions(+)
+Thanks,
 
-diff --git a/arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts b/arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts
-index c7a2ac764a30..4f18b4a9a8c8 100644
---- a/arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts
-+++ b/arch/arm64/boot/dts/mediatek/mt7986a-rfb.dts
-@@ -93,6 +93,15 @@ &mmc0 {
- 	non-removable;
- 	no-sd;
- 	no-sdio;
-+};
-+
-+&pcie {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie_pins>;
-+	status = "okay";
-+};
-+
-+&pcie_phy {
- 	status = "okay";
- };
- 
-@@ -155,6 +164,13 @@ conf-rst {
- 		};
- 	};
- 
-+	pcie_pins: pcie-pins {
-+		mux {
-+			function = "pcie";
-+			groups = "pcie_clk", "pcie_wake", "pcie_pereset";
-+		};
-+	};
-+
- 	spi_flash_pins: spi-flash-pins {
- 		mux {
- 			function = "spi";
-diff --git a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-index 9c552442c02d..f6e980771b69 100644
---- a/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-+++ b/arch/arm64/boot/dts/mediatek/mt7986a.dtsi
-@@ -8,6 +8,7 @@
- #include <dt-bindings/interrupt-controller/arm-gic.h>
- #include <dt-bindings/clock/mt7986-clk.h>
- #include <dt-bindings/reset/mt7986-resets.h>
-+#include <dt-bindings/phy/phy.h>
- 
- / {
- 	compatible = "mediatek,mt7986a";
-@@ -361,6 +362,57 @@ mmc0: mmc@11230000 {
- 			status = "disabled";
- 		};
- 
-+		pcie: pcie@11280000 {
-+			compatible = "mediatek,mt7986-pcie",
-+				     "mediatek,mt8192-pcie";
-+			device_type = "pci";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			reg = <0x00 0x11280000 0x00 0x4000>;
-+			reg-names = "pcie-mac";
-+			interrupts = <GIC_SPI 168 IRQ_TYPE_LEVEL_HIGH>;
-+			bus-range = <0x00 0xff>;
-+			ranges = <0x82000000 0x00 0x20000000 0x00
-+				  0x20000000 0x00 0x10000000>;
-+			clocks = <&infracfg CLK_INFRA_IPCIE_PIPE_CK>,
-+				 <&infracfg CLK_INFRA_IPCIE_CK>,
-+				 <&infracfg CLK_INFRA_IPCIER_CK>,
-+				 <&infracfg CLK_INFRA_IPCIEB_CK>;
-+			clock-names = "pl_250m", "tl_26m", "peri_26m", "top_133m";
-+			status = "disabled";
-+
-+			phys = <&pcie_port PHY_TYPE_PCIE>;
-+			phy-names = "pcie-phy";
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc 0>,
-+					<0 0 0 2 &pcie_intc 1>,
-+					<0 0 0 3 &pcie_intc 2>,
-+					<0 0 0 4 &pcie_intc 3>;
-+			pcie_intc: interrupt-controller {
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+				interrupt-controller;
-+			};
-+		};
-+
-+		pcie_phy: t-phy@11c00000 {
-+			compatible = "mediatek,mt7986-tphy",
-+				     "mediatek,generic-tphy-v2";
-+			#address-cells = <2>;
-+			#size-cells = <2>;
-+			ranges;
-+			status = "disabled";
-+
-+			pcie_port: pcie-phy@11c00000 {
-+				reg = <0 0x11c00000 0 0x20000>;
-+				clocks = <&clk40m>;
-+				clock-names = "ref";
-+				#phy-cells = <1>;
-+			};
-+		};
-+
- 		usb_phy: t-phy@11e10000 {
- 			compatible = "mediatek,mt7986-tphy",
- 				     "mediatek,generic-tphy-v2";
--- 
-2.34.1
+Gregory
+> ---
+>  arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts b/arc=
+h/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
+> index ada164d423f3..5d2b221dbd96 100644
+> --- a/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
+> +++ b/arch/arm64/boot/dts/marvell/armada-3720-turris-mox.dts
+> @@ -136,6 +136,7 @@ &pcie0 {
+>  	pinctrl-0 =3D <&pcie_reset_pins &pcie_clkreq_pins>;
+>  	status =3D "okay";
+>  	reset-gpios =3D <&gpiosb 3 GPIO_ACTIVE_LOW>;
+> +	slot-power-limit-milliwatt =3D <10000>;
+>  	/*
+>  	 * U-Boot port for Turris Mox has a bug which always expects that "rang=
+es" DT property
+>  	 * contains exactly 2 ranges with 3 (child) address cells, 2 (parent) a=
+ddress cells and
+> --=20
+> 2.35.1
+>
 
+--=20
+Gregory Clement, Bootlin
+Embedded Linux and Kernel engineering
+http://bootlin.com
