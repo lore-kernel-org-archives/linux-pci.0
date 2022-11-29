@@ -2,181 +2,135 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE5BDC4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Nov 2022 18:01:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DDA6C4332F
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Nov 2022 18:28:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230410AbiK2SB0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Nov 2022 13:01:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56630 "EHLO
+        id S232988AbiK2S2F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Nov 2022 13:28:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234473AbiK2SB0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2022 13:01:26 -0500
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4004A6B389;
-        Tue, 29 Nov 2022 10:01:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1669744885; x=1701280885;
-  h=subject:from:to:cc:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=QmF5FfaJ/S2y6cErJixUHr2KJoo87IHjihqaSCcnrcM=;
-  b=a6XXcqsDvKNaEc1fHlI5t4KMtY36jejyMwoCGAbuhVciXSEWoxRNt2cv
-   q5PL4C3v5VPUnGbVnslZSggVI6tkniJX3zaVKDWwbWkJLJp3iiDmERjnb
-   1WIlVsDlHVUBJqg/mhD5VZ6eKieiRhu4wgnI1yeQyQfIqNcIDV2Y3fmqm
-   tR5c1lFQjjIZuZJ8rIB7gO8l2vPKTnHCKMBzlRGtsazDCWEQzMrMgp10N
-   X0JaywT8pS8YZ1iPyhJoK2FB9MP3Uf0ZSsvZ9EhTntetrOKDy/5gxGUG6
-   G3cdNZfCQrBaafLRuSna4oeyVlt3g+0EcnYpYMCUyN5qpQ7Z6MH5fFh15
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10546"; a="379467681"
-X-IronPort-AV: E=Sophos;i="5.96,204,1665471600"; 
-   d="scan'208";a="379467681"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2022 09:48:49 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10546"; a="621554740"
-X-IronPort-AV: E=Sophos;i="5.96,203,1665471600"; 
-   d="scan'208";a="621554740"
-Received: from djiang5-desk3.ch.intel.com ([143.182.136.137])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2022 09:48:48 -0800
-Subject: [PATCH v4 07/11] cxl/pci: Find and map the RAS Capability Structure
-From:   Dave Jiang <dave.jiang@intel.com>
-To:     linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     dan.j.williams@intel.com, ira.weiny@intel.com,
-        vishal.l.verma@intel.com, alison.schofield@intel.com,
-        Jonathan.Cameron@huawei.com, rostedt@goodmis.org,
-        terry.bowman@amd.com, bhelgaas@google.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com, shiju.jose@huawei.com
-Date:   Tue, 29 Nov 2022 10:48:48 -0700
-Message-ID: <166974412803.1608150.7096566580400947001.stgit@djiang5-desk3.ch.intel.com>
-In-Reply-To: <166974401763.1608150.5424589924034481387.stgit@djiang5-desk3.ch.intel.com>
-References: <166974401763.1608150.5424589924034481387.stgit@djiang5-desk3.ch.intel.com>
-User-Agent: StGit/1.4
+        with ESMTP id S232491AbiK2S2E (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2022 13:28:04 -0500
+Received: from sin.source.kernel.org (sin.source.kernel.org [IPv6:2604:1380:40e1:4800::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C56E127FE6
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2022 10:28:02 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by sin.source.kernel.org (Postfix) with ESMTPS id A578DCE12B9
+        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2022 18:28:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51DBDC433D6;
+        Tue, 29 Nov 2022 18:27:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1669746478;
+        bh=XmAaFzCpw6vQdbf/K8kOlZXBAPZdch3bWlpf/OoP7Fw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=QN2CQtzvZ+ZUxgxLrqIQQqoCGCOxSXVDSNtSdIu5aN2tjiroospy1zD50VUHlO7p7
+         IBPpV+OXIX/R3OvhAZLwva9+jbUeyPvo/wM9QtLXBqoH1/rRL7Q0R9yRkqFsJcng0r
+         qQ2nC+hxnos891ui1DzAOjkR9bdfly9RlxaZ4mOhYA/Y7qfA/gHmPmdVtCisn40bzL
+         qp5DMzWigi5is/PHHUQSf1UfCf3A3sYpZUxiIejrNGYmIy+V5CJraUmRLdJ6WHdUKb
+         cK5sZ6Aw22hfNJ1CLKnWwmuAKxy8+5Z4HVhF4yhsR+WODSjzhONvgDb47XJOCE6E0k
+         rKzCinjxSvp1g==
+Date:   Tue, 29 Nov 2022 12:27:56 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Francisco Blas Izquierdo Riera <klondike@klondike.es>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Jarkko Sakkinen <jarkko@kernel.org>
+Subject: Re: [PATCH v2] PCI: Add DMA alias for Intel Corporation 8 Series HECI
+Message-ID: <20221129182756.GA727866@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221121164037.8C73110BB536@smtp.xiscosoft.net>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Dan Williams <dan.j.williams@intel.com>
+[+cc Jarkko, tpm_crb author]
 
-The RAS Capability Structure has some ancillary information that may be
-relevant with respect to AER events, link and protcol error status
-registers. Map the RAS Capability Registers in support of defining a
-'struct pci_error_handlers' instance for the cxl_pci driver.
+On Mon, Nov 21, 2022 at 05:40:37PM +0100, Francisco Blas Izquierdo Riera wrote:
+> PCI: Add function 7 DMA alias quirk for Intel Corporation 8 Series HECI.
+> 
+> Intel Corporation 8 Series HECIs include support for a CRB TPM 2.0
+> device. When the device is enabled on the BIOS, the TPM 2.0 device is
+> detected but the IOMMU prevents it from being accessed.
+> 
+> Even on a computer with a fixed DMAR table, device initialization
+> fails with DMA errors:
+>   DMAR: DRHD: handling fault status reg 3
+>   DMAR: [DMA Read NO_PASID] Request device [00:16.7] fault addr 0xdceff000 [fault reason 0x06] PTE Read access is not set
+>   DMAR: DRHD: handling fault status reg 2
+>   DMAR: [DMA Write NO_PASID] Request device [00:16.7] fault addr 0xdceff000 [fault reason 0x05] PTE Write access is not set
+>   DMAR: DRHD: handling fault status reg 2
+>   DMAR: [DMA Write NO_PASID] Request device [00:16.7] fault addr 0xdceff000 [fault reason 0x05] PTE Write access is not set
+>   tpm tpm0: Operation Timed out
+>   DMAR: DRHD: handling fault status reg 3
+>   tpm tpm0: Operation Timed out
+>   tpm_crb: probe of MSFT0101:00 failed with error -62
+> 
+> After patching the DMAR table and adding this patch, the TPM 2.0
+> device is initialized correctly and no DMA errors appear. Accessing
+> the TPM 2.0 PCR banks also works as expected.
+> 
+> Since most Haswell computers supporting this do not seem to have a
+> valid DMAR table patching the table with an appropriate RMRR is
+> usually also needed. I have published a blogpost describing the
+> process.
+> 
+> This patch currently adds the alias only for function 0. Since this
+> is the only function I have seen provided by the HECI on actual
+> hardware.
+> 
+> 
+> V2: Resent using a sendmail to fix tab mangling made by Thunderbird.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=108251
+> Link: https://klondike.es/klog/2022/11/21/patching-the-acpi-dmar-table-to-allow-tpm2-0/
+> Reported-by: Pierre Chifflier <chifflier@gmail.com>
+> Tested-by: Francisco Blas Izquierdo Riera (klondike) <klondike@klondike.es>
+> Signed-off-by: Francisco Blas Izquierdo Riera <klondike@klondike.es>
+> Suggested-by: Baolu Lu <baolu.lu@linux.intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: stable@vger.kernel.org
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
----
- drivers/cxl/core/regs.c |    7 +++++++
- drivers/cxl/cxl.h       |   19 +++++++++++++++++++
- drivers/cxl/pci.c       |    8 ++++++++
- 3 files changed, 34 insertions(+)
+Given that significant additional effort to override the DMAR table is
+required before this quirk is useful, I'm deferring this quirk for
+now.  People willing to recompile the DMAR will probably also be able
+to apply the quirk and rebuild the kernel.
 
-diff --git a/drivers/cxl/core/regs.c b/drivers/cxl/core/regs.c
-index 0efb76658e66..7bfda01ffdb5 100644
---- a/drivers/cxl/core/regs.c
-+++ b/drivers/cxl/core/regs.c
-@@ -85,6 +85,12 @@ void cxl_probe_component_regs(struct device *dev, void __iomem *base,
- 			rmap = &map->hdm_decoder;
- 			break;
- 		}
-+		case CXL_CM_CAP_CAP_ID_RAS:
-+			dev_dbg(dev, "found RAS capability (0x%x)\n",
-+				offset);
-+			length = CXL_RAS_CAPABILITY_LENGTH;
-+			rmap = &map->ras;
-+			break;
- 		default:
- 			dev_dbg(dev, "Unknown CM cap ID: %d (0x%x)\n", cap_id,
- 				offset);
-@@ -201,6 +207,7 @@ int cxl_map_component_regs(struct device *dev, struct cxl_component_regs *regs,
- 		void __iomem **addr;
- 	} mapinfo[] = {
- 		{ &map->component_map.hdm_decoder, &regs->hdm_decoder },
-+		{ &map->component_map.ras, &regs->ras },
- 	};
- 	int i;
- 
-diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
-index b3fa0c6525af..455ad656166b 100644
---- a/drivers/cxl/cxl.h
-+++ b/drivers/cxl/cxl.h
-@@ -33,6 +33,7 @@
- #define   CXL_CM_CAP_HDR_ARRAY_SIZE_MASK GENMASK(31, 24)
- #define CXL_CM_CAP_PTR_MASK GENMASK(31, 20)
- 
-+#define   CXL_CM_CAP_CAP_ID_RAS 0x2
- #define   CXL_CM_CAP_CAP_ID_HDM 0x5
- #define   CXL_CM_CAP_CAP_HDM_VERSION 1
- 
-@@ -123,6 +124,21 @@ static inline int ways_to_cxl(unsigned int ways, u8 *iw)
- 	return 0;
- }
- 
-+/* RAS Registers CXL 2.0 8.2.5.9 CXL RAS Capability Structure */
-+#define CXL_RAS_UNCORRECTABLE_STATUS_OFFSET 0x0
-+#define   CXL_RAS_UNCORRECTABLE_STATUS_MASK (GENMASK(16, 14) | GENMASK(11, 0))
-+#define CXL_RAS_UNCORRECTABLE_MASK_OFFSET 0x4
-+#define   CXL_RAS_UNCORRECTABLE_MASK_MASK (GENMASK(16, 14) | GENMASK(11, 0))
-+#define CXL_RAS_UNCORRECTABLE_SEVERITY_OFFSET 0x8
-+#define   CXL_RAS_UNCORRECTABLE_SEVERITY_MASK (GENMASK(16, 14) | GENMASK(11, 0))
-+#define CXL_RAS_CORRECTABLE_STATUS_OFFSET 0xC
-+#define   CXL_RAS_CORRECTABLE_STATUS_MASK GENMASK(6, 0)
-+#define CXL_RAS_CORRECTABLE_MASK_OFFSET 0x10
-+#define   CXL_RAS_CORRECTABLE_MASK_MASK GENMASK(6, 0)
-+#define CXL_RAS_CAP_CONTROL_OFFSET 0x14
-+#define CXL_RAS_HEADER_LOG_OFFSET 0x18
-+#define CXL_RAS_CAPABILITY_LENGTH 0x58
-+
- /* CXL 2.0 8.2.8.1 Device Capabilities Array Register */
- #define CXLDEV_CAP_ARRAY_OFFSET 0x0
- #define   CXLDEV_CAP_ARRAY_CAP_ID 0
-@@ -157,9 +173,11 @@ struct cxl_regs {
- 	/*
- 	 * Common set of CXL Component register block base pointers
- 	 * @hdm_decoder: CXL 2.0 8.2.5.12 CXL HDM Decoder Capability Structure
-+	 * @ras: CXL 2.0 8.2.5.9 CXL RAS Capability Structure
- 	 */
- 	struct_group_tagged(cxl_component_regs, component,
- 		void __iomem *hdm_decoder;
-+		void __iomem *ras;
- 	);
- 	/*
- 	 * Common set of CXL Device register block base pointers
-@@ -181,6 +199,7 @@ struct cxl_reg_map {
- 
- struct cxl_component_reg_map {
- 	struct cxl_reg_map hdm_decoder;
-+	struct cxl_reg_map ras;
- };
- 
- struct cxl_device_reg_map {
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 8cad9d5fd49a..9428f3e0d99b 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -311,6 +311,9 @@ static int cxl_probe_regs(struct pci_dev *pdev, struct cxl_register_map *map)
- 			return -ENXIO;
- 		}
- 
-+		if (!comp_map->ras.valid)
-+			dev_dbg(dev, "RAS registers not found\n");
-+
- 		dev_dbg(dev, "Set up component registers\n");
- 		break;
- 	case CXL_REGLOC_RBI_MEMDEV:
-@@ -449,6 +452,11 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	devm_cxl_pci_create_doe(cxlds);
- 
-+	rc = cxl_map_component_regs(&pdev->dev, &cxlds->regs.component,
-+				    &map, BIT(CXL_CM_CAP_CAP_ID_RAS));
-+	if (rc)
-+		dev_dbg(&pdev->dev, "Failed to map RAS capability.\n");
-+
- 	rc = cxl_pci_setup_mailbox(cxlds);
- 	if (rc)
- 		return rc;
+Does the TPM work under Windows?  If so, it would suggest that there's
+a different way to use it that doesn't require the quirk or the DMAR
+override.  Or maybe it only works on Windows without the IOMMU being
+enabled?
 
+Naive question: apparently the TPM is doing DMA reads/writes.  I see
+tpm_crb.c doing MMIO mappings (ioremap()), but I don't see any DMA
+mappings.  Is that implicit or done elsewhere?
 
+Bjorn
+
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4162,6 +4162,22 @@
+>  			 0x0122, /* Plextor M6E (Marvell 88SS9183)*/
+>  			 quirk_dma_func1_alias);
+>  
+> +static void quirk_dma_func7_alias(struct pci_dev *dev)
+> +{
+> +	if (PCI_FUNC(dev->devfn) == 0)
+> +		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 7), 1);
+> +}
+> +
+> +/*
+> + * Certain HECIs in Haswell systems support TPM 2.0. Unfortunately they
+> + * perform DMA using the hidden function 7. Fixing this requires this
+> + * alias and a patch of the DMAR ACPI table to include the appropriate
+> + *  MTRR.
+> + * https://bugzilla.kernel.org/show_bug.cgi?id=108251
+> + */
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9c3a,
+> +			 quirk_dma_func7_alias);
+> +
+>  /*
+>   * Some devices DMA with the wrong devfn, not just the wrong function.
+>   * quirk_fixed_dma_alias() uses this table to create fixed aliases, where
