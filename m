@@ -2,107 +2,173 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01C17C4321E
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Nov 2022 07:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8222BC352A1
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Nov 2022 11:23:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234115AbiK3H4z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Nov 2022 02:56:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34344 "EHLO
+        id S234985AbiK3LXM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Nov 2022 06:23:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232674AbiK3H4y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Nov 2022 02:56:54 -0500
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B10BC60EBF
-        for <linux-pci@vger.kernel.org>; Tue, 29 Nov 2022 23:56:53 -0800 (PST)
+        with ESMTP id S235191AbiK3LWE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Nov 2022 06:22:04 -0500
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D06527CE3
+        for <linux-pci@vger.kernel.org>; Wed, 30 Nov 2022 03:21:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1669795013; x=1701331013;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=nO09NC4nr4EEu1J8dIEXRvXZrWim0xgkUbOFfKo94bM=;
-  b=H8008lXC+ZcdZsxg1rPk/bKJXvMWn03sd2TwY/lYMpMsdLlbcQLrcVml
-   7v0m4hxTY5Vr1afQJKE91b/QxM8y89ycnx2pUQpyn0b7w2KwOytjm0UN3
-   FuQIdv9ag6yFQ931nrd862+uZO3V8EYeLAi3luXmEjM2lPKh8BLUz2imI
-   anwnhAtplBs+lQRwugMtg6qln4+P8kUjFd+rTLJg0Vc45klkvWq4NXMma
-   rw14n4b7J57cbzffRJ1jgAVSd+VkCRKfm0v2XoBouIMJOyshNP3v3ucqA
-   lTuEdlzBtX8PHFyjOazdCymxOjg/TpphDMRBBOKfH/5PKA+toGsJVIPWr
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10546"; a="401613102"
-X-IronPort-AV: E=Sophos;i="5.96,205,1665471600"; 
-   d="scan'208";a="401613102"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Nov 2022 23:56:53 -0800
+  t=1669807317; x=1701343317;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=PUtrKtKNQGmO6N8a0d2o7ioGhovPD8Vg70nilxk1F0E=;
+  b=g7YuIqM7RdtYIoF8oOarsFBH/f9EzXSDAOnW9yHWloQD6KSIDaNxuP5z
+   hzJP79AxkoU6g7xdB6UVXFgFhpx4aCua5mYx7XrDSaDvrkTriMdp6aO92
+   c7jarqF6mrDXQFDYPOk3U3VDXTsfqVCglOlHscjEKhbyy2hf2fs66YQFD
+   Mc3W6VwedD/JnnUcL/vqzdXXIAFN2ZkmtEW5E7d2/iM8xRn7Ap49nAjpL
+   XygQbxCx0ez3YRVucxkEqvqGb1jN57ekrtJOTNLq704rmlb3pAD26CFk2
+   PF7VLntF2jZV9Yhmx3XOPcZ/Fty760GoKA0cy0UFr7NeUJpS2EhTZ26w2
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10546"; a="342291715"
+X-IronPort-AV: E=Sophos;i="5.96,206,1665471600"; 
+   d="scan'208";a="342291715"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Nov 2022 03:21:57 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10546"; a="786369024"
-X-IronPort-AV: E=Sophos;i="5.96,205,1665471600"; 
-   d="scan'208";a="786369024"
+X-IronPort-AV: E=McAfee;i="6500,9779,10546"; a="676790604"
+X-IronPort-AV: E=Sophos;i="5.96,206,1665471600"; 
+   d="scan'208";a="676790604"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga001.fm.intel.com with ESMTP; 29 Nov 2022 23:56:52 -0800
+  by orsmga001.jf.intel.com with ESMTP; 30 Nov 2022 03:21:54 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id DD6C310E; Wed, 30 Nov 2022 09:57:18 +0200 (EET)
-Date:   Wed, 30 Nov 2022 09:57:18 +0200
+        id B35543BC; Wed, 30 Nov 2022 13:22:21 +0200 (EET)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: PCI resource allocation mismatch with BIOS
-Message-ID: <Y4cM3qYnaHl3fQsU@black.fi.intel.com>
-References: <Y4SYBtaP1hTWGsYn@black.fi.intel.com>
- <20221128203932.GA644781@bhelgaas>
- <20221128150617.14c98c2e.alex.williamson@redhat.com>
- <20221129064812.GA1555@wunner.de>
- <20221129065242.07b5bcbf.alex.williamson@redhat.com>
- <Y4YgKaml6nh5cB9r@black.fi.intel.com>
- <20221129084646.0b22c80b.alex.williamson@redhat.com>
- <20221129160626.GA19822@wunner.de>
- <20221129091249.3b60dd58.alex.williamson@redhat.com>
- <20221130074347.GC8198@wunner.de>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Chris Chiu <chris.chiu@canonical.com>,
+        linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v3 1/2] PCI: Take other bus devices into account when distributing resources
+Date:   Wed, 30 Nov 2022 13:22:20 +0200
+Message-Id: <20221130112221.66612-2-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.35.1
+In-Reply-To: <20221130112221.66612-1-mika.westerberg@linux.intel.com>
+References: <20221130112221.66612-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20221130074347.GC8198@wunner.de>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+A PCI bridge may reside on a bus with other devices as well. The
+resource distribution code does not take this into account properly and
+therefore it expands the bridge resource windows too much, not leaving
+space for the other devices (or functions a multifunction device) and
+this leads to an issue that Jonathan reported. He runs QEMU with the
+following topoology (QEMU parameters):
 
-On Wed, Nov 30, 2022 at 08:43:47AM +0100, Lukas Wunner wrote:
-> On Tue, Nov 29, 2022 at 09:12:49AM -0700, Alex Williamson wrote:
-> > On Tue, 29 Nov 2022 17:06:26 +0100 Lukas Wunner <lukas@wunner.de> wrote:
-> > > On Tue, Nov 29, 2022 at 08:46:46AM -0700, Alex Williamson wrote:
-> > > > Maybe the elephant in the room is why it's apparently such common
-> > > > practice to need to perform a hard reset these devices outside of
-> > > > virtualization scenarios...  
-> > > 
-> > > These GPUs are used as accelerators in cloud environments.
-> > > 
-> > > They're reset to a pristine state when handed out to another tenant
-> > > to avoid info leaks from the previous tenant.
-> > > 
-> > > That should be a legitimate usage of PCIe reset, no?
-> > 
-> > Absolutely, but why the whole switch?  Thanks,
-> 
-> The reset is propagated down the hierarchy, so by resetting the
-> Switch Upstream Port, it is guaranteed that all endpoints are
-> reset with just a single operation.  Per PCIe r6.0.1 sec 6.6.1:
-> 
->    "For a Switch, the following must cause a hot reset to be sent
->     on all Downstream Ports:
->     [...]
->     Receiving a hot reset on the Upstream Port"
+ -device pcie-root-port,port=0,id=root_port13,chassis=0,slot=2	\
+ -device x3130-upstream,id=sw1,bus=root_port13,multifunction=on	\
+ -device e1000,bus=root_port13,addr=0.1 			\
+ -device xio3130-downstream,id=fun1,bus=sw1,chassis=0,slot=3	\
+ -device e1000,bus=fun1
 
-Adding here the reason I got from the GPU folks:
+The first e1000 NIC here is another function in the switch upstream
+port. This leads to following errors:
 
-In addition to the use case when the GPU is reset when switched to
-another tenant, this is used for recovery. The "first level" recovery is
-handled by the graphics driver that does Function Level Reset but if
-that does not work data centers may trigger reset at higher level (root
-port or switch upstream port) to reset the whole card. So called "big
-hammer".
+  pci 0000:00:04.0: bridge window [mem 0x10200000-0x103fffff] to [bus 02-04]
+  pci 0000:02:00.0: bridge window [mem 0x10200000-0x103fffff] to [bus 03-04]
+  pci 0000:02:00.1: BAR 0: failed to assign [mem size 0x00020000]
+  e1000 0000:02:00.1: can't ioremap BAR 0: [??? 0x00000000 flags 0x0]
 
-There is another use case too - firmware upgrade. This allows data
-centers to upgrade firmware on those cards without need to reboot - they
-just reset the whole thing to make it run the new firmware.
+Fix this by taking into account the possible multifunction devices when
+uptream port resources are distributed.
+
+Link: https://lore.kernel.org/linux-pci/20221014124553.0000696f@huawei.com/
+Reported-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/setup-bus.c | 66 ++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 62 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b4096598dbcb..d456175ddc4f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1830,10 +1830,68 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 	 * bridges below.
+ 	 */
+ 	if (hotplug_bridges + normal_bridges == 1) {
+-		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
+-		if (dev->subordinate)
+-			pci_bus_distribute_available_resources(dev->subordinate,
+-				add_list, io, mmio, mmio_pref);
++		bridge = NULL;
++
++		/* Find the single bridge on this bus first */
++		for_each_pci_bridge(dev, bus) {
++			bridge = dev;
++			break;
++		}
++
++		if (WARN_ON_ONCE(!bridge))
++			return;
++		if (!bridge->subordinate)
++			return;
++
++		/*
++		 * Reduce the space available for distribution by the
++		 * amount required by the other devices on the same bus
++		 * as this bridge.
++		 */
++		list_for_each_entry(dev, &bus->devices, bus_list) {
++			int i;
++
++			if (dev == bridge)
++				continue;
++
++			for (i = 0; i < PCI_NUM_RESOURCES; i++) {
++				const struct resource *dev_res = &dev->resource[i];
++				resource_size_t dev_sz;
++				struct resource *b_res;
++
++				if (dev_res->flags & IORESOURCE_IO) {
++					b_res = &io;
++				} else if (dev_res->flags & IORESOURCE_MEM) {
++					if (dev_res->flags & IORESOURCE_PREFETCH)
++						b_res = &mmio_pref;
++					else
++						b_res = &mmio;
++				} else {
++					continue;
++				}
++
++				/* Size aligned to bridge window */
++				align = pci_resource_alignment(bridge, b_res);
++				dev_sz = ALIGN(resource_size(dev_res), align);
++				if (!dev_sz)
++					continue;
++
++				pci_dbg(dev, "resource %pR aligned to %#llx\n",
++					dev_res, (unsigned long long)dev_sz);
++
++				if (dev_sz > resource_size(b_res))
++					memset(b_res, 0, sizeof(*b_res));
++				else
++					b_res->end -= dev_sz;
++
++				pci_dbg(bridge, "updated available resources to %pR\n",
++					b_res);
++			}
++		}
++
++		pci_bus_distribute_available_resources(bridge->subordinate,
++						       add_list, io, mmio,
++						       mmio_pref);
+ 		return;
+ 	}
+ 
+-- 
+2.35.1
+
