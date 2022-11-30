@@ -2,86 +2,149 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3790C4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Nov 2022 19:53:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9365BC46467
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Nov 2022 00:07:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236051AbiK2TxG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Nov 2022 14:53:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39304 "EHLO
+        id S229775AbiK3AH2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Nov 2022 19:07:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237012AbiK2TxB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2022 14:53:01 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6D4817E38;
-        Tue, 29 Nov 2022 11:53:00 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 43650618CF;
-        Tue, 29 Nov 2022 19:53:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67F50C4347C;
-        Tue, 29 Nov 2022 19:52:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1669751579;
-        bh=OcROACIvrb3LiNJuXbTdCona28iOYGS64nqNq44dgWw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BZDG9rV6PHI0J1/ftJBGz7DpzeSMkRNt9WynhIHksSsK35T9UZJh3KbEoav9XcaQ2
-         kFkcItn1ZfL48NR6Pv4PEBiZqbgb7IACsQ3llg2IMLvaMkZTTl1xZUc3vgtXSq+aVF
-         F6sMmoQmV6zk75pmuHhM5tAVqJmc2wud1jUM+E9ClLAeqVFNg3t+kN6ENucNV/yOsn
-         9umvOZYOPRk4belQh/b6d7BHnCoiWfeUgHdpaGex2P7EaUN4zMpXvxmtUDvLyluKYz
-         8R7kQIU31rVWaqE71TR+oxLHXFZEzw4lCD62Ktjifao0U3Er4Z4x0ZM8xi/6J7uChV
-         2Bg3TGdbbF3Ag==
-From:   Will Deacon <will@kernel.org>
-To:     jonathan.cameron@huawei.com,
-        Shaokun Zhang <zhangshaokun@hisilicon.com>,
-        Jonathan Corbet <corbet@lwn.net>, liuqi6124@gmail.com,
-        Mark Rutland <mark.rutland@arm.com>,
-        Yicong Yang <yangyicong@huawei.com>, bagasdotme@gmail.com
-Cc:     catalin.marinas@arm.com, kernel-team@android.com,
-        Will Deacon <will@kernel.org>, linux-doc@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        prime.zeng@huawei.com, f.fangjian@huawei.com,
-        linux-arm-kernel@lists.infradead.org, linuxarm@huawei.com,
-        shenyang39@huawei.com
-Subject: Re: [PATCH v3 0/4] Add TLP filter support and some fixes for HiSilicon PCIe PMU
-Date:   Tue, 29 Nov 2022 19:52:46 +0000
-Message-Id: <166973225546.3127880.2609206485650719654.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20221117084136.53572-1-yangyicong@huawei.com>
-References: <20221117084136.53572-1-yangyicong@huawei.com>
+        with ESMTP id S229579AbiK3AH2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Nov 2022 19:07:28 -0500
+Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E03057044E;
+        Tue, 29 Nov 2022 16:07:26 -0800 (PST)
+Received: by mail-lj1-x230.google.com with SMTP id d3so19156525ljl.1;
+        Tue, 29 Nov 2022 16:07:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=GVsAs2Za73d6UJPfTz0MZvUiul0X6sklp6MH+CmRL3k=;
+        b=EL47aYSQjawJcsLLj/QAQ8+YXvjf23CGJROzwdIE7wtldJvsKi46kOiNH8Nl+U7j0h
+         ObfsQI3tr5WATq7qgHwTyBxwj7PrSiOaR02VxnCwSgrUpzSkC3nu+3xCtxPmOe0Nphk6
+         Mn9IyRHFXOE8Ibc+ru3BYcGdiccptw+GhjdbJx9Nr45UIjV7V7pAW9dD9cgK+8JlAmIe
+         1XAbJmKZngaT2SEmNzkp0ukKd97UYj4fGz5Q3r+pQqBsu60DmrdKKxYPM6hSNMi7mqWx
+         KbpVERYTp6984IPccQ7mkqg137Bd/28MVaBxB+ZHzbSgINt2Hk07QNRFTFESs4Df6tHR
+         UutQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GVsAs2Za73d6UJPfTz0MZvUiul0X6sklp6MH+CmRL3k=;
+        b=FCIaIG3ZGXPK3sb2qT3dtlYa1ubtWPYEQsggbmz+pXH4u/41BAflY21hSjsi/kbO81
+         66au/cNN13Rr9wvE6f2/tSdyQWOIqwXzkJubEkiK71OInZrkJDzpbnNnaXH+XDr42gfi
+         QpeOb4iXJwOqUL5/u2oZHTNAQD+kn0UpOM39FowTgOwC3qUjv+3GeLVlvADzpX67yenn
+         F0FTGgPUauGkF0OO6Oh31/73LTC5Lpf6nzj4jNezQL+uT7KcZFzFgefL5Y00mNyvWpJG
+         XYSnJ7IVvsBwIYaSLwRNTnDdmTAKiv7cXRcmRuIqX4msPZ5DR3wI45HSlcIvyRGrDZ1V
+         YSig==
+X-Gm-Message-State: ANoB5pll4BWNSefYxLzddvceyKtRw3ZIIetnNr4HUSzViekq8j4B5Y7b
+        FgHIU1BfOaZyRWbplXJpKw8=
+X-Google-Smtp-Source: AA0mqf5dURaix8FQhVVoV1kopruBMKkRVWorfEJEfcfyVRXaS6vpE74eyht6je/iu8eJ0ZOiJU6fPw==
+X-Received: by 2002:a2e:be08:0:b0:277:857:87ab with SMTP id z8-20020a2ebe08000000b00277085787abmr12402330ljq.442.1669766845080;
+        Tue, 29 Nov 2022 16:07:25 -0800 (PST)
+Received: from mobilestation ([95.79.133.202])
+        by smtp.gmail.com with ESMTPSA id 11-20020a05651c128b00b0026fc8855c20sm1706704ljc.19.2022.11.29.16.07.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Nov 2022 16:07:24 -0800 (PST)
+Date:   Wed, 30 Nov 2022 03:07:22 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        caihuoqing <caihuoqing@baidu.com>, Vinod Koul <vkoul@kernel.org>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v7 17/20] PCI: dwc: Introduce generic resources getter
+Message-ID: <20221130000722.xfh3q22mo2huhipk@mobilestation>
+References: <20221127011005.cjzcd6slb6ezy7ix@mobilestation>
+ <20221129183543.GA729294@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20221129183543.GA729294@bhelgaas>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 17 Nov 2022 16:41:32 +0800, Yicong Yang wrote:
-> From: Yicong Yang <yangyicong@hisilicon.com>
+On Tue, Nov 29, 2022 at 12:35:43PM -0600, Bjorn Helgaas wrote:
+> On Sun, Nov 27, 2022 at 04:10:05AM +0300, Serge Semin wrote:
+> > On Wed, Nov 23, 2022 at 01:44:36PM -0600, Bjorn Helgaas wrote:
+> > > On Sun, Nov 13, 2022 at 10:12:58PM +0300, Serge Semin wrote:
 > 
-> HiSilicon PCIe PMU support count the bandwidth of TLP headers, TLP payloads
-> or both. Add support for it. User can set this through perf tool's
-> 'len_mode' like:
+> > > Thanks for these new generic interfaces in the DWC core!  And thanks
+> > > for the changes in this patch to take advantage of them in the
+> > > pcie-designware drivers.
+> > > 
+> > > Do you plan similar changes to other drivers to take advantage of
+> > > these DWC-generic data and interfaces?  If you add generic things to
+> > > the DWC core but only take advantage of them in your driver, I don't
+> > > think they are really usefully generic.
+> > 
+> > Could you be more specific what generic things you are referring to? I
+> > am asking because the only part of the changes which is used in my
+> > low-level driver only is introduced in another patch of this series.
 > 
->   $# perf stat -e hisi_pcie0_core0/rx_mrd_flux,len_mode=0x1/ sleep 5
+> I asked because three of your patches mention "generic" things, but I
+> didn't see any changes to drivers except pcie-designware:
 > 
-> [...]
 
-Applied to will (for-next/perf), thanks!
+>   PCI: dwc: Introduce generic platform clocks and reset
 
-[1/4] drivers/perf: hisi: Fix some event id for hisi-pcie-pmu
-      https://git.kernel.org/will/c/6b4bb4f38dbf
-[2/4] docs: perf: Fix PMU instance name of hisi-pcie-pmu
-      https://git.kernel.org/will/c/eb79f12b4c41
-[3/4] Documentation: perf: Indent filter options list of hisi-pcie-pmu
-      https://git.kernel.org/will/c/c8dff677e6d4
-[4/4] drivers/perf: hisi: Add TLP filter support
-      https://git.kernel.org/will/c/17d573984d4d
+This patch introduces a method to request a generic platform clocks
+and resets by their names. As I already said these names are defined
+by the DT-bindings, which are platform-specific. That's why the most
+of the currently available drivers can't be converted to using it.
+Instead the new drivers are supposed to be encouraged to use the
+generic names (in accordance with the generic DW PCIe DT-schema) and
+the resources request interface (based on the generic DT-bindings) if
+it suits their design.
 
-Cheers,
--- 
-Will
+Anyway I honestly tried to come up with an even more generic
+interface, which could be used by all the low-level drivers. But due
+to too much variations of the resource names and their sometimes too
+complex utilization in the drivers any solution looked too complex.
+After all of thoughts I decided to keep things simpler.
 
-https://fixes.arm64.dev
-https://next.arm64.dev
-https://will.arm64.dev
+>   PCI: dwc: Introduce generic resources getter
+
+This patch defines a generic resource getter for the DW PCIe host and
+end-point drivers. That's why it's called generic. 
+
+>   PCI: dwc: Introduce generic controller capabilities interface
+
+This patch introduces an interface to set the device-specific
+capabilities. Since these capabilities can be marked as available by
+both the core driver (at least two of them already defined within this
+patchset) and low-level platform drivers the interface is called
+as generic.
+
+> 
+> I hoped that we would be able to use these to remove some code from
+> existing drivers, but if they only improve maintainability of future
+> drivers, that's useful, too.
+
+Removing some code is possible for instance from the pcie-visconti.c
+driver by using the new generic clocks and resets request interface.
+I've scheduled to create a small patchset which would do that after
+the rest of my patches pass the review process.
+
+-Serge(y)
+
+> 
+> Bjorn
