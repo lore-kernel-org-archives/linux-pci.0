@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 682D0C4321E
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Dec 2022 21:18:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08491C47090
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Dec 2022 21:19:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234422AbiLBVS5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Dec 2022 16:18:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60592 "EHLO
+        id S233977AbiLBVS6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Dec 2022 16:18:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234242AbiLBVSv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2022 16:18:51 -0500
+        with ESMTP id S229480AbiLBVSw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2022 16:18:52 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 867F65915A;
-        Fri,  2 Dec 2022 13:18:46 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8776481382;
+        Fri,  2 Dec 2022 13:18:51 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 900C8623D6;
-        Fri,  2 Dec 2022 21:18:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BDA10C433D6;
-        Fri,  2 Dec 2022 21:18:44 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 25EA9623D6;
+        Fri,  2 Dec 2022 21:18:51 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EA61C433D6;
+        Fri,  2 Dec 2022 21:18:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670015925;
-        bh=2rrX47NWa70VI8AqxvMAoJDdj+in56xV4jYSGcyJcbo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=d4qTFc/f72OMYxi/1HZE0CdQFKVlgLXIQsf6tAbNbpLXfL/lJBiriy9Skujf59U/l
-         UTDzQnx5ZAY1+ZeCHAeTueZVZwJG3MpPXzmAnjFtm+rxxzsWuPtng1ikgX6s9D1U9k
-         7tk1HQdZIhZCURQkfR9xlVfsZ1IxOZXND7fKXaLauWlAtasxRdI0t762JdMwYay7Mv
-         SYxaVcGFm9XnsMlsPSCdH59mEBmngBdsR2ynwvKt3bV6FQI6t+PVDg7NmhkA0VveWW
-         3tzTlcIsad84rsaDJJd9vI4bQ+Wwa+xJHXHXiqGi+V6pauXAyoXc4qTuK4jI8VPOf8
-         Sz/xgLOG0MGig==
+        s=k20201202; t=1670015930;
+        bh=98iM6PYlP1DYwAk+kn2Y+b30wbZFzaWkuIMVL5eYs9E=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=JHW5goLi4gEr/sxsDqMHLD3F5/TDtVgc5DMrBwUgfeIk5J/Sz6gZmeriQGHK0b+Rw
+         fjm0AjUwPVDtaCe/N0Y17PHViz0nvNsN+X3/LSfcRRWNslFzP1SaVtVap8XKIZYzPf
+         AmCiOVIjCOpzc3XXS9KZjJ/MfBQYF06WcOckJ2xs2gr/iQCdPE54shmflRAI1ueOa2
+         AcUjige64Bw1PGcXzqboU1gv4iN7bolYEAhDgsCOMxdVMBc1PxtoTeNnzCxo9nulA1
+         c6vC0P6mCcbZqjWwSnuTI3esa2V7pynZUy0qtH+WLKRzs5hBmqYVmEgyR76mANbClo
+         OEg/V+ZT/Yp1g==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     Hans de Goede <hdegoede@redhat.com>,
@@ -43,10 +43,12 @@ Cc:     Hans de Goede <hdegoede@redhat.com>,
         Werner Sembach <wse@tuxedocomputers.com>,
         mumblingdrunkard@protonmail.com, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 0/4] PCI: Continue E820 vs host bridge window saga
-Date:   Fri,  2 Dec 2022 15:18:34 -0600
-Message-Id: <20221202211838.1061278-1-helgaas@kernel.org>
+Subject: [PATCH 3/4] x86/PCI: Tidy E820 removal messages
+Date:   Fri,  2 Dec 2022 15:18:37 -0600
+Message-Id: <20221202211838.1061278-4-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221202211838.1061278-1-helgaas@kernel.org>
+References: <20221202211838.1061278-1-helgaas@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -55,49 +57,42 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-When allocating space for PCI BARs, Linux avoids allocating space mentioned
-in the E820 map.  This was originally done by 4dc2287c1805 ("x86: avoid
-E820 regions when allocating address space") to work around BIOS defects
-that included unusable space in host bridge _CRS.
+These messages:
 
-Some recent machines use EfiMemoryMappedIO for PCI MMCONFIG and host bridge
-apertures, and bootloaders and EFI stubs convert those to E820 regions,
-which means we can't allocate space for hot-added PCI devices (often a
-dock) or for devices the BIOS didn't configure (often a touchpad)
+  clipped [mem size 0x00000000 64bit] to [mem size 0xfffffffffffa0000 64bit] for e820 entry [mem 0x0009f000-0x000fffff]
 
-The current strategy is to add DMI quirks that disable the E820 filtering
-on these machines and to disable it entirely starting with 2023 BIOSes:
+aren't as useful as they could be because (a) the resource is often
+IORESOURCE_UNSET, so we print the size instead of the start/end and (b) we
+print the available resource even if it is empty after removing the E820
+entry.
 
-  d341838d776a ("x86/PCI: Disable E820 reserved region clipping via quirks")
-  0ae084d5a674 ("x86/PCI: Disable E820 reserved region clipping starting in 2023")
+Print the available space by hand to avoid the IORESOURCE_UNSET problem and
+only if it's non-empty.  No functional change intended.
 
-But the quirks are problematic because it's really hard to list all the
-machines that need them.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Hans de Goede <hdegoede@redhat.com>
+---
+ arch/x86/kernel/resource.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-This series is an attempt at a more generic approach.  I'm told by firmware
-folks that EfiMemoryMappedIO means "the OS should map this area so EFI
-runtime services can use it in virtual mode," but does not prevent the OS
-from using it.
-
-The first patch removes any EfiMemoryMappedIO areas from the E820 map.
-This doesn't affect any virtual mapping of those areas (that would have to
-be done directly from the EFI memory map) but it means Linux can allocate
-space for PCI MMIO.
-
-The rest are basically cosmetic log message changes.
-
-Bjorn Helgaas (4):
-  efi/x86: Remove EfiMemoryMappedIO from E820 map
-  PCI: Skip allocate_resource() if too little space available
-  x86/PCI: Tidy E820 removal messages
-  x86/PCI: Fix log message typo
-
- arch/x86/kernel/resource.c  |  7 +++++--
- arch/x86/pci/acpi.c         |  2 +-
- arch/x86/platform/efi/efi.c | 36 ++++++++++++++++++++++++++++++++++++
- drivers/pci/bus.c           |  4 ++++
- 4 files changed, 46 insertions(+), 3 deletions(-)
-
+diff --git a/arch/x86/kernel/resource.c b/arch/x86/kernel/resource.c
+index bba1abd05bfe..f34454f694cb 100644
+--- a/arch/x86/kernel/resource.c
++++ b/arch/x86/kernel/resource.c
+@@ -42,8 +42,11 @@ static void remove_e820_regions(struct resource *avail)
+ 
+ 		resource_clip(avail, e820_start, e820_end);
+ 		if (orig.start != avail->start || orig.end != avail->end) {
+-			pr_info("clipped %pR to %pR for e820 entry [mem %#010Lx-%#010Lx]\n",
+-				 &orig, avail, e820_start, e820_end);
++			pr_info("resource: avoiding allocation from e820 entry [mem %#010Lx-%#010Lx]\n",
++				e820_start, e820_end);
++			if (avail->end > avail->start)
++				pr_info("resource: remaining [mem %#010Lx-%#010Lx] available\n",
++					avail->start, avail->end);
+ 			orig = *avail;
+ 		}
+ 	}
 -- 
 2.25.1
 
