@@ -2,158 +2,162 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A23C4C4708D
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Dec 2022 21:19:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDFD9C4321E
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Dec 2022 21:58:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234426AbiLBVS7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Dec 2022 16:18:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60690 "EHLO
+        id S234697AbiLBV6T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Dec 2022 16:58:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234204AbiLBVSx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2022 16:18:53 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F3D573F75;
-        Fri,  2 Dec 2022 13:18:50 -0800 (PST)
+        with ESMTP id S234793AbiLBV6R (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Dec 2022 16:58:17 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3ED4F466D;
+        Fri,  2 Dec 2022 13:58:15 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id E641DCE1FBA;
-        Fri,  2 Dec 2022 21:18:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8581C433C1;
-        Fri,  2 Dec 2022 21:18:46 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 9A8DFB822BB;
+        Fri,  2 Dec 2022 21:58:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E3D5C433D6;
+        Fri,  2 Dec 2022 21:58:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670015926;
-        bh=ubkFfiu5Wnnhs5ib/lclNCLynBsh33oIb0GlenBh+UE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=P1Btn/vL5p35gOwKHoiCm8WQDttirgms2zGjwwU/ndnOUY96WabGqgLcHzPcAYf4a
-         PXzk1gHcdUxMKKrb7ApFKVqUM5iRyPTdZ19dwhZm1Zol0VikITpNngYJYyrhxlbV7l
-         3kKNjjR4VOCBgpOURKbkqJ5+C26iaz+PGC0088mVCcFAFuEqMB5gJVFNXeYybw/SWj
-         CcL8svAVJSFUKv9OchGxOwabE8rehffMzEFqotkr9FhjJreJcub+Fd/I9KviVZjvpG
-         dceJ/A9sIoo4xjs6wG0Oekui8aRBxRnshTP+KB9yZuj7xpqiF7P77qSPiQcIBwaEpB
-         c1EwXgAUkpQjQ==
+        s=k20201202; t=1670018293;
+        bh=JQfzBY7w+BMB6G8p1pow4OS6vMBpG0LUSHGgYMKPwxE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=pmWTEjyGDvqIJZlqbuKQhE2eO3DEOj5wDMoLq5PgVdwY8ELR1FMPZh69C84f/mEeF
+         ZaCVqO6LA6MUnP3w9ZnvrY769dUiiy4crkyAmHRAtihG0i+CkfMG8iJbWMNt8hOoVv
+         kK+PBhpe7c6QmOw+wphd4f91/96kb4tDZItF30iTMCRE1OW2VtcsZsCEnjPfZxXVy2
+         MbyhwBT88Iol0BpC4QlreWua3MG0g4RV2x9rG4G+eCQL1pIuPsTaGkuaxFk5Dvm+Lo
+         bastDzW49fIknNFNV/tc0Oi6H9BGOyME3ZdCkrpzIk6uGTkZXPp3sbksobeHfdY6iC
+         WqO+kT9VwoBqQ==
+Date:   Fri, 2 Dec 2022 15:58:11 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     linux-pci@vger.kernel.org
-Cc:     Hans de Goede <hdegoede@redhat.com>,
+To:     Hans de Goede <hdegoede@redhat.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linuxkernelml@undead.fr,
         Florent DELAHAYE <kernelorg@undead.fr>,
-        Konrad J Hambrick <kjhambrick@gmail.com>,
-        Matt Hansen <2lprbe78@duck.com>,
-        =?UTF-8?q?Benoit=20Gr=C3=A9goire?= <benoitg@coeus.ca>,
-        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Werner Sembach <wse@tuxedocomputers.com>,
-        mumblingdrunkard@protonmail.com, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 1/4] efi/x86: Remove EfiMemoryMappedIO from E820 map
-Date:   Fri,  2 Dec 2022 15:18:35 -0600
-Message-Id: <20221202211838.1061278-2-helgaas@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20221202211838.1061278-1-helgaas@kernel.org>
-References: <20221202211838.1061278-1-helgaas@kernel.org>
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] x86/PCI: Disable E820 reserved region clipping for Clevo
+ NL4XLU laptops
+Message-ID: <20221202215811.GA1063109@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a9203d47-5b85-c035-3ec7-973dcb6a840a@redhat.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Wed, Oct 12, 2022 at 10:23:12AM +0200, Hans de Goede wrote:
+> On 10/11/22 19:40, Bjorn Helgaas wrote:
+> > On Mon, Oct 10, 2022 at 05:02:06PM +0200, Hans de Goede wrote:
+> >> Clevo NL4XLU barebones have the same E820 reservation covering
+> >> the entire _CRS 32-bit window issue as the Lenovo *IIL* and
+> >> Clevo X170KM-G models, relevant dmesg bits (with pci=no_e820):
+> >> ...
+> >> Add a no_e820 quirk for these models to fix the touchpad not working
+> >> (due to Linux being unable to assign a PCI BAR for the i2c-controller).
+> > 
+> > I do plan to apply this, but a little food for thought below.
+> > 
+> > I explored this issue a little bit with the ACPI/UEFI folks (see
+> > https://members.uefi.org/wg/aswg/mail/thread/9265 if you have access).  
+> > 
+> > One aspect I had glossed over earlier is that on most recent machines,
+> > the "E820 map" Linux uses is actually constructed internally by Linux
+> > based on the UEFI memory map, and that construction conflates several
+> > EFI types into E820_TYPE_RESERVED; see
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/firmware/efi/libstub/x86-stub.c?id=v5.19#n576
 
-Firmware can use EfiMemoryMappedIO to request that MMIO regions be mapped
-by the OS so they can be accessed by EFI runtime services, but should have
-no other significance to the OS (UEFI r2.10, sec 7.2).  However, most
-bootloaders and EFI stubs convert EfiMemoryMappedIO regions to
-E820_TYPE_RESERVED entries, which prevent Linux from allocating space from
-them (see remove_e820_regions()).
+Critical error on my part here: the E820 map is passed to Linux by the
+bootloader or the EFI stub, NOT constructed by Linux.
 
-Some platforms use EfiMemoryMappedIO entries for PCI MMCONFIG space and PCI
-host bridge windows, which means Linux can't allocate BAR space for
-hot-added devices.
+> > From a response in the ACPI/UEFI discussion:
+> > 
+> >   The reason EfiMemoryMappedIO[1] exist in the UEFI memory map is to
+> >   request a virtual mapping for UEFI Runtime Services.
+> >   ...
+> >   Thus the EfiMemoryMappedIO entries just exist to pass up the
+> >   EFI_MEMORY_RUNTIME attribute in the UEFI Memory Map. This is the part
+> >   of the contract for UEFI Runtime Service to use virtual mappings
+> >   provided by the OS. So from an OS point of view EfiMemoryMappedIO has
+> >   no other purpose.
+> >   
+> >   [1] UEFI: Table 7-5 Memory Type Usage before ExitBootServices() "Used
+> >   by system firmware to request that a memory-mapped IO region be
+> >   mapped by the OS to a virtual address so it can be accessed by EFI
+> >   runtime services."
 
-Remove any EfiMemoryMappedIO regions from the E820 map to avoid this
-problem.
+> > I'm a little leery of changing that UEFI->E820 conversion because of
+> > other possible implications, but it may be that omitting
+> > EfiMemoryMappedIO entries from the E820 map and keeping the original
+> > "avoid E820 regions" (4dc2287c1805) would also solve this problem.
+> 
+> Actually during my many attempts to fix this I did write a patch
+> adding a new E820_TYPE_MMIO to the generated e820-memmap which
+> would only show up in the EFI -> E820 entry generation case
+> and then used that to not exclude that E820 region, see
+> this RFC series:
+> 
+> https://lore.kernel.org/linux-pci/20220214151759.98267-1-hdegoede@redhat.com/
 
-The previous solution to the problem of allocating BARs in these regions
-was to add pci_crs_quirks[] entries to disable E820 checking for these
-machines (see d341838d776a ("x86/PCI: Disable E820 reserved region clipping
-via quirks")):
+Yes :)  I tried something similar and of course it didn't work because
+it didn't change the E820 map coming from the bootloader.
 
-  Acer   DMI_PRODUCT_NAME    Spin SP513-54N
-  Clevo  DMI_BOARD_NAME      X170KM-G
-  Lenovo DMI_PRODUCT_VERSION *IIL*
+> I also did another series which used the EfiMemoryMappedIO type as
+> an input to heuristics to automatically set pci=no_e820, see:
+> 
+> https://lore.kernel.org/linux-pci/20220228105259.230903-1-hdegoede@redhat.com/
+> 
+> IIRC that patch eventually got replaced by a similar but simpler
+> heuristic from you. Which IIRC eventually got dropped again because
+> it was causing regressions on some models again.
+> 
+> So we ended up with the current set pci=no_e820 using DMI based quirks +
+> try to enable it for all BIOS-es with date >= 2023 approach,
+> with the plan to do DMI quirks setting pci=use_e820 if any (buggy)
+> 2023 BIOS-es show up which need this.
 
-Florent reported the BAR allocation issue on the Clevo NL4XLU.  We could
-add another quirk for the NL4XLU, but I hope this generic change can solve
-it for many machines without having to add quirks.
+I gave up on figuring out what went wrong in this path.
 
-This change has been tested on Clevo X170KM-G (Konrad) and Lenovo Ideapad
-Slim 3 (Matt) and solves the problem even when overriding the existing
-quirks by booting with "pci=use_e820".
+Anyway, I've had the patch below in -next for a couple weeks, but I
+plan to drop it and replace it with the series here:
+https://lore.kernel.org/linux-pci/20221202211838.1061278-1-helgaas@kernel.org/
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=216565     Clevo NL4XLU
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=206459#c78 Clevo X170KM-G
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=1868899    Ideapad Slim 3
-Reported-by: Florent DELAHAYE <kernelorg@undead.fr>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Konrad J Hambrick <kjhambrick@gmail.com>
-Tested-by: Matt Hansen <2lprbe78@duck.com>
-Cc: Hans de Goede <hdegoede@redhat.com>
----
- arch/x86/platform/efi/efi.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+Bjorn
 
-diff --git a/arch/x86/platform/efi/efi.c b/arch/x86/platform/efi/efi.c
-index ebc98a68c400..4728f60119da 100644
---- a/arch/x86/platform/efi/efi.c
-+++ b/arch/x86/platform/efi/efi.c
-@@ -303,6 +303,40 @@ static void __init efi_clean_memmap(void)
- 	}
- }
- 
-+/*
-+ * Firmware can use EfiMemoryMappedIO to request that MMIO regions be
-+ * mapped by the OS so they can be accessed by EFI runtime services, but
-+ * should have no other significance to the OS (UEFI r2.10, sec 7.2).
-+ * However, most bootloaders and EFI stubs convert EfiMemoryMappedIO
-+ * regions to E820_TYPE_RESERVED entries, which prevent Linux from
-+ * allocating space from them (see remove_e820_regions()).
-+ *
-+ * Some platforms use EfiMemoryMappedIO entries for PCI MMCONFIG space and
-+ * PCI host bridge windows, which means Linux can't allocate BAR space for
-+ * hot-added devices.
-+ *
-+ * Remove any EfiMemoryMappedIO regions from the E820 map to avoid this
-+ * problem.
-+ */
-+static void __init efi_remove_e820_mmio(void)
-+{
-+	efi_memory_desc_t *md;
-+	u64 size, start, end;
-+	int i = 0;
-+
-+	for_each_efi_memory_desc(md) {
-+		if (md->type == EFI_MEMORY_MAPPED_IO) {
-+			size = md->num_pages << EFI_PAGE_SHIFT;
-+			start = md->phys_addr;
-+			end = start + size - 1;
-+			pr_info("Remove mem%02u: MMIO range=[0x%08llx-0x%08llx] (%lluMB) from e820 map\n",
-+				i, start, end, size >> 20);
-+			e820__range_remove(start, size, E820_TYPE_RESERVED, 1);
-+		}
-+		i++;
-+	}
-+}
-+
- void __init efi_print_memmap(void)
- {
- 	efi_memory_desc_t *md;
-@@ -474,6 +508,8 @@ void __init efi_init(void)
- 	set_bit(EFI_RUNTIME_SERVICES, &efi.flags);
- 	efi_clean_memmap();
- 
-+	efi_remove_e820_mmio();
-+
- 	if (efi_enabled(EFI_DBG))
- 		efi_print_memmap();
- }
--- 
-2.25.1
-
+> >> Link: https://bugzilla.kernel.org/show_bug.cgi?id=216565
+> >> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> >> ---
+> >>  arch/x86/pci/acpi.c | 13 +++++++++++++
+> >>  1 file changed, 13 insertions(+)
+> >>
+> >> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> >> index 2f82480fd430..45ef65d31a40 100644
+> >> --- a/arch/x86/pci/acpi.c
+> >> +++ b/arch/x86/pci/acpi.c
+> >> @@ -189,6 +189,19 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
+> >>  			DMI_MATCH(DMI_BOARD_NAME, "X170KM-G"),
+> >>  		},
+> >>  	},
+> >> +
+> >> +	/*
+> >> +	 * Clevo NL4XLU barebones have the same E820 reservation covering
+> >> +	 * the entire _CRS 32-bit window issue as the Lenovo *IIL* models.
+> >> +	 * See https://bugzilla.kernel.org/show_bug.cgi?id=216565
+> >> +	 */
+> >> +	{
+> >> +		.callback = set_no_e820,
+> >> +		.ident = "Clevo NL4XLU Barebone",
+> >> +		.matches = {
+> >> +			DMI_MATCH(DMI_BOARD_NAME, "NL4XLU"),
+> >> +		},
+> >> +	},
+> >>  	{}
+> >>  };
+> >>  
+> >> -- 
+> >> 2.37.3
+> >>
+> > 
+> 
