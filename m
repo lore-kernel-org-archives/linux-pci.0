@@ -2,107 +2,128 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31C38C4332F
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Dec 2022 16:26:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0296AC4332F
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Dec 2022 16:55:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231960AbiLEQ0L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Dec 2022 11:26:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50204 "EHLO
+        id S231934AbiLEQzz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Dec 2022 11:55:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231969AbiLEQ0K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2022 11:26:10 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA3FE1DF12;
-        Mon,  5 Dec 2022 08:26:08 -0800 (PST)
+        with ESMTP id S232726AbiLEQzg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Dec 2022 11:55:36 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85CBCCE3B
+        for <linux-pci@vger.kernel.org>; Mon,  5 Dec 2022 08:53:41 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id A742AB81144;
-        Mon,  5 Dec 2022 16:26:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9690BC433D6;
-        Mon,  5 Dec 2022 16:26:03 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 3B4E4B81183
+        for <linux-pci@vger.kernel.org>; Mon,  5 Dec 2022 16:53:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9FF5C433D7;
+        Mon,  5 Dec 2022 16:53:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670257566;
-        bh=IXjbw3od9RX52LgJlY0q/QMMPB1bl3URr+bdkX9l9ow=;
+        s=k20201202; t=1670259219;
+        bh=ap1mfsBv8q3XPZhEzL39o1w74V7H3SYD4rvHgyZ08Wk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ABcF1w6j4l/W2nE40FUo6h9qxYW5EDKXgluAYok40DSQsdXi8xaBnr1imFdy7ZG6x
-         1Lu4aT39+UBc6krnJv3sC7WLYewF66c5sz+wdVkF4Xbf9uTgtNqZoYVW52U864zwXr
-         tTRpbqUMZITFNlCkfCI7l+qztQfbhGZdQgU+K2nMYChHUnlTrQ0GyEV4HCnxUL3t8g
-         9bkyOVFkvrvAzEsSLEwm//ICLlWBtO2QMH/ABI0faCHHGkj5QrkXpyl8q7JeS/i2Mh
-         bdabqDHQ6IwfKOZAxqmY4jaZqWHNHJ5fBbX2K9EhVWPLzOkj1XNTQc86BGEHAATWEx
-         9n+ANSlx+PACQ==
-Date:   Mon, 5 Dec 2022 17:26:00 +0100
+        b=FFgj1XuQ/wYvo9Rgs6HyOq4WJRvPNp7LQ2XxI7SwHEXlENoYtu2AOKCjMqPqHJm0/
+         tWoMAi7IwOo+VoYGMo7UYsY7Tq2954dGHJTaJjvMxv/FglVUYdTURx+A7dh5CobxGk
+         Vl7PyKdSbsSkOo7YCu5KZtJfSlOPvJvc8CP3I8zro1CXG3G1SIgxAu3xZTFcsZOrYI
+         SCRIqyh8nltloTnI38Vr+b0fquZCNxFD01SS0sMv9ci0qwtqLaEf4kNaLzB0vWpU1+
+         9I8jmkWC+S8XwMgz6s2ldgZB3e516fackmqjCWYsJo0umMaKxl58dJTYNAmkqLp6Hg
+         LusMBEV6BmG9w==
+Date:   Mon, 5 Dec 2022 17:53:33 +0100
 From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     John Thomson <git@johnthomson.fastmail.com.au>
-Cc:     Sergio Paracuellos <sergio.paracuellos@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        =?utf-8?B?QXLEsW7DpyDDnE5BTA==?= <arinc.unal@arinc9.com>,
-        linux-phy@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: mt7621: add sentinel to quirks table
-Message-ID: <Y44bmGfgEJNd8VhK@lpieralisi>
-References: <20221104205242.3440388-1-git@johnthomson.fastmail.com.au>
- <20221104205242.3440388-3-git@johnthomson.fastmail.com.au>
+To:     "Munoz Ruiz, Francisco" <francisco.munoz.ruiz@linux.intel.com>
+Cc:     helgaas@kernel.org, alex.williamson@redhat.com,
+        myron.stowe@redhat.com, lorenzo.pieralisi@arm.com,
+        jonathan.derrick@linux.dev, linux-pci@vger.kernel.org,
+        Nirmal Patel <nirmal.patel@linux.intel.com>
+Subject: Re: [PATCH V3] PCI: vmd: Fix secondary bus reset for Intel bridges
+Message-ID: <Y44iDYgQ9h7/UNgM@lpieralisi>
+References: <20221103201407.3158-1-francisco.munoz.ruiz@linux.intel.com>
+ <ea3fe84c-ec76-86d9-5ec6-22bf73c47756@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20221104205242.3440388-3-git@johnthomson.fastmail.com.au>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ea3fe84c-ec76-86d9-5ec6-22bf73c47756@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Always capitalize the sentence in the subject.
+On Mon, Nov 28, 2022 at 03:38:24PM -0800, Munoz Ruiz, Francisco wrote:
+> On 11/3/2022 1:14 PM, francisco.munoz.ruiz@linux.intel.com wrote:
+> > From: Francisco Munoz <francisco.munoz.ruiz@linux.intel.com>
+> > 
+> > The reset was never applied in the current implementation because Intel
+> > Bridges owned by VMD are parentless. Internally, pci_reset_bus() applies
+> > a reset to the parent of the PCI device supplied as argument, but in this
+> > case it failed because there wasn't a parent.
 
-"PCI: mt7621: Add sentinel to quirks table"
+Please add a comment in the *code* as well and explain why it is so.
 
-On Sat, Nov 05, 2022 at 06:52:42AM +1000, John Thomson wrote:
-> With mt7621 soc_dev_attr fixed to register the soc as a device,
-> kernel will experience an oops in soc_device_match_attr
+> > In more detail, this change allows the VMD driver to enumerate NVMe devices
+> > in pass-through configurations when guest reboots are performed. Commit id
+> > 6aab5622296b ("PCI: vmd: Clean up domain before enumeration") attempted to
+> > fix this, but later we discovered that the code inside pci_reset_bus() wasn’t
+> > triggering secondary bus resets.  Therefore, we updated the parameters passed
+> > to it, and now NVMe SSDs attached to VMD bridges are properly enumerated in
+> > VT-d pass-through scenarios.
 
-Can we reword this please ? What you are describing *exposes* the
-bug but it is not describing the bug per-se.
+I am not sure this helps much - I'd rather explain why the device
+hierarchy in VMD is as it is - when that's explained is rather clear
+why the current reset is NOP and this patch is needed.
 
-The bug is related to a missing sentinel in the struct
-soc_device_attribute array and that's true regardless of whether it is
-actually triggered or not.
+> > Signed-off-by: Francisco Munoz <francisco.munoz.ruiz@linux.intel.com>
+> > Reviewed-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+> > Reviewed-by: Jonathan Derrick <jonathan.derrick@linux.dev>
+> > ---
+> > V3:
+> >     - Add WARN_ON
+> >     - Include Jonathan as reviewer
+> >     - Update commit message
+> > V2:
+> >     - Update commit message
+> > 
+> >  drivers/pci/controller/vmd.c | 13 +++++++++++--
+> >  1 file changed, 11 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> > index e06e9f4fc50f..2406be6644f3 100644
+> > --- a/drivers/pci/controller/vmd.c
+> > +++ b/drivers/pci/controller/vmd.c
+> > @@ -859,8 +859,17 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+> >  
+> >  	pci_scan_child_bus(vmd->bus);
+> >  	vmd_domain_reset(vmd);
+> > -	list_for_each_entry(child, &vmd->bus->children, node)
+> > -		pci_reset_bus(child->self);
+> > +
+> > +	list_for_each_entry(child, &vmd->bus->children, node) {
+> > +		if (!list_empty(&child->devices)) {
+> > +			ret = pci_reset_bus(list_first_entry(&child->devices,
+> > +							     struct pci_dev,
+> > +							     bus_list));
+> > +			WARN_ON(ret);
 
-Please update the commit log promptly and I shall send it upstream.
+Technically you are adding a WARN_ON() here to make sure that a failed
+reset is detected - I am not sure a backtrace is really required,
+a pci_warn() maybe ?
 
-Thanks,
 Lorenzo
 
-> This quirk test was introduced in the staging driver in
-> commit b483b4e4d3f6 ("staging: mt7621-pci: add quirks for 'E2' revision
-> using 'soc_device_attribute'"), and the staging driver was moved in
-> commit 2bdd5238e756 ("PCI: mt7621: Add MediaTek MT7621 PCIe host
-> controller driver") for the 5.16 kernel
+> > +			break;
+> > +		}
+> > +	}
+> > +
+> >  	pci_assign_unassigned_bus_resources(vmd->bus);
+> >  
+> >  	/*
 > 
-> Link: https://lore.kernel.org/lkml/26ebbed1-0fe9-4af9-8466-65f841d0b382@app.fastmail.com
-> Fixes: b483b4e4d3f6 ("staging: mt7621-pci: add quirks for 'E2' revision
-> using 'soc_device_attribute'")
-> Signed-off-by: John Thomson <git@johnthomson.fastmail.com.au>
-> ---
->  drivers/pci/controller/pcie-mt7621.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/controller/pcie-mt7621.c b/drivers/pci/controller/pcie-mt7621.c
-> index 4bd1abf26008..ee7aad09d627 100644
-> --- a/drivers/pci/controller/pcie-mt7621.c
-> +++ b/drivers/pci/controller/pcie-mt7621.c
-> @@ -466,7 +466,8 @@ static int mt7621_pcie_register_host(struct pci_host_bridge *host)
->  }
->  
->  static const struct soc_device_attribute mt7621_pcie_quirks_match[] = {
-> -	{ .soc_id = "mt7621", .revision = "E2" }
-> +	{ .soc_id = "mt7621", .revision = "E2" },
-> +	{ /* sentinel */ }
->  };
->  
->  static int mt7621_pcie_probe(struct platform_device *pdev)
-> -- 
-> 2.37.2
+> Hi,
 > 
+> Just a gentle reminder for this one
+> 
+> Best wishes,
+> Francisco.
