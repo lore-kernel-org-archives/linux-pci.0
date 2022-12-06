@@ -2,153 +2,138 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38FD4C3A5A7
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Dec 2022 19:27:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87BE1C352A1
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Dec 2022 19:37:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229807AbiLFT1g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Dec 2022 14:27:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57752 "EHLO
+        id S229791AbiLFThr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Dec 2022 14:37:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229784AbiLFT12 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2022 14:27:28 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8639A22BFD
-        for <linux-pci@vger.kernel.org>; Tue,  6 Dec 2022 11:26:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1670354785;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dr9eadMAbHe85PAKzK4dCl/lg7DFQYZXZiHsTAGln3s=;
-        b=R2fI0IXVg0UZbmUskEkn2FadBVHJK7rhxNSQ7cHZ1EEVur8oh77KUyA207QPVwLCGp/rcW
-        4E2NzlgKGSu+pHWsuN74XCEYxQUctf1L2DpxIXsYTzgmCpmfnnnvy3i3K20Adyng7Jk0j9
-        v9WIn/daz8ecImREGAw3cypMHf0oUcE=
-Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
- [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-272-0YNrdX_ZPUW2OGS5ROi6tQ-1; Tue, 06 Dec 2022 14:26:24 -0500
-X-MC-Unique: 0YNrdX_ZPUW2OGS5ROi6tQ-1
-Received: by mail-ej1-f70.google.com with SMTP id hq42-20020a1709073f2a00b007c100387d64so2070889ejc.3
-        for <linux-pci@vger.kernel.org>; Tue, 06 Dec 2022 11:26:24 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dr9eadMAbHe85PAKzK4dCl/lg7DFQYZXZiHsTAGln3s=;
-        b=SaXkxuvvfup+r4paf0kKv5r8+2Mjkgbhrr9/DWfwCaH7S9+FHJV8vKpwX+XAuq00QA
-         SjMFL5Ahcck2FK2GqwK8JbnjIH+JrJ+V1ta9JKGDLIstr4qtmnGkQ6w1J8JgnfFE6uDq
-         dzW2JyQ/0R7WxbgZX3Ig9Vzhp8opmBVQ5/RDfKP/74Nj+IW2jrutmHDSgDhHevlU1zaO
-         G8KbrxwLpsuSDsgmra+g2bE8E1XEJdJclhwv6BTzOOmiK4iaFhsp3fDN2QTOcTJIW5tF
-         zHvCGzkcGu6hyryeRYlK9xsTDJdvewcd4y9i4CJE6R1LQpa0hUczAFSIZZTjTea138+q
-         qraQ==
-X-Gm-Message-State: ANoB5pmbgVbG0ELIzgZL0LU+a6iwoknL2FdLA95ATC+N3WRCzQqCH4ry
-        QdCpH8dy7mLotsNB0pbMCWu2uBdopT0DmAEYTOGIfPIw7LGpxkSdPVoliwme6UK9IEvXIWqjbc9
-        rviSoH0q4Gj4Y8PaVGO4i
-X-Received: by 2002:aa7:c2cf:0:b0:46d:1c24:e804 with SMTP id m15-20020aa7c2cf000000b0046d1c24e804mr3304313edp.221.1670354783212;
-        Tue, 06 Dec 2022 11:26:23 -0800 (PST)
-X-Google-Smtp-Source: AA0mqf5ZnYXnvfbGNrTKHhGwrdtvgNBxij/xgDDLq8t20iByjVwRgYRuPK862mYTmRsalvyG5aoJlw==
-X-Received: by 2002:aa7:c2cf:0:b0:46d:1c24:e804 with SMTP id m15-20020aa7c2cf000000b0046d1c24e804mr3304302edp.221.1670354783046;
-        Tue, 06 Dec 2022 11:26:23 -0800 (PST)
-Received: from ?IPV6:2001:1c00:c1e:bf00:d69d:5353:dba5:ee81? (2001-1c00-0c1e-bf00-d69d-5353-dba5-ee81.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:d69d:5353:dba5:ee81])
-        by smtp.gmail.com with ESMTPSA id sb25-20020a1709076d9900b007ba46867e6asm7781934ejc.16.2022.12.06.11.26.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Dec 2022 11:26:22 -0800 (PST)
-Message-ID: <9bc9cd5f-cfbe-f997-bd97-2ec874853d93@redhat.com>
-Date:   Tue, 6 Dec 2022 20:26:21 +0100
+        with ESMTP id S229779AbiLFThq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Dec 2022 14:37:46 -0500
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A96091B1C6;
+        Tue,  6 Dec 2022 11:37:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1670355464; x=1701891464;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=vN4lwqnsGyDLulqDpchOlpMKkxyM2VICPVBXfraX+Uk=;
+  b=JD+DLY4Y0mVx3afohGeWqirW8SmYFReP1HkXsK6XxDt6593rAN9M7EgN
+   zjgyiALKve9RA/RDjvQFXu1Z/kuUrbwtjoPLRAfFlE6wyLvoVjG85AHpA
+   UYHDxsjkimIthQCg7slPBO4eKiVKuDAENaXo8Fc35cpk5SZ354PiqoXh4
+   P/MNxguLT+ooavuF5roEKSRTNtDmt6rIngs0IJE51Pii7NjVtpVsUwQgP
+   BVnbvCSWwZYF3jb4wu0LWD70zPTE/Oap8LkKUCzVvTMVF9g+uv3ifqQOE
+   O6gOen7MiuOUiuF2TCq1UVXmwom827APHi5uRNOeF8rV3du3btQCBoEbT
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10553"; a="317853305"
+X-IronPort-AV: E=Sophos;i="5.96,223,1665471600"; 
+   d="scan'208";a="317853305"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2022 11:37:44 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10553"; a="639989304"
+X-IronPort-AV: E=Sophos;i="5.96,223,1665471600"; 
+   d="scan'208";a="639989304"
+Received: from smaslov-mobl3.amr.corp.intel.com (HELO [10.251.23.186]) ([10.251.23.186])
+  by orsmga007-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2022 11:37:43 -0800
+Message-ID: <51fb66d6-f2e0-f11c-68a3-525723d56dd4@linux.intel.com>
+Date:   Tue, 6 Dec 2022 11:37:42 -0800
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Subject: Re: [PATCH] x86/PCI: Disable E820 reserved region clipping for Clevo
- NL4XLU laptops
-Content-Language: en-US, nl
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linuxkernelml@undead.fr,
-        Florent DELAHAYE <kernelorg@undead.fr>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-References: <20221206172604.GA1356368@bhelgaas>
-From:   Hans de Goede <hdegoede@redhat.com>
-In-Reply-To: <20221206172604.GA1356368@bhelgaas>
+ Firefox/102.0 Thunderbird/102.4.2
+Subject: Re: [Patch v4 05/13] init: Call mem_encrypt_init() after Hyper-V
+ hypercall init is done
+Content-Language: en-US
+To:     Michael Kelley <mikelley@microsoft.com>, hpa@zytor.com,
+        kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, luto@kernel.org, peterz@infradead.org,
+        davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+        pabeni@redhat.com, lpieralisi@kernel.org, robh@kernel.org,
+        kw@linux.com, bhelgaas@google.com, arnd@arndb.de,
+        hch@infradead.org, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
+        Tianyu.Lan@microsoft.com, kirill.shutemov@linux.intel.com,
+        ak@linux.intel.com, isaku.yamahata@intel.com,
+        dan.j.williams@intel.com, jane.chu@oracle.com, seanjc@google.com,
+        tony.luck@intel.com, x86@kernel.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        iommu@lists.linux.dev
+References: <1669951831-4180-1-git-send-email-mikelley@microsoft.com>
+ <1669951831-4180-6-git-send-email-mikelley@microsoft.com>
+From:   Sathyanarayanan Kuppuswamy 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <1669951831-4180-6-git-send-email-mikelley@microsoft.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
 
-On 12/6/22 18:26, Bjorn Helgaas wrote:
-> On Sun, Dec 04, 2022 at 10:42:38AM +0100, Hans de Goede wrote:
->> On 12/2/22 22:58, Bjorn Helgaas wrote:
->>> On Wed, Oct 12, 2022 at 10:23:12AM +0200, Hans de Goede wrote:
->>>> On 10/11/22 19:40, Bjorn Helgaas wrote:
->>>>> On Mon, Oct 10, 2022 at 05:02:06PM +0200, Hans de Goede wrote:
->>>>>> Clevo NL4XLU barebones have the same E820 reservation covering
->>>>>> the entire _CRS 32-bit window issue as the Lenovo *IIL* and
->>>>>> Clevo X170KM-G models, relevant dmesg bits (with pci=no_e820):
->>>>>> ...
->>>>>> Add a no_e820 quirk for these models to fix the touchpad not working
->>>>>> (due to Linux being unable to assign a PCI BAR for the i2c-controller).
->> ...
-> 
->> As I mentioned in the email-thread about that patch-series (and there
->> now is dmesg E820 output to confirm this) your generic fix will
->> unfortunately only work when people boot in EFI mode. It will still
->> be good to have the generic fix of course.
->>
->> But maybe we should also add this quirk to make sure these
->> Clevo-s also work properly when booted in BIOS CSM mode ?
-> 
-> Yes, if they can boot in CSM mode, we should probably add the quirk.
-> But Florent doesn't see a way to boot his Clevo NL41LU2/NL4XLU in CSM
-> mode, so I think we can postpone adding the quirk until we find a
-> machine where it makes a difference:
 
-Ack.
+On 12/1/22 7:30 PM, Michael Kelley wrote:
+> Full Hyper-V initialization, including support for hypercalls, is done
+> as an apic_post_init callback via late_time_init().  mem_encrypt_init()
+> needs to make hypercalls when it marks swiotlb memory as decrypted.
+> But mem_encrypt_init() is currently called a few lines before
+> late_time_init(), so the hypercalls don't work.
 
->   https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1948811/comments/8
-> 
-> I added a note to https://bugzilla.kernel.org/show_bug.cgi?id=216565
-> to that effect.
-
-Thank you for also following up on this in bugzilla.
-
-Regards,
-
-Hans
-'
-
+Did you consider moving hyper-v hypercall initialization before
+ mem_encrypt_init(). Is there any dependency issue?
 
 > 
->>>>>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=216565
->>>>>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
->>>>>> ---
->>>>>>  arch/x86/pci/acpi.c | 13 +++++++++++++
->>>>>>  1 file changed, 13 insertions(+)
->>>>>>
->>>>>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
->>>>>> index 2f82480fd430..45ef65d31a40 100644
->>>>>> --- a/arch/x86/pci/acpi.c
->>>>>> +++ b/arch/x86/pci/acpi.c
->>>>>> @@ -189,6 +189,19 @@ static const struct dmi_system_id pci_crs_quirks[] __initconst = {
->>>>>>  			DMI_MATCH(DMI_BOARD_NAME, "X170KM-G"),
->>>>>>  		},
->>>>>>  	},
->>>>>> +
->>>>>> +	/*
->>>>>> +	 * Clevo NL4XLU barebones have the same E820 reservation covering
->>>>>> +	 * the entire _CRS 32-bit window issue as the Lenovo *IIL* models.
->>>>>> +	 * See https://bugzilla.kernel.org/show_bug.cgi?id=216565
->>>>>> +	 */
->>>>>> +	{
->>>>>> +		.callback = set_no_e820,
->>>>>> +		.ident = "Clevo NL4XLU Barebone",
->>>>>> +		.matches = {
->>>>>> +			DMI_MATCH(DMI_BOARD_NAME, "NL4XLU"),
->>>>>> +		},
->>>>>> +	},
->>>>>>  	{}
->>>>>>  };
+> Fix this by moving mem_encrypt_init() after late_time_init() and
+> related clock initializations. The intervening initializations don't
+> do any I/O that requires the swiotlb, so moving mem_encrypt_init()
+> slightly later has no impact.
 > 
+> Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+> Reviewed-by: Tom Lendacky <thomas.lendacky@amd.com>
+> ---
+>  init/main.c | 19 +++++++++++--------
+>  1 file changed, 11 insertions(+), 8 deletions(-)
+> 
+> diff --git a/init/main.c b/init/main.c
+> index e1c3911..5a7c466 100644
+> --- a/init/main.c
+> +++ b/init/main.c
+> @@ -1088,14 +1088,6 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
+>  	 */
+>  	locking_selftest();
+>  
+> -	/*
+> -	 * This needs to be called before any devices perform DMA
+> -	 * operations that might use the SWIOTLB bounce buffers. It will
+> -	 * mark the bounce buffers as decrypted so that their usage will
+> -	 * not cause "plain-text" data to be decrypted when accessed.
+> -	 */
+> -	mem_encrypt_init();
+> -
+>  #ifdef CONFIG_BLK_DEV_INITRD
+>  	if (initrd_start && !initrd_below_start_ok &&
+>  	    page_to_pfn(virt_to_page((void *)initrd_start)) < min_low_pfn) {
+> @@ -1112,6 +1104,17 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
+>  		late_time_init();
+>  	sched_clock_init();
+>  	calibrate_delay();
+> +
+> +	/*
+> +	 * This needs to be called before any devices perform DMA
+> +	 * operations that might use the SWIOTLB bounce buffers. It will
+> +	 * mark the bounce buffers as decrypted so that their usage will
+> +	 * not cause "plain-text" data to be decrypted when accessed. It
+> +	 * must be called after late_time_init() so that Hyper-V x86/x64
+> +	 * hypercalls work when the SWIOTLB bounce buffers are decrypted.
+> +	 */
+> +	mem_encrypt_init();
+> +
+>  	pid_idr_init();
+>  	anon_vma_init();
+>  #ifdef CONFIG_X86
 
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
