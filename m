@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE76C10F1B
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Dec 2022 19:03:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 949FFC10F1E
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Dec 2022 19:03:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229973AbiLHTD4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Dec 2022 14:03:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35182 "EHLO
+        id S229984AbiLHTD5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Dec 2022 14:03:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35226 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229781AbiLHTDx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Dec 2022 14:03:53 -0500
-Received: from sin.source.kernel.org (sin.source.kernel.org [145.40.73.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56E7A8DFF3;
-        Thu,  8 Dec 2022 11:03:52 -0800 (PST)
+        with ESMTP id S229978AbiLHTD4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Dec 2022 14:03:56 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EE158E589;
+        Thu,  8 Dec 2022 11:03:55 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by sin.source.kernel.org (Postfix) with ESMTPS id B43B4CE2682;
-        Thu,  8 Dec 2022 19:03:50 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FF5CC433EF;
-        Thu,  8 Dec 2022 19:03:48 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 180D962043;
+        Thu,  8 Dec 2022 19:03:55 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A54CC433D2;
+        Thu,  8 Dec 2022 19:03:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670526228;
-        bh=nOb1rqG+d8zAEK4Zjd64IrjJmxoyMzvK3YWdEydV4hE=;
+        s=k20201202; t=1670526234;
+        bh=wsQic+DniH74o9yizSX8yaBBMzi/Wi+iIyhKaROtdo8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TjOuOAxixZBCl04IjpGO52FgDvhWH4b8bah7zDSb5uxlbSrHT804XFcsokQR/GnW1
-         8dwlbyq5TZj9EHDAl5LvJyQJAz/UaZflGUDInWSJxcPnby73b/R1BjbK/hJfT6hsEQ
-         dLo1PngRDgnqgK+wNLIGjTQyt2Yqg2DUwGJPyfuDphY8JoJsfsphcyCvc10SYRmayn
-         DLlLZ3zVJ2+b/EbBl0RSsQDJETBxE4t6totU/D/55Y5+PfzHMkJ7pWblSAUPpCmyHS
-         qgtW72xKSVvfi+r/REtBsSbog33B5Yl0lWhssgOTxymiooLCHieA0kfEiCtTNtL8bk
-         T0x0eGq0mi3Xg==
+        b=iETWazC+OBQ0Jrz1EKcJVEa0ICYQuTsUHib1gE3zbdSRvQU1KmKOlXRbjBdGLie5M
+         QcQjyeArzjdabyUGW8DB/75rGfvS278iNq3+oNFG/8Mwmrh/Xp4Q8VSMrCRi5UJxHY
+         dvdzg498eExFdxhY7f9HQW9pJh5iofviJUuVb8xdn6nXvDoWb3ayLrtKWqByhSBmLC
+         IfoYRcxC2shEFpXm/U8hSlQcGsTJ5u4oMcEoEvXYTxxRy7xyy/dDMqx54286Yjyh8z
+         672iK4i/H1FfPvA4Uv1WbuHDSpF00mMo2tqxt9KrafmH5Z2mzSXFwYMWoPneA8d0oS
+         6FRWoxnjWgYkg==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     Hans de Goede <hdegoede@redhat.com>,
@@ -43,9 +43,9 @@ Cc:     Hans de Goede <hdegoede@redhat.com>,
         Werner Sembach <wse@tuxedocomputers.com>,
         mumblingdrunkard@protonmail.com, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 1/4] efi/x86: Remove EfiMemoryMappedIO from E820 map
-Date:   Thu,  8 Dec 2022 13:03:38 -0600
-Message-Id: <20221208190341.1560157-2-helgaas@kernel.org>
+Subject: [PATCH v2 4/4] x86/PCI: Fix log message typo
+Date:   Thu,  8 Dec 2022 13:03:41 -0600
+Message-Id: <20221208190341.1560157-5-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20221208190341.1560157-1-helgaas@kernel.org>
 References: <20221208190341.1560157-1-helgaas@kernel.org>
@@ -57,119 +57,30 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Firmware can use EfiMemoryMappedIO to request that MMIO regions be mapped
-by the OS so they can be accessed by EFI runtime services, but should have
-no other significance to the OS (UEFI r2.10, sec 7.2).  However, most
-bootloaders and EFI stubs convert EfiMemoryMappedIO regions to
-E820_TYPE_RESERVED entries, which prevent Linux from allocating space from
-them (see remove_e820_regions()).
+Add missing word in the log message:
 
-Some platforms use EfiMemoryMappedIO entries for PCI MMCONFIG space and PCI
-host bridge windows, which means Linux can't allocate BAR space for
-hot-added devices.
+  - ... so future kernels can this automatically
+  + ... so future kernels can do this automatically
 
-Remove large EfiMemoryMappedIO regions from the E820 map to avoid this
-problem.
-
-Leave small (< 256KB) EfiMemoryMappedIO regions alone because on some
-platforms, these describe non-window space that's included in host bridge
-_CRS.  If we assign that space to PCI devices, they don't work.  On the
-Lenovo X1 Carbon, this leads to suspend/resume failures.
-
-The previous solution to the problem of allocating BARs in these regions
-was to add pci_crs_quirks[] entries to disable E820 checking for these
-machines (see d341838d776a ("x86/PCI: Disable E820 reserved region clipping
-via quirks")):
-
-  Acer   DMI_PRODUCT_NAME    Spin SP513-54N
-  Clevo  DMI_BOARD_NAME      X170KM-G
-  Lenovo DMI_PRODUCT_VERSION *IIL*
-
-Florent reported the BAR allocation issue on the Clevo NL4XLU.  We could
-add another quirk for the NL4XLU, but I hope this generic change can solve
-it for many machines without having to add quirks.
-
-This change has been tested on Clevo X170KM-G (Konrad) and Lenovo Ideapad
-Slim 3 (Matt) and solves the problem even when overriding the existing
-quirks by booting with "pci=use_e820".
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=216565     Clevo NL4XLU
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=206459#c78 Clevo X170KM-G
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=1868899    Ideapad Slim 3
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=2029207    X1 Carbon
-Reported-by: Florent DELAHAYE <kernelorg@undead.fr>
-Tested-by: Konrad J Hambrick <kjhambrick@gmail.com>
-Tested-by: Matt Hansen <2lprbe78@duck.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Hans de Goede <hdegoede@redhat.com>
 ---
- arch/x86/platform/efi/efi.c | 46 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
+ arch/x86/pci/acpi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/x86/platform/efi/efi.c b/arch/x86/platform/efi/efi.c
-index ebc98a68c400..dee1852e95cd 100644
---- a/arch/x86/platform/efi/efi.c
-+++ b/arch/x86/platform/efi/efi.c
-@@ -303,6 +303,50 @@ static void __init efi_clean_memmap(void)
- 	}
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 2f82480fd430..83dfea9e9894 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -245,7 +245,7 @@ void __init pci_acpi_crs_quirks(void)
+ 	printk(KERN_INFO "PCI: %s E820 reservations for host bridge windows\n",
+ 	       pci_use_e820 ? "Using" : "Ignoring");
+ 	if (pci_probe & (PCI_NO_E820 | PCI_USE_E820))
+-		printk(KERN_INFO "PCI: Please notify linux-pci@vger.kernel.org so future kernels can this automatically\n");
++		printk(KERN_INFO "PCI: Please notify linux-pci@vger.kernel.org so future kernels can do this automatically\n");
  }
  
-+/*
-+ * Firmware can use EfiMemoryMappedIO to request that MMIO regions be
-+ * mapped by the OS so they can be accessed by EFI runtime services, but
-+ * should have no other significance to the OS (UEFI r2.10, sec 7.2).
-+ * However, most bootloaders and EFI stubs convert EfiMemoryMappedIO
-+ * regions to E820_TYPE_RESERVED entries, which prevent Linux from
-+ * allocating space from them (see remove_e820_regions()).
-+ *
-+ * Some platforms use EfiMemoryMappedIO entries for PCI MMCONFIG space and
-+ * PCI host bridge windows, which means Linux can't allocate BAR space for
-+ * hot-added devices.
-+ *
-+ * Remove large EfiMemoryMappedIO regions from the E820 map to avoid this
-+ * problem.
-+ *
-+ * Retain small EfiMemoryMappedIO regions because on some platforms, these
-+ * describe non-window space that's included in host bridge _CRS.  If we
-+ * assign that space to PCI devices, they don't work.
-+ */
-+static void __init efi_remove_e820_mmio(void)
-+{
-+	efi_memory_desc_t *md;
-+	u64 size, start, end;
-+	int i = 0;
-+
-+	for_each_efi_memory_desc(md) {
-+		if (md->type == EFI_MEMORY_MAPPED_IO) {
-+			size = md->num_pages << EFI_PAGE_SHIFT;
-+			if (size >= 256*1024) {
-+				start = md->phys_addr;
-+				end = start + size - 1;
-+				pr_info("Remove mem%02u: MMIO range=[0x%08llx-0x%08llx] (%lluMB) from e820 map\n",
-+					i, start, end, size >> 20);
-+				e820__range_remove(start, size,
-+						   E820_TYPE_RESERVED, 1);
-+			} else {
-+				pr_info("Not removing mem%02u: MMIO range=[0x%08llx-0x%08llx] (%lluKB) from e820 map\n",
-+					i, start, end, size >> 10);
-+			}
-+		}
-+		i++;
-+	}
-+}
-+
- void __init efi_print_memmap(void)
- {
- 	efi_memory_desc_t *md;
-@@ -474,6 +518,8 @@ void __init efi_init(void)
- 	set_bit(EFI_RUNTIME_SERVICES, &efi.flags);
- 	efi_clean_memmap();
- 
-+	efi_remove_e820_mmio();
-+
- 	if (efi_enabled(EFI_DBG))
- 		efi_print_memmap();
- }
+ #ifdef	CONFIG_PCI_MMCONFIG
 -- 
 2.25.1
 
