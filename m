@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19C20C4167B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C03B6C4332F
 	for <linux-pci@archiver.kernel.org>; Wed, 14 Dec 2022 23:53:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229892AbiLNXxd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Dec 2022 18:53:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43800 "EHLO
+        id S229695AbiLNXxe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Dec 2022 18:53:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229740AbiLNXxO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Dec 2022 18:53:14 -0500
+        with ESMTP id S229742AbiLNXxP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Dec 2022 18:53:15 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6754948767;
-        Wed, 14 Dec 2022 15:53:11 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A9B7A48758;
+        Wed, 14 Dec 2022 15:53:13 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 95BB5E0ED8;
-        Thu, 15 Dec 2022 02:53:10 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id DDCEEE0EDB;
+        Thu, 15 Dec 2022 02:53:12 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=TCqeOz2FL8uEcpHHjdwrQW967mI61/OYbB3+Ru9K7WQ=; b=Icn2fHw5RGFz
-        duz9yDcAbM6UE00Qwz7YP8nbTf2e1vNobUi615cbnB+pVxzz4lYv0pHW12FHLTcF
-        VZgcI8GjHumIvRrjiMuHqbN1A33/CJ7bszDC4Vqo/kDqTLgwCt75Ks1uci38c7Ld
-        /WOjAi4OtCGbGNYpzbPII7OoStEFcQk=
+         bh=oUCDuWDZmTyZGQTlkg3jWV2zVzJot8COV59jAp6D20c=; b=EDAj7mNaaan4
+        Q4Ps3m7m5OApMqlwzbjV/9iERJk59nIQ4UL6B9o8JOHP7a3QFoo6+gOO1Cmkh2mS
+        Sc+VcSYPdTklCKwislTil72upCreif8IWVcI+PF7DX2vCmqIYwKve49KObqSWfLt
+        VDgeW55QahZNze1kGEbh/+NXid5TO6I=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 89363E0E6B;
-        Thu, 15 Dec 2022 02:53:10 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id CD532E0E6B;
+        Thu, 15 Dec 2022 02:53:12 +0300 (MSK)
 Received: from localhost (10.8.30.6) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Thu, 15 Dec 2022 02:53:10 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Thu, 15 Dec 2022 02:53:12 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -47,11 +47,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         caihuoqing <caihuoqing@baidu.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v7 04/25] dmaengine: dw-edma: Fix missing src/dst address of the interleaved xfers
-Date:   Thu, 15 Dec 2022 02:52:44 +0300
-Message-ID: <20221214235305.31744-5-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v7 07/25] dmaengine: dw-edma: Add CPU to PCIe bus address translation
+Date:   Thu, 15 Dec 2022 02:52:47 +0300
+Message-ID: <20221214235305.31744-8-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221214235305.31744-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221214235305.31744-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,48 +63,118 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The interleaved DMA transfers support was added in the commit 85e7518f42c8
-("dmaengine: dw-edma: Add device_prep_interleave_dma() support"). It
-seems like the support was broken from the very beginning. Depending on
-the selected channel either source or destination address are left
-uninitialized which was obviously wrong. I don't really know how come the
-original modification was working for the commit author. Anyway let's fix
-it by initializing the destination address of the eDMA burst descriptors
-for the DEV_TO_MEM interleaved operations and by initializing the source
-address of the eDMA burst descriptors for the MEM_TO_DEV interleaved
-operations.
+Starting from commit 9575632052ba ("dmaengine: make slave address
+physical") the source and destination addresses of the DMA-slave device
+have been converted to being defined in CPU address space. It's DMA-device
+driver responsibility to properly convert them to the reachable DMA bus
+spaces. In case of the DW eDMA device, the source or destination
+peripheral (slave) devices reside PCIe bus space. Thus we need to perform
+the PCIe Host/EP windows-based (i.e. ranges DT-property) addresses
+translation otherwise the eDMA transactions won't work as expected (or can
+be even harmful) in case if the CPU and PCIe address spaces don't match.
 
-Fixes: 85e7518f42c8 ("dmaengine: dw-edma: Add device_prep_interleave_dma() support")
+Note 1. Even though the DMA interleaved template has both source and
+destination addresses declared of dma_addr_t type only CPU memory range is
+supposed to be mapped in a way so to be seen by the DMA device since it's
+a subject of the DMA getting towards the system side. The device part must
+not be mapped since slave device resides in the PCIe bus space, which
+isn't affected by IOMMUs or iATU translations. DW PCIe eDMA generates
+corresponding MWr/MRd TLPs on its own.
+
+Note 2. This functionality is mainly required for the remote eDMA setup
+since the CPU address must be manually translated into the PCIe bus space
+before being written to LLI.{SAR,DAR}. If eDMA is embedded into the
+locally accessible DW PCIe RP/EP software-based translation isn't required
+since it will be done by hardware by means of the Outbound iATU as long as
+the DMA_BYPASS flag is cleared. If the later flag is set or there is no
+Outbound iATU entry found to which the SAR or DAR falls in (for Read and
+Write channel respectfully), there won't be any translation performed but
+DMA will proceed with the corresponding source/destination address as is.
+
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-by: Vinod Koul <vkoul@kernel.org>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/dma/dw-edma/dw-edma-core.c | 18 +++++++++++++++++-
+ include/linux/dma/edma.h           | 15 +++++++++++++++
+ 2 files changed, 32 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index a8c1bd9c7ae9..778d91d9fc1b 100644
+index d5c4192141ef..6c9f95a8e397 100644
 --- a/drivers/dma/dw-edma/dw-edma-core.c
 +++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -455,6 +455,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 				 * and destination addresses are increased
- 				 * by the same portion (data length)
- 				 */
-+			} else if (xfer->type == EDMA_XFER_INTERLEAVED) {
-+				burst->dar = dst_addr;
- 			}
- 		} else {
- 			burst->dar = dst_addr;
-@@ -470,6 +472,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 				 * and destination addresses are increased
- 				 * by the same portion (data length)
- 				 */
-+			}  else if (xfer->type == EDMA_XFER_INTERLEAVED) {
-+				burst->sar = src_addr;
- 			}
- 		}
+@@ -39,6 +39,17 @@ struct dw_edma_desc *vd2dw_edma_desc(struct virt_dma_desc *vd)
+ 	return container_of(vd, struct dw_edma_desc, vd);
+ }
  
++static inline
++u64 dw_edma_get_pci_address(struct dw_edma_chan *chan, phys_addr_t cpu_addr)
++{
++	struct dw_edma_chip *chip = chan->dw->chip;
++
++	if (chip->ops->pci_address)
++		return chip->ops->pci_address(chip->dev, cpu_addr);
++
++	return cpu_addr;
++}
++
+ static struct dw_edma_burst *dw_edma_alloc_burst(struct dw_edma_chunk *chunk)
+ {
+ 	struct dw_edma_burst *burst;
+@@ -327,11 +338,11 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ {
+ 	struct dw_edma_chan *chan = dchan2dw_edma_chan(xfer->dchan);
+ 	enum dma_transfer_direction dir = xfer->direction;
+-	phys_addr_t src_addr, dst_addr;
+ 	struct scatterlist *sg = NULL;
+ 	struct dw_edma_chunk *chunk;
+ 	struct dw_edma_burst *burst;
+ 	struct dw_edma_desc *desc;
++	u64 src_addr, dst_addr;
+ 	size_t fsz = 0;
+ 	u32 cnt = 0;
+ 	int i;
+@@ -406,6 +417,11 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 		dst_addr = chan->config.dst_addr;
+ 	}
+ 
++	if (dir == DMA_DEV_TO_MEM)
++		src_addr = dw_edma_get_pci_address(chan, (phys_addr_t)src_addr);
++	else
++		dst_addr = dw_edma_get_pci_address(chan, (phys_addr_t)dst_addr);
++
+ 	if (xfer->type == EDMA_XFER_CYCLIC) {
+ 		cnt = xfer->xfer.cyclic.cnt;
+ 	} else if (xfer->type == EDMA_XFER_SCATTER_GATHER) {
+diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+index a864978ddd27..380a0a3e251f 100644
+--- a/include/linux/dma/edma.h
++++ b/include/linux/dma/edma.h
+@@ -23,8 +23,23 @@ struct dw_edma_region {
+ 	size_t		sz;
+ };
+ 
++/**
++ * struct dw_edma_core_ops - platform-specific eDMA methods
++ * @irq_vector:		Get IRQ number of the passed eDMA channel. Note the
++ *                      method accepts the channel id in the end-to-end
++ *                      numbering with the eDMA write channels being placed
++ *                      first in the row.
++ * @pci_address:	Get PCIe bus address corresponding to the passed CPU
++ *			address. Note there is no need in specifying this
++ *			function if the address translation is performed by
++ *			the DW PCIe RP/EP controller with the DW eDMA device in
++ *			subject and DMA_BYPASS isn't set for all the outbound
++ *			iATU windows. That will be done by the controller
++ *			automatically.
++ */
+ struct dw_edma_core_ops {
+ 	int (*irq_vector)(struct device *dev, unsigned int nr);
++	u64 (*pci_address)(struct device *dev, phys_addr_t cpu_addr);
+ };
+ 
+ enum dw_edma_map_format {
 -- 
 2.38.1
 
