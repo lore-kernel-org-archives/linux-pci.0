@@ -2,44 +2,46 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C45C4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Dec 2022 16:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63221C001B2
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Dec 2022 16:22:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231602AbiLPQWE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Dec 2022 11:22:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54762 "EHLO
+        id S231674AbiLPQWF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Dec 2022 11:22:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231656AbiLPQVg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2022 11:21:36 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBF3711150;
-        Fri, 16 Dec 2022 08:21:34 -0800 (PST)
+        with ESMTP id S231687AbiLPQVh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2022 11:21:37 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B95752A271;
+        Fri, 16 Dec 2022 08:21:36 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 74200B81D12;
-        Fri, 16 Dec 2022 16:21:33 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC311C433D2;
-        Fri, 16 Dec 2022 16:21:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 53E1C61FDD;
+        Fri, 16 Dec 2022 16:21:36 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 849D6C433EF;
+        Fri, 16 Dec 2022 16:21:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1671207692;
-        bh=PcFvDWvuGm/hNaofCgIJSIFQ8fcKSkyPREIHB70eKYg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=TQFRbvjRnIVZy9EUABEqSELdr21+SdA0pbhQrpV83rfmVVZXdmcy0pscNkLBC6DR5
-         WXTEarDX0f5gyiXLkNq1jSg9fcnYREMrJkh5GJbSARGf9zcclRLNuAeKAm6c/Mnj09
-         OQughPVzkT9/wA5nxMClC1Ezp7uMztaud86JAXMTE78u4EbHRG+hPMzFiXndun2MJL
-         vGJd9iMVYVEoaoG7cgLWqhJjPOgPZth9uYzEg8C41QNqM/PYx1t/GzxInatR4WJTmo
-         dk3PH3VZUCx1zt6W2z8F+XrVUyERHTld1+d0MnChdVImwcNFISbMipr8k2xsnSiF75
-         E7u+xDp8MFV/A==
+        s=k20201202; t=1671207695;
+        bh=rf/kiQvV904IrlTYmlNmOzv2wh9Ar7q41y6LIAE+Or8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=oi2Et4GfdoQdyzLPIZ1SbYq8/8VIHiwgSJ8mxaRLr6tXw93y0Orz1U8kNwvkiyzax
+         jOAwBgAmT3ETkYxFYShh4bNuy1iTF2w4DVjtgOApePWMIPNtXM9RKIJ3VkufRsQDbu
+         QjtjhaheDWP8YcIQsOriWOXmytdi5oXNWuV+cHv3aMGGx6YC2yNE1qcjixaTYc5DEI
+         ih/tZ0yRxyNr7RfPiO7+kT0vnOgb/UQw0VzCC+RVB4q6P2V+M6ROgnLqwfqaMIAaNY
+         zMFEBXK8UOKZZGsmOHfZRASO4yNwtWFJzoRN2Bxh0Jo7k0POhT6WtiPYFMZWCYXVhm
+         ah3wEyI9OZmYQ==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
         Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 0/2] PCI: switchtec: Trivial cleanups
-Date:   Fri, 16 Dec 2022 10:21:24 -0600
-Message-Id: <20221216162126.207863-1-helgaas@kernel.org>
+Subject: [PATCH v2 2/2] PCI: switchtec: Return -EFAULT for copy_to_user() errors
+Date:   Fri, 16 Dec 2022 10:21:26 -0600
+Message-Id: <20221216162126.207863-3-helgaas@kernel.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20221216162126.207863-1-helgaas@kernel.org>
+References: <20221216162126.207863-1-helgaas@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -48,18 +50,43 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Simplify switchtec_dma_mrpc_isr() slightly and return the right
-copy_to_user() error code from switchtec_dev_read().
+switchtec_dev_read() didn't handle copy_to_user() errors correctly: it
+assigned "rc = -EFAULT", but actually returned either "size", -ENXIO, or
+-EBADMSG instead.
 
-Bjorn Helgaas (2):
-  PCI: switchtec: Simplify switchtec_dma_mrpc_isr()
-  PCI: switchtec: Return -EFAULT for copy_to_user() errors
+Update the failure cases to unlock mrpc_mutex and return -EFAULT directly.
 
- drivers/pci/switch/switchtec.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/switch/switchtec.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Changes between v1 and v2:
-- Return -EFAULT for copy_to_user() errors.
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index d7ae84070e29..0ac9d4488210 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -606,16 +606,16 @@ static ssize_t switchtec_dev_read(struct file *filp, char __user *data,
+ 	rc = copy_to_user(data, &stuser->return_code,
+ 			  sizeof(stuser->return_code));
+ 	if (rc) {
+-		rc = -EFAULT;
+-		goto out;
++		mutex_unlock(&stdev->mrpc_mutex);
++		return -EFAULT;
+ 	}
+ 
+ 	data += sizeof(stuser->return_code);
+ 	rc = copy_to_user(data, &stuser->data,
+ 			  size - sizeof(stuser->return_code));
+ 	if (rc) {
+-		rc = -EFAULT;
+-		goto out;
++		mutex_unlock(&stdev->mrpc_mutex);
++		return -EFAULT;
+ 	}
+ 
+ 	stuser_set_state(stuser, MRPC_IDLE);
 -- 
 2.25.1
 
