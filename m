@@ -2,165 +2,190 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 151ABC4332F
-	for <linux-pci@archiver.kernel.org>; Sat, 17 Dec 2022 00:45:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D305C4332F
+	for <linux-pci@archiver.kernel.org>; Sat, 17 Dec 2022 05:05:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229562AbiLQAp5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Dec 2022 19:45:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37260 "EHLO
+        id S229948AbiLQFFM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 17 Dec 2022 00:05:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbiLQApz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Dec 2022 19:45:55 -0500
-Received: from mail-oi1-x234.google.com (mail-oi1-x234.google.com [IPv6:2607:f8b0:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A68EA1CFFF;
-        Fri, 16 Dec 2022 16:45:54 -0800 (PST)
-Received: by mail-oi1-x234.google.com with SMTP id r205so2480404oib.9;
-        Fri, 16 Dec 2022 16:45:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:subject:from:references:cc:to
-         :content-language:user-agent:mime-version:date:message-id:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=nWg9wkFT4ZXDaL5R+ZrQ8A3wXuZdrfbZGO5+ybNKwD8=;
-        b=IrMDX6HzbVbj0D3HmhfEn7ql6+u9Cz+HK+7ZZWCgyEe4G8AC38w/0A0g15kk3lhqKY
-         JUUVCtscTivfzzpwA7fGf5KWN7xwcUF0gEoz9h1xq0SjM/Nzr9PMQT+SJgTm8M0ABmBt
-         v3XXEfEW1Xun3DRRlYrIXqpb3xmZXfBHAxMNKrq34lwdBHotI9/C81rxhl0cOCrH9/wd
-         fTUUraQzF1SjRsSWutg+AWwiCDzzeTcz4CUh5kOEg4AQAYuewct7fXIuP6XZgdbJGv+L
-         FigwTiCGjaAICXdD5hl/fcqsft5pFyQLMLWYFpLDUpaB7oB7fjTBdklUVoyc/lqlO99L
-         wv8Q==
+        with ESMTP id S229554AbiLQFFH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Dec 2022 00:05:07 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB7C5680BC
+        for <linux-pci@vger.kernel.org>; Fri, 16 Dec 2022 21:04:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1671253456;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=U5U9JSWe0Cb7QSDp7wHEROQEZPSJHdB4ZZYbZ5fNUQg=;
+        b=dASn1E+KpevZmdjmF1oSqsgoOvv3DQMKzyEz7Ty1V+hLSXL/1mFSPsa6F8HJMlJX2CopHf
+        VNa3cobdI97Cdxod90nCnIEmgBj71P/obSQ9wmQ7id/f0OstJe2ELMqX5mdSikZJaRzb/q
+        D1s0xSEsb0xgBr+vzALMgB0pXbGjWrs=
+Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com
+ [209.85.161.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
+ us-mta-227-x2fombQdPOWrrvY47fFhew-1; Sat, 17 Dec 2022 00:04:13 -0500
+X-MC-Unique: x2fombQdPOWrrvY47fFhew-1
+Received: by mail-oo1-f71.google.com with SMTP id y19-20020a4a9c13000000b0049dd7ad41c4so2087544ooj.3
+        for <linux-pci@vger.kernel.org>; Fri, 16 Dec 2022 21:04:13 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:subject:from:references:cc:to
-         :content-language:user-agent:mime-version:date:message-id:sender
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=nWg9wkFT4ZXDaL5R+ZrQ8A3wXuZdrfbZGO5+ybNKwD8=;
-        b=fa37kRvywhLgUa8/MarYKDCBhZq/QBioUxU79hrl34dhbJVrH7PHGx+AmNKiXc95yr
-         RSCehIkQiEafaJZQzbw8xOFi8tRS78l6vl0sOSej44jpzBvYzR2WKXwWv9mX0GjrC5Rs
-         d9Qk2FqdrKBwMTv6gKCRMKpTSKSsGl6bRzPbIymsECgWxVt0Rm3VdgXRbuHAPWAJGzKI
-         sUwDXfhb0SCFgJaWXIqJb7O3slvzorK54lKnd83/bAzfEwXr7xQ7ni9prLmF81ElzjlQ
-         fExBtQGEtRVGe/cUjS6hMxEgfpnczUVGwputFof3nzJM2U/sFPoWHtpj3G3+2LhvNc40
-         B9Mw==
-X-Gm-Message-State: ANoB5pk8rPiiSI3Lw7V3wdpMjugvejQavr+AcNvQIE/BTyPBCokf2a6h
-        LrZYO/eK3AvvTFF619sa6iXKqJR5SrQ=
-X-Google-Smtp-Source: AA0mqf4aFArzmI7oJ6MlqElzjiZLGBrY9qRcgyNH1dHH0RI6U0HJT5i8ik99aMOQrJduJlQEthYfLA==
-X-Received: by 2002:a05:6808:98e:b0:35e:5aac:716a with SMTP id a14-20020a056808098e00b0035e5aac716amr13462971oic.45.1671237953918;
-        Fri, 16 Dec 2022 16:45:53 -0800 (PST)
-Received: from ?IPV6:2600:1700:e321:62f0:329c:23ff:fee3:9d7c? ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id t26-20020a05683022fa00b00661ad8741b4sm1551565otc.24.2022.12.16.16.45.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 16 Dec 2022 16:45:53 -0800 (PST)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Message-ID: <70dab88e-6119-0c12-7c6a-61bcbe239f66@roeck-us.net>
-Date:   Fri, 16 Dec 2022 16:45:50 -0800
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=U5U9JSWe0Cb7QSDp7wHEROQEZPSJHdB4ZZYbZ5fNUQg=;
+        b=YyXy77D1uXN3U5shiU0WZgrZxP2jKiT4MIQCoenYjeYCh+j2TMELWwenp5Tfo+dOMQ
+         deuvY6QoHN/atKECkM63Nxrm8vhiFvy3Y6auC5fm9fWCc+G2pvUEaVzj/cNjcjH8EtSU
+         SB2LTgeA50vFp1hFkVJX313MOgBuW63B/d30VZUBEwgzh0UG0x39sv+24K+/KQ3IsC1H
+         F0O1hcM8rzppFBgv5oxkGYVKAIz22SbdQ5Qu1vMudX8/4wde6u4q17PshoYS4gCRXKKa
+         VR80VAUIo1PacF8QV/g8nxiQli+n8aKCFtMFOXAFjLtXuTdCL+OptcQ95NwnmpzsWAzK
+         6+SQ==
+X-Gm-Message-State: ANoB5pkkoDuzZqqsd95pdDLi9EM5JlGfvGZOg5jg5qpaYHlwxo46o08r
+        aLsLj86nsULm2VfG98DDgN+hEv83d89lahfDCibycDcY95QeMtRICR0hwXggU1RIC7UqC2e9jQL
+        AOucnBeynDevEnIVuG9Hh
+X-Received: by 2002:a05:6830:26c3:b0:670:6c81:6e55 with SMTP id m3-20020a05683026c300b006706c816e55mr17070812otu.3.1671253452560;
+        Fri, 16 Dec 2022 21:04:12 -0800 (PST)
+X-Google-Smtp-Source: AA0mqf7OcKfeIWpJo8DQSSLbUY371A1pSB8JS42w8afRBefYfX8GfTKt9XdbGTUa3+d37ndPA7Huog==
+X-Received: by 2002:a05:6830:26c3:b0:670:6c81:6e55 with SMTP id m3-20020a05683026c300b006706c816e55mr17070784otu.3.1671253452251;
+        Fri, 16 Dec 2022 21:04:12 -0800 (PST)
+Received: from ?IPv6:2804:1b3:a803:128a:7e6a:b702:e62d:3eea? ([2804:1b3:a803:128a:7e6a:b702:e62d:3eea])
+        by smtp.gmail.com with ESMTPSA id g17-20020a9d6b11000000b00660e833baddsm1768808otp.29.2022.12.16.21.04.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Dec 2022 21:04:11 -0800 (PST)
+Message-ID: <5bf73d21c03d4a642eb81de35544a4d6cfa9294c.camel@redhat.com>
+Subject: Re: [PATCH v2 2/4] sched/isolation: Improve documentation
+From:   Leonardo =?ISO-8859-1?Q?Br=E1s?= <leobras@redhat.com>
+To:     Frederic Weisbecker <frederic@kernel.org>
+Cc:     Steffen Klassert <steffen.klassert@secunet.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Juri Lelli <juri.lelli@redhat.com>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        Dietmar Eggemann <dietmar.eggemann@arm.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+        Daniel Bristot de Oliveira <bristot@redhat.com>,
+        Valentin Schneider <vschneid@redhat.com>,
+        Tejun Heo <tj@kernel.org>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, Phil Auld <pauld@redhat.com>,
+        Antoine Tenart <atenart@kernel.org>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Wang Yufen <wangyufen@huawei.com>, mtosatti@redhat.com,
+        linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Date:   Sat, 17 Dec 2022 02:04:03 -0300
+In-Reply-To: <20221129115439.GA1715045@lothringen>
+References: <20221013184028.129486-1-leobras@redhat.com>
+         <20221013184028.129486-3-leobras@redhat.com>
+         <20221129115439.GA1715045@lothringen>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.2 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.4.2
-Content-Language: en-US
-To:     Marc Zyngier <maz@kernel.org>,
-        Matthew Rosato <mjrosato@linux.ibm.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
-        Allen Hubbe <allenbh@gmail.com>
-References: <20221124230505.073418677@linutronix.de>
- <20221124232325.798556374@linutronix.de>
- <20221213190425.GA3943240@roeck-us.net>
- <4e0a129855490febb1c57e7e979bcfb579d39054.camel@linux.ibm.com>
- <87fsdgzpqs.ffs@tglx> <e570e70d-19bc-101b-0481-ff9a3cab3504@linux.ibm.com>
- <86wn6rptdu.wl-maz@kernel.org>
- <0acb8c63-7f6c-6df6-cb40-66b265a6e6ce@linux.ibm.com>
- <86v8mbphzw.wl-maz@kernel.org>
-From:   Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [patch V3 09/33] genirq/msi: Add range checking to
- msi_insert_desc()
-In-Reply-To: <86v8mbphzw.wl-maz@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 12/16/22 05:58, Marc Zyngier wrote:
-[ ... ]
+On Tue, 2022-11-29 at 12:54 +0100, Frederic Weisbecker wrote:
+> On Thu, Oct 13, 2022 at 03:40:27PM -0300, Leonardo Bras wrote:
+> > Improve documentation on housekeeping types and what to expect from
+> > housekeeping functions.
+> >=20
+> > Signed-off-by: Leonardo Bras <leobras@redhat.com>
+> > ---
+> >  include/linux/sched/isolation.h | 25 ++++++++++++++++---------
+> >  1 file changed, 16 insertions(+), 9 deletions(-)
+> >=20
+> > diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isol=
+ation.h
+> > index 762701f295d1c..9333c28153a7a 100644
+> > --- a/include/linux/sched/isolation.h
+> > +++ b/include/linux/sched/isolation.h
+> > @@ -7,18 +7,25 @@
+> >  #include <linux/tick.h>
+> > =20
+> >  enum hk_type {
+> > -	HK_TYPE_TIMER,
+> > -	HK_TYPE_RCU,
+> > -	HK_TYPE_MISC,
+> > -	HK_TYPE_SCHED,
+> > -	HK_TYPE_TICK,
+> > -	HK_TYPE_DOMAIN,
+> > -	HK_TYPE_WQ,
+> > -	HK_TYPE_MANAGED_IRQ,
+> > -	HK_TYPE_KTHREAD,
+> > +	HK_TYPE_TIMER,		/* Timer interrupt, watchdogs */
+>=20
+> More precisely:
+>=20
+>      /* Unbound timer callbacks */
+>=20
+> > +	HK_TYPE_RCU,		/* RCU callbacks */
+>=20
+> More generally, because it's more than just about callbacks:
+>=20
+>      /* Unbound RCU work */
 
->> With both these fixes applied, it actually then leads to the very
->> next WARN_ON failing in msi_ctrl_valid...  Because ctrl->last ==
->> hwsize.  I think Thomas' initial fix for msi_domain_get_hwsize has
->> an off-by-1 error, I think we should return MSI_XA_DOMAIN_SIZE for
->> msi_domain_get_hwsize instead.
-> 
-> Yes, that's a good point, and that's consistent with what
-> __msi_create_irq_domain() does already, assuming MSI_XA_DOMAIN_SIZE
-> when info->hwsize is 0. No reason to do something else here.
-> 
-> I'll update Thomas' patch. Once Guenter confirms that PPC is OK, I'll
-> send it out.
-> 
-With
+Both updated, thanks!
 
-7a27b6136dcb (local/testing, testing-msi) genirq/msi: Return MSI_XA_DOMAIN_SIZE as the maximum MSI index when no domain is present
-c581d525bb1d genirq/msi: Check for the presence of an irq domain when validating msi_ctrl
-9d33edb20f7e Merge tag 'irq-core-2022-12-10' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+Out of curiosity, what does 'Unbound' means in this context?
 
-I still get the following runtime warning.
+>=20
+> > +	HK_TYPE_MISC,		/* Minor housekeeping categories */
+> > +	HK_TYPE_SCHED,		/* Scheduling and idle load balancing */
+> > +	HK_TYPE_TICK,		/* See isolcpus=3Dnohz boot parameter */
+>=20
+> Yes or nohz_full=3D
+>=20
+> > +	HK_TYPE_DOMAIN,		/* See isolcpus=3Ddomain boot parameter*/
+> > +	HK_TYPE_WQ,		/* Work Queues*/
+>=20
+>   /* Unbound workqueues */
+>=20
+> > +	HK_TYPE_MANAGED_IRQ,	/* See isolcpus=3Dmanaged_irq boot parameter */
+> > +	HK_TYPE_KTHREAD,	/* kernel threads */
+>=20
+>   /* Unbound kernel threads */
+>=20
+>=20
+> >  	HK_TYPE_MAX
+> >  };
+> > =20
+> > +/* Kernel parameters like nohz_full and isolcpus allow passing cpu num=
+bers
+> > + * for disabling housekeeping types.
+> > + *
+> > + * The functions bellow work the opposite way, by referencing which cp=
+us
+> > + * are able to perform the housekeeping type in parameter.
+> > + */
+>=20
+> *below
+>=20
+> Thanks!
 
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 8 at kernel/irq/msi.c:196 .msi_domain_free_descs+0x144/0x170
-Modules linked in:
-CPU: 0 PID: 8 Comm: kworker/u2:0 Tainted: G                 N 6.1.0-01957-g7a27b6136dcb #1
-Hardware name: QEMU ppce500 e5500 0x80240020 QEMU e500
-Workqueue: nvme-reset-wq .nvme_reset_work
-NIP:  c000000000107d54 LR: c000000000107d44 CTR: 0000000000000000
-REGS: c0000000041e74d0 TRAP: 0700   Tainted: G                 N  (6.1.0-01957-g7a27b6136dcb)
-MSR:  0000000080029002 <CE,EE,ME>  CR: 44002282  XER: 20000000
-IRQMASK: 0
-GPR00: c000000000107d44 c0000000041e7770 c000000001629c00 c000000004e748a0
-GPR04: 000000005358db0a c000000001ce7a00 c00000000423b5d0 000000004735aaa2
-GPR08: 0000000000000002 0000000000000013 c00000000423acc0 c00000000214a998
-GPR12: 0000000024002282 c000000002579000 c00000000008e190 c000000004173540
-GPR16: 0000000000000000 c0000000043810b8 0000000000000000 0000000000000001
-GPR20: c0000000060b22d8 c0000000060a70f0 0000000000000000 c000000001996800
-GPR24: c0000000017df6c0 c0000000043810b8 c0000000060b2388 c0000000060b2000
-GPR28: ffffffffffffffff c0000000041e7888 c000000006025ac8 c000000004e748a0
-NIP [c000000000107d54] .msi_domain_free_descs+0x144/0x170
-LR [c000000000107d44] .msi_domain_free_descs+0x134/0x170
-Call Trace:
-[c0000000041e7770] [c000000000107d44] .msi_domain_free_descs+0x134/0x170 (unreliable)
-[c0000000041e7810] [c0000000001085d8] .msi_domain_free_msi_descs_range+0x38/0x70
-[c0000000041e78a0] [c0000000008d000c] .pci_msi_teardown_msi_irqs+0x4c/0xa0
-[c0000000041e7920] [c0000000008cf9e8] .pci_free_msi_irqs+0x18/0x50
-[c0000000041e79a0] [c0000000008cd8d0] .pci_free_irq_vectors+0x80/0xb0
-[c0000000041e7a20] [c000000000a6d2a0] .nvme_reset_work+0x870/0x1780
-[c0000000041e7bb0] [c000000000080e68] .process_one_work+0x2d8/0x7b0
-[c0000000041e7c90] [c0000000000813d8] .worker_thread+0x98/0x4f0
-[c0000000041e7d70] [c00000000008e2cc] .kthread+0x13c/0x150
-[c0000000041e7e10] [c0000000000005d8] .ret_from_kernel_thread+0x58/0x60
-Instruction dump:
-7fc3f378 48ff1ca9 60000000 7c7f1b79 41c2002c e8810070 7fc3f378 48ff3491
-60000000 813f0000 2c090000 41e2ffb0 <0fe00000> 60000000 60000000 ebc10090
-irq event stamp: 98168
-hardirqs last  enabled at (98167): [<c00000000110a274>] ._raw_spin_unlock_irqrestore+0x84/0xd0
-hardirqs last disabled at (98168): [<c000000000010b58>] .program_check_exception+0x38/0x120
-softirqs last  enabled at (97760): [<c00000000110b4dc>] .__do_softirq+0x60c/0x678
-softirqs last disabled at (97749): [<c000000000004d20>] .do_softirq_own_stack+0x30/0x50
----[ end trace 0000000000000000 ]---
-nvme nvme0: 1/0/0 default/read/poll queues
-nvme nvme0: Ignoring bogus Namespace Identifiers
-...
+Done, done, done, done.
+Thanks a lot for reviewing!
 
-The system boots fine, though. This is seen when booting the ppce500 machine with
-e5500 CPU and corenet64_smp_defconfig from nvme.
+Best regards,
+Leo
 
-Guenter
+>=20
+> > +
+> >  #ifdef CONFIG_CPU_ISOLATION
+> >  DECLARE_STATIC_KEY_FALSE(housekeeping_overridden);
+> >  int housekeeping_any_cpu(enum hk_type type);
+> > --=20
+> > 2.38.0
+> >=20
+>=20
 
