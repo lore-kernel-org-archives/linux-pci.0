@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F04B8C46467
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Dec 2022 14:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA694C46467
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Dec 2022 14:48:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232336AbiLSOsF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Dec 2022 09:48:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47402 "EHLO
+        id S232064AbiLSOsl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Dec 2022 09:48:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232012AbiLSOr1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2022 09:47:27 -0500
+        with ESMTP id S232060AbiLSOr2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2022 09:47:28 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9406126F0;
-        Mon, 19 Dec 2022 06:47:17 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1963CD6C;
+        Mon, 19 Dec 2022 06:47:19 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 3442DE0EB1;
-        Mon, 19 Dec 2022 17:47:17 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id AFDB7E0EAE;
+        Mon, 19 Dec 2022 17:47:18 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=i5i9TkCG3hGnq3CWiMkD0V+zfJ+jV4ugBGTrN/78M2c=; b=P5498GSs1mVq
-        xixoZeJR6cEcQLjJZadsgdMzFzUG2ROX6b0ziKg09Z+hRYV4PF5JkyL5tfztX4wN
-        vqf2a5WGf8NrscN24VrYzMJLdjGoyyHmQhG+xP1TsHnWuQQNHeI7DQzk3IoC+AjG
-        dsTVPSSplgzV5SowSxgDOmJkyctSlts=
+         bh=IVGPP2jZ09sUiEmbIAMST4sy74yx2ZoZzppBbwb2xUU=; b=rbivK3HYN5L2
+        udC76Yv+lYsKW57m9H/tRTwSsGDCXv8fSzgpocZIFGhsDDMuYasWQ9g5idU90kxg
+        4djfJEMvY/X2duKqR7OrwzaeRjyDEJ8Ercn00bKDAaZqvhS+E94N933hbhlq5Ufv
+        DFV9oanWYl+BaOpxR3cemMUsGCNNA7Q=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 25D53E0E70;
-        Mon, 19 Dec 2022 17:47:17 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 9B97CE0E70;
+        Mon, 19 Dec 2022 17:47:18 +0300 (MSK)
 Received: from localhost (10.8.30.14) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Mon, 19 Dec 2022 17:47:16 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Mon, 19 Dec 2022 17:47:18 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -48,9 +48,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 21/26] dmaengine: dw-edma: Replace chip ID number with device name
-Date:   Mon, 19 Dec 2022 17:46:52 +0300
-Message-ID: <20221219144658.26620-22-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v8 23/26] dmaengine: dw-edma: Relax driver config settings
+Date:   Mon, 19 Dec 2022 17:46:54 +0300
+Message-ID: <20221219144658.26620-24-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221219144658.26620-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221219144658.26620-1-Sergey.Semin@baikalelectronics.ru>
@@ -63,88 +63,74 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Using some abstract number as the DW eDMA chip identifier isn't really
-practical. First of all there can be more than one DW eDMA controller on
-the platform some of them can be detected as the PCIe end-points, some of
-them can be embedded into the DW PCIe Root Port/End-point controllers.
-Seeing some abstract number in for instance IRQ handlers list doesn't give
-a notion regarding their reference to the particular DMA controller.
-Secondly current DW eDMA chip id implementation doesn't provide the
-multi-eDMA platforms support for same reason of possibly having eDMA
-detected on different system buses. At the same time re-implementing
-something ida-based won't give much benefits especially seeing the DW eDMA
-chip ID is only used in the IRQ request procedure. So to speak in order to
-preserve the code simplicity and get to have the multi-eDMA platforms
-support let's just use the parental device name to create the DW eDMA
-controller name.
+Since the DW PCIe RP/EP driver is about to be updated to register the DW
+eDMA-based DMA-engine the drivers build modes must be synchronized.
+Currently the DW PCIe RP/EP driver is always built as a builtin module.
+Meanwhile the DW eDMA driver can be built as a loadable module. Thus in
+the later case the kernel with DW PCIe controllers support will fail to be
+linked due to lacking the DW eDMA probe/remove symbols. At the same time
+forcibly selecting the DW eDMA driver from the DW PCIe RP/EP kconfig will
+effectively eliminate the tristate type of the former driver fixing it to
+just the builtin kernel module.
+
+Seeing the DW eDMA engine isn't that often met built into the DW PCIe
+Root-ports and End-points let's convert the DW eDMA driver config to being
+more flexible instead of just forcibly selecting the DW eDMA kconfig. In
+order to do that first the DW eDMA PCIe driver config should be converted
+to being depended from the DW eDMA core config instead of selecting the
+one. Second the DW eDMA probe and remove symbols should be referenced only
+if they are reachable by the caller. Thus the user will be able to build
+the DW eDMA core driver with any type, meanwhile the dependent code will
+be either restricted to the same build type (e.g. DW eDMA PCIe driver if
+DW eDMA driver is built as a loadable module) or just won't be able to use
+the eDMA engine registration/de-registration functionality (e.g. DW PCIe
+RP/EP driver if DW eDMA driver is built as a loadable module).
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Acked-by: Vinod Koul <vkoul@kernel.org>
 
 ---
 
-Changelog v2:
-- Slightly extend the eDMA name array. (@Manivannan)
+Changelog v8:
+- This is a new patch added on v8 stage of the series in order to fix
+  the tbot-reported build issues. (@tbot)
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 3 ++-
- drivers/dma/dw-edma/dw-edma-core.h | 2 +-
- drivers/dma/dw-edma/dw-edma-pcie.c | 1 -
- include/linux/dma/edma.h           | 1 -
- 4 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/dma/dw-edma/Kconfig | 5 ++++-
+ include/linux/dma/edma.h    | 2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 040a88cfe070..e3671bfbe186 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -973,7 +973,8 @@ int dw_edma_probe(struct dw_edma_chip *chip)
- 	if (!dw->chan)
- 		return -ENOMEM;
+diff --git a/drivers/dma/dw-edma/Kconfig b/drivers/dma/dw-edma/Kconfig
+index 7ff17b2db6a1..2b6f2679508d 100644
+--- a/drivers/dma/dw-edma/Kconfig
++++ b/drivers/dma/dw-edma/Kconfig
+@@ -9,11 +9,14 @@ config DW_EDMA
+ 	  Support the Synopsys DesignWare eDMA controller, normally
+ 	  implemented on endpoints SoCs.
  
--	snprintf(dw->name, sizeof(dw->name), "dw-edma-core:%d", chip->id);
-+	snprintf(dw->name, sizeof(dw->name), "dw-edma-core:%s",
-+		 dev_name(chip->dev));
- 
- 	/* Disable eDMA, only to establish the ideal initial conditions */
- 	dw_edma_v0_core_off(dw);
-diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index e3ad3e372b55..0ab2b6dba880 100644
---- a/drivers/dma/dw-edma/dw-edma-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -96,7 +96,7 @@ struct dw_edma_irq {
- };
- 
- struct dw_edma {
--	char				name[20];
-+	char				name[32];
- 
- 	struct dma_device		dma;
- 
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index f530bacfd716..3f9dadc73854 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -222,7 +222,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
- 
- 	/* Data structure initialization */
- 	chip->dev = dev;
--	chip->id = pdev->devfn;
- 
- 	chip->mf = vsec_data.mf;
- 	chip->nr_irqs = nr_irqs;
++if DW_EDMA
++
+ config DW_EDMA_PCIE
+ 	tristate "Synopsys DesignWare eDMA PCIe driver"
+ 	depends on PCI && PCI_MSI
+-	select DW_EDMA
+ 	help
+ 	  Provides a glue-logic between the Synopsys DesignWare
+ 	  eDMA controller and an endpoint PCIe device. This also serves
+ 	  as a reference design to whom desires to use this IP.
++
++endif # DW_EDMA
 diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-index 380a0a3e251f..9d44da4aa59d 100644
+index 9d44da4aa59d..0cdd39d68527 100644
 --- a/include/linux/dma/edma.h
 +++ b/include/linux/dma/edma.h
-@@ -76,7 +76,6 @@ enum dw_edma_chip_flags {
-  */
- struct dw_edma_chip {
- 	struct device		*dev;
--	int			id;
- 	int			nr_irqs;
- 	const struct dw_edma_core_ops   *ops;
- 	u32			flags;
+@@ -98,7 +98,7 @@ struct dw_edma_chip {
+ };
+ 
+ /* Export to the platform drivers */
+-#if IS_ENABLED(CONFIG_DW_EDMA)
++#if IS_REACHABLE(CONFIG_DW_EDMA)
+ int dw_edma_probe(struct dw_edma_chip *chip);
+ int dw_edma_remove(struct dw_edma_chip *chip);
+ #else
 -- 
 2.38.1
 
