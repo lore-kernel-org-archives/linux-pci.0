@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B39DBC3DA78
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Dec 2022 14:47:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5799FC4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Dec 2022 14:47:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232114AbiLSOrj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S232130AbiLSOrj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 19 Dec 2022 09:47:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46428 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231878AbiLSOrR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2022 09:47:17 -0500
+        with ESMTP id S231896AbiLSOrT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Dec 2022 09:47:19 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9701A63F9;
-        Mon, 19 Dec 2022 06:47:03 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 937F9DF05;
+        Mon, 19 Dec 2022 06:47:07 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 04A22E0EAF;
-        Mon, 19 Dec 2022 17:47:02 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id CD802E0EB3;
+        Mon, 19 Dec 2022 17:47:04 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=h43jggFkHbpSKEdtfUv/QU5I7Y2qMI4tAlStsWepeHc=; b=eg7dt+W5RwE3
-        4R8F0w/E9guUa9lxTDYUeF42UKWyyCwg6ks7Dwso1mGV9i8vP3vnJbev4L/pYbzV
-        M7ikX5fIBdj7f1uAwR/z4q8D6ZfNPrf2cBc+Tnqb7VDLmKMvc8DL6HVszIc+1drq
-        10kk+8oGusMDevatskRoYdLpALgc+bI=
+         bh=gYdMxZn2yY/ZFty76XnTLyEMybFVqqclJyPRlZ3yZ5g=; b=Jqk5NOUNx0U5
+        IWJ1K++ZAzNILjmMMDqksqM74iWzdyy1vBhzU9RffphJZXG1gpaxOohrx4ZblFtH
+        7uKCorD1eqqzj+Rf/k5Wz/7LdXnu4qkD2haqd8kNnKXwYQvT4AfC3OOwzzz9yTay
+        XL+afq4It805KEWer/3Pi4j2fmaP57I=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id ED682E0E70;
-        Mon, 19 Dec 2022 17:47:01 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id C2FAFE0E70;
+        Mon, 19 Dec 2022 17:47:04 +0300 (MSK)
 Received: from localhost (10.8.30.14) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Mon, 19 Dec 2022 17:47:01 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Mon, 19 Dec 2022 17:47:04 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -47,10 +47,11 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         caihuoqing <caihuoqing@baidu.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 01/26] dmaengine: Fix dma_slave_config.dst_addr description
-Date:   Mon, 19 Dec 2022 17:46:32 +0300
-Message-ID: <20221219144658.26620-2-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v8 05/26] dmaengine: dw-edma: Don't permit non-inc interleaved xfers
+Date:   Mon, 19 Dec 2022 17:46:36 +0300
+Message-ID: <20221219144658.26620-6-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20221219144658.26620-1-Sergey.Semin@baikalelectronics.ru>
 References: <20221219144658.26620-1-Sergey.Semin@baikalelectronics.ru>
@@ -63,34 +64,56 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Most likely due to a copy-paste mistake the dst_addr member of the
-dma_slave_config structure has been marked as ignored if the !source!
-address belong to the memory. That is relevant to the src_addr field of
-the structure while the dst_addr field as containing a destination device
-address is supposed to be ignored if the destination is the CPU memory.
-Let's fix the field description accordingly.
+DW eDMA controller always increments both source and destination
+addresses. Permitting DMA interleaved transfers with no src_inc/dst_inc
+flags set may lead to unexpected behaviour for the device users. Let's fix
+that by terminating the interleaved transfers if at least one of the
+dma_interleaved_template.{src_inc,dst_inc} flag is initialized with false
+value. Note in addition to that we need to increase the source and
+destination addresses accordingly after each iteration.
 
+Fixes: 85e7518f42c8 ("dmaengine: dw-edma: Add device_prep_interleave_dma() support")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-by: Vinod Koul <vkoul@kernel.org>
 ---
- include/linux/dmaengine.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/dma/dw-edma/dw-edma-core.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
-index c923f4e60f24..0c020682d894 100644
---- a/include/linux/dmaengine.h
-+++ b/include/linux/dmaengine.h
-@@ -394,7 +394,7 @@ enum dma_slave_buswidth {
-  * should be read (RX), if the source is memory this argument is
-  * ignored.
-  * @dst_addr: this is the physical address where DMA slave data
-- * should be written (TX), if the source is memory this argument
-+ * should be written (TX), if the destination is memory this argument
-  * is ignored.
-  * @src_addr_width: this is the width in bytes of the source (RX)
-  * register where DMA data shall be read. If the source
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index 778d91d9fc1b..35588e14f79a 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -385,6 +385,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 			return NULL;
+ 		if (xfer->xfer.il->numf > 0 && xfer->xfer.il->frame_size > 0)
+ 			return NULL;
++		if (!xfer->xfer.il->src_inc || !xfer->xfer.il->dst_inc)
++			return NULL;
+ 	} else {
+ 		return NULL;
+ 	}
+@@ -484,15 +486,13 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
+ 			struct dma_interleaved_template *il = xfer->xfer.il;
+ 			struct data_chunk *dc = &il->sgl[i];
+ 
+-			if (il->src_sgl) {
+-				src_addr += burst->sz;
++			src_addr += burst->sz;
++			if (il->src_sgl)
+ 				src_addr += dmaengine_get_src_icg(il, dc);
+-			}
+ 
+-			if (il->dst_sgl) {
+-				dst_addr += burst->sz;
++			dst_addr += burst->sz;
++			if (il->dst_sgl)
+ 				dst_addr += dmaengine_get_dst_icg(il, dc);
+-			}
+ 		}
+ 	}
+ 
 -- 
 2.38.1
 
