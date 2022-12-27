@@ -2,143 +2,130 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F9AC3DA79
-	for <linux-pci@archiver.kernel.org>; Mon, 26 Dec 2022 22:51:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25E05C46467
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Dec 2022 09:44:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232533AbiLZWvX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Dec 2022 17:51:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48494 "EHLO
+        id S230429AbiL0JoZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Dec 2022 04:44:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232147AbiLZWuv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Dec 2022 17:50:51 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79EBE2657;
-        Mon, 26 Dec 2022 14:50:50 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 15F8DB80DB4;
-        Mon, 26 Dec 2022 22:50:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70B18C433D2;
-        Mon, 26 Dec 2022 22:50:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672095047;
-        bh=tkSpVVjv/nV+XYJhqA1quZ54G/qu34LwdP3dgR/CNa0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Cv9admjKnRTsrrXUqVkooE5cwmrOTtgKmj2VwQxoDDP7eeDvT9o5Dgy/6mOo/qdWp
-         Z3vEvPT8Y2ElP5INS41StaKtU11U3Xf+FgKBV3j4oicXNVsqGQueuD2vDXXFb0V4TR
-         hv316bXcRdSnmrAI2AuMQjg0894qB2SV1U9OWF5ceZGGTuAiE7DP+He0JIBJUMFik9
-         yyHAlIDd5Vwzf5Ohv3UDQ2nU3OymMTy8FVgsQje3ifxNwdZZyfpLUccy8dHRhwFGjh
-         Qt5QSQCh0kjfU7EphWjHC4cehN3DfARSaqs/A5swYsSbFtZTMjP/iPdL2qU/yw92Ae
-         DsR4UDDD+pVtg==
-Date:   Mon, 26 Dec 2022 16:50:45 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     bhelgaas@google.com, Mario Limonciello <mario.limonciello@amd.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Stefan Roese <sr@denx.de>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "David E. Box" <david.e.box@linux.intel.com>
-Subject: Re: [PATCH] PCI/portdrv: Avoid enabling AER on Thunderbolt devices
-Message-ID: <20221226225045.GA400369@bhelgaas>
+        with ESMTP id S230026AbiL0JoV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Dec 2022 04:44:21 -0500
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DDAA6467;
+        Tue, 27 Dec 2022 01:44:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=public-files.de;
+        s=s31663417; t=1672134220;
+        bh=YTCy4JEIxOF81L2tkx2q9iUbicPXUbuTb5BUmkJ6Svk=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=Wh5879NVfovwfw6MPcWgTOF9m3eH52aFbDRk39uA3E/Ad8jO78miYBrYzLlJF5pMU
+         Z/UdSo+F+IVHBl4CwgqCHGrr01zACXS6fv/QbFvG3momTUWkqdfdyx4si1efPaw9MC
+         DnEq8H1/ZSxxSyssbOlQHKPaHX8WdiEWupzDlpgm4ZZQ+SxdbRBsvVZhRNQmcgY67N
+         xFlyatiBM4/v74Klw4ZNdSwdnBDXnT37cPlmpvRc73Y/LndBRfGihBJq1CUwRf9wde
+         pTg0E8Vuf68U2J6P9402diqrE70zLoUY26yyzQTnLuVbKBg+9Fn6nwrBGwG/sPwzES
+         YeJJ13pXhrFBg==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [217.61.153.252] ([217.61.153.252]) by web-mail.gmx.net
+ (3c-app-gmx-bap27.server.lan [172.19.172.97]) (via HTTP); Tue, 27 Dec 2022
+ 10:43:40 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20221226153048.1208359-1-kai.heng.feng@canonical.com>
+Message-ID: <trinity-256904b6-bbb5-4424-9686-50ec7fa14f26-1672134220733@3c-app-gmx-bap27>
+From:   Frank Wunderlich <frank-w@public-files.de>
+To:     Daniel Golle <daniel@makrotopia.org>
+Cc:     Frank Wunderlich <linux@fw-web.de>,
+        linux-mediatek@lists.infradead.org,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        Chunfeng Yun <chunfeng.yun@mediatek.com>,
+        Vinod Koul <vkoul@kernel.org>, linux-usb@vger.kernel.org,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        devicetree@vger.kernel.org
+Subject: Aw: Re: [next v7 8/8] arm64: dts: mt7986: add Bananapi R3
+Content-Type: text/plain; charset=UTF-8
+Date:   Tue, 27 Dec 2022 10:43:40 +0100
+Importance: normal
+Sensitivity: Normal
+In-Reply-To: <Y6dMWFy7gChG88j0@makrotopia.org>
+References: <20221127114142.156573-1-linux@fw-web.de>
+ <20221127114142.156573-9-linux@fw-web.de> <Y6dMWFy7gChG88j0@makrotopia.org>
+X-UI-Message-Type: mail
+X-Priority: 3
+X-Provags-ID: V03:K1:bFXzqV914PcH77ozsLVgYaS5I0Vqyn3RZhEoaWQjT7lE8jUeDSGhl7uuTVF9Ur9aotjQ0
+ kJ2zzC2KY87PZVu/kmymoEKe35/OcBtOMhCh69+CaSU97Q9IEwbEKdPDdi/4klIWCuVChTeJcIkj
+ hNsZM0Mk1Pfs9vpZZDPsUz9DoYXK9kS1qRfMMLvmCZPLC+4Lg7e58vZ42EilOMyj+xsYwdzqZSLK
+ J90OlPs5STS14EAJX6MQoYcvaIcSTZQ03+8S8dvHZIAn5qg8LuC3GTwkABj7y/Yk0/0CSu38KfiW
+ d4=
+UI-OutboundReport: notjunk:1;M01:P0:6NV/Op75bNk=;g9hXBa/jc9i8FeIMnr5EwLzU8mP
+ pXy4CNgfhS7gmAFE0ch8bzzVD4MlzuFhtB3o+MMaWTQLz2nPUUmFrJlFzSta1yOb8PU7iyKU5
+ OXisXe7c1ZvK5X1CAp4UfhyKjzW9fMULB7hwrMdnb/k3+VUATHoTV3l7/KPVpqAfQSaURykhF
+ ipfIzASaFOKmYQnmCBC4AxLKWd53ooLwStPuXeLKOtiPVevdUo3UEI4/lz+p8o2Y3X+vIROQE
+ ZfoVuEA0iRmK4a1gWvKnGxv7qbNJEbKnLYNgUWgOjecdxhIFjw2KTSxk0mFMDYU5/YYSsU0aU
+ F8+G0W5mOzeDcZqnvelHmfLFjoey6M+9dhZWnZ9o7zpEM1ejDSmLXKsqHtWgkKYxVZ7N2caG9
+ m+XTEc/j83X71YCecqGZJmpw7AtbLBtSByXOOSYfdwiTNaCdNFjHsRwXNc4Ea05X+7gJWttRr
+ YNN8cWsLINNoA4WR7SujssEI/iW28LJjQeLyStTd+lAy0S8v7LMBGUs0+UZCM5S5ehpMgXr/l
+ N2640kTns3x2PLA1AqqpTsHmQquIryxs+UWYJuoGQDL9GtMIEtonpvMH6TYsssBBqC/WRSs7d
+ 9igluMBSsF/x+U/YR9n5VtcttsmzHP6mVawxBOuKxgmb8G1sP7dBKz2ibbPzZbzm0PyS/soEx
+ uDGzKN7P9Cav1VO8e9MfFgLeX5/MGVD6BKkWKRiAlsCccIJqWZ4Cxh5ORwCRHwy51F/Gy3p28
+ dV9CToPtm7wPOJ4yoFykebIIKFKlw7gZMlz4mt5nfUPlMGvHeqe0bv+dlcBNWpTUvT7c3yPer
+ arRA4ipNplPCK3LO4coyP2Lgq/Y0w57gR5GD3RAHFdFdU=
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc David]
 
-Hi Kai-Heng,
+> Gesendet: Samstag, 24. Dezember 2022 um 20:00 Uhr
+> Von: "Daniel Golle" <daniel@makrotopia.org>
 
-Thanks for the report and the debugging!
+> > +++ b/arch/arm64/boot/dts/mediatek/mt7986a-bananapi-bpi-r3.dts
 
-On Mon, Dec 26, 2022 at 11:30:31PM +0800, Kai-Heng Feng wrote:
-> We are seeing igc ethernet device on Thunderbolt dock stops working
-> after S3 resume because of AER error, or even make S3 resume freeze:
-> pcieport 0000:00:1d.0: AER: Multiple Corrected error received: 0000:00:1d.0
-> pcieport 0000:00:1d.0: PCIe Bus Error: severity=Corrected, type=Transaction Layer, (Receiver ID)
-> pcieport 0000:00:1d.0:   device [8086:7ab0] error status/mask=00008000/00002000
-> pcieport 0000:00:1d.0:    [15] HeaderOF
-> pcieport 0000:00:1d.0: AER: Multiple Uncorrected (Non-Fatal) error received: 0000:00:1d.0
-> pcieport 0000:00:1d.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, (Requester ID)
-> pcieport 0000:00:1d.0:   device [8086:7ab0] error status/mask=00100000/00004000
-> pcieport 0000:00:1d.0:    [20] UnsupReq               (First)
-> pcieport 0000:00:1d.0: AER:   TLP Header: 34000000 0a000052 00000000 00000000
+> > +&spi0 {
+> > +	pinctrl-names =3D "default";
+> > +	pinctrl-0 =3D <&spi_flash_pins>;
+> > +	cs-gpios =3D <0>, <0>;
+>
+> I don't think those bogus cs-gpios here and for spi1 below are needed.
 
-From a very quick look, I think 34...... ......52 is a PTM message (as
-you suggest below).
+at first look it seems it is needed...as i get this trace with 6.2:
 
-> pcieport 0000:00:1d.0: AER:   Error of this Agent is reported first
-> pcieport 0000:04:01.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, (Requester ID)
-> pcieport 0000:04:01.0:   device [8086:1136] error status/mask=00300000/00000000
-> pcieport 0000:04:01.0:    [20] UnsupReq               (First)
-> pcieport 0000:04:01.0:    [21] ACSViol
-> pcieport 0000:04:01.0: AER:   TLP Header: 34000000 04000052 00000000 00000000
-> thunderbolt 0000:05:00.0: AER: can't recover (no error_detected callback)
-> 
-> This supposedly should be fixed by commit c01163dbd1b8 ("PCI/PM: Always disable
-> PTM for all devices during suspend"), but somehow it doesn't work for
-> this case.
-> 
-> By dumping the PCI_PTM_CTRL register on resume, it turns out PTM is
-> already flipped on by either the Thunderbolt dock firmware or the host
-> BIOS. Writing 0 to PCI_PTM_CTRL yields the same result.
+[    2.145931] pc : mtk_spi_can_dma+0x0/0x34
+[    2.155212] lr : mtk_spi_interrupt+0x74/0x360
 
-Can you share your debug patch and corresponding dmesg log in the
-bugzilla?
+[    2.091801] mtk-spi 1100a000.spi: spi-mem transfer timeout
+[    2.097310] spi-nor: probe of spi0.0 failed with error -110
+[    2.102930] Unable to handle kernel read from unreadable memory at virt=
+ual address 0000000000000010
 
-> Windows is however not affected by this issue, by using WinDbg's !pci
-> command, it shows that AER is not enabled for devices connected via
-> Thunderbolt port, and that's the reason why Windows doesn't exhibit the
-> issue.
-> 
-> So turn a blind eye on external Thunderbolt devices like Windows does by
-> disabling AER.
+but i get the same trace when reverting the cs-gpios change....seems somet=
+hing is broken in 6.2-rc1
 
-Unless there's something in the PCIe or Thunderbolt spec that says AER
-shouldn't be used on external devices, I think we need to figure out
-the root cause before disabling AER on all removable devices.
+6.1 works without the bogus cs-gpios (and the mt7531 interrupt-change)...
 
-The dmesg in the bugzilla below is from an HP ZBook Fury 16.  Do you
-see this on any other platforms?  Do you have any HP BIOS contacts to
-ask about this?
+have tried reverting this commit, but it does not fix the issue:
 
-It seems like a firmware defect to enable PTM without knowing whether
-upstream devices have PTM enabled.
+8330e9e8269b 2022-12-07 spi: spi-mtk-nor: Add recovery mechanism for dma r=
+ead timeout
 
-We could leave PTM enabled on upstream devices when suspending, but
-that apparently prevents some low-power states.  Adding David since he
-worked on that.
+any idea without doing a bisect?
 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=216850
-> Cc: Mario Limonciello <mario.limonciello@amd.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
->  drivers/pci/pcie/portdrv.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> index 2cc2e60bcb396..59d00e20e57bf 100644
-> --- a/drivers/pci/pcie/portdrv.c
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -237,7 +237,8 @@ static int get_port_device_capability(struct pci_dev *dev)
->  	if ((pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT ||
->               pci_pcie_type(dev) == PCI_EXP_TYPE_RC_EC) &&
->  	    dev->aer_cap && pci_aer_available() &&
-> -	    (pcie_ports_native || host->native_aer))
-> +	    (pcie_ports_native || host->native_aer) &&
-> +	    !dev_is_removable(&dev->dev))
->  		services |= PCIE_PORT_SERVICE_AER;
->  #endif
->  
-> -- 
-> 2.34.1
-> 
+regards Frank
+
+> > +	status =3D "okay";
+> > +};
+> > +
+> > +&spi1 {
+> > +	pinctrl-names =3D "default";
+> > +	pinctrl-0 =3D <&spic_pins>;
+> > +	cs-gpios =3D <0>, <0>;
+> > +	status =3D "okay";
+> > +};
+
