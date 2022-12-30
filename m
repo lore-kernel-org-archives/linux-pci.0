@@ -2,82 +2,110 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 285C3C4167B
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Dec 2022 11:28:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3343FC3DA7C
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Dec 2022 12:13:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234949AbiL3L2K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Dec 2022 06:28:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35842 "EHLO
+        id S231344AbiL3MNR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Dec 2022 07:13:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234919AbiL3L2F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Dec 2022 06:28:05 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDE371AD9B;
-        Fri, 30 Dec 2022 03:28:04 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id ABE8AB81BCE;
-        Fri, 30 Dec 2022 11:28:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE979C433EF;
-        Fri, 30 Dec 2022 11:27:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672399682;
-        bh=W7YVzAO2mDuYN8n742hVF6/sjZKRdGp2qmdWhfD7pHE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=do70DYj28a0bbgOeoAasB5LC5Y+qLgYm10Rfby4djmnm96ENUiptyeyOqu2Qcn0sz
-         TZllCbG+jXWc9eN/WAzUcpzxNmKj6RkJR2u1AgHv0XKHiukj4xWj6VGHEKYx7yfoy5
-         2S9gfZy9YsMWJrMdZ/WRrLtwP1xyxe8+kKqKoh1ZMCppqXmzFe16GuGFhFG5osluXj
-         793e4jpH8uO6PxqVo4581Bkd1aYAV1g0fMpMynxJQDr1yuKIcEXrUb2TWQo+cVnru0
-         PEwg4uux/4m43h2l7nyKSWV5L46uCSO6ZdhsSoCSqiaWvqmh51740M0uy2DfAezfjr
-         pZZREgw8zHN7w==
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Vinod Koul <vkoul@kernel.org>,
+        with ESMTP id S229924AbiL3MNQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Dec 2022 07:13:16 -0500
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEBCBE07
+        for <linux-pci@vger.kernel.org>; Fri, 30 Dec 2022 04:13:15 -0800 (PST)
+Received: by mail-lf1-x133.google.com with SMTP id z26so31506317lfu.8
+        for <linux-pci@vger.kernel.org>; Fri, 30 Dec 2022 04:13:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=tOV4608QXvjceJ4orI18C2FMI82fRREo3ytAKFrDAno=;
+        b=oKfWKWbyNwZodxgmd7818YAECzl/XyC2dFCzkj/S2x0O2WO3uO/ZQrtF3roTdI+gOC
+         Y5oZV2aG9isdrkBf6/w01OUplJH6tNL97VgSLhxTd30ng5UsYQ/q6hVTadLEENw0kHEW
+         +qISic/+E4+a027OBf7uO2nDbWo1WGtxjyPCVwirKtEIJCSqK3FkUBGiU5ZWtLbcvfcg
+         0dmjM+z8SSh3IOSgtXAi4mN3WZyJ4RHh8YvTJj5o6D1AR3ihFtkqJtremVVtYhf9GOs2
+         DuFOLoe9YSwL36RbFHGZ9DLT0kYqRa1aer3ZEa/jRFqLj2osPXUp5B2omNiGo1ZQowFO
+         Dmqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=tOV4608QXvjceJ4orI18C2FMI82fRREo3ytAKFrDAno=;
+        b=a08uYmXp8kbDSi5Coo48fZ9sn/37cC+bY5DIdNbgPGcVMsLqaktAf/bUwt8RLXf7vU
+         lgN1VHhKavTj63/wkJL/Gvxo/2zlHqDjOK16BkJSil27fqdaj3FNib+iENpsnIXeAi/m
+         aeLI8XNAtlnyeRXd2j5PPV0JyBo04QkGzf+Ipwdt53mRvbAigKhTdzq2atRct6R1veT4
+         BETmghz0LLVjAiATC2ys3T5mdPDvGIg+D7JTp1wUnkDSHipWSl2/kM+yfmGPgMGGzHl3
+         f3txFld8I7Yz8fSIFwxlPP4ig6+v7Aj3HjBx4b1Pfj2sCcQi2F1Qyiq8jO0cZBvNiOXF
+         I3xg==
+X-Gm-Message-State: AFqh2kqKpPK2Qg7cJpr3q4gGBnE4WzaDrJRhxBLLELBaqldvjYPTmEHH
+        tiaS0ZzYGcFTWCiAhv3f2jZIEQ==
+X-Google-Smtp-Source: AMrXdXusvA7Bqp0kTD6ocUkCT45Y8k7XajNQ/mNEXARtiL/stEyuuSH+ZWkdiQok1QaZKKe0pfCC2Q==
+X-Received: by 2002:ac2:430c:0:b0:4cb:10ad:76bd with SMTP id l12-20020ac2430c000000b004cb10ad76bdmr3410731lfh.64.1672402394062;
+        Fri, 30 Dec 2022 04:13:14 -0800 (PST)
+Received: from ?IPV6:2001:14ba:a085:4d00::8a5? (dzccz6yyyyyyyyyyybcwt-3.rev.dnainternet.fi. [2001:14ba:a085:4d00::8a5])
+        by smtp.gmail.com with ESMTPSA id w5-20020ac254a5000000b004b4bb6286d8sm3429914lfk.84.2022.12.30.04.13.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 30 Dec 2022 04:13:13 -0800 (PST)
+Message-ID: <9dfbb21c-b430-193b-a51c-56cc9827eaa1@linaro.org>
+Date:   Fri, 30 Dec 2022 14:13:12 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: (subset) [PATCH v4 0/8] PCI/phy: Add support for PCI on sm8350
+ platform
+Content-Language: en-GB
+To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
         Jingoo Han <jingoohan1@gmail.com>,
         Rob Herring <robh+dt@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Konrad Dybcio <konrad.dybcio@somainline.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Andy Gross <agross@kernel.org>
 Cc:     linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         Johan Hovold <johan@kernel.org>,
         Philipp Zabel <p.zabel@pengutronix.de>
-Subject: Re: (subset) [PATCH v4 0/8] PCI/phy: Add support for PCI on sm8350 platform
-Date:   Fri, 30 Dec 2022 12:27:53 +0100
-Message-Id: <167239965740.745771.6371707855803359101.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20221118233242.2904088-1-dmitry.baryshkov@linaro.org>
 References: <20221118233242.2904088-1-dmitry.baryshkov@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+ <167239965740.745771.6371707855803359101.b4-ty@kernel.org>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+In-Reply-To: <167239965740.745771.6371707855803359101.b4-ty@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 19 Nov 2022 01:32:34 +0200, Dmitry Baryshkov wrote:
-> SM8350 is one of the recent Qualcomm platforms which lacks PCIe support.
-> Use sm8450 PHY tables to add support for the PCIe hosts on Qualcomm SM8350 platform.
+On 30/12/2022 13:27, Lorenzo Pieralisi wrote:
+> On Sat, 19 Nov 2022 01:32:34 +0200, Dmitry Baryshkov wrote:
+>> SM8350 is one of the recent Qualcomm platforms which lacks PCIe support.
+>> Use sm8450 PHY tables to add support for the PCIe hosts on Qualcomm SM8350 platform.
+>>
+>> Note: the PCIe0 table is based on the lahaina-v2.1.dtsi file, so it
+>> might work incorrectly on earlier SoC revisions.
+>>
+>> Dependencies:
+>> - phy/next (for PHY patches only)
+>>
+>> [...]
 > 
-> Note: the PCIe0 table is based on the lahaina-v2.1.dtsi file, so it
-> might work incorrectly on earlier SoC revisions.
+> Applied to pci/qcom, thanks!
 > 
-> Dependencies:
-> - phy/next (for PHY patches only)
-> 
-> [...]
+> [3/8] PCI: qcom: Add support for SM8350
+>        https://git.kernel.org/lpieralisi/pci/c/a39fb9fabdb7
 
-Applied to pci/qcom, thanks!
 
-[3/8] PCI: qcom: Add support for SM8350
-      https://git.kernel.org/lpieralisi/pci/c/a39fb9fabdb7
+Thank you! Would you also pick the patch 1/8 (dt-bindings: PCI: qcom: 
+Add sm8350 to bindings)?
 
-Thanks,
-Lorenzo
+-- 
+With best wishes
+Dmitry
+
