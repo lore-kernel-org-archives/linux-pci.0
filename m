@@ -2,360 +2,447 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAC40C4708D
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Jan 2023 16:59:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5E8DC4708E
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Jan 2023 17:14:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233748AbjABQ7t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Jan 2023 11:59:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50788 "EHLO
+        id S230420AbjABROT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Jan 2023 12:14:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233728AbjABQ7m (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jan 2023 11:59:42 -0500
-Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F257111B;
-        Mon,  2 Jan 2023 08:59:40 -0800 (PST)
-Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
- by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.1.0)
- id 79207faae1a7715a; Mon, 2 Jan 2023 17:59:38 +0100
-Received: from kreacher.localnet (unknown [213.134.163.167])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by v370.home.net.pl (Postfix) with ESMTPSA id AA44A28C0089;
-        Mon,  2 Jan 2023 17:59:37 +0100 (CET)
-Authentication-Results: v370.home.net.pl; dmarc=none (p=none dis=none) header.from=rjwysocki.net
-Authentication-Results: v370.home.net.pl; spf=fail smtp.mailfrom=rjwysocki.net
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Limonciello, Mario" <mario.limonciello@amd.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Mehta Sanju <Sanju.Mehta@amd.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5] PCI/ACPI: PCI/ACPI: Validate devices with power resources support D3
-Date:   Mon, 02 Jan 2023 17:59:36 +0100
-Message-ID: <1945994.PYKUYFuaPT@kreacher>
-In-Reply-To: <8191575.T7Z3S40VBb@kreacher>
-References: <20221121221742.GA137841@bhelgaas> <8191575.T7Z3S40VBb@kreacher>
+        with ESMTP id S232975AbjABROH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Jan 2023 12:14:07 -0500
+Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A27BEAE45;
+        Mon,  2 Jan 2023 09:14:04 -0800 (PST)
+Received: (Authenticated sender: clement.leger@bootlin.com)
+        by mail.gandi.net (Postfix) with ESMTPSA id A2F17E0009;
+        Mon,  2 Jan 2023 17:14:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1672679643;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=jtZiXGegmvlBwyxMr/KRgFf6kuZi+2eQQuI5YxCyVe4=;
+        b=D8JPs233qBQ4HxP77Ymf3JuOi5K7KW6gu7SuSpZf0/UsipduhAPX/GRya4R85WyhVD4KEi
+        63VXXKXgOiU3USulunflI3DB3vTuLTSjp1wTYNyOlUxznR2WtuNoTMBhF0cMoHwGZ5gAw7
+        sQ4Nvc/CTSOpOXB5z+HED/Olbwp33ZacM5nWZBcPqbhqCiNHebg161U6zb0AXV8vxEKrrT
+        BioqrmbBaXFanGaO2QA+Bqt4yADxKZeiBEB4UFxRRpCb3dJ+BJNuuKIMjCpaBj0CTIYCOM
+        vDXE38S4cy7zF5UxfURBN3rm0Twk5pFdyD3IZ96az0AnYilTkPRMdf+fi1RMzA==
+Date:   Mon, 2 Jan 2023 18:16:11 +0100
+From:   =?UTF-8?B?Q2zDqW1lbnQgTMOpZ2Vy?= <clement.leger@bootlin.com>
+To:     Lizhi Hou <lizhi.hou@amd.com>
+Cc:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <robh@kernel.org>,
+        <frowand.list@gmail.com>, <helgaas@kernel.org>, <max.zhen@amd.com>,
+        <sonal.santan@amd.com>, <larry.liu@amd.com>, <brian.xu@amd.com>,
+        <stefano.stabellini@xilinx.com>, <trix@redhat.com>,
+        "Allan.Nielsen@microchip.com" <Allan.Nielsen@microchip.com>,
+        "Horatiu.Vultur@microchip.com" <Horatiu.Vultur@microchip.com>,
+        "Steen.Hegelund@microchip.com" <Steen.Hegelund@microchip.com>
+Subject: Re: [PATCH V5 2/3] PCI: Create device tree node for selected
+ devices
+Message-ID: <20230102181611.0e6023f2@fixe.home>
+In-Reply-To: <1671125446-57584-3-git-send-email-lizhi.hou@amd.com>
+References: <1671125446-57584-1-git-send-email-lizhi.hou@amd.com>
+        <1671125446-57584-3-git-send-email-lizhi.hou@amd.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.35; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 213.134.163.167
-X-CLIENT-HOSTNAME: 213.134.163.167
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvhedrjedvgdeliecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkjghfggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpedvffeuiedtgfdvtddugeeujedtffetteegfeekffdvfedttddtuefhgeefvdejhfenucfkphepvddufedrudefgedrudeifedrudeijeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpedvudefrddufeegrdduieefrdduieejpdhhvghlohepkhhrvggrtghhvghrrdhlohgtrghlnhgvthdpmhgrihhlfhhrohhmpedftfgrfhgrvghlucflrdcuhgihshhotghkihdfuceorhhjfiesrhhjfiihshhotghkihdrnhgvtheqpdhnsggprhgtphhtthhopeduvddprhgtphhtthhopehhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmrghrihhordhlihhmohhntghivghllhhosegrmhgurdgtohhmpdhrtghpthhtoheprhgrfhgrvghlsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlvghnsgeskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdp
- rhgtphhtthhopehmihhkrgdrfigvshhtvghrsggvrhhgsehlihhnuhigrdhinhhtvghlrdgtohhmpdhrtghpthhtohepufgrnhhjuhdrofgvhhhtrgesrghmugdrtghomhdprhgtphhtthhopehluhhkrghsseifuhhnnhgvrhdruggvpdhrtghpthhtoheprhgrfhgrvghlrdhjrdifhihsohgtkhhisehinhhtvghlrdgtohhmpdhrtghpthhtoheplhhinhhugidqrggtphhisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-DCC--Metrics: v370.home.net.pl 1024; Body=12 Fuz1=12 Fuz2=12
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Monday, January 2, 2023 5:34:19 PM CET Rafael J. Wysocki wrote:
-> On Monday, November 21, 2022 11:17:42 PM CET Bjorn Helgaas wrote:
-> > On Mon, Nov 21, 2022 at 03:33:00PM +0100, Rafael J. Wysocki wrote:
-> > > On Friday, November 18, 2022 10:13:39 PM CET Rafael J. Wysocki wrote:
-> > > > On Fri, Nov 18, 2022 at 9:23 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > >
-> > > > > Hi Rafael,
-> > > > >
-> > > > > Sorry, I'm still confused (my perpetual state :)).
-> > > > 
-> > > > No worries, doing my best to address that.
-> > > > 
-> > > > > On Fri, Nov 18, 2022 at 02:16:17PM +0100, Rafael J. Wysocki wrote:
-> > > > > > On Thu, Nov 17, 2022 at 11:16 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > > > On Thu, Nov 17, 2022 at 06:01:26PM +0100, Rafael J. Wysocki wrote:
-> > > > > > > > On Thu, Nov 17, 2022 at 12:28 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > > > > > On Wed, Nov 16, 2022 at 01:00:36PM +0100, Rafael J. Wysocki wrote:
-> > > > > > > > > > On Wed, Nov 16, 2022 at 1:37 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > > > > > > > On Mon, Nov 14, 2022 at 04:33:52PM +0100, Rafael J. Wysocki wrote:
-> > > > > > > > > > > > On Fri, Nov 11, 2022 at 10:42 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > > > > > > > > >
-> > > > > > > > > > > > > On Fri, Nov 11, 2022 at 12:58:28PM -0600, Limonciello, Mario wrote:
-> > > > > > > > > > > > > > On 11/11/2022 11:41, Bjorn Helgaas wrote:
-> > > > > > > > > > > > > > > On Mon, Oct 31, 2022 at 05:33:55PM -0500, Mario Limonciello wrote:
-> > > > > > > > > > > > > > > > Firmware typically advertises that ACPI devices that represent PCIe
-> > > > > > > > > > > > > > > > devices can support D3 by a combination of the value returned by
-> > > > > > > > > > > > > > > > _S0W as well as the HotPlugSupportInD3 _DSD [1].
-> > > > > > > > > > > > > > > >
-> > > > > > > > > > > > > > > > `acpi_pci_bridge_d3` looks for this combination but also contains
-> > > > > > > > > > > > > > > > an assumption that if an ACPI device contains power resources the PCIe
-> > > > > > > > > > > > > > > > device it's associated with can support D3.  This was introduced
-> > > > > > > > > > > > > > > > from commit c6e331312ebf ("PCI/ACPI: Whitelist hotplug ports for
-> > > > > > > > > > > > > > > > D3 if power managed by ACPI").
-> > > > > > > > > > > > > > > >
-> > > > > > > > > > > > > > > > Some firmware configurations for "AMD Pink Sardine" do not support
-> > > > > > > > > > > > > > > > wake from D3 in _S0W for the ACPI device representing the PCIe root
-> > > > > > > > > > > > > > > > port used for tunneling. The PCIe device will still be opted into
-> > > > > > > > > > > > > > > > runtime PM in the kernel [2] because of the logic within
-> > > > > > > > > > > > > > > > `acpi_pci_bridge_d3`. This currently happens because the ACPI
-> > > > > > > > > > > > > > > > device contains power resources.
-> > > > > > > > > > > > >
-> > > > > > > > > > > > > Wait.  Is this as simple as just recognizing that:
-> > > > > > > > > > > > >
-> > > > > > > > > > > > >   _PS0 means the OS has a knob to put the device in D0, but it doesn't
-> > > > > > > > > > > > >   mean the device can wake itself from a low-power state.  The OS has
-> > > > > > > > > > > > >   to use _S0W to learn the device's ability to wake itself.
-> > > > > > > > > > > >
-> > > > > > > > > > > > It is.
-> > > > > > > > > > >
-> > > > > > > > > > > Now I'm confused again about what "HotPlugSupportInD3" means.  The MS
-> > > > > > > > > > > web page [1] says it identifies Root Ports capable of handling hot
-> > > > > > > > > > > plug events while in D3.  That sounds kind of related to _S0W: If _S0W
-> > > > > > > > > > > says "I can wake myself from D3hot and D3cold", how is that different
-> > > > > > > > > > > from "I can handle hotplug events in D3"?
-> > > > > > > > > >
-> > > > > > > > > > For native PME/hot-plug signaling there is no difference.  This is the
-> > > > > > > > > > same interrupt by the spec after all IIRC.
-> > > > > > > > > >
-> > > > > > > > > > For GPE-based signaling, though, there is a difference, because GPEs
-> > > > > > > > > > can only be used directly for wake signaling (this is related to
-> > > > > > > > > > _PRW).  In particular, the only provision in the ACPI spec for device
-> > > > > > > > > > hot-add are the Bus Check and Device Check notification values (0 and
-> > > > > > > > > > 1) which require AML to run and evaluate Notify() on specific AML
-> > > > > > > > > > objects.
-> > > > > > > > > >
-> > > > > > > > > > Hence, there is no spec-defined way to tell the OS that "something can
-> > > > > > > > > > be hot-added under this device while in D3 and you will get notified
-> > > > > > > > > > about that".
-> > > > > > > > >
-> > > > > > > > > So I guess acpi_pci_bridge_d3() looks for:
-> > > > > > > > >
-> > > > > > > > >   - "wake signaling while in D3" (_S0W) and
-> > > > > > > > >   - "notification of hotplug while in D3" ("HotPlugSupportInD3")
-> > > > > > > > >
-> > > > > > > > > For Root Ports with both those abilities (or bridges below such Root
-> > > > > > > > > Ports), we allow D3, and this patch doesn't change that.
-> > > > > > > > >
-> > > > > > > > > What this patch *does* change is that all bridges with _PS0 or _PR0
-> > > > > > > > > previously could use D3, but now will only be able to use D3 if they
-> > > > > > > > > are also (or are below) a Root Port that can signal wakeup
-> > > > > > > > > (wakeup.flags.valid) and can wakeup from D3hot or D3cold (_S0W).
-> > > > > > > > >
-> > > > > > > > > And this fixes the Pink Sardine because it has Root Ports that do
-> > > > > > > > > Thunderbolt tunneling, and they have _PS0 or _PR0 but their _S0W says
-> > > > > > > > > they cannot wake from D3.  Previously we put those in D3, but they
-> > > > > > > > > couldn't wake up.  Now we won't put them in D3.
-> > > > > > > > >
-> > > > > > > > > I guess there's a possibility that this could break or cause higher
-> > > > > > > > > power consumption on systems that were fixed by c6e331312ebf
-> > > > > > > > > ("PCI/ACPI: Whitelist hotplug ports for D3 if power managed by ACPI").
-> > > > > > > > > I don't know enough about that scenario.  Maybe Lukas will chime in.
-> > > > > > > >
-> > > > > > > > Well, it is possible that some of these systems will be affected.
-> > > > > > > >
-> > > > > > > > One of such cases is when the port in question has _S0W which says
-> > > > > > > > that wakeup from D3 is not supported.  In that case I think the kernel
-> > > > > > > > should honor the _S0W input, because there may be a good reason known
-> > > > > > > > to the platform integrator for it.
-> > > > > > > >
-> > > > > > > > The other case is when wakeup.flags.valid is unset for the port's ACPI
-> > > > > > > > companion which means that the port cannot signal wakeup through
-> > > > > > > > ACPI-related means at all and this may be problematic, especially in
-> > > > > > > > the system-wide suspend case in which the wakeup capability is not too
-> > > > > > > > relevant unless there is a system wakeup device under the port.
-> > > > > > > >
-> > > > > > > > I don't think that the adev->wakeup.flags.valid check has any bearing
-> > > > > > > > on the _S0W check - if there is _S0W and it says "no wakeup from D3",
-> > > > > > > > it should still be taken into account - so that check can be moved
-> > > > > > > > past the _S0W check.
-> > > > > > >
-> > > > > > > So if _S0W says it can wake from D3, but wakeup.flags is not valid,
-> > > > > > > it's still OK to use D3?
-> > > > > >
-> > > > > > No, it isn't, as per the code today and I don't think that this
-> > > > > > particular part should be changed now.
-> > > > >
-> > > > > But the current upstream code checks acpi_pci_power_manageable(dev)
-> > > > > first, so if "dev" has _PR0 or _PS0, we'll use D3 even if _S0W says it
-> > > > > can wake from D3 and wakeup.flags is not valid.
-> > > > 
-> > > > Yes, the current code will return 'true' if _PR0 or _PS0 is present
-> > > > for dev regardless of anything else.
-> > > > 
-> > > > The proposed change is to make that conditional on whether or not _S0W
-> > > > for the root port says that wakeup from D3 is supported (or it is not
-> > > > present or unusable).
-> > > > 
-> > > > I see that I've missed one point now which is when the root port
-> > > > doesn't have an ACPI companion, in which case we should go straight
-> > > > for the "dev is power manageable" check.
-> > > 
-> > > Moreover, it is possible that the bridge passed to acpi_pci_bridge_d3() has its
-> > > own _S0W or a wakeup GPE if it is power-manageable via ACPI.  In those cases
-> > > it is not necessary to ask the Root Port's _S0W about wakeup from D3, so overall
-> > > I would go for the patch like the below (not really tested).
-> > > 
-> > > This works in the same way as the current code (unless I have missed anything)
-> > > except for the case when the "target" bridge is power-manageable via ACPI, but
-> > > it cannot signal wakeup via ACPI and has no _S0W.  In that case it will consult
-> > > the upstream Root Port's _S0W to check whether or not wakeup from D3 is
-> > > supported.
-> > > 
-> > > [Note that if dev_has_acpi_pm is 'true', it is kind of pointless to look for the
-> > > "HotPlugSupportInD3" property of the Root Port, because the function is going to
-> > > return 'true' regardless, but I'm not sure if adding an extra if () for handling
-> > > this particular case is worth the hassle.]
-> > 
-> > I think this has a lot of potential.  I haven't tried it, but I wonder
-> > if splitting out the Root Port-specific parts to a separate function
-> > would be helpful, if only to make it more obvious that there may be
-> > two different devices involved.
-> > 
-> > If there are two devices ("dev" is a bridge below a Root Port), I
-> > guess support in the Root Port is not necessarily required?  E.g.,
-> > could "dev" assert a wakeup GPE that's not routed through the Root
-> > Port?  If Root Port support *is* required, maybe it would read more
-> > clearly to test that first, before looking at the downstream device.
-> 
-> Sorry for the delay.
-> 
-> I don't really think that Root Port support is required for a bridge below
-> a Root Port if that bridge itself is power-manageable via ACPI.  Moreover,
-> I don't think that the _S0W of a Root Port has any bearing on devices below
-> it that have their own _S0W.
-> 
-> So what we really want appears to be to evaluate _S0W for the target bridge,
-> regardless of whether or not it is a Root Port, and return 'false' if that
-> produces D2 or a shallower power state.  Otherwise, we can do what we've
-> done so far.
-> 
-> The patch below implements, this - please let me know what you think.
-> 
+Le Thu, 15 Dec 2022 09:30:45 -0800,
+Lizhi Hou <lizhi.hou@amd.com> a =C3=A9crit :
 
-And here's a v2 with somewhat less code duplication.
+> The PCI endpoint device such as Xilinx Alveo PCI card maps the register
+> spaces from multiple hardware peripherals to its PCI BAR. Normally,
+> the PCI core discovers devices and BARs using the PCI enumeration process.
+> There is no infrastructure to discover the hardware peripherals that are
+> present in a PCI device, and which can be accessed through the PCI BARs.
+>=20
+> For Alveo PCI card, the card firmware provides a flattened device tree to
+> describe the hardware peripherals on its BARs. The Alveo card driver can
+> load this flattened device tree and leverage device tree framework to
+> generate platform devices for the hardware peripherals eventually.
+>=20
+> Apparently, the device tree framework requires a device tree node for the
+> PCI device. Thus, it can generate the device tree nodes for hardware
+> peripherals underneath. Because PCI is self discoverable bus, there might
+> not be a device tree node created for PCI devices. This patch is to add
+> support to generate device tree node for PCI devices.
+>=20
+> Added a kernel option. When the option is turned on, the kernel will
+> generate device tree nodes for PCI bridges unconditionally.
+>=20
+> Initially, the basic properties are added for the dynamically generated
+> device tree nodes.
+>=20
+> Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
+> Signed-off-by: Sonal Santan <sonal.santan@amd.com>
+> Signed-off-by: Max Zhen <max.zhen@amd.com>
+> Reviewed-by: Brian Xu <brian.xu@amd.com>
+> ---
+>  drivers/pci/Kconfig         |  12 ++
+>  drivers/pci/Makefile        |   1 +
+>  drivers/pci/bus.c           |   2 +
+>  drivers/pci/msi/irqdomain.c |   6 +-
+>  drivers/pci/of.c            |  71 ++++++++++++
+>  drivers/pci/of_property.c   | 222 ++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci-driver.c    |   3 +-
+>  drivers/pci/pci.h           |  19 +++
+>  drivers/pci/remove.c        |   1 +
+>  9 files changed, 334 insertions(+), 3 deletions(-)
+>  create mode 100644 drivers/pci/of_property.c
+>=20
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 55c028af4bd9..1b2347aa1e5b 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -198,6 +198,18 @@ config PCI_HYPERV
+>  	  The PCI device frontend driver allows the kernel to import arbitrary
+>  	  PCI devices from a PCI backend to support PCI driver domains.
+> =20
+> +config PCI_DYNAMIC_OF_NODES
+> +	bool "Create Devicetree nodes for PCI devices"
+> +	depends on OF
+> +	select OF_DYNAMIC
+> +	help
+> +	  This option enables support for generating device tree nodes for some
+> +	  PCI devices. Thus, the driver of this kind can load and overlay
+> +	  flattened device tree for its downstream devices.
+> +
+> +	  Once this option is selected, the device tree nodes will be generated
+> +	  for all PCI bridges.
+> +
+>  choice
+>  	prompt "PCI Express hierarchy optimization setting"
+>  	default PCIE_BUS_DEFAULT
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 2680e4c92f0a..cc8b4e01e29d 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -32,6 +32,7 @@ obj-$(CONFIG_PCI_P2PDMA)	+=3D p2pdma.o
+>  obj-$(CONFIG_XEN_PCIDEV_FRONTEND) +=3D xen-pcifront.o
+>  obj-$(CONFIG_VGA_ARB)		+=3D vgaarb.o
+>  obj-$(CONFIG_PCI_DOE)		+=3D doe.o
+> +obj-$(CONFIG_PCI_DYNAMIC_OF_NODES) +=3D of_property.o
+> =20
+>  # Endpoint library must be initialized before its users
+>  obj-$(CONFIG_PCI_ENDPOINT)	+=3D endpoint/
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 3cef835b375f..8507cc32b61d 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -316,6 +316,8 @@ void pci_bus_add_device(struct pci_dev *dev)
+>  	 */
+>  	pcibios_bus_add_device(dev);
+>  	pci_fixup_device(pci_fixup_final, dev);
+> +	if (pci_is_bridge(dev))
+> +		of_pci_make_dev_node(dev);
+>  	pci_create_sysfs_dev_files(dev);
+>  	pci_proc_attach_device(dev);
+>  	pci_bridge_d3_update(dev);
+> diff --git a/drivers/pci/msi/irqdomain.c b/drivers/pci/msi/irqdomain.c
+> index e9cf318e6670..eeaf44169bfd 100644
+> --- a/drivers/pci/msi/irqdomain.c
+> +++ b/drivers/pci/msi/irqdomain.c
+> @@ -230,8 +230,10 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *do=
+main, struct pci_dev *pdev)
+>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+> =20
+>  	of_node =3D irq_domain_get_of_node(domain);
+> -	rid =3D of_node ? of_msi_map_id(&pdev->dev, of_node, rid) :
+> -			iort_msi_map_id(&pdev->dev, rid);
+> +	if (of_node && !of_node_check_flag(of_node, OF_DYNAMIC))
+> +		rid =3D of_msi_map_id(&pdev->dev, of_node, rid);
+> +	else
+> +		rid =3D iort_msi_map_id(&pdev->dev, rid);
+> =20
+>  	return rid;
+>  }
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index 196834ed44fe..cb34a73ac8a3 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -469,6 +469,8 @@ static int of_irq_parse_pci(const struct pci_dev *pde=
+v, struct of_phandle_args *
+>  		} else {
+>  			/* We found a P2P bridge, check if it has a node */
+>  			ppnode =3D pci_device_to_OF_node(ppdev);
+> +			if (ppnode && of_node_check_flag(ppnode, OF_DYNAMIC))
+> +				ppnode =3D NULL;
+>  		}
+> =20
+>  		/*
+> @@ -599,6 +601,75 @@ int devm_of_pci_bridge_init(struct device *dev, stru=
+ct pci_host_bridge *bridge)
+>  	return pci_parse_request_of_pci_ranges(dev, bridge);
+>  }
+> =20
+> +#if IS_ENABLED(CONFIG_PCI_DYNAMIC_OF_NODES)
+> +
+> +void of_pci_remove_node(struct pci_dev *pdev)
+> +{
+> +	struct device_node *np;
+> +
+> +	np =3D pci_device_to_OF_node(pdev);
+> +	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
+> +		return;
+> +	pdev->dev.of_node =3D NULL;
+> +
+> +	of_destroy_node(np);
+> +}
+> +
+> +void of_pci_make_dev_node(struct pci_dev *pdev)
+> +{
+> +	struct device_node *ppnode, *np =3D NULL;
+> +	const char *pci_type =3D "dev";
+> +	struct of_changeset *cset;
+> +	const char *name;
+> +	int ret;
+> +
+> +	/*
+> +	 * If there is already a device tree node linked to this device,
+> +	 * return immediately.
+> +	 */
+> +	if (pci_device_to_OF_node(pdev))
+> +		return;
+> +
+> +	/* Check if there is device tree node for parent device */
+> +	if (!pdev->bus->self)
+> +		ppnode =3D pdev->bus->dev.of_node;
+> +	else
+> +		ppnode =3D pdev->bus->self->dev.of_node;
+> +	if (!ppnode)
+> +		return;
+> +
+> +	if (pci_is_bridge(pdev))
+> +		pci_type =3D "pci";
+> +
+> +	name =3D kasprintf(GFP_KERNEL, "%s@%x,%x", pci_type,
+> +			 PCI_SLOT(pdev->devfn), PCI_FUNC(pdev->devfn));
+> +	if (!name)
+> +		goto failed;
+> +
+> +	np =3D of_create_node(ppnode, name, &cset);
+> +	if (!np)
+> +		goto failed;
+> +
+> +	ret =3D of_pci_add_properties(pdev, cset, np);
+> +	if (ret)
+> +		goto failed;
+> +
+> +	ret =3D of_changeset_apply(cset);
+> +	if (ret)
+> +		goto failed;
+> +
+> +	pdev->dev.of_node =3D np;
+> +	kfree(name);
+> +
+> +	return;
+> +
+> +failed:
+> +	if (np)
+> +		of_destroy_node(np);
+> +	kfree(name);
+> +}
+> +#endif
+> +
+>  #endif /* CONFIG_PCI */
+> =20
+>  /**
+> diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+> new file mode 100644
+> index 000000000000..05c8ca05a71b
+> --- /dev/null
+> +++ b/drivers/pci/of_property.c
+> @@ -0,0 +1,222 @@
+> +// SPDX-License-Identifier: GPL-2.0+
+> +/*
+> + * Copyright (C) 2022, Advanced Micro Devices, Inc.
+> + */
+> +
+> +#include <linux/pci.h>
+> +#include <linux/of.h>
+> +#include <linux/bitfield.h>
+> +#include <linux/bits.h>
+> +#include <asm/unaligned.h>
+> +#include "pci.h"
+> +
+> +#define OF_PCI_ADDRESS_CELLS		3
+> +#define OF_PCI_SIZE_CELLS		2
+> +
+> +struct of_pci_addr_pair {
+> +	u32		phys_addr[OF_PCI_ADDRESS_CELLS];
+> +	u32		size[OF_PCI_SIZE_CELLS];
+> +};
+> +
+> +struct of_pci_range {
+> +	u32		child_addr[OF_PCI_ADDRESS_CELLS];
+> +	u32		parent_addr[OF_PCI_ADDRESS_CELLS];
+> +	u32		size[OF_PCI_SIZE_CELLS];
+> +};
+> +
+> +#define OF_PCI_ADDR_SPACE_CONFIG	0x0
+> +#define OF_PCI_ADDR_SPACE_IO		0x1
+> +#define OF_PCI_ADDR_SPACE_MEM32		0x2
+> +#define OF_PCI_ADDR_SPACE_MEM64		0x3
+> +
+> +#define OF_PCI_ADDR_FIELD_NONRELOC	BIT(31)
+> +#define OF_PCI_ADDR_FIELD_SS		GENMASK(25, 24)
+> +#define OF_PCI_ADDR_FIELD_PREFETCH	BIT(30)
+> +#define OF_PCI_ADDR_FIELD_BUS		GENMASK(23, 16)
+> +#define OF_PCI_ADDR_FIELD_DEV		GENMASK(15, 11)
+> +#define OF_PCI_ADDR_FIELD_FUNC		GENMASK(10, 8)
+> +#define OF_PCI_ADDR_FIELD_REG		GENMASK(7, 0)
+> +
+> +#define OF_PCI_ADDR_HI			GENMASK_ULL(63, 32)
+> +#define OF_PCI_ADDR_LO			GENMASK_ULL(31, 0)
+> +#define OF_PCI_SIZE_HI			GENMASK_ULL(63, 32)
+> +#define OF_PCI_SIZE_LO			GENMASK_ULL(31, 0)
+> +
+> +enum of_pci_prop_compatible {
+> +	PROP_COMPAT_PCI_VVVV_DDDD,
+> +	PROP_COMPAT_PCICLASS_CCSSPP,
+> +	PROP_COMPAT_PCICLASS_CCSS,
+> +	PROP_COMPAT_NUM,
+> +};
+> +
+> +static int of_pci_prop_device_type(struct pci_dev *pdev,
+> +				   struct of_changeset *ocs,
+> +				   struct device_node *np)
+> +{
+> +	return of_changeset_add_prop_string(ocs, np, "device_type", "pci");
+> +}
+> +
+> +static int of_pci_prop_address_cells(struct pci_dev *pdev,
+> +				     struct of_changeset *ocs,
+> +				     struct device_node *np)
+> +{
+> +	return of_changeset_add_prop_u32(ocs, np, "#address_cells",
+> +					 OF_PCI_ADDRESS_CELLS);
+> +}
+> +
+> +static int of_pci_prop_size_cells(struct pci_dev *pdev,
+> +				  struct of_changeset *ocs,
+> +				  struct device_node *np)
+> +{
+> +	return of_changeset_add_prop_u32(ocs, np, "#size_cells",
+> +					 OF_PCI_SIZE_CELLS);
+> +}
+> +
+> +static void of_pci_set_address(u32 *prop, u64 addr, u32 flags)
+> +{
+> +	prop[0] =3D flags;
+> +	put_unaligned(addr, &prop[1]);
+> +}
 
----
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: [PATCH] PCI / ACPI: PM: Take _S0W of the target bridge into account in acpi_pci_bridge_d3(()
+Here, the put_unaligned() call will assume you want to store a 32bits
+value since prop is pointing to a u32 array. This can't work.
 
-It is generally questionable to allow a PCI bridge to go into D3 if
-it has _S0W returning D2 or a shallower power state, so modify
-acpi_pci_bridge_d3(() to always take the return value of _S0W for the
-target bridge into accout.  That is, make it return 'false' if _S0W
-returns D2 or a shallower power state for the target bridge regardless
-of its ancestor PCIe Root Port properties.  Of course, this also causes
-'false' to be returned if the PCIe Root Port itself is the target and
-its _S0W returns D2 or a shallower power state.
+Moreover, when storing a 64bits address in device-tree properties, they
+are stored starting with their 32 MSB in the first cell and the
+32 LSB in the next cells.
 
-However, still allow bridges without _S0W that are power-manageable via
-ACPI to enter D3 to retain the current code behavior in that case.
+This should probably be something like this:
 
-Reported-by: Mario Limonciello <mario.limonciello@amd.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/device_pm.c |   16 ++++++++++++++++
- drivers/pci/pci-acpi.c   |   34 ++++++++++++++++++++++++----------
- include/acpi/acpi_bus.h  |    1 +
- 3 files changed, 41 insertions(+), 10 deletions(-)
+static void of_pci_set_address(u32 *prop, u64 addr, u32 flags)
+{
+	prop[0] =3D flags;
+	prop[1] =3D addr >> 32;
+	prop[2] =3D addr;
+}
 
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -977,22 +977,37 @@ bool acpi_pci_bridge_d3(struct pci_dev *
- {
- 	struct pci_dev *rpdev;
- 	struct acpi_device *adev;
--	acpi_status status;
--	unsigned long long state;
- 	const union acpi_object *obj;
- 
- 	if (acpi_pci_disabled || !dev->is_hotplug_bridge)
- 		return false;
- 
--	/* Assume D3 support if the bridge is power-manageable by ACPI. */
--	if (acpi_pci_power_manageable(dev))
--		return true;
-+	adev = ACPI_COMPANION(&dev->dev);
-+	if (adev) {
-+		/*
-+		 * If the bridge has _S0W, whether or not it can go into D3
-+		 * depends on what is returned by that object.  In particular,
-+		 * if the power state returned by _S0W is D2 or shallower,
-+		 * entering D3 should not be allowed.
-+		 */
-+		if (acpi_dev_no_wakeup_from_d3(adev))
-+			return false;
-+
-+		/*
-+		 * Otherwise, assume that the bridge can enter D3 so long as it
-+		 * is power-manageable via ACPI.
-+		 */
-+		if (acpi_device_power_manageable(adev))
-+			return true;
-+	}
- 
- 	rpdev = pcie_find_root_port(dev);
- 	if (!rpdev)
- 		return false;
- 
--	adev = ACPI_COMPANION(&rpdev->dev);
-+	if (rpdev != dev)
-+		adev = ACPI_COMPANION(&rpdev->dev);
-+
- 	if (!adev)
- 		return false;
- 
-@@ -1005,11 +1020,10 @@ bool acpi_pci_bridge_d3(struct pci_dev *
- 		return false;
- 
- 	/*
--	 * If the Root Port cannot wake itself from D3hot or D3cold, we
--	 * can't use D3.
-+	 * In the bridge-below-a-Root-Port case, evaluate _S0W for the Root Port
-+	 * to verify whether or not it can signal wakeup from D3.
- 	 */
--	status = acpi_evaluate_integer(adev->handle, "_S0W", NULL, &state);
--	if (ACPI_SUCCESS(status) && state < ACPI_STATE_D3_HOT)
-+	if (rpdev != dev && acpi_dev_no_wakeup_from_d3(adev))
- 		return false;
- 
- 	/*
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -484,6 +484,22 @@ void acpi_dev_power_up_children_with_adr
- 	acpi_dev_for_each_child(adev, acpi_power_up_if_adr_present, NULL);
- }
- 
-+/**
-+ * acpi_dev_no_wakeup_from_d3 - Check if wakeup signaling from D3 is supported
-+ * @adev: ACPI companion of the target device.
-+ *
-+ * Evaluate _S0W for @adev and return 'true' if it is successful and the power
-+ * state returned by it is D2 or shallower.
-+ */
-+bool acpi_dev_no_wakeup_from_d3(struct acpi_device *adev)
-+{
-+	unsigned long long state;
-+	acpi_status status;
-+
-+	status = acpi_evaluate_integer(adev->handle, "_S0W", NULL, &state);
-+	return ACPI_SUCCESS(status) && state < ACPI_STATE_D3_HOT;
-+}
-+
- #ifdef CONFIG_PM
- static DEFINE_MUTEX(acpi_pm_notifier_lock);
- static DEFINE_MUTEX(acpi_pm_notifier_install_lock);
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -533,6 +533,7 @@ int acpi_bus_update_power(acpi_handle ha
- int acpi_device_update_power(struct acpi_device *device, int *state_p);
- bool acpi_bus_power_manageable(acpi_handle handle);
- void acpi_dev_power_up_children_with_adr(struct acpi_device *adev);
-+bool acpi_dev_no_wakeup_from_d3(struct acpi_device *adev);
- int acpi_device_power_add_dependent(struct acpi_device *adev,
- 				    struct device *dev);
- void acpi_device_power_remove_dependent(struct acpi_device *adev,
+[snip]
 
+> +
+> +static int of_pci_prop_ranges(struct pci_dev *pdev, struct of_changeset =
+*ocs,
+> +			      struct device_node *np)
+> +{
+> +	struct of_pci_range rp[PCI_BRIDGE_RESOURCE_NUM];
+> +	struct resource *res;
+> +	int i =3D 0, j, ret;
+> +	u64 val64;
+> +	u32 flags;
+> +
+> +	res =3D &pdev->resource[PCI_BRIDGE_RESOURCES];
+> +	for (j =3D 0; j < PCI_BRIDGE_RESOURCE_NUM; j++) {
+> +		if (!resource_size(&res[j]))
+> +			continue;
+> +
+> +		flags =3D OF_PCI_ADDR_FIELD_NONRELOC;
+> +		if (of_pci_get_addr_flags(&res[j], &flags))
+> +			continue;
+> +
+> +		val64 =3D res[j].start;
+> +		of_pci_set_address(rp[i].parent_addr, val64, flags);
+> +		of_pci_set_address(rp[i].child_addr, val64, flags);
+> +
+> +		val64 =3D resource_size(&res[j]);
+> +		put_unaligned(val64, rp[i].size);
 
+Same problem here, the size is meant to be a 64 bits values but will
+assume you want to store it using a 32bits pointer.
 
+> +
+> +		i++;
+> +	}
+> +
+> +	ret =3D of_changeset_add_prop_u32_array(ocs, np, "ranges", (u32 *)rp,
+> +					      i * sizeof(*rp) / sizeof(u32));
+> +
+> +	return ret;
+> +}
+> +
+> +static int of_pci_prop_reg(struct pci_dev *pdev, struct of_changeset *oc=
+s,
+> +			   struct device_node *np)
+> +{
+> +	struct of_pci_addr_pair *reg;
+> +	int i =3D 1, resno, ret =3D 0;
+> +	u32 reg_val, base_addr;
+> +	resource_size_t sz;
+> +
+> +	reg =3D kzalloc(sizeof(*reg) * (PCI_STD_NUM_BARS + 1), GFP_KERNEL);
+> +	if (!reg)
+> +		return -ENOMEM;
+> +
+> +	reg_val =3D FIELD_PREP(OF_PCI_ADDR_FIELD_SS, OF_PCI_ADDR_SPACE_CONFIG) |
+> +		FIELD_PREP(OF_PCI_ADDR_FIELD_BUS, pdev->bus->number) |
+> +		FIELD_PREP(OF_PCI_ADDR_FIELD_DEV, PCI_SLOT(pdev->devfn)) |
+> +		FIELD_PREP(OF_PCI_ADDR_FIELD_FUNC, PCI_FUNC(pdev->devfn));
+> +	of_pci_set_address(reg[0].phys_addr, 0, reg_val);
+> +
+> +	base_addr =3D PCI_BASE_ADDRESS_0;
+> +	for (resno =3D PCI_STD_RESOURCES; resno <=3D PCI_STD_RESOURCE_END;
+> +	     resno++, base_addr +=3D 4) {
+> +		sz =3D pci_resource_len(pdev, resno);
+> +		if (!sz)
+> +			continue;
+> +
+> +		ret =3D of_pci_get_addr_flags(&pdev->resource[resno], &reg_val);
+> +		if (!ret)
+> +			continue;
+> +
+> +		reg_val &=3D ~OF_PCI_ADDR_FIELD_REG;
+> +		reg_val |=3D FIELD_PREP(OF_PCI_ADDR_FIELD_REG, base_addr);
+> +		of_pci_set_address(reg[i].phys_addr, 0, reg_val);
+> +		put_unaligned((u64)sz, reg[i].size);
+
+And same here. Something like this should probably be used (untested):
+
+static void of_pci_set_size(u32 *prop, u64 size)
+{
+	prop[0] =3D size >> 32;
+	prop[1] =3D size;
+}
+
+--=20
+Cl=C3=A9ment L=C3=A9ger,
+Embedded Linux and Kernel engineer at Bootlin
+https://bootlin.com
