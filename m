@@ -2,109 +2,206 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70F26C4708D
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Jan 2023 15:53:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5595AC4332F
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Jan 2023 18:38:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239731AbjADPxn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Jan 2023 10:53:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48792 "EHLO
+        id S235177AbjADSha (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Jan 2023 13:37:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239744AbjADPxl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2023 10:53:41 -0500
-X-Greylist: delayed 601 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 04 Jan 2023 07:53:32 PST
-Received: from witt.link (witt.link [185.233.105.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7648F3C38E;
-        Wed,  4 Jan 2023 07:53:32 -0800 (PST)
-Received: from [IPV6:2003:f3:70b:a100:e782:3e2f:c635:6e83] (p200300f3070ba100e7823e2fc6356e83.dip0.t-ipconnect.de [IPv6:2003:f3:70b:a100:e782:3e2f:c635:6e83])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
+        with ESMTP id S240175AbjADShQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2023 13:37:16 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E64B17586
+        for <linux-pci@vger.kernel.org>; Wed,  4 Jan 2023 10:37:14 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by witt.link (Postfix) with ESMTPSA id 2D57C2AE1A9;
-        Wed,  4 Jan 2023 16:37:47 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=witt.link; s=dkim;
-        t=1672846667;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=asRCi9LTyyDCpoVhm5bnewuJ1tD1lcwNq1Fx7lnNlME=;
-        b=C3qBS0Pjjc7QlKMCLaFtPP6Mj4lR0mEffrZVc5ofoWMLlbFWcAdIfvJg5wtfYqGZfkub3M
-        WXThlqR+pLYQdsOrhi8WuLpQonVkxmZ/OTmi4ZtzlyRS/kxFgzzazDscmk9mQlHyAq0Zj7
-        ng34N5kcparcKIBGW66CS7lfdeySUgyAHSBSK9Bf6P/gPAAhQlE/5hWY36QdaWAKQt2jOs
-        Y/LPW+9+xa1kz9VFs9oiThusv2OXtTZgSB9ajnuwYHDp6+hBgM3MfErAF705WYyFZEUfp5
-        56H02meB2rhPVu/W5+tzRJwuAsi3mGlsreNewbAI1e/PX/zcFeD5zjtacgWMJg==
-Message-ID: <fa187ea6-eaba-92cd-b2bc-a62d25501826@witt.link>
-Date:   Wed, 4 Jan 2023 16:37:46 +0100
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D69D6179B
+        for <linux-pci@vger.kernel.org>; Wed,  4 Jan 2023 18:37:14 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B499AC433D2;
+        Wed,  4 Jan 2023 18:37:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1672857433;
+        bh=jAONJ/f1eWzUbzgGUucqc+fiVdwEoDGW61smw/EspQ4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=KvgqCusNBdHKC0uIMZsWXjwHJn9r0sdbfLLYtWKkvlBRLXPfJn65vxq33x5gu/EDF
+         IMZuUb+e/d2P/Cyosa3ssjrxgkXQUvyUK2fARtwqvS7Gx1aL/97KFZku6vpA6t2FPN
+         tyBWdlUFGzx6/UnYtYDMwrQcxNss4gOP92OAUjEhkhn0BoGGlYABr9iFgzIguY7T0m
+         rTfpKMGhX+gl70S80FsLe89vPQQJWTRpolZNwZt+dfGAsE7dANJZeMygJbR1oegu8C
+         8TMh0I6pUCB/S5a5KrmeeRur9+yylNPnpZe6XxeKySxiiCbtYFZiVhfCgF8vkDQodI
+         8wsDpUUlfef5Q==
+Date:   Wed, 4 Jan 2023 12:37:12 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Huacai Chen <chenhuacai@loongson.cn>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-pci@vger.kernel.org, Jianmin Lv <lvjianmin@loongson.cn>,
+        Xuefeng Li <lixuefeng@loongson.cn>,
+        Huacai Chen <chenhuacai@gmail.com>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>
+Subject: Re: [PATCH 2/2] PCI: Add quirk for LS7A to avoid reboot failure
+Message-ID: <20230104183712.GA1082132@bhelgaas>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [Bug 216877] New: Regression in PCI powermanagement breaks resume
- after suspend
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Vidya Sagar <vidyas@nvidia.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-References: <20230104150246.GA1068896@bhelgaas>
-Content-Language: en-US
-From:   Thomas Witt <kernel@witt.link>
-In-Reply-To: <20230104150246.GA1068896@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230103073401.1256736-3-chenhuacai@loongson.cn>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 04/01/2023 16:02, Bjorn Helgaas wrote:
-> On Wed, Jan 04, 2023 at 09:44:25AM +0100, Thomas Witt wrote:
->> On 04/01/2023 01:30, Bjorn Helgaas wrote:
->>> On Mon, Jan 02, 2023 at 11:15:16AM -0600, Bjorn Helgaas wrote:
->>>> On Mon, Jan 02, 2023 at 02:02:51PM +0000, bugzilla-daemon@kernel.org wrote:
->>>>> https://bugzilla.kernel.org/show_bug.cgi?id=216877
->>>>>
->>>>>               Bug ID: 216877
->>>>>              Summary: Regression in PCI powermanagement breaks resume after
->>>>>                       suspend
->>>>>       Kernel Version: 6.0.0-rc1
-> 
-> BTW, if the bisect is correct, I think the regression actually is in
-> v6.1-rc1, where 5e85eba6f50d ("PCI/ASPM: Refactor L1 PM Substates
-> Control Register programming") appeared.
-> 
->>>>> Created attachment 303512
->>>>>     --> https://bugzilla.kernel.org/attachment.cgi?id=303512&action=edit
->>>>> output of git bisect log
->>>>>
->>>>> After commit 5e85eba6f50dc288c22083a7e213152bcc4b8208 "PCI/ASPM:
->>>>> Refactor L1 PM Substates Control Register programming" my Laptop
->>>>> does not resume PCI devices back from suspend.
->>>
->>> Thomas, could you try the debug patch below on top of v6.2-rc1?
->>
->> Thank you for that patch Bjorn, but as far as I can see it does not change
->> anything.
-> 
-> Thanks for testing it.  Maybe Vidya will have more ideas.  The patch
-> below (based on v6.2-rc1) would revert 5e85eba6f50d and 4ff116d0d5fd.
-> If 5e85eba6f50d is the culprit, it should fix the regression.  It
-> would also potentially break L1 substates after resume, so we'd like
-> to avoid reverting it if possible.
-> 
-> But the "Unable to change power state from D3hot to D0, device
-> inaccessible" symptom suggests that the device is still in D3, which
-> would be more like a wakeup issue than an ASPM issue.
-> 
-> Your bisect log said 3e347969a577 ("PCI/PM: Reduce D3hot delay with
-> usleep_range()") was "good", but it would be worth double-checking,
-> e.g., see if reverting it from v6.2-rc1 makes any difference.
-> 
-> Bjorn
-> 
-> commit 61de2691d549 ("Revert "PCI/ASPM: Refactor L1 PM Substates Control Register programming"")
-> parent 1b929c02afd3
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Wed Jan 4 08:38:53 2023 -0600
-> 
->      Revert "PCI/ASPM: Refactor L1 PM Substates Control Register programming"
+On Tue, Jan 03, 2023 at 03:34:01PM +0800, Huacai Chen wrote:
+> cc27b735ad3a7557 ("PCI/portdrv: Turn off PCIe services during shutdown")
+> causes poweroff/reboot failure on systems with LS7A chipset. We found
+> that if we remove "pci_command &= ~PCI_COMMAND_MASTER" in do_pci_disable
+> _device(), it can work well. The hardware engineer says that the root
+> cause is that CPU is still accessing PCIe devices while poweroff/reboot,
 
-With this patch on top of 6.2-rc1 suspend/resume works and my PCI 
-devices come back online.
+Did you ever figure out what these CPU accesses are?  If we call the
+Root Port .shutdown() method, and later access a downstream device,
+that seems like a problem in itself.  At least, we should understand
+exactly *why* we access that downstream device.
 
+To be clear, cc27b735ad3a does not cause the failure.  IIUC, the cause
+is:
+
+  - CPU issues MMIO read to device below Root Port
+
+  - LS7A Root Port fails to forward transaction to secondary bus
+    because of LS7A Bus Master defect
+
+  - CPU hangs waiting for response to MMIO read
+
+> and if we disable the Bus Master Bit at this time, the PCIe controller
+> doesn't forward requests to downstream devices, and also does not send
+> TIMEOUT to CPU, which causes CPU wait forever (hardware deadlock). This
+> behavior is a PCIe protocol violation (Bus Master should not be involved
+> in CPU MMIO transactions), and it will be fixed in new revisions of
+> hardware (add timeout mechanism for CPU read request, whether or not Bus
+> Master bit is cleared).
+> 
+> On some x86 platforms, radeon/amdgpu devices can cause similar problems
+> [1][2]. Once before I wanted to make a single patch to solve "all of
+> these problems" together, but it seems unreasonable because maybe they
+> are not exactly the same problem.
+
+I don't know what any of these problems are.  Neither one of these bug
+reports has a root cause analysis, and it's not obvious how they're
+connected to this patch.
+
+> So, this patch add a new function
+> pcie_portdrv_shutdown(), a slight modified copy of pcie_portdrv_remove()
+> dedicated for the shutdown path, and then add a quirk just for LS7A to
+> avoid clearing Bus Master bit in pcie_portdrv_shutdown(). Leave other
+> platforms behave as before.
+
+Nit: don't break function names across lines ("do_pci_disable_device()").
+
+> [1] https://bugs.freedesktop.org/show_bug.cgi?id=97980
+> [2] https://bugs.freedesktop.org/show_bug.cgi?id=98638
+> 
+> Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+> ---
+>  drivers/pci/controller/pci-loongson.c | 17 +++++++++++++++++
+>  drivers/pci/pcie/portdrv.c            | 21 +++++++++++++++++++--
+>  include/linux/pci.h                   |  1 +
+>  3 files changed, 37 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
+> index 759ec211c17b..641308ba4126 100644
+> --- a/drivers/pci/controller/pci-loongson.c
+> +++ b/drivers/pci/controller/pci-loongson.c
+> @@ -93,6 +93,23 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+>  			DEV_PCIE_PORT_2, loongson_mrrs_quirk);
+>  
+> +static void loongson_bmaster_quirk(struct pci_dev *pdev)
+> +{
+> +	/*
+> +	 * Some Loongson PCIe ports will cause CPU deadlock if disable
+> +	 * the Bus Master bit during poweroff/reboot.
+
+This is not actually true, as far as I can see.
+
+It's not turning off Bus Master that causes the problem; it's the MMIO
+read to a downstream device when the Root Port has bus mastering
+disabled that causes the problem.
+
+> +	 */
+> +	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
+> +
+> +	bridge->no_dis_bmaster = 1;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+> +			DEV_PCIE_PORT_0, loongson_bmaster_quirk);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+> +			DEV_PCIE_PORT_1, loongson_bmaster_quirk);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+> +			DEV_PCIE_PORT_2, loongson_bmaster_quirk);
+> +
+>  static void loongson_pci_pin_quirk(struct pci_dev *pdev)
+>  {
+>  	pdev->pin = 1 + (PCI_FUNC(pdev->devfn) & 3);
+> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+> index 2cc2e60bcb39..96f45c444422 100644
+> --- a/drivers/pci/pcie/portdrv.c
+> +++ b/drivers/pci/pcie/portdrv.c
+> @@ -501,7 +501,6 @@ static void pcie_port_device_remove(struct pci_dev *dev)
+>  {
+>  	device_for_each_child(&dev->dev, NULL, remove_iter);
+>  	pci_free_irq_vectors(dev);
+> -	pci_disable_device(dev);
+>  }
+>  
+>  /**
+> @@ -727,6 +726,24 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
+>  	}
+>  
+>  	pcie_port_device_remove(dev);
+> +
+> +	pci_disable_device(dev);
+> +}
+> +
+> +static void pcie_portdrv_shutdown(struct pci_dev *dev)
+> +{
+> +	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
+> +
+> +	if (pci_bridge_d3_possible(dev)) {
+> +		pm_runtime_forbid(&dev->dev);
+> +		pm_runtime_get_noresume(&dev->dev);
+> +		pm_runtime_dont_use_autosuspend(&dev->dev);
+> +	}
+> +
+> +	pcie_port_device_remove(dev);
+> +
+> +	if (!bridge->no_dis_bmaster)
+> +		pci_disable_device(dev);
+>  }
+>  
+>  static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+> @@ -777,7 +794,7 @@ static struct pci_driver pcie_portdriver = {
+>  
+>  	.probe		= pcie_portdrv_probe,
+>  	.remove		= pcie_portdrv_remove,
+> -	.shutdown	= pcie_portdrv_remove,
+> +	.shutdown	= pcie_portdrv_shutdown,
+>  
+>  	.err_handler	= &pcie_portdrv_err_handler,
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 3df2049ec4a8..a64dbcb89231 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -573,6 +573,7 @@ struct pci_host_bridge {
+>  	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
+>  	unsigned int	no_ext_tags:1;		/* No Extended Tags */
+>  	unsigned int	no_inc_mrrs:1;		/* No Increase MRRS */
+> +	unsigned int	no_dis_bmaster:1;	/* No Disable Bus Master */
+>  	unsigned int	native_aer:1;		/* OS may use PCIe AER */
+>  	unsigned int	native_pcie_hotplug:1;	/* OS may use PCIe hotplug */
+>  	unsigned int	native_shpc_hotplug:1;	/* OS may use SHPC hotplug */
+> -- 
+> 2.31.1
+> 
