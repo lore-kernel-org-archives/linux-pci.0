@@ -2,384 +2,79 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D761C4708E
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Jan 2023 09:16:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E02F0C46467
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Jan 2023 09:16:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230060AbjADJQK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Jan 2023 04:16:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39980 "EHLO
+        id S233862AbjADJQ2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Jan 2023 04:16:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40104 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234032AbjADJQJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2023 04:16:09 -0500
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E21E015FFF
-        for <linux-pci@vger.kernel.org>; Wed,  4 Jan 2023 01:16:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1672823767; x=1704359767;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=1bzxR3ykV8nJ0hBo6N2nTF+70hv99wVk69rwJP2fxL0=;
-  b=dqv6VZqn/fDqrZmWg5UmaixrBGqmsqYZd8tItwEpPTqmZOFznBBmCMYM
-   DTKQdGR1r0sHp3ccc43j+I6k8tDZhppDelBudvCtgOWf4kNc9qZJ6SrAX
-   9hodhaPDxVqkCkRicJ6gR2N8clg5XYPGJZKwsA6275P3bBKIXEQpnEN1G
-   E8mWsLlzQbDJz3i6Ul6BIrrrY6X7rGttL0YnhCwuctWWHaSLFHM0czj8n
-   oLybPJSU8g8QM7NkJdeuQCz3PnuUx2ADct3dn/QKdV3RZGdbHpShSveV6
-   Ob20+o67f+Cy4dDgUFQUfgVB7ewcLg9nLeBwpJR+jylI/fg543ABcwTWk
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10579"; a="301578378"
-X-IronPort-AV: E=Sophos;i="5.96,299,1665471600"; 
-   d="scan'208";a="301578378"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jan 2023 01:16:05 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10579"; a="723580080"
-X-IronPort-AV: E=Sophos;i="5.96,299,1665471600"; 
-   d="scan'208";a="723580080"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga004.fm.intel.com with ESMTP; 04 Jan 2023 01:16:02 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 2A22B162; Wed,  4 Jan 2023 11:16:35 +0200 (EET)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Chris Chiu <chris.chiu@canonical.com>,
-        Alexander Motin <mav@ixsystems.com>,
-        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v4 1/2] PCI: Take other bus devices into account when distributing resources
-Date:   Wed,  4 Jan 2023 11:16:34 +0200
-Message-Id: <20230104091635.63331-2-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20230104091635.63331-1-mika.westerberg@linux.intel.com>
-References: <20230104091635.63331-1-mika.westerberg@linux.intel.com>
+        with ESMTP id S234306AbjADJQX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2023 04:16:23 -0500
+Received: from cstnet.cn (smtp23.cstnet.cn [159.226.251.23])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6ACE711C27;
+        Wed,  4 Jan 2023 01:16:20 -0800 (PST)
+Received: from localhost.localdomain (unknown [124.16.138.125])
+        by APP-03 (Coremail) with SMTP id rQCowABHT5fSQ7VjbrFsCg--.39697S2;
+        Wed, 04 Jan 2023 17:16:05 +0800 (CST)
+From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
+To:     jdmason@kudzu.us, dave.jiang@intel.com, allenbh@gmail.com,
+        lpieralisi@kernel.org, kw@linux.com, mani@kernel.org,
+        kishon@kernel.org, bhelgaas@google.com
+Cc:     ntb@lists.linux.dev, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jiasheng Jiang <jiasheng@iscas.ac.cn>
+Subject: [PATCH] PCI: endpoint: pci-epf-ntb: Add missing check for alloc_workqueue
+Date:   Wed,  4 Jan 2023 17:16:01 +0800
+Message-Id: <20230104091601.22719-1-jiasheng@iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: rQCowABHT5fSQ7VjbrFsCg--.39697S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7XrWrWw1rZrWxWrW8Wr4fuFg_yoWfuFb_Wa
+        y7ZrsrWrZ8Kr1kury5Kw4xZFyIk3s0qFnxXF4rtF9IkFy8CrZY9w4DXryDAr18ur15Kr1q
+        934jvr98Jw17KjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbx8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
+        6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+        Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+        I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r
+        4UM4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628v
+        n2kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+        0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFyl
+        IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+        AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
+        6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUkrc
+        fUUUUU=
+X-Originating-IP: [124.16.138.125]
+X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-A PCI bridge may reside on a bus with other devices as well. The
-resource distribution code does not take this into account properly and
-therefore it expands the bridge resource windows too much, not leaving
-space for the other devices (or functions of a multifunction device) and
-this leads to an issue that Jonathan reported. He runs QEMU with the
-following topology (QEMU parameters):
+Add check for the return value of alloc_workqueue since it may return
+NULL pointer.
 
- -device pcie-root-port,port=0,id=root_port13,chassis=0,slot=2  \
- -device x3130-upstream,id=sw1,bus=root_port13,multifunction=on \
- -device e1000,bus=root_port13,addr=0.1                         \
- -device xio3130-downstream,id=fun1,bus=sw1,chassis=0,slot=3    \
- -device e1000,bus=fun1
-
-The first e1000 NIC here is another function in the switch upstream
-port. This leads to following errors:
-
-  pci 0000:00:04.0: bridge window [mem 0x10200000-0x103fffff] to [bus 02-04]
-  pci 0000:02:00.0: bridge window [mem 0x10200000-0x103fffff] to [bus 03-04]
-  pci 0000:02:00.1: BAR 0: failed to assign [mem size 0x00020000]
-  e1000 0000:02:00.1: can't ioremap BAR 0: [??? 0x00000000 flags 0x0]
-
-Fix this by taking into account the device BARs on the bus, including
-the ones belonging to bridges themselves.
-
-Link: https://lore.kernel.org/linux-pci/20221014124553.0000696f@huawei.com/
-Link: https://lore.kernel.org/linux-pci/6053736d-1923-41e7-def9-7585ce1772d9@ixsystems.com/
-Reported-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reported-by: Alexander Motin <mav@ixsystems.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Fixes: 8b821cf76150 ("PCI: endpoint: Add EP function driver to provide NTB functionality")
+Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
 ---
- drivers/pci/setup-bus.c | 205 +++++++++++++++++++++++++---------------
- 1 file changed, 129 insertions(+), 76 deletions(-)
+ drivers/pci/endpoint/functions/pci-epf-ntb.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b4096598dbcb..cf6a7bdf2427 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1750,6 +1750,7 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
- 				 resource_size_t new_size)
- {
- 	resource_size_t add_size, size = resource_size(res);
-+	resource_size_t min_size;
+diff --git a/drivers/pci/endpoint/functions/pci-epf-ntb.c b/drivers/pci/endpoint/functions/pci-epf-ntb.c
+index 9a00448c7e61..304956bc0516 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-ntb.c
++++ b/drivers/pci/endpoint/functions/pci-epf-ntb.c
+@@ -2124,6 +2124,9 @@ static int __init epf_ntb_init(void)
  
- 	if (res->parent)
- 		return;
-@@ -1757,30 +1758,87 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
- 	if (!new_size)
- 		return;
- 
-+	/* Minimum granularity of a bridge bridge window */
-+	min_size = window_alignment(bridge->bus, res->flags);
+ 	kpcintb_workqueue = alloc_workqueue("kpcintb", WQ_MEM_RECLAIM |
+ 					    WQ_HIGHPRI, 0);
++	if (!kpcintb_workqueue)
++		return -ENOMEM;
 +
- 	if (new_size > size) {
- 		add_size = new_size - size;
-+		if (add_size < min_size)
-+			return;
- 		pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
- 			&add_size);
- 	} else if (new_size < size) {
- 		add_size = size - new_size;
-+		if (add_size < min_size)
-+			return;
- 		pci_dbg(bridge, "bridge window %pR shrunken by %pa\n", res,
- 			&add_size);
-+	} else {
-+		return;
- 	}
- 
- 	res->end = res->start + new_size - 1;
- 	remove_from_list(add_list, res);
- }
- 
-+static void reduce_dev_resources(struct pci_dev *dev, struct resource *io,
-+				 struct resource *mmio,
-+				 struct resource *mmio_pref)
-+{
-+	int i;
-+
-+	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *res = &dev->resource[i];
-+		resource_size_t align, tmp, size;
-+
-+		size = resource_size(res);
-+		if (!size)
-+			continue;
-+
-+		align = pci_resource_alignment(dev, res);
-+
-+		if (resource_type(res) == IORESOURCE_IO) {
-+			align = align ? ALIGN(io->start, align) - io->start : 0;
-+			tmp = align + size;
-+			io->start = min(io->start + tmp, io->end + 1);
-+		} else if (resource_type(res) == IORESOURCE_MEM) {
-+			if (res->flags & IORESOURCE_PREFETCH) {
-+				align = align ? ALIGN(mmio_pref->start, align) -
-+						mmio_pref->start : 0;
-+				tmp = align + size;
-+				mmio_pref->start = min(mmio_pref->start + tmp,
-+						       mmio_pref->end + 1);
-+			} else {
-+				align = align ? ALIGN(mmio->start, align) -
-+						mmio->start : 0;
-+				tmp = align + size;
-+				mmio->start = min(mmio->start + tmp,
-+						  mmio->end + 1);
-+			}
-+		}
-+	}
-+}
-+
-+/*
-+ * io, mmio and mmio_pref contain the total amount of bridge window
-+ * space available. This includes the minimal space needed to cover all
-+ * the existing devices on the bus and the possible extra space that can
-+ * be shared with the bridges.
-+ *
-+ * The resource space consumed by bus->self (the bridge) is already
-+ * reduced.
-+ */
- static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 					    struct list_head *add_list,
- 					    struct resource io,
- 					    struct resource mmio,
- 					    struct resource mmio_pref)
- {
-+	resource_size_t io_align, mmio_align, mmio_pref_align;
-+	resource_size_t io_per_b, mmio_per_b, mmio_pref_per_b;
- 	unsigned int normal_bridges = 0, hotplug_bridges = 0;
- 	struct resource *io_res, *mmio_res, *mmio_pref_res;
- 	struct pci_dev *dev, *bridge = bus->self;
--	resource_size_t io_per_hp, mmio_per_hp, mmio_pref_per_hp, align;
- 
- 	io_res = &bridge->resource[PCI_BRIDGE_IO_WINDOW];
- 	mmio_res = &bridge->resource[PCI_BRIDGE_MEM_WINDOW];
-@@ -1790,17 +1848,17 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 	 * The alignment of this bridge is yet to be considered, hence it must
- 	 * be done now before extending its bridge window.
- 	 */
--	align = pci_resource_alignment(bridge, io_res);
--	if (!io_res->parent && align)
--		io.start = min(ALIGN(io.start, align), io.end + 1);
-+	io_align = pci_resource_alignment(bridge, io_res);
-+	if (!io_res->parent && io_align)
-+		io.start = min(ALIGN(io.start, io_align), io.end + 1);
- 
--	align = pci_resource_alignment(bridge, mmio_res);
--	if (!mmio_res->parent && align)
--		mmio.start = min(ALIGN(mmio.start, align), mmio.end + 1);
-+	mmio_align = pci_resource_alignment(bridge, mmio_res);
-+	if (!mmio_res->parent && mmio_align)
-+		mmio.start = min(ALIGN(mmio.start, mmio_align), mmio.end + 1);
- 
--	align = pci_resource_alignment(bridge, mmio_pref_res);
--	if (!mmio_pref_res->parent && align)
--		mmio_pref.start = min(ALIGN(mmio_pref.start, align),
-+	mmio_pref_align = pci_resource_alignment(bridge, mmio_pref_res);
-+	if (!mmio_pref_res->parent && mmio_pref_align)
-+		mmio_pref.start = min(ALIGN(mmio_pref.start, mmio_pref_align),
- 			mmio_pref.end + 1);
- 
- 	/*
-@@ -1824,94 +1882,89 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 			normal_bridges++;
- 	}
- 
--	/*
--	 * There is only one bridge on the bus so it gets all available
--	 * resources which it can then distribute to the possible hotplug
--	 * bridges below.
--	 */
--	if (hotplug_bridges + normal_bridges == 1) {
--		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
--		if (dev->subordinate)
--			pci_bus_distribute_available_resources(dev->subordinate,
--				add_list, io, mmio, mmio_pref);
--		return;
--	}
--
--	if (hotplug_bridges == 0)
-+	if (!(hotplug_bridges + normal_bridges))
- 		return;
- 
- 	/*
- 	 * Calculate the total amount of extra resource space we can
--	 * pass to bridges below this one.  This is basically the
--	 * extra space reduced by the minimal required space for the
--	 * non-hotplug bridges.
-+	 * pass to bridges below this one. This is basically the extra
-+	 * space reduced by the minimal required space for the bridge
-+	 * windows and device BARs on this bus.
- 	 */
--	for_each_pci_bridge(dev, bus) {
--		resource_size_t used_size;
--		struct resource *res;
--
--		if (dev->is_hotplug_bridge)
--			continue;
--
--		/*
--		 * Reduce the available resource space by what the
--		 * bridge and devices below it occupy.
--		 */
--		res = &dev->resource[PCI_BRIDGE_IO_WINDOW];
--		align = pci_resource_alignment(dev, res);
--		align = align ? ALIGN(io.start, align) - io.start : 0;
--		used_size = align + resource_size(res);
--		if (!res->parent)
--			io.start = min(io.start + used_size, io.end + 1);
--
--		res = &dev->resource[PCI_BRIDGE_MEM_WINDOW];
--		align = pci_resource_alignment(dev, res);
--		align = align ? ALIGN(mmio.start, align) - mmio.start : 0;
--		used_size = align + resource_size(res);
--		if (!res->parent)
--			mmio.start = min(mmio.start + used_size, mmio.end + 1);
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		reduce_dev_resources(dev, &io, &mmio, &mmio_pref);
- 
--		res = &dev->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
--		align = pci_resource_alignment(dev, res);
--		align = align ? ALIGN(mmio_pref.start, align) -
--			mmio_pref.start : 0;
--		used_size = align + resource_size(res);
--		if (!res->parent)
--			mmio_pref.start = min(mmio_pref.start + used_size,
--				mmio_pref.end + 1);
-+	/*
-+	 * If there is at least one hotplug bridge on this bus it gets
-+	 * all the extra resource space that was left after the
-+	 * reductions above.
-+	 *
-+	 * If there are no hotplug bridges the extra resource space is
-+	 * split between non-hotplug bridges. This is to allow possible
-+	 * hotplug bridges below them to get the extra space as well.
-+	 */
-+	if (hotplug_bridges) {
-+		io_per_b = div64_ul(resource_size(&io), hotplug_bridges);
-+		mmio_per_b = div64_ul(resource_size(&mmio), hotplug_bridges);
-+		mmio_pref_per_b = div64_ul(resource_size(&mmio_pref),
-+					   hotplug_bridges);
-+	} else {
-+		io_per_b = div64_ul(resource_size(&io), normal_bridges);
-+		mmio_per_b = div64_ul(resource_size(&mmio), normal_bridges);
-+		mmio_pref_per_b = div64_ul(resource_size(&mmio_pref),
-+					   normal_bridges);
- 	}
- 
--	io_per_hp = div64_ul(resource_size(&io), hotplug_bridges);
--	mmio_per_hp = div64_ul(resource_size(&mmio), hotplug_bridges);
--	mmio_pref_per_hp = div64_ul(resource_size(&mmio_pref),
--		hotplug_bridges);
--
- 	/*
--	 * Go over devices on this bus and distribute the remaining
--	 * resource space between hotplug bridges.
-+	 * Make sure the split resource space is properly aligned for
-+	 * bridge windows (align it down to avoid going above what is
-+	 * available).
- 	 */
-+	if (io_align)
-+		io_per_b = ALIGN_DOWN(io_per_b, io_align);
-+	if (mmio_align)
-+		mmio_per_b = ALIGN_DOWN(mmio_per_b, mmio_align);
-+	if (mmio_pref_align)
-+		mmio_pref_per_b = ALIGN_DOWN(mmio_pref_per_b, mmio_align);
-+
- 	for_each_pci_bridge(dev, bus) {
-+		resource_size_t allocated_io, allocated_mmio, allocated_mmio_pref;
-+		const struct resource *res;
- 		struct pci_bus *b;
- 
- 		b = dev->subordinate;
--		if (!b || !dev->is_hotplug_bridge)
-+		if (!b)
-+			continue;
-+		if (hotplug_bridges && !dev->is_hotplug_bridge)
- 			continue;
- 
-+		io.end = io.start + io_per_b - 1;
- 		/*
--		 * Distribute available extra resources equally between
--		 * hotplug-capable downstream ports taking alignment into
--		 * account.
-+		 * The x_per_b holds the extra resource space that can
-+		 * be added for each bridge but there is the minimal
-+		 * already reserved as well so adjust x.start down
-+		 * accordingly to cover the whole space.
- 		 */
--		io.end = io.start + io_per_hp - 1;
--		mmio.end = mmio.start + mmio_per_hp - 1;
--		mmio_pref.end = mmio_pref.start + mmio_pref_per_hp - 1;
-+		res = &dev->resource[PCI_BRIDGE_IO_WINDOW];
-+		allocated_io = resource_size(res);
-+		io.start -= allocated_io;
-+
-+		mmio.end = mmio.start + mmio_per_b - 1;
-+		res = &dev->resource[PCI_BRIDGE_MEM_WINDOW];
-+		allocated_mmio = resource_size(res);
-+		mmio.start -= allocated_mmio;
-+
-+		mmio_pref.end = mmio_pref.start + mmio_pref_per_b - 1;
-+		res = &dev->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
-+		allocated_mmio_pref = resource_size(res);
-+		mmio_pref.start -= allocated_mmio_pref;
- 
- 		pci_bus_distribute_available_resources(b, add_list, io, mmio,
- 						       mmio_pref);
- 
--		io.start += io_per_hp;
--		mmio.start += mmio_per_hp;
--		mmio_pref.start += mmio_pref_per_hp;
-+		io.start += allocated_io + io_per_b;
-+		mmio.start += allocated_mmio + mmio_per_b;
-+		mmio_pref.start += allocated_mmio_pref + mmio_pref_per_b;
- 	}
- }
- 
+ 	ret = pci_epf_register_driver(&epf_ntb_driver);
+ 	if (ret) {
+ 		destroy_workqueue(kpcintb_workqueue);
 -- 
-2.35.1
+2.25.1
 
