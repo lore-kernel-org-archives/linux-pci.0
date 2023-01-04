@@ -2,44 +2,44 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37116C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00FA7C46467
 	for <linux-pci@archiver.kernel.org>; Wed,  4 Jan 2023 09:16:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233945AbjADJQI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Jan 2023 04:16:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39968 "EHLO
+        id S233868AbjADJQJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Jan 2023 04:16:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230060AbjADJQH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2023 04:16:07 -0500
+        with ESMTP id S230060AbjADJQJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2023 04:16:09 -0500
 Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7A1911C27
-        for <linux-pci@vger.kernel.org>; Wed,  4 Jan 2023 01:16:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09A01167C9
+        for <linux-pci@vger.kernel.org>; Wed,  4 Jan 2023 01:16:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1672823765; x=1704359765;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=40qXsFQqL89++ueEBZw184NAAR9UEuAzj05y6qSH8xo=;
-  b=fvxi42A9dMOyF8vc7uGjR9MP7phHSAJ2X6CyQn+yL6EVIbZgrxzHPyu1
-   tHOMYBE+zk93Kl2GDrzPjri/l9ZvdcR0S+lcPfCY+cnEWdK9dBIenx+/y
-   bVK+2ZqqrKP3fx9ipj0mnog7Il6K1VYjvLQbiuCa7EObHEc25+Li+/Tx5
-   mb5XrDM5m6ma1NV0Aoj1WYcurXjIVc2C1WtC0lYgEnTHLp4ZPaT/Fptvl
-   FORQPvMbxop5XLCQeGwDD+Ma4O9dTOmr+jHtSHvAcHnOui9323WFxksLW
-   A91v6HVBOKjqgwiSGEG9y9ktkaqMym8dw38eKfAuS5w4TbSodwf+UQCKN
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10579"; a="301578371"
+  t=1672823767; x=1704359767;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=kRdYd1BBUDFRXpS8n225Vc+pQfnBq+ne5kGQHwXdAX0=;
+  b=IW09PNYy0PrQfoOw1e+Bi2zm1Mx3+R6eRIvzPDX/SnP4oz/K6ovnBiDw
+   o7rQzwy/aX9LBNTVPHYF9FhcWQwS+jPjeHoTNs5akoiTsIGQf0IWvtMUj
+   Y5XTHdPYSpufrBjYaq/Hg32m74SRuFYAS7Bh3cZQke/m+1OoSImlFFmNm
+   +zBqEA+LBVTDHjnsetOhV3cTdhlTIm/Awuv7qS8+OB+a+QXL9kZH8qo7r
+   nvp+tQoaHcuD6PQySEqyyywuHq0QWGRsPvS4WzGjVxe2sNjabgEoZE1RC
+   3IAzz4QFzYq1Rcmj673zrOCcxQ5fzvylsN1N71JNsRZLbaqD6s8XKLg5z
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10579"; a="301578364"
 X-IronPort-AV: E=Sophos;i="5.96,299,1665471600"; 
-   d="scan'208";a="301578371"
+   d="scan'208";a="301578364"
 Received: from fmsmga004.fm.intel.com ([10.253.24.48])
   by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jan 2023 01:16:05 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10579"; a="723580077"
+X-IronPort-AV: E=McAfee;i="6500,9779,10579"; a="723580078"
 X-IronPort-AV: E=Sophos;i="5.96,299,1665471600"; 
-   d="scan'208";a="723580077"
+   d="scan'208";a="723580078"
 Received: from black.fi.intel.com ([10.237.72.28])
   by fmsmga004.fm.intel.com with ESMTP; 04 Jan 2023 01:16:02 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 30BD01CA; Wed,  4 Jan 2023 11:16:35 +0200 (EET)
+        id 1CB1219E; Wed,  4 Jan 2023 11:16:35 +0200 (EET)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
@@ -51,130 +51,65 @@ Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         linux-pci@vger.kernel.org
-Subject: [PATCH v4 2/2] PCI: Distribute available resources for root buses too
-Date:   Wed,  4 Jan 2023 11:16:35 +0200
-Message-Id: <20230104091635.63331-3-mika.westerberg@linux.intel.com>
+Subject: [PATCH v4 0/2] PCI: distribute resources for root buses
+Date:   Wed,  4 Jan 2023 11:16:33 +0200
+Message-Id: <20230104091635.63331-1-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20230104091635.63331-1-mika.westerberg@linux.intel.com>
-References: <20230104091635.63331-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Previously we distributed spare resources only upon hot-add, so if the
-initial root bus scan found devices that had not been fully configured by
-the BIOS, we allocated only enough resources to cover what was then
-present. If some of those devices were hotplug bridges, we did not leave
-any additional resource space for future expansion.
+Hi all,
 
-Distribute the available resources for root buses, too, to make this work
-the same way as the normal hotplug case.
+This is fourth iteration of the patch series trying to solve the problem
+reported by Chris Chiu [1]. In summary the current resource distribution
+code does not cover the initial device enumeration so if we find
+unconfigured bridges they get the bare minimum.
 
-This is a new version of the patch after the revert due to the regression
-reported by Jonathan Cameron. This one changes pci_bridge_resources_not_assigned()
-to work with bridges that do not have all the resource windows
-programmed by the boot firmware (previously we expected all I/O, memory
-and prefetchable memory were all programmed).
+In addition to that it turned out the current resource distribution code
+does not take into account possible multifunction devices and/or other
+devices on the bus. The patch 1/2 tries to make it more generic. I've
+tested it on QEMU following the topology Jonathan is using and also in a
+a couple of systems with Thunderbolt controller and complex topologies
+to make sure it still keeps working.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=216000
-Link: https://lore.kernel.org/r/20220905080232.36087-5-mika.westerberg@linux.intel.com
-Reported-by: Chris Chiu <chris.chiu@canonical.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/setup-bus.c | 57 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 56 insertions(+), 1 deletion(-)
+The previous versions of the series can be found:
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index cf6a7bdf2427..5ba1b48200bb 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1778,7 +1778,10 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
- 	}
- 
- 	res->end = res->start + new_size - 1;
--	remove_from_list(add_list, res);
-+
-+	/* If the resource is part of the add_list remove it now */
-+	if (add_list)
-+		remove_from_list(add_list, res);
- }
- 
- static void reduce_dev_resources(struct pci_dev *dev, struct resource *io,
-@@ -1976,6 +1979,8 @@ static void pci_bridge_distribute_available_resources(struct pci_dev *bridge,
- 	if (!bridge->is_hotplug_bridge)
- 		return;
- 
-+	pci_dbg(bridge, "distributing available resources\n");
-+
- 	/* Take the initial extra resources from the hotplug port */
- 	available_io = bridge->resource[PCI_BRIDGE_IO_WINDOW];
- 	available_mmio = bridge->resource[PCI_BRIDGE_MEM_WINDOW];
-@@ -1987,6 +1992,54 @@ static void pci_bridge_distribute_available_resources(struct pci_dev *bridge,
- 					       available_mmio_pref);
- }
- 
-+static bool pci_bridge_resources_not_assigned(struct pci_dev *dev)
-+{
-+	const struct resource *r;
-+
-+	/*
-+	 * Check the child device's resources and if they are not yet assigned
-+	 * it means we are configuring them (not the boot firmware) so we
-+	 * should be able to extend the upstream bridge resources in the same
-+	 * way we do with the normal hotplug case.
-+	 */
-+	r = &dev->resource[PCI_BRIDGE_IO_WINDOW];
-+	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
-+		return false;
-+	r = &dev->resource[PCI_BRIDGE_MEM_WINDOW];
-+	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
-+		return false;
-+	r = &dev->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
-+	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
-+		return false;
-+
-+	return true;
-+}
-+
-+static void
-+pci_root_bus_distribute_available_resources(struct pci_bus *bus,
-+					    struct list_head *add_list)
-+{
-+	struct pci_dev *dev, *bridge = bus->self;
-+
-+	for_each_pci_bridge(dev, bus) {
-+		struct pci_bus *b;
-+
-+		b = dev->subordinate;
-+		if (!b)
-+			continue;
-+
-+		/*
-+		 * Need to check "bridge" here too because it is NULL
-+		 * in case of root bus.
-+		 */
-+		if (bridge && pci_bridge_resources_not_assigned(dev))
-+			pci_bridge_distribute_available_resources(bridge,
-+								  add_list);
-+		else
-+			pci_root_bus_distribute_available_resources(b, add_list);
-+	}
-+}
-+
- /*
-  * First try will not touch PCI bridge res.
-  * Second and later try will clear small leaf bridge res.
-@@ -2026,6 +2079,8 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 	 */
- 	__pci_bus_size_bridges(bus, add_list);
- 
-+	pci_root_bus_distribute_available_resources(bus, add_list);
-+
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
+v3: https://lore.kernel.org/linux-pci/20221130112221.66612-1-mika.westerberg@linux.intel.com/
+
+v2: https://lore.kernel.org/linux-pci/20221114115953.40236-1-mika.westerberg@linux.intel.com/
+v1: https://lore.kernel.org/linux-pci/20221103103254.30497-1-mika.westerberg@linux.intel.com/
+
+Changes from v3:
+  * Make it more generic and not depend on how many bridges there are
+    on the bus.
+
+Changes from v2:
+  * Make both patches to work with PCI devices too (do not expect that
+    the bridge is always first device on the bus).
+  * Allow distribution with bridges that do not have all resource
+    windows programmed (therefore the patch 2/2 is not revert anymore)
+  * I did not add the tags from Rafael and Jonathan because the code is
+    not exactly the same anymore so was not sure if they still apply.
+
+Changes from v1:
+  * Re-worded the commit message to hopefully explain the problem better
+  * Added Link: to the bug report
+  * Update the comment according to Bjorn's suggestion
+  * Dropped the ->multifunction check
+  * Use %#llx in log format.
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=216000
+
+Mika Westerberg (2):
+  PCI: Take other bus devices into account when distributing resources
+  PCI: Distribute available resources for root buses too
+
+ drivers/pci/setup-bus.c | 262 ++++++++++++++++++++++++++++------------
+ 1 file changed, 185 insertions(+), 77 deletions(-)
+
 -- 
 2.35.1
 
