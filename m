@@ -2,296 +2,122 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE218C4708E
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Jan 2023 15:03:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E93C46467
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Jan 2023 15:46:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229866AbjADPDF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Jan 2023 10:03:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49872 "EHLO
+        id S235136AbjADPqB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Jan 2023 10:46:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234927AbjADPCu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2023 10:02:50 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DE90126;
-        Wed,  4 Jan 2023 07:02:49 -0800 (PST)
+        with ESMTP id S239792AbjADPpX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Jan 2023 10:45:23 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 321B334751;
+        Wed,  4 Jan 2023 07:45:14 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A5A4261738;
-        Wed,  4 Jan 2023 15:02:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB433C433F2;
-        Wed,  4 Jan 2023 15:02:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BD5446177A;
+        Wed,  4 Jan 2023 15:45:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 056B1C433EF;
+        Wed,  4 Jan 2023 15:45:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672844568;
-        bh=qxY2BbfKlE0QFSBqOhdFOmLlzC/+Cca9PIR3VqNP+Q8=;
+        s=k20201202; t=1672847113;
+        bh=29csCBF4JURyjYpQuuNuLUTGmcuSnO2zlMmXA5Fr9S8=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=tKx4WOtL3mjSj0RspNWDz+lQk45OFXNyfaeEbcMX65rhq1HQf3Z06ixaoru6BfeU5
-         P7eRUfuUer9LHi0XfUNwyFW94/L3P8mItih2Ry1zlx8bGl6uBjnnFFOtaKaYvLgb4G
-         SUJ03FVJR5B4jlSZSQ1G3wvUAZ0tAfTAaSu21SF2HY3e0Tk10VR9nd11edNiwmmUGI
-         SnU5zNf/3y1ajJdn0QiAOF9uIZGWliljrNKeJS0xdJ7hkMP7tfaO0LXvfTKUQNq+/b
-         43nyT+KjG7D30vTYr7pFydhGfd5Lamf9X5iGdZXIZb6TNxmSjaEZZPJi5upjEeIm1C
-         smSNRX3CF+4bQ==
-Date:   Wed, 4 Jan 2023 09:02:46 -0600
+        b=T9FVM8BYsffWLFQL4gRKaT+HXpTeg+IisPbGJEOvE1FH9C8LLaWYfRE6hY1+Den3T
+         PBKP/QmqvfvUk469Y0lE/YJ7+ShrIs890yEwnJQp+VZIvfnW3sY4SDQ2YT3AhS+RYS
+         sEF6XaVa0O6rnaW40pF9mAAwlMdlh3k8lOiTzlRM4ejQ/967p1izRv4Uvkobi3Qa4x
+         ijyIokZbqQm7Csjld8Rp+KTxYFZbGBl37EaPuW6rCx/Unle6FOR1RzxefEctk+u3yT
+         YNVxmD8IZxTemK/KfbMcOXOh421/pmpFKa/FdbrHy0K5Gea3buSg3Lx74pFm572kQ4
+         y4rMeaHOJ4ITg==
+Date:   Wed, 4 Jan 2023 09:45:11 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Thomas Witt <thomas@witt.link>
-Cc:     Vidya Sagar <vidyas@nvidia.com>, Thomas Witt <kernel@witt.link>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [Bug 216877] New: Regression in PCI powermanagement breaks
- resume after suspend
-Message-ID: <20230104150246.GA1068896@bhelgaas>
+To:     "Liang, Kan" <kan.liang@linux.intel.com>
+Cc:     bhelgaas@google.com, hdegoede@redhat.com, kernelorg@undead.fr,
+        kjhambrick@gmail.com, 2lprbe78@duck.com,
+        nicholas.johnson-opensource@outlook.com.au, benoitg@coeus.ca,
+        mika.westerberg@linux.intel.com, wse@tuxedocomputers.com,
+        mumblingdrunkard@protonmail.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, david.e.box@intel.com,
+        yunying.sun@intel.com
+Subject: Re: Bug report: the extended PCI config space is missed with 6.2-rc2
+Message-ID: <20230104154511.GA1071195@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ba98ad17-53b0-1f76-70f7-10d37d279f9d@witt.link>
+In-Reply-To: <20230104145032.GA1069244@bhelgaas>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 04, 2023 at 09:44:25AM +0100, Thomas Witt wrote:
-> On 04/01/2023 01:30, Bjorn Helgaas wrote:
-> > On Mon, Jan 02, 2023 at 11:15:16AM -0600, Bjorn Helgaas wrote:
-> > > On Mon, Jan 02, 2023 at 02:02:51PM +0000, bugzilla-daemon@kernel.org wrote:
-> > > > https://bugzilla.kernel.org/show_bug.cgi?id=216877
-> > > > 
-> > > >              Bug ID: 216877
-> > > >             Summary: Regression in PCI powermanagement breaks resume after
-> > > >                      suspend
-> > > >      Kernel Version: 6.0.0-rc1
-
-BTW, if the bisect is correct, I think the regression actually is in
-v6.1-rc1, where 5e85eba6f50d ("PCI/ASPM: Refactor L1 PM Substates
-Control Register programming") appeared. 
-
-> > > > Created attachment 303512
-> > > >    --> https://bugzilla.kernel.org/attachment.cgi?id=303512&action=edit
-> > > > output of git bisect log
-> > > > 
-> > > > After commit 5e85eba6f50dc288c22083a7e213152bcc4b8208 "PCI/ASPM:
-> > > > Refactor L1 PM Substates Control Register programming" my Laptop
-> > > > does not resume PCI devices back from suspend.
+On Wed, Jan 04, 2023 at 08:50:32AM -0600, Bjorn Helgaas wrote:
+> On Wed, Jan 04, 2023 at 09:39:56AM -0500, Liang, Kan wrote:
+> > Hi Bjorn,
 > > 
-> > Thomas, could you try the debug patch below on top of v6.2-rc1?
+> > Happy new year!
+> > 
+> > We found some PCI issues with the latest 6.2-rc2.
+> > 
+> > - Using the lspci -xxxx, the extended PCI config space of all PCI
+> > devices are missed with the latest 6.2-rc2. The system we used had 932
+> > PCI devices, at least 800 which have extended space as seen when booted
+> > into a 5.15 kernel. But none of them appeared in 6.2-rc2.
+> > - The drivers which rely on the information in the extended PCI config
+> > space don't work anymore. We have confirmed that the perf uncore driver
+> > (uncore performance monitoring) and Intel VSEC driver (telemetry) don't
+> > work in 6.2-rc2. There could be more drivers which are impacted.
+> > 
+> > After a bisect, we found the regression is caused by the below commit
+> > 07eab0901ede ("efi/x86: Remove EfiMemoryMappedIO from E820 map").
+> > After reverting the commit, the issues are gone.
+> > 
+> > Could you please take a look at the issues?
 > 
-> Thank you for that patch Bjorn, but as far as I can see it does not change
-> anything.
+> Certainly.  Can you capture the complete dmesg log, please?
 
-Thanks for testing it.  Maybe Vidya will have more ideas.  The patch
-below (based on v6.2-rc1) would revert 5e85eba6f50d and 4ff116d0d5fd.
-If 5e85eba6f50d is the culprit, it should fix the regression.  It
-would also potentially break L1 substates after resume, so we'd like
-to avoid reverting it if possible.
+Thanks!  Comparing v5.19 and v6.2-rc2, I see these:
 
-But the "Unable to change power state from D3hot to D0, device
-inaccessible" symptom suggests that the device is still in D3, which
-would be more like a wakeup issue than an ASPM issue. 
+  --- v5.19
+  +++ v6.2-rc2
 
-Your bisect log said 3e347969a577 ("PCI/PM: Reduce D3hot delay with
-usleep_range()") was "good", but it would be worth double-checking,
-e.g., see if reverting it from v6.2-rc1 makes any difference.
+  +efi: Remove mem458: MMIO range=[0x80000000-0x8fffffff] (256MB) from e820 map
+  +e820: remove [mem 0x80000000-0x8fffffff] reserved
+  -PCI: MMCONFIG at [mem 0x80000000-0x8fffffff] reserved in E820
+  +PCI: not using MMCONFIG
+  +PCI: MMCONFIG for domain 0000 [bus 00-ff] at [mem 0x80000000-0x8fffffff] (base 0x80000000)
+  +[Firmware Info]: PCI: MMCONFIG at [mem 0x80000000-0x8fffffff] not reserved in ACPI motherboard resources
+  +PCI: not using MMCONFIG
+   system 00:01: [mem 0xff000000-0xffffffff] has been reserved
+   system 00:02: [mem 0xfd000000-0xfd69ffff] could not be reserved
+   system 00:02: [mem 0xfd6c0000-0xfd6cffff] has been reserved
+   system 00:02: [mem 0xfd6f0000-0xfdffffff] has been reserved
+   system 00:02: [mem 0xfe000000-0xfe01ffff] could not be reserved
+   system 00:02: [mem 0xfe200000-0xfe7fffff] has been reserved
+   system 00:02: [mem 0xff000000-0xffffffff] has been reserved
+
+I think this is a firmware defect.  MCFG says the ECAM space is at
+[mem 0x80000000-0x8fffffff].  Per the PCI Firmware Spec, r3.3, Note 2
+of Table 4-2, this space should be reserved by a motherboard resource,
+i.e., a PNP0C02 device (which would appear as "system 00:01" or
+similar above) with _CRS that includes [mem 0x80000000-0x8fffffff].
+
+This firmware supplies an EfiMemoryMappedIO region
+[0x80000000-0x8fffffff] for the ECAM space (this could be confirmed by
+adding "efi=debug"), and the bootloader or EFI stub converted that to
+an E820 entry that Linux consumes.
+
+On v5.19, Linux treated that EfiMemoryMappedIO region as a reservation
+of the ECAM space, but starting with v6.2-rc1, Linux removes
+EfiMemoryMappedIO regions from E820.
+
+My understanding is that EfiMemoryMappedIO tells the OS to map the
+area for use by runtime services, but is not intended to prevent the
+OS from using the area.  Some platforms use EfiMemoryMappedIO for PCI
+host bridge apertures, and of course the OS needs to use those.
+
+If your firmware folks disagree and think Linux should be able to
+figure this out differently, I would love to have a conversation about
+how to do this.
 
 Bjorn
-
-commit 61de2691d549 ("Revert "PCI/ASPM: Refactor L1 PM Substates Control Register programming"")
-parent 1b929c02afd3
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Wed Jan 4 08:38:53 2023 -0600
-
-    Revert "PCI/ASPM: Refactor L1 PM Substates Control Register programming"
-    
-    This reverts 5e85eba6f50d ("PCI/ASPM: Refactor L1 PM Substates Control
-    Register programming") and 4ff116d0d5fd ("PCI/ASPM: Save L1 PM Substates
-    Capability for suspend/resume").
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index fba95486caaf..5641786bd020 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1665,7 +1665,6 @@ int pci_save_state(struct pci_dev *dev)
- 		return i;
- 
- 	pci_save_ltr_state(dev);
--	pci_save_aspm_l1ss_state(dev);
- 	pci_save_dpc_state(dev);
- 	pci_save_aer_state(dev);
- 	pci_save_ptm_state(dev);
-@@ -1772,7 +1771,6 @@ void pci_restore_state(struct pci_dev *dev)
- 	 * LTR itself (in the PCIe capability).
- 	 */
- 	pci_restore_ltr_state(dev);
--	pci_restore_aspm_l1ss_state(dev);
- 
- 	pci_restore_pcie_state(dev);
- 	pci_restore_pasid_state(dev);
-@@ -3465,11 +3463,6 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
- 	if (error)
- 		pci_err(dev, "unable to allocate suspend buffer for LTR\n");
- 
--	error = pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_L1SS,
--					    2 * sizeof(u32));
--	if (error)
--		pci_err(dev, "unable to allocate suspend buffer for ASPM-L1SS\n");
--
- 	pci_allocate_vc_save_buffers(dev);
- }
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 9ed3b5550043..9049d07d3aae 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -566,14 +566,10 @@ bool pcie_wait_for_link(struct pci_dev *pdev, bool active);
- void pcie_aspm_init_link_state(struct pci_dev *pdev);
- void pcie_aspm_exit_link_state(struct pci_dev *pdev);
- void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
--void pci_save_aspm_l1ss_state(struct pci_dev *dev);
--void pci_restore_aspm_l1ss_state(struct pci_dev *dev);
- #else
- static inline void pcie_aspm_init_link_state(struct pci_dev *pdev) { }
- static inline void pcie_aspm_exit_link_state(struct pci_dev *pdev) { }
- static inline void pcie_aspm_powersave_config_link(struct pci_dev *pdev) { }
--static inline void pci_save_aspm_l1ss_state(struct pci_dev *dev) { }
--static inline void pci_restore_aspm_l1ss_state(struct pci_dev *dev) { }
- #endif
- 
- #ifdef CONFIG_PCIE_ECRC
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 53a1fa306e1e..4b4184563a92 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -470,31 +470,6 @@ static void pci_clear_and_set_dword(struct pci_dev *pdev, int pos,
- 	pci_write_config_dword(pdev, pos, val);
- }
- 
--static void aspm_program_l1ss(struct pci_dev *dev, u32 ctl1, u32 ctl2)
--{
--	u16 l1ss = dev->l1ss;
--	u32 l1_2_enable;
--
--	/*
--	 * Per PCIe r6.0, sec 5.5.4, T_POWER_ON in PCI_L1SS_CTL2 must be
--	 * programmed prior to setting the L1.2 enable bits in PCI_L1SS_CTL1.
--	 */
--	pci_write_config_dword(dev, l1ss + PCI_L1SS_CTL2, ctl2);
--
--	/*
--	 * In addition, Common_Mode_Restore_Time and LTR_L1.2_THRESHOLD in
--	 * PCI_L1SS_CTL1 must be programmed *before* setting the L1.2
--	 * enable bits, even though they're all in PCI_L1SS_CTL1.
--	 */
--	l1_2_enable = ctl1 & PCI_L1SS_CTL1_L1_2_MASK;
--	ctl1 &= ~PCI_L1SS_CTL1_L1_2_MASK;
--
--	pci_write_config_dword(dev, l1ss + PCI_L1SS_CTL1, ctl1);
--	if (l1_2_enable)
--		pci_write_config_dword(dev, l1ss + PCI_L1SS_CTL1,
--				       ctl1 | l1_2_enable);
--}
--
- /* Calculate L1.2 PM substate timing parameters */
- static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 				u32 parent_l1ss_cap, u32 child_l1ss_cap)
-@@ -504,6 +479,7 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 	u32 t_common_mode, t_power_on, l1_2_threshold, scale, value;
- 	u32 ctl1 = 0, ctl2 = 0;
- 	u32 pctl1, pctl2, cctl1, cctl2;
-+	u32 pl1_2_enables, cl1_2_enables;
- 
- 	if (!(link->aspm_support & ASPM_STATE_L1_2_MASK))
- 		return;
-@@ -552,21 +528,39 @@ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 	    ctl2 == pctl2 && ctl2 == cctl2)
- 		return;
- 
--	pctl1 &= ~(PCI_L1SS_CTL1_CM_RESTORE_TIME |
--		   PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
--		   PCI_L1SS_CTL1_LTR_L12_TH_SCALE);
--	pctl1 |= (ctl1 & (PCI_L1SS_CTL1_CM_RESTORE_TIME |
--			  PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
--			  PCI_L1SS_CTL1_LTR_L12_TH_SCALE));
--	aspm_program_l1ss(parent, pctl1, ctl2);
-+	/* Disable L1.2 while updating.  See PCIe r5.0, sec 5.5.4, 7.8.3.3 */
-+	pl1_2_enables = pctl1 & PCI_L1SS_CTL1_L1_2_MASK;
-+	cl1_2_enables = cctl1 & PCI_L1SS_CTL1_L1_2_MASK;
- 
--	cctl1 &= ~(PCI_L1SS_CTL1_CM_RESTORE_TIME |
--		   PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
--		   PCI_L1SS_CTL1_LTR_L12_TH_SCALE);
--	cctl1 |= (ctl1 & (PCI_L1SS_CTL1_CM_RESTORE_TIME |
--			  PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
--			  PCI_L1SS_CTL1_LTR_L12_TH_SCALE));
--	aspm_program_l1ss(child, cctl1, ctl2);
-+	if (pl1_2_enables || cl1_2_enables) {
-+		pci_clear_and_set_dword(child, child->l1ss + PCI_L1SS_CTL1,
-+					PCI_L1SS_CTL1_L1_2_MASK, 0);
-+		pci_clear_and_set_dword(parent, parent->l1ss + PCI_L1SS_CTL1,
-+					PCI_L1SS_CTL1_L1_2_MASK, 0);
-+	}
-+
-+	/* Program T_POWER_ON times in both ports */
-+	pci_write_config_dword(parent, parent->l1ss + PCI_L1SS_CTL2, ctl2);
-+	pci_write_config_dword(child, child->l1ss + PCI_L1SS_CTL2, ctl2);
-+
-+	/* Program Common_Mode_Restore_Time in upstream device */
-+	pci_clear_and_set_dword(parent, parent->l1ss + PCI_L1SS_CTL1,
-+				PCI_L1SS_CTL1_CM_RESTORE_TIME, ctl1);
-+
-+	/* Program LTR_L1.2_THRESHOLD time in both ports */
-+	pci_clear_and_set_dword(parent,	parent->l1ss + PCI_L1SS_CTL1,
-+				PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
-+				PCI_L1SS_CTL1_LTR_L12_TH_SCALE, ctl1);
-+	pci_clear_and_set_dword(child, child->l1ss + PCI_L1SS_CTL1,
-+				PCI_L1SS_CTL1_LTR_L12_TH_VALUE |
-+				PCI_L1SS_CTL1_LTR_L12_TH_SCALE, ctl1);
-+
-+	if (pl1_2_enables || cl1_2_enables) {
-+		pci_clear_and_set_dword(parent, parent->l1ss + PCI_L1SS_CTL1, 0,
-+					pl1_2_enables);
-+		pci_clear_and_set_dword(child, child->l1ss + PCI_L1SS_CTL1, 0,
-+					cl1_2_enables);
-+	}
- }
- 
- static void aspm_l1ss_init(struct pcie_link_state *link)
-@@ -757,43 +751,6 @@ static void pcie_config_aspm_l1ss(struct pcie_link_state *link, u32 state)
- 				PCI_L1SS_CTL1_L1SS_MASK, val);
- }
- 
--void pci_save_aspm_l1ss_state(struct pci_dev *dev)
--{
--	struct pci_cap_saved_state *save_state;
--	u16 l1ss = dev->l1ss;
--	u32 *cap;
--
--	if (!l1ss)
--		return;
--
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_L1SS);
--	if (!save_state)
--		return;
--
--	cap = (u32 *)&save_state->cap.data[0];
--	pci_read_config_dword(dev, l1ss + PCI_L1SS_CTL2, cap++);
--	pci_read_config_dword(dev, l1ss + PCI_L1SS_CTL1, cap++);
--}
--
--void pci_restore_aspm_l1ss_state(struct pci_dev *dev)
--{
--	struct pci_cap_saved_state *save_state;
--	u32 *cap, ctl1, ctl2;
--	u16 l1ss = dev->l1ss;
--
--	if (!l1ss)
--		return;
--
--	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_L1SS);
--	if (!save_state)
--		return;
--
--	cap = (u32 *)&save_state->cap.data[0];
--	ctl2 = *cap++;
--	ctl1 = *cap;
--	aspm_program_l1ss(dev, ctl1, ctl2);
--}
--
- static void pcie_config_aspm_dev(struct pci_dev *pdev, u32 val)
- {
- 	pcie_capability_clear_and_set_word(pdev, PCI_EXP_LNKCTL,
