@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DCC0C678DB
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Jan 2023 21:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FCEBC67871
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Jan 2023 21:59:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236438AbjAFV7X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 Jan 2023 16:59:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42340 "EHLO
+        id S236488AbjAFV7Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 Jan 2023 16:59:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235841AbjAFV7U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2023 16:59:20 -0500
+        with ESMTP id S236161AbjAFV7V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2023 16:59:21 -0500
 Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 140726B5F0;
-        Fri,  6 Jan 2023 13:59:20 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2AEB2728AD;
+        Fri,  6 Jan 2023 13:59:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1673042360; x=1704578360;
+  t=1673042361; x=1704578361;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=sQb3sEVMUrtQ11r87eT7TSDBLNdId+qUxBQzgXh/Yr4=;
-  b=AJGaUUeLiVw+MSnV9EoFlzWtud8NDBlwuLKrtYNmM7XkSEKP7V/b6HJc
-   ya6OxH062uVVl+SLJ+BeDZBhHg0LmHfQMMjZQPpGlEijjvodvl6soaswp
-   FjXYgLQ4dEcjUv4pOx4guGGvFZ1D2AwaPnn37OkCncuCeGWKGdkPu6XME
-   jLQEBGtLuKmroxafRqIAVLNUAR+2w48cubP8brLpLiHcMGsMZahHEEUfU
-   GW7gC0P5BUmcrVdcxapFddAExhnaZ4GRHaVGI43k5r7IhjxlG8KAf4kOv
-   +ZMB/jMWQGeIDwttaWmPJ33HJIWaBD3QsFD3WxoTl62kJko9IXol7hbSg
+  bh=0AI0odRghP/P2eZTU9+vUvGrnUWUgK7vgCVx3xkIU9s=;
+  b=I1PcuUKOF1qxryEjviOCk2Q/LT0NFLlqxVVmdatbpPrT7NPUjburRl5G
+   V28RpTk/E0xXGgs3C/daHNlwUUuQbojodQF1Irc2c/iq0jUvMSjPQSclN
+   8/q5oN0jAHaCKyU7TmA/8cRDbNDpJ13ps/KRgpVLSHJyckPS7S0FF4Omk
+   6XHYXdo8c1b6Q3/GwPB8epW3SoW7xHho3bwLX+CZQy6qgZgdJzdGhrNyK
+   ZRjq7sT+bV/XFfJ/wJg1mgWkyGL8i8IGqp4CXJTFa/93yiMgGq3xw/qCn
+   ctHuaawCT6apjgSTO5eP60VHd6UtvqqeOvxUXpyhnHJKUp89qg18jtuXT
    Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10582"; a="387030715"
+X-IronPort-AV: E=McAfee;i="6500,9779,10582"; a="387030720"
 X-IronPort-AV: E=Sophos;i="5.96,306,1665471600"; 
-   d="scan'208";a="387030715"
+   d="scan'208";a="387030720"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
   by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jan 2023 13:59:18 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10582"; a="763652888"
+X-IronPort-AV: E=McAfee;i="6500,9779,10582"; a="763652899"
 X-IronPort-AV: E=Sophos;i="5.96,306,1665471600"; 
-   d="scan'208";a="763652888"
+   d="scan'208";a="763652899"
 Received: from avenkata-desk0.sc.intel.com ([172.25.112.60])
-  by fmsmga002.fm.intel.com with ESMTP; 06 Jan 2023 13:59:16 -0800
+  by fmsmga002.fm.intel.com with ESMTP; 06 Jan 2023 13:59:17 -0800
 From:   Anirudh Venkataramanan <anirudh.venkataramanan@intel.com>
 To:     netdev@vger.kernel.org
 Cc:     linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
@@ -45,9 +45,9 @@ Cc:     linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
         sparclinux@vger.kernel.org,
         Anirudh Venkataramanan <anirudh.venkataramanan@intel.com>,
         Leon Romanovsky <leon@kernel.org>
-Subject: [PATCH net-next 4/7] mips: configs: Remove reference to CONFIG_CASSINI
-Date:   Fri,  6 Jan 2023 14:00:17 -0800
-Message-Id: <20230106220020.1820147-5-anirudh.venkataramanan@intel.com>
+Subject: [PATCH net-next 7/7] sparc: configs: Remove references to CONFIG_SUNVNET and CONFIG_LDMVSW
+Date:   Fri,  6 Jan 2023 14:00:20 -0800
+Message-Id: <20230106220020.1820147-8-anirudh.venkataramanan@intel.com>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20230106220020.1820147-1-anirudh.venkataramanan@intel.com>
 References: <20230106220020.1820147-1-anirudh.venkataramanan@intel.com>
@@ -57,27 +57,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-An earlier patch removed the Sun Cassnini driver. Remove references to
-CONFIG_CASSINI from the mtx1 defconfig
+An earlier patch removed the Sun LDOM vswitch and sunvnet drivers. Remove
+references to CONFIG_SUNVNET and CONFIG_LDMVSW from the sparc64 defconfig.
 
 Cc: Leon Romanovsky <leon@kernel.org>
 Signed-off-by: Anirudh Venkataramanan <anirudh.venkataramanan@intel.com>
 ---
- arch/mips/configs/mtx1_defconfig | 1 -
- 1 file changed, 1 deletion(-)
+ arch/sparc/configs/sparc64_defconfig | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/arch/mips/configs/mtx1_defconfig b/arch/mips/configs/mtx1_defconfig
-index 89a1511..17d88a0 100644
---- a/arch/mips/configs/mtx1_defconfig
-+++ b/arch/mips/configs/mtx1_defconfig
-@@ -305,7 +305,6 @@ CONFIG_PCMCIA_SMC91C92=m
- CONFIG_EPIC100=m
- CONFIG_HAPPYMEAL=m
+diff --git a/arch/sparc/configs/sparc64_defconfig b/arch/sparc/configs/sparc64_defconfig
+index 1809909..a2c76e8 100644
+--- a/arch/sparc/configs/sparc64_defconfig
++++ b/arch/sparc/configs/sparc64_defconfig
+@@ -95,8 +95,6 @@ CONFIG_MII=m
+ CONFIG_SUNLANCE=m
+ CONFIG_HAPPYMEAL=y
  CONFIG_SUNGEM=m
--CONFIG_CASSINI=m
- CONFIG_TLAN=m
- CONFIG_VIA_RHINE=m
- CONFIG_VIA_VELOCITY=m
+-CONFIG_SUNVNET=m
+-CONFIG_LDMVSW=m
+ CONFIG_NET_PCI=y
+ CONFIG_E1000=m
+ CONFIG_E1000E=m
 -- 
 2.37.2
 
