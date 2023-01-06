@@ -2,100 +2,107 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 910ECC54E76
-	for <linux-pci@archiver.kernel.org>; Fri,  6 Jan 2023 07:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92C68C3DA7A
+	for <linux-pci@archiver.kernel.org>; Fri,  6 Jan 2023 08:12:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231894AbjAFHc6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 6 Jan 2023 02:32:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54126 "EHLO
+        id S231977AbjAFIMm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 6 Jan 2023 03:12:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229923AbjAFHce (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2023 02:32:34 -0500
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 189CA6ADB6
-        for <linux-pci@vger.kernel.org>; Thu,  5 Jan 2023 23:32:33 -0800 (PST)
-Received: by mail-wm1-x32f.google.com with SMTP id k26-20020a05600c1c9a00b003d972646a7dso2950320wms.5
-        for <linux-pci@vger.kernel.org>; Thu, 05 Jan 2023 23:32:33 -0800 (PST)
+        with ESMTP id S232012AbjAFIMX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 6 Jan 2023 03:12:23 -0500
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D37407A917
+        for <linux-pci@vger.kernel.org>; Fri,  6 Jan 2023 00:12:11 -0800 (PST)
+Received: by mail-wr1-x433.google.com with SMTP id w1so586826wrt.8
+        for <linux-pci@vger.kernel.org>; Fri, 06 Jan 2023 00:12:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tpLSm6CuKDS6yh1V9OvmrxhxF+Wx/408Npf/SDOYlgc=;
-        b=XUmyNwMsSi1igSUA6OyZ8APYUipjp4oPFJZlJhVNqsDOwr6oqlbHTRGcvpUixUnlMk
-         EhCmLAq5WdQJnP4FB0qZ/96nb9/CstBsU2UpfQDHs7uqxMqiZq4+xJoJLLMIJwcOCnRW
-         l6yL9Q9YNE6thamc5I5pWXQ+GP/fpdxuh8+V6rfD/luO5tmy5vzCSvBmQ2F19FD2oUxF
-         Wf95+jc8zqBg9fnS42BQMOBFKjXZ39Qjy3ujEYHkTT8jAoSYUT9budfiDQitDG49iexJ
-         ILUZcjltGL0x5LHPv+mw3NrNhEwe2v01oZKPDMj2YPM4UnP4B2cZJufIYbMauN5Ykspt
-         LMsQ==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZRTSLPAbue4Um+MgvQ/BKV8J3CThyZ1NI4K+wpxRKTo=;
+        b=xENk31DEptz+5hKVOh6sODx9JGJ8m6agO20liO4YqD4avvcycc1vrXxCSj4l3G/F7+
+         Q6wIyJZ4iHQaYctbBO0IVCqIGOa+cVoTI7OLWj3d4b+owVkfh/u9Ad0IMDP3m8Y8TExJ
+         lN73xkCu5mouXlmVWU9oQXKx7Ntpm/K+TvngrVIGVWef5eDFt24iBhtRet7jF6lCSvq0
+         liqV0ivNfDalFNq6qojxf/pGhGdV1XmrCrcEANJIR/+czzV+aI7XLYDaGG47NGsmF7G/
+         XJ3cARSDdPRaBSyTbG9KroiHAX3UnHA0gR+17G5JU+Yc01bzGvZPmMJiQG7LU05A2pq0
+         iMtg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tpLSm6CuKDS6yh1V9OvmrxhxF+Wx/408Npf/SDOYlgc=;
-        b=XiNV6hrgPJvYvnSIJYbdTWy3pdRlZAkPcJZlmW8tyG1j2cVJsgO6ZnEvVYy98JgHIQ
-         5t6y2AFxtbyAu6t3spE9uQboX/zh1yK2QBzyBg2rHzmqbmSWYt0rNpW+HipczGxfIjTO
-         9KpTL8v6CTRtLxYHa4mIEu3gmCoDJ0t++mI9TryjJxBBf78BcmxW6FrhqdKEd+mxUerq
-         D8+Hxm8Eg1UUvDKsiuLrm+phAvwqZ/PDJwZ2PlHei9VlVaKuKmCX7ezG+edPqpiNakHq
-         z9xyPY//l63ehjjD41qn/yOoE71KbUOxCEYQxX6w+KxtRZia+m5xJru/EHihDKC6HWcY
-         Qm8w==
-X-Gm-Message-State: AFqh2kpLAzG321RICTeYpPkYdJMQ6kChMjxLCPPaEPud0YvJhh+2rBX/
-        bUq3/v4CwbS0fqCne0O9GXVYig==
-X-Google-Smtp-Source: AMrXdXsPrLpJuWu5vWsJ9FCOE0dsyQg2/VcnP2li8WxEguxBxOZYC/+M9y71/sz3HWtjlzFjceOTjw==
-X-Received: by 2002:a05:600c:500a:b0:3d3:5b56:b834 with SMTP id n10-20020a05600c500a00b003d35b56b834mr38440614wmr.5.1672990351634;
-        Thu, 05 Jan 2023 23:32:31 -0800 (PST)
-Received: from [192.168.1.102] ([178.197.216.144])
-        by smtp.gmail.com with ESMTPSA id k13-20020a7bc40d000000b003d9b351de26sm694803wmi.9.2023.01.05.23.32.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Jan 2023 23:32:30 -0800 (PST)
-Message-ID: <8b1f8f2c-c8ea-c987-4860-e3be3bf312f1@linaro.org>
-Date:   Fri, 6 Jan 2023 08:32:27 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH 1/4] dt-bindings: PCI: qcom: add MSM8998 specific
- compatible
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Andy Gross <agross@kernel.org>,
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ZRTSLPAbue4Um+MgvQ/BKV8J3CThyZ1NI4K+wpxRKTo=;
+        b=slTBK1Ewrniaaqpfn60AvtsAjfj33ODkxv5BtI5KXgV2M2RMHtozE5f4sOrWXIsRzy
+         VvgGIM/5TaDPc6oyJwyxgqdjTaKvNsL3vAzdaorzEWWgZfCpKA2uU7sgN3i22VW2Lr8z
+         ZF3oGxj0my2bC8EQwSh+u3Z3MjhhnSprplcZRZPltw9bqC7AKJJVDo9xqJGLq8aTJeb4
+         nd8XkST1niMvWHaKwlKqvpcHpOpXzH05+WB5ws03Lxz1ylMttHUYO9WDSLvwuvHniSUT
+         9nHr0Y318TDGlOClTzRQDp4q9YRXJ2Cnw8i6eQo9BtjGmKzabS4H0z1V/+A3WKlX9zHW
+         Qq6w==
+X-Gm-Message-State: AFqh2krOE76vectnkLFkiK1wA1Vz4zM/LuO8RTH40/XS5eQ5wkv/Mkd+
+        zx8HQDF2me5jbsiGP1VXp2heHQ==
+X-Google-Smtp-Source: AMrXdXsaZv5eY2i4scz2F8KId1dlkbqOzZGo8DYxNZWxWPULFK2XrWPZsF/RcyUx1NqzpL7/O4DghA==
+X-Received: by 2002:a5d:55c8:0:b0:268:eb74:1857 with SMTP id i8-20020a5d55c8000000b00268eb741857mr33934340wrw.20.1672992730363;
+        Fri, 06 Jan 2023 00:12:10 -0800 (PST)
+Received: from krzk-bin.. ([178.197.216.144])
+        by smtp.gmail.com with ESMTPSA id t19-20020a0560001a5300b002362f6fcaf5sm451545wry.48.2023.01.06.00.12.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 06 Jan 2023 00:12:09 -0800 (PST)
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230103203915.GA1020424@bhelgaas>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230103203915.GA1020424@bhelgaas>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v2 2/3] dt-bindings: PCI: qcom: add MSM8998 specific compatible
+Date:   Fri,  6 Jan 2023 09:12:02 +0100
+Message-Id: <20230106081203.14118-2-krzysztof.kozlowski@linaro.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230106081203.14118-1-krzysztof.kozlowski@linaro.org>
+References: <20230106081203.14118-1-krzysztof.kozlowski@linaro.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 03/01/2023 21:39, Bjorn Helgaas wrote:
-> On Tue, Nov 15, 2022 at 01:53:07PM +0100, Krzysztof Kozlowski wrote:
->> Add new compatible for MSM8998 (compatible with MSM8996) to allow
->> further customizing if needed and to accurately describe the hardware.
->>
->> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> 
-> Hi Krzysztof,
-> 
-> Would you mind splitting this into two patches?
-> 
->   - Convert "compatible:" from enum: to oneOf:
->   - Add MSM8998
-> 
-> Having them combined makes the history a little bit harder to follow.
-> 
+Add new compatible for MSM8998 (compatible with MSM8996) to allow
+further customizing if needed and to accurately describe the hardware.
 
-Sure.
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Acked-by: Rob Herring <robh@kernel.org>
 
+---
 
-Best regards,
-Krzysztof
+Changes since v1:
+1. Split oneOf-reindent to separate patch as Bjorn requested.
+2. Add Ack.
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 09a4e3c330f1..612feec05267 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -36,6 +36,9 @@ properties:
+           - qcom,pcie-sm8450-pcie0
+           - qcom,pcie-sm8450-pcie1
+           - qcom,pcie-ipq6018
++      - items:
++          - const: qcom,pcie-msm8998
++          - const: qcom,pcie-msm8996
+ 
+   reg:
+     minItems: 4
+-- 
+2.34.1
 
