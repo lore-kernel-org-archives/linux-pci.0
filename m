@@ -2,238 +2,164 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E994C54EBD
-	for <linux-pci@archiver.kernel.org>; Sun,  8 Jan 2023 15:58:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E5D6C54EBC
+	for <linux-pci@archiver.kernel.org>; Sun,  8 Jan 2023 20:00:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229520AbjAHP6Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 8 Jan 2023 10:58:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55718 "EHLO
+        id S231402AbjAHUAM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 8 Jan 2023 15:00:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231269AbjAHP6X (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Jan 2023 10:58:23 -0500
-Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D443ABCBA;
-        Sun,  8 Jan 2023 07:58:21 -0800 (PST)
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 308FvwuT077262;
-        Sun, 8 Jan 2023 09:57:58 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1673193478;
-        bh=xAnPPGpVZlwRxy0iSh6xiiIJfjz/4/RR/G6X8Sfotdc=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=fECJ2QG4F96/TMqs+FQNV3XFwuOQOZYYtXLiXeexp27p8yWUPdMVPxz8k41qubgzn
-         0iAj5Za31tI+yhtB/Zn9XaguSqPe55BSe+C43N92I+7iHDNg+uqBAFShXtbZ7pReMP
-         b8aC/u+R26VogaFP5DBInfSLf78OrGsE/tVSaGc0=
-Received: from DLEE114.ent.ti.com (dlee114.ent.ti.com [157.170.170.25])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 308FvwBI002555
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 8 Jan 2023 09:57:58 -0600
-Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16; Sun, 8
- Jan 2023 09:57:57 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16 via
- Frontend Transport; Sun, 8 Jan 2023 09:57:57 -0600
-Received: from localhost (ileaxei01-snat2.itg.ti.com [10.180.69.6])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 308FvuSJ027400;
-        Sun, 8 Jan 2023 09:57:57 -0600
-From:   Achal Verma <a-verma1@ti.com>
-To:     Tom Joseph <tjoseph@cadence.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Wilczy_ski <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Achal Verma <a-verma1@ti.com>,
-        Milind Parab <mparab@cadence.com>
-Subject: [PATCH v2 1/2] PCI: cadence: Add support to build pcie-cadence library as module.
-Date:   Sun, 8 Jan 2023 21:27:54 +0530
-Message-ID: <20230108155755.2614147-2-a-verma1@ti.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230108155755.2614147-1-a-verma1@ti.com>
-References: <20230108155755.2614147-1-a-verma1@ti.com>
+        with ESMTP id S231383AbjAHT7x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 8 Jan 2023 14:59:53 -0500
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EEB45DBA
+        for <linux-pci@vger.kernel.org>; Sun,  8 Jan 2023 11:59:52 -0800 (PST)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id C996192009C; Sun,  8 Jan 2023 20:59:49 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id C290592009B;
+        Sun,  8 Jan 2023 19:59:49 +0000 (GMT)
+Date:   Sun, 8 Jan 2023 19:59:49 +0000 (GMT)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>
+cc:     x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [RESEND^3][PATCH v3] x86/PCI: Add support for the Intel 82378ZB/82379AB
+ (SIO/SIO.A) PIRQ router
+Message-ID: <alpine.DEB.2.21.2301081956290.65308@angie.orcam.me.uk>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support to build pcie-cadence library as module.
+The Intel 82378ZB System I/O (SIO) and 82379AB System I/O APIC (SIO.A) 
+ISA bridges implement PCI interrupt steering with a PIRQ router[1][2] 
+that is exactly the same as that of the PIIX and ICH southbridges (or 
+actually the other way round, given that the SIO ASIC was there first).
 
-Signed-off-by: Achal Verma <a-verma1@ti.com>
+An earlier version of the SIO, the 82378IB[3][4], does not implement PCI 
+interrupt steering however, so we need to exclude it by checking the low 
+nibble of the PCI Revision Identification Register[5][6] for being at 
+least 3.
+
+There is a note in the 82379AB specification update[7] saying that the 
+device ID for that chip is 0x7, rather than 0x484 as stated in the 
+datasheet[8].  It looks like a red herring however, for no report has 
+been ever seen with that value quoted and it matches the documented 
+default value of the PCI Command Register, which comes next after the 
+PCI Device Identification Register, so it looks like a copy-&-paste 
+editorial mistake.
+
+NB the 82378ZB has been commonly used with smaller DEC Alpha systems 
+with the contents of the Revision Identification Register reported as 
+one of 0x3, 0x43, or 0x84, so the masking of the high nibble seems 
+indeed right by empirical observation.  The value in the high nibble 
+might be either random, or depend on the batch, or correspond to some 
+other state such as reset straps.
+
+References:
+
+[1] "82378 System I/O (SIO)", Intel Corporation, Order Number: 
+    290473-004, December 1994, Section 4.1.26 "PIRQ[3:0]#--PIRQ Route 
+    Control Registers"
+
+[2] "82378ZB System I/O (SIO) and 82379AB System I/O APIC (SIO.A)",
+    Intel Corporation, Order Number: 290571-001, March 1996, Section 
+    3.1.25. "PIRQ[3:0]#--PIRQ Route Control Registers", p. 48
+
+[3] "82378IB System I/O (SIO)", Intel Corporation, Order Number:
+    290473-002, April 1993, Section 5.8.7.7 "Edge and Level Triggered
+    Modes"
+
+[4] "82378IB to 82378ZB Errata Fix and Feature Enhancement Conversion
+    FOL933002-01",
+    <https://web.archive.org/web/19990421045433/http://support.intel.com/support/chipsets/420/8511.htm>
+
+[5] "82378 System I/O (SIO)", Intel Corporation, Order Number: 
+    290473-004, December 1994, Section 4.1.5. "RID--Revision 
+    Identification Register"
+
+[6] "82378ZB System I/O (SIO) and 82379AB System I/O APIC (SIO.A)",
+    Intel Corporation, Order Number: 290571-001, March 1996, Section 
+    3.1.5. "RID--Revision Identification Register", p. 34
+
+[7] "Intel 82379AB (SIO.A) System I/O Component Specification Update", 
+    Intel Corporation, Order Number: 297734-001, May, 1996, "Component 
+    Identification via Programming Interface", p. 5
+
+[8] "82378ZB System I/O (SIO) and 82379AB System I/O APIC (SIO.A)",
+    Intel Corporation, Order Number: 290571-001, March 1996, Section 
+    3.1.2. "DID--Device Identification Register", p. 33
+
+Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
 ---
- drivers/pci/controller/cadence/Kconfig             | 6 +++---
- drivers/pci/controller/cadence/pcie-cadence-ep.c   | 4 ++++
- drivers/pci/controller/cadence/pcie-cadence-host.c | 5 +++++
- drivers/pci/controller/cadence/pcie-cadence.c      | 9 +++++++++
- drivers/pci/controller/cadence/pcie-cadence.h      | 4 ++--
- 5 files changed, 23 insertions(+), 5 deletions(-)
+Hi,
 
-diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
-index 5d30564190e1..693c41fe32ce 100644
---- a/drivers/pci/controller/cadence/Kconfig
-+++ b/drivers/pci/controller/cadence/Kconfig
-@@ -4,16 +4,16 @@ menu "Cadence PCIe controllers support"
- 	depends on PCI
- 
- config PCIE_CADENCE
--	bool
-+	tristate
- 
- config PCIE_CADENCE_HOST
--	bool
-+	tristate
- 	depends on OF
- 	select IRQ_DOMAIN
- 	select PCIE_CADENCE
- 
- config PCIE_CADENCE_EP
--	bool
-+	tristate
- 	depends on OF
- 	depends on PCI_ENDPOINT
- 	select PCIE_CADENCE
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index b8b655d4047e..598b2b9c5969 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/delay.h>
- #include <linux/kernel.h>
-+#include <linux/module.h>
- #include <linux/of.h>
- #include <linux/pci-epc.h>
- #include <linux/platform_device.h>
-@@ -741,3 +742,6 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_ep_setup);
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index 940c7dd701d6..84754c63df34 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/delay.h>
- #include <linux/kernel.h>
-+#include <linux/module.h>
- #include <linux/list_sort.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -70,6 +71,7 @@ void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 
- 	return rc->cfg_base + (where & 0xfff);
- }
-+EXPORT_SYMBOL_GPL(cdns_pci_map_bus);
- 
- static struct pci_ops cdns_pcie_host_ops = {
- 	.map_bus	= cdns_pci_map_bus,
-@@ -542,3 +544,6 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_host_setup);
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index 13c4032ca379..8e3a86578284 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -4,6 +4,7 @@
- // Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
- 
- #include <linux/kernel.h>
-+#include <linux/module.h>
- 
- #include "pcie-cadence.h"
- 
-@@ -22,6 +23,7 @@ void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
- 
- 	cdns_pcie_writel(pcie, CDNS_PCIE_LTSSM_CONTROL_CAP, ltssm_control_cap);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_detect_quiet_min_delay_set);
- 
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
- 				   u32 r, bool is_io,
-@@ -99,6 +101,7 @@ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_set_outbound_region);
- 
- void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
- 						  u8 busnr, u8 fn,
-@@ -133,6 +136,7 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_set_outbound_region_for_normal_msg);
- 
- void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
- {
-@@ -145,6 +149,7 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), 0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_reset_outbound_region);
- 
- void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
- {
-@@ -155,6 +160,7 @@ void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
- 		phy_exit(pcie->phy[i]);
- 	}
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_disable_phy);
- 
- int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
- {
-@@ -242,6 +248,7 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_init_phy);
- 
- static int cdns_pcie_suspend_noirq(struct device *dev)
- {
-@@ -270,3 +277,5 @@ const struct dev_pm_ops cdns_pcie_pm_ops = {
- 	NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
- 				  cdns_pcie_resume_noirq)
- };
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 190786e47df9..65b330c28299 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -514,7 +514,7 @@ static inline bool cdns_pcie_link_up(struct cdns_pcie *pcie)
- 	return true;
- }
- 
--#ifdef CONFIG_PCIE_CADENCE_HOST
-+#if IS_ENABLED(CONFIG_PCIE_CADENCE_HOST)
- int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
- void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			       int where);
-@@ -531,7 +531,7 @@ static inline void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int d
- }
- #endif
- 
--#ifdef CONFIG_PCIE_CADENCE_EP
-+#if IS_ENABLED(CONFIG_PCIE_CADENCE_EP)
- int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep);
- #else
- static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
--- 
-2.25.1
+ This patch was dropped from x86/irq due to a bug in a follow-up patch and 
+when resent it was not re-picked up along with the other patches for some 
+reason.  It applies unchanged to 6.2.0-rc3.
 
+ Please apply.
+
+  Maciej
+
+Changes from v2:
+
+- Regenerate for a merge conflict.
+
+Changes from v1:
+
+- Add [PATCH] annotation (umm...).
+
+- Fix RID values listed to include 0x84 rather than 0x83 (braino).
+---
+ arch/x86/pci/irq.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+linux-x86-pirq-router-sio.diff
+Index: linux-macro/arch/x86/pci/irq.c
+===================================================================
+--- linux-macro.orig/arch/x86/pci/irq.c
++++ linux-macro/arch/x86/pci/irq.c
+@@ -974,11 +974,18 @@ static __init int intel_router_probe(str
+ 		return 0;
+ 
+ 	switch (device) {
++		u8 rid;
+ 	case PCI_DEVICE_ID_INTEL_82375:
+ 		r->name = "PCEB/ESC";
+ 		r->get = pirq_esc_get;
+ 		r->set = pirq_esc_set;
+ 		return 1;
++	case PCI_DEVICE_ID_INTEL_82378:
++		pci_read_config_byte(router, PCI_REVISION_ID, &rid);
++		/* Tell 82378IB (rev < 3) and 82378ZB/82379AB apart.  */
++		if ((rid & 0xfu) < 3)
++			break;
++		fallthrough;
+ 	case PCI_DEVICE_ID_INTEL_82371FB_0:
+ 	case PCI_DEVICE_ID_INTEL_82371SB_0:
+ 	case PCI_DEVICE_ID_INTEL_82371AB_0:
+@@ -1020,7 +1027,7 @@ static __init int intel_router_probe(str
+ 	case PCI_DEVICE_ID_INTEL_ICH10_3:
+ 	case PCI_DEVICE_ID_INTEL_PATSBURG_LPC_0:
+ 	case PCI_DEVICE_ID_INTEL_PATSBURG_LPC_1:
+-		r->name = "PIIX/ICH";
++		r->name = "SIO/PIIX/ICH";
+ 		r->get = pirq_piix_get;
+ 		r->set = pirq_piix_set;
+ 		return 1;
+@@ -1039,7 +1046,7 @@ static __init int intel_router_probe(str
+ 	     device <= PCI_DEVICE_ID_INTEL_DH89XXCC_LPC_MAX)
+ 	||  (device >= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MIN &&
+ 	     device <= PCI_DEVICE_ID_INTEL_PANTHERPOINT_LPC_MAX)) {
+-		r->name = "PIIX/ICH";
++		r->name = "SIO/PIIX/ICH";
+ 		r->get = pirq_piix_get;
+ 		r->set = pirq_piix_set;
+ 		return 1;
