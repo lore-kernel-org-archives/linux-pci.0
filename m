@@ -2,139 +2,77 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D64A4C54EBD
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Jan 2023 19:43:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68497C5479D
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Jan 2023 20:32:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237710AbjAITnX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Jan 2023 14:43:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45872 "EHLO
+        id S235188AbjAIUcx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Jan 2023 15:32:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237470AbjAITmk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2023 14:42:40 -0500
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96FCD6CFE1;
-        Mon,  9 Jan 2023 11:42:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1673293359; x=1704829359;
-  h=from:subject:date:message-id:mime-version:
-   content-transfer-encoding:to:cc;
-  bh=t0KtIDqmaJYRE1NQYpq+S3S1qQTjDdQlFxzAXzrQRYU=;
-  b=guKMXeEBx+uGo8zRBad8KdfPXBXrrs6CLSM06F+btBlUEQe1PJSWh5r8
-   TkadjJ/bsVjnfGZH5basmdM4kVeT5UXoPhcV02yrjyYfoeIbfc2tev9Pw
-   tg6CQxxAGpthrKZh2CsF9RgGk0DKzUFCPuiMAlc9J6NrflubXv8pg3PsN
-   6Dw1shNgKybzJVkm/Ogm1GkfBBjS98Z8TfoXMSkDdLYItXfU/XUU5Iwbj
-   aQliN6dmoJ4Sl517Tt3yuhMuxnrW6ttAl1i54Yn1mPnfX33BsEqx+OghH
-   5MGibWrRQAm/Qc5UrVlP2y839mlcTzox3ZMI0vdzssUdphe4cQFtsMX/S
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10585"; a="385269859"
-X-IronPort-AV: E=Sophos;i="5.96,311,1665471600"; 
-   d="scan'208";a="385269859"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2023 11:42:32 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10585"; a="656783487"
-X-IronPort-AV: E=Sophos;i="5.96,311,1665471600"; 
-   d="scan'208";a="656783487"
-Received: from cwchen-mobl.amr.corp.intel.com (HELO localhost) ([10.212.45.225])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jan 2023 11:42:31 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-Subject: [PATCH v6 0/8] cxl: Process event logs
-Date:   Mon, 09 Jan 2023 11:42:20 -0800
-Message-Id: <20221216-cxl-ev-log-v6-0-346583105b30@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIABxuvGMC/1WOwQ6CMBBEf8X07JJugYKe/A/jAcoCm9RiWqwaw
- 79bSEz0+CZ5M/MWgTxTEMfdW3iKHHhyCfR+J8zYuIGAu8RCSaVQoQbztEAR7DRAL3Ve53ioygJF
- EtomELS+cWZMirtbm8Kbp56f28L5knjkME/+tQ1GXNNvt5KV1KrKMK9UIRUgsG+yB7F7ndjNZDM
- zXcXaEctf7+9TLEEC1tJorKkrO/xVl2X5AAHSxbvxAAAA
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Davidlohr Bueso <dave@stgolabs.net>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        with ESMTP id S237389AbjAIUcs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2023 15:32:48 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2180F631AB;
+        Mon,  9 Jan 2023 12:32:46 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1673296365;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=hw/0oH2C5TyrGWJ+96YUv3zgISrx89bAQtHhU0yW/ZM=;
+        b=EW+zDZJxz6OyVBYpxCaTTXZUDErFa/CkZ+y26x2qjn8WH9XJWFxmamEGtbncmZM0WtEfwk
+        fFsAuXFc8QgX62JXMJrPaoiNJvkcPMCVNKpz1fUhtl0MqYagSvGAplx9FzTU34gwia5AvK
+        Me+9LwI5rfmd6bcWPw/YPRb3OGU41/ZXBzBSxvsxysRQcQo0sN3y8D0ziOyTNvJn9MvuaN
+        hUpGJXMqvacPjdrKCadQduw6Nw/JnBeqWkwGGWGqxa/P9DKqrXxnFW6ihW8VyKHpucFdT3
+        OWFVR7wqY+aomarSFTfy+d60TPCpLqVu/CgFcOT5VFiP/wbQHEtbTHLUCKuaTg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1673296365;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=hw/0oH2C5TyrGWJ+96YUv3zgISrx89bAQtHhU0yW/ZM=;
+        b=ZB+xeomHEhsnoDEu+u5PqFuIsB0Btz5LE2GeBQhczTdLYJxsa/sb9q1mFrh9Ce/tvgW326
+        E8X7RWdkiHuh/YCw==
+To:     Jason Gunthorpe <jgg@nvidia.com>, Moshe Shemesh <moshe@nvidia.com>,
+        Shay Drory <shayd@nvidia.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Dave Jiang <dave.jiang@intel.com>,
-        Ben Widawsky <bwidawsk@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
-        Bjorn Helgaas <helgaas@kernel.org>
-X-Mailer: b4 0.12-dev-cc11a
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1673293350; l=2483;
- i=ira.weiny@intel.com; s=20221211; h=from:subject:message-id;
- bh=t0KtIDqmaJYRE1NQYpq+S3S1qQTjDdQlFxzAXzrQRYU=;
- b=Mo2DCQbXFcnT8uYCAtepvwGqxQOa0nqdlTARb74mU+RfuKxIJ5mIGQ2yGFB9ohKcO7QEcqZZa/Qy
- oaftH/DyA5hvzPJ2uleeohuUaO1jInr24clsHqBFEVcCNvf1wTQ+
-X-Developer-Key: i=ira.weiny@intel.com; a=ed25519;
- pk=noldbkG+Wp1qXRrrkfY1QJpDf7QsOEthbOT7vm0PqsE=
+        Alex Williamson <alex.williamson@redhat.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
+        Allen Hubbe <allenbh@gmail.com>
+Subject: Re: [patch V3 13/33] x86/apic/vector: Provide MSI parent domain
+In-Reply-To: <Y7VyXNbWMdWWAC6d@nvidia.com>
+References: <20221124230505.073418677@linutronix.de>
+ <20221124232326.034672592@linutronix.de> <Y7VyXNbWMdWWAC6d@nvidia.com>
+Date:   Mon, 09 Jan 2023 21:32:44 +0100
+Message-ID: <87v8lfjvo3.ffs@tglx>
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-I accidentally missed some comments from Dan in my V5 that I sent.[*]  Dan
-asked me to do a quick spin to pick them up.
+Jason!
 
-[*] https://lore.kernel.org/all/6398dd6ed80fa_b05d1294fc@dwillia2-xfh.jf.intel.com.notmuch/
+On Wed, Jan 04 2023 at 08:34, Jason Gunthorpe wrote:
+>
+> Our test team has discovered some kmem leak complaints on rc1 and
+> bisected it to this patch.
+>
+> I don't see an obvious way that fwnode gets destroyed here. So maybe
+> it should be like this?
 
-This code has been tested with a newer qemu which allows for more events to be
-returned at a time as well an additional QMP event and interrupt injection.
-Those patches will follow once they have been cleaned up.
+I'm back from vacation now. Will have a look tomorrow.
 
-The series is now in 3 parts:
+Thanks,
 
-       1) Base functionality including interrupts
-       2) Tracing specific events (Dynamic Capacity Event Record is defered)
-       3) cxl-test infrastructure for basic tests
-
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alison Schofield <alison.schofield@intel.com>
-Cc: Vishal Verma <vishal.l.verma@intel.com>
-Cc: Ira Weiny <ira.weiny@intel.com>
-Cc: Davidlohr Bueso <dave@stgolabs.net>
-Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Ben Widawsky <bwidawsk@kernel.org>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-cxl@vger.kernel.org
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-
----
-Changes in v6:
-- Dan: address the missed comments on V4
-- Link to v5: https://lore.kernel.org/r/20221216-cxl-ev-log-v5-0-180c618ed5d1@intel.com
-
----
-Davidlohr Bueso (1):
-      cxl/mem: Wire up event interrupts
-
-Ira Weiny (7):
-      cxl/mem: Read, trace, and clear events on driver load
-      cxl/mem: Trace General Media Event Record
-      cxl/mem: Trace DRAM Event Record
-      cxl/mem: Trace Memory Module Event Record
-      cxl/test: Add generic mock events
-      cxl/test: Add specific events
-      cxl/test: Simulate event log overflow
-
- drivers/cxl/core/mbox.c       | 187 +++++++++++++++++
- drivers/cxl/core/trace.h      | 479 ++++++++++++++++++++++++++++++++++++++++++
- drivers/cxl/cxl.h             |  16 ++
- drivers/cxl/cxlmem.h          | 173 +++++++++++++++
- drivers/cxl/cxlpci.h          |   6 +
- drivers/cxl/pci.c             | 241 +++++++++++++++++++++
- tools/testing/cxl/test/Kbuild |   2 +-
- tools/testing/cxl/test/mem.c  | 352 +++++++++++++++++++++++++++++++
- 8 files changed, 1455 insertions(+), 1 deletion(-)
----
-base-commit: 589c3357370a596ef7c99c00baca8ac799fce531
-change-id: 20221216-cxl-ev-log-f06383197541
-
-Best regards,
--- 
-Ira Weiny <ira.weiny@intel.com>
+        tglx
