@@ -2,60 +2,61 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F51BC67871
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Jan 2023 12:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F250C74A44
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Jan 2023 12:54:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236199AbjAIMyT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Jan 2023 07:54:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40654 "EHLO
+        id S234481AbjAIMyX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Jan 2023 07:54:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234245AbjAIMxe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2023 07:53:34 -0500
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CA7615FC6
-        for <linux-pci@vger.kernel.org>; Mon,  9 Jan 2023 04:53:33 -0800 (PST)
-Received: by mail-wm1-x32e.google.com with SMTP id m26-20020a05600c3b1a00b003d9811fcaafso6619676wms.5
-        for <linux-pci@vger.kernel.org>; Mon, 09 Jan 2023 04:53:33 -0800 (PST)
+        with ESMTP id S234984AbjAIMxo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Jan 2023 07:53:44 -0500
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90075164B0
+        for <linux-pci@vger.kernel.org>; Mon,  9 Jan 2023 04:53:40 -0800 (PST)
+Received: by mail-wm1-x32f.google.com with SMTP id g19-20020a05600c4ed300b003d9eb1dbc0aso3662450wmq.3
+        for <linux-pci@vger.kernel.org>; Mon, 09 Jan 2023 04:53:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=2oUr8w/fBVkJnE59k2x6LjFTgvfWlu1602Zu3esq0gQ=;
-        b=yw7651Zfiaa/ETLY1KrF3sA59Qt0nq2p9DYlfctPDk3lmFGFgxggxE1j9xeV4bWlz6
-         EJHzBbK5iAv2IEEosCynJKk6OzKB0omA/4odpZkIoCPLMKsu09p2zyYkXourRrSw2VL5
-         1GQsPjAHf3eyuc7yKnvLrLCl+mX7SXR7+KO1yANTVXg5DR0PloCvslrjAt/jq3umiql4
-         OeWyumIvb5oNn+k2blGF+uHuGRPrNWvdjSXXeWQlwFHNpan8JJYwMYBBmMpfGcDb2vOX
-         2L27BJCG4Obp0QFgf9f16SycA4f63/y5LQ0Yvay6aZRKLGheyCsfyBM7hX9y+IOzEB4z
-         BHng==
+        bh=eHeD4/5Q26ruqFmP/If/k2xNMCXAhjZeCMYfTgUbKRU=;
+        b=ST+d6exv+eSO89qaxYEHQlIUZjwGyGwBJ4xr+vru1zfL5TKvPyAhqO8Pkx0pwPrsz+
+         jgw4926gADuQo43X4dvIXEFVEX+2jkFCW71Ibl6xlz8rEKH4KDOuwPJavaTNh6Xc5P0A
+         AjwReWC2HFTNu9qYXgDmUygMPt7ZAvBkFipkWakWAcAxMsf5vwA9wpujm+DSd3CLhQ62
+         Fm9K10aodqGSrxbo5Zu0m7mpFDY6eTc0BH5igwv8WsKfuWKKBwQ+/tSlmb8JcRvYv2nf
+         gApIKGwFDwKoKVFmWMoGxExR8BxoEEnI+UkTInipxpBoGPl/IFugqltGY0B5Ddf6azXK
+         M/8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
          :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=2oUr8w/fBVkJnE59k2x6LjFTgvfWlu1602Zu3esq0gQ=;
-        b=uydLjX4ugHh1L4ZvW2WJTZVOTtcKMfOzV2P3H7CrOI8A2yIffPDtv0XSkj7wC+18tG
-         O2FprpyEP/g25VQrMJy0V/jtpNkkwsjactPe/3v2UywScSxeE5W8tBHZZWnDgXesFIlx
-         JNoxsgC/Sh2ULbvIdcYlHPXDDBsibylzNw9hI+EWbn/YBXRvZAokygDIcJpah5quMCzt
-         OMX/3RDq+c/eDEA4BuWu465JhZ00LUyyInUMvWNEk4zkFN+fiF57DFP8ZZc19xd5Tadw
-         M1I/pwYPLty/kyL073C/faETsFlLp/KuBz3nNI29N7/UdQRLjZc2rAmWTHdH+b6JA2/L
-         3Jmg==
-X-Gm-Message-State: AFqh2kpt2MiJNdg9/XYVdhqe3Agl4MCVaQiJMxTZo6FaLDzS+NBa48df
-        AOSwCvGqd3rdtr8MAbCPR62wEQ==
-X-Google-Smtp-Source: AMrXdXvGChqLrkdOYMIrvP3oiZBLJmzLXN7wzV4hvUgkqWIZvi4SN9pHUanVnXVyf/b8Nfwm+x5bRQ==
-X-Received: by 2002:a05:600c:8507:b0:3d9:6c7d:c9ee with SMTP id gw7-20020a05600c850700b003d96c7dc9eemr41487743wmb.25.1673268811818;
-        Mon, 09 Jan 2023 04:53:31 -0800 (PST)
+        bh=eHeD4/5Q26ruqFmP/If/k2xNMCXAhjZeCMYfTgUbKRU=;
+        b=qCzrRHHKbpcDYcdBkjt+3uVudvQ2GRfLJeVAkDxKsuBzcoCQb+5hyScgdu6nAYhbD/
+         U//6GlsBkiwqshxruwsIUmZ06blR+J+ndA87KegeCJSWIsKmn3+eLFE4PnV1Ot6pdlvz
+         wjvw8UHZ/xKwSBygOmG3bkSy95S1eNy1iWImLjin92TnBPdqnC3FeX7SUdRR1ojncWjt
+         QiEi+qdfG0TQ35ainW3wMSTR0E8b4gPyvNSCRJx6h0dkKZtj0RIJBYirfBQakLvqzT2D
+         5BtpDUijcVTA5eoNqT/J5E2xibA19DBYssy5YCW3BI//6hV8ZOnUldg5sbfz841PXZbh
+         5Y3w==
+X-Gm-Message-State: AFqh2krdwnW3wOoPmXKBwBap4QXiU7I6yuOMrh++vnkBGPWhsuAQR6Lp
+        JoRfsF7hUUU9jl93d9L2jTeovQ==
+X-Google-Smtp-Source: AMrXdXsaurQF4EtQDAHouXVvSJBqCu54hP/k4K5wC/jqtSrGfESg6vwwkM/iQm8oVMP1uuBrED7e8A==
+X-Received: by 2002:a05:600c:3d05:b0:3d3:5c21:dd94 with SMTP id bh5-20020a05600c3d0500b003d35c21dd94mr48020557wmb.9.1673268820053;
+        Mon, 09 Jan 2023 04:53:40 -0800 (PST)
 Received: from arrakeen.starnux.net ([2a01:e0a:982:cbb0:52eb:f6ff:feb3:451a])
-        by smtp.gmail.com with ESMTPSA id y7-20020a7bcd87000000b003d997e5e679sm12805667wmj.14.2023.01.09.04.53.30
+        by smtp.gmail.com with ESMTPSA id y7-20020a7bcd87000000b003d997e5e679sm12805667wmj.14.2023.01.09.04.53.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Jan 2023 04:53:31 -0800 (PST)
+        Mon, 09 Jan 2023 04:53:39 -0800 (PST)
 From:   Neil Armstrong <neil.armstrong@linaro.org>
-Date:   Mon, 09 Jan 2023 13:53:25 +0100
-Subject: [PATCH v2 01/11] dt-bindings: firmware: convert meson_sm.txt to dt-schema
+Date:   Mon, 09 Jan 2023 13:53:30 +0100
+Subject: [PATCH v2 06/11] dt-bindings: power: amlogic,meson-gx-pwrc: mark
+ bindings as deprecated
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20221117-b4-amlogic-bindings-convert-v2-1-36ad050bb625@linaro.org>
+Message-Id: <20221117-b4-amlogic-bindings-convert-v2-6-36ad050bb625@linaro.org>
 References: <20221117-b4-amlogic-bindings-convert-v2-0-36ad050bb625@linaro.org>
 In-Reply-To: <20221117-b4-amlogic-bindings-convert-v2-0-36ad050bb625@linaro.org>
 To:     Rob Herring <robh+dt@kernel.org>,
@@ -93,82 +94,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert the Amlogic Secure Monitor bindings to dt-schema.
+The amlogic,meson-gx-pwrc-vpu compatible isn't used anymore since [1]
+was merged in v5.8-rc1 and amlogic,meson-g12a-pwrc-vpu either since [2]
+was merged in v5.3-rc1.
 
-Take in account usage the used variant with amlogic,meson-gx-sm.
+[1] commit 5273d6cacc06 ("arm64: dts: meson-gx: Switch to the meson-ee-pwrc bindings")
+[2] commit f4f1c8d9ace7 ("arm64: dts: meson-g12: add Everything-Else power domain controller")
 
 Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
- .../bindings/firmware/amlogic,meson-gxbb-sm.yaml   | 39 ++++++++++++++++++++++
- .../bindings/firmware/meson/meson_sm.txt           | 15 ---------
- 2 files changed, 39 insertions(+), 15 deletions(-)
+ Documentation/devicetree/bindings/power/amlogic,meson-gx-pwrc.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/firmware/amlogic,meson-gxbb-sm.yaml b/Documentation/devicetree/bindings/firmware/amlogic,meson-gxbb-sm.yaml
-new file mode 100644
-index 000000000000..8f50e698760e
---- /dev/null
-+++ b/Documentation/devicetree/bindings/firmware/amlogic,meson-gxbb-sm.yaml
-@@ -0,0 +1,39 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/firmware/amlogic,meson-gxbb-sm.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Amlogic Secure Monitor (SM)
-+
-+description:
-+  In the Amlogic SoCs the Secure Monitor code is used to provide access to the
-+  NVMEM, enable JTAG, set USB boot, etc...
-+
-+maintainers:
-+  - Neil Armstrong <neil.armstrong@linaro.org>
-+
-+properties:
-+  compatible:
-+    oneOf:
-+      - const: amlogic,meson-gxbb-sm
-+      - items:
-+          - const: amlogic,meson-gx-sm
-+          - const: amlogic,meson-gxbb-sm
-+
-+  power-controller:
-+    type: object
-+    $ref: /schemas/power/amlogic,meson-sec-pwrc.yaml#
-+
-+required:
-+  - compatible
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    firmware {
-+        secure-monitor {
-+            compatible = "amlogic,meson-gxbb-sm";
-+        };
-+    };
-diff --git a/Documentation/devicetree/bindings/firmware/meson/meson_sm.txt b/Documentation/devicetree/bindings/firmware/meson/meson_sm.txt
-deleted file mode 100644
-index c248cd44f727..000000000000
---- a/Documentation/devicetree/bindings/firmware/meson/meson_sm.txt
-+++ /dev/null
-@@ -1,15 +0,0 @@
--* Amlogic Secure Monitor
--
--In the Amlogic SoCs the Secure Monitor code is used to provide access to the
--NVMEM, enable JTAG, set USB boot, etc...
--
--Required properties for the secure monitor node:
--- compatible: Should be "amlogic,meson-gxbb-sm"
--
--Example:
--
--	firmware {
--		sm: secure-monitor {
--			compatible = "amlogic,meson-gxbb-sm";
--		};
--	};
+diff --git a/Documentation/devicetree/bindings/power/amlogic,meson-gx-pwrc.txt b/Documentation/devicetree/bindings/power/amlogic,meson-gx-pwrc.txt
+index 99b5b10cda31..ba5865ae6bfe 100644
+--- a/Documentation/devicetree/bindings/power/amlogic,meson-gx-pwrc.txt
++++ b/Documentation/devicetree/bindings/power/amlogic,meson-gx-pwrc.txt
+@@ -1,5 +1,5 @@
+-Amlogic Meson Power Controller
+-==============================
++Amlogic Meson Power Controller (deprecated)
++===========================================
+ 
+ The Amlogic Meson SoCs embeds an internal Power domain controller.
+ 
 
 -- 
 2.34.1
