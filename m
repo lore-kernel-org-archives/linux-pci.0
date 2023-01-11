@@ -2,146 +2,106 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77C56C46467
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Jan 2023 13:08:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71E59C678D5
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Jan 2023 13:41:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231730AbjAKNIy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Jan 2023 08:08:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38460 "EHLO
+        id S229928AbjAKNlT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Jan 2023 08:41:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32998 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231420AbjAKNIx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2023 08:08:53 -0500
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2063.outbound.protection.outlook.com [40.107.220.63])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CA0321A808;
-        Wed, 11 Jan 2023 05:08:44 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HYxs6Z+NRRPx7L++2oNDhTW1WBq3OB7iuSPqgwOVrOmO2arBYxLaBlGxDpJLUVy1Ju57fr3IVu2IoDVaahNVTuLmyE3+Afp5BdFilxTl/d0LCGAAlpa2jNCGML3B1YoOGKd+pSXW7cc7qChBkpakZ3NJefHLAM0cOrqQk+J/lzqDve0PvQtaOofjffsy1LsPTfinCUskFxd9bg/M0PNpSZ0xezKTA181fBdeyuEbS2DW2b4/CSkGbIE6OVgGjyJ2cBaHp7IMaKLm0zoQOlYTgZUFCBu0SLoBk+UicENo6uI3G/7FJ1vJkkAE2R5ReF56o5ZbzYOPqy9v8ogM1Cqdjw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=5Ahav4ty33U0774ttbwx2cQ5QO8nrmqsur2NrS0jYNE=;
- b=AISRmCbJd5Y7u0pLojByhfV9duZsosZGi0nkva991CvLrd0SrG8LbXMZKHyCllScyV6VdqluZ0zKNeaA3REhtxTWKUi0YAgP3w05Gsx+L4BCmzyEOgULUuA9La0NNVEDn9FBXWi4cqvhrKzjZ6i4kr9jxaNQWexKISz01Lj026YFNcbVeseZmru8LvAMEDYaa46WBm3TPIjJ8v+h+SSgcVQ4v+44XCJ5g+JSBF07Ekbnrzj+iyplWsQqPK4OrjY8a23HVT+Mh/uxY/spM85fi8stgTMZK79TalfvF08Md3zg9AwO3iZ9ntBV3eZ46aRtX/Ys7ymvJ/JU1tp4XRjTDg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5Ahav4ty33U0774ttbwx2cQ5QO8nrmqsur2NrS0jYNE=;
- b=g6iKwjIdrOdDvbbToEmv4y+XDdzAWtrB9ZEJAIw3lXMuXHdineP5NNoMQe1e6XgW2mB2yQQ3+rzc3sSQm/GIdocJcSMXqy0KbPPcZbJdwTH1TWOZe7+fwYdcRwbCFSZJlCiBv1D5qojmM1ueCNHIqbyi23K/el8Iv1eYIENzba5zCMkEjnSF4ogBB3GXZUk9wM+ngn9SK1nQOX8dhZDQ2Xy19btqA6zNmKJlo3/swI0M3J7dzwX5D6Ja1+s0B18cLPNFMKXSaPHQsgnWUHw1Xj6FIYYkKaPpZQntfkK2cArvnQGJXFKQ7s0cSrS1aJYYDvlURhY8nJAls5L2Efec6w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from LV2PR12MB5869.namprd12.prod.outlook.com (2603:10b6:408:176::16)
- by MW4PR12MB7483.namprd12.prod.outlook.com (2603:10b6:303:212::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6002.13; Wed, 11 Jan
- 2023 13:08:41 +0000
-Received: from LV2PR12MB5869.namprd12.prod.outlook.com
- ([fe80::f8b0:df13:5f8d:12a]) by LV2PR12MB5869.namprd12.prod.outlook.com
- ([fe80::f8b0:df13:5f8d:12a%9]) with mapi id 15.20.6002.013; Wed, 11 Jan 2023
- 13:08:40 +0000
-Date:   Wed, 11 Jan 2023 09:08:39 -0400
-From:   Jason Gunthorpe <jgg@nvidia.com>
-To:     Baolu Lu <baolu.lu@linux.intel.com>
-Cc:     Alex Deucher <alexander.deucher@amd.com>,
-        Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-        "Pan, Xinhui" <Xinhui.Pan@amd.com>,
-        Vasant Hegde <vasant.hegde@amd.com>,
-        Matt Fagnani <matt.fagnani@bell.net>,
-        Thorsten Leemhuis <regressions@leemhuis.info>,
-        Joerg Roedel <jroedel@suse.de>,
-        "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "regressions@lists.linux.dev" <regressions@lists.linux.dev>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        amd-gfx@lists.freedesktop.org
-Subject: Re: [regression, bisected, =?utf-8?Q?pci?=
- =?utf-8?Q?=2Fiommu=5D_Bug=C2=A0216865_-_Black_screen_whe?= =?utf-8?Q?n?=
- amdgpu started during 6.2-rc1 boot with AMD IOMMU enabled
-Message-ID: <Y76013iImTTbfaHG@nvidia.com>
-References: <15d0f9ff-2a56-b3e9-5b45-e6b23300ae3b@leemhuis.info>
- <5aa0e698-f715-0481-36e5-46505024ebc1@bell.net>
- <aea57c5f-2d20-c589-ad44-a63f1133a3db@linux.intel.com>
- <157c4ca4-370a-5d7e-fe32-c64d934f6979@amd.com>
- <223ee6d6-70ea-1d53-8bc2-2d22201d8dde@bell.net>
- <6fff9d10-f77f-e55a-9020-8a1bd34cf508@amd.com>
- <Y7gs0zYKp/VXACBi@nvidia.com>
- <f96b1cf3-6865-663d-f1cd-466a71519b08@linux.intel.com>
- <Y71nZuF5wQp3eqmn@nvidia.com>
- <7c2af186-5868-d962-f810-ef810fbd074c@linux.intel.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7c2af186-5868-d962-f810-ef810fbd074c@linux.intel.com>
-X-ClientProxiedBy: BL1PR13CA0287.namprd13.prod.outlook.com
- (2603:10b6:208:2bc::22) To LV2PR12MB5869.namprd12.prod.outlook.com
- (2603:10b6:408:176::16)
+        with ESMTP id S235719AbjAKNku (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Jan 2023 08:40:50 -0500
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 39EBB11A37;
+        Wed, 11 Jan 2023 05:39:44 -0800 (PST)
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 00C9C13D5;
+        Wed, 11 Jan 2023 05:40:26 -0800 (PST)
+Received: from [10.57.68.138] (unknown [10.57.68.138])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 067423F71A;
+        Wed, 11 Jan 2023 05:39:40 -0800 (PST)
+Message-ID: <fa491b99-5e05-b436-9304-32baeb019750@arm.com>
+Date:   Wed, 11 Jan 2023 13:39:35 +0000
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: LV2PR12MB5869:EE_|MW4PR12MB7483:EE_
-X-MS-Office365-Filtering-Correlation-Id: 07b87a1b-e837-4d69-4894-08daf3d4f54e
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: FD0jkwu/YuGWOn8ZAIb+uKUw4ZEUbmWnPMDdqrgouMVfQlCeWEd+zt8nCnjMtxy9IZsjKAkuudTWm7qokKFvBtLfTf4Hbp0aqpg+eo2JD/VCqfG5AEUh/h3zMGUYY1dUEls6Z4hPMg6SmVRH243gTIydvsZdMk7r5z8vMMgH45PHmEP/t5A8nAE2fvNIZRmMqD10n5M3RMx4L7faVCn8tpBjNtoAq1PfHCLW89Nm32O4xtMkfbAZye2dhMy90t+7+/KgSrE9x/81X/W7s7kzm2OEvzrA18/hjyaDlkHiu82vyIOF1SxIuRzjVI+JZ/BpVpjOWJlmBc8YecZS8nExn1LpyAtRJZzODZgUH52eHs5pEHNlZ/CYc9/QbrIiXns/JKbTRZjlkYRcI4FBANT+OMxO7HGynRyxilVVtTdNvhXfRU4af0sWkHHJKU2peEioTFUDqZYj5Qt5AHdnHTD1Zq0KC6CA7dJNeKhSWPlxPeljudf6s0/C8sBNLzHbMcWLmUvUjnipetvs9utE+JYxEiXfpTrQ1tn+bwz6+kJWaYY4Jbxd+cbfmmKXu1S1sJmmxKANBbpX+s2qLDDSEn04GXLBjykvuAxMf6gOogXtdGa7FBdjJqkAQGdcorGaS/7Y
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV2PR12MB5869.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(136003)(39860400002)(396003)(346002)(366004)(376002)(451199015)(36756003)(4326008)(66946007)(8936002)(2906002)(6916009)(66556008)(66476007)(4744005)(86362001)(7416002)(5660300002)(38100700002)(6486002)(478600001)(54906003)(316002)(2616005)(53546011)(41300700001)(6512007)(186003)(26005)(6506007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?VIFsJcjaHbGXoVlsAbdLrI5UH6wYmHLQQBzBziqdvjq8sMX7DwLp1ZoIF9yY?=
- =?us-ascii?Q?YpR7rtOn4pVysuJkDYcOgbV6OsaCN8hd/U3cYCrkb5xGb7+rQFHW5GrJIjUL?=
- =?us-ascii?Q?woPzl8jUrpVFf0M9YfCU2+x+5u5nTMCUp9rBW0brUSH26cNNgxX2THjzBoqo?=
- =?us-ascii?Q?7DVOaeRaL29JEZm1frt5MR07EXl4SpenOxAhfPabWET/o4S3w/LbRfoSntZw?=
- =?us-ascii?Q?pOuKmuGFeMTsDyxxOHeaM8gRBXRqFsw+jqtCTLdQOi++8VY2SriC/5wbkSBf?=
- =?us-ascii?Q?o1n+x6XYlf8r0QPx6mkvc7l5H+3xuJl7g87++mD1EeXwLfcwy59f2H1LowKi?=
- =?us-ascii?Q?smCzX9yIuLIr/zy1hBMZ/YRjyyRVhuocCCiYbRS0fSZBdH1F3xBF3+UVw6nY?=
- =?us-ascii?Q?urFWVKoZ+/CNx6KD45IeSz2qLOzTA4BCy0TMPMOGF4NYAQGyIq7QlNQEz+4p?=
- =?us-ascii?Q?YmE6P4pC1fJ6MZQ8/N3Yh2KFbb8FHnaXsLxnQZ9GF+5M0xXPylQLUm/MA6Rp?=
- =?us-ascii?Q?Zqolj3MO8PtYam8lXJSLRG8Pjr0PMssByvKLiNrjJ/vacSXKdarbz8hA4Mvf?=
- =?us-ascii?Q?akmD3wZ6CHp0pHWcWbYQ+nz32JbscU6cpAAS+139RKxanKY9ycmBrblDK2Z1?=
- =?us-ascii?Q?adRVeCVM7QQ/pOcJfFMqJ3LAfVgbsEmVLchxCgaLlYlOtlJItkByXkELirIj?=
- =?us-ascii?Q?U5iFM1f7rmLMakskMx5OqSNy9tCrm8sWcx5ri+EgsMwex4H4QRLkBtZf6jU4?=
- =?us-ascii?Q?yKUY8MboLssKl8D5zVKGK17n7rjkMZsa1pSdgmj01VFqsdDSlftSV1wmibt2?=
- =?us-ascii?Q?seT79WnF1mdyRJbbTQgDvuP0Rv9EMCtihGH/VMQDdQC6UvedEuCEil/lDl+Z?=
- =?us-ascii?Q?RuH+2pZAwWubBsiV4gxpafk34dV82O7NkQEtgRpc6ID2T7K3h3/VZ36xR0Tg?=
- =?us-ascii?Q?AO9ZHr2R72EtpzcUQWLgypH2E/WQw94U5wWknZG595Bs57kURognoDWYu0ou?=
- =?us-ascii?Q?6Axlzxy97zFJCQDH5sNtaE0CGmS2m/vYkLbUCGysXHLUAlW/m1r0hrTUCeWO?=
- =?us-ascii?Q?kk7McjcryY7ZojnE2Hz9HcXbsguPZE1v8sYIrTsElG7x92zFu0Jl2txuVZJr?=
- =?us-ascii?Q?6Xij93E+qWm4DTi4JnBKGTD1rmZx4CZynvL18PybK2cZER/xK1xB+UovY1UU?=
- =?us-ascii?Q?r4jTwL32Jk2sW3R8PPQTq58P+KwpcYQ/lUYE+AzBO6Vny6OFEkEL/t/0t1rd?=
- =?us-ascii?Q?aBB8agtbEjq68CxkudhhH/6SdQOqbGB8JLLpLe/9JzNzu5BR7zsqsFaxUk1a?=
- =?us-ascii?Q?ihRIUfVWfdL4ReXKsBxYmZxmf8Jct7Af8i2gSjHVY7Ld0tKRIsLUjpBBzwr/?=
- =?us-ascii?Q?BixTLjoazvGtt/6Hyo64l78J3A9BilOdePeNfswQp77YoXeUHYHmqzOkEHDE?=
- =?us-ascii?Q?OzL4dP6+GZtILqeXasaa0ejeRQ9i+lj0TCLB3BKU3DSFxeZES31IolruR8xc?=
- =?us-ascii?Q?Hy2jmtrMju2Kw7L623B3A/xEdJRb3epqVY2Yb6IcCotZs7mgv/muqDFO6254?=
- =?us-ascii?Q?dIB9tFJjv2uDkNpKf+jihAbXAAd0qgKcoZy5z4bR?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 07b87a1b-e837-4d69-4894-08daf3d4f54e
-X-MS-Exchange-CrossTenant-AuthSource: LV2PR12MB5869.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jan 2023 13:08:40.1917
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: mlEEdKPd3WeLhhe543ybgP70XilEQmxp7ODZxLSAVBFW7d8t9LrCaLj5+OJINdf7
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB7483
+User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v8 24/26] PCI: dwc: Set coherent DMA-mask on MSI-address
+ allocation
+Content-Language: en-GB
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Jingoo Han <jingoohan1@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>
+Cc:     Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        caihuoqing <caihuoqing@baidu.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20221219144658.26620-1-Sergey.Semin@baikalelectronics.ru>
+ <20221219144658.26620-25-Sergey.Semin@baikalelectronics.ru>
+From:   Robin Murphy <robin.murphy@arm.com>
+In-Reply-To: <20221219144658.26620-25-Sergey.Semin@baikalelectronics.ru>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 11, 2023 at 11:16:32AM +0800, Baolu Lu wrote:
-> On 2023/1/10 21:25, Jason Gunthorpe wrote:
-> > > +       } else {
-> > > +               if (!pdev->bus->self ||
-> > > +                   !pci_acs_path_enabled(pdev->bus->self, NULL,
-> > > +                                         PCI_ACS_RR | PCI_ACS_UF))
-> > > +                       return -EINVAL;
-> > > +       }
-> > Why would these be exclusive? Both the path and endpoint needs to be
-> > checked
+On 2022-12-19 14:46, Serge Semin wrote:
+> The MSI target address requires to be reserved within the lowest 4GB
+> memory in order to support the PCIe peripherals with no 64-bit MSI TLPs
+> support. Since the allocation is done from the DMA-coherent memory let's
+> modify the allocation procedure to setting the coherent DMA-mask only and
+> avoiding the streaming DMA-mask modification. Thus at least the streaming
+> DMA operations would work with no artificial limitations. It will be
+> specifically useful for the eDMA-capable controllers so the corresponding
+> DMA-engine clients would map the DMA buffers with no need in the SWIOTLB
+> intervention for the buffers allocated above the 4GB memory region.
 > 
-> If the device is not an MFD, do we still need to check the ACS on it?
-> Perhaps I didn't get your point correctly.
+> While at it let's add a brief comment about the reason of having the MSI
+> target address allocated from the DMA-coherent memory limited with the 4GB
+> upper bound.
 
-It always needs to check the path
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
 
-Jason 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> 
+> ---
+> 
+> Changelog v8:
+> - This is a new patch added on v8 stage of the series.
+>    (@Robin, @Christoph)
+> ---
+>   drivers/pci/controller/dwc/pcie-designware-host.c | 11 ++++++++++-
+>   1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 3ab6ae3712c4..e10608af39b4 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -366,7 +366,16 @@ static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
+>   						    dw_chained_msi_isr, pp);
+>   	}
+>   
+> -	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
+> +	/*
+> +	 * Even though the iMSI-RX Module supports 64-bit addresses some
+> +	 * peripheral PCIe devices may lack the 64-bit messages support. In
+> +	 * order not to miss MSI TLPs from those devices the MSI target address
+> +	 * has to be reserved within the lowest 4GB.
+> +	 * Note until there is a better alternative found the reservation is
+> +	 * done by allocating from the artificially limited DMA-coherent
+> +	 * memory.
+> +	 */
+> +	ret = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
+>   	if (ret)
+>   		dev_warn(dev, "Failed to set DMA mask to 32-bit. Devices with only 32-bit MSI support may not work properly\n");
+>   
