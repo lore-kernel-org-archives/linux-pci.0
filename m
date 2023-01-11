@@ -2,42 +2,47 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77B01C61DB3
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Jan 2023 03:29:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C985FC61DB3
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Jan 2023 03:30:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234716AbjAKD3L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 10 Jan 2023 22:29:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38274 "EHLO
+        id S229986AbjAKD3m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 10 Jan 2023 22:29:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38536 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235162AbjAKD25 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2023 22:28:57 -0500
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97F691758A;
-        Tue, 10 Jan 2023 19:28:39 -0800 (PST)
-X-UUID: 07cd2e80916011ed945fc101203acc17-20230111
+        with ESMTP id S235385AbjAKD3B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Jan 2023 22:29:01 -0500
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D4E3F00B;
+        Tue, 10 Jan 2023 19:28:50 -0800 (PST)
+X-UUID: 0ce976b2916011eda06fc9ecc4dadd91-20230111
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=tPBVLufhdIhjett3dh8ZSV7+mAa/jQgjUH4vRx9Y3lE=;
-        b=DOI5jzxG6HFIMtvAtsFfBTJqYudpd8TXViEzSc+BnEFdTQHzfUME/i9HZIW6SVrGeI3vDJRUnLJSuLs1HXvCi6xXHg3XBR14xpVRyinwUV82waZEB4a+oHJJSpwJPmVtdETMAdxvcJsn3lUw+WpMGM4B5mdGwQPWA6M2vbl+OjA=;
+        h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=Q1367LjRdABOqy7A1vYGcZQlo1pAjOhv0VoFEG4f6qM=;
+        b=l4b0lZgM4FrOxeGQtY/4FwyKJjZRG1Gg1vGv2V2dFXfZfn+qm1sZqnux5tnXB0IQf9m4sTzWb1RPYfI2gtHRkXJ2sv8s050/qpvQz8jfbC9t+qr/+MvSCE3X1+Mw+LLL8pOA8FeKJVIcn4AivUql6u1VxcxVxEirSIhokNouS0I=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.17,REQID:b5fc17c3-1683-46d3-8dc7-82d2ce88cd18,IP:0,U
-        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-        release,TS:0
-X-CID-META: VersionHash:543e81c,CLOUDID:462c4c54-dd49-462e-a4be-2143a3ddc739,B
-        ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0,EDM:-3,IP:nil,U
-        RL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0
+X-CID-O-INFO: VERSION:1.1.17,REQID:5eee728e-3103-4e0d-8cc1-3fcbafde5b85,IP:0,U
+        RL:0,TC:0,Content:0,EDM:0,RT:0,SF:100,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
+        N:release,TS:100
+X-CID-INFO: VERSION:1.1.17,REQID:5eee728e-3103-4e0d-8cc1-3fcbafde5b85,IP:0,URL
+        :0,TC:0,Content:0,EDM:0,RT:0,SF:100,FILE:0,BULK:0,RULE:Spam_GS981B3D,ACTIO
+        N:quarantine,TS:100
+X-CID-META: VersionHash:543e81c,CLOUDID:0f19e78b-8530-4eff-9f77-222cf6e2895b,B
+        ulkID:230111112845I660I28Z,BulkQuantity:0,Recheck:0,SF:38|28|17|19|48,TC:n
+        il,Content:0,EDM:-3,IP:nil,URL:0,File:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OS
+        I:0,OSA:0
+X-CID-APTURL: Status:success,Category:nil,Trust:0,Unknown:0,Malicious:0
 X-CID-BVR: 0,NGT
-X-UUID: 07cd2e80916011ed945fc101203acc17-20230111
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
+X-UUID: 0ce976b2916011eda06fc9ecc4dadd91-20230111
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
         (envelope-from <jian.yang@mediatek.com>)
         (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-        with ESMTP id 149748522; Wed, 11 Jan 2023 11:28:35 +0800
+        with ESMTP id 339982136; Wed, 11 Jan 2023 11:28:43 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.186) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.3;
- Wed, 11 Jan 2023 11:28:33 +0800
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.792.15; Wed, 11 Jan 2023 11:28:42 +0800
 Received: from mhfsdcap04.gcn.mediatek.inc (10.17.3.154) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.792.15 via Frontend Transport; Wed, 11 Jan 2023 11:28:32 +0800
+ 15.2.792.15 via Frontend Transport; Wed, 11 Jan 2023 11:28:41 +0800
 From:   Jian Yang <jian.yang@mediatek.com>
 To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Jianjun Wang <jianjun.wang@mediatek.com>,
@@ -54,10 +59,12 @@ CC:     <linux-pci@vger.kernel.org>,
         <jian.yang@mediatek.com>, <chuanjia.liu@mediatek.com>,
         <jieyy.yang@mediatek.com>, <qizhong.cheng@mediatek.com>,
         <rex-bc.chen@mediatek.com>, <david-yh.chiu@mediatek.com>
-Subject: [PATCH 0/2] PCI: mediatek-gen3: Support controlling power and reset of downstream componennt
-Date:   Wed, 11 Jan 2023 11:28:28 +0800
-Message-ID: <20230111032830.20447-1-jian.yang@mediatek.com>
+Subject: [PATCH 2/2] dt-bindings: PCI: mediatek-gen3: Add support for controlling power and reset
+Date:   Wed, 11 Jan 2023 11:28:30 +0800
+Message-ID: <20230111032830.20447-3-jian.yang@mediatek.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230111032830.20447-1-jian.yang@mediatek.com>
+References: <20230111032830.20447-1-jian.yang@mediatek.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -67,19 +74,48 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: "jian.yang" <jian.yang@mediatek.com>
 
-These series patches add support for controlling power supplies and reset
-GPIO of a downstream component in MediaTek's PCIe GEN3 controller driver.
+Add new properties to support control power supplies and reset pin of
+a downstream component.
 
-jian.yang (2):
-  PCI: mediatek-gen3: Add power and reset control feature for downstream
-    component
-  dt-bindings: PCI: mediatek-gen3: Add support for controlling power and
-    reset
+Signed-off-by: jian.yang <jian.yang@mediatek.com>
+---
+ .../bindings/pci/mediatek-pcie-gen3.yaml      | 23 +++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
- .../bindings/pci/mediatek-pcie-gen3.yaml      |  23 ++++
- drivers/pci/controller/pcie-mediatek-gen3.c   | 114 +++++++++++++++++-
- 2 files changed, 136 insertions(+), 1 deletion(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+index 7e8c7a2a5f9b..46149cc63989 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+@@ -84,6 +84,29 @@ properties:
+     items:
+       enum: [ phy, mac ]
+ 
++  pcie1v8-supply:
++    description:
++      The regulator phandle that provides 1.8V power to downstream component.
++
++  pcie3v3-supply:
++    description:
++      The regulator phandle that provides 3.3V power to downstream component.
++
++  pcie12v-supply:
++    description:
++      The regulator phandle that provides 12V power to downstream component.
++
++  dsc-reset-gpios:
++    description:
++      The reset GPIO of a downstream component.
++    maxItems: 1
++
++  dsc-reset-msleep:
++    description:
++      The delay time between assertion and de-assertion of a downstream
++      component's reset GPIO.
++    maxItems: 1
++
+   clocks:
+     minItems: 4
+     maxItems: 6
 -- 
 2.18.0
 
