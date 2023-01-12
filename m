@@ -2,44 +2,44 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EF8EC678D6
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Jan 2023 21:50:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01D8FC54EBE
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Jan 2023 21:51:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240761AbjALVuz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Jan 2023 16:50:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40684 "EHLO
+        id S240800AbjALVu4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Jan 2023 16:50:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241042AbjALVsq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2023 16:48:46 -0500
-Received: from DM5PR00CU002-vft-obe.outbound.protection.outlook.com (mail-centralusazon11021022.outbound.protection.outlook.com [52.101.62.22])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8CCA389A;
-        Thu, 12 Jan 2023 13:43:25 -0800 (PST)
+        with ESMTP id S232661AbjALVtA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2023 16:49:00 -0500
+Received: from DM5PR00CU002-vft-obe.outbound.protection.outlook.com (mail-centralusazon11021023.outbound.protection.outlook.com [52.101.62.23])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3839B25D5;
+        Thu, 12 Jan 2023 13:43:29 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=L8FiUSKzwF5exMoWdp8/O6UOv5PsQMXxGW2VpjasXIL7tqCx08Ivek+TwLa1I+d8Ck63w4RtA1R56rpFdemiJbkvX5H8RS0OYYuCxj2Wys+fNu30YHI5DjOLLrTUifh5y9lgxbMQrn9TypIRpgmzD8eqc8L9bhOXQWotadSzl30o6gjDVx2lSM00jEAUsC+T+ipB3B4YGc9l/CYsLsKN4LBNTCNQpwjthwq3H1/2CJVO6C71dvR44DvvDXX/XIIpCm6S54A2iAKGcJOmo2y8wZdtUWe8XmfJm+x8rDhpQXYiMMy8zdfz1Aj8bzK8xCIktgo6EG0Q9WmyeOKPYIkGdQ==
+ b=TFR6OG1oczv55QBeazEomPfUct/B5j0EAL4qjM0fa6vI+prY8PGg9Nq3b/wboSodoBgXFrgVOBRrqGSpbUskXR0FriemCg6kBrgdVBaMO9sxVYzWr2/66e0B0JvFxIxIJbqL049yBxKRF78KqMZLeO7HMWB/cV4HgH1/7mhLcdYv/Ad6s/uIJAF/f4ix8b1FDJHjGBLn4DT1RWf0TncIYugtesvCIJDdfe6M8aovGlMzqiIj1mXNs69W8g6xG26dVJ9XqGjHwJCYd7JLnfGZdFwa6kAwfnoUuUCH+KDpkVWWRcQJZAKminNrJAt/dVxi8Va5ArcdT4oLN/q50JzuSw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WhqYaUVvCGoXTFbigkpwdviSAiVGP+4IiVWor9azP/0=;
- b=RysvgL7IYJYZLPJoq4DOzZZ5KmSIf/JDAXoT1EsK47NzVJ/zJ8AO0ekQRkTDpvS08AE2plfCrhYcG+OlHiD6TQ7ye6sXzG9OTPzMKqWych67wKxLr6zqMjZ+vvqHoZiUthbNP7j5UAOkrFDLyriwBlj1kTlgy+ftP2uSTE9am3CeqckagyqKqi2UWV1OV3RyrJEYSP0gQCJGlM8GGqrC9dX5k79WK35CsKhiTU7qigtCuvyS/AsNCsBdR9/z75GW8bwQdykmRA2lznCDdr8fYwH40Us89/+JO0AbhhTJ4IMsibpUewNF68IjvZS6A+tQSWXC7eXrjIXbgkUO8i/jeQ==
+ bh=tGndZWQu3HNngqcEmna4NaG2bsukODbgQidpOqhCV9o=;
+ b=MLCF1RLFuJs4ooyFuNztKMHzIjmeYMKQozzuPvaAfNVSZoD7IZdbWEmpEJ6UXnzavO+xN/Iuyj4OV1YWgo2ne+BctoHrr5hKLsvvEvbuRipbZz+d4ltSX30EjGhN/HZwSqWnRiGm2ik6tIAPLrJ/+FtMuy4BhE4sxSGK57hL78HFKHurFkZCFSJGOi3c22tWsgzbDplbLwMdp6QR/N5FJRiW6JRw3FUBny2HvcibSaEsFB89mO05KCGTmS6u2EO12IyBKNARSWqJTtu+KsT7rO+FUhlz0sqKkEs/tVRPgk5wvJ/BPk1uutjqaSe/kqOjgBomR6eTn/eTyRAfmhGMIw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microsoft.com; dmarc=pass action=none
  header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WhqYaUVvCGoXTFbigkpwdviSAiVGP+4IiVWor9azP/0=;
- b=VWW+/D1vJIwpnAZje+FVO166nMH+1d0Iol3wXGWC33ZTALanuHDF0Bx5RbrOhm72icHa48kDGMzS/+06wDlUrJlMNuOBQbShFARdhhv0YZxexb46gJnTKbWBCquvBlDTGAY9jP3Da1s0fmfoDddTtTuXV5WoGGMHCzdmiemT4gk=
+ bh=tGndZWQu3HNngqcEmna4NaG2bsukODbgQidpOqhCV9o=;
+ b=JGI1rCLknFNe2hd82NC3jIN+eNTznW6MQVcBKoxAsOAfMbK8I/7J9h7Tx7Wi2jTDIXp4evNMWo4TmpzMjQcCUll3ml0r1i0dWHJOPGoE186MHkpSvZOTWInv7u3BtRXy8TlyocnksSojZkA8AM6b1Vg6oW+huGxhkyYoMphSRyA=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=microsoft.com;
 Received: from DM6PR21MB1370.namprd21.prod.outlook.com (2603:10b6:5:16b::28)
  by MW4PR21MB1953.namprd21.prod.outlook.com (2603:10b6:303:74::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6023.4; Thu, 12 Jan
- 2023 21:43:22 +0000
+ 2023 21:43:27 +0000
 Received: from DM6PR21MB1370.namprd21.prod.outlook.com
  ([fe80::ef06:2e2c:3620:46a7]) by DM6PR21MB1370.namprd21.prod.outlook.com
  ([fe80::ef06:2e2c:3620:46a7%8]) with mapi id 15.20.6023.006; Thu, 12 Jan 2023
- 21:43:22 +0000
+ 21:43:26 +0000
 From:   Michael Kelley <mikelley@microsoft.com>
 To:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, luto@kernel.org,
@@ -58,9 +58,9 @@ To:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
         linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
         iommu@lists.linux.dev
 Cc:     mikelley@microsoft.com
-Subject: [PATCH v5 12/14] Drivers: hv: Don't remap addresses that are above shared_gpa_boundary
-Date:   Thu, 12 Jan 2023 13:42:31 -0800
-Message-Id: <1673559753-94403-13-git-send-email-mikelley@microsoft.com>
+Subject: [PATCH v5 14/14] PCI: hv: Enable PCI pass-thru devices in Confidential VMs
+Date:   Thu, 12 Jan 2023 13:42:33 -0800
+Message-Id: <1673559753-94403-15-git-send-email-mikelley@microsoft.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1673559753-94403-1-git-send-email-mikelley@microsoft.com>
 References: <1673559753-94403-1-git-send-email-mikelley@microsoft.com>
@@ -72,158 +72,327 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DM6PR21MB1370:EE_|MW4PR21MB1953:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0e65d253-3731-4b59-0372-08daf4e606ba
+X-MS-Office365-Filtering-Correlation-Id: 59c0cc4e-f754-4183-bff5-08daf4e60955
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: AZ6ZvO9PMGnEUIWlEsxYJ8g5W0U3yFWKuVifsPbRYX1uOpdnuPxKmi+0gSttTociH3TXyO+07YKchvbYs9LklwaHjdVsSYcfUPCaZIbual5rN6NFwZgatYekcRttjA6XLBIiJCiiCHKrb3ThK4c8+O5IYxRRst646LyG2yzfD4DJdm4awGAxzdgS+WL29f0bhSm482m5kdLyXt2lSq62gqqq3szqJRiqs9PFNRMolINj/QpNMb/5rfrIcvM6BvmCjhrxq82ik4loPLfjJenOW/oomlSPgbAyLZXczoj9Yhne0oQXtIbdw1fcEWK7CF0qQbRLjmjlFpliFtz8pr38yK8hG0/dLvlbKlycai955D8Hc+sGYWfTqT7LCNXFSJfXpewTGcQREI4hukeU9Acqe+RB17F0rBCwBikZYD524physiPMbAYJkZGK6pyUq7s17tn6yYHoEs59CroKzKuc3aO7zOvZEcMzoOT8ww/huRVt94myJff7CM3OPuusNLsNAq834WCbjr9XVeIkON6HAJwOWPr6qj9W7sTGjPXY7w9J+SbS9ufZhmK1OIKSNxqNh81qgyQ5FhcSTPmkb8eB9q7f1JXkjZtZIr/fL3QCnUkxqKMw4d+2bPR0vOZ4L/OLlcjoiyt/bJ8DRS4hXbV7/BK2eKKD6szre17yVXM3vx9vxTEkv9qelS/N30KmVDE43RiaPmSuRBPVlSxxh0I/m6rnWuBIj1YEvz8Autt/Ok71TvXHdJTM5+rLGgZhZBUHwOn9EwnWnxAoKbHX7at9Yg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(39860400002)(136003)(346002)(376002)(396003)(451199015)(186003)(26005)(6512007)(82960400001)(82950400001)(6486002)(86362001)(52116002)(478600001)(2906002)(5660300002)(4326008)(8676002)(38350700002)(66556008)(66476007)(316002)(7406005)(38100700002)(10290500003)(41300700001)(921005)(36756003)(66946007)(7416002)(2616005)(8936002)(6506007)(6666004)(107886003)(83380400001);DIR:OUT;SFP:1102;
+X-Microsoft-Antispam-Message-Info: Ugl/mEAhPHzspg1xTRCCkuFWkCpq3vt+54qOsh8MejnorkAfYXgUQAA7Mt4AcWxKDb8i0iRwPY/GHZKt3OusGq28T4K1J7dtLNTF0/MwkpP9v4PS3n8I/Oi9RNBc3MD2IRBLAbce8wsPMMfepwHZN/Rf2NZmvFS6zKoODydiX1VJ2P2uAg3Dgw/S5BN2XnIz47BKL6A2zecswYn04Ln6sFIjudaoM2I5UxF2SoIVyhvmRv/XnOyveyyhDI50CLxd0pdpgNpPNUd8ZiHjVPb305QnkXskPJNRjDzsXy50XBJZnig0s77YQJjNvj5cgbmReNYHKi3mjW6YK6s4M69JRBjCc42oIhx5bzE7OJRs3FkptQ2Nub8dnmENp/02KPI1a+pE7J/l6KxCxZWQcAwkHOGbDh7fFrxWNCAVdWW1QdZd22mw53lGnVwRUzDJpU7MHd6//9IB9gm8fs9q07dATntp0ERnqYQtB5CoXs3vWIACX0eBrcEXwFeMELAq8eP5bE7DjKpVP547nfjEX0CXu+JR64awBO1n/0Xc9IMIwx3FzkjofkR5gzFYic2pV7h7gwqdNBRpZtXQp69KcCD3Bs9Rb9DoXZJtnD0TozadLAiPHx0T0lZwlLZ3gR2TwRIObpN5ODxO78yuwP4aK5gAnSd/wuYIF7uKr1yXrHnqoTdWubW0ppo1N2Qc1eg3nFTk11eBurML1TTDLGO+O5aZ7oKNf0D3OE++PrWbeegsBcrhE+MHpf/zajqXzbh3oloknQq7ESteNSPtkZx5mfqBc5KnIhYUwP5oh+PVurRUR4w=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(39860400002)(136003)(346002)(376002)(396003)(451199015)(186003)(26005)(6512007)(82960400001)(82950400001)(6486002)(86362001)(52116002)(966005)(478600001)(2906002)(5660300002)(4326008)(8676002)(38350700002)(66556008)(66476007)(316002)(7406005)(38100700002)(10290500003)(41300700001)(921005)(36756003)(66946007)(7416002)(2616005)(8936002)(6506007)(6666004)(107886003)(83380400001);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?4S9xlEUN20fs4A+FklWjD/1bQdQaXDss8nT0WeUgCKMl/Z0dU1Wk3Kr/jjOG?=
- =?us-ascii?Q?3knbLmFspj5bQ+e+/sYpc7x2UOCjYqMyQCg3Q5h6QazKZ9wfmhSj2zgGXoxF?=
- =?us-ascii?Q?ZuwKJtsKEAbPNgQM/3fp9fU8hjNa+iM9dqfkhkyDFWiSXPuRwbBSHUarPnlR?=
- =?us-ascii?Q?hlEhpBf/fFguambRFi8WiSh26JqtkQAcQ2Rku+QveOuhS8er0C5+PtGOnDXD?=
- =?us-ascii?Q?obZVu/oBNaThi/qaqXk7kEmx4mq/RELckyxJna85Ihk0agY6d/GT2xR3RFVt?=
- =?us-ascii?Q?wCyX+w2TA1RH8jC8b9QU1otU4lBUM1hHJK9g3tAR/saVbI2V0nMiuO6wvHA/?=
- =?us-ascii?Q?yFJzbDFB7ViC/5O6OU0YaJ2gHNlOBhdLqymLQR9yWIFMKyrLr6ypycYtDDXO?=
- =?us-ascii?Q?8o6I9Kfd4DYyvQ+5urFFv7Ch/x98H4fU9rFcj4a6eMquWNRTDn95NcByQXIm?=
- =?us-ascii?Q?z/z1asFslWtoUY021T7PbHvtr4DfMZNPLT+dFoo/aGROkDuR6TAu7i4SFhk1?=
- =?us-ascii?Q?WM0lM0X/XGe0L6xEG2q6JdIptwIQp5GcFyk9pDgFO2Krqmz3n95yxW03ES2O?=
- =?us-ascii?Q?AVx1dD5ERl8lXANc2dbzdP/KJo/rIiuaoWy5phsUlDSUrAH9wk1ujZOqkzFt?=
- =?us-ascii?Q?XhOuWThddFLHfBTWfnk0syzDhmN1SS6ae0S318Fui6nVUBUD6kJthbKAMoK1?=
- =?us-ascii?Q?MplidyGJrKp8nW/CkJY6wSHagNq0Lk+funxPp6rX+0LeQzuaprj5jbR2Odrq?=
- =?us-ascii?Q?L7DtIBOWvI+2RzAeA5pRm9HkgFF1PCy0SB9yOlFEaFEjg4LKtudS05c8ck3n?=
- =?us-ascii?Q?YPRK0dJ9L7XR2C6zCd4YrIntIL3xgu1HXQlt1KkluAFWVQhC84rhwmp8RWUW?=
- =?us-ascii?Q?BTKTRynwAFDHFmcPNwYADbvFnJEfoXXx02gWOlgfsZn2MAcnULPstmgzA8Bf?=
- =?us-ascii?Q?yAtS5GYv2lE/1EaXg13C9pRczQsu3tbS28/YueRSbrRsqvjD+HNK1uhRLydk?=
- =?us-ascii?Q?VPYM+gp8RpqUVU/NhIH+fxt96fGUq6jK9hAy8gscfmQ2GnHkia8mUEt0aSCb?=
- =?us-ascii?Q?MX+c9QiSeZcvXJa8SWhG6B/dCpM+HJ9hLCnnGx94U32KgXBjosZLTxxm77Yj?=
- =?us-ascii?Q?yK3dqjGrKg2F06ABzpnO6aMTIKJzVn3BeIWl1ZoZ9uSmfK9tlQNMIN6pyqUQ?=
- =?us-ascii?Q?En6TElkNVCBCagaARjXgIf7BsThtf0Y07WxQwa10105gkAZJs6FWzv8E6fSO?=
- =?us-ascii?Q?9YMV5wlKlzL0QMfTON9RNnh6xddpmP54Ab4JoqStZjTDkpFyhKIQGyenQJAg?=
- =?us-ascii?Q?RP1gx7dCxHYjLGtVtohXg3e5r8RpDDM3bS24/Z1Mr6JqEVOrpg5lwcfvPTEZ?=
- =?us-ascii?Q?wG+0F4SHVydlkemO3cMRmCCZzydW56JYAnn8xq7/ASU+2hVnqThu44YvecvI?=
- =?us-ascii?Q?BL9UbrJ+ca33g1gqHs9Da8XXkukHztuqgzqZ5b6+b46Pa1cA9eBNJ3P123bc?=
- =?us-ascii?Q?6ZDz+UI43ZWJvOE/y3kdtAeuwmGJ45lv4JOsQUekxct0plqmwdNe3zuSqS/3?=
- =?us-ascii?Q?IAHTS+M/B9So870aPOC0rVAAY3x9bmEsq+fjgwgn?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?MbwNvmlH6jPQ98GFNxoPVkfBGoRfPkwQJhHgwxyg19hs0uMJILaRgXJ5xyaa?=
+ =?us-ascii?Q?AJDPDbbmRWMghp+U+FSmKAgi7MztvRFjLBgcHhnMnnVUWsrVzN6ekRzMkAKJ?=
+ =?us-ascii?Q?kmsn0OMGnXYLH6TIahblZVQuCfJxE4iETINq2pClRtHB88DPwQGBoSqnVppF?=
+ =?us-ascii?Q?rVDZPOm7r0LmeN9t7VQHaiUOd7iN5sk/d/ua+M+aT58XcZAyU9wY9DHjwvTy?=
+ =?us-ascii?Q?v8wBZAyD0uA6jm7375HrP+46BJPGmPUj0/KxJm/Z4EirUNKI3EINznGwCOL1?=
+ =?us-ascii?Q?xdgIa8JQdKn6WYCrjQfhcGSLw0mE1OqwgqKEeuVYpkWN0VGsB0ZAAz2jtEyM?=
+ =?us-ascii?Q?zCUVGdVwQElILehyj482loMzRnzsTz3r1c+oPXsIj2O4b9uLfT5oMnhyXgfi?=
+ =?us-ascii?Q?SeX5s864vA5RsAGtT3mDiuRLmWYErv1b/LOf08rFTUNr7ESr0e3VSZWM0UUB?=
+ =?us-ascii?Q?1ela2+ywIFSsZWGVjwDmcxH/xum5YAkqbZkkt7wSSWjP/thjHZ0CmbufBrMo?=
+ =?us-ascii?Q?3EoYvX09ZOvj0iCfcmNdiHoswvP+cmHcSp1fqnLHhq3rVJ09cxwpxc61WqIb?=
+ =?us-ascii?Q?HDkFPwuhKynMloOIMoHifhge4eTsFrDN/8Cx8Xm5hIhGbqrlX89NL7sr82nR?=
+ =?us-ascii?Q?57gmPTeyBIINtqDqgmjfvP5Gdf3IGkezBaxs4/qowc4nMvBDs0trnDvLrvtn?=
+ =?us-ascii?Q?2t2kNo2L94a+de209Xo9b3m3HEVATpNpJoHUpDm9CDINavknby70lgJtgbFZ?=
+ =?us-ascii?Q?D0CbR8NH5UjWFXvi2ZoYIiwnXHA+CLHrOCPnc+o5aFiFTcBPuNcjRUIHcRDm?=
+ =?us-ascii?Q?dbbC/XpUX+QXJUUv7fQvrt7iO4bEiSiOpw8JBjv8c1PaSGRcqDGey+bYQHnx?=
+ =?us-ascii?Q?hlQ3mHZnevfThTec2+4AkWfSIwWRH9Kl5koDZgwkMOaZC2S+A8jUukVrlpSO?=
+ =?us-ascii?Q?3GcsR19jFG42PhC03znwF+HjJEdhBqvDWH8hmHY4Zv/MD9BWWFSJajlFpolk?=
+ =?us-ascii?Q?VyFsWFc0jKmPGPPkJ45gTz4kulSox8vbfAsEaHIYEwwyTGPsKa8tpqjakbq9?=
+ =?us-ascii?Q?q4+2xOXN5fWXK1vOiDwWUOJSS4YJTwxGtLlMJatIkBvfcT2EgDXpOdlyWg1b?=
+ =?us-ascii?Q?N3rd12tCeF1bOM1NLRZa9sAAtwcgaKSM5s9gdjQKe1zNE+DO+fRAvth7bIQw?=
+ =?us-ascii?Q?kuJ3EB4j2dvNyOjVDhI4xrYj4FexJiQW29/18onNy0xF7PXjDo3OCe+UmWo6?=
+ =?us-ascii?Q?p5udcMIXb5rpGPINfiRk7JNyp1RNRhlB3ZDg/Q/yTqRhDB7d/pJkyYvz4QGn?=
+ =?us-ascii?Q?I4EK/J4YB82N+bRZ/aHmH2RmpJ+TQB7ZxgZ7w3sHREPtRvUWLPrg0JGv/ahD?=
+ =?us-ascii?Q?pWjA3hIBU3GqNac3AlFtLm6nswut6uUc6ddxUgR5lMZqXyh4pM825EH5CV4O?=
+ =?us-ascii?Q?vOve0saz7I06HbT86jNYSXCSBZW+yUA1PtlGd5x5462rzCXCX4ECI2H5DN/O?=
+ =?us-ascii?Q?AHBDQorygqi+vpoo6/+wCnnT5NPbKRV9jSULBG8scY4wgyyKcG3vPx5Jkf6T?=
+ =?us-ascii?Q?51/Fhd7LGSMKD0viHJndibKUxpzvOVBceQ6+8Yu3?=
 X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e65d253-3731-4b59-0372-08daf4e606ba
+X-MS-Exchange-CrossTenant-Network-Message-Id: 59c0cc4e-f754-4183-bff5-08daf4e60955
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1370.namprd21.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jan 2023 21:43:22.0730
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jan 2023 21:43:26.3866
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: t8vrkjm65WbsZ7gnDQ5L8/pksjsN4jxo8GN2v7ZoejAcYOkAy8zcLYgIoABmCDqg9e4Py9+X2+dffnaRHpdGqA==
+X-MS-Exchange-CrossTenant-UserPrincipalName: AvwFQdhc8h5e2n7l5WvhI205IEkGx+er6w0hTh/TkrFirBB7a1F/p/RbGXTYfNPDFljUYxGbuDdI1rvo6RkG4A==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB1953
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With the vTOM bit now treated as a protection flag and not part of
-the physical address, avoid remapping physical addresses with vTOM set
-since technically such addresses aren't valid.  Use ioremap_cache()
-instead of memremap() to ensure that the mapping provides decrypted
-access, which will correctly set the vTOM bit as a protection flag.
+For PCI pass-thru devices in a Confidential VM, Hyper-V requires
+that PCI config space be accessed via hypercalls.  In normal VMs,
+config space accesses are trapped to the Hyper-V host and emulated.
+But in a confidential VM, the host can't access guest memory to
+decode the instruction for emulation, so an explicit hypercall must
+be used.
 
-While this change is not required for correctness with the current
-implementation of memremap(), for general code hygiene it's better to
-not depend on the mapping functions doing something reasonable with
-a physical address that is out-of-range.
+Update the PCI config space access functions to use the hypercalls
+when such use is indicated by Hyper-V flags.  Also, set the flag to
+allow the Hyper-V PCI driver to be loaded and used in a Confidential
+VM (a.k.a., "Isolation VM").  The driver has previously been hardened
+against a malicious Hyper-V host[1].
 
-While here, fix typos in two error messages.
+[1] https://lore.kernel.org/all/20220511223207.3386-2-parri.andrea@gmail.com/
 
+Co-developed-by: Dexuan Cui <decui@microsoft.com>
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
 Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-Reviewed-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
+Reviewed-by: Boqun Feng <boqun.feng@gmail.com>
 ---
- arch/x86/hyperv/hv_init.c |  7 +++++--
- drivers/hv/hv.c           | 23 +++++++++++++----------
- 2 files changed, 18 insertions(+), 12 deletions(-)
+ drivers/hv/channel_mgmt.c           |   2 +-
+ drivers/pci/controller/pci-hyperv.c | 168 ++++++++++++++++++++++--------------
+ 2 files changed, 105 insertions(+), 65 deletions(-)
 
-diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
-index edbc67e..a5f9474 100644
---- a/arch/x86/hyperv/hv_init.c
-+++ b/arch/x86/hyperv/hv_init.c
-@@ -63,7 +63,10 @@ static int hyperv_init_ghcb(void)
- 	 * memory boundary and map it here.
- 	 */
- 	rdmsrl(MSR_AMD64_SEV_ES_GHCB, ghcb_gpa);
--	ghcb_va = memremap(ghcb_gpa, HV_HYP_PAGE_SIZE, MEMREMAP_WB);
+diff --git a/drivers/hv/channel_mgmt.c b/drivers/hv/channel_mgmt.c
+index cc23b90..007f26d 100644
+--- a/drivers/hv/channel_mgmt.c
++++ b/drivers/hv/channel_mgmt.c
+@@ -67,7 +67,7 @@
+ 	{ .dev_type = HV_PCIE,
+ 	  HV_PCIE_GUID,
+ 	  .perf_device = false,
+-	  .allowed_in_isolated = false,
++	  .allowed_in_isolated = true,
+ 	},
+ 
+ 	/* Synthetic Frame Buffer */
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index bbe6e36..f874f89 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -514,6 +514,7 @@ struct hv_pcibus_device {
+ 
+ 	/* Highest slot of child device with resources allocated */
+ 	int wslot_res_allocated;
++	bool use_calls; /* Use hypercalls to access mmio cfg space */
+ 
+ 	/* hypercall arg, must not cross page boundary */
+ 	struct hv_retarget_device_interrupt retarget_msi_interrupt_params;
+@@ -1123,8 +1124,10 @@ static void hv_pci_write_mmio(struct device *dev, phys_addr_t gpa, int size, u32
+ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
+ 				     int size, u32 *val)
+ {
++	struct hv_pcibus_device *hbus = hpdev->hbus;
++	struct device *dev = &hbus->hdev->device;
++	int offset = where + CFG_PAGE_OFFSET;
+ 	unsigned long flags;
+-	void __iomem *addr = hpdev->hbus->cfg_addr + CFG_PAGE_OFFSET + where;
+ 
+ 	/*
+ 	 * If the attempt is to read the IDs or the ROM BAR, simulate that.
+@@ -1152,56 +1155,79 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
+ 		 */
+ 		*val = 0;
+ 	} else if (where + size <= CFG_PAGE_SIZE) {
+-		spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
+-		/* Choose the function to be read. (See comment above) */
+-		writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+-		/* Make sure the function was chosen before we start reading. */
+-		mb();
+-		/* Read from that function's config space. */
+-		switch (size) {
+-		case 1:
+-			*val = readb(addr);
+-			break;
+-		case 2:
+-			*val = readw(addr);
+-			break;
+-		default:
+-			*val = readl(addr);
+-			break;
 +
-+	/* Mask out vTOM bit. ioremap_cache() maps decrypted */
-+	ghcb_gpa &= ~ms_hyperv.shared_gpa_boundary;
-+	ghcb_va = (void *)ioremap_cache(ghcb_gpa, HV_HYP_PAGE_SIZE);
- 	if (!ghcb_va)
- 		return -ENOMEM;
- 
-@@ -217,7 +220,7 @@ static int hv_cpu_die(unsigned int cpu)
- 	if (hv_ghcb_pg) {
- 		ghcb_va = (void **)this_cpu_ptr(hv_ghcb_pg);
- 		if (*ghcb_va)
--			memunmap(*ghcb_va);
-+			iounmap(*ghcb_va);
- 		*ghcb_va = NULL;
++		spin_lock_irqsave(&hbus->config_lock, flags);
++		if (hbus->use_calls) {
++			phys_addr_t addr = hbus->mem_config->start + offset;
++
++			hv_pci_write_mmio(dev, hbus->mem_config->start, 4,
++						hpdev->desc.win_slot.slot);
++			hv_pci_read_mmio(dev, addr, size, val);
++		} else {
++			void __iomem *addr = hbus->cfg_addr + offset;
++
++			/* Choose the function to be read. (See comment above) */
++			writel(hpdev->desc.win_slot.slot, hbus->cfg_addr);
++			/* Make sure the function was chosen before reading. */
++			mb();
++			/* Read from that function's config space. */
++			switch (size) {
++			case 1:
++				*val = readb(addr);
++				break;
++			case 2:
++				*val = readw(addr);
++				break;
++			default:
++				*val = readl(addr);
++				break;
++			}
++			/*
++			 * Make sure the read was done before we release the
++			 * spinlock allowing consecutive reads/writes.
++			 */
++			mb();
+ 		}
+-		/*
+-		 * Make sure the read was done before we release the spinlock
+-		 * allowing consecutive reads/writes.
+-		 */
+-		mb();
+-		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
++		spin_unlock_irqrestore(&hbus->config_lock, flags);
+ 	} else {
+-		dev_err(&hpdev->hbus->hdev->device,
+-			"Attempt to read beyond a function's config space.\n");
++		dev_err(dev, "Attempt to read beyond a function's config space.\n");
  	}
+ }
  
-diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
-index 4d6480d..410e6c4 100644
---- a/drivers/hv/hv.c
-+++ b/drivers/hv/hv.c
-@@ -217,11 +217,13 @@ void hv_synic_enable_regs(unsigned int cpu)
- 	simp.simp_enabled = 1;
+ static u16 hv_pcifront_get_vendor_id(struct hv_pci_dev *hpdev)
+ {
++	struct hv_pcibus_device *hbus = hpdev->hbus;
++	struct device *dev = &hbus->hdev->device;
++	u32 val;
+ 	u16 ret;
+ 	unsigned long flags;
+-	void __iomem *addr = hpdev->hbus->cfg_addr + CFG_PAGE_OFFSET +
+-			     PCI_VENDOR_ID;
  
- 	if (hv_isolation_type_snp()) {
-+		/* Mask out vTOM bit. ioremap_cache() maps decrypted */
-+		u64 base = (simp.base_simp_gpa << HV_HYP_PAGE_SHIFT) &
-+				~ms_hyperv.shared_gpa_boundary;
- 		hv_cpu->synic_message_page
--			= memremap(simp.base_simp_gpa << HV_HYP_PAGE_SHIFT,
--				   HV_HYP_PAGE_SIZE, MEMREMAP_WB);
-+			= (void *)ioremap_cache(base, HV_HYP_PAGE_SIZE);
- 		if (!hv_cpu->synic_message_page)
--			pr_err("Fail to map syinc message page.\n");
-+			pr_err("Fail to map synic message page.\n");
+-	spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
++	spin_lock_irqsave(&hbus->config_lock, flags);
+ 
+-	/* Choose the function to be read. (See comment above) */
+-	writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+-	/* Make sure the function was chosen before we start reading. */
+-	mb();
+-	/* Read from that function's config space. */
+-	ret = readw(addr);
+-	/*
+-	 * mb() is not required here, because the spin_unlock_irqrestore()
+-	 * is a barrier.
+-	 */
++	if (hbus->use_calls) {
++		phys_addr_t addr = hbus->mem_config->start +
++					 CFG_PAGE_OFFSET + PCI_VENDOR_ID;
++
++		hv_pci_write_mmio(dev, hbus->mem_config->start, 4,
++					hpdev->desc.win_slot.slot);
++		hv_pci_read_mmio(dev, addr, 2, &val);
++		ret = val;  /* Truncates to 16 bits */
++	} else {
++		void __iomem *addr = hbus->cfg_addr + CFG_PAGE_OFFSET +
++					     PCI_VENDOR_ID;
++		/* Choose the function to be read. (See comment above) */
++		writel(hpdev->desc.win_slot.slot, hbus->cfg_addr);
++		/* Make sure the function was chosen before we start reading. */
++		mb();
++		/* Read from that function's config space. */
++		ret = readw(addr);
++		/*
++		 * mb() is not required here, because the
++		 * spin_unlock_irqrestore() is a barrier.
++		 */
++	}
+ 
+-	spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
++	spin_unlock_irqrestore(&hbus->config_lock, flags);
+ 
+ 	return ret;
+ }
+@@ -1216,39 +1242,51 @@ static u16 hv_pcifront_get_vendor_id(struct hv_pci_dev *hpdev)
+ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
+ 				      int size, u32 val)
+ {
++	struct hv_pcibus_device *hbus = hpdev->hbus;
++	struct device *dev = &hbus->hdev->device;
++	int offset = where + CFG_PAGE_OFFSET;
+ 	unsigned long flags;
+-	void __iomem *addr = hpdev->hbus->cfg_addr + CFG_PAGE_OFFSET + where;
+ 
+ 	if (where >= PCI_SUBSYSTEM_VENDOR_ID &&
+ 	    where + size <= PCI_CAPABILITY_LIST) {
+ 		/* SSIDs and ROM BARs are read-only */
+ 	} else if (where >= PCI_COMMAND && where + size <= CFG_PAGE_SIZE) {
+-		spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
+-		/* Choose the function to be written. (See comment above) */
+-		writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+-		/* Make sure the function was chosen before we start writing. */
+-		wmb();
+-		/* Write to that function's config space. */
+-		switch (size) {
+-		case 1:
+-			writeb(val, addr);
+-			break;
+-		case 2:
+-			writew(val, addr);
+-			break;
+-		default:
+-			writel(val, addr);
+-			break;
++		spin_lock_irqsave(&hbus->config_lock, flags);
++
++		if (hbus->use_calls) {
++			phys_addr_t addr = hbus->mem_config->start + offset;
++
++			hv_pci_write_mmio(dev, hbus->mem_config->start, 4,
++						hpdev->desc.win_slot.slot);
++			hv_pci_write_mmio(dev, addr, size, val);
++		} else {
++			void __iomem *addr = hbus->cfg_addr + offset;
++
++			/* Choose the function to write. (See comment above) */
++			writel(hpdev->desc.win_slot.slot, hbus->cfg_addr);
++			/* Make sure the function was chosen before writing. */
++			wmb();
++			/* Write to that function's config space. */
++			switch (size) {
++			case 1:
++				writeb(val, addr);
++				break;
++			case 2:
++				writew(val, addr);
++				break;
++			default:
++				writel(val, addr);
++				break;
++			}
++			/*
++			 * Make sure the write was done before we release the
++			 * spinlock allowing consecutive reads/writes.
++			 */
++			mb();
+ 		}
+-		/*
+-		 * Make sure the write was done before we release the spinlock
+-		 * allowing consecutive reads/writes.
+-		 */
+-		mb();
+-		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
++		spin_unlock_irqrestore(&hbus->config_lock, flags);
  	} else {
- 		simp.base_simp_gpa = virt_to_phys(hv_cpu->synic_message_page)
- 			>> HV_HYP_PAGE_SHIFT;
-@@ -234,12 +236,13 @@ void hv_synic_enable_regs(unsigned int cpu)
- 	siefp.siefp_enabled = 1;
+-		dev_err(&hpdev->hbus->hdev->device,
+-			"Attempt to write beyond a function's config space.\n");
++		dev_err(dev, "Attempt to write beyond a function's config space.\n");
+ 	}
+ }
  
- 	if (hv_isolation_type_snp()) {
--		hv_cpu->synic_event_page =
--			memremap(siefp.base_siefp_gpa << HV_HYP_PAGE_SHIFT,
--				 HV_HYP_PAGE_SIZE, MEMREMAP_WB);
--
-+		/* Mask out vTOM bit. ioremap_cache() maps decrypted */
-+		u64 base = (siefp.base_siefp_gpa << HV_HYP_PAGE_SHIFT) &
-+				~ms_hyperv.shared_gpa_boundary;
-+		hv_cpu->synic_event_page
-+			= (void *)ioremap_cache(base, HV_HYP_PAGE_SIZE);
- 		if (!hv_cpu->synic_event_page)
--			pr_err("Fail to map syinc event page.\n");
-+			pr_err("Fail to map synic event page.\n");
- 	} else {
- 		siefp.base_siefp_gpa = virt_to_phys(hv_cpu->synic_event_page)
- 			>> HV_HYP_PAGE_SHIFT;
-@@ -316,7 +319,7 @@ void hv_synic_disable_regs(unsigned int cpu)
+@@ -3627,6 +3665,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	hbus->bridge->domain_nr = dom;
+ #ifdef CONFIG_X86
+ 	hbus->sysdata.domain = dom;
++	hbus->use_calls = !!(ms_hyperv.hints & HV_X64_USE_MMIO_HYPERCALLS);
+ #elif defined(CONFIG_ARM64)
+ 	/*
+ 	 * Set the PCI bus parent to be the corresponding VMbus
+@@ -3636,6 +3675,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	 * information to devices created on the bus.
  	 */
- 	simp.simp_enabled = 0;
- 	if (hv_isolation_type_snp())
--		memunmap(hv_cpu->synic_message_page);
-+		iounmap(hv_cpu->synic_message_page);
- 	else
- 		simp.base_simp_gpa = 0;
+ 	hbus->sysdata.parent = hdev->device.parent;
++	hbus->use_calls = false;
+ #endif
  
-@@ -326,7 +329,7 @@ void hv_synic_disable_regs(unsigned int cpu)
- 	siefp.siefp_enabled = 0;
- 
- 	if (hv_isolation_type_snp())
--		memunmap(hv_cpu->synic_event_page);
-+		iounmap(hv_cpu->synic_event_page);
- 	else
- 		siefp.base_siefp_gpa = 0;
- 
+ 	hbus->hdev = hdev;
 -- 
 1.8.3.1
 
