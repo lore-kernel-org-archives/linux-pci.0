@@ -2,145 +2,195 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32ADBC54EBD
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Jan 2023 07:21:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD6F2C54EBD
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Jan 2023 08:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236457AbjALHVd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Jan 2023 02:21:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52324 "EHLO
+        id S239811AbjALI4h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Jan 2023 03:56:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235881AbjALHVc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2023 02:21:32 -0500
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0ADE13F1E;
-        Wed, 11 Jan 2023 23:21:30 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=MzJ7p0PD/B7FkcjuOatmbyk3HGsgXOOzgPuQ3DEIlMYNVp3vp+K5AvE3Aw1PQxLMIGxfzZhp1Tni+7YVtscBbJHzl9BjA+tw2yvpN85DHrzuve/RnQIM53AXF79K6EWbe5jvFsTkJIMEHFJNh4DoXCWTY3OFHdNfc3KBgahjjW6n4YRH15tO5+vbz3jpjiTycahgAtT75ulOgeRQwkp/T8GUebOR12iHKlKNMfNUq8beMBVvgYDUalY7rocqTuVJJBMw+AsGIsOM0M3xjR1tGT6CK2IuIY8sigUPNAO7GLGQMx8AlaoXLcWxT6NL+j0g8LiPd3/51B2WcgdJo56p0A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=gG6pymy5MdVXlb9R6BEKHV0VziNyFrW3PllbBIhqPEY=;
- b=Kc+Q+4KiBNFz3vYxHiyYAH0vSAVnPen4NOCrFgL/b+nMMPHr9SGCHucOZBoR254RrWR/TMC1Sh8+1d16dfGqBCX+MW1c4RQwrkYjGQWDbqmMbJGeqPYPKLv6zepNW0TdN0h6O/Pa7FVClBK73ZgY/ZlHwLaSG7yoRdiLPKu286s1TsSuBUZpJ9woy7Z7OGo/9pYDvWdPptprA5uKZo+8bq52rUoieXAI0UdHA00qBRwwPuoaFr6/qFPMEhd9tqGCZY2RtlZRefIy2Mleu1f1Ul+aik2Ww76cGYp4xqMDOuU8jak69eQ5D4X7uZJqejvLV7wESilynanx3Yk4sqwY7A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gG6pymy5MdVXlb9R6BEKHV0VziNyFrW3PllbBIhqPEY=;
- b=jrpzlr2axAfdTHMCNKbqY3fi+O1+YrV1N3AauV35V+89naKKqfBpbQa4q9pbMMbPAAqvsUyqYcI1JWL2VaTqxw1uluVlTxX2ApcvLeQu74EZ5RwsJDqBeptANuQKSlXeciFFXB9cWSQQLw0Z7iYaeVJ39ZDKr2yJHdVWdK001QaOg7rmRn0nFyoo10nw4KvRRTCqiT1F/2tVWQbKADRrpcC96DVxyU/fujc0RCwNS45fvdDCDi8YkXYAZMffHCuDlcL9OoStTUIkEO1iN+Uo605gvqMkiLqGuM3Hdi3kxXXs4cWitHHxGvL3bfRaVbvJXumSd05VE33XAaQeAKb0qg==
-Received: from DS7PR03CA0026.namprd03.prod.outlook.com (2603:10b6:5:3b8::31)
- by MN2PR12MB4535.namprd12.prod.outlook.com (2603:10b6:208:267::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5986.18; Thu, 12 Jan
- 2023 07:21:28 +0000
-Received: from DS1PEPF0000E638.namprd02.prod.outlook.com
- (2603:10b6:5:3b8:cafe::a) by DS7PR03CA0026.outlook.office365.com
- (2603:10b6:5:3b8::31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6002.13 via Frontend
- Transport; Thu, 12 Jan 2023 07:21:28 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- DS1PEPF0000E638.mail.protection.outlook.com (10.167.17.70) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6002.11 via Frontend Transport; Thu, 12 Jan 2023 07:21:28 +0000
-Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.36; Wed, 11 Jan
- 2023 23:21:18 -0800
-Received: from drhqmail202.nvidia.com (10.126.190.181) by
- drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.36; Wed, 11 Jan 2023 23:21:17 -0800
-Received: from vidyas-desktop.nvidia.com (10.127.8.9) by mail.nvidia.com
- (10.126.190.181) with Microsoft SMTP Server id 15.2.986.36 via Frontend
- Transport; Wed, 11 Jan 2023 23:21:14 -0800
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <bhelgaas@google.com>, <ruscur@russell.cc>, <oohall@gmail.com>,
-        <treding@nvidia.com>, <jonathanh@nvidia.com>
-CC:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-        <linux-kernel@vger.kernel.org>, <vsethi@nvidia.com>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <sagar.tv@gmail.com>
-Subject: [PATCH V2] PCI/AER: Configure ECRC only AER is native
-Date:   Thu, 12 Jan 2023 12:51:11 +0530
-Message-ID: <20230112072111.20063-1-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230111203116.4896-1-vidyas@nvidia.com>
-References: <20230111203116.4896-1-vidyas@nvidia.com>
-X-NVConfidentiality: public
+        with ESMTP id S239833AbjALIzW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2023 03:55:22 -0500
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1C56392FD;
+        Thu, 12 Jan 2023 00:54:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1673513665; x=1705049665;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=sbZLbVJ1FtTUzxWrLWMc69Y2p0n8V6X7/TxYZupX72g=;
+  b=fG7IJCaoqRs8oL5EaezhfA4EboiA/bTrFgK8DUqzwvvfDvAr/HdoNsOh
+   pDAESPi/xQIssXvuVcbK77MefMFKoqDX2h6vRzqqpJaYTuII65hZJfV8v
+   sGSgeq155oIphuT/XeQaI6v8hxzMUUZ/vIW36JBhmN1ogxVkhQPinA75R
+   hm5a8fIFuNJp+eExe6v6zEWfHisBN7wtrQWNiykFMRZh/mWc7p7fSkuoY
+   FTLMKsLns9OQbbBwHK8GJtsPy/yVECWV7cPySzZ+hTPgeqzBv8jzohv+o
+   pLob8cwJzQAxlaAawc45oNKkjcUqJ5cPUsVreBUYm+pec5/DFitzv99Ea
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10586"; a="303349657"
+X-IronPort-AV: E=Sophos;i="5.96,319,1665471600"; 
+   d="scan'208";a="303349657"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2023 00:54:25 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10586"; a="765526296"
+X-IronPort-AV: E=Sophos;i="5.96,319,1665471600"; 
+   d="scan'208";a="765526296"
+Received: from allen-box.sh.intel.com ([10.239.159.48])
+  by fmsmga002.fm.intel.com with ESMTP; 12 Jan 2023 00:54:22 -0800
+From:   Lu Baolu <baolu.lu@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, Joerg Roedel <jroedel@suse.de>
+Cc:     =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Jason Gunthorpe <jgg@nvidia.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Vasant Hegde <vasant.hegde@amd.com>,
+        Tony Zhu <tony.zhu@intel.com>, linux-pci@vger.kernel.org,
+        iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
+        Lu Baolu <baolu.lu@linux.intel.com>,
+        Matt Fagnani <matt.fagnani@bell.net>
+Subject: [PATCH 1/1] PCI: Add translated request only opt-in for pci_enable_pasid()
+Date:   Thu, 12 Jan 2023 16:46:29 +0800
+Message-Id: <20230112084629.737653-1-baolu.lu@linux.intel.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS1PEPF0000E638:EE_|MN2PR12MB4535:EE_
-X-MS-Office365-Filtering-Correlation-Id: a8f48d19-57c9-4228-5351-08daf46d9f4c
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: oN0dbua3UWSpW8ozqC24Uy5I6oKFMYHxkGPMrpqdUzPWDqG/xDAESnlloJ4HWAcWH/PNb7quFIB/uNlpjuw3n/uv+GENId1LftmN/tFfkgDbdxoMEG7rJOx8vYPUkKG86FneH9mOH2uWk3Loek/7JaCnCzMlrjBNNw51SwnP9R0Q/aunFaW5T+wVDHCPiiA1skv6g7NKNZqRuo8p1uv1I1ZJfdAAShxfYyBBlYrRfVhMKnVfpm1/zQi04kfORQaqEXr/0wzwHRW2DbDMCM/GSmYf54ma2HTUTFkvN2wiaOcNg4kH9gqLiVGni6q5UfDFR93TI3xIfUquXn03l3CGu4JcHmZJqJ97wD282szXBMDZuwjkbPcQVt09tqXRk0PGim20GGLGku2uKCEmZ9CQaVkRnsr2YMJaddP5DN0RuoUTh1xEdBPo7dvcCkqOhTLmKenLDcFqn0UOLgz8vkldjGTdfcC8DK5JOz7sJ8SToh5XJrK35zMBWf8+4qXOgOAlDRZRZAjfP1dDJ39OYMxUcubXvya1QfCcUVLmeyNrD02cwbwYw/cA1nwca3VYdQ/psEMf77aBp7sVMOJbb56o96PqpMQ5HwaJRpjz9YvmA3fJqPPC3v30QZQPLqbMnKR/9brsGERPT6KIdwz7VXD0+XJS3kXhcnFBoTobE7ehk3NQFKBp6FmExkDmEJ/LJ/mC2TKrXhMKQYTRSKDa71p5zA==
-X-Forefront-Antispam-Report: CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230022)(4636009)(396003)(346002)(39860400002)(136003)(376002)(451199015)(46966006)(40470700004)(36840700001)(36860700001)(82740400003)(6666004)(7636003)(356005)(2906002)(478600001)(2616005)(1076003)(316002)(26005)(186003)(5660300002)(40480700001)(7696005)(86362001)(8936002)(83380400001)(40460700003)(36756003)(82310400005)(47076005)(41300700001)(426003)(110136005)(336012)(8676002)(70586007)(70206006)(6636002)(54906003)(4326008);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jan 2023 07:21:28.5819
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: a8f48d19-57c9-4228-5351-08daf46d9f4c
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DS1PEPF0000E638.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4535
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As the ECRC configuration bits are part of AER registers, configure
-ECRC only if AER is natively owned by the kernel.
+The PCIe fabric routes Memory Requests based on the TLP address, ignoring
+the PASID. In order to ensure system integrity, commit 201007ef707a ("PCI:
+Enable PASID only when ACS RR & UF enabled on upstream path") requires
+some ACS features being supported on device's upstream path when enabling
+PCI/PASID.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+One alternative is ATS which lets the device resolve the PASID+addr pair
+before a memory request is made into a routeable TLB address through the
+TA. Those resolved addresses are then cached on the device instead of
+in the IOMMU TLB and the device always sets the translated bit for PASID.
+One example of those devices are AMD graphic devices that always have ACS
+or ATS enabled together with PASID.
+
+This adds an extra parameter in the pci_enable_pasid() helper, with which
+the device driver could opt-in the fact that device always sets the
+translated bit for PASID.
+
+It also applies this opt-in for AMD graphic devices. Without this change,
+kernel boots to black screen on a system with below AMD graphic device:
+
+00:01.0 VGA compatible controller: Advanced Micro Devices, Inc.
+        [AMD/ATI] Wani [Radeon R5/R6/R7 Graphics] (rev ca)
+        (prog-if 00 [VGA controller])
+	DeviceName: ATI EG BROADWAY
+	Subsystem: Hewlett-Packard Company Device 8332
+
+Refer to kernel bugzilla through below link for more details.
+
+Fixes: 201007ef707a ("PCI: Enable PASID only when ACS RR & UF enabled on upstream path")
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=216865
+Reported-by: Matt Fagnani <matt.fagnani@bell.net>
+Suggested-by: Jason Gunthorpe <jgg@nvidia.com>
+Suggested-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Lu Baolu <baolu.lu@linux.intel.com>
 ---
-v2:
-* Updated kernel-parameters.txt document based on Bjorn's suggestion
+ include/linux/pci-ats.h                     | 5 +++--
+ drivers/iommu/amd/iommu.c                   | 2 +-
+ drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c | 2 +-
+ drivers/iommu/intel/iommu.c                 | 3 ++-
+ drivers/pci/ats.c                           | 7 +++++--
+ 5 files changed, 12 insertions(+), 7 deletions(-)
 
- Documentation/admin-guide/kernel-parameters.txt | 4 +++-
- drivers/pci/pcie/aer.c                          | 3 +++
- 2 files changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 426fa892d311..8f85a1230525 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -4242,7 +4242,9 @@
- 				specified, e.g., 12@pci:8086:9c22:103c:198f
- 				for 4096-byte alignment.
- 		ecrc=		Enable/disable PCIe ECRC (transaction layer
--				end-to-end CRC checking).
-+				end-to-end CRC checking). Only effective if
-+				OS has native AER control (either granted by
-+				ACPI _OSC or forced via "pcie_ports=native")
- 				bios: Use BIOS/firmware settings. This is the
- 				the default.
- 				off: Turn ECRC off
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index e2d8a74f83c3..730b47bdcdef 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -184,6 +184,9 @@ static int disable_ecrc_checking(struct pci_dev *dev)
+diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+index df54cd5b15db..78a37821fff4 100644
+--- a/include/linux/pci-ats.h
++++ b/include/linux/pci-ats.h
+@@ -35,12 +35,13 @@ static inline bool pci_pri_supported(struct pci_dev *pdev)
+ #endif /* CONFIG_PCI_PRI */
+ 
+ #ifdef CONFIG_PCI_PASID
+-int pci_enable_pasid(struct pci_dev *pdev, int features);
++int pci_enable_pasid(struct pci_dev *pdev, int features, bool transled_only);
+ void pci_disable_pasid(struct pci_dev *pdev);
+ int pci_pasid_features(struct pci_dev *pdev);
+ int pci_max_pasids(struct pci_dev *pdev);
+ #else /* CONFIG_PCI_PASID */
+-static inline int pci_enable_pasid(struct pci_dev *pdev, int features)
++static inline int pci_enable_pasid(struct pci_dev *pdev, int features,
++				   bool transled_only)
+ { return -EINVAL; }
+ static inline void pci_disable_pasid(struct pci_dev *pdev) { }
+ static inline int pci_pasid_features(struct pci_dev *pdev)
+diff --git a/drivers/iommu/amd/iommu.c b/drivers/iommu/amd/iommu.c
+index cbeaab55c0db..a89734b30947 100644
+--- a/drivers/iommu/amd/iommu.c
++++ b/drivers/iommu/amd/iommu.c
+@@ -1700,7 +1700,7 @@ static int pdev_pri_ats_enable(struct pci_dev *pdev)
+ 	int ret;
+ 
+ 	/* Only allow access to user-accessible pages */
+-	ret = pci_enable_pasid(pdev, 0);
++	ret = pci_enable_pasid(pdev, 0, true);
+ 	if (ret)
+ 		goto out_err;
+ 
+diff --git a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+index ab160198edd6..f5f224f023ba 100644
+--- a/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
++++ b/drivers/iommu/arm/arm-smmu-v3/arm-smmu-v3.c
+@@ -2350,7 +2350,7 @@ static int arm_smmu_enable_pasid(struct arm_smmu_master *master)
+ 	if (num_pasids <= 0)
+ 		return num_pasids;
+ 
+-	ret = pci_enable_pasid(pdev, features);
++	ret = pci_enable_pasid(pdev, features, false);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "Failed to enable PASID\n");
+ 		return ret;
+diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
+index 317af67b6098..2dd7773ce5c0 100644
+--- a/drivers/iommu/intel/iommu.c
++++ b/drivers/iommu/intel/iommu.c
+@@ -1424,7 +1424,8 @@ static void iommu_enable_pci_caps(struct device_domain_info *info)
+ 	   undefined. So always enable PASID support on devices which
+ 	   have it, even if we can't yet know if we're ever going to
+ 	   use it. */
+-	if (info->pasid_supported && !pci_enable_pasid(pdev, info->pasid_supported & ~1))
++	if (info->pasid_supported &&
++	    !pci_enable_pasid(pdev, info->pasid_supported & ~1, false))
+ 		info->pasid_enabled = 1;
+ 
+ 	if (info->pri_supported &&
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index f9cc2e10b676..eb14ca8ec4e6 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -353,12 +353,14 @@ void pci_pasid_init(struct pci_dev *pdev)
+  * pci_enable_pasid - Enable the PASID capability
+  * @pdev: PCI device structure
+  * @features: Features to enable
++ * @transled_only: True if the device issues MemRd/Wr TLPs with a PASID TLP
++ *                 prefix only when the AT field is set to translated.
+  *
+  * Returns 0 on success, negative value on error. This function checks
+  * whether the features are actually supported by the device and returns
+  * an error if not.
   */
- void pcie_set_ecrc_checking(struct pci_dev *dev)
+-int pci_enable_pasid(struct pci_dev *pdev, int features)
++int pci_enable_pasid(struct pci_dev *pdev, int features, bool transled_only)
  {
-+	if (!pcie_aer_is_native(dev))
-+		return;
-+
- 	switch (ecrc_policy) {
- 	case ECRC_POLICY_DEFAULT:
- 		return;
+ 	u16 control, supported;
+ 	int pasid = pdev->pasid_cap;
+@@ -382,7 +384,8 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
+ 	if (!pasid)
+ 		return -EINVAL;
+ 
+-	if (!pci_acs_path_enabled(pdev, NULL, PCI_ACS_RR | PCI_ACS_UF))
++	if (!transled_only &&
++	    !pci_acs_path_enabled(pdev, NULL, PCI_ACS_RR | PCI_ACS_UF))
+ 		return -EINVAL;
+ 
+ 	pci_read_config_word(pdev, pasid + PCI_PASID_CAP, &supported);
 -- 
-2.17.1
+2.34.1
 
