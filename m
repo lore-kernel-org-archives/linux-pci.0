@@ -2,44 +2,44 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED0FC54EBE
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Jan 2023 21:49:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A3FEC678D6
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Jan 2023 21:49:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240146AbjALVth (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Jan 2023 16:49:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40520 "EHLO
+        id S240229AbjALVtj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Jan 2023 16:49:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240899AbjALVsi (ORCPT
+        with ESMTP id S240917AbjALVsi (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Jan 2023 16:48:38 -0500
-Received: from DM5PR00CU002-vft-obe.outbound.protection.outlook.com (mail-centralusazon11021015.outbound.protection.outlook.com [52.101.62.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23BD51CD;
-        Thu, 12 Jan 2023 13:43:00 -0800 (PST)
+Received: from DM5PR00CU002-vft-obe.outbound.protection.outlook.com (mail-centralusazon11021027.outbound.protection.outlook.com [52.101.62.27])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B63A7138;
+        Thu, 12 Jan 2023 13:43:04 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Um95EYTQHhXjTM2ilqgNmnYLF7Tz5M6zhL2wxF9zRlCSOMYSVUqNVBthpb9Hmr796/4+5XnFrBol61/zg/P6nuN01V6E62nJNbHa05D8W65K+F0Y8kiizpBvlE0a5WPHFfyTsVhd+NiQTLzIMvvy4C9j2Tt6E3UiAnYaXoDJBQwXEAcz9pF8rpyDvI480y1UY4wxBXSPtJAOTX2qNzEDEap0E7mHyX1W8KlMryirO+RuD3cBumFlpSdputAerb4ChJbFgLuGOTVFsmWkrtZ9mSR/w7WNox4nrEBbDXAzM1lrYL0wKgJ5m82fuM6Ru97ZkdxJBRvRGhkYDlHxg/8jhg==
+ b=VBMy1djo+Hct4j9CPHErVovksv0TZUyJPZa1FpQy3t0nuAuecHM4r+zvTHgvuJO++aZpvkVQlxTdd5bGx3RDfJrC0PAPSIj8YfpuVsVg02x9e5crE8IPIZLJSbCCxmfEhVNSCXpW8YHekZBtc7akZjGLuMsXBGKV/gxwZeHG8QClM6tsT/8muYqp7tlRSIpTZi9lGjBKV04fwwLj8HWZXbuFh4XdkL3ZirJ28vSogxbYrzyvkUdTBG/EBZirr7774yFXZlvy/K/ISQO4YwpqBMdkaAszc5oPW0lhkFIrMkaZEE0r2+kp7nu/w6YBo3kPN6dP3SCIgqupBAfwQX0qIw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=prBl40LE1pY7rW1brW6ejZmnzAIhX7f98kgAyr5rCvA=;
- b=KMRc8nY4lqsNS9seHPReXk+RtunQ65EeXp96XG1CblGWhskUlCNMOwejkeMhIbrcprI4KwaX0K4ytUD0RGIix+LNE6gBv2GF4QoNh+FXHHu8fTKlYbb0CgP26aVKA13Jwx9kM/EnYipaUMjX2huOYG8tcaJSUXi+c0komSHycEnkMI2s3tyMGe0SZ4OdA0bZgOuc71sl6HCqaix46Dcw0OATHQsZ0DV54CTxNAZC5RdT90hinD6S+jpQWpOcchqIq1/WIMFz8DH8cEyJSk0yfX3BReUNN5gx59O8txoPwA60KxMEp6vWXHa3pxB1YUXHVQ/72d01+xVnif0svt/S1w==
+ bh=WMpXjLd+UjKJmPXYudC0MTw+Yv2SaNNAfvRbowIeYws=;
+ b=et1NSPg6/TmRKt3RpdbQTrc/j/9MGN0M68mU3WEU0qjf9s97vAFuE8nPeUSBDSgkkQEZ7/8fRj27yD64FXRZoACNj6i1VFYAPIi3ByjJbxuk3UqBCPayY9FOyPSzeEN2opwxU6KG5XzlyguS687NHb/jv1Qin+xruXPls0le9BsA7K0CElFiuomqfkfQrKJMA4MU3PhNNNi/BKwVmOID27i/W4m0XxD+Ivc4G4GapuPbRIlIjKkF+pcbPITKlbPBK9qdpxyx8ASckQyc9Co2oaE9kVfflGiKtP6I3n/glA4H4XcTHBK0+Vx4PrmTCk7P7whfZJEyeRv+xdLaX7LDsQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microsoft.com; dmarc=pass action=none
  header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=prBl40LE1pY7rW1brW6ejZmnzAIhX7f98kgAyr5rCvA=;
- b=VZcGsfmAbbjBR5EBZHMHvYKfT/S/4+VhHRt909MsqfqntLmNEn0pKsn8ljVp9pI2E8CfrBZ2QwjuwErGS70aH9bfLsczDKS4KjZfSPZqRQpo+LH0CITrZGjEzRyvflUXBfAchEiDENrxUrG7u8SPBPQOXAT6Or8osKoZJUsrCNs=
+ bh=WMpXjLd+UjKJmPXYudC0MTw+Yv2SaNNAfvRbowIeYws=;
+ b=LUQXRwjatbHT5murwyU6bij+uBmV3BE1eW84NGIWOwdklPN+bYKGzNOlzRR0b5Bnu0K0ZW8/eK6afVSzSDEx3ZW2NNxQTaXcmk6YNnPgk99vo/OcB98/3Ze4Mtj90krBjjzO8h8xTF8SB7dbG4lsMI3+SyRxY/9KyTIUDIk4f/I=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=microsoft.com;
 Received: from DM6PR21MB1370.namprd21.prod.outlook.com (2603:10b6:5:16b::28)
  by MW4PR21MB1953.namprd21.prod.outlook.com (2603:10b6:303:74::9) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6023.4; Thu, 12 Jan
- 2023 21:42:58 +0000
+ 2023 21:43:02 +0000
 Received: from DM6PR21MB1370.namprd21.prod.outlook.com
  ([fe80::ef06:2e2c:3620:46a7]) by DM6PR21MB1370.namprd21.prod.outlook.com
  ([fe80::ef06:2e2c:3620:46a7%8]) with mapi id 15.20.6023.006; Thu, 12 Jan 2023
- 21:42:58 +0000
+ 21:43:02 +0000
 From:   Michael Kelley <mikelley@microsoft.com>
 To:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, luto@kernel.org,
@@ -58,9 +58,9 @@ To:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
         linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
         iommu@lists.linux.dev
 Cc:     mikelley@microsoft.com
-Subject: [PATCH v5 01/14] x86/ioapic: Gate decrypted mapping on cc_platform_has() attribute
-Date:   Thu, 12 Jan 2023 13:42:20 -0800
-Message-Id: <1673559753-94403-2-git-send-email-mikelley@microsoft.com>
+Subject: [PATCH v5 03/14] Drivers: hv: Explicitly request decrypted in vmap_pfn() calls
+Date:   Thu, 12 Jan 2023 13:42:22 -0800
+Message-Id: <1673559753-94403-4-git-send-email-mikelley@microsoft.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1673559753-94403-1-git-send-email-mikelley@microsoft.com>
 References: <1673559753-94403-1-git-send-email-mikelley@microsoft.com>
@@ -72,113 +72,96 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: DM6PR21MB1370:EE_|MW4PR21MB1953:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9808566c-fee6-4821-098c-08daf4e5f884
+X-MS-Office365-Filtering-Correlation-Id: 36ca748f-9355-4c1b-f74b-08daf4e5fb1f
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: +4h6B1nLXCtVOyqRaaTnoYoF0n8L5ufqRcj+FsXNr28z7R3dkWDHBVp46dTuFc7O/+rDYDORec4dfxFT0WeS/W0cBP2XPi5myiuOzE5ONuMx3qfnQ4nk1m7AOneDJB5IYTUBwD+cOzjM82QVsHh8zxzP8c9Esh4MovKwhvhk+Gs48rVndrTfFZyYyiQGKjYXXFAm5Ko4IaEsDZGCtu8z/K4n1iYxI/76eixWmvtMKQ0ZLtfJ/pht4rKLpDCAVvHkNkBgvfWawxoafYRWv2sMu3Scem/o8CnBT1UB80Z1tgLsCIh4DfqsiW69TJZETxyzQ9hKtsKoLABS8zfWj35DVfSwh8dsM1gkV2D13dQzLCeRpKcx4bvs8gCRK0nH91dFdLo3IJ41Fi/9+0NWsMyJNsdxRhF+K7WP21b+Q3iV/y5t7aGCU2qdag4kMvyJskU4GNOuOA8+CMw2vzF4Mel5V+fipkhYAp3Pdz0CfXKsW7JqiY4DcfTqzbSHvt+qeCnlQJ/xyplxGHxE6xlXLjtjlVXimPZcU12ZOhD0mYxSiTF3g83SrEc7cE1W2ryOZUjeehOORaq6rWGqgWNjPPfwX8aeHnSb5zHnltxgt6yHvEIKMXFK9p4lNjyI6zffLIoObgzlhZqe+vnYQuGys5TAm4T2cL3z2Ms2lpOQWmUodksBjW/sRsHSXiTN5QGW0OW8hTxkiXplzsuB8QK/GYM+xuaeviUlUMmgjjeoX7yIq6D1cgSujKU7WtulIDHwjIiR2XmU+gPGZvJdgSLnWC6nAQ==
+X-Microsoft-Antispam-Message-Info: TMm8m8T1LzkFPnS/GK6umfT28POi/+i20GzRzUDn3WpD9/HuFfZkHtX20P0gDn0oThsVRLfLS2Kya+V/axbtv6Sx+AQv+mVrprGdDvDNiTy+BX8Yy+EVyOUz3UXplYiDXvieLqubjQJrxRjsJXIX0Heg00X9RRJb15kRUc6KCTDv0dingtgEOAfZDc+N4hj0huEolRRrDUz5hd2aMBKT2kioyApTs1pRBkyN8BWlBE7iWHzgKJtAHP+pPPe/n/zz3GiXFHavKd2E1yy3zuwqSBSspQ3d4S7SjGkKU1BsIgc+zjeAT3ylD/m/lBwDl3vrRG9y2dp4MrxGrd4EjcDcygczHArFfn2heloqtsviOeyfSxdiFXhQyACq2sakcyUe+XbFKkIZmNYPSCbsMCyGAJpnLEw1Q/5DmRSq9ms+V/av46gqgiSgM2E7BDcLIeEqSkVQnvQqGDQhFNkflFZvZ4GOM+cmQw3jpYDgKpuedqgmIvH8fGjciwlS9XUuUboM5VhFDbRlRb4eqdL1x5ZJgSojjwbZAVUK0+XCyP9xvpXuVxTAEmyWiTY4l+DpcPt6x2k5PxIX7QGuEcOXc1dCja7YbJ+cZeDEnoshwNIZ1/TbXvg7UI/0fH5/CLDBPWBRI2xMDUiYV+drQvn8VehKK575VnCVcyIAzks4XkbLhl6ksHjbef036KaZgIUGo57/otG38DGpWsy4NIKIPvUBFXqT6GGjxzSnyHfk+JCkP+VPQCS01R0+iETsWIOnSk2/cgCMd9QlmOGyP7S3MdnODg==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(366004)(39860400002)(136003)(346002)(376002)(396003)(451199015)(186003)(26005)(6512007)(82960400001)(82950400001)(6486002)(86362001)(52116002)(478600001)(2906002)(5660300002)(4326008)(8676002)(38350700002)(66556008)(66476007)(316002)(7406005)(38100700002)(10290500003)(41300700001)(921005)(36756003)(66946007)(7416002)(2616005)(8936002)(6506007)(6666004)(107886003)(83380400001);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?7h/7b1pufhuhWNL8TtHjR9lu6MEaoci139rZvOXaw6zRMCF4zSOlBP7aH3tv?=
- =?us-ascii?Q?gPh76ZPKOZi8cht62/O1Lb1lzu5yrpFok74sEkPIfmjHYo7EC0dZXtf6DEEq?=
- =?us-ascii?Q?RrPjGFXhdD7cR/+h7RWbO/HqjzRJb13Xz+5Jy2Dw4IMSUTYDF3pY7tD6xT2l?=
- =?us-ascii?Q?cnl8+cUwCpIfa/c98/l7SxlLm5ZhVrpL1006w1YofixqSN5mS5Q3nRVAgkae?=
- =?us-ascii?Q?pKTsgPgEjReIR7KIPelN+9lLzDKVvrZGW5mCnyjwIuLmaHGlPWXqbNrIs2h1?=
- =?us-ascii?Q?+8X64lIhZ8O4bzXeVd04eF/ENlhhEV6OKi/ZGc7ZMAaSaBmGZi6c+MjDZJiT?=
- =?us-ascii?Q?XOhkp5XkbpffZo8HRHQVNP/Tp8iDHk1h/09ykSJVMXrk3veEvtUnoLyJgaXa?=
- =?us-ascii?Q?6c4GSrlIB+KMA0MsowCjQKVRPHeBZrmaO9YJ8i4qrzdSqc8s91ygL4j3dQDh?=
- =?us-ascii?Q?Y9D6fnzOdNmhNzNfGWSmo0FNqJKuDROnc2Ssh6bcM3/dIqwEGTGSZA+gPZOf?=
- =?us-ascii?Q?fI7SCXYjXXrVRpCEqnyp5Vo6dy4JytINS59+pngucr7bwXtCVUiH9SCavoUM?=
- =?us-ascii?Q?PoEkbDKW67VlAxVs4odp17S7m1J3I8+O2lqiWrv3jjVXH20FXGbDsaj1Fr37?=
- =?us-ascii?Q?uQjRZqYJVn0t0XAN1IzoWjOaIjh9CQb9cbSqnX62a4Y+hCMlup0g8rmUpqeB?=
- =?us-ascii?Q?w3w6Ftx2wGucrs5l0qEo3BrJTg2MiA1PzwPdgpoQfk1UCQq9RhOEmbqX5i6i?=
- =?us-ascii?Q?LeF9KGe0YBT6IQ7nOUj4Ov1SOi64Vx5zeLzq0fIVrKY1p6zlvLzGUBXfSVBb?=
- =?us-ascii?Q?FM6oC7MpJBnJXii2F3x1E+tRJMUFL1gI0syaiq1/XPQH0WUCUnrDFYMFNuS3?=
- =?us-ascii?Q?k7Ko899EG8iOdBIiMbHcHUVJacXT1pvkNhhzBv4Dh7H5dstPR0My+apQ52k6?=
- =?us-ascii?Q?H/A+hSkiTwjRnrC+6a78dnTY085ayIPdM0HumDLPeUHxopGd3uSBkm3fnuyk?=
- =?us-ascii?Q?gSD/4TVCUj4TvPYiOgLOWVuXuXkOQ6frMyB3Tsw1lxMBDa564kx62niTS1RE?=
- =?us-ascii?Q?gaqufcdqAEAmUJfU5r70KR79C937V9YasBusrZ3J8O/tusz3fOK7ucMogchG?=
- =?us-ascii?Q?8S/eqr/Cm86q2xS16VZEQLhUALJo1AFp/Z3fF1RI3tryaLmyy5nHd0V1dAKy?=
- =?us-ascii?Q?m6romflyQxnWIIJlndy1NCYDSJN7mEjL/SrvThUgd2X+qHMtNCY5xaYoMS3J?=
- =?us-ascii?Q?PekVh0gM7S5utcSq06RVi8EoHcqw8LViVz7X0FXeMY23PZ7H+EtBbp8KDPvV?=
- =?us-ascii?Q?O8wkzPAxuipRbkPq+AB7L6YG8i93kMLm54kTf9088poGWpjfL58srkwGgURG?=
- =?us-ascii?Q?ECopt7X+3n4b/swJvaalVsfBt6ef2eRBWx4nIQm2zGLYylOuprrtlreXv5dB?=
- =?us-ascii?Q?AcKY8fSHVihHgOjJR2BrqL0rs37uDugcWYj4SgqcMtaSN7FOajsbW4jwcDQ2?=
- =?us-ascii?Q?fsiFguQne/BEsysc32zAxx8PvAJgL4E3SX2VxbD7ij0BWOPny3QQfprsUa00?=
- =?us-ascii?Q?irlwRF+JYNxazgmKz/V1vc4RyU1DBjyVUIciKQnyMwqR5vLBCBkpmBnemEEh?=
- =?us-ascii?Q?bQ=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?P7l5wDcNXRhBXdKKx4pE1/Lc2RVJ2J10vyvBMddKkYHoxtMErZXHw/d+98/U?=
+ =?us-ascii?Q?xv1nFK2B82sjPmFzZpxexr9+NffPNa5an2KRbLdiaNkJHpn9VzsKwywW180i?=
+ =?us-ascii?Q?Eu7+IVlH4yjACLW5DiwX0TecK7Lavx/5xiPWb62HmGdSc0W/urFEMbbJA+u4?=
+ =?us-ascii?Q?Rwv/YKD4hY2q1aKnGCOjVe4mBspcr/5o7vNan5SodY/ZMenGOsCbVC2Vbzca?=
+ =?us-ascii?Q?v7p9JBmz3H/QIZXoY7qjb+caK2xQd9Tam1Kk0YL34hg6BmIjYd/SAaW5ImgJ?=
+ =?us-ascii?Q?ek9iJILeMv7N6j7G3X/Kb2DhofSleoE4T0RsliPiPT4Q3VWuuliNXm1toeS6?=
+ =?us-ascii?Q?jJLq0an51xqkFfhaAaGQK7NIbYYgk/wuu19Oajzkn8g+tNTSgrB+DO6Xc40C?=
+ =?us-ascii?Q?avz8c6JDX84MZ/JdTatEcBkhGCxUtuS8uiTcPpsHhuhpcQAjbcSmatYwYHvf?=
+ =?us-ascii?Q?YPruc9f5rjgXXtLCF2HyZ3LR7XjFXnjEEPq8Tm05yv+NaszVJHLx1rPJm/I/?=
+ =?us-ascii?Q?yb1TcynB/GvpG7HfuLpqvGE/1hT1OojMblInMYxaEc/BDbdqh1MHLxKtm68l?=
+ =?us-ascii?Q?b2TvhAL9TDGjXWrOZyhhT/YlAfDlR3+kqxXRgPROGZ5XARUwOGQPn49JLOgc?=
+ =?us-ascii?Q?GF7SftWByXBuzj7At7msQ3QkD8gRjUgZntegU8gn/Sc6J3xcwvB1HkTchV1X?=
+ =?us-ascii?Q?JCVw5jYQZGwYmqP50r8M6kYayK+0bymAUqbIq0+QtvDOYMRUEe7JNOGv8pGW?=
+ =?us-ascii?Q?oMJivwt1w4vWRH2oSLtGe+NZRXZFzY7G4h7jw7C5SJnVHN/Hk463OBXlgOtj?=
+ =?us-ascii?Q?QNikQPBWAERnGOkB5WH7Oap0wzrRKsBiBKG50xKo01BQKaSd00xhTg1IE36H?=
+ =?us-ascii?Q?cN+omDenmwOVjUGzfOsIdPrvyjRjsdC1eJfwuwAKkh5ogtgbwYdkRFYePja6?=
+ =?us-ascii?Q?mjG8eSm7e2aBOLEnwq+W9pvmo5GxUCrYlvKUeOwKP1lsUjeHyzduKBadvdPE?=
+ =?us-ascii?Q?Q5XvLnZXni9ZAY91wwU6505CsEMHa2/DMNrfaPOhc/85aaXpxgk/CiMg7ZGm?=
+ =?us-ascii?Q?/AUlUhIFlGsAQqxLcrdHrwIqZg/uQOwkdPINmISZWn1ZRtQ4XXnZCMv9PxDJ?=
+ =?us-ascii?Q?w5G2vJZp8s0BS6z1FEWjNLw+rqzD/MnZe636Yf7KGrzgL6fztoMA4T3G7rhO?=
+ =?us-ascii?Q?dIf54X756mbe45g0oKihpb1KTmlASm0Mlqglm/151SuTDyiE7UWLwA9MSHKr?=
+ =?us-ascii?Q?zRRSdYUm5rHCl3i4sT8KEScGaw+qkJ10IdMrgKXpmG2LnQpQZhUOZmBq7YAf?=
+ =?us-ascii?Q?rKN8sypfBQFPAZG7hZLwz/h190r1v+geV/ODkbjAtLFMkpI0GyvoTxdAB6vY?=
+ =?us-ascii?Q?H4pH7W+QUa+DtghMgqUWmydqXvEdyNFM2+27cFlLBGTj25R+/Folb7CNH5N7?=
+ =?us-ascii?Q?qK54aJCcj1jsB2IesMLeW+AtrsdLMYNuK5DTvdVXM3xXB/DBhTH+Ru9HMphN?=
+ =?us-ascii?Q?prINsJ3bZcixupHvqB+P+DsTMPEBC7d5gXJpj1D4L32pJcRdMQxmlQKbUJK3?=
+ =?us-ascii?Q?2agSwy4CRiAQpVLIkxtOepG/FmHfEDpCPzaeTQOZ?=
 X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9808566c-fee6-4821-098c-08daf4e5f884
+X-MS-Exchange-CrossTenant-Network-Message-Id: 36ca748f-9355-4c1b-f74b-08daf4e5fb1f
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1370.namprd21.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jan 2023 21:42:58.2780
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Jan 2023 21:43:02.5473
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: dIJ6ADs1bXlT5A2RZv75TbmQYWNFS+8HChvPi1tef3fFop3OWstGnyYJikQzGA5rHSY2yIIWqFnHtZUn/6rtkg==
+X-MS-Exchange-CrossTenant-UserPrincipalName: n3CPEB9ICxjpk7jpfn2zQRQcSgFfJeoUp6SiwrPbzmWwKvfvD1gjQWiUKBomBZ7ThfU3kVxas0XGh/BqS0YLcQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB1953
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Current code always maps the IO-APIC as shared (decrypted) in a
-confidential VM. But Hyper-V guest VMs on AMD SEV-SNP with vTOM
-enabled use a paravisor running in VMPL0 to emulate the IO-APIC.
-
-In such a case, the IO-APIC must be accessed as private (encrypted)
-because the paravisor emulates the IO-APIC at an address below
-vTOM, where all accesses are encrypted.
-
-Add a new CC attribute which determines how the IO-APIC MMIO mapping
-should be established depending on the platform the kernel is
-running on as a guest.
+Update vmap_pfn() calls to explicitly request that the mapping
+be for decrypted access to the memory.  There's no change in
+functionality since the PFNs passed to vmap_pfn() are above the
+shared_gpa_boundary, implicitly producing a decrypted mapping.
+But explicitly requesting "decrypted" allows the code to work
+before and after changes that cause vmap_pfn() to mask the
+PFNs to being below the shared_gpa_boundary.
 
 Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-Reviewed-by: Wei Liu <wei.liu@kernel.org>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Reviewed-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 ---
- arch/x86/kernel/apic/io_apic.c |  3 ++-
- include/linux/cc_platform.h    | 12 ++++++++++++
- 2 files changed, 14 insertions(+), 1 deletion(-)
+ arch/x86/hyperv/ivm.c    | 2 +-
+ drivers/hv/ring_buffer.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index a868b76..2b70e2e 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -2686,7 +2686,8 @@ static void io_apic_set_fixmap(enum fixed_addresses idx, phys_addr_t phys)
- 	 * Ensure fixmaps for IOAPIC MMIO respect memory encryption pgprot
- 	 * bits, just like normal ioremap():
- 	 */
--	flags = pgprot_decrypted(flags);
-+	if (!cc_platform_has(CC_ATTR_ACCESS_IOAPIC_ENCRYPTED))
-+		flags = pgprot_decrypted(flags);
+diff --git a/arch/x86/hyperv/ivm.c b/arch/x86/hyperv/ivm.c
+index f33c67e..5648efb 100644
+--- a/arch/x86/hyperv/ivm.c
++++ b/arch/x86/hyperv/ivm.c
+@@ -343,7 +343,7 @@ void *hv_map_memory(void *addr, unsigned long size)
+ 		pfns[i] = vmalloc_to_pfn(addr + i * PAGE_SIZE) +
+ 			(ms_hyperv.shared_gpa_boundary >> PAGE_SHIFT);
  
- 	__set_fixmap(idx, phys, flags);
- }
-diff --git a/include/linux/cc_platform.h b/include/linux/cc_platform.h
-index cb0d6cd..7b63a7d 100644
---- a/include/linux/cc_platform.h
-+++ b/include/linux/cc_platform.h
-@@ -90,6 +90,18 @@ enum cc_attr {
- 	 * Examples include TDX Guest.
- 	 */
- 	CC_ATTR_HOTPLUG_DISABLED,
-+
-+	/**
-+	 * @CC_ATTR_ACCESS_IOAPIC_ENCRYPTED: Guest VM IO-APIC is encrypted
-+	 *
-+	 * The platform/OS is running as a guest/virtual machine with
-+	 * an IO-APIC that is emulated by a paravisor running in the
-+	 * guest VM context. As such, the IO-APIC is accessed in the
-+	 * encrypted portion of the guest physical address space.
-+	 *
-+	 * Examples include Hyper-V SEV-SNP guests using vTOM.
-+	 */
-+	CC_ATTR_ACCESS_IOAPIC_ENCRYPTED,
- };
+-	vaddr = vmap_pfn(pfns, size / PAGE_SIZE, PAGE_KERNEL_IO);
++	vaddr = vmap_pfn(pfns, size / PAGE_SIZE, pgprot_decrypted(PAGE_KERNEL));
+ 	kfree(pfns);
  
- #ifdef CONFIG_ARCH_HAS_CC_PLATFORM
+ 	return vaddr;
+diff --git a/drivers/hv/ring_buffer.c b/drivers/hv/ring_buffer.c
+index c6692fd..2111e97 100644
+--- a/drivers/hv/ring_buffer.c
++++ b/drivers/hv/ring_buffer.c
+@@ -211,7 +211,7 @@ int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
+ 
+ 		ring_info->ring_buffer = (struct hv_ring_buffer *)
+ 			vmap_pfn(pfns_wraparound, page_cnt * 2 - 1,
+-				 PAGE_KERNEL);
++				 pgprot_decrypted(PAGE_KERNEL));
+ 		kfree(pfns_wraparound);
+ 
+ 		if (!ring_info->ring_buffer)
 -- 
 1.8.3.1
 
