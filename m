@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29AEEC54EBE
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B400C678D7
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230219AbjAMRYX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 12:24:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33408 "EHLO
+        id S229571AbjAMRYZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 12:24:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230326AbjAMRXC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:02 -0500
+        with ESMTP id S231208AbjAMRXu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:50 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7A518A2A98;
-        Fri, 13 Jan 2023 09:14:27 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 09E71A4C6B;
+        Fri, 13 Jan 2023 09:14:41 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id BBA36E0F1B;
-        Fri, 13 Jan 2023 20:14:26 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 6D88AE0F2C;
+        Fri, 13 Jan 2023 20:14:35 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=6nwp9QZuVil5CNMMQXtCvBGcqfB6QdvRl2q83K7oOa0=; b=nnKgjSE4prOs
-        MhX11N9iehV8zpcbz3aywUIg2D5cq8B+UK7YumOUs64+lH3ZKz/Mt0McFjetxNzO
-        TRUPVv44S8O/Oey0dJ26FR/39OS9+v7uIZclkuhpX+ZYOwbM149CT01iAnOnPwQz
-        mzQghAZ1anpR1V39UJTYEeDKEqETwlQ=
+         bh=rm52EHXk9zhos3pIhkdkgojTWB1rvHu/gaPCXIP5N28=; b=IPfoHI89mz3y
+        /MFaBu/EMBq/52KRvwChKUlr0gcaenuxYT53xM/CDHTFLrROZ9dhW4Kq4VAqXd5J
+        zpYSShfcafeTNelt7DOSuXpmhxFuDrT41bX+5g/M5XQLpsoqfl+C0dCnxvMFL9md
+        i0Johe6qodxuQ0eYCiAbusdNFMJpX5k=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 8ED61E0F13;
-        Fri, 13 Jan 2023 20:14:26 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 56807E0F13;
+        Fri, 13 Jan 2023 20:14:35 +0300 (MSK)
 Received: from localhost (10.8.30.26) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:26 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:34 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -47,11 +47,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         caihuoqing <caihuoqing@baidu.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v9 10/27] dmaengine: dw-edma: Fix DebugFS reg entry type
-Date:   Fri, 13 Jan 2023 20:13:52 +0300
-Message-ID: <20230113171409.30470-11-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v9 21/27] dmaengine: dw-edma: Replace chip ID number with device name
+Date:   Fri, 13 Jan 2023 20:14:03 +0300
+Message-ID: <20230113171409.30470-22-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,54 +63,88 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-debugfs_entries structure declared in the dw-edma-v0-debugfs.c module
-contains the DebugFS node' register address. The address is declared as
-dma_addr_t type, but first it's assigned with virtual CPU IOMEM address
-and then it's cast back to the virtual address. Even though the castes
-sandwich will unlikely cause any problem since normally DMA address is at
-least of the same size as the CPU virtual address, it's at the very least
-redundant if not to say logically incorrect. Let's fix it by just stop
-casting the pointer back and worth and just preserve the address as a
-pointer to void with __iomem qualifier.
+Using some abstract number as the DW eDMA chip identifier isn't really
+practical. First of all there can be more than one DW eDMA controller on
+the platform some of them can be detected as the PCIe end-points, some of
+them can be embedded into the DW PCIe Root Port/End-point controllers.
+Seeing some abstract number in for instance IRQ handlers list doesn't give
+a notion regarding their reference to the particular DMA controller.
+Secondly current DW eDMA chip id implementation doesn't provide the
+multi-eDMA platforms support for same reason of possibly having eDMA
+detected on different system buses. At the same time re-implementing
+something ida-based won't give much benefits especially seeing the DW eDMA
+chip ID is only used in the IRQ request procedure. So to speak in order to
+preserve the code simplicity and get to have the multi-eDMA platforms
+support let's just use the parental device name to create the DW eDMA
+controller name.
 
-Fixes: 305aebeff879 ("dmaengine: Add Synopsys eDMA IP version 0 debugfs support")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-by: Vinod Koul <vkoul@kernel.org>
----
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-index 5226c9014703..8e61810dea4b 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-@@ -14,7 +14,7 @@
- #include "dw-edma-core.h"
+---
+
+Changelog v2:
+- Slightly extend the eDMA name array. (@Manivannan)
+---
+ drivers/dma/dw-edma/dw-edma-core.c | 3 ++-
+ drivers/dma/dw-edma/dw-edma-core.h | 2 +-
+ drivers/dma/dw-edma/dw-edma-pcie.c | 1 -
+ include/linux/dma/edma.h           | 1 -
+ 4 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index 040a88cfe070..e3671bfbe186 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -973,7 +973,8 @@ int dw_edma_probe(struct dw_edma_chip *chip)
+ 	if (!dw->chan)
+ 		return -ENOMEM;
  
- #define REGS_ADDR(name) \
--	((void __force *)&regs->name)
-+	((void __iomem *)&regs->name)
- #define REGISTER(name) \
- 	{ #name, REGS_ADDR(name) }
+-	snprintf(dw->name, sizeof(dw->name), "dw-edma-core:%d", chip->id);
++	snprintf(dw->name, sizeof(dw->name), "dw-edma-core:%s",
++		 dev_name(chip->dev));
  
-@@ -48,12 +48,13 @@ static struct {
- 
- struct debugfs_entries {
- 	const char				*name;
--	dma_addr_t				*reg;
-+	void __iomem				*reg;
+ 	/* Disable eDMA, only to establish the ideal initial conditions */
+ 	dw_edma_v0_core_off(dw);
+diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
+index e3ad3e372b55..0ab2b6dba880 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.h
++++ b/drivers/dma/dw-edma/dw-edma-core.h
+@@ -96,7 +96,7 @@ struct dw_edma_irq {
  };
  
- static int dw_edma_debugfs_u32_get(void *data, u64 *val)
- {
--	void __iomem *reg = (void __force __iomem *)data;
-+	void __iomem *reg = data;
-+
- 	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY &&
- 	    reg >= (void __iomem *)&regs->type.legacy.ch) {
- 		void __iomem *ptr = &regs->type.legacy.ch;
+ struct dw_edma {
+-	char				name[20];
++	char				name[32];
+ 
+ 	struct dma_device		dma;
+ 
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
+index f530bacfd716..3f9dadc73854 100644
+--- a/drivers/dma/dw-edma/dw-edma-pcie.c
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -222,7 +222,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+ 
+ 	/* Data structure initialization */
+ 	chip->dev = dev;
+-	chip->id = pdev->devfn;
+ 
+ 	chip->mf = vsec_data.mf;
+ 	chip->nr_irqs = nr_irqs;
+diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+index 380a0a3e251f..9d44da4aa59d 100644
+--- a/include/linux/dma/edma.h
++++ b/include/linux/dma/edma.h
+@@ -76,7 +76,6 @@ enum dw_edma_chip_flags {
+  */
+ struct dw_edma_chip {
+ 	struct device		*dev;
+-	int			id;
+ 	int			nr_irqs;
+ 	const struct dw_edma_core_ops   *ops;
+ 	u32			flags;
 -- 
 2.39.0
 
