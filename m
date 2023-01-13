@@ -2,183 +2,96 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36946C54EBD
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:02:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC109C67871
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:23:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229501AbjAMRCj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 12:02:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50300 "EHLO
+        id S229979AbjAMRXA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 12:23:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229502AbjAMRCi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:02:38 -0500
-Received: from mail-qv1-xf2a.google.com (mail-qv1-xf2a.google.com [IPv6:2607:f8b0:4864:20::f2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8155F5792F
-        for <linux-pci@vger.kernel.org>; Fri, 13 Jan 2023 09:02:37 -0800 (PST)
-Received: by mail-qv1-xf2a.google.com with SMTP id h10so15166194qvq.7
-        for <linux-pci@vger.kernel.org>; Fri, 13 Jan 2023 09:02:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=mtm4pvPjWMYrozLxNwOe/qUwVMP4EPvQdbHa6k655vM=;
-        b=OFC4DPMCXWmfDYQpcLka7Es9nd7nQ37mQnH0PgM+j+NdHtz2dSvvVg6zCRe/1W87xF
-         oP2vYuC+UtO8v5SpgB0l84LWymJ3xZDJtkqgSmRSsM1KcH4q1Pqs7qjegqtsmItaRfOm
-         BzMWhzq1GrLlFoUEyGMUhfr40QkFXwBsylOMdkHycRaZDYN6hzXgqoQ2ZrYGodLK9PXj
-         dafYULgl1Cg5iISym1Sb9IH7IUSwJAVH9me89azyTCq/+LevuCjT+yeARSwDkypjMrl2
-         iUV0XUP4l+MdNOCjCn7Qh56GM49ztu2qsdORvmykjIUcImwFh6XKoU+R6eDEnZiyqdPT
-         bNRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=mtm4pvPjWMYrozLxNwOe/qUwVMP4EPvQdbHa6k655vM=;
-        b=QE1EehHai6Z3QBBbk1ORCeUk33t5DXCKKougkKSqcTub66abBBzQaPZsIFB1o2uqjG
-         Ym22+9shpnjsnYbvc0Uw5yTiF+vEXN3VhKnVzYXqdvtw4dOAqMgNOsMfP0iWz90edAhY
-         oVxPs7Ngy0m55/OqVDwkzVdIQYZKBnOEnSaNYNclHcFcTFCcZyQSoeEw3blLl7oghTWu
-         1CQAfB7Znx8aGa88a2FOwgzOzUBTs2z7rTixyTItyzt+PNKNLsmlV712+Bc3d6JHkizJ
-         T2f7XHpvAq3TBa6jl/GlPfhRcognzuv3Ch6Qfjm/snnLElawSV1rZ7MHZnTRi24kljrX
-         2O0A==
-X-Gm-Message-State: AFqh2kqvkUlxTxpihBS9U8N/1GCLGrjCP9IL4HATWPxSm2gNzIhjQHJ/
-        eHpA2WqOUvQBLnG6HKlJcKz8TLY4qLzuV/Il
-X-Google-Smtp-Source: AMrXdXvpEMqxqZnyYwJjA2Wsk0U+UFnZxwFXqNXzBsxQUAnIV5QVOBZC1hnbueLh3hPx5pTQRrK0Pg==
-X-Received: by 2002:a0c:ab1b:0:b0:534:86f1:bcb5 with SMTP id h27-20020a0cab1b000000b0053486f1bcb5mr3324781qvb.41.1673629356285;
-        Fri, 13 Jan 2023 09:02:36 -0800 (PST)
-Received: from localhost.localdomain (76-10-173-44.dsl.teksavvy.com. [76.10.173.44])
-        by smtp.gmail.com with ESMTPSA id v9-20020a05620a440900b006fc6529abaesm13094955qkp.101.2023.01.13.09.02.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Jan 2023 09:02:35 -0800 (PST)
-From:   Anatoli Antonovitch <a.antonovitch@gmail.com>
-To:     linux-pci@vger.kernel.org
-Cc:     bhelgaas@google.com, lukas@wunner.de, Alexander.Deucher@amd.com,
-        christian.koenig@amd.com,
-        Anatoli Antonovitch <anatoli.antonovitch@amd.com>
-Subject: [PATCH] PCI/hotplug: Replaced down_write_nested with hotplug_slot_rwsem if ctrl->depth > 0 when taking the ctrl->reset_lock.
-Date:   Fri, 13 Jan 2023 12:01:31 -0500
-Message-Id: <20230113170131.5086-1-a.antonovitch@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S230371AbjAMRWA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:22:00 -0500
+Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6547488DED;
+        Fri, 13 Jan 2023 09:14:20 -0800 (PST)
+Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 6DB92E0F1C;
+        Fri, 13 Jan 2023 20:14:19 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        baikalelectronics.ru; h=cc:cc:content-transfer-encoding
+        :content-type:content-type:date:from:from:in-reply-to:message-id
+        :mime-version:references:reply-to:subject:subject:to:to; s=post;
+         bh=f9dfrCZ2XeOWLX2I65+lcPJF+69skluVHEvNGo0pMc8=; b=R7578+/bkQZf
+        f6cLiKyvHhJepHJ3tikJ7GV/FNwYHpL1zx9q6ZWpwTCckjUTsV3ik16tzUAyvOaJ
+        lfoBYG7rSRUTTW4lKRbz63y4QdOqlmzBZyK60tNv42w1Dq2waUeK4F0OZr6vcSGs
+        e0jhE+JWX2A16otG2WsspG0bl8jSSjs=
+Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 5736EE0F13;
+        Fri, 13 Jan 2023 20:14:19 +0300 (MSK)
+Received: from localhost (10.8.30.26) by mail (192.168.51.25) with Microsoft
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:18 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        caihuoqing <caihuoqing@baidu.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v9 01/27] dmaengine: Fix dma_slave_config.dst_addr description
+Date:   Fri, 13 Jan 2023 20:13:43 +0300
+Message-ID: <20230113171409.30470-2-Sergey.Semin@baikalelectronics.ru>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
+References: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.8.30.26]
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Anatoli Antonovitch <anatoli.antonovitch@amd.com>
+Most likely due to a copy-paste mistake the dst_addr member of the
+dma_slave_config structure has been marked as ignored if the !source!
+address belong to the memory. That is relevant to the src_addr field of
+the structure while the dst_addr field as containing a destination device
+address is supposed to be ignored if the destination is the CPU memory.
+Let's fix the field description accordingly.
 
-It is to avoid any potential issues when S3 resume but at the same time we want to hot-unplug.
-
-To fix the race between pciehp and AER reported in https://bugzilla.kernel.org/show_bug.cgi?id=215590
-
-INFO: task irq/26-aerdrv:95 blocked for more than 120 seconds.
-Tainted: G        W          6.2.0-rc3-custom-norework-jan11+ #29
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:irq/26-aerdrv   state:D stack:0     pid:95    ppid:2      flags:0x00004000
-Call Trace:
-<TASK>
-__schedule+0x3df/0xec0
-? rcu_read_lock_held_common+0x12/0x60
-schedule+0x6b/0x100
-rwsem_down_write_slowpath+0x3b2/0x9c0
-down_write_nested+0x16b/0x220
-pciehp_reset_slot+0x63/0x160
-pci_reset_hotplug_slot+0x44/0x80
-pci_slot_reset+0x10d/0x1a0
-pci_bus_error_reset+0xb2/0xe0
-aer_root_reset+0x144/0x1a0
-pcie_do_recovery+0x15a/0x280
-? __pfx_aer_root_reset+0x20/0x20
-aer_process_err_devices+0xfa/0x115
-aer_isr.cold+0x52/0xa1
-? __kmem_cache_free+0x36a/0x3c0
-? irq_thread+0xb0/0x1e0
-? irq_thread+0xb0/0x1e0
-irq_thread_fn+0x28/0x80
-irq_thread+0x106/0x1e0
-? __pfx_irq_thread_fn+0x20/0x20
-? __pfx_irq_thread_dtor+0x20/0x20
-? __pfx_irq_thread+0x20/0x20
-kthread+0x10a/0x140
-? __pfx_kthread+0x20/0x20
-ret_from_fork+0x35/0x60
-</TASK>
-
-INFO: task irq/26-pciehp:96 blocked for more than 120 seconds.
-Tainted: G        W          6.2.0-rc3-custom-norework-jan11+ #29
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:irq/26-pciehp   state:D stack:0     pid:96    ppid:2      flags:0x00004000
-Call Trace:
-<TASK>
-__schedule+0x3df/0xec0
-? rcu_read_lock_sched_held+0x25/0x80
-schedule+0x6b/0x100
-schedule_preempt_disabled+0x18/0x40
-__mutex_lock+0x685/0xf60
-? rcu_read_lock_sched_held+0x25/0x80
-? rcu_read_lock_held_common+0x12/0x60
-? pci_dev_set_disconnected+0x1b/0x80
-mutex_lock_nested+0x1b/0x40
-? mutex_lock_nested+0x1b/0x40
-pci_dev_set_disconnected+0x1b/0x80
-? __pfx_pci_dev_set_disconnected+0x20/0x20
-pci_walk_bus+0x48/0xa0
-pciehp_unconfigure_device+0x129/0x140
-pciehp_disable_slot+0x6e/0x120
-pciehp_handle_presence_or_link_change+0xf1/0x320
-pciehp_ist+0x1a0/0x1c0
-? irq_thread+0xb0/0x1e0
-irq_thread_fn+0x28/0x80
-irq_thread+0x106/0x1e0
-? __pfx_irq_thread_fn+0x20/0x20
-? __pfx_irq_thread_dtor+0x20/0x20
-? __pfx_irq_thread+0x20/0x20
-kthread+0x10a/0x140
-? __pfx_kthread+0x20/0x20
-ret_from_fork+0x35/0x60
-</TASK>
-
-Signed-off-by: Anatoli Antonovitch <anatoli.antonovitch@amd.com>
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Vinod Koul <vkoul@kernel.org>
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ include/linux/dmaengine.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 10e9670eea0b..b1084e67f798 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -27,6 +27,8 @@
- #include "../pci.h"
- #include "pciehp.h"
- 
-+static DECLARE_RWSEM(hotplug_slot_rwsem);
-+
- static const struct dmi_system_id inband_presence_disabled_dmi_table[] = {
- 	/*
- 	 * Match all Dell systems, as some Dell systems have inband
-@@ -911,7 +913,10 @@ int pciehp_reset_slot(struct hotplug_slot *hotplug_slot, bool probe)
- 	if (probe)
- 		return 0;
- 
--	down_write_nested(&ctrl->reset_lock, ctrl->depth);
-+	if (ctrl->depth > 0)
-+		down_write_nested(&ctrl->reset_lock, ctrl->depth);
-+	else
-+		down_write(&hotplug_slot_rwsem);
- 
- 	if (!ATTN_BUTTN(ctrl)) {
- 		ctrl_mask |= PCI_EXP_SLTCTL_PDCE;
-@@ -931,7 +936,11 @@ int pciehp_reset_slot(struct hotplug_slot *hotplug_slot, bool probe)
- 	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
- 
--	up_write(&ctrl->reset_lock);
-+	if (ctrl->depth > 0)
-+		up_write(&ctrl->reset_lock);
-+	else
-+		up_write(&hotplug_slot_rwsem);
-+
- 	return rc;
- }
- 
+diff --git a/include/linux/dmaengine.h b/include/linux/dmaengine.h
+index c923f4e60f24..0c020682d894 100644
+--- a/include/linux/dmaengine.h
++++ b/include/linux/dmaengine.h
+@@ -394,7 +394,7 @@ enum dma_slave_buswidth {
+  * should be read (RX), if the source is memory this argument is
+  * ignored.
+  * @dst_addr: this is the physical address where DMA slave data
+- * should be written (TX), if the source is memory this argument
++ * should be written (TX), if the destination is memory this argument
+  * is ignored.
+  * @src_addr_width: this is the width in bytes of the source (RX)
+  * register where DMA data shall be read. If the source
 -- 
-2.25.1
+2.39.0
+
 
