@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04776C3DA78
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C9ADC54EBD
 	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230425AbjAMRYb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 12:24:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37922 "EHLO
+        id S230454AbjAMRYc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 12:24:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231233AbjAMRXy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:54 -0500
+        with ESMTP id S231243AbjAMRXz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:55 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C34F9A4C73;
-        Fri, 13 Jan 2023 09:14:43 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id AF5BCA4C65;
+        Fri, 13 Jan 2023 09:14:42 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 9A41AE0F30;
-        Fri, 13 Jan 2023 20:14:38 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id D2690E0F29;
+        Fri, 13 Jan 2023 20:14:32 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=d7bJelLGSWZmM7IXBZfGb6iRBR8TCuRpsPrdqslUK5E=; b=v1Y4Zv1XgLQQ
-        wxMzn5D0uXPjyNwJkp/fbevesPq7ksq6PhryOdRwg2DxVfs5h4yZftrKAw5eO1UD
-        yWdWY4pahoZ1ThcOJQHMwhxAvJ9QSqi/gkky9BxnCPtrqp1dEegq+RDO3qIpi7lm
-        3r3iHcqg08tEgzvxyCuvgOCBvi/ImnE=
+         bh=hzDKMV2XF0eP/pMZllPurYSnLvbALJTSJ69bRX4s28A=; b=V9ohMP1D41YI
+        RlJdB394YcKmQMLZDY/BTHE3Tl3lGKaNZF8uhX2U2sP5n8HZQiYsRkKJKa5qI+tT
+        9lI1Yl+MC+c/5G7Y6AdsygjAncNEoWwyAanwhJXvUFT+K6Q2fmZ4QZ3XWoeB2ckE
+        +0G9idQtFmkbCzPjS0If6P+K62GH6po=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 71B8CE0F13;
-        Fri, 13 Jan 2023 20:14:38 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id ADCD2E0F13;
+        Fri, 13 Jan 2023 20:14:32 +0300 (MSK)
 Received: from localhost (10.8.30.26) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:38 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:32 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -38,20 +38,19 @@ To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Cai Huoqing <cai.huoqing@linux.dev>,
         Robin Murphy <robin.murphy@arm.com>,
         Jingoo Han <jingoohan1@gmail.com>, Frank Li <Frank.Li@nxp.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         caihuoqing <caihuoqing@baidu.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v9 25/27] PCI: dwc: Set coherent DMA-mask on MSI-address allocation
-Date:   Fri, 13 Jan 2023 20:14:07 +0300
-Message-ID: <20230113171409.30470-26-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v9 18/27] dmaengine: dw-edma: Use DMA-engine device DebugFS subdirectory
+Date:   Fri, 13 Jan 2023 20:14:00 +0300
+Message-ID: <20230113171409.30470-19-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,54 +63,131 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The MSI target address requires to be reserved within the lowest 4GB
-memory in order to support the PCIe peripherals with no 64-bit MSI TLPs
-support. Since the allocation is done from the DMA-coherent memory let's
-modify the allocation procedure to setting the coherent DMA-mask only and
-avoiding the streaming DMA-mask modification. Thus at least the streaming
-DMA operations would work with no artificial limitations. It will be
-specifically useful for the eDMA-capable controllers so the corresponding
-DMA-engine clients would map the DMA buffers with no need in the SWIOTLB
-intervention for the buffers allocated above the 4GB memory region.
-
-While at it let's add a brief comment about the reason of having the MSI
-target address allocated from the DMA-coherent memory limited with the 4GB
-upper bound.
+Since all DW eDMA read and write channels are now installed in a framework
+of a single DMA-engine device, we can freely move all the DW eDMA-specific
+DebugFS nodes into a ready-to-use DMA-engine DebugFS subdirectory. It's
+created during the DMA-device registration and can be found in the
+dma_device.dbg_dev_root field.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Vinod Koul <vkoul@kernel.org>
 ---
+ drivers/dma/dw-edma/dw-edma-core.c       |  3 ---
+ drivers/dma/dw-edma/dw-edma-core.h       |  3 ---
+ drivers/dma/dw-edma/dw-edma-v0-core.c    |  5 -----
+ drivers/dma/dw-edma/dw-edma-v0-core.h    |  1 -
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 16 ++++------------
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.h |  5 -----
+ 6 files changed, 4 insertions(+), 29 deletions(-)
 
-Changelog v8:
-- This is a new patch added on v8 stage of the series.
-  (@Robin, @Christoph)
----
- drivers/pci/controller/dwc/pcie-designware-host.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 3ab6ae3712c4..e10608af39b4 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -366,7 +366,16 @@ static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
- 						    dw_chained_msi_isr, pp);
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index c3ecae4287d0..58808bec4148 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -1038,9 +1038,6 @@ int dw_edma_remove(struct dw_edma_chip *chip)
+ 		list_del(&chan->vc.chan.device_node);
  	}
  
--	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
-+	/*
-+	 * Even though the iMSI-RX Module supports 64-bit addresses some
-+	 * peripheral PCIe devices may lack the 64-bit messages support. In
-+	 * order not to miss MSI TLPs from those devices the MSI target address
-+	 * has to be reserved within the lowest 4GB.
-+	 * Note until there is a better alternative found the reservation is
-+	 * done by allocating from the artificially limited DMA-coherent
-+	 * memory.
-+	 */
-+	ret = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
- 	if (ret)
- 		dev_warn(dev, "Failed to set DMA mask to 32-bit. Devices with only 32-bit MSI support may not work properly\n");
+-	/* Turn debugfs off */
+-	dw_edma_v0_core_debugfs_off(dw);
+-
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(dw_edma_remove);
+diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
+index b576a8fff45a..e3ad3e372b55 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.h
++++ b/drivers/dma/dw-edma/dw-edma-core.h
+@@ -111,9 +111,6 @@ struct dw_edma {
+ 	raw_spinlock_t			lock;		/* Only for legacy */
  
+ 	struct dw_edma_chip             *chip;
+-#ifdef CONFIG_DEBUG_FS
+-	struct dentry			*debugfs;
+-#endif /* CONFIG_DEBUG_FS */
+ };
+ 
+ struct dw_edma_sg {
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
+index 77e6cfe52e0a..66f296daac5a 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-core.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
+@@ -504,8 +504,3 @@ void dw_edma_v0_core_debugfs_on(struct dw_edma *dw)
+ {
+ 	dw_edma_v0_debugfs_on(dw);
+ }
+-
+-void dw_edma_v0_core_debugfs_off(struct dw_edma *dw)
+-{
+-	dw_edma_v0_debugfs_off(dw);
+-}
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.h b/drivers/dma/dw-edma/dw-edma-v0-core.h
+index 75aec6d31b21..ab96a1f48080 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-core.h
++++ b/drivers/dma/dw-edma/dw-edma-v0-core.h
+@@ -23,6 +23,5 @@ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first);
+ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan);
+ /* eDMA debug fs callbacks */
+ void dw_edma_v0_core_debugfs_on(struct dw_edma *dw);
+-void dw_edma_v0_core_debugfs_off(struct dw_edma *dw);
+ 
+ #endif /* _DW_EDMA_V0_CORE_H */
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+index e6cf608d121b..d12c607433bf 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+@@ -268,7 +268,7 @@ static void dw_edma_debugfs_regs(struct dw_edma *dw)
+ 	struct dentry *regs_dent;
+ 	int nr_entries;
+ 
+-	regs_dent = debugfs_create_dir(REGISTERS_STR, dw->debugfs);
++	regs_dent = debugfs_create_dir(REGISTERS_STR, dw->dma.dbg_dev_root);
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(dw, debugfs_regs, nr_entries, regs_dent);
+@@ -282,17 +282,9 @@ void dw_edma_v0_debugfs_on(struct dw_edma *dw)
+ 	if (!debugfs_initialized())
+ 		return;
+ 
+-	dw->debugfs = debugfs_create_dir(dw->name, NULL);
+-
+-	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->chip->mf);
+-	debugfs_create_u16("wr_ch_cnt", 0444, dw->debugfs, &dw->wr_ch_cnt);
+-	debugfs_create_u16("rd_ch_cnt", 0444, dw->debugfs, &dw->rd_ch_cnt);
++	debugfs_create_u32("mf", 0444, dw->dma.dbg_dev_root, &dw->chip->mf);
++	debugfs_create_u16("wr_ch_cnt", 0444, dw->dma.dbg_dev_root, &dw->wr_ch_cnt);
++	debugfs_create_u16("rd_ch_cnt", 0444, dw->dma.dbg_dev_root, &dw->rd_ch_cnt);
+ 
+ 	dw_edma_debugfs_regs(dw);
+ }
+-
+-void dw_edma_v0_debugfs_off(struct dw_edma *dw)
+-{
+-	debugfs_remove_recursive(dw->debugfs);
+-	dw->debugfs = NULL;
+-}
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
+index 3391b86edf5a..fb3342d97d6d 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
+@@ -13,15 +13,10 @@
+ 
+ #ifdef CONFIG_DEBUG_FS
+ void dw_edma_v0_debugfs_on(struct dw_edma *dw);
+-void dw_edma_v0_debugfs_off(struct dw_edma *dw);
+ #else
+ static inline void dw_edma_v0_debugfs_on(struct dw_edma *dw)
+ {
+ }
+-
+-static inline void dw_edma_v0_debugfs_off(struct dw_edma *dw)
+-{
+-}
+ #endif /* CONFIG_DEBUG_FS */
+ 
+ #endif /* _DW_EDMA_V0_DEBUG_FS_H */
 -- 
 2.39.0
 
