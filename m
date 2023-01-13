@@ -2,111 +2,172 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AD2BC54EBD
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:58:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32E26C54EBD
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:58:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230280AbjAMR6R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 12:58:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37330 "EHLO
+        id S229825AbjAMR6x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 12:58:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39668 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230218AbjAMR5y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:57:54 -0500
-Received: from bee.birch.relay.mailchannels.net (bee.birch.relay.mailchannels.net [23.83.209.14])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E21156C049;
-        Fri, 13 Jan 2023 09:51:08 -0800 (PST)
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 40A203E0F9B;
-        Fri, 13 Jan 2023 17:42:39 +0000 (UTC)
-Received: from pdx1-sub0-mail-a315.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id 99E533E1268;
-        Fri, 13 Jan 2023 17:42:38 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1673631758; a=rsa-sha256;
-        cv=none;
-        b=aB6xa21VDCjs87dpabaUSa9RMma55OpPQaxzs5/hFiR/txUcRRtBhKPJN9Lf8kypZUGZve
-        OtaBHAQ7lJb45wZtVNvWkWy0UjltwLbKs+fM7/TV6MTsCzIZxNm7ve3Lm92e+lKQOT9/M3
-        x2ntuoAkr7IkXFeUK+r436fblVe20jhUhg1dMbR2zVJo8HVvQBFe6/hsAuoVO845FMrwd1
-        DJaHz0q9gaJkEBB0RpQykMWm/kz77h9n/xWvu4t5efnoGvLA0iegQuDA1WLsltdJbLYeK7
-        sKD01uBJh7ANtcJ+PB9U17U8AqTBnx3w0q1fSklosI2iA8PnCfO0LWFepTbkLQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1673631758;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=twgTTPRo+VXnNzflsrxDFTC/SO/Nbxj3cfBkYLW1hkg=;
-        b=33tB9wnNeVgJi+brT3FXVWGpHrSQprQzqzii7hJosZZtJdQCCj6dbkmrDasJE6JtHzd8Xx
-        bcKHi5hodfbnA9Bfits86Y1WQqQnCXzjR6WHqbW5OpxWcJOJLsosFJLh2xlbmVK82f445F
-        IQpjW7kfl3dqi6M4Fjg4kzYmU1ANGpRLR70vKS5thPIF3+qIM9GWgPX2ZeRcwivWmO4yqm
-        YXxfdvpo9ZSBbSgukYfOiAsNC9S1hq/6tRoqKe9VQP7RVNsxnKHKp4lJgvvTClLZrkQLt4
-        y8PMnTZQ9fxmBgzyLO08X3+gsnMXnDhLIMQgU1D4vpYJDCkvHL29vssuWL6dSQ==
-ARC-Authentication-Results: i=1;
-        rspamd-6f569fcb69-pz4jf;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Skirt-Oafish: 11b8c2af1ed5ac8b_1673631759033_935896507
-X-MC-Loop-Signature: 1673631759033:1125857754
-X-MC-Ingress-Time: 1673631759033
-Received: from pdx1-sub0-mail-a315.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.97.48.85 (trex/6.7.1);
-        Fri, 13 Jan 2023 17:42:39 +0000
-Received: from offworld (ip72-199-50-187.sd.sd.cox.net [72.199.50.187])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S231138AbjAMR6f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:58:35 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A91F7F9D7;
+        Fri, 13 Jan 2023 09:51:39 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: dave@stgolabs.net)
-        by pdx1-sub0-mail-a315.dreamhost.com (Postfix) with ESMTPSA id 4Ntpf51GyWzGX;
-        Fri, 13 Jan 2023 09:42:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1673631758;
-        bh=twgTTPRo+VXnNzflsrxDFTC/SO/Nbxj3cfBkYLW1hkg=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=pK5KpZ772hyobLbvM90Mxb120RtMGLRQc1NTBkdqzOnDx4KQzICc/QtGrON+qOaR6
-         UZaq4nyW/+as5VqCbYpmIdiLzuLlmtJuwtURrOdUunDEOnzlziG6N/1kmiV1al23IR
-         SqK1fErGH759hq9eNs0oZb6AfS72PbVIxAT6Kdc60FyaTDIt3mKElSxhdAgMGJadx2
-         e7q3CGcKDt2AV6RaOapdZ0DIuCkfRrN23NiCnx67+bLvwVWqwl0M4HL33DuTKtNmrH
-         BDg+9bqi9hXA3bvRoHKoXA0ht9/gEKVoWmFNkbweLOG/i13+xd2e7igG1+9Pmkzygi
-         ScYv9WSjENQfg==
-Date:   Fri, 13 Jan 2023 09:16:33 -0800
-From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ED2D3622D0;
+        Fri, 13 Jan 2023 17:51:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E1C0C433D2;
+        Fri, 13 Jan 2023 17:51:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1673632298;
+        bh=3LnsMdjPcXTZVEHkBWK5abIQvnrNhWuNASnKmgc+Fgs=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=cipZBDKw064GTZrUKI/yNHcV+IPnDLtFInQKkG04Ax3FbPKeiZqrZm57AqWLKN5SG
+         TrxYhMa50EX7bQGyspOBPhY0eHqZ4yfLOpuGLytRrPWPlPCjpazbWTAh45Z9pBA3l7
+         xu18lp3TMgnsUejX781ScR+woiUWTpvS8k9kzVgyqxMI9UdTzDkt6m2FqzF0ykcYCe
+         09K639BJ5Jmi/QEn0BJ+NLiln2FbLEkEvYT72bMEJHcWyDrIZYka5U60C+itgD5lzn
+         9jCLmip8J1cXtv36jstTU6rh9X67XvMrnWOZ3m2VvfOe3VigHrnTtJ0rZpQz+0Mp48
+         NVkLzTbc41Pyw==
+Date:   Fri, 13 Jan 2023 11:51:36 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Limonciello, Mario" <Mario.Limonciello@amd.com>
+Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Ben Widawsky <bwidawsk@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org
-Subject: Re: [PATCH v6 3/8] cxl/mem: Trace General Media Event Record
-Message-ID: <20230113171633.2ooichii3jk4exqe@offworld>
-References: <20221216-cxl-ev-log-v6-0-346583105b30@intel.com>
- <20221216-cxl-ev-log-v6-3-346583105b30@intel.com>
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Mehta, Sanju" <Sanju.Mehta@amd.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH v4] PCI / ACPI: PM: Take _S0W of the target bridge into
+ account in acpi_pci_bridge_d3(()
+Message-ID: <20230113175136.GA1848594@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20221216-cxl-ev-log-v6-3-346583105b30@intel.com>
-User-Agent: NeoMutt/20220429
+In-Reply-To: <MN0PR12MB61016E8166D73C4BD7C720D4E2FD9@MN0PR12MB6101.namprd12.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 09 Jan 2023, Ira Weiny wrote:
+On Thu, Jan 12, 2023 at 10:45:03PM +0000, Limonciello, Mario wrote:
+> [AMD Official Use Only - General]
+> 
+> 
+> 
+> > -----Original Message-----
+> > From: Bjorn Helgaas <helgaas@kernel.org>
+> > Sent: Thursday, January 12, 2023 16:41
+> > To: Limonciello, Mario <Mario.Limonciello@amd.com>
+> > Cc: Rafael J. Wysocki <rjw@rjwysocki.net>; linux-pci@vger.kernel.org; Rafael J.
+> > Wysocki <rafael@kernel.org>; Len Brown <lenb@kernel.org>; Bjorn Helgaas
+> > <bhelgaas@google.com>; Mika Westerberg
+> > <mika.westerberg@linux.intel.com>; Mehta, Sanju <Sanju.Mehta@amd.com>;
+> > Lukas Wunner <lukas@wunner.de>; Rafael J . Wysocki
+> > <rafael.j.wysocki@intel.com>; linux-acpi@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; Linux PM <linux-pm@vger.kernel.org>
+> > Subject: Re: [PATCH v4] PCI / ACPI: PM: Take _S0W of the target bridge into
+> > account in acpi_pci_bridge_d3(()
+> > 
+> > On Thu, Jan 12, 2023 at 10:09:21PM +0000, Limonciello, Mario wrote:
+> > > > -----Original Message-----
+> > > > From: Bjorn Helgaas <helgaas@kernel.org>
+> > > > Sent: Thursday, January 12, 2023 16:02
+> > > > To: Rafael J. Wysocki <rjw@rjwysocki.net>
+> > > > Cc: linux-pci@vger.kernel.org; Limonciello, Mario
+> > > > <Mario.Limonciello@amd.com>; Rafael J. Wysocki <rafael@kernel.org>;
+> > Len
+> > > > Brown <lenb@kernel.org>; Bjorn Helgaas <bhelgaas@google.com>; Mika
+> > > > Westerberg <mika.westerberg@linux.intel.com>; Mehta, Sanju
+> > > > <Sanju.Mehta@amd.com>; Lukas Wunner <lukas@wunner.de>; Rafael J .
+> > > > Wysocki <rafael.j.wysocki@intel.com>; linux-acpi@vger.kernel.org; linux-
+> > > > kernel@vger.kernel.org; Linux PM <linux-pm@vger.kernel.org>
+> > > > Subject: Re: [PATCH v4] PCI / ACPI: PM: Take _S0W of the target bridge into
+> > > > account in acpi_pci_bridge_d3(()
+> > > >
+> > > > On Thu, Jan 12, 2023 at 09:51:24PM +0100, Rafael J. Wysocki wrote:
+> > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > >
+> > > > > It is generally questionable to allow a PCI bridge to go into D3 if
+> > > > > it has _S0W returning D2 or a shallower power state, so modify
+> > > > > acpi_pci_bridge_d3(() to always take the return value of _S0W for the
+> > > > > target bridge into accout.  That is, make it return 'false' if _S0W
+> > > > > returns D2 or a shallower power state for the target bridge regardless
+> > > > > of its ancestor PCIe Root Port properties.  Of course, this also causes
+> > > > > 'false' to be returned if the PCIe Root Port itself is the target and
+> > > > > its _S0W returns D2 or a shallower power state.
+> > > > >
+> > > > > However, still allow bridges without _S0W that are power-manageable via
+> > > > > ACPI to enter D3 to retain the current code behavior in that case.
+> > > > >
+> > > > > Link: https://lore.kernel.org/linux-pci/20221031223356.32570-1-
+> > > > mario.limonciello@amd.com/
+> > > > > Reported-by: Mario Limonciello <mario.limonciello@amd.com>
+> > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > >
+> > > > Applied to pci/pm for v6.3, thanks!
+> > > >
+> > > > It'd be great if we could include a short description of the problems
+> > > > users might see.  I think the original problem was that on some AMD
+> > > > systems we put a USB4 router in D3 when it should remain in D0.  And I
+> > > > assume this means something doesn't wake up when it should?  Or maybe
+> > > > we miss a hotplug event?
+> > > >
+> > > > If somebody has an example or some text, I'll add it to the commit
+> > > > log.
+> > >
+> > > Here's a blurb for what happens on AMD side:
+> > >
+> > > When the platform is configured to not allow the PCIe port used for
+> > > tunneling to wakeup from D3 it will runtime suspend into D0 and the
+> > > USB4 controller which is a consumer will runtime suspend into D3.
+> > >
+> > > This inconsistency leads to failures to initialize PCIe tunnels for
+> > > USB4 devices.
+> > 
+> > And what is J. Random User going to see?  DisplayPort not working
+> > ever?  It works to begin with, but not after a suspend?  Devices in a
+> > dock not being able to wake the system?
+> > 
+> > I don't really know what "PCIe tunnels for USB4 devices not being
+> > initialized" means for me.  I want to know what a problem report from
+> > a non-expert user might look like.
+> 
+> DP tunnels aren't affected, so monitors should still work.
+> 
+> In terms of what doesn't work it depends on the architecture of the
+> the connected device.  Here's some concrete up-leveled examples:
+> 
+> USB4 docks contain that a PCIe network adapter and that adapter won't
+> work when the dock is plugged in after the system boot.
+> 
+> USB4 docks that contain a USB network adapter should work properly,
+> but downstream USB4 or TBT3 devices connected to that USB4 dock will
+> not work when the device or dock is plugged in after the system boots.
+> 
+> TBT3 storage devices connected after the system has booted will not work.
 
->CXL rev 3.0 section 8.2.9.2.1.1 defines the General Media Event Record.
->
->Determine if the event read is a general media record and if so trace
->the record as a General Media Event Record.
->
->Reviewed-by: Dan Williams <dan.j.williams@intel.com>
->Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+Thanks, this is exactly the sort of thing I was looking for.  Since
+they all mention "connected after boot," I assume the issue with the
+current code is that a hotplug notification is being missed because a
+bridge is in D3.
 
-Reviewed-by: Davidlohr Bueso <dave@stgolabs.net>
+If the devices are present and enumerated at boot, there's no issue
+with suspend/resume, right?
+
+What do you think of the following possible text?  I don't want to be
+overly specific because I don't think it's practical to list every
+scenario.  We just need a hook to make people think "Hmm, I'm seeing a
+dock issue; maybe this is the fix."
+
+  This fixes problems where a hotplug notification is missed because a
+  bridge is in D3.  That means hot-added devices such as USB4 docks
+  (and the devices they contain) and Thunderbolt 3 devices may not
+  work.
