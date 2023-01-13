@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B400C678D7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC02FC678D8
 	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbjAMRYZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 12:24:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33822 "EHLO
+        id S230346AbjAMRY0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 12:24:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231208AbjAMRXu (ORCPT
+        with ESMTP id S231210AbjAMRXu (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:50 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 09E71A4C6B;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0A017A4C6E;
         Fri, 13 Jan 2023 09:14:41 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 6D88AE0F2C;
-        Fri, 13 Jan 2023 20:14:35 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id A1FAFE0F2A;
+        Fri, 13 Jan 2023 20:14:33 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=rm52EHXk9zhos3pIhkdkgojTWB1rvHu/gaPCXIP5N28=; b=IPfoHI89mz3y
-        /MFaBu/EMBq/52KRvwChKUlr0gcaenuxYT53xM/CDHTFLrROZ9dhW4Kq4VAqXd5J
-        zpYSShfcafeTNelt7DOSuXpmhxFuDrT41bX+5g/M5XQLpsoqfl+C0dCnxvMFL9md
-        i0Johe6qodxuQ0eYCiAbusdNFMJpX5k=
+         bh=iHoTsWnELhMhp0Lw9xP2sH277JOvYA36ebqQ27B/2r8=; b=SIhOBc48rjS4
+        euU7G0zuY5epxOYHA3j5sLAaIMDEIhkCj/b3DNlIqi5DNsvya2n2eE46yraL9IY2
+        0wfLdoJX08os+MAJ6nj1s/jyML1Ot9xFpGAgfv7eYkBAYhHxdNN1xpkzz1D0uFgQ
+        faKDzKb+8TUR1f9YpbMXaM0tE8W8btQ=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 56807E0F13;
-        Fri, 13 Jan 2023 20:14:35 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 85DE4E0F13;
+        Fri, 13 Jan 2023 20:14:33 +0300 (MSK)
 Received: from localhost (10.8.30.26) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:34 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:33 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -48,9 +48,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v9 21/27] dmaengine: dw-edma: Replace chip ID number with device name
-Date:   Fri, 13 Jan 2023 20:14:03 +0300
-Message-ID: <20230113171409.30470-22-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH v9 19/27] dmaengine: dw-edma: Use non-atomic io-64 methods
+Date:   Fri, 13 Jan 2023 20:14:01 +0300
+Message-ID: <20230113171409.30470-20-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
@@ -63,88 +63,165 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Using some abstract number as the DW eDMA chip identifier isn't really
-practical. First of all there can be more than one DW eDMA controller on
-the platform some of them can be detected as the PCIe end-points, some of
-them can be embedded into the DW PCIe Root Port/End-point controllers.
-Seeing some abstract number in for instance IRQ handlers list doesn't give
-a notion regarding their reference to the particular DMA controller.
-Secondly current DW eDMA chip id implementation doesn't provide the
-multi-eDMA platforms support for same reason of possibly having eDMA
-detected on different system buses. At the same time re-implementing
-something ida-based won't give much benefits especially seeing the DW eDMA
-chip ID is only used in the IRQ request procedure. So to speak in order to
-preserve the code simplicity and get to have the multi-eDMA platforms
-support let's just use the parental device name to create the DW eDMA
-controller name.
+Instead of splitting the 64-bits IOs up into two 32-bits ones it's
+possible to use the already available non-atomic readq/writeq methods
+implemented exactly for such cases. They are defined in the dedicated
+header files io-64-nonatomic-lo-hi.h/io-64-nonatomic-hi-lo.h. So in case
+if the 64-bits readq/writeq methods are unavailable on some platforms at
+consideration, the corresponding drivers can have any of these headers
+included and stop locally re-implementing the 64-bits IO accessors taking
+into account the non-atomic nature of the included methods. Let's do that
+in the DW eDMA driver too. Note by doing so we can discard the
+CONFIG_64BIT config ifdefs from the code.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-by: Vinod Koul <vkoul@kernel.org>
-
 ---
+ drivers/dma/dw-edma/dw-edma-v0-core.c | 55 +++++++++------------------
+ 1 file changed, 18 insertions(+), 37 deletions(-)
 
-Changelog v2:
-- Slightly extend the eDMA name array. (@Manivannan)
----
- drivers/dma/dw-edma/dw-edma-core.c | 3 ++-
- drivers/dma/dw-edma/dw-edma-core.h | 2 +-
- drivers/dma/dw-edma/dw-edma-pcie.c | 1 -
- include/linux/dma/edma.h           | 1 -
- 4 files changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index 040a88cfe070..e3671bfbe186 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -973,7 +973,8 @@ int dw_edma_probe(struct dw_edma_chip *chip)
- 	if (!dw->chan)
- 		return -ENOMEM;
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
+index 66f296daac5a..51a34b43434c 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-core.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
+@@ -8,6 +8,8 @@
  
--	snprintf(dw->name, sizeof(dw->name), "dw-edma-core:%d", chip->id);
-+	snprintf(dw->name, sizeof(dw->name), "dw-edma-core:%s",
-+		 dev_name(chip->dev));
+ #include <linux/bitfield.h>
  
- 	/* Disable eDMA, only to establish the ideal initial conditions */
- 	dw_edma_v0_core_off(dw);
-diff --git a/drivers/dma/dw-edma/dw-edma-core.h b/drivers/dma/dw-edma/dw-edma-core.h
-index e3ad3e372b55..0ab2b6dba880 100644
---- a/drivers/dma/dw-edma/dw-edma-core.h
-+++ b/drivers/dma/dw-edma/dw-edma-core.h
-@@ -96,7 +96,7 @@ struct dw_edma_irq {
- };
++#include <linux/io-64-nonatomic-lo-hi.h>
++
+ #include "dw-edma-core.h"
+ #include "dw-edma-v0-core.h"
+ #include "dw-edma-v0-regs.h"
+@@ -53,8 +55,6 @@ static inline struct dw_edma_v0_regs __iomem *__dw_regs(struct dw_edma *dw)
+ 		SET_32(dw, rd_##name, value);		\
+ 	} while (0)
  
- struct dw_edma {
--	char				name[20];
-+	char				name[32];
+-#ifdef CONFIG_64BIT
+-
+ #define SET_64(dw, name, value)				\
+ 	writeq(value, &(__dw_regs(dw)->name))
  
- 	struct dma_device		dma;
+@@ -80,8 +80,6 @@ static inline struct dw_edma_v0_regs __iomem *__dw_regs(struct dw_edma *dw)
+ 		SET_64(dw, rd_##name, value);		\
+ 	} while (0)
  
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index f530bacfd716..3f9dadc73854 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -222,7 +222,6 @@ static int dw_edma_pcie_probe(struct pci_dev *pdev,
+-#endif /* CONFIG_64BIT */
+-
+ #define SET_COMPAT(dw, name, value)			\
+ 	writel(value, &(__dw_regs(dw)->type.unroll.name))
  
- 	/* Data structure initialization */
- 	chip->dev = dev;
--	chip->id = pdev->devfn;
+@@ -164,14 +162,13 @@ static inline u32 readl_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ #define SET_LL_32(ll, value) \
+ 	writel(value, ll)
  
- 	chip->mf = vsec_data.mf;
- 	chip->nr_irqs = nr_irqs;
-diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
-index 380a0a3e251f..9d44da4aa59d 100644
---- a/include/linux/dma/edma.h
-+++ b/include/linux/dma/edma.h
-@@ -76,7 +76,6 @@ enum dw_edma_chip_flags {
-  */
- struct dw_edma_chip {
- 	struct device		*dev;
--	int			id;
- 	int			nr_irqs;
- 	const struct dw_edma_core_ops   *ops;
- 	u32			flags;
+-#ifdef CONFIG_64BIT
+-
+ static inline void writeq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ 			     u64 value, void __iomem *addr)
+ {
++	unsigned long flags;
++
+ 	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY) {
+ 		u32 viewport_sel;
+-		unsigned long flags;
+ 
+ 		raw_spin_lock_irqsave(&dw->lock, flags);
+ 
+@@ -181,22 +178,22 @@ static inline void writeq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ 
+ 		writel(viewport_sel,
+ 		       &(__dw_regs(dw)->type.legacy.viewport_sel));
+-		writeq(value, addr);
++	}
++
++	writeq(value, addr);
+ 
++	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY)
+ 		raw_spin_unlock_irqrestore(&dw->lock, flags);
+-	} else {
+-		writeq(value, addr);
+-	}
+ }
+ 
+ static inline u64 readq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ 			   const void __iomem *addr)
+ {
+-	u32 value;
++	unsigned long flags;
++	u64 value;
+ 
+ 	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY) {
+ 		u32 viewport_sel;
+-		unsigned long flags;
+ 
+ 		raw_spin_lock_irqsave(&dw->lock, flags);
+ 
+@@ -206,12 +203,12 @@ static inline u64 readq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ 
+ 		writel(viewport_sel,
+ 		       &(__dw_regs(dw)->type.legacy.viewport_sel));
+-		value = readq(addr);
++	}
++
++	value = readq(addr);
+ 
++	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY)
+ 		raw_spin_unlock_irqrestore(&dw->lock, flags);
+-	} else {
+-		value = readq(addr);
+-	}
+ 
+ 	return value;
+ }
+@@ -225,8 +222,6 @@ static inline u64 readq_ch(struct dw_edma *dw, enum dw_edma_dir dir, u16 ch,
+ #define SET_LL_64(ll, value) \
+ 	writeq(value, ll)
+ 
+-#endif /* CONFIG_64BIT */
+-
+ /* eDMA management callbacks */
+ void dw_edma_v0_core_off(struct dw_edma *dw)
+ {
+@@ -325,19 +320,10 @@ static void dw_edma_v0_core_write_chunk(struct dw_edma_chunk *chunk)
+ 		/* Transfer size */
+ 		SET_LL_32(&lli[i].transfer_size, child->sz);
+ 		/* SAR */
+-		#ifdef CONFIG_64BIT
+-			SET_LL_64(&lli[i].sar.reg, child->sar);
+-		#else /* CONFIG_64BIT */
+-			SET_LL_32(&lli[i].sar.lsb, lower_32_bits(child->sar));
+-			SET_LL_32(&lli[i].sar.msb, upper_32_bits(child->sar));
+-		#endif /* CONFIG_64BIT */
++		SET_LL_64(&lli[i].sar.reg, child->sar);
+ 		/* DAR */
+-		#ifdef CONFIG_64BIT
+-			SET_LL_64(&lli[i].dar.reg, child->dar);
+-		#else /* CONFIG_64BIT */
+-			SET_LL_32(&lli[i].dar.lsb, lower_32_bits(child->dar));
+-			SET_LL_32(&lli[i].dar.msb, upper_32_bits(child->dar));
+-		#endif /* CONFIG_64BIT */
++		SET_LL_64(&lli[i].dar.reg, child->dar);
++
+ 		i++;
+ 	}
+ 
+@@ -349,12 +335,7 @@ static void dw_edma_v0_core_write_chunk(struct dw_edma_chunk *chunk)
+ 	/* Channel control */
+ 	SET_LL_32(&llp->control, control);
+ 	/* Linked list */
+-	#ifdef CONFIG_64BIT
+-		SET_LL_64(&llp->llp.reg, chunk->ll_region.paddr);
+-	#else /* CONFIG_64BIT */
+-		SET_LL_32(&llp->llp.lsb, lower_32_bits(chunk->ll_region.paddr));
+-		SET_LL_32(&llp->llp.msb, upper_32_bits(chunk->ll_region.paddr));
+-	#endif /* CONFIG_64BIT */
++	SET_LL_64(&llp->llp.reg, chunk->ll_region.paddr);
+ }
+ 
+ void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
 -- 
 2.39.0
 
