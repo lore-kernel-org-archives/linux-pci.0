@@ -2,132 +2,95 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDA2DC678D4
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 16:43:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C85C54EBD
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 16:47:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229682AbjAMQnu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 11:43:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55594 "EHLO
+        id S229580AbjAMQr1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 11:47:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230029AbjAMQnM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 11:43:12 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7017363D2F;
-        Fri, 13 Jan 2023 08:41:37 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 25453B82196;
-        Fri, 13 Jan 2023 16:41:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 62132C433F0;
-        Fri, 13 Jan 2023 16:41:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673628094;
-        bh=FJhtEiC6ULwl4PcnADQiRPvVSQkqYUWhzXd8dnEWZMg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PlOwfN0gWWBpHjQTjn31FGB3azBt7UnFzDAlSY9DBqUONBzTMvt+sDky8ccI9HKf4
-         +Ss19Db/75tOMdQXa+hx60haAPUSoO4xrNniDkQ9GAKtC3avI7hKkPLLZR+h+kRxm4
-         c75TCmgsHzTVajmNrcX7gKkZM4EntJ7o2tVtKI6eMbVo4a+OPwqF+ieWReiEyZfw2T
-         HHKyEFcufkjQDl7Q4/ZIe9v6GpLTnBDNGfxs/cKEZe1Re+ySl54gHLUMIGm6EHksqi
-         DxFEZbfPKkn5KEJ0U2QpMETlln/nPTw5zElSP3feOsvTz22UBHaP+YKd8m53RcKLPU
-         DA2e4NwIdvqUg==
-Date:   Fri, 13 Jan 2023 17:41:28 +0100
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc:     "David E. Box" <david.e.box@linux.intel.com>,
-        nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
-        lorenzo.pieralisi@arm.com, hch@infradead.org, kw@linux.com,
-        robh@kernel.org, bhelgaas@google.com, michael.a.bottini@intel.com,
-        rafael@kernel.org, me@adhityamohan.in, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V9 2/4] PCI: vmd: Use PCI_VDEVICE in device list
-Message-ID: <Y8GJuE9KySv9AcHZ@lpieralisi>
-References: <20221208023942.491721-1-david.e.box@linux.intel.com>
- <20221208023942.491721-3-david.e.box@linux.intel.com>
- <4d0d03c0-2880-1b90-ea94-e36d581ca040@linux.intel.com>
+        with ESMTP id S230118AbjAMQrF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 11:47:05 -0500
+Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C790589BC3;
+        Fri, 13 Jan 2023 08:44:53 -0800 (PST)
+Received: by mail-ej1-x632.google.com with SMTP id vm8so53606485ejc.2;
+        Fri, 13 Jan 2023 08:44:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=hSYE2T82iOkVo5VndGHZGfvNrTv8HNJ4m9Ysiu68KwI=;
+        b=Wud4UUW4I0LXXwykMW38HKJzeiS+ewkGf9GCGBhdspHzc/IDzmQhpNmnyBCs6aOYdb
+         AOFYSdUSeTUxz+Lk/LMrl0vrloshPMfcXeLAvRWMFsQK4JQfsAOdwLCRljl2pVvlMpCi
+         x3CtDMaKPlfQ0T2TZnDo1ymZMQVPoH30CwwGJTIPC68iU7Ab8TqoorI4yO5xAUQYX4qQ
+         GQJBjp46izovE6xhsm0Z/KmMHtcDBVazocFosVTkV6i9gmD8IUrRWH65/oWuhmEVbBJy
+         CMb5l+YCMMYObueKXEVUksnHUrYQvRnl9FpQG7m38BUjuQktrWnBYFXBgGUDiL6BD+m/
+         Hnuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=hSYE2T82iOkVo5VndGHZGfvNrTv8HNJ4m9Ysiu68KwI=;
+        b=joRwul10fFjiQFOdFDPiYYbXgEmpArDQoMXzNJxXwyeSUxWMveUuOWIGSIcFgBWWHZ
+         8NAFe0M8fNAy3y/j73bdUbdZqHA/BXix1VApN4ZikJdmz199uMgeNedotvVYb8asexve
+         d1uff0lwUSrl8LReVlkcK1Ivp+31K3Af8Rnc2xnvNcnexHMCqDfT8aOzJNv0109a0pHf
+         rImKjnI+8vfzSkTP1GRe3mCR+XqaZvNOKYGHj2t3mR39u8avqdRBzDPQeccsr6luCsVO
+         U+Smjn7lWbjakNuNI8TfvjsIb71F2RhVDdlZB+V9h6/cDmSrw8CpPvgYoqoH+S61zgoK
+         3y5w==
+X-Gm-Message-State: AFqh2kpK5yqd/u9ZUKr6m4Nt35RqYMXhbdZ9tg5lzHh4ivjODovjDRzR
+        HTEFoBQxpayP3f60VoqFgQA=
+X-Google-Smtp-Source: AMrXdXvqoIZ2B8o5sGtzPTzKfxJ9Wfp6noZuF5fhPatuU42KuRg2fn6CbwBL6m8d/HLO/R+KZW0EYA==
+X-Received: by 2002:a17:906:3095:b0:809:c1f4:ea09 with SMTP id 21-20020a170906309500b00809c1f4ea09mr63716609ejv.69.1673628292202;
+        Fri, 13 Jan 2023 08:44:52 -0800 (PST)
+Received: from fedora.. (dh207-97-147.xnet.hr. [88.207.97.147])
+        by smtp.googlemail.com with ESMTPSA id sb25-20020a1709076d9900b007b2a58e31dasm8777831ejc.145.2023.01.13.08.44.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Jan 2023 08:44:51 -0800 (PST)
+From:   Robert Marko <robimarko@gmail.com>
+To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        bhelgaas@google.com, lpieralisi@kernel.org, robh@kernel.org,
+        kw@linux.com, krzysztof.kozlowski+dt@linaro.org, mani@kernel.org,
+        svarbanov@mm-sol.com, shawn.guo@linaro.org,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Robert Marko <robimarko@gmail.com>
+Subject: [PATCH v2 1/9] arm64: dts: qcom: ipq8074: fix Gen2 PCIe QMP PHY
+Date:   Fri, 13 Jan 2023 17:44:41 +0100
+Message-Id: <20230113164449.906002-1-robimarko@gmail.com>
+X-Mailer: git-send-email 2.39.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4d0d03c0-2880-1b90-ea94-e36d581ca040@linux.intel.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Dec 07, 2022 at 06:56:38PM -0800, Sathyanarayanan Kuppuswamy wrote:
-> 
-> 
-> On 12/7/22 6:39 PM, David E. Box wrote:
-> > Refactor the PCI ID list to use PCI_VDEVICE.
-> 
-> Add some info about why it is done.
+Serdes register space sizes are incorrect, update them to match the
+actual sizes from downstream QCA 5.4 kernel.
 
-I am waiting for the dust to settle on this series, it is pretty
-close to completion it seems, please let me know when you consider
-it ready.
+Fixes: 942bcd33ed45 ("arm64: dts: qcom: Fix IPQ8074 PCIe PHY nodes")
+Signed-off-by: Robert Marko <robimarko@gmail.com>
+---
+ arch/arm64/boot/dts/qcom/ipq8074.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Lorenzo
+diff --git a/arch/arm64/boot/dts/qcom/ipq8074.dtsi b/arch/arm64/boot/dts/qcom/ipq8074.dtsi
+index 06e2f0157396..31ec24100213 100644
+--- a/arch/arm64/boot/dts/qcom/ipq8074.dtsi
++++ b/arch/arm64/boot/dts/qcom/ipq8074.dtsi
+@@ -277,9 +277,9 @@ pcie_qmp1: phy@8e000 {
+ 			status = "disabled";
+ 
+ 			pcie_phy1: phy@8e200 {
+-				reg = <0x8e200 0x16c>,
++				reg = <0x8e200 0x130>,
+ 				      <0x8e400 0x200>,
+-				      <0x8e800 0x4f4>;
++				      <0x8e800 0x1f8>;
+ 				#phy-cells = <0>;
+ 				#clock-cells = <0>;
+ 				clocks = <&gcc GCC_PCIE1_PIPE_CLK>;
+-- 
+2.39.0
 
-> > Signed-off-by: David E. Box <david.e.box@linux.intel.com>
-> > Reviewed-by: Jon Derrick <jonathan.derrick@linux.dev>
-> > Reviewed-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-> > ---
-> >  V9 - No change
-> > 
-> >  V8 - No change
-> > 
-> >  V7 - New Patch. Separate patch suggested by Lorenzo
-> > 
-> >  drivers/pci/controller/vmd.c | 16 ++++++++--------
-> >  1 file changed, 8 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> > index e06e9f4fc50f..9dedca714c18 100644
-> > --- a/drivers/pci/controller/vmd.c
-> > +++ b/drivers/pci/controller/vmd.c
-> > @@ -994,33 +994,33 @@ static int vmd_resume(struct device *dev)
-> >  static SIMPLE_DEV_PM_OPS(vmd_dev_pm_ops, vmd_suspend, vmd_resume);
-> >  
-> >  static const struct pci_device_id vmd_ids[] = {
-> > -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_201D),
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_201D),
-> >  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP,},
-> > -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_28C0),
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_28C0),
-> >  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
-> >  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> >  				VMD_FEAT_CAN_BYPASS_MSI_REMAP,},
-> > -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x467f),
-> > +	{PCI_VDEVICE(INTEL, 0x467f),
-> >  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
-> >  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> >  				VMD_FEAT_OFFSET_FIRST_VECTOR,},
-> > -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x4c3d),
-> > +	{PCI_VDEVICE(INTEL, 0x4c3d),
-> >  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
-> >  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> >  				VMD_FEAT_OFFSET_FIRST_VECTOR,},
-> > -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0xa77f),
-> > +	{PCI_VDEVICE(INTEL, 0xa77f),
-> >  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
-> >  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> >  				VMD_FEAT_OFFSET_FIRST_VECTOR,},
-> > -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x7d0b),
-> > +	{PCI_VDEVICE(INTEL, 0x7d0b),
-> >  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
-> >  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> >  				VMD_FEAT_OFFSET_FIRST_VECTOR,},
-> > -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0xad0b),
-> > +	{PCI_VDEVICE(INTEL, 0xad0b),
-> >  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
-> >  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> >  				VMD_FEAT_OFFSET_FIRST_VECTOR,},
-> > -	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_9A0B),
-> > +	{PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_VMD_9A0B),
-> >  		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW_VSCAP |
-> >  				VMD_FEAT_HAS_BUS_RESTRICTIONS |
-> >  				VMD_FEAT_OFFSET_FIRST_VECTOR,},
-> 
-> -- 
-> Sathyanarayanan Kuppuswamy
-> Linux Kernel Developer
