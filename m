@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26575C67871
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29AEEC54EBE
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230201AbjAMRYW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 12:24:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38710 "EHLO
+        id S230219AbjAMRYX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 12:24:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33408 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230346AbjAMRXi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:38 -0500
+        with ESMTP id S230326AbjAMRXC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:02 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 36422A41CC;
-        Fri, 13 Jan 2023 09:14:30 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7A518A2A98;
+        Fri, 13 Jan 2023 09:14:27 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id D2DC8E0F25;
-        Fri, 13 Jan 2023 20:14:28 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id BBA36E0F1B;
+        Fri, 13 Jan 2023 20:14:26 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=YasRH7EfjqvX/On4k0TlHJ81hcDgJrbWEwCQC+5rSzM=; b=Gzygzbey1yrv
-        DJy+xeyD+1bntDGKzeracoU2Dk3zFnBiAcgWM2tewG877ex0xHB4/MOLEftm1W3e
-        prrc2Uwps5c5cS5uaAMJBI2AQ/jxB+oHw0x1MUm1JH2P8xC2VsxPBuGfC/hoKW41
-        dYs/aAfEz2fooYQVkQ8KJrIWR3Gb3SQ=
+         bh=6nwp9QZuVil5CNMMQXtCvBGcqfB6QdvRl2q83K7oOa0=; b=nnKgjSE4prOs
+        MhX11N9iehV8zpcbz3aywUIg2D5cq8B+UK7YumOUs64+lH3ZKz/Mt0McFjetxNzO
+        TRUPVv44S8O/Oey0dJ26FR/39OS9+v7uIZclkuhpX+ZYOwbM149CT01iAnOnPwQz
+        mzQghAZ1anpR1V39UJTYEeDKEqETwlQ=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id B3C9BE0F13;
-        Fri, 13 Jan 2023 20:14:28 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 8ED61E0F13;
+        Fri, 13 Jan 2023 20:14:26 +0300 (MSK)
 Received: from localhost (10.8.30.26) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:28 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:26 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -47,10 +47,11 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         caihuoqing <caihuoqing@baidu.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v9 13/27] dmaengine: dw-edma: Convert DebugFS descs to being kz-allocated
-Date:   Fri, 13 Jan 2023 20:13:55 +0300
-Message-ID: <20230113171409.30470-14-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>,
+        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+Subject: [PATCH v9 10/27] dmaengine: dw-edma: Fix DebugFS reg entry type
+Date:   Fri, 13 Jan 2023 20:13:52 +0300
+Message-ID: <20230113171409.30470-11-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
@@ -63,72 +64,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently all the DW eDMA DebugFS nodes descriptors are allocated on
-stack, while the DW eDMA driver private data and CSR limits are statically
-preserved. Such design won't work for the multi-eDMA platforms. As a
-preparation to adding the multi-eDMA system setups support we need to have
-each DebugFS node separately allocated and described. Afterwards we'll put
-an addition info there like Read/Write channel flag, channel ID, DW eDMA
-private data reference.
+debugfs_entries structure declared in the dw-edma-v0-debugfs.c module
+contains the DebugFS node' register address. The address is declared as
+dma_addr_t type, but first it's assigned with virtual CPU IOMEM address
+and then it's cast back to the virtual address. Even though the castes
+sandwich will unlikely cause any problem since normally DMA address is at
+least of the same size as the CPU virtual address, it's at the very least
+redundant if not to say logically incorrect. Let's fix it by just stop
+casting the pointer back and worth and just preserve the address as a
+pointer to void with __iomem qualifier.
 
-Note this conversion is mainly required due to having the legacy DW eDMA
-controllers with indirect Read/Write channels context CSRs access. If we
-didn't need to have a synchronized access to these registers the DebugFS
-code of the driver would have been much simpler.
-
+Fixes: 305aebeff879 ("dmaengine: Add Synopsys eDMA IP version 0 debugfs support")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-by: Vinod Koul <vkoul@kernel.org>
-
 ---
-
-Changelog v2:
-- Drop __iomem qualifier from the struct dw_edma_debugfs_entry instance
-  definition in the dw_edma_debugfs_u32_get() method. (@Manivannan)
----
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-index 2121ffc33cf3..78f15e4b07ac 100644
+index 5226c9014703..8e61810dea4b 100644
 --- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
 +++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-@@ -53,7 +53,8 @@ struct dw_edma_debugfs_entry {
+@@ -14,7 +14,7 @@
+ #include "dw-edma-core.h"
+ 
+ #define REGS_ADDR(name) \
+-	((void __force *)&regs->name)
++	((void __iomem *)&regs->name)
+ #define REGISTER(name) \
+ 	{ #name, REGS_ADDR(name) }
+ 
+@@ -48,12 +48,13 @@ static struct {
+ 
+ struct debugfs_entries {
+ 	const char				*name;
+-	dma_addr_t				*reg;
++	void __iomem				*reg;
+ };
  
  static int dw_edma_debugfs_u32_get(void *data, u64 *val)
  {
--	void __iomem *reg = data;
-+	struct dw_edma_debugfs_entry *entry = data;
-+	void __iomem *reg = entry->reg;
- 
+-	void __iomem *reg = (void __force __iomem *)data;
++	void __iomem *reg = data;
++
  	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY &&
  	    reg >= (void __iomem *)&regs->type.legacy.ch) {
-@@ -94,14 +95,22 @@ static int dw_edma_debugfs_u32_get(void *data, u64 *val)
- }
- DEFINE_DEBUGFS_ATTRIBUTE(fops_x32, dw_edma_debugfs_u32_get, NULL, "0x%08llx\n");
- 
--static void dw_edma_debugfs_create_x32(const struct dw_edma_debugfs_entry entries[],
-+static void dw_edma_debugfs_create_x32(const struct dw_edma_debugfs_entry ini[],
- 				       int nr_entries, struct dentry *dir)
- {
-+	struct dw_edma_debugfs_entry *entries;
- 	int i;
- 
-+	entries = devm_kcalloc(dw->chip->dev, nr_entries, sizeof(*entries),
-+			       GFP_KERNEL);
-+	if (!entries)
-+		return;
-+
- 	for (i = 0; i < nr_entries; i++) {
-+		entries[i] = ini[i];
-+
- 		debugfs_create_file_unsafe(entries[i].name, 0444, dir,
--					   entries[i].reg, &fops_x32);
-+					   &entries[i], &fops_x32);
- 	}
- }
- 
+ 		void __iomem *ptr = &regs->type.legacy.ch;
 -- 
 2.39.0
 
