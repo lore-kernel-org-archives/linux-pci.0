@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D5DC54EBE
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:23:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A691C678D4
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229525AbjAMRXH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 12:23:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33374 "EHLO
+        id S229926AbjAMRYP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 12:24:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229999AbjAMRWa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:22:30 -0500
+        with ESMTP id S230371AbjAMRXD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:03 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9F0D2A1800;
-        Fri, 13 Jan 2023 09:14:22 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3A4D4A2AA2;
+        Fri, 13 Jan 2023 09:14:28 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id CA9F3E0F1F;
-        Fri, 13 Jan 2023 20:14:21 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 60902E0F1C;
+        Fri, 13 Jan 2023 20:14:27 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=Tx45rUBHoY/IsByRXGmLDUzcyD/t/V57Pwb7WAVxkr8=; b=FRFEF4hEpa30
-        o5WHIa8irBVECooc7iFSTZNe0seOayNevSg5DU1rQKZtaQcjTFJy11BqIS6gRMDQ
-        GzBMXQeOsJttkHSJAIs+vEf9L/FLuZMhWzmHpTvSBjIAJ0a+srPa0Mxc0nZbSJMD
-        LdhjBx+8UH/O2n8YnRcxPjuedMPgARM=
+         bh=2WY/BWysNEsD4b7Dv/SVQFLrgeBe16jT29XPC1xGCw4=; b=r3GyEqC6LKAe
+        6QZkGesA48bHag7sPkslHMKezaqDjojIzdy9eKItSu4PusOFLGNyeOUfJZaqOrh8
+        r6DzyVVBKF1vRuMK0shDUhZmK9fdpkZWm7ch6uFj4EaCj0NIPud2vRd2bUFSzAui
+        +nIRCDthIxITsSxEmTtmvSc4gjKKwAI=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id A7C2DE0F13;
-        Fri, 13 Jan 2023 20:14:21 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 45F6AE0F13;
+        Fri, 13 Jan 2023 20:14:27 +0300 (MSK)
 Received: from localhost (10.8.30.26) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:21 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:26 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -47,11 +47,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         caihuoqing <caihuoqing@baidu.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v9 04/27] dmaengine: dw-edma: Fix missing src/dst address of the interleaved xfers
-Date:   Fri, 13 Jan 2023 20:13:46 +0300
-Message-ID: <20230113171409.30470-5-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v9 11/27] dmaengine: dw-edma: Stop checking debugfs_create_*() return value
+Date:   Fri, 13 Jan 2023 20:13:53 +0300
+Message-ID: <20230113171409.30470-12-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,48 +63,107 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The interleaved DMA transfers support was added in the commit 85e7518f42c8
-("dmaengine: dw-edma: Add device_prep_interleave_dma() support"). It
-seems like the support was broken from the very beginning. Depending on
-the selected channel either source or destination address are left
-uninitialized which was obviously wrong. I don't really know how come the
-original modification was working for the commit author. Anyway let's fix
-it by initializing the destination address of the eDMA burst descriptors
-for the DEV_TO_MEM interleaved operations and by initializing the source
-address of the eDMA burst descriptors for the MEM_TO_DEV interleaved
-operations.
+First of all they never return NULL. So checking their return value for
+being not NULL just pointless. Secondly the DebugFS subsystem is designed
+in a way to be used as simple as possible. So if one of the
+debugfs_create_*() method in a hierarchy fails, the following methods will
+just silently return the passed erroneous parental dentry. Finally the
+code is supposed to be working no matter whether anything DebugFS-related
+fails. So in order to make code simpler and DebugFS-independent let's drop
+the debugfs_create_*() methods return value checking in the same way as
+the most of the kernel drivers do.
 
-Fixes: 85e7518f42c8 ("dmaengine: dw-edma: Add device_prep_interleave_dma() support")
+Note in order to preserve some memory space we suggest to skip the DebugFS
+nodes initialization if the file system in unavailable.
+
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Acked-by: Vinod Koul <vkoul@kernel.org>
 ---
- drivers/dma/dw-edma/dw-edma-core.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 20 +++++---------------
+ 1 file changed, 5 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
-index a8c1bd9c7ae9..778d91d9fc1b 100644
---- a/drivers/dma/dw-edma/dw-edma-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-core.c
-@@ -455,6 +455,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 				 * and destination addresses are increased
- 				 * by the same portion (data length)
- 				 */
-+			} else if (xfer->type == EDMA_XFER_INTERLEAVED) {
-+				burst->dar = dst_addr;
- 			}
- 		} else {
- 			burst->dar = dst_addr;
-@@ -470,6 +472,8 @@ dw_edma_device_transfer(struct dw_edma_transfer *xfer)
- 				 * and destination addresses are increased
- 				 * by the same portion (data length)
- 				 */
-+			}  else if (xfer->type == EDMA_XFER_INTERLEAVED) {
-+				burst->sar = src_addr;
- 			}
- 		}
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+index 8e61810dea4b..6e7f3ef60ca7 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+@@ -100,9 +100,8 @@ static void dw_edma_debugfs_create_x32(const struct debugfs_entries entries[],
+ 	int i;
  
+ 	for (i = 0; i < nr_entries; i++) {
+-		if (!debugfs_create_file_unsafe(entries[i].name, 0444, dir,
+-						entries[i].reg,	&fops_x32))
+-			break;
++		debugfs_create_file_unsafe(entries[i].name, 0444, dir,
++					   entries[i].reg, &fops_x32);
+ 	}
+ }
+ 
+@@ -168,8 +167,6 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 	char name[16];
+ 
+ 	regs_dir = debugfs_create_dir(WRITE_STR, dir);
+-	if (!regs_dir)
+-		return;
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
+@@ -184,8 +181,6 @@ static void dw_edma_debugfs_regs_wr(struct dentry *dir)
+ 		snprintf(name, sizeof(name), "%s:%d", CHANNEL_STR, i);
+ 
+ 		ch_dir = debugfs_create_dir(name, regs_dir);
+-		if (!ch_dir)
+-			return;
+ 
+ 		dw_edma_debugfs_regs_ch(&regs->type.unroll.ch[i].wr, ch_dir);
+ 
+@@ -237,8 +232,6 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 	char name[16];
+ 
+ 	regs_dir = debugfs_create_dir(READ_STR, dir);
+-	if (!regs_dir)
+-		return;
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
+@@ -253,8 +246,6 @@ static void dw_edma_debugfs_regs_rd(struct dentry *dir)
+ 		snprintf(name, sizeof(name), "%s:%d", CHANNEL_STR, i);
+ 
+ 		ch_dir = debugfs_create_dir(name, regs_dir);
+-		if (!ch_dir)
+-			return;
+ 
+ 		dw_edma_debugfs_regs_ch(&regs->type.unroll.ch[i].rd, ch_dir);
+ 
+@@ -273,8 +264,6 @@ static void dw_edma_debugfs_regs(void)
+ 	int nr_entries;
+ 
+ 	regs_dir = debugfs_create_dir(REGISTERS_STR, dw->debugfs);
+-	if (!regs_dir)
+-		return;
+ 
+ 	nr_entries = ARRAY_SIZE(debugfs_regs);
+ 	dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
+@@ -285,6 +274,9 @@ static void dw_edma_debugfs_regs(void)
+ 
+ void dw_edma_v0_debugfs_on(struct dw_edma *_dw)
+ {
++	if (!debugfs_initialized())
++		return;
++
+ 	dw = _dw;
+ 	if (!dw)
+ 		return;
+@@ -294,8 +286,6 @@ void dw_edma_v0_debugfs_on(struct dw_edma *_dw)
+ 		return;
+ 
+ 	dw->debugfs = debugfs_create_dir(dw->name, NULL);
+-	if (!dw->debugfs)
+-		return;
+ 
+ 	debugfs_create_u32("mf", 0444, dw->debugfs, &dw->chip->mf);
+ 	debugfs_create_u16("wr_ch_cnt", 0444, dw->debugfs, &dw->wr_ch_cnt);
 -- 
 2.39.0
 
