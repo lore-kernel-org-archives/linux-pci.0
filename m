@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EE78C54EBE
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26575C67871
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Jan 2023 17:24:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229640AbjAMRYV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 13 Jan 2023 12:24:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37832 "EHLO
+        id S230201AbjAMRYW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 13 Jan 2023 12:24:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230201AbjAMRW6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:22:58 -0500
+        with ESMTP id S230346AbjAMRXi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 13 Jan 2023 12:23:38 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5B04CA183F;
-        Fri, 13 Jan 2023 09:14:26 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 36422A41CC;
+        Fri, 13 Jan 2023 09:14:30 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 11C40E0F23;
-        Fri, 13 Jan 2023 20:14:25 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id D2DC8E0F25;
+        Fri, 13 Jan 2023 20:14:28 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=EdENeH3TUyngHa7WBf9toVHVO+x1m2FiHcxZ2NrasqE=; b=lio6rfxCtAuH
-        fTVKSOj1kdlEqVJYx9UA6C2ykaw6RfczwF8JPTAhnbmC95Kcm7bI7Jv9yBMQ6eDl
-        tUUBvVgdJsm7ar8jo0AMEWRCbZzaDm+Qcdn/3jH9RtsjzqB4ID5BOzohqM/YFE6z
-        8KkFNJJvfeHdORmR22Yevb2L9OXmW+M=
+         bh=YasRH7EfjqvX/On4k0TlHJ81hcDgJrbWEwCQC+5rSzM=; b=Gzygzbey1yrv
+        DJy+xeyD+1bntDGKzeracoU2Dk3zFnBiAcgWM2tewG877ex0xHB4/MOLEftm1W3e
+        prrc2Uwps5c5cS5uaAMJBI2AQ/jxB+oHw0x1MUm1JH2P8xC2VsxPBuGfC/hoKW41
+        dYs/aAfEz2fooYQVkQ8KJrIWR3Gb3SQ=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id DBBF8E0F13;
-        Fri, 13 Jan 2023 20:14:24 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id B3C9BE0F13;
+        Fri, 13 Jan 2023 20:14:28 +0300 (MSK)
 Received: from localhost (10.8.30.26) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:24 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 13 Jan 2023 20:14:28 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
@@ -47,11 +47,10 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         caihuoqing <caihuoqing@baidu.com>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Subject: [PATCH v9 08/27] dmaengine: dw-edma: Add PCIe bus address getter to the remote EP glue-driver
-Date:   Fri, 13 Jan 2023 20:13:50 +0300
-Message-ID: <20230113171409.30470-9-Sergey.Semin@baikalelectronics.ru>
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v9 13/27] dmaengine: dw-edma: Convert DebugFS descs to being kz-allocated
+Date:   Fri, 13 Jan 2023 20:13:55 +0300
+Message-ID: <20230113171409.30470-14-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230113171409.30470-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,18 +63,19 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In general the Synopsys PCIe EndPoint IP prototype kit can be attached to
-a PCIe bus with any PCIe Host controller including to the one with
-distinctive from CPU address space. Due to that we need to make sure that
-the source and destination addresses of the DMA-slave devices are properly
-converted to the PCIe bus address space, otherwise the DMA transaction
-will not only work as expected, but may cause the memory corruption with
-subsequent system crash. Let's do that by introducing a new
-dw_edma_pcie_address() method defined in the dw-edma-pcie.c, which will
-perform the denoted translation by using the pcibios_resource_to_bus()
-method.
+Currently all the DW eDMA DebugFS nodes descriptors are allocated on
+stack, while the DW eDMA driver private data and CSR limits are statically
+preserved. Such design won't work for the multi-eDMA platforms. As a
+preparation to adding the multi-eDMA system setups support we need to have
+each DebugFS node separately allocated and described. Afterwards we'll put
+an addition info there like Read/Write channel flag, channel ID, DW eDMA
+private data reference.
 
-Fixes: 41aaff2a2ac0 ("dmaengine: Add Synopsys eDMA IP PCIe glue-logic")
+Note this conversion is mainly required due to having the legacy DW eDMA
+controllers with indirect Read/Write channels context CSRs access. If we
+didn't need to have a synchronized access to these registers the DebugFS
+code of the driver would have been much simpler.
+
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Tested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
@@ -83,40 +83,52 @@ Acked-by: Vinod Koul <vkoul@kernel.org>
 
 ---
 
-Note this patch depends on the patch "dmaengine: dw-edma: Add CPU to PCIe
-bus address translation" from this series.
+Changelog v2:
+- Drop __iomem qualifier from the struct dw_edma_debugfs_entry instance
+  definition in the dw_edma_debugfs_u32_get() method. (@Manivannan)
 ---
- drivers/dma/dw-edma/dw-edma-pcie.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
-index 04c95cba1244..f530bacfd716 100644
---- a/drivers/dma/dw-edma/dw-edma-pcie.c
-+++ b/drivers/dma/dw-edma/dw-edma-pcie.c
-@@ -95,8 +95,23 @@ static int dw_edma_pcie_irq_vector(struct device *dev, unsigned int nr)
- 	return pci_irq_vector(to_pci_dev(dev), nr);
+diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+index 2121ffc33cf3..78f15e4b07ac 100644
+--- a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
++++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+@@ -53,7 +53,8 @@ struct dw_edma_debugfs_entry {
+ 
+ static int dw_edma_debugfs_u32_get(void *data, u64 *val)
+ {
+-	void __iomem *reg = data;
++	struct dw_edma_debugfs_entry *entry = data;
++	void __iomem *reg = entry->reg;
+ 
+ 	if (dw->chip->mf == EDMA_MF_EDMA_LEGACY &&
+ 	    reg >= (void __iomem *)&regs->type.legacy.ch) {
+@@ -94,14 +95,22 @@ static int dw_edma_debugfs_u32_get(void *data, u64 *val)
+ }
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_x32, dw_edma_debugfs_u32_get, NULL, "0x%08llx\n");
+ 
+-static void dw_edma_debugfs_create_x32(const struct dw_edma_debugfs_entry entries[],
++static void dw_edma_debugfs_create_x32(const struct dw_edma_debugfs_entry ini[],
+ 				       int nr_entries, struct dentry *dir)
+ {
++	struct dw_edma_debugfs_entry *entries;
+ 	int i;
+ 
++	entries = devm_kcalloc(dw->chip->dev, nr_entries, sizeof(*entries),
++			       GFP_KERNEL);
++	if (!entries)
++		return;
++
+ 	for (i = 0; i < nr_entries; i++) {
++		entries[i] = ini[i];
++
+ 		debugfs_create_file_unsafe(entries[i].name, 0444, dir,
+-					   entries[i].reg, &fops_x32);
++					   &entries[i], &fops_x32);
+ 	}
  }
  
-+static u64 dw_edma_pcie_address(struct device *dev, phys_addr_t cpu_addr)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct pci_bus_region region;
-+	struct resource res = {
-+		.flags = IORESOURCE_MEM,
-+		.start = cpu_addr,
-+		.end = cpu_addr,
-+	};
-+
-+	pcibios_resource_to_bus(pdev->bus, &region, &res);
-+	return region.start;
-+}
-+
- static const struct dw_edma_core_ops dw_edma_pcie_core_ops = {
- 	.irq_vector = dw_edma_pcie_irq_vector,
-+	.pci_address = dw_edma_pcie_address,
- };
- 
- static void dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
 -- 
 2.39.0
 
