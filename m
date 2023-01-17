@@ -2,113 +2,77 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F7EFC54E76
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Jan 2023 18:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2868CC54E76
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Jan 2023 19:15:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232165AbjAQSvm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Jan 2023 13:51:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34036 "EHLO
+        id S229775AbjAQTPJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Jan 2023 14:15:09 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234199AbjAQSr6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2023 13:47:58 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AF114DCE8
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2023 10:15:28 -0800 (PST)
+        with ESMTP id S232454AbjAQTKm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2023 14:10:42 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F01C537B42;
+        Tue, 17 Jan 2023 10:24:38 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 2B3E2B81911
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2023 18:15:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 844DEC433F0;
-        Tue, 17 Jan 2023 18:15:25 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id B2806B819A1;
+        Tue, 17 Jan 2023 18:24:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C2BFC43396;
+        Tue, 17 Jan 2023 18:24:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673979325;
-        bh=C/Rlqd06hTG+sBwbmTa7yjDrxvllM1QBeEIK/4R580U=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=h5YI8X8Gh6D7f0v217gVFzrElT63JOXfaFiPoFYnb+2a70/7JiXk4dxDu+Y49xv45
-         CpjhosyXT0I4pE3UI4pnu6cmRo8/U3c8L3GPtKKwQQDh88laoJuFeBCxx+0ZHGT8uP
-         klFHIwr5Bx83MLr26hcDbmGujlEnn/YuLCupEirE75GW6BzkBiYUFoWuFZeOLRNnqG
-         uxfyctBOR0yXPQxoUB9plz4worqNoanVgYWXYPGvStlM3XBaWlaWOtEg9XtNqbr4Fz
-         PUlsu3ZBEltblSAA4ZMkd3w6L88ERSo6hb9SaVlszyv4n8QlbPwd/3xPQbuXAbmYhL
-         MvbBmVmHXKPdQ==
-Date:   Tue, 17 Jan 2023 12:15:23 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Huang Adrian <adrianhuang0701@gmail.com>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        s=k20201202; t=1673979876;
+        bh=e/Yadhg7MhxiC6ICfyqgJNkywCHiFZdW0smgFQQj1Ig=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=cWvg9UKfMMTj3rO/pO1Mra0JKxMu5xIubaxUkEzGDvQyPUDv1ud6ehrdFA1TQVKtn
+         jhiN+842WVmmNJi5uSNygHV0oRFClHoUqel4z29u1M8KvvoTzJqsPI522+G8quNAxG
+         L/vLYT7SSuKkHQKK2sUp1sLpTFyGmbQ79wrVCBJdnQQqvEwgOU3e3fbbSB+dGXq2sM
+         Ij4+5FiFWoSCUP1MLxvcBTh+VULLIeVcWhre8CYGbT9Xo2OeJBobXbHAgTHOE18HS8
+         aKNZXPiwVvFW7DXeCFYMe+PVxKA5lg4fLm4EQlIqpwAtDZS47Q1FV+wDvPkBSoRNJT
+         34nAkBoRcsd2w==
+From:   Bjorn Andersson <andersson@kernel.org>
+To:     dmitry.baryshkov@linaro.org, kw@linux.com, kishon@kernel.org,
+        bhelgaas@google.com, robh+dt@kernel.org,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Nirmal Patel <nirmal.patel@linux.intel.com>,
-        Adrian Huang <ahuang12@lenovo.com>,
-        Jon Derrick <jonathan.derrick@linux.dev>
-Subject: Re: [PATCH v2 1/1] PCI: vmd: Avoid acceidental enablement of window
- when zeroing config space of VMD root ports
-Message-ID: <20230117181523.GA134569@bhelgaas>
+        jingoohan1@gmail.com, konrad.dybcio@somainline.org,
+        agross@kernel.org, vkoul@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, gustavo.pimentel@synopsys.com
+Cc:     devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-phy@lists.infradead.org, p.zabel@pengutronix.de,
+        linux-pci@vger.kernel.org, johan@kernel.org
+Subject: Re: (subset) [PATCH v4 0/8] PCI/phy: Add support for PCI on sm8350 platform
+Date:   Tue, 17 Jan 2023 12:24:21 -0600
+Message-Id: <167397986254.2832389.9697915757914288404.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.37.1
+In-Reply-To: <20221118233242.2904088-1-dmitry.baryshkov@linaro.org>
+References: <20221118233242.2904088-1-dmitry.baryshkov@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHKZfL1PPo=fyukj8UA5=m4TUSjFiUj65wC4FmU6w-XW1mJyqw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 17, 2023 at 05:50:05PM +0800, Huang Adrian wrote:
-> On Wed, Jan 11, 2023 at 11:58 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > When memset_io() clears prefetchable base 32 bits register, the
-> > > prefetchable memory becomes 0000000000000000-575000fffff, which
-> > > is enabled.  This behavior (accidental enablement of window)
-> > > causes that config accesses get routed to the wrong place, and
-> > > the access content of PCI configuration space of VMD root ports
-> > > is 0xff after invoking memset_io() in vmd_domain_reset():
-> >
-> > I was thinking the problem was only between clearing
-> > PCI_PREF_MEMORY_BASE and PCI_PREF_BASE_UPPER32, but that would be
-> > a pretty small window, and you're seeing a lot of config accesses
-> > going wrong.  Why is that?  Is there enumeration that races with
-> > this domain reset?
+On Sat, 19 Nov 2022 01:32:34 +0200, Dmitry Baryshkov wrote:
+> SM8350 is one of the recent Qualcomm platforms which lacks PCIe support.
+> Use sm8450 PHY tables to add support for the PCIe hosts on Qualcomm SM8350 platform.
 > 
-> Well, I didn't see the races. The problem is that: memset_io() uses
-> enhanced REP STOSB, fast-string operation or legacy method (see
-> arch/x86/lib/memset_64.S) to *sequentially* clear the memory
-> location from lower memory location to higher one.
+> Note: the PCIe0 table is based on the lahaina-v2.1.dtsi file, so it
+> might work incorrectly on earlier SoC revisions.
+> 
+> Dependencies:
+> - phy/next (for PHY patches only)
+> 
+> [...]
 
-Obviously we can't *ever* clear both PCI_PREF_MEMORY_BASE and
-PCI_PREF_BASE_UPPER32 atomically, whether it's via memset_io(),
-writel(), or whatever.  I understand that.
+Applied, thanks!
 
-> When clearing at PCI_PREF_BASE_UPPER32, the prefetchable memory
-> window is accidentally enabled. The subsequent accesses (each read
-> returns 0xff, and each write does not take any effect) cannot be
-> made correctly. In this case, clearing at PCI_PREF_LIMIT_UPPER32
-> cannot take any effect. So, we're unable to configure VMD devices
-> anymore for subsequent writes.
+[7/8] arm64: dts: qcom: sm8350: add PCIe devices
+      commit: 6daee40678a0868a994b2ce923694c52299dbd65
+[8/8] arm64: dts: qcom: sm8350-hdk: enable PCIe devices
+      commit: 186b27135a9edb5bfbdebd5fb525e3fb7eff962e
 
-I understand the mechanism that temporarily enables the window.  But I
-don't understand the part about "clearing PCI_PREF_LIMIT_UPPER32
-*cannot* take any effect."
-
-Is it impossible to clear PCI_PREF_LIMIT_UPPER32 while the window is
-enabled?  Given the normal PCI rules, I don't understand why that
-would be.
-
-This sequence is problematic because the window is accidentally
-enabled:
-
-  1)  clear PCI_PREF_MEMORY_BASE
-  2)  <window is enabled here>
-  3)  clear PCI_PREF_BASE_UPPER32
-
-and the following sequence works as desired:
-
-  clear PCI_PREF_BASE_UPPER32
-  clear PCI_PREF_MEMORY_BASE
-
-The interval between 1) and 3) above should be short: there are only a
-few config writes between them.
-
-But you're seeing DMAR VT-d config reads that fail.  Why are those
-happening at the same time as VMD enumeration?  And apparently you can
-also run lspci and see *those* config reads fail.
-
-There has to be more going on here than a window that is accidentally
-enabled for a few milliseconds.  *That* is my question.
-
-Bjorn
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
