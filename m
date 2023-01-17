@@ -2,107 +2,78 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0C22C38142
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Jan 2023 22:14:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80080C00A5A
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 00:00:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229847AbjAQWN4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Jan 2023 17:13:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54974 "EHLO
+        id S229458AbjARAAL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Jan 2023 19:00:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229774AbjAQWM7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2023 17:12:59 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4A00360BF;
-        Tue, 17 Jan 2023 12:32:20 -0800 (PST)
+        with ESMTP id S229485AbjAQX7c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2023 18:59:32 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E02C1893CC;
+        Tue, 17 Jan 2023 15:14:20 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id ED3DCB81A0C;
-        Tue, 17 Jan 2023 20:32:18 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CEC9C433EF;
-        Tue, 17 Jan 2023 20:32:17 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 53FABB81A62;
+        Tue, 17 Jan 2023 23:14:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7012C433D2;
+        Tue, 17 Jan 2023 23:14:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1673987537;
-        bh=oWArDaU1DZ8qSMwUfX0DJS1kByfHC40zRhFfLw4sElw=;
+        s=k20201202; t=1673997258;
+        bh=UyCduLUKDHMuOlRKdVS07Ic8VuPeGTimn3Gjp7iIcuQ=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=So0CGmlLd0rpIGyI1GLq77v0BmHP+sTo1hURjyCdtUdg6xg1ABSapvnbdUl94W3rY
-         2p1hElP35LI+u7wMLC7UEzcrcbPPWtHBdiXO0kzXLmiOH2Wx8cQRXFDVkc3yxFVGBf
-         ioeYYCQPpV6Fxpn8KPdNI3fxGCA+Cm/jiALg8+Znof2ifM1bS0CUQxC2Qe9Qi0qNMQ
-         lHc4ylkndFepazbC0Q9fOPYJJCJmGmVtJQhFKdvuAJ79ckSNtYL2KwfqCn6UYUsVxA
-         0NgFveb9erbKvtimViaQ7MqGatjUZJHgyBReX+dGffuUzqvOj9uiBvYe63vhUQV9iS
-         qge43omTJNOuQ==
-Date:   Tue, 17 Jan 2023 14:32:15 -0600
+        b=prWGvCBKzqqnRYOonvhjMq6+HuXZbQ2bfu69j6jTopGc49O7slkoNWl99+J3sTOOv
+         fqpj0RKNXt9Fm/40r3Th2EjwutW6hokYmVsQpnNMBDaBIIO+5qQ24qhMVkFY/cYezZ
+         3w9sh5VsObHXNzDod1HUKS5obzITXfKfbY6JI4JgsntOOULF/alKpv0szDoiOT7sbT
+         HJ1Qkj/Yu8/o/QR/q4DeRFj85RJPR9GnJVdP8MK3UwWtEvPTmsWK+Tz5XTNpGCn2b5
+         BEPGKuw6GqJ3DgkhLhboFjXXfl1s0ZUV7fuPncg9oQJDREU3lRngcQdIzt/qmLRCEU
+         k0Oj0YW3kfYGw==
+Date:   Tue, 17 Jan 2023 17:14:16 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Shunsuke Mie <mie@igel.co.jp>
-Cc:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Frank Li <Frank.Li@nxp.com>, Li Chen <lchen@ambarella.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 0/3] Deal with alignment restriction on EP side
-Message-ID: <20230117203215.GA144880@bhelgaas>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     bhelgaas@google.com, Mario Limonciello <mario.limonciello@amd.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <kbusch@kernel.org>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
+        Stefan Roese <sr@denx.de>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/portdrv: Avoid enabling AER on Thunderbolt devices
+Message-ID: <20230117231416.GA158056@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230113090350.1103494-1-mie@igel.co.jp>
+In-Reply-To: <20221226153048.1208359-1-kai.heng.feng@canonical.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 13, 2023 at 06:03:47PM +0900, Shunsuke Mie wrote:
-> Some PCIe EPC controllers have restriction to map PCIe address space to the
-> local memory space. The mapping is needed to access memory of other side.
-> On epf test, RC module prepares an aligned memory, and EP module maps the
-> region. However, a EP module which emulate a device (e.g. VirtIO, NVMe and
-> etc) cannot expect that a driver for the device prepares an aligned memory.
-> So, a EP side should deal with the alignment restriction.
-> 
-> This patchset addresses with the alignment restriction on EP size. A
-> content as follows:
-> 1. Improve a pci epc unmap/map functions to cover the alignment restriction
-> with adding epc driver support as EPC ops.
-> 2. Implement the support function for DWC EPC driver.
-> 3. Adapt the pci-epf-test to the map/unmap function updated at first patch.
-> 
-> I tested this changes on RENESAS board has DWC PCIeC.
-> 
-> This is a RFC, and it has patches for testing only. Following changes are
-> not included yet:
-> 1. Removing alignment codes on RC side completely
-> 2. Adapting map/unmap() changes to pci-epf-ntb/vntb
-> 
-> Best,
-> Shunsuke
-> 
-> Shunsuke Mie (3):
->   PCI: endpoint: support an alignment aware map/unmaping
->   PCI: dwc: support align_mem() callback for pci_epc_epc
->   PCI: endpoint: support pci_epc_mem_map/unmap API changes
+On Mon, Dec 26, 2022 at 11:30:31PM +0800, Kai-Heng Feng wrote:
+> We are seeing igc ethernet device on Thunderbolt dock stops working
+> after S3 resume because of AER error, or even make S3 resume freeze:
+> pcieport 0000:00:1d.0: AER: Multiple Corrected error received: 0000:00:1d.0
+> pcieport 0000:00:1d.0: PCIe Bus Error: severity=Corrected, type=Transaction Layer, (Receiver ID)
+> pcieport 0000:00:1d.0:   device [8086:7ab0] error status/mask=00008000/00002000
+> pcieport 0000:00:1d.0:    [15] HeaderOF
+> pcieport 0000:00:1d.0: AER: Multiple Uncorrected (Non-Fatal) error received: 0000:00:1d.0
+> pcieport 0000:00:1d.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, (Requester ID)
+> pcieport 0000:00:1d.0:   device [8086:7ab0] error status/mask=00100000/00004000
+> pcieport 0000:00:1d.0:    [20] UnsupReq               (First)
+> pcieport 0000:00:1d.0: AER:   TLP Header: 34000000 0a000052 00000000 00000000
+> pcieport 0000:00:1d.0: AER:   Error of this Agent is reported first
+> pcieport 0000:04:01.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, (Requester ID)
+> pcieport 0000:04:01.0:   device [8086:1136] error status/mask=00300000/00000000
+> pcieport 0000:04:01.0:    [20] UnsupReq               (First)
+> pcieport 0000:04:01.0:    [21] ACSViol
+> pcieport 0000:04:01.0: AER:   TLP Header: 34000000 04000052 00000000 00000000
+> thunderbolt 0000:05:00.0: AER: can't recover (no error_detected callback)
 
-s/unmaping/unmapping/
+Is this a regression?  E.g., is this something that started after
+f26e58bf6f54 ("PCI/AER: Enable error reporting when AER is native") or
+something similar?
 
-Capitalize subject lines ("Support ...").
-
-Would be nice to say something more specific than "support ... API
-changes."
-
-The last patch seems to be for a test case.  Some previous changes to
-it use the "PCI: pci-epf-test" prefix so it's distinct from the
-pci-epc-core changes.
-
->  .../pci/controller/dwc/pcie-designware-ep.c   | 13 +++
->  drivers/pci/endpoint/functions/pci-epf-test.c | 89 +++++--------------
->  drivers/pci/endpoint/pci-epc-core.c           | 57 +++++++++---
->  include/linux/pci-epc.h                       | 10 ++-
->  4 files changed, 90 insertions(+), 79 deletions(-)
-> 
-> -- 
-> 2.25.1
-> 
+Bjorn
