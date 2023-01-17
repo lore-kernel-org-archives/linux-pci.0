@@ -2,74 +2,75 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F79CC3DA78
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Jan 2023 18:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CB49C54E76
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Jan 2023 18:51:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232963AbjAQSsO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Jan 2023 13:48:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56270 "EHLO
+        id S231205AbjAQSv2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Jan 2023 13:51:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34476 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231485AbjAQSeT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2023 13:34:19 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3309A53FB4
-        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2023 10:06:34 -0800 (PST)
+        with ESMTP id S235158AbjAQSsj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Jan 2023 13:48:39 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EAAA4DCCB
+        for <linux-pci@vger.kernel.org>; Tue, 17 Jan 2023 10:15:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1673978823; x=1705514823;
+  t=1673979333; x=1705515333;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=mLYXfazVSA5M9uvl1VYSmYFHejQG7N1AMoygb7dtFR4=;
-  b=k1EYnbUfBwOWCnSTSww+2VhGUBMmAACv4jHmJNHrfzQuuAf2T/5GIPnp
-   q3PbQNPTgD2chv8zjTK2+5gbRS0z60MxByt32pdWrRGzQ2zC2xH8OdxjZ
-   PFlRonyEK6hPF0qYxuubqSD9hLu5c0tz1hYIfWo0OPw/VhaaWtbGyFqJK
-   ZvxQbHHYeRzwcr8gEeU7xqVsFxBAqGXnQnk94D/uVtHnn2gR0gnm6ivHn
-   MfR74WAqszTSeM8ybhDyxEHxVE4OtREABBLeXfNdzk3sqEuEB1cdreW8O
-   s2aGnhC7F5PmxVXS815F3IEnEqjjEbBsOUSN9MTSV6VMBSWtH7B5kwrpT
+  bh=cs9PRyMKl+fTfibu3bFmjN91HAM0npT6zgM0PBXVGkM=;
+  b=Zt7wUDFoOR8JzkVW6QTqWVJ+73wNVxtwY+Flw9sk3KD6U1V04210OM3R
+   0lLcf5exUCUEoGtZyfFKgiYrpxj3pML9wrW/Bl8yfE1FxZuMqEJtKoWPd
+   5tDRPThhI+giLTShzG0dP1V+MRAnTkG4388v28kitEpRnZM58sDhRNkt7
+   ps5pr8Y9a2e10oFsQC0NbhBps/QtDtyKWNji3k9KecrQt+H5Cu4Z9yTqS
+   mF+jHIBou9DRyG03mLaD0rJVm5T8qBA+3rPjMioma9JId+UJFl5FJPOlI
+   lNj8bxPcxjY/S26kBqbVItzQ4LmlodB5UMXQfg4QRIIoQstFfDX+RCxHX
    g==;
 X-IronPort-AV: E=Sophos;i="5.97,224,1669046400"; 
-   d="scan'208";a="220876122"
-Received: from mail-mw2nam04lp2174.outbound.protection.outlook.com (HELO NAM04-MW2-obe.outbound.protection.outlook.com) ([104.47.73.174])
-  by ob1.hgst.iphmx.com with ESMTP; 18 Jan 2023 02:06:32 +0800
+   d="scan'208";a="325343155"
+Received: from mail-bn8nam12lp2168.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.168])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Jan 2023 02:15:30 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HSMQyaXah3ds6qbf/pi+h527czFd0HxZZ6nrDVWha/PGX19n+RH8YqoyssXhJazpsPiECEAXHvGcsb2NIyxJGOGoKedDGXthaM/5KUAq1JDZ0qLfGUNSilJqyz1iTc47ACKDePnDrzudS/KYb7fBbPixBfPndKSmeHaP0eHv0AriGWsL7R5xWlQX8DRHxu9esdlyxYWoN5oJP7B7egMcaWr0IVny1vT66lVCITZq9AQc50Xgonk8ToR05yGDZQAjIsON3e421nhMpb25XCxh0Xs+4djjXUW2CE6n+/SHYE5OcI9qsMc7LlNHqsOG5Y2LwBRwvzg7Rc+nPWCi8a6k7A==
+ b=nRWkoZGYBhRVTnfrrxdfwJOi8ebC0AlUiuaz9ix0LQfV7fD1i27WDncexGQ61rImqL9TqtbfNYj30UZKN3MnZGMG4l+70RMV1/34TPRbULtzZCzUNK1xmD7MHVgFqqbQkF3GD5sYnc/Z1H/YPyXjR7z4a18/96dwIlIMiTUGk2svvIy47WU5nUZZe44h0EW4ba+Ow7FIAKA+jgepiDlL5bj45yzAVl9ICk4xWuJCJfUexvkPMlzC4+ImzOtJmokgCCSYHHgKJSEP9VpuQKvBw4UFbGSTWgHC6RrKZL7xAe3Yudpncyq3wLGCoEgTihcBtiPiw+nHx467oz2Yf66KcA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=MnWMXm6hDFvGXZzRyaKRsAvo/aUZ7lk2nRVn1rUG5HQ=;
- b=IDquLlHEmRBIuu2CEbXpCjyX/EOha2ZbeeUHui5R0k4EI74HYtyAhzQ2fpsrYNgbsv012R5SYV4NAaWL0tG4MzDhV7bClLT5zpAm1Mnh29vyXdKbl4plykVzJVBuyPMrq+p4pIoBbZkXNfeZZh0ApyEuxGI+V2XD/u8vOX3qPKwsp6e5D428x4REeEhEHW8JOHeAwebZgz3lkVx1BpRi6CAxxUvXfY2gkWmGKhl6i+CvTpv/6+qJiWqZmzBKx7e76mVwVg5TH82hN4PQj1Yo7XpQCJb0KuJI4MHP8yyWgwWZDhFHc7fOONHX3QfeTKlP6e/YX/DB8HpRKpYC4WVd/Q==
+ bh=2lEEE51EaNQIPTbPFPnShg/11v24NWtXd0KL/V01xhQ=;
+ b=jQPCzqz2FOYR4NV8RzBPZP1u3cnIW9dRT7MNKJNW3fib/rmX2at1iKj8PiLyRvPjUiv8AdesfFWL0XeTPWqSe+0A9Hj/ghmEaTh4MuCD3SG+YKvtkHVfGkl6LEBHp9RHgp2gPfQxIgm9oKpj1AOgjgN/gGsN746rQhgEjkX3I8ED4HvC2ddSQgDWxjdMYGn3OpXb1/E+Da0QkIJRjBYPli2+hWVqGWAVKlrwEdjBODJWWwVm0rQocVLfcQQPALTnfpY21cm7x9QtFABg2fhRjkKsAUCnp5zrJZ34lMFOmxaKoJAp6uIkjnBdRjTyA/+qo8ZtmPhW/64/zF8MDlKQ9w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MnWMXm6hDFvGXZzRyaKRsAvo/aUZ7lk2nRVn1rUG5HQ=;
- b=zuviii5xoQUF4nK72VRwPOekkOTMuzHHhDeB5Awhi5CXWJWz4UyFj8iSlFOi37xjabFdb9/+OtMJZPxluuMBRm8mhEpdDCcuGh1nKOOz7aOW7UEKrT66Ul6aysh/YM5lTy7r/atGly315+jktbxLEkgjbzSHqoqP8zConslIsHQ=
+ bh=2lEEE51EaNQIPTbPFPnShg/11v24NWtXd0KL/V01xhQ=;
+ b=JiCQxMxLqH+HzPvRDRtNU+XtUWHt4eExJDYjG5zojWhinEk6QzKky945bYrLukRnsutq733+Z8mq7GOYEpRU7rco7Gi7hFpENuIDzZSuIsYTuO8Pd6BI3zl+T1ZQHFJx2CyvlFl1F45K/jsKPBWqRNW36IOja/XFM6SNnn6C86U=
 Received: from DM6PR04MB6473.namprd04.prod.outlook.com (2603:10b6:5:1ef::23)
- by BN7PR04MB4436.namprd04.prod.outlook.com (2603:10b6:408::23) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.5986.23; Tue, 17 Jan 2023 18:06:30 +0000
+ by SA0PR04MB7178.namprd04.prod.outlook.com (2603:10b6:806:e7::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5986.23; Tue, 17 Jan
+ 2023 18:15:29 +0000
 Received: from DM6PR04MB6473.namprd04.prod.outlook.com
  ([fe80::27e5:bc1:9b25:d24c]) by DM6PR04MB6473.namprd04.prod.outlook.com
  ([fe80::27e5:bc1:9b25:d24c%7]) with mapi id 15.20.5986.023; Tue, 17 Jan 2023
- 18:06:30 +0000
+ 18:15:28 +0000
 From:   Alexey Bogoslavsky <Alexey.Bogoslavsky@wdc.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     "'hch@lst.de'" <hch@lst.de>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+To:     Keith Busch <kbusch@kernel.org>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "bhelgaas@google.com" <bhelgaas@google.com>,
-        Rajat Khandelwal <rajat.khandelwal@linux.intel.com>
+        "'hch@lst.de'" <hch@lst.de>
 Subject: RE: [PATCH 1/1] PCI/AER: Ignore correctable error reports for SN730
  WD SSD
 Thread-Topic: [PATCH 1/1] PCI/AER: Ignore correctable error reports for SN730
  WD SSD
-Thread-Index: AQHZKdjydF/vmoLqekqeVIf5E6S3m66iMtgAgABjz9CAABQKgIAAOBFA
-Date:   Tue, 17 Jan 2023 18:06:29 +0000
-Message-ID: <DM6PR04MB647387CDACE15C3B5767B5FD8BC69@DM6PR04MB6473.namprd04.prod.outlook.com>
-References: <DM6PR04MB6473099D6C2AA889D959A11C8BC69@DM6PR04MB6473.namprd04.prod.outlook.com>
- <20230117142257.GA117624@bhelgaas>
-In-Reply-To: <20230117142257.GA117624@bhelgaas>
+Thread-Index: AQHZKdjydF/vmoLqekqeVIf5E6S3m66ixGcAgAAlMGA=
+Date:   Tue, 17 Jan 2023 18:15:28 +0000
+Message-ID: <DM6PR04MB647368572FC2A56C2869B1758BC69@DM6PR04MB6473.namprd04.prod.outlook.com>
+References: <BY5PR04MB704131DBB47254C9F1FF12B38B409@BY5PR04MB7041.namprd04.prod.outlook.com>
+ <DM6PR04MB6473197DBD89FF4643CC391F8BC19@DM6PR04MB6473.namprd04.prod.outlook.com>
+ <Y8bE0gfBq0sxsefv@kbusch-mbp>
+In-Reply-To: <Y8bE0gfBq0sxsefv@kbusch-mbp>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -77,172 +78,103 @@ X-MS-TNEF-Correlator:
 authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=wdc.com;
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DM6PR04MB6473:EE_|BN7PR04MB4436:EE_
-x-ms-office365-filtering-correlation-id: 072d71c0-4f58-4e75-372e-08daf8b58f24
+x-ms-traffictypediagnostic: DM6PR04MB6473:EE_|SA0PR04MB7178:EE_
+x-ms-office365-filtering-correlation-id: 5764eeb4-f2a5-41da-be5e-08daf8b6d03b
 wdcipoutbound: EOP-TRUE
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: LATmkXjvqwSQ73VNBGcNuYAJhqGB7N5gyM3u0BGbc3Ary42xLgoKhQPRHrvMfrGpCV4nKTpwQzQ4kDkfwe5l6hXTIv8Rdgt15tPoSQ6IOZE7AQGfcF6wiPJcSdD76LI3VfUM0++JVHxSyXJSWS3RWTtNtMoWCtdrfPA8s1fRlfRUvRryyTjKu3+PqzX/KCEsFbmfgV4uvTokggJ6ygfbYa6hPZE9Y/TC8o5tz6AXx90jyQIQVjW9cU1A0lVFGKQceR8t/OjYE+dhSD5XK8zNnIUa79hRllSXF1EwWS9qTXuNVKRAU77v8eOQRRL+LW4KKko1b8gdnRo94vjCgF9+yQSUNjM4ybQTGKbcDATgwGp8YOpkZLYYgev7ogD84eZeONbeW899bBQrHUKCQEN2rSn+gl8PoiwVmTZhAqOQVLFOJtQfnl6k8Zie0wGaHEcJ39oHEmEdRqyMJVs8+NzLP344sPU/SPcpr7qomBLOS3naoZBKJ2RT/fk7EQO5aZU1OYVJg4lk/Qad3lftEtluOaRS3gmioUmu9xYHJUt5zzBvtcY3uRYyzE3f6LGfDCax1ZGWzvQk9Dc+dfWrpS4mU0GHy+EJ1oAbXuxyYSk6DyPLoqOE8uwXsBOqVbxCMKMYF9aWsnpDC8ho/itlUz945ObaQmzXrxw3saz4vcT9K1LHvEWz50k6xPJAM82tw2CdO01TETbRAHuRzPlUfg2Zx/0y9vSWwexx//KRjYHBanY=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6473.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(376002)(39860400002)(366004)(396003)(346002)(136003)(451199015)(38070700005)(86362001)(6916009)(66946007)(64756008)(52536014)(8936002)(55016003)(66556008)(8676002)(66446008)(66476007)(2906002)(4326008)(76116006)(82960400001)(83380400001)(5660300002)(33656002)(122000001)(38100700002)(7696005)(71200400001)(316002)(54906003)(966005)(41300700001)(478600001)(9686003)(6506007)(26005)(186003);DIR:OUT;SFP:1102;
+x-microsoft-antispam-message-info: 13tGMPRWTyqhzXv7bFudhs45EFf6BlRPKqEgjiFJ3ryV4R10Y1QzU2cyQJzwVXDUBKRs8oLoanUrddw2JVoiADqEcth6Ml9pDuw+CjlwANeoMWnEUiOjPUCmh9UgbjmT2C5mGECl4YR7wFoFtk5/R7ehNqxCWzgrWuvpHIW4p7abl8Ipy1vTDSid2PHm/7B7rZ3aZAi+AmD2nPwjR0coaX3EvtSEWUOZ0DKIFD9npnSdy1SIxt1jqKZLZ0AMdqFnZiHf0e7MjTCJCgTvqasIF2iz+zyscGE0c5buSqLed5iALCCcqSKRb1WqCkI12QtIqSVhIoC7Vy3rfezgLjg+0ZAxl2FdvLitzT9ceEcUoZYdoF81CHfQdQufN3SPvPaRpi6BOpyEowiNswOdAcpAkjCdZd069ZhDj2nO5HUzWn6TnvhqK7vVdHT1qI4S+BR9mYWDSH9xQZjAlKLX70DjRVx3j4tp1eMi9rZLzEkvzfYI2K1WvITwEXur4xuOeaMl0r6Y5C1y/hsfELc0+qeGcsgepDmLbgsm0yCpbUxdwovd1JJ6FeLTTmyeez5Ojg2E6Lnoook/iiSXI/cTV6PPAQVW1kI8Nby343s0G+dXmlRFZmkXnRBAq5AhCh60nvPcfrvjtGCJtP8GCXR2nxDd6XvIBHZiG+iciprIdKqYVQd7HJRWgGhVZtub4bra0T4iZzyUwcR7A+O/Ao3NViAy+g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6473.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230022)(4636009)(396003)(366004)(136003)(376002)(346002)(39860400002)(451199015)(82960400001)(38100700002)(83380400001)(33656002)(55016003)(122000001)(38070700005)(86362001)(2906002)(5660300002)(76116006)(8676002)(52536014)(6916009)(66476007)(8936002)(64756008)(66446008)(4326008)(66556008)(66946007)(41300700001)(9686003)(186003)(6506007)(26005)(7696005)(71200400001)(316002)(478600001)(54906003);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?WCraEq8+wTNIfXG0Pwmc6GuNTKKlLzMS5+EyC53eG3csS3N4D38YsnP7ucKs?=
- =?us-ascii?Q?37UTF5qRJtmw2Ajd4CegXmcwjBY1P57nc8pS/iFzIQuJrVdd5GXto5pqgxL9?=
- =?us-ascii?Q?lEK6ZiRTsztD/6Rsxc6NkqUSE96nSpRmIwlwaIHYhLpPd/iXT4qrOdNk6Qqw?=
- =?us-ascii?Q?NFnHAwOb9qtqcAu0zxQD1HjGOlG0BL+g8ZKVTEUKN0xUDkGjygtpbJTH/Z0U?=
- =?us-ascii?Q?qtt2LbN1YCh3v7UvXsL7cJF47I2Y3F9a1jt4EJAGMe23hwY4xXHiAZTRjEfh?=
- =?us-ascii?Q?74I80b0PsV9jcmpzkIj9k3P0vXUU8wUCnh2e64lVkAak4GESDKGNyUvzYi/M?=
- =?us-ascii?Q?hSVL7UwJQ3R2Zj4CmqBk5IyaLzGVel2GccREpe8lWCepW1dzXU72f9fbcXlZ?=
- =?us-ascii?Q?eDrM+m0ZsHTdRGQUVsHJ5tF61cI/dPEvsJASX++Fi+hRXGHAqfqLM4lB9Vhy?=
- =?us-ascii?Q?bk03My9y6GBpwHdcOA8KGc6Lj7MAHTybsEZ4HUKv1PqNrWGXfzjw1XyfNAby?=
- =?us-ascii?Q?S/VunsIHVgWkXUfHsOiKz6hAo7Yp48/Ej4RlmpgIzo9kCggSVadhjpt7C3FM?=
- =?us-ascii?Q?2bY8fh21JZ/leUBub3UPPoYnzgKPOsbK4t1GXJ6jfgWXbovm5IRQVKpItGa0?=
- =?us-ascii?Q?yBLeMxTUsBbkkVZvJ+EC/7TbFxdxf4RjyoFXG/9nEQMgFn3Ny/dWveGkxGTP?=
- =?us-ascii?Q?UePweovfaWUaIaJlqnci4ix1CB2ChmlvGKDh4JD5FJx1e8cImuu/nDOCd6AG?=
- =?us-ascii?Q?dUR9/QwtQxzJM0SBvmcARhE70TdKZSSScuGtIr8s3HfsjeyRucIEUQNFpw3x?=
- =?us-ascii?Q?TibENHa7AIneKQO7LBD0eRvvBOr0SEnZh0vhc4t6iEIi7K1BGE6oagia/Saa?=
- =?us-ascii?Q?3LnEvBrnUdSCxpCocDOoEYyTXKBUTLy170auvS0D06CsDMtTMkHy9HtpuCXo?=
- =?us-ascii?Q?pA4zmfJr5FP9EgO9j+7dUbkd1qUnDpqCfvcckd9pIhOy7ZLRG57F86oGvUtn?=
- =?us-ascii?Q?ilyXAqKfVIUPMefSDR6gmrDGwOuA5Kc5nCoMhJimS4aAyjXTUUpOyYUrRD54?=
- =?us-ascii?Q?vpstBm5BHeXjVdqHc/JGK8/ySwNewwwXvETZ5b6vqkctPU2GbImFOodttT3u?=
- =?us-ascii?Q?DmQ0pUtzrWK2C5fxwV5xNeQSj3V3ZmQzZsUwi2WAUcjDKm0OBwBN5F9YBjwm?=
- =?us-ascii?Q?dXFxS57uCPeBZSa0/ookugSoiZ4rR4YK0ZM9j0fK86LGCpGdwURgkufCEPGG?=
- =?us-ascii?Q?QKgsKdcwmLSTqxtklSzAkZHRR4nRcBVUhSoXjZRRnmSQieuJz4c4PLmGZzeM?=
- =?us-ascii?Q?w4fjA/6J+HVVyvKVLa80ShHHaX2FP3tqcfiXhBd4/7DqRne6VQbraHcYpr3i?=
- =?us-ascii?Q?aFpBTWXAWTzSOfxv3w5uETt2DO4MKfwzqhlT1/SkXSavt9Mi44wpIx0xfal0?=
- =?us-ascii?Q?1HKHtrz4NqtR+IxWjagvUFtQjkVWGbCdErReFObvkUFxgoZSTKAoWAPen6Vc?=
- =?us-ascii?Q?b/l+RAeVNzWyj3+e324/q2Sywwsdx/A22CZc0gipTfMpZb9Ds/Ugda/pAUno?=
- =?us-ascii?Q?IgMEH/Xguhp8Ft0aZQFqslaMeLTYPK/YjvGStndVvSop9YfPFoId0B4CEfyw?=
- =?us-ascii?Q?uw=3D=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?n2zbPrTc68Y7uMnhPpgIAWpYlo5oFrrqKfyyu+jM6OjuhWvLxB1lx6QcpLyU?=
+ =?us-ascii?Q?E6uLqWCrJZNzCSTOEoIvFudFp3G7b4wZW8kvKj2fe5DcuBM6QjlXWpA4qukK?=
+ =?us-ascii?Q?coTvM0pgoEck09CeIFzgojoqsn9xFWnpgz3dWGSIjK4xQQyHF4PkVXKE2Ucy?=
+ =?us-ascii?Q?80x6fz6XznNQhSOax6wZ0SyF7IeBBz5lnje11W80/1WRRVsuD/QJYSRoSOX+?=
+ =?us-ascii?Q?MW4XalwJS3D5B6Udp/1ZbZnWQNP4KAEkxgx7lbpcCqpRmPnhRu8erxebCVCL?=
+ =?us-ascii?Q?Vx+jNsKv9bOCJAUcK+BG2QSllRJTbT0lrEHIVD2ElKLogiHBW5l82Fjmi97N?=
+ =?us-ascii?Q?CS/XBJMcDaon3r1bc3xhiiXgHdy8h4qWI0rTpwcfbjsyfJ+rLPMuHrmBcvyt?=
+ =?us-ascii?Q?MBbCMPiYvoUvGQojN8xdbJYjIccipu/08mIYOITUAixwgbFVMx/MjVyJFjd4?=
+ =?us-ascii?Q?wDux5ZenfdDrExB3Qz7bFA4GXez4frsarLOeZLCD9NMOMnTpvSCW2fpcYeF6?=
+ =?us-ascii?Q?Si65pEKFWnc3Xyx9c7AEx7U1qho2b43nsqXvhwczrBdn+MXRMHwwmCy19DD9?=
+ =?us-ascii?Q?K7FNRO/LquOoWnSVtFZrAZlJg2xn24lCQmPqfSJdYbUEJqi48LtfgTOTS5qv?=
+ =?us-ascii?Q?JUknohGIhksjcvVKydTKBVHcsd4gbP83Ovxkf964B0IQfocBRcxa18CK0Tu+?=
+ =?us-ascii?Q?5JxqBi/mPysZ9cVXbPP/1PkEOMdAOMtxLKHKkS0zN6NwApCAApTAt7kk1UuF?=
+ =?us-ascii?Q?ubSu31Y12WOd8ItMPD0vaq362YfC7SoLJ831Yt01c4bmi47TVLjX6Ojq/Rrl?=
+ =?us-ascii?Q?uKdPaR1bTar4VS8BrM85ebymtgy81H2EMBcyS068Fg8qPVyT96NKA6jvMqMt?=
+ =?us-ascii?Q?iSj8+/aynynm88GK4Rzsi9Yf56moEEJRBsFFLPYJuP6iTwHnlUz2EUht7us4?=
+ =?us-ascii?Q?LUbI8OSOoIF0mwoe3fSajvzzwhSnH6GjGkpUdTDKgf3Kywxtb5seeZbHdOKV?=
+ =?us-ascii?Q?KgANPswfBxkmMl8da28BdBa2qEs90esh745Z5h+Sti4BixZsrmVWPa+4o9xY?=
+ =?us-ascii?Q?8PGtennBd5jiyAWLXvCgBunbeYgY24VxBsFKVE2mnyxEJCBZ+ZlJSDGPmMrW?=
+ =?us-ascii?Q?8msP4wEx/Le06YARQs3Wrx0WnkitRMXUkTGWv/bLbqI5NCIiWRImeVbFGZGo?=
+ =?us-ascii?Q?6ibufJB3G6U8sKg4lBtY/8VBqD0ntgsGCNLUvKxZraMi8aa9iYzo0Wu4gUNj?=
+ =?us-ascii?Q?uJEDNWysyZCePJwUt57P05FjRdZIezFOVyOrnqx0EVVlq2KJOPn9ZKUd3jqW?=
+ =?us-ascii?Q?27xxfJDc7AQufS8AyDXyv5ZefapIAWpB4pX83acc5Y8rqkArtg2oWJxCMVtg?=
+ =?us-ascii?Q?E8n8cQnEw86jL+A5WrzYDMnaACBj5ZPVMeTJuHAtvp13jfcXRQ35qv/ynFfC?=
+ =?us-ascii?Q?RAlavJooH4RkRHMxh56M6eAJy9WjXlI26PQcQg2SJTSwQd8TnxItPhexAnEp?=
+ =?us-ascii?Q?b6uRKBs7bR5Lvq84uNbo7SBn6V9qDzFWb3t2RGsoHk2nN60l0/7CBHZqda65?=
+ =?us-ascii?Q?vfc7zNQeGh1gARlD/iW5jLnv4fsD9nvpxJofZRng3fUnfqOxiXzr3fHydEF5?=
+ =?us-ascii?Q?xQ=3D=3D?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: kjPo4wRN0vzIZPjD7Sb8myW6cgKBFv8FmuRKnp38JFr8LSbzvA3uG+YTMo85SWHv1/GGxhTOFY7ixUkYtn9YZvS4R2wGJwxZpzhvjnwPcjQM8bsNBNSHG+echJdGabYbsW+uCqKTgRvciY1qcPuaQNLw21pf6w6ZZpYmrMLAGIt/dnDdkXIFy5Iq15kQXxnzQpz88pCYd2V/3zFxPJ7r0VAPDEVD1lKETY8KRxTg8KNjltr+fJ20jKG1qthFjxhUdgfwb3etUbU/53NH61nWcP7i/DU5lIWJFuKnArclY0Y8HXtNe0tO7xo1owFpTkzA4Tr9KSzFdRRV0Vaa3Docw/bi7Qtx/diWcGPqDEQdo9T0ER/GC6RpPLex+GsO83zdpQyYnrzcT5ajgkOa4lv6oNtnpOm9PwvM3VTXS7YK+uXX5H90ls8+/X5Y+1zvUufViNqWTlE2qh4SHnn3fxlOaz8uA7sGQlZJwSGAdQJ3JlJDEmAxH/B1z97dzNjGlRB2Efehy/lqSS5Nhip2Q5+4GodSWi3ymzm18erQb8HfyXRM2Jv0KLXIeQ/nWi7VkSe6DKP+GHVu1pJqNhrHgMpfgqKBzWn74dd5nFMGQ+tfBgOW46enCYe2xZz12pQfMHLvHIOkKZCa05LCvzU0KPFFqWlDFb0+XzmYu7lw2quojrGC03EAiqtqoYAjvTwYL9GqZjP7OI0f6CSSf4Yg7pnUYHbFPj+SkOZufn/8wstrcEoCBEDFKXdK9H5xZY+H4te6Nx8Gt41VfmkBSrVajZXKg29AbzEn4pe6+KbXBvkliHdPHeAqncms9RNsQgPAG3EgdVKjuBSZlYW6xpOc1jbQn52W/kxreTCpPRBYrddVsdYKf7Jb7MZHv0kytf0lPZBi0aRMPb23netDK5qP42jSSg==
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0: Fn0NATG5Bk5dVKgckq3yGZAmREyc78stVNjzK2zerV9LYBL6Q0aJeHyZYCebQPNHxurBpzkTHlDpNdhOoDw9pbAFuXH7Z6Y/Mntbo5UjwdUCVrcIouuLlRI2RO5koy5XMZX/IQ8rkPOyAi0SdLF1Ukw+RAxU4Jd4Zcb2J5AvW5WDTVSPoRCj7lcp2chCoccZZ3/bbL0W8xIzd5V2Ri0k0NN9QZoQBtBB/vhUL6Uc4U76mX50sXftH6nds8jZGI7m/ozHsJtN3zuWAZn0RTK0GF7Io+O2cP34VBEsE4HIGTc4jOsCWN7jM/L4DZmTfSyXbkBBpC8EM7h3MXSUXpzCXIr9HbdRyU66lZsByW6+J+mUHc2wC2SrIlWMhJSVbKUGqAlBkYnIzEgch5MdNyXdSylr7GwqipPEB1KkF3887KGuHmJ3peBbWn+mNriQOGhTL35nL5UFfGizklIjN0aayV9M1ToHjF4PuRdAjlWJ/KOHyzEYIQ5K7Yc49O8cb1QmuZao8a0JeadQYkRPGJ6QH53Vj+YD3uO231N+pqWV9NhxzBeSNlJSh+fXAFVZmBi/duWwT7jIzeS856LwwwAPwCeOzlHZh5bVTL+9WqGCEXH0vvafBcgdY17egfUMmG8cMmexupF1hNaff8kCazWwqliXrMPjOzKseQ+e86wvXpX+V3epsa9qyHJFe/CRlya0GDqowK2dFK1vMEh0rOPtC4Coy5CNxqjRg6VelaDywtAIx+UiT3uyvvQ32cDSHlyOg8FkgkLl+OqFjyuFkgyuu904WriQ29jJknCYT1NkmOg+ZFdgClkrVGutBtGzY+1OyPWTHwXKkXWHp3A8jiAFKw5hAmaZ99sgxTn3n9rYm90=
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6473.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 072d71c0-4f58-4e75-372e-08daf8b58f24
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2023 18:06:30.0474
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5764eeb4-f2a5-41da-be5e-08daf8b6d03b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2023 18:15:28.7502
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: fG9uwnRR8AL2aSU7PWlY+t10VlvhViBSn03kBjlypAujQOgjX3JOYWdgvskmJYyW8dQ1co8hwANb5PkPUz5ZuUJd16iVZohADFFE8Uvz5uM=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR04MB4436
+X-MS-Exchange-CrossTenant-userprincipalname: e7Rio903isCXhwb33hVt689G10FNN3UZgncMCoMtwOkcSiCLQ8AXFH0Voq4Lbbpx+bhLU9cWh7aW162fwA1tDRG88PAcD+YiLRwB4wmuRRM=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR04MB7178
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
->From: Bjorn Helgaas <helgaas@kernel.org>=20
->Sent: Tuesday, January 17, 2023 4:23 PM
+
+>From: Keith Busch <kbusch@kernel.org>=20
+>Sent: Tuesday, January 17, 2023 5:55 PM
 >To: Alexey Bogoslavsky <Alexey.Bogoslavsky@wdc.com>
->Cc: 'hch@lst.de' <hch@lst.de>; linux-pci@vger.kernel.org; bhelgaas@google.=
-com; Rajat Khandelwal <rajat.khandelwal@linux.intel.com>
+>Cc: linux-pci@vger.kernel.org; bhelgaas@google.com; 'hch@lst.de' <hch@lst.=
+de>
 >Subject: Re: [PATCH 1/1] PCI/AER: Ignore correctable error reports for SN7=
 30 WD SSD
 
->[+cc Rajat]
-
->On Tue, Jan 17, 2023 at 01:20:28PM +0000, Alexey Bogoslavsky wrote:
->> >From: 'hch@lst.de' <hch@lst.de>
->> >On Mon, Jan 16, 2023 at 06:32:54PM +0000, Alexey Bogoslavsky wrote:
->> >> From: Alexey Bogoslavsky <mailto:Alexey.Bogoslavsky@wdc.com>
->> >>
->> >> A bug was found in SN730 WD SSD that causes occasional false AER repo=
-rting
->> >> of correctable errors. While functionally harmless, this causes error
->> >> messages to appear in the system log (dmesg) which, in turn, causes
->> >> problems in automated platform validation tests.
-
->I don't think automated test problems warrant an OS change to suppress
->warnings.  Those are internal tests where you can automatically ignore
->warnings you don't care about.
-
->> >> Since the issue can not
->> >> be fixed by FW, customers asked for correctable error reporting to be
->> >> quirked out in the kernel for this particular device.
-
->Customer complaints are a little more of an issue.  But let's clarify
->what's happening here.  You mention "false AER reporting," and I want
->to understand that better.  I guess you mean that SN730 logs a
->correctable error and generates an ERR_COR message when no error
->actually occurred?
-Exactly
-
->I hesitate to turn off correctable error reporting completely because
->that information is useful for monitoring overall system health.  But
->there are two things I think we could do:
-
->  - Reformat the correctable error messages so they are obviously
->    different from uncorrectable errors and indicate that these have
->    been automatically corrected, and
-We've had long and tiresome discussions with the customers using this
-specific device in their design trying to convince them to just ignore
-the messages, but they wouldn't budge
->  - Possibly rate-limit them on a per-device basis, e.g., something
->    like https://lore.kernel.org/r/20230103165548.570377-1-rajat.khandelwa=
-l@linux.intel.com
-The thing is on this device correctable PCI errors can never be trusted. So=
- reporting
-them in any format or at any rate makes little sense as one can never assum=
-e they're real.
-Also, the loss of potential real error notifications is something the custo=
-mers seem
-to be OK with, given the pros and cons.
-
->If we do end up having to turn off reporting completely, I would log a
->note that we're doing that so we know we're giving up something and
->there may be legitimate errors that we will never see.
-You mean, print a warning message the first time such error is reported by =
-the device
-and ignore all additional ERR_COR messages? This seems like a fine idea, I =
-would
-definitely be willing to implement it
-
->> >> The patch was manually verified. It was checked that correctable erro=
-rs
->> >> are still detected but ignored for the target device (SN730), and are=
- both
->> >> detected and reported for devices not affected by this quirk.
->> >>
->> >> Signed-off-by: Alexey Bogoslavsky mailto:alexey.bogoslavsky@wdc.com
-
->Check the history and use the same format here, i.e.,
-
->  Alexey Bogoslavsky <alexey.bogoslavsky@wdc.com>
-
->(Also for the From: line inserted at the top.)
-Sorry about that, will fix
-> >> ---
-> >>  drivers/pci/pcie/aer.c  | 3 +++
-> >>  drivers/pci/quirks.c    | 6 ++++++
-> >>  include/linux/pci.h     | 1 +
-> >>  include/linux/pci_ids.h | 4 ++++
-> >>  4 files changed, 14 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> >> index d7ee79d7b192..5cc24d28b76d 100644
-> >> --- a/drivers/pci/pcie/aer.c
-> >> +++ b/drivers/pci/pcie/aer.c
-> >> @@ -721,6 +721,9 @@ void aer_print_error(struct pci_dev *dev, struct a=
-er_err_info *info)
-> >>               goto out;
-> >>       }
-> >>
-> >> +     if ((info->severity =3D=3D AER_CORRECTABLE) && dev->ignore_corre=
-ctable_errors)
+>On Mon, Jan 16, 2023 at 06:32:54PM +0000, Alexey Bogoslavsky wrote:
+>> From: Alexey Bogoslavsky <mailto:Alexey.Bogoslavsky@wdc.com>
+>>
+>> A bug was found in SN730 WD SSD that causes occasional false AER reporti=
+ng
+>> of correctable errors. While functionally harmless, this causes error
+>> messages to appear in the system log (dmesg) which, in turn, causes
+>> problems in automated platform validation tests. Since the issue can not
+>> be fixed by FW, customers asked for correctable error reporting to be
+>> quirked out in the kernel for this particular device.
 >
-> >No need for the inner braces.
-> Will fix
->
-> >> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_WESTERN_DIGITAL, PCI_DEVICE_ID_=
-WESTERN_DIGITAL_SN730, wd_ignore_correctable_errors);
->
-> >Overly long line.  Also wd_ seems like an odd prefix, I'd do pci_
-> instead.
-> Will fix both, thanks
-> >But overall I'm not really sure it's worth adding code just to surpress
-> >a harmless warning.
-> This is, of course, problematic. We're only resorting to this option afte=
-r we've tried pretty much everything else
+>> The patch was manually verified. It was checked that correctable errors
+>> are still detected but ignored for the target device (SN730), and are bo=
+th
+>> detected and reported for devices not affected by this quirk.
+
+>If you're just going to have the kernel ignore these, are you not able
+>to suppress the ERR_COR message at the source? Have the following
+>options been tried?
+
+> a. Disabling Correctable Error Reporting Enable in Device Control
+>    Register; i.e. mask out PCI_EXP_DEVCTL_CERE.
+> b. Setting AER Correctable Error Mask Register to all 1's
+
+>I think it's usually possible for firmware to hardwire these. If the
+I believe these options were discussed but deemed non-viable. I'll double c=
+heck anyway
+>If firmware can't do that, quirking the kernel to always disable reporting
+>sounds like a better option. If either of the above fail to suppress the
+>error messages, then I guess having the kernel ignore it is the only
+>option.
+This could probably work. I'll discuss this with our FW team to make sure t=
+he issue can
+be resolved this way. Thank you
