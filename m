@@ -2,137 +2,252 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D80C38159
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 11:16:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E85C38159
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 11:20:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229831AbjARLQm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 06:16:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36690 "EHLO
+        id S229929AbjARLUU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 06:20:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229593AbjARLQN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 06:16:13 -0500
-X-Greylist: delayed 439 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 18 Jan 2023 02:29:12 PST
-Received: from weierstrass.telenet-ops.be (weierstrass.telenet-ops.be [IPv6:2a02:1800:110:4::f00:11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFB307F994
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 02:29:12 -0800 (PST)
-Received: from xavier.telenet-ops.be (xavier.telenet-ops.be [IPv6:2a02:1800:120:4::f00:14])
-        by weierstrass.telenet-ops.be (Postfix) with ESMTPS id 4Nxhd65SgXz4xFh1
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 11:21:46 +0100 (CET)
-Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed50:4745:2e6d:e3a6:3327])
-        by xavier.telenet-ops.be with bizsmtp
-        id AAFN290092zf9gW01AFNxV; Wed, 18 Jan 2023 11:15:42 +0100
-Received: from rox.of.borg ([192.168.97.57])
-        by ramsan.of.borg with esmtp (Exim 4.95)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1pI5TQ-005aIh-PT;
-        Wed, 18 Jan 2023 11:15:22 +0100
-Received: from geert by rox.of.borg with local (Exim 4.95)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1pI5TW-001JW3-3f;
-        Wed, 18 Jan 2023 11:15:22 +0100
-From:   Geert Uytterhoeven <geert+renesas@glider.be>
-To:     Madalin Bucur <madalin.bucur@nxp.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Horatiu Vultur <horatiu.vultur@microchip.com>,
-        UNGLinuxDriver@microchip.com,
-        Thierry Reding <thierry.reding@gmail.com>,
+        with ESMTP id S230047AbjARLSk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 06:18:40 -0500
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B04CD457F2
+        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 02:33:56 -0800 (PST)
+Received: by mail-pl1-x636.google.com with SMTP id k18so12420924pll.5
+        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 02:33:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=igel-co-jp.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=S5FkcmWc4Vga+pPOybEWy6+7SA1iVavl4uDEeNULrMI=;
+        b=wAGIUjhhAOdClQfmVJIVZ/wlUnqkhd7XzlX8pd+D1t3PJUni3MwHmLvieZZbiYYC0D
+         1uOOaFJ8jkHLvLueIkjVwWgeJOqSHuwSMDU8yIGFhVGyjb0wNcy+CiysiKf0Y6S43Umv
+         lS/cT/qG1A0G3DLVxVL1VSIdq1XAPIEvmK+Daip9zYXLUH0L1zIpA5uqaP6w7e8LosWJ
+         YzsThEA/r69nkOETtBMVNpQXu/tEiWtuEeQI3PCzIwEwS35mWaP0TdDRWW7HdReYSkUx
+         S0Hnec565F7+5Wsfy/tZqrcCpx7al8V64m1qjO3EGRa/Gr5ttbl7ek2TEaubTof9Tj2o
+         4kKw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=S5FkcmWc4Vga+pPOybEWy6+7SA1iVavl4uDEeNULrMI=;
+        b=5ct7yGEHfj3WSmNI/fekCsCSdRW+e6w5vjhJbIz5el1mJZmFsStxyahO1HXzXUTgna
+         4LEJQGgf6ANiLgwvQpdmg4l5EX6WgiHkOKK280kQOia9iyWV8yz6WV2fFv/EmpSjhvGG
+         OdrFJTKkMFcZihrnlFOgza+CkUoRK7/pcnA04HCIMIimypR+Lx70Wa/QphS7JSk95df+
+         yRNaXrYGPha4Cq/1T/j56+tVbtjJv8g24ySLPIyTDIKiyAaUua8vdU9RDVOLCrXlZnDu
+         Xwlhm4wP6b9q6cEz4NZoydfod9k8zn/Gm9i1AoBnRFzNDkJnlMveS7xCuhKeK3lTQuaI
+         Vy2w==
+X-Gm-Message-State: AFqh2kqZuCZ14GmGq+kMay5YzYghdc1Rv1HixdboMFudtfw0hFOE2gGg
+        AlYH2xDApU8rMv5gOhwkreJJS/sSKmCwsu2y68M=
+X-Google-Smtp-Source: AMrXdXtX45t86W7xZiRJIdmxkLa3KehQKQPiRPHi1ed+/Yo0xHWCcPRFI78HkW2R6fX24CJtDTrscQ==
+X-Received: by 2002:a17:90a:2fca:b0:227:b49:6233 with SMTP id n10-20020a17090a2fca00b002270b496233mr6518931pjm.45.1674038036202;
+        Wed, 18 Jan 2023 02:33:56 -0800 (PST)
+Received: from [10.16.128.218] (napt.igel.co.jp. [219.106.231.132])
+        by smtp.gmail.com with ESMTPSA id rm10-20020a17090b3eca00b00229b00cc8desm1510122pjb.0.2023.01.18.02.33.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Jan 2023 02:33:55 -0800 (PST)
+Message-ID: <5a87a5b1-270c-5756-f3f1-ecbd01c4091b@igel.co.jp>
+Date:   Wed, 18 Jan 2023 19:33:51 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.6.1
+Subject: Re: [RFC PATCH 1/3] PCI: endpoint: support an alignment aware
+ map/unmaping
+Content-Language: en-US
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Vinod Koul <vkoul@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Siddharth Vadapalli <s-vadapalli@ti.com>,
-        Russell King <linux@armlinux.org.uk>
-Cc:     netdev@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH 6/7] usb: host: ehci-exynos: Convert to devm_of_phy_optional_get()
-Date:   Wed, 18 Jan 2023 11:15:19 +0100
-Message-Id: <96fce347ffa2d6efaa3fd24bf2d91e2a0a91c371.1674036164.git.geert+renesas@glider.be>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <cover.1674036164.git.geert+renesas@glider.be>
-References: <cover.1674036164.git.geert+renesas@glider.be>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Frank Li <Frank.Li@nxp.com>, Li Chen <lchen@ambarella.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230117204131.GA145312@bhelgaas>
+From:   Shunsuke Mie <mie@igel.co.jp>
+In-Reply-To: <20230117204131.GA145312@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use the new devm_of_phy_optional_get() helper instead of open-coding the
-same operation.
 
-This lets us drop several checks for IS_ERR(), as phy_power_{on,off}()
-handle NULL parameters fine.
+On 2023/01/18 5:41, Bjorn Helgaas wrote:
+> On Fri, Jan 13, 2023 at 06:03:48PM +0900, Shunsuke Mie wrote:
+>> Add an align_mem operation to the EPC ops, which function is used to
+>> pci_epc_map/unmap_addr(). These change to enable mapping for any alignment
+>> restriction of EPC. The map function maps an aligned memory to include a
+>> requested memory region.
+> I think this does two things: 1) add the .align_mem() function
+> pointer, and 2) move the pci_epc_mem_alloc_addr() call into
+> pci_epc_map_addr().  For 2), I would expect to see
+> pci_epc_mem_alloc_addr() being *removed* from somewhere else.
+>
+> Anyway, both are significant and should be mentioned in the commit
+> log.  Possibly they could even be separate commits: move the
+> alloc/free first, then add .align_mem().
+I understood. I attempt to arrange commits as your mention.
+>
+> Another question below.
+>
+>> Signed-off-by: Shunsuke Mie <mie@igel.co.jp>
+>> ---
+>>   drivers/pci/endpoint/pci-epc-core.c | 57 ++++++++++++++++++++++++-----
+>>   include/linux/pci-epc.h             | 10 +++--
+>>   2 files changed, 53 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+>> index 2542196e8c3d..60d586e05e7d 100644
+>> --- a/drivers/pci/endpoint/pci-epc-core.c
+>> +++ b/drivers/pci/endpoint/pci-epc-core.c
+>> @@ -430,8 +430,12 @@ EXPORT_SYMBOL_GPL(pci_epc_set_msix);
+>>    * Invoke to unmap the CPU address from PCI address.
+>>    */
+>>   void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>> -			phys_addr_t phys_addr)
+>> +			phys_addr_t phys_addr, void __iomem *virt_addr, size_t size)
+>>   {
+>> +	u64 aligned_phys;
+>> +	void __iomem *aligned_virt;
+>> +	size_t offset;
+>> +
+>>   	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+>>   		return;
+>>   
+>> @@ -441,9 +445,22 @@ void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>   	if (!epc->ops->unmap_addr)
+>>   		return;
+>>   
+>> +	if (epc->ops->align_mem) {
+>> +		mutex_lock(&epc->lock);
+>> +		aligned_phys = epc->ops->align_mem(epc, phys_addr, &size);
+>> +		mutex_unlock(&epc->lock);
+>> +	} else {
+>> +		aligned_phys = phys_addr;
+>> +	}
+>> +
+>> +	offset = phys_addr - aligned_phys;
+>> +	aligned_virt = virt_addr - offset;
+>> +
+>>   	mutex_lock(&epc->lock);
+>> -	epc->ops->unmap_addr(epc, func_no, vfunc_no, phys_addr);
+>> +	epc->ops->unmap_addr(epc, func_no, vfunc_no, aligned_phys);
+>>   	mutex_unlock(&epc->lock);
+>> +
+>> +	pci_epc_mem_free_addr(epc, aligned_phys, aligned_virt, size);
+>>   }
+>>   EXPORT_SYMBOL_GPL(pci_epc_unmap_addr);
+>>   
+>> @@ -458,26 +475,46 @@ EXPORT_SYMBOL_GPL(pci_epc_unmap_addr);
+>>    *
+>>    * Invoke to map CPU address with PCI address.
+>>    */
+>> -int pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>> -		     phys_addr_t phys_addr, u64 pci_addr, size_t size)
+>> +void __iomem *pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>> +		u64 pci_addr, phys_addr_t *phys_addr, size_t size)
+>>   {
+>>   	int ret;
+>> +	u64 aligned_addr;
+>> +	size_t offset;
+>> +	void __iomem *virt_addr;
+>>   
+>>   	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+>> -		return -EINVAL;
+>> +		return ERR_PTR(-EINVAL);
+>>   
+>>   	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+>> -		return -EINVAL;
+>> +		return ERR_PTR(-EINVAL);
+>>   
+>>   	if (!epc->ops->map_addr)
+>> -		return 0;
+>> +		return ERR_PTR(-ENOPTSUPP);
+>> +
+>> +	if (epc->ops->align_mem) {
+>> +		mutex_lock(&epc->lock);
+>> +		aligned_addr = epc->ops->align_mem(epc, pci_addr, &size);
+>> +		mutex_unlock(&epc->lock);
+>> +	} else {
+>> +		aligned_addr = pci_addr;
+>> +	}
+>> +
+>> +	offset = pci_addr - aligned_addr;
+>> +
+>> +	virt_addr = pci_epc_mem_alloc_addr(epc, phys_addr, size);
+>> +	if (!virt_addr)
+>> +		return ERR_PTR(-ENOMEM);
+>>   
+>>   	mutex_lock(&epc->lock);
+>> -	ret = epc->ops->map_addr(epc, func_no, vfunc_no, phys_addr, pci_addr,
+>> -				 size);
+>> +	ret = epc->ops->map_addr(epc, func_no, vfunc_no, *phys_addr, aligned_addr, size);
+>>   	mutex_unlock(&epc->lock);
+>> +	if (ret)
+>> +		return ERR_PTR(ret);
+>>   
+>> -	return ret;
+>> +	*phys_addr += offset;
+>> +
+>> +	return virt_addr + offset;
+>>   }
+>>   EXPORT_SYMBOL_GPL(pci_epc_map_addr);
+>>   
+>> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+>> index a48778e1a4ee..8f29161bce80 100644
+>> --- a/include/linux/pci-epc.h
+>> +++ b/include/linux/pci-epc.h
+>> @@ -84,6 +84,7 @@ struct pci_epc_ops {
+>>   			       phys_addr_t phys_addr, u8 interrupt_num,
+>>   			       u32 entry_size, u32 *msi_data,
+>>   			       u32 *msi_addr_offset);
+>> +	u64	(*align_mem)(struct pci_epc *epc, u64 addr, size_t *size);
+> Is there a requirement for multiple implementations of .align_mem()?
+> There's only one implementation in this series
+> (dw_pcie_ep_align_mem()), and it only needs pci->region_align.  That
+> *value* might be DWC-specific, but the concept really isn't, so maybe
+> there could be a generic function that uses the device-specific value.
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/usb/host/ehci-exynos.c | 24 +++++++-----------------
- 1 file changed, 7 insertions(+), 17 deletions(-)
+That is the correct way, but some handlers require different implementation.
 
-diff --git a/drivers/usb/host/ehci-exynos.c b/drivers/usb/host/ehci-exynos.c
-index a333231616f437b8..0f8d7df4937b2da4 100644
---- a/drivers/usb/host/ehci-exynos.c
-+++ b/drivers/usb/host/ehci-exynos.c
-@@ -80,19 +80,12 @@ static int exynos_ehci_get_phy(struct device *dev,
- 			return -EINVAL;
- 		}
- 
--		phy = devm_of_phy_get(dev, child, NULL);
-+		phy = devm_of_phy_optional_get(dev, child, NULL);
- 		exynos_ehci->phy[phy_number] = phy;
- 		if (IS_ERR(phy)) {
--			ret = PTR_ERR(phy);
--			if (ret == -EPROBE_DEFER) {
--				of_node_put(child);
--				return ret;
--			} else if (ret != -ENOSYS && ret != -ENODEV) {
--				dev_err(dev,
--					"Error retrieving usb2 phy: %d\n", ret);
--				of_node_put(child);
--				return ret;
--			}
-+			of_node_put(child);
-+			return dev_err_probe(dev, PTR_ERR(phy),
-+					     "Error retrieving usb2 phy\n");
- 		}
- 	}
- 
-@@ -108,12 +101,10 @@ static int exynos_ehci_phy_enable(struct device *dev)
- 	int ret = 0;
- 
- 	for (i = 0; ret == 0 && i < PHY_NUMBER; i++)
--		if (!IS_ERR(exynos_ehci->phy[i]))
--			ret = phy_power_on(exynos_ehci->phy[i]);
-+		ret = phy_power_on(exynos_ehci->phy[i]);
- 	if (ret)
- 		for (i--; i >= 0; i--)
--			if (!IS_ERR(exynos_ehci->phy[i]))
--				phy_power_off(exynos_ehci->phy[i]);
-+			phy_power_off(exynos_ehci->phy[i]);
- 
- 	return ret;
- }
-@@ -125,8 +116,7 @@ static void exynos_ehci_phy_disable(struct device *dev)
- 	int i;
- 
- 	for (i = 0; i < PHY_NUMBER; i++)
--		if (!IS_ERR(exynos_ehci->phy[i]))
--			phy_power_off(exynos_ehci->phy[i]);
-+		phy_power_off(exynos_ehci->phy[i]);
- }
- 
- static void exynos_setup_vbus_gpio(struct device *dev)
--- 
-2.34.1
+Sorry, this patch could have been misleading. it is my fault. I'll add 
+the other
+
+handlers to a next version.
+
+>
+>>   	int	(*start)(struct pci_epc *epc);
+>>   	void	(*stop)(struct pci_epc *epc);
+>>   	const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
+>> @@ -218,11 +219,12 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>   		    struct pci_epf_bar *epf_bar);
+>>   void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>   		       struct pci_epf_bar *epf_bar);
+>> -int pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>> -		     phys_addr_t phys_addr,
+>> -		     u64 pci_addr, size_t size);
+>> +void __iomem *pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>> +			       u64 pci_addr, phys_addr_t *phys_addr,
+>> +			       size_t size);
+>>   void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>> -			phys_addr_t phys_addr);
+>> +			phys_addr_t phys_addr, void __iomem *virt_addr,
+>> +			size_t size);
+>>   int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>   		    u8 interrupts);
+>>   int pci_epc_get_msi(struct pci_epc *epc, u8 func_no, u8 vfunc_no);
+>> -- 
+>> 2.25.1
+>>
+Best,
+
+Shunsuke
 
