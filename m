@@ -2,125 +2,170 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A6A5C38159
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 12:00:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81361C46467
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 13:33:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229919AbjARMAd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 07:00:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37590 "EHLO
+        id S230035AbjARNdZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 08:33:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229629AbjARMAB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 07:00:01 -0500
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E729F7EE57
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 03:17:14 -0800 (PST)
-Received: by mail-wm1-x32f.google.com with SMTP id iv8-20020a05600c548800b003db04a0a46bso1224564wmb.0
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 03:17:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Ax0S1Mi21dQMczSaAgM0TaYM+PtE4awHpXsqNp1yeTs=;
-        b=LVO8wtaTw/mwetQHWmbQRBGMm1Qwm1fXYLm1TMwUAF0rVno1eQ4vfawC8DHGgibq85
-         Ca9IuilPgvfjwM7dPmJKpoLHPQ5t8tg1ITDXefjjYttak0nnHOVJG9bYNKic3uQ/NqaX
-         rDj+UszO828Jvel8gZgKI2WU6kFW4aO3jcrlqQZC0VJXOQdRtpyGRr1ztBSyh8PQHE4C
-         uTZftHL8faguXRqYtbMlMPdK4SIATcGt15ZsYErjJVPQpbyUtj9a72xHhQlotxaWS11n
-         axniRJOKC1NJ3AElrqOKee4fpzy3vHCHRAb8wjQ09Q8ad1kg6+n9VfI0yXFnhEulGcNc
-         bb/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Ax0S1Mi21dQMczSaAgM0TaYM+PtE4awHpXsqNp1yeTs=;
-        b=T/BqJoyWyRmE0MYymabgBUthRRvUs9+zp3DMFrPTN8E8dJ9GSJtpgHYNqhhDbetqM5
-         lHLFYW1ccpjWGIPkKiJO0mIijIDFbrZ5dnSIBYrh/i0nZ32vYrlZHtR5PIlYAVRoevCw
-         phapFpVOPEAjUM0ZiP4zjlNHK5w66aVGcdieNYVNYGjfXbgZuc1quf1LAoJ+7AA4Mo0s
-         dSh62XiPPJKiBhPYj0eUmI4N0QDBv0/eQnax1HMpLLpjK7omq7Ixw5h2Ql/k90Bz2FTM
-         P6Nnt6ALLzChtVNKqeTh8xvWLMJtKS9Krx3MxlvnKMA7Y/q2grtwOYvN6KfSm/kjO3T8
-         mD4Q==
-X-Gm-Message-State: AFqh2kp+k52mNtKQw77ZdaSLQX4KfwNJ/XZg2jnhNfxWY0sfYwrlbZoD
-        2In52s/wMNZrrm4jpMjyOetiRD11cPC5hbQj
-X-Google-Smtp-Source: AMrXdXu/jsgeI9CfpoJSfBwQlQSHFQhbqZk8oQ0dhQ1qE3VJqvmj418GDaH2fhc0Fdp0lB7bGnPoRg==
-X-Received: by 2002:a05:600c:3c8a:b0:3da:2a78:d7a4 with SMTP id bg10-20020a05600c3c8a00b003da2a78d7a4mr6183108wmb.21.1674040633455;
-        Wed, 18 Jan 2023 03:17:13 -0800 (PST)
-Received: from hackbox.lan ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id q10-20020a1cf30a000000b003d1e3b1624dsm1670998wmq.2.2023.01.18.03.17.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Jan 2023 03:17:12 -0800 (PST)
-From:   Abel Vesa <abel.vesa@linaro.org>
-To:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 2/2] PCI: qcom: Add SM8550 PCIe support
-Date:   Wed, 18 Jan 2023 13:17:04 +0200
-Message-Id: <20230118111704.3553542-2-abel.vesa@linaro.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230118111704.3553542-1-abel.vesa@linaro.org>
-References: <20230118111704.3553542-1-abel.vesa@linaro.org>
+        with ESMTP id S229450AbjARNc6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 08:32:58 -0500
+Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09C5358964;
+        Wed, 18 Jan 2023 04:59:57 -0800 (PST)
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 30ICxd5C042737;
+        Wed, 18 Jan 2023 06:59:39 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1674046780;
+        bh=OmDhyxusumxXEVyuH5Sjllr2iDvvrq2e6vgSiOeP5YM=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=KmOBihnfjfv9Qu0r/HhsNxQdion004LK+Ke+onUX4sHSZ0Nur7mzbw2I5dNMSmW8F
+         WmiAmxlj8tyqcvBaVkzooqQMAnxJ7MvEs+qFNU+CFE1QKp72QdjddHLu8DDrksD4e8
+         aWaxFQF9wSIC9lQSeUlhJRAzrg8MsitgrmGfABzc=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 30ICxdQD010085
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 18 Jan 2023 06:59:39 -0600
+Received: from DFLE109.ent.ti.com (10.64.6.30) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16; Wed, 18
+ Jan 2023 06:59:39 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16 via
+ Frontend Transport; Wed, 18 Jan 2023 06:59:39 -0600
+Received: from localhost (ileaxei01-snat2.itg.ti.com [10.180.69.6])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 30ICxc2V016777;
+        Wed, 18 Jan 2023 06:59:39 -0600
+From:   Achal Verma <a-verma1@ti.com>
+To:     <mranostay@ti.com>, <rogerq@kernel.org>, <lpieralisi@kernel.org>,
+        <robh@kernel.org>, <kw@linux.com>, <bhelgaas@google.com>,
+        <krzysztof.kozlowski@linaro.org>, <vigneshr@ti.com>,
+        <tjoseph@cadence.com>, <sergio.paracuellos@gmail.com>,
+        <pthombar@cadence.com>, <linux-pci@vger.kernel.org>
+CC:     <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-omap@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v8 1/5] dt-bindings: PCI: ti,j721e-pci-*: add checks for num-lanes
+Date:   Wed, 18 Jan 2023 18:29:32 +0530
+Message-ID: <20230118125936.3456716-2-a-verma1@ti.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230118125936.3456716-1-a-verma1@ti.com>
+References: <20230118125936.3456716-1-a-verma1@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add compatible for both PCIe found on SM8550.
-Also add the cnoc_pcie_sf_axi clock needed by the SM8550.
+From: Matt Ranostay <mranostay@ti.com>
 
-Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Add num-lanes schema checks based on compatible string on available lanes
+for that platform.
+
+Signed-off-by: Matt Ranostay <mranostay@ti.com>
+Signed-off-by: Achal Verma <a-verma1@ti.com>
 ---
+ .../bindings/pci/ti,j721e-pci-ep.yaml         | 28 +++++++++++++++++--
+ .../bindings/pci/ti,j721e-pci-host.yaml       | 28 +++++++++++++++++--
+ 2 files changed, 50 insertions(+), 6 deletions(-)
 
-The v1 was here:
-https://lore.kernel.org/all/20221116123505.2760397-2-abel.vesa@linaro.org/
-
-Changes since v1:
- * changed the subject line prefix for the patch to match the history,
-   like Bjorn Helgaas suggested.
- * added Konrad's R-b tag
-
- drivers/pci/controller/dwc/pcie-qcom.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 77e5dc7b88ad..85988b3fd4f6 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -182,7 +182,7 @@ struct qcom_pcie_resources_2_3_3 {
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+index 10e6eabdff53..403cd3ef1177 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+@@ -10,9 +10,6 @@ title: TI J721E PCI EP (PCIe Wrapper)
+ maintainers:
+   - Kishon Vijay Abraham I <kishon@ti.com>
  
- /* 6 clocks typically, 7 for sm8250 */
- struct qcom_pcie_resources_2_7_0 {
--	struct clk_bulk_data clks[12];
-+	struct clk_bulk_data clks[13];
- 	int num_clks;
- 	struct regulator_bulk_data supplies[2];
- 	struct reset_control *pci_reset;
-@@ -1208,6 +1208,7 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
- 	res->clks[idx++].id = "noc_aggr_4";
- 	res->clks[idx++].id = "noc_aggr_south_sf";
- 	res->clks[idx++].id = "cnoc_qx";
-+	res->clks[idx++].id = "cnoc_pcie_sf_axi";
+-allOf:
+-  - $ref: "cdns-pcie-ep.yaml#"
+-
+ properties:
+   compatible:
+     oneOf:
+@@ -65,6 +62,31 @@ properties:
+     items:
+       - const: link_state
  
- 	num_opt_clks = idx - num_clks;
- 	res->num_clks = idx;
-@@ -1828,6 +1829,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-sm8250", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
-+	{ .compatible = "qcom,pcie-sm8550", .data = &cfg_1_9_0 },
- 	{ }
- };
++allOf:
++  - $ref: cdns-pcie-ep.yaml#
++  - if:
++      properties:
++        compatible:
++          enum:
++            - ti,am64-pcie-ep
++    then:
++      properties:
++        num-lanes:
++          minimum: 1
++          maximum: 1
++
++  - if:
++      properties:
++        compatible:
++          enum:
++            - ti,j7200-pcie-ep
++            - ti,j721e-pcie-ep
++    then:
++      properties:
++        num-lanes:
++          minimum: 1
++          maximum: 2
++
+ required:
+   - compatible
+   - reg
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+index b0513b197d08..7bd78cfca845 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+@@ -10,9 +10,6 @@ title: TI J721E PCI Host (PCIe Wrapper)
+ maintainers:
+   - Kishon Vijay Abraham I <kishon@ti.com>
  
+-allOf:
+-  - $ref: "cdns-pcie-host.yaml#"
+-
+ properties:
+   compatible:
+     oneOf:
+@@ -98,6 +95,31 @@ properties:
+       interrupts:
+         maxItems: 1
+ 
++allOf:
++  - $ref: cdns-pcie-host.yaml#
++  - if:
++      properties:
++        compatible:
++          enum:
++            - ti,am64-pcie-host
++    then:
++      properties:
++        num-lanes:
++          minimum: 1
++          maximum: 1
++
++  - if:
++      properties:
++        compatible:
++          enum:
++            - ti,j7200-pcie-host
++            - ti,j721e-pcie-host
++    then:
++      properties:
++        num-lanes:
++          minimum: 1
++          maximum: 2
++
+ required:
+   - compatible
+   - reg
 -- 
-2.34.1
+2.25.1
 
