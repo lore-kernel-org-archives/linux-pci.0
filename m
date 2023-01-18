@@ -2,203 +2,98 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C612BC004D4
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 10:08:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E228EC38159
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 11:09:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230149AbjARKIN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 05:08:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44448 "EHLO
+        id S229752AbjARLJB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 06:09:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230202AbjARKHn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 05:07:43 -0500
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 539F26E807
-        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 01:12:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674033161; x=1705569161;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=NTxjNrAP88GnC2doiDvby2CsEH8RgdVbzqE/L5YOIpk=;
-  b=NWL/08D5PMHcDqsq2S9fEVgXY3W4oXDvrA/+4Zo/cbmLBFQj3FsLPLmO
-   mFGhCtzgyQR+D4zEwU1NDarXiR7+SE5G4s+ENgwAszf+jlsg89WOOZpAu
-   B146gpDOH9QxyunZENLWqQ/LdssBBGbdlwD1aHjr5naVbvnI8KRIuhDOV
-   sWF1zBA+HPSFT9JexGAdXvByJ5nUCBk7KqomR2XPD8VEcZvIcau6bTHXY
-   07iEwkfiwB134Q5ICNIJb6b+XfUQv33r3tUu4Se1CuhJbjFreK6ANAnPs
-   jP0tSGQb88sEjPDkcXF/MuJEd27O7cq9JnbqtKJXgIy+q/yxa4m/TW3aV
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10593"; a="411177601"
-X-IronPort-AV: E=Sophos;i="5.97,224,1669104000"; 
-   d="scan'208";a="411177601"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2023 01:12:40 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10593"; a="728115689"
-X-IronPort-AV: E=Sophos;i="5.97,224,1669104000"; 
-   d="scan'208";a="728115689"
-Received: from lkp-server01.sh.intel.com (HELO 5646d64e7320) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 18 Jan 2023 01:12:39 -0800
-Received: from kbuild by 5646d64e7320 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pI4Uo-0000Aq-2V;
-        Wed, 18 Jan 2023 09:12:38 +0000
-Date:   Wed, 18 Jan 2023 17:11:54 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [helgaas-pci:pci/misc] BUILD SUCCESS
- 1aa3f2b02fcd3817a0b1caa0a4654e40433a33be
-Message-ID: <63c7b7da.icj2X3JFjtkgqE7c%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S230196AbjARLIo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 06:08:44 -0500
+Received: from baptiste.telenet-ops.be (baptiste.telenet-ops.be [IPv6:2a02:1800:120:4::f00:13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2AD366ECA
+        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 02:15:44 -0800 (PST)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed50:4745:2e6d:e3a6:3327])
+        by baptiste.telenet-ops.be with bizsmtp
+        id AAFN2900B2zf9gW01AFN4L; Wed, 18 Jan 2023 11:15:42 +0100
+Received: from rox.of.borg ([192.168.97.57])
+        by ramsan.of.borg with esmtp (Exim 4.95)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1pI5TQ-005aIP-MK;
+        Wed, 18 Jan 2023 11:15:22 +0100
+Received: from geert by rox.of.borg with local (Exim 4.95)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1pI5TW-001JVm-0b;
+        Wed, 18 Jan 2023 11:15:22 +0100
+From:   Geert Uytterhoeven <geert+renesas@glider.be>
+To:     Madalin Bucur <madalin.bucur@nxp.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Horatiu Vultur <horatiu.vultur@microchip.com>,
+        UNGLinuxDriver@microchip.com,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Siddharth Vadapalli <s-vadapalli@ti.com>,
+        Russell King <linux@armlinux.org.uk>
+Cc:     netdev@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH 2/7] net: fman: memac: Convert to devm_of_phy_optional_get()
+Date:   Wed, 18 Jan 2023 11:15:15 +0100
+Message-Id: <0c2302aceb4739ec846edebbc57e71819a8b8ad3.1674036164.git.geert+renesas@glider.be>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <cover.1674036164.git.geert+renesas@glider.be>
+References: <cover.1674036164.git.geert+renesas@glider.be>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/misc
-branch HEAD: 1aa3f2b02fcd3817a0b1caa0a4654e40433a33be  misc: pci_endpoint_test: Drop initial kernel-doc marker
+Use the new devm_of_phy_optional_get() helper instead of open-coding the
+same operation.
 
-elapsed time: 725m
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/net/ethernet/freescale/fman/fman_memac.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-configs tested: 125
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arc                                 defconfig
-s390                             allmodconfig
-alpha                               defconfig
-s390                                defconfig
-powerpc                           allnoconfig
-s390                             allyesconfig
-x86_64                            allnoconfig
-sh                               allmodconfig
-powerpc                          allmodconfig
-mips                             allyesconfig
-x86_64                          rhel-8.3-func
-x86_64                    rhel-8.3-kselftests
-x86_64               randconfig-a011-20230116
-x86_64               randconfig-a016-20230116
-x86_64               randconfig-a014-20230116
-x86_64               randconfig-a013-20230116
-x86_64               randconfig-a015-20230116
-x86_64               randconfig-a012-20230116
-x86_64                              defconfig
-x86_64                           allyesconfig
-x86_64                               rhel-8.3
-ia64                             allmodconfig
-arm64                            allyesconfig
-arm                                 defconfig
-arm                              allyesconfig
-i386                             allyesconfig
-i386                                defconfig
-i386                          randconfig-a012
-i386                          randconfig-a014
-i386                          randconfig-a016
-x86_64                           rhel-8.3-kvm
-x86_64                           rhel-8.3-syz
-x86_64                           rhel-8.3-bpf
-x86_64                         rhel-8.3-kunit
-um                           x86_64_defconfig
-um                             i386_defconfig
-m68k                             allyesconfig
-m68k                             allmodconfig
-arc                              allyesconfig
-alpha                            allyesconfig
-i386                 randconfig-c001-20230116
-i386                 randconfig-a013-20230116
-i386                 randconfig-a012-20230116
-i386                 randconfig-a016-20230116
-i386                 randconfig-a014-20230116
-i386                 randconfig-a011-20230116
-i386                          debian-10.3-kvm
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
-m68k                          hp300_defconfig
-arm                            lart_defconfig
-riscv                randconfig-r042-20230116
-arm                  randconfig-r046-20230117
-arm                  randconfig-r046-20230115
-s390                 randconfig-r044-20230116
-arc                  randconfig-r043-20230117
-arc                  randconfig-r043-20230116
-arc                  randconfig-r043-20230115
-powerpc                      bamboo_defconfig
-arm                           imxrt_defconfig
-powerpc                      makalu_defconfig
-arm                        cerfcube_defconfig
-i386                 randconfig-a015-20230116
-ia64                        generic_defconfig
-sh                 kfr2r09-romimage_defconfig
-openrisc                         alldefconfig
-i386                          randconfig-c001
-powerpc                     tqm8548_defconfig
-mips                        vocore2_defconfig
-sparc                               defconfig
-xtensa                           allyesconfig
-csky                                defconfig
-sparc                            allyesconfig
-x86_64                                  kexec
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-riscv                    nommu_k210_defconfig
-riscv                             allnoconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-nios2                            allyesconfig
-nios2                               defconfig
-parisc                              defconfig
-parisc64                            defconfig
-parisc                           allyesconfig
-x86_64                        randconfig-c001
-arm                  randconfig-c002-20230117
-
-clang tested configs:
-x86_64               randconfig-a003-20230116
-x86_64               randconfig-a004-20230116
-x86_64               randconfig-a006-20230116
-x86_64               randconfig-a005-20230116
-x86_64               randconfig-a001-20230116
-x86_64               randconfig-a002-20230116
-arm                          sp7021_defconfig
-powerpc                     ppa8548_defconfig
-powerpc                     tqm8560_defconfig
-arm                  colibri_pxa270_defconfig
-x86_64                        randconfig-k001
-i386                 randconfig-a002-20230116
-i386                 randconfig-a004-20230116
-i386                 randconfig-a001-20230116
-i386                 randconfig-a003-20230116
-i386                 randconfig-a005-20230116
-i386                 randconfig-a006-20230116
-powerpc                      acadia_defconfig
-arm                        magician_defconfig
-riscv                             allnoconfig
-arm                           sama7_defconfig
-riscv                          rv32_defconfig
-powerpc                    mvme5100_defconfig
-arm                         hackkit_defconfig
-mips                          malta_defconfig
-mips                        qi_lb60_defconfig
-x86_64                          rhel-8.3-rust
-powerpc                        fsp2_defconfig
-mips                           rs90_defconfig
-powerpc                 mpc836x_rdk_defconfig
-arm                       cns3420vb_defconfig
-powerpc                 mpc836x_mds_defconfig
-powerpc                    ge_imp3a_defconfig
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-riscv                randconfig-r042-20230117
-s390                 randconfig-r044-20230117
-hexagon              randconfig-r041-20230117
-hexagon              randconfig-r045-20230117
-
+diff --git a/drivers/net/ethernet/freescale/fman/fman_memac.c b/drivers/net/ethernet/freescale/fman/fman_memac.c
+index 9349f841bd0645a0..892277f13048660d 100644
+--- a/drivers/net/ethernet/freescale/fman/fman_memac.c
++++ b/drivers/net/ethernet/freescale/fman/fman_memac.c
+@@ -1152,12 +1152,12 @@ int memac_initialization(struct mac_device *mac_dev,
+ 	else
+ 		memac->sgmii_pcs = pcs;
+ 
+-	memac->serdes = devm_of_phy_get(mac_dev->dev, mac_node, "serdes");
+-	err = PTR_ERR(memac->serdes);
+-	if (err == -ENODEV || err == -ENOSYS) {
++	memac->serdes = devm_of_phy_optional_get(mac_dev->dev, mac_node,
++						 "serdes");
++	if (!memac->serdes) {
+ 		dev_dbg(mac_dev->dev, "could not get (optional) serdes\n");
+-		memac->serdes = NULL;
+ 	} else if (IS_ERR(memac->serdes)) {
++		err = PTR_ERR(memac->serdes);
+ 		dev_err_probe(mac_dev->dev, err, "could not get serdes\n");
+ 		goto _return_fm_mac_free;
+ 	}
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.34.1
+
