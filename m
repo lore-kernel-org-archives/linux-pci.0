@@ -2,50 +2,52 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE19CC678D4
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 05:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD1ADC678DB
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 05:57:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229598AbjARF5R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 00:57:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45664 "EHLO
+        id S229530AbjARF4n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 00:56:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbjARFy0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 00:54:26 -0500
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D99D582B7;
-        Tue, 17 Jan 2023 21:54:03 -0800 (PST)
+        with ESMTP id S229600AbjARFyY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 00:54:24 -0500
+Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B74E582B3;
+        Tue, 17 Jan 2023 21:53:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674021243; x=1705557243;
-  h=from:date:subject:mime-version:content-transfer-encoding:
-   message-id:references:in-reply-to:to:cc;
-  bh=Mk0oIVnzMhEKY95fMhecSAt7DLXaIz6CJ6fM/4b0G7E=;
-  b=Ok6Ya8fEOreXlv9Gs+TyZQ6+7Lzs7/oMlEIuq46pqt6Y24Uk7TUGtVGE
-   ekQ593+OlarAiqRR+vN4sEm1VqMpuDeol/ix2txwqg4gKkvYsn/D7tEpS
-   ktigr32Hhbh2oe0B14PWMDYK6XG4DZvxi2If9R2eQGH/zC8n/BEDJGWSJ
-   yowxLLXW4YpsNKTYojQSxLHv36m1lQ8kXkZtzGCcBnbcUrtRo+VvKAPpN
-   ICjJ3RtRSuYSLVz+D2lfiBYMl9ud+OljiT7OxIqjiJ2X8X14wCIPb4Szp
-   Q5v94BRosLx2KD1Hfd+TgZLQRCJkvdP/dXTwhMOXFzdNgavv7N4S0R9I5
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10593"; a="304586836"
+  t=1674021238; x=1705557238;
+  h=from:subject:date:message-id:mime-version:
+   content-transfer-encoding:to:cc;
+  bh=8hCE29/rAv/KePGjVVbATlGPXJKEr6j4vLKWjkF4hUA=;
+  b=AKBt24qU7Mk7MeVyIQBP7QbFU2XIm3fkIyaFfuiLXXTB+oRJBGq8NMK9
+   Ol0nmSjy6DsuK6bR5sU80VkZSllehvrsHPZ8sFpB9jYhe2xbJuRoL7oyA
+   hrFywp++9hlo4GvVmG+VbN4q6ZkCxYy9Pe0xIzvWZ4h1aYQBmFmKY1tuZ
+   pdQcjDEsDK24aBkwOB+tc6MsyR8q0hNlKgTv2tlgHwVwXXKcKscU23tGI
+   5aLWHURcNpDgi3L06tTkQbgI/zolDpWea1q6PJ6Wp7dxhp+rKAhDMHmz1
+   RU5dHrkr1w4wjtY8RGlgz1X7Y20fRcg+48n9jm0Qudir3buEXBJkEl/3k
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10593"; a="308469098"
 X-IronPort-AV: E=Sophos;i="5.97,224,1669104000"; 
-   d="scan'208";a="304586836"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2023 21:54:02 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10593"; a="802043330"
+   d="scan'208";a="308469098"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2023 21:53:50 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10593"; a="722953495"
 X-IronPort-AV: E=Sophos;i="5.97,224,1669104000"; 
-   d="scan'208";a="802043330"
+   d="scan'208";a="722953495"
 Received: from iweiny-mobl.amr.corp.intel.com (HELO localhost) ([10.209.10.122])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2023 21:54:01 -0800
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2023 21:53:48 -0800
 From:   Ira Weiny <ira.weiny@intel.com>
-Date:   Tue, 17 Jan 2023 21:53:43 -0800
-Subject: [PATCH v7 8/8] cxl/test: Simulate event log overflow
+Subject: [PATCH v7 0/8] cxl: Process event logs
+Date:   Tue, 17 Jan 2023 21:53:36 -0800
+Message-Id: <20221216-cxl-ev-log-v7-0-2316a5c8f7d8@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20221216-cxl-ev-log-v7-8-2316a5c8f7d8@intel.com>
-References: <20221216-cxl-ev-log-v7-0-2316a5c8f7d8@intel.com>
-In-Reply-To: <20221216-cxl-ev-log-v7-0-2316a5c8f7d8@intel.com>
+X-B4-Tracking: v=1; b=H4sIAGCJx2MC/3WPQWrDMBBFrxK07pgZyZLcrnqP0oUtT+IBVQ5Sq
+ iYE371KoJAWunwf3v8zV1U4Cxf1sruqzFWKrKmBf9qpsIzpwCBzY6VRa9LkIJwjcIW4HmCPzgyG
+ nr3tSTVhGgvDlMcUlqakzxhbeMy8l/N94e298SLltObLfbDSLf3p1ujRad+R8bpHDQSSx+6LJV1
+ eJZ04dmH9ULeOah+9XzdVCwg0YHA08Gxn+qu6/1XXVNM7235COxl8VLdt+wYIpO0DLAEAAA==
 To:     Dan Williams <dan.j.williams@intel.com>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Alison Schofield <alison.schofield@intel.com>,
@@ -57,139 +59,81 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Ben Widawsky <bwidawsk@kernel.org>,
         Steven Rostedt <rostedt@goodmis.org>,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org
+        linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
+        Bjorn Helgaas <helgaas@kernel.org>
 X-Mailer: b4 0.12-dev-cc11a
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1674021228; l=4124;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1674021228; l=2371;
  i=ira.weiny@intel.com; s=20221211; h=from:subject:message-id;
- bh=Mk0oIVnzMhEKY95fMhecSAt7DLXaIz6CJ6fM/4b0G7E=;
- b=pJZGC0Qn3+f+KJ22HojFTaXyw6arPsHECysq/YYmmBsfuOR2xI4af/7185+TSWJsk9UBgkE75e43
- MJEtcP3oBtKtV85dBb7PVZ7BvK3mlrnC+OKTZ/jOFbGEkMC8g9tJ
+ bh=8hCE29/rAv/KePGjVVbATlGPXJKEr6j4vLKWjkF4hUA=;
+ b=nbukHKPG6a3viQFoKvaOKYkcRCRvMpEtDxkCMxcpbwM5kkzO9bI8t/sgHyYf0Q/q68B8BCysLaHa
+ cVU1c6quDGGbiViW3/7KxA9d5/QAgnjuvSNGjUgEIFfiT1FCDqFh
 X-Developer-Key: i=ira.weiny@intel.com; a=ed25519;
  pk=noldbkG+Wp1qXRrrkfY1QJpDf7QsOEthbOT7vm0PqsE=
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Log overflow is marked by a separate trace message.
+CXL devices have multiple event logs which can be queried for CXL event
+records.
 
-Simulate a log with lots of messages and flag overflow until space is
-cleared.
+Add event log processing and cxl-test infrastructure.  In addition to cxl-test,
+this code has been tested with the qemu patches posted here:
 
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+https://lore.kernel.org/all/20221221-ira-cxl-events-2022-11-17-v2-0-2ce2ecc06219@intel.com/
+
+The series is now in 3 parts:
+
+       1) Base functionality including interrupts
+       2) Tracing specific events (Dynamic Capacity Event Record is defered)
+       3) cxl-test infrastructure for basic tests
+
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alison Schofield <alison.schofield@intel.com>
+Cc: Vishal Verma <vishal.l.verma@intel.com>
+Cc: Ira Weiny <ira.weiny@intel.com>
+Cc: Davidlohr Bueso <dave@stgolabs.net>
+Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Ben Widawsky <bwidawsk@kernel.org>
+Cc: Steven Rostedt <rostedt@goodmis.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org
+Cc: linux-cxl@vger.kernel.org
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
 ---
 Changes in v7:
-        <no change>
+- Jonathan: Address minor comments on V6
+- Link to v6: https://lore.kernel.org/r/20221216-cxl-ev-log-v6-0-346583105b30@intel.com
+
 ---
- tools/testing/cxl/test/mem.c | 50 +++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 49 insertions(+), 1 deletion(-)
+Davidlohr Bueso (1):
+      cxl/mem: Wire up event interrupts
 
-diff --git a/tools/testing/cxl/test/mem.c b/tools/testing/cxl/test/mem.c
-index 00bf19a68604..9263b04d35f7 100644
---- a/tools/testing/cxl/test/mem.c
-+++ b/tools/testing/cxl/test/mem.c
-@@ -78,6 +78,8 @@ struct mock_event_log {
- 	u16 clear_idx;
- 	u16 cur_idx;
- 	u16 nr_events;
-+	u16 nr_overflow;
-+	u16 overflow_reset;
- 	struct cxl_event_record_raw *events[CXL_TEST_EVENT_CNT_MAX];
- };
- 
-@@ -116,6 +118,7 @@ static void event_reset_log(struct mock_event_log *log)
- {
- 	log->cur_idx = 0;
- 	log->clear_idx = 0;
-+	log->nr_overflow = log->overflow_reset;
- }
- 
- /* Handle can never be 0 use 1 based indexing for handle */
-@@ -147,8 +150,12 @@ static void mes_add_event(struct mock_event_store *mes,
- 		return;
- 
- 	log = &mes->mock_logs[log_type];
--	if (WARN_ON(log->nr_events >= CXL_TEST_EVENT_CNT_MAX))
-+
-+	if ((log->nr_events + 1) > CXL_TEST_EVENT_CNT_MAX) {
-+		log->nr_overflow++;
-+		log->overflow_reset = log->nr_overflow;
- 		return;
-+	}
- 
- 	log->events[log->nr_events] = event;
- 	log->nr_events++;
-@@ -159,6 +166,7 @@ static int mock_get_event(struct cxl_dev_state *cxlds,
- {
- 	struct cxl_get_event_payload *pl;
- 	struct mock_event_log *log;
-+	u16 nr_overflow;
- 	u8 log_type;
- 	int i;
- 
-@@ -191,6 +199,19 @@ static int mock_get_event(struct cxl_dev_state *cxlds,
- 	if (!event_log_empty(log))
- 		pl->flags |= CXL_GET_EVENT_FLAG_MORE_RECORDS;
- 
-+	if (log->nr_overflow) {
-+		u64 ns;
-+
-+		pl->flags |= CXL_GET_EVENT_FLAG_OVERFLOW;
-+		pl->overflow_err_count = cpu_to_le16(nr_overflow);
-+		ns = ktime_get_real_ns();
-+		ns -= 5000000000; /* 5s ago */
-+		pl->first_overflow_timestamp = cpu_to_le64(ns);
-+		ns = ktime_get_real_ns();
-+		ns -= 1000000000; /* 1s ago */
-+		pl->last_overflow_timestamp = cpu_to_le64(ns);
-+	}
-+
- 	return 0;
- }
- 
-@@ -231,6 +252,9 @@ static int mock_clear_event(struct cxl_dev_state *cxlds,
- 		}
- 	}
- 
-+	if (log->nr_overflow)
-+		log->nr_overflow = 0;
-+
- 	/* Clear events */
- 	log->clear_idx += pl->nr_recs;
- 	return 0;
-@@ -353,6 +377,30 @@ static void cxl_mock_add_event_logs(struct mock_event_store *mes)
- 		      (struct cxl_event_record_raw *)&mem_module);
- 	mes->ev_status |= CXLDEV_EVENT_STATUS_INFO;
- 
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &maint_needed);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL,
-+		      (struct cxl_event_record_raw *)&dram);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL,
-+		      (struct cxl_event_record_raw *)&gen_media);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL,
-+		      (struct cxl_event_record_raw *)&mem_module);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL,
-+		      (struct cxl_event_record_raw *)&dram);
-+	/* Overflow this log */
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FAIL, &hardware_replace);
-+	mes->ev_status |= CXLDEV_EVENT_STATUS_FAIL;
-+
- 	mes_add_event(mes, CXL_EVENT_TYPE_FATAL, &hardware_replace);
- 	mes_add_event(mes, CXL_EVENT_TYPE_FATAL,
- 		      (struct cxl_event_record_raw *)&dram);
+Ira Weiny (7):
+      cxl/mem: Read, trace, and clear events on driver load
+      cxl/mem: Trace General Media Event Record
+      cxl/mem: Trace DRAM Event Record
+      cxl/mem: Trace Memory Module Event Record
+      cxl/test: Add generic mock events
+      cxl/test: Add specific events
+      cxl/test: Simulate event log overflow
 
+ drivers/cxl/core/mbox.c       | 198 +++++++++++++++++
+ drivers/cxl/core/trace.h      | 479 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/cxl/cxl.h             |  16 ++
+ drivers/cxl/cxlmem.h          | 166 +++++++++++++++
+ drivers/cxl/cxlpci.h          |   6 +
+ drivers/cxl/pci.c             | 243 +++++++++++++++++++++
+ tools/testing/cxl/test/Kbuild |   2 +-
+ tools/testing/cxl/test/mem.c  | 352 +++++++++++++++++++++++++++++++
+ 8 files changed, 1461 insertions(+), 1 deletion(-)
+---
+base-commit: 589c3357370a596ef7c99c00baca8ac799fce531
+change-id: 20221216-cxl-ev-log-f06383197541
+
+Best regards,
 -- 
-2.39.0
+Ira Weiny <ira.weiny@intel.com>
