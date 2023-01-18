@@ -2,81 +2,75 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87E79C32793
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 20:15:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B615AC38147
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 21:15:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229489AbjARUPs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 15:15:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58078 "EHLO
+        id S231156AbjARVPa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 16:15:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbjARUPr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 15:15:47 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E8295D7E4;
-        Wed, 18 Jan 2023 12:15:46 -0800 (PST)
+        with ESMTP id S231214AbjARVOv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 16:14:51 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC722630A6
+        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 13:14:27 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 20827B81F01;
-        Wed, 18 Jan 2023 20:15:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 508D6C433EF;
-        Wed, 18 Jan 2023 20:15:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 85E3061997
+        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 21:14:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4755C433EF;
+        Wed, 18 Jan 2023 21:14:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674072943;
-        bh=J4WWSguMR9lTheJDbGf665NqLi4YZhutquYw9Q/2MBE=;
+        s=k20201202; t=1674076466;
+        bh=viBveGu88AsjPiWErhOmDAlRkCq1n+hHkT6lfehusXM=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=fKdR5/WNd7sHsQqLKMilgWYTwWn9dblHmb2+Ibnk12p4TVHXb26JhLviMWswH9toD
-         j/Kz4/IkT9CRJ/+UJfp46aznGs2Sj19EOqJEnv8XNWnSev/NZXb8CWFX+40+bmN9oM
-         dFhUbdwgXvwwyzB0wVtKVkbr8zXKclSeihSjD0z4SapQ0JYenshV9If33jZVEDinK6
-         ToNdxR5tsdDqH7oKDP16SlLxetzh8EZ07mBsYhm3qTXVFmdlsIyzIfTLexLSNHGNEb
-         EB/vilqNSVeVNIFb6DjilEJ38D44g+EwrRVXQIF1sdRZ3OWKpyeXbo+tbMv+sWC9RD
-         T0GCy4GzsgLUw==
-Date:   Wed, 18 Jan 2023 14:15:41 -0600
+        b=P+6bLzgWp6OrhYNUKh0Na3pZPGFySZh1vdknGJs07Sv3v9YQhRQ7UswUPlw4GiBgb
+         JBPUBrig5WTpInKkRFONkP/qc6CodmBitUjFCcDCfQLo1cyUyetD7Kp9k8Qb17wgtf
+         Ev7/LKkPyqO5/wzi0MeavkzZqTdOa0E4pe1t4JLsTsowOZVhq11e7Bs5MHljC8fGUZ
+         5pplkjlokWREuRzbafSn4/zwL3I5O6s+99jorULvNBLgkMz0VFdVYR6U+Ckav7/c+b
+         6H+dWMgEuCCuq+a/HE6ZcKBDJFmnXJF5TuENyt50XslCKLYGV7z+x/M33viHH/sh7W
+         AW4QXjPlBy92Q==
+Date:   Wed, 18 Jan 2023 15:14:24 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Yang Yingliang <yangyingliang@huawei.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ntb@lists.linux.dev, jdmason@kudzu.us, dave.jiang@intel.com,
-        allenbh@gmail.com, lpieralisi@kernel.org, kw@linux.com,
-        mani@kernel.org, kishon@kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] PCI: endpoint: pci-epf-vntb: add kernel-doc for num_mws
- on epf_ntb_mw_bar_clear()
-Message-ID: <20230118201541.GA254794@bhelgaas>
+To:     David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>
+Cc:     Marcin <martii@interia.pl>, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, regressions@lists.linux.dev
+Subject: Re: [Bug 216950] New: DisplayPort USB-C hub issue
+Message-ID: <20230118211424.GA259217@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230103024907.293853-1-yangyingliang@huawei.com>
+In-Reply-To: <bug-216950-41252@https.bugzilla.kernel.org/>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 03, 2023 at 10:49:07AM +0800, Yang Yingliang wrote:
-> Commit 8e4bfbe644a6 ("PCI: endpoint: pci-epf-vntb: fix error handle
-> in epf_ntb_mw_bar_init()") added a "num_mws" parameter to
-> epf_ntb_mw_bar_clear() but failed to add kernel-doc for num_mws.
+On Wed, Jan 18, 2023 at 07:49:38PM +0000, bugzilla-daemon@kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=216950
+>            Summary: DisplayPort USB-C hub issue
+>     Kernel Version: 6.2.0-rc3
+> ...
+> Created attachment 303624
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=303624&action=edit
+> dmidecode + kern.log
 > 
-> This patch adds kernel-doc for num_mws on epf_ntb_mw_bar_clear().
+> I have HP 845 EliteBook G7 (Ryzen) and before 6.2.0-rc3 installation
+> there was no issue with my laptop and HP docking station via USB-C.
 > 
-> Fixes: 8e4bfbe644a6 ("PCI: endpoint: pci-epf-vntb: fix error handle in epf_ntb_mw_bar_init()")
-> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+> This kernel display behaves weirdly. LCD monitor (connected to
+> docking station via DisplayPort) wakes up only once after reboot.
+> Second docking connection ends up with blank external screen and
+> only restart helps.
+> 
+> Display manager detects extra screen and even newly launched apps
+> land there.
+> 
+> I didn't have such issues with original distro kernel
+> 5.16.15-76051615-generic
 
-Applied to pci/misc for v6.3, thanks!
+This report (which looks like a regression between
+5.16.15-76051615-generic and 6.2.0-rc3) was raised against PCI, but I
+don't see PCI issues in the logs.  Any DRM ideas?
 
-> ---
->  drivers/pci/endpoint/functions/pci-epf-vntb.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> index 04698e7995a5..b7c7a8af99f4 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> @@ -652,6 +652,7 @@ static int epf_ntb_mw_bar_init(struct epf_ntb *ntb)
->  /**
->   * epf_ntb_mw_bar_clear() - Clear Memory window BARs
->   * @ntb: NTB device that facilitates communication between HOST and VHOST
-> + * @num_mws: the number of Memory window BARs that to be cleared
->   */
->  static void epf_ntb_mw_bar_clear(struct epf_ntb *ntb, int num_mws)
->  {
-> -- 
-> 2.25.1
-> 
+Bjorn
