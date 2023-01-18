@@ -2,180 +2,130 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6518C004D4
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 05:58:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98DCAC54EBE
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 07:53:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229619AbjARF5w (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 00:57:52 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45824 "EHLO
+        id S229759AbjARHxf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 02:53:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229512AbjARFy0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 00:54:26 -0500
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A93F8582B6;
-        Tue, 17 Jan 2023 21:54:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674021241; x=1705557241;
-  h=from:date:subject:mime-version:content-transfer-encoding:
-   message-id:references:in-reply-to:to:cc;
-  bh=655O1aIAPWsR+dipGRZIcJj8Rbea4py0JBUlU5nI76I=;
-  b=jDGW02VVsK48RTOjd17uqLm0tq4lZ07cxsLfuFTQwKCwMJbdqUZcOmdX
-   dCPOTrHWi3mEhk/o6/Uln/3a8WLn0Wbhp3qH6AB6m/e7S1J6GSe5v8Ixu
-   OFDCdKxqXYs7KSvMPSjpQTjDG5j+M9qPU+6UtHyONOUQpy8W8YrrNQNRl
-   q2Ju8u7gceyQRKMpDh4FzsQfzGuDCWOS/GH6g8xY0xWyOltbhngy6ueTF
-   R+s0ogpZi4dYLbFx5dej9nK+wnOjiG38fA6ZdGfgpV2+AFyxNNlZR5yIJ
-   49MKYJpyWDd9HLXEnIHErWAT0c9/WgSdBfbwhTZWQ3/MsE9seYysIV2w7
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10593"; a="304586828"
-X-IronPort-AV: E=Sophos;i="5.97,224,1669104000"; 
-   d="scan'208";a="304586828"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2023 21:54:01 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10593"; a="802043307"
-X-IronPort-AV: E=Sophos;i="5.97,224,1669104000"; 
-   d="scan'208";a="802043307"
-Received: from iweiny-mobl.amr.corp.intel.com (HELO localhost) ([10.209.10.122])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2023 21:54:00 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-Date:   Tue, 17 Jan 2023 21:53:42 -0800
-Subject: [PATCH v7 7/8] cxl/test: Add specific events
+        with ESMTP id S229709AbjARHxR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 02:53:17 -0500
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C529654C9;
+        Tue, 17 Jan 2023 23:20:50 -0800 (PST)
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 30I7KaxH081712;
+        Wed, 18 Jan 2023 01:20:36 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1674026437;
+        bh=KkFY6GKvqhnim7O+cjEqnGKGMnv1G70IhEgs+/7uVNM=;
+        h=From:To:CC:Subject:Date;
+        b=RaUg1slCIczvkNHhbOBh/Ha6FwfSCY2hU08sTPg4EMz++P79I7ep1et8HftEqr3PF
+         wHy7k7XZHPuyD1F05TYCrL9aqO8+SKkbvW/NL41gkIh8GUORRyj5j4a+lPqtcbcg91
+         3aGoWOLYliEeGyou3D6p2ri0yR/hTAgBUJj4LJYY=
+Received: from DLEE102.ent.ti.com (dlee102.ent.ti.com [157.170.170.32])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 30I7Ka0i008292
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 18 Jan 2023 01:20:36 -0600
+Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16; Wed, 18
+ Jan 2023 01:20:36 -0600
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE109.ent.ti.com
+ (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16 via
+ Frontend Transport; Wed, 18 Jan 2023 01:20:36 -0600
+Received: from localhost (ileaxei01-snat2.itg.ti.com [10.180.69.6])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 30I7KZcY116191;
+        Wed, 18 Jan 2023 01:20:36 -0600
+From:   Achal Verma <a-verma1@ti.com>
+To:     Tom Joseph <tjoseph@cadence.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Wilczy_ski <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Achal Verma <a-verma1@ti.com>,
+        Milind Parab <mparab@cadence.com>, Jian Wang <jian-wang@ti.com>
+Subject: [PATCH] PCI: cadence: Fix next function value in case of ARI
+Date:   Wed, 18 Jan 2023 12:50:35 +0530
+Message-ID: <20230118072035.3381993-1-a-verma1@ti.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20221216-cxl-ev-log-v7-7-2316a5c8f7d8@intel.com>
-References: <20221216-cxl-ev-log-v7-0-2316a5c8f7d8@intel.com>
-In-Reply-To: <20221216-cxl-ev-log-v7-0-2316a5c8f7d8@intel.com>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Davidlohr Bueso <dave@stgolabs.net>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Ben Widawsky <bwidawsk@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org
-X-Mailer: b4 0.12-dev-cc11a
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1674021228; l=3696;
- i=ira.weiny@intel.com; s=20221211; h=from:subject:message-id;
- bh=655O1aIAPWsR+dipGRZIcJj8Rbea4py0JBUlU5nI76I=;
- b=uAez2jzCOxZoaf8X+/mgb+L8Y9939vAnbEHjs9i9ea1G3qOJE9iz1NxrJ8NrXYLY/bPfNTh3sESX
- utF/wOYnAj5XbZUevsqdAg2AHB9gV/n+kYLJCtFbpLtLPqb528eg
-X-Developer-Key: i=ira.weiny@intel.com; a=ed25519;
- pk=noldbkG+Wp1qXRrrkfY1QJpDf7QsOEthbOT7vm0PqsE=
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Each type of event has different trace point outputs.
+From: Jasko-EXT Wojciech <wojciech.jasko-EXT@continental-corporation.com>
 
-Add mock General Media Event, DRAM event, and Memory Module Event
-records to the mock list of events returned.
+Next function field in ARI_CAP_AND_CTR field register for last
+function should be zero but thats not the case, so this patch
+programs the next function field for last function as zero.
 
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-
+Signed-off-by: Jasko-EXT Wojciech <wojciech.jasko-EXT@continental-corporation.com>
+Signed-off-by: Achal Verma <a-verma1@ti.com>
 ---
-Changes in v7:
-        <no change>
----
- tools/testing/cxl/test/mem.c | 73 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 73 insertions(+)
+ drivers/pci/controller/cadence/pcie-cadence-ep.c | 15 ++++++++++++++-
+ drivers/pci/controller/cadence/pcie-cadence.h    |  6 ++++++
+ 2 files changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/tools/testing/cxl/test/mem.c b/tools/testing/cxl/test/mem.c
-index 90a463f83ae4..00bf19a68604 100644
---- a/tools/testing/cxl/test/mem.c
-+++ b/tools/testing/cxl/test/mem.c
-@@ -277,12 +277,85 @@ struct cxl_event_record_raw hardware_replace = {
- 	.data = { 0xDE, 0xAD, 0xBE, 0xEF },
- };
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index b8b655d4047e..6b6904cf0123 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -565,7 +565,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	struct cdns_pcie *pcie = &ep->pcie;
+ 	struct device *dev = pcie->dev;
+ 	int max_epfs = sizeof(epc->function_num_map) * 8;
+-	int ret, value, epf;
++	int ret, epf, last_fn;
++	u32 reg, value;
  
-+struct cxl_event_gen_media gen_media = {
-+	.hdr = {
-+		.id = UUID_INIT(0xfbcd0a77, 0xc260, 0x417f,
-+				0x85, 0xa9, 0x08, 0x8b, 0x16, 0x21, 0xeb, 0xa6),
-+		.length = sizeof(struct cxl_event_gen_media),
-+		.flags[0] = CXL_EVENT_RECORD_FLAG_PERMANENT,
-+		/* .handle = Set dynamically */
-+		.related_handle = cpu_to_le16(0),
-+	},
-+	.phys_addr = cpu_to_le64(0x2000),
-+	.descriptor = CXL_GMER_EVT_DESC_UNCORECTABLE_EVENT,
-+	.type = CXL_GMER_MEM_EVT_TYPE_DATA_PATH_ERROR,
-+	.transaction_type = CXL_GMER_TRANS_HOST_WRITE,
-+	/* .validity_flags = <set below> */
-+	.channel = 1,
-+	.rank = 30
-+};
-+
-+struct cxl_event_dram dram = {
-+	.hdr = {
-+		.id = UUID_INIT(0x601dcbb3, 0x9c06, 0x4eab,
-+				0xb8, 0xaf, 0x4e, 0x9b, 0xfb, 0x5c, 0x96, 0x24),
-+		.length = sizeof(struct cxl_event_dram),
-+		.flags[0] = CXL_EVENT_RECORD_FLAG_PERF_DEGRADED,
-+		/* .handle = Set dynamically */
-+		.related_handle = cpu_to_le16(0),
-+	},
-+	.phys_addr = cpu_to_le64(0x8000),
-+	.descriptor = CXL_GMER_EVT_DESC_THRESHOLD_EVENT,
-+	.type = CXL_GMER_MEM_EVT_TYPE_INV_ADDR,
-+	.transaction_type = CXL_GMER_TRANS_INTERNAL_MEDIA_SCRUB,
-+	/* .validity_flags = <set below> */
-+	.channel = 1,
-+	.bank_group = 5,
-+	.bank = 2,
-+	.column = {0xDE, 0xAD},
-+};
-+
-+struct cxl_event_mem_module mem_module = {
-+	.hdr = {
-+		.id = UUID_INIT(0xfe927475, 0xdd59, 0x4339,
-+				0xa5, 0x86, 0x79, 0xba, 0xb1, 0x13, 0xb7, 0x74),
-+		.length = sizeof(struct cxl_event_mem_module),
-+		/* .handle = Set dynamically */
-+		.related_handle = cpu_to_le16(0),
-+	},
-+	.event_type = CXL_MMER_TEMP_CHANGE,
-+	.info = {
-+		.health_status = CXL_DHI_HS_PERFORMANCE_DEGRADED,
-+		.media_status = CXL_DHI_MS_ALL_DATA_LOST,
-+		.add_status = (CXL_DHI_AS_CRITICAL << 2) |
-+			      (CXL_DHI_AS_WARNING << 4) |
-+			      (CXL_DHI_AS_WARNING << 5),
-+		.device_temp = { 0xDE, 0xAD},
-+		.dirty_shutdown_cnt = { 0xde, 0xad, 0xbe, 0xef },
-+		.cor_vol_err_cnt = { 0xde, 0xad, 0xbe, 0xef },
-+		.cor_per_err_cnt = { 0xde, 0xad, 0xbe, 0xef },
-+	}
-+};
-+
- static void cxl_mock_add_event_logs(struct mock_event_store *mes)
- {
-+	put_unaligned_le16(CXL_GMER_VALID_CHANNEL | CXL_GMER_VALID_RANK,
-+			   &gen_media.validity_flags);
-+
-+	put_unaligned_le16(CXL_DER_VALID_CHANNEL | CXL_DER_VALID_BANK_GROUP |
-+			   CXL_DER_VALID_BANK | CXL_DER_VALID_COLUMN,
-+			   &dram.validity_flags);
-+
- 	mes_add_event(mes, CXL_EVENT_TYPE_INFO, &maint_needed);
-+	mes_add_event(mes, CXL_EVENT_TYPE_INFO,
-+		      (struct cxl_event_record_raw *)&gen_media);
-+	mes_add_event(mes, CXL_EVENT_TYPE_INFO,
-+		      (struct cxl_event_record_raw *)&mem_module);
- 	mes->ev_status |= CXLDEV_EVENT_STATUS_INFO;
+ 	/*
+ 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
+@@ -573,6 +574,18 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	 */
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, epc->function_num_map);
  
- 	mes_add_event(mes, CXL_EVENT_TYPE_FATAL, &hardware_replace);
-+	mes_add_event(mes, CXL_EVENT_TYPE_FATAL,
-+		      (struct cxl_event_record_raw *)&dram);
- 	mes->ev_status |= CXLDEV_EVENT_STATUS_FATAL;
- }
++	/* Setup ARI Next Function Number.
++	 * This field should point to the next physical Function and 0 for
++	 * last Function.
++	 */
++	last_fn = find_last_bit(&epc->function_num_map, BITS_PER_LONG);
++	reg     = CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(last_fn);
++
++	// Clear Next Function Number for the last function used.
++	value  = cdns_pcie_readl(pcie, reg);
++	value &= ~CDNS_PCIE_ARI_CAP_NFN_MASK;
++	cdns_pcie_writel(pcie, reg, value);
++
+ 	if (ep->quirk_disable_flr) {
+ 		for (epf = 0; epf < max_epfs; epf++) {
+ 			if (!(epc->function_num_map & BIT(epf)))
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 190786e47df9..68c4c7878111 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -130,6 +130,12 @@
+ #define CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET	0xc0
+ #define CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET	0x200
  
-
++/*
++ * Endpoint PF Registers
++ */
++#define CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(fn)	(0x144 + (fn) * 0x1000)
++#define CDNS_PCIE_ARI_CAP_NFN_MASK	GENMASK(15, 8)
++
+ /*
+  * Root Port Registers (PCI configuration space for the root port function)
+  */
 -- 
-2.39.0
+2.25.1
+
