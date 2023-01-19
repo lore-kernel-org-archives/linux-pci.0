@@ -2,133 +2,76 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BC61C6379F
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 14:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15E0BC004D4
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 14:22:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231451AbjASOWY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 19 Jan 2023 09:22:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45420 "EHLO
+        id S231348AbjASOWy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 19 Jan 2023 09:22:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46116 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231508AbjASOWT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2023 09:22:19 -0500
+        with ESMTP id S231183AbjASOWp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2023 09:22:45 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 926572133;
-        Thu, 19 Jan 2023 06:22:12 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 271A375A30;
+        Thu, 19 Jan 2023 06:22:41 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2898161958;
-        Thu, 19 Jan 2023 14:22:12 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 311D8C433D2;
-        Thu, 19 Jan 2023 14:22:04 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B437A6170E;
+        Thu, 19 Jan 2023 14:22:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76F0BC433EF;
+        Thu, 19 Jan 2023 14:22:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674138131;
-        bh=bY47sj+taCgjVg3ciOHgQdSFSSTtzqbCSq1j2aPO4Cw=;
+        s=k20201202; t=1674138160;
+        bh=mDh1LDHRJOGkqTlnK3QxHsjTBRyPM7cJRW+pfnInBI0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lMgflNK94RMu0HDmaLdm3GnHGNVnW5J/RoxECwBu4K3DIg3722+vjDkVux1dVwXXD
-         0MCc1HnLi5ILp6pWp1gx+fP9RIOvhu1heAQywr44/50zTqb5mwoxWe7nO1zksWB3Mw
-         RV0Hl6Nc7+LxhAFwNFznpY3r4hqbLI2XM0FuFDEj2PBNo8DlgauEkiw4yrEp0XgP9N
-         f3vor7PXuQ1t2lvEfs6uHiZIa0GNV7c4Llji1U7jzYbTMEDWZVN8uhJxroCUKCJLR3
-         LHfKhTy2Lm5xrjB9jRVgqfm0i+RmZO6w6rgBHnyxOmyPdq4gOkbczG2jHD00tO/dJk
-         FcIzO9TzgZMog==
-Date:   Thu, 19 Jan 2023 19:51:55 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Abel Vesa <abel.vesa@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        "vkoul@kernel.org" <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 10/12] PCI: qcom: Add SM8550 PCIe support
-Message-ID: <20230119142155.GA101896@thinkpad>
-References: <20230119140453.3942340-1-abel.vesa@linaro.org>
- <20230119140453.3942340-11-abel.vesa@linaro.org>
+        b=IyxHAJF9pl/t/6vUxnb085JR8Fse9frezRoj62Ci+GTte2karxrFQjXRCGnI2n5QB
+         cfRl/Wylx74MNTHCVcwBKeudh25jvj5I6Cw+bBUOtxER6LCNKhshzmu603O/Y10cSG
+         cxjaeRvjs5woG6NCYfNUnPwVXmERdpUxdQQt1/DAoKX1tRF+FNQSNOl4l6R4ImBkMU
+         p+nO/iSozt4VVbEe5QfHRWCBhwrfgNIGfUvk4DSsA6wwb7t+3tLwol1YQec/VVA3dH
+         RSwzr05WSYF6Ab3JCjGAOtsQtdmI8PGUvZMyXOwXjzJ2wpOdxHwNGJGsbNckwLhn18
+         zSU5OCLO7LqUg==
+Date:   Thu, 19 Jan 2023 14:22:30 +0000
+From:   Lee Jones <lee@kernel.org>
+To:     Tianfei Zhang <tianfei.zhang@intel.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-fpga@vger.kernel.org, lukas@wunner.de, kabel@kernel.org,
+        mani@kernel.org, pali@kernel.org, mdf@kernel.org, hao.wu@intel.com,
+        yilun.xu@intel.com, trix@redhat.com, jgg@ziepe.ca,
+        ira.weiny@intel.com, andriy.shevchenko@linux.intel.com,
+        dan.j.williams@intel.com, keescook@chromium.org, rafael@kernel.org,
+        russell.h.weight@intel.com, corbet@lwn.net,
+        linux-doc@vger.kernel.org, ilpo.jarvinen@linux.intel.com,
+        gregkh@linuxfoundation.org, matthew.gerlach@linux.intel.com
+Subject: Re: [PATCH v1 11/12] fpga: m10bmc-sec: add m10bmc_sec_retimer_load
+ callback
+Message-ID: <Y8lSJsuLQ9DyXZ4U@google.com>
+References: <20230119013602.607466-1-tianfei.zhang@intel.com>
+ <20230119013602.607466-12-tianfei.zhang@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230119140453.3942340-11-abel.vesa@linaro.org>
+In-Reply-To: <20230119013602.607466-12-tianfei.zhang@intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 19, 2023 at 04:04:51PM +0200, Abel Vesa wrote:
-> Add compatible for both PCIe found on SM8550.
-> Also add the cnoc_pcie_sf_axi clock needed by the SM8550.
+On Wed, 18 Jan 2023, Tianfei Zhang wrote:
+
+> Create m10bmc_sec_retimer_load() callback function to provide
+> a trigger to update a new retimer (Intel C827 Ethernet
+> transceiver) firmware on Intel PAC N3000 Card.
 > 
-> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-
-> Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+> Signed-off-by: Russ Weight <russell.h.weight@intel.com>
+> Signed-off-by: Tianfei Zhang <tianfei.zhang@intel.com>
 > ---
-> 
-> The v3 of this patchset is:
-> https://lore.kernel.org/all/20230119112453.3393911-1-abel.vesa@linaro.org/
-> 
-> Changes since v3:
->  * renamed cnoc_pcie_sf_axi to cnoc_sf_axi
-> 
-> Changes since v2:
->  * none
->  
-> Changes since v1:
->  * changed the subject line prefix for the patch to match the history,
->    like Bjorn Helgaas suggested.
->  * added Konrad's R-b tag
-> 
-> 
->  drivers/pci/controller/dwc/pcie-qcom.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 77e5dc7b88ad..30f74bc51dbf 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -182,7 +182,7 @@ struct qcom_pcie_resources_2_3_3 {
->  
->  /* 6 clocks typically, 7 for sm8250 */
+>  drivers/fpga/intel-m10-bmc-sec-update.c | 136 ++++++++++++++++++++++++
+>  include/linux/mfd/intel-m10-bmc.h       |  31 ++++++
 
-Now this comment is outdated ;)
+Looks mostly fine - no need to send this to me again, thanks:
 
-Thanks,
-Mani
-
->  struct qcom_pcie_resources_2_7_0 {
-> -	struct clk_bulk_data clks[12];
-> +	struct clk_bulk_data clks[13];
->  	int num_clks;
->  	struct regulator_bulk_data supplies[2];
->  	struct reset_control *pci_reset;
-> @@ -1208,6 +1208,7 @@ static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
->  	res->clks[idx++].id = "noc_aggr_4";
->  	res->clks[idx++].id = "noc_aggr_south_sf";
->  	res->clks[idx++].id = "cnoc_qx";
-> +	res->clks[idx++].id = "cnoc_sf_axi";
->  
->  	num_opt_clks = idx - num_clks;
->  	res->num_clks = idx;
-> @@ -1828,6 +1829,7 @@ static const struct of_device_id qcom_pcie_match[] = {
->  	{ .compatible = "qcom,pcie-sm8250", .data = &cfg_1_9_0 },
->  	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &cfg_1_9_0 },
->  	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
-> +	{ .compatible = "qcom,pcie-sm8550", .data = &cfg_1_9_0 },
->  	{ }
->  };
->  
-> -- 
-> 2.34.1
-> 
+Acked-by: Lee Jones <lee@kernel.org>
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Lee Jones [李琼斯]
