@@ -2,94 +2,146 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D097BC38159
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 00:05:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F49CC678D6
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 01:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229682AbjASAFF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 19:05:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38324 "EHLO
+        id S230180AbjASBbd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 20:31:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230221AbjASAFC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 19:05:02 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A32D4ABDA;
-        Wed, 18 Jan 2023 16:05:01 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E047361AA0;
-        Thu, 19 Jan 2023 00:05:00 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1985DC433D2;
-        Thu, 19 Jan 2023 00:04:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674086700;
-        bh=XFj3V77eBnU3VzKi4DgSZePbZGDbcn3G9qKgGyp2XD8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=QVfae5fKfNKNTnr1w12VRmIl8UEoSNkrqGkPAfAs96RiVpacw3sxfePzEuP6ybjmv
-         6b3dP/jyE9f62SAearEiXwl76+14iyGEgVcIlTvnt6O5TPGbBWEHcJhjhPQhURi/YO
-         ytLUKXCIOt0px7hs6EPrz8C++ng8Ad2QLFedYmqFadDQAVoK+5ZmO/0JtjcDWFqlrm
-         DQnpP7MN+O3QeV/NGG22YuniDx4m6J4C9zILlujpyo1SLe4mZ4+gXAJCL2Es2Yh+VN
-         dwoNXP6O/sAjKEjYfu/cZ6DMw9jOCe0eU01U88SGvdT1Eny/ElHT1mRNKk5kKOKnwV
-         Q9gjXZbxPmZjw==
-Date:   Wed, 18 Jan 2023 18:04:58 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Zeno Davatz <zdavatz@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bruno Moreira-Guedes <brunodout.dev@gmail.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-Subject: Re: [Bug 216859] New: PCI bridge to bus boot hang at enumeration
-Message-ID: <20230119000458.GA275446@bhelgaas>
+        with ESMTP id S229827AbjASBah (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 20:30:37 -0500
+Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B385B12F10;
+        Wed, 18 Jan 2023 17:28:14 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1674091694; x=1705627694;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=UAZ94p0WUC/AaXFVxPFR+U579xW3l9C+CQE+2DDw6Tc=;
+  b=lniYkZfNFFZW4nTGLG5eQTp9WggnA9/1kwSBuedTWQ5Dzh8u1EGokFOB
+   Yun/spLiIRiGjBG0mopH3EmknIs7w3p6AGHkC1TUE5j33ynMAx0V1GDTK
+   Uea7D9tIYDqTqj1Wesx2vSYJT9Jh4FfCDdN73icmjfaUxyzVfVEwEbkeQ
+   pE2bvxWRWoQIj6cIH+BtUqFF7V84AzPU83DnddRGgbOyaW8MQLnG+lKrG
+   4ZiElEKGfEORzZ4qMTeJy7D98JmdHgRM2W8rWeRVB1pTmRvJpv3mg9jjO
+   UwCwb1gO3gAl0TxnQaN1eUk0W1C8zd2YiB2Ow1qXMY8zqa3uTPK+FE60A
+   A==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="322847445"
+X-IronPort-AV: E=Sophos;i="5.97,226,1669104000"; 
+   d="scan'208";a="322847445"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2023 17:28:14 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="767995621"
+X-IronPort-AV: E=Sophos;i="5.97,226,1669104000"; 
+   d="scan'208";a="767995621"
+Received: from unknown (HELO fedora.sh.intel.com) ([10.238.175.104])
+  by fmsmga002.fm.intel.com with ESMTP; 18 Jan 2023 17:28:08 -0800
+From:   Tianfei Zhang <tianfei.zhang@intel.com>
+To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-fpga@vger.kernel.org, lukas@wunner.de, kabel@kernel.org,
+        mani@kernel.org, pali@kernel.org, mdf@kernel.org, hao.wu@intel.com,
+        yilun.xu@intel.com, trix@redhat.com, jgg@ziepe.ca,
+        ira.weiny@intel.com, andriy.shevchenko@linux.intel.com,
+        dan.j.williams@intel.com, keescook@chromium.org, rafael@kernel.org,
+        russell.h.weight@intel.com, corbet@lwn.net,
+        linux-doc@vger.kernel.org, ilpo.jarvinen@linux.intel.com,
+        lee@kernel.org, gregkh@linuxfoundation.org,
+        matthew.gerlach@linux.intel.com
+Cc:     Tianfei Zhang <tianfei.zhang@intel.com>
+Subject: [PATCH v1 02/12] PCI: hotplug: expose APIs from pciehp driver
+Date:   Wed, 18 Jan 2023 20:35:52 -0500
+Message-Id: <20230119013602.607466-3-tianfei.zhang@intel.com>
+X-Mailer: git-send-email 2.38.1
+In-Reply-To: <20230119013602.607466-1-tianfei.zhang@intel.com>
+References: <20230119013602.607466-1-tianfei.zhang@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOkhzLW+1z58681zBV7LT=Lw=tcT9EgVPEbKx8YGsa+EJyxUSw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Krzysztof]
+When a PCIe-based FPGA card is reprogrammed, it temporarily
+disappears from the PCIe bus. This needs to be managed by
+disabling the link to avoid PCIe errors while the device is
+not present. Also, re-enabling the link and rescan the PCI
+devices must be performed after loading the new images. Export
+functions from pciehp driver necessary for removing and
+reconfiguring the PCI devices below a PCI hotplug bridge.
 
-On Fri, Jan 06, 2023 at 05:42:33PM +0100, Zeno Davatz wrote:
-> On Fri, Dec 30, 2022 at 7:50 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Dec 28, 2022 at 12:42:34PM -0600, Bjorn Helgaas wrote:
-> > > On Wed, Dec 28, 2022 at 06:42:38PM +0100, Zeno Davatz wrote:
-> > > > On Wed, Dec 28, 2022 at 1:02 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > On Wed, Dec 28, 2022 at 08:37:52AM +0000, bugzilla-daemon@kernel.org wrote:
-> > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=216859
-> > > > >
-> > > > > >            Summary: PCI bridge to bus boot hang at enumeration
-> > > > > >     Kernel Version: 6.1-rc1
-> > > > > > ...
-> > > > >
-> > > > > > With Kernel 6.1-rc1 the enumeration process stopped working for me,
-> > > > > > see attachments.
-> > > > > >
-> > > > > > The enumeration works fine with Kernel 6.0 and below.
-> > > > > >
-> > > > > > Same problem still exists with v6.1. and v6.2.-rc1
-> > > > >
-> > > > > Thank you very much for your report, Zeno!
-> > > > >
-> > > > > v6.0 works, v6.1-rc1 fails.  Would you mind booting v6.1-rc1 with the
-> > > > > "ignore_loglevel initcall_debug" kernel parameters and taking a photo
-> > > > > when it hangs?
-> > > >
-> > > > I will try this after Januar 7th 2023.
-> 
-> I updated the issue:
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=216859
-> 
-> I booted with the option: "ignore_loglevel initcall_debug"
+Signed-off-by: Tianfei Zhang <tianfei.zhang@intel.com>
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/pci/hotplug/pciehp.h     | 2 ++
+ drivers/pci/hotplug/pciehp_hpc.c | 5 ++++-
+ drivers/pci/hotplug/pciehp_pci.c | 2 ++
+ 3 files changed, 8 insertions(+), 1 deletion(-)
 
-Thanks!  There's so much pcie output in that picture that we can't see
-any of the initcall logging.  Can you capture another movie, but use
-kernel parameters like "ignore_loglevel initcall_debug boot_delay=100"
-to slow things down?  The full-speed boot is too fast for the camera
-to capture all the output.  You can do this on any convenient kernel
-that hangs.
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index e0a614acee05..c7f455a3b08f 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -194,6 +194,8 @@ int pciehp_get_raw_indicator_status(struct hotplug_slot *h_slot, u8 *status);
+ 
+ int pciehp_slot_reset(struct pcie_device *dev);
+ 
++int pciehp_link_enable(struct controller *ctrl);
++
+ static inline const char *slot_name(struct controller *ctrl)
+ {
+ 	return hotplug_slot_name(&ctrl->hotplug_slot);
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 10e9670eea0b..11e4bc58aec0 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -328,6 +328,7 @@ int pciehp_check_link_status(struct controller *ctrl)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_NS_GPL(pciehp_check_link_status, PCIEHP);
+ 
+ static int __pciehp_link_set(struct controller *ctrl, bool enable)
+ {
+@@ -346,10 +347,11 @@ static int __pciehp_link_set(struct controller *ctrl, bool enable)
+ 	return 0;
+ }
+ 
+-static int pciehp_link_enable(struct controller *ctrl)
++int pciehp_link_enable(struct controller *ctrl)
+ {
+ 	return __pciehp_link_set(ctrl, true);
+ }
++EXPORT_SYMBOL_NS_GPL(pciehp_link_enable, PCIEHP);
+ 
+ int pciehp_get_raw_indicator_status(struct hotplug_slot *hotplug_slot,
+ 				    u8 *status)
+@@ -482,6 +484,7 @@ int pciehp_query_power_fault(struct controller *ctrl)
+ 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+ 	return !!(slot_status & PCI_EXP_SLTSTA_PFD);
+ }
++EXPORT_SYMBOL_NS_GPL(pciehp_query_power_fault, PCIEHP);
+ 
+ int pciehp_set_raw_indicator_status(struct hotplug_slot *hotplug_slot,
+ 				    u8 status)
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index d17f3bf36f70..dd44e999b777 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -69,6 +69,7 @@ int pciehp_configure_device(struct controller *ctrl)
+ 	pci_unlock_rescan_remove();
+ 	return ret;
+ }
++EXPORT_SYMBOL_NS_GPL(pciehp_configure_device, PCIEHP);
+ 
+ /**
+  * pciehp_unconfigure_device() - remove PCI devices below a hotplug bridge
+@@ -120,3 +121,4 @@ void pciehp_unconfigure_device(struct controller *ctrl, bool presence)
+ 
+ 	pci_unlock_rescan_remove();
+ }
++EXPORT_SYMBOL_NS_GPL(pciehp_unconfigure_device, PCIEHP);
+-- 
+2.38.1
 
-There might be more we can do with the bisection, too, but I don't
-have any suggestions for that yet.  Maybe Krzysztof does.
-
-Bjorn
