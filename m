@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B90D6C678DC
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 01:31:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 791C9C677F1
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 01:31:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230188AbjASBbk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 20:31:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45130 "EHLO
+        id S229634AbjASBbm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 20:31:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45120 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229928AbjASBai (ORCPT
+        with ESMTP id S229862AbjASBai (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 20:30:38 -0500
 Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 520214903B;
-        Wed, 18 Jan 2023 17:28:38 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F73D2C647;
+        Wed, 18 Jan 2023 17:28:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674091718; x=1705627718;
+  t=1674091700; x=1705627700;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=VUExVLrrHvppHIaV2qBfwGoE2alj2nO9APdfx3eq+jA=;
-  b=S4moSG0ym34U+hnnxDK+RV3LjoqM7hQ0o5KF8uwQ3ku5P53cVP1RnlsE
-   OzrlYlRTQ0Ee5sMi6D283YD2F35nGKYfH2got7oX2TEve8SNhl56pe74V
-   GMSjxdgkrm8BwIgMmqyjsv+gWRgWP16YXJiUYmx5AraFcdKy6Jjt6KHGI
-   2I9TGXkuD8JS8iUZj+BWJwaXGOG31LM2zfBX8s3QZefIj63YSuASuqzyE
-   hFHt7edDIEX8ewKwtozsPvteRnnshBxF4Ft+O6rsdh4AJogtb45/maRiA
-   hUCHDyWZl74Eqkl7HLaFw0gp7r9JC0tyn0eZwqu/iNGO7E2gJx6ZBntJS
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="322847521"
+  bh=/fMvxq4ANCu2cW712GMMTIFRFtohqCRfRXkl6DAzvos=;
+  b=WZrJQnrCS1MIiO+78TrLWPEZ3C8AYcw1GsQxe0iI0Wg/jvq2jLoumIuH
+   zVpgWpcho3tJW2X/e6mL3e4gCj0LBGiafIB8CsQ8XaGjPqbKg8QqRLwsS
+   VRinlaM68VMEvITZ2ZgdOItXGu8Vz3QiKS0OjNgWuJU9HB7zXXu0cXRZp
+   WXpLDhDInnX1R9vq4u+Fa3FLp0/NZW0AEU54qVHfBm+Db/9NmprX1TjzL
+   i4E7A6BwzdE/P9QbIMX8yZ+JbGTNyd+2hiaDHPSHQMrPEVfv+CbFJgyg5
+   2cF3Cw/V/djB68rliwVzHTEknmUFnAcFmw5F5U2MjxVqLBrrYoz83/9Wy
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="322847462"
 X-IronPort-AV: E=Sophos;i="5.97,226,1669104000"; 
-   d="scan'208";a="322847521"
+   d="scan'208";a="322847462"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2023 17:28:38 -0800
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2023 17:28:20 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="767995651"
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="767995625"
 X-IronPort-AV: E=Sophos;i="5.97,226,1669104000"; 
-   d="scan'208";a="767995651"
+   d="scan'208";a="767995625"
 Received: from unknown (HELO fedora.sh.intel.com) ([10.238.175.104])
-  by fmsmga002.fm.intel.com with ESMTP; 18 Jan 2023 17:28:32 -0800
+  by fmsmga002.fm.intel.com with ESMTP; 18 Jan 2023 17:28:14 -0800
 From:   Tianfei Zhang <tianfei.zhang@intel.com>
 To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
         linux-fpga@vger.kernel.org, lukas@wunner.de, kabel@kernel.org,
@@ -50,63 +50,61 @@ To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
         lee@kernel.org, gregkh@linuxfoundation.org,
         matthew.gerlach@linux.intel.com
 Cc:     Tianfei Zhang <tianfei.zhang@intel.com>
-Subject: [PATCH v1 06/12] driver core: expose device_is_ancestor() API
-Date:   Wed, 18 Jan 2023 20:35:56 -0500
-Message-Id: <20230119013602.607466-7-tianfei.zhang@intel.com>
+Subject: [PATCH v1 03/12] PCI: hotplug: add and expose link disable API
+Date:   Wed, 18 Jan 2023 20:35:53 -0500
+Message-Id: <20230119013602.607466-4-tianfei.zhang@intel.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230119013602.607466-1-tianfei.zhang@intel.com>
 References: <20230119013602.607466-1-tianfei.zhang@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Exposes device_is_ancestor() API which can be used
-for check the device is the target device's ancestor or not.
+When a PCIe-based FPGA card is reprogrammed, it temporarily
+disappears from the PCIe bus. This needs to be managed to
+avoid PCIe errors while the device is not present. Also,
+re-probing and rescan the PCI devices must be performed after
+loading the new images. Export functions from pciehp driver
+necessary for disable and enable the PCI link of a PCI hotplug
+bridge.
 
 Signed-off-by: Tianfei Zhang <tianfei.zhang@intel.com>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/base/core.c    | 3 ++-
- include/linux/device.h | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/hotplug/pciehp.h     | 1 +
+ drivers/pci/hotplug/pciehp_hpc.c | 6 ++++++
+ 2 files changed, 7 insertions(+)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index a3e14143ec0c..597192b38198 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -262,7 +262,7 @@ static void device_link_remove_from_lists(struct device_link *link)
- }
- #endif /* !CONFIG_SRCU */
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index c7f455a3b08f..8b58d0e84644 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -195,6 +195,7 @@ int pciehp_get_raw_indicator_status(struct hotplug_slot *h_slot, u8 *status);
+ int pciehp_slot_reset(struct pcie_device *dev);
  
--static bool device_is_ancestor(struct device *dev, struct device *target)
-+bool device_is_ancestor(struct device *dev, struct device *target)
+ int pciehp_link_enable(struct controller *ctrl);
++int pciehp_link_disable(struct controller *ctrl);
+ 
+ static inline const char *slot_name(struct controller *ctrl)
  {
- 	while (target->parent) {
- 		target = target->parent;
-@@ -271,6 +271,7 @@ static bool device_is_ancestor(struct device *dev, struct device *target)
- 	}
- 	return false;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 11e4bc58aec0..729546c0c1f9 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -353,6 +353,12 @@ int pciehp_link_enable(struct controller *ctrl)
  }
-+EXPORT_SYMBOL_GPL(device_is_ancestor);
+ EXPORT_SYMBOL_NS_GPL(pciehp_link_enable, PCIEHP);
  
- /**
-  * device_is_dependent - Check if one device depends on another one
-diff --git a/include/linux/device.h b/include/linux/device.h
-index 44e3acae7b36..35e35982d9a5 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -909,6 +909,7 @@ int device_move(struct device *dev, struct device *new_parent,
- int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid);
- const char *device_get_devnode(struct device *dev, umode_t *mode, kuid_t *uid,
- 			       kgid_t *gid, const char **tmp);
-+bool device_is_ancestor(struct device *dev, struct device *target);
- int device_is_dependent(struct device *dev, void *target);
- 
- static inline bool device_supports_offline(struct device *dev)
++int pciehp_link_disable(struct controller *ctrl)
++{
++	return __pciehp_link_set(ctrl, false);
++}
++EXPORT_SYMBOL_NS_GPL(pciehp_link_disable, PCIEHP);
++
+ int pciehp_get_raw_indicator_status(struct hotplug_slot *hotplug_slot,
+ 				    u8 *status)
+ {
 -- 
 2.38.1
 
