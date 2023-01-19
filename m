@@ -2,77 +2,155 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0019EC678D4
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 05:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CF12C00A5A
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 06:10:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229887AbjASFAR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 19 Jan 2023 00:00:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42552 "EHLO
+        id S229670AbjASGKm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 19 Jan 2023 01:10:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230089AbjASE7u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 23:59:50 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96B696E809;
-        Wed, 18 Jan 2023 20:54:06 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 3024661B08;
-        Thu, 19 Jan 2023 04:54:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CE8BC433F2;
-        Thu, 19 Jan 2023 04:54:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674104045;
-        bh=8STx2T8AJT0u5Zm/c1U9jriS211KAffMt8EbxIqBgBM=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=rxL85B7jBYlqD7zx9JK9i4b/MHm8n93LItWc32urivS+btvL/bkcFdb23u8uuJSo9
-         PRRDihA+oN3AfCvmgRZr/MoEL2N5ElAUTwYGzgFOktwQqypHBoRryAi5L0cpQbeMe3
-         tV96jsK2VwlR6rVKtOjeC4JD62SASG0GIAuXrbMaZMFpgGeKjYKqOcHmgKhCqQFrmv
-         uih3LhL1xSSQtTUjJRU2iV3754K/kd9PuVU4EdSK33HsFYDMCBZ5oOfAoTZw3cPenJ
-         GYcYHPZqdbPkOcBeYvTW1q5ta6scRWGDFTA8ltJXg3wgj4LwCfxbt2p/3JP1cRct6D
-         KMR3JkNOG7oZA==
-From:   Bjorn Andersson <andersson@kernel.org>
-To:     shawn.guo@linaro.org, kw@linux.com, linux-pci@vger.kernel.org,
-        lpieralisi@kernel.org, konrad.dybcio@linaro.org,
-        bhelgaas@google.com, robh@kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        Robert Marko <robimarko@gmail.com>,
-        linux-arm-msm@vger.kernel.org, agross@kernel.org,
-        svarbanov@mm-sol.com, mani@kernel.org
-Subject: Re: (subset) [PATCH v2 1/9] arm64: dts: qcom: ipq8074: fix Gen2 PCIe QMP PHY
-Date:   Wed, 18 Jan 2023 22:54:00 -0600
-Message-Id: <167410403679.3048186.3473019994896236828.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.37.1
-In-Reply-To: <20230113164449.906002-1-robimarko@gmail.com>
-References: <20230113164449.906002-1-robimarko@gmail.com>
+        with ESMTP id S229481AbjASGKl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 19 Jan 2023 01:10:41 -0500
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C420470A9
+        for <linux-pci@vger.kernel.org>; Wed, 18 Jan 2023 22:10:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1674108640; x=1705644640;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=2GORJR8UxXm60Lh6doausCfDvpXmVmi1KKiStuBunH0=;
+  b=G1pWoDA+koDLwXEmrU35BntB6SYwdp13+u4gFOLMWtG3nc4wKP4m6FS3
+   e1Em9w9epO7QypNcXUqA9ddqUIkZxlRP6+gpGLTJ5dZAwqCB9etOsNrrj
+   x2qbK6TVetyZIgqrp4GDNfIC0nb6v2e9114VSdeUIK0ivmH8sJ/I09iCd
+   EGQfSG2P+0pc0eXfumvY9b+SJiWCP7neGt81jyjN5YYJ9py4HsJaGURwb
+   9NxogPl8Hj4p1Agcd2VS7XXm9JNwNWaoFX4KOkyF5nCugs3dvyli1XEDb
+   FrnNuaueqM904AiqJcibsrNLel99Y5oqBC469zRdWCUcUzaCqXq9ZFMiB
+   w==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="323892682"
+X-IronPort-AV: E=Sophos;i="5.97,228,1669104000"; 
+   d="scan'208";a="323892682"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2023 22:10:40 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="833878897"
+X-IronPort-AV: E=Sophos;i="5.97,228,1669104000"; 
+   d="scan'208";a="833878897"
+Received: from lkp-server01.sh.intel.com (HELO 5646d64e7320) ([10.239.97.150])
+  by orsmga005.jf.intel.com with ESMTP; 18 Jan 2023 22:10:37 -0800
+Received: from kbuild by 5646d64e7320 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1pIO8C-0001Bw-1Q;
+        Thu, 19 Jan 2023 06:10:36 +0000
+Date:   Thu, 19 Jan 2023 14:10:33 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [helgaas-pci:pci/switchtec] BUILD SUCCESS
+ ddc10938e08cd7aac63d8385f7305f7889df5179
+Message-ID: <63c8ded9.G2RtYnQw5iM7aM26%lkp@intel.com>
+User-Agent: Heirloom mailx 12.5 6/20/10
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 13 Jan 2023 17:44:41 +0100, Robert Marko wrote:
-> Serdes register space sizes are incorrect, update them to match the
-> actual sizes from downstream QCA 5.4 kernel.
-> 
-> 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/switchtec
+branch HEAD: ddc10938e08cd7aac63d8385f7305f7889df5179  PCI: switchtec: Return -EFAULT for copy_to_user() errors
 
-Applied, thanks!
+elapsed time: 726m
 
-[1/9] arm64: dts: qcom: ipq8074: fix Gen2 PCIe QMP PHY
-      commit: 100d9c94ccf15b02742c326cd04f422ab729153b
-[2/9] arm64: dts: qcom: ipq8074: fix Gen3 PCIe QMP PHY
-      commit: 7ba33591b45f9d547a317e42f1c2acd19c925eb6
-[3/9] arm64: dts: qcom: ipq8074: correct Gen2 PCIe ranges
-      commit: 2055cb7dccea16bafa3adf9c5e3216949512c34a
-[4/9] arm64: dts: qcom: ipq8074: set Gen2 PCIe pcie max-link-speed
-      commit: b60590314828e3da670bed94129f4ebc02b87548
-[8/9] arm64: dts: qcom: ipq8074: fix Gen3 PCIe node
-      commit: 3e83a9c41ab0244a45a4a2800b9adb8de0d15f82
-[9/9] arm64: dts: qcom: ipq8074: correct PCIe QMP PHY output clock names
-      commit: 0e8b90c0256cf9c9589e2cee517dedc987a34355
+configs tested: 79
+configs skipped: 2
 
-Best regards,
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arc                                 defconfig
+arc                              allyesconfig
+alpha                            allyesconfig
+alpha                               defconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+s390                                defconfig
+s390                             allmodconfig
+x86_64                            allnoconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+s390                             allyesconfig
+x86_64                           rhel-8.3-kvm
+x86_64                           rhel-8.3-syz
+x86_64                           rhel-8.3-bpf
+x86_64                         rhel-8.3-kunit
+ia64                             allmodconfig
+i386                             allyesconfig
+i386                                defconfig
+powerpc                           allnoconfig
+mips                             allyesconfig
+powerpc                          allmodconfig
+sh                               allmodconfig
+powerpc                      mgcoge_defconfig
+sh                        dreamcast_defconfig
+sh                           se7722_defconfig
+riscv                randconfig-r042-20230118
+s390                 randconfig-r044-20230118
+arc                  randconfig-r043-20230118
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                               rhel-8.3
+i386                          randconfig-a012
+i386                          randconfig-a014
+i386                          randconfig-a016
+x86_64                        randconfig-a006
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+arm64                            allyesconfig
+arm                                 defconfig
+arm                              allyesconfig
+x86_64                          rhel-8.3-func
+x86_64                    rhel-8.3-kselftests
+i386                          randconfig-c001
+x86_64                        randconfig-a011
+x86_64                        randconfig-a013
+x86_64                        randconfig-a015
+sh                                  defconfig
+powerpc                mpc7448_hpc2_defconfig
+xtensa                              defconfig
+parisc                           allyesconfig
+sparc                               defconfig
+xtensa                           allyesconfig
+csky                                defconfig
+sparc                            allyesconfig
+x86_64                                  kexec
+arm                       omap2plus_defconfig
+microblaze                          defconfig
+nios2                         10m50_defconfig
+arm                               allnoconfig
+sh                           se7705_defconfig
+arc                      axs103_smp_defconfig
+arm                       imx_v6_v7_defconfig
+sh                              ul2_defconfig
+sh                           se7750_defconfig
+arc                     nsimosci_hs_defconfig
+
+clang tested configs:
+x86_64                          rhel-8.3-rust
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a002
+i386                          randconfig-a006
+i386                          randconfig-a004
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+x86_64                        randconfig-a001
+arm                        spear3xx_defconfig
+arm                        neponset_defconfig
+x86_64                        randconfig-k001
+
 -- 
-Bjorn Andersson <andersson@kernel.org>
+0-DAY CI Kernel Test Service
+https://01.org/lkp
