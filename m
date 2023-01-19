@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFAC2C678D4
-	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 01:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0148CC678D6
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 01:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229901AbjASBeh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 20:34:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45148 "EHLO
+        id S229968AbjASBek (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 20:34:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45136 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230040AbjASBak (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 20:30:40 -0500
+        with ESMTP id S230031AbjASBaj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 20:30:39 -0500
 Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0F9B5AB76;
-        Wed, 18 Jan 2023 17:29:07 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A84B37F20;
+        Wed, 18 Jan 2023 17:28:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674091747; x=1705627747;
+  t=1674091730; x=1705627730;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=8i69sD1dc8EqIXhwoHYyaLvbsgr6RGeo037UG511anQ=;
-  b=SSxwFZq4uBFKu8kQZvgrngxkHfHkXif4lEh8zG/60minPevtOUJ3k1V1
-   bHTh6TV057zQL/J101xkHIkexDxMerEMgfXA+RVCbLBy4i8YwswbPhDLC
-   4BzJUMu9nUZuP5jNwd6tbfuAwg/QFW4YvmJiqlxTPyoe4B6lNZHYuDxT9
-   I22B96f3+ViuUyxLS+p/yVJaSjKiy/qPlEcukctfNJJE9b/lkbFK8b/o2
-   ptFSOr2m8ICpyduAyF6EgayiX6Ybj2d3Qu8C7186NIU/RhWEvnzFosQak
-   L3s7KVr+JoABfcW5DGvWEQ1KHkd6BEjzN1KuWbGqLkThRZfGXrSKjyp+C
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="322847623"
+  bh=92WpI/CMYfwGiXcsjcP/NI5y3TpYtmkZChXGGpFRbp8=;
+  b=NZ6hYGX/bDPHMCNa6Y0TYUPAH9sltl7RFp1xTiX3yfeST5hNmphUh/PJ
+   ScqsRoK6AHXMHPHaxSqZyzC/DOTzt+4Brcefp7CpT3Lh8qrk9qe74F6K5
+   7+ImcGqQtCs1Ul70BAzSHhjKiyo0JoTDXuGnn9C9x25cKPd5nXOj0gN8w
+   MqdliTxHmktLVtEqdcfnUPWPpwQ9dva61fLFuFDiNwmFj5VRtAkae84D1
+   vUtj+DbEPNIBoFkAPYjo4OAFkjAIYeSR5E9wgKmpabzjDUspjhSlmNDat
+   jFoMfJmPbKW3sjshoBS7kPSJn2+av4tmno3Q/algaoA5DX+Ms1gJhfoTt
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="322847566"
 X-IronPort-AV: E=Sophos;i="5.97,226,1669104000"; 
-   d="scan'208";a="322847623"
+   d="scan'208";a="322847566"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2023 17:29:07 -0800
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2023 17:28:49 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="767995709"
+X-IronPort-AV: E=McAfee;i="6500,9779,10594"; a="767995682"
 X-IronPort-AV: E=Sophos;i="5.97,226,1669104000"; 
-   d="scan'208";a="767995709"
+   d="scan'208";a="767995682"
 Received: from unknown (HELO fedora.sh.intel.com) ([10.238.175.104])
-  by fmsmga002.fm.intel.com with ESMTP; 18 Jan 2023 17:29:01 -0800
+  by fmsmga002.fm.intel.com with ESMTP; 18 Jan 2023 17:28:44 -0800
 From:   Tianfei Zhang <tianfei.zhang@intel.com>
 To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
         linux-fpga@vger.kernel.org, lukas@wunner.de, kabel@kernel.org,
@@ -50,9 +50,9 @@ To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
         lee@kernel.org, gregkh@linuxfoundation.org,
         matthew.gerlach@linux.intel.com
 Cc:     Tianfei Zhang <tianfei.zhang@intel.com>
-Subject: [PATCH v1 11/12] fpga: m10bmc-sec: add m10bmc_sec_retimer_load callback
-Date:   Wed, 18 Jan 2023 20:36:01 -0500
-Message-Id: <20230119013602.607466-12-tianfei.zhang@intel.com>
+Subject: [PATCH v1 08/12] fpga: m10bmc-sec: register BMC device into fpgahp driver
+Date:   Wed, 18 Jan 2023 20:35:58 -0500
+Message-Id: <20230119013602.607466-9-tianfei.zhang@intel.com>
 X-Mailer: git-send-email 2.38.1
 In-Reply-To: <20230119013602.607466-1-tianfei.zhang@intel.com>
 References: <20230119013602.607466-1-tianfei.zhang@intel.com>
@@ -62,213 +62,199 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Create m10bmc_sec_retimer_load() callback function to provide
-a trigger to update a new retimer (Intel C827 Ethernet
-transceiver) firmware on Intel PAC N3000 Card.
+Add a registration of Intel M10 BMC security update device
+into fpgahp driver by fpgahp_bmc_device_register() API.
 
 Signed-off-by: Russ Weight <russell.h.weight@intel.com>
 Signed-off-by: Tianfei Zhang <tianfei.zhang@intel.com>
 ---
- drivers/fpga/intel-m10-bmc-sec-update.c | 136 ++++++++++++++++++++++++
- include/linux/mfd/intel-m10-bmc.h       |  31 ++++++
- 2 files changed, 167 insertions(+)
+ drivers/fpga/Kconfig                    |   1 +
+ drivers/fpga/intel-m10-bmc-sec-update.c | 110 ++++++++++++++++++++++++
+ 2 files changed, 111 insertions(+)
 
+diff --git a/drivers/fpga/Kconfig b/drivers/fpga/Kconfig
+index 2188c5658e06..f83682d00a1b 100644
+--- a/drivers/fpga/Kconfig
++++ b/drivers/fpga/Kconfig
+@@ -248,6 +248,7 @@ config FPGA_MGR_VERSAL_FPGA
+ config FPGA_M10_BMC_SEC_UPDATE
+ 	tristate "Intel MAX10 BMC Secure Update driver"
+ 	depends on MFD_INTEL_M10_BMC
++	depends on HOTPLUG_PCI_FPGA
+ 	select FW_LOADER
+ 	select FW_UPLOAD
+ 	help
 diff --git a/drivers/fpga/intel-m10-bmc-sec-update.c b/drivers/fpga/intel-m10-bmc-sec-update.c
-index 647531094b3b..053be33713c5 100644
+index 79d48852825e..647531094b3b 100644
 --- a/drivers/fpga/intel-m10-bmc-sec-update.c
 +++ b/drivers/fpga/intel-m10-bmc-sec-update.c
-@@ -291,6 +291,137 @@ static int m10bmc_sec_bmc_image_load_1(struct m10bmc_sec *sec)
- 	return m10bmc_sec_bmc_image_load(sec, 1);
- }
+@@ -8,6 +8,7 @@
+ #include <linux/bitfield.h>
+ #include <linux/device.h>
+ #include <linux/firmware.h>
++#include <linux/fpga/fpgahp_manager.h>
+ #include <linux/mfd/intel-m10-bmc.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/module.h>
+@@ -19,10 +20,21 @@ struct m10bmc_sec {
+ 	struct intel_m10bmc *m10bmc;
+ 	struct fw_upload *fwl;
+ 	char *fw_name;
++	struct image_load *image_load;
++	struct fpgahp_bmc_device *fpgahp_bmc;
+ 	u32 fw_name_id;
+ 	bool cancel_request;
+ };
  
-+static int trigger_retimer_eeprom_load(struct m10bmc_sec *sec)
++struct image_load {
++	const char *name;
++	int (*load_image)(struct m10bmc_sec *sec);
++	u32 wait_time_msec;
++};
++
++/* default wait 10 seconds for FPGA/BMC image reload */
++#define RELOAD_DEFAULT_WAIT_MSECS  (10 * MSEC_PER_SEC)
++
+ static DEFINE_XARRAY_ALLOC(fw_upload_xa);
+ 
+ /* Root Entry Hash (REH) support */
+@@ -137,6 +149,43 @@ DEVICE_ATTR_SEC_CSK_RO(pr, PR_PROG_ADDR + CSK_VEC_OFFSET);
+ 
+ #define FLASH_COUNT_SIZE 4096	/* count stored as inverted bit vector */
+ 
++static ssize_t m10bmc_available_images(struct fpgahp_bmc_device *bmc, char *buf)
 +{
-+	struct intel_m10bmc *m10bmc = sec->m10bmc;
-+	unsigned int val;
-+	int ret;
++	struct m10bmc_sec *sec = bmc->priv;
++	const struct image_load *hndlr;
++	ssize_t count = 0;
 +
-+	ret = regmap_update_bits(m10bmc->regmap, M10BMC_SYS_BASE + M10BMC_DOORBELL,
-+				 DRBL_PKVL_EEPROM_LOAD_SEC, DRBL_PKVL_EEPROM_LOAD_SEC);
-+	if (ret)
-+		return ret;
++	for (hndlr = sec->image_load; hndlr->name; hndlr++)
++		count += scnprintf(buf + count, PAGE_SIZE - count, "%s ", hndlr->name);
 +
-+	/*
-+	 * If the current NIOS FW supports this retimer update feature, then
-+	 * it will clear the same PKVL_EEPROM_LOAD bit in 2 seconds. Otherwise
-+	 * the driver needs to clear the PKVL_EEPROM_LOAD bit manually and
-+	 * return an error code.
-+	 */
-+	ret = regmap_read_poll_timeout(m10bmc->regmap, M10BMC_SYS_BASE + M10BMC_DOORBELL,
-+				       val, !(val & DRBL_PKVL_EEPROM_LOAD_SEC),
-+				       M10BMC_PKVL_LOAD_INTERVAL_US, M10BMC_PKVL_LOAD_TIMEOUT_US);
-+	if (ret == -ETIMEDOUT) {
-+		dev_err(sec->dev, "PKVL_EEPROM_LOAD clear timeout\n");
-+		regmap_update_bits(m10bmc->regmap, M10BMC_SYS_BASE + M10BMC_DOORBELL,
-+				   DRBL_PKVL_EEPROM_LOAD_SEC, 0);
-+	} else if (ret) {
-+		dev_err(sec->dev, "EEPROM_LOAD poll error %d\n", ret);
++	buf[count - 1] = '\n';
++
++	return count;
++}
++
++static int m10bmc_image_trigger(struct fpgahp_bmc_device *bmc, const char *buf,
++				u32 *wait_time_msec)
++{
++	struct m10bmc_sec *sec = bmc->priv;
++	const struct image_load *hndlr;
++	int ret = -EINVAL;
++
++	for (hndlr = sec->image_load; hndlr->name; hndlr++) {
++		if (sysfs_streq(buf, hndlr->name)) {
++			ret = hndlr->load_image(sec);
++			*wait_time_msec = hndlr->wait_time_msec;
++			break;
++		}
 +	}
 +
 +	return ret;
 +}
 +
-+static int poll_retimer_eeprom_load_done(struct m10bmc_sec *sec)
-+{
-+	struct intel_m10bmc *m10bmc = sec->m10bmc;
-+	unsigned int doorbell;
-+	int ret;
++static const struct fpgahp_bmc_ops fpgahp_bmc_ops = {
++	.image_trigger = m10bmc_image_trigger,
++	.available_images = m10bmc_available_images,
++};
 +
-+	/*
-+	 * RSU_STAT_PKVL_REJECT indicates that the current image is
-+	 * already programmed. RSU_PROG_PKVL_PROM_DONE that the firmware
-+	 * update process has finished, but does not necessarily indicate
-+	 * a successful update.
-+	 */
-+	ret = regmap_read_poll_timeout(m10bmc->regmap, M10BMC_SYS_BASE + M10BMC_DOORBELL,
-+				       doorbell, (rsu_prog(doorbell) == RSU_PROG_PKVL_PROM_DONE) ||
-+				       (rsu_stat(doorbell) == RSU_STAT_PKVL_REJECT),
-+				       M10BMC_PKVL_PRELOAD_INTERVAL_US,
-+				       M10BMC_PKVL_PRELOAD_TIMEOUT_US);
-+	if (ret) {
-+		if (ret == -ETIMEDOUT)
-+			dev_err(sec->dev,
-+				"Doorbell check timeout, last value 0x%08x\n", doorbell);
-+		else
-+			dev_err(sec->dev, "Doorbell poll error\n");
-+		return ret;
-+	}
-+
-+	if (rsu_stat(doorbell) == RSU_STAT_PKVL_REJECT) {
-+		dev_err(sec->dev, "Duplicate image rejected\n");
-+		return -EEXIST;
-+	}
-+
-+	return 0;
-+}
-+
-+static int poll_retimer_preload_done(struct m10bmc_sec *sec)
-+{
-+	struct intel_m10bmc *m10bmc = sec->m10bmc;
-+	unsigned int val;
-+	int ret;
-+
-+	/*
-+	 * Wait for the updated firmware to be loaded by the PKVL device
-+	 * and confirm that the updated firmware is operational
-+	 */
-+	ret = regmap_read_poll_timeout(m10bmc->regmap,
-+				       M10BMC_SYS_BASE + M10BMC_PKVL_POLL_CTRL, val,
-+				       (val & M10BMC_PKVL_PRELOAD) == M10BMC_PKVL_PRELOAD,
-+				       M10BMC_PKVL_PRELOAD_INTERVAL_US,
-+				       M10BMC_PKVL_PRELOAD_TIMEOUT_US);
-+	if (ret) {
-+		dev_err(sec->dev, "M10BMC_PKVL_PRELOAD poll error %d\n", ret);
-+		return ret;
-+	}
-+
-+	if ((val & M10BMC_PKVL_UPG_STATUS_MASK) != M10BMC_PKVL_UPG_STATUS_GOOD) {
-+		dev_err(sec->dev, "Error detected during upgrade\n");
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+static int retimer_check_idle(struct m10bmc_sec *sec)
+ static ssize_t flash_count_show(struct device *dev,
+ 				struct device_attribute *attr, char *buf)
+ {
+@@ -208,6 +257,54 @@ static void log_error_regs(struct m10bmc_sec *sec, u32 doorbell)
+ 		dev_err(sec->dev, "RSU auth result: 0x%08x\n", auth_result);
+ }
+ 
++static int m10bmc_sec_bmc_image_load(struct m10bmc_sec *sec,
++				     unsigned int val)
 +{
 +	u32 doorbell;
 +	int ret;
 +
-+	ret = m10bmc_sys_read(sec->m10bmc, M10BMC_DOORBELL, &doorbell);
-+	if (ret)
-+		return -EIO;
-+
-+	if (rsu_prog(doorbell) != RSU_PROG_IDLE &&
-+	    rsu_prog(doorbell) != RSU_PROG_RSU_DONE &&
-+	    rsu_prog(doorbell) != RSU_PROG_PKVL_PROM_DONE) {
-+		log_error_regs(sec, doorbell);
-+		return -EBUSY;
++	if (val > 1) {
++		dev_err(sec->dev, "invalid reload val = %u\n", val);
++		return -EINVAL;
 +	}
 +
-+	return 0;
++	ret = m10bmc_sys_read(sec->m10bmc, M10BMC_DOORBELL, &doorbell);
++	if (ret)
++		return ret;
++
++	if (doorbell & DRBL_REBOOT_DISABLED)
++		return -EBUSY;
++
++	return regmap_update_bits(sec->m10bmc->regmap,
++				  M10BMC_SYS_BASE + M10BMC_DOORBELL,
++				  DRBL_CONFIG_SEL | DRBL_REBOOT_REQ,
++				  FIELD_PREP(DRBL_CONFIG_SEL, val) | DRBL_REBOOT_REQ);
 +}
 +
-+static int m10bmc_sec_retimer_eeprom_load(struct m10bmc_sec *sec)
++static int m10bmc_sec_bmc_image_load_0(struct m10bmc_sec *sec)
 +{
-+	int ret;
-+
-+	ret = retimer_check_idle(sec);
-+	if (ret)
-+		return ret;
-+
-+	ret = trigger_retimer_eeprom_load(sec);
-+	if (ret)
-+		return ret;
-+
-+	ret = poll_retimer_eeprom_load_done(sec);
-+	if (ret)
-+		return ret;
-+
-+	return poll_retimer_preload_done(sec);
++	return m10bmc_sec_bmc_image_load(sec, 0);
 +}
 +
- static struct image_load m10bmc_image_load_hndlrs[] = {
- 	{
- 		.name = "bmc_factory",
-@@ -302,6 +433,11 @@ static struct image_load m10bmc_image_load_hndlrs[] = {
- 		.load_image = m10bmc_sec_bmc_image_load_0,
- 		.wait_time_msec = RELOAD_DEFAULT_WAIT_MSECS,
- 	},
++static int m10bmc_sec_bmc_image_load_1(struct m10bmc_sec *sec)
++{
++	return m10bmc_sec_bmc_image_load(sec, 1);
++}
++
++static struct image_load m10bmc_image_load_hndlrs[] = {
 +	{
-+		.name = "retimer_fw",
-+		.load_image = m10bmc_sec_retimer_eeprom_load,
-+		.wait_time_msec = 2 * RELOAD_DEFAULT_WAIT_MSECS,
++		.name = "bmc_factory",
++		.load_image = m10bmc_sec_bmc_image_load_1,
++		.wait_time_msec = RELOAD_DEFAULT_WAIT_MSECS,
 +	},
- 	{}
- };
++	{
++		.name = "bmc_user",
++		.load_image = m10bmc_sec_bmc_image_load_0,
++		.wait_time_msec = RELOAD_DEFAULT_WAIT_MSECS,
++	},
++	{}
++};
++
+ static enum fw_upload_err rsu_check_idle(struct m10bmc_sec *sec)
+ {
+ 	u32 doorbell;
+@@ -565,6 +662,7 @@ static int m10bmc_sec_probe(struct platform_device *pdev)
+ 	sec->dev = &pdev->dev;
+ 	sec->m10bmc = dev_get_drvdata(pdev->dev.parent);
+ 	dev_set_drvdata(&pdev->dev, sec);
++	sec->image_load = m10bmc_image_load_hndlrs;
  
-diff --git a/include/linux/mfd/intel-m10-bmc.h b/include/linux/mfd/intel-m10-bmc.h
-index f0044b14136e..35ce0c35138b 100644
---- a/include/linux/mfd/intel-m10-bmc.h
-+++ b/include/linux/mfd/intel-m10-bmc.h
-@@ -36,6 +36,37 @@
- #define M10BMC_VER_PCB_INFO_MSK		GENMASK(31, 24)
- #define M10BMC_VER_LEGACY_INVALID	0xffffffff
+ 	ret = xa_alloc(&fw_upload_xa, &sec->fw_name_id, sec,
+ 		       xa_limit_32b, GFP_KERNEL);
+@@ -587,6 +685,16 @@ static int m10bmc_sec_probe(struct platform_device *pdev)
+ 	}
  
-+/* Retimer related registers, in system register region */
-+#define M10BMC_PKVL_POLL_CTRL		0x80
-+#define M10BMC_PKVL_A_PRELOAD		BIT(16)
-+#define M10BMC_PKVL_A_PRELOAD_TO	BIT(17)
-+#define M10BMC_PKVL_A_DATA_TOO_BIG	BIT(18)
-+#define M10BMC_PKVL_A_HDR_CKSUM	BIT(20)
-+#define M10BMC_PKVL_B_PRELOAD		BIT(24)
-+#define M10BMC_PKVL_B_PRELOAD_TO	BIT(25)
-+#define M10BMC_PKVL_B_DATA_TOO_BIG	BIT(26)
-+#define M10BMC_PKVL_B_HDR_CKSUM	BIT(28)
+ 	sec->fwl = fwl;
 +
-+#define M10BMC_PKVL_PRELOAD		(M10BMC_PKVL_A_PRELOAD | M10BMC_PKVL_B_PRELOAD)
-+#define M10BMC_PKVL_PRELOAD_TIMEOUT	(M10BMC_PKVL_A_PRELOAD_TO | M10BMC_PKVL_B_PRELOAD_TO)
-+#define M10BMC_PKVL_DATA_TOO_BIG	(M10BMC_PKVL_A_DATA_TOO_BIG | M10BMC_PKVL_B_DATA_TOO_BIG)
-+#define M10BMC_PKVL_HDR_CHECKSUM	(M10BMC_PKVL_A_HDR_CKSUM | M10BMC_PKVL_B_HDR_CKSUM)
++	sec->fpgahp_bmc = fpgahp_bmc_device_register(&fpgahp_bmc_ops, sec->dev, sec);
++	if (IS_ERR(sec->fpgahp_bmc)) {
++		dev_err(sec->dev, "register hotplug bmc failed\n");
++		kfree(sec->fw_name);
++		xa_erase(&fw_upload_xa, sec->fw_name_id);
++		firmware_upload_unregister(sec->fwl);
++		return PTR_ERR(sec->fpgahp_bmc);
++	}
 +
-+#define M10BMC_PKVL_UPG_STATUS_MASK \
-+	(M10BMC_PKVL_PRELOAD | \
-+	M10BMC_PKVL_PRELOAD_TIMEOUT | \
-+	M10BMC_PKVL_DATA_TOO_BIG | \
-+	M10BMC_PKVL_HDR_CHECKSUM)
-+#define M10BMC_PKVL_UPG_STATUS_GOOD	(M10BMC_PKVL_PRELOAD | M10BMC_PKVL_HDR_CHECKSUM)
-+
-+/* interval 100ms and timeout 2s */
-+#define M10BMC_PKVL_LOAD_INTERVAL_US	(100 * USEC_PER_MSEC)
-+#define M10BMC_PKVL_LOAD_TIMEOUT_US	(2 * USEC_PER_SEC)
-+
-+/* interval 100ms and timeout 30s */
-+#define M10BMC_PKVL_PRELOAD_INTERVAL_US (100 * USEC_PER_MSEC)
-+#define M10BMC_PKVL_PRELOAD_TIMEOUT_US  (30 * USEC_PER_SEC)
-+
- /* Secure update doorbell register, in system register region */
- #define M10BMC_DOORBELL			0x400
+ 	return 0;
+ }
  
+@@ -594,6 +702,7 @@ static int m10bmc_sec_remove(struct platform_device *pdev)
+ {
+ 	struct m10bmc_sec *sec = dev_get_drvdata(&pdev->dev);
+ 
++	fpgahp_bmc_device_unregister(sec->fpgahp_bmc);
+ 	firmware_upload_unregister(sec->fwl);
+ 	kfree(sec->fw_name);
+ 	xa_erase(&fw_upload_xa, sec->fw_name_id);
+@@ -626,3 +735,4 @@ module_platform_driver(intel_m10bmc_sec_driver);
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_DESCRIPTION("Intel MAX10 BMC Secure Update");
+ MODULE_LICENSE("GPL");
++MODULE_IMPORT_NS(FPGAHP);
 -- 
 2.38.1
 
