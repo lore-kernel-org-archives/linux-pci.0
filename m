@@ -2,116 +2,82 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C813EC38159
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Jan 2023 05:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5577DC678DC
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Jan 2023 05:37:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231236AbjATFfk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Jan 2023 00:35:40 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40644 "EHLO
+        id S230365AbjATFhd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Jan 2023 00:37:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42216 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231808AbjATFfU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2023 00:35:20 -0500
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7FDF2B0B9;
-        Thu, 19 Jan 2023 21:31:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674192685; x=1705728685;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=bPwLT4AdfGFNjdbmHQTqlULNnRfeNCfvR5vyvMh1ppY=;
-  b=nJQ1xKWNQ9gUpHunIYAqfJfcNUyYyAIvvfBysMIaMp0QyinPIGdlWWR8
-   Fo53lVqCn7LDcbXWPA7klVFnGgfGy7hmP/c6Ix3eefHsz4E90oVLewxbt
-   ZSFsjTRNQTVKaPep4/DsyrJX6L0M2mJwF0E6KGbjkRYjmoLSfomwpzkFj
-   VuRclqGLld5P+vS2hHONi9H8erFUGqxSeaZ6UjlODA7lchVM0Gil0ELfu
-   dFYNTlZ4FX5NBoYPrt493C9jqUMFVIBzFVbpCoXPiUw7dsuCylr2KEus1
-   F6hRQ3/XYGPVTd4GFSptR18ckgYX7PWXvezZp4rXxkXsr0iaa8NAzDa9X
-   g==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10595"; a="411739204"
-X-IronPort-AV: E=Sophos;i="5.97,231,1669104000"; 
-   d="scan'208";a="411739204"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 21:28:46 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10595"; a="989296124"
-X-IronPort-AV: E=Sophos;i="5.97,231,1669104000"; 
-   d="scan'208";a="989296124"
-Received: from mtcooper-mobl.amr.corp.intel.com (HELO [10.212.132.108]) ([10.212.132.108])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 21:28:46 -0800
-Message-ID: <a374e36b-2da2-c76c-717c-1381b171d75e@linux.intel.com>
-Date:   Thu, 19 Jan 2023 21:28:45 -0800
+        with ESMTP id S230176AbjATFgt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2023 00:36:49 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E978CE3AE;
+        Thu, 19 Jan 2023 21:33:24 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 4B7DCB82667;
+        Thu, 19 Jan 2023 17:07:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAF1DC433F1;
+        Thu, 19 Jan 2023 17:07:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674148040;
+        bh=p21pGzD22MpoWatcSjUEkm1IDstJhidS3Q/BmnFObP8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=VB0v90HPUpSjfT4dp4KDfWV1uLlPh58zX+dCdCUBE7r5uS8I/kVy0uQm4Rj/cjB0F
+         2jaWmuy9HcXj6JlHF0/pXjIMwDKTbjkYG7OZ+JiZrbmCzp0bjeyVvJpryCjU+P6xnv
+         d3mAt3WP0R3QtfXWQuTLTWJ4jmUZzk+gNpU6lE8fOAeyZv5y0BFKAJvyMAnzCOmqdY
+         Xaifjh0J9LbdsYoXe+rhoUf/VhC2dEMfYZdqviCVeq2XXrnw0g6XxS3rMZ95ar7BPZ
+         92a933OMWBfksIZY+rCEZXrW5NSJrMILond4EbEpNxBxiHSxgErwKqAoQC70VNMTHM
+         HWLpW3oNDstgw==
+Date:   Thu, 19 Jan 2023 09:07:17 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Vinod Koul <vkoul@kernel.org>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Madalin Bucur <madalin.bucur@nxp.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Horatiu Vultur <horatiu.vultur@microchip.com>,
+        UNGLinuxDriver@microchip.com,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Siddharth Vadapalli <s-vadapalli@ti.com>,
+        Russell King <linux@armlinux.org.uk>, netdev@vger.kernel.org,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-usb@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org
+Subject: Re: [PATCH 1/7] phy: Add devm_of_phy_optional_get() helper
+Message-ID: <20230119090717.3e220c30@kernel.org>
+In-Reply-To: <Y8kmG+jB/s7stebA@matsya>
+References: <cover.1674036164.git.geert+renesas@glider.be>
+        <f53a1bcca637ceeafb04ce3540a605532d3bc34a.1674036164.git.geert+renesas@glider.be>
+        <20230118192809.2082b004@kernel.org>
+        <Y8kmG+jB/s7stebA@matsya>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.4.2
-Subject: Re: [PATCH V10 0/4] Enable PCIe ASPM and LTR on select hardware
-Content-Language: en-US
-To:     "David E. Box" <david.e.box@linux.intel.com>,
-        nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
-        lorenzo.pieralisi@arm.com, hch@infradead.org, kw@linux.com,
-        robh@kernel.org, bhelgaas@google.com, michael.a.bottini@intel.com,
-        rafael@kernel.org, me@adhityamohan.in
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230120031522.2304439-1-david.e.box@linux.intel.com>
-From:   Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20230120031522.2304439-1-david.e.box@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Thu, 19 Jan 2023 16:44:35 +0530 Vinod Koul wrote:
+> > For merging could you put this one on an immutable branch and then
+> > everyone can pull + apply patches for callers from their section?  
+> 
+> Since this is phy, I can do that and everyone else can merge that in or
+> all changes can go thru phy tree
 
-
-On 1/19/23 7:15 PM, David E. Box wrote:
-> This series adds a work around for enabling PCIe ASPM and for setting PCIe
-> LTR values on VMD reserved root ports on select platforms. While
-> configuration of these capabilities is usually done by BIOS, on these
-> platforms these capabilities will not be configured because the ports are
-> not visible to BIOS. This was part of an initial design that expected the
-> driver to completely handle the ports, including power management. However
-> on Linux those ports are still managed by the PCIe core, which has the
-> expectation that they adhere to device standards including BIOS
-> configuration, leading to this problem.
-> 
-> The target platforms are Tiger Lake, Alder Lake, and Raptor Lake though the
-> latter has already implemented support for configuring the LTR values.
-> Meteor Lake is expected add BIOS ASPM support, eliminating the future need
-> for this work around.
-> 
-> Note, the driver programs the LTRs because BIOS would also normally do this
-> for devices that do not set them by default. Without this, SoC power
-> management would be blocked on those platform. This SoC specific value is
-> the maximum latency required to allow the SoC to enter the deepest power
-> state.
-> 
-> This patch addresses the following open bugzillas on VMD enabled laptops
-> that cannot enter low power states.
-> 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=212355
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=215063
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=213717
-> 
-
-Looks good to me.
-
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-
-> David E. Box (3):
->   PCI: vmd: Use PCI_VDEVICE in device list
->   PCI: vmd: Create feature grouping for client products
->   PCI: vmd: Add quirk to configure PCIe ASPM and LTR
-> 
-> Michael Bottini (1):
->   PCI/ASPM: Add pci_enable_link_state()
-> 
->  drivers/pci/controller/vmd.c | 97 ++++++++++++++++++++++++++----------
->  drivers/pci/pcie/aspm.c      | 54 ++++++++++++++++++++
->  include/linux/pci.h          |  7 +++
->  3 files changed, 132 insertions(+), 26 deletions(-)
-> 
-> 
-> base-commit: 5dc4c995db9eb45f6373a956eb1f69460e69e6d4
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+Great! The microchip and ti drivers are relatively actively developed, 
+I reckon it's worth going the branch way.
