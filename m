@@ -2,106 +2,94 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15F19C677F1
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Jan 2023 23:48:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D097BC38159
+	for <linux-pci@archiver.kernel.org>; Thu, 19 Jan 2023 00:05:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229608AbjARXsC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Jan 2023 18:48:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51744 "EHLO
+        id S229682AbjASAFF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Jan 2023 19:05:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230209AbjARXrf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 18:47:35 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 147254A209;
-        Wed, 18 Jan 2023 15:47:14 -0800 (PST)
+        with ESMTP id S230221AbjASAFC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Jan 2023 19:05:02 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A32D4ABDA;
+        Wed, 18 Jan 2023 16:05:01 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BE56EB81F9C;
-        Wed, 18 Jan 2023 23:47:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 36586C433F1;
-        Wed, 18 Jan 2023 23:47:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E047361AA0;
+        Thu, 19 Jan 2023 00:05:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1985DC433D2;
+        Thu, 19 Jan 2023 00:04:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674085622;
-        bh=jU3LaV/UIN+dmBuggye012PcdlnkG7nIjHD98dbjUpk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=i4ewNbWLwndEi0QGob/RnVhLVMjzuxxSDIsj4Wz1njkOXrN9upsBTs0ek+BPlL5as
-         abQIZHzIDFX9Jwrt81zSgXU7iG8Dbwt1h94kki3ko5cioXiZCIEOkfZy25ZCh1f3dr
-         cwwgILQ4BWtV58AG2KtydiFYCCAOURTCsyziY0YAzmDaWvSTIo8CbjQ0m+Kduuv8KF
-         a5m+O4VBqcZLRX63ASPiFiX6tv4WrapyoAdu8xmNdUJFKlAq3GU9Bbw/9tXyKRoDdh
-         ioomQ2xowXpviJFHoiZqGEtYa8ZQnlTel79kH9P1YvHZBQ3eW1ffOOj5raLHnFojuh
-         cQDucPtnpq7qQ==
+        s=k20201202; t=1674086700;
+        bh=XFj3V77eBnU3VzKi4DgSZePbZGDbcn3G9qKgGyp2XD8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=QVfae5fKfNKNTnr1w12VRmIl8UEoSNkrqGkPAfAs96RiVpacw3sxfePzEuP6ybjmv
+         6b3dP/jyE9f62SAearEiXwl76+14iyGEgVcIlTvnt6O5TPGbBWEHcJhjhPQhURi/YO
+         ytLUKXCIOt0px7hs6EPrz8C++ng8Ad2QLFedYmqFadDQAVoK+5ZmO/0JtjcDWFqlrm
+         DQnpP7MN+O3QeV/NGG22YuniDx4m6J4C9zILlujpyo1SLe4mZ4+gXAJCL2Es2Yh+VN
+         dwoNXP6O/sAjKEjYfu/cZ6DMw9jOCe0eU01U88SGvdT1Eny/ElHT1mRNKk5kKOKnwV
+         Q9gjXZbxPmZjw==
+Date:   Wed, 18 Jan 2023 18:04:58 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     linux-pci@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org
-Subject: [PATCH 8/9] igc: Remove redundant pci_enable_pcie_error_reporting()
-Date:   Wed, 18 Jan 2023 17:46:11 -0600
-Message-Id: <20230118234612.272916-9-helgaas@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230118234612.272916-1-helgaas@kernel.org>
-References: <20230118234612.272916-1-helgaas@kernel.org>
+To:     Zeno Davatz <zdavatz@gmail.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bruno Moreira-Guedes <brunodout.dev@gmail.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+Subject: Re: [Bug 216859] New: PCI bridge to bus boot hang at enumeration
+Message-ID: <20230119000458.GA275446@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOkhzLW+1z58681zBV7LT=Lw=tcT9EgVPEbKx8YGsa+EJyxUSw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+[+cc Krzysztof]
 
-pci_enable_pcie_error_reporting() enables the device to send ERR_*
-Messages.  Since f26e58bf6f54 ("PCI/AER: Enable error reporting when AER is
-native"), the PCI core does this for all devices during enumeration.
+On Fri, Jan 06, 2023 at 05:42:33PM +0100, Zeno Davatz wrote:
+> On Fri, Dec 30, 2022 at 7:50 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Wed, Dec 28, 2022 at 12:42:34PM -0600, Bjorn Helgaas wrote:
+> > > On Wed, Dec 28, 2022 at 06:42:38PM +0100, Zeno Davatz wrote:
+> > > > On Wed, Dec 28, 2022 at 1:02 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > > On Wed, Dec 28, 2022 at 08:37:52AM +0000, bugzilla-daemon@kernel.org wrote:
+> > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=216859
+> > > > >
+> > > > > >            Summary: PCI bridge to bus boot hang at enumeration
+> > > > > >     Kernel Version: 6.1-rc1
+> > > > > > ...
+> > > > >
+> > > > > > With Kernel 6.1-rc1 the enumeration process stopped working for me,
+> > > > > > see attachments.
+> > > > > >
+> > > > > > The enumeration works fine with Kernel 6.0 and below.
+> > > > > >
+> > > > > > Same problem still exists with v6.1. and v6.2.-rc1
+> > > > >
+> > > > > Thank you very much for your report, Zeno!
+> > > > >
+> > > > > v6.0 works, v6.1-rc1 fails.  Would you mind booting v6.1-rc1 with the
+> > > > > "ignore_loglevel initcall_debug" kernel parameters and taking a photo
+> > > > > when it hangs?
+> > > >
+> > > > I will try this after Januar 7th 2023.
+> 
+> I updated the issue:
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=216859
+> 
+> I booted with the option: "ignore_loglevel initcall_debug"
 
-Remove the redundant pci_enable_pcie_error_reporting() call from the
-driver.  Also remove the corresponding pci_disable_pcie_error_reporting()
-from the driver .remove() path.
+Thanks!  There's so much pcie output in that picture that we can't see
+any of the initcall logging.  Can you capture another movie, but use
+kernel parameters like "ignore_loglevel initcall_debug boot_delay=100"
+to slow things down?  The full-speed boot is too fast for the camera
+to capture all the output.  You can do this on any convenient kernel
+that hangs.
 
-Note that this doesn't control interrupt generation by the Root Port; that
-is controlled by the AER Root Error Command register, which is managed by
-the AER service driver.
+There might be more we can do with the bisection, too, but I don't
+have any suggestions for that yet.  Maybe Krzysztof does.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
-Cc: Tony Nguyen <anthony.l.nguyen@intel.com>
-Cc: intel-wired-lan@lists.osuosl.org
-Cc: netdev@vger.kernel.org
----
- drivers/net/ethernet/intel/igc/igc_main.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/drivers/net/ethernet/intel/igc/igc_main.c b/drivers/net/ethernet/intel/igc/igc_main.c
-index 44b1740dc098..a4df4ef088a9 100644
---- a/drivers/net/ethernet/intel/igc/igc_main.c
-+++ b/drivers/net/ethernet/intel/igc/igc_main.c
-@@ -6430,8 +6430,6 @@ static int igc_probe(struct pci_dev *pdev,
- 	if (err)
- 		goto err_pci_reg;
- 
--	pci_enable_pcie_error_reporting(pdev);
--
- 	err = pci_enable_ptm(pdev, NULL);
- 	if (err < 0)
- 		dev_info(&pdev->dev, "PCIe PTM not supported by PCIe bus/controller\n");
-@@ -6636,7 +6634,6 @@ static int igc_probe(struct pci_dev *pdev,
- err_ioremap:
- 	free_netdev(netdev);
- err_alloc_etherdev:
--	pci_disable_pcie_error_reporting(pdev);
- 	pci_release_mem_regions(pdev);
- err_pci_reg:
- err_dma:
-@@ -6684,8 +6681,6 @@ static void igc_remove(struct pci_dev *pdev)
- 
- 	free_netdev(netdev);
- 
--	pci_disable_pcie_error_reporting(pdev);
--
- 	pci_disable_device(pdev);
- }
- 
--- 
-2.25.1
-
+Bjorn
