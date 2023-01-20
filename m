@@ -2,132 +2,116 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA744C678DF
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Jan 2023 05:30:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C813EC38159
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Jan 2023 05:35:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229960AbjATFaH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Jan 2023 00:30:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60206 "EHLO
+        id S231236AbjATFfk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Jan 2023 00:35:40 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230033AbjATF2x (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2023 00:28:53 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAAAB72C33;
-        Thu, 19 Jan 2023 21:23:54 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E504BB82671;
-        Thu, 19 Jan 2023 17:00:05 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71553C433D2;
-        Thu, 19 Jan 2023 17:00:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674147604;
-        bh=IsPO8S/oCSzGPZ8455uZgGSwmix/EjYODvjeJWwsjEg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=O6eOYocHeXXxAvmJL57obWdcak0zyidIdD/Y4h6WcW3rWpgn+/IS7jZ6BgmZYUgOO
-         dZIBuUYgGFO3pK3BOjmu0JzO6BqqpWxKf4eOkQ+H7ZlaGblFpbh6nrf3Jf9a2JQSNs
-         QaTr/dD47vaDLEm5XVMKNcu4G3RueX0kw1RTasT6HsmWo/+IHCs6kcSC3HgHHV4TFW
-         xLog8lPDBI1sJVUI38NGMwD/PocFVFu8/TW37AQQFrBVf0sV5wVHYahlM8sYvFd8no
-         PLr7PfLFsxoRRvqEsqiF0bIZZe60p/afuUfUDDLr2haFsG46QvxNEGRlrtJ8CSkUn0
-         SS7KXsBHV5ycw==
-Date:   Thu, 19 Jan 2023 11:00:03 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Zeno Davatz <zdavatz@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bruno Moreira-Guedes <brunodout.dev@gmail.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bjorn@helgaas.com>
-Subject: Re: [Bug 216859] New: PCI bridge to bus boot hang at enumeration
-Message-ID: <20230119170003.GA316230@bhelgaas>
+        with ESMTP id S231808AbjATFfU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Jan 2023 00:35:20 -0500
+Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7FDF2B0B9;
+        Thu, 19 Jan 2023 21:31:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1674192685; x=1705728685;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=bPwLT4AdfGFNjdbmHQTqlULNnRfeNCfvR5vyvMh1ppY=;
+  b=nJQ1xKWNQ9gUpHunIYAqfJfcNUyYyAIvvfBysMIaMp0QyinPIGdlWWR8
+   Fo53lVqCn7LDcbXWPA7klVFnGgfGy7hmP/c6Ix3eefHsz4E90oVLewxbt
+   ZSFsjTRNQTVKaPep4/DsyrJX6L0M2mJwF0E6KGbjkRYjmoLSfomwpzkFj
+   VuRclqGLld5P+vS2hHONi9H8erFUGqxSeaZ6UjlODA7lchVM0Gil0ELfu
+   dFYNTlZ4FX5NBoYPrt493C9jqUMFVIBzFVbpCoXPiUw7dsuCylr2KEus1
+   F6hRQ3/XYGPVTd4GFSptR18ckgYX7PWXvezZp4rXxkXsr0iaa8NAzDa9X
+   g==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10595"; a="411739204"
+X-IronPort-AV: E=Sophos;i="5.97,231,1669104000"; 
+   d="scan'208";a="411739204"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 21:28:46 -0800
+X-IronPort-AV: E=McAfee;i="6500,9779,10595"; a="989296124"
+X-IronPort-AV: E=Sophos;i="5.97,231,1669104000"; 
+   d="scan'208";a="989296124"
+Received: from mtcooper-mobl.amr.corp.intel.com (HELO [10.212.132.108]) ([10.212.132.108])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jan 2023 21:28:46 -0800
+Message-ID: <a374e36b-2da2-c76c-717c-1381b171d75e@linux.intel.com>
+Date:   Thu, 19 Jan 2023 21:28:45 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230119000458.GA275446@bhelgaas>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Firefox/102.0 Thunderbird/102.4.2
+Subject: Re: [PATCH V10 0/4] Enable PCIe ASPM and LTR on select hardware
+Content-Language: en-US
+To:     "David E. Box" <david.e.box@linux.intel.com>,
+        nirmal.patel@linux.intel.com, jonathan.derrick@linux.dev,
+        lorenzo.pieralisi@arm.com, hch@infradead.org, kw@linux.com,
+        robh@kernel.org, bhelgaas@google.com, michael.a.bottini@intel.com,
+        rafael@kernel.org, me@adhityamohan.in
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230120031522.2304439-1-david.e.box@linux.intel.com>
+From:   Sathyanarayanan Kuppuswamy 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <20230120031522.2304439-1-david.e.box@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc bjorn@helgaas.com to avoid spamassassin]
 
-On Wed, Jan 18, 2023 at 06:04:58PM -0600, Bjorn Helgaas wrote:
-> On Fri, Jan 06, 2023 at 05:42:33PM +0100, Zeno Davatz wrote:
-> > On Fri, Dec 30, 2022 at 7:50 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > On Wed, Dec 28, 2022 at 12:42:34PM -0600, Bjorn Helgaas wrote:
-> > > > On Wed, Dec 28, 2022 at 06:42:38PM +0100, Zeno Davatz wrote:
-> > > > > On Wed, Dec 28, 2022 at 1:02 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > > > On Wed, Dec 28, 2022 at 08:37:52AM +0000, bugzilla-daemon@kernel.org wrote:
-> > > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=216859
-> > > > > >
-> > > > > > >            Summary: PCI bridge to bus boot hang at enumeration
-> > > > > > >     Kernel Version: 6.1-rc1
-> > > > > > > ...
-> > > > > >
-> > > > > > > With Kernel 6.1-rc1 the enumeration process stopped working for me,
-> > > > > > > see attachments.
-> > > > > > >
-> > > > > > > The enumeration works fine with Kernel 6.0 and below.
-> > > > > > >
-> > > > > > > Same problem still exists with v6.1. and v6.2.-rc1
-> > > > > >
-> > > > > > Thank you very much for your report, Zeno!
-> > > > > >
-> > > > > > v6.0 works, v6.1-rc1 fails.  Would you mind booting v6.1-rc1 with the
-> > > > > > "ignore_loglevel initcall_debug" kernel parameters and taking a photo
-> > > > > > when it hangs?
-> > > > >
-> > > > > I will try this after Januar 7th 2023.
-> > 
-> > I updated the issue:
-> > 
-> > https://bugzilla.kernel.org/show_bug.cgi?id=216859
-> > 
-> > I booted with the option: "ignore_loglevel initcall_debug"
+
+On 1/19/23 7:15 PM, David E. Box wrote:
+> This series adds a work around for enabling PCIe ASPM and for setting PCIe
+> LTR values on VMD reserved root ports on select platforms. While
+> configuration of these capabilities is usually done by BIOS, on these
+> platforms these capabilities will not be configured because the ports are
+> not visible to BIOS. This was part of an initial design that expected the
+> driver to completely handle the ports, including power management. However
+> on Linux those ports are still managed by the PCIe core, which has the
+> expectation that they adhere to device standards including BIOS
+> configuration, leading to this problem.
 > 
-> Thanks!  There's so much pcie output in that picture that we can't see
-> any of the initcall logging.  Can you capture another movie, but use
-> kernel parameters like "ignore_loglevel initcall_debug boot_delay=100"
-> to slow things down?  The full-speed boot is too fast for the camera
-> to capture all the output.  You can do this on any convenient kernel
-> that hangs.
+> The target platforms are Tiger Lake, Alder Lake, and Raptor Lake though the
+> latter has already implemented support for configuring the LTR values.
+> Meteor Lake is expected add BIOS ASPM support, eliminating the future need
+> for this work around.
+> 
+> Note, the driver programs the LTRs because BIOS would also normally do this
+> for devices that do not set them by default. Without this, SoC power
+> management would be blocked on those platform. This SoC specific value is
+> the maximum latency required to allow the SoC to enter the deepest power
+> state.
+> 
+> This patch addresses the following open bugzillas on VMD enabled laptops
+> that cannot enter low power states.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=212355
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=215063
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=213717
+> 
 
-Thanks for the new movie!  The last initcalls I see before the hang
-are:
+Looks good to me.
 
-  init_mqueue_fs
-  key_proc_init
-  jent_mod_init
+Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-We must have returned from jent_mod_init() because I think the "saving
-config space" messages we see at the hang are from
-pcie_portdrv_init().
+> David E. Box (3):
+>   PCI: vmd: Use PCI_VDEVICE in device list
+>   PCI: vmd: Create feature grouping for client products
+>   PCI: vmd: Add quirk to configure PCIe ASPM and LTR
+> 
+> Michael Bottini (1):
+>   PCI/ASPM: Add pci_enable_link_state()
+> 
+>  drivers/pci/controller/vmd.c | 97 ++++++++++++++++++++++++++----------
+>  drivers/pci/pcie/aspm.c      | 54 ++++++++++++++++++++
+>  include/linux/pci.h          |  7 +++
+>  3 files changed, 132 insertions(+), 26 deletions(-)
+> 
+> 
+> base-commit: 5dc4c995db9eb45f6373a956eb1f69460e69e6d4
 
-I built 833477fce7a1 ("Merge tag 'sound-6.1-rc1' of
-git://git.kernel.org/pub/scl) with your .config and when I boot it on
-qemu, I see this:
-
-  calling  jent_mod_init+0x0/0x32 @ 1
-  initcall jent_mod_init+0x0/0x32 returned 0 after 27185 usecs
-  calling  af_alg_init+0x0/0x45 @ 1
-  NET: Registered PF_ALG protocol family
-  ...
-  calling  sg_pool_init+0x0/0xb4 @ 1
-  initcall sg_pool_init+0x0/0xb4 returned 0 after 462 usecs
-  calling  pcie_portdrv_init+0x0/0x43 @ 1
-  pcieport 0000:00:1c.0: vgaarb: pci_notify
-  pcieport 0000:00:1c.0: runtime IRQ mapping not provided by arch
-  pcieport 0000:00:1c.0: enabling bus mastering
-  pcieport 0000:00:1c.0: PME: Signaling with IRQ 24
-  pcieport 0000:00:1c.0: AER: enabled with IRQ 24
-  pcieport 0000:00:1c.0: saving config space at offset 0x0 (reading 0x34208086)
-  pcieport 0000:00:1c.0: saving config space at offset 0x4 (reading 0x100507)
-  pcieport 0000:00:1c.0: saving config space at offset 0x8 (reading 0x6040002)
-  ...
-
-Would you mind trying again with "boot_delay=1000 pcie_ports=compat"?
-
-"boot_delay=1000" should slow it down more (all the action is in the
-last 3 seconds and it's still hard to see) and "pcie_ports=compat"
-should turn off the PCIe port driver.
-
-Bjorn
+-- 
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
