@@ -2,87 +2,126 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2111BC54EAA
-	for <linux-pci@archiver.kernel.org>; Sun, 22 Jan 2023 10:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57938C54EB4
+	for <linux-pci@archiver.kernel.org>; Sun, 22 Jan 2023 12:21:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229879AbjAVK6H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 22 Jan 2023 05:58:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60068 "EHLO
+        id S230034AbjAVMVj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 22 Jan 2023 07:21:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60588 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229675AbjAVK6G (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 22 Jan 2023 05:58:06 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE64D4C35;
-        Sun, 22 Jan 2023 02:58:04 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 8002BB80A36;
-        Sun, 22 Jan 2023 10:58:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8154C433D2;
-        Sun, 22 Jan 2023 10:58:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1674385082;
-        bh=ByCGf5RX78/mkAxYc+ERxDI9C5SV6TUWVm84iW4jpDw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lovkQmpNtvJJX4n1F8dwQ3UY08y4kjSEABo67kjYmujM4DycY+4aPd5XKzlVYVmyU
-         WpfCEBLzmjPUtsEUV5i31xViPi5dR00JP9FhheHmbROXHogySyE1uUCHX7YrswffOd
-         duYKQpN6ilEDD7m56A5aYm9EdgOxedvYziLV2AMM=
-Date:   Sun, 22 Jan 2023 11:57:58 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Leon Romanovsky <leon@kernel.org>
-Cc:     Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Marc Zyngier <maz@kernel.org>, darwi@linutronix.de,
-        elena.reshetova@intel.com, kirill.shutemov@linux.intel.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI/MSI: Cache the MSIX table size
-Message-ID: <Y80WtujnO7kfduAZ@kroah.com>
-References: <20230119170633.40944-1-alexander.shishkin@linux.intel.com>
- <20230119170633.40944-2-alexander.shishkin@linux.intel.com>
- <Y8z7FPcuDXDBi+1U@unreal>
+        with ESMTP id S229921AbjAVMVi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 22 Jan 2023 07:21:38 -0500
+Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 855E961A4;
+        Sun, 22 Jan 2023 04:21:37 -0800 (PST)
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 30MCLRLH106734;
+        Sun, 22 Jan 2023 06:21:27 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1674390087;
+        bh=TISRczCqqClgTnuh9Jgbp4YdFIC7Href1UTZ0gVUQ5I=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=vEINhMjtD19zKyn81aKyiO8PEEYlg97ZkguUPjq6lA79zoe9+q7jb13wTyTtLdId5
+         9pOhwf79bQ5GIDtIP2xjd6Yd1LMqA0uW6Cwpmf4FeiZnOdYLzLO8W1ET5kWq0hzH+G
+         yYk/Kyd53aAGLjcgLeMIBm6apoU6AxNSd9NvdPWQ=
+Received: from DFLE115.ent.ti.com (dfle115.ent.ti.com [10.64.6.36])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 30MCLRab102324
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sun, 22 Jan 2023 06:21:27 -0600
+Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE115.ent.ti.com
+ (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16; Sun, 22
+ Jan 2023 06:21:27 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE106.ent.ti.com
+ (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16 via
+ Frontend Transport; Sun, 22 Jan 2023 06:21:27 -0600
+Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 30MCLQWM029950;
+        Sun, 22 Jan 2023 06:21:27 -0600
+From:   Achal Verma <a-verma1@ti.com>
+To:     <mranostay@ti.com>, <rogerq@kernel.org>, <lpieralisi@kernel.org>,
+        <robh@kernel.org>, <kw@linux.com>, <bhelgaas@google.com>,
+        <krzysztof.kozlowski@linaro.org>, <vigneshr@ti.com>,
+        <tjoseph@cadence.com>, <sergio.paracuellos@gmail.com>,
+        <pthombar@cadence.com>, <linux-pci@vger.kernel.org>
+CC:     <devicetree@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-omap@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v9 3/5] PCI: j721e: Add PCIe 4x lane selection support
+Date:   Sun, 22 Jan 2023 17:51:19 +0530
+Message-ID: <20230122122121.3552375-4-a-verma1@ti.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230122122121.3552375-1-a-verma1@ti.com>
+References: <20230122122121.3552375-1-a-verma1@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y8z7FPcuDXDBi+1U@unreal>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Jan 22, 2023 at 11:00:04AM +0200, Leon Romanovsky wrote:
-> On Thu, Jan 19, 2023 at 07:06:32PM +0200, Alexander Shishkin wrote:
-> > A malicious device can change its MSIX table size between the table
-> > ioremap() and subsequent accesses, resulting in a kernel page fault in
-> > pci_write_msg_msix().
-> > 
-> > To avoid this, cache the table size observed at the moment of table
-> > ioremap() and use the cached value. This, however, does not help drivers
-> > that peek at the PCIE_MSIX_FLAGS register directly.
-> > 
-> > Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-> > Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Cc: stable@vger.kernel.org
-> > ---
-> >  drivers/pci/msi/api.c | 7 ++++++-
-> >  drivers/pci/msi/msi.c | 2 +-
-> >  include/linux/pci.h   | 1 +
-> >  3 files changed, 8 insertions(+), 2 deletions(-)
-> 
-> I'm not security expert here, but not sure that this protects from anything.
-> 1. Kernel relies on working and not-malicious HW. There are gazillion ways
-> to cause crashes other than changing MSI-X.
+From: Matt Ranostay <mranostay@ti.com>
 
-Linux does NOT protect from malicious PCIe devices at this point in
-time, you are correct.  If we wish to change that model, then we can
-work on that with the explict understanding that most all drivers will
-need to change as will the bus logic for the busses involved.
+Add support for setting of two-bit field that allows selection of 4x lane
+PCIe which was previously limited to only 2x lanes.
 
-To do piece-meal patches like this for no good reason is not a good idea
-as it achieves nothing in the end :(
+Signed-off-by: Matt Ranostay <mranostay@ti.com>
+Reviewed-by: Vignesh Raghavendra <vigneshr@ti.com>
+Reviewed-by: Roger Quadros <rogerq@kernel.org>
+Signed-off-by: Achal Verma <a-verma1@ti.com>
+---
+ drivers/pci/controller/cadence/pci-j721e.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-thanks,
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index f4dc2c5abedb..58dcac9021e4 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -42,7 +42,6 @@ enum link_status {
+ };
+ 
+ #define J721E_MODE_RC			BIT(7)
+-#define LANE_COUNT_MASK			BIT(8)
+ #define LANE_COUNT(n)			((n) << 8)
+ 
+ #define GENERATION_SEL_MASK		GENMASK(1, 0)
+@@ -52,6 +51,7 @@ struct j721e_pcie {
+ 	struct clk		*refclk;
+ 	u32			mode;
+ 	u32			num_lanes;
++	u32			max_lanes;
+ 	void __iomem		*user_cfg_base;
+ 	void __iomem		*intd_cfg_base;
+ 	u32			linkdown_irq_regfield;
+@@ -205,11 +205,15 @@ static int j721e_pcie_set_lane_count(struct j721e_pcie *pcie,
+ {
+ 	struct device *dev = pcie->cdns_pcie->dev;
+ 	u32 lanes = pcie->num_lanes;
++	u32 mask = BIT(8);
+ 	u32 val = 0;
+ 	int ret;
+ 
++	if (pcie->max_lanes == 4)
++		mask = GENMASK(9, 8);
++
+ 	val = LANE_COUNT(lanes - 1);
+-	ret = regmap_update_bits(syscon, offset, LANE_COUNT_MASK, val);
++	ret = regmap_update_bits(syscon, offset, mask, val);
+ 	if (ret)
+ 		dev_err(dev, "failed to set link count\n");
+ 
+@@ -441,7 +445,9 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 		dev_warn(dev, "num-lanes property not provided or invalid, setting num-lanes to 1\n");
+ 		num_lanes = 1;
+ 	}
++
+ 	pcie->num_lanes = num_lanes;
++	pcie->max_lanes = data->max_lanes;
+ 
+ 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48)))
+ 		return -EINVAL;
+-- 
+2.25.1
 
-greg k-h
