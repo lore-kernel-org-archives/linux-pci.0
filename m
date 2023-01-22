@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57938C54EB4
-	for <linux-pci@archiver.kernel.org>; Sun, 22 Jan 2023 12:21:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC33FC61D97
+	for <linux-pci@archiver.kernel.org>; Sun, 22 Jan 2023 12:21:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230034AbjAVMVj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S230080AbjAVMVj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Sun, 22 Jan 2023 07:21:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60588 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229921AbjAVMVi (ORCPT
+        with ESMTP id S229890AbjAVMVi (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sun, 22 Jan 2023 07:21:38 -0500
 Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 855E961A4;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 640035BB7;
         Sun, 22 Jan 2023 04:21:37 -0800 (PST)
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 30MCLRLH106734;
-        Sun, 22 Jan 2023 06:21:27 -0600
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 30MCLOu5106723;
+        Sun, 22 Jan 2023 06:21:24 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1674390087;
-        bh=TISRczCqqClgTnuh9Jgbp4YdFIC7Href1UTZ0gVUQ5I=;
+        s=ti-com-17Q1; t=1674390084;
+        bh=TvLXqGFP62Kxbj9vLoF4VkS0d1KSy83RMoiHtO0IdzA=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=vEINhMjtD19zKyn81aKyiO8PEEYlg97ZkguUPjq6lA79zoe9+q7jb13wTyTtLdId5
-         9pOhwf79bQ5GIDtIP2xjd6Yd1LMqA0uW6Cwpmf4FeiZnOdYLzLO8W1ET5kWq0hzH+G
-         yYk/Kyd53aAGLjcgLeMIBm6apoU6AxNSd9NvdPWQ=
-Received: from DFLE115.ent.ti.com (dfle115.ent.ti.com [10.64.6.36])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 30MCLRab102324
+        b=C7DsTRmRz2zG8zyIKBkpcJQ9v6OTfepRGfzgrLPkCMR+TyKf1Fsi2Vm4Z47IWq0zE
+         FaMCkwwQKaEmf47aLhDEasL2fRmqWiAJB0zCHMRLD6NaTekTaRaCiFBssTKsSM2LOi
+         Mdi5PpQ1q/xkdnTCQqxKBBCCa5Lroc8mkiH/zH3o=
+Received: from DFLE114.ent.ti.com (dfle114.ent.ti.com [10.64.6.35])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 30MCLOsS075614
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 22 Jan 2023 06:21:27 -0600
-Received: from DFLE106.ent.ti.com (10.64.6.27) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+        Sun, 22 Jan 2023 06:21:24 -0600
+Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16; Sun, 22
- Jan 2023 06:21:27 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE106.ent.ti.com
- (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
+ Jan 2023 06:21:24 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16 via
- Frontend Transport; Sun, 22 Jan 2023 06:21:27 -0600
+ Frontend Transport; Sun, 22 Jan 2023 06:21:24 -0600
 Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 30MCLQWM029950;
-        Sun, 22 Jan 2023 06:21:27 -0600
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 30MCLNTH029933;
+        Sun, 22 Jan 2023 06:21:24 -0600
 From:   Achal Verma <a-verma1@ti.com>
 To:     <mranostay@ti.com>, <rogerq@kernel.org>, <lpieralisi@kernel.org>,
         <robh@kernel.org>, <kw@linux.com>, <bhelgaas@google.com>,
@@ -48,9 +48,9 @@ To:     <mranostay@ti.com>, <rogerq@kernel.org>, <lpieralisi@kernel.org>,
 CC:     <devicetree@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-omap@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v9 3/5] PCI: j721e: Add PCIe 4x lane selection support
-Date:   Sun, 22 Jan 2023 17:51:19 +0530
-Message-ID: <20230122122121.3552375-4-a-verma1@ti.com>
+Subject: [PATCH v9 1/5] dt-bindings: PCI: ti,j721e-pci-*: add checks for num-lanes
+Date:   Sun, 22 Jan 2023 17:51:17 +0530
+Message-ID: <20230122122121.3552375-2-a-verma1@ti.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230122122121.3552375-1-a-verma1@ti.com>
 References: <20230122122121.3552375-1-a-verma1@ti.com>
@@ -64,64 +64,106 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Matt Ranostay <mranostay@ti.com>
 
-Add support for setting of two-bit field that allows selection of 4x lane
-PCIe which was previously limited to only 2x lanes.
+Add num-lanes schema checks based on compatible string on available lanes
+for that platform.
 
 Signed-off-by: Matt Ranostay <mranostay@ti.com>
-Reviewed-by: Vignesh Raghavendra <vigneshr@ti.com>
-Reviewed-by: Roger Quadros <rogerq@kernel.org>
 Signed-off-by: Achal Verma <a-verma1@ti.com>
 ---
- drivers/pci/controller/cadence/pci-j721e.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ .../bindings/pci/ti,j721e-pci-ep.yaml         | 27 ++++++++++++++++---
+ .../bindings/pci/ti,j721e-pci-host.yaml       | 27 ++++++++++++++++---
+ 2 files changed, 48 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
-index f4dc2c5abedb..58dcac9021e4 100644
---- a/drivers/pci/controller/cadence/pci-j721e.c
-+++ b/drivers/pci/controller/cadence/pci-j721e.c
-@@ -42,7 +42,6 @@ enum link_status {
- };
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+index 10e6eabdff53..32e0c70ed801 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
+@@ -10,9 +10,6 @@ title: TI J721E PCI EP (PCIe Wrapper)
+ maintainers:
+   - Kishon Vijay Abraham I <kishon@ti.com>
  
- #define J721E_MODE_RC			BIT(7)
--#define LANE_COUNT_MASK			BIT(8)
- #define LANE_COUNT(n)			((n) << 8)
+-allOf:
+-  - $ref: "cdns-pcie-ep.yaml#"
+-
+ properties:
+   compatible:
+     oneOf:
+@@ -65,6 +62,30 @@ properties:
+     items:
+       - const: link_state
  
- #define GENERATION_SEL_MASK		GENMASK(1, 0)
-@@ -52,6 +51,7 @@ struct j721e_pcie {
- 	struct clk		*refclk;
- 	u32			mode;
- 	u32			num_lanes;
-+	u32			max_lanes;
- 	void __iomem		*user_cfg_base;
- 	void __iomem		*intd_cfg_base;
- 	u32			linkdown_irq_regfield;
-@@ -205,11 +205,15 @@ static int j721e_pcie_set_lane_count(struct j721e_pcie *pcie,
- {
- 	struct device *dev = pcie->cdns_pcie->dev;
- 	u32 lanes = pcie->num_lanes;
-+	u32 mask = BIT(8);
- 	u32 val = 0;
- 	int ret;
- 
-+	if (pcie->max_lanes == 4)
-+		mask = GENMASK(9, 8);
++allOf:
++  - $ref: cdns-pcie-ep.yaml#
++  - if:
++      properties:
++        compatible:
++          enum:
++            - ti,am64-pcie-ep
++    then:
++      properties:
++        num-lanes:
++          const: 1
 +
- 	val = LANE_COUNT(lanes - 1);
--	ret = regmap_update_bits(syscon, offset, LANE_COUNT_MASK, val);
-+	ret = regmap_update_bits(syscon, offset, mask, val);
- 	if (ret)
- 		dev_err(dev, "failed to set link count\n");
- 
-@@ -441,7 +445,9 @@ static int j721e_pcie_probe(struct platform_device *pdev)
- 		dev_warn(dev, "num-lanes property not provided or invalid, setting num-lanes to 1\n");
- 		num_lanes = 1;
- 	}
++  - if:
++      properties:
++        compatible:
++          enum:
++            - ti,j7200-pcie-ep
++            - ti,j721e-pcie-ep
++    then:
++      properties:
++        num-lanes:
++          minimum: 1
++          maximum: 2
 +
- 	pcie->num_lanes = num_lanes;
-+	pcie->max_lanes = data->max_lanes;
+ required:
+   - compatible
+   - reg
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+index b0513b197d08..9d4611387387 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+@@ -10,9 +10,6 @@ title: TI J721E PCI Host (PCIe Wrapper)
+ maintainers:
+   - Kishon Vijay Abraham I <kishon@ti.com>
  
- 	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48)))
- 		return -EINVAL;
+-allOf:
+-  - $ref: "cdns-pcie-host.yaml#"
+-
+ properties:
+   compatible:
+     oneOf:
+@@ -98,6 +95,30 @@ properties:
+       interrupts:
+         maxItems: 1
+ 
++allOf:
++  - $ref: cdns-pcie-host.yaml#
++  - if:
++      properties:
++        compatible:
++          enum:
++            - ti,am64-pcie-host
++    then:
++      properties:
++        num-lanes:
++          const: 1
++
++  - if:
++      properties:
++        compatible:
++          enum:
++            - ti,j7200-pcie-host
++            - ti,j721e-pcie-host
++    then:
++      properties:
++        num-lanes:
++          minimum: 1
++          maximum: 2
++
+ required:
+   - compatible
+   - reg
 -- 
 2.25.1
 
