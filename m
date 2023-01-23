@@ -2,64 +2,63 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BFDEC54EED
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:10:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C65AEC61DA3
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:10:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231626AbjAWKKG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Jan 2023 05:10:06 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36446 "EHLO
+        id S231671AbjAWKKK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Jan 2023 05:10:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230074AbjAWKKE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:10:04 -0500
-Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11F57E397
-        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 02:10:02 -0800 (PST)
-Received: by mail-wm1-x336.google.com with SMTP id k16so8552941wms.2
-        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 02:10:01 -0800 (PST)
+        with ESMTP id S231607AbjAWKKH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:10:07 -0500
+Received: from mail-wr1-x431.google.com (mail-wr1-x431.google.com [IPv6:2a00:1450:4864:20::431])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E190E38F
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 02:10:05 -0800 (PST)
+Received: by mail-wr1-x431.google.com with SMTP id bk16so10233371wrb.11
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 02:10:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wEW/8zJog5ASK2qRbXljjSIfTx60QJ93vwtD14+LGbY=;
-        b=Xi9NoL7ue+FLAFSSGnI/2XAjpQ+UTVRx5qe4KqcY34Z1YHDu82IcObWaJKWB8hLoU1
-         CbkbOAozjA4dyfKE3PtQiBsJUsoxmASJdVGDkJhqajjCrBOk8L4VG974dtfoMtgXTWm8
-         zzd+YAd8BBpcnr/qhqWr9ZVYkgJcT/TAKRuGqrXJFsvGrUIh3kTu/8O9gh25pMVy8QpD
-         yYQ9x7PJAkayDMFdSJugqjSvv0yEZB1od1P+cFP5AA5UxYnN6opD+NNbpIMPCtMRljry
-         T5kcX+TKSkpLdjGwLtapshYOVrknkUPVJsy1RF02C2ABfPDUmuqzb/lQboOi227gc7F7
-         Up6A==
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Vk3/4zGC4vaP3JAISpcs7adXGbsqb5n1p++8mkCPqRs=;
+        b=MMPgOtfoI2j+ih+wcRxk5PFgCEJn/T+1p4w/72XLAt6gLMnjYIUTq6ZY0iKWnnEtvL
+         L2f1u5tV27sJIuMPP4IJFqfvXBJspspnQP7lnfBqaylFPQmzp5xy7zSBadyGILWRqQqx
+         CFu8wgExZsMHN1YqRLpStNy1TBS+NTFvo9SdUY94ttWU1UNG2SmBCOqzTbit5BgD2o88
+         l2zQY6mmbeLVq+VEFbJoMjmSHlNjcP3DwPenlhJC1eyvwvYr1gRBRzDLHPqcR+DV84TO
+         Tp/dBxlIDCGl3PvlGqeHj+N0DHQe2Lp0cGO8aj+4XcI870TCZODQ1uoE+34YiXzbjXz/
+         EF7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=wEW/8zJog5ASK2qRbXljjSIfTx60QJ93vwtD14+LGbY=;
-        b=BfQJN8xpnABXNjiw5zE5msRe5oKW7/6P5RGul+6WdeqWVvo1qbywFxY4qzaNHOY9yt
-         GioNc/r9jG/qEVJkhG4PN53kkJhqf3P2TwbhZ2fsd2bGGi8Q/B+ue+5VLu2LgJf4i6FL
-         Ki5pCviTd+hG3A0pxlfE0qHWe2ZGhmo39/IeDF6N+5zdsjX+OlJvuVz26Nz4L2ValX0J
-         5dwM3cIrm/VNKGTUIRCTNhI8DAApmq+Y/END9wuE8uPsiRPTgjDvEBYnM+j8JSm7Rr9N
-         YqX/vwiJhs/7b193gBp3rrj47fcqyuUHafwyRlfytPKHxRLIr3QV2bgy4vGOOUKhm83K
-         ipeg==
-X-Gm-Message-State: AFqh2kqv1GYHfw29f4oVaPIM8n9x3EujmGbsTyxDiLlSZUGYzvM9opTn
-        WJ774d1ACWnAeJchKvyypaJymQ==
-X-Google-Smtp-Source: AMrXdXvOLzdEZ+5tsjlSq6NFgEVoE9bw28HxzSxeJSvTcruIKayc/Hq3oGuybhxXiJbtg0VDk9DhNQ==
-X-Received: by 2002:a05:600c:1e21:b0:3d0:7fee:8a70 with SMTP id ay33-20020a05600c1e2100b003d07fee8a70mr23729461wmb.19.1674468600579;
-        Mon, 23 Jan 2023 02:10:00 -0800 (PST)
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Vk3/4zGC4vaP3JAISpcs7adXGbsqb5n1p++8mkCPqRs=;
+        b=x5pZ4OGYH9TuNr1XHK4ezozjAxLgSZTOxJ9Y9HDMx2cHc62ZJ47o2vcP0TWctjERlr
+         pVV/fSYMTF8G2MKlkJjYvr2YdAoSFSEq/hhjgEPYGgvxtpFMLwjZXLu/Nr6laQ0BJfBA
+         Xk1TXW48wKITX9rDJkBhF2qKgP+c0BpLuWeCiYvc4HXBV4LGqPr2v5Elo+AjSKi4cEqm
+         2NgBGy/ykXL67hAIkSVyYM8ikIQSA6R2H5dhL4Lpa9rTXYfJcjhrW4FNHJC567PP10sC
+         +22jilC7Cmqjdlsppl2E5cMjTbDduauRYv0v91b/mEE7Cy90geMJBye+CiTVZQ1aW+2J
+         mhBw==
+X-Gm-Message-State: AFqh2kpRRRlG09NAWOGLMJoKGRcIi68JHKn2qJg4ch5cBlcbExaeHqPY
+        Lje3UHcJcvP0GJA2QWL7ei+kbg==
+X-Google-Smtp-Source: AMrXdXv5n6gQQPpGitCuhpTioRST8hVeitfmO5EXEg2uiFHqkKOrVye2NrLcVnE/rL1MFgPzkBUkng==
+X-Received: by 2002:adf:f150:0:b0:2bf:963e:f9ac with SMTP id y16-20020adff150000000b002bf963ef9acmr8918210wro.18.1674468603610;
+        Mon, 23 Jan 2023 02:10:03 -0800 (PST)
 Received: from arrakeen.starnux.net ([2a01:e0a:982:cbb0:52eb:f6ff:feb3:451a])
-        by smtp.gmail.com with ESMTPSA id m9-20020a056000024900b002bdec340a1csm22670403wrz.110.2023.01.23.02.09.59
+        by smtp.gmail.com with ESMTPSA id m9-20020a056000024900b002bdec340a1csm22670403wrz.110.2023.01.23.02.10.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Jan 2023 02:10:00 -0800 (PST)
+        Mon, 23 Jan 2023 02:10:02 -0800 (PST)
 From:   Neil Armstrong <neil.armstrong@linaro.org>
-Subject: [PATCH v3 0/7] dt-bindings: first batch of dt-schema conversions
- for Amlogic Meson bindings
-Date:   Mon, 23 Jan 2023 11:09:57 +0100
-Message-Id: <20221117-b4-amlogic-bindings-convert-v3-0-e28dd31e3bed@linaro.org>
+Date:   Mon, 23 Jan 2023 11:09:59 +0100
+Subject: [PATCH v3 2/7] dt-bindings: nvmem: convert
+ amlogic-meson-mx-efuse.txt to dt-schema
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAPVczmMC/5XNTQ7CIBQE4KsY1j4DtNDWlfcwLvgrfQlCApXEN
- L276M6driYzi282UlxGV8j5sJHsKhZMsZXueCBmUdE7QNs64ZRzxtgAugd1D8mjAY3RYvQFTIr
- V5RVGNzM7CNtzaUkTtCoOdFbRLM2IjxDauGBZU35+Hitrcf0NrwwodDPlQkyTnuR4CRhVTqeUP
- bk1uPI/MP7GpLJUUK0lF1/Yvu8vs7aotRkBAAA=
+Message-Id: <20221117-b4-amlogic-bindings-convert-v3-2-e28dd31e3bed@linaro.org>
+References: <20221117-b4-amlogic-bindings-convert-v3-0-e28dd31e3bed@linaro.org>
+In-Reply-To: <20221117-b4-amlogic-bindings-convert-v3-0-e28dd31e3bed@linaro.org>
 To:     Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
@@ -80,101 +79,112 @@ To:     Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
 Cc:     devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-amlogic@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-watchdog@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org
 X-Mailer: b4 0.12.0
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Batch conversion of the following bindings:
-- amlogic-efuse.txt
-- amlogic-meson-mx-efuse.txt
-- meson-wdt.txt
-- meson-ir.txt
-- rtc-meson.txt
-- amlogic,meson6-timer.txt
-- amlogic,meson-gx.txt
-- amlogic,meson-pcie.txt
+Convert the Amlogic Meson6 eFuse bindings to dt-schema.
 
-Martin Blumenstingl was also added as bindings maintainer for Meson6/8/8b
-related bindings.
-
-Remaining conversions:
-- meson,pinctrl.txt
-- pwm-meson.txt
-- amlogic,meson-gpio-intc.txt
-- amlogic,meson-mx-sdio.txt
-- rtc-meson-vrtc.txt
-- amlogic,axg-sound-card.txt
-- amlogic,axg-fifo.txt
-- amlogic,axg-pdm.txt
-- amlogic,axg-spdifout.txt
-- amlogic,axg-tdm-formatters.txt
-- amlogic,axg-spdifin.txt
-- amlogic,axg-tdm-iface.txt
-- amlogic,g12a-tohdmitx.txt
-- amlogic,axg-audio-clkc.txt
-- amlogic,gxbb-clkc.txt
-- amlogic,gxbb-aoclkc.txt
-- amlogic,meson8b-clkc.txt
-
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
-Changes in v3:
-- Dropped applied patches
-- Added acked/reviewed-by tags
-- patch 3: removed invalid secure-monitor property
-- patch 4: added a note on the commit message about the meson8 compatible
-- patch 9: fixed mmc compatible bindings
-- patch 1-: unified PCIe instead on PCIE + PCIe
-- Link to v2: https://lore.kernel.org/r/20221117-b4-amlogic-bindings-convert-v2-0-36ad050bb625@linaro.org
+ .../bindings/nvmem/amlogic,meson6-efuse.yaml       | 57 ++++++++++++++++++++++
+ .../bindings/nvmem/amlogic-meson-mx-efuse.txt      | 22 ---------
+ 2 files changed, 57 insertions(+), 22 deletions(-)
 
-Changes in v2:
-- rebased on v6.2-rc1
-- patch 1: fixed power-controller, added const: amlogic,meson-gx-sm
-- patch 2: added const: amlogic,meson-gx-efuse, fixed secure-monitor type
-- patch 3: updated example subnodes to match reality
-- patch 4: added reviewed-by, added interrupts, added const: amlogic,meson8m2-wdt
-- patch 5: added reviewed-by, added const: amlogic,meson-gx-ir
-- patch 6: dropped applied
-- patch 7: dropped patch, replaced with deprecated in the title of the TXt bindings
-- patch 8: fixed title, added reviewed-by, added interrupt description
-- patch 9: fixed example indent, added reviewed-by
-- patch 10: fixed const: amlogic,meson-gx-mmc case, fixed indentation
-- patch 11: added reviewed-by, fixed title, fixed bindings after rebase, added clocks/clock-names as required
-- patch 12: added reviewed-by
-- Link to v1: https://lore.kernel.org/r/20221117-b4-amlogic-bindings-convert-v1-0-3f025599b968@linaro.org
+diff --git a/Documentation/devicetree/bindings/nvmem/amlogic,meson6-efuse.yaml b/Documentation/devicetree/bindings/nvmem/amlogic,meson6-efuse.yaml
+new file mode 100644
+index 000000000000..84b3dfd21e09
+--- /dev/null
++++ b/Documentation/devicetree/bindings/nvmem/amlogic,meson6-efuse.yaml
+@@ -0,0 +1,57 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/nvmem/amlogic,meson6-efuse.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Amlogic Meson6 eFuse
++
++maintainers:
++  - Neil Armstrong <neil.armstrong@linaro.org>
++  - Martin Blumenstingl <martin.blumenstingl@googlemail.com>
++
++allOf:
++  - $ref: nvmem.yaml#
++
++properties:
++  compatible:
++    enum:
++      - amlogic,meson6-efuse
++      - amlogic,meson8-efuse
++      - amlogic,meson8b-efuse
++
++  reg:
++    maxItems: 1
++
++  clocks:
++    maxItems: 1
++
++  clock-names:
++    const: core
++
++required:
++  - compatible
++  - reg
++  - clocks
++  - clock-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    efuse: efuse@0 {
++        compatible = "amlogic,meson6-efuse";
++        reg = <0x0 0x2000>;
++        clocks = <&clk_efuse>;
++        clock-names = "core";
++        #address-cells = <1>;
++        #size-cells = <1>;
++
++        ethernet_mac_address: mac@1b4 {
++            reg = <0x1b4 0x6>;
++        };
++
++        temperature_calib: calib@1f4 {
++             reg = <0x1f4 0x4>;
++        };
++    };
+diff --git a/Documentation/devicetree/bindings/nvmem/amlogic-meson-mx-efuse.txt b/Documentation/devicetree/bindings/nvmem/amlogic-meson-mx-efuse.txt
+deleted file mode 100644
+index a3c63954a1a4..000000000000
+--- a/Documentation/devicetree/bindings/nvmem/amlogic-meson-mx-efuse.txt
++++ /dev/null
+@@ -1,22 +0,0 @@
+-Amlogic Meson6/Meson8/Meson8b efuse
+-
+-Required Properties:
+-- compatible: depending on the SoC this should be one of:
+-	- "amlogic,meson6-efuse"
+-	- "amlogic,meson8-efuse"
+-	- "amlogic,meson8b-efuse"
+-- reg: base address and size of the efuse registers
+-- clocks: a reference to the efuse core gate clock
+-- clock-names: must be "core"
+-
+-All properties and sub-nodes as well as the consumer bindings
+-defined in nvmem.txt in this directory are also supported.
+-
+-
+-Example:
+-	efuse: nvmem@0 {
+-		compatible = "amlogic,meson8-efuse";
+-		reg = <0x0 0x2000>;
+-		clocks = <&clkc CLKID_EFUSE>;
+-		clock-names = "core";
+-	};
 
----
-Neil Armstrong (7):
-      dt-bindings: nvmem: convert amlogic-efuse.txt to dt-schema
-      dt-bindings: nvmem: convert amlogic-meson-mx-efuse.txt to dt-schema
-      dt-bindings: watchdog: convert meson-wdt.txt to dt-schema
-      dt-bindings: media: convert meson-ir.txt to dt-schema
-      dt-bindings: timer: convert timer/amlogic,meson6-timer.txt to dt-schema
-      dt-bindings: mmc: convert amlogic,meson-gx.txt to dt-schema
-      dt-bindings: PCI: convert amlogic,meson-pcie.txt to dt-schema
-
- .../bindings/media/amlogic,meson6-ir.yaml          |  47 ++++++++
- .../devicetree/bindings/media/meson-ir.txt         |  20 ---
- .../bindings/mmc/amlogic,meson-gx-mmc.yaml         |  73 +++++++++++
- .../devicetree/bindings/mmc/amlogic,meson-gx.txt   |  39 ------
- .../bindings/nvmem/amlogic,meson-gxbb-efuse.yaml   |  57 +++++++++
- .../bindings/nvmem/amlogic,meson6-efuse.yaml       |  57 +++++++++
- .../devicetree/bindings/nvmem/amlogic-efuse.txt    |  48 --------
- .../bindings/nvmem/amlogic-meson-mx-efuse.txt      |  22 ----
- .../devicetree/bindings/pci/amlogic,axg-pcie.yaml  | 134 +++++++++++++++++++++
- .../devicetree/bindings/pci/amlogic,meson-pcie.txt |  70 -----------
- .../bindings/timer/amlogic,meson6-timer.txt        |  22 ----
- .../bindings/timer/amlogic,meson6-timer.yaml       |  54 +++++++++
- .../bindings/watchdog/amlogic,meson6-wdt.yaml      |  50 ++++++++
- .../devicetree/bindings/watchdog/meson-wdt.txt     |  21 ----
- 14 files changed, 472 insertions(+), 242 deletions(-)
----
-base-commit: afb812b3dddfcc711bf2d8a1a8a61378b3af4f8b
-change-id: 20221117-b4-amlogic-bindings-convert-8ef1d75d426d
-
-Best regards,
 -- 
-Neil Armstrong <neil.armstrong@linaro.org>
+2.34.1
 
