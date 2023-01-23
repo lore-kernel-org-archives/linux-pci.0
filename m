@@ -2,103 +2,100 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7884DC05027
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:20:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 534C0C38142
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:22:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232002AbjAWKUO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Jan 2023 05:20:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49020 "EHLO
+        id S231389AbjAWKWo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Jan 2023 05:22:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50048 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232004AbjAWKUN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:20:13 -0500
-X-Greylist: delayed 355 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 23 Jan 2023 02:20:10 PST
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 583DA113E2;
-        Mon, 23 Jan 2023 02:20:10 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by mailout2.hostsharing.net (Postfix) with ESMTPS id 1BF4410189E10;
-        Mon, 23 Jan 2023 11:14:13 +0100 (CET)
-Received: from localhost (unknown [89.246.108.87])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by h08.hostsharing.net (Postfix) with ESMTPSA id EB416600D2E1;
-        Mon, 23 Jan 2023 11:14:12 +0100 (CET)
-X-Mailbox-Line: From 4dba01ff87d630abdd5a09d52e954d3c212d2018 Mon Sep 17 00:00:00 2001
-Message-Id: <cover.1674468099.git.lukas@wunner.de>
-From:   Lukas Wunner <lukas@wunner.de>
-Date:   Mon, 23 Jan 2023 11:10:00 +0100
-Subject: [PATCH v2 00/10] Collection of DOE material
-To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc:     Gregory Price <gregory.price@memverge.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
-        Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
-        linux-cxl@vger.kernel.org
+        with ESMTP id S230046AbjAWKWn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:22:43 -0500
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BCB6E390;
+        Mon, 23 Jan 2023 02:22:41 -0800 (PST)
+Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4P0mL63q7Hz6J6Y4;
+        Mon, 23 Jan 2023 18:19:26 +0800 (CST)
+Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
+ (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Mon, 23 Jan
+ 2023 10:22:38 +0000
+Date:   Mon, 23 Jan 2023 10:22:37 +0000
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Greg KH <gregkh@linuxfoundation.org>
+CC:     Leon Romanovsky <leon@kernel.org>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Marc Zyngier <maz@kernel.org>, <darwi@linutronix.de>,
+        <elena.reshetova@intel.com>, <kirill.shutemov@linux.intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        <stable@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH 1/2] PCI/MSI: Cache the MSIX table size
+Message-ID: <20230123102237.00006bfa@Huawei.com>
+In-Reply-To: <Y80WtujnO7kfduAZ@kroah.com>
+References: <20230119170633.40944-1-alexander.shishkin@linux.intel.com>
+        <20230119170633.40944-2-alexander.shishkin@linux.intel.com>
+        <Y8z7FPcuDXDBi+1U@unreal>
+        <Y80WtujnO7kfduAZ@kroah.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.76]
+X-ClientProxiedBy: lhrpeml100006.china.huawei.com (7.191.160.224) To
+ lhrpeml500005.china.huawei.com (7.191.163.240)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Collection of DOE material, v2:
+On Sun, 22 Jan 2023 11:57:58 +0100
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-* Fix WARN splat reported by Gregory Price
-* Migrate to synchronous API
-* Create DOE mailboxes in PCI core instead of in drivers
-* No longer require request and response size to be multiple of 4 bytes
+> On Sun, Jan 22, 2023 at 11:00:04AM +0200, Leon Romanovsky wrote:
+> > On Thu, Jan 19, 2023 at 07:06:32PM +0200, Alexander Shishkin wrote:  
+> > > A malicious device can change its MSIX table size between the table
+> > > ioremap() and subsequent accesses, resulting in a kernel page fault in
+> > > pci_write_msg_msix().
+> > > 
+> > > To avoid this, cache the table size observed at the moment of table
+> > > ioremap() and use the cached value. This, however, does not help drivers
+> > > that peek at the PCIE_MSIX_FLAGS register directly.
+> > > 
+> > > Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+> > > Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > Cc: stable@vger.kernel.org
+> > > ---
+> > >  drivers/pci/msi/api.c | 7 ++++++-
+> > >  drivers/pci/msi/msi.c | 2 +-
+> > >  include/linux/pci.h   | 1 +
+> > >  3 files changed, 8 insertions(+), 2 deletions(-)  
+> > 
+> > I'm not security expert here, but not sure that this protects from anything.
+> > 1. Kernel relies on working and not-malicious HW. There are gazillion ways
+> > to cause crashes other than changing MSI-X.  
+> 
+> Linux does NOT protect from malicious PCIe devices at this point in
+> time, you are correct.  If we wish to change that model, then we can
+> work on that with the explict understanding that most all drivers will
+> need to change as will the bus logic for the busses involved.
+> 
+> To do piece-meal patches like this for no good reason is not a good idea
+> as it achieves nothing in the end :(
+> 
+> thanks,
+> 
+> greg k-h
 
-This is in preparation for CMA device authentication (PCIe r6.0, sec 6.31),
-which performs DOE exchanges of irregular size and is going to be handled
-in the PCI core.  The synchronous API reduces code size for DOE users.
+If you care enough about potential malicious PCIe devices, do device
+attestation and reject any devices that don't support it (which means
+rejecting pretty much everything today ;).
+Or potentially limit what non attested devices are allowed to do.
 
-Link to CMA development branch:
-https://github.com/l1k/linux/commits/doe
++CC Lukas who is working on this.
 
-
-Changes v1 -> v2:
-* [PATCH v2 01/10] PCI/DOE: Silence WARN splat with CONFIG_DEBUG_OBJECTS=y 
-  * Add note in kernel-doc of pci_doe_submit_task() that pci_doe_task must
-    be allocated on the stack (Jonathan)
-* [PATCH v2 05/10] PCI/DOE: Make asynchronous API private
-  * Deduplicate note in kernel-doc of struct pci_doe_task that caller need
-    not initialize certain fields (Jonathan)
-
-Link to v1:
-https://lore.kernel.org/linux-pci/cover.1669608950.git.lukas@wunner.de/
-
-
-Lukas Wunner (10):
-  PCI/DOE: Silence WARN splat with CONFIG_DEBUG_OBJECTS=y
-  PCI/DOE: Fix memory leak with CONFIG_DEBUG_OBJECTS=y
-  PCI/DOE: Provide synchronous API and use it internally
-  cxl/pci: Use synchronous API for DOE
-  PCI/DOE: Make asynchronous API private
-  PCI/DOE: Allow mailbox creation without devres management
-  PCI/DOE: Create mailboxes on device enumeration
-  cxl/pci: Use CDAT DOE mailbox created by PCI core
-  PCI/DOE: Make mailbox creation API private
-  PCI/DOE: Relax restrictions on request and response size
-
- .clang-format           |   1 -
- drivers/cxl/core/pci.c  |  89 ++++--------
- drivers/cxl/cxlmem.h    |   3 -
- drivers/cxl/pci.c       |  49 -------
- drivers/pci/doe.c       | 315 ++++++++++++++++++++++++++++++----------
- drivers/pci/pci.h       |  10 ++
- drivers/pci/probe.c     |   1 +
- drivers/pci/remove.c    |   2 +
- include/linux/pci-doe.h |  62 +-------
- include/linux/pci.h     |   3 +
- 10 files changed, 283 insertions(+), 252 deletions(-)
-
--- 
-2.39.1
-
+Jonathan
