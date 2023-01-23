@@ -2,160 +2,245 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A081EC25B50
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:44:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D14ACC25B50
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:47:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232007AbjAWKoo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Jan 2023 05:44:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60294 "EHLO
+        id S230107AbjAWKrm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Jan 2023 05:47:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231867AbjAWKon (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:44:43 -0500
-Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B8A623338
-        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 02:44:40 -0800 (PST)
-Received: by mail-wm1-x334.google.com with SMTP id f19-20020a1c6a13000000b003db0ef4dedcso10250950wmc.4
-        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 02:44:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=2PRs0X+3aZkUyAyZNInl6XM4TEd14eiJLS0plPeBy28=;
-        b=K88Go0c9RwpYrCjd8bPLO6/yvB177d2ERGGqVyjrBtJ9Opnop6J7vSn8s/U2vk6XVn
-         DKQRsPLphOjXmo+4O6Xf6J/AwvIM8Hw+9mrA0s4gXs8L/Cu8icK2ei4FJgqP0QHd2lwm
-         OXna9tNDOkThjGrHlLYolglciahMV3QqY6i33rWAugKCUJYjfgOU4JIyKwnpXXmiDBgL
-         Ex7Cw/DFsPEVJ3IoTrJPpq5+ceTj/wUEOf5HA5jM4U4/Nl7q2TK3XLM5fyTumzMQD7nH
-         dnh7Wk8vrbvt4os3AlADxQHlUjrTD74altfFZCn+98LHTlUKNv/cV14Hc6LuvyOR2ouH
-         Fp6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2PRs0X+3aZkUyAyZNInl6XM4TEd14eiJLS0plPeBy28=;
-        b=17S/e+xpvimeUKp1laVCxHhO4svwCDFwuDmzWIyOU0jne4BpTZ1Cz8g4cwqepyuOWM
-         A6Skur8QC5pcWUj3PLgUo7b46+A+XIisIWVLu+DGKJNdodd4ZWZNmj3w0+Gw+mZXEDdD
-         QAIUD7AwVcNs9sAlfbuzAcqU8odtaVf+xzLfhFMF//QYWumMYrG4ybC7SJ8JIZVvqflT
-         lV0WMaXuxtvGlHk/QcGaHM9YpHKhdiwd4qgEh6hp9duMPSpSSGjD4eu/xcRK5R4Pp4Oz
-         diJDYVzxmWCdbxh/SNgJbYttxVVflGPE7Ux4oEQzo6Ca8mgfAErEa3TUEJJe16cHeqXe
-         /PUQ==
-X-Gm-Message-State: AFqh2kpnSA9GqScqXVS3qL++BJLANwe5ydfxPr52yvoo7FHx4AIO6+oV
-        fxyNSGEEKjS+ZUcOJW6NsFJs2w==
-X-Google-Smtp-Source: AMrXdXtYXhgiuVMLRok6DEndR280kFs7XZ1T15tjO8fChaM2EuvZ84f0IK3TKrrf3jQLDOppc2V2uw==
-X-Received: by 2002:a05:600c:24ce:b0:3da:18c5:e48b with SMTP id 14-20020a05600c24ce00b003da18c5e48bmr31515548wmu.18.1674470678999;
-        Mon, 23 Jan 2023 02:44:38 -0800 (PST)
-Received: from linaro.org ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id k9-20020a5d6d49000000b002bc8130cca7sm34107744wri.23.2023.01.23.02.44.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Jan 2023 02:44:38 -0800 (PST)
-Date:   Mon, 23 Jan 2023 12:44:36 +0200
-From:   Abel Vesa <abel.vesa@linaro.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        "vkoul@kernel.org" <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 09/12] dt-bindings: PCI: qcom: Add SM8550 compatible
-Message-ID: <Y85lFD3m5pdpNtdR@linaro.org>
-References: <20230119140453.3942340-1-abel.vesa@linaro.org>
- <20230119140453.3942340-10-abel.vesa@linaro.org>
- <7af21247-a44e-cb46-7461-204fa6b4fcab@linaro.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7af21247-a44e-cb46-7461-204fa6b4fcab@linaro.org>
+        with ESMTP id S231855AbjAWKrg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:47:36 -0500
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5fcc:0])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58E361F5C1
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 02:47:33 -0800 (PST)
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by mailout1.hostsharing.net (Postfix) with ESMTPS id 06A6D101920DC;
+        Mon, 23 Jan 2023 11:47:29 +0100 (CET)
+Received: from localhost (unknown [89.246.108.87])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by h08.hostsharing.net (Postfix) with ESMTPSA id D3C94600D2E1;
+        Mon, 23 Jan 2023 11:47:28 +0100 (CET)
+X-Mailbox-Line: From 291131574c9e625195e9c34591abf5fa75cd1279 Mon Sep 17 00:00:00 2001
+Message-Id: <291131574c9e625195e9c34591abf5fa75cd1279.1674468099.git.lukas@wunner.de>
+In-Reply-To: <cover.1674468099.git.lukas@wunner.de>
+References: <cover.1674468099.git.lukas@wunner.de>
+From:   Lukas Wunner <lukas@wunner.de>
+Date:   Mon, 23 Jan 2023 11:16:00 +0100
+Subject: [PATCH v2 06/10] PCI/DOE: Allow mailbox creation without devres
+ management
+To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc:     Gregory Price <gregory.price@memverge.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
+        Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
+        linux-cxl@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 23-01-22 15:10:59, Krzysztof Kozlowski wrote:
-> On 19/01/2023 15:04, Abel Vesa wrote:
-> > Add the SM8550 platform to the binding.
-> > 
-> > Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-> > ---
-> > 
-> > The v3 of this patchset is:
-> > https://lore.kernel.org/all/20230119112453.3393911-1-abel.vesa@linaro.org/
-> > 
-> > Changes since v3:
-> >  * renamed noc_aggr to noc_aggr_4, as found in the driver
-> > 
-> > Changes since v2:
-> >  * dropped the pipe from clock-names
-> >  * removed the pcie instance number from aggre clock-names comment
-> >  * renamed aggre clock-names to noc_aggr
-> >  * dropped the _pcie infix from cnoc_pcie_sf_axi
-> >  * renamed pcie_1_link_down_reset to simply link_down
-> >  * added enable-gpios back, since pcie1 node will use it
-> > 
-> > Changes since v1:
-> >  * Switched to single compatible for both PCIes (qcom,pcie-sm8550)
-> >  * dropped enable-gpios property
-> >  * dropped interconnects related properties, the power-domains
-> >  * properties
-> >    and resets related properties the sm8550 specific allOf:if:then
-> >  * dropped pipe_mux, phy_pipe and ref clocks from the sm8550 specific
-> >    allOf:if:then clock-names array and decreased the minItems and
-> >    maxItems for clocks property accordingly
-> >  * added "minItems: 1" to interconnects, since sm8550 pcie uses just
-> >  * one,
-> >    same for interconnect-names
-> > 
-> > 
-> >  .../devicetree/bindings/pci/qcom,pcie.yaml    | 44 +++++++++++++++++++
-> >  1 file changed, 44 insertions(+)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-> > index a5859bb3dc28..58f926666332 100644
-> > --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-> > +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-> > @@ -34,6 +34,7 @@ properties:
-> >        - qcom,pcie-sm8250
-> >        - qcom,pcie-sm8450-pcie0
-> >        - qcom,pcie-sm8450-pcie1
-> > +      - qcom,pcie-sm8550
-> >        - qcom,pcie-ipq6018
-> >  
-> >    reg:
-> > @@ -65,9 +66,11 @@ properties:
-> >    dma-coherent: true
-> >  
-> >    interconnects:
-> > +    minItems: 1
-> >      maxItems: 2
-> >  
-> 
-> I don't see my concerns from v3 answered.
+DOE mailbox creation is currently only possible through a devres-managed
+API.  The lifetime of mailboxes thus ends with driver unbinding.
 
-Check the dates for v4 and your reply to v3.
+An upcoming commit will create DOE mailboxes upon device enumeration by
+the PCI core.  Their lifetime shall not be limited by a driver.
 
-v4 was sent a day before you sent your v3 comments. :)
+Therefore rework pcim_doe_create_mb() into the non-devres-managed
+pci_doe_create_mb().  Add pci_doe_destroy_mb() for mailbox destruction
+on device removal.
 
-> 
-> This is a friendly reminder during the review process.
-> 
-> It seems my previous comments were not fully addressed. Maybe my
-> feedback got lost between the quotes, maybe you just forgot to apply it.
-> Please go back to the previous discussion and either implement all
-> requested changes or keep discussing them.
+Provide a devres-managed wrapper under the existing pcim_doe_create_mb()
+name.
 
-Will address your comments in next version.
+Tested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/doe.c | 103 +++++++++++++++++++++++++++++++---------------
+ 1 file changed, 70 insertions(+), 33 deletions(-)
 
-> 
-> Thank you.
-> 
-> Best regards,
-> Krzysztof
-> 
+diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+index 066400531d09..cc1fdd75ad2a 100644
+--- a/drivers/pci/doe.c
++++ b/drivers/pci/doe.c
+@@ -37,7 +37,7 @@
+  *
+  * This state is used to manage a single DOE mailbox capability.  All fields
+  * should be considered opaque to the consumers and the structure passed into
+- * the helpers below after being created by devm_pci_doe_create()
++ * the helpers below after being created by pci_doe_create_mb().
+  *
+  * @pdev: PCI device this mailbox belongs to
+  * @cap_offset: Capability offset
+@@ -412,20 +412,6 @@ static int pci_doe_cache_protocols(struct pci_doe_mb *doe_mb)
+ 	return 0;
+ }
+ 
+-static void pci_doe_xa_destroy(void *mb)
+-{
+-	struct pci_doe_mb *doe_mb = mb;
+-
+-	xa_destroy(&doe_mb->prots);
+-}
+-
+-static void pci_doe_destroy_workqueue(void *mb)
+-{
+-	struct pci_doe_mb *doe_mb = mb;
+-
+-	destroy_workqueue(doe_mb->work_queue);
+-}
+-
+ static void pci_doe_flush_mb(void *mb)
+ {
+ 	struct pci_doe_mb *doe_mb = mb;
+@@ -442,7 +428,7 @@ static void pci_doe_flush_mb(void *mb)
+ }
+ 
+ /**
+- * pcim_doe_create_mb() - Create a DOE mailbox object
++ * pci_doe_create_mb() - Create a DOE mailbox object
+  *
+  * @pdev: PCI device to create the DOE mailbox for
+  * @cap_offset: Offset of the DOE mailbox
+@@ -453,24 +439,20 @@ static void pci_doe_flush_mb(void *mb)
+  * RETURNS: created mailbox object on success
+  *	    ERR_PTR(-errno) on failure
+  */
+-struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset)
++static struct pci_doe_mb *pci_doe_create_mb(struct pci_dev *pdev,
++					    u16 cap_offset)
+ {
+ 	struct pci_doe_mb *doe_mb;
+-	struct device *dev = &pdev->dev;
+ 	int rc;
+ 
+-	doe_mb = devm_kzalloc(dev, sizeof(*doe_mb), GFP_KERNEL);
++	doe_mb = kzalloc(sizeof(*doe_mb), GFP_KERNEL);
+ 	if (!doe_mb)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	doe_mb->pdev = pdev;
+ 	doe_mb->cap_offset = cap_offset;
+ 	init_waitqueue_head(&doe_mb->wq);
+-
+ 	xa_init(&doe_mb->prots);
+-	rc = devm_add_action(dev, pci_doe_xa_destroy, doe_mb);
+-	if (rc)
+-		return ERR_PTR(rc);
+ 
+ 	doe_mb->work_queue = alloc_ordered_workqueue("%s %s DOE [%x]", 0,
+ 						dev_driver_string(&pdev->dev),
+@@ -479,35 +461,90 @@ struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset)
+ 	if (!doe_mb->work_queue) {
+ 		pci_err(pdev, "[%x] failed to allocate work queue\n",
+ 			doe_mb->cap_offset);
+-		return ERR_PTR(-ENOMEM);
++		rc = -ENOMEM;
++		goto err_free;
+ 	}
+-	rc = devm_add_action_or_reset(dev, pci_doe_destroy_workqueue, doe_mb);
+-	if (rc)
+-		return ERR_PTR(rc);
+ 
+ 	/* Reset the mailbox by issuing an abort */
+ 	rc = pci_doe_abort(doe_mb);
+ 	if (rc) {
+ 		pci_err(pdev, "[%x] failed to reset mailbox with abort command : %d\n",
+ 			doe_mb->cap_offset, rc);
+-		return ERR_PTR(rc);
++		goto err_destroy_wq;
+ 	}
+ 
+ 	/*
+ 	 * The state machine and the mailbox should be in sync now;
+-	 * Set up mailbox flush prior to using the mailbox to query protocols.
++	 * Use the mailbox to query protocols.
+ 	 */
+-	rc = devm_add_action_or_reset(dev, pci_doe_flush_mb, doe_mb);
+-	if (rc)
+-		return ERR_PTR(rc);
+-
+ 	rc = pci_doe_cache_protocols(doe_mb);
+ 	if (rc) {
+ 		pci_err(pdev, "[%x] failed to cache protocols : %d\n",
+ 			doe_mb->cap_offset, rc);
++		goto err_flush;
++	}
++
++	return doe_mb;
++
++err_flush:
++	pci_doe_flush_mb(doe_mb);
++	xa_destroy(&doe_mb->prots);
++err_destroy_wq:
++	destroy_workqueue(doe_mb->work_queue);
++err_free:
++	kfree(doe_mb);
++	return ERR_PTR(rc);
++}
++
++/**
++ * pci_doe_destroy_mb() - Destroy a DOE mailbox object
++ *
++ * @ptr: Pointer to DOE mailbox
++ *
++ * Destroy all internal data structures created for the DOE mailbox.
++ */
++static void pci_doe_destroy_mb(void *ptr)
++{
++	struct pci_doe_mb *doe_mb = ptr;
++
++	xa_destroy(&doe_mb->prots);
++	destroy_workqueue(doe_mb->work_queue);
++	kfree(doe_mb);
++}
++
++/**
++ * pcim_doe_create_mb() - Create a DOE mailbox object
++ *
++ * @pdev: PCI device to create the DOE mailbox for
++ * @cap_offset: Offset of the DOE mailbox
++ *
++ * Create a single mailbox object to manage the mailbox protocol at the
++ * cap_offset specified.  The mailbox will automatically be destroyed on
++ * driver unbinding from @pdev.
++ *
++ * RETURNS: created mailbox object on success
++ *	    ERR_PTR(-errno) on failure
++ */
++struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset)
++{
++	struct pci_doe_mb *doe_mb;
++	int rc;
++
++	doe_mb = pci_doe_create_mb(pdev, cap_offset);
++	if (IS_ERR(doe_mb))
++		return doe_mb;
++
++	rc = devm_add_action(&pdev->dev, pci_doe_destroy_mb, doe_mb);
++	if (rc) {
++		pci_doe_flush_mb(doe_mb);
++		pci_doe_destroy_mb(doe_mb);
+ 		return ERR_PTR(rc);
+ 	}
+ 
++	rc = devm_add_action_or_reset(&pdev->dev, pci_doe_flush_mb, doe_mb);
++	if (rc)
++		return ERR_PTR(rc);
++
+ 	return doe_mb;
+ }
+ EXPORT_SYMBOL_GPL(pcim_doe_create_mb);
+-- 
+2.39.1
+
