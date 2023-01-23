@@ -2,208 +2,165 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40AA9C25B50
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:57:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28DA5C38142
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 11:03:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231535AbjAWK50 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Jan 2023 05:57:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40710 "EHLO
+        id S231592AbjAWLDV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Jan 2023 06:03:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43600 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231468AbjAWK5Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:57:25 -0500
-X-Greylist: delayed 594 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 23 Jan 2023 02:57:24 PST
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 350CACA10;
-        Mon, 23 Jan 2023 02:57:24 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by mailout1.hostsharing.net (Postfix) with ESMTPS id BFBA1101920DC;
-        Mon, 23 Jan 2023 11:57:22 +0100 (CET)
-Received: from localhost (unknown [89.246.108.87])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by h08.hostsharing.net (Postfix) with ESMTPSA id 9ACE1600D2E1;
-        Mon, 23 Jan 2023 11:57:22 +0100 (CET)
-X-Mailbox-Line: From 4dba01ff87d630abdd5a09d52e954d3c212d2018 Mon Sep 17 00:00:00 2001
-Message-Id: <4dba01ff87d630abdd5a09d52e954d3c212d2018.1674468099.git.lukas@wunner.de>
-In-Reply-To: <cover.1674468099.git.lukas@wunner.de>
-References: <cover.1674468099.git.lukas@wunner.de>
-From:   Lukas Wunner <lukas@wunner.de>
-Date:   Mon, 23 Jan 2023 11:20:00 +0100
-Subject: [PATCH v2 10/10] PCI/DOE: Relax restrictions on request and response
- size
-To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc:     Gregory Price <gregory.price@memverge.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
-        Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
-        linux-cxl@vger.kernel.org
+        with ESMTP id S230371AbjAWLDV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 06:03:21 -0500
+Received: from mail-wm1-x333.google.com (mail-wm1-x333.google.com [IPv6:2a00:1450:4864:20::333])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85E8617CD2
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 03:03:18 -0800 (PST)
+Received: by mail-wm1-x333.google.com with SMTP id c4-20020a1c3504000000b003d9e2f72093so10304167wma.1
+        for <linux-pci@vger.kernel.org>; Mon, 23 Jan 2023 03:03:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=eSV5uo0LzqlE/rDUs0H+Ek9lv+hIiI/0qlptbm1nlzo=;
+        b=Q9zz6tDiTIEqkINnMDbEAc9ILYldzvnpgCQVocYauAClFiB3JC21S7pEtANOVdZngz
+         sttTVNKpYbQs/CUaAQ6c6Bu+Rg4lHVBfNw3htHvzbyVKBPvXsz405idLuCmYZcfuHZcV
+         0dXI193ffNKuBK/eDHl2qnP6X0OMu2gc9PpobucvwpCPE+eaPQDeBFxjdhchSnuL92XK
+         UKOsUp3TtcdIP2rRZ/DuBofaRRwR9HjwFhfoo7gDJ9fnDNLyOeM8Xe+9umcHSQspdQEM
+         sixtL7seJkdnvPRsQMkBXyrGVvwklSHxT9LedF5WQU1Sbzy9giC0jIOk4gTeeQRQ2EKr
+         BUtg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=eSV5uo0LzqlE/rDUs0H+Ek9lv+hIiI/0qlptbm1nlzo=;
+        b=TqdodlAvJ1ZOYuevj8AxQMgBVc2DMA7aD3PjHCZRoGbDhr7AkEwAITFMfQogRSJVrd
+         yJ9e9NM0D1hPFw/luJen6HRlejCA8kH1ZZXpibHr72NZcK/PL7AjwRKoEySkWd80Cffv
+         xpFLPDwVCHWXe7hYdjFakZBVFBGFT2cteaRQkT+5jzXhH+W7uwFNjWCOi5xXHWj9BuOd
+         0CUTB7ea5VMhtLUfz5JFibLywhNNY8ISLYUkHDN7swZD+8zbfk+VjMQ6T2GEUm+oulY4
+         ivvGz5ibfuH7cCJZr9Atbw+t6s5EHTiTBRtJ8ZLP4QVHQEVY23XWlWuBqv5E8sWNYQwx
+         tdRg==
+X-Gm-Message-State: AFqh2ko9Xk/Cin1oBl4jJMQHv5kdopV6sednVgCdCoBOpVfZ5Sxl2IPy
+        4YHbBLIqs8tqyuxKVhtiTSPBTQ==
+X-Google-Smtp-Source: AMrXdXuWIciYT3qWABQE8KiIpgFepimGzph3mMI6Ii1TsVDBmMMhr3NEtvyE/L5N3b+DBiIooIRzog==
+X-Received: by 2002:a05:600c:35d6:b0:3db:2ad:e344 with SMTP id r22-20020a05600c35d600b003db02ade344mr20332817wmq.13.1674471797051;
+        Mon, 23 Jan 2023 03:03:17 -0800 (PST)
+Received: from [192.168.1.109] ([178.197.216.144])
+        by smtp.gmail.com with ESMTPSA id bg24-20020a05600c3c9800b003d9ed40a512sm14284884wmb.45.2023.01.23.03.03.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 23 Jan 2023 03:03:16 -0800 (PST)
+Message-ID: <4f0f8477-2a06-0e95-be32-0ec0f337a7fe@linaro.org>
+Date:   Mon, 23 Jan 2023 12:03:14 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.7.0
+Subject: Re: [PATCH v4 09/12] dt-bindings: PCI: qcom: Add SM8550 compatible
+Content-Language: en-US
+To:     Abel Vesa <abel.vesa@linaro.org>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        "vkoul@kernel.org" <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <20230119140453.3942340-1-abel.vesa@linaro.org>
+ <20230119140453.3942340-10-abel.vesa@linaro.org>
+ <7af21247-a44e-cb46-7461-204fa6b4fcab@linaro.org>
+ <Y85lFD3m5pdpNtdR@linaro.org>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <Y85lFD3m5pdpNtdR@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-An upcoming user of DOE is CMA (Component Measurement and Authentication,
-PCIe r6.0 sec 6.31).
+On 23/01/2023 11:44, Abel Vesa wrote:
+> On 23-01-22 15:10:59, Krzysztof Kozlowski wrote:
+>> On 19/01/2023 15:04, Abel Vesa wrote:
+>>> Add the SM8550 platform to the binding.
+>>>
+>>> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+>>> ---
+>>>
+>>> The v3 of this patchset is:
+>>> https://lore.kernel.org/all/20230119112453.3393911-1-abel.vesa@linaro.org/
+>>>
+>>> Changes since v3:
+>>>  * renamed noc_aggr to noc_aggr_4, as found in the driver
+>>>
+>>> Changes since v2:
+>>>  * dropped the pipe from clock-names
+>>>  * removed the pcie instance number from aggre clock-names comment
+>>>  * renamed aggre clock-names to noc_aggr
+>>>  * dropped the _pcie infix from cnoc_pcie_sf_axi
+>>>  * renamed pcie_1_link_down_reset to simply link_down
+>>>  * added enable-gpios back, since pcie1 node will use it
+>>>
+>>> Changes since v1:
+>>>  * Switched to single compatible for both PCIes (qcom,pcie-sm8550)
+>>>  * dropped enable-gpios property
+>>>  * dropped interconnects related properties, the power-domains
+>>>  * properties
+>>>    and resets related properties the sm8550 specific allOf:if:then
+>>>  * dropped pipe_mux, phy_pipe and ref clocks from the sm8550 specific
+>>>    allOf:if:then clock-names array and decreased the minItems and
+>>>    maxItems for clocks property accordingly
+>>>  * added "minItems: 1" to interconnects, since sm8550 pcie uses just
+>>>  * one,
+>>>    same for interconnect-names
+>>>
+>>>
+>>>  .../devicetree/bindings/pci/qcom,pcie.yaml    | 44 +++++++++++++++++++
+>>>  1 file changed, 44 insertions(+)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+>>> index a5859bb3dc28..58f926666332 100644
+>>> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+>>> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+>>> @@ -34,6 +34,7 @@ properties:
+>>>        - qcom,pcie-sm8250
+>>>        - qcom,pcie-sm8450-pcie0
+>>>        - qcom,pcie-sm8450-pcie1
+>>> +      - qcom,pcie-sm8550
+>>>        - qcom,pcie-ipq6018
+>>>  
+>>>    reg:
+>>> @@ -65,9 +66,11 @@ properties:
+>>>    dma-coherent: true
+>>>  
+>>>    interconnects:
+>>> +    minItems: 1
+>>>      maxItems: 2
+>>>  
+>>
+>> I don't see my concerns from v3 answered.
+> 
+> Check the dates for v4 and your reply to v3.
+> 
+> v4 was sent a day before you sent your v3 comments. :)
+> 
+>>
+>> This is a friendly reminder during the review process.
+>>
+>> It seems my previous comments were not fully addressed. Maybe my
+>> feedback got lost between the quotes, maybe you just forgot to apply it.
+>> Please go back to the previous discussion and either implement all
+>> requested changes or keep discussing them.
+> 
+> Will address your comments in next version.
 
-It builds on SPDM (Security Protocol and Data Model):
-https://www.dmtf.org/dsp/DSP0274
+Ah, then ok :)
 
-SPDM message sizes are not always a multiple of dwords.  To transport
-them over DOE without using bounce buffers, allow sending requests and
-receiving responses whose final dword is only partially populated.
-
-Tested-by: Ira Weiny <ira.weiny@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Cc: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
----
- drivers/pci/doe.c | 66 ++++++++++++++++++++++++++++-------------------
- 1 file changed, 40 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-index 0263bcfdddd8..2113ec95379f 100644
---- a/drivers/pci/doe.c
-+++ b/drivers/pci/doe.c
-@@ -76,13 +76,6 @@ struct pci_doe_protocol {
-  * @private: Private data for the consumer
-  * @work: Used internally by the mailbox
-  * @doe_mb: Used internally by the mailbox
-- *
-- * The payload sizes and rv are specified in bytes with the following
-- * restrictions concerning the protocol.
-- *
-- *	1) The request_pl_sz must be a multiple of double words (4 bytes)
-- *	2) The response_pl_sz must be >= a single double word (4 bytes)
-- *	3) rv is returned as bytes but it will be a multiple of double words
-  */
- struct pci_doe_task {
- 	struct pci_doe_protocol prot;
-@@ -153,7 +146,7 @@ static int pci_doe_send_req(struct pci_doe_mb *doe_mb,
- {
- 	struct pci_dev *pdev = doe_mb->pdev;
- 	int offset = doe_mb->cap_offset;
--	size_t length;
-+	size_t length, remainder;
- 	u32 val;
- 	int i;
- 
-@@ -171,7 +164,7 @@ static int pci_doe_send_req(struct pci_doe_mb *doe_mb,
- 		return -EIO;
- 
- 	/* Length is 2 DW of header + length of payload in DW */
--	length = 2 + task->request_pl_sz / sizeof(u32);
-+	length = 2 + DIV_ROUND_UP(task->request_pl_sz, sizeof(u32));
- 	if (length > PCI_DOE_MAX_LENGTH)
- 		return -EIO;
- 	if (length == PCI_DOE_MAX_LENGTH)
-@@ -184,10 +177,20 @@ static int pci_doe_send_req(struct pci_doe_mb *doe_mb,
- 	pci_write_config_dword(pdev, offset + PCI_DOE_WRITE,
- 			       FIELD_PREP(PCI_DOE_DATA_OBJECT_HEADER_2_LENGTH,
- 					  length));
-+
-+	/* Write payload */
- 	for (i = 0; i < task->request_pl_sz / sizeof(u32); i++)
- 		pci_write_config_dword(pdev, offset + PCI_DOE_WRITE,
- 				       task->request_pl[i]);
- 
-+	/* Write last payload dword */
-+	remainder = task->request_pl_sz % sizeof(u32);
-+	if (remainder) {
-+		val = 0;
-+		memcpy(&val, &task->request_pl[i], remainder);
-+		pci_write_config_dword(pdev, offset + PCI_DOE_WRITE, val);
-+	}
-+
- 	pci_doe_write_ctrl(doe_mb, PCI_DOE_CTRL_GO);
- 
- 	return 0;
-@@ -207,11 +210,11 @@ static bool pci_doe_data_obj_ready(struct pci_doe_mb *doe_mb)
- 
- static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *task)
- {
-+	size_t length, payload_length, remainder, received;
- 	struct pci_dev *pdev = doe_mb->pdev;
- 	int offset = doe_mb->cap_offset;
--	size_t length, payload_length;
-+	int i = 0;
- 	u32 val;
--	int i;
- 
- 	/* Read the first dword to get the protocol */
- 	pci_read_config_dword(pdev, offset + PCI_DOE_READ, &val);
-@@ -238,15 +241,34 @@ static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *tas
- 
- 	/* First 2 dwords have already been read */
- 	length -= 2;
--	payload_length = min(length, task->response_pl_sz / sizeof(u32));
--	/* Read the rest of the response payload */
--	for (i = 0; i < payload_length; i++) {
--		pci_read_config_dword(pdev, offset + PCI_DOE_READ,
--				      &task->response_pl[i]);
-+	received = task->response_pl_sz;
-+	payload_length = DIV_ROUND_UP(task->response_pl_sz, sizeof(u32));
-+	remainder = task->response_pl_sz % sizeof(u32);
-+	if (!remainder)
-+		remainder = sizeof(u32);
-+
-+	if (length < payload_length) {
-+		received = length * sizeof(u32);
-+		payload_length = length;
-+		remainder = sizeof(u32);
-+	}
-+
-+	if (payload_length) {
-+		/* Read all payload dwords except the last */
-+		for (; i < payload_length - 1; i++) {
-+			pci_read_config_dword(pdev, offset + PCI_DOE_READ,
-+					      &task->response_pl[i]);
-+			pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
-+		}
-+
-+		/* Read last payload dword */
-+		pci_read_config_dword(pdev, offset + PCI_DOE_READ, &val);
-+		memcpy(&task->response_pl[i], &val, remainder);
- 		/* Prior to the last ack, ensure Data Object Ready */
--		if (i == (payload_length - 1) && !pci_doe_data_obj_ready(doe_mb))
-+		if (!pci_doe_data_obj_ready(doe_mb))
- 			return -EIO;
- 		pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
-+		i++;
- 	}
- 
- 	/* Flush excess length */
-@@ -260,7 +282,7 @@ static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *tas
- 	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val))
- 		return -EIO;
- 
--	return min(length, task->response_pl_sz / sizeof(u32)) * sizeof(u32);
-+	return received;
- }
- 
- static void signal_task_complete(struct pci_doe_task *task, int rv)
-@@ -560,14 +582,6 @@ static int pci_doe_submit_task(struct pci_doe_mb *doe_mb,
- 	if (!pci_doe_supports_prot(doe_mb, task->prot.vid, task->prot.type))
- 		return -EINVAL;
- 
--	/*
--	 * DOE requests must be a whole number of DW and the response needs to
--	 * be big enough for at least 1 DW
--	 */
--	if (task->request_pl_sz % sizeof(u32) ||
--	    task->response_pl_sz < sizeof(u32))
--		return -EINVAL;
--
- 	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags))
- 		return -EIO;
- 
--- 
-2.39.1
+Best regards,
+Krzysztof
 
