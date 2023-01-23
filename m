@@ -2,100 +2,119 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 534C0C38142
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D59F5C25B50
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Jan 2023 10:28:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231389AbjAWKWo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Jan 2023 05:22:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50048 "EHLO
+        id S229579AbjAWK17 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Jan 2023 05:27:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52846 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230046AbjAWKWn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:22:43 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BCB6E390;
-        Mon, 23 Jan 2023 02:22:41 -0800 (PST)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4P0mL63q7Hz6J6Y4;
-        Mon, 23 Jan 2023 18:19:26 +0800 (CST)
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Mon, 23 Jan
- 2023 10:22:38 +0000
-Date:   Mon, 23 Jan 2023 10:22:37 +0000
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Greg KH <gregkh@linuxfoundation.org>
-CC:     Leon Romanovsky <leon@kernel.org>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Marc Zyngier <maz@kernel.org>, <darwi@linutronix.de>,
-        <elena.reshetova@intel.com>, <kirill.shutemov@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        <stable@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH 1/2] PCI/MSI: Cache the MSIX table size
-Message-ID: <20230123102237.00006bfa@Huawei.com>
-In-Reply-To: <Y80WtujnO7kfduAZ@kroah.com>
-References: <20230119170633.40944-1-alexander.shishkin@linux.intel.com>
-        <20230119170633.40944-2-alexander.shishkin@linux.intel.com>
-        <Y8z7FPcuDXDBi+1U@unreal>
-        <Y80WtujnO7kfduAZ@kroah.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml100006.china.huawei.com (7.191.160.224) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+        with ESMTP id S229548AbjAWK17 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Jan 2023 05:27:59 -0500
+X-Greylist: delayed 381 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 23 Jan 2023 02:27:57 PST
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [IPv6:2a01:4f8:150:2161:1:b009:f236:0])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91B6B126E8;
+        Mon, 23 Jan 2023 02:27:56 -0800 (PST)
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by mailout3.hostsharing.net (Postfix) with ESMTPS id 64FF8101E6B03;
+        Mon, 23 Jan 2023 11:21:31 +0100 (CET)
+Received: from localhost (unknown [89.246.108.87])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by h08.hostsharing.net (Postfix) with ESMTPSA id 27548600D2E1;
+        Mon, 23 Jan 2023 11:21:31 +0100 (CET)
+X-Mailbox-Line: From cc4b61809e2520d835cf3d4f62e7d5ed00a9d031 Mon Sep 17 00:00:00 2001
+Message-Id: <cc4b61809e2520d835cf3d4f62e7d5ed00a9d031.1674468099.git.lukas@wunner.de>
+In-Reply-To: <cover.1674468099.git.lukas@wunner.de>
+References: <cover.1674468099.git.lukas@wunner.de>
+From:   Lukas Wunner <lukas@wunner.de>
+Date:   Mon, 23 Jan 2023 11:11:00 +0100
+Subject: [PATCH v2 01/10] PCI/DOE: Silence WARN splat with
+ CONFIG_DEBUG_OBJECTS=y
+To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc:     Gregory Price <gregory.price@memverge.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
+        Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
+        linux-cxl@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, 22 Jan 2023 11:57:58 +0100
-Greg KH <gregkh@linuxfoundation.org> wrote:
+Gregory Price reports a WARN splat with CONFIG_DEBUG_OBJECTS=y upon CXL
+probing because pci_doe_submit_task() invokes INIT_WORK() instead of
+INIT_WORK_ONSTACK() for a work_struct that was allocated on the stack.
 
-> On Sun, Jan 22, 2023 at 11:00:04AM +0200, Leon Romanovsky wrote:
-> > On Thu, Jan 19, 2023 at 07:06:32PM +0200, Alexander Shishkin wrote:  
-> > > A malicious device can change its MSIX table size between the table
-> > > ioremap() and subsequent accesses, resulting in a kernel page fault in
-> > > pci_write_msg_msix().
-> > > 
-> > > To avoid this, cache the table size observed at the moment of table
-> > > ioremap() and use the cached value. This, however, does not help drivers
-> > > that peek at the PCIE_MSIX_FLAGS register directly.
-> > > 
-> > > Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-> > > Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > Cc: stable@vger.kernel.org
-> > > ---
-> > >  drivers/pci/msi/api.c | 7 ++++++-
-> > >  drivers/pci/msi/msi.c | 2 +-
-> > >  include/linux/pci.h   | 1 +
-> > >  3 files changed, 8 insertions(+), 2 deletions(-)  
-> > 
-> > I'm not security expert here, but not sure that this protects from anything.
-> > 1. Kernel relies on working and not-malicious HW. There are gazillion ways
-> > to cause crashes other than changing MSI-X.  
-> 
-> Linux does NOT protect from malicious PCIe devices at this point in
-> time, you are correct.  If we wish to change that model, then we can
-> work on that with the explict understanding that most all drivers will
-> need to change as will the bus logic for the busses involved.
-> 
-> To do piece-meal patches like this for no good reason is not a good idea
-> as it achieves nothing in the end :(
-> 
-> thanks,
-> 
-> greg k-h
+All callers of pci_doe_submit_task() allocate the work_struct on the
+stack, so replace INIT_WORK() with INIT_WORK_ONSTACK() as a backportable
+short-term fix.
 
-If you care enough about potential malicious PCIe devices, do device
-attestation and reject any devices that don't support it (which means
-rejecting pretty much everything today ;).
-Or potentially limit what non attested devices are allowed to do.
+Stacktrace for posterity:
 
-+CC Lukas who is working on this.
+WARNING: CPU: 0 PID: 23 at lib/debugobjects.c:545 __debug_object_init.cold+0x18/0x183
+CPU: 0 PID: 23 Comm: kworker/u2:1 Not tainted 6.1.0-0.rc1.20221019gitaae703b02f92.17.fc38.x86_64 #1
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.16.0-0-gd239552ce722-prebuilt.qemu.org 04/01/2014
+Call Trace:
+ pci_doe_submit_task+0x5d/0xd0
+ pci_doe_discovery+0xb4/0x100
+ pcim_doe_create_mb+0x219/0x290
+ cxl_pci_probe+0x192/0x430
+ local_pci_probe+0x41/0x80
+ pci_device_probe+0xb3/0x220
+ really_probe+0xde/0x380
+ __driver_probe_device+0x78/0x170
+ driver_probe_device+0x1f/0x90
+ __driver_attach_async_helper+0x5c/0xe0
+ async_run_entry_fn+0x30/0x130
+ process_one_work+0x294/0x5b0
 
-Jonathan
+Fixes: 9d24322e887b ("PCI/DOE: Add DOE mailbox support functions")
+Link: https://lore.kernel.org/linux-cxl/Y1bOniJliOFszvIK@memverge.com/
+Reported-by: Gregory Price <gregory.price@memverge.com>
+Tested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: stable@vger.kernel.org # v6.0+
+Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ Changes v1 -> v2:
+  * Add note in kernel-doc of pci_doe_submit_task() that pci_doe_task must
+    be allocated on the stack (Jonathan)
+
+ drivers/pci/doe.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+index 66d9ab288646..12a6752351bf 100644
+--- a/drivers/pci/doe.c
++++ b/drivers/pci/doe.c
+@@ -520,6 +520,8 @@ EXPORT_SYMBOL_GPL(pci_doe_supports_prot);
+  * task->complete will be called when the state machine is done processing this
+  * task.
+  *
++ * @task must be allocated on the stack.
++ *
+  * Excess data will be discarded.
+  *
+  * RETURNS: 0 when task has been successfully queued, -ERRNO on error
+@@ -541,7 +543,7 @@ int pci_doe_submit_task(struct pci_doe_mb *doe_mb, struct pci_doe_task *task)
+ 		return -EIO;
+ 
+ 	task->doe_mb = doe_mb;
+-	INIT_WORK(&task->work, doe_statemachine_work);
++	INIT_WORK_ONSTACK(&task->work, doe_statemachine_work);
+ 	queue_work(doe_mb->work_queue, &task->work);
+ 	return 0;
+ }
+-- 
+2.39.1
+
