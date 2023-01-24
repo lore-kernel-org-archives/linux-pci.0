@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98796C61DA4
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Jan 2023 18:38:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7009C61D9D
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Jan 2023 18:38:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233603AbjAXSiJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Jan 2023 13:38:09 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42042 "EHLO
+        id S233936AbjAXSiM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Jan 2023 13:38:12 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233639AbjAXSiG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2023 13:38:06 -0500
-Received: from laurent.telenet-ops.be (laurent.telenet-ops.be [IPv6:2a02:1800:110:4::f00:19])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 975F43D0AD
-        for <linux-pci@vger.kernel.org>; Tue, 24 Jan 2023 10:37:58 -0800 (PST)
+        with ESMTP id S233726AbjAXSiH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2023 13:38:07 -0500
+Received: from michel.telenet-ops.be (michel.telenet-ops.be [IPv6:2a02:1800:110:4::f00:18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEF3C42BF3
+        for <linux-pci@vger.kernel.org>; Tue, 24 Jan 2023 10:37:59 -0800 (PST)
 Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed50:2f4a:8573:c294:b2ce])
-        by laurent.telenet-ops.be with bizsmtp
-        id CidZ2900K56uRqi01idZ2h; Tue, 24 Jan 2023 19:37:55 +0100
+        by michel.telenet-ops.be with bizsmtp
+        id CidZ2900556uRqi06idZyA; Tue, 24 Jan 2023 19:37:58 +0100
 Received: from rox.of.borg ([192.168.97.57])
         by ramsan.of.borg with esmtp (Exim 4.95)
         (envelope-from <geert@linux-m68k.org>)
-        id 1pKOAe-007HCs-OB;
+        id 1pKOAe-007HCY-JX;
         Tue, 24 Jan 2023 19:37:33 +0100
 Received: from geert by rox.of.borg with local (Exim 4.95)
         (envelope-from <geert@linux-m68k.org>)
-        id 1pKOAn-002n1A-8j;
+        id 1pKOAn-002n0l-3x;
         Tue, 24 Jan 2023 19:37:33 +0100
 From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Vinod Koul <vkoul@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
@@ -53,10 +53,11 @@ Cc:     linux-phy@lists.infradead.org, linux-doc@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-samsung-soc@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v2 9/9] usb: host: ohci-exynos: Convert to devm_of_phy_optional_get()
-Date:   Tue, 24 Jan 2023 19:37:28 +0100
-Message-Id: <3adc5dd1149a17ea7daf4463549feab886c6b145.1674584626.git.geert+renesas@glider.be>
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Sean Anderson <sean.anderson@seco.com>
+Subject: [PATCH v2 4/9] net: fman: memac: Convert to devm_of_phy_optional_get()
+Date:   Tue, 24 Jan 2023 19:37:23 +0100
+Message-Id: <f2d801cd73cca36a7162819289480d7fc91fcc7e.1674584626.git.geert+renesas@glider.be>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <cover.1674584626.git.geert+renesas@glider.be>
 References: <cover.1674584626.git.geert+renesas@glider.be>
@@ -73,72 +74,39 @@ As devm_of_phy_optional_get() returns NULL if either the PHY cannot be
 found, or if support for the PHY framework is not enabled, it is no
 longer needed to check for -ENODEV or -ENOSYS.
 
-This lets us drop several checks for IS_ERR(), as phy_power_{on,off}()
-handle NULL parameters fine.
-
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Reviewed-by: Sean Anderson <sean.anderson@seco.com>
 ---
 v2:
-  - Add Acked-by,
+  - Add Reviewed-by,
   - Clarify removed checks for -ENODEV and -ENOSYS,
   - Remove error printing in case of real failures.
 ---
- drivers/usb/host/ohci-exynos.c | 23 ++++++-----------------
- 1 file changed, 6 insertions(+), 17 deletions(-)
+ drivers/net/ethernet/freescale/fman/fman_memac.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/usb/host/ohci-exynos.c b/drivers/usb/host/ohci-exynos.c
-index 8d7977fd5d3bd502..8af17c1ee5cc8f1e 100644
---- a/drivers/usb/host/ohci-exynos.c
-+++ b/drivers/usb/host/ohci-exynos.c
-@@ -69,19 +69,11 @@ static int exynos_ohci_get_phy(struct device *dev,
- 			return -EINVAL;
- 		}
+diff --git a/drivers/net/ethernet/freescale/fman/fman_memac.c b/drivers/net/ethernet/freescale/fman/fman_memac.c
+index 9349f841bd0645a0..ddd9d13f1166e120 100644
+--- a/drivers/net/ethernet/freescale/fman/fman_memac.c
++++ b/drivers/net/ethernet/freescale/fman/fman_memac.c
+@@ -1152,13 +1152,12 @@ int memac_initialization(struct mac_device *mac_dev,
+ 	else
+ 		memac->sgmii_pcs = pcs;
  
--		phy = devm_of_phy_get(dev, child, NULL);
-+		phy = devm_of_phy_optional_get(dev, child, NULL);
- 		exynos_ohci->phy[phy_number] = phy;
- 		if (IS_ERR(phy)) {
--			ret = PTR_ERR(phy);
--			if (ret == -EPROBE_DEFER) {
--				of_node_put(child);
--				return ret;
--			} else if (ret != -ENOSYS && ret != -ENODEV) {
--				dev_err(dev,
--					"Error retrieving usb2 phy: %d\n", ret);
--				of_node_put(child);
--				return ret;
--			}
-+			of_node_put(child);
-+			return PTR_ERR(phy);
- 		}
+-	memac->serdes = devm_of_phy_get(mac_dev->dev, mac_node, "serdes");
+-	err = PTR_ERR(memac->serdes);
+-	if (err == -ENODEV || err == -ENOSYS) {
++	memac->serdes = devm_of_phy_optional_get(mac_dev->dev, mac_node,
++						 "serdes");
++	if (!memac->serdes) {
+ 		dev_dbg(mac_dev->dev, "could not get (optional) serdes\n");
+-		memac->serdes = NULL;
+ 	} else if (IS_ERR(memac->serdes)) {
+-		dev_err_probe(mac_dev->dev, err, "could not get serdes\n");
++		err = PTR_ERR(memac->serdes);
+ 		goto _return_fm_mac_free;
  	}
  
-@@ -97,12 +89,10 @@ static int exynos_ohci_phy_enable(struct device *dev)
- 	int ret = 0;
- 
- 	for (i = 0; ret == 0 && i < PHY_NUMBER; i++)
--		if (!IS_ERR(exynos_ohci->phy[i]))
--			ret = phy_power_on(exynos_ohci->phy[i]);
-+		ret = phy_power_on(exynos_ohci->phy[i]);
- 	if (ret)
- 		for (i--; i >= 0; i--)
--			if (!IS_ERR(exynos_ohci->phy[i]))
--				phy_power_off(exynos_ohci->phy[i]);
-+			phy_power_off(exynos_ohci->phy[i]);
- 
- 	return ret;
- }
-@@ -114,8 +104,7 @@ static void exynos_ohci_phy_disable(struct device *dev)
- 	int i;
- 
- 	for (i = 0; i < PHY_NUMBER; i++)
--		if (!IS_ERR(exynos_ohci->phy[i]))
--			phy_power_off(exynos_ohci->phy[i]);
-+		phy_power_off(exynos_ohci->phy[i]);
- }
- 
- static int exynos_ohci_probe(struct platform_device *pdev)
 -- 
 2.34.1
 
