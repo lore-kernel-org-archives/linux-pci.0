@@ -2,113 +2,286 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E310EC25B50
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Jan 2023 11:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6984C38142
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Jan 2023 12:16:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232999AbjAXL7i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Jan 2023 06:59:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45862 "EHLO
+        id S233461AbjAXMQB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Jan 2023 07:16:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229546AbjAXL7i (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2023 06:59:38 -0500
-Received: from mga05.intel.com (mga05.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DF993C2B6;
-        Tue, 24 Jan 2023 03:59:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674561577; x=1706097577;
-  h=from:to:cc:subject:in-reply-to:references:date:
-   message-id:mime-version;
-  bh=pu6QJ5RV9LyVJNpkIVe152Ce044Cxxkxyc2BLBxj7s0=;
-  b=RD/3yl+ElryZ3vyhDqNKNxVyyme0fmvAvPeamzQMNS5YRXXGOWQkxvn3
-   Y8ZQFITjGgY5vBGYZftxNIQgJZTNjpFLPfVdu+YFSGk0ZMz6gCjqtbgn9
-   2bzpVO2DeBMRFL1mXTfZjZ1vP3hdVlvahMCBKCz8U7Xz0JozSx+5oJTDr
-   3Lkb50f3O90oGpKb9608KrnVIv3cYpuXoje6/vkj6Z0lnU3EbKrD+hjVs
-   ayA8iW4wu+1MdoPV6cXsA1MntebB3TpjxJAzJ4aPDrjOQYesc6IUr8VgG
-   ovLeZdf/eT+QpaoCTwTAmeCmY2+3Sb2TkDfJaCqcXJrVo3geRdqKQrhbQ
-   w==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10599"; a="412509689"
-X-IronPort-AV: E=Sophos;i="5.97,242,1669104000"; 
-   d="scan'208";a="412509689"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2023 03:59:37 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10599"; a="804571134"
-X-IronPort-AV: E=Sophos;i="5.97,242,1669104000"; 
-   d="scan'208";a="804571134"
-Received: from ubik.fi.intel.com (HELO localhost) ([10.237.72.184])
-  by fmsmga001.fm.intel.com with ESMTP; 24 Jan 2023 03:59:34 -0800
-From:   Alexander Shishkin <alexander.shishkin@linux.intel.com>
-To:     Marc Zyngier <maz@kernel.org>, Leon Romanovsky <leon@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        darwi@linutronix.de, elena.reshetova@intel.com,
-        kirill.shutemov@linux.intel.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        stable@vger.kernel.org, alexander.shishkin@linux.intel.com
-Subject: Re: [PATCH 1/2] PCI/MSI: Cache the MSIX table size
-In-Reply-To: <86fsc2n8fp.wl-maz@kernel.org>
-References: <20230119170633.40944-1-alexander.shishkin@linux.intel.com>
- <20230119170633.40944-2-alexander.shishkin@linux.intel.com>
- <Y8z7FPcuDXDBi+1U@unreal> <86fsc2n8fp.wl-maz@kernel.org>
-Date:   Tue, 24 Jan 2023 13:59:33 +0200
-Message-ID: <87sfg0p2hm.fsf@ubik.fi.intel.com>
+        with ESMTP id S233524AbjAXMP5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2023 07:15:57 -0500
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0D8444BCA;
+        Tue, 24 Jan 2023 04:15:46 -0800 (PST)
+Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4P1Qn80N1Gz6J6KY;
+        Tue, 24 Jan 2023 20:11:40 +0800 (CST)
+Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
+ (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Tue, 24 Jan
+ 2023 12:15:43 +0000
+Date:   Tue, 24 Jan 2023 12:15:43 +0000
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Lukas Wunner <lukas@wunner.de>
+CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
+        "Gregory Price" <gregory.price@memverge.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        "Dan Williams" <dan.j.williams@intel.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Li, Ming" <ming4.li@intel.com>, "Hillf Danton" <hdanton@sina.com>,
+        Ben Widawsky <bwidawsk@kernel.org>, <linuxarm@huawei.com>,
+        <linux-cxl@vger.kernel.org>
+Subject: Re: [PATCH v2 06/10] PCI/DOE: Allow mailbox creation without devres
+ management
+Message-ID: <20230124121543.00002600@Huawei.com>
+In-Reply-To: <291131574c9e625195e9c34591abf5fa75cd1279.1674468099.git.lukas@wunner.de>
+References: <cover.1674468099.git.lukas@wunner.de>
+        <291131574c9e625195e9c34591abf5fa75cd1279.1674468099.git.lukas@wunner.de>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.76]
+X-ClientProxiedBy: lhrpeml500002.china.huawei.com (7.191.160.78) To
+ lhrpeml500005.china.huawei.com (7.191.163.240)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Marc Zyngier <maz@kernel.org> writes:
+On Mon, 23 Jan 2023 11:16:00 +0100
+Lukas Wunner <lukas@wunner.de> wrote:
 
-> On Sun, 22 Jan 2023 09:00:04 +0000,
-> Leon Romanovsky <leon@kernel.org> wrote:
->> 
->> On Thu, Jan 19, 2023 at 07:06:32PM +0200, Alexander Shishkin wrote:
->> > A malicious device can change its MSIX table size between the table
->> > ioremap() and subsequent accesses, resulting in a kernel page fault in
->> > pci_write_msg_msix().
->> > 
->> > To avoid this, cache the table size observed at the moment of table
->> > ioremap() and use the cached value. This, however, does not help drivers
->> > that peek at the PCIE_MSIX_FLAGS register directly.
->> > 
->> > Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
->> > Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->> > Cc: stable@vger.kernel.org
->> > ---
->> >  drivers/pci/msi/api.c | 7 ++++++-
->> >  drivers/pci/msi/msi.c | 2 +-
->> >  include/linux/pci.h   | 1 +
->> >  3 files changed, 8 insertions(+), 2 deletions(-)
->> 
->> I'm not security expert here, but not sure that this protects from anything.
->> 1. Kernel relies on working and not-malicious HW. There are gazillion ways
->> to cause crashes other than changing MSI-X.
->> 2. Device can report large table size, kernel will cache it and
->> malicious device will reduce it back. It is not handled and will cause
->> to kernel crash too.
->> 
->
-> Indeed, this was my exact reaction reading this patch. This only makes
-> sure the same (potentially wrong) value is used at all times. So while
-> this results in a consistent use, this doesn't give much guarantee.
+> DOE mailbox creation is currently only possible through a devres-managed
+> API.  The lifetime of mailboxes thus ends with driver unbinding.
+> 
+> An upcoming commit will create DOE mailboxes upon device enumeration by
+> the PCI core.  Their lifetime shall not be limited by a driver.
+> 
+> Therefore rework pcim_doe_create_mb() into the non-devres-managed
+> pci_doe_create_mb().  Add pci_doe_destroy_mb() for mailbox destruction
+> on device removal.
+> 
+> Provide a devres-managed wrapper under the existing pcim_doe_create_mb()
+> name.
+> 
+> Tested-by: Ira Weiny <ira.weiny@intel.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Hi Lukas,
 
-It guarantees that the MSIX table is big enough to fit all the vectors,
-so it should prevent the page faults from out-of-bounds accesses.
+A few comments inline.
 
-> The only way to deal with this is to actually handle the resulting
-> fault, similar to what the kernel does when accessing userspace. Not
-> sure how possible this is with something like PCIe.
+In particular I'd like to understand why flushing in the tear down
+can't always be done as that makes the code more complex.
 
-Do you mean replacing MMIO accesses with exception handling accessors?
-That seems like a monumental effort. And then we'd have to figure out
-how to handle errors in the __pci_write_msi_msg() path.
+Might become clear in later patches though as I've not read ahead yet!
 
-Preventing page faults from happening in the first place seems like a
-more reasonable solution, or what do you think?
+Jonathan
 
-Thanks,
---
-Alex
+> ---
+>  drivers/pci/doe.c | 103 +++++++++++++++++++++++++++++++---------------
+>  1 file changed, 70 insertions(+), 33 deletions(-)
+> 
+> diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+> index 066400531d09..cc1fdd75ad2a 100644
+> --- a/drivers/pci/doe.c
+> +++ b/drivers/pci/doe.c
+> @@ -37,7 +37,7 @@
+>   *
+>   * This state is used to manage a single DOE mailbox capability.  All fields
+>   * should be considered opaque to the consumers and the structure passed into
+> - * the helpers below after being created by devm_pci_doe_create()
+> + * the helpers below after being created by pci_doe_create_mb().
+>   *
+>   * @pdev: PCI device this mailbox belongs to
+>   * @cap_offset: Capability offset
+> @@ -412,20 +412,6 @@ static int pci_doe_cache_protocols(struct pci_doe_mb *doe_mb)
+>  	return 0;
+>  }
+>  
+> -static void pci_doe_xa_destroy(void *mb)
+> -{
+> -	struct pci_doe_mb *doe_mb = mb;
+> -
+> -	xa_destroy(&doe_mb->prots);
+> -}
+> -
+> -static void pci_doe_destroy_workqueue(void *mb)
+> -{
+> -	struct pci_doe_mb *doe_mb = mb;
+> -
+> -	destroy_workqueue(doe_mb->work_queue);
+> -}
+> -
+>  static void pci_doe_flush_mb(void *mb)
+>  {
+>  	struct pci_doe_mb *doe_mb = mb;
+> @@ -442,7 +428,7 @@ static void pci_doe_flush_mb(void *mb)
+>  }
+>  
+>  /**
+> - * pcim_doe_create_mb() - Create a DOE mailbox object
+> + * pci_doe_create_mb() - Create a DOE mailbox object
+>   *
+>   * @pdev: PCI device to create the DOE mailbox for
+>   * @cap_offset: Offset of the DOE mailbox
+> @@ -453,24 +439,20 @@ static void pci_doe_flush_mb(void *mb)
+>   * RETURNS: created mailbox object on success
+>   *	    ERR_PTR(-errno) on failure
+>   */
+> -struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset)
+> +static struct pci_doe_mb *pci_doe_create_mb(struct pci_dev *pdev,
+> +					    u16 cap_offset)
+>  {
+>  	struct pci_doe_mb *doe_mb;
+> -	struct device *dev = &pdev->dev;
+>  	int rc;
+>  
+> -	doe_mb = devm_kzalloc(dev, sizeof(*doe_mb), GFP_KERNEL);
+> +	doe_mb = kzalloc(sizeof(*doe_mb), GFP_KERNEL);
+>  	if (!doe_mb)
+>  		return ERR_PTR(-ENOMEM);
+>  
+>  	doe_mb->pdev = pdev;
+>  	doe_mb->cap_offset = cap_offset;
+>  	init_waitqueue_head(&doe_mb->wq);
+> -
+>  	xa_init(&doe_mb->prots);
+See below - I'd move xa_init() down to just above the pci_doe_cache_protocols()
+call.
+
+> -	rc = devm_add_action(dev, pci_doe_xa_destroy, doe_mb);
+> -	if (rc)
+> -		return ERR_PTR(rc);
+>  
+>  	doe_mb->work_queue = alloc_ordered_workqueue("%s %s DOE [%x]", 0,
+>  						dev_driver_string(&pdev->dev),
+> @@ -479,35 +461,90 @@ struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset)
+>  	if (!doe_mb->work_queue) {
+>  		pci_err(pdev, "[%x] failed to allocate work queue\n",
+>  			doe_mb->cap_offset);
+> -		return ERR_PTR(-ENOMEM);
+> +		rc = -ENOMEM;
+> +		goto err_free;
+>  	}
+> -	rc = devm_add_action_or_reset(dev, pci_doe_destroy_workqueue, doe_mb);
+> -	if (rc)
+> -		return ERR_PTR(rc);
+>  
+>  	/* Reset the mailbox by issuing an abort */
+>  	rc = pci_doe_abort(doe_mb);
+>  	if (rc) {
+>  		pci_err(pdev, "[%x] failed to reset mailbox with abort command : %d\n",
+>  			doe_mb->cap_offset, rc);
+> -		return ERR_PTR(rc);
+> +		goto err_destroy_wq;
+>  	}
+>  
+>  	/*
+>  	 * The state machine and the mailbox should be in sync now;
+> -	 * Set up mailbox flush prior to using the mailbox to query protocols.
+> +	 * Use the mailbox to query protocols.
+>  	 */
+> -	rc = devm_add_action_or_reset(dev, pci_doe_flush_mb, doe_mb);
+> -	if (rc)
+> -		return ERR_PTR(rc);
+> -
+>  	rc = pci_doe_cache_protocols(doe_mb);
+>  	if (rc) {
+>  		pci_err(pdev, "[%x] failed to cache protocols : %d\n",
+>  			doe_mb->cap_offset, rc);
+> +		goto err_flush;
+> +	}
+> +
+> +	return doe_mb;
+> +
+> +err_flush:
+> +	pci_doe_flush_mb(doe_mb);
+> +	xa_destroy(&doe_mb->prots);
+
+Why the reorder wrt to the original devm managed cleanup?
+I'd expect this to happen on any error path after the xa_init.
+
+It doesn't matter in practice because there isn't anything to
+do until after pci_doe_cache_protocols though.  Maybe
+simplest option would be move xa_init() down to just above
+the call to pci_doe_cache_protocols()?  That way the order
+you have here would meet the 'obviously correct' test.
+
+
+> +err_destroy_wq:
+> +	destroy_workqueue(doe_mb->work_queue);
+> +err_free:
+> +	kfree(doe_mb);
+> +	return ERR_PTR(rc);
+> +}
+> +
+> +/**
+> + * pci_doe_destroy_mb() - Destroy a DOE mailbox object
+> + *
+> + * @ptr: Pointer to DOE mailbox
+> + *
+> + * Destroy all internal data structures created for the DOE mailbox.
+
+Could you comment on why it doesn't make sense to flush the
+mb on this path?  Perhaps add a comment here to say what state
+we should be in before calling this?
+
+Not flushing here means you need more complex handling in
+error paths.
+
+> + */
+> +static void pci_doe_destroy_mb(void *ptr)
+> +{
+> +	struct pci_doe_mb *doe_mb = ptr;
+> +
+> +	xa_destroy(&doe_mb->prots);
+
+If making the change above, also push the xa_destroy() below
+the destroy_workqueue() here.
+
+> +	destroy_workqueue(doe_mb->work_queue);
+> +	kfree(doe_mb);
+> +}
+> +
+> +/**
+> + * pcim_doe_create_mb() - Create a DOE mailbox object
+> + *
+> + * @pdev: PCI device to create the DOE mailbox for
+> + * @cap_offset: Offset of the DOE mailbox
+> + *
+> + * Create a single mailbox object to manage the mailbox protocol at the
+> + * cap_offset specified.  The mailbox will automatically be destroyed on
+> + * driver unbinding from @pdev.
+> + *
+> + * RETURNS: created mailbox object on success
+> + *	    ERR_PTR(-errno) on failure
+> + */
+> +struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset)
+> +{
+> +	struct pci_doe_mb *doe_mb;
+> +	int rc;
+> +
+> +	doe_mb = pci_doe_create_mb(pdev, cap_offset);
+> +	if (IS_ERR(doe_mb))
+> +		return doe_mb;
+> +
+> +	rc = devm_add_action(&pdev->dev, pci_doe_destroy_mb, doe_mb);
+> +	if (rc) {
+> +		pci_doe_flush_mb(doe_mb);
+> +		pci_doe_destroy_mb(doe_mb);
+>  		return ERR_PTR(rc);
+>  	}
+>  
+> +	rc = devm_add_action_or_reset(&pdev->dev, pci_doe_flush_mb, doe_mb);
+> +	if (rc)
+> +		return ERR_PTR(rc);
+> +
+>  	return doe_mb;
+>  }
+>  EXPORT_SYMBOL_GPL(pcim_doe_create_mb);
+
