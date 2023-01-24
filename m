@@ -2,117 +2,111 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D348C25B4E
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Jan 2023 12:37:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29DF8C54E94
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Jan 2023 12:42:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233568AbjAXMhb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Jan 2023 07:37:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44288 "EHLO
+        id S233542AbjAXMmj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Jan 2023 07:42:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232823AbjAXMha (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2023 07:37:30 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89AB3E3B4;
-        Tue, 24 Jan 2023 04:37:29 -0800 (PST)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4P1Qvq5RFWz6J73m;
-        Tue, 24 Jan 2023 20:17:27 +0800 (CST)
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Tue, 24 Jan
- 2023 12:21:31 +0000
-Date:   Tue, 24 Jan 2023 12:21:30 +0000
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Lukas Wunner <lukas@wunner.de>
-CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
-        "Gregory Price" <gregory.price@memverge.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        "Dan Williams" <dan.j.williams@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, "Hillf Danton" <hdanton@sina.com>,
-        Ben Widawsky <bwidawsk@kernel.org>, <linuxarm@huawei.com>,
-        <linux-cxl@vger.kernel.org>
-Subject: Re: [PATCH v2 07/10] PCI/DOE: Create mailboxes on device
- enumeration
-Message-ID: <20230124122130.00000493@Huawei.com>
-In-Reply-To: <5b03b8f4d2d04cf7e4997c71daee667c73eb427b.1674468099.git.lukas@wunner.de>
-References: <cover.1674468099.git.lukas@wunner.de>
-        <5b03b8f4d2d04cf7e4997c71daee667c73eb427b.1674468099.git.lukas@wunner.de>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229753AbjAXMmi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Jan 2023 07:42:38 -0500
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B84A2BF13;
+        Tue, 24 Jan 2023 04:42:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1674564153; x=1706100153;
+  h=from:to:cc:subject:in-reply-to:references:date:
+   message-id:mime-version;
+  bh=azRAjyHYATG0pAS/puvlhaA3TL8JqYMWIj5+ISxcN20=;
+  b=g1AiOTAB0H4Q7Iv1LzRRHtjeX8ZtTkL4tMJ2b8U7h3zMZH8zXae4hMlA
+   1B8jBStnFdaLzJjY5/9gaNff9q9yaDvIYPxMJUj/3YY/0CzfkBaiIosyk
+   wqNz/1g4WyLqtMr3gwjADz5Yh2uStcv8RDTpqeYD1AUrsrj9ihZN59Ckg
+   OleA3fkHs6bENWVbb3vlNKjHscsaG9eVXdrRIHXND8nObt1/jQRGLDItT
+   ie5wp/VGiafK2uHMUCRP9wW92BWflvIUGKRZRUzaXHEv5cnqfLCLShuwI
+   fKtvYJx6Gl/jqhbFktoUw4wL2T2GPBFbWywpuKW17SQXEWoArlyCFbsXx
+   Q==;
+X-IronPort-AV: E=McAfee;i="6500,9779,10599"; a="314184931"
+X-IronPort-AV: E=Sophos;i="5.97,242,1669104000"; 
+   d="scan'208";a="314184931"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jan 2023 04:42:16 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6500,9779,10599"; a="612034493"
+X-IronPort-AV: E=Sophos;i="5.97,242,1669104000"; 
+   d="scan'208";a="612034493"
+Received: from ubik.fi.intel.com (HELO localhost) ([10.237.72.184])
+  by orsmga003.jf.intel.com with ESMTP; 24 Jan 2023 04:42:12 -0800
+From:   Alexander Shishkin <alexander.shishkin@linux.intel.com>
+To:     Leon Romanovsky <leon@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Marc Zyngier <maz@kernel.org>, darwi@linutronix.de,
+        elena.reshetova@intel.com, kirill.shutemov@linux.intel.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        stable@vger.kernel.org, alexander.shishkin@linux.intel.com
+Subject: Re: [PATCH 1/2] PCI/MSI: Cache the MSIX table size
+In-Reply-To: <Y8/Kyzh+stow83lQ@unreal>
+References: <20230119170633.40944-1-alexander.shishkin@linux.intel.com>
+ <20230119170633.40944-2-alexander.shishkin@linux.intel.com>
+ <Y8z7FPcuDXDBi+1U@unreal> <87v8kwp2t6.fsf@ubik.fi.intel.com>
+ <Y8/Kyzh+stow83lQ@unreal>
+Date:   Tue, 24 Jan 2023 14:42:11 +0200
+Message-ID: <87pmb4p0ik.fsf@ubik.fi.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 23 Jan 2023 11:17:00 +0100
-Lukas Wunner <lukas@wunner.de> wrote:
+Leon Romanovsky <leon@kernel.org> writes:
 
-> Currently a DOE instance cannot be shared by multiple drivers because
-> each driver creates its own pci_doe_mb struct for a given DOE instance.
-> For the same reason a DOE instance cannot be shared between the PCI core
-> and a driver.
-> 
-> Overcome this limitation by creating mailboxes in the PCI core on device
-> enumeration.  Provide a pci_find_doe_mailbox() API call to allow drivers
-> to get a pci_doe_mb for a given (pci_dev, vendor, protocol) triple.
-> 
-> On device removal, tear down mailboxes in two steps:
-> 
-> In pci_stop_dev(), before the driver is unbound, stop ongoing DOE
-> exchanges and prevent new ones from being scheduled.  This ensures that
-> a hot-removed device doesn't needlessly wait for a running exchange to
-> time out.
+> On Tue, Jan 24, 2023 at 01:52:37PM +0200, Alexander Shishkin wrote:
+>> Leon Romanovsky <leon@kernel.org> writes:
+>> 
+>> > I'm not security expert here, but not sure that this protects from anything.
+>> > 1. Kernel relies on working and not-malicious HW. There are gazillion ways
+>> > to cause crashes other than changing MSI-X.
+>> 
+>> This particular bug was preventing our fuzzing from going deeper into
+>> the code and reaching some more of the aforementioned gazillion bugs.
+>
+> Your commit message says nothing about fuzzing, but talks about
+> malicious device. 
 
-Ah. I didn't have to go far to find answer to my earlier query!  This
-needs to be two step - hence the split in the previous patch.
+A malicious device is what the fuzzing is aiming to simulate. The fact
+of fuzzing process itself didn't seem relevant to the patch, so I didn't
+include it, going instead for the problem statement and proposed
+solution. Will the commit message benefit from mentioning fuzzing?
 
-> 
-> In pci_destroy_dev(), after the driver is unbound, free the mailboxes
-> and their internal data structures.
-> 
-> Tested-by: Ira Weiny <ira.weiny@intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Do you see "gazillion bugs" for devices which don't change their MSI-X
+> table size under the hood, which is main kernel assumption?
 
-Very nice.  One comment on a possible future need inline.
+Not so far.
 
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> If yes, you should fix these bugs.
 
+That's absolutely the intention.
 
-> +/**
-> + * pci_find_doe_mailbox() - Find Data Object Exchange mailbox
-> + *
-> + * @pdev: PCI device
-> + * @vendor: Vendor ID
-> + * @type: Data Object Type
-> + *
-> + * Find first DOE mailbox of a PCI device which supports the given protocol.
-> + *
-> + * RETURNS: Pointer to the DOE mailbox or NULL if none was found.
-> + */
-> +struct pci_doe_mb *pci_find_doe_mailbox(struct pci_dev *pdev, u16 vendor,
-> +					u8 type)
+>> > 2. Device can report large table size, kernel will cache it and
+>> > malicious device will reduce it back. It is not handled and will cause
+>> > to kernel crash too.
+>> 
+>> How would that happen? If the device decides to have fewer vectors,
+>> they'll all still fit in the ioremapped MSIX table. The worst thing that
+>> can happen is 0xffffffff reads from the mmio space, which a device can
+>> do anyway. But that shouldn't trigger a page fault or otherwise
+>> crash. Or am I missing something?
+>
+> Like I said, I'm no expert. You should tell me if it safe for all
+> callers of pci_msix_vec_count().
 
-This is good for now.  We may want eventually to be slightly
-more flexible and allow for a 'find instance X of a DOE that supports Y'.
-Can solve that when we need it though.
+Well, since you stated that the reverse will cause a kernel crash, I had
+to ask how. I'll include some version of the above paragraph in the
+commit message to indicate that we reverse situation has been considered.
 
-> +{
-> +	struct pci_doe_mb *doe_mb;
-> +	unsigned long index;
-> +
-> +	xa_for_each(&pdev->doe_mbs, index, doe_mb)
-> +		if (pci_doe_supports_prot(doe_mb, vendor, type))
-> +			return doe_mb;
-> +
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_find_doe_mailbox);
+Regards,
+--
+Alex
