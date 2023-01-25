@@ -2,171 +2,159 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E15C54EAA
-	for <linux-pci@archiver.kernel.org>; Wed, 25 Jan 2023 15:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45194C54E94
+	for <linux-pci@archiver.kernel.org>; Wed, 25 Jan 2023 17:05:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234540AbjAYPe0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 25 Jan 2023 10:34:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56980 "EHLO
+        id S230347AbjAYRFN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 25 Jan 2023 12:05:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230089AbjAYPeZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jan 2023 10:34:25 -0500
+        with ESMTP id S235688AbjAYRFN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 25 Jan 2023 12:05:13 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 455BB37F2B;
-        Wed, 25 Jan 2023 07:34:17 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03B1183CC;
+        Wed, 25 Jan 2023 09:05:12 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id EB032B80990;
-        Wed, 25 Jan 2023 15:34:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94015C433D2;
-        Wed, 25 Jan 2023 15:34:14 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id AC48BB81B44;
+        Wed, 25 Jan 2023 17:05:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A186C433EF;
+        Wed, 25 Jan 2023 17:05:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674660854;
-        bh=umc2arEjS5hASEcWst4KSnUtu/WD905vibgkc+vPU2I=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=eGtIwwpb7rjyJJ8nmi+ZOS1pAP8gwDM/eO9eEbZRrqvlgkZRbtfMj/qWUZwkgw3cO
-         y8B+UN+LukJ6aYame2EW6gtDttog6i/PdwyndifRaV8TDW3wP1TE7oo7tpKtJ+/JN4
-         9vZLtf+MpZOVcZP5b8ayXRXAT30NqncFgTRBRMnbM+EL8nichpMOpzRDX7vIkRnrBj
-         VNl2wNjUbmh1EIVUNski7G3YCIC+sfkMILoxRkdxVsvOtZwFmub9RXBbC+6XMT/B2L
-         Gmis3ns+lwGR2AhjTBhU2Crt7FPl4ihL6Wf8W8NZLkfkll4CtSnF+/8i7JVboz2/rZ
-         HTL05raT5ELBA==
-Received: by mail-yw1-f175.google.com with SMTP id 00721157ae682-5063029246dso100776407b3.6;
-        Wed, 25 Jan 2023 07:34:14 -0800 (PST)
-X-Gm-Message-State: AFqh2kqjlha/fF+qjQKPucpCijtJY8aqmIisX7pu1lMLNTRNs+Mq2SRi
-        RzrNeffzmvqkWIdtixbizEWCQm08NCAPlPNrhw==
-X-Google-Smtp-Source: AMrXdXv2RU4fY0q9umUdMoP1XW5HdAjtg9b0UXKHlF2lwCX+hP0b4xrin/HR6b/G1kb467LpcYn26pq1mYdJSwHadok=
-X-Received: by 2002:a81:a50f:0:b0:4ed:9349:97d3 with SMTP id
- u15-20020a81a50f000000b004ed934997d3mr3935669ywg.357.1674660853564; Wed, 25
- Jan 2023 07:34:13 -0800 (PST)
+        s=k20201202; t=1674666309;
+        bh=KCgquHBBE3i32DY08dZlQY8oNliwvemLJmq1BLIltXY=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=rvk2iA8pOJhX6AySAr56h3sa54DxzdmfY9i5WuM501Wd1mNsKW2iOkzkfUk1HnGhQ
+         fcXZ1tXfgy1+iteHg1xoxwgQqYrngP6I8DFlYjGkYzXHPxcZWC6m5zhM7YF1UuiA0l
+         TziucBvFB70zD9yrad7zBhej/nswthz1AtU9xK8SPCq1Uu6aGA75iTMLyfqe3fbhfK
+         8PNp1OA66uRHyR6bSMlXwkFyoOWrqXroiCFm2aX/aXa2KX4msX+TNqpXUo0wBJ2ry5
+         2n8/KAzsbFFJuPzmTR/HanO1nPIulfnR4eiliFbC+M/GewjlXC92TsMjvY8X2+5aps
+         5yhA7ses57mjQ==
+Date:   Wed, 25 Jan 2023 11:05:06 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Daniel Scheller <d.scheller@gmx.net>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Berni <bernhard@turmann.eu>,
+        Salvatore Bonaccorso <carnil@debian.org>,
+        Sean V Kelley <sean.v.kelley@linux.intel.com>,
+        linux-media@vger.kernel.org
+Subject: Re: [bugzilla-daemon@bugzilla.kernel.org: [Bug 208507] New:
+ BISECTED: i2c timeout loading module ddbridge with commit
+ d2345d1231d80ecbea5fb764eb43123440861462]
+Message-ID: <20230125170506.GA1175690@bhelgaas>
 MIME-Version: 1.0
-References: <20230120-simple-mfd-pci-v1-1-c46b3d6601ef@axis.com>
- <Y86op9oh5ldrZQyG@google.com> <Y862WTT03/JxXUG8@kroah.com>
- <Y9EBSmOoE5+83jS5@axis.com> <Y9EgrKT3hDyx+ULy@kroah.com> <CAL_JsqLGworC4beavkWSk9Uf=qFUR1RtsKBezH2xvop83C15NQ@mail.gmail.com>
- <Y9FEJAah8y0aY1L2@kroah.com>
-In-Reply-To: <Y9FEJAah8y0aY1L2@kroah.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Wed, 25 Jan 2023 09:34:01 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqL02_z8ePyAObbe219iYcCyPKGURYvT3_yuG5B4qxXSeQ@mail.gmail.com>
-Message-ID: <CAL_JsqL02_z8ePyAObbe219iYcCyPKGURYvT3_yuG5B4qxXSeQ@mail.gmail.com>
-Subject: Re: [PATCH] mfd: Add Simple PCI MFD driver
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Vincent Whitchurch <vincent.whitchurch@axis.com>,
-        Lee Jones <lee@kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        kernel <kernel@axis.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200709191722.GA6054@bjorn-Precision-5520>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 25, 2023 at 9:00 AM Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
+[+cc Salvatore, Mauro, Daniel, linux-media]
+
+On Thu, Jul 09, 2020 at 02:17:22PM -0500, Bjorn Helgaas wrote:
+> Bisected to Debian commit d2345d1231d8, which is a backport of the
+> upstream commit b88bf6c3b6ff ("PCI: Add boot interrupt quirk mechanism
+> for Xeon chipsets").
+> 
+> Reporter confirmed that reverting the Debian backport from 4.19.132
+> fixes the problem.
 >
-> On Wed, Jan 25, 2023 at 08:54:21AM -0600, Rob Herring wrote:
-> > On Wed, Jan 25, 2023 at 6:29 AM Greg Kroah-Hartman
-> > <gregkh@linuxfoundation.org> wrote:
-> > >
-> > > On Wed, Jan 25, 2023 at 11:15:38AM +0100, Vincent Whitchurch wrote:
-> > > > On Mon, Jan 23, 2023 at 05:31:21PM +0100, Greg Kroah-Hartman wrote:
-> > > > > On Mon, Jan 23, 2023 at 03:32:55PM +0000, Lee Jones wrote:
-> > > > > > On Mon, 23 Jan 2023, Vincent Whitchurch wrote:
-> > > > > >
-> > > > > > > Add a PCI driver which registers all child nodes specified in the
-> > > > > > > devicetree.  It will allow platform devices to be used on virtual
-> > > > > > > systems which already support PCI and devicetree, such as UML with
-> > > > > > > virt-pci.
-> > > > > > >
-> > > > > > > The driver has no id_table by default; user space needs to provide one
-> > > > > > > using the new_id mechanism in sysfs.
-> > > > > >
-> > > > > > This feels wrong for several reasons.
-> > > > > >
-> > > > > > Firstly, I think Greg (Cc:ed) will have something to say about this.
-> > > > >
-> > > > > Yes, this isn't ok.  Please write a real driver for the hardware under
-> > > > > control here, and that would NOT be a MFD driver (hint, if you want to
-> > > > > split up a PCI device into different drivers, use the aux bus code, that
-> > > > > is what it is there for.)
-> > > >
-> > > > I hope it's clear from my other replies in this thread that the entire
-> > > > purpose of this driver is to allow arbitrary platform devices to be used
-> > > > via a PCI device in virtual environments like User Mode Linux in order
-> > > > to test existing platform drivers using mocked hardware.
-> > >
-> > > That still feels wrong, why is PCI involved here at all?
-> > >
-> > > Don't abuse platform devices like this please, mock up a platform device
-> > > framework instead if you want to test them that way, don't think that
-> > > adding a platform device "below" a PCI device is somehow allowed at all.
-> >
-> > My question as well. However, that's only for Vincent's usecase. The
-> > other ones I'm aware of are definitely non-discoverable MMIO devices
-> > behind a PCI device.
-> >
-> > It is perfectly valid in DT to have the same device either directly on
-> > an MMIO bus or behind some other MMIO capable bus. So what bus type
-> > should they all be?
->
-> If the mmio space is behind a PCI device, then why isn't that a special
-> bus type for that "pci-mmio" or something, right?  Otherwise what
-> happens when you yank out that PCI device?  Does that work today for
-> these platform devices?
+> ----- Forwarded message from bugzilla-daemon@bugzilla.kernel.org -----
+> 
+> Date: Thu, 09 Jul 2020 15:01:11 +0000
+> From: bugzilla-daemon@bugzilla.kernel.org
+> To: bjorn@helgaas.com
+> Subject: [Bug 208507] New: BISECTED: i2c timeout loading module ddbridge with
+> 	commit d2345d1231d80ecbea5fb764eb43123440861462
+> Message-ID: <bug-208507-41252@https.bugzilla.kernel.org/>
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=208507
+> 
+>             Bug ID: 208507
+>            Summary: BISECTED: i2c timeout loading module ddbridge with
+>                     commit d2345d1231d80ecbea5fb764eb43123440861462
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: 4.19.132
+>           Hardware: x86-64
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: bernhard@turmann.eu
+>         Regression: Yes
+> 
+> Created attachment 290179
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=290179&action=edit
+> dmesg on 4.19.132
+> 
+> OS: Debian 10.4 Buster
+> CPU: Intel(R) Xeon(R) CPU D-1541 @ 2.10GHz
+> Hardware: Supermicro  Super Server
+> Mainboard: Supermicro X10SDV
+> DVB card: Digital Devices Cine S2 V7 Advanced DVB adapter
+> 
+> Issue:
+> =====
+> Loading kernel module ddbridge fails with i2c timeouts, see attached dmesg. The
+> dvb media adapter is unusable.
+> This happened after Linux kernel upgrade from 4.19.98-1+deb10u1 to
+> 4.19.118-2+deb10u1.
+> 
+> A git bisect based on the Debian kernel repo on branch buster identified as
+> first bad commit: [1fb0eb795661ab9e697c3a053b35aa4dc3b81165] Update to
+> 4.19.116.
+> 
+> Another git bisect based on upstream Linux kernel repo on branch v4.19.y
+> identified as first bad commit: [d2345d1231d80ecbea5fb764eb43123440861462] PCI:
+> Add boot interrupt quirk mechanism for Xeon chipsets.
+> 
+> Other affected Debian kernel version: 5.6.14+2~bpo10+1
+> I tested this version via buster-backports, because so far I was unable to
+> build my own kernel from 5.6.y or even 5.7.y.
+> 
+> Workaround:
+> ==========
+> Reverting the mentioned commit d2345d1231d80ecbea5fb764eb43123440861462 on top
+> of 4.19.132 is fixing the problem. Reverting the same commit on 4.19.118 or
+> 4.19.116 is also fixing the problem.
 
-Well, yes, I'm sure there's lots of issues with hot-unplug and DT.
-That's pretty much anything using DT, not just platform devices. Those
-will only get fixed when folks try to do that, but so far we've mostly
-prevented doing that. For example, we don't support a generic
-mechanism to add and remove DT overlays because most drivers aren't
-ready for their DT node to disappear.
+Sorry, I dropped the ball on this.
 
-Is there some restriction that says platform_bus can't do hotplug? I
-thought everything is hotpluggable (in theory).
+Berni has verified that this problem still exists in v6.1.4, and has
+attached current dmesg logs and lspci output.  
 
-> > > > Given this "hardware", it's not clear what a "real driver" would do
-> > > > differently.
-> > >
-> > > Again, you can not have a platform device below a PCI device, that's not
-> > > what a platform device is for at all.
-> > >
-> > > > The auxiliary bus cannot be used since it naturally does
-> > > > not support platform devices.
-> > >
-> > > The aux bus can support any type of bus (it's there to be used as you
-> > > want, it's just that people are currently using it for PCI devices right
-> > > now).
-> > >
-> > > > A hard coded list of sub-devices cannot be used since arbitrary
-> > > > platform devices with arbitrary devicetree properties need to be
-> > > > supported.
-> > >
-> > > Then make a new bus type and again, do not abuse platform devices.
-> >
-> > How about of_platform_bus[1]?
->
-> Fair enough :)
->
-> > At this point, it would be easier to create a new bus type for
-> > whatever it is you think *should* be a platform device and move those
-> > to the new bus leaving platform_bus as the DT/ACPI devices bus.
->
-> platfom bus should be for DT/ACPI devices like that, but that's not what
-> a "hang a DT off a PCI device" should be, right?  Why is mmio space
-> somehow special here?
+Sean's comment (https://bugzilla.kernel.org/show_bug.cgi?id=208507#c18)
+suggests this is actually a ddbridge driver issue related to INTx
+emulation or MSI support.
 
-Only because platform_bus is the bus type in the kernel that supports
-MMIO devices and that the DT code uses to instantiate them. The DT
-code doesn't care if those are at the root level or behind some other
-bus type.
+Berni confirmed that the i2c timeouts happen when
+CONFIG_DVB_DDBRIDGE_MSIENABLE is not enabled, and that enabling MSI
+via the "ddbridge.msi=1" module parameter avoids the i2c timeouts.
 
-> Perhaps we just add support for that to the aux
-> bus?
+The Kconfig help for DVB_DDBRIDGE_MSIENABLE:
 
-Yes, we could add IOMEM resources, DT ID table and matching, etc., but
-we'd just end up back at of_platform_bus with a new name. Every driver
-doing both would have 2 driver structs and register calls. What do we
-gain from that?
+  Use PCI MSI (Message Signaled Interrupts) per default. Enabling this
+  might lead to I2C errors originating from the bridge in conjunction
+  with certain SATA controllers, requiring a reload of the ddbridge
+  module. MSI can still be disabled by passing msi=0 as option, as
+  this will just change the msi option default value.
 
-Rob
+suggests that there may be an i2c or SATA issue that could be fixed so
+ddbridge MSI could be always enabled.  But I don't know about that
+underlying issue.
+
+Per MAINTAINERS, the ddbridge driver looks orphaned, so I cc'd the
+media folks and Daniel, who might know something about the MSI issues,
+based on adaf4df70521 ("media: ddbridge: Kconfig option to control the
+MSI modparam default").
+
+Bjorn
+
