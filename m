@@ -2,150 +2,96 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0829C61DA2
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Jan 2023 16:54:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 084A1C61DA3
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Jan 2023 18:20:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231655AbjAZQx7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Jan 2023 11:53:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33666 "EHLO
+        id S229930AbjAZST7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Jan 2023 13:19:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbjAZQx7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2023 11:53:59 -0500
-Received: from mail-qt1-x835.google.com (mail-qt1-x835.google.com [IPv6:2607:f8b0:4864:20::835])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17593470BF
-        for <linux-pci@vger.kernel.org>; Thu, 26 Jan 2023 08:53:58 -0800 (PST)
-Received: by mail-qt1-x835.google.com with SMTP id j9so1764842qtv.4
-        for <linux-pci@vger.kernel.org>; Thu, 26 Jan 2023 08:53:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ixsystems.com; s=google;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=LzJPe3EcmggiRO10VtpQvAAZOYxUCc3B6VhZOb/rnEw=;
-        b=K9TssC2tvO2bl8n5jggZPVlhfeYQA8WE8uf9tMmK56dMGQPG7N0fHRGvT6nLRRW0OR
-         cvECnIrifJy5t2grFtdHCWFWvgrk4YchKyMB4JSCq3pO5zlIWgEKa0Fcsgb/P24YUkCH
-         AKpYjVAVirzZFaUypwoVxeTrsUf5efj9VRfehK5FSm759KRZCmP+PCchYGUJXk8tT59E
-         N8Mk6fCm52vPaHtfswZfUL/DuKsSVtdeUt1SAwOaE7P1d+kOPv1Q7yDRLxKX2rPmYoj7
-         4q6ubtQzoLCD0uPVfPwyh0WsWdAds6p3bEJo7guqowOUuoxg5VFjhClE/eQGsQ2wDaI4
-         WhzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=LzJPe3EcmggiRO10VtpQvAAZOYxUCc3B6VhZOb/rnEw=;
-        b=lm/sa8DISZWLwvG+jU3zyHf8x+0I0KDMtpXkXl8yeZoEl7Yeas0QzkSsGgQZRzZXhd
-         jZiZsdxgngbPM7F5WQZcqp3SVpxrhIW+OfpQsbXATwJGetDBQcRbuw/UJ/SFOzK1NvA8
-         +TcMmI3mrQkVvvHxqAPL1mN0CI1ze3pKhARvgEiw9gqHGVMrw8zKwhBdOiH37QiV/R56
-         DSwxgbrVhdjiKv62rpWBTDWfLfRpOwkLOgua9nzq9mhtQGRwlYhZHPjnDEewh9Bvn7u4
-         +zdutebG8FRDdeIPJM+FhntuzGYvqJwskVkUlQc+3BCYJYinEarCwRg2svtgG04BNMPp
-         C9Dg==
-X-Gm-Message-State: AO0yUKVi62KkyAWeSAtas+Wz+KDWbctSgNsIKLwRkoogTy3bhdRtSdes
-        vgr7KmoisheYbJcfDvMeUpz5AA==
-X-Google-Smtp-Source: AK7set9r/4Hyn4M9sc6jcdezlIBVvONhF3rWFQnGmP2n/9pOWDxYJ2xHS+Yylyek0nIDjSOCY08+KA==
-X-Received: by 2002:ac8:5c09:0:b0:3b6:377d:4330 with SMTP id i9-20020ac85c09000000b003b6377d4330mr12132504qti.29.1674752037055;
-        Thu, 26 Jan 2023 08:53:57 -0800 (PST)
-Received: from [10.230.45.5] ([38.32.73.2])
-        by smtp.gmail.com with ESMTPSA id i12-20020ac84f4c000000b003b63c9c59easm973869qtw.97.2023.01.26.08.53.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 26 Jan 2023 08:53:56 -0800 (PST)
-Message-ID: <7b4a981b-2ee8-0021-0c3a-984d6171f680@ixsystems.com>
-Date:   Thu, 26 Jan 2023 11:53:55 -0500
+        with ESMTP id S230051AbjAZST6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Jan 2023 13:19:58 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5ABA96537D;
+        Thu, 26 Jan 2023 10:19:57 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id BD4086192B;
+        Thu, 26 Jan 2023 18:19:56 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1940C433EF;
+        Thu, 26 Jan 2023 18:19:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674757196;
+        bh=Yhgs9+A5wKBzRaMRYNnqazTkLbHVQaZOCExLNcxL1Z8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=giu8wG7//Z59qJSKD1YBAEv0EXlZAK8nbm7JsHXvc72vFpdQKFS7VDbMFPSPxx7gq
+         fOteqb4ZulxWqI/5XGZVM3TTizIKH1IeU5pghMxWrp515nS9SZKzAnLoICv5aO9YfU
+         CnUakiJS+SgwLhg+M8k/o3CLx64HVURBiN2wsgROAajf0YIJr9uBuaOz20SkChcof3
+         +mxOSJ1v2bqPTeASWO0Fx2sRomrTNhrQKhM15SqVppJLGNcZegxCBgvlnJanY1PzFj
+         nJN9f16KTBhcA8AfAB+JlPPVOxzfotpx+rNj9Uh3aAvw9tb4hI3dQzr+QjVcX3Bcw5
+         /24S6rj1GgYXw==
+Date:   Thu, 26 Jan 2023 12:19:54 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Serge Semin <fancer.lancer@gmail.com>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>, Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        caihuoqing <caihuoqing@baidu.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v9 24/27] dmaengine: dw-edma: Relax driver config settings
+Message-ID: <20230126181954.GA1290077@bhelgaas>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; FreeBSD amd64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.0
-Subject: Re: [PATCH v5 1/3] PCI: Align extra resources for hotplug bridges
- properly
-Content-Language: en-US
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Chris Chiu <chris.chiu@canonical.com>,
-        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-        linux-pci@vger.kernel.org
-References: <20230112110000.59974-1-mika.westerberg@linux.intel.com>
- <20230112110000.59974-2-mika.westerberg@linux.intel.com>
-From:   Alexander Motin <mav@ixsystems.com>
-In-Reply-To: <20230112110000.59974-2-mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230126163750.ae6z3pkyd3o32byn@mobilestation>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Mika,
+On Thu, Jan 26, 2023 at 07:37:50PM +0300, Serge Semin wrote:
+> On Wed, Jan 25, 2023 at 05:23:57PM -0600, Bjorn Helgaas wrote:
 
-Unfortunately my system was de-racked meanwhile, so it will take few 
-more days for me to test this.  So far I only successfully built it on 
-my 5.15.79 kernel.  Meanwhile some comments below:
-
-On 12.01.2023 05:59, Mika Westerberg wrote:
-> After division the extra resource space per hotplug bridge may not be
-> aligned according to the window alignment so do that before passing it
-> down for further distribution.
+> > It's a pretty trivial update, so I just did it myself.  The result is
+> > at https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/ctrl/dwc&id=ecadcaed4ef7
+> > 
+> > I split this patch and tweaked some commit messages for consistency
+> > (including the "DW eDMA PCIe driver" change above).  "git diff -b"
+> > with Lorenzo's current branch (95624672bb3e ("PCI: dwc: Add DW eDMA
+> > engine support")) is empty except for a minor comment change.  
 > 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->   drivers/pci/setup-bus.c | 25 +++++++++++++++++++------
->   1 file changed, 19 insertions(+), 6 deletions(-)
+> Great! Thanks. Although I've already created v10 beforehand but didn't
+> submitted it yet waiting for your response. The split up patches look
+> exactly like yours.
 > 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index b4096598dbcb..34a74bc581b0 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1891,6 +1891,7 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->   	 * resource space between hotplug bridges.
->   	 */
->   	for_each_pci_bridge(dev, bus) {
-> +		struct resource *res;
->   		struct pci_bus *b;
->   
->   		b = dev->subordinate;
-> @@ -1902,16 +1903,28 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
->   		 * hotplug-capable downstream ports taking alignment into
->   		 * account.
->   		 */
-> -		io.end = io.start + io_per_hp - 1;
-> -		mmio.end = mmio.start + mmio_per_hp - 1;
-> -		mmio_pref.end = mmio_pref.start + mmio_pref_per_hp - 1;
-> +		res = &dev->resource[PCI_BRIDGE_IO_WINDOW];
-> +		align = pci_resource_alignment(dev, res);
-> +		io.end = align ? io.start + ALIGN_DOWN(io_per_hp, align) - 1
-> +			       : io.start + io_per_hp - 1;
+> In addition to that since I was going to re-send v10 I also took into
+> account your comments regarding the patch:
+> [PATCH v9 19/27] dmaengine: dw-edma: Use non-atomic io-64 methods
+> Link: https://lore.kernel.org/linux-pci/20230113171409.30470-20-Sergey.Semin@baikalelectronics.ru/
+> I've dropped unneeded modification and unpinned another fixes patch
+> which turned out to be a part of those modifications. So if you
+> re-based your pci/ctrl/dwc branch with that patch replaced with the
+> patches attached to this email it would have been great. Otherwise
+> it's ok to merge the series as is.
+> 
+> Note in the attached "non-atomic io-64" patch I've already replaced
+> the commit log with the your short version.
 
-Not bug probably, but if we align x_per_b down for one bridge, we could 
-be able to increase it for other(s).
+Awesome, thanks!  I folded those updates in and updated my branch.
 
-> +
-> +		res = &dev->resource[PCI_BRIDGE_MEM_WINDOW];
-> +		align = pci_resource_alignment(dev, res);
-> +		mmio.end = align ? mmio.start + ALIGN_DOWN(mmio_per_hp, align) - 1
-> +				 : mmio.start + io_per_hp - 1;
+And merged the whole thing into the PCI "next" branch.
 
-Here is a typo, it should be mmio_per_hp here   ^^^.
+Thanks for all your work!
 
-> +
-> +		res = &dev->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
-> +		align = pci_resource_alignment(dev, res);
-> +		mmio_pref.end = align ? mmio_pref.start +
-> +					ALIGN_DOWN(mmio_pref_per_hp, align) - 1
-> +				      : mmio_pref.start + mmio_pref_per_hp;
->   
->   		pci_bus_distribute_available_resources(b, add_list, io, mmio,
->   						       mmio_pref);
->   
-> -		io.start += io_per_hp;
-> -		mmio.start += mmio_per_hp;
-> -		mmio_pref.start += mmio_pref_per_hp;
-> +		io.start += io.end + 1;
-> +		mmio.start += mmio.end + 1;
-> +		mmio_pref.start += mmio_pref.end + 1;
->   	}
->   }
->   
-
--- 
-Alexander Motin
+Bjorn
