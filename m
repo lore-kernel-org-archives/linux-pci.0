@@ -2,133 +2,105 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B6E3C38142
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Jan 2023 10:27:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 161B9C54EAA
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Jan 2023 11:35:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230249AbjA0K11 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 27 Jan 2023 05:27:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37100 "EHLO
+        id S233772AbjA0Lfp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 27 Jan 2023 06:35:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49368 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229909AbjA0K10 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2023 05:27:26 -0500
-Received: from mga18.intel.com (mga18.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAD26222ED;
-        Fri, 27 Jan 2023 02:27:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674815245; x=1706351245;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=AnsrmHHoBOgvGeWy5Tq/LhGIJFaTmSKx2mxuUEhkpr4=;
-  b=exGL/XvKFTiLezeGpGfNcjYhLXBkv5zFPq1oWXNdo8SuWD1kx6kaLomr
-   DVrJA7QVWBoALuPDzg93lxMs07WMLq6tH12SyNhKdTf8izJlMrDfp2EaI
-   0r3tuYdYDYGEUE0gcvKCs7Mk6uzuBWxKspsm2KV/CjEPSujSmnEvN9BT6
-   gL0jEOh600YnbnGT56rOJ45y8T2DjqKneWXjzOURaGloIsLoEwcORMgdm
-   rBjBkMDcogFg+8GpFMFS99/wPSvzrOud0MPEA7wHaDsfLFO3BB+E59NXA
-   O7tEOC1UQSTKnjIOqhtg0bD1W6lwqou/Jl6y95TD5DNesOppwageMIGAY
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10602"; a="310681204"
-X-IronPort-AV: E=Sophos;i="5.97,250,1669104000"; 
-   d="scan'208";a="310681204"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2023 02:27:24 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10602"; a="837068002"
-X-IronPort-AV: E=Sophos;i="5.97,250,1669104000"; 
-   d="scan'208";a="837068002"
-Received: from mckumar-mobl2.gar.corp.intel.com (HELO [10.213.102.127]) ([10.213.102.127])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jan 2023 02:27:19 -0800
-Message-ID: <7f5be4cd-ae84-aa24-cf8f-8261c825fafd@linux.intel.com>
-Date:   Fri, 27 Jan 2023 15:57:16 +0530
+        with ESMTP id S233791AbjA0Lf3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Jan 2023 06:35:29 -0500
+X-Greylist: delayed 230 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 27 Jan 2023 03:34:17 PST
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [IPv6:2a01:488:42:1000:50ed:8234::])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13985196B1
+        for <linux-pci@vger.kernel.org>; Fri, 27 Jan 2023 03:34:16 -0800 (PST)
+Received: from [2a02:8108:963f:de38:4bc7:2566:28bd:b73c]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1pLMyW-00024h-SK; Fri, 27 Jan 2023 12:32:56 +0100
+Message-ID: <b1abd22f-ca6c-54f4-9fa8-29f31ca8a729@leemhuis.info>
+Date:   Fri, 27 Jan 2023 12:32:56 +0100
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH v5 net-next 3/5] net: wwan: t7xx: PCIe reset rescan
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Jakub Kicinski <kuba@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, netdev@vger.kernel.org,
-        davem@davemloft.net, johannes@sipsolutions.net,
-        ryazanov.s.a@gmail.com, loic.poulain@linaro.org,
-        ilpo.jarvinen@linux.intel.com, ricardo.martinez@linux.intel.com,
-        chiranjeevi.rapolu@linux.intel.com, haijun.liu@mediatek.com,
-        edumazet@google.com, pabeni@redhat.com,
-        chandrashekar.devegowda@intel.com, linuxwwan@intel.com,
-        linuxwwan_5g@intel.com,
-        Madhusmita Sahu <madhusmita.sahu@intel.com>,
-        linux-pci@vger.kernel.org
-References: <20230126152552.GA1265322@bhelgaas>
-Content-Language: en-US
-From:   "Kumar, M Chetan" <m.chetan.kumar@linux.intel.com>
-In-Reply-To: <20230126152552.GA1265322@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.0
+Subject: Re: Missing sriov_numvfs after removal of EfiMemoryMappedIO from E820
+ map
+Content-Language: en-US, de-DE
+To:     Peifeng Qiu <linux@qiupf.dev>,
+        Linux regressions mailing list <regressions@lists.linux.dev>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org
+References: <CAPH51bc1ZoP2ukJJh8nfrNY1FCp1nk7AP0jGGCvoskq2XbmAoA@mail.gmail.com>
+ <029045a9-5006-e663-571f-b67344fa3a50@leemhuis.info>
+ <2f866122-6a56-dfc7-9add-5168a4e796b2@leemhuis.info>
+ <CAPH51bdcXFCiHrFPnMYGznsrCTOHDB0fyujFy3y5e8PWWYnnbQ@mail.gmail.com>
+From:   "Linux kernel regression tracking (#update)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <CAPH51bdcXFCiHrFPnMYGznsrCTOHDB0fyujFy3y5e8PWWYnnbQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1674819257;a16cced9;
+X-HE-SMSGID: 1pLMyW-00024h-SK
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 1/26/2023 8:55 PM, Bjorn Helgaas wrote:
-> On Tue, Jan 24, 2023 at 08:45:43PM -0800, Jakub Kicinski wrote:
->> Hi Bjorn,
+[TLDR: This mail in primarily relevant for Linux kernel regression
+tracking. See link in footer if these mails annoy you.]
+
+On 16.01.23 11:14, Peifeng Qiu wrote:
+> On Mon, Jan 16, 2023 at 12:41 AM Linux kernel regression tracking
+> (Thorsten Leemhuis) <regressions@leemhuis.info> wrote:
 >>
->> any objections to the kind of shenanigans this is playing?
-> 
-> Yes, thanks for asking.  Drivers definitely should not have to do this
-> sort of thing.
-> 
->> On Sat, 21 Jan 2023 19:03:23 +0530 m.chetan.kumar@linux.intel.com wrote:
->>> From: M Chetan Kumar <m.chetan.kumar@linux.intel.com>
+>> Forget to mention one small detail:
+>>
+>> On 15.01.23 15:21, Linux kernel regression tracking (Thorsten Leemhuis)
+>> wrote:
+>>> [CCing the regression list, as it should be in the loop for regressions:
+>>> https://docs.kernel.org/admin-guide/reporting-regressions.html]
 >>>
->>> PCI rescan module implements "rescan work queue".
->>> In firmware flashing or coredump collection procedure
->>> WWAN device is programmed to boot in fastboot mode and
->>> a work item is scheduled for removal & detection.
+>>> Hi, this is your Linux kernel regression tracker.
 >>>
->>> The WWAN device is reset using APCI call as part driver
->>> removal flow. Work queue rescans pci bus at fixed interval
->>> for device detection, later when device is detect work queue
->>> exits.
+>>> On 15.01.23 10:21, Peifeng Qiu wrote:
+>>>>
+>>>> I'm using a dual Xeon system with Intel e810 25G network card and make use
+>>>> of SRIOV feature heavily. I have a script to setup the NIC the first step is
+>>>> echo $VFS > /sys/class/net/$DEVNAME/device/sriov_numvfs
+>>>>
+>>>> After switching from v6.1 to v6.2-rc1 "sriov_numvfs" is no longer present. If I
+>>>> switch back to v6.1 it's back. Command line parameters are the same so it's
+>>>> most likely kernel changes. I did git bisect and found the culprit to be
+>>>> 07eab0901ed(efi/x86: Remove EfiMemoryMappedIO from E820 map)
+>>>
+>>> This is not my area of expertise, but there is another report about an
+>>> issue that was bisected to that particular commit:
+>>>
+>>> https://lore.kernel.org/lkml/ac2693d8-8ba3-72e0-5b66-b3ae008d539d@linux.intel.com/
+>>>
+>>> A fix for that one was posted here:
+>>>
+>>> https://lore.kernel.org/lkml/20230110180243.1590045-1-helgaas@kernel.org/
+>>>
+>>> You might want to look into the report and if it looks like a possible
+>>> duplicate give the proposed fix a try.
+>>
+>> FWIW, that patch was recently mainlined and thus will be in 6.2-rc4 that
+>> Linus will likely release in a few hours.
+>>
+>> Ciao, Thorsten
 > 
-> I'm not sure what's going on here.  Do we need to reset the device
-> when the t7xx driver is loaded so the device will load new firmware
-> when it comes out of reset?
+> I just tested the latest v6.2-rc4 and I can confirm that the issue is
+> fixed. Thanks!
 
-Flow is, Reset the device to get into firmware download mode then update
-the firmware and later reset it to go back to normal mode.
+In that case:
 
-> 
-> There are a few drivers that do that, e.g., with pci_reset_function().
-> 
+#regzbot fix: fd3a8cff4d4a
+#regzbot ignore-activity
 
-Thanks for the suggestion.
-I will explore a bit and also try to use pci_reset_function() interface 
-and see if it serves the purpose.
+[better late than never]
 
-
->>> +static struct remove_rescan_context t7xx_rescan_ctx;
-> 
-> Apparently this only supports a single t7xx instance in a system?  Not
-> good.
-> 
->>> +void t7xx_pci_dev_rescan(void)
->>> +{
->>> +	struct pci_bus *b = NULL;
->>> +
->>> +	pci_lock_rescan_remove();
->>> +	while ((b = pci_find_next_bus(b)))
->>> +		pci_rescan_bus(b);
-> 
-> No, this driver absolutely cannot rescan and assign unassigned
-> resources for all the PCI buses in the system.
-
-T7xx device falls off the bus due to ACPI reset.
-Would you please suggest how we can bring device back on the bus without 
-such changes inside driver ?  Will pci_reset_function() help in this 
-regard ?
-
-If there is no alternate option, then we shall try using remove and 
-rescan from user space and drop this patch.
-
-> 
-> Bjorn
-
--- 
-Chetan
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
