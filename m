@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F039BC05027
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Feb 2023 12:39:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67925C636D4
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Feb 2023 12:40:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231766AbjBBMjt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Feb 2023 07:39:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36868 "EHLO
+        id S232111AbjBBMj7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Feb 2023 07:39:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232000AbjBBMjd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Feb 2023 07:39:33 -0500
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33A2988CF7
-        for <linux-pci@vger.kernel.org>; Thu,  2 Feb 2023 04:39:22 -0800 (PST)
-Received: by mail-wr1-x430.google.com with SMTP id t18so1596756wro.1
-        for <linux-pci@vger.kernel.org>; Thu, 02 Feb 2023 04:39:22 -0800 (PST)
+        with ESMTP id S231465AbjBBMjn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Feb 2023 07:39:43 -0500
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11DD98DAD9
+        for <linux-pci@vger.kernel.org>; Thu,  2 Feb 2023 04:39:24 -0800 (PST)
+Received: by mail-wr1-x433.google.com with SMTP id bk16so1554917wrb.11
+        for <linux-pci@vger.kernel.org>; Thu, 02 Feb 2023 04:39:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0B2yuqpUAr3hk6ptdpys+Q3pB/tCrjYURP36RVktnLY=;
-        b=PcMhG/5EHIT8pT+dwLYZnfp2D+Wu51YdIpMkO4b9TDz0dGzJTTdTw/xNxIzFh5V8YL
-         o6bIUo/XO8+QXED+GtL5h08min/ApH1BC9sNI6rDgFI7LJWx8z7zKFGG/vQ24xmSQraw
-         YMQ/+zb1nQT3n9/bCI4Kqv7Uhk/rd3T75ZAiLYIhRHFmJQkLyz8YjLxkWEBbixDLRgnT
-         Pdl+A2tgTX3peokdD+0uu6aiulSmUjkL4xPIgwhk31ORu4YsSs7jr17ROrQYHFr7Q7V1
-         CAzGqDbu9ZMc5TDkycdEFYCwjYmQBDFVCgZp9tG1NEcAMVqE59LzJy9eXi/lMz9JqMgq
-         bJ5w==
+        bh=R3cpLmQKkpTI7Y1psq2KMOuaf6aMRXzbT/aYEgPUMCk=;
+        b=bfHCkzh/dFq6Rgtnx4cPXqOFw0qek9foVTrhwK2ENI+lj6yCnWexKjNRMMWkAUCNHe
+         VC5Jf5E1ZEerGI+426bCgyp7WZjeATfFQH4fpTMjhCMrMPq8XVuIfdBkyN/Wfn4Rw4C2
+         b/d9YN+2rGd8OB1yhbivLSOO0dGqu6Mxp3gLEJIHnFnjhtIfhcyGqhCx869IOA0CtII6
+         BZD68SBnfAE6aO3EXU8F42sPQTXXyAZC4Lx+8z8YTnKAYheNEB21jvlpoKB5SW8H1jru
+         p5WTrvJLsmPr6n9/GDVkuWfqdWhBTFylSx7No+Z2dQu2NYvSkXQEhrKwbbuuZaPh4WYa
+         qhgg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=0B2yuqpUAr3hk6ptdpys+Q3pB/tCrjYURP36RVktnLY=;
-        b=0kjLJQ6c+/+pUFV+s8uVnMOTj6lgy7mWPkm/qKlyBOVpIMejRD4Jz1cXYRZDzlHst1
-         rGW5JSXhhkLLyp4ZAqT6xUGjvSTdT0dB3uEztAA7kKEJMaRPEt5nxdqlm3ibDnDXnzMF
-         GAyHQAO+zpCvxyOrywlFHiRxEcuBRRDBpl5NFPiV+UfKHY461/kqtMcSyvVeFlmERG/O
-         zn3DbSIIJPF2OZXxnAUTPfkcNxUtUfR9zlDTcFvA0Q1pPwHI8/O5iPYKQi7YJZNiNoPe
-         SX3F+Yn0T7XPqVFF4Bojb/GHwMxeooCqevR5ts8MKJkxmnU44DJ1QLQw77CO9+ywHuxV
-         yL3w==
-X-Gm-Message-State: AO0yUKXEDtwHOQPL5XeJCKJIV4/d9QcaAyrHscrnbNFVL+yWl39azvOj
-        ZEpJrHZ3nlClkEzENOc725vaIg==
-X-Google-Smtp-Source: AK7set/WnmOw78Xf7tU01XvxTZd9yTQ+P7f4xl3t8ZpiXAiUXfCWNeNFgtYOgI/mx5BKJuE8pWmZuA==
-X-Received: by 2002:adf:f7c9:0:b0:2bf:c530:329e with SMTP id a9-20020adff7c9000000b002bfc530329emr5124958wrq.14.1675341560151;
-        Thu, 02 Feb 2023 04:39:20 -0800 (PST)
+        bh=R3cpLmQKkpTI7Y1psq2KMOuaf6aMRXzbT/aYEgPUMCk=;
+        b=XtNgezZlRQhtKs2xkUz1qJclKTHkrpDfbHFa390StY7TNxU8dc3qBMbO1Ux20KSwhn
+         XxRoED8pSWVg/awzJ6BLdOQBxhCsrwhQkmYGDvWmftd6jNwEA8WmcZeeOmZVpEWZDeD+
+         3a8QJvKZQHTqQY7g/4xLhhqatuy3QRC9uytJDq8ZevqWahS0fd8coTcuK7q1do7Un9GB
+         +E4v+37VzcaK/FMqry6ru2/TC0f1SWlO+0iZS7cxotYCTThwf27aHIB+C9LYDgO/4h2Z
+         mkxAldJNr8hBVNwZnY/WU303mB+rDB54NK0oQdyEry2PuSB0c1ovuM0Fsr9mvk0i51GX
+         GXUQ==
+X-Gm-Message-State: AO0yUKWRr1N+EpmR5kpf25y/n0ZDodGHQA19pPyrYgBU6FobjTSsdVzf
+        or7Cl4dALFhdR3Ct31+GXK9wVA==
+X-Google-Smtp-Source: AK7set9HEpaSgaWlFtFya4ohwrlN79++x0IRKbAnmXHCQ7Wu4iTcXEdV67l4kobLPf5S86I0N8gtzQ==
+X-Received: by 2002:a05:6000:1c08:b0:2bf:c805:7b36 with SMTP id ba8-20020a0560001c0800b002bfc8057b36mr1660477wrb.49.1675341564490;
+        Thu, 02 Feb 2023 04:39:24 -0800 (PST)
 Received: from hackbox.lan ([94.52.112.99])
-        by smtp.gmail.com with ESMTPSA id j5-20020adff005000000b002bddd75a83fsm19525644wro.8.2023.02.02.04.39.18
+        by smtp.gmail.com with ESMTPSA id j5-20020adff005000000b002bddd75a83fsm19525644wro.8.2023.02.02.04.39.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 02 Feb 2023 04:39:19 -0800 (PST)
+        Thu, 02 Feb 2023 04:39:24 -0800 (PST)
 From:   Abel Vesa <abel.vesa@linaro.org>
 To:     Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
@@ -64,10 +64,10 @@ To:     Andy Gross <agross@kernel.org>,
 Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Subject: [PATCH v6 06/12] phy: qcom-qmp: qserdes-txrx: Add v6.20 register offsets
-Date:   Thu,  2 Feb 2023 14:38:56 +0200
-Message-Id: <20230202123902.3831491-7-abel.vesa@linaro.org>
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v6 09/12] dt-bindings: PCI: qcom: Add SM8550 compatible
+Date:   Thu,  2 Feb 2023 14:38:59 +0200
+Message-Id: <20230202123902.3831491-10-abel.vesa@linaro.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230202123902.3831491-1-abel.vesa@linaro.org>
 References: <20230202123902.3831491-1-abel.vesa@linaro.org>
@@ -77,103 +77,149 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The new SM8550 SoC bumps up the HW version of QMP phy to v6.20 for
-PCIE g4x2. Add the new qserdes TX RX PCIE specific offsets in a
-dedicated header file.
+Add the SM8550 platform to the binding.
 
 Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
 
 This patchset relies on the following patchset:
 https://lore.kernel.org/all/20230117224148.1914627-1-abel.vesa@linaro.org/
 
 The v5 of this patch is:
-https://lore.kernel.org/all/20230124124714.3087948-7-abel.vesa@linaro.org/
+https://lore.kernel.org/all/20230124124714.3087948-10-abel.vesa@linaro.org/
 
 Changes since v5:
- * none
+ * added Krzysztof's R-b tag
 
 Changes since v4:
- * none
+ * dropped _serdes infix from ln_shrd table name and from every ln_shrd
+   variable name
+ * added hyphen between "no CSR" in both places
+ * dropped has_ln_shrd_serdes_tbl
+ * reordered qmp_pcie_offsets_v6_20 by struct members
+ * added rollback for no-CSR reset in qmp_pcie_init fail path
+ * moved ln_shrd offset calculation after port_b
+ * dropped the minItems for interconnects
+ * made iommu related properties global
+ * renamed noc_aggr_4 back to noc_aggr
 
 Changes since v3:
- * added Dmitry's R-b tag
+ * renamed noc_aggr to noc_aggr_4, as found in the driver
 
 Changes since v2:
- * none
+ * dropped the pipe from clock-names
+ * removed the pcie instance number from aggre clock-names comment
+ * renamed aggre clock-names to noc_aggr
+ * dropped the _pcie infix from cnoc_pcie_sf_axi
+ * renamed pcie_1_link_down_reset to simply link_down
+ * added enable-gpios back, since pcie1 node will use it
 
 Changes since v1:
- * split all the offsets into separate patches, like Vinod suggested
+ * Switched to single compatible for both PCIes (qcom,pcie-sm8550)
+ * dropped enable-gpios property
+ * dropped interconnects related properties, the power-domains
+ * properties
+   and resets related properties the sm8550 specific allOf:if:then
+ * dropped pipe_mux, phy_pipe and ref clocks from the sm8550 specific
+   allOf:if:then clock-names array and decreased the minItems and
+   maxItems for clocks property accordingly
+ * added "minItems: 1" to interconnects, since sm8550 pcie uses just one,
+   same for interconnect-names
 
- .../phy-qcom-qmp-qserdes-txrx-v6_20.h         | 45 +++++++++++++++++++
- drivers/phy/qualcomm/phy-qcom-qmp.h           |  1 +
- 2 files changed, 46 insertions(+)
- create mode 100644 drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v6_20.h
+ .../devicetree/bindings/pci/qcom,pcie.yaml    | 44 +++++++++++++++++++
+ 1 file changed, 44 insertions(+)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v6_20.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v6_20.h
-new file mode 100644
-index 000000000000..5385a8b60970
---- /dev/null
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-txrx-v6_20.h
-@@ -0,0 +1,45 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (c) 2023, Linaro Limited
-+ */
-+
-+#ifndef QCOM_PHY_QMP_QSERDES_TXRX_PCIE_V6_20_H_
-+#define QCOM_PHY_QMP_QSERDES_TXRX_PCIE_V6_20_H_
-+
-+#define QSERDES_V6_20_TX_RES_CODE_LANE_OFFSET_TX		0x30
-+#define QSERDES_V6_20_TX_RES_CODE_LANE_OFFSET_RX		0x34
-+#define QSERDES_V6_20_TX_TRAN_DRVR_EMP_EN			0xac
-+#define QSERDES_V6_20_TX_LANE_MODE_1				0x78
-+#define QSERDES_V6_20_TX_LANE_MODE_2				0x7c
-+#define QSERDES_V6_20_TX_LANE_MODE_3				0x80
-+
-+#define QSERDES_V6_20_RX_UCDR_FO_GAIN_RATE_2			0x08
-+#define QSERDES_V6_20_RX_UCDR_FO_GAIN_RATE_3			0x0c
-+#define QSERDES_V6_20_RX_UCDR_PI_CONTROLS			0x20
-+#define QSERDES_V6_20_RX_UCDR_SO_ACC_DEFAULT_VAL_RATE3		0x34
-+#define QSERDES_V6_20_RX_IVCM_CAL_CTRL2				0x9c
-+#define QSERDES_V6_20_RX_IVCM_POSTCAL_OFFSET			0xa0
-+#define QSERDES_V6_20_RX_DFE_3					0xb4
-+#define QSERDES_V6_20_RX_VGA_CAL_MAN_VAL			0xe8
-+#define QSERDES_V6_20_RX_GM_CAL					0x10c
-+#define QSERDES_V6_20_RX_EQU_ADAPTOR_CNTRL4			0x120
-+#define QSERDES_V6_20_RX_SIGDET_ENABLES				0x148
-+#define QSERDES_V6_20_RX_PHPRE_CTRL				0x188
-+#define QSERDES_V6_20_RX_DFE_CTLE_POST_CAL_OFFSET		0x194
-+#define QSERDES_V6_20_RX_Q_PI_INTRINSIC_BIAS_RATE32		0x1dc
-+#define QSERDES_V6_20_RX_MODE_RATE2_B0				0x1f4
-+#define QSERDES_V6_20_RX_MODE_RATE2_B1				0x1f8
-+#define QSERDES_V6_20_RX_MODE_RATE2_B2				0x1fc
-+#define QSERDES_V6_20_RX_MODE_RATE2_B3				0x200
-+#define QSERDES_V6_20_RX_MODE_RATE2_B4				0x204
-+#define QSERDES_V6_20_RX_MODE_RATE2_B5				0x208
-+#define QSERDES_V6_20_RX_MODE_RATE2_B6				0x20c
-+#define QSERDES_V6_20_RX_MODE_RATE3_B0				0x210
-+#define QSERDES_V6_20_RX_MODE_RATE3_B1				0x214
-+#define QSERDES_V6_20_RX_MODE_RATE3_B2				0x218
-+#define QSERDES_V6_20_RX_MODE_RATE3_B3				0x21c
-+#define QSERDES_V6_20_RX_MODE_RATE3_B4				0x220
-+#define QSERDES_V6_20_RX_MODE_RATE3_B5				0x224
-+#define QSERDES_V6_20_RX_MODE_RATE3_B6				0x228
-+
-+#endif
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.h b/drivers/phy/qualcomm/phy-qcom-qmp.h
-index 760de4c76e5b..e5974e6caf51 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.h
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.h
-@@ -23,6 +23,7 @@
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 872817d6d2bd..9f1bdbc4b0fd 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -38,6 +38,7 @@ properties:
+           - qcom,pcie-sm8350
+           - qcom,pcie-sm8450-pcie0
+           - qcom,pcie-sm8450-pcie1
++          - qcom,pcie-sm8550
+       - items:
+           - const: qcom,pcie-msm8996
+           - const: qcom,pcie-msm8998
+@@ -58,6 +59,12 @@ properties:
+     minItems: 1
+     maxItems: 8
  
- #include "phy-qcom-qmp-qserdes-com-v6.h"
- #include "phy-qcom-qmp-qserdes-txrx-v6.h"
-+#include "phy-qcom-qmp-qserdes-txrx-v6_20.h"
++  iommus:
++    maxItems: 1
++
++  iommu-map:
++    maxItems: 2
++
+   # Common definitions for clocks, clock-names and reset.
+   # Platform constraints are described later.
+   clocks:
+@@ -108,6 +115,10 @@ properties:
+   power-domains:
+     maxItems: 1
  
- #include "phy-qcom-qmp-qserdes-pll.h"
++  enable-gpios:
++    description: GPIO controlled connection to ENABLE# signal
++    maxItems: 1
++
+   perst-gpios:
+     description: GPIO controlled connection to PERST# signal
+     maxItems: 1
+@@ -205,6 +216,7 @@ allOf:
+               - qcom,pcie-sm8350
+               - qcom,pcie-sm8450-pcie0
+               - qcom,pcie-sm8450-pcie1
++              - qcom,pcie-sm8550
+     then:
+       properties:
+         reg:
+@@ -639,6 +651,37 @@ allOf:
+           items:
+             - const: pci # PCIe core reset
  
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,pcie-sm8550
++    then:
++      properties:
++        clocks:
++          minItems: 7
++          maxItems: 8
++        clock-names:
++          minItems: 7
++          items:
++            - const: aux # Auxiliary clock
++            - const: cfg # Configuration clock
++            - const: bus_master # Master AXI clock
++            - const: bus_slave # Slave AXI clock
++            - const: slave_q2a # Slave Q2A clock
++            - const: ddrss_sf_tbu # PCIe SF TBU clock
++            - const: noc_aggr # Aggre NoC PCIe AXI clock
++            - const: cnoc_sf_axi # Config NoC PCIe1 AXI clock
++        resets:
++          minItems: 1
++          maxItems: 2
++        reset-names:
++          minItems: 1
++          items:
++            - const: pci # PCIe core reset
++            - const: link_down # PCIe link down reset
++
+   - if:
+       properties:
+         compatible:
+@@ -724,6 +767,7 @@ allOf:
+               - qcom,pcie-sm8350
+               - qcom,pcie-sm8450-pcie0
+               - qcom,pcie-sm8450-pcie1
++              - qcom,pcie-sm8550
+     then:
+       oneOf:
+         - properties:
 -- 
 2.34.1
 
