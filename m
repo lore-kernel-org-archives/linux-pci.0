@@ -2,275 +2,335 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96DA2C05027
-	for <linux-pci@archiver.kernel.org>; Thu,  9 Feb 2023 07:14:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57AF3C05027
+	for <linux-pci@archiver.kernel.org>; Thu,  9 Feb 2023 08:03:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229890AbjBIHO3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 Feb 2023 02:14:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49048 "EHLO
+        id S229642AbjBIIDS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 Feb 2023 03:03:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229818AbjBIHOS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Feb 2023 02:14:18 -0500
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13C9942DC2;
-        Wed,  8 Feb 2023 23:14:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=hOwPtrFr9W1RAetj4yw8lS4WGxzVY9WeB5xiD+rtLZk=; b=YzYv5Lu+GhnsQWcrh/P3dNn99Y
-        kFFn/VTStVzrVt7izdrqqcFl3XXWJTiUSU7zkMNSHLZccvHB/fdFfsSF2G3d9l6tM8mZkGWrqFoL+
-        zV70haeTAUkVk/rmntIAjBbeTETDQ9gynZkiS5FkcxD5ysQrDwctOiqgUEqy0Xc8jqVEGJ0uWfK0f
-        t2HqZ/A6Oxx0EJl+SAADCmwyxjMuktOo75CIMUWNmk83r+Z+8eyEK1uwZEhembDTSx9i7ostc00tO
-        /jouGLzfxYzc3+YcINRJIpim6ul86T5PcNwp2g7wUJajkYggQ+pjUyATSgrXOBG/P/NTAUzC9nrO4
-        AJo7w9JQ==;
-Received: from [2601:1c2:980:9ec0::df2f] (helo=bombadil.infradead.org)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1pQ189-000LPt-4s; Thu, 09 Feb 2023 07:14:05 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Russell King <linux@armlinux.org.uk>,
-        Jens Axboe <axboe@kernel.dk>,
-        Vladimir Oltean <olteanv@gmail.com>,
-        Steffen Klassert <steffen.klassert@secunet.com>,
-        Daniel Jordan <daniel.m.jordan@oracle.com>,
-        Akinobu Mita <akinobu.mita@gmail.com>,
-        Helge Deller <deller@gmx.de>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Henrik Rydberg <rydberg@bitmath.org>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Jiri Kosina <jikos@kernel.org>,
-        Miroslav Benes <mbenes@suse.cz>,
-        Petr Mladek <pmladek@suse.com>,
-        Josh Poimboeuf <jpoimboe@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Naoya Horiguchi <naoya.horiguchi@nec.com>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        Jonas Bonn <jonas@southpole.se>,
-        Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
-        Stafford Horne <shorne@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Marc Zyngier <maz@kernel.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Juri Lelli <juri.lelli@redhat.com>,
-        Vincent Guittot <vincent.guittot@linaro.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Paul Moore <paul@paul-moore.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Daniel Bristot de Oliveira <bristot@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Evgeniy Polyakov <zbr@ioremap.net>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        Reinette Chatre <reinette.chatre@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Borislav Petkov <bp@alien8.de>,
-        Chris Zankel <chris@zankel.net>,
-        Max Filippov <jcmvbkbc@gmail.com>, coresight@lists.linaro.org,
-        dri-devel@lists.freedesktop.org, keyrings@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-sgx@vger.kernel.org, linux-trace-devel@vger.kernel.org,
-        linux-trace-kernel@vger.kernel.org, live-patching@vger.kernel.org,
-        linux-security-module@vger.kernel.org, linux-usb@vger.kernel.org,
-        netdev@vger.kernel.org, linux-mm@kvack.org,
-        openrisc@lists.librecores.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-xtensa@linux-xtensa.org, linuxppc-dev@lists.ozlabs.org,
-        x86@kernel.org
-Subject: [PATCH 00/24 v2] Documentation: correct lots of spelling errors (series 1)
-Date:   Wed,  8 Feb 2023 23:13:36 -0800
-Message-Id: <20230209071400.31476-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.39.1
+        with ESMTP id S229538AbjBIIDR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Feb 2023 03:03:17 -0500
+Received: from mta-01.yadro.com (mta-02.yadro.com [89.207.88.252])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6622B1351B;
+        Thu,  9 Feb 2023 00:03:15 -0800 (PST)
+Received: from mta-01.yadro.com (localhost.localdomain [127.0.0.1])
+        by mta-01.yadro.com (Proxmox) with ESMTP id B33613419C4;
+        Thu,  9 Feb 2023 11:03:12 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; h=cc
+        :cc:content-transfer-encoding:content-type:content-type:date
+        :from:from:in-reply-to:message-id:mime-version:references
+        :reply-to:subject:subject:to:to; s=mta-01; bh=rOQyMsw8uaFgb7W82Q
+        inOezrLT65rlawKG7bcimeNq8=; b=gyJCP+3kR/8UHNPmnIL9VnyZfvcibwyor9
+        z7iWJVKDCuomf6VgR66b5t0sgZNqPDb03HNu+ZN3ghAS6JpLU2DpE0BfS8/mZIyK
+        YZIZJaR3rG16En/k7ZR5hEETGXiLGwemkGBg5FyviQMnI2EJerr89kJrvcOwBm8m
+        W2fnWgkEk=
+Received: from T-EXCH-08.corp.yadro.com (unknown [172.17.10.14])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Proxmox) with ESMTPS id A6F3A3419BE;
+        Thu,  9 Feb 2023 11:03:12 +0300 (MSK)
+Received: from [10.199.16.60] (10.199.16.60) by T-EXCH-08.corp.yadro.com
+ (172.17.11.58) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1118.9; Thu, 9 Feb 2023
+ 11:03:11 +0300
+Message-ID: <7f59568a-eebe-95c8-4aea-c01dd726efa7@yadro.com>
+Date:   Thu, 9 Feb 2023 11:03:11 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.4.2
+Subject: Re: [PATCH v6 0/2] PCI: dwc: Add support for 64-bit MSI target
+ addresses
+Content-Language: en-US
+To:     Serge Semin <fancer.lancer@gmail.com>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Robin Murphy <robin.murphy@arm.com>, <kernel-team@android.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, <linux@yadro.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Will McVicker <willmcvicker@google.com>
+References: <20220825235404.4132818-1-willmcvicker@google.com>
+ <decae9e4-3446-2384-4fc5-4982b747ac03@yadro.com>
+ <c014b074-6d7f-773b-533a-c0500e239ab8@arm.com>
+ <46ba97c9-85ff-eb47-0d05-79dc3960d7b4@yadro.com>
+ <20230203221216.c2s6ahm52ug5jtqv@mobilestation>
+ <66b01fd7-7466-5d76-c384-0758ceadee8e@yadro.com>
+ <20230209004837.n62af6wxgjj4kxt6@mobilestation>
+From:   Evgenii Shatokhin <e.shatokhin@yadro.com>
+In-Reply-To: <20230209004837.n62af6wxgjj4kxt6@mobilestation>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.199.16.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-08.corp.yadro.com (172.17.11.58)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Correct many spelling errors in Documentation/ as reported by codespell.
+On 09.02.2023 03:48, Serge Semin wrote:
+> On Mon, Feb 06, 2023 at 02:27:41PM +0300, Evgenii Shatokhin wrote:
+>> Hi Sergey,
+>>
+>> First of all, thank you for the detailed explanation. It is clearer now what
+>> is going on and why it is that way.
+>>
+>> On 04.02.2023 01:12, Serge Semin wrote:
+>>> Hi Evgenii
+>>>
+>>> On Wed, Feb 01, 2023 at 04:54:55PM +0300, Evgenii Shatokhin wrote:
+>>>> On 31.01.2023 15:42, Robin Murphy wrote:
+>>>>>
+>>>>> On 2023-01-31 12:29, Evgenii Shatokhin wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> On 26.08.2022 02:54, Will McVicker wrote:
+>>>>>>> Hi All,
+>>>>>>>
+>>>>>>> I've update patch 2/2 to address Robin's suggestions. This includes:
+>>>>>>>
+>>>>>>>     * Dropping the while-loop for retrying with a 64-bit mask in favor of
+>>>>>>>       retrying within the error if-statement.
+>>>>>>>     * Using an int for the DMA mask instead of a bool and ternary
+>>>>>>> operation.
+>>>>>>>
+>>>>>>> Thanks again for the reviews and sorry for the extra revision today!
+>>>>>>> Hopefully this is the last one :) If not, I'd be fine to submit
+>>>>>>> patch 1/2
+>>>>>>> without 2/2 to avoid resending patch 1/2 for future revisions of patch
+>>>>>>> 2/2
+>>>>>>> (unless I don't need to do that anyway).
+>>>>>>
+>>>>>> The first patch of the series made it into the mainline kernel, but, it
+>>>>>> seems, the second one ("PCI: dwc: Add support for 64-bit MSI target
+>>>>>> address") did not. As of 6.2-rc6, it is still missing.
+>>>>>>
+>>>>>> Was it intentionally dropped because of some issues or, perhaps, just by
+>>>>>> accident? If it was by accident, could you please queue it for inclusion
+>>>>>> into mainline again?
+>>>>>
+>>>>> Yes, it was dropped due to the PCI_MSI_FLAGS_64BIT usage apparently
+>>>>> being incorrect, and some other open debate (which all happened on the
+>>>>> v5 thread):
+>>>>>
+>>>>> https://lore.kernel.org/linux-pci/YzVTmy9MWh+AjshC@lpieralisi/
+>>>>
+>>>
+>>>> I see. If I understand it correctly, the problem was that
+>>>> PCI_MSI_FLAGS_64BIT flag did not guarantee that 64-bit mask could be used
+>>>> for that particular allocation. Right?
+>>>>
+>>>
+>>> William was trying to utilize for only software cause. Setting
+>>> PCI_MSI_FLAGS_64BIT didn't actually change the hardware behavior.
+>>> He could have as well provided just a driver private capability
+>>> flag. (see below for a more detailed problem description)
+>>>
+>>>>>
+>>>>> The DMA mask issues have now been sorted out,
+>>>>
+>>>> I suppose, you mean https://lore.kernel.org/all/20230113171409.30470-26-Sergey.Semin@baikalelectronics.ru/?
+>>>
+>>> Well, the way the DMA-mask issue has been solved was a bit of the
+>>> hacky. I wouldn't call it a fully proper solution. The problem with
+>>> pointlessly allocating physical memory for the iMSI-RX engine (it
+>>> doesn't perform any DMA) and artificially restricting the coherent-DMA
+>>> mask is still there. The patch in the subject was a compromise in
+>>> order to at least permit unrestricted streaming DMAs but limiting the
+>>> coherent DMAs for the MSI setup to work properly for all peripheral
+>>> devices.
+>>>
+>>>>
+>>>> It still breaks our particular case when the SoC has no 32-bit-addressable
+>>>> RAM. We'd set DMA masks to DMA_BIT_MASK(36) in the platform-specific driver
+>>>> before calling dw_pcie_host_init(). However, dw_pcie_msi_host_init() resets
+>>>> it to 32-bit, tries dmam_alloc_coherent() and fails.
+>>>
+>>> Yeah. That's another problem with the implemented approach. But are
+>>> your sure the driver had worked even before this patch? AFAICS the
+>>> driver allocated the MSI-targeted page from DMA32 zone before this
+>>> modification. So the allocation must have failed on your platform too.
+>>
+>> You are right. I did not notice earlier that the kernel based on 6.0-stable
+>> we used before did actually contain our SoC-specific workaround for this.
+>> Without that custom patch, initialization of PCIe host does not work. So,
+>> yes, the problem was present earlier too.
+>>
+>>>
+>>>>
+>>>> With 36-bit masks, the kernel seems to play well with the devices in our
+>>>> case.
+>>>>
+>>>> I saw your comment in https://lore.kernel.org/linux-pci/4dc31a63-00b1-f379-c5ac-7dc9425937f4@arm.com/
+>>>> that drivers should always explicitly set their masks.
+>>>>
+>>>
+>>>> Is it a really bad idea to check the current coherent mask's bits in
+>>>> dw_pcie_msi_host_init() and if it is more than 32 - just issue a warning
+>>>> rather than reset it to 32-bit unconditionally? That would help in our case.
+>>>> Or, perhaps, there is a better workaround.
+>>>
+>>> The problem isn't in the value the mask is set to. The problem is
+>>> two-leveled, but is mainly connected with the PCIe device detected on
+>>> the PCIe bus. There are some of them which can't send MSI TLPs to the
+>>> 64-bit addresses. Since we can't predict whether such devices exist on
+>>> the bus beforehand the LLDD probe is performed together with the
+>>> MSI-engine initialization, the solution was to just restrict the MSIs
+>>> base address to be allocated within the lowest 4GB. Moreover as I said
+>>> above the iMSI-RX engine doesn't actually cause any DMA thus there is
+>>> no need in any memory allocation. Instead reserving some PCIe-bus
+>>> space/DWORD for MSIs would be enough. Alas the PCIe-subsystem doesn't
+>>> provide a way to do so. That's why we have what you see in the driver:
+>>> DMA mask restriction and coherent DMA memory allocation.
+>>
+> 
+>> So, if I understand you correctly, what is needed here is a small area of
+>> PCIe address space accessible to any of the connected PCIe devices. As the
+>> kernel does not know in advance, which restrictions the devices have, it
+>> tries to allocate 32-bit-addressable memory, suitable for DMA. This way, it
+>> would be OK for any attached PCIe device. Right?
+> 
+> Right. The restriction is the 64-bit MSI capability. If any PCIe
+> peripheral device has no PCI_MSI_64_BIT_ADDR_CAP flag set and the MSI
+> target address is selected from the space above 4GB then such device
+> MSIs won't be handled.
+> 
+> Note as I said above no DMA actually performed if at least one MSI
+> vector is enabled. The driver just needs a DWORD within the PCIe bus
+> space for the MSI MWr TLPs target address and EP+vector data. The MSI
+> TLP data is decoded by the iMSI-RX engine in order to set the
+> corresponding flag in the MSI IRQ status register. Such TLPs won't be
+> passed to the master AXI-bus.
+> 
+>>
+>>>
+>>> If only we had a way to auto-detected the PCIe-bus space with no
+>>> physical memory behind it and take out a DWORD from it to initialize
+>>> the iMSI-RX engine we could have immediately got rid from the mask
+>>> setting operation and the memory allocation. It would have solved your
+>>> problem too.
+>>
+> 
+>> Yes, it would solve our issue too. I do not know, however, if a generic
+>> solution is possible here, but I am no expert in PCIe.
+> 
+> Currently the kernel PCIe subsystem doesn't provide a way to reserve a
+> range within the PCIe bus memory with no physical RAM behind and left
+> unused during the BARs resource initialization. Implementing such
+> functionality (perhaps in the framework of the P2P module or based on
+> it) would give the generic solution.
+> 
+>>
+>> For now, we are probably better off with SoC-specific patches, when we know
+>> which PCIe devices can possibly be used and what their restrictions are.
+> 
+> Since you know that there is no any RAM below 4GB and you have
+> matching CPU and PCIe address spaces, then you can just take any
+> address below 4GB and use it to initialize the MSI-target address
+> (dw_pcie_rp.msi_data). But make sure that the peripheral PCIe-devices
+> don't use it for something application-specific (like accessing CPU
+> MMIO devices mapped to that base address). That seems like the most
+> universal solution for your case.
 
-Maintainers of specific kernel subsystems are only Cc-ed on their
-respective patches, not the entire series.
+Interesting idea!
+Thank you, Sergey.
 
-These patches are based on linux-next-20230209.
+> 
+> -Serge(y)
+> 
+>>
+>>>
+>>> -Serge(y)
+>>>
+>>>>
+>>>> Looking forward to your comments.
+>>>
+>>>
+>>>
+>>>>
+>>>>
+>>>>> so you, or Will, or anyone
+>>>>> else interested should be free to rework this on top of linux-next
+>>>>> (although at this point, more realistically on top of 6.3-rc1 in a few
+>>>>> weeks).
+>>>>>
+>>>>> Thanks,
+>>>>> Robin.
+>>>>>
+>>>>>> Support for 64-bit MSI target addresses is needed for some of our SoCs.
+>>>>>> I ran into a situation when there was no available RAM in ZONE_DMA32
+>>>>>> during initialization of PCIe host. Hence, dmam_alloc_coherent() failed
+>>>>>> in dw_pcie_msi_host_init() and initialization failed with -ENOMEM:
+>>>>>>
+>>>>>> [    0.374834] dw-pcie 4000000.pcie0: host bridge /soc/pcie0@4000000
+>>>>>> ranges:
+>>>>>> [    0.375813] dw-pcie 4000000.pcie0:      MEM
+>>>>>> 0x0041000000..0x004fffffff -> 0x0041000000
+>>>>>> [    0.376171] dw-pcie 4000000.pcie0:   IB MEM
+>>>>>> 0x0400000000..0x07ffffffff -> 0x0400000000
+>>>>>> [    0.377914] dw-pcie 4000000.pcie0: Failed to alloc and map MSI data
+>>>>>> [    0.378191] dw-pcie 4000000.pcie0: Failed to initialize host
+>>>>>> [    0.378255] dw-pcie: probe of 4000000.pcie0 failed with error -12
+>>>>>>
+>>>>>> Mainline kernel 6.2-rc6 was used in that test.
+>>>>>>
+>>>>>> The hardware supports 64-bit target addresses, so the patch "PCI: dwc:
+>>>>>> Add support for 64-bit MSI target address" should help with this
+>>>>>> particular failure.
+>>>>>>
+>>>>>>
+>>>>>>>
+>>>>>>> Thanks,
+>>>>>>> Will
+>>>>>>>
+>>>>>>> Will McVicker (2):
+>>>>>>>      PCI: dwc: Drop dependency on ZONE_DMA32
+>>>>>>>
+>>>>>>> v6:
+>>>>>>>     * Retrying DMA allocation with 64-bit mask within the error
+>>>>>>> if-statement.
+>>>>>>>     * Use an int for the DMA mask instead of a bool and ternary operation.
+>>>>>>>
+>>>>>>> v5:
+>>>>>>>     * Updated patch 2/2 to first try with a 32-bit DMA mask. On failure,
+>>>>>>>       retry with a 64-bit mask if supported.
+>>>>>>>
+>>>>>>> v4:
+>>>>>>>     * Updated commit descriptions.
+>>>>>>>     * Renamed msi_64b -> msi_64bit.
+>>>>>>>     * Dropped msi_64bit ternary use.
+>>>>>>>     * Dropped export of dw_pcie_msi_capabilities.
+>>>>>>>
+>>>>>>> v3:
+>>>>>>>      * Switched to a managed DMA allocation.
+>>>>>>>      * Simplified the DMA allocation cleanup.
+>>>>>>>      * Dropped msi_page from struct dw_pcie_rp.
+>>>>>>>      * Allocating a u64 instead of a full page.
+>>>>>>>
+>>>>>>> v2:
+>>>>>>>      * Fixed build error caught by kernel test robot
+>>>>>>>      * Fixed error handling reported by Isaac Manjarres
+>>>>>>>     PCI: dwc: Add support for 64-bit MSI target address
+>>>>>>>
+>>>>>>>     .../pci/controller/dwc/pcie-designware-host.c | 43 +++++++++----------
+>>>>>>>     drivers/pci/controller/dwc/pcie-designware.c  |  8 ++++
+>>>>>>>     drivers/pci/controller/dwc/pcie-designware.h  |  2 +-
+>>>>>>>     3 files changed, 30 insertions(+), 23 deletions(-)
+>>>>>>>
+>>>>>>>
+>>>>>>> base-commit: 568035b01cfb107af8d2e4bd2fb9aea22cf5b868
+>>>>>>
+>>>>>> Thank you in advance.
+>>
+>> Regards,
+>> Evgenii
+>>
+>>
+> 
 
 
- [PATCH 01/24] Documentation: arm: correct spelling
- [PATCH 02/24] Documentation: block: correct spelling
- [PATCH 03/24] Documentation: core-api: correct spelling
- [PATCH 04/24] Documentation: fault-injection: correct spelling
- [PATCH 05/24] Documentation: fb: correct spelling
- [PATCH 06/24] Documentation: features: correct spelling
- [PATCH 07/24] Documentation: input: correct spelling
- [PATCH 08/24] Documentation: isdn: correct spelling
- [PATCH 09/24] Documentation: livepatch: correct spelling
- [PATCH 10/24] Documentation: locking: correct spelling
- [PATCH 11/24] Documentation: mm: correct spelling
- [PATCH 12/24] Documentation: openrisc: correct spelling
- [PATCH 13/24] Documentation: PCI: correct spelling
- [PATCH 14/24] Documentation: powerpc: correct spelling
- [PATCH 15/24] Documentation: s390: correct spelling
- [PATCH 16/24] Documentation: scheduler: correct spelling
- [PATCH 17/24] Documentation: security: correct spelling
- [PATCH 18/24] Documentation: timers: correct spelling
- [PATCH 19/24] Documentation: tools/rtla: correct spelling
- [PATCH 20/24] Documentation: trace/rv: correct spelling
- [PATCH 21/24] Documentation: trace: correct spelling
- [PATCH 22/24] Documentation: w1: correct spelling
- [PATCH 23/24] Documentation: x86: correct spelling
- [PATCH 24/24] Documentation: xtensa: correct spelling
-
-
-diffstat:
- Documentation/PCI/endpoint/pci-vntb-howto.rst                    |    2 +-
- Documentation/PCI/msi-howto.rst                                  |    2 +-
- Documentation/arm/arm.rst                                        |    2 +-
- Documentation/arm/ixp4xx.rst                                     |    4 ++--
- Documentation/arm/keystone/knav-qmss.rst                         |    2 +-
- Documentation/arm/stm32/stm32-dma-mdma-chaining.rst              |    6 +++---
- Documentation/arm/sunxi/clocks.rst                               |    2 +-
- Documentation/arm/swp_emulation.rst                              |    2 +-
- Documentation/arm/tcm.rst                                        |    2 +-
- Documentation/arm/vlocks.rst                                     |    2 +-
- Documentation/block/data-integrity.rst                           |    2 +-
- Documentation/core-api/packing.rst                               |    2 +-
- Documentation/core-api/padata.rst                                |    2 +-
- Documentation/fault-injection/fault-injection.rst                |    2 +-
- Documentation/fb/sm712fb.rst                                     |    2 +-
- Documentation/fb/sstfb.rst                                       |    2 +-
- Documentation/features/core/thread-info-in-task/arch-support.txt |    2 +-
- Documentation/input/devices/iforce-protocol.rst                  |    2 +-
- Documentation/input/multi-touch-protocol.rst                     |    2 +-
- Documentation/isdn/interface_capi.rst                            |    2 +-
- Documentation/isdn/m_isdn.rst                                    |    2 +-
- Documentation/livepatch/reliable-stacktrace.rst                  |    2 +-
- Documentation/locking/lockdep-design.rst                         |    4 ++--
- Documentation/locking/locktorture.rst                            |    2 +-
- Documentation/locking/locktypes.rst                              |    2 +-
- Documentation/locking/preempt-locking.rst                        |    2 +-
- Documentation/mm/hmm.rst                                         |    4 ++--
- Documentation/mm/hwpoison.rst                                    |    2 +-
- Documentation/openrisc/openrisc_port.rst                         |    4 ++--
- Documentation/power/suspend-and-interrupts.rst                   |    2 +-
- Documentation/powerpc/kasan.txt                                  |    2 +-
- Documentation/powerpc/papr_hcalls.rst                            |    2 +-
- Documentation/powerpc/qe_firmware.rst                            |    4 ++--
- Documentation/powerpc/vas-api.rst                                |    4 ++--
- Documentation/s390/pci.rst                                       |    4 ++--
- Documentation/s390/vfio-ccw.rst                                  |    2 +-
- Documentation/scheduler/sched-bwc.rst                            |    2 +-
- Documentation/scheduler/sched-energy.rst                         |    4 ++--
- Documentation/security/digsig.rst                                |    4 ++--
- Documentation/security/keys/core.rst                             |    2 +-
- Documentation/security/secrets/coco.rst                          |    2 +-
- Documentation/timers/hrtimers.rst                                |    2 +-
- Documentation/tools/rtla/rtla-timerlat-top.rst                   |    2 +-
- Documentation/trace/coresight/coresight-etm4x-reference.rst      |    2 +-
- Documentation/trace/events.rst                                   |    6 +++---
- Documentation/trace/fprobe.rst                                   |    2 +-
- Documentation/trace/ftrace-uses.rst                              |    2 +-
- Documentation/trace/hwlat_detector.rst                           |    2 +-
- Documentation/trace/rv/runtime-verification.rst                  |    2 +-
- Documentation/trace/uprobetracer.rst                             |    2 +-
- Documentation/w1/w1-netlink.rst                                  |    2 +-
- Documentation/x86/boot.rst                                       |    2 +-
- Documentation/x86/buslock.rst                                    |    2 +-
- Documentation/x86/mds.rst                                        |    2 +-
- Documentation/x86/resctrl.rst                                    |    2 +-
- Documentation/x86/sgx.rst                                        |    2 +-
- Documentation/xtensa/atomctl.rst                                 |    2 +-
- 57 files changed, 70 insertions(+), 70 deletions(-)
-
-
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Vladimir Oltean <olteanv@gmail.com>
-Cc: Steffen Klassert <steffen.klassert@secunet.com>
-Cc: Daniel Jordan <daniel.m.jordan@oracle.com>
-Cc: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Helge Deller <deller@gmx.de>
-?Cc: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Henrik Rydberg <rydberg@bitmath.org>
-Cc: Karsten Keil <isdn@linux-pingi.de>
-Cc: Jiri Kosina <jikos@kernel.org>
-Cc: Miroslav Benes <mbenes@suse.cz>
-Cc: Petr Mladek <pmladek@suse.com>
-Cc: Josh Poimboeuf <jpoimboe@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Will Deacon <will@kernel.org>
-Cc: Jérôme Glisse <jglisse@redhat.com>
-Cc: Naoya Horiguchi <naoya.horiguchi@nec.com>
-Cc: Miaohe Lin <linmiaohe@huawei.com>
-Cc: Jonas Bonn <jonas@southpole.se>
-Cc: Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
-Cc: Stafford Horne <shorne@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Heiko Carstens <hca@linux.ibm.com>
-Cc: Vasily Gorbik <gor@linux.ibm.com>
-Cc: Alexander Gordeev <agordeev@linux.ibm.com>
-Cc: Juri Lelli <juri.lelli@redhat.com>
-Cc: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: David Howells <dhowells@redhat.com>
-Cc: Jarkko Sakkinen <jarkko@kernel.org>
-Cc: Paul Moore <paul@paul-moore.com>
-Cc: James Morris <jmorris@namei.org>
-Cc: "Serge E. Hallyn" <serge@hallyn.com>
-Cc: Daniel Bristot de Oliveira <bristot@kernel.org>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: Masami Hiramatsu <mhiramat@kernel.org>
-Cc: Mathieu Poirier <mathieu.poirier@linaro.org>
-Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
-Cc: Evgeniy Polyakov <zbr@ioremap.net>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: Reinette Chatre <reinette.chatre@intel.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Chris Zankel <chris@zankel.net>
-Cc: Max Filippov <jcmvbkbc@gmail.com>
-
-Cc: coresight@lists.linaro.org
-Cc: dri-devel@lists.freedesktop.org
-Cc: keyrings@vger.kernel.org
-Cc: linux-block@vger.kernel.org
-Cc: linux-crypto@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-fbdev@vger.kernel.org
-Cc: linux-input@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-s390@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-sgx@vger.kernel.org
-Cc: linux-trace-devel@vger.kernel.org
-Cc: linux-trace-kernel@vger.kernel.org
-Cc: live-patching@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org
-Cc: linux-usb@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: openrisc@lists.librecores.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-xtensa@linux-xtensa.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: x86@kernel.org
