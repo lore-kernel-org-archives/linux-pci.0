@@ -2,265 +2,161 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0809C636D7
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Feb 2023 20:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 799A6C636D4
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Feb 2023 20:58:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233885AbjBJUzS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Feb 2023 15:55:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55396 "EHLO
+        id S233569AbjBJU6A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Feb 2023 15:58:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233846AbjBJUzQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2023 15:55:16 -0500
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5fcc:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE32016331;
-        Fri, 10 Feb 2023 12:55:14 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by mailout1.hostsharing.net (Postfix) with ESMTPS id 8E6CE1019263E;
-        Fri, 10 Feb 2023 21:55:13 +0100 (CET)
-Received: from localhost (unknown [89.246.108.87])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by h08.hostsharing.net (Postfix) with ESMTPSA id 60A3B600CA83;
-        Fri, 10 Feb 2023 21:55:13 +0100 (CET)
-X-Mailbox-Line: From c3f9e24fffa318a045f89664fb9545099cb0d603 Mon Sep 17 00:00:00 2001
-Message-Id: <c3f9e24fffa318a045f89664fb9545099cb0d603.1676043318.git.lukas@wunner.de>
-In-Reply-To: <cover.1676043318.git.lukas@wunner.de>
-References: <cover.1676043318.git.lukas@wunner.de>
-From:   Lukas Wunner <lukas@wunner.de>
-Date:   Fri, 10 Feb 2023 21:25:12 +0100
-Subject: [PATCH v3 12/16] PCI/DOE: Create mailboxes on device enumeration
-To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc:     Gregory Price <gregory.price@memverge.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
-        Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
-        linux-cxl@vger.kernel.org
+        with ESMTP id S233288AbjBJU57 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2023 15:57:59 -0500
+Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 774E218B26
+        for <linux-pci@vger.kernel.org>; Fri, 10 Feb 2023 12:57:58 -0800 (PST)
+Received: by mail-pj1-x1030.google.com with SMTP id rm7-20020a17090b3ec700b0022c05558d22so6711639pjb.5
+        for <linux-pci@vger.kernel.org>; Fri, 10 Feb 2023 12:57:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=evdRb0y0uW0suzf6IqaYt5x7djfotbgzG0ewIjt0Uk8=;
+        b=KUT+l2F2GWE7igSYQ8d5+p5+59DtVXpCEXbLlVmc96yZz0C6BTvOrxsmTe+OBsGL6s
+         y2rzOIBMtqUvWwibc6YD8yAi5yQL/cH6XRbNvg4K7cDiXdcIFRxcLSduB35wUWXXA0VJ
+         UeK9Fr3MnD+UOG5bxYvcENuScn2VK2MbwHDh6DLWlTMMB6ENfQqUGQCX/ex0dNBaX4/L
+         Vh+BtiM/GbqdCb8E9zZUPWET+0t1LsXdZfKblrGrFj3BpftIY518+n8kbXbPsSi8YbwV
+         /d3USSewKz7NLQ6A/T63dPWA2RxNmCM816H+HjOkO44vyORTTbVJHwxomoZAon+9gPk5
+         VCWQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=evdRb0y0uW0suzf6IqaYt5x7djfotbgzG0ewIjt0Uk8=;
+        b=YMVQqFOFuUrIOA3lZULrzLmJnWvJZ1+ur2iblrai4OeJv88YhuwRyxjXeBIxMQb/10
+         KVDMVvoDEcpE3QxV9iXduG/U7fxCOPg3JdGSHsF6elPZHNzfh+yw95MBEU1SIRMLvXEv
+         YntFdkzPYD23cEcDK5TRdC5eDqg6fLtbDXzzQRdURfa/XFR9D81R4XBo30UGHJver8BY
+         M2obzE8rjq6C56tJF0ZMAIUhCRElkUm0t5RsI3K/mxR6YxE3aQ+3+6KEyv0qlaShrifh
+         LNIiu8BVvTCxft/6jcV+R3780pX4EHHz+yZa0WkEaCqFZt6tP2OTcOb6frTiTklSBAsL
+         SPGg==
+X-Gm-Message-State: AO0yUKXlzFOu0odGxJaLO4nXWzefksMf6FVZz62LibSmOpWqmpYo1TjW
+        BCuuOtpcToaSvZ1KpSdFpE9akw==
+X-Google-Smtp-Source: AK7set9CwV4ClXZtXo/ecYginhuJqO7iCZWxx36BetrGYm8vH3+HGalmqFIH3VMl3TsAt45IiN7jgw==
+X-Received: by 2002:a17:903:111:b0:198:af4f:de12 with SMTP id y17-20020a170903011100b00198af4fde12mr42392plc.18.1676062677683;
+        Fri, 10 Feb 2023 12:57:57 -0800 (PST)
+Received: from google.com (7.104.168.34.bc.googleusercontent.com. [34.168.104.7])
+        by smtp.gmail.com with ESMTPSA id ms16-20020a17090b235000b00233864f21a7sm2070323pjb.51.2023.02.10.12.57.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Feb 2023 12:57:57 -0800 (PST)
+Date:   Fri, 10 Feb 2023 20:57:53 +0000
+From:   Sean Christopherson <seanjc@google.com>
+To:     Dave Hansen <dave.hansen@intel.com>
+Cc:     Borislav Petkov <bp@alien8.de>,
+        "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
+        "hpa@zytor.com" <hpa@zytor.com>, KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "luto@kernel.org" <luto@kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "edumazet@google.com" <edumazet@google.com>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "pabeni@redhat.com" <pabeni@redhat.com>,
+        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+        "robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
+        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
+        "sathyanarayanan.kuppuswamy@linux.intel.com" 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        "ak@linux.intel.com" <ak@linux.intel.com>,
+        "isaku.yamahata@intel.com" <isaku.yamahata@intel.com>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "jane.chu@oracle.com" <jane.chu@oracle.com>,
+        "tony.luck@intel.com" <tony.luck@intel.com>,
+        "x86@kernel.org" <x86@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "iommu@lists.linux.dev" <iommu@lists.linux.dev>
+Subject: Re: [PATCH v5 06/14] x86/ioremap: Support hypervisor specified range
+ to map as encrypted
+Message-ID: <Y+av0SVUHBLCVdWE@google.com>
+References: <BYAPR21MB16883BB6178DDEEA10FD1F1CD7D69@BYAPR21MB1688.namprd21.prod.outlook.com>
+ <Y+JG9+zdSwZlz6FU@zn.tnic>
+ <4216dea6-d899-aecb-2207-caa2ae7db0e3@intel.com>
+ <BYAPR21MB16886D92828BA2CA8D47FEA4D7D99@BYAPR21MB1688.namprd21.prod.outlook.com>
+ <Y+aP8rHr6H3LIf/c@google.com>
+ <Y+aVFxrE6a6b37XN@zn.tnic>
+ <BYAPR21MB16882083E84F20B906E2C847D7DE9@BYAPR21MB1688.namprd21.prod.outlook.com>
+ <Y+aczIbbQm/ZNunZ@zn.tnic>
+ <cb80e102-4b78-1a03-9c32-6450311c0f55@intel.com>
+ <Y+auMQ88In7NEc30@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Y+auMQ88In7NEc30@google.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently a DOE instance cannot be shared by multiple drivers because
-each driver creates its own pci_doe_mb struct for a given DOE instance.
-For the same reason a DOE instance cannot be shared between the PCI core
-and a driver.
+On Fri, Feb 10, 2023, Sean Christopherson wrote:
+> On Fri, Feb 10, 2023, Dave Hansen wrote:
+> > On 2/10/23 11:36, Borislav Petkov wrote:
+> > >> One approach is to go with the individual device attributes for now.>> If the list does grow significantly, there will probably be patterns
+> > >> or groupings that we can't discern now.  We could restructure into
+> > >> larger buckets at that point based on those patterns/groupings.
+> > > There's a reason the word "platform" is in cc_platform_has(). Initially
+> > > we wanted to distinguish attributes of the different platforms. So even
+> > > if y'all don't like CC_ATTR_PARAVISOR, that is what distinguishes this
+> > > platform and it *is* one platform.
+> > > 
+> > > So call it CC_ATTR_SEV_VTOM as it uses that technology or whatever. But
+> > > call it like the platform, not to mean "I need this functionality".
+> > 
+> > I can live with that.  There's already a CC_ATTR_GUEST_SEV_SNP, so it
+> > would at least not be too much of a break from what we already have.
+> 
+> I'm fine with CC_ATTR_SEV_VTOM, assuming the proposal is to have something like:
+> 
+> 	static inline bool is_address_range_private(resource_size_t addr)
+> 	{
+> 		if (cc_platform_has(CC_ATTR_SEV_VTOM))
+> 			return is_address_below_vtom(addr);
+> 
+> 		return false;
+> 	}
+> 
+> i.e. not have SEV_VTOM mean "I/O APIC and vTPM are private".  Though I don't see
+> the point in making it SEV vTOM specific or using a flag.  Despite what any of us
+> think about TDX paravisors, it's completely doable within the confines of TDX to
+> have an emulated device reside in the private address space.  E.g. why not
+> something like this? 
+> 
+> 	static inline bool is_address_range_private(resource_size_t addr)
+> 	{
+> 		return addr < cc_platform_private_end;
+> 	}
+> 
+> where SEV fills in "cc_platform_private_end" when vTOM is enabled, and TDX does
+> the same.  Or wrap cc_platform_private_end in a helper, etc.
 
-Overcome this limitation by creating mailboxes in the PCI core on device
-enumeration.
+Gah, forgot that the intent with TDX is to enumerate devices in their legacy
+address spaces.  So a TDX guest couldn't do this by default, but if/when Hyper-V
+or some other hypervisor moves I/O APIC, vTPM, etc... into the TCB, the common
+code would just work and only the hypervisor-specific paravirt code would need
+to change.
 
-Provide a pci_find_doe_mailbox() API call to allow drivers to get a
-pci_doe_mb for a given (pci_dev, vendor, protocol) triple.  This API is
-modeled after pci_find_capability() and can later be amended with a
-pci_find_next_doe_mailbox() call to iterate over all mailboxes of a
-given pci_dev which support a specific protocol.
-
-On removal, destroy the mailboxes in pci_destroy_dev(), after the driver
-is unbound.  This allows drivers to use DOE in their ->remove() hook.
-
-On surprise removal, cancel ongoing DOE exchanges and prevent new ones
-from being scheduled.  Thereby ensure that a hot-removed device doesn't
-needlessly wait for a running exchange to time out.
-
-Tested-by: Ira Weiny <ira.weiny@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Reviewed-by: Ira Weiny <ira.weiny@intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
----
- Changes v2 -> v3:
- * Don't cancel ongoing DOE exchanges in pci_stop_dev() so that
-   drivers may perform DOE in their ->remove() hooks
- * Instead cancel ongoing DOE exchanges on surprise removal in
-   pci_dev_set_disconnected()
- * Emit error message in pci_doe_init() if mailbox creation fails (Ira)
- * Explain in commit message that pci_find_doe_mailbox() can later
-   be amended with pci_find_next_doe_mailbox() (Jonathan)
-
- drivers/pci/doe.c       | 73 +++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h       | 12 +++++++
- drivers/pci/probe.c     |  1 +
- drivers/pci/remove.c    |  1 +
- include/linux/pci-doe.h |  2 ++
- include/linux/pci.h     |  3 ++
- 6 files changed, 92 insertions(+)
-
-diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-index 2bc202b64b6a..bf32875d27da 100644
---- a/drivers/pci/doe.c
-+++ b/drivers/pci/doe.c
-@@ -20,6 +20,8 @@
- #include <linux/pci-doe.h>
- #include <linux/workqueue.h>
- 
-+#include "pci.h"
-+
- #define PCI_DOE_PROTOCOL_DISCOVERY 0
- 
- /* Timeout of 1 second from 6.30.2 Operation, PCI Spec r6.0 */
-@@ -658,3 +660,74 @@ int pci_doe(struct pci_doe_mb *doe_mb, u16 vendor, u8 type,
- 	return task.rv;
- }
- EXPORT_SYMBOL_GPL(pci_doe);
-+
-+/**
-+ * pci_find_doe_mailbox() - Find Data Object Exchange mailbox
-+ *
-+ * @pdev: PCI device
-+ * @vendor: Vendor ID
-+ * @type: Data Object Type
-+ *
-+ * Find first DOE mailbox of a PCI device which supports the given protocol.
-+ *
-+ * RETURNS: Pointer to the DOE mailbox or NULL if none was found.
-+ */
-+struct pci_doe_mb *pci_find_doe_mailbox(struct pci_dev *pdev, u16 vendor,
-+					u8 type)
-+{
-+	struct pci_doe_mb *doe_mb;
-+	unsigned long index;
-+
-+	xa_for_each(&pdev->doe_mbs, index, doe_mb)
-+		if (pci_doe_supports_prot(doe_mb, vendor, type))
-+			return doe_mb;
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(pci_find_doe_mailbox);
-+
-+void pci_doe_init(struct pci_dev *pdev)
-+{
-+	struct pci_doe_mb *doe_mb;
-+	u16 offset = 0;
-+	int rc;
-+
-+	xa_init(&pdev->doe_mbs);
-+
-+	while ((offset = pci_find_next_ext_capability(pdev, offset,
-+						      PCI_EXT_CAP_ID_DOE))) {
-+		doe_mb = pci_doe_create_mb(pdev, offset);
-+		if (IS_ERR(doe_mb)) {
-+			pci_err(pdev, "[%x] failed to create mailbox: %ld\n",
-+				offset, PTR_ERR(doe_mb));
-+			continue;
-+		}
-+
-+		rc = xa_insert(&pdev->doe_mbs, offset, doe_mb, GFP_KERNEL);
-+		if (rc) {
-+			pci_err(pdev, "[%x] failed to insert mailbox: %d\n",
-+				offset, rc);
-+			pci_doe_destroy_mb(doe_mb);
-+		}
-+	}
-+}
-+
-+void pci_doe_destroy(struct pci_dev *pdev)
-+{
-+	struct pci_doe_mb *doe_mb;
-+	unsigned long index;
-+
-+	xa_for_each(&pdev->doe_mbs, index, doe_mb)
-+		pci_doe_destroy_mb(doe_mb);
-+
-+	xa_destroy(&pdev->doe_mbs);
-+}
-+
-+void pci_doe_disconnected(struct pci_dev *pdev)
-+{
-+	struct pci_doe_mb *doe_mb;
-+	unsigned long index;
-+
-+	xa_for_each(&pdev->doe_mbs, index, doe_mb)
-+		pci_doe_cancel_tasks(doe_mb);
-+}
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 8f5d4bd5b410..065ca9743ec1 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -318,6 +318,16 @@ struct pci_sriov {
- 	bool		drivers_autoprobe; /* Auto probing of VFs by driver */
- };
- 
-+#ifdef CONFIG_PCI_DOE
-+void pci_doe_init(struct pci_dev *pdev);
-+void pci_doe_destroy(struct pci_dev *pdev);
-+void pci_doe_disconnected(struct pci_dev *pdev);
-+#else
-+static inline void pci_doe_init(struct pci_dev *pdev) { }
-+static inline void pci_doe_destroy(struct pci_dev *pdev) { }
-+static inline void pci_doe_disconnected(struct pci_dev *pdev) { }
-+#endif
-+
- /**
-  * pci_dev_set_io_state - Set the new error state if possible.
-  *
-@@ -372,6 +382,8 @@ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
- 	pci_dev_set_io_state(dev, pci_channel_io_perm_failure);
- 	device_unlock(&dev->dev);
- 
-+	pci_doe_disconnected(dev);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 1779582fb500..65e60ee50489 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2476,6 +2476,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_aer_init(dev);		/* Advanced Error Reporting */
- 	pci_dpc_init(dev);		/* Downstream Port Containment */
- 	pci_rcec_init(dev);		/* Root Complex Event Collector */
-+	pci_doe_init(dev);		/* Data Object Exchange */
- 
- 	pcie_report_downtraining(dev);
- 	pci_init_reset_methods(dev);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 0145aef1b930..f25acf50879f 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -39,6 +39,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
- 	list_del(&dev->bus_list);
- 	up_write(&pci_bus_sem);
- 
-+	pci_doe_destroy(dev);
- 	pcie_aspm_exit_link_state(dev);
- 	pci_bridge_d3_update(dev);
- 	pci_free_resources(dev);
-diff --git a/include/linux/pci-doe.h b/include/linux/pci-doe.h
-index 7f16749c6aa3..d6192ee0ac07 100644
---- a/include/linux/pci-doe.h
-+++ b/include/linux/pci-doe.h
-@@ -29,6 +29,8 @@ struct pci_doe_mb;
- 
- struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset);
- bool pci_doe_supports_prot(struct pci_doe_mb *doe_mb, u16 vid, u8 type);
-+struct pci_doe_mb *pci_find_doe_mailbox(struct pci_dev *pdev, u16 vendor,
-+					u8 type);
- 
- int pci_doe(struct pci_doe_mb *doe_mb, u16 vendor, u8 type,
- 	    const void *request, size_t request_sz,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3c51cac3890b..b19c2965e384 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -511,6 +511,9 @@ struct pci_dev {
- #endif
- #ifdef CONFIG_PCI_P2PDMA
- 	struct pci_p2pdma __rcu *p2pdma;
-+#endif
-+#ifdef CONFIG_PCI_DOE
-+	struct xarray	doe_mbs;	/* Data Object Exchange mailboxes */
- #endif
- 	u16		acs_cap;	/* ACS Capability offset */
- 	phys_addr_t	rom;		/* Physical address if not from BAR */
--- 
-2.39.1
-
+Probably need a more specific name than is_address_range_private() though, e.g.
+is_mmio_address_range_private()?
