@@ -2,161 +2,212 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 799A6C636D4
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Feb 2023 20:58:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E57B5C636D7
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Feb 2023 20:58:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233569AbjBJU6A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Feb 2023 15:58:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56976 "EHLO
+        id S233703AbjBJU6Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Feb 2023 15:58:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57222 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233288AbjBJU57 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2023 15:57:59 -0500
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 774E218B26
-        for <linux-pci@vger.kernel.org>; Fri, 10 Feb 2023 12:57:58 -0800 (PST)
-Received: by mail-pj1-x1030.google.com with SMTP id rm7-20020a17090b3ec700b0022c05558d22so6711639pjb.5
-        for <linux-pci@vger.kernel.org>; Fri, 10 Feb 2023 12:57:58 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=evdRb0y0uW0suzf6IqaYt5x7djfotbgzG0ewIjt0Uk8=;
-        b=KUT+l2F2GWE7igSYQ8d5+p5+59DtVXpCEXbLlVmc96yZz0C6BTvOrxsmTe+OBsGL6s
-         y2rzOIBMtqUvWwibc6YD8yAi5yQL/cH6XRbNvg4K7cDiXdcIFRxcLSduB35wUWXXA0VJ
-         UeK9Fr3MnD+UOG5bxYvcENuScn2VK2MbwHDh6DLWlTMMB6ENfQqUGQCX/ex0dNBaX4/L
-         Vh+BtiM/GbqdCb8E9zZUPWET+0t1LsXdZfKblrGrFj3BpftIY518+n8kbXbPsSi8YbwV
-         /d3USSewKz7NLQ6A/T63dPWA2RxNmCM816H+HjOkO44vyORTTbVJHwxomoZAon+9gPk5
-         VCWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=evdRb0y0uW0suzf6IqaYt5x7djfotbgzG0ewIjt0Uk8=;
-        b=YMVQqFOFuUrIOA3lZULrzLmJnWvJZ1+ur2iblrai4OeJv88YhuwRyxjXeBIxMQb/10
-         KVDMVvoDEcpE3QxV9iXduG/U7fxCOPg3JdGSHsF6elPZHNzfh+yw95MBEU1SIRMLvXEv
-         YntFdkzPYD23cEcDK5TRdC5eDqg6fLtbDXzzQRdURfa/XFR9D81R4XBo30UGHJver8BY
-         M2obzE8rjq6C56tJF0ZMAIUhCRElkUm0t5RsI3K/mxR6YxE3aQ+3+6KEyv0qlaShrifh
-         LNIiu8BVvTCxft/6jcV+R3780pX4EHHz+yZa0WkEaCqFZt6tP2OTcOb6frTiTklSBAsL
-         SPGg==
-X-Gm-Message-State: AO0yUKXlzFOu0odGxJaLO4nXWzefksMf6FVZz62LibSmOpWqmpYo1TjW
-        BCuuOtpcToaSvZ1KpSdFpE9akw==
-X-Google-Smtp-Source: AK7set9CwV4ClXZtXo/ecYginhuJqO7iCZWxx36BetrGYm8vH3+HGalmqFIH3VMl3TsAt45IiN7jgw==
-X-Received: by 2002:a17:903:111:b0:198:af4f:de12 with SMTP id y17-20020a170903011100b00198af4fde12mr42392plc.18.1676062677683;
-        Fri, 10 Feb 2023 12:57:57 -0800 (PST)
-Received: from google.com (7.104.168.34.bc.googleusercontent.com. [34.168.104.7])
-        by smtp.gmail.com with ESMTPSA id ms16-20020a17090b235000b00233864f21a7sm2070323pjb.51.2023.02.10.12.57.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Feb 2023 12:57:57 -0800 (PST)
-Date:   Fri, 10 Feb 2023 20:57:53 +0000
-From:   Sean Christopherson <seanjc@google.com>
-To:     Dave Hansen <dave.hansen@intel.com>
-Cc:     Borislav Petkov <bp@alien8.de>,
-        "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
-        "hpa@zytor.com" <hpa@zytor.com>, KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "edumazet@google.com" <edumazet@google.com>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "pabeni@redhat.com" <pabeni@redhat.com>,
-        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-        "robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "sathyanarayanan.kuppuswamy@linux.intel.com" 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        "ak@linux.intel.com" <ak@linux.intel.com>,
-        "isaku.yamahata@intel.com" <isaku.yamahata@intel.com>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "jane.chu@oracle.com" <jane.chu@oracle.com>,
-        "tony.luck@intel.com" <tony.luck@intel.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "iommu@lists.linux.dev" <iommu@lists.linux.dev>
-Subject: Re: [PATCH v5 06/14] x86/ioremap: Support hypervisor specified range
- to map as encrypted
-Message-ID: <Y+av0SVUHBLCVdWE@google.com>
-References: <BYAPR21MB16883BB6178DDEEA10FD1F1CD7D69@BYAPR21MB1688.namprd21.prod.outlook.com>
- <Y+JG9+zdSwZlz6FU@zn.tnic>
- <4216dea6-d899-aecb-2207-caa2ae7db0e3@intel.com>
- <BYAPR21MB16886D92828BA2CA8D47FEA4D7D99@BYAPR21MB1688.namprd21.prod.outlook.com>
- <Y+aP8rHr6H3LIf/c@google.com>
- <Y+aVFxrE6a6b37XN@zn.tnic>
- <BYAPR21MB16882083E84F20B906E2C847D7DE9@BYAPR21MB1688.namprd21.prod.outlook.com>
- <Y+aczIbbQm/ZNunZ@zn.tnic>
- <cb80e102-4b78-1a03-9c32-6450311c0f55@intel.com>
- <Y+auMQ88In7NEc30@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y+auMQ88In7NEc30@google.com>
+        with ESMTP id S233716AbjBJU6O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2023 15:58:14 -0500
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC7BC1C5B4;
+        Fri, 10 Feb 2023 12:58:07 -0800 (PST)
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by mailout2.hostsharing.net (Postfix) with ESMTPS id 3FEE010189E11;
+        Fri, 10 Feb 2023 21:58:06 +0100 (CET)
+Received: from localhost (unknown [89.246.108.87])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by h08.hostsharing.net (Postfix) with ESMTPSA id 109CF600CA83;
+        Fri, 10 Feb 2023 21:58:06 +0100 (CET)
+X-Mailbox-Line: From 99d93ba784fc8b0cc4f484ea00b812f8b0efcada Mon Sep 17 00:00:00 2001
+Message-Id: <99d93ba784fc8b0cc4f484ea00b812f8b0efcada.1676043318.git.lukas@wunner.de>
+In-Reply-To: <cover.1676043318.git.lukas@wunner.de>
+References: <cover.1676043318.git.lukas@wunner.de>
+From:   Lukas Wunner <lukas@wunner.de>
+Date:   Fri, 10 Feb 2023 21:25:13 +0100
+Subject: [PATCH v3 13/16] cxl/pci: Use CDAT DOE mailbox created by PCI core
+To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc:     Gregory Price <gregory.price@memverge.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
+        Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
+        linux-cxl@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Feb 10, 2023, Sean Christopherson wrote:
-> On Fri, Feb 10, 2023, Dave Hansen wrote:
-> > On 2/10/23 11:36, Borislav Petkov wrote:
-> > >> One approach is to go with the individual device attributes for now.>> If the list does grow significantly, there will probably be patterns
-> > >> or groupings that we can't discern now.  We could restructure into
-> > >> larger buckets at that point based on those patterns/groupings.
-> > > There's a reason the word "platform" is in cc_platform_has(). Initially
-> > > we wanted to distinguish attributes of the different platforms. So even
-> > > if y'all don't like CC_ATTR_PARAVISOR, that is what distinguishes this
-> > > platform and it *is* one platform.
-> > > 
-> > > So call it CC_ATTR_SEV_VTOM as it uses that technology or whatever. But
-> > > call it like the platform, not to mean "I need this functionality".
-> > 
-> > I can live with that.  There's already a CC_ATTR_GUEST_SEV_SNP, so it
-> > would at least not be too much of a break from what we already have.
-> 
-> I'm fine with CC_ATTR_SEV_VTOM, assuming the proposal is to have something like:
-> 
-> 	static inline bool is_address_range_private(resource_size_t addr)
-> 	{
-> 		if (cc_platform_has(CC_ATTR_SEV_VTOM))
-> 			return is_address_below_vtom(addr);
-> 
-> 		return false;
-> 	}
-> 
-> i.e. not have SEV_VTOM mean "I/O APIC and vTPM are private".  Though I don't see
-> the point in making it SEV vTOM specific or using a flag.  Despite what any of us
-> think about TDX paravisors, it's completely doable within the confines of TDX to
-> have an emulated device reside in the private address space.  E.g. why not
-> something like this? 
-> 
-> 	static inline bool is_address_range_private(resource_size_t addr)
-> 	{
-> 		return addr < cc_platform_private_end;
-> 	}
-> 
-> where SEV fills in "cc_platform_private_end" when vTOM is enabled, and TDX does
-> the same.  Or wrap cc_platform_private_end in a helper, etc.
+The PCI core has just been amended to create a pci_doe_mb struct for
+every DOE instance on device enumeration.
 
-Gah, forgot that the intent with TDX is to enumerate devices in their legacy
-address spaces.  So a TDX guest couldn't do this by default, but if/when Hyper-V
-or some other hypervisor moves I/O APIC, vTPM, etc... into the TCB, the common
-code would just work and only the hypervisor-specific paravirt code would need
-to change.
+Drop creation of a (duplicate) CDAT DOE mailbox on cxl probing in favor
+of the one already created by the PCI core.
 
-Probably need a more specific name than is_address_range_private() though, e.g.
-is_mmio_address_range_private()?
+Tested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/cxl/core/pci.c | 27 +++++------------------
+ drivers/cxl/cxlmem.h   |  3 ---
+ drivers/cxl/pci.c      | 49 ------------------------------------------
+ 3 files changed, 5 insertions(+), 74 deletions(-)
+
+diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+index 09a9fa67d12a..1b954783b516 100644
+--- a/drivers/cxl/core/pci.c
++++ b/drivers/cxl/core/pci.c
+@@ -459,27 +459,6 @@ EXPORT_SYMBOL_NS_GPL(cxl_hdm_decode_init, CXL);
+ #define CXL_DOE_TABLE_ACCESS_LAST_ENTRY		0xffff
+ #define CXL_DOE_PROTOCOL_TABLE_ACCESS 2
+ 
+-static struct pci_doe_mb *find_cdat_doe(struct device *uport)
+-{
+-	struct cxl_memdev *cxlmd;
+-	struct cxl_dev_state *cxlds;
+-	unsigned long index;
+-	void *entry;
+-
+-	cxlmd = to_cxl_memdev(uport);
+-	cxlds = cxlmd->cxlds;
+-
+-	xa_for_each(&cxlds->doe_mbs, index, entry) {
+-		struct pci_doe_mb *cur = entry;
+-
+-		if (pci_doe_supports_prot(cur, PCI_DVSEC_VENDOR_ID_CXL,
+-					  CXL_DOE_PROTOCOL_TABLE_ACCESS))
+-			return cur;
+-	}
+-
+-	return NULL;
+-}
+-
+ #define CDAT_DOE_REQ(entry_handle) cpu_to_le32				\
+ 	(FIELD_PREP(CXL_DOE_TABLE_ACCESS_REQ_CODE,			\
+ 		    CXL_DOE_TABLE_ACCESS_REQ_CODE_READ) |		\
+@@ -577,10 +556,14 @@ void read_cdat_data(struct cxl_port *port)
+ 	struct pci_doe_mb *cdat_doe;
+ 	struct device *dev = &port->dev;
+ 	struct device *uport = port->uport;
++	struct cxl_memdev *cxlmd = to_cxl_memdev(uport);
++	struct cxl_dev_state *cxlds = cxlmd->cxlds;
++	struct pci_dev *pdev = to_pci_dev(cxlds->dev);
+ 	size_t cdat_length;
+ 	int rc;
+ 
+-	cdat_doe = find_cdat_doe(uport);
++	cdat_doe = pci_find_doe_mailbox(pdev, PCI_DVSEC_VENDOR_ID_CXL,
++					CXL_DOE_PROTOCOL_TABLE_ACCESS);
+ 	if (!cdat_doe) {
+ 		dev_dbg(dev, "No CDAT mailbox\n");
+ 		return;
+diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
+index ab138004f644..e1a1b23cf56c 100644
+--- a/drivers/cxl/cxlmem.h
++++ b/drivers/cxl/cxlmem.h
+@@ -227,7 +227,6 @@ struct cxl_endpoint_dvsec_info {
+  * @component_reg_phys: register base of component registers
+  * @info: Cached DVSEC information about the device.
+  * @serial: PCIe Device Serial Number
+- * @doe_mbs: PCI DOE mailbox array
+  * @mbox_send: @dev specific transport for transmitting mailbox commands
+  *
+  * See section 8.2.9.5.2 Capacity Configuration and Label Storage for
+@@ -264,8 +263,6 @@ struct cxl_dev_state {
+ 	resource_size_t component_reg_phys;
+ 	u64 serial;
+ 
+-	struct xarray doe_mbs;
+-
+ 	int (*mbox_send)(struct cxl_dev_state *cxlds, struct cxl_mbox_cmd *cmd);
+ };
+ 
+diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
+index 33083a522fd1..f8b8e514a3c6 100644
+--- a/drivers/cxl/pci.c
++++ b/drivers/cxl/pci.c
+@@ -8,7 +8,6 @@
+ #include <linux/mutex.h>
+ #include <linux/list.h>
+ #include <linux/pci.h>
+-#include <linux/pci-doe.h>
+ #include <linux/aer.h>
+ #include <linux/io.h>
+ #include "cxlmem.h"
+@@ -359,52 +358,6 @@ static int cxl_setup_regs(struct pci_dev *pdev, enum cxl_regloc_type type,
+ 	return rc;
+ }
+ 
+-static void cxl_pci_destroy_doe(void *mbs)
+-{
+-	xa_destroy(mbs);
+-}
+-
+-static void devm_cxl_pci_create_doe(struct cxl_dev_state *cxlds)
+-{
+-	struct device *dev = cxlds->dev;
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	u16 off = 0;
+-
+-	xa_init(&cxlds->doe_mbs);
+-	if (devm_add_action(&pdev->dev, cxl_pci_destroy_doe, &cxlds->doe_mbs)) {
+-		dev_err(dev, "Failed to create XArray for DOE's\n");
+-		return;
+-	}
+-
+-	/*
+-	 * Mailbox creation is best effort.  Higher layers must determine if
+-	 * the lack of a mailbox for their protocol is a device failure or not.
+-	 */
+-	pci_doe_for_each_off(pdev, off) {
+-		struct pci_doe_mb *doe_mb;
+-
+-		doe_mb = pcim_doe_create_mb(pdev, off);
+-		if (IS_ERR(doe_mb)) {
+-			dev_err(dev, "Failed to create MB object for MB @ %x\n",
+-				off);
+-			continue;
+-		}
+-
+-		if (!pci_request_config_region_exclusive(pdev, off,
+-							 PCI_DOE_CAP_SIZEOF,
+-							 dev_name(dev)))
+-			pci_err(pdev, "Failed to exclude DOE registers\n");
+-
+-		if (xa_insert(&cxlds->doe_mbs, off, doe_mb, GFP_KERNEL)) {
+-			dev_err(dev, "xa_insert failed to insert MB @ %x\n",
+-				off);
+-			continue;
+-		}
+-
+-		dev_dbg(dev, "Created DOE mailbox @%x\n", off);
+-	}
+-}
+-
+ /*
+  * Assume that any RCIEP that emits the CXL memory expander class code
+  * is an RCD
+@@ -469,8 +422,6 @@ static int cxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	cxlds->component_reg_phys = map.resource;
+ 
+-	devm_cxl_pci_create_doe(cxlds);
+-
+ 	rc = cxl_map_component_regs(&pdev->dev, &cxlds->regs.component,
+ 				    &map, BIT(CXL_CM_CAP_CAP_ID_RAS));
+ 	if (rc)
+-- 
+2.39.1
+
