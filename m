@@ -2,39 +2,38 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11A5DC636D7
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Feb 2023 21:02:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91686C636D4
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Feb 2023 21:05:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233360AbjBJVC3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Feb 2023 16:02:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60410 "EHLO
+        id S233219AbjBJVFl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Feb 2023 16:05:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232764AbjBJVC2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2023 16:02:28 -0500
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5fcc:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C97F818B26;
-        Fri, 10 Feb 2023 13:02:26 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        with ESMTP id S232764AbjBJVFk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2023 16:05:40 -0500
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [176.9.242.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 637FF6C7DC;
+        Fri, 10 Feb 2023 13:05:39 -0800 (PST)
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
          client-signature RSA-PSS (4096 bits) client-digest SHA256)
         (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by mailout1.hostsharing.net (Postfix) with ESMTPS id 5F38D1019263E;
-        Fri, 10 Feb 2023 22:02:25 +0100 (CET)
+        by mailout3.hostsharing.net (Postfix) with ESMTPS id A461710333601;
+        Fri, 10 Feb 2023 22:05:37 +0100 (CET)
 Received: from localhost (unknown [89.246.108.87])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by h08.hostsharing.net (Postfix) with ESMTPSA id 2F089600CA83;
-        Fri, 10 Feb 2023 22:02:25 +0100 (CET)
-X-Mailbox-Line: From fdb52e091b62b34c2036a61ae9ab8087dba4e4db Mon Sep 17 00:00:00 2001
-Message-Id: <fdb52e091b62b34c2036a61ae9ab8087dba4e4db.1676043318.git.lukas@wunner.de>
+        by h08.hostsharing.net (Postfix) with ESMTPSA id 571BA600CA83;
+        Fri, 10 Feb 2023 22:05:37 +0100 (CET)
+X-Mailbox-Line: From 49c5299afc660ac33fee9a116ea37df0de938432 Mon Sep 17 00:00:00 2001
+Message-Id: <49c5299afc660ac33fee9a116ea37df0de938432.1676043318.git.lukas@wunner.de>
 In-Reply-To: <cover.1676043318.git.lukas@wunner.de>
 References: <cover.1676043318.git.lukas@wunner.de>
 From:   Lukas Wunner <lukas@wunner.de>
-Date:   Fri, 10 Feb 2023 21:25:15 +0100
-Subject: [PATCH v3 15/16] PCI/DOE: Relax restrictions on request and response
- size
+Date:   Fri, 10 Feb 2023 21:25:16 +0100
+Subject: [PATCH v3 16/16] cxl/pci: Rightsize CDAT response allocation
 To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
 Cc:     Gregory Price <gregory.price@memverge.com>,
         Ira Weiny <ira.weiny@intel.com>,
@@ -50,189 +49,158 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-An upcoming user of DOE is CMA (Component Measurement and Authentication,
-PCIe r6.0 sec 6.31).
+Jonathan notes that cxl_cdat_get_length() and cxl_cdat_read_table()
+allocate 32 dwords for the DOE response even though it may be smaller.
 
-It builds on SPDM (Security Protocol and Data Model):
-https://www.dmtf.org/dsp/DSP0274
+In the case of cxl_cdat_get_length(), only the second dword of the
+response is of interest (it contains the length).  So reduce the
+allocation to 2 dwords and let DOE discard the remainder.
 
-SPDM message sizes are not always a multiple of dwords.  To transport
-them over DOE without using bounce buffers, allow sending requests and
-receiving responses whose final dword is only partially populated.
+In the case of cxl_cdat_read_table(), a correctly sized allocation for
+the full CDAT already exists.  Let DOE write each table entry directly
+into that allocation.  There's a snag in that the table entry is
+preceded by a Table Access Response Header (1 dword).  Save the last
+dword of the previous table entry, let DOE overwrite it with the
+header of the next entry and restore it afterwards.
 
-To be clear, PCIe r6.0 sec 6.30.1 specifies the Data Object Header 2
-"Length" in dwords and pci_doe_send_req() and pci_doe_recv_resp()
-read/write dwords.  So from a spec point of view, DOE is still specified
-in dwords and allowing non-dword request/response buffers is merely for
-the convenience of callers.
+The resulting CDAT is preceded by 4 unavoidable useless bytes.  Increase
+the allocation size accordingly and skip these bytes when exposing CDAT
+in sysfs.
+
+The buffer overflow check in cxl_cdat_read_table() becomes unnecessary
+because the remaining bytes in the allocation are tracked in "length",
+which is passed to DOE and limits how many bytes it writes to the
+allocation.  Additionally, cxl_cdat_read_table() bails out if the DOE
+response is truncated due to insufficient space.
 
 Tested-by: Ira Weiny <ira.weiny@intel.com>
 Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
 ---
  Changes v2 -> v3:
- * Fix byte order of last dword on big endian arches (Ira)
- * Explain in commit message and kerneldoc that arbitrary-sized
-   payloads are not stipulated by the spec, but merely for
-   convenience of the caller (Bjorn, Jonathan)
- * Add code comment that "remainder" in pci_doe_recv_resp() signifies
-   the number of data bytes in the last payload dword (Ira)
+ * Newly added patch in v3 on popular request (Jonathan)
 
- drivers/pci/doe.c | 74 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 49 insertions(+), 25 deletions(-)
+ drivers/cxl/core/pci.c | 34 ++++++++++++++++++----------------
+ drivers/cxl/cxl.h      |  3 ++-
+ drivers/cxl/port.c     |  2 +-
+ 3 files changed, 21 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
-index 15e5f9df1bba..14252f2fa955 100644
---- a/drivers/pci/doe.c
-+++ b/drivers/pci/doe.c
-@@ -76,13 +76,6 @@ struct pci_doe_protocol {
-  * @private: Private data for the consumer
-  * @work: Used internally by the mailbox
-  * @doe_mb: Used internally by the mailbox
-- *
-- * The payload sizes and rv are specified in bytes with the following
-- * restrictions concerning the protocol.
-- *
-- *	1) The request_pl_sz must be a multiple of double words (4 bytes)
-- *	2) The response_pl_sz must be >= a single double word (4 bytes)
-- *	3) rv is returned as bytes but it will be a multiple of double words
-  */
- struct pci_doe_task {
- 	struct pci_doe_protocol prot;
-@@ -153,7 +146,7 @@ static int pci_doe_send_req(struct pci_doe_mb *doe_mb,
+diff --git a/drivers/cxl/core/pci.c b/drivers/cxl/core/pci.c
+index 1b954783b516..70097cc75302 100644
+--- a/drivers/cxl/core/pci.c
++++ b/drivers/cxl/core/pci.c
+@@ -471,7 +471,7 @@ static int cxl_cdat_get_length(struct device *dev,
+ 			       size_t *length)
  {
- 	struct pci_dev *pdev = doe_mb->pdev;
- 	int offset = doe_mb->cap_offset;
--	size_t length;
-+	size_t length, remainder;
- 	u32 val;
- 	int i;
+ 	__le32 request = CDAT_DOE_REQ(0);
+-	__le32 response[32];
++	__le32 response[2];
+ 	int rc;
  
-@@ -171,7 +164,7 @@ static int pci_doe_send_req(struct pci_doe_mb *doe_mb,
- 		return -EIO;
+ 	rc = pci_doe(cdat_doe, PCI_DVSEC_VENDOR_ID_CXL,
+@@ -495,28 +495,28 @@ static int cxl_cdat_read_table(struct device *dev,
+ 			       struct pci_doe_mb *cdat_doe,
+ 			       struct cxl_cdat *cdat)
+ {
+-	size_t length = cdat->length;
+-	u32 *data = cdat->table;
++	size_t length = cdat->length + sizeof(u32);
++	__le32 *data = cdat->table;
+ 	int entry_handle = 0;
++	__le32 saved_dw = 0;
  
- 	/* Length is 2 DW of header + length of payload in DW */
--	length = 2 + task->request_pl_sz / sizeof(u32);
-+	length = 2 + DIV_ROUND_UP(task->request_pl_sz, sizeof(u32));
- 	if (length > PCI_DOE_MAX_LENGTH)
- 		return -EIO;
- 	if (length == PCI_DOE_MAX_LENGTH)
-@@ -184,10 +177,21 @@ static int pci_doe_send_req(struct pci_doe_mb *doe_mb,
- 	pci_write_config_dword(pdev, offset + PCI_DOE_WRITE,
- 			       FIELD_PREP(PCI_DOE_DATA_OBJECT_HEADER_2_LENGTH,
- 					  length));
-+
-+	/* Write payload */
- 	for (i = 0; i < task->request_pl_sz / sizeof(u32); i++)
- 		pci_write_config_dword(pdev, offset + PCI_DOE_WRITE,
- 				       le32_to_cpu(task->request_pl[i]));
+ 	do {
+ 		__le32 request = CDAT_DOE_REQ(entry_handle);
+ 		struct cdat_entry_header *entry;
+-		__le32 response[32];
+ 		size_t entry_dw;
+ 		int rc;
  
-+	/* Write last payload dword */
-+	remainder = task->request_pl_sz % sizeof(u32);
-+	if (remainder) {
-+		val = 0;
-+		memcpy(&val, &task->request_pl[i], remainder);
-+		le32_to_cpus(&val);
-+		pci_write_config_dword(pdev, offset + PCI_DOE_WRITE, val);
-+	}
-+
- 	pci_doe_write_ctrl(doe_mb, PCI_DOE_CTRL_GO);
+ 		rc = pci_doe(cdat_doe, PCI_DVSEC_VENDOR_ID_CXL,
+ 			     CXL_DOE_PROTOCOL_TABLE_ACCESS,
+ 			     &request, sizeof(request),
+-			     &response, sizeof(response));
++			     data, length);
+ 		if (rc < 0) {
+ 			dev_err(dev, "DOE failed: %d", rc);
+ 			return rc;
+ 		}
+ 
+ 		/* 1 DW Table Access Response Header + CDAT entry */
+-		entry = (struct cdat_entry_header *)(response + 1);
++		entry = (struct cdat_entry_header *)(data + 1);
+ 		if ((entry_handle == 0 &&
+ 		     rc != sizeof(u32) + sizeof(struct cdat_header)) ||
+ 		    (entry_handle > 0 &&
+@@ -526,21 +526,22 @@ static int cxl_cdat_read_table(struct device *dev,
+ 
+ 		/* Get the CXL table access header entry handle */
+ 		entry_handle = FIELD_GET(CXL_DOE_TABLE_ACCESS_ENTRY_HANDLE,
+-					 le32_to_cpu(response[0]));
++					 le32_to_cpu(data[0]));
+ 		entry_dw = rc / sizeof(u32);
+ 		/* Skip Header */
+ 		entry_dw -= 1;
+-		entry_dw = min(length / sizeof(u32), entry_dw);
+-		/* Prevent length < 1 DW from causing a buffer overflow */
+-		if (entry_dw) {
+-			memcpy(data, entry, entry_dw * sizeof(u32));
+-			length -= entry_dw * sizeof(u32);
+-			data += entry_dw;
+-		}
++		/*
++		 * Table Access Response Header overwrote the last DW of
++		 * previous entry, so restore that DW
++		 */
++		*data = saved_dw;
++		length -= entry_dw * sizeof(u32);
++		data += entry_dw;
++		saved_dw = *data;
+ 	} while (entry_handle != CXL_DOE_TABLE_ACCESS_LAST_ENTRY);
+ 
+ 	/* Length in CDAT header may exceed concatenation of CDAT entries */
+-	cdat->length -= length;
++	cdat->length -= length - sizeof(u32);
  
  	return 0;
-@@ -207,11 +211,11 @@ static bool pci_doe_data_obj_ready(struct pci_doe_mb *doe_mb)
- 
- static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *task)
- {
-+	size_t length, payload_length, remainder, received;
- 	struct pci_dev *pdev = doe_mb->pdev;
- 	int offset = doe_mb->cap_offset;
--	size_t length, payload_length;
-+	int i = 0;
- 	u32 val;
--	int i;
- 
- 	/* Read the first dword to get the protocol */
- 	pci_read_config_dword(pdev, offset + PCI_DOE_READ, &val);
-@@ -238,15 +242,38 @@ static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *tas
- 
- 	/* First 2 dwords have already been read */
- 	length -= 2;
--	payload_length = min(length, task->response_pl_sz / sizeof(u32));
--	/* Read the rest of the response payload */
--	for (i = 0; i < payload_length; i++) {
-+	received = task->response_pl_sz;
-+	payload_length = DIV_ROUND_UP(task->response_pl_sz, sizeof(u32));
-+	remainder = task->response_pl_sz % sizeof(u32);
-+
-+	/* remainder signifies number of data bytes in last payload dword */
-+	if (!remainder)
-+		remainder = sizeof(u32);
-+
-+	if (length < payload_length) {
-+		received = length * sizeof(u32);
-+		payload_length = length;
-+		remainder = sizeof(u32);
-+	}
-+
-+	if (payload_length) {
-+		/* Read all payload dwords except the last */
-+		for (; i < payload_length - 1; i++) {
-+			pci_read_config_dword(pdev, offset + PCI_DOE_READ,
-+					      &val);
-+			task->response_pl[i] = cpu_to_le32(val);
-+			pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
-+		}
-+
-+		/* Read last payload dword */
- 		pci_read_config_dword(pdev, offset + PCI_DOE_READ, &val);
--		task->response_pl[i] = cpu_to_le32(val);
-+		cpu_to_le32s(&val);
-+		memcpy(&task->response_pl[i], &val, remainder);
- 		/* Prior to the last ack, ensure Data Object Ready */
--		if (i == (payload_length - 1) && !pci_doe_data_obj_ready(doe_mb))
-+		if (!pci_doe_data_obj_ready(doe_mb))
- 			return -EIO;
- 		pci_write_config_dword(pdev, offset + PCI_DOE_READ, 0);
-+		i++;
+ }
+@@ -576,7 +577,8 @@ void read_cdat_data(struct cxl_port *port)
+ 		return;
  	}
  
- 	/* Flush excess length */
-@@ -260,7 +287,7 @@ static int pci_doe_recv_resp(struct pci_doe_mb *doe_mb, struct pci_doe_task *tas
- 	if (FIELD_GET(PCI_DOE_STATUS_ERROR, val))
- 		return -EIO;
+-	port->cdat.table = devm_kzalloc(dev, cdat_length, GFP_KERNEL);
++	port->cdat.table = devm_kzalloc(dev, cdat_length + sizeof(u32),
++					GFP_KERNEL);
+ 	if (!port->cdat.table)
+ 		return;
  
--	return min(length, task->response_pl_sz / sizeof(u32)) * sizeof(u32);
-+	return received;
+diff --git a/drivers/cxl/cxl.h b/drivers/cxl/cxl.h
+index 1b1cf459ac77..78f5cae5134c 100644
+--- a/drivers/cxl/cxl.h
++++ b/drivers/cxl/cxl.h
+@@ -494,7 +494,8 @@ struct cxl_pmem_region {
+  * @component_reg_phys: component register capability base address (optional)
+  * @dead: last ep has been removed, force port re-creation
+  * @depth: How deep this port is relative to the root. depth 0 is the root.
+- * @cdat: Cached CDAT data
++ * @cdat: Cached CDAT data (@table is preceded by 4 null bytes, these are not
++ *	  included in @length)
+  * @cdat_available: Should a CDAT attribute be available in sysfs
+  */
+ struct cxl_port {
+diff --git a/drivers/cxl/port.c b/drivers/cxl/port.c
+index 5453771bf330..0705343ac5ca 100644
+--- a/drivers/cxl/port.c
++++ b/drivers/cxl/port.c
+@@ -95,7 +95,7 @@ static ssize_t CDAT_read(struct file *filp, struct kobject *kobj,
+ 		return 0;
+ 
+ 	return memory_read_from_buffer(buf, count, &offset,
+-				       port->cdat.table,
++				       port->cdat.table + sizeof(u32),
+ 				       port->cdat.length);
  }
  
- static void signal_task_complete(struct pci_doe_task *task, int rv)
-@@ -561,14 +588,6 @@ static int pci_doe_submit_task(struct pci_doe_mb *doe_mb,
- 	if (!pci_doe_supports_prot(doe_mb, task->prot.vid, task->prot.type))
- 		return -EINVAL;
- 
--	/*
--	 * DOE requests must be a whole number of DW and the response needs to
--	 * be big enough for at least 1 DW
--	 */
--	if (task->request_pl_sz % sizeof(u32) ||
--	    task->response_pl_sz < sizeof(u32))
--		return -EINVAL;
--
- 	if (test_bit(PCI_DOE_FLAG_DEAD, &doe_mb->flags))
- 		return -EIO;
- 
-@@ -596,6 +615,11 @@ static int pci_doe_submit_task(struct pci_doe_mb *doe_mb,
-  * without byte-swapping.  If payloads contain little-endian register values,
-  * the caller is responsible for conversion with cpu_to_le32() / le32_to_cpu().
-  *
-+ * For convenience, arbitrary payload sizes are allowed even though PCIe r6.0
-+ * sec 6.30.1 specifies the Data Object Header 2 "Length" in dwords.  The last
-+ * (partial) dword is copied with byte granularity and padded with zeroes if
-+ * necessary.  Callers are thus relieved from using dword-sized bounce buffers.
-+ *
-  * RETURNS: Length of received response or negative errno.
-  * Received data in excess of @response_sz is discarded.
-  * The length may be smaller than @response_sz and the caller
 -- 
 2.39.1
 
