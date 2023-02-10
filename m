@@ -2,151 +2,107 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C5EBC05027
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Feb 2023 20:51:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E467C636D4
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Feb 2023 20:52:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233876AbjBJUvL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Feb 2023 15:51:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52616 "EHLO
+        id S233858AbjBJUwC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Feb 2023 15:52:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53800 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233860AbjBJUvK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2023 15:51:10 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79FA87F82F
-        for <linux-pci@vger.kernel.org>; Fri, 10 Feb 2023 12:51:02 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id e10-20020a17090a630a00b0022bedd66e6dso11227894pjj.1
-        for <linux-pci@vger.kernel.org>; Fri, 10 Feb 2023 12:51:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=G6ClxDPqqo9XGMX8nibdBrVqKRqBmlDx/QkEPTPhrmI=;
-        b=CQBERmQX6UW6aN9ppCfG84ilCLxw0hROZywoezlBpkLDc3CEV63muuePgbkAQ4uUTP
-         eVYf0yxkeklltYT638VQVLUGWm1IlB+L0GPDdKLiHtJ2WGGLYu5qt7LaGHGnoriCzhpY
-         R+rRH6ybKW9tvY9M0IWhT2J77tmpZgTgfGz4/AjJwGtMfQMpO3Z9MH3hGi7qiajkr+a0
-         Y2Jn4OfuyhOTmpuJkEJNnPsE2TTKLu6+AWlepChxd0I9e52F1UgvI/MMVi8hWWHW24z8
-         FPaztSxLf0zInUZVGmjknEYg8NwCn/c2YtYGTgPHz05CyujaIUcMVeTONN+TBbui6M5V
-         +u4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=G6ClxDPqqo9XGMX8nibdBrVqKRqBmlDx/QkEPTPhrmI=;
-        b=GQTISZaL1WtQXrEsoJeIBBIrzXQFS8YfZRUBL4ncDroJiapILNC88UQ0neAM/DGC0+
-         NSY9zvsKvbA1BIe6X+Px7Elu5Qo6qQSmhInL+025TssWTwsd3QN/CLN05bMK7BldSP/v
-         7APNwzFQZiQBkm8EmzjfpwDANPIpf/ilS7+sHR/tVhsUQwdCwFXoaiR2G/Zx0oPSuaNH
-         gBGC2S9C3M3In7ZP7Ra/CYj4FMzLtb+NlyH2dqJZS49N+AJHtwe/oqKRFGJIUEYYO7Xm
-         BOTaSIVduPp4f5vXraHwLvzXIPzNumXQOhKPcGIjxDzE3yyOKhTcfjOjBHc3NVM2o2Ts
-         BEdQ==
-X-Gm-Message-State: AO0yUKVg4smrtoj4H55sryjlz7W/v+lzXu2Ii91yvEzeyebLNdCaf/E/
-        5JXixqgHzFUCaU3JnupWwv5k6A==
-X-Google-Smtp-Source: AK7set87/K1BTbtqK1YxC0xEr79tEEU7ncmCCfkbuZto381YIZlqqRDqWHnUS/qjJKIZM1QnsMq8jQ==
-X-Received: by 2002:a17:902:7c07:b0:198:af50:e4e6 with SMTP id x7-20020a1709027c0700b00198af50e4e6mr48370pll.12.1676062261748;
-        Fri, 10 Feb 2023 12:51:01 -0800 (PST)
-Received: from google.com (7.104.168.34.bc.googleusercontent.com. [34.168.104.7])
-        by smtp.gmail.com with ESMTPSA id p6-20020aa78606000000b005828071bf7asm3698940pfn.22.2023.02.10.12.51.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Feb 2023 12:51:01 -0800 (PST)
-Date:   Fri, 10 Feb 2023 20:50:57 +0000
-From:   Sean Christopherson <seanjc@google.com>
-To:     Dave Hansen <dave.hansen@intel.com>
-Cc:     Borislav Petkov <bp@alien8.de>,
-        "Michael Kelley (LINUX)" <mikelley@microsoft.com>,
-        "hpa@zytor.com" <hpa@zytor.com>, KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "edumazet@google.com" <edumazet@google.com>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "pabeni@redhat.com" <pabeni@redhat.com>,
-        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-        "robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "sathyanarayanan.kuppuswamy@linux.intel.com" 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        "ak@linux.intel.com" <ak@linux.intel.com>,
-        "isaku.yamahata@intel.com" <isaku.yamahata@intel.com>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "jane.chu@oracle.com" <jane.chu@oracle.com>,
-        "tony.luck@intel.com" <tony.luck@intel.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "iommu@lists.linux.dev" <iommu@lists.linux.dev>
-Subject: Re: [PATCH v5 06/14] x86/ioremap: Support hypervisor specified range
- to map as encrypted
-Message-ID: <Y+auMQ88In7NEc30@google.com>
-References: <Y9FC7Dpzr5Uge/Mi@zn.tnic>
- <BYAPR21MB16883BB6178DDEEA10FD1F1CD7D69@BYAPR21MB1688.namprd21.prod.outlook.com>
- <Y+JG9+zdSwZlz6FU@zn.tnic>
- <4216dea6-d899-aecb-2207-caa2ae7db0e3@intel.com>
- <BYAPR21MB16886D92828BA2CA8D47FEA4D7D99@BYAPR21MB1688.namprd21.prod.outlook.com>
- <Y+aP8rHr6H3LIf/c@google.com>
- <Y+aVFxrE6a6b37XN@zn.tnic>
- <BYAPR21MB16882083E84F20B906E2C847D7DE9@BYAPR21MB1688.namprd21.prod.outlook.com>
- <Y+aczIbbQm/ZNunZ@zn.tnic>
- <cb80e102-4b78-1a03-9c32-6450311c0f55@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cb80e102-4b78-1a03-9c32-6450311c0f55@intel.com>
+        with ESMTP id S233888AbjBJUwA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2023 15:52:00 -0500
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5fcc:0])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A2012FCCD;
+        Fri, 10 Feb 2023 12:51:58 -0800 (PST)
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by mailout1.hostsharing.net (Postfix) with ESMTPS id 7489C1019263E;
+        Fri, 10 Feb 2023 21:51:57 +0100 (CET)
+Received: from localhost (unknown [89.246.108.87])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by h08.hostsharing.net (Postfix) with ESMTPSA id 44BB1600CA83;
+        Fri, 10 Feb 2023 21:51:57 +0100 (CET)
+X-Mailbox-Line: From 7b5cf1e007ba1638ff2512f221e8a7fd72ed8245 Mon Sep 17 00:00:00 2001
+Message-Id: <7b5cf1e007ba1638ff2512f221e8a7fd72ed8245.1676043318.git.lukas@wunner.de>
+In-Reply-To: <cover.1676043318.git.lukas@wunner.de>
+References: <cover.1676043318.git.lukas@wunner.de>
+From:   Lukas Wunner <lukas@wunner.de>
+Date:   Fri, 10 Feb 2023 21:25:10 +0100
+Subject: [PATCH v3 10/16] PCI/DOE: Deduplicate mailbox flushing
+To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc:     Gregory Price <gregory.price@memverge.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
+        Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
+        linux-cxl@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Feb 10, 2023, Dave Hansen wrote:
-> On 2/10/23 11:36, Borislav Petkov wrote:
-> >> One approach is to go with the individual device attributes for now.>> If the list does grow significantly, there will probably be patterns
-> >> or groupings that we can't discern now.  We could restructure into
-> >> larger buckets at that point based on those patterns/groupings.
-> > There's a reason the word "platform" is in cc_platform_has(). Initially
-> > we wanted to distinguish attributes of the different platforms. So even
-> > if y'all don't like CC_ATTR_PARAVISOR, that is what distinguishes this
-> > platform and it *is* one platform.
-> > 
-> > So call it CC_ATTR_SEV_VTOM as it uses that technology or whatever. But
-> > call it like the platform, not to mean "I need this functionality".
-> 
-> I can live with that.  There's already a CC_ATTR_GUEST_SEV_SNP, so it
-> would at least not be too much of a break from what we already have.
+When a DOE mailbox is torn down, its workqueue is flushed once in
+pci_doe_flush_mb() through a call to flush_workqueue() and subsequently
+flushed once more in pci_doe_destroy_workqueue() through a call to
+destroy_workqueue().
 
-I'm fine with CC_ATTR_SEV_VTOM, assuming the proposal is to have something like:
+Deduplicate by dropping flush_workqueue() from pci_doe_flush_mb().
 
-	static inline bool is_address_range_private(resource_size_t addr)
-	{
-		if (cc_platform_has(CC_ATTR_SEV_VTOM))
-			return is_address_below_vtom(addr);
+Rename pci_doe_flush_mb() to pci_doe_cancel_tasks() to more aptly
+describe what it now does.
 
-		return false;
-	}
+Tested-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ Changes v2 -> v3:
+ * Newly added patch in v3
 
-i.e. not have SEV_VTOM mean "I/O APIC and vTPM are private".  Though I don't see
-the point in making it SEV vTOM specific or using a flag.  Despite what any of us
-think about TDX paravisors, it's completely doable within the confines of TDX to
-have an emulated device reside in the private address space.  E.g. why not
-something like this? 
+ drivers/pci/doe.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-	static inline bool is_address_range_private(resource_size_t addr)
-	{
-		return addr < cc_platform_private_end;
-	}
+diff --git a/drivers/pci/doe.c b/drivers/pci/doe.c
+index afb53bc1b4aa..291cd7a46a39 100644
+--- a/drivers/pci/doe.c
++++ b/drivers/pci/doe.c
+@@ -429,7 +429,7 @@ static void pci_doe_destroy_workqueue(void *mb)
+ 	destroy_workqueue(doe_mb->work_queue);
+ }
+ 
+-static void pci_doe_flush_mb(void *mb)
++static void pci_doe_cancel_tasks(void *mb)
+ {
+ 	struct pci_doe_mb *doe_mb = mb;
+ 
+@@ -439,9 +439,6 @@ static void pci_doe_flush_mb(void *mb)
+ 	/* Cancel an in progress work item, if necessary */
+ 	set_bit(PCI_DOE_FLAG_CANCEL, &doe_mb->flags);
+ 	wake_up(&doe_mb->wq);
+-
+-	/* Flush all work items */
+-	flush_workqueue(doe_mb->work_queue);
+ }
+ 
+ /**
+@@ -498,9 +495,9 @@ struct pci_doe_mb *pcim_doe_create_mb(struct pci_dev *pdev, u16 cap_offset)
+ 
+ 	/*
+ 	 * The state machine and the mailbox should be in sync now;
+-	 * Set up mailbox flush prior to using the mailbox to query protocols.
++	 * Set up cancel tasks prior to using the mailbox to query protocols.
+ 	 */
+-	rc = devm_add_action_or_reset(dev, pci_doe_flush_mb, doe_mb);
++	rc = devm_add_action_or_reset(dev, pci_doe_cancel_tasks, doe_mb);
+ 	if (rc)
+ 		return ERR_PTR(rc);
+ 
+-- 
+2.39.1
 
-where SEV fills in "cc_platform_private_end" when vTOM is enabled, and TDX does
-the same.  Or wrap cc_platform_private_end in a helper, etc.
