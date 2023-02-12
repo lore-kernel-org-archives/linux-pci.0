@@ -2,106 +2,76 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24778C636D7
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Feb 2023 10:56:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CC6AC6379F
+	for <linux-pci@archiver.kernel.org>; Sun, 12 Feb 2023 15:41:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229571AbjBKK4e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 11 Feb 2023 05:56:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35246 "EHLO
+        id S229744AbjBLPli (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 12 Feb 2023 10:41:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39286 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229498AbjBKK4e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 11 Feb 2023 05:56:34 -0500
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [IPv6:2a01:4f8:150:2161:1:b009:f23e:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3CE322004;
-        Sat, 11 Feb 2023 02:56:32 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by bmailout3.hostsharing.net (Postfix) with ESMTPS id 1C1B3102E6622;
-        Sat, 11 Feb 2023 11:56:31 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id D459F275D54; Sat, 11 Feb 2023 11:56:30 +0100 (CET)
-Date:   Sat, 11 Feb 2023 11:56:30 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Gregory Price <gregory.price@memverge.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
-        Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
-        linux-cxl@vger.kernel.org
-Subject: Re: [PATCH v3 03/16] cxl/pci: Handle truncated CDAT entries
-Message-ID: <20230211105630.GA28226@wunner.de>
-References: <cover.1676043318.git.lukas@wunner.de>
- <5b4e23f256b3705360d84eccb9652e4b558a77b5.1676043318.git.lukas@wunner.de>
- <63e6e65e5e1f3_1e494329496@dwillia2-xfh.jf.intel.com.notmuch>
+        with ESMTP id S229742AbjBLPlg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Feb 2023 10:41:36 -0500
+Received: from soltyk.jannau.net (soltyk.jannau.net [144.76.91.90])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0166ECC3E;
+        Sun, 12 Feb 2023 07:41:34 -0800 (PST)
+Received: from robin.home.jannau.net (p579ad32f.dip0.t-ipconnect.de [87.154.211.47])
+        by soltyk.jannau.net (Postfix) with ESMTPSA id 8E0B726F77F;
+        Sun, 12 Feb 2023 16:41:33 +0100 (CET)
+From:   Janne Grunau <j@jannau.net>
+To:     Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Mark Kettenis <kettenis@openbsd.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+Cc:     asahi@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 10/17] dt-bindings: pci: apple,pcie: Add t8112 support
+Date:   Sun, 12 Feb 2023 16:41:20 +0100
+Message-Id: <20230202-asahi-t8112-dt-v1-10-cb5442d1c229@jannau.net>
+X-Mailer: git-send-email 2.39.1
+In-Reply-To: <20230202-asahi-t8112-dt-v1-0-cb5442d1c229@jannau.net>
+References: <20230202-asahi-t8112-dt-v1-0-cb5442d1c229@jannau.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <63e6e65e5e1f3_1e494329496@dwillia2-xfh.jf.intel.com.notmuch>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset="utf-8"
+X-Mailer: b4 0.12.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=923; i=j@jannau.net; h=from:subject:message-id; bh=B5Qcd4CxlxesRe0jkuQrKlKZBtIrCHBPG5zOO2R33rg=; b=owGbwMvMwCG2UNrmdq9+ahrjabUkhuSX7Cf+3fv/8/cJ8wf5PTnnflu923ri12nNf7n/JDexp Ug+Lful3FHKwiDGwSArpsiSpP2yg2F1jWJM7YMwmDmsTCBDGLg4BWAi9+sZ/jv3J9ySmWbpJuAf FH7/UFdhRlDAnHWPTtevvsVhKWNUkMnIcH6Bxlm32z9vLrrDXdjc2Dx7iq179BHeV+EzMv9PfCw zlwMA
+X-Developer-Key: i=j@jannau.net; a=openpgp; fpr=8B336A6BE4E5695E89B8532B81E806F586338419
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Feb 10, 2023 at 04:50:38PM -0800, Dan Williams wrote:
-> Lukas Wunner wrote:
-> > If truncated CDAT entries are received from a device, the concatenation
-> > of those entries constitutes a corrupt CDAT, yet is happily exposed to
-> > user space.
-> > 
-> > Avoid by verifying response lengths and erroring out if truncation is
-> > detected.
-[...]
-> > @@ -557,14 +557,19 @@ static int cxl_cdat_read_table(struct device *dev,
-> >  			return rc;
-> >  		}
-> >  		wait_for_completion(&t.c);
-> > -		/* 1 DW header + 1 DW data min */
-> > -		if (t.task.rv < (2 * sizeof(u32)))
-> 
-> Ah, I guess that's why the previous check can not be pushed down
-> further, its obviated by this more comprehensive check.
+The block found in the Apple M2 SoC is compatible with the existing
+driver, and supports 4 downstream ports like the t6000 one.
 
-The check in the previous patch ("cxl/pci: Handle truncated CDAT header")
-fixes response size verification for cxl_cdat_get_length().
+Signed-off-by: Janne Grunau <j@jannau.net>
 
-The check here however is in a different function, cxl_cdat_read_table().
-Previously the function only checked whether the DOE response contained
-two dwords.  That's one dword for the Table Access Response header
-(CXL r3.0 sec 8.1.11.1) plus one dword for the common header shared
-by all CDAT structures.
+---
+This trivial dt-bindings update should be merged through the asahi-soc
+tree to ensure validation of the Apple M2 (t8112) devicetrees in this
+series.
+---
+ Documentation/devicetree/bindings/pci/apple,pcie.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-What can happen is we receive a truncated entry with, say, just
-two dwords, and we copy that to the cached CDAT exposed in sysfs.
-Obviously that's a corrupt CDAT.  The consumer of the CDAT doesn't
-know that the data was truncated and will try to parse the entry
-even though the data may actually be a portion of the next entry.
+diff --git a/Documentation/devicetree/bindings/pci/apple,pcie.yaml b/Documentation/devicetree/bindings/pci/apple,pcie.yaml
+index aa38680aaaca..215ff9a9c835 100644
+--- a/Documentation/devicetree/bindings/pci/apple,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/apple,pcie.yaml
+@@ -33,6 +33,7 @@ properties:
+     items:
+       - enum:
+           - apple,t8103-pcie
++          - apple,t8112-pcie
+           - apple,t6000-pcie
+       - const: apple,pcie
+ 
 
-The improved verification here ensures that the received amount of
-data corresponds to the length in the entry header.
+-- 
+2.39.1
 
-It is up to the parsing function of each entry to verify whether
-that length is correct for that specific entry.  E.g. a DSMAS entry
-should contain 24 bytes, so the parsing function needs to verify
-that the length in the entry header is actually 24.  (See the e-mail
-I sent to Dave a few minutes ago.)
-
-Thanks,
-
-Lukas
-
-> > +		/* 1 DW Table Access Response Header + CDAT entry */
-> > +		entry = (struct cdat_entry_header *)(t.response_pl + 1);
-> > +		if ((entry_handle == 0 &&
-> > +		     t.task.rv != sizeof(u32) + sizeof(struct cdat_header)) ||
-> > +		    (entry_handle > 0 &&
-> > +		     (t.task.rv < sizeof(u32) + sizeof(struct cdat_entry_header) ||
-> > +		      t.task.rv != sizeof(u32) + le16_to_cpu(entry->length))))
-> >  			return -EIO;
