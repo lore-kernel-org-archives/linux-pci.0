@@ -2,29 +2,30 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAC38C636CC
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Feb 2023 13:31:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B7C5C64ED6
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Feb 2023 13:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbjBMNbV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Feb 2023 08:31:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35920 "EHLO
+        id S230111AbjBMNbX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Feb 2023 08:31:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229489AbjBMNbV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2023 08:31:21 -0500
-X-Greylist: delayed 416 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 13 Feb 2023 05:31:19 PST
-Received: from out-106.mta1.migadu.com (out-106.mta1.migadu.com [95.215.58.106])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD10859C2
-        for <linux-pci@vger.kernel.org>; Mon, 13 Feb 2023 05:31:19 -0800 (PST)
+        with ESMTP id S230056AbjBMNbW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2023 08:31:22 -0500
+X-Greylist: delayed 419 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 13 Feb 2023 05:31:20 PST
+Received: from out-124.mta1.migadu.com (out-124.mta1.migadu.com [IPv6:2001:41d0:203:375::7c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87E5D1A963
+        for <linux-pci@vger.kernel.org>; Mon, 13 Feb 2023 05:31:20 -0800 (PST)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1676294659;
+        t=1676294694;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=9dytgbDEt57ATtNFmXWKfGB365p9SDGH+/FXWfQmEvk=;
-        b=WZZo+VxZnjVMd9cLc5+stq6cYI8Km9THa3KQsE7i0diT4xnzY1pbXQlUhWUfG3MjTdv7PU
-        01k4xuJMu5zaMjofLFzbZYLEbu3vrg4IUkJsAG/6EYrGDIV9/zLNPYrD033nNO9Qc42db5
-        JjEoz92Sx1FqAvB4N/wBDQVPPDrny2Q=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=u/je6LjKAXTT4L7cZQHh0omexUfrc1LfneIWADnI9bw=;
+        b=mRrmmCE2sHSBaMEE/5sKB+KqxiWe32EEa6Y1rAIayQdB1rqwTPxJ15mywRXxFjr+hmPrmG
+        mW9gFfhKRIiJX5xF3WE9jByYlcADBgnYT6wLxCkiOXgLIFRMWswKhUO5pCG/fkMvhtRvYi
+        OrkeW31xFT4Xujt7OM+weIE8h1l3Fms=
 From:   Cai Huoqing <cai.huoqing@linux.dev>
 To:     Sergey.Semin@baikalelectronics.ru
 Cc:     Cai huoqing <cai.huoqing@linux.dev>,
@@ -37,9 +38,11 @@ Cc:     Cai huoqing <cai.huoqing@linux.dev>,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v3 0/4] dmaengine: dw-edma: Add support for native HDMA
-Date:   Mon, 13 Feb 2023 21:24:05 +0800
-Message-Id: <20230213132411.65524-1-cai.huoqing@linux.dev>
+Subject: [PATCH v3 4/4] dmaengine: dw-edma: Add HDMA DebugFS support
+Date:   Mon, 13 Feb 2023 21:24:09 +0800
+Message-Id: <20230213132411.65524-5-cai.huoqing@linux.dev>
+In-Reply-To: <20230213132411.65524-1-cai.huoqing@linux.dev>
+References: <20230213132411.65524-1-cai.huoqing@linux.dev>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
@@ -49,76 +52,261 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Cai huoqing <cai.huoqing@linux.dev>
 
-Add support for HDMA NATIVE, as long the IP design has set
-the compatible register map parameter-HDMA_NATIVE,
-which allows compatibility for native HDMA register configuration.
+Add HDMA DebugFS support to show register information
 
-The HDMA Hyper-DMA IP is an enhancement of the eDMA embedded-DMA IP.
-And the native HDMA registers are different from eDMA,
-so this patch add support for HDMA NATIVE mode.
-
-HDMA write and read channels operate independently to maximize
-the performance of the HDMA read and write data transfer over
-the link When you configure the HDMA with multiple read channels,
-then it uses a round robin (RR) arbitration scheme to select
-the next read channel to be serviced.
-The same applies when you have multiple write channels.
-
-The native HDMA driver also supports a maximum of 16 independent
-channels (8 write + 8 read), which can run simultaneously.
-Both SAR (Source Address Register) and DAR (Destination Address Register)
-are alignmented to byte.dmaengine: dw-edma: Add support for native HDMA
-
-Cai huoqing (4):
-  dmaengine: dw-edma: Rename dw_edma_core_ops structure to
-    dw_edma_plat_ops
-  dmaengine: dw-edma: Create a new dw_edma_core_ops structure to
-    abstract controller operation
-  dmaengine: dw-edma: Add support for native HDMA
-  dmaengine: dw-edma: Add HDMA DebugFS support
-
-  v2->v3:
-    [1/4]
-    1.Add more commit log to explain why use dw_edma_plat_ops.
-    2.Update the structure name in the DW PCIe driver.
-    [2/4]
-    3.Use the reverse xmas tree vars definition order.
-    4.Add edma core ops wrapper.
-    5.Add dw_edma_done_interrupt() and dw_edma_abort_interrupt()
-      global methods.
-    6.Fix some indentation.
-    7.Fix some typo
-    8.Make use off dw_edma_core prefix instead of dw_xdma_core_.
-    [3/4]
-    9.Remove unnecessary include: dw-edma-v0-regs.h and dw-edma-v0-regs.h
-    10.HDMA supports the LL descriptors placed on the CPU memory.
-    [4/4]
-    11.Split DebugFS to be a separate patch.
-    12.Refactor HDMA DebugFS like the series in @Bjorn tree.
-
-  v2 link:
-  https://lore.kernel.org/lkml/20220925173412.u2ez6rbmfc5fupdn@mobilestation/
-
- drivers/dma/dw-edma/Makefile                 |   8 +-
- drivers/dma/dw-edma/dw-edma-core.c           |  63 ++--
- drivers/dma/dw-edma/dw-edma-core.h           |  92 ++++++
- drivers/dma/dw-edma/dw-edma-pcie.c           |   4 +-
- drivers/dma/dw-edma/dw-edma-v0-core.c        |  88 ++++-
- drivers/dma/dw-edma/dw-edma-v0-core.h        |  14 +-
- drivers/dma/dw-edma/dw-hdma-v0-core.c        | 317 +++++++++++++++++++
- drivers/dma/dw-edma/dw-hdma-v0-core.h        |  17 +
- drivers/dma/dw-edma/dw-hdma-v0-debugfs.c     | 175 ++++++++++
- drivers/dma/dw-edma/dw-hdma-v0-debugfs.h     |  22 ++
- drivers/dma/dw-edma/dw-hdma-v0-regs.h        | 129 ++++++++
- drivers/pci/controller/dwc/pcie-designware.c |   2 +-
- include/linux/dma/edma.h                     |   7 +-
- 13 files changed, 860 insertions(+), 78 deletions(-)
- create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-core.c
- create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-core.h
+Signed-off-by: Cai huoqing <cai.huoqing@linux.dev>
+---
+ drivers/dma/dw-edma/Makefile             |   3 +-
+ drivers/dma/dw-edma/dw-hdma-v0-core.c    |   2 +
+ drivers/dma/dw-edma/dw-hdma-v0-debugfs.c | 175 +++++++++++++++++++++++
+ drivers/dma/dw-edma/dw-hdma-v0-debugfs.h |  22 +++
+ 4 files changed, 201 insertions(+), 1 deletion(-)
  create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
  create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-debugfs.h
- create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-regs.h
 
+diff --git a/drivers/dma/dw-edma/Makefile b/drivers/dma/dw-edma/Makefile
+index b1c91ef2c63d..83ab58f87760 100644
+--- a/drivers/dma/dw-edma/Makefile
++++ b/drivers/dma/dw-edma/Makefile
+@@ -1,7 +1,8 @@
+ # SPDX-License-Identifier: GPL-2.0
+ 
+ obj-$(CONFIG_DW_EDMA)		+= dw-edma.o
+-dw-edma-$(CONFIG_DEBUG_FS)	:= dw-edma-v0-debugfs.o
++dw-edma-$(CONFIG_DEBUG_FS)	:= dw-edma-v0-debugfs.o	\
++				   dw-hdma-v0-debugfs.o
+ dw-edma-objs			:= dw-edma-core.o	\
+ 				   dw-edma-v0-core.o	\
+ 				   dw-hdma-v0-core.o $(dw-edma-y)
+diff --git a/drivers/dma/dw-edma/dw-hdma-v0-core.c b/drivers/dma/dw-edma/dw-hdma-v0-core.c
+index 7e4f98987e29..3723d5d8127c 100644
+--- a/drivers/dma/dw-edma/dw-hdma-v0-core.c
++++ b/drivers/dma/dw-edma/dw-hdma-v0-core.c
+@@ -9,6 +9,7 @@
+ #include "dw-edma-core.h"
+ #include "dw-hdma-v0-core.h"
+ #include "dw-hdma-v0-regs.h"
++#include "dw-hdma-v0-debugfs.h"
+ 
+ enum dw_hdma_control {
+ 	DW_HDMA_V0_CB					= BIT(0),
+@@ -294,6 +295,7 @@ static void dw_hdma_v0_core_ch_config(struct dw_edma_chan *chan)
+ /* HDMA debugfs callbacks */
+ static void dw_hdma_v0_core_debugfs_on(struct dw_edma *dw)
+ {
++	dw_hdma_v0_debugfs_on(dw);
+ }
+ 
+ static const struct dw_edma_core_ops hdma_core = {
+diff --git a/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c b/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
+new file mode 100644
+index 000000000000..a0fafd788c14
+--- /dev/null
++++ b/drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
+@@ -0,0 +1,175 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2023 Cai Huoqing
++ * Synopsys DesignWare HDMA v0 debugfs
++ *
++ * Author: Cai Huoqing <cai.huoqing@linux.dev>
++ */
++
++#include <linux/debugfs.h>
++#include <linux/bitfield.h>
++
++#include "dw-hdma-v0-debugfs.h"
++#include "dw-hdma-v0-regs.h"
++#include "dw-edma-core.h"
++
++#define REGS_ADDR(dw, name)						       \
++	({								       \
++		struct dw_hdma_v0_regs __iomem *__regs = (dw)->chip->reg_base; \
++									       \
++		(void __iomem *)&__regs->name;				       \
++	})
++
++#define REGS_CH_ADDR(dw, name, _dir, _ch)				       \
++	({								       \
++		struct dw_hdma_v0_ch_regs __iomem *__ch_regs;		       \
++									       \
++		if (_dir == EDMA_DIR_READ)				       \
++			__ch_regs = REGS_ADDR(dw, ch[_ch].rd);		       \
++		else							       \
++			__ch_regs = REGS_ADDR(dw, ch[_ch].wr);		       \
++									       \
++		(void __iomem *)&__ch_regs->name;			       \
++	})
++
++#define CTX_REGISTER(dw, name, dir, ch) \
++	{ dw, #name, REGS_CH_ADDR(dw, name, dir, ch), dir, ch }
++
++#define REGISTER(dw, name) \
++	{ dw, #name, REGS_ADDR(dw, name) }
++
++#define WRITE_STR				"write"
++#define READ_STR				"read"
++#define CHANNEL_STR				"channel"
++#define REGISTERS_STR				"registers"
++
++struct dw_hdma_debugfs_entry {
++	struct dw_edma				*dw;
++	const char				*name;
++	void __iomem				*reg;
++	enum dw_edma_dir			dir;
++	u16					ch;
++};
++
++static int dw_hdma_debugfs_u32_get(void *data, u64 *val)
++{
++	void __iomem *reg = (void __force __iomem *)data;
++	*val = readl(reg);
++
++	return 0;
++}
++DEFINE_DEBUGFS_ATTRIBUTE(fops_x32, dw_hdma_debugfs_u32_get, NULL, "0x%08llx\n");
++
++static void dw_hdma_debugfs_create_x32(struct dw_edma *dw,
++				       const struct dw_hdma_debugfs_entry ini[],
++				       int nr_entries, struct dentry *dent)
++{
++	struct dw_hdma_debugfs_entry *entries;
++	int i;
++
++	entries = devm_kcalloc(dw->chip->dev, nr_entries, sizeof(*entries),
++			       GFP_KERNEL);
++	for (i = 0; i < nr_entries; i++) {
++		entries[i] = ini[i];
++
++		debugfs_create_file_unsafe(entries[i].name, 0444, dent,
++					   &entries[i], &fops_x32);
++	}
++}
++
++static void dw_hdma_debugfs_regs_ch(struct dw_edma *dw, enum dw_edma_dir dir,
++				    u16 ch, struct dentry *dent)
++{
++	int nr_entries;
++	struct dw_hdma_debugfs_entry debugfs_regs[] = {
++		CTX_REGISTER(dw, ch_en, dir, ch),
++		CTX_REGISTER(dw, doorbell, dir, ch),
++		CTX_REGISTER(dw, llp.lsb, dir, ch),
++		CTX_REGISTER(dw, llp.msb, dir, ch),
++		CTX_REGISTER(dw, cycle_sync, dir, ch),
++		CTX_REGISTER(dw, transfer_size, dir, ch),
++		CTX_REGISTER(dw, sar.lsb, dir, ch),
++		CTX_REGISTER(dw, sar.msb, dir, ch),
++		CTX_REGISTER(dw, dar.lsb, dir, ch),
++		CTX_REGISTER(dw, dar.msb, dir, ch),
++		CTX_REGISTER(dw, control1, dir, ch),
++		CTX_REGISTER(dw, ch_stat, dir, ch),
++		CTX_REGISTER(dw, int_stat, dir, ch),
++		CTX_REGISTER(dw, int_setup, dir, ch),
++		CTX_REGISTER(dw, int_clear, dir, ch),
++		CTX_REGISTER(dw, msi_stop.lsb, dir, ch),
++		CTX_REGISTER(dw, msi_stop.msb, dir, ch),
++		CTX_REGISTER(dw, msi_abort.lsb, dir, ch),
++		CTX_REGISTER(dw, msi_abort.msb, dir, ch),
++		CTX_REGISTER(dw, msi_msgdata, dir, ch),
++	};
++
++	nr_entries = ARRAY_SIZE(debugfs_regs);
++	dw_hdma_debugfs_create_x32(dw, debugfs_regs, nr_entries, dent);
++}
++
++static void dw_hdma_debugfs_regs_wr(struct dw_edma *dw, struct dentry *dent)
++{
++	struct dentry *regs_dent, *ch_dent;
++	int i;
++	char name[16];
++
++	regs_dent = debugfs_create_dir(WRITE_STR, dent);
++	if (!regs_dent)
++		return;
++
++	for (i = 0; i < dw->wr_ch_cnt; i++) {
++		snprintf(name, sizeof(name), "%s:%d", CHANNEL_STR, i);
++
++		ch_dent = debugfs_create_dir(name, regs_dent);
++		if (!ch_dent)
++			return;
++
++		dw_hdma_debugfs_regs_ch(dw, EDMA_DIR_WRITE, i, ch_dent);
++	}
++}
++
++static void dw_hdma_debugfs_regs_rd(struct dw_edma *dw, struct dentry *dent)
++{
++	struct dentry *regs_dent, *ch_dent;
++	int i;
++	char name[16];
++
++	regs_dent = debugfs_create_dir(READ_STR, dent);
++	if (!regs_dent)
++		return;
++
++	for (i = 0; i < dw->rd_ch_cnt; i++) {
++		snprintf(name, sizeof(name), "%s:%d", CHANNEL_STR, i);
++
++		ch_dent = debugfs_create_dir(name, regs_dent);
++		if (!ch_dent)
++			return;
++
++		dw_hdma_debugfs_regs_ch(dw, EDMA_DIR_READ, i, ch_dent);
++	}
++}
++
++static void dw_hdma_debugfs_regs(struct dw_edma *dw)
++{
++	struct dentry *regs_dent;
++
++	regs_dent = debugfs_create_dir(REGISTERS_STR, dw->dma.dbg_dev_root);
++	if (!regs_dent)
++		return;
++
++	dw_hdma_debugfs_regs_wr(dw, regs_dent);
++	dw_hdma_debugfs_regs_rd(dw, regs_dent);
++}
++
++void dw_hdma_v0_debugfs_on(struct dw_edma *dw)
++{
++	if (!debugfs_initialized())
++		return;
++
++	debugfs_create_u32("mf", 0444, dw->dma.dbg_dev_root, &dw->chip->mf);
++	debugfs_create_u16("wr_ch_cnt", 0444, dw->dma.dbg_dev_root, &dw->wr_ch_cnt);
++	debugfs_create_u16("rd_ch_cnt", 0444, dw->dma.dbg_dev_root, &dw->rd_ch_cnt);
++
++	dw_hdma_debugfs_regs(dw);
++}
+diff --git a/drivers/dma/dw-edma/dw-hdma-v0-debugfs.h b/drivers/dma/dw-edma/dw-hdma-v0-debugfs.h
+new file mode 100644
+index 000000000000..e6842c83777d
+--- /dev/null
++++ b/drivers/dma/dw-edma/dw-hdma-v0-debugfs.h
+@@ -0,0 +1,22 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (c) 2023 Cai Huoqing
++ * Synopsys DesignWare HDMA v0 debugfs
++ *
++ * Author: Cai Huoqing <cai.huoqing@linux.dev>
++ */
++
++#ifndef _DW_HDMA_V0_DEBUG_FS_H
++#define _DW_HDMA_V0_DEBUG_FS_H
++
++#include <linux/dma/edma.h>
++
++#ifdef CONFIG_DEBUG_FS
++void dw_hdma_v0_debugfs_on(struct dw_edma *dw);
++#else
++static inline void dw_hdma_v0_debugfs_on(struct dw_edma *dw)
++{
++}
++#endif /* CONFIG_DEBUG_FS */
++
++#endif /* _DW_HDMA_V0_DEBUG_FS_H */
 -- 
 2.34.1
 
