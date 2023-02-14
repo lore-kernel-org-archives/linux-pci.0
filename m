@@ -2,173 +2,107 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05374C61DA4
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 15:45:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F785C05027
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 16:13:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232666AbjBNPpM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Feb 2023 10:45:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60304 "EHLO
+        id S232014AbjBNQNG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Feb 2023 11:13:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbjBNPpL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 10:45:11 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F282C29169;
-        Tue, 14 Feb 2023 07:45:09 -0800 (PST)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4PGQQj1KGxz6J682;
-        Tue, 14 Feb 2023 23:40:45 +0800 (CST)
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.17; Tue, 14 Feb
- 2023 15:45:06 +0000
-Date:   Tue, 14 Feb 2023 15:45:05 +0000
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Lukas Wunner <lukas@wunner.de>
-CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
-        Gregory Price <gregory.price@memverge.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Alison Schofield" <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
-        Ben Widawsky <bwidawsk@kernel.org>, <linuxarm@huawei.com>,
-        <linux-cxl@vger.kernel.org>
-Subject: Re: [PATCH v3 01/16] cxl/pci: Fix CDAT retrieval on big endian
-Message-ID: <20230214154505.00006dad@Huawei.com>
-In-Reply-To: <20230214135110.GB14338@wunner.de>
-References: <cover.1676043318.git.lukas@wunner.de>
-        <bbbe1c4f3788052865941572565aeb2be67a6770.1676043318.git.lukas@wunner.de>
-        <20230214111504.000060b0@Huawei.com>
-        <20230214135110.GB14338@wunner.de>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S232064AbjBNQM5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 11:12:57 -0500
+Received: from mail-io1-f47.google.com (mail-io1-f47.google.com [209.85.166.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5085B252BD;
+        Tue, 14 Feb 2023 08:12:39 -0800 (PST)
+Received: by mail-io1-f47.google.com with SMTP id j17so6019950ioa.9;
+        Tue, 14 Feb 2023 08:12:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=date:subject:message-id:references:in-reply-to:cc:to:from
+         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=sxGQh4DHINPPQJzpA71hCGf9LwnTAZIRU/+oLDvRlgk=;
+        b=dt3mx2Sm3ApPzYir4aK/MFBwDom804+1Bl/LJ9sPw+Q9KrYbxhdgjBp30DlwdzGutd
+         VpYfoZp2oYlxAY/BwWDtngQAe4ucBzWul1hYnuTZXd2mNnFDscFP/1saGzbbzSHeYaoJ
+         LIs61IZFMR6lPTBHxyI52LSs7KF/ZlrxgzOtgdV08XmfSe46pn/eX6UIBvjBUrj06OnW
+         5AU+YGbxfuUwbjyqCvlZf9BwXVRq7q8uRCI5SuF9UwjAmmD+ufYKGkZ/9Z5huvilJPy+
+         tXwAho7E9a+/AQWX2lwaLXYj53rtnEaTRTlXWUMqcqqButtBEmETkbDi4rn1xazu6B1q
+         jCsQ==
+X-Gm-Message-State: AO0yUKVyRQl7vFcwg+I3f8cADR+Vj97TmQ+bDfetxn6ypPT7eGgS/roK
+        fWQeDvmeiXk1uHBSAtoNCA==
+X-Google-Smtp-Source: AK7set8d05seqW+6Lpm2vtV7rgeGYkDNnRLFja2NokWcAe/KeKg1s2d/S8b8G5y3trFBOSommRRYsQ==
+X-Received: by 2002:a5e:c30a:0:b0:71a:1b72:5afc with SMTP id a10-20020a5ec30a000000b0071a1b725afcmr2256087iok.19.1676391158375;
+        Tue, 14 Feb 2023 08:12:38 -0800 (PST)
+Received: from robh_at_kernel.org (c-73-14-99-67.hsd1.co.comcast.net. [73.14.99.67])
+        by smtp.gmail.com with ESMTPSA id t66-20020a6bc345000000b00704878474c7sm5289961iof.53.2023.02.14.08.12.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Feb 2023 08:12:37 -0800 (PST)
+Received: (nullmailer pid 76712 invoked by uid 1000);
+        Tue, 14 Feb 2023 16:12:34 -0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml500006.china.huawei.com (7.191.161.198) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+From:   Rob Herring <robh@kernel.org>
+To:     Shradha Todi <shradha.t@samsung.com>
+Cc:     alim.akhtar@samsung.com, Sergey.Semin@baikalelectronics.ru,
+        pankaj.dubey@samsung.com, jh80.chung@samsung.co,
+        krzysztof.kozlowski+dt@linaro.org, devicetree@vger.kernel.org,
+        lukas.bulwahn@gmail.com, hongxing.zhu@nxp.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        m.szyprowski@samsung.com, linux-kernel@vger.kernel.org,
+        lpieralisi@kernel.org, tglx@linutronix.de,
+        linux-samsung-soc@vger.kernel.org, kw@linux.com,
+        jingoohan1@gmail.com
+In-Reply-To: <20230214121333.1837-6-shradha.t@samsung.com>
+References: <20230214121333.1837-1-shradha.t@samsung.com>
+ <CGME20230214121424epcas5p38e74b52a2d94a32b82a093c7e0a12499@epcas5p3.samsung.com>
+ <20230214121333.1837-6-shradha.t@samsung.com>
+Message-Id: <167638944926.3699.15638999253407034271.robh@kernel.org>
+Subject: Re: [PATCH 05/16] dt-bindings: PCI: Rename the term elbi to appl
+Date:   Tue, 14 Feb 2023 10:12:34 -0600
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 14 Feb 2023 14:51:10 +0100
-Lukas Wunner <lukas@wunner.de> wrote:
 
-> On Tue, Feb 14, 2023 at 11:15:04AM +0000, Jonathan Cameron wrote:
-> > On Fri, 10 Feb 2023 21:25:01 +0100 Lukas Wunner <lukas@wunner.de> wrote:  
-> > > The CDAT exposed in sysfs differs between little endian and big endian
-> > > arches:  On big endian, every 4 bytes are byte-swapped.
-> > > 
-> > > PCI Configuration Space is little endian (PCI r3.0 sec 6.1).  Accessors
-> > > such as pci_read_config_dword() implicitly swap bytes on big endian.
-> > > That way, the macros in include/uapi/linux/pci_regs.h work regardless of
-> > > the arch's endianness.  For an example of implicit byte-swapping, see
-> > > ppc4xx_pciex_read_config(), which calls in_le32(), which uses lwbrx
-> > > (Load Word Byte-Reverse Indexed).
-> > > 
-> > > DOE Read/Write Data Mailbox Registers are unlike other registers in
-> > > Configuration Space in that they contain or receive a 4 byte portion of
-> > > an opaque byte stream (a "Data Object" per PCIe r6.0 sec 7.9.24.5f).
-> > > They need to be copied to or from the request/response buffer verbatim.
-> > > So amend pci_doe_send_req() and pci_doe_recv_resp() to undo the implicit
-> > > byte-swapping.
-> > > 
-> > > The CXL_DOE_TABLE_ACCESS_* and PCI_DOE_DATA_OBJECT_DISC_* macros assume
-> > > implicit byte-swapping.  Byte-swap requests after constructing them with
-> > > those macros and byte-swap responses before parsing them.
-> > > 
-> > > Change the request and response type to __le32 to avoid sparse warnings.  
-> > 
-> > In brief this patch set ensures that internal handling of the payloads
-> > is in le32 chunks by unwinding the implicit conversions in the pci config
-> > accessors for BE platforms.  Thus the data in the payloads is always
-> > in the same order.  Good start.  Hence the binary read back of CDAT is
-> > little endian (including all fields within it).  
+On Tue, 14 Feb 2023 17:43:22 +0530, Shradha Todi wrote:
+> DT uses the name elbi in reg-names for application logic
+> registers which is a wrong nomenclature. This patch fixes
+> the same.
 > 
-> Correct.  On big endian this means writing request dwords and
-> reading response dwords involves 2 endianness conversions.
+> This commit shouldn't be applied without changes
+> "arm64: dts: Rename the term elbi to appl" and
+> "PCI: samsung: Rename the term elbi to appl"
 > 
-> If the request is constructed with macros such as CXL_DOE_TABLE_ACCESS_*
-> and PCI_DOE_DATA_OBJECT_DISC_*, then an additional (3rd) endianness
-> conversion is necessary:  The request is constructed in native big endian
-> order, then converted to a little endian DOE payload.  That payload is
-> then converted back to big endian so that it can be written with the
-> config space accessor, which converts to little endian.
+> Signed-off-by: Shradha Todi <shradha.t@samsung.com>
+> ---
+>  Documentation/devicetree/bindings/pci/samsung,pcie.yaml | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> I recognize this is crazy but I do not see a better solution.
-> Dan suggested amending struct pci_ops with ->read_raw and ->write_raw
-> callbacks which omit the endianness conversion.  However there are
-> 175 struct pci_ops in the kernel and each one would have to be looked at.
-> I also do not know the Assembler instructions for every architecture to
-> perform a non-byte-swapped write or read.  It's a big task and lots of
-> code to add.  Given that DOE is likely the only user and big endian
-> is seeing decreasing use, it's probably not worth the effort and LoC.
-> 
-> 
-> > > @@ -322,15 +322,17 @@ static int pci_doe_discovery(struct pci_doe_mb *doe_mb, u8 *index, u16 *vid,
-> > >  	struct pci_doe_task task = {
-> > >  		.prot.vid = PCI_VENDOR_ID_PCI_SIG,
-> > >  		.prot.type = PCI_DOE_PROTOCOL_DISCOVERY,
-> > > -		.request_pl = &request_pl,
-> > > +		.request_pl = (__le32 *)&request_pl,  
-> > 
-> > I don't like this type cast. request_pl is local
-> > anyway, so why not change it's type and set it appropriately in
-> > the first place.  
-> 
-> That doesn't work I'm afraid.  The request_pl is constructed with
-> FIELD_PREP() here and the response_pl is parsed with FIELD_GET().
-> 
-> Those macros operate on an unsigned integer of native endianness.
-> If I declare them __le32, I get sparse warnings and rightfully so.
-> 
-> The casts are the simplest, least intrusive solution.  The only
-> alternative would be to use separate variables but then I'd have
-> to change a lot more lines and it would be more difficult to review
-> and probably not all that more readable.
 
-Separate variables was what I meant (less than clear)
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
 
-Add a __le32 le32_req_pl then
-do the endian conversion into that rather than in place conversion.
-Equivalent in teh other direction for the response.
+yamllint warnings/errors:
 
-That way the endian markings end up correct on all the local variables
-and it shouldn't require many more lines to change.
+dtschema/dtc warnings/errors:
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/samsung,pcie.example.dtb: pcie@15700000: reg-names:1: 'appl' was expected
+	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/samsung,pcie.yaml
 
+doc reference errors (make refcheckdocs):
 
-> 
-> Thanks,
-> 
-> Lukas
-> 
-> > >  		.request_pl_sz = sizeof(request_pl),
-> > > -		.response_pl = &response_pl,
-> > > +		.response_pl = (__le32 *)&response_pl,  
-> > 
-> > Likewise here.
-> >   
-> > >  		.response_pl_sz = sizeof(response_pl),
-> > >  		.complete = pci_doe_task_complete,
-> > >  		.private = &c,
-> > >  	};
-> > >  	int rc;
-> > >  
-> > > +	cpu_to_le32s(&request_pl);
-> > > +
-> > >  	rc = pci_doe_submit_task(doe_mb, &task);
-> > >  	if (rc < 0)
-> > >  		return rc;
-> > > @@ -340,6 +342,7 @@ static int pci_doe_discovery(struct pci_doe_mb *doe_mb, u8 *index, u16 *vid,
-> > >  	if (task.rv != sizeof(response_pl))
-> > >  		return -EIO;
-> > >  
-> > > +	le32_to_cpus(&response_pl);
-> > >  	*vid = FIELD_GET(PCI_DOE_DATA_OBJECT_DISC_RSP_3_VID, response_pl);
-> > >  	*protocol = FIELD_GET(PCI_DOE_DATA_OBJECT_DISC_RSP_3_PROTOCOL,
-> > >  			      response_pl);  
-> 
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20230214121333.1837-6-shradha.t@samsung.com
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
