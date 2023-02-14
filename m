@@ -2,55 +2,55 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E5F5C05027
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 14:12:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5599CC05027
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 14:14:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233349AbjBNOMU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Feb 2023 09:12:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55918 "EHLO
+        id S233456AbjBNOOF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Feb 2023 09:14:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233365AbjBNOMC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 09:12:02 -0500
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A14092A98E
-        for <linux-pci@vger.kernel.org>; Tue, 14 Feb 2023 06:11:22 -0800 (PST)
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20230214140947epoutp02319cbee2490f4064032e201d9bdaddc4~DtixODuVF0915809158epoutp02d
-        for <linux-pci@vger.kernel.org>; Tue, 14 Feb 2023 14:09:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20230214140947epoutp02319cbee2490f4064032e201d9bdaddc4~DtixODuVF0915809158epoutp02d
+        with ESMTP id S233493AbjBNONv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 09:13:51 -0500
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 596712A9A4
+        for <linux-pci@vger.kernel.org>; Tue, 14 Feb 2023 06:13:12 -0800 (PST)
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230214141207epoutp03ff54a0a97c3b269b271acacb8bc26750~DtkzG3nx42144721447epoutp03U
+        for <linux-pci@vger.kernel.org>; Tue, 14 Feb 2023 14:12:07 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230214141207epoutp03ff54a0a97c3b269b271acacb8bc26750~DtkzG3nx42144721447epoutp03U
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1676383787;
-        bh=4fhan0Tw+cznyXrr7NgUEAhifEgTnLcEgNjy+Wty2Cw=;
+        s=mail20170921; t=1676383927;
+        bh=kuxFDkZgnx1SPc8bSDimvFlfEON/qYA/DJ+OdV4F/YQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=olDVb81Nst6/wevqa91KPXlhz4A76c3IZfQBCHbOFp8hVqEF3sqoo1bL/JL+/qnjy
-         UmcOb6ahKWhIKJIUYuB8zHM0EXJ0WCYhIwOi6WYIw41VaL5urM+hH+/rWGvX/g0iFw
-         7K3G1wvf7d5svqTbgv3MrxmvRjJ6x5qjxBxxloX4=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
-        20230214140946epcas5p486c00e47e91f42ab64c5e4790e25c773~DtiwDhMJF0632406324epcas5p4S;
-        Tue, 14 Feb 2023 14:09:46 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.178]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4PGNPj28DXz4x9Pr; Tue, 14 Feb
-        2023 14:09:45 +0000 (GMT)
-Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        b=DDuRAcqb+5hyg832WJoKuUhqt6rKqIWP5KtENOp/+vXJd+K/aQk1gdqYF9KN2NSaB
+         EaUFU0RBplmSMrVgzkLLnsdX+S4bNPAh8LXQ1J+Ni09TTzJfo9oUf3AVCwF34ivqnq
+         xOLwsjaFUNuf+bkUjfgf205G7y8z8ekKZ/P6SSiA=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20230214141205epcas5p2d1a6f101ff50ff4839d6e38ac321f605~Dtkx45R8m2451524515epcas5p2p;
+        Tue, 14 Feb 2023 14:12:05 +0000 (GMT)
+Received: from epsmges5p3new.samsung.com (unknown [182.195.38.179]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4PGNSN4yFnz4x9Pv; Tue, 14 Feb
+        2023 14:12:04 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
         epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        05.78.06765.9269BE36; Tue, 14 Feb 2023 23:09:45 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-        20230214121432epcas5p27248b4dafdec64b0172c69f7909d7a64~Dr_Iz7q-k0795707957epcas5p2u;
-        Tue, 14 Feb 2023 12:14:32 +0000 (GMT)
+        4B.A8.06765.4B69BE36; Tue, 14 Feb 2023 23:12:04 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+        20230214121456epcas5p36603c8d717588699d1b5575229d19114~Dr_e7CiW40081100811epcas5p3B;
+        Tue, 14 Feb 2023 12:14:56 +0000 (GMT)
 Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20230214121432epsmtrp2aaeff2e6d8ba1fd91cf68af8eee5f102~Dr_Iy7bEK1888418884epsmtrp2h;
-        Tue, 14 Feb 2023 12:14:32 +0000 (GMT)
-X-AuditID: b6c32a4b-20fff70000011a6d-fa-63eb96296114
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20230214121456epsmtrp1fda2db0719d5e8d922c54d556495a537~Dr_e04eqs1788717887epsmtrp1Q;
+        Tue, 14 Feb 2023 12:14:56 +0000 (GMT)
+X-AuditID: b6c32a4b-46dfa70000011a6d-f5-63eb96b4cc3b
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
         epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        4D.FA.17995.82B7BE36; Tue, 14 Feb 2023 21:14:32 +0900 (KST)
+        E6.0B.17995.F3B7BE36; Tue, 14 Feb 2023 21:14:55 +0900 (KST)
 Received: from cheetah.sa.corp.samsungelectronics.net (unknown
         [107.109.115.53]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230214121429epsmtip1b719ca6d898005b96417aba8e73dc392~Dr_GIkwkM2553425534epsmtip1D;
-        Tue, 14 Feb 2023 12:14:29 +0000 (GMT)
+        20230214121452epsmtip16085c3c7717daffba84e84cb8bf1ee37~Dr_bm37Mg2436024360epsmtip1q;
+        Tue, 14 Feb 2023 12:14:52 +0000 (GMT)
 From:   Shradha Todi <shradha.t@samsung.com>
 To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
         bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
@@ -62,245 +62,186 @@ Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
         Shradha Todi <shradha.t@samsung.com>
-Subject: [PATCH 07/16] PCI: samsung: Rename the term elbi to appl
-Date:   Tue, 14 Feb 2023 17:43:24 +0530
-Message-Id: <20230214121333.1837-8-shradha.t@samsung.com>
+Subject: [PATCH 13/16] PCI: samsung: Rename common functions to samsung
+Date:   Tue, 14 Feb 2023 17:43:30 +0530
+Message-Id: <20230214121333.1837-14-shradha.t@samsung.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230214121333.1837-1-shradha.t@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrMJsWRmVeSWpSXmKPExsWy7bCmpq7mtNfJBpPf81g8mLeNzWJJU4bF
-        /CPnWC1mbZvLaPHx9zkWixVfZrJb9L14yGzR0POb1WLT42usFpd3zWGzODvvOJvFjPP7mCxa
-        /rSwWLQcbWexWHvkLrvFoq1f2C3+79nBbvFn+gcWi97DtRabN01ldhDxeLPpO7vHzll32T0W
-        bCr12LSqk83jzrU9bB7vzp1j93hyZTqTx+Yl9R4b3+1g8ljU8JHNo2/LKkaPz5vkAniism0y
-        UhNTUosUUvOS81My89JtlbyD453jTc0MDHUNLS3MlRTyEnNTbZVcfAJ03TJzgN5UUihLzCkF
-        CgUkFhcr6dvZFOWXlqQqZOQXl9gqpRak5BSYFOgVJ+YWl+al6+WlllgZGhgYmQIVJmRnTHq9
-        iLVguXXF1tlnmBoY9xp3MXJySAiYSMxZ0cHcxcjFISSwm1HibutMdgjnE6PEvllboTKfGSVO
-        zHrGCNOyuW8qVNUuRon/DftZIJxWJoknc+ewgFSxCWhJNH7tAmsXEbjFJPHy80OwFmaBU4wS
-        B17sZQepEhZwlNj76TwbiM0ioCox5e9+VhCbV8BSYt3ux1D75CVWbzjADGJzClhJtLRuApsq
-        IXCHQ+La3TvMEEUuEtfev2SHsIUlXh3fAmVLSXx+t5cNwk6XWLl5BlR9jsS3zUuYIGx7iQNX
-        QM7mALpOU2L9Ln2IsKzE1FPrwEqYBfgken8/gSrnldgxD8ZWlvjydw8LhC0pMe/YZVYI20Ni
-        Zvd5aBj1Mkp8PfaaeQKj3CyEFQsYGVcxSqYWFOempxabFhjnpZbDIy45P3cTIzg1a3nvYHz0
-        4IPeIUYmDsZDjBIczEoivMJPXyQL8aYkVlalFuXHF5XmpBYfYjQFBuBEZinR5HxgdsgriTc0
-        sTQwMTMzM7E0NjNUEudVtz2ZLCSQnliSmp2aWpBaBNPHxMEp1cB0aM6tsshr7BxnHs3tMGCO
-        Lar32/CLr/rh27/f1s2ZMm+FUZVl6JJzy0xas1uO3D3zIHlrQdoVj6jlnEVbqtj3G4lMsMjj
-        cHsRdCCA4013pOv0212JEX///FxWmhHtLuJz8ORWHhOrf6fi+603d1ZHLvig6LQ3uqt86aZd
-        qq4SOeWc6S1TRJV0Ine1pataSfUoVV6om3mh5vA1PxeOj5k57zlTX3x4fCBP6GtzGUOfcsKf
-        Fpsr3x502002kpOcY50ldiE68nkhs/bZu/+5tp7dnPb+zpM1PIqSoZu6rz/5uIP7Q5sZb42C
-        ueSj3b92ei624t1mImPhZalltmdmlZxvjzu/xywH676QY009m5RYijMSDbWYi4oTARGVKHxW
-        BAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrBLMWRmVeSWpSXmKPExsWy7bCSnK5G9etkg9NTBS0ezNvGZrGkKcNi
+X-Brightmail-Tracker: H4sIAAAAAAAAA0VTbUxTVxje6b3tLcyyO8DtQCKD65CAAi2WcjDiZzeuccmaEPcDSdhduaGV
+        0ja97YYm22ABmXWgiyIfQlUkU1kEKVA7YICAoCxUExgkBBJRdMUtfJXh5COutGX79zzP+7wf
+        5z3nCLHAXkGoUK01sgYto6EE/ritNzoqtuXSn0rx+nwEemKxCVDddyp0pc/BR1W2GoAWVh04
+        urlUSaBS5xSG8n9Y5SPrs1E+Gm6rFqAhy4AAVTzq5KHCtUIcFd4vxtHtvkkC1bYuEehNh51A
+        a+XzOCrp/Ro1W8uwA8H0X9ZXBP1L1SRBX7WaaGv9GQE9MdohoGcdDoKeHinn0c1139JNs3Ye
+        XZu/IKBLW+oB7bKGKbak5+xVsUwWawhntUpdllqbnUIdTcs8nJkoE0tiJckoiQrXMrlsCiX/
+        RBH7sVrjPiYV/iWjMbklBcNxVPy+vQadyciGq3ScMYVi9VkavVQfxzG5nEmbHadljXskYnFC
+        otv4eY7K9ngA07+m8vInS0A+mN5mBn5CSEphUbMLNwN/YSDZDmCX4zrmJYsAVk61+ogLwLN3
+        G8FmSp/tNd8baAPwWv8cz0uKeHB1zCzYcAnIGFjwt9mTHkyO8+CMa4rYIBg5CGC381diwxVE
+        psKJ36yeujgZCa8POrENLCL3wMXx0zxvvw/gz3e6PbqfWy8ssnqqQnJECNsb5vlekxy+eDhP
+        eHEQfDnQ4sOhcObcaR/OhreaKzAv1sDl5jpfg/2we6TavQOhe7po2NgW75W3wbLBBo8FIwNg
+        yeq0zy6Cdssm3g6X1jtwLw6Blv5h3zg0bFwpILxrKQFwYeAecR6EVf3f4ioA9SCE1XO52SyX
+        qN+tZb/67+KUulwr8LzmmKN28PTJfFwP4AlBD4BCjAoWBT13KgNFWczJU6xBl2kwaViuByS6
+        F/gjFrpVqXN/B60xUyJNFktlMpk0ebdMQr0vikp5qAwksxkjm8OyetawmccT+oXm87qqI3vU
+        Ud1Nl+9e4V7eCI0eH8sgB6dvzpzImDsoquq03Hj7C1FZ0Cku4ZuPGsxdQ8sZkYro/sX2f05s
+        DwmQHM+SG7Q10Xjq7Kv2x0StZvqPCwGHMna44o+tNRXfSkvfP7lz+P6Wd3b2K6Ic8SsKwLLl
+        4u/Ti7caHxz49Hj8EXuq7dkF2UTnGVPBQdGYfu5e2PNjBYnik/67iFHd5UXJ+YiEfbfPPvVz
+        7hCR3JAlr9h2eN28rFZePPLZhysSlV2u7nDyqYjhJFKqKql47y2b4nfXwrmEcmahaFfSu/LK
+        pbyf7pgyiNaL15L5BW8OPWi1XMJlkS+CSv2SYmbgcs2jACaNwjkVI4nBDBzzL0QRPRZWBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrJLMWRmVeSWpSXmKPExsWy7bCSnK599etkg2UvzS0ezNvGZrGkKcNi
         /pFzrBazts1ltPj4+xyLxYovM9kt+l48ZLZo6PnNarHp8TVWi8u75rBZnJ13nM1ixvl9TBYt
         f1pYLFqOtrNYrD1yl91i0dYv7Bb/9+xgt/gz/QOLRe/hWovNm6YyO4h4vNn0nd1j56y77B4L
         NpV6bFrVyeZx59oeNo93586xezy5Mp3JY/OSeo+N73YweSxq+Mjm0bdlFaPH501yATxRXDYp
-        qTmZZalF+nYJXBmTXi9iLVhuXbF19hmmBsa9xl2MnBwSAiYSm/umsncxcnEICexglJjYcIYV
-        IiEp8fniOiYIW1hi5b/n7CC2kEAzk8SyM7UgNpuAlkTj1y5mkGYRgVdMEof3zABzmAUuMErc
-        OtgN1iEs4Cix99N5NhCbRUBVYsrf/WAbeAUsJdbtfswIsUFeYvWGA8wgNqeAlURL6yZmiG2W
-        ErN+rWKcwMi3gJFhFaNkakFxbnpusWGBUV5quV5xYm5xaV66XnJ+7iZGcORoae1g3LPqg94h
-        RiYOxkOMEhzMSiK8wk9fJAvxpiRWVqUW5ccXleakFh9ilOZgURLnvdB1Ml5IID2xJDU7NbUg
-        tQgmy8TBKdXAxHht/wWJ1fuuKN98u/bG7rrqyr2/vr340nB9/oGm/1fit9SlLgpXU2CZ66l2
-        cueE8CCt9Sy6ks9YqkRZdmf0frV7MyHz7+7YdqePEx0Dbu428d33YeWdByf2Cs2ebG0Wb+g/
-        WUrM+GaXSOeTQun0494XWcze/Q1cGD31lubTxwcVM7e+OT/1plWN+PqzP25v0W45+HDJqc3n
-        77vFXTz+aaWI7DHJ26e03f6GHJtV1RJbJSszS+iE2/93bofnP7vy9MilnVzNHFXpB7WXix/s
-        q78XKv8tPP3xMaGGPHuO9ryJymvk3n8XvhYTkrexJPPcT50PJjrSTAavru6NqT98wY29/fuH
-        sGmdH1e03C5zOmGpxFKckWioxVxUnAgAhP21vAsDAAA=
-X-CMS-MailID: 20230214121432epcas5p27248b4dafdec64b0172c69f7909d7a64
+        qTmZZalF+nYJXBnbLhxnLvipVNFwt5exgfGJbBcjJ4eEgInEkW0/WbsYuTiEBHYwSizYv4EN
+        IiEp8fniOiYIW1hi5b/n7BBFzUwS5/+fAUuwCWhJNH7tYgZJiAi8YpI4vGcGmMMscIFR4tbB
+        bnaQKmEBd4k7pzcxgtgsAqoSi0+9YAaxeQWsJD7daoNaIS+xesMBsDgnULyldROYLSRgKTHr
+        1yrGCYx8CxgZVjFKphYU56bnFhsWGOWllusVJ+YWl+al6yXn525iBMeOltYOxj2rPugdYmTi
+        YDzEKMHBrCTCK/z0RbIQb0piZVVqUX58UWlOavEhRmkOFiVx3gtdJ+OFBNITS1KzU1MLUotg
+        skwcnFINTOmxGU7e+vvvh0mZf8jQORV7S2zzqjz9LWq5UyfpcPprbVFcFnGdP+PLLpuadQkh
+        LZMCrT+9nH4mc8213Ir7Zd33Zk3a3JO/+/Kd9pmb1vvUyf/gOTmJi6vVkis5VPfYTvufAfMO
+        np2ceMyY98Ff2TnfhNla37EdYfi1spupU+VxmUFmfe+21kc35v480pRyaFOb8nI9cd5De4qP
+        PnGQ+vJzvsPakLcHlRN1rvxWLcl0Xbfhvn31mosnzVX0T75t2H0rzGe6l4TBrbaQjVqyFdfr
+        JsoKllzYErZDp8fyRuYtYYHzTVpKXI01WmG7Xtx7qyN68rGhmPqNCUz7W9nbHtUnaExcpb3q
+        7Aqu+SJP05RYijMSDbWYi4oTAcxvLLcMAwAA
+X-CMS-MailID: 20230214121456epcas5p36603c8d717588699d1b5575229d19114
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230214121432epcas5p27248b4dafdec64b0172c69f7909d7a64
+X-CMS-RootMailID: 20230214121456epcas5p36603c8d717588699d1b5575229d19114
 References: <20230214121333.1837-1-shradha.t@samsung.com>
-        <CGME20230214121432epcas5p27248b4dafdec64b0172c69f7909d7a64@epcas5p2.samsung.com>
+        <CGME20230214121456epcas5p36603c8d717588699d1b5575229d19114@epcas5p3.samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The driver uses the name elbi for application logic
-registers which is a wrong nomenclature. This patch fixes
-the same.
+Use samsung instead of exynos for all common functions
+like probe/remove/suspend/resume.
 
-This commit shouldn't be applied without changes
-"arm64: dts: exynos: Rename the term elbi to appl" and
-"dt-bindings: PCI: Rename the term elbi to appl"
-
+Suggested-by: Pankaj Dubey <pankaj.dubey@samsung.com>
 Signed-off-by: Shradha Todi <shradha.t@samsung.com>
 ---
- drivers/pci/controller/dwc/pci-samsung.c | 80 ++++++++++++------------
- 1 file changed, 40 insertions(+), 40 deletions(-)
+ drivers/pci/controller/dwc/pci-samsung.c | 42 ++++++++++++------------
+ 1 file changed, 21 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-samsung.c b/drivers/pci/controller/dwc/pci-samsung.c
-index 6c07d3f151be..d5adf1017a05 100644
+index 719d284e1552..dc8ec0b546fd 100644
 --- a/drivers/pci/controller/dwc/pci-samsung.c
 +++ b/drivers/pci/controller/dwc/pci-samsung.c
-@@ -25,7 +25,7 @@
+@@ -60,7 +60,7 @@ struct samsung_pcie {
+ 	struct regulator_bulk_data	supplies[2];
+ };
  
- #define to_exynos_pcie(x)	dev_get_drvdata((x)->dev)
- 
--/* PCIe ELBI registers */
-+/* PCIe APPL registers */
- #define EXYNOS_PCIE_IRQ_PULSE			0x000
- #define EXYNOS_IRQ_INTA_ASSERT			BIT(0)
- #define EXYNOS_IRQ_INTB_ASSERT			BIT(2)
-@@ -44,16 +44,16 @@
- #define EXYNOS_PCIE_NONSTICKY_RESET		0x024
- #define EXYNOS_PCIE_APP_INIT_RESET		0x028
- #define EXYNOS_PCIE_APP_LTSSM_ENABLE		0x02c
--#define EXYNOS_PCIE_ELBI_RDLH_LINKUP		0x074
--#define EXYNOS_PCIE_ELBI_XMLH_LINKUP		BIT(4)
--#define EXYNOS_PCIE_ELBI_LTSSM_ENABLE		0x1
--#define EXYNOS_PCIE_ELBI_SLV_AWMISC		0x11c
--#define EXYNOS_PCIE_ELBI_SLV_ARMISC		0x120
--#define EXYNOS_PCIE_ELBI_SLV_DBI_ENABLE	BIT(21)
-+#define EXYNOS_PCIE_APPL_RDLH_LINKUP		0x074
-+#define EXYNOS_PCIE_APPL_XMLH_LINKUP		BIT(4)
-+#define EXYNOS_PCIE_APPL_LTSSM_ENABLE		0x1
-+#define EXYNOS_PCIE_APPL_SLV_AWMISC		0x11c
-+#define EXYNOS_PCIE_APPL_SLV_ARMISC		0x120
-+#define EXYNOS_PCIE_APPL_SLV_DBI_ENABLE	BIT(21)
- 
- struct exynos_pcie {
- 	struct dw_pcie			pci;
--	void __iomem			*elbi_base;
-+	void __iomem			*appl_base;
- 	struct clk_bulk_data		*clks;
- 	int				clk_cnt;
- 	struct phy			*phy;
-@@ -93,49 +93,49 @@ static void exynos_pcie_sideband_dbi_w_mode(struct exynos_pcie *ep, bool on)
+-static int exynos_pcie_init_clk_resources(struct samsung_pcie *sp)
++static int samsung_pcie_init_clk_resources(struct samsung_pcie *sp)
  {
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->elbi_base, EXYNOS_PCIE_ELBI_SLV_AWMISC);
-+	val = exynos_pcie_readl(ep->appl_base, EXYNOS_PCIE_APPL_SLV_AWMISC);
- 	if (on)
--		val |= EXYNOS_PCIE_ELBI_SLV_DBI_ENABLE;
-+		val |= EXYNOS_PCIE_APPL_SLV_DBI_ENABLE;
- 	else
--		val &= ~EXYNOS_PCIE_ELBI_SLV_DBI_ENABLE;
--	exynos_pcie_writel(ep->elbi_base, val, EXYNOS_PCIE_ELBI_SLV_AWMISC);
-+		val &= ~EXYNOS_PCIE_APPL_SLV_DBI_ENABLE;
-+	exynos_pcie_writel(ep->appl_base, val, EXYNOS_PCIE_APPL_SLV_AWMISC);
+ 	struct device *dev = sp->pci.dev;
+ 	int ret;
+@@ -74,7 +74,7 @@ static int exynos_pcie_init_clk_resources(struct samsung_pcie *sp)
+ 	return clk_bulk_prepare_enable(sp->clk_cnt, sp->clks);
  }
  
- static void exynos_pcie_sideband_dbi_r_mode(struct exynos_pcie *ep, bool on)
+-static void exynos_pcie_deinit_clk_resources(struct samsung_pcie *sp)
++static void samsung_pcie_deinit_clk_resources(struct samsung_pcie *sp)
  {
- 	u32 val;
+ 	clk_bulk_disable_unprepare(sp->clk_cnt, sp->clks);
+ }
+@@ -297,7 +297,7 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.start_link = exynos_pcie_start_link,
+ };
  
--	val = exynos_pcie_readl(ep->elbi_base, EXYNOS_PCIE_ELBI_SLV_ARMISC);
-+	val = exynos_pcie_readl(ep->appl_base, EXYNOS_PCIE_APPL_SLV_ARMISC);
- 	if (on)
--		val |= EXYNOS_PCIE_ELBI_SLV_DBI_ENABLE;
-+		val |= EXYNOS_PCIE_APPL_SLV_DBI_ENABLE;
- 	else
--		val &= ~EXYNOS_PCIE_ELBI_SLV_DBI_ENABLE;
--	exynos_pcie_writel(ep->elbi_base, val, EXYNOS_PCIE_ELBI_SLV_ARMISC);
-+		val &= ~EXYNOS_PCIE_APPL_SLV_DBI_ENABLE;
-+	exynos_pcie_writel(ep->appl_base, val, EXYNOS_PCIE_APPL_SLV_ARMISC);
+-static int exynos_pcie_probe(struct platform_device *pdev)
++static int samsung_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct samsung_pcie *sp;
+@@ -319,7 +319,7 @@ static int exynos_pcie_probe(struct platform_device *pdev)
+ 	if (IS_ERR(sp->appl_base))
+ 		return PTR_ERR(sp->appl_base);
+ 
+-	ret = exynos_pcie_init_clk_resources(sp);
++	ret = samsung_pcie_init_clk_resources(sp);
+ 	if (ret < 0)
+ 		return ret;
+ 
+@@ -345,12 +345,12 @@ static int exynos_pcie_probe(struct platform_device *pdev)
+ fail_probe:
+ 	phy_exit(sp->phy);
+ 	regulator_bulk_disable(ARRAY_SIZE(sp->supplies), sp->supplies);
+-	exynos_pcie_deinit_clk_resources(sp);
++	samsung_pcie_deinit_clk_resources(sp);
+ 
+ 	return ret;
  }
  
- static void exynos_pcie_assert_core_reset(struct exynos_pcie *ep)
+-static int __exit exynos_pcie_remove(struct platform_device *pdev)
++static int __exit samsung_pcie_remove(struct platform_device *pdev)
  {
- 	u32 val;
+ 	struct samsung_pcie *sp = platform_get_drvdata(pdev);
  
--	val = exynos_pcie_readl(ep->elbi_base, EXYNOS_PCIE_CORE_RESET);
-+	val = exynos_pcie_readl(ep->appl_base, EXYNOS_PCIE_CORE_RESET);
- 	val &= ~EXYNOS_PCIE_CORE_RESET_ENABLE;
--	exynos_pcie_writel(ep->elbi_base, val, EXYNOS_PCIE_CORE_RESET);
--	exynos_pcie_writel(ep->elbi_base, 0, EXYNOS_PCIE_STICKY_RESET);
--	exynos_pcie_writel(ep->elbi_base, 0, EXYNOS_PCIE_NONSTICKY_RESET);
-+	exynos_pcie_writel(ep->appl_base, val, EXYNOS_PCIE_CORE_RESET);
-+	exynos_pcie_writel(ep->appl_base, 0, EXYNOS_PCIE_STICKY_RESET);
-+	exynos_pcie_writel(ep->appl_base, 0, EXYNOS_PCIE_NONSTICKY_RESET);
- }
+@@ -358,13 +358,13 @@ static int __exit exynos_pcie_remove(struct platform_device *pdev)
+ 	exynos_pcie_assert_core_reset(sp);
+ 	phy_power_off(sp->phy);
+ 	phy_exit(sp->phy);
+-	exynos_pcie_deinit_clk_resources(sp);
++	samsung_pcie_deinit_clk_resources(sp);
+ 	regulator_bulk_disable(ARRAY_SIZE(sp->supplies), sp->supplies);
  
- static void exynos_pcie_deassert_core_reset(struct exynos_pcie *ep)
- {
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->elbi_base, EXYNOS_PCIE_CORE_RESET);
-+	val = exynos_pcie_readl(ep->appl_base, EXYNOS_PCIE_CORE_RESET);
- 	val |= EXYNOS_PCIE_CORE_RESET_ENABLE;
- 
--	exynos_pcie_writel(ep->elbi_base, val, EXYNOS_PCIE_CORE_RESET);
--	exynos_pcie_writel(ep->elbi_base, 1, EXYNOS_PCIE_STICKY_RESET);
--	exynos_pcie_writel(ep->elbi_base, 1, EXYNOS_PCIE_NONSTICKY_RESET);
--	exynos_pcie_writel(ep->elbi_base, 1, EXYNOS_PCIE_APP_INIT_RESET);
--	exynos_pcie_writel(ep->elbi_base, 0, EXYNOS_PCIE_APP_INIT_RESET);
-+	exynos_pcie_writel(ep->appl_base, val, EXYNOS_PCIE_CORE_RESET);
-+	exynos_pcie_writel(ep->appl_base, 1, EXYNOS_PCIE_STICKY_RESET);
-+	exynos_pcie_writel(ep->appl_base, 1, EXYNOS_PCIE_NONSTICKY_RESET);
-+	exynos_pcie_writel(ep->appl_base, 1, EXYNOS_PCIE_APP_INIT_RESET);
-+	exynos_pcie_writel(ep->appl_base, 0, EXYNOS_PCIE_APP_INIT_RESET);
- }
- 
- static int exynos_pcie_start_link(struct dw_pcie *pci)
-@@ -143,21 +143,21 @@ static int exynos_pcie_start_link(struct dw_pcie *pci)
- 	struct exynos_pcie *ep = to_exynos_pcie(pci);
- 	u32 val;
- 
--	val = exynos_pcie_readl(ep->elbi_base, EXYNOS_PCIE_SW_WAKE);
-+	val = exynos_pcie_readl(ep->appl_base, EXYNOS_PCIE_SW_WAKE);
- 	val &= ~EXYNOS_PCIE_BUS_EN;
--	exynos_pcie_writel(ep->elbi_base, val, EXYNOS_PCIE_SW_WAKE);
-+	exynos_pcie_writel(ep->appl_base, val, EXYNOS_PCIE_SW_WAKE);
- 
- 	/* assert LTSSM enable */
--	exynos_pcie_writel(ep->elbi_base, EXYNOS_PCIE_ELBI_LTSSM_ENABLE,
-+	exynos_pcie_writel(ep->appl_base, EXYNOS_PCIE_APPL_LTSSM_ENABLE,
- 			  EXYNOS_PCIE_APP_LTSSM_ENABLE);
  	return 0;
  }
  
- static void exynos_pcie_clear_irq_pulse(struct exynos_pcie *ep)
+-static int exynos_pcie_suspend_noirq(struct device *dev)
++static int samsung_pcie_suspend_noirq(struct device *dev)
  {
--	u32 val = exynos_pcie_readl(ep->elbi_base, EXYNOS_PCIE_IRQ_PULSE);
-+	u32 val = exynos_pcie_readl(ep->appl_base, EXYNOS_PCIE_IRQ_PULSE);
+ 	struct samsung_pcie *sp = dev_get_drvdata(dev);
  
--	exynos_pcie_writel(ep->elbi_base, val, EXYNOS_PCIE_IRQ_PULSE);
-+	exynos_pcie_writel(ep->appl_base, val, EXYNOS_PCIE_IRQ_PULSE);
+@@ -376,7 +376,7 @@ static int exynos_pcie_suspend_noirq(struct device *dev)
+ 	return 0;
  }
  
- static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
-@@ -173,9 +173,9 @@ static void exynos_pcie_enable_irq_pulse(struct exynos_pcie *ep)
- 	u32 val = EXYNOS_IRQ_INTA_ASSERT | EXYNOS_IRQ_INTB_ASSERT |
- 		  EXYNOS_IRQ_INTC_ASSERT | EXYNOS_IRQ_INTD_ASSERT;
- 
--	exynos_pcie_writel(ep->elbi_base, val, EXYNOS_PCIE_IRQ_EN_PULSE);
--	exynos_pcie_writel(ep->elbi_base, 0, EXYNOS_PCIE_IRQ_EN_LEVEL);
--	exynos_pcie_writel(ep->elbi_base, 0, EXYNOS_PCIE_IRQ_EN_SPECIAL);
-+	exynos_pcie_writel(ep->appl_base, val, EXYNOS_PCIE_IRQ_EN_PULSE);
-+	exynos_pcie_writel(ep->appl_base, 0, EXYNOS_PCIE_IRQ_EN_LEVEL);
-+	exynos_pcie_writel(ep->appl_base, 0, EXYNOS_PCIE_IRQ_EN_SPECIAL);
- }
- 
- static u32 exynos_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
-@@ -232,9 +232,9 @@ static struct pci_ops exynos_pci_ops = {
- static int exynos_pcie_link_up(struct dw_pcie *pci)
+-static int exynos_pcie_resume_noirq(struct device *dev)
++static int samsung_pcie_resume_noirq(struct device *dev)
  {
- 	struct exynos_pcie *ep = to_exynos_pcie(pci);
--	u32 val = exynos_pcie_readl(ep->elbi_base, EXYNOS_PCIE_ELBI_RDLH_LINKUP);
-+	u32 val = exynos_pcie_readl(ep->appl_base, EXYNOS_PCIE_APPL_RDLH_LINKUP);
- 
--	return (val & EXYNOS_PCIE_ELBI_XMLH_LINKUP);
-+	return (val & EXYNOS_PCIE_APPL_XMLH_LINKUP);
+ 	struct samsung_pcie *sp = dev_get_drvdata(dev);
+ 	struct dw_pcie *pci = &sp->pci;
+@@ -394,25 +394,25 @@ static int exynos_pcie_resume_noirq(struct device *dev)
+ 	return dw_pcie_wait_for_link(pci);
  }
  
- static int exynos_pcie_host_init(struct dw_pcie_rp *pp)
-@@ -315,10 +315,10 @@ static int exynos_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(ep->phy))
- 		return PTR_ERR(ep->phy);
+-static const struct dev_pm_ops exynos_pcie_pm_ops = {
+-	NOIRQ_SYSTEM_SLEEP_PM_OPS(exynos_pcie_suspend_noirq,
+-				  exynos_pcie_resume_noirq)
++static const struct dev_pm_ops samsung_pcie_pm_ops = {
++	NOIRQ_SYSTEM_SLEEP_PM_OPS(samsung_pcie_suspend_noirq,
++				  samsung_pcie_resume_noirq)
+ };
  
--	/* External Local Bus interface (ELBI) registers */
--	ep->elbi_base = devm_platform_ioremap_resource_byname(pdev, "elbi");
--	if (IS_ERR(ep->elbi_base))
--		return PTR_ERR(ep->elbi_base);
-+	/* Application logic registers */
-+	ep->appl_base = devm_platform_ioremap_resource_byname(pdev, "appl");
-+	if (IS_ERR(ep->appl_base))
-+		return PTR_ERR(ep->appl_base);
+-static const struct of_device_id exynos_pcie_of_match[] = {
++static const struct of_device_id samsung_pcie_of_match[] = {
+ 	{ .compatible = "samsung,exynos5433-pcie", },
+ 	{ },
+ };
  
- 	ret = exynos_pcie_init_clk_resources(ep);
- 	if (ret < 0)
+-static struct platform_driver exynos_pcie_driver = {
+-	.probe		= exynos_pcie_probe,
+-	.remove		= __exit_p(exynos_pcie_remove),
++static struct platform_driver samsung_pcie_driver = {
++	.probe		= samsung_pcie_probe,
++	.remove		= __exit_p(samsung_pcie_remove),
+ 	.driver = {
+-		.name	= "exynos-pcie",
+-		.of_match_table = exynos_pcie_of_match,
+-		.pm		= &exynos_pcie_pm_ops,
++		.name	= "samsung-pcie",
++		.of_match_table = samsung_pcie_of_match,
++		.pm		= &samsung_pcie_pm_ops,
+ 	},
+ };
+-module_platform_driver(exynos_pcie_driver);
++module_platform_driver(samsung_pcie_driver);
+ MODULE_LICENSE("GPL v2");
+-MODULE_DEVICE_TABLE(of, exynos_pcie_of_match);
++MODULE_DEVICE_TABLE(of, samsung_pcie_of_match);
 -- 
 2.17.1
 
