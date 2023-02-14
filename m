@@ -2,186 +2,154 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9DF2C6379F
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 13:58:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBB80C61DA4
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 14:07:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231675AbjBNN6o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Feb 2023 08:58:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41638 "EHLO
+        id S233273AbjBNOHK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Feb 2023 09:07:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231572AbjBNN6n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 08:58:43 -0500
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2070.outbound.protection.outlook.com [40.107.237.70])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1D3026CDD;
-        Tue, 14 Feb 2023 05:58:23 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XVNokHsWoPs0PVbWrhxNbhDPRX2zAaCi22VKGo+qhVn8kbBaVKPJPQ8On4Fo6/ynXjkJmoevTZSvRzYRKuppwTHkmy19MYiyRhs056PFDbePgE9eb4zLMkVcUvChoP3KCoiqwoPJkQhkPpkOCHCDkc+JSWpnXDcL+hzaG6gWDkm80IztruGixJrmI6quN0PZrZRsDfHMRwIAWzfMQhU9CUhS30BOdZk0Ejb6JYs4akZLB6qCZXY1LQKdWsxaj78+Z2TSaysXKOnffzK64RkosXYozcnXhOR4Mr31LGQv+l6OmKLhbvXTk7XPPoiZ3KqmUBolZkEPO63765zEYWY9pg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uyd5fCSxYUD1RCVtiDE+eZuKz1HSRSzE0Rx2wFcb10k=;
- b=ODk8XNcKzSCgb0jJU2yzF0KpGtVJxIB1Jjah18a+KwsJHS1fGcTaShKPxMxNMtNgOJ3rAByhbMObaD8vx8R5o5V30+FtK4wE3g7IOXjFOLjbXBoo2JJA2dKdlHDGKXlInpYDQ+/I150PrfhFcZDVS/xmPNw1k5M+OZBYJvJSIhrI8KqPGwATzZPfO/yN3o99wcaQ34yLCGcKcjuGZC/1Zckjjz3f/c7DIFLt0seMkK6zqabxRFpWhk3YvI0M5DRATcwIZxwTKDLtw8KUFH41AurXWVqcSsWXvfcqGDxBQYy2mJOGdeWz5InzCSgugjPokuPMDCNUTBSvaqSJvjzghQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uyd5fCSxYUD1RCVtiDE+eZuKz1HSRSzE0Rx2wFcb10k=;
- b=MH0W9XHQ2uWpeXIgsb6q1m07E0x16lOuc0Lno4AgQWEzjI5WajXVwqmGoMEMEjcw7NPRCXv6eKIc43iIIlYFlITU8BD3n1839A3+d9ZBTWNSzQmI744cSIAdM2d2q6Qv4O/mI3oXNwqUhSfa1h783D0yKKKypM7gw5YWsPThJSWuFL9/F00npFO5m7NnipJNwI/2LI7cZHuMtYQdydu6YdNNH3blzcaOuROSf+HODUJg/EtnKB/me87BqG/lu4WS2ZZYsSDzyrNYODe7UjSWykVbJGbTNAyj6Ob8IVMKCRNS9nGZ0XQG+B/V5wBBhV1yPu6z0Alh8m9YpW+9/dZqtw==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from BN8PR12MB2900.namprd12.prod.outlook.com (2603:10b6:408:69::18)
- by DS7PR12MB5958.namprd12.prod.outlook.com (2603:10b6:8:7d::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6086.24; Tue, 14 Feb
- 2023 13:58:17 +0000
-Received: from BN8PR12MB2900.namprd12.prod.outlook.com
- ([fe80::4c18:dc36:558c:1478]) by BN8PR12MB2900.namprd12.prod.outlook.com
- ([fe80::4c18:dc36:558c:1478%7]) with mapi id 15.20.6086.019; Tue, 14 Feb 2023
- 13:58:16 +0000
-Message-ID: <ccc4b7fe-db07-cddb-2d0b-b6a89d7b1155@nvidia.com>
-Date:   Tue, 14 Feb 2023 19:27:54 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.6.1
-Subject: Re: [PATCH V5 0/3] PCI: designware-ep: Fix DBI access before core
- init
-To:     Manivannan Sadhasivam <mani@kernel.org>
-Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        lpieralisi@kernel.org, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, Sergey.Semin@baikalelectronics.ru,
-        dmitry.baryshkov@linaro.org, linmq006@gmail.com,
-        ffclaire1224@gmail.com, thierry.reding@gmail.com,
-        jonathanh@nvidia.com, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kthota@nvidia.com, mmaddireddy@nvidia.com, sagar.tv@gmail.com
-References: <20221013175712.7539-1-vidyas@nvidia.com>
- <20230214130329.GC4981@thinkpad>
-Content-Language: en-US
-From:   Vidya Sagar <vidyas@nvidia.com>
-In-Reply-To: <20230214130329.GC4981@thinkpad>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: MA0PR01CA0001.INDPRD01.PROD.OUTLOOK.COM
- (2603:1096:a01:80::14) To BN8PR12MB2900.namprd12.prod.outlook.com
- (2603:10b6:408:69::18)
-MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8PR12MB2900:EE_|DS7PR12MB5958:EE_
-X-MS-Office365-Filtering-Correlation-Id: 75cf8e45-89dc-49cb-f243-08db0e9384e6
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Gkh0v6lAnoy097QolGYGMkXZ/Rc9XYc9Wv1OlErBDeR1czMeQCUb1fyqt7ULaBtQdYqe6PIzDOFMkh0pH73X1B7rN1oTSXQmucmAQsQoV1xU5KJfK4Fh9azXG5sM/sG5HFaNd2z7d05MYQD5gPQGb3RObW4MPDhsMn/BpOYaxgXQE6f7Pf5SYCyH0+8aNUhHbXanNdUR5Uk9jdGoWwNHYiKL4+pWWLiV2XQG5c0KjKCUu4jLYlpOvjOUh0P24MLoYILj+K9eQnyoned6AGY/sCZm0dXxwV4g5ASgQKjSTHqQiCpFm4nphVeWMFLjwaeR3h62meYwnXzjzZJt2RUELlbbjFiKmzbdsW5ACaJI5TYMnDWdKKqwD+DOD8hteVKWxknRjRBjA1ZOOLPsP82BdQDNG9PXEuiCRtUroLnK3muGN+pv1oJmyAY8E1uqppeEjuk3h46DV9Jby398CHMruKIf3/0U5M1mkKpgQhzPS0b0D9JPs0Ox363SPdJSpWr53E22c79tKBb7uNDAdvOOj+HuQeLz8PjEjYBSpSsJiy4gnONsmegvQ+cpwVH7RKa5roKrecPGGhPBwaQHGh2airywhO8cveM2bwodmIRZ7iCSGcHTd6nQut8D8oR07rrUsweJ3FHo6pU4d09Ody/ET0HZWDriFO0Gs42ThIisqjgcMj4zBBidELdirBAeRmUEhOCcGW3KY/FhzoUAP0i8/XH+QjYaer4sbYnQbEs5XD0=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN8PR12MB2900.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(376002)(136003)(346002)(396003)(366004)(39860400002)(451199018)(8936002)(66556008)(66946007)(66476007)(6916009)(8676002)(4326008)(41300700001)(5660300002)(316002)(2616005)(86362001)(7416002)(83380400001)(478600001)(2906002)(31696002)(31686004)(6486002)(6666004)(53546011)(26005)(186003)(6506007)(6512007)(38100700002)(36756003)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Z2lUOU1od0VPd243d0QwclJDTnJJM2laMmhOSFN4WmpvZzAwTW14SWowWVc0?=
- =?utf-8?B?bjF1cjJieWFaS3d6ajJCMFdreDlEN29STElBNnpQbkkyK29GeDl5amVrazVa?=
- =?utf-8?B?akI0ZEJ1TWxZWkFTN2pCY09FZmcvb3psVzBvQVc2Qk1zVEtpVy9oT1BIME10?=
- =?utf-8?B?YURWdC9jcXMzRlpKeW5ORExXV1lkUWRhTnNRRWhGZ2RJR25iTFdhSDB2TUc0?=
- =?utf-8?B?K0hnZ2RkUkpHNkVGN1JtTHUrYWhWV3J5bHZKNTcrVnRmVFBKOEJoWFR4T2x1?=
- =?utf-8?B?UTNuNnZDNnFXYTkzd0FnWkZwTVhUUEFremIyeVF5azU3aHl6Z1cvbXBaRTdi?=
- =?utf-8?B?U0NkY1o1cE1HTnVvMHFmK1g0MUp5WEY2Y08wbmR5L3NlaVhPM1ZFRDJrbkdh?=
- =?utf-8?B?emRIbGFFV2JnUTlTNmF0WVhxKzBwN2p5eERpQjFJMXNxRHBCbEtZVTRXdHJY?=
- =?utf-8?B?OFUyamF6Smg5VW9pZnd3NGxwRVR5bWhMTTV4Z2RPUEJPN1NBL2xqTXpvcE40?=
- =?utf-8?B?bE9ZYkdTMFd4ajZnM0FMNTNmMjI3VWhwNnF3WUVjWFU3dzVkQ250ejk5QUNO?=
- =?utf-8?B?dVQ2bzA1eE9laHJlR1RPZnVjaDE5elJWRWQ0UDE1Nk5vOVZQOHA1UmgxOUZB?=
- =?utf-8?B?WXREbmdSV3IrT3UyOGRXV2VFWFU3SThFcU0vZmtSMWFuTWJ0aGhNTjhIdU9s?=
- =?utf-8?B?YkpzdFM1bHMwdktHK3pHT1FSMkVpb0dNTkxPRlY0allXTk04YnpDam80dXA4?=
- =?utf-8?B?NWtzZGhhbTBWa1Z3b0x6TmlwZnNDajI3TkNVcmFndk1TN3R2RFFET2tiRTZ4?=
- =?utf-8?B?OXM1UUlGUERVWUkzcUp5K0IyNysySHB1Ulphd2hJMjFqZkMrOXFLSnZZY0FZ?=
- =?utf-8?B?V0lBS2pLM1I3YUcxd1kzY2p0QU4xOUVreVppeWgwK1JwV2JBL3F6U1g1KzVS?=
- =?utf-8?B?Mi9KYTJac0RTdm45VEdZVVhnZEtxWjN3MHFtZ28vNVVkUXl2RGpBMnJESkpx?=
- =?utf-8?B?V1A4UzhpdDdUNzFjeEQ0YTVtYnRrVTF1K1J0OVI1MnI2TjdOZGxWeitwZW9z?=
- =?utf-8?B?UGFXVHNkWGpIRkVXUFFadE1xYlBpcis0M2pyaFBTQ3hNQ01STkN6ZFRadnJ0?=
- =?utf-8?B?aFJwQ2F0alcyaVFoNnZ5NnpEQldJZitiTkZacjFxekVtN2xTVjA4c05lWGhp?=
- =?utf-8?B?WUV2SSsvTG0vdXVwa1NzYzhaL2xQMGlqaW1HYXZGRi9UdldOeldLRXpMRXZh?=
- =?utf-8?B?ME1QMzBxb1B0ZUkyZWFmRUlvaWh4V1BjS1VBYlBCUko0TXBzTFJLUTBUeW9O?=
- =?utf-8?B?U2xwUHZ6QW41aUdhbk5oS2JRUVgvZEw4bGEzTnJxaWU2MEJsajlUKzE1SlZT?=
- =?utf-8?B?Y3pSQ1V3bE1pck9xby94Y20ybDEvSVV6R1FZc2k2WEdUUUdZb2dTT1h4TXBs?=
- =?utf-8?B?aE5wbW5jYmVzZnRKUmFObDVHQWxZZFM2aThLNjM2Ylg2SThqdFRqMm5yVTgr?=
- =?utf-8?B?Yk8zaVZxMEpFUEFJLzFoMEU4T3krdUFvNHR2eWNaNnpTM0pkeEJkcEtTankx?=
- =?utf-8?B?bVVjeHZlQUxNdUdiTUZwbkRuUlJBc0dTeGFPRTh0ZmtRWkRqYlhYTzZTZUdG?=
- =?utf-8?B?MWFxZjJGUW0wYXhkRCtVZ1lwV2o4ODRYREM2dEdyYUFHbGpjdUlHZUUrSWxa?=
- =?utf-8?B?Smg5cVV0OHA1ZjdHTHFNY1RFQ0lnaWoxMWl0cVJvSXRWa1lGaE1CVHlpWEpE?=
- =?utf-8?B?UEVpMysyYitnRCtmdGQ3dklvSFFSRkJrZGp0UlNRSXBLek9SQmRSTEpaaGNh?=
- =?utf-8?B?aTBRMUowUEtSYkdsVGtYWXdZVVVVMTkzMVVTR1ZKTUFnZHY2UVlXLzBDQkZM?=
- =?utf-8?B?OXhabTE5TGxzM3Fub3grZzFjNCtiOEpHMk1wK0lpMUZOdDZ3VzBVRHFXRVBn?=
- =?utf-8?B?cjVXZ3c2anFraWtjZWU1bE9vYWxIUmlKcU5yRlBKNjN0eUFDVFZ4RDNBVzJw?=
- =?utf-8?B?akR4THg3QWlkKytrZ29MbWVaSTNGekthb2c5RTUxSGhaT2NTYXRDTVNGazM0?=
- =?utf-8?B?cko2UEpoQmMxVEJENnJqVFFCMCtwSEhwaFV4S1EyQnRsa2t6UGp4UUEwYUFr?=
- =?utf-8?Q?5li46E02cJTYsaXa0vfuXqx3K?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 75cf8e45-89dc-49cb-f243-08db0e9384e6
-X-MS-Exchange-CrossTenant-AuthSource: BN8PR12MB2900.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Feb 2023 13:58:16.7171
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: tzfQi2OMQK3EeU/pSXnm5pIM6L4jmbiwsrmErusVCOoEfb9zVnQzx4sjWAb3zbWwVPUjJ03OmuOpqWYXkcME2Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB5958
+        with ESMTP id S233215AbjBNOG5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 09:06:57 -0500
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 265D229174
+        for <linux-pci@vger.kernel.org>; Tue, 14 Feb 2023 06:06:27 -0800 (PST)
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20230214140623epoutp0462d88e07eb557b9ccc8e73de94305095~DtfymOFf52242422424epoutp04B
+        for <linux-pci@vger.kernel.org>; Tue, 14 Feb 2023 14:06:23 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20230214140623epoutp0462d88e07eb557b9ccc8e73de94305095~DtfymOFf52242422424epoutp04B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1676383583;
+        bh=SdNM4Tz3fLK6Ln86MZGGxK52Puw9N/dkEq+z+0rNYYs=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=rVpQ4dCyVQpQ1VGxOQ2VRgfvyfdjz/aMTYhbFv6XEHClKh0tVOFPEagnQASzkXQlN
+         CooupJPKCAtkeq1pRAQntceFH2J/7pMyyB/Pofzq+lmkaXKXyIiWeahodfvguEbeR5
+         BZ3SqJ+TP94pzBDMEU0Qwf7iY02eEKbnnnp9cg+c=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTP id
+        20230214140622epcas5p4f151af96adc5d416d4f57d74b9082c83~DtfyAKCzc3228232282epcas5p4B;
+        Tue, 14 Feb 2023 14:06:22 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.182]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4PGNKn1xpWz4x9Pp; Tue, 14 Feb
+        2023 14:06:21 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        39.EF.55678.D559BE36; Tue, 14 Feb 2023 23:06:21 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20230214121348epcas5p48a3b2b225f616d748cc20622d01edb97~Dr9gG5u4l0767707677epcas5p4b;
+        Tue, 14 Feb 2023 12:13:48 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20230214121348epsmtrp2dc813dcaf173070dfd350293e1cd2916~Dr9gF-WY01865118651epsmtrp2J;
+        Tue, 14 Feb 2023 12:13:48 +0000 (GMT)
+X-AuditID: b6c32a4a-909fc7000000d97e-d3-63eb955d2f17
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        2A.EA.17995.CFA7BE36; Tue, 14 Feb 2023 21:13:48 +0900 (KST)
+Received: from cheetah.sa.corp.samsungelectronics.net (unknown
+        [107.109.115.53]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20230214121345epsmtip126bd4d57eb7bd902e5958cb92e11db8d~Dr9dRniJT2436024360epsmtip1d;
+        Tue, 14 Feb 2023 12:13:45 +0000 (GMT)
+From:   Shradha Todi <shradha.t@samsung.com>
+To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
+        alim.akhtar@samsung.com, jingoohan1@gmail.com,
+        Sergey.Semin@baikalelectronics.ru, lukas.bulwahn@gmail.com,
+        hongxing.zhu@nxp.com, tglx@linutronix.de, m.szyprowski@samsung.com,
+        jh80.chung@samsung.co, pankaj.dubey@samsung.com
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Shradha Todi <shradha.t@samsung.com>
+Subject: [PATCH 00/16] Refactor Exynos PCIe driver to make it generic
+Date:   Tue, 14 Feb 2023 17:43:17 +0530
+Message-Id: <20230214121333.1837-1-shradha.t@samsung.com>
+X-Mailer: git-send-email 2.17.1
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrEJsWRmVeSWpSXmKPExsWy7bCmpm7s1NfJBsdesFk8mLeNzWJJU4bF
+        /CPnWC1mbZvLaPHx9zkWixVfZrJb9L14yGzR0POb1WLT42usFpd3zWGzODvvOJvFjPP7mCxa
+        /rSwWLQcbWexWHvkLrvFoq1f2C3+79nBbvFn+gcWi97DtRabN01ldhDxeLPpO7vHzll32T0W
+        bCr12LSqk83jzrU9bB7vzp1j93hyZTqTx+Yl9R4b3+1g8ljU8JHNo2/LKkaPz5vkAniism0y
+        UhNTUosUUvOS81My89JtlbyD453jTc0MDHUNLS3MlRTyEnNTbZVcfAJ03TJzgN5UUihLzCkF
+        CgUkFhcr6dvZFOWXlqQqZOQXl9gqpRak5BSYFOgVJ+YWl+al6+WlllgZGhgYmQIVJmRndJ5d
+        xVwwib/i1+aiBsY2ni5GTg4JAROJLfNuMnYxcnEICexmlOjfOZcdwvnEKLH983RWCOczo8Ty
+        b6uZYFrmNn+BSuxilJi//AlUfyuTxK6j65lBqtgEtCQav3YxgyREBG4xSbz8/BBsMLPAKUaJ
+        Ay/2AjkcHMICrhL7lueDNLAIqEp8uLQELMwrYClxcjnUgfISqzccAJsjIbCHQ2Jhwy9mkBoJ
+        AReJpf8DIWqEJV4d38IOYUtJfH63lw3CTpdYuXkGM4SdI/Ft8xKoD+wlDlyZwwIyhllAU2L9
+        Ln2IsKzE1FPrwEqYBfgken8/gSrnldgxD8ZWlvjydw8LhC0pMe/YZVYI20Pi8/QjYHEhgViJ
+        prY3rBMYZWchbFjAyLiKUTK1oDg3PbXYtMAoL7UcHk/J+bmbGMGJV8trB+PDBx/0DjEycTAe
+        YpTgYFYS4RV++iJZiDclsbIqtSg/vqg0J7X4EKMpMMQmMkuJJucDU39eSbyhiaWBiZmZmYml
+        sZmhkjivuu3JZCGB9MSS1OzU1ILUIpg+Jg5OqQYmsae6CtzxKaohLKlCn441qXB4Wb/9Mtcq
+        fe8D2dvS2kvmLM77fl987l+lnKnO2w3ZpWOWbFmw8qMal13smmvib7fPVQ6Mmbm/qkSc5bfj
+        qSnz+05lNbBIaE/4/9ig+lZ3/W4XrV1bzzreZnE7xi12YWPl1BlNPP/MKu86rjv5I9JOInpi
+        9W7/Ds/D6pKCfGzP7zGez/gg9++HxfPcSV+be9I2Zk79p9kjZn1SdN2LdoElFR+C4kqfa0rI
+        P5+T8ran6FdW0ZLnOsoTLd1OFKzNXxd3Paioa9p7j4k9pYJ7GxLn+E7O/DgvrzZRLSiQzfju
+        AXd98xBXx4XKmz2Y0069Dp0VVG15Zs6jppeF/IZKLMUZiYZazEXFiQBuU2XPRQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrHLMWRmVeSWpSXmKPExsWy7bCSnO6fqtfJBlMbZC0ezNvGZrGkKcNi
+        /pFzrBazts1ltPj4+xyLxYovM9kt+l48ZLZo6PnNarHp8TVWi8u75rBZnJ13nM1ixvl9TBYt
+        f1pYLFqOtrNYrD1yl91i0dYv7Bb/9+xgt/gz/QOLRe/hWovNm6YyO4h4vNn0nd1j56y77B4L
+        NpV6bFrVyeZx59oeNo93586xezy5Mp3JY/OSeo+N73YweSxq+Mjm0bdlFaPH501yATxRXDYp
+        qTmZZalF+nYJXBmdZ1cxF0zir/i1uaiBsY2ni5GTQ0LARGJu8xfWLkYuDiGBHYwSS5f9ZINI
+        SEp8vriOCcIWllj57zk7RFEzk8THJ5fBEmwCWhKNX7uYQRIiAq+YJA7vmQHmMAtcYJS4dbAb
+        qIWDQ1jAVWLf8nyQBhYBVYkPl5aAhXkFLCVOLoe6Ql5i9YYDzBMYeRYwMqxilEwtKM5Nzy02
+        LDDKSy3XK07MLS7NS9dLzs/dxAiOAi2tHYx7Vn3QO8TIxMF4iFGCg1lJhFf46YtkId6UxMqq
+        1KL8+KLSnNTiQ4zSHCxK4rwXuk7GCwmkJ5akZqemFqQWwWSZODilGphKfniZiR5PSOo8k5og
+        Pffni6+TDpqrHjnh4CUif/1+0IQq2c19230EZLwuf+hduUb94ZuK3UvPLNqnrTPv9ouz+fm2
+        D/YrLhb4PPeE6r3zEyvnfFf0tPlXs8jnW7+sr+BuvUtL9eRbP/md7G/dM8F7aY+Zr/z0hV9u
+        Xvt77/+CSZXyPSKt6lzrGV+fZq2WtTjdfubo2hM+r1dYv/P18ey6dzgt+GqqnpLHo+RHx5/P
+        UL6X/TLwsLpP3i3228E61+9Hp2UqzU+c7LXgzYXmWyXKJ5yLmzprpb/v2FokJH5ndYZFbq+1
+        99+dUh/EN/29JcyVJ/hAuD0g4ZTVv1/SLnlXEvMfvzimmH3br/fuI/WzSizFGYmGWsxFxYkA
+        kfOhw/ECAAA=
+X-CMS-MailID: 20230214121348epcas5p48a3b2b225f616d748cc20622d01edb97
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20230214121348epcas5p48a3b2b225f616d748cc20622d01edb97
+References: <CGME20230214121348epcas5p48a3b2b225f616d748cc20622d01edb97@epcas5p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Currently pci-exynos is being used as a PCIe driver for Exynos5433
+only. This patch set refactors the driver to make it extensible to
+other Samsung manufactured SoCs having DWC PCIe controllers.
+The major change points are:
+- Renaming all common functions/structures to use "samsung" instead
+  of "exynos". Make common probe/remove/suspend/resume
+- Making clock/regulator get/enable/disable generic
+- Adding private struct to hold platform specific function ops
 
+Shradha Todi (16):
+  dt-bindings: PCI: Rename Exynos PCIe binding to Samsung PCIe
+  PCI: exynos: Rename Exynos PCIe driver to Samsung PCIe
+  PCI: samsung: Change macro names to exynos specific
+  PCI: samsung: Use clock bulk API to get clocks
+  dt-bindings: PCI: Rename the term elbi to appl
+  arm64: dts: exynos: Rename the term elbi to appl
+  PCI: samsung: Rename the term elbi to appl
+  PCI: samsung: Rename exynos_pcie to samsung_pcie
+  PCI: samsung: Make common appl readl/writel functions
+  dt-bindings: PCI: Add phy-names as required property
+  arm64: dts: exynos: Add phy-names as DT property
+  PCI: samsung: Get PHY using non-DT version
+  PCI: samsung: Rename common functions to samsung
+  PCI: samsung: Add platform device private data
+  PCI: samsung: Add structure to hold resource operations
+  PCI: samsung: Make handling of regulators generic
 
-On 2/14/2023 6:33 PM, Manivannan Sadhasivam wrote:
-> External email: Use caution opening links or attachments
-> 
-> 
-> On Thu, Oct 13, 2022 at 11:27:09PM +0530, Vidya Sagar wrote:
->> This series attempts to fix the issue with core register (Ex:- DBI) accesses
->> causing system hang issues in platforms where there is a dependency on the
->> availability of PCIe Reference clock from the host for their core
->> initialization.
->> This series is verified on Tegra194 & Tegra234 platforms.
->>
->> Manivannan, could you please verify on qcom platforms?
->>
-> 
-> Vidya, any plan to respin this series? The EPC rework series is now merged for
-> v6.3.
+ ...ung,exynos-pcie.yaml => samsung,pcie.yaml} |  15 +-
+ MAINTAINERS                                   |   4 +-
+ arch/arm64/boot/dts/exynos/exynos5433.dtsi    |   3 +-
+ drivers/pci/controller/dwc/Kconfig            |   6 +-
+ drivers/pci/controller/dwc/Makefile           |   2 +-
+ drivers/pci/controller/dwc/pci-samsung.c      | 508 ++++++++++++++++++
+ 6 files changed, 526 insertions(+), 12 deletions(-)
+ rename Documentation/devicetree/bindings/pci/{samsung,exynos-pcie.yaml => samsung,pcie.yaml} (89%)
+ create mode 100644 drivers/pci/controller/dwc/pci-samsung.c
 
-Yes. I'll send an updated series soon.
-Currently, I'm observing some regression with linux-next on Tegra 
-platform for endpoint mode. I'll post the patches as soon as that is 
-resolved.
+-- 
+2.17.1
 
-Thanks,
-Vidya Sagar
-
-> 
-> Thanks,
-> Mani
-> 
->> V5:
->> * Addressed review comments from Bjorn
->> * Changed dw_pcie_ep_init_complete() to dw_pcie_ep_init_late()
->> * Skipped memory allocation if done already. This is to avoid freeing and then
->>    allocating again during PERST# toggles from the host.
->>
->> V4:
->> * Addressed review comments from Bjorn and Manivannan
->> * Added .ep_init_late() ops
->> * Added patches to refactor code in qcom and tegra platforms
->>
->> Vidya Sagar (3):
->>    PCI: designware-ep: Fix DBI access before core init
->>    PCI: qcom-ep: Refactor EP initialization completion
->>    PCI: tegra194: Refactor EP initialization completion
->>
->>   .../pci/controller/dwc/pcie-designware-ep.c   | 125 +++++++++++-------
->>   drivers/pci/controller/dwc/pcie-designware.h  |  10 +-
->>   drivers/pci/controller/dwc/pcie-qcom-ep.c     |  27 ++--
->>   drivers/pci/controller/dwc/pcie-tegra194.c    |   4 +-
->>   4 files changed, 97 insertions(+), 69 deletions(-)
->>
->> --
->> 2.17.1
->>
-> 
-> --
-> மணிவண்ணன் சதாசிவம்
