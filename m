@@ -2,152 +2,160 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26B3BC6379F
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 14:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A313C61DA4
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 15:29:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232720AbjBNO0s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Feb 2023 09:26:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49586 "EHLO
+        id S233433AbjBNP3C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Feb 2023 10:29:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233165AbjBNO0a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 09:26:30 -0500
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BE082A98B
-        for <linux-pci@vger.kernel.org>; Tue, 14 Feb 2023 06:26:20 -0800 (PST)
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20230214140840epoutp0332e4b234d682b69fce2f63bcae78da80~Dthy1QIkd1771117711epoutp036
-        for <linux-pci@vger.kernel.org>; Tue, 14 Feb 2023 14:08:40 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20230214140840epoutp0332e4b234d682b69fce2f63bcae78da80~Dthy1QIkd1771117711epoutp036
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1676383720;
-        bh=P4o2RODWrzpC0VraKdmaU2+Wsu5NhyyDqSjcT9MD770=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=shPIJ6HfaiRYa62FMQH15a1LJXvKnpxUUElYD28PB2mXMcYRmQizTFdrdR5M3Rfi2
-         RuWQB1pJcAtKAY+9I7+zv4NNTwQSlgSDGFM/pRL47pXW/ilaLfnq1AAtzWABsxKgPr
-         x6w2tT9d80Ng/h2EBpngnCF4DEJH4a30dx+NvjnQ=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
-        20230214140839epcas5p2a33f397fd00d4b08838b0012423c31f1~DthyBc6L72728027280epcas5p2-;
-        Tue, 14 Feb 2023 14:08:39 +0000 (GMT)
-Received: from epsmges5p1new.samsung.com (unknown [182.195.38.181]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4PGNNQ1VV0z4x9Pv; Tue, 14 Feb
-        2023 14:08:38 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        88.79.10528.6E59BE36; Tue, 14 Feb 2023 23:08:38 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-        20230214121424epcas5p38e74b52a2d94a32b82a093c7e0a12499~Dr_BbpmeK2572325723epcas5p3B;
-        Tue, 14 Feb 2023 12:14:24 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20230214121424epsmtrp114f31489629691cd65e62d91d8f2a18d~Dr_Bas2u41843918439epsmtrp1E;
-        Tue, 14 Feb 2023 12:14:24 +0000 (GMT)
-X-AuditID: b6c32a49-e75fa70000012920-47-63eb95e62dff
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        98.FA.17995.02B7BE36; Tue, 14 Feb 2023 21:14:24 +0900 (KST)
-Received: from cheetah.sa.corp.samsungelectronics.net (unknown
-        [107.109.115.53]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20230214121421epsmtip11cc3c41c0c08218d174e751e42f73cba~Dr9_oUh8v2436024360epsmtip1j;
-        Tue, 14 Feb 2023 12:14:21 +0000 (GMT)
-From:   Shradha Todi <shradha.t@samsung.com>
-To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
-        alim.akhtar@samsung.com, jingoohan1@gmail.com,
-        Sergey.Semin@baikalelectronics.ru, lukas.bulwahn@gmail.com,
-        hongxing.zhu@nxp.com, tglx@linutronix.de, m.szyprowski@samsung.com,
-        jh80.chung@samsung.co, pankaj.dubey@samsung.com
-Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Shradha Todi <shradha.t@samsung.com>
-Subject: [PATCH 05/16] dt-bindings: PCI: Rename the term elbi to appl
-Date:   Tue, 14 Feb 2023 17:43:22 +0530
-Message-Id: <20230214121333.1837-6-shradha.t@samsung.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230214121333.1837-1-shradha.t@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrAJsWRmVeSWpSXmKPExsWy7bCmuu6zqa+TDf4cY7d4MG8bm8WSpgyL
-        +UfOsVrM2jaX0eLj73MsFiu+zGS36HvxkNmioec3q8Wmx9dYLS7vmsNmcXbecTaLGef3MVm0
-        /GlhsWg52s5isfbIXXaLRVu/sFv837OD3eLP9A8sFr2Hay02b5rK7CDi8WbTd3aPnbPusnss
-        2FTqsWlVJ5vHnWt72DzenTvH7vHkynQmj81L6j02vtvB5LGo4SObR9+WVYwenzfJBfBEZdtk
-        pCampBYppOYl56dk5qXbKnkHxzvHm5oZGOoaWlqYKynkJeam2iq5+AToumXmAL2ppFCWmFMK
-        FApILC5W0rezKcovLUlVyMgvLrFVSi1IySkwKdArTswtLs1L18tLLbEyNDAwMgUqTMjOuNLf
-        yFywnbNiwwK7BsZj7F2MnBwSAiYS285cZu1i5OIQEtjNKHFmxQYmCOcTo0TjtYNsEM5nRomt
-        P6cwwbS0/J7BDpHYxShx+dEPZginlUni/6c5bCBVbAJaEo1fu8ASIgK3mCRefn4I1sIscIpR
-        4sCLvWDrhQVcJa7fXMEMYrMIqEqsP7EELM4rYCmxYud1qH3yEqs3HACr4RSwkmhp3cQMEb/A
-        IbG/KRvCdpG4Pmsh1EvCEq+Ob4GypSRe9rdB2ekSKzfPgOrNkfi2eQnUfHuJA1fmsHQxcgAd
-        pymxfpc+RFhWYuqpdWAlzAJ8Er2/n0CV80rsmAdjK0t8+buHBcKWlJh3DBSSILaHRMfHfrAa
-        IYFeRonW96ITGOVmIWxYwMi4ilEytaA4Nz212LTAMC+1HB5ryfm5mxjBSVnLcwfj3Qcf9A4x
-        MnEwHmKU4GBWEuEVfvoiWYg3JbGyKrUoP76oNCe1+BCjKTD4JjJLiSbnA/NCXkm8oYmlgYmZ
-        mZmJpbGZoZI4r7rtyWQhgfTEktTs1NSC1CKYPiYOTqkGJjGTL1u1s1mf2xzfvL1h17uwU4m7
-        k/9WnvYUjvqf832Nnd+ka63lsxZu6H5xLu3c/Ef1bt3b4qctl/2UYDvp6bKVF3vMjr01uVSZ
-        8EaQa04rxxXfWTbFi1S/eeef85+rqaGds0l10+JJ2zTbfzpX5V3w0Io6u5z/ekYsw+ns+d+D
-        uZeHOreq1Lsuf5/k8/mLiFQ3R6XXFKN+hYCJGYycsz+rL86Z9CDlyZLNlqdF97cc4A4t/iTR
-        u7Gon+VweFnMP6MT3DwZdw2r3plN8+dMLt2ZMH0eG9ezTtXWaWeq773z2CH7zNO375PvjCvr
-        sk+Z7f/2eMZlLavziV0hT/+X8O+5dbjHx9Rd8ePzzJUlykosxRmJhlrMRcWJABqBLptTBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrBLMWRmVeSWpSXmKPExsWy7bCSnK5C9etkg9mfhSwezNvGZrGkKcNi
-        /pFzrBazts1ltPj4+xyLxYovM9kt+l48ZLZo6PnNarHp8TVWi8u75rBZnJ13nM1ixvl9TBYt
-        f1pYLFqOtrNYrD1yl91i0dYv7Bb/9+xgt/gz/QOLRe/hWovNm6YyO4h4vNn0nd1j56y77B4L
-        NpV6bFrVyeZx59oeNo93586xezy5Mp3JY/OSeo+N73YweSxq+Mjm0bdlFaPH501yATxRXDYp
-        qTmZZalF+nYJXBlX+huZC7ZzVmxYYNfAeIy9i5GTQ0LARKLl9wwgm4tDSGAHo8SS1YfZIBKS
-        Ep8vrmOCsIUlVv57DlXUzCRx+dV1FpAEm4CWROPXLmaQhIjAKyaJw3tmgDnMAhcYJW4d7Abb
-        ISzgKnH95gpmEJtFQFVi/YklYHFeAUuJFTuvQ62Ql1i94QBYDaeAlURL6yYwWwioZtavVYwT
-        GPkWMDKsYpRMLSjOTc8tNiwwykst1ytOzC0uzUvXS87P3cQIjhwtrR2Me1Z90DvEyMTBeIhR
-        goNZSYRX+OmLZCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8F7pOxgsJpCeWpGanphakFsFkmTg4
-        pRqY6n94zPzw/Ifsr4+a5vcbnM/7cDs1feJy17x0+29d8w2JL8IVezR/NtctuCVUbyrsvW1m
-        fqH0DLkWwfji67+X3TtVvuSB96In/LzPZVo6ZYUmXSrquNqlbyRQZLd+9flVnvef29bpfbqf
-        b7b1sTvf7+1lHFy1t1ytsxZH9HkJHzluOHGeyL2F+p4aXypbg92WGDCwxf6Q3qI2Yz6Li/qH
-        BeJMW9WL3gaaPLa9uOffe8Mpgn+s+JY/VNsQ9+/2Z48bT0PbqiaUMG/LiDewST7d9W5riKR0
-        4to7a2f2szufu27EV7PjKnPVlR7JJb1LWx7vz+jjVjn7ed3a7s33WL3jt7rK/s6OzHsbKiyw
-        jM9ZiaU4I9FQi7moOBEAJbfJ/QsDAAA=
-X-CMS-MailID: 20230214121424epcas5p38e74b52a2d94a32b82a093c7e0a12499
-X-Msg-Generator: CA
+        with ESMTP id S232902AbjBNP3A (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 10:29:00 -0500
+Received: from EUR02-VI1-obe.outbound.protection.outlook.com (mail-vi1eur02on2065.outbound.protection.outlook.com [40.107.241.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A6C8252A6;
+        Tue, 14 Feb 2023 07:28:59 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=FZJ9m7lh6vAQH8A6L9jDa173KI6/As6qHOpUI8oLuWEx6lD9bAQuJU12ojSWaDnXifpPvv4UQT4AVsSs9Ve+n08a9Oeibn5AONPJJzvnLNg60IphPPsVIOBTybnaCuV+1ZYk372IHAZepSMQmR08hCtknlEGt1jBZRfSwTpNfDrvhEfM/cdKaTqmPpJwUCEt1lYBqGoPbLdI3mKRWrc4Ms1iALtPjXsdjeaiZJj7M+EwdBmkc96ole8aNHvgYe/RLIF9CSUAFk9LlQwol528w1VtHrkgB11zaY2lNYskh8lJP8OOd4UCmq1KJ5rDd1Hs7pNBfwUPpKC2q07M/1s1yA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=cm7HhKoZ2Ni0XU+H/1QP6q9n8Fze2T+vNwPcjyOIvOg=;
+ b=kvJ8SXa74LiZ15QY899O7+FaKE5Ljsm1OiIc3yMuSNx8VlzQVH9NGylZ85vVET+625w1lIZVerXkMTgI6yjWcr7RDayXMyrJvPqE2c14HC7CDfvN9m/Ho9gYt5EJwj9emiUpvnUo/2MOngtTOmf7mnF/sTRxwY3/mOJv23br6jHmhb3JrCSZj3oxnGt1+XvAYKHxq3Ra0RjRDVdLLV3aU0Ch/RAaoyxI7bxyGZ1ufsvEVpXwMXk3mnlyHxEtzGplXH2saJuzVQ2uB4gBJ8if8woF80BxvFtNdCzAMAdsmT8N9fxRCq4Bdqutz8wannJlODBice51u7vcbHeYp50+Dw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cm7HhKoZ2Ni0XU+H/1QP6q9n8Fze2T+vNwPcjyOIvOg=;
+ b=L88jL8Pxv4hy3tXr/aQbEQDm2fw+d/yPoQrnz+nzov7ZOv7zYPfMtZ1CeiXS3AUCieTyf/R/Q4a7jN++6ymxbbfhqePEPI7IWoyU6p16j8d34P5rFIWZn9uynkMhFWj8SrstBkX+Buqr2+CK8JiJ1R7n20jDeU0sHL6fBfxYTlk=
+Received: from HE1PR0401MB2331.eurprd04.prod.outlook.com (2603:10a6:3:24::22)
+ by PA4PR04MB7808.eurprd04.prod.outlook.com (2603:10a6:102:c8::23) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6086.24; Tue, 14 Feb
+ 2023 15:28:56 +0000
+Received: from HE1PR0401MB2331.eurprd04.prod.outlook.com
+ ([fe80::ca48:3816:f0b6:3fcd]) by HE1PR0401MB2331.eurprd04.prod.outlook.com
+ ([fe80::ca48:3816:f0b6:3fcd%6]) with mapi id 15.20.6086.023; Tue, 14 Feb 2023
+ 15:28:56 +0000
+From:   Frank Li <frank.li@nxp.com>
+To:     Shunsuke Mie <mie@igel.co.jp>,
+        "imx@lists.linux.dev" <imx@lists.linux.dev>
+CC:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "jdmason@kudzu.us" <jdmason@kudzu.us>,
+        "kishon@kernel.org" <kishon@kernel.org>,
+        "kw@linux.com" <kw@linux.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "mst@redhat.com" <mst@redhat.com>,
+        "renzhijie2@huawei.com" <renzhijie2@huawei.com>,
+        "taki@igel.co.jp" <taki@igel.co.jp>,
+        "virtualization@lists.linux-foundation.org" 
+        <virtualization@lists.linux-foundation.org>
+Subject: RE: [EXT] Re: PCIe RC\EP virtio rdma solution discussion.
+Thread-Topic: [EXT] Re: PCIe RC\EP virtio rdma solution discussion.
+Thread-Index: AQHZOyzIhsmm2lUdzUGRwLjL3rp40q7N0WuAgADIPKA=
+Date:   Tue, 14 Feb 2023 15:28:56 +0000
+Message-ID: <HE1PR0401MB2331F429D5EB7CD1068797E688A29@HE1PR0401MB2331.eurprd04.prod.outlook.com>
+References: <20230207194527.4071169-1-Frank.Li@nxp.com>
+ <9f781dc0-e4d5-4c14-cad9-483f59b2a315@igel.co.jp>
+In-Reply-To: <9f781dc0-e4d5-4c14-cad9-483f59b2a315@igel.co.jp>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: HE1PR0401MB2331:EE_|PA4PR04MB7808:EE_
+x-ms-office365-filtering-correlation-id: 68588202-a5fa-479b-6347-08db0ea0301f
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: a0a1jx8lBXnPha4XbrNkpkDsGzs1KOem4u+qHXLDqQeioVu/ra5HEaF1c/FahuVK46KlAbi72/mVTBztaJ6ZvoISjvtF2yNy6vvyWmFgZIq2R7KJ1kgKPrNIzHx8lyLMPR1K5k89OIvbqRiPfZ465ZuwvZ2jec99U8zIcWlcP2c+oy+U/01PK0sqjbzrRcW2n/aIzUd0vUsLxztLVjCkdVx/J78q6GhQW1S0OQ9KpGt2MsxzvwlBAomTB8lhDzqzuuSCh7hG5LErwzKSv/OzVKFKEp37kazhHXOReaOR0PliclNKR9G0/vc2RjyiS2OZeForE3bHS3/KfZiH+TqbsGv3fua6TqfCykEOJocULpiR3XdMV0gKxzd9bq97rTNN62/TpzbGsIeIKs+b1VZrBzGpn/G+D/+O2dgBR9GWFG7UOhvY4EUpZB7chmcE0gWpTGURzszDl1OteWPVtfIRFiXwexthTh4zvpOWs3PgpREELJXqfYP8enLaeSC0FGVEhJh93L5+AgzAv+qq75aXDvYZC8GOjxDPrctT717hVTC3oDSTN93qHwiiRaPa9XupNI5AMgZVToIznK5ZEQ23lXh3AZRLWgXJaD95kADfi8LX3+LLhKvqjYgBVNrFxoxxm6EU4ociPLZw6h0mVxBOZizOWtngCuV7Rh/elG7N6Ckt1Db4f/tFfYCQJPOdCb8jvyWRNtz8pYpZuqIxcfNbiw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:HE1PR0401MB2331.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230025)(4636009)(346002)(136003)(376002)(366004)(39860400002)(396003)(451199018)(33656002)(86362001)(38100700002)(55016003)(38070700005)(122000001)(66476007)(4326008)(52536014)(66946007)(66446008)(66556008)(76116006)(41300700001)(54906003)(110136005)(316002)(8676002)(64756008)(7416002)(2906002)(186003)(8936002)(44832011)(5660300002)(71200400001)(55236004)(6506007)(26005)(7696005)(9686003)(478600001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?UDEzYnRMYTM0c0ErNmhDQndvQXprbVJza1picVBLRTQ1aTRuYmFnTU85MmJY?=
+ =?utf-8?B?eWFDdXRueVh1M0Yyd3g2alhQMnZBUzZTR2RWNlNIYXJRb28yOVJ6RmhvQkZF?=
+ =?utf-8?B?Q0lLZHNXY0pqTGJ4b3FZWWROL05lVGliSXZTc3Y2WS9jd0p4SUtpd25BZmZt?=
+ =?utf-8?B?VzEwNFlpZENlQU9PNXdxVG00OEJpUE1aRlFGanpvK2hYbWFrRXZURzJzemJU?=
+ =?utf-8?B?L01IbWVqTXZlaWlkN2EzTHQ5VXQrbFF0RkM5Mm1hNnJrSjByKzNYblFJNWZD?=
+ =?utf-8?B?bmtUZEVKY0xlWk5DSlNXM0NuK0s0RkthUHVObitHL3JFTWtQeGg1aXBFVHlh?=
+ =?utf-8?B?OHA2bzBLZ1o0QStEMEJoZ0E0Um5wR09ub1h2VllGcHdzaEFQNUJETGJhSjZC?=
+ =?utf-8?B?QzdGNzRad28wMlVJMzFUaU9MYjk2aDZiOCs1ZEU2N2dUQThLMkM4K3g1S2ZW?=
+ =?utf-8?B?RWhWalM2OEIzNEZFa1BydnpNbUFFbnNMcjNBdjBiWXQ1aEkyRzhISkk4cUJl?=
+ =?utf-8?B?dnNraEluR0twNk9tQ3NzemxkbjhpaEJZSXMvdms0NUdob3JRRzk0blFoSmtZ?=
+ =?utf-8?B?MVAreExub01TbGtXY0NKKzB0SjFHdzFiSlRGTDFTU3VFRE9QVlFhSnE5aGtE?=
+ =?utf-8?B?bHdvaTJkUHRRU043RERscHhqRDZTamhXdlpQN3UzTDd5V3VVVkwzNDVtNVli?=
+ =?utf-8?B?TVluckF2V3YxYi9EdUpQSVlhMnpJck1UQlBnRU9TK2hXZkg3R0d3WnUvTXZo?=
+ =?utf-8?B?ZktnZmcwc1JQc2JmMTFZMm9abEI0TUJlUk1NelhLRlpCaXh4WWthZWtGeXRh?=
+ =?utf-8?B?aWxYcTFIMEJYR0lzY1VxWVpXZWpzZTgvWGxQOE9ZMHZSZGxHaDZLUkhMYlA3?=
+ =?utf-8?B?UUd0bi9wZXllUU44VXJOTW4xV3JoWFE1NVBheENQTDd4UnArZXFzeWZPMDVw?=
+ =?utf-8?B?SVV0cjY3aDIvVjFJVDcvQnlaVExqTWtaSkt0NHJFVStpUk5WU0p1UDR6UzV2?=
+ =?utf-8?B?bmFxdWd2Uld5ajFzVjRuSjFFSUxzYVp2NmZidzV0TEY1ZE1PRWlIT1VrSmxn?=
+ =?utf-8?B?cTJzcmdlSHpIWThFeGlDSm9rMjlzZ2VnNzMrQWcyMzl0WHhSeFRZYy9MTGY0?=
+ =?utf-8?B?ZmRnUWlibzVxd0xhcmJ0aXpjTXRXKzljMUhXUEgyWkxmRTBLdHAvQ1lmWnc4?=
+ =?utf-8?B?OXcyM3h0aWN4dlJOM1ZhL3B5NzhYSE9DcU1DWEVIc0tKemtiU2toTXplenFV?=
+ =?utf-8?B?SzVHOWxUQ2YvUkdXa0twYzRMczZZSXpQMzlyUm4zSnVkam9aMkFVK2RHSzVk?=
+ =?utf-8?B?bHBVbGxvTjFsK1czQm9IRjdCUW9OSVNzZWpzamtySXFzdDJkYXBWT0U0QU9M?=
+ =?utf-8?B?eC8zYTcwSTY0T2FaWnRTZk5WcGZsdnN0RkdCMUF0L0p3SEJHNFZUK2JtNlBY?=
+ =?utf-8?B?UTJGd0V1a0xQNktraEJ6TTFRTkVTZVJ6R0ZualBqTmtGdUpCNjFYOURKZ0xY?=
+ =?utf-8?B?WkN0ZzdsZTJnMmx3M1gvdmxhQkFJSEZNVFR1RXkwL0QySGJ1Z056ZHl6MjZI?=
+ =?utf-8?B?a0RJOWlTMVhnN0t2Nm83UnpZa25aK3d2aUFuVlM0V3EvVHpVc1VsQUZGQTlw?=
+ =?utf-8?B?M0NWV2NMK3plTEoxOC9lOGNEUmsrUGJKYXZYT0Vqd0hzci9uZFRNNkFpNEVZ?=
+ =?utf-8?B?WFZMTHRwNHVkSnE0R1lKa0RXR29nc3Nua0JDd2lnTTlkSjJDY0FwYktrc2xF?=
+ =?utf-8?B?TDdCWHpETzFmWTN2RDl4K09PWHZzL1NwbmczSEdJdjF6TlJ6UXdtSjY4QUpD?=
+ =?utf-8?B?VkRhTys5NEx6SWFrS29lV2w4MWhGd3BHaGhmNmZSaEVsNU9vdDBhNW4ydTB3?=
+ =?utf-8?B?b0VlWVZWTkNsa0hBNW5CVmtaaGxRTHJzZDc4c3NSOVpUWldUeW1VR0xIYmxr?=
+ =?utf-8?B?S0ZzL2JtZUdSL01UZ0NzOU5Ca3l3OFBpbzArSzBZSE5wZUM4cUdVUzQxdHk4?=
+ =?utf-8?B?RnhMcCtMZjJ6bEJ2dnJuajJwcWJibGkwMzlpWGJ1bWM2ZjhVd1VORFV1Yitx?=
+ =?utf-8?B?VTJDdWtYQW14cVRwMnB1UnlSSFNWRFdPbGc3RlVsVEl1UU5rcG1hU3R6LzRW?=
+ =?utf-8?Q?jm6Q=3D?=
 Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20230214121424epcas5p38e74b52a2d94a32b82a093c7e0a12499
-References: <20230214121333.1837-1-shradha.t@samsung.com>
-        <CGME20230214121424epcas5p38e74b52a2d94a32b82a093c7e0a12499@epcas5p3.samsung.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: HE1PR0401MB2331.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 68588202-a5fa-479b-6347-08db0ea0301f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Feb 2023 15:28:56.7351
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: nGqU2yH92G5ULx70UmyZsk70/pRa1poA6Eg3iYrS+x67uNHisyZ8JNKRNz1hXPg1V5CdEtIAj68Iv5PUCUE+kQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB7808
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DT uses the name elbi in reg-names for application logic
-registers which is a wrong nomenclature. This patch fixes
-the same.
-
-This commit shouldn't be applied without changes
-"arm64: dts: Rename the term elbi to appl" and
-"PCI: samsung: Rename the term elbi to appl"
-
-Signed-off-by: Shradha Todi <shradha.t@samsung.com>
----
- Documentation/devicetree/bindings/pci/samsung,pcie.yaml | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/samsung,pcie.yaml b/Documentation/devicetree/bindings/pci/samsung,pcie.yaml
-index 6cd36d9ccba0..9c58c4d1f6a7 100644
---- a/Documentation/devicetree/bindings/pci/samsung,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/samsung,pcie.yaml
-@@ -25,13 +25,13 @@ properties:
-   reg:
-     items:
-       - description: Data Bus Interface (DBI) registers.
--      - description: External Local Bus interface (ELBI) registers.
-+      - description: Controller's application logic registers.
-       - description: PCIe configuration space region.
- 
-   reg-names:
-     items:
-       - const: dbi
--      - const: elbi
-+      - const: appl
-       - const: config
- 
-   interrupts:
--- 
-2.17.1
-
+PiBFUCBzaWRlIHVzZSB2aG9zdCwgUkMgc2lkZSB1c2UgdmlydGlvLg0KPiA+IEkgZG9u4oCZdCB0
+aGluayBhbnlvbmUgd29ya3Mgb24gdGhpcyB0aHJlYWQgbm93Lg0KPiA+IElmIHVzaW5nIGVETUEs
+IGl0IG5lZWRzIGJvdGggc2lkZXMgdG8gaGF2ZSBhIHRyYW5zZmVyIHF1ZXVlLg0KPiA+IEkgZG9u
+J3Qga25vdyBob3cgdG8gZWFzaWx5IGltcGxlbWVudCBpdCBvbiB0aGUgdmhvc3Qgc2lkZS4NCj4g
+V2UgaGFkIGltcGxlbWVudGVkIHRoaXMgc29sdXRpb24gYXQgdGhlIGRlc2lnbiBzdGFnZSBvZiBv
+dXIgcHJvcG9zYWwuDQo+IFRoaXMgc29sdXRpb24gaGFzIHRvIHByZXBhcmUgYSBuZXR3b3JrIGRl
+dmljZSBhbmQgcmVnaXN0ZXIgdG8gdGhlIGtlcm5lbA0KPiBmcm9tIHNjcmF0Y2ggZm9yIHRoZSBl
+bmRwb2ludC4gVGhlcmUgaXMgYSBsb3Qgb2YgZHVwbGljYXRlZCBjb2RlLCBzbyB3ZQ0KPiB0aGlu
+ayB0aGUgc29sdXRpb24gMSBpcyBiZXR0ZXIsIGFzIEZyYW5rIHNhaWQuDQo+ID4gU29sdXRpb24g
+MyhJIGFtIHdvcmtpbmcgb24pDQo+ID4NCj4gPiBJbXBsZW1lbnQgaW5maW5pYmFuZCByZG1hIGRy
+aXZlciBhdCBib3RoIEVQIGFuZCBSQyBzaWRlLg0KPiA+IEVQIHNpZGUgYnVpbGQgRURNQSBoYXJk
+d2FyZSBxdWV1ZSBiYXNlZCBvbiBFUC9SQyBzaWRl4oCZcyBzZW5kIGFuZA0KPiByZWNlaXZlDQo+
+ID4gcXVldWUgYW5kIHdoZW4gZURNQSBmaW5pc2hlZCwgd3JpdGUgc3RhdHVzIHRvIGNvbXBsZXRl
+IHF1ZXVlIGZvciBib3RoDQo+IEVQL1JDDQo+ID4gc2lkZS4gVXNlIGlwb2liIGltcGxlbWVudCBu
+ZXR3b3JrIHRyYW5zZmVyLg0KPiBUaGUgbmV3IEluZmluaUJhbmQgZGV2aWNlIGhhcyB0byBpbXBs
+ZW1lbnQgYW4gSW5maW5pQmFuZCBuZXR3b3JrIGxheWVyLg0KPiBJIHRoaW5rIGl0IGlzIG92ZXJl
+bmdpbmVlcmVkIGZvciB0aGlzIHBlZXItdG8tcGVlciBjb21tdW5pY2F0aW9uLiBJbg0KPiBhZGRp
+dGlvbiwgdGhlIGRyaXZlciBvZiB0aGUgSW5maW5pQmFuZCBkZXZpY2Ugc2hvdWxkIGJlIGltcGxl
+bWVudGVkIG9yDQo+IGVtdWxhdGUgdGhlIGV4aXN0aW5nIEluZmluaUJhbmQgZGV2aWNlIHRvIHVz
+ZSB0aGUgdXBzdHJlYW0gZHJpdmVyLiBXZQ0KPiB3YW50IHRvIHJlZHVjZSB0aGUgY29zdCBvZiBp
+bXBsZW1lbnRhdGlvbiBhbmQgbWFpbnRlbmFuY2UuDQoNCkluZmluaWJhbmQgZHJpdmVyIGlzIHF1
+aXRlIGNvbXBsZXguIFRoYXQncyByZWFzb24gd2h5IHByb2dyZXNzIGlzIHNsb3cgaW4gbXkNCnNp
+ZGUuICBJIGhvcGUgdGhlIGVuZHBvaW50IG1haW50YWluZXIoa3cpIGFuZCBQQ0kgbWFpbnRhaW5l
+cihCam9ybikgY2FuDQpwcm92aWRlIGNvbW1lbnRzLiAgDQoNCj4gPiBUaGUgd2hvbGUgdXBzdHJl
+YW0gZWZmb3J0IGlzIHF1aXRlIGh1Z2UgZm9yIHRoZXNlLiBJIGRvbuKAmXQgd2FudCB0byB3YXN0
+ZQ0KPiA+IHRpbWUgYW5kIGVmZm9ydHMgYmVjYXVzZSBkaXJlY3Rpb24gaXMgd3JvbmcuDQo+ID4N
+Cj4gPiBJIHRoaW5rIFNvbHV0aW9uIDEgaXMgYW4gZWFzeSBwYXRoLg0KPiA+DQo+ID4NCj4gPg0K
+PiBCZXN0LA0KPiANCj4gU2h1bnN1a2UuDQoNCg==
