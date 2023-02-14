@@ -2,85 +2,101 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA21BC61DA4
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 11:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4DACC61DA4
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 13:03:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229808AbjBNLwC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Feb 2023 06:52:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50702 "EHLO
+        id S232292AbjBNNDu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Feb 2023 08:03:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46982 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229795AbjBNLwB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 06:52:01 -0500
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 950612365E;
-        Tue, 14 Feb 2023 03:52:00 -0800 (PST)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4PGKJp012Gz689lY;
-        Tue, 14 Feb 2023 19:50:17 +0800 (CST)
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.17; Tue, 14 Feb
- 2023 11:51:57 +0000
-Date:   Tue, 14 Feb 2023 11:51:56 +0000
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Lukas Wunner <lukas@wunner.de>
-CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
-        "Gregory Price" <gregory.price@memverge.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        "Dan Williams" <dan.j.williams@intel.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, "Hillf Danton" <hdanton@sina.com>,
-        Ben Widawsky <bwidawsk@kernel.org>, <linuxarm@huawei.com>,
-        <linux-cxl@vger.kernel.org>
-Subject: Re: [PATCH v3 11/16] PCI/DOE: Allow mailbox creation without devres
- management
-Message-ID: <20230214115156.00002e04@Huawei.com>
-In-Reply-To: <ad46bbc593d4b7f1c9c5cbafbb51d89533edd4a7.1676043318.git.lukas@wunner.de>
-References: <cover.1676043318.git.lukas@wunner.de>
-        <ad46bbc593d4b7f1c9c5cbafbb51d89533edd4a7.1676043318.git.lukas@wunner.de>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S229938AbjBNNDt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 08:03:49 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93C1223874;
+        Tue, 14 Feb 2023 05:03:48 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ED85A61636;
+        Tue, 14 Feb 2023 13:03:47 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2758C433EF;
+        Tue, 14 Feb 2023 13:03:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1676379827;
+        bh=Ah31oBpDRFH3gj+Pln1eAvPNgbibR+8IhW3nJlNAJ/4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NOnVnOwjkpHpAEh8YY2F2IoXstPQmHwo79yS0DQZ4IbaqB/LgigG1rEgwVQkzxWIY
+         Th1VZfzyUjR8t+Tv/TJu4yew37NJpTWae0jts3JYg1dh3kmpYDIsoKfctXJBXLYKDY
+         gDFo7gbiDpjEulu4m/3FSEtRYS53+v2viHmKEnjqCB0YD95Szq6VHprYJ+TGCzqvPP
+         rIMXf5QnK6jTHp9yuwm6T11fBQHX/uoaBoWzGyr6QuTNHyCymsFj5YsubQIPz5SWGG
+         GiNGELjww7tAB5x9qlKSlidWC2RQdEZW5IZ+r8I8VJsEObt5Phka6/3iutFwRh/yQK
+         ZFQ+jTvhVWKAQ==
+Date:   Tue, 14 Feb 2023 18:33:29 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        lpieralisi@kernel.org, robh@kernel.org, kw@linux.com,
+        bhelgaas@google.com, mani@kernel.org,
+        Sergey.Semin@baikalelectronics.ru, dmitry.baryshkov@linaro.org,
+        linmq006@gmail.com, ffclaire1224@gmail.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kthota@nvidia.com,
+        mmaddireddy@nvidia.com, sagar.tv@gmail.com
+Subject: Re: [PATCH V5 0/3] PCI: designware-ep: Fix DBI access before core
+ init
+Message-ID: <20230214130329.GC4981@thinkpad>
+References: <20221013175712.7539-1-vidyas@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml500003.china.huawei.com (7.191.162.67) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20221013175712.7539-1-vidyas@nvidia.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 10 Feb 2023 21:25:11 +0100
-Lukas Wunner <lukas@wunner.de> wrote:
+On Thu, Oct 13, 2022 at 11:27:09PM +0530, Vidya Sagar wrote:
+> This series attempts to fix the issue with core register (Ex:- DBI) accesses
+> causing system hang issues in platforms where there is a dependency on the
+> availability of PCIe Reference clock from the host for their core
+> initialization.
+> This series is verified on Tegra194 & Tegra234 platforms.
+> 
+> Manivannan, could you please verify on qcom platforms?
+> 
 
-> DOE mailbox creation is currently only possible through a devres-managed
-> API.  The lifetime of mailboxes thus ends with driver unbinding.
-> 
-> An upcoming commit will create DOE mailboxes upon device enumeration by
-> the PCI core.  Their lifetime shall not be limited by a driver.
-> 
-> Therefore rework pcim_doe_create_mb() into the non-devres-managed
-> pci_doe_create_mb().  Add pci_doe_destroy_mb() for mailbox destruction
-> on device removal.
-> 
-> Provide a devres-managed wrapper under the existing pcim_doe_create_mb()
-> name.
-> 
-> The error path of pcim_doe_create_mb() previously called xa_destroy() if
-> alloc_ordered_workqueue() failed.  That's unnecessary because the xarray
-> is still empty at that point.  It doesn't need to be destroyed until
-> it's been populated by pci_doe_cache_protocols().  Arrange the error
-> path of the new pci_doe_create_mb() accordingly.
-> 
-> pci_doe_cancel_tasks() is no longer used as callback for
-> devm_add_action(), so refactor it to accept a struct pci_doe_mb pointer
-> instead of a generic void pointer.
-> 
-> Tested-by: Ira Weiny <ira.weiny@intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Vidya, any plan to respin this series? The EPC rework series is now merged for
+v6.3.
 
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Thanks,
+Mani
 
+> V5:
+> * Addressed review comments from Bjorn
+> * Changed dw_pcie_ep_init_complete() to dw_pcie_ep_init_late()
+> * Skipped memory allocation if done already. This is to avoid freeing and then
+>   allocating again during PERST# toggles from the host.
+> 
+> V4:
+> * Addressed review comments from Bjorn and Manivannan
+> * Added .ep_init_late() ops
+> * Added patches to refactor code in qcom and tegra platforms
+> 
+> Vidya Sagar (3):
+>   PCI: designware-ep: Fix DBI access before core init
+>   PCI: qcom-ep: Refactor EP initialization completion
+>   PCI: tegra194: Refactor EP initialization completion
+> 
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 125 +++++++++++-------
+>  drivers/pci/controller/dwc/pcie-designware.h  |  10 +-
+>  drivers/pci/controller/dwc/pcie-qcom-ep.c     |  27 ++--
+>  drivers/pci/controller/dwc/pcie-tegra194.c    |   4 +-
+>  4 files changed, 97 insertions(+), 69 deletions(-)
+> 
+> -- 
+> 2.17.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
