@@ -2,58 +2,58 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF0B7C64ED6
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 14:10:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D4E2C61DA4
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Feb 2023 14:11:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233430AbjBNOK5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Feb 2023 09:10:57 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55526 "EHLO
+        id S233442AbjBNOK6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Feb 2023 09:10:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233301AbjBNOKq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 09:10:46 -0500
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C90DE2A141;
-        Tue, 14 Feb 2023 06:10:13 -0800 (PST)
-Received: by mail-ej1-x633.google.com with SMTP id mc25so3023031ejb.13;
-        Tue, 14 Feb 2023 06:10:13 -0800 (PST)
+        with ESMTP id S233343AbjBNOKt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2023 09:10:49 -0500
+Received: from mail-ej1-x62f.google.com (mail-ej1-x62f.google.com [IPv6:2a00:1450:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 293C22A145;
+        Tue, 14 Feb 2023 06:10:17 -0800 (PST)
+Received: by mail-ej1-x62f.google.com with SMTP id lf10so8514247ejc.5;
+        Tue, 14 Feb 2023 06:10:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=CTWPMQ5IkIsp33gvRTV303Woi805qt5LWeJY1A4m9uw=;
-        b=iRlk5JA6Owj1tpws1EfuazhlcuU+rLUsxc4gTBtwVUs4Q9lo9qvpvsYcNZJlbZ/JpE
-         oK21vzja6sMUmUzIodoZTYUYtdFan5EAlpeMGzSl9AcMHptN4c4s7+PViEkF29SMzUv7
-         3GFX025yHPRed6vxvk84JBOK3WfyWoCaZSaG41y9VTxvCV4ani39VSJDzoa3zUjnuC8h
-         RIanKdM7Z61smgWoUAhAo9bk8kFPc0zpqgH/ThekupRHUpCa8p2/Mp2LqcoLr3n+RbC5
-         jQaGBc2bQEBMq61ascyWWDBrPVkdCATbE+MY6luviuG2Dkx3fvMqKiOHxaI4ubCB/eV7
-         qvXg==
+        bh=ZyRxgGKgBmZ7vlz9B0DPHOS/vRaGIdO6oxSW3aBTwD0=;
+        b=DHncKPYs87waR3yJGxtEcKoh3OyMcA7zdF3rOXm3j38m6CDX/iQqffz0+04g2A3+bf
+         GffdS4BULOVh9kWWLEh+LXl/+mJ+a7Yf3ZD9CBZjCpZhYzlggO3VwSBmaLjwzja2RdM+
+         gxwVHpFgOFkY3b53Xeh42awaCb4Drw0n2jtMHW+uflM4ToEFt25BrIOlPHfXCCtiZJ3K
+         fJg5HIcSYpEXucDMsRiqCNeT22ekeN8gi94IbFbiN1VwItRwUoutXOn3UbniynDjb/1q
+         S7ct7A0a0AnO2Lbl0LnFqsAO3+LBOkQQTuO6L3AoWQBKrlynHKDcIk/cW/BdVu/Qk9bW
+         g7hw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=CTWPMQ5IkIsp33gvRTV303Woi805qt5LWeJY1A4m9uw=;
-        b=wUOZ1/HyJunzvX7b2JSyEaS17tFNEdR+IZKqohdMyW9VRysp+uDcGizM/itjpsydLa
-         4dT7UJAgtXNFVBmvKJCIhAF4dcLDA39I4JagaoETxhOI49bPURF6Rem32RNqEy8v6t8D
-         Ka8ltw+2U0K9FQMv7w/477UnchU2Oxk6CLSbXLj0rm99tFBJUrJs2YqXGmGcciF5aTIp
-         LxfyYU2ZOEPDzeq5GpI/x0wyT1vXGHULGbXw/fpbnImE6wONo7ride6b5vk986a4A2dv
-         J0Asxq6eIxWRCqkT33Ja8o4d8VB+9h9owyH+trQ6ll7CrepNRFfAd0GfufRp2x0IM2V1
-         Jy9g==
-X-Gm-Message-State: AO0yUKXThJ5dkTEXAGy/5YmZsP5XwYxFWnw1YVr81v3Iiz94zvQIqyfq
-        mEa3NCCWh0Lgkhs8IFX8mY8=
-X-Google-Smtp-Source: AK7set9KhVRcL1vkjLJPVGMyilsn5eE+TJWdC9vdzFon7EJF13hwGE1UA2zzRaRP2jZ55wjDvdPiXQ==
-X-Received: by 2002:a17:906:2214:b0:8b1:304e:58a7 with SMTP id s20-20020a170906221400b008b1304e58a7mr2092828ejs.56.1676383800712;
-        Tue, 14 Feb 2023 06:10:00 -0800 (PST)
+        bh=ZyRxgGKgBmZ7vlz9B0DPHOS/vRaGIdO6oxSW3aBTwD0=;
+        b=AKPdcURQ2jR53KnPTtvnYHMPSxEPFsJKihoKtyDB2wLAavmkaxfOpb2xDbfcAhQZX9
+         yJFOdBc7HpBF2wtsKGIciBCIpR2BuZBt1ysd0PPwg868B+HxVsUw06MiZ6ZDIj65DkrS
+         MRNFTmX0VZJikQNV6o0TEfPoDb2f/Q4CuiWeSuWGHb+d3pJQqdGzhVBlH2RHAzyfidOn
+         uc75VMJ9U74eEhblFKTK/9nJInYeobTSTs2/CciVRYFraIIAfys/uVJZ3AlDuN+ifDJj
+         V++yUq1tVIyS1rPnRHIKTv4qr8NfPZAKdAwcSEM1WZh/2wdYIhuUqDX0mmZc0MH777pC
+         BYug==
+X-Gm-Message-State: AO0yUKWx5xadOplZ0YzjWvJ8ypiyIOZ2mnYKhLkr9NBvlSLA57DL/LdQ
+        N3WI2pINAegLMNdDAj6nOGY=
+X-Google-Smtp-Source: AK7set8457lF/1ct6QNmD+ni295zwiDN6/EivlGIF+JpLzVOpzazEgBBkLErUzQwRm93A7rAOTYAOg==
+X-Received: by 2002:a17:906:2f06:b0:878:714b:5e16 with SMTP id v6-20020a1709062f0600b00878714b5e16mr3011287eji.28.1676383806487;
+        Tue, 14 Feb 2023 06:10:06 -0800 (PST)
 Received: from A13PC04R.einet.ad.eivd.ch ([193.134.219.72])
-        by smtp.googlemail.com with ESMTPSA id n11-20020a1709065e0b00b008b13814f804sm332241eju.186.2023.02.14.06.09.59
+        by smtp.googlemail.com with ESMTPSA id n11-20020a1709065e0b00b008b13814f804sm332241eju.186.2023.02.14.06.10.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Feb 2023 06:10:00 -0800 (PST)
+        Tue, 14 Feb 2023 06:10:06 -0800 (PST)
 From:   Rick Wertenbroek <rick.wertenbroek@gmail.com>
 To:     alberto.dassatti@heig-vd.ch
 Cc:     xxm@rock-chips.com, rick.wertenbroek@heig-vd.ch,
         Rick Wertenbroek <rick.wertenbroek@gmail.com>,
-        stable@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Heiko Stuebner <heiko@sntech.de>,
         Shawn Lin <shawn.lin@rock-chips.com>,
@@ -61,15 +61,15 @@ Cc:     xxm@rock-chips.com, rick.wertenbroek@heig-vd.ch,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Jani Nikula <jani.nikula@intel.com>,
-        Mikko Kovanen <mikko.kovanen@aavamobile.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mikko Kovanen <mikko.kovanen@aavamobile.com>,
         devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH v2 3/9] PCI: rockchip: Assert PCI Configuration Enable bit after probe
-Date:   Tue, 14 Feb 2023 15:08:51 +0100
-Message-Id: <20230214140858.1133292-4-rick.wertenbroek@gmail.com>
+Subject: [PATCH v2 5/9] arm64: dts: rockchip: Add dtsi entry for RK3399 PCIe endpoint core
+Date:   Tue, 14 Feb 2023 15:08:53 +0100
+Message-Id: <20230214140858.1133292-6-rick.wertenbroek@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230214140858.1133292-1-rick.wertenbroek@gmail.com>
 References: <20230214140858.1133292-1-rick.wertenbroek@gmail.com>
@@ -79,33 +79,52 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Assert PCI Configuration Enable bit after probe. When this bit is left to
-0 in the endpoint mode, the RK3399 PCIe endpoint core will generate
-configuration request retry status (CRS) messages back to the root complex.
-Assert this bit after probe to allow the RK3399 PCIe endpoint core to reply
-to configuration requests from the root complex.
-This is documented in section 17.5.8.1.2 of the RK3399 TRM.
+Add dtsi entry for RK3399 PCIe endpoint core in the device tree.
+The status is "disabled" by default, so it will not be loaded unless
+explicitly chosen to. The RK3399 PCIe endpoit core should be enabled
+with the RK3399 PCIe root complex disabled because the RK3399 PCIe
+controller can only work one mode at the time, either in "root complex"
+mode or in "endpoint" mode.
 
-Fixes: cf590b078391 ("PCI: rockchip: Add EP driver for Rockchip PCIe controller")
-Cc: stable@vger.kernel.org
 Signed-off-by: Rick Wertenbroek <rick.wertenbroek@gmail.com>
 ---
- drivers/pci/controller/pcie-rockchip-ep.c | 2 ++
- 1 file changed, 2 insertions(+)
+ arch/arm64/boot/dts/rockchip/rk3399.dtsi | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
-index 9b835377b..4c84e403e 100644
---- a/drivers/pci/controller/pcie-rockchip-ep.c
-+++ b/drivers/pci/controller/pcie-rockchip-ep.c
-@@ -623,6 +623,8 @@ static int rockchip_pcie_ep_probe(struct platform_device *pdev)
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399.dtsi b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
+index 9d5b0e8c9..8cc5a1ee2 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
+@@ -265,6 +265,29 @@ pcie0_intc: interrupt-controller {
+ 		};
+ 	};
  
- 	ep->irq_pci_addr = ROCKCHIP_PCIE_EP_DUMMY_IRQ_ADDR;
- 
-+	rockchip_pcie_write(rockchip, PCIE_CLIENT_CONF_ENABLE, PCIE_CLIENT_CONFIG);
++	pcie0_ep: pcie-ep@f8000000 {
++		compatible = "rockchip,rk3399-pcie-ep";
++		rockchip,max-outbound-regions = <32>;
++		clocks = <&cru ACLK_PCIE>, <&cru ACLK_PERF_PCIE>,
++			<&cru PCLK_PCIE>, <&cru SCLK_PCIE_PM>;
++		clock-names = "aclk", "aclk-perf",
++				"hclk", "pm";
++		max-functions = /bits/ 8 <8>;
++		num-lanes = <4>;
++		reg = <0x0 0xfd000000 0x0 0x1000000>, <0x0 0xfa000000 0x0 0x2000000>;
++		reg-names = "apb-base", "mem-base";
++		resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
++			<&cru SRST_PCIE_MGMT_STICKY>, <&cru SRST_PCIE_PIPE> ,
++			<&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
++		reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
++				"pm", "pclk", "aclk";
++		phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
++		phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pcie_clkreqnb_cpm>;
++		status = "disabled";
++	};
 +
- 	return 0;
- err_epc_mem_exit:
- 	pci_epc_mem_exit(epc);
+ 	gmac: ethernet@fe300000 {
+ 		compatible = "rockchip,rk3399-gmac";
+ 		reg = <0x0 0xfe300000 0x0 0x10000>;
 -- 
 2.25.1
 
