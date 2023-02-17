@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1AD4C64ED8
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Feb 2023 09:40:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9471C636D4
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Feb 2023 09:40:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230106AbjBQJkM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Feb 2023 04:40:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34484 "EHLO
+        id S229931AbjBQJkL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Feb 2023 04:40:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbjBQJkK (ORCPT
+        with ESMTP id S229461AbjBQJkK (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2023 04:40:10 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E358362FDC;
-        Fri, 17 Feb 2023 01:40:00 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C782E62FCD;
+        Fri, 17 Feb 2023 01:40:02 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 0AB62E0EAA;
-        Fri, 17 Feb 2023 12:39:59 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id EAEA7E0EAE;
+        Fri, 17 Feb 2023 12:40:01 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
-        :content-type:content-type:date:from:from:message-id
-        :mime-version:reply-to:subject:subject:to:to; s=post; bh=s4GbBTn
-        mS7KrQ6aqqnSvUqvcmPEcQprtwoDeUBF0LW8=; b=Sfm6jUMN3ZM8vSCUU3xAYzO
-        RdpbO0KpLb3sao8ZZ+8rGH+ZCZKbNfWRnmXmTd1Pqk4YZ+N99oFNbQsCfieP9bSf
-        UdIsupNm9T1lMOIPOP6Xhqm45XBuR6wbEjgZv2cLHvRFeSxi4uNxR3y5rY/1zeSu
-        VuR351U3Gx18abMRJYSY=
+        :content-type:content-type:date:from:from:in-reply-to:message-id
+        :mime-version:references:reply-to:subject:subject:to:to; s=post;
+         bh=nGH1eyeTZsaiGaUCtbAQ+K31eiBwSX9FFd2B6giUXIA=; b=CxHf8e3cIwtB
+        ZY5fLrR1Kbr0CX5bkrAi9BCoeKgkbXYt7jAtvCbh9m9g5PmHxBSkXMnmWSdMIjoQ
+        lVbVjjWdAZCK7BjF/V6rTr0pknE89/OsZ8OpHZ+EBJEcmDkcpuwtlNefoHxgdQAR
+        sKjn6qBzCR8YtQZCgCiUck9pr+m7ENw=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id D65ABE0E6A;
-        Fri, 17 Feb 2023 12:39:58 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id D38A9E0E6A;
+        Fri, 17 Feb 2023 12:40:01 +0300 (MSK)
 Received: from localhost (10.8.30.14) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Fri, 17 Feb 2023 12:39:58 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 17 Feb 2023 12:40:01 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -39,17 +39,21 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Vinod Koul <vkoul@kernel.org>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>
-CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Rob Herring <robh@kernel.org>,
         Serge Semin <fancer.lancer@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH 00/11] PCI: dwc: Relatively simple fixes and cleanups
-Date:   Fri, 17 Feb 2023 12:39:45 +0300
-Message-ID: <20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 02/11] PCI: dwc: Fix erroneous version type test helper
+Date:   Fri, 17 Feb 2023 12:39:47 +0300
+Message-ID: <20230217093956.27126-3-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru>
+References: <20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -59,79 +63,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It turns out the recent DW PCIe-related patchset was merged in with
-several relatively trivial issues left unsettled (noted by Bjorn and
-Manivannan). All of these lefovers have been fixed in this patchset.
-Namely the series starts with two bug-fixes. The first one concerns the
-improper link-mode initialization in case if the CDM-check is enabled. The
-second unfortunate mistake I made in the IP-core version type helper. In
-particular instead of testing the IP-core version type the macro function
-referred to the just IP-core version which obviously wasn't what I
-intended.
+Due to an unfortunate mistake the macro function actually checks the
+IP-core version instead of the IP-core version type which isn't what
+originally implied. Fix it by introducing a new helper
+__dw_pcie_ver_type_cmp() with the same semantic as the __dw_pcie_ver_cmp()
+counterpart except it refers to the dw_pcie.type field in order to perform
+the passed comparison operation.
 
-Afterwards two @Mani-noted fixes follow. Firstly the dma-ranges related warning
-message is fixed to start with "DMA-ranges" word instead of "Dma-ranges".
-Secondly the Baikal-T1 PCIe Host driver is converted to perform the
-asynchronous probe type which saved us of about 15% of bootup time if no any
-PCIe peripheral device attached to the port.
-
-Then the patchset contains the Baikal-T1 PCIe driver fix. The
-corresponding patch removes the false error message printed during the
-controller probe procedure. I accidentally added the unconditional
-dev_err_probe() method invocation. It was obviously wrong.
-
-Then two trivial cleanups are introduced. The first one concerns the
-duplicated fast-link-mode flag unsetting. The second one implies
-dropping a redundant empty line from the dw_pcie_link_set_max_speed()
-function.
-
-The series continues with a patch inspired by the last @Bjorn note
-regarding the generic resources request interface. As @Bjorn correctly
-said it would be nice to have the new interface used wider in the DW PCIe
-subsystem. Aside with the Baikal-T1 PCIe Host driver the Toshiba Visconti
-PCIe driver can be easily converted to using the generic clock names.
-That's what is done in the noted patch.
-
-The patchset is closed with a series of MAINTAINERS-list related patches.
-Firstly after getting the DW PCIe RP/EP DT-schemas refactored I forgot to
-update the MAINTAINER-list with the new files added in the framework of
-that procedure. All the snps,dw-pcie* schemas shall be maintained by the
-DW PCIe core driver maintainers. Secondly seeing how long it took for my
-patchsets to review and not having any comments from the original driver
-maintainers I'd suggest to add myself as the reviewer to the DW PCIe and
-eDMA drivers. Thus hopefully the new updates review process will be
-performed with much less latencies. For the same reason I would also like
-to suggest to add @Manivannan as the DW PCIe/eDMA drivers maintainer if
-he isn't against that idea. What do you think about the last suggestion?
-
+Fixes: 0b0a780d52ad ("PCI: dwc: Add macros to compare Synopsys IP core versions")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
-Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
-Cc: linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/controller/dwc/pcie-designware.h | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Serge Semin (11):
-  PCI: dwc: Fix port link CSR improper init if CDM check enabled
-  PCI: dwc: Fix erroneous version type test helper
-  PCI: dwc: Fix inbound iATU entries out-of-bounds warning message
-  PCI: bt1: Enable async probe type
-  PCI: bt1: Fix printing false error message
-  PCI: dwc: Drop duplicated fast-link-mode flag unsetting
-  PCI: dwc: Drop empty line from dw_pcie_link_set_max_speed()
-  PCI: visconti: Convert to using generic resources getter
-  MAINTAINERS: Add all generic DW PCIe RP/EP DT-schemas
-  MAINTAINERS: Add myself as the DW PCIe core reviewer
-  MAINTAINERS: Add myself as the DW eDMA driver reviewer
-
- MAINTAINERS                                   |  5 ++-
- drivers/pci/controller/dwc/pcie-bt1.c         |  5 ++-
- .../pci/controller/dwc/pcie-designware-host.c |  2 +-
- drivers/pci/controller/dwc/pcie-designware.c  |  3 +-
- drivers/pci/controller/dwc/pcie-designware.h  |  7 +++-
- drivers/pci/controller/dwc/pcie-visconti.c    | 37 +++++++++----------
- 6 files changed, 31 insertions(+), 28 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 393dfb931df6..9ebe91cc11d8 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -35,17 +35,20 @@
+ #define __dw_pcie_ver_cmp(_pci, _ver, _op) \
+ 	((_pci)->version _op DW_PCIE_VER_ ## _ver)
+ 
++#define __dw_pcie_ver_type_cmp(_pci, _type, _op) \
++	((_pci)->type _op DW_PCIE_VER_TYPE_ ## _type)
++
+ #define dw_pcie_ver_is(_pci, _ver) __dw_pcie_ver_cmp(_pci, _ver, ==)
+ 
+ #define dw_pcie_ver_is_ge(_pci, _ver) __dw_pcie_ver_cmp(_pci, _ver, >=)
+ 
+ #define dw_pcie_ver_type_is(_pci, _ver, _type) \
+ 	(__dw_pcie_ver_cmp(_pci, _ver, ==) && \
+-	 __dw_pcie_ver_cmp(_pci, TYPE_ ## _type, ==))
++	 __dw_pcie_ver_type_cmp(_pci, _type, ==))
+ 
+ #define dw_pcie_ver_type_is_ge(_pci, _ver, _type) \
+ 	(__dw_pcie_ver_cmp(_pci, _ver, ==) && \
+-	 __dw_pcie_ver_cmp(_pci, TYPE_ ## _type, >=))
++	 __dw_pcie_ver_type_cmp(_pci, _type, >=))
+ 
+ /* DWC PCIe controller capabilities */
+ #define DW_PCIE_CAP_REQ_RES		0
 -- 
 2.39.0
 
