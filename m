@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 799ACC6FA99
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6058AC6FA9D
 	for <linux-pci@archiver.kernel.org>; Fri, 17 Feb 2023 09:40:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230123AbjBQJkO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S230117AbjBQJkO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 17 Feb 2023 04:40:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34500 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230097AbjBQJkM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2023 04:40:12 -0500
+        with ESMTP id S229868AbjBQJkK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2023 04:40:10 -0500
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4A15162FC4;
-        Fri, 17 Feb 2023 01:40:10 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 16AAC62FD0;
+        Fri, 17 Feb 2023 01:40:04 -0800 (PST)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id EF648E0EB1;
-        Fri, 17 Feb 2023 12:40:05 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 45F58E0EAF;
+        Fri, 17 Feb 2023 12:40:03 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=h8ZIQkAkmsk8Sq+0FVklTiFjRYhjzEGYwZkUfKAAjwc=; b=vbTyxYCznMEB
-        cw21xpv2Urs2d6rAuR2y7JuuQUk8+3kWPk2qQ05Oe6l++GhjC+T8Ixj3be0d9cDz
-        qoXq0w/Kk52BL4jcpO8Zphq5B3WNV537xTBUeIEKRX9dMYVpo71oeaQ0WioGHY7J
-        Cmc0lXQO3UGYpsLWgOMdvx0PQu8lIgE=
+         bh=w2jlGrFc3qlyTKTPE83c3X1APnnB2VRFPyB7c0ZQ+FI=; b=RRzqS2/0K8Ge
+        mdhKGX9+WFP+VcEHZTdSVmo9qiAxVL/OTSjwF1oUc5pXuOoA3mY13hi0rUCO1tBF
+        fW+CAKx3EArhpVOxXQNW/VdU8JCrFfmTTaLktqKzyPIeErNfRPy48qIx+2+B6aLV
+        wz148Vu8/he1OvYYHoDk+er4oyH9tsI=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id D8AD1E0E6A;
-        Fri, 17 Feb 2023 12:40:05 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 307D5E0E6A;
+        Fri, 17 Feb 2023 12:40:03 +0300 (MSK)
 Received: from localhost (10.8.30.14) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Fri, 17 Feb 2023 12:40:05 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 17 Feb 2023 12:40:02 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -40,17 +40,17 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Rob Herring <robh@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH 05/11] PCI: bt1: Fix printing false error message
-Date:   Fri, 17 Feb 2023 12:39:50 +0300
-Message-ID: <20230217093956.27126-6-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 03/11] PCI: dwc: Fix inbound iATU entries out-of-bounds warning message
+Date:   Fri, 17 Feb 2023 12:39:48 +0300
+Message-ID: <20230217093956.27126-4-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.39.0
 In-Reply-To: <20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru>
@@ -63,33 +63,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The dev_err_probe() method is supposed to be invoked only if any error is
-happened. It was definitely wrong to call it unconditionally. Due to that
-the DWC PCIe host initialization error-message is printed all the time the
-Baikal-T1 PCIe controller is probed even if no error actually happened.
+The message is printed if the number of requested inbound iATU windows
+exceed the device capability. In that case the message should either refer
+to the "dma-ranges" DT property or to the DMA-ranges mapping. We suggest
+to use the later version as a counterpart to the just CPU-ranges mapping.
+In any case the current "Dma-ranges" phrase seems incorrect.
 
-Fixes: ba6ed462dcf4 ("PCI: dwc: Add Baikal-T1 PCIe controller support")
+Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/pci/controller/dwc/pcie-bt1.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-bt1.c b/drivers/pci/controller/dwc/pcie-bt1.c
-index 036a22886d17..055ed6ae321f 100644
---- a/drivers/pci/controller/dwc/pcie-bt1.c
-+++ b/drivers/pci/controller/dwc/pcie-bt1.c
-@@ -593,8 +593,10 @@ static int bt1_pcie_add_port(struct bt1_pcie *btpci)
- 	dw_pcie_cap_set(&btpci->dw, REQ_RES);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 3ab6ae3712c4..5762bd306261 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -704,7 +704,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ 	}
  
- 	ret = dw_pcie_host_init(&btpci->dw.pp);
-+	if (ret)
-+		dev_err_probe(dev, ret, "Failed to initialize DWC PCIe host\n");
+ 	if (pci->num_ib_windows <= i)
+-		dev_warn(pci->dev, "Dma-ranges exceed inbound iATU size (%u)\n",
++		dev_warn(pci->dev, "DMA-ranges exceed inbound iATU size (%u)\n",
+ 			 pci->num_ib_windows);
  
--	return dev_err_probe(dev, ret, "Failed to initialize DWC PCIe host\n");
-+	return ret;
- }
- 
- static void bt1_pcie_del_port(struct bt1_pcie *btpci)
+ 	return 0;
 -- 
 2.39.0
 
