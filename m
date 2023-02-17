@@ -2,126 +2,99 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C46C636D6
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Feb 2023 09:07:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 523C9C636D6
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Feb 2023 09:40:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229949AbjBQJHc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Feb 2023 04:07:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39120 "EHLO
+        id S230094AbjBQJkK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Feb 2023 04:40:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229714AbjBQJHb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2023 04:07:31 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AE460FA3
-        for <linux-pci@vger.kernel.org>; Fri, 17 Feb 2023 01:06:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1676624794;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QYBgjTMjZdGOtt6bx76zu2DLo3upoWvpTnwIk+crChA=;
-        b=GSIE2yV0pSYAPwfnKhm+J/hbBW/g3y0mAAu3VtxXA3i13Bm0Bcjl99TO75hZfoAoc8embN
-        I1DUv8fM2SKM3+LqFub61pl7QSpdKq80Lzj4HpLQwFIxeYXELsZeHsvn3dKtYzOv2BLTNi
-        nVvHqQhVcvcDy89/s0fdVYp6AUl6Lr8=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_128_GCM_SHA256) id
- us-mta-98-vV_e88flPx27QHTUgtxXfw-1; Fri, 17 Feb 2023 04:06:33 -0500
-X-MC-Unique: vV_e88flPx27QHTUgtxXfw-1
-Received: by mail-qt1-f200.google.com with SMTP id c19-20020ac853d3000000b003ba2a2c50f9so154936qtq.23
-        for <linux-pci@vger.kernel.org>; Fri, 17 Feb 2023 01:06:33 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=QYBgjTMjZdGOtt6bx76zu2DLo3upoWvpTnwIk+crChA=;
-        b=auP1wsLEgHB6iS9qced53tk42q56xJ6fIo7e6cACJyCIN7tx0O2P1EWxHjm5TxIafs
-         Sv+gf5yjKYeAUqjyWzuAiAM5QSGL+AofN5nOMstFqgAegzTWMIXq9bcxPjPGPCtd5n1f
-         UahhyeOPm4N0C5RktVkS6bj/MDYUrlOuQMO8KGUTMtmjH4Hr0kkWUFyyJ42h6rUMeUPY
-         v+iATISBujGr8zIWowKdwkK3EoLr84A3QSD2bqqJi+kau/Ps4bBBJYPaL5/caSy4+ShD
-         6sWUvk3xRJIt1VtTWaIhfDlFbeN6p/dfpjjiQaMuRb1giKtJIx7xmsfBsd1aVMGKjx4d
-         NXBA==
-X-Gm-Message-State: AO0yUKXD0Jl42O79Qjh+oGBPtCWgU4Dm4fH5t6fIPdE5c2Fo9dBw+phq
-        2LHpiA8UN0ciBm4I6vXCbBydZ6kKywWsNPneZR3VqCkyCf8ZcYcqk4t2sad2rn/hlqFiGPfh/Ti
-        HB5V6gLNKEasdYhDAxnL+
-X-Received: by 2002:a05:6214:21a9:b0:56e:fef4:7ff1 with SMTP id t9-20020a05621421a900b0056efef47ff1mr6224982qvc.21.1676624792393;
-        Fri, 17 Feb 2023 01:06:32 -0800 (PST)
-X-Google-Smtp-Source: AK7set9dksCLRvkGtOCr4ORausUUH6GVWvsZbSk/a25QvYMl9pl4wePTorQHv5gsaTW5qe3V949j8g==
-X-Received: by 2002:a05:6214:21a9:b0:56e:fef4:7ff1 with SMTP id t9-20020a05621421a900b0056efef47ff1mr6224956qvc.21.1676624792049;
-        Fri, 17 Feb 2023 01:06:32 -0800 (PST)
-Received: from localhost.localdomain ([151.29.151.163])
-        by smtp.gmail.com with ESMTPSA id i65-20020a37b844000000b00705cef9b84asm2814791qkf.131.2023.02.17.01.06.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Feb 2023 01:06:31 -0800 (PST)
-Date:   Fri, 17 Feb 2023 10:06:27 +0100
-From:   Juri Lelli <juri.lelli@redhat.com>
-To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-rt-users@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Tommaso Cucinotta <tommaso.cucinotta@santannapisa.it>,
-        Daniel Bristot de Oliveira <bristot@redhat.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@linaro.org>
-Subject: Re: [ANNOUNCE][CFP] Power Management and Scheduling in the Linux
- Kernel V edition (OSPM-summit 2023)
-Message-ID: <Y+9Dk69B/PSMp3Lp@localhost.localdomain>
-References: <Y8lFkbJ6nluNdVYO@localhost.localdomain>
+        with ESMTP id S229605AbjBQJkK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2023 04:40:10 -0500
+Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5F7F562FDD;
+        Fri, 17 Feb 2023 01:40:01 -0800 (PST)
+Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 80D55E0EAC;
+        Fri, 17 Feb 2023 12:40:00 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        baikalelectronics.ru; h=cc:cc:content-transfer-encoding
+        :content-type:content-type:date:from:from:in-reply-to:message-id
+        :mime-version:references:reply-to:subject:subject:to:to; s=post;
+         bh=Tv9FLsHiNOnxzHzQ4+Y5Gt8oNFskGfjGVuw49JYQI/M=; b=ry3EXBiKkYUA
+        prt2XdNsZHFU/Tp461Whj35weJ3xp7uHhPpFj6uiaMMLWOBaejPJf3TFUBw/jyxF
+        vB4M0OaLkpvFcZcULMd/waJ6x4fM8s0HRVAtaM8e2Ip6LniY/QIuZiagrWX7SAZM
+        VnOz/4/F/qgIxrPtZNxfmOx5ztHqTbI=
+Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 69CAEE0E6A;
+        Fri, 17 Feb 2023 12:40:00 +0300 (MSK)
+Received: from localhost (10.8.30.14) by mail (192.168.51.25) with Microsoft
+ SMTP Server (TLS) id 15.0.1395.4; Fri, 17 Feb 2023 12:40:00 +0300
+From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Rob Herring <robh@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Manivannan Sadhasivam <mani@kernel.org>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH 01/11] PCI: dwc: Fix port link CSR improper init if CDM check enabled
+Date:   Fri, 17 Feb 2023 12:39:46 +0300
+Message-ID: <20230217093956.27126-2-Sergey.Semin@baikalelectronics.ru>
+X-Mailer: git-send-email 2.39.0
+In-Reply-To: <20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru>
+References: <20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Y8lFkbJ6nluNdVYO@localhost.localdomain>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.8.30.14]
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi All,
+If CDM_CHECK capability is set then the local variable 'val' will be
+overwritten in the dw_pcie_setup() method in the PL_CHK register
+initialization procedure. Thus further variable usage in the framework of
+the PCIE_PORT_LINK_CONTROL register initialization must imply the variable
+re-initialization. Alas it hasn't been taken into account in the
+commit ec7b952f453c ("PCI: dwc: Always enable CDM check if
+"snps,enable-cdm-check" exists"). Due to that the PCIE_PORT_LINK_CONTROL
+register will be written with improper value in case if the CDM-check is
+enabled. Let's fix this by re-initializing the 'val' variable with the
+PCIE_PORT_LINK_CONTROL CSR content before link-mode initialization.
 
-On 19/01/23 14:28, Juri Lelli wrote:
-> Power Management and Scheduling in the Linux Kernel (OSPM-summit) V edition
-> 
-> April 17-19, 2023
-> Universita Politecnica delle Marche, Facolta di Economia
-> Ancona, Italy
-> 
-> ---
-> 
-> .:: FOCUS
-> 
-> After a couple of years break, OSPM is back! In a different venue.
-> 
-> The V edition of the Power Management and Scheduling in the Linux Kernel
-> (OSPM) summit aims at fostering discussions on power management and
-> (real-time) scheduling techniques. Summit will be held in Ancona (Italy)
-> on April 17-19, 2023.
+Fixes: ec7b952f453c ("PCI: dwc: Always enable CDM check if "snps,enable-cdm-check" exists")
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+---
+ drivers/pci/controller/dwc/pcie-designware.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-...
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 6d5d619ab2e9..3bb9ca14fb9c 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -824,6 +824,7 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	}
+ 
+ 	/* Set the number of lanes */
++	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
+ 	val &= ~PORT_LINK_FAST_LINK_MODE;
+ 	val &= ~PORT_LINK_MODE_MASK;
+ 	switch (pci->num_lanes) {
+-- 
+2.39.0
 
-> .:: ATTENDING
-> 
-> Attending the OSPM-summit is free of charge, but registration to the
-> event is mandatory. The event can allow a maximum of 50 people (so, be
-> sure to register early!).
-
-Registrations are now open. Please use the link below to register. Don't
-hesitate to reply to me privately if you experience problems with
-the process.
-
-https://forms.gle/QbRhGS3HWXinKBZq7
-
-Also, website of the event is now online. Refer to that for logistic
-information.
-
-https://retis.sssup.it/ospm-summit/
-
-You can find below the list of accepted topics.
-
-https://docs.google.com/spreadsheets/d/10AJFQporrCPH9Gn6-MaRotdfO4Hm4LG6dVAoDrQdj5A/edit?usp=sharing
-
-For registered attendees, a draft schedule will be available in the next
-couple of weeks (tentatively :).
-
-Looking forward to meeting you in Ancona!
-
-Best,
-Juri
 
