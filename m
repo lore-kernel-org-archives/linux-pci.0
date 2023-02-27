@@ -2,162 +2,88 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61EEBC64ED8
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Feb 2023 19:29:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B86C7EE2D
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Feb 2023 19:56:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229629AbjB0T3v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Feb 2023 14:29:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35018 "EHLO
+        id S230060AbjB0T4C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Feb 2023 14:56:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230117AbjB0T3u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2023 14:29:50 -0500
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98811234FA;
-        Mon, 27 Feb 2023 11:29:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1677526189; x=1709062189;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=v3mSa++3w5di4VuVyxMCx7ivKLHS0LlRNUH1BB+AgB8=;
-  b=hZ/SOCRwBXaRf2haKwIDhDVWoiuGDCxQCFc49c1o8U/4vK9dS9cAqhtO
-   XjdUWa5zZOYzf+llEc3jV4yPm/UxEByEkTF4iFo3c/XYMexgpVS4FTLp1
-   BL5yNUwznYP34nOINwbuITzBxdeuxqzCtDWZ09kJFP0iLVQ088ZqvtvlA
-   SY4wx3uLtydVLdcNBb/fD9uGVbh11w0qYAQlns9fm/k+oTlS7nCTsWDJE
-   9VCePvBTMA/NbiIeX4PvT+c0Mh/YW73vW+vdFWTe8FuiSuO6RUhhRlnKX
-   x3wdoFaawKZ7jAohAp8JIO+fECXjAxo1BQUXOcdIkdj/bZyvikbYBh6tr
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10634"; a="313619215"
-X-IronPort-AV: E=Sophos;i="5.98,219,1673942400"; 
-   d="scan'208";a="313619215"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2023 11:29:49 -0800
-X-IronPort-AV: E=McAfee;i="6500,9779,10634"; a="737856265"
-X-IronPort-AV: E=Sophos;i="5.98,219,1673942400"; 
-   d="scan'208";a="737856265"
-Received: from cpalit-mobl2.amr.corp.intel.com (HELO [10.212.235.220]) ([10.212.235.220])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2023 11:29:48 -0800
-Message-ID: <b7a71cca-8223-7346-c024-edc80a106042@linux.intel.com>
-Date:   Mon, 27 Feb 2023 11:29:47 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.4.2
-Subject: Re: [PATCH 1/2] PCI/ATS: Add a helper function to configure ATS STU
- of a PF.
-Content-Language: en-US
-To:     Ganapatrao Kulkarni <gankulkarni@os.amperecomputing.com>,
+        with ESMTP id S230201AbjB0Tz4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2023 14:55:56 -0500
+Received: from mail-oo1-f49.google.com (mail-oo1-f49.google.com [209.85.161.49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16DE927487;
+        Mon, 27 Feb 2023 11:55:37 -0800 (PST)
+Received: by mail-oo1-f49.google.com with SMTP id b10-20020a4aba0a000000b005200c0d4a2aso1182743oop.11;
+        Mon, 27 Feb 2023 11:55:37 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Bi77Q6Z8Ff9qsnZSuzIme0IaEFZzAF96yr6jKLT/oNY=;
+        b=SRujPQTf8ADse0J8OKENRUhyL3irU3TJLqlFVW61b61irn+fBZ4dWq7rLoLnuVmLxF
+         zXbR4ZY3QwqOEBCsbTvQc1MuV/X8QRQXvNf8P22dB/wJj7SuRpZ/1HQ6MVNeOFaOA8i4
+         cQuFgYLrm6waNMwhkJXYIYLXtEseVHbcmFJ6gcbc33su4ylYGxtJYR3kFJn0quPDqZGQ
+         xHjd5dtOcYTJ3FbFBeh7B9esZ90Ub1XaE66tZatFp5X03Ood1MGxl0FGzAuLHOtoQoWV
+         CZ/8TqZ732OMFfxotimjIHAkK/sd8cqPbRdCDIG5qh8JoemQh7T2DsEl6L2t1nkD3N8c
+         iUoQ==
+X-Gm-Message-State: AO0yUKUjHoH8XoegLOERIChAYZ4HCA4Bcis10bUqv/6RWcRzwY4O6VDg
+        RWl5SWxvhIwDdacspGqEGw==
+X-Google-Smtp-Source: AK7set9GQuirZFd7o5uFL8Fk7mb03UTZ7Ig8Xe1KNoWVOrcBWkvbceDiwdjpSqwnJAwtKq6eclwsGw==
+X-Received: by 2002:a4a:5250:0:b0:51f:955a:ca37 with SMTP id d77-20020a4a5250000000b0051f955aca37mr12887637oob.8.1677527736308;
+        Mon, 27 Feb 2023 11:55:36 -0800 (PST)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id h15-20020a4abb8f000000b00525398a1144sm2977105oop.32.2023.02.27.11.55.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Feb 2023 11:55:36 -0800 (PST)
+Received: (nullmailer pid 754635 invoked by uid 1000);
+        Mon, 27 Feb 2023 19:55:35 -0000
+Date:   Mon, 27 Feb 2023 13:55:35 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     andersson@kernel.org, lpieralisi@kernel.org, kw@linux.com,
+        krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org,
+        konrad.dybcio@linaro.org, bhelgaas@google.com, kishon@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-        joro@8bytes.org, bhelgaas@google.com, robin.murphy@arm.com,
-        will@kernel.org
-Cc:     jean-philippe@linaro.org, darren@os.amperecomputing.com,
-        scott@os.amperecomputing.com
-References: <20230227132151.1907480-1-gankulkarni@os.amperecomputing.com>
- <20230227132151.1907480-2-gankulkarni@os.amperecomputing.com>
-From:   Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20230227132151.1907480-2-gankulkarni@os.amperecomputing.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 02/13] dt-bindings: PCI: qcom: Add iommu properties
+Message-ID: <20230227195535.GA749409-robh@kernel.org>
+References: <20230224105906.16540-1-manivannan.sadhasivam@linaro.org>
+ <20230224105906.16540-3-manivannan.sadhasivam@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230224105906.16540-3-manivannan.sadhasivam@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On 2/27/23 5:21 AM, Ganapatrao Kulkarni wrote:
-> As per PCI specification (PCI Express Base Specification Revision
-> 6.0, Section 10.5) both PF and VFs of a PCI EP are permitted to be enabled
-> independently for ATS capability, however the STU(Smallest Translation
-> Unit) is shared between PF and VFs. For VFs, it is hardwired to Zero and
-> the associated PF's value applies to VFs.
+On Fri, Feb 24, 2023 at 04:28:55PM +0530, Manivannan Sadhasivam wrote:
+> Most of the PCIe controllers require iommu support to function properly.
+> So let's add them to the binding.
 > 
-> In the current code, the STU is being configured while enabling the PF ATS.
-> Hence, it is not able to enable ATS for VFs, if it is not enabled on the
-> associated PF already.> 
-> Adding a function pci_ats_stu_configure(), which can be called to
-> configure the STU during PF enumeration.
-> Latter enumerations of VFs can successfully enable ATS independently.
-
-Why not enable ATS in PF before enabling it in VF? Just updating STU of
-PF and not enabling it seem odd.
-
-> 
-> Signed-off-by: Ganapatrao Kulkarni <gankulkarni@os.amperecomputing.com>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > ---
->  drivers/pci/ats.c       | 32 ++++++++++++++++++++++++++++++--
->  include/linux/pci-ats.h |  1 +
->  2 files changed, 31 insertions(+), 2 deletions(-)
+>  Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 5 +++++
+>  1 file changed, 5 insertions(+)
 > 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index f9cc2e10b676..70e1982efdb4 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -46,6 +46,34 @@ bool pci_ats_supported(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_ats_supported);
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> index a3639920fcbb..f48d0792aa57 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> @@ -64,6 +64,11 @@ properties:
 >  
-> +/**
-> + * pci_ats_stu_configure - Configure STU of a PF.
-> + * @dev: the PCI device
-> + * @ps: the IOMMU page shift
-> + *
-> + * Returns 0 on success, or negative on failure.
-> + */
-> +int pci_ats_stu_configure(struct pci_dev *dev, int ps)
-> +{
-> +	u16 ctrl;
-> +
-> +	if (dev->ats_enabled || dev->is_virtfn)
-> +		return 0;
-> +
-> +	if (!pci_ats_supported(dev))
-> +		return -EINVAL;
-> +
-> +	if (ps < PCI_ATS_MIN_STU)
-> +		return -EINVAL;
-> +
-> +	dev->ats_stu = ps;
-> +	ctrl = PCI_ATS_CTRL_STU(dev->ats_stu - PCI_ATS_MIN_STU);
-> +	pci_write_config_word(dev, dev->ats_cap + PCI_ATS_CTRL, ctrl);
-
-If you just want to update the STU, don't overwrite other fields.
-
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_ats_stu_configure);
-> +
->  /**
->   * pci_enable_ats - enable the ATS capability
->   * @dev: the PCI device
-> @@ -68,8 +96,8 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
->  		return -EINVAL;
+>    dma-coherent: true
 >  
->  	/*
-> -	 * Note that enabling ATS on a VF fails unless it's already enabled
-> -	 * with the same STU on the PF.
-> +	 * Note that enabling ATS on a VF fails unless it's already
-> +	 * configured with the same STU on the PF.
->  	 */
->  	ctrl = PCI_ATS_CTRL_ENABLE;
->  	if (dev->is_virtfn) {
-> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-> index df54cd5b15db..9b40eb555124 100644
-> --- a/include/linux/pci-ats.h
-> +++ b/include/linux/pci-ats.h
-> @@ -8,6 +8,7 @@
->  /* Address Translation Service */
->  bool pci_ats_supported(struct pci_dev *dev);
->  int pci_enable_ats(struct pci_dev *dev, int ps);
-> +int pci_ats_stu_configure(struct pci_dev *dev, int ps);
+> +  iommus:
+> +    maxItems: 1
+> +
+> +  iommu-map: true
+> +
 
-What about dummy declaration for !CONFIG_PCI_ATS case?
+I think both properties together doesn't make sense unless the PCI host 
+itself does DMA in addition to PCI bus devices doing DMA.
 
->  void pci_disable_ats(struct pci_dev *dev);
->  int pci_ats_queue_depth(struct pci_dev *dev);
->  int pci_ats_page_aligned(struct pci_dev *dev);
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+Rob
