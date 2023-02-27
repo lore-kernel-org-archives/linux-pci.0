@@ -2,103 +2,148 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47488C64ED8
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Feb 2023 08:12:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB88C7EE2D
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Feb 2023 08:57:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229888AbjB0IM1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Feb 2023 03:12:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42630 "EHLO
+        id S230007AbjB0I5V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Feb 2023 03:57:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbjB0IM0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2023 03:12:26 -0500
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED4CB19F2A
-        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2023 00:12:25 -0800 (PST)
-Received: by mail-pf1-x430.google.com with SMTP id y10so2977050pfi.8
-        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2023 00:12:25 -0800 (PST)
+        with ESMTP id S231766AbjB0I4n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2023 03:56:43 -0500
+Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EAF022A1A
+        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2023 00:48:33 -0800 (PST)
+Received: by mail-lf1-x130.google.com with SMTP id s22so7484894lfi.9
+        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2023 00:48:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AaJLUnQgW3YvM+831rK4y5nTUdoF7eZcnDJFmGI//oE=;
-        b=Ngpm7nT9CLlDP9rE42QTdn2hVBMBSwbKJ/5U4B9su4IO7cFkAk3pwyqqwO1e9Vv/CF
-         Dd5Fpx3q4gZe+Aedx3imAbYnK2Ii08MrMK/1GH3d34ZqOwLKXkzKTQZVo4+tHZfoY4VO
-         WLJNLcB93TdiLrpJ2HQBolnxW6vquDdW63Ynz8QPRkFgWAGe/CfpOnOq3iG+ukf0e87T
-         A1tzjoc6QxBZx3FOq+BY25lWzYh02AUtwhIrW8KwZAvewdR5950AlkK2fIZzIyDsRzp1
-         3ncsvUaYGQhLNZ2p5WTZA9bHR/qKLhHqlyu/3e0uZYKlcJOjKEmxHEk3u3qCeadiF7kO
-         TRng==
+        d=linaro.org; s=google; t=1677487633;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=vGEvxiIce6M0SGXJ5oF+mxzxGYDkt2DuO9DUSxA4Nhc=;
+        b=DbYxzYd2egvjqQVaE54QMDImLRBvo2tB+2pSsAFL6cS0WM2EON5MTROQQHlYJlzbv7
+         eOkA1276kEfRKLawg17GO6ur3BDp2eOeBieMhTSSArIzg34xSekrFJhzS/yogKQZutlM
+         GEpUL9/znyFxZCy/DUxzjslBwsG91jFZHBJ8u83foePcb1eErY1GsRkOBI+GQapxxL3U
+         UU1ArqCqJre2wSzeWuHJUf199TMel7PmWVUGfucOQD9nfmarDaepqONWqqKRS3pRX4aK
+         fZmlNicKzjlYudQadii3pDFAmd6brtZxMhhQEe+M8iZx+kiYSfyRNopsnzt8r4Xho9SD
+         pxPQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=AaJLUnQgW3YvM+831rK4y5nTUdoF7eZcnDJFmGI//oE=;
-        b=s5T9xaFHdKyUg0e7YKZg90HkQVUptkSUQK5mUya/FIKygzcL8/d5h18vMPGVUj4dMc
-         HSCBAhCIt9GltUvVaka+3ej5TmzIFgUguN3fK+7eJ++fZAfHBmyeFiSKbI0Znqbd2g2k
-         q5adh+5sDZ9V54Sv9qm9xTut7pxNHXIctR9NbeDuYjexQXd/mcbdNI3zm6GuCr9yUGLt
-         llK0TWRbRurwYBluoWEPNgMoCHclAYbbsPKBrH0gwKzyJ5p/naufIOewqpiYr6H+fbbA
-         jmENLlpfVQZhU9u4IZ9WeUMkDINhcbIca96lkFlvFSR+Z5vBv3ZmIZfiyBCyPov+FfTe
-         GLeQ==
-X-Gm-Message-State: AO0yUKWB85nO/Rop90P8U4ioEukEQmFAJhEkW7Cx/tWEXaDfu8XnW8T2
-        Pl2JwC6eNqp71wnxmBOfoXfyV5f13VG2uW+aPxJpbmBOfS6Erw==
-X-Google-Smtp-Source: AK7set8EDBW9a4nZ/5oesxVYWIxejD62UIU84J6EB5Lf0Miu3NHHvMboaLuYQG0eqDXOAZPL+mw4UGRfkd4eBFDRw3Q=
-X-Received: by 2002:a63:9dc9:0:b0:503:2535:44c3 with SMTP id
- i192-20020a639dc9000000b00503253544c3mr2128484pgd.4.1677485545278; Mon, 27
- Feb 2023 00:12:25 -0800 (PST)
+        d=1e100.net; s=20210112; t=1677487633;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=vGEvxiIce6M0SGXJ5oF+mxzxGYDkt2DuO9DUSxA4Nhc=;
+        b=eisbQ7mN3tYMYAA31jF19W7V2iEOvbkOBNKKKlbxbaOgVmK+REAFX4nzfFiEryeHys
+         EIX1pHz6AJD28EKN+pTtIKcPLmN8PAAUXkjeB05n3/LQzIp/usQPg+BftBQZ0WOj3v+4
+         BppDPK7J6XWGBAnTrBUV0l/iSOT65fAynW4KgngJ1/dGBSNI7WTHN0d9m0eNZdPmYicq
+         4Xu1chh0dRaTvpeSVM5Sxmso91raae2S8r+Co/MeED8RGzFV4QAlaMo60jLH5oQNH2WU
+         5ocy2O4KbJ8be8BwLgUliH+e7kgb9NDFBoIcYnJSqspzVRVzQ/4vk/WLNEORO2e4NZmU
+         QEUw==
+X-Gm-Message-State: AO0yUKXBv+nlyVGFxABjqu+gG8Tl+Hoeov5OOv9InwY3MkqKi2H4z2Bf
+        26TWJOVzkldv9lwhi739qryVjA==
+X-Google-Smtp-Source: AK7set+jRlP3Ws0pk91xzP8Ph3OLMg+5mB5YM01sUtHzwiuA+FFG2+OP37l/eZVFlbwMvoHRKPydiw==
+X-Received: by 2002:ac2:5a5c:0:b0:4d7:58c8:5f44 with SMTP id r28-20020ac25a5c000000b004d758c85f44mr7382294lfn.12.1677487633674;
+        Mon, 27 Feb 2023 00:47:13 -0800 (PST)
+Received: from [192.168.1.101] (abym99.neoplus.adsl.tpnet.pl. [83.9.32.99])
+        by smtp.gmail.com with ESMTPSA id a7-20020a2eb547000000b00290716d65dcsm641925ljn.136.2023.02.27.00.47.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Feb 2023 00:47:13 -0800 (PST)
+Message-ID: <8991446f-88f0-9f83-e284-be67b376b1f6@linaro.org>
+Date:   Mon, 27 Feb 2023 09:47:11 +0100
 MIME-Version: 1.0
-References: <8e7978f65c6606fb2d48483435c78bd3@cutk.com> <756173E3-354E-4AC4-89D7-9096B62E344C.1@smtp-inbound1.duck.com>
-In-Reply-To: <756173E3-354E-4AC4-89D7-9096B62E344C.1@smtp-inbound1.duck.com>
-From:   "Oliver O'Halloran" <oohall@gmail.com>
-Date:   Mon, 27 Feb 2023 19:12:14 +1100
-Message-ID: <CAOSf1CGoAVrzb7nrMgZ6tZP-Akx7DvGD5RBu9KjprP5r2DtQiA@mail.gmail.com>
-Subject: Re: ASMedia ASM1812 PCIe switch causes system to freeze hard
-To:     fk1xdcio@duck.com
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.8.0
+Subject: Re: [PATCH v2 09/13] ARM: dts: qcom: sdx55-t55: Enable PCIe RC
+ support
+Content-Language: en-US
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        andersson@kernel.org, lpieralisi@kernel.org, robh@kernel.org,
+        kw@linux.com, krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org
+Cc:     bhelgaas@google.com, kishon@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
+References: <20230224105906.16540-1-manivannan.sadhasivam@linaro.org>
+ <20230224105906.16540-10-manivannan.sadhasivam@linaro.org>
+From:   Konrad Dybcio <konrad.dybcio@linaro.org>
+In-Reply-To: <20230224105906.16540-10-manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Feb 26, 2023 at 6:20=E2=80=AFAM <fk1xdcio@duck.com> wrote:
->
-> On 2023-02-25 13:28, Chris wrote:
-> > I'm testing a generic 4-port PCIe x4 2.5Gbps Ethernet NIC. It uses an
-> > ASM1812 for the PCI packet switch to four RTL8125BG network
-> > controllers.
->
-> Sorry, I forget my attachment with the PCI device information.
 
-Looks like your mail client is breaking threads.
 
-Anyway, the only thing of interest I can see in the log is that AER is
-reporting correctable errors on three of your four NICs:
+On 24.02.2023 11:59, Manivannan Sadhasivam wrote:
+> Enable PCIe RC support on Thundercomm T55 board.
+> 
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> ---
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 
-07:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8125
-2.5GbE Controller (rev 05)
-Capabilities: [100 v2] Advanced Error Reporting
-CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
-08:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8125
-2.5GbE Controller (rev 05)
-Capabilities: [100 v2] Advanced Error Reporting
-CESta: RxErr+ BadTLP- BadDLLP+ Rollover- Timeout+ AdvNonFatalErr-
-09:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8125
-2.5GbE Controller (rev 05)
-Capabilities: [100 v2] Advanced Error Reporting
-CESta: RxErr+ BadTLP- BadDLLP+ Rollover- Timeout+ AdvNonFatalErr-
-0a:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8125
-2.5GbE Controller (rev 05)
-Capabilities: [100 v2] Advanced Error Reporting
-CESta: RxErr+ BadTLP- BadDLLP+ Rollover- Timeout+ AdvNonFatalErr-
-
-Bad Data Link Layer Packet errors suggest that specific card has
-signal integrity issues. Assuming that's true, more traffic to the NIC
-means more opportunities for uncorrectable errors which would explain
-the hard lockups. I'm not sure why setting pci=3Dnommconf seems to fix
-the problem, but my guess it's just masking the issue. The AER
-capability is in the extended config space which requires the memory
-mapped config space to access so disabling that probably just stops
-the kernel from noticing that errors are occuring. The network stack
-is pretty forgiving of errors since it can just drop packets which
-might also explain the lower throughput too.
+Konrad
+>  arch/arm/boot/dts/qcom-sdx55-t55.dts | 42 ++++++++++++++++++++++++++++
+>  1 file changed, 42 insertions(+)
+> 
+> diff --git a/arch/arm/boot/dts/qcom-sdx55-t55.dts b/arch/arm/boot/dts/qcom-sdx55-t55.dts
+> index 7ed8feb99afb..6339af791b0b 100644
+> --- a/arch/arm/boot/dts/qcom-sdx55-t55.dts
+> +++ b/arch/arm/boot/dts/qcom-sdx55-t55.dts
+> @@ -242,6 +242,23 @@ &ipa {
+>  	memory-region = <&ipa_fw_mem>;
+>  };
+>  
+> +&pcie_phy {
+> +	vdda-phy-supply = <&vreg_l1e_bb_1p2>;
+> +	vdda-pll-supply = <&vreg_l4e_bb_0p875>;
+> +
+> +	status = "okay";
+> +};
+> +
+> +&pcie_rc {
+> +	perst-gpios = <&tlmm 57 GPIO_ACTIVE_LOW>;
+> +	wake-gpios = <&tlmm 53 GPIO_ACTIVE_HIGH>;
+> +
+> +	pinctrl-0 = <&pcie_default>;
+> +	pinctrl-names = "default";
+> +
+> +	status = "okay";
+> +};
+> +
+>  &qpic_bam {
+>  	status = "ok";
+>  };
+> @@ -265,6 +282,31 @@ &remoteproc_mpss {
+>  	memory-region = <&mpss_adsp_mem>;
+>  };
+>  
+> +&tlmm {
+> +	pcie_default: pcie-default-state {
+> +		clkreq-pins {
+> +			pins = "gpio56";
+> +			function = "pcie_clkreq";
+> +			drive-strength = <2>;
+> +			bias-pull-up;
+> +		};
+> +
+> +		perst-pins {
+> +			pins = "gpio57";
+> +			function = "gpio";
+> +			drive-strength = <2>;
+> +			bias-pull-down;
+> +		};
+> +
+> +		wake-pins {
+> +		       pins = "gpio53";
+> +		       function = "gpio";
+> +		       drive-strength = <2>;
+> +		       bias-pull-up;
+> +	       };
+> +	};
+> +};
+> +
+>  &usb_hsphy {
+>  	status = "okay";
+>  	vdda-pll-supply = <&vreg_l4e_bb_0p875>;
