@@ -2,28 +2,28 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57B6DC64ED6
-	for <linux-pci@archiver.kernel.org>; Tue, 28 Feb 2023 05:43:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F5CC6FA8E
+	for <linux-pci@archiver.kernel.org>; Tue, 28 Feb 2023 05:56:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229469AbjB1Fn6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 28 Feb 2023 00:43:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56558 "EHLO
+        id S229715AbjB1F4E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 28 Feb 2023 00:56:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229534AbjB1Fn5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2023 00:43:57 -0500
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0906D1A4B8;
-        Mon, 27 Feb 2023 21:43:54 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        with ESMTP id S229706AbjB1F4D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Feb 2023 00:56:03 -0500
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86E5125B85;
+        Mon, 27 Feb 2023 21:55:58 -0800 (PST)
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
          client-signature RSA-PSS (4096 bits) client-digest SHA256)
         (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by bmailout3.hostsharing.net (Postfix) with ESMTPS id 4F8AB102F1753;
-        Tue, 28 Feb 2023 06:43:53 +0100 (CET)
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id A45C82801161B;
+        Tue, 28 Feb 2023 06:55:56 +0100 (CET)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 213C938176; Tue, 28 Feb 2023 06:43:53 +0100 (CET)
-Date:   Tue, 28 Feb 2023 06:43:53 +0100
+        id 92DF940F8A; Tue, 28 Feb 2023 06:55:56 +0100 (CET)
+Date:   Tue, 28 Feb 2023 06:55:56 +0100
 From:   Lukas Wunner <lukas@wunner.de>
 To:     Alexey Kardashevskiy <aik@amd.com>
 Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
@@ -37,52 +37,40 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
         "Li, Ming" <ming4.li@intel.com>, Hillf Danton <hdanton@sina.com>,
         Ben Widawsky <bwidawsk@kernel.org>, linuxarm@huawei.com,
         linux-cxl@vger.kernel.org
-Subject: Re: [PATCH v3 12/16] PCI/DOE: Create mailboxes on device enumeration
-Message-ID: <20230228054353.GA32202@wunner.de>
+Subject: Re: [PATCH v3 16/16] cxl/pci: Rightsize CDAT response allocation
+Message-ID: <20230228055556.GB32202@wunner.de>
 References: <cover.1676043318.git.lukas@wunner.de>
- <c3f9e24fffa318a045f89664fb9545099cb0d603.1676043318.git.lukas@wunner.de>
- <bc150b29-ee21-b033-7d05-dd28dd7a1af4@amd.com>
+ <49c5299afc660ac33fee9a116ea37df0de938432.1676043318.git.lukas@wunner.de>
+ <10f9baf4-7fdf-b105-9222-5a1df59e2993@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bc150b29-ee21-b033-7d05-dd28dd7a1af4@amd.com>
+In-Reply-To: <10f9baf4-7fdf-b105-9222-5a1df59e2993@amd.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Feb 28, 2023 at 12:18:07PM +1100, Alexey Kardashevskiy wrote:
-> On 11/2/23 07:25, Lukas Wunner wrote:
-> > For the same reason a DOE instance cannot be shared between the PCI core
-> > and a driver.
-> 
-> And we want this sharing why? Any example will do. Thanks,
+On Tue, Feb 28, 2023 at 12:45:33PM +1100, Alexey Kardashevskiy wrote:
+> Almost no change from this patchset applied cleanly to
+> drivers/cxl/core/pci.c, what is the patchset based on? Thanks,
 
-The PCI core is going to perform CMA/SPDM authentication when a device
-gets enumerated (PCIe r6.0 sec 6.31).  That's the main motivation
-to lift DOE mailbox creation into the PCI core.  It's not mentioned
-here explicitly because I want the patch to stand on its own.
-CMA/SPDM support will be submitted separately.
+This series is based on pci/next, i.e. v6.2-rc1 plus PCI changes for v6.3:
 
-A driver that later on gets bound to the device should be allowed
-to talk to it via DOE as well, possibly even sharing the same DOE
-mailboxes used by the PCI core.
+https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=next
 
-Patches for CMA/SPDM are under development on this branch:
+It should apply cleanly to cxl/next as well, save for a trivial merge
+conflict in patch [13/16] due to a context change.  Here's a branch
+containing v3 of this series based on cxl/next:
+
+https://github.com/l1k/linux/commits/doe_rework_v3_cxl_next
+
+That said, you're probably better off just using the development branch
+for CMA/SPDM, it incorporates all the changes requested during review
+of v3 and will form the basis for v4 (slated for submission in a few
+days):
 
 https://github.com/l1k/linux/commits/doe
-
-
-> > Currently a DOE instance cannot be shared by multiple drivers because
-> > each driver creates its own pci_doe_mb struct for a given DOE instance.
-> 
-> Sorry for my ignorance but why/how/when would a device have multiple drivers
-> bound? Or it only one driver at the time but we also want DOE MBs to survive
-> switching to another (different or newer) driver?
-
-Conceivably, a driver may have the need to talk to multiple devices
-via DOE, even ones it's not bound to.  (E.g. devices in its ancestry
-or children.)
 
 Thanks,
 
