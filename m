@@ -2,103 +2,171 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BA83C7EE33
-	for <linux-pci@archiver.kernel.org>; Wed,  1 Mar 2023 21:01:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62225C7EE23
+	for <linux-pci@archiver.kernel.org>; Wed,  1 Mar 2023 21:07:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229802AbjCAVBE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 Mar 2023 16:01:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36988 "EHLO
+        id S229740AbjCAVHz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 Mar 2023 16:07:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41204 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229563AbjCAVBC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Mar 2023 16:01:02 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12EDD521CD;
-        Wed,  1 Mar 2023 13:01:01 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id BD885B80EE1;
-        Wed,  1 Mar 2023 21:00:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 742DBC4339E;
-        Wed,  1 Mar 2023 21:00:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677704458;
-        bh=Ijy28NfIAolHq1kijXKPv1A9Prn6Z4PgPnz0SF2ZvmE=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=qwnNOgDopWNiUb4dKzA0Y6sT0gASegFoNl0l1oHhxaeFwidRVACqKvo9Zw4Lq2uLa
-         DkRPAf51+Vr8EEyQ7IwC/Bj5H1tJVAjANsJyJLagfb6dQBIR+9OsGjhNPWRat2SOtH
-         5jiteysKnyeBDdmsXExcQfoBUuLwKJRarM2/PpsDCzlFSlDaYiuiIN6Yn50f7C1yat
-         Kl5hMVdu4kXvgesUhxebkvb/oOudYsbAKXyirkpGD3xB/LvTXAtTlhB/h40wU7a9WI
-         X+6tPt1WSw58XL3OkDSeUjRPC3OEETL51n26pr7wfG3C7UJmYklBJjZHN6oNtzMzrG
-         H1pgP6Xi9fu0w==
-Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-53852143afcso389451967b3.3;
-        Wed, 01 Mar 2023 13:00:58 -0800 (PST)
-X-Gm-Message-State: AO0yUKUkNco2rq4K5o5XxG7Qrs1MolodYnCt0+yadl9+JyNaMT4qDo7m
-        2DczIbGS4CB2Hvw33a1Rv2MKLhdYuXOfAeUKqg==
-X-Google-Smtp-Source: AK7set/B7w4SIUVUY+fuTrfn39/aDxu+LSL+nDi5aDHHQnm81UFIS2ScAXvxaj+SUvgnwt845OQ2PIVb1st0BjISJs0=
-X-Received: by 2002:a05:6102:3ca9:b0:41e:bccf:5669 with SMTP id
- c41-20020a0561023ca900b0041ebccf5669mr6637793vsv.2.1677704437053; Wed, 01 Mar
- 2023 13:00:37 -0800 (PST)
-MIME-Version: 1.0
-References: <20230301185209.274134-1-jjhiblot@traphandler.com> <20230301185209.274134-4-jjhiblot@traphandler.com>
-In-Reply-To: <20230301185209.274134-4-jjhiblot@traphandler.com>
-From:   Rob Herring <robh+dt@kernel.org>
-Date:   Wed, 1 Mar 2023 15:00:25 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqJvYnBtaOwaRbNo5Eqp51yxhJpnSYQWEGfKjtZKjm7R4g@mail.gmail.com>
-Message-ID: <CAL_JsqJvYnBtaOwaRbNo5Eqp51yxhJpnSYQWEGfKjtZKjm7R4g@mail.gmail.com>
-Subject: Re: [PATCH 3/3] of: irq: release the node after looking up for "interrupts-extended"
-To:     Jean-Jacques Hiblot <jjhiblot@traphandler.com>
-Cc:     saravanak@google.com, clement.leger@bootlin.com,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
+        with ESMTP id S229694AbjCAVHy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Mar 2023 16:07:54 -0500
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52C1210EA;
+        Wed,  1 Mar 2023 13:07:51 -0800 (PST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1677704869;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B374OxTzVS9QcjckHvkiwhr+6E3lqWByqJOzxF2qGow=;
+        b=1drUTVAXKqngwe09WrmIidH/RzxI6ZIGMbKPz/8rOfWchpWKji8v3Sd9k/iiJSrrs0Iqav
+        rbrDSJRayQwz/HBJVgZWfK4WdTEZ9ZLJ36vYw81BaHEcJEbQQ8FnZ8/CjwLJi1YHx0fioe
+        FpS8swwObQDVsKoiMAY6dQv8F4JwaAZjs4QrDFdNznCDcVxVD5LRWiE6z7+xGAYA2bVXj7
+        S9Jyrmmiu+gesDGg71KvcSeCYWfjOwaACVFvCfUsv2R1Flux+bdkbfqUQqSI/G1XHmq0uW
+        WXlWEHaA477XPYFtRUjNP8uOeSKbkX7NXdZQuCu18GBZIlqT7qUEnWqh6749wQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1677704869;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B374OxTzVS9QcjckHvkiwhr+6E3lqWByqJOzxF2qGow=;
+        b=5Ajx6tscPHnH64xp+028YR2a9czj6LIZcEPYMzh0ULXNf96J2x0Dqr24aGYiU87iLVJuBC
+        Ka5YEgQGUGeS9VBg==
+To:     Miquel Raynal <miquel.raynal@bootlin.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Ashok Raj <ashok.raj@intel.com>, Jon Mason <jdmason@kudzu.us>,
+        Allen Hubbe <allenbh@gmail.com>,
         Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
         Christophe Leroy <christophe.leroy@csgroup.eu>,
-        zajec5@gmail.com, Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Claudiu Beznea <claudiu.beznea@microchip.com>,
-        Marc Zyngier <maz@kernel.org>, afaerber@suse.de,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Samuel Holland <samuel@sholland.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Nishanth Menon <nm@ti.com>, ssantosh@kernel.org,
-        mathias.nyman@intel.com, gregkh@linuxfoundation.org,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        linux-renesas-soc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-wireless@vger.kernel.org,
-        linux-actions@lists.infradead.org, linux-riscv@lists.infradead.org,
-        linux-sunxi@lists.linux.dev, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        linuxppc-dev@lists.ozlabs.org,
+        "Ahmed S. Darwish" <darwi@linutronix.de>,
+        Reinette Chatre <reinette.chatre@intel.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [patch 05/39] genirq/msi: Remove filter from
+ msi_free_descs_free_range()
+In-Reply-To: <20230301115530.5ccea5ae@xps-13>
+References: <20221111120501.026511281@linutronix.de>
+ <20221111122013.888850936@linutronix.de> <20230301115530.5ccea5ae@xps-13>
+Date:   Wed, 01 Mar 2023 22:07:48 +0100
+Message-ID: <87mt4wkwnv.ffs@tglx>
+MIME-Version: 1.0
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 1, 2023 at 12:53=E2=80=AFPM Jean-Jacques Hiblot
-<jjhiblot@traphandler.com> wrote:
+Miquel!
+
+On Wed, Mar 01 2023 at 11:55, Miquel Raynal wrote:
+> tglx@linutronix.de wrote on Fri, 11 Nov 2022 14:54:22 +0100 (CET):
 >
-> When of_parse_phandle_with_args() succeeds, a get() is performed on
-> out_irq->np. And another get() is performed in of_irq_parse_raw(),
-> resulting in the refcount being incremented twice.
-> Fixing this by calling put() after of_irq_parse_raw().
+>> When a range of descriptors is freed then all of them are not associated to
+>> a linux interrupt. Remove the filter and add a warning to the free function.
+>> +		/* Leak the descriptor when it is still referenced */
+>> +		if (WARN_ON_ONCE(msi_desc_match(desc, MSI_DESC_ASSOCIATED)))
+>> +			continue;
+>> +		msi_free_desc(desc);
+>>  	}
+>>  }
+>
+> It looks like since this commit I am getting warnings upon EPROBE_DEFER
+> errors in the mvpp2 Marvell Ethernet driver. I looked a bit at the
+> internals to understand why this warning was shown, and it seems that
+> nothing "de-references" the descriptors, which would mean here:
+> resetting desc->irq to 0.
 
-This looks like a band-aid to me. It only makes sense that the caller
-of of_irq_parse_raw() already holds a ref to out_irq->np. So the first
-of_node_get() in it looks wrong. It looks like the refcounting was
-originally balanced, but commit 2f53a713c4b6 ("of/irq: Fix device_node
-refcount in of_irq_parse_raw()") dropped the put on exit after 'got
-it!'. I'm not sure if just adding it back would be correct or not
-though.
+Correct. This platform-msi ^(*&!@&^ hack really needs to die ASAP.
 
-All this needs some test cases to be sure we get things right...
+Marc, where are we on that? Is this still in limbo?
 
-Rob
+> I am wondering how useful thisd WARN_ON() is, or otherwise where the
+
+It is useful as it caught bugs already.
+
+> desc->irq entry should be zeroed (if I understand that correctly), any
+> help will be appreciated.
+
+Untested workaround below. I hate it with a passion, but *shrug*.
+
+Thanks,
+
+        tglx
+---
+ drivers/base/platform-msi.c |    1 +
+ include/linux/msi.h         |    2 ++
+ kernel/irq/msi.c            |   23 ++++++++++++++++++++++-
+ 3 files changed, 25 insertions(+), 1 deletion(-)
+
+--- a/drivers/base/platform-msi.c
++++ b/drivers/base/platform-msi.c
+@@ -324,6 +324,7 @@ void platform_msi_device_domain_free(str
+ 	struct platform_msi_priv_data *data = domain->host_data;
+ 
+ 	msi_lock_descs(data->dev);
++	msi_domain_depopulate_descs(data->dev, virq, nr_irqs);
+ 	irq_domain_free_irqs_common(domain, virq, nr_irqs);
+ 	msi_free_msi_descs_range(data->dev, virq, virq + nr_irqs - 1);
+ 	msi_unlock_descs(data->dev);
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -631,6 +631,8 @@ int msi_domain_prepare_irqs(struct irq_d
+ 			    int nvec, msi_alloc_info_t *args);
+ int msi_domain_populate_irqs(struct irq_domain *domain, struct device *dev,
+ 			     int virq, int nvec, msi_alloc_info_t *args);
++void msi_domain_depopulate_descs(struct device *dev, int virq, int nvec);
++
+ struct irq_domain *
+ __platform_msi_create_device_domain(struct device *dev,
+ 				    unsigned int nvec,
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -1109,14 +1109,35 @@ int msi_domain_populate_irqs(struct irq_
+ 	return 0;
+ 
+ fail:
+-	for (--virq; virq >= virq_base; virq--)
++	for (--virq; virq >= virq_base; virq--) {
++		msi_domain_depopulate_descs(dev, virq, 1);
+ 		irq_domain_free_irqs_common(domain, virq, 1);
++	}
+ 	msi_domain_free_descs(dev, &ctrl);
+ unlock:
+ 	msi_unlock_descs(dev);
+ 	return ret;
+ }
+ 
++void msi_domain_depopulate_descs(struct device *dev, int virq_base, int nvec)
++{
++	struct msi_ctrl ctrl = {
++		.domid	= MSI_DEFAULT_DOMAIN,
++		.first  = virq_base,
++		.last	= virq_base + nvec - 1,
++	};
++	struct msi_desc *desc;
++	struct xarray *xa;
++	unsigned long idx;
++
++	if (!msi_ctrl_valid(dev, &ctrl))
++		return;
++
++	xa = &dev->msi.data->__domains[ctrl.domid].store;
++	xa_for_each_range(xa, idx, desc, ctrl.first, ctrl.last)
++		desc->irq = 0;
++}
++
+ /*
+  * Carefully check whether the device can use reservation mode. If
+  * reservation mode is enabled then the early activation will assign a
