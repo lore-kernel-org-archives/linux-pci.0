@@ -2,47 +2,47 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE98EC7EE32
-	for <linux-pci@archiver.kernel.org>; Fri,  3 Mar 2023 21:51:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E70FC7EE3A
+	for <linux-pci@archiver.kernel.org>; Fri,  3 Mar 2023 21:51:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232835AbjCCVtq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 3 Mar 2023 16:49:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37842 "EHLO
+        id S232868AbjCCVvg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 3 Mar 2023 16:51:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37524 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232603AbjCCVtQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Mar 2023 16:49:16 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AF9E6702C;
-        Fri,  3 Mar 2023 13:45:47 -0800 (PST)
+        with ESMTP id S233149AbjCCVui (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Mar 2023 16:50:38 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 986C664871;
+        Fri,  3 Mar 2023 13:46:39 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6CC3EB81A0A;
-        Fri,  3 Mar 2023 21:42:49 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F930C433A1;
-        Fri,  3 Mar 2023 21:42:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 88BC961943;
+        Fri,  3 Mar 2023 21:44:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AE11C433A0;
+        Fri,  3 Mar 2023 21:44:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677879768;
+        s=k20201202; t=1677879894;
         bh=BPvNuEoIcrDhMCnlwaSg0666iVjyarZBp9q3ys8goR4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OJaAienXgwEaawTA+Clz2jz9NWCLLMkm7H61tUdN2cIm4nqf6orYvrNSzrhIiQJjE
-         r/hkA9XhfQiyKTw2ODoSi4knacIeWthcFGjbfi9NGTIur4wQQonzF3keJ/sJNHcQYe
-         U6VuS1egUlFGRJihb9NDo2ivcdTprm0TZdrwRgJjXZXE79o3/z2mcUtzhjcix/vT0V
-         KBy5A3G+B9DqPMm7ULD3SWCSqfk8eD/49IGTC4ggLWVug/V0RwkpEfi078Z02yj6qZ
-         TmNfmW53GJnyescLoH3FOJ13c975hCdoguMCAUap7S87F6/1u1qC3AVQU95ImPhOGQ
-         TNp/39YAgNDJA==
+        b=j2N0lg1e/jzDa+L4Eg2Nhmz6f4nqj8fvzPbC9zwA/PShZxHfWPixPdElFbXqf9I69
+         +/696tQQ5Gw3DOzlFGRb5lqpf106QrP3ObDgZNqSjz0x+Q9cehP2I4BW2H2UPXQR4c
+         0rUK+jEgyE3mcnmzf0437S3DjbNQjnaedr4N3ucnge2m0T0VcFVGIRiolXWucKGKuw
+         3DQd9Y1Ns4ryb9aL5g7HfnbZlb/kqjP4c7YTySnweiDNvdTdRyMmtUZFwFqGq/dymm
+         +P3btUr8ujqkmELDA4VUa/uBiMhgOsF7Jjlv+33GsfFybs0seCQDKjcKElqnuMoA1c
+         3HLiLscw7PUYw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
         Chris Chiu <chris.chiu@canonical.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 49/64] PCI: Distribute available resources for root buses, too
-Date:   Fri,  3 Mar 2023 16:40:51 -0500
-Message-Id: <20230303214106.1446460-49-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 45/60] PCI: Distribute available resources for root buses, too
+Date:   Fri,  3 Mar 2023 16:42:59 -0500
+Message-Id: <20230303214315.1447666-45-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230303214106.1446460-1-sashal@kernel.org>
-References: <20230303214106.1446460-1-sashal@kernel.org>
+In-Reply-To: <20230303214315.1447666-1-sashal@kernel.org>
+References: <20230303214315.1447666-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
