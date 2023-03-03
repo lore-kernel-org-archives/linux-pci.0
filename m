@@ -2,48 +2,47 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3250BC7EE30
-	for <linux-pci@archiver.kernel.org>; Fri,  3 Mar 2023 21:49:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE98EC7EE32
+	for <linux-pci@archiver.kernel.org>; Fri,  3 Mar 2023 21:51:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232723AbjCCVtf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 3 Mar 2023 16:49:35 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37754 "EHLO
+        id S232835AbjCCVtq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 3 Mar 2023 16:49:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232662AbjCCVs4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Mar 2023 16:48:56 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 641786703B;
-        Fri,  3 Mar 2023 13:45:44 -0800 (PST)
+        with ESMTP id S232603AbjCCVtQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Mar 2023 16:49:16 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AF9E6702C;
+        Fri,  3 Mar 2023 13:45:47 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 76C78B81A27;
-        Fri,  3 Mar 2023 21:45:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5195BC4339C;
-        Fri,  3 Mar 2023 21:45:15 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 6CC3EB81A0A;
+        Fri,  3 Mar 2023 21:42:49 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F930C433A1;
+        Fri,  3 Mar 2023 21:42:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677879916;
-        bh=4unAjt4V5SjOwcZePewu1fuScVRo67vkT/F46A6vQYo=;
+        s=k20201202; t=1677879768;
+        bh=BPvNuEoIcrDhMCnlwaSg0666iVjyarZBp9q3ys8goR4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BRvt0YsqF4VTiMd3oLy/Exr3xH6u0hSIOGgPrpjo0C65dK9lLEy2PuELhDAa1DcA1
-         WTANkengS4LY0bxN/vnksuWHrDO9a/Jwz9NYGseTPfTXwFZFfOZMatuJWzgJ+6KfgH
-         a3UqbuBdmA+tsjeWwjDX6JgrKAkm4Hq1lIKqzTRk0bLE7NS2J1eBpnwuJXryF3yBhr
-         1Ntb93rAMvchvPeLUA3bWC7ATWdSIWBB5LXtq7IZcjb43hpBjMZZq8NV1Cd9+Kl0Vj
-         I6fSW//wj/d3EzDBLZlVCBGgVH7u33Wg+0CNJbrRLFL8btHKIchla24JMtlwksb06r
-         OpV6+B0E4SJNw==
+        b=OJaAienXgwEaawTA+Clz2jz9NWCLLMkm7H61tUdN2cIm4nqf6orYvrNSzrhIiQJjE
+         r/hkA9XhfQiyKTw2ODoSi4knacIeWthcFGjbfi9NGTIur4wQQonzF3keJ/sJNHcQYe
+         U6VuS1egUlFGRJihb9NDo2ivcdTprm0TZdrwRgJjXZXE79o3/z2mcUtzhjcix/vT0V
+         KBy5A3G+B9DqPMm7ULD3SWCSqfk8eD/49IGTC4ggLWVug/V0RwkpEfi078Z02yj6qZ
+         TmNfmW53GJnyescLoH3FOJ13c975hCdoguMCAUap7S87F6/1u1qC3AVQU95ImPhOGQ
+         TNp/39YAgNDJA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Chris Chiu <chris.chiu@canonical.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, lukas@wunner.de,
-        mani@kernel.org, pali@kernel.org, kabel@kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 55/60] PCI: pciehp: Add Qualcomm quirk for Command Completed erratum
-Date:   Fri,  3 Mar 2023 16:43:09 -0500
-Message-Id: <20230303214315.1447666-55-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.2 49/64] PCI: Distribute available resources for root buses, too
+Date:   Fri,  3 Mar 2023 16:40:51 -0500
+Message-Id: <20230303214106.1446460-49-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230303214315.1447666-1-sashal@kernel.org>
-References: <20230303214315.1447666-1-sashal@kernel.org>
+In-Reply-To: <20230303214106.1446460-1-sashal@kernel.org>
+References: <20230303214106.1446460-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,44 +51,130 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-[ Upstream commit 82b34b0800af8c9fc9988c290cdc813e0ca0df31 ]
+[ Upstream commit 7180c1d08639f28e63110ad35815f7a1785b8a19 ]
 
-The Qualcomm PCI bridge device (Device ID 0x010e) found in chipsets such as
-SC8280XP used in Lenovo Thinkpad X13s, does not set the Command Completed
-bit unless writes to the Slot Command register change "Control" bits.
+Previously we distributed spare resources only upon hot-add, so if the
+initial root bus scan found devices that had not been fully configured by
+the BIOS, we allocated only enough resources to cover what was then
+present. If some of those devices were hotplug bridges, we did not leave
+any additional resource space for future expansion.
 
-This results in timeouts like below during boot and resume from suspend:
+Distribute the available resources for root buses, too, to make this work
+the same way as the normal hotplug case.
 
-  pcieport 0002:00:00.0: pciehp: Timeout on hotplug command 0x03c0 (issued 2020 msec ago)
-  ...
-  pcieport 0002:00:00.0: pciehp: Timeout on hotplug command 0x13f1 (issued 107724 msec ago)
+A previous commit to do this was reverted due to a regression reported by
+Jonathan Cameron:
 
-Add the device to the Command Completed quirk to mark commands "completed"
-immediately unless they change the "Control" bits.
+  e96e27fc6f79 ("PCI: Distribute available resources for root buses, too")
+  5632e2beaf9d ("Revert "PCI: Distribute available resources for root buses, too"")
 
-Link: https://lore.kernel.org/r/20230213144922.89982-1-manivannan.sadhasivam@linaro.org
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+This commit changes pci_bridge_resources_not_assigned() to work with
+bridges that do not have all the resource windows programmed by the boot
+firmware (previously we expected all I/O, memory and prefetchable memory
+were programmed).
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=216000
+Link: https://lore.kernel.org/r/20220905080232.36087-5-mika.westerberg@linux.intel.com
+Link: https://lore.kernel.org/r/20230131092405.29121-4-mika.westerberg@linux.intel.com
+Reported-by: Chris Chiu <chris.chiu@canonical.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/setup-bus.c | 57 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 56 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 040ae076ec0e9..112c8f401ac4e 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -1086,6 +1086,8 @@ static void quirk_cmd_compl(struct pci_dev *pdev)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b7b8dddb77722..c690572b10ce7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1770,7 +1770,10 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
+ 	}
+ 
+ 	res->end = res->start + new_size - 1;
+-	remove_from_list(add_list, res);
++
++	/* If the resource is part of the add_list, remove it now */
++	if (add_list)
++		remove_from_list(add_list, res);
  }
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
- 			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x010e,
-+			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x0110,
- 			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x0400,
+ 
+ static void remove_dev_resource(struct resource *avail, struct pci_dev *dev,
+@@ -1972,6 +1975,8 @@ static void pci_bridge_distribute_available_resources(struct pci_dev *bridge,
+ 	if (!bridge->is_hotplug_bridge)
+ 		return;
+ 
++	pci_dbg(bridge, "distributing available resources\n");
++
+ 	/* Take the initial extra resources from the hotplug port */
+ 	available_io = bridge->resource[PCI_BRIDGE_IO_WINDOW];
+ 	available_mmio = bridge->resource[PCI_BRIDGE_MEM_WINDOW];
+@@ -1983,6 +1988,54 @@ static void pci_bridge_distribute_available_resources(struct pci_dev *bridge,
+ 					       available_mmio_pref);
+ }
+ 
++static bool pci_bridge_resources_not_assigned(struct pci_dev *dev)
++{
++	const struct resource *r;
++
++	/*
++	 * If the child device's resources are not yet assigned it means we
++	 * are configuring them (not the boot firmware), so we should be
++	 * able to extend the upstream bridge resources in the same way we
++	 * do with the normal hotplug case.
++	 */
++	r = &dev->resource[PCI_BRIDGE_IO_WINDOW];
++	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
++		return false;
++	r = &dev->resource[PCI_BRIDGE_MEM_WINDOW];
++	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
++		return false;
++	r = &dev->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
++	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
++		return false;
++
++	return true;
++}
++
++static void
++pci_root_bus_distribute_available_resources(struct pci_bus *bus,
++					    struct list_head *add_list)
++{
++	struct pci_dev *dev, *bridge = bus->self;
++
++	for_each_pci_bridge(dev, bus) {
++		struct pci_bus *b;
++
++		b = dev->subordinate;
++		if (!b)
++			continue;
++
++		/*
++		 * Need to check "bridge" here too because it is NULL
++		 * in case of root bus.
++		 */
++		if (bridge && pci_bridge_resources_not_assigned(dev))
++			pci_bridge_distribute_available_resources(bridge,
++								  add_list);
++		else
++			pci_root_bus_distribute_available_resources(b, add_list);
++	}
++}
++
+ /*
+  * First try will not touch PCI bridge res.
+  * Second and later try will clear small leaf bridge res.
+@@ -2022,6 +2075,8 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	 */
+ 	__pci_bus_size_bridges(bus, add_list);
+ 
++	pci_root_bus_distribute_available_resources(bus, add_list);
++
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
 -- 
 2.39.2
 
