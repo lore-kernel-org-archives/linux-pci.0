@@ -2,47 +2,46 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E70FC7EE3A
-	for <linux-pci@archiver.kernel.org>; Fri,  3 Mar 2023 21:51:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5462DC64EC4
+	for <linux-pci@archiver.kernel.org>; Fri,  3 Mar 2023 21:53:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232868AbjCCVvg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 3 Mar 2023 16:51:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37524 "EHLO
+        id S232492AbjCCVxb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 3 Mar 2023 16:53:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233149AbjCCVui (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Mar 2023 16:50:38 -0500
+        with ESMTP id S232989AbjCCVwE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Mar 2023 16:52:04 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 986C664871;
-        Fri,  3 Mar 2023 13:46:39 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 642EF6F492;
+        Fri,  3 Mar 2023 13:47:40 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 88BC961943;
-        Fri,  3 Mar 2023 21:44:54 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AE11C433A0;
-        Fri,  3 Mar 2023 21:44:53 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7F57E6195E;
+        Fri,  3 Mar 2023 21:47:10 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE96CC4339C;
+        Fri,  3 Mar 2023 21:47:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677879894;
-        bh=BPvNuEoIcrDhMCnlwaSg0666iVjyarZBp9q3ys8goR4=;
+        s=k20201202; t=1677880030;
+        bh=UPgSQDiz37wmpeF/caGGh5H14TBtwqAIZKd89eNeUO8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=j2N0lg1e/jzDa+L4Eg2Nhmz6f4nqj8fvzPbC9zwA/PShZxHfWPixPdElFbXqf9I69
-         +/696tQQ5Gw3DOzlFGRb5lqpf106QrP3ObDgZNqSjz0x+Q9cehP2I4BW2H2UPXQR4c
-         0rUK+jEgyE3mcnmzf0437S3DjbNQjnaedr4N3ucnge2m0T0VcFVGIRiolXWucKGKuw
-         3DQd9Y1Ns4ryb9aL5g7HfnbZlb/kqjP4c7YTySnweiDNvdTdRyMmtUZFwFqGq/dymm
-         +P3btUr8ujqkmELDA4VUa/uBiMhgOsF7Jjlv+33GsfFybs0seCQDKjcKElqnuMoA1c
-         3HLiLscw7PUYw==
+        b=oCaCvouk+0HXpCSTg1jRavtUAjdp5uh1w3Mlv5lG78fpjJWkN8yWWbu1qXVa2tvX6
+         HxujwnR8V1SXbvXqoDaaciZaumElc0nOgBDYng8djv0c5jDkWopPFJFzps1VZL2L2b
+         6CtzKF47MBzEUY9NJeQyFgWD6MCwY87TMcD5Wn8gAc+TqPfnQl+9OpCczEMogBKoYj
+         VnzkAFn1wE2rcDHtG7zSjVTk9BRlq9pJDL1bJMoV0+jUDmaYMD1oto7KX5oR2QItfi
+         xfzY3jy6HJMXdT7oDt6ErFFv+eF4O0i8v2l1QIHXTo7qmP+hwNfB9hSPjICCAmWAHz
+         VrTg+z8qspNXA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Chris Chiu <chris.chiu@canonical.com>,
+Cc:     Mengyuan Lou <mengyuanlou@net-swift.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 45/60] PCI: Distribute available resources for root buses, too
-Date:   Fri,  3 Mar 2023 16:42:59 -0500
-Message-Id: <20230303214315.1447666-45-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 47/50] PCI: Add ACS quirk for Wangxun NICs
+Date:   Fri,  3 Mar 2023 16:45:28 -0500
+Message-Id: <20230303214531.1450154-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230303214315.1447666-1-sashal@kernel.org>
-References: <20230303214315.1447666-1-sashal@kernel.org>
+In-Reply-To: <20230303214531.1450154-1-sashal@kernel.org>
+References: <20230303214531.1450154-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,130 +50,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+From: Mengyuan Lou <mengyuanlou@net-swift.com>
 
-[ Upstream commit 7180c1d08639f28e63110ad35815f7a1785b8a19 ]
+[ Upstream commit a2b9b123ccac913e9f9b80337d687a2fe786a634 ]
 
-Previously we distributed spare resources only upon hot-add, so if the
-initial root bus scan found devices that had not been fully configured by
-the BIOS, we allocated only enough resources to cover what was then
-present. If some of those devices were hotplug bridges, we did not leave
-any additional resource space for future expansion.
+Wangxun has verified there is no peer-to-peer between functions for the
+below selection of SFxxx, RP1000 and RP2000 NICS.  They may be
+multi-function devices, but the hardware does not advertise ACS capability.
 
-Distribute the available resources for root buses, too, to make this work
-the same way as the normal hotplug case.
+Add an ACS quirk for these devices so the functions can be in independent
+IOMMU groups.
 
-A previous commit to do this was reverted due to a regression reported by
-Jonathan Cameron:
-
-  e96e27fc6f79 ("PCI: Distribute available resources for root buses, too")
-  5632e2beaf9d ("Revert "PCI: Distribute available resources for root buses, too"")
-
-This commit changes pci_bridge_resources_not_assigned() to work with
-bridges that do not have all the resource windows programmed by the boot
-firmware (previously we expected all I/O, memory and prefetchable memory
-were programmed).
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=216000
-Link: https://lore.kernel.org/r/20220905080232.36087-5-mika.westerberg@linux.intel.com
-Link: https://lore.kernel.org/r/20230131092405.29121-4-mika.westerberg@linux.intel.com
-Reported-by: Chris Chiu <chris.chiu@canonical.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Link: https://lore.kernel.org/r/20230207102419.44326-1-mengyuanlou@net-swift.com
+Signed-off-by: Mengyuan Lou <mengyuanlou@net-swift.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/setup-bus.c | 57 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 56 insertions(+), 1 deletion(-)
+ drivers/pci/quirks.c    | 22 ++++++++++++++++++++++
+ include/linux/pci_ids.h |  2 ++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b7b8dddb77722..c690572b10ce7 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1770,7 +1770,10 @@ static void adjust_bridge_window(struct pci_dev *bridge, struct resource *res,
- 	}
- 
- 	res->end = res->start + new_size - 1;
--	remove_from_list(add_list, res);
-+
-+	/* If the resource is part of the add_list, remove it now */
-+	if (add_list)
-+		remove_from_list(add_list, res);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index a531064233f98..00d7d1738992c 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4823,6 +4823,26 @@ static int pci_quirk_brcm_acs(struct pci_dev *dev, u16 acs_flags)
+ 		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
  }
  
- static void remove_dev_resource(struct resource *avail, struct pci_dev *dev,
-@@ -1972,6 +1975,8 @@ static void pci_bridge_distribute_available_resources(struct pci_dev *bridge,
- 	if (!bridge->is_hotplug_bridge)
- 		return;
- 
-+	pci_dbg(bridge, "distributing available resources\n");
-+
- 	/* Take the initial extra resources from the hotplug port */
- 	available_io = bridge->resource[PCI_BRIDGE_IO_WINDOW];
- 	available_mmio = bridge->resource[PCI_BRIDGE_MEM_WINDOW];
-@@ -1983,6 +1988,54 @@ static void pci_bridge_distribute_available_resources(struct pci_dev *bridge,
- 					       available_mmio_pref);
- }
- 
-+static bool pci_bridge_resources_not_assigned(struct pci_dev *dev)
++/*
++ * Wangxun 10G/1G NICs have no ACS capability, and on multi-function
++ * devices, peer-to-peer transactions are not be used between the functions.
++ * So add an ACS quirk for below devices to isolate functions.
++ * SFxxx 1G NICs(em).
++ * RP1000/RP2000 10G NICs(sp).
++ */
++static int  pci_quirk_wangxun_nic_acs(struct pci_dev *dev, u16 acs_flags)
 +{
-+	const struct resource *r;
-+
-+	/*
-+	 * If the child device's resources are not yet assigned it means we
-+	 * are configuring them (not the boot firmware), so we should be
-+	 * able to extend the upstream bridge resources in the same way we
-+	 * do with the normal hotplug case.
-+	 */
-+	r = &dev->resource[PCI_BRIDGE_IO_WINDOW];
-+	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
-+		return false;
-+	r = &dev->resource[PCI_BRIDGE_MEM_WINDOW];
-+	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
-+		return false;
-+	r = &dev->resource[PCI_BRIDGE_PREF_MEM_WINDOW];
-+	if (r->flags && !(r->flags & IORESOURCE_STARTALIGN))
-+		return false;
-+
-+	return true;
-+}
-+
-+static void
-+pci_root_bus_distribute_available_resources(struct pci_bus *bus,
-+					    struct list_head *add_list)
-+{
-+	struct pci_dev *dev, *bridge = bus->self;
-+
-+	for_each_pci_bridge(dev, bus) {
-+		struct pci_bus *b;
-+
-+		b = dev->subordinate;
-+		if (!b)
-+			continue;
-+
-+		/*
-+		 * Need to check "bridge" here too because it is NULL
-+		 * in case of root bus.
-+		 */
-+		if (bridge && pci_bridge_resources_not_assigned(dev))
-+			pci_bridge_distribute_available_resources(bridge,
-+								  add_list);
-+		else
-+			pci_root_bus_distribute_available_resources(b, add_list);
++	switch (dev->device) {
++	case 0x0100 ... 0x010F:
++	case 0x1001:
++	case 0x2001:
++		return pci_acs_ctrl_enabled(acs_flags,
++			PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
 +	}
++
++	return false;
 +}
 +
- /*
-  * First try will not touch PCI bridge res.
-  * Second and later try will clear small leaf bridge res.
-@@ -2022,6 +2075,8 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 	 */
- 	__pci_bus_size_bridges(bus, add_list);
+ static const struct pci_dev_acs_enabled {
+ 	u16 vendor;
+ 	u16 device;
+@@ -4968,6 +4988,8 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_NXP, 0x8d9b, pci_quirk_nxp_rp_acs },
+ 	/* Zhaoxin Root/Downstream Ports */
+ 	{ PCI_VENDOR_ID_ZHAOXIN, PCI_ANY_ID, pci_quirk_zhaoxin_pcie_ports_acs },
++	/* Wangxun nics */
++	{ PCI_VENDOR_ID_WANGXUN, PCI_ANY_ID, pci_quirk_wangxun_nic_acs },
+ 	{ 0 }
+ };
  
-+	pci_root_bus_distribute_available_resources(bus, add_list);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 04f44a4694a2e..4853538bf1561 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -3012,6 +3012,8 @@
+ #define PCI_DEVICE_ID_INTEL_VMD_9A0B	0x9a0b
+ #define PCI_DEVICE_ID_INTEL_S21152BB	0xb152
+ 
++#define PCI_VENDOR_ID_WANGXUN		0x8088
 +
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
+ #define PCI_VENDOR_ID_SCALEMP		0x8686
+ #define PCI_DEVICE_ID_SCALEMP_VSMP_CTL	0x1010
+ 
 -- 
 2.39.2
 
