@@ -2,46 +2,46 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C3AEC6FD18
-	for <linux-pci@archiver.kernel.org>; Fri,  3 Mar 2023 22:05:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2E24C64EC4
+	for <linux-pci@archiver.kernel.org>; Fri,  3 Mar 2023 22:54:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233444AbjCCWFo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 3 Mar 2023 17:05:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44310 "EHLO
+        id S232060AbjCCWyt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 3 Mar 2023 17:54:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233825AbjCCWFK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Mar 2023 17:05:10 -0500
+        with ESMTP id S232736AbjCCWyg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Mar 2023 17:54:36 -0500
 Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 430C48614F;
-        Fri,  3 Mar 2023 13:55:17 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D841214E87;
+        Fri,  3 Mar 2023 14:53:58 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 0D4A8B81A0D;
-        Fri,  3 Mar 2023 21:43:02 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 264CEC433AA;
-        Fri,  3 Mar 2023 21:43:00 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id A063DB81A1F;
+        Fri,  3 Mar 2023 21:45:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B79A6C4339C;
+        Fri,  3 Mar 2023 21:45:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677879780;
+        s=k20201202; t=1677879911;
         bh=rdHX1NYCXHcsgCzqeUQTYwR7JXbfTw3eMiKLl6bPnlM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=B3Tv6sARtnBlwMCq3JY/HcnaYIoNqo/fCUNdvMe3FBekylUA1dSrduE6NO3Qjtt0f
-         karNxaEB4vwXI2oGfWSO5730YVdxP2mEI0bz4Dmi/Q3lRGWZXW7G+M59/dhtynchB2
-         OSJZQKiubqAG3HE8n5cF642fgJGpZVCEkT7GW0Oh5qxuUltOcZCh3+licW+GSAWSjg
-         ULcHTfbgGVDDIw5dJKv0DnMz9ffFwU4S2QmxBT/gUzdUpPILczDWOBVe9+NO3qOOUu
-         e0zEFff7jtf+68QCSZ8o0PD/6yMzXosAnBrGsDYNacj7P3fpwa7Snp+XDNbB0Lr4Fd
-         Zkrg1ERN0u9fg==
+        b=P+fvJ/tobTsd2kjqawrH52TBUpL+FFJfHdSTt874Idiz/KYms2ds+Lgg9BW/M/p/Q
+         G+mUmaNbaWSUdsArdWWWCHc2ya/zrtaXPvDEo1Qix9nmEY0ozdvPZQLWrjJh3qfkbN
+         Z15Nnu5E+HfcUR+38LzMf0L4ucqVtmmWVc8AdTtzJCxZI4iwu2P7pvpkEYqJ6+mm7E
+         tAmB+1bAQpvFrBLkNEtn+CWmxgylvec0yAWyCT6rnUlZ35asB1sPsdC/cIkPokmj9h
+         iphzKh9hcB+BAvZgwRXPLvgaMX6e51OT3eMHAciFhuHHMNKw6Kmn/z5eORxCAHdBui
+         2L/zF4E3enQNw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mengyuan Lou <mengyuanlou@net-swift.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.2 58/64] PCI: Add ACS quirk for Wangxun NICs
-Date:   Fri,  3 Mar 2023 16:41:00 -0500
-Message-Id: <20230303214106.1446460-58-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 54/60] PCI: Add ACS quirk for Wangxun NICs
+Date:   Fri,  3 Mar 2023 16:43:08 -0500
+Message-Id: <20230303214315.1447666-54-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230303214106.1446460-1-sashal@kernel.org>
-References: <20230303214106.1446460-1-sashal@kernel.org>
+In-Reply-To: <20230303214315.1447666-1-sashal@kernel.org>
+References: <20230303214315.1447666-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
