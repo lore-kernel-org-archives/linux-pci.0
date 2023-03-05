@@ -2,47 +2,47 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F86DC678DB
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Mar 2023 13:58:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAAE5C6FA8E
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Mar 2023 14:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230366AbjCEN6N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Mar 2023 08:58:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43288 "EHLO
+        id S229720AbjCEODy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Mar 2023 09:03:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59192 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230283AbjCEN5v (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Mar 2023 08:57:51 -0500
+        with ESMTP id S229846AbjCEODv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Mar 2023 09:03:51 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 078AE1ACD7;
-        Sun,  5 Mar 2023 05:56:57 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 986B9EFB9;
+        Sun,  5 Mar 2023 06:03:19 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6511A60B4B;
-        Sun,  5 Mar 2023 13:55:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 28D65C4339B;
-        Sun,  5 Mar 2023 13:55:23 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6A9E860B23;
+        Sun,  5 Mar 2023 13:55:40 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33C3AC433EF;
+        Sun,  5 Mar 2023 13:55:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678024523;
-        bh=TNRsfsq+ON3+lKbO5+C/vXgI9p1AOsFvWEKc0YjI+vE=;
+        s=k20201202; t=1678024539;
+        bh=LqwQRxQJ8yM/tgpG0HtjBBaEWie9NUFFmB+B0q2b/o8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Usj6zyxuLXk611UIK7PyjGQcHDCYqePd+RYZRmen9kuhhaTL1s+JNfMz2vcWa/CwI
-         siizi5RoHGsVM8THUFP/zFKJDvTmBwuiEXzC62H5BWjKZNCzQzpcBOH8mvnufCXpnq
-         p8vrZZt12WGESnBKDbevVExsI2l+Q9tu+XBdEavNgmqg1ycbLMaVOKpHsMU51yEft1
-         R/1ymTst+S+Trjs0m/aBva46daj01zPILaBAyZ56oGkKcNzYSWjktz7Svrm8V4XbXi
-         lSW8DV9BttYGKYvfjcZLCjs8IVexuOHaLqBMhTXItcxXtVDeMxAqmjSsdH5TIE5G4y
-         31ILJ7CLXVYuQ==
+        b=kNHXigo/4SdbB+/y/TbBsqbBWItPkl/m4gYkKw0d4if8iy4SB8ssQt6ZCBQDpTcFW
+         vS/If93hqI7aFnTHdkZCLuYWzrY/NHH+cDvWq/tgFGBlToM0Ms7zjpYESF0av6MfQ2
+         3BldtqDGoTRVw0MXEaOp7bTkB39CzlDN07U5k45XtxSm8G0ScWTpce3ZTIc4nodloo
+         YgN7tyxDzzePkBtdVTE0Ax4TobXcVdXLe36Zquy1/MfMzz8IO6lZI6ZJ2uK4P7Yz88
+         HKodR3ivHbLw/OcksT3rH3iLNP1+y1NwC88d53PDvtD/4N9lPF+X7Jb1cQmubtqXfq
+         xuGUU9PLIWZYA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Alvaro Karsz <alvaro.karsz@solid-run.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         "Michael S . Tsirkin" <mst@redhat.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 5/6] PCI: Add SolidRun vendor ID
-Date:   Sun,  5 Mar 2023 08:55:08 -0500
-Message-Id: <20230305135509.1794186-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 5/6] PCI: Add SolidRun vendor ID
+Date:   Sun,  5 Mar 2023 08:55:24 -0500
+Message-Id: <20230305135525.1794277-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230305135509.1794186-1-sashal@kernel.org>
-References: <20230305135509.1794186-1-sashal@kernel.org>
+In-Reply-To: <20230305135525.1794277-1-sashal@kernel.org>
+References: <20230305135525.1794277-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -70,10 +70,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1658e9f8d8032..78c1cd4dfdc07 100644
+index d4eae72202fab..0122286beda53 100644
 --- a/include/linux/pci_ids.h
 +++ b/include/linux/pci_ids.h
-@@ -3097,6 +3097,8 @@
+@@ -3045,6 +3045,8 @@
  
  #define PCI_VENDOR_ID_3COM_2		0xa727
  
