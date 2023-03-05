@@ -2,47 +2,47 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C48ECC678DB
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Mar 2023 13:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A4DC61DA4
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Mar 2023 13:57:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230073AbjCEN5i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Mar 2023 08:57:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43450 "EHLO
+        id S229662AbjCEN5x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Mar 2023 08:57:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39970 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230292AbjCEN5O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Mar 2023 08:57:14 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88FDE2D63;
-        Sun,  5 Mar 2023 05:56:18 -0800 (PST)
+        with ESMTP id S229948AbjCEN5Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Mar 2023 08:57:24 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAB4F1A48F;
+        Sun,  5 Mar 2023 05:56:34 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id D0E3AB80A36;
-        Sun,  5 Mar 2023 13:55:09 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFD6BC433D2;
-        Sun,  5 Mar 2023 13:55:07 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8829E60B3E;
+        Sun,  5 Mar 2023 13:55:25 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 457DDC433A8;
+        Sun,  5 Mar 2023 13:55:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678024508;
-        bh=5pq+WA9b1ZPBvhrwtWx6thZ7pT0GlWpeEMlEm7dJ/4A=;
+        s=k20201202; t=1678024524;
+        bh=YRu1Yna9k8yc3FvL3pHtPZpj4O50aFe6qrLJK/vHrsQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KSGjd+jFyN3VlX5oy4va6IH/oy3+crvVg3EKXSBz4TOqgam/eP8G05va6+14aQf9D
-         ZcaYqqVzUwqITZJpmJq2ucYCAMJWLwdognAjcaGU5TQyKnDIh9Fvguazi7I4iobmSs
-         UChRSm/YSzC2CkbzbYOdASJrgYF830e62qdxQgzMNuSiNauLdjbAzmPazYNPpO/OVw
-         OOFT6tgGTyCoB3PF1/TkZ7x0lACdh1rRcNb7b9I5+k4qkSrNGNEgbQkxVWcnoVRJ9x
-         Sr71ZNOEAlZ3CuaJJ+384h9REPlGFx3YS5lTDwaqSlfcl4E5kSeyC7wSk6ssRIKXOx
-         27wtlD6BXiqRg==
+        b=XRXcQR4jqu3TeyfelyYnTkKnbHfLU0DPHGIYjO0cpb3E/Ek3I269qw0AhiWWlTswc
+         e3B8H5zcpSHcbKCr2fP4A+8DNSbSsQguEfGjVN/3wy94CVtYAoBcIjszn7SdRdjKw3
+         cXsldUyYx5G0YmJoOvKdd/Eyk5uxgVtjQgOLClRckjkOqiN64DxSgQ9YxPd/XIGOUn
+         Z2tmynOt59eWgHsZuPbuJPpy/FtWmXFcXjDSPCjMYX3XH+2juiF6bMB+54XzlW+HNX
+         nw24DEB5Y61Tszjvnlb6TnMR4MFqw8qg+VEcUQUo4wloYKHg3W+ObUvtM97lctR1oM
+         UMaRTOmAi48aw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Alvaro Karsz <alvaro.karsz@solid-run.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         "Michael S . Tsirkin" <mst@redhat.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 7/7] PCI: Avoid FLR for SolidRun SNET DPU rev 1
-Date:   Sun,  5 Mar 2023 08:54:48 -0500
-Message-Id: <20230305135449.1794083-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 6/6] PCI: Avoid FLR for SolidRun SNET DPU rev 1
+Date:   Sun,  5 Mar 2023 08:55:09 -0500
+Message-Id: <20230305135509.1794186-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230305135449.1794083-1-sashal@kernel.org>
-References: <20230305135449.1794083-1-sashal@kernel.org>
+In-Reply-To: <20230305135509.1794186-1-sashal@kernel.org>
+References: <20230305135509.1794186-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -73,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 8 insertions(+)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8b98b7f3eb246..ba32f18075544 100644
+index f494e76faaa01..d8388c2189b1e 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -5341,6 +5341,14 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
+@@ -5156,6 +5156,14 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
  
