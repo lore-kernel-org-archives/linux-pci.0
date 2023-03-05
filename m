@@ -2,47 +2,47 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 113D4C6FA8E
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Mar 2023 13:56:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C51C6FA9E
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Mar 2023 13:56:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230206AbjCEN4N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Mar 2023 08:56:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43472 "EHLO
+        id S230217AbjCEN4P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Mar 2023 08:56:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230169AbjCENzj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Mar 2023 08:55:39 -0500
+        with ESMTP id S230191AbjCENzs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Mar 2023 08:55:48 -0500
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 84D7B1632F;
-        Sun,  5 Mar 2023 05:55:05 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35111196AB;
+        Sun,  5 Mar 2023 05:55:08 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5693960AE2;
-        Sun,  5 Mar 2023 13:53:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 148FBC433D2;
-        Sun,  5 Mar 2023 13:53:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1650F60B21;
+        Sun,  5 Mar 2023 13:55:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D090DC4339E;
+        Sun,  5 Mar 2023 13:55:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678024438;
-        bh=P+C/F+PSp7FrUfSop9nKIwaLsIUBXRuGBlsYGl7+qCc=;
+        s=k20201202; t=1678024507;
+        bh=YkW9XORc0MfYV6vPpLp/i6aNbNW4yluMnk6Tg9u2gsA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h+XsLkLutaHs5oWgL4ZlYZbpdGEZHLKTGxmU9O8filEqUSXvry70J4xFIOfUsihOi
-         sRhfPOs0j+LlLVHwm12+cvaPagO4wESUApNZkx84hdOoDdFnpruwOA6QljVNG3vny7
-         XTyKtCOUtpYGADl367mnCX1gSq0n/5tD554c/9RGCLHCNe5ayNVYwEgJcY+ChxDy/E
-         0PaBn8v0vOGwOAtu1bGV8/lcQwEh2K67qNo9ONIyzBAxmUHwb7FGBQaKoJLNkBwR2p
-         LIJZxNWK0hwwmfRt6pKas4UTDMcH6rnCFHvPk4cql7XQffcv6C7EOKcsvbt8F4IREV
-         gSoA7YcoHO1xw==
+        b=dZfi9rKag+GtSxrKa6wA73p3/HPR2CY31V+kqX2Ex76fX2xx/L9UV9avoYG4eB3Po
+         /AvTe1psdNN4U2gsnkDscTPrKmPHy2gf2FfMbAVHSbbLG3CCjRKP/532wrIliHRc7g
+         Q4KQauCMgVKUeTPqOFyAjQlO7qcYGJAGtkzuJb4mwX5dGaF22nC62Ir3U58aOLMCif
+         duQ3WKq/kvK1jQQLa0Dw7dBEmYYZG5ZwOmB8SkgSbWvIWAuQOgl3EyXSCSW4UOjuN+
+         tMyWQQyWiaUjhXzo2c1t52vGwydlndl4jT3wRyVs0lGF+CydPQbyJnE6sV4nhzT2vR
+         2hiLuS9ZU+J3g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Alvaro Karsz <alvaro.karsz@solid-run.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         "Michael S . Tsirkin" <mst@redhat.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 15/15] PCI: Avoid FLR for SolidRun SNET DPU rev 1
-Date:   Sun,  5 Mar 2023 08:53:06 -0500
-Message-Id: <20230305135306.1793564-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 6/7] PCI: Add SolidRun vendor ID
+Date:   Sun,  5 Mar 2023 08:54:47 -0500
+Message-Id: <20230305135449.1794083-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230305135306.1793564-1-sashal@kernel.org>
-References: <20230305135306.1793564-1-sashal@kernel.org>
+In-Reply-To: <20230305135449.1794083-1-sashal@kernel.org>
+References: <20230305135449.1794083-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,44 +53,35 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Alvaro Karsz <alvaro.karsz@solid-run.com>
 
-[ Upstream commit d089d69cc1f824936eeaa4fa172f8fa1a0949eaa ]
+[ Upstream commit db6c4dee4c104f50ed163af71c53bfdb878a8318 ]
 
-This patch fixes a FLR bug on the SNET DPU rev 1 by setting the
-PCI_DEV_FLAGS_NO_FLR_RESET flag.
+Add SolidRun vendor ID to pci_ids.h
 
-As there is a quirk to avoid FLR (quirk_no_flr), I added a new quirk
-to check the rev ID before calling to quirk_no_flr.
-
-Without this patch, a SNET DPU rev 1 may hang when FLR is applied.
+The vendor ID is used in 2 different source files, the SNET vDPA driver
+and PCI quirks.
 
 Signed-off-by: Alvaro Karsz <alvaro.karsz@solid-run.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Message-Id: <20230110165638.123745-3-alvaro.karsz@solid-run.com>
+Message-Id: <20230110165638.123745-2-alvaro.karsz@solid-run.com>
 Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 285acc4aaccc1..809d03272c205 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5343,6 +5343,14 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x149c, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_no_flr);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_no_flr);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 526d423740eb2..3cde3050ef518 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -3104,6 +3104,8 @@
  
-+/* FLR may cause the SolidRun SNET DPU (rev 0x1) to hang */
-+static void quirk_no_flr_snet(struct pci_dev *dev)
-+{
-+	if (dev->revision == 0x1)
-+		quirk_no_flr(dev);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SOLIDRUN, 0x1000, quirk_no_flr_snet);
+ #define PCI_VENDOR_ID_3COM_2		0xa727
+ 
++#define PCI_VENDOR_ID_SOLIDRUN		0xd063
 +
- static void quirk_no_ext_tags(struct pci_dev *pdev)
- {
- 	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
+ #define PCI_VENDOR_ID_DIGIUM		0xd161
+ #define PCI_DEVICE_ID_DIGIUM_HFC4S	0xb410
+ 
 -- 
 2.39.2
 
