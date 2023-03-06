@@ -2,53 +2,52 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 130B8C64EC4
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Mar 2023 15:33:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0207AC678D4
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Mar 2023 15:33:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229952AbjCFPdU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Mar 2023 10:33:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59116 "EHLO
+        id S229915AbjCFPdS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Mar 2023 10:33:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229586AbjCFPdQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2023 10:33:16 -0500
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4197932CDB
-        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2023 07:32:48 -0800 (PST)
-Received: by mail-pl1-x62a.google.com with SMTP id i10so10755731plr.9
-        for <linux-pci@vger.kernel.org>; Mon, 06 Mar 2023 07:32:48 -0800 (PST)
+        with ESMTP id S230126AbjCFPdL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2023 10:33:11 -0500
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F50528D11
+        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2023 07:32:41 -0800 (PST)
+Received: by mail-pj1-x102b.google.com with SMTP id x20-20020a17090a8a9400b00233ba727724so11105221pjn.1
+        for <linux-pci@vger.kernel.org>; Mon, 06 Mar 2023 07:32:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678116767;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dmhzqQp9Bpxccy6mDdW3lTo4tjr71oQJII7ujI7fl58=;
-        b=ofBNg33OO1cIk2DNKGqqauZoRKBPFtQCz38D0poCdzva5H4Xt/q/VYXz9IX3RdHtlS
-         JfkUCD193+J8gUc6tFuF+A5PT6orD2+cl2Np6wpJ6CVCF0RqwiBPkUA1SjwCDgTNp1/0
-         Drp6pjPBq/U+sFV2BAAlH35+VXaugjyP3dKAw6p6S+mPii0GNKgUK/gboW9VL5FihSVl
-         dxKCbdGBbcq9IXTwKmV1c0ckurZdbkE/v5bMxGUoVnl51z2q4xo4/y66buslzG2QSrBa
-         uGU0dLwfGt1iSlR95S6qpYR+AJoMX2L7cId4gr4CKbwZ7Pq30N+9/FKu4COu3qgRO4zY
-         80gg==
+        d=linaro.org; s=google; t=1678116760;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Mt4PnJhS2YRcl1V5hJsj3yA+GagqVnLSKo0OGCRHctc=;
+        b=CQnRbnfuwO2EE097d2GHPjRyr3PHyjthwep650jJ46Ud18aYxadBX7amPPsMMh38lb
+         L8/pVM5WWPsSyVMfFzEnSThuzKt6ineBxxCG8zVFCkCfXxxhztQ08n7VZXDPBtvjF60y
+         TYbhHBoG1v9tjhn82LymUPbXe5y0SBGZSiWQeh0ZiykIFizKwfbnJRXK2tWFqhBbd7Xs
+         ySBgIg0WjGema48SQ0VMYS1a2s/1K4jmtP2YgsGSL9P+tHCXvtxOga/Zfm+mV8HHn+q8
+         oCpqhQX6/cdYMvJEhMMwvHSAmWYT5iaEZt5sexDETg/WZC5ORwdM+o0NEuLGAiHrvYp6
+         bAMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678116767;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=dmhzqQp9Bpxccy6mDdW3lTo4tjr71oQJII7ujI7fl58=;
-        b=ds+T/4SBIl7A6g6tnW7v6WOzIPc5j6UGURTnBlYDxkjNtYwVYo1hQ1Viy1RxKrGOVh
-         BDZaUtHpuQLh+QAg8XHjuYyOEZ82TLJ5cRYwkE74O2eBGlW3qugZNwV6tJ/TKBhu0FMd
-         gG+tMP4f4nxwnZGJVyPQyzLhVKp6HopPpxdEnHratFB5bvPSszrT31nqfOP3+pEpzBKO
-         ls8wRtOO4+i27RvubWxcQQg+x+hzXMnrR9duw6U9rPPnyMyA3UBN5qi3zVNh2ZaO5jrZ
-         iDXDl9ILR+gt8lcZrxVp5mGG1mfKLC60tXR6GMKPJUeXsWHxPz+K0wiIOQZl0jVCSUYR
-         bfWA==
-X-Gm-Message-State: AO0yUKV72QpT7Jy3Iv2UwlkMCVoMS8FaoqZAodcN12GgfMB9F2CJLMxV
-        bHKkaZZOgAyYvClBoGh+yt2e
-X-Google-Smtp-Source: AK7set+yWV/VhNLImyYR+KqbGXGA/kVZxgIdBcl+PNfyT9Hj1yZ9+quDo/uJqicyI+7UMgqwNaMOhQ==
-X-Received: by 2002:a17:902:dacd:b0:19a:96f0:b0f with SMTP id q13-20020a170902dacd00b0019a96f00b0fmr12034576plx.28.1678116767536;
-        Mon, 06 Mar 2023 07:32:47 -0800 (PST)
+        d=1e100.net; s=20210112; t=1678116760;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Mt4PnJhS2YRcl1V5hJsj3yA+GagqVnLSKo0OGCRHctc=;
+        b=CvFU70b4GPvUkjbECQbUHxFySZVjmVB2kYBcYeqds5VMAnOyq7tLS7xTLN2mcFkPon
+         YkXhEloN5VonL/amvVB0k/9RfIn6NVQlJsxB3hArK9R9olVSrZkeR0XFgEeyDD1LqN6R
+         NXkjjNSmmRz1dh8F3/ZGnYlAViyLQrnUMRZ+nfnsBfj2EpUcZM0EEl2+zFP9xi0CJiu4
+         XcPEhLhJ/i3pnhufQsAMVs9b92zg+FCELFF1fbEdSJQdX50Cua0FMx8mvoxKlOD45mr1
+         LfsEN+rIn6Vq+IkGfjA8BRQnHA4UXVwX6gTxhOJ06mrYvhYdbbWtzSX7K0E1UG7JkANb
+         ykEg==
+X-Gm-Message-State: AO0yUKUnHekWKOLT671hMc9y5CyWzeG1I0UzfDLDlNnQ4R/sXKcNRZpU
+        1qGZw4zu1Ff60x4DqJO/oS9Q
+X-Google-Smtp-Source: AK7set+HjBdNIpsf8ef4VJSwEelL+jqIfP8yZmMfm7xzM1eTk7/8khH6kLRd036efOYER8cCvsN2DQ==
+X-Received: by 2002:a17:902:d4cc:b0:19b:dbf7:f9ca with SMTP id o12-20020a170902d4cc00b0019bdbf7f9camr15257570plg.0.1678116759945;
+        Mon, 06 Mar 2023 07:32:39 -0800 (PST)
 Received: from localhost.localdomain ([59.97.52.140])
-        by smtp.gmail.com with ESMTPSA id kl4-20020a170903074400b0019a7c890c61sm6837430plb.252.2023.03.06.07.32.44
+        by smtp.gmail.com with ESMTPSA id kl4-20020a170903074400b0019a7c890c61sm6837430plb.252.2023.03.06.07.32.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Mar 2023 07:32:47 -0800 (PST)
+        Mon, 06 Mar 2023 07:32:39 -0800 (PST)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     andersson@kernel.org, lpieralisi@kernel.org, kw@linux.com,
         krzysztof.kozlowski+dt@linaro.org, robh@kernel.org
@@ -56,185 +55,76 @@ Cc:     konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, quic_srichara@quicinc.com,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 02/19] PCI: qcom: Sort and group registers and bitfield definitions
-Date:   Mon,  6 Mar 2023 21:02:05 +0530
-Message-Id: <20230306153222.157667-3-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 00/19] Qcom PCIe cleanups and improvements
+Date:   Mon,  6 Mar 2023 21:02:03 +0530
+Message-Id: <20230306153222.157667-1-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230306153222.157667-1-manivannan.sadhasivam@linaro.org>
-References: <20230306153222.157667-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Sorting the registers and their bit definitions will make it easier to add
-more definitions in the future and it also helps in maintenance.
+Hi,
 
-While at it, let's also group the registers and bit definitions separately
-as done in the pcie-qcom-ep driver.
+This series brings in several code cleanups and improvements to the
+Qualcomm PCIe controller drivers (RC and EP). The cleanup part mostly
+cleans up the bitfield definitions and transitions to bulk APIs for clocks,
+and resets. The improvement part renames the "mmio" region to "mhi" as per
+Qualcomm's internal documentation EP driver and also adds the debugfs entry
+to track link transition count in RC driver.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 108 ++++++++++++++-----------
- 1 file changed, 63 insertions(+), 45 deletions(-)
+Testing
+-------
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 6930bc9ceeb5..9223ca76640d 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -33,7 +33,36 @@
- #include "../../pci.h"
- #include "pcie-designware.h"
- 
-+/* PARF registers */
- #define PARF_SYS_CTRL				0x00
-+#define PARF_PM_CTRL				0x20
-+#define PARF_PCS_DEEMPH				0x34
-+#define PARF_PCS_SWING				0x38
-+#define PARF_PHY_CTRL				0x40
-+#define PARF_PHY_REFCLK				0x4C
-+#define PARF_CONFIG_BITS			0x50
-+#define PARF_DBI_BASE_ADDR			0x168
-+#define PARF_SLV_ADDR_SPACE_SIZE_2_3_3		0x16C /* Register offset specific to IP ver 2.3.3 */
-+#define PARF_MHI_CLOCK_RESET_CTRL		0x174
-+#define PARF_AXI_MSTR_WR_ADDR_HALT		0x178
-+#define PARF_AXI_MSTR_WR_ADDR_HALT_V2		0x1A8
-+#define PARF_Q2A_FLUSH				0x1AC
-+#define PARF_LTSSM				0x1B0
-+#define PARF_SID_OFFSET				0x234
-+#define PARF_BDF_TRANSLATE_CFG			0x24C
-+#define PARF_SLV_ADDR_SPACE_SIZE		0x358
-+#define PARF_DEVICE_TYPE			0x1000
-+#define PARF_BDF_TO_SID_TABLE_N			0x2000
-+
-+/* ELBI registers */
-+#define ELBI_SYS_CTRL				0x04
-+
-+/* DBI registers */
-+#define AXI_MSTR_RESP_COMP_CTRL0		0x818
-+#define AXI_MSTR_RESP_COMP_CTRL1		0x81c
-+#define MISC_CONTROL_1_REG			0x8BC
-+
-+/* PARF_SYS_CTRL register fields */
- #define MST_WAKEUP_EN				BIT(13)
- #define SLV_WAKEUP_EN				BIT(12)
- #define MSTR_ACLK_CGC_DIS			BIT(10)
-@@ -43,45 +72,56 @@
- #define L23_CLK_RMV_DIS				BIT(2)
- #define L1_CLK_RMV_DIS				BIT(1)
- 
--#define PARF_PM_CTRL				0x20
-+/* PARF_PM_CTRL register fields */
- #define REQ_NOT_ENTR_L1				BIT(5)
- 
--#define PARF_PHY_CTRL				0x40
-+/* PARF_PCS_DEEMPH register fields */
-+#define PCS_DEEMPH_TX_DEEMPH_GEN1(x)		((x) << 16)
-+#define PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(x)	((x) << 8)
-+#define PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(x)	((x) << 0)
-+
-+/* PARF_PCS_SWING register fields */
-+#define PCS_SWING_TX_SWING_FULL(x)		((x) << 8)
-+#define PCS_SWING_TX_SWING_LOW(x)		((x) << 0)
-+
-+/* PARF_PHY_CTRL register fields */
- #define PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK	GENMASK(20, 16)
- #define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		((x) << 16)
- 
--#define PARF_PHY_REFCLK				0x4C
-+/* PARF_PHY_REFCLK register fields */
- #define PHY_REFCLK_SSP_EN			BIT(16)
- #define PHY_REFCLK_USE_PAD			BIT(12)
- 
--#define PARF_DBI_BASE_ADDR			0x168
--#define PARF_SLV_ADDR_SPACE_SIZE_2_3_3		0x16C /* Register offset specific to IP rev 2.3.3 */
--#define PARF_MHI_CLOCK_RESET_CTRL		0x174
-+/* PARF_CONFIG_BITS register fields */
-+#define PHY_RX0_EQ(x)				((x) << 24)
-+
-+/* PARF_SLV_ADDR_SPACE_SIZE register value */
-+#define SLV_ADDR_SPACE_SZ			0x10000000
-+
-+/* PARF_MHI_CLOCK_RESET_CTRL register fields */
- #define AHB_CLK_EN				BIT(0)
- #define MSTR_AXI_CLK_EN				BIT(1)
- #define BYPASS					BIT(4)
- 
--#define PARF_AXI_MSTR_WR_ADDR_HALT		0x178
--#define PARF_AXI_MSTR_WR_ADDR_HALT_V2		0x1A8
--#define PARF_LTSSM				0x1B0
--#define PARF_SID_OFFSET				0x234
--#define PARF_BDF_TRANSLATE_CFG			0x24C
--#define PARF_DEVICE_TYPE			0x1000
--#define PARF_BDF_TO_SID_TABLE_N			0x2000
-+/* PARF_DEVICE_TYPE register fields */
-+#define DEVICE_TYPE_RC				0x4
- 
--#define ELBI_SYS_CTRL				0x04
-+/* ELBI_SYS_CTRL register fields */
- #define ELBI_SYS_CTRL_LT_ENABLE			BIT(0)
- 
--#define AXI_MSTR_RESP_COMP_CTRL0		0x818
-+/* AXI_MSTR_RESP_COMP_CTRL0 register fields */
- #define CFG_REMOTE_RD_REQ_BRIDGE_SIZE_2K	0x4
- #define CFG_REMOTE_RD_REQ_BRIDGE_SIZE_4K	0x5
--#define AXI_MSTR_RESP_COMP_CTRL1		0x81c
-+
-+/* AXI_MSTR_RESP_COMP_CTRL1 register fields */
- #define CFG_BRIDGE_SB_INIT			BIT(0)
- 
--#define PCIE_CAP_SLOT_POWER_LIMIT_VAL		FIELD_PREP(PCI_EXP_SLTCAP_SPLV, \
--						250)
--#define PCIE_CAP_SLOT_POWER_LIMIT_SCALE		FIELD_PREP(PCI_EXP_SLTCAP_SPLS, \
--						1)
-+/* MISC_CONTROL_1_REG register fields */
-+#define DBI_RO_WR_EN				1
-+
-+/* PCI_EXP_SLTCAP register fields */
-+#define PCIE_CAP_SLOT_POWER_LIMIT_VAL		FIELD_PREP(PCI_EXP_SLTCAP_SPLV, 250)
-+#define PCIE_CAP_SLOT_POWER_LIMIT_SCALE		FIELD_PREP(PCI_EXP_SLTCAP_SPLS, 1)
- #define PCIE_CAP_SLOT_VAL			(PCI_EXP_SLTCAP_ABP | \
- 						PCI_EXP_SLTCAP_PCP | \
- 						PCI_EXP_SLTCAP_MRLSP | \
-@@ -93,34 +133,12 @@
- 						PCIE_CAP_SLOT_POWER_LIMIT_VAL | \
- 						PCIE_CAP_SLOT_POWER_LIMIT_SCALE)
- 
--#define PARF_Q2A_FLUSH				0x1AC
--
--#define MISC_CONTROL_1_REG			0x8BC
--#define DBI_RO_WR_EN				1
--
- #define PERST_DELAY_US				1000
--/* PARF registers */
--#define PARF_PCS_DEEMPH				0x34
--#define PCS_DEEMPH_TX_DEEMPH_GEN1(x)		((x) << 16)
--#define PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(x)	((x) << 8)
--#define PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(x)	((x) << 0)
--
--#define PARF_PCS_SWING				0x38
--#define PCS_SWING_TX_SWING_FULL(x)		((x) << 8)
--#define PCS_SWING_TX_SWING_LOW(x)		((x) << 0)
--
--#define PARF_CONFIG_BITS			0x50
--#define PHY_RX0_EQ(x)				((x) << 24)
--
--#define PARF_SLV_ADDR_SPACE_SIZE		0x358
--#define SLV_ADDR_SPACE_SZ			0x10000000
--
--#define DEVICE_TYPE_RC				0x4
- 
--#define QCOM_PCIE_2_1_0_MAX_SUPPLY	3
--#define QCOM_PCIE_2_1_0_MAX_CLOCKS	5
-+#define QCOM_PCIE_2_1_0_MAX_SUPPLY		3
-+#define QCOM_PCIE_2_1_0_MAX_CLOCKS		5
- 
--#define QCOM_PCIE_CRC8_POLYNOMIAL (BIT(2) | BIT(1) | BIT(0))
-+#define QCOM_PCIE_CRC8_POLYNOMIAL		(BIT(2) | BIT(1) | BIT(0))
- 
- struct qcom_pcie_resources_2_1_0 {
- 	struct clk_bulk_data clks[QCOM_PCIE_2_1_0_MAX_CLOCKS];
+I have tested this series on SDM845, SM8250 and SC8280XP based platforms.
+However, I'm counting on Qualcomm folks CCed to do testing on older IPQ/APQ
+platforms.
+
+Merging Strategy
+----------------
+
+Binding and driver patches through PCI tree and DTS patches through Qcom
+tree.
+
+NOTE: For the sake of maintaining dependency, I've clubbed both cleanup and
+improvement patches in the same series. If any of the maintainers prefer to
+have them splitted, please let me know.
+
+Thanks,
+Mani
+
+
+Manivannan Sadhasivam (19):
+  PCI: qcom: Remove PCIE20_ prefix from register definitions
+  PCI: qcom: Sort and group registers and bitfield definitions
+  PCI: qcom: Use bitfield definitions for register fields
+  PCI: qcom: Add missing macros for register fields
+  PCI: qcom: Use lower case for hex
+  PCI: qcom: Use bulk reset APIs for handling resets for IP rev 2.1.0
+  PCI: qcom: Use bulk clock APIs for handling clocks for IP rev 1.0.0
+  PCI: qcom: Use bulk clock APIs for handling clocks for IP rev 2.3.2
+  PCI: qcom: Use bulk clock APIs for handling clocks for IP rev 2.3.3
+  PCI: qcom: Use bulk reset APIs for handling resets for IP rev 2.3.3
+  PCI: qcom: Use bulk reset APIs for handling resets for IP rev 2.4.0
+  PCI: qcom: Use macros for defining total no. of clocks & supplies
+  dt-bindings: PCI: qcom-ep: Rename "mmio" region to "mhi"
+  PCI: qcom-ep: Rename "mmio" region to "mhi"
+  dt-bindings: PCI: qcom: Add "mhi" register region to supported SoCs
+  arm64: dts: qcom: sdm845: Add "mhi" region to the PCIe nodes
+  arm64: dts: qcom: sm8250: Add "mhi" region to the PCIe nodes
+  arm64: dts: qcom: sc8280xp: Add "mhi" region to the PCIe nodes
+  PCI: qcom: Expose link transition counts via debugfs
+
+ .../devicetree/bindings/pci/qcom,pcie-ep.yaml |    6 +-
+ .../devicetree/bindings/pci/qcom,pcie.yaml    |   12 +-
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi        |   15 +-
+ arch/arm64/boot/dts/qcom/sdm845.dtsi          |    6 +-
+ arch/arm64/boot/dts/qcom/sm8250.dtsi          |    9 +-
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     |   38 +-
+ drivers/pci/controller/dwc/pcie-qcom.c        | 1009 ++++++-----------
+ 7 files changed, 414 insertions(+), 681 deletions(-)
+
 -- 
 2.25.1
 
