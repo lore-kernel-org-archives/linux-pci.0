@@ -2,85 +2,128 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC7CFC6FD19
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Mar 2023 07:24:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0294C678D4
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Mar 2023 07:24:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229572AbjCFHYY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Mar 2023 02:24:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55466 "EHLO
+        id S229618AbjCFHYw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Mar 2023 02:24:52 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229536AbjCFHYY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2023 02:24:24 -0500
-Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C4351EBE6
-        for <linux-pci@vger.kernel.org>; Sun,  5 Mar 2023 23:24:21 -0800 (PST)
-Received: by mail-ed1-x534.google.com with SMTP id i34so34451708eda.7
-        for <linux-pci@vger.kernel.org>; Sun, 05 Mar 2023 23:24:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678087460;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=r3bQ4k2PvMngf9Eau2r8xaRdUgTYQ5lSW/kSlMDUom0=;
-        b=RVHBz1olKRHM9CecnH51ezfBz0TAbN2v/Y+Jbn0xMyymyU8EcXQDVoHuu1VBKISYbm
-         7C65P7hQabNIH7uKiPmfDiCP6zlK2FYb3RjYCjB5BXpPe84NwtcfUFicpWuqfo0o+gJL
-         nmn2NXx6UotZOVZct62/2gSu54kl5w1TiF2d9uHp+9w/iZN2A2Wgr6cHExQZT3cJ9yGZ
-         7SXoRX8i/MIrtAtTlGHBDU9fTXqoOusKBnlSIuRI4yh86/sD5RMpygJW5XCCr1TqdW0V
-         chQzeTapnwWBxdTg5kpeZOmkOojUysr0KpoA2QobV7GvKpekWJEiEsWTPXiSuWMO93CP
-         p3Vg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678087460;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=r3bQ4k2PvMngf9Eau2r8xaRdUgTYQ5lSW/kSlMDUom0=;
-        b=eELTgCUhBrtjsCK2HR5LvRQTRlHF5/3XvHMMjLsV/edIo6EZBvs59AKyKRyYltITtD
-         HDKhSdFokqzqVs483jwrCZRYhgN7VM2cqlS/y5oBUKWhUXTKs9v26gZEWcQIgiRfj+QI
-         iTxykn/gclD4h+BUzfChmx5WtHw+4vMd6LMUUl7p525JPqu7YHf7nOdthBck0Wjp55cc
-         JvzqOEpNCEjJDbJtTDvR6/YXYl7mE/cv1uXEJ+fAY61cdORoSPOsI+t4YHaqLL+leslo
-         n8FomJdRSUE5+dOLnl5wpmYTJCymEIyKHEewEX6W6Gez9aK4HD5ZN1wsUwAbEjMA23od
-         Yvsw==
-X-Gm-Message-State: AO0yUKXK3Cnb8jgSzo/gzxHpcZ44mzViWsWusiyENdi3+n32ckhSxAxh
-        6nqwtkQXoA3xxDbf8AdW6n68VA==
-X-Google-Smtp-Source: AK7set+IhaidXT2y96C0YWRplmrJ2nTzw3MTMT3w0/n/D0HHJ2ViWvdT+gToydQTCuXU2iPTW4/CRQ==
-X-Received: by 2002:a17:906:fe41:b0:8f1:949f:37b5 with SMTP id wz1-20020a170906fe4100b008f1949f37b5mr12317038ejb.32.1678087459966;
-        Sun, 05 Mar 2023 23:24:19 -0800 (PST)
-Received: from ?IPV6:2a02:810d:15c0:828:d85d:5a4b:9830:fcfe? ([2a02:810d:15c0:828:d85d:5a4b:9830:fcfe])
-        by smtp.gmail.com with ESMTPSA id h9-20020a1709060f4900b008d2683e24c4sm4198751ejj.69.2023.03.05.23.24.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 05 Mar 2023 23:24:19 -0800 (PST)
-Message-ID: <eba45618-8e0f-6b7d-6ab9-329f481138b6@linaro.org>
-Date:   Mon, 6 Mar 2023 08:24:18 +0100
+        with ESMTP id S229559AbjCFHYv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2023 02:24:51 -0500
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2069.outbound.protection.outlook.com [40.107.244.69])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD14B1EBC7
+        for <linux-pci@vger.kernel.org>; Sun,  5 Mar 2023 23:24:38 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BWSXUsbFyi4g6bTDYIgWsCUc1vF58QMdDpnqpKQxJYf9eVY/YhNWqRHUVOCy3tV0pFob4fEzHwKR3z9XeHkX2PgE+NrCHEK0wW0CJvVsFcUv5Ws2aFcqaMI/W++KR28aoq11RCsB2oo5n+bOunpXhnJKKPntdWvZh/sq0d4yzETEX7CnWk3fJNIu8Uet1gZVRirlVpqGs7amMfS03aTiWqmOos30UE9KSUplbYMAnyh+SWwCVJZa+axYjZfLCNOFtyIuC5MRxk7ysvD7DPoN47cG0Wr5nNPS6tw1Hd6T730BDmyAY7bQgIrbC8F6F4/SVsbsktNrFboBOaDZ0UBhlA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=pIVJX3uUw+D89xVcclhKTn2js0Cwh1frq4toex6nUNE=;
+ b=ABIBEQe5Hi0GN07hqJVIy1smDrJWmmVuBU5AMYxCrgXP1Y4dCd9xgccMLSYIFD8H3EkPZivkZUGpobyoR18iTuqXrcSaTgQmb859Xni/1gYpFz6YKD9T0o55eGJ+l7oB5ctf8p/YxMM/KEmeVOD+T7uZ5k+BbOjTdaC3jC1KaCkINw89xRLItwFoGUMr52P6rzBrP6/dOeWbN3DBzmFrDq3qqFM5ArOe1ng4okFHKn/I8N1GNNNx6wAjht11wNQ2AaCYhhO9bvK3gOFRIvwNBcuDyXIwrmhva3PqW5veu9wWiawzeV5pbYJR71lCoQ8wx+3lUKM9iq8mMgBgfJBMJQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pIVJX3uUw+D89xVcclhKTn2js0Cwh1frq4toex6nUNE=;
+ b=Una9Moh5i3oQnCGoPjxKvh+aFZv/Y2LE7mUzTiPdw0mSkf/wL0pdAb7xmLvHjNyXq4U0/awxvmuazFCIeIV6BciRYPJs+xsoKVY/GeTrIIKRmOdXhXR/+6AOs5q52p4il+5CFVAdvTWTm0OWioM2OUFVXnkj7JUCGl2jojtDffo=
+Received: from DM6PR04CA0024.namprd04.prod.outlook.com (2603:10b6:5:334::29)
+ by MW3PR12MB4554.namprd12.prod.outlook.com (2603:10b6:303:55::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6156.23; Mon, 6 Mar
+ 2023 07:24:36 +0000
+Received: from DM6NAM11FT033.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:334:cafe::9d) by DM6PR04CA0024.outlook.office365.com
+ (2603:10b6:5:334::29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6156.28 via Frontend
+ Transport; Mon, 6 Mar 2023 07:24:36 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ DM6NAM11FT033.mail.protection.outlook.com (10.13.172.221) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6178.15 via Frontend Transport; Mon, 6 Mar 2023 07:24:36 +0000
+Received: from jatayu.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Mon, 6 Mar
+ 2023 01:24:33 -0600
+From:   Basavaraj Natikar <Basavaraj.Natikar@amd.com>
+To:     <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC:     <mario.limonciello@amd.com>, <thomas@glanzmann.de>,
+        Basavaraj Natikar <Basavaraj.Natikar@amd.com>
+Subject: [PATCH] PCI: Add quirk to clear MSI-X
+Date:   Mon, 6 Mar 2023 12:53:40 +0530
+Message-ID: <20230306072340.172306-1-Basavaraj.Natikar@amd.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH 2/6] dt-bindings: PCI: qcom: Add SDX65 SoC
-Content-Language: en-US
-To:     Rohit Agarwal <quic_rohiagar@quicinc.com>, agross@kernel.org,
-        andersson@kernel.org, konrad.dybcio@linaro.org, lee@kernel.org,
-        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        mani@kernel.org, lpieralisi@kernel.org, kw@linux.com,
-        bhelgaas@google.com, manivannan.sadhasivam@linaro.org
-Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-References: <1678080302-29691-1-git-send-email-quic_rohiagar@quicinc.com>
- <1678080302-29691-3-git-send-email-quic_rohiagar@quicinc.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <1678080302-29691-3-git-send-email-quic_rohiagar@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT033:EE_|MW3PR12MB4554:EE_
+X-MS-Office365-Filtering-Correlation-Id: 4639b9da-63b3-4566-6189-08db1e13d6f8
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: WMIhOoQkzLWF4G0YDe2AOpQqw9M9rc49oF4XSIDRwiB0Q/mUB6Umehh3YczOe1uzHTTvWh4+Gpr2OKWc9Di+kXxOlT1iMadZBka/eFEqsXFI7EEqu55TG8xXG+ceHtByczrwhCT1r4pYRyBoV5ccBAd3HhE5H8CWK+v5XW0c1QHHlQFyuaSu6safiXZEf4FnJWDT2Ut0GEtEGImFYwshto5qsw6LDR2h7DQ9noSdZZimTa9Lro6kR1/pBVTSeE/LXMAQdgqYy4cqnURUOzf9M7hyeaHNAvVnk2rTbIshEKbMmaxJDurp9TugoE5KiOujMkZJdPxE/RIZeU6SfpJ6Ihgwtiqg28OPjtjkY1K22OA4fWVgQp6O6iPlJa/x+M7DAxqSHJbnzY0VjxIUm5KDf2UCOULg/1LTXC9nAv9rudLxKBWQB7mqWN2kCVYwEuiOcEclfVhDxpFrNUxkUOU/zuPXGWssbYipVZWAm7uVsYfHGvrOgBjKZ73xAcjvwumExzDbbp1Npfw2WcPDnk0omSm18JgRgzjIj8rJp7Rj7m/ZAE3DuiCvU1f9RpDuYWKRsKs5f45Lpyd2mHwiLfPWm7GnOsLzgMd29MCj5gsRT7M57NyOYcCjeCieE5cb1JKpS6Cur0fmAT2/blcHGY8hGcH2t3oxzF/I4MPi8SuoUctsIN73SLiPKX1mmPqF+EHWu2PPNeNhiNwjZRK+p40NKPZrlDbie6fWE5liUbX8/Uw=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230025)(4636009)(396003)(376002)(346002)(39860400002)(136003)(451199018)(40470700004)(46966006)(36840700001)(478600001)(36860700001)(47076005)(83380400001)(426003)(7696005)(82310400005)(6666004)(36756003)(316002)(356005)(110136005)(82740400003)(54906003)(2616005)(336012)(1076003)(16526019)(26005)(40460700003)(966005)(186003)(86362001)(81166007)(5660300002)(41300700001)(40480700001)(8936002)(2906002)(70206006)(70586007)(8676002)(4326008)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Mar 2023 07:24:36.2089
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 4639b9da-63b3-4566-6189-08db1e13d6f8
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT033.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR12MB4554
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 06/03/2023 06:24, Rohit Agarwal wrote:
-> Add PCIe EP compatible string for SDX65 SoC.
-> 
-> Signed-off-by: Rohit Agarwal <quic_rohiagar@quicinc.com>
+One of the AMD USB controllers fails to maintain internal functional
+context when transitioning from D3 to D0, desynchronizing MSI-X bits.
+As a result, add a quirk to this controller to clear the MSI-X bits
+on suspend.
 
+Note: This quirk works in all scenarios, regardless of whether the
+integrated GPU is disabled in the BIOS.
 
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Cc: Mario Limonciello <mario.limonciello@amd.com>
+Reported-by: Thomas Glanzmann <thomas@glanzmann.de>
+Link: https://lore.kernel.org/linux-usb/Y%2Fz9GdHjPyF2rNG3@glanzmann.de/T/#u
+Signed-off-by: Basavaraj Natikar <Basavaraj.Natikar@amd.com>
+---
+ drivers/pci/quirks.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Best regards,
-Krzysztof
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 44cab813bf95..ddf7100227d3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6023,3 +6023,13 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a2d, dpc_log_size);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a2f, dpc_log_size);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a31, dpc_log_size);
+ #endif
++
++static void quirk_clear_msix(struct pci_dev *dev)
++{
++	u16 ctrl;
++
++	pci_read_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, &ctrl);
++	ctrl &= ~(PCI_MSIX_FLAGS_MASKALL | PCI_MSIX_FLAGS_ENABLE);
++	pci_write_config_word(dev, dev->msix_cap + PCI_MSIX_FLAGS, ctrl);
++}
++DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_AMD, 0x15b8, quirk_clear_msix);
+-- 
+2.25.1
 
