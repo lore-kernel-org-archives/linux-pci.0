@@ -2,52 +2,53 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0207AC678D4
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Mar 2023 15:33:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25390C64EC4
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Mar 2023 15:33:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229915AbjCFPdS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Mar 2023 10:33:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59036 "EHLO
+        id S229586AbjCFPds (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Mar 2023 10:33:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59382 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230126AbjCFPdL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2023 10:33:11 -0500
-Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F50528D11
-        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2023 07:32:41 -0800 (PST)
-Received: by mail-pj1-x102b.google.com with SMTP id x20-20020a17090a8a9400b00233ba727724so11105221pjn.1
-        for <linux-pci@vger.kernel.org>; Mon, 06 Mar 2023 07:32:41 -0800 (PST)
+        with ESMTP id S230039AbjCFPd1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2023 10:33:27 -0500
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD0D21BFD
+        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2023 07:32:53 -0800 (PST)
+Received: by mail-pj1-x1033.google.com with SMTP id me6-20020a17090b17c600b0023816b0c7ceso13540910pjb.2
+        for <linux-pci@vger.kernel.org>; Mon, 06 Mar 2023 07:32:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678116760;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Mt4PnJhS2YRcl1V5hJsj3yA+GagqVnLSKo0OGCRHctc=;
-        b=CQnRbnfuwO2EE097d2GHPjRyr3PHyjthwep650jJ46Ud18aYxadBX7amPPsMMh38lb
-         L8/pVM5WWPsSyVMfFzEnSThuzKt6ineBxxCG8zVFCkCfXxxhztQ08n7VZXDPBtvjF60y
-         TYbhHBoG1v9tjhn82LymUPbXe5y0SBGZSiWQeh0ZiykIFizKwfbnJRXK2tWFqhBbd7Xs
-         ySBgIg0WjGema48SQ0VMYS1a2s/1K4jmtP2YgsGSL9P+tHCXvtxOga/Zfm+mV8HHn+q8
-         oCpqhQX6/cdYMvJEhMMwvHSAmWYT5iaEZt5sexDETg/WZC5ORwdM+o0NEuLGAiHrvYp6
-         bAMQ==
+        d=linaro.org; s=google; t=1678116771;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3tT4IStfyTS7c0lPgVozml2BSLbP+qQslzAxoVdPoGM=;
+        b=qzFYJbB7hAFe7l46nHpK+q27pyKOro8dHeXLkSvKdgHRTDwrDJvyUujUSPZYQ9E0R3
+         KYRq24VUy+YZsbMCTHh5ZSYTwSlJ3owoPJWfAk+9h9ntwKEOY3MTr4wyMvraBRjfEa2C
+         qYJCImXGHxsET7RQLe6K/OcDYFMh+qMcuOJBWyvMx20JN+PVgtRWqAIYXlCDwO/IYbZU
+         8P+k6hbuGqcI8nqTQVtl9VCb3YjDrl/slsZYXfLYkWsiPzC5HLQzf11f20Y4li9/jmQE
+         RKkJM9s74mWLsvwp5yHrISGrnl97nHwk5Rag4jxMSmDoH8WQf50i87CnLCQTzSVpi1Hu
+         pJyQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678116760;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Mt4PnJhS2YRcl1V5hJsj3yA+GagqVnLSKo0OGCRHctc=;
-        b=CvFU70b4GPvUkjbECQbUHxFySZVjmVB2kYBcYeqds5VMAnOyq7tLS7xTLN2mcFkPon
-         YkXhEloN5VonL/amvVB0k/9RfIn6NVQlJsxB3hArK9R9olVSrZkeR0XFgEeyDD1LqN6R
-         NXkjjNSmmRz1dh8F3/ZGnYlAViyLQrnUMRZ+nfnsBfj2EpUcZM0EEl2+zFP9xi0CJiu4
-         XcPEhLhJ/i3pnhufQsAMVs9b92zg+FCELFF1fbEdSJQdX50Cua0FMx8mvoxKlOD45mr1
-         LfsEN+rIn6Vq+IkGfjA8BRQnHA4UXVwX6gTxhOJ06mrYvhYdbbWtzSX7K0E1UG7JkANb
-         ykEg==
-X-Gm-Message-State: AO0yUKUnHekWKOLT671hMc9y5CyWzeG1I0UzfDLDlNnQ4R/sXKcNRZpU
-        1qGZw4zu1Ff60x4DqJO/oS9Q
-X-Google-Smtp-Source: AK7set+HjBdNIpsf8ef4VJSwEelL+jqIfP8yZmMfm7xzM1eTk7/8khH6kLRd036efOYER8cCvsN2DQ==
-X-Received: by 2002:a17:902:d4cc:b0:19b:dbf7:f9ca with SMTP id o12-20020a170902d4cc00b0019bdbf7f9camr15257570plg.0.1678116759945;
-        Mon, 06 Mar 2023 07:32:39 -0800 (PST)
+        d=1e100.net; s=20210112; t=1678116771;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=3tT4IStfyTS7c0lPgVozml2BSLbP+qQslzAxoVdPoGM=;
+        b=UKYqT8YaDf/+GNpxVxnzNIraOx3I4+oMaSlV2Mq2shCZ5cUaqQ4gfYF4wL0BFul2J2
+         Us3DuI01FBABnNEQg7kSsYhoy+p867czy252bqifojHhYNGgvbo+79lveDebhOeDcskh
+         /uxkLmuGq8vKuby46ULRfvrfbb+u8m55trRvt7Wi5OZ9P6f3ovE6Uyg9RaV/52axbj/V
+         LXdr/eKmPxDWPhbV4hoWoBfs5I3G52OrDPx8BYsRGwBrNyYfqu8nG3ADMKUpSIDhSshL
+         odXjZaFSsYXPR4Uo1uSwTdWzYZOZ+sCdUeYu7ZljcEyBY0bDnNeet/pQg2MH6oiYhPQy
+         gjZg==
+X-Gm-Message-State: AO0yUKXNH6jm0nYqnONM16uMa52AY1cRJ+K9MH22wvMk9baMF7x6W0hd
+        7b1aueXpcRg97ldoin5zlSRv
+X-Google-Smtp-Source: AK7set+rfW5mUC6Jzv3XUSjoc31D9wyI3xcLM7qOSrxPZKjhLzoB90Ibrt4vWYqfAsj2sIV+sIHrmw==
+X-Received: by 2002:a17:902:e844:b0:19c:ef4d:ea35 with SMTP id t4-20020a170902e84400b0019cef4dea35mr13099075plg.21.1678116771509;
+        Mon, 06 Mar 2023 07:32:51 -0800 (PST)
 Received: from localhost.localdomain ([59.97.52.140])
-        by smtp.gmail.com with ESMTPSA id kl4-20020a170903074400b0019a7c890c61sm6837430plb.252.2023.03.06.07.32.36
+        by smtp.gmail.com with ESMTPSA id kl4-20020a170903074400b0019a7c890c61sm6837430plb.252.2023.03.06.07.32.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Mar 2023 07:32:39 -0800 (PST)
+        Mon, 06 Mar 2023 07:32:51 -0800 (PST)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     andersson@kernel.org, lpieralisi@kernel.org, kw@linux.com,
         krzysztof.kozlowski+dt@linaro.org, robh@kernel.org
@@ -55,76 +56,62 @@ Cc:     konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, quic_srichara@quicinc.com,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 00/19] Qcom PCIe cleanups and improvements
-Date:   Mon,  6 Mar 2023 21:02:03 +0530
-Message-Id: <20230306153222.157667-1-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 03/19] PCI: qcom: Use bitfield definitions for register fields
+Date:   Mon,  6 Mar 2023 21:02:06 +0530
+Message-Id: <20230306153222.157667-4-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230306153222.157667-1-manivannan.sadhasivam@linaro.org>
+References: <20230306153222.157667-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+To maintain uniformity throughout the driver and also to make the code
+easier to read, let's make use of bitfield definitions for register fields.
 
-This series brings in several code cleanups and improvements to the
-Qualcomm PCIe controller drivers (RC and EP). The cleanup part mostly
-cleans up the bitfield definitions and transitions to bulk APIs for clocks,
-and resets. The improvement part renames the "mmio" region to "mhi" as per
-Qualcomm's internal documentation EP driver and also adds the debugfs entry
-to track link transition count in RC driver.
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-Testing
--------
-
-I have tested this series on SDM845, SM8250 and SC8280XP based platforms.
-However, I'm counting on Qualcomm folks CCed to do testing on older IPQ/APQ
-platforms.
-
-Merging Strategy
-----------------
-
-Binding and driver patches through PCI tree and DTS patches through Qcom
-tree.
-
-NOTE: For the sake of maintaining dependency, I've clubbed both cleanup and
-improvement patches in the same series. If any of the maintainers prefer to
-have them splitted, please let me know.
-
-Thanks,
-Mani
-
-
-Manivannan Sadhasivam (19):
-  PCI: qcom: Remove PCIE20_ prefix from register definitions
-  PCI: qcom: Sort and group registers and bitfield definitions
-  PCI: qcom: Use bitfield definitions for register fields
-  PCI: qcom: Add missing macros for register fields
-  PCI: qcom: Use lower case for hex
-  PCI: qcom: Use bulk reset APIs for handling resets for IP rev 2.1.0
-  PCI: qcom: Use bulk clock APIs for handling clocks for IP rev 1.0.0
-  PCI: qcom: Use bulk clock APIs for handling clocks for IP rev 2.3.2
-  PCI: qcom: Use bulk clock APIs for handling clocks for IP rev 2.3.3
-  PCI: qcom: Use bulk reset APIs for handling resets for IP rev 2.3.3
-  PCI: qcom: Use bulk reset APIs for handling resets for IP rev 2.4.0
-  PCI: qcom: Use macros for defining total no. of clocks & supplies
-  dt-bindings: PCI: qcom-ep: Rename "mmio" region to "mhi"
-  PCI: qcom-ep: Rename "mmio" region to "mhi"
-  dt-bindings: PCI: qcom: Add "mhi" register region to supported SoCs
-  arm64: dts: qcom: sdm845: Add "mhi" region to the PCIe nodes
-  arm64: dts: qcom: sm8250: Add "mhi" region to the PCIe nodes
-  arm64: dts: qcom: sc8280xp: Add "mhi" region to the PCIe nodes
-  PCI: qcom: Expose link transition counts via debugfs
-
- .../devicetree/bindings/pci/qcom,pcie-ep.yaml |    6 +-
- .../devicetree/bindings/pci/qcom,pcie.yaml    |   12 +-
- arch/arm64/boot/dts/qcom/sc8280xp.dtsi        |   15 +-
- arch/arm64/boot/dts/qcom/sdm845.dtsi          |    6 +-
- arch/arm64/boot/dts/qcom/sm8250.dtsi          |    9 +-
- drivers/pci/controller/dwc/pcie-qcom-ep.c     |   38 +-
- drivers/pci/controller/dwc/pcie-qcom.c        | 1009 ++++++-----------
- 7 files changed, 414 insertions(+), 681 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 9223ca76640d..e9f4c70b719a 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -76,24 +76,24 @@
+ #define REQ_NOT_ENTR_L1				BIT(5)
+ 
+ /* PARF_PCS_DEEMPH register fields */
+-#define PCS_DEEMPH_TX_DEEMPH_GEN1(x)		((x) << 16)
+-#define PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(x)	((x) << 8)
+-#define PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(x)	((x) << 0)
++#define PCS_DEEMPH_TX_DEEMPH_GEN1(x)		FIELD_PREP(GENMASK(21, 16), x)
++#define PCS_DEEMPH_TX_DEEMPH_GEN2_3_5DB(x)	FIELD_PREP(GENMASK(13, 8), x)
++#define PCS_DEEMPH_TX_DEEMPH_GEN2_6DB(x)	FIELD_PREP(GENMASK(5, 0), x)
+ 
+ /* PARF_PCS_SWING register fields */
+-#define PCS_SWING_TX_SWING_FULL(x)		((x) << 8)
+-#define PCS_SWING_TX_SWING_LOW(x)		((x) << 0)
++#define PCS_SWING_TX_SWING_FULL(x)		FIELD_PREP(GENMASK(14, 8), x)
++#define PCS_SWING_TX_SWING_LOW(x)		FIELD_PREP(GENMASK(6, 0), x)
+ 
+ /* PARF_PHY_CTRL register fields */
+ #define PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK	GENMASK(20, 16)
+-#define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		((x) << 16)
++#define PHY_CTRL_PHY_TX0_TERM_OFFSET(x)		FIELD_PREP(PHY_CTRL_PHY_TX0_TERM_OFFSET_MASK, x)
+ 
+ /* PARF_PHY_REFCLK register fields */
+ #define PHY_REFCLK_SSP_EN			BIT(16)
+ #define PHY_REFCLK_USE_PAD			BIT(12)
+ 
+ /* PARF_CONFIG_BITS register fields */
+-#define PHY_RX0_EQ(x)				((x) << 24)
++#define PHY_RX0_EQ(x)				FIELD_PREP(GENMASK(26, 24), x)
+ 
+ /* PARF_SLV_ADDR_SPACE_SIZE register value */
+ #define SLV_ADDR_SPACE_SZ			0x10000000
 -- 
 2.25.1
 
