@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE8FFC6FD1C
-	for <linux-pci@archiver.kernel.org>; Mon,  6 Mar 2023 15:34:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F3D9C64EC4
+	for <linux-pci@archiver.kernel.org>; Mon,  6 Mar 2023 15:35:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229981AbjCFPeh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 Mar 2023 10:34:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33116 "EHLO
+        id S229681AbjCFPfF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 Mar 2023 10:35:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230312AbjCFPeU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2023 10:34:20 -0500
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA9E7AD00
-        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2023 07:33:43 -0800 (PST)
-Received: by mail-pl1-x630.google.com with SMTP id n6so10787026plf.5
-        for <linux-pci@vger.kernel.org>; Mon, 06 Mar 2023 07:33:43 -0800 (PST)
+        with ESMTP id S231163AbjCFPeV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2023 10:34:21 -0500
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09F3226855
+        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2023 07:33:51 -0800 (PST)
+Received: by mail-pj1-x102e.google.com with SMTP id h17-20020a17090aea9100b0023739b10792so9172107pjz.1
+        for <linux-pci@vger.kernel.org>; Mon, 06 Mar 2023 07:33:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678116819;
+        d=linaro.org; s=google; t=1678116827;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=FSZTsxFvrcK51n2zirybFkKL1X1N/PtWqccn7VlsBoE=;
-        b=CMF2lbQmJRo/nSmptNkmWK25ase0/6LStx4Q+kyliXRBjgF8nMVTfzYXz5xRwHy+Uv
-         s+3dRUyQXoGOMT/psC+HQXqSQhG9talllgrxQD+Pnsuk4fPpHoJit7axA7AvnkB8btqk
-         meyPqkjSgSQUrdMta+uFqNIbTvTXqJmPa13TztxaJWrSjFHQK/nEpyvbKStVlm42ieNM
-         qn62Q4fQgXauS6szDyp+a6ckwa9dMilh4FrY9G/czNTeMtZtFReH8VaQmCi1KiUa3uFV
-         wL/hqCcj4DM+qlvfnZ//SIAmRixAbI2MI9Iotny/xoGllPvYPbQEB+0iTg5XBQIaVkrS
-         65yg==
+        bh=tvJuD70O+H+sPQNrNpV5HwBBDKIiVR9W0oL4sqQ+c8g=;
+        b=hgfdfPgxkzcoWcZ/R+cq9xjZ3F6NPOCBDoWdMpYZLOFAF1F9eqXSUFis9etAEsA3P6
+         cqSXs+FE5vKO0+/xzpXvA/wRUetLvClJrh5V+Tl4rErDmC2KNHRM9vkKxOrbo8AwOEr4
+         8lVLoF9Z52QSqqL223eR/O+B/ejROiWY20j6lvtnqOyuakBrwe5jsaajtIx2zOLz3Xml
+         hSF2JFuNbrU2CY2Ov9qYh9elL48M5cw/I8KT6xKqfYCIPulaWBpxUNrikv7NF2tSQpHw
+         DMBbL5HPbURUYsUwQ4jAlq09YtLArS6G42UOQ6WcbbHdZ1U/01up84YfHWZSMjEG1Lg4
+         Urbg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678116819;
+        d=1e100.net; s=20210112; t=1678116827;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=FSZTsxFvrcK51n2zirybFkKL1X1N/PtWqccn7VlsBoE=;
-        b=CCmfftWIggw9T4kFIrqmGlU9xc2eDTvCB8RebohV1C6tOw74gcSxDHa4uUfYgOVNck
-         PsuBmtNgEYUt/sIQy6QqJIinP+rxefXySGqnMb/0Cgd/uvl7UmdWxrDrF/smRSTWFKgx
-         Oxka6EXRq9T67IQgLOi5evANDWL5N6T3gYX4wOp7166KsRrrKDQZwcCyroMpAaYQTPeG
-         P664tZOMT5Rx4GnQHPUVY7XyAs71xPSSHeagjw2m+QwlKpUHFSnH1usniDUt6XeEDzkf
-         b2nI+EDXzyXQviFi6Z8/XnJXEs/LRwpfx3/aDn4XAS0JOr/e69bCS0Ni2P+0YkeVvJds
-         ra5Q==
-X-Gm-Message-State: AO0yUKVTH26EoEzuuzDWbuerFg3nCnsbyUXhFE1HKJXkmcrYvo2uIM2A
-        MaLSjT57fedH4FTNrON57adf
-X-Google-Smtp-Source: AK7set82IVvmz55x2cDlnkyaJV0+PnXaPQyULxNMeE+2vqBXVrH5YGgrlSTA2fAZcnEoKeHTkfXNCw==
-X-Received: by 2002:a17:903:2290:b0:19e:25b4:7740 with SMTP id b16-20020a170903229000b0019e25b47740mr13907805plh.28.1678116819521;
-        Mon, 06 Mar 2023 07:33:39 -0800 (PST)
+        bh=tvJuD70O+H+sPQNrNpV5HwBBDKIiVR9W0oL4sqQ+c8g=;
+        b=fZOkkCZvefsDr/mE5Myxzwk+dMyDatZoCY1ItsVVQ8SOYLbZR+cgUDyS4jgmB29q4L
+         S6wUh2TfkgJzOObiLfkg8PicnD/klplPeScqd3TJTmJv2TvT6zqAsMqjTfeaZ/ST05Fn
+         3VI3F4BxTkO3ZTB4Px/9FKOjxo49iS7qKMfzvg0CDzPxeYssa3OSKVtn0BTUK0OybTxw
+         takvPTt7ZMSTKHR70JYG+rMjBNJXxYyCMcas63qtCGpbp6t836OwDVDL1xIQoqkQq5yw
+         MlDEPfK8/LDu5zHLIUvwsxRdvrGvlZGwtMv+1ezzv4zJyk8gdraWCbMA0w2UQzb4t9dP
+         IRYA==
+X-Gm-Message-State: AO0yUKWHCxOZrbYOWLlULFSzd2fPOOuwBd75NoQrILyjUn6I1uIXUgq9
+        tKOfPhlNe+wxGv1Objig6Pad
+X-Google-Smtp-Source: AK7set8n1ClaD9Wh3bK6TU1KDVp/KEv/S2xbAzslWozdEkohVawwinrk2XH41iXV+jORtEOXWDPvJQ==
+X-Received: by 2002:a17:902:d4c5:b0:199:30a6:376c with SMTP id o5-20020a170902d4c500b0019930a6376cmr12206287plg.68.1678116827601;
+        Mon, 06 Mar 2023 07:33:47 -0800 (PST)
 Received: from localhost.localdomain ([59.97.52.140])
-        by smtp.gmail.com with ESMTPSA id kl4-20020a170903074400b0019a7c890c61sm6837430plb.252.2023.03.06.07.33.35
+        by smtp.gmail.com with ESMTPSA id kl4-20020a170903074400b0019a7c890c61sm6837430plb.252.2023.03.06.07.33.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Mar 2023 07:33:39 -0800 (PST)
+        Mon, 06 Mar 2023 07:33:47 -0800 (PST)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     andersson@kernel.org, lpieralisi@kernel.org, kw@linux.com,
         krzysztof.kozlowski+dt@linaro.org, robh@kernel.org
@@ -56,9 +56,9 @@ Cc:     konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, quic_srichara@quicinc.com,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 14/19] PCI: qcom-ep: Rename "mmio" region to "mhi"
-Date:   Mon,  6 Mar 2023 21:02:17 +0530
-Message-Id: <20230306153222.157667-15-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 16/19] arm64: dts: qcom: sdm845: Add "mhi" region to the PCIe nodes
+Date:   Mon,  6 Mar 2023 21:02:19 +0530
+Message-Id: <20230306153222.157667-17-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230306153222.157667-1-manivannan.sadhasivam@linaro.org>
 References: <20230306153222.157667-1-manivannan.sadhasivam@linaro.org>
@@ -68,105 +68,44 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As per Qualcomm's internal documentation, the name of the region is "mhi"
-and not "mmio". So let's rename it to follow the convention.
+The "mhi" region contains the debug registers that could be used to monitor
+the PCIe link transitions.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 38 +++++++++++------------
- 1 file changed, 19 insertions(+), 19 deletions(-)
+ arch/arm64/boot/dts/qcom/sdm845.dtsi | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 19b32839ea26..a4983d3844f7 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -147,9 +147,9 @@ enum qcom_pcie_ep_link_status {
-  * @pci: Designware PCIe controller struct
-  * @parf: Qualcomm PCIe specific PARF register base
-  * @elbi: Designware PCIe specific ELBI register base
-- * @mmio: MMIO register base
-+ * @mhi: MHI register base
-  * @perst_map: PERST regmap
-- * @mmio_res: MMIO region resource
-+ * @mhi_res: MHI region resource
-  * @core_reset: PCIe Endpoint core reset
-  * @reset: PERST# GPIO
-  * @wake: WAKE# GPIO
-@@ -168,9 +168,9 @@ struct qcom_pcie_ep {
- 
- 	void __iomem *parf;
- 	void __iomem *elbi;
--	void __iomem *mmio;
-+	void __iomem *mhi;
- 	struct regmap *perst_map;
--	struct resource *mmio_res;
-+	struct resource *mhi_res;
- 
- 	struct reset_control *core_reset;
- 	struct gpio_desc *reset;
-@@ -405,10 +405,10 @@ static int qcom_pcie_perst_deassert(struct dw_pcie *pci)
- 	}
- 
- 	/*
--	 * The physical address of the MMIO region which is exposed as the BAR
--	 * should be written to MHI BASE registers.
-+	 * The physical address of the MHI region which is exposed as the BAR
-+	 * should be written to PARF_MHI_BASE registers.
- 	 */
--	writel_relaxed(pcie_ep->mmio_res->start,
-+	writel_relaxed(pcie_ep->mhi_res->start,
- 		       pcie_ep->parf + PARF_MHI_BASE_ADDR_LOWER);
- 	writel_relaxed(0, pcie_ep->parf + PARF_MHI_BASE_ADDR_UPPER);
- 
-@@ -477,16 +477,16 @@ static int qcom_pcie_ep_get_io_resources(struct platform_device *pdev,
- 	if (IS_ERR(pcie_ep->elbi))
- 		return PTR_ERR(pcie_ep->elbi);
- 
--	pcie_ep->mmio_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
--							 "mmio");
--	if (!pcie_ep->mmio_res) {
--		dev_err(dev, "Failed to get mmio resource\n");
-+	pcie_ep->mhi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+							 "mhi");
-+	if (!pcie_ep->mhi_res) {
-+		dev_err(dev, "Failed to get mhi resource\n");
- 		return -EINVAL;
- 	}
- 
--	pcie_ep->mmio = devm_pci_remap_cfg_resource(dev, pcie_ep->mmio_res);
--	if (IS_ERR(pcie_ep->mmio))
--		return PTR_ERR(pcie_ep->mmio);
-+	pcie_ep->mhi = devm_pci_remap_cfg_resource(dev, pcie_ep->mhi_res);
-+	if (IS_ERR(pcie_ep->mhi))
-+		return PTR_ERR(pcie_ep->mhi);
- 
- 	syscon = of_parse_phandle(dev->of_node, "qcom,perst-regs", 0);
- 	if (!syscon) {
-@@ -674,19 +674,19 @@ static int qcom_pcie_ep_link_transition_count(struct seq_file *s, void *data)
- 				     dev_get_drvdata(s->private);
- 
- 	seq_printf(s, "L0s transition count: %u\n",
--		   readl_relaxed(pcie_ep->mmio + PARF_DEBUG_CNT_PM_LINKST_IN_L0S));
-+		   readl_relaxed(pcie_ep->mhi + PARF_DEBUG_CNT_PM_LINKST_IN_L0S));
- 
- 	seq_printf(s, "L1 transition count: %u\n",
--		   readl_relaxed(pcie_ep->mmio + PARF_DEBUG_CNT_PM_LINKST_IN_L1));
-+		   readl_relaxed(pcie_ep->mhi + PARF_DEBUG_CNT_PM_LINKST_IN_L1));
- 
- 	seq_printf(s, "L1.1 transition count: %u\n",
--		   readl_relaxed(pcie_ep->mmio + PARF_DEBUG_CNT_AUX_CLK_IN_L1SUB_L1));
-+		   readl_relaxed(pcie_ep->mhi + PARF_DEBUG_CNT_AUX_CLK_IN_L1SUB_L1));
- 
- 	seq_printf(s, "L1.2 transition count: %u\n",
--		   readl_relaxed(pcie_ep->mmio + PARF_DEBUG_CNT_AUX_CLK_IN_L1SUB_L2));
-+		   readl_relaxed(pcie_ep->mhi + PARF_DEBUG_CNT_AUX_CLK_IN_L1SUB_L2));
- 
- 	seq_printf(s, "L2 transition count: %u\n",
--		   readl_relaxed(pcie_ep->mmio + PARF_DEBUG_CNT_PM_LINKST_IN_L2));
-+		   readl_relaxed(pcie_ep->mhi + PARF_DEBUG_CNT_PM_LINKST_IN_L2));
- 
- 	return 0;
- }
+diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+index 479859bd8ab3..0104e77dd8d5 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -2280,10 +2280,11 @@ opp-4 {
+ 		pcie0: pci@1c00000 {
+ 			compatible = "qcom,pcie-sdm845";
+ 			reg = <0 0x01c00000 0 0x2000>,
++			      <0 0x01c07000 0 0x1000>,
+ 			      <0 0x60000000 0 0xf1d>,
+ 			      <0 0x60000f20 0 0xa8>,
+ 			      <0 0x60100000 0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "config";
++			reg-names = "parf", "mhi", "dbi", "elbi", "config";
+ 			device_type = "pci";
+ 			linux,pci-domain = <0>;
+ 			bus-range = <0x00 0xff>;
+@@ -2385,10 +2386,11 @@ pcie0_lane: phy@1c06200 {
+ 		pcie1: pci@1c08000 {
+ 			compatible = "qcom,pcie-sdm845";
+ 			reg = <0 0x01c08000 0 0x2000>,
++			      <0 0x01c0c000 0 0x1000>,
+ 			      <0 0x40000000 0 0xf1d>,
+ 			      <0 0x40000f20 0 0xa8>,
+ 			      <0 0x40100000 0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "config";
++			reg-names = "parf", "mhi", "dbi", "elbi", "config";
+ 			device_type = "pci";
+ 			linux,pci-domain = <1>;
+ 			bus-range = <0x00 0xff>;
 -- 
 2.25.1
 
