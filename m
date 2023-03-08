@@ -2,135 +2,96 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B7ABC6FD1E
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Mar 2023 08:25:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B515EC74A44
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Mar 2023 08:25:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230251AbjCHIZd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S229767AbjCHIZd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 8 Mar 2023 03:25:33 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39612 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230335AbjCHIY6 (ORCPT
+        with ESMTP id S230328AbjCHIY6 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Mar 2023 03:24:58 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D169A2A149
-        for <linux-pci@vger.kernel.org>; Wed,  8 Mar 2023 00:24:45 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id me6-20020a17090b17c600b0023816b0c7ceso1517698pjb.2
-        for <linux-pci@vger.kernel.org>; Wed, 08 Mar 2023 00:24:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678263885;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BWGkUKxc1+RShsSquL6TSNv4d+3ZNQVwM0OHF82Nolc=;
-        b=nnv0TKxz1LQVhz72XMyVwhz2edQHF5C8K/gYRQygBo/yk+Dbv/xU+iD8tOrKpBybxo
-         Th40/nZ5t3RuUuVaBM6w9/X487xPXQIMTOKM9TbKVKor+Z0RVV2eYg8W8PhlRGiSX/kh
-         ddWdEZIFEpMwK++1pKPLAP1lGQcQYlhaYBvzvGWLWaFB70c6ZfKmR0GdchQKNjwHjGZc
-         iN+14smx3G6dHXcmkw1THuLbzgflDB5QFz+VmZr10YyKqLAPt7GpI7XLw4ybBEWFJWv7
-         Hrj4r6bBgz9hKSJUOWbkNDVSPO/ri5RP9664q/ztWxL4fVHCC9ZgzTxmkwpwyZYGN4gi
-         v6kg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678263885;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BWGkUKxc1+RShsSquL6TSNv4d+3ZNQVwM0OHF82Nolc=;
-        b=YZsuu2t9DaKHtTDC78PoYDGAUK2tMg2qjwaBLxxAqX7nz+OiCpMOJYfWdLAmIvNJqc
-         RqvbCUFT9+zinFgbkhz60MWDezy26yLUGiH1FM0jUnSK6hPCNkwbqRSutiYquI9mOd5n
-         yQ8byVH1LYfptK4NWs+JDTy+uBduIs5uIpU4lRhxCDCKzIvyLMGGdf0s0ufU/b05N6ew
-         wAj4YmZmx2wNXAYDwxVPRnb3IhKneW3/bgs/7fBjRi7GQN6Z2ttFUNIXqns68+69Ps5G
-         aZ5x97ZJNjzEmeYW07rd65IegCpNeaFX9sGcBlCi4+lqadhCQfx1Hl8lb0Akm9AP6tcv
-         3emA==
-X-Gm-Message-State: AO0yUKWi/E3xEGDHedUU0ZxJ+XmaiHm2DuYuG0Jxq4y2VnWDZNDyGgr1
-        1LxN93xDtnA5y5YY2dkX7j5v
-X-Google-Smtp-Source: AK7set9hgLNXRCzM9+1cjNcg3cIBVdT4wUvKBQU14zJyGNk2N5NXDyJJWVjP3UoIVTQYzfWFhPYFbA==
-X-Received: by 2002:a17:902:cec6:b0:19d:1bc8:488a with SMTP id d6-20020a170902cec600b0019d1bc8488amr22220855plg.29.1678263885323;
-        Wed, 08 Mar 2023 00:24:45 -0800 (PST)
-Received: from localhost.localdomain ([59.97.52.140])
-        by smtp.gmail.com with ESMTPSA id s10-20020a170902ea0a00b0019aaab3f9d7sm9448086plg.113.2023.03.08.00.24.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Mar 2023 00:24:45 -0800 (PST)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     andersson@kernel.org, lpieralisi@kernel.org, robh@kernel.org,
-        kw@linux.com, krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org
-Cc:     konrad.dybcio@linaro.org, bhelgaas@google.com, kishon@kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v3 03/13] dt-bindings: PCI: qcom: Add SDX55 SoC
-Date:   Wed,  8 Mar 2023 13:54:14 +0530
-Message-Id: <20230308082424.140224-4-manivannan.sadhasivam@linaro.org>
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2C38295E1B;
+        Wed,  8 Mar 2023 00:24:42 -0800 (PST)
+X-IronPort-AV: E=Sophos;i="5.98,243,1673881200"; 
+   d="scan'208";a="151900491"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie5.idc.renesas.com with ESMTP; 08 Mar 2023 17:24:25 +0900
+Received: from localhost.localdomain (unknown [10.166.15.32])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 4D8EC4010E14;
+        Wed,  8 Mar 2023 17:24:25 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
+        bhelgaas@google.com, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com
+Cc:     Sergey.Semin@baikalelectronics.ru, marek.vasut+renesas@gmail.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v10 05/12] PCI: dwc: Refactor PCIE_PORT_LINK_CONTROL handling
+Date:   Wed,  8 Mar 2023 17:23:45 +0900
+Message-Id: <20230308082352.491561-6-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230308082424.140224-1-manivannan.sadhasivam@linaro.org>
-References: <20230308082424.140224-1-manivannan.sadhasivam@linaro.org>
+In-Reply-To: <20230308082352.491561-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20230308082352.491561-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for the PCIe controller on the Qcom SDX55 SoC to the binding.
+The previous code wrote this PCIE_PORT_LINK_CONTROL register twice
+with redudant mask (PORT_LINK_FAST_LINK_MODE). So, refactor this.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- .../devicetree/bindings/pci/qcom,pcie.yaml    | 28 +++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware.c | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index 55ee86facbc0..35ef56553603 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -33,6 +33,7 @@ properties:
-           - qcom,pcie-sc8180x
-           - qcom,pcie-sc8280xp
-           - qcom,pcie-sdm845
-+          - qcom,pcie-sdx55
-           - qcom,pcie-sm8150
-           - qcom,pcie-sm8250
-           - qcom,pcie-sm8350
-@@ -203,6 +204,7 @@ allOf:
-               - qcom,pcie-sc7280
-               - qcom,pcie-sc8180x
-               - qcom,pcie-sc8280xp
-+              - qcom,pcie-sdx55
-               - qcom,pcie-sm8250
-               - qcom,pcie-sm8350
-               - qcom,pcie-sm8450-pcie0
-@@ -671,6 +673,32 @@ allOf:
-           items:
-             - const: pci # PCIe core reset
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 8e33e6e59e68..89b8ec29da7f 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -1008,19 +1008,13 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 		dw_pcie_writel_dbi(pci, PCIE_PL_CHK_REG_CONTROL_STATUS, val);
+ 	}
  
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            enum:
-+              - qcom,pcie-sdx55
-+    then:
-+      properties:
-+        clocks:
-+          minItems: 7
-+          maxItems: 7
-+        clock-names:
-+          items:
-+            - const: pipe # PIPE clock
-+            - const: aux # Auxiliary clock
-+            - const: cfg # Configuration clock
-+            - const: bus_master # Master AXI clock
-+            - const: bus_slave # Slave AXI clock
-+            - const: slave_q2a # Slave Q2A clock
-+            - const: sleep # PCIe Sleep clock
-+        resets:
-+          maxItems: 1
-+        reset-names:
-+          items:
-+            - const: pci # PCIe core reset
-+
-   - if:
-       properties:
-         compatible:
++	/* Set the number of lanes */
+ 	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
+ 	val &= ~PORT_LINK_FAST_LINK_MODE;
+ 	val |= PORT_LINK_DLL_LINK_EN;
+-	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
+-
+-	if (!pci->num_lanes) {
+-		dev_dbg(pci->dev, "Using h/w default number of lanes\n");
+-		return;
+-	}
+-
+-	/* Set the number of lanes */
+-	val &= ~PORT_LINK_FAST_LINK_MODE;
+-	val &= ~PORT_LINK_MODE_MASK;
++	/* Mask LINK_MODE if num_lanes is not zero */
++	if (pci->num_lanes)
++		val &= ~PORT_LINK_MODE_MASK;
+ 	switch (pci->num_lanes) {
+ 	case 1:
+ 		val |= PORT_LINK_MODE_1_LANES;
+@@ -1035,10 +1029,12 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 		val |= PORT_LINK_MODE_8_LANES;
+ 		break;
+ 	default:
+-		dev_err(pci->dev, "num-lanes %u: invalid value\n", pci->num_lanes);
+-		return;
++		dev_dbg(pci->dev, "Using h/w default number of lanes\n");
++		break;
+ 	}
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
++	if (!pci->num_lanes)
++		return;
+ 
+ 	/* Set link width speed control register */
+ 	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
 -- 
 2.25.1
 
