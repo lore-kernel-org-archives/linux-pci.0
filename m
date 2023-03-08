@@ -2,157 +2,95 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA05C6FD1E
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Mar 2023 08:25:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2DB1C742A7
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Mar 2023 08:25:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230142AbjCHIZU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Mar 2023 03:25:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46862 "EHLO
+        id S230188AbjCHIZV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Mar 2023 03:25:21 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230300AbjCHIY4 (ORCPT
+        with ESMTP id S230307AbjCHIY4 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Mar 2023 03:24:56 -0500
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 976AA7EE6;
-        Wed,  8 Mar 2023 00:24:40 -0800 (PST)
-X-IronPort-AV: E=Sophos;i="5.98,243,1673881200"; 
-   d="scan'208";a="155237829"
-Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 08 Mar 2023 17:24:25 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 2FA2F4010E14;
-        Wed,  8 Mar 2023 17:24:25 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
-        bhelgaas@google.com, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com
-Cc:     Sergey.Semin@baikalelectronics.ru, marek.vasut+renesas@gmail.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v10 04/12] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
-Date:   Wed,  8 Mar 2023 17:23:44 +0900
-Message-Id: <20230308082352.491561-5-yoshihiro.shimoda.uh@renesas.com>
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AF1BE06D
+        for <linux-pci@vger.kernel.org>; Wed,  8 Mar 2023 00:24:41 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id qa18-20020a17090b4fd200b0023750b675f5so1502095pjb.3
+        for <linux-pci@vger.kernel.org>; Wed, 08 Mar 2023 00:24:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1678263881;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=WT/YBVNsPknrBjyIkGUY9UiL+2Gj/Zemk+zRmMN7Jkk=;
+        b=IU1Ed86toqfeL/Oy5S9RLvgyjhKn4YpmAkbkjTUtlIYfyxwE6ss5nnj0A6aD5fihad
+         5YkLLWGCXIfYwDa6fLQxk3cHtvfit/giKXBtqIMZpOPlbTcWOVLPFxDj0xzeWoMasOma
+         iVMEvW21hIS6FfgzrVtxi2kRHuAiOtEGHFbxOmoj4ltE7uWTJ0m4kApJme7X5j0NPIkb
+         D/Rk+8qsklFZegDG8Os2SB3hNuI0zl2fERMn3Ja62fix/UnUKPeOZnopO4OUqfm/94/5
+         ewWodg5fB/p4yGvAfQoErsiv/UDPygj7R64RzhBJn5eRSKtuGp2tZLqcjUotGOPJxD9/
+         SGbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678263881;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=WT/YBVNsPknrBjyIkGUY9UiL+2Gj/Zemk+zRmMN7Jkk=;
+        b=wn479R9wvrOaGMVE0dqCVeQ/OKRwnvk+n6ng6803mH5zCqtbPQzEToTB61yO8E6EfW
+         FXSbyfD51mjapLUEcGh+OcRdUk68msgqlqWTy+j3GXayKyPAT+NTfmnhTKKhew18xhIm
+         9ZpNv3GYxl+WmN0iqM9kGNf/nuKU9rsMDnaNyIGsvai0dXfq5r1wo0KMyXWlxTSQk30g
+         YEpeIP6UscERi3q+1berbrSoLRM8d8XgVOdb9cWDzGcN+nI/KNVJn8LxYYIJvoTOolKo
+         wa1Z5vUBLf0lherwq4H3UoUQsxj/5d6If1Ka4Ctyj44FOP8xGDelQxDQBxxxSHOp2aNh
+         gj9Q==
+X-Gm-Message-State: AO0yUKUUGMFZRUtkINYQuuDKwhkd3CYmv7A2co2X600chjrrf4Te72gz
+        P2opNjVCPkkcIrSwrVnV/rYr
+X-Google-Smtp-Source: AK7set/u3U2U32Lk//wFu6fAj0zNV+97AFPfKeYRbfUxhcrYTjxdj5ItKedSSAA8khsHfHl97oL8EA==
+X-Received: by 2002:a17:902:c948:b0:19c:dd49:9bf8 with SMTP id i8-20020a170902c94800b0019cdd499bf8mr21710306pla.28.1678263880800;
+        Wed, 08 Mar 2023 00:24:40 -0800 (PST)
+Received: from localhost.localdomain ([59.97.52.140])
+        by smtp.gmail.com with ESMTPSA id s10-20020a170902ea0a00b0019aaab3f9d7sm9448086plg.113.2023.03.08.00.24.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Mar 2023 00:24:40 -0800 (PST)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     andersson@kernel.org, lpieralisi@kernel.org, robh@kernel.org,
+        kw@linux.com, krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org
+Cc:     konrad.dybcio@linaro.org, bhelgaas@google.com, kishon@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v3 02/13] dt-bindings: PCI: qcom: Add iommu-map properties
+Date:   Wed,  8 Mar 2023 13:54:13 +0530
+Message-Id: <20230308082424.140224-3-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230308082352.491561-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20230308082352.491561-1-yoshihiro.shimoda.uh@renesas.com>
+In-Reply-To: <20230308082424.140224-1-manivannan.sadhasivam@linaro.org>
+References: <20230308082424.140224-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
-PCIe endpoint module.
+Most of the PCIe controllers require iommu support to function properly.
+So let's add the "iommu-map" property that specifies the SMMU SID of the
+PCIe devices to the binding.
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- .../bindings/pci/rcar-gen4-pci-ep.yaml        | 95 +++++++++++++++++++
- 1 file changed, 95 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
-new file mode 100644
-index 000000000000..bce44c5e52b4
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
-@@ -0,0 +1,95 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2022 Renesas Electronics Corp.
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-ep.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 92eb273581f6..55ee86facbc0 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -70,6 +70,8 @@ properties:
+ 
+   dma-coherent: true
+ 
++  iommu-map: true
 +
-+title: Renesas R-Car Gen4 PCIe Endpoint
-+
-+maintainers:
-+  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-+
-+allOf:
-+  - $ref: snps,dw-pcie-ep.yaml#
-+
-+properties:
-+  compatible:
-+    items:
-+      - const: renesas,r8a779f0-pcie-ep   # R-Car S4-8
-+      - const: renesas,rcar-gen4-pcie-ep  # R-Car Gen4
-+
-+  reg:
-+    maxItems: 4
-+
-+  reg-names:
-+    items:
-+      - const: dbi
-+      - const: atu
-+      - const: app
-+      - const: addr_space
-+
-+  interrupts:
-+    maxItems: 3
-+
-+  interrupt-names:
-+    items:
-+      - const: dma
-+      - const: sft_ce
-+      - const: app
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  resets:
-+    maxItems: 1
-+
-+  clocks:
-+    maxItems: 1
-+
-+  max-functions:
-+    maximum: 2
-+
-+  max-link-speed:
-+    maximum: 4
-+
-+  num-lanes:
-+    maximum: 4
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - interrupts
-+  - resets
-+  - power-domains
-+  - clocks
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/power/r8a779f0-sysc.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie0_ep: pcie-ep@e65d0000 {
-+            compatible = "renesas,r8a779f0-pcie-ep", "renesas,rcar-gen4-pcie-ep";
-+            reg = <0 0xe65d0000 0 0x1000>, <0 0xe65d1000 0 0x1000>,
-+                  <0 0xe65d3000 0 0x2000>, <0 0xfe000000 0 0x400000>;
-+            reg-names = "dbi", "atu", "appl", "addr_space";
-+            interrupts = <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-names = "dma", "sft_ce", "app";
-+            clocks = <&cpg CPG_MOD 624>;
-+            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
-+            resets = <&cpg 624>;
-+            num-lanes = <2>;
-+            max-link-speed = <2>;
-+        };
-+    };
+   interconnects:
+     maxItems: 2
+ 
 -- 
 2.25.1
 
