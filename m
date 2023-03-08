@@ -2,97 +2,157 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C11AC742A7
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Mar 2023 08:25:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA05C6FD1E
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Mar 2023 08:25:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230096AbjCHIZP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Mar 2023 03:25:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45066 "EHLO
+        id S230142AbjCHIZU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Mar 2023 03:25:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230274AbjCHIYx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Mar 2023 03:24:53 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAD65186
-        for <linux-pci@vger.kernel.org>; Wed,  8 Mar 2023 00:24:36 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id cp7-20020a17090afb8700b0023756229427so1521197pjb.1
-        for <linux-pci@vger.kernel.org>; Wed, 08 Mar 2023 00:24:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678263876;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Hku7GI8fxnyC2ugXj0rjNviSGHzIDWLdfW64e83ph/U=;
-        b=S2IrAmdHcm7bUgPqWiRffn0Hlsp2BqnYwJv4XBFQgfPcJI+vFmaDXjPCWfARaed2IH
-         wIrPT0Fe/TNOMIF+Lb9G93gvD2TWYGJ4fKJXgRzUGfQtkyjg1wxeXNlDu28qFDtclfKo
-         p+S/QhmEhYh8mUs11wPkrAqZl0FYgSZ5Y2MxAJPRx9g1XHCpKIvREMFt4rPbnQ2ObMas
-         bo5mij/kUtqhHkVyYDGWNrseFO7SRy4jHVVyfMR6saiNOkS9WxxFYJyjl6Q3/ipIosB9
-         m6OhFbIvpb9Ya4NILIg1L/Vt7q4y7HhbMzAbkvxRiqtXVaz64VFovjXvvALw/Y2zkvv1
-         tzMw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678263876;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Hku7GI8fxnyC2ugXj0rjNviSGHzIDWLdfW64e83ph/U=;
-        b=3LkKNMputz/WiZ+5hdbRgEIo3QFFtUYnckqPWcdJUt+aL89zGYzT1tCKRztxZisEvD
-         aOht3njzryZH3BCw3GhzYfIkesgH6kkk9xE25TJPdX74fZCeIDM5mJkMjq6db3XhWwV8
-         OEG616QLkFEVYnLHjE829ZcWk4zG+d5BkHkMNjz37+H0fx3wiLyApwWl9GUzLKN3KRUh
-         G7MbX9cruQVyBsqoeIq9pJT3Jyb2uquH53x7roeQikgH+uHWahYWv7Uz0kxxx4I0UN5h
-         dHgMUcncy5UkPXNsIvO5aCpXQlIeTH0zf6ymv1G2EiyGiXpQ1j3bJiSi7eZfjQ1h2ec/
-         pXOw==
-X-Gm-Message-State: AO0yUKXgzGMLimdqMwDfFGvKDlpf+iRzzGfyu1DnXQ0E161AXfEayYes
-        0fXgW6AzCxqo30VKfEAeY9hl
-X-Google-Smtp-Source: AK7set+z2ohjLMrW/ySDf6/Oh+UEPC1wQb+tHc0FTJS9Kcx/n4N6wSZuXNOT6xuA5n5AkVTr9Gltmg==
-X-Received: by 2002:a17:902:b282:b0:19a:b151:bf68 with SMTP id u2-20020a170902b28200b0019ab151bf68mr17535437plr.38.1678263876361;
-        Wed, 08 Mar 2023 00:24:36 -0800 (PST)
-Received: from localhost.localdomain ([59.97.52.140])
-        by smtp.gmail.com with ESMTPSA id s10-20020a170902ea0a00b0019aaab3f9d7sm9448086plg.113.2023.03.08.00.24.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Mar 2023 00:24:36 -0800 (PST)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     andersson@kernel.org, lpieralisi@kernel.org, robh@kernel.org,
-        kw@linux.com, krzysztof.kozlowski+dt@linaro.org, vkoul@kernel.org
-Cc:     konrad.dybcio@linaro.org, bhelgaas@google.com, kishon@kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v3 01/13] dt-bindings: PCI: qcom: Update maintainers entry
-Date:   Wed,  8 Mar 2023 13:54:12 +0530
-Message-Id: <20230308082424.140224-2-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S230300AbjCHIY4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Mar 2023 03:24:56 -0500
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 976AA7EE6;
+        Wed,  8 Mar 2023 00:24:40 -0800 (PST)
+X-IronPort-AV: E=Sophos;i="5.98,243,1673881200"; 
+   d="scan'208";a="155237829"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie6.idc.renesas.com with ESMTP; 08 Mar 2023 17:24:25 +0900
+Received: from localhost.localdomain (unknown [10.166.15.32])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 2FA2F4010E14;
+        Wed,  8 Mar 2023 17:24:25 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
+        bhelgaas@google.com, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com
+Cc:     Sergey.Semin@baikalelectronics.ru, marek.vasut+renesas@gmail.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Rob Herring <robh@kernel.org>
+Subject: [PATCH v10 04/12] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
+Date:   Wed,  8 Mar 2023 17:23:44 +0900
+Message-Id: <20230308082352.491561-5-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230308082424.140224-1-manivannan.sadhasivam@linaro.org>
-References: <20230308082424.140224-1-manivannan.sadhasivam@linaro.org>
+In-Reply-To: <20230308082352.491561-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20230308082352.491561-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Stan is no longer working with MMSOL and expressed his interest to not
-continue maintaining Qcom PCIe driver. Since I took over the driver
-maintainership, I'm stepping in to maintain the binding also.
+Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+PCIe endpoint module.
 
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../bindings/pci/rcar-gen4-pci-ep.yaml        | 95 +++++++++++++++++++
+ 1 file changed, 95 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index fb32c43dd12d..92eb273581f6 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -8,7 +8,7 @@ title: Qualcomm PCI express root complex
- 
- maintainers:
-   - Bjorn Andersson <bjorn.andersson@linaro.org>
--  - Stanimir Varbanov <svarbanov@mm-sol.com>
-+  - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
- 
- description: |
-   Qualcomm PCIe root complex controller is based on the Synopsys DesignWare
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+new file mode 100644
+index 000000000000..bce44c5e52b4
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+@@ -0,0 +1,95 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2022 Renesas Electronics Corp.
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-ep.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Renesas R-Car Gen4 PCIe Endpoint
++
++maintainers:
++  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
++
++allOf:
++  - $ref: snps,dw-pcie-ep.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: renesas,r8a779f0-pcie-ep   # R-Car S4-8
++      - const: renesas,rcar-gen4-pcie-ep  # R-Car Gen4
++
++  reg:
++    maxItems: 4
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: atu
++      - const: app
++      - const: addr_space
++
++  interrupts:
++    maxItems: 3
++
++  interrupt-names:
++    items:
++      - const: dma
++      - const: sft_ce
++      - const: app
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++  clocks:
++    maxItems: 1
++
++  max-functions:
++    maximum: 2
++
++  max-link-speed:
++    maximum: 4
++
++  num-lanes:
++    maximum: 4
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - interrupts
++  - resets
++  - power-domains
++  - clocks
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a779f0-sysc.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie0_ep: pcie-ep@e65d0000 {
++            compatible = "renesas,r8a779f0-pcie-ep", "renesas,rcar-gen4-pcie-ep";
++            reg = <0 0xe65d0000 0 0x1000>, <0 0xe65d1000 0 0x1000>,
++                  <0 0xe65d3000 0 0x2000>, <0 0xfe000000 0 0x400000>;
++            reg-names = "dbi", "atu", "appl", "addr_space";
++            interrupts = <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "dma", "sft_ce", "app";
++            clocks = <&cpg CPG_MOD 624>;
++            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++            resets = <&cpg 624>;
++            num-lanes = <2>;
++            max-link-speed = <2>;
++        };
++    };
 -- 
 2.25.1
 
