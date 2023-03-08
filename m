@@ -2,107 +2,100 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34421C74A44
-	for <linux-pci@archiver.kernel.org>; Wed,  8 Mar 2023 13:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D58E9C7618A
+	for <linux-pci@archiver.kernel.org>; Wed,  8 Mar 2023 14:08:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231206AbjCHNi4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 Mar 2023 08:38:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51732 "EHLO
+        id S232152AbjCHOIK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 Mar 2023 09:08:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231193AbjCHNiO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Mar 2023 08:38:14 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5F12BF38D;
-        Wed,  8 Mar 2023 05:36:29 -0800 (PST)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 328Cm8rq013590;
-        Wed, 8 Mar 2023 13:36:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=w0vsOsjk5O2np8Tu4l+4ogLxH7P0R+ba99o7h7cf8e8=;
- b=aYqtprk/iHAKZZMVUkNcYiuF5LkQkja+yUy3YuJRLkWOjW7681qAFR+DVtHXOKr0Bn2N
- CJLOr4/dLvNAMmY71fA19Lakp8yMiluHLAZmuy5u9o0lormeHmdiVSGku6KGYPF38U/9
- 32AJhJYH9CvCbHOyr3CSPDxODJt77Rv7agIbpClaa3emY6RjrCZ+nYUmqNupA6cDvpWE
- B489shze39AyZw/3N6kubLCpiQh3n/Ax3otW1u4AGCO19kVFYJhySGyt8CYHBHVm0zsm
- wbyFh7Pk9+9u+ih0VraQjlakKOT7WSlE0H97G5L44n5lSVe+v6+kVkG0Ucj1D4icYtoU 7Q== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3p6fga1rjs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 08 Mar 2023 13:36:21 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 328DZgqt020580;
-        Wed, 8 Mar 2023 13:35:42 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3p4fftbxx8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Wed, 08 Mar 2023 13:35:42 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 328DZgbM020567;
-        Wed, 8 Mar 2023 13:35:42 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-rohiagar-hyd.qualcomm.com [10.213.106.138])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 328DZgWO020566;
-        Wed, 08 Mar 2023 13:35:42 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3970568)
-        id 745C14FB4; Wed,  8 Mar 2023 19:05:41 +0530 (+0530)
-From:   Rohit Agarwal <quic_rohiagar@quicinc.com>
-To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        lee@kernel.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, mani@kernel.org,
-        lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com,
-        manivannan.sadhasivam@linaro.org
-Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Rohit Agarwal <quic_rohiagar@quicinc.com>
-Subject: [PATCH v3 0/5] Add PCIe EP support for SDX65
-Date:   Wed,  8 Mar 2023 19:05:27 +0530
-Message-Id: <1678282532-16635-1-git-send-email-quic_rohiagar@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: filnOAoPk92BQj6Yabp5PPPXws0gHO9h
-X-Proofpoint-ORIG-GUID: filnOAoPk92BQj6Yabp5PPPXws0gHO9h
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-08_08,2023-03-08_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
- lowpriorityscore=0 malwarescore=0 priorityscore=1501 suspectscore=0
- spamscore=0 mlxscore=0 clxscore=1015 mlxlogscore=678 impostorscore=0
- bulkscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303080116
+        with ESMTP id S232128AbjCHOHv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Mar 2023 09:07:51 -0500
+Received: from mail-oi1-f175.google.com (mail-oi1-f175.google.com [209.85.167.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6265C4DE35;
+        Wed,  8 Mar 2023 06:06:30 -0800 (PST)
+Received: by mail-oi1-f175.google.com with SMTP id q15so12199279oiw.11;
+        Wed, 08 Mar 2023 06:06:30 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678284389;
+        h=date:subject:message-id:references:in-reply-to:cc:to:from
+         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=46ifXtx7H5qHUf/TrPJ9mIvLhusVn1artVDZ/aEfyqY=;
+        b=KWFUyO0nioE5dQ7vHHl//5hg/neJ0gcA6fLP4BsYkFKL2k7ukG2RASWWdjPOsxrKrb
+         oCvayFtAzWC++0SJnFA03XE7HxUpkx9ti4QJb/ARvO9rGUhjgsiHxZi5aYZYYoHksRvy
+         R/FEi8Np8/k+ZU8J7lCV3BFy5VC07qMALGgjQt9zL0Wm/MUJWlqAZLi4XDEGQzqHvKJp
+         S8GipnhT/M871QNNjW2aIwfG2fOx9VPcMX0IAVVk1TzNoi5LDUSuynX0yiZpgvg2+uR/
+         CYNIFYb63AYYK3R4fOYAoqflFFEsEEEG9b8i4uKxbpKFU0SwXtC4VgNkthRttQE2bCS4
+         QTng==
+X-Gm-Message-State: AO0yUKU4KxJIrT8bHxWBiyuSxvhyB4JIQCdnxMMzKBmW9MXU1WboS8pB
+        6FWsiX0LU4zfG3+H1VmraQ==
+X-Google-Smtp-Source: AK7set8gAyNjY8BkNBNF90LL+mmM7D2sm8zj5SI+095OPsrGhbzhNlHil1wu52ljYCwndnnZtwARTA==
+X-Received: by 2002:a05:6808:251:b0:384:637:a4f with SMTP id m17-20020a056808025100b0038406370a4fmr8319226oie.10.1678284389579;
+        Wed, 08 Mar 2023 06:06:29 -0800 (PST)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id p13-20020a05680811cd00b0037d59e90a07sm6336512oiv.55.2023.03.08.06.06.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 08 Mar 2023 06:06:28 -0800 (PST)
+Received: (nullmailer pid 2666447 invoked by uid 1000);
+        Wed, 08 Mar 2023 14:06:21 -0000
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+From:   Rob Herring <robh@kernel.org>
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     marek.vasut+renesas@gmail.com, lpieralisi@kernel.org,
+        jingoohan1@gmail.com, linux-renesas-soc@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, Sergey.Semin@baikalelectronics.ru,
+        kw@linux.com, robh+dt@kernel.org, gustavo.pimentel@synopsys.com
+In-Reply-To: <20230308082352.491561-5-yoshihiro.shimoda.uh@renesas.com>
+References: <20230308082352.491561-1-yoshihiro.shimoda.uh@renesas.com>
+ <20230308082352.491561-5-yoshihiro.shimoda.uh@renesas.com>
+Message-Id: <167828360013.2613033.9597953469083757730.robh@kernel.org>
+Subject: Re: [PATCH v10 04/12] dt-bindings: PCI: renesas: Add R-Car Gen4
+ PCIe Endpoint
+Date:   Wed, 08 Mar 2023 08:06:21 -0600
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
 
-Changes in v3:
- - Removing the applied patch.
- - Addressing some of the compile time issues missed in v2.
+On Wed, 08 Mar 2023 17:23:44 +0900, Yoshihiro Shimoda wrote:
+> Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+> PCIe endpoint module.
+> 
+> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> ---
+>  .../bindings/pci/rcar-gen4-pci-ep.yaml        | 95 +++++++++++++++++++
+>  1 file changed, 95 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+> 
 
-Changes in v2:
- - Addressing comments from Konrad and Dmitry.
- - Rebased on top of 6.3-rc1.
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
 
-This series adds the devicetree support for PCIe PHY and PCIe EP on SDX65.
-The PCIe EP is enabled on SDX65 MTP board.
+yamllint warnings/errors:
 
-Thanks,
-Rohit.
+dtschema/dtc warnings/errors:
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.example.dtb: pcie-ep@e65d0000: reg-names:2: 'app' was expected
+	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
 
-Rohit Agarwal (5):
-  dt-bindings: PCI: qcom: Add SDX65 SoC
-  ARM: dts: qcom: sdx65: Add support for PCIe PHY
-  ARM: dts: qcom: sdx65: Add support for PCIe EP
-  ARM: dts: qcom: sdx65-mtp: Enable PCIe PHY
-  ARM: dts: qcom: sdx65-mtp: Enable PCIe EP
+doc reference errors (make refcheckdocs):
 
- .../devicetree/bindings/pci/qcom,pcie-ep.yaml      |  2 +
- arch/arm/boot/dts/qcom-sdx65-mtp.dts               | 47 ++++++++++-
- arch/arm/boot/dts/qcom-sdx65.dtsi                  | 90 ++++++++++++++++++++++
- 3 files changed, 136 insertions(+), 3 deletions(-)
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20230308082352.491561-5-yoshihiro.shimoda.uh@renesas.com
 
--- 
-2.7.4
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
