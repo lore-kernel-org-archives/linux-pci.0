@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 227AAC742A7
-	for <linux-pci@archiver.kernel.org>; Thu,  9 Mar 2023 08:52:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B3CBC61DA4
+	for <linux-pci@archiver.kernel.org>; Thu,  9 Mar 2023 08:52:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230416AbjCIIwZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 Mar 2023 03:52:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52724 "EHLO
+        id S230075AbjCIIwe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 Mar 2023 03:52:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230422AbjCIIwW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2023 03:52:22 -0500
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFA1BDF27D
-        for <linux-pci@vger.kernel.org>; Thu,  9 Mar 2023 00:51:52 -0800 (PST)
-Received: by mail-pl1-x634.google.com with SMTP id i5so1280697pla.2
-        for <linux-pci@vger.kernel.org>; Thu, 09 Mar 2023 00:51:52 -0800 (PST)
+        with ESMTP id S230440AbjCIIw0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2023 03:52:26 -0500
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83198DF72D
+        for <linux-pci@vger.kernel.org>; Thu,  9 Mar 2023 00:51:54 -0800 (PST)
+Received: by mail-pl1-x636.google.com with SMTP id p6so1317263plf.0
+        for <linux-pci@vger.kernel.org>; Thu, 09 Mar 2023 00:51:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678351904;
+        d=linaro.org; s=google; t=1678351912;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=TSFkykYkB7c0gJwp2FwEg/ye5mEGILHD2HLR3ehwkBA=;
-        b=hc0gwMQFnzalTunvAjm4L58hHwNp7VbTbHo+lbvNwLRqv+H00TGza5uFFfGhU4r2Aa
-         ufBz12oVXM+brOBI+yvrO9AvuRl4WSr8FwDEw2mJ0cW/XOC5/z2cUDVEPtlsOZY2E12d
-         evzbkEOD05Koq4h7ngnttkZ2Nsy9Hz08S8QbhN1oQB9/yRwre67ituExGeRsvfo03m6i
-         kMV9bbvJ/IrRzwoxSOcaTxN6VQ9SEeyxbuaztgUntrLgW2A+k6Dym6tEvNinZfsIoUps
-         9KMm1tz1rxbq3rQlhZsFGhVovsNX80Z5NvS3+nCPZiB3fLG8U5iM4OIF/RX8VU0ZTEWe
-         bPWQ==
+        bh=HLaHkNbeR3pTSpm3EckvQkVoLPurUbKikH/yYKtcjD0=;
+        b=STLOuZSaP5i6ZafnkMfA/KapJp8IN5WQ69Cpe5WYrpLjSnVR2RMY95uBQDNX6Bpebk
+         3wY9UW7BWkBaGRKdoImhFiVbbXQ9NxiRxogbaJvukUZdfwdyD2xPdxnpxI5HtEn+sbpU
+         suZYJ45NPh5ZBj+WzSMtnCyQhlZvy3VXFpWBPdTtbVb1dqZ1iEToQilaX2pFQxZEBibd
+         tTpMBFoLjE1iT5wmsLyP4zGw/aJHQr8hIERvu+0kmhuC5wzCrJHKe5AvvdK8rFRp7g31
+         U0gVRMiAN2hjqvFmig/LLCw4c8VyjLIm59tkU8buMMqtd77uw2QNAkHiXpFaToeffuhh
+         aVog==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678351904;
+        d=1e100.net; s=20210112; t=1678351912;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=TSFkykYkB7c0gJwp2FwEg/ye5mEGILHD2HLR3ehwkBA=;
-        b=Nkr5YeM4KtUbsnRttcT6NA8IKJJSPq82qNgzhaxmwqNwHryV1NfcnCXZW3lnOiT+3S
-         y+eTnAMmdpk+lVPQgJSK5+1czfwcTVtou7aKY57EJLAbVj5EkcS4T/F4Q2pUpz21VrsF
-         GEPXFpG2VRP0SIaMD0cEhZM+MH0AqPI5K7SF0nPpkf6pW8oxUNEVLVfU1Hcoq7urkqpY
-         +c7o8D/5QSKH18rekbZGNrdb43mtcVD2GKjFZXsCXzj3/JVYMtCHJ/JuyhgGUn/GxdFO
-         +tbP6uOBcO+gewqGbRQoqTvJWps+kX5jH9TBnfEFe0i1bItfF8RTv2orZtI3/IZyJ37m
-         9IWw==
-X-Gm-Message-State: AO0yUKWCmJYgSgvZsCqtATnIBoz8msEeUoO1fGIXr3V+y9B1s6gtgpty
-        OO4sMb/EJyZ0E3txuA1Hzm0a
-X-Google-Smtp-Source: AK7set9PtpEL7sXKPywKujAuB+LNOQB+ST0LshJZUOcCzup+D7fIp4tjKw5uDpoFiYR/YpYPQr3Tlg==
-X-Received: by 2002:a05:6a20:440d:b0:c7:6088:9bc8 with SMTP id ce13-20020a056a20440d00b000c760889bc8mr27454847pzb.52.1678351904178;
-        Thu, 09 Mar 2023 00:51:44 -0800 (PST)
+        bh=HLaHkNbeR3pTSpm3EckvQkVoLPurUbKikH/yYKtcjD0=;
+        b=uulQ1H2AlI43jctfxXY4B+98la7fV8nzVwaAbtl0HZ3WHrP81PbA8qLXgYRDxMJLt4
+         PJ07zKVrM2eiXdlXA95+Vo46iGn0Si9Y4UhZAGXe6YNzJ+0UdGCAqty2DIY3GlpyEU5Q
+         AABUqi3UCW4dvZ7zIWD5pV8+hZrERRp7Wntb/0GANlhvbR+lkHQZ2E7zRLBKdh3+6PLQ
+         mMHqiURgZaWFzA3SJSUqRC3M+wU0YGNn9j6Cn53mueQmDvTikrE8z7HbPnD6jg6CgEbD
+         XV4DVu6mayd+SqmHHa1Dznn9mdsdwMHQI498Xdmwru8lTu6OAJ8q/juR8sb9e+930+vo
+         2EHQ==
+X-Gm-Message-State: AO0yUKVSQXbAXn2GVlTJD1qZZUDhElxM3AFZJ799W7PtFIJFRoeMtJcL
+        hRJLpKxd2U3RXuwtSJFRkbQx
+X-Google-Smtp-Source: AK7set9t0Xb8a/RKBklvzvT8/n/BJqXJ8ZXZUdbQ2YA6pfa82mk8TzLyr+9GPYMymnExn5WePhlAHQ==
+X-Received: by 2002:a05:6a20:1448:b0:be:cbee:edbc with SMTP id a8-20020a056a20144800b000becbeeedbcmr23850105pzi.24.1678351911733;
+        Thu, 09 Mar 2023 00:51:51 -0800 (PST)
 Received: from localhost.localdomain ([220.158.158.11])
-        by smtp.gmail.com with ESMTPSA id u4-20020aa78484000000b005809d382016sm10638604pfn.74.2023.03.09.00.51.40
+        by smtp.gmail.com with ESMTPSA id u4-20020aa78484000000b005809d382016sm10638604pfn.74.2023.03.09.00.51.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Mar 2023 00:51:43 -0800 (PST)
+        Thu, 09 Mar 2023 00:51:51 -0800 (PST)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     andersson@kernel.org, lpieralisi@kernel.org, kw@linux.com,
         krzysztof.kozlowski+dt@linaro.org, robh@kernel.org
@@ -56,9 +56,9 @@ Cc:     konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, quic_srichara@quicinc.com,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 07/17] PCI: qcom: Use bulk clock APIs for handling clocks for IP rev 1.0.0
-Date:   Thu,  9 Mar 2023 14:20:52 +0530
-Message-Id: <20230309085102.120977-8-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v2 09/17] PCI: qcom: Use bulk clock APIs for handling clocks for IP rev 2.3.3
+Date:   Thu,  9 Mar 2023 14:20:54 +0530
+Message-Id: <20230309085102.120977-10-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230309085102.120977-1-manivannan.sadhasivam@linaro.org>
 References: <20230309085102.120977-1-manivannan.sadhasivam@linaro.org>
@@ -73,129 +73,143 @@ APIs can be used to handle them together. This simplifies the code a lot.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 72 +++++++-------------------
- 1 file changed, 19 insertions(+), 53 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom.c | 88 ++++++--------------------
+ 1 file changed, 20 insertions(+), 68 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 2d9116464842..0bb27d3c95a0 100644
+index 939973733a1e..6b83e3627336 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -145,11 +145,9 @@
- 
- #define QCOM_PCIE_CRC8_POLYNOMIAL		(BIT(2) | BIT(1) | BIT(0))
- 
-+#define QCOM_PCIE_1_0_0_MAX_CLOCKS		4
- struct qcom_pcie_resources_1_0_0 {
--	struct clk *iface;
--	struct clk *aux;
--	struct clk *master_bus;
--	struct clk *slave_bus;
-+	struct clk_bulk_data clks[QCOM_PCIE_1_0_0_MAX_CLOCKS];
- 	struct reset_control *core;
- 	struct regulator *vdda;
+@@ -169,6 +169,12 @@ struct qcom_pcie_resources_2_3_2 {
+ 	struct regulator_bulk_data supplies[QCOM_PCIE_2_3_2_MAX_SUPPLY];
  };
-@@ -439,26 +437,20 @@ static int qcom_pcie_get_resources_1_0_0(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
- 	struct dw_pcie *pci = pcie->pci;
- 	struct device *dev = pci->dev;
-+	int ret;
  
- 	res->vdda = devm_regulator_get(dev, "vdda");
- 	if (IS_ERR(res->vdda))
- 		return PTR_ERR(res->vdda);
++#define QCOM_PCIE_2_3_3_MAX_CLOCKS		5
++struct qcom_pcie_resources_2_3_3 {
++	struct clk_bulk_data clks[QCOM_PCIE_2_3_3_MAX_CLOCKS];
++	struct reset_control *rst[7];
++};
++
+ #define QCOM_PCIE_2_4_0_MAX_CLOCKS	4
+ struct qcom_pcie_resources_2_4_0 {
+ 	struct clk_bulk_data clks[QCOM_PCIE_2_4_0_MAX_CLOCKS];
+@@ -187,15 +193,6 @@ struct qcom_pcie_resources_2_4_0 {
+ 	struct reset_control *phy_ahb_reset;
+ };
+ 
+-struct qcom_pcie_resources_2_3_3 {
+-	struct clk *iface;
+-	struct clk *axi_m_clk;
+-	struct clk *axi_s_clk;
+-	struct clk *ahb_clk;
+-	struct clk *aux_clk;
+-	struct reset_control *rst[7];
+-};
+-
+ /* 6 clocks typically, 7 for sm8250 */
+ struct qcom_pcie_resources_2_7_0 {
+ 	struct clk_bulk_data clks[12];
+@@ -896,26 +893,17 @@ static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
+ 	const char *rst_names[] = { "axi_m", "axi_s", "pipe",
+ 				    "axi_m_sticky", "sticky",
+ 				    "ahb", "sleep", };
++	int ret;
  
 -	res->iface = devm_clk_get(dev, "iface");
 -	if (IS_ERR(res->iface))
 -		return PTR_ERR(res->iface);
 -
--	res->aux = devm_clk_get(dev, "aux");
--	if (IS_ERR(res->aux))
--		return PTR_ERR(res->aux);
+-	res->axi_m_clk = devm_clk_get(dev, "axi_m");
+-	if (IS_ERR(res->axi_m_clk))
+-		return PTR_ERR(res->axi_m_clk);
 -
--	res->master_bus = devm_clk_get(dev, "master_bus");
--	if (IS_ERR(res->master_bus))
--		return PTR_ERR(res->master_bus);
+-	res->axi_s_clk = devm_clk_get(dev, "axi_s");
+-	if (IS_ERR(res->axi_s_clk))
+-		return PTR_ERR(res->axi_s_clk);
+-
+-	res->ahb_clk = devm_clk_get(dev, "ahb");
+-	if (IS_ERR(res->ahb_clk))
+-		return PTR_ERR(res->ahb_clk);
 +	res->clks[0].id = "iface";
-+	res->clks[1].id = "aux";
-+	res->clks[2].id = "master_bus";
-+	res->clks[3].id = "slave_bus";
++	res->clks[1].id = "axi_m";
++	res->clks[2].id = "axi_s";
++	res->clks[3].id = "ahb";
++	res->clks[4].id = "aux";
  
--	res->slave_bus = devm_clk_get(dev, "slave_bus");
--	if (IS_ERR(res->slave_bus))
--		return PTR_ERR(res->slave_bus);
+-	res->aux_clk = devm_clk_get(dev, "aux");
+-	if (IS_ERR(res->aux_clk))
+-		return PTR_ERR(res->aux_clk);
 +	ret = devm_clk_bulk_get(dev, ARRAY_SIZE(res->clks), res->clks);
 +	if (ret < 0)
 +		return ret;
  
- 	res->core = devm_reset_control_get_exclusive(dev, "core");
- 	return PTR_ERR_OR_ZERO(res->core);
-@@ -469,10 +461,7 @@ static void qcom_pcie_deinit_1_0_0(struct qcom_pcie *pcie)
- 	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 	for (i = 0; i < ARRAY_SIZE(rst_names); i++) {
+ 		res->rst[i] = devm_reset_control_get(dev, rst_names[i]);
+@@ -930,11 +918,7 @@ static void qcom_pcie_deinit_2_3_3(struct qcom_pcie *pcie)
+ {
+ 	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
  
- 	reset_control_assert(res->core);
--	clk_disable_unprepare(res->slave_bus);
--	clk_disable_unprepare(res->master_bus);
 -	clk_disable_unprepare(res->iface);
--	clk_disable_unprepare(res->aux);
+-	clk_disable_unprepare(res->axi_m_clk);
+-	clk_disable_unprepare(res->axi_s_clk);
+-	clk_disable_unprepare(res->ahb_clk);
+-	clk_disable_unprepare(res->aux_clk);
 +	clk_bulk_disable_unprepare(ARRAY_SIZE(res->clks), res->clks);
- 	regulator_disable(res->vdda);
  }
  
-@@ -489,46 +478,23 @@ static int qcom_pcie_init_1_0_0(struct qcom_pcie *pcie)
- 		return ret;
- 	}
+ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+@@ -969,47 +953,15 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+ 	 */
+ 	usleep_range(2000, 2500);
  
--	ret = clk_prepare_enable(res->aux);
--	if (ret) {
--		dev_err(dev, "cannot prepare/enable aux clock\n");
--		goto err_res;
--	}
--
 -	ret = clk_prepare_enable(res->iface);
 -	if (ret) {
--		dev_err(dev, "cannot prepare/enable iface clock\n");
--		goto err_aux;
+-		dev_err(dev, "cannot prepare/enable core clock\n");
+-		goto err_clk_iface;
 -	}
 -
--	ret = clk_prepare_enable(res->master_bus);
+-	ret = clk_prepare_enable(res->axi_m_clk);
 -	if (ret) {
--		dev_err(dev, "cannot prepare/enable master_bus clock\n");
--		goto err_iface;
+-		dev_err(dev, "cannot prepare/enable core clock\n");
+-		goto err_clk_axi_m;
 -	}
 -
--	ret = clk_prepare_enable(res->slave_bus);
+-	ret = clk_prepare_enable(res->axi_s_clk);
+-	if (ret) {
+-		dev_err(dev, "cannot prepare/enable axi slave clock\n");
+-		goto err_clk_axi_s;
+-	}
+-
+-	ret = clk_prepare_enable(res->ahb_clk);
+-	if (ret) {
+-		dev_err(dev, "cannot prepare/enable ahb clock\n");
+-		goto err_clk_ahb;
+-	}
+-
+-	ret = clk_prepare_enable(res->aux_clk);
 +	ret = clk_bulk_prepare_enable(ARRAY_SIZE(res->clks), res->clks);
  	if (ret) {
--		dev_err(dev, "cannot prepare/enable slave_bus clock\n");
--		goto err_master;
+-		dev_err(dev, "cannot prepare/enable aux clock\n");
+-		goto err_clk_aux;
 +		dev_err(dev, "cannot prepare/enable clocks\n");
-+		goto err_assert_reset;
- 	}
- 
- 	ret = regulator_enable(res->vdda);
- 	if (ret) {
- 		dev_err(dev, "cannot enable vdda regulator\n");
--		goto err_slave;
-+		goto err_disable_clks;
++		goto err_assert_resets;
  	}
  
  	return 0;
--err_slave:
--	clk_disable_unprepare(res->slave_bus);
--err_master:
--	clk_disable_unprepare(res->master_bus);
--err_iface:
--	clk_disable_unprepare(res->iface);
--err_aux:
--	clk_disable_unprepare(res->aux);
--err_res:
-+
-+err_disable_clks:
-+	clk_bulk_disable_unprepare(ARRAY_SIZE(res->clks), res->clks);
-+err_assert_reset:
- 	reset_control_assert(res->core);
  
- 	return ret;
+-err_clk_aux:
+-	clk_disable_unprepare(res->ahb_clk);
+-err_clk_ahb:
+-	clk_disable_unprepare(res->axi_s_clk);
+-err_clk_axi_s:
+-	clk_disable_unprepare(res->axi_m_clk);
+-err_clk_axi_m:
+-	clk_disable_unprepare(res->iface);
+-err_clk_iface:
++err_assert_resets:
+ 	/*
+ 	 * Not checking for failure, will anyway return
+ 	 * the original failure in 'ret'.
 -- 
 2.25.1
 
