@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65604C6FD19
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 08:05:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A680AC76188
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 08:05:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230187AbjCJIFt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Mar 2023 03:05:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49158 "EHLO
+        id S230197AbjCJIFu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Mar 2023 03:05:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230111AbjCJIFq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2023 03:05:46 -0500
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0209CB1B3D;
-        Fri, 10 Mar 2023 00:05:45 -0800 (PST)
+        with ESMTP id S230179AbjCJIFs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2023 03:05:48 -0500
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01C26C2DA1;
+        Fri, 10 Mar 2023 00:05:47 -0800 (PST)
 Received: from cryzen.lan (cpc87451-finc19-2-0-cust61.4-2.cable.virginm.net [82.11.51.62])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: tanureal)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 65BC46603083;
-        Fri, 10 Mar 2023 08:05:43 +0000 (GMT)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 3A2DE66030FB;
+        Fri, 10 Mar 2023 08:05:45 +0000 (GMT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1678435543;
-        bh=+ZX7vYLxaBazI08zF5lNguc40/rFNVo9sCm+2OiHagA=;
+        s=mail; t=1678435545;
+        bh=LOi/siaqM76rHO4gX21yMZsTjTCPrx6+roVKTERlr6Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Q6hA6R1SqYQZ8YdpMwHANgLV+I9hzt66+OemjAwE845VtxO74K9Po0yR/hVpmVMyu
-         f6TgbY9c6KP0RDpUg410/rYRZ+GOdjEpA2EQqx3gefaidQAsb1eD3Q8hE7Fq/+GFHm
-         OeTDg5c54bmdFCsPx3xsrqHpDCFrSkfOr5OWemVy2McvZwdhtmPWBQ8piV02l/QsAC
-         iFNLsZIStXoDWuJURmmWRetliS5IV2EvNx3bjf3rDAl2/nJQmI25U7/JeQXiifJAl6
-         LwysFb/wruv0JXp1RVe8oFJ8Mf/cLKf0XGbWgdgxdl55E79Vf6mV/vyR97+SmkeQKN
-         uG839CYQzQbTA==
+        b=FbW3Tac8MSWHsTylUudxehstgS7z+O257JcutLLEmD5INT4MH2QtgyZbVEy5pCt66
+         MRxJ+De2AlznRsy52qpwJqrjUknHC2dlA4FpYxbdIGKJnNLqa+yuyuNVeIcP8ufRh5
+         zxU9H/kEVM7X27C1cqXcbOzYUxxclLJ4jEr6Mf6VTQywRMyyXSXYFCWN394LhLVZQa
+         dmNii/CIGrhpYdRqQEBTyNV276lzeZxyA9pQOGh39KOsOis2SNWYZ1oYrgGgwZbZEb
+         nT9F6xjO8g+1c12jBOyusPtID0w8jWmu4CIpZWFdYx+oZqGk+TnjAmBVrqTeMsAcHh
+         DB6L0qSbs4i4g==
 From:   Lucas Tanure <lucas.tanure@collabora.com>
 To:     Vinod Koul <vkoul@kernel.org>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
@@ -51,9 +51,9 @@ Cc:     Qu Wenruo <wqu@suse.com>,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org,
         Lucas Tanure <lucas.tanure@collabora.com>, kernel@collabora.com
-Subject: [PATCH 3/7] dt-bindings: phy: rockchip: Add rk3588 compatible line
-Date:   Fri, 10 Mar 2023 08:05:14 +0000
-Message-Id: <20230310080518.78054-4-lucas.tanure@collabora.com>
+Subject: [PATCH 7/7] arm64: dts: rockchip: RK3588s: Enable PCIE2.0x1 @fe190000
+Date:   Fri, 10 Mar 2023 08:05:18 +0000
+Message-Id: <20230310080518.78054-8-lucas.tanure@collabora.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230310080518.78054-1-lucas.tanure@collabora.com>
 References: <20230310080518.78054-1-lucas.tanure@collabora.com>
@@ -63,26 +63,50 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-RK3568 Naneng Combo Phy driver can support RK3588 with the additional
-clocks and initial configuration, so add the compatible line.
+Enable PCIE2.0x1 @fe190000 for RTL8125 network controller in
+Rock 5B board.
+
+This is based on prior work from XiaoDong Huang and
+Peter Geis fixing this issue specifically for Rockchip 356x.
 
 Signed-off-by: Lucas Tanure <lucas.tanure@collabora.com>
 ---
- .../devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml     | 1 +
- 1 file changed, 1 insertion(+)
+ .../arm64/boot/dts/rockchip/rk3588-rock-5b.dts | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml b/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
-index 8d8698412de0..9ae514fa7533 100644
---- a/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
-+++ b/Documentation/devicetree/bindings/phy/phy-rockchip-naneng-combphy.yaml
-@@ -13,6 +13,7 @@ properties:
-   compatible:
-     enum:
-       - rockchip,rk3568-naneng-combphy
-+      - rockchip,rk3588-naneng-combphy
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts b/arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts
+index df8b135cf223..c4ae20ad2fd7 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts
+@@ -36,6 +36,15 @@ vcc_1v1_nldo_s3: vcc-1v1-nldo-s3 {
+ 		regulator-max-microvolt = <1100000>;
+ 		vin-supply = <&vcc5v0_sys>;
+ 	};
++
++	vcc3v3_pcie2x1l2: vcc3v3-pcie2x1l2 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc3v3_pcie2x1l2";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		startup-delay-us = <5000>;
++		vin-supply = <&vcc_3v3_s3>;
++	};
+ };
  
-   reg:
-     maxItems: 1
+ &sdhci {
+@@ -70,3 +79,12 @@ &sdmmc {
+ 	status = "okay";
+ };
+ 
++&combphy0_ps {
++	status = "okay";
++};
++
++&pcie2x1l2 {
++	reset-gpios = <&gpio3 RK_PB0 GPIO_ACTIVE_HIGH>;
++	vpcie3v3-supply = <&vcc3v3_pcie2x1l2>;
++	status = "okay";
++};
 -- 
 2.39.2
 
