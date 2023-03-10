@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94192C6FD19
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 08:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5094CC6FD1C
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 08:05:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230132AbjCJIFr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S230157AbjCJIFr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 10 Mar 2023 03:05:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49142 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230102AbjCJIFp (ORCPT
+        with ESMTP id S229817AbjCJIFp (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2023 03:05:45 -0500
 Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEB69B1B38;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BDA86B04BC;
         Fri, 10 Mar 2023 00:05:44 -0800 (PST)
 Received: from cryzen.lan (cpc87451-finc19-2-0-cust61.4-2.cable.virginm.net [82.11.51.62])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: tanureal)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id E55AB6603064;
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 0CBA26603055;
         Fri, 10 Mar 2023 08:05:42 +0000 (GMT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1678435543;
-        bh=aXDW9FM3v6N1gp/G6svdu0Iv9rfB/0Z8Inu2S3xCf4E=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Fh+3hbrZX63tbEgCu8QMhiNdvHIvJ5tdpSdE3dTMSQQ1IHv3G/OkOYp587KeXjw0H
-         Wte5VVGJez2NsEGK//ZaFmtSdyvqpRqlNGd7BxI2OxdywTkzTBcj2qWXu9Zc8hBS1t
-         FyczdNcZcgqYA4btHApUzWydm858U28q8YtAtjFDOVpP+MyWBBJRQ2i0NqHit/qcBX
-         VSzsvPi0sDRbrE9J3wtfLgV23V7UUqmjgl/pv5JkKll+vXESPsWGCTLuVCjr9ieAfb
-         VC2gm6t8YHh6OfxNeo0Ldu2Q55JyQ43MM23j7Cjmc0ZF8JdZLn183AXvtbY8sI+t2/
-         /QBgzL9dAMtFg==
+        s=mail; t=1678435542;
+        bh=ctw8Xau90CJVFW0RlRvP3WtEFwDOCAAhoBzXWYLTG04=;
+        h=From:To:Cc:Subject:Date:From;
+        b=izGcV98nHfD5trsFvC4m1eoN6ru69aCkxCgu/Ix5XerWL2xqID0++Pi6WTJgHj5UI
+         5W7Hb5j4Qv07H5x5pEuJAj+yRwIgXQCzYEIocUy2kpGxl9btqReSn+GnLlXDha0WOH
+         nxKO0zIoN7p0YzqPFjWY75fwf+FuUhXaeE4fG7+/b39pzdD7tx9Lds8keQpsfTz3N0
+         nMRbpbUloQYxwn7PXUpD2MPphW3mUpAZTAP9kJNQTKSAVTV1Tng/CqWM3dCVke8dQz
+         ooNGDMJe5m26oJZ0ao1PqtoyeDXLx54qu7+QUZ6yzPLlJxXZ/K63HhIhd3KwcwKUca
+         omviOhGOZjzUQ==
 From:   Lucas Tanure <lucas.tanure@collabora.com>
 To:     Vinod Koul <vkoul@kernel.org>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
@@ -51,37 +51,47 @@ Cc:     Qu Wenruo <wqu@suse.com>,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org,
         Lucas Tanure <lucas.tanure@collabora.com>, kernel@collabora.com
-Subject: [PATCH 2/7] PCI: rockchip-dwc: Add rk3588 compatible line
-Date:   Fri, 10 Mar 2023 08:05:13 +0000
-Message-Id: <20230310080518.78054-3-lucas.tanure@collabora.com>
+Subject: [PATCH 0/7] Add PCIe2 support for Rockchip Boards
+Date:   Fri, 10 Mar 2023 08:05:11 +0000
+Message-Id: <20230310080518.78054-1-lucas.tanure@collabora.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230310080518.78054-1-lucas.tanure@collabora.com>
-References: <20230310080518.78054-1-lucas.tanure@collabora.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-RK3588 can use the same PCIe driver as rk3568
+I am assisting with PCIe and networking bring-up for Rock Pi 5B (RK3588).
+This chip uses the same GICv3 as RK356X but has fixed the previous
+limitation of GIC only supporting 32-bit addresses.
 
-Signed-off-by: Lucas Tanure <lucas.tanure@collabora.com>
----
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 1 +
- 1 file changed, 1 insertion(+)
+We sent this RFC a few weeks back:
+https://lore.kernel.org/all/CAMdYzYrmq1ftBaBj1XHVWWXUQ4Prr1VpTpunyNOQ2ha-DkXMjQ@mail.gmail.com/
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index c1e7653e508e..435b717e5bc6 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -354,6 +354,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 
- static const struct of_device_id rockchip_pcie_of_match[] = {
- 	{ .compatible = "rockchip,rk3568-pcie", },
-+	{ .compatible = "rockchip,rk3588-pcie", },
- 	{},
- };
- 
+The big change from that RFC to this patch series is the change from
+ITS quirks to a DMA Non-Coherent flag, as sugested by Robin Murphy.
+
+This is work based on prior work from XiaoDong Huang and
+Peter Geis fixing this issue specifically for Rockchip 356x.
+Plus comments of Robin Murphy about Non-Coherent properties.
+
+Lucas Tanure (7):
+  irqchip/gic-v3: Add a DMA Non-Coherent flag
+  PCI: rockchip-dwc: Add rk3588 compatible line
+  dt-bindings: phy: rockchip: Add rk3588 compatible line
+  phy: rockchip: Add naneng combo phy support for RK3588
+  arm64: dts: rockchip: Add ITS GIC600 configuration for rk3588s
+  arm64: dts: rockchip: Add PCIE2.0x1 lane @fe190000 for RK3588s
+  arm64: dts: rockchip: RK3588s: Enable PCIE2.0x1 @fe190000
+
+ .../phy/phy-rockchip-naneng-combphy.yaml      |   1 +
+ .../boot/dts/rockchip/rk3588-rock-5b.dts      |  18 ++
+ arch/arm64/boot/dts/rockchip/rk3588s.dtsi     |  97 +++++++++
+ drivers/irqchip/irq-gic-v3-its.c              |  22 +++
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c |   1 +
+ .../rockchip/phy-rockchip-naneng-combphy.c    | 184 ++++++++++++++++++
+ 6 files changed, 323 insertions(+)
+
 -- 
 2.39.2
 
