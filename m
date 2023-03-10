@@ -2,385 +2,74 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A924CC77B6D
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 12:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D87CC64EC4
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 12:37:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230419AbjCJMf2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Mar 2023 07:35:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45844 "EHLO
+        id S229654AbjCJMhZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Mar 2023 07:37:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48638 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230417AbjCJMfV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2023 07:35:21 -0500
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9338E1125BB;
-        Fri, 10 Mar 2023 04:35:17 -0800 (PST)
-X-IronPort-AV: E=Sophos;i="5.98,249,1673881200"; 
-   d="scan'208";a="155526897"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 10 Mar 2023 21:35:14 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 58D37423B048;
-        Fri, 10 Mar 2023 21:35:14 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
-        bhelgaas@google.com, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com
-Cc:     Sergey.Semin@baikalelectronics.ru, marek.vasut+renesas@gmail.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        with ESMTP id S230461AbjCJMhL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2023 07:37:11 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D01110C72A;
+        Fri, 10 Mar 2023 04:36:39 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id C9EEBB82289;
+        Fri, 10 Mar 2023 12:36:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A42DDC433D2;
+        Fri, 10 Mar 2023 12:36:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678451796;
+        bh=PWCVTsxCw26Cz18rQKUtN2MtA3+P6cbKGi9GO9ylpbY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=gq85VTs8UU8E8IvynBgdr6eI3J2MbgjX/XPVexU4GKZbE2iZMln1k/EF35wc6+Fxs
+         fWFWmDTT5HSN/pUGIkAt800H4Rq4xPJCdbddaUwRyGwqNMvpq+oEYaZxEKuLVCuTVt
+         wobieWVxvIKtiXGHNsjkzysydfAiMolwCy7kT6P7M90+c//nQRJ6JAFUt9IRN71i9c
+         F6gIorX3ZHWbTWLBOZojMu5N/K4RL5Z8LjTI9JyXc++76KyRpxv1A832IibdFVRmhQ
+         eotnoCo7QxjAF/Q0GUtWeFsiS9MXtt7uUiyksk7LTEG2kFvZURIJlRjusB6NUUT5vD
+         QhNOfs97rupAw==
+From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
+To:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v11 09/13] PCI: dwc: Add support for triggering legacy IRQs
-Date:   Fri, 10 Mar 2023 21:35:06 +0900
-Message-Id: <20230310123510.675685-10-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230310123510.675685-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20230310123510.675685-1-yoshihiro.shimoda.uh@renesas.com>
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar: avoid defines prefixed with CONFIG
+Date:   Fri, 10 Mar 2023 13:36:30 +0100
+Message-Id: <167845177669.1223205.12603940242969013581.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230113084516.31888-1-lukas.bulwahn@gmail.com>
+References: <20230113084516.31888-1-lukas.bulwahn@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for triggering legacy IRQs by using outbound iATU.
-Outbound iATU is utilized to send assert and de-assert INTx TLPs.
-The message is generated based on the payloadless Msg TLP with type
-0x14, where 0x4 is the routing code implying the terminated at
-Receiver message. The message code is specified as b1000xx for
-the INTx assertion and b1001xx for the INTx de-assertion.
+On Fri, 13 Jan 2023 09:45:16 +0100, Lukas Bulwahn wrote:
+> Defines prefixed with "CONFIG" should be limited to proper Kconfig options,
+> that are introduced in a Kconfig file.
+> 
+> Here, a definition for a bitmask to configure the SEND_ENABLE mode is named
+> CONFIG_SEND_ENABLE.
+> 
+> Rename this local definition to CONFIGURE_SEND_ENABLE to avoid defines
+> prefixed with "CONFIG".
+> 
+> [...]
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
----
- .../pci/controller/dwc/pcie-designware-ep.c   | 66 ++++++++++++--
- drivers/pci/controller/dwc/pcie-designware.c  | 88 +++++++++++++------
- drivers/pci/controller/dwc/pcie-designware.h  | 11 ++-
- 3 files changed, 126 insertions(+), 39 deletions(-)
+Applied to pci/rcar, thanks!
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 95efe14f1036..73b3844e8a09 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -6,6 +6,7 @@
-  * Author: Kishon Vijay Abraham I <kishon@ti.com>
-  */
- 
-+#include <linux/delay.h>
- #include <linux/of.h>
- #include <linux/platform_device.h>
- 
-@@ -182,8 +183,8 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, u8 func_no, int type,
- 	return 0;
- }
- 
--static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, u8 func_no,
--				   phys_addr_t phys_addr,
-+static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, u8 func_no, int type,
-+				   u8 code, u8 routing, phys_addr_t phys_addr,
- 				   u64 pci_addr, size_t size)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-@@ -196,8 +197,9 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, u8 func_no,
- 		return -EINVAL;
- 	}
- 
--	ret = dw_pcie_prog_ep_outbound_atu(pci, func_no, free_win, PCIE_ATU_TYPE_MEM,
--					   phys_addr, pci_addr, size);
-+	ret = dw_pcie_prog_ep_outbound_atu(pci, func_no, free_win, type,
-+					   code, routing, phys_addr, pci_addr,
-+					   size);
- 	if (ret)
- 		return ret;
- 
-@@ -306,7 +308,8 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 
--	ret = dw_pcie_ep_outbound_atu(ep, func_no, addr, pci_addr, size);
-+	ret = dw_pcie_ep_outbound_atu(ep, func_no, PCIE_ATU_TYPE_MEM, 0, 0,
-+				      addr, pci_addr, size);
- 	if (ret) {
- 		dev_err(pci->dev, "Failed to enable address\n");
- 		return ret;
-@@ -479,14 +482,46 @@ static const struct pci_epc_ops epc_ops = {
- 	.get_features		= dw_pcie_ep_get_features,
- };
- 
-+static int dw_pcie_ep_send_msg(struct dw_pcie_ep *ep, u8 func_no, u8 code,
-+			       u8 routing)
-+{
-+	struct pci_epc *epc = ep->epc;
-+	int ret;
-+
-+	ret = dw_pcie_ep_outbound_atu(ep, func_no, PCIE_ATU_TYPE_MSG, code,
-+				      routing, ep->intx_mem_phys, 0,
-+				      epc->mem->window.page_size);
-+	if (ret)
-+		return ret;
-+	writel(0, ep->intx_mem);
-+	dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->intx_mem_phys);
-+
-+	return 0;
-+}
-+
-+static int __dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no,
-+					 int intx)
-+{
-+	int ret;
-+
-+	ret = dw_pcie_ep_send_msg(ep, func_no, PCIE_MSG_ASSERT_INTA + intx, 0x04);
-+	if (ret)
-+		return ret;
-+	usleep_range(1000, 2000);
-+	return dw_pcie_ep_send_msg(ep, func_no, PCIE_MSG_DEASSERT_INTA + intx, 0x04);
-+}
-+
- int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct device *dev = pci->dev;
- 
--	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+	if (!ep->intx_mem) {
-+		dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+		return -EINVAL;
-+	}
- 
--	return -EINVAL;
-+	return __dw_pcie_ep_raise_legacy_irq(ep, func_no, 0);
- }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_legacy_irq);
- 
-@@ -617,6 +652,10 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- 
- 	dw_pcie_edma_remove(pci);
- 
-+	if (ep->intx_mem)
-+		pci_epc_mem_free_addr(epc, ep->intx_mem_phys, ep->intx_mem,
-+				      epc->mem->window.page_size);
-+
- 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
- 			      epc->mem->window.page_size);
- 
-@@ -789,9 +828,14 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		goto err_exit_epc_mem;
- 	}
- 
-+	ep->intx_mem = pci_epc_mem_alloc_addr(epc, &ep->intx_mem_phys,
-+					      epc->mem->window.page_size);
-+	if (!ep->intx_mem)
-+		dev_warn(dev, "Failed to reserve memory for INTx\n");
-+
- 	ret = dw_pcie_edma_detect(pci);
- 	if (ret)
--		goto err_free_epc_mem;
-+		goto err_free_epc_mem_intx;
- 
- 	if (ep->ops->get_features) {
- 		epc_features = ep->ops->get_features(ep);
-@@ -808,7 +852,11 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- err_remove_edma:
- 	dw_pcie_edma_remove(pci);
- 
--err_free_epc_mem:
-+err_free_epc_mem_intx:
-+	if (ep->intx_mem)
-+		pci_epc_mem_free_addr(epc, ep->intx_mem_phys, ep->intx_mem,
-+				      epc->mem->window.page_size);
-+
- 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
- 			      epc->mem->window.page_size);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 47860da5738e..364926832126 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -23,6 +23,17 @@
- #include "../../pci.h"
- #include "pcie-designware.h"
- 
-+struct dw_pcie_outbound_atu {
-+	u64 cpu_addr;
-+	u64 pci_addr;
-+	u64 size;
-+	int index;
-+	int type;
-+	u8 func_no;
-+	u8 code;
-+	u8 routing;
-+};
-+
- static const char * const dw_pcie_app_clks[DW_PCIE_NUM_APP_CLKS] = {
- 	[DW_PCIE_DBI_CLK] = "dbi",
- 	[DW_PCIE_MSTR_CLK] = "mstr",
-@@ -464,56 +475,58 @@ static inline u32 dw_pcie_enable_ecrc(u32 val)
- 	return val | PCIE_ATU_TD;
- }
- 
--static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
--				       int index, int type, u64 cpu_addr,
--				       u64 pci_addr, u64 size)
-+static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
-+				       struct dw_pcie_outbound_atu *atu)
- {
- 	u32 retries, val;
- 	u64 limit_addr;
- 
- 	if (pci->ops && pci->ops->cpu_addr_fixup)
--		cpu_addr = pci->ops->cpu_addr_fixup(pci, cpu_addr);
-+		atu->cpu_addr = pci->ops->cpu_addr_fixup(pci, atu->cpu_addr);
- 
--	limit_addr = cpu_addr + size - 1;
-+	limit_addr = atu->cpu_addr + atu->size - 1;
- 
--	if ((limit_addr & ~pci->region_limit) != (cpu_addr & ~pci->region_limit) ||
--	    !IS_ALIGNED(cpu_addr, pci->region_align) ||
--	    !IS_ALIGNED(pci_addr, pci->region_align) || !size) {
-+	if ((limit_addr & ~pci->region_limit) != (atu->cpu_addr & ~pci->region_limit) ||
-+	    !IS_ALIGNED(atu->cpu_addr, pci->region_align) ||
-+	    !IS_ALIGNED(atu->pci_addr, pci->region_align) || !atu->size) {
- 		return -EINVAL;
- 	}
- 
--	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_LOWER_BASE,
--			      lower_32_bits(cpu_addr));
--	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_UPPER_BASE,
--			      upper_32_bits(cpu_addr));
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_LOWER_BASE,
-+			      lower_32_bits(atu->cpu_addr));
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_UPPER_BASE,
-+			      upper_32_bits(atu->cpu_addr));
- 
--	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_LIMIT,
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_LIMIT,
- 			      lower_32_bits(limit_addr));
- 	if (dw_pcie_ver_is_ge(pci, 460A))
--		dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_UPPER_LIMIT,
-+		dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_UPPER_LIMIT,
- 				      upper_32_bits(limit_addr));
- 
--	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_LOWER_TARGET,
--			      lower_32_bits(pci_addr));
--	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_UPPER_TARGET,
--			      upper_32_bits(pci_addr));
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_LOWER_TARGET,
-+			      lower_32_bits(atu->pci_addr));
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_UPPER_TARGET,
-+			      upper_32_bits(atu->pci_addr));
- 
--	val = type | PCIE_ATU_FUNC_NUM(func_no);
--	if (upper_32_bits(limit_addr) > upper_32_bits(cpu_addr) &&
-+	val = atu->type | atu->routing | PCIE_ATU_FUNC_NUM(atu->func_no);
-+	if (upper_32_bits(limit_addr) > upper_32_bits(atu->cpu_addr) &&
- 	    dw_pcie_ver_is_ge(pci, 460A))
- 		val |= PCIE_ATU_INCREASE_REGION_SIZE;
- 	if (dw_pcie_ver_is(pci, 490A))
- 		val = dw_pcie_enable_ecrc(val);
--	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_REGION_CTRL1, val);
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val);
- 
--	dw_pcie_writel_atu_ob(pci, index, PCIE_ATU_REGION_CTRL2, PCIE_ATU_ENABLE);
-+	val = PCIE_ATU_ENABLE;
-+	if (atu->type == PCIE_ATU_TYPE_MSG)
-+		val |= PCIE_ATU_INHIBIT_PAYLOAD | PCIE_ATU_HEADER_SUB_ENABLE | atu->code;
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, val);
- 
- 	/*
- 	 * Make sure ATU enable takes effect before any subsequent config
- 	 * and I/O accesses.
- 	 */
- 	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
--		val = dw_pcie_readl_atu_ob(pci, index, PCIE_ATU_REGION_CTRL2);
-+		val = dw_pcie_readl_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2);
- 		if (val & PCIE_ATU_ENABLE)
- 			return 0;
- 
-@@ -528,16 +541,33 @@ static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci, u8 func_no,
- int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 			      u64 cpu_addr, u64 pci_addr, u64 size)
- {
--	return __dw_pcie_prog_outbound_atu(pci, 0, index, type,
--					   cpu_addr, pci_addr, size);
-+	struct dw_pcie_outbound_atu atu;
-+
-+	memset(&atu, 0, sizeof(atu));
-+	atu.index = index;
-+	atu.type = type;
-+	atu.cpu_addr = cpu_addr;
-+	atu.pci_addr = pci_addr;
-+	atu.size = size;
-+	return __dw_pcie_prog_outbound_atu(pci, &atu);
- }
- 
- int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
--				 int type, u64 cpu_addr, u64 pci_addr,
--				 u64 size)
-+				 int type, u8 code, u8 routing, u64 cpu_addr,
-+				 u64 pci_addr, u64 size)
- {
--	return __dw_pcie_prog_outbound_atu(pci, func_no, index, type,
--					   cpu_addr, pci_addr, size);
-+	struct dw_pcie_outbound_atu atu;
-+
-+	memset(&atu, 0, sizeof(atu));
-+	atu.func_no = func_no;
-+	atu.index = index;
-+	atu.type = type;
-+	atu.code = code;
-+	atu.routing = routing;
-+	atu.cpu_addr = cpu_addr;
-+	atu.pci_addr = pci_addr;
-+	atu.size = size;
-+	return __dw_pcie_prog_outbound_atu(pci, &atu);
- }
- 
- static inline u32 dw_pcie_readl_atu_ib(struct dw_pcie *pci, u32 index, u32 reg)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 36f3e2c818fe..3dbadb8043ab 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -147,11 +147,14 @@
- #define PCIE_ATU_TYPE_IO		0x2
- #define PCIE_ATU_TYPE_CFG0		0x4
- #define PCIE_ATU_TYPE_CFG1		0x5
-+#define PCIE_ATU_TYPE_MSG		0x10
- #define PCIE_ATU_TD			BIT(8)
- #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
- #define PCIE_ATU_REGION_CTRL2		0x004
- #define PCIE_ATU_ENABLE			BIT(31)
- #define PCIE_ATU_BAR_MODE_ENABLE	BIT(30)
-+#define PCIE_ATU_INHIBIT_PAYLOAD	BIT(22)
-+#define PCIE_ATU_HEADER_SUB_ENABLE	BIT(21)
- #define PCIE_ATU_FUNC_NUM_MATCH_EN      BIT(19)
- #define PCIE_ATU_LOWER_BASE		0x008
- #define PCIE_ATU_UPPER_BASE		0x00C
-@@ -244,6 +247,9 @@
- /* Default eDMA LLP memory size */
- #define DMA_LLP_MEM_SIZE		PAGE_SIZE
- 
-+#define PCIE_MSG_ASSERT_INTA		0x20
-+#define PCIE_MSG_DEASSERT_INTA		0x24
-+
- struct dw_pcie;
- struct dw_pcie_rp;
- struct dw_pcie_ep;
-@@ -352,6 +358,8 @@ struct dw_pcie_ep {
- 	unsigned long		*ob_window_map;
- 	void __iomem		*msi_mem;
- 	phys_addr_t		msi_mem_phys;
-+	void __iomem		*intx_mem;
-+	phys_addr_t		intx_mem_phys;
- 	struct pci_epf_bar	*epf_bar[PCI_STD_NUM_BARS];
- };
- 
-@@ -420,7 +428,8 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci);
- int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 			      u64 cpu_addr, u64 pci_addr, u64 size);
- int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
--				 int type, u64 cpu_addr, u64 pci_addr, u64 size);
-+				 int type, u8 code, u8 routing, u64 cpu_addr,
-+				 u64 pci_addr, u64 size);
- int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
- 			     u64 cpu_addr, u64 pci_addr, u64 size);
- int dw_pcie_prog_ep_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
--- 
-2.25.1
+[1/1] PCI: rcar: avoid defines prefixed with CONFIG
+      https://git.kernel.org/pci/pci/c/727de4c08768
 
+Thanks,
+Lorenzo
