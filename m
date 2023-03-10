@@ -2,97 +2,83 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C08BCC64EC4
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 10:46:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 821E3C6FA99
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 11:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbjCJKp7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Mar 2023 05:45:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59754 "EHLO
+        id S230286AbjCJLAT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Mar 2023 06:00:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229994AbjCJKpz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2023 05:45:55 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B678CF8E53;
-        Fri, 10 Mar 2023 02:45:42 -0800 (PST)
+        with ESMTP id S229523AbjCJLAN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2023 06:00:13 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA6569079E;
+        Fri, 10 Mar 2023 02:59:57 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 6CCDEB82254;
-        Fri, 10 Mar 2023 10:45:41 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63EFDC4339B;
-        Fri, 10 Mar 2023 10:45:37 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6456661383;
+        Fri, 10 Mar 2023 10:59:57 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8BA6C433D2;
+        Fri, 10 Mar 2023 10:59:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1678445140;
-        bh=xdOv7uNCigwmUrpXzidKOlMmbXveRlJ+/d2EH0ufkdA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jl4DgVXkQgVApUmLK5cswQkRfI3PYbMMw0LpnYUYVELSnyJP1RA2gp8LoJBVfAf7s
-         IPNWnET6kchDKrZPHx/DQZapWnZZR/VLhdZv46pU1sAZ8sR0Q3qP6Y2hK2yYdlzXgS
-         Mi0RgMVB/PFg7/vTlZ1qQNkj4lDXGjHvirleuJaPVsCsvv6IV9yOKi9dRMmz7/KKMn
-         LKWZav7zA3N5KmBqYbBfQYFH2IIVro6GIG1oCGPS85jqOd+jRqpwvl7EbwQ7PEWYX0
-         EjLXIGqKjp19IO9P1JE83r53UtwE0fJlcNwRawavcGFyLYvbsLdqxunyCbQHoSoukO
-         rSnB8PSiceUJA==
-Date:   Fri, 10 Mar 2023 11:45:34 +0100
+        s=k20201202; t=1678445996;
+        bh=6HNYmPSJ53e5recOteBLDrR//Q6H9ztqrpDz+ZdxIZs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=TY2mrrC7snf0967lhtOTrr7oHSkmUs/i2L8OHTR4PL1rwC8tGZwq+dYYUy1IDCt/V
+         OHbDHluEC8J/Dc9AZvJw4tlAslf4BgA/xSxj6CFTxBx7cVeq9FQNTcDvruU5YHsqKe
+         sshXjlE85gxIBTi67mtZxDlZ8B78w8ubqR2WzVVxoh0/Et/cSvNA59yPEpraHRK3YE
+         +mEitmB3TWdU/+OvcuJu7tRXqNGpDe6x1nqGcOV9TY4PhBHEIOeVTkHpP0s4D6Nt3Q
+         MNrMSyrfGKYy2RyL33Pb84ya8EJ8HSM4oFGpEN8eEmJ4cNMnrLrxO4dN/DZO0inXhS
+         SmeqWBLn1yfPw==
 From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Xi Ruoyao <xry111@xry111.site>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+To:     Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Xiaowei Song <songxiaowei@huawei.com>, stable@vger.kernel.org
-Subject: Re: Ping: [PATCH] PCI: kirin: Select REGMAP_MMIO for PCIE_KIRIN
-Message-ID: <ZAsKThAQPbGVUig8@lpieralisi>
-References: <20230228043423.19335-1-xry111@xry111.site>
- <8996e9ba32cbdc24b828c9a37793b39f17eb33a8.camel@xry111.site>
+        Neil Armstrong <neil.armstrong@linaro.org>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-amlogic@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: Re: (subset) [PATCH v4 0/5] dt-bindings: first batch of dt-schema conversions for Amlogic Meson bindings
+Date:   Fri, 10 Mar 2023 11:59:47 +0100
+Message-Id: <167844597212.1217818.3420848199619883504.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20221117-b4-amlogic-bindings-convert-v4-0-34e623dbf789@linaro.org>
+References: <20221117-b4-amlogic-bindings-convert-v4-0-34e623dbf789@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <8996e9ba32cbdc24b828c9a37793b39f17eb33a8.camel@xry111.site>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Mar 07, 2023 at 01:42:01PM +0800, Xi Ruoyao wrote:
-> Gentle ping.
+On Wed, 08 Mar 2023 14:27:28 +0100, Neil Armstrong wrote:
+> Batch conversion of the following bindings:
+> - amlogic-efuse.txt
+> - amlogic-meson-mx-efuse.txt
+> - meson-wdt.txt
+> - meson-ir.txt
+> - rtc-meson.txt
+> - amlogic,meson6-timer.txt
+> - amlogic,meson-pcie.txt
 > 
-> On Tue, 2023-02-28 at 12:34 +0800, Xi Ruoyao wrote:
-> > pcie-kirin.c invokes devm_regmap_init_mmio, so it's necessary to
-> > select
-> > REGMAP_MMIO or vmlinux fails to link with "undefined reference to
-> > `__devm_regmap_init_mmio_clk`.
-> > 
-> > Cc: stable@vger.kernel.org # at least for 6.1 and 6.2
+> [...]
 
-I merged this (with a rewritten commit log, Fixes tag and
-CC stable - please have a look and check how this has to
-be written for future submissions):
+Applied to controller/dt, thanks!
 
-https://lore.kernel.org/linux-pci/167844411812.1209684.12017386820985241641.b4-ty@kernel.org
-
-This patch is dropped.
+[5/5] dt-bindings: PCI: convert amlogic,meson-pcie.txt to dt-schema
+      https://git.kernel.org/pci/pci/c/b80b848bdf56
 
 Thanks,
 Lorenzo
-
-> > Signed-off-by: Xi Ruoyao <xry111@xry111.site>
-> > ---
-> >  drivers/pci/controller/dwc/Kconfig | 1 +
-> >  1 file changed, 1 insertion(+)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/Kconfig
-> > b/drivers/pci/controller/dwc/Kconfig
-> > index 434f6a4f4041..d29551261e80 100644
-> > --- a/drivers/pci/controller/dwc/Kconfig
-> > +++ b/drivers/pci/controller/dwc/Kconfig
-> > @@ -307,6 +307,7 @@ config PCIE_KIRIN
-> >         tristate "HiSilicon Kirin series SoCs PCIe controllers"
-> >         depends on PCI_MSI
-> >         select PCIE_DW_HOST
-> > +       select REGMAP_MMIO
-> >         help
-> >           Say Y here if you want PCIe controller support
-> >           on HiSilicon Kirin series SoCs.
-> 
-> -- 
-> Xi Ruoyao <xry111@xry111.site>
-> School of Aerospace Science and Technology, Xidian University
