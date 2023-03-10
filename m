@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0F39C6FA99
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 04:11:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A57AC6FA99
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Mar 2023 04:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231132AbjCJELy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 Mar 2023 23:11:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59626 "EHLO
+        id S231151AbjCJEMY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 Mar 2023 23:12:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59772 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230325AbjCJEKq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2023 23:10:46 -0500
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA211103ED5
-        for <linux-pci@vger.kernel.org>; Thu,  9 Mar 2023 20:09:41 -0800 (PST)
-Received: by mail-pg1-x536.google.com with SMTP id d6so2366612pgu.2
-        for <linux-pci@vger.kernel.org>; Thu, 09 Mar 2023 20:09:41 -0800 (PST)
+        with ESMTP id S230459AbjCJEK5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2023 23:10:57 -0500
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75920102B78
+        for <linux-pci@vger.kernel.org>; Thu,  9 Mar 2023 20:09:44 -0800 (PST)
+Received: by mail-pg1-x52e.google.com with SMTP id s17so2358190pgv.4
+        for <linux-pci@vger.kernel.org>; Thu, 09 Mar 2023 20:09:44 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678421375;
+        d=linaro.org; s=google; t=1678421384;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=azG6rPTW4OW7MpxRM4BYmIziHm2wpGO0S0WPmax4BIQ=;
-        b=T838p+Gk/zYv4/Qevbgh+Dc7eZumK6aAMJLP/Z15+n29Gc5V+aodL4yew5LU25+JUr
-         cvVvBkeOLmKXSMPcLJ3jvvHdE6q11Ml8iUw5zmnRGPPHki3j72e/pTojc9Cp5Dk7p+z8
-         SAvYgUhlJkJhgBeXwzeLc+jqmed25ZnhigQlb4sI3uEUUFsyXDCkJ5A0rgueFGeF/170
-         RC7AYR2Nz9f2qnLSIWgp4PYjLkP8fBuFh4S4RVnQlzX0+jHZY4b7GkzqG5cjnnEUXLNB
-         JDtE3O9hRDBX553kJrMBIGZIopzvggE4DhGBYdK67YcPYN2jX5mC3UzzTpFWf8zzvlGK
-         Fk2g==
+        bh=TfGaCzEutI1ZxAuEhg+K1BmQaCq/7g5+zrL93kp+oys=;
+        b=hYP3bxNUWN+cDM56wIW5jHqBMTGJY5MpDds/b+AcTuqU6Tl+GBM8Hdk/iy+xZLDU2Q
+         LcFhkkJUAtLBLgGDQ/FBdnvsSeBT6rNX/xwSUH1Rw3FpovXy0cg2cJnZ62a4hOB7CUYr
+         i/I6hUAVAvdnO3eTnp0gu2SIlf4teIBioRdcUFmuFXjrIRdsDwRgYCKetGSr2/5aV/5z
+         1wVtpdwJ/4DwFiDh2SM4QxN6b+zAb+uGIkW6e7mIZnZJj+dMwzJaLw2no2q+DGqEzwi1
+         77nXkAWzhmrDqYE27e+rkYYSXkqql9u66ySYgu9LSWUcxl85iKlXBqoMtHTTGum4a+7V
+         e9iQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678421375;
+        d=1e100.net; s=20210112; t=1678421384;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=azG6rPTW4OW7MpxRM4BYmIziHm2wpGO0S0WPmax4BIQ=;
-        b=VHcb8LMHnDzH32uQm2xYHjEAPWEPMfxThuqrHFop4X/57yN+fYdTkWZOGATzVUQcCa
-         RbeQaL7Q0iHkD+sZK8vYIS4+onlroFokcZVqo+pTWcaASUrupw3oKgPqC06HyUFY+Gmd
-         LEMNHfZpQY7nRkt9n5ePKnAqp08UT7xReGMfdkY6cu75mqCViJ60SMs06URveyscb8XH
-         etxb+UAKAVQHi+LHXYIEawkDyhdUZ8niY98blLjzxYRnTC+eEXL1WSUOQ7nC3uhYaI+V
-         ITUOgd+53jhqtRci0FV6aM6z/thTkNzPCUV8zO9M6qmLkUADlGP6JZ9Zi6/1FOt10WCz
-         Y8HQ==
-X-Gm-Message-State: AO0yUKXGtSzj0xliDs0ML+iDujQz4IWjUt1bQKYK/WdkwOpWe0gmgo3w
-        rNYUN7c9+eT46y6mKlBV9h+r
-X-Google-Smtp-Source: AK7set8iWgZsctnWyqET4kdeHLJhm8V0kp44MnXmDnxSHmcr58iaHZEabkhLVBxnrwRZ1052oZwOaA==
-X-Received: by 2002:aa7:96e2:0:b0:5a9:cbc3:ca70 with SMTP id i2-20020aa796e2000000b005a9cbc3ca70mr22595640pfq.24.1678421375186;
-        Thu, 09 Mar 2023 20:09:35 -0800 (PST)
+        bh=TfGaCzEutI1ZxAuEhg+K1BmQaCq/7g5+zrL93kp+oys=;
+        b=1jvZ//rnGqh8y3ANYjIn5GqeSJMZ16FeMTy552EF6mGAz9Aea0DiZzbozuMYzwk72f
+         WTk2rGnFwubD8Z5R0NiNpsXKNvNxauYHV8jiSnrKEj4KoLxy7K9YICgIhp+ysFWY4r5Z
+         oqQG4EB3KcDN4LPJAgIw3e9bNJqf9HEC+ess2anhaDGi1KyWQcPUNjHNeFGbxSqpkZo8
+         IZdhhwTttvW36uf0gQjiiNo69mK4x8FLW7wwtB3KzXc8E1QO1tkgbw9brrM3dxHg97Pg
+         W+wax0KNp5LMWWcsFVMPkHM1k6Dg91mZLoY3kqbFF0VXi4950/x++kFDEXFbOO6fM7mk
+         rOtg==
+X-Gm-Message-State: AO0yUKVq2jAArY4254hKQlAmQJIGmANC/7SBT0JXB/PPT/GJ4UTP/tB9
+        xStRjuHoZfXfJTpfsMrusvem
+X-Google-Smtp-Source: AK7set/4pNSj969315rt8pVl6hBMGuJfDedYhhW2cJ8CkAfOk42sbXlP+vWpBfjIMWj/N3WmPsGiwg==
+X-Received: by 2002:aa7:968e:0:b0:5a9:bba9:f25b with SMTP id f14-20020aa7968e000000b005a9bba9f25bmr23736644pfk.17.1678421384135;
+        Thu, 09 Mar 2023 20:09:44 -0800 (PST)
 Received: from localhost.localdomain ([27.111.75.67])
-        by smtp.gmail.com with ESMTPSA id y26-20020aa7855a000000b0058d92d6e4ddsm361846pfn.5.2023.03.09.20.09.31
+        by smtp.gmail.com with ESMTPSA id y26-20020aa7855a000000b0058d92d6e4ddsm361846pfn.5.2023.03.09.20.09.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Mar 2023 20:09:34 -0800 (PST)
+        Thu, 09 Mar 2023 20:09:42 -0800 (PST)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     andersson@kernel.org, lpieralisi@kernel.org, kw@linux.com,
         krzysztof.kozlowski+dt@linaro.org, robh@kernel.org
@@ -56,9 +56,9 @@ Cc:     konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, quic_srichara@quicinc.com,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v3 15/19] arm64: dts: qcom: sdm845: Add "mhi" region to the PCIe nodes
-Date:   Fri, 10 Mar 2023 09:38:12 +0530
-Message-Id: <20230310040816.22094-16-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v3 17/19] arm64: dts: qcom: sc8280xp: Add "mhi" region to the PCIe nodes
+Date:   Fri, 10 Mar 2023 09:38:14 +0530
+Message-Id: <20230310040816.22094-18-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230310040816.22094-1-manivannan.sadhasivam@linaro.org>
 References: <20230310040816.22094-1-manivannan.sadhasivam@linaro.org>
@@ -73,37 +73,73 @@ the PCIe link transitions.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- arch/arm64/boot/dts/qcom/sdm845.dtsi | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-index 479859bd8ab3..46caac9acc95 100644
---- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
-@@ -2282,8 +2282,9 @@ pcie0: pci@1c00000 {
- 			reg = <0 0x01c00000 0 0x2000>,
- 			      <0 0x60000000 0 0xf1d>,
- 			      <0 0x60000f20 0 0xa8>,
--			      <0 0x60100000 0 0x100000>;
--			reg-names = "parf", "dbi", "elbi", "config";
-+			      <0 0x60100000 0 0x100000>,
-+			      <0 0x01c07000 0 0x1000>;
-+			reg-names = "parf", "dbi", "elbi", "config", "mhi";
- 			device_type = "pci";
- 			linux,pci-domain = <0>;
- 			bus-range = <0x00 0xff>;
-@@ -2387,8 +2388,9 @@ pcie1: pci@1c08000 {
- 			reg = <0 0x01c08000 0 0x2000>,
- 			      <0 0x40000000 0 0xf1d>,
- 			      <0 0x40000f20 0 0xa8>,
--			      <0 0x40100000 0 0x100000>;
--			reg-names = "parf", "dbi", "elbi", "config";
-+			      <0 0x40100000 0 0x100000>,
-+			      <0 0x01c0c000 0 0x1000>;
-+			reg-names = "parf", "dbi", "elbi", "config", "mhi";
- 			device_type = "pci";
- 			linux,pci-domain = <1>;
- 			bus-range = <0x00 0xff>;
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 0d02599d8867..eb87c3e5d2bc 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -1653,8 +1653,9 @@ pcie4: pcie@1c00000 {
+ 			      <0x0 0x30000000 0x0 0xf1d>,
+ 			      <0x0 0x30000f20 0x0 0xa8>,
+ 			      <0x0 0x30001000 0x0 0x1000>,
+-			      <0x0 0x30100000 0x0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "atu", "config";
++			      <0x0 0x30100000 0x0 0x100000>,
++			      <0x0 0x01c03000 0x0 0x1000>;
++			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x30200000 0x0 0x30200000 0x0 0x100000>,
+@@ -1752,8 +1753,9 @@ pcie3b: pcie@1c08000 {
+ 			      <0x0 0x32000000 0x0 0xf1d>,
+ 			      <0x0 0x32000f20 0x0 0xa8>,
+ 			      <0x0 0x32001000 0x0 0x1000>,
+-			      <0x0 0x32100000 0x0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "atu", "config";
++			      <0x0 0x32100000 0x0 0x100000>,
++			      <0x0 0x01c0b000 0x0 0x1000>;
++			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x32200000 0x0 0x32200000 0x0 0x100000>,
+@@ -1849,8 +1851,9 @@ pcie3a: pcie@1c10000 {
+ 			      <0x0 0x34000000 0x0 0xf1d>,
+ 			      <0x0 0x34000f20 0x0 0xa8>,
+ 			      <0x0 0x34001000 0x0 0x1000>,
+-			      <0x0 0x34100000 0x0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "atu", "config";
++			      <0x0 0x34100000 0x0 0x100000>,
++			      <0x0 0x01c13000 0x0 0x1000>;
++			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x34200000 0x0 0x34200000 0x0 0x100000>,
+@@ -1949,8 +1952,9 @@ pcie2b: pcie@1c18000 {
+ 			      <0x0 0x38000000 0x0 0xf1d>,
+ 			      <0x0 0x38000f20 0x0 0xa8>,
+ 			      <0x0 0x38001000 0x0 0x1000>,
+-			      <0x0 0x38100000 0x0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "atu", "config";
++			      <0x0 0x38100000 0x0 0x100000>,
++			      <0x0 0x01c1b000 0x0 0x1000>;
++			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x38200000 0x0 0x38200000 0x0 0x100000>,
+@@ -2046,8 +2050,9 @@ pcie2a: pcie@1c20000 {
+ 			      <0x0 0x3c000000 0x0 0xf1d>,
+ 			      <0x0 0x3c000f20 0x0 0xa8>,
+ 			      <0x0 0x3c001000 0x0 0x1000>,
+-			      <0x0 0x3c100000 0x0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "atu", "config";
++			      <0x0 0x3c100000 0x0 0x100000>,
++			      <0x0 0x01c23000 0x0 0x1000>;
++			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			ranges = <0x01000000 0x0 0x3c200000 0x0 0x3c200000 0x0 0x100000>,
 -- 
 2.25.1
 
