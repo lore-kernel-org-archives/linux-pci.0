@@ -2,105 +2,110 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4931C61DA4
-	for <linux-pci@archiver.kernel.org>; Sat, 11 Mar 2023 04:41:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31693C61DA4
+	for <linux-pci@archiver.kernel.org>; Sat, 11 Mar 2023 08:22:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229655AbjCKElq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Mar 2023 23:41:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52372 "EHLO
+        id S229929AbjCKIW0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 11 Mar 2023 03:22:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229541AbjCKElp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2023 23:41:45 -0500
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 357291A64F;
-        Fri, 10 Mar 2023 20:41:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678509704; x=1710045704;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=NSQSlE/+vXBkfkITnkBpbAE3poVuW/J///aE8MnPULY=;
-  b=WIMR0qXxN+xLKVcpj7Th8rYUtio7ZC2nA3oTxZe1lksCCpZJfX14wZq/
-   3CBVS/83VEb6S1AZhkQyYjcNBMTAwgeCov8GxLEhPIbjYaSGHoZGD8N5t
-   UYpiahwNqQtHw4yicEOZI7b9pNwZzfmSSc4PqNCTnoxOCw8bVyVVj8bzH
-   v0r205dSL/mPGFDu7JU0NhLy/fvXSHmVnLzKW0hx2/tjZ7nr1KbRoTUht
-   imACXFmIw/A7aqSoqT1517S9IQPQSincGBakfL0gdGR1TJYqPqptibcvM
-   Hd/yxAg3sXeNHwtThDWU8aU6k3JB5PsqeoZE1VFpaKOfoD1Mj0LIaLjwv
-   Q==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10645"; a="316522277"
-X-IronPort-AV: E=Sophos;i="5.98,251,1673942400"; 
-   d="scan'208";a="316522277"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2023 20:41:43 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10645"; a="680435839"
-X-IronPort-AV: E=Sophos;i="5.98,251,1673942400"; 
-   d="scan'208";a="680435839"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by fmsmga007.fm.intel.com with ESMTP; 10 Mar 2023 20:41:40 -0800
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1par35-0004Kb-2g;
-        Sat, 11 Mar 2023 04:41:39 +0000
-Date:   Sat, 11 Mar 2023 12:40:54 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Rohit Agarwal <quic_rohiagar@quicinc.com>, agross@kernel.org,
-        andersson@kernel.org, konrad.dybcio@linaro.org, lee@kernel.org,
-        robh+dt@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        mani@kernel.org, lpieralisi@kernel.org, kw@linux.com,
-        bhelgaas@google.com, manivannan.sadhasivam@linaro.org
-Cc:     oe-kbuild-all@lists.linux.dev, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Rohit Agarwal <quic_rohiagar@quicinc.com>
-Subject: Re: [PATCH v2 3/6] ARM: dts: qcom: sdx65: Add support for PCIe PHY
-Message-ID: <202303111226.ITclm8Vw-lkp@intel.com>
-References: <1678277993-18836-4-git-send-email-quic_rohiagar@quicinc.com>
+        with ESMTP id S229522AbjCKIWZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 11 Mar 2023 03:22:25 -0500
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DA2A20D18
+        for <linux-pci@vger.kernel.org>; Sat, 11 Mar 2023 00:22:24 -0800 (PST)
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 363DA280154BA;
+        Sat, 11 Mar 2023 09:22:20 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 21C383E457; Sat, 11 Mar 2023 09:22:20 +0100 (CET)
+Date:   Sat, 11 Mar 2023 09:22:20 +0100
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Tushar Dave <tdave@nvidia.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org,
+        kbusch@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: nvme-pci: Disabling device after reset failure: -5 occurs while
+ AER recovery
+Message-ID: <20230311082220.GA3649@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1678277993-18836-4-git-send-email-quic_rohiagar@quicinc.com>
+In-Reply-To: <20230309175321.GA1151233@bhelgaas>
+ <843e2392-9ff0-2286-5f97-659831013c2e@nvidia.com>
+ <20230310235306.GA1290793@bhelgaas>
+ <4922cec7-ecc1-4971-75af-cdbaeaa6434f@nvidia.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rohit,
+On Fri, Mar 10, 2023 at 05:45:48PM -0800, Tushar Dave wrote:
+> On 3/10/2023 3:53 PM, Bjorn Helgaas wrote:
+> > In the log below, pciehp obviously is enabled; should I infer that in
+> > the log above, it is not?
+> 
+> pciehp is enabled all the time. In the log above and below.
+> I do not have answer yet why pciehp shows-up only in some tests (due to DPC
+> link down/up) and not in others like you noticed in both the logs.
 
-Thank you for the patch! Yet something to improve:
+Maybe some of the switch Downstream Ports are hotplug-capable and
+some are not?  (Check the Slot Implemented bit in the PCI Express
+Capabilities Register as well as the Hot-Plug Capable bit in the
+Slot Capabilities Register.)
 
-[auto build test ERROR on robh/for-next]
-[also build test ERROR on lee-mfd/for-mfd-next lee-mfd/for-mfd-fixes pci/next pci/for-linus linus/master v6.3-rc1 next-20230310]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Rohit-Agarwal/dt-bindings-mfd-qcom-tcsr-Add-compatible-for-sdx65/20230308-202140
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
-patch link:    https://lore.kernel.org/r/1678277993-18836-4-git-send-email-quic_rohiagar%40quicinc.com
-patch subject: [PATCH v2 3/6] ARM: dts: qcom: sdx65: Add support for PCIe PHY
-config: arm-allyesconfig (https://download.01.org/0day-ci/archive/20230311/202303111226.ITclm8Vw-lkp@intel.com/config)
-compiler: arm-linux-gnueabi-gcc (GCC) 12.1.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/ca67929d838c65d39536e65c284da94928f55786
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Rohit-Agarwal/dt-bindings-mfd-qcom-tcsr-Add-compatible-for-sdx65/20230308-202140
-        git checkout ca67929d838c65d39536e65c284da94928f55786
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=arm olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash
+> > Generally we've avoided handling a device reset as a remove/add event
+> > because upper layers can't deal well with that.  But in the log below
+> > it looks like pciehp *did* treat the DPC containment as a remove/add,
+> > which of course involves configuring the "new" device and its MPS
+> > settings.
+> 
+> yes and that puzzled me why? especially when"Link Down/Up ignored (recovered
+> by DPC)". Do we still have race somewhere, I am not sure.
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303111226.ITclm8Vw-lkp@intel.com/
+You're seeing the expected behavior.  pciehp ignores DLLSC events
+caused by DPC, but then double-checks that DPC recovery succeeded.
+If it didn't, it would be a bug not to bring down the slot.
+So pciehp does exactly that.  See this code snippet in
+pciehp_ignore_dpc_link_change():
 
-All errors (new ones prefixed by >>):
+	/*
+	 * If the link is unexpectedly down after successful recovery,
+	 * the corresponding link change may have been ignored above.
+	 * Synthesize it to ensure that it is acted on.
+	 */
+	down_read_nested(&ctrl->reset_lock, ctrl->depth);
+	if (!pciehp_check_link_active(ctrl))
+		pciehp_request(ctrl, PCI_EXP_SLTSTA_DLLSC);
+	up_read(&ctrl->reset_lock);
 
->> Error: arch/arm/boot/dts/qcom-sdx65.dtsi:306.6-7 syntax error
-   FATAL ERROR: Unable to parse input tree
+So on hotplug-capable ports, pciehp is able to mop up the mess created
+by fiddling with the MPS settings behind the kernel's back.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+We don't have that option on non-hotplug-capable ports.  If error
+recovery fails, we generally let the inaccessible devices remain
+in the system and user interaction is necessary to recover, either
+through a reboot or by manually removing and rescanning PCI devices
+via syfs after reinstating sane MPS settings.
+
+
+>   - Switch and NVMe MPS are 512B
+>   - NVMe config space saved (including MPS=512B)
+>   - You change Switch MPS to 128B
+>   - NVMe does DMA with payload > 128B
+>   - Switch reports Malformed TLP because TLP is larger than its MPS
+>   - Recovery resets NVMe, which sets MPS to the default of 128B
+>   - nvme_slot_reset() restores NVMe config space (MPS is now 512B)
+>   - Subsequent NVMe DMA with payload > 128B repeats cycle
+
+Forgive my ignorance, but if MPS is restored to 512B by nvme_slot_reset(),
+shouldn't the communication with the device just work again from that
+point on?
+
+Thanks,
+
+Lukas
