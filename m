@@ -2,59 +2,59 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F5F8C74A4B
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Mar 2023 12:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D34C6FD19
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Mar 2023 12:43:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230097AbjCMMnB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Mar 2023 08:43:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48070 "EHLO
+        id S230234AbjCMMnO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Mar 2023 08:43:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230117AbjCMMmz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2023 08:42:55 -0400
+        with ESMTP id S230086AbjCMMm6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2023 08:42:58 -0400
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E27C5664E8;
-        Mon, 13 Mar 2023 05:42:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E043964A9A;
+        Mon, 13 Mar 2023 05:42:23 -0700 (PDT)
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32D6OxcI020021;
-        Mon, 13 Mar 2023 05:42:06 -0700
+        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32D6OxcN020021;
+        Mon, 13 Mar 2023 05:42:15 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=QJOWFJmvLNjPQ3cK/VFiHx9zeHs9QVtLszvjB+5MdRM=;
- b=dESX45KFJYcFjRIFl7+4CD8CZlvr8xvixUnVeUhmG57G0373NHF+9CUc/n/pczDnT1lx
- iHWpHp8+psFnw0HGmgehZiN67TDzUs+tbSvYCYSgZjMK4Wf7gAUUuj/wD6SLYqGljDAI
- uWxGjLix9YlRgTYcSJZsKoqvKx5S3SJZig/CDBNvF0yKqwqlMIEF2EzQnpd+iKmZQeE+
- S0F1ac6occap9xS1RzVsp/gVLDVLGiwYDJ/Rqql0fUeXGZa6vYBS2ozGfFM1jq2JZMLK
- Lr9kwa0ZDhiQ9t89ce32ebFIk9dJE/rWEVUc9sbPrxqFpFH0nxpagLxeQ4g2/gQygXIj 4Q== 
+ content-type; s=pfpt0220; bh=aaeXNgwpp6Zy5Dgr92iuq1Nr5/oDxipG6De41HDKGy8=;
+ b=NTn3jWp09n8JuQ+kjvl3KajPsPtttiqruRNqBSTTo+dMIQaE2141AMBthozypELFoEdq
+ bua+aM+VqJ0Ob+WIET4Q3EJc2XXUGyPi9zKxGRZymuEaQoKcbVx8weGdUo7NWwt/CHNQ
+ CsCxP4mpil/92K3IZq4/GmysuKtdXkQc9JCRFzzVEwBUGOjV/BMLauhOhKL/tNZR22lO
+ JIDbCb1TWoJ9xqdTypP3J4YZO8jwjqAnOHJyHHQt9SP7YU8fK4HD/VRY6eBO4fQOs+Z2
+ 049oqaPhV8vn4TPbY1haQczMpxm4W/2WtEedF+VQ/tNIsu7t5rgHKYVSfp1tPbKZ0jFv Fw== 
 Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3p8t1t5gex-8
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3p8t1t5gex-18
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 13 Mar 2023 05:42:06 -0700
+        Mon, 13 Mar 2023 05:42:14 -0700
 Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Mon, 13 Mar
- 2023 05:40:55 -0700
+ 2023 05:41:14 -0700
 Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.42 via Frontend
- Transport; Mon, 13 Mar 2023 05:40:55 -0700
+ Transport; Mon, 13 Mar 2023 05:41:14 -0700
 Received: from jupiter073.il.marvell.com (unknown [10.5.116.85])
-        by maili.marvell.com (Postfix) with ESMTP id 903725B6921;
-        Mon, 13 Mar 2023 05:40:51 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 8459A5B6921;
+        Mon, 13 Mar 2023 05:41:10 -0700 (PDT)
 From:   Elad Nachman <enachman@marvell.com>
 To:     <thomas.petazzoni@bootlin.com>, <bhelgaas@google.com>,
         <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
         <krzysztof.kozlowski+dt@linaro.org>, <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Vadym Kochan <vadym.kochan@plvision.eu>
-Subject: [PATCH v4 1/8] dt-bindings: PCI: armada8k: Add compatible string for AC5 SoC
-Date:   Mon, 13 Mar 2023 14:40:09 +0200
-Message-ID: <20230313124016.17102-2-enachman@marvell.com>
+CC:     Elad Nachman <enachman@marvell.com>
+Subject: [PATCH v4 4/8] dt-bindings: PCI: dwc: Add dma-ranges, region mask
+Date:   Mon, 13 Mar 2023 14:40:12 +0200
+Message-ID: <20230313124016.17102-5-enachman@marvell.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230313124016.17102-1-enachman@marvell.com>
 References: <20230313124016.17102-1-enachman@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-GUID: XI55rmSjiSveaP3dlq5zNOwxQhqp1rFa
-X-Proofpoint-ORIG-GUID: XI55rmSjiSveaP3dlq5zNOwxQhqp1rFa
+X-Proofpoint-GUID: eCJZqwhSSm_hjhuKhOV91Q5XDz7EC0Vg
+X-Proofpoint-ORIG-GUID: eCJZqwhSSm_hjhuKhOV91Q5XDz7EC0Vg
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-13_05,2023-03-13_01,2023-02-09_01
@@ -62,31 +62,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Vadym Kochan <vadym.kochan@plvision.eu>
+From: Elad Nachman <enachman@marvell.com>
 
-AC5 SoC has armada8k PCIe IP so add compatible string for it.
+Add properties to support configurable DMA mask bits and region mask bits:
 
-Signed-off-by: Vadym Kochan <vadym.kochan@plvision.eu>
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+ 1. configurable dma-ranges is needed for Marvell AC5/AC5X SOCs which
+    have their physical DDR memory start at address 0x2_0000_0000.
+
+ 2. Configurable region mask bits is needed for the Marvell Armada
+    7020/7040/8040 SOCs when the DT file places the PCIe window above the 4GB region.
+    The Synopsis Designware PCIe IP in these SOCs is too old to specify the
+    highest memory location supported by the PCIe, but practically supports
+    such locations. Allow these locations to be specified in the DT file.
+
+Signed-off-by: Elad Nachman <enachman@marvell.com>
 ---
- Documentation/devicetree/bindings/pci/pci-armada8k.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+v4:
+   1) Fix commit message and its formatting
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-index ff25a134befa..b272fa4f08b5 100644
---- a/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-@@ -4,7 +4,9 @@ This PCIe host controller is based on the Synopsys DesignWare PCIe IP
- and thus inherits all the common properties defined in snps,dw-pcie.yaml.
+   2) Replace num-dmamask with dma-ranges
+
+ .../devicetree/bindings/pci/snps,dw-pcie-common.yaml        | 5 +++++
+ Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml     | 6 ++++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+index d87e13496834..3cb9af1aefeb 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-common.yaml
+@@ -261,6 +261,11 @@ properties:
  
- Required properties:
--- compatible: "marvell,armada8k-pcie"
-+- compatible: Should be set to one of the following:
-+   - "marvell,armada8k-pcie" : For A7K/8K family of SoCs
-+   - "marvell,ac5-pcie"      : For AC5 family of SoCs
- - reg: must contain two register regions
-    - the control register region
-    - the config space region
+   dma-coherent: true
+ 
++  num-regionmask:
++    description: |
++      number of region limit mask bits to use, if different than default 32
++    maximum: 64
++
+ additionalProperties: true
+ 
+ ...
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 1a83f0f65f19..ed7ae2a14804 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -197,6 +197,12 @@ properties:
+       - contains:
+           const: msi
+ 
++  dma-ranges:
++    description:
++      Defines the DMA mask for devices which due to non-standard HW address
++      assignment have their RAM starting address above the lower 32-bit region.
++      Since this is a mask, only the size attribute of the dma-ranges is used.
++
+ additionalProperties: true
+ 
+ required:
 -- 
 2.17.1
 
