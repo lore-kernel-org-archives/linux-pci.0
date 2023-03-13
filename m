@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42938C7618D
-	for <linux-pci@archiver.kernel.org>; Mon, 13 Mar 2023 12:43:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F168CC61DA4
+	for <linux-pci@archiver.kernel.org>; Mon, 13 Mar 2023 12:43:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230086AbjCMMnQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 13 Mar 2023 08:43:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48222 "EHLO
+        id S230316AbjCMMnS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 13 Mar 2023 08:43:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230140AbjCMMm6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2023 08:42:58 -0400
+        with ESMTP id S230165AbjCMMm7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2023 08:42:59 -0400
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11DF267824;
-        Mon, 13 Mar 2023 05:42:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABB446A1EC;
+        Mon, 13 Mar 2023 05:42:27 -0700 (PDT)
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32D6OxcP020021;
-        Mon, 13 Mar 2023 05:42:17 -0700
+        by mx0b-0016f401.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32D6OxcQ020021;
+        Mon, 13 Mar 2023 05:42:19 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=7DKfIo9JLAYpRKRTLSaaANvz0M1ibKDER5y1y9Rke+A=;
- b=kSLrJR17BZ/AdYbZrQCJVWrdkXS5u3hbqm+RLcXs3NXP3mmmWSSeQ2v7SKbBdedLtWLr
- Vo4qLU3kByYxhEFV2ILU3k4TkUu8FMwme9FrgHldbJboGyyVS12cV+Tszu00TS92rofb
- jMAommBcTKIzo/n9InELHXz6j0V5eSYRw+q9TeJZqPptUdeP0DYGR60CZE44viHOMcj0
- wxsFLw8ELmZPk6oUdMRk1XF1Mw3XDUewRZvJPXu7H8KDEvqhlcfuX0mIXZfVR0od5sCg
- gAdZTH8HFMvt6d7vE9derhgcpXhKc7oz3Nw+wyJAAWIduCIu6EtWFYT9fXAo88C2xkok Aw== 
+ content-type; s=pfpt0220; bh=+Twwfo+d1JCCV20Ow3YeKxKYdEAuXIvfbVrrAMuP3yA=;
+ b=guNHMHlyOa/7znmSrleiZRsrgbsvOWq0cOkeJh0umWESO1IqHPan62SO5JZ2XmM97+OR
+ 0x6v22rD/fNfDOMMmNu8eY4MEoVkv5QMJ48R5mtas/wLyJEK00ICbSKkk4SfNkGwwObE
+ t+Jr4NCBKO74/1TmbvT6YJ549huXcJwVSoirSQEMW/uD6Koav30EsrjJNKaPRryRrtcV
+ IjMIqETRoTzOKFrMmMwrKxf92OkN46wWc9Y07z2lqcisxdYJfp6YeOA53ZqFRUvKvw12
+ S6EWaBxG1yt1/XXhrFcEiVP7LGAxUE0yjtu4J8nfCWGazwDpLsoyglXKuZlMOiHK6ojl pA== 
 Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3p8t1t5gex-20
+        by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 3p8t1t5gjs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 13 Mar 2023 05:42:17 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
+        Mon, 13 Mar 2023 05:42:19 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Mon, 13 Mar
- 2023 05:41:22 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.42 via Frontend
- Transport; Mon, 13 Mar 2023 05:41:22 -0700
+ 2023 05:41:30 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.42 via Frontend
+ Transport; Mon, 13 Mar 2023 05:41:30 -0700
 Received: from jupiter073.il.marvell.com (unknown [10.5.116.85])
-        by maili.marvell.com (Postfix) with ESMTP id 2C5325B6921;
-        Mon, 13 Mar 2023 05:41:18 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 07CCF5B6921;
+        Mon, 13 Mar 2023 05:41:26 -0700 (PDT)
 From:   Elad Nachman <enachman@marvell.com>
 To:     <thomas.petazzoni@bootlin.com>, <bhelgaas@google.com>,
         <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
@@ -45,16 +45,16 @@ To:     <thomas.petazzoni@bootlin.com>, <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
 CC:     Elad Nachman <enachman@marvell.com>
-Subject: [PATCH v4 6/8] PCI: armada8k: support reg regions according to DT.
-Date:   Mon, 13 Mar 2023 14:40:14 +0200
-Message-ID: <20230313124016.17102-7-enachman@marvell.com>
+Subject: [PATCH v4 8/8] PCI: dwc: Introduce region limit from DT
+Date:   Mon, 13 Mar 2023 14:40:16 +0200
+Message-ID: <20230313124016.17102-9-enachman@marvell.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230313124016.17102-1-enachman@marvell.com>
 References: <20230313124016.17102-1-enachman@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-GUID: R8-l_f3q1QTZAIqYGGMZ9XTliljdjdj1
-X-Proofpoint-ORIG-GUID: R8-l_f3q1QTZAIqYGGMZ9XTliljdjdj1
+X-Proofpoint-GUID: 9Xb2KkvInWYrasdOqz5A3CBQUIxGT5aI
+X-Proofpoint-ORIG-GUID: 9Xb2KkvInWYrasdOqz5A3CBQUIxGT5aI
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-13_05,2023-03-13_01,2023-02-09_01
@@ -64,103 +64,56 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Elad Nachman <enachman@marvell.com>
 
-Support atu/vendor registers regions start according to DT rather than using
-inflexible offset arithmetics.
+Allow dts override of region limit for SOCs with older Synopsis
+Designware PCIe IP but with greater than 32-bit address range support,
+such as the Armada 7020/7040/8040 family of SOCs by Marvell,
+when the DT file places the PCIe window above the 4GB region.
+The Synopsis Designware PCIe IP in these SOCs is too old to specify the
+highest memory location supported by the PCIe, but practically supports
+such locations. Allow these locations to be specified in the DT file.
+DT property is called num-regionmask , and can range between 33 and 64.
 
 Signed-off-by: Elad Nachman <enachman@marvell.com>
 ---
 v4:
-   Split from previous patch in series
+   1) Fix blank lines removal / addition
 
- drivers/pci/controller/dwc/pcie-armada8k.c | 30 ++++++++++++++--------
- 1 file changed, 19 insertions(+), 11 deletions(-)
+   2) Remove usage of variable with same name as dt binding property
 
-diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-index 2b94e32853ad..145434c7a9fb 100644
---- a/drivers/pci/controller/dwc/pcie-armada8k.c
-+++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-@@ -46,7 +46,7 @@ struct armada8k_pcie_of_data {
- 	const struct dw_pcie_ops *pcie_ops;
- };
- 
--#define PCIE_VENDOR_REGS_OFFSET		0x8000	/* in ac5 is 0x10000 */
-+#define PCIE_VENDOR_REGS_OFFSET		0x8000	/* in ac5 is in another region */
- 
- #define PCIE_GLOBAL_CONTROL_REG		(PCIE_VENDOR_REGS_OFFSET + 0x0)
- #define PCIE_APP_LTSSM_EN		BIT(2)
-@@ -314,24 +314,29 @@ static int armada8k_add_pcie_port(struct armada8k_pcie *pcie,
- 	return 0;
- }
- 
--static u32 ac5_xlate_dbi_reg(u32 reg)
-+static void __iomem *ac5_xlate_dbi_reg(struct dw_pcie *pci,
-+				       void __iomem *base,
-+				       u32 reg)
+ drivers/pci/controller/dwc/pcie-designware.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 53a16b8b6ac2..9773c110c733 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -735,8 +735,10 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
  {
- 	/* Handle AC5 ATU access */
- 	if ((reg & ~0xfffff) == PCIE_ATU_ACCESS_MASK_AC5) {
- 		reg &= 0xfffff;
--		/* ATU registers offset is 0xC00 + 0x200 * n,
-+		/* ATU registers offset is 0xC000 + 0x200 * n,
- 		 * from RFU registers.
- 		 */
--		reg = 0xc000 | (0x200 * (reg >> 9)) | (reg & 0xff);
-+		reg = (0x200 * (reg >> 9)) | (reg & 0xff);
-+		return pci->atu_base + reg;
- 	} else if ((reg & 0xfffff000) == PCIE_VENDOR_REGS_OFFSET) {
- 		/* PCIe RFU registers in A8K are at offset 0x8000 from base
- 		 * (0xf2600000) while in AC5 offset is 0x10000 from base
--		 * (0x800a0000) therefore need the addition of 0x8000.
-+		 * (0x800a0000) therefore need to be reduced by 0x8000
-+		 * and rebased from dbi2 base, which is set to the PCIe rfu
-+		 * base in the AC5 dts:
- 		 */
--		reg += PCIE_VENDOR_REGS_OFFSET;
-+		reg -= PCIE_VENDOR_REGS_OFFSET;
-+		return pci->dbi_base2 + reg;
+ 	int max_region, ob, ib;
+-	u32 val, min, dir;
++	u32 val, min, dir, ret;
+ 	u64 max;
++	struct device *dev = pci->dev;
++	struct device_node *np = dev->of_node;
+ 
+ 	val = dw_pcie_readl_dbi(pci, PCIE_ATU_VIEWPORT);
+ 	if (val == 0xFFFFFFFF) {
+@@ -781,7 +783,13 @@ void dw_pcie_iatu_detect(struct dw_pcie *pci)
+ 		dw_pcie_writel_atu(pci, dir, 0, PCIE_ATU_UPPER_LIMIT, 0xFFFFFFFF);
+ 		max = dw_pcie_readl_atu(pci, dir, 0, PCIE_ATU_UPPER_LIMIT);
+ 	} else {
+-		max = 0;
++		/* Allow dts override of region limit for older IP with above 32-bit support: */
++		ret = of_property_read_u32(np, "num-regionmask", &val);
++		if (!ret && val > 32) {
++			max = GENMASK(val - 33, 0);
++			dev_info(pci->dev, "Overriding region limit to %u bits\n", val);
++		} else
++			max = 0;
  	}
--
--	return reg;
-+	return base + reg;
- }
  
- static u32 ac5_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
-@@ -339,14 +344,14 @@ static u32 ac5_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
- {
- 	u32 val;
- 
--	dw_pcie_read(base + ac5_xlate_dbi_reg(reg), size, &val);
-+	dw_pcie_read(ac5_xlate_dbi_reg(pci, base, reg), size, &val);
- 	return val;
- }
- 
- static void ac5_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
- 			       u32 reg, size_t size, u32 val)
- {
--	dw_pcie_write(base + ac5_xlate_dbi_reg(reg), size, val);
-+	dw_pcie_write(ac5_xlate_dbi_reg(pci, base, reg), size, val);
- }
- 
- static const struct dw_pcie_ops armada8k_dw_pcie_ops = {
-@@ -425,7 +430,6 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 		ret = PTR_ERR(pci->dbi_base);
- 		goto fail_clkreg;
- 	}
--
- 	ret = armada8k_pcie_setup_phys(pcie);
- 	if (ret)
- 		goto fail_clkreg;
-@@ -436,6 +440,10 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto disable_phy;
- 
-+	/* backwards compatibility with older dts files: */
-+	if (!pci->dbi_base2)
-+		pci->dbi_base2 = pci->dbi_base;
-+
- 	return 0;
- 
- disable_phy:
+ 	pci->num_ob_windows = ob;
 -- 
 2.17.1
 
