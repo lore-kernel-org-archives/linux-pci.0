@@ -2,234 +2,212 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6986DC7618D
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 13:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E7FDC6FD1D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 13:28:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230348AbjCNNAN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Mar 2023 09:00:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47010 "EHLO
+        id S232057AbjCNN2e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Mar 2023 09:28:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232466AbjCNM7y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 08:59:54 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60EE29BA52;
-        Tue, 14 Mar 2023 05:55:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1678798538; x=1710334538;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=rmow8MmVfNohfbbu6S6MxBXECwf/J7vfVWyiDy1C384=;
-  b=fsRjA52x8HyiQzO3IJo0feCUqHqgLtRjUW2jmuOd6Mo786joSaqQGg/1
-   xZ3j+V2o3wBxX4+r1YC6WhJoyJD9/Ez3dAkCz/tWrc+87LDxIwFtpL+fL
-   z6NGXmKWZBFWHx2J7zu19j4ahZQOQu2d4Jn8B5hEUikfVYowbah42abO6
-   PbnihmCgehdoz6TNwRnWPq4eMiQqGYfECmzF3bqV9Hrm+u4ElG3vqOp8C
-   BI3pMUjbUUVTbWfUczPhI8q850EBxUyaSfkCDHbglGG/DLen86KZMmSik
-   R8TBOpHVF5gZ6P5rL4ggRBVVYJ4Y0/P/elkXLeCV2V9oOBMimYKzXUfGT
-   A==;
-X-IronPort-AV: E=McAfee;i="6500,9779,10648"; a="339777496"
-X-IronPort-AV: E=Sophos;i="5.98,259,1673942400"; 
-   d="scan'208";a="339777496"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 05:52:33 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6500,9779,10648"; a="768077784"
-X-IronPort-AV: E=Sophos;i="5.98,259,1673942400"; 
-   d="scan'208";a="768077784"
-Received: from julieape-mobl.amr.corp.intel.com (HELO [10.209.119.116]) ([10.209.119.116])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2023 05:52:32 -0700
-Message-ID: <646638fa-42e8-624a-068b-9c8a26ebfd98@linux.intel.com>
-Date:   Tue, 14 Mar 2023 05:52:31 -0700
+        with ESMTP id S230329AbjCNN1x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 09:27:53 -0400
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80C926A1DF;
+        Tue, 14 Mar 2023 06:25:32 -0700 (PDT)
+Received: from [192.168.86.246] (cpc87451-finc19-2-0-cust61.4-2.cable.virginm.net [82.11.51.62])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: tanureal)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 6C51C660036A;
+        Tue, 14 Mar 2023 13:25:30 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1678800330;
+        bh=3Q9Wk1fkKtkxc1DaKV294b/HrXukUV6KK5bXqHC2FLQ=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=Yhq4ySgX78GYfKdhwkJ4cf+2fmyAhwykSsKt51YyCkCKw4x2zGEnFzMme38fWlbEQ
+         0k+opx9wQfa+7o0Z9w95XUbbOy/1dq8Z1rwY+e47dwsZqKfQpCY8nu+jymSUawLqxP
+         ohqk6g9CQmZUY0sW4OSUbTVOzDeJf6ygS3AW32qN6iEN/KmQdznlpC5PdFUjr7k/bD
+         D7YYvFn4bzsKAQLD2ETwiLvF/IL78rg+dG93m9ZhWAWnA6aVYbKaM8gNdex5nxnjPh
+         DWG+9OKAArr1ikA0myJ6WAaSnO5OuGnXO2L+ZiT9X905vkugTZNbeOtMit77e3EoTF
+         IeDkeL3BFYZYw==
+Message-ID: <93e4d83d-9559-c987-d93b-c49572413275@collabora.com>
+Date:   Tue, 14 Mar 2023 13:25:28 +0000
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.4.2
-Subject: Re: [PATCH v2 1/2] PCI/ATS: Add a helper function to configure ATS
- STU of a PF
+ Thunderbird/102.8.0
+Subject: Re: [PATCH 1/7] irqchip/gic-v3: Add a DMA Non-Coherent flag
+To:     Robin Murphy <robin.murphy@arm.com>,
+        Peter Geis <pgwipeout@gmail.com>
+Cc:     Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof Wilczynski <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, Qu Wenruo <wqu@suse.com>,
+        Piotr Oniszczuk <piotr.oniszczuk@gmail.com>,
+        Kever Yang <kever.yang@rock-chips.com>,
+        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, kernel@collabora.com
+References: <20230310080518.78054-1-lucas.tanure@collabora.com>
+ <20230310080518.78054-2-lucas.tanure@collabora.com>
+ <CAMdYzYpL7V6udw=T7ZChTFi0xOj1tb-5CVHb84u1pL4kj3eDZA@mail.gmail.com>
+ <3db23e11-5fac-f36e-c89e-93c4e8ac2d98@arm.com>
 Content-Language: en-US
-To:     Ganapatrao Kulkarni <gankulkarni@os.amperecomputing.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
-        joro@8bytes.org, bhelgaas@google.com, robin.murphy@arm.com,
-        will@kernel.org, jean-philippe@linaro.org,
-        darren@os.amperecomputing.com, scott@os.amperecomputing.com
-References: <20230313211201.GA1540091@bhelgaas>
- <6339c50a-8dfe-f3a2-63d7-504abd4e62f0@linux.intel.com>
- <c7a68d5f-3b95-723f-f384-223fcbd6a877@os.amperecomputing.com>
-From:   Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <c7a68d5f-3b95-723f-f384-223fcbd6a877@os.amperecomputing.com>
-Content-Type: text/plain; charset=UTF-8
+From:   Lucas Tanure <lucas.tanure@collabora.com>
+In-Reply-To: <3db23e11-5fac-f36e-c89e-93c4e8ac2d98@arm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 3/14/23 3:08 AM, Ganapatrao Kulkarni wrote:
-> 
-> 
-> On 14-03-2023 04:00 am, Sathyanarayanan Kuppuswamy wrote:
->> Hi Kulkarni,
+On 10-03-2023 12:04, Robin Murphy wrote:
+> On 2023-03-10 11:41, Peter Geis wrote:
+>> On Fri, Mar 10, 2023 at 3:05 AM Lucas Tanure 
+>> <lucas.tanure@collabora.com> wrote:
+>>>
+>>> The GIC600 integration in RK356x, used in rk3588, doesn't support
+>>> any of the shareability or cacheability attributes, and requires
+>>> both values to be set to 0b00 for all the ITS and Redistributor
+>>> tables.
+>>>
+>>> This is loosely based on prior work from XiaoDong Huang and
+>>> Peter Geis fixing this issue specifically for Rockchip 356x.
 >>
->> On 3/13/23 2:12 PM, Bjorn Helgaas wrote:
->>> On Mon, Feb 27, 2023 at 08:21:36PM -0800, Ganapatrao Kulkarni wrote:
->>>> As per PCI specification (PCI Express Base Specification Revision
->>>> 6.0, Section 10.5) both PF and VFs of a PCI EP are permitted to be enabled
->>>> independently for ATS capability, however the STU(Smallest Translation
->>>> Unit) is shared between PF and VFs. For VFs, it is hardwired to Zero and
->>>> the associated PF's value applies to VFs.
->>>>
->>>> In the current code, the STU is being configured while enabling the PF ATS.
->>>> Hence, it is not able to enable ATS for VFs, if it is not enabled on the
->>>> associated PF already.
->>>>
->>>> Adding a function pci_ats_stu_configure(), which can be called to
->>>> configure the STU during PF enumeration.
->>>> Latter enumerations of VFs can successfully enable ATS independently.
->>>
->>> s/STU(Smallest/STU (Smallest/ (add space before paren)
->>> s/Adding a function pci_ats_stu_configure()/Add pci_ats_stu_configure()/
->>> s/Latter/Subsequent/
->>>
->>> Add blank line between paragraphs (it looks like "Latter enumerations"
->>> is intended to start a new paragraph).
->>>
->>>> Signed-off-by: Ganapatrao Kulkarni <gankulkarni@os.amperecomputing.com>
->>>
->>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->>>
->>> Given an ack for the IOMMU patch, I'd be happy to merge both (and I
->>> can do the commit log tweaks); just let me know.
->>>
->>> One comment/question below.
->>>
->>>> ---
->>>>   drivers/pci/ats.c       | 33 +++++++++++++++++++++++++++++++--
->>>>   include/linux/pci-ats.h |  3 +++
->>>>   2 files changed, 34 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
->>>> index f9cc2e10b676..1611bfa1d5da 100644
->>>> --- a/drivers/pci/ats.c
->>>> +++ b/drivers/pci/ats.c
->>>> @@ -46,6 +46,35 @@ bool pci_ats_supported(struct pci_dev *dev)
->>>>   }
->>>>   EXPORT_SYMBOL_GPL(pci_ats_supported);
->>>>   +/**
->>>> + * pci_ats_stu_configure - Configure STU of a PF.
->>>> + * @dev: the PCI device
->>>> + * @ps: the IOMMU page shift
->>>> + *
->>>> + * Returns 0 on success, or negative on failure.
->>>> + */
->>>> +int pci_ats_stu_configure(struct pci_dev *dev, int ps)
->>>> +{
->>>> +    u16 ctrl;
->>>> +
->>>> +    if (dev->ats_enabled || dev->is_virtfn)
->>>> +        return 0;
->>>
->>> I might return an error for the VF case on the assumption that it's
->>> likely an error in the caller.  I guess one could argue that it
->>> simplifies the caller if it doesn't have to check for PF vs VF.  But
->>> the fact that STU is shared between PF and VFs is an important part of
->>> understanding how ATS works, so the caller should be aware of the
->>> distinction anyway.
+>> Good Morning,
 >>
->> I have already asked this question. But let me repeat it.
->>
->> We don't have any checks for the PF case here. That means you can re-configure
->> the STU as many times as you want until ATS is enabled in PF. So, if there are
->> active VFs which uses this STU, can PF re-configure the STU at will?
->>
+>> Since the gic is using dma, would it be reasonable to have all memory
+>> allocations be requested with the GFP_DMA flag? Otherwise this doesn't
+>> fully solve the problem for rk356x, where only the lower 4GB range is
+>> DMA capable, but this tends to get allocated in the upper 4GB on 8GB
+>> boards.
 > 
-> IMO, Since STU is shared, programming it multiple times is not expected from callers code do it, however we can add below check to allow to program STU once from a PF.
-> 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index 1611bfa1d5da..f7bb01068e18 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -60,6 +60,10 @@ int pci_ats_stu_configure(struct pci_dev *dev, int ps)
->         if (dev->ats_enabled || dev->is_virtfn)
->                 return 0;
-> 
-> +       /* Configured already */
-> +       if (dev->ats_stu)
-> +               return 0;
-> +
-
-Theoretically, you can re-configure STU as long as no one is using it. Instead of this check, is
-there a way to check whether there are active VMs which enables ATS?
-
->         if (!pci_ats_supported(dev))
->                 return -EINVAL;
->>>
->>>> +
->>>> +    if (!pci_ats_supported(dev))
->>>> +        return -EINVAL;
->>>> +
->>>> +    if (ps < PCI_ATS_MIN_STU)
->>>> +        return -EINVAL;
->>>> +
->>>> +    dev->ats_stu = ps;
->>>> +    pci_read_config_word(dev, dev->ats_cap + PCI_ATS_CTRL, &ctrl);
->>>> +    ctrl |= PCI_ATS_CTRL_STU(dev->ats_stu - PCI_ATS_MIN_STU);
->>>> +    pci_write_config_word(dev, dev->ats_cap + PCI_ATS_CTRL, ctrl);
->>>> +
->>>> +    return 0;
->>>> +}
->>>> +EXPORT_SYMBOL_GPL(pci_ats_stu_configure);
->>>> +
->>>>   /**
->>>>    * pci_enable_ats - enable the ATS capability
->>>>    * @dev: the PCI device
->>>> @@ -68,8 +97,8 @@ int pci_enable_ats(struct pci_dev *dev, int ps)
->>>>           return -EINVAL;
->>>>         /*
->>>> -     * Note that enabling ATS on a VF fails unless it's already enabled
->>>> -     * with the same STU on the PF.
->>>> +     * Note that enabling ATS on a VF fails unless it's already
->>>> +     * configured with the same STU on the PF.
->>>>        */
->>>>       ctrl = PCI_ATS_CTRL_ENABLE;
->>>>       if (dev->is_virtfn) {
->>>> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
->>>> index df54cd5b15db..7d62a92aaf23 100644
->>>> --- a/include/linux/pci-ats.h
->>>> +++ b/include/linux/pci-ats.h
->>>> @@ -8,6 +8,7 @@
->>>>   /* Address Translation Service */
->>>>   bool pci_ats_supported(struct pci_dev *dev);
->>>>   int pci_enable_ats(struct pci_dev *dev, int ps);
->>>> +int pci_ats_stu_configure(struct pci_dev *dev, int ps);
->>>>   void pci_disable_ats(struct pci_dev *dev);
->>>>   int pci_ats_queue_depth(struct pci_dev *dev);
->>>>   int pci_ats_page_aligned(struct pci_dev *dev);
->>>> @@ -16,6 +17,8 @@ static inline bool pci_ats_supported(struct pci_dev *d)
->>>>   { return false; }
->>>>   static inline int pci_enable_ats(struct pci_dev *d, int ps)
->>>>   { return -ENODEV; }
->>>> +static inline int pci_ats_stu_configure(struct pci_dev *d, int ps)
->>>> +{ return -ENODEV; }
->>>>   static inline void pci_disable_ats(struct pci_dev *d) { }
->>>>   static inline int pci_ats_queue_depth(struct pci_dev *d)
->>>>   { return -ENODEV; }
->>>> -- 
->>>> 2.38.1
->>>>
->>>>
->>>> _______________________________________________
->>>> linux-arm-kernel mailing list
->>>> linux-arm-kernel@lists.infradead.org
->>>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->>
+> Not really, because there's no fixed definition of what GFP_DMA actually 
+> means, and it may mean nothing (same for GFP_DMA32, which may or may not 
+> be meaningful depending on kernel config and platform topology). Drivers 
+> should really use the DMA API allocation functions if they care about 
+> what they get, which comes back round to the notion from years ago of 
+> converting the ITS driver to a regular platform driver, so it can 
+> benefit from regular DT concepts like "dma-ranges" automatically.
 > 
 > Thanks,
-> Ganapat
+> Robin.
 > 
+I am looking how to do that conversion to platform driver.
+But about the communication between irq-gic-v3-its and irq-gic-v3.
+Should irq-gic-v3-its be a MFD child of irq-gic-v3?
+Or use the component bind/unbind framework?
 
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+>>
+>> Very Respectfully,
+>> Peter Geis
+>>
+>>>
+>>> Suggested-by: Robin Murphy <robin.murphy@arm.com>
+>>> Signed-off-by: Lucas Tanure <lucas.tanure@collabora.com>
+>>> ---
+>>>   drivers/irqchip/irq-gic-v3-its.c | 22 ++++++++++++++++++++++
+>>>   1 file changed, 22 insertions(+)
+>>>
+>>> diff --git a/drivers/irqchip/irq-gic-v3-its.c 
+>>> b/drivers/irqchip/irq-gic-v3-its.c
+>>> index 973ede0197e3..1c334dfeb647 100644
+>>> --- a/drivers/irqchip/irq-gic-v3-its.c
+>>> +++ b/drivers/irqchip/irq-gic-v3-its.c
+>>> @@ -42,6 +42,7 @@
+>>>   #define ITS_FLAGS_CMDQ_NEEDS_FLUSHING          (1ULL << 0)
+>>>   #define ITS_FLAGS_WORKAROUND_CAVIUM_22375      (1ULL << 1)
+>>>   #define ITS_FLAGS_WORKAROUND_CAVIUM_23144      (1ULL << 2)
+>>> +#define ITS_FLAGS_DMA_NON_COHERENT             (1ULL << 3)
+>>>
+>>>   #define RDIST_FLAGS_PROPBASE_NEEDS_FLUSHING    (1 << 0)
+>>>   #define RDIST_FLAGS_RD_TABLES_PREALLOCATED     (1 << 1)
+>>> @@ -2359,6 +2360,13 @@ static int its_setup_baser(struct its_node 
+>>> *its, struct its_baser *baser,
+>>>          its_write_baser(its, baser, val);
+>>>          tmp = baser->val;
+>>>
+>>> +       if (its->flags & ITS_FLAGS_DMA_NON_COHERENT) {
+>>> +               if (tmp & GITS_BASER_SHAREABILITY_MASK)
+>>> +                       tmp &= ~GITS_BASER_SHAREABILITY_MASK;
+>>> +               else
+>>> +                       gic_flush_dcache_to_poc(base, 
+>>> PAGE_ORDER_TO_SIZE(order));
+>>> +       }
+>>> +
+>>>          if ((val ^ tmp) & GITS_BASER_SHAREABILITY_MASK) {
+>>>                  /*
+>>>                   * Shareability didn't stick. Just use
+>>> @@ -3055,6 +3063,7 @@ static u64 its_clear_vpend_valid(void __iomem 
+>>> *vlpi_base, u64 clr, u64 set)
+>>>
+>>>   static void its_cpu_init_lpis(void)
+>>>   {
+>>> +       struct its_node *its = list_first_entry(&its_nodes, struct 
+>>> its_node, entry);
+>>>          void __iomem *rbase = gic_data_rdist_rd_base();
+>>>          struct page *pend_page;
+>>>          phys_addr_t paddr;
+>>> @@ -3096,6 +3105,9 @@ static void its_cpu_init_lpis(void)
+>>>          gicr_write_propbaser(val, rbase + GICR_PROPBASER);
+>>>          tmp = gicr_read_propbaser(rbase + GICR_PROPBASER);
+>>>
+>>> +       if (its->flags & ITS_FLAGS_DMA_NON_COHERENT)
+>>> +               tmp &= ~GICR_PROPBASER_SHAREABILITY_MASK;
+>>> +
+>>>          if ((tmp ^ val) & GICR_PROPBASER_SHAREABILITY_MASK) {
+>>>                  if (!(tmp & GICR_PROPBASER_SHAREABILITY_MASK)) {
+>>>                          /*
+>>> @@ -3120,6 +3132,9 @@ static void its_cpu_init_lpis(void)
+>>>          gicr_write_pendbaser(val, rbase + GICR_PENDBASER);
+>>>          tmp = gicr_read_pendbaser(rbase + GICR_PENDBASER);
+>>>
+>>> +       if (its->flags & ITS_FLAGS_DMA_NON_COHERENT)
+>>> +               tmp &= ~GICR_PENDBASER_SHAREABILITY_MASK;
+>>> +
+>>>          if (!(tmp & GICR_PENDBASER_SHAREABILITY_MASK)) {
+>>>                  /*
+>>>                   * The HW reports non-shareable, we must remove the
+>>> @@ -5005,6 +5020,7 @@ static int __init 
+>>> its_compute_its_list_map(struct resource *res,
+>>>   static int __init its_probe_one(struct resource *res,
+>>>                                  struct fwnode_handle *handle, int 
+>>> numa_node)
+>>>   {
+>>> +       struct device_node *np = to_of_node(handle);
+>>>          struct its_node *its;
+>>>          void __iomem *its_base;
+>>>          u64 baser, tmp, typer;
+>>> @@ -5076,6 +5092,9 @@ static int __init its_probe_one(struct resource 
+>>> *res,
+>>>          its->get_msi_base = its_irq_get_msi_base;
+>>>          its->msi_domain_flags = IRQ_DOMAIN_FLAG_MSI_REMAP;
+>>>
+>>> +       if (np && !of_dma_is_coherent(np))
+>>> +               its->flags |= ITS_FLAGS_DMA_NON_COHERENT;
+>>> +
+>>>          its_enable_quirks(its);
+>>>
+>>>          err = its_alloc_tables(its);
+>>> @@ -5095,6 +5114,9 @@ static int __init its_probe_one(struct resource 
+>>> *res,
+>>>          gits_write_cbaser(baser, its->base + GITS_CBASER);
+>>>          tmp = gits_read_cbaser(its->base + GITS_CBASER);
+>>>
+>>> +       if (its->flags & ITS_FLAGS_DMA_NON_COHERENT)
+>>> +               tmp &= ~GITS_CBASER_SHAREABILITY_MASK;
+>>> +
+>>>          if ((tmp ^ baser) & GITS_CBASER_SHAREABILITY_MASK) {
+>>>                  if (!(tmp & GITS_CBASER_SHAREABILITY_MASK)) {
+>>>                          /*
+>>> -- 
+>>> 2.39.2
+>>>
+
