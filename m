@@ -2,424 +2,329 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 516F1C7618E
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 13:43:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04189C7618D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 13:55:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232340AbjCNNnX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Mar 2023 09:43:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53684 "EHLO
+        id S231461AbjCNNzF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Mar 2023 09:55:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231356AbjCNNm7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 09:42:59 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57E89ADC1F;
-        Tue, 14 Mar 2023 06:40:16 -0700 (PDT)
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EBuD9i021456;
-        Tue, 14 Mar 2023 12:12:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=HdO4vE5VVMCsPa//8JbQ8fNZYQE0ELrX1Vo0vu7Lmcw=;
- b=jRVugEP5xDd1pI58t3BVxvvVnhxolTgKNIlh5c3kHN9EjQ9FIlqdvRvCK/hgZWsnYtfw
- WPZi3gAhF0WmcWhoLOEWq8SKtUxXST9FCtiYBlPEu2c9HOEjhfVyKM/LUtZBzk6haTli
- Ml0I+ATW2ZciUnQl/t4U+TzOtcO7G64SqEcIVo/CYnDjGljcItau6MITA8YCJK3wbSHt
- nMeWUNlThjdsr+WaQd5j8i3A4nbFM83o2XQ5z+Eg8oJVVTinH/t6cx47D4goX11RvPuk
- VA/fXwS7l0Y9bonwrVFpJn6vk9F5Trs6j4Nyjkp8QZ+mrGh/taRCzmXxSzmCgjl8HhOs sw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3papenbxfp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:26 +0000
-Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32ECAYwG031131;
-        Tue, 14 Mar 2023 12:12:25 GMT
-Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
-        by mx0b-001b2d01.pphosted.com (PPS) with ESMTPS id 3papenbxer-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:25 +0000
-Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
-        by ppma02fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32E9dImv019195;
-        Tue, 14 Mar 2023 12:12:23 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-        by ppma02fra.de.ibm.com (PPS) with ESMTPS id 3p8h96krue-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:23 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECCKPI65274356
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Mar 2023 12:12:20 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9ADE32007C;
-        Tue, 14 Mar 2023 12:12:20 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 64E2D2007A;
-        Tue, 14 Mar 2023 12:12:19 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 14 Mar 2023 12:12:19 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>,
-        Richard Henderson <richard.henderson@linaro.org>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Michal Simek <monstr@monstr.eu>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Helge Deller <deller@gmx.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Christophe Leroy <christophe.leroy@csgroup.eu>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        with ESMTP id S231307AbjCNNyf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 09:54:35 -0400
+Received: from mail-oa1-x30.google.com (mail-oa1-x30.google.com [IPv6:2001:4860:4864:20::30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F624360B2;
+        Tue, 14 Mar 2023 06:52:45 -0700 (PDT)
+Received: by mail-oa1-x30.google.com with SMTP id 586e51a60fabf-177b78067ffso6186579fac.7;
+        Tue, 14 Mar 2023 06:52:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678801964;
+        h=in-reply-to:content-disposition:mime-version:references:reply-to
+         :message-id:subject:cc:to:from:date:sender:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dXM+kC2Z9enJZTkFL65kALYvwaM6+hV1n+RHvsknQ4s=;
+        b=espBuW7gnXrqbqrbjWyWs9PbqjvuIunipa3wSFPs+RV9o5fILqNlIxP3LdV5gfDuz2
+         aDtIxZ6vKj52n75V+tyAuDPd91hqVtyFAZfa7Fku+op/jGeRBLG1HihyL1BRYusrYAXg
+         miaHzmu9ESydEe4ARsonu+B8eHHjl1Kp7zuMrV4eknzpt+9s2vIDYZkBrVmvsaT2/3/t
+         duFyOhQgM2qR2RieKRx+6jNKl+aW4TQt9CEQ/gNnTpuMmj/uP+YNmGxHwLNT8iXGe1oZ
+         va1+Pxrj+X8YT+0JKq+dj8IICu/g9//Hw33vhAaFmmzNBiwqrkKDGrWRVQ/+n1sB67Nq
+         g2wg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1678801964;
+        h=in-reply-to:content-disposition:mime-version:references:reply-to
+         :message-id:subject:cc:to:from:date:sender:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=dXM+kC2Z9enJZTkFL65kALYvwaM6+hV1n+RHvsknQ4s=;
+        b=gU3CQu+O/TBjJHy3OhB91u2cwiOKSLkbJBWBfgXG5Sl0ydoh7EDE7nx/lvKoAPM8Kz
+         w1saVKRB336PIbyDcQPQAJdPLLRuKq7m5gNvnMekcrTxuX+EyzClgVKEgCzVynAN2FUv
+         DV6+18o1bMDjL0+UjWki9TgojmctvpgxOuy3KJYG9yK5SkLPnhnJ1m1GKleYTypkpleb
+         sNl4y8Z30yuzOA+S5GnqNT01l6Kx6rLZrlimb6IK90SILoK0S7DMjyy7Usf37eYEHKyo
+         3fwfMNHeBeNc4KYnNQfT0m045waRfUzRNZd89GqP6XIQJ+wQkb9X7PJWuJykNiBL7fC9
+         e9vA==
+X-Gm-Message-State: AO0yUKUAcjGs11lV+Js3sdJReJzzO8oEkO5hpnr/QPg1wFswYCISyMlm
+        vt6WidryJDRmfFhuqGu9MrDiAhUbhW8F
+X-Google-Smtp-Source: AK7set8YMt4CBjS/js+B29A+ykr0D7sO5qIzL0imVy6LNA3pswA0gRI/h2SlYpo3C7cqaG2KKtoeNA==
+X-Received: by 2002:a05:6870:961d:b0:177:727e:4eae with SMTP id d29-20020a056870961d00b00177727e4eaemr8101060oaq.45.1678801963862;
+        Tue, 14 Mar 2023 06:52:43 -0700 (PDT)
+Received: from serve.minyard.net (serve.minyard.net. [2001:470:b8f6:1b::1])
+        by smtp.gmail.com with ESMTPSA id t2-20020a05680800c200b003850d921b90sm1002711oic.1.2023.03.14.06.52.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Mar 2023 06:52:43 -0700 (PDT)
+Sender: Corey Minyard <tcminyard@gmail.com>
+Received: from minyard.net (unknown [IPv6:2001:470:b8f6:1b:d290:38d8:4c6f:34f2])
+        by serve.minyard.net (Postfix) with ESMTPSA id 54DEF180044;
+        Tue, 14 Mar 2023 13:52:41 +0000 (UTC)
+Date:   Tue, 14 Mar 2023 08:52:40 -0500
+From:   Corey Minyard <minyard@acm.org>
+To:     Niklas Schnelle <schnelle@linux.ibm.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Peter Huewe <peterhuewe@gmx.de>,
+        Jarkko Sakkinen <jarkko@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
         Alan Stern <stern@rowland.harvard.edu>,
         "Rafael J. Wysocki" <rafael@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-ia64@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
-        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-riscv@lists.infradead.org,
-        linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
-        linux-um@lists.infradead.org
-Subject: [PATCH v3 01/38] Kconfig: introduce HAS_IOPORT option and select it as necessary
-Date:   Tue, 14 Mar 2023 13:11:39 +0100
-Message-Id: <20230314121216.413434-2-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.37.2
-In-Reply-To: <20230314121216.413434-1-schnelle@linux.ibm.com>
+        openipmi-developer@lists.sourceforge.net,
+        linux-integrity@vger.kernel.org
+Subject: Re: [PATCH v3 03/38] char: impi, tpm: depend on HAS_IOPORT
+Message-ID: <ZBB8KCj/9QE7LOgw@minyard.net>
+Reply-To: minyard@acm.org
 References: <20230314121216.413434-1-schnelle@linux.ibm.com>
+ <20230314121216.413434-4-schnelle@linux.ibm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: jEeY3nBMThQ6e7_Ur-wLIeKSlt5g2V_U
-X-Proofpoint-GUID: P_xr1SfeNrScxKrnJYkVPc3TfzBTokPD
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-14_06,2023-03-14_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
- mlxlogscore=999 mlxscore=0 adultscore=0 phishscore=0 impostorscore=0
- lowpriorityscore=0 malwarescore=0 clxscore=1011 priorityscore=1501
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2212070000 definitions=main-2303140103
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230314121216.413434-4-schnelle@linux.ibm.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We introduce a new HAS_IOPORT Kconfig option to indicate support for I/O
-Port access. In a future patch HAS_IOPORT=n will disable compilation of
-the I/O accessor functions inb()/outb() and friends on architectures
-which can not meaningfully support legacy I/O spaces such as s390. Also
-add dependencies on HAS_IOPORT for the ISA and HAVE_EISA config options
-as these busses always go along with HAS_IOPORT.
+On Tue, Mar 14, 2023 at 01:11:41PM +0100, Niklas Schnelle wrote:
+> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+> not being declared. We thus need to add this dependency and ifdef
+> sections of code using inb()/outb() as alternative access methods.
 
-The "depends on" relations on HAS_IOPORT in drivers as well as ifdefs
-for HAS_IOPORT specific sections will be added in subsequent patches on
-a per subsystem basis.
+For the IPMI portions, this looks good.
 
-Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
- arch/alpha/Kconfig      | 1 +
- arch/arm/Kconfig        | 1 +
- arch/arm64/Kconfig      | 1 +
- arch/ia64/Kconfig       | 1 +
- arch/m68k/Kconfig       | 1 +
- arch/microblaze/Kconfig | 1 +
- arch/mips/Kconfig       | 2 ++
- arch/parisc/Kconfig     | 2 ++
- arch/powerpc/Kconfig    | 2 +-
- arch/riscv/Kconfig      | 1 +
- arch/sh/Kconfig         | 1 +
- arch/sparc/Kconfig      | 1 +
- arch/um/Kconfig         | 1 +
- arch/x86/Kconfig        | 2 ++
- drivers/bus/Kconfig     | 2 +-
- drivers/eisa/Kconfig    | 1 +
- lib/Kconfig             | 4 ++++
- lib/Kconfig.kgdb        | 3 ++-
- 18 files changed, 25 insertions(+), 3 deletions(-)
+Acked-by: Corey Minyard <cminyard@mvista.com>
 
-diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
-index 780d4673c3ca..a5c2b1aa46b0 100644
---- a/arch/alpha/Kconfig
-+++ b/arch/alpha/Kconfig
-@@ -27,6 +27,7 @@ config ALPHA
- 	select AUDIT_ARCH
- 	select GENERIC_CPU_VULNERABILITIES
- 	select GENERIC_SMP_IDLE_THREAD
-+	select HAS_IOPORT
- 	select HAVE_ARCH_AUDITSYSCALL
- 	select HAVE_MOD_ARCH_SPECIFIC
- 	select MODULES_USE_ELF_RELA
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index e24a9820e12f..4acb5bc4b52a 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -70,6 +70,7 @@ config ARM
- 	select GENERIC_SCHED_CLOCK
- 	select GENERIC_SMP_IDLE_THREAD
- 	select HARDIRQS_SW_RESEND
-+	select HAS_IOPORT
- 	select HAVE_ARCH_AUDITSYSCALL if AEABI && !OABI_COMPAT
- 	select HAVE_ARCH_BITREVERSE if (CPU_32v7M || CPU_32v7) && !CPU_32v6
- 	select HAVE_ARCH_JUMP_LABEL if !XIP_KERNEL && !CPU_ENDIAN_BE32 && MMU
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 1023e896d46b..b740019c4aee 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -145,6 +145,7 @@ config ARM64
- 	select GENERIC_GETTIMEOFDAY
- 	select GENERIC_VDSO_TIME_NS
- 	select HARDIRQS_SW_RESEND
-+	select HAS_IOPORT
- 	select HAVE_MOVE_PMD
- 	select HAVE_MOVE_PUD
- 	select HAVE_PCI
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index d7e4a24e8644..2e13ec8263b9 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -25,6 +25,7 @@ config IA64
- 	select PCI_DOMAINS if PCI
- 	select PCI_MSI
- 	select PCI_SYSCALL if PCI
-+	select HAS_IOPORT
- 	select HAVE_ASM_MODVERSIONS
- 	select HAVE_UNSTABLE_SCHED_CLOCK
- 	select HAVE_EXIT_THREAD
-diff --git a/arch/m68k/Kconfig b/arch/m68k/Kconfig
-index 82154952e574..40198a1ebe27 100644
---- a/arch/m68k/Kconfig
-+++ b/arch/m68k/Kconfig
-@@ -18,6 +18,7 @@ config M68K
- 	select GENERIC_CPU_DEVICES
- 	select GENERIC_IOMAP
- 	select GENERIC_IRQ_SHOW
-+	select HAS_IOPORT if PCI || ISA || ATARI_ROM_ISA
- 	select HAVE_ARCH_SECCOMP
- 	select HAVE_ARCH_SECCOMP_FILTER
- 	select HAVE_ASM_MODVERSIONS
-diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
-index cc88af6fa7a4..211f338d6235 100644
---- a/arch/microblaze/Kconfig
-+++ b/arch/microblaze/Kconfig
-@@ -21,6 +21,7 @@ config MICROBLAZE
- 	select GENERIC_IRQ_SHOW
- 	select GENERIC_PCI_IOMAP
- 	select GENERIC_SCHED_CLOCK
-+	select HAS_IOPORT if PCI
- 	select HAVE_ARCH_HASH
- 	select HAVE_ARCH_KGDB
- 	select HAVE_ARCH_SECCOMP
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index e2f3ca73f40d..64760fcd7b52 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -47,6 +47,7 @@ config MIPS
- 	select GENERIC_SMP_IDLE_THREAD
- 	select GENERIC_TIME_VSYSCALL
- 	select GUP_GET_PXX_LOW_HIGH if CPU_MIPS32 && PHYS_ADDR_T_64BIT
-+	select HAS_IOPORT if !NO_IOPORT_MAP
- 	select HAVE_ARCH_COMPILER_H
- 	select HAVE_ARCH_JUMP_LABEL
- 	select HAVE_ARCH_KGDB if MIPS_FP_SUPPORT
-@@ -3120,6 +3121,7 @@ config PCI_DRIVERS_LEGACY
- # users to choose the right thing ...
- #
- config ISA
-+	depends on HAS_IOPORT
- 	bool
- 
- config TC
-diff --git a/arch/parisc/Kconfig b/arch/parisc/Kconfig
-index a98940e64243..5eeacc72e4da 100644
---- a/arch/parisc/Kconfig
-+++ b/arch/parisc/Kconfig
-@@ -47,6 +47,7 @@ config PARISC
- 	select MODULES_USE_ELF_RELA
- 	select CLONE_BACKWARDS
- 	select TTY # Needed for pdc_cons.c
-+	select HAS_IOPORT if PCI
- 	select HAVE_DEBUG_STACKOVERFLOW
- 	select HAVE_ARCH_AUDITSYSCALL
- 	select HAVE_ARCH_HASH
-@@ -131,6 +132,7 @@ config STACKTRACE_SUPPORT
- 
- config ISA_DMA_API
- 	bool
-+	depends on HAS_IOPORT
- 
- config ARCH_MAY_HAVE_PC_FDC
- 	bool
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index a6c4407d3ec8..f7de646c074a 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -188,6 +188,7 @@ config PPC
- 	select GENERIC_SMP_IDLE_THREAD
- 	select GENERIC_TIME_VSYSCALL
- 	select GENERIC_VDSO_TIME_NS
-+	select HAS_IOPORT			if PCI
- 	select HAVE_ARCH_AUDITSYSCALL
- 	select HAVE_ARCH_HUGE_VMALLOC		if HAVE_ARCH_HUGE_VMAP
- 	select HAVE_ARCH_HUGE_VMAP		if PPC_RADIX_MMU || PPC_8xx
-@@ -1070,7 +1071,6 @@ menu "Bus options"
- 
- config ISA
- 	bool "Support for ISA-bus hardware"
--	depends on PPC_CHRP
- 	select PPC_I8259
- 	help
- 	  Find out whether you have ISA slots on your motherboard.  ISA is the
-diff --git a/arch/riscv/Kconfig b/arch/riscv/Kconfig
-index c5e42cc37604..b957d12a171b 100644
---- a/arch/riscv/Kconfig
-+++ b/arch/riscv/Kconfig
-@@ -74,6 +74,7 @@ config RISCV
- 	select GENERIC_TIME_VSYSCALL if MMU && 64BIT
- 	select GENERIC_VDSO_TIME_NS if HAVE_GENERIC_VDSO
- 	select HARDIRQS_SW_RESEND
-+	select HAS_IOPORT if MMU
- 	select HAVE_ARCH_AUDITSYSCALL
- 	select HAVE_ARCH_HUGE_VMALLOC if HAVE_ARCH_HUGE_VMAP
- 	select HAVE_ARCH_HUGE_VMAP if MMU && 64BIT && !XIP_KERNEL
-diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-index 0665ac0add0b..cfb797bc4200 100644
---- a/arch/sh/Kconfig
-+++ b/arch/sh/Kconfig
-@@ -25,6 +25,7 @@ config SUPERH
- 	select GENERIC_SCHED_CLOCK
- 	select GENERIC_SMP_IDLE_THREAD
- 	select GUP_GET_PXX_LOW_HIGH if X2TLB
-+	select HAS_IOPORT if HAS_IOPORT_MAP
- 	select HAVE_ARCH_AUDITSYSCALL
- 	select HAVE_ARCH_KGDB
- 	select HAVE_ARCH_SECCOMP_FILTER
-diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-index 84437a4c6545..d4c1d96f85cd 100644
---- a/arch/sparc/Kconfig
-+++ b/arch/sparc/Kconfig
-@@ -32,6 +32,7 @@ config SPARC
- 	select GENERIC_IRQ_SHOW
- 	select ARCH_WANT_IPC_PARSE_VERSION
- 	select GENERIC_PCI_IOMAP
-+	select HAS_IOPORT
- 	select HAVE_NMI_WATCHDOG if SPARC64
- 	select HAVE_CBPF_JIT if SPARC32
- 	select HAVE_EBPF_JIT if SPARC64
-diff --git a/arch/um/Kconfig b/arch/um/Kconfig
-index 541a9b18e343..452d268be2e8 100644
---- a/arch/um/Kconfig
-+++ b/arch/um/Kconfig
-@@ -56,6 +56,7 @@ config NO_IOPORT_MAP
- 
- config ISA
- 	bool
-+	depends on HAS_IOPORT
- 
- config SBUS
- 	bool
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index a825bf031f49..634dd42532f3 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -162,6 +162,7 @@ config X86
- 	select GUP_GET_PXX_LOW_HIGH		if X86_PAE
- 	select HARDIRQS_SW_RESEND
- 	select HARDLOCKUP_CHECK_TIMESTAMP	if X86_64
-+	select HAS_IOPORT
- 	select HAVE_ACPI_APEI			if ACPI
- 	select HAVE_ACPI_APEI_NMI		if ACPI
- 	select HAVE_ALIGNED_STRUCT_PAGE		if SLUB
-@@ -2893,6 +2894,7 @@ if X86_32
- 
- config ISA
- 	bool "ISA support"
-+	depends on HAS_IOPORT
- 	help
- 	  Find out whether you have ISA slots on your motherboard.  ISA is the
- 	  name of a bus system, i.e. the way the CPU talks to the other stuff
-diff --git a/drivers/bus/Kconfig b/drivers/bus/Kconfig
-index 7bfe998f3514..fcfa280df98a 100644
---- a/drivers/bus/Kconfig
-+++ b/drivers/bus/Kconfig
-@@ -81,7 +81,7 @@ config MOXTET
- config HISILICON_LPC
- 	bool "Support for ISA I/O space on HiSilicon Hip06/7"
- 	depends on (ARM64 && ARCH_HISI) || (COMPILE_TEST && !ALPHA && !HEXAGON && !PARISC)
--	depends on HAS_IOMEM
-+	depends on HAS_IOPORT
- 	select INDIRECT_PIO if ARM64
- 	help
- 	  Driver to enable I/O access to devices attached to the Low Pin
-diff --git a/drivers/eisa/Kconfig b/drivers/eisa/Kconfig
-index c8bbf90209f5..d3f62de72259 100644
---- a/drivers/eisa/Kconfig
-+++ b/drivers/eisa/Kconfig
-@@ -5,6 +5,7 @@
- 
- config HAVE_EISA
- 	bool
-+	depends on HAS_IOPORT
- 
- menuconfig EISA
- 	bool "EISA support"
-diff --git a/lib/Kconfig b/lib/Kconfig
-index ce2abffb9ed8..5c2da561c516 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -92,6 +92,7 @@ config ARCH_USE_SYM_ANNOTATIONS
- config INDIRECT_PIO
- 	bool "Access I/O in non-MMIO mode"
- 	depends on ARM64
-+	depends on HAS_IOPORT
- 	help
- 	  On some platforms where no separate I/O space exists, there are I/O
- 	  hosts which can not be accessed in MMIO mode. Using the logical PIO
-@@ -509,6 +510,9 @@ config HAS_IOMEM
- 	depends on !NO_IOMEM
- 	default y
- 
-+config HAS_IOPORT
-+	bool
-+
- config HAS_IOPORT_MAP
- 	bool
- 	depends on HAS_IOMEM && !NO_IOPORT_MAP
-diff --git a/lib/Kconfig.kgdb b/lib/Kconfig.kgdb
-index 3b9a44008433..c68e4d9dcecb 100644
---- a/lib/Kconfig.kgdb
-+++ b/lib/Kconfig.kgdb
-@@ -121,7 +121,8 @@ config KDB_DEFAULT_ENABLE
- 
- config KDB_KEYBOARD
- 	bool "KGDB_KDB: keyboard as input device"
--	depends on VT && KGDB_KDB && !PARISC
-+	depends on HAS_IOPORT
-+	depends on VT && KGDB_KDB
- 	default n
- 	help
- 	  KDB can use a PS/2 type keyboard for an input device
--- 
-2.37.2
+Thanks
 
+-corey
+
+> 
+> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> ---
+>  drivers/char/Kconfig             |  3 ++-
+>  drivers/char/ipmi/Makefile       | 11 ++++-------
+>  drivers/char/ipmi/ipmi_si_intf.c |  3 ++-
+>  drivers/char/ipmi/ipmi_si_pci.c  |  3 +++
+>  drivers/char/pcmcia/Kconfig      |  8 ++++----
+>  drivers/char/tpm/Kconfig         |  1 +
+>  drivers/char/tpm/tpm_infineon.c  | 14 ++++++++++----
+>  drivers/char/tpm/tpm_tis_core.c  | 19 ++++++++-----------
+>  8 files changed, 34 insertions(+), 28 deletions(-)
+> 
+> diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
+> index 30fe9848dac1..c34679c6da70 100644
+> --- a/drivers/char/Kconfig
+> +++ b/drivers/char/Kconfig
+> @@ -34,6 +34,7 @@ config TTY_PRINTK_LEVEL
+>  config PRINTER
+>  	tristate "Parallel printer support"
+>  	depends on PARPORT
+> +	depends on HAS_IOPORT
+>  	help
+>  	  If you intend to attach a printer to the parallel port of your Linux
+>  	  box (as opposed to using a serial printer; if the connector at the
+> @@ -342,7 +343,7 @@ config NVRAM
+>  
+>  config DEVPORT
+>  	bool "/dev/port character device"
+> -	depends on ISA || PCI
+> +	depends on HAS_IOPORT
+>  	default y
+>  	help
+>  	  Say Y here if you want to support the /dev/port device. The /dev/port
+> diff --git a/drivers/char/ipmi/Makefile b/drivers/char/ipmi/Makefile
+> index cb6138b8ded9..e0944547c9d0 100644
+> --- a/drivers/char/ipmi/Makefile
+> +++ b/drivers/char/ipmi/Makefile
+> @@ -5,13 +5,10 @@
+>  
+>  ipmi_si-y := ipmi_si_intf.o ipmi_kcs_sm.o ipmi_smic_sm.o ipmi_bt_sm.o \
+>  	ipmi_si_hotmod.o ipmi_si_hardcode.o ipmi_si_platform.o \
+> -	ipmi_si_port_io.o ipmi_si_mem_io.o
+> -ifdef CONFIG_PCI
+> -ipmi_si-y += ipmi_si_pci.o
+> -endif
+> -ifdef CONFIG_PARISC
+> -ipmi_si-y += ipmi_si_parisc.o
+> -endif
+> +	ipmi_si_mem_io.o
+> +ipmi_si-$(CONFIG_HAS_IOPORT) += ipmi_si_port_io.o
+> +ipmi_si-$(CONFIG_PCI) += ipmi_si_pci.o
+> +ipmi_si-$(CONFIG_PARISC) += ipmi_si_parisc.o
+>  
+>  obj-$(CONFIG_IPMI_HANDLER) += ipmi_msghandler.o
+>  obj-$(CONFIG_IPMI_DEVICE_INTERFACE) += ipmi_devintf.o
+> diff --git a/drivers/char/ipmi/ipmi_si_intf.c b/drivers/char/ipmi/ipmi_si_intf.c
+> index abddd7e43a9a..edbbdb804913 100644
+> --- a/drivers/char/ipmi/ipmi_si_intf.c
+> +++ b/drivers/char/ipmi/ipmi_si_intf.c
+> @@ -1882,7 +1882,8 @@ int ipmi_si_add_smi(struct si_sm_io *io)
+>  	}
+>  
+>  	if (!io->io_setup) {
+> -		if (io->addr_space == IPMI_IO_ADDR_SPACE) {
+> +		if (IS_ENABLED(CONFIG_HAS_IOPORT) &&
+> +		    io->addr_space == IPMI_IO_ADDR_SPACE) {
+>  			io->io_setup = ipmi_si_port_setup;
+>  		} else if (io->addr_space == IPMI_MEM_ADDR_SPACE) {
+>  			io->io_setup = ipmi_si_mem_setup;
+> diff --git a/drivers/char/ipmi/ipmi_si_pci.c b/drivers/char/ipmi/ipmi_si_pci.c
+> index 74fa2055868b..b83d55685b22 100644
+> --- a/drivers/char/ipmi/ipmi_si_pci.c
+> +++ b/drivers/char/ipmi/ipmi_si_pci.c
+> @@ -97,6 +97,9 @@ static int ipmi_pci_probe(struct pci_dev *pdev,
+>  	}
+>  
+>  	if (pci_resource_flags(pdev, 0) & IORESOURCE_IO) {
+> +		if (!IS_ENABLED(CONFIG_HAS_IOPORT))
+> +			return -ENXIO;
+> +
+>  		io.addr_space = IPMI_IO_ADDR_SPACE;
+>  		io.io_setup = ipmi_si_port_setup;
+>  	} else {
+> diff --git a/drivers/char/pcmcia/Kconfig b/drivers/char/pcmcia/Kconfig
+> index f5d589b2be44..788422627b43 100644
+> --- a/drivers/char/pcmcia/Kconfig
+> +++ b/drivers/char/pcmcia/Kconfig
+> @@ -8,7 +8,7 @@ menu "PCMCIA character devices"
+>  
+>  config SYNCLINK_CS
+>  	tristate "SyncLink PC Card support"
+> -	depends on PCMCIA && TTY
+> +	depends on PCMCIA && TTY && HAS_IOPORT
+>  	help
+>  	  Enable support for the SyncLink PC Card serial adapter, running
+>  	  asynchronous and HDLC communications up to 512Kbps. The port is
+> @@ -21,7 +21,7 @@ config SYNCLINK_CS
+>  
+>  config CARDMAN_4000
+>  	tristate "Omnikey Cardman 4000 support"
+> -	depends on PCMCIA
+> +	depends on PCMCIA && HAS_IOPORT
+>  	select BITREVERSE
+>  	help
+>  	  Enable support for the Omnikey Cardman 4000 PCMCIA Smartcard
+> @@ -33,7 +33,7 @@ config CARDMAN_4000
+>  
+>  config CARDMAN_4040
+>  	tristate "Omnikey CardMan 4040 support"
+> -	depends on PCMCIA
+> +	depends on PCMCIA && HAS_IOPORT
+>  	help
+>  	  Enable support for the Omnikey CardMan 4040 PCMCIA Smartcard
+>  	  reader.
+> @@ -57,7 +57,7 @@ config SCR24X
+>  
+>  config IPWIRELESS
+>  	tristate "IPWireless 3G UMTS PCMCIA card support"
+> -	depends on PCMCIA && NETDEVICES && TTY
+> +	depends on PCMCIA && NETDEVICES && TTY && HAS_IOPORT
+>  	select PPP
+>  	help
+>  	  This is a driver for 3G UMTS PCMCIA card from IPWireless company. In
+> diff --git a/drivers/char/tpm/Kconfig b/drivers/char/tpm/Kconfig
+> index 927088b2c3d3..418c9ed59ffd 100644
+> --- a/drivers/char/tpm/Kconfig
+> +++ b/drivers/char/tpm/Kconfig
+> @@ -149,6 +149,7 @@ config TCG_NSC
+>  config TCG_ATMEL
+>  	tristate "Atmel TPM Interface"
+>  	depends on PPC64 || HAS_IOPORT_MAP
+> +	depends on HAS_IOPORT
+>  	help
+>  	  If you have a TPM security chip from Atmel say Yes and it 
+>  	  will be accessible from within Linux.  To compile this driver 
+> diff --git a/drivers/char/tpm/tpm_infineon.c b/drivers/char/tpm/tpm_infineon.c
+> index 9c924a1440a9..2d2ae37153ba 100644
+> --- a/drivers/char/tpm/tpm_infineon.c
+> +++ b/drivers/char/tpm/tpm_infineon.c
+> @@ -51,34 +51,40 @@ static struct tpm_inf_dev tpm_dev;
+>  
+>  static inline void tpm_data_out(unsigned char data, unsigned char offset)
+>  {
+> +#ifdef CONFIG_HAS_IOPORT
+>  	if (tpm_dev.iotype == TPM_INF_IO_PORT)
+>  		outb(data, tpm_dev.data_regs + offset);
+>  	else
+> +#endif
+>  		writeb(data, tpm_dev.mem_base + tpm_dev.data_regs + offset);
+>  }
+>  
+>  static inline unsigned char tpm_data_in(unsigned char offset)
+>  {
+> +#ifdef CONFIG_HAS_IOPORT
+>  	if (tpm_dev.iotype == TPM_INF_IO_PORT)
+>  		return inb(tpm_dev.data_regs + offset);
+> -	else
+> -		return readb(tpm_dev.mem_base + tpm_dev.data_regs + offset);
+> +#endif
+> +	return readb(tpm_dev.mem_base + tpm_dev.data_regs + offset);
+>  }
+>  
+>  static inline void tpm_config_out(unsigned char data, unsigned char offset)
+>  {
+> +#ifdef CONFIG_HAS_IOPORT
+>  	if (tpm_dev.iotype == TPM_INF_IO_PORT)
+>  		outb(data, tpm_dev.config_port + offset);
+>  	else
+> +#endif
+>  		writeb(data, tpm_dev.mem_base + tpm_dev.index_off + offset);
+>  }
+>  
+>  static inline unsigned char tpm_config_in(unsigned char offset)
+>  {
+> +#ifdef CONFIG_HAS_IOPORT
+>  	if (tpm_dev.iotype == TPM_INF_IO_PORT)
+>  		return inb(tpm_dev.config_port + offset);
+> -	else
+> -		return readb(tpm_dev.mem_base + tpm_dev.index_off + offset);
+> +#endif
+> +	return readb(tpm_dev.mem_base + tpm_dev.index_off + offset);
+>  }
+>  
+>  /* TPM header definitions */
+> diff --git a/drivers/char/tpm/tpm_tis_core.c b/drivers/char/tpm/tpm_tis_core.c
+> index 3f98e587b3e8..e43d2a1da3ea 100644
+> --- a/drivers/char/tpm/tpm_tis_core.c
+> +++ b/drivers/char/tpm/tpm_tis_core.c
+> @@ -897,11 +897,6 @@ static void tpm_tis_clkrun_enable(struct tpm_chip *chip, bool value)
+>  		clkrun_val &= ~LPC_CLKRUN_EN;
+>  		iowrite32(clkrun_val, data->ilb_base_addr + LPC_CNTRL_OFFSET);
+>  
+> -		/*
+> -		 * Write any random value on port 0x80 which is on LPC, to make
+> -		 * sure LPC clock is running before sending any TPM command.
+> -		 */
+> -		outb(0xCC, 0x80);
+>  	} else {
+>  		data->clkrun_enabled--;
+>  		if (data->clkrun_enabled)
+> @@ -912,13 +907,15 @@ static void tpm_tis_clkrun_enable(struct tpm_chip *chip, bool value)
+>  		/* Enable LPC CLKRUN# */
+>  		clkrun_val |= LPC_CLKRUN_EN;
+>  		iowrite32(clkrun_val, data->ilb_base_addr + LPC_CNTRL_OFFSET);
+> -
+> -		/*
+> -		 * Write any random value on port 0x80 which is on LPC, to make
+> -		 * sure LPC clock is running before sending any TPM command.
+> -		 */
+> -		outb(0xCC, 0x80);
+>  	}
+> +
+> +#ifdef CONFIG_HAS_IOPORT
+> +	/*
+> +	 * Write any random value on port 0x80 which is on LPC, to make
+> +	 * sure LPC clock is running before sending any TPM command.
+> +	 */
+> +	outb(0xCC, 0x80);
+> +#endif
+>  }
+>  
+>  static const struct tpm_class_ops tpm_tis = {
+> -- 
+> 2.37.2
+> 
