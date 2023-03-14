@@ -2,65 +2,64 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D47DC77B7B
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 12:15:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5019C77B7A
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 12:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231873AbjCNMPM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231864AbjCNMPM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 14 Mar 2023 08:15:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55508 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231853AbjCNMOk (ORCPT
+        with ESMTP id S231846AbjCNMOk (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 08:14:40 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA8878480B;
-        Tue, 14 Mar 2023 05:13:18 -0700 (PDT)
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EAlCeI030805;
-        Tue, 14 Mar 2023 12:12:51 GMT
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC966198F;
+        Tue, 14 Mar 2023 05:13:17 -0700 (PDT)
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EBC3xx012797;
+        Tue, 14 Mar 2023 12:12:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=JXq4Thrm3+N2YkkONgmv7Gb1Ah6ctBorW6vPUyhIY4o=;
- b=AQf+5zT2yPpPb4qSLEW8bkuAyJakyMeEh50tBU6I9cpSOxBA4GSmPuqnbQwoaeLuIGnw
- Xkfey9EJzi4iI7l9c3maXzB0nwiKfx6XmVmXiZmg2riUIX6kDN3hWZcvrZ0QuE057HzK
- YvfCL3TJS9Yp3p0ePiqlu3oeep8m8s4HHGoEk4ssbVkJZbE6nfuxTkGDR1ZW+ixjyCUs
- pdnqumIQ2FLVpVhrdBLqbej2B16eikTjDlz4DBzVDEuN5lmFWqzARzUJfBoWc2KPRSGJ
- IbNO5cLPhshGL9aWNTYZGMxQrxsfCr7q1P2aFoHC1RDW5NVvx5OjharLSh2CPjwnF+9g Xg== 
+ bh=6SLZ7qoXgAVu2cLDL1YGgvUQ7Et8dBu6ruo0LRxOq4Y=;
+ b=nXHnzk3waNC8+ghdHr3yKVMM2CbXdPTfBfQ0rLxEn1+VyRTfC7sypktjZmyvLdHBZWNj
+ BiB3CKSQ1oIk5ybesaMBU/taCkLNm2GAr3dCOXokxODe1x1K9OpH5zCVqCJ0e3VW967n
+ tGRmDJ+qVGm8ibpQs/6pF7II8/RI11Jxrnu/1Q6gsIcyRkFonJC11t85Jo/Bvl6E331R
+ PUcdvY3Jl32iPDGruhKTu0kQVzX+yKxM6r9ycjopu5n3ZXns8ImV9JoiHTp4G9/Lv77W
+ d6wT4cTaYRiIfevGrOAyzpg0VJkHcJHGsWVTPNrEJZQiKHLfcRW50bwL4xt/3+6+6zOQ pQ== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3paqftj5cj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:50 +0000
-Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EAlHQp030901;
-        Tue, 14 Mar 2023 12:12:50 GMT
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3paqftj5b9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:49 +0000
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32E8baS8017716;
-        Tue, 14 Mar 2023 12:12:47 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-        by ppma01fra.de.ibm.com (PPS) with ESMTPS id 3p8h96ksft-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3paqu91m3x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Tue, 14 Mar 2023 12:12:47 +0000
+Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EBscDn017048;
+        Tue, 14 Mar 2023 12:12:47 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3paqu91m1y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Mar 2023 12:12:47 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32E7uGPZ001011;
+        Tue, 14 Mar 2023 12:12:44 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3p8h96mrw3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Mar 2023 12:12:44 +0000
 Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECCj4c27525830
+        by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECCfWe20251178
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Mar 2023 12:12:45 GMT
+        Tue, 14 Mar 2023 12:12:42 GMT
 Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1FF712007C;
-        Tue, 14 Mar 2023 12:12:45 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id DDA6F2007A;
+        Tue, 14 Mar 2023 12:12:41 +0000 (GMT)
 Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9FBB02007A;
-        Tue, 14 Mar 2023 12:12:44 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 728BF2007B;
+        Tue, 14 Mar 2023 12:12:41 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 14 Mar 2023 12:12:44 +0000 (GMT)
+        Tue, 14 Mar 2023 12:12:41 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>, Sebastian Reichel <sre@kernel.org>
+To:     Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
@@ -71,53 +70,63 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-pm@vger.kernel.org
-Subject: [PATCH v3 27/38] power: add HAS_IOPORT dependencies
-Date:   Tue, 14 Mar 2023 13:12:05 +0100
-Message-Id: <20230314121216.413434-28-schnelle@linux.ibm.com>
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
+Subject: [PATCH v3 23/38] PCI/sysfs: Make I/O resource depend on HAS_IOPORT
+Date:   Tue, 14 Mar 2023 13:12:01 +0100
+Message-Id: <20230314121216.413434-24-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20230314121216.413434-1-schnelle@linux.ibm.com>
 References: <20230314121216.413434-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: F3knjOjisl1Im1t6udSJo-zBNxgBWEn1
-X-Proofpoint-GUID: nC_oXsNvFfZc4mYN2GFcYeMACwqVGOyk
+X-Proofpoint-ORIG-GUID: hp-FIPNWUNIA28WYjl4VUnjNjJXOxSom
+X-Proofpoint-GUID: 4twqkcWQOFPIvY_5cnok_bCwlS_GB72B
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-14_04,2023-03-14_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 spamscore=0
- malwarescore=0 mlxscore=0 lowpriorityscore=0 bulkscore=0 suspectscore=0
- adultscore=0 impostorscore=0 priorityscore=1501 clxscore=1011 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2212070000
- definitions=main-2303140103
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
+ lowpriorityscore=0 spamscore=0 malwarescore=0 suspectscore=0
+ priorityscore=1501 phishscore=0 impostorscore=0 mlxlogscore=999
+ adultscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303140103
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+If legacy I/O spaces are not supported simply return an error when
+trying to access them via pci_resource_io(). This allows inb() and
+friends to become undefined when they are known at compile time to be
+non-functional in a later patch.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/power/reset/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/pci-sysfs.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/power/reset/Kconfig b/drivers/power/reset/Kconfig
-index 8c87eeda0fec..fff07b2bd77b 100644
---- a/drivers/power/reset/Kconfig
-+++ b/drivers/power/reset/Kconfig
-@@ -158,6 +158,7 @@ config POWER_RESET_OXNAS
- config POWER_RESET_PIIX4_POWEROFF
- 	tristate "Intel PIIX4 power-off driver"
- 	depends on PCI
-+	depends on HAS_IOPORT
- 	depends on MIPS || COMPILE_TEST
- 	help
- 	  This driver supports powering off a system using the Intel PIIX4
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index dd0d9d9bc509..11e92d106761 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1083,6 +1083,7 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 			       struct bin_attribute *attr, char *buf,
+ 			       loff_t off, size_t count, bool write)
+ {
++#ifdef CONFIG_HAS_IOPORT
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	int bar = (unsigned long)attr->private;
+ 	unsigned long port = off;
+@@ -1116,6 +1117,9 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 		return 4;
+ 	}
+ 	return -EINVAL;
++#else
++	return -ENXIO;
++#endif
+ }
+ 
+ static ssize_t pci_read_resource_io(struct file *filp, struct kobject *kobj,
 -- 
 2.37.2
 
