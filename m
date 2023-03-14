@@ -2,70 +2,62 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 513BEC77B6F
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 12:16:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E363C77B7B
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 12:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231854AbjCNMPn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Mar 2023 08:15:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54856 "EHLO
+        id S231919AbjCNMPt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Mar 2023 08:15:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231907AbjCNMOq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 08:14:46 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 418DB94F5B;
-        Tue, 14 Mar 2023 05:13:33 -0700 (PDT)
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EBSdWu011544;
-        Tue, 14 Mar 2023 12:12:53 GMT
+        with ESMTP id S231965AbjCNMOx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 08:14:53 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7E5DA17EE;
+        Tue, 14 Mar 2023 05:13:47 -0700 (PDT)
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EAaKFC006820;
+        Tue, 14 Mar 2023 12:13:03 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : content-transfer-encoding
- : mime-version; s=pp1; bh=ZmT/mFL5JQ5/mvCbrOpAoQn3FZbtHEliZEw1GJshmhs=;
- b=I2zxpeqet/9aeV4VhPw/iablRgxumtj+RSAoFu/zzfTx/cqtUZ+jT4sHV21D6EgXshCt
- mFG/m294VKbpGS612Em8LjuD9bW3iKzDljRYv31+XFUZImH182CVnPTyotvDRtFPnu4x
- LxkUtW7Sc/IsAS3zfqHRCrsaOeKC/L2P6LvfMSEMLPPRLhAWc1CBv6ssLdeI9/U94RU4
- DCnByAx4PguF2tUuRC6Ix0yoL3EitDoMceclFJtHIXAAsPR477A4WXr6neJWCFzRztbI
- VThY61CRF9xJE3TgmAs+otJb/sSxyVtMm0JD4OmrQq/0O1cMjsmmDgiGHsVt/8oTi7H1 3A== 
+ : mime-version; s=pp1; bh=6AdpnIybOCMo1GlluvJpjD1nEuouwict9EnTkt8t2Ds=;
+ b=ryCBpQkI7EGir44bnjXkF4vzO1tTG+aqJFCNfr2oUIvWy2QXESiNlalde3p01vmOnhCq
+ YCV6aSPPdi/kYqZVOGkg43n6aSY+yZPFJStuUQCGcOWJHJkfyEQhaBOIs1elqnNFqQWX
+ WKNmULctn93V8W+8n3qzcNerEUcH3WenqQoKA/Of77z3KmugFKUL/zFH1UPVgO0ELddV
+ DMrcRrD/tojYbQO5QL/dAT8asf6YKZLgpTAgnVEHeSwKEfDANWTOYCiJwJcACTgV0t6l
+ h7LABTy4KVKg4XRiUCnsnq+Qc8E4mpfxG0DlhQxoIwK8jSNs3s3qpt1NNu0KqXUIZY1x aQ== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pap9ecb0p-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3papkwkkq2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:53 +0000
-Received: from m0098421.ppops.net (m0098421.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EAjQBK017076;
-        Tue, 14 Mar 2023 12:12:52 GMT
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pap9ecayb-1
+        Tue, 14 Mar 2023 12:13:03 +0000
+Received: from m0098404.ppops.net (m0098404.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EBoSgG025638;
+        Tue, 14 Mar 2023 12:13:02 GMT
+Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3papkwkknk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:52 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32E7jOGX001023;
-        Tue, 14 Mar 2023 12:12:50 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3p8h96mrw5-1
+        Tue, 14 Mar 2023 12:13:02 +0000
+Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
+        by ppma02fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32E9I2SW019091;
+        Tue, 14 Mar 2023 12:12:59 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+        by ppma02fra.de.ibm.com (PPS) with ESMTPS id 3p8h96kruu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:49 +0000
+        Tue, 14 Mar 2023 12:12:59 +0000
 Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECClur35258912
+        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECCvkI52756836
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Mar 2023 12:12:47 GMT
+        Tue, 14 Mar 2023 12:12:57 GMT
 Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A35362007A;
-        Tue, 14 Mar 2023 12:12:47 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 540282007E;
+        Tue, 14 Mar 2023 12:12:57 +0000 (GMT)
 Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 08D852007D;
-        Tue, 14 Mar 2023 12:12:47 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id E702F2007A;
+        Tue, 14 Mar 2023 12:12:56 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 14 Mar 2023 12:12:46 +0000 (GMT)
+        Tue, 14 Mar 2023 12:12:56 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com
+To:     Arnd Bergmann <arnd@arndb.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
@@ -78,308 +70,231 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
-Subject: [PATCH v3 29/38] scsi: add HAS_IOPORT dependencies
-Date:   Tue, 14 Mar 2023 13:12:07 +0100
-Message-Id: <20230314121216.413434-30-schnelle@linux.ibm.com>
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
+Subject: [PATCH v3 38/38] asm-generic/io.h: drop inb() etc for HAS_IOPORT=n
+Date:   Tue, 14 Mar 2023 13:12:16 +0100
+Message-Id: <20230314121216.413434-39-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20230314121216.413434-1-schnelle@linux.ibm.com>
 References: <20230314121216.413434-1-schnelle@linux.ibm.com>
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: kcr1nimqfScav668mJlXBIGkIAdBizWV
-X-Proofpoint-ORIG-GUID: 5MSMYgdjgj5y_bTZbJ1vy0QoJNSgyBQ_
+X-Proofpoint-GUID: egv6jccCWu2Kx543K-2jZOPRLR9EgGLk
+X-Proofpoint-ORIG-GUID: PojSYCrdyY7AdEAQC5ZFEM2fBfmVUN_N
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-03-14_04,2023-03-14_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- spamscore=0 bulkscore=0 suspectscore=0 mlxscore=0 adultscore=0
- mlxlogscore=972 impostorscore=0 phishscore=0 malwarescore=0
- priorityscore=1501 clxscore=1011 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2212070000 definitions=main-2303140103
+ definitions=2023-03-14_06,2023-03-14_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
+ impostorscore=0 mlxscore=0 lowpriorityscore=0 mlxlogscore=999
+ suspectscore=0 priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1015
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2212070000 definitions=main-2303140103
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+With all subsystems and drivers either declaring their dependence on
+HAS_IOPORT or fencing I/O port specific code sections we can finally
+make inb()/outb() and friends compile-time dependent on HAS_IOPORT as
+suggested by Linus in the linked mail. The main benefit of this is that
+on platforms such as s390 which have no meaningful way of implementing
+inb()/outb() their use without the proper HAS_IOPORT dependency will
+result in easy to catch and fix compile-time errors instead of compiling
+code that can never work.
 
+Link: https://lore.kernel.org/lkml/CAHk-=wg80je=K7madF4e7WrRNp37e3qh6y10Svhdc7O8SZ_-8g@mail.gmail.com/
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/scsi/Kconfig                   | 25 +++++++++++++------------
- drivers/scsi/aic7xxx/Kconfig.aic79xx   |  2 +-
- drivers/scsi/aic7xxx/Kconfig.aic7xxx   |  2 +-
- drivers/scsi/aic94xx/Kconfig           |  2 +-
- drivers/scsi/megaraid/Kconfig.megaraid |  6 +++---
- drivers/scsi/mvsas/Kconfig             |  2 +-
- drivers/scsi/pcmcia/Kconfig            |  6 +++++-
- drivers/scsi/qla2xxx/Kconfig           |  2 +-
- 8 files changed, 26 insertions(+), 21 deletions(-)
+ include/asm-generic/io.h | 60 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 60 insertions(+)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 03e71e3d5e5b..4ff96d8f6455 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -334,7 +334,7 @@ config SGIWD93_SCSI
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index 4c44a29b5e8e..a13fe19b55a9 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -539,6 +539,7 @@ static inline void writesq(volatile void __iomem *addr, const void *buffer,
  
- config BLK_DEV_3W_XXXX_RAID
- 	tristate "3ware 5/6/7/8xxx ATA-RAID support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  3ware is the only hardware ATA-Raid product in Linux to date.
- 	  This card is 2,4, or 8 channel master mode support only.
-@@ -381,7 +381,7 @@ config SCSI_3W_SAS
+ #if !defined(inb) && !defined(_inb)
+ #define _inb _inb
++#ifdef CONFIG_HAS_IOPORT
+ static inline u8 _inb(unsigned long addr)
+ {
+ 	u8 val;
+@@ -548,10 +549,15 @@ static inline u8 _inb(unsigned long addr)
+ 	__io_par(val);
+ 	return val;
+ }
++#else
++u8 _inb(unsigned long addr)
++	__compiletime_error("inb()) requires CONFIG_HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_ACARD
- 	tristate "ACARD SCSI support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  This driver supports the ACARD SCSI host adapter.
- 	  Support Chip <ATP870 ATP876 ATP880 ATP885>
-@@ -462,7 +462,7 @@ config SCSI_MVUMI
- config SCSI_ADVANSYS
- 	tristate "AdvanSys SCSI support"
- 	depends on SCSI
--	depends on ISA || EISA || PCI
-+	depends on (ISA || EISA || PCI) && HAS_IOPORT
- 	depends on ISA_DMA_API || !ISA
- 	help
- 	  This is a driver for all SCSI host adapters manufactured by
-@@ -503,7 +503,7 @@ config SCSI_HPTIOP
+ #if !defined(inw) && !defined(_inw)
+ #define _inw _inw
++#ifdef CONFIG_HAS_IOPORT
+ static inline u16 _inw(unsigned long addr)
+ {
+ 	u16 val;
+@@ -561,10 +567,15 @@ static inline u16 _inw(unsigned long addr)
+ 	__io_par(val);
+ 	return val;
+ }
++#else
++u16 _inw(unsigned long addr)
++	__compiletime_error("inw() requires CONFIG_HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_BUSLOGIC
- 	tristate "BusLogic SCSI support"
--	depends on PCI && SCSI
-+	depends on SCSI && PCI && HAS_IOPORT
- 	help
- 	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
- 	  Adapters. Consult the SCSI-HOWTO, available from
-@@ -518,7 +518,7 @@ config SCSI_BUSLOGIC
+ #if !defined(inl) && !defined(_inl)
+ #define _inl _inl
++#ifdef CONFIG_HAS_IOPORT
+ static inline u32 _inl(unsigned long addr)
+ {
+ 	u32 val;
+@@ -574,36 +585,55 @@ static inline u32 _inl(unsigned long addr)
+ 	__io_par(val);
+ 	return val;
+ }
++#else
++u32 _inl(unsigned long addr)
++	__compiletime_error("inl() requires CONFIG_HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_FLASHPOINT
- 	bool "FlashPoint support"
--	depends on SCSI_BUSLOGIC && PCI
-+	depends on SCSI_BUSLOGIC && PCI && HAS_IOPORT
- 	help
- 	  This option allows you to add FlashPoint support to the
- 	  BusLogic SCSI driver. The FlashPoint SCCB Manager code is
-@@ -632,7 +632,7 @@ config SCSI_SNIC_DEBUG_FS
+ #if !defined(outb) && !defined(_outb)
+ #define _outb _outb
++#ifdef CONFIG_HAS_IOPORT
+ static inline void _outb(u8 value, unsigned long addr)
+ {
+ 	__io_pbw();
+ 	__raw_writeb(value, PCI_IOBASE + addr);
+ 	__io_paw();
+ }
++#else
++void _outb(u8 value, unsigned long addr)
++	__compiletime_error("outb() requires CONFIG_HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_DMX3191D
- 	tristate "DMX3191D SCSI support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	  This is support for Domex DMX3191D SCSI Host Adapters.
-@@ -646,7 +646,7 @@ config SCSI_FDOMAIN
+ #if !defined(outw) && !defined(_outw)
+ #define _outw _outw
++#ifdef CONFIG_HAS_IOPORT
+ static inline void _outw(u16 value, unsigned long addr)
+ {
+ 	__io_pbw();
+ 	__raw_writew((u16 __force)cpu_to_le16(value), PCI_IOBASE + addr);
+ 	__io_paw();
+ }
++#else
++void _outw(u16 value, unsigned long addr)
++	__compiletime_error("outw() requires CONFIG_HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_FDOMAIN_PCI
- 	tristate "Future Domain TMC-3260/AHA-2920A PCI SCSI support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_FDOMAIN
- 	help
- 	  This is support for Future Domain's PCI SCSI host adapters (TMC-3260)
-@@ -699,7 +699,7 @@ config SCSI_GENERIC_NCR5380
+ #if !defined(outl) && !defined(_outl)
+ #define _outl _outl
++#ifdef CONFIG_HAS_IOPORT
+ static inline void _outl(u32 value, unsigned long addr)
+ {
+ 	__io_pbw();
+ 	__raw_writel((u32 __force)cpu_to_le32(value), PCI_IOBASE + addr);
+ 	__io_paw();
+ }
++#else
++void _outl(u32 value, unsigned long addr)
++	__compiletime_error("outl() requires CONFIG_HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_IPS
- 	tristate "IBM ServeRAID support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  This is support for the IBM ServeRAID hardware RAID controllers.
- 	  See <http://www.developer.ibm.com/welcome/netfinity/serveraid.html>
-@@ -759,7 +759,7 @@ config SCSI_IBMVFC_TRACE
+ #include <linux/logic_pio.h>
+@@ -687,53 +717,83 @@ static inline void outl_p(u32 value, unsigned long addr)
  
- config SCSI_INITIO
- 	tristate "Initio 9100U(W) support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  This is support for the Initio 91XXU(W) SCSI host adapter.  Please
- 	  read the SCSI-HOWTO, available from
-@@ -770,7 +770,7 @@ config SCSI_INITIO
+ #ifndef insb
+ #define insb insb
++#ifdef CONFIG_HAS_IOPORT
+ static inline void insb(unsigned long addr, void *buffer, unsigned int count)
+ {
+ 	readsb(PCI_IOBASE + addr, buffer, count);
+ }
++#else
++void insb(unsigned long addr, void *buffer, unsigned int count)
++	__compiletime_error("insb() requires HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_INIA100
- 	tristate "Initio INI-A100U2W support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  This is support for the Initio INI-A100U2W SCSI host adapter.
- 	  Please read the SCSI-HOWTO, available from
-@@ -782,6 +782,7 @@ config SCSI_INIA100
- config SCSI_PPA
- 	tristate "IOMEGA parallel port (ppa - older drives)"
- 	depends on SCSI && PARPORT_PC
-+	depends on HAS_IOPORT
- 	help
- 	  This driver supports older versions of IOMEGA's parallel port ZIP
- 	  drive (a 100 MB removable media device).
-@@ -1176,7 +1177,7 @@ config SCSI_SIM710
+ #ifndef insw
+ #define insw insw
++#ifdef CONFIG_HAS_IOPORT
+ static inline void insw(unsigned long addr, void *buffer, unsigned int count)
+ {
+ 	readsw(PCI_IOBASE + addr, buffer, count);
+ }
++#else
++void insw(unsigned long addr, void *buffer, unsigned int count)
++	__compiletime_error("insw() requires HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_DC395x
- 	tristate "Tekram DC395(U/UW/F) and DC315(U) SCSI support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	  This driver supports PCI SCSI host adapters based on the ASIC
-@@ -1208,7 +1209,7 @@ config SCSI_AM53C974
+ #ifndef insl
+ #define insl insl
++#ifdef CONFIG_HAS_IOPORT
+ static inline void insl(unsigned long addr, void *buffer, unsigned int count)
+ {
+ 	readsl(PCI_IOBASE + addr, buffer, count);
+ }
++#else
++void insl(unsigned long addr, void *buffer, unsigned int count)
++	__compiletime_error("insl() requires HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_NSP32
- 	tristate "Workbit NinjaSCSI-32Bi/UDE support"
--	depends on PCI && SCSI && !64BIT
-+	depends on PCI && SCSI && !64BIT && HAS_IOPORT
- 	help
- 	  This is support for the Workbit NinjaSCSI-32Bi/UDE PCI/Cardbus
- 	  SCSI host adapter. Please read the SCSI-HOWTO, available from
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic79xx b/drivers/scsi/aic7xxx/Kconfig.aic79xx
-index a47dbd500e9a..4bc53eec4c83 100644
---- a/drivers/scsi/aic7xxx/Kconfig.aic79xx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic79xx
-@@ -5,7 +5,7 @@
- #
- config SCSI_AIC79XX
- 	tristate "Adaptec AIC79xx U320 support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	This driver supports all of Adaptec's Ultra 320 PCI-X
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic7xxx b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-index 0cfd92ce750a..f0425145a5f4 100644
---- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-@@ -5,7 +5,7 @@
- #
- config SCSI_AIC7XXX
- 	tristate "Adaptec AIC7xxx Fast -> U160 support"
--	depends on (PCI || EISA) && SCSI
-+	depends on (PCI || EISA) && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	This driver supports all of Adaptec's Fast through Ultra 160 PCI
-diff --git a/drivers/scsi/aic94xx/Kconfig b/drivers/scsi/aic94xx/Kconfig
-index 71931c371b1c..aaa8dadc6e1c 100644
---- a/drivers/scsi/aic94xx/Kconfig
-+++ b/drivers/scsi/aic94xx/Kconfig
-@@ -8,7 +8,7 @@
+ #ifndef outsb
+ #define outsb outsb
++#ifdef CONFIG_HAS_IOPORT
+ static inline void outsb(unsigned long addr, const void *buffer,
+ 			 unsigned int count)
+ {
+ 	writesb(PCI_IOBASE + addr, buffer, count);
+ }
++#else
++void outsb(unsigned long addr, const void *buffer, unsigned int count)
++	__compiletime_error("outsb() requires HAS_IOPORT");
++#endif
+ #endif
  
- config SCSI_AIC94XX
- 	tristate "Adaptec AIC94xx SAS/SATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select SCSI_SAS_LIBSAS
- 	select FW_LOADER
- 	help
-diff --git a/drivers/scsi/megaraid/Kconfig.megaraid b/drivers/scsi/megaraid/Kconfig.megaraid
-index 2adc2afd9f91..3f2ce1eb081c 100644
---- a/drivers/scsi/megaraid/Kconfig.megaraid
-+++ b/drivers/scsi/megaraid/Kconfig.megaraid
-@@ -1,13 +1,13 @@
- # SPDX-License-Identifier: GPL-2.0-only
- config MEGARAID_NEWGEN
- 	bool "LSI Logic New Generation RAID Device Drivers"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	LSI Logic RAID Device Drivers
+ #ifndef outsw
+ #define outsw outsw
++#ifdef CONFIG_HAS_IOPORT
+ static inline void outsw(unsigned long addr, const void *buffer,
+ 			 unsigned int count)
+ {
+ 	writesw(PCI_IOBASE + addr, buffer, count);
+ }
++#else
++void outsw(unsigned long addr, const void *buffer, unsigned int count)
++	__compiletime_error("outsw() requires HAS_IOPORT");
++#endif
+ #endif
  
- config MEGARAID_MM
- 	tristate "LSI Logic Management Module (New Driver)"
--	depends on PCI && SCSI && MEGARAID_NEWGEN
-+	depends on PCI && HAS_IOPORT && SCSI && MEGARAID_NEWGEN
- 	help
- 	Management Module provides ioctl, sysfs support for LSI Logic
- 	RAID controllers.
-@@ -67,7 +67,7 @@ config MEGARAID_MAILBOX
+ #ifndef outsl
+ #define outsl outsl
++#ifdef CONFIG_HAS_IOPORT
+ static inline void outsl(unsigned long addr, const void *buffer,
+ 			 unsigned int count)
+ {
+ 	writesl(PCI_IOBASE + addr, buffer, count);
+ }
++#else
++void outsl(unsigned long addr, const void *buffer, unsigned int count)
++	__compiletime_error("outsl() requires HAS_IOPORT");
++#endif
+ #endif
  
- config MEGARAID_LEGACY
- 	tristate "LSI Logic Legacy MegaRAID Driver"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	This driver supports the LSI MegaRAID 418, 428, 438, 466, 762, 490
- 	and 467 SCSI host adapters. This driver also support the all U320
-diff --git a/drivers/scsi/mvsas/Kconfig b/drivers/scsi/mvsas/Kconfig
-index 79812b80743b..5ac7fd593b17 100644
---- a/drivers/scsi/mvsas/Kconfig
-+++ b/drivers/scsi/mvsas/Kconfig
-@@ -9,7 +9,7 @@
- 
- config SCSI_MVSAS
- 	tristate "Marvell 88SE64XX/88SE94XX SAS/SATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select SCSI_SAS_LIBSAS
- 	select FW_LOADER
- 	help
-diff --git a/drivers/scsi/pcmcia/Kconfig b/drivers/scsi/pcmcia/Kconfig
-index 9696b6b5591f..449bd85db7bb 100644
---- a/drivers/scsi/pcmcia/Kconfig
-+++ b/drivers/scsi/pcmcia/Kconfig
-@@ -12,6 +12,7 @@ if SCSI_LOWLEVEL_PCMCIA && SCSI && PCMCIA && m
- 
- config PCMCIA_AHA152X
- 	tristate "Adaptec AHA152X PCMCIA support"
-+	depends on HAS_IOPORT
- 	select SCSI_SPI_ATTRS
- 	help
- 	  Say Y here if you intend to attach this type of PCMCIA SCSI host
-@@ -22,6 +23,7 @@ config PCMCIA_AHA152X
- 
- config PCMCIA_FDOMAIN
- 	tristate "Future Domain PCMCIA support"
-+	depends on HAS_IOPORT
- 	select SCSI_FDOMAIN
- 	help
- 	  Say Y here if you intend to attach this type of PCMCIA SCSI host
-@@ -32,7 +34,7 @@ config PCMCIA_FDOMAIN
- 
- config PCMCIA_NINJA_SCSI
- 	tristate "NinjaSCSI-3 / NinjaSCSI-32Bi (16bit) PCMCIA support"
--	depends on !64BIT || COMPILE_TEST
-+	depends on (!64BIT || COMPILE_TEST) && HAS_IOPORT
- 	help
- 	  If you intend to attach this type of PCMCIA SCSI host adapter to
- 	  your computer, say Y here and read
-@@ -66,6 +68,7 @@ config PCMCIA_NINJA_SCSI
- 
- config PCMCIA_QLOGIC
- 	tristate "Qlogic PCMCIA support"
-+	depends on HAS_IOPORT
- 	help
- 	  Say Y here if you intend to attach this type of PCMCIA SCSI host
- 	  adapter to your computer.
-@@ -75,6 +78,7 @@ config PCMCIA_QLOGIC
- 
- config PCMCIA_SYM53C500
- 	tristate "Symbios 53c500 PCMCIA support"
-+	depends on HAS_IOPORT
- 	help
- 	  Say Y here if you have a New Media Bus Toaster or other PCMCIA
- 	  SCSI adapter based on the Symbios 53c500 controller.
-diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
-index 802c373fd6d9..a584708d3056 100644
---- a/drivers/scsi/qla2xxx/Kconfig
-+++ b/drivers/scsi/qla2xxx/Kconfig
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0-only
- config SCSI_QLA_FC
- 	tristate "QLogic QLA2XXX Fibre Channel Support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	depends on SCSI_FC_ATTRS
- 	depends on NVME_FC || !NVME_FC
- 	select FW_LOADER
+ #ifndef insb_p
 -- 
 2.37.2
 
