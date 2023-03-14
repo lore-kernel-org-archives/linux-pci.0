@@ -2,65 +2,63 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43BB2C76196
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9277CC761AF
 	for <linux-pci@archiver.kernel.org>; Tue, 14 Mar 2023 12:16:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230493AbjCNMPj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Mar 2023 08:15:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55992 "EHLO
+        id S231161AbjCNMPk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Mar 2023 08:15:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231948AbjCNMOv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 08:14:51 -0400
+        with ESMTP id S231937AbjCNMOu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2023 08:14:50 -0400
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62F7FA17D4;
-        Tue, 14 Mar 2023 05:13:45 -0700 (PDT)
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EBJfXW004950;
-        Tue, 14 Mar 2023 12:12:52 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 843B6A0F08;
+        Tue, 14 Mar 2023 05:13:42 -0700 (PDT)
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32EAaKQ5006722;
+        Tue, 14 Mar 2023 12:12:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=4s5IzeE50FKgT5lCLIC3rUk2mGkqu67OQKlzgenEORU=;
- b=mzcd+nuvqoVoReILcFQr7mLizX0YEBh0rbn+2KdFCHnkmPCyf/eg+ekdCGIn4D+i8YdI
- xw2PFUy9qDE5oeFjtT3DQierBKtsGCFnD45mPuQJD6wmICnxA1qk/2aRVQWEwtHqpTyz
- /650AhHy6GdVu6QiHDEsaCK12DGZr4uGN3VoiGR4tLSwCaKlYzxeEqYAmEEJTxWy6kBs
- 1envjOADScs4NTJYmQ81oOhBgp4LDCIhH5kdZk2r5RCAVhfk9QkCubVLxIjqtGVyJueA
- S6tHxENqXcuc+4/fSaqYeTzRoJUS5sS8Z9HxUDCuaeWBH1OLnElKQTBsmTcq2TMkAjvx xQ== 
+ bh=hZxWlGrC9I5futhnCDpAcceir2xESzBcIJtb4kgUt3k=;
+ b=qsxIwGf5KOsoVqSZIGki8SXV0a48D/O5NKIO1ywFTe8qdI8XeGHI/eo/PNkqU4J9gRQi
+ v/25pBd1SiXiQ41hYjtRJpq8cnmp3/XoUDh4OXDzjGnTZReeOxE+m1jEQLsbXpqLnrpF
+ 1ZcMSdyGlwHy169567cOgFUSBq0Xl8OTRB21bQ0kaLaBfxT4x/A0tEwk45NNMdH5u5Ef
+ LH2PdjOK9NdLc2wb3Lt87wJodE/3CvxuhUYvIzyfEubHLq1SH5o9z1mXHcVCAzgPtC++
+ J9DJRToHzuadp21b0zS9dsFCaJv9Adc6FfhwEZAvggGmslSsOqtIOumib0NyfEv5SEUx Cg== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pap49cmq0-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3papkwkkdg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:52 +0000
-Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EAc9H5037490;
-        Tue, 14 Mar 2023 12:12:51 GMT
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3pap49cmne-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 14 Mar 2023 12:12:51 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32E6few9028628;
+        Tue, 14 Mar 2023 12:12:49 +0000
+Received: from m0098404.ppops.net (m0098404.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32EAckAL024254;
         Tue, 14 Mar 2023 12:12:48 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-        by ppma04ams.nl.ibm.com (PPS) with ESMTPS id 3p8h96msmy-1
+Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3papkwkkbm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Tue, 14 Mar 2023 12:12:48 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECCkNh27198134
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
+        by ppma06fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 32EC38i7029416;
         Tue, 14 Mar 2023 12:12:46 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+        by ppma06fra.de.ibm.com (PPS) with ESMTPS id 3p8gwfks53-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 14 Mar 2023 12:12:45 +0000
+Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
+        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 32ECChKV27329104
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 14 Mar 2023 12:12:43 GMT
 Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E72DF2007D;
-        Tue, 14 Mar 2023 12:12:45 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 7F2DE2007C;
+        Tue, 14 Mar 2023 12:12:43 +0000 (GMT)
 Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6C30A2007A;
-        Tue, 14 Mar 2023 12:12:45 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 116562007A;
+        Tue, 14 Mar 2023 12:12:43 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 14 Mar 2023 12:12:45 +0000 (GMT)
+        Tue, 14 Mar 2023 12:12:43 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>
+To:     Arnd Bergmann <arnd@arndb.de>, Benson Leung <bleung@chromium.org>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
@@ -74,25 +72,25 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-rtc@vger.kernel.org
-Subject: [PATCH v3 28/38] rtc: add HAS_IOPORT dependencies
-Date:   Tue, 14 Mar 2023 13:12:06 +0100
-Message-Id: <20230314121216.413434-29-schnelle@linux.ibm.com>
+        chrome-platform@lists.linux.dev
+Subject: [PATCH v3 25/38] platform: add HAS_IOPORT dependencies
+Date:   Tue, 14 Mar 2023 13:12:03 +0100
+Message-Id: <20230314121216.413434-26-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.37.2
 In-Reply-To: <20230314121216.413434-1-schnelle@linux.ibm.com>
 References: <20230314121216.413434-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: DlOU3Lpa4pwpaG9dyu6d7RQ6cpkrfNi9
-X-Proofpoint-ORIG-GUID: G27jwAgQCa0xo34Ec3NOSW-wx8e6dyr1
+X-Proofpoint-GUID: RHDKunSieNfnBGbG2X0xdYlT5WAn9l7u
+X-Proofpoint-ORIG-GUID: Ru3kP5CSo9WzkNd79J2yHZnj9-kDqipv
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-14_06,2023-03-14_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 malwarescore=0
- clxscore=1011 bulkscore=0 spamscore=0 mlxlogscore=818 phishscore=0
- mlxscore=0 impostorscore=0 adultscore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
+ impostorscore=0 mlxscore=0 lowpriorityscore=0 mlxlogscore=859
+ suspectscore=0 priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1011
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2212070000 definitions=main-2303140103
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -105,38 +103,34 @@ those drivers using them.
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/rtc/Kconfig | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/platform/chrome/Kconfig          | 1 +
+ drivers/platform/chrome/wilco_ec/Kconfig | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/rtc/Kconfig b/drivers/rtc/Kconfig
-index 5a71579af0a1..20aa77bf0a9f 100644
---- a/drivers/rtc/Kconfig
-+++ b/drivers/rtc/Kconfig
-@@ -956,6 +956,7 @@ comment "Platform RTC drivers"
- config RTC_DRV_CMOS
- 	tristate "PC-style 'CMOS'"
- 	depends on X86 || ARM || PPC || MIPS || SPARC64
+diff --git a/drivers/platform/chrome/Kconfig b/drivers/platform/chrome/Kconfig
+index 7d82a0946e1c..7eb1cfde29b4 100644
+--- a/drivers/platform/chrome/Kconfig
++++ b/drivers/platform/chrome/Kconfig
+@@ -132,6 +132,7 @@ config CROS_EC_UART
+ config CROS_EC_LPC
+ 	tristate "ChromeOS Embedded Controller (LPC)"
+ 	depends on CROS_EC && ACPI && (X86 || COMPILE_TEST)
 +	depends on HAS_IOPORT
- 	default y if X86
- 	select RTC_MC146818_LIB
  	help
-@@ -976,6 +977,7 @@ config RTC_DRV_CMOS
- config RTC_DRV_ALPHA
- 	bool "Alpha PC-style CMOS"
- 	depends on ALPHA
+ 	  If you say Y here, you get support for talking to the ChromeOS EC
+ 	  over an LPC bus, including the LPC Microchip EC (MEC) variant.
+diff --git a/drivers/platform/chrome/wilco_ec/Kconfig b/drivers/platform/chrome/wilco_ec/Kconfig
+index 49e8530ca0ac..d1648fb099ac 100644
+--- a/drivers/platform/chrome/wilco_ec/Kconfig
++++ b/drivers/platform/chrome/wilco_ec/Kconfig
+@@ -3,6 +3,7 @@ config WILCO_EC
+ 	tristate "ChromeOS Wilco Embedded Controller"
+ 	depends on X86 || COMPILE_TEST
+ 	depends on ACPI && CROS_EC_LPC && LEDS_CLASS
 +	depends on HAS_IOPORT
- 	select RTC_MC146818_LIB
- 	default y
  	help
-@@ -1193,7 +1195,7 @@ config RTC_DRV_MSM6242
- 
- config RTC_DRV_BQ4802
- 	tristate "TI BQ4802"
--	depends on HAS_IOMEM
-+	depends on HAS_IOMEM && HAS_IOPORT
- 	help
- 	  If you say Y here you will get support for the TI
- 	  BQ4802 RTC chip.
+ 	  If you say Y here, you get support for talking to the ChromeOS
+ 	  Wilco EC over an eSPI bus. This uses a simple byte-level protocol
 -- 
 2.37.2
 
