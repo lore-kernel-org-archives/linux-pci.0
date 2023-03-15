@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F1C9C76196
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Mar 2023 06:45:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34879C6FD1D
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Mar 2023 06:45:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231358AbjCOGpB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Mar 2023 02:45:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59234 "EHLO
+        id S231511AbjCOGpD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Mar 2023 02:45:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59618 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231600AbjCOGoh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Mar 2023 02:44:37 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A702366B8
-        for <linux-pci@vger.kernel.org>; Tue, 14 Mar 2023 23:44:06 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id y11so19044762plg.1
-        for <linux-pci@vger.kernel.org>; Tue, 14 Mar 2023 23:44:06 -0700 (PDT)
+        with ESMTP id S231616AbjCOGok (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Mar 2023 02:44:40 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5B7E311C5
+        for <linux-pci@vger.kernel.org>; Tue, 14 Mar 2023 23:44:12 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id cn6so5163042pjb.2
+        for <linux-pci@vger.kernel.org>; Tue, 14 Mar 2023 23:44:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1678862640;
+        d=linaro.org; s=google; t=1678862652;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=rQx6P2mfh2qDcHF7hB2MhMZ3flZiY/yvDBCNUwZGTWw=;
-        b=rjD1zy/F5hXJTiuuiIQFngXWyQ5K2q6XbeqK4/QWvR3muGAGZiKHPmRq2va7TYy5TF
-         lVIflj2GN5OQyCOjW/sPHNzu/XTecZFM8WlJC6Tv6mqrHPsVdetKjzftZeI299HhhUs2
-         SODVf9uXNJpVTRWGzpA8kJ4dQergz6TQvjIePNcsUtBKKtxVjZm1baunlkl4Fe7kApnp
-         9auWfQOU5D4eY0aY+EnfVK8iSAw1te2w5RxmpPs4ilW/MdsKfKx2Oked/yIXIxok7HPa
-         oySlie5HHTjzFhdWh7u8vYssDbt0c9fJQN2pQEkb0npYDk8LrpbDloT/w8OgX/tRTkHS
-         IK8g==
+        bh=u4buO9u/YEJ2XslOs7PK/sn8ZofMZxzKI+5s+2aMPGs=;
+        b=TLr0mBUM2U4Mm/fZK5JU42H7nrEehkO13ShcIkRweW1jcPAYb7BxRev7sbFleukMV/
+         M/gxnvyPXCZx2XBJCuKpidlNeuS821hi2QWNa8Cpadn+nKgB6MwVkCYFCL0acp6jNEUS
+         sWt1mLMjBskRkuhSis11UlX7RKSEJssEK+2zJRsPcrJIg/URDOsu5P18/j4yLOeQ2OhA
+         xCIDL69dQovODnMToUO51uPlg2Jd4aj+oLp5B4KWyHJ7kxzDb9h1KoAWVYqgWvdIixOL
+         SC9mUKc0rdUig/dBUupv5G0mPdXattLjy4aHNE6WpxEn1k1zksOF0j2sZPgcgL3i+nkR
+         Rb7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1678862640;
+        d=1e100.net; s=20210112; t=1678862652;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=rQx6P2mfh2qDcHF7hB2MhMZ3flZiY/yvDBCNUwZGTWw=;
-        b=JpYZX5qJWIna6APhVX0WRQCav43aZCya/vvYzHZ5KP+H8LnThyPIabz51QWPBT0T2k
-         QCHZvPuMNWu5X6nUEK/Og7Ux3ZKhBALmFeNOsEC8pIWkHve5GuVjqp8D2lFxZ9OZSzUo
-         LXkGsg0CZ0uwqhA6vToo7+vImR6dffEILmCa/tpFPYF//O2NH7OdPOg0GV4fLrChL5nm
-         MTO7UnXkgZ0647HHTMDdnfsR8h5suRNbpYIgL4CyRLGd5oNb5dIHNAofRxfU1MKnaBdU
-         GHZYhKTnMkoBzdsEH5kDYwsFwvT6bop0nDO1qJhjSkRi2tEWby6k7k76w1ec9CvzHbx+
-         FZIg==
-X-Gm-Message-State: AO0yUKWTb0eFQhGlTo7tIV5AE4rrlNvaJHayO7JrrzfIjXw0VN+5dNny
-        UaN2wGCOAr9Fx2GSAhLgqxX7
-X-Google-Smtp-Source: AK7set89pwSckHBA6X0mvuFRK86wOtioV9O69BOlzyKpMn6yWtysatSdVFzJhAzfCzfhMB/bpcpc2Q==
-X-Received: by 2002:a17:90b:4b4b:b0:233:a6b7:3770 with SMTP id mi11-20020a17090b4b4b00b00233a6b73770mr41430916pjb.14.1678862640195;
-        Tue, 14 Mar 2023 23:44:00 -0700 (PDT)
+        bh=u4buO9u/YEJ2XslOs7PK/sn8ZofMZxzKI+5s+2aMPGs=;
+        b=UmvkioqzPVRi/f+HG3woxLQL00NwoDNd/wyQPVlFUd2IXbLq4lTxUxQpZIIQmuc0Y+
+         F/kEUotInU2spuC2BYS9uP2/W0CBrXGNgzkrGjfUn3a/M42zptLFoxkZkYDV+B5Q50M6
+         nhEEEm4iW4ASqxHMKFZ9yYAXYvPT0sxMLQ7Exg/Hw+SUecMreDxCS8d3GsDukZ5q7LDC
+         iUVQM6vY8dTM6BA3rGeKT1tuWxNRBP9OoEssNwvx0CBF+ZtoJE+jKM0oSIvwipTeomhs
+         LwqornWzejvmf5sAGlLwYDVG9wXOIKZNmgQlhk7VuPkPMdITSgvr7jOm04fcipX8bmes
+         yUFg==
+X-Gm-Message-State: AO0yUKXoLcC8z+Q+JzWR9i99UlxKh0amj12uwdReNO/DQSRokE9qYpjj
+        m5U6dbUbANr+XB4bRMvYXUT+amJBbtJ7D31hcw==
+X-Google-Smtp-Source: AK7set+ASsrZPRNm6wN+fXqyjW6FtdOBZ0ficbA5MrptjDrwZf1uoOUIBtFZzhnmVV+49wG3JKqmXw==
+X-Received: by 2002:a17:90b:4acd:b0:22c:4d85:1725 with SMTP id mh13-20020a17090b4acd00b0022c4d851725mr41583536pjb.9.1678862652460;
+        Tue, 14 Mar 2023 23:44:12 -0700 (PDT)
 Received: from localhost.localdomain ([117.217.182.35])
-        by smtp.gmail.com with ESMTPSA id u4-20020a17090a6a8400b002367325203fsm550747pjj.50.2023.03.14.23.43.56
+        by smtp.gmail.com with ESMTPSA id u4-20020a17090a6a8400b002367325203fsm550747pjj.50.2023.03.14.23.44.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Mar 2023 23:43:59 -0700 (PDT)
+        Tue, 14 Mar 2023 23:44:11 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     andersson@kernel.org, lpieralisi@kernel.org, kw@linux.com,
         krzysztof.kozlowski+dt@linaro.org, robh@kernel.org
@@ -56,9 +56,9 @@ Cc:     konrad.dybcio@linaro.org, linux-arm-msm@vger.kernel.org,
         devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, quic_srichara@quicinc.com,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v4 13/18] PCI: qcom: Rename qcom_pcie_config_sid_sm8250() to reflect IP version
-Date:   Wed, 15 Mar 2023 12:12:50 +0530
-Message-Id: <20230315064255.15591-14-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v4 16/18] arm64: dts: qcom: sm8250: Add "mhi" region to the PCIe nodes
+Date:   Wed, 15 Mar 2023 12:12:53 +0530
+Message-Id: <20230315064255.15591-17-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230315064255.15591-1-manivannan.sadhasivam@linaro.org>
 References: <20230315064255.15591-1-manivannan.sadhasivam@linaro.org>
@@ -68,183 +68,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-qcom_pcie_config_sid_sm8250() function no longer applies only to SM8250.
-So let's rename it to reflect the actual IP version and also move its
-definition to keep it sorted as per IP revisions.
+The "mhi" region contains the debug registers that could be used to monitor
+the PCIe link transitions.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 143 ++++++++++++-------------
- 1 file changed, 71 insertions(+), 72 deletions(-)
+ arch/arm64/boot/dts/qcom/sm8250.dtsi | 15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index e1180c84f0fa..e47fdae3918c 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -963,6 +963,76 @@ static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
- 	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
- }
- 
-+static int qcom_pcie_config_sid_1_9_0(struct qcom_pcie *pcie)
-+{
-+	/* iommu map structure */
-+	struct {
-+		u32 bdf;
-+		u32 phandle;
-+		u32 smmu_sid;
-+		u32 smmu_sid_len;
-+	} *map;
-+	void __iomem *bdf_to_sid_base = pcie->parf + PARF_BDF_TO_SID_TABLE_N;
-+	struct device *dev = pcie->pci->dev;
-+	u8 qcom_pcie_crc8_table[CRC8_TABLE_SIZE];
-+	int i, nr_map, size = 0;
-+	u32 smmu_sid_base;
-+
-+	of_get_property(dev->of_node, "iommu-map", &size);
-+	if (!size)
-+		return 0;
-+
-+	map = kzalloc(size, GFP_KERNEL);
-+	if (!map)
-+		return -ENOMEM;
-+
-+	of_property_read_u32_array(dev->of_node, "iommu-map", (u32 *)map,
-+				   size / sizeof(u32));
-+
-+	nr_map = size / (sizeof(*map));
-+
-+	crc8_populate_msb(qcom_pcie_crc8_table, QCOM_PCIE_CRC8_POLYNOMIAL);
-+
-+	/* Registers need to be zero out first */
-+	memset_io(bdf_to_sid_base, 0, CRC8_TABLE_SIZE * sizeof(u32));
-+
-+	/* Extract the SMMU SID base from the first entry of iommu-map */
-+	smmu_sid_base = map[0].smmu_sid;
-+
-+	/* Look for an available entry to hold the mapping */
-+	for (i = 0; i < nr_map; i++) {
-+		__be16 bdf_be = cpu_to_be16(map[i].bdf);
-+		u32 val;
-+		u8 hash;
-+
-+		hash = crc8(qcom_pcie_crc8_table, (u8 *)&bdf_be, sizeof(bdf_be), 0);
-+
-+		val = readl(bdf_to_sid_base + hash * sizeof(u32));
-+
-+		/* If the register is already populated, look for next available entry */
-+		while (val) {
-+			u8 current_hash = hash++;
-+			u8 next_mask = 0xff;
-+
-+			/* If NEXT field is NULL then update it with next hash */
-+			if (!(val & next_mask)) {
-+				val |= (u32)hash;
-+				writel(val, bdf_to_sid_base + current_hash * sizeof(u32));
-+			}
-+
-+			val = readl(bdf_to_sid_base + hash * sizeof(u32));
-+		}
-+
-+		/* BDF [31:16] | SID [15:8] | NEXT [7:0] */
-+		val = map[i].bdf << 16 | (map[i].smmu_sid - smmu_sid_base) << 8 | 0;
-+		writel(val, bdf_to_sid_base + hash * sizeof(u32));
-+	}
-+
-+	kfree(map);
-+
-+	return 0;
-+}
-+
- static int qcom_pcie_get_resources_2_9_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
-@@ -1077,77 +1147,6 @@ static int qcom_pcie_link_up(struct dw_pcie *pci)
- 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
- }
- 
--static int qcom_pcie_config_sid_sm8250(struct qcom_pcie *pcie)
--{
--	/* iommu map structure */
--	struct {
--		u32 bdf;
--		u32 phandle;
--		u32 smmu_sid;
--		u32 smmu_sid_len;
--	} *map;
--	void __iomem *bdf_to_sid_base = pcie->parf + PARF_BDF_TO_SID_TABLE_N;
--	struct device *dev = pcie->pci->dev;
--	u8 qcom_pcie_crc8_table[CRC8_TABLE_SIZE];
--	int i, nr_map, size = 0;
--	u32 smmu_sid_base;
--
--	of_get_property(dev->of_node, "iommu-map", &size);
--	if (!size)
--		return 0;
--
--	map = kzalloc(size, GFP_KERNEL);
--	if (!map)
--		return -ENOMEM;
--
--	of_property_read_u32_array(dev->of_node,
--		"iommu-map", (u32 *)map, size / sizeof(u32));
--
--	nr_map = size / (sizeof(*map));
--
--	crc8_populate_msb(qcom_pcie_crc8_table, QCOM_PCIE_CRC8_POLYNOMIAL);
--
--	/* Registers need to be zero out first */
--	memset_io(bdf_to_sid_base, 0, CRC8_TABLE_SIZE * sizeof(u32));
--
--	/* Extract the SMMU SID base from the first entry of iommu-map */
--	smmu_sid_base = map[0].smmu_sid;
--
--	/* Look for an available entry to hold the mapping */
--	for (i = 0; i < nr_map; i++) {
--		__be16 bdf_be = cpu_to_be16(map[i].bdf);
--		u32 val;
--		u8 hash;
--
--		hash = crc8(qcom_pcie_crc8_table, (u8 *)&bdf_be, sizeof(bdf_be),
--			0);
--
--		val = readl(bdf_to_sid_base + hash * sizeof(u32));
--
--		/* If the register is already populated, look for next available entry */
--		while (val) {
--			u8 current_hash = hash++;
--			u8 next_mask = 0xff;
--
--			/* If NEXT field is NULL then update it with next hash */
--			if (!(val & next_mask)) {
--				val |= (u32)hash;
--				writel(val, bdf_to_sid_base + current_hash * sizeof(u32));
--			}
--
--			val = readl(bdf_to_sid_base + hash * sizeof(u32));
--		}
--
--		/* BDF [31:16] | SID [15:8] | NEXT [7:0] */
--		val = map[i].bdf << 16 | (map[i].smmu_sid - smmu_sid_base) << 8 | 0;
--		writel(val, bdf_to_sid_base + hash * sizeof(u32));
--	}
--
--	kfree(map);
--
--	return 0;
--}
--
- static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -1268,7 +1267,7 @@ static const struct qcom_pcie_ops ops_1_9_0 = {
- 	.init = qcom_pcie_init_2_7_0,
- 	.deinit = qcom_pcie_deinit_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
--	.config_sid = qcom_pcie_config_sid_sm8250,
-+	.config_sid = qcom_pcie_config_sid_1_9_0,
- };
- 
- /* Qcom IP rev.: 2.9.0  Synopsys IP rev.: 5.00a */
+diff --git a/arch/arm64/boot/dts/qcom/sm8250.dtsi b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+index 2f0e460acccd..81383e20d3d9 100644
+--- a/arch/arm64/boot/dts/qcom/sm8250.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8250.dtsi
+@@ -1824,8 +1824,9 @@ pcie0: pci@1c00000 {
+ 			      <0 0x60000000 0 0xf1d>,
+ 			      <0 0x60000f20 0 0xa8>,
+ 			      <0 0x60001000 0 0x1000>,
+-			      <0 0x60100000 0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "atu", "config";
++			      <0 0x60100000 0 0x100000>,
++			      <0 0x01c03000 0 0x1000>;
++			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			device_type = "pci";
+ 			linux,pci-domain = <0>;
+ 			bus-range = <0x00 0xff>;
+@@ -1933,8 +1934,9 @@ pcie1: pci@1c08000 {
+ 			      <0 0x40000000 0 0xf1d>,
+ 			      <0 0x40000f20 0 0xa8>,
+ 			      <0 0x40001000 0 0x1000>,
+-			      <0 0x40100000 0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "atu", "config";
++			      <0 0x40100000 0 0x100000>,
++			      <0 0x01c0b000 0 0x1000>;
++			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			device_type = "pci";
+ 			linux,pci-domain = <1>;
+ 			bus-range = <0x00 0xff>;
+@@ -2041,8 +2043,9 @@ pcie2: pci@1c10000 {
+ 			      <0 0x64000000 0 0xf1d>,
+ 			      <0 0x64000f20 0 0xa8>,
+ 			      <0 0x64001000 0 0x1000>,
+-			      <0 0x64100000 0 0x100000>;
+-			reg-names = "parf", "dbi", "elbi", "atu", "config";
++			      <0 0x64100000 0 0x100000>,
++			      <0 0x01c13000 0 0x1000>;
++			reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
+ 			device_type = "pci";
+ 			linux,pci-domain = <2>;
+ 			bus-range = <0x00 0xff>;
 -- 
 2.25.1
 
