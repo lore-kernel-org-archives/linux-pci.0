@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4982C6FD1D
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Mar 2023 09:44:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFDE8C76196
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Mar 2023 09:44:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231701AbjCOJoH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Mar 2023 05:44:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54512 "EHLO
+        id S232094AbjCOJoK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Mar 2023 05:44:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232088AbjCOJn7 (ORCPT
+        with ESMTP id S232096AbjCOJn7 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Mar 2023 05:43:59 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42C5D60D65;
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C469062D9B;
         Wed, 15 Mar 2023 02:43:47 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Pc56M2svSzrT4m;
-        Wed, 15 Mar 2023 17:42:51 +0800 (CST)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Pc54t3n2VzHwyp;
+        Wed, 15 Mar 2023 17:41:34 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Wed, 15 Mar 2023 17:43:44 +0800
+ 15.1.2507.21; Wed, 15 Mar 2023 17:43:45 +0800
 From:   Yicong Yang <yangyicong@huawei.com>
 To:     <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
         <jonathan.cameron@huawei.com>, <corbet@lwn.net>,
@@ -28,9 +28,9 @@ To:     <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
 CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
         <linux-pci@vger.kernel.org>, <prime.zeng@huawei.com>,
         <linuxarm@huawei.com>
-Subject: [PATCH 1/4] hwtracing: hisi_ptt: Make cpumask only present online CPUs
-Date:   Wed, 15 Mar 2023 17:43:13 +0800
-Message-ID: <20230315094316.26772-2-yangyicong@huawei.com>
+Subject: [PATCH 4/4] hwtracing: hisi_ptt: Advertise PERF_PMU_CAP_NO_EXCLUDE for PTT PMU
+Date:   Wed, 15 Mar 2023 17:43:16 +0800
+Message-ID: <20230315094316.26772-5-yangyicong@huawei.com>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20230315094316.26772-1-yangyicong@huawei.com>
 References: <20230315094316.26772-1-yangyicong@huawei.com>
@@ -47,43 +47,31 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Yicong Yang <yangyicong@hisilicon.com>
 
-perf will try to start PTT trace on every CPU presented in cpumask sysfs
-attribute and it will fail to start on offline CPUs(see the comments in
-perf_event_open()). But the driver is using cpumask_of_node() to export
-the available cpumask which may include offline CPUs and may fail the
-perf unintendedly. Fix this by only export the online CPUs of the node.
+The PTT trace collects PCIe TLP headers from the PCIe link and don't
+have the ability to exclude certain context. It doesn't support itrace
+as well. So only advertise PERF_PMU_CAP_NO_EXCLUDE. This will greatly
+save the storage of final data. Tested tracing idle link for ~15s,
+without this patch we'll collect ~28.682MB data for context related
+information and with this patch it reduced to ~0.226MB.
 
-Fixes: ff0de066b463 ("hwtracing: hisi_ptt: Add trace function support for HiSilicon PCIe Tune and Trace device")
 Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
 ---
- drivers/hwtracing/ptt/hisi_ptt.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/hwtracing/ptt/hisi_ptt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
-index 30f1525639b5..0a10c7ec46ad 100644
+index a5cd87edb813..8c1cce32b83f 100644
 --- a/drivers/hwtracing/ptt/hisi_ptt.c
 +++ b/drivers/hwtracing/ptt/hisi_ptt.c
-@@ -487,9 +487,18 @@ static ssize_t cpumask_show(struct device *dev, struct device_attribute *attr,
- 			    char *buf)
- {
- 	struct hisi_ptt *hisi_ptt = to_hisi_ptt(dev_get_drvdata(dev));
--	const cpumask_t *cpumask = cpumask_of_node(dev_to_node(&hisi_ptt->pdev->dev));
-+	cpumask_var_t mask;
-+	ssize_t n;
+@@ -1216,7 +1216,7 @@ static int hisi_ptt_register_pmu(struct hisi_ptt *hisi_ptt)
  
--	return cpumap_print_to_pagebuf(true, buf, cpumask);
-+	if (!alloc_cpumask_var(&mask, GFP_KERNEL))
-+		return 0;
-+
-+	cpumask_and(mask, cpumask_of_node(dev_to_node(&hisi_ptt->pdev->dev)),
-+		    cpu_online_mask);
-+	n = cpumap_print_to_pagebuf(true, buf, mask);
-+	free_cpumask_var(mask);
-+
-+	return n;
- }
- static DEVICE_ATTR_RO(cpumask);
- 
+ 	hisi_ptt->hisi_ptt_pmu = (struct pmu) {
+ 		.module		= THIS_MODULE,
+-		.capabilities	= PERF_PMU_CAP_EXCLUSIVE | PERF_PMU_CAP_ITRACE,
++		.capabilities	= PERF_PMU_CAP_NO_EXCLUDE,
+ 		.task_ctx_nr	= perf_sw_context,
+ 		.attr_groups	= hisi_ptt_pmu_groups,
+ 		.event_init	= hisi_ptt_pmu_event_init,
 -- 
 2.24.0
 
