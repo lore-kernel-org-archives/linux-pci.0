@@ -2,160 +2,136 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96293C6FD1D
-	for <linux-pci@archiver.kernel.org>; Fri, 17 Mar 2023 04:28:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C35DC74A5B
+	for <linux-pci@archiver.kernel.org>; Fri, 17 Mar 2023 06:54:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbjCQE2O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 Mar 2023 00:28:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47116 "EHLO
+        id S229556AbjCQGyQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 Mar 2023 02:54:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbjCQE2M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Mar 2023 00:28:12 -0400
-Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D639E24495;
-        Thu, 16 Mar 2023 21:28:10 -0700 (PDT)
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 32H4Rs77097856;
-        Thu, 16 Mar 2023 23:27:54 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1679027274;
-        bh=S0qRl4CmWdXFxK2UH6mTRJjfvXYxHjbag3C0LYUvbA0=;
-        h=Date:Subject:To:CC:References:From:In-Reply-To;
-        b=Ra45kfxUE7TAStvukIk9VywQsWX78y0W0OhjtFwsUTO+aJiYQkfPBLJgXsUiulaAL
-         OxaBUhwOX2BasTmd51pZgN0gbutNMvJ0SoDzlcqNU4R5aPbjVPNTjBjkZi1ej1eS5t
-         YIrVPSD95Eglm/3tU1dKKquHBA1ZBQ4e2VCgh8w4=
-Received: from DLEE110.ent.ti.com (dlee110.ent.ti.com [157.170.170.21])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 32H4RsBZ017702
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 16 Mar 2023 23:27:54 -0500
-Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16; Thu, 16
- Mar 2023 23:27:53 -0500
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.16 via
- Frontend Transport; Thu, 16 Mar 2023 23:27:53 -0500
-Received: from [10.249.131.60] (ileaxei01-snat2.itg.ti.com [10.180.69.6])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 32H4RmSD073045;
-        Thu, 16 Mar 2023 23:27:49 -0500
-Message-ID: <4e430590-40f5-bc4a-d674-5b316c3a1586@ti.com>
-Date:   Fri, 17 Mar 2023 09:57:48 +0530
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.8.0
-Subject: Re: [PATCH v3] PCI: cadence: Clear the ARI Capability Next Function
- Number of the last function
-Content-Language: en-US
-To:     Vignesh Raghavendra <vigneshr@ti.com>,
-        Tom Joseph <tjoseph@cadence.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Wilczy_ski <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Milind Parab <mparab@cadence.com>,
-        <wojciech.jasko-EXT@continental-corporation.com>
-References: <20230316071156.200888-1-a-verma1@ti.com>
- <11b83885-ff64-df78-e14c-137fffb5f7ce@ti.com>
-From:   "Verma, Achal" <a-verma1@ti.com>
-In-Reply-To: <11b83885-ff64-df78-e14c-137fffb5f7ce@ti.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+        with ESMTP id S229488AbjCQGyP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Mar 2023 02:54:15 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7414A12F3E;
+        Thu, 16 Mar 2023 23:54:14 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32H6JnEc030674;
+        Fri, 17 Mar 2023 06:54:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=Zo8HWx/v61xwLS9kssmqHorazwKPNDeTeO4Da4+/G20=;
+ b=eZ8Hwy8XvUtRXyeQJxlq7DOv5f81cH8E6KJjMg5Ci0vuLiOcbRxTpbCtaYLr0Acordi2
+ yrikgq7eNnrsBDqBYSwnOjZhX1ZuPvGUI234DPeIxrMK5+JkoQB9S1G07D2EnS+3RiM8
+ 6en9tfEkylbidrQ6BMEk7LBr331s+H1nQTr/LYq18ShyGB28ueH+ry0S9eNkdCehX+oA
+ VftYlwcxpX7qz+ezGbYopPeeA/fTEIX8ynnBMLxMdQp7el3ifIiqe8Yu3oq/mj+elvUh
+ jnM2ubBLU9Jqk1LuXaun3ZxWCmVnnt+wI+GUsinMA9MgDzMlt6KVDG2ZBIVwsbxeyeZu wA== 
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pc5r1a1kv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Mar 2023 06:54:07 +0000
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32H6s3aR016066;
+        Fri, 17 Mar 2023 06:54:03 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3p8jqmd9dc-1;
+        Fri, 17 Mar 2023 06:54:03 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32H6s3Hi016039;
+        Fri, 17 Mar 2023 06:54:03 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-rohiagar-hyd.qualcomm.com [10.213.106.138])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 32H6s2oi016025;
+        Fri, 17 Mar 2023 06:54:03 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3970568)
+        id DF86E4F3A; Fri, 17 Mar 2023 12:24:01 +0530 (+0530)
+From:   Rohit Agarwal <quic_rohiagar@quicinc.com>
+To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        lee@kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, mani@kernel.org,
+        lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com,
+        manivannan.sadhasivam@linaro.org
+Cc:     linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Rohit Agarwal <quic_rohiagar@quicinc.com>
+Subject: [PATCH v4 4/5] ARM: dts: qcom: sdx65-mtp: Enable PCIe PHY
+Date:   Fri, 17 Mar 2023 12:23:58 +0530
+Message-Id: <1679036039-27157-5-git-send-email-quic_rohiagar@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1679036039-27157-1-git-send-email-quic_rohiagar@quicinc.com>
+References: <1679036039-27157-1-git-send-email-quic_rohiagar@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: _ljpIgthh24Y1-dzdgEcM3H68GQFIyWY
+X-Proofpoint-ORIG-GUID: _ljpIgthh24Y1-dzdgEcM3H68GQFIyWY
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-03-17_03,2023-03-16_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 bulkscore=0 adultscore=0 phishscore=0 suspectscore=0
+ mlxscore=0 clxscore=1015 mlxlogscore=498 lowpriorityscore=0 spamscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303150002 definitions=main-2303170045
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Enable PCIe PHY on SDX65 MTP for PCIe EP. While at it,
+updating status as last property for each node.
 
+Signed-off-by: Rohit Agarwal <quic_rohiagar@quicinc.com>
+---
+ arch/arm/boot/dts/qcom-sdx65-mtp.dts | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-On 3/17/2023 9:38 AM, Vignesh Raghavendra wrote:
-> 
-> 
-> On 16/03/23 12:41, Achal Verma wrote:
->> From: Jasko-EXT Wojciech <wojciech.jasko-EXT@continental-corporation.com>
->>
->> Next Function Number field in ARI Capability Register for last function
->> must be zero by default as per the PCIe specification, indicating there
->> is no next higher number function but that's not happening in our case,
->> so this patch clears the Next Function Number field for last function used.
->>
->> Signed-off-by: Jasko-EXT Wojciech <wojciech.jasko-EXT@continental-corporation.com>
->> Signed-off-by: Achal Verma <a-verma1@ti.com>
->> ---
->> Changes from v1:
->> * Fix commments in the code.
->>
->> Changes from v2:
->> * Rework the commit message.
->>
->>   drivers/pci/controller/cadence/pcie-cadence-ep.c | 14 +++++++++++++-
->>   drivers/pci/controller/cadence/pcie-cadence.h    |  6 ++++++
->>   2 files changed, 19 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
->> index b8b655d4047e..8742b2f594fd 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
->> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
->> @@ -565,7 +565,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
->>   	struct cdns_pcie *pcie = &ep->pcie;
->>   	struct device *dev = pcie->dev;
->>   	int max_epfs = sizeof(epc->function_num_map) * 8;
->> -	int ret, value, epf;
->> +	int ret, epf, last_fn;
->> +	u32 reg, value;
->>   
->>   	/*
->>   	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
->> @@ -573,6 +574,17 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
->>   	 */
->>   	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, epc->function_num_map);
->>   
->> +	/*
->> +	 * Next function field in ARI_CAP_AND_CTR register for last function
->> +	 * should be 0.
->> +	 * Clearing Next Function Number field for the last function used.
->> +	 */
->> +	last_fn = find_last_bit(&epc->function_num_map, BITS_PER_LONG);
->> +	reg     = CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(last_fn);
->> +	value  = cdns_pcie_readl(pcie, reg);
->> +	value &= ~CDNS_PCIE_ARI_CAP_NFN_MASK;
->> +	cdns_pcie_writel(pcie, reg, value);
->> +
->>   	if (ep->quirk_disable_flr) {
->>   		for (epf = 0; epf < max_epfs; epf++) {
->>   			if (!(epc->function_num_map & BIT(epf)))
->> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
->> index 190786e47df9..68c4c7878111 100644
->> --- a/drivers/pci/controller/cadence/pcie-cadence.h
->> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
->> @@ -130,6 +130,12 @@
->>   #define CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET	0xc0
->>   #define CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET	0x200
->>   
->> +/*
->> + * Endpoint PF Registers
->> + */
->> +#define CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(fn)	(0x144 + (fn) * 0x1000)
->> +#define CDNS_PCIE_ARI_CAP_NFN_MASK	GENMASK(15, 8)
->> +
->>   /*
->>    * Root Port Registers (PCI configuration space for the root port function)
->>    */
-> 
-> 
-> 
-> Reviewed-by: Vignesh Raghavendra <vigneshr@ti.com>
-> 
-> FYI, there seems to be a duplicate patch [1], you may want to clarify
-> which one to look at
-> 
-> 
-> [1] https://lore.kernel.org/all/20230316065455.191785-1-a-verma1@ti.com/
-Please consider this one.
+diff --git a/arch/arm/boot/dts/qcom-sdx65-mtp.dts b/arch/arm/boot/dts/qcom-sdx65-mtp.dts
+index ed98c83..70720e6 100644
+--- a/arch/arm/boot/dts/qcom-sdx65-mtp.dts
++++ b/arch/arm/boot/dts/qcom-sdx65-mtp.dts
+@@ -245,6 +245,13 @@
+ 	status = "okay";
+ };
+ 
++&pcie_phy {
++	vdda-phy-supply = <&vreg_l1b_1p2>;
++	vdda-pll-supply = <&vreg_l4b_0p88>;
++
++	status = "okay";
++};
++
+ &qpic_bam {
+ 	status = "okay";
+ };
+@@ -265,8 +272,9 @@
+ };
+ 
+ &remoteproc_mpss {
+-	status = "okay";
+ 	memory-region = <&mpss_adsp_mem>;
++
++	status = "okay";
+ };
+ 
+ &usb {
+@@ -278,14 +286,16 @@
+ };
+ 
+ &usb_hsphy {
+-	status = "okay";
+ 	vdda-pll-supply = <&vreg_l4b_0p88>;
+ 	vdda33-supply = <&vreg_l10b_3p08>;
+ 	vdda18-supply = <&vreg_l5b_1p8>;
++
++	status = "okay";
+ };
+ 
+ &usb_qmpphy {
+-	status = "okay";
+ 	vdda-phy-supply = <&vreg_l4b_0p88>;
+ 	vdda-pll-supply = <&vreg_l1b_1p2>;
++
++	status = "okay";
+ };
+-- 
+2.7.4
 
-Thanks,
-Achal Verma
-> 
