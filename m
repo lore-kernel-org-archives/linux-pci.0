@@ -2,267 +2,97 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CFCFC6FD1F
-	for <linux-pci@archiver.kernel.org>; Sun, 19 Mar 2023 06:01:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03D68C7618A
+	for <linux-pci@archiver.kernel.org>; Sun, 19 Mar 2023 11:23:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230015AbjCSGBL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 19 Mar 2023 02:01:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36780 "EHLO
+        id S230200AbjCSLXr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 19 Mar 2023 07:23:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230025AbjCSGBK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 19 Mar 2023 02:01:10 -0400
-Received: from mail-il1-x135.google.com (mail-il1-x135.google.com [IPv6:2607:f8b0:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41E1C2211F
-        for <linux-pci@vger.kernel.org>; Sat, 18 Mar 2023 23:01:05 -0700 (PDT)
-Received: by mail-il1-x135.google.com with SMTP id e9e14a558f8ab-3184514d31eso213845ab.1
-        for <linux-pci@vger.kernel.org>; Sat, 18 Mar 2023 23:01:05 -0700 (PDT)
+        with ESMTP id S229980AbjCSLXq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 19 Mar 2023 07:23:46 -0400
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85794211C8
+        for <linux-pci@vger.kernel.org>; Sun, 19 Mar 2023 04:23:44 -0700 (PDT)
+Received: by mail-ed1-x52f.google.com with SMTP id h8so36527796ede.8
+        for <linux-pci@vger.kernel.org>; Sun, 19 Mar 2023 04:23:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1679205664;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7jtobE7mdQ684Q9rpZyR9ThE+UBXlRxaYkXSGk1qWzI=;
-        b=Uv/GGmwuWmKmuai9ob/LIugQoqxPKWFQ7VQPGsUzDsFDNBg7szlIlGrjo7Wy6dUE5+
-         m5CLuuE8SgR+boruhHSQ2QGYMbhG+txFqoW37ungZHOAuhIlBH27W24o1IjrNdQOUGDn
-         rOBRSjw07ZsARNdte4ehKRi0jjkPaHBpLfkx4=
+        d=linaro.org; s=google; t=1679225023;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Uhjd68zfF5UiWTfwOfNThe6SqbXCr8qYgQuqxBosLCQ=;
+        b=y6pV4LwjyTHZWDZScr3dOeB0HT/Oexu7LE0PgThaO6GiZE//I7wPbu+Az3u670gqRL
+         Z6qQwJuwyfylluWvYqT0jfmpST/4LaYuWZJw2Blbejxm9kGDP2fgTKzW/lG0jZtGp2bF
+         yXbKUvSG8CN/vTOSKaJU+SktSLYqChOUkZFsARTUPTo9GTaA6kSIl1ua5mvNByk1lA6D
+         S5F3U4FLPVb/g9q0WT10r71JoJHV1YbsBgH67CI5w1D03vBETuFJ7hJdwc1eEWR8N0CG
+         Dgzf4BRYZjD9iQ/nPVr0d8wVBtV1aohdPS9bG0epM++7muuhCut/O9z2+itOft7TQrdd
+         9bYA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679205664;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7jtobE7mdQ684Q9rpZyR9ThE+UBXlRxaYkXSGk1qWzI=;
-        b=oIQh71jOAYTgwm7tHNkY47RUS916X0u/pq6ZsUGkIv6JpAqerl+/sPza0kpt1gN+4O
-         FxNQskwhQlrFvifpsWwqz87vgl7duC+9FddqOV8B44G+l1wOSIYZvIIwpCXccE0kvIqH
-         wYPRnOnNUtPhMlPvocOPbd5HazF0LJVvdzG3SiY8RGz548Lceaet7kyPb0mZbDYJTaBZ
-         xghWm0eVsPdiVBlUavyskpHuJYMhJJiHPRup1yLFAsVCIKpBL7oPqUrTHfljFcIS997R
-         sOVzGTHtnmGVcTSjlRr1uSi46oi6BzJPHZIZ78RLg2L9wg0F6RLcNkRjLEsFwdF63QNU
-         a+vw==
-X-Gm-Message-State: AO0yUKWY5Jzd0CyPbQ2DmHaff8y0dzALPoRvhCbX6nhVusLFpf9rg3ht
-        /5FWYYWEDFwgP9ivgxnEDjUlYhzuzbppLVbql16lKw==
-X-Google-Smtp-Source: AK7set8cLZYljQLpMgQgrBxrBo0UkMYzaidGYl/tBvUtvNEHoq8IQWEs2fBEX/GlE8CDFvEikWcBJNSxSYDOktq1GmA=
-X-Received: by 2002:a05:6e02:1d9b:b0:317:6591:95dd with SMTP id
- h27-20020a056e021d9b00b00317659195ddmr224882ila.9.1679205664302; Sat, 18 Mar
- 2023 23:01:04 -0700 (PDT)
+        d=1e100.net; s=20210112; t=1679225023;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Uhjd68zfF5UiWTfwOfNThe6SqbXCr8qYgQuqxBosLCQ=;
+        b=XmBqvOg0zMNxkW5VOQjMbUvi2B+Xafb/9PMHEiR9RgSveCgZsvJiDt57txpe4gwJTD
+         pbUmzIbp+9PR+VXqPKj0xO1Ale3J0s/HnwYPQVprwSET2R0cuh1krk7YSRHayQNqV7Mx
+         hrQ0fetGtYGwtgZNwoZyOX5rnTRQ+Ph8En09YhaoWuqmG5rApeGCHqijqTfbX4HOG8+B
+         B1cR5gnPEQiCoUNEdWhCeh7i90A1+nVKPsoyuqmVE3JKe3T2Z4AuC1Yc0jwOH0jsTG7x
+         O0Tqa1+PxLVk2DKVzfHUdzFT+kEq4RfSDqtUhnoD8EAKbRRudjhaLZ9kQnVZ+ZE+OGDp
+         pWgA==
+X-Gm-Message-State: AO0yUKVtP4gFjwoFh8l20hnZWceSqbT5c5YVqkvmEL9cUThkzYtYq9Lr
+        uKytg4WA95PJw8zxePbcYbgsMw==
+X-Google-Smtp-Source: AK7set9DH7t9vbYttxzDn2t+uwPKGFFb6IpYIdpWB85V46GlocLw+bx1xwjNNTedM94sH/tCTCze1w==
+X-Received: by 2002:aa7:d744:0:b0:4fd:2b05:aa2 with SMTP id a4-20020aa7d744000000b004fd2b050aa2mr9563909eds.42.1679225023065;
+        Sun, 19 Mar 2023 04:23:43 -0700 (PDT)
+Received: from ?IPV6:2a02:810d:15c0:828:5b5f:f22b:a0b:559d? ([2a02:810d:15c0:828:5b5f:f22b:a0b:559d])
+        by smtp.gmail.com with ESMTPSA id t17-20020a508d51000000b004fa012332ecsm3416669edt.1.2023.03.19.04.23.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 19 Mar 2023 04:23:42 -0700 (PDT)
+Message-ID: <64d0dffd-a5ce-4667-9d56-1c109ec73866@linaro.org>
+Date:   Sun, 19 Mar 2023 12:23:41 +0100
 MIME-Version: 1.0
-References: <bd48a3f0-138d-9c48-27d6-a5133f054c96@linux.intel.com> <20230317193056.GA1963022@bhelgaas>
-In-Reply-To: <20230317193056.GA1963022@bhelgaas>
-From:   Grant Grundler <grundler@chromium.org>
-Date:   Sat, 18 Mar 2023 23:00:52 -0700
-Message-ID: <CANEJEGuVTWTkFmnK0m-4Tn1OUvQQBLjCQ-fxL24jXAWaafQ9cw@mail.gmail.com>
-Subject: Re: [PATCHv2 pci-next 1/2] PCI/AER: correctable error message as KERN_INFO
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Grant Grundler <grundler@chromium.org>,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        "Oliver O 'Halloran" <oohall@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Rajat Khandelwal <rajat.khandelwal@linux.intel.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        Rajat Jain <rajatja@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.9.0
+Subject: Re: [PATCH v11 1/5] dt-bindings: PCI: ti,j721e-pci-*: add checks for
+ num-lanes
+Content-Language: en-US
+To:     Achal Verma <a-verma1@ti.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof Wilczy_ski <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Dhananjay Vilasrao Kangude <dkangude@cadence.com>,
+        Anindita Das <dasa@cadence.com>,
+        Yuan Zhao <yuanzhao@cadence.com>,
+        Milind Parab <mparab@cadence.com>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+References: <20230317075120.506267-1-a-verma1@ti.com>
+ <20230317075120.506267-2-a-verma1@ti.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <20230317075120.506267-2-a-verma1@ti.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 17, 2023 at 12:31=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org>=
- wrote:
->
-> On Fri, Mar 17, 2023 at 11:50:22AM -0700, Sathyanarayanan Kuppuswamy wrot=
-e:
-> > On 3/17/23 10:51 AM, Grant Grundler wrote:
-> > > Since correctable errors have been corrected (and counted), the dmesg=
- output
-> > > should not be reported as a warning, but rather as "informational".
-> > >
-> > > Otherwise, using a certain well known vendor's PCIe parts in a USB4 d=
-ocking
-> > > station, the dmesg buffer can be spammed with correctable errors, 717=
- bytes
-> > > per instance, potentially many MB per day.
-> >
-> > Why don't you investigate why you are getting so many correctable error=
-s?
-
-It's a bit difficult to insert a PCIe logic analyzer on someone else's
-soldered down parts. Intel is the only party with all the HW in a form
-that allows that level of debugging.
-
-> > Isn't solving the problem preferable to hiding the logs?
-
-Of course! But note that spamming the logs with low priority messages
-isn't acceptable either. So we should be doing both.
-
-> I hope there's some effort to find the cause of the errors, too.
-
-Rajat (from Intel) has told me that Intel is investigating this.
-
-I was told the devices are reporting two kinds of correctable
-errors:replay rollover and replay timeout.
-
-This may be related to a replay timer value (PCIERTP1) in the PCI
-device is too short for PCIe tunneling (USB4).  It's not clear to me
-if this value is hardcoded in the Intel NIC or if it's configurable.
-But I've been waiting since last December for Intel to give me
-guidance on what is implemented in their NIC.
-
-> But I do think KERN_INFO is a reasonable level for errors that have
-> already been corrected.  KERN_ERR seems a little bit too severe to me.
->
-> Does changing to KERN_INFO keep the messages out of the dmesg log?  I
-> don't think it does, because *most* kernel messages are at KERN_INFO.
-> This may be just a commit log clarification.
-
-True. I'm not sure why I thought KERN_INFO would not show up.  If they
-do, I'll depend on the rate limiting patch to not spam the system
-logs.
-
-> I would like to know *which* devices are involved.
-> Is there some reason for weasel-wording this?
-
-I don't think there is. Rajat previously mentioned this was for the HP
-TBT4 docking station. The two USB4 docking station vendors I'm
-familiar with are both using Intel i225 NIC (foxville). This appears
-to be a problem only with the NIC behind a PCIe tunnel and not a HW
-problem with the docking station overall (which is what I previously
-assumed.)
-
-FTR, this same NIC works and does not report correctable errors when
-directly connected to a PCI host controller. It's not as happy on the
-other side of a USB4 PCIe tunnel but still appears to work correctly
-(retries are succeeding). I'm not able to point at any NIC failures
-(yet). But I'm certainly not very happy that the same company which is
-the primary backer of thunderbolt and USB4 isn't able to
-design/configure parts so they play well together.
-
->  Knowing which devices are involved
-> helps in triaging issue reports.  If there are any public reports on
-> mailing lists, etc, we could also cite those here to help users find
-> this solution.
-
-Yup - that's exactly how I've been helped so often in the past as well.
+On 17/03/2023 08:51, Achal Verma wrote:
+> From: Matt Ranostay <mranostay@ti.com>
+> 
+> Add num-lanes schema checks based on compatible string on available lanes
+> for that platform.
+> 
+> Signed-off-by: Matt Ranostay <mranostay@ti.com>
+> Signed-off-by: Achal Verma <a-verma1@ti.com>
 
 
->
-> > > Given the "WARN" priority, these messages have already confused the t=
-ypical
-> > > user that stumbles across them, support staff (triaging feedback repo=
-rts),
-> > > and more than a few linux kernel devs. Changing to INFO will hide the=
-se
-> > > messages from most audiences.
-> > >
-> > > Signed-off-by: Grant Grundler <grundler@chromium.org>
-> > > ---
-> > >  drivers/pci/pcie/aer.c | 29 +++++++++++++++++++----------
-> > >  1 file changed, 19 insertions(+), 10 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > > index f6c24ded134c..cb6b96233967 100644
-> > > --- a/drivers/pci/pcie/aer.c
-> > > +++ b/drivers/pci/pcie/aer.c
-> > > @@ -687,23 +687,29 @@ static void __aer_print_error(struct pci_dev *d=
-ev,
-> > >  {
-> > >     const char **strings;
-> > >     unsigned long status =3D info->status & ~info->mask;
-> > > -   const char *level, *errmsg;
-> > >     int i;
-> > >
-> > >     if (info->severity =3D=3D AER_CORRECTABLE) {
-> > >             strings =3D aer_correctable_error_string;
-> > > -           level =3D KERN_WARNING;
-> > > +           pci_info(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
-> > > +                   info->status, info->mask);
-> > >     } else {
-> > >             strings =3D aer_uncorrectable_error_string;
-> > > -           level =3D KERN_ERR;
-> > > +           pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n",
-> > > +                   info->status, info->mask);
-> > >     }
-> > >
-> > >     for_each_set_bit(i, &status, 32) {
-> > > -           errmsg =3D strings[i];
-> > > +           const char *errmsg =3D strings[i];
-> > > +
-> > >             if (!errmsg)
-> > >                     errmsg =3D "Unknown Error Bit";
-> > >
-> > > -           pci_printk(level, dev, "   [%2d] %-22s%s\n", i, errmsg,
-> > > +           if (info->severity =3D=3D AER_CORRECTABLE)
-> > > +                   pci_info(dev, "   [%2d] %-22s%s\n", i, errmsg,
-> > > +                           info->first_error =3D=3D i ? " (First)" :=
- "");
-> > > +           else
-> > > +                   pci_err(dev, "   [%2d] %-22s%s\n", i, errmsg,
-> > >                             info->first_error =3D=3D i ? " (First)" :=
- "");
->
-> The - 5 lines, + 11 lines diff and repetition of the printk strings
-> doesn't seem like an improvement compared to the -1, +1 in the v1
-> patch:
->
->   @@ -692,7 +692,7 @@ static void __aer_print_error(struct pci_dev *dev,
->
->           if (info->severity =3D=3D AER_CORRECTABLE) {
->                   strings =3D aer_correctable_error_string;
->   -               level =3D KERN_WARNING;
->   +               level =3D KERN_INFO;
->           } else {
->
-> But maybe there's a reason?
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-Not intentionally - but Yes - the next patch is simpler when changing
-to pci_info_ratelimit. This change will show up in either the first or
-second patch.
+Best regards,
+Krzysztof
 
-I can switch that hunk back to V1 code if you prefer that for this patch.
-
-cheers,
-grant
-
->
-> > >     }
-> > >     pci_dev_aer_stats_incr(dev, info);
-> > > @@ -724,7 +730,7 @@ void aer_print_error(struct pci_dev *dev, struct =
-aer_err_info *info)
-> > >     layer =3D AER_GET_LAYER_ERROR(info->severity, info->status);
-> > >     agent =3D AER_GET_AGENT(info->severity, info->status);
-> > >
-> > > -   level =3D (info->severity =3D=3D AER_CORRECTABLE) ? KERN_WARNING =
-: KERN_ERR;
-> > > +   level =3D (info->severity =3D=3D AER_CORRECTABLE) ? KERN_INFO : K=
-ERN_ERR;
-> > >
-> > >     pci_printk(level, dev, "PCIe Bus Error: severity=3D%s, type=3D%s,=
- (%s)\n",
-> > >                aer_error_severity_string[info->severity],
-> > > @@ -797,14 +803,17 @@ void cper_print_aer(struct pci_dev *dev, int ae=
-r_severity,
-> > >     info.mask =3D mask;
-> > >     info.first_error =3D PCI_ERR_CAP_FEP(aer->cap_control);
-> > >
-> > > -   pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, ma=
-sk);
-> > >     __aer_print_error(dev, &info);
-> > > -   pci_err(dev, "aer_layer=3D%s, aer_agent=3D%s\n",
-> > > -           aer_error_layer[layer], aer_agent_string[agent]);
-> > >
-> > > -   if (aer_severity !=3D AER_CORRECTABLE)
-> > > +   if (aer_severity =3D=3D AER_CORRECTABLE) {
-> > > +           pci_info(dev, "aer_layer=3D%s, aer_agent=3D%s\n",
-> > > +                   aer_error_layer[layer], aer_agent_string[agent]);
-> > > +   } else {
-> > > +           pci_err(dev, "aer_layer=3D%s, aer_agent=3D%s\n",
-> > > +                   aer_error_layer[layer], aer_agent_string[agent]);
-> > >             pci_err(dev, "aer_uncor_severity: 0x%08x\n",
-> > >                     aer->uncor_severity);
-> > > +   }
-> > >
-> > >     if (tlp_header_valid)
-> > >             __print_tlp_header(dev, &aer->header_log);
-> >
-> > --
-> > Sathyanarayanan Kuppuswamy
-> > Linux Kernel Developer
