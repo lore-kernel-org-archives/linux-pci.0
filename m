@@ -2,152 +2,307 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD8F8C6FD1D
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Mar 2023 12:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EDA0C76195
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Mar 2023 13:16:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231213AbjCTMOL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Mar 2023 08:14:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37956 "EHLO
+        id S231580AbjCTNQO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Mar 2023 09:16:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231236AbjCTMOI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2023 08:14:08 -0400
-Received: from mail-lj1-x22a.google.com (mail-lj1-x22a.google.com [IPv6:2a00:1450:4864:20::22a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5CA01FDA;
-        Mon, 20 Mar 2023 05:14:05 -0700 (PDT)
-Received: by mail-lj1-x22a.google.com with SMTP id a11so1340287lji.6;
-        Mon, 20 Mar 2023 05:14:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679314444;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=t9LnjLbPanhFFeBnqt4/w6DoMU3P/cWwvDYe1wNCVYA=;
-        b=WoCxGdyRQUoaFeRCl2SxcsyXe8gXqBTSOAxx8j/EKrQ4iGU2PnPw7UjGmcFYMF5mNN
-         3EsbLQM8ZbWQaiNyXWTZZ+b7DHmk/EhfW3VeiqhpOCj1l8k4mYUS9LBEk/jFEwEPH03+
-         /8g075PpJceFOkTNij/58fUUZteuDVIrr2LFo2gschYPQb1T/YzT3hIQ1fOJRBMWfG7R
-         gzPxVsQJcRK/uZhFWZG3CGR6RD/bmauOPQgAByZ04Ha7FLpih16uEQST5/8SyxE/yd8o
-         J1/WY3tlOcE5yD9sZt0i7xmBTP0RQIElOkORYOKDI/EAUUQOv9dUXc80pIWCmeUOMms5
-         9qqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679314444;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=t9LnjLbPanhFFeBnqt4/w6DoMU3P/cWwvDYe1wNCVYA=;
-        b=7f59ZEK0TJZMuh5RBQc659WDipw90K9YZHm03Ugb9hPpNFKwEfbrKoC64WMK7ATeiK
-         LZIISp891E9nPEMU5jZmGhG7s6QshGFlMNgEScTKpp2VNd99fqUdooh9AM0VnoE6oRWo
-         OwCd2dkIg+PoYwHfhnlXuZfjBdzVudfDfhNZIarpVtRTm/CKt5V3zHQ4cxeDISNsqafl
-         5sBsylAR6Eg3w4ZXintuBHiEc1luG5aR/KamoaNjKKb2qBJbAmEM0ASp/vNdZFEvyPFI
-         bK63t/l+Zpc9gyoDjvUBYPwwiEKECv8FrMkNjiVQH/VWYFLfaVCGXTtfA1O2kXp0QD+u
-         PfpA==
-X-Gm-Message-State: AO0yUKW8gAPi1k2uPDqr45E0jTrMMLd2wISYA71kv07cIJOUZgQHiJqO
-        97T64TZ5CCm6BFXL58YlxCQ=
-X-Google-Smtp-Source: AK7set/yWX5zDIOxdnEBzeOKx+t3YMNYMsGjravxokl7smUIBtcuptxPbjKE9nhED9ZxC5OoaFu/rQ==
-X-Received: by 2002:a2e:300e:0:b0:29e:5dc2:903a with SMTP id w14-20020a2e300e000000b0029e5dc2903amr684918ljw.23.1679314444011;
-        Mon, 20 Mar 2023 05:14:04 -0700 (PDT)
-Received: from mobilestation ([95.79.133.202])
-        by smtp.gmail.com with ESMTPSA id y21-20020a2e9d55000000b002989fc0a69csm1700190ljj.124.2023.03.20.05.14.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Mar 2023 05:14:03 -0700 (PDT)
-Date:   Mon, 20 Mar 2023 15:14:01 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Cai Huoqing <cai.huoqing@linux.dev>
-Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
+        with ESMTP id S231596AbjCTNQN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2023 09:16:13 -0400
+Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FFC723840;
+        Mon, 20 Mar 2023 06:16:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1679318169; x=1710854169;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=pKBg2DWRtjN/3o0GQ+Gz1Jmqpx4HtRyfpegHo4oOuDE=;
+  b=IevzGpzGRGvW6GHvpuGTsY/dEcTF4i+gKzGLKMxz9JkrMv4+oNpy0zO4
+   0WHVKpWOELHGsdINiwE7WeZkwW0EjFz+KVEiUNmME1rCsw3T0eSEf8hiX
+   GeL0Se5Zj4g90Kqsi1TQbql+lA0XbQ8eUCuPGAc3qhkwcEzXy4uByNex5
+   qYRF93wmVEcKPRsI0AUd4fJWbCWmdtUdAkkefFAN4SZ/El/2Xxtl6di/y
+   500+a/Ci/ySo7dQawdXEZVO0IOmHRD3ki5ziCw1AOnbEOvpW0EcbliCNn
+   mgV9jD1sqor+3xpU75mvuKGmSumoZofFYjxnOc3fDI+yGszd5WSy4N9QA
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10654"; a="341015291"
+X-IronPort-AV: E=Sophos;i="5.98,274,1673942400"; 
+   d="scan'208";a="341015291"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Mar 2023 06:16:07 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10654"; a="824468996"
+X-IronPort-AV: E=Sophos;i="5.98,274,1673942400"; 
+   d="scan'208";a="824468996"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga001.fm.intel.com with ESMTP; 20 Mar 2023 06:15:58 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 0FA3050B; Mon, 20 Mar 2023 15:16:44 +0200 (EET)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     =?UTF-8?q?Micka=C3=ABl=20Sala=C3=BCn?= <mic@digikod.net>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        "Maciej W. Rozycki" <macro@orcam.me.uk>,
+        Juergen Gross <jgross@suse.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-acpi@vger.kernel.org
+Cc:     Miguel Ojeda <ojeda@kernel.org>,
+        Richard Henderson <richard.henderson@linaro.org>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Anatolij Gustschin <agust@denx.de>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Rich Felker <dalias@libc.org>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        "David S. Miller" <davem@davemloft.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 0/5] dmaengine: dw-edma: Add support for native HDMA
-Message-ID: <20230320121401.zkcjbqmghzacpffh@mobilestation>
-References: <20230315012840.6986-1-cai.huoqing@linux.dev>
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>
+Subject: [PATCH v6 2/4] PCI: Split pci_bus_for_each_resource_p() out of pci_bus_for_each_resource()
+Date:   Mon, 20 Mar 2023 15:16:31 +0200
+Message-Id: <20230320131633.61680-3-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230320131633.61680-1-andriy.shevchenko@linux.intel.com>
+References: <20230320131633.61680-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230315012840.6986-1-cai.huoqing@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Cai
+Refactor pci_bus_for_each_resource() in the same way as it's done in
+pci_dev_for_each_resource() case. This will allow to hide iterator
+inside the loop, where it's not used otherwise.
 
-On Wed, Mar 15, 2023 at 09:28:31AM +0800, Cai Huoqing wrote:
-> Add support for HDMA NATIVE, as long the IP design has set
-> the compatible register map parameter-HDMA_NATIVE,
-> which allows compatibility for native HDMA register configuration.
-> 
-> The HDMA Hyper-DMA IP is an enhancement of the eDMA embedded-DMA IP.
-> And the native HDMA registers are different from eDMA,
-> so this patch add support for HDMA NATIVE mode.
-> 
-> HDMA write and read channels operate independently to maximize
-> the performance of the HDMA read and write data transfer over
-> the link When you configure the HDMA with multiple read channels,
-> then it uses a round robin (RR) arbitration scheme to select
-> the next read channel to be serviced.The same applies when
-> youhave multiple write channels.
-> 
-> The native HDMA driver also supports a maximum of 16 independent
-> channels (8 write + 8 read), which can run simultaneously.
-> Both SAR (Source Address Register) and DAR (Destination Address Register)
-> are aligned to byte.
+No functional changes intended.
 
-It seems like we are getting towards the series finalization. I'll
-test it out on my HW after v8 is submitted. Meanwhile could you please
-clarify whether you have a real device with DW HDMA engine on board?
-You keep submitting the DW eDMA driver core update, but there is no
-glue-driver or low-level device driver patch for a real device which
-would set the EDMA_MF_HDMA_NATIVE mapping.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Reviewed-by: Krzysztof Wilczyński <kw@linux.com>
+---
+ .clang-format                      |  1 +
+ drivers/pci/bus.c                  |  7 +++----
+ drivers/pci/hotplug/shpchp_sysfs.c |  8 ++++----
+ drivers/pci/pci.c                  |  5 ++---
+ drivers/pci/probe.c                |  2 +-
+ drivers/pci/setup-bus.c            | 10 ++++------
+ include/linux/pci.h                | 14 ++++++++++----
+ 7 files changed, 25 insertions(+), 22 deletions(-)
 
--Serge(y)
+diff --git a/.clang-format b/.clang-format
+index 266abb843654..81c9f055086f 100644
+--- a/.clang-format
++++ b/.clang-format
+@@ -520,6 +520,7 @@ ForEachMacros:
+   - 'of_property_for_each_string'
+   - 'of_property_for_each_u32'
+   - 'pci_bus_for_each_resource'
++  - 'pci_bus_for_each_resource_p'
+   - 'pci_dev_for_each_resource'
+   - 'pci_dev_for_each_resource_p'
+   - 'pci_doe_for_each_off'
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 549c4bd5caec..b0789d332d36 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -182,13 +182,13 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
+ 		void *alignf_data,
+ 		struct pci_bus_region *region)
+ {
+-	int i, ret;
+ 	struct resource *r, avail;
+ 	resource_size_t max;
++	int ret;
+ 
+ 	type_mask |= IORESOURCE_TYPE_BITS;
+ 
+-	pci_bus_for_each_resource(bus, r, i) {
++	pci_bus_for_each_resource_p(bus, r) {
+ 		resource_size_t min_used = min;
+ 
+ 		if (!r)
+@@ -289,9 +289,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
+ 	struct resource *res = &dev->resource[idx];
+ 	struct resource orig_res = *res;
+ 	struct resource *r;
+-	int i;
+ 
+-	pci_bus_for_each_resource(bus, r, i) {
++	pci_bus_for_each_resource_p(bus, r) {
+ 		resource_size_t start, end;
+ 
+ 		if (!r)
+diff --git a/drivers/pci/hotplug/shpchp_sysfs.c b/drivers/pci/hotplug/shpchp_sysfs.c
+index 64beed7a26be..ff04f0c5e7c3 100644
+--- a/drivers/pci/hotplug/shpchp_sysfs.c
++++ b/drivers/pci/hotplug/shpchp_sysfs.c
+@@ -24,16 +24,16 @@
+ static ssize_t show_ctrl(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+ 	struct pci_dev *pdev;
+-	int index, busnr;
+ 	struct resource *res;
+ 	struct pci_bus *bus;
+ 	size_t len = 0;
++	int busnr;
+ 
+ 	pdev = to_pci_dev(dev);
+ 	bus = pdev->subordinate;
+ 
+ 	len += sysfs_emit_at(buf, len, "Free resources: memory\n");
+-	pci_bus_for_each_resource(bus, res, index) {
++	pci_bus_for_each_resource_p(bus, res) {
+ 		if (res && (res->flags & IORESOURCE_MEM) &&
+ 				!(res->flags & IORESOURCE_PREFETCH)) {
+ 			len += sysfs_emit_at(buf, len,
+@@ -43,7 +43,7 @@ static ssize_t show_ctrl(struct device *dev, struct device_attribute *attr, char
+ 		}
+ 	}
+ 	len += sysfs_emit_at(buf, len, "Free resources: prefetchable memory\n");
+-	pci_bus_for_each_resource(bus, res, index) {
++	pci_bus_for_each_resource_p(bus, res) {
+ 		if (res && (res->flags & IORESOURCE_MEM) &&
+ 			       (res->flags & IORESOURCE_PREFETCH)) {
+ 			len += sysfs_emit_at(buf, len,
+@@ -53,7 +53,7 @@ static ssize_t show_ctrl(struct device *dev, struct device_attribute *attr, char
+ 		}
+ 	}
+ 	len += sysfs_emit_at(buf, len, "Free resources: IO\n");
+-	pci_bus_for_each_resource(bus, res, index) {
++	pci_bus_for_each_resource_p(bus, res) {
+ 		if (res && (res->flags & IORESOURCE_IO)) {
+ 			len += sysfs_emit_at(buf, len,
+ 					     "start = %8.8llx, length = %8.8llx\n",
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7a67611dc5f4..2f8915ab41ef 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -779,9 +779,8 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ {
+ 	const struct pci_bus *bus = dev->bus;
+ 	struct resource *r;
+-	int i;
+ 
+-	pci_bus_for_each_resource(bus, r, i) {
++	pci_bus_for_each_resource_p(bus, r) {
+ 		if (!r)
+ 			continue;
+ 		if (resource_contains(r, res)) {
+@@ -799,7 +798,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+ 			 * be both a positively-decoded aperture and a
+ 			 * subtractively-decoded region that contain the BAR.
+ 			 * We want the positively-decoded one, so this depends
+-			 * on pci_bus_for_each_resource() giving us those
++			 * on pci_bus_for_each_resource_p() giving us those
+ 			 * first.
+ 			 */
+ 			return r;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index a3f68b6ba6ac..5ada4c155d3c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -533,7 +533,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
+ 	pci_read_bridge_mmio_pref(child);
+ 
+ 	if (dev->transparent) {
+-		pci_bus_for_each_resource(child->parent, res, i) {
++		pci_bus_for_each_resource_p(child->parent, res) {
+ 			if (res && res->flags) {
+ 				pci_bus_add_resource(child, res,
+ 						     PCI_SUBTRACTIVE_DECODE);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d4fc7665f70a..d6ead027255f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -770,9 +770,8 @@ static struct resource *find_bus_resource_of_type(struct pci_bus *bus,
+ 						  unsigned long type)
+ {
+ 	struct resource *r, *r_assigned = NULL;
+-	int i;
+ 
+-	pci_bus_for_each_resource(bus, r, i) {
++	pci_bus_for_each_resource_p(bus, r) {
+ 		if (r == &ioport_resource || r == &iomem_resource)
+ 			continue;
+ 		if (r && (r->flags & type_mask) == type && !r->parent)
+@@ -1204,7 +1203,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			additional_mmio_pref_size = 0;
+ 	struct resource *pref;
+ 	struct pci_host_bridge *host;
+-	int hdr_type, i, ret;
++	int hdr_type, ret;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+@@ -1228,7 +1227,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		host = to_pci_host_bridge(bus->bridge);
+ 		if (!host->size_windows)
+ 			return;
+-		pci_bus_for_each_resource(bus, pref, i)
++		pci_bus_for_each_resource_p(bus, pref)
+ 			if (pref && (pref->flags & IORESOURCE_PREFETCH))
+ 				break;
+ 		hdr_type = -1;	/* Intentionally invalid - not a PCI device. */
+@@ -1333,12 +1332,11 @@ EXPORT_SYMBOL(pci_bus_size_bridges);
+ 
+ static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
+ {
+-	int i;
+ 	struct resource *parent_r;
+ 	unsigned long mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 			     IORESOURCE_PREFETCH;
+ 
+-	pci_bus_for_each_resource(b, parent_r, i) {
++	pci_bus_for_each_resource_p(b, parent_r) {
+ 		if (!parent_r)
+ 			continue;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a97f026afaed..f0be961fcd7e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1445,10 +1445,16 @@ int devm_request_pci_bus_resources(struct device *dev,
+ /* Temporary until new and working PCI SBR API in place */
+ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+ 
+-#define pci_bus_for_each_resource(bus, res, i)				\
+-	for (i = 0;							\
+-	    (res = pci_bus_resource_n(bus, i)) || i < PCI_BRIDGE_RESOURCE_NUM; \
+-	     i++)
++#define __pci_bus_for_each_resource(bus, res, __i, vartype)			\
++	for (vartype __i = 0;							\
++	     res = pci_bus_resource_n(bus, __i), __i < PCI_BRIDGE_RESOURCE_NUM;	\
++	     __i++)
++
++#define pci_bus_for_each_resource(bus, res, i)					\
++	__pci_bus_for_each_resource(bus, res, i, )
++
++#define pci_bus_for_each_resource_p(bus, res)					\
++	__pci_bus_for_each_resource(bus, res, __i, unsigned int)
+ 
+ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 			struct resource *res, resource_size_t size,
+-- 
+2.39.2
 
-> 
-> Cai Huoqing (2):
->   dmaengine: dw-edma: Add support for native HDMA
->   dmaengine: dw-edma: Optimization in dw_edma_v0_core_handle_int
-> 
-> Cai huoqing (3):
->   dmaengine: dw-edma: Rename dw_edma_core_ops structure to
->     dw_edma_plat_ops
->   dmaengine: dw-edma: Create a new dw_edma_core_ops structure to
->     abstract controller operation
->   dmaengine: dw-edma: Add HDMA DebugFS support
-> 
-> v6->v7:
->   [1/5]
->   1.Update the commit log.
->   [2/5]
->   2.Revert dw_edma_core_handle_int back to dw-edma-core.h.
->   3.Fix code style.
->   [3/5]
->   4.Move the change of register file from patch[4/5] to patch[3/5].
->   5.Fix code style.
-> 
-> v6 link:
->   https://lore.kernel.org/lkml/20230310032342.17395-1-cai.huoqing@linux.dev/
-> 
->  drivers/dma/dw-edma/Makefile                 |   8 +-
->  drivers/dma/dw-edma/dw-edma-core.c           |  86 ++----
->  drivers/dma/dw-edma/dw-edma-core.h           |  58 ++++
->  drivers/dma/dw-edma/dw-edma-pcie.c           |   4 +-
->  drivers/dma/dw-edma/dw-edma-v0-core.c        |  91 ++++--
->  drivers/dma/dw-edma/dw-edma-v0-core.h        |  14 +-
->  drivers/dma/dw-edma/dw-hdma-v0-core.c        | 277 +++++++++++++++++++
->  drivers/dma/dw-edma/dw-hdma-v0-core.h        |  17 ++
->  drivers/dma/dw-edma/dw-hdma-v0-debugfs.c     | 176 ++++++++++++
->  drivers/dma/dw-edma/dw-hdma-v0-debugfs.h     |  22 ++
->  drivers/dma/dw-edma/dw-hdma-v0-regs.h        | 130 +++++++++
->  drivers/pci/controller/dwc/pcie-designware.c |   2 +-
->  include/linux/dma/edma.h                     |   7 +-
->  13 files changed, 785 insertions(+), 107 deletions(-)
->  create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-core.c
->  create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-core.h
->  create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-debugfs.c
->  create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-debugfs.h
->  create mode 100644 drivers/dma/dw-edma/dw-hdma-v0-regs.h
-> 
-> -- 
-> 2.34.1
-> 
