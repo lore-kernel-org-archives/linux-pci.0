@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E0A0C7618E
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Mar 2023 18:35:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E8C3C7618A
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Mar 2023 18:35:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229637AbjCTSfI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Mar 2023 14:35:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33142 "EHLO
+        id S231448AbjCTSfq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Mar 2023 14:35:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32784 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231478AbjCTSee (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2023 14:34:34 -0400
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on20604.outbound.protection.outlook.com [IPv6:2a01:111:f400:7eaa::604])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37FAB2E0FF;
-        Mon, 20 Mar 2023 11:26:36 -0700 (PDT)
+        with ESMTP id S231631AbjCTSfD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2023 14:35:03 -0400
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on20606.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe5a::606])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FC663598;
+        Mon, 20 Mar 2023 11:27:19 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IwoQzOubhEHVSidMieDmqnphoRVfhhXhpWz6i/uUj2PuYNGhNkpStrd3nqUlTdtLW/+D6dlCr7ZhC2uk31RFPub7JuzMOfmfRDAn1i26U+0PW5mdXk088OYboiyVErojCAeyQKep3+saCQIktMIVXXh2+y2r5R4R1gCImjOUs1YHzqYcQrmSgKBks+ME4yhkE6hq2VPxSaO1HGG5+/61A/DrihlFs2iXvSYeeE5Qq7yrAK+nI7kjPQk7QMQKhBSUO5h3FfaxDecB1KHJxQrjj1MD3T2MAl32h5bTgivwondneG7G43OcBVE/5M3/SuNYCsPcwh2amnLa3+8KBbPnGQ==
+ b=dPN9yd6hOnaPRTajKmTctjnxg10X+xxtmCFg+O3M8hoMpSOPS7Vhr32TbDoxbP8bqCT2pd6eHEI5YJ7EKQGt2sxr2x711TO19Lz9xxNsXsYwIQSa7ao/iltD1bkH8NBLrAsiJ9GUymH7W6CencuhFvKBu37vBC2Q3drtO+fQt8jhfz8LOa16yQwxGGLL6kwT7Gw0dPXURB3DelIHJTf+ReIyArv7G6Y9CYeJShgKSXczBbWM2cbs+y0ZgIVVjW5WwGV6J43sP+5C4cPeo0s9OONN5LVEQ7aVdQX0rFx2/eeRnNj7yxyrJs5CiKG/NBGNaiWoM9HLAWqfP/A1RUSJLw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=pNCTaro6ewyVWAmKyh/Qk0oQqzhR9dQ1kRZCS8CFNvY=;
- b=Z0v0XusEuQtcZYNp3TxV7mLwOfWRUS3F7g5hxzIQG2mMaJYTn/612H92D5z4aiGwSUzgaRyIcn1vrFuelyMTtEXKONe3O02wr2YVbRGLvejbqBi7bgJKBlKjXOxDwhi9TLkCDwWsYiAx63V6BFeEewW1qd3qahGLW/buGIT+AE/o309mN8N/cRZh1E+sRLXkbtVsXJF601srm2hg4u2aIPQZj44aR4MGOmEDsvCLfy/A6VdG6ijYfqZlOiJygsUyiwcLrPB1m+ZuqkLNdymWXwPuttTHhI0UaaQSyyCtMYQxUHJ5TmOid+QyGWbv3HXEk0VchF3rKMWP0GN/YFyjbg==
+ bh=oVRwgFgeJYSRsGwUZ2XIMEM87v9qQMGzP1nTzHvrqW4=;
+ b=HbrZfUVrPG4e9H391ggnRiosA0hjaXGdDT1qSlK0mnbofkey1NHHQWo6T4YC+yz/msND4Xnpfx9kX4kqT/HGcXrdO07qpKiJYpLB8GVip4skg+bAbq/pXqivZKYBWWgjJbaAtj2oTTW6GCxuMlWsLts6ixic1dUYmS6AaYJ+ifllZ5EQuEoaBAWuYR2EUwd1Zi+YbCOIw+GJ2VJ84iNp6uAZDDhIAWBkyI8G62eLi+y9OXuvKNCaQF/cmNMucoQPeSvTsuBMKfqyWzYnIzmHi8D3HzefgkrnZi9wKtDErAHwkCJNC1Z+6TpEtK9lQbNOhNKxOnUt7sI4QVUCJVRXjQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.118.232) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -28,18 +28,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pNCTaro6ewyVWAmKyh/Qk0oQqzhR9dQ1kRZCS8CFNvY=;
- b=patRxxeQu4JLr8blBdscvmFMn6UMpZNX2uAhzg+w5CPa3xDLh89Pt8Q+Clm+O6IGn80Lli4ESGTNszgH4GLV0s4IPGr6OxIBNZfUQ8YAKPpX1JMDd0f+TB76/Yhmt35FKTwvJLOcavOSO3mQhMyioJtzlhzWXQK+J4YgLCeIepXEib2Aw0aLJlA/dCcVsi5hnfMsZkZzKl3KGcqTKM/KPKTgXuvbiSr6N0Q2MibqEcSyrHA6kWE7PsZgkDJ3c/QGGtsVBm3R0vcy/DYA66itGnh2HljhsfSrxXAFrKCxGngeTdxLMHnb38hvGZf8qYEXugPVKmxfpkySvinYvd3Mrw==
-Received: from BN9PR03CA0735.namprd03.prod.outlook.com (2603:10b6:408:110::20)
- by MN2PR12MB4208.namprd12.prod.outlook.com (2603:10b6:208:1d0::18) with
+ bh=oVRwgFgeJYSRsGwUZ2XIMEM87v9qQMGzP1nTzHvrqW4=;
+ b=r5hWqjepssJwnDPok+6zZ4Ykp9z7s0Xyn4soUqFahCe6fllfO/2VCD0Y6BdsOYCx9oLTSAtw5A7q3vOi4srFbDkcfauZUU+wnadwEncnjuU1SnlMTO4DFR/e24wb5C9MO/L1GK9xrisGsKultjz0jZh6TdQ/89fTMKcKC+PIVGwPxGrkt4JI0RnS1vQrpoBTHC/C/Y8LQCsU34r4w9tB/ePBhGrFo3Pt5CzzwL7J7Fs+uN0CzEhrDLW8ciGeGJB+EKSB+t331DoPqs8tzjsOzKHji5oOU+3hMQlb/w3kd4781yhTUBGmncZwnhvfybWyHwYQ6GYFeJvMzIUDAvI72g==
+Received: from BN0PR04CA0125.namprd04.prod.outlook.com (2603:10b6:408:ed::10)
+ by BL1PR12MB5112.namprd12.prod.outlook.com (2603:10b6:208:316::16) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37; Mon, 20 Mar
- 2023 18:26:07 +0000
-Received: from BN8NAM11FT087.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:110:cafe::cc) by BN9PR03CA0735.outlook.office365.com
- (2603:10b6:408:110::20) with Microsoft SMTP Server (version=TLS1_2,
+ 2023 18:26:41 +0000
+Received: from BN8NAM11FT023.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:ed:cafe::9e) by BN0PR04CA0125.outlook.office365.com
+ (2603:10b6:408:ed::10) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37 via Frontend
- Transport; Mon, 20 Mar 2023 18:26:07 +0000
+ Transport; Mon, 20 Mar 2023 18:26:41 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -47,20 +47,20 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.118.232 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.118.232) by
- BN8NAM11FT087.mail.protection.outlook.com (10.13.177.24) with Microsoft SMTP
+ BN8NAM11FT023.mail.protection.outlook.com (10.13.177.103) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6222.16 via Frontend Transport; Mon, 20 Mar 2023 18:26:06 +0000
-Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
+ 15.20.6222.16 via Frontend Transport; Mon, 20 Mar 2023 18:26:40 +0000
+Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
  (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.5; Mon, 20 Mar 2023
- 11:25:58 -0700
+ 11:26:33 -0700
 Received: from drhqmail202.nvidia.com (10.126.190.181) by
- drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.37; Mon, 20 Mar 2023 11:25:58 -0700
+ 15.2.986.37; Mon, 20 Mar 2023 11:26:32 -0700
 Received: from sumitg-l4t.nvidia.com (10.127.8.10) by mail.nvidia.com
  (10.126.190.181) with Microsoft SMTP Server id 15.2.986.5 via Frontend
- Transport; Mon, 20 Mar 2023 11:25:53 -0700
+ Transport; Mon, 20 Mar 2023 11:26:27 -0700
 From:   Sumit Gupta <sumitg@nvidia.com>
 To:     <treding@nvidia.com>, <krzysztof.kozlowski@linaro.org>,
         <dmitry.osipenko@collabora.com>, <viresh.kumar@linaro.org>,
@@ -72,9 +72,9 @@ CC:     <linux-kernel@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
         <kw@linux.com>, <bhelgaas@google.com>, <vidyas@nvidia.com>,
         <sanjayc@nvidia.com>, <ksitaraman@nvidia.com>, <ishah@nvidia.com>,
         <bbasu@nvidia.com>, <sumitg@nvidia.com>
-Subject: [Patch v3 06/11] arm64: tegra: Add cpu OPP tables and interconnects property
-Date:   Mon, 20 Mar 2023 23:54:36 +0530
-Message-ID: <20230320182441.11904-7-sumitg@nvidia.com>
+Subject: [Patch v3 08/11] memory: tegra: make cpu cluster bw request a multiple of mc channels
+Date:   Mon, 20 Mar 2023 23:54:38 +0530
+Message-ID: <20230320182441.11904-9-sumitg@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230320182441.11904-1-sumitg@nvidia.com>
 References: <20230320182441.11904-1-sumitg@nvidia.com>
@@ -83,413 +83,144 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT087:EE_|MN2PR12MB4208:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8cf87a40-3128-40d5-c742-08db29709255
+X-MS-TrafficTypeDiagnostic: BN8NAM11FT023:EE_|BL1PR12MB5112:EE_
+X-MS-Office365-Filtering-Correlation-Id: 43e773a7-e4d4-4335-74c0-08db2970a694
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: HhehNrbaR7qyRdQ1oAiXW0HmJn8CWZVAKutBD9g5iicGCfmK/nxa6qcFLppFYj6EcCPrd2CXa3VEDJ9hWS3Ge7U7bAvLOx6cr94nWg1Ha6qvVyrhQOvXAGqYFWGlVgSUifipQ6DBDmx75DpcyK93dBs90j/1hvh8alKdfarNQggEud9UiXRhWywCU1bEk/6Da/pWPLbb4PnLOCGgkyvOUOVoNWC53g8v4NUnSrKJs8HTdR1p1HoadBmL31CTOyFxgdda/iLtS0aDlbztpv6DozbJfcGu6WhYAwLrfq2rK0v84AN6UJtRUVGFmiDCFyg/Y3U9MoeHXZlHrO84WaZSkRXUooE2KS3lDhoH5dZHq9e1wecUvapfgLEoKG5mOU7xkFjsgj0Rb+v1GqMeBULHJX5lgiTq/dW6MXIuyNEecq/Tl783xN35GDSaRnehLz3LmVR0rpVvz6hXu6J9EOCYb/yFQ5bQNv00vrjHvP/qcEsXPQv9JXWQoojGBaPnKPW3pqB5tB3o+2V9mT1gqFtV2wGrctmzaxTU4mk7Q6DZ8OnNIxJJFZi6HrngM4lD5cLtf/U926DQJshfnWZAgdyAcNgkeF+LinsnxhKSR0+lhnkfuHTPkGwN9NGw4CEnZ3OUqBtRPaqkZDhnbupnF7Fjxo2IS7DcW4q0gmBJiFstEBuVWbPgrKNX+sHgdCDBMwxviaReTVfFEqZ15MdMASOcCi0YN08A6rXb84rPKtOj71+wlzA24mohOgLoL4RfBIH+
-X-Forefront-Antispam-Report: CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230025)(4636009)(396003)(346002)(39860400002)(376002)(136003)(451199018)(46966006)(40470700004)(36840700001)(356005)(2616005)(6666004)(107886003)(336012)(186003)(1076003)(26005)(7696005)(47076005)(426003)(86362001)(2906002)(478600001)(83380400001)(40460700003)(82740400003)(82310400005)(7636003)(8676002)(54906003)(110136005)(40480700001)(316002)(8936002)(4326008)(5660300002)(7416002)(36860700001)(41300700001)(36756003)(70586007)(70206006);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: yGeIDYM1rQW51KCOI1zNHcUqclzU1MzRxaJTuoIC5lhfpRFWEx+MwJe8naDfL/ND0MrW4mkjtvLjIyOb8+sErNoXR/NjA32lTKP0ZkfmU61uvhROTjiEP40vr340LV1D6zpx1cT/X37ZvD8dnA3JNQBhFkbVA5hZUJtgeFUeaeRTCxnl9UH9DG+cj5QOmfEtIxeiz3NcUk5kWhU7yv3SFSFBm3NPXlk2CNBNMst+12N7UlDksy9z/JPsX4CvRqaAnqEty49IHgs2FplfjO8qJ17aezrY4lxEZFSFSWDKvNGpOjMaMYng5JGqy2bye2udr5LDG0hULktrL8dXFh/GQrNeTsEnVdyoy0oT5KdsvrtRsWzUY2yQBo5uJj5bNftQG4lmNSxbZYjquib/xeVxyxPfuAcgCX5/1rn0vCsbP0PoHGciEl2SoPPX4Gw5aQq1i1wlMsBXVPDpvt/b9TP1fPpp7YHgKOapy+sOKesqNtQNIu45OPGnGXxPtAadoNy/l7nNPThTJvOVe6IeuHst0uK2Gl6AaZaPNgn1yckHdDD4Cl/uZzBnv5qEAawwfJ5q1AjCFW8HbRXvZIEWzVS+k213AMEcsWHqT14VEVMVvoFR9A9dxYxuzh5TPYTWSqgRby2ONzxCBfnS5c6mUuU5GWR9NPOlqE5vUpoCpJ+CketpF2AHUDUWtmkIBlXXX9K8823CMrX95YEWlowbKrFCkUWV5RszhRpWMY0WBqsb/c8BnPKHVZmSdkU7osIFKf4h
+X-Forefront-Antispam-Report: CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230025)(4636009)(39860400002)(396003)(346002)(376002)(136003)(451199018)(36840700001)(40470700004)(46966006)(47076005)(426003)(2616005)(83380400001)(82310400005)(54906003)(6666004)(107886003)(1076003)(478600001)(316002)(5660300002)(186003)(26005)(7416002)(7696005)(7636003)(110136005)(36860700001)(40460700003)(356005)(86362001)(336012)(82740400003)(8936002)(2906002)(41300700001)(40480700001)(70586007)(70206006)(4326008)(8676002)(36756003);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2023 18:26:06.9353
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2023 18:26:40.8849
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8cf87a40-3128-40d5-c742-08db29709255
+X-MS-Exchange-CrossTenant-Network-Message-Id: 43e773a7-e4d4-4335-74c0-08db2970a694
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT087.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT023.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4208
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5112
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add OPP table and interconnects property to scale DDR frequency with
-CPU frequency for better performance. Each operating point entry of
-the OPP table has CPU freq to per MC channel bandwidth mapping.
-One table is added for each cluster even though the table data is
-same because the bandwidth request is per cluster. This is done
-because OPP framework creates a single icc path and hence single
-bandwidth request if the table is marked as 'opp-shared' and shared
-among all clusters. For us, the OPP table data is same but the MC
-Client ID argument to interconnects property is different for each
-cluster. So, having per cluster table makes different icc path for
-each cluster and helps to make per cluster BW requests.
+Make CPU cluster's bandwidth (BW) request a multiple of MC channels.
+CPU OPP tables have BW info per MC channel. But, the actual BW depends
+on the number of MC channels which can change as per the boot config.
+Get the number of MC channels which are actually enabled in current
+boot configuration and multiply the BW request from a CPU cluster with
+the number of enabled MC channels. This is not required to be done for
+other MC clients.
 
 Signed-off-by: Sumit Gupta <sumitg@nvidia.com>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- arch/arm64/boot/dts/nvidia/tegra234.dtsi | 276 +++++++++++++++++++++++
- 1 file changed, 276 insertions(+)
+ drivers/memory/tegra/mc.c       | 19 +++++++++++++++++++
+ drivers/memory/tegra/mc.h       |  1 +
+ drivers/memory/tegra/tegra234.c | 21 ++++++++++++++++++++-
+ include/soc/tegra/mc.h          |  1 +
+ 4 files changed, 41 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra234.dtsi b/arch/arm64/boot/dts/nvidia/tegra234.dtsi
-index f1748cff8a33..285fff0bef99 100644
---- a/arch/arm64/boot/dts/nvidia/tegra234.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra234.dtsi
-@@ -3013,6 +3013,9 @@
+diff --git a/drivers/memory/tegra/mc.c b/drivers/memory/tegra/mc.c
+index bbd27d754fef..77346125dea6 100644
+--- a/drivers/memory/tegra/mc.c
++++ b/drivers/memory/tegra/mc.c
+@@ -843,6 +843,23 @@ static int tegra_mc_interconnect_setup(struct tegra_mc *mc)
+ 	return err;
+ }
  
- 			enable-method = "psci";
++static void tegra_mc_num_channel_enabled(struct tegra_mc *mc)
++{
++	unsigned int i;
++	u32 value;
++
++	value = mc_ch_readl(mc, 0, MC_EMEM_ADR_CFG_CHANNEL_ENABLE);
++	if (value <= 0) {
++		mc->num_channels = mc->soc->num_channels;
++		return;
++	}
++
++	for (i = 0; i < 32; i++) {
++		if (value & BIT(i))
++			mc->num_channels++;
++	}
++}
++
+ static int tegra_mc_probe(struct platform_device *pdev)
+ {
+ 	struct tegra_mc *mc;
+@@ -881,6 +898,8 @@ static int tegra_mc_probe(struct platform_device *pdev)
+ 			return err;
+ 	}
  
-+			operating-points-v2 = <&cl0_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER0 &emc>;
++	tegra_mc_num_channel_enabled(mc);
 +
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3029,6 +3032,9 @@
+ 	if (mc->soc->ops && mc->soc->ops->handle_irq) {
+ 		mc->irq = platform_get_irq(pdev, 0);
+ 		if (mc->irq < 0)
+diff --git a/drivers/memory/tegra/mc.h b/drivers/memory/tegra/mc.h
+index bc01586b6560..c3f6655bec60 100644
+--- a/drivers/memory/tegra/mc.h
++++ b/drivers/memory/tegra/mc.h
+@@ -53,6 +53,7 @@
+ #define MC_ERR_ROUTE_SANITY_ADR				0x9c4
+ #define MC_ERR_GENERALIZED_CARVEOUT_STATUS		0xc00
+ #define MC_ERR_GENERALIZED_CARVEOUT_ADR			0xc04
++#define MC_EMEM_ADR_CFG_CHANNEL_ENABLE			0xdf8
+ #define MC_GLOBAL_INTSTATUS				0xf24
+ #define MC_ERR_ADR_HI					0x11fc
  
- 			enable-method = "psci";
+diff --git a/drivers/memory/tegra/tegra234.c b/drivers/memory/tegra/tegra234.c
+index 0c666e52bf46..0b608b820b28 100644
+--- a/drivers/memory/tegra/tegra234.c
++++ b/drivers/memory/tegra/tegra234.c
+@@ -868,6 +868,25 @@ static int tegra234_mc_icc_set(struct icc_node *src, struct icc_node *dst)
+ 	return ret;
+ }
  
-+			operating-points-v2 = <&cl0_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER0 &emc>;
++static int tegra234_mc_icc_aggregate(struct icc_node *node, u32 tag, u32 avg_bw,
++				     u32 peak_bw, u32 *agg_avg, u32 *agg_peak)
++{
++	struct icc_provider *p = node->provider;
++	struct tegra_mc *mc = icc_provider_to_tegra_mc(p);
 +
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3045,6 +3051,9 @@
++	if (node->id == TEGRA_ICC_MC_CPU_CLUSTER0 ||
++	    node->id == TEGRA_ICC_MC_CPU_CLUSTER1 ||
++	    node->id == TEGRA_ICC_MC_CPU_CLUSTER2) {
++		if (mc)
++			peak_bw = peak_bw * mc->num_channels;
++	}
++
++	*agg_avg += avg_bw;
++	*agg_peak = max(*agg_peak, peak_bw);
++
++	return 0;
++}
++
+ static struct icc_node*
+ tegra234_mc_of_icc_xlate(struct of_phandle_args *spec, void *data)
+ {
+@@ -899,7 +918,7 @@ static int tegra234_mc_icc_get_init_bw(struct icc_node *node, u32 *avg, u32 *pea
  
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl0_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER0 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3061,6 +3070,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl0_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER0 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3077,6 +3089,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl1_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER1 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3093,6 +3108,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl1_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER1 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3109,6 +3127,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl1_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER1 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3125,6 +3146,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl1_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER1 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3141,6 +3165,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl2_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER2 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3157,6 +3184,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl2_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER2 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3173,6 +3203,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl2_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER2 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3189,6 +3222,9 @@
- 
- 			enable-method = "psci";
- 
-+			operating-points-v2 = <&cl2_opp_tbl>;
-+			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER2 &emc>;
-+
- 			i-cache-size = <65536>;
- 			i-cache-line-size = <64>;
- 			i-cache-sets = <256>;
-@@ -3445,4 +3481,244 @@
- 		interrupt-parent = <&gic>;
- 		always-on;
- 	};
-+
-+	cl0_opp_tbl: opp-table-cluster0 {
-+		compatible = "operating-points-v2";
-+		opp-shared;
-+
-+		cl0_ch1_opp1: opp-115200000 {
-+			  opp-hz = /bits/ 64 <115200000>;
-+			  opp-peak-kBps = <816000>;
-+		};
-+
-+		cl0_ch1_opp2: opp-268800000 {
-+			opp-hz = /bits/ 64 <268800000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl0_ch1_opp3: opp-422400000 {
-+			opp-hz = /bits/ 64 <422400000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl0_ch1_opp4: opp-576000000 {
-+			opp-hz = /bits/ 64 <576000000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl0_ch1_opp5: opp-729600000 {
-+			opp-hz = /bits/ 64 <729600000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl0_ch1_opp6: opp-883200000 {
-+			opp-hz = /bits/ 64 <883200000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl0_ch1_opp7: opp-1036800000 {
-+			opp-hz = /bits/ 64 <1036800000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl0_ch1_opp8: opp-1190400000 {
-+			opp-hz = /bits/ 64 <1190400000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl0_ch1_opp9: opp-1344000000 {
-+			opp-hz = /bits/ 64 <1344000000>;
-+			opp-peak-kBps = <1632000>;
-+		};
-+
-+		cl0_ch1_opp10: opp-1497600000 {
-+			opp-hz = /bits/ 64 <1497600000>;
-+			opp-peak-kBps = <1632000>;
-+		};
-+
-+		cl0_ch1_opp11: opp-1651200000 {
-+			opp-hz = /bits/ 64 <1651200000>;
-+			opp-peak-kBps = <2660000>;
-+		};
-+
-+		cl0_ch1_opp12: opp-1804800000 {
-+			opp-hz = /bits/ 64 <1804800000>;
-+			opp-peak-kBps = <2660000>;
-+		};
-+
-+		cl0_ch1_opp13: opp-1958400000 {
-+			opp-hz = /bits/ 64 <1958400000>;
-+			opp-peak-kBps = <3200000>;
-+		};
-+
-+		cl0_ch1_opp14: opp-2112000000 {
-+			opp-hz = /bits/ 64 <2112000000>;
-+			opp-peak-kBps = <6400000>;
-+		};
-+
-+		cl0_ch1_opp15: opp-2201600000 {
-+			opp-hz = /bits/ 64 <2201600000>;
-+			opp-peak-kBps = <6400000>;
-+		};
-+	};
-+
-+	cl1_opp_tbl: opp-table-cluster1 {
-+		compatible = "operating-points-v2";
-+		opp-shared;
-+
-+		cl1_ch1_opp1: opp-115200000 {
-+			  opp-hz = /bits/ 64 <115200000>;
-+			  opp-peak-kBps = <816000>;
-+		};
-+
-+		cl1_ch1_opp2: opp-268800000 {
-+			opp-hz = /bits/ 64 <268800000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl1_ch1_opp3: opp-422400000 {
-+			opp-hz = /bits/ 64 <422400000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl1_ch1_opp4: opp-576000000 {
-+			opp-hz = /bits/ 64 <576000000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl1_ch1_opp5: opp-729600000 {
-+			opp-hz = /bits/ 64 <729600000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl1_ch1_opp6: opp-883200000 {
-+			opp-hz = /bits/ 64 <883200000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl1_ch1_opp7: opp-1036800000 {
-+			opp-hz = /bits/ 64 <1036800000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl1_ch1_opp8: opp-1190400000 {
-+			opp-hz = /bits/ 64 <1190400000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl1_ch1_opp9: opp-1344000000 {
-+			opp-hz = /bits/ 64 <1344000000>;
-+			opp-peak-kBps = <1632000>;
-+		};
-+
-+		cl1_ch1_opp10: opp-1497600000 {
-+			opp-hz = /bits/ 64 <1497600000>;
-+			opp-peak-kBps = <1632000>;
-+		};
-+
-+		cl1_ch1_opp11: opp-1651200000 {
-+			opp-hz = /bits/ 64 <1651200000>;
-+			opp-peak-kBps = <2660000>;
-+		};
-+
-+		cl1_ch1_opp12: opp-1804800000 {
-+			opp-hz = /bits/ 64 <1804800000>;
-+			opp-peak-kBps = <2660000>;
-+		};
-+
-+		cl1_ch1_opp13: opp-1958400000 {
-+			opp-hz = /bits/ 64 <1958400000>;
-+			opp-peak-kBps = <3200000>;
-+		};
-+
-+		cl1_ch1_opp14: opp-2112000000 {
-+			opp-hz = /bits/ 64 <2112000000>;
-+			opp-peak-kBps = <6400000>;
-+		};
-+
-+		cl1_ch1_opp15: opp-2201600000 {
-+			opp-hz = /bits/ 64 <2201600000>;
-+			opp-peak-kBps = <6400000>;
-+		};
-+	};
-+
-+	cl2_opp_tbl: opp-table-cluster2 {
-+		compatible = "operating-points-v2";
-+		opp-shared;
-+
-+		cl2_ch1_opp1: opp-115200000 {
-+			  opp-hz = /bits/ 64 <115200000>;
-+			  opp-peak-kBps = <816000>;
-+		};
-+
-+		cl2_ch1_opp2: opp-268800000 {
-+			opp-hz = /bits/ 64 <268800000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl2_ch1_opp3: opp-422400000 {
-+			opp-hz = /bits/ 64 <422400000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl2_ch1_opp4: opp-576000000 {
-+			opp-hz = /bits/ 64 <576000000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl2_ch1_opp5: opp-729600000 {
-+			opp-hz = /bits/ 64 <729600000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl2_ch1_opp6: opp-883200000 {
-+			opp-hz = /bits/ 64 <883200000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl2_ch1_opp7: opp-1036800000 {
-+			opp-hz = /bits/ 64 <1036800000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl2_ch1_opp8: opp-1190400000 {
-+			opp-hz = /bits/ 64 <1190400000>;
-+			opp-peak-kBps = <816000>;
-+		};
-+
-+		cl2_ch1_opp9: opp-1344000000 {
-+			opp-hz = /bits/ 64 <1344000000>;
-+			opp-peak-kBps = <1632000>;
-+		};
-+
-+		cl2_ch1_opp10: opp-1497600000 {
-+			opp-hz = /bits/ 64 <1497600000>;
-+			opp-peak-kBps = <1632000>;
-+		};
-+
-+		cl2_ch1_opp11: opp-1651200000 {
-+			opp-hz = /bits/ 64 <1651200000>;
-+			opp-peak-kBps = <2660000>;
-+		};
-+
-+		cl2_ch1_opp12: opp-1804800000 {
-+			opp-hz = /bits/ 64 <1804800000>;
-+			opp-peak-kBps = <2660000>;
-+		};
-+
-+		cl2_ch1_opp13: opp-1958400000 {
-+			opp-hz = /bits/ 64 <1958400000>;
-+			opp-peak-kBps = <3200000>;
-+		};
-+
-+		cl2_ch1_opp14: opp-2112000000 {
-+			opp-hz = /bits/ 64 <2112000000>;
-+			opp-peak-kBps = <6400000>;
-+		};
-+
-+		cl2_ch1_opp15: opp-2201600000 {
-+			opp-hz = /bits/ 64 <2201600000>;
-+			opp-peak-kBps = <6400000>;
-+		};
-+	};
+ static const struct tegra_mc_icc_ops tegra234_mc_icc_ops = {
+ 	.xlate = tegra234_mc_of_icc_xlate,
+-	.aggregate = icc_std_aggregate,
++	.aggregate = tegra234_mc_icc_aggregate,
+ 	.get_bw = tegra234_mc_icc_get_init_bw,
+ 	.set = tegra234_mc_icc_set,
  };
+diff --git a/include/soc/tegra/mc.h b/include/soc/tegra/mc.h
+index fefac9622987..2fe6f0217a39 100644
+--- a/include/soc/tegra/mc.h
++++ b/include/soc/tegra/mc.h
+@@ -233,6 +233,7 @@ struct tegra_mc {
+ 
+ 	struct tegra_mc_timing *timings;
+ 	unsigned int num_timings;
++	unsigned int num_channels;
+ 
+ 	struct reset_controller_dev reset;
+ 
 -- 
 2.17.1
 
