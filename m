@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E32DC7618A
-	for <linux-pci@archiver.kernel.org>; Mon, 20 Mar 2023 18:36:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8761CC6FD1D
+	for <linux-pci@archiver.kernel.org>; Mon, 20 Mar 2023 18:36:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231506AbjCTSg2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 Mar 2023 14:36:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37440 "EHLO
+        id S231394AbjCTSgp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 Mar 2023 14:36:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230162AbjCTSgE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2023 14:36:04 -0400
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1nam02on2044.outbound.protection.outlook.com [40.107.96.44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A86F237F38;
-        Mon, 20 Mar 2023 11:28:02 -0700 (PDT)
+        with ESMTP id S231520AbjCTSgL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2023 14:36:11 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2077.outbound.protection.outlook.com [40.107.220.77])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 794543645E;
+        Mon, 20 Mar 2023 11:28:21 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EmiMnZ1/j8sdZnP921Gslt+cGB4GQ8OgE7CgeW1jsCDA8SxkJ+H3DL6OGQs2Gi4dCGnhbQy5yvDeuAh9QSkRtqhaQQC+TeAKzFmL+Lm0cOHJXOAKtW9zoU9NiR3m0NG0VCspz4lLZdPPcGculkNnJQbmWAkxulFI9aoxiYzUe6lGCnssjAAL/NC04+Vd4MZavTEr5Sq6yHI7zNhyeUqeJjNwqgF773e4P3tFJ9jwJ4eB9Cw5HE9RnF8I3U3A2DgWmm6Id8Wzs/vOWJrnozliyqKKG80V3QEfx19K6JkT4zAQ4PSY8O+cY/HE48ANmG3OgEz3u03QLkougNsFxWkYWQ==
+ b=NzcHhSw2AC7XlQFbRoLQ5pRPSOSS9kNcraKWLzOkbznLtyexSSd3DaX05Fo2muquLrpRqL2sOE2JdUJlGC4ue4m523dIzuplXVlLrgUqDDj9pUbYWoNwtSJ/K9M6d6+SMx5DBWLid3kN12vV76l/tgFdRYobhxaORpq3F20U3wd53f4vGCzG7CO583rtSbK8qhQUquxopIaRJZRx4gUhpJC50B00D4Fu7uP3g0ep1Ar+C7pRb5PeSl+W9G8k+ChzfH35LuI/Gr+sblaXAIO9/tVyrY9huhDWZ1RuLCqgMgVLTfHMeHALQLFEfEIIe2LQq9oJbpmYZyi0GwNyJsM9yg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Zl/Zq3udnXoPPmPhp/uzEpbABsNB15gy+KqjcHFYdzA=;
- b=WHfnWkNKP2P1xHHx+LBsR9cVMo20I05SQwoFO2cosF/8W5hBD8/qAk2JODoyM3TLwRbB2A3DYDpCoo32RIaJNAihkUCWW79jRk67SFoJaB+yCbRrANDT8erku+ijlXC4Bl/qcQWSzHHssz5AVagILGBJGbs6icjiPTf3RM6+u3OhqaExNSglTrvJP2M3WOvWbv4VPaByNdT25BrHFQShp9mJZK6Tu5Hal28QGyzZatXjBDqsNTfEpyLxDxeYTpqdsFVPRajjjtDUlhFuHV+7K3BfyAe+A8iOckaRy/yUjNqqVOYkDWGxb3jO9tyO/ELdS6JDW3b2Lv/uGDTRIKe37g==
+ bh=mFknPj1juTW4yd0nvS8kgtV28YxgIZKG3ZTe30gnatA=;
+ b=Fx/jYw861a3R7WJw7IjuIphwq+I0mPbq916iSmzOREwrYVTOWNsC8vqc02wte5gMzBiTLWoNpooIsdyPxR4cmfUAUa8r8lSyYDi2sIqQQpEKnwn8Pn+uFRCF6p6E3Rf8+lsaVkvcIdWTKAkZZ1S/NDBxm79Wsl+E5FyueSKGI01jqp0ny41JvBmLeV8SESn/35GWBcDZukU6r1Z72wrrHgGgglDqIMrFYiF1bHdyA5H8uAU+OWh1tvMkESnDcYz8Kgmb+uy2+R4Q69fDT65Te1JpFkpQWS1QD2JardE8wHVJ7v3h0w24eO7DZYkBjVfDdTaSozUYcJ2jaQ+fK0nliw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  216.228.118.233) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
@@ -28,17 +28,18 @@ ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Zl/Zq3udnXoPPmPhp/uzEpbABsNB15gy+KqjcHFYdzA=;
- b=hSE1ku6SK16qx42p6Y12lkhLqqwxMnvBsDY+eo39Y9/GrPikgPcFGdl5cC4oF3h3LBkwM6vYdTqz4F7Cm54Xm6SHs2tBRyKZB2EVWpfrHopRhxsGvxz+r35i05eGjv76nakyoxmxmpruX4bPdQpU/qjf8SRTmZlF7+bQfFPwDV96qLz34zgOZ0LFuAukgpz91ZEOHR5hdSygEcry4jwJvScKOxOT0e2Vx/e9CIPLh5yDQK9dXgdyjK1YuBaGzck5Z7WSqVyKig90dOvo2xpf+G4yzm2G47ExGIZEHBa4iuP4YMRYNdKZJ1ZgEbbdRmHHK3KVrWhmsC/YknfYCgAn0Q==
-Received: from MW4PR03CA0112.namprd03.prod.outlook.com (2603:10b6:303:b7::27)
- by DM4PR12MB6012.namprd12.prod.outlook.com (2603:10b6:8:6c::5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6178.33; Mon, 20 Mar 2023 18:26:55 +0000
-Received: from CO1NAM11FT085.eop-nam11.prod.protection.outlook.com
- (2603:10b6:303:b7:cafe::24) by MW4PR03CA0112.outlook.office365.com
- (2603:10b6:303:b7::27) with Microsoft SMTP Server (version=TLS1_2,
+ bh=mFknPj1juTW4yd0nvS8kgtV28YxgIZKG3ZTe30gnatA=;
+ b=HwZyWxMScnuOA9LGZMiebr04sPtYeSrR7SGYrZvdxtbzT1hDfrXhyGV8IHphlWd2EtQR4XkcZ0hl+JNLlBWWIrg+givrnQ32iQaE1JqGiD2Ju6smQbHfRvc+p7FHaH8Sl4cmkO4i3Sn1mr9Hl2/vewb1BYLuv7dMI8Cl7DfzmzNMS1OVALMbVh4SDngEzkXLmeWgU8efi68dHzpAEgIMfOxNfzA52EwfQ35Lt3OLOjNbDyNz6TrGWEwpQT2do6odRxqfUBBF8xl+UYcxpNFItcnSu5w4yGHIUwtJFC13KRBek4kiCcsDBZDRLBeHEjODEBLLfMF0V3aslc+ExBvRrA==
+Received: from MW4PR04CA0059.namprd04.prod.outlook.com (2603:10b6:303:6a::34)
+ by PH0PR12MB8125.namprd12.prod.outlook.com (2603:10b6:510:293::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37; Mon, 20 Mar
+ 2023 18:27:22 +0000
+Received: from CO1NAM11FT056.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:6a:cafe::db) by MW4PR04CA0059.outlook.office365.com
+ (2603:10b6:303:6a::34) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.37 via Frontend
- Transport; Mon, 20 Mar 2023 18:26:55 +0000
+ Transport; Mon, 20 Mar 2023 18:27:22 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
@@ -46,20 +47,20 @@ Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
  216.228.118.233 as permitted sender) receiver=protection.outlook.com;
  client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
 Received: from mail.nvidia.com (216.228.118.233) by
- CO1NAM11FT085.mail.protection.outlook.com (10.13.174.137) with Microsoft SMTP
+ CO1NAM11FT056.mail.protection.outlook.com (10.13.175.107) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6222.15 via Frontend Transport; Mon, 20 Mar 2023 18:26:54 +0000
+ 15.20.6222.16 via Frontend Transport; Mon, 20 Mar 2023 18:27:21 +0000
 Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
  (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.5; Mon, 20 Mar 2023
- 11:26:44 -0700
+ 11:27:13 -0700
 Received: from drhqmail202.nvidia.com (10.126.190.181) by
  drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.37; Mon, 20 Mar 2023 11:26:43 -0700
+ 15.2.986.37; Mon, 20 Mar 2023 11:27:12 -0700
 Received: from sumitg-l4t.nvidia.com (10.127.8.10) by mail.nvidia.com
  (10.126.190.181) with Microsoft SMTP Server id 15.2.986.5 via Frontend
- Transport; Mon, 20 Mar 2023 11:26:38 -0700
+ Transport; Mon, 20 Mar 2023 11:27:07 -0700
 From:   Sumit Gupta <sumitg@nvidia.com>
 To:     <treding@nvidia.com>, <krzysztof.kozlowski@linaro.org>,
         <dmitry.osipenko@collabora.com>, <viresh.kumar@linaro.org>,
@@ -71,9 +72,9 @@ CC:     <linux-kernel@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
         <kw@linux.com>, <bhelgaas@google.com>, <vidyas@nvidia.com>,
         <sanjayc@nvidia.com>, <ksitaraman@nvidia.com>, <ishah@nvidia.com>,
         <bbasu@nvidia.com>, <sumitg@nvidia.com>
-Subject: [Patch v3 09/11] PCI: tegra194: add interconnect support in Tegra234
-Date:   Mon, 20 Mar 2023 23:54:39 +0530
-Message-ID: <20230320182441.11904-10-sumitg@nvidia.com>
+Subject: [Patch v3 11/11] memory: tegra186-emc: fix interconnect registration race
+Date:   Mon, 20 Mar 2023 23:54:41 +0530
+Message-ID: <20230320182441.11904-12-sumitg@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230320182441.11904-1-sumitg@nvidia.com>
 References: <20230320182441.11904-1-sumitg@nvidia.com>
@@ -82,136 +83,78 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1NAM11FT085:EE_|DM4PR12MB6012:EE_
-X-MS-Office365-Filtering-Correlation-Id: ae155388-fa7c-457b-8371-08db2970aedf
+X-MS-TrafficTypeDiagnostic: CO1NAM11FT056:EE_|PH0PR12MB8125:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6a67cb8c-72c5-40e4-4494-08db2970bf00
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: VMnkquGLqRaEEgbELFAsbTF8R0NuQrvFQrEB9fBQiGZsNpiCQZTspmRH1+PWFFXlASfgM5yimOjvLTMn+EZ93BayQr0S6gnngVDh7Gm2wfuuToXwbBNyi6RGM7a+KpwQ8DrCYVMz/OaPN/+A8IkrBq8C9MxkFCJt2IVeIpU/veZpFItmXf30tJKGqsFKBjbH/RqH9oz/DNutSLmPw4ep8k7hxnPbfOC9j3sGFEjlvmSsJkA6RQBR2hxKHOVK8YfZNYBvinLyqOHoz3vHn0cI36fMjBckAxq8vxTTFn17dAHMZve/mcDc1qpMiokIjUh+hFywWoHHvlYg9os+rWUg1lKb0q7xpQnD/XlgN9jM9jVsjF1Q+xyajdTBJnxtZ61PA/52ueCK24OiQELhwXLVMjNaRKM2ptXk/u1USuXwFQ9XNrMwp7eBqeT//qMqpi7UwOg+qWo2jZzRmdu9WSgjpt/AaMIKBUWdwJqEeOSI3dC7OBgCcv7SkpJ0l8A3nz8LrqzS+XIeUFGhM2FkVA3ZyeDGlwXj91/pQZ+uheh3DHntFdS3YExj5eQZQaoaR8yEC62gjuMjEbcHFDdKk71TYTzgxuwBsMg7/fuW+cBhF2DCC6jpgK/eJZ++pf5fQvcMnCM7pCc1LzyLiuWyMUKKwup1IAwk1HoE+SkhASGNREKwbZ352OPu7V5Lnvd+8czxaQuGABCOORPx0WnU3J74VpAaObBNpcG5xM1JV6sCtQoYQm1GsoOr4M3b7rJ3Clf/
-X-Forefront-Antispam-Report: CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230025)(4636009)(396003)(136003)(376002)(39860400002)(346002)(451199018)(36840700001)(46966006)(40470700004)(8936002)(5660300002)(7416002)(41300700001)(83380400001)(40460700003)(36860700001)(1076003)(40480700001)(82740400003)(86362001)(36756003)(82310400005)(356005)(7636003)(2906002)(110136005)(54906003)(7696005)(316002)(2616005)(107886003)(478600001)(26005)(426003)(186003)(70206006)(70586007)(8676002)(336012)(4326008)(47076005);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: aNmrClQK7SYCKuVaxl43iEGAVzMwtJQJ40SWsRwk0AejLb9CXlJYZkyeiGxQdXHlcv1DGSj14ZNvWFa0EWeKmGT1Ev9pkSkBsCZ0niASgWU7zY4W1t3s4JB3IIJESzRMVsnNZsIws+ieq0UU0WlKgjLgtrUsfWg8jRQlJbkWWoxbtQkmp0BkDiCAyjgpOWpY3wALa+7rrJH/+9WE7OIjsx57dczG95Mt+P8t45mGgz4JHz0u1BsPNigZmwOMIxmEBP2wXZEKPv/VRl10Xvbm2ZN9b1ukALb00RfmkHZomj5PbmbtLFIA9EwIQB5OxAvTJFuBN0tGtO+ca8QmOn8DEeGjY4uN2vXQDOkxNuiGV8V4EJOUDz4rZMX0OHLlNbY3WMIPM+sxoLFpRCIOwVlKbADSP9InlIJgjSEJ16zjFn4VMiFMW0GkBfqXfMGZgHFGrK+WGRdsVmS60xpwwKMYjuIG+LUzcIqO+RRDY3a/2yBinR579I4nEhazids32lg9QC4l/83NWVLw3CgptF+EXAfD+2nLD6+rDsb1jXmcYcJUq5V+cT6RVOiMyZhVmomOLvmACoigImTyZR0YAWdt49kX0z4IlcpJKKu8OcdbmKGkEMtrDkXAUfM8JAHuvyCJEsBv7P6iPcVluWpcReL52B7rUGZeLr2Nv1EbvjrVtoxb+4MpxBm2bbKqiWGzsaBwzqqU+bgdSlEDXKlXffbB95ta9bHLbzYmBChdPyIcyankjxLw396pGdePDA4t7/pC
+X-Forefront-Antispam-Report: CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230025)(4636009)(376002)(39860400002)(396003)(136003)(346002)(451199018)(40470700004)(36840700001)(46966006)(41300700001)(40480700001)(4326008)(8676002)(70586007)(70206006)(82740400003)(36756003)(7636003)(2906002)(36860700001)(40460700003)(8936002)(5660300002)(26005)(1076003)(7416002)(82310400005)(336012)(107886003)(6666004)(47076005)(7696005)(356005)(186003)(2616005)(426003)(86362001)(83380400001)(316002)(478600001)(110136005)(54906003);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2023 18:26:54.9079
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2023 18:27:21.9349
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ae155388-fa7c-457b-8371-08db2970aedf
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6a67cb8c-72c5-40e4-4494-08db2970bf00
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT085.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT056.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6012
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB8125
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support to request DRAM bandwidth with Memory Interconnect
-in Tegra234 SoC. The DRAM BW required for different modes depends
-on speed (Gen-1/2/3/4) and width/lanes (x1/x2/x4/x8).
+The current interconnect provider registration interface is inherently
+racy as nodes are not added until the after adding the provider. This
+can specifically cause racing DT lookups to fail.
 
-Suggested-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Switch to using the new API where the provider is not registered until
+after it has been fully initialised.
+
+Fixes: ("memory: tegra: add interconnect support for DRAM scaling in Tegra234")
 Signed-off-by: Sumit Gupta <sumitg@nvidia.com>
 ---
- drivers/pci/controller/dwc/pcie-tegra194.c | 40 +++++++++++++++++-----
- 1 file changed, 32 insertions(+), 8 deletions(-)
+ drivers/memory/tegra/tegra186-emc.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 09825b4a075e..d2513c9d3feb 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -15,6 +15,7 @@
- #include <linux/gpio.h>
- #include <linux/gpio/consumer.h>
- #include <linux/interrupt.h>
-+#include <linux/interconnect.h>
- #include <linux/iopoll.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-@@ -287,6 +288,7 @@ struct tegra_pcie_dw {
- 	unsigned int pex_rst_irq;
- 	int ep_state;
- 	long link_status;
-+	struct icc_path *icc_path;
- };
+diff --git a/drivers/memory/tegra/tegra186-emc.c b/drivers/memory/tegra/tegra186-emc.c
+index 0d68a20fd376..a5a2bce01db4 100644
+--- a/drivers/memory/tegra/tegra186-emc.c
++++ b/drivers/memory/tegra/tegra186-emc.c
+@@ -207,15 +207,13 @@ static int tegra_emc_interconnect_init(struct tegra186_emc *emc)
+ 	emc->provider.xlate = tegra_emc_of_icc_xlate;
+ 	emc->provider.get_bw = tegra_emc_icc_get_init_bw;
  
- static inline struct tegra_pcie_dw *to_tegra_pcie(struct dw_pcie *pci)
-@@ -309,6 +311,24 @@ struct tegra_pcie_soc {
- 	enum dw_pcie_device_mode mode;
- };
+-	err = icc_provider_add(&emc->provider);
+-	if (err)
+-		goto err_msg;
++	icc_provider_init(&emc->provider);
  
-+static void tegra_pcie_icc_set(struct tegra_pcie_dw *pcie)
-+{
-+	struct dw_pcie *pci = &pcie->pci;
-+	u32 val, speed, width;
-+
-+	val = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA);
-+
-+	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, val);
-+	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, val);
-+
-+	val = width * (PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]) / BITS_PER_BYTE);
-+
-+	if (icc_set_bw(pcie->icc_path, MBps_to_icc(val), 0))
-+		dev_err(pcie->dev, "can't set bw[%u]\n", val);
-+
-+	clk_set_rate(pcie->core_clk, pcie_gen_freq[speed - 1]);
-+}
-+
- static void apply_bad_link_workaround(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -452,14 +472,12 @@ static irqreturn_t tegra_pcie_ep_irq_thread(int irq, void *arg)
- 	struct tegra_pcie_dw *pcie = arg;
- 	struct dw_pcie_ep *ep = &pcie->pci.ep;
- 	struct dw_pcie *pci = &pcie->pci;
--	u32 val, speed;
-+	u32 val;
- 
- 	if (test_and_clear_bit(0, &pcie->link_status))
- 		dw_pcie_ep_linkup(ep);
- 
--	speed = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA) &
--		PCI_EXP_LNKSTA_CLS;
--	clk_set_rate(pcie->core_clk, pcie_gen_freq[speed - 1]);
-+	tegra_pcie_icc_set(pcie);
- 
- 	if (pcie->of_data->has_ltr_req_fix)
- 		return IRQ_HANDLED;
-@@ -945,9 +963,9 @@ static int tegra_pcie_dw_host_init(struct dw_pcie_rp *pp)
- 
- static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
- {
--	u32 val, offset, speed, tmp;
- 	struct tegra_pcie_dw *pcie = to_tegra_pcie(pci);
- 	struct dw_pcie_rp *pp = &pci->pp;
-+	u32 val, offset, tmp;
- 	bool retry = true;
- 
- 	if (pcie->of_data->mode == DW_PCIE_EP_TYPE) {
-@@ -1018,9 +1036,7 @@ static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
- 		goto retry_link;
+ 	/* create External Memory Controller node */
+ 	node = icc_node_create(TEGRA_ICC_EMC);
+ 	if (IS_ERR(node)) {
+ 		err = PTR_ERR(node);
+-		goto del_provider;
++		goto err_msg;
  	}
  
--	speed = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA) &
--		PCI_EXP_LNKSTA_CLS;
--	clk_set_rate(pcie->core_clk, pcie_gen_freq[speed - 1]);
-+	tegra_pcie_icc_set(pcie);
+ 	node->name = "External Memory Controller";
+@@ -236,11 +234,13 @@ static int tegra_emc_interconnect_init(struct tegra186_emc *emc)
+ 	node->name = "External Memory (DRAM)";
+ 	icc_node_add(node, &emc->provider);
  
- 	tegra_pcie_enable_interrupts(pp);
- 
-@@ -2224,6 +2240,14 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, pcie);
- 
-+	pcie->icc_path = devm_of_icc_get(&pdev->dev, "write");
-+	ret = PTR_ERR_OR_ZERO(pcie->icc_path);
-+	if (ret) {
-+		tegra_bpmp_put(pcie->bpmp);
-+		dev_err_probe(&pdev->dev, ret, "failed to get write interconnect\n");
-+		return ret;
-+	}
++	err = icc_provider_register(&emc->provider);
++	if (err)
++		goto remove_nodes;
 +
- 	switch (pcie->of_data->mode) {
- 	case DW_PCIE_RC_TYPE:
- 		ret = devm_request_irq(dev, pp->irq, tegra_pcie_rp_irq_handler,
+ 	return 0;
+ remove_nodes:
+ 	icc_nodes_remove(&emc->provider);
+-del_provider:
+-	icc_provider_del(&emc->provider);
+ err_msg:
+ 	dev_err(emc->dev, "failed to initialize ICC: %d\n", err);
+ 
 -- 
 2.17.1
 
