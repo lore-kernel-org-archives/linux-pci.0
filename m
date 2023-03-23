@@ -2,30 +2,31 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E76AC6FD1C
-	for <linux-pci@archiver.kernel.org>; Thu, 23 Mar 2023 09:05:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BB6BC6FD1C
+	for <linux-pci@archiver.kernel.org>; Thu, 23 Mar 2023 09:16:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231650AbjCWJFN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 Mar 2023 05:05:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43894 "EHLO
+        id S231225AbjCWJQy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 Mar 2023 05:16:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39252 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231669AbjCWJEq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2023 05:04:46 -0400
-Received: from out30-132.freemail.mail.aliyun.com (out30-132.freemail.mail.aliyun.com [115.124.30.132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D7BE20A22;
-        Thu, 23 Mar 2023 02:04:36 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R611e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046056;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0VeTkM5q_1679562272;
-Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0VeTkM5q_1679562272)
+        with ESMTP id S230340AbjCWJQw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2023 05:16:52 -0400
+Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A27B1CF68;
+        Thu, 23 Mar 2023 02:16:48 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R151e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045168;MF=yang.lee@linux.alibaba.com;NM=1;PH=DS;RN=10;SR=0;TI=SMTPD_---0VeTkQZk_1679563004;
+Received: from localhost(mailfrom:yang.lee@linux.alibaba.com fp:SMTPD_---0VeTkQZk_1679563004)
           by smtp.aliyun-inc.com;
-          Thu, 23 Mar 2023 17:04:32 +0800
+          Thu, 23 Mar 2023 17:16:45 +0800
 From:   Yang Li <yang.lee@linux.alibaba.com>
-To:     linus.walleij@linaro.org
-Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
+To:     marek.vasut+renesas@gmail.com
+Cc:     yoshihiro.shimoda.uh@renesas.com, lpieralisi@kernel.org,
+        kw@linux.com, robh@kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         linux-kernel@vger.kernel.org, Yang Li <yang.lee@linux.alibaba.com>
-Subject: [PATCH -next] PCI: v3: Use devm_platform_get_and_ioremap_resource()
-Date:   Thu, 23 Mar 2023 17:04:31 +0800
-Message-Id: <20230323090431.73526-1-yang.lee@linux.alibaba.com>
+Subject: [PATCH -next] PCI: rcar-gen2: Use devm_platform_get_and_ioremap_resource()
+Date:   Thu, 23 Mar 2023 17:16:44 +0800
+Message-Id: <20230323091644.91981-1-yang.lee@linux.alibaba.com>
 X-Mailer: git-send-email 2.20.1.7.g153144c
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -41,23 +42,23 @@ what this function does.
 
 Signed-off-by: Yang Li <yang.lee@linux.alibaba.com>
 ---
- drivers/pci/controller/pci-v3-semi.c | 3 +--
+ drivers/pci/controller/pci-rcar-gen2.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-v3-semi.c b/drivers/pci/controller/pci-v3-semi.c
-index ca44b0c83d1b..a8b49f841534 100644
---- a/drivers/pci/controller/pci-v3-semi.c
-+++ b/drivers/pci/controller/pci-v3-semi.c
-@@ -736,8 +736,7 @@ static int v3_pci_probe(struct platform_device *pdev)
- 		return ret;
- 	}
+diff --git a/drivers/pci/controller/pci-rcar-gen2.c b/drivers/pci/controller/pci-rcar-gen2.c
+index 839695791757..d29866485361 100644
+--- a/drivers/pci/controller/pci-rcar-gen2.c
++++ b/drivers/pci/controller/pci-rcar-gen2.c
+@@ -290,8 +290,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
+ 	priv = pci_host_bridge_priv(bridge);
+ 	bridge->sysdata = priv;
  
--	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	v3->base = devm_ioremap_resource(dev, regs);
-+	v3->base = devm_platform_get_and_ioremap_resource(pdev, 0, &regs);
- 	if (IS_ERR(v3->base))
- 		return PTR_ERR(v3->base);
- 	/*
+-	cfg_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	reg = devm_ioremap_resource(dev, cfg_res);
++	reg = devm_platform_get_and_ioremap_resource(pdev, 0, &cfg_res);
+ 	if (IS_ERR(reg))
+ 		return PTR_ERR(reg);
+ 
 -- 
 2.20.1.7.g153144c
 
