@@ -2,229 +2,228 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9E25C77B61
-	for <linux-pci@archiver.kernel.org>; Sun, 26 Mar 2023 13:55:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45FE2C74A5B
+	for <linux-pci@archiver.kernel.org>; Sun, 26 Mar 2023 13:56:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232229AbjCZNze (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 26 Mar 2023 09:55:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53194 "EHLO
+        id S231950AbjCZN4A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 26 Mar 2023 09:56:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232168AbjCZNzF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 26 Mar 2023 09:55:05 -0400
-Received: from DM5PR00CU002.outbound.protection.outlook.com (mail-centralusazon11021025.outbound.protection.outlook.com [52.101.62.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9693B93D6;
-        Sun, 26 Mar 2023 06:54:13 -0700 (PDT)
+        with ESMTP id S232043AbjCZNzg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 26 Mar 2023 09:55:36 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on20619.outbound.protection.outlook.com [IPv6:2a01:111:f400:7eab::619])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E724868D;
+        Sun, 26 Mar 2023 06:54:48 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=LkeczNyTj1/Tm7JU9B6GQITrpGFfKTHnFiGBBb7+OCxKNa0Zx7ab/eytJq5+poSkpIMX2rlb62RglYmFbhMiVArgfC5HdD64yr+Z3AEWzscE0y+WcOzqXADynSnKPWcVrSGhD0AKBXakHFwZ0rK0q91WTIqX0QRTNGnSTo3sfX8c8MagYrhm7gLtDce+XyM7xltPE4AKxcUphWxcTxv31OA+35KZ7NCY4NX/zGcb+IL+cYbCIHeC/fK97SQz38fYb8weUhdI0F5N92gpMEQTs8oRojA5T8sKGGeGqrVK88G0Fp/trO7u1CtOeIJOFhfxFBDIttp6BR5K9LDIzpvt8Q==
+ b=DIboPYzsujIclQRIGgzqPOmkynzLqyS8UHG15vEkEgmiIUWWCzn9t0sheI7fGAVCsHyxbqNhGUhXe3nc2kv0o3Yejd+uSjP+CdBwjpV3SAkwzWNMe5Sudl5cnlo/73EhCzGkoe5I7pw2i5x7WLH1wpkKMwcEh7R5mBDCebkNsrJj1ycBVAzhaEvSGiwy4VLcOd8dj9n7siJdQU0V8CVf2hfrcTVQyHFFAV7YaBIvg4hPXNL2axd/MIscxsWpMCpRL/bnlBlzwH4vk6ckXmknKuRxrsW2qqWj9xy0TQLUZQSdvP8u9MJy5eImQZM5/g/lSidUkjuEgS2Eyk1ALii7nQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ONuUHkX2s2accV/LU91CFqIQ9xmiy1GHEaZGBeyXQoA=;
- b=T8Y/Lw4+Hl+VYT48Xg5u3QR8PFsIese+85TD5WN++j+rNTr1iSlZ7eyubzYqkqP1g4Kn1rjxrytZ2vDl3LhqGxCUKomRgeQr3eeJGLev6SVy+62bivmq9khZKmCNE3pzfg+8FMFCwQYDGKYcmkHOKz7YFE8omstx1jjPjx+0ftnofVnQ9nKKqGwGB9JYhH5BBxZXkvjyc4Pz5Mj6XHPlWwgbbGNnQbVODXMYBmR8FcjdyFW+SfQRujHsPiNVbf3anLGj3nAWTaoZJt1AhNVeXEBeURJTDC327IK/O+Zdbtxq3fXu5iYN5QXyvoo3B2mr2Wun5PZyZVQzPOiyQVm+hg==
+ bh=E5RFpX79GJ2EZKenEJTdJ0qq+oRW7Q15gudkYHnnaQA=;
+ b=VTSFBjLs80pwqWS2oh+9gqFhRHhJTHgu4fawkpzQDYqHQjpl33EMfMqLwZ8eaRPnUmW7QKENaIq25NU/+mPXQyF5/0nGNGA2587JNyiiQswpgKKRoLuxEj+Bahl6cv4kZb2jD3m2X7b5jlISQrJ5MCjdkZmdTEQRU4o/WuQlM9Axd4p9nPIwGlXWKXg5FUIlVjqUMIoiOTUr9c1mBXLprmGNdLzKXNpweMc7v3EY2pULGoxeCGaWSwJQCmfKxwCi5SfmSNUYiCx/QhIcj1Z2hFA4CCIbV9XshF9SFXc4GlYnY6gmKretbzr7V+86cLHzHBhniyXEQMSsd80/udgLMA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ONuUHkX2s2accV/LU91CFqIQ9xmiy1GHEaZGBeyXQoA=;
- b=ArYfc2a7HZ0UGZ/o2gckeO9HXcQCIZ9r3GAg64M45DIGzENCD3n0ZCyBaQ1JoqaEkOIIKsXXnzCwwxVWQP2/v9FlMfjkPHMFAc8wRHFxY3UCgLqapHU+LTSal4P3Tx5+hWyCZdwviguHHbsG2pLWRTnnAKyFmaSXqOmYrx9+VAQ=
+ bh=E5RFpX79GJ2EZKenEJTdJ0qq+oRW7Q15gudkYHnnaQA=;
+ b=aoyD+hGxv+4N1BTb96L+MLaPFUoUZ5lh3rVRQEM4XC3hBbwpxCgTJcKMPR6MbExMWxKDqO/ICoN8tXhHFaSk2ODM1I0eHG8yt+WjEnmtdCrjIK/zIuWZSQZg3EdVg4JXo4EXVamGflsmIozxdJFXTk3x3IvYEFzsvcgXYFBy4EQ5s2B59aLgwdTAXTC8MIT8DP5khbOEPXfmSBF26R5DSjNKXR05vpEJqq2jymGCyjD7z778Yl9QYsTYuAmkU7E4aAKsoVY9EboJgOzToxlblHnPTFLkXgi/YT3pCfjvteXTXO2fC4e8ZJAxqlMQr5GERiBrv+8QYpSRaXT7aO+9Wg==
 Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-Received: from DM6PR21MB1370.namprd21.prod.outlook.com (2603:10b6:5:16b::28)
- by MW4PR21MB2001.namprd21.prod.outlook.com (2603:10b6:303:68::21) with
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CY5PR12MB6179.namprd12.prod.outlook.com (2603:10b6:930:24::22)
+ by IA1PR12MB8466.namprd12.prod.outlook.com (2603:10b6:208:44b::7) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6254.15; Sun, 26 Mar
- 2023 13:53:30 +0000
-Received: from DM6PR21MB1370.namprd21.prod.outlook.com
- ([fe80::b7e9:4da1:3c23:35f]) by DM6PR21MB1370.namprd21.prod.outlook.com
- ([fe80::b7e9:4da1:3c23:35f%3]) with mapi id 15.20.6254.009; Sun, 26 Mar 2023
- 13:53:30 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     hpa@zytor.com, kys@microsoft.com, haiyangz@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, luto@kernel.org,
-        peterz@infradead.org, davem@davemloft.net, edumazet@google.com,
-        kuba@kernel.org, pabeni@redhat.com, lpieralisi@kernel.org,
-        robh@kernel.org, kw@linux.com, bhelgaas@google.com, arnd@arndb.de,
-        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
-        Tianyu.Lan@microsoft.com, kirill.shutemov@linux.intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com, ak@linux.intel.com,
-        isaku.yamahata@intel.com, dan.j.williams@intel.com,
-        jane.chu@oracle.com, seanjc@google.com, tony.luck@intel.com,
-        x86@kernel.org, linux-kernel@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        iommu@lists.linux.dev
-Cc:     mikelley@microsoft.com
-Subject: [PATCH v7 11/12] Drivers: hv: Don't remap addresses that are above shared_gpa_boundary
-Date:   Sun, 26 Mar 2023 06:52:06 -0700
-Message-Id: <1679838727-87310-12-git-send-email-mikelley@microsoft.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1679838727-87310-1-git-send-email-mikelley@microsoft.com>
-References: <1679838727-87310-1-git-send-email-mikelley@microsoft.com>
-Content-Type: text/plain
-X-ClientProxiedBy: MW4PR03CA0168.namprd03.prod.outlook.com
- (2603:10b6:303:8d::23) To DM6PR21MB1370.namprd21.prod.outlook.com
- (2603:10b6:5:16b::28)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6178.41; Sun, 26 Mar
+ 2023 13:54:05 +0000
+Received: from CY5PR12MB6179.namprd12.prod.outlook.com
+ ([fe80::d228:dfe5:a8a8:28b3]) by CY5PR12MB6179.namprd12.prod.outlook.com
+ ([fe80::d228:dfe5:a8a8:28b3%5]) with mapi id 15.20.6178.038; Sun, 26 Mar 2023
+ 13:54:05 +0000
+Date:   Sun, 26 Mar 2023 16:53:58 +0300
+From:   Ido Schimmel <idosch@nvidia.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Petr Machata <petrm@nvidia.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org,
+        Amit Cohen <amcohen@nvidia.com>, mlxsw@nvidia.com,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH net-next 6/6] mlxsw: pci: Add support for new reset flow
+Message-ID: <ZCBOdunTNYsufhcn@shredder>
+References: <c61d07469ecf5d3053442e24d4d050405f466b76.1679502371.git.petrm@nvidia.com>
+ <20230323165115.GA2557618@bhelgaas>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230323165115.GA2557618@bhelgaas>
+X-ClientProxiedBy: LO2P265CA0244.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:8a::16) To CY5PR12MB6179.namprd12.prod.outlook.com
+ (2603:10b6:930:24::22)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR21MB1370:EE_|MW4PR21MB2001:EE_
-X-MS-Office365-Filtering-Correlation-Id: dcf3a441-03ba-42a3-a887-08db2e017b35
+X-MS-TrafficTypeDiagnostic: CY5PR12MB6179:EE_|IA1PR12MB8466:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6bae1877-738d-451d-ce6b-08db2e018fd7
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: V3e0F1MdQJq0inkX+y5/R894PUIoyU2R8SLr0KrsjeUCEkhVhgjQ9DF9gJXirslCnixHrJfVCK1L/EHYHhxY6GuYf/lGAbkmhoPtcavpzvP+MUyEQnhthG9Gefk20cSIcsUcn/gO8GTPHiyCgOEdmC+buYi7OEOjWf/PdrPNASsY2MiAod7S2www8gPTyZHgd45nLZl4byzRme56eUMly78gfC3MsTrvNoPF9ICosm58a9JtzgLdwuHhQNBfm6jkOOcvp3MhekI3j7nI8rE+ykCGCoqdtWpycpfbPBD6AdgHc1Th7r5OmtvRC+G2Boy6GpS4uOoYB/m22/6EULrC+4Sq54KvXiCaxk5cCFQnjjitshT3h5QAQGVN+Ol9l3YkdMhhEP/kww8gKOVO7GWx+b9StM21g7LC8kXTW2UlfhAdTwNn2Qqf78Kppn5/UA4Rmd7//GZ5QY2msH2WHfKMDfU96SM17AOw/DtP+rxdhE4pPfLTBcyMDV80+nDSydMM8/GTTxh7dXxuxjXKv/yIG89s5C6OhVNS8v5Sbuy5nReXjvR7TJ61PPK2K7v+PQYG7KSjWOBiBGZYHfG1yLoZ6rnirWyToQePvp/sgO5eI04Wl7NidB0wAiWosu8Sm/E5f2fdQWgiujW5svybmOaxobFfOY61Z80tKUwdNhOu6v/3wFYx/vxTuHrn9w2/qqtQ
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1370.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(39860400002)(376002)(346002)(366004)(136003)(396003)(451199021)(38100700002)(38350700002)(82950400001)(82960400001)(36756003)(86362001)(921005)(2906002)(6666004)(107886003)(10290500003)(186003)(26005)(478600001)(6506007)(6512007)(5660300002)(7416002)(7406005)(8936002)(52116002)(6486002)(41300700001)(316002)(66556008)(66476007)(66946007)(4326008)(2616005)(8676002)(83380400001);DIR:OUT;SFP:1102;
+X-Microsoft-Antispam-Message-Info: nMTyPk3JaQCn8p6Xb3v7kL9WOjszTo4GIV1Lip/JDKFwQhU2bvbgA9ylChIAeHRa3eu/wGpnf7Ath17ubX6hMm5tgJoea/OHwS2BqPG+r75Katss8rSidt5aiSyLrIvaOV4iBItW70tEXALud/6K3zDAsL5ydBDL2qJiD/PYu5q1T/7Zuz53mQS6EIYXCoD4+8zgoInKoTbgELWkEK1XNAbxI5uaRr1grCYD0Z1tDy90skeX8tOps44HiiVwz5NxQkWRHSrjkghnvyyC5Iz5UAgVqusfo4zRYOfeDSFvRCvl/AFyn/fy2nYkCOXJiA8K6igHbA4RLzfdsl+3Y9Gr368STbWP0iuggSElC95u42Xt0h0Fu2A4+m0AQWH3gH2Nym3lS32T8rgWFZFUQjITdAYUIibdjGE+pvPiKzeoHso5izfhD3dayDmxg29nBZXHrr49o30w7gc9TdK9TbI5b7ADuVqw4bWroYLdKnDbhQDYIjQMG52SyZJFZ/uVCiiITxy2gJjLHNojCgU3k4QlXOZ1q1/oHXY0CiORaC5zQtNeL6L0f3Krp6AMn2ykeBoi
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY5PR12MB6179.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(7916004)(346002)(376002)(136003)(39860400002)(366004)(396003)(451199021)(66946007)(66556008)(5660300002)(66476007)(6486002)(316002)(54906003)(4326008)(8676002)(6916009)(8936002)(9686003)(186003)(478600001)(41300700001)(6512007)(26005)(6506007)(83380400001)(38100700002)(33716001)(86362001)(2906002)(6666004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?qSXq/nYl85E7O1mimCDWYl8PQSKT1OoE90G5RiKbaagAyh0aP5wtMKGc6zca?=
- =?us-ascii?Q?AjB/PRZtpjMzwjFWxJV0I5cDRVmkMjkcdgh7pgUQ3ptPKmOLWRs5iS3JPBYV?=
- =?us-ascii?Q?vRM1S29L51IP0xmrsnzZu4tytPHZkLiji3ln3/Z1xBnZFqbZlYYkUKxOJ00q?=
- =?us-ascii?Q?tO/uaGPiwa4agzNdOCOq1boqFqMqdqdRuLfsy7fH1fw7hn8JKCzv5E+Hi9Hz?=
- =?us-ascii?Q?kyJutZUZh+O7bZmpDPHtd6+81GYi7jPu+wv1d1gn2+3MkBEPgK7BgDooi4Gd?=
- =?us-ascii?Q?5VM8CZyvoIPGOvDICIQrjsewv56TYkMllTvYA7693eVaxh0GZZghXIfkTdBj?=
- =?us-ascii?Q?ji1yOdAvxaVzkG5WpxGnXhMWgX4bP9jCtA+ZsWRgC6/LUx5tXnjFQdmOTLD1?=
- =?us-ascii?Q?jELtbaSGZiiu5k/BBfXGgeDBNTX466ArDfAgr0M4v5AVzfLdyZ/E25m2wcqF?=
- =?us-ascii?Q?af13wruw4GsOHRMZ+1asM7NbPGJ6yQ/9+aT7mZykq3aHE6UJATd4WYzt+hKk?=
- =?us-ascii?Q?r7STkBfBWw8RKCUswuIDRNVCTXKzcwX44CS+rw42Jm8sAWsnzFuR3ndwrSg0?=
- =?us-ascii?Q?Tsevi7ccSNXet6dbDzHLSWA5RcZJ4e2DnVFBVWb5dn4YbNrNNgcHvIrox3gu?=
- =?us-ascii?Q?MjEwmU8aQ0K+6qbcIa5CG01TFFSRUhJSl8BjJq/5uAIdwJoYMHLIykdaVeXh?=
- =?us-ascii?Q?s+aBEHHhzF2a3xSDezqtfMzjQfbK2sABKJAqeJrb9o4vK6j8kIIHF2HocEeM?=
- =?us-ascii?Q?c3TvDGbO/dW4NQ70RLYugHI6VyvFdg1gcuRqxluU/pcGiRpNFDzgkMsMqR42?=
- =?us-ascii?Q?bkf65voD+cHWAyyU2xSSrze9MEEX409vJDYfn5fFovY872fd9sIPZCwpgNCo?=
- =?us-ascii?Q?oxAJ9YgU+s6qhL6LrbV5UoMCc9AtpxSj9bw/omyy4ou6ZSihahKtM3NXalHC?=
- =?us-ascii?Q?CgxzXmM7WwoHMTHvxnDqIMcTZQ0SkQWQ7FWlDFhBn3dnaSJ7jmGKe/eTze8p?=
- =?us-ascii?Q?f8FVV06pmYTAlBqppV05zch/eQd00P7y9NpVZt0DGQZ9O99qLrpNf/AscA+u?=
- =?us-ascii?Q?i2hBSFa5gpsIqkHX54yC7G7AFpLnaUHawlveX91NQMMtIhemYH8ainvqFH60?=
- =?us-ascii?Q?SPNhx3M0UsHul31XYRIpVs0Ctyyzjzjagcr9hMLdbHoPu+0W+fB98Yfsuk6A?=
- =?us-ascii?Q?nASa1/HSy2WWzqitNdkiCFn+sPThOI+rVGhKI7EwOg+5t8Q07SQ7WBCM8BmY?=
- =?us-ascii?Q?1P9O8HX8nP1zP8oaw0yXcM8YVhQr8eqgs8Pp+Z4RZmvx70z7/3XzYVjcOwTh?=
- =?us-ascii?Q?osXB5QbvtFtwVq+f7RVNTFFgK2nz9Cy+vUWI1k1thLyeFKTBwtYTUxXeNsOb?=
- =?us-ascii?Q?R61+1wlOVuDr+zyQfgrMy5NM6agPQ35eiJ0svZR6XPPOce+sm4ZQTPZ+1AnY?=
- =?us-ascii?Q?0/U0s9ynJhYAerrvhAgg0F73bjpBOdsRxCGPtDdYauy7cznf/1bDs7mgjnTf?=
- =?us-ascii?Q?NQ5YwgkQ/vYghOyQMqjF0BYEdMTt6kvZGQTLmAz7MoD8b3DfKycAka1Gg98L?=
- =?us-ascii?Q?I5xORuA6CGCsZ3bvKBSsVgSx2XLzVRqoYZ1nchVTbeNhXquUGUNwOXIMWTfm?=
- =?us-ascii?Q?oQ=3D=3D?=
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: dcf3a441-03ba-42a3-a887-08db2e017b35
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1370.namprd21.prod.outlook.com
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?TsXVY6w4dhoRsNd8toA7jnhlC2I1+7XxRdYDpNPcfnCLZQh0OfP7h4kqewqG?=
+ =?us-ascii?Q?DpxhEAIhPNTqMSVtucnITmUyeekjHodJ2880APMVNUmJZjfdJVZ1luK6lqlu?=
+ =?us-ascii?Q?mHnobAJuRmNMFE7/6nYHUX8qfkJ7aCS7wewjPOcZc2tygBskUChfqMRbPfQH?=
+ =?us-ascii?Q?yKFgTFXvBNnc92RyY1TCZH5BKQEmrwfMpYhwG/Wt2ima5nlJdOPFmZtAljUx?=
+ =?us-ascii?Q?LWj4tpMh9KUjJQ/YdZ+W0IEcSHMpO57xFCUWySmxVcHnLbHUUvlvl00tPgBG?=
+ =?us-ascii?Q?J5GTHQjnfuLbGF/IUjasiUm+AHJy3BMdQocJoOGEHcmZz+ApIoMYl9uqOpbH?=
+ =?us-ascii?Q?k4xGkK4t3xpbZ1EYGcuwwAAvNfmb6f/tTvFdZExtdUCg5Cvw4YtXWOunWnq6?=
+ =?us-ascii?Q?TOpVmS+e+YNKxhhiVLfqdw/P8R+iBQMhMtdCW4mFI4lzdveo+uUFkqH7DeAd?=
+ =?us-ascii?Q?9jRTzppfXNlMbjKF3c1o2pbT2a7abuEzILVP7c/waLGIxlgCFDLY3lw0aIWq?=
+ =?us-ascii?Q?4EMBwSrNHF2Y1b98m5l7OSSlHYJnCTuZjR9mXhkfe3dTGf1HstBUxapQuFpX?=
+ =?us-ascii?Q?0EVMXGDZaDWFdEsgDcwUvCLgRd4MOQyrfyOJE9VLmJBR17vm3heZugfHxtOK?=
+ =?us-ascii?Q?aHIMDXr4ipnXgxZ0pOtLwMTGxGxzIS10mh7tE6Ts5g0ACoZcBkvEZUd5Jtq7?=
+ =?us-ascii?Q?Kk3gTWRvb8TasJF+E5RJDeseeu3N54wwH+wjMgQyJ4uux0fG63SZdjwUlUGK?=
+ =?us-ascii?Q?ELUbYICUbC5gp3GH23f7ZlBoGVkf6nLiDijdB9MyOew6mEcQaiVm3iWjZobC?=
+ =?us-ascii?Q?lZS0GK82weXG7Pv8aRE7NSSTXoJVOUnVp/B9cOnziRpcpyIUjuDFEReiYmcp?=
+ =?us-ascii?Q?N8qfCaCd0XqpsqHTgKPtPV+j7MjjE5m9wAaT/XHOkhlmk+Iba1pquv2poTXW?=
+ =?us-ascii?Q?eEEUJlgSlJvXSEXX9OEPHbTegeW7ZYJ+jqecC9hYmlfuMQZKz8OxZOablXvz?=
+ =?us-ascii?Q?Cb8thfgJIL2sWL2ZlCk90cmPTe04cJrs8vFl36k9IN90ArvM31TV2zSrKbXX?=
+ =?us-ascii?Q?c6sdLVTlICPWO2Ft5RQbXVOsEt+DTRLuFm5ec+kczXw/L8D7D8Z6MFAmAheR?=
+ =?us-ascii?Q?L7z8dG6At2oCbkL41t47wBGuh1OL9tYswwsKdLcVpLAz2HSsj/GcvKwD1bTx?=
+ =?us-ascii?Q?6xfjCvdDZBApQTD7bfSDXrdOZ+7BRdPDxiR2xhtRX/lJlQFg+CvHrOnCtv1F?=
+ =?us-ascii?Q?LiLYL451WvHHeJjJ8RZxRiX6oXDyagzCq+wmK2wQQg/PMcQiHaKONo6slSfM?=
+ =?us-ascii?Q?2pFAc43eUYekoJSgzkPNyaeAX+o26XbSFY06Q3sCCo3ZrdcT29mAdmvL1IAE?=
+ =?us-ascii?Q?F9qSkFK7oEngaEprk5Z53XgJ9//GZVhX0hpxErkKo8237C0j97qlL+dkW/uA?=
+ =?us-ascii?Q?9Khd1QNMLus4Hiskv5GDjLshA2D0yelUxyr0cowe43+SlG/QKCQNdAS+CBfd?=
+ =?us-ascii?Q?cu0w5ewdcp5IHDTGNI6rM+lZAnYSrkNUmxgyRfn37CW6HSYDM/kBp1uRI7pE?=
+ =?us-ascii?Q?HBEtM7QaG90NeuJ29xjXlNq/GpdTephq0WoVexq/?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6bae1877-738d-451d-ce6b-08db2e018fd7
+X-MS-Exchange-CrossTenant-AuthSource: CY5PR12MB6179.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Mar 2023 13:53:30.1689
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Mar 2023 13:54:05.0561
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: QiVyTTzfiMJpGhZNivf+WtX1xrGaqeJWSBo8jBWYnKXt9MiQ0WRyBp6HKazzv6OBKJC9F2EwPUxuZXCD5RVKuA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB2001
+X-MS-Exchange-CrossTenant-UserPrincipalName: GEJgp0PSgRpUzjS35E2nM8ngNHd3DqCvxYfp9mcwGBsF+PJL9G8ewmVifpCsUfNatzpKBlnB3AokipAROnWlsw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8466
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With the vTOM bit now treated as a protection flag and not part of
-the physical address, avoid remapping physical addresses with vTOM set
-since technically such addresses aren't valid.  Use ioremap_cache()
-instead of memremap() to ensure that the mapping provides decrypted
-access, which will correctly set the vTOM bit as a protection flag.
+Hi Bjorn,
 
-While this change is not required for correctness with the current
-implementation of memremap(), for general code hygiene it's better to
-not depend on the mapping functions doing something reasonable with
-a physical address that is out-of-range.
+On Thu, Mar 23, 2023 at 11:51:15AM -0500, Bjorn Helgaas wrote:
+> Hi Petr, thanks for pointing me here.
+> 
+> On Wed, Mar 22, 2023 at 05:49:35PM +0100, Petr Machata wrote:
+> > From: Amit Cohen <amcohen@nvidia.com>
+> > 
+> > The driver resets the device during probe and during a devlink reload.
+> > The current reset method reloads the current firmware version or a pending
+> > one, if one was previously flashed using devlink. However, the reset does
+> > not take down the PCI link, preventing the PCI firmware from being
+> > upgraded, unless the system is rebooted.
+> 
+> Just to make sure I understand this correctly, the above sounds like
+> "firmware" includes two parts that have different rules for loading:
+> 
+>   - Current reset method is completely mlxsw-specific and resets the
+>     mlxsw core but not the PCIe interface; this loads only firmware
+>     part A
+> 
+>   - A PCIe reset resets both the mlxsw core and the PCIe interface;
+>     this loads both firmware part A and part B
 
-While here, fix typos in two error messages.
+Yes. A few years ago I had to flash a new firmware in order to test a
+fix in the PCIe firmware and the bug still reproduced after a devlink
+reload. Only after a reboot the new PCIe firmware was loaded and the bug
+was fixed. Bugs in PCIe firmware are not common, but we would like to
+avoid the scenario where users must reboot the machine in order to load
+the new firmware.
 
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
-Reviewed-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
----
- arch/x86/hyperv/hv_init.c |  7 +++++--
- drivers/hv/hv.c           | 23 +++++++++++++----------
- 2 files changed, 18 insertions(+), 12 deletions(-)
+> 
+> > To solve this problem, a new reset command (6) was implemented in the
+> > firmware. Unlike the current command (1), after issuing the new command
+> > the device will not start the reset immediately, but only after the PCI
+> > link was disabled. The driver is expected to wait for 500ms before
+> > re-enabling the link to give the firmware enough time to start the reset.
+> 
+> I guess the idea here is that the mlxsw driver:
+> 
+>   - Tells the firmware we're going to reset
+>     (MLXSW_REG_MRSR_COMMAND_RESET_AT_PCI_DISABLE)
+> 
+>   - Saves PCI config state
+> 
+>   - Disables the link (mlxsw_pci_link_toggle()), which causes a PCIe
+>     hot reset
+> 
+>   - The firmware notices the link disable and starts its own internal
+>     reset
+> 
+>   - The mlxsw driver waits 500ms
+>     (MLXSW_PCI_TOGGLE_WAIT_BEFORE_EN_MSECS)
+> 
+>   - Enables link and waits for it to be active
+>     (mlxsw_pci_link_active_check()
+> 
+>   - Waits for device to be ready again (mlxsw_pci_device_id_read())
 
-diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
-index edbc67e..a5f9474 100644
---- a/arch/x86/hyperv/hv_init.c
-+++ b/arch/x86/hyperv/hv_init.c
-@@ -63,7 +63,10 @@ static int hyperv_init_ghcb(void)
- 	 * memory boundary and map it here.
- 	 */
- 	rdmsrl(MSR_AMD64_SEV_ES_GHCB, ghcb_gpa);
--	ghcb_va = memremap(ghcb_gpa, HV_HYP_PAGE_SIZE, MEMREMAP_WB);
-+
-+	/* Mask out vTOM bit. ioremap_cache() maps decrypted */
-+	ghcb_gpa &= ~ms_hyperv.shared_gpa_boundary;
-+	ghcb_va = (void *)ioremap_cache(ghcb_gpa, HV_HYP_PAGE_SIZE);
- 	if (!ghcb_va)
- 		return -ENOMEM;
- 
-@@ -217,7 +220,7 @@ static int hv_cpu_die(unsigned int cpu)
- 	if (hv_ghcb_pg) {
- 		ghcb_va = (void **)this_cpu_ptr(hv_ghcb_pg);
- 		if (*ghcb_va)
--			memunmap(*ghcb_va);
-+			iounmap(*ghcb_va);
- 		*ghcb_va = NULL;
- 	}
- 
-diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
-index 8b0dd8e..00823489 100644
---- a/drivers/hv/hv.c
-+++ b/drivers/hv/hv.c
-@@ -217,11 +217,13 @@ void hv_synic_enable_regs(unsigned int cpu)
- 	simp.simp_enabled = 1;
- 
- 	if (hv_isolation_type_snp() || hv_root_partition) {
-+		/* Mask out vTOM bit. ioremap_cache() maps decrypted */
-+		u64 base = (simp.base_simp_gpa << HV_HYP_PAGE_SHIFT) &
-+				~ms_hyperv.shared_gpa_boundary;
- 		hv_cpu->synic_message_page
--			= memremap(simp.base_simp_gpa << HV_HYP_PAGE_SHIFT,
--				   HV_HYP_PAGE_SIZE, MEMREMAP_WB);
-+			= (void *)ioremap_cache(base, HV_HYP_PAGE_SIZE);
- 		if (!hv_cpu->synic_message_page)
--			pr_err("Fail to map syinc message page.\n");
-+			pr_err("Fail to map synic message page.\n");
- 	} else {
- 		simp.base_simp_gpa = virt_to_phys(hv_cpu->synic_message_page)
- 			>> HV_HYP_PAGE_SHIFT;
-@@ -234,12 +236,13 @@ void hv_synic_enable_regs(unsigned int cpu)
- 	siefp.siefp_enabled = 1;
- 
- 	if (hv_isolation_type_snp() || hv_root_partition) {
--		hv_cpu->synic_event_page =
--			memremap(siefp.base_siefp_gpa << HV_HYP_PAGE_SHIFT,
--				 HV_HYP_PAGE_SIZE, MEMREMAP_WB);
--
-+		/* Mask out vTOM bit. ioremap_cache() maps decrypted */
-+		u64 base = (siefp.base_siefp_gpa << HV_HYP_PAGE_SHIFT) &
-+				~ms_hyperv.shared_gpa_boundary;
-+		hv_cpu->synic_event_page
-+			= (void *)ioremap_cache(base, HV_HYP_PAGE_SIZE);
- 		if (!hv_cpu->synic_event_page)
--			pr_err("Fail to map syinc event page.\n");
-+			pr_err("Fail to map synic event page.\n");
- 	} else {
- 		siefp.base_siefp_gpa = virt_to_phys(hv_cpu->synic_event_page)
- 			>> HV_HYP_PAGE_SHIFT;
-@@ -316,7 +319,7 @@ void hv_synic_disable_regs(unsigned int cpu)
- 	 */
- 	simp.simp_enabled = 0;
- 	if (hv_isolation_type_snp() || hv_root_partition) {
--		memunmap(hv_cpu->synic_message_page);
-+		iounmap(hv_cpu->synic_message_page);
- 		hv_cpu->synic_message_page = NULL;
- 	} else {
- 		simp.base_simp_gpa = 0;
-@@ -328,7 +331,7 @@ void hv_synic_disable_regs(unsigned int cpu)
- 	siefp.siefp_enabled = 0;
- 
- 	if (hv_isolation_type_snp() || hv_root_partition) {
--		memunmap(hv_cpu->synic_event_page);
-+		iounmap(hv_cpu->synic_event_page);
- 		hv_cpu->synic_event_page = NULL;
- 	} else {
- 		siefp.base_siefp_gpa = 0;
--- 
-1.8.3.1
+Correct.
 
+> 
+> So the first question is why you don't simply use
+> pci_reset_function(), since it is supposed to cause a reset and do all
+> the necessary waiting for the device to be ready.  This is quite
+> complicated to do correctly; in fact, we still discover issues there
+> regularly.  There are many special cases in PCIe r6.0, sec 6.6.1, and
+> it would be much better if we can avoid trying to handle them all in
+> individual drivers.
+
+I see that this function takes the device lock and I think (didn't try)
+it will deadlock if we were to replace the current code with it since we
+also perform a reset during probe where I believe the device lock is
+already taken.
+
+__pci_reset_function_locked() is another option, but it assumes the
+device lock was already taken, which is correct during probe, but not
+when reset is performed as part of devlink reload.
+
+Let's put the locking issues aside and assume we can use
+__pci_reset_function_locked(). I'm trying to figure out what it can
+allow us to remove from the driver in favor of common PCI code. It
+essentially invokes one of the supported reset methods. Looking at my
+device, I see the following:
+
+ # cat /sys/class/pci_bus/0000\:01/device/0000\:01\:00.0/reset_method 
+ pm bus
+
+So I assume it will invoke pci_pm_reset(). I'm not sure it can work for
+us as our reset procedure requires us to disable the link on the
+downstream port as a way of notifying the device that it should start
+the reset procedure.
+
+We might be able to use the "device_specific" method and add quirks in
+"pci_dev_reset_methods". However, I'm not sure what would be the
+benefit, as it basically means moving the code in
+mlxsw_pci_link_toggle() to drivers/pci/quirks.c. Also, when the "probe"
+argument is "true" we can't actually determine if this reset method is
+supported or not, as we can't query that from the configuration space of
+the device in the current implementation. It's queried using a command
+interface that is specific to mlxsw and resides in the driver itself.
+Not usable from drivers/pci/quirks.c.
+
+> 
+> Of course, pci_reset_function() does *not* include details like
+> MLXSW_PCI_TOGGLE_WAIT_BEFORE_EN_MSECS.
+> 
+> I assume that flashing the firmware to the device followed by a power
+> cycle (without ever doing MLXSW_REG_MRSR_COMMAND_RESET_AT_PCI_DISABLE)
+> would load the new firmware everywhere.  Can we not do the same with a
+> PCIe reset?
+
+Yes, that's what we would like to achieve.
+
+Thanks for the feedback!
