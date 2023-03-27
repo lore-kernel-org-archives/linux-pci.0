@@ -2,202 +2,183 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7757AC761AF
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Mar 2023 07:52:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C66C76195
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Mar 2023 09:43:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232672AbjC0Hwq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Mar 2023 03:52:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46196 "EHLO
+        id S232738AbjC0JnM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Mar 2023 05:43:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232614AbjC0Hwp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2023 03:52:45 -0400
-Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BB35102
-        for <linux-pci@vger.kernel.org>; Mon, 27 Mar 2023 00:52:43 -0700 (PDT)
-Received: by mail-ed1-x536.google.com with SMTP id cn12so32126253edb.4
-        for <linux-pci@vger.kernel.org>; Mon, 27 Mar 2023 00:52:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1679903562;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=S1nsUKjzCSRJ3QxewfOzpoaDxvCQL60FhzqskMDTvRY=;
-        b=mW6Kkklp5WlQxHi+FwA6xvgBZDesfxzza7v/KKjXwrrHY9YdKhXB/l3F9czTiiEz2r
-         NTfqu6AdyMuGrKKrs8fkHgXdgOt/VwqGzi5BX+f7CujntDaEgS108SFEGai4VFMJLuNX
-         6BZDKIdmOxQsmkyQi2jgY5ZRiLpKeMScj4HoGs2Zbg9thSzGXbPx0szDQ+fzhrODrT42
-         Kw2/CiVwx62vbhNbw5LHy3AHMWtGF5PuvjCwK+lq+CaDUb227Pp2XCZIda+E6CmsCu7D
-         fb66VS2k9/7Hri9KWG1SsAgRpWV1mJ0Ljtux/VYee5xZQtCGwxk3R9k0KGJgflvyZnfh
-         janQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1679903562;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=S1nsUKjzCSRJ3QxewfOzpoaDxvCQL60FhzqskMDTvRY=;
-        b=sTCXuTybNRu6YJfOna0zP3tXWo+4qGhDx7xB/WsA09GjbOL4keo6rPfhJMSO9qdyU9
-         y2PR96oY2CDJDyR/ObNOnYzZRYwAqDpWXu/XGcDwwINL8GH+KHBsuAgN8cbJEr395ixe
-         iGAnNxPaCyxlsLkpgkLXoEtNbvVklbb8KRyY9K9HE6QWUzsuQr9MBYTTLZba84qfEsQS
-         kcc8wTZyb1ScbcB02SO1w91NHil00mBuMDAAOlfGn4vEzoHFHaBz7+JfctvgmiNCRaj0
-         aJoQ4bpzR53poNOhk0pJkJNNyXUUL/s0iycATqKo8W67JtOJ+DbNBeQzRNyE6yQgM55k
-         yNmQ==
-X-Gm-Message-State: AAQBX9cdjdVMHKctIph1cfrbC0HiN9TKidjAB9wDysUHR2WUiLwLnttl
-        lx9i7LPoe46y+EPrZ1PLZyWCZg==
-X-Google-Smtp-Source: AKy350bG/xOcJXznhNrcbxb2R9hKOzmD00U7Kklxl1F6u5myMQ0+i27iI8rX0Oq2x156EA5Ivve36w==
-X-Received: by 2002:a17:906:948d:b0:8b1:264d:6187 with SMTP id t13-20020a170906948d00b008b1264d6187mr10204061ejx.46.1679903561704;
-        Mon, 27 Mar 2023 00:52:41 -0700 (PDT)
-Received: from ?IPV6:2a02:810d:15c0:828:198e:c1a5:309b:d678? ([2a02:810d:15c0:828:198e:c1a5:309b:d678])
-        by smtp.gmail.com with ESMTPSA id o7-20020a1709062e8700b00933356c681esm12231674eji.150.2023.03.27.00.52.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 27 Mar 2023 00:52:41 -0700 (PDT)
-Message-ID: <c03075fa-14d4-513e-3ff0-940452697765@linaro.org>
-Date:   Mon, 27 Mar 2023 09:52:40 +0200
+        with ESMTP id S232413AbjC0JnL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2023 05:43:11 -0400
+Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B6B95B8F
+        for <linux-pci@vger.kernel.org>; Mon, 27 Mar 2023 02:42:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1679910162; x=1711446162;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=37SPK8wjFX7vtW2Uj752EJe7UH/ZiEIvpE+wLJ09O0I=;
+  b=mFMFIYK58Hjs2koJKstRzcMA6rZcaRHCKIz9DgjfzTdhhglNtI0Xxf4k
+   ShgVJMSGGZadh0Gc2HT2sMQHMVkIzU2jnHsZU4HAMD3HgIFtHGQ3mHvYg
+   0MrxEh/s82e7ZQXIBqQSyWz+LC4FEuNaAgVEclvyQS/nKcdYnymDIAcFq
+   /0wetxU/yOPfguXLKu7VY/qyN8Q1pPpGldpYS5zEbUpqzZfW0pbCeZU64
+   ppu5ZFyvUp/Et63ExEA2T2o3jCixEDrLNnAWz5acH4OKxOQeQfHXo7nnZ
+   gsJ7DScOoT1cQjgH4WMqNSed/2T/DwEAzG3ez3lpiw6iUDQlelFrUXr2s
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10661"; a="402819336"
+X-IronPort-AV: E=Sophos;i="5.98,294,1673942400"; 
+   d="scan'208";a="402819336"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2023 02:42:08 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10661"; a="857597013"
+X-IronPort-AV: E=Sophos;i="5.98,294,1673942400"; 
+   d="scan'208";a="857597013"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga005.jf.intel.com with ESMTP; 27 Mar 2023 02:42:03 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id EE67380A; Mon, 27 Mar 2023 12:42:50 +0300 (EEST)
+Date:   Mon, 27 Mar 2023 12:42:50 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Lukas Wunner <lukas@wunner.de>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Mahesh J Salgaonkar <mahesh@linux.ibm.com>, oohall@gmail.com,
+        Chris Chiu <chris.chiu@canonical.com>,
+        linux-pci@vger.kernel.org, Ashok Raj <ashok.raj@intel.com>,
+        Sathyanarayanan Kuppuswamy 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Sheng Bi <windy.bi.enflame@gmail.com>,
+        Ravi Kishore Koppuravuri <ravi.kishore.koppuravuri@intel.com>,
+        Stanislav Spassov <stanspas@amazon.de>,
+        Yang Su <yang.su@linux.alibaba.com>, shuo.tan@linux.alibaba.com
+Subject: Re: [PATCH] PCI/PM: Wait longer after reset when active link
+ reporting is supported
+Message-ID: <20230327094250.GC33314@black.fi.intel.com>
+References: <20230321095031.65709-1-mika.westerberg@linux.intel.com>
+ <20230322221624.GA2497123@bhelgaas>
+ <20230326062207.GA14559@wunner.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.0
-Subject: Re: [PATCH v2 02/12] dt-bindings: PCI: qcom: Document sc8180x
- properties
-Content-Language: en-US
-To:     Vinod Koul <vkoul@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bjorn Andersson <andersson@kernel.org>
-Cc:     linux-arm-msm@vger.kernel.org,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230325122444.249507-1-vkoul@kernel.org>
- <20230325122444.249507-3-vkoul@kernel.org>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <20230325122444.249507-3-vkoul@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20230326062207.GA14559@wunner.de>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 25/03/2023 13:24, Vinod Koul wrote:
-> sc8180x PCIe clocks and resets are different from the common pcie
+Hi,
 
-There is no "common" part for sc8180x in this binding. sc8180x is
-customized.
-
-> binding, this warrants the oneOf clause for the clocks and resets
-
-Your subject and commit suggests you are now adding new customization
-for SC8180x, but it is already there! Clocks, interrupts, regs etc.
-Therefore the commit msg does not fit the contents of the patch. Instead
-say that you fix something or change, because of foo and bar.
-
-Otherwise it looks like some old patch rebased onto new kernel so it
-does not match at all.
-
+On Sun, Mar 26, 2023 at 08:22:07AM +0200, Lukas Wunner wrote:
+> [cc += Ashok, Sathya, Ravi Kishore, Sheng Bi, Stanislav, Yang Su, Shuo Tan]
 > 
-> Signed-off-by: Vinod Koul <vkoul@kernel.org>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie.yaml    | 49 ++++++++++++++++++-
->  1 file changed, 47 insertions(+), 2 deletions(-)
+> On Wed, Mar 22, 2023 at 05:16:24PM -0500, Bjorn Helgaas wrote:
+> > On Tue, Mar 21, 2023 at 11:50:31AM +0200, Mika Westerberg wrote:
+> > > The PCIe spec prescribes that a device may take up to 1 second to
+> > > recover from reset and this same delay is prescribed when coming out of
+> > > D3cold (as that involves reset too). The device may extend this 1 second
+> > > delay through Request Retry Status completions and we accommondate for
+> > > that in Linux with 60 second cap, only in reset code path, not in resume
+> > > code path.
+> > > 
+> > > However, a device has surfaced, namely Intel Titan Ridge xHCI, which
+> > > requires longer delay also in the resume code path. For this reason make
+> > > the resume code path to use this same extended delay than with the reset
+> > > path but only after the link has come up (active link reporting is
+> > > supported) so that we do not wait longer time for devices that have
+> > > become permanently innaccessible during system sleep, e.g because they
+> > > have been removed.
+> > > 
+> > > While there move the two constants from the pci.h header into pci.c as
+> > > these are not used outside of that file anymore.
+> > > 
+> > > Reported-by: Chris Chiu <chris.chiu@canonical.com>
+> > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=216728
+> > > Cc: Lukas Wunner <lukas@wunner.de>
+> > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > 
+> > Lukas just added the "timeout" parameter with ac91e6980563 ("PCI:
+> > Unify delay handling for reset and resume"), so I'm going to look for
+> > his ack for this.
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-> index fb32c43dd12d..d4f837924e7c 100644
-> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-> @@ -459,6 +459,33 @@ allOf:
->            items:
->              - const: pci # PCIe core reset
->  
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            enum:
-> +              - qcom,pcie-sc8180x
-> +    then:
-> +      properties:
-> +        clocks:
-> +          minItems: 8
-> +          maxItems: 8
-> +        clock-names:
-> +          items:
-> +            - const: pipe # PIPE clock
-> +            - const: aux # Auxiliary clock
-> +            - const: cfg # Configuration clock
-> +            - const: bus_master # Master AXI clock
-> +            - const: bus_slave # Slave AXI clock
-> +            - const: slave_q2a # Slave Q2A clock
-> +            - const: ref # REFERENCE clock
-> +            - const: tbu # PCIe TBU clock
-> +        resets:
-> +          maxItems: 1
-> +        reset-names:
-> +          items:
-> +            - const: pci # PCIe core reset
-> +
->    - if:
->        properties:
->          compatible:
-> @@ -507,7 +534,6 @@ allOf:
->          compatible:
->            contains:
->              enum:
-> -              - qcom,pcie-sc8180x
->                - qcom,pcie-sm8150
->                - qcom,pcie-sm8250
->      then:
-> @@ -675,6 +701,7 @@ allOf:
->            contains:
->              enum:
->                - qcom,pcie-sa8540p
-> +              - qcom,pcie-sc8180x
->                - qcom,pcie-sc8280xp
->      then:
->        required:
-> @@ -717,7 +744,6 @@ allOf:
->              enum:
->                - qcom,pcie-msm8996
->                - qcom,pcie-sc7280
-> -              - qcom,pcie-sc8180x
->                - qcom,pcie-sdm845
->                - qcom,pcie-sm8150
->                - qcom,pcie-sm8250
-> @@ -746,6 +772,25 @@ allOf:
->                  - const: msi6
->                  - const: msi7
->  
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            enum:
-> +              - qcom,pcie-sc8180x
-> +    then:
-> +      oneOf:
+> Acked-by: Lukas Wunner <lukas@wunner.de>
+> 
+> 
+> > After ac91e6980563, we called pci_bridge_wait_for_secondary_bus() with
+> > timeouts of either:
+> > 
+> >   60s for reset (pci_bridge_secondary_bus_reset() or
+> >       dpc_reset_link()), or
+> > 
+> >    1s for resume (pci_pm_resume_noirq() or pci_pm_runtime_resume() via
+> >       pci_pm_bridge_power_up_actions())
+> > 
+> > If I'm reading this right, the main changes of this patch are:
+> > 
+> >   - For slow links (<= 5 GT/s), we sleep 100ms, then previously waited
+> >     up to 1s (resume) or 60s (reset) for the device to be ready.  Now
+> >     we will wait a max of 1s for both resume and reset.
+> > 
+> >   - For fast links (> 5 GT/s) we wait up to 100ms for the link to come
+> >     up and fail if it does not.  If the link did come up in 100ms, we
+> >     previously waited up to 1s (resume) or 60s (reset).  Now we will
+> >     wait up to 60s for both resume and reset.
+> > 
+> > So this *reduces* the time we wait for slow links after reset, and
+> > *increases* the time for fast links after resume.  Right?
+> 
+> Good point.  So now the wait duration hinges on the link speed
+> rather than reset versus resume.
+> 
+> Before ac91e6980563 (which went into v6.3-rc1), the wait duration
+> after a Secondary Bus Reset and a DPC-induced Hot Reset was
+> essentially zero.  And the Ponte Vecchio cards which necessitated
+> ac91e6980563 are usually plugged into servers whose Root Ports
+> support link speeds > 5 GT/s.  So the risk of breaking anything
+> with this change seems small.
+> 
+> The reason why Mika is waiting only 1 second in the <= 5 GT/s case
+> is that we don't check for the link to become active for these slower
+> link speeds.  That's because Link Active Reporting is only mandatory
+> if the port is hotplug-capable or supports link speeds > 5 GT/s.
+> Otherwise it's optional (PCIe r6.0.1 sec 7.5.3.6).
+> 
+> It would be user-unfriendly to pause for 60 sec if the device does
+> not come back after reset or resume (e.g. because it was removed)
+> and the fact that the link is up is an indication that the device
+> is present, but may just need a little more time to respond to
+> Configuration Space Requests.
+> 
+> We *could* afford the longer wait duration in the <= 5 GT/s case
+> as well by checking if Link Active Reporting is supported and further
+> checking if the link came up after the 100 ms delay prescribed by
+> PCIe r6.0 sec 6.6.1.  Should Link Active Reporting *not* be supported,
+> we'd have to retain the shorter wait duration limit of 1 sec.
+> 
+> This optimization opportunity for the <= 5 GT/s case does not have
+> to be addressed in this patch.  It could be added later on if it
+> turns out that users do plug cards such as Ponte Vecchio into older
+> Gen1/Gen2 Downstream Ports.  (Unless Mika wants to perfect it right
+> now.)
+> 
 
-It's not oneOf.
-> +        - properties:
-> +            interrupts:
-> +              maxItems: 1
-> +            interrupt-names:
-> +              items:
-> +                - const: msi
+No problem doing that :) I guess you mean something like the diff below,
+so that we use active link reporting and the longer time also for any
+downstream port that supports supports it, regardless of the speed.
 
-Why do you even need this here? It's already there.
+I can update the patch accordingly.
 
-> +            iommus:
-> +              maxItems: 1
-> +            iommu-map:
-> +              maxItems: 2
-
-And this looks wrong. Drop.
-https://lore.kernel.org/all/20230308082424.140224-3-manivannan.sadhasivam@linaro.org/
-
-> +
->    - if:
->        properties:
->          compatible:
-
-Best regards,
-Krzysztof
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 36d4aaa8cea2..b507a26ffb9d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5027,7 +5027,8 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type)
+ 	if (!pcie_downstream_port(dev))
+ 		return 0;
+ 
+-	if (pcie_get_speed_cap(dev) <= PCIE_SPEED_5_0GT) {
++	if (!dev->link_active_reporting &&
++	    pcie_get_speed_cap(dev) <= PCIE_SPEED_5_0GT) {
+ 		pci_dbg(dev, "waiting %d ms for downstream link\n", delay);
+ 		msleep(delay);
+ 		return pci_dev_wait(child, reset_type, PCI_RESET_WAIT - delay);
