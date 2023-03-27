@@ -2,97 +2,132 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC752C6FD1D
-	for <linux-pci@archiver.kernel.org>; Mon, 27 Mar 2023 18:31:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42991C6FD1D
+	for <linux-pci@archiver.kernel.org>; Mon, 27 Mar 2023 22:37:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229688AbjC0Sbr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 Mar 2023 14:31:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41614 "EHLO
+        id S229632AbjC0Wh6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 Mar 2023 18:37:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229606AbjC0Sbq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2023 14:31:46 -0400
-X-Greylist: delayed 900 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 27 Mar 2023 11:31:45 PDT
-Received: from mx2.n90.eu (mx.n90.eu [65.21.251.117])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21E26271D;
-        Mon, 27 Mar 2023 11:31:45 -0700 (PDT)
-Received: by mx2.n90.eu (Postfix, from userid 182)
-        id 6277A1027DB45; Mon, 27 Mar 2023 18:06:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=n90.eu; s=default;
-        t=1679940370; bh=OGbOFJayhgRcXq5FMeS6bRDyUolQeucd8waNYOur4j4=;
-        h=References:From:To:Cc:Subject:Date:In-reply-to;
-        b=nPD85CB4IjQubR+FqhGXUYhBxV7bbwiHtN9kDpUsMfvJ5VKjUsWV88RDwd2C5oy4/
-         9tlJmIwPVi3rnu2uF27A0Xua2/i08lUSZ8Yll0MXwtsw+rld4069lz2IM8kPcwxggO
-         phjBZkPfcy0QaShZxkSowFm5huqTrA2RmJl4unv3BE9WpLw5cHrd/vU7l+6slZ5l9/
-         p7m9eSvV87wcasXYp44lZW2pwDpGg8ecJrJGUayyE9ySjUesRCJHONIfC7Dbqvhl94
-         Nfe8MHZJvedo8D6w1a4cBrMOGJeF/f9TiWznHy5d8o12ZS2UBdgtiZxheA/fa2BBpK
-         PygFgKG/87wsA==
-Received: from spica (unknown [172.20.188.202])
-        by mx2.n90.eu (Postfix) with ESMTP id CD5411025BB5A;
-        Mon, 27 Mar 2023 18:06:07 +0000 (UTC)
-References: <20230327143359.GA2834753@bhelgaas>
- <ZCHB6hXbCOxiZw+n@kbusch-mbp.dhcp.thefacebook.com>
-User-agent: mu4e 1.8.14; emacs 30.0.50
-From:   Aleksander Trofimowicz <alex@n90.eu>
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [bugzilla-daemon@kernel.org: [Bug 217251] New: pciehp: nvme not
- visible after re-insert to tbt port]
-Date:   Mon, 27 Mar 2023 17:43:18 +0000
-In-reply-to: <ZCHB6hXbCOxiZw+n@kbusch-mbp.dhcp.thefacebook.com>
-X-Mailer: boring 1.0
-Message-ID: <871qlank6o.fsf@n90.eu>
+        with ESMTP id S229547AbjC0Wh5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2023 18:37:57 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4055124;
+        Mon, 27 Mar 2023 15:37:55 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 69588B818C7;
+        Mon, 27 Mar 2023 22:37:54 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8BB77C433EF;
+        Mon, 27 Mar 2023 22:37:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679956673;
+        bh=1if43ofgC9kxf3iYz7Cwwx2xe1GO6f2A+/K/yppDoB4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=V5stfdgS5SB9T2aCNjNxc787XGu0UHW2Yjcxry6AiYOk2AjfNgKZRSmvJ2XNzdnQJ
+         9wUPZcA+vnIMA1uRFTXkA0YxA6n6VlMHHzyKxDSoQ7rc4eC2COVi+Av1XkiwmJEV8c
+         +9L/vwdZ/2mufCy0WbHu2VIdbROdZhMWd88cJMemF6WKRgv+6MciuyFkYZ3cMwGxNX
+         L+yBPC0/EX8nJFuFjfW5/FkhH+KnlrSAHK2hlmq8FJHIN7x+dZBqG80Vl4Pp2kgyJz
+         169aPEmhjItSjwH789Jibd4RdoGhYvZA68vAo8t83ow2rj20G/n/o4+7CI2fd+6e6+
+         G1Mqi9W1qvE9w==
+Date:   Mon, 27 Mar 2023 17:37:50 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Rajat Khandelwal <rajat.khandelwal@linux.intel.com>
+Cc:     kbusch@kernel.org, axboe@fb.com, hch@lst.de, sagi@grimberg.me,
+        linux-nvme@lists.infradead.org,
+        "Khandelwal, Rajat" <rajat.khandelwal@intel.com>,
+        Aleksander Trofimowicz <alex@n90.eu>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [BUG] nvme-pci: NVMe probe fails with ENODEV
+Message-ID: <20230327223750.GA2860671@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <975cc790-7dd9-4902-45c1-c69b4be9ba3a@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+[+cc Aleksander, original report at
+https://lore.kernel.org/r/975cc790-7dd9-4902-45c1-c69b4be9ba3a@linux.intel.com]
 
-Keith Busch <kbusch@kernel.org> writes:
+On Thu, Mar 09, 2023 at 07:34:18PM +0530, Rajat Khandelwal wrote:
+> On 3/9/2023 7:31 PM, Rajat Khandelwal wrote:
+> > Hi,
+> > I am seeking some help regarding an issue I encounter sporadically
+> > with Samsung Portable TBT SSD X5.
+> > 
+> > Right from the thunderbolt discovery to the PCIe enumeration, everything
+> > is fine, until 'NVME_REG_CSTS' is tried to be read in 'nvme_reset_work'.
+> > Precisely, 'readl(dev->bar + NVME_REG_CSTS)' fails.
 
-> On Mon, Mar 27, 2023 at 09:33:59AM -0500, Bjorn Helgaas wrote:
->> Forwarding to NVMe folks, lists for visibility.
->>
->> ----- Forwarded message from bugzilla-daemon@kernel.org -----
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=217251
->> ...
->>
->> Created attachment 304031
->>   --> https://bugzilla.kernel.org/attachment.cgi?id=304031&action=edit
->> the tracing of nvme_pci_enable() during re-insertion
->>
->> Hi,
->>
->> There is a JHL7540-based device that may host a NVMe device. After the first
->> insertion a nvme drive is properly discovered and handled by the relevant
->> modules. Once disconnected any further attempts are not successful. The device
->> is visible on a PCI bus, but nvme_pci_enable() ends up calling
->> pci_disable_device() every time; the runtime PM status of the device is
->> "suspended", the power status of the 04:01.0 PCI bridge is D3. Preventing the
->> device from being power managed ("on" -> /sys/devices/../power/control)
->> combined with device removal and pci rescan changes nothing. A host reboot
->> restores the initial state.
->>
->> I would appreciate any suggestions how to debug it further.
->
-> Sounds the same as this report:
->
->   http://lists.infradead.org/pipermail/linux-nvme/2023-March/038259.html
->
-> The driver is bailing on the device because we can't read it's status register
-> out of the remapped BAR. There's nothing we can do about that from the nvme
-> driver level. Memory mapped IO has to work in order to proceed.
->
-Thanks. I can confirm it is the same problem:
+> > I handle type-C, thunderbolt and USB4 on Chrome platforms, and currently
+> > we are working on Intel Raptorlake systems.
+> > This issue has been witnessed from ADL time-frame and now is seen
+> > on RPL as well. I would really like to get to the bottom of the problem
+> > and close the issue.
+> > 
+> > I have tried 5.10 and 6.1.15 kernels.
 
-a) the platform is Intel Alderlake
-b) readl(dev->bar + NVME_REG_CSTS) in nvme_pci_enable() fails
-c) reading BAR0 via setpci gives 0x00000004
+It's intermittent, but happens on both v5.10 and v6.1.15.  So we have
+no reason to think this is a regression, right?
 
---
-at
+And you see it on ADL and RPL?  Do you see it on any other platforms?
+Have you tried any others?
+
+> > During the issue:
+> > Contents of BAR-0: <garbage> 00000004 (dumped using setpci)
+> > Contents of kernel PCI resource-0: 0x83000000 (matches with the mem allocation)
+> > Issue: nvme nvme1: Removing after probe failure status: -19
+
+How exactly did you use setpci and what was "<garbage>"?  Can you
+include the entire transcript, e.g.,
+
+  $ setpci -G -s 01:00.0 BASE_ADDRESS_0.L
+  Trying method linux-sysfs......using /sys/bus/pci...OK
+  Decided to use linux-sysfs
+  ec000000
+
+What does "lspci -vvxxx" show in this case?
+
+I guess "kernel PCI resource-0: 0x83000000" means the following from
+your dmesg log, right?
+
+  pci 0000:03:00.0: BAR 0: assigned [mem 0x83000000-0x83003fff 64bit]
+
+I think the first access to the device should be here (same as what
+Keith said):
+
+  nvme_probe
+    nvme_pci_enable
+      pci_enable_device_mem
+      pci_set_master
+      readl(dev->bar + NVME_REG_CSTS)
+
+But you mention nvme_reset_work() above.  How did you figure that out?
+
+Maybe there's a race where we reset the device (which clears the BARs)
+and do MMIO accesses before the BARs are restored.
+
+Or maybe some PCI error happens and nvme_reset_work() is invoked as
+part of recovery?  I see some *corrected* AER errors in your log, but
+none look related to your NVMe device at 03:00.0.
+
+I assume reading the BAR with setpci happens in "slow user time" so we
+have to assume that's the steady state of the BAR after nvme_probe()
+fails with -19.
+
+> > During a working case:
+> > Contents of BAR-0: 83000004 (dumped using setpci)
+> > 
+> > Seems like, the kernel PCIe resource contents don't change (which results in a
+> > successful ioremap), but somehow the BAR-0 dumps garbage.
+> > 
+> > The logs for the scenario: (apologies if this is not the way to attach a log in
+> > the mailing list as I have never done that :)).
+
+> > ... (see original report at
+> > https://lore.kernel.org/r/975cc790-7dd9-4902-45c1-c69b4be9ba3a@linux.intel.com)
+
+Bjorn
