@@ -2,65 +2,64 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92931C77B60
-	for <linux-pci@archiver.kernel.org>; Thu, 30 Mar 2023 13:36:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E34C1C77B6D
+	for <linux-pci@archiver.kernel.org>; Thu, 30 Mar 2023 13:36:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231751AbjC3NgZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 Mar 2023 09:36:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46134 "EHLO
+        id S232090AbjC3Ng0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 Mar 2023 09:36:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231642AbjC3NgW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2023 09:36:22 -0400
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2085.outbound.protection.outlook.com [40.107.95.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67EBAA268;
-        Thu, 30 Mar 2023 06:35:45 -0700 (PDT)
+        with ESMTP id S232081AbjC3NgZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2023 09:36:25 -0400
+Received: from NAM04-BN8-obe.outbound.protection.outlook.com (mail-bn8nam04on2043.outbound.protection.outlook.com [40.107.100.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EC438A5B;
+        Thu, 30 Mar 2023 06:35:47 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=RPwgP+ksHkLDc3UCmu62F6ATCy1pn3xPf1meft8r/wzgQgVfgeHOOfnkBj5eZcmA5/0qD6q/kehbgSZHuVUYNV1ESeMyEjn9SXxxTEF6iCi/O0XhKtL2UxSmZ7gY5Q/a9swPGJRSnEkZx+qdgIiQBgCMRffYSdOXMKrIBB9CR1U8qIyCiJd6GHjS8N4HY9P6CjPvyZg5dPMsISQKjRlA93UWDGamgxCDhaXV5PBGWAZosXogfcxB4nhwaX1ULvWKIjjgVdWCvYjlxrw8L2gbfKDNr027nH9RfXp368yR4PGLQ2FfdIThjKuyc16018ryX3gMCVUZYf6UMrYuIvydGg==
+ b=XtTZP8Re2WuynsDln26R00dxsNqUR6MN5YetxmgWN6QgnlsuS6soZ36F6zduBq+lTV5nS4HGWRWFCZj1sK6AQidOv1Tp4G6InVEdycgUCyfmCXF2FFo8xzrspf+h2VjVJ1YxnRSoOIVF6VQGGJ8/a+f7k/a4VZ9WTP/zn6kvgE+ETiq2zee9XUz5xfgAVVSgKNf68n2wwsG3uY6drpUDWew8T60Ek+6k5aEpyuqwBhR47QUrOXu+7h3OSHxZLxqo6E+6sUuMYAM3jGC299i3d7xv+N3unm2oQTdTYvuk3Hdp4bECzhTJWxX7vvRb+TxqtIsGmUbX2NQdzXPxzvO70w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=oSL0tSeKRavrPoWu4zSxlgLh06KAImtspwJWfUPGZSM=;
- b=L9xstYWys3cntQMxva2RwB6w4WEzeNUvnR9lBJ9zoRwFnHZrnNSi+fQeb27zfup2aFf23GYG1S5L/8Id2XPY46DJNfB74HAG3SZpSLqgsEvdgVTCjthvlvG8RQzEcogM4OWepZ6jqpoQ+KWiiQ825LAYKDgdk/Q1g8RRnFBozzVTQbG/20tbsAs0WrqMVqj6o2Ep/SEbEVodqYXMGGFChh+F8G+A8KjYnsdAsxV3bXMTOp0ZO1GyXmX7djcrlVCGPYAQSr9K6rAjGZvkW7b+WvJqnBcXK7YdIWGMn51iDR2nMH4vR4NXJ8F9jIrjPuk6QvxBJ+wYO008B+f8NMn7LQ==
+ bh=cxvKHL4caozilROvR5+TnU4HO09jiXCkfL3FawQRZXI=;
+ b=Mma2mtoReElBvu3n2QCadTUgL+MEgfMmrh35ljU01NO0BmbZlsLFO5FFP8uay7CW3dcTPo1BXvTlxuGFUFcVWOjrAk/TM0pRGwtRPU9QdzmpOzZww4SnqPjr3JnAkBo0YzKxn0Q+OWnnTQovEnYq0zyi1N0aFeBhog7J3GtcNJkegmgG0uIxWKisu7OEF64IQbGXNt+mNOy6+y7XkIqj+e/iX1j4k4QCVydHgd5/J+IMRdRWEHFhblh1A5dpbP8KbisbTmqNZ3HmYfHrCoM3Rp6tPyIEBLBOJ4D4ENLsWDTNaI9Rpx9x6NMc0DJ8sctF8MyBaQTIup3uTuElPAExBA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.232) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ 216.228.118.233) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=oSL0tSeKRavrPoWu4zSxlgLh06KAImtspwJWfUPGZSM=;
- b=SlaZSjo/Bw5SIhMS+GyxR0ypptih3LpzKruL2Ap5M2f0V8rnrfnjA3oZ+aovqYBA/BuwQTehoW+ut9zViySDkB/dC5apy3Z4dXiZhVlKQmXPRXNMe0SNKMU0Ylz8BN6cwUowVGppKR/23WtBt33LIjyouzCmgpvAXUwKir/wyNbW18hWjE8oGhYhDlz1PmSM0j0qoCS+/1QOieELhDgPhQNQTFt40/hQPwOo4VL3F3KMvgk7E2wYxyjd1RYd4UCgoouRKPHny9XCiNO8bVg4z1qqH1gmhoHCUvKkSOSXBxWxR8AJN9mbiY3siNQkBiF4vHGvM9uhewD6P1zZJ0VGpA==
-Received: from DS7PR03CA0071.namprd03.prod.outlook.com (2603:10b6:5:3bb::16)
- by CH2PR12MB4245.namprd12.prod.outlook.com (2603:10b6:610:af::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6222.35; Thu, 30 Mar
- 2023 13:35:42 +0000
-Received: from DS1PEPF0000E630.namprd02.prod.outlook.com
- (2603:10b6:5:3bb:cafe::b6) by DS7PR03CA0071.outlook.office365.com
- (2603:10b6:5:3bb::16) with Microsoft SMTP Server (version=TLS1_2,
+ bh=cxvKHL4caozilROvR5+TnU4HO09jiXCkfL3FawQRZXI=;
+ b=pch9ye6YZsNFWzJkhPXRGn5ZweBVIWb42NPOVZgvyh6KRqwc5lyBO6vDR0pFlz1boje4io6hQ6RQX+NR2KwCvNn7Z8Pd3XbUoXxUuGooEyx7qNE5/3UJIiafWOalvl7gPl2X9xSFRgrBhyY5Qhtuiq2RZDFVx9EFScHSQEErf7tGP63lJRAN5rR7C5gwt+AD8TlHCoRXfagEIHrJ7GVgrBNYuNwz0r5KsBBhIY9VHFRuFlt7bahtrZtAnSeSLBXZ+LOWrLiJ4B2A/t/Kcylrc4U0m1278zXC+sMeYUDJA0VJ3sGJ4upmXOmplwPhqkkSbkYOeb+VNV8a/6Ir+Iz6bQ==
+Received: from DM5PR07CA0097.namprd07.prod.outlook.com (2603:10b6:4:ae::26) by
+ IA0PR12MB9047.namprd12.prod.outlook.com (2603:10b6:208:402::8) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6222.33; Thu, 30 Mar 2023 13:35:45 +0000
+Received: from DM6NAM11FT049.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:4:ae:cafe::bf) by DM5PR07CA0097.outlook.office365.com
+ (2603:10b6:4:ae::26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6254.20 via Frontend
- Transport; Thu, 30 Mar 2023 13:35:42 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ Transport; Thu, 30 Mar 2023 13:35:45 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.232) by
- DS1PEPF0000E630.mail.protection.outlook.com (10.167.17.134) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6178.30 via Frontend Transport; Thu, 30 Mar 2023 13:35:42 +0000
-Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
- (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.233) by
+ DM6NAM11FT049.mail.protection.outlook.com (10.13.172.188) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6254.22 via Frontend Transport; Thu, 30 Mar 2023 13:35:45 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
+ (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.5; Thu, 30 Mar 2023
- 06:35:23 -0700
+ 06:35:43 -0700
 Received: from drhqmail201.nvidia.com (10.126.190.180) by
- drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.37; Thu, 30 Mar 2023 06:35:23 -0700
+ 15.2.986.37; Thu, 30 Mar 2023 06:35:42 -0700
 Received: from sumitg-l4t.nvidia.com (10.127.8.10) by mail.nvidia.com
  (10.126.190.180) with Microsoft SMTP Server id 15.2.986.37 via Frontend
- Transport; Thu, 30 Mar 2023 06:35:17 -0700
+ Transport; Thu, 30 Mar 2023 06:35:37 -0700
 From:   Sumit Gupta <sumitg@nvidia.com>
 To:     <treding@nvidia.com>, <krzysztof.kozlowski@linaro.org>,
         <dmitry.osipenko@collabora.com>, <viresh.kumar@linaro.org>,
@@ -72,9 +71,9 @@ CC:     <linux-kernel@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
         <kw@linux.com>, <bhelgaas@google.com>, <vidyas@nvidia.com>,
         <sanjayc@nvidia.com>, <ksitaraman@nvidia.com>, <ishah@nvidia.com>,
         <bbasu@nvidia.com>, <sumitg@nvidia.com>
-Subject: [Patch v5 6/8] cpufreq: tegra194: add OPP support and set bandwidth
-Date:   Thu, 30 Mar 2023 19:03:52 +0530
-Message-ID: <20230330133354.714-7-sumitg@nvidia.com>
+Subject: [Patch v5 8/8] arm64: tegra: Add cpu OPP tables and interconnects property
+Date:   Thu, 30 Mar 2023 19:03:54 +0530
+Message-ID: <20230330133354.714-9-sumitg@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230330133354.714-1-sumitg@nvidia.com>
 References: <20230330133354.714-1-sumitg@nvidia.com>
@@ -83,304 +82,413 @@ MIME-Version: 1.0
 Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS1PEPF0000E630:EE_|CH2PR12MB4245:EE_
-X-MS-Office365-Filtering-Correlation-Id: 77300a39-b892-45b7-f1e4-08db3123a8d2
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT049:EE_|IA0PR12MB9047:EE_
+X-MS-Office365-Filtering-Correlation-Id: db18f6de-1f09-41af-5aa5-08db3123aa32
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: b7Z0BkVlsE2ff1R0KmXvkDUU3GETKUKmONr73E6nxsjJSw+nO6o3t/S5fc/d7uXLNzBSaBiLaUWF8lBWn8oX39ow0vl16bjb90SNq4MW0yiYz6hkuUZwYvvWUOlXrtf9HjJvaKosQmPjkeSFlskqK5l9mxuUMfBkWZNj5+I3fTa3BT7+bRmECa95Pxx4BIfWmW75RcCkCE41Mp8Jv7t7sGVJI2ZloNFllPpTK41rdalC+XVxFEjzlYLmeROlqxTt4j1ewkQICiVrTK8v4xqHG/MgQu47bi+cSNkGczd6GnOgYLuXbtEH9uDqtal+8YDxX/FyLE/yMssqHBfUxA6x6QLk9ucx4t1r4LKTOjZnmDQ2yEL51bt8g9CIY1ZjK6lyAbw2Nd5OC01oB2CNXLFRtPmbmIFWaSL7EOXsAxn+D8vWo7KMBkR1SuG4Q8IK1kOsgHICfl3xxiiJHweHys6BoG9exQfpofiolHhpRLI6RMwB72Z3Hd+aeGhmAzx+7wnu3+gDR0RgMeA+ypWiKWIlOyP1CaKnEOE5zTB9Cc6Ka5QBskGPE5XCBeK+UOtfjxJyIMaNKxoQhD7fLJNLQBnvXotL2wlgOvGBqW1PpBsv/bVItNjJk6Hbopa1z3GlytN3Po8NfQAnH1hy5wnMR6bjoBmRZeKqmdYNQclpD4rjSVsclisVjfbspGhu/KqEXRcveZx5AbZ4xHoqzswc/Lq6HrNnXjsK6y94tAMjfJxeNe2xIC0Qua0P2WlKJ4hFdIfi
-X-Forefront-Antispam-Report: CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230028)(4636009)(346002)(376002)(136003)(396003)(39860400002)(451199021)(46966006)(36840700001)(40470700004)(86362001)(40460700003)(36860700001)(40480700001)(54906003)(110136005)(4326008)(356005)(8676002)(41300700001)(2906002)(7636003)(70586007)(316002)(186003)(70206006)(1076003)(426003)(83380400001)(2616005)(47076005)(336012)(7696005)(107886003)(478600001)(6666004)(26005)(82740400003)(82310400005)(36756003)(8936002)(5660300002)(7416002);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: +KVwLpvyYb0mWJolel677Mn27/IbpLnLJMWhOvzaVd6IVw2FLfQNk9v116RfDgZs6TwZRzcym20erpqnC4dvOcczptFwYZ40uom3FJdVQNs0QyvKsthjwxmSKIxIpXuCxRmWuO7+GPgqBxkjefYpvWwyZtuaZHVzQW2oB9vPaJxK0K6Wgfbviu9xOjqG0eyXM0AWQecfPejrM68FVMPZw991RMh4M6rPQ0snIFkeVTnnISrNDMUK8gZ1jJHep6KuZJs9djoz/BOpfdoOxnPrDyTvaoMfsSUmXUT0R/A/jHhlEcs6WENnmKWYEPTsjQHXfq6OOKIRW3UxRDHKhVH6UG0FyBUEuCCnwUEzwEaOlmzjQjjirkulR3LOd4ESe9s3FxjFavkVcjrODg+EJ5Bjj7PIIVV/vTyN9MreOYu3JLG+Y87VSD6hHdOpkY16JJvNOPM+FTBd4vyS8DKH7E3/5VTX38pOJ7EJ5B4U6Ud3gm8Mjv9jP5nqcc4/c6EjyO02lc7Gr9A9qjq+atxqu2wlnZxX1KS2ZWxPRxvsTMnlsAzvwBlhukTtHuEhmL5uebSYUCjzW/RGo81VFQ22iPo9H6kd/Ofr94wo0/9XdASGl2Tl2dnYgxGOaLy93vPGUsuJKUsV4BmUrh307+Mkh4J+blTFrDSD2TvOIqHXcMfnUdCeqIchD5Mad6gk5JTYHUpLMsiUE03lUBxVKz/ARjaTctKDSycMNjNRRGFIvVfiZVlohLNcfbjah4xI1RBlxhB6uPtxVURvs1l3zuIr2RJ/0yVDkVKfO+5nOkLVJgrdOwc=
+X-Forefront-Antispam-Report: CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230028)(4636009)(396003)(136003)(376002)(346002)(39860400002)(451199021)(40470700004)(46966006)(36840700001)(40460700003)(7696005)(70206006)(36756003)(4326008)(8676002)(356005)(34020700004)(2906002)(41300700001)(36860700001)(5660300002)(40480700001)(86362001)(82740400003)(8936002)(70586007)(7636003)(7416002)(82310400005)(316002)(110136005)(1076003)(26005)(186003)(107886003)(6666004)(478600001)(83380400001)(2616005)(54906003)(47076005)(426003)(336012);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2023 13:35:42.7039
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2023 13:35:45.0694
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 77300a39-b892-45b7-f1e4-08db3123a8d2
+X-MS-Exchange-CrossTenant-Network-Message-Id: db18f6de-1f09-41af-5aa5-08db3123aa32
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DS1PEPF0000E630.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT049.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4245
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB9047
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support to use OPP table from DT in Tegra194 cpufreq driver.
-Tegra SoC's receive the frequency lookup table (LUT) from BPMP-FW.
-Cross check the OPP's present in DT against the LUT from BPMP-FW
-and enable only those DT OPP's which are present in LUT also.
-
-The OPP table in DT has CPU Frequency to bandwidth mapping where
-the bandwidth value is per MC channel. DRAM bandwidth depends on the
-number of MC channels which can vary as per the boot configuration.
-This per channel bandwidth from OPP table will be later converted by
-MC driver to final bandwidth value by multiplying with number of
-channels before sending the request to BPMP-FW.
-
-If OPP table is not present in DT, then use the LUT from BPMP-FW
-directy as the CPU frequency table and not do the DRAM frequency
-scaling which is same as the current behavior.
-
-Now, as the CPU Frequency table is being controlling through OPP
-table in DT. Keeping fewer entries in the table will create less
-frequency steps and can help to scale fast to high frequencies
-when required.
+Add OPP table and interconnects property to scale DDR frequency with
+CPU frequency for better performance. Each operating point entry of
+the OPP table has CPU freq to per MC channel bandwidth mapping.
+One table is added for each cluster even though the table data is
+same because the bandwidth request is per cluster. This is done
+because OPP framework creates a single icc path and hence single
+bandwidth request if the table is marked as 'opp-shared' and shared
+among all clusters. For us, the OPP table data is same but the MC
+Client ID argument to interconnects property is different for each
+cluster. So, having per cluster table makes different icc path for
+each cluster and helps to make per cluster BW requests.
 
 Signed-off-by: Sumit Gupta <sumitg@nvidia.com>
 ---
- drivers/cpufreq/tegra194-cpufreq.c | 156 ++++++++++++++++++++++++++---
- 1 file changed, 143 insertions(+), 13 deletions(-)
+ arch/arm64/boot/dts/nvidia/tegra234.dtsi | 276 +++++++++++++++++++++++
+ 1 file changed, 276 insertions(+)
 
-diff --git a/drivers/cpufreq/tegra194-cpufreq.c b/drivers/cpufreq/tegra194-cpufreq.c
-index 5890e25d7f77..c8d03346068a 100644
---- a/drivers/cpufreq/tegra194-cpufreq.c
-+++ b/drivers/cpufreq/tegra194-cpufreq.c
-@@ -12,6 +12,7 @@
- #include <linux/of_platform.h>
- #include <linux/platform_device.h>
- #include <linux/slab.h>
-+#include <linux/units.h>
+diff --git a/arch/arm64/boot/dts/nvidia/tegra234.dtsi b/arch/arm64/boot/dts/nvidia/tegra234.dtsi
+index 959d659dd5cd..d735ad2eb84f 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra234.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra234.dtsi
+@@ -3011,6 +3011,9 @@
  
- #include <asm/smp_plat.h>
+ 			enable-method = "psci";
  
-@@ -65,12 +66,36 @@ struct tegra_cpufreq_soc {
++			operating-points-v2 = <&cl0_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER0 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3027,6 +3030,9 @@
  
- struct tegra194_cpufreq_data {
- 	void __iomem *regs;
--	struct cpufreq_frequency_table **tables;
-+	struct cpufreq_frequency_table **bpmp_luts;
- 	const struct tegra_cpufreq_soc *soc;
-+	bool icc_dram_bw_scaling;
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl0_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER0 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3043,6 +3049,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl0_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER0 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3059,6 +3068,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl0_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER0 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3075,6 +3087,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl1_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER1 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3091,6 +3106,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl1_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER1 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3107,6 +3125,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl1_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER1 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3123,6 +3144,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl1_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER1 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3139,6 +3163,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl2_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER2 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3155,6 +3182,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl2_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER2 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3171,6 +3201,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl2_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER2 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3187,6 +3220,9 @@
+ 
+ 			enable-method = "psci";
+ 
++			operating-points-v2 = <&cl2_opp_tbl>;
++			interconnects = <&mc TEGRA_ICC_MC_CPU_CLUSTER2 &emc>;
++
+ 			i-cache-size = <65536>;
+ 			i-cache-line-size = <64>;
+ 			i-cache-sets = <256>;
+@@ -3443,4 +3479,244 @@
+ 		interrupt-parent = <&gic>;
+ 		always-on;
+ 	};
++
++	cl0_opp_tbl: opp-table-cluster0 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		cl0_ch1_opp1: opp-115200000 {
++			  opp-hz = /bits/ 64 <115200000>;
++			  opp-peak-kBps = <816000>;
++		};
++
++		cl0_ch1_opp2: opp-268800000 {
++			opp-hz = /bits/ 64 <268800000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl0_ch1_opp3: opp-422400000 {
++			opp-hz = /bits/ 64 <422400000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl0_ch1_opp4: opp-576000000 {
++			opp-hz = /bits/ 64 <576000000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl0_ch1_opp5: opp-729600000 {
++			opp-hz = /bits/ 64 <729600000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl0_ch1_opp6: opp-883200000 {
++			opp-hz = /bits/ 64 <883200000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl0_ch1_opp7: opp-1036800000 {
++			opp-hz = /bits/ 64 <1036800000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl0_ch1_opp8: opp-1190400000 {
++			opp-hz = /bits/ 64 <1190400000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl0_ch1_opp9: opp-1344000000 {
++			opp-hz = /bits/ 64 <1344000000>;
++			opp-peak-kBps = <1632000>;
++		};
++
++		cl0_ch1_opp10: opp-1497600000 {
++			opp-hz = /bits/ 64 <1497600000>;
++			opp-peak-kBps = <1632000>;
++		};
++
++		cl0_ch1_opp11: opp-1651200000 {
++			opp-hz = /bits/ 64 <1651200000>;
++			opp-peak-kBps = <2660000>;
++		};
++
++		cl0_ch1_opp12: opp-1804800000 {
++			opp-hz = /bits/ 64 <1804800000>;
++			opp-peak-kBps = <2660000>;
++		};
++
++		cl0_ch1_opp13: opp-1958400000 {
++			opp-hz = /bits/ 64 <1958400000>;
++			opp-peak-kBps = <3200000>;
++		};
++
++		cl0_ch1_opp14: opp-2112000000 {
++			opp-hz = /bits/ 64 <2112000000>;
++			opp-peak-kBps = <6400000>;
++		};
++
++		cl0_ch1_opp15: opp-2201600000 {
++			opp-hz = /bits/ 64 <2201600000>;
++			opp-peak-kBps = <6400000>;
++		};
++	};
++
++	cl1_opp_tbl: opp-table-cluster1 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		cl1_ch1_opp1: opp-115200000 {
++			  opp-hz = /bits/ 64 <115200000>;
++			  opp-peak-kBps = <816000>;
++		};
++
++		cl1_ch1_opp2: opp-268800000 {
++			opp-hz = /bits/ 64 <268800000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl1_ch1_opp3: opp-422400000 {
++			opp-hz = /bits/ 64 <422400000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl1_ch1_opp4: opp-576000000 {
++			opp-hz = /bits/ 64 <576000000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl1_ch1_opp5: opp-729600000 {
++			opp-hz = /bits/ 64 <729600000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl1_ch1_opp6: opp-883200000 {
++			opp-hz = /bits/ 64 <883200000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl1_ch1_opp7: opp-1036800000 {
++			opp-hz = /bits/ 64 <1036800000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl1_ch1_opp8: opp-1190400000 {
++			opp-hz = /bits/ 64 <1190400000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl1_ch1_opp9: opp-1344000000 {
++			opp-hz = /bits/ 64 <1344000000>;
++			opp-peak-kBps = <1632000>;
++		};
++
++		cl1_ch1_opp10: opp-1497600000 {
++			opp-hz = /bits/ 64 <1497600000>;
++			opp-peak-kBps = <1632000>;
++		};
++
++		cl1_ch1_opp11: opp-1651200000 {
++			opp-hz = /bits/ 64 <1651200000>;
++			opp-peak-kBps = <2660000>;
++		};
++
++		cl1_ch1_opp12: opp-1804800000 {
++			opp-hz = /bits/ 64 <1804800000>;
++			opp-peak-kBps = <2660000>;
++		};
++
++		cl1_ch1_opp13: opp-1958400000 {
++			opp-hz = /bits/ 64 <1958400000>;
++			opp-peak-kBps = <3200000>;
++		};
++
++		cl1_ch1_opp14: opp-2112000000 {
++			opp-hz = /bits/ 64 <2112000000>;
++			opp-peak-kBps = <6400000>;
++		};
++
++		cl1_ch1_opp15: opp-2201600000 {
++			opp-hz = /bits/ 64 <2201600000>;
++			opp-peak-kBps = <6400000>;
++		};
++	};
++
++	cl2_opp_tbl: opp-table-cluster2 {
++		compatible = "operating-points-v2";
++		opp-shared;
++
++		cl2_ch1_opp1: opp-115200000 {
++			  opp-hz = /bits/ 64 <115200000>;
++			  opp-peak-kBps = <816000>;
++		};
++
++		cl2_ch1_opp2: opp-268800000 {
++			opp-hz = /bits/ 64 <268800000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl2_ch1_opp3: opp-422400000 {
++			opp-hz = /bits/ 64 <422400000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl2_ch1_opp4: opp-576000000 {
++			opp-hz = /bits/ 64 <576000000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl2_ch1_opp5: opp-729600000 {
++			opp-hz = /bits/ 64 <729600000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl2_ch1_opp6: opp-883200000 {
++			opp-hz = /bits/ 64 <883200000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl2_ch1_opp7: opp-1036800000 {
++			opp-hz = /bits/ 64 <1036800000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl2_ch1_opp8: opp-1190400000 {
++			opp-hz = /bits/ 64 <1190400000>;
++			opp-peak-kBps = <816000>;
++		};
++
++		cl2_ch1_opp9: opp-1344000000 {
++			opp-hz = /bits/ 64 <1344000000>;
++			opp-peak-kBps = <1632000>;
++		};
++
++		cl2_ch1_opp10: opp-1497600000 {
++			opp-hz = /bits/ 64 <1497600000>;
++			opp-peak-kBps = <1632000>;
++		};
++
++		cl2_ch1_opp11: opp-1651200000 {
++			opp-hz = /bits/ 64 <1651200000>;
++			opp-peak-kBps = <2660000>;
++		};
++
++		cl2_ch1_opp12: opp-1804800000 {
++			opp-hz = /bits/ 64 <1804800000>;
++			opp-peak-kBps = <2660000>;
++		};
++
++		cl2_ch1_opp13: opp-1958400000 {
++			opp-hz = /bits/ 64 <1958400000>;
++			opp-peak-kBps = <3200000>;
++		};
++
++		cl2_ch1_opp14: opp-2112000000 {
++			opp-hz = /bits/ 64 <2112000000>;
++			opp-peak-kBps = <6400000>;
++		};
++
++		cl2_ch1_opp15: opp-2201600000 {
++			opp-hz = /bits/ 64 <2201600000>;
++			opp-peak-kBps = <6400000>;
++		};
++	};
  };
- 
- static struct workqueue_struct *read_counters_wq;
- 
-+static int tegra_cpufreq_set_bw(struct cpufreq_policy *policy, unsigned long freq_khz)
-+{
-+	struct tegra194_cpufreq_data *data = cpufreq_get_driver_data();
-+	struct dev_pm_opp *opp;
-+	struct device *dev;
-+	int ret;
-+
-+	dev = get_cpu_device(policy->cpu);
-+	if (!dev)
-+		return -ENODEV;
-+
-+	opp = dev_pm_opp_find_freq_exact(dev, freq_khz * KHZ, true);
-+	if (IS_ERR(opp))
-+		return PTR_ERR(opp);
-+
-+	ret = dev_pm_opp_set_opp(dev, opp);
-+	if (ret)
-+		data->icc_dram_bw_scaling = false;
-+
-+	dev_pm_opp_put(opp);
-+	return ret;
-+}
-+
- static void tegra_get_cpu_mpidr(void *mpidr)
- {
- 	*((u64 *)mpidr) = read_cpuid_mpidr() & MPIDR_HWID_BITMASK;
-@@ -354,7 +379,7 @@ static unsigned int tegra194_get_speed(u32 cpu)
- 	 * to the last written ndiv value from freq_table. This is
- 	 * done to return consistent value.
- 	 */
--	cpufreq_for_each_valid_entry(pos, data->tables[clusterid]) {
-+	cpufreq_for_each_valid_entry(pos, data->bpmp_luts[clusterid]) {
- 		if (pos->driver_data != ndiv)
- 			continue;
- 
-@@ -369,16 +394,93 @@ static unsigned int tegra194_get_speed(u32 cpu)
- 	return rate;
- }
- 
-+static int tegra_cpufreq_init_cpufreq_table(struct cpufreq_policy *policy,
-+					    struct cpufreq_frequency_table *bpmp_lut,
-+					    struct cpufreq_frequency_table **opp_table)
-+{
-+	struct tegra194_cpufreq_data *data = cpufreq_get_driver_data();
-+	struct cpufreq_frequency_table *freq_table = NULL;
-+	struct cpufreq_frequency_table *pos;
-+	struct device *cpu_dev;
-+	struct dev_pm_opp *opp;
-+	unsigned long rate;
-+	int ret, max_opps;
-+	int j = 0;
-+
-+	cpu_dev = get_cpu_device(policy->cpu);
-+	if (!cpu_dev) {
-+		pr_err("%s: failed to get cpu%d device\n", __func__, policy->cpu);
-+		return -ENODEV;
-+	}
-+
-+	/* Initialize OPP table mentioned in operating-points-v2 property in DT */
-+	ret = dev_pm_opp_of_add_table_indexed(cpu_dev, 0);
-+	if (!ret) {
-+		max_opps = dev_pm_opp_get_opp_count(cpu_dev);
-+		if (max_opps <= 0) {
-+			dev_err(cpu_dev, "Failed to add OPPs\n");
-+			return max_opps;
-+		}
-+
-+		/* Disable all opps and cross-validate against LUT later */
-+		for (rate = 0; ; rate++) {
-+			opp = dev_pm_opp_find_freq_ceil(cpu_dev, &rate);
-+			if (IS_ERR(opp))
-+				break;
-+
-+			dev_pm_opp_put(opp);
-+			dev_pm_opp_disable(cpu_dev, rate);
-+		}
-+	} else {
-+		dev_err(cpu_dev, "Invalid or empty opp table in device tree\n");
-+		data->icc_dram_bw_scaling = false;
-+		return ret;
-+	}
-+
-+	freq_table = kcalloc((max_opps + 1), sizeof(*freq_table), GFP_KERNEL);
-+	if (!freq_table)
-+		return -ENOMEM;
-+
-+	/*
-+	 * Cross check the frequencies from BPMP-FW LUT against the OPP's present in DT.
-+	 * Enable only those DT OPP's which are present in LUT also.
-+	 */
-+	cpufreq_for_each_valid_entry(pos, bpmp_lut) {
-+		opp = dev_pm_opp_find_freq_exact(cpu_dev, pos->frequency * KHZ, false);
-+		if (IS_ERR(opp))
-+			continue;
-+
-+		ret = dev_pm_opp_enable(cpu_dev, pos->frequency * KHZ);
-+		if (ret < 0)
-+			return ret;
-+
-+		freq_table[j].driver_data = pos->driver_data;
-+		freq_table[j].frequency = pos->frequency;
-+		j++;
-+	}
-+
-+	freq_table[j].driver_data = pos->driver_data;
-+	freq_table[j].frequency = CPUFREQ_TABLE_END;
-+
-+	*opp_table = &freq_table[0];
-+
-+	dev_pm_opp_set_sharing_cpus(cpu_dev, policy->cpus);
-+
-+	return ret;
-+}
-+
- static int tegra194_cpufreq_init(struct cpufreq_policy *policy)
- {
- 	struct tegra194_cpufreq_data *data = cpufreq_get_driver_data();
- 	int maxcpus_per_cluster = data->soc->maxcpus_per_cluster;
-+	struct cpufreq_frequency_table *freq_table;
-+	struct cpufreq_frequency_table *bpmp_lut;
- 	u32 start_cpu, cpu;
- 	u32 clusterid;
-+	int ret;
- 
- 	data->soc->ops->get_cpu_cluster_id(policy->cpu, NULL, &clusterid);
--
--	if (clusterid >= data->soc->num_clusters || !data->tables[clusterid])
-+	if (clusterid >= data->soc->num_clusters || !data->bpmp_luts[clusterid])
- 		return -EINVAL;
- 
- 	start_cpu = rounddown(policy->cpu, maxcpus_per_cluster);
-@@ -387,9 +489,22 @@ static int tegra194_cpufreq_init(struct cpufreq_policy *policy)
- 		if (cpu_possible(cpu))
- 			cpumask_set_cpu(cpu, policy->cpus);
- 	}
--	policy->freq_table = data->tables[clusterid];
- 	policy->cpuinfo.transition_latency = TEGRA_CPUFREQ_TRANSITION_LATENCY;
- 
-+	bpmp_lut = data->bpmp_luts[clusterid];
-+
-+	if (data->icc_dram_bw_scaling) {
-+		ret = tegra_cpufreq_init_cpufreq_table(policy, bpmp_lut, &freq_table);
-+		if (!ret) {
-+			policy->freq_table = freq_table;
-+			return 0;
-+		}
-+	}
-+
-+	data->icc_dram_bw_scaling = false;
-+	policy->freq_table = bpmp_lut;
-+	pr_info("OPP tables missing from DT, EMC frequency scaling disabled\n");
-+
- 	return 0;
- }
- 
-@@ -406,6 +521,9 @@ static int tegra194_cpufreq_set_target(struct cpufreq_policy *policy,
- 	 */
- 	data->soc->ops->set_cpu_ndiv(policy, (u64)tbl->driver_data);
- 
-+	if (data->icc_dram_bw_scaling)
-+		tegra_cpufreq_set_bw(policy, tbl->frequency);
-+
- 	return 0;
- }
- 
-@@ -439,8 +557,8 @@ static void tegra194_cpufreq_free_resources(void)
- }
- 
- static struct cpufreq_frequency_table *
--init_freq_table(struct platform_device *pdev, struct tegra_bpmp *bpmp,
--		unsigned int cluster_id)
-+tegra_cpufreq_bpmp_read_lut(struct platform_device *pdev, struct tegra_bpmp *bpmp,
-+			    unsigned int cluster_id)
- {
- 	struct cpufreq_frequency_table *freq_table;
- 	struct mrq_cpu_ndiv_limits_response resp;
-@@ -515,6 +633,7 @@ static int tegra194_cpufreq_probe(struct platform_device *pdev)
- 	const struct tegra_cpufreq_soc *soc;
- 	struct tegra194_cpufreq_data *data;
- 	struct tegra_bpmp *bpmp;
-+	struct device *cpu_dev;
- 	int err, i;
- 
- 	data = devm_kzalloc(&pdev->dev, sizeof(*data), GFP_KERNEL);
-@@ -530,9 +649,9 @@ static int tegra194_cpufreq_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
--	data->tables = devm_kcalloc(&pdev->dev, data->soc->num_clusters,
--				    sizeof(*data->tables), GFP_KERNEL);
--	if (!data->tables)
-+	data->bpmp_luts = devm_kcalloc(&pdev->dev, data->soc->num_clusters,
-+				       sizeof(*data->bpmp_luts), GFP_KERNEL);
-+	if (!data->bpmp_luts)
- 		return -ENOMEM;
- 
- 	if (soc->actmon_cntr_base) {
-@@ -556,15 +675,26 @@ static int tegra194_cpufreq_probe(struct platform_device *pdev)
- 	}
- 
- 	for (i = 0; i < data->soc->num_clusters; i++) {
--		data->tables[i] = init_freq_table(pdev, bpmp, i);
--		if (IS_ERR(data->tables[i])) {
--			err = PTR_ERR(data->tables[i]);
-+		data->bpmp_luts[i] = tegra_cpufreq_bpmp_read_lut(pdev, bpmp, i);
-+		if (IS_ERR(data->bpmp_luts[i])) {
-+			err = PTR_ERR(data->bpmp_luts[i]);
- 			goto err_free_res;
- 		}
- 	}
- 
- 	tegra194_cpufreq_driver.driver_data = data;
- 
-+	/* Check for optional OPPv2 and interconnect paths on CPU0 to enable ICC scaling */
-+	cpu_dev = get_cpu_device(0);
-+	if (!cpu_dev)
-+		return -EPROBE_DEFER;
-+
-+	if (dev_pm_opp_of_get_opp_desc_node(cpu_dev)) {
-+		err = dev_pm_opp_of_find_icc_paths(cpu_dev, NULL);
-+		if (!err)
-+			data->icc_dram_bw_scaling = true;
-+	}
-+
- 	err = cpufreq_register_driver(&tegra194_cpufreq_driver);
- 	if (!err)
- 		goto put_bpmp;
 -- 
 2.17.1
 
