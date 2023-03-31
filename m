@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B98A1C6FD18
-	for <linux-pci@archiver.kernel.org>; Fri, 31 Mar 2023 06:18:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47ECEC76196
+	for <linux-pci@archiver.kernel.org>; Fri, 31 Mar 2023 06:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230135AbjCaGSv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 31 Mar 2023 02:18:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57532 "EHLO
+        id S230177AbjCaGTJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 31 Mar 2023 02:19:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230047AbjCaGSn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Mar 2023 02:18:43 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 298CE3C20;
-        Thu, 30 Mar 2023 23:18:43 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32V5jFmJ019985;
-        Fri, 31 Mar 2023 06:18:36 GMT
+        with ESMTP id S230138AbjCaGSv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Mar 2023 02:18:51 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 330E165AD;
+        Thu, 30 Mar 2023 23:18:49 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 32V4MFI6021687;
+        Fri, 31 Mar 2023 06:18:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=f/vVrLbjYNoac+duJcW+BhpAcjKHzIiJxKtah+6l4rI=;
- b=h1WmfcZwx6w4y+H/Z2yORwDxY9r9vuQFT4aoo6tuCzQmssjdsQ1XGE8WFvtfiuhEPMue
- PdC9KvFWcsNrGB8Bk9S0A5lauxNSrV98l3/hyKjAbh9o/p2shmdNvVAq/YL3+7VP2TJl
- ZaSDbCB67EBezS/UAmWWhXH9O7m0ca5/smcpMjFLW18XUaVTUj2RaK5R1IZSEwKM9yqE
- zs/UIpkV1HFALLFnwk3Qsm95CHsQNsTidYMCVetfBPXIupLSybbmOAYXVbV43oZNgR+W
- Qw89jQNHWeAikQVCsxr0N/1QqCsByBVb37AOc1Xr2yOhWxgW440H3HRtaO7c7gK2sh8N cg== 
+ bh=zlQ0wsHFTnl7JbDwTeLUx3Kswpe5rNg9zDVI6ufEwss=;
+ b=CXuJ64Otqd4InKoUGfk0o9hRAmS65lgDtnUKYZ4Iw3zAN8VoMYBR7Cc9DvEP4VrT5G/R
+ rsl1Gj45QeE1wNxQk5IzZaKv61OrjO4zYA5G/PaQDDnTmO+203gwmhg9SfmY5V+BREiZ
+ yRrlqbupH8P23cmwe+Pv1A37VCkf6fs1UlrzSK2Sj4idFxImElBF6hirEKlRbLMDhwaD
+ Eeob1Q91gTaQzf5+XYZAvjqd6TgITIsx1xl1HdJ84tSp+lTLZn+ybBlQMATLWUhbFo8w
+ 6T3IBhBOhaBEC7dP3MI1hTdbEB8/JfNzFoF4gBFLRtG68dZ/VRDjyhNaSVvYECpAf4th uQ== 
 Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pn934tjbd-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3pn9kgtggg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Mar 2023 06:18:36 +0000
+        Fri, 31 Mar 2023 06:18:43 +0000
 Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32V6IWIS013904;
-        Fri, 31 Mar 2023 06:18:33 GMT
+        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 32V6IWdc013918;
+        Fri, 31 Mar 2023 06:18:32 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3pht1knm2n-1
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3pht1knm2b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 31 Mar 2023 06:18:33 +0000
+        Fri, 31 Mar 2023 06:18:32 +0000
 Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32V6IWid013895;
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 32V6IWib013895;
         Fri, 31 Mar 2023 06:18:32 GMT
 Received: from hu-sgudaval-hyd.qualcomm.com (hu-rohiagar-hyd.qualcomm.com [10.213.106.138])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 32V6IWLH013915;
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 32V6IVZP013883;
         Fri, 31 Mar 2023 06:18:32 +0000
 Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3970568)
-        id 0746B4EED; Fri, 31 Mar 2023 11:48:32 +0530 (+0530)
+        id 64D324F66; Fri, 31 Mar 2023 11:48:31 +0530 (+0530)
 From:   Rohit Agarwal <quic_rohiagar@quicinc.com>
 To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
         mani@kernel.org, bhelgaas@google.com, lpieralisi@kernel.org,
@@ -52,9 +52,9 @@ To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
 Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         Rohit Agarwal <quic_rohiagar@quicinc.com>
-Subject: [PATCH v5 5/5] ARM: dts: qcom: sdx65-mtp: Enable PCIe EP
-Date:   Fri, 31 Mar 2023 11:48:22 +0530
-Message-Id: <1680243502-23744-6-git-send-email-quic_rohiagar@quicinc.com>
+Subject: [PATCH v5 3/5] ARM: dts: qcom: sdx65: Add support for PCIe EP
+Date:   Fri, 31 Mar 2023 11:48:20 +0530
+Message-Id: <1680243502-23744-4-git-send-email-quic_rohiagar@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1680243502-23744-1-git-send-email-quic_rohiagar@quicinc.com>
 References: <1680243502-23744-1-git-send-email-quic_rohiagar@quicinc.com>
@@ -62,82 +62,111 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: HAc_AtjRW_6fXFm_xABy5V8BVs6rAu6j
-X-Proofpoint-ORIG-GUID: HAc_AtjRW_6fXFm_xABy5V8BVs6rAu6j
+X-Proofpoint-GUID: 0Qkzmter7guxT6NvjMKzaq4-VYn7UQfD
+X-Proofpoint-ORIG-GUID: 0Qkzmter7guxT6NvjMKzaq4-VYn7UQfD
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-03-31_02,2023-03-30_04,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 adultscore=0
- mlxscore=0 bulkscore=0 impostorscore=0 lowpriorityscore=0 suspectscore=0
- spamscore=0 mlxlogscore=685 clxscore=1015 priorityscore=1501
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501 mlxscore=0
+ adultscore=0 malwarescore=0 suspectscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 mlxlogscore=999 lowpriorityscore=0 impostorscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2303200000 definitions=main-2303310050
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable PCIe Endpoint controller on the SDX65 MTP board based
-on Qualcomm SDX65 platform.
+Add support for PCIe Endpoint controller on the
+Qualcomm SDX65 platform.
 
 Signed-off-by: Rohit Agarwal <quic_rohiagar@quicinc.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 ---
- arch/arm/boot/dts/qcom-sdx65-mtp.dts | 35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ arch/arm/boot/dts/qcom-sdx65.dtsi | 56 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
-diff --git a/arch/arm/boot/dts/qcom-sdx65-mtp.dts b/arch/arm/boot/dts/qcom-sdx65-mtp.dts
-index 70720e6..96da625 100644
---- a/arch/arm/boot/dts/qcom-sdx65-mtp.dts
-+++ b/arch/arm/boot/dts/qcom-sdx65-mtp.dts
-@@ -245,6 +245,18 @@
- 	status = "okay";
- };
+diff --git a/arch/arm/boot/dts/qcom-sdx65.dtsi b/arch/arm/boot/dts/qcom-sdx65.dtsi
+index 084daf8..7597365 100644
+--- a/arch/arm/boot/dts/qcom-sdx65.dtsi
++++ b/arch/arm/boot/dts/qcom-sdx65.dtsi
+@@ -8,6 +8,7 @@
  
-+&pcie_ep {
-+	pinctrl-0 = <&pcie_ep_clkreq_default
-+		     &pcie_ep_perst_default
-+		     &pcie_ep_wake_default>;
-+	pinctrl-names = "default";
-+
-+	reset-gpios = <&tlmm 57 GPIO_ACTIVE_LOW>;
-+	wake-gpios = <&tlmm 53 GPIO_ACTIVE_LOW>;
-+
-+	status = "okay";
-+};
-+
- &pcie_phy {
- 	vdda-phy-supply = <&vreg_l1b_1p2>;
- 	vdda-pll-supply = <&vreg_l4b_0p88>;
-@@ -277,6 +289,29 @@
- 	status = "okay";
- };
+ #include <dt-bindings/clock/qcom,gcc-sdx65.h>
+ #include <dt-bindings/clock/qcom,rpmh.h>
++#include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+ #include <dt-bindings/power/qcom-rpmpd.h>
+ #include <dt-bindings/soc/qcom,rpmh-rsc.h>
+@@ -293,6 +294,56 @@
+ 			status = "disabled";
+ 		};
  
-+&tlmm {
-+	pcie_ep_clkreq_default: pcie-ep-clkreq-default-state {
-+		pins = "gpio56";
-+		function = "pcie_clkreq";
-+		drive-strength = <2>;
-+		bias-disable;
-+	};
++		pcie_ep: pcie-ep@1c00000 {
++			compatible = "qcom,sdx65-pcie-ep", "qcom,sdx55-pcie-ep";
++			reg = <0x01c00000 0x3000>,
++			      <0x40000000 0xf1d>,
++			      <0x40000f20 0xa8>,
++			      <0x40001000 0x1000>,
++			      <0x40200000 0x100000>,
++			      <0x01c03000 0x3000>;
++			reg-names = "parf",
++				    "dbi",
++				    "elbi",
++				    "atu",
++				    "addr_space",
++				    "mmio";
 +
-+	pcie_ep_perst_default: pcie-ep-perst-default-state {
-+		pins = "gpio57";
-+		function = "gpio";
-+		drive-strength = <2>;
-+		bias-pull-down;
-+	};
++			qcom,perst-regs = <&tcsr 0xb258 0xb270>;
 +
-+	pcie_ep_wake_default: pcie-ep-wake-default-state {
-+		pins = "gpio53";
-+		function = "gpio";
-+		drive-strength = <2>;
-+		bias-disable;
-+	};
-+};
++			clocks = <&gcc GCC_PCIE_AUX_CLK>,
++				 <&gcc GCC_PCIE_CFG_AHB_CLK>,
++				 <&gcc GCC_PCIE_MSTR_AXI_CLK>,
++				 <&gcc GCC_PCIE_SLV_AXI_CLK>,
++				 <&gcc GCC_PCIE_SLV_Q2A_AXI_CLK>,
++				 <&gcc GCC_PCIE_SLEEP_CLK>,
++				 <&gcc GCC_PCIE_0_CLKREF_EN>;
++			clock-names = "aux",
++				      "cfg",
++				      "bus_master",
++				      "bus_slave",
++				      "slave_q2a",
++				      "sleep",
++				      "ref";
 +
- &usb {
- 	status = "okay";
- };
++			interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "global", "doorbell";
++
++			resets = <&gcc GCC_PCIE_BCR>;
++			reset-names = "core";
++
++			power-domains = <&gcc PCIE_GDSC>;
++
++			phys = <&pcie_phy>;
++			phy-names = "pcie-phy";
++
++			max-link-speed = <3>;
++			num-lanes = <2>;
++
++			status = "disabled";
++		};
++
+ 		pcie_phy: phy@1c06000 {
+ 			compatible = "qcom,sdx65-qmp-gen4x2-pcie-phy";
+ 			reg = <0x01c06000 0x2000>;
+@@ -330,6 +381,11 @@
+ 			#hwlock-cells = <1>;
+ 		};
+ 
++		tcsr: syscon@1fcb000 {
++			compatible = "qcom,sdx65-tcsr", "syscon";
++			reg = <0x01fc0000 0x1000>;
++		};
++
+ 		remoteproc_mpss: remoteproc@4080000 {
+ 			compatible = "qcom,sdx55-mpss-pas";
+ 			reg = <0x04080000 0x4040>;
 -- 
 2.7.4
 
