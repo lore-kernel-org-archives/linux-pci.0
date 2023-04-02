@@ -2,84 +2,86 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E30FFC7619A
-	for <linux-pci@archiver.kernel.org>; Sun,  2 Apr 2023 13:32:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94994C76196
+	for <linux-pci@archiver.kernel.org>; Sun,  2 Apr 2023 14:34:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230200AbjDBNcU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 2 Apr 2023 09:32:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44156 "EHLO
+        id S230512AbjDBOeb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 2 Apr 2023 10:34:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229448AbjDBNcT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Apr 2023 09:32:19 -0400
-Received: from mxout3.routing.net (mxout3.routing.net [IPv6:2a03:2900:1:a::8])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CB601B340;
-        Sun,  2 Apr 2023 06:32:18 -0700 (PDT)
-Received: from mxbox1.masterlogin.de (unknown [192.168.10.88])
-        by mxout3.routing.net (Postfix) with ESMTP id C4B5C61CDF;
-        Sun,  2 Apr 2023 13:13:23 +0000 (UTC)
-Received: from frank-G5.. (fttx-pool-217.61.149.201.bambit.de [217.61.149.201])
-        by mxbox1.masterlogin.de (Postfix) with ESMTPSA id 8262B4092B;
-        Sun,  2 Apr 2023 13:12:01 +0000 (UTC)
-From:   Frank Wunderlich <linux@fw-web.de>
-To:     linux-mediatek@lists.infradead.org
-Cc:     Frank Wunderlich <frank-w@public-files.de>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Jianjun Wang <jianjun.wang@mediatek.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] PCI: mediatek-gen3: handle PERST after reset
-Date:   Sun,  2 Apr 2023 15:11:19 +0200
-Message-Id: <20230402131119.98805-1-linux@fw-web.de>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S229997AbjDBOea (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Apr 2023 10:34:30 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56337DA;
+        Sun,  2 Apr 2023 07:34:12 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id z10so16010646pgr.8;
+        Sun, 02 Apr 2023 07:34:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680446052;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OoKAUsS1+OPv2yaj0HT7KaFR2MH6Yyn+hzIBLI7xgeI=;
+        b=ILEvwS91rgkWPiWhD7zih4rFjl7XNbDo2TWQbTQmLiSCIRjv76s9QPGoQlsN043vzN
+         yBk6Y2LTK6XhR/DZbwerQlmxtwoJMHabnz0iK2D/M5mc+CrRIQu5bw4kif3w/29NBgFB
+         pQo4K/fce8HBMfRPVNUOJ8p0MOYg+DuF2eam+iD9PbmBYo/qe0xqHdzKh8SbvXKXSIf3
+         g3YRkSHCV9F65Cyb3psaAYUq98SzfwGMlSbYu8O2YfHFBKJXzRCGbefzIfMm9pgNBnip
+         vE6MX1JqDKSopsTjGPu3sWDthzudvdLVTgr1w3M517g7uoeEM8mu1AUAhIUnOVdGwmh6
+         2c4g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680446052;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=OoKAUsS1+OPv2yaj0HT7KaFR2MH6Yyn+hzIBLI7xgeI=;
+        b=jzW5sIvm2vNB3A9Rd/vaEp6coN+wIhTc93GamwME3zNz/lggV3nzP8T8ZMLdwxkeAe
+         4clsfraoEWG2smsnhvUfxLx8exL5mm+GrvrX6xOqyK1QfudTQpSq0pNekIws59A9zT1/
+         cs4d8MDn5lkDrPheJ/p7iiT5winbvmSUE7eFrpjr7y7b6S47ABuGrEM7kIrm7JWD98kK
+         4FDeRKjH4WBjl8QJZlLgcwJt5Q9Mlphg1WRv4UYeK+tWwL1CiH4+Pc/FyutbYiPy0bgr
+         DLN0zoATGcyTemwrz7rNqZ8oXe5jgKKFnjh53kku9/YjmHEJyPXY7Of2PYWiQVJlCyrG
+         33Xw==
+X-Gm-Message-State: AAQBX9cJ8bvIAWKYjHnQJVbDfIsy4U1oiCvbnzegZRqCJgB3ob5Gdq8y
+        7qPkiqsFjHYJ2jLR167oY5zO/i28UtCb9Qsx1zw=
+X-Google-Smtp-Source: AKy350YhREvdHCLaIM3E+GIkX8AqtxKuIacMDNv7RPZaGmpahRKm1+Oas+9LD694s7AeGD6aep3xqXszgN6JcVG8At4=
+X-Received: by 2002:a63:40c1:0:b0:4fd:5105:eb93 with SMTP id
+ n184-20020a6340c1000000b004fd5105eb93mr8830444pga.3.1680446051785; Sun, 02
+ Apr 2023 07:34:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Mail-ID: 8b6dfb75-3da6-40a2-b803-4599ce6843ed
+References: <20230329163107.GA3061927@bhelgaas> <0603c75d-82d3-01d5-ffe7-b648c1f02f0e@linux.intel.com>
+In-Reply-To: <0603c75d-82d3-01d5-ffe7-b648c1f02f0e@linux.intel.com>
+From:   Xinghui Li <korantwork@gmail.com>
+Date:   Sun, 2 Apr 2023 22:34:00 +0800
+Message-ID: <CAEm4hYXwGuuZiKb9psXPyau+zKq-w=VboJEuYbS0FbY-iT-EmA@mail.gmail.com>
+Subject: Re: [PATCH v4] PCI: vmd: Add the module param to adjust MSI mode
+To:     "Patel, Nirmal" <nirmal.patel@linux.intel.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, kbusch@kernel.org,
+        jonathan.derrick@linux.dev, lpieralisi@kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Xinghui Li <korantli@tencent.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Frank Wunderlich <frank-w@public-files.de>
+On Thu, Mar 30, 2023 at 2:49=E2=80=AFPM Patel, Nirmal
+<nirmal.patel@linux.intel.com> wrote:
+>
+> How about adding a boolean flag by comparing user input for module
+> parameter msi_remap? and add the flag at
+>
+>     - if (!(features & VMD_FEAT_CAN_BYPASS_MSI_REMAP) || msi_flag
+>         || offset[0] || offset[1])
+>
+> Correct if I am wrong, but in this way we can cover all the cases.
+> If user adds msi_remap=3Don, msi_flag=3Dtrue and enables remapping.
+> If user adds msi_remap=3Doff, msi_flag=3Dfalse and disables remapping.
+> If user doesn't add anything, msi_flag=3Dfalse and decision will be
+> made same as current implementation. This will cover guest OS case
+> as well.
+>
+Sorry, I don't quite get your point. How is msi_flag assigned?
+Do you mean when msi_remap=3Dno, the msi_flag is assigned as true?
+And msi_remap=3Doff, the msi_flag is assigned as false?
 
-De-assert PERST in separate step after reset signals to fully comply
-the PCIe CEM clause 2.2.
-
-This fixes some NVME detection issues on mt7986.
-
-Fixes: d3bf75b579b9 ("PCI: mediatek-gen3: Add MediaTek Gen3 driver for MT8192")
-Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
----
-Patch is taken from user Ruslan aka RRKh61 (permitted me to send it
-with me as author).
-
-https://forum.banana-pi.org/t/bpi-r3-nvme-connection-issue/14563/17
----
- drivers/pci/controller/pcie-mediatek-gen3.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
-index b8612ce5f4d0..176b1a04565d 100644
---- a/drivers/pci/controller/pcie-mediatek-gen3.c
-+++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-@@ -350,7 +350,13 @@ static int mtk_pcie_startup_port(struct mtk_gen3_pcie *pcie)
- 	msleep(100);
- 
- 	/* De-assert reset signals */
--	val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB | PCIE_PE_RSTB);
-+	val &= ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB);
-+	writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
-+
-+	msleep(100);
-+
-+	/* De-assert PERST# signals */
-+	val &= ~(PCIE_PE_RSTB);
- 	writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
- 
- 	/* Check if the link is up or not */
--- 
-2.34.1
-
+Thanks~
