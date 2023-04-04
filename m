@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F102C77B71
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Apr 2023 16:50:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46F9FC77B74
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Apr 2023 16:50:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235555AbjDDQuo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231664AbjDDQuo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 4 Apr 2023 12:50:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57876 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57750 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235208AbjDDQu2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2023 12:50:28 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 958735246;
-        Tue,  4 Apr 2023 09:50:07 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 334C6890020922;
+        with ESMTP id S235501AbjDDQuc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2023 12:50:32 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EEDC4ECA;
+        Tue,  4 Apr 2023 09:50:08 -0700 (PDT)
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 334FbMMc032153;
         Tue, 4 Apr 2023 16:49:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type; s=qcppdkim1;
- bh=EMVbhRAoVjpqre5uULgNKP9VoYtsopaS2kYR4Jnjd6Y=;
- b=PCPew5/NWwXNv5OC/wL18nDmCO0AM04qlDhLA8e3uHZSTXXi5OUe/xpag1uJ9+a5vdGS
- 5yIvVP4jRBygSXO73/oo2/CAhD2+Rr8kFE8/ifEqIDrvV5u5CWCZwwJF3DAnQDZlVzov
- lIr2og+0X5+DgFYtPoJLRDZ72uizROQefqcCreByhYymO2mYizEFg5K0qnNQPSvo2rhK
- +BZj9ppDBxDGl660Fs8XEW7nJ5Gi1iJIeUz51X+FpK8csE9zjlRnC0M+dvVA+P29KUpj
- JzSnQvmvLVnK2Pei5JPmyFvkT9BhkuwQZWK3CutWFE4PMZGZAxi1Esu782BIBkaq15Mn 9A== 
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3prg9bhb9w-1
+ bh=0gxFRLp/xqtX3HLtCEJgQldP5Rm+jQdeEOnJiR0WFGI=;
+ b=O5GlgSFUNlLkI4QYYca+zbHYf0Hqvwb3HJaPjSin0LPZpfxt/RSOHUcWoRLxc41ADSqj
+ gtF4rRFlsZU68LzYsm2tLUTKtboeUKv+vx5ue8+THcFH8K4jtQpjhhFg4pdrGIb+LGD+
+ 6bSZJqEeZul1x6b854mvRvwM4UjltOcV6a0hfcjF4LO4YuhEn7WTB5SFEL9HASDAGVOJ
+ ryYEGx9HsjURFZALl19PMCqGB9xXvFk7cQ4l1Osrwj59L/yviIwyCNYrfFxkfQ3gKO1B
+ X2ZRm3c4TQAt7nbzgTEp2CfXJaBsXSIzR0wm1FsqdpMT1jkK+SnjqPjXN6syaCvWz/yR Hw== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3prppug663-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Tue, 04 Apr 2023 16:49:56 +0000
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA05.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 334Gns1o015560
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 334GnR3J030373
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 4 Apr 2023 16:49:54 GMT
+        Tue, 4 Apr 2023 16:49:27 GMT
 Received: from devipriy-linux.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.986.42; Tue, 4 Apr 2023 09:49:45 -0700
+ 15.2.986.42; Tue, 4 Apr 2023 09:49:18 -0700
 From:   Devi Priya <quic_devipriy@quicinc.com>
 To:     <agross@kernel.org>, <andersson@kernel.org>,
         <konrad.dybcio@linaro.org>, <lpieralisi@kernel.org>,
@@ -53,9 +53,9 @@ CC:     <quic_srichara@quicinc.com>, <quic_gokulsri@quicinc.com>,
         <quic_sjaganat@quicinc.com>, <quic_kathirav@quicinc.com>,
         <quic_arajkuma@quicinc.com>, <quic_anusha@quicinc.com>,
         <quic_ipkumar@quicinc.com>
-Subject: [PATCH V2 7/9] arm64: dts: qcom: ipq9574: Add PCIe PHYs and controller nodes
-Date:   Tue, 4 Apr 2023 22:18:26 +0530
-Message-ID: <20230404164828.8031-8-quic_devipriy@quicinc.com>
+Subject: [PATCH V2 4/9] phy: qcom-qmp-pcie: Add support for IPQ9574 g3x1 and g3x2 PCIEs
+Date:   Tue, 4 Apr 2023 22:18:23 +0530
+Message-ID: <20230404164828.8031-5-quic_devipriy@quicinc.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230404164828.8031-1-quic_devipriy@quicinc.com>
 References: <20230404164828.8031-1-quic_devipriy@quicinc.com>
@@ -66,457 +66,457 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 7hduGm4F1uS41OtqrU7IBnbyy9w0RS0i
-X-Proofpoint-ORIG-GUID: 7hduGm4F1uS41OtqrU7IBnbyy9w0RS0i
+X-Proofpoint-GUID: MyHOIsI1O1VGRmtaqwkIHomNMlg-nC82
+X-Proofpoint-ORIG-GUID: MyHOIsI1O1VGRmtaqwkIHomNMlg-nC82
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-04-04_08,2023-04-04_05,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 clxscore=1015
- lowpriorityscore=0 mlxlogscore=999 priorityscore=1501 impostorscore=0
- bulkscore=0 mlxscore=0 malwarescore=0 spamscore=0 suspectscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2304040155
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ lowpriorityscore=0 clxscore=1015 malwarescore=0 suspectscore=0
+ adultscore=0 mlxlogscore=999 phishscore=0 bulkscore=0 priorityscore=1501
+ mlxscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2303200000 definitions=main-2304040156
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCIe0, PCIe1, PCIe2, PCIe3 (and corresponding PHY) devices
-found on IPQ9574 platform. The PCIe0 & PCIe1 are 1-lane Gen3
-host whereas PCIe2 & PCIe3 are 2-lane Gen3 host.
+Add support for a single-lane and two-lane PCIe PHYs
+found on Qualcomm IPQ9574 platform.
 
 Co-developed-by: Anusha Rao <quic_anusha@quicinc.com>
 Signed-off-by: Anusha Rao <quic_anusha@quicinc.com>
 Signed-off-by: Devi Priya <quic_devipriy@quicinc.com>
 ---
  Changes in V2:
-	- Dropped the usb3phy and PCIe pipe clock nodes
-	  and added the pcie_phy phandles directly to the gcc node
-	- Updated the ranges and encoded them in a single lane 
-	- Wrapped up the interrupts in a single line
-	- Dropped the child node from PCIe PHY and updated it accordingly
-	  to adopt the latest design
-	- Dropped the aggr_noc regions as they  will be handled using 
-	  interconnect driver 
-	- Sorted the includes alphabetically
- 
- arch/arm64/boot/dts/qcom/ipq9574.dtsi | 375 +++++++++++++++++++++++++-
- 1 file changed, 370 insertions(+), 5 deletions(-)
+	- Added qmp_pcie_offsets for ipq9574 3x1 and 3x2 PHY
+	  configuration as it does not contain child node
 
-diff --git a/arch/arm64/boot/dts/qcom/ipq9574.dtsi b/arch/arm64/boot/dts/qcom/ipq9574.dtsi
-index 27c717932b1a..068c3950dcec 100644
---- a/arch/arm64/boot/dts/qcom/ipq9574.dtsi
-+++ b/arch/arm64/boot/dts/qcom/ipq9574.dtsi
-@@ -6,8 +6,8 @@
-  * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
-  */
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      | 332 ++++++++++++++++++
+ .../phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5.h   |  26 +-
+ .../phy/qualcomm/phy-qcom-qmp-qserdes-pll.h   |   3 +
+ 3 files changed, 355 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
+index b1e81530d551..39ed2076bdce 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
+@@ -515,6 +515,250 @@ static const struct qmp_phy_init_tbl ipq8074_pcie_gen3_pcs_misc_tbl[] = {
+ 	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_ENDPOINT_REFCLK_DRIVE, 0xc1),
+ };
  
--#include <dt-bindings/interrupt-controller/arm-gic.h>
- #include <dt-bindings/clock/qcom,ipq9574-gcc.h>
-+#include <dt-bindings/interrupt-controller/arm-gic.h>
- #include <dt-bindings/reset/qcom,ipq9574-gcc.h>
++static const struct qmp_phy_init_tbl ipq9574_gen3x1_pcie_serdes_tbl[] = {
++	QMP_PHY_INIT_CFG(QSERDES_PLL_BIAS_EN_CLKBUFLR_EN, 0x18),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_BIAS_EN_CTRL_BY_PSM, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_SELECT, 0x31),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_IVCO, 0x0F),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_BG_TRIM, 0x0F),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CMN_CONFIG, 0x06),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP_EN, 0x42),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_RESETSM_CNTRL, 0x20),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SVS_MODE_CLK_SEL, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE_MAP, 0x04),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SVS_MODE_CLK_SEL, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE_TIMER1, 0xFF),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE_TIMER2, 0x3F),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORE_CLK_EN, 0x30),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_HSCLK_SEL, 0x21),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DEC_START_MODE0, 0x68),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START3_MODE0, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START2_MODE0, 0xAA),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START1_MODE0, 0xAB),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP2_MODE0, 0x14),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP1_MODE0, 0xD4),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CP_CTRL_MODE0, 0x09),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_RCTRL_MODE0, 0x16),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_CCTRL_MODE0, 0x28),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_INTEGLOOP_GAIN1_MODE0, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_INTEGLOOP_GAIN0_MODE0, 0xA0),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE2_MODE0, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE1_MODE0, 0x24),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SVS_MODE_CLK_SEL, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORE_CLK_EN, 0x20),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORECLK_DIV, 0x0A),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_SELECT, 0x32),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SYS_CLK_CTRL, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SYSCLK_BUF_ENABLE, 0x07),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SYSCLK_EN_SEL, 0x08),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_BG_TIMER, 0x0A),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_HSCLK_SEL, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DEC_START_MODE1, 0x53),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START3_MODE1, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START2_MODE1, 0x55),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START1_MODE1, 0x55),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP2_MODE1, 0x29),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP1_MODE1, 0xAA),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CP_CTRL_MODE1, 0x09),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_RCTRL_MODE1, 0x16),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_CCTRL_MODE1, 0x28),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_INTEGLOOP_GAIN1_MODE1, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_INTEGLOOP_GAIN0_MODE1, 0xA0),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE2_MODE1, 0x03),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE1_MODE1, 0xB4),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SVS_MODE_CLK_SEL, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORE_CLK_EN, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORECLK_DIV_MODE1, 0x08),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_EN_CENTER, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_PER1, 0x7D),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_PER2, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_ADJ_PER1, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_ADJ_PER2, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_STEP_SIZE1_MODE0, 0x0A),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_STEP_SIZE2_MODE0, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_STEP_SIZE1_MODE1, 0x08),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_STEP_SIZE2_MODE1, 0x04),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_EP_DIV_MODE0, 0x19),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_EP_DIV_MODE1, 0x28),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_ENABLE1, 0x90),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_HSCLK_SEL, 0x89),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_ENABLE1, 0x10),
++};
++
++static const struct qmp_phy_init_tbl ipq9574_gen3x2_pcie_serdes_tbl[] = {
++	QMP_PHY_INIT_CFG(QSERDES_PLL_BIAS_EN_CLKBUFLR_EN, 0x18),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_BIAS_EN_CTRL_BY_PSM, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_SELECT, 0x31),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_IVCO, 0x0F),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_BG_TRIM, 0x0F),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CMN_CONFIG, 0x06),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP_EN, 0x42),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_RESETSM_CNTRL, 0x20),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SVS_MODE_CLK_SEL, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE_MAP, 0x04),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SVS_MODE_CLK_SEL, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE_TIMER1, 0xFF),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE_TIMER2, 0x3F),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORE_CLK_EN, 0x30),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_HSCLK_SEL, 0x21),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DEC_START_MODE0, 0x68),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START3_MODE0, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START2_MODE0, 0xAA),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START1_MODE0, 0xAB),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP2_MODE0, 0x14),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP1_MODE0, 0xD4),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CP_CTRL_MODE0, 0x09),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_RCTRL_MODE0, 0x16),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_CCTRL_MODE0, 0x28),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_INTEGLOOP_GAIN1_MODE0, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_INTEGLOOP_GAIN0_MODE0, 0xA0),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE2_MODE0, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE1_MODE0, 0x24),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SVS_MODE_CLK_SEL, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORE_CLK_EN, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORECLK_DIV, 0x0A),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_SELECT, 0x32),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SYS_CLK_CTRL, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SYSCLK_BUF_ENABLE, 0x07),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SYSCLK_EN_SEL, 0x08),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_BG_TIMER, 0x0A),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_HSCLK_SEL, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DEC_START_MODE1, 0x53),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START3_MODE1, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START2_MODE1, 0x55),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_DIV_FRAC_START1_MODE1, 0x55),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP2_MODE1, 0x29),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_LOCK_CMP1_MODE1, 0xAA),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CP_CTRL_MODE1, 0x09),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_RCTRL_MODE1, 0x16),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_PLL_CCTRL_MODE1, 0x28),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_INTEGLOOP_GAIN1_MODE1, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_INTEGLOOP_GAIN0_MODE1, 0xA0),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE2_MODE1, 0x03),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_VCO_TUNE1_MODE1, 0xB4),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SVS_MODE_CLK_SEL, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORE_CLK_EN, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CORECLK_DIV_MODE1, 0x08),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_EN_CENTER, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_PER1, 0x7D),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_PER2, 0x01),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_ADJ_PER1, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_ADJ_PER2, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_STEP_SIZE1_MODE0, 0x0A),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_STEP_SIZE2_MODE0, 0x05),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_STEP_SIZE1_MODE1, 0x08),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_SSC_STEP_SIZE2_MODE1, 0x04),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_EP_DIV_MODE0, 0x19),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_EP_DIV_MODE1, 0x28),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_ENABLE1, 0x90),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_HSCLK_SEL, 0x89),
++	QMP_PHY_INIT_CFG(QSERDES_PLL_CLK_ENABLE1, 0x10),
++};
++
++static const struct qmp_phy_init_tbl ipq9574_pcie_tx_tbl[] = {
++	QMP_PHY_INIT_CFG(QSERDES_V4_TX_RES_CODE_LANE_OFFSET_TX, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_V4_TX_RCV_DETECT_LVL_2, 0x12),
++	QMP_PHY_INIT_CFG(QSERDES_V4_TX_HIGHZ_DRVR_EN, 0x10),
++	QMP_PHY_INIT_CFG(QSERDES_V4_TX_LANE_MODE_1, 0x06),
++};
++
++static const struct qmp_phy_init_tbl ipq9574_pcie_rx_tbl[] = {
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_SIGDET_CNTRL, 0x03),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_SIGDET_ENABLES, 0x1C),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_SIGDET_DEGLITCH_CNTRL, 0x14),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_EQU_ADAPTOR_CNTRL2, 0x61),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_EQU_ADAPTOR_CNTRL3, 0x04),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_EQU_ADAPTOR_CNTRL4, 0x1E),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_DFE_EN_TIMER, 0x04),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_UCDR_FO_GAIN, 0x0C),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_UCDR_SO_GAIN, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_UCDR_SO_SATURATION_AND_ENABLE, 0x7F),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_UCDR_PI_CONTROLS, 0x70),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_EQU_ADAPTOR_CNTRL1, 0x73),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_EQU_ADAPTOR_CNTRL2, 0x80),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_10_LOW, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_10_HIGH, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_10_HIGH2, 0xC8),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_10_HIGH3, 0x09),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_10_HIGH4, 0xB1),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_01_LOW, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_01_HIGH, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_01_HIGH2, 0xC8),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_01_HIGH3, 0x09),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_01_HIGH4, 0xB1),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_00_LOW, 0xF0),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_00_HIGH, 0x02),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_00_HIGH2, 0x2F),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_00_HIGH3, 0xD3),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_MODE_00_HIGH4, 0x40),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_IDAC_TSETTLE_HIGH, 0x00),
++	QMP_PHY_INIT_CFG(QSERDES_V4_RX_RX_IDAC_TSETTLE_LOW, 0xC0),
++};
++
++static const struct qmp_phy_init_tbl ipq9574_gen3x1_pcie_pcs_tbl[] = {
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_P2U3_WAKEUP_DLY_TIME_AUXCLK_H, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_P2U3_WAKEUP_DLY_TIME_AUXCLK_L, 0x01),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_RX_DCC_CAL_CONFIG, 0x01),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_RX_SIGDET_LVL, 0xAA),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_REFGEN_REQ_CONFIG1, 0x0D),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_G12S1_TXDEEMPH_M3P5DB, 0x10),
++};
++
++static const struct qmp_phy_init_tbl ipq9574_gen3x1_pcie_pcs_misc_tbl[] = {
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_OSC_DTCT_ACTIONS, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_POWER_STATE_CONFIG2, 0x0D),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_L1P1_WAKEUP_DLY_TIME_AUXCLK_H, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_L1P1_WAKEUP_DLY_TIME_AUXCLK_L, 0x01),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_L1P2_WAKEUP_DLY_TIME_AUXCLK_H, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_L1P2_WAKEUP_DLY_TIME_AUXCLK_L, 0x01),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_EQ_CONFIG1, 0x14),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_EQ_CONFIG1, 0x10),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_EQ_CONFIG2, 0x0B),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_PRESET_P10_PRE, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_PRESET_P10_POST, 0x58),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_POWER_STATE_CONFIG4, 0x07),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_OSC_DTCT_CONFIG2, 0x52),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_INT_AUX_CLK_CONFIG1, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_OSC_DTCT_MODE2_CONFIG2, 0x50),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_OSC_DTCT_MODE2_CONFIG4, 0x1A),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_OSC_DTCT_MODE2_CONFIG5, 0x06),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_OSC_DTCT_MODE2_CONFIG6, 0x03),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_PCIE_ENDPOINT_REFCLK_DRIVE, 0xC1),
++};
++
++static const struct qmp_phy_init_tbl ipq9574_gen3x2_pcie_pcs_tbl[] = {
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_REFGEN_REQ_CONFIG1, 0x0D),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_G12S1_TXDEEMPH_M3P5DB, 0x10),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_P2U3_WAKEUP_DLY_TIME_AUXCLK_H, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_P2U3_WAKEUP_DLY_TIME_AUXCLK_L, 0x01),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_RX_DCC_CAL_CONFIG, 0x01),
++	QMP_PHY_INIT_CFG(QPHY_V4_PCS_RX_SIGDET_LVL, 0xAA),
++};
++
++static const struct qmp_phy_init_tbl ipq9574_gen3x2_pcie_pcs_misc_tbl[] = {
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_OSC_DTCT_ACTIONS, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_POWER_STATE_CONFIG2, 0x1D),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_L1P1_WAKEUP_DLY_TIME_AUXCLK_H, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_L1P1_WAKEUP_DLY_TIME_AUXCLK_L, 0x01),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_L1P2_WAKEUP_DLY_TIME_AUXCLK_H, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_L1P2_WAKEUP_DLY_TIME_AUXCLK_L, 0x01),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_EQ_CONFIG1, 0x14),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_EQ_CONFIG1, 0x10),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_EQ_CONFIG2, 0x0B),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_PRESET_P10_PRE, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_PRESET_P10_POST, 0x58),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_POWER_STATE_CONFIG4, 0x07),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_OSC_DTCT_CONFIG1, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_OSC_DTCT_CONFIG2, 0x52),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_OSC_DTCT_CONFIG4, 0x19),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_INT_AUX_CLK_CONFIG1, 0x00),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_OSC_DTCT_MODE2_CONFIG2, 0x49),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_OSC_DTCT_MODE2_CONFIG4, 0x2A),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_OSC_DTCT_MODE2_CONFIG5, 0x02),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_OSC_DTCT_MODE2_CONFIG6, 0x03),
++	QMP_PHY_INIT_CFG(QPHY_V5_PCS_PCIE_ENDPOINT_REFCLK_DRIVE, 0xC1),
++};
++
+ static const struct qmp_phy_init_tbl sdm845_qmp_pcie_serdes_tbl[] = {
+ 	QMP_PHY_INIT_CFG(QSERDES_V3_COM_BIAS_EN_CLKBUFLR_EN, 0x14),
+ 	QMP_PHY_INIT_CFG(QSERDES_V3_COM_CLK_SELECT, 0x30),
+@@ -2045,6 +2289,10 @@ static const char * const ipq8074_pciephy_clk_l[] = {
+ 	"aux", "cfg_ahb",
+ };
  
- / {
-@@ -116,6 +116,58 @@
- 		#size-cells = <1>;
- 		ranges = <0 0 0 0xffffffff>;
++static const char * const ipq9574_pciephy_clk_l[] = {
++	"aux", "cfg_ahb", "anoc_lane", "snoc_lane",
++};
++
+ static const char * const msm8996_phy_clk_l[] = {
+ 	"aux", "cfg_ahb", "ref",
+ };
+@@ -2075,6 +2323,24 @@ static const char * const sdm845_pciephy_reset_l[] = {
+ 	"phy",
+ };
  
-+		pcie0_phy: phy@84000 {
-+			compatible = "qcom,ipq9574-qmp-gen3x1-pcie-phy";
-+			reg = <0x00084000 0x1000>;
++static const struct qmp_pcie_offsets qmp_pcie_offsets_3x1_ipq9574 = {
++	.serdes         = 0,
++	.tx             = 0x0200,
++	.rx             = 0x0400,
++	.pcs            = 0x0800,
++	.pcs_misc       = 0x0c00,
++};
 +
-+			clocks = <&gcc GCC_PCIE0_AUX_CLK>,
-+				 <&gcc GCC_PCIE0_AHB_CLK>,
-+				 <&gcc GCC_ANOC_PCIE0_1LANE_M_CLK>,
-+				 <&gcc GCC_SNOC_PCIE0_1LANE_S_CLK>,
-+				 <&gcc GCC_PCIE0_PIPE_CLK>;
-+			clock-names = "aux", "cfg_ahb", "anoc_lane", "snoc_lane", "pipe";
++static const struct qmp_pcie_offsets qmp_pcie_offsets_3x2_ipq9574 = {
++	.serdes		= 0,
++	.tx		= 0x0200,
++	.rx		= 0x0400,
++	.tx2		= 0x0600,
++	.rx2		= 0x0800,
++	.pcs		= 0x1000,
++	.pcs_misc	= 0x1400,
++};
 +
-+			assigned-clocks = <&gcc GCC_PCIE0_AUX_CLK>;
-+			assigned-clock-rates = <20000000>;
-+
-+			resets = <&gcc GCC_PCIE0_PHY_BCR>,
-+				 <&gcc GCC_PCIE0PHY_PHY_BCR>;
-+			reset-names = "phy", "common";
-+
-+			#clock-cells = <0>;
-+			clock-output-names = "gcc_pcie0_pipe_clk_src";
-+
-+			#phy-cells = <0>;
-+			status = "disabled";
-+
-+		};
-+
-+		pcie2_phy: phy@8c000 {
-+			compatible = "qcom,ipq9574-qmp-gen3x2-pcie-phy";
-+			reg = <0x0008c000 0x2000>;
-+
-+			clocks = <&gcc GCC_PCIE2_AUX_CLK>,
-+				 <&gcc GCC_PCIE2_AHB_CLK>,
-+				 <&gcc GCC_ANOC_PCIE2_2LANE_M_CLK>,
-+				 <&gcc GCC_SNOC_PCIE2_2LANE_S_CLK>,
-+				 <&gcc GCC_PCIE2_PIPE_CLK>;
-+			clock-names = "aux", "cfg_ahb", "anoc_lane", "snoc_lane", "pipe";
-+
-+			assigned-clocks = <&gcc GCC_PCIE2_AUX_CLK>;
-+			assigned-clock-rates = <20000000>;
-+
-+			resets = <&gcc GCC_PCIE2_PHY_BCR>,
-+				 <&gcc GCC_PCIE2PHY_PHY_BCR>;
-+			reset-names = "phy", "common";
-+
-+			#clock-cells = <0>;
-+			clock-output-names = "gcc_pcie2_pipe_clk_src";
-+
-+			#phy-cells = <0>;
-+			status = "disabled";
-+
-+		};
-+
- 		rng: rng@e3000 {
- 			compatible = "qcom,prng-ee";
- 			reg = <0x000e3000 0x1000>;
-@@ -123,6 +175,58 @@
- 			clock-names = "core";
- 		};
+ static const struct qmp_pcie_offsets qmp_pcie_offsets_v5 = {
+ 	.serdes		= 0,
+ 	.pcs		= 0x0200,
+@@ -2177,6 +2443,66 @@ static const struct qmp_phy_cfg ipq6018_pciephy_cfg = {
+ 	.phy_status		= PHYSTATUS,
+ };
  
-+		pcie3_phy: phy@f4000 {
-+			compatible = "qcom,ipq9574-qmp-gen3x2-pcie-phy";
-+			reg = <0x000f4000 0x2000>;
++static const struct qmp_phy_cfg ipq9574_gen3x1_pciephy_cfg = {
++	.lanes			= 1,
 +
-+			clocks = <&gcc GCC_PCIE3_AUX_CLK>,
-+				 <&gcc GCC_PCIE3_AHB_CLK>,
-+				 <&gcc GCC_ANOC_PCIE3_2LANE_M_CLK>,
-+				 <&gcc GCC_SNOC_PCIE3_2LANE_S_CLK>,
-+				 <&gcc GCC_PCIE3_PIPE_CLK>;
-+			clock-names = "aux", "cfg_ahb", "anoc_lane", "snoc_lane", "pipe";
++	.offsets		= &qmp_pcie_offsets_3x1_ipq9574,
 +
-+			assigned-clocks = <&gcc GCC_PCIE3_AUX_CLK>;
-+			assigned-clock-rates = <20000000>;
++	.tbls = {
++		.serdes		= ipq9574_gen3x1_pcie_serdes_tbl,
++		.serdes_num	= ARRAY_SIZE(ipq9574_gen3x1_pcie_serdes_tbl),
++		.tx		= ipq9574_pcie_tx_tbl,
++		.tx_num		= ARRAY_SIZE(ipq9574_pcie_tx_tbl),
++		.rx		= ipq9574_pcie_rx_tbl,
++		.rx_num		= ARRAY_SIZE(ipq9574_pcie_rx_tbl),
++		.pcs		= ipq9574_gen3x1_pcie_pcs_tbl,
++		.pcs_num	= ARRAY_SIZE(ipq9574_gen3x1_pcie_pcs_tbl),
++		.pcs_misc	= ipq9574_gen3x1_pcie_pcs_misc_tbl,
++		.pcs_misc_num	= ARRAY_SIZE(ipq9574_gen3x1_pcie_pcs_misc_tbl),
++	},
++	.clk_list		= ipq9574_pciephy_clk_l,
++	.num_clks		= ARRAY_SIZE(ipq9574_pciephy_clk_l),
++	.reset_list		= ipq8074_pciephy_reset_l,
++	.num_resets		= ARRAY_SIZE(ipq8074_pciephy_reset_l),
++	.vreg_list		= NULL,
++	.num_vregs		= 0,
++	.regs			= pciephy_v4_regs_layout,
 +
-+			resets = <&gcc GCC_PCIE3_PHY_BCR>,
-+				 <&gcc GCC_PCIE3PHY_PHY_BCR>;
-+			reset-names = "phy", "common";
++	.pwrdn_ctrl		= SW_PWRDN | REFCLK_DRV_DSBL,
++	.phy_status		= PHYSTATUS,
++	.pipe_clock_rate	= 250000000,
++};
 +
-+			#clock-cells = <0>;
-+			clock-output-names = "gcc_pcie3_pipe_clk_src";
++static const struct qmp_phy_cfg ipq9574_gen3x2_pciephy_cfg = {
++	.lanes			= 2,
 +
-+			#phy-cells = <0>;
-+			status = "disabled";
++	.offsets		= &qmp_pcie_offsets_3x2_ipq9574,
 +
-+		};
++	.tbls = {
++		.serdes		= ipq9574_gen3x2_pcie_serdes_tbl,
++		.serdes_num	= ARRAY_SIZE(ipq9574_gen3x2_pcie_serdes_tbl),
++		.tx		= ipq9574_pcie_tx_tbl,
++		.tx_num		= ARRAY_SIZE(ipq9574_pcie_tx_tbl),
++		.rx		= ipq9574_pcie_rx_tbl,
++		.rx_num		= ARRAY_SIZE(ipq9574_pcie_rx_tbl),
++		.pcs		= ipq9574_gen3x2_pcie_pcs_tbl,
++		.pcs_num	= ARRAY_SIZE(ipq9574_gen3x2_pcie_pcs_tbl),
++		.pcs_misc	= ipq9574_gen3x2_pcie_pcs_misc_tbl,
++		.pcs_misc_num	= ARRAY_SIZE(ipq9574_gen3x2_pcie_pcs_misc_tbl),
++	},
++	.clk_list		= ipq9574_pciephy_clk_l,
++	.num_clks		= ARRAY_SIZE(ipq9574_pciephy_clk_l),
++	.reset_list		= ipq8074_pciephy_reset_l,
++	.num_resets		= ARRAY_SIZE(ipq8074_pciephy_reset_l),
++	.vreg_list		= NULL,
++	.num_vregs		= 0,
++	.regs			= pciephy_v4_regs_layout,
 +
-+		pcie1_phy: phy@fc000 {
-+			compatible = "qcom,ipq9574-qmp-gen3x1-pcie-phy";
-+			reg = <0x000fc000 0x1000>;
++	.pwrdn_ctrl		= SW_PWRDN | REFCLK_DRV_DSBL,
++	.phy_status		= PHYSTATUS,
++	.pipe_clock_rate	= 250000000,
++};
 +
-+			clocks = <&gcc GCC_PCIE1_AUX_CLK>,
-+				 <&gcc GCC_PCIE1_AHB_CLK>,
-+				 <&gcc GCC_ANOC_PCIE1_1LANE_M_CLK>,
-+				 <&gcc GCC_SNOC_PCIE1_1LANE_S_CLK>,
-+				 <&gcc GCC_PCIE1_PIPE_CLK>;
-+			clock-names = "aux", "cfg_ahb", "anoc_lane", "snoc_lane", "pipe";
-+
-+			assigned-clocks = <&gcc GCC_PCIE1_AUX_CLK>;
-+			assigned-clock-rates = <20000000>;
-+
-+			resets = <&gcc GCC_PCIE1_PHY_BCR>,
-+				 <&gcc GCC_PCIE1PHY_PHY_BCR>;
-+			reset-names = "phy", "common";
-+
-+			#clock-cells = <0>;
-+			clock-output-names = "gcc_pcie1_pipe_clk_src";
-+
-+			#phy-cells = <0>;
-+			status = "disabled";
-+
-+		};
-+
- 		tlmm: pinctrl@1000000 {
- 			compatible = "qcom,ipq9574-tlmm";
- 			reg = <0x01000000 0x300000>;
-@@ -146,10 +250,10 @@
- 			reg = <0x01800000 0x80000>;
- 			clocks = <&xo_board_clk>,
- 				 <&sleep_clk>,
--				 <0>,
--				 <0>,
--				 <0>,
--				 <0>,
-+				 <&pcie0_phy>,
-+				 <&pcie1_phy>,
-+				 <&pcie2_phy>,
-+				 <&pcie3_phy>,
- 				 <0>;
- 			#clock-cells = <1>;
- 			#reset-cells = <1>;
-@@ -478,6 +582,267 @@
- 				status = "disabled";
- 			};
- 		};
-+
-+		pcie1: pci@10000000 {
-+			compatible = "qcom,pcie-ipq9574";
-+			reg =  <0x10000000 0xf1d>,
-+			       <0x10000F20 0xa8>,
-+			       <0x10001000 0x1000>,
-+			       <0x000F8000 0x4000>,
-+			       <0x10100000 0x1000>;
-+			reg-names = "dbi", "elbi", "atu", "parf", "config";
-+			device_type = "pci";
-+			linux,pci-domain = <2>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			ranges = <0x01000000 0 0x00000000 0x10200000 0 0x00100000>, /* downstream I/O */
-+				 <0x02000000 0 0x00000000 0x10300000 0 0x07d00000>; /* non-prefetchable memory */
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc 0 35 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+					<0 0 0 2 &intc 0 49 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+					<0 0 0 3 &intc 0 84 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+					<0 0 0 4 &intc 0 85 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+
-+			interrupts = <GIC_SPI 25 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "global_irq";
-+
-+			/* clocks and clock-names are used to enable the clock in CBCR */
-+			clocks = <&gcc GCC_PCIE1_AHB_CLK>,
-+				 <&gcc GCC_PCIE1_AUX_CLK>,
-+				 <&gcc GCC_PCIE1_AXI_M_CLK>,
-+				 <&gcc GCC_PCIE1_AXI_S_CLK>,
-+				 <&gcc GCC_PCIE1_AXI_S_BRIDGE_CLK>,
-+				 <&gcc GCC_PCIE1_RCHNG_CLK>;
-+			clock-names = "ahb",
-+				      "aux",
-+				      "axi_m",
-+				      "axi_s",
-+				      "axi_bridge",
-+				      "rchng";
-+
-+			resets = <&gcc GCC_PCIE1_PIPE_ARES>,
-+				 <&gcc GCC_PCIE1_CORE_STICKY_ARES>,
-+				 <&gcc GCC_PCIE1_AXI_S_STICKY_ARES>,
-+				 <&gcc GCC_PCIE1_AXI_S_ARES>,
-+				 <&gcc GCC_PCIE1_AXI_M_STICKY_ARES>,
-+				 <&gcc GCC_PCIE1_AXI_M_ARES>,
-+				 <&gcc GCC_PCIE1_AUX_ARES>,
-+				 <&gcc GCC_PCIE1_AHB_ARES>;
-+			reset-names = "pipe",
-+				      "sticky",
-+				      "axi_s_sticky",
-+				      "axi_s",
-+				      "axi_m_sticky",
-+				      "axi_m",
-+				      "aux",
-+				      "ahb";
-+
-+			phys = <&pcie1_phy>;
-+			phy-names = "pciephy";
-+			msi-parent = <&v2m0>;
-+			status = "disabled";
-+		};
-+
-+		pcie3: pci@18000000 {
-+			compatible = "qcom,pcie-ipq9574";
-+			reg =  <0x18000000 0xf1d>,
-+			       <0x18000F20 0xa8>,
-+			       <0x18001000 0x1000>,
-+			       <0x000F0000 0x4000>,
-+			       <0x18100000 0x1000>;
-+			reg-names = "dbi", "elbi", "atu", "parf", "config";
-+			device_type = "pci";
-+			linux,pci-domain = <4>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <2>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			ranges = <0x01000000 0 0x00000000 0x18200000 0 0x00100000>, /* downstream I/O */
-+				 <0x02000000 0 0x00000000 0x18300000 0 0x07d00000>; /* non-prefetchable memory */
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc 0 189 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+					<0 0 0 2 &intc 0 190 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+					<0 0 0 3 &intc 0 191 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+					<0 0 0 4 &intc 0 192 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+
-+			interrupts = <GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "global_irq";
-+
-+			/* clocks and clock-names are used to enable the clock in CBCR */
-+			clocks = <&gcc GCC_PCIE3_AHB_CLK>,
-+				 <&gcc GCC_PCIE3_AUX_CLK>,
-+				 <&gcc GCC_PCIE3_AXI_M_CLK>,
-+				 <&gcc GCC_PCIE3_AXI_S_CLK>,
-+				 <&gcc GCC_PCIE3_AXI_S_BRIDGE_CLK>,
-+				 <&gcc GCC_PCIE3_RCHNG_CLK>;
-+			clock-names = "ahb",
-+				      "aux",
-+				      "axi_m",
-+				      "axi_s",
-+				      "axi_bridge",
-+				      "rchng";
-+
-+			resets = <&gcc GCC_PCIE3_PIPE_ARES>,
-+				 <&gcc GCC_PCIE3_CORE_STICKY_ARES>,
-+				 <&gcc GCC_PCIE3_AXI_S_STICKY_ARES>,
-+				 <&gcc GCC_PCIE3_AXI_S_ARES>,
-+				 <&gcc GCC_PCIE3_AXI_M_STICKY_ARES>,
-+				 <&gcc GCC_PCIE3_AXI_M_ARES>,
-+				 <&gcc GCC_PCIE3_AUX_ARES>,
-+				 <&gcc GCC_PCIE3_AHB_ARES>;
-+			reset-names = "pipe",
-+				      "sticky",
-+				      "axi_s_sticky",
-+				      "axi_s",
-+				      "axi_m_sticky",
-+				      "axi_m",
-+				      "aux",
-+				      "ahb";
-+
-+			phys = <&pcie3_phy>;
-+			phy-names = "pciephy";
-+			msi-parent = <&v2m0>;
-+			status = "disabled";
-+		};
-+
-+		pcie2: pci@20000000 {
-+			compatible = "qcom,pcie-ipq9574";
-+			reg =  <0x20000000 0xf1d>,
-+			       <0x20000F20 0xa8>,
-+			       <0x20001000 0x1000>,
-+			       <0x00088000 0x4000>,
-+			       <0x20100000 0x1000>;
-+			reg-names = "dbi", "elbi", "atu", "parf", "config";
-+			device_type = "pci";
-+			linux,pci-domain = <3>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <2>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			ranges = <0x01000000 0 0x00000000 0x20200000 0 0x00100000>, /* downstream I/O */
-+				 <0x02000000 0 0x00000000 0x20300000 0 0x07d00000>; /* non-prefetchable memory */
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc 0 164 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+					<0 0 0 2 &intc 0 165 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+					<0 0 0 3 &intc 0 186 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+					<0 0 0 4 &intc 0 187 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+
-+			interrupts = <GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "global_irq";
-+
-+			/* clocks and clock-names are used to enable the clock in CBCR */
-+			clocks = <&gcc GCC_PCIE2_AHB_CLK>,
-+				 <&gcc GCC_PCIE2_AUX_CLK>,
-+				 <&gcc GCC_PCIE2_AXI_M_CLK>,
-+				 <&gcc GCC_PCIE2_AXI_S_CLK>,
-+				 <&gcc GCC_PCIE2_AXI_S_BRIDGE_CLK>,
-+				 <&gcc GCC_PCIE2_RCHNG_CLK>;
-+			clock-names = "ahb",
-+				      "aux",
-+				      "axi_m",
-+				      "axi_s",
-+				      "axi_bridge",
-+				      "rchng";
-+
-+			resets = <&gcc GCC_PCIE2_PIPE_ARES>,
-+				 <&gcc GCC_PCIE2_CORE_STICKY_ARES>,
-+				 <&gcc GCC_PCIE2_AXI_S_STICKY_ARES>,
-+				 <&gcc GCC_PCIE2_AXI_S_ARES>,
-+				 <&gcc GCC_PCIE2_AXI_M_STICKY_ARES>,
-+				 <&gcc GCC_PCIE2_AXI_M_ARES>,
-+				 <&gcc GCC_PCIE2_AUX_ARES>,
-+				 <&gcc GCC_PCIE2_AHB_ARES>;
-+			reset-names = "pipe",
-+				      "sticky",
-+				      "axi_s_sticky",
-+				      "axi_s",
-+				      "axi_m_sticky",
-+				      "axi_m",
-+				      "aux",
-+				      "ahb";
-+
-+			phys = <&pcie2_phy>;
-+			phy-names = "pciephy";
-+			msi-parent = <&v2m0>;
-+			status = "disabled";
-+		};
-+
-+		pcie0: pci@28000000 {
-+			compatible = "qcom,pcie-ipq9574";
-+			reg =  <0x28000000 0xf1d>,
-+			       <0x28000F20 0xa8>,
-+			       <0x28001000 0x1000>,
-+			       <0x00080000 0x4000>,
-+			       <0x28100000 0x1000>;
-+			reg-names = "dbi", "elbi", "atu", "parf", "config";
-+			device_type = "pci";
-+			linux,pci-domain = <1>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+
-+			ranges = <0x01000000 0 0x00000000 0x28200000 0 0x00100000>, /* downstream I/O */
-+				 <0x02000000 0 0x00000000 0x28300000 0 0x07d00000>; /* non-prefetchable memory */
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc 0 75 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+					<0 0 0 2 &intc 0 78 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+					<0 0 0 3 &intc 0 79 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+					<0 0 0 4 &intc 0 83 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+
-+			interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "global_irq";
-+
-+			/* clocks and clock-names are used to enable the clock in CBCR */
-+			clocks = <&gcc GCC_PCIE0_AHB_CLK>,
-+				 <&gcc GCC_PCIE0_AUX_CLK>,
-+				 <&gcc GCC_PCIE0_AXI_M_CLK>,
-+				 <&gcc GCC_PCIE0_AXI_S_CLK>,
-+				 <&gcc GCC_PCIE0_AXI_S_BRIDGE_CLK>,
-+				 <&gcc GCC_PCIE0_RCHNG_CLK>;
-+			clock-names = "ahb",
-+				      "aux",
-+				      "axi_m",
-+				      "axi_s",
-+				      "axi_bridge",
-+				      "rchng";
-+
-+			resets = <&gcc GCC_PCIE0_PIPE_ARES>,
-+				 <&gcc GCC_PCIE0_CORE_STICKY_ARES>,
-+				 <&gcc GCC_PCIE0_AXI_S_STICKY_ARES>,
-+				 <&gcc GCC_PCIE0_AXI_S_ARES>,
-+				 <&gcc GCC_PCIE0_AXI_M_STICKY_ARES>,
-+				 <&gcc GCC_PCIE0_AXI_M_ARES>,
-+				 <&gcc GCC_PCIE0_AUX_ARES>,
-+				 <&gcc GCC_PCIE0_AHB_ARES>;
-+			reset-names = "pipe",
-+				      "sticky",
-+				      "axi_s_sticky",
-+				      "axi_s",
-+				      "axi_m_sticky",
-+				      "axi_m",
-+				      "aux",
-+				      "ahb";
-+
-+			phys = <&pcie0_phy>;
-+			phy-names = "pciephy";
-+			msi-parent = <&v2m0>;
-+			status = "disabled";
-+		};
-+
- 	};
+ static const struct qmp_phy_cfg sdm845_qmp_pciephy_cfg = {
+ 	.lanes			= 1,
  
- 	timer {
+@@ -3379,6 +3705,12 @@ static const struct of_device_id qmp_pcie_of_match_table[] = {
+ 	}, {
+ 		.compatible = "qcom,ipq8074-qmp-pcie-phy",
+ 		.data = &ipq8074_pciephy_cfg,
++	}, {
++		.compatible = "qcom,ipq9574-qmp-gen3x1-pcie-phy",
++		.data = &ipq9574_gen3x1_pciephy_cfg,
++	}, {
++		.compatible = "qcom,ipq9574-qmp-gen3x2-pcie-phy",
++		.data = &ipq9574_gen3x2_pciephy_cfg,
+ 	}, {
+ 		.compatible = "qcom,msm8998-qmp-pcie-phy",
+ 		.data = &msm8998_pciephy_cfg,
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5.h b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5.h
+index a469ae2a10a1..5f002b150cea 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5.h
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5.h
+@@ -8,11 +8,25 @@
+ #define QCOM_PHY_QMP_PCS_PCIE_V5_H_
+ 
+ /* Only for QMP V5 PHY - PCS_PCIE registers */
+-#define QPHY_V5_PCS_PCIE_POWER_STATE_CONFIG2		0x0c
+-#define QPHY_V5_PCS_PCIE_POWER_STATE_CONFIG4		0x14
+-#define QPHY_V5_PCS_PCIE_ENDPOINT_REFCLK_DRIVE		0x20
+-#define QPHY_V5_PCS_PCIE_INT_AUX_CLK_CONFIG1		0x54
+-#define QPHY_V5_PCS_PCIE_OSC_DTCT_ACTIONS		0x94
+-#define QPHY_V5_PCS_PCIE_EQ_CONFIG2			0xa8
++#define QPHY_V5_PCS_PCIE_POWER_STATE_CONFIG2			0x0c
++#define QPHY_V5_PCS_PCIE_POWER_STATE_CONFIG4			0x14
++#define QPHY_V5_PCS_PCIE_ENDPOINT_REFCLK_DRIVE			0x20
++#define QPHY_V5_PCS_PCIE_L1P1_WAKEUP_DLY_TIME_AUXCLK_L		0x44
++#define QPHY_V5_PCS_PCIE_L1P1_WAKEUP_DLY_TIME_AUXCLK_H		0x48
++#define QPHY_V5_PCS_PCIE_L1P2_WAKEUP_DLY_TIME_AUXCLK_L		0x4c
++#define QPHY_V5_PCS_PCIE_L1P2_WAKEUP_DLY_TIME_AUXCLK_H		0x50
++#define QPHY_V5_PCS_PCIE_INT_AUX_CLK_CONFIG1			0x54
++#define QPHY_V5_PCS_PCIE_OSC_DTCT_CONFIG1			0x5c
++#define QPHY_V5_PCS_PCIE_OSC_DTCT_CONFIG2			0x60
++#define QPHY_V5_PCS_PCIE_OSC_DTCT_CONFIG4			0x68
++#define QPHY_V5_PCS_PCIE_OSC_DTCT_MODE2_CONFIG2			0x7c
++#define QPHY_V5_PCS_PCIE_OSC_DTCT_MODE2_CONFIG4			0x84
++#define QPHY_V5_PCS_PCIE_OSC_DTCT_MODE2_CONFIG5			0x88
++#define QPHY_V5_PCS_PCIE_OSC_DTCT_MODE2_CONFIG6			0x8c
++#define QPHY_V5_PCS_PCIE_OSC_DTCT_ACTIONS			0x94
++#define QPHY_V5_PCS_PCIE_EQ_CONFIG1				0xa4
++#define QPHY_V5_PCS_PCIE_EQ_CONFIG2				0xa8
++#define QPHY_V5_PCS_PCIE_PRESET_P10_PRE				0xc0
++#define QPHY_V5_PCS_PCIE_PRESET_P10_POST			0xe4
+ 
+ #endif
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-pll.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-pll.h
+index ad326e301a3a..231e59364e31 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-pll.h
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-pll.h
+@@ -8,6 +8,9 @@
+ 
+ /* QMP V2 PHY for PCIE gen3 ports - QSERDES PLL registers */
+ #define QSERDES_PLL_BG_TIMER				0x00c
++#define QSERDES_PLL_SSC_EN_CENTER			0x010
++#define QSERDES_PLL_SSC_ADJ_PER1			0x014
++#define QSERDES_PLL_SSC_ADJ_PER2			0x018
+ #define QSERDES_PLL_SSC_PER1				0x01c
+ #define QSERDES_PLL_SSC_PER2				0x020
+ #define QSERDES_PLL_SSC_STEP_SIZE1_MODE0		0x024
 -- 
 2.17.1
 
