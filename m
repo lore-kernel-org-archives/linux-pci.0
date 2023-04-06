@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EB94C77B72
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Apr 2023 00:21:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44A68C7618D
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Apr 2023 00:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234335AbjDFAVJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Apr 2023 20:21:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37298 "EHLO
+        id S234396AbjDFAVT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Apr 2023 20:21:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233950AbjDFAVI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2023 20:21:08 -0400
-Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0135E6598;
-        Wed,  5 Apr 2023 17:21:02 -0700 (PDT)
+        with ESMTP id S234368AbjDFAVM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2023 20:21:12 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A80EB6E82;
+        Wed,  5 Apr 2023 17:21:10 -0700 (PDT)
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id 8960792009C; Thu,  6 Apr 2023 02:20:59 +0200 (CEST)
+        id DB94092009E; Thu,  6 Apr 2023 02:21:09 +0200 (CEST)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id 8201792009B;
-        Thu,  6 Apr 2023 01:20:59 +0100 (BST)
-Date:   Thu, 6 Apr 2023 01:20:59 +0100 (BST)
+        by angie.orcam.me.uk (Postfix) with ESMTP id D459B92009B;
+        Thu,  6 Apr 2023 01:21:09 +0100 (BST)
+Date:   Thu, 6 Apr 2023 01:21:09 +0100 (BST)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
@@ -42,9 +42,10 @@ cc:     Alex Williamson <alex.williamson@redhat.com>,
         linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
         linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v8 0/7] pci: Work around ASMedia ASM2824 PCIe link training
- failures
-Message-ID: <alpine.DEB.2.21.2304060100160.13659@angie.orcam.me.uk>
+Subject: [PATCH v8 2/7] PCI: Export PCI link retrain timeout
+In-Reply-To: <alpine.DEB.2.21.2304060100160.13659@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2304060110230.13659@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2304060100160.13659@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -52,19 +53,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Rename LINK_RETRAIN_TIMEOUT to PCIE_LINK_RETRAIN_TIMEOUT and make it
+available via "pci.h" for PCI drivers to use.
 
- This is v8 of the change to work around a PCIe link training phenomenon 
-where a pair of devices both capable of operating at a link speed above 
-2.5GT/s seems unable to negotiate the link speed and continues training 
-indefinitely with the Link Training bit switching on and off repeatedly 
-and the data link layer never reaching the active state.
+Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
+---
+Changes from v7:
 
- This version adds a Reviewed-by: tag by Lukas Wunner accidentally missed 
-from 6/7 in v7 and reorders said change to the front of the series.
+- Reorder from 1/7.
 
- Last two iterations: 
-<https://lore.kernel.org/r/alpine.DEB.2.21.2304042200040.37565@angie.orcam.me.uk/>
-<https://lore.kernel.org/r/alpine.DEB.2.21.2302022022230.45310@angie.orcam.me.uk/>.
+No change from v6.
 
-  Maciej
+No change from v5.
+
+New change in v5.
+---
+ drivers/pci/pci.h       |    2 ++
+ drivers/pci/pcie/aspm.c |    4 +---
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+linux-pcie-link-retrain-timeout.diff
+Index: linux-macro/drivers/pci/pci.h
+===================================================================
+--- linux-macro.orig/drivers/pci/pci.h
++++ linux-macro/drivers/pci/pci.h
+@@ -11,6 +11,8 @@
+ 
+ #define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
+ 
++#define PCIE_LINK_RETRAIN_TIMEOUT HZ
++
+ extern const unsigned char pcie_link_speed[];
+ extern bool pci_early_dump;
+ 
+Index: linux-macro/drivers/pci/pcie/aspm.c
+===================================================================
+--- linux-macro.orig/drivers/pci/pcie/aspm.c
++++ linux-macro/drivers/pci/pcie/aspm.c
+@@ -90,8 +90,6 @@ static const char *policy_str[] = {
+ 	[POLICY_POWER_SUPERSAVE] = "powersupersave"
+ };
+ 
+-#define LINK_RETRAIN_TIMEOUT HZ
+-
+ /*
+  * The L1 PM substate capability is only implemented in function 0 in a
+  * multi function device.
+@@ -213,7 +211,7 @@ static bool pcie_retrain_link(struct pci
+ 	}
+ 
+ 	/* Wait for link training end. Break out after waiting for timeout */
+-	end_jiffies = jiffies + LINK_RETRAIN_TIMEOUT;
++	end_jiffies = jiffies + PCIE_LINK_RETRAIN_TIMEOUT;
+ 	do {
+ 		pcie_capability_read_word(parent, PCI_EXP_LNKSTA, &reg16);
+ 		if (!(reg16 & PCI_EXP_LNKSTA_LT))
