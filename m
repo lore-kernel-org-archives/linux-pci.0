@@ -2,95 +2,110 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36336C761A6
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Apr 2023 23:17:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F716C7619A
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Apr 2023 00:21:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233081AbjDEXRs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Apr 2023 19:17:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55746 "EHLO
+        id S234275AbjDFAVJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Apr 2023 20:21:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229754AbjDEXRr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2023 19:17:47 -0400
-Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5524F6EB7;
-        Wed,  5 Apr 2023 16:17:46 -0700 (PDT)
-Received: by mail-wr1-f49.google.com with SMTP id d17so37724985wrb.11;
-        Wed, 05 Apr 2023 16:17:46 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1680736664;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=n9HAWFNIUkLfI+TykU7qXeNifdIEUrsEUjcWyjUlZwc=;
-        b=xw00ZtoI20CGzLTROO5vxbY3rvxZuhqdCt00ZydzXZlC3LSuu39FrMwFqrLsy0CdpQ
-         RKTSRHFSCQRqLPRInMFJ8FueWWBHr/kUJ4GnYsYl22tyIiBuhl6/ath/ESxX7kpkJxhv
-         gd0J9GPu23LOQRuTZ2Z80pEtX/bE4T3LtnJ51d3JXIhWSS+2v4UDtLeYX/c9e9j5Uzfz
-         WekkHTkMeS9AH5iVVChzntoi0QVmutN9MS192BntyHfXTAXa6XrlLqLu7/d79w9Fdovu
-         SyRlR/vIdMetWo/YbLl869GsZmcMbiV+FLZ21zAbgQosgpV1ap7rTpC/cGr5mBdsYz0q
-         BTxA==
-X-Gm-Message-State: AAQBX9c9FrZNRWaC0oQ1H3hixp/uN9sM1gF9Yqe4TSgpu2Ew++KrZRvs
-        MJrH/F0LOddbW4cuVfjyiVY=
-X-Google-Smtp-Source: AKy350bVIvzj2w2ex7Yv/ifhviZgw1E23pomxV0Tq72c6IruhzIaqthjEEZ7rWySwdm21cy0A8Kqxw==
-X-Received: by 2002:a5d:6b0a:0:b0:2ce:aa62:ff79 with SMTP id v10-20020a5d6b0a000000b002ceaa62ff79mr5343393wrw.40.1680736664654;
-        Wed, 05 Apr 2023 16:17:44 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id e10-20020adfdbca000000b002ceac2ccc4asm25182wrj.23.2023.04.05.16.17.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Apr 2023 16:17:44 -0700 (PDT)
-Date:   Wed, 5 Apr 2023 23:17:41 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Jinank Jain <jinankjain@linux.microsoft.com>
-Cc:     jinankjain@microsoft.com, kys@microsoft.com,
-        haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
-        lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, linux-hyperv@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        nunodasneves@linux.microsoft.com
-Subject: Re: [PATCH] PCI: hv: Use nested hypercall for retargeting interrupts
-Message-ID: <ZC4BlSo0D1uNliFk@liuwe-devbox-debian-v2>
-References: <20230404113546.856813-1-jinankjain@linux.microsoft.com>
+        with ESMTP id S232000AbjDFAVI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2023 20:21:08 -0400
+X-Greylist: delayed 95112 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 05 Apr 2023 17:21:06 PDT
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [78.133.224.34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2090165A9;
+        Wed,  5 Apr 2023 17:21:06 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id E5DC992009D; Thu,  6 Apr 2023 02:21:04 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id DF3FC92009B;
+        Thu,  6 Apr 2023 01:21:04 +0100 (BST)
+Date:   Thu, 6 Apr 2023 01:21:04 +0100 (BST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Christophe Leroy <christophe.leroy@csgroup.eu>,
+        Saeed Mahameed <saeedm@nvidia.com>,
+        Leon Romanovsky <leon@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>
+cc:     Alex Williamson <alex.williamson@redhat.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Stefan Roese <sr@denx.de>, Jim Wilson <wilson@tuliptree.org>,
+        David Abdurachmanov <david.abdurachmanov@gmail.com>,
+        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v8 1/7] PCI: pciehp: Rely on `link_active_reporting'
+In-Reply-To: <alpine.DEB.2.21.2304060100160.13659@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2304060106260.13659@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2304060100160.13659@angie.orcam.me.uk>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230404113546.856813-1-jinankjain@linux.microsoft.com>
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 04, 2023 at 11:35:46AM +0000, Jinank Jain wrote:
-> In case of nested MSHV, retargeting interrupt hypercall should be sent
-> to L0 hypervisor instead of L1 hypervisor.
-> 
-> Signed-off-by: Jinank Jain <jinankjain@linux.microsoft.com>
+Use `link_active_reporting' to determine whether Data Link Layer Link 
+Active Reporting is available rather than re-retrieving the capability.
 
-While I think this is a sensible change -- how did you discover this?
-Can you provide a bit more information?
+Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
+---
+NB this has been compile-tested only with PPC64LE and x86-64
+configurations.
 
-> ---
->  drivers/pci/controller/pci-hyperv.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> index f33370b75628..2123f632ecf7 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -704,8 +704,14 @@ static void hv_arch_irq_unmask(struct irq_data *data)
->  		}
->  	}
->  
-> -	res = hv_do_hypercall(HVCALL_RETARGET_INTERRUPT | (var_size << 17),
-> -			      params, NULL);
-> +	if (hv_nested)
-> +		res = hv_do_nested_hypercall(HVCALL_RETARGET_INTERRUPT |
-> +					     (var_size << 17),
-> +					     params, NULL);
-> +	else
-> +		res = hv_do_hypercall(HVCALL_RETARGET_INTERRUPT |
-> +				      (var_size << 17),
-> +				      params, NULL);
->  
->  exit_unlock:
->  	spin_unlock_irqrestore(&hbus->retarget_msi_interrupt_lock, flags);
-> -- 
-> 2.34.1
-> 
+Changes from v7:
+
+- Add Reviewed-by: tag by Lukas Wunner.
+
+- Reorder from 6/7.
+
+No change from v6.
+
+New change in v6.
+---
+ drivers/pci/hotplug/pciehp_hpc.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+linux-pcie-link-active-reporting-hpc.diff
+Index: linux-macro/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-macro.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-macro/drivers/pci/hotplug/pciehp_hpc.c
+@@ -984,7 +984,7 @@ static inline int pcie_hotplug_depth(str
+ struct controller *pcie_init(struct pcie_device *dev)
+ {
+ 	struct controller *ctrl;
+-	u32 slot_cap, slot_cap2, link_cap;
++	u32 slot_cap, slot_cap2;
+ 	u8 poweron;
+ 	struct pci_dev *pdev = dev->port;
+ 	struct pci_bus *subordinate = pdev->subordinate;
+@@ -1030,9 +1030,6 @@ struct controller *pcie_init(struct pcie
+ 	if (dmi_first_match(inband_presence_disabled_dmi_table))
+ 		ctrl->inband_presence_disabled = 1;
+ 
+-	/* Check if Data Link Layer Link Active Reporting is implemented */
+-	pcie_capability_read_dword(pdev, PCI_EXP_LNKCAP, &link_cap);
+-
+ 	/* Clear all remaining event bits in Slot Status register. */
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
+ 		PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+@@ -1051,7 +1048,7 @@ struct controller *pcie_init(struct pcie
+ 		FLAG(slot_cap, PCI_EXP_SLTCAP_EIP),
+ 		FLAG(slot_cap, PCI_EXP_SLTCAP_NCCS),
+ 		FLAG(slot_cap2, PCI_EXP_SLTCAP2_IBPD),
+-		FLAG(link_cap, PCI_EXP_LNKCAP_DLLLARC),
++		FLAG(pdev->link_active_reporting, true),
+ 		pdev->broken_cmd_compl ? " (with Cmd Compl erratum)" : "");
+ 
+ 	/*
