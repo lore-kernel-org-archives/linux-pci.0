@@ -2,105 +2,117 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF39EC77B6E
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Apr 2023 20:58:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73EC0C76196
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Apr 2023 21:51:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231168AbjDGU6W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Apr 2023 16:58:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48438 "EHLO
+        id S229747AbjDGVvt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Apr 2023 17:51:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48978 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230413AbjDGU6T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Apr 2023 16:58:19 -0400
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 45E1AC17E;
-        Fri,  7 Apr 2023 13:58:17 -0700 (PDT)
-Received: from skinsburskii.localdomain (unknown [131.107.1.229])
-        by linux.microsoft.com (Postfix) with ESMTPSA id AE674213B634;
-        Fri,  7 Apr 2023 13:58:16 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com AE674213B634
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-        s=default; t=1680901096;
-        bh=32mhPLCSnFqlWC0muL7q44icEI++yknNcaEQIU1ZLvE=;
-        h=Subject:From:Cc:Date:In-Reply-To:References:From;
-        b=rLRQUe03PQBMKbXvSZ/VJWDxgdc9PySimsj3H5+d3DxKwZjzOd7WeHSUUetID2zxh
-         nayWNjg4p5Co3J52iHGyG4JgzQm14NIt/oJhXv8wMvDRwEzY6CKH3KWd94mThdmOxA
-         wVJYjO39KNVcye7uCLbs6BOrthe+MQi/hGzv8c+c=
-Subject: [PATCH 2/2] PCI: hv: Deal with nested MSHV setup
-From:   Stanislav Kinsburskii <skinsburskii@linux.microsoft.com>
-Cc:     Stanislav Kinsburskii <stanislav.kinsburskii@gmail.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Thu, 06 Apr 2023 09:33:24 -0700
-Message-ID: <168079879905.14175.16212926378045082102.stgit@skinsburskii.localdomain>
-In-Reply-To: <168079806973.14175.17999267023207421381.stgit@skinsburskii.localdomain>
-References: <168079806973.14175.17999267023207421381.stgit@skinsburskii.localdomain>
-User-Agent: StGit/0.19
+        with ESMTP id S231271AbjDGVvr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Apr 2023 17:51:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AC54C679;
+        Fri,  7 Apr 2023 14:51:45 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C7F0A64465;
+        Fri,  7 Apr 2023 21:51:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2AEEC433D2;
+        Fri,  7 Apr 2023 21:51:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680904304;
+        bh=KKX2qukbqARKziXpZ5Z77M5yQRvkEtvdiQIqFTYCZsU=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=TmvDC25psL77z4S32BHtlD52ALcXUQU7psLxZkr5GV0/1iiTvsnGI9O9E+ck5bgAh
+         ktNAF0oGPXsSk0A880Ejp3W/uD9Fuq9TD3GYJkxNn2s3W2I0aWsdk3Kq4LxIqWCnNP
+         SFV+MFsfr6DZYVwYftXClzshWRAbpW/1uS5paeq7GGJl7VcnmotJ0yvoQ38RJ0Yru2
+         eDrf0LizhpEHB6cZ2azrbbGPVGaKjILcGcn8lyshCvUHCrNExe2oABhOBqvraFfMPr
+         caWL0GZdjaS3mrrGB2q4gI838qrdSBTkr7VN68Z321xRgAvPtRy+1DbJZ5QIDJkdUo
+         xTC6ZbmhlnI/Q==
+Date:   Fri, 7 Apr 2023 16:51:42 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        "Natu, Mahesh" <mahesh.natu@intel.com>
+Subject: Re: [PATCH v2] PCI/EDR: Clear PCIe Device Status errors after EDR
+ error recovery
+Message-ID: <20230407215142.GA3825302@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
+In-Reply-To: <20230315235449.1279209-1-sathyanarayanan.kuppuswamy@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Stanislav Kinsburskii <stanislav.kinsburskii@gmail.com>
+[+cc Jonathan, Mahesh]
 
-Running Microsoft hypervisor as nested (i.e., on top of another Microsoft
-hypervisor) imposes a different requirement for the PCI-hyperv controller.
+On Wed, Mar 15, 2023 at 04:54:49PM -0700, Kuppuswamy Sathyanarayanan wrote:
+> Commit 068c29a248b6 ("PCI/ERR: Clear PCIe Device Status errors only if
+> OS owns AER") adds support to clear error status in the Device Status
+> Register(DEVSTA) only if OS owns the AER support. But this change
+> breaks the requirement of the EDR feature which requires OS to cleanup
+> the error registers even if firmware owns the control of AER support.
+> 
+> More details about this requirement can be found in PCIe Firmware
+> specification v3.3, Table 4-6 Interpretation of the _OSC Control Field.
+> If the OS supports the Error Disconnect Recover (EDR) feature and
+> firmware sends the EDR event, then during the EDR recovery window, OS
+> is responsible for the device error recovery and holds the ownership of
+> the following error registers.
+> 
+> • Device Status Register
+> • Uncorrectable Error Status Register
+> • Correctable Error Status Register
+> • Root Error Status Register
+> • RP PIO Status Register
+> 
+> So call pcie_clear_device_status() in edr_handle_event() if the error
+> recovery is successful.
+> 
+> Reported-by: Tsaur Erwin <erwin.tsaur@intel.com>
+> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-In this setup, the interrupt will first come to the nested (L1) hypervisor
-from the hypervisor, running on bare metal (L0), and then the L1 hypervisor
-will deliver the interrupt to the appropriate CPU of the nested root
-partition.
+Sorry I spent so much time on this, but I finally applied it to
+pci/aer for v6.4.
 
-Thus, instead of issuing the RETARGET hypercall to the L0 hypervisor,
-MAP_DEVICE_INTERRUPT hypercall should be issued to the L1 hypervisor to
-complete the interrupt setup.
+I added the "Fixes: 068c29a248b6" line.  It's not that 068c29a248b6 is
+a bug, just that EDR relied on behavior that 068c29a248b6 legitimately
+removed, so this patch should go where 068c29a248b6 goes.
 
-Signed-off-by: Stanislav Kinsburskii <stanislav.kinsburskii@gmail.com>
-CC: "K. Y. Srinivasan" <kys@microsoft.com>
-CC: Haiyang Zhang <haiyangz@microsoft.com>
-CC: Wei Liu <wei.liu@kernel.org>
-CC: Dexuan Cui <decui@microsoft.com>
-CC: Lorenzo Pieralisi <lpieralisi@kernel.org>
-CC: "Krzysztof Wilczyński" <kw@linux.com>
-CC: Rob Herring <robh@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-hyperv@vger.kernel.org
-CC: linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
----
- drivers/pci/controller/pci-hyperv.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+I wordsmithed the commit log to add hints about things I stumbled
+over.  I'll post a follow-up patch to add a couple comments there,
+too.
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index f33370b75628..61bee8babad4 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -1570,7 +1570,16 @@ static void hv_irq_mask(struct irq_data *data)
- 
- static void hv_irq_unmask(struct irq_data *data)
- {
--	hv_arch_irq_unmask(data);
-+	if (hv_nested && hv_root_partition)
-+		/*
-+		 * In case of the nested root partition, the nested hypervisor
-+		 * is taking care of interrupt remapping and thus the
-+		 * MAP_DEVICE_INTERRUPT hypercall is required instead of the
-+		 * RETARGET_INTERRUPT one.
-+		 */
-+		(void)hv_map_msi_interrupt(data, NULL);
-+	else
-+		hv_arch_irq_unmask(data);
- 
- 	if (data->parent_data->chip->irq_unmask)
- 		irq_chip_unmask_parent(data);
+Thanks for your patience in educating me through all this.
 
-
+> ---
+> 
+> Changes since v1:
+>  * Rebased on top of v6.3-rc1.
+>  * Fixed a typo in pcie_clear_device_status().
+> 
+>  drivers/pci/pcie/edr.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/pcie/edr.c b/drivers/pci/pcie/edr.c
+> index a6b9b479b97a..87734e4c3c20 100644
+> --- a/drivers/pci/pcie/edr.c
+> +++ b/drivers/pci/pcie/edr.c
+> @@ -193,6 +193,7 @@ static void edr_handle_event(acpi_handle handle, u32 event, void *data)
+>  	 */
+>  	if (estate == PCI_ERS_RESULT_RECOVERED) {
+>  		pci_dbg(edev, "DPC port successfully recovered\n");
+> +		pcie_clear_device_status(edev);
+>  		acpi_send_edr_status(pdev, edev, EDR_OST_SUCCESS);
+>  	} else {
+>  		pci_dbg(edev, "DPC port recovery failed\n");
+> -- 
+> 2.34.1
+> 
