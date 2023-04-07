@@ -2,185 +2,143 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7658CC77B6F
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Apr 2023 11:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21E31C6FD1D
+	for <linux-pci@archiver.kernel.org>; Fri,  7 Apr 2023 15:07:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231758AbjDGL4z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Apr 2023 07:56:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36318 "EHLO
+        id S240702AbjDGPHz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 7 Apr 2023 11:07:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232209AbjDGL4y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Apr 2023 07:56:54 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD5347ECB
-        for <linux-pci@vger.kernel.org>; Fri,  7 Apr 2023 04:56:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1680868611; x=1712404611;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=Pc0s6lCAjSFh5SzEZF9yg6JrbUwH7ofvIWEgLrOEOHw=;
-  b=XERpRNtjXO/DS4xpoWN2pJhss0dTw3cyd23F7toR8FDGcYRFRywFLzQc
-   NT5awttuRJDd6ug5KD5BKWJmBxS/0QYOIBWugN8mYXe2ZgAffG1YD+BDQ
-   qs9PnZAreTNZfVpcp78Gmtcy/evlrtDgp92VibntZiBgM/dREnY7HaDz6
-   gMyfAXxVnu5PAQj/mXD97I+ZbNYKb53GO/uVZIbHEfvtetOhN5nCkebC5
-   irhfBXvJZaMgNuL13Dpe7feqjpdKYZDd7mwxDNoTY2vWDr/ScrlnQPB+k
-   fecwvJEBxVReXpS8JzAHk8DatRTFpDX0TaGIEyL088TaZGSCs1uEmIyGl
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10672"; a="408104883"
-X-IronPort-AV: E=Sophos;i="5.98,326,1673942400"; 
-   d="scan'208";a="408104883"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2023 04:56:50 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10672"; a="720045259"
-X-IronPort-AV: E=Sophos;i="5.98,326,1673942400"; 
-   d="scan'208";a="720045259"
-Received: from lkp-server01.sh.intel.com (HELO b613635ddfff) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 07 Apr 2023 04:56:49 -0700
-Received: from kbuild by b613635ddfff with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1pkkhv-000SSm-2H;
-        Fri, 07 Apr 2023 11:56:43 +0000
-Date:   Fri, 07 Apr 2023 19:56:03 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- 30ba2d09edb5ea857a1473ae3d820911347ada62
-Message-ID: <643004d3.lx9wbaRQBXigDg4T%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        with ESMTP id S240553AbjDGPHb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Apr 2023 11:07:31 -0400
+Received: from mail-oo1-xc36.google.com (mail-oo1-xc36.google.com [IPv6:2607:f8b0:4864:20::c36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85B09CC10;
+        Fri,  7 Apr 2023 08:06:35 -0700 (PDT)
+Received: by mail-oo1-xc36.google.com with SMTP id n6-20020a4abd06000000b0053b59893660so6643125oop.0;
+        Fri, 07 Apr 2023 08:06:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680879978; x=1683471978;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iIrhmcIO3ShBrxPOokKqqO9vW72VgVDZYa/LDSCO/yE=;
+        b=BEPkqHQLR4fGInU/bLiO6aYsrzf8I7yOKRZdQYkzNEW2xl2GmuwFiyrsBDrdw8DV1d
+         B+rDC2Vv4tYnJ6DcHVvWJXKWCwGy+ETOiSnczMGpdjBBEGs3nXcMxHSh/MBYY1hlMrNR
+         lam9L9y+vUNPwgvFc4lmCfOo62Oz5NjypNdmqBMZ/u2Rizhv0EBe2AC2fX7tn344s12R
+         h1QsvdzoGvlKUQ6QdtCIDhn7je3qKPVHh1r9qjHg5r/VXwv/aYybL029S4RBBFQ+xIFC
+         gEyHWmgWLEk7tebT+bz1F3OkX+dpR0mW1pDGLU7rdRTjkcW4RKN7fQnY9NJ30GbXi8SM
+         hhcg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1680879978; x=1683471978;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=iIrhmcIO3ShBrxPOokKqqO9vW72VgVDZYa/LDSCO/yE=;
+        b=AsRm5Pn+dd3G/HEHIksdvunTvEYSwf9bSSctwaKcWgeLVMzDmdkiUNxpe+2bSvXBfs
+         bR4ILSP/SpnmGMlXETRR7njgbTq53Nz/oDPt2sFTlHJRY1C6TsS+ba1Uz4cbUI44Jw/C
+         x9yWpwYjcswb2mc+JUTtl9nejYOc//qZwZo6w6XJ4zL82O7NBMFre1ladQWd2Lz4R6uq
+         +1IveYId+olwVUJjc8Z0zEe4FfrCAVSk9zhPds5fWpooYcvdOAd9dvdnRxcRbz7KLuh7
+         W5NpNlvNgiBDRRv0I28j7I8ofTBnsIbmxHg44Mq2R0Pmq6GD3jE7rm4dO2drU1bDcLbW
+         aHVg==
+X-Gm-Message-State: AAQBX9dRCz5Xy3TODYX5ygGbCnKxIFsu30PFZxkYV8AFybaNNCTBBj49
+        da0iQLFlmJOc+z8toZxq8x6fftMeH/aUjJwSODQ=
+X-Google-Smtp-Source: AKy350ZbbPlnSS1gfLGKCh+j04duOZnmfyN8lIA1Y0JYiTnNbsVFDfqLt451BAOl/qHUT2qv0pbTKgVYTfj/HhSlhHY=
+X-Received: by 2002:a4a:b404:0:b0:53e:944:8896 with SMTP id
+ y4-20020a4ab404000000b0053e09448896mr589061oon.0.1680879977728; Fri, 07 Apr
+ 2023 08:06:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+References: <20230406124625.41325-1-jim2101024@gmail.com> <20230406213123.wcztrbmhdpukoby2@mraw.org>
+In-Reply-To: <20230406213123.wcztrbmhdpukoby2@mraw.org>
+From:   Hank Barta <hbarta@gmail.com>
+Date:   Fri, 7 Apr 2023 10:06:19 -0500
+Message-ID: <CABTDG88MNmMmha96j0ABU4Q3-NKcLfx58wgQ2_GpyLgtAm1bxw@mail.gmail.com>
+Subject: Re: [PATCH v1 0/3] PCI: brcmstb: Clkreq# accomodations of downstream device
+To:     Cyril Brulebois <kibi@debian.org>
+Cc:     Jim Quinlan <jim2101024@gmail.com>, linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Phil Elwell <phil@raspberrypi.com>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        Rob Herring <robh@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: 30ba2d09edb5ea857a1473ae3d820911347ada62  PCI: Fix use-after-free in pci_bus_release_domain_nr()
+Apologies to anyone who is seeing this for the second time. I forgot
+to format as plain text on the first transmission.
 
-elapsed time: 729m
+Cyril Brulebois kindly provided me with Debian packages for the two
+kernels he built and I tested them as well. I can confirm that the one
+without the three patches still had the panic on power up and when a
+PCIe device is present. Otherwise it booted without difficulty. The
+kernel with three patches booted successfully on all tries both cold
+and warm with a PCIe/NVME installed. I was also able to mount
+partitions on the NVME driver and copy data off.
 
-configs tested: 111
-configs skipped: 12
+My hardware
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+CM4 with WiFi/BT, 8GG RAM and no eMMC.
+(Official) I/O board
+PCIe/NVME adapter card with Intel 670p SSD installed
+32GB Samsung EVO Select SD card (boot device.)
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r034-20230403   gcc  
-arc                  randconfig-r043-20230403   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                  randconfig-r031-20230403   gcc  
-arm                  randconfig-r035-20230403   gcc  
-arm                  randconfig-r046-20230403   clang
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r022-20230403   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r011-20230403   gcc  
-hexagon      buildonly-randconfig-r003-20230403   clang
-hexagon              randconfig-r041-20230403   clang
-hexagon              randconfig-r045-20230403   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-a001-20230403   clang
-i386                 randconfig-a002-20230403   clang
-i386                 randconfig-a003-20230403   clang
-i386                 randconfig-a004-20230403   clang
-i386                 randconfig-a005-20230403   clang
-i386                 randconfig-a006-20230403   clang
-i386                 randconfig-a011-20230403   gcc  
-i386                 randconfig-a012-20230403   gcc  
-i386                 randconfig-a013-20230403   gcc  
-i386                 randconfig-a014-20230403   gcc  
-i386                 randconfig-a015-20230403   gcc  
-i386                 randconfig-a016-20230403   gcc  
-ia64                             allmodconfig   gcc  
-ia64                                defconfig   gcc  
-ia64                 randconfig-r002-20230403   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             alldefconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r023-20230403   gcc  
-m68k                 randconfig-r035-20230403   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r005-20230403   gcc  
-mips                 randconfig-r013-20230406   gcc  
-mips                 randconfig-r014-20230403   clang
-mips                 randconfig-r021-20230403   clang
-mips                 randconfig-r024-20230403   clang
-mips                 randconfig-r033-20230403   gcc  
-nios2                               defconfig   gcc  
-openrisc     buildonly-randconfig-r001-20230403   gcc  
-openrisc                    or1ksim_defconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r001-20230403   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc      buildonly-randconfig-r004-20230403   gcc  
-powerpc              randconfig-r015-20230403   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r012-20230403   gcc  
-riscv                randconfig-r013-20230403   gcc  
-riscv                randconfig-r042-20230403   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r004-20230403   clang
-s390                 randconfig-r014-20230406   clang
-s390                 randconfig-r044-20230403   gcc  
-sh                               allmodconfig   gcc  
-sh                   randconfig-r016-20230406   gcc  
-sparc        buildonly-randconfig-r002-20230403   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r034-20230403   gcc  
-sparc64      buildonly-randconfig-r006-20230403   gcc  
-sparc64              randconfig-r003-20230403   gcc  
-sparc64              randconfig-r036-20230403   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230403   clang
-x86_64               randconfig-a002-20230403   clang
-x86_64               randconfig-a003-20230403   clang
-x86_64               randconfig-a004-20230403   clang
-x86_64               randconfig-a005-20230403   clang
-x86_64               randconfig-a006-20230403   clang
-x86_64               randconfig-a011-20230403   gcc  
-x86_64               randconfig-a012-20230403   gcc  
-x86_64               randconfig-a013-20230403   gcc  
-x86_64               randconfig-a014-20230403   gcc  
-x86_64               randconfig-a015-20230403   gcc  
-x86_64               randconfig-a016-20230403   gcc  
-x86_64               randconfig-k001-20230403   gcc  
-x86_64               randconfig-r026-20230403   gcc  
-x86_64               randconfig-r032-20230403   clang
-x86_64                               rhel-8.3   gcc  
-xtensa       buildonly-randconfig-r005-20230403   gcc  
-xtensa               randconfig-r006-20230403   gcc  
-xtensa               randconfig-r015-20230406   gcc  
-xtensa               randconfig-r033-20230403   gcc  
+Thanks to all who contributed to this fix.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+
+On Thu, Apr 6, 2023 at 4:31=E2=80=AFPM Cyril Brulebois <kibi@debian.org> wr=
+ote:
+>
+> Hi Jim,
+>
+> Jim Quinlan <jim2101024@gmail.com> (2023-04-06):
+> > The current driver assumes the downstream devices can provide clkreq# f=
+or
+> > ASPM.  These commits accomodate devices w/ or w/o clkreq# and also hand=
+le
+> > L1SS-capable devices.
+> >
+> > The Raspian Linux folks have already been using a PCIe RC property
+> > "brcm,enable-l1ss".  These commits use the same property, in a
+> > backward-compatible manner, and the implementaion adds more detail and =
+also
+> > automatically identifies devices w/o a clkreq# signal, i.e. most device=
+s
+> > plugged into an RPi CM4 IO board.
+> >
+> > Jim Quinlan (3):
+> >   dt-bindings: PCI: brcmstb: Add two optional props
+> >   PCI: brcmstb: Clkreq# accomodations of downstream device
+> >   PCI: brcmstb: Allow setting the completion timeout
+> >
+> >  .../bindings/pci/brcm,stb-pcie.yaml           | 12 +++
+> >  drivers/pci/controller/pcie-brcmstb.c         | 93 +++++++++++++++++--
+> >  2 files changed, 95 insertions(+), 10 deletions(-)
+> >
+> >
+> > base-commit: 99ddf2254febae9eab7fb0bcc02c5322243f5c49
+>
+> I've just verified with the exact same hardware as in Bugzilla#217276
+> that latest master (v6.3-rc5-137-gf2afccfefe7b) still gets a kernel
+> panic at boot, which goes away once those 3 patches are applied. Do you
+> need any extra information, log excerpt, or something like that?
+>
+>
+> Cheers,
+> --
+> Cyril Brulebois (kibi@debian.org)            <https://debamax.com/>
+> D-I release manager -- Release team member -- Freelance Consultant
+
+
+
+--=20
+Beautiful Sunny Winfield
