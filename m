@@ -2,233 +2,176 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A542C7619A
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Apr 2023 11:03:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03455C7619A
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Apr 2023 11:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229656AbjDKLDU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Apr 2023 07:03:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57906 "EHLO
+        id S229922AbjDKLDe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Apr 2023 07:03:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58064 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbjDKLDT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2023 07:03:19 -0400
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2052.outbound.protection.outlook.com [40.107.243.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F3173AAA;
-        Tue, 11 Apr 2023 04:02:42 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DSqStCKtjFd/F/3QD/yjlGaxjdqFSLnqeahB6saI0ChRi4+tONZDUS0ArfqKjAiUxHDJTkniKfNf0/Rax+hsfoA/k8HJnq1itjvlsENw3xRsvBy69vSeBuqNeQogjIXxeXVtIHVnQNL08mjhO3UUle6sXP2b8P/OAwDTmnzbsJDkem8cR5mZEYAF3b8p/ZD3YfY67C9+px4vT0cS/BzbqnAbXZxdfIwTNAEntsHnPlFQ233ShrbGGWCPoPHP0hkHigtgvNdUdyDCuzm6OIx0hidpIwEaIK61bJn5nzxfY3uDy/ozBeUE19Afz3YMos6hex8GGt0xgyxxMkSjGp+sew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qe7ko4hKk3wIiZjpXWtiYE1sJaLpuPQX/tl1088MPcA=;
- b=FVWxpOw/fd2JeR5vTt3rGvp+3wqxVbIP07M45g5ItV5XLKsKsRlT21MjJt2y8elBgIFYpDJvov59yBDlV3+vVUc7EHhMKB5lswvUVuZZyjX5OHQvBxam57TtBekkZXtKy+aj2bNJjZFjioKd40KbsbKMSbK3D75G0q1lxLRdW66w2nSfHzZKMrMOA6VXlpsVhCdoPb0ujOsD+GKi5crcZPrZCySniQ+pKywPriCdtQo3r2UaO48SDF3lNM+dgvfaQ9nBE5SKZcYwSvgM9vFa+edRd3E6fGgfEYOko40KLx9mjXdhA3YNvSxjAHhVUIqE3GitFWYw7e9WGGJzlaSNwg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qe7ko4hKk3wIiZjpXWtiYE1sJaLpuPQX/tl1088MPcA=;
- b=LXcS8bqKI7YvWEmCLu2sqEw/JwSUHIig3Zs7YH5OmH6CygV3G8lCY44g0OD6PBrLzYdYaPYfazg40UacSJe9fILA58Ws1dAKysFyJXIBhSmSOYgboiRVByjKGOhcgtP1ox9zSBuv4pazeovG1K6fGeYlTMe161yXGp3u80RdSJ6Q1KNNn4NQ/mEQM9x/nP6KGU+tRZuW6x7j5U6Dosbjot4ndyBjcHhhGz1MF55gvoxAcvtBae1yJTQ/wfRB8DYhQGDJj4CalyBBsAyvxn68rnQhfhtS+VpJiMRV6oZJmyae98Cb/8ddFNkoR6mjrDWr3hSPnSPlutI5YY+LJPGa9Q==
-Received: from BN9PR03CA0466.namprd03.prod.outlook.com (2603:10b6:408:139::21)
- by SA0PR12MB4446.namprd12.prod.outlook.com (2603:10b6:806:71::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6277.34; Tue, 11 Apr
- 2023 11:02:13 +0000
-Received: from BN8NAM11FT009.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:139:cafe::20) by BN9PR03CA0466.outlook.office365.com
- (2603:10b6:408:139::21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6298.28 via Frontend
- Transport; Tue, 11 Apr 2023 11:02:13 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- BN8NAM11FT009.mail.protection.outlook.com (10.13.176.65) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6298.28 via Frontend Transport; Tue, 11 Apr 2023 11:02:12 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.5; Tue, 11 Apr 2023
- 04:02:01 -0700
-Received: from rnnvmail204.nvidia.com (10.129.68.6) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.986.37; Tue, 11 Apr
- 2023 04:02:00 -0700
-Received: from sumitg-l4t.nvidia.com (10.127.8.10) by mail.nvidia.com
- (10.129.68.6) with Microsoft SMTP Server id 15.2.986.37 via Frontend
- Transport; Tue, 11 Apr 2023 04:01:54 -0700
-From:   Sumit Gupta <sumitg@nvidia.com>
-To:     <treding@nvidia.com>, <krzysztof.kozlowski@linaro.org>,
-        <dmitry.osipenko@collabora.com>, <viresh.kumar@linaro.org>,
-        <rafael@kernel.org>, <jonathanh@nvidia.com>, <robh+dt@kernel.org>,
-        <lpieralisi@kernel.org>, <helgaas@kernel.org>
-CC:     <linux-kernel@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <linux-pm@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <mmaddireddy@nvidia.com>,
-        <kw@linux.com>, <bhelgaas@google.com>, <vidyas@nvidia.com>,
-        <sanjayc@nvidia.com>, <ksitaraman@nvidia.com>, <ishah@nvidia.com>,
-        <bbasu@nvidia.com>, <sumitg@nvidia.com>
-Subject: [Patch v6 8/9] PCI: tegra194: Add interconnect support in Tegra234
-Date:   Tue, 11 Apr 2023 16:30:01 +0530
-Message-ID: <20230411110002.19824-9-sumitg@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230411110002.19824-1-sumitg@nvidia.com>
-References: <20230411110002.19824-1-sumitg@nvidia.com>
-X-NVConfidentiality: public
+        with ESMTP id S229707AbjDKLDZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2023 07:03:25 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E62EB448D
+        for <linux-pci@vger.kernel.org>; Tue, 11 Apr 2023 04:02:50 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id v9so12934949pjk.0
+        for <linux-pci@vger.kernel.org>; Tue, 11 Apr 2023 04:02:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1681210968;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=8NdaDMR88s+1WtvRZzFseNEUErd04u8W3GHHaAxJqcs=;
+        b=PcARvOGxXSQhEYhGNs5SJ4lcR/LE0utoGKPBYI+EgKQh+DGinmFPhN5kt43TQ2JyDd
+         dKLFtiOqLxKExs6YBGTsPI+kjuI1bSJXgCsoaceJ8gTo2vCVMNwY+9MNxohlTR1KlurA
+         ejPL/IfoGTmi99OxNcnJ73DXjqOBgU6/cZlBOKc2BccUlyhHcRUxYZ1t+2tiXT9rope9
+         Udup0Y2bP9bDgsRt8kX6kiSz3iUXFwhpMl7Y1oFOHuJF8orX/9f1Qp+qXPFN2SRJ4taQ
+         yW/TRxBSYfIyfeWR5l89vB7eQVuWohHz98m0UBLXiWpWMXvatYw+LkFnlYO3oWketJqC
+         YUNw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1681210968;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8NdaDMR88s+1WtvRZzFseNEUErd04u8W3GHHaAxJqcs=;
+        b=WVf2w5rBx2t4rj/x3XUfyAUmDC/z+ST9alySxrDCycre66tXyJbv3RbpjNlAlrHmjR
+         aON4yCqd/DQswElB8OOYl/tnsOesjemhgaYy8QDF2Xkf6xwDpvJ1Y+1bNVFmNqObpa0G
+         5EOB+QIEOBr0soa+C6Hn9XGE/sWjARnJ0KYPcFYVq3SReJLtbGy3CKJof5fHCKaRuxQp
+         qE0tHZtKgD6VvR8AAvUq0k/sf/mR0lwTOSYYOKPB0A1inE0gUlLC55FZBzuNctty8nb3
+         8e9h2cxnG/g94Ot4mD56E6pyP5SZVh62pe7aHZcZ4+Bx90oenTEfXQrO4mpkQ03BkO8q
+         ngpw==
+X-Gm-Message-State: AAQBX9eu9cNQ2qgxTGMSfNZza4E31lfBjgNCqJOLsDUCmkFE3oyj9YKJ
+        GiyZZCjH1FsevZJWE0aP/GPx
+X-Google-Smtp-Source: AKy350YrgJ+yCoYpqvWMVoHJqr9R84fHbxO/QbzkuGhgDRXGWXXcdoOGiDeCw4wvWJg+mz30I1j3aA==
+X-Received: by 2002:a17:90b:1c8e:b0:234:e3f:f53b with SMTP id oo14-20020a17090b1c8e00b002340e3ff53bmr13789406pjb.21.1681210967895;
+        Tue, 11 Apr 2023 04:02:47 -0700 (PDT)
+Received: from thinkpad ([117.216.120.128])
+        by smtp.gmail.com with ESMTPSA id i6-20020a170902c28600b0019c92f56983sm9416236pld.120.2023.04.11.04.02.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Apr 2023 04:02:47 -0700 (PDT)
+Date:   Tue, 11 Apr 2023 16:32:40 +0530
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Rob Herring <robh@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RESEND v3 00/10] PCI: dwc: Relatively simple fixes and
+ cleanups
+Message-ID: <20230411110240.GB5333@thinkpad>
+References: <20230411033928.30397-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT009:EE_|SA0PR12MB4446:EE_
-X-MS-Office365-Filtering-Correlation-Id: b5b813f1-49b1-43f3-8c44-08db3a7c3459
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: nmoax3ypVuJf8c40uIjBOmNI/7ftLnLw5Bue/bvxxFINHhLIxAK4lFnOas+g3awJKtQ3n7N/T5j4FBp+sB4jX2t1HMVufnWRmyyqai5DFdVIbfxTkxU1M/37G64URpSOiWMiyn9FS0kzcrDnBHhPZL2+jdy64Y4QHAh75FqgFeK0KfLwEb/yI2c3Ezl8hoRsFlBZWccV/hnlAyEz3+Nrg9izvEbqU2vjxz46mHcV/NW6BtYzPEysWZksp1pVjDOcI9tIrmZ8OZZnBH4ox3rYPuDjlWQpQLcaX5smk5o2SIhJD3gBSPKxRjsWWtPLOnlSm8Kfs+3+STvrgecnSlTkfLth3s7KA2tRvyiuNVfMv5xXLe3rSFIPnFIBwpbJmt0zt58Qi7YRp52RIxeE11MafO6wdevAuB+ryUTxfuPwqtxC9uDMw0pZUVXNFDsU9aeXwsRnXmyPMNWJliAqDHdJBiKFoHoc3eOWPoRt5cIZ3cnTUtSmJncsW1wmYHn/paZTZtlV+eLb7eRCkkPA9OiJ4J/gpF09x+4s3otIOnrUa4Q6FJZNhHO1JqcwLaHVPfVvsKeoJyXCb/JFdrav4aowBoQcPDv5+bzIrFBxjC5Io43JQQUmqNCVWzRBeeU7y8IFxOJCUMzdpawrVXyo6hCkEIzSdbAmJ/vIq2dLU0i6A3H6GTpmFvdMkT4w6gSupprRH5urIdmyqo1KDxYg0ppby4URq+i5C0ZligAVxRrXyqpkCTKtUVdXOHnRBeSpvIxh
-X-Forefront-Antispam-Report: CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230028)(4636009)(136003)(39860400002)(346002)(396003)(376002)(451199021)(36840700001)(46966006)(40470700004)(36860700001)(110136005)(54906003)(7636003)(82740400003)(356005)(426003)(2616005)(336012)(82310400005)(47076005)(316002)(83380400001)(86362001)(4326008)(186003)(7416002)(8676002)(26005)(478600001)(70206006)(70586007)(2906002)(1076003)(107886003)(6666004)(36756003)(5660300002)(40460700003)(40480700001)(8936002)(41300700001)(7696005);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2023 11:02:12.9665
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: b5b813f1-49b1-43f3-8c44-08db3a7c3459
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT009.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA0PR12MB4446
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230411033928.30397-1-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support to request DRAM bandwidth with Memory Interconnect
-in Tegra234 SoC. The DRAM BW required for different modes depends
-on speed (Gen-1/2/3/4) and width/lanes (x1/x2/x4/x8).
-Currently, no latency is observed in data transfer with PCI as the
-DRAM Freq is always set to max. But that results in high power
-consumption. Now for Tegra234, we are enabling the dynamic scaling
-of the DRAM Freq based on requests from Clients instead of running
-at the max Freq always. This change does that for PCI MC client.
+On Tue, Apr 11, 2023 at 06:39:18AM +0300, Serge Semin wrote:
+> It turns out the recent DW PCIe-related patchset was merged in with
+> several relatively trivial issues left unsettled (noted by Bjorn and
+> Manivannan). All of these lefovers have been fixed in this patchset.
+> Namely the series starts with two bug-fixes. The first one concerns the
+> improper link-mode initialization in case if the CDM-check is enabled. The
+> second unfortunate mistake I made in the IP-core version type helper. In
+> particular instead of testing the IP-core version type the macro function
+> referred to the just IP-core version which obviously wasn't what I
+> intended.
+> 
+> Afterwards two @Mani-noted fixes follow. Firstly the dma-ranges related warning
+> message is fixed to start with "DMA-ranges" word instead of "Dma-ranges".
+> Secondly the Baikal-T1 PCIe Host driver is converted to perform the
+> asynchronous probe type which saved us of about 15% of bootup time if no any
+> PCIe peripheral device attached to the port.
+> 
+> Then the patchset contains the Baikal-T1 PCIe driver fix. The
+> corresponding patch removes the false error message printed during the
+> controller probe procedure. I accidentally added the unconditional
+> dev_err_probe() method invocation. It was obviously wrong.
+> 
+> Then two trivial cleanups are introduced. The first one concerns the
+> duplicated fast-link-mode flag unsetting. The second one implies
+> dropping a redundant empty line from the dw_pcie_link_set_max_speed()
+> function.
+> 
+> The series continues with a patch inspired by the last @Bjorn note
+> regarding the generic resources request interface. As @Bjorn correctly
+> said it would be nice to have the new interface used wider in the DW PCIe
+> subsystem. Aside with the Baikal-T1 PCIe Host driver the Toshiba Visconti
+> PCIe driver can be easily converted to using the generic clock names.
+> That's what is done in the noted patch.
+> 
+> The patchset is closed with a series of MAINTAINERS-list related patches.
+> Firstly after getting the DW PCIe RP/EP DT-schemas refactored I forgot to
+> update the MAINTAINER-list with the new files added in the framework of
+> that procedure. All the snps,dw-pcie* schemas shall be maintained by the
+> DW PCIe core driver maintainers. Secondly seeing how long it took for my
+> patchsets to review and not having any comments from the original driver
+> maintainers I'd suggest to add myself as the reviewer to the DW PCIe and
+> eDMA drivers. Thus hopefully the new updates review process will be
+> performed with much less latencies. For the same reason I would also like
+> to suggest to add @Manivannan as the DW PCIe/eDMA drivers maintainer if
+> he isn't against that idea. What do you think about the last suggestion?
+> 
 
-Suggested-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Signed-off-by: Sumit Gupta <sumitg@nvidia.com>
----
- drivers/pci/controller/dwc/pcie-tegra194.c | 51 +++++++++++++++-------
- 1 file changed, 35 insertions(+), 16 deletions(-)
+I'm willing to co-maintain the drivers.
 
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index e6eec85480ca..4fdadc7b045f 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -14,6 +14,7 @@
- #include <linux/delay.h>
- #include <linux/gpio.h>
- #include <linux/gpio/consumer.h>
-+#include <linux/interconnect.h>
- #include <linux/interrupt.h>
- #include <linux/iopoll.h>
- #include <linux/kernel.h>
-@@ -288,6 +289,7 @@ struct tegra_pcie_dw {
- 	unsigned int pex_rst_irq;
- 	int ep_state;
- 	long link_status;
-+	struct icc_path *icc_path;
- };
- 
- static inline struct tegra_pcie_dw *to_tegra_pcie(struct dw_pcie *pci)
-@@ -310,6 +312,27 @@ struct tegra_pcie_soc {
- 	enum dw_pcie_device_mode mode;
- };
- 
-+static void tegra_pcie_icc_set(struct tegra_pcie_dw *pcie)
-+{
-+	struct dw_pcie *pci = &pcie->pci;
-+	u32 val, speed, width;
-+
-+	val = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA);
-+
-+	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, val);
-+	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, val);
-+
-+	val = width * (PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]) / BITS_PER_BYTE);
-+
-+	if (icc_set_bw(pcie->icc_path, MBps_to_icc(val), 0))
-+		dev_err(pcie->dev, "can't set bw[%u]\n", val);
-+
-+	if (speed >= ARRAY_SIZE(pcie_gen_freq))
-+		speed = 0;
-+
-+	clk_set_rate(pcie->core_clk, pcie_gen_freq[speed]);
-+}
-+
- static void apply_bad_link_workaround(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -453,18 +476,12 @@ static irqreturn_t tegra_pcie_ep_irq_thread(int irq, void *arg)
- 	struct tegra_pcie_dw *pcie = arg;
- 	struct dw_pcie_ep *ep = &pcie->pci.ep;
- 	struct dw_pcie *pci = &pcie->pci;
--	u32 val, speed;
-+	u32 val;
- 
- 	if (test_and_clear_bit(0, &pcie->link_status))
- 		dw_pcie_ep_linkup(ep);
- 
--	speed = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA) &
--		PCI_EXP_LNKSTA_CLS;
--
--	if (speed >= ARRAY_SIZE(pcie_gen_freq))
--		speed = 0;
--
--	clk_set_rate(pcie->core_clk, pcie_gen_freq[speed]);
-+	tegra_pcie_icc_set(pcie);
- 
- 	if (pcie->of_data->has_ltr_req_fix)
- 		return IRQ_HANDLED;
-@@ -950,9 +967,9 @@ static int tegra_pcie_dw_host_init(struct dw_pcie_rp *pp)
- 
- static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
- {
--	u32 val, offset, speed, tmp;
- 	struct tegra_pcie_dw *pcie = to_tegra_pcie(pci);
- 	struct dw_pcie_rp *pp = &pci->pp;
-+	u32 val, offset, tmp;
- 	bool retry = true;
- 
- 	if (pcie->of_data->mode == DW_PCIE_EP_TYPE) {
-@@ -1023,13 +1040,7 @@ static int tegra_pcie_dw_start_link(struct dw_pcie *pci)
- 		goto retry_link;
- 	}
- 
--	speed = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA) &
--		PCI_EXP_LNKSTA_CLS;
--
--	if (speed >= ARRAY_SIZE(pcie_gen_freq))
--		speed = 0;
--
--	clk_set_rate(pcie->core_clk, pcie_gen_freq[speed]);
-+	tegra_pcie_icc_set(pcie);
- 
- 	tegra_pcie_enable_interrupts(pp);
- 
-@@ -2233,6 +2244,14 @@ static int tegra_pcie_dw_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, pcie);
- 
-+	pcie->icc_path = devm_of_icc_get(&pdev->dev, "write");
-+	ret = PTR_ERR_OR_ZERO(pcie->icc_path);
-+	if (ret) {
-+		tegra_bpmp_put(pcie->bpmp);
-+		dev_err_probe(&pdev->dev, ret, "failed to get write interconnect\n");
-+		return ret;
-+	}
-+
- 	switch (pcie->of_data->mode) {
- 	case DW_PCIE_RC_TYPE:
- 		ret = devm_request_irq(dev, pp->irq, tegra_pcie_rp_irq_handler,
+- Mani
+
+> Link: https://lore.kernel.org/linux-pci/20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru/
+> Changelog v2:
+> - Rebase onto the kernel 6.3-rc2.
+> 
+> Link: https://lore.kernel.org/linux-pci/20230313200816.30105-1-Sergey.Semin@baikalelectronics.ru/
+> Changelog v3:
+> - Drop the patch:
+>   [PATCH v2 01/11] PCI: dwc: Fix port link CSR improper init if CDM check enabled
+>   and rebase onto the already submitted by @Yoshihiro fix:
+>   commit cdce67099117 ("PCI: dwc: Fix PORT_LINK_CONTROL update when CDM check enabled")
+> - Just resend.
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
+> Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
+> Cc: linux-pci@vger.kernel.org
+> Cc: dmaengine@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> 
+> Serge Semin (10):
+>   PCI: dwc: Fix erroneous version type test helper
+>   PCI: dwc: Fix inbound iATU entries out-of-bounds warning message
+>   PCI: bt1: Enable async probe type
+>   PCI: bt1: Fix printing false error message
+>   PCI: dwc: Drop duplicated fast-link-mode flag unsetting
+>   PCI: dwc: Drop empty line from dw_pcie_link_set_max_speed()
+>   PCI: visconti: Convert to using generic resources getter
+>   MAINTAINERS: Add all generic DW PCIe RP/EP DT-schemas
+>   MAINTAINERS: Add myself as the DW PCIe core reviewer
+>   MAINTAINERS: Add myself as the DW eDMA driver reviewer
+> 
+>  MAINTAINERS                                   |  5 ++-
+>  drivers/pci/controller/dwc/pcie-bt1.c         |  5 ++-
+>  .../pci/controller/dwc/pcie-designware-host.c |  2 +-
+>  drivers/pci/controller/dwc/pcie-designware.c  |  2 -
+>  drivers/pci/controller/dwc/pcie-designware.h  |  7 +++-
+>  drivers/pci/controller/dwc/pcie-visconti.c    | 37 +++++++++----------
+>  6 files changed, 30 insertions(+), 28 deletions(-)
+> 
+> -- 
+> 2.40.0
+> 
+> 
+
 -- 
-2.17.1
-
+மணிவண்ணன் சதாசிவம்
