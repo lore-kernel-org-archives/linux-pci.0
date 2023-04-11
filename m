@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F7DFC76196
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Apr 2023 03:40:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47237C7619A
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Apr 2023 03:40:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229697AbjDKDj5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Apr 2023 23:39:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38786 "EHLO
+        id S229978AbjDKDj7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Apr 2023 23:39:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229914AbjDKDjw (ORCPT
+        with ESMTP id S229915AbjDKDjw (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2023 23:39:52 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DD7CF1BFC;
-        Mon, 10 Apr 2023 20:39:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1CFA32118;
+        Mon, 10 Apr 2023 20:39:51 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 60DE4E0EAA;
-        Tue, 11 Apr 2023 06:39:45 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 2D425E0EAF;
+        Tue, 11 Apr 2023 06:39:48 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=dhe5fI/NAb096CUtikyh7zdL7QAzlkNeqQb7gzpNoGQ=; b=jO5/qNV/XUsm
-        qyc3iswjovf49leh7tHcz8t63Bucd+qBaKNJoB6MOSTsslARXmR+cK8Dw8TcE5k1
-        rKJ/pbe4tUViJZZZRwbiCWdbsmoBC4nq5yHqWoZmydJcZXpSXWjs5A/S0ObLVrTQ
-        qn/LFoKvM/Eq+Nl+HIXmwCSNWHOW2so=
+         bh=6XssbBvI45R3gW5dyCZlANOptb4ng76cV2Y7e/5miHw=; b=luqF/e1nnoeK
+        81NnSjaQ4TqHEZPnFf6vU4zeITPmnBRm0yKBWF36DnbUd3Jis5xm7ceJqYspKmAb
+        ilsfE8jYx52j/uJndaNGc5FjZEU3QmuW9cfviQEG/AHq+cA7MwHtlJQzoMC0J7zY
+        duVEItDsAzUzRvMLbQRzko9DTzFjxtI=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 4B7B5E0E6A;
-        Tue, 11 Apr 2023 06:39:45 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 0B800E0E6A;
+        Tue, 11 Apr 2023 06:39:48 +0300 (MSK)
 Received: from localhost (10.8.30.38) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Tue, 11 Apr 2023 06:39:45 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Tue, 11 Apr 2023 06:39:47 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -48,9 +48,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v3 01/10] PCI: dwc: Fix erroneous version type test helper
-Date:   Tue, 11 Apr 2023 06:39:19 +0300
-Message-ID: <20230411033928.30397-2-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v3 05/10] PCI: dwc: Drop duplicated fast-link-mode flag unsetting
+Date:   Tue, 11 Apr 2023 06:39:23 +0300
+Message-ID: <20230411033928.30397-6-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230411033928.30397-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230411033928.30397-1-Sergey.Semin@baikalelectronics.ru>
@@ -63,46 +63,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Due to an unfortunate mistake the macro function actually checks the
-IP-core version instead of the IP-core version type which isn't what
-originally implied. Fix it by introducing a new helper
-__dw_pcie_ver_type_cmp() with the same semantic as the __dw_pcie_ver_cmp()
-counterpart except it refers to the dw_pcie.type field in order to perform
-the passed comparison operation.
+Most likely by mistake the PORT_LINK_FAST_LINK_MODE flag unsetting was
+added twice in the commit cff9244432e8 ("PCI: dwc: Ensure FAST_LINK_MODE
+is cleared"): first it is cleared right after the content of the
+PCIE_PORT_LINK_CONTROL register is read, second it's cleared in the
+framework of the link-mode initialization procedure. The later action is
+redundant. Let's drop it.
 
-Fixes: 0b0a780d52ad ("PCI: dwc: Add macros to compare Synopsys IP core versions")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/pci/controller/dwc/pcie-designware.h | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 79713ce075cc..adad0ea61799 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -37,17 +37,20 @@
- #define __dw_pcie_ver_cmp(_pci, _ver, _op) \
- 	((_pci)->version _op DW_PCIE_VER_ ## _ver)
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 8e33e6e59e68..e55b7b387eb6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -1019,7 +1019,6 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	}
  
-+#define __dw_pcie_ver_type_cmp(_pci, _type, _op) \
-+	((_pci)->type _op DW_PCIE_VER_TYPE_ ## _type)
-+
- #define dw_pcie_ver_is(_pci, _ver) __dw_pcie_ver_cmp(_pci, _ver, ==)
- 
- #define dw_pcie_ver_is_ge(_pci, _ver) __dw_pcie_ver_cmp(_pci, _ver, >=)
- 
- #define dw_pcie_ver_type_is(_pci, _ver, _type) \
- 	(__dw_pcie_ver_cmp(_pci, _ver, ==) && \
--	 __dw_pcie_ver_cmp(_pci, TYPE_ ## _type, ==))
-+	 __dw_pcie_ver_type_cmp(_pci, _type, ==))
- 
- #define dw_pcie_ver_type_is_ge(_pci, _ver, _type) \
- 	(__dw_pcie_ver_cmp(_pci, _ver, ==) && \
--	 __dw_pcie_ver_cmp(_pci, TYPE_ ## _type, >=))
-+	 __dw_pcie_ver_type_cmp(_pci, _type, >=))
- 
- /* DWC PCIe controller capabilities */
- #define DW_PCIE_CAP_REQ_RES		0
+ 	/* Set the number of lanes */
+-	val &= ~PORT_LINK_FAST_LINK_MODE;
+ 	val &= ~PORT_LINK_MODE_MASK;
+ 	switch (pci->num_lanes) {
+ 	case 1:
 -- 
 2.40.0
 
