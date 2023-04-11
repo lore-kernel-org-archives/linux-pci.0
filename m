@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EE16C7619A
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Apr 2023 03:40:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6256FC77B70
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Apr 2023 03:40:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229990AbjDKDkI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Apr 2023 23:40:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38838 "EHLO
+        id S229963AbjDKDkL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Apr 2023 23:40:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229920AbjDKDjw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2023 23:39:52 -0400
+        with ESMTP id S229940AbjDKDjy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2023 23:39:54 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 68DD1213D;
-        Mon, 10 Apr 2023 20:39:51 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 986ED1BC9;
+        Mon, 10 Apr 2023 20:39:52 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 781E9E0EB3;
-        Tue, 11 Apr 2023 06:39:50 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id BC545E0EB5;
+        Tue, 11 Apr 2023 06:39:51 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=TSFsJp4bX10BSILZK9L2OF55Miu/NunLzJLcFBycd5A=; b=Zc/hI5vepwu/
-        p3l+UtSHaLz+L6wCNPKixB+blIBROkAaykS21IltHbaB3j9fgHif493B5/YEYn5X
-        YVpAhjtfySCXNtl6PlpdkQAO2zrQ3qiMeHjRxoa7Q+9xRQ2yRfT3UrfwygPUDdyL
-        KOSSqUnTjWopb8Ama6iy/lWg761FyII=
+         bh=F0aH2rLYFF3yry3CDu2E1nuTkSLviDEruk4l21KZ7ec=; b=EO5tInePAkGU
+        hD4YOkhu9BEzfsrtj1LOx433TlBVwIYuWGLJY2F6ZcZvcHO0EpJEhTPLqfWugPDL
+        LbGO1bGOhU6HLf1C60ROJW2cFJD6gNzjz8kSKJQP8kslGKBYoVB60eD5K1gMPi8V
+        4dfnOACYYAQ+bw+Y4KCJSJZ673YknGY=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 59001E0E6A;
-        Tue, 11 Apr 2023 06:39:50 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 9E4B1E0E6A;
+        Tue, 11 Apr 2023 06:39:51 +0300 (MSK)
 Received: from localhost (10.8.30.38) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Tue, 11 Apr 2023 06:39:50 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Tue, 11 Apr 2023 06:39:51 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -46,9 +46,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v3 08/10] MAINTAINERS: Add all generic DW PCIe RP/EP DT-schemas
-Date:   Tue, 11 Apr 2023 06:39:26 +0300
-Message-ID: <20230411033928.30397-9-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v3 10/10] MAINTAINERS: Add myself as the DW eDMA driver reviewer
+Date:   Tue, 11 Apr 2023 06:39:28 +0300
+Message-ID: <20230411033928.30397-11-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230411033928.30397-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230411033928.30397-1-Sergey.Semin@baikalelectronics.ru>
@@ -61,33 +61,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Recently the DT-schema of the DW PCIe Root Port and End-point controllers
-has been refactored by detaching the common bindings into a separate
-schema. The provided modification must be reflected in the MAINTAINERS
-list so the patch submitters would be aware of the new files maintainers.
-Let's do that by adding the maintained files wildcard pattern like
-snps,dw-pcie*.yaml, which is applicable for all the old DW PCIe DT-schema
-files and the new one.
+The driver maintainer has been inactive for almost two years now. It
+doesn't positively affect the new patches tests and reviews process. Since
+the DW eDMA engine has been embedded into the PCIe controllers in several
+our SoCs we will be interested in helping with the updates review.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- MAINTAINERS | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index ec57c42ed544..489fd4b4c7ae 100644
+index 51adcafa0f0c..fb7bada6cdd0 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -16063,8 +16063,7 @@ M:	Jingoo Han <jingoohan1@gmail.com>
- M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
--F:	Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
--F:	Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-+F:	Documentation/devicetree/bindings/pci/snps,dw-pcie*.yaml
- F:	drivers/pci/controller/dwc/*designware*
+@@ -5862,6 +5862,7 @@ F:	drivers/mtd/nand/raw/denali*
  
- PCI DRIVER FOR TI DRA7XX/J721E
+ DESIGNWARE EDMA CORE IP DRIVER
+ M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++R:	Serge Semin <fancer.lancer@gmail.com>
+ L:	dmaengine@vger.kernel.org
+ S:	Maintained
+ F:	drivers/dma/dw-edma/
 -- 
 2.40.0
 
