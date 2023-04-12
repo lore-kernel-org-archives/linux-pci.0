@@ -2,137 +2,94 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1024FC77B71
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Apr 2023 09:26:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51BADC77B6E
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Apr 2023 09:34:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229995AbjDLJ0D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Apr 2023 05:26:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40052 "EHLO
+        id S229935AbjDLJeB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Apr 2023 05:34:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229784AbjDLJ0C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2023 05:26:02 -0400
-X-Greylist: delayed 866 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 12 Apr 2023 02:26:00 PDT
-Received: from mx2.zhaoxin.com (mx2.zhaoxin.com [203.110.167.99])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D4626599
-        for <linux-pci@vger.kernel.org>; Wed, 12 Apr 2023 02:26:00 -0700 (PDT)
-X-ASG-Debug-ID: 1681290690-1eb14e6d796f090001-0c9NHn
-Received: from ZXSHMBX3.zhaoxin.com (ZXSHMBX3.zhaoxin.com [10.28.252.165]) by mx2.zhaoxin.com with ESMTP id 07ib5wqwrvL7hREm (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Wed, 12 Apr 2023 17:11:30 +0800 (CST)
-X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.165
-Received: from ZXBJMBX03.zhaoxin.com (10.29.252.7) by ZXSHMBX3.zhaoxin.com
- (10.28.252.165) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.16; Wed, 12 Apr
- 2023 17:11:30 +0800
-Received: from [10.32.64.2] (10.32.64.2) by ZXBJMBX03.zhaoxin.com
- (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.16; Wed, 12 Apr
- 2023 17:11:28 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.165
-Message-ID: <433ad19a-8286-ff58-9fd8-d7dd13547032@zhaoxin.com>
-X-Barracuda-RBL-Trusted-Forwarder: 10.32.64.2
-Date:   Wed, 12 Apr 2023 17:11:28 +0800
+        with ESMTP id S229824AbjDLJeA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2023 05:34:00 -0400
+Received: from mail-yw1-x112f.google.com (mail-yw1-x112f.google.com [IPv6:2607:f8b0:4864:20::112f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AECD90
+        for <linux-pci@vger.kernel.org>; Wed, 12 Apr 2023 02:33:59 -0700 (PDT)
+Received: by mail-yw1-x112f.google.com with SMTP id 00721157ae682-54c0c86a436so327645497b3.6
+        for <linux-pci@vger.kernel.org>; Wed, 12 Apr 2023 02:33:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1681292038; x=1683884038;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=DwL/3VMepjx9Z6q8O/t/WMg5rFUEyIyuski0j0+TDZk=;
+        b=UIUdMhlb6l1DdqbK6rwBKhK4k4SyDW8DStl4fJIlRpmFsWXZ7jKBjrJpUBswp34c7W
+         4LhI8hP9gEwxbP2FRyDdkO4eZCDoc9h8/QumxU1wWIdbanKTgNNvyMmd/+fxdS1NloJ3
+         k10b3YvwYrxbIkAVKzY4Fbx0Bzt4CgIDjjv7nd+/9St++CUnfFd0dVst9efwPQial6c5
+         X1TD8BAawnalWWEGyGyZYTz3jq5ee4ZnlFangsbUtxTlPMrBDgvuOZay84/M7A94DfpM
+         ZkC89+YAs/9jhC5yYKWx2b82yheWHWwgFxl8t5Evcjp08vJO4qE0kzBEDoMAQ1s5XicG
+         5l5Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112; t=1681292038; x=1683884038;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=DwL/3VMepjx9Z6q8O/t/WMg5rFUEyIyuski0j0+TDZk=;
+        b=ZoXP4fumdHNynEBdU25v6QwelY6PSNhgrDzOCi6qPSfXkL2lWmUPzxPsVL3zzxmbi3
+         B33xQrlAZY1u6bTcsZMkNC+n2Q0V6yXbD8QqTXjQJxMVoRbeJT+yGmasq+BbYYZGmLoZ
+         eU/mapvodgZGAjE4OtjlbZoytenvs5q3m2pVoTzQ2KOssBZLUPvHJv0kUPUhLgr5kmdM
+         tRlPa9XzNnMWCoxQRnuK+00U9Nx7Sq5uve8mRPp2zQ7tDwnPHFEvhECwFEtxdE2PAsqD
+         iercpWqJU2+aeNXQzeTG7bzug+889MVf2gpFFbJM119w7ojby7WA0XPJQ6B0SYg6HKVQ
+         SyLA==
+X-Gm-Message-State: AAQBX9dCaMUShsKFR4YkRvNkyW7dy3s3+U+Vq8oSVjwU5mL+EvYUghD6
+        mApHems6nH9nwrWvitlVVb7OtDWJOZLa2j0TG7LqBQ==
+X-Google-Smtp-Source: AKy350b4lXnxJMahbQP29fnZ/K5p/FQvT9/NlNdKGjbcnVD8m4440VDP3F56HTDLXt/hlQHt8oHyRg4ToVodBs0eJDE=
+X-Received: by 2002:a81:c608:0:b0:54f:93c0:4ba8 with SMTP id
+ l8-20020a81c608000000b0054f93c04ba8mr803020ywi.2.1681292038149; Wed, 12 Apr
+ 2023 02:33:58 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.9.1
-Subject: Re: [PATCH v2 0/5] Parse the PCIe AER and set to relevant registers
-To:     Bjorn Helgaas <helgaas@kernel.org>
-X-ASG-Orig-Subj: Re: [PATCH v2 0/5] Parse the PCIe AER and set to relevant registers
-CC:     <rafael@kernel.org>, <lenb@kernel.org>, <james.morse@arm.com>,
-        <tony.luck@intel.com>, <bp@alien8.de>, <robert.moore@intel.com>,
-        <ying.huang@intel.com>, <rdunlap@infradead.org>,
-        <bhelgaas@google.com>, <linux-acpi@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devel@acpica.org>, <CobeChen@zhaoxin.com>,
-        <TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>,
-        Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        "Li, Ming" <ming4.li@intel.com>
-References: <20230407231821.GA3831711@bhelgaas>
-From:   LeoLiuoc <LeoLiu-oc@zhaoxin.com>
-In-Reply-To: <20230407231821.GA3831711@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.32.64.2]
-X-ClientProxiedBy: ZXSHCAS2.zhaoxin.com (10.28.252.162) To
- ZXBJMBX03.zhaoxin.com (10.29.252.7)
-X-Barracuda-Connect: ZXSHMBX3.zhaoxin.com[10.28.252.165]
-X-Barracuda-Start-Time: 1681290690
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://10.28.252.36:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 2887
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: -2.02
-X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.107308
-        Rule breakdown below
-         pts rule name              description
-        ---- ---------------------- --------------------------------------------------
+References: <20230412093301.3656266-1-ajayagarwal@google.com>
+In-Reply-To: <20230412093301.3656266-1-ajayagarwal@google.com>
+From:   Ajay Agarwal <ajayagarwal@google.com>
+Date:   Wed, 12 Apr 2023 15:03:47 +0530
+Message-ID: <CAHMEbQ8MFRNvKk8h9BFSLK=w_03Q2Z70sVxsxvNL6d_cQ+v-zA@mail.gmail.com>
+Subject: Re: [PATCH 0/3] ASPM: aspm_disable/default/support state handling fixes
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Nikhil Devshatwar <nikhilnd@google.com>,
+        Manu Gautam <manugautam@google.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sajid Dalvi <sdalvi@google.com>,
+        William McVicker <willmcvicker@google.com>
+Cc:     linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Please ignore this email. It was sent by mistake.
 
-
-在 2023/4/8 7:18, Bjorn Helgaas 写道:
-> [+cc Sathy, Ming, since they commented on the previous version]
-> 
-> On Tue, Nov 15, 2022 at 11:11:15AM +0800, LeoLiu-oc wrote:
->> From: leoliu-oc <leoliu-oc@zhaoxin.com>
->>
->> According to the sec 18.3.2.4, 18.3.2.5 and 18.3.2.6 in ACPI r6.5, the
->> register values form HEST PCI Express AER Structure should be written to
->> relevant PCIe Device's AER Capabilities. So the purpose of the patch set
->> is to extract register values from HEST PCI Express AER structures and
->> program them into AER Capabilities. Refer to the ACPI Spec r6.5 for a more
->> detailed description.
-> 
-> I wasn't involved in this part of the ACPI spec, and I don't
-> understand how this is intended to work.
-> 
-> I see that this series extracts AER mask, severity, and control
-> information from the ACPI HEST table and uses it to configure PCIe
-> devices as they are enumerated.
-> 
-> What I don't understand is how this relates to ownership of the AER
-> capability as negotiated by the _OSC method.  Firmware can configure
-> the AER capability itself, and if it retains control of the AER
-> capability, the OS can't write to it (with the exception of clearing
-> EDR error status), so this wouldn't be necessary.
-
-There is no relationship between the ownership of the AER related 
-register and the ownership of the AER capability in the OS or Firmware. 
-The processing here is to initialize the AER related register, not the 
-AER event. If Firmware is configured with AER register, it will not be 
-able to handle the runtime hot reset and link retrain cases in addition 
-to the hotplug case you mentioned below.
-
-> 
-> If the OS owns the AER capability, I assume it gets to decide for
-> itself how to configure AER, no matter what the ACPI HEST says.
-> 
-
-What information does the OS use to decide how to configure AER? The 
-ACPI Spec has the following description: PCI Express (PCIe) root ports 
-may implement PCIe Advanced Error Reporting (AER) support. This 
-table(HEST) contains  information platform firmware supplies to OSPM for 
-configuring AER support on a given root port. We understand that HEST 
-stands for user to express expectations.
-
-In the current implementation, the OS already configures a PCIE device 
-based on _HPP/_HPX method when configuring a PCI device inserted into a 
-hot-plug slot or initial configuration of a PCI device at system boot. 
-HEST is just another way to express the desired configuration of the user.
-
-Yours sincerely,
-Leoliu-oc
-
-> Maybe this is intended for the case where firmware retains AER
-> ownership but the OS uses native hotplug (pciehp), and this is a way
-> for the OS to configure new devices as the firmware expects?  But in
-> that case, we still have the problem that the OS can't write to the
-> AER capability to do this configuration.
-> 
-> Bjorn
-
+On Wed, Apr 12, 2023 at 3:03=E2=80=AFPM Ajay Agarwal <ajayagarwal@google.co=
+m> wrote:
+>
+> On going through the aspm driver, I found some potential bugs in
+> the way the aspm_disable, aspm_default and aspm_support states
+> are being handled by the driver.
+>
+> I intend to fix these bugs.
+>
+> Ajay Agarwal (3):
+>   PCI/ASPM: Disable ASPM_STATE_L1 only when class driver disables L1
+>     ASPM
+>   PCI/ASPM: Set ASPM_STATE_L1 when class driver enables L1ss
+>   PCI/ASPM: Remove unnecessary ASPM_STATE_L1SS check
+>
+>  drivers/pci/pcie/aspm.c | 20 ++++++++------------
+>  1 file changed, 8 insertions(+), 12 deletions(-)
+>
+> --
+> 2.40.0.577.gac1e443424-goog
+>
