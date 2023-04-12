@@ -2,55 +2,54 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C564C7619A
-	for <linux-pci@archiver.kernel.org>; Wed, 12 Apr 2023 09:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 453E1C77B6E
+	for <linux-pci@archiver.kernel.org>; Wed, 12 Apr 2023 09:35:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229824AbjDLJee (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 12 Apr 2023 05:34:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51176 "EHLO
+        id S231488AbjDLJdZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 12 Apr 2023 05:33:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230046AbjDLJed (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2023 05:34:33 -0400
+        with ESMTP id S231366AbjDLJdW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2023 05:33:22 -0400
 Received: from mail-yw1-x114a.google.com (mail-yw1-x114a.google.com [IPv6:2607:f8b0:4864:20::114a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BAF490
-        for <linux-pci@vger.kernel.org>; Wed, 12 Apr 2023 02:34:32 -0700 (PDT)
-Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-54ee12aa4b5so112255987b3.4
-        for <linux-pci@vger.kernel.org>; Wed, 12 Apr 2023 02:34:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EEFF77DA9
+        for <linux-pci@vger.kernel.org>; Wed, 12 Apr 2023 02:33:09 -0700 (PDT)
+Received: by mail-yw1-x114a.google.com with SMTP id 00721157ae682-54ee12aa4b5so112230427b3.4
+        for <linux-pci@vger.kernel.org>; Wed, 12 Apr 2023 02:33:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1681292071; x=1683884071;
+        d=google.com; s=20221208; t=1681291989; x=1683883989;
         h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
          :date:message-id:reply-to;
-        bh=XXrY+88/qpDMfyRoUypnAqs2C5fQRNIfOwP/pzZA4NY=;
-        b=QU5NqCtV5OjmMJI+OPnWdgMJz9AQSpVorJrOF8/C71fRPP5pM3ILcKmEJLngJrDwa4
-         A+GsZItusJVI50m0ou8NLSW68dg44vWNAlY/RPuyCVKD0hMIGRf9Ad/iHegN5BpwB5M6
-         i0txi60uTwZYH/ez0iGQRAYy+XredvADGAM+vXqsUCrcCe/ZO1vOmwhE1vu9H9AElw8r
-         oWJCTVeIKi3DzMTTg0PM8kU4pk5YYUFRXsv+39jcFnPigxTegXlSRJ8SC0jZldNi1s9n
-         J3aLLWrWjN8w/UvG2zxi8h8CSUtdIYlcBT5LuBWE/IKQcf3sYaOl7w48exgd2TOH1/4E
-         +GeQ==
+        bh=jUEkD81ojAds4Zbt5kdoDqBVeA2aOp3S2+5CR5jfNJs=;
+        b=DM0QOTk2wYCqz3CiJNGNZrGp8o0o4Ui4qViyqZYxfRc9Cix1hqTq4kNpB0Dhr37ob9
+         rStNLbVmQM0oreQgl+ewhGDKjiCjE2v5WPleG+6BV5R1IM2YHhH4AfL5HgtCpt+cCzuQ
+         1j5fEJKDS5EMa4FPzGDmQ1OHJsVf5c82kWG/QXpn7Jn4y4kBh/BH4PnUI2tGf9UhIwuz
+         K2J4nDMdP1lm19xw7oChbvXOnXEaL7WryqwR3GHehz6HJFHHpd6gp/eOcbvw4oTT/n16
+         bp35eqFz1iksSsEed9kMxs1GWOooQ2Rd+uHhODGWEI8gsAujMPwIJSZ7nV2c7HUdYgMk
+         IFFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112; t=1681292071; x=1683884071;
+        d=1e100.net; s=20210112; t=1681291989; x=1683883989;
         h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=XXrY+88/qpDMfyRoUypnAqs2C5fQRNIfOwP/pzZA4NY=;
-        b=rl3gDiYij+gJCulQwS5tK6xxtm+6c6lar+wuAu7f9rWqvUQNsncu45xa8Zers5cfVk
-         +C/+qi1RLITVIIftA5uJUbeWJcitRu6NHEY82Q2p/JivEZcFeEB4+L7IgHVrhQslnswd
-         m+gfJIlTqkPA/ORQ5Sw5UVn8eqEOCcJg5hsW9WAvf4jNX4KXzTtLXBrmOb8ll6ikyAbp
-         xKoKAsjUAjfSug6Mdq4pjlnMZVOgtHun2ON13oWnecfuuN31MlcrEUCZB2q9nBAJV4Xk
-         aMwoRP/PYa1T4xcrn9EbYFoS/FtRCGUfOlBVHP6702n5WHEwshj63/+B8RXNlCXT80PU
-         aRLw==
-X-Gm-Message-State: AAQBX9e4D8ziNAN394e0vos0uH2+/s8prTbF0gb3OLcIl5tWU4Yn4dLv
-        z10IZGq+P4KZrPnauRF9BB84l2uYSRBCkzsxgxDPUMTxqz4biV0csee6jpSv8/pzz+ANZ+MllGM
-        /zfqtgbSo+TqB77dVx+0o42c=
-X-Google-Smtp-Source: AKy350ZRkaFDNeBZD7HdE3CDPSM2DK+hW9zhFGSaHM4CkdWVS719+OORhaFoJitVu+Ig8CqYXHYwPHq1A1QMPNJauw==
+        bh=jUEkD81ojAds4Zbt5kdoDqBVeA2aOp3S2+5CR5jfNJs=;
+        b=T3NQgcMvBKZAMZelaZ+pVflF96nNpTFOBff47AfhEUY6QosPnSGRbSS+jrUHIy59k5
+         pzTRAUd/L3S+yzFcfFsGcPaexl0Wkzt9ZVOC6oamHEfDUjME2tMCjN2sjGWqgyUai185
+         foXFE29K6WmLSQMVEbCSH+ZTUk2Fts7llF7/CPKmNsQJQhEWZBUlYS4Qs8iwlL7smHVN
+         q6/aYNYV/sx1trlTQCyY+8ZO2BNIDH9ZVvXO5mYEVZKVboNL+f1EnmzNijcNgRuNuptX
+         3zrW5h/YaNfexrUlT+1OWed8nOag98WHFJIqrf/ep+bvRdI/rSPOkE/wZkl/SaTg4m/v
+         FneA==
+X-Gm-Message-State: AAQBX9cSJWjuxCB7dga35tS9rGConICo1vWgpkiiDqRBsbSdfT23LX05
+        lyz0dSVva+LO0NYi33vmInzss07PBmYkvuvDOQ==
+X-Google-Smtp-Source: AKy350YMRADQ4bQahWtEEaUMYPNIWk6Jx6KX5bKpJVjl9llDASRjTvlbEO5YAe8EjFpf6Zv4qQEFXnpl3gC/Q3WZTQ==
 X-Received: from ajaya.c.googlers.com ([fda3:e722:ac3:cc00:4f:4b78:c0a8:39b5])
- (user=ajayagarwal job=sendgmr) by 2002:a25:cf48:0:b0:b8f:47c4:58ed with SMTP
- id f69-20020a25cf48000000b00b8f47c458edmr367727ybg.9.1681292071686; Wed, 12
- Apr 2023 02:34:31 -0700 (PDT)
-Date:   Wed, 12 Apr 2023 15:04:25 +0530
+ (user=ajayagarwal job=sendgmr) by 2002:a25:73c2:0:b0:b8f:3e29:fb9a with SMTP
+ id o185-20020a2573c2000000b00b8f3e29fb9amr739634ybc.6.1681291989240; Wed, 12
+ Apr 2023 02:33:09 -0700 (PDT)
+Date:   Wed, 12 Apr 2023 15:02:55 +0530
 Mime-Version: 1.0
 X-Mailer: git-send-email 2.40.0.577.gac1e443424-goog
-Message-ID: <20230412093425.3659088-1-ajayagarwal@google.com>
-Subject: [PATCH v4] PCI: dwc: Wait for link up only if link is started
+Message-ID: <20230412093301.3656266-1-ajayagarwal@google.com>
+Subject: [PATCH 0/3] ASPM: aspm_disable/default/support state handling fixes
 From:   Ajay Agarwal <ajayagarwal@google.com>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -64,115 +63,25 @@ To:     Jingoo Han <jingoohan1@gmail.com>,
         William McVicker <willmcvicker@google.com>
 Cc:     linux-pci@vger.kernel.org, Ajay Agarwal <ajayagarwal@google.com>
 Content-Type: text/plain; charset="UTF-8"
-X-ccpol: medium
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In dw_pcie_host_init() regardless of whether the link has been
-started or not, the code waits for the link to come up. Even in
-cases where start_link() is not defined the code ends up spinning
-in a loop for 1 second. Since in some systems dw_pcie_host_init()
-gets called during probe, this one second loop for each pcie
-interface instance ends up extending the boot time.
+On going through the aspm driver, I found some potential bugs in
+the way the aspm_disable, aspm_default and aspm_support states
+are being handled by the driver.
 
-Wait for the link up in only if the start_link() is defined.
+I intend to fix these bugs.
 
-Signed-off-by: Sajid Dalvi <sdalvi@google.com>
-Signed-off-by: Ajay Agarwal <ajayagarwal@google.com>
----
-Changelog since v3:
-- Run dw_pcie_start_link() only if link is not already up
+Ajay Agarwal (3):
+  PCI/ASPM: Disable ASPM_STATE_L1 only when class driver disables L1
+    ASPM
+  PCI/ASPM: Set ASPM_STATE_L1 when class driver enables L1ss
+  PCI/ASPM: Remove unnecessary ASPM_STATE_L1SS check
 
-Changelog since v2:
-- Wait for the link up if start_link() is really defined.
-- Print the link status if the link is up on init.
+ drivers/pci/pcie/aspm.c | 20 ++++++++------------
+ 1 file changed, 8 insertions(+), 12 deletions(-)
 
- .../pci/controller/dwc/pcie-designware-host.c | 13 ++++++++----
- drivers/pci/controller/dwc/pcie-designware.c  | 20 ++++++++++++-------
- drivers/pci/controller/dwc/pcie-designware.h  |  1 +
- 3 files changed, 23 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 9952057c8819..cf61733bf78d 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -485,14 +485,19 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (ret)
- 		goto err_remove_edma;
- 
--	if (!dw_pcie_link_up(pci)) {
-+	if (dw_pcie_link_up(pci)) {
-+		dw_pcie_print_link_status(pci);
-+	} else {
- 		ret = dw_pcie_start_link(pci);
- 		if (ret)
- 			goto err_remove_edma;
--	}
- 
--	/* Ignore errors, the link may come up later */
--	dw_pcie_wait_for_link(pci);
-+		if (pci->ops && pci->ops->start_link) {
-+			ret = dw_pcie_wait_for_link(pci);
-+			if (ret)
-+				goto err_stop_link;
-+		}
-+	}
- 
- 	bridge->sysdata = pp;
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 53a16b8b6ac2..03748a8dffd3 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -644,9 +644,20 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index)
- 	dw_pcie_writel_atu(pci, dir, index, PCIE_ATU_REGION_CTRL2, 0);
- }
- 
--int dw_pcie_wait_for_link(struct dw_pcie *pci)
-+void dw_pcie_print_link_status(struct dw_pcie *pci)
- {
- 	u32 offset, val;
-+
-+	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	val = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
-+
-+	dev_info(pci->dev, "PCIe Gen.%u x%u link up\n",
-+		 FIELD_GET(PCI_EXP_LNKSTA_CLS, val),
-+		 FIELD_GET(PCI_EXP_LNKSTA_NLW, val));
-+}
-+
-+int dw_pcie_wait_for_link(struct dw_pcie *pci)
-+{
- 	int retries;
- 
- 	/* Check if the link is up or not */
-@@ -662,12 +673,7 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
- 		return -ETIMEDOUT;
- 	}
- 
--	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
--	val = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
--
--	dev_info(pci->dev, "PCIe Gen.%u x%u link up\n",
--		 FIELD_GET(PCI_EXP_LNKSTA_CLS, val),
--		 FIELD_GET(PCI_EXP_LNKSTA_NLW, val));
-+	dw_pcie_print_link_status(pci);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 79713ce075cc..615660640801 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -429,6 +429,7 @@ void dw_pcie_setup(struct dw_pcie *pci);
- void dw_pcie_iatu_detect(struct dw_pcie *pci);
- int dw_pcie_edma_detect(struct dw_pcie *pci);
- void dw_pcie_edma_remove(struct dw_pcie *pci);
-+void dw_pcie_print_link_status(struct dw_pcie *pci);
- 
- static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
- {
 -- 
 2.40.0.577.gac1e443424-goog
 
