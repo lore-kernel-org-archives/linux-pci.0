@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E28FAC77B7A
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Apr 2023 06:16:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80269C77B7C
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Apr 2023 06:16:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230092AbjDNGQf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Apr 2023 02:16:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48770 "EHLO
+        id S229534AbjDNGQg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Apr 2023 02:16:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230064AbjDNGQe (ORCPT
+        with ESMTP id S229924AbjDNGQe (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2023 02:16:34 -0400
 Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3C0E759C5;
-        Thu, 13 Apr 2023 23:16:31 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 37B2259EE;
+        Thu, 13 Apr 2023 23:16:33 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,195,1677510000"; 
-   d="scan'208";a="155958225"
+   d="scan'208";a="155958228"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
   by relmlie5.idc.renesas.com with ESMTP; 14 Apr 2023 15:16:31 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 25D384195D7C;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 6E7424195D7C;
         Fri, 14 Apr 2023 15:16:31 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
@@ -29,104 +29,55 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v12 00/19] PCI: rcar-gen4: Add R-Car Gen4 PCIe support
-Date:   Fri, 14 Apr 2023 15:16:03 +0900
-Message-Id: <20230414061622.2930995-1-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v12 02/19] PCI: Add INtx Mechanism Messages macros
+Date:   Fri, 14 Apr 2023 15:16:05 +0900
+Message-Id: <20230414061622.2930995-3-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230414061622.2930995-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20230414061622.2930995-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add R-Car S4-8 (R-Car Gen4) PCIe Host and Endpoint support.
-To support them, modify PCIe DesignWare common codes.
+Add "Message Routing" and "INTx Mechanism Messages" macros to send
+a message by a PCIe driver.
 
-Changes from v11:
-https://lore.kernel.org/linux-pci/20230310123510.675685-1-yoshihiro.shimoda.uh@renesas.com/
- - Based on next-20230413
- - Based on the following cleanups patches:
-   [PATCH v4 00/14] PCI: dwc: Relatively simple fixes and cleanups
-   https://lore.kernel.org/linux-pci/20230414021832.13167-1-Sergey.Semin@baikalelectronics.ru/
- - Drop a fixed patch of pci-epf-test because I have submitted it independently.
- - Split patches about adding dw_pcie_link_set_max_* functions.
- - Split patches about modify __dw_pcie_prog_outbound_atu().
- - Add description about num lanes into the commit log.
- - Add some macros into pci_regs.h and pci.h.
- - Add comment about disabling bars in pcie-rcar-gen4-host.c.
- - Set MAX_MSI_IRQS to num_vectors for handling 32 MSIs.
- - Add .ep_deinit().
- - Add retrain link handling of PCIe Host mode for detecting PCIe Gen4.
- - Modify some minor things.
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ include/linux/pci.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-Changes from v10:
-https://lore.kernel.org/linux-pci/20230308082352.491561-1-yoshihiro.shimoda.uh@renesas.com/
- - Fix dt-bindings doc for endpoint (reported by Rob's bot).
- - Add reg and reg-names to the dt-bindings doc of host.
- - Fix examples in the dt-bindings docs of both host and endpoint.
- - Add R-Car S4-8 device ID into the pci_test_endpoint driver.
-
-Changes from v9:
-https://lore.kernel.org/linux-pci/20230210134917.2909314-1-yoshihiro.shimoda.uh@renesas.com/
- - Based on next-20230306
- - Add bug fix patches into this patch series.
-   https://lore.kernel.org/linux-pci/20230216092012.3256440-1-yoshihiro.shimoda.uh@renesas.com/
-   https://lore.kernel.org/linux-pci/20230222015327.3585691-1-yoshihiro.shimoda.uh@renesas.com/
- - Add maximum for max-link-speed and num-lanes to dt-bindings of both host and endpoint.
- - Add max-functions to dt-bindings of endpoint.
- - Use reg-names "app" on endpoint.
- - Remove unnecessary linkup and wait process in rcar_gen4_pcie_host_init().
- - Remove unnecessary macros in pcie-rcar-gen4.h.
- - Use dbi2 to write BAR mask registers.
- - Remove no_msix and intx_by_atu flags.
- - Reduce __dw_pcie_prog_outbound_atu() arguments.
- - Add dw_pcie_num_lanes_setup() to setup num_lanes.
- - Refactor dw_pcie_setup() to avoid PCIE_PORT_LINK_CONTROL writing twice.
-
-Yoshihiro Shimoda (19):
-  PCI: Add PCI_EXP_LNKCAP_MLW macros
-  PCI: Add INtx Mechanism Messages macros
-  PCI: Add PCI_HEADER_TYPE_MULTI_FUNC
-  PCI: dwc: Add dw_pcie_link_set_max_link_width()
-  PCI: dwc: Add dw_pcie_link_set_max_width()
-  PCI: dwc: Add dw_pcie_link_set_max_cap_width()
-  PCI: dwc: Expose dw_pcie_ep_exit() to module
-  PCI: dwc: Introduce struct dw_pcie_outbound_atu
-  PCI: dwc: Add members into struct dw_pcie_outbound_atu
-  PCI: dwc: Change arguments of dw_pcie_prog_ep_outbound_atu()
-  PCI: dwc: Add support for triggering legacy IRQs
-  PCI: dwc: Add EDMA_UNROLL capability flag
-  PCI: dwc: Introduce .ep_pre_init() and .ep_deinit()
-  dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
-  dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
-  PCI: rcar-gen4: Add R-Car Gen4 PCIe Host support
-  PCI: rcar-gen4-ep: Add R-Car Gen4 PCIe Endpoint support
-  MAINTAINERS: Update PCI DRIVER FOR RENESAS R-CAR for R-Car Gen4
-  misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
-
- .../bindings/pci/rcar-gen4-pci-ep.yaml        |  98 +++++++++
- .../bindings/pci/rcar-gen4-pci-host.yaml      | 109 ++++++++++
- MAINTAINERS                                   |   1 +
- drivers/misc/pci_endpoint_test.c              |   4 +
- drivers/pci/controller/dwc/Kconfig            |  18 ++
- drivers/pci/controller/dwc/Makefile           |   4 +
- .../pci/controller/dwc/pcie-designware-ep.c   |  93 ++++++--
- drivers/pci/controller/dwc/pcie-designware.c  | 201 +++++++++++-------
- drivers/pci/controller/dwc/pcie-designware.h  |  27 ++-
- .../pci/controller/dwc/pcie-rcar-gen4-ep.c    | 166 +++++++++++++++
- .../pci/controller/dwc/pcie-rcar-gen4-host.c  | 134 ++++++++++++
- drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 187 ++++++++++++++++
- drivers/pci/controller/dwc/pcie-rcar-gen4.h   |  49 +++++
- include/linux/pci.h                           |  18 ++
- include/uapi/linux/pci_regs.h                 |   7 +
- 15 files changed, 1020 insertions(+), 96 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-host.c
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.c
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.h
-
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0b57e37d8e77..ada1047035a8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1050,6 +1050,24 @@ enum {
+ #define PCI_IRQ_MSIX		(1 << 2) /* Allow MSI-X interrupts */
+ #define PCI_IRQ_AFFINITY	(1 << 3) /* Auto-assign affinity */
+ 
++/* Message Routing */
++#define PCI_MSG_ROUTING_RC	0
++#define PCI_MSG_ROUTING_ADDR	1
++#define PCI_MSG_ROUTING_ID	2
++#define PCI_MSG_ROUTING_BC	3
++#define PCI_MSG_ROUTING_LOCAL	4
++#define PCI_MSG_ROUTING_GATHER	5
++
++/* INTx Mechanism Messages */
++#define PCI_CODE_ASSERT_INTA	0x20
++#define PCI_CODE_ASSERT_INTB	0x21
++#define PCI_CODE_ASSERT_INTC	0x22
++#define PCI_CODE_ASSERT_INTD	0x23
++#define PCI_CODE_DEASSERT_INTA	0x24
++#define PCI_CODE_DEASSERT_INTB	0x25
++#define PCI_CODE_DEASSERT_INTC	0x26
++#define PCI_CODE_DEASSERT_INTD	0x27
++
+ /* These external functions are only available when PCI support is enabled */
+ #ifdef CONFIG_PCI
+ 
 -- 
 2.25.1
 
