@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C4AC7EE21
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Apr 2023 06:16:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28BCEC7EE31
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Apr 2023 06:16:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230192AbjDNGQn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Apr 2023 02:16:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48852 "EHLO
+        id S229958AbjDNGQo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Apr 2023 02:16:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230135AbjDNGQi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2023 02:16:38 -0400
+        with ESMTP id S230096AbjDNGQh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2023 02:16:37 -0400
 Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BCD5D6A5B;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A1EDB6A42;
         Thu, 13 Apr 2023 23:16:36 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,195,1677510000"; 
-   d="scan'208";a="159411143"
+   d="scan'208";a="159411140"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 14 Apr 2023 15:16:33 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 14 Apr 2023 15:16:32 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 286E94195F62;
-        Fri, 14 Apr 2023 15:16:33 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id DE3914195F62;
+        Fri, 14 Apr 2023 15:16:32 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
         gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v12 13/19] PCI: dwc: Introduce .ep_pre_init() and .ep_deinit()
-Date:   Fri, 14 Apr 2023 15:16:16 +0900
-Message-Id: <20230414061622.2930995-14-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v12 11/19] PCI: dwc: Add support for triggering legacy IRQs
+Date:   Fri, 14 Apr 2023 15:16:14 +0900
+Message-Id: <20230414061622.2930995-12-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230414061622.2930995-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230414061622.2930995-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,56 +41,144 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-One of controllers requires vender-specific initialization before
-.ep_init(). To use dw->dbi and dw->bum-lanes in the initialization
-code, introduce .ep_pre_init() into struct dw_pcie_ep_ops.
-Also introduce .ep_deinit() to disable the controller by using
-vender-specific de-initialization.
+Add support for triggering legacy IRQs by using outbound iATU.
+Outbound iATU is utilized to send assert and de-assert INTx TLPs.
+The message is generated based on the payloadless Msg TLP with type
+0x14, where 0x4 is the routing code implying the terminated at
+Receiver message. The message code is specified as b1000xx for
+the INTx assertion and b1001xx for the INTx de-assertion.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 6 ++++++
- drivers/pci/controller/dwc/pcie-designware.h    | 2 ++
- 2 files changed, 8 insertions(+)
+ .../pci/controller/dwc/pcie-designware-ep.c   | 65 +++++++++++++++++--
+ drivers/pci/controller/dwc/pcie-designware.h  |  2 +
+ 2 files changed, 63 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 2f34843272bd..a223485e1df4 100644
+index cd6721594e43..2f34843272bd 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -664,6 +664,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
+@@ -6,6 +6,7 @@
+  * Author: Kishon Vijay Abraham I <kishon@ti.com>
+  */
  
-+	if (ep->ops->ep_deinit)
-+		ep->ops->ep_deinit(ep);
-+
- 	dw_pcie_edma_remove(pci);
++#include <linux/delay.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
  
- 	if (ep->intx_mem)
-@@ -777,6 +780,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	ep->phys_base = res->start;
- 	ep->addr_size = resource_size(res);
- 
-+	if (ep->ops->ep_pre_init)
-+		ep->ops->ep_pre_init(ep);
-+
- 	dw_pcie_version_detect(pci);
- 
- 	dw_pcie_iatu_detect(pci);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index c4190bb7984f..9f4373cd1757 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -336,7 +336,9 @@ struct dw_pcie_rp {
+@@ -484,14 +485,57 @@ static const struct pci_epc_ops epc_ops = {
+ 	.get_features		= dw_pcie_ep_get_features,
  };
  
- struct dw_pcie_ep_ops {
-+	void	(*ep_pre_init)(struct dw_pcie_ep *ep);
- 	void	(*ep_init)(struct dw_pcie_ep *ep);
-+	void	(*ep_deinit)(struct dw_pcie_ep *ep);
- 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
- 			     enum pci_epc_irq_type type, u16 interrupt_num);
- 	const struct pci_epc_features* (*get_features)(struct dw_pcie_ep *ep);
++static int dw_pcie_ep_send_msg(struct dw_pcie_ep *ep, u8 func_no, u8 code,
++			       u8 routing)
++{
++	struct dw_pcie_outbound_atu atu = { 0 };
++	struct pci_epc *epc = ep->epc;
++	int ret;
++
++	atu.func_no = func_no;
++	atu.code = code;
++	atu.routing = routing;
++	atu.type = PCIE_ATU_TYPE_MSG;
++	atu.cpu_addr = ep->intx_mem_phys;
++	atu.size = epc->mem->window.page_size;
++	ret = dw_pcie_ep_outbound_atu(ep, &atu);
++	if (ret)
++		return ret;
++
++	writel(0, ep->intx_mem);
++
++	dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->intx_mem_phys);
++
++	return 0;
++}
++
++static int __dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no,
++					 int intx)
++{
++	int ret;
++
++	ret = dw_pcie_ep_send_msg(ep, func_no, PCI_CODE_ASSERT_INTA + intx,
++				  PCI_MSG_ROUTING_LOCAL);
++	if (ret)
++		return ret;
++
++	usleep_range(1000, 2000);
++
++	return dw_pcie_ep_send_msg(ep, func_no, PCI_CODE_DEASSERT_INTA + intx,
++				   PCI_MSG_ROUTING_LOCAL);
++}
++
+ int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct device *dev = pci->dev;
+ 
+-	dev_err(dev, "EP cannot trigger legacy IRQs\n");
++	if (!ep->intx_mem) {
++		dev_err(dev, "EP cannot trigger legacy IRQs\n");
++		return -EINVAL;
++	}
+ 
+-	return -EINVAL;
++	return __dw_pcie_ep_raise_legacy_irq(ep, func_no, 0);
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_legacy_irq);
+ 
+@@ -622,6 +666,10 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ 
+ 	dw_pcie_edma_remove(pci);
+ 
++	if (ep->intx_mem)
++		pci_epc_mem_free_addr(epc, ep->intx_mem_phys, ep->intx_mem,
++				      epc->mem->window.page_size);
++
+ 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
+ 			      epc->mem->window.page_size);
+ 
+@@ -794,9 +842,14 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		goto err_exit_epc_mem;
+ 	}
+ 
++	ep->intx_mem = pci_epc_mem_alloc_addr(epc, &ep->intx_mem_phys,
++					      epc->mem->window.page_size);
++	if (!ep->intx_mem)
++		dev_warn(dev, "Failed to reserve memory for INTx\n");
++
+ 	ret = dw_pcie_edma_detect(pci);
+ 	if (ret)
+-		goto err_free_epc_mem;
++		goto err_free_epc_mem_intx;
+ 
+ 	if (ep->ops->get_features) {
+ 		epc_features = ep->ops->get_features(ep);
+@@ -813,7 +866,11 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ err_remove_edma:
+ 	dw_pcie_edma_remove(pci);
+ 
+-err_free_epc_mem:
++err_free_epc_mem_intx:
++	if (ep->intx_mem)
++		pci_epc_mem_free_addr(epc, ep->intx_mem_phys, ep->intx_mem,
++				      epc->mem->window.page_size);
++
+ 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
+ 			      epc->mem->window.page_size);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index ef264809f7ce..5ec046744bb6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -369,6 +369,8 @@ struct dw_pcie_ep {
+ 	unsigned long		*ob_window_map;
+ 	void __iomem		*msi_mem;
+ 	phys_addr_t		msi_mem_phys;
++	void __iomem		*intx_mem;
++	phys_addr_t		intx_mem_phys;
+ 	struct pci_epf_bar	*epf_bar[PCI_STD_NUM_BARS];
+ };
+ 
 -- 
 2.25.1
 
