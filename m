@@ -2,167 +2,106 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C1D5C77B6E
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Apr 2023 12:27:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 030BBC77B78
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Apr 2023 12:37:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230129AbjDNM1K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Apr 2023 08:27:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46298 "EHLO
+        id S231162AbjDNMhW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Apr 2023 08:37:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54834 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229668AbjDNM1I (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2023 08:27:08 -0400
-Received: from mail-qt1-x831.google.com (mail-qt1-x831.google.com [IPv6:2607:f8b0:4864:20::831])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C62FEA5DE;
-        Fri, 14 Apr 2023 05:27:06 -0700 (PDT)
-Received: by mail-qt1-x831.google.com with SMTP id l11so19161449qtj.4;
-        Fri, 14 Apr 2023 05:27:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1681475226; x=1684067226;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lOLnLUyWsueTcuj2HNW2KGjMx5SMzfhFbviIP3xXYOo=;
-        b=OrBfzxeofaBx3S6TatIutjwAt0TpdUSnm9rchMg3fvcJeOVr4wCpnKFvlgST5vx7Kr
-         +EMNAPLBYF1RlDljKKQ+bKtK4QZ65wZgZNhnJQKk+a5/nievSQPdWLl61pDPxV8P33zL
-         JmXXiklPMqcDIH1vqM7noklxBajEsV40yzCEdLoqZTWogyPy8Q03tKrFrIClPfMju5rd
-         M1sQrBUk3ntc4hpp4VOYoiHBMH3qeZjb6ShTCDjqyHsVHiV1mgAtkqyl9MzyM5h7zk0l
-         VzI/sORklNb8YHNqAiS+9ffJl9uJ9GfFnUgG8IFZ+lC6jg7UFHETPftqVuc0PN/5pz+i
-         4iEQ==
+        with ESMTP id S230339AbjDNMhO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2023 08:37:14 -0400
+Received: from mail-oa1-f48.google.com (mail-oa1-f48.google.com [209.85.160.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01C6C11C;
+        Fri, 14 Apr 2023 05:37:12 -0700 (PDT)
+Received: by mail-oa1-f48.google.com with SMTP id 586e51a60fabf-187bee46f9dso83544fac.11;
+        Fri, 14 Apr 2023 05:37:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681475226; x=1684067226;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=lOLnLUyWsueTcuj2HNW2KGjMx5SMzfhFbviIP3xXYOo=;
-        b=DYgi+xQXlgunH/fUkF7fuiQO/wMtAAe4jBKv1Vv1q5NI8CDwwS9uS3G6c3pMPIo/J/
-         ilJ6ElaEfH9vagm5EjmbCS3njfRgpgevOLwZ37CjNnqFXchf2nYMUDQEZwVbnN/oH4dl
-         dAElE8ey7t4uZ4IX3V3ci1Qgvi48p1y/vPKPrn0vbVHI0IEMCG5PzShfgQkZvFrPNs/v
-         vm3g9JAey215D4/oFfUwDj0qeuLe60for62ixVBhUvX14wLfcFfn2AWs8LMUTATzhOj7
-         JwUiY3ypXJfzFhygJe4mhYtvFERVS2SVnDyci9V2UHbCxxE8MtKkIUVbNQ+RQwSbAd2+
-         9xZg==
-X-Gm-Message-State: AAQBX9dtJ3aNIBBux0MzPv8Ep2s5SN0wvIArUAualVCGH9GXoopaaDMb
-        7hVQ2y5RiRI3Q1K942DWVmfkr3Xz+vWpFQ==
-X-Google-Smtp-Source: AKy350aqZ8F8Upq3pSjo9kCKeDEwex0PMvg1Zgjwk2kanisFlrJRxt9NGtqdtNpjhAWYlLIvYUIfpw==
-X-Received: by 2002:a05:622a:1114:b0:3ea:abb2:23c8 with SMTP id e20-20020a05622a111400b003eaabb223c8mr4893335qty.42.1681475225750;
-        Fri, 14 Apr 2023 05:27:05 -0700 (PDT)
-Received: from [192.168.1.105] (ip72-194-116-95.oc.oc.cox.net. [72.194.116.95])
-        by smtp.gmail.com with ESMTPSA id q11-20020a05620a2a4b00b0074a3c282c7dsm1183844qkp.97.2023.04.14.05.27.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 14 Apr 2023 05:27:05 -0700 (PDT)
-Message-ID: <85a1cca1-f59b-6a0c-dee3-9d9ed5d6b6d1@gmail.com>
-Date:   Fri, 14 Apr 2023 05:27:01 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH v2 2/3] PCI: brcmstb: CLKREQ# accomodations of downstream
- device
-Content-Language: en-US
-To:     Jim Quinlan <jim2101024@gmail.com>,
-        Cyril Brulebois <kibi@debian.org>
-Cc:     linux-pci@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenz@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Phil Elwell <phil@raspberrypi.com>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <20230411165919.23955-1-jim2101024@gmail.com>
- <20230411165919.23955-3-jim2101024@gmail.com>
- <20230413143935.pmbyjk2boxl3rwne@mraw.org>
- <CANCKTBtXKAYf1LxR4qN+dVyxsWgyDztUVB4EdG=xhHbuhNCq5w@mail.gmail.com>
- <20230413200646.ddgsoqgmaae343nl@mraw.org>
- <CANCKTBuZ=Hxy9WgnjbauhHqXGx4QU_t8pgX=3che2K89=2BT9A@mail.gmail.com>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-In-Reply-To: <CANCKTBuZ=Hxy9WgnjbauhHqXGx4QU_t8pgX=3che2K89=2BT9A@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+        d=1e100.net; s=20221208; t=1681475832; x=1684067832;
+        h=date:subject:message-id:references:in-reply-to:cc:to:from
+         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=tif8NhdXDaYsKWyUG+spnxjaLJkK+6EAtIt8ttAcEs4=;
+        b=i+4joY4xSfcJWUGbb/QKqQhM6JAFGQGGC2hc8kjXcu+DFxMEumpHtzO+djsGYvUHGM
+         V+P6a26j383t68rtnfI5RZh59jhcACjD9qLDg9yy6J6AuxUX9/RgpKZu6ANNokstysIm
+         nn5xVbT2iT76xHF7EFmYwHwy1B5kObd/euSHWH6L4WjG1OK4qNkgXASzVEkY1BAZDU/B
+         rj3ie90JVqz2NjaQG0EwhYHW1OqfD4wuEoUNrP3Hcl17PFlbu48BcwPX65eIOksUFKm0
+         AubaGQ0aS0y0XWTTRfccFLfws77JxLR/DYNBzAV+iTNLa99ZyrzJxlk+tYpPiq+EMQA0
+         pIUQ==
+X-Gm-Message-State: AAQBX9ci6Dmh/0k6E7y4OnObJ2LoDSC5mslbh+zaC6Y5PMJaEAuf645h
+        UMkGnIk2mwvMfuv4U6e/qQ==
+X-Google-Smtp-Source: AKy350YtIiRkiMozbJSJbOls/JKKCcKXGbj0sXIIm/2Aub6PlAVIfCaR3m+eP4C5BMr98YW8rvXHAQ==
+X-Received: by 2002:a05:6870:c227:b0:177:b6ed:a154 with SMTP id z39-20020a056870c22700b00177b6eda154mr4230820oae.34.1681475832618;
+        Fri, 14 Apr 2023 05:37:12 -0700 (PDT)
+Received: from robh_at_kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id eb8-20020a056870a88800b001777244e3f9sm1740074oab.8.2023.04.14.05.37.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Apr 2023 05:37:11 -0700 (PDT)
+Received: (nullmailer pid 3600812 invoked by uid 1000);
+        Fri, 14 Apr 2023 12:37:05 -0000
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+From:   Rob Herring <robh@kernel.org>
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     kishon@kernel.org, linux-renesas-soc@vger.kernel.org,
+        robh+dt@kernel.org, bhelgaas@google.com,
+        gustavo.pimentel@synopsys.com, mani@kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        fancer.lancer@gmail.com, marek.vasut+renesas@gmail.com,
+        kw@linux.com, lpieralisi@kernel.org, jingoohan1@gmail.com
+In-Reply-To: <20230414061622.2930995-15-yoshihiro.shimoda.uh@renesas.com>
+References: <20230414061622.2930995-1-yoshihiro.shimoda.uh@renesas.com>
+ <20230414061622.2930995-15-yoshihiro.shimoda.uh@renesas.com>
+Message-Id: <168147484959.3576429.13497930996151330300.robh@kernel.org>
+Subject: Re: [PATCH v12 14/19] dt-bindings: PCI: renesas: Add R-Car Gen4
+ PCIe Host
+Date:   Fri, 14 Apr 2023 07:37:05 -0500
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
-
-On 4/14/2023 5:14 AM, Jim Quinlan wrote:
-> On Thu, Apr 13, 2023 at 4:06 PM Cyril Brulebois <kibi@debian.org> wrote:
->>
->> Hi Jim,
->>
->> Jim Quinlan <jim2101024@gmail.com> (2023-04-13):
->>> Can you provide (a) the full boot log prior to applying the patch
->>> series and (b) full boot log after applying the series, using an
->>> IDENTICAL setup. If it fails on both then it has little to do with my
->>> patch series.
->>
->> Just to be clear, the issue I reported was with:
->>   - Raspberry Pi Compute Module 4 (Rev 1.1, 4G RAM, 32G storage)
->>   - Raspberry Pi Compute Module 4 IO Board
->>   - SupaHub PCIe-to-multiple-USB adapter, reference PCE6U1C-R02, VER 006S
->>
->> This was my minimal reproducer for the kernel panic at boot-up, which
->> goes away with either v1 or v2. When I realized I didn't actually check
->> whether the SupaHub board was working correctly, I plugged 2 devices to
->> obtain this setup:
->>   - Raspberry Pi Compute Module 4 (Rev 1.1, 4G RAM, 32G storage)
->>   - Raspberry Pi Compute Module 4 IO Board
->>   - SupaHub PCIe-to-multiple-USB adapter, reference PCE6U1C-R02, VER 006S
->>   - Kingston DataTraveler G4 32GB on USB-A port #1 of the SupaHub board.
->>   - Logitech K120 keyboard on USB-A port #2 of the SupaHub board.
->>
->> It turns out that this particular revision of the SupaHub board isn't
->> supported by xhci_hcd directly (failing to probe with error -110) and
->> one needs to enable CONFIG_USB_XHCI_PCI_RENESAS=m and also ship its
->> accompanying firmware (/lib/firmware/renesas_usb_fw.mem). With this
->> updated kernel config, I'm able to use the keyboard and to read data
->> from the memory stick without problems (70 MB/s).
->>
->>> In my last series your testing somehow conflated the effect of an
->>> unrelated MMC interrupt issue so please be precise.
->>
->> I wish things would be simpler and didn't involve combinatorics, let
->> alone other bugs/regressions at times, but I'm really trying my best to
->> navigate and report issues and test patches when I can spare some time…
+On Fri, 14 Apr 2023 15:16:17 +0900, Yoshihiro Shimoda wrote:
+> Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+> PCIe host module.
 > 
-> Hi Cyril,
+> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+> ---
+>  .../bindings/pci/rcar-gen4-pci-host.yaml      | 109 ++++++++++++++++++
+>  1 file changed, 109 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
 > 
-> I want to encourage you and others doing testing and bug reporting:
-> everyone wins when a bug or issue is reported, fixed, and tested.
-> I'm just asking that when you have negative results, that you provide
-> information on the "before" and "after" test results of
-> the patch series, and run both on the same test environment.
 
-Cyril, based upon the table and logs you provided whereby you have used 
-the following:
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
 
-- Raspberry Pi Compute Module 4 (Rev 1.0, 8G RAM, 32G storage)
-- Raspberry Pi Compute Module 4 IO Board
-- SupaHub PCIe-to-multiple-USB adapter, reference PCE6U1C-R02, VER 006S
+yamllint warnings/errors:
 
-in the before/unpatched case we have a PCIe link down and in the 
-after/patched we have a PCIe link up but a kernel panic. Neither are 
-great nor resulting in a fully functional PCIe device.
+dtschema/dtc warnings/errors:
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.example.dtb: pcie@e65d0000: reg: [[0, 3864854528, 0, 4096], [0, 3864862720, 0, 2048], [0, 3864866816, 0, 8192], [0, 3864875008, 0, 4608], [0, 3864879616, 0, 3584], [0, 4261412864, 0, 4194304]] is too long
+	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.example.dtb: pcie@e65d0000: reg-names: ['dbi', 'dbi2', 'atu', 'dma', 'app', 'config'] is too long
+	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+/builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.example.dtb: pcie@e65d0000: Unevaluated properties are not allowed ('#address-cells', '#interrupt-cells', '#size-cells', 'bus-range', 'device_type', 'dma-ranges', 'interrupt-map', 'interrupt-map-mask', 'ranges', 'snps,enable-cdm-check' were unexpected)
+	From schema: /builds/robherring/dt-review-ci/linux/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
 
-Looking at:
+doc reference errors (make refcheckdocs):
 
-https://www.amazon.co.uk/SupaHub-Express-BandWidth-Capable-Expanding/dp/B092ZQWG5B
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20230414061622.2930995-15-yoshihiro.shimoda.uh@renesas.com
 
-it would appear that it can accept an external power supply, do you have 
-one connected to that USB expansion card by any chance? Are you able to 
-boot the kernel before/after if you disconnect any USB peripheral?
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
 
-This looks like a broader electrical problem than the scope of this 
-patch, though it would be neat if we could find a combination that 
-works. At least with Jim's patch we have a PCIe link with 
-uni-directional CLKREQ# so we could try a variety of things.
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
 
-Does that SupaHub board plugged to the CM4 1.0 system work fine in the 
-Raspberry Pi kernel tree?
--- 
-Florian
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
+
