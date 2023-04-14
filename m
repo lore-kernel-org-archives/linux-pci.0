@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE36DC7EE33
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Apr 2023 06:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A5AC77B71
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Apr 2023 06:16:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230224AbjDNGQq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Apr 2023 02:16:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48766 "EHLO
+        id S230136AbjDNGQr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Apr 2023 02:16:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48854 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230136AbjDNGQj (ORCPT
+        with ESMTP id S230137AbjDNGQj (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2023 02:16:39 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id D32F36A6F;
-        Thu, 13 Apr 2023 23:16:36 -0700 (PDT)
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 67D606E81;
+        Thu, 13 Apr 2023 23:16:37 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,195,1677510000"; 
-   d="scan'208";a="155958245"
+   d="scan'208";a="159411146"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 14 Apr 2023 15:16:33 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 14 Apr 2023 15:16:33 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 08E984195D58;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 48CE64195F5A;
         Fri, 14 Apr 2023 15:16:33 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
@@ -28,10 +28,11 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
         bhelgaas@google.com, kishon@kernel.org
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v12 12/19] PCI: dwc: Add EDMA_UNROLL capability flag
-Date:   Fri, 14 Apr 2023 15:16:15 +0900
-Message-Id: <20230414061622.2930995-13-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Rob Herring <robh@kernel.org>
+Subject: [PATCH v12 14/19] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
+Date:   Fri, 14 Apr 2023 15:16:17 +0900
+Message-Id: <20230414061622.2930995-15-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230414061622.2930995-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230414061622.2930995-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,53 +42,132 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-One of PCIe controllers have an unexpected register value on
-the dbi+0x97b register. So, add a new capability flag "EDMA_UNROLL"
-which would force the unrolled eDMA mapping for the problematic
-device, as suggested by Serge Semin.
+Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+PCIe host module.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 8 +++++++-
- drivers/pci/controller/dwc/pcie-designware.h | 5 +++--
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ .../bindings/pci/rcar-gen4-pci-host.yaml      | 109 ++++++++++++++++++
+ 1 file changed, 109 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 2413cd39310c..feb6ab9d4944 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -920,8 +920,14 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
- 	 * Indirect eDMA CSRs access has been completely removed since v5.40a
- 	 * thus no space is now reserved for the eDMA channels viewport and
- 	 * former DMA CTRL register is no longer fixed to FFs.
-+	 *
-+	 * Note some devices for unknown reason may have zeros in the eDMA CTRL
-+	 * register even though the HW-manual explicitly states there must FFs
-+	 * if the unrolled mapping is enabled. For such cases the low-level
-+	 * drivers are supposed to manually activate the unrolled mapping to
-+	 * bypass the auto-detection procedure.
- 	 */
--	if (dw_pcie_ver_is_ge(pci, 540A))
-+	if (dw_pcie_ver_is_ge(pci, 540A) || dw_pcie_cap_is(pci, EDMA_UNROLL))
- 		val = 0xFFFFFFFF;
- 	else
- 		val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 5ec046744bb6..c4190bb7984f 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -54,8 +54,9 @@
- 
- /* DWC PCIe controller capabilities */
- #define DW_PCIE_CAP_REQ_RES		0
--#define DW_PCIE_CAP_IATU_UNROLL		1
--#define DW_PCIE_CAP_CDM_CHECK		2
-+#define DW_PCIE_CAP_EDMA_UNROLL		1
-+#define DW_PCIE_CAP_IATU_UNROLL		2
-+#define DW_PCIE_CAP_CDM_CHECK		3
- 
- #define dw_pcie_cap_is(_pci, _cap) \
- 	test_bit(DW_PCIE_CAP_ ## _cap, &(_pci)->caps)
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+new file mode 100644
+index 000000000000..637353c3df8b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+@@ -0,0 +1,109 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2022 Renesas Electronics Corp.
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-host.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Renesas R-Car Gen4 PCIe Host
++
++maintainers:
++  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
++
++allOf:
++  - $ref: snps,dw-pcie.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: renesas,r8a779f0-pcie   # R-Car S4-8
++      - const: renesas,rcar-gen4-pcie  # R-Car Gen4
++
++  reg:
++    maxItems: 6
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: dbi2
++      - const: atu
++      - const: dma
++      - const: app
++      - const: config
++
++  interrupts:
++    maxItems: 4
++
++  interrupt-names:
++    items:
++      - const: msi
++      - const: dma
++      - const: sft_ce
++      - const: app
++
++  clocks:
++    maxItems: 1
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++  max-link-speed:
++    maximum: 4
++
++  num-lanes:
++    maximum: 4
++
++required:
++  - compatible
++  - reg
++  - interrupts
++  - clocks
++  - power-domains
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a779f0-sysc.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie: pcie@e65d0000 {
++            compatible = "renesas,r8a779f0-pcie", "renesas,rcar-gen4-pcie";
++            reg = <0 0xe65d0000 0 0x1000>, <0 0xe65d2000 0 0x0800>,
++                  <0 0xe65d3000 0 0x2000>, <0 0xe65d5000 0 0x1200>,
++                  <0 0xe65d6200 0 0x0e00>, <0 0xfe000000 0 0x400000>;
++            reg-names = "dbi", "dbi2", "atu", "dma", "app", "config";
++            #address-cells = <3>;
++            #size-cells = <2>;
++            bus-range = <0x00 0xff>;
++            device_type = "pci";
++            ranges = <0x81000000 0 0x00000000 0 0xfe000000 0 0x00400000
++                      0x82000000 0 0x30000000 0 0x30000000 0 0x10000000>;
++            dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000>;
++            interrupts = <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "msi", "dma", "sft_ce", "app";
++            #interrupt-cells = <1>;
++            interrupt-map-mask = <0 0 0 7>;
++            interrupt-map = <0 0 0 1 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH
++                             0 0 0 2 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH
++                             0 0 0 3 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH
++                             0 0 0 4 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 624>;
++            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++            resets = <&cpg 624>;
++            num-lanes = <2>;
++            snps,enable-cdm-check;
++            max-link-speed = <2>;
++        };
++    };
 -- 
 2.25.1
 
