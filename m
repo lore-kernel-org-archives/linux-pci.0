@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECBF3C77B75
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 12:25:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF13DC6FD18
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 12:26:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231415AbjDRMZs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Apr 2023 08:25:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34166 "EHLO
+        id S231532AbjDRM0F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Apr 2023 08:26:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231397AbjDRMZe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 08:25:34 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8DE985596;
-        Tue, 18 Apr 2023 05:25:08 -0700 (PDT)
+        with ESMTP id S231252AbjDRMZx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 08:25:53 -0400
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 03947A5F1;
+        Tue, 18 Apr 2023 05:25:26 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,207,1677510000"; 
-   d="scan'208";a="159867451"
+   d="scan'208";a="156404627"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 18 Apr 2023 21:24:15 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 18 Apr 2023 21:24:16 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id E6912423C459;
-        Tue, 18 Apr 2023 21:24:14 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id E15D1423C45D;
+        Tue, 18 Apr 2023 21:24:15 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
         gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v13 15/22] PCI: dwc: Introduce .ep_pre_init() and .ep_deinit()
-Date:   Tue, 18 Apr 2023 21:23:56 +0900
-Message-Id: <20230418122403.3178462-16-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v13 22/22] misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
+Date:   Tue, 18 Apr 2023 21:24:03 +0900
+Message-Id: <20230418122403.3178462-23-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230418122403.3178462-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230418122403.3178462-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,56 +41,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-One of controllers requires vender-specific initialization before
-.ep_init(). To use dw->dbi and dw->bum-lanes in the initialization
-code, introduce .ep_pre_init() into struct dw_pcie_ep_ops.
-Also introduce .ep_deinit() to disable the controller by using
-vender-specific de-initialization.
+Add Renesas R8A779F0 in pci_device_id table so that pci-epf-test
+can be used for testing PCIe EP on R-Car S4-8.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 6 ++++++
- drivers/pci/controller/dwc/pcie-designware.h    | 2 ++
- 2 files changed, 8 insertions(+)
+ drivers/misc/pci_endpoint_test.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 2458ca2bc0e4..a011db7e3064 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -670,6 +670,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index a7244de081ec..1d8f72b42c0a 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -81,6 +81,7 @@
+ #define PCI_DEVICE_ID_RENESAS_R8A774B1		0x002b
+ #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
+ #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
++#define PCI_DEVICE_ID_RENESAS_R8A779F0		0x0031
  
-+	if (ep->ops->ep_deinit)
-+		ep->ops->ep_deinit(ep);
-+
- 	dw_pcie_edma_remove(pci);
+ static DEFINE_IDA(pci_endpoint_test_ida);
  
- 	if (ep->intx_mem)
-@@ -783,6 +786,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	ep->phys_base = res->start;
- 	ep->addr_size = resource_size(res);
- 
-+	if (ep->ops->ep_pre_init)
-+		ep->ops->ep_pre_init(ep);
-+
- 	dw_pcie_version_detect(pci);
- 
- 	dw_pcie_iatu_detect(pci);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index c4bdfed7b2e2..ae8ac15e53dc 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -336,7 +336,9 @@ struct dw_pcie_rp {
- };
- 
- struct dw_pcie_ep_ops {
-+	void	(*ep_pre_init)(struct dw_pcie_ep *ep);
- 	void	(*ep_init)(struct dw_pcie_ep *ep);
-+	void	(*ep_deinit)(struct dw_pcie_ep *ep);
- 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
- 			     enum pci_epc_irq_type type, u16 interrupt_num);
- 	const struct pci_epc_features* (*get_features)(struct dw_pcie_ep *ep);
+@@ -993,6 +994,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1),},
++	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
++	  .driver_data = (kernel_ulong_t)&default_data,
++	},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
+ 	  .driver_data = (kernel_ulong_t)&j721e_data,
+ 	},
 -- 
 2.25.1
 
