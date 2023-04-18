@@ -2,61 +2,128 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2CD9C77B71
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 05:24:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EEFBC77B75
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 07:11:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229721AbjDRFYU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Apr 2023 01:24:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57228 "EHLO
+        id S230173AbjDRHLp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Apr 2023 03:11:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229654AbjDRFYU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 01:24:20 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:3::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B94C4682;
-        Mon, 17 Apr 2023 22:24:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Eh/DqUUzY2lVMjQIOADXqy4dsohFXgtxffqXhcCjk5w=; b=1kQY28uOFr0UvLUA8wxZYC5Ovg
-        QUwA79p7Awun5OpxioLnsddpA2ecnLTzt78vbM2VIqszOfAPXog6IyQrGUz/XBYhQPQ+5fE1khcTC
-        Hf7NOkNVr05+ey/0N44zCD7tbJ7WZZt/mVnWVHUtyO6qH+pRL6pAtFIfg5YFTimshqBddj9YTTznX
-        RNqzuzzFsIHfoyQZd8V4Sxpxnx/EJAba1X2/7c9pcmf2A/8QSxE3EccmEy1iCFiCUVjjeoXbMMR5k
-        AjhrP3SFTHwqvvPZ9WnWV0YCzY0Ji6XczHHBN2dS+BAK9fCuA0Ao6p9+wv72c0AGGfQAvqB8/L93q
-        QOQcmhmg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.96 #2 (Red Hat Linux))
-        id 1podpD-000uNI-0t;
-        Tue, 18 Apr 2023 05:24:19 +0000
-Date:   Mon, 17 Apr 2023 22:24:19 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Patrick McLean <chutzpah@gentoo.org>
-Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Dave Airlie <airlied@redhat.com>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH 2/2] ata: libata-core: Apply ATI NCQ horkage to ASPEED as
- well
-Message-ID: <ZD4pg7EMgGU2yjLM@infradead.org>
-References: <20230418011720.3900090-1-chutzpah@gentoo.org>
- <20230418011720.3900090-3-chutzpah@gentoo.org>
+        with ESMTP id S229862AbjDRHLo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 03:11:44 -0400
+Received: from mail-oi1-x229.google.com (mail-oi1-x229.google.com [IPv6:2607:f8b0:4864:20::229])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E83561713;
+        Tue, 18 Apr 2023 00:11:43 -0700 (PDT)
+Received: by mail-oi1-x229.google.com with SMTP id 5614622812f47-38be7a5ab37so203086b6e.3;
+        Tue, 18 Apr 2023 00:11:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1681801903; x=1684393903;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eTWib7JxQgRfPP7nkQkRpwdyPsWxBj+IL3VbidooW0M=;
+        b=hVUcF1oeFKWWGWNtlbS0nussKF65jhn4dl3su18uwaKlEFYNbn9AzxAimO05juCoyM
+         SOzC/5V49vwQhx5oOvjVsiuX3DNzd8fjNFzEvDhb3FUmMFyiuZ3a5caQmC0Ic6w2pyyS
+         m5sW/WXoqRsxgRBCg/Dso40zZJ2+qAYKe66v7aktSGuLBf1PFfK3s8RLoSPeMw+hvEvh
+         90nbYjRMCvhJ6WwELi7bByENsM9LyQNq0jkn8JjKMbOkkbC7yykbhELYktynIBEFy+1F
+         eCmZwd4PR9Pesm1OMHBqR1X4/BQAhiVAC/jKEnhHz12jwCgOlhxVWsob4arYHJLRhOz5
+         DV9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681801903; x=1684393903;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=eTWib7JxQgRfPP7nkQkRpwdyPsWxBj+IL3VbidooW0M=;
+        b=Vgn2qpreq2eawLugudYMljzZoTPrPMFqJ0SiXucbjXP4iVigoGPFBWEyqQjcgwI2Me
+         Rw+z3XUFYidXPz4xyY54t6fHy9b+dvJP65tVA64bVjjdf8lwzVNFfAtn22nYT/vLW5P7
+         NJ58sX503iFZMh0W8wDKZoUVWgn0UOuYXY/8/prJpI2RDtBvZA7oIAKNbRbw+9HczOwW
+         jrkbZU5wdKU+YtQU/42S4I6wDPWq8iwMeziGJh5SUwWqbQ/Cvtt0FnzJB2ldS6OEMFsi
+         hfo8T5B+GmuyqlaxK2HEZ7JSjHUpoRKabnFjM8a6hg7qLrt8c656Z6jDpKy53DRID/jK
+         C6mQ==
+X-Gm-Message-State: AAQBX9cLHpuXkPKoN47jPH4dL3/1yVYJ2ozSnWG3PuulmnniiOv3eDMr
+        vKbT5hIvnTwjdhEhF4p5A1BgAoNK8vqiKFyPOoheCE7u/Cg=
+X-Google-Smtp-Source: AKy350aMS52U0BpcvRun1qRMCtVKhTYvV6yb/hI65EaQPrxsqIVekJ5kylKFKvwKZcLodcwL9kc3njD3myEsrtI+Nyw=
+X-Received: by 2002:aca:db54:0:b0:38b:c09e:500f with SMTP id
+ s81-20020acadb54000000b0038bc09e500fmr248261oig.10.1681801903242; Tue, 18 Apr
+ 2023 00:11:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230418011720.3900090-3-chutzpah@gentoo.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20230417092631.347976-1-rick.wertenbroek@gmail.com>
+ <20230417092631.347976-12-rick.wertenbroek@gmail.com> <cf47e154-1a48-58a9-b139-95b51b87d356@kernel.org>
+In-Reply-To: <cf47e154-1a48-58a9-b139-95b51b87d356@kernel.org>
+From:   Rick Wertenbroek <rick.wertenbroek@gmail.com>
+Date:   Tue, 18 Apr 2023 09:11:07 +0200
+Message-ID: <CAAEEuhq0nCT0XVuEeiHxY=tAsHipJPY=Uq59B=vZAwrXXjMzcg@mail.gmail.com>
+Subject: Re: [PATCH v4 11/11] PCI: rockchip: Set address alignment for
+ endpoint mode
+To:     Damien Le Moal <dlemoal@kernel.org>
+Cc:     alberto.dassatti@heig-vd.ch, xxm@rock-chips.com,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Johan Jonker <jbx6244@gmail.com>,
+        Caleb Connolly <kc@postmarketos.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Corentin Labbe <clabbe@baylibre.com>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Hugh Cole-Baker <sigmaris@gmail.com>,
+        Judy Hsiao <judyhsiao@chromium.org>,
+        Arnaud Ferraris <arnaud.ferraris@collabora.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 17, 2023 at 06:17:20PM -0700, Patrick McLean wrote:
-> We have some machines with ASPEED SATA controllers, and are seeing the same NCQ
-> issues that ATI controllers (I am not sure if it's a rebranded ATI controller,
-> or they both have some faulty implementation). This NCQ breakage is consistent
-> across a few different types of drives.
-> 
-> Instead of maintaining a list of drives that are broken with ASPEED controllers
+On Tue, Apr 18, 2023 at 1:51=E2=80=AFAM Damien Le Moal <dlemoal@kernel.org>=
+ wrote:
+>
+> On 4/17/23 18:26, Rick Wertenbroek wrote:
+> > From: Damien Le Moal <dlemoal@kernel.org>
+> >
+> > The address translation unit of the rockchip EP controller does not use
+> > the lower 8 bits of a PCIe-space address to map local memory. Thus we
+> > must set the align feature field to 256 to let the user know about this
+> > constraint.
+> >
+> > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+>
+> I think this one also needs the tag:
+>
+> Fixes: cf590b078391 ("...")
+> Cc: stable@vger.kernel.org
+>
+> And you forgot to add you Signed-off-by tag (when sending someones else p=
+atch,
+> you must add your own SoB tag after the author's tag).
+>
 
-Are these ASPEED controllers all the same or a wide variety?
-Quirking all controllers from the same vendor seems like an overly
-broad approach to me.
+Thank you for all your comments, I'll add the tags.
+I reread the documentation, I missed it, it's the first
+time I sent someone elses patch.
+
+> > ---
+> >  drivers/pci/controller/pcie-rockchip-ep.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/co=
+ntroller/pcie-rockchip-ep.c
+> > index edfced311a9f..0af0e965fb57 100644
+> > --- a/drivers/pci/controller/pcie-rockchip-ep.c
+> > +++ b/drivers/pci/controller/pcie-rockchip-ep.c
+> > @@ -442,6 +442,7 @@ static const struct pci_epc_features rockchip_pcie_=
+epc_features =3D {
+> >       .linkup_notifier =3D false,
+> >       .msi_capable =3D true,
+> >       .msix_capable =3D false,
+> > +     .align =3D 256,
+> >  };
+> >
+> >  static const struct pci_epc_features*
+>
