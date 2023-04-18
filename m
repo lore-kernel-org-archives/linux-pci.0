@@ -2,64 +2,118 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F1F4C6FD18
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 12:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1158C77B75
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 12:55:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231142AbjDRM0Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Apr 2023 08:26:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34178 "EHLO
+        id S232292AbjDRMzq convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Apr 2023 08:55:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231405AbjDRM0D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 08:26:03 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9AB66B759;
-        Tue, 18 Apr 2023 05:25:49 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="5.99,207,1677510000"; 
-   d="scan'208";a="159867464"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 18 Apr 2023 21:24:15 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id B807C423C454;
-        Tue, 18 Apr 2023 21:24:15 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     jingoohan1@gmail.com, mani@kernel.org,
-        gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
-        lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
-        bhelgaas@google.com, kishon@kernel.org
-Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v13 21/22] MAINTAINERS: Update PCI DRIVER FOR RENESAS R-CAR for R-Car Gen4
-Date:   Tue, 18 Apr 2023 21:24:02 +0900
-Message-Id: <20230418122403.3178462-22-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230418122403.3178462-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20230418122403.3178462-1-yoshihiro.shimoda.uh@renesas.com>
+        with ESMTP id S232267AbjDRMzp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 08:55:45 -0400
+Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF636CC25;
+        Tue, 18 Apr 2023 05:55:42 -0700 (PDT)
+Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-95227e5164dso15161166b.1;
+        Tue, 18 Apr 2023 05:55:42 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1681822541; x=1684414541;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Jdb0w+jEfZkSk+3SmG8wtFklZfay3JZ0XkSQ6zMoTbs=;
+        b=X/gZFai55uFeiF9bEbYoxncxzKgJUlmwQNw5ag7MzPRjAGkT/xlNfYvhy4AshsbIZi
+         MQUL+fE9UM7dmKLET/nTZtMzglC3yIPwW3r5ux/0rjATNJb3ZRsKIFDf9LlJNkmJOFef
+         f2Q6rQPLB5uCEy7ShW+iKvXLrOSPqDeGpr/PPQfc8Spx+dyqbAmtcnBxJVM6fqUPqLZQ
+         44qrSpbYrzGh6sWJs33Ndk0wvy8DwR3KLqX60j6zN4YnXcG2nxWYFrruQD9+QckeIAaK
+         JFvsDrE8FDCEuY3ezDoYmMpiKDgR92kTMouFp/Xgkm5KMQwUKes1v2n/rAccTdcvovtQ
+         6H/w==
+X-Gm-Message-State: AAQBX9e7z12sTtRm1Y5OcKh/4binTifT7sl1863L6NnceTXyZ9VJRspI
+        HQ1FvHsq5MYojLwewEgR1lk5Z2SbMEDXANlIb/GQ+4yE
+X-Google-Smtp-Source: AKy350bLfOyZ9Ie3U225HmWjoFoX38ib+ugrt8e5BtaILw2UAjlpIwX2quIGIFifup4AhjRGOqyfFVD/0daX42HkUNs=
+X-Received: by 2002:a17:906:535d:b0:94f:4ec3:f0e8 with SMTP id
+ j29-20020a170906535d00b0094f4ec3f0e8mr6553646ejo.4.1681822541141; Tue, 18 Apr
+ 2023 05:55:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230418085030.2154918-1-imammedo@redhat.com>
+In-Reply-To: <20230418085030.2154918-1-imammedo@redhat.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Tue, 18 Apr 2023 14:55:29 +0200
+Message-ID: <CAJZ5v0geYujyXKv9mG_i+2rjcdrMVh+jmE1ffJ79_oFr8GNoMg@mail.gmail.com>
+Subject: Re: [PATCH] pci: acpiphp: try to reassign resources on bridge if necessary
+To:     Igor Mammedov <imammedo@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, mst@redhat.com, rafael@kernel.org,
+        lenb@kernel.org, bhelgaas@google.com, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Update this entry for R-Car Gen4's source code.
+On Tue, Apr 18, 2023 at 10:50 AM Igor Mammedov <imammedo@redhat.com> wrote:
+>
+> When using ACPI PCI hotplug, hotplugging a device with
+> large BARs may fail if bridge windows programmed by
+> firmware are not large enough.
+>
+> Reproducer:
+>   $ qemu-kvm -monitor stdio -M q35  -m 4G \
+>       -global ICH9-LPC.acpi-pci-hotplug-with-bridge-support=on \
+>       -device id=rp1,pcie-root-port,bus=pcie.0,chassis=4 \
+>       disk_image
+>
+>  wait till linux guest boots, then hotplug device
+>    (qemu) device_add qxl,bus=rp1
+>
+>  hotplug on guest side fails with:
+>    pci 0000:01:00.0: [1b36:0100] type 00 class 0x038000
+>    pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x03ffffff]
+>    pci 0000:01:00.0: reg 0x14: [mem 0x00000000-0x03ffffff]
+>    pci 0000:01:00.0: reg 0x18: [mem 0x00000000-0x00001fff]
+>    pci 0000:01:00.0: reg 0x1c: [io  0x0000-0x001f]
+>    pci 0000:01:00.0: BAR 0: no space for [mem size 0x04000000]
+>    pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x04000000]
+>    pci 0000:01:00.0: BAR 1: no space for [mem size 0x04000000]
+>    pci 0000:01:00.0: BAR 1: failed to assign [mem size 0x04000000]
+>    pci 0000:01:00.0: BAR 2: assigned [mem 0xfe800000-0xfe801fff]
+>    pci 0000:01:00.0: BAR 3: assigned [io  0x1000-0x101f]
+>    qxl 0000:01:00.0: enabling device (0000 -> 0003)
+>    Unable to create vram_mapping
+>    qxl: probe of 0000:01:00.0 failed with error -12
+>
+> However when using native PCIe hotplug
+>   '-global ICH9-LPC.acpi-pci-hotplug-with-bridge-support=off'
+> it works fine, since kernel attempts to reassign unused resources.
+> Use the same machinery as native PCIe hotplug to (re)assign resources.
+>
+> Signed-off-by: Igor Mammedov <imammedo@redhat.com>
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 3d50a83738a4..85556bdbf6d5 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -16156,6 +16156,7 @@ L:	linux-renesas-soc@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/*rcar*
- F:	drivers/pci/controller/*rcar*
-+F:	drivers/pci/controller/dwc/*rcar*
- 
- PCI DRIVER FOR SAMSUNG EXYNOS
- M:	Jingoo Han <jingoohan1@gmail.com>
--- 
-2.25.1
+or please let me know if you want me to pick this up.
 
+> ---
+> tested in QEMU with Q35 machine on PCIE root port and also
+> with nested conventional bridge attached to root port.
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 5b1f271c6034..9aebde28a92f 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -517,7 +517,7 @@ static void enable_slot(struct acpiphp_slot *slot, bool bridge)
+>                                 }
+>                         }
+>                 }
+> -               __pci_bus_assign_resources(bus, &add_list, NULL);
+> +               pci_assign_unassigned_bridge_resources(bus->self);
+>         }
+>
+>         acpiphp_sanitize_bus(bus);
+> --
+> 2.39.1
+>
