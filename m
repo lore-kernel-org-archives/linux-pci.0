@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC05C77B76
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 12:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61E81C77B7F
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 12:25:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231336AbjDRMZH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Apr 2023 08:25:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33356 "EHLO
+        id S231332AbjDRMZI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Apr 2023 08:25:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231222AbjDRMZD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 08:25:03 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6234F65B0;
-        Tue, 18 Apr 2023 05:24:41 -0700 (PDT)
+        with ESMTP id S231361AbjDRMZF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 08:25:05 -0400
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 549089EC6;
+        Tue, 18 Apr 2023 05:24:44 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,207,1677510000"; 
-   d="scan'208";a="159867437"
+   d="scan'208";a="156404611"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 18 Apr 2023 21:24:14 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 18 Apr 2023 21:24:14 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 05EA4423C459;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 9E95F423C45C;
         Tue, 18 Apr 2023 21:24:14 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v13 08/22] PCI: dwc: Change arguments of dw_pcie_prog_ep_outbound_atu()
-Date:   Tue, 18 Apr 2023 21:23:49 +0900
-Message-Id: <20230418122403.3178462-9-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v13 13/22] PCI: dwc: Add EDMA_UNROLL capability flag
+Date:   Tue, 18 Apr 2023 21:23:54 +0900
+Message-Id: <20230418122403.3178462-14-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230418122403.3178462-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230418122403.3178462-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,108 +41,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To use "code" and "routing" parameters on an outbound iATU,
-change arguments of dw_pcie_prog_ep_outbound_atu(). No behavior changes.
+One of PCIe controllers have an unexpected register value on
+the dbi+0x97b register. So, add a new capability flag "EDMA_UNROLL"
+which would force the unrolled eDMA mapping for the problematic
+device, as suggested by Serge Semin.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- .../pci/controller/dwc/pcie-designware-ep.c   | 21 ++++++++++++-------
- drivers/pci/controller/dwc/pcie-designware.c  | 15 +++----------
- drivers/pci/controller/dwc/pcie-designware.h  |  4 ++--
- 3 files changed, 18 insertions(+), 22 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 8 +++++++-
+ drivers/pci/controller/dwc/pcie-designware.h | 5 +++--
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index a80b9fd03638..96375b0aba82 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -183,9 +183,8 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, u8 func_no, int type,
- 	return 0;
- }
- 
--static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, u8 func_no,
--				   phys_addr_t phys_addr,
--				   u64 pci_addr, size_t size)
-+static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep,
-+				   struct dw_pcie_outbound_atu *atu)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	u32 free_win;
-@@ -197,13 +196,13 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, u8 func_no,
- 		return -EINVAL;
- 	}
- 
--	ret = dw_pcie_prog_ep_outbound_atu(pci, func_no, free_win, PCIE_ATU_TYPE_MEM,
--					   phys_addr, pci_addr, size);
-+	atu->index = free_win;
-+	ret = dw_pcie_prog_ep_outbound_atu(pci, atu);
- 	if (ret)
- 		return ret;
- 
- 	set_bit(free_win, ep->ob_window_map);
--	ep->outbound_addr[free_win] = phys_addr;
-+	ep->outbound_addr[free_win] = atu->cpu_addr;
- 
- 	return 0;
- }
-@@ -306,8 +305,14 @@ static int dw_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 	int ret;
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
--
--	ret = dw_pcie_ep_outbound_atu(ep, func_no, addr, pci_addr, size);
-+	struct dw_pcie_outbound_atu atu = { 0 };
-+
-+	atu.func_no = func_no;
-+	atu.type = PCIE_ATU_TYPE_MEM;
-+	atu.cpu_addr = addr;
-+	atu.pci_addr = pci_addr;
-+	atu.size = size;
-+	ret = dw_pcie_ep_outbound_atu(ep, &atu);
- 	if (ret) {
- 		dev_err(pci->dev, "Failed to enable address\n");
- 		return ret;
 diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 60e6522f0762..e8d4d5bde2d3 100644
+index 2413cd39310c..feb6ab9d4944 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.c
 +++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -540,19 +540,10 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 	return __dw_pcie_prog_outbound_atu(pci, &atu);
- }
- 
--int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
--				 int type, u64 cpu_addr, u64 pci_addr,
--				 u64 size)
-+int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci,
-+				 struct dw_pcie_outbound_atu *atu)
- {
--	struct dw_pcie_outbound_atu atu = { 0 };
--
--	atu.func_no = func_no;
--	atu.index = index;
--	atu.type = type;
--	atu.cpu_addr = cpu_addr;
--	atu.pci_addr = pci_addr;
--	atu.size = size;
--	return __dw_pcie_prog_outbound_atu(pci, &atu);
-+	return __dw_pcie_prog_outbound_atu(pci, atu);
- }
- 
- static inline u32 dw_pcie_readl_atu_ib(struct dw_pcie *pci, u32 index, u32 reg)
+@@ -920,8 +920,14 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+ 	 * Indirect eDMA CSRs access has been completely removed since v5.40a
+ 	 * thus no space is now reserved for the eDMA channels viewport and
+ 	 * former DMA CTRL register is no longer fixed to FFs.
++	 *
++	 * Note some devices for unknown reason may have zeros in the eDMA CTRL
++	 * register even though the HW-manual explicitly states there must FFs
++	 * if the unrolled mapping is enabled. For such cases the low-level
++	 * drivers are supposed to manually activate the unrolled mapping to
++	 * bypass the auto-detection procedure.
+ 	 */
+-	if (dw_pcie_ver_is_ge(pci, 540A))
++	if (dw_pcie_ver_is_ge(pci, 540A) || dw_pcie_cap_is(pci, EDMA_UNROLL))
+ 		val = 0xFFFFFFFF;
+ 	else
+ 		val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 20a107c2e543..954d504890a1 100644
+index 8c08159ea08e..c4bdfed7b2e2 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -435,8 +435,8 @@ void dw_pcie_upconfig_setup(struct dw_pcie *pci);
- int dw_pcie_wait_for_link(struct dw_pcie *pci);
- int dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 			      u64 cpu_addr, u64 pci_addr, u64 size);
--int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci, u8 func_no, int index,
--				 int type, u64 cpu_addr, u64 pci_addr, u64 size);
-+int dw_pcie_prog_ep_outbound_atu(struct dw_pcie *pci,
-+				 struct dw_pcie_outbound_atu *atu);
- int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
- 			     u64 cpu_addr, u64 pci_addr, u64 size);
- int dw_pcie_prog_ep_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
+@@ -54,8 +54,9 @@
+ 
+ /* DWC PCIe controller capabilities */
+ #define DW_PCIE_CAP_REQ_RES		0
+-#define DW_PCIE_CAP_IATU_UNROLL		1
+-#define DW_PCIE_CAP_CDM_CHECK		2
++#define DW_PCIE_CAP_EDMA_UNROLL		1
++#define DW_PCIE_CAP_IATU_UNROLL		2
++#define DW_PCIE_CAP_CDM_CHECK		3
+ 
+ #define dw_pcie_cap_is(_pci, _cap) \
+ 	test_bit(DW_PCIE_CAP_ ## _cap, &(_pci)->caps)
 -- 
 2.25.1
 
