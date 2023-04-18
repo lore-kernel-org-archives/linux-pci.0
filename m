@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF13DC6FD18
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 12:26:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BAF3C7EE20
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 12:26:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231532AbjDRM0F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Apr 2023 08:26:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34328 "EHLO
+        id S231356AbjDRM0G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Apr 2023 08:26:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231252AbjDRMZx (ORCPT
+        with ESMTP id S231404AbjDRMZx (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2023 08:25:53 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 03947A5F1;
-        Tue, 18 Apr 2023 05:25:26 -0700 (PDT)
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 217C74497;
+        Tue, 18 Apr 2023 05:25:28 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,207,1677510000"; 
-   d="scan'208";a="156404627"
+   d="scan'208";a="159867455"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 18 Apr 2023 21:24:16 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 18 Apr 2023 21:24:15 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id E15D1423C45D;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 30FD5423C459;
         Tue, 18 Apr 2023 21:24:15 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
@@ -28,10 +28,11 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
         bhelgaas@google.com, kishon@kernel.org
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v13 22/22] misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
-Date:   Tue, 18 Apr 2023 21:24:03 +0900
-Message-Id: <20230418122403.3178462-23-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Rob Herring <robh@kernel.org>
+Subject: [PATCH v13 17/22] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
+Date:   Tue, 18 Apr 2023 21:23:58 +0900
+Message-Id: <20230418122403.3178462-18-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230418122403.3178462-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230418122403.3178462-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,36 +42,132 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Renesas R8A779F0 in pci_device_id table so that pci-epf-test
-can be used for testing PCIe EP on R-Car S4-8.
+Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+PCIe host module.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 ---
- drivers/misc/pci_endpoint_test.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../bindings/pci/rcar-gen4-pci-host.yaml      | 109 ++++++++++++++++++
+ 1 file changed, 109 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index a7244de081ec..1d8f72b42c0a 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -81,6 +81,7 @@
- #define PCI_DEVICE_ID_RENESAS_R8A774B1		0x002b
- #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
- #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
-+#define PCI_DEVICE_ID_RENESAS_R8A779F0		0x0031
- 
- static DEFINE_IDA(pci_endpoint_test_ida);
- 
-@@ -993,6 +994,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1),},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
-+	  .driver_data = (kernel_ulong_t)&default_data,
-+	},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
- 	  .driver_data = (kernel_ulong_t)&j721e_data,
- 	},
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+new file mode 100644
+index 000000000000..637353c3df8b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+@@ -0,0 +1,109 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2022 Renesas Electronics Corp.
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-host.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Renesas R-Car Gen4 PCIe Host
++
++maintainers:
++  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
++
++allOf:
++  - $ref: snps,dw-pcie.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: renesas,r8a779f0-pcie   # R-Car S4-8
++      - const: renesas,rcar-gen4-pcie  # R-Car Gen4
++
++  reg:
++    maxItems: 6
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: dbi2
++      - const: atu
++      - const: dma
++      - const: app
++      - const: config
++
++  interrupts:
++    maxItems: 4
++
++  interrupt-names:
++    items:
++      - const: msi
++      - const: dma
++      - const: sft_ce
++      - const: app
++
++  clocks:
++    maxItems: 1
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++  max-link-speed:
++    maximum: 4
++
++  num-lanes:
++    maximum: 4
++
++required:
++  - compatible
++  - reg
++  - interrupts
++  - clocks
++  - power-domains
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a779f0-sysc.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie: pcie@e65d0000 {
++            compatible = "renesas,r8a779f0-pcie", "renesas,rcar-gen4-pcie";
++            reg = <0 0xe65d0000 0 0x1000>, <0 0xe65d2000 0 0x0800>,
++                  <0 0xe65d3000 0 0x2000>, <0 0xe65d5000 0 0x1200>,
++                  <0 0xe65d6200 0 0x0e00>, <0 0xfe000000 0 0x400000>;
++            reg-names = "dbi", "dbi2", "atu", "dma", "app", "config";
++            #address-cells = <3>;
++            #size-cells = <2>;
++            bus-range = <0x00 0xff>;
++            device_type = "pci";
++            ranges = <0x81000000 0 0x00000000 0 0xfe000000 0 0x00400000
++                      0x82000000 0 0x30000000 0 0x30000000 0 0x10000000>;
++            dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000>;
++            interrupts = <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "msi", "dma", "sft_ce", "app";
++            #interrupt-cells = <1>;
++            interrupt-map-mask = <0 0 0 7>;
++            interrupt-map = <0 0 0 1 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH
++                             0 0 0 2 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH
++                             0 0 0 3 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH
++                             0 0 0 4 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 624>;
++            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++            resets = <&cpg 624>;
++            num-lanes = <2>;
++            snps,enable-cdm-check;
++            max-link-speed = <2>;
++        };
++    };
 -- 
 2.25.1
 
