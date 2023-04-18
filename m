@@ -2,18 +2,18 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87050C77B7C
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 01:17:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C186C77B78
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 01:17:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230248AbjDRBR3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Apr 2023 21:17:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41048 "EHLO
+        id S230253AbjDRBRa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Apr 2023 21:17:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41046 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230239AbjDRBR2 (ORCPT
+        with ESMTP id S230229AbjDRBR2 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Apr 2023 21:17:28 -0400
-Received: from smtp.gentoo.org (woodpecker.gentoo.org [140.211.166.183])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B8C83AA2;
-        Mon, 17 Apr 2023 18:17:27 -0700 (PDT)
+Received: from smtp.gentoo.org (smtp.gentoo.org [IPv6:2001:470:ea4a:1:5054:ff:fec7:86e4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F10FF44B7;
+        Mon, 17 Apr 2023 18:17:26 -0700 (PDT)
 From:   Patrick McLean <chutzpah@gentoo.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
@@ -21,9 +21,9 @@ Cc:     linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         Thomas Zimmermann <tzimmermann@suse.de>,
         dri-devel@lists.freedesktop.org,
         Patrick McLean <chutzpah@gentoo.org>
-Subject: [PATCH 2/2] ata: libata-core: Apply ATI NCQ horkage to ASPEED as well
-Date:   Mon, 17 Apr 2023 18:17:20 -0700
-Message-Id: <20230418011720.3900090-3-chutzpah@gentoo.org>
+Subject: [PATCH 1/2] gpu: Move ASPEED vendor ID definition to pci_ids.h
+Date:   Mon, 17 Apr 2023 18:17:19 -0700
+Message-Id: <20230418011720.3900090-2-chutzpah@gentoo.org>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230418011720.3900090-1-chutzpah@gentoo.org>
 References: <20230418011720.3900090-1-chutzpah@gentoo.org>
@@ -33,37 +33,48 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We have some machines with ASPEED SATA controllers, and are seeing the same NCQ
-issues that ATI controllers (I am not sure if it's a rebranded ATI controller,
-or they both have some faulty implementation). This NCQ breakage is consistent
-across a few different types of drives.
-
-Instead of maintaining a list of drives that are broken with ASPEED controllers
-as well as ATI, let's just treat ASPEED controllers like ATI ones, and disable
-NCQ on drives that have ATA_HORKAGE_NO_NCQ_ON_ATI set on them.
-
-We have been running this patch on several machines for over a week now without
-reproducing an issue that was happening almost daily before.
+Currently the ASPEED PCI vendor ID is defined in drivers/gpu/drm/ast/ast_drv.c,
+move that to include/linux/pci_ids.h with all the rest of the PCI vendor ID
+definitions. Rename the definition to follow the format that the other
+definitions follow.
 
 Signed-off-by: Patrick McLean <chutzpah@gentoo.org>
 ---
- drivers/ata/libata-core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/gpu/drm/ast/ast_drv.c | 4 +---
+ include/linux/pci_ids.h       | 2 ++
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 14c17c3bda4e..051492e8e9f9 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2219,7 +2219,8 @@ static int ata_dev_config_ncq(struct ata_device *dev,
- 	}
+diff --git a/drivers/gpu/drm/ast/ast_drv.c b/drivers/gpu/drm/ast/ast_drv.c
+index d78852c7cf5b..232e797793b6 100644
+--- a/drivers/gpu/drm/ast/ast_drv.c
++++ b/drivers/gpu/drm/ast/ast_drv.c
+@@ -70,12 +70,10 @@ static const struct drm_driver ast_driver = {
+  * PCI driver
+  */
  
- 	if (dev->horkage & ATA_HORKAGE_NO_NCQ_ON_ATI &&
--	    ata_dev_check_adapter(dev, PCI_VENDOR_ID_ATI)) {
-+	    (ata_dev_check_adapter(dev, PCI_VENDOR_ID_ATI) ||
-+		ata_dev_check_adapter(dev, PCI_VENDOR_ID_ASPEED))) {
- 		snprintf(desc, desc_sz, "NCQ (not used)");
- 		return 0;
- 	}
+-#define PCI_VENDOR_ASPEED 0x1a03
+-
+ #define AST_VGA_DEVICE(id, info) {		\
+ 	.class = PCI_BASE_CLASS_DISPLAY << 16,	\
+ 	.class_mask = 0xff0000,			\
+-	.vendor = PCI_VENDOR_ASPEED,			\
++	.vendor = PCI_VENDOR_ID_ASPEED,			\
+ 	.device = id,				\
+ 	.subvendor = PCI_ANY_ID,		\
+ 	.subdevice = PCI_ANY_ID,		\
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 45c3d62e616d..6634741aea80 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -815,6 +815,8 @@
+ #define PCI_VENDOR_ID_ASUSTEK		0x1043
+ #define PCI_DEVICE_ID_ASUSTEK_0675	0x0675
+ 
++#define PCI_VENDOR_ID_ASPEED		0x1a03
++
+ #define PCI_VENDOR_ID_DPT		0x1044
+ #define PCI_DEVICE_ID_DPT		0xa400
+ 
 -- 
 2.40.0
 
