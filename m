@@ -2,79 +2,91 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C186C77B78
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 01:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73229C77B72
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Apr 2023 01:53:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230253AbjDRBRa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Apr 2023 21:17:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41046 "EHLO
+        id S229830AbjDRBxk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Apr 2023 21:53:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230229AbjDRBR2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Apr 2023 21:17:28 -0400
-Received: from smtp.gentoo.org (smtp.gentoo.org [IPv6:2001:470:ea4a:1:5054:ff:fec7:86e4])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F10FF44B7;
-        Mon, 17 Apr 2023 18:17:26 -0700 (PDT)
-From:   Patrick McLean <chutzpah@gentoo.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci@vger.kernel.org, Dave Airlie <airlied@redhat.com>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        dri-devel@lists.freedesktop.org,
-        Patrick McLean <chutzpah@gentoo.org>
-Subject: [PATCH 1/2] gpu: Move ASPEED vendor ID definition to pci_ids.h
-Date:   Mon, 17 Apr 2023 18:17:19 -0700
-Message-Id: <20230418011720.3900090-2-chutzpah@gentoo.org>
-X-Mailer: git-send-email 2.40.0
-In-Reply-To: <20230418011720.3900090-1-chutzpah@gentoo.org>
-References: <20230418011720.3900090-1-chutzpah@gentoo.org>
+        with ESMTP id S229687AbjDRBxj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Apr 2023 21:53:39 -0400
+Received: from out199-18.us.a.mail.aliyun.com (out199-18.us.a.mail.aliyun.com [47.90.199.18])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA9ED420F;
+        Mon, 17 Apr 2023 18:52:46 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R171e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046056;MF=baolin.wang@linux.alibaba.com;NM=1;PH=DS;RN=12;SR=0;TI=SMTPD_---0VgN.twa_1681782660;
+Received: from 30.97.48.52(mailfrom:baolin.wang@linux.alibaba.com fp:SMTPD_---0VgN.twa_1681782660)
+          by smtp.aliyun-inc.com;
+          Tue, 18 Apr 2023 09:51:01 +0800
+Message-ID: <e2397b81-ec19-25e4-ee47-29da29984f9c@linux.alibaba.com>
+Date:   Tue, 18 Apr 2023 09:51:02 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [PATCH v2 2/3] drivers/perf: add DesignWare PCIe PMU driver
+To:     Shuai Xue <xueshuai@linux.alibaba.com>, helgaas@kernel.org,
+        yangyicong@huawei.com, will@kernel.org, Jonathan.Cameron@huawei.com
+Cc:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, rdunlap@infradead.org,
+        robin.murphy@arm.com, mark.rutland@arm.com,
+        zhuo.song@linux.alibaba.com
+References: <20220917121036.14864-1-xueshuai@linux.alibaba.com>
+ <20230410031702.68355-3-xueshuai@linux.alibaba.com>
+ <713d8162-dd3c-483c-b984-7707ef8aaa36@linux.alibaba.com>
+ <ca46be9a-77f2-80ee-62e8-a3ce3eb02097@linux.alibaba.com>
+From:   Baolin Wang <baolin.wang@linux.alibaba.com>
+In-Reply-To: <ca46be9a-77f2-80ee-62e8-a3ce3eb02097@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently the ASPEED PCI vendor ID is defined in drivers/gpu/drm/ast/ast_drv.c,
-move that to include/linux/pci_ids.h with all the rest of the PCI vendor ID
-definitions. Rename the definition to follow the format that the other
-definitions follow.
 
-Signed-off-by: Patrick McLean <chutzpah@gentoo.org>
----
- drivers/gpu/drm/ast/ast_drv.c | 4 +---
- include/linux/pci_ids.h       | 2 ++
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/gpu/drm/ast/ast_drv.c b/drivers/gpu/drm/ast/ast_drv.c
-index d78852c7cf5b..232e797793b6 100644
---- a/drivers/gpu/drm/ast/ast_drv.c
-+++ b/drivers/gpu/drm/ast/ast_drv.c
-@@ -70,12 +70,10 @@ static const struct drm_driver ast_driver = {
-  * PCI driver
-  */
- 
--#define PCI_VENDOR_ASPEED 0x1a03
--
- #define AST_VGA_DEVICE(id, info) {		\
- 	.class = PCI_BASE_CLASS_DISPLAY << 16,	\
- 	.class_mask = 0xff0000,			\
--	.vendor = PCI_VENDOR_ASPEED,			\
-+	.vendor = PCI_VENDOR_ID_ASPEED,			\
- 	.device = id,				\
- 	.subvendor = PCI_ANY_ID,		\
- 	.subdevice = PCI_ANY_ID,		\
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 45c3d62e616d..6634741aea80 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -815,6 +815,8 @@
- #define PCI_VENDOR_ID_ASUSTEK		0x1043
- #define PCI_DEVICE_ID_ASUSTEK_0675	0x0675
- 
-+#define PCI_VENDOR_ID_ASPEED		0x1a03
-+
- #define PCI_VENDOR_ID_DPT		0x1044
- #define PCI_DEVICE_ID_DPT		0xa400
- 
--- 
-2.40.0
+On 4/17/2023 9:16 AM, Shuai Xue wrote:
 
+[snip]
+
+>>> +
+>>> +static void dwc_pcie_pmu_event_update(struct perf_event *event)
+>>> +{
+>>> +    u64 counter;
+>>> +    struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
+>>> +    struct dwc_pcie_rp_info *rp_info = pmu_to_pcie_info(event->pmu);
+>>> +    struct pci_dev *pdev = rp_info->pdev;
+>>> +    u16 ras_des = rp_info->ras_des;
+>>> +    struct hw_perf_event *hwc = &event->hw;
+>>> +    enum dwc_pcie_event_type type = DWC_PCIE_EVENT_TYPE(event);
+>>> +    u64 delta, prev, now;
+>>> +
+>>> +    do {
+>>> +        prev = local64_read(&hwc->prev_count);
+>>> +
+>>> +        if (type == DWC_PCIE_LANE_EVENT)
+>>> +            dwc_pcie_pmu_read_event_counter(pdev, ras_des, &counter);
+>>> +        else if (type == DWC_PCIE_TIME_BASE_EVENT)
+>>> +            dwc_pcie_pmu_read_base_time_counter(pdev, ras_des,
+>>> +                                &counter);
+>>> +        else
+>>> +            dev_err(pcie_pmu->dev, "invalid event type: 0x%x\n", type);
+>>> +
+>>> +        now = counter;
+>>> +    } while (local64_cmpxchg(&hwc->prev_count, prev, now) != prev);
+>>> +
+>>> +    delta = now - prev;
+>>
+>> This can be overflow? better to add a mask to avoid possible overflow.
+> 
+> I think it can not. This Root Complex supports up to PCIe Gen5 (32 GT/s)
+> and one root port support up to x16 lanes, with peek bandwidth 64 GB/s.
+> On Yitian 710, one root port is x4 lane with peak bandwidth 16 GB/s.
+> The counter is 64 bit width with 16 bytes unit.
+> 
+> 	2^64*16/(64*10^9)/60/60/24/365 = 146 years
+> 
+> For x16 root port, it will not overflow within 146 yeasr and for yitian 710,
+> it will never overflow in my life too.
+
+However the lane event counter is 32bit, so still a maximum counter mask 
+is preferable.
