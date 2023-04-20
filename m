@@ -2,168 +2,188 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40D84C77B78
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Apr 2023 07:09:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CC24C77B72
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Apr 2023 07:14:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233964AbjDTHJu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Apr 2023 03:09:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57638 "EHLO
+        id S234020AbjDTHOx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Apr 2023 03:14:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233975AbjDTHJn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Apr 2023 03:09:43 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D39A8558D;
-        Thu, 20 Apr 2023 00:09:19 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id d2e1a72fcca58-63b7588005fso676845b3a.0;
-        Thu, 20 Apr 2023 00:09:19 -0700 (PDT)
+        with ESMTP id S234019AbjDTHOv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Apr 2023 03:14:51 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0BDA2D64;
+        Thu, 20 Apr 2023 00:14:50 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id 98e67ed59e1d1-244a5ccf13eso434720a91.2;
+        Thu, 20 Apr 2023 00:14:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1681974559; x=1684566559;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=RgJY1hiFKqX+w6LLZ3fee7l/ovDaM7Mvo24SInHmDsg=;
-        b=V+ZsB60bpdgJy7Dn9GZC4OnTeeHxQPWo9NW7+bMfokCuZxbGmstFSeYHez97GS6a42
-         QQAECBG9Pp1B7RogsbqgT3gkj0CZ57DStXkghmir9fl76hBozq60MOapPmNv6VuxEK4a
-         QcupBobZmpVym6dZTlZWINENyzfoQsrVGh/1zMnEca3kYFCaTbjlRAbkTxJfs90kWJtT
-         Bumq5J0dITt379+n84an6gwpXRV/6ke6MMi+dbCK8USYsIURfkiUmL4y9s7oBiwAvo52
-         QDTbvDsFoPfTB8iXVyrgzJnRwp9G33SRbMvePwYf4SB0pkQWQWGiVRhsQXNge/vQI3nZ
-         I/GQ==
+        d=gmail.com; s=20221208; t=1681974890; x=1684566890;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=WF5f/qiCq+I4QIB3+B0PWVUJeva+vS+YZGKI21h5n8k=;
+        b=CRJ77JW6KbBe8kyJ2xIA/OdIJCX3BWF9TdsDwiy7SfDkY6SC22GM9tjX9kSFCUf2PG
+         Cm7QQN3OvXy46uCogoH3DQ9IYUj9Z6Gp8FEXseIOhPUZZEHN8YPMQt38+szLvUrMf/zv
+         4v0baj1sUEMk4zvH6q+0RSl34iL34kaiR3o+wPXBlEAWw7CS4Msgf8p2VstQDj6oTBEf
+         vanha6XFl4XoY8P7s+9OOUhZn+wFtJfaoPZXJIUSWaNXAt9HrF8tu5iFZsDT/wE+Nz+c
+         yVG0IOSUhaZfoodkmL2g8iDZjDf7/ZihyJOBIKTYgZ3opePv0gQDwjm/VsdzuxVHrOFj
+         m1vg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1681974559; x=1684566559;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20221208; t=1681974890; x=1684566890;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=RgJY1hiFKqX+w6LLZ3fee7l/ovDaM7Mvo24SInHmDsg=;
-        b=a1lIhHwWF/ZrnmRY0vfSSbMc+P30Zf7KR1f9QS7m0ARJoUAEC/Qsczz3s81OImOeUr
-         cB18jwZv3hLjlnHXNU9YYepMPoBEKa4JAltytu5ehCwvcuESTigv19ejZNYdYy/0f98W
-         pFMY0iFmMoIif0f0GHPG5hlLLW2Y7XWWOs8TMeWFi6S8epN9Nt7VbQFaFerYmRL6u6zY
-         1eIqqQBJq8akDhgtN1S8Y83xbQa0y7q8FCWnu0UrKIwSI/obCAwHjQCaIlx2w7f0vTaA
-         7sj/QdpbC/xNGDeVPpXb5ksIaNXl5Upvru46mnd6j+9WWxWYpjpaxFwrhatq69XaH9oB
-         8YAA==
-X-Gm-Message-State: AAQBX9foZmCyVzWXPfEshA21IW0w1UVIxDvTA8MjOHvr9ryKou7GhYOO
-        Zech4wZXFP48YGIpaCW7HjI=
-X-Google-Smtp-Source: AKy350Z8+n5KwNdXI9m+pUnlYONRImHCi5g8u9N65BgFlbMvpIkvdtVEjvlMqTmKZcZli4hvS17Ptg==
-X-Received: by 2002:a05:6a20:8e0c:b0:ef:2389:66c5 with SMTP id y12-20020a056a208e0c00b000ef238966c5mr1277801pzj.12.1681974559066;
-        Thu, 20 Apr 2023 00:09:19 -0700 (PDT)
-Received: from localhost.localdomain ([43.132.141.8])
-        by smtp.gmail.com with ESMTPSA id h64-20020a638343000000b0051b603bf22csm503080pge.69.2023.04.20.00.09.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Apr 2023 00:09:18 -0700 (PDT)
-From:   korantwork@gmail.com
-To:     helgaas@kernel.org, nirmal.patel@linux.intel.com,
-        kbusch@kernel.org, jonathan.derrick@linux.dev,
-        lpieralisi@kernel.org
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Xinghui Li <korantli@tencent.com>
-Subject: [PATCH v5] PCI: vmd: Add the module param to adjust MSI mode
-Date:   Thu, 20 Apr 2023 15:09:14 +0800
-Message-Id: <20230420070914.1383918-1-korantwork@gmail.com>
-X-Mailer: git-send-email 2.31.1
+        bh=WF5f/qiCq+I4QIB3+B0PWVUJeva+vS+YZGKI21h5n8k=;
+        b=YIr13AcRP3TOu1U8aNVgDOI8DQdY4tcKbWFlGSRRzazpSSwiylZ+Q+xxVH6WGiuJ5X
+         7jQY9OwU7KMy4/E3GMfZbYY++VrEAjIRuFUs9J6tpU11nLLdz1GQjXnUqWDLAEwkySuq
+         6YIj8NJ/rNZTIQ19ojMHOacF0B9Gtq3lBbjSR9mLpP6j/yd3xf/+DDhErgQnildw6Oav
+         Wh2KiIIzkpv9d9iY4cca0Ls2gU3oFJ9wAmR4j5yJZots4GH7/O8I1EKZ5HXENS1VJp5o
+         Sog8RhCHIVCnU5pyok7t41Wg++WzOtNzYFAmBgEfDwLcPAz2EzFk+K8frQAtl7BRP5dZ
+         AeWg==
+X-Gm-Message-State: AAQBX9fBSM16mHBunuSEXkMTa93XBVG6OXplEtpIO/do3YovXzXNjKju
+        4injfwM8UeM6nvdPPqHRj6hWI6WbeWZORegPrQjmK2+LHSCl8xfN
+X-Google-Smtp-Source: AKy350bhhUfp7hBdz0g9NOIEyHF2MBw8P3pv/mgubG1I6uYlBfOdm5OAmrextNvzJbyRepJsONzc0j0oiGXG2HrwJG4=
+X-Received: by 2002:a17:90b:388f:b0:23d:1143:c664 with SMTP id
+ mu15-20020a17090b388f00b0023d1143c664mr743277pjb.31.1681974889887; Thu, 20
+ Apr 2023 00:14:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20230419193513.708818-1-robh@kernel.org>
+In-Reply-To: <20230419193513.708818-1-robh@kernel.org>
+From:   Donald Hunter <donald.hunter@gmail.com>
+Date:   Thu, 20 Apr 2023 08:14:38 +0100
+Message-ID: <CAD4GDZziEXfeietHOwutUOj4h9-zgV_EfCZj+0x5KCOO23ZS9A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Restrict device disabled status check to DT
+To:     Rob Herring <robh@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Binbin Zhou <zhoubinbin@loongson.cn>,
+        Liu Peibao <liupeibao@loongson.cn>,
+        Huacai Chen <chenhuacai@loongson.cn>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Xinghui Li <korantli@tencent.com>
+On Wed, 19 Apr 2023 at 20:45, Rob Herring <robh@kernel.org> wrote:
+>
+> Commit 6fffbc7ae137 ("PCI: Honor firmware's device disabled status")
+> checked the firmware device status for both DT and ACPI devices. That
+> caused a regression in some ACPI systems. The exact reason isn't clear.
+> It's possibly a firmware bug. For now, at least, refactor the check to
+> be for DT based systems only.
+>
+> Note that the original implementation leaked a refcount which is now
+> correctly handled.
+>
+> Fixes: 6fffbc7ae137 ("PCI: Honor firmware's device disabled status")
+> Link: https://lore.kernel.org/all/m2fs9lgndw.fsf@gmail.com/
+> Reported-by: Donald Hunter <donald.hunter@gmail.com>
+> Cc: Binbin Zhou <zhoubinbin@loongson.cn>
+> Cc: Liu Peibao <liupeibao@loongson.cn>
+> Cc: Huacai Chen <chenhuacai@loongson.cn>
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
-In the past, the vmd MSI mode can only be adjusted by configuring
-vmd_ids table. This patch adds another way to adjust MSI mode by
-adjusting module parameter, which allows users easier to adjust the vmd
-according to the I/O scenario without rebuilding driver.
+Tested-by: Donald Hunter <donald.hunter@gmail.com>
 
-- "disable_msi_bypass=0 or other values":
-  Under normal circumstances, we recommend enable the VMD MSI-X bypass
-  feature, which improves interrupt handling performance by avoiding
-  the VMD MSI-X domain interrupt handler.
+Thanks!
 
-- "disable_msi_bypass=1":
-  Use this when multiple NVMe devices are mounted on the same PCIe
-  node with a high volume of 4K random I/O. It mitigates excessive
-  pressure on the PCIe node caused by numerous interrupts from NVMe
-  drives, resulting in improved I/O performance. Such as:
-
-  In FIO 4K random test when 4 NVME(Gen4) mounted on the same PCIE port:
-    - Enable bypass: read: IOPS=562k, BW=2197MiB/s, io=644GiB
-    - Disable bypass: read: IOPS=1144k, BW=4470MiB/s, io=1310GiB
-
-As not all devices support VMD MSI-X bypass, this parameter is
-only applicable to devices that support the bypass function and
-have already enabled it, such as VMD_28C0. Besides, this parameter
-does not affect the MSI-X working mode in guest.
-
-Signed-off-by: Xinghui Li <korantli@tencent.com>
----
- drivers/pci/controller/vmd.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 990630ec57c6..8ee673810cbf 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -34,6 +34,20 @@
- #define MB2_SHADOW_OFFSET	0x2000
- #define MB2_SHADOW_SIZE		16
- 
-+/*
-+ * The VMD disable_msi_bypass module parameter provides the alternative
-+ * way to adjust MSI mode when loading vmd.ko. This parameter is only applicable
-+ * to devices that both support and have enabled bypass, such as VMD_28C0.
-+ * Besides, it does not affect MSI-X mode in the guest.
-+ *
-+ * 1: disable MSI-X bypass
-+ * other values: not disable MSI-X bypass
-+ */
-+static int disable_msi_bypass;
-+module_param(disable_msi_bypass, int, 0444);
-+MODULE_PARM_DESC(disable_msi_bypass, "Whether to disable MSI-X bypass function.\n"
-+	"\t\t  Only effective on the device supporting bypass, such as 28C0.");
-+
- enum vmd_features {
- 	/*
- 	 * Device may contain registers which hint the physical location of the
-@@ -875,6 +889,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 			return ret;
- 
- 		vmd_set_msi_remapping(vmd, true);
-+		dev_info(&vmd->dev->dev, "init vmd with remapping MSI-X\n");
- 
- 		ret = vmd_create_irq_domain(vmd);
- 		if (ret)
-@@ -887,6 +902,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 		irq_domain_update_bus_token(vmd->irq_domain, DOMAIN_BUS_VMD_MSI);
- 	} else {
- 		vmd_set_msi_remapping(vmd, false);
-+		dev_info(&vmd->dev->dev, "init vmd with bypass MSI-X\n");
- 	}
- 
- 	pci_add_resource(&resources, &vmd->resources[0]);
-@@ -955,6 +971,17 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	return 0;
- }
- 
-+static void vmd_config_msi_bypass_param(unsigned long *features)
-+{
-+	/*
-+	 * Not every VMD device supports and enables bypass MSI-X.
-+	 * Make sure current device has the bypass flag set.
-+	 */
-+	if (disable_msi_bypass == 1 &&
-+	  *features & VMD_FEAT_CAN_BYPASS_MSI_REMAP)
-+		*features &= ~(VMD_FEAT_CAN_BYPASS_MSI_REMAP);
-+}
-+
- static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- {
- 	unsigned long features = (unsigned long) id->driver_data;
-@@ -984,6 +1011,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	if (err < 0)
- 		goto out_release_instance;
- 
-+	vmd_config_msi_bypass_param(&features);
-+
- 	vmd->cfgbar = pcim_iomap(dev, VMD_CFGBAR, 0);
- 	if (!vmd->cfgbar) {
- 		err = -ENOMEM;
--- 
-2.31.1
-
+> ---
+>  drivers/pci/of.c    | 30 ++++++++++++++++++++++++------
+>  drivers/pci/pci.h   |  4 ++--
+>  drivers/pci/probe.c |  8 ++++----
+>  3 files changed, 30 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index 196834ed44fe..4c2ef2e28fb5 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -16,14 +16,32 @@
+>  #include "pci.h"
+>
+>  #ifdef CONFIG_PCI
+> -void pci_set_of_node(struct pci_dev *dev)
+> +/**
+> + * pci_set_of_node - Find and set device's DT device_node
+> + * @dev: the PCI device structure to fill
+> + *
+> + * Returns 0 on success with of_node set or when no device is described in the
+> + * DT. Returns -ENODEV if the device is present, but disabled in the DT.
+> + */
+> +int pci_set_of_node(struct pci_dev *dev)
+>  {
+> +       struct device_node *node;
+> +
+>         if (!dev->bus->dev.of_node)
+> -               return;
+> -       dev->dev.of_node = of_pci_find_child_device(dev->bus->dev.of_node,
+> -                                                   dev->devfn);
+> -       if (dev->dev.of_node)
+> -               dev->dev.fwnode = &dev->dev.of_node->fwnode;
+> +               return 0;
+> +
+> +       node = of_pci_find_child_device(dev->bus->dev.of_node, dev->devfn);
+> +       if (!node)
+> +               return 0;
+> +
+> +       if (!of_device_is_available(node)) {
+> +               of_node_put(node);
+> +               return -ENODEV;
+> +       }
+> +
+> +       dev->dev.of_node = node;
+> +       dev->dev.fwnode = &node->fwnode;
+> +       return 0;
+>  }
+>
+>  void pci_release_of_node(struct pci_dev *dev)
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index d2c08670a20e..2b48a0aa8008 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -624,7 +624,7 @@ int of_pci_get_max_link_speed(struct device_node *node);
+>  u32 of_pci_get_slot_power_limit(struct device_node *node,
+>                                 u8 *slot_power_limit_value,
+>                                 u8 *slot_power_limit_scale);
+> -void pci_set_of_node(struct pci_dev *dev);
+> +int pci_set_of_node(struct pci_dev *dev);
+>  void pci_release_of_node(struct pci_dev *dev);
+>  void pci_set_bus_of_node(struct pci_bus *bus);
+>  void pci_release_bus_of_node(struct pci_bus *bus);
+> @@ -662,7 +662,7 @@ of_pci_get_slot_power_limit(struct device_node *node,
+>         return 0;
+>  }
+>
+> -static inline void pci_set_of_node(struct pci_dev *dev) { }
+> +static inline int pci_set_of_node(struct pci_dev *dev) { return 0; }
+>  static inline void pci_release_of_node(struct pci_dev *dev) { }
+>  static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+>  static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index a3f68b6ba6ac..f96fa83f2627 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1826,7 +1826,7 @@ int pci_setup_device(struct pci_dev *dev)
+>         u32 class;
+>         u16 cmd;
+>         u8 hdr_type;
+> -       int pos = 0;
+> +       int err, pos = 0;
+>         struct pci_bus_region region;
+>         struct resource *res;
+>
+> @@ -1840,10 +1840,10 @@ int pci_setup_device(struct pci_dev *dev)
+>         dev->error_state = pci_channel_io_normal;
+>         set_pcie_port_type(dev);
+>
+> -       pci_set_of_node(dev);
+> +       err = pci_set_of_node(dev);
+> +       if (err)
+> +               return err;
+>         pci_set_acpi_fwnode(dev);
+> -       if (dev->dev.fwnode && !fwnode_device_is_available(dev->dev.fwnode))
+> -               return -ENODEV;
+>
+>         pci_dev_assign_slot(dev);
+>
+> --
+> 2.39.2
+>
