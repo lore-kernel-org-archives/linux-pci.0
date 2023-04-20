@@ -2,44 +2,44 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6506FC6FD18
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Apr 2023 02:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC0AC77B7C
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Apr 2023 02:41:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229797AbjDTClP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Apr 2023 22:41:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40522 "EHLO
+        id S233516AbjDTCl2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Apr 2023 22:41:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229687AbjDTClO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Apr 2023 22:41:14 -0400
-Received: from BN6PR00CU002.outbound.protection.outlook.com (mail-eastus2azon11021014.outbound.protection.outlook.com [52.101.57.14])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F4D2F2;
-        Wed, 19 Apr 2023 19:41:12 -0700 (PDT)
+        with ESMTP id S232635AbjDTClU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Apr 2023 22:41:20 -0400
+Received: from BN6PR00CU002.outbound.protection.outlook.com (mail-eastus2azon11021022.outbound.protection.outlook.com [52.101.57.22])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DE0B4EC3;
+        Wed, 19 Apr 2023 19:41:18 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gK4duflaRTqQaWN8Q/JTtR9fQ/K4dgM31DYIiVP1BFPZMKQVKtcEPRSU+6P4we8fYvONv/B01LvsdEj/fLWEgzVbS2jCRfnJQQMhHaleerUNT4b9xQeN6xLy9hhREVn5XbP6J+WC89Cn2XE+JVteYWZPdcBwqrU3e7M+s7VEsIIbjQ2WCv/Yrtjyk3yec4Vf8qdRHFGJrbjOz+JHIkLgeJlrgoj5y9WXBTL8G3ZoJQ284sR0rp7IcDHXg3FaD0BHvYThAPI+DNuJtyuRd4Qvc+7XWI3kTmvIwUIJRV6U67jqycYkssrtnPexoGNenZAEhwHdt6DI7i4sUiNKr0vs+A==
+ b=BUbcBBXLRNeEPVdzKSBSCFkNfUpnVk0ElvPvR33vQ4IjSX/R+AjOL2SLSEIx54nIqzeHTFBXwm4dQ9MmA82Pi96nhmXQpvLxHbP1RV2lQ2UGdHNhEwASv7lYGPJrvx74Fl8RxEFVLzv5eC/IjhhxStjmPVtKV9FTmTkh1hoa+lJSzZ83uvD8rojBh6GXiLsl4pwwW+v5RtmSFA6nLcrVYvXpHGHO55RTRV+MMnBNO0kUu6dD6SLsr+w+xG9gVVVtMmo+Goby7EEn70s+0RFGrgdQ+9vdiLeft0H5qk49n+cXzGWDI/0SXnO5xKEl6Ie7WxhdBVRnEzK1cgw9Umz+Ng==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WOM67pBbZqEU6233oIAMYg9ABoV9tHU8HDvLg4S3tWk=;
- b=i648LT68ELLroRtT00SSayFymIglVrfrsoHr0tuqIkmAtpCj1n3X7oULcohCsSnuuh9ebVco8BoFlixxZGTl8opEJQ3XObIYSeaVBaWyk1VeHRpbjghCcsS7D3OWabsdP+grrgI5ibQBjjKa3hQyRJsbzhLGsN883d75rma3LfzD6mDpI+Q2N2GMySX452LWpVQtyjdWt7XQPA3I22ncQWWBXXcRfND3vS9BVmCyrtomoacWfu+ce4j/A17LMIi9zLZxeOBMkvFuf9t7BQhP1DrK5bqMIBTcIxuPa5XNcPSRTARnKIUuQ819Z9swxkpp4BFVDpi4Yqnjzj7kDwsWqg==
+ bh=2qOPAMkZr4rtwbzpMhwxs/4UwiZWmjvSHb4CdQwyqS4=;
+ b=Bs1ienACzmoC2iMN6Td3bJPaVdG8uLYMIyEmEN9Px2Rg+3CXz5p7T3vws+T2ZUpctNuP22Vkze3Q/WkkZNh+SGEmnmcloJQy+1+iHvyATlbl9KcPKFZ9Aoc/7MVGlbwoyadFq8btFvx234bVOC/7jzqYpZgOu6qzfJ7qvtZQ8D0+pY3tFGtQpLPEhOQgY6bK5H+9XhuVGmlspfNBAXi9CmcIRZoAZrK2JJJefzswUr5pruhKLkwcYkQb3Zx2i8mreTdkYeWPaLxyNLKmVn8p5VRDVRg1FYGFuyLo3btp/LH2FJ+5MtuzbC33r8MeLnwg+EGULbRiSdT9g2RjQN9rpw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microsoft.com; dmarc=pass action=none
  header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WOM67pBbZqEU6233oIAMYg9ABoV9tHU8HDvLg4S3tWk=;
- b=fUZ/Zvln2FSc8X9D1kbZ6Jn3314LAtDlOBXG2zPVev9TcHjqZ8INtGhGeW1wvkJQ/UI46qJ3O7VcOrrwq+0X34fK3rUZgs5FmakLQixYZ4XKpJuUaGlj43JK23dSqLn5w6gOTjP1zm+SnbQCoUDZb+OHWWZJSS0QAqYRoYz5zrA=
+ bh=2qOPAMkZr4rtwbzpMhwxs/4UwiZWmjvSHb4CdQwyqS4=;
+ b=YCp7H84zJYOSe+J+80R2hVaJMuB0XGL2ohnnPz59CT887Ij3ugTKgdJqsRGcFmt8vLTAzXWu2yPDxo7Ccp9h7d4K1xYYzG6pmCqI4CqBgGWWoX4UaKQGz1LZlO9OAGZNmv4n57HqQCgYig34Fh1tz6dkrBXs/zrtKGhES1dn+1E=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=microsoft.com;
 Received: from BL0PR2101MB1092.namprd21.prod.outlook.com
  (2603:10b6:207:30::23) by SJ1PR21MB3411.namprd21.prod.outlook.com
  (2603:10b6:a03:451::9) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6340.7; Thu, 20 Apr
- 2023 02:41:09 +0000
+ 2023 02:41:15 +0000
 Received: from BL0PR2101MB1092.namprd21.prod.outlook.com
  ([fe80::932e:24fe:fc1b:5d30]) by BL0PR2101MB1092.namprd21.prod.outlook.com
  ([fe80::932e:24fe:fc1b:5d30%5]) with mapi id 15.20.6340.009; Thu, 20 Apr 2023
- 02:41:09 +0000
+ 02:41:15 +0000
 From:   Dexuan Cui <decui@microsoft.com>
 To:     bhelgaas@google.com, davem@davemloft.net, decui@microsoft.com,
         edumazet@google.com, haiyangz@microsoft.com, jakeo@microsoft.com,
@@ -50,11 +50,13 @@ To:     bhelgaas@google.com, davem@davemloft.net, decui@microsoft.com,
         boqun.feng@gmail.com, ssengar@microsoft.com, helgaas@kernel.org
 Cc:     linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        josete@microsoft.com
-Subject: [PATCH v3 0/6] pci-hyper: Fix race condition bugs for fast device hotplug
-Date:   Wed, 19 Apr 2023 19:40:31 -0700
-Message-Id: <20230420024037.5921-1-decui@microsoft.com>
+        josete@microsoft.com, stable@vger.kernel.org
+Subject: [PATCH v3 2/6] PCI: hv: Fix a race condition in hv_irq_unmask() that can cause panic
+Date:   Wed, 19 Apr 2023 19:40:33 -0700
+Message-Id: <20230420024037.5921-3-decui@microsoft.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20230420024037.5921-1-decui@microsoft.com>
+References: <20230420024037.5921-1-decui@microsoft.com>
 Content-Type: text/plain
 X-ClientProxiedBy: MW4P221CA0023.NAMP221.PROD.OUTLOOK.COM
  (2603:10b6:303:8b::28) To BL0PR2101MB1092.namprd21.prod.outlook.com
@@ -63,92 +65,128 @@ MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: BL0PR2101MB1092:EE_|SJ1PR21MB3411:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8cf5489e-10a5-4630-c22c-08db4148b1e9
+X-MS-Office365-Filtering-Correlation-Id: 71268da5-6bac-45dc-9f31-08db4148b64c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: t+EnossUVzShVk4zQQjEqIvVI2w9my18HmvktoHvu4GgX8kPkpb66riYBONFwLqB5MzFCzzzOLyYsn+hk8m9BsQPICgno88IOwwKu1GJDJvLrP9ZEyiSirevxa8LJPttmc/04zMH5K/DaVvNc0/yR6E5Olki0FLksPodRWQz1wYodPXymV01C9oonGMha49PeVZoY4niScTNC28gJCZL1LDi53485cFkveJR7FHjkkk/6/JsqK4HnGYHb71DUCMFbG7ZMsNB6HYsxevmD8nSOVzvIscvvhg8ZRB4ps9g304bI1KA+UGQIZbdeAwd1mpMysbHZn15wjuLP1IGkrGpEbvnzgglay7VwuGU5Euyn+KEuG9K7sZv139XuVAVso0o7lc6PrQOW1XvuiLt7dHedwc2XjJK/s87w/gMsWM5MLCI2SywYXNjpfkoCpj90B4VgoYckMkV4tVn3aeVXU5PHKJ24hLGfOlTwE5Xs0VV19BKkKIaUCcYRWoKsVtgTHaftS24hfwlLAGJu+KY0lfVr8qjnNWcyUzHtyF0BCzNYJRAlZu3T8DCYm2RHI7jwB/MRIhOUOdJIhuX1QDGUrHQdeLgTbLaJ7+brRDiu+56BwQgcp6yZtTh9MlaojhBk3WWqTXrHcondrfy/p1Etlt8R+enchtXLY3h7/G/OVF5K2za0pVRel0rB00kBKrkgPAq
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR2101MB1092.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(376002)(366004)(39860400002)(346002)(396003)(136003)(451199021)(2616005)(83380400001)(36756003)(186003)(6486002)(6512007)(1076003)(6506007)(966005)(6666004)(52116002)(66946007)(66556008)(10290500003)(66476007)(478600001)(4326008)(316002)(41300700001)(82950400001)(82960400001)(921005)(786003)(8676002)(8936002)(38100700002)(5660300002)(7416002)(107886003)(86362001)(2906002);DIR:OUT;SFP:1102;
+X-Microsoft-Antispam-Message-Info: 43AG5Ny/u0MFFsrA1XyCJrvbol9uB6YB5da7vVzZ7+/EeDgoOruyoFDOhLS8BK19IdoQpUyF2T6zJPYdAYiFL9r1qXKCKDZplUrwy/R79TW2cfWE3oSKrV6v+LQENEIwbETvv5K0FO9vQfHqvWncCZk7zh6QwloRCnCBXAPgIvpHMjXfpmAYgDdK0/bj0PWif8HVGpyuDeaNam971tFK8fAN96fYS74mFk7n2evsGfuKt1T7AqJnf6mbAgDrYG4hLUqB741n4u0R7oGvYnDFqerdLJWCFKj9I0ecZqKY9b9tWQDVFIbQOPtEPXRdgSx9S+0r6OQpuonlU8S0LCUGQ59AgZ8CVRJqHN4Cblr/U1J265wtYytAhX8tPOdKJsLtvCqHvirMsaWQbE6Q2cGxCA9FQDn2gJCV4WO2Fes7pU9hTnZfGuTQjTf2OR4PsKLhvP7qhV+QpgxLSa0L79rVZhKVg6v8t72N6JIsA6rcu1a14MibO106v3ponTmGEQowo/xKGp4XiqyES37PYPN+GRF9UuSqBIPaSUZTjSOq2PZSeu3/PPP0hsW3+UuCAymJWCqEfuX6hXrd06bLMmCa2SDdAbSTMOpomdyHWIc6FpC+MXFgI2gVhoOBAxLU+L+4BI4rLHlShef2BnTNKWGUyA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR2101MB1092.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(376002)(366004)(39860400002)(346002)(396003)(136003)(451199021)(2616005)(83380400001)(36756003)(186003)(6486002)(6512007)(1076003)(6506007)(6666004)(52116002)(66946007)(66556008)(10290500003)(66476007)(478600001)(4326008)(316002)(41300700001)(82950400001)(82960400001)(921005)(786003)(8676002)(8936002)(38100700002)(5660300002)(66899021)(7416002)(86362001)(2906002);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?KO/8tbPh5kwQ1LehDBhwMXokI+Cp9bDevRkHmoeBaQeW6wGl/U6TC8kq88ET?=
- =?us-ascii?Q?0eqLMEMlHlZPhdaEK1lOcZT7NR/uBu3EmymqaEuINgMfpI332I3AGlh61dEs?=
- =?us-ascii?Q?Otkz77prMu5CvCz5t0KSJxvG86Zn/lAleWPveN/60YbbpkoRhZ9Sgnm6hf28?=
- =?us-ascii?Q?jsxWWsyyGvgmridlr0d1zF+BI0nTSkXlZx4rW+AQIG2uNe/aL8peF1m/bSXd?=
- =?us-ascii?Q?B1pTSmQZ1d2x5PCix9In9i52nYl8Ff4a0lURvmgIi8gPxsyKe1pvvgr0WZRr?=
- =?us-ascii?Q?0HfMaioiStvMaYOKTeRLA3c8HB2L1GOZv73C6Z4bjmaePgv9q79wO1ytlzd7?=
- =?us-ascii?Q?HNB7EQ1zWktUYw8U94BbJhB/Y2lsn3PMiV/v05tEi51yV1nqHRYwvKQYj36H?=
- =?us-ascii?Q?Ur0JF/391ZexaBvCqKBY8pgvlrNX2J13F3JrsKNA+wHRAT4dCjYHjBJ+RNtN?=
- =?us-ascii?Q?/rH0CT2xAFv05nMbgLCthgQetLCfEVZlI79NT6sP1JU0h+kZkK5fUGy0993R?=
- =?us-ascii?Q?ExZMN2BI4jJWi2lvwQV3kBwVXMi77gInK0fGwv/G9IX8ujBiG0NG2mURevq9?=
- =?us-ascii?Q?nkc0ud5bPppIZ/J8msh8qI8N+/nva5ZNLckojOLU9xm0MOGk6Ouopl65jZwq?=
- =?us-ascii?Q?WJOIKKuXJImMK4NG7xWUwZsMVo3v+ggP/h1E/1khEujuEVfWOyosPEK6+YKx?=
- =?us-ascii?Q?6+Bzk6qx6+8/Q5DTqD4saeuFMuMFKlujNjnCT1YAo/neY5ZGSGLka0upaLbt?=
- =?us-ascii?Q?iOGIJPeT9jAyCRW7lvkCiyVDSU3K/dQ2QVmus8I1rFuHXV1g7s35Tjk/491P?=
- =?us-ascii?Q?TqrHCHlsprkNVM62u2zcZ8BH/R3pJauxg/vxgbvATyQLvDJdWf/qeNbmowGH?=
- =?us-ascii?Q?EvLNlU72qY3ZKQW9pNvCbgPoTcxQZ89Ue0k9cyVNo36unv5F1yIV9S73IuB/?=
- =?us-ascii?Q?H0JNuIvP2gBa17HhF0/x6hFIM6Fb81ZKenq+m4p9zY9Ffm413XkUL4441QOj?=
- =?us-ascii?Q?lF10IdNY5NHJNkp6+o89ZJTbT6ktQUPQtSg1ldlBp3doa6zulYeEx2ZeisB2?=
- =?us-ascii?Q?w5Ue2Shd0+zs5L2owC0NKd0uBiByHXfYh+WU8mxd41VRwGG/qnuKrSM/69/x?=
- =?us-ascii?Q?AASIeZbR11LtH/EPQp5GU2iTHbKlxLn3MTDtR6a09mp8iYPlEpj1iEkHvwGo?=
- =?us-ascii?Q?hRbhSGxvuAX8706bAsP4LuHPQ6QF+QS+AyuV9WLwIEZ76S7WJ8UnNpdrUX+H?=
- =?us-ascii?Q?gSLmorbhXWDpVBPdukfj1W00a7pDyaB6gM9PLReGg5mMhEpJy828Od0pkSjO?=
- =?us-ascii?Q?PKnFXGQlBqE3zsWPfFTHnhoQxY2W5X+bkKF0kPm8Sn8RT6ukccwx2Z1lJTdd?=
- =?us-ascii?Q?a0F5e7D2dKxGcuWverlIBq9PvoQMP4lXpBSM+oKx80435f5UWraMNBBJ6VLc?=
- =?us-ascii?Q?SaNH14Z48Mb/17wbf8rv13axwOL/rMSThKdtucR/CjFKvBdOF1M0re3lPQpA?=
- =?us-ascii?Q?vZFtd3WTs9PV22mhfgAK6eICRIUzQwMffa92umFk774fmSEuOBQadsREhhqv?=
- =?us-ascii?Q?/39Z+Wnqw7sdH8M/hrhC0ojTekfleUcFOnGglPv9NS/QeBwOEj+c8jLRm/Iu?=
- =?us-ascii?Q?n0khWlXdIcSGp4SaB9q4d41xOR+ask22wXhaX/+u4YQd?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?lBt1pE3KS2VxTaHw6c201QQnmwupheTd9rqzb2x8XtyC90SVMq+AdwjA38v0?=
+ =?us-ascii?Q?SPyA7mVSZ5tuUAcvZVDqvqnofN7rObWk/ZoYDee9Ly4EP3lQgUkqOMwGbd50?=
+ =?us-ascii?Q?K/QGD2GWObmvdDXlPzoteASvgDAlVIQou/9Ax/naI/kAti9P9eeMvr3T9RIx?=
+ =?us-ascii?Q?YhiB5G2t4AOFW0YBusRhHHUC4DSUk1hoLoN81n+0Gl3VBGD0e3JV7WJFBSq4?=
+ =?us-ascii?Q?BQCf5U6hqed1SEO65IMhgqscC1JHmhHUW9ixRRe9YvT+ZHrdwuff/TtESUAI?=
+ =?us-ascii?Q?F9Jmf7athceX7R1haDkgguSiDyW8bfZmiQiVl61GnMk2TR3vQeZOhFo4INaI?=
+ =?us-ascii?Q?QWym9WGd+QTEb4GUfQmbHOc/taivRjFMbolHqsEaCn4lzGGu71yo+Gy+6ZdV?=
+ =?us-ascii?Q?yYx43FhGDWvEYXR9s3BS9wa6Ok0Gv1mK1cUa73lkzWtd+fai4UMJpqONVj+C?=
+ =?us-ascii?Q?egnxCyIxzUzD1QzpoLmQRz+OK7fEFyEXMeXieZJHYTfIO5dsZWeiXtPpKSIq?=
+ =?us-ascii?Q?+VUfctJM6AeGnYxWcdwp8hXoZJC/9qnQn3+mdH/fsUXwpml5TUNMs8bov/mT?=
+ =?us-ascii?Q?tdC6s138SFOxTGkTa7KdWZBVGV25tEUHie3eGS9F2UNI+6vKUkP0sunjGflb?=
+ =?us-ascii?Q?fUpIJA4FISfpadjzcsQ2toavatet5koQ/TgALiOSTVFeZlj8b0pIocUcaJRE?=
+ =?us-ascii?Q?8V3vsA789+pzppevGgnjIu8WOXZlcWLp07GKTQL0kJfqzjtRvDGWTuyT35IU?=
+ =?us-ascii?Q?5GGCPPL66I0ZebZYnJ2KgQYde45fSFbz+tz4k+I7pQOg5b0w9UDe952MbDE3?=
+ =?us-ascii?Q?YaaIoHmrutKR/Ydmt0yOQVkSyiHrF1H1tg80pT/SgRs8PISYKWCxfW0naBEK?=
+ =?us-ascii?Q?7B9jOQh7HQQ6i0LMUqdtRyNwdn2MyyrjlIAJkOANDUDvP6HxLgbdLpw8SexF?=
+ =?us-ascii?Q?YS62NGJRWk3iVjSkRh9bKXIQX/V9zuMNxK6O/syZokJ9Vq/dr73zTitXr/WN?=
+ =?us-ascii?Q?jl6Tt83TEa9DK618boV0YWbNx42crwe/MigXavT1ABw2bxEe6/qxt9vystMW?=
+ =?us-ascii?Q?CoUnK3NljBtPTwIBeWqM4qhYXKhrj6LAovo42/1C9vyvMVkGGeqky8zZCvDr?=
+ =?us-ascii?Q?tQReAzf9RabJvr6gLcjb/71sX4KtnzHvMdCr13vyyfoeGgeG0TRL7CrnvxPO?=
+ =?us-ascii?Q?cYqDdc7z0uZYFShm/maNnLRf+fl9s8nc3CoCPWryNSvibJsJJmqOFUZZAOI0?=
+ =?us-ascii?Q?Crg0muxMqDVczSDRnCgIUp/EMuGoIP+R3N5aP5U+/ZaZIe0CLGJ36xgrdJHw?=
+ =?us-ascii?Q?kedrbqvt7yex3Gp92DqCuNPjzQt7bUGOObShUFwI7lDNMW3ArSJHJk3LSC/P?=
+ =?us-ascii?Q?Y3rTEB7mX8ubStHAl+yBXqSge0wAnuQZTsNhOGqwrEj0p/A5XApA1ZxNWVa2?=
+ =?us-ascii?Q?9c75ko+EZJL+Bfz11xlYXOHAC0X5/HEqs1BrQkfYDsUs8st2upzNoQleA05g?=
+ =?us-ascii?Q?S4HFErckNwj37Tuwe+a9xx45+ioT3LYHcbEApUzN/INnpUbO9oFzZriTReXi?=
+ =?us-ascii?Q?M2pX/LxK24LIsrL1bCUReM19iGkaTj8Nkc/xV1RJ25VIDm42sDTVwmrZxCgE?=
+ =?us-ascii?Q?cZvl5Yf9oo4ZgwuP9Kqgj3Y5VVhlQFQESxguq1q6vUsy?=
 X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8cf5489e-10a5-4630-c22c-08db4148b1e9
+X-MS-Exchange-CrossTenant-Network-Message-Id: 71268da5-6bac-45dc-9f31-08db4148b64c
 X-MS-Exchange-CrossTenant-AuthSource: BL0PR2101MB1092.namprd21.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Apr 2023 02:41:08.5575
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Apr 2023 02:41:15.6669
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: rcK6EDcBhE0XYTba+e/yB8nJMWoQirzkQJGFjTHoGdanMCgO6IAmn1FB8DiL/p462h6b/YH21ZGnlH5grgGT6Q==
+X-MS-Exchange-CrossTenant-UserPrincipalName: TGWNROkJbnTnvhIBSWLgt5JRkvhGsMv+p/wf5EVUTTBCunDB6zneh2hm9PfFpkP7Qywn+r5x+f/1tb6oOPlcPw==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ1PR21MB3411
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Before the guest finishes probing a device, the host may be already starting
-to remove the device. Currently there are multiple race condition bugs in the
-pci-hyperv driver, which can cause the guest to panic.  The patchset fixes
-the crashes.
+When the host tries to remove a PCI device, the host first sends a
+PCI_EJECT message to the guest, and the guest is supposed to gracefully
+remove the PCI device and send a PCI_EJECTION_COMPLETE message to the host;
+the host then sends a VMBus message CHANNELMSG_RESCIND_CHANNELOFFER to
+the guest (when the guest receives this message, the device is already
+unassigned from the guest) and the guest can do some final cleanup work;
+if the guest fails to respond to the PCI_EJECT message within one minute,
+the host sends the VMBus message CHANNELMSG_RESCIND_CHANNELOFFER and
+removes the PCI device forcibly.
 
-The patchset also does some cleanup work: patch 3 removes the useless
-hv_pcichild_state, and patch 4 reverts an old patch which is not really
-useful (without patch 4, it would be hard to make patch 5 clean).
+In the case of fast device addition/removal, it's possible that the PCI
+device driver is still configuring MSI-X interrupts when the guest receives
+the PCI_EJECT message; the channel callback calls hv_pci_eject_device(),
+which sets hpdev->state to hv_pcichild_ejecting, and schedules a work
+hv_eject_device_work(); if the PCI device driver is calling
+pci_alloc_irq_vectors() -> ... -> hv_compose_msi_msg(), we can break the
+while loop in hv_compose_msi_msg() due to the updated hpdev->state, and
+leave data->chip_data with its default value of NULL; later, when the PCI
+device driver calls request_irq() -> ... -> hv_irq_unmask(), the guest
+crashes in hv_arch_irq_unmask() due to data->chip_data being NULL.
 
-Patch 6 removes the use of a global mutex lock, and enables async-probing
-to allow concurrent device probing for faster boot.
+Fix the issue by not testing hpdev->state in the while loop: when the
+guest receives PCI_EJECT, the device is still assigned to the guest, and
+the guest has one minute to finish the device removal gracefully. We don't
+really need to (and we should not) test hpdev->state in the loop.
 
-v3 is based on v6.3-rc5. No code change since v2. I just added Michael's
-and Long Li's Reviewed-by.
+Fixes: de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()")
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Cc: stable@vger.kernel.org
+---
 
-The patchset is also availsble in my github branch:
-https://github.com/dcui/tdx/commits/decui/vpci/v6.3-rc5-v3
+v2:
+  Removed the "debug code".
+  No change to the patch body.
+  Added Cc:stable
 
-v2 can be found here:
-https://lwn.net/ml/linux-kernel/20230404020545.32359-1-decui@microsoft.com/
+v3:
+  Added Michael's Reviewed-by.
 
-Please review. Thanks!
+ drivers/pci/controller/pci-hyperv.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-
-Dexuan Cui (6):
-  PCI: hv: Fix a race condition bug in hv_pci_query_relations()
-  PCI: hv: Fix a race condition in hv_irq_unmask() that can cause panic
-  PCI: hv: Remove the useless hv_pcichild_state from struct hv_pci_dev
-  Revert "PCI: hv: Fix a timing issue which causes kdump to fail
-    occasionally"
-  PCI: hv: Add a per-bus mutex state_lock
-  PCI: hv: Use async probing to reduce boot time
-
- drivers/pci/controller/pci-hyperv.c | 145 +++++++++++++++++-----------
- 1 file changed, 86 insertions(+), 59 deletions(-)
-
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index b82c7cde19e66..1b11cf7391933 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -643,6 +643,11 @@ static void hv_arch_irq_unmask(struct irq_data *data)
+ 	pbus = pdev->bus;
+ 	hbus = container_of(pbus->sysdata, struct hv_pcibus_device, sysdata);
+ 	int_desc = data->chip_data;
++	if (!int_desc) {
++		dev_warn(&hbus->hdev->device, "%s() can not unmask irq %u\n",
++			 __func__, data->irq);
++		return;
++	}
+ 
+ 	spin_lock_irqsave(&hbus->retarget_msi_interrupt_lock, flags);
+ 
+@@ -1911,12 +1916,6 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 		hv_pci_onchannelcallback(hbus);
+ 		spin_unlock_irqrestore(&channel->sched_lock, flags);
+ 
+-		if (hpdev->state == hv_pcichild_ejecting) {
+-			dev_err_once(&hbus->hdev->device,
+-				     "the device is being ejected\n");
+-			goto enable_tasklet;
+-		}
+-
+ 		udelay(100);
+ 	}
+ 
 -- 
 2.25.1
 
