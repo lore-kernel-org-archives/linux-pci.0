@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72C29C7EE2A
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Apr 2023 04:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC9EEC77B60
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Apr 2023 04:56:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239437AbjDZE4d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Apr 2023 00:56:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40924 "EHLO
+        id S239446AbjDZE4g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Apr 2023 00:56:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239436AbjDZE4b (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2023 00:56:31 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4C45730C5;
-        Tue, 25 Apr 2023 21:56:20 -0700 (PDT)
+        with ESMTP id S239034AbjDZE4f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2023 00:56:35 -0400
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3FC6230CA;
+        Tue, 25 Apr 2023 21:56:21 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,227,1677510000"; 
-   d="scan'208";a="157312799"
+   d="scan'208";a="160778539"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 26 Apr 2023 13:56:06 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 26 Apr 2023 13:56:08 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 98ECB4175EC6;
-        Wed, 26 Apr 2023 13:56:06 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id DA59041763FB;
+        Wed, 26 Apr 2023 13:56:07 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
         gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v14 12/21] PCI: dwc: Add EDMA_UNROLL capability flag
-Date:   Wed, 26 Apr 2023 13:55:48 +0900
-Message-Id: <20230426045557.3613826-13-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v14 21/21] misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
+Date:   Wed, 26 Apr 2023 13:55:57 +0900
+Message-Id: <20230426045557.3613826-22-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230426045557.3613826-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230426045557.3613826-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,54 +41,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Renesas R-Car Gen4 PCIe controllers have an unexpected register value on
-the dbi+0x97b register. So, add a new capability flag "EDMA_UNROLL"
-which would force the unrolled eDMA mapping for the problematic
-device, as suggested by Serge Semin.
+Add Renesas R8A779F0 in pci_device_id table so that pci-epf-test
+can be used for testing PCIe EP on R-Car S4-8.
 
-Suggested-by: Serge Semin <fancer.lancer@gmail.com>
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 8 +++++++-
- drivers/pci/controller/dwc/pcie-designware.h | 5 +++--
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/misc/pci_endpoint_test.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index bdc5ebd7cd5f..62f3a6f42942 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -921,8 +921,14 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
- 	 * Indirect eDMA CSRs access has been completely removed since v5.40a
- 	 * thus no space is now reserved for the eDMA channels viewport and
- 	 * former DMA CTRL register is no longer fixed to FFs.
-+	 *
-+	 * Note that Renesas R-Car S4-8's PCIe controllers for unknown reason
-+	 * may have zeros in the eDMA CTRL register even though the HW-manual
-+	 * explicitly states there must FFs if the unrolled mapping is enabled.
-+	 * For such cases the low-level drivers are supposed to manually
-+	 * activate the unrolled mapping to bypass the auto-detection procedure.
- 	 */
--	if (dw_pcie_ver_is_ge(pci, 540A))
-+	if (dw_pcie_ver_is_ge(pci, 540A) || dw_pcie_cap_is(pci, EDMA_UNROLL))
- 		val = 0xFFFFFFFF;
- 	else
- 		val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 8c08159ea08e..c4bdfed7b2e2 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -54,8 +54,9 @@
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index a7244de081ec..1d8f72b42c0a 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -81,6 +81,7 @@
+ #define PCI_DEVICE_ID_RENESAS_R8A774B1		0x002b
+ #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
+ #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
++#define PCI_DEVICE_ID_RENESAS_R8A779F0		0x0031
  
- /* DWC PCIe controller capabilities */
- #define DW_PCIE_CAP_REQ_RES		0
--#define DW_PCIE_CAP_IATU_UNROLL		1
--#define DW_PCIE_CAP_CDM_CHECK		2
-+#define DW_PCIE_CAP_EDMA_UNROLL		1
-+#define DW_PCIE_CAP_IATU_UNROLL		2
-+#define DW_PCIE_CAP_CDM_CHECK		3
+ static DEFINE_IDA(pci_endpoint_test_ida);
  
- #define dw_pcie_cap_is(_pci, _cap) \
- 	test_bit(DW_PCIE_CAP_ ## _cap, &(_pci)->caps)
+@@ -993,6 +994,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1),},
++	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
++	  .driver_data = (kernel_ulong_t)&default_data,
++	},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
+ 	  .driver_data = (kernel_ulong_t)&j721e_data,
+ 	},
 -- 
 2.25.1
 
