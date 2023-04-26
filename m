@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84DCEC7618E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C05B5C7EE33
 	for <linux-pci@archiver.kernel.org>; Wed, 26 Apr 2023 04:56:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239424AbjDZE4W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Apr 2023 00:56:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40296 "EHLO
+        id S239428AbjDZE4X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Apr 2023 00:56:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239429AbjDZE4V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2023 00:56:21 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CF2DA2D7C;
-        Tue, 25 Apr 2023 21:56:13 -0700 (PDT)
+        with ESMTP id S239420AbjDZE4S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2023 00:56:18 -0400
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3D4582D4A;
+        Tue, 25 Apr 2023 21:56:12 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,227,1677510000"; 
-   d="scan'208";a="160778530"
+   d="scan'208";a="157312781"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 26 Apr 2023 13:56:07 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 26 Apr 2023 13:56:06 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 0BFB841763FB;
-        Wed, 26 Apr 2023 13:56:07 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id F032641763FC;
+        Wed, 26 Apr 2023 13:56:05 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
         gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
@@ -28,11 +28,10 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
         bhelgaas@google.com, kishon@kernel.org
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v14 15/21] dt-bindings: PCI: dwc: Update maxItems of reg and reg-names
-Date:   Wed, 26 Apr 2023 13:55:51 +0900
-Message-Id: <20230426045557.3613826-16-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v14 07/21] PCI: dwc: Add members into struct dw_pcie_outbound_atu
+Date:   Wed, 26 Apr 2023 13:55:43 +0900
+Message-Id: <20230426045557.3613826-8-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230426045557.3613826-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230426045557.3613826-1-yoshihiro.shimoda.uh@renesas.com>
@@ -42,53 +41,68 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Update maxItems of reg and reg-names on both host and endpoint
-for supporting Renesas R-Car Gen4 PCIe controllers later.
+Add "code" and "routing" into struct dw_pcie_outbound_atu for
+sending MSG by iATU in the PCIe endpoint mode in near the future.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml | 4 ++--
- Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml    | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 7 +++++--
+ drivers/pci/controller/dwc/pcie-designware.h | 5 +++++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index 8fc2151691a4..cb727f60be0b 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -33,11 +33,11 @@ properties:
-       normal controller functioning. iATU memory IO region is also required
-       if the space is unrolled (IP-core version >= 4.80a).
-     minItems: 2
--    maxItems: 5
-+    maxItems: 6
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 782c4b34d0a3..e8d4d5bde2d3 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -497,7 +497,7 @@ static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+ 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_UPPER_TARGET,
+ 			      upper_32_bits(atu->pci_addr));
  
-   reg-names:
-     minItems: 2
--    maxItems: 5
-+    maxItems: 6
-     items:
-       oneOf:
-         - description:
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index 1a83f0f65f19..0bfcfd6ccb5f 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -33,11 +33,11 @@ properties:
-       are required for the normal controller work. iATU memory IO region is
-       also required if the space is unrolled (IP-core version >= 4.80a).
-     minItems: 2
--    maxItems: 5
-+    maxItems: 6
+-	val = atu->type | PCIE_ATU_FUNC_NUM(atu->func_no);
++	val = atu->type | atu->routing | PCIE_ATU_FUNC_NUM(atu->func_no);
+ 	if (upper_32_bits(limit_addr) > upper_32_bits(atu->cpu_addr) &&
+ 	    dw_pcie_ver_is_ge(pci, 460A))
+ 		val |= PCIE_ATU_INCREASE_REGION_SIZE;
+@@ -505,7 +505,10 @@ static int __dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+ 		val = dw_pcie_enable_ecrc(val);
+ 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val);
  
-   reg-names:
-     minItems: 2
--    maxItems: 5
-+    maxItems: 6
-     items:
-       oneOf:
-         - description:
+-	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, PCIE_ATU_ENABLE);
++	val = PCIE_ATU_ENABLE;
++	if (atu->type == PCIE_ATU_TYPE_MSG)
++		val |= PCIE_ATU_INHIBIT_PAYLOAD | PCIE_ATU_HEADER_SUB_ENABLE | atu->code;
++	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, val);
+ 
+ 	/*
+ 	 * Make sure ATU enable takes effect before any subsequent config
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 81c7558a4718..954d504890a1 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -150,11 +150,14 @@
+ #define PCIE_ATU_TYPE_IO		0x2
+ #define PCIE_ATU_TYPE_CFG0		0x4
+ #define PCIE_ATU_TYPE_CFG1		0x5
++#define PCIE_ATU_TYPE_MSG		0x10
+ #define PCIE_ATU_TD			BIT(8)
+ #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
+ #define PCIE_ATU_REGION_CTRL2		0x004
+ #define PCIE_ATU_ENABLE			BIT(31)
+ #define PCIE_ATU_BAR_MODE_ENABLE	BIT(30)
++#define PCIE_ATU_INHIBIT_PAYLOAD	BIT(22)
++#define PCIE_ATU_HEADER_SUB_ENABLE	BIT(21)
+ #define PCIE_ATU_FUNC_NUM_MATCH_EN      BIT(19)
+ #define PCIE_ATU_LOWER_BASE		0x008
+ #define PCIE_ATU_UPPER_BASE		0x00C
+@@ -298,6 +301,8 @@ struct dw_pcie_outbound_atu {
+ 	int index;
+ 	int type;
+ 	u8 func_no;
++	u8 code;
++	u8 routing;
+ };
+ 
+ struct dw_pcie_host_ops {
 -- 
 2.25.1
 
