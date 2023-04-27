@@ -2,118 +2,86 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 635A9C7618E
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Apr 2023 20:44:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0CE1C77B73
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Apr 2023 03:28:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239350AbjDZUom (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Apr 2023 16:44:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58622 "EHLO
+        id S242667AbjD0D2X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Apr 2023 23:28:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235264AbjDZUol (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2023 16:44:41 -0400
-Received: from mail-yb1-xb34.google.com (mail-yb1-xb34.google.com [IPv6:2607:f8b0:4864:20::b34])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 503B410FC
-        for <linux-pci@vger.kernel.org>; Wed, 26 Apr 2023 13:44:40 -0700 (PDT)
-Received: by mail-yb1-xb34.google.com with SMTP id 3f1490d57ef6-b8f5276baa3so6153451276.3
-        for <linux-pci@vger.kernel.org>; Wed, 26 Apr 2023 13:44:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1682541879; x=1685133879;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xxo+GagR2E5RsONBsNVbiP1yowr7LdpGNwMG4261j9A=;
-        b=faYBWlmYPyVvv7dCSVdlURDjZBV+jp5BEAL4MPplDhYFuE+X+/yt2ANHT/yKYSmHyY
-         1bI3KzdDYZ/S+tlVPGuDbzvjDeHxPl8NmJmeGk5oBqZB5OpAU7FxnWmSFvy/24BS/pxF
-         kzev6AMTpWTf/VpiABPkTvJxutYbuCVtPi7xZ+uZkPYRAe7vw3+UxDePsFNdlFm2Hg/3
-         d4iRmoquc+59g7WqDlvtM8BNVIE7PWw5SBSz4QTorNiTx9ane0rsAi9nN20cJArQRlKh
-         TyqOsCt2/dKAOSK2EPxJlCwA5xZQMIBeIbxyZJ7FjTdPAXmVkFb/fq2On3WYVKPY1qzf
-         zlNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1682541879; x=1685133879;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xxo+GagR2E5RsONBsNVbiP1yowr7LdpGNwMG4261j9A=;
-        b=T7Xm4av2GCGhlPiYtx6GjYbz+7MEezhWpyyy1BZJgim0f5YZjiCslCFlz6ZHobHhG2
-         ZYZjOGayCqvLZqAZRrtxuWRJ2PlGyh36PdFd1JZnu3oA2QqopexdLgK8MzBPjytfQ+NE
-         Vij9C2zvwKbS6Rge283Dv3ukvPeVAaglT7B5nD8FrY6tH56qhO+eLMiYk9e5vRyaIpSA
-         f0tEkEsRofVtPaE4h6Kjegb46tW8WdoBV0zsc6sx8g+PAYNS4wI9FghopMbhDvmwfdxf
-         FzuJnTYW3WaDE2KkfdrWB7odm6XLoOfmZd4rtC3OZ2+y2FWTcqPVRwPi7rsgcpPOvSUN
-         Wgpw==
-X-Gm-Message-State: AAQBX9cOnka0zpMRour90ZcutI3wwv3vjbpfP52M8qtxQbFmCFpvhDT9
-        nJTLYg+X/RrYrzDIPXxJuubwhIOSLbiCzObRK5zEJA==
-X-Google-Smtp-Source: AKy350a58TxEbfHOXh1V7tj6baxt2SbIMUuXCOzsDYOPHS6Ge8eiFsTVjov8kJk3UtA7diGdnLbhxtreSLxqSwB+Keg=
-X-Received: by 2002:a0d:d908:0:b0:54e:dcf2:705b with SMTP id
- b8-20020a0dd908000000b0054edcf2705bmr13240850ywe.47.1682541879483; Wed, 26
- Apr 2023 13:44:39 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230423053208.2348-1-yejunyan@hust.edu.cn>
-In-Reply-To: <20230423053208.2348-1-yejunyan@hust.edu.cn>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Wed, 26 Apr 2023 22:44:28 +0200
-Message-ID: <CACRpkdbDfAJOWzkvEgOdoOCMQAQ24mauWAeWXWgvBmyU3mi0FQ@mail.gmail.com>
-Subject: Re: [PATCH v2] pci: controller: pci-ftpci100: Release the clock resources
-To:     Junyan Ye <yejunyan@hust.edu.cn>
-Cc:     christophe.jaillet@wanadoo.fr,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        with ESMTP id S233083AbjD0D2W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2023 23:28:22 -0400
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A2ED3A81
+        for <linux-pci@vger.kernel.org>; Wed, 26 Apr 2023 20:28:20 -0700 (PDT)
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 6CB762800C962;
+        Thu, 27 Apr 2023 05:28:16 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 48DDF1FB8C; Thu, 27 Apr 2023 05:28:16 +0200 (CEST)
+Date:   Thu, 27 Apr 2023 05:28:16 +0200
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Andrew Murray <amurray@thegoodpenguin.co.uk>,
-        hust-os-kernel-patches@googlegroups.com,
-        Dongliang Mu <dzm91@hust.edu.cn>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        Krzysztof Wilczy??ski <kw@linux.com>,
+        Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Siddharth Vadapalli <s-vadapalli@ti.com>,
+        Rohit Agarwal <quic_rohiagar@quicinc.com>,
+        Shunsuke Mie <mie@igel.co.jp>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: Re: [GIT PULL] PCI changes for v6.4
+Message-ID: <20230427032816.GA18461@wunner.de>
+References: <20230425200936.GA66754@bhelgaas>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230425200936.GA66754@bhelgaas>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Apr 23, 2023 at 7:34=E2=80=AFAM Junyan Ye <yejunyan@hust.edu.cn> wr=
-ote:
+Hi Bjorn,
 
-> Smatch reported:
-> 1. drivers/pci/controller/pci-ftpci100.c:526 faraday_pci_probe()
-> warn: 'clk' from clk_prepare_enable() not released on lines:
-> 442,451,462,478,512,517.
-> 2. drivers/pci/controller/pci-ftpci100.c:526 faraday_pci_probe()
-> warn: 'p->bus_clk' from clk_prepare_enable() not released on lines:
-> 451,462,478,512,517.
->
-> The clock resource is obtained by the devm_clk_get function. The
-> clk_prepare_enable function then makes the clock resource ready for use,
-> notifying the system that the clock resource should be run. After that,
-> the clock resource should be released when it is no longer needed. The
-> corresponding function is clk_disable_unprepare. However, while doing
-> some error handling in the faraday_pci_probe function, the
-> clk_disable_unprepare function is not called to release the clk and
-> p->bus_clk resources.
->
-> Fix this warning by changing the devm_clk_get function to
-> devm_clk_get_enabled, which is equivalent to
-> devm_clk_get() + clk_prepare_enable(). And with the
-> devm_clk_get_enabled function, the clock will automatically be
-> disabled, unprepared and freed when the device is unbound from the bus.
->
-> Fixes: b3c433efb8a3 ("PCI: faraday: Fix wrong pointer passed to PTR_ERR()=
-")
-> Fixes: 2eeb02b28579 ("PCI: faraday: Add clock handling")
-> Fixes: 783a862563f7 ("PCI: faraday: Use pci_parse_request_of_pci_ranges()=
-")
-> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI H=
-ost Bridge driver")
-> Fixes: f1e8bd21e39e ("PCI: faraday: Convert IRQ masking to raw PCI config=
- accessors")
-> Signed-off-by: Junyan Ye <yejunyan@hust.edu.cn>
-> Reviewed-by: Dongliang Mu <dzm91@hust.edu.cn>
-> ---
-> v1 -> v2: Switch from clk_disable_unprepare() to devm_clk_get_enabled() t=
-o release the clock.
-> This issue is found by static analyzer.
+On Tue, Apr 25, 2023 at 03:09:36PM -0500, Bjorn Helgaas wrote:
+> The following changes since commit fe15c26ee26efa11741a7b632e9f23b01aca4cc6:
+> 
+>   Linux 6.3-rc1 (2023-03-05 14:52:03 -0800)
+> 
+> are available in the Git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git tags/pci-v6.4-changes
+> 
+> for you to fetch changes up to 09a8e5f01dfb30667a8f05e35c1cc073cb4fd134:
+> 
+>   Merge branch 'pci/controller/kconfig' (2023-04-20 16:19:37 -0500)
 
-Neat fix, saves codelines!
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Just a heads-up that this pull request doesn't include the following
+topic branches in pci.git:
 
-Yours,
-Linus Walleij
+    controller/endpoint
+    controller/cadence
+    controller/vmd
+
+... as well as the following commit on the controller/dt branch:
+
+    661a7e9aa551 ("dt-bindings: PCI: qcom: Add SDX65 SoC")
+
+Perhaps you intend to submit them in a second pull request this
+merge window, but I just wanted to make sure they're not forgotten.
+The patches applied to those topic branches are marked "Accepted"
+in patchwork, so if the topic branches are deleted when the 6.5
+cycle begins, the patches would seem to have been merged even though
+they're not.
+
+Thanks,
+
+Lukas
