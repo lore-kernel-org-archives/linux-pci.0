@@ -2,218 +2,90 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E43FC7EE25
-	for <linux-pci@archiver.kernel.org>; Mon,  1 May 2023 07:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3AB8C77B73
+	for <linux-pci@archiver.kernel.org>; Mon,  1 May 2023 12:29:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231755AbjEAHvN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 May 2023 03:51:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40882 "EHLO
+        id S232504AbjEAM34 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 May 2023 08:29:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231738AbjEAHvL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 May 2023 03:51:11 -0400
-Received: from mxout1.routing.net (mxout1.routing.net [IPv6:2a03:2900:1:a::a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1669B10E;
-        Mon,  1 May 2023 00:51:08 -0700 (PDT)
-Received: from mxbox3.masterlogin.de (unknown [192.168.10.78])
-        by mxout1.routing.net (Postfix) with ESMTP id CFD64400E8;
-        Mon,  1 May 2023 07:51:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1682927467;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Z0oEgBhbgkatdW/gn/4BePOt2CMODf7qHT2G4Wu1GCU=;
-        b=WEMV8dmHrsdCXTVLpmZlng2C0yOQHzsMoiVhnUYlKTzAfpr+qRv33PIv6YdmJq+6IDyQRE
-        GXfJqF4jzDI+NzesOna7gWy/9AKf1xPdRrtA80vyhcKdhWK4cme7p3DLlv2q2CdH3kfrA4
-        f/7i9dUDZCRXEj38fR6TTieADvR9oGE=
-Received: from [127.0.0.1] (fttx-pool-217.61.150.65.bambit.de [217.61.150.65])
-        by mxbox3.masterlogin.de (Postfix) with ESMTPSA id E98873605FA;
-        Mon,  1 May 2023 07:51:05 +0000 (UTC)
-Date:   Mon, 01 May 2023 09:51:06 +0200
-From:   Frank Wunderlich <linux@fw-web.de>
-To:     frank-w@public-files.de,
-        Frank Wunderlich <frank-w@public-files.de>,
-        =?UTF-8?B?Smlhbmp1biBXYW5nICjnjovlu7rlhpsp?= 
-        <Jianjun.Wang@mediatek.com>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mediatek@lists.infradead.org" 
-        <linux-mediatek@lists.infradead.org>,
-        =?UTF-8?B?SmlleXkgWWFuZyAo5p2o5rSBKQ==?= <Jieyy.Yang@mediatek.com>,
-        "robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-        Ryder Lee <Ryder.Lee@mediatek.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: Aw: [PATCH] PCI: mediatek-gen3: handle PERST after reset
-User-Agent: K-9 Mail for Android
-In-Reply-To: <82F47DB2-CFB9-4DA0-97A7-81F1B939A025@public-files.de>
-References: <20230402131347.99268-1-linux@fw-web.de> <trinity-8c5502f4-34bc-456b-9e4b-37edac37c3ed-1682530907724@3c-app-gmx-bs05> <74149a72313c1b944c870a45b55893e1b9331c8e.camel@mediatek.com> <EF6EF3CD-5741-449E-B7E0-27DF9A6C297D@fw-web.de> <cd7c2672cc7cb97086cdb8d2079ad38c7fd6367f.camel@mediatek.com> <82F47DB2-CFB9-4DA0-97A7-81F1B939A025@public-files.de>
-Message-ID: <D7EAAAC4-B696-422F-A6D6-FF90D351B6F4@fw-web.de>
+        with ESMTP id S232465AbjEAM3z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 May 2023 08:29:55 -0400
+Received: from mail-yw1-x112f.google.com (mail-yw1-x112f.google.com [IPv6:2607:f8b0:4864:20::112f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 906ABE74
+        for <linux-pci@vger.kernel.org>; Mon,  1 May 2023 05:29:46 -0700 (PDT)
+Received: by mail-yw1-x112f.google.com with SMTP id 00721157ae682-55a00da4e53so28623557b3.0
+        for <linux-pci@vger.kernel.org>; Mon, 01 May 2023 05:29:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1682944186; x=1685536186;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uNAU33N+roe5U6IAkPOOSvsUX5CPin1Iei73lUukdn0=;
+        b=OzBoO667tpOKcKnteYCoqmBbhm3gsae5un7Arjuq0FT8CtDy6n4eHaq+WXiCfIbSW+
+         FVWi9j20O0r26vOZO2Cn3rWa4EQ+x6vS5FhJ/+7A6UhypygTqsFYcHKsNOr6a9CMHp2Q
+         j7OT9/gIQyl5cOjkpML8zmr/ElU2wN89jyDlKGVt46+37XE+L+iE/o3zylA1r3M0MiU2
+         TzwHUSTLPQqvfH6hZ0LWB+rWxH2TEFo9CoXuUZ3xgavsUc4Wn/r/KEDzbJRtj31ggbEh
+         kFly4b6xcJ/xK5xaf53PxN95uglRMwFnHRYgTr17ZGAs8bUNpwFSJ11h9onaodAzzPuA
+         i3sA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1682944186; x=1685536186;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=uNAU33N+roe5U6IAkPOOSvsUX5CPin1Iei73lUukdn0=;
+        b=dJz18zYJrM+37NeYfYLA/5Q5dZDy75CBR3mok4xTIMMCJwYzaoE2VcHCpN8oRL4WFF
+         2vAwgUjxZNFNcx138xi/XW4p2AlZbC2iLMaHCOxl2L2trc0aXs9qiiMZOkPkEYNyuggh
+         Lz/KoafVHI4NMbCnt+fCCDux+VC01UYJKPT4JkvN+cCfpbziG/6BH04AhHWUhLc0uVZf
+         9zooWDBTZ3tHF16fEa2q625F6mowo0Pz7mxO0WRijg7aKSfra1HpCEZYnfPamoSYCSnd
+         J3zj6iMVyjLmzUsWpOHFvpbBz8UP23a796UOK3E3IjA/9WbX48hODgepdoA0pI6+K5pg
+         GFSA==
+X-Gm-Message-State: AC+VfDzW4RmgdWAB7RG7agZYq8xsUvsSkSB2YgHQ5qHnWnBZhxSMJ6hK
+        t7+1kltwGzaAPBClfXaa0+UeO7MdqSyOOPXVwoIlCQ==
+X-Google-Smtp-Source: ACHHUZ4JWzJBoFVmVjKOt5uk/TX2V9yqXi7q2ye0IdtVGgzFFHtPnptZV32IyVAGJuUn9bkoviCUycIwRkhXHwfDQ5g=
+X-Received: by 2002:a81:dd08:0:b0:54f:8f16:c8b5 with SMTP id
+ e8-20020a81dd08000000b0054f8f16c8b5mr11598419ywn.34.1682944185780; Mon, 01
+ May 2023 05:29:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+References: <20230314121216.413434-1-schnelle@linux.ibm.com>
+ <20230314121216.413434-10-schnelle@linux.ibm.com> <CACRpkdbS1U8_qakdWV0YZq3bhr1NvFuL0Umv3QsXD0wYu7Hd9A@mail.gmail.com>
+ <9a0feb128bc3b26ca444367ce4ee44e80aa9f469.camel@linux.ibm.com>
+In-Reply-To: <9a0feb128bc3b26ca444367ce4ee44e80aa9f469.camel@linux.ibm.com>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Mon, 1 May 2023 14:29:34 +0200
+Message-ID: <CACRpkdYGWZSk+wSW7waFsY0wSS+CasEqm4N0CU6u6UKxe9WA6A@mail.gmail.com>
+Subject: Re: [PATCH v3 09/38] gpio: add HAS_IOPORT dependencies
+To:     Niklas Schnelle <schnelle@linux.ibm.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Bartosz Golaszewski <brgl@bgdev.pl>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        linux-gpio@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-X-Mail-ID: 076819e0-7339-4474-bb1f-9a846e6c2e93
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am 29=2E April 2023 11:03:07 MESZ schrieb Frank Wunderlich <frank-w@public-=
-files=2Ede>:
->Hi
->
->Am 29=2E April 2023 05:15:51 MESZ schrieb "Jianjun Wang (=E7=8E=8B=E5=BB=
-=BA=E5=86=9B)" <Jianjun=2EWang@mediatek=2Ecom>:
->>Hi Frank,
->>
->>On Fri, 2023-04-28 at 07:50 +0200, Frank Wunderlich wrote:
->>> External email : Please do not click links or open attachments until
->>> you have verified the sender or the content=2E
->>>=20
->>>=20
->>> Am 27=2E April 2023 10:31:07 MESZ schrieb "Jianjun Wang (=E7=8E=8B=E5=
-=BB=BA=E5=86=9B)" <
->>> Jianjun=2EWang@mediatek=2Ecom>:
->>> > Hi Frank,
->>> >=20
->>> > Seems this patch has huge impact on boot time, I'm curious about
->>> > the
->>> > NVMe detection issue on mt7986, can you share the SSD model that
->>> > you
->>> > are using and the bootup logs with that SSD?
->>>=20
->>> Which "huge" delay do you get in which setup? It adds a 100ms delay
->>> yes,but this seems needed to some devices working=2Ei found several
->>> sources talking about the 100ms wake-up time=2E=2E=2E
->
->>Some products are very sensitive to the bootup time, especially the
->>platforms with many PCIe ports, adding this 100ms delay for each port
->>will cause the bootup time be increased by multiple times(depending on
->>the number of PCIe ports it uses), and also the wake-up time, since the
->>mtk_pcie_starup_port() function will be called on resume stage=2E
->
->Thanks for taking time for analysing it=2E
->
->>> I do not have this issue,but some users in bpi-forum reorted it=2E
->>> Pcie-controller on mt7986/bpi-r3 does simply not detect the nvme and
->>> returned ETIMEDOUT (110)=2E
->>Since we're already comply with the PCIe CEM specification sections
->>2=2E2(PERST# signal)[1], and this issue only occurs on a few platforms,
->
->I see there is the msleep before the reset,where the patch splits reset a=
-nd perst (and add the sleep between)=2E
->
->So imho the best way is to move the existing msleep between these "splitt=
-ed" signals instead of adding a second one=2E I have to verify it with some=
-one who have the issue currently=2E
+On Fri, Apr 28, 2023 at 4:45=E2=80=AFPM Niklas Schnelle <schnelle@linux.ibm=
+.com> wrote:
 
-Seems this does not make it work=2E=2E=2E
+> Makes sense I changed it to the above approach for v4. One thing this
+> makes me wonder is if then one should change the X86 dependency to at
+> least X86 || COMPILE_TEST or even remove it and rely on HAS_IOPORT.
 
-Here are the bootlogs with different versions of this patch:
+Hm it makes sense I think. I don't know if there may be other
+X86 deps in these drivers but we don't know until we tried.
 
-https://forum=2Ebanana-pi=2Eorg/t/bpi-r3-problem-with-pcie/15152/22
-
->>I'll inclined to it's might be a signal quality issue=2E Also I checked
->>the BPI-R3 schematic diagram[2], and noticed that there are no AC
->>Coupling capacitors on the transmitter side, which described in PCIe
->>CEM Spec sections 4=2E7=2E1, but this schematic diagram only have part o=
-f
->>it, can you help to check the board design or share the full schematic
->>diagram for further analysis?=20
->
->I gave the questions to board vendor in forum=2E
->
->>[1]:=20
->>https://git=2Ekernel=2Eorg/pub/scm/linux/kernel/git/torvalds/linux=2Egit=
-/tree/drivers/pci/controller/pcie-mediatek-gen3=2Ec?h=3Dv6=2E3#n344
->>[2]:
->>https://drive=2Egoogle=2Ecom/file/d/1mxKb8CBbnzfNSd_4esmcX_NovxaXjEb8/vi=
-ew
->>
->>Thanks=2E
->>>=20
->>> # dmesg | grep 'pci'
->>> [ 5=2E235564] mtk-pcie-gen3 11280000=2Epcie: host bridge=20
->>> /soc/pcie@11280000 ranges:
->>> [ 5=2E242938] mtk-pcie-gen3 11280000=2Epcie: Parsing ranges property=
-=2E=2E=2E
->>> [ 5=2E249235] mtk-pcie-gen3 11280000=2Epcie: MEM
->>> 0x0020000000=2E=2E0x002fffffff -> 0x0020000000
->>> [ 5=2E478062] mtk-pcie-gen3 11280000=2Epcie: PCIe link down, current
->>> LTSSM state: detect=2Eactive (0x10 00001)
->>> [ 5=2E487491] mtk-pcie-gen3: probe of 11280000=2Epcie failed with erro=
-r
->>> -110
->>>=20
->>> One specific hardware is reported as example:
->>>=20
->>> Adata Legend710 512GB x3
->>>=20
->>> > Thanks=2E
->>> >=20
->>> > On Wed, 2023-04-26 at 19:41 +0200, Frank Wunderlich wrote:
->>> > > External email : Please do not click links or open attachments
->>> > > until
->>> > > you have verified the sender or the content=2E
->>> > >=20
->>> > >=20
->>> > > Hi
->>> > >=20
->>> > > > Gesendet: Sonntag, 02=2E April 2023 um 15:13 Uhr
->>> > > > Von: "Frank Wunderlich" <linux@fw-web=2Ede>
->>> > > > De-assert PERST in separate step after reset signals to fully
->>> > > > comply
->>> > > > the PCIe CEM clause 2=2E2=2E
->>> > > >=20
->>> > > > This fixes some NVME detection issues on mt7986=2E
->>> > > >=20
->>> > > > Fixes: d3bf75b579b9 ("PCI: mediatek-gen3: Add MediaTek Gen3
->>> > > > driver
->>> > > > for MT8192")
->>> > > > Signed-off-by: Frank Wunderlich <frank-w@public-files=2Ede>
->>> > > > ---
->>> > > > Patch is taken from user Ruslan aka RRKh61 (permitted me to
->>> > > > send it
->>> > > > with me as author)=2E
->>> > > >=20
->>> > > >=20
->>> >=20
->>> >=20
->>https://urldefense=2Ecom/v3/__https://forum=2Ebanana-pi=2Eorg/t/bpi-r3-n=
-vme-connection-issue/14563/17__;!!CTRNKA9wMg0ARbw!nCXEM685pkUpoiZYGKptPYccN=
-rWMeN2D3jIO5_irwxZJ7c6ZzEeACIx-V2WeZHAP_0FKlDDIQ0RbDJ892prtoToDv30$
->>> > > > ---
->>> > > >  drivers/pci/controller/pcie-mediatek-gen3=2Ec | 8 +++++++-
->>> > > >  1 file changed, 7 insertions(+), 1 deletion(-)
->>> > > >=20
->>> > > > diff --git a/drivers/pci/controller/pcie-mediatek-gen3=2Ec
->>> > > > b/drivers/pci/controller/pcie-mediatek-gen3=2Ec
->>> > > > index b8612ce5f4d0=2E=2E176b1a04565d 100644
->>> > > > --- a/drivers/pci/controller/pcie-mediatek-gen3=2Ec
->>> > > > +++ b/drivers/pci/controller/pcie-mediatek-gen3=2Ec
->>> > > > @@ -350,7 +350,13 @@ static int mtk_pcie_startup_port(struct
->>> > > > mtk_gen3_pcie *pcie)
->>> > > >       msleep(100);
->Maybe the better way is to drop this msleep when adding the new one below=
- the reset asserts?
->
->>> > > >       /* De-assert reset signals */
->>> > > > -     val &=3D ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
->>> > > > PCIE_PE_RSTB);
->>> > > > +     val &=3D ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB);
->>> > > > +     writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
->>> > > > +
->>> > > > +     msleep(100);
->>> > > > +
->>> > > > +     /* De-assert PERST# signals */
->>> > > > +     val &=3D ~(PCIE_PE_RSTB);
->>> > > >       writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
->>> > > >=20
->>> > > >       /* Check if the link is up or not */
-
-
-regards Frank
+Yours,
+Linus Walleij
