@@ -2,145 +2,145 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A2CCC77B75
-	for <linux-pci@archiver.kernel.org>; Sat,  6 May 2023 14:05:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC0BC77B73
+	for <linux-pci@archiver.kernel.org>; Sun,  7 May 2023 03:41:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232521AbjEFOFP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 6 May 2023 10:05:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33256 "EHLO
+        id S229551AbjEGDlo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 6 May 2023 23:41:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36592 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232305AbjEFOFO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 6 May 2023 10:05:14 -0400
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 760D59EE3;
-        Sat,  6 May 2023 07:05:13 -0700 (PDT)
-Received: by mail-pf1-x42f.google.com with SMTP id d2e1a72fcca58-643aad3bc41so1575515b3a.0;
-        Sat, 06 May 2023 07:05:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683381913; x=1685973913;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=hkd6WhOnQ+KRJOV8mq0TlD1Vd10aUH02oQzy0floNgM=;
-        b=oZ/wzpDrNQU5oZBQyozEZp/aueljhoFfsUE1M196wAGapBqhMVXtvpTaANriQD12z1
-         CYEg7PWsaSBrOYqkBgPV8q4xpWcZjVvQvmJnmaQyrVuah01sUWYm5MOhaTa6rY0u+ao9
-         J5SvoqKaCvLK2gtKqK20sWmTQYhZbLxQQO61uiKXv2H3Uncipj5skzx2G/+y3Qfd3QHx
-         Z79evxngpcyoP9GLiK60fAzLGujA+naSqO2YqU9zJfnzWpCbTzA/sBRKPly2zdZWhkJo
-         6D6py3AEBxeCN6Bibnfr7yexfudCV/IE/YBSot3fPUKvt3wNC8eXHIVIvcTf1YYD8rd/
-         DwGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683381913; x=1685973913;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=hkd6WhOnQ+KRJOV8mq0TlD1Vd10aUH02oQzy0floNgM=;
-        b=W1+MNd0b4wVzEtNJDWU5EhohebKEvAcyrkv4TRT+rsvUXiGK52vPgEDur0uVEoQQuW
-         r2RjnHq0eWC+NA7TU9+Zv6oNDkxkL60Z+/PbX560MDGTo7xABwqRINjtpmHIFay4ftkZ
-         qsd5HSdlm6jQoU+uS6HfSlj+TVQluqVPAqH6LsUNhaCw2fW/g9Uep97mEvWAsx3sZU+X
-         LobIfQjA8CRV7jHvKUWspQ+4e71XVcII1KNbh+Cx1uHTLj4pm6SwU3LWnpDnF+hN0yHC
-         9jHgcMrTjTKG6qFwf9pgFCLIEb3dNn7+dnCDX/g2KxQ6VqKIOxGNAzKQYbptgjNek1X4
-         K6hw==
-X-Gm-Message-State: AC+VfDyZ/4zZEee0LF+BpqdCjK+3l/NChLTEaw8zX1jFBWAUFtDOAAU+
-        XGKbqydzVuNELmMS54fDg04=
-X-Google-Smtp-Source: ACHHUZ7rgEFomnilJPyZ9wR1v0RoF0VJiK09vgckHJn4op9dBHqIrGd5UF7Buqd+HJ5Z29zeoKndfg==
-X-Received: by 2002:a05:6a20:442a:b0:ff:68f1:679 with SMTP id ce42-20020a056a20442a00b000ff68f10679mr2930570pzb.52.1683381912861;
-        Sat, 06 May 2023 07:05:12 -0700 (PDT)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id m22-20020aa78a16000000b0063d3d776910sm3244758pfa.138.2023.05.06.07.05.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 06 May 2023 07:05:12 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Date:   Sat, 6 May 2023 07:05:11 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
-        Sanket Goswami <Sanket.Goswami@amd.com>,
-        Richard gong <richard.gong@amd.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] amd_nb: Add PCI ID for family 19h model 78h
-Message-ID: <7b74c389-97b7-4f56-851b-6ce17950a4d1@roeck-us.net>
-References: <20230427053338.16653-1-mario.limonciello@amd.com>
- <20230427053338.16653-2-mario.limonciello@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230427053338.16653-2-mario.limonciello@amd.com>
+        with ESMTP id S229462AbjEGDlm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 6 May 2023 23:41:42 -0400
+Received: from mail-m127104.qiye.163.com (mail-m127104.qiye.163.com [115.236.127.104])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6BE9132BE;
+        Sat,  6 May 2023 20:41:39 -0700 (PDT)
+Received: from localhost.localdomain (unknown [IPV6:240e:3b7:3277:3e50:d9d7:3dc:49c3:c0bf])
+        by mail-m127104.qiye.163.com (Hmail) with ESMTPA id A44EFA40198;
+        Sun,  7 May 2023 11:41:34 +0800 (CST)
+From:   Ding Hui <dinghui@sangfor.com.cn>
+To:     bhelgaas@google.com
+Cc:     sathyanarayanan.kuppuswamy@linux.intel.com, vidyas@nvidia.com,
+        david.e.box@linux.intel.com, kai.heng.feng@canonical.com,
+        michael.a.bottini@linux.intel.com, rajatja@google.com,
+        refactormyself@gmail.com, qinzongquan@sangfor.com.cn,
+        dinghui@sangfor.com.cn, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2] PCI/ASPM: Fix UAF by disabling ASPM for link when child function is removed
+Date:   Sun,  7 May 2023 11:40:57 +0800
+Message-Id: <20230507034057.20970-1-dinghui@sangfor.com.cn>
+X-Mailer: git-send-email 2.17.1
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+        tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlDSE5LVktLH0IfSkpDHUMeS1UTARMWGhIXJBQOD1
+        lXWRgSC1lBWUlPSx5BSBlMQUhJTExBSB5OS0EfQh9MQUgfGEFPQhhIQRhLGR1ZV1kWGg8SFR0UWU
+        FZT0tIVUpKS0hKTFVKS0tVS1kG
+X-HM-Tid: 0a87f44cee36b282kuuua44efa40198
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6PC46Vhw5Hj0OTjJJGD0ZKA4L
+        HUwaFFFVSlVKTUNIT0hLQ0JOTUpIVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
+        QVlJT0seQUgZTEFISUxMQUgeTktBH0IfTEFIHxhBT0IYSEEYSxkdWVdZCAFZQU9NTU43Bg++
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 27, 2023 at 12:33:36AM -0500, Mario Limonciello wrote:
-> s2idle previously worked on this system, but it regressed in kernel
-> 6.4 due to commit 310e782a99c7 ("platform/x86/amd: pmc: Utilize SMN
-> index 0 for driver probe").
-> 
-> The reason for the regression is that before this commit the SMN
-> communication was hardcoded, but after amd_smn_read() is used which
-> relies upon the misc PCI ID used by DF function 3 being included in
-> a table.  The ID was missing for model 78h, so this meant that the
-> amd_smn_read() wouldn't work.
-> 
-> Add the missing ID into amd_nb, restoring s2idle on this system.
-> 
-> Fixes: 310e782a99c7 ("platform/x86/amd: pmc: Utilize SMN index 0 for driver probe")
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+If the Function 0 of a Multi-Function device is software removed,
+a freed downstream pointer will be left in struct pcie_link_state,
+and then when pcie_config_aspm_link() be invoked from any path,
+we will trigger use-after-free, e.g.:
 
-FWIW:
+Reproducer:
 
-Acked-by: Guenter Roeck <linux@roeck-us.net>
+  [root@host ~]# cat repro.sh
+  #!/bin/bash
+  DEV_F0="0000:03:00.0"
+  echo 1 > /sys/bus/pci/devices/$DEV_F0/remove
+  echo powersave > /sys/module/pcie_aspm/parameters/policy
 
-Note that this patch is not upstream, meaning the second patch
-in the series can not be applied either. I am not sure if that is
-because of "regressed in kernel 6.4" - after all, that kernel does not
-exist yet. The offending patch _is_ in the upstream kernel, though.
-It might make sense to inform the regression bot if the problem is
-not fixed when v6.4-rc1 is made available.
+Result:
 
-Guenter
+  ==================================================================
+  BUG: KASAN: slab-use-after-free in pcie_config_aspm_link+0x42d/0x500
+  Read of size 4 at addr ffff8881070c80a0 by task repro.sh/2056
+  CPU: 3 PID: 2056 Comm: repro.sh Not tainted 6.3.0+ #15
+  Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00 11/12/2020
+  Call Trace:
+   <TASK>
+   dump_stack_lvl+0x33/0x50
+   print_address_description.constprop.0+0x27/0x310
+   print_report+0x3e/0x70
+   kasan_report+0xae/0xe0
+   pcie_config_aspm_link+0x42d/0x500
+   pcie_aspm_set_policy+0x8e/0x1a0
+   param_attr_store+0x162/0x2c0
+   module_attr_store+0x3e/0x80
+   kernfs_fop_write_iter+0x2d5/0x460
+   vfs_write+0x72e/0xae0
+   ksys_write+0xed/0x1c0
+   do_syscall_64+0x38/0x90
+   entry_SYSCALL_64_after_hwframe+0x72/0xdc
 
-> ---
->  arch/x86/kernel/amd_nb.c | 2 ++
->  include/linux/pci_ids.h  | 1 +
->  2 files changed, 3 insertions(+)
-> 
-> diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-> index 4266b64631a4..7e331e8f3692 100644
-> --- a/arch/x86/kernel/amd_nb.c
-> +++ b/arch/x86/kernel/amd_nb.c
-> @@ -36,6 +36,7 @@
->  #define PCI_DEVICE_ID_AMD_19H_M50H_DF_F4 0x166e
->  #define PCI_DEVICE_ID_AMD_19H_M60H_DF_F4 0x14e4
->  #define PCI_DEVICE_ID_AMD_19H_M70H_DF_F4 0x14f4
-> +#define PCI_DEVICE_ID_AMD_19H_M78H_DF_F4 0x12fc
->  
->  /* Protect the PCI config register pairs used for SMN. */
->  static DEFINE_MUTEX(smn_mutex);
-> @@ -79,6 +80,7 @@ static const struct pci_device_id amd_nb_misc_ids[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M50H_DF_F3) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M60H_DF_F3) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M70H_DF_F3) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_19H_M78H_DF_F3) },
->  	{}
->  };
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 45c3d62e616d..95f33dadb2be 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -567,6 +567,7 @@
->  #define PCI_DEVICE_ID_AMD_19H_M50H_DF_F3 0x166d
->  #define PCI_DEVICE_ID_AMD_19H_M60H_DF_F3 0x14e3
->  #define PCI_DEVICE_ID_AMD_19H_M70H_DF_F3 0x14f3
-> +#define PCI_DEVICE_ID_AMD_19H_M78H_DF_F3 0x12fb
->  #define PCI_DEVICE_ID_AMD_CNB17H_F3	0x1703
->  #define PCI_DEVICE_ID_AMD_LANCE		0x2000
->  #define PCI_DEVICE_ID_AMD_LANCE_HOME	0x2001
-> -- 
-> 2.34.1
-> 
+As per PCIe spec r6.0, sec 7.5.3.7, it is recommended that software
+program the same value in all Functions for Multi-Function Devices
+(including ARI Devices). For ARI Devices, ASPM Control is determined
+solely by the setting in Function 0.
+
+So we can just disable ASPM of the whole component if any child
+function is removed, the downstream pointer will be avoided from
+use-after-free, that will also avoid other potential corner cases.
+
+Fixes: b5a0a9b59c81 ("PCI/ASPM: Read and set up L1 substate capabilities")
+Debugged-by: Zongquan Qin <qinzongquan@sangfor.com.cn>
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
+---
+v2:
+  - better commit title and message
+  - update comment
+  - add reproduction steps
+
+v1: https://lore.kernel.org/lkml/20230504123418.4438-1-dinghui@sangfor.com.cn/
+
+Link: https://lore.kernel.org/lkml/20230429132604.31853-1-dinghui@sangfor.com.cn/
+
+---
+ drivers/pci/pcie/aspm.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 66d7514ca111..06152cc39fea 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1010,18 +1010,15 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 
+ 	down_read(&pci_bus_sem);
+ 	mutex_lock(&aspm_lock);
+-	/*
+-	 * All PCIe functions are in one slot, remove one function will remove
+-	 * the whole slot, so just wait until we are the last function left.
+-	 */
+-	if (!list_empty(&parent->subordinate->devices))
+-		goto out;
+ 
+ 	link = parent->link_state;
+ 	root = link->root;
+ 	parent_link = link->parent;
+ 
+-	/* All functions are removed, so just disable ASPM for the link */
++	/*
++	 * For any function removed, disable ASPM for the link. See PCIe r6.0,
++	 * sec 7.7.3.7 for details.
++	 */
+ 	pcie_config_aspm_link(link, 0);
+ 	list_del(&link->sibling);
+ 	/* Clock PM is for endpoint device */
+@@ -1032,7 +1029,7 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 		pcie_update_aspm_capable(root);
+ 		pcie_config_aspm_path(parent_link);
+ 	}
+-out:
++
+ 	mutex_unlock(&aspm_lock);
+ 	up_read(&pci_bus_sem);
+ }
+-- 
+2.17.1
+
