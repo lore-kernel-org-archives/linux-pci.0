@@ -2,61 +2,231 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3FF4C7EE2C
-	for <linux-pci@archiver.kernel.org>; Mon,  8 May 2023 07:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8F0BC77B73
+	for <linux-pci@archiver.kernel.org>; Mon,  8 May 2023 08:24:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233603AbjEHHwM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 May 2023 03:52:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58590 "EHLO
+        id S233079AbjEHIYV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 May 2023 04:24:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233586AbjEHHwJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2023 03:52:09 -0400
-X-Greylist: delayed 604 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 08 May 2023 00:52:08 PDT
-Received: from mail.rawlinsfis.com (mail.rawlinsfis.com [89.40.118.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F0DB1BF7
-        for <linux-pci@vger.kernel.org>; Mon,  8 May 2023 00:52:07 -0700 (PDT)
-Received: by mail.rawlinsfis.com (Postfix, from userid 1001)
-        id 10CE781B2C; Mon,  8 May 2023 08:36:14 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rawlinsfis.com;
-        s=mail; t=1683531380;
-        bh=lDo1OjfzzJ3sOfR9tSDg5RMmT4aDyBP45hIVJCLtIrE=;
-        h=Date:From:To:Subject:From;
-        b=qsyXZt++mHZ+697yFyGpq43tk3rtk0yaknXIk3pmn1HQACN4jkC6brZAnOI5iknZt
-         3Unppt1V/kmkpAtO0QYycnVjlOTXdgw5yiT48idAb0fflH0SdFOIb+a2Ju41+mwI6g
-         y3fBjn28RsvW+BluBqu4lAqjhTdsq6+OAEFYqoja9/NSwV9yAYRpBhcYvgvEIylcij
-         b203usJlZhm8OaWyIYetlaWnI3IsgDXaeGsgnGb4Ocsp/0s9BpkPlpqCkOi3ArOIjd
-         xiLtqdhh09xap5YlSo8Im70jbdl0G6V+mz9B23r2vNrV56kghAJZiHv7piHTom4x4U
-         6nEDYNrDniFog==
-Received: by mail.rawlinsfis.com for <linux-pci@vger.kernel.org>; Mon,  8 May 2023 07:36:07 GMT
-Message-ID: <20230508074500-0.1.3d.5lsm.0.k71rlejrhk@rawlinsfis.com>
-Date:   Mon,  8 May 2023 07:36:07 GMT
-From:   "Damian Hordych" <damian.hordych@rawlinsfis.com>
-To:     <linux-pci@vger.kernel.org>
-Subject: =?UTF-8?Q?Pompy_ciep=C5=82a_-_nowe_warunki_?=
-X-Mailer: mail.rawlinsfis.com
+        with ESMTP id S233009AbjEHIXv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2023 04:23:51 -0400
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C85D1CFDA;
+        Mon,  8 May 2023 01:23:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1683534230; x=1715070230;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=hlyuFLKeGB1+i6aF1UQOhgZD24UMcmO95zWntN5xZBE=;
+  b=2dPFf8klo8fVOzWvSGpVH7NYhDq34oITCnJxboSbxuDVxplP5pGD76+M
+   kYgfbjYKbLUPIjv2yWhF3kx8Xp6RggbPqy18XCJ/ajn7N4gqeS36e/v2y
+   /QNetmERCtE6YkZNBtVKDly5J+lQPD4pfUqLJbE3K3kwrKqyP2OzvSuvE
+   U+3+SA8iSf3cDq+eJ2RT4BUSwfAoQSL3b6HKyEOCNqtg48s4RLUWWzs0C
+   HiO0LfMlTZbZoUhVjHCMQ7QKcr18Soabp0RwryZJNeXRq8FHOUYg9S+A+
+   9T0FZI0BQFUFXPNemFSK29Mv0vMQcIAJtvFXg9RHJF6/V2U6G6YLcPlU/
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.99,258,1677567600"; 
+   d="asc'?scan'208";a="224279113"
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 May 2023 01:23:48 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.21; Mon, 8 May 2023 01:23:48 -0700
+Received: from wendy (10.10.115.15) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.21 via Frontend
+ Transport; Mon, 8 May 2023 01:23:45 -0700
+Date:   Mon, 8 May 2023 09:23:26 +0100
+From:   Conor Dooley <conor.dooley@microchip.com>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+CC:     Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH fixes] dt-bindings: PCI: fsl,imx6q: fix assigned-clocks
+ warning
+Message-ID: <20230508-purely-radar-8fb16747ba60@wendy>
+References: <20230508071837.68552-1-krzysztof.kozlowski@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="QtB+N7QIRkmC4l2w"
+Content-Disposition: inline
+In-Reply-To: <20230508071837.68552-1-krzysztof.kozlowski@linaro.org>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Dzie=C5=84 dobry,
+--QtB+N7QIRkmC4l2w
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-w ramach nowej edycji programu Czyste Powietrze dla klient=C3=B3w indywid=
-ualnych mog=C4=85 otrzyma=C4=87 Pa=C5=84stwo do 135 tys. z=C5=82 wsparcia=
- na zakup pompy ciep=C5=82a.
+On Mon, May 08, 2023 at 09:18:37AM +0200, Krzysztof Kozlowski wrote:
+> @@ -49,6 +62,31 @@ required:
+>  allOf:
+>    - $ref: /schemas/pci/snps,dw-pcie-ep.yaml#
+>    - $ref: /schemas/pci/fsl,imx6q-pcie-common.yaml#
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - fsl,imx8mq-pcie-ep
 
-Pr=C3=B3cz wy=C5=BCszego dofinansowania program zak=C5=82ada m.in. podwy=C5=
-=BCszenie prog=C3=B3w dochodowych oraz mo=C5=BCliwo=C5=9B=C4=87 z=C5=82o=C5=
-=BCenia kolejnego wniosku o dofinansowanie dla tych, kt=C3=B3rzy ju=C5=BC=
- wcze=C5=9Bniej skorzystali z Programu.
+How come this is enum rather than const (and same for the other
+single-compatible ones below)?
 
-Jako firma specjalizuj=C4=85ca si=C4=99 w dostawie, monta=C5=BCu i serwis=
-ie pomp ciep=C5=82a pomo=C5=BCemy Pa=C5=84stwu w uzyskaniu dofinansowania=
- wraz z kompleksow=C4=85 realizacj=C4=85 ca=C5=82ego projektu.
+Cheers,
+Conor.
 
-S=C4=85 Pa=C5=84stwo zainteresowani?
+> +    then:
+> +      properties:
+> +        clocks:
+> +          minItems: 4
+> +        clock-names:
+> +          items:
+> +            - const: pcie
+> +            - const: pcie_bus
+> +            - const: pcie_phy
+> +            - const: pcie_aux
+> +    else:
+> +      properties:
+> +        clocks:
+> +          maxItems: 3
+> +        clock-names:
+> +          items:
+> +            - const: pcie
+> +            - const: pcie_bus
+> +            - const: pcie_aux
+> +
+> =20
+>  unevaluatedProperties: false
+> =20
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/=
+Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> index 2443641754d3..81bbb8728f0f 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+> @@ -40,6 +40,19 @@ properties:
+>        - const: dbi
+>        - const: config
+> =20
+> +  clocks:
+> +    minItems: 3
+> +    items:
+> +      - description: PCIe bridge clock.
+> +      - description: PCIe bus clock.
+> +      - description: PCIe PHY clock.
+> +      - description: Additional required clock entry for imx6sx-pcie,
+> +           imx6sx-pcie-ep, imx8mq-pcie, imx8mq-pcie-ep.
+> +
+> +  clock-names:
+> +    minItems: 3
+> +    maxItems: 4
+> +
+>    interrupts:
+>      items:
+>        - description: builtin MSI controller.
+> @@ -77,6 +90,70 @@ required:
+>  allOf:
+>    - $ref: /schemas/pci/snps,dw-pcie.yaml#
+>    - $ref: /schemas/pci/fsl,imx6q-pcie-common.yaml#
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - fsl,imx6sx-pcie
+> +    then:
+> +      properties:
+> +        clocks:
+> +          minItems: 4
+> +        clock-names:
+> +          items:
+> +            - const: pcie
+> +            - const: pcie_bus
+> +            - const: pcie_phy
+> +            - const: pcie_inbound_axi
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - fsl,imx8mq-pcie
+> +    then:
+> +      properties:
+> +        clocks:
+> +          minItems: 4
+> +        clock-names:
+> +          items:
+> +            - const: pcie
+> +            - const: pcie_bus
+> +            - const: pcie_phy
+> +            - const: pcie_aux
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - fsl,imx6q-pcie
+> +            - fsl,imx6qp-pcie
+> +            - fsl,imx7d-pcie
+> +    then:
+> +      properties:
+> +        clocks:
+> +          maxItems: 3
+> +        clock-names:
+> +          items:
+> +            - const: pcie
+> +            - const: pcie_bus
+> +            - const: pcie_phy
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - fsl,imx8mm-pcie
+> +            - fsl,imx8mp-pcie
+> +    then:
+> +      properties:
+> +        clocks:
+> +          maxItems: 3
+> +        clock-names:
+> +          items:
+> +            - const: pcie
+> +            - const: pcie_bus
+> +            - const: pcie_aux
+> =20
+>  unevaluatedProperties: false
+> =20
+> --=20
+> 2.34.1
+>=20
 
-Pozdrawiam
-Damian Hordych
+--QtB+N7QIRkmC4l2w
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZFixcAAKCRB4tDGHoIJi
+0hl7AP4x1NzK+26z63yAD+Pl99r+yAFmNg1IKq8KmxhVMOHLZwD/c2HvdUBgj+A/
+VXIO5d2wSOFSW0nWqet8dkJfD9Aw2w4=
+=vPiN
+-----END PGP SIGNATURE-----
+
+--QtB+N7QIRkmC4l2w--
