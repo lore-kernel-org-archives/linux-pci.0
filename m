@@ -2,138 +2,195 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A01F8C77B7F
-	for <linux-pci@archiver.kernel.org>; Mon,  8 May 2023 15:39:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D84F9C7EE24
+	for <linux-pci@archiver.kernel.org>; Mon,  8 May 2023 15:53:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234435AbjEHPj3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 May 2023 11:39:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51304 "EHLO
+        id S234622AbjEHPxf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 May 2023 11:53:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234092AbjEHPj2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2023 11:39:28 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 204C665AB;
-        Mon,  8 May 2023 08:39:27 -0700 (PDT)
-Received: from pps.filterd (m0353726.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 348FSUPJ031602;
-        Mon, 8 May 2023 15:38:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- content-transfer-encoding : mime-version; s=pp1;
- bh=5EqBMa4gR0QbDtx8JIBT/ijJxpZC9W9h/jf+aACfoa4=;
- b=HXOweJalFLJ4p/2scyuwFnXGFrpQEvBA7T6Gsd9hfUeos76y5GXZQw8oCKrQiuz/xwKX
- np+fXcPiDgeJT+qelxypHduJq5MixQd8QUvM5R9099iXmNJ17c9kNFndWZF9Bc6M0HT8
- UQ+bqdZRFYxwJyb4eAk+CB1XYqGREZ5DLRrfbaB7gjUpaMMsRFIW8p2Vpj9EnHNW2REO
- FCsOCZcKNlpbI+kHqMAwNx35oZ5VGwPpU0n1eWxiSECsjt8QV4Zy63wObK+hVQT4cdL2
- Xh6P24GpDB+B0ydbGM4qn4arxXHkvELvBR7edtlhTQpgXbC5ItCfWEJ2DqSmMAMtHhZd Dw== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qf3rmgq84-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 08 May 2023 15:38:56 +0000
-Received: from m0353726.ppops.net (m0353726.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 348FT9ce001343;
-        Mon, 8 May 2023 15:37:39 GMT
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qf3rmgk1r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 08 May 2023 15:37:38 +0000
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3483Rkbm001141;
-        Mon, 8 May 2023 15:36:35 GMT
-Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
-        by ppma05fra.de.ibm.com (PPS) with ESMTPS id 3qdeh6gywq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 08 May 2023 15:36:35 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 348FaW1Q44826890
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 8 May 2023 15:36:32 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9D8E720043;
-        Mon,  8 May 2023 15:36:32 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8473220040;
-        Mon,  8 May 2023 15:36:31 +0000 (GMT)
-Received: from [9.171.75.120] (unknown [9.171.75.120])
-        by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Mon,  8 May 2023 15:36:31 +0000 (GMT)
-Message-ID: <aa68b4afdca34bf3bfd2439b03e6f9bcfad94903.camel@linux.ibm.com>
-Subject: Re: [PATCH v3 28/38] rtc: add HAS_IOPORT dependencies
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Alexandre Belloni <alexandre.belloni@bootlin.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-rtc@vger.kernel.org
-Date:   Mon, 08 May 2023 17:36:31 +0200
-In-Reply-To: <202303141252027ef5511a@mail.local>
-References: <20230314121216.413434-1-schnelle@linux.ibm.com>
-         <20230314121216.413434-29-schnelle@linux.ibm.com>
-         <202303141252027ef5511a@mail.local>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 (3.48.1-1.fc38) 
+        with ESMTP id S234439AbjEHPxe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2023 11:53:34 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6610F97;
+        Mon,  8 May 2023 08:53:30 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 02C4F21DB3;
+        Mon,  8 May 2023 15:53:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1683561209; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=enCmPKVL/QYyWJsvjc1siLNro32aXyEZpjP4ToWLEys=;
+        b=ithED1KI1jXI4dpx1wT8kE5Q567qTNV290ZWYDHVsYekplRXDrxtJQ+EvU5F7c90fBjv19
+        TB5/cxMwkMWg5B9aAl5f6H/hSokrfNUEno+6Xt156PNgM0Dk2JrTcpTPyZexNh7ip4e8ou
+        tWXTL7Rb7w06LMHD/hNPWswPX0spdsY=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 809EE1346B;
+        Mon,  8 May 2023 15:53:28 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id y8mUHfgaWWQfOQAAMHmgww
+        (envelope-from <jgross@suse.com>); Mon, 08 May 2023 15:53:28 +0000
+Message-ID: <3ce78def-659c-a3c2-3633-26e5b0a212b1@suse.com>
+Date:   Mon, 8 May 2023 17:53:28 +0200
 MIME-Version: 1.0
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: HRugoYqyIQPXXC-tvn11OSwiaFsesSiz
-X-Proofpoint-ORIG-GUID: o20aFgLcvaCJXNwI7RQ5eYI4YmrObTiV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.942,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-08_11,2023-05-05_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- mlxlogscore=846 adultscore=0 phishscore=0 spamscore=0 clxscore=1011
- priorityscore=1501 lowpriorityscore=0 bulkscore=0 malwarescore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2303200000 definitions=main-2305080103
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.1
+Subject: Re: [PATCH] x86/pci/xen: populate MSI sysfs entries
+Content-Language: en-US
+To:     Maximilian Heyne <mheyne@amazon.de>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>, Marc Zyngier <maz@kernel.org>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Ashok Raj <ashok.raj@intel.com>,
+        "Ahmed S. Darwish" <darwi@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20230503131656.15928-1-mheyne@amazon.de>
+From:   Juergen Gross <jgross@suse.com>
+In-Reply-To: <20230503131656.15928-1-mheyne@amazon.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------qUSNF0DqSSSO09uggR0ul3al"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 2023-03-14 at 13:52 +0100, Alexandre Belloni wrote:
-> Hello,
->=20
-> On 14/03/2023 13:12:06+0100, Niklas Schnelle wrote:
-> > In a future patch HAS_IOPORT=3Dn will result in inb()/outb() and friend=
-s
-> > not being declared. We thus need to add HAS_IOPORT as dependency for
-> > those drivers using them.
-> >=20
-> > Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> > ---
-> >  drivers/rtc/Kconfig | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> >=20
-> > diff --git a/drivers/rtc/Kconfig b/drivers/rtc/Kconfig
-> > index 5a71579af0a1..20aa77bf0a9f 100644
-> > --- a/drivers/rtc/Kconfig
-> > +++ b/drivers/rtc/Kconfig
-> > @@ -956,6 +956,7 @@ comment "Platform RTC drivers"
-> >  config RTC_DRV_CMOS
-> >  	tristate "PC-style 'CMOS'"
-> >  	depends on X86 || ARM || PPC || MIPS || SPARC64
-> > +	depends on HAS_IOPORT
->=20
-> Did you check that this will not break platforms that doesn't have RTC_PO=
-RT defined?
-> >=20
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--------------qUSNF0DqSSSO09uggR0ul3al
+Content-Type: multipart/mixed; boundary="------------2VgdL2ARHnFdKP06t0hm3NRa";
+ protected-headers="v1"
+From: Juergen Gross <jgross@suse.com>
+To: Maximilian Heyne <mheyne@amazon.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner
+ <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>,
+ Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>,
+ x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+ Marc Zyngier <maz@kernel.org>, Kevin Tian <kevin.tian@intel.com>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Ashok Raj <ashok.raj@intel.com>,
+ "Ahmed S. Darwish" <darwi@linutronix.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Message-ID: <3ce78def-659c-a3c2-3633-26e5b0a212b1@suse.com>
+Subject: Re: [PATCH] x86/pci/xen: populate MSI sysfs entries
+References: <20230503131656.15928-1-mheyne@amazon.de>
+In-Reply-To: <20230503131656.15928-1-mheyne@amazon.de>
 
-From what I can tell the CMOS_READ() macro this driver relies on uses
-some form of inb() style I/O port access in all its definitions. So my
-understanding is that this device is always accessed via I/O ports even
-if the variants differ slightly and would make no sense on a platform
-without any way of accessing I/O ports which is what lack of HAS_IOPORT
-means. From what I can see even without RTC_PORT being defined the
-CMOS_READ is still used. Hope that answers your question?
+--------------2VgdL2ARHnFdKP06t0hm3NRa
+Content-Type: multipart/mixed; boundary="------------5l1refLpYoFuAkuHwmsfSyyJ"
+
+--------------5l1refLpYoFuAkuHwmsfSyyJ
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: base64
+
+T24gMDMuMDUuMjMgMTU6MTYsIE1heGltaWxpYW4gSGV5bmUgd3JvdGU6DQo+IENvbW1pdCBi
+ZjVlNzU4ZjAyZmMgKCJnZW5pcnEvbXNpOiBTaW1wbGlmeSBzeXNmcyBoYW5kbGluZyIpIHJl
+d29ya2VkIHRoZQ0KPiBjcmVhdGlvbiBvZiBzeXNmcyBlbnRyaWVzIGZvciBNU0kgSVJRcy4g
+VGhlIGNyZWF0aW9uIHVzZWQgdG8gYmUgaW4NCj4gbXNpX2RvbWFpbl9hbGxvY19pcnFzX2Rl
+c2NzX2xvY2tlZCBhZnRlciBjYWxsaW5nIG9wcy0+ZG9tYWluX2FsbG9jX2lycXMuDQo+IFRo
+ZW4gaXQgbW92ZWQgaW50byBfX21zaV9kb21haW5fYWxsb2NfaXJxcyB3aGljaCBpcyBhbiBp
+bXBsZW1lbnRhdGlvbiBvZg0KPiBkb21haW5fYWxsb2NfaXJxcy4gSG93ZXZlciwgWGVuIGNv
+bWVzIHdpdGggdGhlIG9ubHkgb3RoZXIgaW1wbGVtZW50YXRpb24NCj4gb2YgZG9tYWluX2Fs
+bG9jX2lycXMgYW5kIGhlbmNlIGRvZXNuJ3QgcnVuIHRoZSBzeXNmcyBwb3B1bGF0aW9uIGNv
+ZGUNCj4gYW55bW9yZS4NCj4gDQo+IENvbW1pdCA2Yzc5Njk5NmVlNzAgKCJ4ODYvcGNpL3hl
+bjogRml4dXAgZmFsbG91dCBmcm9tIHRoZSBQQ0kvTVNJDQo+IG92ZXJoYXVsIikgc2V0IHRo
+ZSBmbGFnIE1TSV9GTEFHX0RFVl9TWVNGUyBmb3IgdGhlIHhlbiBtc2lfZG9tYWluX2luZm8N
+Cj4gYnV0IHRoYXQgZG9lc24ndCBhY3R1YWxseSBoYXZlIGFuIGVmZmVjdCBiZWNhdXNlIFhl
+biB1c2VzIGl0J3Mgb3duDQo+IGRvbWFpbl9hbGxvY19pcnFzIGltcGxlbWVudGF0aW9uLg0K
+PiANCj4gRml4IHRoaXMgYnkgbWFraW5nIHVzZSBvZiB0aGUgZmFsbGJhY2sgZnVuY3Rpb25z
+IGZvciBzeXNmcyBwb3B1bGF0aW9uLg0KPiANCj4gRml4ZXM6IGJmNWU3NThmMDJmYyAoImdl
+bmlycS9tc2k6IFNpbXBsaWZ5IHN5c2ZzIGhhbmRsaW5nIikNCj4gU2lnbmVkLW9mZi1ieTog
+TWF4aW1pbGlhbiBIZXluZSA8bWhleW5lQGFtYXpvbi5kZT4NCg0KUmV2aWV3ZWQtYnk6IEp1
+ZXJnZW4gR3Jvc3MgPGpncm9zc0BzdXNlLmNvbT4NCg0KDQpKdWVyZ2VuDQoNCg==
+--------------5l1refLpYoFuAkuHwmsfSyyJ
+Content-Type: application/pgp-keys; name="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Disposition: attachment; filename="OpenPGP_0xB0DE9DD628BF132F.asc"
+Content-Description: OpenPGP public key
+Content-Transfer-Encoding: quoted-printable
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xsBNBFOMcBYBCACgGjqjoGvbEouQZw/ToiBg9W98AlM2QHV+iNHsEs7kxWhKMjri
+oyspZKOBycWxw3ie3j9uvg9EOB3aN4xiTv4qbnGiTr3oJhkB1gsb6ToJQZ8uxGq2
+kaV2KL9650I1SJvedYm8Of8Zd621lSmoKOwlNClALZNew72NjJLEzTalU1OdT7/i
+1TXkH09XSSI8mEQ/ouNcMvIJNwQpd369y9bfIhWUiVXEK7MlRgUG6MvIj6Y3Am/B
+BLUVbDa4+gmzDC9ezlZkTZG2t14zWPvxXP3FAp2pkW0xqG7/377qptDmrk42GlSK
+N4z76ELnLxussxc7I2hx18NUcbP8+uty4bMxABEBAAHNHEp1ZXJnZW4gR3Jvc3Mg
+PGpnQHBmdXBmLm5ldD7CwHkEEwECACMFAlOMcBYCGwMHCwkIBwMCAQYVCAIJCgsE
+FgIDAQIeAQIXgAAKCRCw3p3WKL8TL0KdB/93FcIZ3GCNwFU0u3EjNbNjmXBKDY4F
+UGNQH2lvWAUy+dnyThpwdtF/jQ6j9RwE8VP0+NXcYpGJDWlNb9/JmYqLiX2Q3Tye
+vpB0CA3dbBQp0OW0fgCetToGIQrg0MbD1C/sEOv8Mr4NAfbauXjZlvTj30H2jO0u
++6WGM6nHwbh2l5O8ZiHkH32iaSTfN7Eu5RnNVUJbvoPHZ8SlM4KWm8rG+lIkGurq
+qu5gu8q8ZMKdsdGC4bBxdQKDKHEFExLJK/nRPFmAuGlId1E3fe10v5QL+qHI3EIP
+tyfE7i9Hz6rVwi7lWKgh7pe0ZvatAudZ+JNIlBKptb64FaiIOAWDCx1SzR9KdWVy
+Z2VuIEdyb3NzIDxqZ3Jvc3NAc3VzZS5jb20+wsB5BBMBAgAjBQJTjHCvAhsDBwsJ
+CAcDAgEGFQgCCQoLBBYCAwECHgECF4AACgkQsN6d1ii/Ey/HmQf/RtI7kv5A2PS4
+RF7HoZhPVPogNVbC4YA6lW7DrWf0teC0RR3MzXfy6pJ+7KLgkqMlrAbN/8Dvjoz7
+8X+5vhH/rDLa9BuZQlhFmvcGtCF8eR0T1v0nC/nuAFVGy+67q2DH8As3KPu0344T
+BDpAvr2uYM4tSqxK4DURx5INz4ZZ0WNFHcqsfvlGJALDeE0LhITTd9jLzdDad1pQ
+SToCnLl6SBJZjDOX9QQcyUigZFtCXFst4dlsvddrxyqT1f17+2cFSdu7+ynLmXBK
+7abQ3rwJY8SbRO2iRulogc5vr/RLMMlscDAiDkaFQWLoqHHOdfO9rURssHNN8WkM
+nQfvUewRz80hSnVlcmdlbiBHcm9zcyA8amdyb3NzQG5vdmVsbC5jb20+wsB5BBMB
+AgAjBQJTjHDXAhsDBwsJCAcDAgEGFQgCCQoLBBYCAwECHgECF4AACgkQsN6d1ii/
+Ey8PUQf/ehmgCI9jB9hlgexLvgOtf7PJnFOXgMLdBQgBlVPO3/D9R8LtF9DBAFPN
+hlrsfIG/SqICoRCqUcJ96Pn3P7UUinFG/I0ECGF4EvTE1jnDkfJZr6jrbjgyoZHi
+w/4BNwSTL9rWASyLgqlA8u1mf+c2yUwcGhgkRAd1gOwungxcwzwqgljf0N51N5Jf
+VRHRtyfwq/ge+YEkDGcTU6Y0sPOuj4Dyfm8fJzdfHNQsWq3PnczLVELStJNdapwP
+OoE+lotufe3AM2vAEYJ9rTz3Cki4JFUsgLkHFqGZarrPGi1eyQcXeluldO3m91NK
+/1xMI3/+8jbO0tsn1tqSEUGIJi7ox80eSnVlcmdlbiBHcm9zcyA8amdyb3NzQHN1
+c2UuZGU+wsB5BBMBAgAjBQJTjHDrAhsDBwsJCAcDAgEGFQgCCQoLBBYCAwECHgEC
+F4AACgkQsN6d1ii/Ey+LhQf9GL45eU5vOowA2u5N3g3OZUEBmDHVVbqMtzwlmNC4
+k9Kx39r5s2vcFl4tXqW7g9/ViXYuiDXb0RfUpZiIUW89siKrkzmQ5dM7wRqzgJpJ
+wK8Bn2MIxAKArekWpiCKvBOB/Cc+3EXE78XdlxLyOi/NrmSGRIov0karw2RzMNOu
+5D+jLRZQd1Sv27AR+IP3I8U4aqnhLpwhK7MEy9oCILlgZ1QZe49kpcumcZKORmzB
+TNh30FVKK1EvmV2xAKDoaEOgQB4iFQLhJCdP1I5aSgM5IVFdn7v5YgEYuJYx37Io
+N1EblHI//x/e2AaIHpzK5h88NEawQsaNRpNSrcfbFmAg987ATQRTjHAWAQgAyzH6
+AOODMBjgfWE9VeCgsrwH3exNAU32gLq2xvjpWnHIs98ndPUDpnoxWQugJ6MpMncr
+0xSwFmHEgnSEjK/PAjppgmyc57BwKII3sV4on+gDVFJR6Y8ZRwgnBC5mVM6JjQ5x
+Dk8WRXljExRfUX9pNhdE5eBOZJrDRoLUmmjDtKzWaDhIg/+1Hzz93X4fCQkNVbVF
+LELU9bMaLPBG/x5q4iYZ2k2ex6d47YE1ZFdMm6YBYMOljGkZKwYde5ldM9mo45mm
+we0icXKLkpEdIXKTZeKDO+Hdv1aqFuAcccTg9RXDQjmwhC3yEmrmcfl0+rPghO0I
+v3OOImwTEe4co3c1mwARAQABwsBfBBgBAgAJBQJTjHAWAhsMAAoJELDendYovxMv
+Q/gH/1ha96vm4P/L+bQpJwrZ/dneZcmEwTbe8YFsw2V/Buv6Z4Mysln3nQK5ZadD
+534CF7TDVft7fC4tU4PONxF5D+/tvgkPfDAfF77zy2AH1vJzQ1fOU8lYFpZXTXIH
+b+559UqvIB8AdgR3SAJGHHt4RKA0F7f5ipYBBrC6cyXJyyoprT10EMvU8VGiwXvT
+yJz3fjoYsdFzpWPlJEBRMedCot60g5dmbdrZ5DWClAr0yau47zpWj3enf1tLWaqc
+suylWsviuGjKGw7KHQd3bxALOknAp4dN3QwBYCKuZ7AddY9yjynVaD5X7nF9nO5B
+jR/i1DG86lem3iBDXzXsZDn8R38=3D
+=3D2wuH
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------5l1refLpYoFuAkuHwmsfSyyJ--
+
+--------------2VgdL2ARHnFdKP06t0hm3NRa--
+
+--------------qUSNF0DqSSSO09uggR0ul3al
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsB5BAABCAAjFiEEhRJncuj2BJSl0Jf3sN6d1ii/Ey8FAmRZGvgFAwAAAAAACgkQsN6d1ii/Ey93
+MQf/cxKVXhKe0gAEAMln7DmZGr6S7zdybp9iDiXoHMLt9maAVZlKd7AoiwoDqsSRJCkaxoZWtPfC
+1ShfFUXQrH3X+RXM0xoOZbwErxXDCnT06ZAtV4muq8RUWfw6wTppfnvd0t0WxuYhEtvdbU40zH0u
++K26n/zsBHSUygZ6kpnHLvMAI/BarkuOamBar8fkKQ3SxhKdOtpNWSn7UgmyvO0tDyepG3GciLy6
+cMrI5ibjjWIOeOJD93KNpihT0QlSlVVfQ2MYr58QUyTmi4VLtIJ2LPI/H6whMc1d399u16pzjpfJ
+gIE01xfP/1/0PoBJhnL3Y+9LNzY1ZGzF/iKfnTxP7Q==
+=cQFh
+-----END PGP SIGNATURE-----
+
+--------------qUSNF0DqSSSO09uggR0ul3al--
