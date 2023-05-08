@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88437C7EE25
-	for <linux-pci@archiver.kernel.org>; Mon,  8 May 2023 22:02:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D080C7EE26
+	for <linux-pci@archiver.kernel.org>; Mon,  8 May 2023 22:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233235AbjEHWCD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 May 2023 18:02:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40808 "EHLO
+        id S234438AbjEHWCF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 May 2023 18:02:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234534AbjEHWBm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2023 18:01:42 -0400
-Received: from mail-qk1-x72b.google.com (mail-qk1-x72b.google.com [IPv6:2607:f8b0:4864:20::72b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9731A86B4;
-        Mon,  8 May 2023 15:01:33 -0700 (PDT)
-Received: by mail-qk1-x72b.google.com with SMTP id af79cd13be357-7576ecfa4e7so240632285a.3;
-        Mon, 08 May 2023 15:01:33 -0700 (PDT)
+        with ESMTP id S234303AbjEHWBo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2023 18:01:44 -0400
+Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB9A98A7A;
+        Mon,  8 May 2023 15:01:35 -0700 (PDT)
+Received: by mail-qk1-x733.google.com with SMTP id af79cd13be357-75785057afeso128971485a.3;
+        Mon, 08 May 2023 15:01:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683583292; x=1686175292;
+        d=gmail.com; s=20221208; t=1683583294; x=1686175294;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=kcpsE+wXJIHOwOwJebkaqKb6ksrC76geutECDHqWm0M=;
-        b=nQZCsAkpKbZH+NBSmthHZ4XSxFw4l7H/EfLchf9T90RXuolhnNuzAV2fQ8rScXRq91
-         Ip/j5Zd0ka3ezfaM739EkextCL6k5czlmge55HVclKTdiCO3S3TQzVp+j8zeq/9bsxw3
-         d5qafuY9OaskMjGQiz3XodwF4Q/XklCV4dWKrUAvt13CefnxU3NQ8kbrEKziMdN1xbHm
-         7FTDQ6ppzxM5v2DcIyOsICQaHnF1fbqDYyVVb9lSckFAESuJURCX+AjooJc0VQUu/ncq
-         f7o5F9rrYVmLmgQMUFIg+bUr1rP26spKPqmc1lb+QMcmBcz+H4ix7paA7xyDaeKcbJAP
-         5orw==
+        bh=pCt3fs/yt+9j4nJyZEyIyBbz3ydO6tgld+CtAn09VxI=;
+        b=O66dAvPPs2CQpnu+jPSBwMhFwMizGeRGvwdwnC/tapuHPzrY6ubNibVBXz8X3zLEPM
+         vzeOUPnjE1agVfmXqrMbUBB6+wW3pZLz0zpVBJybj/JEyGRkdws//wa77Qj6oyYk9kvd
+         mWh+LZMZ5bSQgAKc7lBQG+LKVNYleJRiNKTEn9tSA0sIxIXgZziFcMoVG3Pgg8CYkPUr
+         WmxgAbcVKclCjP4N7MBsnawEzH6A/dW4gaKFOPKwCcadbLQWyY+liMJxgRBajGRQOmnr
+         jsbVlCshTvjd6fYZK34vYLbdCJETIVVcswi0HcRi2UzVMAWbdX+AExVD9U1EBkNVSIf1
+         OoaQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1683583292; x=1686175292;
+        d=1e100.net; s=20221208; t=1683583294; x=1686175294;
         h=references:in-reply-to:message-id:date:subject:cc:to:from
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=kcpsE+wXJIHOwOwJebkaqKb6ksrC76geutECDHqWm0M=;
-        b=CD7XxRIVtWlkQK3vBuBBMLxGPYsuZMC31Xo4XyJ5ubx99Jrm4n3x7+orV3LEmEM+ia
-         L0k7aPCuVP19oII9lBZrGmv8it2cdGKXldYSwJoSQVFolBhYKPkxNsNTeGYbCmGA2aOV
-         VzOvNRcGbshiBFyN0wxTM6+oTQbyjvisEZ+g+VnLj332LAskAKH4vFl5OEIdyYRAZyMq
-         6e+wIwKEyMeUJ6m2ETk2RrUaQw5W2ed85J4kAJwG8NMScEgkQD0iUfriIxNmbZvzVTb7
-         Bf4O7Xg9DXqpMOWveeFcWuSD+9FF9fVkvfIV0qvQCKfj/VPdbVHh7blk/2PoLpbsb/qR
-         JhUg==
-X-Gm-Message-State: AC+VfDwiBBYnir4NrbTOAq25Sw6FzfbOC22/DXXQO42b2QweWR/0kq0v
-        3o9Y3VfMrPF9RpbTteC0ZG4AI5QS1Mg=
-X-Google-Smtp-Source: ACHHUZ4Wz75x9v6n2Zda1aQQbZCKWO4yU29ClORYfdWR/7zwukW4VnTCowYWV5YO9m0VFBayAYREug==
-X-Received: by 2002:a05:622a:4cf:b0:3ef:344b:2099 with SMTP id q15-20020a05622a04cf00b003ef344b2099mr17431319qtx.4.1683583292550;
-        Mon, 08 May 2023 15:01:32 -0700 (PDT)
+        bh=pCt3fs/yt+9j4nJyZEyIyBbz3ydO6tgld+CtAn09VxI=;
+        b=gyq8nIH4Wcpi//wWjHNHGO979eSv2xh0KdAddInDRlQioo5swRUsWY1TBmWQ8jF6VN
+         SdTplSXb5/IoG916jhW4Z/biX6GmrZyTqfb8+RqfGSmHldeOzR4D7H+nB1br+v1DORKN
+         NJoZeAnT82TY3MEBcIA5RkDJThSH0xDaWDeMlmM4/dOieq3dK9xrR8Ou0W+XH/BkZEXj
+         2rCp/wLQXouitESTdoLnxHoA8rysdfDZCJAWoPu7uVjvNJzEX/cPK1VpeoKsO42ym3kN
+         tWaQkCEkgNH1VG6HfNswKfJguAP6IZYdXg/uj+kK9STuVMgEtQ2bMn3YHCewaMzG1/Yn
+         BWvA==
+X-Gm-Message-State: AC+VfDzh2ZmLeOfKz/of5HHTHPtebwCwvm/vle2hbGZ9DFPsfal0QMHN
+        O67S92LPIcp+s7d7ze8Ndi38yye+4vY=
+X-Google-Smtp-Source: ACHHUZ7xSK+QevIq0p3hBj+58HTRkq4ohElRL00PBCdMCP3uGE82Ms/affum43cqE0BMUDlwa6q98g==
+X-Received: by 2002:ac8:5cd2:0:b0:3ef:4c4b:7e1e with SMTP id s18-20020ac85cd2000000b003ef4c4b7e1emr17619302qta.29.1683583294692;
+        Mon, 08 May 2023 15:01:34 -0700 (PDT)
 Received: from stbsrv-and-01.and.broadcom.net ([192.19.144.250])
-        by smtp.gmail.com with ESMTPSA id e11-20020ac8010b000000b003d7e923736asm3315176qtg.6.2023.05.08.15.01.31
+        by smtp.gmail.com with ESMTPSA id e11-20020ac8010b000000b003d7e923736asm3315176qtg.6.2023.05.08.15.01.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 May 2023 15:01:32 -0700 (PDT)
+        Mon, 08 May 2023 15:01:34 -0700 (PDT)
 From:   Jim Quinlan <jim2101024@gmail.com>
 To:     linux-pci@vger.kernel.org,
         Nicolas Saenz Julienne <nsaenz@kernel.org>,
@@ -65,9 +65,9 @@ Cc:     Florian Fainelli <f.fainelli@gmail.com>,
         linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
         BCM2711/BCM2835 ARM ARCHITECTURE),
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v5 3/5] PCI: brcmstb: Set higher value for internal bus timeout
-Date:   Mon,  8 May 2023 18:01:23 -0400
-Message-Id: <20230508220126.16241-4-jim2101024@gmail.com>
+Subject: [PATCH v5 5/5] PCI: brcmstb: Remove stale comment
+Date:   Mon,  8 May 2023 18:01:25 -0400
+Message-Id: <20230508220126.16241-6-jim2101024@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230508220126.16241-1-jim2101024@gmail.com>
 References: <20230508220126.16241-1-jim2101024@gmail.com>
@@ -75,54 +75,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-During long periods of the PCIe RC HW being in an L1SS sleep state, there
-may be a timeout on an internal bus access, even though there may not be
-any PCIe access involved.  Such a timeout will cause a subsequent CPU
-abort.
+A comment says that Multi-MSI is not supported by the driver.
+A past commit [1] added this feature, so the comment is
+incorrect and is removed.
 
-So, when "brcm,enable-l1ss" is observed, we increase the timeout value to
-four seconds instead of using its HW default.
+[1] commit 198acab1772f22f2 ("PCI: brcmstb: Enable Multi-MSI")
 
-Tested-by: Florian Fainelli <f.fainelli@gmail.com>
 Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/pci/controller/pcie-brcmstb.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index d30636a725d7..fe0415a98c63 100644
+index 7b698a9a851e..acd478edbe2f 100644
 --- a/drivers/pci/controller/pcie-brcmstb.c
 +++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -1034,6 +1034,21 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	return 0;
- }
+@@ -449,7 +449,6 @@ static struct irq_chip brcm_msi_irq_chip = {
+ };
  
-+/*
-+ * This extends the timeout period for an access to an internal bus.  This
-+ * access timeout may occur during L1SS sleep periods even without the
-+ * presence of a PCIe access.
-+ */
-+static void brcm_extend_rbus_timeout(struct brcm_pcie *pcie)
-+{
-+	/* TIMEOUT register is two registers before RGR1_SW_INIT_1 */
-+	const unsigned int REG_OFFSET = PCIE_RGR1_SW_INIT_1(pcie) - 8;
-+	u32 timeout_us = 4000000; /* 4 seconds, our setting for L1SS */
-+
-+	/* Each unit in timeout register is 1/216,000,000 seconds */
-+	writel(216 * timeout_us, pcie->base + REG_OFFSET);
-+}
-+
- static void brcm_config_clkreq(struct brcm_pcie *pcie)
- {
- 	bool l1ss = of_property_read_bool(pcie->np, "brcm,enable-l1ss");
-@@ -1059,6 +1074,7 @@ static void brcm_config_clkreq(struct brcm_pcie *pcie)
- 		 * of 400ns, as specified in 3.2.5.2.2 of the PCI Express
- 		 * Mini CEM 2.0 specification.
- 		 */
-+		brcm_extend_rbus_timeout(pcie);
- 		clkreq_set |= PCIE_MISC_HARD_PCIE_HARD_DEBUG_L1SS_ENABLE_MASK;
- 		dev_info(pcie->dev, "bi-dir CLKREQ# for L1SS power savings");
- 	} else {
+ static struct msi_domain_info brcm_msi_domain_info = {
+-	/* Multi MSI is supported by the controller, but not by this driver */
+ 	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+ 		   MSI_FLAG_MULTI_PCI_MSI),
+ 	.chip	= &brcm_msi_irq_chip,
 -- 
 2.17.1
 
