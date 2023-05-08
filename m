@@ -2,273 +2,260 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF309C77B73
-	for <linux-pci@archiver.kernel.org>; Mon,  8 May 2023 13:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72765C7EE2C
+	for <linux-pci@archiver.kernel.org>; Mon,  8 May 2023 15:37:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233973AbjEHNq0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 8 May 2023 09:46:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34394 "EHLO
+        id S234494AbjEHPhc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 May 2023 11:37:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234338AbjEHNqY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2023 09:46:24 -0400
-Received: from EUR05-AM6-obe.outbound.protection.outlook.com (mail-am6eur05on2057.outbound.protection.outlook.com [40.107.22.57])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66F4F35567;
-        Mon,  8 May 2023 06:46:11 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aUK/CNi31IwjY8uzhkJPkxWgxBmUEssanWi8qqkYE1FA2FgOh6AA26SzflCfwoLwjYor8Z2ZJ3npw5pB0jKc12nDWrQIJ2EifbcfkebKFJ/ISYkxJYtoPkldduXfWUnN8KuuTckqnlK6Z3UFgUReavUy72HDpO4QZcSY1dQ5FRMSfmL9yFH/krPlYAEwVu1uACByOi0K59EG80jfHzzZ+ZKB0drZei+E2t2xIcWCkJUJ8GkvQdDX2w1LL06wNaxblcI4Pr0jwBznOVoVHW/EQfSEHhLhKIBdMAXeBNjqvavLu5+AzkQ3zCM+0v/W/lOC/xOnEWJnSxU6WHIZ/d8tGQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LoQ19bYXE2p8HA/ylDCP0SiXrlNu+lcWB8IPvKh+Lp4=;
- b=oXqVb9c5xi4Si9yrmWE25sGVLvg7jBB4Xe8vFrHPeYysol5GU7ZF43+BI9k97yh/HRZ4czn8OQew8cFWf+BNazMHY1HDqcmG7RzdgH3SJiXw+LakyL97uH/TjTCwau07VTHeGywEK2kq6RpNPb1UbvuzyGc09V6CXmu31s4mA8LeOivG5lrtiPWtja8tnFjBEmtJoMmEo2W/kq3Df/TNxIV/K3dfOJTFh5V2H2NBtY435tmh9oZWlTXa6MZvn45H05SmO3MopxbCBRCkisUPXTsfRbsiXhbczSpRbtBhgl6QwDE6JtAPpAUSkPCZeECd1C554Zqz6L00JMdRsYe0Gg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LoQ19bYXE2p8HA/ylDCP0SiXrlNu+lcWB8IPvKh+Lp4=;
- b=VTsJQnZb1+SFIqnO8m5IxlK3DU2F2TQMSSynzrJjdooisHk2zXFyjhdHd2nNxfd57yRwYWUy63SDZwaiFfNpRHDtDsFS/FAcarbY50LQ5Wso1keVL94Wg+I5ouq+aeCcOSVcCxt7ALMH5/1kjORf+koc8HvJ8xgHOi41DaVfAp8=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM6PR04MB4838.eurprd04.prod.outlook.com (2603:10a6:20b:4::16)
- by AM8PR04MB7330.eurprd04.prod.outlook.com (2603:10a6:20b:1c4::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6363.32; Mon, 8 May
- 2023 13:46:07 +0000
-Received: from AM6PR04MB4838.eurprd04.prod.outlook.com
- ([fe80::bcdd:75c9:176c:39ed]) by AM6PR04MB4838.eurprd04.prod.outlook.com
- ([fe80::bcdd:75c9:176c:39ed%4]) with mapi id 15.20.6363.032; Mon, 8 May 2023
- 13:46:07 +0000
-From:   Frank Li <Frank.Li@nxp.com>
-To:     Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linuxppc-dev@lists.ozlabs.org (open list:PCI DRIVER FOR FREESCALE
-        LAYERSCAPE),
-        linux-pci@vger.kernel.org (open list:PCI DRIVER FOR FREESCALE
-        LAYERSCAPE),
-        linux-arm-kernel@lists.infradead.org (moderated list:PCI DRIVER FOR
-        FREESCALE LAYERSCAPE), linux-kernel@vger.kernel.org (open list)
-Cc:     imx@lists.linux.dev
-Subject: [PATCH v2 1/1] PCI: layerscape: Add the endpoint linkup notifier support
-Date:   Mon,  8 May 2023 09:45:47 -0400
-Message-Id: <20230508134548.1934970-1-Frank.Li@nxp.com>
-X-Mailer: git-send-email 2.34.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BYAPR11CA0099.namprd11.prod.outlook.com
- (2603:10b6:a03:f4::40) To AM6PR04MB4838.eurprd04.prod.outlook.com
- (2603:10a6:20b:4::16)
+        with ESMTP id S234501AbjEHPhb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2023 11:37:31 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C62016E8A;
+        Mon,  8 May 2023 08:37:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4F4436254C;
+        Mon,  8 May 2023 15:37:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C9CFC433EF;
+        Mon,  8 May 2023 15:37:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683560239;
+        bh=qel2kewVtsWY2T8P8nd4z4jo4QGJjpzs3QivQR26XnU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=BFpzuOPxLR7YpgCaQn1Qyzm7HajYuF8kDSIUFBxHW6XKzeXc4SJcbptiQWGrVF9tK
+         9+TPanXeI85eM12C+vQWxoO9n/g4MCnMqVpYjKYH9340zEgYiCwefB6tEo13hofdzM
+         droRdHz5COjR8pYAc4YTf8h1g2b2KSp+EDk6aUF2vNfm62dcTDqosiJH2C3pyWzOYU
+         39Vnao3Gzl+dEYC4Qp7vk2o6oyaIFmc6Twm5FyR2ugVtPk12bxzpG7JMtNOtUsftKr
+         ygcZyzrCOso78EuXUbc2xLZbaV/QsT4kWsZzGj2Yr+Vvt/pIQ61B1J5/wHTJFjriei
+         VHz1jXZAC0rfQ==
+Date:   Mon, 8 May 2023 21:07:06 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Cc:     Devi Priya <quic_devipriy@quicinc.com>, agross@kernel.org,
+        andersson@kernel.org, konrad.dybcio@linaro.org,
+        lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
+        mturquette@baylibre.com, sboyd@kernel.org,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-clk@vger.kernel.org, quic_srichara@quicinc.com,
+        quic_sjaganat@quicinc.com, quic_kathirav@quicinc.com,
+        quic_arajkuma@quicinc.com, quic_anusha@quicinc.com,
+        quic_ipkumar@quicinc.com
+Subject: Re: [PATCH V3 6/6] PCI: qcom: Add support for IPQ9574
+Message-ID: <20230508153706.GA14969@thinkpad>
+References: <20230421124938.21974-1-quic_devipriy@quicinc.com>
+ <20230421124938.21974-7-quic_devipriy@quicinc.com>
+ <20230508122109.GC4190@thinkpad>
+ <CAA8EJppKUwfatdNoQPD4QbEPXyv1cEz3cDLfND+70Veq5Bcf8Q@mail.gmail.com>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM6PR04MB4838:EE_|AM8PR04MB7330:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0d274ddc-f66a-44f6-d12f-08db4fca92f7
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: aeQZkocifZrWVCZ9hbCfC6MEYN7xn+YsdP9IiSniJBZn886JdjiyDuwv+GxUHPmCTssKQeNKKWxnW6r7cRDVJ1unjxSzj5y3EjvNHHs+Jfhs2T+fEMtywovl4YnT8zGVnFLC7QJrn3b8tXraSVt8ZEfqaJ8snlFJQLjtFn+b2+6pvOjtshDqMqi8umvaZkXmgQkb3iB4HFdzPrwqcI8qKlwID/aWB3qyyggnJ7yzHkzxYBJCpw+7AviwZse5az1P7ZnAjouR6nctK2gIO9sGCHD4F5efPbKcb1yPvOwIo5jpjKbtQnZ2xggA8OBht6QX5V+chWsa1nIPrBfU70kAEXpz/K1STnTDctsoSwnCx3jUikxrso9RNBUDCWVAfquVkUl4IV8mOeKxrIJjGkygP4szoc99d2eLWEKn1s6U3zTF4AJoTaQBy9K3+FVpgNnutQ/BH3wcdp6DcAyBR1nx4sHbZHWlkG3hHG50ATAeqatMwqV33NBjg6d8m1zjmubLgywqkzPUB6Yuy+d2/RWmvy76bVYp6CjwFMqRXYOVvwtZ85I/Brq2ogYGE6zKElYbOPoGatxhCZ8PdJXn+czhp63tTpGvmwOiUDtP0iH4KObIVWuPzB2PjpsePs5CkCmdSkvD5u2irkjPwDg7IgaRPA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM6PR04MB4838.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(39860400002)(366004)(396003)(346002)(376002)(136003)(451199021)(6512007)(1076003)(26005)(6506007)(6486002)(52116002)(83380400001)(36756003)(2616005)(38100700002)(38350700002)(86362001)(921005)(186003)(110136005)(41300700001)(2906002)(5660300002)(4326008)(66476007)(66556008)(316002)(8936002)(8676002)(478600001)(66946007)(6666004);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?YijV3bSytbxXcMZHImtI3GS8ihClVr+N/Y7VJWJ0KHlmeVTNk7l95HRFSBZg?=
- =?us-ascii?Q?qk7R1C3xcd8VEvX5Uk2z3SUCr2tfXBXhSidLOquHEciX0LJ8fDWq7gPl7Ht8?=
- =?us-ascii?Q?bVSSpNueII9G5DG7kl0je9mNtr0IEmeXC8LvBy1menL7mUBf1zYhQMuTA420?=
- =?us-ascii?Q?tcejt3PBZKAFtRvciHjkWqnh8K1eQgg9X3EnxJywvAe8HekU/y38KVAueKuG?=
- =?us-ascii?Q?X96dW5CqD9G7l42Tg8Is0W0PWuAxrjWMsIsnRuCMdxi8WaymPHJCYmDupLbf?=
- =?us-ascii?Q?+LV/ovV1Ib7p3WbbiC8ZF+5CDIYTMFDLa1ULUbCRD3dxQ+po4QUNRy4ZJ63n?=
- =?us-ascii?Q?jkz2YocaFpr5aROjl0OoCse+0iYMfzs5zDOcwQC+NOj8GimGeo4qkPkhi3QP?=
- =?us-ascii?Q?o4eXEw4BKEe96Ik4galHHotkS2h2jBe9Zczf5s/JEqd4G6cA7gRNOD2e1kUL?=
- =?us-ascii?Q?fnnrbp525r587PM8cj+AveekvUal85AavAXH3/2mxp5qqAmb9BBf73qaABdS?=
- =?us-ascii?Q?yyl812R3igS82TlgKFzCKqtWWCKvVT6dUWTWPzHIZJ92GVFeyHDoJkat95MY?=
- =?us-ascii?Q?MWbp+IB6e8prc8KS6SRJ2OmElN+tSI8lgildXH6v3mEa9krmZzLDYX+vaEIc?=
- =?us-ascii?Q?EnLR1CxAJsgKCUTN57FBGc03FWeOgYwNfVCALTEgyAgr2yIyPJDSgnELKU0M?=
- =?us-ascii?Q?wlWvJfrGbjvhhCKF+ybjqjwDoEkoskNHrsSazk466r+23VG4pPE0FzDE8oeM?=
- =?us-ascii?Q?cDlXejvbHdfTeniAOph4zuLfZvs70ADEseSpyljiUeUVNB390EJa4+SRv6TH?=
- =?us-ascii?Q?YbkxAwdcON6j04IOG1SlgizoGWtNZIqlwKHOxkDFYqceT+d8frwZy9iKUUgl?=
- =?us-ascii?Q?3X7Dvk2m2f6jLJ0R/EQf8b4YzFZRebag3d94USbSmJNLfRydNApiNkCXvFSV?=
- =?us-ascii?Q?frHuOb9Lj4B1G4I911jqlAaY37P8wfNXm5wTCxe0Ghw5lZq3UZlYFfKWVtxV?=
- =?us-ascii?Q?a6VjLdUbqnYCby3ZPZvRa8I3C70IkK4YtLc0CiP+uWou9t1XHarvS6/FjWsE?=
- =?us-ascii?Q?JDSpr/tQNLKYBHjksKNxhYShyG2RPXmWb9GymyJ1z5fHJELXf43YfwBv17rq?=
- =?us-ascii?Q?OzLEAG+cuT3E/zO5Rh/Z6Mz4zXiLfjFZPPII2I6m6Tb1xAR0i91lcgbiF+rc?=
- =?us-ascii?Q?yZhTw+wBplIMR/lOdJ1jGPxGcA1xkbHL8EPkcL9RV1PTa/SUVGHWVyjT7XRO?=
- =?us-ascii?Q?+tfi7ujyqILwoTUNgclvyrIUa9K7UN8USsjAgC42/ctnfE7d7MAOy0c1AFje?=
- =?us-ascii?Q?NQp+7tQzbnN6C840KJPpP2xI6Erlc3exVT4Yovi68pyjSoPNCHvkCwDmnOF5?=
- =?us-ascii?Q?W6RZi9FeieTzUmfh+ltQuUF5lwjL4Sn/O15/+B6mnBu55arEd73wayMsMRjf?=
- =?us-ascii?Q?y2Zbsj5h0UYBbYEcbgeeU/KYG8c/+suQfnZgSmmom5z2UQHbnD2NIhUDVo0i?=
- =?us-ascii?Q?7dnUa/DfaPP43jGQDSrlwfYw/rFXtXORpnIzXiNsHXZnURyDSjGv1nIxzrEf?=
- =?us-ascii?Q?G1dqXmOXvlZBLPxuwxl5xlPLRIGfxRHt4wonrPrF?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0d274ddc-f66a-44f6-d12f-08db4fca92f7
-X-MS-Exchange-CrossTenant-AuthSource: AM6PR04MB4838.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 May 2023 13:46:07.2633
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: MlFR9WkkG8JuiSjHtLnT87b9a+uAricSKP6ntHeuFqGoJ4u4m+99tEvZUqkQB5xwqugeQx9NO6YwFuYufXl2sg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8PR04MB7330
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAA8EJppKUwfatdNoQPD4QbEPXyv1cEz3cDLfND+70Veq5Bcf8Q@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Layerscape has PME interrupt, which can be used as linkup notifier.
-Set CFG_READY bit of PEX_PF0_CONFIG to enable accesses from root complex
-when linkup detected.
+On Mon, May 08, 2023 at 03:46:53PM +0300, Dmitry Baryshkov wrote:
+> On Mon, 8 May 2023 at 15:21, Manivannan Sadhasivam <mani@kernel.org> wrote:
+> >
+> > On Fri, Apr 21, 2023 at 06:19:38PM +0530, Devi Priya wrote:
+> > > The IPQ9574 platform has 4 Gen3 PCIe controllers: two single-lane
+> > > and two dual-lane based on SNPS core 5.70a
+> > > The Qcom IP rev is 1.27.0 and Synopsys IP rev is 5.80a
+> > > Added a new compatible 'qcom,pcie-ipq9574' and 'ops_1_27_0'
+> > > which reuses all the members of 'ops_2_9_0' except for the post_init
+> > > as the SLV_ADDR_SPACE_SIZE configuration differs between 2_9_0
+> > > and 1_27_0.
+> > > Also, modified get_resources of 'ops 2_9_0' to get the clocks
+> > > from the device tree and modelled the post init sequence as
+> > > a common function to avoid code redundancy.
+> > >
+> > > Co-developed-by: Anusha Rao <quic_anusha@quicinc.com>
+> > > Signed-off-by: Anusha Rao <quic_anusha@quicinc.com>
+> > > Signed-off-by: Devi Priya <quic_devipriy@quicinc.com>
+> >
+> > One comment below. With that fixed,
+> >
+> > Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+> >
+> > - Mani
+> >
+> > > ---
+> > >  Changes in V3:
+> > >       - Rebased on top of linux-next/master
+> > >
+> > >  drivers/pci/controller/dwc/pcie-qcom.c | 61 ++++++++++++++++++--------
+> > >  1 file changed, 43 insertions(+), 18 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > index 4ab30892f6ef..3682ecdead1f 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > @@ -107,6 +107,7 @@
+> > >
+> > >  /* PARF_SLV_ADDR_SPACE_SIZE register value */
+> > >  #define SLV_ADDR_SPACE_SZ                    0x10000000
+> > > +#define SLV_ADDR_SPACE_SZ_1_27_0             0x08000000
+> > >
+> > >  /* PARF_MHI_CLOCK_RESET_CTRL register fields */
+> > >  #define AHB_CLK_EN                           BIT(0)
+> > > @@ -202,10 +203,10 @@ struct qcom_pcie_resources_2_7_0 {
+> > >       struct reset_control *rst;
+> > >  };
+> > >
+> > > -#define QCOM_PCIE_2_9_0_MAX_CLOCKS           5
+> > >  struct qcom_pcie_resources_2_9_0 {
+> > > -     struct clk_bulk_data clks[QCOM_PCIE_2_9_0_MAX_CLOCKS];
+> > > +     struct clk_bulk_data *clks;
+> > >       struct reset_control *rst;
+> > > +     int num_clks;
+> > >  };
+> > >
+> > >  union qcom_pcie_resources {
+> > > @@ -1050,17 +1051,10 @@ static int qcom_pcie_get_resources_2_9_0(struct qcom_pcie *pcie)
+> > >       struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
+> > >       struct dw_pcie *pci = pcie->pci;
+> > >       struct device *dev = pci->dev;
+> > > -     int ret;
+> > >
+> > > -     res->clks[0].id = "iface";
+> > > -     res->clks[1].id = "axi_m";
+> > > -     res->clks[2].id = "axi_s";
+> > > -     res->clks[3].id = "axi_bridge";
+> > > -     res->clks[4].id = "rchng";
+> > > -
+> > > -     ret = devm_clk_bulk_get(dev, ARRAY_SIZE(res->clks), res->clks);
+> > > -     if (ret < 0)
+> > > -             return ret;
+> > > +     res->num_clks = devm_clk_bulk_get_all(dev, &res->clks);
+> > > +     if (res->clks < 0)
+> > > +             return res->num_clks;
+> >
+> > Why not return proper error no?
+> 
+> Instead the question should be, why not the proper condition: it tells
+> `if (res->clks < 0)', while it should be `if (res->num_clks < 0)'.
+> 
 
-Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
----
- .../pci/controller/dwc/pci-layerscape-ep.c    | 102 +++++++++++++++++-
- 1 file changed, 101 insertions(+), 1 deletion(-)
+Heh. I completely overlooked that part. Yes, the if condition itself should be
+fixed.
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index c640db60edc6..1a431a9be91e 100644
---- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -18,6 +18,20 @@
- 
- #include "pcie-designware.h"
- 
-+#define PEX_PF0_CONFIG			0xC0014
-+#define PEX_PF0_CFG_READY		BIT(0)
-+
-+/* PEX PFa PCIE PME and message interrupt registers*/
-+#define PEX_PF0_PME_MES_DR		0xC0020
-+#define PEX_PF0_PME_MES_DR_LUD		BIT(7)
-+#define PEX_PF0_PME_MES_DR_LDD		BIT(9)
-+#define PEX_PF0_PME_MES_DR_HRD		BIT(10)
-+
-+#define PEX_PF0_PME_MES_IER		0xC0028
-+#define PEX_PF0_PME_MES_IER_LUDIE	BIT(7)
-+#define PEX_PF0_PME_MES_IER_LDDIE	BIT(9)
-+#define PEX_PF0_PME_MES_IER_HRDIE	BIT(10)
-+
- #define to_ls_pcie_ep(x)	dev_get_drvdata((x)->dev)
- 
- struct ls_pcie_ep_drvdata {
-@@ -30,8 +44,86 @@ struct ls_pcie_ep {
- 	struct dw_pcie			*pci;
- 	struct pci_epc_features		*ls_epc;
- 	const struct ls_pcie_ep_drvdata *drvdata;
-+	bool				big_endian;
-+	int				irq;
- };
- 
-+static u32 ls_lut_readl(struct ls_pcie_ep *pcie, u32 offset)
-+{
-+	struct dw_pcie *pci = pcie->pci;
-+
-+	if (pcie->big_endian)
-+		return ioread32be(pci->dbi_base + offset);
-+	else
-+		return ioread32(pci->dbi_base + offset);
-+}
-+
-+static void ls_lut_writel(struct ls_pcie_ep *pcie, u32 offset, u32 value)
-+{
-+	struct dw_pcie *pci = pcie->pci;
-+
-+	if (pcie->big_endian)
-+		iowrite32be(value, pci->dbi_base + offset);
-+	else
-+		iowrite32(value, pci->dbi_base + offset);
-+}
-+
-+static irqreturn_t ls_pcie_ep_event_handler(int irq, void *dev_id)
-+{
-+	struct ls_pcie_ep *pcie = dev_id;
-+	struct dw_pcie *pci = pcie->pci;
-+	u32 val, cfg;
-+
-+	val = ls_lut_readl(pcie, PEX_PF0_PME_MES_DR);
-+	ls_lut_writel(pcie, PEX_PF0_PME_MES_DR, val);
-+
-+	if (!val)
-+		return IRQ_NONE;
-+
-+	if (val & PEX_PF0_PME_MES_DR_LUD) {
-+		cfg = ls_lut_readl(pcie, PEX_PF0_CONFIG);
-+		cfg |= PEX_PF0_CFG_READY;
-+		ls_lut_writel(pcie, PEX_PF0_CONFIG, cfg);
-+		dw_pcie_ep_linkup(&pci->ep);
-+
-+		dev_dbg(pci->dev, "Link up\n");
-+	} else if (val & PEX_PF0_PME_MES_DR_LDD) {
-+		dev_dbg(pci->dev, "Link down\n");
-+	} else if (val & PEX_PF0_PME_MES_DR_HRD) {
-+		dev_dbg(pci->dev, "Hot reset\n");
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int ls_pcie_ep_interrupt_init(struct ls_pcie_ep *pcie,
-+				     struct platform_device *pdev)
-+{
-+	u32 val;
-+	int ret;
-+
-+	pcie->irq = platform_get_irq_byname(pdev, "pme");
-+	if (pcie->irq < 0) {
-+		dev_err(&pdev->dev, "Can't get 'pme' IRQ\n");
-+		return pcie->irq;
-+	}
-+
-+	ret = devm_request_irq(&pdev->dev, pcie->irq, ls_pcie_ep_event_handler,
-+			       IRQF_SHARED, pdev->name, pcie);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Can't register PCIe IRQ\n");
-+		return ret;
-+	}
-+
-+	/* Enable interrupts */
-+	val = ls_lut_readl(pcie, PEX_PF0_PME_MES_IER);
-+	val |=  PEX_PF0_PME_MES_IER_LDDIE | PEX_PF0_PME_MES_IER_HRDIE |
-+		PEX_PF0_PME_MES_IER_LUDIE;
-+	ls_lut_writel(pcie, PEX_PF0_PME_MES_IER, val);
-+
-+	return 0;
-+}
-+
- static const struct pci_epc_features*
- ls_pcie_ep_get_features(struct dw_pcie_ep *ep)
- {
-@@ -125,6 +217,7 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
- 	struct ls_pcie_ep *pcie;
- 	struct pci_epc_features *ls_epc;
- 	struct resource *dbi_base;
-+	int ret;
- 
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
- 	if (!pcie)
-@@ -144,6 +237,7 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
- 	pci->ops = pcie->drvdata->dw_pcie_ops;
- 
- 	ls_epc->bar_fixed_64bit = (1 << BAR_2) | (1 << BAR_4);
-+	ls_epc->linkup_notifier = true;
- 
- 	pcie->pci = pci;
- 	pcie->ls_epc = ls_epc;
-@@ -155,9 +249,15 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
- 
- 	pci->ep.ops = &ls_pcie_ep_ops;
- 
-+	pcie->big_endian = of_property_read_bool(dev->of_node, "big-endian");
-+
- 	platform_set_drvdata(pdev, pcie);
- 
--	return dw_pcie_ep_init(&pci->ep);
-+	ret = dw_pcie_ep_init(&pci->ep);
-+	if (ret)
-+		return ret;
-+
-+	return ls_pcie_ep_interrupt_init(pcie, pdev);
- }
- 
- static struct platform_driver ls_pcie_ep_driver = {
+- Mani
+
+> >
+> > >
+> > >       res->rst = devm_reset_control_array_get_exclusive(dev);
+> > >       if (IS_ERR(res->rst))
+> > > @@ -1073,7 +1067,7 @@ static void qcom_pcie_deinit_2_9_0(struct qcom_pcie *pcie)
+> > >  {
+> > >       struct qcom_pcie_resources_2_9_0 *res = &pcie->res.v2_9_0;
+> > >
+> > > -     clk_bulk_disable_unprepare(ARRAY_SIZE(res->clks), res->clks);
+> > > +     clk_bulk_disable_unprepare(res->num_clks, res->clks);
+> > >  }
+> > >
+> > >  static int qcom_pcie_init_2_9_0(struct qcom_pcie *pcie)
+> > > @@ -1102,19 +1096,16 @@ static int qcom_pcie_init_2_9_0(struct qcom_pcie *pcie)
+> > >
+> > >       usleep_range(2000, 2500);
+> > >
+> > > -     return clk_bulk_prepare_enable(ARRAY_SIZE(res->clks), res->clks);
+> > > +     return clk_bulk_prepare_enable(res->num_clks, res->clks);
+> > >  }
+> > >
+> > > -static int qcom_pcie_post_init_2_9_0(struct qcom_pcie *pcie)
+> > > +static int qcom_pcie_post_init(struct qcom_pcie *pcie)
+> > >  {
+> > >       struct dw_pcie *pci = pcie->pci;
+> > >       u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> > >       u32 val;
+> > >       int i;
+> > >
+> > > -     writel(SLV_ADDR_SPACE_SZ,
+> > > -             pcie->parf + PARF_SLV_ADDR_SPACE_SIZE);
+> > > -
+> > >       val = readl(pcie->parf + PARF_PHY_CTRL);
+> > >       val &= ~PHY_TEST_PWR_DOWN;
+> > >       writel(val, pcie->parf + PARF_PHY_CTRL);
+> > > @@ -1151,6 +1142,26 @@ static int qcom_pcie_post_init_2_9_0(struct qcom_pcie *pcie)
+> > >       return 0;
+> > >  }
+> > >
+> > > +static int qcom_pcie_post_init_1_27_0(struct qcom_pcie *pcie)
+> > > +{
+> > > +     writel(SLV_ADDR_SPACE_SZ_1_27_0,
+> > > +            pcie->parf + PARF_SLV_ADDR_SPACE_SIZE);
+> > > +
+> > > +     qcom_pcie_post_init(pcie);
+> > > +
+> > > +     return 0;
+> > > +}
+> > > +
+> > > +static int qcom_pcie_post_init_2_9_0(struct qcom_pcie *pcie)
+> > > +{
+> > > +     writel(SLV_ADDR_SPACE_SZ,
+> > > +            pcie->parf + PARF_SLV_ADDR_SPACE_SIZE);
+> > > +
+> > > +     qcom_pcie_post_init(pcie);
+> > > +
+> > > +     return 0;
+> > > +}
+> > > +
+> > >  static int qcom_pcie_link_up(struct dw_pcie *pci)
+> > >  {
+> > >       u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+> > > @@ -1291,6 +1302,15 @@ static const struct qcom_pcie_ops ops_2_9_0 = {
+> > >       .ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+> > >  };
+> > >
+> > > +/* Qcom IP rev.: 1.27.0  Synopsys IP rev.: 5.80a */
+> > > +static const struct qcom_pcie_ops ops_1_27_0 = {
+> > > +     .get_resources = qcom_pcie_get_resources_2_9_0,
+> > > +     .init = qcom_pcie_init_2_9_0,
+> > > +     .post_init = qcom_pcie_post_init_1_27_0,
+> > > +     .deinit = qcom_pcie_deinit_2_9_0,
+> > > +     .ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+> > > +};
+> > > +
+> > >  static const struct qcom_pcie_cfg cfg_1_0_0 = {
+> > >       .ops = &ops_1_0_0,
+> > >  };
+> > > @@ -1323,6 +1343,10 @@ static const struct qcom_pcie_cfg cfg_2_9_0 = {
+> > >       .ops = &ops_2_9_0,
+> > >  };
+> > >
+> > > +static const struct qcom_pcie_cfg cfg_1_27_0 = {
+> > > +     .ops = &ops_1_27_0,
+> > > +};
+> > > +
+> > >  static const struct dw_pcie_ops dw_pcie_ops = {
+> > >       .link_up = qcom_pcie_link_up,
+> > >       .start_link = qcom_pcie_start_link,
+> > > @@ -1607,6 +1631,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+> > >       { .compatible = "qcom,pcie-ipq8064-v2", .data = &cfg_2_1_0 },
+> > >       { .compatible = "qcom,pcie-ipq8074", .data = &cfg_2_3_3 },
+> > >       { .compatible = "qcom,pcie-ipq8074-gen3", .data = &cfg_2_9_0 },
+> > > +     { .compatible = "qcom,pcie-ipq9574", .data = &cfg_1_27_0 },
+> > >       { .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
+> > >       { .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
+> > >       { .compatible = "qcom,pcie-sa8540p", .data = &cfg_1_9_0 },
+> > > --
+> > > 2.17.1
+> > >
+> >
+> > --
+> > மணிவண்ணன் சதாசிவம்
+> 
+> 
+> 
+> -- 
+> With best wishes
+> Dmitry
+
 -- 
-2.34.1
-
+மணிவண்ணன் சதாசிவம்
