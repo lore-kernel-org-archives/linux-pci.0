@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49A67C7EE30
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E227FC7EE33
 	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235327AbjEIMmG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S235533AbjEIMmG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 9 May 2023 08:42:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49514 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235389AbjEIMmE (ORCPT
+        with ESMTP id S235215AbjEIMmE (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:42:04 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2AEE12690;
-        Tue,  9 May 2023 05:42:03 -0700 (PDT)
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 261301BF9;
+        Tue,  9 May 2023 05:42:02 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,262,1677510000"; 
-   d="scan'208";a="162218206"
+   d="scan'208";a="158709371"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 09 May 2023 21:42:00 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 09 May 2023 21:42:00 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id D5B16403832D;
-        Tue,  9 May 2023 21:41:59 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 2AD56403832F;
+        Tue,  9 May 2023 21:42:00 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
         gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v15 01/22] PCI: Add PCI_EXP_LNKCAP_MLW macros
-Date:   Tue,  9 May 2023 21:41:35 +0900
-Message-Id: <20230509124156.150200-2-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v15 03/22] PCI: Add INTx Mechanism Messages macros
+Date:   Tue,  9 May 2023 21:41:37 +0900
+Message-Id: <20230509124156.150200-4-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,32 +41,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add macros defining Maximum Link Width bits in Link Capabilities
-Register.
+Add "Message Routing" and "INTx Mechanism Messages" macros to send
+a message by a PCIe driver.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- include/uapi/linux/pci_regs.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/pci/pci.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index dc2000e0fe3a..5d48413ac28f 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -538,6 +538,12 @@
- #define  PCI_EXP_LNKCAP_SLS_16_0GB 0x00000004 /* LNKCAP2 SLS Vector bit 3 */
- #define  PCI_EXP_LNKCAP_SLS_32_0GB 0x00000005 /* LNKCAP2 SLS Vector bit 4 */
- #define  PCI_EXP_LNKCAP_SLS_64_0GB 0x00000006 /* LNKCAP2 SLS Vector bit 5 */
-+#define  PCI_EXP_LNKCAP_MLW_X1	0x00000010 /* Maximum Link Width x1 */
-+#define  PCI_EXP_LNKCAP_MLW_X2	0x00000020 /* Maximum Link Width x2 */
-+#define  PCI_EXP_LNKCAP_MLW_X4	0x00000040 /* Maximum Link Width x4 */
-+#define  PCI_EXP_LNKCAP_MLW_X8	0x00000080 /* Maximum Link Width x8 */
-+#define  PCI_EXP_LNKCAP_MLW_X12	0x000000c0 /* Maximum Link Width x12 */
-+#define  PCI_EXP_LNKCAP_MLW_X16	0x00000100 /* Maximum Link Width x16 */
- #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
- #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
- #define  PCI_EXP_LNKCAP_ASPM_L0S 0x00000400 /* ASPM L0s Support */
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 2475098f6518..67badc40e90b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -11,6 +11,24 @@
+ 
+ #define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
+ 
++/* Message Routing */
++#define PCI_MSG_ROUTING_RC	0
++#define PCI_MSG_ROUTING_ADDR	1
++#define PCI_MSG_ROUTING_ID	2
++#define PCI_MSG_ROUTING_BC	3
++#define PCI_MSG_ROUTING_LOCAL	4
++#define PCI_MSG_ROUTING_GATHER	5
++
++/* INTx Mechanism Messages */
++#define PCI_CODE_ASSERT_INTA	0x20
++#define PCI_CODE_ASSERT_INTB	0x21
++#define PCI_CODE_ASSERT_INTC	0x22
++#define PCI_CODE_ASSERT_INTD	0x23
++#define PCI_CODE_DEASSERT_INTA	0x24
++#define PCI_CODE_DEASSERT_INTB	0x25
++#define PCI_CODE_DEASSERT_INTC	0x26
++#define PCI_CODE_DEASSERT_INTD	0x27
++
+ extern const unsigned char pcie_link_speed[];
+ extern bool pci_early_dump;
+ 
 -- 
 2.25.1
 
