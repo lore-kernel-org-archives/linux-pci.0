@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46178C7EE43
-	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35FB8C87FDC
+	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235551AbjEIMmT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 May 2023 08:42:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49834 "EHLO
+        id S233875AbjEIMmU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 May 2023 08:42:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235655AbjEIMmM (ORCPT
+        with ESMTP id S235106AbjEIMmM (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:42:12 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F0DC44C05;
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CAEF92693;
         Tue,  9 May 2023 05:42:08 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,262,1677510000"; 
-   d="scan'208";a="162218235"
+   d="scan'208";a="158709395"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 09 May 2023 21:42:03 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 09 May 2023 21:42:01 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id D781840ECF82;
-        Tue,  9 May 2023 21:42:02 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 2973C403832F;
+        Tue,  9 May 2023 21:42:01 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
         gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v15 21/22] MAINTAINERS: Update PCI DRIVER FOR RENESAS R-CAR for R-Car Gen4
-Date:   Tue,  9 May 2023 21:41:55 +0900
-Message-Id: <20230509124156.150200-22-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v15 09/22] PCI: dwc: Add dw_pcie_link_set_max_link_width()
+Date:   Tue,  9 May 2023 21:41:43 +0900
+Message-Id: <20230509124156.150200-10-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,26 +41,76 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Update this entry for R-Car Gen4's source code.
+To improve code readability, add dw_pcie_link_set_max_link_width().
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/dwc/pcie-designware.c | 46 ++++++++++++--------
+ 1 file changed, 28 insertions(+), 18 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 081300126ffc..2375f6a2cd0a 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -16165,6 +16165,7 @@ L:	linux-renesas-soc@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/*rcar*
- F:	drivers/pci/controller/*rcar*
-+F:	drivers/pci/controller/dwc/*rcar*
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index a7c724ba7385..68aefbbcd68c 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -719,6 +719,33 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+ 	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed);
+ }
  
- PCI DRIVER FOR SAMSUNG EXYNOS
- M:	Jingoo Han <jingoohan1@gmail.com>
++static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
++{
++	u32 lwsc;
++
++	if (!num_lanes)
++		return;
++
++	/* Set link width speed control register */
++	lwsc = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	lwsc &= ~PORT_LOGIC_LINK_WIDTH_MASK;
++	switch (num_lanes) {
++	case 1:
++		lwsc |= PORT_LOGIC_LINK_WIDTH_1_LANES;
++		break;
++	case 2:
++		lwsc |= PORT_LOGIC_LINK_WIDTH_2_LANES;
++		break;
++	case 4:
++		lwsc |= PORT_LOGIC_LINK_WIDTH_4_LANES;
++		break;
++	case 8:
++		lwsc |= PORT_LOGIC_LINK_WIDTH_8_LANES;
++		break;
++	}
++	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
++}
++
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
+ {
+ 	int max_region, ob, ib;
+@@ -1026,22 +1053,5 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	}
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
+ 
+-	/* Set link width speed control register */
+-	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
+-	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
+-	switch (pci->num_lanes) {
+-	case 1:
+-		val |= PORT_LOGIC_LINK_WIDTH_1_LANES;
+-		break;
+-	case 2:
+-		val |= PORT_LOGIC_LINK_WIDTH_2_LANES;
+-		break;
+-	case 4:
+-		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
+-		break;
+-	case 8:
+-		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
+-		break;
+-	}
+-	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++	dw_pcie_link_set_max_link_width(pci, pci->num_lanes);
+ }
 -- 
 2.25.1
 
