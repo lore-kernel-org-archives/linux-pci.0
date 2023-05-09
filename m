@@ -2,103 +2,102 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EE90C77B75
-	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:30:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC676C7EE2E
+	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235327AbjEIMaW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 May 2023 08:30:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40302 "EHLO
+        id S235140AbjEIMmE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 May 2023 08:42:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233731AbjEIMaV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:30:21 -0400
-Received: from mail.zeus03.de (www.zeus03.de [194.117.254.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F350B1BD4
-        for <linux-pci@vger.kernel.org>; Tue,  9 May 2023 05:30:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=sang-engineering.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=k1; bh=O7ltxVMMcMInBof4d0OnDbKkJnZu
-        QoKhhWJSzl0H97U=; b=Kmeo0nFdRVC8jbGCGJOi5s5nX67DVq31zHV1bQtwOLkg
-        3PEsLemIQd6u1ARAKt+g3MH1VSGZEvX5V1lOlQsGCiOantjk+rYPpzfx9ZlbMib3
-        Xm4C+SbD4ZN2vgb7dLJTBTidFxoe7m6ZdPJeBjCNbNKdD9iN+w30deWzWz2R+8U=
-Received: (qmail 2075146 invoked from network); 9 May 2023 14:30:15 +0200
-Received: by mail.zeus03.de with ESMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 9 May 2023 14:30:15 +0200
-X-UD-Smtp-Session: l3s3148p1@JFLc6kH72q0ujnsI
-Date:   Tue, 9 May 2023 14:30:15 +0200
-From:   Wolfram Sang <wsa+renesas@sang-engineering.com>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-renesas-soc@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH 1/3] dt-bindings: PCI: rcar-pci-host: add optional
- regulators
-Message-ID: <ZFo817TZtIn0Ry+d@ninjato>
-Mail-Followup-To: Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-renesas-soc@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230508104557.47889-1-wsa+renesas@sang-engineering.com>
- <20230508104557.47889-2-wsa+renesas@sang-engineering.com>
- <CAMuHMdWGaDT_XGpeVm-915hbxa8-w5303QWg0a0iCjqk998unQ@mail.gmail.com>
- <ZFlD7x99++k3yfE1@kunai>
- <CAMuHMdUS56xQbOcRx7kVhL_irQQR2cnDr0Y6p6q8tCjZ2U_dwg@mail.gmail.com>
+        with ESMTP id S235215AbjEIMmD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:42:03 -0400
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 76CEAFD;
+        Tue,  9 May 2023 05:42:01 -0700 (PDT)
+X-IronPort-AV: E=Sophos;i="5.99,262,1677510000"; 
+   d="scan'208";a="158709368"
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie5.idc.renesas.com with ESMTP; 09 May 2023 21:42:00 +0900
+Received: from localhost.localdomain (unknown [10.166.15.32])
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 0A78640359CB;
+        Tue,  9 May 2023 21:42:00 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     jingoohan1@gmail.com, mani@kernel.org,
+        gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
+        lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
+        bhelgaas@google.com, kishon@kernel.org
+Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v15 02/22] PCI: Add PCI_HEADER_TYPE_MULTI_FUNC
+Date:   Tue,  9 May 2023 21:41:36 +0900
+Message-Id: <20230509124156.150200-3-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="XejAdsIjL01QPq9Q"
-Content-Disposition: inline
-In-Reply-To: <CAMuHMdUS56xQbOcRx7kVhL_irQQR2cnDr0Y6p6q8tCjZ2U_dwg@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add PCI_HEADER_TYPE_MULTI_FUNC macro which is "Multi-Function Device"
+of Header Type Register.
 
---XejAdsIjL01QPq9Q
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ drivers/pci/probe.c           | 2 +-
+ drivers/pci/quirks.c          | 4 ++--
+ include/uapi/linux/pci_regs.h | 1 +
+ 3 files changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 0b2826c4a832..56f01b48fb81 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1836,7 +1836,7 @@ int pci_setup_device(struct pci_dev *dev)
+ 	dev->dev.parent = dev->bus->bridge;
+ 	dev->dev.bus = &pci_bus_type;
+ 	dev->hdr_type = hdr_type & 0x7f;
+-	dev->multifunction = !!(hdr_type & 0x80);
++	dev->multifunction = !!(hdr_type & PCI_HEADER_TYPE_MULTI_FUNC);
+ 	dev->error_state = pci_channel_io_normal;
+ 	set_pcie_port_type(dev);
+ 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f4e2a88729fd..8ceb970ccf1f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1750,7 +1750,7 @@ static void quirk_jmicron_ata(struct pci_dev *pdev)
+ 	/* Update pdev accordingly */
+ 	pci_read_config_byte(pdev, PCI_HEADER_TYPE, &hdr);
+ 	pdev->hdr_type = hdr & 0x7f;
+-	pdev->multifunction = !!(hdr & 0x80);
++	pdev->multifunction = !!(hdr & PCI_HEADER_TYPE_MULTI_FUNC);
+ 
+ 	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &class);
+ 	pdev->class = class >> 8;
+@@ -5567,7 +5567,7 @@ static void quirk_nvidia_hda(struct pci_dev *gpu)
+ 
+ 	/* The GPU becomes a multi-function device when the HDA is enabled */
+ 	pci_read_config_byte(gpu, PCI_HEADER_TYPE, &hdr_type);
+-	gpu->multifunction = !!(hdr_type & 0x80);
++	gpu->multifunction = !!(hdr_type & PCI_HEADER_TYPE_MULTI_FUNC);
+ }
+ DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 			       PCI_BASE_CLASS_DISPLAY, 16, quirk_nvidia_hda);
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 5d48413ac28f..a302b67d2834 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -80,6 +80,7 @@
+ #define  PCI_HEADER_TYPE_NORMAL		0
+ #define  PCI_HEADER_TYPE_BRIDGE		1
+ #define  PCI_HEADER_TYPE_CARDBUS	2
++#define  PCI_HEADER_TYPE_MULTI_FUNC	0x80
+ 
+ #define PCI_BIST		0x0f	/* 8 bits */
+ #define  PCI_BIST_CODE_MASK	0x0f	/* Return result */
+-- 
+2.25.1
 
-> > I couldn't find one and took what I think is the most used pattern. But
-> > I wasn't entirely sure, this is why the series is still RFC.
->=20
-> Upon second thought, shouldn't these supplies be part of a PCIe
-> connector subnode, as they are not properties of the PCIe host
-> controller itself?
-
-Beats me. Current practice is to put it in the host controller.
-
-
---XejAdsIjL01QPq9Q
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmRaPNIACgkQFA3kzBSg
-KbYcnA/+Mf7e2Kx1VZ9YMEhvAsnupmI/+OELVuUOwKhEBKroO1ssgozVcim8Bs6X
-HJGf9d2Xgoq2CrKrs3s6V7Bdl/lxQcITIpstFNZ66EcJTlBy6Llqw7eNPPkfIQCq
-OZEyhxKactnfiD1ClQ6LBUqymbclqn2y54yGvnFL5ZUMlOZD1PA561IOgf6f4WOT
-5fVZ3yHi56dDwLzB0trIvCG0Uz55J+BpUhH6VJz5uAEsc3XHmG9EU8T66dGjqorp
-MEGpRDNxh+Xxgl+XociCHks6dOfsuWwIIk0hxto56uZbd+R3zI3IdTvpd3siUy50
-vSV3fY96S3PpUpyY/GpnvA9epf4NskvyATc2IDhUboQjhx/E5F6I4KRFOprP7kDq
-MIJfr2SEk5EFUcVcUdYed6/dUxvJXsnXrzK0HIGvkLvIxQi7ZUEimrvbAnVK9+gT
-Ve1o6LFmRJphDAjH1/JT5dchQQQqTwk2YKV4Fgd3fTJAwMpprmrH2LIaeWSVIQgw
-SwnRcGBc3rGVBhRUuua19JyieEtEUz14ClynDg2uvKc67iqlFwEcH/Tx4lbCAP0+
-uMgAWHfIeONCveBwa6GbDCj6n/cqpDVW+FCos3jSlhuQk+m2P3TTLNUyYsFv4OnA
-lu7E34zT0iSt+FrgmawchAz9qdEUnwgavurNkc2gNUtDWFs1t0Q=
-=d+5H
------END PGP SIGNATURE-----
-
---XejAdsIjL01QPq9Q--
