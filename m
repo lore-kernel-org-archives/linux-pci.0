@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12FE7C77B7C
-	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49A67C7EE30
+	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235395AbjEIMmE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 May 2023 08:42:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49500 "EHLO
+        id S235327AbjEIMmG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 May 2023 08:42:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235327AbjEIMmD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:42:03 -0400
+        with ESMTP id S235389AbjEIMmE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:42:04 -0400
 Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 40CA8212F;
-        Tue,  9 May 2023 05:42:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2AEE12690;
+        Tue,  9 May 2023 05:42:03 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,262,1677510000"; 
-   d="scan'208";a="162218209"
+   d="scan'208";a="162218206"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 09 May 2023 21:42:01 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 09 May 2023 21:42:00 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 48B49409ECF1;
-        Tue,  9 May 2023 21:42:01 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id D5B16403832D;
+        Tue,  9 May 2023 21:41:59 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
         gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v15 10/22] PCI: dwc: Modify PCIE_PORT_LINK_CONTROL handling
-Date:   Tue,  9 May 2023 21:41:44 +0900
-Message-Id: <20230509124156.150200-11-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v15 01/22] PCI: Add PCI_EXP_LNKCAP_MLW macros
+Date:   Tue,  9 May 2023 21:41:35 +0900
+Message-Id: <20230509124156.150200-2-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,91 +41,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To improve code readability, modify PCIE_PORT_LINK_CONTROL handling.
+Add macros defining Maximum Link Width bits in Link Capabilities
+Register.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 40 +++++++-------------
- 1 file changed, 13 insertions(+), 27 deletions(-)
+ include/uapi/linux/pci_regs.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 68aefbbcd68c..5dc423dd2f21 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -721,28 +721,40 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
- 
- static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- {
--	u32 lwsc;
-+	u32 lwsc, plc;
- 
- 	if (!num_lanes)
- 		return;
- 
-+	/* Set the number of lanes */
-+	plc = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
-+	plc &= ~PORT_LINK_MODE_MASK;
-+
- 	/* Set link width speed control register */
- 	lwsc = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
- 	lwsc &= ~PORT_LOGIC_LINK_WIDTH_MASK;
- 	switch (num_lanes) {
- 	case 1:
-+		plc |= PORT_LINK_MODE_1_LANES;
- 		lwsc |= PORT_LOGIC_LINK_WIDTH_1_LANES;
- 		break;
- 	case 2:
-+		plc |= PORT_LINK_MODE_2_LANES;
- 		lwsc |= PORT_LOGIC_LINK_WIDTH_2_LANES;
- 		break;
- 	case 4:
-+		plc |= PORT_LINK_MODE_4_LANES;
- 		lwsc |= PORT_LOGIC_LINK_WIDTH_4_LANES;
- 		break;
- 	case 8:
-+		plc |= PORT_LINK_MODE_8_LANES;
- 		lwsc |= PORT_LOGIC_LINK_WIDTH_8_LANES;
- 		break;
-+	default:
-+		dev_err(pci->dev, "num-lanes %u: invalid value\n", num_lanes);
-+		return;
- 	}
-+	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
- 	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
- }
- 
-@@ -1027,31 +1039,5 @@ void dw_pcie_setup(struct dw_pcie *pci)
- 	val |= PORT_LINK_DLL_LINK_EN;
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
- 
--	if (!pci->num_lanes) {
--		dev_dbg(pci->dev, "Using h/w default number of lanes\n");
--		return;
--	}
--
--	/* Set the number of lanes */
--	val &= ~PORT_LINK_MODE_MASK;
--	switch (pci->num_lanes) {
--	case 1:
--		val |= PORT_LINK_MODE_1_LANES;
--		break;
--	case 2:
--		val |= PORT_LINK_MODE_2_LANES;
--		break;
--	case 4:
--		val |= PORT_LINK_MODE_4_LANES;
--		break;
--	case 8:
--		val |= PORT_LINK_MODE_8_LANES;
--		break;
--	default:
--		dev_err(pci->dev, "num-lanes %u: invalid value\n", pci->num_lanes);
--		return;
--	}
--	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
--
- 	dw_pcie_link_set_max_link_width(pci, pci->num_lanes);
- }
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index dc2000e0fe3a..5d48413ac28f 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -538,6 +538,12 @@
+ #define  PCI_EXP_LNKCAP_SLS_16_0GB 0x00000004 /* LNKCAP2 SLS Vector bit 3 */
+ #define  PCI_EXP_LNKCAP_SLS_32_0GB 0x00000005 /* LNKCAP2 SLS Vector bit 4 */
+ #define  PCI_EXP_LNKCAP_SLS_64_0GB 0x00000006 /* LNKCAP2 SLS Vector bit 5 */
++#define  PCI_EXP_LNKCAP_MLW_X1	0x00000010 /* Maximum Link Width x1 */
++#define  PCI_EXP_LNKCAP_MLW_X2	0x00000020 /* Maximum Link Width x2 */
++#define  PCI_EXP_LNKCAP_MLW_X4	0x00000040 /* Maximum Link Width x4 */
++#define  PCI_EXP_LNKCAP_MLW_X8	0x00000080 /* Maximum Link Width x8 */
++#define  PCI_EXP_LNKCAP_MLW_X12	0x000000c0 /* Maximum Link Width x12 */
++#define  PCI_EXP_LNKCAP_MLW_X16	0x00000100 /* Maximum Link Width x16 */
+ #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
+ #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
+ #define  PCI_EXP_LNKCAP_ASPM_L0S 0x00000400 /* ASPM L0s Support */
 -- 
 2.25.1
 
