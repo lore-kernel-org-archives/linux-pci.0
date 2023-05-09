@@ -2,172 +2,157 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19F31C7EE26
-	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9117C77B7C
+	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:45:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233530AbjEIMm1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 May 2023 08:42:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49710 "EHLO
+        id S232747AbjEIMps (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 May 2023 08:45:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235656AbjEIMmV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:42:21 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C3E9E49CC;
-        Tue,  9 May 2023 05:42:14 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="5.99,262,1677510000"; 
-   d="scan'208";a="158709415"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 09 May 2023 21:42:02 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 4A47B40359CB;
-        Tue,  9 May 2023 21:42:02 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     jingoohan1@gmail.com, mani@kernel.org,
-        gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
-        lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
-        bhelgaas@google.com, kishon@kernel.org
-Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v15 17/22] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
-Date:   Tue,  9 May 2023 21:41:51 +0900
-Message-Id: <20230509124156.150200-18-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
+        with ESMTP id S229550AbjEIMpr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:45:47 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2FA42693
+        for <linux-pci@vger.kernel.org>; Tue,  9 May 2023 05:45:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1683636294;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0atVn8hE4TWtYprE3l2D/bldVae4vEGU9rmhpIuRuRM=;
+        b=KbHsnrenwsiVP79Xcc5rBS8xrVMxg3BHkPKmsTYthL7uHJ2pXA/jPat/u8qvdACionHvRW
+        tjwKH2Ef5qBbgmwCVG7m8pO11DqGhvejjWg1jEMuf8ISVEStuGavjaNHYWi1BwylUdjBzx
+        jSNbAFuyxLmFMx5rPajrXZRRRrNs/Ik=
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
+ [209.85.208.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-468-NBGgiQxROmGzApUO_Obnhg-1; Tue, 09 May 2023 08:44:53 -0400
+X-MC-Unique: NBGgiQxROmGzApUO_Obnhg-1
+Received: by mail-ed1-f72.google.com with SMTP id 4fb4d7f45d1cf-506b0b75731so5503585a12.3
+        for <linux-pci@vger.kernel.org>; Tue, 09 May 2023 05:44:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683636292; x=1686228292;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=0atVn8hE4TWtYprE3l2D/bldVae4vEGU9rmhpIuRuRM=;
+        b=Po3VMpybvL+S/QEYyc5g1Qe+j0uMzb3JkQSviZfWaY8i4r30z60Wp4zWM+FDWRM5oQ
+         s4rULrGf7Lqy5YzvYNITDD2F5hDHWbUoWBHOnHTkR8sglHN0FCR4v+hLGaM/2FW2lAwX
+         JDWI0nMWDg4Kc0bVxgE/IYuG9x5lZtRCD7isxbwC0PD0Kk9SV1WZBkpjocY0LADJDU93
+         U5SoylWGmK8mxc88mXNyYIJ+WzJKIuci0A2Zrhhl5aNiMUPlgXQZKychuSNt+sr4RSUP
+         /L2wzH9IA0cqPpAVzsjv5m0OqXNJucpOnbUifOMbJta6NaSC00Bj3SUqWjMD+gFSbrew
+         6rHQ==
+X-Gm-Message-State: AC+VfDy/tht0NPoXwSBtBrAeFKq/i/xJ/zl6r38AmIOZxbC+sZtTo+R/
+        A5uMYJEae7rwcfz1Icwtjiy3irgWx0ghzHvf4r13/ehCSNEVpo9NG+xCYw2/pt2R1RV9H6WvOn1
+        2S2knu0VutUEIagoW5BT+
+X-Received: by 2002:aa7:c74b:0:b0:506:b228:7b08 with SMTP id c11-20020aa7c74b000000b00506b2287b08mr11570174eds.17.1683636292179;
+        Tue, 09 May 2023 05:44:52 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ7CLeiKvojA8ol97ghYKS30L3xlPs1xNBy2YAqxITFwcuJFzajIjrQY8KNJX/UTo8/nCkIk6w==
+X-Received: by 2002:aa7:c74b:0:b0:506:b228:7b08 with SMTP id c11-20020aa7c74b000000b00506b2287b08mr11570148eds.17.1683636291806;
+        Tue, 09 May 2023 05:44:51 -0700 (PDT)
+Received: from imammedo.users.ipa.redhat.com (nat-pool-brq-t.redhat.com. [213.175.37.10])
+        by smtp.gmail.com with ESMTPSA id y15-20020a50e60f000000b0050bc27a4967sm746733edm.21.2023.05.09.05.44.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 May 2023 05:44:51 -0700 (PDT)
+Date:   Tue, 9 May 2023 14:44:50 +0200
+From:   Igor Mammedov <imammedo@redhat.com>
+To:     helgaas@kernel.org
+Cc:     linux-kernel@vger.kernel.org, mst@redhat.com, rafael@kernel.org,
+        lenb@kernel.org, bhelgaas@google.com, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, mika.westerberg@linux.intel.com
+Subject: Re: [PATCH v2] PCI: acpiphp: Reassign resources on bridge if
+ necessary
+Message-ID: <20230509144450.2bc3aea8@imammedo.users.ipa.redhat.com>
+In-Reply-To: <20230424191557.2464760-1-imammedo@redhat.com>
+References: <20230424191557.2464760-1-imammedo@redhat.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.37; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
-PCIe host module.
+On Mon, 24 Apr 2023 21:15:57 +0200
+Igor Mammedov <imammedo@redhat.com> wrote:
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
----
- .../bindings/pci/rcar-gen4-pci-host.yaml      | 109 ++++++++++++++++++
- 1 file changed, 109 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+Bjorn,
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-new file mode 100644
-index 000000000000..6bbdbf4fa617
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
-@@ -0,0 +1,109 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+# Copyright (C) 2022-2023 Renesas Electronics Corp.
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-host.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Renesas R-Car Gen4 PCIe Host
-+
-+maintainers:
-+  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-+
-+allOf:
-+  - $ref: snps,dw-pcie.yaml#
-+
-+properties:
-+  compatible:
-+    items:
-+      - const: renesas,r8a779f0-pcie   # R-Car S4-8
-+      - const: renesas,rcar-gen4-pcie  # R-Car Gen4
-+
-+  reg:
-+    maxItems: 6
-+
-+  reg-names:
-+    items:
-+      - const: dbi
-+      - const: dbi2
-+      - const: atu
-+      - const: dma
-+      - const: app
-+      - const: config
-+
-+  interrupts:
-+    maxItems: 4
-+
-+  interrupt-names:
-+    items:
-+      - const: msi
-+      - const: dma
-+      - const: sft_ce
-+      - const: app
-+
-+  clocks:
-+    maxItems: 1
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  resets:
-+    maxItems: 1
-+
-+  max-link-speed:
-+    maximum: 4
-+
-+  num-lanes:
-+    maximum: 4
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+  - clocks
-+  - power-domains
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/power/r8a779f0-sysc.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie: pcie@e65d0000 {
-+            compatible = "renesas,r8a779f0-pcie", "renesas,rcar-gen4-pcie";
-+            reg = <0 0xe65d0000 0 0x1000>, <0 0xe65d2000 0 0x0800>,
-+                  <0 0xe65d3000 0 0x2000>, <0 0xe65d5000 0 0x1200>,
-+                  <0 0xe65d6200 0 0x0e00>, <0 0xfe000000 0 0x400000>;
-+            reg-names = "dbi", "dbi2", "atu", "dma", "app", "config";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            bus-range = <0x00 0xff>;
-+            device_type = "pci";
-+            ranges = <0x01000000 0 0x00000000 0 0xfe000000 0 0x00400000>,
-+                     <0x02000000 0 0x30000000 0 0x30000000 0 0x10000000>;
-+            dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
-+            interrupts = <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-names = "msi", "dma", "sft_ce", "app";
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 7>;
-+            interrupt-map = <0 0 0 1 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
-+                            <0 0 0 2 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
-+                            <0 0 0 3 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
-+                            <0 0 0 4 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>;
-+            clocks = <&cpg CPG_MOD 624>;
-+            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
-+            resets = <&cpg 624>;
-+            num-lanes = <2>;
-+            snps,enable-cdm-check;
-+            max-link-speed = <4>;
-+        };
-+    };
--- 
-2.25.1
+I've fixed up issues you've mentioned on v1 review,
+is it good enough to take it in now?
+
+> When using ACPI PCI hotplug, hotplugging a device with
+> large BARs may fail if bridge windows programmed by
+> firmware are not large enough.
+> 
+> Reproducer:
+>   $ qemu-kvm -monitor stdio -M q35  -m 4G \
+>       -global ICH9-LPC.acpi-pci-hotplug-with-bridge-support=on \
+>       -device id=rp1,pcie-root-port,bus=pcie.0,chassis=4 \
+>       disk_image
+> 
+>  wait till linux guest boots, then hotplug device
+>    (qemu) device_add qxl,bus=rp1
+> 
+>  hotplug on guest side fails with:
+>    pci 0000:01:00.0: [1b36:0100] type 00 class 0x038000
+>    pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x03ffffff]
+>    pci 0000:01:00.0: reg 0x14: [mem 0x00000000-0x03ffffff]
+>    pci 0000:01:00.0: reg 0x18: [mem 0x00000000-0x00001fff]
+>    pci 0000:01:00.0: reg 0x1c: [io  0x0000-0x001f]
+>    pci 0000:01:00.0: BAR 0: no space for [mem size 0x04000000]
+>    pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x04000000]
+>    pci 0000:01:00.0: BAR 1: no space for [mem size 0x04000000]
+>    pci 0000:01:00.0: BAR 1: failed to assign [mem size 0x04000000]
+>    pci 0000:01:00.0: BAR 2: assigned [mem 0xfe800000-0xfe801fff]
+>    pci 0000:01:00.0: BAR 3: assigned [io  0x1000-0x101f]
+>    qxl 0000:01:00.0: enabling device (0000 -> 0003)
+>    Unable to create vram_mapping
+>    qxl: probe of 0000:01:00.0 failed with error -12
+> 
+> However when using native PCIe hotplug
+>   '-global ICH9-LPC.acpi-pci-hotplug-with-bridge-support=off'
+> it works fine, since kernel attempts to reassign unused resources.
+> Use the same machinery as native PCIe hotplug to (re)assign resources.
+> 
+> Signed-off-by: Igor Mammedov <imammedo@redhat.com>
+> ---
+> tested in QEMU with Q35 machine on PCIE root port and also
+> with nested conventional bridge attached to root port.
+> 
+> v2:
+>   * fixup subject to match expected style
+>   * drop no longer needed __pci_bus_size_bridges() to avoid
+>     memory leak (Bjorn Helgaas <helgaas@kernel.org>)
+> ---
+>  drivers/pci/hotplug/acpiphp_glue.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> index 5b1f271c6034..328d1e416014 100644
+> --- a/drivers/pci/hotplug/acpiphp_glue.c
+> +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> @@ -498,7 +498,6 @@ static void enable_slot(struct acpiphp_slot *slot, bool bridge)
+>  				acpiphp_native_scan_bridge(dev);
+>  		}
+>  	} else {
+> -		LIST_HEAD(add_list);
+>  		int max, pass;
+>  
+>  		acpiphp_rescan_slot(slot);
+> @@ -512,12 +511,10 @@ static void enable_slot(struct acpiphp_slot *slot, bool bridge)
+>  				if (pass && dev->subordinate) {
+>  					check_hotplug_bridge(slot, dev);
+>  					pcibios_resource_survey_bus(dev->subordinate);
+> -					__pci_bus_size_bridges(dev->subordinate,
+> -							       &add_list);
+>  				}
+>  			}
+>  		}
+> -		__pci_bus_assign_resources(bus, &add_list, NULL);
+> +		pci_assign_unassigned_bridge_resources(bus->self);
+>  	}
+>  
+>  	acpiphp_sanitize_bus(bus);
 
