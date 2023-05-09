@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F26C77B7C
-	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56847C7EE2F
+	for <linux-pci@archiver.kernel.org>; Tue,  9 May 2023 12:42:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235636AbjEIMmP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 May 2023 08:42:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49826 "EHLO
+        id S235608AbjEIMmT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 May 2023 08:42:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235635AbjEIMmJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:42:09 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 937A02690;
-        Tue,  9 May 2023 05:42:06 -0700 (PDT)
+        with ESMTP id S235650AbjEIMmL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2023 08:42:11 -0400
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 241F944A5;
+        Tue,  9 May 2023 05:42:08 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,262,1677510000"; 
-   d="scan'208";a="158709387"
+   d="scan'208";a="162218232"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 09 May 2023 21:42:01 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 09 May 2023 21:42:02 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id DDC04409EE09;
-        Tue,  9 May 2023 21:42:00 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id B91954038331;
+        Tue,  9 May 2023 21:42:02 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
         gustavo.pimentel@synopsys.com, fancer.lancer@gmail.com,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v15 07/22] PCI: dwc: Add outbound MSG TLPs support
-Date:   Tue,  9 May 2023 21:41:41 +0900
-Message-Id: <20230509124156.150200-8-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v15 20/22] PCI: rcar-gen4-ep: Add R-Car Gen4 PCIe Endpoint support
+Date:   Tue,  9 May 2023 21:41:54 +0900
+Message-Id: <20230509124156.150200-21-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230509124156.150200-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,71 +41,220 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add "code" and "routing" into struct dw_pcie_outbound_atu for
-sending MSG by iATU in the PCIe endpoint mode in near the future.
-PCIE_ATU_INHIBIT_PAYLOAD is set to issue TLP type of Msg instead of
-MsgD. PCIE_ATU_HEADER_SUB_ENABLE is set to issue the translated
-TLP header by using PCIE_ATU_{LOW,UPP}ER_TARGET registers' values.
+Add R-Car Gen4 PCIe Endpoint support. This controller is based on
+Synopsys DesignWare PCIe.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 7 +++++--
- drivers/pci/controller/dwc/pcie-designware.h | 5 +++++
- 2 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/Kconfig            |   9 +
+ drivers/pci/controller/dwc/Makefile           |   2 +
+ .../pci/controller/dwc/pcie-rcar-gen4-ep.c    | 166 ++++++++++++++++++
+ 3 files changed, 177 insertions(+)
+ create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index bd85a73d354b..a7c724ba7385 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -498,7 +498,7 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_UPPER_TARGET,
- 			      upper_32_bits(atu->pci_addr));
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 64d4d37bc891..4d877cd18374 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -424,4 +424,13 @@ config PCIE_RCAR_GEN4
+ 	  Say Y here if you want PCIe host controller support on R-Car Gen4 SoCs.
+ 	  This uses the DesignWare core.
  
--	val = atu->type | PCIE_ATU_FUNC_NUM(atu->func_no);
-+	val = atu->type | atu->routing | PCIE_ATU_FUNC_NUM(atu->func_no);
- 	if (upper_32_bits(limit_addr) > upper_32_bits(cpu_addr) &&
- 	    dw_pcie_ver_is_ge(pci, 460A))
- 		val |= PCIE_ATU_INCREASE_REGION_SIZE;
-@@ -506,7 +506,10 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 		val = dw_pcie_enable_ecrc(val);
- 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val);
++config PCIE_RCAR_GEN4_EP
++	tristate "Renesas R-Car Gen4 PCIe Endpoint controller"
++	depends on ARCH_RENESAS || COMPILE_TEST
++	depends on PCI_ENDPOINT
++	select PCIE_DW_EP
++	help
++	  Say Y here if you want PCIe endpoint controller support on R-Car Gen4
++	  SoCs. This uses the DesignWare core.
++
+ endmenu
+diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+index 486cf706b53d..0fb0bde26ac4 100644
+--- a/drivers/pci/controller/dwc/Makefile
++++ b/drivers/pci/controller/dwc/Makefile
+@@ -28,6 +28,8 @@ obj-$(CONFIG_PCIE_UNIPHIER_EP) += pcie-uniphier-ep.o
+ obj-$(CONFIG_PCIE_VISCONTI_HOST) += pcie-visconti.o
+ pcie-rcar-gen4-host-drv-objs := pcie-rcar-gen4.o pcie-rcar-gen4-host.o
+ obj-$(CONFIG_PCIE_RCAR_GEN4) += pcie-rcar-gen4-host-drv.o
++pcie-rcar-gen4-ep-drv-objs := pcie-rcar-gen4.o pcie-rcar-gen4-ep.o
++obj-$(CONFIG_PCIE_RCAR_GEN4_EP) += pcie-rcar-gen4-ep-drv.o
  
--	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, PCIE_ATU_ENABLE);
-+	val = PCIE_ATU_ENABLE;
-+	if (atu->type == PCIE_ATU_TYPE_MSG)
-+		val |= PCIE_ATU_INHIBIT_PAYLOAD | PCIE_ATU_HEADER_SUB_ENABLE | atu->code;
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, val);
- 
- 	/*
- 	 * Make sure ATU enable takes effect before any subsequent config
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index b8fa099bbed3..c83d1d176e62 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -150,11 +150,14 @@
- #define PCIE_ATU_TYPE_IO		0x2
- #define PCIE_ATU_TYPE_CFG0		0x4
- #define PCIE_ATU_TYPE_CFG1		0x5
-+#define PCIE_ATU_TYPE_MSG		0x10
- #define PCIE_ATU_TD			BIT(8)
- #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
- #define PCIE_ATU_REGION_CTRL2		0x004
- #define PCIE_ATU_ENABLE			BIT(31)
- #define PCIE_ATU_BAR_MODE_ENABLE	BIT(30)
-+#define PCIE_ATU_INHIBIT_PAYLOAD	BIT(22)
-+#define PCIE_ATU_HEADER_SUB_ENABLE	BIT(21)
- #define PCIE_ATU_FUNC_NUM_MATCH_EN      BIT(19)
- #define PCIE_ATU_LOWER_BASE		0x008
- #define PCIE_ATU_UPPER_BASE		0x00C
-@@ -295,6 +298,8 @@ struct dw_pcie_ob_atu_cfg {
- 	int index;
- 	int type;
- 	u8 func_no;
-+	u8 code;
-+	u8 routing;
- 	u64 cpu_addr;
- 	u64 pci_addr;
- 	u64 size;
+ # The following drivers are for devices that use the generic ACPI
+ # pci_root.c driver but don't support standard ECAM config access.
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c b/drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c
+new file mode 100644
+index 000000000000..710bbc9e61a5
+--- /dev/null
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c
+@@ -0,0 +1,166 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * PCIe Endpoint driver for Renesas R-Car Gen4 Series SoCs
++ * Copyright (C) 2022-2023 Renesas Electronics Corporation
++ */
++
++#include <linux/interrupt.h>
++#include <linux/module.h>
++#include <linux/of_device.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++
++#include "pcie-rcar-gen4.h"
++#include "pcie-designware.h"
++
++static void rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
++	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
++	u8 val;
++
++	rcar_gen4_pcie_set_device_type(rcar, false, dw->num_lanes);
++
++	dw_pcie_dbi_ro_wr_en(dw);
++
++	/* Single function */
++	val = dw_pcie_readb_dbi(dw, PCI_HEADER_TYPE);
++	val &= ~PCI_HEADER_TYPE_MULTI_FUNC;
++	dw_pcie_writeb_dbi(dw, PCI_HEADER_TYPE, val);
++
++	dw_pcie_dbi_ro_wr_dis(dw);
++
++	writel(PCIEDMAINTSTSEN_INIT, rcar->base + PCIEDMAINTSTSEN);
++}
++
++static void rcar_gen4_pcie_ep_deinit(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
++	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
++
++	writel(0, rcar->base + PCIEDMAINTSTSEN);
++}
++
++static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
++				       enum pci_epc_irq_type type,
++				       u16 interrupt_num)
++{
++	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
++
++	switch (type) {
++	case PCI_EPC_IRQ_INTX:
++		return dw_pcie_ep_raise_intx_irq(ep, func_no);
++	case PCI_EPC_IRQ_MSI:
++		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
++	default:
++		dev_err(dw->dev, "Unknown IRQ type\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static const struct pci_epc_features rcar_gen4_pcie_epc_features = {
++	.linkup_notifier = false,
++	.msi_capable = true,
++	.msix_capable = false,
++	.reserved_bar = 1 << BAR_5,
++	.align = SZ_1M,
++};
++
++static const struct pci_epc_features*
++rcar_gen4_pcie_ep_get_features(struct dw_pcie_ep *ep)
++{
++	return &rcar_gen4_pcie_epc_features;
++}
++
++static const struct dw_pcie_ep_ops pcie_ep_ops = {
++	.ep_pre_init = rcar_gen4_pcie_ep_pre_init,
++	.ep_deinit = rcar_gen4_pcie_ep_deinit,
++	.raise_irq = rcar_gen4_pcie_ep_raise_irq,
++	.get_features = rcar_gen4_pcie_ep_get_features,
++};
++
++static int rcar_gen4_add_pcie_ep(struct rcar_gen4_pcie *rcar,
++				 struct platform_device *pdev)
++{
++	struct dw_pcie_ep *ep = &rcar->dw.ep;
++	int ret;
++
++	ep->ops = &pcie_ep_ops;
++
++	ret = dw_pcie_ep_init(ep);
++	if (ret) {
++		dev_err(&pdev->dev, "Failed to initialize endpoint\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static void rcar_gen4_remove_pcie_ep(struct rcar_gen4_pcie *rcar)
++{
++	dw_pcie_ep_exit(&rcar->dw.ep);
++}
++
++static int rcar_gen4_pcie_ep_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct rcar_gen4_pcie *rcar;
++	int err;
++
++	rcar = rcar_gen4_pcie_devm_alloc(dev);
++	if (!rcar)
++		return -ENOMEM;
++
++	err = rcar_gen4_pcie_get_resources(rcar, pdev);
++	if (err < 0) {
++		dev_err(dev, "Failed to request resource: %d\n", err);
++		return err;
++	}
++
++	platform_set_drvdata(pdev, rcar);
++
++	err = rcar_gen4_pcie_prepare(rcar);
++	if (err < 0)
++		return err;
++
++	err = rcar_gen4_add_pcie_ep(rcar, pdev);
++	if (err < 0)
++		goto err_add;
++
++	return 0;
++
++err_add:
++	rcar_gen4_pcie_unprepare(rcar);
++
++	return err;
++}
++
++static int rcar_gen4_pcie_ep_remove(struct platform_device *pdev)
++{
++	struct rcar_gen4_pcie *rcar = platform_get_drvdata(pdev);
++
++	rcar_gen4_remove_pcie_ep(rcar);
++	rcar_gen4_pcie_unprepare(rcar);
++
++	return 0;
++}
++
++static const struct of_device_id rcar_gen4_pcie_of_match[] = {
++	{ .compatible = "renesas,rcar-gen4-pcie-ep", },
++	{},
++};
++
++static struct platform_driver rcar_gen4_pcie_ep_driver = {
++	.driver = {
++		.name = "pcie-rcar-gen4-ep",
++		.of_match_table = rcar_gen4_pcie_of_match,
++	},
++	.probe = rcar_gen4_pcie_ep_probe,
++	.remove = rcar_gen4_pcie_ep_remove,
++};
++module_platform_driver(rcar_gen4_pcie_ep_driver);
++
++MODULE_DESCRIPTION("Renesas R-Car Gen4 PCIe endpoint controller driver");
++MODULE_LICENSE("GPL");
 -- 
 2.25.1
 
