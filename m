@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3894CC87FDD
-	for <linux-pci@archiver.kernel.org>; Wed, 10 May 2023 06:22:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F20A6C7EE33
+	for <linux-pci@archiver.kernel.org>; Wed, 10 May 2023 06:22:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236031AbjEJGWq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 May 2023 02:22:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33154 "EHLO
+        id S235998AbjEJGWt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 May 2023 02:22:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235985AbjEJGWm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 May 2023 02:22:42 -0400
+        with ESMTP id S235992AbjEJGWn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 May 2023 02:22:43 -0400
 Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B91582D57;
-        Tue,  9 May 2023 23:22:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4EC6F40CE;
+        Tue,  9 May 2023 23:22:41 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="5.99,263,1677510000"; 
-   d="scan'208";a="158801581"
+   d="scan'208";a="158801585"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
   by relmlie5.idc.renesas.com with ESMTP; 10 May 2023 15:22:37 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 298584010E3C;
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 884D3401140D;
         Wed, 10 May 2023 15:22:37 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, mani@kernel.org,
@@ -29,9 +29,9 @@ To:     jingoohan1@gmail.com, mani@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v16 08/22] PCI: designware-ep: Add INTx IRQs support
-Date:   Wed, 10 May 2023 15:22:20 +0900
-Message-Id: <20230510062234.201499-9-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v16 11/22] PCI: dwc: Add dw_pcie_link_set_max_cap_width()
+Date:   Wed, 10 May 2023 15:22:23 +0900
+Message-Id: <20230510062234.201499-12-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230510062234.201499-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230510062234.201499-1-yoshihiro.shimoda.uh@renesas.com>
@@ -41,148 +41,66 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for triggering INTx IRQs by using outbound iATU.
-Outbound iATU is utilized to send assert and de-assert INTx TLPs.
-The message is generated based on the payloadless Msg TLP with type
-0x14, where 0x4 is the routing code implying the Terminate at
-Receiver message. The message code is specified as b1000xx for
-the INTx assertion and b1001xx for the INTx de-assertion.
+Add dw_pcie_link_set_max_cap_width() to set PCI_EXP_LNKCAP_MLW.
+In accordance with the DW PCIe RC/EP HW manuals [1,2,3,...] aside with
+the PORT_LINK_CTRL_OFF.LINK_CAPABLE and GEN2_CTRL_OFF.NUM_OF_LANES[8:0]
+field there is another one which needs to be updated. It's
+LINK_CAPABILITIES_REG.PCIE_CAP_MAX_LINK_WIDTH. If it isn't done at
+the very least the maximum link-width capability CSR won't expose
+the actual maximum capability.
 
+[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.60a, March 2015, p.1032
+[2] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.70a, March 2016, p.1065
+[3] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.90a, March 2016, p.1057
+...
+[X] DesignWare Cores PCI Express Controller Databook - DWC PCIe Endpoint,
+      Version 5.40a, March 2019, p.1396
+[X+1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+      Version 5.40a, March 2019, p.1266
+
+The commit description is suggested by Serge Semin.
+
+Suggested-by: Serge Semin <fancer.lancer@gmail.com>
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- .../pci/controller/dwc/pcie-designware-ep.c   | 66 +++++++++++++++++--
- drivers/pci/controller/dwc/pcie-designware.h  |  2 +
- 2 files changed, 64 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index fe2e0d765be9..0abc0073b1cf 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -6,9 +6,11 @@
-  * Author: Kishon Vijay Abraham I <kishon@ti.com>
-  */
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 5dc423dd2f21..8b2978c6eb23 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -758,6 +758,21 @@ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
+ 	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
+ }
  
-+#include <linux/delay.h>
- #include <linux/of.h>
- #include <linux/platform_device.h>
- 
-+#include "../../pci.h"
- #include "pcie-designware.h"
- #include <linux/pci-epc.h>
- #include <linux/pci-epf.h>
-@@ -484,14 +486,57 @@ static const struct pci_epc_ops epc_ops = {
- 	.get_features		= dw_pcie_ep_get_features,
- };
- 
-+static int dw_pcie_ep_send_msg(struct dw_pcie_ep *ep, u8 func_no, u8 code,
-+			       u8 routing)
++static void dw_pcie_link_set_max_cap_width(struct dw_pcie *pci, int num_lanes)
 +{
-+	struct dw_pcie_ob_atu_cfg atu = { 0 };
-+	struct pci_epc *epc = ep->epc;
-+	int ret;
++	u32 val;
++	u8 cap;
 +
-+	atu.func_no = func_no;
-+	atu.code = code;
-+	atu.routing = routing;
-+	atu.type = PCIE_ATU_TYPE_MSG;
-+	atu.cpu_addr = ep->intx_mem_phys;
-+	atu.size = epc->mem->window.page_size;
++	if (!num_lanes)
++		return;
 +
-+	ret = dw_pcie_ep_outbound_atu(ep, &atu);
-+	if (ret)
-+		return ret;
-+
-+	writel(0, ep->intx_mem);
-+
-+	dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->intx_mem_phys);
-+
-+	return 0;
++	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	val = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
++	val &= ~PCI_EXP_LNKCAP_MLW;
++	val |= num_lanes << PCI_EXP_LNKSTA_NLW_SHIFT;
++	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, val);
 +}
 +
- int dw_pcie_ep_raise_intx_irq(struct dw_pcie_ep *ep, u8 func_no)
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
  {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct device *dev = pci->dev;
-+	int ret;
+ 	int max_region, ob, ib;
+@@ -1040,4 +1055,5 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
  
--	dev_err(dev, "EP cannot trigger INTx IRQs\n");
-+	if (!ep->intx_mem) {
-+		dev_err(dev, "INTx not supported\n");
-+		return -EOPNOTSUPP;
-+	}
- 
--	return -EINVAL;
-+	/*
-+	 * According to the document of PCIe, the INTx emulation should be
-+	 * level-triggered. However, the Linux PCIe Endpoint framework only
-+	 * supports edge-triggered for now. So, this function asserts INTx for
-+	 * 50 usec, and then deasserts it.
-+	 */
-+	ret = dw_pcie_ep_send_msg(ep, func_no, PCI_CODE_ASSERT_INTA,
-+				  PCI_MSG_ROUTING_LOCAL);
-+	if (ret)
-+		return ret;
-+
-+	usleep_range(50, 100);
-+
-+	return dw_pcie_ep_send_msg(ep, func_no, PCI_CODE_DEASSERT_INTA,
-+				   PCI_MSG_ROUTING_LOCAL);
+ 	dw_pcie_link_set_max_link_width(pci, pci->num_lanes);
++	dw_pcie_link_set_max_cap_width(pci, pci->num_lanes);
  }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_intx_irq);
- 
-@@ -622,6 +667,10 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- 
- 	dw_pcie_edma_remove(pci);
- 
-+	if (ep->intx_mem)
-+		pci_epc_mem_free_addr(epc, ep->intx_mem_phys, ep->intx_mem,
-+				      epc->mem->window.page_size);
-+
- 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
- 			      epc->mem->window.page_size);
- 
-@@ -793,9 +842,14 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		goto err_exit_epc_mem;
- 	}
- 
-+	ep->intx_mem = pci_epc_mem_alloc_addr(epc, &ep->intx_mem_phys,
-+					      epc->mem->window.page_size);
-+	if (!ep->intx_mem)
-+		dev_warn(dev, "Failed to reserve memory for INTx\n");
-+
- 	ret = dw_pcie_edma_detect(pci);
- 	if (ret)
--		goto err_free_epc_mem;
-+		goto err_free_epc_mem_intx;
- 
- 	if (ep->ops->get_features) {
- 		epc_features = ep->ops->get_features(ep);
-@@ -812,7 +866,11 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- err_remove_edma:
- 	dw_pcie_edma_remove(pci);
- 
--err_free_epc_mem:
-+err_free_epc_mem_intx:
-+	if (ep->intx_mem)
-+		pci_epc_mem_free_addr(epc, ep->intx_mem_phys, ep->intx_mem,
-+				      epc->mem->window.page_size);
-+
- 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
- 			      epc->mem->window.page_size);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index c83d1d176e62..06e044e2163a 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -369,6 +369,8 @@ struct dw_pcie_ep {
- 	unsigned long		*ob_window_map;
- 	void __iomem		*msi_mem;
- 	phys_addr_t		msi_mem_phys;
-+	void __iomem		*intx_mem;
-+	phys_addr_t		intx_mem_phys;
- 	struct pci_epf_bar	*epf_bar[PCI_STD_NUM_BARS];
- };
- 
 -- 
 2.25.1
 
