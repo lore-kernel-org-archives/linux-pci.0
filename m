@@ -2,161 +2,131 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2524AC7EE22
-	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 13:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 095BEC7EE23
+	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 13:45:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237940AbjEKNp2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 May 2023 09:45:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35636 "EHLO
+        id S237983AbjEKNp3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 May 2023 09:45:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238046AbjEKNpR (ORCPT
+        with ESMTP id S238054AbjEKNpR (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 09:45:17 -0400
 Received: from smtp-relay-canonical-1.canonical.com (smtp-relay-canonical-1.canonical.com [185.125.188.121])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B52DEC1;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E452B1BE;
         Thu, 11 May 2023 06:45:05 -0700 (PDT)
 Received: from localhost.localdomain (unknown [10.101.196.174])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id 46A3D42A99;
-        Thu, 11 May 2023 13:36:55 +0000 (UTC)
+        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id 2EE2C42AAF;
+        Thu, 11 May 2023 13:37:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1683812218;
-        bh=k6U60AfyHoi50EUXdw1yC205/vKIebqXK872eoYXLZ0=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
-        b=boAXbNMqDUHZwzGQv4J58ZS/mKyhZy13pTeRNv17MLiFusW7e6vhqXAKS0mcDdrGr
-         LAmfQ3uwlG7oRvscmEMnBwBJEkgq7O23Vkc3n7vk+zOxczHzWS7rjuss6SdDO9x49i
-         VGGer0xXbwzWTv45h33SY2Kebu7bhqe3dz6xrVNFrtN9WqSZkY7a1wa7Q9vaGU5rIU
-         fAaXEmIwmim1zjLHss1DEk3xzE2QT3TLmDTLh2dKATTUgRNYHX4Fdq59dke3yAwT/U
-         qqpQvcXqXi81i0GmpFbEThzUPamaKbvKFUj1j0g0yFJaRaxB64Rw0HzJnEVNAiEuu9
-         hsPURx+u0mV7Q==
+        s=20210705; t=1683812227;
+        bh=/jWMueCzoMOVJ33QBenY907j4dy6f0ZLbi4Ji6SmwJU=;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+         MIME-Version;
+        b=LXJMcg6F9RUJNMo3hZzU+HLq5osdsPX+H9YoRDj7ckVglQpmM5hwQs0Oi0n5qLrlr
+         YN4gdmoWuiE11eVj5sBunbh3Xf4ahe8Hc6+hmNN/E3KNizGO0Yoh0QIU/tIAkXAyLK
+         xt392Fv5/d+W6poGq7jgdWWDe2sR2aBsgZG2p8bg26ppH1xg9j6jTglbeKPqTLQtEq
+         iysasQd8nnIl3nBfZxUExcZmUfLV4FFdBCgVD+pJxjGUJZbO8vCh3F26VoaLGtTbEf
+         8y/GYPe7JXXx1FO8pyxZHzfF3Mo+PwZhIZ5NuGG11noyPVwFck9vWHLE4kbDOIvDR3
+         k/xyWpGVmiqtQ==
 From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
 To:     bhelgaas@google.com
 Cc:     mika.westerberg@linux.intel.com, koba.ko@canonical.com,
         sathyanarayanan.kuppuswamy@linux.intel.com,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
         Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
         "Oliver O'Halloran" <oohall@gmail.com>,
         linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v5 1/3] PCI/AER: Factor out interrupt toggling into helpers
-Date:   Thu, 11 May 2023 21:36:07 +0800
-Message-Id: <20230511133610.99759-1-kai.heng.feng@canonical.com>
+Subject: [PATCH v5 3/3] PCI/DPC: Disable DPC interrupt during suspend
+Date:   Thu, 11 May 2023 21:36:09 +0800
+Message-Id: <20230511133610.99759-3-kai.heng.feng@canonical.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230511133610.99759-1-kai.heng.feng@canonical.com>
+References: <20230511133610.99759-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There are many places that enable and disable AER interrupt, so move
-them into helpers.
+PCIe service that shares IRQ with PME may cause spurious wakeup on
+system suspend.
+
+Since AER is conditionally disabled in previous patch, also apply the
+same logic to disable DPC which depends on AER to work.
+
+It's okay to disable DPC because PCIe Base Spec 5.0, section 5.2 "Link
+State Power Management" states that TLP and DLLP transmission is
+disabled for a Link in L2/L3 Ready (D3hot), L2 (D3cold with aux power)
+and L3 (D3cold), hence we don't lose much here to disable DPC during system
+suspend.
+
+[1] https://lore.kernel.org/linux-pci/20220408153159.106741-1-kai.heng.feng@canonical.com/
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=216295
 
 Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 ---
-v5
- - Fix misspelling.
+v5:
+ - Wording.
 
 v4:
+v3:
  - No change.
 
-v3:
- - Correct subject.
-
 v2:
- - New patch.
+ - Only disable DPC IRQ.
+ - No more check on PME IRQ#.
+ drivers/pci/pcie/dpc.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
- drivers/pci/pcie/aer.c | 45 +++++++++++++++++++++++++-----------------
- 1 file changed, 27 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index f6c24ded134c..1420e1f27105 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -1227,6 +1227,28 @@ static irqreturn_t aer_irq(int irq, void *context)
- 	return IRQ_WAKE_THREAD;
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 3ceed8e3de41..d2d845c20438 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -384,6 +384,30 @@ static int dpc_probe(struct pcie_device *dev)
+ 	return status;
  }
  
-+static void aer_enable_irq(struct pci_dev *pdev)
++static int dpc_suspend(struct pcie_device *dev)
 +{
-+	int aer = pdev->aer_cap;
-+	u32 reg32;
++	struct pci_dev *pdev = dev->port;
++	u16 ctl;
 +
-+	/* Enable Root Port's interrupt in response to error messages */
-+	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
-+	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
-+	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
++	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, &ctl);
++	ctl &= ~PCI_EXP_DPC_CTL_INT_EN;
++	pci_write_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, ctl);
++
++	return 0;
 +}
 +
-+static void aer_disable_irq(struct pci_dev *pdev)
++static int dpc_resume(struct pcie_device *dev)
 +{
-+	int aer = pdev->aer_cap;
-+	u32 reg32;
++	struct pci_dev *pdev = dev->port;
++	u16 ctl;
 +
-+	/* Disable Root's interrupt in response to error messages */
-+	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
-+	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
-+	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
++	pci_read_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, &ctl);
++	ctl |= PCI_EXP_DPC_CTL_INT_EN;
++	pci_write_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_CTL, ctl);
++
++	return 0;
 +}
 +
- /**
-  * aer_enable_rootport - enable Root Port's interrupts when receiving messages
-  * @rpc: pointer to a Root Port data structure
-@@ -1256,10 +1278,7 @@ static void aer_enable_rootport(struct aer_rpc *rpc)
- 	pci_read_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS, &reg32);
- 	pci_write_config_dword(pdev, aer + PCI_ERR_UNCOR_STATUS, reg32);
+ static void dpc_remove(struct pcie_device *dev)
+ {
+ 	struct pci_dev *pdev = dev->port;
+@@ -399,6 +423,8 @@ static struct pcie_port_service_driver dpcdriver = {
+ 	.port_type	= PCIE_ANY_PORT,
+ 	.service	= PCIE_PORT_SERVICE_DPC,
+ 	.probe		= dpc_probe,
++	.suspend	= dpc_suspend,
++	.resume		= dpc_resume,
+ 	.remove		= dpc_remove,
+ };
  
--	/* Enable Root Port's interrupt in response to error messages */
--	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
--	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
--	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
-+	aer_enable_irq(pdev);
- }
- 
- /**
-@@ -1274,10 +1293,7 @@ static void aer_disable_rootport(struct aer_rpc *rpc)
- 	int aer = pdev->aer_cap;
- 	u32 reg32;
- 
--	/* Disable Root's interrupt in response to error messages */
--	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
--	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
--	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
-+	aer_disable_irq(pdev);
- 
- 	/* Clear Root's error status reg */
- 	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_STATUS, &reg32);
-@@ -1372,12 +1388,8 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	 */
- 	aer = root ? root->aer_cap : 0;
- 
--	if ((host->native_aer || pcie_ports_native) && aer) {
--		/* Disable Root's interrupt in response to error messages */
--		pci_read_config_dword(root, aer + PCI_ERR_ROOT_COMMAND, &reg32);
--		reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
--		pci_write_config_dword(root, aer + PCI_ERR_ROOT_COMMAND, reg32);
--	}
-+	if ((host->native_aer || pcie_ports_native) && aer)
-+		aer_disable_irq(root);
- 
- 	if (type == PCI_EXP_TYPE_RC_EC || type == PCI_EXP_TYPE_RC_END) {
- 		rc = pcie_reset_flr(dev, PCI_RESET_DO_RESET);
-@@ -1396,10 +1408,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 		pci_read_config_dword(root, aer + PCI_ERR_ROOT_STATUS, &reg32);
- 		pci_write_config_dword(root, aer + PCI_ERR_ROOT_STATUS, reg32);
- 
--		/* Enable Root Port's interrupt in response to error messages */
--		pci_read_config_dword(root, aer + PCI_ERR_ROOT_COMMAND, &reg32);
--		reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
--		pci_write_config_dword(root, aer + PCI_ERR_ROOT_COMMAND, reg32);
-+		aer_enable_irq(root);
- 	}
- 
- 	return rc ? PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_RECOVERED;
 -- 
 2.34.1
 
