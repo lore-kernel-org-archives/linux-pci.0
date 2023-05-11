@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3FF1C77B7C
-	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF8DCC7EE37
+	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239079AbjEKTJd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 May 2023 15:09:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36766 "EHLO
+        id S239093AbjEKTJe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 May 2023 15:09:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238397AbjEKTJY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 15:09:24 -0400
+        with ESMTP id S238961AbjEKTJ0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 15:09:26 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5AE305FE5;
-        Thu, 11 May 2023 12:09:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 50A9E6E8C;
+        Thu, 11 May 2023 12:09:24 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id CADFFE0EBC;
-        Thu, 11 May 2023 22:09:18 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id A5937E0EC0;
+        Thu, 11 May 2023 22:09:21 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=dE2pBVNU3O4WIfQIvMSjtNs6p960k8nUdeVplXDZ9LA=; b=vQpMu2zef3oP
-        AulljtCA85KvXgZUr7ZOc14Jn6ZQv/qAdkuemdt/+thSZ4s+FNZi58UUgOknoBLO
-        hovMHR7IVVdRGbyFVT7WnNgzI4tzMHGGMbTUtW0/qYF2eoHnfw1Nbp7z7chuKvfX
-        1V9zWsHEq7TzANVpCO2/HydVyDr9IUA=
+         bh=z1ajNxVuMALkKpCfppBKR7DxSLkoIP1cPgaO6m6/vIw=; b=I3IempSwe8aT
+        6PxV8+XvJpO2VaUFnobx6Te01pEByp4Sb29JRGpBae90vt4FLvIeEm717AXw8H9V
+        /Rqn2Ze63tPlm4hC9O4U1ciTFORXYECwfQkqBjxY0EbyYwb/Z44dLiY0DeckJWEn
+        jC1gbhB3/oiP/A05cCnbolnSvJyZUQo=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id AE9C0E0EB1;
-        Thu, 11 May 2023 22:09:18 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 8A648E0EB1;
+        Thu, 11 May 2023 22:09:21 +0300 (MSK)
 Received: from localhost (10.8.30.6) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:18 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:21 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -49,9 +49,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v5 02/14] PCI: dwc: Fix inbound iATU entries out-of-bounds warning message
-Date:   Thu, 11 May 2023 22:08:50 +0300
-Message-ID: <20230511190902.28896-3-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v5 06/14] PCI: dwc: Drop empty line from dw_pcie_link_set_max_speed()
+Date:   Thu, 11 May 2023 22:08:54 +0300
+Message-ID: <20230511190902.28896-7-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,32 +64,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The message is printed if the number of requested inbound iATU windows
-exceed the device capability. In that case the message should either refer
-to the "dma-ranges" DT property or to the DMA-ranges mapping. We suggest
-to use the later version as a counterpart to the just CPU-ranges mapping.
-In any case the current "Dma-ranges" phrase seems incorrect.
+Well, just drop a redundant empty line from the tail of the denoted
+function which by mistake was added in commit 39bc5006501c ("PCI: dwc:
+Centralize link gen setting").
 
-Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 9952057c8819..5718b4bb67f0 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -723,7 +723,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
- 	}
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index e55b7b387eb6..ede166645289 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -729,7 +729,6 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
  
- 	if (pci->num_ib_windows <= i)
--		dev_warn(pci->dev, "Dma-ranges exceed inbound iATU size (%u)\n",
-+		dev_warn(pci->dev, "DMA-ranges exceed inbound iATU size (%u)\n",
- 			 pci->num_ib_windows);
+ 	cap &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed);
+-
+ }
  
- 	return 0;
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
 -- 
 2.40.0
 
