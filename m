@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF8DCC7EE37
-	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5615C7EE2D
+	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239093AbjEKTJe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 May 2023 15:09:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36776 "EHLO
+        id S239100AbjEKTJg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 May 2023 15:09:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238961AbjEKTJ0 (ORCPT
+        with ESMTP id S238960AbjEKTJ0 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 15:09:26 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 50A9E6E8C;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F20AB6EBD;
         Thu, 11 May 2023 12:09:24 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id A5937E0EC0;
-        Thu, 11 May 2023 22:09:21 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 1A53DE0EC3;
+        Thu, 11 May 2023 22:09:24 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=z1ajNxVuMALkKpCfppBKR7DxSLkoIP1cPgaO6m6/vIw=; b=I3IempSwe8aT
-        6PxV8+XvJpO2VaUFnobx6Te01pEByp4Sb29JRGpBae90vt4FLvIeEm717AXw8H9V
-        /Rqn2Ze63tPlm4hC9O4U1ciTFORXYECwfQkqBjxY0EbyYwb/Z44dLiY0DeckJWEn
-        jC1gbhB3/oiP/A05cCnbolnSvJyZUQo=
+         bh=xBd+z4e5MXWvOcjFcTeyVJjVX2Efx8HIvckYUDSA3Xc=; b=VzyN1Ac0DUwB
+        Ndb60Dizqjbt8KEWy+TmQGMF7fU4IslyVp6rqH8QmiCcwtQCSHzD3UutzT+XSKn+
+        2NePkFBasGQ4fORDE8uuwuBX7DRWChDctZZLhITlOrZUWMSfzt1v0mo1B0z8MaEz
+        Mwjz1E5w7nOU3Mgeok3HtS1Ays9hzio=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 8A648E0EB1;
-        Thu, 11 May 2023 22:09:21 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 0342EE0EB1;
+        Thu, 11 May 2023 22:09:24 +0300 (MSK)
 Received: from localhost (10.8.30.6) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:21 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:23 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -39,19 +39,16 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Vinod Koul <vkoul@kernel.org>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+        Rob Herring <robh@kernel.org>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v5 06/14] PCI: dwc: Drop empty line from dw_pcie_link_set_max_speed()
-Date:   Thu, 11 May 2023 22:08:54 +0300
-Message-ID: <20230511190902.28896-7-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v5 09/14] MAINTAINERS: Demote Gustavo Pimentel to DW PCIe core reviewer
+Date:   Thu, 11 May 2023 22:08:57 +0300
+Message-ID: <20230511190902.28896-10-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
@@ -64,28 +61,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Well, just drop a redundant empty line from the tail of the denoted
-function which by mistake was added in commit 39bc5006501c ("PCI: dwc:
-Centralize link gen setting").
+No maintaining actions from Gustavo have been noticed for over two years.
+Demote him to being the DW PCIe RP/EP driver reviewer for now.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 1 -
- 1 file changed, 1 deletion(-)
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index e55b7b387eb6..ede166645289 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -729,7 +729,6 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 817cd8f40e65..0d93e1e4e776 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -16166,7 +16166,7 @@ F:	drivers/pci/controller/dwc/pci-exynos.c
  
- 	cap &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed);
--
- }
- 
- void dw_pcie_iatu_detect(struct dw_pcie *pci)
+ PCI DRIVER FOR SYNOPSYS DESIGNWARE
+ M:	Jingoo Han <jingoohan1@gmail.com>
+-M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++R:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/snps,dw-pcie*.yaml
 -- 
 2.40.0
 
