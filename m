@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30624C77B7C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A20EC7EE2A
 	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233472AbjEKTJa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 May 2023 15:09:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36774 "EHLO
+        id S239061AbjEKTJb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 May 2023 15:09:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238725AbjEKTJY (ORCPT
+        with ESMTP id S238452AbjEKTJY (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 15:09:24 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5B6C36A52;
-        Thu, 11 May 2023 12:09:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 276F96A7A;
+        Thu, 11 May 2023 12:09:21 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 7FA95E0EB3;
-        Thu, 11 May 2023 22:09:17 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 28B27E0EBE;
+        Thu, 11 May 2023 22:09:20 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
-        :content-type:content-type:date:from:from:message-id
-        :mime-version:reply-to:subject:subject:to:to; s=post; bh=PuMGmJI
-        UhZCmLfTOtaUizJFxzeU1KYOXEXJs6qIN77o=; b=tF+SiV6M/G7aifDcie3zMw4
-        HkYTLQmf1ATR3mrtBCuojJisOfQaqlGJbJ/JNgXkNyeU4ael7BYze4SFt4D7Cj3q
-        W0XUPYYZ3GSCMBcQIYFl3rqncaD6eIeMJBC3OZTcuFe7bFopjMkjyCQHqHFZ36uD
-        ww/lL9BasqZSfDtuyrI0=
+        :content-type:content-type:date:from:from:in-reply-to:message-id
+        :mime-version:references:reply-to:subject:subject:to:to; s=post;
+         bh=xGDsTPT86T4LuRJWjhR70wGw0i95sKl3YEXw9Ee0IO4=; b=ODoQRPlPuXyM
+        o1meTISnVUbUucMLG3kaePS1JvuWUe+CqB7jmHkIkRrzNQIF5Vt8yaoxP9kXvvEp
+        D3hSw85fKmsvaCiSZ4QtbikTB5kUpeL5P0zjtW69NiXdO8m/PRn4aSdTUKF9gGy7
+        LwkubmrLS4cc4xk3j/VgoirgPzh1KQQ=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 644BEE0EB1;
-        Thu, 11 May 2023 22:09:17 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 12B7CE0EB1;
+        Thu, 11 May 2023 22:09:20 +0300 (MSK)
 Received: from localhost (10.8.30.6) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:16 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:19 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -39,17 +39,21 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Vinod Koul <vkoul@kernel.org>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>
+        Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v5 00/14] PCI: dwc: Relatively simple fixes and cleanups
-Date:   Thu, 11 May 2023 22:08:48 +0300
-Message-ID: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v5 04/14] PCI: bt1: Fix printing false error message
+Date:   Thu, 11 May 2023 22:08:52 +0300
+Message-ID: <20230511190902.28896-5-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
+In-Reply-To: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
+References: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -59,108 +63,34 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It turns out the recent DW PCIe-related patchset was merged in with
-several relatively trivial issues left unsettled (noted by Bjorn and
-Manivannan). All of these lefovers have been fixed in this patchset.
-Namely the series starts with two bug-fixes. The first one concerns the
-improper link-mode initialization in case if the CDM-check is enabled. The
-second unfortunate mistake I made in the IP-core version type helper. In
-particular instead of testing the IP-core version type the macro function
-referred to the just IP-core version which obviously wasn't what I
-intended.
+The dev_err_probe() method is supposed to be invoked only if any error is
+happened. It was definitely wrong to call it unconditionally. Due to that
+the DWC PCIe host initialization error-message is printed all the time the
+Baikal-T1 PCIe controller is probed even if no error actually happened.
 
-Afterwards two @Mani-noted fixes follow. Firstly the dma-ranges related warning
-message is fixed to start with "DMA-ranges" word instead of "Dma-ranges".
-Secondly the Baikal-T1 PCIe Host driver is converted to perform the
-asynchronous probe type which saved us of about 15% of bootup time if no any
-PCIe peripheral device attached to the port.
-
-Then the patchset contains the Baikal-T1 PCIe driver fix. The
-corresponding patch removes the false error message printed during the
-controller probe procedure. I accidentally added the unconditional
-dev_err_probe() method invocation. It was obviously wrong.
-
-Then two trivial cleanups are introduced. The first one concerns the
-duplicated fast-link-mode flag unsetting. The second one implies
-dropping a redundant empty line from the dw_pcie_link_set_max_speed()
-function.
-
-The series continues with a patch inspired by the last @Bjorn note
-regarding the generic resources request interface. As @Bjorn correctly
-said it would be nice to have the new interface used wider in the DW PCIe
-subsystem. Aside with the Baikal-T1 PCIe Host driver the Toshiba Visconti
-PCIe driver can be easily converted to using the generic clock names.
-That's what is done in the noted patch.
-
-The patchset is closed with a series of MAINTAINERS-list related patches.
-Firstly after getting the DW PCIe RP/EP DT-schemas refactored I forgot to
-update the MAINTAINER-list with the new files added in the framework of
-that procedure. All the snps,dw-pcie* schemas shall be maintained by the
-DW PCIe core driver maintainers. Secondly seeing how long it took for my
-patchsets to review and not having any comments from the original driver
-maintainers I'd suggest to add myself as the reviewer to the DW PCIe and
-eDMA drivers. Thus hopefully the new updates review process will be
-performed with much less latencies. For the same reason @Manivannan is
-added to the maintainers list of the DW PCIe/eDMA drivers as he already
-agreed to be in.
-
-Link: https://lore.kernel.org/linux-pci/20230217093956.27126-1-Sergey.Semin@baikalelectronics.ru/
-Changelog v2:
-- Rebase onto the kernel 6.3-rc2.
-
-Link: https://lore.kernel.org/linux-pci/20230313200816.30105-1-Sergey.Semin@baikalelectronics.ru/
-Changelog v3:
-- Drop the patch:
-  [PATCH v2 01/11] PCI: dwc: Fix port link CSR improper init if CDM check enabled
-  and rebase onto the already submitted by @Yoshihiro fix:
-  commit cdce67099117 ("PCI: dwc: Fix PORT_LINK_CONTROL update when CDM check enabled")
-- Just resend.
-
-Link: https://lore.kernel.org/linux-pci/20230411033928.30397-1-Sergey.Semin@baikalelectronics.ru/
-Changelog v4:
-- Demote @Gustavo to being DW PCIe/eDMA drivers reviewer:
-  [PATCH v4 9/14] MAINTAINERS: Demote Gustavo Pimentel to DW PCIe core reviewer
-  [PATCH v4 12/14] MAINTAINERS: Demote Gustavo Pimentel to DW EDMA driver reviewer
-- Add Manivannan to the DW PCIe/eDMA drivers maintainers list:
-  [PATCH v4 10/14] MAINTAINERS: Add Manivannan to DW PCIe core maintainers list
-  [PATCH v4 13/14] MAINTAINERS: Add Manivannan to DW eDMA driver maintainers list
-
-Link: https://lore.kernel.org/linux-pci/20230414021832.13167-1-Sergey.Semin@baikalelectronics.ru/
-Changelog v5:
-- Rebase onto the kernel 6.4-rc1.
-- Just resend.
-
+Fixes: ba6ed462dcf4 ("PCI: dwc: Add Baikal-T1 PCIe controller support")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
-Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
-Cc: linux-pci@vger.kernel.org
-Cc: dmaengine@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-bt1.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Serge Semin (14):
-  PCI: dwc: Fix erroneous version type test helper
-  PCI: dwc: Fix inbound iATU entries out-of-bounds warning message
-  PCI: bt1: Enable async probe type
-  PCI: bt1: Fix printing false error message
-  PCI: dwc: Drop duplicated fast-link-mode flag unsetting
-  PCI: dwc: Drop empty line from dw_pcie_link_set_max_speed()
-  PCI: visconti: Convert to using generic resources getter
-  MAINTAINERS: Add all generic DW PCIe RP/EP DT-schemas
-  MAINTAINERS: Demote Gustavo Pimentel to DW PCIe core reviewer
-  MAINTAINERS: Add Manivannan to DW PCIe core maintainers list
-  MAINTAINERS: Add myself as the DW PCIe core reviewer
-  MAINTAINERS: Demote Gustavo Pimentel to DW EDMA driver reviewer
-  MAINTAINERS: Add Manivannan to DW eDMA driver maintainers list
-  MAINTAINERS: Add myself as the DW eDMA driver reviewer
-
- MAINTAINERS                                   | 11 ++++--
- drivers/pci/controller/dwc/pcie-bt1.c         |  5 ++-
- .../pci/controller/dwc/pcie-designware-host.c |  2 +-
- drivers/pci/controller/dwc/pcie-designware.c  |  2 -
- drivers/pci/controller/dwc/pcie-designware.h  |  7 +++-
- drivers/pci/controller/dwc/pcie-visconti.c    | 37 +++++++++----------
- 6 files changed, 34 insertions(+), 30 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-bt1.c b/drivers/pci/controller/dwc/pcie-bt1.c
+index e36a20bf82cf..6557141873ad 100644
+--- a/drivers/pci/controller/dwc/pcie-bt1.c
++++ b/drivers/pci/controller/dwc/pcie-bt1.c
+@@ -597,8 +597,10 @@ static int bt1_pcie_add_port(struct bt1_pcie *btpci)
+ 	dw_pcie_cap_set(&btpci->dw, REQ_RES);
+ 
+ 	ret = dw_pcie_host_init(&btpci->dw.pp);
++	if (ret)
++		dev_err_probe(dev, ret, "Failed to initialize DWC PCIe host\n");
+ 
+-	return dev_err_probe(dev, ret, "Failed to initialize DWC PCIe host\n");
++	return ret;
+ }
+ 
+ static void bt1_pcie_del_port(struct bt1_pcie *btpci)
 -- 
 2.40.0
 
