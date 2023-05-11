@@ -2,111 +2,106 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E43C77B7C
-	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 20:09:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CB59C77B7C
+	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 20:11:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239066AbjEKUJR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 May 2023 16:09:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55502 "EHLO
+        id S238084AbjEKULk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 May 2023 16:11:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238053AbjEKUJQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 16:09:16 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADFE910EC;
-        Thu, 11 May 2023 13:09:15 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1pxCb5-0000QH-Hy; Thu, 11 May 2023 22:09:07 +0200
-Message-ID: <c45f3a39-2103-6beb-ae6d-5bdf070854e0@leemhuis.info>
-Date:   Thu, 11 May 2023 22:09:06 +0200
+        with ESMTP id S238053AbjEKULj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 16:11:39 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABD9310EC;
+        Thu, 11 May 2023 13:11:38 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id 4fb4d7f45d1cf-50b8d2eed3dso13816445a12.0;
+        Thu, 11 May 2023 13:11:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683835897; x=1686427897;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=4Gv59x7GRc5rw9NVZjRlpFcBsJGKMNlvZ+8b/lko974=;
+        b=U9jwxYVWRvc7c3eyMw7CX12GG4sKAyEyzAA+PJAODX5/yYAfX1SZB6hQe0nKAaCeFT
+         AyDl2k49B8BGm9h8XkL+n/41aza9gqD034iCxh/JMFGOWPLRO3pBKMYyzG0l9gzVoqyy
+         a7RR/FOuXjKHjkYBCtoGnqCtwsGAPY61QqgQYEYvoKHaBzjM6JBeLGAvQGCuc9OjVhB9
+         BlR33EQUKnNPcvMtAj9yBRE8D9cKZuqHHDz2Uax0Atza+WtlcnM6ZqQUq/bbFz60Ans0
+         BFwaugWAg4Vl7GbCno+D3aSO8YmnZt2SKJcSPWNHi0DvG9r570qW6hSdBGkhp7SF00Rf
+         Qejg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1683835897; x=1686427897;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4Gv59x7GRc5rw9NVZjRlpFcBsJGKMNlvZ+8b/lko974=;
+        b=XgGjgwKM7U8W2s/TLMeZ4c5rHnn3JrAvwl+sxdqJl+/sVHk6OMFfiF14yQG013byod
+         4S7BFZmx7j/IyhD23iAgfqta5vWcW/DGYyI9t+lof130Wf7Ijvg1PIp0z+uyTIpoivAc
+         iOrIhyfuDEyxja1OJDECu8B0Ok0G6tHraLxBkuPph0UAxS94A9tpaN+Hy3j4N1ZiGGr4
+         ZD5l97TsqsZZdAOSFV7vPDwOQ27urIs57KSAdqN0pVdkd0Mtes815jyfL1lqlYR7eSac
+         Qvu8ag9CkI53T2bn7xZTjQSvX36SyWYRwTGHCNs1ezRa9IOw++WmWtvbcjYCKLx/TKp/
+         yG2Q==
+X-Gm-Message-State: AC+VfDwFHC+EC7zFwXy1ysFuwbNe/g0fJTNkSlXce1aWmUn8Yw4UHdfa
+        aQ9znDY4gqS4uDbJveJD4PoPHwmlMg4=
+X-Google-Smtp-Source: ACHHUZ61T6/jjmTvoOauQp2G3JqGNSx50QqwOuG6jWjusDoinNT7NX/OAG0HNY9C4xqkCVIME1Zw+g==
+X-Received: by 2002:a17:906:7949:b0:969:ffcb:1eb4 with SMTP id l9-20020a170906794900b00969ffcb1eb4mr9552168ejo.2.1683835896960;
+        Thu, 11 May 2023 13:11:36 -0700 (PDT)
+Received: from ?IPV6:2a01:c23:c58e:b900:c905:524d:7524:40e1? (dynamic-2a01-0c23-c58e-b900-c905-524d-7524-40e1.c23.pool.telefonica.de. [2a01:c23:c58e:b900:c905:524d:7524:40e1])
+        by smtp.googlemail.com with ESMTPSA id jz10-20020a17090775ea00b00965ef79ae14sm4398958ejc.189.2023.05.11.13.11.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 11 May 2023 13:11:36 -0700 (PDT)
+Message-ID: <f96e4a8a-1b69-a783-d1ca-7d8e48100954@gmail.com>
+Date:   Thu, 11 May 2023 22:11:32 +0200
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Content-Language: en-US, de-DE
-To:     "Limonciello, Mario" <Mario.Limonciello@amd.com>,
-        Sasha Levin <sashal@kernel.org>
-Cc:     Linux regressions mailing list <regressions@lists.linux.dev>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        "S-k, Shyam-sundar" <Shyam-sundar.S-k@amd.com>,
-        "Goswami, Sanket" <Sanket.Goswami@amd.com>,
-        "Gong, Richard" <Richard.Gong@amd.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "x86@kernel.org" <x86@kernel.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Borislav Petkov <bp@alien8.de>,
-        Guenter Roeck <linux@roeck-us.net>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-References: <20230427053338.16653-1-mario.limonciello@amd.com>
- <20230427053338.16653-2-mario.limonciello@amd.com>
- <7b74c389-97b7-4f56-851b-6ce17950a4d1@roeck-us.net>
- <f2b81356-e702-3026-660f-d9a88edff632@amd.com>
- <084837c4-72c8-be92-fd1c-5ccbd805c559@leemhuis.info>
- <20230508112543.GBZFjcN2oxk4do31w4@fat_crate.local>
- <a8b29619-f1da-4cb9-a5bd-a396b52e159f@roeck-us.net>
- <20230508134414.GCZFj8rieNwF1AOerB@fat_crate.local>
- <MN0PR12MB610132F2277B0F1DB1039A15E2749@MN0PR12MB6101.namprd12.prod.outlook.com>
-From:   Thorsten Leemhuis <linux@leemhuis.info>
-Subject: Re: [PATCH 1/2] amd_nb: Add PCI ID for family 19h model 78h
-In-Reply-To: <MN0PR12MB610132F2277B0F1DB1039A15E2749@MN0PR12MB6101.namprd12.prod.outlook.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH 14/17] r8169: Use pcie_lnkctl_clear_and_set() for changing
+ LNKCTL
+Content-Language: en-US
+To:     Lukas Wunner <lukas@wunner.de>,
+        =?UTF-8?Q?Ilpo_J=c3=a4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Krzysztof Wilczy?ski <kw@linux.com>, nic_swsd@realtek.com,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Netdev <netdev@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20230511131441.45704-1-ilpo.jarvinen@linux.intel.com>
+ <20230511131441.45704-15-ilpo.jarvinen@linux.intel.com>
+ <98b3b70a-86c0-78c0-b734-0764bb5a21fc@gmail.com>
+ <985b617-c5d7-dce3-318b-f2f8412beed3@linux.intel.com>
+ <20230511201025.GC31598@wunner.de>
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+In-Reply-To: <20230511201025.GC31598@wunner.de>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;linux@leemhuis.info;1683835755;0525ef7d;
-X-HE-SMSGID: 1pxCb5-0000QH-Hy
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11.05.23 21:51, Limonciello, Mario wrote:
-> [AMD Official Use Only - General]
-> 
-> +stable, Sasha
-> 
->>> Together with this patch there are now at least two regressions if
->>> -rc1 whch could have been avoided and may impact testability on
->>> affected systems.
+On 11.05.2023 22:10, Lukas Wunner wrote:
+> On Thu, May 11, 2023 at 11:00:02PM +0300, Ilpo Järvinen wrote:
+>> On Thu, 11 May 2023, Heiner Kallweit wrote:
+>>> On 11.05.2023 15:14, Ilpo Järvinen wrote:
+>>>> Don't assume that only the driver would be accessing LNKCTL. ASPM
+>>>> policy changes can trigger write to LNKCTL outside of driver's control.
+>>>>
+>>>> Use pcie_lnkctl_clear_and_set() which does proper locking to avoid
+>>>> losing concurrent updates to the register value.
+>>>>
+>>>
+>>> Wouldn't it be more appropriate to add proper locking to the
+>>> underlying pcie_capability_clear_and_set_word()?
 >>
->> Are you saying that this patch which fixes s2idle on some random box
->> should've gone to Linus *immediately*?
->>
->> And read my mail again:
->>
->> "Some fixes need longer testing because there have been cases where
->> a fix breaks something else."
->>
->> So yes, I disagree with rushing fixes immediately. If they're obvious
->> - whatever that means - then sure but not all of them are such.
->>
->> --
+>> As per discussion for the other patch, that's where this series is now 
+>> aiming to in v2.
 > 
-> Unfortunately, it looks like the broken commit got backported into 6.1.28,
-> but the fix still isn't in Linus' tree.
+> That discussion wasn't cc'ed to Heiner.  For reference, this is the
+> message Ilpo is referring to:
 > 
-> Sasha,
-> 
-> Can you please pick up
-> https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git/commit/?h=x86/urgent&id=23a5b8bb022c1e071ca91b1a9c10f0ad6a0966e9
-> for 6.1.29 to fix the regression?
+> https://lore.kernel.org/linux-pci/ZF1AjOKDVlbNFJPK@bhelgaas/
 
-FWIW, the stable team afaics usually does not fix anything in stable
-trees before it's fixed in mainline. IOW: that fix now quickly needs to
-go to Linus to get it quickly fixed in 6.1.y.
-
-Side note: I'll soon post a rewritten section of 'Prioritize work on
-fixing regressions' which is part of
-Documentation/process/handling-regressions.rst. It among others will
-cover this case:
-
-```
-* Whenever you want to swiftly resolve a regression that recently also
-made it into a proper mainline, stable, or longterm release, fix it
-quickly in mainline; when appropriate thus involve Linus to fast-track
-the fix. That's because the stable team normally does neither revert nor
-fix any changes that cause a regression in mainline, too.
-```
-
-Ciao, Thorsten
+Thanks for the link!
