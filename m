@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5615C7EE2D
-	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E9C4C7EE24
+	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239100AbjEKTJg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S239111AbjEKTJg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 11 May 2023 15:09:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36812 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36810 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238960AbjEKTJ0 (ORCPT
+        with ESMTP id S238920AbjEKTJ0 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 15:09:26 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F20AB6EBD;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4FD566A66;
         Thu, 11 May 2023 12:09:24 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 1A53DE0EC3;
-        Thu, 11 May 2023 22:09:24 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id D2E05E0EBF;
+        Thu, 11 May 2023 22:09:20 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=xBd+z4e5MXWvOcjFcTeyVJjVX2Efx8HIvckYUDSA3Xc=; b=VzyN1Ac0DUwB
-        Ndb60Dizqjbt8KEWy+TmQGMF7fU4IslyVp6rqH8QmiCcwtQCSHzD3UutzT+XSKn+
-        2NePkFBasGQ4fORDE8uuwuBX7DRWChDctZZLhITlOrZUWMSfzt1v0mo1B0z8MaEz
-        Mwjz1E5w7nOU3Mgeok3HtS1Ays9hzio=
+         bh=F5KLKEFXUqNgjKmp28Ld9aQ5dFD0tABN1BOL+5Sahuc=; b=QdqKvadTKFeB
+        FnfWiOwe8pJ4SWCWgma6bby9D7/UMn9oY2QaulmRuaajIKAHMt4bCdVdHKAK4NNA
+        pT19yvh/OcywfKXlqsKf5CYKqn/1swO6yHEZAT+vk41B4RPB31S13a94MgCOEEAp
+        T3lMy3cD9MbeoI3JV3gwlUL84VfgWWY=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 0342EE0EB1;
-        Thu, 11 May 2023 22:09:24 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id BA6E0E0EB1;
+        Thu, 11 May 2023 22:09:20 +0300 (MSK)
 Received: from localhost (10.8.30.6) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:23 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:20 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -39,16 +39,19 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Vinod Koul <vkoul@kernel.org>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>
-CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Rob Herring <robh@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
         Serge Semin <fancer.lancer@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v5 09/14] MAINTAINERS: Demote Gustavo Pimentel to DW PCIe core reviewer
-Date:   Thu, 11 May 2023 22:08:57 +0300
-Message-ID: <20230511190902.28896-10-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v5 05/14] PCI: dwc: Drop duplicated fast-link-mode flag unsetting
+Date:   Thu, 11 May 2023 22:08:53 +0300
+Message-ID: <20230511190902.28896-6-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
@@ -61,27 +64,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-No maintaining actions from Gustavo have been noticed for over two years.
-Demote him to being the DW PCIe RP/EP driver reviewer for now.
+Most likely by mistake the PORT_LINK_FAST_LINK_MODE flag unsetting was
+added twice in the commit cff9244432e8 ("PCI: dwc: Ensure FAST_LINK_MODE
+is cleared"): first it is cleared right after the content of the
+PCIE_PORT_LINK_CONTROL register is read, second it's cleared in the
+framework of the link-mode initialization procedure. The later action is
+redundant. Let's drop it.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 817cd8f40e65..0d93e1e4e776 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -16166,7 +16166,7 @@ F:	drivers/pci/controller/dwc/pci-exynos.c
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 8e33e6e59e68..e55b7b387eb6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -1019,7 +1019,6 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	}
  
- PCI DRIVER FOR SYNOPSYS DESIGNWARE
- M:	Jingoo Han <jingoohan1@gmail.com>
--M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+R:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/snps,dw-pcie*.yaml
+ 	/* Set the number of lanes */
+-	val &= ~PORT_LINK_FAST_LINK_MODE;
+ 	val &= ~PORT_LINK_MODE_MASK;
+ 	switch (pci->num_lanes) {
+ 	case 1:
 -- 
 2.40.0
 
