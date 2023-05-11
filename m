@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 169DBC7EE30
-	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27EB5C7EE24
+	for <linux-pci@archiver.kernel.org>; Thu, 11 May 2023 19:09:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239139AbjEKTJk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 May 2023 15:09:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36818 "EHLO
+        id S239114AbjEKTJl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 May 2023 15:09:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238973AbjEKTJ0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 15:09:26 -0400
+        with ESMTP id S239001AbjEKTJ1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2023 15:09:27 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B4AD15B97;
-        Thu, 11 May 2023 12:09:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C7BC95BB2;
+        Thu, 11 May 2023 12:09:26 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id E4DF6E0EC4;
-        Thu, 11 May 2023 22:09:24 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 5A021E0EC6;
+        Thu, 11 May 2023 22:09:26 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=7noKm2W+LO/3wFPmcU1el+gIU7Rnanzeq+ZtBWe1hGU=; b=Unqb19p90qqf
-        dBiIz7mbkXSbuT8N261VXRRRCtJiwRxA5+oCNsV2FETmDmZaFfyhzjCAvOY2hB7T
-        w1N/W8+Rzg0vixp264MCEDPxJuGdSnzQzjfQHlWuJpGU8kEYTNvbd2pE0szFCPUe
-        1b8il5DoFeOcAiGaQfQ9+57mmUDifsY=
+         bh=cKxFWvBRCGO5QYV7lihhwS+Rb3JehQtKtb/qWmN7idI=; b=Jrc4yiRKgS2M
+        +P+HV3v6KxGos8eE8q69fUamJ3n/6WGXKggBzyzOF+ph8+KvMn2ZMGt4gglp7joS
+        rtDOBbhMXSuVspdGZe0kRTMXLa5XOXyOv1FyN/0fh/xqywtMJ33PtqEVfySUja9m
+        xqSw8ENnaFw6/FVHfhLRhd6UvVAnydc=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id C7D32E0EB1;
-        Thu, 11 May 2023 22:09:24 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 43A2CE0EB1;
+        Thu, 11 May 2023 22:09:26 +0300 (MSK)
 Received: from localhost (10.8.30.6) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:24 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Thu, 11 May 2023 22:09:25 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -46,9 +46,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v5 10/14] MAINTAINERS: Add Manivannan to DW PCIe core maintainers list
-Date:   Thu, 11 May 2023 22:08:58 +0300
-Message-ID: <20230511190902.28896-11-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v5 12/14] MAINTAINERS: Demote Gustavo Pimentel to DW EDMA driver reviewer
+Date:   Thu, 11 May 2023 22:09:00 +0300
+Message-ID: <20230511190902.28896-13-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
@@ -61,27 +61,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Manivannan has been very active in reviewing and testing the bits coming
-to the DW PCIe RP/EP core driver. Let's add him to the driver maintainers
-list.
+No maintaining actions from Gustavo have been noticed for over a year.
+Demote him to being the DW eDMA driver reviewer for now.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 0d93e1e4e776..dc1a5164c93c 100644
+index 1cd2e42110d5..b49a3f0e6dde 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -16166,6 +16166,7 @@ F:	drivers/pci/controller/dwc/pci-exynos.c
+@@ -5885,7 +5885,7 @@ S:	Orphan
+ F:	drivers/mtd/nand/raw/denali*
  
- PCI DRIVER FOR SYNOPSYS DESIGNWARE
- M:	Jingoo Han <jingoohan1@gmail.com>
-+M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
- R:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
- L:	linux-pci@vger.kernel.org
+ DESIGNWARE EDMA CORE IP DRIVER
+-M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++R:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+ L:	dmaengine@vger.kernel.org
  S:	Maintained
+ F:	drivers/dma/dw-edma/
 -- 
 2.40.0
 
