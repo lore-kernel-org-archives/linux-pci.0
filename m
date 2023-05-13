@@ -2,116 +2,244 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A939C77B7F
-	for <linux-pci@archiver.kernel.org>; Sat, 13 May 2023 18:39:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 677D8C7EE24
+	for <linux-pci@archiver.kernel.org>; Sat, 13 May 2023 18:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229566AbjEMSjc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 13 May 2023 14:39:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34180 "EHLO
+        id S229752AbjEMSql (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 13 May 2023 14:46:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229449AbjEMSja (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 May 2023 14:39:30 -0400
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E410E1FCB
-        for <linux-pci@vger.kernel.org>; Sat, 13 May 2023 11:39:28 -0700 (PDT)
-Received: by mail-ej1-x635.google.com with SMTP id a640c23a62f3a-965fc25f009so1769517566b.3
-        for <linux-pci@vger.kernel.org>; Sat, 13 May 2023 11:39:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1684003167; x=1686595167;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tJgRipBTIMb9CKVptB0CK8vcEy1PL4DIIOTmSIIgPL0=;
-        b=iG2e9xty+mu13wsk5ZZM2QaivT8V52G8/Af/PifVYBtLEzIXHIe06u/elBe1sr0Djd
-         aSAji3yS5LgcoFTRpqxzNPwTOm8stv9rdWo/6ANeKzHlZDreAKLVD94/cUt0xVM5gLB8
-         bh7XvLe2HRcyEKASv5Vwswa/IKzWZ5qAGsa72ikRD4XhA6/QbLsuMGoMFSlXLgwpobcS
-         urJPJ8tAzXUdsO8gn+IGWMMXRX6q09fLGsj1T2s9mBTSuGT/efeJ8ugbCVhoFSejB/Tb
-         RpUjM7gZkem4Ep8SQfrahiNgJY90jVtc5ycgRjkbFJsS6zh34P015AyayIO3TXKXcG5W
-         299w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684003167; x=1686595167;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=tJgRipBTIMb9CKVptB0CK8vcEy1PL4DIIOTmSIIgPL0=;
-        b=d3ggjOvK/PlAT+Aj8spIFb9iXvkctni0Ot789RUtRGEXcFZdlYp1JWFmLYiBRE3To7
-         02v9xQZ/1qxjw4DV/sCpCIWfffDcKd8bMgsjidkC25tP9Wtf9XU+Jxxq4ThmYLS/HdvK
-         XgLn4NwgJZ6Uj4SX3InD9fouxDYbu9yITpsNF7u+zQkdhWe6cC6X75hm6bPSrOlh8ru5
-         E8HVu6SAhzSZ4Hb2IqA8gNnSUXLurGya51J47zJIFO0BqyvMFy4MpxC0AGgQMt/mVc6k
-         Wp0VhzTs1phBXq44GaKH56Kv2TTkq5XuTqAMMd5ArksjJml+QJGNmtO4FChGtVbs5nwG
-         tExA==
-X-Gm-Message-State: AC+VfDyQhKazNLDBDXLuHEkSgN7nu/11aMGUdngRENHxqOZ4wDdlKasc
-        YON5hcMREeozltFNBXYZPZRoQg==
-X-Google-Smtp-Source: ACHHUZ7KQIKKSFZzxRVxqQy6v2UvaVPHdQTePpga0/dLKovt2/RDIklcz0rqo0618m3DIDXIpqarsw==
-X-Received: by 2002:a17:906:db0d:b0:94a:35d1:59a with SMTP id xj13-20020a170906db0d00b0094a35d1059amr23656859ejb.14.1684003167395;
-        Sat, 13 May 2023 11:39:27 -0700 (PDT)
-Received: from ?IPV6:2a02:810d:15c0:828:ba68:e5c9:694e:c6e4? ([2a02:810d:15c0:828:ba68:e5c9:694e:c6e4])
-        by smtp.gmail.com with ESMTPSA id k18-20020a17090632d200b009661f07db93sm7049268ejk.223.2023.05.13.11.39.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 13 May 2023 11:39:26 -0700 (PDT)
-Message-ID: <d137b401-5b4a-bab7-ec21-ea267bd07c41@linaro.org>
-Date:   Sat, 13 May 2023 20:39:25 +0200
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [EXTERNAL] Re: [PATCH 3/3] arm64: defconfig: enable J721e PCIe
- controller
-Content-Language: en-US
-To:     "Verma, Achal" <a-verma1@ti.com>, Tom Joseph <tjoseph@cadence.com>,
+        with ESMTP id S229633AbjEMSqj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 May 2023 14:46:39 -0400
+Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CB9E1FE7;
+        Sat, 13 May 2023 11:46:37 -0700 (PDT)
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 34DIkNLB051180;
+        Sat, 13 May 2023 13:46:23 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1684003583;
+        bh=SmklqMHmFqNtXZFpw2ey0bDKvXCNmYP4xor9MZB4SQ8=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=GSIiiECxB+ivPPy1Dhi6O2dFcLaXrk+c/reEVLzNtZQGaIS3tYCHgRbFuhYY/M81d
+         MgQrMk6rl1QF+i399Fovu0kTIzb2RVrTeljzt9+ljSmNlz50SAGaGfCGwf41oEAx/M
+         tZqW0pap6Cka19uG0tcWNx1w9YU5iqnd7Jp39ENQ=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 34DIkN2T011327
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 13 May 2023 13:46:23 -0500
+Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Sat, 13
+ May 2023 13:46:22 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE114.ent.ti.com
+ (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
+ Frontend Transport; Sat, 13 May 2023 13:46:22 -0500
+Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 34DIkMjl089171;
+        Sat, 13 May 2023 13:46:22 -0500
+From:   Achal Verma <a-verma1@ti.com>
+To:     Tom Joseph <tjoseph@cadence.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Krzysztof Wilczy_ski <kw@linux.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        Bjorn Andersson <quic_bjorande@quicinc.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
-        "N_colas F . R . A . Prado" <nfraprado@collabora.com>,
-        Mark Brown <broonie@kernel.org>,
-        Rafa_ Mi_ecki <rafal@milecki.pl>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         Nishanth Menon <nm@ti.com>, Milind Parab <mparab@cadence.com>,
         Swapnil Kashinath Jakhade <sjakhade@cadence.com>
-Cc:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-omap@vger.kernel.org
-References: <20230512070510.1873171-1-a-verma1@ti.com>
- <20230512070510.1873171-4-a-verma1@ti.com>
- <13028434-f68c-cad3-056e-d319c1ec35cf@linaro.org>
- <3b5d7c3c-164d-0690-c2e8-2c7daec4865c@ti.com>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <3b5d7c3c-164d-0690-c2e8-2c7daec4865c@ti.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+CC:     <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, Achal Verma <a-verma1@ti.com>
+Subject: [PATCH v2 1/2] PCI: cadence: Add support to build pcie-cadence library as a kernel module.
+Date:   Sun, 14 May 2023 00:16:19 +0530
+Message-ID: <20230513184620.2200916-2-a-verma1@ti.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230513184620.2200916-1-a-verma1@ti.com>
+References: <20230513184620.2200916-1-a-verma1@ti.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 13/05/2023 19:58, Verma, Achal wrote:
-> 
-> Hello Krzysztof,
-> On 5/12/2023 12:53 PM, Krzysztof Kozlowski wrote:
->> On 12/05/2023 09:05, Achal Verma wrote:
->>> Enable Cadence PCIe controller and pci-j721e drivers to be built as
->>> kernel modules.
->>
->> Why? IOW, who needs them. Please provide rationale in the commit msg. I
->> am pretty sure I asked for this...
->>
-> On TI's J7 SOCs, PCIe is composed of PCIe core from Cadence and TI 
-> wrapper. It is desired to have J7 PCIe working on upstream kernel by 
-> default. So to enable this I have pushed these defconfig changes.
-> 
-> BTW, I am planning to hold this change until PCIe code changes (rest of 
-> the patches in this series) gets merged.
-> 
-> Please let me know if there are more concern to this.
+From: Kishon Vijay Abraham I <kishon@ti.com>
 
-The concerns are that commit msg does not explain this. Please always
-provide in commit msg answer to "why you are doing this". In case of
-defconfig the answer to "why" is: "board foo bar with SoC baz uses it".
+Cadence PCIe controller driver can be build as kernel built-in driver only,
+which is not required since its not required at boot time.
+Thus, this change adds support to build Cadence PCIe driver as kernel
+module as well.
 
-Best regards,
-Krzysztof
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Achal Verma <a-verma1@ti.com>
+---
+ drivers/pci/controller/cadence/Kconfig             | 6 +++---
+ drivers/pci/controller/cadence/pcie-cadence-ep.c   | 4 ++++
+ drivers/pci/controller/cadence/pcie-cadence-host.c | 5 +++++
+ drivers/pci/controller/cadence/pcie-cadence.c      | 9 +++++++++
+ drivers/pci/controller/cadence/pcie-cadence.h      | 4 ++--
+ 5 files changed, 23 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
+index 291d12711363..abc245dbedab 100644
+--- a/drivers/pci/controller/cadence/Kconfig
++++ b/drivers/pci/controller/cadence/Kconfig
+@@ -4,16 +4,16 @@ menu "Cadence-based PCIe controllers"
+ 	depends on PCI
+ 
+ config PCIE_CADENCE
+-	bool
++	tristate
+ 
+ config PCIE_CADENCE_HOST
+-	bool
++	tristate
+ 	depends on OF
+ 	select IRQ_DOMAIN
+ 	select PCIE_CADENCE
+ 
+ config PCIE_CADENCE_EP
+-	bool
++	tristate
+ 	depends on OF
+ 	depends on PCI_ENDPOINT
+ 	select PCIE_CADENCE
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index b8b655d4047e..598b2b9c5969 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -5,6 +5,7 @@
+ 
+ #include <linux/delay.h>
+ #include <linux/kernel.h>
++#include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/pci-epc.h>
+ #include <linux/platform_device.h>
+@@ -741,3 +742,6 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(cdns_pcie_ep_setup);
++
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 940c7dd701d6..84754c63df34 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -5,6 +5,7 @@
+ 
+ #include <linux/delay.h>
+ #include <linux/kernel.h>
++#include <linux/module.h>
+ #include <linux/list_sort.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -70,6 +71,7 @@ void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 
+ 	return rc->cfg_base + (where & 0xfff);
+ }
++EXPORT_SYMBOL_GPL(cdns_pci_map_bus);
+ 
+ static struct pci_ops cdns_pcie_host_ops = {
+ 	.map_bus	= cdns_pci_map_bus,
+@@ -542,3 +544,6 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(cdns_pcie_host_setup);
++
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
+index 13c4032ca379..8e3a86578284 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.c
++++ b/drivers/pci/controller/cadence/pcie-cadence.c
+@@ -4,6 +4,7 @@
+ // Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+ 
+ #include <linux/kernel.h>
++#include <linux/module.h>
+ 
+ #include "pcie-cadence.h"
+ 
+@@ -22,6 +23,7 @@ void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
+ 
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_LTSSM_CONTROL_CAP, ltssm_control_cap);
+ }
++EXPORT_SYMBOL_GPL(cdns_pcie_detect_quiet_min_delay_set);
+ 
+ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
+ 				   u32 r, bool is_io,
+@@ -99,6 +101,7 @@ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
+ }
++EXPORT_SYMBOL_GPL(cdns_pcie_set_outbound_region);
+ 
+ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
+ 						  u8 busnr, u8 fn,
+@@ -133,6 +136,7 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
+ }
++EXPORT_SYMBOL_GPL(cdns_pcie_set_outbound_region_for_normal_msg);
+ 
+ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
+ {
+@@ -145,6 +149,7 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), 0);
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
+ }
++EXPORT_SYMBOL_GPL(cdns_pcie_reset_outbound_region);
+ 
+ void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
+ {
+@@ -155,6 +160,7 @@ void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
+ 		phy_exit(pcie->phy[i]);
+ 	}
+ }
++EXPORT_SYMBOL_GPL(cdns_pcie_disable_phy);
+ 
+ int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
+ {
+@@ -242,6 +248,7 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(cdns_pcie_init_phy);
+ 
+ static int cdns_pcie_suspend_noirq(struct device *dev)
+ {
+@@ -270,3 +277,5 @@ const struct dev_pm_ops cdns_pcie_pm_ops = {
+ 	NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
+ 				  cdns_pcie_resume_noirq)
+ };
++
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 190786e47df9..65b330c28299 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -514,7 +514,7 @@ static inline bool cdns_pcie_link_up(struct cdns_pcie *pcie)
+ 	return true;
+ }
+ 
+-#ifdef CONFIG_PCIE_CADENCE_HOST
++#if IS_ENABLED(CONFIG_PCIE_CADENCE_HOST)
+ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
+ void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 			       int where);
+@@ -531,7 +531,7 @@ static inline void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int d
+ }
+ #endif
+ 
+-#ifdef CONFIG_PCIE_CADENCE_EP
++#if IS_ENABLED(CONFIG_PCIE_CADENCE_EP)
+ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep);
+ #else
+ static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+-- 
+2.25.1
 
