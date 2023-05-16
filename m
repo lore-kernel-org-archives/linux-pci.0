@@ -2,41 +2,69 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A3C3C7EE26
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 11:46:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D831EC7EE26
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 11:50:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232223AbjEPLq2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 07:46:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41174 "EHLO
+        id S233182AbjEPLu3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 07:50:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232428AbjEPLqV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 07:46:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B9305596;
-        Tue, 16 May 2023 04:46:21 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8D0F2638C0;
-        Tue, 16 May 2023 11:46:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 711C6C4339B;
-        Tue, 16 May 2023 11:46:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1684237580;
-        bh=/6URK8ebxKRAr1E5o6SIqB7r+nUmDZOUBzaa5dq3/fw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=iGdJ2rYsmqR8oVsZahQCffWW98XsY3ZQUeXnWDOdK/AEAQZPWGakOfz+Feazfr/vl
-         zwZZikKODPH3BvcBxPlO97qsEGQqvFknbw/tEto+OjmYA+dy8uQzKCCOKDXOXurVb1
-         Cn+gG0WOxgz6wHXyTwJKTcrMiK15YYAZk/wJYeq4=
-Date:   Tue, 16 May 2023 13:46:17 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Niklas Schnelle <schnelle@linux.ibm.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Corey Minyard <minyard@acm.org>,
-        Peter Huewe <peterhuewe@gmx.de>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
+        with ESMTP id S233199AbjEPLt6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 07:49:58 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25577729A;
+        Tue, 16 May 2023 04:49:41 -0700 (PDT)
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GB44cv006463;
+        Tue, 16 May 2023 11:08:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=wwvkgBhBhiac5VRA7kHCq0ljR9oGDxxTWWiP4W4mpSI=;
+ b=eElr/fc8dYSpeBiiSZdk2D8Z9zhUqW3hUSoeGbZ/01H3f5aN2Zrxz4gcX3hRiMXy0FB1
+ eIyrMOWKlwQY+4b58gb4+Z7oYFpFpvNXYjTvrPzOwUhatnRFEqSHfcPRJlTmBlJPkBVt
+ DwDCJkkKmeWdt3YZEK8FcDBRq+JjtbNv+e6wEKQuWeYR5ke4qqGmpUr1Tz3DdFR0Fy6K
+ aMD0ObrdV+NSmALZhQF0eK1Cqnrcyvk+hPWP6tjSAp7cCb1Jm9YGnLW5yYg7ZfIzr72g
+ 2WQiv9GHv8jMIieOeTcgqAAxeeG0+ZKPBB8FgF3kar/xwdPQ8tEykStZFinqFdb/bVVf gQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrrbdr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:08:27 +0000
+Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GB4Skj008048;
+        Tue, 16 May 2023 11:06:53 GMT
+Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrr7js-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:06:53 +0000
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G5UiNc005778;
+        Tue, 16 May 2023 11:01:11 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+        by ppma04ams.nl.ibm.com (PPS) with ESMTPS id 3qj264sk99-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:01:11 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB17wO20251144
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 16 May 2023 11:01:08 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 792432004D;
+        Tue, 16 May 2023 11:01:07 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0B5B520043;
+        Tue, 16 May 2023 11:01:07 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Tue, 16 May 2023 11:01:06 +0000 (GMT)
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Arnd Bergmann <arnd@arndb.de>, William Hubbs <w.d.hubbs@gmail.com>,
+        Chris Brannon <chris@the-brannons.com>,
+        Kirk Reiser <kirk@reisers.ca>,
+        Samuel Thibault <samuel.thibault@ens-lyon.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
         Alan Stern <stern@rowland.harvard.edu>,
@@ -47,47 +75,56 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Corey Minyard <minyard@acm.org>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Corey Minyard <cminyard@mvista.com>,
-        openipmi-developer@lists.sourceforge.net,
-        linux-integrity@vger.kernel.org
-Subject: Re: [PATCH v4 03/41] char: impi, tpm: depend on HAS_IOPORT
-Message-ID: <2023051656-mammary-cobweb-7265@gregkh>
+        speakup@linux-speakup.org
+Subject: [PATCH v4 31/41] speakup: add HAS_IOPORT dependency for SPEAKUP_SERIALIO
+Date:   Tue, 16 May 2023 13:00:27 +0200
+Message-Id: <20230516110038.2413224-32-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230516110038.2413224-1-schnelle@linux.ibm.com>
 References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
- <20230516110038.2413224-4-schnelle@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230516110038.2413224-4-schnelle@linux.ibm.com>
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: G_Iumy14XBoJxVl7NCGJ3BWhSfFGNNQe
+X-Proofpoint-GUID: ybiDJ16Bl5MKmiijTO6745n-i8n1Cjuv
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-16_04,2023-05-16_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 spamscore=0 impostorscore=0 mlxscore=0 mlxlogscore=999
+ lowpriorityscore=0 suspectscore=0 adultscore=0 phishscore=0 bulkscore=0
+ clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2305160094
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, May 16, 2023 at 12:59:59PM +0200, Niklas Schnelle wrote:
-> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-> not being declared. We thus need to add this dependency and ifdef
-> sections of code using inb()/outb() as alternative access methods.
-> 
-> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-> Acked-by: Corey Minyard <cminyard@mvista.com> # IPMI
-> Reviewed-by: Jarkko Sakkinen <jarkko@kernel.org>
-> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> ---
-> Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
->       per-subsystem patches may be applied independently
-> 
->  drivers/char/Kconfig             |  3 ++-
->  drivers/char/ipmi/Makefile       | 11 ++++-------
->  drivers/char/ipmi/ipmi_si_intf.c |  3 ++-
->  drivers/char/ipmi/ipmi_si_pci.c  |  3 +++
->  drivers/char/tpm/Kconfig         |  1 +
->  drivers/char/tpm/tpm_infineon.c  | 16 ++++++++++++----
->  drivers/char/tpm/tpm_tis_core.c  | 19 ++++++++-----------
->  7 files changed, 32 insertions(+), 24 deletions(-)
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. SPEAKUP_SERIALIO thus needs to depend on HAS_IOPORT.
 
-TPM and IPMI patches go through different git trees, so odds are you are
-going to have to split this patch in 2.
+Reviewed-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
+      per-subsystem patches may be applied independently
 
-thanks,
+ drivers/accessibility/speakup/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-greg k-h
+diff --git a/drivers/accessibility/speakup/Kconfig b/drivers/accessibility/speakup/Kconfig
+index 07ecbbde0384..e84fb617acc4 100644
+--- a/drivers/accessibility/speakup/Kconfig
++++ b/drivers/accessibility/speakup/Kconfig
+@@ -46,6 +46,7 @@ if SPEAKUP
+ config SPEAKUP_SERIALIO
+ 	def_bool y
+ 	depends on ISA || COMPILE_TEST
++	depends on HAS_IOPORT
+ 
+ config SPEAKUP_SYNTH_ACNTSA
+ 	tristate "Accent SA synthesizer support"
+-- 
+2.39.2
+
