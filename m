@@ -2,73 +2,66 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2396C77B7F
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 11:40:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31F90C77B75
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 11:43:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231593AbjEPLkU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 07:40:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36052 "EHLO
+        id S233025AbjEPLnq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 07:43:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231401AbjEPLkQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 07:40:16 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9891F2D4C;
-        Tue, 16 May 2023 04:40:15 -0700 (PDT)
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GBcXVQ020880;
-        Tue, 16 May 2023 11:39:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- content-transfer-encoding : mime-version; s=pp1;
- bh=YkhRQbWj+jTt2Ue3u9TW20D+7Bv+YjDbhfGt4q6glLc=;
- b=cdIxkgcMMZS1xBXzAgbxJRLIs/g6eEN/67NggdAKbmFAU7k6/CYtGXCfmRZS/rZSkG5p
- 4MGVz2Qfp1JqT4pL4zBGVEsPODLwNux4CQcUYGkHl555az82/pIpzupitbws8z6fMO8o
- bINaR6tJFhaymVnIWqSnrH5Z9y3L9UwN13xzHrjK3b0I82BN0X7mXDaFFfJZWBLp8VDI
- FX/vH9Xc4oq5I7W0u+T3rNxRPBIjSPBkHvyVJL0yLKYZni34JjPKyvvq2tDe8Ix9IqQ6
- 449JNsG95QlxspP308eUDEKPk9hp2E/Isw+FEabZUpuSoSh5l3auzzVrfrREKb4BBRq5 9Q== 
+        with ESMTP id S232531AbjEPLnp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 07:43:45 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 555624684;
+        Tue, 16 May 2023 04:43:40 -0700 (PDT)
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GB4523006529;
+        Tue, 16 May 2023 11:10:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=q4mkOmayVIeelFMdSm+uqzqWI2RgGSp2vYNs6KYmdg4=;
+ b=Fx5/8qArhXRgvfZMlkuABLjya6CvHQ6hdJi12g/Ye7EMGxevOLv4ZiAViK91T38pJzIw
+ 2bqXYrnk560SqxoRZgvxuMyQQGm1bMZj+TJNe5pcbSAfFE5CIxkfooi9Kv9Hi5a6LLKB
+ RX9gA1Gb5182evv1ERHeBk4GYHx8AdPKbXLx2TpnFaryfAqkH1o71IlVY6TwI0a8AtyW
+ +Nw8XUP0UiHO4Vqj8dPRo2RFQdqON2zzDQgRtDIlKrDEsxXq0AOMXEIqKaW6eKVilmfa
+ 6Oszx0t9FnfLeTdzsmkUUSu+JEKU9SNGcvOahZpiDBI6BL7GqrpMWrCVUpzlSnIQsjgA WA== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm7jp2tu6-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrrj6c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:39:32 +0000
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GBcmcb021497;
-        Tue, 16 May 2023 11:39:31 GMT
+        Tue, 16 May 2023 11:10:55 +0000
+Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GB54CD012832;
+        Tue, 16 May 2023 11:08:35 GMT
 Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm7jp2tr9-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrr7qu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:39:31 +0000
+        Tue, 16 May 2023 11:08:35 +0000
 Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G9c7Zi031636;
-        Tue, 16 May 2023 11:39:28 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-        by ppma03fra.de.ibm.com (PPS) with ESMTPS id 3qj2651b5b-1
+        by ppma03fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G9accn029810;
+        Tue, 16 May 2023 11:01:13 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+        by ppma03fra.de.ibm.com (PPS) with ESMTPS id 3qj2651aq1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:39:28 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GBdQWU57934228
+        Tue, 16 May 2023 11:01:12 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+        by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB1A3g42467958
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 May 2023 11:39:26 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0A07B20040;
-        Tue, 16 May 2023 11:39:26 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6C8A32004B;
-        Tue, 16 May 2023 11:39:25 +0000 (GMT)
-Received: from [9.152.212.232] (unknown [9.152.212.232])
-        by smtpav05.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 16 May 2023 11:39:25 +0000 (GMT)
-Message-ID: <97b01d4cefb0310c6956bac198e564b212fb93ca.camel@linux.ibm.com>
-Subject: Re: [PATCH v4 03/41] char: impi, tpm: depend on HAS_IOPORT
+        Tue, 16 May 2023 11:01:10 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 6808D2004B;
+        Tue, 16 May 2023 11:01:10 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 1756020040;
+        Tue, 16 May 2023 11:01:10 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Tue, 16 May 2023 11:01:10 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Corey Minyard <minyard@acm.org>,
-        Peter Huewe <peterhuewe@gmx.de>,
-        Jarkko Sakkinen <jarkko@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
         Alan Stern <stern@rowland.harvard.edu>,
@@ -79,52 +72,66 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Corey Minyard <cminyard@mvista.com>,
-        openipmi-developer@lists.sourceforge.net,
-        linux-integrity@vger.kernel.org
-Date:   Tue, 16 May 2023 13:39:25 +0200
-In-Reply-To: <60e9d000-0793-1421-3045-fdb74976373c@molgen.mpg.de>
+        linux-usb@vger.kernel.org
+Subject: [PATCH v4 34/41] usb: add HAS_IOPORT dependencies
+Date:   Tue, 16 May 2023 13:00:30 +0200
+Message-Id: <20230516110038.2413224-35-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230516110038.2413224-1-schnelle@linux.ibm.com>
 References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
-         <20230516110038.2413224-4-schnelle@linux.ibm.com>
-         <60e9d000-0793-1421-3045-fdb74976373c@molgen.mpg.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 (3.48.1-1.fc38) 
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: NkBegRieKaiZe8tSrIXbhLD0l1pYOvlA
-X-Proofpoint-GUID: 8VH3GLGz6RvnThNaF42HrH7TLEJAxoth
+X-Proofpoint-ORIG-GUID: kiC1D5uLyHUugFPS5KqMBMr2EmHGo7XZ
+X-Proofpoint-GUID: PuavF0Mvs3ztcJM53xtQvivITa5uRWdD
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-16_04,2023-05-16_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 malwarescore=0
- priorityscore=1501 impostorscore=0 bulkscore=0 mlxlogscore=990
- adultscore=0 lowpriorityscore=0 phishscore=0 mlxscore=0 spamscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2304280000 definitions=main-2305160098
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 spamscore=0 impostorscore=0 mlxscore=0 mlxlogscore=782
+ lowpriorityscore=0 suspectscore=0 adultscore=0 phishscore=0 bulkscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2305160094
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 2023-05-16 at 13:06 +0200, Paul Menzel wrote:
-> Dear Niklas,
->=20
->=20
-> Am 16.05.23 um 12:59 schrieb Niklas Schnelle:
->=20
-> [=E2=80=A6]
->=20
-> There is a small typo in the commit message summary/title: impi =E2=86=92=
- ipmi.
->=20
->=20
-> Kind regards
->=20
-> Paul
->=20
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
-Good catch. I fixed it locally now. Let's see if we need a v5 anyway or
-if this can be changed on applying the patch.
+Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
+      per-subsystem patches may be applied independently
 
-Thanks,
-Niklas
+ drivers/usb/host/Kconfig | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+index c170672f847e..4448d0ab06f0 100644
+--- a/drivers/usb/host/Kconfig
++++ b/drivers/usb/host/Kconfig
+@@ -376,7 +376,7 @@ config USB_ISP116X_HCD
+ 
+ config USB_ISP1362_HCD
+ 	tristate "ISP1362 HCD support"
+-	depends on HAS_IOMEM
++	depends on HAS_IOPORT
+ 	depends on COMPILE_TEST # nothing uses this
+ 	help
+ 	  Supports the Philips ISP1362 chip as a host controller
+@@ -578,7 +578,7 @@ endif # USB_OHCI_HCD
+ 
+ config USB_UHCI_HCD
+ 	tristate "UHCI HCD (most Intel and VIA) support"
+-	depends on USB_PCI || USB_UHCI_SUPPORT_NON_PCI_HC
++	depends on (USB_PCI && HAS_IOPORT) || USB_UHCI_SUPPORT_NON_PCI_HC
+ 	help
+ 	  The Universal Host Controller Interface is a standard by Intel for
+ 	  accessing the USB hardware in the PC (which is also called the USB
+-- 
+2.39.2
+
