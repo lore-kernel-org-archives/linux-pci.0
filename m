@@ -2,121 +2,109 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CFE7C7EE23
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:39:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1BBC77B75
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:49:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229464AbjEPTjO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 15:39:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59796 "EHLO
+        id S229558AbjEPTtl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 15:49:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229454AbjEPTjN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:39:13 -0400
+        with ESMTP id S229534AbjEPTtk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:49:40 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C46ABD2DD;
-        Tue, 16 May 2023 12:38:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E39C5A9;
+        Tue, 16 May 2023 12:49:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C3E563E87;
-        Tue, 16 May 2023 19:37:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E563AC433EF;
-        Tue, 16 May 2023 19:37:51 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7FA2162D8A;
+        Tue, 16 May 2023 19:49:39 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FD71C433D2;
+        Tue, 16 May 2023 19:49:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684265877;
-        bh=BMgSzYPnqUEEoyY2VRZWSxLxvLKRRE/JigFmOP6CVm8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NpGBW3oQfGokP+EqO9HPXqgBNDkoc36H1oosSB5XjEzBOg7yBtWPUSvXBHiX4Rn4Q
-         nPdmLvbLNil6YudLmIUT16A//m5E1l/d5GoNjyYA+FGYUUcB0t2DXV/Y8FzJPsCm/g
-         WSjrQhVBlok700vqB4usp49fWyRCAVJCMtG/hOkniDZfEqspZMur4GNXocMx9PVPyv
-         JJe6IYAyEollD++tusMr4MFE1ysVhpCHJNBmX4uqv8rrV1pvWM156/dMfMSZOF9/ow
-         oYS4tnWysUdqiVHzAJ2DPP9MsHPpjO23QeTGlMaWQS4Y+XN+rqnjj3iE0utAy7m/f2
-         S+exm0cd8OABA==
-From:   Arnd Bergmann <arnd@kernel.org>
-To:     x86@kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Juergen Gross <jgross@suse.com>,
-        "Srivatsa S. Bhat (VMware)" <srivatsa@csail.mit.edu>,
-        Alexey Makhalov <amakhalov@vmware.com>,
-        VMware PV-Drivers Reviewers <pv-drivers@vmware.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-pm@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: [PATCH 18/20] x86: ioremap: add early_memremap_pgprot_adjust prototype
-Date:   Tue, 16 May 2023 21:35:47 +0200
-Message-Id: <20230516193549.544673-19-arnd@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230516193549.544673-1-arnd@kernel.org>
-References: <20230516193549.544673-1-arnd@kernel.org>
+        s=k20201202; t=1684266578;
+        bh=K90crMBvGWv1uFUHmxW01PE2M6Nmno0yReDGlpG1yUE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=i38RnsNXEGAT4Q2f69Z/KFOKrz6IDzh8dR9mh5/NQGvzl++wCasx8R/rulrL156IA
+         fs1YIKV55Nj4VXr/ijEYiDbPaxoUFHE4PaG3yFEw2z9ZNdNbdlSbNBJ3DqX+5I4E5s
+         rK2ih/C+nzAwd8p384qrzL3Y1P2+Cg82RQbiNfzbIezifo7UE1VTqkYbiVRBrO/ffh
+         eogPSspVZ443o//v8lekINHrHM85a5/ww43sRC1woMlj2zVapLaEG0nAbx9aCDGlrx
+         /v+bjORKf57xcIeIwqAe0VexcNO8wFAnwdad6auNzEgKWOQbbFwh9/h3m4RTMEEopz
+         bG0SJZWPoF6tA==
+Date:   Tue, 16 May 2023 14:49:36 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Xiangyi Zeng <xyzeng@stu.xidian.edu.cn>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        hust-os-kernel-patches@googlegroups.com,
+        Dongliang Mu <dzm91@hust.edu.cn>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: keystone: Free IRQ in `ks_pcie_remove` and the
+ error handling section of `ks_pcie_probe`
+Message-ID: <ZGPeUNqznHKETgqs@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230516051659.22194-1-xyzeng@stu.xidian.edu.cn>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Tue, May 16, 2023 at 01:16:59PM +0800, Xiangyi Zeng wrote:
+> Smatch complains that:
+> drivers/pci/controller/dwc/pci-keystone.c:1303 ks_pcie_probe() warn:
+> 'irq' from request_irq() not released on lines: 1183,1187,1303.
 
-early_memremap_pgprot_adjust() is a __weak function with a local
-prototype, but x86 has a custom implementation that does not
-see the prototype, causing a W=1 warning:
+Make this the entire warning line from smatch with no extra newlines
+inserted.
 
-arch/x86/mm/ioremap.c:785:17: error: no previous prototype for 'early_memremap_pgprot_adjust' [-Werror=missing-prototypes]
+> "ks-pcie-error-irq" was requested in the `ks_pcie_probe` function, but
+> was not freed neither in the error handling part of `ks_pcie_probe`
+> nor in the `ks_pcie_remove` function.
+> 
+> Fix this by adding `free_irq` in `ks_pcie_remove` and in a new error
+> handling label `err_alloc` after `err_link` in `ks_pcie_probe`. In
+> `ks_pcie_probe`, if `phy` or `link` memory allocation fails, we will
+> fall to `err_alloc`. If any other error occurs that leads to
+> `err_get_sync` or `err_link`, we end up going to `err_alloc`.
 
-Move the declaration into the global linux/io.h header to avoid this.
+I think the backticks (`) are markdown that makes these "code".
+Personally I think ks_pcie_probe() is more readable than
+`ks_pcie_probe` since most people (I think) read these in plain-ASCII
+situations.  And using backticks for labels and local variables seems
+like overkill.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- include/linux/io.h | 5 +++++
- mm/internal.h      | 6 ------
- 2 files changed, 5 insertions(+), 6 deletions(-)
+> Fixes: 0790eb175ee0 ("PCI: keystone: Cleanup error_irq configuration")
+> Signed-off-by: Xiangyi Zeng <xyzeng@stu.xidian.edu.cn>
+> Reviewed-by: Dongliang Mu <dzm91@hust.edu.cn>
 
-diff --git a/include/linux/io.h b/include/linux/io.h
-index 308f4f0cfb93..7304f2a69960 100644
---- a/include/linux/io.h
-+++ b/include/linux/io.h
-@@ -68,6 +68,11 @@ void *devm_memremap(struct device *dev, resource_size_t offset,
- 		size_t size, unsigned long flags);
- void devm_memunmap(struct device *dev, void *addr);
- 
-+/* architectures can override this */
-+pgprot_t __init early_memremap_pgprot_adjust(resource_size_t phys_addr,
-+					unsigned long size, pgprot_t prot);
-+
-+
- #ifdef CONFIG_PCI
- /*
-  * The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
-diff --git a/mm/internal.h b/mm/internal.h
-index 68410c6d97ac..e6029d94bdb2 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -178,12 +178,6 @@ extern unsigned long highest_memmap_pfn;
-  */
- #define MAX_RECLAIM_RETRIES 16
- 
--/*
-- * in mm/early_ioremap.c
-- */
--pgprot_t __init early_memremap_pgprot_adjust(resource_size_t phys_addr,
--					unsigned long size, pgprot_t prot);
--
- /*
-  * in mm/vmscan.c:
-  */
--- 
-2.39.2
+It's best if the Reviewed-by tag is not added until Dongliang sends
+email with that tag directly to the mailing list.  Internal reviews
+before posting to the mailing list aren't worth much.
 
+> @@ -1309,12 +1316,14 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+>  	struct device_link **link = ks_pcie->link;
+>  	int num_lanes = ks_pcie->num_lanes;
+>  	struct device *dev = &pdev->dev;
+> +	int irq = platform_get_irq(pdev, 0);
+
+I think it's better to save the irq we looked up in ks_pcie_probe()
+and free *that*.  It's probably the same thing you get by calling
+platform_get_irq() again, but it seems cleaner to me to save what we
+got in ks_pcie_probe().
+
+>  	pm_runtime_put(dev);
+>  	pm_runtime_disable(dev);
+>  	ks_pcie_disable_phy(ks_pcie);
+>  	while (num_lanes--)
+>  		device_link_del(link[num_lanes]);
+> +	free_irq(irq, ks_pcie);
+>  
+>  	return 0;
+>  }
+> -- 
+> 2.34.1
+> 
