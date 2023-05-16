@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E09C7EE2D
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:37:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A8C9C7EE23
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:37:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230073AbjEPThs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 15:37:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57348 "EHLO
+        id S229572AbjEPThx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 15:37:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56914 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230004AbjEPThj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:37:39 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 085B7A26F;
-        Tue, 16 May 2023 12:37:16 -0700 (PDT)
+        with ESMTP id S229712AbjEPThp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:37:45 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1236D180;
+        Tue, 16 May 2023 12:37:21 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 456B663EA5;
-        Tue, 16 May 2023 19:37:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D45FC433EF;
-        Tue, 16 May 2023 19:37:08 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BBCD63E9E;
+        Tue, 16 May 2023 19:37:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD2D1C433AC;
+        Tue, 16 May 2023 19:36:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684265834;
-        bh=+aTnWzkkpkhZD/Q7mAQ3dRAZxC9ekU9RPhso/2vdjUI=;
+        s=k20201202; t=1684265822;
+        bh=DMCbu5Ck8nL16laCe8gzQ409+Zy7oFJ6XN+76haQQGQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iMBAvFb2VaJhJEHCkXY8xN9dopzfCYxzGAVtlxmPc4ecgoxsfcVqAYWppizbCyYp/
-         VTvljPsItuhT+KslruGdf17RZHnkXZTeI5SNB0HcVA3Q2is1QzaTJ7NIWpw6KBUWf/
-         zV4XavdE98t65jnuE5hyhNvdFmgDjcz0+x8JQ3Pa2M+Ke5oMTbpixoiurollUeJB73
-         blh6OUjzwzOwaiTkJeA6SFn1+VvUJj1MKmXFKzsle/9hQMjVA4gOvU8RBqzqzy+ig5
-         svmuwCrWyPhEepXDnslmThYsgGibYlGdcBhMAypATUJEGwuGF8kbOigthqqwhCFfB8
-         Ic0+xYNIrQ58Q==
+        b=Q3CPblb9vbnnqFuY1tw61aFfK9l0Nhj6hfccpdSnjngrZvApvgdIxViPf4vjP57Qt
+         qFvGozg2KkPlPBN+rhtss57IV7tT1g8FtyasUBtWiN829+Muh+cn2shwW83ND+k0Cc
+         FplnF09GMWMj2fcC0b4/jJX2TTCfua7UEdLt0MdxFgk7PQtYpG9Ml8CxcQcizGiZaB
+         ZR03FhPL6TM5aGirSEx1n5ym6Z3bavzahWDpVyLa0GqRqs2Kjp4+nNz+wxsThyDUFs
+         rdCC/oV4Ld02UzX5Lf0ab8U3AP0KQT6Q7EydXL76RrAs/+USlWya2sP3b0UpG2emEd
+         pAwthPxEXYTPA==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     x86@kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>,
@@ -56,9 +56,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
         xen-devel@lists.xenproject.org, linux-pm@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 11/20] x86: entry: add  do_SYSENTER_32() prototype
-Date:   Tue, 16 May 2023 21:35:40 +0200
-Message-Id: <20230516193549.544673-12-arnd@kernel.org>
+Subject: [PATCH 09/20] x86: platform_quirks: include linux/pnp.h for arch_pnpbios_disabled
+Date:   Tue, 16 May 2023 21:35:38 +0200
+Message-Id: <20230516193549.544673-10-arnd@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230516193549.544673-1-arnd@kernel.org>
 References: <20230516193549.544673-1-arnd@kernel.org>
@@ -70,36 +70,28 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The 32-bit system call entry points can be called on both 32-bit
-and 64-bit kernels, but on the former the declarations are hidden:
+arch_pnpbios_disabled() is defined in architecture code on x86, but this
+does not include the appropriate header, causing a warning:
 
-arch/x86/entry/common.c:238:24: error: no previous prototype for 'do_SYSENTER_32' [-Werror=missing-prototypes]
-
-Move them all out of the #ifdef block to avoid the warnings.
+arch/x86/kernel/platform-quirks.c:42:13: error: no previous prototype for 'arch_pnpbios_disabled' [-Werror=missing-prototypes]
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/x86/include/asm/syscall.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ arch/x86/kernel/platform-quirks.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/x86/include/asm/syscall.h b/arch/x86/include/asm/syscall.h
-index 5b85987a5e97..4fb36fba4b5a 100644
---- a/arch/x86/include/asm/syscall.h
-+++ b/arch/x86/include/asm/syscall.h
-@@ -127,9 +127,11 @@ static inline int syscall_get_arch(struct task_struct *task)
- }
+diff --git a/arch/x86/kernel/platform-quirks.c b/arch/x86/kernel/platform-quirks.c
+index b348a672f71d..b525fe6d6657 100644
+--- a/arch/x86/kernel/platform-quirks.c
++++ b/arch/x86/kernel/platform-quirks.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/pnp.h>
  
- void do_syscall_64(struct pt_regs *regs, int nr);
--void do_int80_syscall_32(struct pt_regs *regs);
--long do_fast_syscall_32(struct pt_regs *regs);
- 
- #endif	/* CONFIG_X86_32 */
- 
-+void do_int80_syscall_32(struct pt_regs *regs);
-+long do_fast_syscall_32(struct pt_regs *regs);
-+long do_SYSENTER_32(struct pt_regs *regs);
-+
- #endif	/* _ASM_X86_SYSCALL_H */
+ #include <asm/setup.h>
+ #include <asm/bios_ebda.h>
 -- 
 2.39.2
 
