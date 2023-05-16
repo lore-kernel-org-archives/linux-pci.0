@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 660CCC7EE24
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D12C7EE2F
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:38:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230150AbjEPTiE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 15:38:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57674 "EHLO
+        id S230060AbjEPTiF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 15:38:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230104AbjEPThx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:37:53 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43F8093FA;
-        Tue, 16 May 2023 12:37:29 -0700 (PDT)
+        with ESMTP id S230091AbjEPThy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:37:54 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 979CB3C10;
+        Tue, 16 May 2023 12:37:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 92CDE63EAB;
-        Tue, 16 May 2023 19:37:27 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57333C4339B;
-        Tue, 16 May 2023 19:37:21 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 23FF66372E;
+        Tue, 16 May 2023 19:37:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EAB46C433D2;
+        Tue, 16 May 2023 19:37:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684265847;
-        bh=J5EKXsQ8JpkrI9Gz8p7tvN4WBF349kQdKYOIvFSrsNU=;
+        s=k20201202; t=1684265828;
+        bh=9mGjBlJh/v4od95uyV8nA9/tvAI7Fp8HXXcZE+gBPXw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XIN+eFgSG5axh0khDn+f/DfiFa2fy/Gl7HlqCu4DFGR/Gh/jJBZE6kogRn1pGLSf0
-         H7p3sJKdHoW15hlgh4PqRp1aSRxoJGu8xkUBD8UOV/7Wc3R0dnNCmKZ0BDGWJZb8D1
-         oH2yP6PbTSse4jjfW7V1Oui8ScgC+ip8wsTfipPJG3h+KlhBMS7cqSGZFq5vDlKiy0
-         RswG11Urln0rfwHreMBoCRqO+yKcqFn55K7Ppwg4ukMOh1RtnbSr9DTsibIdx1NEsh
-         DnzXMlfpiLzkeqt66J/wTfnFD+0D1bBh1mk3F7Als3cmaZdCeWg7QJDwUyVhPN3vUW
-         T784GEZx+Ea6A==
+        b=dchZZo9WqmTT5pXqQ91IEEzoZcfaltTNsqPX8uCQB2EtS7z6X18KvPkxGsTqXf4Im
+         FZs0O9Gu21RgjwUSracQfDCkupgQf81CrS65a+HuQhXicxa375U5tO5k2auE3ZkfIX
+         SKZBxS0YIyNz60tANL/6BP3KH5Ub5veXwRzbRJxH/VCBU7GKgNIbVhmkVUIQ8Vs5kv
+         5GszcMPQCxAVwJPTq5LqISilKOY4ClP6e9zRYaqOL34Yi0tc5tzpXafXUnVrKXNOO3
+         TsvuruEr2W76ZTF/RJBhwZwLfH80cVdeikTgUUcvyM1yAbkQhHNiX6snxmVt/CTQZJ
+         lgJDvr4/QBZSw==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     x86@kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>,
@@ -56,9 +56,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
         xen-devel@lists.xenproject.org, linux-pm@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 13/20] x86: hibernate: declare global functions in suspend.h
-Date:   Tue, 16 May 2023 21:35:42 +0200
-Message-Id: <20230516193549.544673-14-arnd@kernel.org>
+Subject: [PATCH 10/20] x86: xen: add missing prototypes
+Date:   Tue, 16 May 2023 21:35:39 +0200
+Message-Id: <20230516193549.544673-11-arnd@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230516193549.544673-1-arnd@kernel.org>
 References: <20230516193549.544673-1-arnd@kernel.org>
@@ -70,61 +70,83 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-Three functions that are defined in x86 specific code to override
-generic __weak implementations cause a warning because of a missing
-prototype:
-
-arch/x86/power/cpu.c:298:5: error: no previous prototype for 'hibernate_resume_nonboot_cpu_disable' [-Werror=missing-prototypes]
-arch/x86/power/hibernate.c:129:5: error: no previous prototype for 'arch_hibernation_header_restore' [-Werror=missing-prototypes]
-arch/x86/power/hibernate.c:91:5: error: no previous prototype for 'arch_hibernation_header_save' [-Werror=missing-prototypes]
-
-Move the declarations into a global header so it can be included
-by any file defining one of these.
+arch/x86/xen/enlighten_pv.c:1233:34: error: no previous prototype for 'xen_start_kernel' [-Werror=missing-prototypes]
+arch/x86/xen/irq.c:22:14: error: no previous prototype for 'xen_force_evtchn_callback' [-Werror=missing-prototypes]
+arch/x86/xen/mmu_pv.c:358:20: error: no previous prototype for 'xen_pte_val' [-Werror=missing-prototypes]
+arch/x86/xen/mmu_pv.c:366:20: error: no previous prototype for 'xen_pgd_val' [-Werror=missing-prototypes]
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- include/linux/suspend.h | 4 ++++
- kernel/power/power.h    | 5 -----
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ arch/x86/xen/efi.c     |  2 ++
+ arch/x86/xen/smp.h     |  3 +++
+ arch/x86/xen/xen-ops.h | 14 ++++++++++++++
+ include/xen/xen.h      |  3 +++
+ 4 files changed, 22 insertions(+)
 
-diff --git a/include/linux/suspend.h b/include/linux/suspend.h
-index 7ec73e77e652..bc911fecb8e8 100644
---- a/include/linux/suspend.h
-+++ b/include/linux/suspend.h
-@@ -452,6 +452,10 @@ extern struct pbe *restore_pblist;
- int pfn_is_nosave(unsigned long pfn);
+diff --git a/arch/x86/xen/efi.c b/arch/x86/xen/efi.c
+index 7d7ffb9c826a..863d0d6b3edc 100644
+--- a/arch/x86/xen/efi.c
++++ b/arch/x86/xen/efi.c
+@@ -16,6 +16,8 @@
+ #include <asm/setup.h>
+ #include <asm/xen/hypercall.h>
  
- int hibernate_quiet_exec(int (*func)(void *data), void *data);
-+int hibernate_resume_nonboot_cpu_disable(void);
-+int arch_hibernation_header_save(void *addr, unsigned int max_size);
-+int arch_hibernation_header_restore(void *addr);
++#include "xen-ops.h"
 +
- #else /* CONFIG_HIBERNATION */
- static inline void register_nosave_region(unsigned long b, unsigned long e) {}
- static inline int swsusp_page_is_forbidden(struct page *p) { return 0; }
-diff --git a/kernel/power/power.h b/kernel/power/power.h
-index b83c8d5e188d..a6a16faf0ead 100644
---- a/kernel/power/power.h
-+++ b/kernel/power/power.h
-@@ -26,9 +26,6 @@ extern void __init hibernate_image_size_init(void);
- /* Maximum size of architecture specific data in a hibernation header */
- #define MAX_ARCH_HEADER_SIZE	(sizeof(struct new_utsname) + 4)
+ static efi_char16_t vendor[100] __initdata;
  
--extern int arch_hibernation_header_save(void *addr, unsigned int max_size);
--extern int arch_hibernation_header_restore(void *addr);
--
- static inline int init_header_complete(struct swsusp_info *info)
- {
- 	return arch_hibernation_header_save(info, MAX_ARCH_HEADER_SIZE);
-@@ -41,8 +38,6 @@ static inline const char *check_image_kernel(struct swsusp_info *info)
- }
- #endif /* CONFIG_ARCH_HIBERNATION_HEADER */
+ static efi_system_table_t efi_systab_xen __initdata = {
+diff --git a/arch/x86/xen/smp.h b/arch/x86/xen/smp.h
+index 22fb982ff971..cbc45e2462f5 100644
+--- a/arch/x86/xen/smp.h
++++ b/arch/x86/xen/smp.h
+@@ -2,6 +2,9 @@
+ #ifndef _XEN_SMP_H
  
--extern int hibernate_resume_nonboot_cpu_disable(void);
--
- /*
-  * Keep some memory free so that I/O operations can succeed without paging
-  * [Might this be more than 4 MB?]
+ #ifdef CONFIG_SMP
++
++asmlinkage void cpu_bringup_and_idle(void);
++
+ extern void xen_send_IPI_mask(const struct cpumask *mask,
+ 			      int vector);
+ extern void xen_send_IPI_mask_allbutself(const struct cpumask *mask,
+diff --git a/arch/x86/xen/xen-ops.h b/arch/x86/xen/xen-ops.h
+index 6d7f6318fc07..0f71ee3fe86b 100644
+--- a/arch/x86/xen/xen-ops.h
++++ b/arch/x86/xen/xen-ops.h
+@@ -160,4 +160,18 @@ void xen_hvm_post_suspend(int suspend_cancelled);
+ static inline void xen_hvm_post_suspend(int suspend_cancelled) {}
+ #endif
+ 
++void xen_force_evtchn_callback(void);
++pteval_t xen_pte_val(pte_t pte);
++pgdval_t xen_pgd_val(pgd_t pgd);
++pte_t xen_make_pte(pteval_t pte);
++pgd_t xen_make_pgd(pgdval_t pgd);
++pmdval_t xen_pmd_val(pmd_t pmd);
++pmd_t xen_make_pmd(pmdval_t pmd);
++pudval_t xen_pud_val(pud_t pud);
++pud_t xen_make_pud(pudval_t pud);
++p4dval_t xen_p4d_val(p4d_t p4d);
++p4d_t xen_make_p4d(p4dval_t p4d);
++pte_t xen_make_pte_init(pteval_t pte);
++void xen_start_kernel(struct start_info *si);
++
+ #endif /* XEN_OPS_H */
+diff --git a/include/xen/xen.h b/include/xen/xen.h
+index 0efeb652f9b8..f989162983c3 100644
+--- a/include/xen/xen.h
++++ b/include/xen/xen.h
+@@ -31,6 +31,9 @@ extern uint32_t xen_start_flags;
+ 
+ #include <xen/interface/hvm/start_info.h>
+ extern struct hvm_start_info pvh_start_info;
++void xen_prepare_pvh(void);
++struct pt_regs;
++void xen_pv_evtchn_do_upcall(struct pt_regs *regs);
+ 
+ #ifdef CONFIG_XEN_DOM0
+ #include <xen/interface/xen.h>
 -- 
 2.39.2
 
