@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58AC9C7EE2C
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:38:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 642ACC7EE2D
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:38:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230298AbjEPTie (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 15:38:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58014 "EHLO
+        id S230313AbjEPTif (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 15:38:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230125AbjEPTiV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:38:21 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF910A26E;
-        Tue, 16 May 2023 12:37:59 -0700 (PDT)
+        with ESMTP id S230131AbjEPTiW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:38:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE904A5DE;
+        Tue, 16 May 2023 12:38:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0E28563E94;
-        Tue, 16 May 2023 19:37:52 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC9F0C4339C;
-        Tue, 16 May 2023 19:37:45 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B72EA63EB1;
+        Tue, 16 May 2023 19:37:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B617C4339C;
+        Tue, 16 May 2023 19:37:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684265871;
-        bh=gSQe4II2iJtS+QQtWHfwrqCvLdxK7Wzo7e0HtFoFV5g=;
+        s=k20201202; t=1684265853;
+        bh=VUIVbi0JrRPfajUkNZclAh0STTeBs9rnHGdAvoTKkf0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=j20kxPBBFRIlxqq0mFZaJS7pQ1cCrLadjW3BuMisWulwenHNraGn3QWbXEUvelZB9
-         k8AScRxshCwAwrVHCxXAtcvrlQ6DnbnlQVpLaumX7l4EAkHg/GHsGYTQGiOvmWdeHV
-         nnvqCAqbFDpb6jdopaiVGQxZ8tQP14F6vLmY6rEGNbIsMSxZRZfWCAbLoJmiLJul9v
-         mHgb9qRmHAMRdPNwGH1ZJuxcpbeasYeDWHN2uDuIqWD3/Br6dub6irvZhT2xBqimyR
-         5zR/L6TK+jHMgzzDqKoPOtdy3hz/UK9lh7gf7JJ+DhFN6pkHpaPxXMMg+7/fxjhdum
-         PLw3akFNr0smA==
+        b=mC+M7eKABjyFWUz3ahztx+5ej0UDKRHny6IDcOOkOBb7T8TKyoOo1fQHoeIhY+UJr
+         sMwYJWriml+CN5IT55dh+Y3N4Qkk1jy6sqNrI9NQRSoJY9QmUi1UgvCpWOpG8IrCEn
+         JOOcmypp8HYKXesh78Zw9Mn2B1hMfzJ5E0vHwnVhf9EWjHBjng/8AutDQDYVKbiQni
+         nhbYm4YAKuzLx1TphcnEliNa7XAqoVH4gMMnVTi3+fU11+7fSp55kbWmoZSJxYHgWE
+         bkp6SUDmTbzTpuvHIao5LyGY8w2RZRYUNYlNHTF5PTUou4JACCZ0eU58pOVKhjr1zj
+         +aqQ1XVbdlOGQ==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     x86@kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>,
@@ -56,9 +56,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
         xen-devel@lists.xenproject.org, linux-pm@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 17/20] x86: usercopy: include arch_wb_cache_pmem declaration
-Date:   Tue, 16 May 2023 21:35:46 +0200
-Message-Id: <20230516193549.544673-18-arnd@kernel.org>
+Subject: [PATCH 14/20] x86: fbdev: include asm/fb.h as needed
+Date:   Tue, 16 May 2023 21:35:43 +0200
+Message-Id: <20230516193549.544673-15-arnd@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230516193549.544673-1-arnd@kernel.org>
 References: <20230516193549.544673-1-arnd@kernel.org>
@@ -70,29 +70,29 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-arch_wb_cache_pmem() is declared in a global header but defined by
-the architecture. On x86, the implementation needs to include the header
-to avoid this warning:
+fb_is_primary_device() is defined as a global function on x86, unlike
+the others that have an inline version. The file that defines is
+however needs to include the declaration to avoid a warning:
 
-arch/x86/lib/usercopy_64.c:39:6: error: no previous prototype for 'arch_wb_cache_pmem' [-Werror=missing-prototypes]
+arch/x86/video/fbdev.c:14:5: error: no previous prototype for 'fb_is_primary_device' [-Werror=missing-prototypes]
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/x86/lib/usercopy_64.c | 1 +
+ arch/x86/video/fbdev.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/arch/x86/lib/usercopy_64.c b/arch/x86/lib/usercopy_64.c
-index 003d90138e20..e9251b89a9e9 100644
---- a/arch/x86/lib/usercopy_64.c
-+++ b/arch/x86/lib/usercopy_64.c
-@@ -9,6 +9,7 @@
- #include <linux/export.h>
- #include <linux/uaccess.h>
- #include <linux/highmem.h>
-+#include <linux/libnvdimm.h>
+diff --git a/arch/x86/video/fbdev.c b/arch/x86/video/fbdev.c
+index 9fd24846d094..9e9143085d19 100644
+--- a/arch/x86/video/fbdev.c
++++ b/arch/x86/video/fbdev.c
+@@ -10,6 +10,7 @@
+ #include <linux/pci.h>
+ #include <linux/module.h>
+ #include <linux/vgaarb.h>
++#include <asm/fb.h>
  
- /*
-  * Zero Userspace
+ int fb_is_primary_device(struct fb_info *info)
+ {
 -- 
 2.39.2
 
