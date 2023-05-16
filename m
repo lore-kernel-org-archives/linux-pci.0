@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEA7FC7EE2D
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CFE7C7EE23
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:39:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230227AbjEPTi5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 15:38:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57902 "EHLO
+        id S229464AbjEPTjO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 15:39:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230397AbjEPTir (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:38:47 -0400
+        with ESMTP id S229454AbjEPTjN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:39:13 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B6D08A58;
-        Tue, 16 May 2023 12:38:25 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C46ABD2DD;
+        Tue, 16 May 2023 12:38:45 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id E945D63E22;
-        Tue, 16 May 2023 19:37:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5BB4C433D2;
-        Tue, 16 May 2023 19:37:39 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1C3E563E87;
+        Tue, 16 May 2023 19:37:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E563AC433EF;
+        Tue, 16 May 2023 19:37:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684265865;
-        bh=ePOLp5lrYksDFnI5SruvVtfGvFIosnERaoYqbpISZdc=;
+        s=k20201202; t=1684265877;
+        bh=BMgSzYPnqUEEoyY2VRZWSxLxvLKRRE/JigFmOP6CVm8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QzHHLwTINJvvcADDWDAFD53gb0rzvbfM+9frChQz9nOeJdPvDbN96AuXaWQc9Zvxr
-         aIMvdYvF3T+QNbI/k5wpwc6MSujK2ulBi7AB+gIW4MAFtORYIB6dloPpaU3136n4im
-         28e0oQ/gFuMmWEVqE32GvMwA8QC1R8ZOSDj5aB75yht+WU7UenY2JSg291k/G5ntiU
-         9aBuw8l68CYZc+TZWL+A0oDAj4k2nTmi3WAfSETq8X/lpMsTNhdlRU1e3qXY/DCjc8
-         kbTXiAG5OAPFlElt+nbApNzKv5CT7DQpkoHI/Mebhyj1HGkKmozLCY+jMgkk1Bebd7
-         De/Gp233G0FBg==
+        b=NpGBW3oQfGokP+EqO9HPXqgBNDkoc36H1oosSB5XjEzBOg7yBtWPUSvXBHiX4Rn4Q
+         nPdmLvbLNil6YudLmIUT16A//m5E1l/d5GoNjyYA+FGYUUcB0t2DXV/Y8FzJPsCm/g
+         WSjrQhVBlok700vqB4usp49fWyRCAVJCMtG/hOkniDZfEqspZMur4GNXocMx9PVPyv
+         JJe6IYAyEollD++tusMr4MFE1ysVhpCHJNBmX4uqv8rrV1pvWM156/dMfMSZOF9/ow
+         oYS4tnWysUdqiVHzAJ2DPP9MsHPpjO23QeTGlMaWQS4Y+XN+rqnjj3iE0utAy7m/f2
+         S+exm0cd8OABA==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     x86@kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>,
@@ -56,9 +56,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
         xen-devel@lists.xenproject.org, linux-pm@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 16/20] x86: vdso: include vdso/processor.h
-Date:   Tue, 16 May 2023 21:35:45 +0200
-Message-Id: <20230516193549.544673-17-arnd@kernel.org>
+Subject: [PATCH 18/20] x86: ioremap: add early_memremap_pgprot_adjust prototype
+Date:   Tue, 16 May 2023 21:35:47 +0200
+Message-Id: <20230516193549.544673-19-arnd@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230516193549.544673-1-arnd@kernel.org>
 References: <20230516193549.544673-1-arnd@kernel.org>
@@ -70,29 +70,53 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-__vdso_getcpu is declared in a header but this is not included
-before the definition, causing a W=1 warning:
+early_memremap_pgprot_adjust() is a __weak function with a local
+prototype, but x86 has a custom implementation that does not
+see the prototype, causing a W=1 warning:
 
-arch/x86/entry/vdso/vgetcpu.c:13:1: error: no previous prototype for '__vdso_getcpu' [-Werror=missing-prototypes]
-arch/x86/entry/vdso/vdso32/../vgetcpu.c:13:1: error: no previous prototype for '__vdso_getcpu' [-Werror=missing-prototypes]
+arch/x86/mm/ioremap.c:785:17: error: no previous prototype for 'early_memremap_pgprot_adjust' [-Werror=missing-prototypes]
+
+Move the declaration into the global linux/io.h header to avoid this.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/x86/entry/vdso/vgetcpu.c | 1 +
- 1 file changed, 1 insertion(+)
+ include/linux/io.h | 5 +++++
+ mm/internal.h      | 6 ------
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/arch/x86/entry/vdso/vgetcpu.c b/arch/x86/entry/vdso/vgetcpu.c
-index 0a9007c24056..e4640306b2e3 100644
---- a/arch/x86/entry/vdso/vgetcpu.c
-+++ b/arch/x86/entry/vdso/vgetcpu.c
-@@ -8,6 +8,7 @@
- #include <linux/kernel.h>
- #include <linux/getcpu.h>
- #include <asm/segment.h>
-+#include <vdso/processor.h>
+diff --git a/include/linux/io.h b/include/linux/io.h
+index 308f4f0cfb93..7304f2a69960 100644
+--- a/include/linux/io.h
++++ b/include/linux/io.h
+@@ -68,6 +68,11 @@ void *devm_memremap(struct device *dev, resource_size_t offset,
+ 		size_t size, unsigned long flags);
+ void devm_memunmap(struct device *dev, void *addr);
  
- notrace long
- __vdso_getcpu(unsigned *cpu, unsigned *node, struct getcpu_cache *unused)
++/* architectures can override this */
++pgprot_t __init early_memremap_pgprot_adjust(resource_size_t phys_addr,
++					unsigned long size, pgprot_t prot);
++
++
+ #ifdef CONFIG_PCI
+ /*
+  * The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+diff --git a/mm/internal.h b/mm/internal.h
+index 68410c6d97ac..e6029d94bdb2 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -178,12 +178,6 @@ extern unsigned long highest_memmap_pfn;
+  */
+ #define MAX_RECLAIM_RETRIES 16
+ 
+-/*
+- * in mm/early_ioremap.c
+- */
+-pgprot_t __init early_memremap_pgprot_adjust(resource_size_t phys_addr,
+-					unsigned long size, pgprot_t prot);
+-
+ /*
+  * in mm/vmscan.c:
+  */
 -- 
 2.39.2
 
