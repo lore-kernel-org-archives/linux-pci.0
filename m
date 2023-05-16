@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A8C9C7EE23
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:37:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 660CCC7EE24
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 19:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229572AbjEPThx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 15:37:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56914 "EHLO
+        id S230150AbjEPTiE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 15:38:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229712AbjEPThp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:37:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1236D180;
-        Tue, 16 May 2023 12:37:21 -0700 (PDT)
+        with ESMTP id S230104AbjEPThx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 15:37:53 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43F8093FA;
+        Tue, 16 May 2023 12:37:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 0BBCD63E9E;
-        Tue, 16 May 2023 19:37:03 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD2D1C433AC;
-        Tue, 16 May 2023 19:36:56 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 92CDE63EAB;
+        Tue, 16 May 2023 19:37:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 57333C4339B;
+        Tue, 16 May 2023 19:37:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1684265822;
-        bh=DMCbu5Ck8nL16laCe8gzQ409+Zy7oFJ6XN+76haQQGQ=;
+        s=k20201202; t=1684265847;
+        bh=J5EKXsQ8JpkrI9Gz8p7tvN4WBF349kQdKYOIvFSrsNU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Q3CPblb9vbnnqFuY1tw61aFfK9l0Nhj6hfccpdSnjngrZvApvgdIxViPf4vjP57Qt
-         qFvGozg2KkPlPBN+rhtss57IV7tT1g8FtyasUBtWiN829+Muh+cn2shwW83ND+k0Cc
-         FplnF09GMWMj2fcC0b4/jJX2TTCfua7UEdLt0MdxFgk7PQtYpG9Ml8CxcQcizGiZaB
-         ZR03FhPL6TM5aGirSEx1n5ym6Z3bavzahWDpVyLa0GqRqs2Kjp4+nNz+wxsThyDUFs
-         rdCC/oV4Ld02UzX5Lf0ab8U3AP0KQT6Q7EydXL76RrAs/+USlWya2sP3b0UpG2emEd
-         pAwthPxEXYTPA==
+        b=XIN+eFgSG5axh0khDn+f/DfiFa2fy/Gl7HlqCu4DFGR/Gh/jJBZE6kogRn1pGLSf0
+         H7p3sJKdHoW15hlgh4PqRp1aSRxoJGu8xkUBD8UOV/7Wc3R0dnNCmKZ0BDGWJZb8D1
+         oH2yP6PbTSse4jjfW7V1Oui8ScgC+ip8wsTfipPJG3h+KlhBMS7cqSGZFq5vDlKiy0
+         RswG11Urln0rfwHreMBoCRqO+yKcqFn55K7Ppwg4ukMOh1RtnbSr9DTsibIdx1NEsh
+         DnzXMlfpiLzkeqt66J/wTfnFD+0D1bBh1mk3F7Als3cmaZdCeWg7QJDwUyVhPN3vUW
+         T784GEZx+Ea6A==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     x86@kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>,
@@ -56,9 +56,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
         xen-devel@lists.xenproject.org, linux-pm@vger.kernel.org,
         linux-mm@kvack.org
-Subject: [PATCH 09/20] x86: platform_quirks: include linux/pnp.h for arch_pnpbios_disabled
-Date:   Tue, 16 May 2023 21:35:38 +0200
-Message-Id: <20230516193549.544673-10-arnd@kernel.org>
+Subject: [PATCH 13/20] x86: hibernate: declare global functions in suspend.h
+Date:   Tue, 16 May 2023 21:35:42 +0200
+Message-Id: <20230516193549.544673-14-arnd@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230516193549.544673-1-arnd@kernel.org>
 References: <20230516193549.544673-1-arnd@kernel.org>
@@ -70,28 +70,61 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-arch_pnpbios_disabled() is defined in architecture code on x86, but this
-does not include the appropriate header, causing a warning:
+Three functions that are defined in x86 specific code to override
+generic __weak implementations cause a warning because of a missing
+prototype:
 
-arch/x86/kernel/platform-quirks.c:42:13: error: no previous prototype for 'arch_pnpbios_disabled' [-Werror=missing-prototypes]
+arch/x86/power/cpu.c:298:5: error: no previous prototype for 'hibernate_resume_nonboot_cpu_disable' [-Werror=missing-prototypes]
+arch/x86/power/hibernate.c:129:5: error: no previous prototype for 'arch_hibernation_header_restore' [-Werror=missing-prototypes]
+arch/x86/power/hibernate.c:91:5: error: no previous prototype for 'arch_hibernation_header_save' [-Werror=missing-prototypes]
+
+Move the declarations into a global header so it can be included
+by any file defining one of these.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/x86/kernel/platform-quirks.c | 1 +
- 1 file changed, 1 insertion(+)
+ include/linux/suspend.h | 4 ++++
+ kernel/power/power.h    | 5 -----
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/arch/x86/kernel/platform-quirks.c b/arch/x86/kernel/platform-quirks.c
-index b348a672f71d..b525fe6d6657 100644
---- a/arch/x86/kernel/platform-quirks.c
-+++ b/arch/x86/kernel/platform-quirks.c
-@@ -1,6 +1,7 @@
- // SPDX-License-Identifier: GPL-2.0
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/pnp.h>
+diff --git a/include/linux/suspend.h b/include/linux/suspend.h
+index 7ec73e77e652..bc911fecb8e8 100644
+--- a/include/linux/suspend.h
++++ b/include/linux/suspend.h
+@@ -452,6 +452,10 @@ extern struct pbe *restore_pblist;
+ int pfn_is_nosave(unsigned long pfn);
  
- #include <asm/setup.h>
- #include <asm/bios_ebda.h>
+ int hibernate_quiet_exec(int (*func)(void *data), void *data);
++int hibernate_resume_nonboot_cpu_disable(void);
++int arch_hibernation_header_save(void *addr, unsigned int max_size);
++int arch_hibernation_header_restore(void *addr);
++
+ #else /* CONFIG_HIBERNATION */
+ static inline void register_nosave_region(unsigned long b, unsigned long e) {}
+ static inline int swsusp_page_is_forbidden(struct page *p) { return 0; }
+diff --git a/kernel/power/power.h b/kernel/power/power.h
+index b83c8d5e188d..a6a16faf0ead 100644
+--- a/kernel/power/power.h
++++ b/kernel/power/power.h
+@@ -26,9 +26,6 @@ extern void __init hibernate_image_size_init(void);
+ /* Maximum size of architecture specific data in a hibernation header */
+ #define MAX_ARCH_HEADER_SIZE	(sizeof(struct new_utsname) + 4)
+ 
+-extern int arch_hibernation_header_save(void *addr, unsigned int max_size);
+-extern int arch_hibernation_header_restore(void *addr);
+-
+ static inline int init_header_complete(struct swsusp_info *info)
+ {
+ 	return arch_hibernation_header_save(info, MAX_ARCH_HEADER_SIZE);
+@@ -41,8 +38,6 @@ static inline const char *check_image_kernel(struct swsusp_info *info)
+ }
+ #endif /* CONFIG_ARCH_HIBERNATION_HEADER */
+ 
+-extern int hibernate_resume_nonboot_cpu_disable(void);
+-
+ /*
+  * Keep some memory free so that I/O operations can succeed without paging
+  * [Might this be more than 4 MB?]
 -- 
 2.39.2
 
