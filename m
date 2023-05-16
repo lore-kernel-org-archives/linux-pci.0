@@ -2,50 +2,66 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50BD2C7EE26
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 12:25:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA190C77B7A
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 12:27:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232893AbjEPMZB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 08:25:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43560 "EHLO
+        id S232823AbjEPM1b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 08:27:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232714AbjEPMZA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 08:25:00 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DBA61FE7;
-        Tue, 16 May 2023 05:24:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684239899; x=1715775899;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=1kZ67IohKTNXw9v48L99Ve76ncobxnQ7nLLOn/LyTKQ=;
-  b=bGztEPKF1Ov+pXMZwo7x/7vcEdHRpNeEL7DcfevD2x9YZGx4uFVEaL09
-   NHo2034CpOo3G1NCRVB+8rhnq+vqu7TGkLaocANPHxYltlnzWp9mYBKzb
-   ntUA65105/kCa1D0omrXEP6e3abCh8FRYkulOvjdcckynDexROuv/PSZ7
-   DIl3qdhyE7Wo8jo9O2GmcNcySTTOV4tX8Odbve4xwWCgjmyepUDPlTaVJ
-   AyhaWE1prh51BwJBBryizRnJqud+s3NXEL7cjqHtQMYrg1wl1aBA7f0Pl
-   wbuaWqJtd3le9q/dKzNdPrMh+dD3tTlzKkM6cqMLDpGIWfnbqQlmfeytZ
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10711"; a="414868724"
-X-IronPort-AV: E=Sophos;i="5.99,278,1677571200"; 
-   d="scan'208";a="414868724"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2023 05:24:58 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10711"; a="771018670"
-X-IronPort-AV: E=Sophos;i="5.99,278,1677571200"; 
-   d="scan'208";a="771018670"
-Received: from stinkpipe.fi.intel.com (HELO stinkbox) ([10.237.72.70])
-  by fmsmga004.fm.intel.com with SMTP; 16 May 2023 05:24:53 -0700
-Received: by stinkbox (sSMTP sendmail emulation); Tue, 16 May 2023 15:24:52 +0300
-Date:   Tue, 16 May 2023 15:24:52 +0300
-From:   Ville =?iso-8859-1?Q?Syrj=E4l=E4?= <ville.syrjala@linux.intel.com>
-To:     Niklas Schnelle <schnelle@linux.ibm.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Helge Deller <deller@gmx.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        with ESMTP id S229664AbjEPM1b (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 08:27:31 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 939FE46AE;
+        Tue, 16 May 2023 05:27:29 -0700 (PDT)
+Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GAehQ7016889;
+        Tue, 16 May 2023 11:05:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=BDtKaUlzFaQR39llwSdBsyCySk6OVFApmA8cPg7u7T0=;
+ b=Yriu5L1ywdg+OKLkpnlwJQGDXEtZa5mketP+g+BVNCBZ8fSnPWltaFQSfaWgMlHIAN/M
+ bp8QxQv9Akh0EuivmrPS7EdZF7Fgq1HtLXeR8mbaq1CT3Bj5bf06ZkdiX6KZlnLsNjlp
+ gGwPaugZBGtCWeNmltoHIOkRn93Nxb1clvhRe5bVO2DMJ1Y+drSmhUnPoC51fUQqQq4q
+ alZSVd+bcUFUt1FDHxtsvkcWSmRhpgkd+jJy6KMH6WD/t5hqJVA1jnDrQvHF9Cwe6vz3
+ RFlbX1ymiiqYJLEkeGYLBcpfovoJnSXf3olUolYDBVfIU5TgTuztgPwgczTy0owGlsdV gQ== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm82f0tf0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:05:48 +0000
+Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GB4xdd002085;
+        Tue, 16 May 2023 11:05:14 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm82f0pmu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:05:14 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G1c0io027917;
+        Tue, 16 May 2023 11:01:04 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qj264sjvk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 16 May 2023 11:01:04 +0000
+Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
+        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB119825493960
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 16 May 2023 11:01:01 GMT
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9E0AC2004D;
+        Tue, 16 May 2023 11:01:01 +0000 (GMT)
+Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 440E920043;
+        Tue, 16 May 2023 11:01:01 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+        by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Tue, 16 May 2023 11:01:01 +0000 (GMT)
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Arnd Bergmann <arnd@arndb.de>, Benson Leung <bleung@chromium.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
         Alan Stern <stern@rowland.harvard.edu>,
@@ -55,60 +71,72 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Helge Deller <deller@gmx.de>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH v4 37/41] fbdev: atyfb: Remove unused clock determination
-Message-ID: <ZGN2FKSBkMREujgR@intel.com>
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        Tzung-Bi Shih <tzungbi@kernel.org>,
+        chrome-platform@lists.linux.dev
+Subject: [PATCH v4 25/41] platform: add HAS_IOPORT dependencies
+Date:   Tue, 16 May 2023 13:00:21 +0200
+Message-Id: <20230516110038.2413224-26-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230516110038.2413224-1-schnelle@linux.ibm.com>
 References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
- <20230516110038.2413224-38-schnelle@linux.ibm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230516110038.2413224-38-schnelle@linux.ibm.com>
-X-Patchwork-Hint: comment
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: wkt5LjdythVOx6GUGIuZnKF80a0rVLfQ
+X-Proofpoint-ORIG-GUID: D1wPEMQ5wJltjbmeb5Q4UneMtwNK40jF
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-16_04,2023-05-16_01,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
+ spamscore=0 suspectscore=0 mlxlogscore=941 impostorscore=0 malwarescore=0
+ adultscore=0 phishscore=0 priorityscore=1501 clxscore=1011
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2304280000 definitions=main-2305160094
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, May 16, 2023 at 01:00:33PM +0200, Niklas Schnelle wrote:
-> Just below the removed lines par->clk_wr_offset is hard coded to 3 so
-> there is no use in determining a different clock just to then ignore it
-> anyway. This also removes the only I/O port use remaining in the driver
-> allowing it to be built without CONFIG_HAS_IOPORT.
-> 
-> Link: https://lore.kernel.org/all/ZBx5aLo5h546BzBt@intel.com/
-> Suggested-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
-> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
-Reviewed-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+Acked-by: Tzung-Bi Shih <tzungbi@kernel.org>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
+      per-subsystem patches may be applied independently
 
-> ---
-> Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
->       per-subsystem patches may be applied independently
-> 
->  drivers/video/fbdev/aty/atyfb_base.c | 5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/drivers/video/fbdev/aty/atyfb_base.c b/drivers/video/fbdev/aty/atyfb_base.c
-> index b02e4e645035..cba2b113b28b 100644
-> --- a/drivers/video/fbdev/aty/atyfb_base.c
-> +++ b/drivers/video/fbdev/aty/atyfb_base.c
-> @@ -3498,11 +3498,6 @@ static int atyfb_setup_generic(struct pci_dev *pdev, struct fb_info *info,
->  	if (ret)
->  		goto atyfb_setup_generic_fail;
->  #endif
-> -	if (!(aty_ld_le32(CRTC_GEN_CNTL, par) & CRTC_EXT_DISP_EN))
-> -		par->clk_wr_offset = (inb(R_GENMO) & 0x0CU) >> 2;
-> -	else
-> -		par->clk_wr_offset = aty_ld_8(CLOCK_CNTL, par) & 0x03U;
-> -
->  	/* according to ATI, we should use clock 3 for acelerated mode */
->  	par->clk_wr_offset = 3;
->  
-> -- 
-> 2.39.2
+ drivers/platform/chrome/Kconfig          | 1 +
+ drivers/platform/chrome/wilco_ec/Kconfig | 1 +
+ 2 files changed, 2 insertions(+)
 
+diff --git a/drivers/platform/chrome/Kconfig b/drivers/platform/chrome/Kconfig
+index 7d82a0946e1c..7eb1cfde29b4 100644
+--- a/drivers/platform/chrome/Kconfig
++++ b/drivers/platform/chrome/Kconfig
+@@ -132,6 +132,7 @@ config CROS_EC_UART
+ config CROS_EC_LPC
+ 	tristate "ChromeOS Embedded Controller (LPC)"
+ 	depends on CROS_EC && ACPI && (X86 || COMPILE_TEST)
++	depends on HAS_IOPORT
+ 	help
+ 	  If you say Y here, you get support for talking to the ChromeOS EC
+ 	  over an LPC bus, including the LPC Microchip EC (MEC) variant.
+diff --git a/drivers/platform/chrome/wilco_ec/Kconfig b/drivers/platform/chrome/wilco_ec/Kconfig
+index 49e8530ca0ac..d1648fb099ac 100644
+--- a/drivers/platform/chrome/wilco_ec/Kconfig
++++ b/drivers/platform/chrome/wilco_ec/Kconfig
+@@ -3,6 +3,7 @@ config WILCO_EC
+ 	tristate "ChromeOS Wilco Embedded Controller"
+ 	depends on X86 || COMPILE_TEST
+ 	depends on ACPI && CROS_EC_LPC && LEDS_CLASS
++	depends on HAS_IOPORT
+ 	help
+ 	  If you say Y here, you get support for talking to the ChromeOS
+ 	  Wilco EC over an eSPI bus. This uses a simple byte-level protocol
 -- 
-Ville Syrjälä
-Intel
+2.39.2
+
