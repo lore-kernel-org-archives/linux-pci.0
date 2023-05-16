@@ -2,63 +2,63 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D66C77B7A
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 11:04:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07BE9C77B75
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 11:04:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232732AbjEPLEP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 07:04:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53812 "EHLO
+        id S232752AbjEPLEc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 07:04:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231557AbjEPLDZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 07:03:25 -0400
+        with ESMTP id S232704AbjEPLEA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 07:04:00 -0400
 Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B3B4198E;
-        Tue, 16 May 2023 04:01:50 -0700 (PDT)
-Received: from pps.filterd (m0353722.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GAjGJL030986;
-        Tue, 16 May 2023 11:01:09 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50AEB76B1;
+        Tue, 16 May 2023 04:02:03 -0700 (PDT)
+Received: from pps.filterd (m0353723.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GAqubG008652;
+        Tue, 16 May 2023 11:01:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : content-transfer-encoding
- : mime-version; s=pp1; bh=ezG6jTGZUINryZDCi0wemxVU5pmXhLyRDWX1OhiOgHU=;
- b=h6lzSEKUdWWG4A/aTdtGXH4vAF28nPcnoL6kIe44ov3ha/krGBBhU6GOjFyGyGKXbmTc
- aqkXi1L+M9tQZaItW62onlbM1aWemBBncbegVPeaRnVHHwVLqoQwlUPg/CYGn3H0rUOh
- JuYHWT+xcdsROKFCUtzQYM2fDjB8xwtkj7OTsmKnOvBNf8EHoUifuu4yaGn5pb4uguGq
- MSgwzfe8UxOJQkeKlp7UfuMS1O1aSHy0wUEju9YpBgY8oJ9CmbqiClPZ6BxzZB1cbEfk
- UcSfuX9WaYmvy6pQesXsTZCLnSCH+OAN6ai7qir4mu/9m91OkxnGZVlRMFvOMtfJibq0 kQ== 
+ : date : message-id : in-reply-to : references : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=OHDQiiEJroO0i+y82hrgSvcy7FLDy/xxm28oD5scI9A=;
+ b=d4oOyb+urNbv4NnIHFxSpFXGPAWlQUKoJZ5q6AUueUY22R8dAnOQs4o6cd+Eq1QqXrHN
+ zVoEgukcuadeRETmubrUq7tkV5Ib8x+dpiPLNEO4xMChtmc8Mxco4KmQm3WcY8KEyJs0
+ r1bJcBOTyTjs/Bj1/pcjKYjotm/irIcNMWxuGrEF4Er6cMLpj+fAfgCZhgH4PJdL8vHz
+ qgSwJya1XgYkGIbIf0agj2pjsqvTrz6tKmVj4GJ1Jd4gO1LaAUnYZhnLQAv8TH8tAfWd
+ MaUbVI2PgfcSv0/NaEGkDhvudZloE0KQCmM3q2fx1OGtiJkVautgtjaP0j8onMskBanJ EQ== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8bn0e7p-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8fbg73w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:01:08 +0000
-Received: from m0353722.ppops.net (m0353722.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GAkeu5002316;
-        Tue, 16 May 2023 11:01:07 GMT
-Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8bn0e69-1
+        Tue, 16 May 2023 11:01:20 +0000
+Received: from m0353723.ppops.net (m0353723.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GAwNMt029904;
+        Tue, 16 May 2023 11:01:19 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8fbg72a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:01:07 +0000
-Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
-        by ppma04fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G9brXp014004;
-        Tue, 16 May 2023 11:01:04 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-        by ppma04fra.de.ibm.com (PPS) with ESMTPS id 3qj264sane-1
+        Tue, 16 May 2023 11:01:19 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G4ZOP8014025;
+        Tue, 16 May 2023 11:01:16 GMT
+Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qj264sjvp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:01:04 +0000
+        Tue, 16 May 2023 11:01:16 +0000
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB121x44433722
+        by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB1D2l22413898
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 May 2023 11:01:02 GMT
+        Tue, 16 May 2023 11:01:13 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 61BA820043;
-        Tue, 16 May 2023 11:01:02 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 1EF1A20063;
+        Tue, 16 May 2023 11:01:13 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id EFA5B2004D;
-        Tue, 16 May 2023 11:01:01 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id B8BF72004B;
+        Tue, 16 May 2023 11:01:12 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 16 May 2023 11:01:01 +0000 (GMT)
+        Tue, 16 May 2023 11:01:12 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>, Jaroslav Kysela <perex@perex.cz>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+To:     Arnd Bergmann <arnd@arndb.de>, Helge Deller <deller@gmx.de>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
@@ -71,59 +71,66 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-acpi@vger.kernel.org
-Subject: [PATCH v4 26/41] pnp: add HAS_IOPORT dependencies
-Date:   Tue, 16 May 2023 13:00:22 +0200
-Message-Id: <20230516110038.2413224-27-schnelle@linux.ibm.com>
+        linux-pci@vger.kernel.org,
+        =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?= 
+        <ville.syrjala@linux.intel.com>, linux-fbdev@vger.kernel.org,
+        dri-devel@lists.freedesktop.org
+Subject: [PATCH v4 37/41] fbdev: atyfb: Remove unused clock determination
+Date:   Tue, 16 May 2023 13:00:33 +0200
+Message-Id: <20230516110038.2413224-38-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230516110038.2413224-1-schnelle@linux.ibm.com>
 References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: 4SOFwS1bUwRSspsSLqmRSfBI48x6gJXQ
-X-Proofpoint-ORIG-GUID: iGVhOeXDZmrWc_CqFrDp9Y7IH11Ipm_X
+X-Proofpoint-ORIG-GUID: 1yaS_CGaroKGuNMhMhwrIJKLlrHZkWea
+X-Proofpoint-GUID: 3Sv0jLznQWCfM5wFfxteAoWtQqAbwtHk
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-16_04,2023-05-16_01,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- lowpriorityscore=0 mlxlogscore=999 impostorscore=0 mlxscore=0 phishscore=0
- suspectscore=0 spamscore=0 malwarescore=0 clxscore=1011 adultscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2304280000 definitions=main-2305160089
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ mlxscore=0 clxscore=1015 adultscore=0 malwarescore=0 lowpriorityscore=0
+ mlxlogscore=999 impostorscore=0 priorityscore=1501 spamscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+ definitions=main-2305160089
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to depend on HAS_IOPORT even when
-compile testing only.
+Just below the removed lines par->clk_wr_offset is hard coded to 3 so
+there is no use in determining a different clock just to then ignore it
+anyway. This also removes the only I/O port use remaining in the driver
+allowing it to be built without CONFIG_HAS_IOPORT.
 
-Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+Link: https://lore.kernel.org/all/ZBx5aLo5h546BzBt@intel.com/
+Suggested-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
 Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
       per-subsystem patches may be applied independently
 
- drivers/pnp/isapnp/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/video/fbdev/aty/atyfb_base.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/pnp/isapnp/Kconfig b/drivers/pnp/isapnp/Kconfig
-index d0479a563123..79bd48f1dd94 100644
---- a/drivers/pnp/isapnp/Kconfig
-+++ b/drivers/pnp/isapnp/Kconfig
-@@ -4,7 +4,7 @@
- #
- config ISAPNP
- 	bool "ISA Plug and Play support"
--	depends on ISA || COMPILE_TEST
-+	depends on ISA || (HAS_IOPORT && COMPILE_TEST)
- 	help
- 	  Say Y here if you would like support for ISA Plug and Play devices.
- 	  Some information is in <file:Documentation/driver-api/isapnp.rst>.
+diff --git a/drivers/video/fbdev/aty/atyfb_base.c b/drivers/video/fbdev/aty/atyfb_base.c
+index b02e4e645035..cba2b113b28b 100644
+--- a/drivers/video/fbdev/aty/atyfb_base.c
++++ b/drivers/video/fbdev/aty/atyfb_base.c
+@@ -3498,11 +3498,6 @@ static int atyfb_setup_generic(struct pci_dev *pdev, struct fb_info *info,
+ 	if (ret)
+ 		goto atyfb_setup_generic_fail;
+ #endif
+-	if (!(aty_ld_le32(CRTC_GEN_CNTL, par) & CRTC_EXT_DISP_EN))
+-		par->clk_wr_offset = (inb(R_GENMO) & 0x0CU) >> 2;
+-	else
+-		par->clk_wr_offset = aty_ld_8(CLOCK_CNTL, par) & 0x03U;
+-
+ 	/* according to ATI, we should use clock 3 for acelerated mode */
+ 	par->clk_wr_offset = 3;
+ 
 -- 
 2.39.2
 
