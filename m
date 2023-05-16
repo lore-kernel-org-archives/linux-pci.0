@@ -2,76 +2,66 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFB2EC77B7F
-	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 11:10:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6732C77B7F
+	for <linux-pci@archiver.kernel.org>; Tue, 16 May 2023 11:11:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232648AbjEPLKf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 May 2023 07:10:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59762 "EHLO
+        id S232824AbjEPLLS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 May 2023 07:11:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232846AbjEPLJn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 07:09:43 -0400
+        with ESMTP id S232814AbjEPLLD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2023 07:11:03 -0400
 Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AD174EFF;
-        Tue, 16 May 2023 04:09:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 967E2D8;
+        Tue, 16 May 2023 04:09:53 -0700 (PDT)
 Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GB44nj006505;
-        Tue, 16 May 2023 11:07:39 GMT
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34GB44eq006482;
+        Tue, 16 May 2023 11:08:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=BmSGV7X4oc4NMEhAbmNjzPqRnq5D2JIeblSLzp/XN+w=;
- b=reFRE9Q98P5lYlmf/BiCoeYB/AsUuJu11UZg2s8Q3JQAbzDCJGit+4p0jf0L3XxU1PLh
- aVG05EnrR6+CaD8c79A96Baufi2hGsdS2qjeucXsYnQ0iH/3hrW3UIID3gJF5MtLURXx
- CTIx0EeBAZ/CWPfaOF3B2fpEy7DKPHfXEol8726TxFQhPXGzCA/GarNiZRfzqFh1Zac1
- F924x+CO4bDFfysob8lymXTQGfowmEZBfmOmIh7BR60KUPvmxIlnXLUmy0Sj2e2WfbL5
- OrDUlU1566Brs10nrDM8DBleLZa60sMjT6H2+trZSUyqBzs19BiFEAaWq0au22IV88nr TQ== 
+ bh=Xnmp6X0qL0zeKYH38Xvfl6ZMW1/Auj5gq04lGrIhuYs=;
+ b=YlkmCd7H5u0sgJ0X74Msc0g3bz+X+QmSM6w2BaWeGdcq2KotsdMr/JoDCb63or7niaXh
+ nMpGm9Ov/D+SJqaS+VLhUxmWH6nIfUGLABQQVhQuQZUiAeumUtr2iNT82WAps1U0qwR/
+ Kb4y4B+8tpyBedF+rJGsVF9jdzDzRHJI6sBN90qltifLz+WacTWJ37UHITUopGARAriI
+ WlNIYeUmkvi76XawiSlx9ZAjKoCUWZh56AIVe6IuUulqGdRSichNwWoHbHgjJIKaONhL
+ FltTdlagv98hhtZRDLvQ23Gzl05/xkAz+w0LjeoqBwIDQW6yGa/LnePI0ESBIuEasg87 Pg== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrr9fn-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrrc6d-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:07:38 +0000
+        Tue, 16 May 2023 11:08:49 +0000
 Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GB4F9w007371;
-        Tue, 16 May 2023 11:06:31 GMT
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrr6bg-1
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34GB5gt2017876;
+        Tue, 16 May 2023 11:07:01 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qm8mrr7nq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:06:31 +0000
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G4UVsf012372;
-        Tue, 16 May 2023 11:01:00 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-        by ppma04ams.nl.ibm.com (PPS) with ESMTPS id 3qj264sk93-1
+        Tue, 16 May 2023 11:07:01 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34G1c0ip027917;
+        Tue, 16 May 2023 11:01:12 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qj264sjvm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 May 2023 11:01:00 +0000
+        Tue, 16 May 2023 11:01:12 +0000
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB0vJj52429142
+        by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34GB19vt24445640
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 May 2023 11:00:57 GMT
+        Tue, 16 May 2023 11:01:09 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A74912004B;
-        Tue, 16 May 2023 11:00:57 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id B675A20043;
+        Tue, 16 May 2023 11:01:09 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 15E2F20040;
-        Tue, 16 May 2023 11:00:57 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 596E220040;
+        Tue, 16 May 2023 11:01:09 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Tue, 16 May 2023 11:00:57 +0000 (GMT)
+        Tue, 16 May 2023 11:01:09 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Michael Grzeschik <m.grzeschik@pengutronix.de>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        "Maciej W. Rozycki" <macro@orcam.me.uk>,
-        Ralf Baechle <ralf@linux-mips.org>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
@@ -83,19 +73,18 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        netdev@vger.kernel.org, linux-can@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-hams@vger.kernel.org
-Subject: [PATCH v4 20/41] net: handle HAS_IOPORT dependencies
-Date:   Tue, 16 May 2023 13:00:16 +0200
-Message-Id: <20230516110038.2413224-21-schnelle@linux.ibm.com>
+        linux-serial@vger.kernel.org
+Subject: [PATCH v4 33/41] tty: serial: handle HAS_IOPORT dependencies
+Date:   Tue, 16 May 2023 13:00:29 +0200
+Message-Id: <20230516110038.2413224-34-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230516110038.2413224-1-schnelle@linux.ibm.com>
 References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: 5KjlPr0pW8Gy4eFSG5zht_wptMVAV7j3
-X-Proofpoint-GUID: s_B6O6hrKQup073aT0YnpVY4_cFow43b
+X-Proofpoint-ORIG-GUID: biHOP2Q-2JiF04-XB4LVy_v4nFDt1Nw_
+X-Proofpoint-GUID: H3GNej9JNcqM914NpYfwBLPvDlpiYJ9v
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-16_04,2023-05-16_01,2023-02-09_01
@@ -110,334 +99,371 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
 not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers requiring them. For the DEFXX driver the use of I/O
-ports is optional and we only need to fence specific code paths. It also
-turns out that with HAS_IOPORT handled explicitly HAMRADIO does not need
-the !S390 dependency and successfully builds the bpqether driver.
+those drivers using them unconditionally. For 8250 based drivers some
+support MMIO only use so fence only the parts requiring I/O ports.
 
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de>
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-Acked-by: Jakub Kicinski <kuba@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
 Note: The HAS_IOPORT Kconfig option was added in v6.4-rc1 so
       per-subsystem patches may be applied independently
 
- drivers/net/Kconfig                  | 2 +-
- drivers/net/arcnet/Kconfig           | 2 +-
- drivers/net/can/cc770/Kconfig        | 1 +
- drivers/net/can/sja1000/Kconfig      | 1 +
- drivers/net/ethernet/3com/Kconfig    | 4 ++--
- drivers/net/ethernet/8390/Kconfig    | 6 +++---
- drivers/net/ethernet/amd/Kconfig     | 4 ++--
- drivers/net/ethernet/fujitsu/Kconfig | 2 +-
- drivers/net/ethernet/intel/Kconfig   | 2 +-
- drivers/net/ethernet/sis/Kconfig     | 4 ++--
- drivers/net/ethernet/smsc/Kconfig    | 2 +-
- drivers/net/ethernet/ti/Kconfig      | 2 +-
- drivers/net/ethernet/via/Kconfig     | 1 +
- drivers/net/ethernet/xircom/Kconfig  | 2 +-
- drivers/net/fddi/defxx.c             | 2 +-
- drivers/net/hamradio/Kconfig         | 6 +++---
- drivers/net/wan/Kconfig              | 2 +-
- net/ax25/Kconfig                     | 2 +-
- 18 files changed, 25 insertions(+), 22 deletions(-)
+ drivers/tty/Kconfig                  |  4 +--
+ drivers/tty/serial/8250/8250_early.c |  4 +++
+ drivers/tty/serial/8250/8250_pci.c   | 14 +++++++++
+ drivers/tty/serial/8250/8250_port.c  | 44 +++++++++++++++++++++++-----
+ drivers/tty/serial/8250/Kconfig      |  5 ++--
+ drivers/tty/serial/Kconfig           |  2 +-
+ 6 files changed, 60 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
-index d0a1ed216d15..817322605825 100644
---- a/drivers/net/Kconfig
-+++ b/drivers/net/Kconfig
-@@ -476,7 +476,7 @@ source "drivers/net/ipa/Kconfig"
+diff --git a/drivers/tty/Kconfig b/drivers/tty/Kconfig
+index 341abaed4ce2..bdd267dbd5e4 100644
+--- a/drivers/tty/Kconfig
++++ b/drivers/tty/Kconfig
+@@ -222,7 +222,7 @@ config MOXA_INTELLIO
  
- config NET_SB1000
- 	tristate "General Instruments Surfboard 1000"
--	depends on PNP
-+	depends on ISA && PNP
+ config MOXA_SMARTIO
+ 	tristate "Moxa SmartIO support v. 2.0"
+-	depends on SERIAL_NONSTANDARD && PCI
++	depends on SERIAL_NONSTANDARD && PCI && HAS_IOPORT
  	help
- 	  This is a driver for the General Instrument (also known as
- 	  NextLevel) SURFboard 1000 internal
-diff --git a/drivers/net/arcnet/Kconfig b/drivers/net/arcnet/Kconfig
-index a51b9dab6d3a..d1d07a1d4fbc 100644
---- a/drivers/net/arcnet/Kconfig
-+++ b/drivers/net/arcnet/Kconfig
-@@ -4,7 +4,7 @@
- #
+ 	  Say Y here if you have a Moxa SmartIO multiport serial card and/or
+ 	  want to help develop a new version of this driver.
+@@ -303,7 +303,7 @@ config GOLDFISH_TTY_EARLY_CONSOLE
  
- menuconfig ARCNET
--	depends on NETDEVICES && (ISA || PCI || PCMCIA)
-+	depends on NETDEVICES && (ISA || PCI || PCMCIA) && HAS_IOPORT
- 	tristate "ARCnet support"
+ config IPWIRELESS
+ 	tristate "IPWireless 3G UMTS PCMCIA card support"
+-	depends on PCMCIA && NETDEVICES
++	depends on PCMCIA && NETDEVICES && HAS_IOPORT
+ 	select PPP
  	help
- 	  If you have a network card of this type, say Y and check out the
-diff --git a/drivers/net/can/cc770/Kconfig b/drivers/net/can/cc770/Kconfig
-index 9ef1359319f0..467ef19de1c1 100644
---- a/drivers/net/can/cc770/Kconfig
-+++ b/drivers/net/can/cc770/Kconfig
-@@ -7,6 +7,7 @@ if CAN_CC770
+ 	  This is a driver for 3G UMTS PCMCIA card from IPWireless company. In
+diff --git a/drivers/tty/serial/8250/8250_early.c b/drivers/tty/serial/8250/8250_early.c
+index 0ebde0ab8167..4192b1ae2736 100644
+--- a/drivers/tty/serial/8250/8250_early.c
++++ b/drivers/tty/serial/8250/8250_early.c
+@@ -48,8 +48,10 @@ static unsigned int serial8250_early_in(struct uart_port *port, int offset)
+ 		return readl(port->membase + offset);
+ 	case UPIO_MEM32BE:
+ 		return ioread32be(port->membase + offset);
++#ifdef CONFIG_HAS_IOPORT
+ 	case UPIO_PORT:
+ 		return inb(port->iobase + offset);
++#endif
+ 	case UPIO_AU:
+ 		return port->serial_in(port, reg_offset);
+ 	default:
+@@ -75,9 +77,11 @@ static void serial8250_early_out(struct uart_port *port, int offset, int value)
+ 	case UPIO_MEM32BE:
+ 		iowrite32be(value, port->membase + offset);
+ 		break;
++#ifdef CONFIG_HAS_IOPORT
+ 	case UPIO_PORT:
+ 		outb(value, port->iobase + offset);
+ 		break;
++#endif
+ 	case UPIO_AU:
+ 		port->serial_out(port, reg_offset, value);
+ 		break;
+diff --git a/drivers/tty/serial/8250/8250_pci.c b/drivers/tty/serial/8250/8250_pci.c
+index c55be6fda0ca..70bd84a05da7 100644
+--- a/drivers/tty/serial/8250/8250_pci.c
++++ b/drivers/tty/serial/8250/8250_pci.c
+@@ -847,6 +847,7 @@ static int pci_netmos_init(struct pci_dev *dev)
+ 	return num_serial;
+ }
  
- config CAN_CC770_ISA
- 	tristate "ISA Bus based legacy CC770 driver"
-+	depends on ISA
- 	help
- 	  This driver adds legacy support for CC770 and AN82527 chips
- 	  connected to the ISA bus using I/O port, memory mapped or
-diff --git a/drivers/net/can/sja1000/Kconfig b/drivers/net/can/sja1000/Kconfig
-index 4b2f9cb17fc3..01168db4c106 100644
---- a/drivers/net/can/sja1000/Kconfig
-+++ b/drivers/net/can/sja1000/Kconfig
-@@ -87,6 +87,7 @@ config CAN_PLX_PCI
++#ifdef CONFIG_HAS_IOPORT
+ /*
+  * These chips are available with optionally one parallel port and up to
+  * two serial ports. Unfortunately they all have the same product id.
+@@ -973,6 +974,7 @@ static void pci_ite887x_exit(struct pci_dev *dev)
+ 	ioport &= 0xffff;
+ 	release_region(ioport, ITE_887x_IOSIZE);
+ }
++#endif /* CONFIG_HAS_IOPORT */
  
- config CAN_SJA1000_ISA
- 	tristate "ISA Bus based legacy SJA1000 driver"
-+	depends on ISA
- 	help
- 	  This driver adds legacy support for SJA1000 chips connected to
- 	  the ISA bus using I/O port, memory mapped or indirect access.
-diff --git a/drivers/net/ethernet/3com/Kconfig b/drivers/net/ethernet/3com/Kconfig
-index 706bd59bf645..1fbab79e2be4 100644
---- a/drivers/net/ethernet/3com/Kconfig
-+++ b/drivers/net/ethernet/3com/Kconfig
-@@ -44,7 +44,7 @@ config 3C515
+ /*
+  * Oxford Semiconductor Inc.
+@@ -1255,6 +1257,7 @@ static int pci_asix_setup(struct serial_private *priv,
+ #define QOPR_CLOCK_X8		0x0003
+ #define QOPR_CLOCK_RATE_MASK	0x0003
  
- config PCMCIA_3C574
- 	tristate "3Com 3c574 PCMCIA support"
--	depends on PCMCIA
-+	depends on PCMCIA && HAS_IOPORT
- 	help
- 	  Say Y here if you intend to attach a 3Com 3c574 or compatible PCMCIA
- 	  (PC-card) Fast Ethernet card to your computer.
-@@ -54,7 +54,7 @@ config PCMCIA_3C574
++#ifdef CONFIG_HAS_IOPORT
+ /* Quatech devices have their own extra interface features */
+ static struct pci_device_id quatech_cards[] = {
+ 	{ PCI_DEVICE_DATA(QUATECH, QSC100,   1) },
+@@ -1474,6 +1477,7 @@ static int pci_quatech_setup(struct serial_private *priv,
+ 		pci_warn(priv->dev, "software control of RS422 features not currently supported.\n");
+ 	return pci_default_setup(priv, board, port, idx);
+ }
++#endif /* CONFIG_HAS_IOPORT */
  
- config PCMCIA_3C589
- 	tristate "3Com 3c589 PCMCIA support"
--	depends on PCMCIA
-+	depends on PCMCIA && HAS_IOPORT
- 	help
- 	  Say Y here if you intend to attach a 3Com 3c589 or compatible PCMCIA
- 	  (PC-card) Ethernet card to your computer.
-diff --git a/drivers/net/ethernet/8390/Kconfig b/drivers/net/ethernet/8390/Kconfig
-index a4130e643342..345f250781c6 100644
---- a/drivers/net/ethernet/8390/Kconfig
-+++ b/drivers/net/ethernet/8390/Kconfig
-@@ -19,7 +19,7 @@ if NET_VENDOR_8390
+ static int pci_default_setup(struct serial_private *priv,
+ 		  const struct pciserial_board *board,
+@@ -1753,6 +1757,7 @@ static int skip_tx_en_setup(struct serial_private *priv,
+ 	return pci_default_setup(priv, board, port, idx);
+ }
  
- config PCMCIA_AXNET
- 	tristate "Asix AX88190 PCMCIA support"
--	depends on PCMCIA
-+	depends on PCMCIA && HAS_IOPORT
- 	help
- 	  Say Y here if you intend to attach an Asix AX88190-based PCMCIA
- 	  (PC-card) Fast Ethernet card to your computer.  These cards are
-@@ -117,7 +117,7 @@ config NE2000
++#ifdef CONFIG_HAS_IOPORT
+ static void kt_handle_break(struct uart_port *p)
+ {
+ 	struct uart_8250_port *up = up_to_u8250p(p);
+@@ -1796,6 +1801,7 @@ static int kt_serial_setup(struct serial_private *priv,
+ 	port->port.handle_break = kt_handle_break;
+ 	return skip_tx_en_setup(priv, board, port, idx);
+ }
++#endif /* CONFIG_HAS_IOPORT */
  
- config NE2K_PCI
- 	tristate "PCI NE2000 and clones support (see help)"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select CRC32
- 	help
- 	  This driver is for NE2000 compatible PCI cards. It will not work
-@@ -146,7 +146,7 @@ config APNE
+ static int pci_eg20t_init(struct pci_dev *dev)
+ {
+@@ -1840,6 +1846,7 @@ pci_wch_ch38x_setup(struct serial_private *priv,
+ #define CH384_XINT_ENABLE_REG   0xEB
+ #define CH384_XINT_ENABLE_BIT   0x02
  
- config PCMCIA_PCNET
- 	tristate "NE2000 compatible PCMCIA support"
--	depends on PCMCIA
-+	depends on PCMCIA && HAS_IOPORT
- 	select CRC32
- 	help
- 	  Say Y here if you intend to attach an NE2000 compatible PCMCIA
-diff --git a/drivers/net/ethernet/amd/Kconfig b/drivers/net/ethernet/amd/Kconfig
-index f8cc8925161c..b39c6f3e1eda 100644
---- a/drivers/net/ethernet/amd/Kconfig
-+++ b/drivers/net/ethernet/amd/Kconfig
-@@ -56,7 +56,7 @@ config LANCE
++#ifdef CONFIG_HAS_IOPORT
+ static int pci_wch_ch38x_init(struct pci_dev *dev)
+ {
+ 	int max_port;
+@@ -1867,6 +1874,7 @@ static void pci_wch_ch38x_exit(struct pci_dev *dev)
+ 	iobase = pci_resource_start(dev, 0);
+ 	outb(0x0, iobase + CH384_XINT_ENABLE_REG);
+ }
++#endif /* CONFIG_HAS_IOPORT */
  
- config PCNET32
- 	tristate "AMD PCnet32 PCI support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select CRC32
- 	select MII
- 	help
-@@ -122,7 +122,7 @@ config MVME147_NET
  
- config PCMCIA_NMCLAN
- 	tristate "New Media PCMCIA support"
--	depends on PCMCIA
-+	depends on PCMCIA && HAS_IOPORT
- 	help
- 	  Say Y here if you intend to attach a New Media Ethernet or LiveWire
- 	  PCMCIA (PC-card) Ethernet card to your computer.
-diff --git a/drivers/net/ethernet/fujitsu/Kconfig b/drivers/net/ethernet/fujitsu/Kconfig
-index 0a1400cb410a..06a28bce5d27 100644
---- a/drivers/net/ethernet/fujitsu/Kconfig
-+++ b/drivers/net/ethernet/fujitsu/Kconfig
-@@ -18,7 +18,7 @@ if NET_VENDOR_FUJITSU
+ static int
+@@ -2070,6 +2078,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
+ 		.subdevice	= PCI_ANY_ID,
+ 		.setup		= ce4100_serial_setup,
+ 	},
++#ifdef CONFIG_HAS_IOPORT
+ 	{
+ 		.vendor		= PCI_VENDOR_ID_INTEL,
+ 		.device		= PCI_DEVICE_ID_INTEL_PATSBURG_KT,
+@@ -2089,6 +2098,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
+ 		.setup		= pci_default_setup,
+ 		.exit		= pci_ite887x_exit,
+ 	},
++#endif
+ 	/*
+ 	 * National Instruments
+ 	 */
+@@ -2210,6 +2220,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
+ 		.exit		= pci_ni8430_exit,
+ 	},
+ 	/* Quatech */
++#ifdef CONFIG_HAS_IOPORT
+ 	{
+ 		.vendor		= PCI_VENDOR_ID_QUATECH,
+ 		.device		= PCI_ANY_ID,
+@@ -2218,6 +2229,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
+ 		.init		= pci_quatech_init,
+ 		.setup		= pci_quatech_setup,
+ 	},
++#endif
+ 	/*
+ 	 * Panacom
+ 	 */
+@@ -2588,6 +2600,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
+ 		.subdevice      = PCI_ANY_ID,
+ 		.setup          = pci_wch_ch38x_setup,
+ 	},
++#ifdef CONFIG_HAS_IOPORT
+ 	/* WCH CH384 8S card (16850 clone) */
+ 	{
+ 		.vendor         = PCIE_VENDOR_ID_WCH,
+@@ -2598,6 +2611,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
+ 		.exit		= pci_wch_ch38x_exit,
+ 		.setup          = pci_wch_ch38x_setup,
+ 	},
++#endif
+ 	/*
+ 	 * ASIX devices with FIFO bug
+ 	 */
+diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
+index fe8d79c4ae95..8d8606dc763b 100644
+--- a/drivers/tty/serial/8250/8250_port.c
++++ b/drivers/tty/serial/8250/8250_port.c
+@@ -401,6 +401,7 @@ static void au_serial_dl_write(struct uart_8250_port *up, int value)
  
- config PCMCIA_FMVJ18X
- 	tristate "Fujitsu FMV-J18x PCMCIA support"
--	depends on PCMCIA
-+	depends on PCMCIA && HAS_IOPORT
- 	select CRC32
- 	help
- 	  Say Y here if you intend to attach a Fujitsu FMV-J18x or compatible
-diff --git a/drivers/net/ethernet/intel/Kconfig b/drivers/net/ethernet/intel/Kconfig
-index 9bc0a9519899..f48289a82a16 100644
---- a/drivers/net/ethernet/intel/Kconfig
-+++ b/drivers/net/ethernet/intel/Kconfig
-@@ -41,7 +41,7 @@ config E100
- 
- config E1000
- 	tristate "Intel(R) PRO/1000 Gigabit Ethernet support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  This driver supports Intel(R) PRO/1000 gigabit ethernet family of
- 	  adapters.  For more information on how to identify your adapter, go
-diff --git a/drivers/net/ethernet/sis/Kconfig b/drivers/net/ethernet/sis/Kconfig
-index 775d76d9890e..7e498bdbca73 100644
---- a/drivers/net/ethernet/sis/Kconfig
-+++ b/drivers/net/ethernet/sis/Kconfig
-@@ -19,7 +19,7 @@ if NET_VENDOR_SIS
- 
- config SIS900
- 	tristate "SiS 900/7016 PCI Fast Ethernet Adapter support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select CRC32
- 	select MII
- 	help
-@@ -35,7 +35,7 @@ config SIS900
- 
- config SIS190
- 	tristate "SiS190/SiS191 gigabit ethernet support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select CRC32
- 	select MII
- 	help
-diff --git a/drivers/net/ethernet/smsc/Kconfig b/drivers/net/ethernet/smsc/Kconfig
-index 5f22a8a4d27b..13ce9086a9ca 100644
---- a/drivers/net/ethernet/smsc/Kconfig
-+++ b/drivers/net/ethernet/smsc/Kconfig
-@@ -54,7 +54,7 @@ config SMC91X
- 
- config PCMCIA_SMC91C92
- 	tristate "SMC 91Cxx PCMCIA support"
--	depends on PCMCIA
-+	depends on PCMCIA && HAS_IOPORT
- 	select CRC32
- 	select MII
- 	help
-diff --git a/drivers/net/ethernet/ti/Kconfig b/drivers/net/ethernet/ti/Kconfig
-index fce06663e1e1..20068acce9fe 100644
---- a/drivers/net/ethernet/ti/Kconfig
-+++ b/drivers/net/ethernet/ti/Kconfig
-@@ -161,7 +161,7 @@ config TI_KEYSTONE_NETCP_ETHSS
- 
- config TLAN
- 	tristate "TI ThunderLAN support"
--	depends on (PCI || EISA)
-+	depends on (PCI || EISA) && HAS_IOPORT
- 	help
- 	  If you have a PCI Ethernet network card based on the ThunderLAN chip
- 	  which is supported by this driver, say Y here.
-diff --git a/drivers/net/ethernet/via/Kconfig b/drivers/net/ethernet/via/Kconfig
-index da287ef65be7..00773f5e4d7e 100644
---- a/drivers/net/ethernet/via/Kconfig
-+++ b/drivers/net/ethernet/via/Kconfig
-@@ -20,6 +20,7 @@ config VIA_RHINE
- 	tristate "VIA Rhine support"
- 	depends on PCI || (OF_IRQ && GENERIC_PCI_IOMAP)
- 	depends on PCI || ARCH_VT8500 || COMPILE_TEST
-+	depends on HAS_IOPORT
- 	depends on HAS_DMA
- 	select CRC32
- 	select MII
-diff --git a/drivers/net/ethernet/xircom/Kconfig b/drivers/net/ethernet/xircom/Kconfig
-index 7497b9bea511..bfbdcf758afb 100644
---- a/drivers/net/ethernet/xircom/Kconfig
-+++ b/drivers/net/ethernet/xircom/Kconfig
-@@ -19,7 +19,7 @@ if NET_VENDOR_XIRCOM
- 
- config PCMCIA_XIRC2PS
- 	tristate "Xircom 16-bit PCMCIA support"
--	depends on PCMCIA
-+	depends on PCMCIA && HAS_IOPORT
- 	help
- 	  Say Y here if you intend to attach a Xircom 16-bit PCMCIA (PC-card)
- 	  Ethernet or Fast Ethernet card to your computer.
-diff --git a/drivers/net/fddi/defxx.c b/drivers/net/fddi/defxx.c
-index 1fef8a9b1a0f..0fbbb7286008 100644
---- a/drivers/net/fddi/defxx.c
-+++ b/drivers/net/fddi/defxx.c
-@@ -254,7 +254,7 @@ static const char version[] =
- #define DFX_BUS_TC(dev) 0
  #endif
  
--#if defined(CONFIG_EISA) || defined(CONFIG_PCI)
 +#ifdef CONFIG_HAS_IOPORT
- #define dfx_use_mmio bp->mmio
- #else
- #define dfx_use_mmio true
-diff --git a/drivers/net/hamradio/Kconfig b/drivers/net/hamradio/Kconfig
-index a94c7bd5db2e..887c61971841 100644
---- a/drivers/net/hamradio/Kconfig
-+++ b/drivers/net/hamradio/Kconfig
-@@ -83,7 +83,7 @@ config SCC_TRXECHO
+ static unsigned int hub6_serial_in(struct uart_port *p, int offset)
+ {
+ 	offset = offset << p->regshift;
+@@ -414,6 +415,7 @@ static void hub6_serial_out(struct uart_port *p, int offset, int value)
+ 	outb(p->hub6 - 1 + offset, p->iobase);
+ 	outb(value, p->iobase + 1);
+ }
++#endif /* CONFIG_HAS_IOPORT */
  
- config BAYCOM_SER_FDX
- 	tristate "BAYCOM ser12 fullduplex driver for AX.25"
--	depends on AX25 && !S390
-+	depends on AX25 && HAS_IOPORT
- 	select CRC_CCITT
- 	help
- 	  This is one of two drivers for Baycom style simple amateur radio
-@@ -103,7 +103,7 @@ config BAYCOM_SER_FDX
+ static unsigned int mem_serial_in(struct uart_port *p, int offset)
+ {
+@@ -463,6 +465,7 @@ static unsigned int mem32be_serial_in(struct uart_port *p, int offset)
+ 	return ioread32be(p->membase + offset);
+ }
  
- config BAYCOM_SER_HDX
- 	tristate "BAYCOM ser12 halfduplex driver for AX.25"
--	depends on AX25 && !S390
-+	depends on AX25 && HAS_IOPORT
- 	select CRC_CCITT
- 	help
- 	  This is one of two drivers for Baycom style simple amateur radio
-@@ -151,7 +151,7 @@ config BAYCOM_EPP
++#ifdef CONFIG_HAS_IOPORT
+ static unsigned int io_serial_in(struct uart_port *p, int offset)
+ {
+ 	offset = offset << p->regshift;
+@@ -474,6 +477,24 @@ static void io_serial_out(struct uart_port *p, int offset, int value)
+ 	offset = offset << p->regshift;
+ 	outb(value, p->iobase + offset);
+ }
++#endif
++static unsigned int no_serial_in(struct uart_port *p, int offset)
++{
++	return (unsigned int)-1;
++}
++
++static void no_serial_out(struct uart_port *p, int offset, int value)
++{
++}
++
++#ifdef CONFIG_HAS_IOPORT
++static inline bool is_upf_fourport(struct uart_port *port)
++{
++	return port->flags & UPF_FOURPORT;
++}
++#else
++#define is_upf_fourport(x)	false
++#endif
  
- config YAM
- 	tristate "YAM driver for AX.25"
--	depends on AX25 && !S390
-+	depends on AX25 && HAS_IOPORT
- 	help
- 	  The YAM is a modem for packet radio which connects to the serial
- 	  port and includes some of the functions of a Terminal Node
-diff --git a/drivers/net/wan/Kconfig b/drivers/net/wan/Kconfig
-index dcb069dde66b..417e2c2d349d 100644
---- a/drivers/net/wan/Kconfig
-+++ b/drivers/net/wan/Kconfig
-@@ -178,7 +178,7 @@ config C101
+ static int serial8250_default_handle_irq(struct uart_port *port);
  
- config FARSYNC
- 	tristate "FarSync T-Series support"
--	depends on HDLC && PCI
-+	depends on HDLC && PCI && HAS_IOPORT
- 	help
- 	  Support for the FarSync T-Series X.21 (and V.35/V.24) cards by
- 	  FarSite Communications Ltd.
-diff --git a/net/ax25/Kconfig b/net/ax25/Kconfig
-index d3a9843a043d..f769e8f4bd02 100644
---- a/net/ax25/Kconfig
-+++ b/net/ax25/Kconfig
-@@ -4,7 +4,7 @@
- #
+@@ -485,10 +506,12 @@ static void set_io_from_upio(struct uart_port *p)
+ 	up->dl_write = default_serial_dl_write;
  
- menuconfig HAMRADIO
--	depends on NET && !S390
-+	depends on NET
- 	bool "Amateur Radio support"
+ 	switch (p->iotype) {
++#ifdef CONFIG_HAS_IOPORT
+ 	case UPIO_HUB6:
+ 		p->serial_in = hub6_serial_in;
+ 		p->serial_out = hub6_serial_out;
+ 		break;
++#endif
+ 
+ 	case UPIO_MEM:
+ 		p->serial_in = mem_serial_in;
+@@ -519,10 +542,17 @@ static void set_io_from_upio(struct uart_port *p)
+ 		break;
+ #endif
+ 
+-	default:
++#ifdef CONFIG_HAS_IOPORT
++	case UPIO_PORT:
+ 		p->serial_in = io_serial_in;
+ 		p->serial_out = io_serial_out;
+ 		break;
++#endif
++
++	default:
++		WARN(1, "Unsupported UART type %x\n", p->iotype);
++		p->serial_in = no_serial_in;
++		p->serial_out = no_serial_out;
+ 	}
+ 	/* Remember loaded iotype */
+ 	up->cur_iotype = p->iotype;
+@@ -1379,7 +1409,7 @@ static void autoconfig_irq(struct uart_8250_port *up)
+ 	unsigned long irqs;
+ 	int irq;
+ 
+-	if (port->flags & UPF_FOURPORT) {
++	if (is_upf_fourport(port)) {
+ 		ICP = (port->iobase & 0xfe0) | 0x1f;
+ 		save_ICP = inb_p(ICP);
+ 		outb_p(0x80, ICP);
+@@ -1398,7 +1428,7 @@ static void autoconfig_irq(struct uart_8250_port *up)
+ 	irqs = probe_irq_on();
+ 	serial8250_out_MCR(up, 0);
+ 	udelay(10);
+-	if (port->flags & UPF_FOURPORT) {
++	if (is_upf_fourport(port)) {
+ 		serial8250_out_MCR(up, UART_MCR_DTR | UART_MCR_RTS);
+ 	} else {
+ 		serial8250_out_MCR(up,
+@@ -1416,7 +1446,7 @@ static void autoconfig_irq(struct uart_8250_port *up)
+ 	serial8250_out_MCR(up, save_mcr);
+ 	serial_out(up, UART_IER, save_ier);
+ 
+-	if (port->flags & UPF_FOURPORT)
++	if (is_upf_fourport(port))
+ 		outb_p(save_ICP, ICP);
+ 
+ 	if (uart_console(port))
+@@ -2381,7 +2411,7 @@ int serial8250_do_startup(struct uart_port *port)
+ 	serial_port_out(port, UART_LCR, UART_LCR_WLEN8);
+ 
+ 	spin_lock_irqsave(&port->lock, flags);
+-	if (up->port.flags & UPF_FOURPORT) {
++	if (is_upf_fourport(&up->port)) {
+ 		if (!up->port.irq)
+ 			up->port.mctrl |= TIOCM_OUT1;
+ 	} else
+@@ -2463,7 +2493,7 @@ int serial8250_do_startup(struct uart_port *port)
+ 	 */
+ 	up->ier = UART_IER_RLSI | UART_IER_RDI;
+ 
+-	if (port->flags & UPF_FOURPORT) {
++	if (is_upf_fourport(port)) {
+ 		unsigned int icp;
+ 		/*
+ 		 * Enable interrupts on the AST Fourport board
+@@ -2506,7 +2536,7 @@ void serial8250_do_shutdown(struct uart_port *port)
+ 		serial8250_release_dma(up);
+ 
+ 	spin_lock_irqsave(&port->lock, flags);
+-	if (port->flags & UPF_FOURPORT) {
++	if (is_upf_fourport(port)) {
+ 		/* reset interrupts on the AST Fourport board */
+ 		inb((port->iobase & 0xfe0) | 0x1f);
+ 		port->mctrl |= TIOCM_OUT1;
+diff --git a/drivers/tty/serial/8250/Kconfig b/drivers/tty/serial/8250/Kconfig
+index 5313aa31930f..2a43bea7d7c3 100644
+--- a/drivers/tty/serial/8250/Kconfig
++++ b/drivers/tty/serial/8250/Kconfig
+@@ -6,7 +6,6 @@
+ 
+ config SERIAL_8250
+ 	tristate "8250/16550 and compatible serial support"
+-	depends on !S390
+ 	select SERIAL_CORE
+ 	select SERIAL_MCTRL_GPIO if GPIOLIB
  	help
- 	  If you want to connect your Linux box to an amateur radio, answer Y
+@@ -72,7 +71,7 @@ config SERIAL_8250_16550A_VARIANTS
+ 
+ config SERIAL_8250_FINTEK
+ 	bool "Support for Fintek F81216A LPC to 4 UART RS485 API"
+-	depends on SERIAL_8250
++	depends on SERIAL_8250 && HAS_IOPORT
+ 	help
+ 	  Selecting this option will add support for the RS485 capabilities
+ 	  of the Fintek F81216A LPC to 4 UART.
+@@ -160,7 +159,7 @@ config SERIAL_8250_HP300
+ 
+ config SERIAL_8250_CS
+ 	tristate "8250/16550 PCMCIA device support"
+-	depends on PCMCIA && SERIAL_8250
++	depends on PCMCIA && SERIAL_8250 && HAS_IOPORT
+ 	help
+ 	  Say Y here to enable support for 16-bit PCMCIA serial devices,
+ 	  including serial port cards, modems, and the modem functions of
+diff --git a/drivers/tty/serial/Kconfig b/drivers/tty/serial/Kconfig
+index 398e5aac2e77..dc41b3be6800 100644
+--- a/drivers/tty/serial/Kconfig
++++ b/drivers/tty/serial/Kconfig
+@@ -871,7 +871,7 @@ config SERIAL_TXX9_STDSERIAL
+ 
+ config SERIAL_JSM
+ 	tristate "Digi International NEO and Classic PCI Support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	select SERIAL_CORE
+ 	help
+ 	  This is a driver for Digi International's Neo and Classic series
 -- 
 2.39.2
 
