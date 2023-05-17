@@ -2,119 +2,75 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1832BC77B7A
-	for <linux-pci@archiver.kernel.org>; Wed, 17 May 2023 07:45:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8396AC7EE23
+	for <linux-pci@archiver.kernel.org>; Wed, 17 May 2023 08:12:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230098AbjEQHpK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 May 2023 03:45:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41892 "EHLO
+        id S229724AbjEQIMb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 May 2023 04:12:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230154AbjEQHpI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 May 2023 03:45:08 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 855A6118
-        for <linux-pci@vger.kernel.org>; Wed, 17 May 2023 00:45:07 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id d9443c01a7336-1aaef97652fso4355385ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 17 May 2023 00:45:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1684309507; x=1686901507;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Ddij+IgcohB+6avEyT6HE6OwNGw10qKKU1zhDBMIdCU=;
-        b=jkaTUZt9Hs97I1MjdIphtWrYTCS6celIa+fvsyxEcGRYkIlZ7s54nclg4kyRmb371q
-         kvxx8u6+mHZQBUb4taRXcquv2MNclgVbCDJhhHxUEerjDFKKAf9USgYGFEEU4709UZYT
-         2mJtLhhGZY3uDbc91ETeqKCTKQPkQAZvv3KIvFLATApzUcsZEcu0aSLZRwRtZ+euhN8u
-         03VHe7OKJZEV5TXXy6xQEyWt9xKbqVcTjTa/QstDHfPRl+rxRFtWrr4dPYLIik33gTQA
-         aG4hzo5p+lyBPME+8s6vnbdhy+0cfiEMzwBMlL4uZX5QuE8pMDKDdD7yVP0TzWjBHk4N
-         9d7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1684309507; x=1686901507;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ddij+IgcohB+6avEyT6HE6OwNGw10qKKU1zhDBMIdCU=;
-        b=DYuEEQ32EkI+oukZOF+A6SRMzeJfPCdH6TJhkTGH9nfVgAbX0GOiTD15ry10VCD1aR
-         haIS4VwJLUkKRabVgJz1+Ut4Yjf9l1sri3Z2ZMG89Hnv3SMjb95D6ipsUfWy8tP1iWMT
-         dZkuDmoQYXQVbY6+ncsewpBSRV/jzgFZdc3WP2oUpSf7EMfxoAYB+3HscKbHCMp0fpLC
-         27dEayS1kj8m1S0iF2VhfA7he7w8WBiS3lqi1rvfdNoOYKA+sU0ulfTTEJGN3GMKmeCA
-         ntyKF67zruDIHajxsJ+tA+3KgPo4vRDLelFs9Y1blsHDFNvBI5Sheev1dWVrRyDMwybW
-         11tg==
-X-Gm-Message-State: AC+VfDwk/7F4NunpgJOD0bYBwiOjhUeiItqXSwJChAlCEri35ARux6K5
-        xiX5Ivc5da+QmL3V0P9OF02a
-X-Google-Smtp-Source: ACHHUZ7Pc+TZlRHUWTX9PYr3qJ+VJYdNJJmMTsMZkqfYNDlIGj+eCyDL38FMnMC/1h3DunGIn/7lew==
-X-Received: by 2002:a17:902:ced0:b0:1ad:c736:209a with SMTP id d16-20020a170902ced000b001adc736209amr23245827plg.56.1684309506983;
-        Wed, 17 May 2023 00:45:06 -0700 (PDT)
-Received: from thinkpad ([117.207.26.28])
-        by smtp.gmail.com with ESMTPSA id jh19-20020a170903329300b001a9a8983a15sm16832784plb.231.2023.05.17.00.45.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 May 2023 00:45:06 -0700 (PDT)
-Date:   Wed, 17 May 2023 13:15:00 +0530
-From:   Manivannan Sadhasivami <manivannan.sadhasivam@linaro.org>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>
-Subject: Re: [PATCH v2 2/2] PCI: endpoint: Add kdoc description of
- pci_epf_type_add_cfs()
-Message-ID: <20230517074500.GK4868@thinkpad>
-References: <20230515074348.595704-1-dlemoal@kernel.org>
- <20230515074348.595704-3-dlemoal@kernel.org>
+        with ESMTP id S229868AbjEQIM2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 May 2023 04:12:28 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EDD310C3;
+        Wed, 17 May 2023 01:12:27 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D68E864364;
+        Wed, 17 May 2023 08:12:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A469C433EF;
+        Wed, 17 May 2023 08:12:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684311146;
+        bh=nCq3wyagGzcAnVK/CuXROM0u9JK6bfH6cEQEixju2n8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=VT6ZdunxonwqwKp0xZZmk6cbBBAJhlAz2betwj/2YP2QReJtkK8j+AmbJ2v7b7C2H
+         DLtxUPJKUSKoNeqW+ZcKzq6AmVqEM5PwChnBaoT1Me6BeLskgYBXsl5FvKB65nGZE2
+         JPUIFU4nWA3ZpsMyx+Y6SmD0JwAwLdeDEjtbv4as4qWW1d8Z4W+Cm+fush9jiI5B5W
+         eRQGl8ebauyTFB0iH/ln3WoVxo8wk3S7yPfElF8XSGBOLd9XITS3Kn/mSWspwLJy6A
+         iIAIUJId4ntgRB3YFwVHGeLlzlahFbXvp6J3eCvd5RWxyAWk+W0H5Sz7d6PBhKeSvR
+         dm+tkCmKyW96Q==
+Date:   Wed, 17 May 2023 13:42:22 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Rob Herring <robh@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RESEND v5 12/14] MAINTAINERS: Demote Gustavo Pimentel to
+ DW EDMA driver reviewer
+Message-ID: <ZGSMZtvJnXDkSkiL@matsya>
+References: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
+ <20230511190902.28896-13-Sergey.Semin@baikalelectronics.ru>
+ <20230517053154.GE4868@thinkpad>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230515074348.595704-3-dlemoal@kernel.org>
+In-Reply-To: <20230517053154.GE4868@thinkpad>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, May 15, 2023 at 04:43:48PM +0900, Damien Le Moal wrote:
-> Restore an improve the kdoc function description for
-> pci_epf_type_add_cfs() that was removed with commit
-> 893f14fed7d3 ("PCI: endpoint: Move pci_epf_type_add_cfs() code").
+On 17-05-23, 11:01, Manivannan Sadhasivam wrote:
+> On Thu, May 11, 2023 at 10:09:00PM +0300, Serge Semin wrote:
+> > No maintaining actions from Gustavo have been noticed for over a year.
+> > Demote him to being the DW eDMA driver reviewer for now.
+> > 
+> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > 
-> Fixes: 893f14fed7d3 ("PCI: endpoint: Move pci_epf_type_add_cfs() code")
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Reviewed-by: Manivannan Sadhasivami <manivannan.sadhasivam@linaro.org>
-
-- Mani
-
-> ---
->  drivers/pci/endpoint/pci-ep-cfs.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-> index 0bf5be986e9b..be042c3f50b5 100644
-> --- a/drivers/pci/endpoint/pci-ep-cfs.c
-> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
-> @@ -509,6 +509,22 @@ static const struct config_item_type pci_epf_type = {
->  	.ct_owner	= THIS_MODULE,
->  };
->  
-> +/**
-> + * pci_epf_type_add_cfs() - Help function drivers to expose function specific   
-> + *                          attributes in configfs
-> + * @epf: the EPF device that has to be configured using configfs
-> + * @group: the parent configfs group (corresponding to entries in
-> + *         pci_epf_device_id)
-> + *
-> + * Invoke to expose function specific attributes in configfs.
-> + *
-> + * Return: A pointer to a config_group structure or NULL if the function driver
-> + * does not have anything to expose (attributes configured by user) or if the
-> + * the function driver does not implement the add_cfs() method.
-> + *
-> + * Returns an error pointer if this function is called for an unbound EPF device
-> + * or if the EPF driver add_cfs() method fails.
-> + */
->  static struct config_group *pci_epf_type_add_cfs(struct pci_epf *epf,
->  						 struct config_group *group)
->  {
-> -- 
-> 2.40.1
-> 
+Applied to dmaengine/next, thanks
 
 -- 
-மணிவண்ணன் சதாசிவம்
+~Vinod
