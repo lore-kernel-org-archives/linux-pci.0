@@ -2,88 +2,141 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B94C7EE2D
-	for <linux-pci@archiver.kernel.org>; Thu, 18 May 2023 17:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CA8DC7EE25
+	for <linux-pci@archiver.kernel.org>; Thu, 18 May 2023 17:49:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229621AbjERRcD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 May 2023 13:32:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59906 "EHLO
+        id S229653AbjERRso (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 May 2023 13:48:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229654AbjERRcC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2023 13:32:02 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3451EAA;
-        Thu, 18 May 2023 10:31:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1684431105; x=1715967105;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=Wl8BDYVG0i7AvYNjyPawAfZhnam6nIO2zxc9kJVuY98=;
-  b=n6Zm4Of+BldnxQc0YUu+ASMgCbzK4g4rXyxfgtVIC2vl1JBt7SeLKpZp
-   qljjuxYfoDzKXUZrlcSJ89kfZoyqK51Ah7HKlru6SrdfmQjtom26vsrmd
-   TOIzyxXUW7jaHbalTuvAI6vAsv8BeJS5PSivMZqADfQvEUsb6QNBnDOmn
-   4uvBcFukVBd5uvAFCcVq2wE0EnIoU/3dqyDjA8JjMO9joNPR4DkFr1JcF
-   1eauAMqrJn+WNe3WKs76V6aTST7bAOz0hcGHGnpwt5bbMUA4UWBbmbijt
-   NHAUWy03yZZq1VYMJzqtfeiX9N23vPt6y1+9p/oqGcJzYakYCjK6DCG81
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10714"; a="354475452"
-X-IronPort-AV: E=Sophos;i="6.00,174,1681196400"; 
-   d="scan'208";a="354475452"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2023 10:31:18 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10714"; a="1032284552"
-X-IronPort-AV: E=Sophos;i="6.00,174,1681196400"; 
-   d="scan'208";a="1032284552"
-Received: from nroy-mobl1.amr.corp.intel.com (HELO [10.209.81.123]) ([10.209.81.123])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 May 2023 10:31:17 -0700
-Message-ID: <d03ef733-8098-69b7-97c2-304f1195e2a4@intel.com>
-Date:   Thu, 18 May 2023 10:31:16 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH 00/20] x86: address -Wmissing-prototype warnings
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@kernel.org>, x86@kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Juergen Gross <jgross@suse.com>,
-        "Srivatsa S. Bhat (VMware)" <srivatsa@csail.mit.edu>,
-        Alexey Makhalov <amakhalov@vmware.com>,
-        VMware PV-Drivers Reviewers <pv-drivers@vmware.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-pm@vger.kernel.org,
-        linux-mm@kvack.org
-References: <20230516193549.544673-1-arnd@kernel.org>
-From:   Dave Hansen <dave.hansen@intel.com>
-In-Reply-To: <20230516193549.544673-1-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S229990AbjERRsR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2023 13:48:17 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5717BE46;
+        Thu, 18 May 2023 10:48:13 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34ICmhnF005791;
+        Thu, 18 May 2023 17:48:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=m8vs+ulPx0hn8jujm1Mm//MOJFUFjOVv9tB3J5FHA0w=;
+ b=j04X/DZ3vUEBYLbLXdm5W1DzEXHApEZ7kRrvLO+RGgP1Xy+ZNcRx9W9S2NEShSuH+Wl5
+ 44VnmrLcy6Fs4k+yjpph0OgUyrq3YhDNYxhzR9LW0wVOTnUQciBesSOP1s07LIGHra7b
+ r0t+dWLjE2TccuA82XcC6hKKjzlypEpTJsFW4CykxSJxpjrF5VcrNAvf8lVkC8DrVEOJ
+ yMNIP7Ja3ZWrtGjG3dqgL4Ehp25Klz79+cEjAII/TPeUBY2WHaM7a3YLJptcptRUzsyW
+ 5UVlXs4/WIa+Vsnba1gAKKO2tNGdFUu5tO6xiyVUl4FugK/DwNOFB0MVOrljlW3/eRO/ Gg== 
+Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qnb7h9whb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 18 May 2023 17:48:06 +0000
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 34IHm4ff012411;
+        Thu, 18 May 2023 17:48:04 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3qj3mkaky0-1;
+        Thu, 18 May 2023 17:48:03 +0000
+Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34IHm1pY011968;
+        Thu, 18 May 2023 17:48:03 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-rohiagar-hyd.qualcomm.com [10.213.106.138])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 34IHm2Px012362;
+        Thu, 18 May 2023 17:48:03 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3970568)
+        id E58D35EC0; Thu, 18 May 2023 23:18:02 +0530 (+0530)
+From:   Rohit Agarwal <quic_rohiagar@quicinc.com>
+To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        mani@kernel.org, bhelgaas@google.com, lpieralisi@kernel.org,
+        kw@linux.com, robh@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        conor+dt@kernel.org, manivannan.sadhasivam@linaro.org
+Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Rohit Agarwal <quic_rohiagar@quicinc.com>
+Subject: [PATCH v6 5/5] ARM: dts: qcom: sdx65-mtp: Enable PCIe EP
+Date:   Thu, 18 May 2023 23:17:53 +0530
+Message-Id: <1684432073-28490-6-git-send-email-quic_rohiagar@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1684432073-28490-1-git-send-email-quic_rohiagar@quicinc.com>
+References: <1684432073-28490-1-git-send-email-quic_rohiagar@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: W4Ga2xlKMdmiQDdrwN5M8KKXvbj4YaTy
+X-Proofpoint-GUID: W4Ga2xlKMdmiQDdrwN5M8KKXvbj4YaTy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
+ definitions=2023-05-18_13,2023-05-17_02,2023-02-09_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 bulkscore=0
+ mlxscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0 mlxlogscore=691
+ adultscore=0 suspectscore=0 phishscore=0 clxscore=1015 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+ definitions=main-2305180144
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 5/16/23 12:35, Arnd Bergmann wrote:
-> The ones that are a bit awkward are those that just add a prototype to
-> shut up the warning, but the prototypes are never used for calling the
-> function because the only caller is in assembler code. I tried to come up
-> with other ways to shut up the compiler using the asmlinkage annotation,
-> but with no success.
+Enable PCIe Endpoint controller on the SDX65 MTP board based
+on Qualcomm SDX65 platform.
 
-I went looking for the same thing.  It's too bad gcc doesn't have an
-__attribute__ for it.
+Signed-off-by: Rohit Agarwal <quic_rohiagar@quicinc.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+---
+ arch/arm/boot/dts/qcom-sdx65-mtp.dts | 35 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/arch/arm/boot/dts/qcom-sdx65-mtp.dts b/arch/arm/boot/dts/qcom-sdx65-mtp.dts
+index 29ccb158..02d8d6e 100644
+--- a/arch/arm/boot/dts/qcom-sdx65-mtp.dts
++++ b/arch/arm/boot/dts/qcom-sdx65-mtp.dts
+@@ -250,6 +250,18 @@
+ 	status = "okay";
+ };
+ 
++&pcie_ep {
++	pinctrl-0 = <&pcie_ep_clkreq_default
++		     &pcie_ep_perst_default
++		     &pcie_ep_wake_default>;
++	pinctrl-names = "default";
++
++	reset-gpios = <&tlmm 57 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 53 GPIO_ACTIVE_LOW>;
++
++	status = "okay";
++};
++
+ &pcie_phy {
+ 	vdda-phy-supply = <&vreg_l1b_1p2>;
+ 	vdda-pll-supply = <&vreg_l4b_0p88>;
+@@ -281,6 +293,29 @@
+ 	status = "okay";
+ };
+ 
++&tlmm {
++	pcie_ep_clkreq_default: pcie-ep-clkreq-default-state {
++		pins = "gpio56";
++		function = "pcie_clkreq";
++		drive-strength = <2>;
++		bias-disable;
++	};
++
++	pcie_ep_perst_default: pcie-ep-perst-default-state {
++		pins = "gpio57";
++		function = "gpio";
++		drive-strength = <2>;
++		bias-pull-down;
++	};
++
++	pcie_ep_wake_default: pcie-ep-wake-default-state {
++		pins = "gpio53";
++		function = "gpio";
++		drive-strength = <2>;
++		bias-disable;
++	};
++};
++
+ &usb {
+ 	status = "okay";
+ };
+-- 
+2.7.4
+
