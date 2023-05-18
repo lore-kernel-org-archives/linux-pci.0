@@ -2,108 +2,82 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A3CC83005
-	for <linux-pci@archiver.kernel.org>; Thu, 18 May 2023 17:49:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51B55C77B7D
+	for <linux-pci@archiver.kernel.org>; Thu, 18 May 2023 21:50:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229937AbjERRss (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 May 2023 13:48:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40406 "EHLO
+        id S229937AbjERVuV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 May 2023 17:50:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229942AbjERRsR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2023 13:48:17 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1F3C10E6;
-        Thu, 18 May 2023 10:48:12 -0700 (PDT)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34IFgecP012352;
-        Thu, 18 May 2023 17:48:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=WH2q1eTTzCem1++Dct9CVIebrtgMtbEilSLzBsm7Ang=;
- b=Ywyb7hHov5CCfbYPL7ikMgJhCkgGB5UB21cIgJMY1b6bLv+EOxHaB7/FEyaDrtwE9uns
- HIZ6/1ezLjFeUK7PCTJq+1SbykqhGqUDHV7bo/DDrn8nvnHCp/JEPZ+bGJ9jg5RmIPey
- o+aQRowteriAZZwEUZLAH+1Wo7ZLGe47ihHyl9zjbjUCCQ3AZBaIqfcKjmtsaIyXXKA9
- 4srwBhTOcQg5HVo2Jm8pDXkWpaxlBxw5YGg81OzEHuqxpk0SQfJwQcx/sIpnfhfGQVXg
- xDDGNisFpji7dYeQMy3ALVhywQEq7KJqZndeBAai8LPj1CCT/8yt89bXuznjSOxy8qMX Gw== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3qnfpw1emm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 18 May 2023 17:48:06 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 34IHm23L012137;
-        Thu, 18 May 2023 17:48:02 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3qj3mkakxc-1;
-        Thu, 18 May 2023 17:48:02 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34IHm1BK012014;
-        Thu, 18 May 2023 17:48:02 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-rohiagar-hyd.qualcomm.com [10.213.106.138])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 34IHm120011967;
-        Thu, 18 May 2023 17:48:01 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3970568)
-        id 1D3DC5EC0; Thu, 18 May 2023 23:18:01 +0530 (+0530)
-From:   Rohit Agarwal <quic_rohiagar@quicinc.com>
-To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        mani@kernel.org, bhelgaas@google.com, lpieralisi@kernel.org,
-        kw@linux.com, robh@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, manivannan.sadhasivam@linaro.org
-Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Rohit Agarwal <quic_rohiagar@quicinc.com>
-Subject: [PATCH v6 1/5] dt-bindings: PCI: qcom: Add SDX65 SoC
-Date:   Thu, 18 May 2023 23:17:49 +0530
-Message-Id: <1684432073-28490-2-git-send-email-quic_rohiagar@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1684432073-28490-1-git-send-email-quic_rohiagar@quicinc.com>
-References: <1684432073-28490-1-git-send-email-quic_rohiagar@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: BdoyNiSrwIV_5HBvzws9LbkHKlmTtQHw
-X-Proofpoint-GUID: BdoyNiSrwIV_5HBvzws9LbkHKlmTtQHw
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-18_13,2023-05-17_02,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- priorityscore=1501 mlxscore=0 suspectscore=0 clxscore=1011 bulkscore=0
- adultscore=0 phishscore=0 mlxlogscore=781 impostorscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2304280000 definitions=main-2305180144
+        with ESMTP id S229936AbjERVuU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2023 17:50:20 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DD2B18F
+        for <linux-pci@vger.kernel.org>; Thu, 18 May 2023 14:50:19 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2B21E65280
+        for <linux-pci@vger.kernel.org>; Thu, 18 May 2023 21:50:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 533DAC43445;
+        Thu, 18 May 2023 21:50:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684446618;
+        bh=pvB1dqx6BmrDhpE0rLsmDlFZ7NJUbH9faiGI0N3crJk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=s3W0wSwuJcyq2iOt/4sn4enNUUwIF2gOMiK2x8BGhBdNSxPmgw090mN8XOA2huPa3
+         6ol3oHXQbv/S8pTHxGtGrmv7ZL1sBMgw+Q70rnHdnRIix7/mwyCcR1/oo9qBbOWgOx
+         jRrv9lVE8i18S181xqTlK2IsNZgUUIjmEe/F81SFORAZ7m9db8jVqA3lfW7qtNZgcG
+         FPcdPALy68/InxwLUNN6/U+hKh2v5UlVBPdxKxzLgW5X/AWuE0u+thOCvMg5gpB7z/
+         SeMYx2DzbOjo7WVzKeUGuzMTM5NHZF/5zt47xzk3HGQJQyCXxX4gv/ZOiBMZ1I1k1A
+         EF5ns/0md7w3A==
+Date:   Thu, 18 May 2023 16:50:16 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Ajay Agarwal <ajayagarwal@google.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        Nikhil Devshatwar <nikhilnd@google.com>,
+        Manu Gautam <manugautam@google.com>,
+        "David E. Box" <david.e.box@linux.intel.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Michael Bottini <michael.a.bottini@linux.intel.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3 0/5] PCI/ASPM: aspm_disable/default state handling and
+ other trivial fixes
+Message-ID: <ZGadmGNsHhVO0e1P@bhelgaas>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230504111301.229358-1-ajayagarwal@google.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCIe EP compatible string for SDX65 SoC.
+On Thu, May 04, 2023 at 04:42:56PM +0530, Ajay Agarwal wrote:
+> On going through the aspm driver, I found some potential bugs
+> and opportunities for code cleanup in the way the aspm_disable
+> and aspm_default states are being handled by the driver.
+> Perform other refactoring as well.
+> 
+> Changes from v2 to v3:
+>  - Commit message updates
+> 
+> Changes from v1 to v2:
+>  - Split the patches into smaller patches
+>  - Add the patch to rename L1.2 specific functions
+> 
+> Ajay Agarwal (5):
+>   PCI/ASPM: Disable ASPM_STATE_L1 only when driver disables L1 ASPM
+>   PCI/ASPM: Set ASPM_STATE_L1 only when driver enables L1
+>   PCI/ASPM: Set ASPM_STATE_L1 when driver enables L1ss
+>   PCI/ASPM: Rename L1.2 specific functions
+>   PCI/ASPM: Remove unnecessary ASPM_STATE_L1SS check
+> 
+>  drivers/pci/pcie/aspm.c | 34 +++++++++++++++-------------------
+>  1 file changed, 15 insertions(+), 19 deletions(-)
 
-Signed-off-by: Rohit Agarwal <quic_rohiagar@quicinc.com>
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml | 2 ++
- 1 file changed, 2 insertions(+)
+Applied to pci/aspm for v6.5, thanks!
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-index b3c22eb..8111122 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-@@ -13,6 +13,7 @@ properties:
-   compatible:
-     enum:
-       - qcom,sdx55-pcie-ep
-+      - qcom,sdx65-pcie-ep
-       - qcom,sm8450-pcie-ep
- 
-   reg:
-@@ -109,6 +110,7 @@ allOf:
-           contains:
-             enum:
-               - qcom,sdx55-pcie-ep
-+              - qcom,sdx65-pcie-ep
-     then:
-       properties:
-         clocks:
--- 
-2.7.4
-
+Bjorn
