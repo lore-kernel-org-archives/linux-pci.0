@@ -2,206 +2,71 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D55C4C77B7A
-	for <linux-pci@archiver.kernel.org>; Thu, 18 May 2023 09:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C07D0C7EE23
+	for <linux-pci@archiver.kernel.org>; Thu, 18 May 2023 09:32:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229981AbjERJWu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 May 2023 05:22:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49100 "EHLO
+        id S230194AbjERJcv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 May 2023 05:32:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229810AbjERJWu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2023 05:22:50 -0400
-Received: from loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A1378211B;
-        Thu, 18 May 2023 02:22:47 -0700 (PDT)
-Received: from loongson.cn (unknown [10.20.42.35])
-        by gateway (Coremail) with SMTP id _____8BxRPBm7mVkM84JAA--.17280S3;
-        Thu, 18 May 2023 17:22:46 +0800 (CST)
-Received: from user-pc.202.106.0.20 (unknown [10.20.42.35])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8BxWdJi7mVkSKFnAA--.45037S2;
-        Thu, 18 May 2023 17:22:45 +0800 (CST)
-From:   Yinbo Zhu <zhuyinbo@loongson.cn>
-To:     Minas Harutyunyan <hminas@synopsys.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     Jianmin Lv <lvjianmin@loongson.cn>, wanghongliang@loongson.cn,
-        Liu Peibao <liupeibao@loongson.cn>,
-        loongson-kernel@lists.loongnix.cn, Yinbo Zhu <zhuyinbo@loongson.cn>
-Subject: [PATCH v1] usb: dwc2: add pci_device_id driver_data parse support
-Date:   Thu, 18 May 2023 17:22:40 +0800
-Message-Id: <20230518092240.8023-1-zhuyinbo@loongson.cn>
-X-Mailer: git-send-email 2.20.1
+        with ESMTP id S230186AbjERJcs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2023 05:32:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5B692123;
+        Thu, 18 May 2023 02:32:46 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7AEEA64DC5;
+        Thu, 18 May 2023 09:32:46 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B693C4339B;
+        Thu, 18 May 2023 09:32:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684402365;
+        bh=AxosTDF4QElj+lF1aFKpzDoBWCNtV2DhU375tkIJwHs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Wiw61qcuhVDj5zJkbgdbELZ5rbttjn0+LQWiy2Bad0QaVf9jb5Xzf9sIoI5Qi48eG
+         at76n9GncvKk0FCkJLTbUF1W1ddkt7dFeYPs1+2bFRfP/EJfEIg0zJ1yMCbXV3Z9eZ
+         z+kRykqnoX1sd/LFHjo7BO5rs1SPNWQVUZagwjjlXBtVPtYwevVDa9V2LNAP6Vg1QI
+         +eOc/aj0OloKZAgik57+ecrapuh5N+jv46XPeFCt1/kD0Zu1avfAlB0ebjS63XPSma
+         BORoQdh9nPnVKHOGxK2vibN17IjtGCCKLYy4fKZlRfN43mg6sb00FlPPnxcc4jz4du
+         i9BcXvBRhPheg==
+Date:   Thu, 18 May 2023 15:02:41 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cai Huoqing <cai.huoqing@linux.dev>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Rob Herring <robh@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        linux-pci@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RESEND v5 14/14] MAINTAINERS: Add myself as the DW eDMA
+ driver reviewer
+Message-ID: <ZGXwuZgUCabzj0/O@matsya>
+References: <20230511190902.28896-1-Sergey.Semin@baikalelectronics.ru>
+ <20230511190902.28896-15-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf8BxWdJi7mVkSKFnAA--.45037S2
-X-CM-SenderInfo: 52kx5xhqerqz5rrqw2lrqou0/
-X-Coremail-Antispam: 1Uk129KBjvJXoWxur4xWF13GFWrZry7Kr13XFb_yoW7Jr1DpF
-        ZrZFW0yrWktFsxCw13CF4UAFy5Zan7J34UCa47Kw1S9FZ7Ar4rXF1jkr45Cr93t390ga12
-        vF17tw48CF47J37anT9S1TB71UUUUUJqnTZGkaVYY2UrUUUUj1kv1TuYvTs0mT0YCTnIWj
-        qI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUIcSsGvfJTRUUU
-        bVAFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUXVWUAwA2ocxC64
-        kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28E
-        F7xvwVC0I7IYx2IY6xkF7I0E14v26r4j6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJw
-        A2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr1j6rxdM2kKe7AKxVWUXVWUAwAS0I0E0xvYzxvE
-        52x082IY62kv0487Mc804VCY07AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I
-        80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCj
-        c4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7VAKI48JMxAIw28IcVCjz48v1s
-        IEY20_WwCFx2IqxVCFs4IE7xkEbVWUJVW8JwCFI7km07C267AKxVWUXVWUAwC20s026c02
-        F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
-        ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
-        xVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
-        4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07j5
-        HUDUUUUU=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230511190902.28896-15-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The dwc2 driver has everything we need to run in PCI mode except
-for pci_device_id driver_data parse.  With that to set Loongson
-dwc2 element and added identified as PCI_VENDOR_ID_LOONGSON
-and PCI_DEVICE_ID_LOONGSON_DWC2 in dwc2_pci_ids, the Loongson
-dwc2 controller will work.
+On 11-05-23, 22:09, Serge Semin wrote:
+> The driver original maintainer has been inactive for almost two years now.
+> It doesn't positively affect the new patches tests and reviews process.
+> Since the DW eDMA engine has been embedded into the PCIe controllers in
+> several our SoCs we will be interested in helping with the updates review.
 
-Signed-off-by: Yinbo Zhu <zhuyinbo@loongson.cn>
----
- drivers/usb/dwc2/core.h   |  1 +
- drivers/usb/dwc2/params.c | 33 +++++++++++++++++++++++++++++++--
- drivers/usb/dwc2/pci.c    | 14 +-------------
- include/linux/pci_ids.h   |  2 ++
- 4 files changed, 35 insertions(+), 15 deletions(-)
+Applied, thanks
 
-diff --git a/drivers/usb/dwc2/core.h b/drivers/usb/dwc2/core.h
-index 0bb4c0c845bf..c92a1da46a01 100644
---- a/drivers/usb/dwc2/core.h
-+++ b/drivers/usb/dwc2/core.h
-@@ -1330,6 +1330,7 @@ irqreturn_t dwc2_handle_common_intr(int irq, void *dev);
- /* The device ID match table */
- extern const struct of_device_id dwc2_of_match_table[];
- extern const struct acpi_device_id dwc2_acpi_match[];
-+extern const struct pci_device_id dwc2_pci_ids[];
- 
- int dwc2_lowlevel_hw_enable(struct dwc2_hsotg *hsotg);
- int dwc2_lowlevel_hw_disable(struct dwc2_hsotg *hsotg);
-diff --git a/drivers/usb/dwc2/params.c b/drivers/usb/dwc2/params.c
-index 21d16533bd2f..f7550d293c2d 100644
---- a/drivers/usb/dwc2/params.c
-+++ b/drivers/usb/dwc2/params.c
-@@ -7,6 +7,8 @@
- #include <linux/module.h>
- #include <linux/of_device.h>
- #include <linux/usb/of.h>
-+#include <linux/pci_ids.h>
-+#include <linux/pci.h>
- 
- #include "core.h"
- 
-@@ -55,6 +57,14 @@ static void dwc2_set_jz4775_params(struct dwc2_hsotg *hsotg)
- 		!device_property_read_bool(hsotg->dev, "disable-over-current");
- }
- 
-+static void dwc2_set_loongson_params(struct dwc2_hsotg *hsotg)
-+{
-+	struct dwc2_core_params *p = &hsotg->params;
-+
-+	p->phy_utmi_width = 8;
-+	p->power_down = DWC2_POWER_DOWN_PARAM_NONE;
-+}
-+
- static void dwc2_set_x1600_params(struct dwc2_hsotg *hsotg)
- {
- 	struct dwc2_core_params *p = &hsotg->params;
-@@ -281,6 +291,22 @@ const struct acpi_device_id dwc2_acpi_match[] = {
- };
- MODULE_DEVICE_TABLE(acpi, dwc2_acpi_match);
- 
-+const struct pci_device_id dwc2_pci_ids[] = {
-+	{
-+		PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, PCI_PRODUCT_ID_HAPS_HSOTG),
-+	},
-+	{
-+		PCI_DEVICE(PCI_VENDOR_ID_STMICRO,
-+			   PCI_DEVICE_ID_STMICRO_USB_OTG),
-+	},
-+	{
-+		PCI_DEVICE(PCI_VENDOR_ID_LOONGSON, PCI_DEVICE_ID_LOONGSON_DWC2),
-+		.driver_data = (unsigned long)dwc2_set_loongson_params,
-+	},
-+	{ /* end: all zeroes */ }
-+};
-+MODULE_DEVICE_TABLE(pci, dwc2_pci_ids);
-+
- static void dwc2_set_param_otg_cap(struct dwc2_hsotg *hsotg)
- {
- 	switch (hsotg->hw_params.op_mode) {
-@@ -929,10 +955,13 @@ int dwc2_init_params(struct dwc2_hsotg *hsotg)
- 		set_params(hsotg);
- 	} else {
- 		const struct acpi_device_id *amatch;
-+		const struct pci_device_id *pmatch;
- 
- 		amatch = acpi_match_device(dwc2_acpi_match, hsotg->dev);
--		if (amatch && amatch->driver_data) {
--			set_params = (set_params_cb)amatch->driver_data;
-+		pmatch = pci_match_id(dwc2_pci_ids, to_pci_dev(hsotg->dev->parent));
-+
-+		if ((amatch && amatch->driver_data) || (pmatch && pmatch->driver_data)) {
-+			set_params = (set_params_cb)pmatch->driver_data;
- 			set_params(hsotg);
- 		}
- 	}
-diff --git a/drivers/usb/dwc2/pci.c b/drivers/usb/dwc2/pci.c
-index b7306ed8be4c..f3a1e4232a31 100644
---- a/drivers/usb/dwc2/pci.c
-+++ b/drivers/usb/dwc2/pci.c
-@@ -24,7 +24,7 @@
- #include <linux/platform_device.h>
- #include <linux/usb/usb_phy_generic.h>
- 
--#define PCI_PRODUCT_ID_HAPS_HSOTG	0xabc0
-+#include "core.h"
- 
- static const char dwc2_driver_name[] = "dwc2-pci";
- 
-@@ -122,18 +122,6 @@ static int dwc2_pci_probe(struct pci_dev *pci,
- 	return ret;
- }
- 
--static const struct pci_device_id dwc2_pci_ids[] = {
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, PCI_PRODUCT_ID_HAPS_HSOTG),
--	},
--	{
--		PCI_DEVICE(PCI_VENDOR_ID_STMICRO,
--			   PCI_DEVICE_ID_STMICRO_USB_OTG),
--	},
--	{ /* end: all zeroes */ }
--};
--MODULE_DEVICE_TABLE(pci, dwc2_pci_ids);
--
- static struct pci_driver dwc2_pci_driver = {
- 	.name = dwc2_driver_name,
- 	.id_table = dwc2_pci_ids,
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index e43ab203054a..6481f648695a 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -157,6 +157,7 @@
- #define PCI_VENDOR_ID_PCI_SIG		0x0001
- 
- #define PCI_VENDOR_ID_LOONGSON		0x0014
-+#define PCI_DEVICE_ID_LOONGSON_DWC2	0x7a04
- 
- #define PCI_VENDOR_ID_SOLIDIGM		0x025e
- 
-@@ -2356,6 +2357,7 @@
- #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3_AXI	0xabce
- #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB31	0xabcf
- #define PCI_DEVICE_ID_SYNOPSYS_EDDA	0xedda
-+#define PCI_PRODUCT_ID_HAPS_HSOTG       0xabc0
- 
- #define PCI_VENDOR_ID_USR		0x16ec
- 
 -- 
-2.20.1
-
+~Vinod
