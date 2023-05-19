@@ -2,115 +2,81 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14FDDC7EE2C
-	for <linux-pci@archiver.kernel.org>; Fri, 19 May 2023 02:12:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6847C77B7A
+	for <linux-pci@archiver.kernel.org>; Fri, 19 May 2023 03:56:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230302AbjESCMD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 May 2023 22:12:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43000 "EHLO
+        id S229493AbjESD4p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 May 2023 23:56:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230308AbjESCMB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2023 22:12:01 -0400
-Received: from bird.elm.relay.mailchannels.net (bird.elm.relay.mailchannels.net [23.83.212.17])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1419FE4A;
-        Thu, 18 May 2023 19:11:59 -0700 (PDT)
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 5170B540B3A;
-        Fri, 19 May 2023 02:11:59 +0000 (UTC)
-Received: from pdx1-sub0-mail-a208.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id B909554189B;
-        Fri, 19 May 2023 02:11:58 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1684462318; a=rsa-sha256;
-        cv=none;
-        b=lFVuP0UoAneulIb7AnLiKzB/VWkoxfjRvq9wDf/gk5bJ0/rcRTYyHpH/RCpPhJl1iALLig
-        jIq5PhCKmV8jrX5yowgbfX8NvUPZqRuxH0cNB6YdORheHKeCOn5J547NAy4R0ogBvUAMYJ
-        u5GuLicKDmbbqa6WitM6R+0KA7BG9wwNdZ8E29aDbyL6NPNYU/GljD6b7v/zbkAWCqW6Hl
-        hqsSRd1pLvsFcOms537k03oRCdCjSkEyBkl9xH0bcXJFiZCkgSCYpaCPCadPbnCx7gfiOP
-        k4LSsgJE8zgAVzEseCnCWupQTZKhwh5O9p7tqtu8EOPXOUXqU7gQ9kd/AcwGYA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1684462318;
+        with ESMTP id S229452AbjESD4o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2023 23:56:44 -0400
+X-Greylist: delayed 79 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 18 May 2023 20:56:02 PDT
+Received: from us-smtp-delivery-115.mimecast.com (us-smtp-delivery-115.mimecast.com [170.10.133.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23F1CE75
+        for <linux-pci@vger.kernel.org>; Thu, 18 May 2023 20:56:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=maxlinear.com;
+        s=selector; t=1684468561;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=UGS5YSwf/rGU2XZSGVPlNsADHYegr/4g6swrqUfHy7s=;
-        b=7mShLIeClaqzPUCKIdjphAH2oWfX+GzrU/n0YYf5GZwnx6vBJGOz6Ud4sISM2FFCG8sl8Q
-        6fA0t67d5XFZfEXlDgYKMRLtCiJTpLTzN7kWn7491KZ3Pl2u+AEaNvK34mXB711KlBME9t
-        xeEGsFs5xgo2bLOw8lYwP11WKZq4TxmmwcrG2pccP/TTsJspxpaOopzyO52TBYIma1edIh
-        uZ3rlsz3A3ndwiMOx/xgkMjJwidIzYl45rMtn6/mFjUOmuU4y7m/osfsrNZIrj3EibazMi
-        TnR9uo4NkkvwQJAYBDmtnqSSOHK29gc80eTbecqV+m2fbBWL3ePRuYpWfgkA4A==
-ARC-Authentication-Results: i=1;
-        rspamd-5cdf8fd7d9-fw8rh;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Stupid-Trouble: 64a12e39217dfb73_1684462319114_247395351
-X-MC-Loop-Signature: 1684462319113:2194989952
-X-MC-Ingress-Time: 1684462319113
-Received: from pdx1-sub0-mail-a208.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.127.59.19 (trex/6.8.1);
-        Fri, 19 May 2023 02:11:59 +0000
-Received: from offworld (unknown [104.36.25.8])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dave@stgolabs.net)
-        by pdx1-sub0-mail-a208.dreamhost.com (Postfix) with ESMTPSA id 4QMr255946z9r;
-        Thu, 18 May 2023 19:11:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1684462318;
-        bh=UGS5YSwf/rGU2XZSGVPlNsADHYegr/4g6swrqUfHy7s=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=edgYCx8RTxJ0QaKA/sRny6kjo4yI+ie8V3T3tW3Jox9IGLLgUlCkCUW7GsXlG+fQt
-         Dy7yqwu9j4WqawEvohkJsvU0mOTsv9Qd7SadnukmYuHAiZSmWE1qX5A6PuM/zoRbpm
-         TBTJE4UzsqXG2EvTEN7GtbvfDe72pql0hx847aZO0IeAYYn6+ybr8QvRB4b8yJ4UiH
-         vlCaeg3n9I70PEXabo2MdA9a7+MdQYUl8MiZukvF+LO9FKWqmHJY5CZ3vlLgqLzcFj
-         w8FI+Ir/NVi31hL9ajSsQdWVlirdm4NCVOUg+SAuLbduizTKIzR134trbKguCnkJ5n
-         kfq78sUTFUMdw==
-Date:   Thu, 18 May 2023 18:38:46 -0700
-From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     LiuLele <liu.lele@qq.com>
-Cc:     dave.jiang@intel.com, Jonathan.Cameron@huawei.com,
-        alison.schofield@intel.com, bhelgaas@google.com,
-        bwidawsk@kernel.org, dan.j.williams@intel.com, helgaas@kernel.org,
-        ira.weiny@intel.com, linux-acpi@vger.kernel.org,
-        linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, rostedt@goodmis.org,
-        vishal.l.verma@intel.com
-Subject: Re: CXL memory device not created correctly
-Message-ID: <gbsxrcjtnf67jxpqmbn57nqoslpmjtuk2ycatmau3vfsmpvbrd@c2umpofn2hti>
-References: <cec6a8f5-a284-4f46-1ada-4edd625a9a2e@intel.com>
- <tencent_D9D9D358330CA573E23D490C6EE13E0DC105@qq.com>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=mUAOOvuJ71E7a8sz5yk0mrvRi53ftsjgLeuc9agjm50=;
+        b=Y7EKG+0YRqFO6NLjSdaRvHZbFDkipn57iDx1IrkAven6a4CdcKeiODL6MY8Vt/M0U0EsHj
+        iry4p7Mi2Hiatf2VqJnfvnJSbIHbihX45JGGMNV8FWJOTqh7AdPoKXILCuXA8pvDs2ambz
+        u0vUXOb0f8TUEySXySyudciIBvs3H2S5efvOXV8jpJNIpT5RJU59utZzUMqEhEyl+Tb6MS
+        jdKFJ4t0MZ+Z2qLYRcjzQhYT1zRXx83BAF3zfkxmtL1vrEW5Rna7ZW4aSTGYE6Ltcz9trY
+        fEiIzTf9tqfN6o/9utWI8xX20o83hWd06G0OcHogVliIZETWMyJjyBNWsenIUQ==
+Received: from mail.maxlinear.com (174-47-1-83.static.ctl.one [174.47.1.83])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ us-mta-328-d_ORvbF9PZ6B45mPdvOi6A-1; Thu, 18 May 2023 23:54:40 -0400
+X-MC-Unique: d_ORvbF9PZ6B45mPdvOi6A-1
+Received: from sgsxdev002.isng.phoenix.local (10.226.81.112) by
+ mail.maxlinear.com (10.23.38.120) with Microsoft SMTP Server id 15.1.2375.24;
+ Thu, 18 May 2023 20:54:36 -0700
+From:   Zhu YiXin <yzhu@maxlinear.com>
+To:     <lchuanhua@maxlinear.com>, <torvalds@linux-foundation.org>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <upstream_support@maxlinear.com>, Zhu YiXin <yzhu@maxlinear.com>
+Subject: [PATCH] MAINTAINERS: Update entry for PCIe driver for Intel LGM GW SoC
+Date:   Fri, 19 May 2023 11:54:24 +0800
+Message-ID: <20230519035424.53069-1-yzhu@maxlinear.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <tencent_D9D9D358330CA573E23D490C6EE13E0DC105@qq.com>
-User-Agent: NeoMutt/20230407
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: maxlinear.com
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 19 May 2023, LiuLele wrote:
+Rahul Tanwar is no longer at Maxlinear, so update the MAINTAINER's entry
+for the PCIe driver for Intel LGM GW SoC.
 
->In my testing CXL device /sys/bus/cxl/devices/mem0  not created, and the get error messages :
->
->```
->cxl_pci 0000:0d:00.0: Failed to get interrupt for event Info log
->```
->
->My test environment is a qemu CXL emulator with qemu v8.0.0, Linux kernel v6.3.0.
->While with kernel 5.9.13,  /sys/bus/cxl/devices/mem0  can be created.
+Added group email address for support purpose.
 
-Yes, this can be annoying and would argue the probe should not error out.
-Regardless, the actual qemu support is in Jonathan's tree:
+Signed-off-by: Zhu YiXin <yzhu@maxlinear.com>
+---
+ MAINTAINERS | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-https://gitlab.com/jic23/qemu/-/commit/a04e6476df363d1f6bc160577b30dda6564d3f67
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c8d274efff10..b97bdbcaf4e9 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -16383,8 +16383,9 @@ F:=09Documentation/devicetree/bindings/pci/intel,ke=
+embay-pcie*
+ F:=09drivers/pci/controller/dwc/pcie-keembay.c
+=20
+ PCIE DRIVER FOR INTEL LGM GW SOC
+-M:=09Rahul Tanwar <rtanwar@maxlinear.com>
++M:=09Chuanhua Lei <lchuanhua@maxlinear.com>
+ L:=09linux-pci@vger.kernel.org
++L:=09upstream_support@maxlinear.com
+ S:=09Maintained
+ F:=09Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+ F:=09drivers/pci/controller/dwc/pcie-intel-gw.c
+--=20
+2.17.1
 
-Thanks,
-Davidlohr
