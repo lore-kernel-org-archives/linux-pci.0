@@ -2,121 +2,55 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2DB2C7EE23
-	for <linux-pci@archiver.kernel.org>; Fri, 19 May 2023 11:05:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2EE0C77B7A
+	for <linux-pci@archiver.kernel.org>; Fri, 19 May 2023 11:21:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230362AbjESLFy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 May 2023 07:05:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47572 "EHLO
+        id S229681AbjESLVy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 May 2023 07:21:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231974AbjESLFr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 May 2023 07:05:47 -0400
-Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com [66.111.4.25])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C3021988;
-        Fri, 19 May 2023 04:05:18 -0700 (PDT)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-        by mailout.nyi.internal (Postfix) with ESMTP id 888FD5C018C;
-        Fri, 19 May 2023 07:04:25 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute6.internal (MEProxy); Fri, 19 May 2023 07:04:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1684494265; x=1684580665; bh=/C
-        wla6Z93CmdqEZ213cheaHU/C7xFoaUH7cr2bjxpHQ=; b=fgD3+fClg58VBaUs//
-        zaPCHvCJP5VwPquLsJQCejG585X4z+0cgq8+PVQLQhfsm5YWTZtpvK/KaaglSt4v
-        AZlDlbvGF3uoZD3fC2SSE25eKMeiJ6Wom5J1YcG2GkUcncWYRhxQyk68GPcM/VQp
-        34Ei3ImxNpBRwXdc9tym77ZcH2TZYznA5nJLd0dV2c5Gry+glxktVg9gmMI9439a
-        f3L5sFm8wopBNd1vAmNNyXTneaLVTBRRVuEaIadcCeApET3YIvFnFJalDw9tA0h/
-        2TZol3iqiGR+i22jK3aoA3M0ZmXVLJnvyzijOnDj+ydVHvdZRUx6GiucYtjtNpoN
-        JBTA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; t=1684494265; x=1684580665; bh=/Cwla6Z93Cmdq
-        EZ213cheaHU/C7xFoaUH7cr2bjxpHQ=; b=dFs0aALapqY2/RKBVBoRgsFC+kwwn
-        aghUbwauR7c1rX0XPL5DOBgegPR2+r/bkGNCHfJxUzqFkNmnzE8s/4FBbZi5lUoP
-        nAOFrE15xfCXbV5De8PpVHEPPQaEzx07LPV8M2YiUR692Ae414HT9CDIPsp6/adS
-        ri78lMwnrM8+0M82lszLmKjmmPSM5wfqXIhxwrHo/HhPJmcwFpyMcgcL4OhJuOKD
-        iQ+iy6dLE5E+W30aMejTZcd8FnCpaTSh3UIXb6IRU53VnkL0NvNyaDJ3yMEEg3jy
-        Amhm2R5vJ7t1jx6KTPd6J1GyNs70g8SgYMjfUjxhve2s0eAY/TVDwYw5g==
-X-ME-Sender: <xms:t1dnZJJPaJ2g_2nxuUp5GipLJ04nJ7R8n701jCM3WJMdOGe7-3CtvQ>
-    <xme:t1dnZFIpdftyeukP7ox0wWnWvdRtWV5S4-6mNAnBSP0uR5dlSKF5AEHwrDn2R_GBj
-    PS_1pR-COVEJwI7y-M>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvhedrfeeihedgfeeiucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
-    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:t1dnZBuc-n5XDtHdGoa_Vunbhz_oDVhyhorHNRW0yPyAxt_gejgLQg>
-    <xmx:t1dnZKYlvNBeT1qmqCedxwoaVPlHQKmXv30SdUKAdaGMxpMsm1ja6g>
-    <xmx:t1dnZAbwOs_Q1raPox-9GKEVt3JVUpAGWNgWD_H68sPb8ESiQXlXfg>
-    <xmx:uVdnZLvOcIo3POIIQLS4ujcc4StrWhcyu6DRLzy0SJ32ArlhSgUt0g>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 9A414B60089; Fri, 19 May 2023 07:04:23 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-431-g1d6a3ebb56-fm-20230511.001-g1d6a3ebb
-Mime-Version: 1.0
-Message-Id: <1f771dae-1bc7-4fd3-8514-613cf3b12e1a@app.fastmail.com>
-In-Reply-To: <cabdd839-71d5-aabb-aee6-d37ebcabf2ab@intel.com>
-References: <20230516193549.544673-1-arnd@kernel.org>
- <20230516193549.544673-11-arnd@kernel.org>
- <cabdd839-71d5-aabb-aee6-d37ebcabf2ab@intel.com>
-Date:   Fri, 19 May 2023 13:04:03 +0200
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Dave Hansen" <dave.hansen@intel.com>,
-        "Arnd Bergmann" <arnd@kernel.org>, x86@kernel.org
-Cc:     "Thomas Gleixner" <tglx@linutronix.de>,
-        "Ingo Molnar" <mingo@redhat.com>, "Borislav Petkov" <bp@alien8.de>,
-        "Dave Hansen" <dave.hansen@linux.intel.com>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "Andy Lutomirski" <luto@kernel.org>,
-        "Steven Rostedt" <rostedt@goodmis.org>,
-        "Masami Hiramatsu" <mhiramat@kernel.org>,
-        "Mark Rutland" <mark.rutland@arm.com>,
-        "Juergen Gross" <jgross@suse.com>,
-        "Srivatsa S. Bhat (VMware)" <srivatsa@csail.mit.edu>,
-        "Alexey Makhalov" <amakhalov@vmware.com>,
-        "VMware PV-Drivers Reviewers" <pv-drivers@vmware.com>,
-        "Peter Zijlstra" <peterz@infradead.org>,
-        "Darren Hart" <dvhart@infradead.org>,
-        "Andy Shevchenko" <andy@infradead.org>,
-        "Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        linux-kernel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        xen-devel@lists.xenproject.org, linux-pm@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [PATCH 10/20] x86: xen: add missing prototypes
-Content-Type: text/plain
+        with ESMTP id S229514AbjESLVx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 May 2023 07:21:53 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DFB13AD;
+        Fri, 19 May 2023 04:21:51 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id 62BB992009E; Fri, 19 May 2023 13:21:50 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id 5B8CC92009B;
+        Fri, 19 May 2023 12:21:50 +0100 (BST)
+Date:   Fri, 19 May 2023 12:21:50 +0100 (BST)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] x86/PCI: Fix a sanity check in
+ pirq_convert_irt_table()
+In-Reply-To: <bc8422a8bf3ff99809413eb62dd12aacc85a9950.1683356951.git.christophe.jaillet@wanadoo.fr>
+Message-ID: <alpine.DEB.2.21.2305190345331.50034@angie.orcam.me.uk>
+References: <bc8422a8bf3ff99809413eb62dd12aacc85a9950.1683356951.git.christophe.jaillet@wanadoo.fr>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, May 18, 2023, at 19:28, Dave Hansen wrote:
-> On 5/16/23 12:35, Arnd Bergmann wrote:
->> 
->> arch/x86/xen/enlighten_pv.c:1233:34: error: no previous prototype for 'xen_start_kernel' [-Werror=missing-prototypes]
->> arch/x86/xen/irq.c:22:14: error: no previous prototype for 'xen_force_evtchn_callback' [-Werror=missing-prototypes]
->> arch/x86/xen/mmu_pv.c:358:20: error: no previous prototype for 'xen_pte_val' [-Werror=missing-prototypes]
->> arch/x86/xen/mmu_pv.c:366:20: error: no previous prototype for 'xen_pgd_val' [-Werror=missing-prototypes]
->
-> What's the deal with this one?
->
-> The patch is doing a bunch functions on top of the ones from the commit
-> message.  Were you just showing a snippet of what the actual set of
-> warnings is?
+On Sat, 6 May 2023, Christophe JAILLET wrote:
 
-I missed this one going through the changelogs before sending them out,
-I thought I had added a proper text to each one, but it fell through the
-cracks. I've followed up with a v2 patch that has a proper changelog
-now.
+> We compare the size in bytes of a struct (and its ending flexible array)
+> with the number of elements in a flexible array.
 
-      Arnd
+ Incorrect, see the inline documentation for the struct.
+
+> This is wrong and "ir->size < ir->used" is likely to be always false.
+
+ Hopefully, but we've seen all kinds of rubbish in PC BIOS data, and this 
+data structure seems available for OEMs to program with a tool called BCP.  
+Better safe than sorry.  Therefore, NAK.
+
+  Maciej
