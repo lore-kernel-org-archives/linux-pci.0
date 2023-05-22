@@ -2,173 +2,134 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF052C77B75
-	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 14:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9090DC7EE26
+	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 14:37:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231232AbjEVO3H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 May 2023 10:29:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54522 "EHLO
+        id S233199AbjEVOhz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 May 2023 10:37:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231600AbjEVO3G (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 10:29:06 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5038799;
-        Mon, 22 May 2023 07:29:04 -0700 (PDT)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4QQ0Ch0Z4Nz686w8;
-        Mon, 22 May 2023 22:27:44 +0800 (CST)
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Mon, 22 May
- 2023 15:29:00 +0100
-Date:   Mon, 22 May 2023 15:28:59 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Shuai Xue <xueshuai@linux.alibaba.com>
-CC:     <chengyou@linux.alibaba.com>, <kaishen@linux.alibaba.com>,
-        <helgaas@kernel.org>, <yangyicong@huawei.com>, <will@kernel.org>,
-        <baolin.wang@linux.alibaba.com>, <robin.murphy@arm.com>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-pci@vger.kernel.org>, <rdunlap@infradead.org>,
-        <mark.rutland@arm.com>, <zhuo.song@linux.alibaba.com>
-Subject: Re: [PATCH v5 0/4] drivers/perf: add Synopsys DesignWare PCIe PMU
- driver support
-Message-ID: <20230522152859.0000429e@Huawei.com>
-In-Reply-To: <20230522035428.69441-1-xueshuai@linux.alibaba.com>
-References: <20220917121036.14864-1-xueshuai@linux.alibaba.com>
-        <20230522035428.69441-1-xueshuai@linux.alibaba.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S231909AbjEVOhy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 10:37:54 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 883899E;
+        Mon, 22 May 2023 07:37:51 -0700 (PDT)
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MDA9nU024128;
+        Mon, 22 May 2023 13:54:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : to : cc : date : in-reply-to : references : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=iLdM+YTiB4Ar1aYJSLHnL52KDJQTNxM1cOAPGR05Xdg=;
+ b=dU4g9QeT1zR3JWjp2grQM29RAEphhwu72hGDHeCWIiErpMILa3di+r0y7bxCC0OweyaQ
+ K17EYrb70QJj07zFoG67oYiTjIqIHz6EsgyHnt4CeByIWhAODXJ1MNf3pnf9py2Ub9Nl
+ tx/TODnqzZ36ipmyERZdDfisTiKTgKDVZu7stRdr1BoT5g4TmJBx/AGtwCjomM2+1F/J
+ 65Cf9lIOCiY2TxPVAb20+6UxKKbORHdYOa/fLLkz891L5IEu8TZbZgdPnswioTfBo75T
+ i3rMxDw3r/0Thjw02zxnhsseafIeFoOde6bnR+CNUSnfBMGxE2N0uOWxL6PugK8LrrY+ 1g== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqfq3f58c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 22 May 2023 13:54:42 +0000
+Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MDAhab027851;
+        Mon, 22 May 2023 13:54:42 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqfq3f56q-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 22 May 2023 13:54:42 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M3fj1w027623;
+        Mon, 22 May 2023 13:54:40 GMT
+Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qppcu904h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 22 May 2023 13:54:39 +0000
+Received: from smtpav06.fra02v.mail.ibm.com (smtpav06.fra02v.mail.ibm.com [10.20.54.105])
+        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MDsbcL33554932
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 22 May 2023 13:54:37 GMT
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8E09220049;
+        Mon, 22 May 2023 13:54:37 +0000 (GMT)
+Received: from smtpav06.fra02v.mail.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 6A6CE2004B;
+        Mon, 22 May 2023 13:54:36 +0000 (GMT)
+Received: from [9.171.23.45] (unknown [9.171.23.45])
+        by smtpav06.fra02v.mail.ibm.com (Postfix) with ESMTP;
+        Mon, 22 May 2023 13:54:36 +0000 (GMT)
+Message-ID: <c63aaec4da1d9e8b8b48cf037b3d859c62ee1a59.camel@linux.ibm.com>
+Subject: Re: [PATCH v5 32/44] sound: add HAS_IOPORT dependencies
+From:   Niklas Schnelle <schnelle@linux.ibm.com>
+To:     Takashi Iwai <tiwai@suse.de>
+Cc:     Arnd Bergmann <arnd@arndb.de>, Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        alsa-devel@alsa-project.org
+Date:   Mon, 22 May 2023 15:54:36 +0200
+In-Reply-To: <87cz2sy3t3.wl-tiwai@suse.de>
+References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
+         <20230522105049.1467313-33-schnelle@linux.ibm.com>
+         <87cz2sy3t3.wl-tiwai@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.1 (3.48.1-1.fc38) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml100002.china.huawei.com (7.191.160.241) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: q4KoBRyJFhYMlNCzkM3e9tKYxb8Q82xy
+X-Proofpoint-GUID: 1_f1mYGJMse_Cr5AQntxJm-aI4Itain9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.176.26
+ definitions=2023-05-22_09,2023-05-22_03,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=724
+ priorityscore=1501 adultscore=0 lowpriorityscore=0 mlxscore=0 spamscore=0
+ suspectscore=0 malwarescore=0 impostorscore=0 clxscore=1015 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+ definitions=main-2305220113
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 22 May 2023 11:54:24 +0800
-Shuai Xue <xueshuai@linux.alibaba.com> wrote:
+On Mon, 2023-05-22 at 13:59 +0200, Takashi Iwai wrote:
+> On Mon, 22 May 2023 12:50:37 +0200,
+> Niklas Schnelle wrote:
+> >=20
+> > In a future patch HAS_IOPORT=3Dn will result in inb()/outb() and friend=
+s
+> > not being declared. We thus need to add HAS_IOPORT as dependency for
+> > those drivers using them.
+> >=20
+> > Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+> > Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+> > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+>=20
+> Looks good to me.  Would you like the patch picked up through
+> sound.git tree, or rather apply all through a different tree?
+> In the latter case:
+>=20
+> Reviewed-by: Takashi Iwai <tiwai@suse.de>
+>=20
+>=20
+> thanks,
+>=20
+> Takashi
 
-Hi,
+With the Kconfig addition of HAS_IOPORT merged in v6.4-rc1 this patch
+can now go independently via the the sound.git tree. Our plan is to get
+as many of these per-subsystem patches merged for v6.5 as possible such
+that then only a small number (ideally zero) of patches remain before
+the last one can be merged removing inb()/outb() etc for HAS_IOPORT=3Dn.
 
-Very rarely a good idea to send a new patch set version in reply to an old
-one. Tends to just resort in it being way off the top of people's most recent
-email (depending on client of course!)
-
-Jonathan
-
-> changes since v4:
-> 
-> 1. addressing commens from Bjorn Helgaas:
-> - reorder the includes by alpha
-> - change all macros with upper-case hex
-> - change ras_des type into u16
-> - remove unnecessary outer "()"
-> - minor format changes
-> 
-> 2. Address commensts from Jonathan Cameron:
-> - rewrite doc and add a example to show how to use lane event
-> 
-> 3. fix compile error reported by: kernel test robot
-> - remove COMPILE_TEST and add depend on PCI in kconfig
-> - add Reported-by: kernel test robot <lkp@intel.com>
-> 
-> Changes since v3:
-> 
-> 1. addressing comments from Robin Murphy:
-> - add a prepare patch to define pci id in linux/pci_ids.h
-> - remove unnecessary 64BIT dependency
-> - fix DWC_PCIE_PER_EVENT_OFF/ON macro
-> - remove dwc_pcie_pmu struct and move all its fileds into dwc_pcie_rp_info
-> - remove unnecessary format field show
-> - use sysfs_emit() instead of all the assorted sprintf() and snprintf() calls.
-> - remove unnecessary spaces and remove unnecessary cast to follow event show convention
-> - remove pcie_pmu_event_attr_is_visible
-> - fix a refcout leak on error branch when walk pci device in for_each_pci_dev
-> - remove bdf field from dwc_pcie_rp_info and calculate it at runtime
-> - finish all the checks before allocating rp_info to avoid hanging wasted memory
-> - remove some unused fields
-> - warp out control register configuration from sub function to .add()
-> - make function return type with a proper signature
-> - fix lane event count enable by clear DWC_PCIE_CNT_ENABLE field first
-> - pass rp_info directly to the read_*_counter helpers and in start, stop and add callbacks
-> - move event type validtion into .event_init()
-> - use is_sampling_event() to be consistent with everything else of pmu drivers
-> - remove unnecessary dev_err message in .event_init()
-> - return EINVAL instead EOPNOTSUPP for not a valid event 
-> - finish all the checks before start modifying the event
-> - fix sibling event check by comparing event->pmu with sibling->pmu
-> - probe PMU for each rootport independently
-> - use .update() as .read() directly
-> - remove dynamically generating symbolic name of lane event
-> - redefine static symbolic name of lane event and leave lane filed to user
-> - add CPU hotplug support
-> 
-> 2. addressing comments from Baolin:
-> - add a mask to avoid possible overflow
-> 
-> Changes since v2 addressing comments from Baolin:
-> - remove redundant macro definitions
-> - use dev_err to print error message
-> - change pmu_is_register to boolean
-> - use PLATFORM_DEVID_NONE macro
-> - fix module author format
-> 
-> Changes since v1:
-> 
-> 1. address comments from Jonathan:
-> - drop marco for PMU name and VSEC version
-> - simplify code with PCI standard marco
-> - simplify code with FIELD_PREP()/FIELD_GET() to replace shift marco
-> - name register filed with single _ instead double
-> - wrap dwc_pcie_pmu_{write}_dword out and drop meaningless snaity check 
-> - check vendor id while matching vesc with pci_find_vsec_capability()
-> - remove RP_NUM_MAX and use a list to organize PMU devices for rootports
-> - replace DWC_PCIE_CREATE_BDF with standard PCI_DEVID
-> - comments on riping register together
-> 
-> 2. address comments from Bjorn:
-> - rename DWC_PCIE_VSEC_ID to DWC_PCIE_VSEC_RAS_DES_ID
-> - rename cap_pos to ras_des
-> - simplify declare of device_attribute with DEVICE_ATTR_RO
-> - simplify code with PCI standard macro and API like pcie_get_width_cap()
-> - fix some code style problem and typo
-> - drop meaningless snaity check of container_of
-> 
-> 3. address comments from Yicong:
-> - use sysfs_emit() to replace sprintf()
-> - simplify iteration of pci device with for_each_pci_dev
-> - pick preferred CPUs on a near die and add comments
-> - unregister PMU drivers only for failed ones
-> - log on behalf PMU device and give more hint
-> - fix some code style problem
-> 
-> (Thanks for all comments and they are very valuable to me)
-> 
-> This patchset adds the PCIe Performance Monitoring Unit (PMU) driver support
-> for T-Head Yitian 710 SoC chip. Yitian 710 is based on the Synopsys PCI Express
-> Core controller IP which provides statistics feature.
-> 
-> Shuai Xue (4):
->   docs: perf: Add description for Synopsys DesignWare PCIe PMU driver
->   PCI: move Alibaba Vendor ID linux/pci_ids.h
->   drivers/perf: add DesignWare PCIe PMU driver
->   MAINTAINERS: add maintainers for DesignWare PCIe PMU driver
-> 
->  .../admin-guide/perf/dwc_pcie_pmu.rst         |  97 +++
->  Documentation/admin-guide/perf/index.rst      |   1 +
->  MAINTAINERS                                   |   6 +
->  drivers/infiniband/hw/erdma/erdma_hw.h        |   2 -
->  drivers/perf/Kconfig                          |   7 +
->  drivers/perf/Makefile                         |   1 +
->  drivers/perf/dwc_pcie_pmu.c                   | 701 ++++++++++++++++++
->  include/linux/pci_ids.h                       |   2 +
->  8 files changed, 815 insertions(+), 2 deletions(-)
->  create mode 100644 Documentation/admin-guide/perf/dwc_pcie_pmu.rst
->  create mode 100644 drivers/perf/dwc_pcie_pmu.c
-> 
-
+Thanks,
+Niklas
