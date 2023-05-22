@@ -2,69 +2,66 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC6FC7EE2D
-	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:42:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70376C7EE2E
+	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:51:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230523AbjEVKmk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 May 2023 06:42:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37136 "EHLO
+        id S232738AbjEVKvQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 May 2023 06:51:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40652 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230362AbjEVKmj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:42:39 -0400
+        with ESMTP id S230188AbjEVKvL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:51:11 -0400
 Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12BE1B3;
-        Mon, 22 May 2023 03:42:37 -0700 (PDT)
-Received: from pps.filterd (m0353724.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34M9cOEB010154;
-        Mon, 22 May 2023 10:42:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- content-transfer-encoding : mime-version; s=pp1;
- bh=oAtcR3CjUqUoLFIujCSD3j+neQkPVsD2jlqdXWw8s2o=;
- b=Y7QHsYYh2ESn04M12mL1SyRfdaxlo5dlcn5VT6ul4Cc6wsUs5I75sksygIGiFqWX4Ba/
- N0nUyT2bg9A5r3UdIbSCZdHZNO81EEwM0hJ56/nJBff/r+KQzlF/eOkQjGttTwqbFccn
- A6N6lQeMYvvSfaxyFWFwQQFAiJImRmgkY/Te1XPCJxEe6S5InprnKwbmhKhgu+JrnFqt
- 8e9JyIjw6ujKvCv7LHpbDRH+pw0uqpcifezDQPiHWlu4ZmCIqmHMc6lCW83efbKVFx1S
- mNZsMJ3VT2uvn6X2bCHO3zPARcBPhPbUNr3baSCBUr4Pj6VcZgPxgkrIfNI9H2280dls bQ== 
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30A0BDC;
+        Mon, 22 May 2023 03:51:09 -0700 (PDT)
+Received: from pps.filterd (m0353723.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34M8qMms022853;
+        Mon, 22 May 2023 10:50:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=Qjp5WmRB6pMZkB2MV3VuohUa5H77Y1Zh6kYqFrJDkEI=;
+ b=g0F7EJmRriStYFJ0NRJJvAbDKhX8XrnsCaTuU2P7IE3QYxYLcXX69i+VyU0PYTRizNH4
+ 7eIX9KBDcgTNV3AofICxrIb3mwqqsYY2Ud+qFFSO54CU2CtxuaH/6/KoYs8dV7yeAQsg
+ aUINTt/Yn6PAjYcZegHK0Lt2hJFw7MKTI9QrVdhA/mEVFtnIax/eSzUcQmQZsfPptjNv
+ cJ7bGhGiYLUpA0kd6L7hIjlP05xeXbTt74HXosU5EzcxUDsmfdoVmJygz6Jxy0zHNYhx
+ RMt+8kefZRqeW6saLZUNmJ87zB3T6SRxrHpsga6Y5lYgZ4VJY0+Qurs3DJGwZ3I3QCe4 Fw== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqee6t7c4-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqd3tc918-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:42:22 +0000
-Received: from m0353724.ppops.net (m0353724.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MAahkO010615;
-        Mon, 22 May 2023 10:42:21 GMT
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqee6t7b2-1
+        Mon, 22 May 2023 10:50:57 +0000
+Received: from m0353723.ppops.net (m0353723.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MAg1c1018836;
+        Mon, 22 May 2023 10:50:56 GMT
+Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqd3tc90n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:42:21 +0000
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M9r4b4023774;
-        Mon, 22 May 2023 10:42:19 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-        by ppma06fra.de.ibm.com (PPS) with ESMTPS id 3qppa4rrw3-1
+        Mon, 22 May 2023 10:50:56 +0000
+Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
+        by ppma04fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M8UAIW022273;
+        Mon, 22 May 2023 10:50:54 GMT
+Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
+        by ppma04fra.de.ibm.com (PPS) with ESMTPS id 3qppcf0rtk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:42:19 +0000
+        Mon, 22 May 2023 10:50:54 +0000
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MAgGMh7930206
+        by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MAoqdg23003846
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 10:42:16 GMT
+        Mon, 22 May 2023 10:50:52 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6BF712004D;
-        Mon, 22 May 2023 10:42:16 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 516A420040;
+        Mon, 22 May 2023 10:50:52 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6632720040;
-        Mon, 22 May 2023 10:42:15 +0000 (GMT)
-Received: from [9.171.23.45] (unknown [9.171.23.45])
+        by IMSVA (Postfix) with ESMTP id EF6C72004B;
+        Mon, 22 May 2023 10:50:51 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Mon, 22 May 2023 10:42:15 +0000 (GMT)
-Message-ID: <cb6aa00b1901abb572e69e218a5500f2cd1561ce.camel@linux.ibm.com>
-Subject: Re: [PATCH v4 05/41] counter: add HAS_IOPORT dependencies
+        Mon, 22 May 2023 10:50:51 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     William Breathitt Gray <william.gray@linaro.org>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
+To:     Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
         Alan Stern <stern@rowland.harvard.edu>,
@@ -74,99 +71,62 @@ Cc:     Arnd Bergmann <arnd@arndb.de>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-iio@vger.kernel.org
-Date:   Mon, 22 May 2023 12:42:15 +0200
-In-Reply-To: <ZGeF1K0Yxu9lTgN2@fedora>
-References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
-         <20230516110038.2413224-6-schnelle@linux.ibm.com> <ZGbQYzXK8InMqkxu@fedora>
-         <6f4d672ba7136f2b01ea9ee69687b16168eddb8d.camel@linux.ibm.com>
-         <231dcebc57c2e43ba65d007b60d3d446d9ed71c8.camel@linux.ibm.com>
-         <abc02dc2af7563ae26bf0d0ddd927d9b4a21dda3.camel@linux.ibm.com>
-         <ZGeF1K0Yxu9lTgN2@fedora>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.1 (3.48.1-1.fc38) 
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
+Subject: [PATCH v5 03/44] char: add HAS_IOPORT dependencies
+Date:   Mon, 22 May 2023 12:50:08 +0200
+Message-Id: <20230522105049.1467313-4-schnelle@linux.ibm.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230522105049.1467313-1-schnelle@linux.ibm.com>
+References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: cA0g1KbNT_1V-Wdsk-GcXzW4oULP6J5E
-X-Proofpoint-ORIG-GUID: 8B6fhOHNamOcgpya-zvAw4kmkSBF0QJC
+X-Proofpoint-ORIG-GUID: yx45th0kOCQ38F5l-gjYQ6uMdaIMysqb
+X-Proofpoint-GUID: TfzigNbNyI8rIaldclqcDxJkNnlUA0kj
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-22_06,2023-05-22_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 suspectscore=0
- phishscore=0 adultscore=0 bulkscore=0 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 mlxlogscore=607 clxscore=1015 impostorscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 suspectscore=0
+ malwarescore=0 clxscore=1015 mlxscore=0 bulkscore=0 spamscore=0
+ mlxlogscore=999 impostorscore=0 adultscore=0 lowpriorityscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2304280000 definitions=main-2305220089
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 2023-05-19 at 10:21 -0400, William Breathitt Gray wrote:
-> On Fri, May 19, 2023 at 03:39:57PM +0200, Niklas Schnelle wrote:
-> > On Fri, 2023-05-19 at 15:38 +0200, Niklas Schnelle wrote:
-> > > On Fri, 2023-05-19 at 15:17 +0200, Niklas Schnelle wrote:
-> > > > On Thu, 2023-05-18 at 21:26 -0400, William Breathitt Gray wrote:
-> > > > > On Tue, May 16, 2023 at 01:00:01PM +0200, Niklas Schnelle wrote:
-> > > > > > In a future patch HAS_IOPORT=3Dn will result in inb()/outb() an=
-d friends
-> > > > > > not being declared. We thus need to add HAS_IOPORT as dependenc=
-y for
-> > > > > > those drivers using them.
-> > > > > >=20
-> > > > > > Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> > > > > > Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-> > > > > > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> > > > >=20
-> > > > > Hi Niklas,
-> > > > >=20
-> > > > > The change itself is fine, but please update the description to r=
-eflect
-> > > > > that this is adding a depends on HAS_IOPORT_MAP rather than HAS_I=
-OPORT,
-> > > > > along with the reason why it's needed (i.e. devm_ioport_map() is =
-used).
-> > > > >=20
-> > > > > Thanks,
-> > > > >=20
-> > > > > William Breathitt Gray
-> > > > >=20
-> > > > >=20
-> > > >=20
-> > > > Right, this clearly needs adjustment. I went with the following com=
-mit
-> > > > message for v5:
-> > > >=20
-> > > > "counter: add HAS_IOPORT_MAP dependency
-> > > >=20
-> > > > The 104_QUAD_8 counter driver uses devm_ioport_map() without depend=
-ing
-> > > > on HAS_IOPORT_MAP. This causes compilation to fail on platforms suc=
-h as
-> > > > s390 which do not support I/O port mapping. Add the missing
-> > > > HAS_IOPORT_MAP dependency to fix this."
-> > > >=20
-> > >=20
-> > > Just noticed this isn't entirely correct. As devm_ioport_map() has an
-> > > empty stub for HAS_IOPORT_MAP=3Dn this doesn't lead to a compile erro=
-r it
-> > > just doesn't work. Will reword to "This causes the driver to not be
-> > > useable on platforms ..."
-> >=20
-> > s/useable/usable/
->=20
-> 104_QUAD_8 has an explicit dependency on PC104 and X86, so I don't think
-> it would ever be used outside of x86 platforms. Does it still make sense
-> to have the HAS_IOPORT_MAP dependency in this case?
->=20
-> William Breathitt Gray
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to add HAS_IOPORT as dependency for
+those drivers using them.
 
-Well, yes and no, you're right that it doesn't really cause compile
-issues despite the "|| COMPILE_TEST" albeit the code could never work.
-Still, I'd add the dependency. At the very least it serves as
-documentation and maybe in the future someone will want to remove those
-empty stubs for HAS_IOPORT_MAP=3Dn.
+Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+ drivers/char/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Thanks
-Niklas
+diff --git a/drivers/char/Kconfig b/drivers/char/Kconfig
+index 801d6c83f896..625af75833fc 100644
+--- a/drivers/char/Kconfig
++++ b/drivers/char/Kconfig
+@@ -34,6 +34,7 @@ config TTY_PRINTK_LEVEL
+ config PRINTER
+ 	tristate "Parallel printer support"
+ 	depends on PARPORT
++	depends on HAS_IOPORT || PARPORT_NOT_PC
+ 	help
+ 	  If you intend to attach a printer to the parallel port of your Linux
+ 	  box (as opposed to using a serial printer; if the connector at the
+@@ -340,7 +341,7 @@ config NVRAM
+ 
+ config DEVPORT
+ 	bool "/dev/port character device"
+-	depends on ISA || PCI
++	depends on HAS_IOPORT
+ 	default y
+ 	help
+ 	  Say Y here if you want to support the /dev/port device. The /dev/port
+-- 
+2.39.2
+
