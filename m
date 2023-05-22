@@ -2,64 +2,64 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B52F7C7EE2D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A249EC7EE2E
 	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:52:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232417AbjEVKwX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 May 2023 06:52:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41142 "EHLO
+        id S230523AbjEVKwW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 May 2023 06:52:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41284 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232944AbjEVKvs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:51:48 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D68431A8;
-        Mon, 22 May 2023 03:51:26 -0700 (PDT)
-Received: from pps.filterd (m0353723.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MANwQM029722;
-        Mon, 22 May 2023 10:51:17 GMT
+        with ESMTP id S232929AbjEVKvr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:51:47 -0400
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE32818C;
+        Mon, 22 May 2023 03:51:24 -0700 (PDT)
+Received: from pps.filterd (m0353727.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34M9Melt006230;
+        Mon, 22 May 2023 10:51:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=kZbh9TuLodKcSl9IAvECr9fdM5pb/9fofPwHViYFQvE=;
- b=P6/lYUI34s/dxsx1tVMI8/Zjy6jwRb+jOlRHCt07FBzKLY9YmPEUhSNdXM5lAse7WiPk
- CyCGqOlHJzZa2gPaI7ru2FtQZ2/fBLTNwTcQZYLbSZnOeMSB0gN1RKwbqXctpdBpgbG8
- IGeGI+SqfCSUWq+M5zNDjiFaoJJtux7dnExEz5Bf1SXlPyqoU1WZnCzWeVzpGylSTL5C
- GKMmFqbmFsdSXyWpc73aA9SEYnckA5VaxbaINotY8RMztnR/SGPjB/2i6TtvUJtCDusZ
- FbHzPWm7HxOfrso/oHW+d4jEjGMbg+rCz/y6wQapdaYt8juBqW9i3MvaVp5Zz9HejHKK fA== 
+ bh=Q3KezN7Dg1yUy1aoxJvKOm2EF7m5HjkM4ODXo76O98U=;
+ b=trCFkXUKh2HvDN0cfAScvmCvd5YCw6TxpzX8KWyc361jr2phEn4JZxp2B1z3CT+a15br
+ q3jIkT/3GcXIM/fK8S3D42FIh3A69VpJpkDq4UI2b0yHDttgNESLJJLgQ0SXhg7r7XwP
+ 8xxC1jOLREwGOpcWsxAlKo3v6jYAieU3pziWFp+wpOuJmJJw1YFN0aszaxb/eaOeTB7u
+ niXUAfAXLblgdbplnHlIa0Up49k2GbRVY9+YPoGTD51550C22nEeklxcagWTA6VhLiak
+ I5IWMBle84gBcv8sbIB3m3a7Tnz1hUo+7i5TQrls4Ypvb+papKBCWAYSoLhQEcvgkkGL JQ== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqd3tc98b-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqgk8s30a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:16 +0000
-Received: from m0353723.ppops.net (m0353723.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MAb6mk005611;
-        Mon, 22 May 2023 10:51:16 GMT
+        Mon, 22 May 2023 10:51:10 +0000
+Received: from m0353727.ppops.net (m0353727.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MAbZ1h023711;
+        Mon, 22 May 2023 10:51:10 GMT
 Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqd3tc97h-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqgk8s2y8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:15 +0000
+        Mon, 22 May 2023 10:51:09 +0000
 Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M5xB5H007770;
-        Mon, 22 May 2023 10:51:13 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qppcu8wf0-1
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M3tYdn009545;
+        Mon, 22 May 2023 10:51:07 GMT
+Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qppcu8wev-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:13 +0000
+        Mon, 22 May 2023 10:51:07 +0000
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MApBrb2228892
+        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MAp35o4981324
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 10:51:11 GMT
+        Mon, 22 May 2023 10:51:03 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 19FC62004B;
-        Mon, 22 May 2023 10:51:11 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 0FBC620043;
+        Mon, 22 May 2023 10:51:03 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BD3B120043;
-        Mon, 22 May 2023 10:51:10 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id A18D020040;
+        Mon, 22 May 2023 10:51:02 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Mon, 22 May 2023 10:51:10 +0000 (GMT)
+        Mon, 22 May 2023 10:51:02 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
 To:     Arnd Bergmann <arnd@arndb.de>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
@@ -72,69 +72,101 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
-Subject: [PATCH v5 23/44] parport: PC style parport depends on HAS_IOPORT
-Date:   Mon, 22 May 2023 12:50:28 +0200
-Message-Id: <20230522105049.1467313-24-schnelle@linux.ibm.com>
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        linux-input@vger.kernel.org
+Subject: [PATCH v5 16/44] Input: gameport: add ISA and HAS_IOPORT dependencies
+Date:   Mon, 22 May 2023 12:50:21 +0200
+Message-Id: <20230522105049.1467313-17-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: Q5y0hsUNBmLVmH2dlnWCoyXC73LYg7Gi
-X-Proofpoint-GUID: XY8n3rTkFbbZfldquVZpKdTfb-e-DUiQ
+X-Proofpoint-GUID: ExqTYt-CoUFf4bJE6m43wER4NUh7sT72
+X-Proofpoint-ORIG-GUID: tWu58CQLcge7w6zm95HQnBPwAFb8mrPB
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-22_06,2023-05-22_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 suspectscore=0
- malwarescore=0 clxscore=1015 mlxscore=0 bulkscore=0 spamscore=0
- mlxlogscore=604 impostorscore=0 adultscore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 spamscore=0
+ mlxscore=0 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+ priorityscore=1501 adultscore=0 impostorscore=0 phishscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2304280000 definitions=main-2305220089
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. As PC style parport uses these functions we need to
-handle this dependency.
+not being declared. As ISA already implies HAS_IOPORT we can simply add
+this dependency and guard sections of code using inb()/outb() as
+alternative access methods.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/parport/Kconfig | 3 ++-
- include/linux/parport.h | 2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/input/gameport/Kconfig | 4 +++-
+ include/linux/gameport.h       | 9 +++++++--
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/parport/Kconfig b/drivers/parport/Kconfig
-index 5561362224e2..631c193fe42c 100644
---- a/drivers/parport/Kconfig
-+++ b/drivers/parport/Kconfig
-@@ -42,7 +42,8 @@ if PARPORT
+diff --git a/drivers/input/gameport/Kconfig b/drivers/input/gameport/Kconfig
+index 5a2c2fb3217d..fe73b26e647a 100644
+--- a/drivers/input/gameport/Kconfig
++++ b/drivers/input/gameport/Kconfig
+@@ -25,6 +25,7 @@ if GAMEPORT
  
- config PARPORT_PC
- 	tristate "PC-style hardware"
--	depends on ARCH_MIGHT_HAVE_PC_PARPORT || (PCI && !S390)
-+	depends on ARCH_MIGHT_HAVE_PC_PARPORT || PCI
-+	depends on HAS_IOPORT
+ config GAMEPORT_NS558
+ 	tristate "Classic ISA and PnP gameport support"
++	depends on ISA
  	help
- 	  You should say Y here if you have a PC-style parallel port. All
- 	  IBM PC compatible computers and some Alphas have PC-style
-diff --git a/include/linux/parport.h b/include/linux/parport.h
-index a0bc9e0267b7..fff39bc30629 100644
---- a/include/linux/parport.h
-+++ b/include/linux/parport.h
-@@ -514,7 +514,7 @@ extern int parport_device_proc_register(struct pardevice *device);
- extern int parport_device_proc_unregister(struct pardevice *device);
+ 	  Say Y here if you have an ISA or PnP gameport.
  
- /* If PC hardware is the only type supported, we can optimise a bit.  */
--#if !defined(CONFIG_PARPORT_NOT_PC)
-+#if !defined(CONFIG_PARPORT_NOT_PC) && defined(CONFIG_PARPORT_PC)
+@@ -35,6 +36,7 @@ config GAMEPORT_NS558
  
- #include <linux/parport_pc.h>
- #define parport_write_data(p,x)            parport_pc_write_data(p,x)
+ config GAMEPORT_L4
+ 	tristate "PDPI Lightning 4 gamecard support"
++	depends on ISA
+ 	help
+ 	  Say Y here if you have a PDPI Lightning 4 gamecard.
+ 
+@@ -53,7 +55,7 @@ config GAMEPORT_EMU10K1
+ 
+ config GAMEPORT_FM801
+ 	tristate "ForteMedia FM801 gameport support"
+-	depends on PCI
++	depends on PCI && HAS_IOPORT
+ 	help
+ 	  Say Y here if you have ForteMedia FM801 PCI audio controller
+ 	  (Abit AU10, Genius Sound Maker, HP Workstation zx2000,
+diff --git a/include/linux/gameport.h b/include/linux/gameport.h
+index 8c2f00018e89..4d5720022b63 100644
+--- a/include/linux/gameport.h
++++ b/include/linux/gameport.h
+@@ -167,16 +167,21 @@ static inline void gameport_trigger(struct gameport *gameport)
+ {
+ 	if (gameport->trigger)
+ 		gameport->trigger(gameport);
++#ifdef CONFIG_HAS_IOPORT
+ 	else
+ 		outb(0xff, gameport->io);
++#endif
+ }
+ 
+ static inline unsigned char gameport_read(struct gameport *gameport)
+ {
+ 	if (gameport->read)
+ 		return gameport->read(gameport);
+-	else
+-		return inb(gameport->io);
++#ifdef CONFIG_HAS_IOPORT
++	return inb(gameport->io);
++#else
++	return 0xff;
++#endif
+ }
+ 
+ static inline int gameport_cooked_read(struct gameport *gameport, int *axes, int *buttons)
 -- 
 2.39.2
 
