@@ -2,66 +2,65 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 668EFC7EE2F
-	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:55:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF3D9C77B75
+	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:55:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232783AbjEVKy7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 May 2023 06:54:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41242 "EHLO
+        id S230126AbjEVKzA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 May 2023 06:55:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232738AbjEVKxB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:53:01 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A257100;
-        Mon, 22 May 2023 03:51:42 -0700 (PDT)
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MAHSVA008247;
-        Mon, 22 May 2023 10:51:29 GMT
+        with ESMTP id S232538AbjEVKw7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:52:59 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 445B2103;
+        Mon, 22 May 2023 03:51:43 -0700 (PDT)
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MAMoKS005244;
+        Mon, 22 May 2023 10:51:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=/SEcaNC6I1GrhSw2Y7KGUQYtIfCgZ7j9WYsOxm/VjuE=;
- b=gB/2f0ty6kdge6NOKz/omoMUta51VQM5r7CGh6TYqDOFGpPmi154VCr0j/lD5dk8r7H5
- rMty4IA9jh9P3jxeAafBLeI65dOVPWZgZ8gAxrjF2TEEu4lBNDFsM5TPAeuUNSNIhYoX
- QeH/7uf4O4e/4ih0csPfOe4K6cuxU7E2/axxOIEjbORxb1Sn2SS5tgNxcjmO3/PqvvGQ
- HcBepzg7aWA3X5v1Xn6RnkcdRx8RSRcAHvqAOO3IYd2petH7IcPsVwjhdmfzhGV+gDx/
- sJWI0cobPzSqdKL4Z6ETNnqZEmQAkQ3qGfwGLLL3MJ4LVc7xLQ/uBg8wD7i0XyYepQ2+ WQ== 
+ bh=dfQ5wQfNvBBFH/wDJ5V3TSqe/Y7LuirZVNmCqlaqJ5Q=;
+ b=GRnDdWhOGFX36plq4/sEtOllzRiD8AAbRkTy83bj2Nn0OFJw2o+aiS1pstoqWS7fKP2w
+ gFJDAqc1K5cdEoVZbOpyxirv5s5M+MKo15D/FiOqXn/7Xh1sTJ0a/BUNPxIHuHuyr2n+
+ YJoDHD38+BZulEoL56CQTOQ4aNWqTExy0oTfMkB68ZEolNsy0PqPuGMWLFDCpZmV+Z4h
+ GrjSuPCx04M+SFzWU8sidYwcJ+XGipxHIjMgEGkSexJswU6v5ucIkk5vX/aYx37IGAwV
+ axF2HAh0JhW50WAfKKSGCR+cqAzmpXqhySNXADRTHVoPRbwYzAfUbvtgDJ9jSETgEBnJ /A== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqh128ney-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqfq39r4m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 22 May 2023 10:51:32 +0000
+Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34M9bChA026211;
+        Mon, 22 May 2023 10:51:31 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqfq39r42-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 22 May 2023 10:51:31 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M0H8rM032675;
+        Mon, 22 May 2023 10:51:29 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qppcu8wf6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Mon, 22 May 2023 10:51:28 +0000
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MAI1wh010504;
-        Mon, 22 May 2023 10:51:28 GMT
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqh128ndu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:28 +0000
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M4iPYH004863;
-        Mon, 22 May 2023 10:51:25 GMT
-Received: from smtprelay07.fra02v.mail.ibm.com ([9.218.2.229])
-        by ppma06fra.de.ibm.com (PPS) with ESMTPS id 3qppa4rryt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:25 +0000
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay07.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MApMj258262010
+        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MApQTF42599134
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 10:51:22 GMT
+        Mon, 22 May 2023 10:51:26 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 3F90620040;
-        Mon, 22 May 2023 10:51:22 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 7BA1A20043;
+        Mon, 22 May 2023 10:51:26 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D81CA2004B;
-        Mon, 22 May 2023 10:51:21 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 22D4220040;
+        Mon, 22 May 2023 10:51:26 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Mon, 22 May 2023 10:51:21 +0000 (GMT)
+        Mon, 22 May 2023 10:51:26 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+To:     Arnd Bergmann <arnd@arndb.de>, Helge Deller <deller@gmx.de>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
@@ -73,394 +72,152 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-serial@vger.kernel.org
-Subject: [PATCH v5 35/44] tty: serial: handle HAS_IOPORT dependencies
-Date:   Mon, 22 May 2023 12:50:40 +0200
-Message-Id: <20230522105049.1467313-36-schnelle@linux.ibm.com>
+        linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org
+Subject: [PATCH v5 40/44] fbdev: add HAS_IOPORT dependencies
+Date:   Mon, 22 May 2023 12:50:45 +0200
+Message-Id: <20230522105049.1467313-41-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: Sd1XWlVgOlkNpLIH7MGNlW3tUJyQiMGY
-X-Proofpoint-GUID: YlbMyG1UHxb1JPgBfW6-PiX5z_eYQye1
+X-Proofpoint-ORIG-GUID: gF39b4CtRX-VN3x90OvnQJrNShb5p1QN
+X-Proofpoint-GUID: 3MKUXHaX8MLYXQBNoJhPW_qWaJmsxJUH
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-22_06,2023-05-22_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
- priorityscore=1501 impostorscore=0 phishscore=0 clxscore=1015
- mlxlogscore=999 bulkscore=0 adultscore=0 malwarescore=0 suspectscore=0
- lowpriorityscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2304280000 definitions=main-2305220089
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=999
+ priorityscore=1501 adultscore=0 lowpriorityscore=0 mlxscore=0 spamscore=0
+ suspectscore=0 malwarescore=0 impostorscore=0 clxscore=1015 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+ definitions=main-2305220089
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
 not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them unconditionally. For 8250 based drivers some
-support MMIO only use so fence only the parts requiring I/O ports.
+those drivers using them.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/tty/Kconfig                  |  4 +--
- drivers/tty/serial/8250/8250_early.c |  4 +++
- drivers/tty/serial/8250/8250_pci.c   | 14 +++++++++
- drivers/tty/serial/8250/8250_port.c  | 44 +++++++++++++++++++++++-----
- drivers/tty/serial/8250/Kconfig      |  5 ++--
- drivers/tty/serial/Kconfig           |  2 +-
- 6 files changed, 60 insertions(+), 13 deletions(-)
+ drivers/video/fbdev/Kconfig | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/tty/Kconfig b/drivers/tty/Kconfig
-index 341abaed4ce2..bdd267dbd5e4 100644
---- a/drivers/tty/Kconfig
-+++ b/drivers/tty/Kconfig
-@@ -222,7 +222,7 @@ config MOXA_INTELLIO
+diff --git a/drivers/video/fbdev/Kconfig b/drivers/video/fbdev/Kconfig
+index 0fdf5f46802c..4eea398ebbfe 100644
+--- a/drivers/video/fbdev/Kconfig
++++ b/drivers/video/fbdev/Kconfig
+@@ -335,7 +335,7 @@ config FB_IMX
  
- config MOXA_SMARTIO
- 	tristate "Moxa SmartIO support v. 2.0"
--	depends on SERIAL_NONSTANDARD && PCI
-+	depends on SERIAL_NONSTANDARD && PCI && HAS_IOPORT
- 	help
- 	  Say Y here if you have a Moxa SmartIO multiport serial card and/or
- 	  want to help develop a new version of this driver.
-@@ -303,7 +303,7 @@ config GOLDFISH_TTY_EARLY_CONSOLE
+ config FB_CYBER2000
+ 	tristate "CyberPro 2000/2010/5000 support"
+-	depends on FB && PCI && (BROKEN || !SPARC64)
++	depends on FB && PCI && HAS_IOPORT && (BROKEN || !SPARC64)
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -429,6 +429,7 @@ config FB_FM2
+ config FB_ARC
+ 	tristate "Arc Monochrome LCD board support"
+ 	depends on FB && (X86 || COMPILE_TEST)
++	depends on HAS_IOPORT
+ 	select FB_SYS_FILLRECT
+ 	select FB_SYS_COPYAREA
+ 	select FB_SYS_IMAGEBLIT
+@@ -531,7 +532,7 @@ config FB_IMSTT
  
- config IPWIRELESS
- 	tristate "IPWireless 3G UMTS PCMCIA card support"
--	depends on PCMCIA && NETDEVICES
-+	depends on PCMCIA && NETDEVICES && HAS_IOPORT
- 	select PPP
- 	help
- 	  This is a driver for 3G UMTS PCMCIA card from IPWireless company. In
-diff --git a/drivers/tty/serial/8250/8250_early.c b/drivers/tty/serial/8250/8250_early.c
-index 0ebde0ab8167..4192b1ae2736 100644
---- a/drivers/tty/serial/8250/8250_early.c
-+++ b/drivers/tty/serial/8250/8250_early.c
-@@ -48,8 +48,10 @@ static unsigned int serial8250_early_in(struct uart_port *port, int offset)
- 		return readl(port->membase + offset);
- 	case UPIO_MEM32BE:
- 		return ioread32be(port->membase + offset);
-+#ifdef CONFIG_HAS_IOPORT
- 	case UPIO_PORT:
- 		return inb(port->iobase + offset);
-+#endif
- 	case UPIO_AU:
- 		return port->serial_in(port, reg_offset);
- 	default:
-@@ -75,9 +77,11 @@ static void serial8250_early_out(struct uart_port *port, int offset, int value)
- 	case UPIO_MEM32BE:
- 		iowrite32be(value, port->membase + offset);
- 		break;
-+#ifdef CONFIG_HAS_IOPORT
- 	case UPIO_PORT:
- 		outb(value, port->iobase + offset);
- 		break;
-+#endif
- 	case UPIO_AU:
- 		port->serial_out(port, reg_offset, value);
- 		break;
-diff --git a/drivers/tty/serial/8250/8250_pci.c b/drivers/tty/serial/8250/8250_pci.c
-index e80c4f6551a1..d0c602952f92 100644
---- a/drivers/tty/serial/8250/8250_pci.c
-+++ b/drivers/tty/serial/8250/8250_pci.c
-@@ -847,6 +847,7 @@ static int pci_netmos_init(struct pci_dev *dev)
- 	return num_serial;
- }
+ config FB_VGA16
+ 	tristate "VGA 16-color graphics support"
+-	depends on FB && (X86 || PPC)
++	depends on FB && HAS_IOPORT
+ 	select APERTURE_HELPERS
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+@@ -1332,7 +1333,7 @@ config FB_ATY_BACKLIGHT
  
-+#ifdef CONFIG_HAS_IOPORT
- /*
-  * These chips are available with optionally one parallel port and up to
-  * two serial ports. Unfortunately they all have the same product id.
-@@ -973,6 +974,7 @@ static void pci_ite887x_exit(struct pci_dev *dev)
- 	ioport &= 0xffff;
- 	release_region(ioport, ITE_887x_IOSIZE);
- }
-+#endif /* CONFIG_HAS_IOPORT */
+ config FB_S3
+ 	tristate "S3 Trio/Virge support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1393,7 +1394,7 @@ config FB_SAVAGE_ACCEL
  
- /*
-  * Oxford Semiconductor Inc.
-@@ -1255,6 +1257,7 @@ static int pci_asix_setup(struct serial_private *priv,
- #define QOPR_CLOCK_X8		0x0003
- #define QOPR_CLOCK_RATE_MASK	0x0003
+ config FB_SIS
+ 	tristate "SiS/XGI display support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1424,7 +1425,7 @@ config FB_SIS_315
  
-+#ifdef CONFIG_HAS_IOPORT
- /* Quatech devices have their own extra interface features */
- static struct pci_device_id quatech_cards[] = {
- 	{ PCI_DEVICE_DATA(QUATECH, QSC100,   1) },
-@@ -1474,6 +1477,7 @@ static int pci_quatech_setup(struct serial_private *priv,
- 		pci_warn(priv->dev, "software control of RS422 features not currently supported.\n");
- 	return pci_default_setup(priv, board, port, idx);
- }
-+#endif /* CONFIG_HAS_IOPORT */
+ config FB_VIA
+ 	tristate "VIA UniChrome (Pro) and Chrome9 display support"
+-	depends on FB && PCI && GPIOLIB && I2C && (X86 || COMPILE_TEST)
++	depends on FB && PCI && GPIOLIB && I2C && HAS_IOPORT && (X86 || COMPILE_TEST)
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1463,7 +1464,7 @@ endif
  
- static int pci_default_setup(struct serial_private *priv,
- 		  const struct pciserial_board *board,
-@@ -1753,6 +1757,7 @@ static int skip_tx_en_setup(struct serial_private *priv,
- 	return pci_default_setup(priv, board, port, idx);
- }
+ config FB_NEOMAGIC
+ 	tristate "NeoMagic display support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_MODE_HELPERS
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+@@ -1493,7 +1494,7 @@ config FB_KYRO
  
-+#ifdef CONFIG_HAS_IOPORT
- static void kt_handle_break(struct uart_port *p)
- {
- 	struct uart_8250_port *up = up_to_u8250p(p);
-@@ -1796,6 +1801,7 @@ static int kt_serial_setup(struct serial_private *priv,
- 	port->port.handle_break = kt_handle_break;
- 	return skip_tx_en_setup(priv, board, port, idx);
- }
-+#endif /* CONFIG_HAS_IOPORT */
+ config FB_3DFX
+ 	tristate "3Dfx Banshee/Voodoo3/Voodoo5 display support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_IMAGEBLIT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+@@ -1543,7 +1544,7 @@ config FB_VOODOO1
  
- static int pci_eg20t_init(struct pci_dev *dev)
- {
-@@ -1840,6 +1846,7 @@ pci_wch_ch38x_setup(struct serial_private *priv,
- #define CH384_XINT_ENABLE_REG   0xEB
- #define CH384_XINT_ENABLE_BIT   0x02
+ config FB_VT8623
+ 	tristate "VIA VT8623 support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1558,7 +1559,7 @@ config FB_VT8623
  
-+#ifdef CONFIG_HAS_IOPORT
- static int pci_wch_ch38x_init(struct pci_dev *dev)
- {
- 	int max_port;
-@@ -1867,6 +1874,7 @@ static void pci_wch_ch38x_exit(struct pci_dev *dev)
- 	iobase = pci_resource_start(dev, 0);
- 	outb(0x0, iobase + CH384_XINT_ENABLE_REG);
- }
-+#endif /* CONFIG_HAS_IOPORT */
+ config FB_TRIDENT
+ 	tristate "Trident/CyberXXX/CyberBlade support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -1581,7 +1582,7 @@ config FB_TRIDENT
  
+ config FB_ARK
+ 	tristate "ARK 2000PV support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
+@@ -2195,7 +2196,7 @@ config FB_SSD1307
  
- static int
-@@ -2072,6 +2080,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
- 		.subdevice	= PCI_ANY_ID,
- 		.setup		= ce4100_serial_setup,
- 	},
-+#ifdef CONFIG_HAS_IOPORT
- 	{
- 		.vendor		= PCI_VENDOR_ID_INTEL,
- 		.device		= PCI_DEVICE_ID_INTEL_PATSBURG_KT,
-@@ -2091,6 +2100,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
- 		.setup		= pci_default_setup,
- 		.exit		= pci_ite887x_exit,
- 	},
-+#endif
- 	/*
- 	 * National Instruments
- 	 */
-@@ -2212,6 +2222,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
- 		.exit		= pci_ni8430_exit,
- 	},
- 	/* Quatech */
-+#ifdef CONFIG_HAS_IOPORT
- 	{
- 		.vendor		= PCI_VENDOR_ID_QUATECH,
- 		.device		= PCI_ANY_ID,
-@@ -2220,6 +2231,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
- 		.init		= pci_quatech_init,
- 		.setup		= pci_quatech_setup,
- 	},
-+#endif
- 	/*
- 	 * Panacom
- 	 */
-@@ -2590,6 +2602,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
- 		.subdevice      = PCI_ANY_ID,
- 		.setup          = pci_wch_ch38x_setup,
- 	},
-+#ifdef CONFIG_HAS_IOPORT
- 	/* WCH CH384 8S card (16850 clone) */
- 	{
- 		.vendor         = PCIE_VENDOR_ID_WCH,
-@@ -2600,6 +2613,7 @@ static struct pci_serial_quirk pci_serial_quirks[] = {
- 		.exit		= pci_wch_ch38x_exit,
- 		.setup          = pci_wch_ch38x_setup,
- 	},
-+#endif
- 	/*
- 	 * ASIX devices with FIFO bug
- 	 */
-diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
-index c153ba3a018a..6890ef8a5ede 100644
---- a/drivers/tty/serial/8250/8250_port.c
-+++ b/drivers/tty/serial/8250/8250_port.c
-@@ -401,6 +401,7 @@ static void au_serial_dl_write(struct uart_8250_port *up, int value)
- 
- #endif
- 
-+#ifdef CONFIG_HAS_IOPORT
- static unsigned int hub6_serial_in(struct uart_port *p, int offset)
- {
- 	offset = offset << p->regshift;
-@@ -414,6 +415,7 @@ static void hub6_serial_out(struct uart_port *p, int offset, int value)
- 	outb(p->hub6 - 1 + offset, p->iobase);
- 	outb(value, p->iobase + 1);
- }
-+#endif /* CONFIG_HAS_IOPORT */
- 
- static unsigned int mem_serial_in(struct uart_port *p, int offset)
- {
-@@ -463,6 +465,7 @@ static unsigned int mem32be_serial_in(struct uart_port *p, int offset)
- 	return ioread32be(p->membase + offset);
- }
- 
-+#ifdef CONFIG_HAS_IOPORT
- static unsigned int io_serial_in(struct uart_port *p, int offset)
- {
- 	offset = offset << p->regshift;
-@@ -474,6 +477,24 @@ static void io_serial_out(struct uart_port *p, int offset, int value)
- 	offset = offset << p->regshift;
- 	outb(value, p->iobase + offset);
- }
-+#endif
-+static unsigned int no_serial_in(struct uart_port *p, int offset)
-+{
-+	return (unsigned int)-1;
-+}
-+
-+static void no_serial_out(struct uart_port *p, int offset, int value)
-+{
-+}
-+
-+#ifdef CONFIG_HAS_IOPORT
-+static inline bool is_upf_fourport(struct uart_port *port)
-+{
-+	return port->flags & UPF_FOURPORT;
-+}
-+#else
-+#define is_upf_fourport(x)	false
-+#endif
- 
- static int serial8250_default_handle_irq(struct uart_port *port);
- 
-@@ -485,10 +506,12 @@ static void set_io_from_upio(struct uart_port *p)
- 	up->dl_write = default_serial_dl_write;
- 
- 	switch (p->iotype) {
-+#ifdef CONFIG_HAS_IOPORT
- 	case UPIO_HUB6:
- 		p->serial_in = hub6_serial_in;
- 		p->serial_out = hub6_serial_out;
- 		break;
-+#endif
- 
- 	case UPIO_MEM:
- 		p->serial_in = mem_serial_in;
-@@ -519,10 +542,17 @@ static void set_io_from_upio(struct uart_port *p)
- 		break;
- #endif
- 
--	default:
-+#ifdef CONFIG_HAS_IOPORT
-+	case UPIO_PORT:
- 		p->serial_in = io_serial_in;
- 		p->serial_out = io_serial_out;
- 		break;
-+#endif
-+
-+	default:
-+		WARN(1, "Unsupported UART type %x\n", p->iotype);
-+		p->serial_in = no_serial_in;
-+		p->serial_out = no_serial_out;
- 	}
- 	/* Remember loaded iotype */
- 	up->cur_iotype = p->iotype;
-@@ -1380,7 +1410,7 @@ static void autoconfig_irq(struct uart_8250_port *up)
- 	unsigned long irqs;
- 	int irq;
- 
--	if (port->flags & UPF_FOURPORT) {
-+	if (is_upf_fourport(port)) {
- 		ICP = (port->iobase & 0xfe0) | 0x1f;
- 		save_ICP = inb_p(ICP);
- 		outb_p(0x80, ICP);
-@@ -1399,7 +1429,7 @@ static void autoconfig_irq(struct uart_8250_port *up)
- 	irqs = probe_irq_on();
- 	serial8250_out_MCR(up, 0);
- 	udelay(10);
--	if (port->flags & UPF_FOURPORT) {
-+	if (is_upf_fourport(port)) {
- 		serial8250_out_MCR(up, UART_MCR_DTR | UART_MCR_RTS);
- 	} else {
- 		serial8250_out_MCR(up,
-@@ -1417,7 +1447,7 @@ static void autoconfig_irq(struct uart_8250_port *up)
- 	serial8250_out_MCR(up, save_mcr);
- 	serial_out(up, UART_IER, save_ier);
- 
--	if (port->flags & UPF_FOURPORT)
-+	if (is_upf_fourport(port))
- 		outb_p(save_ICP, ICP);
- 
- 	if (uart_console(port))
-@@ -2382,7 +2412,7 @@ int serial8250_do_startup(struct uart_port *port)
- 	serial_port_out(port, UART_LCR, UART_LCR_WLEN8);
- 
- 	spin_lock_irqsave(&port->lock, flags);
--	if (up->port.flags & UPF_FOURPORT) {
-+	if (is_upf_fourport(&up->port)) {
- 		if (!up->port.irq)
- 			up->port.mctrl |= TIOCM_OUT1;
- 	} else
-@@ -2464,7 +2494,7 @@ int serial8250_do_startup(struct uart_port *port)
- 	 */
- 	up->ier = UART_IER_RLSI | UART_IER_RDI;
- 
--	if (port->flags & UPF_FOURPORT) {
-+	if (is_upf_fourport(port)) {
- 		unsigned int icp;
- 		/*
- 		 * Enable interrupts on the AST Fourport board
-@@ -2507,7 +2537,7 @@ void serial8250_do_shutdown(struct uart_port *port)
- 		serial8250_release_dma(up);
- 
- 	spin_lock_irqsave(&port->lock, flags);
--	if (port->flags & UPF_FOURPORT) {
-+	if (is_upf_fourport(port)) {
- 		/* reset interrupts on the AST Fourport board */
- 		inb((port->iobase & 0xfe0) | 0x1f);
- 		port->mctrl |= TIOCM_OUT1;
-diff --git a/drivers/tty/serial/8250/Kconfig b/drivers/tty/serial/8250/Kconfig
-index 5313aa31930f..2a43bea7d7c3 100644
---- a/drivers/tty/serial/8250/Kconfig
-+++ b/drivers/tty/serial/8250/Kconfig
-@@ -6,7 +6,6 @@
- 
- config SERIAL_8250
- 	tristate "8250/16550 and compatible serial support"
--	depends on !S390
- 	select SERIAL_CORE
- 	select SERIAL_MCTRL_GPIO if GPIOLIB
- 	help
-@@ -72,7 +71,7 @@ config SERIAL_8250_16550A_VARIANTS
- 
- config SERIAL_8250_FINTEK
- 	bool "Support for Fintek F81216A LPC to 4 UART RS485 API"
--	depends on SERIAL_8250
-+	depends on SERIAL_8250 && HAS_IOPORT
- 	help
- 	  Selecting this option will add support for the RS485 capabilities
- 	  of the Fintek F81216A LPC to 4 UART.
-@@ -160,7 +159,7 @@ config SERIAL_8250_HP300
- 
- config SERIAL_8250_CS
- 	tristate "8250/16550 PCMCIA device support"
--	depends on PCMCIA && SERIAL_8250
-+	depends on PCMCIA && SERIAL_8250 && HAS_IOPORT
- 	help
- 	  Say Y here to enable support for 16-bit PCMCIA serial devices,
- 	  including serial port cards, modems, and the modem functions of
-diff --git a/drivers/tty/serial/Kconfig b/drivers/tty/serial/Kconfig
-index 398e5aac2e77..dc41b3be6800 100644
---- a/drivers/tty/serial/Kconfig
-+++ b/drivers/tty/serial/Kconfig
-@@ -871,7 +871,7 @@ config SERIAL_TXX9_STDSERIAL
- 
- config SERIAL_JSM
- 	tristate "Digi International NEO and Classic PCI Support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select SERIAL_CORE
- 	help
- 	  This is a driver for Digi International's Neo and Classic series
+ config FB_SM712
+ 	tristate "Silicon Motion SM712 framebuffer support"
+-	depends on FB && PCI
++	depends on FB && PCI && HAS_IOPORT
+ 	select FB_CFB_FILLRECT
+ 	select FB_CFB_COPYAREA
+ 	select FB_CFB_IMAGEBLIT
 -- 
 2.39.2
 
