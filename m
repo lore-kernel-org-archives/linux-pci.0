@@ -2,98 +2,161 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB9FBC77B75
-	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 13:15:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 868FBC7EE23
+	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 14:19:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234106AbjEVNPO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 May 2023 09:15:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40602 "EHLO
+        id S233493AbjEVOTn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 May 2023 10:19:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233880AbjEVNPM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 09:15:12 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34ED0129
-        for <linux-pci@vger.kernel.org>; Mon, 22 May 2023 06:14:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1684761258;
+        with ESMTP id S231210AbjEVOTm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 10:19:42 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CAE5A3;
+        Mon, 22 May 2023 07:19:41 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1684765179;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=fJa+GKU9edCanEPVCfWeFwI5Lsvvl9efoskVffi2Y6Y=;
-        b=AjseIyjcu3B3ke70cSFiujUYeyalyu2onJteHIUaKPBFdjTLWkuO4133/dPM/x9ESIaqa9
-        o7DtatmgXvOZhYupxvG8SqJjuP7H6fqb0BHamXdG+BkG7E+ZfebWjlAXdc3JclKGiv4g4C
-        n1HwoPcOjzECJBnkjiRS5GSRImHq/2g=
-Received: from mimecast-mx02.redhat.com (mx3-rdu2.redhat.com
- [66.187.233.73]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-671-DQ9PCLdCNdyTrKjd0AyNjA-1; Mon, 22 May 2023 09:14:14 -0400
-X-MC-Unique: DQ9PCLdCNdyTrKjd0AyNjA-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id CAB7E3C11A24;
-        Mon, 22 May 2023 13:14:12 +0000 (UTC)
-Received: from sirius.home.kraxel.org (unknown [10.39.192.139])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 53260401026;
-        Mon, 22 May 2023 13:14:12 +0000 (UTC)
-Received: by sirius.home.kraxel.org (Postfix, from userid 1000)
-        id D7FEB1800606; Mon, 22 May 2023 15:14:10 +0200 (CEST)
-Date:   Mon, 22 May 2023 15:14:10 +0200
-From:   Gerd Hoffmann <kraxel@redhat.com>
-To:     Thomas Zimmermann <tzimmermann@suse.de>
-Cc:     Niklas Schnelle <schnelle@linux.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Dave Airlie <airlied@redhat.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>, linux-arch@vger.kernel.org,
-        Arnd Bergmann <arnd@kernel.org>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
+        bh=gEFrgqz+gYLalhKQzChWX9y13gBECThZx9rK3oKXttA=;
+        b=cnxOpR90o7b9DdKZbimSkvnr6JHqdXf3oOrsG7QcyoV1Ac/DwCRI9RFkgWd5l6vSJdDUk7
+        QH/p5gkBaJyHXeV+852Ii+nXe9WRHtdyUzbOlrVfKOxGHby46cx/h49HYyCs0GetKzD9im
+        RkI3ASIiJGTYXWJ9iPSrGXHLl+7eaorVZdIIlTZomc0ukCC7M9J3RwI6Nu4JluhNCfWmO7
+        KpU9eCs+zB9b205s3ptRyp1JwGsg1+arE+KtcPp/d3dHs1S4jjoWHGlfML9ROMtTFdvE30
+        rVsx2WYi0+Gf4iNo+Omb98a3p6dXimbGks+lHQmepIoxUd2oGwPQarrqrE1yDA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1684765179;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=gEFrgqz+gYLalhKQzChWX9y13gBECThZx9rK3oKXttA=;
+        b=BFafzFgxgWxPaKO3wZOg+17eqARUJiZ13GDJnVawb4dyxmDJRqxJB6hjPwQB0txXX1fh8h
+        6J/LXx4rHUjl4hDQ==
+To:     Marc Zyngier <maz@kernel.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>, Will Deacon <will@kernel.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        virtualization@lists.linux-foundation.org,
-        Alan Stern <stern@rowland.harvard.edu>,
-        spice-devel@lists.freedesktop.org,
-        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Palmer Dabbelt <palmer@dabbelt.com>
-Subject: Re: [PATCH v5 09/44] drm: handle HAS_IOPORT dependencies
-Message-ID: <vng4tcbkdieuvlmiu36drat5t3lwzufthylcgv3qzfrodphhq3@sjxcuan5q6h6>
-References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
- <20230522105049.1467313-10-schnelle@linux.ibm.com>
- <2043cea3-7553-ee9d-4aaa-6f1d22ac4d87@suse.de>
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Ammar Faizi <ammarfaizi2@gnuweeb.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Vinod Koul <vkoul@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Shameerali Kolothum Thodi 
+        <shameerali.kolothum.thodi@huawei.com>,
+        Zenghui Yu <yuzenghui@huawei.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        Anna-Maria Behnsen <anna-maria.behnsen@linutronix.de>
+Subject: Re: [patch V2 06/40] PCI/MSI: Provide static key for parent
+ mask/unmask
+In-Reply-To: <87v8n3c2qy.ffs@tglx>
+References: <20221121135653.208611233@linutronix.de>
+ <20221121140048.659849460@linutronix.de> <8635a8o65q.wl-maz@kernel.org>
+ <87bkowcx0z.ffs@tglx> <86zgcgmpzl.wl-maz@kernel.org> <87v8n3c2qy.ffs@tglx>
+Date:   Mon, 22 May 2023 16:19:39 +0200
+Message-ID: <87ttw4wiro.ffs@tglx>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2043cea3-7553-ee9d-4aaa-6f1d22ac4d87@suse.de>
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-  Hi,
+On Fri, Nov 25 2022 at 01:11, Thomas Gleixner wrote:
+> On Thu, Nov 24 2022 at 13:38, Marc Zyngier wrote:
+>> On Thu, 24 Nov 2022 13:17:00 +0000,
+>> Thomas Gleixner <tglx@linutronix.de> wrote:
+>>> > I find this a bit odd. If anything, I'd rather drop the masking at the
+>>> > PCI level and keep it local to the interrupt controller, because this
+>>> > is likely to be more universal than the equivalent PCI operation
+>>> > (think multi-MSI, for example, which cannot masks individual MSIs).
+>>> >
+>>> > Another thing is that the static key is a global state. Nothing says
+>>> > that masking one way or the other is a universal thing, specially when
+>>> > you have multiple interrupt controllers dealing with MSIs in different
+>>> > ways. For example, GICv3 can use both the ITS and the GICv3-MBI frame
+>>> > at the same time for different PCI RC. OK, they happen to deal with
+>>> > MSIs in the same way, but you hopefully get my point.
+>>> 
+>>> I'm fine with dropping that. I did this because basically all of the
+>>> various ARM PCI/MSI domain implementation have a copy of the same
+>>> functions. Some of them have pointlessly the wrong order because copy &
+>>> pasta is so wonderful....
+>>> 
+>>> So the alternative solution is to provide _ONE_ set of correct callbacks
+>>> and let the domain initialization code override the irq chip callbacks
+>>> of the default PCI/MSI template.
+>>
+>> If the various irqchips can tell the core code whether they want
+>> things to be masked at the PCI level or at the irqchip level, this
+>> would be a move in the right direction. For the GIC, I'd definitely
+>> want things masked locally.
+>>
+>> What I'd like to get rid off is the double masking, as I agree it is
+>> on the "pretty dumb" side of things.
+>
+> Not necessarily. It mitigates the problem of MSI interrupts which can't
+> be masked because the implementers decided to spare the gates. MSI
+> allows that as masking is opt-in...
+>
+> Let me think about it.
 
-> > There is also a direct and hard coded use in cirrus.c which according to
-> > the comment is only necessary during resume.  Let's just skip this as
-> > for example s390 which doesn't have I/O port support also doesen't
-> > support suspend/resume.
-> 
-> I think we should consider making cirrus depend on HAS_IOPORT. The driver is
-> only for qemu's cirrus emulation, which IIRC can only be enabled for i586.
+That really took a while to think about it :)
 
-Agree.  cirrus is x86 only (both i386 / x86_64 though).  Just require
-HAS_IOPORT and be done with it.
+We have the following cases on the PCI/MSI side:
 
-> And it has all been deprecated long ago.
+ 1) The MSI[X] entry can be masked
 
-The fact that cirrus used to be the qemu default for many years is
-pretty much the only reason it is still somewhat relevant today ...
+ 2) The MSI[X] entry cannot be masked because hardware did not implement
+    it, masking is globally disabled due to XEN, masking does not exist
+    for this horrible virtual MSI hackery
 
-take care,
-  Gerd
+Now you said:
+
+ "For the GIC, I'd definitely want things masked locally."
+
+I decoded this, that you want to have these interrupts masked at the GIC
+level too independent of #1 or #2 above. And then:
+
+ "What I'd like to get rid off is the double masking."
+
+But relying on the GIC alone is not really a good thing IMO. There is no
+point to let some confused device send unwanted MSI messages around
+without a way to shut it up from the generic code via the regular
+mask/unmask callbacks.
+
+On the other hand for PCI/MSI[x] the mask/unmask operations are not in
+the hot path as PCI/MSI[x] are strictly edge. Mask/unmask is only
+happening on startup, shutdown and when an interrupt arrives after
+disable_irq() incremented the lazy disable counter.
+
+For regular interrupt handling mask/unmask is not involved.
+
+So to avoid that global key we can let the parent domain set a new flag,
+e.g. MSI_FLAG_PCI_MSI_MASK_PARENT, in msi_parent_ops::supported_flags
+and let the PCI/MSI core code query that information when the per device
+domain is created and select the appropriate template or fixup the
+callbacks after the domain is created.
+
+Does that address your concerns?
+
+Thanks,
+
+        tglx
+
+
+
+
 
