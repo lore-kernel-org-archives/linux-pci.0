@@ -2,385 +2,143 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37816C7EE2A
-	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 11:50:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B02BAC77B75
+	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 11:53:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233444AbjEVLuz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 May 2023 07:50:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57052 "EHLO
+        id S233417AbjEVLxU convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 May 2023 07:53:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233438AbjEVLud (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 07:50:33 -0400
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 619A799;
-        Mon, 22 May 2023 04:50:26 -0700 (PDT)
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MAlcMi028821;
-        Mon, 22 May 2023 10:51:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : content-transfer-encoding
- : mime-version; s=pp1; bh=917PnRVT8vP1wsO6btjKtDfaMRlNQCEz+EQNu2Kh6F8=;
- b=onSDkcGHn7BCEto7khxv+J1wbziOeig45AIAXwLLXpBp4cgWkzr0ifa7Vm22TolhPapP
- nYNTcRQaJoHNz6SBYlKyfsANPG3lwuFLHG/JprrmKl0uYU0QfO4rbcdfq03HByWhELfx
- 0VHgXLevFZ059gH2oETCD9Y6EPWq21vmhYjklmYIKHJvSnXfBF76Ybgvud8EEU5JcwhX
- x+pj2w3l6agzAaWR3C8Ilw4O5VWRY4KWpP8ebDtsovkDFaU6rF4ifWGDdK1MjaIQ0RJ6
- 1ZHQExrPFkLjY+wt69D+qu6ywJ4Gvtob+61aa/C8WyXtpTZNBAOlqouU8cpxoK1f+Mc8 mA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqfq39rck-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:59 +0000
-Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MARDWI021237;
-        Mon, 22 May 2023 10:51:58 GMT
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqfq39r10-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:58 +0000
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M5xB5I007770;
-        Mon, 22 May 2023 10:51:22 GMT
-Received: from smtprelay01.fra02v.mail.ibm.com ([9.218.2.227])
-        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qppcu8wf3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:21 +0000
-Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay01.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MApIAW17760806
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 10:51:18 GMT
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id ED24E20040;
-        Mon, 22 May 2023 10:51:17 +0000 (GMT)
-Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6E4D420043;
-        Mon, 22 May 2023 10:51:17 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Mon, 22 May 2023 10:51:17 +0000 (GMT)
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com
-Subject: [PATCH v5 31/44] scsi: add HAS_IOPORT dependencies
-Date:   Mon, 22 May 2023 12:50:36 +0200
-Message-Id: <20230522105049.1467313-32-schnelle@linux.ibm.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230522105049.1467313-1-schnelle@linux.ibm.com>
-References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: XENUFwbsOgrO0v-rx39ukbaTzSGZLI-A
-X-Proofpoint-GUID: sNSBIT0WJWBOCnsUQzJpu81RYeFMsrqY
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        with ESMTP id S233118AbjEVLxS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 07:53:18 -0400
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EF4AB9;
+        Mon, 22 May 2023 04:52:57 -0700 (PDT)
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-96f66fbd770so64006766b.1;
+        Mon, 22 May 2023 04:52:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1684756368; x=1687348368;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=+FPeo127aNEneYS/+N/CPU60LUgRtnsXFwUreJ7fb7k=;
+        b=jz3PdrrCQfFvnqYya0g6pH1JIMvX2e2TyNVBJA27VLxJarUNbA09kYZ0OYos0xmaQr
+         xA5tdaNLwoXI2Da+eEgGqtpgaguSvA86Ire2+JiM46f1EIdU0/6wcHXQF672PqRRIJeU
+         vrX0gHLPlhxTor/m9/lb4eseDlGbmwVrKTrZxENLMlCj37bEzKybAOZu46M7OUGP3D4B
+         0op9A6nLxul24lcbD49nm+RZnq/5DNzHEBQ7d8X9qrXe02Q9v5iJP0sRqOIBLdzDjGb6
+         aR5p6yUjToQ1VLqb3tUZUB6eClTU9KS7uRRQl58RJ5XXX9gUB/R0ojdK++tVRpBbGcVv
+         xozA==
+X-Gm-Message-State: AC+VfDyUo5GHI7MJHwV/FsvF/IsIg2eATQvH2nTKRHNFQnaUwIFYMFtQ
+        PCMCZUbqn1Q7eW3c4u596wgfzPRO868JhLOCfAFaXXly
+X-Google-Smtp-Source: ACHHUZ7ay0sDw93PbatWpSuJjrVDcBSB58TJboeKwJrei0jiFWOncTr6FVqIaSmaVs0GDMnfXGEijnILFjvyFyMdQe8=
+X-Received: by 2002:a17:906:7495:b0:94e:9efa:a9ed with SMTP id
+ e21-20020a170906749500b0094e9efaa9edmr9837725ejl.7.1684756368268; Mon, 22 May
+ 2023 04:52:48 -0700 (PDT)
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
- definitions=2023-05-22_06,2023-05-22_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=999
- priorityscore=1501 adultscore=0 lowpriorityscore=0 mlxscore=0 spamscore=0
- suspectscore=0 malwarescore=0 impostorscore=0 clxscore=1015 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
- definitions=main-2305220089
+References: <20230424191557.2464760-1-imammedo@redhat.com> <20230522130635.5e3f8771@imammedo.users.ipa.redhat.com>
+In-Reply-To: <20230522130635.5e3f8771@imammedo.users.ipa.redhat.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Mon, 22 May 2023 13:52:33 +0200
+Message-ID: <CAJZ5v0jcap1Qe=PeZ98csqN9DxwZLPRontGkbvMuah6XrtbT4A@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: acpiphp: Reassign resources on bridge if necessary
+To:     Igor Mammedov <imammedo@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, rafael@kernel.org, mst@redhat.com,
+        lenb@kernel.org, bhelgaas@google.com, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, helgaas@kernel.org,
+        mika.westerberg@linux.intel.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them.
+On Mon, May 22, 2023 at 1:06 PM Igor Mammedov <imammedo@redhat.com> wrote:
+>
+> On Mon, 24 Apr 2023 21:15:57 +0200
+> Igor Mammedov <imammedo@redhat.com> wrote:
+>
+> > When using ACPI PCI hotplug, hotplugging a device with
+> > large BARs may fail if bridge windows programmed by
+> > firmware are not large enough.
+>
+> Rafael,
+>
+> Since there was no more comments for a while,
+> can you merge this patch through your tree?
 
-Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
- drivers/scsi/Kconfig                   | 25 +++++++++++++------------
- drivers/scsi/aic7xxx/Kconfig.aic79xx   |  2 +-
- drivers/scsi/aic7xxx/Kconfig.aic7xxx   |  2 +-
- drivers/scsi/aic94xx/Kconfig           |  2 +-
- drivers/scsi/megaraid/Kconfig.megaraid |  6 +++---
- drivers/scsi/mvsas/Kconfig             |  2 +-
- drivers/scsi/pcmcia/Kconfig            |  6 +++++-
- drivers/scsi/qla2xxx/Kconfig           |  2 +-
- 8 files changed, 26 insertions(+), 21 deletions(-)
+I need an ACK from Bjorn on this, as the PCI maintainer, or it can go
+in via the PCI tree as far as I'm concerned.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 0704809d9d99..4962ce989113 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -334,7 +334,7 @@ config SGIWD93_SCSI
- 
- config BLK_DEV_3W_XXXX_RAID
- 	tristate "3ware 5/6/7/8xxx ATA-RAID support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  3ware is the only hardware ATA-Raid product in Linux to date.
- 	  This card is 2,4, or 8 channel master mode support only.
-@@ -381,7 +381,7 @@ config SCSI_3W_SAS
- 
- config SCSI_ACARD
- 	tristate "ACARD SCSI support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  This driver supports the ACARD SCSI host adapter.
- 	  Support Chip <ATP870 ATP876 ATP880 ATP885>
-@@ -462,7 +462,7 @@ config SCSI_MVUMI
- config SCSI_ADVANSYS
- 	tristate "AdvanSys SCSI support"
- 	depends on SCSI
--	depends on ISA || EISA || PCI
-+	depends on (ISA || EISA || PCI) && HAS_IOPORT
- 	depends on ISA_DMA_API || !ISA
- 	help
- 	  This is a driver for all SCSI host adapters manufactured by
-@@ -503,7 +503,7 @@ config SCSI_HPTIOP
- 
- config SCSI_BUSLOGIC
- 	tristate "BusLogic SCSI support"
--	depends on PCI && SCSI
-+	depends on SCSI && PCI && HAS_IOPORT
- 	help
- 	  This is support for BusLogic MultiMaster and FlashPoint SCSI Host
- 	  Adapters. Consult the SCSI-HOWTO, available from
-@@ -518,7 +518,7 @@ config SCSI_BUSLOGIC
- 
- config SCSI_FLASHPOINT
- 	bool "FlashPoint support"
--	depends on SCSI_BUSLOGIC && PCI
-+	depends on SCSI_BUSLOGIC && PCI && HAS_IOPORT
- 	help
- 	  This option allows you to add FlashPoint support to the
- 	  BusLogic SCSI driver. The FlashPoint SCCB Manager code is
-@@ -632,7 +632,7 @@ config SCSI_SNIC_DEBUG_FS
- 
- config SCSI_DMX3191D
- 	tristate "DMX3191D SCSI support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	  This is support for Domex DMX3191D SCSI Host Adapters.
-@@ -646,7 +646,7 @@ config SCSI_FDOMAIN
- 
- config SCSI_FDOMAIN_PCI
- 	tristate "Future Domain TMC-3260/AHA-2920A PCI SCSI support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_FDOMAIN
- 	help
- 	  This is support for Future Domain's PCI SCSI host adapters (TMC-3260)
-@@ -699,7 +699,7 @@ config SCSI_GENERIC_NCR5380
- 
- config SCSI_IPS
- 	tristate "IBM ServeRAID support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  This is support for the IBM ServeRAID hardware RAID controllers.
- 	  See <http://www.developer.ibm.com/welcome/netfinity/serveraid.html>
-@@ -759,7 +759,7 @@ config SCSI_IBMVFC_TRACE
- 
- config SCSI_INITIO
- 	tristate "Initio 9100U(W) support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  This is support for the Initio 91XXU(W) SCSI host adapter.  Please
- 	  read the SCSI-HOWTO, available from
-@@ -770,7 +770,7 @@ config SCSI_INITIO
- 
- config SCSI_INIA100
- 	tristate "Initio INI-A100U2W support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	  This is support for the Initio INI-A100U2W SCSI host adapter.
- 	  Please read the SCSI-HOWTO, available from
-@@ -782,6 +782,7 @@ config SCSI_INIA100
- config SCSI_PPA
- 	tristate "IOMEGA parallel port (ppa - older drives)"
- 	depends on SCSI && PARPORT_PC
-+	depends on HAS_IOPORT
- 	help
- 	  This driver supports older versions of IOMEGA's parallel port ZIP
- 	  drive (a 100 MB removable media device).
-@@ -1175,7 +1176,7 @@ config SCSI_SIM710
- 
- config SCSI_DC395x
- 	tristate "Tekram DC395(U/UW/F) and DC315(U) SCSI support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	  This driver supports PCI SCSI host adapters based on the ASIC
-@@ -1207,7 +1208,7 @@ config SCSI_AM53C974
- 
- config SCSI_NSP32
- 	tristate "Workbit NinjaSCSI-32Bi/UDE support"
--	depends on PCI && SCSI && !64BIT
-+	depends on PCI && SCSI && !64BIT && HAS_IOPORT
- 	help
- 	  This is support for the Workbit NinjaSCSI-32Bi/UDE PCI/Cardbus
- 	  SCSI host adapter. Please read the SCSI-HOWTO, available from
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic79xx b/drivers/scsi/aic7xxx/Kconfig.aic79xx
-index a47dbd500e9a..4bc53eec4c83 100644
---- a/drivers/scsi/aic7xxx/Kconfig.aic79xx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic79xx
-@@ -5,7 +5,7 @@
- #
- config SCSI_AIC79XX
- 	tristate "Adaptec AIC79xx U320 support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	This driver supports all of Adaptec's Ultra 320 PCI-X
-diff --git a/drivers/scsi/aic7xxx/Kconfig.aic7xxx b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-index 0cfd92ce750a..f0425145a5f4 100644
---- a/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-+++ b/drivers/scsi/aic7xxx/Kconfig.aic7xxx
-@@ -5,7 +5,7 @@
- #
- config SCSI_AIC7XXX
- 	tristate "Adaptec AIC7xxx Fast -> U160 support"
--	depends on (PCI || EISA) && SCSI
-+	depends on (PCI || EISA) && HAS_IOPORT && SCSI
- 	select SCSI_SPI_ATTRS
- 	help
- 	This driver supports all of Adaptec's Fast through Ultra 160 PCI
-diff --git a/drivers/scsi/aic94xx/Kconfig b/drivers/scsi/aic94xx/Kconfig
-index 71931c371b1c..aaa8dadc6e1c 100644
---- a/drivers/scsi/aic94xx/Kconfig
-+++ b/drivers/scsi/aic94xx/Kconfig
-@@ -8,7 +8,7 @@
- 
- config SCSI_AIC94XX
- 	tristate "Adaptec AIC94xx SAS/SATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select SCSI_SAS_LIBSAS
- 	select FW_LOADER
- 	help
-diff --git a/drivers/scsi/megaraid/Kconfig.megaraid b/drivers/scsi/megaraid/Kconfig.megaraid
-index 2adc2afd9f91..3f2ce1eb081c 100644
---- a/drivers/scsi/megaraid/Kconfig.megaraid
-+++ b/drivers/scsi/megaraid/Kconfig.megaraid
-@@ -1,13 +1,13 @@
- # SPDX-License-Identifier: GPL-2.0-only
- config MEGARAID_NEWGEN
- 	bool "LSI Logic New Generation RAID Device Drivers"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	LSI Logic RAID Device Drivers
- 
- config MEGARAID_MM
- 	tristate "LSI Logic Management Module (New Driver)"
--	depends on PCI && SCSI && MEGARAID_NEWGEN
-+	depends on PCI && HAS_IOPORT && SCSI && MEGARAID_NEWGEN
- 	help
- 	Management Module provides ioctl, sysfs support for LSI Logic
- 	RAID controllers.
-@@ -67,7 +67,7 @@ config MEGARAID_MAILBOX
- 
- config MEGARAID_LEGACY
- 	tristate "LSI Logic Legacy MegaRAID Driver"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	help
- 	This driver supports the LSI MegaRAID 418, 428, 438, 466, 762, 490
- 	and 467 SCSI host adapters. This driver also support the all U320
-diff --git a/drivers/scsi/mvsas/Kconfig b/drivers/scsi/mvsas/Kconfig
-index 79812b80743b..5ac7fd593b17 100644
---- a/drivers/scsi/mvsas/Kconfig
-+++ b/drivers/scsi/mvsas/Kconfig
-@@ -9,7 +9,7 @@
- 
- config SCSI_MVSAS
- 	tristate "Marvell 88SE64XX/88SE94XX SAS/SATA support"
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select SCSI_SAS_LIBSAS
- 	select FW_LOADER
- 	help
-diff --git a/drivers/scsi/pcmcia/Kconfig b/drivers/scsi/pcmcia/Kconfig
-index 9696b6b5591f..449bd85db7bb 100644
---- a/drivers/scsi/pcmcia/Kconfig
-+++ b/drivers/scsi/pcmcia/Kconfig
-@@ -12,6 +12,7 @@ if SCSI_LOWLEVEL_PCMCIA && SCSI && PCMCIA && m
- 
- config PCMCIA_AHA152X
- 	tristate "Adaptec AHA152X PCMCIA support"
-+	depends on HAS_IOPORT
- 	select SCSI_SPI_ATTRS
- 	help
- 	  Say Y here if you intend to attach this type of PCMCIA SCSI host
-@@ -22,6 +23,7 @@ config PCMCIA_AHA152X
- 
- config PCMCIA_FDOMAIN
- 	tristate "Future Domain PCMCIA support"
-+	depends on HAS_IOPORT
- 	select SCSI_FDOMAIN
- 	help
- 	  Say Y here if you intend to attach this type of PCMCIA SCSI host
-@@ -32,7 +34,7 @@ config PCMCIA_FDOMAIN
- 
- config PCMCIA_NINJA_SCSI
- 	tristate "NinjaSCSI-3 / NinjaSCSI-32Bi (16bit) PCMCIA support"
--	depends on !64BIT || COMPILE_TEST
-+	depends on (!64BIT || COMPILE_TEST) && HAS_IOPORT
- 	help
- 	  If you intend to attach this type of PCMCIA SCSI host adapter to
- 	  your computer, say Y here and read
-@@ -66,6 +68,7 @@ config PCMCIA_NINJA_SCSI
- 
- config PCMCIA_QLOGIC
- 	tristate "Qlogic PCMCIA support"
-+	depends on HAS_IOPORT
- 	help
- 	  Say Y here if you intend to attach this type of PCMCIA SCSI host
- 	  adapter to your computer.
-@@ -75,6 +78,7 @@ config PCMCIA_QLOGIC
- 
- config PCMCIA_SYM53C500
- 	tristate "Symbios 53c500 PCMCIA support"
-+	depends on HAS_IOPORT
- 	help
- 	  Say Y here if you have a New Media Bus Toaster or other PCMCIA
- 	  SCSI adapter based on the Symbios 53c500 controller.
-diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
-index 802c373fd6d9..a584708d3056 100644
---- a/drivers/scsi/qla2xxx/Kconfig
-+++ b/drivers/scsi/qla2xxx/Kconfig
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0-only
- config SCSI_QLA_FC
- 	tristate "QLogic QLA2XXX Fibre Channel Support"
--	depends on PCI && SCSI
-+	depends on PCI && HAS_IOPORT && SCSI
- 	depends on SCSI_FC_ATTRS
- 	depends on NVME_FC || !NVME_FC
- 	select FW_LOADER
--- 
-2.39.2
+Thanks!
 
+> > Reproducer:
+> >   $ qemu-kvm -monitor stdio -M q35  -m 4G \
+> >       -global ICH9-LPC.acpi-pci-hotplug-with-bridge-support=on \
+> >       -device id=rp1,pcie-root-port,bus=pcie.0,chassis=4 \
+> >       disk_image
+> >
+> >  wait till linux guest boots, then hotplug device
+> >    (qemu) device_add qxl,bus=rp1
+> >
+> >  hotplug on guest side fails with:
+> >    pci 0000:01:00.0: [1b36:0100] type 00 class 0x038000
+> >    pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x03ffffff]
+> >    pci 0000:01:00.0: reg 0x14: [mem 0x00000000-0x03ffffff]
+> >    pci 0000:01:00.0: reg 0x18: [mem 0x00000000-0x00001fff]
+> >    pci 0000:01:00.0: reg 0x1c: [io  0x0000-0x001f]
+> >    pci 0000:01:00.0: BAR 0: no space for [mem size 0x04000000]
+> >    pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x04000000]
+> >    pci 0000:01:00.0: BAR 1: no space for [mem size 0x04000000]
+> >    pci 0000:01:00.0: BAR 1: failed to assign [mem size 0x04000000]
+> >    pci 0000:01:00.0: BAR 2: assigned [mem 0xfe800000-0xfe801fff]
+> >    pci 0000:01:00.0: BAR 3: assigned [io  0x1000-0x101f]
+> >    qxl 0000:01:00.0: enabling device (0000 -> 0003)
+> >    Unable to create vram_mapping
+> >    qxl: probe of 0000:01:00.0 failed with error -12
+> >
+> > However when using native PCIe hotplug
+> >   '-global ICH9-LPC.acpi-pci-hotplug-with-bridge-support=off'
+> > it works fine, since kernel attempts to reassign unused resources.
+> > Use the same machinery as native PCIe hotplug to (re)assign resources.
+> >
+> > Signed-off-by: Igor Mammedov <imammedo@redhat.com>
+> > ---
+> > tested in QEMU with Q35 machine on PCIE root port and also
+> > with nested conventional bridge attached to root port.
+> >
+> > v2:
+> >   * fixup subject to match expected style
+> >   * drop no longer needed __pci_bus_size_bridges() to avoid
+> >     memory leak (Bjorn Helgaas <helgaas@kernel.org>)
+> > ---
+> >  drivers/pci/hotplug/acpiphp_glue.c | 5 +----
+> >  1 file changed, 1 insertion(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+> > index 5b1f271c6034..328d1e416014 100644
+> > --- a/drivers/pci/hotplug/acpiphp_glue.c
+> > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> > @@ -498,7 +498,6 @@ static void enable_slot(struct acpiphp_slot *slot, bool bridge)
+> >                               acpiphp_native_scan_bridge(dev);
+> >               }
+> >       } else {
+> > -             LIST_HEAD(add_list);
+> >               int max, pass;
+> >
+> >               acpiphp_rescan_slot(slot);
+> > @@ -512,12 +511,10 @@ static void enable_slot(struct acpiphp_slot *slot, bool bridge)
+> >                               if (pass && dev->subordinate) {
+> >                                       check_hotplug_bridge(slot, dev);
+> >                                       pcibios_resource_survey_bus(dev->subordinate);
+> > -                                     __pci_bus_size_bridges(dev->subordinate,
+> > -                                                            &add_list);
+> >                               }
+> >                       }
+> >               }
+> > -             __pci_bus_assign_resources(bus, &add_list, NULL);
+> > +             pci_assign_unassigned_bridge_resources(bus->self);
+> >       }
+> >
+> >       acpiphp_sanitize_bus(bus);
+>
