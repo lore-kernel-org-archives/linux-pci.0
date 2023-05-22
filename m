@@ -2,65 +2,65 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F0B6C7EE2A
-	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B961C77B75
+	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:51:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232677AbjEVKvU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S232609AbjEVKvU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 22 May 2023 06:51:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40680 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232729AbjEVKvO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:51:14 -0400
+        with ESMTP id S232741AbjEVKvQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:51:16 -0400
 Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00519E0;
-        Mon, 22 May 2023 03:51:12 -0700 (PDT)
-Received: from pps.filterd (m0353723.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34M8qKGI022751;
-        Mon, 22 May 2023 10:51:02 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15A71B3;
+        Mon, 22 May 2023 03:51:14 -0700 (PDT)
+Received: from pps.filterd (m0353724.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34M9cQQe010213;
+        Mon, 22 May 2023 10:51:04 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=r0iP2dEhZ9OVhEy+tAYdX8nt+/qP3QrB+sF2qrnjCU0=;
- b=Kv5scphL2k5l8GIPc9rHapIah5Tfr73ny9C12+iNRPhMo3qmlKQ1ftu6SEttZjVO2Qoe
- n0mh2QJ6t6kkvXM86rteooz/hS1Y9foQKT3pZfnOBweBdDYISu/rcA7qGNOd6vvap86o
- DdxhmV2mt8IgGQ2mkvqtPXJMHgr/G+IkBvsjWlBok0dffgB3gByUO9FCMnCZAuPF0Jqa
- gYE+H8GPUowRGdEKHyWpyIn7oam+sVQ51TKEogiFHKeSG6Z6BTlN3isW39pNsHCyeTRI
- 6XSif9mhGbjJ4JpBXn9NZhl9PU3EEckPPHFORTRQWdPRZ0JhxxVhjR/w9Jo9xHmpdrAP 3Q== 
+ bh=OI6wF1zAmCtTgOoZ252lKahmHjBD6cG3jFZDrBmzfTU=;
+ b=O6S7mybTB8sk5Iohs6m46NkxZOq+apwkSpMUhfNeiEziCv8DS5nYhQn6xed4YrwFmJKm
+ Yvq1xfzRpBAa4AivibZEKX5dN/b/Xd/LNOr3fgB4lBxhZPTkFWFMBHlFPlacu6E9Mf6K
+ sfiqWDXWqA+XBIOmw1TxBnKYG95hbvrVlOR5k5MGzf7UXWX8TMuSVaWOTI0JHvQhd3x3
+ G1fYJtJZfz1rBmNSXOyCQDBiiAkBa289nIzF2Qmebu8gHwwPzaLEsCfyQMMzroDYPNoz
+ Hh+5DbLxeSRq13s4/Xk+TfWR8J6WfVfNNGA9Xoif3koipdPcAGJfZKqV2h1GtPzImWsg iA== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqd3tc92p-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqee6tdk3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:01 +0000
-Received: from m0353723.ppops.net (m0353723.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MAp1YB013361;
+        Mon, 22 May 2023 10:51:04 +0000
+Received: from m0353724.ppops.net (m0353724.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MASa3O020599;
+        Mon, 22 May 2023 10:51:03 GMT
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqee6tdjj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 22 May 2023 10:51:03 +0000
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M5xB5G007770;
         Mon, 22 May 2023 10:51:01 GMT
-Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqd3tc923-1
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+        by ppma03ams.nl.ibm.com (PPS) with ESMTPS id 3qppcu8wes-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Mon, 22 May 2023 10:51:01 +0000
-Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
-        by ppma06ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M8tUbC032622;
-        Mon, 22 May 2023 10:50:59 GMT
-Received: from smtprelay03.fra02v.mail.ibm.com ([9.218.2.224])
-        by ppma06ams.nl.ibm.com (PPS) with ESMTPS id 3qppc3gw80-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:50:59 +0000
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay03.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MAouFo21562068
+        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MAowpn32834006
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 10:50:56 GMT
+        Mon, 22 May 2023 10:50:58 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9CA2020043;
-        Mon, 22 May 2023 10:50:56 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 4FAF120040;
+        Mon, 22 May 2023 10:50:58 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 4EC7720040;
-        Mon, 22 May 2023 10:50:56 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 002AE20043;
+        Mon, 22 May 2023 10:50:57 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Mon, 22 May 2023 10:50:56 +0000 (GMT)
+        Mon, 22 May 2023 10:50:57 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
@@ -72,76 +72,74 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
-Subject: [PATCH v5 08/44] /dev/port: don't compile file operations without CONFIG_DEVPORT
-Date:   Mon, 22 May 2023 12:50:13 +0200
-Message-Id: <20230522105049.1467313-9-schnelle@linux.ibm.com>
+Subject: [PATCH v5 10/44] firmware: dmi-sysfs: handle HAS_IOPORT=n
+Date:   Mon, 22 May 2023 12:50:15 +0200
+Message-Id: <20230522105049.1467313-11-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: iuzYpcytujTIHbBo2tvThISxULnSw31E
-X-Proofpoint-GUID: Y_ZqzBhtPlF6aLytqsbY7WFAyeE3H6TF
+X-Proofpoint-GUID: I_2Gg45WEEi3OLP1qik9T0oAgXW0txyO
+X-Proofpoint-ORIG-GUID: MZA9tQJ53QoiaNqEKNPswhPP2GknA3vx
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-22_06,2023-05-22_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 suspectscore=0
- malwarescore=0 clxscore=1015 mlxscore=0 bulkscore=0 spamscore=0
- mlxlogscore=999 impostorscore=0 adultscore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 suspectscore=0
+ phishscore=0 adultscore=0 bulkscore=0 malwarescore=0 lowpriorityscore=0
+ priorityscore=1501 mlxlogscore=999 clxscore=1015 impostorscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2304280000 definitions=main-2305220089
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the future inb() and friends will not be available when compiling
-with CONFIG_HAS_IOPORT=n so we must only try to access them here if
-CONFIG_DEVPORT is set which depends on HAS_IOPORT.
+In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
+not being declared. We thus need to guard sections of code calling them
+as alternative access methods.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/char/mem.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/firmware/dmi-sysfs.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index f494d31f2b98..e0c3a1b89b20 100644
---- a/drivers/char/mem.c
-+++ b/drivers/char/mem.c
-@@ -402,6 +402,7 @@ static int mmap_mem(struct file *file, struct vm_area_struct *vma)
- 	return 0;
- }
+diff --git a/drivers/firmware/dmi-sysfs.c b/drivers/firmware/dmi-sysfs.c
+index 03708ab64e56..8d91997036e4 100644
+--- a/drivers/firmware/dmi-sysfs.c
++++ b/drivers/firmware/dmi-sysfs.c
+@@ -310,6 +310,7 @@ static const struct kobj_type dmi_system_event_log_ktype = {
+ 	.default_groups = dmi_sysfs_sel_groups,
+ };
  
-+#ifdef CONFIG_DEVPORT
- static ssize_t read_port(struct file *file, char __user *buf,
- 			 size_t count, loff_t *ppos)
- {
-@@ -443,6 +444,7 @@ static ssize_t write_port(struct file *file, const char __user *buf,
- 	*ppos = i;
- 	return tmp-buf;
++#ifdef CONFIG_HAS_IOPORT
+ typedef u8 (*sel_io_reader)(const struct dmi_system_event_log *sel,
+ 			    loff_t offset);
+ 
+@@ -374,6 +375,7 @@ static ssize_t dmi_sel_raw_read_io(struct dmi_sysfs_entry *entry,
+ 
+ 	return wrote;
  }
 +#endif
  
- static ssize_t read_null(struct file *file, char __user *buf,
- 			 size_t count, loff_t *ppos)
-@@ -671,12 +673,14 @@ static const struct file_operations null_fops = {
- 	.uring_cmd	= uring_cmd_null,
- };
+ static ssize_t dmi_sel_raw_read_phys32(struct dmi_sysfs_entry *entry,
+ 				       const struct dmi_system_event_log *sel,
+@@ -409,11 +411,13 @@ static ssize_t dmi_sel_raw_read_helper(struct dmi_sysfs_entry *entry,
+ 	memcpy(&sel, dh, sizeof(sel));
  
--static const struct file_operations __maybe_unused port_fops = {
-+#ifdef CONFIG_DEVPORT
-+static const struct file_operations port_fops = {
- 	.llseek		= memory_lseek,
- 	.read		= read_port,
- 	.write		= write_port,
- 	.open		= open_port,
- };
+ 	switch (sel.access_method) {
++#ifdef CONFIG_HAS_IOPORT
+ 	case DMI_SEL_ACCESS_METHOD_IO8:
+ 	case DMI_SEL_ACCESS_METHOD_IO2x8:
+ 	case DMI_SEL_ACCESS_METHOD_IO16:
+ 		return dmi_sel_raw_read_io(entry, &sel, state->buf,
+ 					   state->pos, state->count);
 +#endif
- 
- static const struct file_operations zero_fops = {
- 	.llseek		= zero_lseek,
+ 	case DMI_SEL_ACCESS_METHOD_PHYS32:
+ 		return dmi_sel_raw_read_phys32(entry, &sel, state->buf,
+ 					       state->pos, state->count);
 -- 
 2.39.2
 
