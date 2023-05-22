@@ -2,65 +2,64 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAE80C7EE2D
-	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16B28C7EE2A
+	for <linux-pci@archiver.kernel.org>; Mon, 22 May 2023 10:53:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232958AbjEVKxO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 May 2023 06:53:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41482 "EHLO
+        id S232981AbjEVKxW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 May 2023 06:53:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232964AbjEVKv6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:51:58 -0400
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BB2EE5A;
+        with ESMTP id S232982AbjEVKwG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2023 06:52:06 -0400
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E104FE56;
         Mon, 22 May 2023 03:51:30 -0700 (PDT)
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34MAHRSP005526;
-        Mon, 22 May 2023 10:51:15 GMT
+Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 34M9qg9D015336;
+        Mon, 22 May 2023 10:51:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=Eya5n8SYoD6iVTKWrBjyhQ0SEXz4plmKMHsS9S/BAco=;
- b=j1dKD/OKoXrHUuEf5woWp5zNJycjWiq5hOjzzWXYidcnDb7DzWTlwvwDKO7Hi5Z8B9QM
- QUr15iQG15j9XDqVp9DoUDFRo+smDUYEvqp+yt+c34FXZ+p3E7Z/OE3c5b6rMEKUjzAh
- quhz35i9wi+WxdlODumLyHIzXxw5GXIEya9c7liJKGT0XTJ4xLIGO6R9RaiRAszmVg8S
- ukOM+aSfMd4lQBZh0VVmWsrG5zaiyTsmuMRJ2h87iKR8sqFqa/Py7cU1ukzS046V6eaD
- batGcxRjzVlsU5/DtCaudo1exXQx2J7v0eLfFkynLgqAZrgXXrkHRWUDGxLP6flQH3UL BQ== 
+ bh=kOVkRocUNzoCE3Ax5Q0vzHkYAKeyWtHflf+V2JFhZf0=;
+ b=H59bd4cB44i8p9lHZcNLtdBgO7LwkI4vcfWimglf/EirGSAG0UYGfuKSDVqMTedixpCx
+ Eq5ic2rwAXfSS4JAvklRh2PvbdzwtIE8d4KKdXq19v7MRY/KhRpTUEtXRDMApDCUFBZr
+ 4CXN1GElFtf5nDZq3KBP/7IKM3Tqc0reb2gjcA/sXYVBybrf+aKB4iQuFveMM5iI6Ipf
+ +R4uAJv8tV7pLIsMm++BLpLvN/yvIFog3W6O6pfIQV+yLxYMSI26DqdyqtDMQyjuKiFM
+ zCuQT2I7uhZbX6xKRRxxh8TDv9i8MuRNxiIuAIcjPg6KOI5s40WrZyZeUWVSmFY0NMw3 9Q== 
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qq78bh2k5-1
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqfq39r0b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:15 +0000
-Received: from m0356517.ppops.net (m0356517.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34MAShFu013591;
-        Mon, 22 May 2023 10:51:14 GMT
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qq78bh2h8-1
+        Mon, 22 May 2023 10:51:20 +0000
+Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 34M9cE0Z029654;
+        Mon, 22 May 2023 10:51:20 GMT
+Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
+        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3qqfq39qyj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:14 +0000
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M6KApJ015110;
-        Mon, 22 May 2023 10:51:10 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-        by ppma05fra.de.ibm.com (PPS) with ESMTPS id 3qppbmgrw2-1
+        Mon, 22 May 2023 10:51:19 +0000
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 34M3P0dq016258;
+        Mon, 22 May 2023 10:51:18 GMT
+Received: from smtprelay04.fra02v.mail.ibm.com ([9.218.2.228])
+        by ppma04ams.nl.ibm.com (PPS) with ESMTPS id 3qppdk0w99-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 22 May 2023 10:51:10 +0000
+        Mon, 22 May 2023 10:51:18 +0000
 Received: from smtpav04.fra02v.mail.ibm.com (smtpav04.fra02v.mail.ibm.com [10.20.54.103])
-        by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MAp7GH8192616
+        by smtprelay04.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 34MApCjB37356186
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 22 May 2023 10:51:07 GMT
+        Mon, 22 May 2023 10:51:12 GMT
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 90AF52004E;
-        Mon, 22 May 2023 10:51:06 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 7AA692004B;
+        Mon, 22 May 2023 10:51:12 +0000 (GMT)
 Received: from smtpav04.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 37D182004B;
-        Mon, 22 May 2023 10:51:06 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 2411A20043;
+        Mon, 22 May 2023 10:51:12 +0000 (GMT)
 Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
         by smtpav04.fra02v.mail.ibm.com (Postfix) with ESMTP;
-        Mon, 22 May 2023 10:51:06 +0000 (GMT)
+        Mon, 22 May 2023 10:51:12 +0000 (GMT)
 From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     Arnd Bergmann <arnd@arndb.de>, Karsten Keil <isdn@linux-pingi.de>
+To:     Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
         =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
@@ -71,114 +70,65 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Palmer Dabbelt <palmer@dabbelt.com>,
         Albert Ou <aou@eecs.berkeley.edu>,
         linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org
-Subject: [PATCH v5 20/44] mISDN: add HAS_IOPORT dependencies
-Date:   Mon, 22 May 2023 12:50:25 +0200
-Message-Id: <20230522105049.1467313-21-schnelle@linux.ibm.com>
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>
+Subject: [PATCH v5 25/44] PCI/sysfs: Make I/O resource depend on HAS_IOPORT
+Date:   Mon, 22 May 2023 12:50:30 +0200
+Message-Id: <20230522105049.1467313-26-schnelle@linux.ibm.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: xuXwvEEWcIDWKtivvMmAjkBo7InOnKLx
-X-Proofpoint-GUID: gtQjnL-FLFPAM4NIBQ9rwyjkborAPGA5
+X-Proofpoint-ORIG-GUID: XA-F9FHMBXeah8fQ5YuIlUwTaeRSmasl
+X-Proofpoint-GUID: dUS_Pkqk5J8FLYkSzVrfagtH8ZX07pRa
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.573,FMLib:17.11.170.22
  definitions=2023-05-22_06,2023-05-22_03,2023-02-09_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
- malwarescore=0 phishscore=0 impostorscore=0 priorityscore=1501
- mlxlogscore=846 adultscore=0 lowpriorityscore=0 clxscore=1015 spamscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2304280000 definitions=main-2305220089
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxlogscore=999
+ priorityscore=1501 adultscore=0 lowpriorityscore=0 mlxscore=0 spamscore=0
+ suspectscore=0 malwarescore=0 impostorscore=0 clxscore=1015 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2304280000
+ definitions=main-2305220089
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-not being declared. We thus need to add HAS_IOPORT as dependency for
-those drivers using them. With that the !S390 dependency on ISDN can be
-removed as all drivers without HAS_IOPORT requirement now build.
+If legacy I/O spaces are not supported simply return an error when
+trying to access them via pci_resource_io(). This allows inb() and
+friends to become undefined when they are known at compile time to be
+non-functional in a later patch.
 
 Co-developed-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-Acked-by: Jakub Kicinski <kuba@kernel.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
 ---
- drivers/isdn/Kconfig                |  1 -
- drivers/isdn/hardware/mISDN/Kconfig | 12 ++++++------
- 2 files changed, 6 insertions(+), 7 deletions(-)
+ drivers/pci/pci-sysfs.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/isdn/Kconfig b/drivers/isdn/Kconfig
-index 2690e2c5a158..6fd1b3f84a29 100644
---- a/drivers/isdn/Kconfig
-+++ b/drivers/isdn/Kconfig
-@@ -6,7 +6,6 @@
- menuconfig ISDN
- 	bool "ISDN support"
- 	depends on NET && NETDEVICES
--	depends on !S390 && !UML
- 	help
- 	  ISDN ("Integrated Services Digital Network", called RNIS in France)
- 	  is a fully digital telephone service that can be used for voice and
-diff --git a/drivers/isdn/hardware/mISDN/Kconfig b/drivers/isdn/hardware/mISDN/Kconfig
-index 078eeadf707a..a35bff8a93f5 100644
---- a/drivers/isdn/hardware/mISDN/Kconfig
-+++ b/drivers/isdn/hardware/mISDN/Kconfig
-@@ -14,7 +14,7 @@ config MISDN_HFCPCI
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index ab32a91f287b..d9eede2dbc0e 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1083,6 +1083,7 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 			       struct bin_attribute *attr, char *buf,
+ 			       loff_t off, size_t count, bool write)
+ {
++#ifdef CONFIG_HAS_IOPORT
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	int bar = (unsigned long)attr->private;
+ 	unsigned long port = off;
+@@ -1116,6 +1117,9 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 		return 4;
+ 	}
+ 	return -EINVAL;
++#else
++	return -ENXIO;
++#endif
+ }
  
- config MISDN_HFCMULTI
- 	tristate "Support for HFC multiport cards (HFC-4S/8S/E1)"
--	depends on PCI || CPM1
-+	depends on (PCI || CPM1) && HAS_IOPORT
- 	depends on MISDN
- 	help
- 	  Enable support for cards with Cologne Chip AG's HFC multiport
-@@ -43,7 +43,7 @@ config MISDN_HFCUSB
- config MISDN_AVMFRITZ
- 	tristate "Support for AVM FRITZ!CARD PCI"
- 	depends on MISDN
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select MISDN_IPAC
- 	help
- 	  Enable support for AVMs FRITZ!CARD PCI cards
-@@ -51,7 +51,7 @@ config MISDN_AVMFRITZ
- config MISDN_SPEEDFAX
- 	tristate "Support for Sedlbauer Speedfax+"
- 	depends on MISDN
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select MISDN_IPAC
- 	select MISDN_ISAR
- 	help
-@@ -60,7 +60,7 @@ config MISDN_SPEEDFAX
- config MISDN_INFINEON
- 	tristate "Support for cards with Infineon chipset"
- 	depends on MISDN
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	select MISDN_IPAC
- 	help
- 	  Enable support for cards with ISAC + HSCX, IPAC or IPAC-SX
-@@ -69,14 +69,14 @@ config MISDN_INFINEON
- config MISDN_W6692
- 	tristate "Support for cards with Winbond 6692"
- 	depends on MISDN
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	help
- 	  Enable support for Winbond 6692 PCI chip based cards.
- 
- config MISDN_NETJET
- 	tristate "Support for NETJet cards"
- 	depends on MISDN
--	depends on PCI
-+	depends on PCI && HAS_IOPORT
- 	depends on TTY
- 	select MISDN_IPAC
- 	select MISDN_HDLC
+ static ssize_t pci_read_resource_io(struct file *filp, struct kobject *kobj,
 -- 
 2.39.2
 
