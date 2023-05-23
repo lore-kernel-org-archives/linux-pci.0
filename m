@@ -2,454 +2,222 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B71FEC7EE23
-	for <linux-pci@archiver.kernel.org>; Tue, 23 May 2023 09:34:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20FFEC77B75
+	for <linux-pci@archiver.kernel.org>; Tue, 23 May 2023 10:25:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236238AbjEWJeH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 May 2023 05:34:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54048 "EHLO
+        id S230041AbjEWKZX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 May 2023 06:25:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236117AbjEWJeC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2023 05:34:02 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B11F120;
-        Tue, 23 May 2023 02:33:49 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4QQTbc50HMzsRpb;
-        Tue, 23 May 2023 17:31:40 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Tue, 23 May 2023 17:33:46 +0800
-From:   Yicong Yang <yangyicong@huawei.com>
-To:     <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
-        <jonathan.cameron@huawei.com>, <corbet@lwn.net>,
-        <linux-kernel@vger.kernel.org>, <linux-doc@vger.kernel.org>
-CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
-        <linux-pci@vger.kernel.org>, <prime.zeng@huawei.com>,
-        <linuxarm@huawei.com>
-Subject: [PATCH v3 3/4] hwtracing: hisi_ptt: Export available filters through sysfs
-Date:   Tue, 23 May 2023 17:32:27 +0800
-Message-ID: <20230523093228.48149-4-yangyicong@huawei.com>
-X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20230523093228.48149-1-yangyicong@huawei.com>
-References: <20230523093228.48149-1-yangyicong@huawei.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.50.163.32]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500009.china.huawei.com (7.192.105.203)
-X-CFilter-Loop: Reflected
+        with ESMTP id S229758AbjEWKZV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2023 06:25:21 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 875AC94;
+        Tue, 23 May 2023 03:25:20 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1A540629E5;
+        Tue, 23 May 2023 10:25:20 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10711C433D2;
+        Tue, 23 May 2023 10:25:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684837519;
+        bh=bVF4P4TLoqF9NzA727Ndl4mHf4vkDIs82DyqWk2MbEE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=ay7HNQ48D1jj5/UNscaWnaoknIegl7HkPbMigAnuMpNk/VoehH1ipcBmahPqVPf+b
+         mRBwNUGVtJw7Mw/5187+EbuAqz2Us3xbOUaHWDFKj6P/oRCO2BCbn6kLCaOazl6h1p
+         qrEk+OVd5nH3VZvZH6JFSlm6xmDYCs9lwQSbkwVWDM86iTOvndLYWEIu2mwkELLLwU
+         s5DtChSzDHQUmUu/oqdMPe4sXYHVwYiQbxh48Yl88FMiHZ0E8+usDUM2OHAhXj3qPg
+         siRbs38Z51sLhsvwyozCvye0awrgsjSIKvFt164t0WuRURK1q8bd2j0lVyVU2HN1J4
+         XRsGRJbpwsp3w==
+Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
+        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.95)
+        (envelope-from <maz@kernel.org>)
+        id 1q1PCe-00HKM9-Cd;
+        Tue, 23 May 2023 11:25:16 +0100
+Date:   Tue, 23 May 2023 11:25:07 +0100
+Message-ID: <86r0r7cpks.wl-maz@kernel.org>
+From:   Marc Zyngier <maz@kernel.org>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     LKML <linux-kernel@vger.kernel.org>, Will Deacon <will@kernel.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Ammar Faizi <ammarfaizi2@gnuweeb.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Nishanth Menon <nm@ti.com>, Tero Kristo <kristo@kernel.org>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Vinod Koul <vkoul@kernel.org>, Sinan Kaya <okaya@kernel.org>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Shameerali Kolothum Thodi 
+        <shameerali.kolothum.thodi@huawei.com>,
+        Zenghui Yu <yuzenghui@huawei.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        Anna-Maria Behnsen <anna-maria.behnsen@linutronix.de>
+Subject: Re: [patch V2 06/40] PCI/MSI: Provide static key for parent mask/unmask
+In-Reply-To: <87ttw4wiro.ffs@tglx>
+References: <20221121135653.208611233@linutronix.de>
+        <20221121140048.659849460@linutronix.de>
+        <8635a8o65q.wl-maz@kernel.org>
+        <87bkowcx0z.ffs@tglx>
+        <86zgcgmpzl.wl-maz@kernel.org>
+        <87v8n3c2qy.ffs@tglx>
+        <87ttw4wiro.ffs@tglx>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/28.2
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: tglx@linutronix.de, linux-kernel@vger.kernel.org, will@kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, lorenzo.pieralisi@arm.com, gregkh@linuxfoundation.org, jgg@mellanox.com, andrew@lunn.ch, gregory.clement@bootlin.com, sebastian.hesselbarth@gmail.com, ammarfaizi2@gnuweeb.org, robin.murphy@arm.com, lpieralisi@kernel.org, nm@ti.com, kristo@kernel.org, ssantosh@kernel.org, linux-arm-kernel@lists.infradead.org, vkoul@kernel.org, okaya@kernel.org, agross@kernel.org, andersson@kernel.org, mark.rutland@arm.com, shameerali.kolothum.thodi@huawei.com, yuzenghui@huawei.com, shawnguo@kernel.org, s.hauer@pengutronix.de, festevam@gmail.com, anna-maria.behnsen@linutronix.de
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yicong Yang <yangyicong@hisilicon.com>
+On Mon, 22 May 2023 15:19:39 +0100,
+Thomas Gleixner <tglx@linutronix.de> wrote:
+> 
+> On Fri, Nov 25 2022 at 01:11, Thomas Gleixner wrote:
+> > On Thu, Nov 24 2022 at 13:38, Marc Zyngier wrote:
+> >> On Thu, 24 Nov 2022 13:17:00 +0000,
+> >> Thomas Gleixner <tglx@linutronix.de> wrote:
+> >>> > I find this a bit odd. If anything, I'd rather drop the masking at the
+> >>> > PCI level and keep it local to the interrupt controller, because this
+> >>> > is likely to be more universal than the equivalent PCI operation
+> >>> > (think multi-MSI, for example, which cannot masks individual MSIs).
+> >>> >
+> >>> > Another thing is that the static key is a global state. Nothing says
+> >>> > that masking one way or the other is a universal thing, specially when
+> >>> > you have multiple interrupt controllers dealing with MSIs in different
+> >>> > ways. For example, GICv3 can use both the ITS and the GICv3-MBI frame
+> >>> > at the same time for different PCI RC. OK, they happen to deal with
+> >>> > MSIs in the same way, but you hopefully get my point.
+> >>> 
+> >>> I'm fine with dropping that. I did this because basically all of the
+> >>> various ARM PCI/MSI domain implementation have a copy of the same
+> >>> functions. Some of them have pointlessly the wrong order because copy &
+> >>> pasta is so wonderful....
+> >>> 
+> >>> So the alternative solution is to provide _ONE_ set of correct callbacks
+> >>> and let the domain initialization code override the irq chip callbacks
+> >>> of the default PCI/MSI template.
+> >>
+> >> If the various irqchips can tell the core code whether they want
+> >> things to be masked at the PCI level or at the irqchip level, this
+> >> would be a move in the right direction. For the GIC, I'd definitely
+> >> want things masked locally.
+> >>
+> >> What I'd like to get rid off is the double masking, as I agree it is
+> >> on the "pretty dumb" side of things.
+> >
+> > Not necessarily. It mitigates the problem of MSI interrupts which can't
+> > be masked because the implementers decided to spare the gates. MSI
+> > allows that as masking is opt-in...
+> >
+> > Let me think about it.
+> 
+> That really took a while to think about it :)
+> 
+> We have the following cases on the PCI/MSI side:
+> 
+>  1) The MSI[X] entry can be masked
+> 
+>  2) The MSI[X] entry cannot be masked because hardware did not implement
+>     it, masking is globally disabled due to XEN, masking does not exist
+>     for this horrible virtual MSI hackery
 
-The PTT can only filter the traced TLP headers by the Root Ports or the
-Requester ID of the Endpoint, which are located on the same core of the
-PTT device. The filter value used is derived from the BDF number of the
-supported Root Port or the Endpoint. It's not friendly enough for the
-users since it requires the user to be familiar enough with the platform
-and calculate the filter value manually.
+And as a bonus the case of non-PCI MSIs, which are definitely a thing,
+and I'd like them to fit in the same model (because life is too short
+to do anything else). As for the Xen side, I hope to never have to
+care about it for the architecture I care about (I've long proclaimed
+Xen/arm64 dead and buried).
 
-This patch export the available filters through sysfs. Each available
-filters is presented as an individual file with the name of the BDF
-number of the related PCIe device. The files are created under
-$(PTT PMU dir)/available_root_port_filters and
-$(PTT PMU dir)/available_requester_filters respectively. The filter
-value can be known by reading the related file.
+> 
+> Now you said:
+> 
+>  "For the GIC, I'd definitely want things masked locally."
+> 
+> I decoded this, that you want to have these interrupts masked at the GIC
+> level too independent of #1 or #2 above. And then:
+> 
+>  "What I'd like to get rid off is the double masking."
+> 
+> But relying on the GIC alone is not really a good thing IMO. There is no
+> point to let some confused device send unwanted MSI messages around
+> without a way to shut it up from the generic code via the regular
+> mask/unmask callbacks.
 
-Then the users can easily know the available filters for trace and get
-the filter values without calculating.
+I have a slightly different view of the problem. The device masking is
+somehow orthogonal with the masking at the GIC level:
 
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- .../ABI/testing/sysfs-devices-hisi_ptt        |  50 +++++
- Documentation/trace/hisi-ptt.rst              |   6 +
- drivers/hwtracing/ptt/hisi_ptt.c              | 206 ++++++++++++++++++
- drivers/hwtracing/ptt/hisi_ptt.h              |  14 ++
- 4 files changed, 276 insertions(+)
+- can the interrupt be generated: this is a device property
 
-diff --git a/Documentation/ABI/testing/sysfs-devices-hisi_ptt b/Documentation/ABI/testing/sysfs-devices-hisi_ptt
-index 82de6d710266..190ed504346b 100644
---- a/Documentation/ABI/testing/sysfs-devices-hisi_ptt
-+++ b/Documentation/ABI/testing/sysfs-devices-hisi_ptt
-@@ -59,3 +59,53 @@ Description:	(RW) Control the allocated buffer watermark of outbound packets.
- 		The available tune data is [0, 1, 2]. Writing a negative value
- 		will return an error, and out of range values will be converted
- 		to 2. The value indicates a probable level of the event.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/root_port_filters
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	This directory contains the files providing the PCIe Root Port filters
-+		information used for PTT trace. Each file is named after the supported
-+		Root Port device name <domain>:<bus>:<device>.<function>.
-+
-+		See the description of the "filter" in Documentation/trace/hisi-ptt.rst
-+		for more information.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/root_port_filters/multiselect
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	(Read) Indicates whether this kind of filter can be multiselected
-+		or not. 1 for multiselectable, 0 for not.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/root_port_filters/<bdf>
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	(Read) Indicates the filter value of this Root Port filter, which
-+		can be used to control the TLP headers to trace by the PTT trace.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/requester_filters
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	This directory contains the files providing the PCIe Requester filters
-+		information used for PTT trace. Each file is named after the supported
-+		Endpoint device name <domain>:<bus>:<device>.<function>.
-+
-+		See the description of the "filter" in Documentation/trace/hisi-ptt.rst
-+		for more information.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/requester_filters/multiselect
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	(Read) Indicates whether this kind of filter can be multiselected
-+		or not. 1 for multiselectable, 0 for not.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/requester_filters/<bdf>
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	(Read) Indicates the filter value of this Requester filter, which
-+		can be used to control the TLP headers to trace by the PTT trace.
-diff --git a/Documentation/trace/hisi-ptt.rst b/Documentation/trace/hisi-ptt.rst
-index 3641aca4287a..b8c7d71aee32 100644
---- a/Documentation/trace/hisi-ptt.rst
-+++ b/Documentation/trace/hisi-ptt.rst
-@@ -148,6 +148,12 @@ For example, if the desired filter is Endpoint function 0000:01:00.1 the filter
- value will be 0x00101. If the desired filter is Root Port 0000:00:10.0 then
- then filter value is calculated as 0x80001.
- 
-+The driver also presents every supported Root Port and Requester filter through
-+sysfs. Each filter will be an individual file with name of its related PCIe
-+device name (domain:bus:device.function). The files of Root Port filters are
-+under $(PTT PMU dir)/root_port_filters and files of Requester filters
-+are under $(PTT PMU dir)/requester_filters.
-+
- Note that multiple Root Ports can be specified at one time, but only one
- Endpoint function can be specified in one trace. Specifying both Root Port
- and function at the same time is not supported. Driver maintains a list of
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
-index 9b4acbc434b0..65f4288a1915 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.c
-+++ b/drivers/hwtracing/ptt/hisi_ptt.c
-@@ -404,6 +404,142 @@ hisi_ptt_alloc_add_filter(struct hisi_ptt *hisi_ptt, u16 devid, bool is_port)
- 	return filter;
- }
- 
-+static ssize_t hisi_ptt_filter_show(struct device *dev, struct device_attribute *attr,
-+				    char *buf)
-+{
-+	struct hisi_ptt_filter_desc *filter;
-+	unsigned long filter_val;
-+
-+	filter = container_of(attr, struct hisi_ptt_filter_desc, attr);
-+	filter_val = hisi_ptt_get_filter_val(filter->devid, filter->is_port) |
-+		     (filter->is_port ? HISI_PTT_PMU_FILTER_IS_PORT : 0);
-+
-+	return sysfs_emit(buf, "0x%05lx\n", filter_val);
-+}
-+
-+static int hisi_ptt_create_rp_filter_attr(struct hisi_ptt *hisi_ptt,
-+					  struct hisi_ptt_filter_desc *filter)
-+{
-+	struct kobject *kobj = &hisi_ptt->hisi_ptt_pmu.dev->kobj;
-+
-+	filter->attr.attr.name = filter->name;
-+	filter->attr.attr.mode = 0400; /* DEVICE_ATTR_ADMIN_RO */
-+	filter->attr.show = hisi_ptt_filter_show;
-+
-+	return sysfs_add_file_to_group(kobj, &filter->attr.attr,
-+				       HISI_PTT_RP_FILTERS_GRP_NAME);
-+}
-+
-+static void hisi_ptt_remove_rp_filter_attr(struct hisi_ptt *hisi_ptt,
-+					  struct hisi_ptt_filter_desc *filter)
-+{
-+	struct kobject *kobj = &hisi_ptt->hisi_ptt_pmu.dev->kobj;
-+
-+	sysfs_remove_file_from_group(kobj, &filter->attr.attr,
-+				     HISI_PTT_RP_FILTERS_GRP_NAME);
-+}
-+
-+static int hisi_ptt_create_req_filter_attr(struct hisi_ptt *hisi_ptt,
-+					   struct hisi_ptt_filter_desc *filter)
-+{
-+	struct kobject *kobj = &hisi_ptt->hisi_ptt_pmu.dev->kobj;
-+
-+	filter->attr.attr.name = filter->name;
-+	filter->attr.attr.mode = 0400; /* DEVICE_ATTR_ADMIN_RO */
-+	filter->attr.show = hisi_ptt_filter_show;
-+
-+	return sysfs_add_file_to_group(kobj, &filter->attr.attr,
-+				       HISI_PTT_REQ_FILTERS_GRP_NAME);
-+}
-+
-+static void hisi_ptt_remove_req_filter_attr(struct hisi_ptt *hisi_ptt,
-+					   struct hisi_ptt_filter_desc *filter)
-+{
-+	struct kobject *kobj = &hisi_ptt->hisi_ptt_pmu.dev->kobj;
-+
-+	sysfs_remove_file_from_group(kobj, &filter->attr.attr,
-+				     HISI_PTT_REQ_FILTERS_GRP_NAME);
-+}
-+
-+static int hisi_ptt_create_filter_attr(struct hisi_ptt *hisi_ptt,
-+				       struct hisi_ptt_filter_desc *filter)
-+{
-+	int ret;
-+
-+	if (filter->is_port)
-+		ret = hisi_ptt_create_rp_filter_attr(hisi_ptt, filter);
-+	else
-+		ret = hisi_ptt_create_req_filter_attr(hisi_ptt, filter);
-+
-+	if (ret)
-+		pci_err(hisi_ptt->pdev, "failed to create sysfs attribute for filter %s\n",
-+			filter->name);
-+
-+	return ret;
-+}
-+
-+static void hisi_ptt_remove_filter_attr(struct hisi_ptt *hisi_ptt,
-+					struct hisi_ptt_filter_desc *filter)
-+{
-+	if (filter->is_port)
-+		hisi_ptt_remove_rp_filter_attr(hisi_ptt, filter);
-+	else
-+		hisi_ptt_remove_req_filter_attr(hisi_ptt, filter);
-+}
-+
-+static void hisi_ptt_remove_all_filter_attributes(void *data)
-+{
-+	struct hisi_ptt_filter_desc *filter;
-+	struct hisi_ptt *hisi_ptt = data;
-+
-+	mutex_lock(&hisi_ptt->filter_lock);
-+
-+	list_for_each_entry(filter, &hisi_ptt->req_filters, list)
-+		hisi_ptt_remove_filter_attr(hisi_ptt, filter);
-+
-+	list_for_each_entry(filter, &hisi_ptt->port_filters, list)
-+		hisi_ptt_remove_filter_attr(hisi_ptt, filter);
-+
-+	hisi_ptt->sysfs_inited = false;
-+	mutex_unlock(&hisi_ptt->filter_lock);
-+}
-+
-+static int hisi_ptt_init_filter_attributes(struct hisi_ptt *hisi_ptt)
-+{
-+	struct hisi_ptt_filter_desc *filter;
-+	int ret;
-+
-+	mutex_lock(&hisi_ptt->filter_lock);
-+
-+	/*
-+	 * Register the reset callback in the first stage. In reset we traverse
-+	 * the filters list to remove the sysfs attributes so itself alone can
-+	 * be called safely even without below filter attributes creation work.
-+	 */
-+	ret = devm_add_action(&hisi_ptt->pdev->dev,
-+			      hisi_ptt_remove_all_filter_attributes,
-+			      hisi_ptt);
-+	if (ret)
-+		goto out;
-+
-+	list_for_each_entry(filter, &hisi_ptt->port_filters, list) {
-+		ret = hisi_ptt_create_filter_attr(hisi_ptt, filter);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	list_for_each_entry(filter, &hisi_ptt->req_filters, list) {
-+		ret = hisi_ptt_create_filter_attr(hisi_ptt, filter);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	hisi_ptt->sysfs_inited = true;
-+out:
-+	mutex_unlock(&hisi_ptt->filter_lock);
-+	return ret;
-+}
-+
- static void hisi_ptt_update_filters(struct work_struct *work)
- {
- 	struct delayed_work *delayed_work = to_delayed_work(work);
-@@ -428,6 +564,18 @@ static void hisi_ptt_update_filters(struct work_struct *work)
- 			filter = hisi_ptt_alloc_add_filter(hisi_ptt, info.devid, info.is_port);
- 			if (!filter)
- 				continue;
-+
-+			/*
-+			 * If filters' sysfs entries hasn't been initialized,
-+			 * then we're still at probe stage. Add the filters to
-+			 * the list and later hisi_ptt_init_filter_attributes()
-+			 * will create sysfs attributes for all the filters.
-+			 */
-+			if (hisi_ptt->sysfs_inited &&
-+			    hisi_ptt_create_filter_attr(hisi_ptt, filter)) {
-+				hisi_ptt_del_free_filter(hisi_ptt, filter);
-+				continue;
-+			}
- 		} else {
- 			struct hisi_ptt_filter_desc *tmp;
- 			struct list_head *target_list;
-@@ -438,6 +586,10 @@ static void hisi_ptt_update_filters(struct work_struct *work)
- 			list_for_each_entry_safe(filter, tmp, target_list, list)
- 				if (filter->devid == info.devid) {
- 					hisi_ptt_del_free_filter(hisi_ptt, filter);
-+
-+					if (hisi_ptt->sysfs_inited)
-+						hisi_ptt_remove_filter_attr(hisi_ptt, filter);
-+
- 					break;
- 				}
- 		}
-@@ -662,10 +814,58 @@ static struct attribute_group hisi_ptt_pmu_format_group = {
- 	.attrs = hisi_ptt_pmu_format_attrs,
- };
- 
-+static ssize_t hisi_ptt_filter_multiselect_show(struct device *dev,
-+						struct device_attribute *attr,
-+						char *buf)
-+{
-+	struct dev_ext_attribute *ext_attr;
-+
-+	ext_attr = container_of(attr, struct dev_ext_attribute, attr);
-+	return sysfs_emit(buf, "%s\n", (char *)ext_attr->var);
-+}
-+
-+static struct dev_ext_attribute root_port_filters_multiselect = {
-+	.attr = {
-+		.attr = { .name = "multiselect", .mode = 0400 },
-+		.show = hisi_ptt_filter_multiselect_show,
-+	},
-+	.var = "1",
-+};
-+
-+static struct attribute *hisi_ptt_pmu_root_ports_attrs[] = {
-+	&root_port_filters_multiselect.attr.attr,
-+	NULL
-+};
-+
-+static struct attribute_group hisi_ptt_pmu_root_ports_group = {
-+	.name = HISI_PTT_RP_FILTERS_GRP_NAME,
-+	.attrs = hisi_ptt_pmu_root_ports_attrs,
-+};
-+
-+static struct dev_ext_attribute requester_filters_multiselect = {
-+	.attr = {
-+		.attr = { .name = "multiselect", .mode = 0400 },
-+		.show = hisi_ptt_filter_multiselect_show,
-+	},
-+	.var = "0",
-+};
-+
-+static struct attribute *hisi_ptt_pmu_requesters_attrs[] = {
-+	&requester_filters_multiselect.attr.attr,
-+	NULL
-+};
-+
-+static struct attribute_group hisi_ptt_pmu_requesters_group = {
-+	.name = HISI_PTT_REQ_FILTERS_GRP_NAME,
-+	.attrs = hisi_ptt_pmu_requesters_attrs,
-+};
-+
- static const struct attribute_group *hisi_ptt_pmu_groups[] = {
- 	&hisi_ptt_cpumask_attr_group,
- 	&hisi_ptt_pmu_format_group,
- 	&hisi_ptt_tune_group,
-+	&hisi_ptt_pmu_root_ports_group,
-+	&hisi_ptt_pmu_requesters_group,
- 	NULL
- };
- 
-@@ -1146,6 +1346,12 @@ static int hisi_ptt_probe(struct pci_dev *pdev,
- 		return ret;
- 	}
- 
-+	ret = hisi_ptt_init_filter_attributes(hisi_ptt);
-+	if (ret) {
-+		pci_err(pdev, "failed to init sysfs filter attributes, ret = %d", ret);
-+		return ret;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.h b/drivers/hwtracing/ptt/hisi_ptt.h
-index d080b306af77..e5e1a49df380 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.h
-+++ b/drivers/hwtracing/ptt/hisi_ptt.h
-@@ -11,6 +11,7 @@
- 
- #include <linux/bits.h>
- #include <linux/cpumask.h>
-+#include <linux/device.h>
- #include <linux/kfifo.h>
- #include <linux/list.h>
- #include <linux/mutex.h>
-@@ -139,14 +140,25 @@ struct hisi_ptt_trace_ctrl {
- 	u32 type:4;
- };
- 
-+/*
-+ * sysfs attribute group name for root port filters and requester filters:
-+ * /sys/devices/hisi_ptt<sicl_id>_<core_id>/root_port_filters
-+ * and
-+ * /sys/devices/hisi_ptt<sicl_id>_<core_id>/requester_filters
-+ */
-+#define HISI_PTT_RP_FILTERS_GRP_NAME	"root_port_filters"
-+#define HISI_PTT_REQ_FILTERS_GRP_NAME	"requester_filters"
-+
- /**
-  * struct hisi_ptt_filter_desc - Descriptor of the PTT trace filter
-+ * @attr:    sysfs attribute of this filter
-  * @list:    entry of this descriptor in the filter list
-  * @is_port: the PCI device of the filter is a Root Port or not
-  * @name:    name of this filter, same as the name of the related PCI device
-  * @devid:   the PCI device's devid of the filter
-  */
- struct hisi_ptt_filter_desc {
-+	struct device_attribute attr;
- 	struct list_head list;
- 	bool is_port;
- 	char *name;
-@@ -193,6 +205,7 @@ struct hisi_ptt_pmu_buf {
-  * @port_filters: the filter list of root ports
-  * @req_filters:  the filter list of requester ID
-  * @filter_lock:  lock to protect the filters
-+ * @sysfs_inited: whether the filters' sysfs entries has been initialized
-  * @port_mask:    port mask of the managed root ports
-  * @work:         delayed work for filter updating
-  * @filter_update_lock: spinlock to protect the filter update fifo
-@@ -220,6 +233,7 @@ struct hisi_ptt {
- 	struct list_head port_filters;
- 	struct list_head req_filters;
- 	struct mutex filter_lock;
-+	bool sysfs_inited;
- 	u16 port_mask;
- 
- 	/*
+- can the interrupt be signalled: this is an interrupt controller
+  property
+
+In a way, this is no different from your basic device, such as a
+timer: you need both the interrupt generation to be enabled at the
+timer level, and the interrupt signalling to be enabled (unmasked) at
+the irqchip level.
+
+Today, we conflate the two, because we have either:
+
+- devices that cannot selectively mask interrupts
+
+- interrupt controllers that are limited in what they can mask
+
+and this results in the terrible pattern that's all over the
+GIC-related stuff.
+
+> On the other hand for PCI/MSI[x] the mask/unmask operations are not in
+> the hot path as PCI/MSI[x] are strictly edge. Mask/unmask is only
+> happening on startup, shutdown and when an interrupt arrives after
+> disable_irq() incremented the lazy disable counter.
+> 
+> For regular interrupt handling mask/unmask is not involved.
+> 
+> So to avoid that global key we can let the parent domain set a new flag,
+> e.g. MSI_FLAG_PCI_MSI_MASK_PARENT, in msi_parent_ops::supported_flags
+> and let the PCI/MSI core code query that information when the per device
+> domain is created and select the appropriate template or fixup the
+> callbacks after the domain is created.
+> 
+> Does that address your concerns?
+
+It does to a certain extent.
+
+But what I'd really like is that in the most common case where the
+interrupt controller is capable of masking MSIs, the PCI/MSI
+*enabling* becomes the responsibility of the PCI core code and not the
+IRQ code.
+
+The IRQ code should ideally only be concerned with the masking of the
+interrupt at the irqchip level, and not beyond that. And that'd solve
+the Xen problem by merely ignoring it.
+
+If we have HW out there that cannot mask MSIs at the interrupt
+controller level, then we'd have to fallback to device-side masking,
+which doesn't really work in general (MultiMSI being my favourite
+example). My gut feeling is that this is rare, but I'm pretty sure it
+exists.
+
+Thanks,
+
+	M.
+
 -- 
-2.24.0
-
+Without deviation from the norm, progress is not possible.
