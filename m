@@ -2,69 +2,82 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEA5DC7EE23
-	for <linux-pci@archiver.kernel.org>; Wed, 24 May 2023 15:55:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DB10C7EE23
+	for <linux-pci@archiver.kernel.org>; Wed, 24 May 2023 16:02:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236586AbjEXPzb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 May 2023 11:55:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51938 "EHLO
+        id S238478AbjEXQCk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 May 2023 12:02:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55144 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237544AbjEXPzU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2023 11:55:20 -0400
-X-Greylist: delayed 559 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 24 May 2023 08:55:02 PDT
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [IPv6:2a01:37:3000::53df:4ef0:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC5F21A4;
-        Wed, 24 May 2023 08:55:01 -0700 (PDT)
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 6DD7F28010365;
-        Wed, 24 May 2023 17:44:54 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 63A39261ABF; Wed, 24 May 2023 17:44:54 +0200 (CEST)
-Date:   Wed, 24 May 2023 17:44:54 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        S-k Shyam-sundar <Shyam-sundar.S-k@amd.com>,
-        Natikar Basavaraj <Basavaraj.Natikar@amd.com>,
-        Deucher Alexander <Alexander.Deucher@amd.com>,
-        linux-pm@vger.kernel.org, Iain Lane <iain@orangesquash.org.uk>
-Subject: Re: [PATCH v3] PCI: Don't assume root ports from > 2015 are power
- manageable
-Message-ID: <20230524154454.GA28455@wunner.de>
-References: <20230524152136.1033-1-mario.limonciello@amd.com>
+        with ESMTP id S238189AbjEXQC1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2023 12:02:27 -0400
+Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B8F01BD;
+        Wed, 24 May 2023 09:01:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1684944074; x=1716480074;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Wx0Ob/xebu07nSB9TJ+GF90jaV0TCKSH0UQ2GQEg59o=;
+  b=RETM/931CbERbzpPgwOiAxqENRCG6p7YFd+3qZK3xafr2DYmDHgCYLWa
+   0GDfBegkWSZ35HQmC+hp1f740bFgVV8JA5yQjIqIyD+wDXFOyxiGjPprV
+   W/Bz5TQYN4iqxGY3igo6Pvf8OuG7EmivcnaLJ5/PkwFJ0mLwS7VU1RDpX
+   J5a7zx613HNYITxTngezU0hqENZVtNsUd0Ehzk2z9qgxJILJBhLT3vho8
+   Uld5PPSQPIAQY4H4/rwIDJwuzul+TG2rBfVIGttw6pRcrAttVXuR9+YzO
+   g3VZkFLtza/k5iwl/RhEq955M0XZfmymdJXJXx8hd5X6rw5ZP3RmVF2NF
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10720"; a="343073976"
+X-IronPort-AV: E=Sophos;i="6.00,189,1681196400"; 
+   d="scan'208";a="343073976"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2023 08:59:45 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10720"; a="654853056"
+X-IronPort-AV: E=Sophos;i="6.00,189,1681196400"; 
+   d="scan'208";a="654853056"
+Received: from kknopp-mobl1.amr.corp.intel.com (HELO [10.212.186.147]) ([10.212.186.147])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 May 2023 08:59:44 -0700
+Message-ID: <571c2a4a-4832-e64e-4f3c-8e7c8a795579@intel.com>
+Date:   Wed, 24 May 2023 09:00:12 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230524152136.1033-1-mario.limonciello@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
+Subject: Re: [PATCH] x86/pci/xen: populate MSI sysfs entries
+Content-Language: en-US
+To:     Juergen Gross <jgross@suse.com>,
+        Maximilian Heyne <mheyne@amazon.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>, xen-devel@lists.xenproject.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Ashok Raj <ashok.raj@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Marc Zyngier <maz@kernel.org>,
+        "Ahmed S. Darwish" <darwi@linutronix.de>,
+        Kevin Tian <kevin.tian@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20230503131656.15928-1-mheyne@amazon.de>
+ <20230524154330.GA52988@dev-dsk-mheyne-1b-c1362c4d.eu-west-1.amazon.com>
+ <c0f7cf97-f7ea-83f2-3a9c-f77f82dfb689@suse.com>
+From:   Dave Hansen <dave.hansen@intel.com>
+In-Reply-To: <c0f7cf97-f7ea-83f2-3a9c-f77f82dfb689@suse.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 24, 2023 at 10:21:36AM -0500, Mario Limonciello wrote:
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2976,6 +2976,9 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
->  
->  	switch (pci_pcie_type(bridge)) {
->  	case PCI_EXP_TYPE_ROOT_PORT:
-> +		if (!platform_pci_power_manageable(bridge))
-> +			return false;
-> +		fallthrough;
->  	case PCI_EXP_TYPE_UPSTREAM:
->  	case PCI_EXP_TYPE_DOWNSTREAM:
->  		if (pci_bridge_d3_disable)
+On 5/24/23 08:47, Juergen Gross wrote:
+>> Any other feedback on this one? This is definitely a bug but I
+>> understand that
+>> there might be different ways to fix it.
+> 
+> I'd be happy to take the patch via the Xen tree, but I think x86
+> maintainers should at least ack that.
 
-This will exempt the Root Ports from pcie_port_pm=force.
-Not sure if that's desirable.
+Ack.
 
-Thanks,
-
-Lukas
+Works for me.
