@@ -2,84 +2,106 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC959C7EE24
-	for <linux-pci@archiver.kernel.org>; Tue, 30 May 2023 17:12:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 711E8C7EE23
+	for <linux-pci@archiver.kernel.org>; Tue, 30 May 2023 17:19:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231193AbjE3RMu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 May 2023 13:12:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45170 "EHLO
+        id S233176AbjE3RTJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 May 2023 13:19:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48608 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229673AbjE3RMs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2023 13:12:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0121CEA;
-        Tue, 30 May 2023 10:12:47 -0700 (PDT)
+        with ESMTP id S233001AbjE3RTI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2023 13:19:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6391BD9;
+        Tue, 30 May 2023 10:19:07 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 83F8E61A4E;
-        Tue, 30 May 2023 17:12:47 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CF91C433D2;
-        Tue, 30 May 2023 17:12:46 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EE7B7630C8;
+        Tue, 30 May 2023 17:19:06 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA22EC433D2;
+        Tue, 30 May 2023 17:19:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685466766;
-        bh=oMDauuBphE6JUcQ+uIrJvX7TM2de128E6fd+crN090A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=bMNUevF8N4FowswMCFCB2xmyLAJMN7oa1AM+Z9xuaCrabO5PZThXqULzQiKg7insW
-         YWV11lnmkWgOTUqczvVFVBYUoR+O+92fLauUU6GOttBn8oqXG+sSqQs9rj9hpaH0zj
-         t7UN6bqshf0tdp8JnPsPhKZlj/WAlIPfKngglGgloBvxB3XjC5LR1KWtGd/JfNSWNr
-         S0VzJUdoRyYgzhFlOK2mJ5m9w1iNbb2B3BYCNlI93zBLueqPBUbBddVL63ksAgIOzm
-         zcaKtXF02lBCtn6ySqJHH/pvbIl08uoPA6Zeh6epk4t2E4oOMMrjlkU4DHJCM2e6i4
-         K6t6OVHg3wNAA==
-Date:   Tue, 30 May 2023 12:12:44 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Igor Mammedov <imammedo@redhat.com>
-Cc:     linux-kernel@vger.kernel.org, mst@redhat.com, rafael@kernel.org,
-        lenb@kernel.org, bhelgaas@google.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, mika.westerberg@linux.intel.com
-Subject: Re: [PATCH v2] PCI: acpiphp: Reassign resources on bridge if
- necessary
-Message-ID: <ZHYujEM3o6iWIB1B@bhelgaas>
+        s=k20201202; t=1685467146;
+        bh=PIBi+WICffiBvaB2Kw9KN3H9bNAFCDH01ZgbVaQGbpg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=E2Xa4JrAvvdRGyRf3zxeWBvkc5cuOtjqlw0qF7dZxyI06ngCrCEr+2VfwVIRMVVdd
+         V5zTylUXQRCf1KW4HPXzMIdv+9vrMt1yP+n7FUDa+t2FjNJ4LF5+BlKFZwjSqNBqRe
+         ZHB1IFdqYD9OcZl9/+Ecs/JcoSOvUOC9V09t4ZzWib5Tw6UHYj9RtfWvo7heP6Av47
+         dD3CVQoa6UM26DNqLEt2ojddXXiZcVQpH+lX3kslYjvfSLtg1sWzEWznuptvI921Y/
+         KH17pTxqsO/dGyBabW1mpfH4P2fEriexl3TKpaNOhSUcu+Vgyc5AIWsf3E+ZScPJZ6
+         l+0N0Pn0M1pBQ==
+From:   Bjorn Andersson <andersson@kernel.org>
+To:     Vinod Koul <vkoul@kernel.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        linux-pci@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        devicetree@vger.kernel.org,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Wesley Cheng <quic_wcheng@quicinc.com>,
+        linux-scsi@vger.kernel.org, Marc Zyngier <maz@kernel.org>,
+        linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Georgi Djakov <djakov@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: (subset) [PATCH v3 00/15] Introduce the SC8180x devices
+Date:   Tue, 30 May 2023 10:22:49 -0700
+Message-Id: <168546732606.2227271.7267063763992454803.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230530162454.51708-1-vkoul@kernel.org>
+References: <20230530162454.51708-1-vkoul@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230424191557.2464760-1-imammedo@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 24, 2023 at 09:15:57PM +0200, Igor Mammedov wrote:
-> When using ACPI PCI hotplug, hotplugging a device with
-> large BARs may fail if bridge windows programmed by
-> firmware are not large enough.
+On Tue, 30 May 2023 21:54:39 +0530, Vinod Koul wrote:
+> This introduces Qualcomm SC8180x SoC which features in Lenovo Flex 5G
+> laptop. This also adds support for Primus platform as well as Lenovo Flex 5G
+> laptop.
 > 
-> Reproducer:
->   $ qemu-kvm -monitor stdio -M q35  -m 4G \
->       -global ICH9-LPC.acpi-pci-hotplug-with-bridge-support=on \
->       -device id=rp1,pcie-root-port,bus=pcie.0,chassis=4 \
->       disk_image
+> Changes in v3:
+>  - Split DTS patch into smaller check
+>  - checkpatch and dtbs check error fixes
+>  - fix comments from Konrad/Krzysztof
 > 
->  wait till linux guest boots, then hotplug device
->    (qemu) device_add qxl,bus=rp1
-> 
->  hotplug on guest side fails with:
->    pci 0000:01:00.0: [1b36:0100] type 00 class 0x038000
->    pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x03ffffff]
->    pci 0000:01:00.0: reg 0x14: [mem 0x00000000-0x03ffffff]
->    pci 0000:01:00.0: reg 0x18: [mem 0x00000000-0x00001fff]
->    pci 0000:01:00.0: reg 0x1c: [io  0x0000-0x001f]
->    pci 0000:01:00.0: BAR 0: no space for [mem size 0x04000000]
->    pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x04000000]
->    pci 0000:01:00.0: BAR 1: no space for [mem size 0x04000000]
->    pci 0000:01:00.0: BAR 1: failed to assign [mem size 0x04000000]
->    pci 0000:01:00.0: BAR 2: assigned [mem 0xfe800000-0xfe801fff]
->    pci 0000:01:00.0: BAR 3: assigned [io  0x1000-0x101f]
->    qxl 0000:01:00.0: enabling device (0000 -> 0003)
+> [...]
 
-Ugh, I just noticed that we turned on PCI_COMMAND_MEMORY even though
-BARs 0 and 1 haven't been assigned.  How did that happen?  It looks
-like pci_enable_resources() checks for that, but there must be a hole
-somewhere.
+Quite a few DT validation warnings left, but let's get it merged so that we can
+work on those together.
 
->    Unable to create vram_mapping
->    qxl: probe of 0000:01:00.0 failed with error -12
+Applied, thanks!
+
+[06/15] arm64: dts: qcom: Introduce the SC8180x platform
+        commit: 8575f197b077001591ef3ff709cdee48785daf0d
+[07/15] arm64: dts: qcom: sc8180x: Add interconnects and lmh
+        commit: f3be8a111d7eaf4e291b6c2d51dd0adb39934b32
+[08/15] arm64: dts: qcom: sc8180x: Add thermal zones
+        commit: d1d3ca03554e51be44546638f83169bb05b20ef8
+[09/15] arm64: dts: qcom: sc8180x: Add QUPs
+        commit: 0018761d1564f64d567e119fd9156c473b4592d7
+[10/15] arm64: dts: qcom: sc8180x: Add PCIe instances
+        commit: d20b6c84f56ae3a9823cc0fa5cfad330536ba0d1
+[11/15] arm64: dts: qcom: sc8180x: Add remoteprocs, wifi and usb nodes
+        commit: b080f53a8f44eeaa9db9628d8d339ab5a2afb5bd
+[12/15] arm64: dts: qcom: sc8180x: Add display and gpu nodes
+        commit: 494dec9b6f541451b2e82905b0eebd9a4ac9848b
+[13/15] arm64: dts: qcom: sc8180x: Add pmics
+        commit: d3302290f59e8533a56a8fa2455357f843d8dcf6
+[14/15] arm64: dts: qcom: sc8180x: Introduce Primus
+        commit: 2ce38cc1e8fea4e251e4563e436104369bf3b322
+[15/15] arm64: dts: qcom: sc8180x: Introduce Lenovo Flex 5G
+        commit: 20dea72a393c6d5572088b8ad01dbb9e9aca64ce
+
+Best regards,
+-- 
+Bjorn Andersson <andersson@kernel.org>
