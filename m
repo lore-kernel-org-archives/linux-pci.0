@@ -2,80 +2,127 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 419B2C77B73
-	for <linux-pci@archiver.kernel.org>; Tue, 30 May 2023 14:39:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E69CCC77B7A
+	for <linux-pci@archiver.kernel.org>; Tue, 30 May 2023 16:25:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232124AbjE3OjU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 May 2023 10:39:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48562 "EHLO
+        id S231404AbjE3QZe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 May 2023 12:25:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232075AbjE3OjT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2023 10:39:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 139958F;
-        Tue, 30 May 2023 07:39:18 -0700 (PDT)
+        with ESMTP id S231910AbjE3QZb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2023 12:25:31 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 187BF11D;
+        Tue, 30 May 2023 09:25:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 99C386167D;
-        Tue, 30 May 2023 14:39:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8C03BC433D2;
-        Tue, 30 May 2023 14:39:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1685457557;
-        bh=o4tpbU823ZvDH0zikrH1WbEEN9ld+0DC5TSzAlggrDg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TFC4dNFYo6U2/cb0RD/dYedoJi79GLYvB3vEqJn92ZYsZlvchM4SABG7CLX/g1bfX
-         8D27fV7G77wYR5HeLP6H/UZMsRlSrow6OygdI1SM/3f3/DrupT3g8bJKOUfqgJ9DvT
-         NZZgdlqs3/WDB3GCSRKO2kdSQfFd5lMOA3BNGhXY=
-Date:   Tue, 30 May 2023 15:39:14 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Niklas Schnelle <schnelle@linux.ibm.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Jiri Slaby <jirislaby@kernel.org>,
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5766560CA4;
+        Tue, 30 May 2023 16:25:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A570C433A7;
+        Tue, 30 May 2023 16:25:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1685463907;
+        bh=c6AGKWOZbqw3+DTVVifBJKHqZLfhJBeG4c33ZI92WM0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=aetMphh/jp8E0sT6W7xZw6g52tpK/B5/isECt+TrDMWR04Iq2g0PsJ+jpw9CRJ86/
+         n+LfNNkKUr74k5VyLtYuTUWTMH2h4pb+XwMmr/ns+s6qIDuMytgDQXYGZjejEcpxU+
+         lsKhwaPEmqQnMivvdZTsXnBRv/titSJ7H4NUSMmUw8zu7UUT5m3iXIPELFQrSil+Cf
+         q17+aLGapTXgWNmbKvG3G5BazxDxqaIHf/elDxNWdMoNrk4+757J75rsNt94XoBKq0
+         zFQSsPcAwP33412Z3HQlBoZVBNJaa0NHGeFqhKHZjfjRGDBKKyVJt+PRDh+qkXOcSM
+         lKSscywRwf6Yg==
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Bjorn Andersson <andersson@kernel.org>
+Cc:     linux-arm-msm@vger.kernel.org,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
-        linux-serial@vger.kernel.org
-Subject: Re: [PATCH v5 35/44] tty: serial: handle HAS_IOPORT dependencies
-Message-ID: <2023053050-prodigal-shine-4d1c@gregkh>
-References: <20230522105049.1467313-1-schnelle@linux.ibm.com>
- <20230522105049.1467313-36-schnelle@linux.ibm.com>
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Vinod Koul <vkoul@kernel.org>
+Subject: [PATCH v3 01/15] dt-bindings: PCI: qcom: Fix sc8180x clocks and interrupts
+Date:   Tue, 30 May 2023 21:54:40 +0530
+Message-Id: <20230530162454.51708-2-vkoul@kernel.org>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230530162454.51708-1-vkoul@kernel.org>
+References: <20230530162454.51708-1-vkoul@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230522105049.1467313-36-schnelle@linux.ibm.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, May 22, 2023 at 12:50:40PM +0200, Niklas Schnelle wrote:
-> In a future patch HAS_IOPORT=n will result in inb()/outb() and friends
-> not being declared. We thus need to add HAS_IOPORT as dependency for
-> those drivers using them unconditionally. For 8250 based drivers some
-> support MMIO only use so fence only the parts requiring I/O ports.
-> 
-> Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-> Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-> ---
->  drivers/tty/Kconfig                  |  4 +--
->  drivers/tty/serial/8250/8250_early.c |  4 +++
->  drivers/tty/serial/8250/8250_pci.c   | 14 +++++++++
->  drivers/tty/serial/8250/8250_port.c  | 44 +++++++++++++++++++++++-----
->  drivers/tty/serial/8250/Kconfig      |  5 ++--
->  drivers/tty/serial/Kconfig           |  2 +-
->  6 files changed, 60 insertions(+), 13 deletions(-)
+Commit 45a3ec891370 ("PCI: qcom: Add sc8180x compatible") added sc8180x
+compatible and commit 075a9d55932e ("dt-bindings: PCI: qcom: Convert to
+YAML") converted the description to yaml
 
-This doesn't apply at all to my tree, so I'll just let you take it as
-there must be some merge issues somewhere:
+But there are still some errors specific to sc8180x which this change
+attempts to fix. The clocks and resets for sc8180 pcie controller are
+different so need to be documented separately
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Vinod Koul <vkoul@kernel.org>
+---
+ .../devicetree/bindings/pci/qcom,pcie.yaml    | 29 ++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 81971be4e554..40a1f451a3d3 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -476,6 +476,33 @@ allOf:
+           items:
+             - const: pci # PCIe core reset
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,pcie-sc8180x
++    then:
++      properties:
++        clocks:
++          minItems: 8
++          maxItems: 8
++        clock-names:
++          items:
++            - const: pipe # PIPE clock
++            - const: aux # Auxiliary clock
++            - const: cfg # Configuration clock
++            - const: bus_master # Master AXI clock
++            - const: bus_slave # Slave AXI clock
++            - const: slave_q2a # Slave Q2A clock
++            - const: ref # REFERENCE clock
++            - const: tbu # PCIe TBU clock
++        resets:
++          maxItems: 1
++        reset-names:
++          items:
++            - const: pci # PCIe core reset
++
+   - if:
+       properties:
+         compatible:
+@@ -524,7 +551,6 @@ allOf:
+         compatible:
+           contains:
+             enum:
+-              - qcom,pcie-sc8180x
+               - qcom,pcie-sm8150
+               - qcom,pcie-sm8250
+     then:
+@@ -749,6 +775,7 @@ allOf:
+           contains:
+             enum:
+               - qcom,pcie-sa8540p
++              - qcom,pcie-sc8180x
+               - qcom,pcie-sc8280xp
+     then:
+       required:
+-- 
+2.40.1
+
