@@ -2,124 +2,119 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDFE6C77B7A
-	for <linux-pci@archiver.kernel.org>; Tue, 30 May 2023 17:24:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C0C0C77B7A
+	for <linux-pci@archiver.kernel.org>; Tue, 30 May 2023 18:17:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233421AbjE3RYU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 30 May 2023 13:24:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50894 "EHLO
+        id S232555AbjE3SRf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 30 May 2023 14:17:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51028 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232991AbjE3RXl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2023 13:23:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BA47171F;
-        Tue, 30 May 2023 10:23:07 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7BEFC63114;
-        Tue, 30 May 2023 17:22:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B27E8C4339B;
-        Tue, 30 May 2023 17:22:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685467363;
-        bh=fDJgY69hwhL+3CR1eSDi7/Wi+6ZsYK6idV3Bjue83t4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=AsG5JlLrY2cX845sSfS5azR6HQlCeFCiUku4z/OI1kmprAYseS23AbN8f98Fi3rmd
-         BA5ktDXruURv3Z6Sj+PwOCi77xwz8oDiQ9RRjbK0eW43FCaIb9nuhxtJkBYBcF7vUx
-         YkhX0ew6QPMf4muutU04vUK13p55mqmaogiwV8NngHd19MzL5J1bNtZeOY1pcUQD89
-         zjoLp7ouFi8Y+Z+1ac+s5gDXOlx03/oPKhf2ifkC7WldqVKoVdi2aekuaz3m+++IhM
-         01gfSG/NnM4S7lqg9W54Ay/DL93i+9E/51uGOkDGkQlGHbGJikAPmsClSl/8L6KNFd
-         06bnLO8U5F/EQ==
-Date:   Tue, 30 May 2023 12:22:42 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Owen Yang <ecs.taipeikernel@gmail.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Matthias Kaehlcke <mka@google.com>,
-        Doug Anderson <dianders@chromium.org>,
-        Stephen Boyd <swboyd@chromium.org>, Harvey <hunge@google.com>,
-        Gavin Lee <gavin.lee@ecs.com.tw>,
-        Abner Yen <abner.yen@ecs.com.tw>,
-        Bob Moragues <moragues@google.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: [PATCH v3] PCI: Add suspend fixup for SSD on sc7280
-Message-ID: <ZHYw4mQ5I3y2XibL@bhelgaas>
+        with ESMTP id S231231AbjE3SRe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2023 14:17:34 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D42B8D9
+        for <linux-pci@vger.kernel.org>; Tue, 30 May 2023 11:16:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685470607;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=LboiJrYnAi/py5cGBQDQMSaCfDnf6CASAq+urrSZpQ0=;
+        b=JIp6OkyU4j51uq6HKLfj4Yg2Ubpkour7PHp8VvZHDnHe84IqZsgC2gHy9CPhIvP69+vFmt
+        ZzQ/PW0yv1KDmSC9XuQr0vty1qP0vUqwnZn1Y5lk6P5tnoMPBCEehz87L6SlSask7dosBJ
+        Mqo+IGazwGO5nk4Uk9lWvfiUJ73oFbA=
+Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
+ [209.85.208.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-652-z0u9woOvONqPXlFq9joQ9g-1; Tue, 30 May 2023 14:16:46 -0400
+X-MC-Unique: z0u9woOvONqPXlFq9joQ9g-1
+Received: by mail-lj1-f197.google.com with SMTP id 38308e7fff4ca-2af31539394so21449161fa.3
+        for <linux-pci@vger.kernel.org>; Tue, 30 May 2023 11:16:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685470604; x=1688062604;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=LboiJrYnAi/py5cGBQDQMSaCfDnf6CASAq+urrSZpQ0=;
+        b=A5DfACeMMZ26TeFa1cYi/ldsUvgZmkA65BJLF1xLsPyRxFJLG5pYcbQIGSukwL7fF0
+         H7SXXDUKD8HVZGwkRKQHgpfTslh2GrvYZV62cVY9pa5Ska7ZaYkzrdcwOZooIRFYKZcg
+         88Jq1WLj0OLbrJUW+dBumSf3O83WbLAa6wSt4iXXfSBVIgmVuR6ed7RGxiyT3zOaA3nl
+         XkiN3Vw0oBg7zL2knRoE7hgGRHiBfYV8Kzt+lmb5weD+aPtRY4aIbnQmq7gPuizs+E+n
+         L1iWAVgngf8QG+Q+Wk02HUCRv3Bfci/niINhcHs3ZS1lCFMnlvFIWfUkqvyiD/dPHlr9
+         9JwQ==
+X-Gm-Message-State: AC+VfDyMGzijyxhxwW7jahwNTVDwsDxGaOS9glvlmheaTRsgX7DXHJaW
+        UCMHXefCi9mK073WTgSrYF0uHTu3+A02PVwZbTrViDqoP7Dis+vHs5nvmF4VXCpZHbSX31Bp9jC
+        dneDhcXGisA1RJIyDIi/Z
+X-Received: by 2002:a2e:c52:0:b0:2a2:47a8:728b with SMTP id o18-20020a2e0c52000000b002a247a8728bmr1425281ljd.13.1685470603872;
+        Tue, 30 May 2023 11:16:43 -0700 (PDT)
+X-Google-Smtp-Source: ACHHUZ6L+/RfkbhNFet6mCP3WipllloDSKB6gbN/OJcXr/yJVtnkSj+T0yms3k/Tma6Qn+mxAQxBOg==
+X-Received: by 2002:a2e:c52:0:b0:2a2:47a8:728b with SMTP id o18-20020a2e0c52000000b002a247a8728bmr1425268ljd.13.1685470603541;
+        Tue, 30 May 2023 11:16:43 -0700 (PDT)
+Received: from redhat.com ([176.12.143.106])
+        by smtp.gmail.com with ESMTPSA id c10-20020a2e9d8a000000b002af03f75edasm2932561ljj.80.2023.05.30.11.16.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 May 2023 11:16:43 -0700 (PDT)
+Date:   Tue, 30 May 2023 14:16:36 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Igor Mammedov <imammedo@redhat.com>, linux-kernel@vger.kernel.org,
+        rafael@kernel.org, lenb@kernel.org, bhelgaas@google.com,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        mika.westerberg@linux.intel.com
+Subject: Re: [PATCH v2] PCI: acpiphp: Reassign resources on bridge if
+ necessary
+Message-ID: <20230530141321-mutt-send-email-mst@kernel.org>
+References: <20230424191557.2464760-1-imammedo@redhat.com>
+ <ZHYujEM3o6iWIB1B@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230530102613.v3.1.Id388e4e2aa48fc56f9cd2d413aabd461ff81d615@changeid>
+In-Reply-To: <ZHYujEM3o6iWIB1B@bhelgaas>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Manivannan]
+On Tue, May 30, 2023 at 12:12:44PM -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 24, 2023 at 09:15:57PM +0200, Igor Mammedov wrote:
+> > When using ACPI PCI hotplug, hotplugging a device with
+> > large BARs may fail if bridge windows programmed by
+> > firmware are not large enough.
+> > 
+> > Reproducer:
+> >   $ qemu-kvm -monitor stdio -M q35  -m 4G \
+> >       -global ICH9-LPC.acpi-pci-hotplug-with-bridge-support=on \
+> >       -device id=rp1,pcie-root-port,bus=pcie.0,chassis=4 \
+> >       disk_image
+> > 
+> >  wait till linux guest boots, then hotplug device
+> >    (qemu) device_add qxl,bus=rp1
+> > 
+> >  hotplug on guest side fails with:
+> >    pci 0000:01:00.0: [1b36:0100] type 00 class 0x038000
+> >    pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x03ffffff]
+> >    pci 0000:01:00.0: reg 0x14: [mem 0x00000000-0x03ffffff]
+> >    pci 0000:01:00.0: reg 0x18: [mem 0x00000000-0x00001fff]
+> >    pci 0000:01:00.0: reg 0x1c: [io  0x0000-0x001f]
+> >    pci 0000:01:00.0: BAR 0: no space for [mem size 0x04000000]
+> >    pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x04000000]
+> >    pci 0000:01:00.0: BAR 1: no space for [mem size 0x04000000]
+> >    pci 0000:01:00.0: BAR 1: failed to assign [mem size 0x04000000]
+> >    pci 0000:01:00.0: BAR 2: assigned [mem 0xfe800000-0xfe801fff]
+> >    pci 0000:01:00.0: BAR 3: assigned [io  0x1000-0x101f]
+> >    qxl 0000:01:00.0: enabling device (0000 -> 0003)
+> 
+> Ugh, I just noticed that we turned on PCI_COMMAND_MEMORY even though
+> BARs 0 and 1 haven't been assigned.  How did that happen?  It looks
+> like pci_enable_resources() checks for that, but there must be a hole
+> somewhere.
 
-On Tue, May 30, 2023 at 10:26:29AM +0800, Owen Yang wrote:
-> Implement this workaround to correct NVMe suspend process.
-> 
-> SSD will randomly crashed at 100~250+ suspend/resume cycle. Phison and
-> Qualcomm found that its due to NVMe entering D3cold instead of L1ss.
-> https://partnerissuetracker.corp.google.com/issues/275663637
-> 
-> According to Qualcomm. This issue has been found last year and they have
-> attempt to submit some patches to fix the pci suspend behavior.
-> (ref:https://patchwork.kernel.org/project/linux-arm-msm/list/?
-> series=665060&state=%2A&archive=both).
-> But somehow these patches were rejected because of its complexity. And
-> we've got advise from Google that it will be more efficient that we
-> implement a quirks to fix this issue.
-> 
-> The DECLARE_PCI_FIXUP_SUSPEND function has already specify the PCI device
-> ID. And this SSD will only be used at our Chromebook device only.
+Maybe because BAR2 was assigned? I think pci_enable_resources just
+does
+                if (r->flags & IORESOURCE_MEM)
+                        cmd |= PCI_COMMAND_MEMORY;
+in a loop so if any memory BARs are assigned then PCI_COMMAND_MEMORY
+is set.
 
-I'll wait for your response to Manivannan:
-https://lore.kernel.org/r/20230529164856.GE5633@thinkpad
+> >    Unable to create vram_mapping
+> >    qxl: probe of 0000:01:00.0 failed with error -12
 
-If the issue is caused by an out-of-tree patch, this fix needs to stay
-with that patch.  If the issue doesn't happen with the current
-upstream kernel, this patch isn't relevant for upstream.
-
-> Signed-off-by: Owen Yang <ecs.taipeikernel@gmail.com>
-> ---
-> 
-> Changes in v3:
-> - Adjust comment about issue behavior, ASPM, and the sc7280 connection.
-> - Fix multi-line code comment.
-> 
-> Changes in v2:
-> - Fix subject line style from "drivers: pci: quirks:" to "PCI:"
-> - Adjust comment.
-> 
->  drivers/pci/quirks.c | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index f4e2a88729fd..6d895a4da4b5 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5945,6 +5945,21 @@ static void nvidia_ion_ahci_fixup(struct pci_dev *pdev)
->  }
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x0ab8, nvidia_ion_ahci_fixup);
->  
-> +/* 
-> + * In Qualcomm 7c gen 3 sc7280 platform. Some of the SSD will enter
-> + * D3cold instead of L1ss.It cause the device will randomly crash after
-> + * suspend within 100~250+ cycles of suspend/resume test.
-> + *
-> + * After adding this fixup.We've verified that 10 devices passed
-> + * the suspend/resume 2500 cycles test.
-> + */
-> +static void phison_suspend_fixup(struct pci_dev *pdev)
-> +{
-> +	msleep(30);
-> +}
-> +DECLARE_PCI_FIXUP_SUSPEND(0x1987, 0x5013, phison_suspend_fixup);
-> +DECLARE_PCI_FIXUP_SUSPEND(0x1987, 0x5015, phison_suspend_fixup);
-> +
->  static void rom_bar_overlap_defect(struct pci_dev *dev)
->  {
->  	pci_info(dev, "working around ROM BAR overlap defect\n");
-> -- 
-> 2.17.1
-> 
