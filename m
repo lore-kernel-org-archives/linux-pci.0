@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AAA6C77B7C
-	for <linux-pci@archiver.kernel.org>; Wed, 31 May 2023 11:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 838D5C7EE2F
+	for <linux-pci@archiver.kernel.org>; Wed, 31 May 2023 11:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229936AbjEaL0O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 31 May 2023 07:26:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36856 "EHLO
+        id S235578AbjEaL0R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 31 May 2023 07:26:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234727AbjEaL0L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2023 07:26:11 -0400
+        with ESMTP id S235271AbjEaL0M (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2023 07:26:12 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 58B89126;
-        Wed, 31 May 2023 04:26:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C653CD9;
+        Wed, 31 May 2023 04:26:11 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 74010E0E1D;
-        Wed, 31 May 2023 14:26:09 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id EEC1DE0E70;
+        Wed, 31 May 2023 14:26:10 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=xGDsTPT86T4LuRJWjhR70wGw0i95sKl3YEXw9Ee0IO4=; b=ID/EMm4ZxidU
-        Szol5r8Np1HEuyQG7tdxGlQxPpxV/zj6up4qbF7lCKHeUTZBdj0dMUGGxNkxzOMT
-        KL2L5GS/ZRjK/BjxDfPdOl4iUpyb7fS7L9Jb5GRahTYHo/+rq6pGbgpHAW5TcZFz
-        barqK//dozWqTUW32AdtM4t9o9R0snU=
+         bh=ewQtbCS0aYotHwCcsIGiBtGLXDEmAhz8Lh39J+rbF5o=; b=SbsmJ1lNfDbr
+        xY2LqLeH7/VRfqvLNtSVir5Wr9n5PIXwUjWxJr0040OfNW8FU190wtgPAN2NfstK
+        2GTpb2Ut1RRRNYCtuPGEbKpyGctjzGwaREfP5rM3NCpxNYPgL1UYr33EuEpLJvdn
+        3IUHK+3U4HHkbUb31g1hgs6H3pXX2AQ=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 50AB1E0DE3;
-        Wed, 31 May 2023 14:26:09 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id C2719E0DE3;
+        Wed, 31 May 2023 14:26:10 +0300 (MSK)
 Received: from localhost (10.8.30.6) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Wed, 31 May 2023 14:26:08 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Wed, 31 May 2023 14:26:10 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -38,16 +38,17 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Rob Herring <robh@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v6 04/11] PCI: bt1: Fix printing false error message
-Date:   Wed, 31 May 2023 14:25:55 +0300
-Message-ID: <20230531112602.7222-5-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v6 06/11] PCI: dwc: Drop empty line from dw_pcie_link_set_max_speed()
+Date:   Wed, 31 May 2023 14:25:57 +0300
+Message-ID: <20230531112602.7222-7-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230531112602.7222-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230531112602.7222-1-Sergey.Semin@baikalelectronics.ru>
@@ -60,34 +61,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The dev_err_probe() method is supposed to be invoked only if any error is
-happened. It was definitely wrong to call it unconditionally. Due to that
-the DWC PCIe host initialization error-message is printed all the time the
-Baikal-T1 PCIe controller is probed even if no error actually happened.
+Well, just drop a redundant empty line from the tail of the denoted
+function which by mistake was added in commit 39bc5006501c ("PCI: dwc:
+Centralize link gen setting").
 
-Fixes: ba6ed462dcf4 ("PCI: dwc: Add Baikal-T1 PCIe controller support")
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/pci/controller/dwc/pcie-bt1.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-bt1.c b/drivers/pci/controller/dwc/pcie-bt1.c
-index e36a20bf82cf..6557141873ad 100644
---- a/drivers/pci/controller/dwc/pcie-bt1.c
-+++ b/drivers/pci/controller/dwc/pcie-bt1.c
-@@ -597,8 +597,10 @@ static int bt1_pcie_add_port(struct bt1_pcie *btpci)
- 	dw_pcie_cap_set(&btpci->dw, REQ_RES);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index e55b7b387eb6..ede166645289 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -729,7 +729,6 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
  
- 	ret = dw_pcie_host_init(&btpci->dw.pp);
-+	if (ret)
-+		dev_err_probe(dev, ret, "Failed to initialize DWC PCIe host\n");
- 
--	return dev_err_probe(dev, ret, "Failed to initialize DWC PCIe host\n");
-+	return ret;
+ 	cap &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed);
+-
  }
  
- static void bt1_pcie_del_port(struct bt1_pcie *btpci)
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
 -- 
 2.40.0
 
