@@ -2,74 +2,73 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38BBEC77B7A
-	for <linux-pci@archiver.kernel.org>; Wed, 31 May 2023 10:13:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70548C77B7C
+	for <linux-pci@archiver.kernel.org>; Wed, 31 May 2023 10:13:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229949AbjEaKN0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 31 May 2023 06:13:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33888 "EHLO
+        id S235851AbjEaKNa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 31 May 2023 06:13:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34108 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235852AbjEaKNY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2023 06:13:24 -0400
-X-Greylist: delayed 939 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 31 May 2023 03:13:20 PDT
+        with ESMTP id S234838AbjEaKN3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2023 06:13:29 -0400
 Received: from imap5.colo.codethink.co.uk (imap5.colo.codethink.co.uk [78.40.148.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C004C188
-        for <linux-pci@vger.kernel.org>; Wed, 31 May 2023 03:13:20 -0700 (PDT)
-Received: from [167.98.27.226] (helo=[10.35.5.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0599124
+        for <linux-pci@vger.kernel.org>; Wed, 31 May 2023 03:13:26 -0700 (PDT)
+Received: from [167.98.27.226] (helo=rainbowdash)
         by imap5.colo.codethink.co.uk with esmtpsa  (Exim 4.94.2 #2 (Debian))
-        id 1q4IaI-0087hR-P2; Wed, 31 May 2023 10:57:39 +0100
-Message-ID: <9d4f0f57-0458-987f-d9e7-0ece2a2476b9@codethink.co.uk>
-Date:   Wed, 31 May 2023 10:57:38 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [PATCH] pci: add PCI_EXT_CAP_ID_PL_32GT define
-Content-Language: en-GB
-To:     linux-pci@vger.kernel.org, bhelgaas@google.com
-Cc:     Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>,
+        id 1q4I1D-0086Kd-WF; Wed, 31 May 2023 10:21:24 +0100
+Received: from ben by rainbowdash with local (Exim 4.96)
+        (envelope-from <ben@rainbowdash>)
+        id 1q4I1E-001DuJ-0S;
+        Wed, 31 May 2023 10:21:24 +0100
+From:   Ben Dooks <ben.dooks@codethink.co.uk>
+To:     devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com
+Cc:     Conor Dooley <conor+dt@kernel.org>, Rob Herring <robh@kernel.org>,
+        Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>,
         Jude Onyenegecha <jude.onyenegecha@codethink.co.uk>,
         Greentime Hu <greentime.hu@sifive.com>,
         Jeegar Lakhani <jeegar.lakhani@sifive.com>,
-        Ben Dooks <ben.dooks@sifive.com>
-References: <20230531095545.293063-1-ben.dooks@codethink.co.uk>
-From:   Ben Dooks <ben.dooks@codethink.co.uk>
-Organization: Codethink Limited.
-In-Reply-To: <20230531095545.293063-1-ben.dooks@codethink.co.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Ben Dooks <ben.dooks@codethink.co.uk>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Subject: [PATCH 2/2] dt-bindings: updated max-link-speed for newer generations
+Date:   Wed, 31 May 2023 10:21:21 +0100
+Message-Id: <20230531092121.291770-2-ben.dooks@codethink.co.uk>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230531092121.291770-1-ben.dooks@codethink.co.uk>
+References: <20230531092121.291770-1-ben.dooks@codethink.co.uk>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 31/05/2023 10:55, Ben Dooks wrote:
-> From: Ben Dooks <ben.dooks@sifive.com>
-> 
-> Add the define for PCI_EXT_CAP_ID_PL_32GT for drivers that
-> will want this whilst doing Gen5/Gen6 accesses.
-> 
-> Signed-off-by: Ben Dooks <ben.dooks@sifive.com>
-> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
-> ---
->   include/uapi/linux/pci_regs.h | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index dc2000e0fe3a..e5f558d96493 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -738,6 +738,7 @@
->   #define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
->   #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
->   #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
-> +#define PCI_EXT_CAP_ID_PL_32GT  0x2A    /* Physical Layer 32.0 GT/s */
->   #define PCI_EXT_CAP_ID_DOE	0x2E	/* Data Object Exchange */
->   #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_DOE
+Add updated max-link-speed values for newer generation PCIe link
+speeds.
 
-Just noticed this isn't tab indented, so fixed and sent a v2.
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc: devicetree@vger.kernel.org
+---
+ Documentation/devicetree/bindings/pci/pci.txt | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index 6a8f2874a24d..56391e193fc4 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -22,8 +22,9 @@ driver implementation may support the following properties:
+    If present this property specifies PCI gen for link capability.  Host
+    drivers could add this as a strategy to avoid unnecessary operation for
+    unsupported link speed, for instance, trying to do training for
+-   unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+-   for gen2, and '1' for gen1. Any other values are invalid.
++   unsupported link speed, etc.  Must be '6' for gen6,  '5' for gen5,
++   '4' for gen4, '3' for gen3, '2' for gen2, and '1' for gen1.
++   Any other values are invalid.
+ - reset-gpios:
+    If present this property specifies PERST# GPIO. Host drivers can parse the
+    GPIO and apply fundamental reset to endpoints.
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
-
-https://www.codethink.co.uk/privacy.html
+2.39.2
 
