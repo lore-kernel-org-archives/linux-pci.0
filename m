@@ -2,61 +2,61 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A45EC77B7E
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Jun 2023 15:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A34C7EE23
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Jun 2023 15:05:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234823AbjFAPEh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Jun 2023 11:04:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42810 "EHLO
+        id S233226AbjFAPFl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Jun 2023 11:05:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42462 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234463AbjFAPEH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2023 11:04:07 -0400
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DF5210F2
-        for <linux-pci@vger.kernel.org>; Thu,  1 Jun 2023 08:03:04 -0700 (PDT)
-Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1b18474cbb6so5128935ad.1
-        for <linux-pci@vger.kernel.org>; Thu, 01 Jun 2023 08:03:04 -0700 (PDT)
+        with ESMTP id S234859AbjFAPEh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2023 11:04:37 -0400
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5268C1980
+        for <linux-pci@vger.kernel.org>; Thu,  1 Jun 2023 08:03:27 -0700 (PDT)
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-53f70f7c2d2so499246a12.3
+        for <linux-pci@vger.kernel.org>; Thu, 01 Jun 2023 08:03:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1685631703; x=1688223703;
+        d=linaro.org; s=google; t=1685631689; x=1688223689;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=FI+i05lzXUFOa/Wt+qCq2zIVxieQpfBQT3yhV8ufVhA=;
-        b=wwR3YiHbsq4MsNehzflmyYgJU031d3xgkoFwx9K1NRelzu1xpXORXsM6c0bxufv8Jk
-         nypExqlYkhZRpMpRY1hX1yBnGKw5U5X7gI44H0xFOjDe24YJDCrcWEsad6t/B8gyKAl9
-         Z/cuu1gGKqMpnu42YULUxHIIxmKV7v6jXNHaGWqzJOv+2454Hu1UT4Cfd2/YL3/PDYdz
-         3ip84OTu27450uy07buA9jgd8aXBJyYbnRx5dwNblPkjD8SZAx94BDNt9G0rcFnDA52v
-         CLqDOFfvmO0JULMDnm/ci8KVBWtRrOBsygw8GzEc7l+isWUO/HT31+QXbMse53Se9sGH
-         H5NQ==
+        bh=GvBjA4f+x+l+Skjyvt+2SPWzkMrr8PFd+q36DPYPr/I=;
+        b=bzJ4jU0WClHtjcePctYLLq8ptSRv1RNXiiFih+6jn8u6dAn0GwxEzEoTjfe8hYywDP
+         MT9F04ejf8olI6bDjNZSpQIf1sajyAIBDxy3cgUWzb9ONtdA8bmFlP4WWD3CDovKJ5Dx
+         AhBadsTI5LF6NxThu992XqO7lFo3WI7stz/+b+8xSkhTfVIJ9hx8GLXzRNsKcYXiP2Y2
+         xu130Bag9YCqv1SpfiJxFcOEItltZxCDr/NCXosuobZJosQh8EhaS7Rqbcz92LB+uf0u
+         /HsAB1oLqi8ObKn1V4bUgVYp2O3Zy8LFLOtvzDLTP2ogKy756oU7uTwkI6seXvTffIOo
+         pCHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685631703; x=1688223703;
+        d=1e100.net; s=20221208; t=1685631689; x=1688223689;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=FI+i05lzXUFOa/Wt+qCq2zIVxieQpfBQT3yhV8ufVhA=;
-        b=KIMcwx5ZRD87g/1nuy2cIVO4jE15rT5Y+TKv37MYNGoM51gADP7lvDPwZPg/46G5Si
-         wBpepNaAtjkloT+8O0jjC3UZtz6vibBGDhGiGoJmhptcLrrJ+9/aHSFZU2ZSU8U63/zD
-         mzGbqoIxWG4Pw0skTggMBNGyi7dXNLqlpWkQ9FmcBouZPthldWJ++EnHcCisexXEwG8I
-         vL0uXRoOk3NNC0v3kFfx47o6icF3r6I4KIpwK9aH0sxylXiZBiz/nmBcZcxaKP1mOnyC
-         YCduUAmDe7vlWCyV3GDJfq6tDWSUusCA/jKsOyxZeIKJB6wRocl9iRttyJ8Efoqv2RhZ
-         Nz9g==
-X-Gm-Message-State: AC+VfDy7Oh1dTRC9nPJaFMsYNB1Ou27KGa6V/QVN/4zFl/r2IhPJ0ViG
-        f/2MHVcTh/UTPTLuYJvRV2LO
-X-Google-Smtp-Source: ACHHUZ57zqVhapjlb0cYnUmObMwdYbBmVVIw+upnf2HfjjUTLZuWi/ubNC0E+9mni4uPwjMxdw6d/g==
-X-Received: by 2002:a17:903:22d2:b0:1b0:aec3:ed34 with SMTP id y18-20020a17090322d200b001b0aec3ed34mr4563142plg.52.1685631703088;
-        Thu, 01 Jun 2023 08:01:43 -0700 (PDT)
+        bh=GvBjA4f+x+l+Skjyvt+2SPWzkMrr8PFd+q36DPYPr/I=;
+        b=ivyDaItXQudp+WILm9qSvUXcs4W1BOPZWV0P9ecg/7JRn57jnR3b6sgwBJfBLpVd0K
+         AgoBRBWud9FJTLoiX921Ad7uiMPhTswljqZ42znFez6p8k0dAwaIbwNM7DNdUal25i75
+         iDHca0NsUTmNoNrVSpAzkVFY8Y9ixFfwWYd5jga33hGkzBQvA8sq+qGCgkn9ftuoIN6Q
+         zTVEWRPcCpBKxLgM3VoxdN1EBJyOO+VXP+vK0qTg2RnOV4OZICtb460lAQgZeAsMZhEM
+         HEmnsV3/kuUjN78ZiOAmJ+pGFxVIh0NjjltxJxOdNW50DB0blb992prldz24UfEKjSCT
+         Wo9w==
+X-Gm-Message-State: AC+VfDzymJz2dFmCoY5J8tCawNtgN2Lnh3ctI5cTVafUM4vuZ1BlEYUv
+        7SFMwgJo8uV4eAlB+bKhEJ+9
+X-Google-Smtp-Source: ACHHUZ6MTf2zs1nPSgalZc/iisRLp3EZNGNRCGEUNzi0Xt0DrPoxh8pKEnqC5CDMe9snGvbMyFQCvg==
+X-Received: by 2002:a17:902:6b05:b0:1b0:5e0f:16a5 with SMTP id o5-20020a1709026b0500b001b05e0f16a5mr4913488plk.11.1685631689682;
+        Thu, 01 Jun 2023 08:01:29 -0700 (PDT)
 Received: from localhost.localdomain ([117.217.186.123])
-        by smtp.gmail.com with ESMTPSA id q7-20020a170902dac700b001b0499bee11sm3595480plx.240.2023.06.01.08.01.40
+        by smtp.gmail.com with ESMTPSA id q7-20020a170902dac700b001b0499bee11sm3595480plx.240.2023.06.01.08.01.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 08:01:42 -0700 (PDT)
+        Thu, 01 Jun 2023 08:01:29 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     lpieralisi@kernel.org, kw@linux.com
 Cc:     kishon@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [RESEND PATCH v5 7/9] PCI: qcom-ep: Add support for BME notification
-Date:   Thu,  1 Jun 2023 20:31:01 +0530
-Message-Id: <20230601150103.12755-8-manivannan.sadhasivam@linaro.org>
+Subject: [RESEND PATCH v5 3/9] PCI: endpoint: Warn and return if EPC is started/stopped multiple times
+Date:   Thu,  1 Jun 2023 20:30:57 +0530
+Message-Id: <20230601150103.12755-4-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230601150103.12755-1-manivannan.sadhasivam@linaro.org>
 References: <20230601150103.12755-1-manivannan.sadhasivam@linaro.org>
@@ -66,27 +66,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support to pass BME (Bus Master Enable) notification to Endpoint
-function driver so that the BME event can be processed by the function.
+When the EPC is started or stopped multiple times from configfs, just emit
+a once time warning and return. There is no need to call the EPC start/stop
+functions in those cases.
 
 Reviewed-by: Kishon Vijay Abraham I <kishon@kernel.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/endpoint/pci-ep-cfs.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 4ce01ff7527c..1435f516d3f7 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -573,6 +573,7 @@ static irqreturn_t qcom_pcie_ep_global_irq_thread(int irq, void *data)
- 	} else if (FIELD_GET(PARF_INT_ALL_BME, status)) {
- 		dev_dbg(dev, "Received BME event. Link is enabled!\n");
- 		pcie_ep->link_status = QCOM_PCIE_EP_LINK_ENABLED;
-+		pci_epc_bme_notify(pci->ep.epc);
- 	} else if (FIELD_GET(PARF_INT_ALL_PM_TURNOFF, status)) {
- 		dev_dbg(dev, "Received PM Turn-off event! Entering L23\n");
- 		val = readl_relaxed(pcie_ep->parf + PARF_PM_CTRL);
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 4b8ac0ac84d5..62c8e09c59f4 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -178,6 +178,9 @@ static ssize_t pci_epc_start_store(struct config_item *item, const char *page,
+ 	if (kstrtobool(page, &start) < 0)
+ 		return -EINVAL;
+ 
++	if (WARN_ON_ONCE(start == epc_group->start))
++		return 0;
++
+ 	if (!start) {
+ 		pci_epc_stop(epc);
+ 		epc_group->start = 0;
 -- 
 2.25.1
 
