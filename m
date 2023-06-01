@@ -2,61 +2,61 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED0B5C7EE2F
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Jun 2023 15:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A45E6C7EE2E
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Jun 2023 15:04:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234693AbjFAPEP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Jun 2023 11:04:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42708 "EHLO
+        id S233490AbjFAPE0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Jun 2023 11:04:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234738AbjFAPD5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2023 11:03:57 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05E0AE4A
+        with ESMTP id S233351AbjFAPD6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2023 11:03:58 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E25D5E4D
         for <linux-pci@vger.kernel.org>; Thu,  1 Jun 2023 08:02:55 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id d9443c01a7336-1b024e29657so4267495ad.3
+Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1b011cffef2so8757415ad.3
         for <linux-pci@vger.kernel.org>; Thu, 01 Jun 2023 08:02:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1685631709; x=1688223709;
+        d=linaro.org; s=google; t=1685631696; x=1688223696;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=1PIsP178Wnb1M5epQp5PS0aVEa7SerWOVU16+rPTld8=;
-        b=NRtkOFoXrRqIAsQYHfizsKkfazkBZu/PmGKjM9DDmcpy6pDBO4lAI0EUIjl/wkhpUv
-         QhiG9mO6+xJzFpZ4b6tEAjbap+PTqHi4LH0UZtcC/7eST824IFL/86/t1e37TkIpv49+
-         iGrS2vkiXgPwunRDN/pQ6LkjzQx92ZsPWIBvFV3+TnlMJ0mKqmd6OazysEP5R0fz+o2j
-         x0vnmxuz+lUJWhuuT+f1+ceuGP/L/kY1i4QpOBZbXoB1rDJeWfM1idWDZu/CdjLV/J4e
-         O3662gLSy/cJc+u0fONZyYCqdmTCAXyXI6EbYwoH0PwLK/BavYCt4PcUxalj5zGZOZY9
-         5hKA==
+        bh=hYZvtGezswvgwNKpdFwjsrVB2tlNlkIcg9dibR8Jyd4=;
+        b=yWfa1cfsbNuv8SL7i0k37kcW+rev8gxSikZmYhFIW5TZlc5nLt/soh558LQsSCrCPQ
+         2PJw+jVJOPLWH3zLAS04Y5iKpReBZQWWy3VabC3iEFV+Bcb003y/bRIHBoYm06ZDIcL5
+         BqB2JvBVg556zdAzKG+D+o6p5mseda+6gfiSiqD9mm9eBNjpNA0qKoXK+9ycp5OB3aGT
+         nkr5tmiwYpCSRAmcbSNu1eIOEJuxjXCR5J7LYamuMVkQoxTH9KAoiNgE0SRzmkFP4KlJ
+         G9xjm3vWeagD6NoMpM1dBmBxONM+RUVeEr+WXg5VWhwY0T18z6Fh3UNBrXZAQ5UhqRuF
+         jkkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685631709; x=1688223709;
+        d=1e100.net; s=20221208; t=1685631696; x=1688223696;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=1PIsP178Wnb1M5epQp5PS0aVEa7SerWOVU16+rPTld8=;
-        b=a6SS7ZOTzAilrrFi6i6s7AwZ44Gti8SO06o6Wb/L2L80k7aXP9iiBgudK5SBiasRdm
-         XGBtVnUe8Bdb5Mt8rNoBRAWsIFWugWK/e3mZyqM7Y6zHC1JiJ09Lg04PJe6YZenl67j9
-         aUnxFM8WimWmc4QvW1MSlXPJI3EpLyaILEf3IAFSoUR/wx2toxGufZ5kZQ7vVwXWYcy7
-         ToQIhRQQkaMuOrCbrbsvAmE5PolLgkow0cxXVB9NEPizM8PQJVhRkKKHvbo/7bThNbtf
-         ikv7p/5fMhy/FaXm36WFRgxoS5s46WaeANsXlcY3aZjgQPF77PVFr41QNmaIfxQMuVxL
-         Jcug==
-X-Gm-Message-State: AC+VfDyxpDHKOloz2x1iGwYcfemHEoRsMArCrMGPaf3GvNBwU/71tlRj
-        8ItDxtZu92rc7EMuqj1K1g98
-X-Google-Smtp-Source: ACHHUZ6LTVKej0JlOCpsp2OJdU36a1KbVLMBingCLZXRt7cRscTDm+zFbmmDBMUWZBZEB4ZQ96A46A==
-X-Received: by 2002:a17:903:187:b0:1a6:83fa:b370 with SMTP id z7-20020a170903018700b001a683fab370mr7308307plg.2.1685631709505;
-        Thu, 01 Jun 2023 08:01:49 -0700 (PDT)
+        bh=hYZvtGezswvgwNKpdFwjsrVB2tlNlkIcg9dibR8Jyd4=;
+        b=Nhpdg8sr8MGludNiAnw3RtfnxHqDNhjcjnjSfzY5YaH21j1Ur5rHEe/59/kVSqGKa8
+         spiESKm0H3RRLW3a3gy4UkHrXF3cHGGQcKVend4eLXVjkSSLxYJ7M7gsovsOHDETrM91
+         sCTrBnpYfc3toWF1k1sDWDIO3AOTmp574fXHa17JYnTvEb8TWFyMk2xF6XcjwBYgiqvV
+         9oojttwMDTaOJEKyhxbQtBJQDk0SJ3UsltQxN5biZvIslu56EgrWUiZxONDLqTPR9shK
+         f4bQuyc1o7zIfnTUDl5eMthJ7ygESLs803ofz6DWTtYpRP8nNXGNm1rOyXrezhynHmGK
+         nVWA==
+X-Gm-Message-State: AC+VfDyVyS32U+bKZrlsItrBxg/qi4hWWxp9ZR2wXqX8RG7pws5REyMM
+        U3bNWJFvnO0kMClsIzgZ480V
+X-Google-Smtp-Source: ACHHUZ7k4hmla9PPwp8Ro6hgXlR4liPGoGzlIYSOkhU9h84fCDC1o1FoFi49GCXzeMXq0+h0mDfMHQ==
+X-Received: by 2002:a17:902:6b8a:b0:1b1:80ba:39d0 with SMTP id p10-20020a1709026b8a00b001b180ba39d0mr4411729plk.30.1685631696116;
+        Thu, 01 Jun 2023 08:01:36 -0700 (PDT)
 Received: from localhost.localdomain ([117.217.186.123])
-        by smtp.gmail.com with ESMTPSA id q7-20020a170902dac700b001b0499bee11sm3595480plx.240.2023.06.01.08.01.46
+        by smtp.gmail.com with ESMTPSA id q7-20020a170902dac700b001b0499bee11sm3595480plx.240.2023.06.01.08.01.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jun 2023 08:01:49 -0700 (PDT)
+        Thu, 01 Jun 2023 08:01:35 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     lpieralisi@kernel.org, kw@linux.com
 Cc:     kishon@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [RESEND PATCH v5 9/9] MAINTAINERS: Add PCI MHI endpoint function driver under MHI bus
-Date:   Thu,  1 Jun 2023 20:31:03 +0530
-Message-Id: <20230601150103.12755-10-manivannan.sadhasivam@linaro.org>
+Subject: [RESEND PATCH v5 5/9] PCI: endpoint: Add BME notifier support
+Date:   Thu,  1 Jun 2023 20:30:59 +0530
+Message-Id: <20230601150103.12755-6-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230601150103.12755-1-manivannan.sadhasivam@linaro.org>
 References: <20230601150103.12755-1-manivannan.sadhasivam@linaro.org>
@@ -66,26 +66,84 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add PCI endpoint driver for MHI bus under the MHI bus entry in MAINTAINERS
-file.
+Add support to notify the EPF device about the Bus Master Enable (BME)
+event received by the EPC device from the Root complex.
 
+Reviewed-by: Kishon Vijay Abraham I <kishon@kernel.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/endpoint/pci-epc-core.c | 26 ++++++++++++++++++++++++++
+ include/linux/pci-epc.h             |  1 +
+ include/linux/pci-epf.h             |  2 ++
+ 3 files changed, 29 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 07625a47cf08..a4ac2d567334 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -13630,6 +13630,7 @@ F:	Documentation/ABI/stable/sysfs-bus-mhi
- F:	Documentation/mhi/
- F:	drivers/bus/mhi/
- F:	drivers/net/mhi_*
-+F:	drivers/pci/endpoint/functions/pci-epf-mhi.c
- F:	include/linux/mhi.h
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index e0570b52698d..6c54fa5684d2 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -758,6 +758,32 @@ void pci_epc_init_notify(struct pci_epc *epc)
+ }
+ EXPORT_SYMBOL_GPL(pci_epc_init_notify);
  
- MICROBLAZE ARCHITECTURE
++/**
++ * pci_epc_bme_notify() - Notify the EPF device that the EPC device has received
++ *			  the BME event from the Root complex
++ * @epc: the EPC device that received the BME event
++ *
++ * Invoke to Notify the EPF device that the EPC device has received the Bus
++ * Master Enable (BME) event from the Root complex
++ */
++void pci_epc_bme_notify(struct pci_epc *epc)
++{
++	struct pci_epf *epf;
++
++	if (!epc || IS_ERR(epc))
++		return;
++
++	mutex_lock(&epc->list_lock);
++	list_for_each_entry(epf, &epc->pci_epf, list) {
++		mutex_lock(&epf->lock);
++		if (epf->event_ops && epf->event_ops->bme)
++			epf->event_ops->bme(epf);
++		mutex_unlock(&epf->lock);
++	}
++	mutex_unlock(&epc->list_lock);
++}
++EXPORT_SYMBOL_GPL(pci_epc_bme_notify);
++
+ /**
+  * pci_epc_destroy() - destroy the EPC device
+  * @epc: the EPC device that has to be destroyed
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 63a6cc5e5282..5cb694031072 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -205,6 +205,7 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf,
+ void pci_epc_linkup(struct pci_epc *epc);
+ void pci_epc_linkdown(struct pci_epc *epc);
+ void pci_epc_init_notify(struct pci_epc *epc);
++void pci_epc_bme_notify(struct pci_epc *epc);
+ void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf,
+ 			enum pci_epc_interface_type type);
+ int pci_epc_write_header(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index f8e5a63d0c83..f34b3b32a0e7 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -72,11 +72,13 @@ struct pci_epf_ops {
+  * @core_init: Callback for the EPC initialization complete event
+  * @link_up: Callback for the EPC link up event
+  * @link_down: Callback for the EPC link down event
++ * @bme: Callback for the EPC BME (Bus Master Enable) event
+  */
+ struct pci_epc_event_ops {
+ 	int (*core_init)(struct pci_epf *epf);
+ 	int (*link_up)(struct pci_epf *epf);
+ 	int (*link_down)(struct pci_epf *epf);
++	int (*bme)(struct pci_epf *epf);
+ };
+ 
+ /**
 -- 
 2.25.1
 
