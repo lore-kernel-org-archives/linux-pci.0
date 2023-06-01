@@ -2,109 +2,188 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A66FC77B7A
-	for <linux-pci@archiver.kernel.org>; Thu,  1 Jun 2023 04:21:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02A91C77B7E
+	for <linux-pci@archiver.kernel.org>; Thu,  1 Jun 2023 06:04:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230303AbjFAEVC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 1 Jun 2023 00:21:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33004 "EHLO
+        id S229689AbjFAGEU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 1 Jun 2023 02:04:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229598AbjFAEVB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2023 00:21:01 -0400
-Received: from bird.elm.relay.mailchannels.net (bird.elm.relay.mailchannels.net [23.83.212.17])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9D2B101;
-        Wed, 31 May 2023 21:20:59 -0700 (PDT)
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-Received: from relay.mailchannels.net (localhost [127.0.0.1])
-        by relay.mailchannels.net (Postfix) with ESMTP id 3F9DD8C2021;
-        Thu,  1 Jun 2023 04:20:59 +0000 (UTC)
-Received: from pdx1-sub0-mail-a316.dreamhost.com (unknown [127.0.0.6])
-        (Authenticated sender: dreamhost)
-        by relay.mailchannels.net (Postfix) with ESMTPA id ABB228C1F36;
-        Thu,  1 Jun 2023 04:20:58 +0000 (UTC)
-ARC-Seal: i=1; s=arc-2022; d=mailchannels.net; t=1685593258; a=rsa-sha256;
-        cv=none;
-        b=BdbjzErGq6v80wOWwi2VacehdOLmDDzUef/Ivj90y1yyjYrd2ZqMz/naR1tbBVPjhL3QkZ
-        tslE/906L936abXNCYxKzY+t3yTJWA93A9blnMaEQiwABMYds/KdBKArXQ572f31jAGt8t
-        mdvRQZU4iWPCgt75ZbWVSKAzNYvucuo/QVdXVcroAdTueGYqUUPieRR955x6Uj9M5pY1dd
-        6vG1qhXxFF3ptL2WHpBxgWgWjTimXNMb9QCOZVG4xPqp2ePgHrKm5B3Te2wEWYrqy/fAWX
-        2tMzZPfW2so8icdH7sglUlVK4w9EzZCPWIjJ/9vQL1LGehFUVUiI3/0999houA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mailchannels.net;
-        s=arc-2022; t=1685593258;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references:dkim-signature;
-        bh=YKUYW9MMboE6NImD3jpIGzcjkz1Sx8imCsGATqbsc7Y=;
-        b=gOiZZdwntaUARe4H9qu5yhDmhsrKu+uuIBNYE+XaF/tm1nDvk+AWWzima7ifU3Sjzb1P/W
-        nvb65jvCSuNk+7MASqNv5wbwspv680nLJj3lXqUXoBZlW0832udAk+8WmxOpGGkCICTvB8
-        JiUoLd7FGHGj+avo8cqv84yz3vK/gQvzpKqR/VrtxMGU1ZhjDPaZBmKdjqXJSNEYBoIaOu
-        Ph0SKXELo825iF5kFfgJ56wEQlvkqD0TjFUr43YpC4MTmmwwgxXXdrxKgULMQZ+PhaTemN
-        lOOl3puvzH0BOilDptSX9i6aXIpcDj+agTkNn3Dq06cYpV2u05N4+DngEYP0Eg==
-ARC-Authentication-Results: i=1;
-        rspamd-58dcc7d645-d5k62;
-        auth=pass smtp.auth=dreamhost smtp.mailfrom=dave@stgolabs.net
-X-Sender-Id: dreamhost|x-authsender|dave@stgolabs.net
-X-MC-Relay: Neutral
-X-MailChannels-SenderId: dreamhost|x-authsender|dave@stgolabs.net
-X-MailChannels-Auth-Id: dreamhost
-X-Robust-Lettuce: 7b7b1af03d6a4c90_1685593258927_719203131
-X-MC-Loop-Signature: 1685593258927:3178244814
-X-MC-Ingress-Time: 1685593258927
-Received: from pdx1-sub0-mail-a316.dreamhost.com (pop.dreamhost.com
- [64.90.62.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384)
-        by 100.107.49.254 (trex/6.8.1);
-        Thu, 01 Jun 2023 04:20:58 +0000
-Received: from offworld (ip72-199-50-187.sd.sd.cox.net [72.199.50.187])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: dave@stgolabs.net)
-        by pdx1-sub0-mail-a316.dreamhost.com (Postfix) with ESMTPSA id 4QWtGx3vMXz4s;
-        Wed, 31 May 2023 21:20:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1685593258;
-        bh=YKUYW9MMboE6NImD3jpIGzcjkz1Sx8imCsGATqbsc7Y=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=hSWzwmIcIT3s7IuMFb7M0yAeXQqg6bho4aiaJkQTU1ZoMAf/ic0wcC9gc86DqxKy8
-         6WYDS6iUto6DRlvtPknE5HKtxbOTybIoxCihgDsVqYUeRkU71D50Qr8xRqDz+Mkbee
-         jCqBFYn4qM2fHJiHCTtD2bzd0NNMkKVOYiBWAwMe7x0cKJTgGd6ypUSQtftjelWv3H
-         tYERHh4Tq5BF436SMXJ+HFyLqkaW/RmUuVOEnzWEd3EJ7soVi7T6czQPbeRmVDGc04
-         AXygnPF+uqese3FOL9R40lsTxEC7knICe9ZNlP8vgE93T0Ilr7n+NHAw5ske7L21/R
-         bx2sKDr9iqFBg==
-Date:   Wed, 31 May 2023 20:46:59 -0700
-From:   Davidlohr Bueso <dave@stgolabs.net>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>, LiuLele <liu.lele@qq.com>,
-        dave.jiang@intel.com, Jonathan.Cameron@huawei.com,
-        alison.schofield@intel.com, bhelgaas@google.com,
-        bwidawsk@kernel.org, dan.j.williams@intel.com, helgaas@kernel.org,
-        linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        rostedt@goodmis.org, vishal.l.verma@intel.com
-Subject: Re: CXL memory device not created correctly
-Message-ID: <ns63paacatejvt5udpj7ssnyzp75aphbenw7ac5o2xcjiln6l4@lisofmey2kca>
-References: <cec6a8f5-a284-4f46-1ada-4edd625a9a2e@intel.com>
- <tencent_D9D9D358330CA573E23D490C6EE13E0DC105@qq.com>
- <gbsxrcjtnf67jxpqmbn57nqoslpmjtuk2ycatmau3vfsmpvbrd@c2umpofn2hti>
- <646793cc665bf_1231462943c@iweiny-mobl.notmuch>
- <ZHaubgQOFU0+r1MD@bombadil.infradead.org>
- <64780c904d3c_c35b294ce@iweiny-mobl.notmuch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <64780c904d3c_c35b294ce@iweiny-mobl.notmuch>
-User-Agent: NeoMutt/20230517
+        with ESMTP id S229682AbjFAGET (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2023 02:04:19 -0400
+Received: from mga14.intel.com (mga14.intel.com [192.55.52.115])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DBB6E2
+        for <linux-pci@vger.kernel.org>; Wed, 31 May 2023 23:04:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1685599455; x=1717135455;
+  h=date:from:to:cc:subject:message-id;
+  bh=fuNvyid9kWrXHYNipttguZr9z5tHO+4xPIfyZLPJY64=;
+  b=dBDsgpBtdX0np3wpdqCc7IiT51sb3CnqzEOm35MuSTu+9nHmAi94E7CU
+   kCUpA3vTIFxS5vCkGNJBW7jeC78HP5L2X74kbGyfLBK8/DCjLdpC5CrMG
+   gun7hXPEpzuvCegVR20GHYfTvgtPvWhCFp8XXl1xINdxKjvoZ83Ic/9C9
+   VgMWVE+cNt+4xzgu2k6ff6Brw00xoyIo1FiMCWu2uBh4OM7wLV8UvtaLf
+   eKYt5eAO8pnFdEkMgXeQiSq+oyOg1YT+nitTTohEkzwlY4BOW2ezOawvW
+   xfyfXMsXvWX3QEen7bH7isbwgu8LCUDxBhGLEPTDO8Zc9jk43AW+Xmszf
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="355470515"
+X-IronPort-AV: E=Sophos;i="6.00,209,1681196400"; 
+   d="scan'208";a="355470515"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 May 2023 23:04:06 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10727"; a="684713731"
+X-IronPort-AV: E=Sophos;i="6.00,209,1681196400"; 
+   d="scan'208";a="684713731"
+Received: from lkp-server01.sh.intel.com (HELO fb1ced2c09fb) ([10.239.97.150])
+  by orsmga006.jf.intel.com with ESMTP; 31 May 2023 23:04:05 -0700
+Received: from kbuild by fb1ced2c09fb with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1q4bPo-0001yj-1L;
+        Thu, 01 Jun 2023 06:04:04 +0000
+Date:   Thu, 01 Jun 2023 14:03:32 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:misc] BUILD SUCCESS
+ 2aa5ac633259843f656eb6ecff4cf01e8e810c5e
+Message-ID: <20230601060332.v84qY%lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 31 May 2023, Ira Weiny wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git misc
+branch HEAD: 2aa5ac633259843f656eb6ecff4cf01e8e810c5e  PCI: Add pci_clear_master() stub for non-CONFIG_PCI
 
->I don't think the kernel should be changed for following the spec.
+elapsed time: 726m
 
-Agreed. If events are mandatory we just have to bite the bullet.
+configs tested: 118
+configs skipped: 8
 
-Thanks,
-Davidlohr
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r026-20230531   gcc  
+alpha                randconfig-r034-20230531   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230531   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                  randconfig-r022-20230531   gcc  
+arm                  randconfig-r046-20230531   gcc  
+arm64                            allyesconfig   gcc  
+arm64        buildonly-randconfig-r002-20230531   gcc  
+arm64        buildonly-randconfig-r005-20230531   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r036-20230531   gcc  
+csky                                defconfig   gcc  
+hexagon              randconfig-r014-20230531   clang
+hexagon              randconfig-r015-20230531   clang
+hexagon              randconfig-r041-20230531   clang
+hexagon              randconfig-r045-20230531   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-i001-20230531   gcc  
+i386                 randconfig-i002-20230531   gcc  
+i386                 randconfig-i003-20230531   gcc  
+i386                 randconfig-i004-20230531   gcc  
+i386                 randconfig-i005-20230531   gcc  
+i386                 randconfig-i006-20230531   gcc  
+i386                 randconfig-i011-20230531   clang
+i386                 randconfig-i012-20230531   clang
+i386                 randconfig-i013-20230531   clang
+i386                 randconfig-i014-20230531   clang
+i386                 randconfig-i015-20230531   clang
+i386                 randconfig-i016-20230531   clang
+i386                 randconfig-i051-20230531   gcc  
+i386                 randconfig-i052-20230531   gcc  
+i386                 randconfig-i053-20230531   gcc  
+i386                 randconfig-i054-20230531   gcc  
+i386                 randconfig-i055-20230531   gcc  
+i386                 randconfig-i056-20230531   gcc  
+i386                 randconfig-i061-20230531   gcc  
+i386                 randconfig-i062-20230531   gcc  
+i386                 randconfig-i063-20230531   gcc  
+i386                 randconfig-i064-20230531   gcc  
+i386                 randconfig-i065-20230531   gcc  
+i386                 randconfig-i066-20230531   gcc  
+i386                 randconfig-r003-20230531   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch    buildonly-randconfig-r001-20230531   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r002-20230531   gcc  
+loongarch            randconfig-r016-20230531   gcc  
+loongarch            randconfig-r024-20230531   gcc  
+m68k                             allmodconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r011-20230531   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r001-20230531   clang
+nios2                               defconfig   gcc  
+openrisc             randconfig-r035-20230531   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc              randconfig-r021-20230531   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r042-20230531   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390         buildonly-randconfig-r003-20230531   clang
+s390         buildonly-randconfig-r006-20230531   clang
+s390                                defconfig   gcc  
+s390                 randconfig-r031-20230531   gcc  
+s390                 randconfig-r044-20230531   clang
+sh                               allmodconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r013-20230531   gcc  
+sparc64              randconfig-r012-20230531   gcc  
+sparc64              randconfig-r033-20230531   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-r004-20230531   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-a001-20230531   gcc  
+x86_64               randconfig-a002-20230531   gcc  
+x86_64               randconfig-a003-20230531   gcc  
+x86_64               randconfig-a004-20230531   gcc  
+x86_64               randconfig-a005-20230531   gcc  
+x86_64               randconfig-a006-20230531   gcc  
+x86_64               randconfig-a011-20230531   clang
+x86_64               randconfig-a012-20230531   clang
+x86_64               randconfig-a013-20230531   clang
+x86_64               randconfig-a014-20230531   clang
+x86_64               randconfig-a015-20230531   clang
+x86_64               randconfig-a016-20230531   clang
+x86_64               randconfig-x051-20230531   clang
+x86_64               randconfig-x052-20230531   clang
+x86_64               randconfig-x053-20230531   clang
+x86_64               randconfig-x054-20230531   clang
+x86_64               randconfig-x055-20230531   clang
+x86_64               randconfig-x056-20230531   clang
+x86_64               randconfig-x061-20230531   clang
+x86_64               randconfig-x062-20230531   clang
+x86_64               randconfig-x063-20230531   clang
+x86_64               randconfig-x064-20230531   clang
+x86_64               randconfig-x065-20230531   clang
+x86_64               randconfig-x066-20230531   clang
+x86_64                               rhel-8.3   gcc  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
