@@ -2,95 +2,154 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1D17C7EE2C
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 11:49:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A11C2C7EE24
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 11:49:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234933AbjFBLtC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Jun 2023 07:49:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37188 "EHLO
+        id S235010AbjFBLtE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Jun 2023 07:49:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235152AbjFBLst (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 07:48:49 -0400
-Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37E63E49
-        for <linux-pci@vger.kernel.org>; Fri,  2 Jun 2023 04:48:28 -0700 (PDT)
-Received: by mail-ed1-x52b.google.com with SMTP id 4fb4d7f45d1cf-51458e3af68so2753155a12.2
-        for <linux-pci@vger.kernel.org>; Fri, 02 Jun 2023 04:48:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1685706506; x=1688298506;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OZzlHz0HjDIVYRBaIDbbDRIPAZMGT2jNZydQ3880wqo=;
-        b=RSl1RhdQjDhcuoHbfJOFSu1v4UsLQbqbYR6fkQzgveTfVMFqyJIvEESXWjyQiQKous
-         ljRDVaAE0ibwe/S/6vlbINCYPya6Jprm5NlYJJVzCYseBfaGR1FO7h/dcPrv/2cp1JyM
-         YdJS12cwWcyLITajmfFC+TW1GJc0L+TjgWF/NXAR/BaO2zRa3KH/zSzugzg0vjg64ieP
-         bBufghgnW2u9YN8WI/27SC7bMFwpWK1VG0atI6KnGasYuOesmU1QOEN/YOi1seJY+Iad
-         s+Y1N2jWaEcafuU4gZNez2WqNTntVVfnLZ6X1OFS1r7kQv9VX9LLgy9fRB26DrAjNngp
-         mt9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685706506; x=1688298506;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=OZzlHz0HjDIVYRBaIDbbDRIPAZMGT2jNZydQ3880wqo=;
-        b=g59Mo0Tax5vks7Knw4vV/ldLkta391tZwR0DyWrD1uwAmEmAYYG7Zk6mTNE0Idf7vP
-         f/0w913yg08wpnBs06IhgatjPevf8+ae9kOUsAvniAlrxo0O5W08cuLsx/FcSgV63ZAb
-         GpvAdTPNBnjyK0NTQ4UxLYLnRIz6Dgt9vxAaolW4m9buabRDDxYc4tZbc1rfOj+VQUxg
-         ssmgJykHEk8DI4qV+owaCrGd/nO8UXQZ3dqXJ/eLwz7S8P3fd8gnWLUTBNU1v19J0LQ0
-         aJrkJhhmJPLz52GQ2sOG4DgAVAhyJkGwx68xSTaE7WAmyHdz0ycHJxH0cbaJWj2Yu76k
-         XF7Q==
-X-Gm-Message-State: AC+VfDw31hlE4alL2Opxp0H4ZWiTGii/D45z8Q4lSQG8qTBoCY4KiE+k
-        006DBXpO2X91cX9PA9KwKdw/
-X-Google-Smtp-Source: ACHHUZ7pvmxtYN/zam3Dez9Klnh0TqVs/VqPnMqRQBA5+8cf7He7JCfxNNSnhe6KRNcTvnQsVD4x1g==
-X-Received: by 2002:a17:907:7f09:b0:96f:b58e:7e21 with SMTP id qf9-20020a1709077f0900b0096fb58e7e21mr11645865ejc.52.1685706506371;
-        Fri, 02 Jun 2023 04:48:26 -0700 (PDT)
-Received: from localhost.localdomain ([117.217.186.79])
-        by smtp.gmail.com with ESMTPSA id qu25-20020a170907111900b00974530bb44dsm658924ejb.183.2023.06.02.04.48.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Jun 2023 04:48:26 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     lpieralisi@kernel.org, kw@linux.com
-Cc:     kishon@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        dlemoal@kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v6 3/9] PCI: endpoint: Return error if EPC is started/stopped multiple times
-Date:   Fri,  2 Jun 2023 17:17:50 +0530
-Message-Id: <20230602114756.36586-4-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230602114756.36586-1-manivannan.sadhasivam@linaro.org>
-References: <20230602114756.36586-1-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S229452AbjFBLs7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 07:48:59 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44FF9E7B;
+        Fri,  2 Jun 2023 04:48:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1685706510; x=1717242510;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=GYiQUacdfpCaOUMOuUUbytp5bgtwqkFXs7jFdgIpGa0=;
+  b=dRsl7VQbR4RXL1A4hSial9N8vJkzkcA55oEl8FPUocQyK+hEiREgigfk
+   kNZ09UpBWK5hj39bvkdXT+oqmSF3nx/s/9qoUUJLTIPwllcgWEZNwAclf
+   sO9TnFP5eW3uQhnvH1Exx+M/IuQF7svCWlhOiyR5h34QeUPHYpRqGnvyf
+   8Ks9r4/d0uzpShCKgPElWCe5buKQfxnjxWDirffQeRxFKrjUbrENdfgHy
+   qWA+ix9I0aaWS3KuHlh2gDhfMfMfybP4L24xsbahIlcyeo05f0OK+ocyx
+   MelNiouvPkxbu4llGVWyDbW4D3hHDwa1mTVX0xP8pkcKqn5rbvtjsmszb
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10728"; a="358279620"
+X-IronPort-AV: E=Sophos;i="6.00,212,1681196400"; 
+   d="scan'208";a="358279620"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2023 04:48:15 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10728"; a="707819419"
+X-IronPort-AV: E=Sophos;i="6.00,212,1681196400"; 
+   d="scan'208";a="707819419"
+Received: from rspatil-mobl3.gar.corp.intel.com (HELO ijarvine-MOBL2.ger.corp.intel.com) ([10.251.208.112])
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2023 04:48:10 -0700
+From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Jonathan Derrick <jonathan.derrick@linux.dev>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [RFC PATCH v1 02/13] PCI/ASPM: Rename pci_enable_link_state() to pci_set_default_link_state()
+Date:   Fri,  2 Jun 2023 14:47:39 +0300
+Message-Id: <20230602114751.19671-3-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230602114751.19671-1-ilpo.jarvinen@linux.intel.com>
+References: <20230602114751.19671-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When the EPC is started or stopped multiple times from configfs, just
-return -EALREADY. There is no need to call the EPC start/stop functions
-in those cases.
+pci_enable_link_state() and pci_disable_link_state() are not paired
+symmetrically despite their names suggesting otherwise. Also,
+pci_enable_link_state() tweaks link state when the "default" policy is
+in use rather than exactly "enabling" some link states. Obviously, when
+the default policy is in use and the default link state is changed,
+some link states may get enabled but that is a secondary effect.
 
-Reviewed-by: Kishon Vijay Abraham I <kishon@kernel.org>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Thus, rename pci_enable_link_state() to pci_set_default_link_state() to
+better match what it does. The rename also frees
+pci_enable_link_state() name so that a later commit can add a function
+that pairs symmetrically with pci_disable_link_state().
+
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/endpoint/pci-ep-cfs.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/controller/vmd.c | 2 +-
+ drivers/pci/pcie/aspm.c      | 8 ++++----
+ include/linux/pci.h          | 4 ++--
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-index 4b8ac0ac84d5..7e0e430e4ceb 100644
---- a/drivers/pci/endpoint/pci-ep-cfs.c
-+++ b/drivers/pci/endpoint/pci-ep-cfs.c
-@@ -178,6 +178,9 @@ static ssize_t pci_epc_start_store(struct config_item *item, const char *page,
- 	if (kstrtobool(page, &start) < 0)
- 		return -EINVAL;
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index 990630ec57c6..0e62f4cd5a5f 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -737,7 +737,7 @@ static int vmd_pm_enable_quirk(struct pci_dev *pdev, void *userdata)
+ 	if (!(features & VMD_FEAT_BIOS_PM_QUIRK))
+ 		return 0;
  
-+	if (start == epc_group->start)
-+		return -EALREADY;
-+
- 	if (!start) {
- 		pci_epc_stop(epc);
- 		epc_group->start = 0;
+-	pci_enable_link_state(pdev, PCIE_LINK_STATE_ALL);
++	pci_set_default_link_state(pdev, PCIE_LINK_STATE_ALL);
+ 
+ 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_LTR);
+ 	if (!pos)
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 51d6693d7171..9fa8ab6eb7a4 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1157,8 +1157,8 @@ int pci_disable_link_state(struct pci_dev *pdev, int state)
+ EXPORT_SYMBOL(pci_disable_link_state);
+ 
+ /**
+- * pci_enable_link_state - Clear and set the default device link state so that
+- * the link may be allowed to enter the specified states. Note that if the
++ * pci_set_default_link_state - Clear and set the default device link state so
++ * that the link may be allowed to enter the specified states. Note that if the
+  * BIOS didn't grant ASPM control to the OS, this does nothing because we can't
+  * touch the LNKCTL register. Also note that this does not enable states
+  * disabled by pci_disable_link_state(). Return 0 or a negative errno.
+@@ -1166,7 +1166,7 @@ EXPORT_SYMBOL(pci_disable_link_state);
+  * @pdev: PCI device
+  * @state: Mask of ASPM link states to enable
+  */
+-int pci_enable_link_state(struct pci_dev *pdev, int state)
++int pci_set_default_link_state(struct pci_dev *pdev, int state)
+ {
+ 	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
+ 
+@@ -1208,7 +1208,7 @@ int pci_enable_link_state(struct pci_dev *pdev, int state)
+ 
+ 	return 0;
+ }
+-EXPORT_SYMBOL(pci_enable_link_state);
++EXPORT_SYMBOL(pci_set_default_link_state);
+ 
+ static int pcie_aspm_set_policy(const char *val,
+ 				const struct kernel_param *kp)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1878f55b2aa6..5597e97a086d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1777,12 +1777,12 @@ extern bool pcie_ports_native;
+ int pci_disable_link_state(struct pci_dev *pdev, int state);
+ int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+ #ifdef CONFIG_PCIEASPM
+-int pci_enable_link_state(struct pci_dev *pdev, int state);
++int pci_set_default_link_state(struct pci_dev *pdev, int state);
+ void pcie_no_aspm(void);
+ bool pcie_aspm_support_enabled(void);
+ bool pcie_aspm_enabled(struct pci_dev *pdev);
+ #else
+-static inline int pci_enable_link_state(struct pci_dev *pdev, int state)
++static inline int pci_set_default_link_state(struct pci_dev *pdev, int state)
+ { return 0; }
+ static inline void pcie_no_aspm(void) { }
+ static inline bool pcie_aspm_support_enabled(void) { return false; }
 -- 
-2.25.1
+2.30.2
 
