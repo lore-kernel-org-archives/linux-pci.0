@@ -2,160 +2,150 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60986C7EE29
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 11:49:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41526C7EE24
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 11:49:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235297AbjFBLtb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Jun 2023 07:49:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37640 "EHLO
+        id S235248AbjFBLtz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Jun 2023 07:49:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235236AbjFBLt2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 07:49:28 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D000610EF;
-        Fri,  2 Jun 2023 04:48:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685706538; x=1717242538;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=9QPnZYdorgxm2tG/6TS44yuCtoro1PqrgtUx93Xiu78=;
-  b=BemgC80972E9OTSM/YDZfiSp1yK4rX6yaztWmgXZ1zRtXNa5YqK1zVrx
-   gGwRFnWC/+TDutQFzQCSWYu9Nh6ygVjgozKZ7q6MmZB6QETSNAaVvTx0O
-   XHytvj9ytyn98TEgWyJGMz3LzvYQSJF28tfdiGmEeml22BnOJw8TvIIGe
-   2iNnTZWYNftxR0uXiRleNxbMXCet1zhFUrQY2buDHeyI5rq3Yb7iR2q+t
-   khisMk85QVIHb7DhWHbFtufjSH37c1lv6NC5pNUSyEntSlYUKre9AFGmt
-   /eq0QIOoM6h9xjoH+bKvgfMwumG7f3qVMAWQny7z13H3vqG60XgA/IjTC
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10728"; a="358279676"
-X-IronPort-AV: E=Sophos;i="6.00,212,1681196400"; 
-   d="scan'208";a="358279676"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2023 04:48:35 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10728"; a="707819452"
-X-IronPort-AV: E=Sophos;i="6.00,212,1681196400"; 
-   d="scan'208";a="707819452"
-Received: from rspatil-mobl3.gar.corp.intel.com (HELO ijarvine-MOBL2.ger.corp.intel.com) ([10.251.208.112])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2023 04:48:29 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Hector Martin <marcan@marcan.st>,
-        Sven Peter <sven@svenpeter.dev>,
-        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, asahi@lists.linux.dev,
-        linux-arm-kernel@lists.infradead.org,
-        linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [RFC PATCH v1 06/13] Bluetooth: hci_bcm4377: Convert aspm disable to quirk
-Date:   Fri,  2 Jun 2023 14:47:43 +0300
-Message-Id: <20230602114751.19671-7-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230602114751.19671-1-ilpo.jarvinen@linux.intel.com>
-References: <20230602114751.19671-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S235398AbjFBLtj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 07:49:39 -0400
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5B20E71
+        for <linux-pci@vger.kernel.org>; Fri,  2 Jun 2023 04:49:09 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id 4fb4d7f45d1cf-5149429c944so2901616a12.0
+        for <linux-pci@vger.kernel.org>; Fri, 02 Jun 2023 04:49:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1685706516; x=1688298516;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5f2NzEmcmTRcbM6hAaos0VU2nOjwvX3dKkaSzu4inyY=;
+        b=YMZgY2r4p5PUODu7nF7gyQ1MAxc7lPnuJINS2nLNHjT4gvveXJWl7P1cdaS73QaSQB
+         Lrmto9GuHgqdmS5PjiavOqOdzeBcdASij0ZJ05DLMxMAqp7Z0iik8IX5UbDDa3wpBSYP
+         wKtA81bAhBMXhnKMNe+Cgc+aO2hEIZOyHk9EsCcV5kyxNwQTTcaW4Ez4CMZnqcrxfrAh
+         B7+KN8pLOHpWaR2RQwXMqvEOuWNRc8wBa5z8OP4Sz9sjsBvv8AocVaJi1MX0f5Oef1x0
+         0sGi+gE8AK1EVHjQ8LUw2FgjwjDtYtMjAe3ufCx/1G+no5eeOf8DxDUAOqHTgeI42f6Y
+         g0Fg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685706516; x=1688298516;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5f2NzEmcmTRcbM6hAaos0VU2nOjwvX3dKkaSzu4inyY=;
+        b=cV+SLSe+wAS6MfS7PD8S1Mj7iLIPsCoB/h8srEQjp5+7HaWckADmv1dxZwauZJGANc
+         mDiYNGyqjDLgH+ZnLArFvHrnP6+TJFOoLPvRphdsEEfl+jkTA/Bz0UiCzZAtP4EMpjVU
+         RqQ4lKNBIujMAb8X2XggGL8MqI3rMUeNvir387OqSABJE4LWmaDsPLsFEE8iw717Mut9
+         70vIOci/jM53I7njx9NC+jc3xd3EFTxAXhni15cCdidKLeATPNQcxpWb66xoOi6xMlYZ
+         RJ26UuW1Q7E+5U/YHTokl1bINw5vYTSNkbHI8RU2Rvy3kOLKx4Ir1U6Pkb0b0ZpRKsr+
+         ipeQ==
+X-Gm-Message-State: AC+VfDw2dwZLzLT1hT2GJzGGnDzP2X1kVCP0GFY911VevasLKb1BVVVK
+        H7gpL9TQDn1hVkRHMIlxq4C4HGE3mNEqsAbpdQ==
+X-Google-Smtp-Source: ACHHUZ6HLw8fdSjuXPHCuTEOgExHLw//KqfpW6dM2TxpwtcsemdxR/ONmFaQxgTjDx1MZaicvN+Hew==
+X-Received: by 2002:a17:907:7e8c:b0:96f:c676:a917 with SMTP id qb12-20020a1709077e8c00b0096fc676a917mr11580346ejc.35.1685706516599;
+        Fri, 02 Jun 2023 04:48:36 -0700 (PDT)
+Received: from localhost.localdomain ([117.217.186.79])
+        by smtp.gmail.com with ESMTPSA id qu25-20020a170907111900b00974530bb44dsm658924ejb.183.2023.06.02.04.48.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 Jun 2023 04:48:36 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     lpieralisi@kernel.org, kw@linux.com
+Cc:     kishon@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        dlemoal@kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v6 5/9] PCI: endpoint: Add BME notifier support
+Date:   Fri,  2 Jun 2023 17:17:52 +0530
+Message-Id: <20230602114756.36586-6-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230602114756.36586-1-manivannan.sadhasivam@linaro.org>
+References: <20230602114756.36586-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_disable_link_state() was made reliable regardless of ASPM CONFIG
-and OS being disallowed to change ASPM states to allow drivers to rely
-on pci_disable_link_state() working.
+Add support to notify the EPF device about the Bus Master Enable (BME)
+event received by the EPC device from the Root complex.
 
-Remove driver working around unreliable pci_disable_link_state() from
-hci_bcm4377 driver and add a PCI quirk to disable ASPM.
-
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Reviewed-by: Kishon Vijay Abraham I <kishon@kernel.org>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/bluetooth/hci_bcm4377.c | 20 --------------------
- drivers/pci/quirks.c            |  3 +++
- 2 files changed, 3 insertions(+), 20 deletions(-)
+ drivers/pci/endpoint/pci-epc-core.c | 26 ++++++++++++++++++++++++++
+ include/linux/pci-epc.h             |  1 +
+ include/linux/pci-epf.h             |  2 ++
+ 3 files changed, 29 insertions(+)
 
-diff --git a/drivers/bluetooth/hci_bcm4377.c b/drivers/bluetooth/hci_bcm4377.c
-index 19ad0e788646..2348ee2380db 100644
---- a/drivers/bluetooth/hci_bcm4377.c
-+++ b/drivers/bluetooth/hci_bcm4377.c
-@@ -490,7 +490,6 @@ struct bcm4377_data;
-  * clear_pciecfg_subsystem_ctrl_bit19: Set to true if bit 19 in the
-  *                                     vendor-specific subsystem control
-  *                                     register has to be cleared
-- * disable_aspm: Set to true if ASPM must be disabled due to hardware errata
-  * broken_ext_scan: Set to true if the chip erroneously claims to support
-  *                  extended scanning
-  * broken_mws_transport_config: Set to true if the chip erroneously claims to
-@@ -509,7 +508,6 @@ struct bcm4377_hw {
- 
- 	unsigned long has_bar0_core2_window2 : 1;
- 	unsigned long clear_pciecfg_subsystem_ctrl_bit19 : 1;
--	unsigned long disable_aspm : 1;
- 	unsigned long broken_ext_scan : 1;
- 	unsigned long broken_mws_transport_config : 1;
- 
-@@ -2222,20 +2220,6 @@ static int bcm4377_probe_of(struct bcm4377_data *bcm4377)
- 	return 0;
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index e0570b52698d..6c54fa5684d2 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -758,6 +758,32 @@ void pci_epc_init_notify(struct pci_epc *epc)
  }
+ EXPORT_SYMBOL_GPL(pci_epc_init_notify);
  
--static void bcm4377_disable_aspm(struct bcm4377_data *bcm4377)
--{
--	pci_disable_link_state(bcm4377->pdev,
--			       PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
--
--	/*
--	 * pci_disable_link_state can fail if either CONFIG_PCIEASPM is disabled
--	 * or if the BIOS hasn't handed over control to us. We must *always*
--	 * disable ASPM for this device due to hardware errata though.
--	 */
--	pcie_capability_clear_word(bcm4377->pdev, PCI_EXP_LNKCTL,
--				   PCI_EXP_LNKCTL_ASPMC);
--}
--
- static void bcm4377_pci_free_irq_vectors(void *data)
- {
- 	pci_free_irq_vectors(data);
-@@ -2288,9 +2272,6 @@ static int bcm4377_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return -ENODEV;
- 	}
- 
--	if (bcm4377->hw->disable_aspm)
--		bcm4377_disable_aspm(bcm4377);
--
- 	ret = pci_reset_function_locked(pdev);
- 	if (ret)
- 		dev_warn(
-@@ -2448,7 +2429,6 @@ static const struct bcm4377_hw bcm4377_hw_variants[] = {
- 		.otp_offset = 0x4120,
- 		.bar0_window1 = 0x1800b000,
- 		.bar0_window2 = 0x1810c000,
--		.disable_aspm = true,
- 		.broken_ext_scan = true,
- 		.send_ptb = bcm4377_send_ptb,
- 	},
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index f4e2a88729fd..25b7d7bcb279 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2407,6 +2407,9 @@ static void quirk_disable_aspm_l0s_l1(struct pci_dev *dev)
-  */
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ASMEDIA, 0x1080, quirk_disable_aspm_l0s_l1);
- 
-+/* BCM4377 must always disable ASPM due to hardware errata. */
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM, 0x5fa0, quirk_disable_aspm_l0s_l1);
++/**
++ * pci_epc_bme_notify() - Notify the EPF device that the EPC device has received
++ *			  the BME event from the Root complex
++ * @epc: the EPC device that received the BME event
++ *
++ * Invoke to Notify the EPF device that the EPC device has received the Bus
++ * Master Enable (BME) event from the Root complex
++ */
++void pci_epc_bme_notify(struct pci_epc *epc)
++{
++	struct pci_epf *epf;
 +
- /*
-  * Some Pericom PCIe-to-PCI bridges in reverse mode need the PCIe Retrain
-  * Link bit cleared after starting the link retrain process to allow this
++	if (!epc || IS_ERR(epc))
++		return;
++
++	mutex_lock(&epc->list_lock);
++	list_for_each_entry(epf, &epc->pci_epf, list) {
++		mutex_lock(&epf->lock);
++		if (epf->event_ops && epf->event_ops->bme)
++			epf->event_ops->bme(epf);
++		mutex_unlock(&epf->lock);
++	}
++	mutex_unlock(&epc->list_lock);
++}
++EXPORT_SYMBOL_GPL(pci_epc_bme_notify);
++
+ /**
+  * pci_epc_destroy() - destroy the EPC device
+  * @epc: the EPC device that has to be destroyed
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 63a6cc5e5282..5cb694031072 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -205,6 +205,7 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf,
+ void pci_epc_linkup(struct pci_epc *epc);
+ void pci_epc_linkdown(struct pci_epc *epc);
+ void pci_epc_init_notify(struct pci_epc *epc);
++void pci_epc_bme_notify(struct pci_epc *epc);
+ void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf,
+ 			enum pci_epc_interface_type type);
+ int pci_epc_write_header(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index f8e5a63d0c83..f34b3b32a0e7 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -72,11 +72,13 @@ struct pci_epf_ops {
+  * @core_init: Callback for the EPC initialization complete event
+  * @link_up: Callback for the EPC link up event
+  * @link_down: Callback for the EPC link down event
++ * @bme: Callback for the EPC BME (Bus Master Enable) event
+  */
+ struct pci_epc_event_ops {
+ 	int (*core_init)(struct pci_epf *epf);
+ 	int (*link_up)(struct pci_epf *epf);
+ 	int (*link_down)(struct pci_epf *epf);
++	int (*bme)(struct pci_epf *epf);
+ };
+ 
+ /**
 -- 
-2.30.2
+2.25.1
 
