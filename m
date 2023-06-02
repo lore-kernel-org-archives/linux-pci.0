@@ -2,151 +2,152 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08839C7EE29
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 12:21:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83140C77B7A
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 12:37:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235676AbjFBMVf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Jun 2023 08:21:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33442 "EHLO
+        id S234692AbjFBMhr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Jun 2023 08:37:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235508AbjFBMVT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 08:21:19 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA2491AD;
-        Fri,  2 Jun 2023 05:21:08 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4573164FD9;
-        Fri,  2 Jun 2023 12:21:08 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63064C433EF;
-        Fri,  2 Jun 2023 12:21:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1685708467;
-        bh=PLdBfEClAMSly38pIj5EbZNFFoVKxAsoZhfeXQhzduA=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=L1sdvIBBDriYTc0lag8r7w3THWmMo0Y5lCAZz/kfobeaQPaWnxiQZ3xyJd8vyt0dN
-         EG2ERiE/y7zFLcEsOJuLtfXnu3283Y4wIJCtt+gktxlKuyPsoo8jIJmRJ0lJMj1tD8
-         LDJWnR3fkz9ZVm3nnuAPWZLBQUt8/agkm08cJFwy/WaCjrGj4uIbQzdGhtlT2fMwpd
-         qFn6MVBebfAJcJ2pGcqrghuTogK8PPe4vZgnVW9dQ1Cd4zBeORfty6obIWl8EMdtEz
-         BPNi0BVkOxLfPAvjXF2aXqtk87CpZs5KwNOKta0qHTlIvxqJXwKgOfNtBQXXEet8Ej
-         EMEdzpGsIvePA==
-Message-ID: <7a4f4f8a-8edf-0ac4-2e9f-a341fd589e8e@kernel.org>
-Date:   Fri, 2 Jun 2023 21:21:03 +0900
+        with ESMTP id S234769AbjFBMhi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 08:37:38 -0400
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2079.outbound.protection.outlook.com [40.107.95.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC93913D;
+        Fri,  2 Jun 2023 05:37:37 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=L8gCmxCP5gi3sKimzXdOeKQhHbF8ZK2+XlraAYa28h1lTVqoeWTP/T0VNFKRwx45QSkFmBfWF8v+0rmJC2MwCEaCsH8WCcZDk8jS8LQG8eB2ebwFSeYgjr9NTyXmnEwlSKJytE4/ipGZJP/E6G3CRnhEZItyE0IxUdKbS+uw4I4x0Qst27cQ2/xdQDCKNdSO4FFTQZBx+aJLvdHgVZG3dmMVERNtsELNgOmJJENfT3Lu4j3SkUIhBVtqDOveaHmx2PVAzqpzNpjof4e+XzgON1A3BZrHIU4cxpMypo30Sd95rT1EYKAHR8d6wEaeSqbu/fNFTGBNAsEWgi5ntJ8YAQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=r/eZbnDVbXzjBr2zEuM/T2tm7tpG4IDORP5Lxfj6QEk=;
+ b=ic8uJ0P0vCA+++WU3YLe6X3ETX3/WgQzxLbFaCQnuxpgffHYo3w8Ox6Nb+7oNJSg8np2UarQ9P+qVU3OkV+2t7ocjb01+ZSZOm34dgeZiViWOJUnh65Ev64wtsBqvluG73jKDCZIpq50/mVxHDpBEDlEQlkK0AgmAPliib+zVe1XYIrP+6wk4AL2NHmStXWl1cSkC6TikcVbizgMT2+iE8JxPcLwbiP5E9VxDi6peAmgySZc+q+PhUSbCmN7BN9ruW0NKOb2SBZDY0Bj1smqRnG0P8ismYwKToNt0+8iKxClJWYbK6/8k1h0UW95ZdlKm/7U9Hs7O1zwYprUBRxs9w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=r/eZbnDVbXzjBr2zEuM/T2tm7tpG4IDORP5Lxfj6QEk=;
+ b=dPSrrH9YO9ZBpUrZzSJlxQkxwX/2jYOIEkKRVvPtzj1dEcgLbVz5vJANCORHogBwsdmx2HmbbCkqlfz3yJg6CiHitN5CaTd70sOApOvlDIuDvlyob/Jb67yPpekfM+ShFSwYoq8U9f/suF879zkaVUklOFRb5VeBDYKwLRNVW2M=
+Received: from SJ0PR05CA0008.namprd05.prod.outlook.com (2603:10b6:a03:33b::13)
+ by CH2PR12MB4231.namprd12.prod.outlook.com (2603:10b6:610:7d::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6455.24; Fri, 2 Jun
+ 2023 12:37:32 +0000
+Received: from CO1NAM11FT051.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:a03:33b:cafe::f9) by SJ0PR05CA0008.outlook.office365.com
+ (2603:10b6:a03:33b::13) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6477.9 via Frontend
+ Transport; Fri, 2 Jun 2023 12:37:32 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1NAM11FT051.mail.protection.outlook.com (10.13.174.114) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6455.27 via Frontend Transport; Fri, 2 Jun 2023 12:37:31 +0000
+Received: from SITE-L-T34-2.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Fri, 2 Jun
+ 2023 07:37:30 -0500
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "Mario Limonciello" <mario.limonciello@amd.com>
+Subject: [PATCH] PCI: Call _REG when saving/restoring PCI state
+Date:   Thu, 1 Jun 2023 22:11:22 -0500
+Message-ID: <20230602031122.18350-1-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.10.0
-Subject: Re: [RFC PATCH 1/3] PCI: endpoint: support an alignment aware
- map/unmaping
-Content-Language: en-US
-To:     Shunsuke Mie <mie@igel.co.jp>,
-        Kishon Vijay Abraham I <kvijayab@amd.com>,
-        Jingoo Han <jingoohan1@gmail.com>
-Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Frank Li <Frank.Li@nxp.com>, Li Chen <lchen@ambarella.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20230113090350.1103494-1-mie@igel.co.jp>
- <20230113090350.1103494-2-mie@igel.co.jp>
- <e417f2c9-1fcb-cf57-3524-1408c9aae5fa@amd.com>
- <978b63ac-90b5-b909-d259-0668b77f1cc8@kernel.org>
- <8bc9affb-7b72-0495-16de-c0867a141f9f@igel.co.jp>
-From:   Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <8bc9affb-7b72-0495-16de-c0867a141f9f@igel.co.jp>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1NAM11FT051:EE_|CH2PR12MB4231:EE_
+X-MS-Office365-Filtering-Correlation-Id: ec80ad4a-dfb2-4a38-eb87-08db6366224d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: eko2wRYexRCNNxDvxLOJpAuQ7vKh4LnuXOi/ncOJcJXECNCXziIfK6KwDnDMPOEaXOC8IXA/k4eOmDR+nr0zG4XrSwqkh7k4XFoKvAOSykeEer2z7t5j3JjTR7KaULAcoeny4G3qnYh/PdrvtXpXeVhB50BWpyjCNVxWQDroXMmE+1vYHD/igi2Zqo3J5ns23GNtibOZctbm23940BlpAyP8vMMbds+7/G/I1sHEMZsDtAPnBmzf7YMI9ToC3so/zYfaDNY+LebGdtBD05wod9s8vt7zllmB733AK7Cp4ixV1MfkOiqzM+hb6Lqc22R6EAF/Y3iJiJvCui5rMBntmSeSf7GNnzJVZiXGOYKgtpSSXkchIIZXdwiazdKtAm6Xfo8s0QuO2Qcry682Hvqd9CkSnk3kyV2JF90yCSNkwlJtSIF7OY2gLIjXe0AqPDN10VG4ZzyGQJDPwIu/54i1n4w7knUuTVEwnT1QVQRzrV1xuuP6sMI4HhRnrxTlg8OTTYxLkSrygxD2Slf9cgBmXW5IBudPlqHARbu7ya8ImsgN/BfGg4FPkOJCwZHjllag8yHiwW/Kd3jNVw4l0uQk4tENxoKshRD6VmrbNFSuDkkz7s+6xjG7bNHb35DzD2BMN9AI7JIf5i86cBChX/A1DNT9Dvzx1lTiFUXrWvUwdJM9IFCyzPtcV0UpHa4X2HptTGUN1QbfG3ycoo+IoWzjw2v8aq7af/Z5Y+K57b0iTBIbNV3HDuwjg+SGy2LqK+7vPJo1O+UdP1nEkXqn6H1Xk9CidgLiyFe00pUHxftblwY=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(136003)(346002)(376002)(39860400002)(396003)(451199021)(40470700004)(46966006)(36840700001)(82740400003)(82310400005)(356005)(81166007)(40460700003)(40480700001)(86362001)(70206006)(54906003)(6916009)(70586007)(4326008)(36756003)(7696005)(6666004)(966005)(478600001)(16526019)(1076003)(186003)(26005)(5660300002)(8936002)(2906002)(8676002)(316002)(44832011)(2616005)(47076005)(36860700001)(336012)(426003)(41300700001)(83380400001)(21314003)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2023 12:37:31.4840
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: ec80ad4a-dfb2-4a38-eb87-08db6366224d
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT051.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4231
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 6/2/23 18:42, Shunsuke Mie wrote:
-> Hi Damien,
-> 
-> On 2023/06/02 8:43, Damien Le Moal wrote:
->> On 6/2/23 00:06, Kishon Vijay Abraham I wrote:
->>> Hi Shunsuke,
->>>
->>> On 1/13/2023 2:33 PM, Shunsuke Mie wrote:
->>>> Add an align_mem operation to the EPC ops, which function is used to
->>>> pci_epc_map/unmap_addr(). These change to enable mapping for any alignment
->>>> restriction of EPC. The map function maps an aligned memory to include a
->>>> requested memory region.
->>> I'd prefer all the PCIe address alignment restriction be handled in the
->>> endpoint function drivers and not inside the core layer (esp in map and
->>> unmap calls).
->> That is a really *bad* idea ! Most function drivers should be able to work with
->> any EP controller hardware. Asking these drivers to support all the alignment
->> peculiarities of every possible EP controller is impossible.
->>
->>> IMO, get the pci address alignment restriction using pci_epc_features.
->>> And use a bigger size (based on alignment restriction) in
->>> pci_epc_mem_alloc_addr() and access the allocated window using an offset
->>> (based on alignment value). You can add separate helpers if required.
->> That is too simplistic and not enough. Example: Rick and I working on an nvme
->> function driver are facing a lot of issues with the EPC API for mem & mapping
->> management because we have 0 control over the PCI address that the host will
->> use. Alignment is all over the place, and the current EPC memory API
->> restrictions (window size limitations) make it impossible to transparently
->> handle all cases. We endup with NVMe command failures simply because of the API
->> limitations.
-> 
-> I think so to.
-> 
-> I'm also proposing virtio-console function driver[1]. I suppose the 
-> virtio function
-> driver and your nvme function driver are the same in that the spec is 
-> defined and
-> host side driver must work as is.
-> 
-> [1] 
-> https://lore.kernel.org/linux-pci/20230427104428.862643-4-mie@igel.co.jp/
-> 
->>
->> And sure, we can modify that driver to better support the EP controller we are
->> using (rockchip). But we need to support other EP controllers as well. So API
->> changes are definitely needed. Working on that. That is not easy as the mapping
->> API and its semantic impacts data transfers (memcpy_from|toio and DMA).
->>
->> I do have a patch that does something similar as this one, but at a much higher
->> level with a helper function that gives the function driver the offset into the
->> allocated memory region to use for mapping a particular PCI address. And then
->> this helper is then in turn used into a new pci_epc_map() function which does
->> mem alloc + mapping in one go based on the EPC constraints. That hides all
->> alignment details to the function drivers, which greatlyu simplyfies the code.
->> But that is not enough as alignment also implies that we have to deal with
->> boundaries (due to limited window size) and so sometimes endpu failing a mapping
->> that is too large because the host used a PCI address close to the boundary.
->> More work is needed to have pci_epc_map() also hide that with tricks like
->> allowing the allocation and mapping of multiple contiguous windows. So EPC ops
->> API changes are also needed.
-> 
-> Could you submit the your changes if you can?
-> 
-> I'd like to solve the current EPC limitation for the mapping in a better 
-> way and avoid doing similar work.
+ASMedia PCIe GPIO controllers connected to AMD SOC fail functional tests
+after returning from s2idle. This is because the BIOS checks whether the
+OSPM has called the _REG method to determine whether it can interact with
+the OperationRegion assigned to the device.
 
-Will try to cleanup my patches and send an RFC next week. Need to rebase,
-cleanup etc. Not sure I can make it soon as I am busy with other things for 6.5
-right now.
+To fix this issue, call acpi_evaluate_reg() when saving and restoring the
+state of PCI devices.
 
-You can have a look at the work in progress here:
+Link: https://uefi.org/htmlspecs/ACPI_Spec_6_4_html/06_Device_Configuration/Device_Configuration.html#reg-region
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/pci/pci.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-https://github.com/damien-lemoal/linux/tree/rockpro64_ep_v21
-
-There are a bunch of epf and epc core patches as well as some rockchip driver
-patches. The first half of the patches on top of Linus 6.3 tag patch are already
-in pci-next.
-
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e38c2f6eebd4..071ecba548b0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1068,6 +1068,12 @@ static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
+ 	return acpi_pci_bridge_d3(dev);
+ }
+ 
++static inline int platform_toggle_reg(struct pci_dev *dev, int c)
++{
++	return acpi_evaluate_reg(ACPI_HANDLE(&dev->dev),
++				 ACPI_ADR_SPACE_PCI_CONFIG, c);
++}
++
+ /**
+  * pci_update_current_state - Read power state of given device and cache it
+  * @dev: PCI device to handle.
+@@ -1645,6 +1651,9 @@ static void pci_restore_ltr_state(struct pci_dev *dev)
+ int pci_save_state(struct pci_dev *dev)
+ {
+ 	int i;
++
++	platform_toggle_reg(dev, ACPI_REG_DISCONNECT);
++
+ 	/* XXX: 100% dword access ok here? */
+ 	for (i = 0; i < 16; i++) {
+ 		pci_read_config_dword(dev, i * 4, &dev->saved_config_space[i]);
+@@ -1790,6 +1799,8 @@ void pci_restore_state(struct pci_dev *dev)
+ 	pci_enable_acs(dev);
+ 	pci_restore_iov_state(dev);
+ 
++	platform_toggle_reg(dev, ACPI_REG_CONNECT);
++
+ 	dev->state_saved = false;
+ }
+ EXPORT_SYMBOL(pci_restore_state);
+@@ -3203,6 +3214,7 @@ void pci_pm_init(struct pci_dev *dev)
+ 	pci_read_config_word(dev, PCI_STATUS, &status);
+ 	if (status & PCI_STATUS_IMM_READY)
+ 		dev->imm_ready = 1;
++	platform_toggle_reg(dev, ACPI_REG_CONNECT);
+ }
+ 
+ static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
 -- 
-Damien Le Moal
-Western Digital Research
+2.34.1
 
