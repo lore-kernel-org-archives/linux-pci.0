@@ -2,174 +2,291 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C70B6C7EE24
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 08:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60354C77B7A
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 09:42:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234740AbjFBIpO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Jun 2023 04:45:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48120 "EHLO
+        id S234562AbjFBJm1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Jun 2023 05:42:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234135AbjFBIpF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 04:45:05 -0400
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFE41E67;
-        Fri,  2 Jun 2023 01:44:32 -0700 (PDT)
-Received: from [192.168.0.2] (ip5f5aebf4.dynamic.kabel-deutschland.de [95.90.235.244])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 2F6E361EA1BFF;
-        Fri,  2 Jun 2023 10:43:27 +0200 (CEST)
-Message-ID: <577f38ed-8532-c32e-07bd-4a3b384d5fe8@molgen.mpg.de>
-Date:   Fri, 2 Jun 2023 10:43:27 +0200
+        with ESMTP id S234303AbjFBJm0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 05:42:26 -0400
+Received: from mail-ot1-x335.google.com (mail-ot1-x335.google.com [IPv6:2607:f8b0:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 718B61A8
+        for <linux-pci@vger.kernel.org>; Fri,  2 Jun 2023 02:42:14 -0700 (PDT)
+Received: by mail-ot1-x335.google.com with SMTP id 46e09a7af769-6af6f5fc42aso1834795a34.1
+        for <linux-pci@vger.kernel.org>; Fri, 02 Jun 2023 02:42:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=igel-co-jp.20221208.gappssmtp.com; s=20221208; t=1685698933; x=1688290933;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=KDrhfzHICQN9ayaPuS0DNQLuInOilyGOWl7DR14+R70=;
+        b=lshe2T0z3OCvdGuihY2E2siz79o3hWdAOOHEoR8opOvVyP+2SC9F+oklcAQmh+5rRZ
+         Ox9nQGsra2mYv1vzX86ZN7daTbYatroMRQwv37RhxZQwZT298tbwvm6JQNhjDrxZVTOZ
+         Lu2CCcyA8DO6jG6hgb6tMvCcGnRaRoptWT3bpN2oW6ZeASh6AAxrcneoVuCD57h9L2Sp
+         AObqCeN6Pk6xoVWqbL8aL4hVXXMS+ovHsTiaZoVeypNPogKnvkOwtTQf6c3Gy92SfHl+
+         UE+WXY2TCWekGLIGaVJuRWaG8C1IOxaICACYQP9euiMQugHD7yF+bacwRdmKlQQSTiun
+         Jgow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685698933; x=1688290933;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=KDrhfzHICQN9ayaPuS0DNQLuInOilyGOWl7DR14+R70=;
+        b=ciFc4O0+faSAoPOWpcJvHCqIWLhEupT8L1hVufY3cqzkKCK0vkh+jIERsy0SclhyWl
+         +MDji/Xlj60ecwtieJ0zy1nmW1C5JSQdwCnPM/I0Pi75WQ2kjzhXG3Ka0uEMuQia11hz
+         CyoE0rllhzGiPnLCh8PjlVi9XwbzzjZn6kSkgg2Zjblq8lxw3U11HA1PqrGKWj62bvTW
+         0shDCa9TSw5Fy0q7LSsu/DfUtr4K0wpHk5EBxA9/km9wWHGyYhyZDSVO5BBlIZ8k9cAS
+         FZBuiAs4es9wZmHNwnC5gROzqcX9soMt0WA75Q8yl1O4DY7aFx2ltXDPe6iuDEkvgj0Z
+         1F5A==
+X-Gm-Message-State: AC+VfDzFQl3T/hrh9aWe+vn2nf9eOQhJSILxSlVRPgJdk1k5nbNyspcT
+        TAU9b60YOJLBfnOOPIJ89JsRqw==
+X-Google-Smtp-Source: ACHHUZ7WLiOMxS7DeVjZ9HpgKW2Cy5XQG9WC87Hw5WaH7gQC4b+eBkqSYYqxQM6ENRqdrA2YEzm/Ug==
+X-Received: by 2002:a9d:6c90:0:b0:6af:a1d3:e7f1 with SMTP id c16-20020a9d6c90000000b006afa1d3e7f1mr2127525otr.31.1685698933551;
+        Fri, 02 Jun 2023 02:42:13 -0700 (PDT)
+Received: from [10.16.161.199] (napt.igel.co.jp. [219.106.231.132])
+        by smtp.gmail.com with ESMTPSA id n10-20020a170902968a00b001b03f208323sm924463plp.64.2023.06.02.02.42.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 02 Jun 2023 02:42:13 -0700 (PDT)
+Message-ID: <8bc9affb-7b72-0495-16de-c0867a141f9f@igel.co.jp>
+Date:   Fri, 2 Jun 2023 18:42:08 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [Intel-wired-lan] [PATCH] e1000e: Use PME poll to circumvent
- unreliable ACPI wake
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
+ Gecko/20100101 Thunderbird/102.11.0
+Subject: Re: [RFC PATCH 1/3] PCI: endpoint: support an alignment aware
+ map/unmaping
 Content-Language: en-US
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Alexander H Duyck <alexander.duyck@gmail.com>
-Cc:     linux-pm@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        linux-kernel@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        netdev@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        "David S. Miller" <davem@davemloft.net>, linux-pci@vger.kernel.org
-References: <20230601162537.1163270-1-kai.heng.feng@canonical.com>
- <269262acfcce8eb1b85ee1fe3424a5ef2991f481.camel@gmail.com>
- <CAAd53p7c6eEqxd3jecfgvpxuYO3nmmmovcqD=3PgbqSVCWFfxA@mail.gmail.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <CAAd53p7c6eEqxd3jecfgvpxuYO3nmmmovcqD=3PgbqSVCWFfxA@mail.gmail.com>
+To:     Damien Le Moal <dlemoal@kernel.org>,
+        Kishon Vijay Abraham I <kvijayab@amd.com>,
+        Jingoo Han <jingoohan1@gmail.com>
+Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Frank Li <Frank.Li@nxp.com>, Li Chen <lchen@ambarella.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20230113090350.1103494-1-mie@igel.co.jp>
+ <20230113090350.1103494-2-mie@igel.co.jp>
+ <e417f2c9-1fcb-cf57-3524-1408c9aae5fa@amd.com>
+ <978b63ac-90b5-b909-d259-0668b77f1cc8@kernel.org>
+From:   Shunsuke Mie <mie@igel.co.jp>
+In-Reply-To: <978b63ac-90b5-b909-d259-0668b77f1cc8@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[Cc: linux-pci@vger.kernel.org]
+Hi Damien,
 
-Dear Kai,
-
-
-Thank you for your patch.
-
-Am 02.06.23 um 03:46 schrieb Kai-Heng Feng:
-> On Fri, Jun 2, 2023 at 4:24 AM Alexander H Duyck wrote:
+On 2023/06/02 8:43, Damien Le Moal wrote:
+> On 6/2/23 00:06, Kishon Vijay Abraham I wrote:
+>> Hi Shunsuke,
 >>
->> On Fri, 2023-06-02 at 00:25 +0800, Kai-Heng Feng wrote:
->>> On some I219 devices, ethernet cable plugging detection only works once
->>> from PCI D3 state. Subsequent cable plugging does set PME bit correctly,
->>> but device still doesn't get woken up.
+>> On 1/13/2023 2:33 PM, Shunsuke Mie wrote:
+>>> Add an align_mem operation to the EPC ops, which function is used to
+>>> pci_epc_map/unmap_addr(). These change to enable mapping for any alignment
+>>> restriction of EPC. The map function maps an aligned memory to include a
+>>> requested memory region.
+>> I'd prefer all the PCIe address alignment restriction be handled in the
+>> endpoint function drivers and not inside the core layer (esp in map and
+>> unmap calls).
+> That is a really *bad* idea ! Most function drivers should be able to work with
+> any EP controller hardware. Asking these drivers to support all the alignment
+> peculiarities of every possible EP controller is impossible.
+>
+>> IMO, get the pci address alignment restriction using pci_epc_features.
+>> And use a bigger size (based on alignment restriction) in
+>> pci_epc_mem_alloc_addr() and access the allocated window using an offset
+>> (based on alignment value). You can add separate helpers if required.
+> That is too simplistic and not enough. Example: Rick and I working on an nvme
+> function driver are facing a lot of issues with the EPC API for mem & mapping
+> management because we have 0 control over the PCI address that the host will
+> use. Alignment is all over the place, and the current EPC memory API
+> restrictions (window size limitations) make it impossible to transparently
+> handle all cases. We endup with NVMe command failures simply because of the API
+> limitations.
 
-Could you please add the list of all the devices with the firmware 
-version, you know this problem exists on? Please also add the URLs of 
-the bug reports at the end of the commit message.
+I think so to.
 
-Is that problem logged somehow? Could a log message be added first?
+I'm also proposing virtio-console function driver[1]. I suppose the 
+virtio function
+driver and your nvme function driver are the same in that the spec is 
+defined and
+host side driver must work as is.
 
->> Do we have a root cause on why things don't get woken up? This seems
->> like an issue where something isn't getting reset after the first
->> wakeup and so future ones are blocked.
-> 
-> No we don't know the root cause.
-> I guess the D3 wake isn't really tested under Windows because I219
-> doesn't use runtime D3 on Windows.
+[1] 
+https://lore.kernel.org/linux-pci/20230427104428.862643-4-mie@igel.co.jp/
 
-How do you know? Where you able to look at the Microsoft Windows driver 
-source code?
+>
+> And sure, we can modify that driver to better support the EP controller we are
+> using (rockchip). But we need to support other EP controllers as well. So API
+> changes are definitely needed. Working on that. That is not easy as the mapping
+> API and its semantic impacts data transfers (memcpy_from|toio and DMA).
+>
+> I do have a patch that does something similar as this one, but at a much higher
+> level with a helper function that gives the function driver the offset into the
+> allocated memory region to use for mapping a particular PCI address. And then
+> this helper is then in turn used into a new pci_epc_map() function which does
+> mem alloc + mapping in one go based on the EPC constraints. That hides all
+> alignment details to the function drivers, which greatlyu simplyfies the code.
+> But that is not enough as alignment also implies that we have to deal with
+> boundaries (due to limited window size) and so sometimes endpu failing a mapping
+> that is too large because the host used a PCI address close to the boundary.
+> More work is needed to have pci_epc_map() also hide that with tricks like
+> allowing the allocation and mapping of multiple contiguous windows. So EPC ops
+> API changes are also needed.
 
->>> Since I219 connects to the root complex directly, it relies on platform
->>> firmware (ACPI) to wake it up. In this case, the GPE from _PRW only
->>> works for first cable plugging but fails to notify the driver for
->>> subsequent plugging events.
->>>
->>> The issue was originally found on CNP, but the same issue can be found
->>> on ADL too. So workaround the issue by continuing use PME poll after
+Could you submit the your changes if you can?
 
-The verb is spelled with a space: work around.
+I'd like to solve the current EPC limitation for the mapping in a better 
+way and avoid doing similar work.
 
->>> first ACPI wake. As PME poll is always used, the runtime suspend
->>> restriction for CNP can also be removed.
-
-When was that restriction for CNP added?
-
->>> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+>
+>
+>> Thanks,
+>> Kishon
+>>
+>>> Signed-off-by: Shunsuke Mie <mie@igel.co.jp>
 >>> ---
->>>   drivers/net/ethernet/intel/e1000e/netdev.c | 4 +++-
->>>   1 file changed, 3 insertions(+), 1 deletion(-)
+>>>    drivers/pci/endpoint/pci-epc-core.c | 57 ++++++++++++++++++++++++-----
+>>>    include/linux/pci-epc.h             | 10 +++--
+>>>    2 files changed, 53 insertions(+), 14 deletions(-)
 >>>
->>> diff --git a/drivers/net/ethernet/intel/e1000e/netdev.c b/drivers/net/ethernet/intel/e1000e/netdev.c
->>> index bd7ef59b1f2e..f0e48f2bc3a2 100644
->>> --- a/drivers/net/ethernet/intel/e1000e/netdev.c
->>> +++ b/drivers/net/ethernet/intel/e1000e/netdev.c
->>> @@ -7021,6 +7021,8 @@ static __maybe_unused int e1000e_pm_runtime_resume(struct device *dev)
->>>        struct e1000_adapter *adapter = netdev_priv(netdev);
->>>        int rc;
->>>
->>> +     pdev->pme_poll = true;
+>>> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+>>> index 2542196e8c3d..60d586e05e7d 100644
+>>> --- a/drivers/pci/endpoint/pci-epc-core.c
+>>> +++ b/drivers/pci/endpoint/pci-epc-core.c
+>>> @@ -430,8 +430,12 @@ EXPORT_SYMBOL_GPL(pci_epc_set_msix);
+>>>     * Invoke to unmap the CPU address from PCI address.
+>>>     */
+>>>    void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>> -			phys_addr_t phys_addr)
+>>> +			phys_addr_t phys_addr, void __iomem *virt_addr, size_t size)
+>>>    {
+>>> +	u64 aligned_phys;
+>>> +	void __iomem *aligned_virt;
+>>> +	size_t offset;
 >>> +
->>>        rc = __e1000_resume(pdev);
->>>        if (rc)
->>>                return rc;
->>
->> Doesn't this enable this too broadly. I know there are a number of
->> devices that run under the e1000e and I would imagine that we don't
->> want them all running with "pme_poll = true" do we?
-> 
-> Whack a mole isn't scaling, either.
-> The generation between CNP and ADL are probably affected too.
-> 
->> It seems like at a minimum we should only be setting this for specific
->> platofrms or devices instead of on all of them.
->>
->> Also this seems like something we should be setting on the suspend side
->> since it seems to be cleared in the wakeup calls.
-> 
-> pme_poll gets cleared on wakeup, and once it's cleared the device will
-> be removed from pci_pme_list.
-> 
-> To prevent that, reset pme_poll to true immediately on runtime resume.
-> 
->> Lastly I am not sure the first one is necessarily succeeding. You might
->> want to check the status of pme_poll before you run your first test.
->> From what I can tell it looks like the initial state is true in
->> pci_pm_init. If so it might be getting cleared after the first wakeup
->> which is what causes your issues.
-> 
-> That's by design. pme_poll gets cleared when the hardware is capable
-> to signal wakeup via PME# or ACPI GPE. For detected hardwares, the
-> pme_poll will never be cleared.
-> So this becomes tricky for the issue, since the ACPI GPE works for
-> just one time, but never again.
-> 
->>> @@ -7682,7 +7684,7 @@ static int e1000_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->>>
->>>        dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_SMART_PREPARE);
->>>
->>> -     if (pci_dev_run_wake(pdev) && hw->mac.type != e1000_pch_cnp)
->>> +     if (pci_dev_run_wake(pdev))
->>>                pm_runtime_put_noidle(&pdev->dev);
->>>
->>>        return 0;
->>
->> I assume this is the original workaround that was put in to address
->> this issue. Perhaps you should add a Fixes tag to this to identify
->> which workaround this patch is meant to be replacing.
-> 
-> Another possibility is to remove runtime power management completely.
-> I wonder why Windows keep the device at D0 all the time?
+>>>    	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+>>>    		return;
+>>>    
+>>> @@ -441,9 +445,22 @@ void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>>    	if (!epc->ops->unmap_addr)
+>>>    		return;
+>>>    
+>>> +	if (epc->ops->align_mem) {
+>>> +		mutex_lock(&epc->lock);
+>>> +		aligned_phys = epc->ops->align_mem(epc, phys_addr, &size);
+>>> +		mutex_unlock(&epc->lock);
+>>> +	} else {
+>>> +		aligned_phys = phys_addr;
+>>> +	}
+>>> +
+>>> +	offset = phys_addr - aligned_phys;
+>>> +	aligned_virt = virt_addr - offset;
+>>> +
+>>>    	mutex_lock(&epc->lock);
+>>> -	epc->ops->unmap_addr(epc, func_no, vfunc_no, phys_addr);
+>>> +	epc->ops->unmap_addr(epc, func_no, vfunc_no, aligned_phys);
+>>>    	mutex_unlock(&epc->lock);
+>>> +
+>>> +	pci_epc_mem_free_addr(epc, aligned_phys, aligned_virt, size);
+>>>    }
+>>>    EXPORT_SYMBOL_GPL(pci_epc_unmap_addr);
+>>>    
+>>> @@ -458,26 +475,46 @@ EXPORT_SYMBOL_GPL(pci_epc_unmap_addr);
+>>>     *
+>>>     * Invoke to map CPU address with PCI address.
+>>>     */
+>>> -int pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>> -		     phys_addr_t phys_addr, u64 pci_addr, size_t size)
+>>> +void __iomem *pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>> +		u64 pci_addr, phys_addr_t *phys_addr, size_t size)
+>>>    {
+>>>    	int ret;
+>>> +	u64 aligned_addr;
+>>> +	size_t offset;
+>>> +	void __iomem *virt_addr;
+>>>    
+>>>    	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+>>> -		return -EINVAL;
+>>> +		return ERR_PTR(-EINVAL);
+>>>    
+>>>    	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+>>> -		return -EINVAL;
+>>> +		return ERR_PTR(-EINVAL);
+>>>    
+>>>    	if (!epc->ops->map_addr)
+>>> -		return 0;
+>>> +		return ERR_PTR(-ENOPTSUPP);
+>>> +
+>>> +	if (epc->ops->align_mem) {
+>>> +		mutex_lock(&epc->lock);
+>>> +		aligned_addr = epc->ops->align_mem(epc, pci_addr, &size);
+>>> +		mutex_unlock(&epc->lock);
+>>> +	} else {
+>>> +		aligned_addr = pci_addr;
+>>> +	}
+>>> +
+>>> +	offset = pci_addr - aligned_addr;
+>>> +
+>>> +	virt_addr = pci_epc_mem_alloc_addr(epc, phys_addr, size);
+>>> +	if (!virt_addr)
+>>> +		return ERR_PTR(-ENOMEM);
+>>>    
+>>>    	mutex_lock(&epc->lock);
+>>> -	ret = epc->ops->map_addr(epc, func_no, vfunc_no, phys_addr, pci_addr,
+>>> -				 size);
+>>> +	ret = epc->ops->map_addr(epc, func_no, vfunc_no, *phys_addr, aligned_addr, size);
+>>>    	mutex_unlock(&epc->lock);
+>>> +	if (ret)
+>>> +		return ERR_PTR(ret);
+>>>    
+>>> -	return ret;
+>>> +	*phys_addr += offset;
+>>> +
+>>> +	return virt_addr + offset;
+>>>    }
+>>>    EXPORT_SYMBOL_GPL(pci_epc_map_addr);
+>>>    
+>>> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+>>> index a48778e1a4ee..8f29161bce80 100644
+>>> --- a/include/linux/pci-epc.h
+>>> +++ b/include/linux/pci-epc.h
+>>> @@ -84,6 +84,7 @@ struct pci_epc_ops {
+>>>    			       phys_addr_t phys_addr, u8 interrupt_num,
+>>>    			       u32 entry_size, u32 *msi_data,
+>>>    			       u32 *msi_addr_offset);
+>>> +	u64	(*align_mem)(struct pci_epc *epc, u64 addr, size_t *size);
+>>>    	int	(*start)(struct pci_epc *epc);
+>>>    	void	(*stop)(struct pci_epc *epc);
+>>>    	const struct pci_epc_features* (*get_features)(struct pci_epc *epc,
+>>> @@ -218,11 +219,12 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>>    		    struct pci_epf_bar *epf_bar);
+>>>    void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>>    		       struct pci_epf_bar *epf_bar);
+>>> -int pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>> -		     phys_addr_t phys_addr,
+>>> -		     u64 pci_addr, size_t size);
+>>> +void __iomem *pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>> +			       u64 pci_addr, phys_addr_t *phys_addr,
+>>> +			       size_t size);
+>>>    void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>> -			phys_addr_t phys_addr);
+>>> +			phys_addr_t phys_addr, void __iomem *virt_addr,
+>>> +			size_t size);
+>>>    int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>>>    		    u8 interrupts);
+>>>    int pci_epc_get_msi(struct pci_epc *epc, u8 func_no, u8 vfunc_no);
 
-Who knows how to contact Intel’s driver developers for Microsoft Windows?
+Best regards,
 
-> Can Linux align with Windows?
+Shunsuke
 
-Before deciding this, the power usage in the different states should be 
-measured.
-
-
-Kind regards,
-
-Paul
