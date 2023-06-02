@@ -2,107 +2,149 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B8C2C7EE29
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFB59C7EE32
 	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 11:49:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235097AbjFBLtF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Jun 2023 07:49:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37180 "EHLO
+        id S235153AbjFBLtG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Jun 2023 07:49:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235184AbjFBLtB (ORCPT
+        with ESMTP id S235224AbjFBLtB (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 07:49:01 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9236F10C4;
-        Fri,  2 Jun 2023 04:48:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1685706511; x=1717242511;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=wuhMVA9R70dv8zCl7j+RyC0Woig16drv2hvDBVun3EM=;
-  b=DgcC+AbPeVQgxvi1LkAlD+MrTdAIzshgbqVGX7aFN2aqv3DrgPCjEKnS
-   M6D67aevqPUVi/4whyqDxL1u65kOfFZzxFUo2a57AjTzE5pkaDEbmkRJl
-   xco3Mvyg3gu0XcCQfiQn9S3mWOfzmkYHJrSnWva+Mn/9acx/9XEaNfj88
-   dmSYf/0VRwkd3tx5H8mKkggf+BRenPR2o7OKX68/dev4n8h1IRsotwB7U
-   dmDh8seUY6sqxZNidcxl3Ib3evxKqQrrrJaEDn5QEghDLF+JZuhbmrbtV
-   8j5gDlkAApxmge748cAvI2JCdLmqvrkB1NvflJiwGZmn5ewJSh3yKNcv6
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10728"; a="358279642"
-X-IronPort-AV: E=Sophos;i="6.00,212,1681196400"; 
-   d="scan'208";a="358279642"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2023 04:48:20 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10728"; a="707819423"
-X-IronPort-AV: E=Sophos;i="6.00,212,1681196400"; 
-   d="scan'208";a="707819423"
-Received: from rspatil-mobl3.gar.corp.intel.com (HELO ijarvine-MOBL2.ger.corp.intel.com) ([10.251.208.112])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2023 04:48:15 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org
-Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [RFC PATCH v1 03/13] PCI/ASPM: Improve pci_set_default_link_state() kerneldoc
-Date:   Fri,  2 Jun 2023 14:47:40 +0300
-Message-Id: <20230602114751.19671-4-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230602114751.19671-1-ilpo.jarvinen@linux.intel.com>
-References: <20230602114751.19671-1-ilpo.jarvinen@linux.intel.com>
+Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07F7910CA
+        for <linux-pci@vger.kernel.org>; Fri,  2 Jun 2023 04:48:31 -0700 (PDT)
+Received: by mail-ej1-x636.google.com with SMTP id a640c23a62f3a-96fab30d1e1so427262266b.0
+        for <linux-pci@vger.kernel.org>; Fri, 02 Jun 2023 04:48:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1685706511; x=1688298511;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Zqb+azKNXB55HXMybpmBlfsJ54xPwbKSsj/GKkm5OMs=;
+        b=CmDuMRPYvAeuG4xG1voNSkDADQ4mSy35RnYW8mibureiXJUAdvu5Cy5191oz2MB2Xp
+         A+9L6ziZqxZpLbFEbwsHaej1rbDIc5r5HYpnzHHKr6u12Hw/xA4Li7k6SKBdpmJ9KqED
+         ADJ3khYZIhGj5zBvTrS8F8v8yI0aaCmrMc6GT8J6qKfS0hZsWhsg172TaXBoUnjDsweA
+         Ct3IgNC2SBXX2B3WJ4AlFBCisJfI1TNDORzN7qRmYX/zel88Kz6KRH7V80ETyy443chQ
+         9YathxSaJn3eQn+nsQ2BPKRTZk0WT3A1pSmlYTiPvQerDsLUY0cbAlhB6FE7ANQfrnXZ
+         lcTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1685706511; x=1688298511;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Zqb+azKNXB55HXMybpmBlfsJ54xPwbKSsj/GKkm5OMs=;
+        b=Y0EMmlHdUHJxxXGpsaaQV/pLBzK1U7fU220XvKouIQsEEXPBVFGLdprSXDIxtN9dKg
+         Ny/Fup7AmFbyg8xuseDdneklH++9NYo9IoQQxZY9ODrDFh6LkacHMq4kH8K9xDZzGAYK
+         +qec6Dze+lluMWIqJpICA8SpKZL9h3PpYZ+WWSL1LMTf9BJyrJWHXb5bsYI0CQRx/GFv
+         4D5jnSEAF36EQrjvk1DYlH+q5NJwZ1Bu3mT3QvHGEFPa7YK278nN+N+NQsKOFGSJCmUU
+         dgEe6LEzCcVk91itPqcKB2V0jK5O/P0eepsln/XqfL194et+jawQuG8gFWZs7INZDxHc
+         GYDw==
+X-Gm-Message-State: AC+VfDyVIn06qZ71RGh8G7G7daN3SfuPSPQhaYk00FTV5nk0+rwbz6en
+        H+fdGj4jEJ7ss6pYP5me877T
+X-Google-Smtp-Source: ACHHUZ4dplUnJ2Tud7HGQSzoROiGmmBYfraoLDoPBVt48ClU40rqY8euFPInRMUXM/jWwRSenMceZw==
+X-Received: by 2002:a17:906:9756:b0:966:1bf2:2af5 with SMTP id o22-20020a170906975600b009661bf22af5mr4455612ejy.22.1685706511417;
+        Fri, 02 Jun 2023 04:48:31 -0700 (PDT)
+Received: from localhost.localdomain ([117.217.186.79])
+        by smtp.gmail.com with ESMTPSA id qu25-20020a170907111900b00974530bb44dsm658924ejb.183.2023.06.02.04.48.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 02 Jun 2023 04:48:31 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     lpieralisi@kernel.org, kw@linux.com
+Cc:     kishon@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        dlemoal@kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v6 4/9] PCI: endpoint: Add linkdown notifier support
+Date:   Fri,  2 Jun 2023 17:17:51 +0530
+Message-Id: <20230602114756.36586-5-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230602114756.36586-1-manivannan.sadhasivam@linaro.org>
+References: <20230602114756.36586-1-manivannan.sadhasivam@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Improve pci_set_default_link_state() documentation:
+Add support to notify the EPF device about the linkdown event from the
+EPC device.
 
-- Note the link state may get changed if the default policy is in use
-- Better follow kerneldoc formatting guidelines (separate description
-  block and return entries)
-
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Reviewed-by: Kishon Vijay Abraham I <kishon@kernel.org>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/pcie/aspm.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/pci/endpoint/pci-epc-core.c | 26 ++++++++++++++++++++++++++
+ include/linux/pci-epc.h             |  1 +
+ include/linux/pci-epf.h             |  2 ++
+ 3 files changed, 29 insertions(+)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 9fa8ab6eb7a4..33ee2b563a39 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -1157,14 +1157,18 @@ int pci_disable_link_state(struct pci_dev *pdev, int state)
- EXPORT_SYMBOL(pci_disable_link_state);
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 0cf602c83d4a..e0570b52698d 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -706,6 +706,32 @@ void pci_epc_linkup(struct pci_epc *epc)
+ }
+ EXPORT_SYMBOL_GPL(pci_epc_linkup);
+ 
++/**
++ * pci_epc_linkdown() - Notify the EPF device that EPC device has dropped the
++ *			connection with the Root Complex.
++ * @epc: the EPC device which has dropped the link with the host
++ *
++ * Invoke to Notify the EPF device that the EPC device has dropped the
++ * connection with the Root Complex.
++ */
++void pci_epc_linkdown(struct pci_epc *epc)
++{
++	struct pci_epf *epf;
++
++	if (!epc || IS_ERR(epc))
++		return;
++
++	mutex_lock(&epc->list_lock);
++	list_for_each_entry(epf, &epc->pci_epf, list) {
++		mutex_lock(&epf->lock);
++		if (epf->event_ops && epf->event_ops->link_down)
++			epf->event_ops->link_down(epf);
++		mutex_unlock(&epf->lock);
++	}
++	mutex_unlock(&epc->list_lock);
++}
++EXPORT_SYMBOL_GPL(pci_epc_linkdown);
++
+ /**
+  * pci_epc_init_notify() - Notify the EPF device that EPC device's core
+  *			   initialization is completed.
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 301bb0e53707..63a6cc5e5282 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -203,6 +203,7 @@ void pci_epc_destroy(struct pci_epc *epc);
+ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf,
+ 		    enum pci_epc_interface_type type);
+ void pci_epc_linkup(struct pci_epc *epc);
++void pci_epc_linkdown(struct pci_epc *epc);
+ void pci_epc_init_notify(struct pci_epc *epc);
+ void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf,
+ 			enum pci_epc_interface_type type);
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index bc613f0df7e3..f8e5a63d0c83 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -71,10 +71,12 @@ struct pci_epf_ops {
+  * struct pci_epf_event_ops - Callbacks for capturing the EPC events
+  * @core_init: Callback for the EPC initialization complete event
+  * @link_up: Callback for the EPC link up event
++ * @link_down: Callback for the EPC link down event
+  */
+ struct pci_epc_event_ops {
+ 	int (*core_init)(struct pci_epf *epf);
+ 	int (*link_up)(struct pci_epf *epf);
++	int (*link_down)(struct pci_epf *epf);
+ };
  
  /**
-- * pci_set_default_link_state - Clear and set the default device link state so
-- * that the link may be allowed to enter the specified states. Note that if the
-- * BIOS didn't grant ASPM control to the OS, this does nothing because we can't
-- * touch the LNKCTL register. Also note that this does not enable states
-- * disabled by pci_disable_link_state(). Return 0 or a negative errno.
-- *
-+ * pci_set_default_link_state - Set the default device link state
-  * @pdev: PCI device
-  * @state: Mask of ASPM link states to enable
-+ *
-+ * Clear and set the default device link state so that the link may be
-+ * allowed to enter the specified states. If the default policy is in use,
-+ * the link state may also be updated to reflect the new default link state.
-+ * Note that if the BIOS didn't grant ASPM control to the OS, this does
-+ * nothing because we can't touch the LNKCTL register. Also note that this
-+ * does not enable states disabled by pci_disable_link_state().
-+ *
-+ * Return: 0 or a negative errno.
-  */
- int pci_set_default_link_state(struct pci_dev *pdev, int state)
- {
 -- 
-2.30.2
+2.25.1
 
