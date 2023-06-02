@@ -2,152 +2,297 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83140C77B7A
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 12:37:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5E0EC7EE24
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Jun 2023 13:07:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234692AbjFBMhr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Jun 2023 08:37:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40936 "EHLO
+        id S235843AbjFBNHc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Jun 2023 09:07:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234769AbjFBMhi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 08:37:38 -0400
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2079.outbound.protection.outlook.com [40.107.95.79])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC93913D;
-        Fri,  2 Jun 2023 05:37:37 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=L8gCmxCP5gi3sKimzXdOeKQhHbF8ZK2+XlraAYa28h1lTVqoeWTP/T0VNFKRwx45QSkFmBfWF8v+0rmJC2MwCEaCsH8WCcZDk8jS8LQG8eB2ebwFSeYgjr9NTyXmnEwlSKJytE4/ipGZJP/E6G3CRnhEZItyE0IxUdKbS+uw4I4x0Qst27cQ2/xdQDCKNdSO4FFTQZBx+aJLvdHgVZG3dmMVERNtsELNgOmJJENfT3Lu4j3SkUIhBVtqDOveaHmx2PVAzqpzNpjof4e+XzgON1A3BZrHIU4cxpMypo30Sd95rT1EYKAHR8d6wEaeSqbu/fNFTGBNAsEWgi5ntJ8YAQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=r/eZbnDVbXzjBr2zEuM/T2tm7tpG4IDORP5Lxfj6QEk=;
- b=ic8uJ0P0vCA+++WU3YLe6X3ETX3/WgQzxLbFaCQnuxpgffHYo3w8Ox6Nb+7oNJSg8np2UarQ9P+qVU3OkV+2t7ocjb01+ZSZOm34dgeZiViWOJUnh65Ev64wtsBqvluG73jKDCZIpq50/mVxHDpBEDlEQlkK0AgmAPliib+zVe1XYIrP+6wk4AL2NHmStXWl1cSkC6TikcVbizgMT2+iE8JxPcLwbiP5E9VxDi6peAmgySZc+q+PhUSbCmN7BN9ruW0NKOb2SBZDY0Bj1smqRnG0P8ismYwKToNt0+8iKxClJWYbK6/8k1h0UW95ZdlKm/7U9Hs7O1zwYprUBRxs9w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r/eZbnDVbXzjBr2zEuM/T2tm7tpG4IDORP5Lxfj6QEk=;
- b=dPSrrH9YO9ZBpUrZzSJlxQkxwX/2jYOIEkKRVvPtzj1dEcgLbVz5vJANCORHogBwsdmx2HmbbCkqlfz3yJg6CiHitN5CaTd70sOApOvlDIuDvlyob/Jb67yPpekfM+ShFSwYoq8U9f/suF879zkaVUklOFRb5VeBDYKwLRNVW2M=
-Received: from SJ0PR05CA0008.namprd05.prod.outlook.com (2603:10b6:a03:33b::13)
- by CH2PR12MB4231.namprd12.prod.outlook.com (2603:10b6:610:7d::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6455.24; Fri, 2 Jun
- 2023 12:37:32 +0000
-Received: from CO1NAM11FT051.eop-nam11.prod.protection.outlook.com
- (2603:10b6:a03:33b:cafe::f9) by SJ0PR05CA0008.outlook.office365.com
- (2603:10b6:a03:33b::13) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6477.9 via Frontend
- Transport; Fri, 2 Jun 2023 12:37:32 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1NAM11FT051.mail.protection.outlook.com (10.13.174.114) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6455.27 via Frontend Transport; Fri, 2 Jun 2023 12:37:31 +0000
-Received: from SITE-L-T34-2.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.34; Fri, 2 Jun
- 2023 07:37:30 -0500
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     <bhelgaas@google.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Mario Limonciello" <mario.limonciello@amd.com>
-Subject: [PATCH] PCI: Call _REG when saving/restoring PCI state
-Date:   Thu, 1 Jun 2023 22:11:22 -0500
-Message-ID: <20230602031122.18350-1-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S235464AbjFBNHb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2023 09:07:31 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3B58E40;
+        Fri,  2 Jun 2023 06:07:25 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1q54Uy-0000CX-Jv; Fri, 02 Jun 2023 15:07:20 +0200
+Message-ID: <c7da7095-7d68-c65b-daf8-7eee43b79d53@leemhuis.info>
+Date:   Fri, 2 Jun 2023 15:07:19 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.10.0
+Subject: Re: [regression] Bug 217218 - Trying to boot Linux version 6-2.2
+ kernel with Marvell SATA controller 88SE9235
+Content-Language: en-US, de-DE
+From:   Thorsten Leemhuis <regressions@leemhuis.info>
+To:     Robin Murphy <robin.murphy@arm.com>,
+        Linux regressions mailing list <regressions@lists.linux.dev>,
+        Jason Adriaanse <jason_a69@yahoo.co.uk>, hch@lst.de,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     baolu.lu@linux.intel.com, iommu@lists.linux.dev,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+References: <20230416065503.GB6410@lst.de>
+ <fc9f4cef-9426-c9d2-3c2c-3ce12fe5f6c3@yahoo.co.uk>
+ <5f37b0b0-6cb5-b210-a894-d1e91976126e@arm.com>
+ <2a699a99-545c-1324-e052-7d2f41fed1ae@yahoo.co.uk>
+ <07ee0cf7-a5c2-f87a-d627-8dd8fb082345@arm.com>
+ <9648f668-a3bc-3296-71d1-c91cd4c9980e@yahoo.co.uk>
+ <1539e760-392f-a33e-436e-bbf043e79bfc@arm.com>
+ <14f2b1ab-2c7c-fa4d-5854-3df08ac9feef@yahoo.co.uk>
+ <1928df45-7b56-a8a4-21b5-22e5d8ef95eb@leemhuis.info>
+ <9b602abc-37e9-f236-37ee-71bcf1b7ce66@arm.com>
+ <211f3938-2f93-cad7-a92b-821d3ac45b9e@leemhuis.info>
+In-Reply-To: <211f3938-2f93-cad7-a92b-821d3ac45b9e@leemhuis.info>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1NAM11FT051:EE_|CH2PR12MB4231:EE_
-X-MS-Office365-Filtering-Correlation-Id: ec80ad4a-dfb2-4a38-eb87-08db6366224d
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: eko2wRYexRCNNxDvxLOJpAuQ7vKh4LnuXOi/ncOJcJXECNCXziIfK6KwDnDMPOEaXOC8IXA/k4eOmDR+nr0zG4XrSwqkh7k4XFoKvAOSykeEer2z7t5j3JjTR7KaULAcoeny4G3qnYh/PdrvtXpXeVhB50BWpyjCNVxWQDroXMmE+1vYHD/igi2Zqo3J5ns23GNtibOZctbm23940BlpAyP8vMMbds+7/G/I1sHEMZsDtAPnBmzf7YMI9ToC3so/zYfaDNY+LebGdtBD05wod9s8vt7zllmB733AK7Cp4ixV1MfkOiqzM+hb6Lqc22R6EAF/Y3iJiJvCui5rMBntmSeSf7GNnzJVZiXGOYKgtpSSXkchIIZXdwiazdKtAm6Xfo8s0QuO2Qcry682Hvqd9CkSnk3kyV2JF90yCSNkwlJtSIF7OY2gLIjXe0AqPDN10VG4ZzyGQJDPwIu/54i1n4w7knUuTVEwnT1QVQRzrV1xuuP6sMI4HhRnrxTlg8OTTYxLkSrygxD2Slf9cgBmXW5IBudPlqHARbu7ya8ImsgN/BfGg4FPkOJCwZHjllag8yHiwW/Kd3jNVw4l0uQk4tENxoKshRD6VmrbNFSuDkkz7s+6xjG7bNHb35DzD2BMN9AI7JIf5i86cBChX/A1DNT9Dvzx1lTiFUXrWvUwdJM9IFCyzPtcV0UpHa4X2HptTGUN1QbfG3ycoo+IoWzjw2v8aq7af/Z5Y+K57b0iTBIbNV3HDuwjg+SGy2LqK+7vPJo1O+UdP1nEkXqn6H1Xk9CidgLiyFe00pUHxftblwY=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(136003)(346002)(376002)(39860400002)(396003)(451199021)(40470700004)(46966006)(36840700001)(82740400003)(82310400005)(356005)(81166007)(40460700003)(40480700001)(86362001)(70206006)(54906003)(6916009)(70586007)(4326008)(36756003)(7696005)(6666004)(966005)(478600001)(16526019)(1076003)(186003)(26005)(5660300002)(8936002)(2906002)(8676002)(316002)(44832011)(2616005)(47076005)(36860700001)(336012)(426003)(41300700001)(83380400001)(21314003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2023 12:37:31.4840
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ec80ad4a-dfb2-4a38-eb87-08db6366224d
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT051.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR12MB4231
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1685711246;3491e0ec;
+X-HE-SMSGID: 1q54Uy-0000CX-Jv
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-ASMedia PCIe GPIO controllers connected to AMD SOC fail functional tests
-after returning from s2idle. This is because the BIOS checks whether the
-OSPM has called the _REG method to determine whether it can interact with
-the OperationRegion assigned to the device.
+Christoph, could you do me a favor and...
 
-To fix this issue, call acpi_evaluate_reg() when saving and restoring the
-state of PCI devices.
+On 22.05.23 13:33, Linux regression tracking (Thorsten Leemhuis) wrote:
+> On 22.05.23 13:01, Robin Murphy wrote:
+>> On 2023-05-22 11:26, Linux regression tracking (Thorsten Leemhuis) wrote:
+>>>
+>>> I might be missing something, but it looks to me like this regression
+>>> was never fixed in mainline. Which is strange, as we apparently had a
+>>> patch from Robin that fixed the issue for the reporter.
+>>>
+>>> Did it fall through the cracks or what am I missing?
+>>
+>> Strictly, the regression itself has not been fixed - I guess it does
+>> just about qualify since the rather-out-of-date
+>> Documentation/arch/x86/x86_64/boot-options.rst does still say that
+>> iommu=soft "can be used to prevent the usage of an available hardware
+>> IOMMU", and that seems to be what has stopped happening here.
+>>
+>> What it exposed was a latent issue that this particular device has never
+>> been properly supported for use with an IOMMU, and that's what I guessed
+>> at a fix for.
+> 
+> Thx for the summary. This sounds a lot like you have no interest in
+> submitting the quirk entry yourself (please correct me if I'm wrong).
+> Jason from looking at lore doesn't seem to be involved in kernel
+> development regularly. And I try to stay out of such waters as well, as
+> I try to draw a line there. Which leads to the question:
+> 
+> Who will now submit the quirk entry?
+> 
+> From "git blame" it seems Bjorn and Alex added most of the other quirk
+> entries for the marvel controllers (both CCed now). Could one of you add
+> this one that Ron suggested in [1] as well?
 
-Link: https://uefi.org/htmlspecs/ACPI_Spec_6_4_html/06_Device_Configuration/Device_Configuration.html#reg-region
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
- drivers/pci/pci.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+...submit that quirk, as Bjorn and Alex apparently didn't pick this up?
+I could do so myself, but prefer to leave that to people that actually
+known what they are doing -- and thus can also handle problems later, in
+case any show up. And strictly speaking it apparently was you who caused
+this regression with 78013eaadf6 ("x86: remove the IOMMU table
+infrastructure").
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e38c2f6eebd4..071ecba548b0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1068,6 +1068,12 @@ static inline bool platform_pci_bridge_d3(struct pci_dev *dev)
- 	return acpi_pci_bridge_d3(dev);
- }
- 
-+static inline int platform_toggle_reg(struct pci_dev *dev, int c)
-+{
-+	return acpi_evaluate_reg(ACPI_HANDLE(&dev->dev),
-+				 ACPI_ADR_SPACE_PCI_CONFIG, c);
-+}
-+
- /**
-  * pci_update_current_state - Read power state of given device and cache it
-  * @dev: PCI device to handle.
-@@ -1645,6 +1651,9 @@ static void pci_restore_ltr_state(struct pci_dev *dev)
- int pci_save_state(struct pci_dev *dev)
- {
- 	int i;
-+
-+	platform_toggle_reg(dev, ACPI_REG_DISCONNECT);
-+
- 	/* XXX: 100% dword access ok here? */
- 	for (i = 0; i < 16; i++) {
- 		pci_read_config_dword(dev, i * 4, &dev->saved_config_space[i]);
-@@ -1790,6 +1799,8 @@ void pci_restore_state(struct pci_dev *dev)
- 	pci_enable_acs(dev);
- 	pci_restore_iov_state(dev);
- 
-+	platform_toggle_reg(dev, ACPI_REG_CONNECT);
-+
- 	dev->state_saved = false;
- }
- EXPORT_SYMBOL(pci_restore_state);
-@@ -3203,6 +3214,7 @@ void pci_pm_init(struct pci_dev *dev)
- 	pci_read_config_word(dev, PCI_STATUS, &status);
- 	if (status & PCI_STATUS_IMM_READY)
- 		dev->imm_ready = 1;
-+	platform_toggle_reg(dev, ACPI_REG_CONNECT);
- }
- 
- static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
--- 
-2.34.1
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+If I did something stupid, please tell me, as explained on that page.
 
+#regzbot poke
+
+> /me wonders if they'd need a "Signed-off-by" from Ron for a one-liner
+> that is mainly copy-n-paste
+> 
+> Ciao, Thorsten
+> 
+> [1]
+> https://lore.kernel.org/all/1539e760-392f-a33e-436e-bbf043e79bfc@arm.com/
+> 
+>>> On 25.04.23 15:58, Jason Adriaanse wrote:
+>>>> I am happy to report that the change worked, this is what
+>>>> drivers/pci/quirks.c looks like
+>>>>
+>>>> /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
+>>>> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
+>>>>                           quirk_dma_func1_alias);
+>>>> /* https://bugzilla.kernel.org/show_bug.cgi?id=217218 */
+>>>> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9235,
+>>>>                           quirk_dma_func1_alias);
+>>>> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
+>>>>                           quirk_dma_func1_alias);
+>>>>
+>>>> Relevant output of dmesg -T with the new kernel running
+>>>>
+>>>> Tue Apr 25 21:45:13 2023] scsi host0: ahci
+>>>> [Tue Apr 25 21:45:13 2023] scsi host1: ahci
+>>>> [Tue Apr 25 21:45:13 2023] scsi host2: ahci
+>>>> [Tue Apr 25 21:45:13 2023] scsi host3: ahci
+>>>> [Tue Apr 25 21:45:13 2023] ata1: SATA max UDMA/133 abar m2048@0xf7d06000
+>>>> port 0xf7d06100 irq 40
+>>>> [Tue Apr 25 21:45:13 2023] ata2: SATA max UDMA/133 abar m2048@0xf7d06000
+>>>> port 0xf7d06180 irq 40
+>>>> [Tue Apr 25 21:45:13 2023] ata3: DUMMY
+>>>> [Tue Apr 25 21:45:13 2023] ata4: DUMMY
+>>>> [Tue Apr 25 21:45:13 2023] igb 0000:05:00.0 enp5s0: renamed from eth0
+>>>> [Tue Apr 25 21:45:13 2023] ahci 0000:07:00.0: AHCI 0001.0000 32 slots 4
+>>>> ports 6 Gbps 0xf impl SATA mode
+>>>> [Tue Apr 25 21:45:13 2023] ahci 0000:07:00.0: flags: 64bit ncq sntf led
+>>>> only pmp fbs pio slum part sxs
+>>>> [Tue Apr 25 21:45:13 2023] scsi host4: ahci
+>>>> [Tue Apr 25 21:45:13 2023] scsi host5: ahci
+>>>> [Tue Apr 25 21:45:13 2023] scsi host6: ahci
+>>>> [Tue Apr 25 21:45:13 2023] scsi host7: ahci
+>>>> [Tue Apr 25 21:45:13 2023] ata5: SATA max UDMA/133 abar m2048@0xf7b10000
+>>>> port 0xf7b10100 irq 41
+>>>> [Tue Apr 25 21:45:13 2023] ata6: SATA max UDMA/133 abar m2048@0xf7b10000
+>>>> port 0xf7b10180 irq 41
+>>>> [Tue Apr 25 21:45:13 2023] ata7: SATA max UDMA/133 abar m2048@0xf7b10000
+>>>> port 0xf7b10200 irq 41
+>>>> [Tue Apr 25 21:45:13 2023] ata8: SATA max UDMA/133 abar m2048@0xf7b10000
+>>>> port 0xf7b10280 irq 41
+>>>> [Tue Apr 25 21:45:13 2023] usb 1-1: new high-speed USB device number 2
+>>>> using ehci-pci
+>>>> [Tue Apr 25 21:45:14 2023] usb 3-1: new high-speed USB device number 2
+>>>> using ehci-pci
+>>>> [Tue Apr 25 21:45:14 2023] ata8: SATA link up 6.0 Gbps (SStatus 133
+>>>> SControl 300)
+>>>> [Tue Apr 25 21:45:14 2023] ata6: SATA link up 6.0 Gbps (SStatus 133
+>>>> SControl 300)
+>>>> [Tue Apr 25 21:45:14 2023] ata7: SATA link up 6.0 Gbps (SStatus 133
+>>>> SControl 300)
+>>>> [Tue Apr 25 21:45:14 2023] ata5: SATA link up 6.0 Gbps (SStatus 133
+>>>> SControl 300)
+>>>> [Tue Apr 25 21:45:14 2023] ata7.00: ATA-9: WDC WD40EFRX-68WT0N0,
+>>>> 80.00A80, max UDMA/133
+>>>> [Tue Apr 25 21:45:14 2023] ata6.00: ATA-9: WDC WD40EFRX-68WT0N0,
+>>>> 80.00A80, max UDMA/133
+>>>> [Tue Apr 25 21:45:14 2023] ata8.00: ATA-9: WDC WD40EFRX-68WT0N0,
+>>>> 80.00A80, max UDMA/133
+>>>> [Tue Apr 25 21:45:14 2023] ata5.00: ATA-10: CT2000BX500SSD1, M6CR030,
+>>>> max UDMA/133
+>>>> [Tue Apr 25 21:45:14 2023] ata6.00: 7814037168 sectors, multi 0: LBA48
+>>>> NCQ (depth 32), AA
+>>>> [Tue Apr 25 21:45:14 2023] ata7.00: 7814037168 sectors, multi 0: LBA48
+>>>> NCQ (depth 32), AA
+>>>> [Tue Apr 25 21:45:14 2023] ata8.00: 7814037168 sectors, multi 0: LBA48
+>>>> NCQ (depth 32), AA
+>>>> [Tue Apr 25 21:45:14 2023] ata5.00: 3907029168 sectors, multi 1: LBA48
+>>>> NCQ (depth 32), AA
+>>>> [Tue Apr 25 21:45:14 2023] ata6.00: configured for UDMA/133
+>>>> [Tue Apr 25 21:45:14 2023] ata7.00: configured for UDMA/133
+>>>> [Tue Apr 25 21:45:14 2023] ata8.00: configured for UDMA/133
+>>>> [Tue Apr 25 21:45:14 2023] ata1: SATA link down (SStatus 0 SControl 300)
+>>>> [Tue Apr 25 21:45:14 2023] ata5.00: Features: Dev-Sleep
+>>>> [Tue Apr 25 21:45:14 2023] ata5.00: configured for UDMA/133
+>>>> [Tue Apr 25 21:45:14 2023] usb 1-1: New USB device found, idVendor=8087,
+>>>> idProduct=0024, bcdDevice= 0.00
+>>>> [Tue Apr 25 21:45:14 2023] usb 1-1: New USB device strings: Mfr=0,
+>>>> Product=0, SerialNumber=0
+>>>> [Tue Apr 25 21:45:14 2023] hub 1-1:1.0: USB hub found
+>>>> [Tue Apr 25 21:45:14 2023] hub 1-1:1.0: 4 ports detected
+>>>> [Tue Apr 25 21:45:14 2023] usb 3-1: New USB device found, idVendor=8087,
+>>>> idProduct=0024, bcdDevice= 0.00
+>>>> [Tue Apr 25 21:45:14 2023] usb 3-1: New USB device strings: Mfr=0,
+>>>> Product=0, SerialNumber=0
+>>>> [Tue Apr 25 21:45:14 2023] hub 3-1:1.0: USB hub found
+>>>> [Tue Apr 25 21:45:14 2023] hub 3-1:1.0: 6 ports detected
+>>>> [Tue Apr 25 21:45:14 2023] ata2: SATA link down (SStatus 0 SControl 300)
+>>>> [Tue Apr 25 21:45:14 2023] scsi 4:0:0:0: Direct-Access ATA
+>>>> CT2000BX500SSD1  030  PQ: 0 ANSI: 5
+>>>> [Tue Apr 25 21:45:14 2023] scsi 5:0:0:0: Direct-Access ATA      WDC
+>>>> WD40EFRX-68W 0A80 PQ: 0 ANSI: 5
+>>>> [Tue Apr 25 21:45:14 2023] scsi 6:0:0:0: Direct-Access ATA      WDC
+>>>> WD40EFRX-68W 0A80 PQ: 0 ANSI: 5
+>>>> [Tue Apr 25 21:45:14 2023] scsi 7:0:0:0: Direct-Access ATA      WDC
+>>>> WD40EFRX-68W 0A80 PQ: 0 ANSI: 5
+>>>>
+>>>> Thanks everyone for all your help.
+>>>>
+>>>> Jason
+>>>>
+>>>>
+>>>> On 25/04/2023 19:37, Robin Murphy wrote:
+>>>>> On 2023-04-25 05:17, Jason Adriaanse wrote:
+>>>>>> Ok great,
+>>>>>>
+>>>>>> I take it a change needs to be made in
+>>>>>> drivers/pci/quirks.c
+>>>>>> ?
+>>>>>> I do not mind making the change locally here and letting you know if
+>>>>>> it works or not.
+>>>>>
+>>>>> Indeed, something like this (make sure the IDs actually match what your
+>>>>> device reports, I'm just guessing):
+>>>>>
+>>>>>
+>>>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>>>> index 44cab813bf95..a9166e886b75 100644
+>>>>> --- a/drivers/pci/quirks.c
+>>>>> +++ b/drivers/pci/quirks.c
+>>>>> @@ -4161,6 +4161,8 @@
+>>>>> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9220,
+>>>>>   /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c49 */
+>>>>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9230,
+>>>>>                quirk_dma_func1_alias);
+>>>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9235,
+>>>>> +             quirk_dma_func1_alias);
+>>>>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
+>>>>>                quirk_dma_func1_alias);
+>>>>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0645,
+>>>>>
+>>>>>
+>>>>> Marvell themselves seem to lump the 88SE92xx products together as a
+>>>>> closely-related family, so given that we do have quirks for 3 of the 4
+>>>>> already, this one does rather seem conspicuous by its absence...
+>>>>>
+>>>>> Thanks,
+>>>>> Robin.
+>>>>>
+>>>>>> On 24/04/2023 22:07, Robin Murphy wrote:
+>>>>>>> On 2023-04-24 14:44, Jason Adriaanse wrote:
+>>>>>>>> I took out "iommu=soft" and the server failed to boot, so yes it
+>>>>>>>> does break.
+>>>>>>>>
+>>>>>>>> The first error was
+>>>>>>>> ata7.00: Failed to IDENTIFY (INIT_DEV_PARAMS failed , err_mask=0x80)
+>>>>>>>
+>>>>>>> OK, great, that confirms the underlying issue existed all along, so
+>>>>>>> the regression is only a change in who wins a fight between certain
+>>>>>>> conflicting command-line arguments, which is arguably not so
+>>>>>>> critical.
+>>>>>>>
+>>>>>>> The rest of the evidence points to 88SE9235 wanting the same phantom
+>>>>>>> function quirk as most other Marvell controllers, since although
+>>>>>>> it's apparently been half-fixed such that DMA for two of the ports
+>>>>>>> is being correctly emitted from function 0 - given that you say two
+>>>>>>> of the disks *are* detected OK - the other two are still claiming to
+>>>>>>> be function 1 after all.
+>>>>>>>
+>>>>>>> Thanks,
+>>>>>>> Robin.
+>>>>>>>
+>>>>>>>> On 24/04/2023 21:20, Robin Murphy wrote:
+>>>>>>>>> On 2023-04-22 07:25, Jason Adriaanse wrote:
+>>>>>>>>>> Hi Christoph,
+>>>>>>>>>>
+>>>>>>>>>> Sorry for my late reply, I have been on the road.
+>>>>>>>>>>
+>>>>>>>>>> So, if I boot with
+>>>>>>>>>> intel_iommu=off
+>>>>>>>>>> Then the server boots fine..although that is not a solution
+>>>>>>>>>> because I need Intel iommu for virtualisation.
+>>>>>>>>>>
+>>>>>>>>>> Also, I build all my kernels with CONFIG_INTEL_IOMMU=y
+>>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> If you boot 5.15 *without* the "iommu=soft" argument, just
+>>>>>>>>> "intel_iommu=on", does that also break?
+>>>>>>>>>
+>>>>>>>>> Robin.
+>>>>
+>>>>
+>>
+>>
