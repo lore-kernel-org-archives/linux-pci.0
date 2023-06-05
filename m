@@ -2,246 +2,111 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C3ECC7EE2A
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Jun 2023 11:57:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E368AC7EE2A
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Jun 2023 12:02:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233110AbjFEL5z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Jun 2023 07:57:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37662 "EHLO
+        id S233212AbjFEMC1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Jun 2023 08:02:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233088AbjFEL5y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2023 07:57:54 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92C07DF
-        for <linux-pci@vger.kernel.org>; Mon,  5 Jun 2023 04:57:52 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1b041cceb16so40707895ad.2
-        for <linux-pci@vger.kernel.org>; Mon, 05 Jun 2023 04:57:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1685966272; x=1688558272;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=gouN0vd5luN8i9wXHezxl1lZ6vDwVZF4YFz6F585j8Y=;
-        b=sT46klF8oPWNCSa4tYk8NZg2AHnz7f5S6Qrc+YUQyeCMf4+wrktgvPVZn98ZfSxjzD
-         eODX6w96HN8Gbh/o5SQb528EcyO1nFLywQPOvBviBw03Q5vL11+SG50At4MQpeflGSVf
-         gWO3d3xj20zKPTjzX4MqiMKx+09WONcrPqJuwgAx1CRd48p/QYTK+36fWHTYhnesSesc
-         erQ93d9oM6wAtcHhDZE+wASrbFRHMxQAWo4PP3+QjQBX7rgP5u1XYSE77UgVg7pUYzFU
-         vJ0LDZbvN/T4BGpBbPz5ixl1IwG/x7Fz1Gz6NxIrwPzIVBJBsURER6y1HjXQ/y5Op0FZ
-         lW5g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1685966272; x=1688558272;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=gouN0vd5luN8i9wXHezxl1lZ6vDwVZF4YFz6F585j8Y=;
-        b=go1+FbxYAVRYVCUXxc6007WcN+xe/TiCPUfIeDt0PAxn//XLZS4yu86lDtnWlMRSpP
-         J0Y6kFpT3w71zLR4xP1KJiptQXsylhJVOvUgJYaVljRHiO+UmtnXGkVaexwJ94j75qS+
-         8RQvxwWMsdBk7qtIKwdk2pZFOYM7iJy9wfVPziYzpeQUrq3wSFtuHeCro8ZCvJb3Lubo
-         HoqDVGlplKRQn7SF/p3mUCWUQfwONICxTx8v53pkUXlai2L8JUc1KFnUQdl3JOMYOVwE
-         ef/jA9izEkIaUf4QxBd+ZgNRuY/0QuVY0XzFBqQJDtOXPQKgfDsB2w2q2XSTfaJ4hmia
-         LBEw==
-X-Gm-Message-State: AC+VfDyLUDAC7Gr47tEW9S/smCNxe3ZANgoAiUev8M2U5J1Q9wnV9NUz
-        OgUYV8sTE3Njw9vy9wm3OtnM
-X-Google-Smtp-Source: ACHHUZ5W0Z8gQGBJ0iFzTR48CtwbHP4eM7wjSQDBRc0my5cbJYSwmnyjts94N8DkAgx5RE5bvqaMpA==
-X-Received: by 2002:a17:902:788c:b0:1af:babd:7b84 with SMTP id q12-20020a170902788c00b001afbabd7b84mr6300792pll.41.1685966271931;
-        Mon, 05 Jun 2023 04:57:51 -0700 (PDT)
-Received: from thinkpad ([120.138.12.115])
-        by smtp.gmail.com with ESMTPSA id jh1-20020a170903328100b001a6cd1e4205sm6404072plb.279.2023.06.05.04.57.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jun 2023 04:57:51 -0700 (PDT)
-Date:   Mon, 5 Jun 2023 17:27:46 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc:     kw@linux.com, kishon@kernel.org, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, dlemoal@kernel.org
-Subject: Re: [PATCH v6 2/9] PCI: endpoint: Pass EPF device ID to the probe
- function
-Message-ID: <20230605115746.GD5536@thinkpad>
-References: <20230602114756.36586-1-manivannan.sadhasivam@linaro.org>
- <20230602114756.36586-3-manivannan.sadhasivam@linaro.org>
- <ZH2qbS1I25lIMOPi@lpieralisi>
+        with ESMTP id S233190AbjFEMCW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2023 08:02:22 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C3CE92
+        for <linux-pci@vger.kernel.org>; Mon,  5 Jun 2023 05:02:21 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1q68uP-0000Yl-Je; Mon, 05 Jun 2023 14:02:01 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1q68uN-005GF8-Fp; Mon, 05 Jun 2023 14:01:59 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1q68uM-00BNcb-R6; Mon, 05 Jun 2023 14:01:58 +0200
+Date:   Mon, 5 Jun 2023 14:01:51 +0200
+From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To:     Wolfram Sang <wsa@kernel.org>,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-pci@vger.kernel.org, Arnd Bergmann <arnd@kernel.org>,
+        linux-i2c@vger.kernel.org
+Subject: Re: [PATCH v4 11/41] i2c: add HAS_IOPORT dependencies
+Message-ID: <20230605120151.qpoe5ordzdvxmqv7@pengutronix.de>
+References: <20230516110038.2413224-1-schnelle@linux.ibm.com>
+ <20230516110038.2413224-12-schnelle@linux.ibm.com>
+ <ZH21E3Obp+YPJHkl@shikoro>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="rrjpp6upncpe45z2"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZH2qbS1I25lIMOPi@lpieralisi>
+In-Reply-To: <ZH21E3Obp+YPJHkl@shikoro>
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 05, 2023 at 11:27:09AM +0200, Lorenzo Pieralisi wrote:
-> On Fri, Jun 02, 2023 at 05:17:49PM +0530, Manivannan Sadhasivam wrote:
-> > Currently, the EPF probe function doesn't get the device ID argument needed
-> > to correctly identify the device table ID of the EPF device.
-> > 
-> > When multiple entries are added to the "struct pci_epf_device_id" table,
-> > the probe function needs to identify the correct one. This is achieved by
-> > modifying the pci_epf_match_id() function to return the match ID pointer
-> > and passing it to the driver's probe function.
-> > 
-> > pci_epf_device_match() function can return bool based on the return value
-> > of pci_epf_match_id().
-> > 
-> > Reviewed-by: Kishon Vijay Abraham I <kishon@kernel.org>
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > ---
-> >  drivers/pci/endpoint/functions/pci-epf-ntb.c  |  3 ++-
-> >  drivers/pci/endpoint/functions/pci-epf-test.c |  2 +-
-> >  drivers/pci/endpoint/functions/pci-epf-vntb.c |  2 +-
-> >  drivers/pci/endpoint/pci-epf-core.c           | 18 +++++++++++-------
-> >  include/linux/pci-epf.h                       |  4 +++-
-> >  5 files changed, 18 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/drivers/pci/endpoint/functions/pci-epf-ntb.c b/drivers/pci/endpoint/functions/pci-epf-ntb.c
-> > index 9a00448c7e61..980b4ecf19a2 100644
-> > --- a/drivers/pci/endpoint/functions/pci-epf-ntb.c
-> > +++ b/drivers/pci/endpoint/functions/pci-epf-ntb.c
-> > @@ -2075,11 +2075,12 @@ static struct config_group *epf_ntb_add_cfs(struct pci_epf *epf,
-> >  /**
-> >   * epf_ntb_probe() - Probe NTB function driver
-> >   * @epf: NTB endpoint function device
-> > + * @id: NTB endpoint function device ID
-> >   *
-> >   * Probe NTB function driver when endpoint function bus detects a NTB
-> >   * endpoint function.
-> >   */
-> > -static int epf_ntb_probe(struct pci_epf *epf)
-> > +static int epf_ntb_probe(struct pci_epf *epf, const struct pci_epf_device_id *id)
-> >  {
-> >  	struct epf_ntb *ntb;
-> >  	struct device *dev;
-> > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> > index 0f9d2ec822ac..d5fcc78a5b73 100644
-> > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> > @@ -980,7 +980,7 @@ static const struct pci_epf_device_id pci_epf_test_ids[] = {
-> >  	{},
-> >  };
-> >  
-> > -static int pci_epf_test_probe(struct pci_epf *epf)
-> > +static int pci_epf_test_probe(struct pci_epf *epf, const struct pci_epf_device_id *id)
-> >  {
-> >  	struct pci_epf_test *epf_test;
-> >  	struct device *dev = &epf->dev;
-> > diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> > index b7c7a8af99f4..122eb7a12028 100644
-> > --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> > +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
-> > @@ -1401,7 +1401,7 @@ static struct pci_epf_ops epf_ntb_ops = {
-> >   *
-> >   * Returns: Zero for success, or an error code in case of failure
-> >   */
-> > -static int epf_ntb_probe(struct pci_epf *epf)
-> > +static int epf_ntb_probe(struct pci_epf *epf, const struct pci_epf_device_id *id)
-> >  {
-> >  	struct epf_ntb *ntb;
-> >  	struct device *dev;
-> > diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-> > index 2036e38be093..ea6e0aef0bb3 100644
-> > --- a/drivers/pci/endpoint/pci-epf-core.c
-> > +++ b/drivers/pci/endpoint/pci-epf-core.c
-> > @@ -493,16 +493,16 @@ static const struct device_type pci_epf_type = {
-> >  	.release	= pci_epf_dev_release,
-> >  };
-> >  
-> > -static int
-> > -pci_epf_match_id(const struct pci_epf_device_id *id, const struct pci_epf *epf)
-> > +static const struct pci_epf_device_id
-> > +*pci_epf_match_id(const struct pci_epf_device_id *id, const struct pci_epf *epf)
-> >  {
-> >  	while (id->name[0]) {
-> >  		if (strcmp(epf->name, id->name) == 0)
-> > -			return true;
-> > +			return id;
-> >  		id++;
-> >  	}
-> >  
-> > -	return false;
-> > +	return NULL;
-> >  }
-> >  
-> >  static int pci_epf_device_match(struct device *dev, struct device_driver *drv)
-> > @@ -510,8 +510,12 @@ static int pci_epf_device_match(struct device *dev, struct device_driver *drv)
-> >  	struct pci_epf *epf = to_pci_epf(dev);
-> >  	struct pci_epf_driver *driver = to_pci_epf_driver(drv);
-> >  
-> > -	if (driver->id_table)
-> > -		return pci_epf_match_id(driver->id_table, epf);
-> > +	if (driver->id_table) {
-> > +		if (pci_epf_match_id(driver->id_table, epf))
-> > +			return true;
-> > +		else
-> > +			return false;
-> > +	}
-> >  
-> >  	return !strcmp(epf->name, drv->name);
-> >  }
-> > @@ -526,7 +530,7 @@ static int pci_epf_device_probe(struct device *dev)
-> >  
-> >  	epf->driver = driver;
-> >  
-> > -	return driver->probe(epf);
-> > +	return driver->probe(epf, pci_epf_match_id(driver->id_table, epf));
-> 
-> I don't think we should do it this way. If we are probing a driver that
-> means that we have got a driver that matches a device id. The device id
-> is a property of the device, there is no reason why we should pass it
-> to the probe function, it has got to be stored somewhere at device
-> creation stage (well, not in the match function - since that's what
-> we changed), probe() should retrieve it from the device structure.
-> 
 
-Device id defined by the drivers will only be known during the match() stage as
-that's when the drivers are queried for match of the device. During device
-creation stage, there is no way for the EPF core to fetch the ids.
+--rrjpp6upncpe45z2
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-And, passing id during probe() is not new. For most of the non-platform devices,
-the bus driver will pass the id. The PCI core itself is doing the same for the
-client drivers as well and I'd like to keep it same for EPF also:
+Hello Wolfram,
 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/linux/pci.h#n921
+On Mon, Jun 05, 2023 at 12:12:35PM +0200, Wolfram Sang wrote:
+> On Tue, May 16, 2023 at 01:00:07PM +0200, Niklas Schnelle wrote:
+> > In a future patch HAS_IOPORT=3Dn will result in inb()/outb() and friends
+> > not being declared. We thus need to add HAS_IOPORT as dependency for
+> > those drivers using them.
+> >=20
+> > Co-developed-by: Arnd Bergmann <arnd@kernel.org>
+> > Signed-off-by: Arnd Bergmann <arnd@kernel.org>
+> > Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+>=20
+> What has changed since V3? I didn't get the coverletter...
 
-- Mani
+lore has it:
+https://lore.kernel.org/all/20230516110038.2413224-1-schnelle@linux.ibm.com/
 
-> Thanks,
-> Lorenzo
-> 
-> >  }
-> >  
-> >  static void pci_epf_device_remove(struct device *dev)
-> > diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-> > index a215dc8ce693..bc613f0df7e3 100644
-> > --- a/include/linux/pci-epf.h
-> > +++ b/include/linux/pci-epf.h
-> > @@ -89,7 +89,7 @@ struct pci_epc_event_ops {
-> >   * @id_table: identifies EPF devices for probing
-> >   */
-> >  struct pci_epf_driver {
-> > -	int	(*probe)(struct pci_epf *epf);
-> > +	int	(*probe)(struct pci_epf *epf, const struct pci_epf_device_id *id);
-> >  	void	(*remove)(struct pci_epf *epf);
-> >  
-> >  	struct device_driver	driver;
-> > @@ -131,6 +131,7 @@ struct pci_epf_bar {
-> >   * @epc: the EPC device to which this EPF device is bound
-> >   * @epf_pf: the physical EPF device to which this virtual EPF device is bound
-> >   * @driver: the EPF driver to which this EPF device is bound
-> > + * @id: Pointer to the EPF device ID
-> >   * @list: to add pci_epf as a list of PCI endpoint functions to pci_epc
-> >   * @lock: mutex to protect pci_epf_ops
-> >   * @sec_epc: the secondary EPC device to which this EPF device is bound
-> > @@ -158,6 +159,7 @@ struct pci_epf {
-> >  	struct pci_epc		*epc;
-> >  	struct pci_epf		*epf_pf;
-> >  	struct pci_epf_driver	*driver;
-> > +	const struct pci_epf_device_id *id;
-> >  	struct list_head	list;
-> >  	/* mutex to protect against concurrent access of pci_epf_ops */
-> >  	struct mutex		lock;
-> > -- 
-> > 2.25.1
-> > 
+(Found via: https://lore.kernel.org/all/ZH21E3Obp+YPJHkl@shikoro where
+the last part of the URL is the Message-Id of your mail.)
 
--- 
-மணிவண்ணன் சதாசிவம்
+Best regards
+Uwe
+
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+--rrjpp6upncpe45z2
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmR9zqkACgkQj4D7WH0S
+/k6J+wf8DmGrLkbb+yVGL7PepId5isI8DouAOsHiBL2947XH+XFzSbVniR3Ydjfa
+V+XHlHuatOVGSKP23q6pXNFWDhwxVbCZkMWlumoPKslLqIjU+Qgt+SCznZQDiDnZ
+QqOgKD2M1CLufMBb0W/dNcm/pVxDO0T8FeyiJZO9mttJQ8yQ4nzCHCDDKXH5NDXl
+Y2PMdDlLeba0kwleogS5j5JR/jxMLmnoDqCBWjb2v8ZJQMrIg3/6YmZRJ1/hXoHO
+QAdzEIxNOl/2Tj9Cc84+9oyk7J19OsvBhXNpR8g+kB7bS39dCIrE9di96BTDzfaW
+uxKsqfUGQ7aqF/xjpAM+0Bb6NkvhKQ==
+=pscJ
+-----END PGP SIGNATURE-----
+
+--rrjpp6upncpe45z2--
