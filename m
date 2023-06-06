@@ -2,137 +2,171 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40504C7EE32
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Jun 2023 07:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFC0CC7EE2E
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Jun 2023 07:54:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236428AbjFFHvf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:51:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58126 "EHLO
+        id S235613AbjFFHyC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Jun 2023 03:54:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237516AbjFFHu7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2023 03:50:59 -0400
-Received: from mail-oo1-xc2e.google.com (mail-oo1-xc2e.google.com [IPv6:2607:f8b0:4864:20::c2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DABF30E4
-        for <linux-pci@vger.kernel.org>; Tue,  6 Jun 2023 00:47:20 -0700 (PDT)
-Received: by mail-oo1-xc2e.google.com with SMTP id 006d021491bc7-557d4a08bbaso3446130eaf.2
-        for <linux-pci@vger.kernel.org>; Tue, 06 Jun 2023 00:47:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1686037629; x=1688629629;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=MlFTV010nZQAE6a30Glk0hPHQmKZoo0vKsFtf+4D2Uk=;
-        b=HIGV/CmWz7y7WrCFPo3V41nbzrubjgc5bQ1J/hcSntZSJCUYc1H0PYn7ddavlOfLhC
-         HNlTNIZxixuQufsN1uIHgSQVKtGbcbp7WnHO4qCF8ea3ryQlbTmrc6BFh1UsgsDQUdPp
-         akoLeV4s/a/XYd+z0Zn2o/xjqN3V5ZJsKeMrM4Z0wUcPTNdH2qsRHqqpk+d3sxotNQhi
-         AMmEnODQR85S9AwfSyP7QZkbxToObBv2U/o7sQL8M/5XGGbjJZfEQ44zTjQsvZcjLc/w
-         75gldNdlLGjy7/h5kwdDffrpxgzvYKTgfUr0sC5qmXe65ZU1TLyBFnQKGO4xw0fNtPu3
-         GNvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686037629; x=1688629629;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=MlFTV010nZQAE6a30Glk0hPHQmKZoo0vKsFtf+4D2Uk=;
-        b=gaaBUglkDJy6rIc5wds73mMJ+LO3b78tiBDnZVgN9WYGioEufTFeUmzcbx10wjXzYo
-         rMsSwjR2AGuRm40jlkngh3YGmnHGxBtn6zyTAqvzZJVN25/BhSaN9srBYGgdQqCIZ07r
-         n7MQvlLZaQMfr663XWiNCcKE663LcSWf/i/MupLs+PwWdeJZpXmmbBgkjTpHB/K1wQj5
-         BZnAX27TksEObKRGhgqhjKcFIT2rPtOh8o9aVFGMoJwhLw2+IpwXBrRYPfCS4XZNIKvh
-         D/9DR2ijPFMdoQ4K+LEvenwmFBJGDKnNh49WJ9loLA/XyHcJc8tQNISYQZBEvTTSUvRq
-         qeDA==
-X-Gm-Message-State: AC+VfDz5tjwfk/ZJbYNF3JWZPqgEPaGqQUi4R9sVvGYYbpPfeY4d0M4Q
-        LMnwuBwLS9RK8nYfbdW2EXRL
-X-Google-Smtp-Source: ACHHUZ7LAgd37C5kKnCNBQWTGKJbGCJ5fd/gl0zPmNmKxpAwVLpglV/5zNTs1pfze7+ZOctzhxe41g==
-X-Received: by 2002:a05:6358:c027:b0:129:c886:9603 with SMTP id ez39-20020a056358c02700b00129c8869603mr931501rwb.11.1686037628588;
-        Tue, 06 Jun 2023 00:47:08 -0700 (PDT)
-Received: from localhost.localdomain ([117.202.186.178])
-        by smtp.gmail.com with ESMTPSA id k16-20020a63d110000000b00528b78ddbcesm6927063pgg.70.2023.06.06.00.47.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Jun 2023 00:47:08 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     lpieralisi@kernel.org, kw@linux.com
-Cc:     kishon@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH] PCI: endpoint: epf-mhi: Fix the outbound window offset handling
-Date:   Tue,  6 Jun 2023 13:16:57 +0530
-Message-Id: <20230606074657.31622-1-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S235415AbjFFHx1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2023 03:53:27 -0400
+Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0D36E5D;
+        Tue,  6 Jun 2023 00:49:50 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R271e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=15;SR=0;TI=SMTPD_---0VkVT171_1686037784;
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0VkVT171_1686037784)
+          by smtp.aliyun-inc.com;
+          Tue, 06 Jun 2023 15:49:46 +0800
+From:   Shuai Xue <xueshuai@linux.alibaba.com>
+To:     chengyou@linux.alibaba.com, kaishen@linux.alibaba.com,
+        helgaas@kernel.org, yangyicong@huawei.com, will@kernel.org,
+        Jonathan.Cameron@huawei.com, baolin.wang@linux.alibaba.com,
+        robin.murphy@arm.com
+Cc:     linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, rdunlap@infradead.org,
+        mark.rutland@arm.com, zhuo.song@linux.alibaba.com,
+        xueshuai@linux.alibaba.com
+Subject: [PATCH v6 1/4] docs: perf: Add description for Synopsys DesignWare PCIe PMU driver
+Date:   Tue,  6 Jun 2023 15:49:35 +0800
+Message-Id: <20230606074938.97724-2-xueshuai@linux.alibaba.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230606074938.97724-1-xueshuai@linux.alibaba.com>
+References: <20230606074938.97724-1-xueshuai@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-__pci_epf_mhi_alloc_map() allocates and maps the PCI outbound window memory
-to endpoint local memory. For taking care of alignment restrictions, the
-caller needs to specify the address alignment offset. Currently, this
-offset is not added to the allocated physical and virtual addresses before
-returning from the function.
+Alibaba's T-Head Yitan 710 SoC includes Synopsys' DesignWare Core PCIe
+controller which implements which implements PMU for performance and
+functional debugging to facilitate system maintenance.
 
-But __pci_epf_mhi_unmap_free() function substracts the offset before
-unmapping and freeing the memory, leading to incorrect unmap and free.
+Document it to provide guidance on how to use it.
 
-Fix this issue by adding the offset to physical and virtual addresses in
-__pci_epf_mhi_alloc_map() itself. This also removes the need to add the
-offset while doing memcpy in iatu_{read/write}.
-
-Fixes: fd0fda1ef61a ("PCI: endpoint: Add PCI Endpoint function driver for MHI bus")
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
 ---
- drivers/pci/endpoint/functions/pci-epf-mhi.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ .../admin-guide/perf/dwc_pcie_pmu.rst         | 97 +++++++++++++++++++
+ Documentation/admin-guide/perf/index.rst      |  1 +
+ 2 files changed, 98 insertions(+)
+ create mode 100644 Documentation/admin-guide/perf/dwc_pcie_pmu.rst
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-index f5bbaded49d4..18e46ee446c2 100644
---- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-@@ -148,6 +148,9 @@ static int __pci_epf_mhi_alloc_map(struct mhi_ep_cntrl *mhi_cntrl, u64 pci_addr,
- 		return ret;
- 	}
- 
-+	*paddr = *paddr + offset;
-+	*vaddr = *vaddr + offset;
+diff --git a/Documentation/admin-guide/perf/dwc_pcie_pmu.rst b/Documentation/admin-guide/perf/dwc_pcie_pmu.rst
+new file mode 100644
+index 000000000000..c1f671cb64ec
+--- /dev/null
++++ b/Documentation/admin-guide/perf/dwc_pcie_pmu.rst
+@@ -0,0 +1,97 @@
++======================================================================
++Synopsys DesignWare Cores (DWC) PCIe Performance Monitoring Unit (PMU)
++======================================================================
 +
- 	return 0;
- }
- 
-@@ -158,17 +161,9 @@ static int pci_epf_mhi_alloc_map(struct mhi_ep_cntrl *mhi_cntrl, u64 pci_addr,
- 	struct pci_epf_mhi *epf_mhi = to_epf_mhi(mhi_cntrl);
- 	struct pci_epc *epc = epf_mhi->epf->epc;
- 	size_t offset = pci_addr & (epc->mem->window.page_size - 1);
--	int ret;
- 
--	ret = __pci_epf_mhi_alloc_map(mhi_cntrl, pci_addr, paddr, vaddr,
-+	return __pci_epf_mhi_alloc_map(mhi_cntrl, pci_addr, paddr, vaddr,
- 				      offset, size);
--	if (ret)
--		return ret;
--
--	*paddr = *paddr + offset;
--	*vaddr = *vaddr + offset;
--
--	return 0;
- }
- 
- static void __pci_epf_mhi_unmap_free(struct mhi_ep_cntrl *mhi_cntrl,
-@@ -230,7 +225,7 @@ static int pci_epf_mhi_iatu_read(struct mhi_ep_cntrl *mhi_cntrl, u64 from,
- 		return ret;
- 	}
- 
--	memcpy_fromio(to, tre_buf + offset, size);
-+	memcpy_fromio(to, tre_buf, size);
- 
- 	__pci_epf_mhi_unmap_free(mhi_cntrl, from, tre_phys, tre_buf, offset,
- 				 size);
-@@ -258,7 +253,7 @@ static int pci_epf_mhi_iatu_write(struct mhi_ep_cntrl *mhi_cntrl,
- 		return ret;
- 	}
- 
--	memcpy_toio(tre_buf + offset, from, size);
-+	memcpy_toio(tre_buf, from, size);
- 
- 	__pci_epf_mhi_unmap_free(mhi_cntrl, to, tre_phys, tre_buf, offset,
- 				 size);
++DesignWare Cores (DWC) PCIe PMU
++===============================
++
++The PMU is not a PCIe Root Complex integrated End Point (RCiEP) device but
++only PCIe configuration space register block provided by each PCIe Root
++Port in a Vendor-Specific Extended Capability named RAS DES (Debug, Error
++injection, and Statistics).
++
++As the name indicated, the RAS DES capability supports system level
++debugging, AER error injection, and collection of statistics. To facilitate
++collection of statistics, Synopsys DesignWare Cores PCIe controller
++provides the following two features:
++
++- Time Based Analysis (RX/TX data throughput and time spent in each
++  low-power LTSSM state)
++- Lane Event counters (Error and Non-Error for lanes)
++
++Time Based Analysis
++-------------------
++
++Using this feature you can obtain information regarding RX/TX data
++throughput and time spent in each low-power LTSSM state by the controller.
++
++The counters are 64-bit width and measure data in two categories,
++
++- percentage of time does the controller stay in LTSSM state in a
++  configurable duration. The measurement range of each Event in Group#0.
++- amount of data processed (Units of 16 bytes). The measurement range of
++  each Event in Group#1.
++
++Lane Event counters
++-------------------
++
++Using this feature you can obtain Error and Non-Error information in
++specific lane by the controller.
++
++The counters are 32-bit width and the measured event is select by:
++
++- Group i
++- Event j within the Group i
++- and Lane k
++
++Some of the event counters only exist for specific configurations.
++
++DesignWare Cores (DWC) PCIe PMU Driver
++=======================================
++
++This driver add PMU devices for each PCIe Root Port. And the PMU device is
++named based the BDF of Root Port. For example,
++
++    30:03.0 PCI bridge: Device 1ded:8000 (rev 01)
++
++the PMU device name for this Root Port is dwc_rootport_3018.
++
++The DWC PCIe PMU driver registers a perf PMU driver, which provides
++description of available events and configuration options in sysfs, see
++/sys/bus/event_source/devices/dwc_rootport_{bdf}.
++
++The "format" directory describes format of the config, fields of the
++perf_event_attr structure. The "events" directory provides configuration
++templates for all documented events.  For example,
++"Rx_PCIe_TLP_Data_Payload" is an equivalent of "eventid=0x22,type=0x1".
++
++The "perf list" command shall list the available events from sysfs, e.g.::
++
++    $# perf list | grep dwc_rootport
++    <...>
++    dwc_rootport_3018/Rx_PCIe_TLP_Data_Payload/        [Kernel PMU event]
++    <...>
++    dwc_rootport_3018/rx_memory_read,lane=?/               [Kernel PMU event]
++
++Time Based Analysis Event Usage
++-------------------------------
++
++Example usage of counting PCIe RX TLP data payload (Units of 16 bytes)::
++
++    $# perf stat -a -e dwc_rootport_3018/Rx_PCIe_TLP_Data_Payload/
++
++The average RX/TX bandwidth can be calculated using the following formula:
++
++    PCIe RX Bandwidth = PCIE_RX_DATA * 16B / Measure_Time_Window
++    PCIe TX Bandwidth = PCIE_TX_DATA * 16B / Measure_Time_Window
++
++Lane Event Usage
++-------------------------------
++
++Each lane has the same event set and to avoid generating a list of hundreds
++of events, the user need to specify the lane ID explicitly, e.g.::
++
++    $# perf stat -a -e dwc_rootport_3018/rx_memory_read,lane=4/
++
++The driver does not support sampling, therefore "perf record" will not
++work. Per-task (without "-a") perf sessions are not supported.
+diff --git a/Documentation/admin-guide/perf/index.rst b/Documentation/admin-guide/perf/index.rst
+index 9de64a40adab..11a80cd28a2e 100644
+--- a/Documentation/admin-guide/perf/index.rst
++++ b/Documentation/admin-guide/perf/index.rst
+@@ -19,5 +19,6 @@ Performance monitor support
+    arm_dsu_pmu
+    thunderx2-pmu
+    alibaba_pmu
++   dwc_pcie_pmu
+    nvidia-pmu
+    meson-ddr-pmu
 -- 
-2.25.1
+2.20.1.12.g72788fdb
 
