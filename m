@@ -2,99 +2,150 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9991BC77B73
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Jun 2023 13:07:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D42A4C7EE29
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Jun 2023 14:24:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238005AbjFFNHz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Jun 2023 09:07:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36618 "EHLO
+        id S236337AbjFFOYS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Jun 2023 10:24:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238006AbjFFNHy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2023 09:07:54 -0400
-X-Greylist: delayed 2731 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 06 Jun 2023 06:07:23 PDT
-Received: from imap4.hz.codethink.co.uk (imap4.hz.codethink.co.uk [188.40.203.114])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33C8B199A;
-        Tue,  6 Jun 2023 06:07:23 -0700 (PDT)
-Received: from [90.160.41.100] (helo=[10.105.1.14])
-        by imap4.hz.codethink.co.uk with esmtpsa  (Exim 4.94.2 #2 (Debian))
-        id 1q6Vh5-00AOz5-Fy; Tue, 06 Jun 2023 13:21:47 +0100
-Message-ID: <d5140a48-7841-af9d-7560-acd677caec88@codethink.co.uk>
-Date:   Tue, 6 Jun 2023 13:21:33 +0100
+        with ESMTP id S232228AbjFFOYS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2023 10:24:18 -0400
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A646E6E;
+        Tue,  6 Jun 2023 07:24:15 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4QbCKB5Hgvz18M7t;
+        Tue,  6 Jun 2023 22:19:26 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.23; Tue, 6 Jun 2023 22:24:13 +0800
+From:   Yicong Yang <yangyicong@huawei.com>
+To:     <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
+        <jonathan.cameron@huawei.com>, <corbet@lwn.net>,
+        <linux-kernel@vger.kernel.org>, <linux-doc@vger.kernel.org>
+CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
+        <linux-pci@vger.kernel.org>, <prime.zeng@huawei.com>,
+        <linuxarm@huawei.com>, <yangyicong@hisilicon.com>
+Subject: [PATCH v4 1/5] hwtracing: hisi_ptt: Factor out filter allocation and release operation
+Date:   Tue, 6 Jun 2023 22:22:40 +0800
+Message-ID: <20230606142244.10939-2-yangyicong@huawei.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20230606142244.10939-1-yangyicong@huawei.com>
+References: <20230606142244.10939-1-yangyicong@huawei.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [PATCH 2/2] dt-bindings: updated max-link-speed for newer
- generations
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, Conor Dooley <conor+dt@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>,
-        Jude Onyenegecha <jude.onyenegecha@codethink.co.uk>,
-        Greentime Hu <greentime.hu@sifive.com>,
-        Jeegar Lakhani <jeegar.lakhani@sifive.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-References: <ZHeZxPRGw+X83V1k@bhelgaas>
-Content-Language: en-GB
-From:   Ben Dooks <ben.dooks@codethink.co.uk>
-Organization: Codethink Limited.
-In-Reply-To: <ZHeZxPRGw+X83V1k@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ canpemm500009.china.huawei.com (7.192.105.203)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 31/05/2023 20:02, Bjorn Helgaas wrote:
-> Possible subject:
-> 
->    dt-bindings: Add gen5, gen6 max-link-speed values
-> 
-> On Wed, May 31, 2023 at 10:21:21AM +0100, Ben Dooks wrote:
->> Add updated max-link-speed values for newer generation PCIe link
->> speeds.
->>
->> Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
->> Cc: Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
->> Cc: devicetree@vger.kernel.org
->> ---
->>   Documentation/devicetree/bindings/pci/pci.txt | 5 +++--
->>   1 file changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
->> index 6a8f2874a24d..56391e193fc4 100644
->> --- a/Documentation/devicetree/bindings/pci/pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/pci.txt
->> @@ -22,8 +22,9 @@ driver implementation may support the following properties:
->>      If present this property specifies PCI gen for link capability.  Host
->>      drivers could add this as a strategy to avoid unnecessary operation for
->>      unsupported link speed, for instance, trying to do training for
->> -   unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
->> -   for gen2, and '1' for gen1. Any other values are invalid.
->> +   unsupported link speed, etc.  Must be '6' for gen6,  '5' for gen5,
->> +   '4' for gen4, '3' for gen3, '2' for gen2, and '1' for gen1.
->> +   Any other values are invalid.
-> 
-> I really wish we'd used values with some connection to the actual
-> speed, e.g., "16" for 16 GT/s.  These "gen X" values are a real hassle
-> to convert back to the speed.  But I guess that's water under the
-> bridge.
-> 
-> Maybe we should annotate the documentation here, though, e.g.,
-> 
->    '6' for gen6 (64.0 GT/s), '5' for gen5 (32.0 GT/s), ...
-> 
-> Do I have that right?  I don't see "gen5" etc in the specs themselves,
-> so this is just based on Google.
-> 
-> Bjorn 
+From: Yicong Yang <yangyicong@hisilicon.com>
 
-I checked the wikipedia, I've been working on a yet-to-be-released
-device that uses a gen5 phy so updating this would be useful.
+Factor out the allocation and release of filters. This will make it easier
+to extend and manage the function of the filter.
 
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+---
+ drivers/hwtracing/ptt/hisi_ptt.c | 63 ++++++++++++++++++++------------
+ 1 file changed, 39 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
+index 30f1525639b5..548cfef51ace 100644
+--- a/drivers/hwtracing/ptt/hisi_ptt.c
++++ b/drivers/hwtracing/ptt/hisi_ptt.c
+@@ -354,6 +354,39 @@ static int hisi_ptt_register_irq(struct hisi_ptt *hisi_ptt)
+ 	return 0;
+ }
+ 
++static void hisi_ptt_del_free_filter(struct hisi_ptt *hisi_ptt,
++				      struct hisi_ptt_filter_desc *filter)
++{
++	list_del(&filter->list);
++	kfree(filter);
++}
++
++static struct hisi_ptt_filter_desc *
++hisi_ptt_alloc_add_filter(struct hisi_ptt *hisi_ptt, struct pci_dev *pdev)
++{
++	struct hisi_ptt_filter_desc *filter;
++
++	filter = kzalloc(sizeof(*filter), GFP_KERNEL);
++	if (!filter) {
++		pci_err(hisi_ptt->pdev, "failed to add filter for %s\n",
++			pci_name(pdev));
++		return NULL;
++	}
++
++	filter->devid = PCI_DEVID(pdev->bus->number, pdev->devfn);
++	filter->is_port = pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT;
++	if (filter->is_port) {
++		list_add_tail(&filter->list, &hisi_ptt->port_filters);
++
++		/* Update the available port mask */
++		hisi_ptt->port_mask |= hisi_ptt_get_filter_val(filter->devid, true);
++	} else {
++		list_add_tail(&filter->list, &hisi_ptt->req_filters);
++	}
++
++	return filter;
++}
++
+ static int hisi_ptt_init_filters(struct pci_dev *pdev, void *data)
+ {
+ 	struct pci_dev *root_port = pcie_find_root_port(pdev);
+@@ -374,23 +407,9 @@ static int hisi_ptt_init_filters(struct pci_dev *pdev, void *data)
+ 	 * should be partial initialized and users would know which filter fails
+ 	 * through the log. Other functions of PTT device are still available.
+ 	 */
+-	filter = kzalloc(sizeof(*filter), GFP_KERNEL);
+-	if (!filter) {
+-		pci_err(hisi_ptt->pdev, "failed to add filter %s\n", pci_name(pdev));
++	filter = hisi_ptt_alloc_add_filter(hisi_ptt, pdev);
++	if (!filter)
+ 		return -ENOMEM;
+-	}
+-
+-	filter->devid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+-
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT) {
+-		filter->is_port = true;
+-		list_add_tail(&filter->list, &hisi_ptt->port_filters);
+-
+-		/* Update the available port mask */
+-		hisi_ptt->port_mask |= hisi_ptt_get_filter_val(filter->devid, true);
+-	} else {
+-		list_add_tail(&filter->list, &hisi_ptt->req_filters);
+-	}
+ 
+ 	return 0;
+ }
+@@ -400,15 +419,11 @@ static void hisi_ptt_release_filters(void *data)
+ 	struct hisi_ptt_filter_desc *filter, *tmp;
+ 	struct hisi_ptt *hisi_ptt = data;
+ 
+-	list_for_each_entry_safe(filter, tmp, &hisi_ptt->req_filters, list) {
+-		list_del(&filter->list);
+-		kfree(filter);
+-	}
++	list_for_each_entry_safe(filter, tmp, &hisi_ptt->req_filters, list)
++		hisi_ptt_del_free_filter(hisi_ptt, filter);
+ 
+-	list_for_each_entry_safe(filter, tmp, &hisi_ptt->port_filters, list) {
+-		list_del(&filter->list);
+-		kfree(filter);
+-	}
++	list_for_each_entry_safe(filter, tmp, &hisi_ptt->port_filters, list)
++		hisi_ptt_del_free_filter(hisi_ptt, filter);
+ }
+ 
+ static int hisi_ptt_config_trace_buf(struct hisi_ptt *hisi_ptt)
 -- 
-Ben Dooks				http://www.codethink.co.uk/
-Senior Engineer				Codethink - Providing Genius
-
-https://www.codethink.co.uk/privacy.html
+2.24.0
 
