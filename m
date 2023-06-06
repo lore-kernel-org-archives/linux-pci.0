@@ -2,453 +2,863 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 881D6C7EE32
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Jun 2023 14:24:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E05C7EE29
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Jun 2023 15:14:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237879AbjFFOYd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Jun 2023 10:24:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58302 "EHLO
+        id S238544AbjFFPOT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Jun 2023 11:14:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237731AbjFFOYW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2023 10:24:22 -0400
-Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A03410DF;
-        Tue,  6 Jun 2023 07:24:16 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.54])
-        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4QbCKC1D9wz18M7w;
-        Tue,  6 Jun 2023 22:19:27 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
+        with ESMTP id S231232AbjFFPOS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2023 11:14:18 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ADE210E9;
+        Tue,  6 Jun 2023 08:14:10 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QbDSp0N2RzLqDL;
+        Tue,  6 Jun 2023 23:11:06 +0800 (CST)
+Received: from [10.67.102.169] (10.67.102.169) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.23; Tue, 6 Jun 2023 22:24:13 +0800
+ 15.1.2507.23; Tue, 6 Jun 2023 23:14:07 +0800
+CC:     <yangyicong@hisilicon.com>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-pci@vger.kernel.org>, <rdunlap@infradead.org>,
+        <mark.rutland@arm.com>, <zhuo.song@linux.alibaba.com>
+Subject: Re: [PATCH v6 3/4] drivers/perf: add DesignWare PCIe PMU driver
+To:     Shuai Xue <xueshuai@linux.alibaba.com>,
+        <chengyou@linux.alibaba.com>, <kaishen@linux.alibaba.com>,
+        <helgaas@kernel.org>, <will@kernel.org>,
+        <Jonathan.Cameron@huawei.com>, <baolin.wang@linux.alibaba.com>,
+        <robin.murphy@arm.com>
+References: <20230606074938.97724-1-xueshuai@linux.alibaba.com>
+ <20230606074938.97724-4-xueshuai@linux.alibaba.com>
 From:   Yicong Yang <yangyicong@huawei.com>
-To:     <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
-        <jonathan.cameron@huawei.com>, <corbet@lwn.net>,
-        <linux-kernel@vger.kernel.org>, <linux-doc@vger.kernel.org>
-CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
-        <linux-pci@vger.kernel.org>, <prime.zeng@huawei.com>,
-        <linuxarm@huawei.com>, <yangyicong@hisilicon.com>
-Subject: [PATCH v4 3/5] hwtracing: hisi_ptt: Export available filters through sysfs
-Date:   Tue, 6 Jun 2023 22:22:42 +0800
-Message-ID: <20230606142244.10939-4-yangyicong@huawei.com>
-X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20230606142244.10939-1-yangyicong@huawei.com>
-References: <20230606142244.10939-1-yangyicong@huawei.com>
+Message-ID: <31e2b012-3a29-d063-842d-e3f7736816e7@huawei.com>
+Date:   Tue, 6 Jun 2023 23:14:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.5.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.50.163.32]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+In-Reply-To: <20230606074938.97724-4-xueshuai@linux.alibaba.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.67.102.169]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  canpemm500009.china.huawei.com (7.192.105.203)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yicong Yang <yangyicong@hisilicon.com>
+On 2023/6/6 15:49, Shuai Xue wrote:
+> This commit adds the PCIe Performance Monitoring Unit (PMU) driver support
+> for T-Head Yitian SoC chip. Yitian is based on the Synopsys PCI Express
+> Core controller IP which provides statistics feature. The PMU is not a PCIe
+> Root Complex integrated End Point(RCiEP) device but only register counters
+> provided by each PCIe Root Port.
+> 
+> To facilitate collection of statistics the controller provides the
+> following two features for each Root Port:
+> 
+> - Time Based Analysis (RX/TX data throughput and time spent in each
+>   low-power LTSSM state)
+> - Event counters (Error and Non-Error for lanes)
+> 
+> Note, only one counter for each type and does not overflow interrupt.
+> 
+> This driver adds PMU devices for each PCIe Root Port. And the PMU device is
+> named based the BDF of Root Port. For example,
+> 
+>     30:03.0 PCI bridge: Device 1ded:8000 (rev 01)
+> 
+> the PMU device name for this Root Port is dwc_rootport_3018.
+> 
+> Example usage of counting PCIe RX TLP data payload (Units of 16 bytes)::
+> 
+>     $# perf stat -a -e dwc_rootport_3018/Rx_PCIe_TLP_Data_Payload/
+> 
+> average RX bandwidth can be calculated like this:
+> 
+>     PCIe TX Bandwidth = PCIE_TX_DATA * 16B / Measure_Time_Window
+> 
+> Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+> Reported-by: kernel test robot <lkp@intel.com>
+> Link: https://lore.kernel.org/oe-kbuild-all/202305170639.XU3djFZX-lkp@intel.com/
+> Reviewed-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+> ---
+>  drivers/perf/Kconfig        |   7 +
+>  drivers/perf/Makefile       |   1 +
+>  drivers/perf/dwc_pcie_pmu.c | 706 ++++++++++++++++++++++++++++++++++++
+>  3 files changed, 714 insertions(+)
+>  create mode 100644 drivers/perf/dwc_pcie_pmu.c
+> 
+> diff --git a/drivers/perf/Kconfig b/drivers/perf/Kconfig
+> index 711f82400086..6ff3921d7a62 100644
+> --- a/drivers/perf/Kconfig
+> +++ b/drivers/perf/Kconfig
+> @@ -209,6 +209,13 @@ config MARVELL_CN10K_DDR_PMU
+>  	  Enable perf support for Marvell DDR Performance monitoring
+>  	  event on CN10K platform.
+>  
+> +config DWC_PCIE_PMU
+> +	tristate "Enable Synopsys DesignWare PCIe PMU Support"
+> +	depends on (ARM64 && PCI)
+> +	help
+> +	  Enable perf support for Synopsys DesignWare PCIe PMU Performance
+> +	  monitoring event on Yitian 710 platform.
+> +
+>  source "drivers/perf/arm_cspmu/Kconfig"
+>  
+>  source "drivers/perf/amlogic/Kconfig"
+> diff --git a/drivers/perf/Makefile b/drivers/perf/Makefile
+> index dabc859540ce..13a6d1b286da 100644
+> --- a/drivers/perf/Makefile
+> +++ b/drivers/perf/Makefile
+> @@ -22,5 +22,6 @@ obj-$(CONFIG_MARVELL_CN10K_TAD_PMU) += marvell_cn10k_tad_pmu.o
+>  obj-$(CONFIG_MARVELL_CN10K_DDR_PMU) += marvell_cn10k_ddr_pmu.o
+>  obj-$(CONFIG_APPLE_M1_CPU_PMU) += apple_m1_cpu_pmu.o
+>  obj-$(CONFIG_ALIBABA_UNCORE_DRW_PMU) += alibaba_uncore_drw_pmu.o
+> +obj-$(CONFIG_DWC_PCIE_PMU) += dwc_pcie_pmu.o
+>  obj-$(CONFIG_ARM_CORESIGHT_PMU_ARCH_SYSTEM_PMU) += arm_cspmu/
+>  obj-$(CONFIG_MESON_DDR_PMU) += amlogic/
+> diff --git a/drivers/perf/dwc_pcie_pmu.c b/drivers/perf/dwc_pcie_pmu.c
+> new file mode 100644
+> index 000000000000..8bfcf6e0662d
+> --- /dev/null
+> +++ b/drivers/perf/dwc_pcie_pmu.c
+> @@ -0,0 +1,706 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Synopsys DesignWare PCIe PMU driver
+> + *
+> + * Copyright (C) 2021-2023 Alibaba Inc.
+> + */
+> +
+> +#include <linux/bitfield.h>
+> +#include <linux/bitops.h>
+> +#include <linux/cpuhotplug.h>
+> +#include <linux/cpumask.h>
+> +#include <linux/device.h>
+> +#include <linux/errno.h>
+> +#include <linux/kernel.h>
+> +#include <linux/list.h>
+> +#include <linux/perf_event.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/smp.h>
+> +#include <linux/sysfs.h>
+> +#include <linux/types.h>
+> +
+> +#define DWC_PCIE_VSEC_RAS_DES_ID		0x02
+> +
+> +#define DWC_PCIE_EVENT_CNT_CTL			0x8
+> +
+> +/*
+> + * Event Counter Data Select includes two parts:
+> + * - 27-24: Group number(4-bit: 0..0x7)
+> + * - 23-16: Event number(8-bit: 0..0x13) within the Group
+> + *
+> + * Put them togother as TRM used.
+> + */
+> +#define DWC_PCIE_CNT_EVENT_SEL			GENMASK(27, 16)
+> +#define DWC_PCIE_CNT_LANE_SEL			GENMASK(11, 8)
+> +#define DWC_PCIE_CNT_STATUS			BIT(7)
+> +#define DWC_PCIE_CNT_ENABLE			GENMASK(4, 2)
+> +#define DWC_PCIE_PER_EVENT_OFF			0x1
+> +#define DWC_PCIE_PER_EVENT_ON			0x3
+> +#define DWC_PCIE_EVENT_CLEAR			GENMASK(1, 0)
+> +#define DWC_PCIE_EVENT_PER_CLEAR		0x1
+> +
+> +#define DWC_PCIE_EVENT_CNT_DATA			0xC
+> +
+> +#define DWC_PCIE_TIME_BASED_ANAL_CTL		0x10
+> +#define DWC_PCIE_TIME_BASED_REPORT_SEL		GENMASK(31, 24)
+> +#define DWC_PCIE_TIME_BASED_DURATION_SEL	GENMASK(15, 8)
+> +#define DWC_PCIE_DURATION_MANUAL_CTL		0x0
+> +#define DWC_PCIE_DURATION_1MS			0x1
+> +#define DWC_PCIE_DURATION_10MS			0x2
+> +#define DWC_PCIE_DURATION_100MS			0x3
+> +#define DWC_PCIE_DURATION_1S			0x4
+> +#define DWC_PCIE_DURATION_2S			0x5
+> +#define DWC_PCIE_DURATION_4S			0x6
+> +#define DWC_PCIE_DURATION_4US			0xFF
+> +#define DWC_PCIE_TIME_BASED_TIMER_START		BIT(0)
+> +#define DWC_PCIE_TIME_BASED_CNT_ENABLE		0x1
+> +
+> +#define DWC_PCIE_TIME_BASED_ANAL_DATA_REG_LOW	0x14
+> +#define DWC_PCIE_TIME_BASED_ANAL_DATA_REG_HIGH	0x18
+> +
+> +/* Event attributes */
+> +#define DWC_PCIE_CONFIG_EVENTID			GENMASK(15, 0)
+> +#define DWC_PCIE_CONFIG_TYPE			GENMASK(19, 16)
+> +#define DWC_PCIE_CONFIG_LANE			GENMASK(27, 20)
+> +
+> +#define DWC_PCIE_EVENT_ID(event)	FIELD_GET(DWC_PCIE_CONFIG_EVENTID, (event)->attr.config)
+> +#define DWC_PCIE_EVENT_TYPE(event)	FIELD_GET(DWC_PCIE_CONFIG_TYPE, (event)->attr.config)
+> +#define DWC_PCIE_EVENT_LANE(event)	FIELD_GET(DWC_PCIE_CONFIG_LANE, (event)->attr.config)
+> +
+> +enum dwc_pcie_event_type {
+> +	DWC_PCIE_TYPE_INVALID,
+> +	DWC_PCIE_TIME_BASE_EVENT,
+> +	DWC_PCIE_LANE_EVENT,
+> +};
+> +
+> +#define DWC_PCIE_LANE_EVENT_MAX_PERIOD		GENMASK_ULL(31, 0)
+> +#define DWC_PCIE_TIME_BASED_EVENT_MAX_PERIOD	GENMASK_ULL(63, 0)
+> +
+> +
+> +struct dwc_pcie_pmu {
+> +	struct pci_dev		*pdev;		/* Root Port device */
 
-The PTT can only filter the traced TLP headers by the Root Ports or the
-Requester ID of the Endpoint, which are located on the same PCIe core of
-the PTT device. The filter value used is derived from the BDF number of
-the supported Root Port or the Endpoint. It's not friendly enough for the
-users since it requires the user to be familiar enough with the platform
-and calculate the filter value manually.
+If the root port removed after the probe of this PCIe PMU driver, we'll access the NULL
+pointer. I didn't see you hold the root port to avoid the removal.
 
-This patch export the available filters through sysfs. Each available
-filters is presented as an individual file with the name of the BDF
-number of the related PCIe device. The files are created under
-$(PTT PMU dir)/available_root_port_filters and
-$(PTT PMU dir)/available_requester_filters respectively. The filter
-value can be known by reading the related file.
+> +	u16			ras_des;	/* RAS DES capability offset */
+> +	u32			nr_lanes;
+> +
+> +	struct list_head	pmu_node;
+> +	struct hlist_node	cpuhp_node;
+> +	struct pmu		pmu;
+> +	struct perf_event	*event;
+> +	int			oncpu;
+> +};
+> +
+> +struct dwc_pcie_pmu_priv {
+> +	struct device *dev;
+> +	struct list_head pmu_nodes;
+> +};
+> +
+> +#define to_dwc_pcie_pmu(p) (container_of(p, struct dwc_pcie_pmu, pmu))
+> +
 
-Then the users can easily know the available filters for trace and get
-the filter values without calculating.
+somebody told me to put @pmu as the first member then this macro will have no calculation. :)
 
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- .../ABI/testing/sysfs-devices-hisi_ptt        |  50 +++++
- Documentation/trace/hisi-ptt.rst              |   6 +
- drivers/hwtracing/ptt/hisi_ptt.c              | 205 ++++++++++++++++++
- drivers/hwtracing/ptt/hisi_ptt.h              |  14 ++
- 4 files changed, 275 insertions(+)
+> +static struct platform_device *dwc_pcie_pmu_dev;
+> +static int dwc_pcie_pmu_hp_state;
+> +
+> +static ssize_t cpumask_show(struct device *dev,
+> +					 struct device_attribute *attr,
+> +					 char *buf)
+> +{
+> +	struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(dev_get_drvdata(dev));
+> +
+> +	return cpumap_print_to_pagebuf(true, buf, cpumask_of(pcie_pmu->oncpu));
+> +}
+> +static DEVICE_ATTR_RO(cpumask);
+> +
+> +static struct attribute *dwc_pcie_pmu_cpumask_attrs[] = {
+> +	&dev_attr_cpumask.attr,
+> +	NULL
+> +};
+> +
+> +static struct attribute_group dwc_pcie_cpumask_attr_group = {
+> +	.attrs = dwc_pcie_pmu_cpumask_attrs,
+> +};
+> +
+> +struct dwc_pcie_format_attr {
+> +	struct device_attribute attr;
+> +	u64 field;
+> +	int config;
+> +};
+> +
+> +static ssize_t dwc_pcie_pmu_format_show(struct device *dev,
+> +					struct device_attribute *attr,
+> +					char *buf)
+> +{
+> +	struct dwc_pcie_format_attr *fmt = container_of(attr, typeof(*fmt), attr);
+> +	int lo = __ffs(fmt->field), hi = __fls(fmt->field);
+> +
+> +	return sysfs_emit(buf, "config:%d-%d\n", lo, hi);
+> +}
+> +
+> +#define _dwc_pcie_format_attr(_name, _cfg, _fld)				\
+> +	(&((struct dwc_pcie_format_attr[]) {{					\
+> +		.attr = __ATTR(_name, 0444, dwc_pcie_pmu_format_show, NULL),	\
+> +		.config = _cfg,							\
+> +		.field = _fld,							\
+> +	}})[0].attr.attr)
+> +
+> +#define dwc_pcie_format_attr(_name, _fld)	_dwc_pcie_format_attr(_name, 0, _fld)
+> +
+> +static struct attribute *dwc_pcie_format_attrs[] = {
+> +	dwc_pcie_format_attr(type, DWC_PCIE_CONFIG_TYPE),
+> +	dwc_pcie_format_attr(eventid, DWC_PCIE_CONFIG_EVENTID),
+> +	dwc_pcie_format_attr(lane, DWC_PCIE_CONFIG_LANE),
+> +	NULL,
+> +};
+> +
+> +static struct attribute_group dwc_pcie_format_attrs_group = {
+> +	.name = "format",
+> +	.attrs = dwc_pcie_format_attrs,
+> +};
+> +
+> +struct dwc_pcie_event_attr {
+> +	struct device_attribute attr;
+> +	enum dwc_pcie_event_type type;
+> +	u16 eventid;
+> +	u8 lane;
+> +};
+> +
+> +static ssize_t dwc_pcie_event_show(struct device *dev,
+> +				struct device_attribute *attr, char *buf)
+> +{
+> +	struct dwc_pcie_event_attr *eattr;
+> +
+> +	eattr = container_of(attr, typeof(*eattr), attr);
+> +
+> +	if (eattr->type == DWC_PCIE_LANE_EVENT)
+> +		return sysfs_emit(buf, "eventid=0x%x,type=0x%x,lane=?\n",
+> +				  eattr->eventid, eattr->type);
+> +
+> +	return sysfs_emit(buf, "eventid=0x%x,type=0x%x\n", eattr->eventid,
+> +		       eattr->type);
+> +}
+> +
+> +#define DWC_PCIE_EVENT_ATTR(_name, _type, _eventid, _lane)		\
+> +	(&((struct dwc_pcie_event_attr[]) {{				\
+> +		.attr = __ATTR(_name, 0444, dwc_pcie_event_show, NULL),	\
+> +		.type = _type,						\
+> +		.eventid = _eventid,					\
+> +		.lane = _lane,						\
+> +	}})[0].attr.attr)
+> +
+> +#define DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(_name, _eventid)		\
+> +	DWC_PCIE_EVENT_ATTR(_name, DWC_PCIE_TIME_BASE_EVENT, _eventid, 0)
+> +#define DWC_PCIE_PMU_LANE_EVENT_ATTR(_name, _eventid)			\
+> +	DWC_PCIE_EVENT_ATTR(_name, DWC_PCIE_LANE_EVENT, _eventid, 0)
+> +
+> +static struct attribute *dwc_pcie_pmu_time_event_attrs[] = {
+> +	/* Group #0 */
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(one_cycle, 0x00),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(TX_L0S, 0x01),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(RX_L0S, 0x02),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(L0, 0x03),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(L1, 0x04),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(L1_1, 0x05),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(L1_2, 0x06),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(CFG_RCVRY, 0x07),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(TX_RX_L0S, 0x08),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(L1_AUX, 0x09),
+> +
+> +	/* Group #1 */
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(Tx_PCIe_TLP_Data_Payload, 0x20),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(Rx_PCIe_TLP_Data_Payload, 0x21),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(Tx_CCIX_TLP_Data_Payload, 0x22),
+> +	DWC_PCIE_PMU_TIME_BASE_EVENT_ATTR(Rx_CCIX_TLP_Data_Payload, 0x23),
+> +
+> +	/*
+> +	 * Leave it to the user to specify the lane ID to avoid generating
+> +	 * a list of hundreds of events.
+> +	 */
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_ack_dllp, 0x600),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_update_fc_dllp, 0x601),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_ack_dllp, 0x602),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_update_fc_dllp, 0x603),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_nulified_tlp, 0x604),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_nulified_tlp, 0x605),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_duplicate_tl, 0x606),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_memory_write, 0x700),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_memory_read, 0x701),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_configuration_write, 0x702),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_configuration_read, 0x703),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_io_write, 0x704),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_io_read, 0x705),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_completion_without_data, 0x706),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_completion_with_data, 0x707),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_message_tlp, 0x708),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_atomic, 0x709),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_tlp_with_prefix, 0x70A),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_memory_write, 0x70B),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_memory_read, 0x70C),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_io_write, 0x70F),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_io_read, 0x710),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_completion_without_data, 0x711),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_completion_with_data, 0x712),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_message_tlp, 0x713),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_atomic, 0x714),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_tlp_with_prefix, 0x715),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(tx_ccix_tlp, 0x716),
+> +	DWC_PCIE_PMU_LANE_EVENT_ATTR(rx_ccix_tlp, 0x717),
+> +
 
-diff --git a/Documentation/ABI/testing/sysfs-devices-hisi_ptt b/Documentation/ABI/testing/sysfs-devices-hisi_ptt
-index 82de6d710266..10df63568df9 100644
---- a/Documentation/ABI/testing/sysfs-devices-hisi_ptt
-+++ b/Documentation/ABI/testing/sysfs-devices-hisi_ptt
-@@ -59,3 +59,53 @@ Description:	(RW) Control the allocated buffer watermark of outbound packets.
- 		The available tune data is [0, 1, 2]. Writing a negative value
- 		will return an error, and out of range values will be converted
- 		to 2. The value indicates a probable level of the event.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/root_port_filters
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	This directory contains the files providing the PCIe Root Port filters
-+		information used for PTT trace. Each file is named after the supported
-+		Root Port device name <domain>:<bus>:<device>.<function>.
-+
-+		See the description of the "filter" in Documentation/trace/hisi-ptt.rst
-+		for more information.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/root_port_filters/multiselect
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	(Read) Indicates if this kind of filter can be selected at the same
-+		time as others filters, or must be used on it's own.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/root_port_filters/<bdf>
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	(Read) Indicates the filter value of this Root Port filter, which
-+		can be used to control the TLP headers to trace by the PTT trace.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/requester_filters
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	This directory contains the files providing the PCIe Requester filters
-+		information used for PTT trace. Each file is named after the supported
-+		Endpoint device name <domain>:<bus>:<device>.<function>.
-+
-+		See the description of the "filter" in Documentation/trace/hisi-ptt.rst
-+		for more information.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/requester_filters/multiselect
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	(Read) Indicates if this kind of filter can be selected at the same
-+		time as others filters, or must be used on it's own.
-+
-+What:		/sys/devices/hisi_ptt<sicl_id>_<core_id>/requester_filters/<bdf>
-+Date:		May 2023
-+KernelVersion:	6.5
-+Contact:	Yicong Yang <yangyicong@hisilicon.com>
-+Description:	(Read) Indicates the filter value of this Requester filter, which
-+		can be used to control the TLP headers to trace by the PTT trace.
-diff --git a/Documentation/trace/hisi-ptt.rst b/Documentation/trace/hisi-ptt.rst
-index 69c538153838..989255eb5622 100644
---- a/Documentation/trace/hisi-ptt.rst
-+++ b/Documentation/trace/hisi-ptt.rst
-@@ -148,6 +148,12 @@ For example, if the desired filter is Endpoint function 0000:01:00.1 the filter
- value will be 0x00101. If the desired filter is Root Port 0000:00:10.0 then
- then filter value is calculated as 0x80001.
- 
-+The driver also presents every supported Root Port and Requester filter through
-+sysfs. Each filter will be an individual file with name of its related PCIe
-+device name (domain:bus:device.function). The files of Root Port filters are
-+under $(PTT PMU dir)/root_port_filters and files of Requester filters
-+are under $(PTT PMU dir)/requester_filters.
-+
- Note that multiple Root Ports can be specified at one time, but only one
- Endpoint function can be specified in one trace. Specifying both Root Port
- and function at the same time is not supported. Driver maintains a list of
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
-index 31471488fc91..5c7e93e7705f 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.c
-+++ b/drivers/hwtracing/ptt/hisi_ptt.c
-@@ -405,6 +405,142 @@ hisi_ptt_alloc_add_filter(struct hisi_ptt *hisi_ptt, u16 devid, bool is_port)
- 	return filter;
- }
- 
-+static ssize_t hisi_ptt_filter_show(struct device *dev, struct device_attribute *attr,
-+				    char *buf)
-+{
-+	struct hisi_ptt_filter_desc *filter;
-+	unsigned long filter_val;
-+
-+	filter = container_of(attr, struct hisi_ptt_filter_desc, attr);
-+	filter_val = hisi_ptt_get_filter_val(filter->devid, filter->is_port) |
-+		     (filter->is_port ? HISI_PTT_PMU_FILTER_IS_PORT : 0);
-+
-+	return sysfs_emit(buf, "0x%05lx\n", filter_val);
-+}
-+
-+static int hisi_ptt_create_rp_filter_attr(struct hisi_ptt *hisi_ptt,
-+					  struct hisi_ptt_filter_desc *filter)
-+{
-+	struct kobject *kobj = &hisi_ptt->hisi_ptt_pmu.dev->kobj;
-+
-+	filter->attr.attr.name = filter->name;
-+	filter->attr.attr.mode = 0400; /* DEVICE_ATTR_ADMIN_RO */
-+	filter->attr.show = hisi_ptt_filter_show;
-+
-+	return sysfs_add_file_to_group(kobj, &filter->attr.attr,
-+				       HISI_PTT_RP_FILTERS_GRP_NAME);
-+}
-+
-+static void hisi_ptt_remove_rp_filter_attr(struct hisi_ptt *hisi_ptt,
-+					  struct hisi_ptt_filter_desc *filter)
-+{
-+	struct kobject *kobj = &hisi_ptt->hisi_ptt_pmu.dev->kobj;
-+
-+	sysfs_remove_file_from_group(kobj, &filter->attr.attr,
-+				     HISI_PTT_RP_FILTERS_GRP_NAME);
-+}
-+
-+static int hisi_ptt_create_req_filter_attr(struct hisi_ptt *hisi_ptt,
-+					   struct hisi_ptt_filter_desc *filter)
-+{
-+	struct kobject *kobj = &hisi_ptt->hisi_ptt_pmu.dev->kobj;
-+
-+	filter->attr.attr.name = filter->name;
-+	filter->attr.attr.mode = 0400; /* DEVICE_ATTR_ADMIN_RO */
-+	filter->attr.show = hisi_ptt_filter_show;
-+
-+	return sysfs_add_file_to_group(kobj, &filter->attr.attr,
-+				       HISI_PTT_REQ_FILTERS_GRP_NAME);
-+}
-+
-+static void hisi_ptt_remove_req_filter_attr(struct hisi_ptt *hisi_ptt,
-+					   struct hisi_ptt_filter_desc *filter)
-+{
-+	struct kobject *kobj = &hisi_ptt->hisi_ptt_pmu.dev->kobj;
-+
-+	sysfs_remove_file_from_group(kobj, &filter->attr.attr,
-+				     HISI_PTT_REQ_FILTERS_GRP_NAME);
-+}
-+
-+static int hisi_ptt_create_filter_attr(struct hisi_ptt *hisi_ptt,
-+				       struct hisi_ptt_filter_desc *filter)
-+{
-+	int ret;
-+
-+	if (filter->is_port)
-+		ret = hisi_ptt_create_rp_filter_attr(hisi_ptt, filter);
-+	else
-+		ret = hisi_ptt_create_req_filter_attr(hisi_ptt, filter);
-+
-+	if (ret)
-+		pci_err(hisi_ptt->pdev, "failed to create sysfs attribute for filter %s\n",
-+			filter->name);
-+
-+	return ret;
-+}
-+
-+static void hisi_ptt_remove_filter_attr(struct hisi_ptt *hisi_ptt,
-+					struct hisi_ptt_filter_desc *filter)
-+{
-+	if (filter->is_port)
-+		hisi_ptt_remove_rp_filter_attr(hisi_ptt, filter);
-+	else
-+		hisi_ptt_remove_req_filter_attr(hisi_ptt, filter);
-+}
-+
-+static void hisi_ptt_remove_all_filter_attributes(void *data)
-+{
-+	struct hisi_ptt_filter_desc *filter;
-+	struct hisi_ptt *hisi_ptt = data;
-+
-+	mutex_lock(&hisi_ptt->filter_lock);
-+
-+	list_for_each_entry(filter, &hisi_ptt->req_filters, list)
-+		hisi_ptt_remove_filter_attr(hisi_ptt, filter);
-+
-+	list_for_each_entry(filter, &hisi_ptt->port_filters, list)
-+		hisi_ptt_remove_filter_attr(hisi_ptt, filter);
-+
-+	hisi_ptt->sysfs_inited = false;
-+	mutex_unlock(&hisi_ptt->filter_lock);
-+}
-+
-+static int hisi_ptt_init_filter_attributes(struct hisi_ptt *hisi_ptt)
-+{
-+	struct hisi_ptt_filter_desc *filter;
-+	int ret;
-+
-+	mutex_lock(&hisi_ptt->filter_lock);
-+
-+	/*
-+	 * Register the reset callback in the first stage. In reset we traverse
-+	 * the filters list to remove the sysfs attributes so the callback alone
-+	 * can be called safely even without below filter attributes creation.
-+	 */
-+	ret = devm_add_action(&hisi_ptt->pdev->dev,
-+			      hisi_ptt_remove_all_filter_attributes,
-+			      hisi_ptt);
-+	if (ret)
-+		goto out;
-+
-+	list_for_each_entry(filter, &hisi_ptt->port_filters, list) {
-+		ret = hisi_ptt_create_filter_attr(hisi_ptt, filter);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	list_for_each_entry(filter, &hisi_ptt->req_filters, list) {
-+		ret = hisi_ptt_create_filter_attr(hisi_ptt, filter);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	hisi_ptt->sysfs_inited = true;
-+out:
-+	mutex_unlock(&hisi_ptt->filter_lock);
-+	return ret;
-+}
-+
- static void hisi_ptt_update_filters(struct work_struct *work)
- {
- 	struct delayed_work *delayed_work = to_delayed_work(work);
-@@ -429,6 +565,18 @@ static void hisi_ptt_update_filters(struct work_struct *work)
- 			filter = hisi_ptt_alloc_add_filter(hisi_ptt, info.devid, info.is_port);
- 			if (!filter)
- 				continue;
-+
-+			/*
-+			 * If filters' sysfs entries hasn't been initialized,
-+			 * then we're still at probe stage. Add the filters to
-+			 * the list and later hisi_ptt_init_filter_attributes()
-+			 * will create sysfs attributes for all the filters.
-+			 */
-+			if (hisi_ptt->sysfs_inited &&
-+			    hisi_ptt_create_filter_attr(hisi_ptt, filter)) {
-+				hisi_ptt_del_free_filter(hisi_ptt, filter);
-+				continue;
-+			}
- 		} else {
- 			struct hisi_ptt_filter_desc *tmp;
- 			struct list_head *target_list;
-@@ -438,6 +586,9 @@ static void hisi_ptt_update_filters(struct work_struct *work)
- 
- 			list_for_each_entry_safe(filter, tmp, target_list, list)
- 				if (filter->devid == info.devid) {
-+					if (hisi_ptt->sysfs_inited)
-+						hisi_ptt_remove_filter_attr(hisi_ptt, filter);
-+
- 					hisi_ptt_del_free_filter(hisi_ptt, filter);
- 					break;
- 				}
-@@ -663,10 +814,58 @@ static struct attribute_group hisi_ptt_pmu_format_group = {
- 	.attrs = hisi_ptt_pmu_format_attrs,
- };
- 
-+static ssize_t hisi_ptt_filter_multiselect_show(struct device *dev,
-+						struct device_attribute *attr,
-+						char *buf)
-+{
-+	struct dev_ext_attribute *ext_attr;
-+
-+	ext_attr = container_of(attr, struct dev_ext_attribute, attr);
-+	return sysfs_emit(buf, "%s\n", (char *)ext_attr->var);
-+}
-+
-+static struct dev_ext_attribute root_port_filters_multiselect = {
-+	.attr = {
-+		.attr = { .name = "multiselect", .mode = 0400 },
-+		.show = hisi_ptt_filter_multiselect_show,
-+	},
-+	.var = "1",
-+};
-+
-+static struct attribute *hisi_ptt_pmu_root_ports_attrs[] = {
-+	&root_port_filters_multiselect.attr.attr,
-+	NULL
-+};
-+
-+static struct attribute_group hisi_ptt_pmu_root_ports_group = {
-+	.name = HISI_PTT_RP_FILTERS_GRP_NAME,
-+	.attrs = hisi_ptt_pmu_root_ports_attrs,
-+};
-+
-+static struct dev_ext_attribute requester_filters_multiselect = {
-+	.attr = {
-+		.attr = { .name = "multiselect", .mode = 0400 },
-+		.show = hisi_ptt_filter_multiselect_show,
-+	},
-+	.var = "0",
-+};
-+
-+static struct attribute *hisi_ptt_pmu_requesters_attrs[] = {
-+	&requester_filters_multiselect.attr.attr,
-+	NULL
-+};
-+
-+static struct attribute_group hisi_ptt_pmu_requesters_group = {
-+	.name = HISI_PTT_REQ_FILTERS_GRP_NAME,
-+	.attrs = hisi_ptt_pmu_requesters_attrs,
-+};
-+
- static const struct attribute_group *hisi_ptt_pmu_groups[] = {
- 	&hisi_ptt_cpumask_attr_group,
- 	&hisi_ptt_pmu_format_group,
- 	&hisi_ptt_tune_group,
-+	&hisi_ptt_pmu_root_ports_group,
-+	&hisi_ptt_pmu_requesters_group,
- 	NULL
- };
- 
-@@ -1147,6 +1346,12 @@ static int hisi_ptt_probe(struct pci_dev *pdev,
- 		return ret;
- 	}
- 
-+	ret = hisi_ptt_init_filter_attributes(hisi_ptt);
-+	if (ret) {
-+		pci_err(pdev, "failed to init sysfs filter attributes, ret = %d", ret);
-+		return ret;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.h b/drivers/hwtracing/ptt/hisi_ptt.h
-index d598411e9cb8..164012dba4ec 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.h
-+++ b/drivers/hwtracing/ptt/hisi_ptt.h
-@@ -11,6 +11,7 @@
- 
- #include <linux/bits.h>
- #include <linux/cpumask.h>
-+#include <linux/device.h>
- #include <linux/kfifo.h>
- #include <linux/list.h>
- #include <linux/mutex.h>
-@@ -139,14 +140,25 @@ struct hisi_ptt_trace_ctrl {
- 	u32 type:4;
- };
- 
-+/*
-+ * sysfs attribute group name for root port filters and requester filters:
-+ * /sys/devices/hisi_ptt<sicl_id>_<core_id>/root_port_filters
-+ * and
-+ * /sys/devices/hisi_ptt<sicl_id>_<core_id>/requester_filters
-+ */
-+#define HISI_PTT_RP_FILTERS_GRP_NAME	"root_port_filters"
-+#define HISI_PTT_REQ_FILTERS_GRP_NAME	"requester_filters"
-+
- /**
-  * struct hisi_ptt_filter_desc - Descriptor of the PTT trace filter
-+ * @attr:    sysfs attribute of this filter
-  * @list:    entry of this descriptor in the filter list
-  * @is_port: the PCI device of the filter is a Root Port or not
-  * @name:    name of this filter, same as the name of the related PCI device
-  * @devid:   the PCI device's devid of the filter
-  */
- struct hisi_ptt_filter_desc {
-+	struct device_attribute attr;
- 	struct list_head list;
- 	bool is_port;
- 	char *name;
-@@ -194,6 +206,7 @@ struct hisi_ptt_pmu_buf {
-  * @port_filters: the filter list of root ports
-  * @req_filters:  the filter list of requester ID
-  * @filter_lock:  lock to protect the filters
-+ * @sysfs_inited: whether the filters' sysfs entries has been initialized
-  * @port_mask:    port mask of the managed root ports
-  * @work:         delayed work for filter updating
-  * @filter_update_lock: spinlock to protect the filter update fifo
-@@ -221,6 +234,7 @@ struct hisi_ptt {
- 	struct list_head port_filters;
- 	struct list_head req_filters;
- 	struct mutex filter_lock;
-+	bool sysfs_inited;
- 	u16 port_mask;
- 
- 	/*
--- 
-2.24.0
+Intended blank line?
 
+> +	NULL
+> +};
+> +
+> +static const struct attribute_group dwc_pcie_event_attrs_group = {
+> +	.name = "events",
+> +	.attrs = dwc_pcie_pmu_time_event_attrs,
+> +};
+> +
+> +static const struct attribute_group *dwc_pcie_attr_groups[] = {
+> +	&dwc_pcie_event_attrs_group,
+> +	&dwc_pcie_format_attrs_group,
+> +	&dwc_pcie_cpumask_attr_group,
+> +	NULL
+> +};
+> +
+> +static void dwc_pcie_pmu_lane_event_enable(struct dwc_pcie_pmu *pcie_pmu,
+> +					   bool enable)
+> +{
+> +	struct pci_dev *pdev = pcie_pmu->pdev;
+> +	u16 ras_des = pcie_pmu->ras_des;
+> +	u32 val;
+> +
+> +	pci_read_config_dword(pdev, ras_des + DWC_PCIE_EVENT_CNT_CTL, &val);
+> +
+> +	/* Clear DWC_PCIE_CNT_ENABLE field first */
+> +	val &= ~DWC_PCIE_CNT_ENABLE;
+> +	if (enable)
+> +		val |= FIELD_PREP(DWC_PCIE_CNT_ENABLE, DWC_PCIE_PER_EVENT_ON);
+> +	else
+> +		val |= FIELD_PREP(DWC_PCIE_CNT_ENABLE, DWC_PCIE_PER_EVENT_OFF);
+> +
+> +	pci_write_config_dword(pdev, ras_des + DWC_PCIE_EVENT_CNT_CTL, val);
+> +}
+> +
+> +static void dwc_pcie_pmu_time_based_event_enable(struct dwc_pcie_pmu *pcie_pmu,
+> +					  bool enable)
+> +{
+> +	struct pci_dev *pdev = pcie_pmu->pdev;
+> +	u16 ras_des = pcie_pmu->ras_des;
+> +	u32 val;
+> +
+> +	pci_read_config_dword(pdev, ras_des + DWC_PCIE_TIME_BASED_ANAL_CTL,
+> +			      &val);
+> +
+> +	if (enable)
+> +		val |= DWC_PCIE_TIME_BASED_CNT_ENABLE;
+> +	else
+> +		val &= ~DWC_PCIE_TIME_BASED_CNT_ENABLE;
+> +
+> +	pci_write_config_dword(pdev, ras_des + DWC_PCIE_TIME_BASED_ANAL_CTL,
+> +			       val);
+> +}
+> +
+> +static u64 dwc_pcie_pmu_read_lane_event_counter(struct dwc_pcie_pmu *pcie_pmu)
+> +{
+> +	struct pci_dev *pdev = pcie_pmu->pdev;
+> +	u16 ras_des = pcie_pmu->ras_des;
+> +	u32 val;
+> +
+> +	pci_read_config_dword(pdev, ras_des + DWC_PCIE_EVENT_CNT_DATA, &val);
+> +
+> +	return val;
+> +}
+> +
+> +static u64 dwc_pcie_pmu_read_time_based_counter(struct dwc_pcie_pmu *pcie_pmu)
+> +{
+> +	struct pci_dev *pdev = pcie_pmu->pdev;
+> +	u16 ras_des = pcie_pmu->ras_des;
+> +	u64 count;
+> +	u32 val;
+> +
+> +	pci_read_config_dword(
+> +		pdev, ras_des + DWC_PCIE_TIME_BASED_ANAL_DATA_REG_HIGH, &val);
+> +	count = val;
+> +	count <<= 32;
+> +
+> +	pci_read_config_dword(
+> +		pdev, ras_des + DWC_PCIE_TIME_BASED_ANAL_DATA_REG_LOW, &val);
+> +
+> +	count += val;
+> +
+> +	return count;
+> +}
+> +
+> +static void dwc_pcie_pmu_event_update(struct perf_event *event)
+> +{
+> +	struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
+> +	struct hw_perf_event *hwc = &event->hw;
+> +	enum dwc_pcie_event_type type = DWC_PCIE_EVENT_TYPE(event);
+> +	u64 delta, prev, now;
+> +
+> +	do {
+> +		prev = local64_read(&hwc->prev_count);
+> +
+> +		if (type == DWC_PCIE_LANE_EVENT)
+> +			now = dwc_pcie_pmu_read_lane_event_counter(pcie_pmu);
+> +		else if (type == DWC_PCIE_TIME_BASE_EVENT)
+> +			now = dwc_pcie_pmu_read_time_based_counter(pcie_pmu);
+> +
+> +	} while (local64_cmpxchg(&hwc->prev_count, prev, now) != prev);
+> +
+> +	if (type == DWC_PCIE_LANE_EVENT)
+> +		delta = (now - prev) & DWC_PCIE_LANE_EVENT_MAX_PERIOD;
+> +	else if (type == DWC_PCIE_TIME_BASE_EVENT)
+> +		delta = (now - prev) & DWC_PCIE_TIME_BASED_EVENT_MAX_PERIOD;
+> +
+> +	local64_add(delta, &event->count);
+> +}
+> +
+> +static int dwc_pcie_pmu_event_init(struct perf_event *event)
+> +{
+> +	struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
+> +	enum dwc_pcie_event_type type = DWC_PCIE_EVENT_TYPE(event);
+> +	struct perf_event *sibling;
+> +	u32 lane;
+> +
+> +	if (event->attr.type != event->pmu->type)
+> +		return -ENOENT;
+> +
+> +	/* We don't support sampling */
+> +	if (is_sampling_event(event))
+> +		return -EINVAL;
+> +
+> +	/* We cannot support task bound events */
+> +	if (event->cpu < 0 || event->attach_state & PERF_ATTACH_TASK)
+> +		return -EINVAL;
+> +
+> +	if (event->group_leader != event &&
+> +	    !is_software_event(event->group_leader))
+> +		return -EINVAL;
+> +
+> +	for_each_sibling_event(sibling, event->group_leader) {
+> +		if (sibling->pmu != event->pmu && !is_software_event(sibling))
+> +			return -EINVAL;
+> +	}
+> +
+> +	if (type == DWC_PCIE_LANE_EVENT) {
+> +		lane = DWC_PCIE_EVENT_LANE(event);
+> +		if (lane < 0 || lane >= pcie_pmu->nr_lanes)
+> +			return -EINVAL;
+> +	}
+> +
+> +	event->cpu = pcie_pmu->oncpu;
+> +
+> +	return 0;
+> +}
+> +
+> +static void dwc_pcie_pmu_set_period(struct hw_perf_event *hwc)
+> +{
+> +	local64_set(&hwc->prev_count, 0);
+> +}
+> +
+> +static void dwc_pcie_pmu_event_start(struct perf_event *event, int flags)
+> +{
+> +	struct hw_perf_event *hwc = &event->hw;
+> +	struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
+> +	enum dwc_pcie_event_type type = DWC_PCIE_EVENT_TYPE(event);
+> +
+> +	hwc->state = 0;
+> +	dwc_pcie_pmu_set_period(hwc);
+> +
+> +	if (type == DWC_PCIE_LANE_EVENT)
+> +		dwc_pcie_pmu_lane_event_enable(pcie_pmu, true);
+> +	else if (type == DWC_PCIE_TIME_BASE_EVENT)
+> +		dwc_pcie_pmu_time_based_event_enable(pcie_pmu, true);
+> +}
+> +
+> +static void dwc_pcie_pmu_event_stop(struct perf_event *event, int flags)
+> +{
+> +	struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
+> +	enum dwc_pcie_event_type type = DWC_PCIE_EVENT_TYPE(event);
+> +	struct hw_perf_event *hwc = &event->hw;
+> +
+> +	if (event->hw.state & PERF_HES_STOPPED)
+> +		return;
+> +
+> +	if (type == DWC_PCIE_LANE_EVENT)
+> +		dwc_pcie_pmu_lane_event_enable(pcie_pmu, false);
+> +	else if (type == DWC_PCIE_TIME_BASE_EVENT)
+> +		dwc_pcie_pmu_time_based_event_enable(pcie_pmu, false);
+> +
+> +	dwc_pcie_pmu_event_update(event);
+> +	hwc->state |= PERF_HES_STOPPED | PERF_HES_UPTODATE;
+> +}
+> +
+> +static int dwc_pcie_pmu_event_add(struct perf_event *event, int flags)
+> +{
+> +	struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
+> +	struct pci_dev *pdev = pcie_pmu->pdev;
+> +	struct hw_perf_event *hwc = &event->hw;
+> +	enum dwc_pcie_event_type type = DWC_PCIE_EVENT_TYPE(event);
+> +	int event_id = DWC_PCIE_EVENT_ID(event);
+> +	int lane = DWC_PCIE_EVENT_LANE(event);
+> +	u16 ras_des = pcie_pmu->ras_des;
+> +	u32 ctrl;
+> +
+> +	/* Only one counter and it is in use */
+> +	if (pcie_pmu->event)
+> +		return -ENOSPC;
+> +
+> +	pcie_pmu->event = event;
+> +	hwc->state = PERF_HES_STOPPED | PERF_HES_UPTODATE;
+> +
+> +	if (type == DWC_PCIE_LANE_EVENT) {
+> +		/* EVENT_COUNTER_DATA_REG needs clear manually */
+> +		ctrl = FIELD_PREP(DWC_PCIE_CNT_EVENT_SEL, event_id) |
+> +			FIELD_PREP(DWC_PCIE_CNT_LANE_SEL, lane) |
+> +			FIELD_PREP(DWC_PCIE_CNT_ENABLE, DWC_PCIE_PER_EVENT_OFF) |
+> +			FIELD_PREP(DWC_PCIE_EVENT_CLEAR, DWC_PCIE_EVENT_PER_CLEAR);
+> +		pci_write_config_dword(pdev, ras_des + DWC_PCIE_EVENT_CNT_CTL,
+> +				       ctrl);
+> +	} else if (type == DWC_PCIE_TIME_BASE_EVENT) {
+> +		/*
+> +		 * TIME_BASED_ANAL_DATA_REG is a 64 bit register, we can safely
+> +		 * use it with any manually controlled duration. And it is
+> +		 * cleared when next measurement starts.
+> +		 */
+> +		ctrl = FIELD_PREP(DWC_PCIE_TIME_BASED_REPORT_SEL, event_id) |
+> +			FIELD_PREP(DWC_PCIE_TIME_BASED_DURATION_SEL,
+> +				   DWC_PCIE_DURATION_MANUAL_CTL) |
+> +			DWC_PCIE_TIME_BASED_CNT_ENABLE;
+> +		pci_write_config_dword(
+> +			pdev, ras_des + DWC_PCIE_TIME_BASED_ANAL_CTL, ctrl);
+> +	}
+> +
+> +	if (flags & PERF_EF_START)
+> +		dwc_pcie_pmu_event_start(event, PERF_EF_RELOAD);
+> +
+> +	perf_event_update_userpage(event);
+> +
+> +	return 0;
+> +}
+> +
+> +static void dwc_pcie_pmu_event_del(struct perf_event *event, int flags)
+> +{
+> +	struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
+> +
+> +	dwc_pcie_pmu_event_stop(event, flags | PERF_EF_UPDATE);
+> +	perf_event_update_userpage(event);
+> +	pcie_pmu->event = NULL;
+> +}
+> +
+> +static int __dwc_pcie_pmu_probe(struct dwc_pcie_pmu_priv *priv)
+> +{
+> +	struct pci_dev *pdev = NULL;
+> +	struct dwc_pcie_pmu *pcie_pmu;
+> +	char *name;
+> +	u32 bdf;
+> +	int ret;
+> +
+> +	INIT_LIST_HEAD(&priv->pmu_nodes);
+> +
+> +	/* Match the rootport with VSEC_RAS_DES_ID, and register a PMU for it */
+> +	for_each_pci_dev(pdev) {
+> +		u16 vsec;
+> +		u32 val;
+> +
+> +		if (!(pci_is_pcie(pdev) &&
+> +		      pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT))
+> +			continue;
+> +
+> +		vsec = pci_find_vsec_capability(pdev, PCI_VENDOR_ID_ALIBABA,
+> +						DWC_PCIE_VSEC_RAS_DES_ID);
+> +		if (!vsec)
+> +			continue;
+> +
+> +		pci_read_config_dword(pdev, vsec + PCI_VNDR_HEADER, &val);
+> +		if (PCI_VNDR_HEADER_REV(val) != 0x04 ||
+> +		    PCI_VNDR_HEADER_LEN(val) != 0x100)
+> +			continue;
+> +		pci_dbg(pdev,
+> +			"Detected PCIe Vendor-Specific Extended Capability RAS DES\n");
+> +
+> +		bdf = PCI_DEVID(pdev->bus->number, pdev->devfn);
+> +		name = devm_kasprintf(priv->dev, GFP_KERNEL, "dwc_rootport_%x",
+> +				      bdf);
+> +		if (!name)
+> +			return -ENOMEM;
+> +
+> +		/* All checks passed, go go go */
+> +		pcie_pmu = devm_kzalloc(&pdev->dev, sizeof(*pcie_pmu), GFP_KERNEL);
+> +		if (!pcie_pmu) {
+> +			pci_dev_put(pdev);
+
+we need to call pci_dev_put on all the return branch below and above and after the for_each_pci_dev()
+loop to keep the refcnt balance.
+
+> +			return -ENOMEM;
+> +		}
+> +
+> +		pcie_pmu->pdev = pdev;
+> +		pcie_pmu->ras_des = vsec;
+> +		pcie_pmu->nr_lanes = pcie_get_width_cap(pdev);
+> +		pcie_pmu->pmu = (struct pmu){
+> +			.module		= THIS_MODULE,
+> +			.attr_groups	= dwc_pcie_attr_groups,
+> +			.capabilities	= PERF_PMU_CAP_NO_EXCLUDE,
+> +			.task_ctx_nr	= perf_invalid_context,
+> +			.event_init	= dwc_pcie_pmu_event_init,
+> +			.add		= dwc_pcie_pmu_event_add,
+> +			.del		= dwc_pcie_pmu_event_del,
+> +			.start		= dwc_pcie_pmu_event_start,
+> +			.stop		= dwc_pcie_pmu_event_stop,
+> +			.read		= dwc_pcie_pmu_event_update,
+> +		};
+> +
+> +		/* Add this instance to the list used by the offline callback */
+> +		ret = cpuhp_state_add_instance(dwc_pcie_pmu_hp_state,
+> +					       &pcie_pmu->cpuhp_node);
+> +		if (ret) {
+> +			pci_err(pcie_pmu->pdev,
+> +				"Error %d registering hotplug @%x\n", ret, bdf);
+> +			return ret;
+> +		}
+> +		ret = perf_pmu_register(&pcie_pmu->pmu, name, -1);
+> +		if (ret) {
+> +			pci_err(pcie_pmu->pdev,
+> +				"Error %d registering PMU @%x\n", ret, bdf);
+> +			cpuhp_state_remove_instance_nocalls(
+> +				dwc_pcie_pmu_hp_state, &pcie_pmu->cpuhp_node);
+> +			return ret;
+> +		}
+> +
+> +		/* Add registered PMUs and unregister them when this driver remove */
+> +		list_add(&pcie_pmu->pmu_node, &priv->pmu_nodes);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int dwc_pcie_pmu_remove(struct platform_device *pdev)
+> +{
+> +	struct dwc_pcie_pmu_priv *priv = platform_get_drvdata(pdev);
+> +	struct dwc_pcie_pmu *pcie_pmu;
+> +
+> +	list_for_each_entry(pcie_pmu, &priv->pmu_nodes, pmu_node) {
+> +		cpuhp_state_remove_instance(dwc_pcie_pmu_hp_state,
+> +					    &pcie_pmu->cpuhp_node);
+> +		perf_pmu_unregister(&pcie_pmu->pmu);
+
+should unregister the PMU first, keep the order reverse to __dwc_pcie_pmu_probe().
+
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int dwc_pcie_pmu_probe(struct platform_device *pdev)
+> +{
+> +	struct dwc_pcie_pmu_priv *priv;
+> +	int ret;
+> +
+> +	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
+> +	if (!priv)
+> +		return -ENOMEM;
+> +
+> +	priv->dev = &pdev->dev;
+> +	platform_set_drvdata(pdev, priv);
+> +
+> +	/* If one PMU registration fails, remove all. */
+> +	ret = __dwc_pcie_pmu_probe(priv);
+> +	if (ret) {
+> +		dwc_pcie_pmu_remove(pdev);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void dwc_pcie_pmu_migrate(struct dwc_pcie_pmu *pcie_pmu, unsigned int cpu)
+> +{
+> +	/* This PMU does NOT support interrupt, just migrate context. */
+> +	perf_pmu_migrate_context(&pcie_pmu->pmu, pcie_pmu->oncpu, cpu);
+> +	pcie_pmu->oncpu = cpu;
+> +}
+> +
+> +static int dwc_pcie_pmu_online_cpu(unsigned int cpu, struct hlist_node *cpuhp_node)
+> +{
+> +	struct dwc_pcie_pmu *pcie_pmu;
+> +	struct pci_dev *pdev;
+> +	int node;
+> +
+> +	pcie_pmu = hlist_entry_safe(cpuhp_node, struct dwc_pcie_pmu, cpuhp_node);
+> +	pdev = pcie_pmu->pdev;
+> +	node = dev_to_node(&pdev->dev);
+> +
+> +	if (node != NUMA_NO_NODE && cpu_to_node(pcie_pmu->oncpu) != node &&
+> +	    cpu_to_node(cpu) == node)
+> +		dwc_pcie_pmu_migrate(pcie_pmu, cpu);
+> +
+> +	return 0;
+> +}
+> +
+> +static int dwc_pcie_pmu_offline_cpu(unsigned int cpu, struct hlist_node *cpuhp_node)
+> +{
+> +	struct dwc_pcie_pmu *pcie_pmu;
+> +	struct pci_dev *pdev;
+> +	int node;
+> +	cpumask_t mask;
+> +	unsigned int target;
+> +
+> +	pcie_pmu = hlist_entry_safe(cpuhp_node, struct dwc_pcie_pmu, cpuhp_node);
+> +	if (cpu != pcie_pmu->oncpu)
+> +		return 0;
+> +
+> +	pdev = pcie_pmu->pdev;
+> +	node = dev_to_node(&pdev->dev);
+> +	if (cpumask_and(&mask, cpumask_of_node(node), cpu_online_mask) &&
+> +	    cpumask_andnot(&mask, &mask, cpumask_of(cpu)))
+> +		target = cpumask_any(&mask);
+
+The cpumask_of_node() only contains the online CPUs so this branch is redundant. For arm64
+using arch_numa.c the node cpumask is updated in numa_{add, remove}_cpu() and for other
+arthitecture the behaviour should keep consistenct. Please correct my if I'm wrong.
+
+> +	else
+> +		target = cpumask_any_but(cpu_online_mask, cpu);
+> +	if (target < nr_cpu_ids)
+> +		dwc_pcie_pmu_migrate(pcie_pmu, target);
+> +
+> +	return 0;
+> +}
+> +
+> +static struct platform_driver dwc_pcie_pmu_driver = {
+> +	.probe = dwc_pcie_pmu_probe,
+> +	.remove = dwc_pcie_pmu_remove,
+> +	.driver = {.name = "dwc_pcie_pmu",},
+> +};
+> +
+> +static int __init dwc_pcie_pmu_init(void)
+> +{
+> +	int ret;
+> +
+> +	ret = cpuhp_setup_state_multi(CPUHP_AP_ONLINE_DYN,
+> +				      "perf/dwc_pcie_pmu:online",
+> +				      dwc_pcie_pmu_online_cpu,
+> +				      dwc_pcie_pmu_offline_cpu);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	dwc_pcie_pmu_hp_state = ret;
+> +
+> +	ret = platform_driver_register(&dwc_pcie_pmu_driver);
+> +	if (ret) {
+> +		cpuhp_remove_multi_state(dwc_pcie_pmu_hp_state);
+> +		return ret;
+> +	}
+> +
+> +	dwc_pcie_pmu_dev = platform_device_register_simple(
+> +				"dwc_pcie_pmu", PLATFORM_DEVID_NONE, NULL, 0);
+> +	if (IS_ERR(dwc_pcie_pmu_dev)) {
+> +		platform_driver_unregister(&dwc_pcie_pmu_driver);
+
+On failure we also need to remove cpuhp state as well.
+
+Thanks,
+Yicong
+
+> +		return PTR_ERR(dwc_pcie_pmu_dev);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void __exit dwc_pcie_pmu_exit(void)
+> +{
+> +	platform_device_unregister(dwc_pcie_pmu_dev);
+> +	platform_driver_unregister(&dwc_pcie_pmu_driver);
+> +	cpuhp_remove_multi_state(dwc_pcie_pmu_hp_state);
+> +}
+> +
+> +module_init(dwc_pcie_pmu_init);
+> +module_exit(dwc_pcie_pmu_exit);
+> +
+> +MODULE_DESCRIPTION("PMU driver for DesignWare Cores PCI Express Controller");
+> +MODULE_AUTHOR("Shuai xue <xueshuai@linux.alibaba.com>");
+> +MODULE_AUTHOR("Wen Cheng <yinxuan_cw@linux.alibaba.com>");
+> +MODULE_LICENSE("GPL v2");
+> 
