@@ -2,22 +2,22 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A103C7EE2E
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Jun 2023 07:54:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BD13C7EE24
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Jun 2023 07:54:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229880AbjFFHyM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Jun 2023 03:54:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59502 "EHLO
+        id S232225AbjFFHyS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Jun 2023 03:54:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58126 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234899AbjFFHx1 (ORCPT
+        with ESMTP id S232852AbjFFHx1 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2023 03:53:27 -0400
-Received: from out30-110.freemail.mail.aliyun.com (out30-110.freemail.mail.aliyun.com [115.124.30.110])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4A60122;
-        Tue,  6 Jun 2023 00:49:55 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R521e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046060;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=15;SR=0;TI=SMTPD_---0VkVT1DD_1686037790;
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0VkVT1DD_1686037790)
+Received: from out30-112.freemail.mail.aliyun.com (out30-112.freemail.mail.aliyun.com [115.124.30.112])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 736D21BC2;
+        Tue,  6 Jun 2023 00:49:52 -0700 (PDT)
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R101e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046050;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=15;SR=0;TI=SMTPD_---0VkVT19O_1686037787;
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0VkVT19O_1686037787)
           by smtp.aliyun-inc.com;
-          Tue, 06 Jun 2023 15:49:51 +0800
+          Tue, 06 Jun 2023 15:49:48 +0800
 From:   Shuai Xue <xueshuai@linux.alibaba.com>
 To:     chengyou@linux.alibaba.com, kaishen@linux.alibaba.com,
         helgaas@kernel.org, yangyicong@huawei.com, will@kernel.org,
@@ -27,9 +27,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-pci@vger.kernel.org, rdunlap@infradead.org,
         mark.rutland@arm.com, zhuo.song@linux.alibaba.com,
         xueshuai@linux.alibaba.com
-Subject: [PATCH v6 4/4] MAINTAINERS: add maintainers for DesignWare PCIe PMU driver
-Date:   Tue,  6 Jun 2023 15:49:38 +0800
-Message-Id: <20230606074938.97724-5-xueshuai@linux.alibaba.com>
+Subject: [PATCH v6 2/4] PCI: Add Alibaba Vendor ID to linux/pci_ids.h
+Date:   Tue,  6 Jun 2023 15:49:36 +0800
+Message-Id: <20230606074938.97724-3-xueshuai@linux.alibaba.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230606074938.97724-1-xueshuai@linux.alibaba.com>
 References: <20230606074938.97724-1-xueshuai@linux.alibaba.com>
@@ -39,31 +39,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add maintainers for Synopsys DesignWare PCIe PMU driver and driver
-document.
+The Alibaba Vendor ID (0x1ded) is now used by Alibaba elasticRDMA ("erdma")
+and will be shared with the upcoming PCIe PMU ("dwc_pcie_pmu"). Move the
+Vendor ID to linux/pci_ids.h so that it can shared by several drivers
+later.
 
 Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
 ---
- MAINTAINERS | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/infiniband/hw/erdma/erdma_hw.h | 2 --
+ include/linux/pci_ids.h                | 2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 250518fc70ff..3f0aaf15469b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -20483,6 +20483,12 @@ L:	linux-mmc@vger.kernel.org
- S:	Maintained
- F:	drivers/mmc/host/dw_mmc*
+diff --git a/drivers/infiniband/hw/erdma/erdma_hw.h b/drivers/infiniband/hw/erdma/erdma_hw.h
+index 76ce2856be28..ee35ebef9ee7 100644
+--- a/drivers/infiniband/hw/erdma/erdma_hw.h
++++ b/drivers/infiniband/hw/erdma/erdma_hw.h
+@@ -11,8 +11,6 @@
+ #include <linux/types.h>
  
-+SYNOPSYS DESIGNWARE PCIE PMU DRIVER
-+M:	Shuai Xue <xueshuai@linux.alibaba.com>
-+S:	Supported
-+F:	Documentation/admin-guide/perf/dwc_pcie_pmu.rst
-+F:	drivers/perf/dwc_pcie_pmu.c
+ /* PCIe device related definition. */
+-#define PCI_VENDOR_ID_ALIBABA 0x1ded
+-
+ #define ERDMA_PCI_WIDTH 64
+ #define ERDMA_FUNC_BAR 0
+ #define ERDMA_MISX_BAR 2
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 95f33dadb2be..9e8aec472f06 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2586,6 +2586,8 @@
+ #define PCI_VENDOR_ID_TEKRAM		0x1de1
+ #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
+ 
++#define PCI_VENDOR_ID_ALIBABA		0x1ded
 +
- SYNOPSYS HSDK RESET CONTROLLER DRIVER
- M:	Eugeniy Paltsev <Eugeniy.Paltsev@synopsys.com>
- S:	Supported
+ #define PCI_VENDOR_ID_TEHUTI		0x1fc9
+ #define PCI_DEVICE_ID_TEHUTI_3009	0x3009
+ #define PCI_DEVICE_ID_TEHUTI_3010	0x3010
 -- 
 2.20.1.12.g72788fdb
 
