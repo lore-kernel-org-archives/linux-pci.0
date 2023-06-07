@@ -2,154 +2,106 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C42DC7EE29
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Jun 2023 06:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBA59C7EE43
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Jun 2023 07:58:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234137AbjFGGQo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Jun 2023 02:16:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48670 "EHLO
+        id S237843AbjFGH62 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Jun 2023 03:58:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234075AbjFGGQo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2023 02:16:44 -0400
-Received: from 189.cn (ptr.189.cn [183.61.185.101])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 34B68AA;
-        Tue,  6 Jun 2023 23:16:41 -0700 (PDT)
-HMM_SOURCE_IP: 10.64.8.43:37502.551464108
-HMM_ATTACHE_NUM: 0000
-HMM_SOURCE_TYPE: SMTP
-Received: from clientip-114.242.206.180 (unknown [10.64.8.43])
-        by 189.cn (HERMES) with SMTP id 0EAFE1002C5;
-        Wed,  7 Jun 2023 14:16:34 +0800 (CST)
-Received: from  ([114.242.206.180])
-        by gateway-151646-dep-75648544bd-7vx9t with ESMTP id 63d46740575b4bae9c59180969e45e00 for helgaas@kernel.org;
-        Wed, 07 Jun 2023 14:16:39 CST
-X-Transaction-ID: 63d46740575b4bae9c59180969e45e00
-X-Real-From: 15330273260@189.cn
-X-Receive-IP: 114.242.206.180
-X-MEDUSA-Status: 0
-Sender: 15330273260@189.cn
-Message-ID: <a540daba-d61f-1de0-a3dd-eab733a25706@189.cn>
-Date:   Wed, 7 Jun 2023 14:16:31 +0800
+        with ESMTP id S237934AbjFGH61 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2023 03:58:27 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48C8C8E;
+        Wed,  7 Jun 2023 00:58:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
+        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
+        Resent-Cc:Resent-Message-ID; bh=axps5vikobkT1mRFE9fglAhCSO+MMypFTxN72eeUtO0=;
+        t=1686124705; x=1687334305; b=kMfyNLOfrR5GeXbEHt9nEXTdQvySSOfXW53hCo+aMiOCKFZ
+        VjaTOmJclP54w5xMxgHhnKHy6ts2JJewj1niaIPBQ8SOsMuDz8mbFEMpgeBciSkaI2sT1FploU07s
+        y398ttaaB2g1e8t0THF45Y05YWT4icEApqNyb7P9i2xcbEa2geG6Ub1ZuwtLiQ1hQZB5aDgp+lqab
+        oujC9r3HMmF9HviLoM6bB9XDBgRFFkes0+9c2LuFWqkPYsUOY/MdpxwjmBJyv29ikkAyd4KTIXL/m
+        nlWw1iby6ECx8WfgFsOv8G/zBljBBagagaXrRSXpkSbv9mjrWHElYcSYIrr/JhUA==;
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.96)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1q6o3i-00GSjD-27;
+        Wed, 07 Jun 2023 09:58:22 +0200
+Message-ID: <c2b6599182b2f543da2d5fee17dce4b3a094535a.camel@sipsolutions.net>
+Subject: Re: [PATCH v2] PCI/PM: enable runtime PM later during device
+ scanning
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Lukas Wunner <lukas@wunner.de>
+Cc:     linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, rafael@kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed, 07 Jun 2023 09:58:21 +0200
+In-Reply-To: <20230607074939.GA17700@wunner.de>
+References: <20230605121621.4259f1be6cd2.Idbaa55b93f780838af44ebccb84c36f60716df04@changeid>
+         <20230605203519.bc4232207449.Idbaa55b93f780838af44ebccb84c36f60716df04@changeid>
+         <20230607074939.GA17700@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.2 (3.48.2-1.fc38) 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.11.0
-Subject: Re: [Intel-gfx] [PATCH v2 1/2] vgaarb: various coding style and
- comments fix
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Alex Deucher <alexander.deucher@amd.com>,
-        Christian Konig <christian.koenig@amd.com>,
-        Pan Xinhui <Xinhui.Pan@amd.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Karol Herbst <kherbst@redhat.com>,
-        Lyude Paul <lyude@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Maxime Ripard <mripard@kernel.org>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        Hawking Zhang <Hawking.Zhang@amd.com>,
-        Mario Limonciello <mario.limonciello@amd.com>,
-        Lijo Lazar <lijo.lazar@amd.com>,
-        YiPeng Chai <YiPeng.Chai@amd.com>,
-        Andrey Grodzovsky <andrey.grodzovsky@amd.com>,
-        Somalapuram Amaranath <Amaranath.Somalapuram@amd.com>,
-        Bokun Zhang <Bokun.Zhang@amd.com>,
-        Ville Syrjala <ville.syrjala@linux.intel.com>,
-        Li Yi <liyi@loongson.cn>,
-        Sui Jingfeng <suijingfeng@loongson.cn>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Yishai Hadas <yishaih@nvidia.com>,
-        Abhishek Sahu <abhsahu@nvidia.com>,
-        Yi Liu <yi.l.liu@intel.com>, kvm@vger.kernel.org,
-        nouveau@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        loongson-kernel@lists.loongnix.cn, amd-gfx@lists.freedesktop.org,
-        linux-pci@vger.kernel.org
-References: <20230606194921.GA1139774@bhelgaas>
-From:   Sui Jingfeng <15330273260@189.cn>
-In-Reply-To: <20230606194921.GA1139774@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-malware-bazaar: not-scanned
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On Wed, 2023-06-07 at 09:49 +0200, Lukas Wunner wrote:
+> On Mon, Jun 05, 2023 at 08:35:45PM +0200, Johannes Berg wrote:
+> > @@ -3139,6 +3139,7 @@ void pci_pm_init(struct pci_dev *dev)
+> >  	u16 pmc;
+> > =20
+> >  	pm_runtime_forbid(&dev->dev);
+> > +	pm_runtime_get_noresume(&dev->dev);
+> >  	pm_runtime_set_active(&dev->dev);
+> >  	pm_runtime_enable(&dev->dev);
+> >  	device_enable_async_suspend(&dev->dev);
+> > @@ -335,9 +336,12 @@ void pci_bus_add_device(struct pci_dev *dev)
+> >  	int retval;
+> > =20
+> >  	/*
+> > -	 * Can not put in pci_device_add yet because resources
+> > -	 * are not assigned yet for some devices.
+> > +	 * Allow runtime PM only here, since otherwise we may
+> > +	 * try to suspend a device that isn't fully configured
+> > +	 * yet, which causes problems.
+> >  	 */
+> > +	pm_runtime_put_noidle(&dev->dev);
+> > +
+> >  	pcibios_bus_add_device(dev);
+> >  	pci_fixup_device(pci_fixup_final, dev);
+> >  	pci_create_sysfs_dev_files(dev);
+>=20
+> There seem to be many different callers that end up in pci_pm_init()
+> and pci_bus_add_device().
+>=20
+> Is it guaranteed that the two functions are always called in order?
+> Do callers exist which only invoke the former but not the latter or
+> vice-versa?  Can it happen that a caller of the former errors out,
+> so the latter is never called, leading to a runtime PM ref imbalance?
 
-On 2023/6/7 03:49, Bjorn Helgaas wrote:
-> Match the subject line style:
->
->    $ git log --oneline drivers/pci/vgaarb.c
->    f321c35feaee PCI/VGA: Replace full MIT license text with SPDX identifier
->    d5109fe4d1ec PCI/VGA: Use unsigned format string to print lock counts
->    4e6c91847a7f PCI/VGA: Log bridge control messages when adding devices
->    dc593fd48abb PCI/VGA: Remove empty vga_arb_device_card_gone()
->    ...
->
-> Subject line should be a summary of the commit log, not just "various
-> style fixes".  This one needs to say something about
-> vga_str_to_iostate().
+I did ask myself that too, and honestly, I'm not entirely sure - need
+somebody more familiar to really understand that, I think.
 
-Ok, thanks for the educating .
+Most places elsewhere _do_ call both, and it feels like you have to call
+both if you want to do something with the device.
 
-> On Mon, Jun 05, 2023 at 04:58:30AM +0800, Sui Jingfeng wrote:
->> From: Sui Jingfeng <suijingfeng@loongson.cn>
->>
->> To keep consistent with vga_iostate_to_str() function, the third argument
->> of vga_str_to_iostate() function should be 'unsigned int *'.
->>
->> Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
->> ---
->>   drivers/pci/vgaarb.c   | 29 +++++++++++++++--------------
->>   include/linux/vgaarb.h |  8 +++-----
->>   2 files changed, 18 insertions(+), 19 deletions(-)
->>
->> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
->> index 5a696078b382..e40e6e5e5f03 100644
->> --- a/drivers/pci/vgaarb.c
->> +++ b/drivers/pci/vgaarb.c
->> @@ -61,7 +61,6 @@ static bool vga_arbiter_used;
->>   static DEFINE_SPINLOCK(vga_lock);
->>   static DECLARE_WAIT_QUEUE_HEAD(vga_wait_queue);
->>   
->> -
->>   static const char *vga_iostate_to_str(unsigned int iostate)
->>   {
->>   	/* Ignore VGA_RSRC_IO and VGA_RSRC_MEM */
->> @@ -77,10 +76,12 @@ static const char *vga_iostate_to_str(unsigned int iostate)
->>   	return "none";
->>   }
->>   
->> -static int vga_str_to_iostate(char *buf, int str_size, int *io_state)
->> +static int vga_str_to_iostate(char *buf, int str_size, unsigned int *io_state)
->>   {
->> -	/* we could in theory hand out locks on IO and mem
->> -	 * separately to userspace but it can cause deadlocks */
->> +	/*
->> +	 * we could in theory hand out locks on IO and mem
->> +	 * separately to userspace but it can cause deadlocks
->> +	 */
-> Omit all the comment formatting changes.  They are distractions from the
-> vga_str_to_iostate() parameter change.
->
-> I think this patch should be the single line change to the
-> vga_str_to_iostate() prototype so it matches the callers.
->
-> If you want to do the other comment formatting changes, they're fine,
-> but they should be all together in a separate patch that clearly
-> doesn't change the generated code.
+However there are a few places that seem to call the first part and then
+remove the device again immediately after. That also seems harmless
+though.
 
-Ok, no problem.
+> It would be easier to ascertain correctness if you could find a
+> function at a higher level which (indirectly) calls both pci_pm_init()
+> and pci_bus_add_device() so that you can acquire and release the
+> runtimw PM ref in that single function.
+>=20
 
-Will be improved at next version.
+Unfortunately, there isn't such a place, since the scanning is done by
+various bus walks.
 
-> Bjorn
+johannes
