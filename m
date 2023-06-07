@@ -2,87 +2,90 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD48FC7EE23
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Jun 2023 21:19:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9E61C7EE25
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Jun 2023 21:54:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229917AbjFGVTq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Jun 2023 17:19:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44960 "EHLO
+        id S232171AbjFGVyC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Jun 2023 17:54:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229536AbjFGVTp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2023 17:19:45 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A23401984;
-        Wed,  7 Jun 2023 14:19:44 -0700 (PDT)
+        with ESMTP id S231278AbjFGVxo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2023 17:53:44 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB4512695
+        for <linux-pci@vger.kernel.org>; Wed,  7 Jun 2023 14:53:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 30F31648D3;
-        Wed,  7 Jun 2023 21:19:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4B2D3C433D2;
-        Wed,  7 Jun 2023 21:19:43 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4670564A40
+        for <linux-pci@vger.kernel.org>; Wed,  7 Jun 2023 21:53:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74687C433A7;
+        Wed,  7 Jun 2023 21:53:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1686172783;
-        bh=kPvir4ZLGQOIvoukeOAmyBe+ZNEwToynta1WPvI98us=;
+        s=k20201202; t=1686174808;
+        bh=Z9JLulpyoJayy5Gua5CmTFtVD+Uz4BOuWXgnWQdZ3Sc=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=l0CWu4k/EmTG+pvWHcMifGGTMeSBy+7GNaDZcly9c4fJJrCNY3+c8SQ929wWq+Zkq
-         nUMXR9LMAA743dHVIn0MPJlPa9rwlZK39iV7jcl5BIebw+tst0VGShLGvnhuRWX/jc
-         ncaXWegQgYqBAH0ZKzPZatAhQNug6N3wDoriNzzZ0JLF8mtaUZk4M0RpKVys5wED28
-         Y43yN4sHHvVyoZ+Wt0k1Xd4ZACEI4gUQa6SzLuEIbhT2xGM6k9YtDgPZp0TL4l+veF
-         y8LorTecMe69Qduynnv0EbaFPuMOxxJTwdhtQXWU0V/GwW06Y2Q7lYdhNxTZGQDJZ4
-         oxWfQNKKOgTvQ==
-Date:   Wed, 7 Jun 2023 16:19:41 -0500
+        b=nAUBjv+T3m5itQLnhfSVocBuC4wlirV9Nw5NXiZxH3HYyghWCkJU7EcaXS82HQ7X5
+         dA0QLRBKhGh22LZDHupAsTr19fm41fQNzEi/LcbDHEU/zl+xQo44CGpnQX6+/VSwZJ
+         sKUEZgvJNa5RcO1NPmAdJneq3fYVtn25egaX+Khm4atiKEuvvrPJN8SbRpqdL4CXu1
+         Cy5vbM8czFuZFnQP6ElYPVrSdQf7WDwXaVYD03hmgR5kE796JalYujRc/I4Qb7baLy
+         kB3Ak/yyDy6C/IQya6Oy0tifblzkSp76/361O2871jeg0ssCy6a3QVt+7pvqBv6h0A
+         BepnMr3kQItbg==
+Date:   Wed, 7 Jun 2023 16:53:26 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     lpieralisi@kernel.org, kw@linux.com, kishon@kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        dlemoal@kernel.org, Yang Li <yang.lee@linux.alibaba.com>
-Subject: Re: [PATCH v6 8/9] PCI: endpoint: Add PCI Endpoint function driver
- for MHI bus
-Message-ID: <20230607211941.GA1176583@bhelgaas>
+To:     Damien Dejean <dam.dejean@gmail.com>
+Cc:     linux-pci@vger.kernel.org
+Subject: Re: Old Asus doesn't seem to support MSI
+Message-ID: <20230607215326.GA1176980@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230607204923.GA1174664@bhelgaas>
+In-Reply-To: <CAErgN1CYEA6a954vHHv3hkJe1jDY0eyEX0DPKf75nyd4_tD3UA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Yang Li, sorry I didn't notice your patch earlier:
-https://lore.kernel.org/r/20230607093514.104012-1-yang.lee@linux.alibaba.com]
+On Wed, Jun 07, 2023 at 06:24:34PM +0200, Damien Dejean wrote:
+> You'll find the results of the two commands in attachment. I ran them
+> without the pci=nomsi option set just in case.
 
-I think we can squash this into the original commit since it hasn't
-gone upstream yet.  Also note that removing the dev_err() apparently
-makes "dev" unused, so we'd have to remove that as well, based on this
-report [2].
+Thanks!
 
-[2] https://lore.kernel.org/r/202306080418.i64hTj5T-lkp@intel.com
+The kernel does check the ACPI table [1] to see whether MSI is
+supported, and I don't see the "system doesn't support MSI" message
+[2] in your dmesg log, so I don't think that's the problem.  It is
+possible that the chipset doesn't support MSI but the BIOS neglected
+to set the ACPI_FADT_NO_MSI bit in ACPI, although Windows looks at the
+same table and should be similarly broken in that case.
 
-On Wed, Jun 07, 2023 at 03:49:25PM -0500, Bjorn Helgaas wrote:
-> On Fri, Jun 02, 2023 at 05:17:55PM +0530, Manivannan Sadhasivam wrote:
-> > Add PCI Endpoint driver for the Qualcomm MHI (Modem Host Interface) bus.
-> > The driver implements the MHI function over PCI in the endpoint device
-> > such as SDX55 modem. The MHI endpoint function driver acts as a
-> > controller driver for the MHI Endpoint stack and carries out all PCI
-> > related activities like mapping the host memory using iATU, triggering
-> > MSIs etc...
-> > ...
-> 
-> > +static int pci_epf_mhi_bind(struct pci_epf *epf)
-> > +{
-> > ...
-> 
-> > +	ret = platform_get_irq_byname(pdev, "doorbell");
-> > +	if (ret < 0) {
-> > +		dev_err(dev, "Failed to get Doorbell IRQ\n");
-> 
-> This dev_err() causes this new warning from the 0-day robot [1]:
-> 
->   drivers/pci/endpoint/functions/pci-epf-mhi.c:362:2-9: line 362 is redundant because platform_get_irq() already prints an error
-> 
-> Maybe we could drop it?
-> 
-> Bjorn
-> 
-> [1] https://lore.kernel.org/all/20230607163937.ZTc-D%25lkp@intel.com/
+I poked around on the web for similar reports of needing "pci=nomsi"
+for Asus X73SL or Asus F70SL, but I really didn't find anything.  The
+linux-hardware database [3] claims this chipset is used in quite a few
+systems, so I would think we'd see some reports of problems if the
+chipset were broken.  Unfortunately that database doesn't have enough
+information to see whether systems use MSI (no "lspci -vv" output) and
+I don't see a way to contact the reporters to find out.
+
+We do have an existing quirk [4] that disables MSI for the [1039:0761]
+chipset, and maybe we could add an entry for the [1039:0671] that you
+have.  The fact that I couldn't find any reports makes me worry that
+doing that would make it work for you, but unnecessarily disable MSI
+for others.
+
+It's also conceivable that MSI used to work in older kernels, but we
+broke something by v5.10.  Do you know whether any old kernels ever
+worked without "pci=nomsi"?
+
+What exactly is the symptom you see without "pci=nomsi"?  I know we
+turned on more AER reporting recently, which exposed issues on some
+machines.  I think using "pci=nomsi" basically disables the AER
+reporting, too.  If the problem you see is related to AER, you can
+turn that off with "pci=noaer", and you may not need "pci=nomsi".
+Obviously my goal is that you should not need either one!
+
+Bjorn
+
+[1] https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html?highlight=fadt#ia-pc-boot-architecture-flags
+[2] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/pci-acpi.c?id=v6.3#n1475
+[3] https://linux-hardware.org/?view=search&vendorid=1039&deviceid=0671#list
+[4] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/quirks.c?id=v6.3#n2557
