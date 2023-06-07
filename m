@@ -2,70 +2,89 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D535FC7EE23
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Jun 2023 22:41:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C141FC7EE25
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Jun 2023 23:04:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229995AbjFGWlK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Jun 2023 18:41:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48812 "EHLO
+        id S232453AbjFGXEe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Jun 2023 19:04:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231259AbjFGWlJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2023 18:41:09 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55EC91988;
-        Wed,  7 Jun 2023 15:41:04 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id d9443c01a7336-1b24eba185cso6943285ad.2;
-        Wed, 07 Jun 2023 15:41:04 -0700 (PDT)
+        with ESMTP id S230104AbjFGXEd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2023 19:04:33 -0400
+Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8674011A;
+        Wed,  7 Jun 2023 16:04:31 -0700 (PDT)
+Received: by mail-pj1-x102a.google.com with SMTP id 98e67ed59e1d1-25692ff86cdso6444231a91.2;
+        Wed, 07 Jun 2023 16:04:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686177663; x=1688769663;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=EIF33hiMWS7/Vu/beuu7qZKGgIlJuBg/HJHP1JWkTXM=;
-        b=LIMMLb444SdimuyODXevX8HrxRcSUBeezgVcKskNlBnmkRy5xNf3Rt8kJgBtJrpqr+
-         3EoWw1d6voer+zr3GHZIXOzgTmITh+65zJKRBYjQIuOWXMHvH9I6HVQx2wnXV/WpS36P
-         p620u4LE0W6nnw2dGXdBan2NP+ypDvQ1Kpl4rCd98DmI+D86ikq1P4gLDu0c66gYNFM+
-         VPWj7dnHPDxEO2IGl5vcmmE4HShx6uTpZfaoy4dt7YWcbWhiulzTUIQwUph5ABOX4Nz3
-         RzMi0A6zxR0eNh7hBE5dBEZb3EuNR9JqpkI/0fnwkdDJ8m/RZdXTPxyYNH2EAMfOh1iZ
-         I8LQ==
+        d=gmail.com; s=20221208; t=1686179070; x=1688771070;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XEQmXBu5dD2JANi2wiTQk+OaHV1+Cn5N+E2Jx9Z9qA4=;
+        b=RylNv+3BIY+SkOFVAD23uBHZj3gl+6CGLSkAPg+jewP+TXl+yMgPLX6SW4utvQFk5H
+         EH7z/qzntgcgtmMbuBotoKMWdu1zz6kl61hyvmvMZemO0yBPxR5qJxn+hlm5VEyDdIwX
+         ASrRHvjOICNXkznM1ujPM6yNPppmEjhbN5H/OcrhR9xY+BAYQUVBWXyfAd28VEcEAGRJ
+         W6uwAK3z8RHShgB+B3TR+0qli2YJ9J5nN2uHEiUIy7UAHQcBknMD0d05qMnd5aL4gqcd
+         LdwMS7BKs1bMUBiJQvpGkweej2mWnwYJKjDUZ1rkkTAvpN2mrpqTEaFdTLdsRAZvO1eR
+         yk9g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1686177663; x=1688769663;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=EIF33hiMWS7/Vu/beuu7qZKGgIlJuBg/HJHP1JWkTXM=;
-        b=Kz2fsPcLVTqmx1Z4I+8bHyREjkS9Bvy2419r1ChEqiG4G3LvRc2E6lHEkg9tkAkKuc
-         qlqrP4p0erqTMflhpcb4osqllxGLutGuj8K4VkWOReuKMxMopXBwhwE8Yc2QuWSKky4g
-         TRiDbvLeWCdt9NaITLy/4nTjJ3FBly+qv5zIaWRF+aG0jLndA7ckESPFG4HwtjkAwhPY
-         lDcJlX21sEcnzAL0H9ttSxMgiWP2X1tN4Cre0EdasLxGmdrgpSOji5dQM78lIQgoZLBT
-         HAjNL18dp+avjwJs8hTXDQyBkbbnnlyYFo4xgPmSBPEyr/ToBfnhBvPN0SIWHvzuPYcB
-         xkrQ==
-X-Gm-Message-State: AC+VfDy5vwoPzQtf5fx0xsGz2OlOUainuIwdFZyaJM1UlUcIWWzWnr01
-        6fYhfNDEl4zTXXDDADcUMYCyEclwlFvZ5al0q4MCBd1CT+s=
-X-Google-Smtp-Source: ACHHUZ4IrblhBhvZ0moOdjOb2WF7sR6JEjy8GsXoRmgolzjjz7KVMkrWzdUI7T7v03sMhq1RTkU0D84lV5z2Bb4zvN8=
-X-Received: by 2002:a17:903:228d:b0:1b2:4ece:55f1 with SMTP id
- b13-20020a170903228d00b001b24ece55f1mr2010932plh.35.1686177663105; Wed, 07
- Jun 2023 15:41:03 -0700 (PDT)
+        d=1e100.net; s=20221208; t=1686179070; x=1688771070;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=XEQmXBu5dD2JANi2wiTQk+OaHV1+Cn5N+E2Jx9Z9qA4=;
+        b=fvSeaUio12PSHfo29bUmtGP6UNJwLUhC23kRyp+deAwfwYTCpPjBfwBUnrdVP3yM1W
+         VyWiijzudjsUoaIEqJghsy04ZrYGCpX3ceMzcUZm5f9gqwokdcumY03eSl7Ydm1tUAdc
+         fJ+UMAiGu4RmLeBrNPQ0tDD6QPkcXH8hF+3L3khoacnyZUhrfLSc74u1wBd6EEOemAkc
+         o0SPE3LdNhOcPa2tAEOppSr2IF3HaSdeMjKUtjX3oDH3+Znq9sj+asFkuykCPC2DdfzH
+         9CtBJa/jlSJZWCKIh1X7oyxg3Bz5bq2NXyJdRMaHMSTfz5OXmSHlRyYYr4jQJC338F0e
+         CwTQ==
+X-Gm-Message-State: AC+VfDz2dViX7b5iP4MrqMBM1LAdpjT2fAOAncHKpvHGljUsGKjmQT/r
+        YVVyBuuxdNsYp7Vethq6JrKsr/2QP1s0u0NHUmFXig3So7Y=
+X-Google-Smtp-Source: ACHHUZ72aumlNuKAoBEIFQvO8H4ETvfhLNixmshgtGFlUP5g7IApmZyyIjopu2EXDuiSlejJtibjp5Y+wkJnk1Q5LAs=
+X-Received: by 2002:a17:90b:4a08:b0:256:4217:b955 with SMTP id
+ kk8-20020a17090b4a0800b002564217b955mr5585682pjb.35.1686179070356; Wed, 07
+ Jun 2023 16:04:30 -0700 (PDT)
 MIME-Version: 1.0
+References: <CAKgT0UezciLjHacOx372+v8MZkDf22D5Thn82n-07xxKy_0FTQ@mail.gmail.com>
+In-Reply-To: <CAKgT0UezciLjHacOx372+v8MZkDf22D5Thn82n-07xxKy_0FTQ@mail.gmail.com>
 From:   Alexander Duyck <alexander.duyck@gmail.com>
-Date:   Wed, 7 Jun 2023 15:40:26 -0700
-Message-ID: <CAKgT0UezciLjHacOx372+v8MZkDf22D5Thn82n-07xxKy_0FTQ@mail.gmail.com>
-Subject: Question about reserved_regions w/ Intel IOMMU
+Date:   Wed, 7 Jun 2023 16:03:54 -0700
+Message-ID: <CAKgT0UfMeVOz6AOqSvVvzpsedGDiXCNQrjM+4KDv7qJJ1orpsw@mail.gmail.com>
+Subject: Re: Question about reserved_regions w/ Intel IOMMU
 To:     LKML <linux-kernel@vger.kernel.org>,
-        "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-        linux-pci <linux-pci@vger.kernel.org>
+        linux-pci <linux-pci@vger.kernel.org>, iommu@lists.linux.dev
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-I am running into a DMA issue that appears to be a conflict between
-ACS and IOMMU. As per the documentation I can find, the IOMMU is
-supposed to create reserved regions for MSI and the memory window
-behind the root port. However looking at reserved_regions I am not
-seeing that. I only see the reservation for the MSI.
+On Wed, Jun 7, 2023 at 3:40=E2=80=AFPM Alexander Duyck
+<alexander.duyck@gmail.com> wrote:
+>
+> I am running into a DMA issue that appears to be a conflict between
+> ACS and IOMMU. As per the documentation I can find, the IOMMU is
+> supposed to create reserved regions for MSI and the memory window
+> behind the root port. However looking at reserved_regions I am not
+> seeing that. I only see the reservation for the MSI.
+>
+> So for example with an enabled NIC and iommu enabled w/o passthru I am se=
+eing:
+> # cat /sys/bus/pci/devices/0000\:83\:00.0/iommu_group/reserved_regions
+> 0x00000000fee00000 0x00000000feefffff msi
+>
+> Shouldn't there also be a memory window for the region behind the root
+> port to prevent any possible peer-to-peer access?
 
-So for example with an enabled NIC and iommu enabled w/o passthru I am seeing:
-# cat /sys/bus/pci/devices/0000\:83\:00.0/iommu_group/reserved_regions
-0x00000000fee00000 0x00000000feefffff msi
+Since the iommu portion of the email bounced I figured I would fix
+that and provide some additional info.
 
-Shouldn't there also be a memory window for the region behind the root
-port to prevent any possible peer-to-peer access?
+I added some instrumentation to the kernel to dump the resources found
+in iova_reserve_pci_windows. From what I can tell it is finding the
+correct resources for the Memory and Prefetchable regions behind the
+root port. It seems to be calling reserve_iova which is successfully
+allocating an iova to reserve the region.
+
+However still no luck on why it isn't showing up in reserved_regions.
