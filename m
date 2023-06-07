@@ -2,205 +2,180 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7838C7EE2E
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Jun 2023 11:26:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55076C7EE2E
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Jun 2023 11:50:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235326AbjFGL0D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Jun 2023 07:26:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58294 "EHLO
+        id S235499AbjFGLuC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Jun 2023 07:50:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238716AbjFGL0C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2023 07:26:02 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2743B1712
-        for <linux-pci@vger.kernel.org>; Wed,  7 Jun 2023 04:26:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686137161; x=1717673161;
-  h=date:from:to:cc:subject:message-id;
-  bh=GWSdcQS5bR0Pw3nmHP2N3T+hsv6IX8AmVVFlh5fTbJA=;
-  b=Gy/u5CfcSj8mjvmva2ihH3C8PIov3MJ5s6qMCo8KYtfxDyEynnGyxZB3
-   WvnCcJGrPLAe5K7yM7pc8TLmVE2Et9ECAjPx5T2A8UVGIssNXqpoucyMZ
-   5EDmjSexW0WGHJpWkGXKq62C2Fl5VUgQHVi5WvBf/esS5kfx5zALH1qa1
-   bmmaY5QaTt1Lix1tI4aVGKA/Vr6EWKsKxVQvWRi3IP8PKu3ecy6GuQlpx
-   VV3o/Pw/zwgufQ9qn3dskCX5iCMBPkLqHnYDifdm11/ZtRyt+5/jTMP3b
-   DV/WcFBRLfRzA2owtzZpD1Hqf3tcVkv4IK7o3rHTAbCv+D9P/5LmyQtf3
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10733"; a="355813781"
-X-IronPort-AV: E=Sophos;i="6.00,223,1681196400"; 
-   d="scan'208";a="355813781"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jun 2023 04:25:59 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10733"; a="686928051"
-X-IronPort-AV: E=Sophos;i="6.00,223,1681196400"; 
-   d="scan'208";a="686928051"
-Received: from lkp-server01.sh.intel.com (HELO 15ab08e44a81) ([10.239.97.150])
-  by orsmga006.jf.intel.com with ESMTP; 07 Jun 2023 04:25:58 -0700
-Received: from kbuild by 15ab08e44a81 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1q6rIc-0006VF-09;
-        Wed, 07 Jun 2023 11:25:58 +0000
-Date:   Wed, 07 Jun 2023 19:25:11 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:enumeration] BUILD SUCCESS
- c6f54cf44c3d05510f8f292a1782105c087797ba
-Message-ID: <20230607112511.DzEsp%lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S240492AbjFGLt4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2023 07:49:56 -0400
+Received: from mail-lj1-x230.google.com (mail-lj1-x230.google.com [IPv6:2a00:1450:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 351071BD7;
+        Wed,  7 Jun 2023 04:49:55 -0700 (PDT)
+Received: by mail-lj1-x230.google.com with SMTP id 38308e7fff4ca-2b1a653b409so6314701fa.0;
+        Wed, 07 Jun 2023 04:49:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1686138593; x=1688730593;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=KHzjjhm6r+h0VB7DbPCBL5uQXvRdaAwiHw841rXLOhs=;
+        b=H5BZzFhlox4FWGfl+SZhG9qWIsg1SZHq/vKqdazna/kU7ws/KktaZgpCZy/GnxdisL
+         vNfmX3n/cQGAGn/EIiEt5Q9j+rb5BrGkJovajm5B43LQi7EtyiJB4Ud5cgLU6PdGDQ2u
+         6ZbKnqhH0uwxg5ctbUxUBcdG11eKTY4+gaWsF6GIH4/JkJMjYhSBVA9uX1IXcG5rqjJW
+         ava9FTYQ/dlNCXz0cTsgN/T3fk7W0Xt86GeW+Va4HHTzrKK/K/O7DklyUh+YkmkR5v5s
+         427wWajyVxTzPkJvUHymfylsGAAIMvvO8SyQxJRac9K/VkeWIK+9KSu+O86MSMN1YWYo
+         HBag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1686138593; x=1688730593;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=KHzjjhm6r+h0VB7DbPCBL5uQXvRdaAwiHw841rXLOhs=;
+        b=Ea35DETL29/bzHbwVSII6HlebMZx/zC4SOtOUXAWmlRSv5MBnXsJF1HzvyZ2lOWMnT
+         p9BblXg1vOeINJpN2pb4tqBqogr+2usnRdumFTcUofvYDMN33EJCt72LwHC9PItknhIa
+         XaDTvmWT7sYOEdhHTW4duUPVz+6YxPcDyY1QIkB3Ptx7/8/sm+ovA+sGp6uRn5noT8lS
+         BHmnPubM29pVWi5phJbn9I0hRI3ADEt5HSkIAtBWZdPon7xAKoTNMCxzgadPn2jzSe2u
+         TPii7R7hWGwSzYdM+5Wz+MsBtxCTEsuv0YvJsjeFhvrK2x0ds+kSYwta/PamuSY7WJLp
+         BWbQ==
+X-Gm-Message-State: AC+VfDyvTUyiMhjvz118iFOVs9KzF0P4NKKTFFZ5LQeSJgHrzE4660Up
+        u5p3tLBci9JW7iU0TKUy504=
+X-Google-Smtp-Source: ACHHUZ7ZvYRI7NquPD+zBHJhdDx5+k5OgD0smliQDH+Sp7Ez/u6SSSx4n39KTyDKPHfnZI23KTk4FA==
+X-Received: by 2002:a2e:b548:0:b0:2b1:b594:4675 with SMTP id a8-20020a2eb548000000b002b1b5944675mr4749264ljn.7.1686138593224;
+        Wed, 07 Jun 2023 04:49:53 -0700 (PDT)
+Received: from mobilestation ([91.144.185.176])
+        by smtp.gmail.com with ESMTPSA id v9-20020a2e9609000000b002ad5f774579sm2241854ljh.96.2023.06.07.04.49.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Jun 2023 04:49:52 -0700 (PDT)
+Date:   Wed, 7 Jun 2023 14:49:50 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     =?utf-8?B?S8O2cnk=?= Maincent <kory.maincent@bootlin.com>
+Cc:     Cai Huoqing <cai.huoqing@linux.dev>, vkoul@kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH v11 3/4] dmaengine: dw-edma: Add support for native HDMA
+Message-ID: <20230607114950.zml4l2rs77cbeesy@mobilestation>
+References: <20230520050854.73160-1-cai.huoqing@linux.dev>
+ <20230520050854.73160-4-cai.huoqing@linux.dev>
+ <20230607095832.6d6b1a73@kmaincent-XPS-13-7390>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230607095832.6d6b1a73@kmaincent-XPS-13-7390>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git enumeration
-branch HEAD: c6f54cf44c3d05510f8f292a1782105c087797ba  PCI: of: Propagate firmware node by calling device_set_node()
+Hi Köry
 
-elapsed time: 724m
+On Wed, Jun 07, 2023 at 09:58:32AM +0200, Köry Maincent wrote:
+> On Sat, 20 May 2023 13:08:51 +0800
+> Cai Huoqing <cai.huoqing@linux.dev> wrote:
+> 
+> > Add support for HDMA NATIVE, as long the IP design has set
+> > the compatible register map parameter-HDMA_NATIVE,
+> > which allows compatibility for native HDMA register configuration.
+> 
+> I know the patch has been merged in dmaengine tree but something seems weird on
+> my side.
+> 
 
-configs tested: 135
-configs skipped: 12
+> The akida_dw_edma_probe function is selecting the minimum read and write
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+First of all. What is akida platform you are referring to? I failed to
+find any mention in the mainline kernel repo.
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha        buildonly-randconfig-r001-20230607   gcc  
-alpha        buildonly-randconfig-r003-20230607   gcc  
-alpha                               defconfig   gcc  
-arc                              allyesconfig   gcc  
-arc          buildonly-randconfig-r006-20230607   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r035-20230607   gcc  
-arc                  randconfig-r043-20230607   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                        shmobile_defconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r033-20230607   clang
-csky                                defconfig   gcc  
-csky                 randconfig-r015-20230607   gcc  
-csky                 randconfig-r024-20230607   gcc  
-hexagon              randconfig-r034-20230607   clang
-i386                             allyesconfig   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230607   clang
-i386                 randconfig-i002-20230607   clang
-i386                 randconfig-i003-20230607   clang
-i386                 randconfig-i004-20230607   clang
-i386                 randconfig-i005-20230607   clang
-i386                 randconfig-i006-20230607   clang
-i386                 randconfig-i011-20230607   gcc  
-i386                 randconfig-i012-20230607   gcc  
-i386                 randconfig-i013-20230607   gcc  
-i386                 randconfig-i014-20230607   gcc  
-i386                 randconfig-i015-20230607   gcc  
-i386                 randconfig-i016-20230607   gcc  
-i386                 randconfig-i051-20230607   clang
-i386                 randconfig-i052-20230607   clang
-i386                 randconfig-i053-20230607   clang
-i386                 randconfig-i054-20230607   clang
-i386                 randconfig-i055-20230607   clang
-i386                 randconfig-i056-20230607   clang
-i386                 randconfig-i061-20230607   clang
-i386                 randconfig-i062-20230607   clang
-i386                 randconfig-i063-20230607   clang
-i386                 randconfig-i064-20230607   clang
-i386                 randconfig-i065-20230607   clang
-i386                 randconfig-i066-20230607   clang
-i386                 randconfig-r031-20230607   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r006-20230607   gcc  
-loongarch            randconfig-r025-20230607   gcc  
-m68k                             allmodconfig   gcc  
-m68k                          amiga_defconfig   gcc  
-m68k         buildonly-randconfig-r002-20230607   gcc  
-m68k                                defconfig   gcc  
-m68k                       m5275evb_defconfig   gcc  
-m68k                 randconfig-r005-20230607   gcc  
-m68k                 randconfig-r016-20230607   gcc  
-m68k                 randconfig-r031-20230607   gcc  
-microblaze   buildonly-randconfig-r003-20230607   gcc  
-microblaze           randconfig-r004-20230607   gcc  
-microblaze           randconfig-r013-20230607   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                            gpr_defconfig   gcc  
-mips                     loongson1b_defconfig   gcc  
-mips                    maltaup_xpa_defconfig   gcc  
-mips                        omega2p_defconfig   clang
-mips                 randconfig-r003-20230607   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r002-20230607   gcc  
-openrisc             randconfig-r012-20230607   gcc  
-openrisc             randconfig-r015-20230607   gcc  
-openrisc             randconfig-r016-20230607   gcc  
-parisc       buildonly-randconfig-r001-20230607   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r012-20230607   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc              randconfig-r016-20230607   gcc  
-powerpc              randconfig-r021-20230607   gcc  
-powerpc              randconfig-r035-20230607   clang
-powerpc                  storcenter_defconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv        buildonly-randconfig-r006-20230607   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r012-20230607   gcc  
-riscv                randconfig-r022-20230607   gcc  
-riscv                randconfig-r042-20230607   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r032-20230607   clang
-s390                 randconfig-r044-20230607   gcc  
-s390                       zfcpdump_defconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                            hp6xx_defconfig   gcc  
-sh                   sh7724_generic_defconfig   gcc  
-sparc                               defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-a001-20230607   clang
-x86_64               randconfig-a002-20230607   clang
-x86_64               randconfig-a003-20230607   clang
-x86_64               randconfig-a004-20230607   clang
-x86_64               randconfig-a006-20230607   clang
-x86_64               randconfig-a011-20230607   gcc  
-x86_64               randconfig-a012-20230607   gcc  
-x86_64               randconfig-a013-20230607   gcc  
-x86_64               randconfig-a014-20230607   gcc  
-x86_64               randconfig-a015-20230607   gcc  
-x86_64               randconfig-a016-20230607   gcc  
-x86_64               randconfig-r015-20230607   gcc  
-x86_64               randconfig-x051-20230607   gcc  
-x86_64               randconfig-x052-20230607   gcc  
-x86_64               randconfig-x053-20230607   gcc  
-x86_64               randconfig-x054-20230607   gcc  
-x86_64               randconfig-x055-20230607   gcc  
-x86_64               randconfig-x056-20230607   gcc  
-x86_64               randconfig-x061-20230607   gcc  
-x86_64               randconfig-x062-20230607   gcc  
-x86_64               randconfig-x063-20230607   gcc  
-x86_64               randconfig-x064-20230607   gcc  
-x86_64               randconfig-x065-20230607   gcc  
-x86_64               randconfig-x066-20230607   gcc  
-x86_64                               rhel-8.3   gcc  
-xtensa               randconfig-r011-20230607   gcc  
+> channels by doing the minimum between ll_wr_cnt and the ch_count callback.
+> The hdma ch_count callback is counting the number of channels enabled by reading
+> the number of ch_en registers set. At probe time there is no channels registers
+> that has been set as it is done later in the dw_hdma_v0_core_start function.
+> Then the dw_hdma_v0_core_ch_count will always return 0 at probe time and the
+> number of channels will be set to 0 which is not what we want.
+> Could I miss something?
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Based on the HDMA patches content you are right. The channels must be
+pre-enabled in order to have the dw_hdma_v0_core_ch_count() procedure
+to work correctly otherwise you'll indeed end up with an empty list of
+channels. I don't have any device with the HDMA engine embedded so I
+couldn't have possibly tracked that peculiarity on review. Anyway
+AFAICS Cai just implemented a method which seemed to work for his
+hardware setup.
+
+If you think it doesn't work correctly or it isn't portable enough
+then you are free to provide your own implementation of the method and
+submit a patch. I hope Cai will be willing to test it out to make sure
+that it works correctly for you and his platforms.
+
+As for me if I were on your place I would have implemented a loop
+which would walk over all possible HDMA channels (HDMA_V0_MAX_NR_CH)
+and counted all channels which could be enabled. If the ch_en CSR is
+writable (that is the channel could be enabled) then it shall be
+considered as existent. Of course before that I would have made sure
+that the non-existent channels had non-writable ch_en CSR.
+
+-Serge(y)
+
+> 
+> See the functions bellow:
+> 
+> > int akida_dw_edma_probe(struct dw_edma_chip *chip)                         
+> > {                                                                          
+>  ...                               
+> >         dw->wr_ch_cnt = min_t(u16, chip->ll_wr_cnt,                        
+> >                               dw_edma_core_ch_count(dw, EDMA_DIR_WRITE));  
+> >         dw->wr_ch_cnt = min_t(u16, dw->wr_ch_cnt, EDMA_MAX_WR_CH);         
+> >                                                                            
+> >         dw->rd_ch_cnt = min_t(u16, chip->ll_rd_cnt,                        
+> >                               dw_edma_core_ch_count(dw, EDMA_DIR_READ));   
+> >         dw->rd_ch_cnt = min_t(u16, dw->rd_ch_cnt, EDMA_MAX_RD_CH);         
+> >                                                                            
+> >         if (!dw->wr_ch_cnt && !dw->rd_ch_cnt)                              
+> >                 return -EINVAL;            
+> ...
+> }
+> 
+> 
+> > +static u16 dw_hdma_v0_core_ch_count(struct dw_edma *dw, enum dw_edma_dir dir)
+> > +{
+> > +	u32 num_ch = 0;
+> > +	int id;
+> > +
+> > +	for (id = 0; id < HDMA_V0_MAX_NR_CH; id++) {
+> > +		if (GET_CH_32(dw, id, dir, ch_en) & BIT(0))
+> > +			num_ch++;
+> > +	}
+> > +
+> > +	if (num_ch > HDMA_V0_MAX_NR_CH)
+> > +		num_ch = HDMA_V0_MAX_NR_CH;
+> > +
+> > +	return (u16)num_ch;
+> > +}
+> 
+> 
+> 
+> > +static void dw_hdma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
+> > +{
+> > +	struct dw_edma_chan *chan = chunk->chan;
+> > +	struct dw_edma *dw = chan->dw;
+> > +	u32 tmp;
+> > +
+> > +	dw_hdma_v0_core_write_chunk(chunk);
+> > +
+> > +	if (first) {
+> > +		/* Enable engine */
+> > +		SET_CH_32(dw, chan->dir, chan->id, ch_en, BIT(0));
+> ...
+> > +}
+> 
