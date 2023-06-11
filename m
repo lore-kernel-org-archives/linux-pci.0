@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 436D2C7EE2F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC409C7EE45
 	for <linux-pci@archiver.kernel.org>; Sun, 11 Jun 2023 19:20:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229961AbjFKTUU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 11 Jun 2023 15:20:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36960 "EHLO
+        id S233584AbjFKTUV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 11 Jun 2023 15:20:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36972 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233278AbjFKTUP (ORCPT
+        with ESMTP id S233429AbjFKTUP (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Jun 2023 15:20:15 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B9E6EE63;
-        Sun, 11 Jun 2023 12:20:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 16145E50;
+        Sun, 11 Jun 2023 12:20:15 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id D3367E0EAB;
-        Sun, 11 Jun 2023 22:20:12 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 3F3A2E0EAD;
+        Sun, 11 Jun 2023 22:20:14 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=jujpaD/xX8Blkm5Xl+fi8XduXPMkAfGnNG8vQw6cqzo=; b=hv9wxOp3Kuy/
-        ksNwJPYVMXJ8i31UGuZFfeMeJHDW99AZOWKhwtB1EesR3CGICQUGPsGUinLxZul5
-        h747oFuDSyUd2CXzSOatyuDLZu8LiVVfRcKULDdDXrFoA0Hi16cQr7P6FC5YtFy+
-        XASyZO5SZbCh6HvzabQkwonfazmneEc=
+         bh=+65drnYhr88HEmqaTnIn82FSqCF+KQWqtPKAL5E/xbI=; b=C2+C6qurVs4Z
+        uTX4WqQHIzXshxKicfw6LYLXRkRIwJINWj9OtoVlMxx7Jv6Q6hFtYPZaSPr7e2Ju
+        1D8GbSgeQGxKq1uWkmbzYDhi+nJr+IX33qTI+lXIkbcBfN4Nh9MN6J3UHUpFrlWq
+        hPuC5ypqJbEdyCcyQ8YPGyvPDJcMa5U=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 993AFE0DE3;
-        Sun, 11 Jun 2023 22:20:12 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 20F5BE0DE3;
+        Sun, 11 Jun 2023 22:20:14 +0300 (MSK)
 Received: from localhost (10.8.30.10) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Sun, 11 Jun 2023 22:20:12 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Sun, 11 Jun 2023 22:20:13 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -37,20 +37,15 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
+        Rob Herring <robh@kernel.org>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH RESEND v7 07/11] PCI: visconti: Convert to using generic resources getter
-Date:   Sun, 11 Jun 2023 22:20:01 +0300
-Message-ID: <20230611192005.25636-8-Sergey.Semin@baikalelectronics.ru>
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH RESEND v7 09/11] MAINTAINERS: Demote Gustavo Pimentel to DW PCIe core reviewer
+Date:   Sun, 11 Jun 2023 22:20:03 +0300
+Message-ID: <20230611192005.25636-10-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230611192005.25636-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230611192005.25636-1-Sergey.Semin@baikalelectronics.ru>
@@ -63,99 +58,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The generic resources request infrastructure has been recently added to
-the DW PCIe core driver. Since the DT-bindings of the Toshibo Visconti
-PCIe Host controller is fully compatible with the generic names set let's
-convert the driver to using that infrastructure. It won't take much effort
-since the low-level device driver implies the resources request only with
-no additional manipulations involving them. So just drop the locally
-defined clocks request procedures, activate the generic resources request
-capability and make sure the mandatory resources have been requested by
-the DW PCIe core driver.
+No maintaining actions from Gustavo have been noticed for over two years.
+Demote him to being the DW PCIe RP/EP driver reviewer for now.
 
-Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-visconti.c | 37 ++++++++++------------
- 1 file changed, 17 insertions(+), 20 deletions(-)
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-visconti.c b/drivers/pci/controller/dwc/pcie-visconti.c
-index 71026fefa366..ae1517b52c58 100644
---- a/drivers/pci/controller/dwc/pcie-visconti.c
-+++ b/drivers/pci/controller/dwc/pcie-visconti.c
-@@ -29,9 +29,6 @@ struct visconti_pcie {
- 	void __iomem *ulreg_base;
- 	void __iomem *smu_base;
- 	void __iomem *mpu_base;
--	struct clk *refclk;
--	struct clk *coreclk;
--	struct clk *auxclk;
- };
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 132d0aa646bd..ee1b541a2b4b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -16168,7 +16168,7 @@ F:	drivers/pci/controller/dwc/pci-exynos.c
  
- #define PCIE_UL_REG_S_PCIE_MODE		0x00F4
-@@ -198,6 +195,21 @@ static int visconti_pcie_host_init(struct dw_pcie_rp *pp)
- 	int err;
- 	u32 val;
- 
-+	if (!pcie->pci.core_clks[DW_PCIE_REF_CLK].clk) {
-+		dev_err(pci->dev, "Missing ref clock source\n");
-+		return -ENOENT;
-+	}
-+
-+	if (!pcie->pci.core_clks[DW_PCIE_CORE_CLK].clk) {
-+		dev_err(pci->dev, "Missing core clock source\n");
-+		return -ENOENT;
-+	}
-+
-+	if (!pcie->pci.core_clks[DW_PCIE_AUX_CLK].clk) {
-+		dev_err(pci->dev, "Missing aux clock source\n");
-+		return -ENOENT;
-+	}
-+
- 	visconti_smu_writel(pcie,
- 			    PISMU_CKON_PCIE_AUX_CLK | PISMU_CKON_PCIE_MSTR_ACLK,
- 			    PISMU_CKON_PCIE);
-@@ -242,8 +254,6 @@ static const struct dw_pcie_host_ops visconti_pcie_host_ops = {
- static int visconti_get_resources(struct platform_device *pdev,
- 				  struct visconti_pcie *pcie)
- {
--	struct device *dev = &pdev->dev;
--
- 	pcie->ulreg_base = devm_platform_ioremap_resource_byname(pdev, "ulreg");
- 	if (IS_ERR(pcie->ulreg_base))
- 		return PTR_ERR(pcie->ulreg_base);
-@@ -256,21 +266,6 @@ static int visconti_get_resources(struct platform_device *pdev,
- 	if (IS_ERR(pcie->mpu_base))
- 		return PTR_ERR(pcie->mpu_base);
- 
--	pcie->refclk = devm_clk_get(dev, "ref");
--	if (IS_ERR(pcie->refclk))
--		return dev_err_probe(dev, PTR_ERR(pcie->refclk),
--				     "Failed to get ref clock\n");
--
--	pcie->coreclk = devm_clk_get(dev, "core");
--	if (IS_ERR(pcie->coreclk))
--		return dev_err_probe(dev, PTR_ERR(pcie->coreclk),
--				     "Failed to get core clock\n");
--
--	pcie->auxclk = devm_clk_get(dev, "aux");
--	if (IS_ERR(pcie->auxclk))
--		return dev_err_probe(dev, PTR_ERR(pcie->auxclk),
--				     "Failed to get aux clock\n");
--
- 	return 0;
- }
- 
-@@ -304,6 +299,8 @@ static int visconti_pcie_probe(struct platform_device *pdev)
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
- 
-+	dw_pcie_cap_set(pci, REQ_RES);
-+
- 	ret = visconti_get_resources(pdev, pcie);
- 	if (ret)
- 		return ret;
+ PCI DRIVER FOR SYNOPSYS DESIGNWARE
+ M:	Jingoo Han <jingoohan1@gmail.com>
+-M:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
++R:	Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/snps,dw-pcie*.yaml
 -- 
 2.40.0
 
