@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0224FC8300C
-	for <linux-pci@archiver.kernel.org>; Sun, 11 Jun 2023 19:20:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B7F7C83005
+	for <linux-pci@archiver.kernel.org>; Sun, 11 Jun 2023 19:20:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229562AbjFKTUQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 11 Jun 2023 15:20:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36946 "EHLO
+        id S233466AbjFKTUR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 11 Jun 2023 15:20:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36954 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232933AbjFKTUN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Jun 2023 15:20:13 -0400
+        with ESMTP id S233120AbjFKTUO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Jun 2023 15:20:14 -0400
 Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A3259E52;
-        Sun, 11 Jun 2023 12:20:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 75393E57;
+        Sun, 11 Jun 2023 12:20:13 -0700 (PDT)
 Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id C01C7E0E6E;
-        Sun, 11 Jun 2023 22:20:09 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id 097D1E0EAA;
+        Sun, 11 Jun 2023 22:20:12 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         baikalelectronics.ru; h=cc:cc:content-transfer-encoding
         :content-type:content-type:date:from:from:in-reply-to:message-id
         :mime-version:references:reply-to:subject:subject:to:to; s=post;
-         bh=rDVPfhGEyYaKZ/wYe36O1O/Fvo/RdUNSXrMV08kwDqo=; b=VhgfamBFn/9w
-        NP1sXfFpnaT7mbDoO1VjOaPlQ22LxlPqIxhK690FG19umZQHHRexGk2Cxjrye50H
-        sSKvR+UwaM3edIaSizAKk8MMFtx6do853DfQNqFGYITRq5l6hByH8IApKe3GnueU
-        Gc/QaiTfdrrTx2oom6+jCAD08lJjAls=
+         bh=ewQtbCS0aYotHwCcsIGiBtGLXDEmAhz8Lh39J+rbF5o=; b=D7gtbJDq+2oY
+        6GFpjEkRKIAqHDCwY9mDKtzj20BAfpF+6Ddk6E0K4YUxQbht1dCYbwWFbB7nW0PE
+        3adIlW1dzfJ9uzJkNKEPo2jKm3gc/PYZrBQaESxFzqasJHHavf0ugMcahXaNdllU
+        og4Fq9XvADXiwOJvMnOHyqB7F/+zX+U=
 Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-        by post.baikalelectronics.com (Proxmox) with ESMTP id 9B398E0DE3;
-        Sun, 11 Jun 2023 22:20:09 +0300 (MSK)
+        by post.baikalelectronics.com (Proxmox) with ESMTP id C5A34E0DE3;
+        Sun, 11 Jun 2023 22:20:11 +0300 (MSK)
 Received: from localhost (10.8.30.10) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Sun, 11 Jun 2023 22:20:09 +0300
+ SMTP Server (TLS) id 15.0.1395.4; Sun, 11 Jun 2023 22:20:11 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -38,16 +38,17 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Rob Herring <robh@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH RESEND v7 03/11] PCI: bt1: Enable async probe type
-Date:   Sun, 11 Jun 2023 22:19:57 +0300
-Message-ID: <20230611192005.25636-4-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH RESEND v7 06/11] PCI: dwc: Drop empty line from dw_pcie_link_set_max_speed()
+Date:   Sun, 11 Jun 2023 22:20:00 +0300
+Message-ID: <20230611192005.25636-7-Sergey.Semin@baikalelectronics.ru>
 X-Mailer: git-send-email 2.40.0
 In-Reply-To: <20230611192005.25636-1-Sergey.Semin@baikalelectronics.ru>
 References: <20230611192005.25636-1-Sergey.Semin@baikalelectronics.ru>
@@ -60,31 +61,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It's safe to enable the asyncronous probe type since the PCIe peripheral
-devices probing order isn't essential for booting the system. Moreover
-enabling that feature saves 0.5 seconds of bootup time if no any device
-attached to the PCIe root port. It's a significant performance gain seeing
-the total bootup time takes about 3 seconds.
+Well, just drop a redundant empty line from the tail of the denoted
+function which by mistake was added in commit 39bc5006501c ("PCI: dwc:
+Centralize link gen setting").
 
-Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/pci/controller/dwc/pcie-bt1.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/dwc/pcie-designware.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-bt1.c b/drivers/pci/controller/dwc/pcie-bt1.c
-index 95a723a6fd46..e36a20bf82cf 100644
---- a/drivers/pci/controller/dwc/pcie-bt1.c
-+++ b/drivers/pci/controller/dwc/pcie-bt1.c
-@@ -638,6 +638,7 @@ static struct platform_driver bt1_pcie_driver = {
- 	.driver = {
- 		.name	= "bt1-pcie",
- 		.of_match_table = bt1_pcie_of_match,
-+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
- 	},
- };
- module_platform_driver(bt1_pcie_driver);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index e55b7b387eb6..ede166645289 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -729,7 +729,6 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+ 
+ 	cap &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed);
+-
+ }
+ 
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
 -- 
 2.40.0
 
