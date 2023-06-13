@@ -2,28 +2,28 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA860C7EE43
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Jun 2023 03:04:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75963C7EE43
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Jun 2023 03:04:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239534AbjFMDE0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Jun 2023 23:04:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52500 "EHLO
+        id S239594AbjFMDEx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Jun 2023 23:04:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238836AbjFMDD5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2023 23:03:57 -0400
+        with ESMTP id S239365AbjFMDEG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2023 23:04:06 -0400
 Received: from 189.cn (ptr.189.cn [183.61.185.102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8756F1BFC;
-        Mon, 12 Jun 2023 20:02:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 232511FFD;
+        Mon, 12 Jun 2023 20:03:04 -0700 (PDT)
 HMM_SOURCE_IP: 10.64.8.43:47948.1267835893
 HMM_ATTACHE_NUM: 0000
 HMM_SOURCE_TYPE: SMTP
 Received: from clientip-114.242.206.180 (unknown [10.64.8.43])
-        by 189.cn (HERMES) with SMTP id 86DEC1002EF;
-        Tue, 13 Jun 2023 11:02:00 +0800 (CST)
+        by 189.cn (HERMES) with SMTP id 07D72100312;
+        Tue, 13 Jun 2023 11:02:10 +0800 (CST)
 Received: from  ([114.242.206.180])
-        by gateway-151646-dep-75648544bd-7vx9t with ESMTP id 82e2f0a4c4f243cc9b30d58c3c64304d for bhelgaas@google.com;
-        Tue, 13 Jun 2023 11:02:07 CST
-X-Transaction-ID: 82e2f0a4c4f243cc9b30d58c3c64304d
+        by gateway-151646-dep-75648544bd-7vx9t with ESMTP id cc3a4c0ad4584704b36637bc3ff8007e for bhelgaas@google.com;
+        Tue, 13 Jun 2023 11:02:13 CST
+X-Transaction-ID: cc3a4c0ad4584704b36637bc3ff8007e
 X-Real-From: 15330273260@189.cn
 X-Receive-IP: 114.242.206.180
 X-MEDUSA-Status: 0
@@ -35,15 +35,15 @@ Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-fbdev@vger.kernel.org,
         Sui Jingfeng <suijingfeng@loongson.cn>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        Javier Martinez Canillas <javierm@redhat.com>,
         Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
         Maxime Ripard <mripard@kernel.org>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
         David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Andi Shyti <andi.shyti@linux.intel.com>
-Subject: [PATCH v7 3/8] PCI/VGA: Tidy up the code and comment format
-Date:   Tue, 13 Jun 2023 11:01:46 +0800
-Message-Id: <20230613030151.216625-4-15330273260@189.cn>
+        Daniel Vetter <daniel@ffwll.ch>, Helge Deller <deller@gmx.de>
+Subject: [PATCH v7 5/8] video/aperture: Add a helper to detect if an aperture contains firmware FB
+Date:   Tue, 13 Jun 2023 11:01:48 +0800
+Message-Id: <20230613030151.216625-6-15330273260@189.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230613030151.216625-1-15330273260@189.cn>
 References: <20230613030151.216625-1-15330273260@189.cn>
@@ -55,379 +55,147 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-This patch replaces the leading space with a tab and removes the double
-blank line, no functional change.
+This patch adds the aperture_contain_firmware_fb() function to do the
+determination. Unfortunately due to the fact that apertures list will be
+freed dynamically, the location and size information of the firmware fb
+will be lost after dedicated drivers call
+aperture_remove_conflicting_devices(),
+aperture_remove_conflicting_pci_devices() or
+aperture_remove_all_conflicting_devices() functions
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+We handle this problem by introducing two static variables which record the
+firmware framebuffer's start addrness and end addrness. It assumes that the
+system has only one active firmware framebuffer driver at a time.
+
+We don't use the global structure screen_info here, because PCI resource
+may get reallocated(the VRAM BAR could be moved) at kernel boot stage.
+
+Cc: Thomas Zimmermann <tzimmermann@suse.de>
+Cc: Javier Martinez Canillas <javierm@redhat.com>
 Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 Cc: Maxime Ripard <mripard@kernel.org>
-Cc: Thomas Zimmermann <tzimmermann@suse.de>
 Cc: David Airlie <airlied@gmail.com>
 Cc: Daniel Vetter <daniel@ffwll.ch>
+Cc: Helge Deller <deller@gmx.de>
 Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
-Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
 ---
- drivers/pci/vgaarb.c   | 108 ++++++++++++++++++++++++-----------------
- include/linux/vgaarb.h |   4 +-
- 2 files changed, 65 insertions(+), 47 deletions(-)
+ drivers/gpu/drm/drm_aperture.c | 16 ++++++++++++++++
+ drivers/video/aperture.c       | 29 +++++++++++++++++++++++++++++
+ include/drm/drm_aperture.h     |  2 ++
+ include/linux/aperture.h       |  7 +++++++
+ 4 files changed, 54 insertions(+)
 
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index 22a505e877dc..ceb914245383 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -61,7 +61,6 @@ static bool vga_arbiter_used;
- static DEFINE_SPINLOCK(vga_lock);
- static DECLARE_WAIT_QUEUE_HEAD(vga_wait_queue);
- 
--
- static const char *vga_iostate_to_str(unsigned int iostate)
- {
- 	/* Ignore VGA_RSRC_IO and VGA_RSRC_MEM */
-@@ -79,8 +78,10 @@ static const char *vga_iostate_to_str(unsigned int iostate)
- 
- static int vga_str_to_iostate(char *buf, int str_size, unsigned int *io_state)
- {
--	/* we could in theory hand out locks on IO and mem
--	 * separately to userspace but it can cause deadlocks */
-+	/*
-+	 * We could in theory hand out locks on IO and mem
-+	 * separately to userspace but it can cause deadlocks
-+	 */
- 	if (strncmp(buf, "none", 4) == 0) {
- 		*io_state = VGA_RSRC_NONE;
- 		return 1;
-@@ -99,7 +100,7 @@ static int vga_str_to_iostate(char *buf, int str_size, unsigned int *io_state)
- 	return 1;
+diff --git a/drivers/gpu/drm/drm_aperture.c b/drivers/gpu/drm/drm_aperture.c
+index 5729f3bb4398..6e5d8a08683c 100644
+--- a/drivers/gpu/drm/drm_aperture.c
++++ b/drivers/gpu/drm/drm_aperture.c
+@@ -190,3 +190,19 @@ int drm_aperture_remove_conflicting_pci_framebuffers(struct pci_dev *pdev,
+ 	return aperture_remove_conflicting_pci_devices(pdev, req_driver->name);
  }
- 
--/* this is only used a cookie - it should not be dereferenced */
-+/* This is only used as cookie, it should not be dereferenced */
- static struct pci_dev *vga_default;
- 
- /* Find somebody in our list */
-@@ -193,14 +194,17 @@ int vga_remove_vgacon(struct pci_dev *pdev)
- #endif
- EXPORT_SYMBOL(vga_remove_vgacon);
- 
--/* If we don't ever use VGA arb we should avoid
--   turning off anything anywhere due to old X servers getting
--   confused about the boot device not being VGA */
-+/*
-+ * If we don't ever use VGA arb we should avoid
-+ * turning off anything anywhere due to old X servers getting
-+ * confused about the boot device not being VGA
+ EXPORT_SYMBOL(drm_aperture_remove_conflicting_pci_framebuffers);
++
++/**
++ * drm_aperture_contain_firmware_fb - Determine if a aperture contains firmware framebuffer
++ *
++ * @base: the aperture's base address in physical memory
++ * @size: aperture size in bytes
++ *
++ * Returns:
++ * true on if there is a firmware framebuffer belong to the aperture passed in,
++ * or false otherwise.
 + */
- static void vga_check_first_use(void)
++bool drm_aperture_contain_firmware_fb(resource_size_t base, resource_size_t size)
++{
++	return aperture_contain_firmware_fb(base, base + size);
++}
++EXPORT_SYMBOL(drm_aperture_contain_firmware_fb);
+diff --git a/drivers/video/aperture.c b/drivers/video/aperture.c
+index 561be8feca96..5a5422cec669 100644
+--- a/drivers/video/aperture.c
++++ b/drivers/video/aperture.c
+@@ -141,6 +141,9 @@ struct aperture_range {
+ static LIST_HEAD(apertures);
+ static DEFINE_MUTEX(apertures_lock);
+ 
++static resource_size_t firm_fb_start;
++static resource_size_t firm_fb_end;
++
+ static bool overlap(resource_size_t base1, resource_size_t end1,
+ 		    resource_size_t base2, resource_size_t end2)
  {
--	/* we should inform all GPUs in the system that
--	 * VGA arb has occurred and to try and disable resources
--	 * if they can */
-+	/*
-+	 * We should inform all GPUs in the system that
-+	 * vgaarb has occurred and to try and disable resources if they can
-+	 */
- 	if (!vga_arbiter_used) {
- 		vga_arbiter_used = true;
- 		vga_arbiter_notify_clients();
-@@ -216,7 +220,8 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
- 	unsigned int pci_bits;
- 	u32 flags = 0;
+@@ -170,6 +173,9 @@ static int devm_aperture_acquire(struct device *dev,
  
--	/* Account for "normal" resources to lock. If we decode the legacy,
-+	/*
-+	 * Account for "normal" resources to lock. If we decode the legacy,
- 	 * counterpart, we need to request it as well
- 	 */
- 	if ((rsrc & VGA_RSRC_NORMAL_IO) &&
-@@ -236,7 +241,8 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
- 	if (wants == 0)
- 		goto lock_them;
+ 	mutex_lock(&apertures_lock);
  
--	/* We don't need to request a legacy resource, we just enable
-+	/*
-+	 * We don't need to request a legacy resource, we just enable
- 	 * appropriate decoding and go
- 	 */
- 	legacy_wants = wants & VGA_RSRC_LEGACY_MASK;
-@@ -252,7 +258,8 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
- 		if (vgadev == conflict)
- 			continue;
++	firm_fb_start = base;
++	firm_fb_end = end;
++
+ 	list_for_each(pos, &apertures) {
+ 		ap = container_of(pos, struct aperture_range, lh);
+ 		if (overlap(base, end, ap->base, ap->base + ap->size)) {
+@@ -377,3 +383,26 @@ int aperture_remove_conflicting_pci_devices(struct pci_dev *pdev, const char *na
  
--		/* We have a possible conflict. before we go further, we must
-+		/*
-+		 * We have a possible conflict. before we go further, we must
- 		 * check if we sit on the same bus as the conflicting device.
- 		 * if we don't, then we must tie both IO and MEM resources
- 		 * together since there is only a single bit controlling
-@@ -263,13 +270,15 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
- 			lwants = VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM;
- 		}
- 
--		/* Check if the guy has a lock on the resource. If he does,
-+		/*
-+		 * Check if the guy has a lock on the resource. If he does,
- 		 * return the conflicting entry
- 		 */
- 		if (conflict->locks & lwants)
- 			return conflict;
- 
--		/* Ok, now check if it owns the resource we want.  We can
-+		/*
-+		 * Ok, now check if it owns the resource we want.  We can
- 		 * lock resources that are not decoded, therefore a device
- 		 * can own resources it doesn't decode.
- 		 */
-@@ -277,14 +286,16 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
- 		if (!match)
- 			continue;
- 
--		/* looks like he doesn't have a lock, we can steal
-+		/*
-+		 * Looks like he doesn't have a lock, we can steal
- 		 * them from him
- 		 */
- 
- 		flags = 0;
- 		pci_bits = 0;
- 
--		/* If we can't control legacy resources via the bridge, we
-+		/*
-+		 * If we can't control legacy resources via the bridge, we
- 		 * also need to disable normal decoding.
- 		 */
- 		if (!conflict->bridge_has_one_vga) {
-@@ -311,7 +322,8 @@ static struct vga_device *__vga_tryget(struct vga_device *vgadev,
- 	}
- 
- enable_them:
--	/* ok dude, we got it, everybody conflicting has been disabled, let's
-+	/*
-+	 * Ok dude, we got it, everybody conflicting has been disabled, let's
- 	 * enable us.  Mark any bits in "owns" regardless of whether we
- 	 * decoded them.  We can lock resources we don't decode, therefore
- 	 * we must track them via "owns".
-@@ -353,7 +365,8 @@ static void __vga_put(struct vga_device *vgadev, unsigned int rsrc)
- 
- 	vgaarb_dbg(dev, "%s\n", __func__);
- 
--	/* Update our counters, and account for equivalent legacy resources
-+	/*
-+	 * Update our counters, and account for equivalent legacy resources
- 	 * if we decode them
- 	 */
- 	if ((rsrc & VGA_RSRC_NORMAL_IO) && vgadev->io_norm_cnt > 0) {
-@@ -371,7 +384,8 @@ static void __vga_put(struct vga_device *vgadev, unsigned int rsrc)
- 	if ((rsrc & VGA_RSRC_LEGACY_MEM) && vgadev->mem_lock_cnt > 0)
- 		vgadev->mem_lock_cnt--;
- 
--	/* Just clear lock bits, we do lazy operations so we don't really
-+	/*
-+	 * Just clear lock bits, we do lazy operations so we don't really
- 	 * have to bother about anything else at this point
- 	 */
- 	if (vgadev->io_lock_cnt == 0)
-@@ -379,7 +393,8 @@ static void __vga_put(struct vga_device *vgadev, unsigned int rsrc)
- 	if (vgadev->mem_lock_cnt == 0)
- 		vgadev->locks &= ~VGA_RSRC_LEGACY_MEM;
- 
--	/* Kick the wait queue in case somebody was waiting if we actually
-+	/*
-+	 * Kick the wait queue in case somebody was waiting if we actually
- 	 * released something
- 	 */
- 	if (old_locks != vgadev->locks)
-@@ -447,8 +462,8 @@ int vga_get(struct pci_dev *pdev, unsigned int rsrc, int interruptible)
- 		if (conflict == NULL)
- 			break;
- 
--
--		/* We have a conflict, we wait until somebody kicks the
-+		/*
-+		 * We have a conflict, we wait until somebody kicks the
- 		 * work queue. Currently we have one work queue that we
- 		 * kick each time some resources are released, but it would
- 		 * be fairly easy to have a per device one so that we only
-@@ -665,7 +680,7 @@ static bool vga_is_boot_device(struct vga_device *vgadev)
- 	}
- 
- 	/*
--	 * vgadev has neither IO nor MEM enabled.  If we haven't found any
-+	 * Vgadev has neither IO nor MEM enabled.  If we haven't found any
- 	 * other VGA devices, it is the best candidate so far.
- 	 */
- 	if (!boot_vga)
-@@ -706,7 +721,7 @@ static void vga_arbiter_check_bridge_sharing(struct vga_device *vgadev)
- 			bus = same_bridge_vgadev->pdev->bus;
- 			bridge = bus->self;
- 
--			/* see if the share a bridge with this device */
-+			/* See if the share a bridge with this device */
- 			if (new_bridge == bridge) {
- 				/*
- 				 * If their direct parent bridge is the same
-@@ -777,9 +792,10 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
- 	vgadev->decodes = VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM |
- 			  VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
- 
--	/* by default mark it as decoding */
-+	/* By default, mark it as decoding */
- 	vga_decode_count++;
--	/* Mark that we "own" resources based on our enables, we will
-+	/*
-+	 * Mark that we "own" resources based on our enables, we will
- 	 * clear that below if the bridge isn't forwarding
- 	 */
- 	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-@@ -860,7 +876,7 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
- 	return ret;
+ }
+ EXPORT_SYMBOL(aperture_remove_conflicting_pci_devices);
++
++/**
++ * aperture_contain_firmware_fb - Detect if the firmware framebuffer belong to
++ *                                a aperture.
++ * @ap_start: the aperture's start address in physical memory
++ * @ap_end: the aperture's end address in physical memory
++ *
++ * Returns:
++ * true on if there is a firmware framebuffer belong to the aperture passed in,
++ * or false otherwise.
++ */
++bool aperture_contain_firmware_fb(resource_size_t ap_start, resource_size_t ap_end)
++{
++	/* No firmware framebuffer support */
++	if (!firm_fb_start || !firm_fb_end)
++		return false;
++
++	if (firm_fb_start >= ap_start && firm_fb_end <= ap_end)
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL(aperture_contain_firmware_fb);
+diff --git a/include/drm/drm_aperture.h b/include/drm/drm_aperture.h
+index cbe33b49fd5d..6a0b9bacb081 100644
+--- a/include/drm/drm_aperture.h
++++ b/include/drm/drm_aperture.h
+@@ -35,4 +35,6 @@ drm_aperture_remove_framebuffers(const struct drm_driver *req_driver)
+ 							    req_driver);
  }
  
--/* this is called with the lock */
-+/* This is called with the lock */
- static inline void vga_update_device_decodes(struct vga_device *vgadev,
- 					     int new_decodes)
++bool drm_aperture_contain_firmware_fb(resource_size_t base, resource_size_t size);
++
+ #endif
+diff --git a/include/linux/aperture.h b/include/linux/aperture.h
+index 1a9a88b11584..d4dc5917c49b 100644
+--- a/include/linux/aperture.h
++++ b/include/linux/aperture.h
+@@ -19,6 +19,8 @@ int aperture_remove_conflicting_devices(resource_size_t base, resource_size_t si
+ int __aperture_remove_legacy_vga_devices(struct pci_dev *pdev);
+ 
+ int aperture_remove_conflicting_pci_devices(struct pci_dev *pdev, const char *name);
++
++bool aperture_contain_firmware_fb(resource_size_t ap_start, resource_size_t ap_end);
+ #else
+ static inline int devm_aperture_acquire_for_platform_device(struct platform_device *pdev,
+ 							    resource_size_t base,
+@@ -42,6 +44,11 @@ static inline int aperture_remove_conflicting_pci_devices(struct pci_dev *pdev,
  {
-@@ -877,7 +893,7 @@ static inline void vga_update_device_decodes(struct vga_device *vgadev,
- 		vga_iostate_to_str(vgadev->decodes),
- 		vga_iostate_to_str(vgadev->owns));
- 
--	/* if we removed locked decodes, lock count goes to zero, and release */
-+	/* If we removed locked decodes, lock count goes to zero, and release */
- 	if (decodes_unlocked) {
- 		if (decodes_unlocked & VGA_RSRC_LEGACY_IO)
- 			vgadev->io_lock_cnt = 0;
-@@ -886,7 +902,7 @@ static inline void vga_update_device_decodes(struct vga_device *vgadev,
- 		__vga_put(vgadev, decodes_unlocked);
- 	}
- 
--	/* change decodes counter */
-+	/* Change decodes counter */
- 	if (old_decodes & VGA_RSRC_LEGACY_MASK &&
- 	    !(new_decodes & VGA_RSRC_LEGACY_MASK))
- 		vga_decode_count--;
-@@ -910,14 +926,15 @@ static void __vga_set_legacy_decoding(struct pci_dev *pdev,
- 	if (vgadev == NULL)
- 		goto bail;
- 
--	/* don't let userspace futz with kernel driver decodes */
-+	/* Don't let userspace futz with kernel driver decodes */
- 	if (userspace && vgadev->set_decode)
- 		goto bail;
- 
--	/* update the device decodes + counter */
-+	/* Update the device decodes + counter */
- 	vga_update_device_decodes(vgadev, decodes);
- 
--	/* XXX if somebody is going from "doesn't decode" to "decodes" state
-+	/*
-+	 * XXX if somebody is going from "doesn't decode" to "decodes" state
- 	 * here, additional care must be taken as we may have pending owner
- 	 * ship of non-legacy region ...
- 	 */
-@@ -952,9 +969,9 @@ EXPORT_SYMBOL(vga_set_legacy_decoding);
-  * @set_decode callback: If a client can disable its GPU VGA resource, it
-  * will get a callback from this to set the encode/decode state.
-  *
-- * Rationale: we cannot disable VGA decode resources unconditionally some single
-- * GPU laptops seem to require ACPI or BIOS access to the VGA registers to
-- * control things like backlights etc.  Hopefully newer multi-GPU laptops do
-+ * Rationale: we cannot disable VGA decode resources unconditionally, some
-+ * single GPU laptops seem to require ACPI or BIOS access to the VGA registers
-+ * to control things like backlights etc. Hopefully newer multi-GPU laptops do
-  * something saner, and desktops won't have any special ACPI for this. The
-  * driver will get a callback when VGA arbitration is first used by userspace
-  * since some older X servers have issues.
-@@ -984,7 +1001,6 @@ int vga_client_register(struct pci_dev *pdev,
- bail:
- 	spin_unlock_irqrestore(&vga_lock, flags);
- 	return ret;
--
- }
- EXPORT_SYMBOL(vga_client_register);
- 
-@@ -1075,7 +1091,6 @@ static int vga_pci_str_to_vars(char *buf, int count, unsigned int *domain,
- 	int n;
- 	unsigned int slot, func;
- 
--
- 	n = sscanf(buf, "PCI:%x:%x:%x.%x", domain, bus, &slot, &func);
- 	if (n != 4)
- 		return 0;
-@@ -1310,7 +1325,7 @@ static ssize_t vga_arb_write(struct file *file, const char __user *buf,
- 		curr_pos += 7;
- 		remaining -= 7;
- 		pr_debug("client 0x%p called 'target'\n", priv);
--		/* if target is default */
-+		/* If target is default */
- 		if (!strncmp(curr_pos, "default", 7))
- 			pdev = pci_dev_get(vga_default_device());
- 		else {
-@@ -1427,7 +1442,6 @@ static int vga_arb_open(struct inode *inode, struct file *file)
- 	priv->cards[0].io_cnt = 0;
- 	priv->cards[0].mem_cnt = 0;
- 
--
  	return 0;
  }
- 
-@@ -1461,7 +1475,7 @@ static int vga_arb_release(struct inode *inode, struct file *file)
- }
- 
- /*
-- * callback any registered clients to let them know we have a
-+ * Callback any registered clients to let them know we have a
-  * change in VGA cards
-  */
- static void vga_arbiter_notify_clients(void)
-@@ -1500,9 +1514,11 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
- 	if (pdev->class != PCI_CLASS_DISPLAY_VGA << 8)
- 		return 0;
- 
--	/* For now we're only intereted in devices added and removed. I didn't
-+	/*
-+	 * For now we're only intereted in devices added and removed. I didn't
- 	 * test this thing here, so someone needs to double check for the
--	 * cases of hotplugable vga cards. */
-+	 * cases of hotplugable vga cards.
-+	 */
- 	if (action == BUS_NOTIFY_ADD_DEVICE)
- 		notify = vga_arbiter_add_pci_device(pdev);
- 	else if (action == BUS_NOTIFY_DEL_DEVICE)
-@@ -1543,8 +1559,10 @@ static int __init vga_arb_device_init(void)
- 
- 	bus_register_notifier(&pci_bus_type, &pci_notifier);
- 
--	/* We add all PCI devices satisfying VGA class in the arbiter by
--	 * default */
-+	/*
-+	 * We add all PCI devices satisfying VGA class in the arbiter by
-+	 * default
-+	 */
- 	while (1) {
- 		pdev = pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, pdev);
- 		if (!pdev)
-diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-index b4b9137f9792..6d5465f8c3f2 100644
---- a/include/linux/vgaarb.h
-+++ b/include/linux/vgaarb.h
-@@ -96,7 +96,7 @@ static inline int vga_client_register(struct pci_dev *pdev,
- static inline int vga_get_interruptible(struct pci_dev *pdev,
- 					unsigned int rsrc)
- {
--       return vga_get(pdev, rsrc, 1);
-+	return vga_get(pdev, rsrc, 1);
- }
++
++static inline bool aperture_contain_firmware_fb(resource_size_t ap_start, resource_size_t ap_end)
++{
++	return false;
++}
+ #endif
  
  /**
-@@ -111,7 +111,7 @@ static inline int vga_get_interruptible(struct pci_dev *pdev,
- static inline int vga_get_uninterruptible(struct pci_dev *pdev,
- 					  unsigned int rsrc)
- {
--       return vga_get(pdev, rsrc, 0);
-+	return vga_get(pdev, rsrc, 0);
- }
- 
- static inline void vga_client_unregister(struct pci_dev *pdev)
 -- 
 2.25.1
 
