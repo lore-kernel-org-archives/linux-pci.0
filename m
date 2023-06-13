@@ -2,28 +2,28 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1207EC7EE43
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Jun 2023 03:04:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0431C88CB5
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Jun 2023 03:04:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239493AbjFMDET (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Jun 2023 23:04:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52486 "EHLO
+        id S239519AbjFMDEZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Jun 2023 23:04:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51678 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233125AbjFMDDx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2023 23:03:53 -0400
+        with ESMTP id S238629AbjFMDD4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2023 23:03:56 -0400
 Received: from 189.cn (ptr.189.cn [183.61.185.102])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 07CFC1BEE;
-        Mon, 12 Jun 2023 20:02:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9886F1FC1;
+        Mon, 12 Jun 2023 20:02:43 -0700 (PDT)
 HMM_SOURCE_IP: 10.64.8.43:47948.1267835893
 HMM_ATTACHE_NUM: 0000
 HMM_SOURCE_TYPE: SMTP
 Received: from clientip-114.242.206.180 (unknown [10.64.8.43])
-        by 189.cn (HERMES) with SMTP id A70B21002F7;
-        Tue, 13 Jun 2023 11:01:59 +0800 (CST)
+        by 189.cn (HERMES) with SMTP id 59CA0100302;
+        Tue, 13 Jun 2023 11:02:07 +0800 (CST)
 Received: from  ([114.242.206.180])
-        by gateway-151646-dep-75648544bd-7vx9t with ESMTP id a017ae4872414e4aa6dd165875a604cc for bhelgaas@google.com;
-        Tue, 13 Jun 2023 11:02:00 CST
-X-Transaction-ID: a017ae4872414e4aa6dd165875a604cc
+        by gateway-151646-dep-75648544bd-7vx9t with ESMTP id 94e06592384f4442af9040d995fc581c for bhelgaas@google.com;
+        Tue, 13 Jun 2023 11:02:10 CST
+X-Transaction-ID: 94e06592384f4442af9040d995fc581c
 X-Real-From: 15330273260@189.cn
 X-Receive-IP: 114.242.206.180
 X-MEDUSA-Status: 0
@@ -34,10 +34,16 @@ Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         linux-kernel@vger.kernel.org, intel-gfx@lists.freedesktop.org,
         nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        Sui Jingfeng <suijingfeng@loongson.cn>
-Subject: [PATCH v7 2/8] PCI/VGA: Deal only with VGA class devices
-Date:   Tue, 13 Jun 2023 11:01:45 +0800
-Message-Id: <20230613030151.216625-3-15330273260@189.cn>
+        Sui Jingfeng <suijingfeng@loongson.cn>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        Andi Shyti <andi.shyti@linux.intel.com>
+Subject: [PATCH v7 4/8] PCI/VGA: Replace full MIT license text with SPDX identifier
+Date:   Tue, 13 Jun 2023 11:01:47 +0800
+Message-Id: <20230613030151.216625-5-15330273260@189.cn>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230613030151.216625-1-15330273260@189.cn>
 References: <20230613030151.216625-1-15330273260@189.cn>
@@ -49,80 +55,61 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-Deal only with the VGA devcie(pdev->class == 0x0300), so replace the
-pci_get_subsys() function with pci_get_class(). Filter the non-PCI display
-device(pdev->class != 0x0300) out. There no need to process the non-display
-PCI device.
+Per Documentation/process/license-rules.rst, the SPDX MIT identifier is
+equivalent to including the entire MIT license text from
+LICENSES/preferred/MIT.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+Replace the MIT license text with the equivalent SPDX identifier.
+
+Cc: David Airlie <airlied@gmail.com>
+Cc: Daniel Vetter <daniel@ffwll.ch>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Maxime Ripard <mripard@kernel.org>
+Cc: Thomas Zimmermann <tzimmermann@suse.de>
 Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
+Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
 ---
- drivers/pci/vgaarb.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ include/linux/vgaarb.h | 23 ++---------------------
+ 1 file changed, 2 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index c1bc6c983932..22a505e877dc 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -754,10 +754,6 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
- 	struct pci_dev *bridge;
- 	u16 cmd;
- 
--	/* Only deal with VGA class devices */
--	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--		return false;
--
- 	/* Allocate structure */
- 	vgadev = kzalloc(sizeof(struct vga_device), GFP_KERNEL);
- 	if (vgadev == NULL) {
-@@ -1500,7 +1496,9 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	bool notify = false;
- 
--	vgaarb_dbg(dev, "%s\n", __func__);
-+	/* Only deal with VGA class devices */
-+	if (pdev->class != PCI_CLASS_DISPLAY_VGA << 8)
-+		return 0;
- 
- 	/* For now we're only intereted in devices added and removed. I didn't
- 	 * test this thing here, so someone needs to double check for the
-@@ -1510,6 +1508,8 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
- 	else if (action == BUS_NOTIFY_DEL_DEVICE)
- 		notify = vga_arbiter_del_pci_device(pdev);
- 
-+	vgaarb_dbg(dev, "%s: action = %lu\n", __func__, action);
+diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+index 6d5465f8c3f2..97129a1bbb7d 100644
+--- a/include/linux/vgaarb.h
++++ b/include/linux/vgaarb.h
+@@ -1,3 +1,5 @@
++/* SPDX-License-Identifier: MIT */
 +
- 	if (notify)
- 		vga_arbiter_notify_clients();
- 	return 0;
-@@ -1534,8 +1534,8 @@ static struct miscdevice vga_arb_device = {
+ /*
+  * The VGA aribiter manages VGA space routing and VGA resource decode to
+  * allow multiple VGA devices to be used in a system in a safe way.
+@@ -5,27 +7,6 @@
+  * (C) Copyright 2005 Benjamin Herrenschmidt <benh@kernel.crashing.org>
+  * (C) Copyright 2007 Paulo R. Zanoni <przanoni@gmail.com>
+  * (C) Copyright 2007, 2009 Tiago Vignatti <vignatti@freedesktop.org>
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a
+- * copy of this software and associated documentation files (the "Software"),
+- * to deal in the Software without restriction, including without limitation
+- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+- * and/or sell copies of the Software, and to permit persons to whom the
+- * Software is furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice (including the next
+- * paragraph) shall be included in all copies or substantial portions of the
+- * Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+- * DEALINGS
+- * IN THE SOFTWARE.
+- *
+  */
  
- static int __init vga_arb_device_init(void)
- {
-+	struct pci_dev *pdev = NULL;
- 	int rc;
--	struct pci_dev *pdev;
- 
- 	rc = misc_register(&vga_arb_device);
- 	if (rc < 0)
-@@ -1545,11 +1545,13 @@ static int __init vga_arb_device_init(void)
- 
- 	/* We add all PCI devices satisfying VGA class in the arbiter by
- 	 * default */
--	pdev = NULL;
--	while ((pdev =
--		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--			       PCI_ANY_ID, pdev)) != NULL)
-+	while (1) {
-+		pdev = pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, pdev);
-+		if (!pdev)
-+			break;
-+
- 		vga_arbiter_add_pci_device(pdev);
-+	}
- 
- 	pr_info("loaded\n");
- 	return rc;
+ #ifndef LINUX_VGA_H
 -- 
 2.25.1
 
