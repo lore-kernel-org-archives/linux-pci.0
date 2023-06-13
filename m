@@ -2,107 +2,135 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D59FC88CB5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7280C88CB6
 	for <linux-pci@archiver.kernel.org>; Tue, 13 Jun 2023 03:00:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239012AbjFMDAq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Jun 2023 23:00:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51424 "EHLO
+        id S239034AbjFMDAr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Jun 2023 23:00:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51388 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238922AbjFMDAn (ORCPT
+        with ESMTP id S239030AbjFMDAn (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2023 23:00:43 -0400
 Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4E245172B;
-        Mon, 12 Jun 2023 20:00:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7BD631734;
+        Mon, 12 Jun 2023 20:00:41 -0700 (PDT)
 Received: from loongson.cn (unknown [10.20.42.43])
-        by gateway (Coremail) with SMTP id _____8AxnOrV24dkQ2MEAA--.9295S3;
-        Tue, 13 Jun 2023 11:00:37 +0800 (CST)
+        by gateway (Coremail) with SMTP id _____8AxGurW24dkSmMEAA--.9453S3;
+        Tue, 13 Jun 2023 11:00:38 +0800 (CST)
 Received: from openarena.loongson.cn (unknown [10.20.42.43])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8BxC8rV24dkOkAYAA--.60391S2;
-        Tue, 13 Jun 2023 11:00:37 +0800 (CST)
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8BxC8rV24dkOkAYAA--.60391S4;
+        Tue, 13 Jun 2023 11:00:38 +0800 (CST)
 From:   Sui Jingfeng <suijingfeng@loongson.cn>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         linux-kernel@vger.kernel.org, intel-gfx@lists.freedesktop.org,
         nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        kvm@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        Sui Jingfeng <15330273260@189.cn>
-Subject: [PATCH v7 0/8] PCI/VGA: Introduce is_boot_device function callback to vga_client_register
-Date:   Tue, 13 Jun 2023 11:00:27 +0800
-Message-Id: <20230613030035.216556-1-suijingfeng@loongson.cn>
+        kvm@vger.kernel.org, linux-fbdev@vger.kernel.org
+Subject: [PATCH v7 2/8] PCI/VGA: Deal only with VGA class devices
+Date:   Tue, 13 Jun 2023 11:00:29 +0800
+Message-Id: <20230613030035.216556-3-suijingfeng@loongson.cn>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230613030035.216556-1-suijingfeng@loongson.cn>
+References: <20230613030035.216556-1-suijingfeng@loongson.cn>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf8BxC8rV24dkOkAYAA--.60391S2
+X-CM-TRANSID: AQAAf8BxC8rV24dkOkAYAA--.60391S4
 X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
-X-Coremail-Antispam: 1Uk129KBj93XoW7ZrWUZF45Zr4kur18tFW3XFc_yoW8trWkpF
-        45KF9xAr95JF4akry7Aw4xZFy5Zan7CayfKr9rCw1a93W5Cry8trWqyFWrK34DJrWxAF4r
-        tr9xKry7GF1qvrXCm3ZEXasCq-sJn29KB7ZKAUJUUUU5529EdanIXcx71UUUUU7KY7ZEXa
+X-Coremail-Antispam: 1Uk129KBj93XoW7WFW8Kr47tw4kJw1xCFy8WFX_yoW8Kw17pa
+        yrJFWrKry8Ww17Ga12qF1kZFy5ZrZ2ka4ftr4Ik34SkFZrCrW0qasYkry5A34fJrZ5JF1I
+        qay2yF1UXw47GabCm3ZEXasCq-sJn29KB7ZKAUJUUUU5529EdanIXcx71UUUUU7KY7ZEXa
         sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
         0xBIdaVrnRJUUUvIb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-        IYs7xG6rWj6s0DM7CIcVAFz4kK6r1Y6r17M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+        IYs7xG6rWj6s0DM7CIcVAFz4kK6r1a6r1DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
         0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv6xkF7I0E14v2
         6r4UJVWxJr1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqjxCEc2xF0cIa020Ex4CE44I27w
-        Aqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jrv_JF1lYx0Ex4A2jsIE
+        Aqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jw0_WrylYx0Ex4A2jsIE
         14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262kKe7
         AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
         F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
-        ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
-        xVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
-        4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07jr
-        eOLUUUUU=
+        ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7Cj
+        xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
+        4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UX
+        BMtUUUUU=
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sui Jingfeng <15330273260@189.cn>
+Deal only with the VGA devcie(pdev->class == 0x0300), so replace the
+pci_get_subsys() function with pci_get_class(). Filter the non-PCI display
+device(pdev->class != 0x0300) out. There no need to process the non-display
+PCI device.
 
-The vga_is_firmware_default() function is arch-dependent, it's probably
-wrong if we simply remove the arch guard. As the VRAM BAR which contains
-firmware framebuffer may move, while the lfb_base and lfb_size members of
-the screen_info does not change accordingly. In short, it should take the
-re-allocation of the PCI BAR into consideration.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
+---
+ drivers/pci/vgaarb.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-With the observation that device drivers or video aperture helpers may
-have better knowledge about which PCI bar contains the firmware fb,
-which could avoid the need to iterate all of the PCI BARs. But as a PCI
-function at pci/vgaarb.c, vga_is_firmware_default() is not suitable to
-make such an optimization since it is loaded too early.
-
-There are PCI display controllers that don't have a dedicated VRAM bar,
-this function will lose its effectiveness in such a case. Luckily, the
-device driver can provide an accurate workaround.
-
-Therefore, this patch introduces a callback that allows the device driver
-to tell the VGAARB if the device is the default boot device. Also honor
-the comment: "Clients have two callback mechanisms they can use"
-
-Sui Jingfeng (8):
-  PCI/VGA: Use unsigned type for the io_state variable
-  PCI/VGA: Deal only with VGA class devices
-  PCI/VGA: Tidy up the code and comment format
-  PCI/VGA: Replace full MIT license text with SPDX identifier
-  video/aperture: Add a helper to detect if an aperture contains
-    firmware FB
-  PCI/VGA: Introduce is_boot_device function callback to
-    vga_client_register
-  drm/amdgpu: Implement the is_boot_device callback function
-  drm/radeon: Implement the is_boot_device callback function
-
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  12 +-
- drivers/gpu/drm/drm_aperture.c             |  16 +++
- drivers/gpu/drm/i915/display/intel_vga.c   |   3 +-
- drivers/gpu/drm/nouveau/nouveau_vga.c      |   2 +-
- drivers/gpu/drm/radeon/radeon_device.c     |  12 +-
- drivers/pci/vgaarb.c                       | 153 +++++++++++++--------
- drivers/vfio/pci/vfio_pci_core.c           |   2 +-
- drivers/video/aperture.c                   |  29 ++++
- include/drm/drm_aperture.h                 |   2 +
- include/linux/aperture.h                   |   7 +
- include/linux/vgaarb.h                     |  35 ++---
- 11 files changed, 184 insertions(+), 89 deletions(-)
-
+diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+index c1bc6c983932..22a505e877dc 100644
+--- a/drivers/pci/vgaarb.c
++++ b/drivers/pci/vgaarb.c
+@@ -754,10 +754,6 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+ 	struct pci_dev *bridge;
+ 	u16 cmd;
+ 
+-	/* Only deal with VGA class devices */
+-	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+-		return false;
+-
+ 	/* Allocate structure */
+ 	vgadev = kzalloc(sizeof(struct vga_device), GFP_KERNEL);
+ 	if (vgadev == NULL) {
+@@ -1500,7 +1496,9 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	bool notify = false;
+ 
+-	vgaarb_dbg(dev, "%s\n", __func__);
++	/* Only deal with VGA class devices */
++	if (pdev->class != PCI_CLASS_DISPLAY_VGA << 8)
++		return 0;
+ 
+ 	/* For now we're only intereted in devices added and removed. I didn't
+ 	 * test this thing here, so someone needs to double check for the
+@@ -1510,6 +1508,8 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
+ 	else if (action == BUS_NOTIFY_DEL_DEVICE)
+ 		notify = vga_arbiter_del_pci_device(pdev);
+ 
++	vgaarb_dbg(dev, "%s: action = %lu\n", __func__, action);
++
+ 	if (notify)
+ 		vga_arbiter_notify_clients();
+ 	return 0;
+@@ -1534,8 +1534,8 @@ static struct miscdevice vga_arb_device = {
+ 
+ static int __init vga_arb_device_init(void)
+ {
++	struct pci_dev *pdev = NULL;
+ 	int rc;
+-	struct pci_dev *pdev;
+ 
+ 	rc = misc_register(&vga_arb_device);
+ 	if (rc < 0)
+@@ -1545,11 +1545,13 @@ static int __init vga_arb_device_init(void)
+ 
+ 	/* We add all PCI devices satisfying VGA class in the arbiter by
+ 	 * default */
+-	pdev = NULL;
+-	while ((pdev =
+-		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-			       PCI_ANY_ID, pdev)) != NULL)
++	while (1) {
++		pdev = pci_get_class(PCI_CLASS_DISPLAY_VGA << 8, pdev);
++		if (!pdev)
++			break;
++
+ 		vga_arbiter_add_pci_device(pdev);
++	}
+ 
+ 	pr_info("loaded\n");
+ 	return rc;
 -- 
 2.25.1
 
