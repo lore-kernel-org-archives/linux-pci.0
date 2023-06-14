@@ -2,105 +2,120 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D96BEB64D9
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Jun 2023 15:56:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D22F2EB64D9
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Jun 2023 17:54:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245051AbjFNP4v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Jun 2023 11:56:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51384 "EHLO
+        id S232645AbjFNRyh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Jun 2023 13:54:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245169AbjFNP4r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2023 11:56:47 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 872E1E3
-        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2023 08:56:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1686758205; x=1718294205;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=t0VLlU5N6re3pNoF7YVhEoPU3Oi/i8z/lOc/SQ76fqc=;
-  b=iaU9kqTuff8X2gL9YvyHzX3bTGkgswRvoX2KPy6YIAV3hdhHyvDp86y8
-   QF3Chxo117JvqIBvQ0SWM15+Fwxv8QdPk4VJ71weGrVW8YiT4vvBoNtP6
-   /zVntTJF2J0fAcRfUSRTQOWU8y61Op+1Z1IjrJ8vzk3a+UrhlsF/gqfvZ
-   Bx+68YAXKBFebGCtUIIh03h6pORoSUAVLUbjsR4z2szl90d6tc7YFQrb9
-   niDDh9y/Kn/wkNyAnl4Rw27RGe7UuGLrGTtZyI9mkz5JERnKMA1rKE412
-   8JYLZH5CeCaSaaEMV2ItfVwZjshNNtjNc5yOT+g9RMoz1zz2WYBiHQJDs
-   g==;
-X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="216048426"
-X-Amp-Result: SKIPPED(no attachment in message)
-Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Jun 2023 08:56:44 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
- chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Wed, 14 Jun 2023 08:56:07 -0700
-Received: from daire-X570.emdalo.com (10.10.115.15) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server id
- 15.1.2507.21 via Frontend Transport; Wed, 14 Jun 2023 08:56:05 -0700
-From:   <daire.mcnamara@microchip.com>
-To:     <conor.dooley@microchip.com>, <lpieralisi@kernel.org>,
-        <kw@linux.com>, <robh@kernel.org>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>
-CC:     Daire McNamara <daire.mcnamara@microchip.com>,
-        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-Subject: [PATCH v1 3/8] PCI: microchip: enable building this driver as a module
-Date:   Wed, 14 Jun 2023 16:55:51 +0100
-Message-ID: <20230614155556.4095526-4-daire.mcnamara@microchip.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230614155556.4095526-1-daire.mcnamara@microchip.com>
-References: <20230614155556.4095526-1-daire.mcnamara@microchip.com>
+        with ESMTP id S229943AbjFNRyg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2023 13:54:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FF891FCA;
+        Wed, 14 Jun 2023 10:54:35 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 2442B63BC8;
+        Wed, 14 Jun 2023 17:54:35 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51FD7C433C9;
+        Wed, 14 Jun 2023 17:54:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1686765274;
+        bh=LFs3KEZ5mEDZ0GKDFGF6FsGRPB1VvFwyU8SZxXVA1jQ=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=OGKEksRtQMIQsiEhIMdy1AQENzhlaMyT8TuTUHNjyWoO1YxlYsVpOnmiOrW2/6WKi
+         W3DfsnpaNM4Zyz9CAi4TNCTC3PAeUuvseGgogMKeb0REh/X6IrXM8cj4KHY7byTj4V
+         vaNUtGhXO2ncwSEtIDMMkGka+rlbGyNQxooRik/i0mpBIKONx8lvy39LHmk5bQOR1W
+         kGvEVPEAYMfVoowJwaq4JR4VKzNuCOnLQzkZLbsa9MPsw89dqO/jU/Ap97Wu9EfOt1
+         4SN+8fn1gj7/oGp8BPnppp9ctL3MOFkZZoJkEsx4BcwAVNkEvLU6NjRqkQniPfNe4N
+         +0xphPJf44Djg==
+Date:   Wed, 14 Jun 2023 12:54:31 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Ondrej Zary <linux@zary.sk>
+Cc:     rjw@rjwysocki.net, gottwald@igel.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        mika.westerberg@linux.intel.com
+Subject: Re: [PATCH] PCI/PM: Extend Elo i2 quirk to all systems using
+ Continental Z2 board
+Message-ID: <20230614175431.GA1395151@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230614074253.22318-1-linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Daire McNamara <daire.mcnamara@microchip.com>
+On Wed, Jun 14, 2023 at 09:42:53AM +0200, Ondrej Zary wrote:
+> The quirk for Elo i2 introduced in commit 92597f97a40b ("PCI/PM: Avoid
+> putting Elo i2 PCIe Ports in D3cold") is also needed by EloPOS E2/S2/H2
+> which uses the same Continental Z2 board.
+> 
+> Change the quirk to match the board instead of system.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=215715
+> Signed-off-by: Ondrej Zary <linux@zary.sk>
+> Cc: stable@vger.kernel.org
 
-Enable building this driver as a module. The expected use case is the
-driver is built as a module, is installed when needed, and cannot be
-removed once installed.
+Thanks, I applied this to pci/pm for v6.5 with the following subject
+to try to make it easier to connect to product names:
 
-The remove() callback is not implemented as removing a driver with
-INTx and MSI interrupt handling is inherently unsafe.
+  PCI/PM: Avoid putting EloPOS E2/S2/H2 PCIe Ports in D3cold
 
-Link: https://lore.kernel.org/linux-pci/87y1wgbah8.wl-maz@kernel.org/
-Suggested-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
-Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
----
- drivers/pci/controller/Kconfig               | 2 +-
- drivers/pci/controller/pcie-microchip-host.c | 1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 578bf0d3ec3c..0fb0116ae69f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2956,13 +2956,13 @@ static const struct dmi_system_id bridge_d3_blacklist[] = {
+ 	{
+ 		/*
+ 		 * Downstream device is not accessible after putting a root port
+-		 * into D3cold and back into D0 on Elo i2.
++		 * into D3cold and back into D0 on Elo Continental Z2 board
+ 		 */
+-		.ident = "Elo i2",
++		.ident = "Elo Continental Z2",
+ 		.matches = {
+-			DMI_MATCH(DMI_SYS_VENDOR, "Elo Touch Solutions"),
+-			DMI_MATCH(DMI_PRODUCT_NAME, "Elo i2"),
+-			DMI_MATCH(DMI_PRODUCT_VERSION, "RevB"),
++			DMI_MATCH(DMI_BOARD_VENDOR, "Elo Touch Solutions"),
++			DMI_MATCH(DMI_BOARD_NAME, "Geminilake"),
++			DMI_MATCH(DMI_BOARD_VERSION, "Continental Z2"),
+ 		},
+ 	},
+ #endif
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 8d49bad7f847..f4ad0e9cca45 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -217,7 +217,7 @@ config PCIE_MT7621
- 	  This selects a driver for the MediaTek MT7621 PCIe Controller.
- 
- config PCIE_MICROCHIP_HOST
--	bool "Microchip AXI PCIe controller"
-+	tristate "Microchip AXI PCIe controller"
- 	depends on PCI_MSI && OF
- 	select PCI_HOST_COMMON
- 	help
-diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-index 73046bad1521..5efd480e42fa 100644
---- a/drivers/pci/controller/pcie-microchip-host.c
-+++ b/drivers/pci/controller/pcie-microchip-host.c
-@@ -1141,5 +1141,6 @@ static struct platform_driver mc_pcie_driver = {
- };
- 
- builtin_platform_driver(mc_pcie_driver);
-+MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Microchip PCIe host controller driver");
- MODULE_AUTHOR("Daire McNamara <daire.mcnamara@microchip.com>");
--- 
-2.25.1
-
+> ---
+>  drivers/pci/pci.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 5ede93222bc1..c779eb4d7fb8 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2949,13 +2949,13 @@ static const struct dmi_system_id bridge_d3_blacklist[] = {
+>  	{
+>  		/*
+>  		 * Downstream device is not accessible after putting a root port
+> -		 * into D3cold and back into D0 on Elo i2.
+> +		 * into D3cold and back into D0 on Elo Continental Z2 board
+>  		 */
+> -		.ident = "Elo i2",
+> +		.ident = "Elo Continental Z2",
+>  		.matches = {
+> -			DMI_MATCH(DMI_SYS_VENDOR, "Elo Touch Solutions"),
+> -			DMI_MATCH(DMI_PRODUCT_NAME, "Elo i2"),
+> -			DMI_MATCH(DMI_PRODUCT_VERSION, "RevB"),
+> +			DMI_MATCH(DMI_BOARD_VENDOR, "Elo Touch Solutions"),
+> +			DMI_MATCH(DMI_BOARD_NAME, "Geminilake"),
+> +			DMI_MATCH(DMI_BOARD_VERSION, "Continental Z2"),
+>  		},
+>  	},
+>  #endif
+> -- 
+> 2.39.2
+> 
