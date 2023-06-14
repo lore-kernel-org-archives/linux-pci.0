@@ -2,51 +2,51 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3468CEB64DC
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Jun 2023 15:56:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22F9DEB64DC
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Jun 2023 15:56:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245163AbjFNP4T (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Jun 2023 11:56:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50910 "EHLO
+        id S245011AbjFNP4r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Jun 2023 11:56:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245013AbjFNP4S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2023 11:56:18 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5632EE4D
-        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2023 08:56:17 -0700 (PDT)
+        with ESMTP id S245176AbjFNP4r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2023 11:56:47 -0400
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 370A2D2
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2023 08:56:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1686758177; x=1718294177;
+  t=1686758204; x=1718294204;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=+ks7pUc9AzS9Gm0iG/CCj51nI/YmD9r4sRsEsQCKoEw=;
-  b=McUePPjjlD+uqMukdor2j/4vAXQHdG4/GNCbMoAS2DIIRoGLYB20Tkn5
-   ekE4tr6g603n8E8jamV8w9EWKgF/o5bzaMbtXBrJnAjofTZv5Y/dhi+F4
-   Wz8jZHsaslQtESQm1j3Q0ZgEGxUefarubZ0p7qcRrzpMQ1y8aawAcHn6d
-   2n/vQeh5/AkOQ4JSjISSdg894BBG57oj/6NJtS79cp7YyURrCeS+g6He9
-   wxjBX25QdOXQqge6QlaNqcLpPHV4aEFQRTFC6lxFYQuSWZpEdb9FRWQjo
-   aautM811hbJm/BebCbtLFU05j51I792RAj7spnxuBvlhkw6vkAXTZ8Alz
+  bh=56EU1//nUi8+2GPEi8I4JHcx+44wHat4IeyEbEwYssU=;
+  b=xc6JX/PKi+CAFKzCbZQdcEJVM+Ru4qfunOMvHOppOU7gOcw1Oj6PGCJs
+   XHpIn72IGWJija/kVjbW/oV640ozG3d90RuCPv29h+iS4FaQ34q8A2w6P
+   GPlkUzPhI9IR9yt2rHCciuQtmaVTpZNigdHyb/Eoylg19+SxQLAGXp69x
+   ExHQhxaqwZAnhH6LajbWhriOxkgrJjElAOEABL5KJYpv+KSlLX3Nji2/U
+   r5bHym/XV5TITNuN9QAaNFtnQlS7y+Jl3kR1M8gyFbXxn0tKclPxRgFOd
+   gGvt2M2StTed1u+cejDly8HhItfCcYVZ7BWUfrwk7fRQdN6Q1/xQKa1t4
    A==;
 X-IronPort-AV: E=Sophos;i="6.00,242,1681196400"; 
-   d="scan'208";a="230124354"
+   d="scan'208";a="220290982"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Jun 2023 08:56:16 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Jun 2023 08:56:43 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
+ chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Wed, 14 Jun 2023 08:56:16 -0700
+ 15.1.2507.21; Wed, 14 Jun 2023 08:56:04 -0700
 Received: from daire-X570.emdalo.com (10.10.115.15) by
  chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server id
- 15.1.2507.21 via Frontend Transport; Wed, 14 Jun 2023 08:56:15 -0700
+ 15.1.2507.21 via Frontend Transport; Wed, 14 Jun 2023 08:56:03 -0700
 From:   <daire.mcnamara@microchip.com>
 To:     <conor.dooley@microchip.com>, <lpieralisi@kernel.org>,
         <kw@linux.com>, <robh@kernel.org>, <bhelgaas@google.com>,
         <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>
 CC:     Daire McNamara <daire.mcnamara@microchip.com>
-Subject: [PATCH v1 8/8] PCI: microchip: Re-partition code between probe() and init()
-Date:   Wed, 14 Jun 2023 16:55:56 +0100
-Message-ID: <20230614155556.4095526-9-daire.mcnamara@microchip.com>
+Subject: [PATCH v1 2/8] PCI: microchip: Remove cast warning for devm_add_action_or_reset() arg
+Date:   Wed, 14 Jun 2023 16:55:50 +0100
+Message-ID: <20230614155556.4095526-3-daire.mcnamara@microchip.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230614155556.4095526-1-daire.mcnamara@microchip.com>
 References: <20230614155556.4095526-1-daire.mcnamara@microchip.com>
@@ -59,115 +59,47 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Daire McNamara <daire.mcnamara@microchip.com>
 
-Continuing to use pci_host_common_probe() for the PCIe Root Complex on
-PolarFire SoC was leading to an extremely large _init() function and
-some unnatural code flow. Re-partition so some tasks are done in
-a _probe() routine, which calls pci_host_common_probe() and then use a
-much smaller _init() function, mainly to enable interrupts after address
-translation tables are set up.
+The kernel test robot reported that the ugly cast from
+void(*)(struct clk *) to void (*)(void *) converts to incompatible
+function type.  This commit adopts the common convention of creating a
+trivial stub function that takes a void * and passes it to the
+underlying function that expects the more specific type.
 
+Fixes: 6f15a9c9f941 ("PCI: microchip: Add Microchip PolarFire PCIe controller driver")
 Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 ---
- drivers/pci/controller/pcie-microchip-host.c | 55 ++++++++++++++------
- 1 file changed, 38 insertions(+), 17 deletions(-)
+ drivers/pci/controller/pcie-microchip-host.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-index 9ff0fb04b953..c55911c48ec6 100644
+index dd5245904c87..73046bad1521 100644
 --- a/drivers/pci/controller/pcie-microchip-host.c
 +++ b/drivers/pci/controller/pcie-microchip-host.c
-@@ -383,6 +383,8 @@ static struct {
+@@ -848,6 +848,13 @@ static const struct irq_domain_ops event_domain_ops = {
+ 	.map = mc_pcie_event_map,
+ };
  
- static char poss_clks[][5] = { "fic0", "fic1", "fic2", "fic3" };
- 
-+static struct mc_pcie *port;
++static inline void mc_pcie_chip_off_action(void *data)
++{
++	struct clk *clk = data;
 +
- static void mc_pcie_fixup_ecam(struct mc_pcie *port, void __iomem *ecam)
- {
- 	struct mc_msi *msi = &port->msi;
-@@ -1111,7 +1113,34 @@ static int mc_platform_init(struct pci_config_window *cfg)
- {
- 	struct device *dev = cfg->parent;
- 	struct platform_device *pdev = to_platform_device(dev);
--	struct mc_pcie *port;
-+	void __iomem *bridge_base_addr =
-+		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	int ret;
-+
-+	/* Configure address translation table 0 for PCIe config space */
-+	mc_pcie_setup_window(bridge_base_addr, 0, cfg->res.start,
-+			     cfg->res.start,
-+			     resource_size(&cfg->res));
-+
-+	/* Need some fixups in config space */
-+	mc_pcie_fixup_ecam(port, cfg->win);
-+
-+	/* Configure non-config space outbound ranges */
-+	ret = mc_pcie_setup_windows(pdev, port);
-+	if (ret)
-+		return ret;
-+
-+	/* Address translation is up; safe to enable interrupts */
-+	ret = mc_init_interrupts(pdev, port);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
++	clk_disable_unprepare(clk);
 +}
 +
-+static int mc_host_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
- 	void __iomem *bridge_base_addr;
- 	int ret;
- 	u32 val;
-@@ -1119,13 +1148,8 @@ static int mc_platform_init(struct pci_config_window *cfg)
- 	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
- 	if (!port)
- 		return -ENOMEM;
--	port->dev = dev;
+ static inline struct clk *mc_pcie_init_clk(struct device *dev, const char *id)
+ {
+ 	struct clk *clk;
+@@ -863,8 +870,7 @@ static inline struct clk *mc_pcie_init_clk(struct device *dev, const char *id)
+ 	if (ret)
+ 		return ERR_PTR(ret);
  
--	ret = mc_pcie_init_clks(dev);
--	if (ret) {
--		dev_err(dev, "failed to get clock resources, error %d\n", ret);
--		return -ENODEV;
--	}
-+	port->dev = dev;
+-	devm_add_action_or_reset(dev, (void (*) (void *))clk_disable_unprepare,
+-				 clk);
++	devm_add_action_or_reset(dev, mc_pcie_chip_off_action, clk);
  
- 	port->axi_base_addr = devm_platform_ioremap_resource(pdev, 1);
- 	if (IS_ERR(port->axi_base_addr))
-@@ -1150,16 +1174,13 @@ static int mc_platform_init(struct pci_config_window *cfg)
- 	/* Pick vector address from design */
- 	port->msi.vector_phy = readl_relaxed(bridge_base_addr + IMSI_ADDR);
- 
--	/* Configure Address Translation Table 0 for PCIe config space */
--	mc_pcie_setup_window(bridge_base_addr, 0, cfg->res.start & 0xffffffff,
--			     cfg->res.start, resource_size(&cfg->res));
--
--	ret = mc_pcie_setup_windows(pdev, port);
--	if (ret)
--		return ret;
-+	ret = mc_pcie_init_clks(dev);
-+	if (ret) {
-+		dev_err(dev, "failed to get clock resources, error %d\n", ret);
-+		return -ENODEV;
-+	}
- 
--	/* Address translation is up; safe to enable interrupts */
--	return mc_init_interrupts(pdev, port);
-+	return pci_host_common_probe(pdev);
+ 	return clk;
  }
- 
- static const struct pci_ecam_ops mc_ecam_ops = {
-@@ -1182,7 +1203,7 @@ static const struct of_device_id mc_pcie_of_match[] = {
- MODULE_DEVICE_TABLE(of, mc_pcie_of_match);
- 
- static struct platform_driver mc_pcie_driver = {
--	.probe = pci_host_common_probe,
-+	.probe = mc_host_probe,
- 	.driver = {
- 		.name = "microchip-pcie",
- 		.of_match_table = mc_pcie_of_match,
 -- 
 2.25.1
 
