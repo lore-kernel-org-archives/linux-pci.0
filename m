@@ -2,169 +2,105 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA5ACEB64DA
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Jun 2023 23:03:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 189C8EB64D9
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Jun 2023 02:12:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229662AbjFOXD6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Jun 2023 19:03:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40510 "EHLO
+        id S240087AbjFPCMf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Jun 2023 22:12:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229511AbjFOXD5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jun 2023 19:03:57 -0400
-Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DEEF270E;
-        Thu, 15 Jun 2023 16:03:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686870236; x=1718406236;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=9SJ0J7T6a9jiQYsr6lYSjoumu7Hdh9US7+P+SI4SqMw=;
-  b=T80V+A75H8gRVdG5yWxxZNnrgV+y7JoumeN9T4LZh0nE8OGN61xm6lQm
-   FOLGqFR1w3eW2Iz2fcFWb51xZ5MtfhbAFwQxCEJY9zH2nihfO2VUJUCC9
-   JamSoEK67ukS3L9zq/XHwQJQdwdVv17ikpJxV6ysShY2fExGUhKpebvUX
-   mVOHFHaXA7AcDztsHSlJ+Ky3xU2SKZ+7UZ7pXd41IZItjzlpiHn96u4wb
-   tGS3t3ib06Bv5FAseo2lKPGc8PZeEb3cPXiblszenjm/1PC6r0P6WF1X2
-   +hVxIX176/l+kKwdXWkMB753s67vZlVvrHXtVTOfzkkwCsaQBbTeGOkcv
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10742"; a="357935205"
-X-IronPort-AV: E=Sophos;i="6.00,245,1681196400"; 
-   d="scan'208";a="357935205"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2023 16:03:55 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10742"; a="857162818"
-X-IronPort-AV: E=Sophos;i="6.00,245,1681196400"; 
-   d="scan'208";a="857162818"
-Received: from brhacker-mobl26.amr.corp.intel.com (HELO [10.212.148.133]) ([10.212.148.133])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jun 2023 16:03:55 -0700
-Message-ID: <713d71dc-c4a5-cd7b-2deb-343c244dd14d@linux.intel.com>
-Date:   Thu, 15 Jun 2023 16:03:54 -0700
+        with ESMTP id S240076AbjFPCMe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jun 2023 22:12:34 -0400
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 923B62967;
+        Thu, 15 Jun 2023 19:12:32 -0700 (PDT)
+Received: from loongson.cn (unknown [10.20.42.116])
+        by gateway (Coremail) with SMTP id _____8Cxd+kPxYtkhMsFAA--.10389S3;
+        Fri, 16 Jun 2023 10:12:31 +0800 (CST)
+Received: from [10.20.42.116] (unknown [10.20.42.116])
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8AxauUNxYtkj8AcAA--.16275S3;
+        Fri, 16 Jun 2023 10:12:30 +0800 (CST)
+Subject: Re: [PATCH pci] PCI: don't skip probing entire device if first fn OF
+ node has status = "disabled"
+To:     Vladimir Oltean <vladimir.oltean@nxp.com>
+Cc:     Liu Peibao <liupeibao@loongson.cn>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Claudiu Manoil <claudiu.manoil@nxp.com>,
+        Michael Walle <michael@walle.cc>, linux-kernel@vger.kernel.org,
+        Binbin Zhou <zhoubinbin@loongson.cn>,
+        Huacai Chen <chenhuacai@loongson.cn>
+References: <20230601163335.6zw4ojbqxz2ws6vx@skbuf>
+ <ZHjaq+TDW/RFcoxW@bhelgaas> <20230601221532.2rfcda4sg5nl7pzp@skbuf>
+ <dc430271-8511-e6e4-041b-ede197e7665d@loongson.cn>
+ <7a7f78ae-7fd8-b68d-691c-609a38ab3161@loongson.cn>
+ <20230602101628.jkgq3cmwccgsfb4c@skbuf>
+ <87f2b231-2e16-e7b8-963b-fc86c407bc96@loongson.cn>
+ <20230604085500.ioaos3ydehvqq24i@skbuf>
+ <ad969019-e763-b06f-d557-be4e672c68db@loongson.cn>
+ <20230605093459.gpwtsr5h73eonxt5@skbuf>
+From:   Jianmin Lv <lvjianmin@loongson.cn>
+Message-ID: <ec5039c1-61d7-6958-ef92-bf5b8c8db64d@loongson.cn>
+Date:   Fri, 16 Jun 2023 10:12:29 +0800
+User-Agent: Mozilla/5.0 (X11; Linux loongarch64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Firefox/102.0 Thunderbird/102.11.0
-Subject: Re: [PATCH v1] PCI: pciehp: Make sure DPC trigger status is reset in
- PDC handler
+In-Reply-To: <20230605093459.gpwtsr5h73eonxt5@skbuf>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230615062559.1268404-1-sathyanarayanan.kuppuswamy@linux.intel.com>
- <20230615183550.GA9773@wunner.de>
-From:   Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20230615183550.GA9773@wunner.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: AQAAf8AxauUNxYtkj8AcAA--.16275S3
+X-CM-SenderInfo: 5oymxthqpl0qxorr0wxvrqhubq/
+X-Coremail-Antispam: 1Uk129KBj93XoW7Ar1UWF43CF4DKw4kXFW3CFX_yoW8Ww15pF
+        43AF4SkFn8Gr4Sy34DZw4ruFyfua93Xw45Jr48J34v93y5WFySvrWYqa1Iqay7Gr18AF1a
+        vFWjqw1vk3WDWagCm3ZEXasCq-sJn29KB7ZKAUJUUUU5529EdanIXcx71UUUUU7KY7ZEXa
+        sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+        0xBIdaVrnRJUUUvYb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+        IYs7xG6rWj6s0DM7CIcVAFz4kK6r1Y6r17M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+        0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+        6r4j6r4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYIkI8VC2zVCFFI0UMc
+        02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAF
+        wI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxk0xIA0c2IEe2xFo4
+        CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+        67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MI
+        IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+        14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+        W8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07j1WlkU
+        UUUU=
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lukas,
 
-Thanks for the review.
 
-On 6/15/23 11:35 AM, Lukas Wunner wrote:
-> On Wed, Jun 14, 2023 at 11:25:59PM -0700, Kuppuswamy Sathyanarayanan wrote:
->> During the EDR-based DPC recovery process, for devices with persistent
->> issues, the firmware may choose not to handle the DPC error and leave
->> the port in DPC triggered state. In such scenarios, if the user
->> replaces the faulty device with a new one, the OS is expected to clear
->> the DPC trigger status in the hotplug error handler to enable the new
->> device enumeration.
+On 2023/6/5 下午5:34, Vladimir Oltean wrote:
+> On Mon, Jun 05, 2023 at 08:59:23AM +0800, Jianmin Lv wrote:
+>> For a multi-function device, if func 0 is not allowed to be scanned, as I
+>> said in way of 2, the other funcs of the device will be described as
+>> platform devices instead of pci and be not scanned either, which is
+>> acceptable for Loongson. The main goal by any way for us is to resolve the
+>> problem that shared pins can not be used simultaneously by devices sharing
+>> them. IMO, configure them in DT one by one may be reasonable, but adapting
+>> each driver will be bothered.
 > 
-> You're clearing the DPC trigger status upon a PDC event, yet are saying
-> here the purpose is to reset port state for a future hotplugged device.
-
-Sorry, it is a typo. I meant "hotplug interrupt handler".
-
-The goal is to ensure that when a new device presence is detected, the
-old DPC trigger status is cleared.
-
-> 
-> A PDC event may be synthesized, e.g. to trigger slot bringup via
-> sysfs, so using a PDC event to clear DPC trigger status feels wrong.
-
-IMO, it is harmless. We just want to make sure the previous DPC trigger
-status is cleared before enumerating a new device.
-
-> pciehp_unconfigure_device() seems like a more appropriate place to me.
+> Could you give an example of PCIe functions being described as platform
+> devices, and how does that work for Loongson? Are you saying that there
+> will be 2 drivers for the same hardware, one pci_driver and one platform_driver?
+> In the case of the platform_driver, who will do the PCI-specific stuff
+> required by the IP, like function level reset and enabling the memory space?
 > 
 
-I initially thought to add it there. Spec also recommends clearing it
-when removing the device. But I wasn't sure if pciehp_unconfigure_device()
-would be called only during device removal. 
+E.g. there are two functions , func0 is HDA controller and func1 is I2S 
+controller and they have shared pins.
+When HDA or I2S is used, both are disabled for PCI enumeration in BIOS 
+(e.g. by filling PCI header with 0xffffffff), and mem space has been 
+reserved from host bridge window for them in BIOS, of cause, reserved 
+space will not be seen by kernel because it has been removed in host 
+bridge mem range when passed to kernel in DT. Then the reserved mem base 
+is passed into kernel by DT, CPU will use remapped address of the mem 
+base, and these devices will not be enumerated in PCI bus. The way is 
+only used for PCI devices (share common pins and exist on bus 0) 
+integrated in Loongson CPU or chipset.
 
-Let me test this path and get back to you.
-
-> 
->> More details about this issue can be found in PCIe
->> firmware specification, r3.3, sec titled "DPC Event Handling"
->> Implementation note.
-> 
-> That Implementation Note contains a lot of text and a fairly complex
-> flow chart. If you could point to specific paragraphs or numbers in
-> the Implementation Note that would make life easier for a reviewer
-> to make the connection between your code and the spec.
-
-It is the text at the end of the flowchart. Copied it here for reference.
-
-For devices with persistent errors, a port may be kept in the DPC triggered
-state (disabled) to keep those devices from continuing to generate errors. For
-hot-plug slots, the errant device may be removed and replaced with a new device.
-If the DPC trigger state is not cleared, then the port above the newly inserted
-device will still be disabled and will be non-operational. Therefore, operating
-systems may need to modify their hot-plug interrupt handling code to clear DPC
-Trigger Status when a device is removed so that a subsequent insertion
-will succeed.
-
-> 
-> 
->> Similar issue might also happen if the DPC or EDR recovery handler
->> exits before clearing the trigger status. To fix this issue, clear the
->> DPC trigger status in PDC interrupt handler.
-> 
-> I was about to ask why the code is added to dpc.c, not edr.c,
-> and why it's not constrained to CONFIG_PCIE_EDR, but I assume
-> that's the reason?  Because it "might" happen for OS-native DPC
-> as well?
-
-Yes. There are code paths in the DPC driver where error recover handler
-can exit before clearing the DPC trigger status. So I think this fix is
-applicable for native code as well.
-
-> 
-> 
->> +/**
->> + * pci_reset_trigger - Clear DPC trigger status
->> + * @pdev: PCI device
->> + *
->> + * It is called from the PCIe hotplug driver to clean the DPC
->> + * trigger status in the PDC interrupt handler.
->> + */
->> +void pci_dpc_reset_trigger(struct pci_dev *pdev)
->> +{
->> +	if (!pdev->dpc_cap)
->> +		return;
->> +
->> +	pci_write_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_STATUS,
->> +			      PCI_EXP_DPC_STATUS_TRIGGER);
->> +}
-> 
-> This may run concurrently to dpc_reset_link(), so I'd expect that
-> you need some kind of serialization.  What happens if pciehp clears
-> trigger status behind the DPC driver's back while it is handling an
-> error?
-
-Currently, we only call pci_dpc_reset_trigger() in PDC interrupt handler.
-
-Do you think there would be a race between error handler and PDC handler?
-
-> 
-> Thanks,
-> 
-> Lukas
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
