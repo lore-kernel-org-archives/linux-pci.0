@@ -2,53 +2,53 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D8EDEB64DA
-	for <linux-pci@archiver.kernel.org>; Mon, 19 Jun 2023 15:06:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DC48EB64DB
+	for <linux-pci@archiver.kernel.org>; Mon, 19 Jun 2023 15:06:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229817AbjFSPGK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 19 Jun 2023 11:06:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50990 "EHLO
+        id S229575AbjFSPGN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 19 Jun 2023 11:06:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54322 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230511AbjFSPFT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2023 11:05:19 -0400
-Received: from mail-oa1-x2f.google.com (mail-oa1-x2f.google.com [IPv6:2001:4860:4864:20::2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37D8A10C7
-        for <linux-pci@vger.kernel.org>; Mon, 19 Jun 2023 08:04:41 -0700 (PDT)
-Received: by mail-oa1-x2f.google.com with SMTP id 586e51a60fabf-1aa291b3fc4so997881fac.0
-        for <linux-pci@vger.kernel.org>; Mon, 19 Jun 2023 08:04:41 -0700 (PDT)
+        with ESMTP id S229767AbjFSPFX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2023 11:05:23 -0400
+Received: from mail-oi1-x235.google.com (mail-oi1-x235.google.com [IPv6:2607:f8b0:4864:20::235])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CED1A10E6
+        for <linux-pci@vger.kernel.org>; Mon, 19 Jun 2023 08:04:48 -0700 (PDT)
+Received: by mail-oi1-x235.google.com with SMTP id 5614622812f47-39eab4bbe8aso2185408b6e.1
+        for <linux-pci@vger.kernel.org>; Mon, 19 Jun 2023 08:04:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1687187080; x=1689779080;
+        d=linaro.org; s=google; t=1687187088; x=1689779088;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=ltCiTsDOD5ydUGLVe1beQMJS2WLXn803YOi09x8rHPs=;
-        b=RxWkwsnVaP8PkS+Iu4kSHBZxSZwvPpQ+s508UcLy+kyDeCLsGxKmiLpVWFg2PF8BV8
-         qHvx7HgeTREoO61gDGcC6iocs6OzDVNKR5mXRpAhSdTH+cjqgCj2/4AZuCTbFUp5BQ86
-         vRP8zT38xgSQpJurbkYnPowLjIjy1oXWE3Y9+Sy3tdESLZSM/LT9GbHjKDU76pMjLcJR
-         TpV6/1IhdBV6+qT5qPhXMeXm7WTVqixTfEnBF2jD9+prcCNOoPjXFWZ+PmMLL5FTHasj
-         nv0W4B2sAd5KKZeKfkQ2at0ZkrNKaZ0zxoMuY1RJ77gG+5qIcj47SAoxTzEfu37ytEAC
-         wgog==
+        bh=bkQkFXSrqR5MDMbqBcH7Nxin9P2rGGa9soJkqC/yxfY=;
+        b=KL7WH9esTs7EFOrJOLlQDJsDcT/mfXXCsaCZDtwfYT+K05rl4Y0uOKqA/nDRWmM1Ay
+         P0taJUuvOsjTeEXMez6C0nO7L1aJAoU0K3Fjc1lJVCl9ASZJCTyRjDx39SMKsSJgVjUI
+         +nC498m4/o4uDShwgfyz9btY1mBsJhpn64wArvb82L+zGlP/PL09DQBvIavoKC1TNLcW
+         MjtJF09kB4h01Yrj1fX0TNT3dROZOVwuDdNOAdKCMjF44SHOpvkte9RU97YN3M86+26U
+         H5k9xq1Fmw/9RrXcAqB2TlMbGi9Ht0McM5hkCefS5MAV4huKmK5Oyu37azQTD3PDoCKG
+         AzHw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687187080; x=1689779080;
+        d=1e100.net; s=20221208; t=1687187088; x=1689779088;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=ltCiTsDOD5ydUGLVe1beQMJS2WLXn803YOi09x8rHPs=;
-        b=PIs4MRWDpKVctIvlxbdgpUucdyKgQaPpmLMSa8npE61oD03GFM3lzANZgkcXDGVTJ/
-         /vBLc2hHuLFVIuwhO2RoMw1RjH9nuS4t9i60kpHGNiDj/rJall3M3qikL7paGPzS+L8A
-         A2xDpqlI37WJuma0cFbRZCxNDLJt5ocrsLwvIIej6Dw67QPGvSqsjUUysILqFu9ru2Dz
-         0Is6v17UaDAg1CIXjVcEuSY2C1omJ/L1APbt2whWM4DpbDDMT43+VVFRCcSfgcfYqAG2
-         AY0TRN+fjs3n8TTWRzdvJtvPk43z0l2Lyw3o3C/Om999OqUtdkT2cRRBxYmEjOqdJ33G
-         v5hQ==
-X-Gm-Message-State: AC+VfDxaza7pqxHFLELXx2MzxdLBVS93cTSeZ1C4oxeHWjNVHQLXILoC
-        hFms+i2CjpI8Z28S28bIU4rs
-X-Google-Smtp-Source: ACHHUZ7jUCBkk2GZ6mqGYAXM5FgcdG5o86hJ+mp4QPxJJVPhMwUe4RqjHcCfX7pPSzpKAYrptEqsBw==
-X-Received: by 2002:aca:220d:0:b0:39c:4563:d23c with SMTP id b13-20020aca220d000000b0039c4563d23cmr1033259oic.46.1687187080530;
-        Mon, 19 Jun 2023 08:04:40 -0700 (PDT)
+        bh=bkQkFXSrqR5MDMbqBcH7Nxin9P2rGGa9soJkqC/yxfY=;
+        b=PkcaebYeHu4d04pCal8UAC7E5akPHx/lkF0VEZLdHTQssFh9HJWU+N3MFEuBYaOkoI
+         C+8mou10evAVlSbA50wC2AuqxPNAqaj8zCVmFut0isUB1GcoEle+zUkuuamPfQWcv0hR
+         k10shqOOcBh4jhP18xYqVb1sbVCGVOeKZsxSkpzr5TpBicT9vsM+RuCv/kuQqCgQllQo
+         yAFN62d27PnuAqqlVTCgTPqQwInF1A2MgBNCT85YKsMQEBha+V3HOmjRwvbxMOH+1tyY
+         rVYMTn6qVd67a9RxZML58PBagCEIXrmj6Eqzx5cHZdOnjmydezxsJ6gGRZWWENlidlo8
+         EQRA==
+X-Gm-Message-State: AC+VfDwQSfKU5BaBhHilIXftYPyPlWpN4qLrsNts4ZC7dGf9zXszHr1Y
+        O3UKFrPj8v4C+IFWvJDMW1cp
+X-Google-Smtp-Source: ACHHUZ6jYi9B9kO4LbGSPIQT3nzgy6RoEcq55MHd7+0LtTnVlE8m58y0+GdIRnKABb/+X0ocxXlQNQ==
+X-Received: by 2002:a05:6808:301:b0:3a0:35c5:f79d with SMTP id i1-20020a056808030100b003a035c5f79dmr9833oie.36.1687187088151;
+        Mon, 19 Jun 2023 08:04:48 -0700 (PDT)
 Received: from localhost.localdomain ([117.217.183.37])
-        by smtp.gmail.com with ESMTPSA id 10-20020a17090a19ca00b0025efaf7a0d3sm2765480pjj.14.2023.06.19.08.04.37
+        by smtp.gmail.com with ESMTPSA id 10-20020a17090a19ca00b0025efaf7a0d3sm2765480pjj.14.2023.06.19.08.04.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Jun 2023 08:04:40 -0700 (PDT)
+        Mon, 19 Jun 2023 08:04:47 -0700 (PDT)
 From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To:     lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com
 Cc:     robh@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
@@ -56,9 +56,9 @@ Cc:     robh@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
         linux-kernel@vger.kernel.org, steev@kali.org,
         quic_srichara@quicinc.com,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v4 6/9] PCI: qcom: Do not advertise hotplug capability for IP v2.3.2
-Date:   Mon, 19 Jun 2023 20:34:05 +0530
-Message-Id: <20230619150408.8468-7-manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v4 8/9] PCI: qcom: Do not advertise hotplug capability for IP v1.0.0
+Date:   Mon, 19 Jun 2023 20:34:07 +0530
+Message-Id: <20230619150408.8468-9-manivannan.sadhasivam@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230619150408.8468-1-manivannan.sadhasivam@linaro.org>
 References: <20230619150408.8468-1-manivannan.sadhasivam@linaro.org>
@@ -68,7 +68,7 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SoCs making use of Qcom PCIe controller IP v2.3.2 do not support hotplug
+SoCs making use of Qcom PCIe controller IP v1.0.0 do not support hotplug
 functionality. But the hotplug capability bit is set by default in the
 hardware. This causes the kernel PCI core to register hotplug service for
 the controller and send hotplug commands to it. But those commands will
@@ -90,12 +90,12 @@ Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 64b6a8c6a99d..9c8dfd224e6e 100644
+index e6db9e551752..612266fb849a 100644
 --- a/drivers/pci/controller/dwc/pcie-qcom.c
 +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -616,6 +616,8 @@ static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
- 	val |= EN;
- 	writel(val, pcie->parf + PARF_AXI_MSTR_WR_ADDR_HALT_V2);
+@@ -521,6 +521,8 @@ static int qcom_pcie_post_init_1_0_0(struct qcom_pcie *pcie)
+ 		writel(val, pcie->parf + PARF_AXI_MSTR_WR_ADDR_HALT);
+ 	}
  
 +	qcom_pcie_clear_hpc(pcie->pci);
 +
