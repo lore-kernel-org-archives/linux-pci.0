@@ -2,71 +2,106 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 543C3EB64D7
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jun 2023 14:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CAC4EB64D7
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jun 2023 14:12:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232798AbjFTODZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Jun 2023 10:03:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57450 "EHLO
+        id S230411AbjFTOL7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Jun 2023 10:11:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232692AbjFTODY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2023 10:03:24 -0400
-Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C7D1A4;
-        Tue, 20 Jun 2023 07:03:23 -0700 (PDT)
-Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
-        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        id 1qBbRk-00063O-OO; Tue, 20 Jun 2023 15:31:00 +0200
-Message-ID: <65e97f8a-254c-cdc6-5e72-63a7d4014f28@leemhuis.info>
-Date:   Tue, 20 Jun 2023 15:30:59 +0200
+        with ESMTP id S232982AbjFTOL6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2023 10:11:58 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4F4AE72;
+        Tue, 20 Jun 2023 07:11:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1687270314; x=1718806314;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=1L0EtD4x6UtEsw0OVqTd1tIuAoRanKqllhmqxwyA4PA=;
+  b=A6ZdD9yNq8ncEo6o4E6TanYsaRZRr6VOs3lAAD1mO3WI+7vdLKDnMj3j
+   FAlMdJitsmz4YNYNPU1VIOHCNl7RuzOezkPPosmpa+aoKCpbyHJ7dJU17
+   lZsmTaLyFytyvxL8b3I4F8k0a8AkWYhqj7IKsVsUGpukdSt6G9td7ZsYO
+   YsvOmd3wia1MopEQGDQuUZzWiDnyOVFyEiy58VhiajYECFeNE8wMK+VsG
+   KIdqGdZCDe4dAHuvpTa9JC7qvfzqAlCQgTF7xppvVQOLLtpG0tmf52QIP
+   rZXdBiUZT5/LEWHAMWHK6ru7fKVrCmx5NMyje55PT37ARFIQnrW+GZalN
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="340210854"
+X-IronPort-AV: E=Sophos;i="6.00,257,1681196400"; 
+   d="scan'208";a="340210854"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2023 07:11:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="888248886"
+X-IronPort-AV: E=Sophos;i="6.00,257,1681196400"; 
+   d="scan'208";a="888248886"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by orsmga005.jf.intel.com with ESMTP; 20 Jun 2023 07:11:49 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1qBc5D-005H2d-0N;
+        Tue, 20 Jun 2023 17:11:47 +0300
+Date:   Tue, 20 Jun 2023 17:11:46 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Jonas =?iso-8859-1?Q?Dre=DFler?= <verdre@v0yd.nl>
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dean Luick <dean.luick@cornelisnetworks.com>
+Subject: Re: [PATCH v3 00/10] PCI: Improve PCIe Capability RMW concurrency
+ control
+Message-ID: <ZJGzov7J2rJRLmgC@smile.fi.intel.com>
+References: <20230620134624.99688-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.12.0
-Subject: Re: [regression] Bug 217218 - Trying to boot Linux version 6-2.2
- kernel with Marvell SATA controller 88SE9235
-Content-Language: en-US, de-DE
-From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>,
-          Linux regressions mailing list 
-          <regressions@lists.linux.dev>
-References: <a79ea7f5-6a41-a6c9-cfec-ba01aa2a3cfa@leemhuis.info>
-To:     Linux kernel regressions list <regressions@lists.linux.dev>
-In-Reply-To: <a79ea7f5-6a41-a6c9-cfec-ba01aa2a3cfa@leemhuis.info>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1687269803;87adfb1f;
-X-HE-SMSGID: 1qBbRk-00063O-OO
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230620134624.99688-1-ilpo.jarvinen@linux.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[TLDR: This mail in primarily relevant for Linux regression tracking. A
-change or fix related to the regression discussed in this thread was
-posted or applied, but it did not use a Closes: tag to point to the
-report, as Linus and the documentation call for. Things happen, no
-worries -- but now the regression tracking bot needs to be told manually
-about the fix. See link in footer if these mails annoy you.]
++Cc: Jonas
 
-On 21.03.23 14:52, Linux regression tracking (Thorsten Leemhuis) wrote:
+Jonas, might be interesting material in scope of Marvell WiFi PM flow.
+Also shows that some WiFi chips disable ASPM which might be good to
+have on Marvell as well.
+
+On Tue, Jun 20, 2023 at 04:46:14PM +0300, Ilpo Järvinen wrote:
+> PCI Express Capability RMW accessors don't properly protect against
+> concurrent access. Link Control Register is written by a number of
+> things in the kernel in a RMW fashion without any concurrency control.
+> This could in the unlucky case lead to losing one of the updates. One
+> of the most obvious path which can race with most of the other LNKCTL
+> RMW operations seems to be ASPM policy sysfs write which triggers
+> LNKCTL update. Similarly, Root Control Register can be concurrently
+> accessed by AER and PME.
 > 
-> I noticed a regression report in bugzilla.kernel.org. As many (most?)
-> kernel developers don't keep an eye on it, I decided to forward it by
-> mail (note, the reporter *is not* CCed to this mail, see[1]).
+> Make pcie_capability_clear_and_set_word() (and other RMW accessors that
+> call it) to use a per device spinlock to protect the RMW operations to
+> the Capability Registers that require locking. Convert open-coded
+> LNKCTL RMW operations to use pcie_capability_clear_and_set_word() to
+> benefit from the locking.
 > 
-> #regzbot introduced: 78013eaadf696d21
-> https://bugzilla.kernel.org/show_bug.cgi?id=217218
-> #regzbot title: dma/x86: machine with Marvell SATA controller 88SE9235
-> stopped booting
-> #regzbot ignore-activity
+> There's also a related series which improves ASPM service driver and
+> device driver coordination by removing out-of-band ASPM state
+> management from device drivers (which will remove some of the code
+> fragments changed by this series but it has higher regression
+> potential which is why it seems prudent to do these changes in two
+> steps):
+>   https://lore.kernel.org/linux-pci/20230602114751.19671-1-ilpo.jarvinen@linux.intel.com/T/#t
 
-#regzbot fix: ata: ahci: Skip 200 ms debounce delay for Marvell 88SE9235
-#regzbot ignore-activity
+-- 
+With Best Regards,
+Andy Shevchenko
 
-Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
---
-Everything you wanna know about Linux kernel regression tracking:
-https://linux-regtracking.leemhuis.info/about/#tldr
-That page also explains what to do if mails like this annoy you.
+
