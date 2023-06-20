@@ -2,115 +2,71 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 340D0EB64DC
-	for <linux-pci@archiver.kernel.org>; Tue, 20 Jun 2023 13:50:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 543C3EB64D7
+	for <linux-pci@archiver.kernel.org>; Tue, 20 Jun 2023 14:03:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232662AbjFTNut (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 20 Jun 2023 09:50:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48110 "EHLO
+        id S232798AbjFTODZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 20 Jun 2023 10:03:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233190AbjFTNtb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2023 09:49:31 -0400
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D826119A5;
-        Tue, 20 Jun 2023 06:49:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687268965; x=1718804965;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=9fQOgHIalZgJ3V/Zn3q60Ze5yodyVi/9g2hTbBkhRQI=;
-  b=JE3TN/RgIgPsu/irsJGc/F6GAzd1yZcbWLPHb2hBtcMZXtUAn2mMf9Yg
-   0ptYxUy5Mr3AmdGi9pNh23JNVBSCUhckKHUbENzHd9J1NXFrwxytFXgVr
-   VVn2Iy3aIQH6K6NXBt4EH1ou6YWIrLxX3snxAsvYnsTimp5UZgkpq9JZq
-   Mv4SxB2G29ULRYdifrLGEc6epuxuCYC9S/kR0ywKYatQNjbWrsK7W3wxf
-   w6sUqA89SK7vs4zyh+mFLPKdEnq+IU/zQYY6BGB/Is5vbt+uufeirkMDm
-   VnZBWV86AFqx4wmVkH7SCzoVaF6Iox0Lh67US7xTgnFcKbRsm8CuNa3gf
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="362401529"
-X-IronPort-AV: E=Sophos;i="6.00,257,1681196400"; 
-   d="scan'208";a="362401529"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2023 06:47:28 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10747"; a="827006895"
-X-IronPort-AV: E=Sophos;i="6.00,257,1681196400"; 
-   d="scan'208";a="827006895"
-Received: from eshaanan-mobl.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.61.137])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2023 06:47:23 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Saeed Mahameed <saeedm@nvidia.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Moshe Shemesh <moshe@mellanox.com>, netdev@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Dean Luick <dean.luick@cornelisnetworks.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Moshe Shemesh <moshe@nvidia.com>, stable@vger.kernel.org
-Subject: [PATCH v3 07/10] net/mlx5: Use RMW accessors for changing LNKCTL
-Date:   Tue, 20 Jun 2023 16:46:21 +0300
-Message-Id: <20230620134624.99688-8-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230620134624.99688-1-ilpo.jarvinen@linux.intel.com>
-References: <20230620134624.99688-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S232692AbjFTODY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2023 10:03:24 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C7D1A4;
+        Tue, 20 Jun 2023 07:03:23 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qBbRk-00063O-OO; Tue, 20 Jun 2023 15:31:00 +0200
+Message-ID: <65e97f8a-254c-cdc6-5e72-63a7d4014f28@leemhuis.info>
+Date:   Tue, 20 Jun 2023 15:30:59 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [regression] Bug 217218 - Trying to boot Linux version 6-2.2
+ kernel with Marvell SATA controller 88SE9235
+Content-Language: en-US, de-DE
+From:   "Linux regression tracking #update (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>,
+          Linux regressions mailing list 
+          <regressions@lists.linux.dev>
+References: <a79ea7f5-6a41-a6c9-cfec-ba01aa2a3cfa@leemhuis.info>
+To:     Linux kernel regressions list <regressions@lists.linux.dev>
+In-Reply-To: <a79ea7f5-6a41-a6c9-cfec-ba01aa2a3cfa@leemhuis.info>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1687269803;87adfb1f;
+X-HE-SMSGID: 1qBbRk-00063O-OO
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Don't assume that only the driver would be accessing LNKCTL of the
-upstream bridge. ASPM policy changes can trigger write to LNKCTL
-outside of driver's control.
+[TLDR: This mail in primarily relevant for Linux regression tracking. A
+change or fix related to the regression discussed in this thread was
+posted or applied, but it did not use a Closes: tag to point to the
+report, as Linus and the documentation call for. Things happen, no
+worries -- but now the regression tracking bot needs to be told manually
+about the fix. See link in footer if these mails annoy you.]
 
-Use RMW capability accessors which do proper locking to avoid losing
-concurrent updates to the register value.
+On 21.03.23 14:52, Linux regression tracking (Thorsten Leemhuis) wrote:
+> 
+> I noticed a regression report in bugzilla.kernel.org. As many (most?)
+> kernel developers don't keep an eye on it, I decided to forward it by
+> mail (note, the reporter *is not* CCed to this mail, see[1]).
+> 
+> #regzbot introduced: 78013eaadf696d21
+> https://bugzilla.kernel.org/show_bug.cgi?id=217218
+> #regzbot title: dma/x86: machine with Marvell SATA controller 88SE9235
+> stopped booting
+> #regzbot ignore-activity
 
-Fixes: eabe8e5e88f5 ("net/mlx5: Handle sync reset now event")
-Suggested-by: Lukas Wunner <lukas@wunner.de>
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Moshe Shemesh <moshe@nvidia.com>
-Cc: stable@vger.kernel.org
----
- drivers/net/ethernet/mellanox/mlx5/core/fw_reset.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+#regzbot fix: ata: ahci: Skip 200 ms debounce delay for Marvell 88SE9235
+#regzbot ignore-activity
 
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/fw_reset.c b/drivers/net/ethernet/mellanox/mlx5/core/fw_reset.c
-index 50022e7565f1..f202150a5093 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/fw_reset.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/fw_reset.c
-@@ -332,16 +332,11 @@ static int mlx5_pci_link_toggle(struct mlx5_core_dev *dev)
- 		pci_cfg_access_lock(sdev);
- 	}
- 	/* PCI link toggle */
--	err = pci_read_config_word(bridge, cap + PCI_EXP_LNKCTL, &reg16);
--	if (err)
--		return err;
--	reg16 |= PCI_EXP_LNKCTL_LD;
--	err = pci_write_config_word(bridge, cap + PCI_EXP_LNKCTL, reg16);
-+	err = pcie_capability_set_word(bridge, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_LD);
- 	if (err)
- 		return err;
- 	msleep(500);
--	reg16 &= ~PCI_EXP_LNKCTL_LD;
--	err = pci_write_config_word(bridge, cap + PCI_EXP_LNKCTL, reg16);
-+	err = pcie_capability_clear_word(bridge, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_LD);
- 	if (err)
- 		return err;
- 
--- 
-2.30.2
-
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
