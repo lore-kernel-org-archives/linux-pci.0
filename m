@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48DA5C001B3
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Jun 2023 09:31:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC187EB64DD
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Jun 2023 09:31:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231822AbjFUJbL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Jun 2023 05:31:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34940 "EHLO
+        id S231796AbjFUJbK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 21 Jun 2023 05:31:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232300AbjFUJap (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jun 2023 05:30:45 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B44D1997;
-        Wed, 21 Jun 2023 02:29:45 -0700 (PDT)
+        with ESMTP id S232292AbjFUJao (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jun 2023 05:30:44 -0400
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16DB61992;
+        Wed, 21 Jun 2023 02:29:44 -0700 (PDT)
 Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4QmJ9B158pzTlNk;
-        Wed, 21 Jun 2023 17:29:02 +0800 (CST)
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4QmJ7j0pgszLmlX;
+        Wed, 21 Jun 2023 17:27:45 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Wed, 21 Jun 2023 17:29:43 +0800
+ 15.1.2507.27; Wed, 21 Jun 2023 17:29:42 +0800
 From:   Yicong Yang <yangyicong@huawei.com>
 To:     <mathieu.poirier@linaro.org>, <suzuki.poulose@arm.com>,
         <jonathan.cameron@huawei.com>, <corbet@lwn.net>,
@@ -29,12 +29,10 @@ CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
         <linux-pci@vger.kernel.org>, <prime.zeng@huawei.com>,
         <linuxarm@huawei.com>, <yangyicong@hisilicon.com>,
         <hejunhao3@huawei.com>
-Subject: [PATCH v6 4/5] hwtracing: hisi_ptt: Advertise PERF_PMU_CAP_NO_EXCLUDE for PTT PMU
-Date:   Wed, 21 Jun 2023 17:28:03 +0800
-Message-ID: <20230621092804.15120-5-yangyicong@huawei.com>
+Subject: [PATCH v6 0/5] Improve PTT filter interface and some fixes
+Date:   Wed, 21 Jun 2023 17:27:59 +0800
+Message-ID: <20230621092804.15120-1-yangyicong@huawei.com>
 X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20230621092804.15120-1-yangyicong@huawei.com>
-References: <20230621092804.15120-1-yangyicong@huawei.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
@@ -48,32 +46,64 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Yicong Yang <yangyicong@hisilicon.com>
 
-The PTT trace collects PCIe TLP headers from the PCIe link and don't
-have the ability to exclude certain context. It doesn't support itrace
-as well. So replace PERF_PMU_CAP_ITRACE with PERF_PMU_CAP_NO_EXCLUDE.
-This will greatly save the storage of final data. Tested tracing idle
-link for ~15s, without this patch we'll collect ~28.682MB data for
-additional information and with this patch it reduced to ~0.226MB.
+This series tends to improve the PTT's filter interface in 2 aspects (Patch 2&3):
+- Support dynamically filter updating to response to hotplug
+  Previous the supported filter list is settled down once the driver probed and
+  it maybe out-of-date if hotplug events happen later. User need to reload the
+  driver to update list. Patch 1/2 enable the driver to update the list by
+  registering a PCI bus notifier and the filter list will always be the latest.
+- Export the available filters through sysfs
+  Previous user needs to calculate the filters and filter value using device's
+  BDF number, which requires the user to know the hardware well. Patch 3/3 tends
+  to export the available filter information through sysfs attributes, the filter
+  value will be gotten by reading the file. This will be more user friendly.
 
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
----
- drivers/hwtracing/ptt/hisi_ptt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In order to support above function, this series also includes a patch 1/4 to factor
+out the allocation and release function of PTT filters.
 
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
-index 5c366a757573..103fb6b9bffb 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.c
-+++ b/drivers/hwtracing/ptt/hisi_ptt.c
-@@ -1212,7 +1212,7 @@ static int hisi_ptt_register_pmu(struct hisi_ptt *hisi_ptt)
- 
- 	hisi_ptt->hisi_ptt_pmu = (struct pmu) {
- 		.module		= THIS_MODULE,
--		.capabilities	= PERF_PMU_CAP_EXCLUSIVE | PERF_PMU_CAP_ITRACE,
-+		.capabilities	= PERF_PMU_CAP_EXCLUSIVE | PERF_PMU_CAP_NO_EXCLUDE,
- 		.task_ctx_nr	= perf_sw_context,
- 		.attr_groups	= hisi_ptt_pmu_groups,
- 		.event_init	= hisi_ptt_pmu_event_init,
+Also includes an improvement and a fix. Patch 4 tends to set proper PMU capability
+to avoid collecting unnecessary data to save the storage. Patch 5 fix an improper
+use of pci_irq_vector() which have potential problem.
+
+Change since v5:
+- PERF_PMU_CAP_EXCLUSIVE is still needed so keep it as is, thanks Junhao for pointing it
+Link: https://lore.kernel.org/all/01c39cb9-e56a-862b-2d99-024b7ba5a769@huawei.com/
+
+Change since v4:
+- Add tags for Patch 2,3,5 and tweak some comments/docs in Patch 3
+Link: https://lore.kernel.org/all/20230606142244.10939-1-yangyicong@huawei.com/
+
+Change since v3:
+- Addressed the comment from Jonathan. Add tags for Patch 1 and 4. Thanks.
+- Add one bugfix in Patch 5/5
+Link: https://lore.kernel.org/linux-pci/20230523093228.48149-1-yangyicong@huawei.com/
+
+Change since v2:
+- Fix one possible issue for dereferencing a NULL pointer
+Link: https://lore.kernel.org/linux-pci/20230331070310.5465-1-yangyicong@huawei.com/
+
+Change since v1:
+- Drop the patch for handling the cpumask since it seems to be redundant
+- Refine of the codes per Jonathan
+- Add Patch 1/4 for refactor the filters allocation and release
+- Thanks the review of Jonathan.
+Link: https://lore.kernel.org/linux-pci/d496ee4f-641a-a726-ab3f-62b587422b61@huawei.com/T/#m47e4de552d69920035214b3e91080cdc185f61f5
+
+Yicong Yang (5):
+  hwtracing: hisi_ptt: Factor out filter allocation and release
+    operation
+  hwtracing: hisi_ptt: Add support for dynamically updating the filter
+    list
+  hwtracing: hisi_ptt: Export available filters through sysfs
+  hwtracing: hisi_ptt: Advertise PERF_PMU_CAP_NO_EXCLUDE for PTT PMU
+  hwtracing: hisi_ptt: Fix potential sleep in atomic context
+
+ .../ABI/testing/sysfs-devices-hisi_ptt        |  52 ++
+ Documentation/trace/hisi-ptt.rst              |  12 +-
+ drivers/hwtracing/ptt/hisi_ptt.c              | 444 ++++++++++++++++--
+ drivers/hwtracing/ptt/hisi_ptt.h              |  56 +++
+ 4 files changed, 526 insertions(+), 38 deletions(-)
+
 -- 
 2.24.0
 
