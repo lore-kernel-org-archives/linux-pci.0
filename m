@@ -2,47 +2,47 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D17FCC001B3
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Jun 2023 01:01:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84117EB64D7
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Jun 2023 01:02:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229943AbjF0BBz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 26 Jun 2023 21:01:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58066 "EHLO
+        id S229853AbjF0BC5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 26 Jun 2023 21:02:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229913AbjF0BBy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2023 21:01:54 -0400
+        with ESMTP id S229689AbjF0BC4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2023 21:02:56 -0400
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 956A8FD;
-        Mon, 26 Jun 2023 18:01:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F2091FCF;
+        Mon, 26 Jun 2023 18:02:19 -0700 (PDT)
 Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35R0u4w2011038;
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 35R0fxXH015642;
         Tue, 27 Jun 2023 01:01:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=sDwBxXejWXDBtWl1o+jOBgjUmJEiZx7qI5LRlD/XWpY=;
- b=E7s6GknhGubKLDBVMwMbPXtTljxjhz0dZ9PmpK2DKmzro0LI/j1InBpCnq7bMLHaVPTI
- uHmHuj12JtCI6OOJgdJ/jr/qWUnbsQhFBPvYxeZGuvyyZzSm+De5AELigHZVVrK7UjnZ
- Du2y28+prkL0r/r9VRBmi6K4bvO20lNYwSkHLvSrUvdrBvZs5+MzQa90eG7w8AZfSZ+J
- lNubEoCPouQi8Uje9BFUWpZ3PefSx05/naVdzWbuSuLM0FTx2jGioqwftLzLCepDnPqO
- n+rybvLvQGOivR4iXgZ+j9nzyg70LNzyCoqzWkeIXqpzJuGDYDtLjjYE1/wBqRg3D3Qb Og== 
+ bh=FgB4bodO1ovCgHDSqrkKk5ANFL0PagqKtToIH6HGxVM=;
+ b=L1HyfEBhRozhTdArHdNgSRyuIGWGr3symhmU17e9EDAo+66MHGbFgQ0R+l/N8t/FtCkk
+ YrAKWVWK3FSnb2J3+iEW8e4in8zIwyct3Pmw3Yy9SLW+BaIKMjb1L7ZEGbBB0DbYXX+b
+ wHc4jdb5RCTnRfgVv1t18/3vwkzPxnxukS2RQM39P/4WCxl9R78Spy2oxyK6e4M3a3xT
+ 48q4JUD3+f5ZvydZccl1Fe0MBtGeoMTjSi9LoAVuETW6Onus9mUOy2SrMzyuKRCD1cVc
+ jp6NW8uTqQotIet66f2FxC7q7vQpFl4k8fOvpMJf1exw0bVaPUagVcF7H1g70avf+32b ZQ== 
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rfc0d9779-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rfc0d977a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Tue, 27 Jun 2023 01:01:46 +0000
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 35R11h4u006812;
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 35R11haJ006895;
         Tue, 27 Jun 2023 01:01:43 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3rdsjkh3c2-1;
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3rdsjkh3ca-1;
         Tue, 27 Jun 2023 01:01:43 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 35R11hIs006713;
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 35R10HFV005417;
         Tue, 27 Jun 2023 01:01:43 GMT
 Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 35R11hPG006662;
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 35R11hmQ006762;
         Tue, 27 Jun 2023 01:01:43 +0000
 Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id BA9184AA9; Tue, 27 Jun 2023 06:31:42 +0530 (+0530)
+        id 2ACB44AAC; Tue, 27 Jun 2023 06:31:43 +0530 (+0530)
 From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
 To:     manivannan.sadhasivam@linaro.org
 Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
@@ -52,20 +52,13 @@ Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
         krzysztof.kozlowski@linaro.org,
         Krishna chaitanya chundru <quic_krichai@quicinc.com>,
         Manivannan Sadhasivam <mani@kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS)
-Subject: [PATCH v5 1/3] dt-bindings: PCI: qcom: ep: Add interconnects path
-Date:   Tue, 27 Jun 2023 06:31:29 +0530
-Message-Id: <1687827692-6181-2-git-send-email-quic_krichai@quicinc.com>
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v5 3/3] PCI: qcom-ep: Add ICC bandwidth voting support
+Date:   Tue, 27 Jun 2023 06:31:31 +0530
+Message-Id: <1687827692-6181-4-git-send-email-quic_krichai@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1687827692-6181-1-git-send-email-quic_krichai@quicinc.com>
 References: <1687827692-6181-1-git-send-email-quic_krichai@quicinc.com>
@@ -73,8 +66,8 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: YqehASMTlpiQOY43AzczmrZvgwMFIA8H
-X-Proofpoint-ORIG-GUID: YqehASMTlpiQOY43AzczmrZvgwMFIA8H
+X-Proofpoint-GUID: zHGx88Xi-MSCdPvJwLyn6YCTDTy45RD2
+X-Proofpoint-ORIG-GUID: zHGx88Xi-MSCdPvJwLyn6YCTDTy45RD2
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-06-26_20,2023-06-26_03,2023-05-22_02
@@ -87,66 +80,160 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some platforms may not boot if a device driver doesn't
-initialize the interconnect path. Mostly it is handled
-by the bootloader but we have starting to see cases
-where bootloader simply ignores them.
+Add support to vote for ICC bandwidth based on the link
+speed and width.
 
-Add the "pcie-mem" interconnect path as a required property
-to the bindings.
+This patch is inspired from pcie-qcom driver to add basic
+interconnect support.
 
+Reference: commit c4860af88d0c ("PCI: qcom: Add basic interconnect
+support").
 Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom-ep.c | 73 +++++++++++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-index 8111122..bc32e13 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-@@ -71,6 +71,13 @@ properties:
-     description: GPIO used as WAKE# output signal
-     maxItems: 1
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+index 1435f51..b613817 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+@@ -13,6 +13,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
++#include <linux/interconnect.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/phy/pcie.h>
+ #include <linux/phy/phy.h>
+@@ -28,6 +29,7 @@
+ #define PARF_SYS_CTRL				0x00
+ #define PARF_DB_CTRL				0x10
+ #define PARF_PM_CTRL				0x20
++#define PARF_PM_STTS				0x24
+ #define PARF_MHI_CLOCK_RESET_CTRL		0x174
+ #define PARF_MHI_BASE_ADDR_LOWER		0x178
+ #define PARF_MHI_BASE_ADDR_UPPER		0x17c
+@@ -128,11 +130,19 @@
+ /* DBI register fields */
+ #define DBI_CON_STATUS_POWER_STATE_MASK		GENMASK(1, 0)
  
-+  interconnects:
-+    maxItems: 1
++#define DBI_LINKCTRLSTATUS			0x80
++#define DBI_LINKCTRLSTATUS_SHIFT		16
 +
-+  interconnect-names:
-+    items:
-+      - const: pcie-mem
-+
-   resets:
-     maxItems: 1
+ #define XMLH_LINK_UP				0x400
+ #define CORE_RESET_TIME_US_MIN			1000
+ #define CORE_RESET_TIME_US_MAX			1005
+ #define WAKE_DELAY_US				2000 /* 2 ms */
  
-@@ -98,6 +105,8 @@ required:
-   - interrupts
-   - interrupt-names
-   - reset-gpios
-+  - interconnects
-+  - interconnect-names
-   - resets
-   - reset-names
-   - power-domains
-@@ -167,7 +176,9 @@ examples:
-   - |
-     #include <dt-bindings/clock/qcom,gcc-sdx55.h>
-     #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/interconnect/qcom,sdx55.h>
-     #include <dt-bindings/interrupt-controller/arm-gic.h>
++#define PCIE_GEN1_BW_MBPS			250
++#define PCIE_GEN2_BW_MBPS			500
++#define PCIE_GEN3_BW_MBPS			985
++#define PCIE_GEN4_BW_MBPS			1969
 +
-     pcie_ep: pcie-ep@1c00000 {
-         compatible = "qcom,sdx55-pcie-ep";
-         reg = <0x01c00000 0x3000>,
-@@ -194,6 +205,8 @@ examples:
-         interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>,
-                      <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>;
-         interrupt-names = "global", "doorbell";
-+        interconnects = <&system_noc MASTER_PCIE &mc_virt SLAVE_EBI_CH0>;
-+        interconnect-names = "pcie-mem";
-         reset-gpios = <&tlmm 57 GPIO_ACTIVE_LOW>;
-         wake-gpios = <&tlmm 53 GPIO_ACTIVE_LOW>;
-         resets = <&gcc GCC_PCIE_BCR>;
+ #define to_pcie_ep(x)				dev_get_drvdata((x)->dev)
+ 
+ enum qcom_pcie_ep_link_status {
+@@ -178,6 +188,8 @@ struct qcom_pcie_ep {
+ 	struct phy *phy;
+ 	struct dentry *debugfs;
+ 
++	struct icc_path *icc_mem;
++
+ 	struct clk_bulk_data *clks;
+ 	int num_clks;
+ 
+@@ -253,9 +265,51 @@ static void qcom_pcie_dw_stop_link(struct dw_pcie *pci)
+ 	disable_irq(pcie_ep->perst_irq);
+ }
+ 
++static void qcom_pcie_ep_icc_update(struct qcom_pcie_ep *pcie_ep)
++{
++	struct dw_pcie *pci = &pcie_ep->pci;
++	u32 offset, status, bw;
++	int speed, width;
++	int ret;
++
++	if (!pcie_ep->icc_mem)
++		return;
++
++	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
++
++	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, status);
++	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, status);
++
++	switch (speed) {
++	case 1:
++		bw = MBps_to_icc(PCIE_GEN1_BW_MBPS);
++		break;
++	case 2:
++		bw = MBps_to_icc(PCIE_GEN2_BW_MBPS);
++		break;
++	case 3:
++		bw = MBps_to_icc(PCIE_GEN3_BW_MBPS);
++		break;
++	default:
++		dev_warn(pci->dev, "using default GEN4 bandwidth\n");
++		fallthrough;
++	case 4:
++		bw = MBps_to_icc(PCIE_GEN4_BW_MBPS);
++		break;
++	}
++
++	ret = icc_set_bw(pcie_ep->icc_mem, 0, width * bw);
++	if (ret) {
++		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
++			ret);
++	}
++}
++
+ static int qcom_pcie_enable_resources(struct qcom_pcie_ep *pcie_ep)
+ {
+ 	int ret;
++	struct dw_pcie *pci = &pcie_ep->pci;
+ 
+ 	ret = clk_bulk_prepare_enable(pcie_ep->num_clks, pcie_ep->clks);
+ 	if (ret)
+@@ -277,6 +331,20 @@ static int qcom_pcie_enable_resources(struct qcom_pcie_ep *pcie_ep)
+ 	if (ret)
+ 		goto err_phy_exit;
+ 
++	/*
++	 * Some Qualcomm platforms require interconnect bandwidth constraints
++	 * to be set before enabling interconnect clocks.
++	 *
++	 * Set an initial peak bandwidth corresponding to single-lane Gen 1
++	 * for the pcie-mem path.
++	 */
++	ret = icc_set_bw(pcie_ep->icc_mem, 0, MBps_to_icc(PCIE_GEN1_BW_MBPS));
++	if (ret) {
++		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
++			ret);
++		goto err_phy_exit;
++	}
++
+ 	return 0;
+ 
+ err_phy_exit:
+@@ -550,6 +618,10 @@ static int qcom_pcie_ep_get_resources(struct platform_device *pdev,
+ 	if (IS_ERR(pcie_ep->phy))
+ 		ret = PTR_ERR(pcie_ep->phy);
+ 
++	pcie_ep->icc_mem = devm_of_icc_get(dev, "pcie-mem");
++	if (IS_ERR(pcie_ep->icc_mem))
++		ret = PTR_ERR(pcie_ep->icc_mem);
++
+ 	return ret;
+ }
+ 
+@@ -573,6 +645,7 @@ static irqreturn_t qcom_pcie_ep_global_irq_thread(int irq, void *data)
+ 	} else if (FIELD_GET(PARF_INT_ALL_BME, status)) {
+ 		dev_dbg(dev, "Received BME event. Link is enabled!\n");
+ 		pcie_ep->link_status = QCOM_PCIE_EP_LINK_ENABLED;
++		qcom_pcie_ep_icc_update(pcie_ep);
+ 		pci_epc_bme_notify(pci->ep.epc);
+ 	} else if (FIELD_GET(PARF_INT_ALL_PM_TURNOFF, status)) {
+ 		dev_dbg(dev, "Received PM Turn-off event! Entering L23\n");
 -- 
 2.7.4
 
