@@ -2,185 +2,128 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A561FEB64D7
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Jun 2023 09:02:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A02AC04A6A
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Jun 2023 09:48:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236786AbjF1JC0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Jun 2023 05:02:26 -0400
-Received: from smtp-relay-internal-0.canonical.com ([185.125.188.122]:38122
-        "EHLO smtp-relay-internal-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230403AbjF1ItW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jun 2023 04:49:22 -0400
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com [209.85.167.200])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id EE50A3F732
-        for <linux-pci@vger.kernel.org>; Wed, 28 Jun 2023 05:10:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1687929002;
-        bh=3bdC+uUyIZz0PgxeLe6K/fSeIXVXdbQUHA0MK3WxvKU=;
-        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-         To:Cc:Content-Type;
-        b=pPiHqZEyXktMSy2OoI57sTRe/hyUS9cEaElGEVt4J9JCmAKSJW62l//HnldyRrB2Z
-         YMUq6KVGdWsjnyzmgwEKWwC4ua5odQ4Iw3NVR5F56MDV3BM8Bj7tD9q2lGh19tXt6j
-         ZSrgVe5Iov+4ZSSiLzIXEAa8kObaZe7TYUVRj2pC/ZuQrNhEn2Xrlo9jZtCx69i6Gk
-         Jras8+ux+HS1jOSJa328v5YZOouXOvOkbLQAFRXqF8CZkJK7E9Uy7hioVKlgenCa8o
-         V6F4uYvUqUweEg/+KfffBtZxFMCGnFzhc4iiCKtUH/ijr2oWFiHGmyFFoKW9uSPeTJ
-         vMGFUn7sxS9jA==
-Received: by mail-oi1-f200.google.com with SMTP id 5614622812f47-3a1bcdd0966so4643960b6e.2
-        for <linux-pci@vger.kernel.org>; Tue, 27 Jun 2023 22:10:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1687929001; x=1690521001;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3bdC+uUyIZz0PgxeLe6K/fSeIXVXdbQUHA0MK3WxvKU=;
-        b=dWESd7sJsAhZkptQj9Xu6lXQscrTXxNZsEUYREFFkInbe3lDinuslpzZ7deyFOCdzz
-         YNK2yJ9wwZkPTjRxP6yO/gNHJPgm7CixEzRVcCpbIAht9FieIXglVR+YR20jcwmEacax
-         4axkbjBAq0TN/4HfTEP4i00ZuIGFPwhTZyyryvWCm9oyCmD71h2fT3x/LIv+1AWNCFE0
-         jnBYqfYKH8Js8ezY0wL4B7+sPw3qt3O0RQiCT0ljnrwRwk6Tvn5BcaImD6EOwKir3JwT
-         bGgbsu8v+UnzzXiUxjstVjQykuWRb5b7uuJBgc8KejS4A+QEYqh09Gf7ggONBlyixUWg
-         8oeQ==
-X-Gm-Message-State: AC+VfDzRgg3dpaA9ExVeTCNLsgJpp/uTfEYm5EVAZAa1JTwjgXo88RXO
-        3SGHRhUe5tiA7l7FuGG7O59okCnw29+akoFQ6sOg0z6kcerjqRDZEWEYzlrkxIR15kCY/SFnCoV
-        o0rd6eGdV3Knl5kUz1aihchuNmMtGBzdSvQoeDj40AHMP5Z2/TU4HyA==
-X-Received: by 2002:a05:6808:f11:b0:3a0:663d:fd18 with SMTP id m17-20020a0568080f1100b003a0663dfd18mr20647408oiw.57.1687929001322;
-        Tue, 27 Jun 2023 22:10:01 -0700 (PDT)
-X-Google-Smtp-Source: ACHHUZ42ji0zs3PoUsCX1nWOxZzCYOQcakZVi3alWc7EDIew9NqDWXdRzRhCW/XfEnOwyZd2T3eG1ytrMp03ePtGO48=
-X-Received: by 2002:a05:6808:f11:b0:3a0:663d:fd18 with SMTP id
- m17-20020a0568080f1100b003a0663dfd18mr20647388oiw.57.1687929001077; Tue, 27
- Jun 2023 22:10:01 -0700 (PDT)
+        id S231794AbjF1JsD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Jun 2023 05:48:03 -0400
+Received: from mail-bn8nam11on2040.outbound.protection.outlook.com ([40.107.236.40]:46700
+        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233114AbjF1J2V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2023 05:28:21 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=XHseua+lBvjQRXxKVqUkAZa7LyAZp+dpEvT3KbfpQSC+4X5RZZoowEZSwcCT91+cgwx/SKr8NQabmxZBj0+upDYDy7shghrBZuNwkKPRLpuxLFg0hIP0VqTdoEBI4ie+BrDyr8T27H/6zuUHLIcsKNpdOBwaR3LV/bGaeXboP7L+EuUI+me1ktURJkxQvCCVQWQE68Xz3hu2Ej54fTlmGyMpjdS94EVDsrXMoGWrxHmWpoSRqXQU9eH+XNHVtS4Fu36ZxfI0k8IMyyNhkqHAB1WkPpCVT+Wvu5Q24ggxfhb5taR+0xDmKkVT+cW0CeN/d0o4G35UGNH8+NUFaVBLpw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ABrX4W0T5lOUiTOLtx/NG+biEB7Cm4XoJEv6sC+EcE8=;
+ b=DHPPGWt3gYqElyUUvMKK59ZFsIcDcuoBEpiXC+b+Vh8UrO1dVPQ7QuAB+FEHCfcd/fE6sKNvOKYShSbUl7tgaOtP4nc+lMPRn1PeezuYoDCUafIcjyxzlt1GJbnodfe5p6XHwZSSgqhBYtQGnXSdhnFxd6Feo7ZkcHun4l4NGBnoX4Df6V8WKOUyZ4wyJEKwxylWpPujGHJY3RprvNIt1MS32kq23PJKKmV2cRFtCWDsJOK/yVUcC8B5KrJUGdNzGV7twDIcxkAhwXhxOaEHPuSfd0XV0NR4Y4x928EQBuR+hEl8w13q3EuW+8IslYdE8bbwqg4RwjON4movkEwZqA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=linaro.org smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ABrX4W0T5lOUiTOLtx/NG+biEB7Cm4XoJEv6sC+EcE8=;
+ b=rz5lIq8WX8KKiaqQUNVZiyag2+Ms1lOAbmaOwKV7jm3l5TAKKrYnPCglHMjtgaUeCksNQn5PWsyakzpHzSZj1Ads2t2A4EzL6K2ivuK0haZ9dvtvOdQcT4sYiIVtvoQjKcieWYZaHA53NIQhoZlwAhpBaKrFEm3ckAVnmCVuiFI=
+Received: from MW4PR04CA0234.namprd04.prod.outlook.com (2603:10b6:303:87::29)
+ by MW4PR12MB5627.namprd12.prod.outlook.com (2603:10b6:303:16a::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.23; Wed, 28 Jun
+ 2023 09:28:18 +0000
+Received: from CO1NAM11FT055.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:303:87:cafe::78) by MW4PR04CA0234.outlook.office365.com
+ (2603:10b6:303:87::29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.34 via Frontend
+ Transport; Wed, 28 Jun 2023 09:28:18 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1NAM11FT055.mail.protection.outlook.com (10.13.175.129) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6500.48 via Frontend Transport; Wed, 28 Jun 2023 09:28:18 +0000
+Received: from SATLEXMB08.amd.com (10.181.40.132) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Wed, 28 Jun
+ 2023 04:28:18 -0500
+Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB08.amd.com
+ (10.181.40.132) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Wed, 28 Jun
+ 2023 02:28:17 -0700
+Received: from xhdthippesw40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server id 15.1.2507.23 via Frontend
+ Transport; Wed, 28 Jun 2023 04:28:14 -0500
+From:   Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+To:     <krzysztof.kozlowski@linaro.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <robh+dt@kernel.org>, <bhelgaas@google.com>
+CC:     <lorenzo.pieralisi@arm.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <bharat.kumar.gogada@amd.com>, <michals@amd.com>,
+        Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+Subject: [PATCH V5 0/3] Add support for Xilinx XDMA Soft IP as Root Port.
+Date:   Wed, 28 Jun 2023 14:58:09 +0530
+Message-ID: <20230628092812.1592644-1-thippeswamy.havalige@amd.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <CAAd53p4kH7E92++jabBhvsM_+M7Dpyk2JP+aoVdb_sxZn47eyQ@mail.gmail.com>
- <20230627205417.GA366405@bhelgaas>
-In-Reply-To: <20230627205417.GA366405@bhelgaas>
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date:   Wed, 28 Jun 2023 13:09:49 +0800
-Message-ID: <CAAd53p5YjKbOkzBUmhu=EctusO7d38tHhg_b+zzvfVt97hLuOA@mail.gmail.com>
-Subject: Re: [PATCH] PCI/ASPM: Enable ASPM on external PCIe devices
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Limonciello, Mario" <mario.limonciello@amd.com>,
-        bhelgaas@google.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Michael Bottini <michael.a.bottini@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        intel-wired-lan@osuosl.org,
-        "Neftin, Sasha" <sasha.neftin@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1NAM11FT055:EE_|MW4PR12MB5627:EE_
+X-MS-Office365-Filtering-Correlation-Id: 679e586e-8346-4b26-c2d6-08db77ba0202
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 57PDKv2gEH1G04LCYua/dmKDkArHMzIwya+sAbMsMX0WLyfbwaMpH09PM4BvNDKaproygHY3zxjQVeOIlHPNVH9TEJ89dm4xXAUHhK9Y/sLgv35S9aMqLB6c/NLeLul18Yl2BXoW0blY/pxqJaFTkgHZhASaVO9pT/dYCoreENIZK75992JyilCzPrIfCSZEU51NAtQNEAsa3SrsqQ7gL2dkLROWZK3tu46+fiYhTVDLf3zz7vgDUy75Y9e7CwGigE023UgGZOIIrLIAFe1ln9YQgbmvRQFt1rdEiT3Pf78ocbVWf9wEIeUQNqhSTkDqTqvjoohmE7oMJP7Cl7VtHzo0qr25avTnJ3POSzFUKdR9C5BU3kQBzhfNNXOhvJn0PJZRgpYXaNUlGYhnpsYywtURJ3g+e2heZDNacGUWH6iB5dgkuxGJ3ME/beLxOyvHx1WhttauyWT25RXX3ttn/DL7174ymMBWzsids49GGFezDkXLk10OZD80gNj5GKGcSse4M8NyYQvooPCwVfu8+O7oC3q+jFhO/+WUiFztPrBX0XBxXsDWPfoQL7VGRuuTBlib4oBvW2aLuVDc7GrrjMoWq8WIquTL0U45FJN9KcQc7E6CkEB8CtJfku7mF/J0lkZAQu4TXlGQyvGF+McCeELi+gbf5TWDPhErUEQJXd4iJNP/ji5i1JhGCxAsiNapYnxe47eUnlqlwgyXhLMCrnvfp5NSEIMP25EnnaaSKG5rBBGQpxeSE6e7Oo5IwflR/tMavhlAk0/GkiryTi1lnA==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(136003)(346002)(376002)(396003)(39860400002)(451199021)(40470700004)(46966006)(36840700001)(1076003)(44832011)(4326008)(316002)(70586007)(478600001)(8936002)(70206006)(36756003)(8676002)(5660300002)(2906002)(40460700003)(110136005)(54906003)(86362001)(36860700001)(40480700001)(41300700001)(6666004)(82310400005)(186003)(426003)(26005)(47076005)(336012)(81166007)(356005)(82740400003)(83380400001)(2616005)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jun 2023 09:28:18.2696
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 679e586e-8346-4b26-c2d6-08db77ba0202
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT055.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB5627
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+Cc Sasha and Intel Wired Lan]
+This series of patch add support for Xilinx XDMA Soft IP as Root Port.
 
-On Wed, Jun 28, 2023 at 4:54=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Tue, Jun 27, 2023 at 04:35:25PM +0800, Kai-Heng Feng wrote:
-> > On Fri, Jun 23, 2023 at 7:06=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.o=
-rg> wrote:
-> > > On Tue, Jun 20, 2023 at 01:36:59PM -0500, Limonciello, Mario wrote:
-> > > > <snip>
-> > > > > > A variety of Intel chipsets don't support lane width switching
-> > > > > > or speed switching.  When ASPM has been enabled on a dGPU,
-> > > > > > these features are utilized and breakage ensues.
-> > > > >
-> > > > > Maybe this helps explain all the completely unmaintainable ASPM
-> > > > > garbage in amdgpu and radeon.
-> > > > >
-> > > > > If these devices are broken, we need quirks for them.
-> > > >
-> > > > The problem is which device do you consider "broken"?
-> > > > The dGPU that uses these features when the platform advertises ASPM
-> > > > or the chipset which doesn't support the features that the device
-> > > > uses when ASPM is active?
-> > > >
-> > > > With this problem I'm talking about the dGPU works fine on hosts
-> > > > that support these features.
-> > >
-> > > Without more details about what's broken and when, I can't say.  What
-> > > I *think* is that a device that doesn't work per spec needs a quirk.
-> > > Typically it's a device that advertises a capability that doesn't wor=
-k
-> > > correctly.
-> >
-> > Many silicon vendors use the same "PCI IP" and integrate it into their
-> > own chip. That's one of the reason why the capability doesn't really
-> > reflect what actually being support.
-> > The vendors then send their private datasheet to system integrator so
-> > BIOS can enable what's really supported.
->
-> It's perfectly fine for the IP to support PCI features that are not
-> and can not be enabled in a system design.  But I expect that
-> strapping or firmware would disable those features so they are not
-> advertised in config space.
->
-> If BIOS leaves features disabled because they cannot work, but at the
-> same time leaves them advertised in config space, I'd say that's a
-> BIOS defect.  In that case, we should have a DMI quirk or something to
-> work around the defect.
+The Xilinx XDMA Soft IP support's 32 bit and 64bit BAR's.
+As Root Port it supports MSI and legacy interrupts.
 
-That means most if not all BIOS are defected.
-BIOS vendors and ODM never bothered (and probably will not) to change
-the capabilities advertised by config space because "it already works
-under Windows".
+For code reusability existing CPM4 error interrupt bits are moved to
+common header.
 
->
-> > So the logic is to ignore the capability and trust the default set
-> > by BIOS.
->
-> I think limiting ASPM support to whatever BIOS configured at boot-time
-> is problematic.  I don't think we can assume that all platforms have
-> firmware that configures ASPM as aggressively as possible, and
-> obviously firmware won't configure hot-added devices at all (in
-> general; I know ACPI _HPX can do some of that).
+Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>
+---
+Thippeswamy Havalige (3):
+  Move and rename error interrupt bits to a common header.
+  dt-bindings: PCI: xilinx-xdma: Add YAML schemas for Xilinx XDMA PCIe
+    Root Port Bridge
+  PCI: xilinx-xdma: Add Xilinx XDMA Root Port driver
 
-Totally agree. I was not suggesting to limiting the setting at all.
-A boot-time parameter to flip ASPM setting is very useful. If none has
-been set, default to BIOS setting.
+ .../devicetree/bindings/pci/xlnx,xdma-host.yaml    | 114 +++
+ drivers/pci/controller/Kconfig                     |  11 +
+ drivers/pci/controller/Makefile                    |   1 +
+ drivers/pci/controller/pcie-xilinx-common.h        |  31 +
+ drivers/pci/controller/pcie-xilinx-cpm.c           |  38 +-
+ drivers/pci/controller/pcie-xilinx-dma-pl.c        | 803 +++++++++++++++++++++
+ 6 files changed, 967 insertions(+), 31 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/xlnx,xdma-host.yaml
+ create mode 100644 drivers/pci/controller/pcie-xilinx-common.h
+ create mode 100644 drivers/pci/controller/pcie-xilinx-dma-pl.c
 
->
-> It's possible we need some kind of policy that limits ASPM to the BIOS
-> config until date X, but I don't want to limit that forever.
+-- 
+1.8.3.1
 
-Desktop can have very different PCIe cards in the slots so BIOS date
-isn't a good indicator for ASPM support.
-Let alone BIOS date changes on each BIOS upgrade, this means potential
-regression risk.
-
->
-> > > > If you follow my idea of hot added devices the policy follows
-> > > > the parent would it work for the i225 PCIe device case?
-> > >
-> > > That doesn't *sound* really robust to me because even if the default
-> > > config after hot-add works, the user can change things via sysfs, and
-> > > any configuration we set it to should work as well.  If there are
-> > > land-mines there, we need a quirk that prevents sysfs from running
-> > > into it.
-> >
-> > For this case it means driver needs to provide a ASPM callback to flip
-> > PTM based on ASPM sysfs.
->
-> I'm not sure I follow this, but it sounds like you're saying PTM
-> doesn't work correctly with some ASPM configurations.  Is this allowed
-> by the PCIe spec or is it a hardware defect?  If the latter, maybe we
-> just need a quirk to disable PTM on the device.
-
-I'll leave this one to Intel folks.
-
->
-> I'm not sure PTM is valuable enough to add a generic callback
-> mechanism to work around a defect in an individual device.
-
-Agree. Right now the issue is only observed when I225 is in a TBT dock.
-
-Kai-Heng
-
->
-> Bjorn
