@@ -2,79 +2,90 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB685EB64DA
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Jun 2023 13:30:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C97EB64D7
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Jun 2023 14:43:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231133AbjF1Nal (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Jun 2023 09:30:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47212 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232182AbjF1N3r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jun 2023 09:29:47 -0400
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5f64:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D47CC129;
-        Wed, 28 Jun 2023 06:29:46 -0700 (PDT)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 040DE30004510;
-        Wed, 28 Jun 2023 15:29:45 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id EBCC743C12D; Wed, 28 Jun 2023 15:29:44 +0200 (CEST)
-Date:   Wed, 28 Jun 2023 15:29:44 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
-Cc:     Sathyanarayanan Kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, oohall@gmail.com,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        Yazen Ghannam <yazen.ghannam@amd.com>,
-        Fontenot Nathan <Nathan.Fontenot@amd.com>
-Subject: Re: [PATCH v3 1/2] PCI: pciehp: Add support for async hotplug with
- native AER and DPC/EDR
-Message-ID: <20230628132944.GB14276@wunner.de>
-References: <20230621185152.105320-1-Smita.KoralahalliChannabasappa@amd.com>
- <20230621185152.105320-2-Smita.KoralahalliChannabasappa@amd.com>
- <e7aa803b-2b43-dc43-1d92-38bcca636e62@linux.intel.com>
- <a79c82bb-e1fe-891c-87f9-6231a30e5ef2@amd.com>
+        id S230340AbjF1OnA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Jun 2023 10:43:00 -0400
+Received: from mga06b.intel.com ([134.134.136.31]:40100 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230265AbjF1Om7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2023 10:42:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1687963379; x=1719499379;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=peKAr0s1Kurrh+o6kbrz5QnnAIgvQneW3GDRLAasnhQ=;
+  b=KU+kT9kLodqd6Q4kTAzWRZNtPggESLjS5siXXAY8VHKJJmFuNH3/jFXY
+   X7Z2IAkdQigX/NfYPapreqkw3/giBjT58nhofX/1cb4EglpCeFxShFh1F
+   fquAiJkbvtqELjJrfpCcnMValiM4Uri69wmCnupJmYscjeK8otgtut3vJ
+   TG0UjJ/9MEQ/o56mpGxlt9Ay1sCjA9FpIsxBudAsk6SnlctGA0A+g7IWG
+   92VgmGwRGl/CmeH03kXStsad9QNQYb07Ve9es8SsUTOZ/SbzTGwDskb7N
+   vXlO9Zbh2qSY3WjlAlBaJtyRSSUHSkzOB50I/F6XHbcouk1D3luMR5UPE
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10755"; a="425533944"
+X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
+   d="scan'208";a="425533944"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2023 07:42:58 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10755"; a="891069714"
+X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
+   d="scan'208";a="891069714"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by orsmga005.jf.intel.com with ESMTP; 28 Jun 2023 07:42:55 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@intel.com>)
+        id 1qEWNi-000coK-0e;
+        Wed, 28 Jun 2023 17:42:54 +0300
+Date:   Wed, 28 Jun 2023 17:42:53 +0300
+From:   Andy Shevchenko <andriy.shevchenko@intel.com>
+To:     Amadeusz =?utf-8?B?U8WCYXdpxYRza2k=?= 
+        <amadeuszx.slawinski@linux.intel.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Brown <broonie@kernel.org>, Takashi Iwai <tiwai@suse.com>,
+        alsa-devel@alsa-project.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Cezary Rojewski <cezary.rojewski@intel.com>,
+        Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>,
+        Kai Vehmanen <kai.vehmanen@linux.intel.com>
+Subject: Re: [RFC PATCH 4/8] ALSA: hda/i915: Update PCI IDs
+Message-ID: <ZJxG7YRroqi6kiyz@smile.fi.intel.com>
+References: <20230628205135.517241-1-amadeuszx.slawinski@linux.intel.com>
+ <20230628205135.517241-5-amadeuszx.slawinski@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <a79c82bb-e1fe-891c-87f9-6231a30e5ef2@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230628205135.517241-5-amadeuszx.slawinski@linux.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 27, 2023 at 10:48:37AM -0700, Smita Koralahalli wrote:
-> On 6/22/2023 4:22 PM, Sathyanarayanan Kuppuswamy wrote:
-> > On 6/21/23 11:51 AM, Smita Koralahalli wrote:
-> > > +static void dpc_handle_surprise_removal(struct pci_dev *pdev)
-> > > +{
-> > > +	if (pdev->dpc_rp_extensions && dpc_wait_rp_inactive(pdev)) {
-> > > +		pci_err(pdev, "failed to retrieve DPC root port on async remove\n");
-> > > +		goto out;
-> > > +	}
-> > > +
-> > > +	pci_aer_raw_clear_status(pdev);
-> > > +	pci_clear_surpdn_errors(pdev);
-> > > +
-> > > +	pci_write_config_word(pdev, pdev->dpc_cap + PCI_EXP_DPC_STATUS,
-> > > +			      PCI_EXP_DPC_STATUS_TRIGGER);
-> > 
-> > Don't you need to wait for the link to go down?
-> 
-> Yes will include, pcie_wait_for_link()..
-> 
-> Should this check be here or at the beginning of the function before we
-> check pdev->dpc_rp_extensions?
+On Wed, Jun 28, 2023 at 10:51:31PM +0200, Amadeusz Sławiński wrote:
+> Use PCI device IDs from pci_ids.h header
 
-I'd just use the same order as dpc_reset_link(), i.e. checking for
-!pcie_wait_for_link() happens before the check for pdev->dpc_rp_extensions.
+Missing period at the end.
 
-Thanks,
+...
 
-Lukas
+> -#define IS_HSW_CONTROLLER(pci) (((pci)->device == 0x0a0c) || \
+> -				((pci)->device == 0x0c0c) || \
+> -				((pci)->device == 0x0d0c) || \
+> -				((pci)->device == 0x160c))
+> +#define IS_HSW_CONTROLLER(pci) (((pci)->device == PCI_DEVICE_ID_INTEL_HDA_HSW_0) || \
+> +				((pci)->device == PCI_DEVICE_ID_INTEL_HDA_HSW_2) || \
+> +				((pci)->device == PCI_DEVICE_ID_INTEL_HDA_HSW_3) || \
+> +				((pci)->device == PCI_DEVICE_ID_INTEL_HDA_BDW))
+
+The very same macro under different name appeared in the previous patch.
+Am I correct? Perhaps go further and first move it somewhere to be available
+for both?
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
