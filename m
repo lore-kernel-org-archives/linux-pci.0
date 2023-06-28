@@ -2,119 +2,100 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0A9EB64D7
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Jun 2023 12:42:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D116EB64DA
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Jun 2023 12:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231831AbjF1MmV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Jun 2023 08:42:21 -0400
-Received: from mga17.intel.com ([192.55.52.151]:19059 "EHLO mga17.intel.com"
+        id S230216AbjF1Muf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Jun 2023 08:50:35 -0400
+Received: from mga14.intel.com ([192.55.52.115]:59110 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232512AbjF1Mi6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Jun 2023 08:38:58 -0400
+        id S230324AbjF1MuU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2023 08:50:20 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687955938; x=1719491938;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=SiUPLFX8yooaTBprOCUevkhBwdpxnbwZbDK6fkmxZHs=;
-  b=hWwqhdtTZhEUw1ZLKR8KXTn27gIDpUd/4j+dWFwkuy5/G7ZkPAmW7txY
-   15aJrJNkjDXTPL6rMxccn4oCxXfbq0CqVhOmfwdOdwmze8DSAY1EDj4+o
-   /IzZTwWDYEyMWXuYx0gbVAe3Od4yk3XTHuutVtooOAchbnrsNaDIS9zGW
-   ct4LbJNSeKOuJqAEpiVUa4Lbn8fFt2VtY2nhRlg3MNzJ7VMX3RXwfw7c4
-   FcrkE97AAo5qZSdU+hCec2+E7tHYDgYH9hwXLQoIO3Swva7KZz4IiAmMW
-   TKJgh9OJHJ9izovTFxW/dBocE9wzAaSKu4wDMPShyY7+E43tOiMNVUPrt
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="342168627"
+  t=1687956620; x=1719492620;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=FM06hAzUJYRZbdfF74LbkfHXkeBshKd+aj4zJ//1NoE=;
+  b=U4sNzAeJUnHEFA6d+J84G1aXzy1p2HdRITlu6udaWH2BIvwwiIb6sqeb
+   XGHezbe6t2+5Mw8vc6E3amO0Dj0aDtNcU70gPCVvw49Y+NoHISUeiLU+D
+   j4+ZLRMWoIJQO+rWFnsZI70DcLKeDR7g/vtJUTpxdIaQyjewELglxUxz9
+   Fro7DAMapmoXzLbCCVYIhx3w1a+CvMeoCnwj29FK18P05pUD3hPDOcKZj
+   XZ9xHC0f+NABC9WZPZfvxwawdqw2mbqiuoLy5rjLUzFc1HuLx9KgLvHKF
+   HXI5UXeZSDobNLtyrbCkIJPZavsFSr79nvTKuIJATWCbu0xl6c2aYtjIo
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="361875550"
 X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
-   d="scan'208";a="342168627"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2023 05:38:57 -0700
+   d="scan'208";a="361875550"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Jun 2023 05:50:19 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="787031335"
+X-IronPort-AV: E=McAfee;i="6600,9927,10754"; a="891035024"
 X-IronPort-AV: E=Sophos;i="6.01,165,1684825200"; 
-   d="scan'208";a="787031335"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga004.fm.intel.com with ESMTP; 28 Jun 2023 05:38:53 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id CF8B5E1; Wed, 28 Jun 2023 15:38:54 +0300 (EEST)
-Date:   Wed, 28 Jun 2023 15:38:54 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Thomas Witt <thomas@witt.link>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        "David E . Box" <david.e.box@linux.intel.com>,
-        Tasev Nikola <tasev.stefanoska@skynet.be>,
-        Mark Enriquez <enriquezmark36@gmail.com>,
-        Thomas Witt <kernel@witt.link>,
-        Koba Ko <koba.ko@canonical.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/ASPM: Add back L1 PM Substate save and restore
-Message-ID: <20230628123854.GM14638@black.fi.intel.com>
-References: <20230627100447.GC14638@black.fi.intel.com>
- <20230627204124.GA366188@bhelgaas>
- <20230628064637.GF14638@black.fi.intel.com>
- <5a5f7511-74e0-39a2-3b3f-864e3f2e957d@amd.com>
+   d="scan'208";a="891035024"
+Received: from dev2 (HELO DEV2.igk.intel.com) ([10.237.148.94])
+  by orsmga005.jf.intel.com with ESMTP; 28 Jun 2023 05:50:15 -0700
+From:   =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= 
+        <amadeuszx.slawinski@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Brown <broonie@kernel.org>, Takashi Iwai <tiwai@suse.com>
+Cc:     alsa-devel@alsa-project.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Cezary Rojewski <cezary.rojewski@intel.com>,
+        Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>,
+        Kai Vehmanen <kai.vehmanen@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>,
+        =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= 
+        <amadeuszx.slawinski@linux.intel.com>
+Subject: [RFC PATCH 0/8] PCI: Define Intel PCI IDs and use them in drivers
+Date:   Wed, 28 Jun 2023 22:51:27 +0200
+Message-Id: <20230628205135.517241-1-amadeuszx.slawinski@linux.intel.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <5a5f7511-74e0-39a2-3b3f-864e3f2e957d@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jun 28, 2023 at 07:16:49AM -0500, Mario Limonciello wrote:
-> On 6/28/23 01:46, Mika Westerberg wrote:
-> > Hi Bjorn,
-> > 
-> > On Tue, Jun 27, 2023 at 03:41:24PM -0500, Bjorn Helgaas wrote:
-> > > On Tue, Jun 27, 2023 at 01:04:47PM +0300, Mika Westerberg wrote:
-> > > > On Tue, Jun 27, 2023 at 11:53:33AM +0200, Thomas Witt wrote:
-> > > > > On 27/06/2023 08:24, Mika Westerberg wrote:
-> > > > > > Commit a7152be79b62 ("Revert "PCI/ASPM: Save L1 PM Substates Capability
-> > > > > > for suspend/resume"") reverted saving and restoring of ASPM L1 Substates
-> > > > > > due to a regression that caused resume from suspend to fail on certain
-> > > > > > systems. However, we never added this capability back and this is now
-> > > > > > causing systems fail to enter low power CPU states, drawing more power
-> > > > > > from the battery.
-> > > > > 
-> > > > > Hello Mika,
-> > > > > 
-> > > > > I am sorry, but your patch (applied on top of master) triggers the exact
-> > > > > same behaviour I described in
-> > > > > <https://bugzilla.kernel.org/show_bug.cgi?id=216877> (nvme and wifi become
-> > > > > unavailable during suspend/resume)
-> > > > 
-> > > > Thanks for testing! Can you provide the output of dmidecode from that
-> > > > system? We can add it to the denylist as well to avoid the issue on your
-> > > > system.
-> > > 
-> > > To me this says we don't completely understand the mechanism of the
-> > > failure.  If BIOS made L1SS work initially, Linux should be able to
-> > > make it work again after suspend/resume.
-> > > 
-> > > If we can identify an actual hardware or firmware defect, it makes
-> > > good sense to add a quirk or denylist.  But I'll push back a little if
-> > > it's just "there's some problem we don't understand on this system, so
-> > > avoid it."
-> > 
-> > Fair enough.
-> > 
-> > I've looked at the Thomas' system dmesg that he attached to the bugzilla
-> > and he has mem_sleep_default=deep in the kernel command line. There is
-> > no such option in the mainline kernel but I suppose this makes systemd
-> > (or some initscript) to write "deep" to /sys/power/mem_sleep, thus
-> > forcing S3 instead of the default the ACPI tables suggest, which
-> > probably is S0ix (Intel low power state which does not involve BIOS).
-> 
-> JFYI actually it is a mainline kernel parameter.
-> 
-> Reference the documentation here:
-> https://www.kernel.org/doc/html/v6.4/admin-guide/kernel-parameters.html?highlight=mem_sleep_default
+PCI IDs for Intel HDA are duplicated across quite a few drivers, due to
+various configurations and historical reasons. Currently almost all uses
+of HDA PCI IDs have corresponding comment telling which platform it is.
+Additionally there are some inconsistencies between drivers about which
+ID corresponds to which device.
 
-Indeed it is. Thanks for correcting me. I grepped this from my source
-tree but somehow screwed it up and it did not show up anything. Now that
-I checked again it is there.
+Simplify things, by adding PCI IDs to global header and make use of them
+in drivers. This allows for removal of comments by having IDs themselves
+being self explanatory. Additionally it allows for removal of existing
+inconsistencies by having one source of truth.
+
+Amadeusz Sławiński (8):
+  PCI: Add Intel Audio DSP devices to pci_ids.h
+  ALSA: intel-dsp-config: Update PCI ID list
+  ALSA: hda: Update PCI ID list
+  ALSA: hda/i915: Update PCI IDs
+  ASoC: Intel: avs: Update PCI ID list
+  ASoC: Intel: avs: Update PCI ID list
+  ASoC: Intel: Skylake: Update PCI ID list
+  ASoC: SOF: Intel: Update PCI ID list
+
+ include/linux/pci_ids.h                |  44 ++++
+ sound/hda/hdac_i915.c                  |   8 +-
+ sound/hda/intel-dsp-config.c           | 119 +++++-----
+ sound/pci/hda/hda_intel.c              | 292 ++++++++++++-------------
+ sound/soc/intel/avs/board_selection.c  |  10 +-
+ sound/soc/intel/avs/core.c             |  16 +-
+ sound/soc/intel/skylake/skl-messages.c |  16 +-
+ sound/soc/intel/skylake/skl.c          |  36 +--
+ sound/soc/sof/intel/pci-apl.c          |   9 +-
+ sound/soc/sof/intel/pci-cnl.c          |  15 +-
+ sound/soc/sof/intel/pci-icl.c          |  12 +-
+ sound/soc/sof/intel/pci-mtl.c          |   3 +-
+ sound/soc/sof/intel/pci-skl.c          |   6 +-
+ sound/soc/sof/intel/pci-tgl.c          |  45 ++--
+ sound/soc/sof/intel/pci-tng.c          |   3 +-
+ 15 files changed, 311 insertions(+), 323 deletions(-)
+
+-- 
+2.34.1
+
