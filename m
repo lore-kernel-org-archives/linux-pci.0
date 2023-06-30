@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADEA4EB64DC
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59B4DEB64DD
 	for <linux-pci@archiver.kernel.org>; Fri, 30 Jun 2023 15:49:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232793AbjF3PtQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 30 Jun 2023 11:49:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55702 "EHLO
+        id S231743AbjF3PtP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 30 Jun 2023 11:49:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232834AbjF3PtO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jun 2023 11:49:14 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B68B3A87
-        for <linux-pci@vger.kernel.org>; Fri, 30 Jun 2023 08:49:13 -0700 (PDT)
+        with ESMTP id S232793AbjF3PtN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jun 2023 11:49:13 -0400
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B960C35B6
+        for <linux-pci@vger.kernel.org>; Fri, 30 Jun 2023 08:49:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1688140153; x=1719676153;
+  t=1688140152; x=1719676152;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=D9GXduwijQK2bxnbxUdIwGcNUgABIPbcfCI5pRehEFA=;
-  b=VKVdfwWx69Zw6x7tkGxHIspbof85qGtFyU2fB5bVRERejx8x07HvHrKJ
-   Z1N2rtsDG0t6+UUsUMmj9gsfDuHmmobuhh41xUQjz2YxV2ssOBmJnwjPy
-   X9+F+/5h+/wY8betzX6+cg8cc1eG+mDp8iClLTyJqZqcArhOaRVA1nqti
-   L+aLvu6mgoNJ4295F2Lc/6CZU0WGkPyTaXatyIa60D5HlhFl7NgPIfVY+
-   ddle8ZY9xNtFOuTIVHpp0HudLLJ1TKaRmE5VqKfAJ/UPjY8KhEfTNPCRM
-   yZdYbLDO+2BJFxr3XCqIbw16fplAHTJ1QdQGim5z2wBvFWp6ZQvXQyd7p
+  bh=1wJYS/t9aNrnjqOOsSV5jOkrGngLW9L3uxJDr/wqxEA=;
+  b=VPQf4/6oj8sdjOX33IcFFee5vuGONFqKYQoKPWK/274TscqG2PbrOvrT
+   r/xbskHb4MCBHYBqLetofN2ydD5viR98cCrsdmiLFAt/AHuapSDJu0FeW
+   ij7uUiNpSPv4dGsuAK/El7P8K+Im70ZSNzodPgjK/+GgYq2R7lBiVYrJl
+   JtyMTkpqW5V5PsqFSYZXoQeIa118owQPFYFwcWJNJRcedePrljgthT7eW
+   RCtHGzOK5dPfFHVvN6S/WTNp53hydnhMJDP/ywC9TNaywLCK6CmRoDjvC
+   +4fBUvzXTOflqa6YHzrdZkn1ELDniH1b821SEOPS7lFQS4vV0vGzYmZI9
    g==;
 X-IronPort-AV: E=Sophos;i="6.01,171,1684825200"; 
-   d="scan'208";a="220736206"
+   d="scan'208";a="159339719"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 30 Jun 2023 08:49:12 -0700
+  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 30 Jun 2023 08:49:12 -0700
 Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Fri, 30 Jun 2023 08:49:12 -0700
+ 15.1.2507.21; Fri, 30 Jun 2023 08:49:08 -0700
 Received: from daire-X570.amer.actel.com (10.10.115.15) by
  chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server id
- 15.1.2507.21 via Frontend Transport; Fri, 30 Jun 2023 08:49:11 -0700
+ 15.1.2507.21 via Frontend Transport; Fri, 30 Jun 2023 08:49:06 -0700
 From:   <daire.mcnamara@microchip.com>
 To:     <conor@kernel.org>
 CC:     Daire McNamara <daire.mcnamara@microchip.com>,
@@ -47,108 +47,63 @@ CC:     Daire McNamara <daire.mcnamara@microchip.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v2 4/8] PCI: microchip: Enable event handlers to access bridge and ctrl ptrs
-Date:   Fri, 30 Jun 2023 16:48:55 +0100
-Message-ID: <20230630154859.2049521-5-daire.mcnamara@microchip.com>
+        <linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Subject: [PATCH v2 2/8] PCI: microchip: Enable building driver as a module
+Date:   Fri, 30 Jun 2023 16:48:53 +0100
+Message-ID: <20230630154859.2049521-3-daire.mcnamara@microchip.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230630154859.2049521-1-daire.mcnamara@microchip.com>
 References: <20230630154859.2049521-1-daire.mcnamara@microchip.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Daire McNamara <daire.mcnamara@microchip.com>
 
-Minor re-organisation so that event handlers can access both a pointer
-to the bridge area of the PCIe Root Port and the ctrl area of the PCIe
-Root Port.
+Enable building driver as a module. The expected use case is the
+driver is built as a module, is installed when needed, and cannot be
+removed once installed.
 
+The driver has .suppress_bind_attrs set to true.
+
+Link: https://lore.kernel.org/linux-pci/87y1wgbah8.wl-maz@kernel.org/
+Suggested-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 ---
- drivers/pci/controller/pcie-microchip-host.c | 31 ++++++++++----------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ drivers/pci/controller/Kconfig               | 2 +-
+ drivers/pci/controller/pcie-microchip-host.c | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 8d49bad7f847..f4ad0e9cca45 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -217,7 +217,7 @@ config PCIE_MT7621
+ 	  This selects a driver for the MediaTek MT7621 PCIe Controller.
+ 
+ config PCIE_MICROCHIP_HOST
+-	bool "Microchip AXI PCIe controller"
++	tristate "Microchip AXI PCIe controller"
+ 	depends on PCI_MSI && OF
+ 	select PCI_HOST_COMMON
+ 	help
 diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
-index 30153fd1a2b3..a81e6d25e347 100644
+index dd5245904c87..5c89caaab8c9 100644
 --- a/drivers/pci/controller/pcie-microchip-host.c
 +++ b/drivers/pci/controller/pcie-microchip-host.c
-@@ -654,9 +654,10 @@ static inline u32 reg_to_event(u32 reg, struct event_map field)
- 	return (reg & field.reg_mask) ? BIT(field.event_bit) : 0;
- }
+@@ -1135,5 +1135,6 @@ static struct platform_driver mc_pcie_driver = {
+ };
  
--static u32 pcie_events(void __iomem *addr)
-+static u32 pcie_events(struct mc_pcie *port)
- {
--	u32 reg = readl_relaxed(addr);
-+	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
-+	u32 reg = readl_relaxed(ctrl_base_addr + PCIE_EVENT_INT);
- 	u32 val = 0;
- 	int i;
- 
-@@ -666,9 +667,10 @@ static u32 pcie_events(void __iomem *addr)
- 	return val;
- }
- 
--static u32 sec_errors(void __iomem *addr)
-+static u32 sec_errors(struct mc_pcie *port)
- {
--	u32 reg = readl_relaxed(addr);
-+	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
-+	u32 reg = readl_relaxed(ctrl_base_addr + SEC_ERROR_INT);
- 	u32 val = 0;
- 	int i;
- 
-@@ -678,9 +680,10 @@ static u32 sec_errors(void __iomem *addr)
- 	return val;
- }
- 
--static u32 ded_errors(void __iomem *addr)
-+static u32 ded_errors(struct mc_pcie *port)
- {
--	u32 reg = readl_relaxed(addr);
-+	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
-+	u32 reg = readl_relaxed(ctrl_base_addr + DED_ERROR_INT);
- 	u32 val = 0;
- 	int i;
- 
-@@ -690,9 +693,10 @@ static u32 ded_errors(void __iomem *addr)
- 	return val;
- }
- 
--static u32 local_events(void __iomem *addr)
-+static u32 local_events(struct mc_pcie *port)
- {
--	u32 reg = readl_relaxed(addr);
-+	void __iomem *bridge_base_addr = port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	u32 reg = readl_relaxed(bridge_base_addr + ISTATUS_LOCAL);
- 	u32 val = 0;
- 	int i;
- 
-@@ -704,15 +708,12 @@ static u32 local_events(void __iomem *addr)
- 
- static u32 get_events(struct mc_pcie *port)
- {
--	void __iomem *bridge_base_addr =
--		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
--	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
- 	u32 events = 0;
- 
--	events |= pcie_events(ctrl_base_addr + PCIE_EVENT_INT);
--	events |= sec_errors(ctrl_base_addr + SEC_ERROR_INT);
--	events |= ded_errors(ctrl_base_addr + DED_ERROR_INT);
--	events |= local_events(bridge_base_addr + ISTATUS_LOCAL);
-+	events |= pcie_events(port);
-+	events |= sec_errors(port);
-+	events |= ded_errors(port);
-+	events |= local_events(port);
- 
- 	return events;
- }
+ builtin_platform_driver(mc_pcie_driver);
++MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Microchip PCIe host controller driver");
+ MODULE_AUTHOR("Daire McNamara <daire.mcnamara@microchip.com>");
 -- 
 2.25.1
 
