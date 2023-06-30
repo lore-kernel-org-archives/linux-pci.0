@@ -2,28 +2,30 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B74E7EB64DD
-	for <linux-pci@archiver.kernel.org>; Fri, 30 Jun 2023 10:23:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4DEAEB64D7
+	for <linux-pci@archiver.kernel.org>; Fri, 30 Jun 2023 10:23:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229742AbjF3KXe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S232536AbjF3KXe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 30 Jun 2023 06:23:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60254 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60248 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232492AbjF3KXd (ORCPT
+        with ESMTP id S232486AbjF3KXd (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jun 2023 06:23:33 -0400
-Received: from out-27.mta0.migadu.com (out-27.mta0.migadu.com [IPv6:2001:41d0:1004:224b::1b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB3653596
+X-Greylist: delayed 345 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 30 Jun 2023 03:23:31 PDT
+Received: from out-2.mta0.migadu.com (out-2.mta0.migadu.com [91.218.175.2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B8A12D55
         for <linux-pci@vger.kernel.org>; Fri, 30 Jun 2023 03:23:31 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1688120263;
+        t=1688120271;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=238fDL+qYWlIygY8L+jiZcs0vm4Z6TsIfIVyCvmsMuE=;
-        b=WIbZHN1Af9cTX2vBC2L4s1RTsoGG8MUC/jXIYnkc+8EEw9kzXVTqtZLrpS2hnA0b+na8xR
-        Syexya3onHZPwUjMJ8ZcIbx/lipGGEl1S9rl+KVKGlGa7pW7jcHC/kJQqES8YonoT65EXy
-        w7QdeJ0p5+248Z3AqK0yzef6m1/cB2U=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Czs8IghMvQFj4DtiBvG7zR2KpgKm5gD1K6m9U2//NcY=;
+        b=ilBvPjteqljimLzGqnF1hZ9Pt+LcXJ6Owxu1zHPnzTqjghSo1sa5EA5MEwCUOzpCu2Wrjg
+        RuvWehhzVwaCMxyEQ4+XfehVgFb6prjkqNJSUZCFgfEdlcrQbI+bnaaas+v0246Ts/3687
+        OyAYiDwIY2MmnSlGdwfuxZlXpqpUjdg=
 From:   Sui Jingfeng <sui.jingfeng@linux.dev>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
@@ -35,9 +37,11 @@ Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         dri-devel@lists.freedesktop.org,
         Sui Jingfeng <suijingfeng@loongson.cn>,
         Andi Shyti <andi.shyti@linux.intel.com>
-Subject: [PATCH 1/4] PCI/VGA: Use unsigned type for the io_state variable
-Date:   Fri, 30 Jun 2023 18:17:28 +0800
-Message-Id: <20230630101731.134375-1-sui.jingfeng@linux.dev>
+Subject: [PATCH 4/4] PCI/VGA: Replace full MIT license text with SPDX identifier
+Date:   Fri, 30 Jun 2023 18:17:31 +0800
+Message-Id: <20230630101731.134375-4-sui.jingfeng@linux.dev>
+In-Reply-To: <20230630101731.134375-1-sui.jingfeng@linux.dev>
+References: <20230630101731.134375-1-sui.jingfeng@linux.dev>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
@@ -47,31 +51,61 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-The io_state variable in the vga_arb_write() function is declared with
-unsigned int type, while the vga_str_to_iostate() function takes int *
-type. To keep them consistent, replace the third argument of
-vga_str_to_iostate() function with the unsigned int * type.
+Per Documentation/process/license-rules.rst, the SPDX MIT identifier is
+equivalent to including the entire MIT license text from
+LICENSES/preferred/MIT.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+Replace the MIT license text with the equivalent SPDX identifier.
+
+Cc: David Airlie <airlied@gmail.com>
+Cc: Daniel Vetter <daniel@ffwll.ch>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Maxime Ripard <mripard@kernel.org>
+Cc: Thomas Zimmermann <tzimmermann@suse.de>
 Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
 Reviewed-by: Andi Shyti <andi.shyti@linux.intel.com>
 ---
- drivers/pci/vgaarb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/vgaarb.h | 23 ++---------------------
+ 1 file changed, 2 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index 5a696078b382..c1bc6c983932 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -77,7 +77,7 @@ static const char *vga_iostate_to_str(unsigned int iostate)
- 	return "none";
- }
+diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+index 6d5465f8c3f2..97129a1bbb7d 100644
+--- a/include/linux/vgaarb.h
++++ b/include/linux/vgaarb.h
+@@ -1,3 +1,5 @@
++/* SPDX-License-Identifier: MIT */
++
+ /*
+  * The VGA aribiter manages VGA space routing and VGA resource decode to
+  * allow multiple VGA devices to be used in a system in a safe way.
+@@ -5,27 +7,6 @@
+  * (C) Copyright 2005 Benjamin Herrenschmidt <benh@kernel.crashing.org>
+  * (C) Copyright 2007 Paulo R. Zanoni <przanoni@gmail.com>
+  * (C) Copyright 2007, 2009 Tiago Vignatti <vignatti@freedesktop.org>
+- *
+- * Permission is hereby granted, free of charge, to any person obtaining a
+- * copy of this software and associated documentation files (the "Software"),
+- * to deal in the Software without restriction, including without limitation
+- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+- * and/or sell copies of the Software, and to permit persons to whom the
+- * Software is furnished to do so, subject to the following conditions:
+- *
+- * The above copyright notice and this permission notice (including the next
+- * paragraph) shall be included in all copies or substantial portions of the
+- * Software.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+- * DEALINGS
+- * IN THE SOFTWARE.
+- *
+  */
  
--static int vga_str_to_iostate(char *buf, int str_size, int *io_state)
-+static int vga_str_to_iostate(char *buf, int str_size, unsigned int *io_state)
- {
- 	/* we could in theory hand out locks on IO and mem
- 	 * separately to userspace but it can cause deadlocks */
+ #ifndef LINUX_VGA_H
 -- 
 2.25.1
 
