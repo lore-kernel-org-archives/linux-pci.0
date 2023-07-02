@@ -2,36 +2,36 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E70AEB64DD
-	for <linux-pci@archiver.kernel.org>; Sun,  2 Jul 2023 19:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DE11EB64D9
+	for <linux-pci@archiver.kernel.org>; Sun,  2 Jul 2023 19:43:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231685AbjGBTmh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 2 Jul 2023 15:42:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53130 "EHLO
+        id S231996AbjGBTnr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 2 Jul 2023 15:43:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231700AbjGBTmK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jul 2023 15:42:10 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F1021738;
-        Sun,  2 Jul 2023 12:41:30 -0700 (PDT)
+        with ESMTP id S231986AbjGBTnD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 2 Jul 2023 15:43:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EFB51FDA;
+        Sun,  2 Jul 2023 12:42:00 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EBD7F60C81;
-        Sun,  2 Jul 2023 19:40:36 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F24E2C433C7;
-        Sun,  2 Jul 2023 19:40:34 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 19DEC60C75;
+        Sun,  2 Jul 2023 19:41:26 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3DA2DC433C8;
+        Sun,  2 Jul 2023 19:41:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688326836;
+        s=k20201202; t=1688326885;
         bh=uaWp8a1zwVsgrZZAqBBqvVXx6+HOy4XjWCEKR+CBq58=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PmVemTQU8kVCNFeuQndZJnHBZLylcm25sioZklYbFoAv9ORcxc1t6ONKrqlolAYIm
-         UMnNwBYPYPGj6ZPt9ItxWstOeMM/MVn2M8rE2A7Whz7N2jcmE4GEQoY1KAMxkvUpuE
-         fYS9/TyUhhbDW/hoHJGTq41sqjOSgIhGShOEvbc36ga/ixus41TE0Z89bB2orutRIL
-         7acHDBFMzubii8TZJIcVZQ46hjGmKkngTQP8hi4dq1LNCDtRrurzERrR8noYzXSMdt
-         04CWbI4elHqwR5I7Dycc20F34LROShq6UFcqlfqbQRPX7QBFyRocyJFcTPGjrDl6Fs
-         lVGGEUGRsHHHw==
+        b=OzRH8+6i4k41pz9smTqB72E7JaEo2SZieFE0QQAtZbvkoCtrMv37OOZJLc9336/Tu
+         dQtiE2c9ssI5BOMyjwq9mETj9Ot+d3dARXDK7apxoc4GLKLNq54p6xoUa2Hb8AhTv1
+         cyJH2CBUaTYNW5k6WKmjlwS8Eb+9ZHdbS333gFu5uiiAws7eis0Jgf7As8whMG3V8y
+         g2x3SJieAcYCJfjQMGZWfP4BUIzGx4iCbi0v4zvinj/Z9TsPghs6GTvVijTBIeINeh
+         aATFPco5wfOhk1M6tzzaGNYrgRdgXm+Z/7Lk6KUGrjC64Yl7nNdP0jx9ENu0BdCzOy
+         g1QM26LKdl1Ng==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Yazen Ghannam <yazen.ghannam@amd.com>,
@@ -41,16 +41,16 @@ Cc:     Yazen Ghannam <yazen.ghannam@amd.com>,
         mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org,
         bhelgaas@google.com, linux@roeck-us.net, mario.limonciello@amd.com,
         linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.4 04/15] x86/amd_nb: Add MI200 PCI IDs
-Date:   Sun,  2 Jul 2023 15:40:09 -0400
-Message-Id: <20230702194020.1776895-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 03/12] x86/amd_nb: Add MI200 PCI IDs
+Date:   Sun,  2 Jul 2023 15:41:08 -0400
+Message-Id: <20230702194118.1777794-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230702194020.1776895-1-sashal@kernel.org>
-References: <20230702194020.1776895-1-sashal@kernel.org>
+In-Reply-To: <20230702194118.1777794-1-sashal@kernel.org>
+References: <20230702194118.1777794-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.4.1
+X-stable-base: Linux 6.1.37
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
