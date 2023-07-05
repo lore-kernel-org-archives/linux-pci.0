@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9C71C04FE1
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E455EC05051
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231749AbjGELqk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jul 2023 07:46:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49936 "EHLO
+        id S231750AbjGELql (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jul 2023 07:46:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49940 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230417AbjGELqi (ORCPT
+        with ESMTP id S231726AbjGELqi (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 07:46:38 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 63AAB1BC6;
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8CF84172D;
         Wed,  5 Jul 2023 04:46:14 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="6.01,182,1684767600"; 
-   d="scan'208";a="166982751"
+X-IronPort-AV: E=Sophos;i="6.01,183,1684767600"; 
+   d="scan'208";a="170615162"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:12 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:12 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id E9801400C458;
-        Wed,  5 Jul 2023 20:46:11 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 6080F40029CA;
+        Wed,  5 Jul 2023 20:46:12 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
         lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
@@ -29,12 +29,10 @@ To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
 Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Subject: [PATCH v17 03/20] PCI: dwc: Rename "legacy_irq" to "INTx_irq"
-Date:   Wed,  5 Jul 2023 20:41:49 +0900
-Message-Id: <20230705114206.3585188-4-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v17 06/20] PCI: designware-ep: Add INTx IRQs support
+Date:   Wed,  5 Jul 2023 20:41:52 +0900
+Message-Id: <20230705114206.3585188-7-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
@@ -44,120 +42,151 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Using "INTx" instead of "legacy" is more specific. So, rename
-dw_pcie_ep_raise_legacy_irq() to dw_pcie_ep_raise_intx_irq().
+Add support for triggering INTx IRQs by using outbound iATU.
+Outbound iATU is utilized to send assert and de-assert INTx TLPs.
+The message is generated based on the payloadless Msg TLP with type
+0x14, where 0x4 is the routing code implying the Terminate at
+Receiver message. The message code is specified as b1000xx for
+the INTx assertion and b1001xx for the INTx de-assertion.
 
-Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c             | 2 +-
- drivers/pci/controller/dwc/pci-layerscape-ep.c    | 2 +-
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 6 +++---
- drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
- drivers/pci/controller/dwc/pcie-designware.h      | 4 ++--
- drivers/pci/controller/dwc/pcie-qcom-ep.c         | 2 +-
- 6 files changed, 9 insertions(+), 9 deletions(-)
+ .../pci/controller/dwc/pcie-designware-ep.c   | 69 +++++++++++++++++--
+ drivers/pci/controller/dwc/pcie-designware.h  |  2 +
+ 2 files changed, 67 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index a32f1867e0bb..2a13688059a4 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -1064,7 +1064,7 @@ static int imx6_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_INTX:
--		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
-+		return dw_pcie_ep_raise_intx_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
-diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index b2e14d64dba2..5e00f0be4f95 100644
---- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -156,7 +156,7 @@ static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_INTX:
--		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
-+		return dw_pcie_ep_raise_intx_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
 diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index f9182f8d552f..27278010ecec 100644
+index fe2e0d765be9..1d24ebf9686f 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -479,16 +479,16 @@ static const struct pci_epc_ops epc_ops = {
+@@ -6,9 +6,11 @@
+  * Author: Kishon Vijay Abraham I <kishon@ti.com>
+  */
+ 
++#include <linux/delay.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
+ 
++#include "../../pci.h"
+ #include "pcie-designware.h"
+ #include <linux/pci-epc.h>
+ #include <linux/pci-epf.h>
+@@ -484,14 +486,60 @@ static const struct pci_epc_ops epc_ops = {
  	.get_features		= dw_pcie_ep_get_features,
  };
  
--int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+int dw_pcie_ep_raise_intx_irq(struct dw_pcie_ep *ep, u8 func_no)
++static int dw_pcie_ep_send_msg(struct dw_pcie_ep *ep, u8 func_no, u8 code,
++			       u8 routing)
++{
++	struct dw_pcie_ob_atu_cfg atu = { 0 };
++	struct pci_epc *epc = ep->epc;
++	int ret;
++
++	atu.func_no = func_no;
++	atu.code = code;
++	atu.routing = routing;
++	atu.type = PCIE_ATU_TYPE_MSG;
++	atu.cpu_addr = ep->intx_mem_phys;
++	atu.size = epc->mem->window.page_size;
++
++	ret = dw_pcie_ep_outbound_atu(ep, &atu);
++	if (ret)
++		return ret;
++
++	writel(0, ep->intx_mem);
++
++	dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->intx_mem_phys);
++
++	return 0;
++}
++
+ int dw_pcie_ep_raise_intx_irq(struct dw_pcie_ep *ep, u8 func_no)
  {
  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
  	struct device *dev = pci->dev;
++	int ret;
  
--	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-+	dev_err(dev, "EP cannot trigger INTx IRQs\n");
+-	dev_err(dev, "EP cannot trigger INTx IRQs\n");
++	if (!ep->intx_mem) {
++		dev_err(dev, "INTx not supported\n");
++		return -EOPNOTSUPP;
++	}
  
- 	return -EINVAL;
+-	return -EINVAL;
++	/*
++	 * Even though the PCI bus specification implies the level-triggered
++	 * INTx interrupts the kernel PCIe endpoint framework has a single
++	 * PCI_EPC_IRQ_INTx flag defined for the legacy IRQs simulation. Thus
++	 * this function sends the Deassert_INTx PCIe TLP after the Assert_INTx
++	 * message with the 50 usec duration basically implementing the
++	 * rising-edge triggering IRQ. Hopefully the interrupt controller will
++	 * still be able to register the incoming IRQ event...
++	 */
++	ret = dw_pcie_ep_send_msg(ep, func_no, PCI_MSG_CODE_ASSERT_INTA,
++				  PCI_MSG_TYPE_R_ROUTING_LOCAL);
++	if (ret)
++		return ret;
++
++	usleep_range(50, 100);
++
++	return dw_pcie_ep_send_msg(ep, func_no, PCI_MSG_CODE_DEASSERT_INTA,
++				   PCI_MSG_TYPE_R_ROUTING_LOCAL);
  }
--EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_legacy_irq);
-+EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_intx_irq);
+ EXPORT_SYMBOL_GPL(dw_pcie_ep_raise_intx_irq);
  
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num)
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index fc3b02949218..2689ff7939e4 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -49,7 +49,7 @@ static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+@@ -622,6 +670,10 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
  
- 	switch (type) {
- 	case PCI_EPC_IRQ_INTX:
--		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
-+		return dw_pcie_ep_raise_intx_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
+ 	dw_pcie_edma_remove(pci);
+ 
++	if (ep->intx_mem)
++		pci_epc_mem_free_addr(epc, ep->intx_mem_phys, ep->intx_mem,
++				      epc->mem->window.page_size);
++
+ 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
+ 			      epc->mem->window.page_size);
+ 
+@@ -793,9 +845,14 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		goto err_exit_epc_mem;
+ 	}
+ 
++	ep->intx_mem = pci_epc_mem_alloc_addr(epc, &ep->intx_mem_phys,
++					      epc->mem->window.page_size);
++	if (!ep->intx_mem)
++		dev_warn(dev, "Failed to reserve memory for INTx\n");
++
+ 	ret = dw_pcie_edma_detect(pci);
+ 	if (ret)
+-		goto err_free_epc_mem;
++		goto err_free_epc_mem_intx;
+ 
+ 	if (ep->ops->get_features) {
+ 		epc_features = ep->ops->get_features(ep);
+@@ -812,7 +869,11 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ err_remove_edma:
+ 	dw_pcie_edma_remove(pci);
+ 
+-err_free_epc_mem:
++err_free_epc_mem_intx:
++	if (ep->intx_mem)
++		pci_epc_mem_free_addr(epc, ep->intx_mem_phys, ep->intx_mem,
++				      epc->mem->window.page_size);
++
+ 	pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
+ 			      epc->mem->window.page_size);
+ 
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 615660640801..3c06e025c905 100644
+index c626d21243b0..812c221b3f7c 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -548,7 +548,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep);
- int dw_pcie_ep_init_complete(struct dw_pcie_ep *ep);
- void dw_pcie_ep_init_notify(struct dw_pcie_ep *ep);
- void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
--int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no);
-+int dw_pcie_ep_raise_intx_irq(struct dw_pcie_ep *ep, u8 func_no);
- int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
-@@ -581,7 +581,7 @@ static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- {
- }
+@@ -365,6 +365,8 @@ struct dw_pcie_ep {
+ 	unsigned long		*ob_window_map;
+ 	void __iomem		*msi_mem;
+ 	phys_addr_t		msi_mem_phys;
++	void __iomem		*intx_mem;
++	phys_addr_t		intx_mem_phys;
+ 	struct pci_epf_bar	*epf_bar[PCI_STD_NUM_BARS];
+ };
  
--static inline int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-+static inline int dw_pcie_ep_raise_intx_irq(struct dw_pcie_ep *ep, u8 func_no)
- {
- 	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 93624728c772..93f2fdfbb5a3 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -661,7 +661,7 @@ static int qcom_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 
- 	switch (type) {
- 	case PCI_EPC_IRQ_INTX:
--		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
-+		return dw_pcie_ep_raise_intx_irq(ep, func_no);
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	default:
 -- 
 2.25.1
 
