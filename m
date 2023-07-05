@@ -2,244 +2,162 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93855C001DD
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 05:38:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17C5AC001E0
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 08:17:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229493AbjGEFiB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jul 2023 01:38:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55264 "EHLO
+        id S232046AbjGEIRl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jul 2023 04:17:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230477AbjGEFh5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 01:37:57 -0400
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 914D2E7B
-        for <linux-pci@vger.kernel.org>; Tue,  4 Jul 2023 22:37:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1688535475; x=1720071475;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=2jqQBc6hHXlUhkWR05Bads3V43qZGJKNesTOOSwzVDw=;
-  b=GyGN/pklm4R9d/YuWWPLA0guBBB4P1IOeJ+1hQ91ZVdGBK92ckS5mcnq
-   YKYV1zEPblQ7T9gsge58NmUTljd+GM0Dr0xh8t9uK0bWyv3UO08RiDkxu
-   qXD8k4W+/Aiy2uzsOyU6kYvi3nDGenzvIsx6PRqdSelyTFxbju8frpUv7
-   V8hd5GFjePPrUPnUqLlc1x8ua/nt9YlKgI0iS7Kob8J2SBzps+JVxW/wK
-   /Lool32FD/MqBywZoAnup+9cycw68Vq0ZWhqOy40a6EWsFnqiVYxl7/NM
-   qixBPKiK8I/lPGNRrjQUvHu74bVJbOkuxKR+dEJqwrjmEhNseT5S8KpCU
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10761"; a="353083842"
-X-IronPort-AV: E=Sophos;i="6.01,182,1684825200"; 
-   d="scan'208";a="353083842"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2023 22:37:53 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10761"; a="784405883"
-X-IronPort-AV: E=Sophos;i="6.01,182,1684825200"; 
-   d="scan'208";a="784405883"
-Received: from lkp-server01.sh.intel.com (HELO c544d7fc5005) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 04 Jul 2023 22:37:49 -0700
-Received: from kbuild by c544d7fc5005 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qGvD2-0000Of-2b;
-        Wed, 05 Jul 2023 05:37:48 +0000
-Date:   Wed, 05 Jul 2023 13:37:26 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     "Krzysztof =?utf-8?Q?Wilczy=C5=84ski" ?= <kwilczynski@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:controller/remove-void-cast] BUILD SUCCESS
- 1928737d492a1f9adc1e194c29a5716ef0d5262e
-Message-ID: <202307051324.10pMCnKb-lkp@intel.com>
-User-Agent: s-nail v14.9.24
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        with ESMTP id S231958AbjGEIRj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 04:17:39 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78FA71719;
+        Wed,  5 Jul 2023 01:17:38 -0700 (PDT)
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3657rSZa023285;
+        Wed, 5 Jul 2023 08:17:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=BZCOCbcf3tjCgT7VICbftvYbIBdhPLUkBBYxBXdIf6A=;
+ b=lPvok6Qt3WgcPf59HchHj/SxoZjtQFAQCVMzfzQKTiwsjhaZcE4ZgNsBTkST4pXvAuSM
+ Pf8medstFPdBZ8xpvwJetcfDx0VXqwlxROSAJB3FIEHFGQoU2qZaG4oAuDOa2Yxz4QL2
+ P5iZWkQVxmQbCyoU4+0j5iVSkFc4OxcDYWG1bYLrM8nI4eX7D7T+PCEJi43hkr0sLZ1I
+ IYTsfFdiw9g7PnTraood2vb+NR2jX5A7T/pLZCjUvILlkXNJo3CvHwgJKcuAtyc4ayyy
+ CCFsyfW8Cshp97yQHeX8ZnKItMlgqaIUHNWjSKo+NxgjVzggYV85Ng55dhlZgolePBk8 dw== 
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rmnw6h7tx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 05 Jul 2023 08:17:30 +0000
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3658HRZZ021547;
+        Wed, 5 Jul 2023 08:17:27 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3rjd7krn86-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Wed, 05 Jul 2023 08:17:27 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3658HQ7W021540;
+        Wed, 5 Jul 2023 08:17:26 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3658HQCe021539;
+        Wed, 05 Jul 2023 08:17:26 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
+        id BD350244; Wed,  5 Jul 2023 13:47:25 +0530 (+0530)
+From:   Mrinmay Sarkar <quic_msarkar@quicinc.com>
+To:     agross@kernel.org, andersson@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        konrad.dybcio@linaro.org, mani@kernel.org
+Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
+        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
+        Mrinmay Sarkar <quic_msarkar@quicinc.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org
+Subject: [PATCH v1 1/6] dt-bindings: PCI: qcom: Add sa8775p compatible
+Date:   Wed,  5 Jul 2023 13:47:06 +0530
+Message-Id: <1688545032-17748-2-git-send-email-quic_msarkar@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1688545032-17748-1-git-send-email-quic_msarkar@quicinc.com>
+References: <1688545032-17748-1-git-send-email-quic_msarkar@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: sdJFXv1jqVOY6if6_Ak38XBmYaqWOU1n
+X-Proofpoint-ORIG-GUID: sdJFXv1jqVOY6if6_Ak38XBmYaqWOU1n
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
+ definitions=2023-07-04_16,2023-07-04_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ spamscore=0 lowpriorityscore=0 mlxscore=0 phishscore=0 impostorscore=0
+ malwarescore=0 bulkscore=0 mlxlogscore=999 adultscore=0 suspectscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2305260000 definitions=main-2307050075
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/remove-void-cast
-branch HEAD: 1928737d492a1f9adc1e194c29a5716ef0d5262e  PCI: microchip: Remove cast between incompatible function type
+Add sa8775p platform to the binding.
 
-elapsed time: 724m
+Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+---
+ .../devicetree/bindings/pci/qcom,pcie.yaml    | 28 +++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-configs tested: 172
-configs skipped: 4
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r003-20230704   gcc  
-alpha                randconfig-r004-20230704   gcc  
-alpha                randconfig-r025-20230704   gcc  
-alpha                randconfig-r034-20230703   gcc  
-alpha                randconfig-r035-20230704   gcc  
-alpha                randconfig-r036-20230703   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                 nsimosci_hs_smp_defconfig   gcc  
-arc                  randconfig-r043-20230704   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                         assabet_defconfig   gcc  
-arm                                 defconfig   gcc  
-arm                            dove_defconfig   clang
-arm                          ixp4xx_defconfig   clang
-arm                          pxa910_defconfig   gcc  
-arm                  randconfig-r002-20230704   gcc  
-arm                  randconfig-r046-20230704   clang
-arm                       spear13xx_defconfig   clang
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r011-20230704   gcc  
-hexagon              randconfig-r013-20230704   clang
-hexagon              randconfig-r023-20230704   clang
-hexagon              randconfig-r026-20230704   clang
-hexagon              randconfig-r033-20230704   clang
-hexagon              randconfig-r041-20230703   clang
-hexagon              randconfig-r041-20230704   clang
-hexagon              randconfig-r045-20230703   clang
-hexagon              randconfig-r045-20230704   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r004-20230703   gcc  
-i386         buildonly-randconfig-r005-20230703   gcc  
-i386         buildonly-randconfig-r006-20230703   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230703   gcc  
-i386                 randconfig-i001-20230704   clang
-i386                 randconfig-i002-20230703   gcc  
-i386                 randconfig-i002-20230704   clang
-i386                 randconfig-i003-20230703   gcc  
-i386                 randconfig-i003-20230704   clang
-i386                 randconfig-i004-20230703   gcc  
-i386                 randconfig-i004-20230704   clang
-i386                 randconfig-i005-20230703   gcc  
-i386                 randconfig-i005-20230704   clang
-i386                 randconfig-i006-20230703   gcc  
-i386                 randconfig-i006-20230704   clang
-i386                 randconfig-i011-20230703   clang
-i386                 randconfig-i012-20230703   clang
-i386                 randconfig-i013-20230703   clang
-i386                 randconfig-i014-20230703   clang
-i386                 randconfig-i015-20230703   clang
-i386                 randconfig-i016-20230703   clang
-i386                 randconfig-r032-20230704   clang
-loongarch                        alldefconfig   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch                 loongson3_defconfig   gcc  
-loongarch            randconfig-r015-20230704   gcc  
-loongarch            randconfig-r032-20230703   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                            mac_defconfig   gcc  
-m68k                          multi_defconfig   gcc  
-m68k                            q40_defconfig   gcc  
-m68k                 randconfig-r012-20230704   gcc  
-m68k                 randconfig-r033-20230703   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                           jazz_defconfig   gcc  
-mips                      maltaaprp_defconfig   clang
-mips                 randconfig-r014-20230704   clang
-mips                       rbtx49xx_defconfig   clang
-mips                   sb1250_swarm_defconfig   clang
-nios2                         3c120_defconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r006-20230704   gcc  
-nios2                randconfig-r024-20230704   gcc  
-openrisc                 simple_smp_defconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r001-20230704   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                    ge_imp3a_defconfig   clang
-powerpc                   lite5200b_defconfig   clang
-powerpc                      pasemi_defconfig   gcc  
-powerpc                    sam440ep_defconfig   gcc  
-powerpc                    socrates_defconfig   clang
-powerpc                     taishan_defconfig   gcc  
-powerpc                     tqm8541_defconfig   gcc  
-powerpc                        warp_defconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r022-20230704   gcc  
-riscv                randconfig-r042-20230703   clang
-riscv                randconfig-r042-20230704   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r021-20230704   gcc  
-s390                 randconfig-r031-20230703   gcc  
-s390                 randconfig-r044-20230703   clang
-s390                 randconfig-r044-20230704   gcc  
-sh                               allmodconfig   gcc  
-sh                            hp6xx_defconfig   gcc  
-sh                   rts7751r2dplus_defconfig   gcc  
-sh                           se7343_defconfig   gcc  
-sh                           se7619_defconfig   gcc  
-sh                           se7750_defconfig   gcc  
-sh                          urquell_defconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r005-20230704   gcc  
-sparc                randconfig-r036-20230704   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                   randconfig-r031-20230704   gcc  
-um                   randconfig-r034-20230704   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-r001-20230703   gcc  
-x86_64       buildonly-randconfig-r002-20230703   gcc  
-x86_64       buildonly-randconfig-r003-20230703   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-x001-20230703   clang
-x86_64               randconfig-x001-20230704   gcc  
-x86_64               randconfig-x002-20230703   clang
-x86_64               randconfig-x002-20230704   gcc  
-x86_64               randconfig-x003-20230703   clang
-x86_64               randconfig-x003-20230704   gcc  
-x86_64               randconfig-x004-20230703   clang
-x86_64               randconfig-x004-20230704   gcc  
-x86_64               randconfig-x005-20230703   clang
-x86_64               randconfig-x005-20230704   gcc  
-x86_64               randconfig-x006-20230703   clang
-x86_64               randconfig-x006-20230704   gcc  
-x86_64               randconfig-x011-20230703   gcc  
-x86_64               randconfig-x011-20230704   clang
-x86_64               randconfig-x012-20230703   gcc  
-x86_64               randconfig-x012-20230704   clang
-x86_64               randconfig-x013-20230703   gcc  
-x86_64               randconfig-x013-20230704   clang
-x86_64               randconfig-x014-20230703   gcc  
-x86_64               randconfig-x014-20230704   clang
-x86_64               randconfig-x015-20230703   gcc  
-x86_64               randconfig-x015-20230704   clang
-x86_64               randconfig-x016-20230703   gcc  
-x86_64               randconfig-x016-20230704   clang
-x86_64                           rhel-8.3-bpf   gcc  
-x86_64                          rhel-8.3-func   gcc  
-x86_64                    rhel-8.3-kselftests   gcc  
-x86_64                         rhel-8.3-kunit   gcc  
-x86_64                           rhel-8.3-kvm   gcc  
-x86_64                           rhel-8.3-ltp   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 81971be4e554..2c79585a2d1e 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -40,6 +40,7 @@ properties:
+           - qcom,pcie-sm8450-pcie0
+           - qcom,pcie-sm8450-pcie1
+           - qcom,pcie-sm8550
++          - qcom,pcie-sa8775p
+       - items:
+           - const: qcom,pcie-msm8998
+           - const: qcom,pcie-msm8996
+@@ -220,6 +221,7 @@ allOf:
+               - qcom,pcie-sm8450-pcie0
+               - qcom,pcie-sm8450-pcie1
+               - qcom,pcie-sm8550
++              - qcom,pcie-sa8775p
+     then:
+       properties:
+         reg:
+@@ -743,6 +745,30 @@ allOf:
+           items:
+             - const: pci # PCIe core reset
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++                - qcom,pcie-sa8775p
++    then:
++      properties:
++        clocks:
++          minItems: 5
++          maxItems: 5
++        clock-names:
++          items:
++            - const: aux # Auxiliary clock
++            - const: cfg # Configuration clock
++            - const: bus_master # Master AXI clock
++            - const: bus_slave # Slave AXI clock
++            - const: slave_q2a # Slave Q2A clock
++        resets:
++          maxItems: 1
++        reset-names:
++          items:
++            - const: pci # PCIe core reset
++
+   - if:
+       properties:
+         compatible:
+@@ -750,6 +776,7 @@ allOf:
+             enum:
+               - qcom,pcie-sa8540p
+               - qcom,pcie-sc8280xp
++              - qcom,pcie-sa8775p
+     then:
+       required:
+         - interconnects
+@@ -854,6 +881,7 @@ allOf:
+               - qcom,pcie-ipq8074-gen3
+               - qcom,pcie-qcs404
+               - qcom,pcie-sa8540p
++              - qcom,pcie-sa8775p
+     then:
+       properties:
+         interrupts:
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.2
+
