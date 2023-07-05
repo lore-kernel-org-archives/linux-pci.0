@@ -2,96 +2,101 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59F5EC001B0
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 08:46:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA8F6C001DD
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 09:16:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232085AbjGEIqZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jul 2023 04:46:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60910 "EHLO
+        id S232413AbjGEJQo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jul 2023 05:16:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231549AbjGEIqY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 04:46:24 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11049133;
-        Wed,  5 Jul 2023 01:46:24 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A32AA6149D;
-        Wed,  5 Jul 2023 08:46:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 426B2C433C7;
-        Wed,  5 Jul 2023 08:46:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688546783;
-        bh=TrDgTUVhADoSsAO2/sNZ+F/3nrvrfuljDS6R5BUFlqw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=j0+vVsH3AhB/AXyyE2VaWHL77fjGb9huGVzPLh4BVkJWt2lr2ii/t8H+KuQf0s6CS
-         Zw1KPnwuYyrhImeN1ZhndHzTVMH0KPrJsFYeyYRueACZ5pT1HxChw6uE31eC0DWz+w
-         KmrujmRpC7AEtoFiRnr/xJW3Jr9yVhuJoyPo+dK1bLPJKyysyp6XwGyAeMO8aGWfMy
-         iOJA2JBskgNU9gopvIRbAnp1VeSEpMt174zXetABgZyd1SGFpqw5iiVboRScCdx7cL
-         FbfcnVQrOI464HqZplDCV4Je7snRf5FCOc2hKj+CVucweQHllQypi44FecnC01DU7H
-         O72RoaRKM+oJQ==
-Date:   Wed, 5 Jul 2023 14:16:06 +0530
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Mrinmay Sarkar <quic_msarkar@quicinc.com>
-Cc:     agross@kernel.org, andersson@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        konrad.dybcio@linaro.org, quic_shazhuss@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_ramkri@quicinc.com,
-        quic_nayiluri@quicinc.com,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org
-Subject: Re: [PATCH v1 0/6] arm64: qcom: sa8775p: add support for PCIe
-Message-ID: <20230705084606.GF11854@thinkpad>
-References: <1688545032-17748-1-git-send-email-quic_msarkar@quicinc.com>
+        with ESMTP id S232328AbjGEJQb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 05:16:31 -0400
+Received: from mail-io1-f48.google.com (mail-io1-f48.google.com [209.85.166.48])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEE8BDD;
+        Wed,  5 Jul 2023 02:16:30 -0700 (PDT)
+Received: by mail-io1-f48.google.com with SMTP id ca18e2360f4ac-78666f06691so138839739f.0;
+        Wed, 05 Jul 2023 02:16:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1688548590; x=1691140590;
+        h=date:subject:message-id:references:in-reply-to:cc:to:from
+         :mime-version:content-transfer-encoding:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=zrxkvponYz4V5NTYWmXXqT0XM8M8zhkcRZKfUVdIvfo=;
+        b=IClVVPsIgs/ysIKiBXnn4zwciWKPCAUaWpJeofySICfheeSgtZ2bqcdH9v3cPn+kDN
+         Pkoxp3TIgk7Ad/HQNHgEue6zvIAvaJ0DLOcd2CzY/fas7Zwzhl1aPE7SUqYHbFkiUXhe
+         jY7s9tsQEfywYhh2hT5z134Ws1VR5u9rFdSTzvfol1YeVXqfVhEDB91caBHN0KbT1I+l
+         PkjJvErlzyi4LdhfjmOQQc4CzbvK/95GA3vERHl7sVCccl9lRvay0C+WJK0uFcCCMx9r
+         7gyOBv7idhBnwSVeYeEYGCiDdEOQc+lJolALBIz6bOJPaFp7NbWandFDjtXFeO2bwB5t
+         wfvQ==
+X-Gm-Message-State: AC+VfDzsU48vNnjb4dz/wMAgqPzM3Wv4kzU+NR2uhNjYkDMDDe88ERpQ
+        8ECarSSjkfodwY6seKKPGg==
+X-Google-Smtp-Source: ACHHUZ7uV5drZripZphbrl8LDJeBSaflagI8Iu3OZ5ufCPyk2D1KK9nohHZs6UkU+btahidNzSfF3g==
+X-Received: by 2002:a5e:a911:0:b0:77e:3d2f:d1f4 with SMTP id c17-20020a5ea911000000b0077e3d2fd1f4mr15269163iod.15.1688548589990;
+        Wed, 05 Jul 2023 02:16:29 -0700 (PDT)
+Received: from robh_at_kernel.org ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id e20-20020a02a514000000b0042b48e5da4bsm1717283jam.134.2023.07.05.02.16.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Jul 2023 02:16:29 -0700 (PDT)
+Received: (nullmailer pid 4038325 invoked by uid 1000);
+        Wed, 05 Jul 2023 09:16:27 -0000
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1688545032-17748-1-git-send-email-quic_msarkar@quicinc.com>
+From:   Rob Herring <robh@kernel.org>
+To:     Mrinmay Sarkar <quic_msarkar@quicinc.com>
+Cc:     =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        agross@kernel.org, Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        konrad.dybcio@linaro.org, linux-pci@vger.kernel.org,
+        quic_nayiluri@quicinc.com, quic_shazhuss@quicinc.com,
+        linux-phy@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+        quic_ramkri@quicinc.com, linux-arm-msm@vger.kernel.org,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        andersson@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        quic_nitegupt@quicinc.com, conor+dt@kernel.org, mani@kernel.org
+In-Reply-To: <1688545032-17748-2-git-send-email-quic_msarkar@quicinc.com>
+References: <1688545032-17748-1-git-send-email-quic_msarkar@quicinc.com>
+ <1688545032-17748-2-git-send-email-quic_msarkar@quicinc.com>
+Message-Id: <168854858595.4038242.5895489616920935149.robh@kernel.org>
+Subject: Re: [PATCH v1 1/6] dt-bindings: PCI: qcom: Add sa8775p compatible
+Date:   Wed, 05 Jul 2023 03:16:27 -0600
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jul 05, 2023 at 01:47:05PM +0530, Mrinmay Sarkar wrote:
-> Update the relavent DT bindings for PCIe, add new config to the phy
-> driver add pcie and phy nodes to the .dtsi file and enable then in 
-> board .dts file for the sa8775p-ride platform.
-> 
-> Mrinmay Sarkar (6):
->   dt-bindings: PCI: qcom: Add sa8775p compatible
->   dt-bindings: phy: qcom,qmp: Add sa8775p QMP PCIe PHY
->   PCI: qcom: Add support for sa8775p SoC
->   phy: qcom-qmp-pcie: add support for sa8775p
->   arm64: dts: qcom: sa8775p: Add pcie0 and pcie1 nodes
->   arm64: dts: qcom: sa8775p-ride: enable pcie nodes
 
-Please note that the dts patches should come before driver patches.
-
-- Mani
-
+On Wed, 05 Jul 2023 13:47:06 +0530, Mrinmay Sarkar wrote:
+> Add sa8775p platform to the binding.
 > 
->  .../devicetree/bindings/pci/qcom,pcie.yaml    |  28 ++
->  .../phy/qcom,sc8280xp-qmp-pcie-phy.yaml       |  19 +-
->  arch/arm64/boot/dts/qcom/sa8775p-ride.dts     |  68 ++++
->  arch/arm64/boot/dts/qcom/sa8775p.dtsi         | 201 ++++++++++-
->  drivers/pci/controller/dwc/pcie-qcom.c        |   1 +
->  drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      | 328 ++++++++++++++++++
->  .../qualcomm/phy-qcom-qmp-pcs-pcie-v5_20.h    |   1 +
->  .../phy-qcom-qmp-qserdes-txrx-v5_20.h         |   2 +
->  8 files changed, 645 insertions(+), 3 deletions(-)
-> 
-> -- 
-> 2.39.2
+> Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+> ---
+>  .../devicetree/bindings/pci/qcom,pcie.yaml    | 28 +++++++++++++++++++
+>  1 file changed, 28 insertions(+)
 > 
 
--- 
-மணிவண்ணன் சதாசிவம்
+My bot found errors running 'make DT_CHECKER_FLAGS=-m dt_binding_check'
+on your patch (DT_CHECKER_FLAGS is new in v5.13):
+
+yamllint warnings/errors:
+./Documentation/devicetree/bindings/pci/qcom,pcie.yaml:753:17: [warning] wrong indentation: expected 14 but found 16 (indentation)
+
+dtschema/dtc warnings/errors:
+
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/1688545032-17748-2-git-send-email-quic_msarkar@quicinc.com
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
+
