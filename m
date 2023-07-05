@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F152EC001DF
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA8DEB64DD
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:47:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231768AbjGELrT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jul 2023 07:47:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50878 "EHLO
+        id S231799AbjGELrW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jul 2023 07:47:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231743AbjGELrS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 07:47:18 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C2F1519BF;
+        with ESMTP id S231789AbjGELrV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 07:47:21 -0400
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F05551BE4;
         Wed,  5 Jul 2023 04:46:54 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="6.01,182,1684767600"; 
-   d="scan'208";a="166982771"
+X-IronPort-AV: E=Sophos;i="6.01,183,1684767600"; 
+   d="scan'208";a="170615179"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:13 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:14 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 908AC400C458;
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id D6DC5400C45B;
         Wed,  5 Jul 2023 20:46:13 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
@@ -32,9 +32,9 @@ Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Rob Herring <robh@kernel.org>,
         Manivannan Sadhasivam <mani@kernel.org>
-Subject: [PATCH v17 14/20] dt-bindings: PCI: dwc: Update maxItems of reg and reg-names
-Date:   Wed,  5 Jul 2023 20:42:00 +0900
-Message-Id: <20230705114206.3585188-15-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v17 16/20] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
+Date:   Wed,  5 Jul 2023 20:42:02 +0900
+Message-Id: <20230705114206.3585188-17-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
@@ -44,54 +44,130 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Update maxItems of reg and reg-names on both host and endpoint
-for supporting Renesas R-Car Gen4 PCIe controllers later.
+Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+PCIe endpoint module.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
 Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml | 4 ++--
- Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml    | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ .../bindings/pci/rcar-gen4-pci-ep.yaml        | 106 ++++++++++++++++++
+ 1 file changed, 106 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-index 8fc2151691a4..cb727f60be0b 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
-@@ -33,11 +33,11 @@ properties:
-       normal controller functioning. iATU memory IO region is also required
-       if the space is unrolled (IP-core version >= 4.80a).
-     minItems: 2
--    maxItems: 5
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+new file mode 100644
+index 000000000000..4e6be856104c
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+@@ -0,0 +1,106 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2022-2023 Renesas Electronics Corp.
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-ep.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Renesas R-Car Gen4 PCIe Endpoint
++
++maintainers:
++  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
++
++allOf:
++  - $ref: snps,dw-pcie-ep.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: renesas,r8a779f0-pcie-ep   # R-Car S4-8
++      - const: renesas,rcar-gen4-pcie-ep  # R-Car Gen4
++
++  reg:
 +    maxItems: 6
- 
-   reg-names:
-     minItems: 2
--    maxItems: 5
-+    maxItems: 6
-     items:
-       oneOf:
-         - description:
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index 1a83f0f65f19..0bfcfd6ccb5f 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -33,11 +33,11 @@ properties:
-       are required for the normal controller work. iATU memory IO region is
-       also required if the space is unrolled (IP-core version >= 4.80a).
-     minItems: 2
--    maxItems: 5
-+    maxItems: 6
- 
-   reg-names:
-     minItems: 2
--    maxItems: 5
-+    maxItems: 6
-     items:
-       oneOf:
-         - description:
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: dbi2
++      - const: atu
++      - const: dma
++      - const: app
++      - const: addr_space
++
++  interrupts:
++    maxItems: 3
++
++  interrupt-names:
++    items:
++      - const: dma
++      - const: sft_ce
++      - const: app
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++  clocks:
++    maxItems: 2
++
++  clock-names:
++    items:
++      - const: core
++      - const: ref
++
++  max-functions:
++    maximum: 2
++
++  max-link-speed:
++    maximum: 4
++
++  num-lanes:
++    maximum: 4
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - interrupts
++  - resets
++  - power-domains
++  - clocks
++  - clock-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a779f0-sysc.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie0_ep: pcie-ep@e65d0000 {
++            compatible = "renesas,r8a779f0-pcie-ep", "renesas,rcar-gen4-pcie-ep";
++            reg = <0 0xe65d0000 0 0x2000>, <0 0xe65d2800 0 0x0800>,
++                  <0 0xe65d3000 0 0x2000>, <0 0xe65d5000 0 0x1200>,
++                  <0 0xe65d6200 0 0x0e00>, <0 0xfe000000 0 0x400000>;
++            reg-names = "dbi", "dbi2", "atu", "dma", "app", "addr_space";
++            interrupts = <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "dma", "sft_ce", "app";
++            clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
++            clock-names = "core", "ref";
++            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++            resets = <&cpg 624>;
++            num-lanes = <2>;
++            max-link-speed = <4>;
++            max-functions = /bits/ 8 <2>;
++        };
++    };
 -- 
 2.25.1
 
