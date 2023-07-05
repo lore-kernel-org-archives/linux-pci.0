@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D18EB64DD
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:46:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75F59C001DD
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:46:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231755AbjGELqx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jul 2023 07:46:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50324 "EHLO
+        id S231770AbjGELqy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jul 2023 07:46:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231726AbjGELqx (ORCPT
+        with ESMTP id S231721AbjGELqx (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 07:46:53 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 29B5619AD;
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A40EB19BE;
         Wed,  5 Jul 2023 04:46:37 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="6.01,183,1684767600"; 
-   d="scan'208";a="170615166"
+X-IronPort-AV: E=Sophos;i="6.01,182,1684767600"; 
+   d="scan'208";a="166982754"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:12 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:12 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id C82F840029CA;
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 3E6C9400C458;
         Wed,  5 Jul 2023 20:46:12 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
@@ -30,9 +30,9 @@ Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v17 09/20] PCI: dwc: Add PCI_EXP_LNKCAP_MLW handling
-Date:   Wed,  5 Jul 2023 20:41:55 +0900
-Message-Id: <20230705114206.3585188-10-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v17 05/20] PCI: dwc: Add outbound MSG TLPs support
+Date:   Wed,  5 Jul 2023 20:41:51 +0900
+Message-Id: <20230705114206.3585188-6-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
@@ -42,61 +42,72 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Update dw_pcie_link_set_max_link_width() to set PCI_EXP_LNKCAP_MLW.
-In accordance with the DW PCIe RC/EP HW manuals [1,2,3,...] aside with
-the PORT_LINK_CTRL_OFF.LINK_CAPABLE and GEN2_CTRL_OFF.NUM_OF_LANES[8:0]
-field there is another one which needs to be updated. It's
-LINK_CAPABILITIES_REG.PCIE_CAP_MAX_LINK_WIDTH. If it isn't done at
-the very least the maximum link-width capability CSR won't expose
-the actual maximum capability.
+Add "code" and "routing" into struct dw_pcie_ob_atu_cfg for sending
+MSG by iATU in the PCIe endpoint mode in near the future.
+PCIE_ATU_INHIBIT_PAYLOAD is set to issue TLP type of Msg instead of
+MsgD. So, this implementation supports the data-less messages only
+for now.
 
-[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.60a, March 2015, p.1032
-[2] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.70a, March 2016, p.1065
-[3] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.90a, March 2016, p.1057
-...
-[X] DesignWare Cores PCI Express Controller Databook - DWC PCIe Endpoint,
-      Version 5.40a, March 2019, p.1396
-[X+1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-      Version 5.40a, March 2019, p.1266
-
-The commit description is suggested by Serge Semin.
-
-Suggested-by: Serge Semin <fancer.lancer@gmail.com>
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 9 +++++++--
+ drivers/pci/controller/dwc/pcie-designware.h | 4 ++++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 7b720bad7656..44150d34720a 100644
+index e4ac1def7363..a531dc50abea 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.c
 +++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -730,7 +730,8 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+@@ -498,7 +498,7 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+ 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_UPPER_TARGET,
+ 			      upper_32_bits(atu->pci_addr));
  
- static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- {
--	u32 lwsc, plc;
-+	u32 lnkcap, lwsc, plc;
-+	u8 cap;
+-	val = atu->type | PCIE_ATU_FUNC_NUM(atu->func_no);
++	val = atu->type | atu->routing | PCIE_ATU_FUNC_NUM(atu->func_no);
+ 	if (upper_32_bits(limit_addr) > upper_32_bits(cpu_addr) &&
+ 	    dw_pcie_ver_is_ge(pci, 460A))
+ 		val |= PCIE_ATU_INCREASE_REGION_SIZE;
+@@ -506,7 +506,12 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+ 		val = dw_pcie_enable_ecrc(val);
+ 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val);
  
- 	if (!num_lanes)
- 		return;
-@@ -766,6 +767,12 @@ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- 	}
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
- 	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
-+
-+	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
-+	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
-+	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, num_lanes);
-+	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
- }
+-	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, PCIE_ATU_ENABLE);
++	val = PCIE_ATU_ENABLE;
++	if (atu->type == PCIE_ATU_TYPE_MSG) {
++		/* The data-less messages only for now */
++		val |= PCIE_ATU_INHIBIT_PAYLOAD | atu->code;
++	}
++	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, val);
  
- void dw_pcie_iatu_detect(struct dw_pcie *pci)
+ 	/*
+ 	 * Make sure ATU enable takes effect before any subsequent config
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 85de0d8346fa..c626d21243b0 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -147,11 +147,13 @@
+ #define PCIE_ATU_TYPE_IO		0x2
+ #define PCIE_ATU_TYPE_CFG0		0x4
+ #define PCIE_ATU_TYPE_CFG1		0x5
++#define PCIE_ATU_TYPE_MSG		0x10
+ #define PCIE_ATU_TD			BIT(8)
+ #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
+ #define PCIE_ATU_REGION_CTRL2		0x004
+ #define PCIE_ATU_ENABLE			BIT(31)
+ #define PCIE_ATU_BAR_MODE_ENABLE	BIT(30)
++#define PCIE_ATU_INHIBIT_PAYLOAD	BIT(22)
+ #define PCIE_ATU_FUNC_NUM_MATCH_EN      BIT(19)
+ #define PCIE_ATU_LOWER_BASE		0x008
+ #define PCIE_ATU_UPPER_BASE		0x00C
+@@ -292,6 +294,8 @@ struct dw_pcie_ob_atu_cfg {
+ 	int index;
+ 	int type;
+ 	u8 func_no;
++	u8 code;
++	u8 routing;
+ 	u64 cpu_addr;
+ 	u64 pci_addr;
+ 	u64 size;
 -- 
 2.25.1
 
