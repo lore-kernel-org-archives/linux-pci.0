@@ -2,83 +2,83 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95EBEC001B0
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:44:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD6F9C001DD
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:46:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231366AbjGELot (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jul 2023 07:44:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48152 "EHLO
+        id S231269AbjGELqi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jul 2023 07:46:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231177AbjGELos (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 07:44:48 -0400
-Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 183D11737;
-        Wed,  5 Jul 2023 04:44:46 -0700 (PDT)
-Received: by mail-ot1-f51.google.com with SMTP id 46e09a7af769-6b5f362f4beso5587548a34.2;
-        Wed, 05 Jul 2023 04:44:46 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688557486; x=1691149486;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=aGmgNZpQ92H8RtcLdnvOqptQIs6xEPnLECzACgHGwvo=;
-        b=HiowYq3lg9oMHzy++NIwbhtmksQpbsNvzlMeq3JrLquCFaCtFT8LdoPXc9ikxzMER4
-         n4j37derF4/DnzHAGit+UIBBcmVUg5jEY+fzkQdPilJTeogLW7UA1ospn5ZPeXh8n03F
-         ZfTeHJ32PbGgRBSX/b0IoaLxrx8zS56lmXLoeDnUs6qvIPK0pyh//Qlb8lV/k5xeMkQp
-         ZZbfffu0yIhS1+E1ZxhN8ou1OlSWxHe/aS8gFsXXcRbokJPIxv4eAYi/BFB1G+RsgEMx
-         eWa+DNZlvaWO9Ts59JVB5dVhtuMzGJdQeh/v5FhheEGehjoIVo+f4qYjBgXRohy1/1zq
-         mMjg==
-X-Gm-Message-State: ABy/qLZbOP3cgjEkGNVYbpVzGcm7l/+6CVzlayo7gZyyhykd5RW0cnxK
-        oagq8tukqCQDGmc/mkhIGEtuYwKiKrd9PDoL
-X-Google-Smtp-Source: APBJJlE29szK4gZbcjRGLGDhf4x+ZEWEI7JwaN0ovkUsopslhaFgGeEKb2mbAqRj8q+ENlQbRP+q/g==
-X-Received: by 2002:a05:6358:cb2f:b0:134:e413:4d3 with SMTP id gr47-20020a056358cb2f00b00134e41304d3mr11341085rwb.16.1688557485856;
-        Wed, 05 Jul 2023 04:44:45 -0700 (PDT)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id n9-20020a635c49000000b00543e9e17207sm17920311pgm.30.2023.07.05.04.44.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Jul 2023 04:44:44 -0700 (PDT)
-Date:   Wed, 5 Jul 2023 20:44:43 +0900
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     Damien Le Moal <dlemoal@kernel.org>
-Cc:     Alistair Francis <alistair@alistair23.me>,
-        marek.vasut+renesas@gmail.com, yoshihiro.shimoda.uh@renesas.com,
-        linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lpieralisi@kernel.org,
-        robh@kernel.org, bhelgaas@google.com, alistair23@gmail.com
-Subject: Re: [PATCH] PCI: rcar-ep: Include linux/pci-epf.h instead of
- linux/pci-epc.h
-Message-ID: <20230705114443.GA3555378@rocinante>
-References: <20230705104824.174396-1-alistair@alistair23.me>
- <7536d9a3-4738-2bc2-e33e-d93347893865@kernel.org>
+        with ESMTP id S231680AbjGELqh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 07:46:37 -0400
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3A6E819AF;
+        Wed,  5 Jul 2023 04:46:12 -0700 (PDT)
+X-IronPort-AV: E=Sophos;i="6.01,183,1684767600"; 
+   d="scan'208";a="170615155"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie6.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:11 +0900
+Received: from localhost.localdomain (unknown [10.166.15.32])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 71479400C458;
+        Wed,  5 Jul 2023 20:46:11 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
+        bhelgaas@google.com, kishon@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org
+Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v17 01/20] PCI: Add INTx Mechanism Messages macros
+Date:   Wed,  5 Jul 2023 20:41:47 +0900
+Message-Id: <20230705114206.3585188-2-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7536d9a3-4738-2bc2-e33e-d93347893865@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+Add "Implicit Message Routing" and "INTx Mechanism Messages" macros
+to send a message by a PCIe driver.
 
-> > pci-epc.h doesn't define the members of the pci_epf_header struct, so
-> > trying to access them results in errors like this:
-> > 
-> >     error: invalid use of undefined type 'struct pci_epf_header'
-> >       167 |                 val = hdr->vendorid;
-> > 
-> > Instead let's include pci-epf.h which not only defines the
-> > pci_epf_header but also includes pci-epc.h.
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ drivers/pci/pci.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-[...]
-> It is odd that the the build bot did not detect this...
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index a4c397434057..45673cc9c724 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -13,6 +13,24 @@
+ 
+ #define PCIE_LINK_RETRAIN_TIMEOUT_MS	1000
+ 
++/* Implicit Message Routing (r[2:0]) */
++#define PCI_MSG_TYPE_R_ROUTING_RC	0
++#define PCI_MSG_TYPE_R_ROUTING_ADDR	1
++#define PCI_MSG_TYPE_R_ROUTING_ID	2
++#define PCI_MSG_TYPE_R_ROUTING_BC	3
++#define PCI_MSG_TYPE_R_ROUTING_LOCAL	4
++#define PCI_MSG_TYPE_R_ROUTING_GATHER	5
++
++/* INTx Mechanism Messages */
++#define PCI_MSG_CODE_ASSERT_INTA	0x20
++#define PCI_MSG_CODE_ASSERT_INTB	0x21
++#define PCI_MSG_CODE_ASSERT_INTC	0x22
++#define PCI_MSG_CODE_ASSERT_INTD	0x23
++#define PCI_MSG_CODE_DEASSERT_INTA	0x24
++#define PCI_MSG_CODE_DEASSERT_INTB	0x25
++#define PCI_MSG_CODE_DEASSERT_INTC	0x26
++#define PCI_MSG_CODE_DEASSERT_INTD	0x27
++
+ extern const unsigned char pcie_link_speed[];
+ extern bool pci_early_dump;
+ 
+-- 
+2.25.1
 
-This is a bit of a surprise to me too, especially since none of the usual
-bots pick this up, and I can't seem to find such a failure in the nightly
-CI logs either.
-
-Alistair, how did you stumble into this issue?  Also, which version or
-a tree would that be?
-  
-  Thank you!
-
-	Krzysztof
