@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84C89C04E69
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:46:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2298CC04FE0
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jul 2023 11:46:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231792AbjGELqz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 5 Jul 2023 07:46:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50370 "EHLO
+        id S231821AbjGELq4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 5 Jul 2023 07:46:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231781AbjGELqy (ORCPT
+        with ESMTP id S231785AbjGELqy (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2023 07:46:54 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 86C2319BF;
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B3F5F1BC9;
         Wed,  5 Jul 2023 04:46:38 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="6.01,182,1684767600"; 
-   d="scan'208";a="166982760"
+X-IronPort-AV: E=Sophos;i="6.01,183,1684767600"; 
+   d="scan'208";a="170615173"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:12 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 05 Jul 2023 20:46:13 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id A4E6B400C458;
-        Wed,  5 Jul 2023 20:46:12 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 6ECD6400C45C;
+        Wed,  5 Jul 2023 20:46:13 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
         lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
@@ -29,11 +29,10 @@ To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
 Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Subject: [PATCH v17 08/20] PCI: dwc: Add dw_pcie_link_set_max_link_width()
-Date:   Wed,  5 Jul 2023 20:41:54 +0900
-Message-Id: <20230705114206.3585188-9-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v17 13/20] PCI: dwc: Introduce .ep_pre_init() and .ep_deinit()
+Date:   Wed,  5 Jul 2023 20:41:59 +0900
+Message-Id: <20230705114206.3585188-14-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com>
@@ -43,116 +42,56 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-To improve code readability, add dw_pcie_link_set_max_link_width().
+Renesas R-Car Gen4 PCIe controllers require vender-specific
+initialization before .ep_init(). To use dw->dbi and dw->num-lanes
+in the initialization code, introduce .ep_pre_init() into struct
+dw_pcie_ep_ops. Also introduce .ep_deinit() to disable the controller
+by using vender-specific de-initialization.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 86 ++++++++++----------
- 1 file changed, 41 insertions(+), 45 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 6 ++++++
+ drivers/pci/controller/dwc/pcie-designware.h    | 2 ++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index a531dc50abea..7b720bad7656 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -728,6 +728,46 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 14c641395c3b..52b3e7f67513 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -684,6 +684,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct pci_epc *epc = ep->epc;
  
- }
++	if (ep->ops->ep_deinit)
++		ep->ops->ep_deinit(ep);
++
+ 	dw_pcie_edma_remove(pci);
  
-+static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
-+{
-+	u32 lwsc, plc;
-+
-+	if (!num_lanes)
-+		return;
-+
-+	/* Set the number of lanes */
-+	plc = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
-+	plc &= ~PORT_LINK_FAST_LINK_MODE;
-+	plc &= ~PORT_LINK_MODE_MASK;
-+
-+	/* Set link width speed control register */
-+	lwsc = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	lwsc &= ~PORT_LOGIC_LINK_WIDTH_MASK;
-+	switch (num_lanes) {
-+	case 1:
-+		plc |= PORT_LINK_MODE_1_LANES;
-+		lwsc |= PORT_LOGIC_LINK_WIDTH_1_LANES;
-+		break;
-+	case 2:
-+		plc |= PORT_LINK_MODE_2_LANES;
-+		lwsc |= PORT_LOGIC_LINK_WIDTH_2_LANES;
-+		break;
-+	case 4:
-+		plc |= PORT_LINK_MODE_4_LANES;
-+		lwsc |= PORT_LOGIC_LINK_WIDTH_4_LANES;
-+		break;
-+	case 8:
-+		plc |= PORT_LINK_MODE_8_LANES;
-+		lwsc |= PORT_LOGIC_LINK_WIDTH_8_LANES;
-+		break;
-+	default:
-+		dev_err(pci->dev, "num-lanes %u: invalid value\n", num_lanes);
-+		return;
-+	}
-+	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
-+}
-+
- void dw_pcie_iatu_detect(struct dw_pcie *pci)
- {
- 	int max_region, ob, ib;
-@@ -1009,49 +1049,5 @@ void dw_pcie_setup(struct dw_pcie *pci)
- 	val |= PORT_LINK_DLL_LINK_EN;
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
+ 	if (ep->intx_mem)
+@@ -797,6 +800,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	ep->phys_base = res->start;
+ 	ep->addr_size = resource_size(res);
  
--	if (!pci->num_lanes) {
--		dev_dbg(pci->dev, "Using h/w default number of lanes\n");
--		return;
--	}
--
--	/* Set the number of lanes */
--	val &= ~PORT_LINK_FAST_LINK_MODE;
--	val &= ~PORT_LINK_MODE_MASK;
--	switch (pci->num_lanes) {
--	case 1:
--		val |= PORT_LINK_MODE_1_LANES;
--		break;
--	case 2:
--		val |= PORT_LINK_MODE_2_LANES;
--		break;
--	case 4:
--		val |= PORT_LINK_MODE_4_LANES;
--		break;
--	case 8:
--		val |= PORT_LINK_MODE_8_LANES;
--		break;
--	default:
--		dev_err(pci->dev, "num-lanes %u: invalid value\n", pci->num_lanes);
--		return;
--	}
--	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
--
--	/* Set link width speed control register */
--	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
--	switch (pci->num_lanes) {
--	case 1:
--		val |= PORT_LOGIC_LINK_WIDTH_1_LANES;
--		break;
--	case 2:
--		val |= PORT_LOGIC_LINK_WIDTH_2_LANES;
--		break;
--	case 4:
--		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
--		break;
--	case 8:
--		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
--		break;
--	}
--	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
-+	dw_pcie_link_set_max_link_width(pci, pci->num_lanes);
- }
++	if (ep->ops->ep_pre_init)
++		ep->ops->ep_pre_init(ep);
++
+ 	dw_pcie_version_detect(pci);
+ 
+ 	dw_pcie_iatu_detect(pci);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 6821446d7c66..c3aeafd0f4c9 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -332,7 +332,9 @@ struct dw_pcie_rp {
+ };
+ 
+ struct dw_pcie_ep_ops {
++	void	(*ep_pre_init)(struct dw_pcie_ep *ep);
+ 	void	(*ep_init)(struct dw_pcie_ep *ep);
++	void	(*ep_deinit)(struct dw_pcie_ep *ep);
+ 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
+ 			     enum pci_epc_irq_type type, u16 interrupt_num);
+ 	const struct pci_epc_features* (*get_features)(struct dw_pcie_ep *ep);
 -- 
 2.25.1
 
