@@ -2,307 +2,152 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F4A5EB64DC
-	for <linux-pci@archiver.kernel.org>; Sun,  9 Jul 2023 14:46:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA29EB64DD
+	for <linux-pci@archiver.kernel.org>; Sun,  9 Jul 2023 19:00:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229943AbjGIOqx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 9 Jul 2023 10:46:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44002 "EHLO
+        id S229481AbjGITAj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 9 Jul 2023 15:00:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjGIOqw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jul 2023 10:46:52 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D986120
-        for <linux-pci@vger.kernel.org>; Sun,  9 Jul 2023 07:46:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1688913964;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rc5pEAkZCy2ECM6uSNrjq0WgYGvE6IB/Rm8veJW6Wi4=;
-        b=KxQD2+6dGpsfQpJcN5KMzLE2Jrnd6xU6YARY2/L37Qf+WCZK0HtjLI/yKLL4665oqYt8RK
-        22+naFM8NvWM60CCAJiGLEZD496r8FSVRGrPvFSKL1P4CpErp0S3CrBInkHYgCjcQSLj0T
-        vo28U3f1QFI2Kwr6oK1afDvc4Hh+VkI=
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com
- [209.85.222.199]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-14-6waJYl3DOGylirob8I0oug-1; Sun, 09 Jul 2023 10:46:02 -0400
-X-MC-Unique: 6waJYl3DOGylirob8I0oug-1
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-765986c0521so316997185a.3
-        for <linux-pci@vger.kernel.org>; Sun, 09 Jul 2023 07:46:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1688913962; x=1691505962;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:reply-to:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=rc5pEAkZCy2ECM6uSNrjq0WgYGvE6IB/Rm8veJW6Wi4=;
-        b=G3QMSZt8Zo62DQbptuZ6ovy3XHBTWSOAa5o/H+ziYu4I16xo5fQqVkD9li7LUk4Uuh
-         bFbQ/N96XNfRU4HoGJ0oYOQ8YitaFstHLEQtyzpSSU7AY8mTT8yi9k05CX9HSeTtHPdF
-         kV1VWV2UdzZjA5zdUur4Bpuc5hXtnJ1KxFypPc3YlhWFQae8JrFodpQVbTqO7Q5WY42j
-         D+cqTnTAih9Vj4N8+k6UHb/h08k+J7NzrEbTt8Y+q/4vVKjJs5fxwTcERi4ZC4JXQGj/
-         sVXYqXGihUs4Vm9xDm7Tx+Wlc0HIRuDHt3Q/nn2ECWpSS74RIlYcY2+p96ib7qQhQk4Z
-         KGaQ==
-X-Gm-Message-State: ABy/qLbGpARbz36EGZINXJEk35wfxdqALePGulw4rm4vykJs2Nk0AiGQ
-        /GOpCl97K9z7AIdrgejimGe6gx6WPOjyAKTgP4fvcC6XdzWreupPKmKLUb6y9fLp62BNxebNPTi
-        BrrPV+oqZcRT3NKABXLcv
-X-Received: by 2002:a05:622a:164d:b0:401:e0b4:a946 with SMTP id y13-20020a05622a164d00b00401e0b4a946mr10017013qtj.8.1688913962274;
-        Sun, 09 Jul 2023 07:46:02 -0700 (PDT)
-X-Google-Smtp-Source: APBJJlGRaBEWc4t/nDfFSIRPOg2LQmoIdo+hOeGApPhQxZlQKyqMGftaOW+iWs0nJmA8oPuS/rZ1Tg==
-X-Received: by 2002:a05:622a:164d:b0:401:e0b4:a946 with SMTP id y13-20020a05622a164d00b00401e0b4a946mr10016996qtj.8.1688913961912;
-        Sun, 09 Jul 2023 07:46:01 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:59e:9d80:527b:9dff:feef:3874? ([2a01:e0a:59e:9d80:527b:9dff:feef:3874])
-        by smtp.gmail.com with ESMTPSA id bq22-20020a05622a1c1600b003f364778b2bsm3961935qtb.4.2023.07.09.07.45.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 09 Jul 2023 07:46:01 -0700 (PDT)
-Message-ID: <ea62fb9c-2ca2-ec03-6dbd-ff853930eb47@redhat.com>
-Date:   Sun, 9 Jul 2023 16:45:58 +0200
+        with ESMTP id S229450AbjGITAi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jul 2023 15:00:38 -0400
+Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam04on2079.outbound.protection.outlook.com [40.107.101.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5EE40128;
+        Sun,  9 Jul 2023 12:00:37 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=h11nbn2CzIrfzx0fe49tX5Kqj24mWfaY19yXG48FQ8GUVtbDFhV/M403dNoQTqs6D+x7bNKA2Y0JpJ2Cnh1Rn15LpeVoez2n5pMItyg7MT9zqvW31R/y/I07sE7VtpaL2PUqiDfZ0RSX4QWkJ1/ehfEanuQhH5oWXLkbr/myktoY4LnOZwbijPJvL+KB/m5h7ER+GaJyy+JAfFvryA/HYITPzAADzIV/NMpzvFma/FzjJOPmAIYrMWytwWtGPpUyQZk1WSKGqu85x2BPGXCnug/lDVlZWHttJDGy8d/0IleuGb0Ez5QkOvtdgCn/D/g2T5byR2NTJePingfvz8ZPig==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=hevWxkLHIDjLd6V3Vug2xDLsaqM8IxPfJVj9nulxmo0=;
+ b=Q0kooEagauFEUxECqArmX0gqH26qHaa8aiOPQV1JswL7hRzUkEoUjRJnv2Q8eibVvfQh5lkToNDNxOLkKNVcxY9dPZvTO7OV4GvjUo6N2JT+AoOvj6c5h4NfICKrOJ93b7PKizqJ6YfQ4F8lm1xAb/AWuS1AhhL7XDbpTBT/B1t2SNp+51Dx7RoW8HarY7Tv8fFFCbQh0LZxPYOvsN6M18FXDTWMm0txzWZgyVwyw5YtKbnv5jnc1dTPiTt6bCRLuGloOri51gZzQCOuJj2WNbi19K93vsGqqWF3rBoEfoL4ZkgkOA2X5KhlnUboB0IY0pfeDtVQLgT7CzxRs/gXeA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hevWxkLHIDjLd6V3Vug2xDLsaqM8IxPfJVj9nulxmo0=;
+ b=RjnBiY8jgga+HBsQC2UFqiqpEFoNOnVCZom3LC0HmhxB7NwaBZlbvzb/xU+JAIRFdlsIGlKq6qgMUHWqkwSg3wmIZGVGFcjnNBmyKFWxhIPlBDUOzZ/8jj8SvXCxDU+wE3ta4zFy+RsDxSeu/Rv+0q6SdCvY99NSksPJO/8JQFk=
+Received: from BN0PR03CA0032.namprd03.prod.outlook.com (2603:10b6:408:e7::7)
+ by DS0PR12MB7971.namprd12.prod.outlook.com (2603:10b6:8:14e::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.26; Sun, 9 Jul
+ 2023 19:00:34 +0000
+Received: from BN8NAM11FT030.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:408:e7:cafe::d0) by BN0PR03CA0032.outlook.office365.com
+ (2603:10b6:408:e7::7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6565.30 via Frontend
+ Transport; Sun, 9 Jul 2023 19:00:34 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BN8NAM11FT030.mail.protection.outlook.com (10.13.177.146) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6588.18 via Frontend Transport; Sun, 9 Jul 2023 19:00:34 +0000
+Received: from SITE-L-T34-2.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Sun, 9 Jul
+ 2023 14:00:33 -0500
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Len Brown <lenb@kernel.org>, <linux-acpi@vger.kernel.org>,
+        Mario Limonciello <mario.limonciello@amd.com>,
+        <stable@vger.kernel.org>, Iain Lane <iain@orangesquash.org.uk>
+Subject: [PATCH v6 1/1] PCI: Avoid putting some root ports into D3 on some Ryzen chips
+Date:   Sat, 8 Jul 2023 16:44:57 -0500
+Message-ID: <20230708214457.1229-2-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230708214457.1229-1-mario.limonciello@amd.com>
+References: <20230708214457.1229-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.5.0
-Reply-To: eric.auger@redhat.com
-Subject: Re: [PATCH] PCI/VPD: Add runtime power management to sysfs interface
-Content-Language: en-US
-To:     Alex Williamson <alex.williamson@redhat.com>
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20230707151044.1311544-1-alex.williamson@redhat.com>
- <08e455b0-31a6-b379-ba8b-b9a2c0962e22@redhat.com>
- <20230709072632.30c09f1e.alex.williamson@redhat.com>
-From:   Eric Auger <eric.auger@redhat.com>
-In-Reply-To: <20230709072632.30c09f1e.alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN8NAM11FT030:EE_|DS0PR12MB7971:EE_
+X-MS-Office365-Filtering-Correlation-Id: c662de27-856d-4358-3af4-08db80aec690
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: RslJRpSo0vjx1GOpY4NPDe6Lby1ra7Ux+kaTiZd2q0LVShtxoDkuCpxlrCycY5pGnkpUIThZfA9q/GLiMSoyMc68ooiRK2scMU9gZV+aJsSp95hvNZq46enXPCk8u+9IIBrtuvhQ8xdx9ylu8AkbUFRl+CAY59Jo6++Oa5P20nkENAmIzr3+lvTERHKK664SJgV//xU+vZ8S78wNxBR1zHamtnTh7lN/LhTD0tiP/IM46UBnH07dRAQr+91EXsk5+3Vv7SQQRhrpZroUJOfOROACQK0Snp3VPjjb9lDTNaNZ0DhZgUBWd8E5euqjQwi/yGMsdXTIg2ysfZKD9pPN/mJINXp+bBUXORvd+M8gpnGNxzu7C8AEoj2yBqXdaRCYJtUbwByzUS5Dij8q6mYuRbjpE/+MXFG9M3n65lhYSLg0ObvyzhCagzBu3Ke4jF8x7FXZMd0e+tT3+qA1+cg10kywAiapLl6sW3dQseqnLI0yAZ0QePUZXZYIIdBC+a1qQZ4fYShN46BZO+GjyhrE1+m5Et5YauU8Rxvl1VpH3YTSzrn11grczVQb+qGEwlVc9q6ozDSdgbDeMiY+AGvi+m0Fq7YgYsdfzDP7+wlEVwq5nR1dQD/0BSmx8q7ihO5bnq+v3gj+/YVvNc/XaEtQw4JwOD7Egv+/ytqRtXyGqEKvK1XYkuF+va86k4xNHJ0CxhkVVbeNJmTSabQArfRQei8HhZS97h1AFYU9O7N49xWkGVukgrtdnjHZHLg5P7Xa
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(396003)(136003)(346002)(376002)(39860400002)(451199021)(46966006)(36840700001)(40470700004)(40460700003)(4326008)(16526019)(186003)(26005)(1076003)(70206006)(70586007)(5660300002)(41300700001)(8676002)(8936002)(478600001)(110136005)(316002)(54906003)(82740400003)(86362001)(81166007)(356005)(44832011)(47076005)(36756003)(7696005)(36860700001)(966005)(6666004)(2906002)(40480700001)(336012)(2616005)(83380400001)(82310400005)(426003)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2023 19:00:34.6594
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: c662de27-856d-4358-3af4-08db80aec690
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT030.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB7971
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Alex,
+commit 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
+sets the policy that all PCIe ports are allowed to use D3.  When
+the system is suspended if the port is not power manageable by the
+platform and won't be used for wakeup via a PME this sets up the
+policy for these ports to go into D3hot.
 
-On 7/9/23 15:26, Alex Williamson wrote:
-> On Sun, 9 Jul 2023 13:50:35 +0200
-> Eric Auger <eric.auger@redhat.com> wrote:
->
->> Hi Alex,
->>
->> On 7/7/23 17:10, Alex Williamson wrote:
->>> Unlike default access to config space through sysfs, the vpd read and
->>> write function don't actively manage the runtime power management state
->>> of the device during access.  Since commit 7ab5e10eda02 ("vfio/pci: Move
->>> the unused device into low power state with runtime PM"), the vfio-pci
->>> driver will use runtime power management and release unused devices to
->>> make use of low power states.  Attempting to access VPD information in
->>> this low power state can result in incorrect information or kernel
->>> crashes depending on the system behavior.
->>>
->>> Wrap the vpd read/write bin attribute handlers in runtime PM and take
->>> into account the potential quirk to select the correct device to wake.  
->> This much improved the situation as it is more difficult to hit the
->> issue. Unfortunately after tens of attempts I was still able to hit a
->> kernel crash. The console output does not mention the VPD anymore but
->> PCI power management events (PME).
-> Does combining this with an extended D3hot wakeup for the device make
-> any difference, such as a5a6dd262469 ("PCI/PM: Extend D3hot delay for
-> NVIDIA HDA controllers")?  Thanks,
-I added
+This policy generally makes sense from an OSPM perspective but it leads
+to problems with wakeup from suspend on laptops with AMD chips:
 
-static void quirk_qlogic_nic_pm(struct pci_dev *dev)
-{
-        dev_info(&dev->dev, "****** %s", __func__);
-        quirk_d3hot_delay(dev, 20);
-}
-DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_QLOGIC, PCI_ANY_ID,
-                              PCI_CLASS_NETWORK_ETHERNET, 8,
-                              quirk_qlogic_nic_pm)
+- On family 19h model 44h (PCI 0x14b9) this manifests as a missing wakeup
+  interrupt.
+- On family 19h model 74h (PCI 0x14eb) this manifests as a system hang.
 
-and checked it was called, but I can still hit after 10's of iterations
+Add a quirk for the PCI device ID used by the problematic root port on
+both chips to ensure that these root ports are not put into D3hot at
+suspend.
 
-[  152.788557] Modules linked in: xt_CHECKSUM xt_MASQUERADE xt_conntrack
-ipt_REJECT nf_reject_ipv4 nft_compat nft_chain_nat nf_nat nf_conntrack
-nf_defrag_ipv6 nf_defrag_ipv4 nf
-_tables nfnetlink rpcsec_gss_krb5 nfsv4 dns_resolver nfs fscache netfs
-bridge stp llc rfkill vfat fat qedr ib_uverbs vfio_pci ib_core
-vfio_pci_core vfio_iommu_type1 crct10dif_c
-e ghash_ce vfio i2c_smbus sha1_ce ipmi_ssif ipmi_devintf nfsd
-ipmi_msghandler thunderx2_pmu auth_rpcgss nfs_acl lockd grace sunrpc
-ip_tables xfs libcrc32c sg ixgbevf ast drm_km
-s_helper qede i2c_algo_bit drm_shmem_helper qed drm ixgbe e1000e mpt3sas
-nvme nvme_core sha2_ce sha256_arm64 raid_class scsi_transport_sas
-nvme_common crc8 mdio gpio_xlp i2c_xl
-p9xx dm_mirror dm_region_hash dm_log dm_mod fuse
-[  152.854119] CPU: 112 PID: 1416 Comm: kworker/112:7 Not tainted
-6.4.0-vpd-upstream+ #57
-[  152.862024] Hardware name: GIGABYTE R181-T90-00/MT91-FS1-00, BIOS F34
-08/13/2020
-[  152.869406] Workqueue: events_freezable pci_pme_list_scan
-[  152.874810] pstate: 604000c9 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS
-BTYPE=--)
-[  152.881760] pc : pci_generic_config_read+0x64/0xd8
-[  152.886549] lr : pci_generic_config_read+0x28/0xd8
-[  152.891328] sp : ffff80008cb23cb0
-[  152.894630] x29: ffff80008cb23cb0 x28: 0000000000000000 x27:
-0000000000000000
-[  152.901756] x26: 0000000000000000 x25: 0000000000000001 x24:
-ffff80008cb23d76
-[  152.908881] x23: ffff000806331800 x22: 0000000000000044 x21:
-ffff80008232d4c8
-[  152.916006] x20: ffff80008cb23d24 x19: 0000000000000002 x18:
-0000000000000000
-[  152.923130] x17: 0000000000000000 x16: 0000000000000000 x15:
-0000000000000001
-[  152.930255] x14: ffffffffffffffff x13: 0000000000000000 x12:
-0101010101010101
-[  152.937379] x11: 7f7f7f7f7f7f7f7f x10: fefefefefefefeff x9 :
-ffff8000807b3938
-[  152.944504] x8 : fefefefefefefeff x7 : 0000000000000018 x6 :
-000000000000007f
-[  152.951628] x5 : 0000000000000000 x4 : ffff800090000000 x3 :
-0000000000000000
-[  152.958752] x2 : 0000000000000044 x1 : 0000000000c01044 x0 :
-ffff800090c01044
-[  152.965878] Call trace:
-[  152.968312]  pci_generic_config_read+0x64/0xd8
-[  152.972745]  pci_bus_read_config_word+0x84/0xe8
-[  152.977264]  pci_read_config_word+0x30/0x50
-[  152.981435]  pci_check_pme_status+0x70/0xa8
-[  152.985606]  pci_pme_list_scan+0x84/0x158
-[  152.989604]  process_one_work+0x1ec/0x488
-[  152.993616]  worker_thread+0x48/0x400
-[  152.997267]  kthread+0x10c/0x120
-[  153.000492]  ret_from_fork+0x10/0x20
-[  153.004063] Code: 52800000 a94153f3 a8c27bfd d65f03c0 (79400000)
-[  153.010146] ---[ end trace 0000000000000000 ]---
-[  153.014751] Kernel panic - not syncing: synchronous external abort:
-Fatal exception
-[  153.022395] SMP: stopping secondary CPUs
-[  154.081107] SMP: failed to stop secondary CPUs 112,194
-[  154.086236] Kernel Offset: 0x190000 from 0xffff800080000000
-[  154.091796] PHYS_OFFSET: 0x80000000
-[  154.095272] CPU features: 0x01800000,0a0140a1,08004203
-[  154.100398] Memory Limit: none
-[  154.103440] ---[ end Kernel panic - not syncing: synchronous external
-abort: Fatal exception ]---
+Cc: stable@vger.kernel.org # 6.1+
+Reported-by: Iain Lane <iain@orangesquash.org.uk>
+Closes: https://forums.lenovo.com/t5/Ubuntu/Z13-can-t-resume-from-suspend-with-external-USB-keyboard/m-p/5217121
+Fixes: 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/pci/quirks.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-
-Eric
-
-
-
->
-> Alex
->
->  
->> [  168.616700] CPU: 0 PID: 1409 Comm: kworker/0:5 Not tainted
->> 6.4.0-vpd-upstream+ #56
->> [  168.624257] Hardware name: GIGABYTE R181-T90-00/MT91-FS1-00, BIOS F34
->> 08/13/2020
->> [  168.631639] Workqueue: events_freezable pci_pme_list_scan
->> [  168.637032] pstate: 604000c9 (nZCv daIF +PAN -UAO -TCO -DIT -SSBS
->> BTYPE=--)
->> [  168.643982] pc : pci_generic_config_read+0x64/0xd8
->> [  168.648763] lr : pci_generic_config_read+0x28/0xd8
->> [  168.653542] sp : ffff80008caebcb0
->> [  168.656844] x29: ffff80008caebcb0 x28: 0000000000000000 x27:
->> 0000000000000000
->> [  168.663969] x26: 0000000000000000 x25: 0000000000000000 x24:
->> ffff80008caebd76
->> [  168.671094] x23: ffff0008063fd800 x22: 0000000000000044 x21:
->> ffff80008232d4c8
->> [  168.678218] x20: ffff80008caebd24 x19: 0000000000000002 x18:
->> 00000000000040fc
->> [  168.685342] x17: 00000000000040f8 x16: 0000000000000000 x15:
->> 0000000000000001
->> [  168.692466] x14: ffffffffffffffff x13: 0000000000000000 x12:
->> 0101010101010101
->> [  168.699590] x11: 7f7f7f7f7f7f7f7f x10: fefefefefefefeff x9 :
->> ffff8000807b3938
->> [  168.706714] x8 : fefefefefefefeff x7 : 0000000000000018 x6 :
->> 000000000000007f
->> [  168.713838] x5 : 0000000000000000 x4 : ffff800090000000 x3 :
->> 0000000000000000
->> [  168.720962] x2 : 0000000000000044 x1 : 0000000000c00044 x0 :
->> ffff800090c00044
->> [  168.728086] Call trace:
->> [  168.730520]  pci_generic_config_read+0x64/0xd8
->> [  168.734953]  pci_bus_read_config_word+0x84/0xe8
->> [  168.739471]  pci_read_config_word+0x30/0x50
->> [  168.743642]  pci_check_pme_status+0x70/0xa8
->> [  168.747813]  pci_pme_list_scan+0x84/0x158
->> [  168.751811]  process_one_work+0x1ec/0x488
->> [  168.755810]  worker_thread+0x48/0x400
->> [  168.759461]  kthread+0x10c/0x120
->> [  168.762678]  ret_from_fork+0x10/0x20
->> [  168.766245] Code: 52800000 a94153f3 a8c27bfd d65f03c0 (79400000)
->> [  168.772326] ---[ end trace 0000000000000000 ]---
->> [  168.776931] Kernel panic - not syncing: synchronous external abort:
->> Fatal exception
->> [  168.784574] SMP: stopping secondary CPUs
->> [  169.831001] SMP: failed to stop secondary CPUs 0,199
->> [  169.835955] Kernel Offset: 0x190000 from 0xffff800080000000
->>
->>
->> Thanks
->>
->> Eric
->>> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
->>> ---
->>>  drivers/pci/vpd.c | 34 ++++++++++++++++++++++++++++++++--
->>>  1 file changed, 32 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
->>> index a4fc4d0690fe..81217dd4789f 100644
->>> --- a/drivers/pci/vpd.c
->>> +++ b/drivers/pci/vpd.c
->>> @@ -275,8 +275,23 @@ static ssize_t vpd_read(struct file *filp, struct kobject *kobj,
->>>  			size_t count)
->>>  {
->>>  	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
->>> +	struct pci_dev *vpd_dev = dev;
->>> +	ssize_t ret;
->>> +
->>> +	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
->>> +		vpd_dev = pci_get_func0_dev(dev);
->>> +		if (!vpd_dev)
->>> +			return -ENODEV;
->>> +	}
->>> +
->>> +	pci_config_pm_runtime_get(vpd_dev);
->>> +	ret = pci_read_vpd(vpd_dev, off, count, buf);
->>> +	pci_config_pm_runtime_put(vpd_dev);
->>> +
->>> +	if (dev != vpd_dev)
->>> +		pci_dev_put(vpd_dev);
->>>  
->>> -	return pci_read_vpd(dev, off, count, buf);
->>> +	return ret;
->>>  }
->>>  
->>>  static ssize_t vpd_write(struct file *filp, struct kobject *kobj,
->>> @@ -284,8 +299,23 @@ static ssize_t vpd_write(struct file *filp, struct kobject *kobj,
->>>  			 size_t count)
->>>  {
->>>  	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
->>> +	struct pci_dev *vpd_dev = dev;
->>> +	ssize_t ret;
->>> +
->>> +	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0) {
->>> +		vpd_dev = pci_get_func0_dev(dev);
->>> +		if (!vpd_dev)
->>> +			return -ENODEV;
->>> +	}
->>> +
->>> +	pci_config_pm_runtime_get(vpd_dev);
->>> +	ret = pci_write_vpd(vpd_dev, off, count, buf);
->>> +	pci_config_pm_runtime_put(vpd_dev);
->>> +
->>> +	if (dev != vpd_dev)
->>> +		pci_dev_put(vpd_dev);
->>>  
->>> -	return pci_write_vpd(dev, off, count, buf);
->>> +	return ret;
->>>  }
->>>  static BIN_ATTR(vpd, 0600, vpd_read, vpd_write, 0);
->>>    
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 321156ca273d5..e0346073e5855 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3867,6 +3867,22 @@ static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL,
+ 			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+ 			       quirk_apple_poweroff_thunderbolt);
++
++/*
++ * Putting PCIe root ports on Ryzen SoCs with USB4 controllers into D3hot
++ * may cause problems when the system attempts wake up from s2idle.
++ *
++ * On family 19h model 44h (PCI 0x14b9) this manifests as a missing wakeup
++ * interrupt.
++ * On family 19h model 74h (PCI 0x14eb) this manifests as a system hang.
++ */
++static void quirk_ryzen_rp_d3(struct pci_dev *pdev)
++{
++	if (!acpi_pci_power_manageable(pdev))
++		pdev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x14b9, quirk_ryzen_rp_d3);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x14eb, quirk_ryzen_rp_d3);
+ #endif
+ 
+ /*
+-- 
+2.34.1
 
