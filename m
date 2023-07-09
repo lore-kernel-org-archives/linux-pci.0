@@ -2,125 +2,197 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D502AC001DE
-	for <linux-pci@archiver.kernel.org>; Fri,  7 Jul 2023 15:12:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 685E0EB64DC
+	for <linux-pci@archiver.kernel.org>; Sun,  9 Jul 2023 09:20:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232617AbjGGPMU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 7 Jul 2023 11:12:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51758 "EHLO
+        id S230082AbjGIJUO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 9 Jul 2023 05:20:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233352AbjGGPMR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jul 2023 11:12:17 -0400
+        with ESMTP id S229494AbjGIJUN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jul 2023 05:20:13 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E268213C;
-        Fri,  7 Jul 2023 08:12:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54646B8;
+        Sun,  9 Jul 2023 02:20:12 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BE619619D3;
-        Fri,  7 Jul 2023 15:12:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7BDAC433C8;
-        Fri,  7 Jul 2023 15:12:10 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D090560B95;
+        Sun,  9 Jul 2023 09:20:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 324E6C433C9;
+        Sun,  9 Jul 2023 09:20:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688742731;
-        bh=Ya0LfXrJm2rcUDVejC5YdLCrCcxE/mUzk/Zqpcvn0TI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=FitX0YVhEKf14hYzYIjYke+cBCO98TDEt32PMkOsaT/udyzSouFno+mb6mSFyXXcM
-         27Qe6wy4y3zrlvCH2j+hQMCykLwg8DS0zy0wW968EMHOvNtH6AXv3Ib+4htPbKsMJJ
-         tsFuvtoxiFfobvUdw4JVQG1syV8Rgx0vgPxmWuEcejrtUGRHs3d66znDOBPhhovb8x
-         +e4505LaicY8G9K8WZqJ+3FrrsE5c3LRfeem9XC4CHQh8fN+shOLFflhcJe+eJoB2s
-         IyfUPrPyrwmVWpVYleW48JQqDNFdZmvrWKJGaAN0xdFBXY/WBGi393Ne6KmSzNxmEz
-         4g6EBVLyh6Iiw==
-Date:   Fri, 7 Jul 2023 10:12:09 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Dan Carpenter <dan.carpenter@linaro.org>
-Cc:     Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        manivannan.sadhasivam@linaro.org, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        quic_vbadigan@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_skananth@quicinc.com, quic_ramkri@quicinc.com,
-        krzysztof.kozlowski@linaro.org,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Jeffrey Hugo <quic_jhugo@quicinc.com>,
-        Bo Liu <liubo03@inspur.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Carpenter <error27@gmail.com>,
-        "open list:MHI BUS" <mhi@lists.linux.dev>
-Subject: Re: [PATCH v3 9/9] bus: mhi: ep: wake up host is the MHI state is in
- M3
-Message-ID: <20230707151209.GA139708@bhelgaas>
+        s=k20201202; t=1688894411;
+        bh=VG+B59vQ3VEnkB+utkmYw7yH2sF0ifQ8bgRSUsIRrD4=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=giPC6nD8Iw48PL9IvQU6ZlfTc/BvgX+J1y3vztdJaRELuMvhj2UZZzaEwcRW2IBGh
+         ukKZiZteXeH2EkWAM67gGtt3bpksR1dJr89s14rJoibbXQHP6b84pGggH4gZhS6xG4
+         C60m1ot+V5NsoG7FPRuSWV/pS97WgG+okbEffbxj32BAEkz6tlyo6CtVbuOCzhoOuD
+         EqoxxUKMsOD2n1dbbkGUlWTPjWUt5h3+e5IFoEOn2Fnb9drZDhZr0zNEj2XCBt7jCV
+         bCD7zoEL+0IOq8ZqEnVKFv1XVXLjQE4Y0XV9DBEwrLN609WLkKTKto7jsAP3DEdWbV
+         On6dg6t5i0nDA==
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-51e56749750so269921a12.0;
+        Sun, 09 Jul 2023 02:20:11 -0700 (PDT)
+X-Gm-Message-State: ABy/qLYovaT2CSfyCwqNKp3jhf7zv/0dyAt8yQGaoMRxxPOW1PzlghR8
+        2jjtUZlTl96rmcYu1yLGJi1K0MDwf4wsJDQC748=
+X-Google-Smtp-Source: APBJJlExm8T9L2cQk2V06VYJo7Ahe9vTilfZXIMQGDzfjxB9UrSfHkE/BZ68TpSdKojhk/SWFAEPTkZnWsHxiToKxCw=
+X-Received: by 2002:aa7:c7d7:0:b0:51d:acda:2f4a with SMTP id
+ o23-20020aa7c7d7000000b0051dacda2f4amr256334eds.37.1688894409342; Sun, 09 Jul
+ 2023 02:20:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <05b4d009-b50b-4971-9220-615f73db4acd@kadam.mountain>
+References: <20230619014715.3792883-1-maobibo@loongson.cn> <f676d9e0-bb88-283a-5189-f1ae945ee4dd@loongson.cn>
+ <bdc6eb71-482d-5dd6-d527-c2f2f68dfb38@loongson.cn>
+In-Reply-To: <bdc6eb71-482d-5dd6-d527-c2f2f68dfb38@loongson.cn>
+From:   Huacai Chen <chenhuacai@kernel.org>
+Date:   Sun, 9 Jul 2023 17:19:57 +0800
+X-Gmail-Original-Message-ID: <CAAhV-H7_Rjv-ySorjbw0f4OiV4J0-N75fmUNBCmeJbeeydJu4Q@mail.gmail.com>
+Message-ID: <CAAhV-H7_Rjv-ySorjbw0f4OiV4J0-N75fmUNBCmeJbeeydJu4Q@mail.gmail.com>
+Subject: Re: [PATCH v5] PCI: Align pci memory space base address with page size
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Huacai Chen <chenhuacai@kernel.org>
+Cc:     Will Deacon <will@kernel.org>, loongson-kernel@lists.loongnix.cn,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        loongarch@lists.linux.dev, Huacai Chen <chenhuacai@loongson.cn>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jul 07, 2023 at 02:41:57PM +0300, Dan Carpenter wrote:
-> On Fri, Jul 07, 2023 at 04:33:56PM +0530, Krishna chaitanya chundru wrote:
-> > If the MHI state is in M3 then the most probably the host kept the
-> > device in D3 hot or D3 cold, due to that endpoint transctions will not
-> > be read by the host, so endpoint wakes up host to bring the host to D0
-> > which eventually bring back the MHI state to M0.
-> > 
-> > Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-> > ---
-> >  drivers/bus/mhi/ep/main.c | 28 ++++++++++++++++++++++++++++
-> >  1 file changed, 28 insertions(+)
-> > 
-> > diff --git a/drivers/bus/mhi/ep/main.c b/drivers/bus/mhi/ep/main.c
-> > index 6008818..46a8a3c 100644
-> > --- a/drivers/bus/mhi/ep/main.c
-> > +++ b/drivers/bus/mhi/ep/main.c
-> > @@ -25,6 +25,27 @@ static DEFINE_IDA(mhi_ep_cntrl_ida);
-> >  static int mhi_ep_create_device(struct mhi_ep_cntrl *mhi_cntrl, u32 ch_id);
-> >  static int mhi_ep_destroy_device(struct device *dev, void *data);
-> >  
-> > +static bool mhi_ep_wake_host(struct mhi_ep_cntrl *mhi_cntrl)
-> > +{
-> > +	enum mhi_state state;
-> > +	bool mhi_reset;
-> > +	u32 count = 0;
-> > +
-> > +	mhi_cntrl->wakeup_host(mhi_cntrl);
-> > +
-> > +	/* Wait for Host to set the M0 state */
-> > +	do {
-> > +		msleep(M0_WAIT_DELAY_MS);
-> > +		mhi_ep_mmio_get_mhi_state(mhi_cntrl, &state, &mhi_reset);
-> > +		count++;
-> > +	} while (state != MHI_STATE_M0 && count < M0_WAIT_COUNT);
-> > +
-> >+	if (state != MHI_STATE_M0)
-> >+		return false;
-> 
-> Functions which return false on success are an abomination.  Also
-> boolean functions should be named for the question they answer such
-> as access_ok() or has_feature() etc.
+On Fri, Jul 7, 2023 at 10:47=E2=80=AFAM bibo mao <maobibo@loongson.cn> wrot=
+e:
+>
+> Bjourn, Hucai,
+>
+> ping again.
+>
+> The is such issue on only LoongArch system since 16K page size is used.
+>
+> Should we add code in general framework  or in LoongArch specified code
+> in v1?
+Though I still don't know why others have no problems. But it is
+surely a bug on LoongArch. So if Bjorn has no objections, please use
+the old method (just like v1 but you can simply align to page size
+unconditionally).
 
-+1.  Also nice if boolean functions do not have side effects, so in
-this case, where mhi_ep_wake_host() *does* something that might fail,
-I think "return 0 for success or negative error value" is easier to
-read.
-
-> Write it like this:
-> 
-> static int mhi_ep_wake_host(struct mhi_ep_cntrl *mhi_cntrl)
-> {
-> 	enum mhi_state state;
-> 	bool mhi_reset;
-> 	int count = 0;
-> 
-> 	mhi_cntrl->wakeup_host(mhi_cntrl);
-> 
-> 	while (count++ < M0_WAIT_COUNT) {
-> 		msleep(M0_WAIT_DELAY_MS);
-> 
-> 		mhi_ep_mmio_get_mhi_state(mhi_cntrl, &state, &mhi_reset);
-> 		if (state == MHI_STATE_M0)
-> 			return 0;
-> 	}
-> 	return -ENODEV;
-> }
+Huacai
+>
+> If you do not think that it is problem, I can give up. LoongArch system
+> is not only for myself own, I do not care about it also since LoongArch
+> Maintainer think it is not a issue.
+>
+> Regards
+> Bibo Mao
+>
+> =E5=9C=A8 2023/6/26 09:30, bibo mao =E5=86=99=E9=81=93:
+> > gentle ping.
+> >
+> > =E5=9C=A8 2023/6/19 09:47, Bibo Mao =E5=86=99=E9=81=93:
+> >> Some PCI devices have only 4K memory space size, it is normal in gener=
+al
+> >> machines and aligned with page size. However some architectures which
+> >> support different page size, default page size on LoongArch is 16K, an=
+d
+> >> ARM64 supports page size varying from 4K to 64K. On machines where lar=
+ger
+> >> page size is use, memory space region of two different pci devices may=
+ be
+> >> in one page. It is not safe with mmu protection, also VFIO pci device
+> >> driver requires base address of pci memory space page aligned, so that=
+ it
+> >> can be memory mapped to qemu user space when it is passed-through to v=
+m.
+> >>
+> >> It consumes more pci memory resource with page size alignment requirem=
+ent,
+> >> here extra option PCI_MEMRES_PAGE_ALIGN is added, it can be enabled by
+> >> different architectures, currently arm64/loongarch enable this option.
+> >>
+> >> Signed-off-by: Bibo Mao <maobibo@loongson.cn>
+> >> Reviewed-by: Huacai Chen <chenhuacai@loongson.cn>
+> >> ---
+> >> Change history
+> >> v5: enable option PCI_MEMRES_PAGE_ALIGN on arm64. Verified on LoongArc=
+h
+> >> and pass to compile on arm64 with defconfig
+> >>
+> >> v4: add extra kernel option PCI_MEMRES_PAGE_ALIGN to set memory resour=
+ce
+> >>     page aligned
+> >>
+> >> v3: move alignment requirement to generic pci code
+> >>
+> >> v2: add pci resource alignment requirement in arch specified function
+> >>     pcibios_align_resource on arm64/LoongArch platforms
+> >>
+> >> ---
+> >>  arch/arm64/Kconfig      | 1 +
+> >>  arch/loongarch/Kconfig  | 1 +
+> >>  drivers/pci/Kconfig     | 3 +++
+> >>  drivers/pci/setup-res.c | 7 +++++++
+> >>  4 files changed, 12 insertions(+)
+> >>
+> >> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> >> index 343e1e1cae10..24858bbf2b72 100644
+> >> --- a/arch/arm64/Kconfig
+> >> +++ b/arch/arm64/Kconfig
+> >> @@ -232,6 +232,7 @@ config ARM64
+> >>      select OF_EARLY_FLATTREE
+> >>      select PCI_DOMAINS_GENERIC if PCI
+> >>      select PCI_ECAM if (ACPI && PCI)
+> >> +    select PCI_MEMRES_PAGE_ALIGN if PCI
+> >>      select PCI_SYSCALL if PCI
+> >>      select POWER_RESET
+> >>      select POWER_SUPPLY
+> >> diff --git a/arch/loongarch/Kconfig b/arch/loongarch/Kconfig
+> >> index d38b066fc931..7dbde5e5b351 100644
+> >> --- a/arch/loongarch/Kconfig
+> >> +++ b/arch/loongarch/Kconfig
+> >> @@ -140,6 +140,7 @@ config LOONGARCH
+> >>      select PCI_DOMAINS_GENERIC
+> >>      select PCI_ECAM if ACPI
+> >>      select PCI_LOONGSON
+> >> +    select PCI_MEMRES_PAGE_ALIGN
+> >>      select PCI_MSI_ARCH_FALLBACKS
+> >>      select PCI_QUIRKS
+> >>      select PERF_USE_VMALLOC
+> >> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> >> index 9309f2469b41..9be5f85ff9dc 100644
+> >> --- a/drivers/pci/Kconfig
+> >> +++ b/drivers/pci/Kconfig
+> >> @@ -128,6 +128,9 @@ config PCI_LOCKLESS_CONFIG
+> >>  config PCI_BRIDGE_EMUL
+> >>      bool
+> >>
+> >> +config PCI_MEMRES_PAGE_ALIGN
+> >> +    bool
+> >> +
+> >>  config PCI_IOV
+> >>      bool "PCI IOV support"
+> >>      select PCI_ATS
+> >> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+> >> index 967f9a758923..6ad76734a670 100644
+> >> --- a/drivers/pci/setup-res.c
+> >> +++ b/drivers/pci/setup-res.c
+> >> @@ -339,6 +339,13 @@ int pci_assign_resource(struct pci_dev *dev, int =
+resno)
+> >>              return -EINVAL;
+> >>      }
+> >>
+> >> +#ifdef CONFIG_PCI_MEMRES_PAGE_ALIGN
+> >> +    /*
+> >> +     * force minimum page alignment for vfio pci usage
+> >> +     */
+> >> +    if (res->flags & IORESOURCE_MEM)
+> >> +            align =3D max_t(resource_size_t, PAGE_SIZE, align);
+> >> +#endif
+> >>      size =3D resource_size(res);
+> >>      ret =3D _pci_assign_resource(dev, resno, size, align);
+> >>
+> >
+> > _______________________________________________
+> > Loongson-kernel mailing list -- loongson-kernel@lists.loongnix.cn
+> > To unsubscribe send an email to loongson-kernel-leave@lists.loongnix.cn
+>
+>
