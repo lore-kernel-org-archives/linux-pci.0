@@ -2,139 +2,135 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0E8EB64DD
-	for <linux-pci@archiver.kernel.org>; Sun,  9 Jul 2023 19:00:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D63E0C001DE
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Jul 2023 03:22:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229658AbjGITAq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 9 Jul 2023 15:00:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59578 "EHLO
+        id S229827AbjGJDWO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 9 Jul 2023 23:22:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55602 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229450AbjGITAm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jul 2023 15:00:42 -0400
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam04on2060.outbound.protection.outlook.com [40.107.101.60])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 328BA129;
-        Sun,  9 Jul 2023 12:00:39 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HiIIGBG/y9oyuyHWrenPat37IU7GMWANIKKpU0CLkXkexDOM3zs2DsoF12apOplljorQJnYfpVPnrOpFyjJAPBJywnBjm1nzmQ2U2KJglyXBOkG4CPkgD1qAieF2ZKB9dJncDPk2TXmAQLg9pRr3hoTm8dKozB5ImcWifisYYMUlJ9B8MpZRqwTX92HQab5TufJInL+DtFtPSK/JWy3g9hgbtCr5jTtx1E/vWEtUuHLDu5EBoYpoxZnmm22n1vx8uYdQAp+9hAg+KjHD+Tdxiq+p0n+jBe2pZnU0Uos6rWDqCt1Zj1SuHzTpQ4dLdDk4b2pDOZlw/zNqcYbtQqF4MA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=+X9srVhJuN6holpbqCUTwNSIHKDhekchgWn4KggqLWQ=;
- b=dVEBJvBhNNYWIr8WtBwblm39jMBz54KKq5o3h6yTOXm1devXC00WtGrqwLdviv2RoPCclcxGNTkkwwAwiSXuW6/MbEV0lClKcU1+YwqaR5wPvA02uN0nYfUwYucXSEELKJ1516DrM9Q54zj7j+FAaS6cg5DIKnR2/HsyXSKJFFlufFUOhXX1qpXVb/lq3k+tBwx+bWlqweMVi3wt3qRvjdVTQr5caiRwjW2GyU3eiD8+M7sB7wOs6W+Crki3Qpy2v6nEyf7U67i2ekeZFxAdHWl0MZyR9py9ofAhICXk3p8LxCfWLDK+k7AfTRLVwCkeFqXYLvTwO0ZUGVfQgYupng==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+X9srVhJuN6holpbqCUTwNSIHKDhekchgWn4KggqLWQ=;
- b=XBHpjWNLBXkhT6hyebmi7bZo3q7mOUwr2gMzbslViH/sAL7gfeXKB78O2VdrsDBr1goQjaztR0g0tLCE/4jZGJCuZGA8iU/z0+TQ6+NF0u2+PbaB+l8F8KznMe3c0yXE0jCUGLGuxxMQCBRRAxl+WDpGcmeB7poC+9ZJ65q9yug=
-Received: from BN1PR13CA0013.namprd13.prod.outlook.com (2603:10b6:408:e2::18)
- by SN7PR12MB7883.namprd12.prod.outlook.com (2603:10b6:806:32b::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6521.26; Sun, 9 Jul
- 2023 19:00:34 +0000
-Received: from BN8NAM11FT115.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:e2:cafe::fa) by BN1PR13CA0013.outlook.office365.com
- (2603:10b6:408:e2::18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6588.18 via Frontend
- Transport; Sun, 9 Jul 2023 19:00:33 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BN8NAM11FT115.mail.protection.outlook.com (10.13.177.151) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6588.18 via Frontend Transport; Sun, 9 Jul 2023 19:00:33 +0000
-Received: from SITE-L-T34-2.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.23; Sun, 9 Jul
- 2023 14:00:33 -0500
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     "Rafael J . Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Len Brown <lenb@kernel.org>, <linux-acpi@vger.kernel.org>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v6 0/1] Fix suspend issues with AMD root ports
-Date:   Sat, 8 Jul 2023 16:44:56 -0500
-Message-ID: <20230708214457.1229-1-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S229743AbjGJDWN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 9 Jul 2023 23:22:13 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2670DAB;
+        Sun,  9 Jul 2023 20:22:12 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 87F9760DC5;
+        Mon, 10 Jul 2023 03:22:11 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53014C433C8;
+        Mon, 10 Jul 2023 03:22:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1688959331;
+        bh=YcxiXHNloaFRi6noZ3KfceLLhf+oYnIyVeAJVHnE0vs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QMWLUddGYqWdAaJF1R64AjEaXHV4y+/Bh/Q6kBlhDBDj9e87gXA26nB4DX+71/C/R
+         SY+pBqrHabcnv3AU5ZZV7TB6JnAk6SA8J+vVpnCjRA7Qz7iIvA5SI0XWppl/lWtm4f
+         Esiry+uzcxZ8Hdpzjb7BotPMVJiZFRGPLkDTXBxbvXpBguM88waFNnFSnOO9rQV0t7
+         b863Va21AFVJ+EPn8lofk3VKE7GZAWgL4vY8z1wIYU0hFIWaOXVQyjgW/IKbKcC+g4
+         jujn2ebHBIqCMq7quOlesT5EO6klMBq/FJ/B8rzeAFOgyr3SDgNSH5jKioU3625bjf
+         VqDM12yARNbsg==
+Date:   Mon, 10 Jul 2023 08:52:02 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Devi Priya <quic_devipriy@quicinc.com>
+Cc:     Manivannan Sadhasivam <mani@kernel.org>, agross@kernel.org,
+        andersson@kernel.org, konrad.dybcio@linaro.org,
+        lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        quic_srichara@quicinc.com, quic_sjaganat@quicinc.com,
+        quic_kathirav@quicinc.com, quic_anusha@quicinc.com,
+        quic_ipkumar@quicinc.com
+Subject: Re: [PATCH] PCI: qcom: configure the parf halt window size to 1GB
+Message-ID: <20230710032202.GA4677@thinkpad>
+References: <20230623045731.29397-1-quic_devipriy@quicinc.com>
+ <20230624062344.GE5611@thinkpad>
+ <20b7d92d-c3b8-254d-82ec-37a857397e8b@quicinc.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT115:EE_|SN7PR12MB7883:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4533be4f-3669-4aaf-dc2a-08db80aec612
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: EhO8d2ci3RRORGlVHY8p6zIToDxcs8KefFifRyVJy9NSsGrq+Wq1vhOxGaMitayOzspZ8e7e0HS0XQPi9ZzmtziKRoRcB1IQ6+oXvYv6vrbIT/F1b+TcwuVQ2mvr9EzlZJzXamQlNPLsDAO2QIBNUnER3MYf9s9J6Z2ySQH81YsAcAiFPzfYljVaEdZ7fKhJKcqKE4HPH0LuvkicM4rPHMpg2wITEnGB1B2PSCUgqySPBURF60MFC7mO6C7+SB7XqxRUaK3kYIsuTUC+NDcJqPuB1RLkB5M+NvZrUGeW+MwTxh4Hf7/s5QJ/+6uLNLQIQaN7+OMPM8yHufnUmaw+PtdxppAhoDrdPIuQqQQoIaICESPsLWTorpjygcuKFLF9xxcXy5hhAB+enJy5NifxAC7bqoHjwCLKC1BG8h/Yb8k3+kutKmz8Ug3DFdZbQioJAmcQ4+JIsHc5//92D/KmlHg2vdXX3cx/PhWh1vA35rao2jmqmU5YEbDL/Ud5b823/d8twgW98RsrP0ECnA1zcD83mikn8+C6LtShMXk62r177zdtzAvUqB+go1hKlYFwsIDsb8+o8JrbJPeBB3VGqKMERO5iyH7nBRq+T8Ovz/eYDuQordSymcu75oCKgNIwZEY1NSLqRrw0wVb0FEsOBf8nnjcnTUwzWovjSTT3NR69v4PZdH23OYNVuHeUYI2PicDrGaL5aH/Lq2e04YTSNfm8tRa35aqAiqZvHUaNYKP2NBYD86jwYascNLTj5DrRiyRn+gkX3tG2zTkMztZJfcxjPywqm02PQ2CO/GkrZfY=
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(396003)(39860400002)(136003)(346002)(376002)(451199021)(40470700004)(36840700001)(46966006)(44832011)(5660300002)(966005)(15650500001)(2906002)(16526019)(1076003)(86362001)(26005)(186003)(6666004)(82310400005)(4326008)(336012)(83380400001)(426003)(36756003)(478600001)(70206006)(2616005)(316002)(110136005)(8676002)(54906003)(8936002)(70586007)(41300700001)(7696005)(40460700003)(36860700001)(47076005)(81166007)(40480700001)(356005)(82740400003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2023 19:00:33.8221
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4533be4f-3669-4aaf-dc2a-08db80aec612
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT115.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB7883
+In-Reply-To: <20b7d92d-c3b8-254d-82ec-37a857397e8b@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Problems have been reported on AMD laptops with suspend/resume
-where particular root ports are put into D3 and then the system is unable
-to resume properly.
+On Wed, Jul 05, 2023 at 03:57:13PM +0530, Devi Priya wrote:
+> 
+> 
+> On 6/24/2023 11:53 AM, Manivannan Sadhasivam wrote:
+> > On Fri, Jun 23, 2023 at 10:27:31AM +0530, Devi Priya wrote:
+> > > Configure the ADDR_BIT_INDEX of PARF_AXI_MSTR_WR_ADDR_HALT_V2 register with
+> > > 0x1E to increase the halt window size to 1GB so that, when new inbound
+> > > posted write transactions whose address crosses 1G address range, the
+> > > controller would halt all the incoming writes until all the previous AXI
+> > > responses are received.
+> > > 
+> > 
+> > Can you explain how the value of 0x1e corresponds to 1GB window size?
+> 2^30 (0x1e) = 1G
+> > 
 
-The issue boils down to the currently selected kernel policy for root port
-behavior at suspend time:
-0) If the machine is from 2015 or later
-1) If a PCIe root port is power manageable by the platform then platform
-   will be used to determine the power state of the root port at suspend.
-2) If the PCIe root is not power manageable by the platform then the kernel
-   will check if it was configured to wakeup. 
-3) If it was, then it will be put into the deepest state that supports
-   wakeup from PME.
-4) If it wasn't, then it will be put into D3hot.
+So 0x1e selects 2^30 in the hardware? If so, please document it in the commit
+message.
 
-Earlier more general attempts [1] to fix this have been made in the past to
-change the policy so that only roots power manageable by the platform would
-be put into the appropriate power state advertised by the platform
-firmware.
+- Mani
 
-It was hyptothesized[2] that this is a general issue that affects non-AMD
-hardware as well, so I spent time to try to match it against the PCI or
-ACPI specs but I can't find anything that says how the OSPM /should behave/
-in this case.  It seems that this is up to OSPM to decide.
-
-A concern was also raised how this would affect other existing hardware
-that may not have root ports that are power manageable by the platform [3].
-I suspect that they *should* be fine as Intel reviewed and acked the
-original patch, but I have no way to prove this.
-
-This patch is a more targeted approach to workaround the issue only for the
-affected AMD hardware instead of generally changing the policy.
-
-Link: https://lore.kernel.org/linux-pci/20230530163947.230418-2-mario.limonciello@amd.com/ [1]
-Link: https://lore.kernel.org/linux-pci/ZHp45fNGuPUWPnO7@bhelgaas/ [2]
-Link: https://lore.kernel.org/linux-pci/20230607080154.GA7545@wunner.de/ [3]
-
-Mario Limonciello (1):
-  PCI: Avoid putting some root ports into D3 on some Ryzen chips
-
- drivers/pci/quirks.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+> > > Signed-off-by: Devi Priya <quic_devipriy@quicinc.com>
+> > > ---
+> > >   This patch depends on the below series which adds support for PCIe
+> > >   controllers in IPQ9574
+> > >   https://lore.kernel.org/linux-arm-msm/20230519090219.15925-1-quic_devipriy@quicinc.com/
+> > > 
+> > >   drivers/pci/controller/dwc/pcie-qcom.c | 9 +++++++++
+> > >   1 file changed, 9 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > index c7579dfa5b1c..26c40e006120 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > @@ -116,6 +116,8 @@
+> > >   /* PARF_AXI_MSTR_WR_ADDR_HALT register fields */
+> > >   #define EN					BIT(31)
+> > > +#define ADDR_BIT_INDEX				(BIT(0) | BIT(1) | BIT(2) | \
+> > > +						BIT(3) | BIT(4) | BIT(5))
+> > 
+> > GENMASK(5, 0)
+> okay
+> > 
+> > >   /* PARF_LTSSM register fields */
+> > >   #define LTSSM_EN				BIT(8)
+> > > @@ -154,6 +156,8 @@
+> > >   #define QCOM_PCIE_CRC8_POLYNOMIAL		(BIT(2) | BIT(1) | BIT(0))
+> > > +#define PARF_AXI_MSTR_WR_ADDR_HALT_WINDOW_SIZE	0x1e
+> > 
+> > GENMASK(4, 1) as these are address bits.
+> okay
+> 
+> Thanks,
+> Devi Priya
+> > 
+> > - Mani
+> > 
+> > > +
+> > >   #define QCOM_PCIE_1_0_0_MAX_CLOCKS		4
+> > >   struct qcom_pcie_resources_1_0_0 {
+> > >   	struct clk_bulk_data clks[QCOM_PCIE_1_0_0_MAX_CLOCKS];
+> > > @@ -1126,6 +1130,11 @@ static int qcom_pcie_post_init(struct qcom_pcie *pcie)
+> > >   	writel(0, pcie->parf + PARF_Q2A_FLUSH);
+> > > +	val = readl(pcie->parf + PARF_AXI_MSTR_WR_ADDR_HALT_V2);
+> > > +	val &= ~ADDR_BIT_INDEX;
+> > > +	writel(val | PARF_AXI_MSTR_WR_ADDR_HALT_WINDOW_SIZE, pcie->parf +
+> > > +			PARF_AXI_MSTR_WR_ADDR_HALT_V2);
+> > > +
+> > >   	dw_pcie_dbi_ro_wr_en(pci);
+> > >   	writel(PCIE_CAP_SLOT_VAL, pci->dbi_base + offset + PCI_EXP_SLTCAP);
+> > > -- 
+> > > 2.17.1
+> > > 
+> > 
 
 -- 
-2.34.1
-
+மணிவண்ணன் சதாசிவம்
