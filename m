@@ -2,377 +2,82 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDBC7EB64DD
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Jul 2023 16:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3ABCEB64DC
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Jul 2023 20:09:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232429AbjGKQdI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Jul 2023 12:33:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33676 "EHLO
+        id S231436AbjGKUJ3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Jul 2023 16:09:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37984 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233076AbjGKQcv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2023 12:32:51 -0400
-Received: from out-39.mta0.migadu.com (out-39.mta0.migadu.com [IPv6:2001:41d0:1004:224b::27])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D84F1738
-        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2023 09:32:39 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1689093157;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=y8NdVaa3FZD45AYepHkm5Q5aAeH2WaVtJlrYxME+SjQ=;
-        b=kl5iQB0f7CKU8byPvhzHQ3hGWDS9+QlJEt0g8lzfByZhGF4usMvhARqRJhIEdMGbB8gso6
-        brUb+32qDFuOqweZc1D0jx2AhZqXvt9t33NNSXyAZneG0QQ1xTZIb3RYXzDf9Pr83wii/t
-        6b4W0S+weX2XzLGC10W+D1BbsQfjS2s=
-From:   Sui Jingfeng <sui.jingfeng@linux.dev>
-To:     Alex Deucher <alexander.deucher@amd.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Dave Airlie <airlied@redhat.com>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        Jocelyn Falempe <jfalempe@redhat.com>,
-        Javier Martinez Canillas <javierm@redhat.com>,
-        Maxime Ripard <mripard@kernel.org>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>, Lyude Paul <lyude@redhat.com>,
+        with ESMTP id S231334AbjGKUJ2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2023 16:09:28 -0400
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4ED51722
+        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2023 13:09:20 -0700 (PDT)
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-666ecf9a081so5408247b3a.2
+        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2023 13:09:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689106160; x=1691698160;
+        h=content-transfer-encoding:content-disposition:mime-version
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=lMJwZ8kAMR/naZvtIfWHzEjIasoE6IRJi+ShdVOpKCk=;
+        b=B7F1zOor6/5pH9BTZSRyurnqZOhdK2hV5QYmlRvC9o3b1Z+K+O/MEkuDfHYOG9u3c7
+         1j7+nDfu0sWHO35gXmEUNYHs8ePzqNBtgXD15iQ9oIfjxixMILLKwwW/rtEbR1cMIMCw
+         cqPdT+EhJXces6IQ1lW+Z8m8s4Z5h890R4r4safGG6c8xnGkoCRkG8bAPZOeAx3LS4gj
+         PtfDoE8RSA6C2KiCljpl9+6rQLxDONcWBMDvzV0b3JJBbIwOd54wRYaLk7SCSKameAld
+         NWnZX/K5rt6XZ/7yiyNDyR7D66EkxlFzQq9FypXqKp5rlyhDq/4WsHXnFG2Sad5oGNeo
+         ffbQ==
+X-Gm-Message-State: ABy/qLY8lp6rdN54/K+Ocl157+3Tig1xFTuqy9qzEY3OFb4XJhBMPltv
+        WCUBLVpVGv+qcpq+CJsX5OHeGlTMz/YH2X2S
+X-Google-Smtp-Source: APBJJlEMkDJl43ARcG6lzf4hTkMzpWHfzTW2q9k9uIHW4MAlwmSP3PAeQN5hNVsYSmr1VltJAOV0Hg==
+X-Received: by 2002:a17:903:1107:b0:1b8:8af0:416f with SMTP id n7-20020a170903110700b001b88af0416fmr19728245plh.1.1689106159501;
+        Tue, 11 Jul 2023 13:09:19 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id f8-20020a170902684800b001b53953f314sm2389605pln.23.2023.07.11.13.09.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Jul 2023 13:09:18 -0700 (PDT)
+Date:   Wed, 12 Jul 2023 05:09:16 +0900
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Linux PCI <linux-pci@vger.kernel.org>
+Cc:     Alex Williamson <alex.williamson@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Helge Deller <deller@gmx.de>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, intel-gfx@lists.freedesktop.org,
-        nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        kvm@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        Sui Jingfeng <suijingfeng@loongson.cn>,
-        Pan Xinhui <Xinhui.Pan@amd.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-        Karol Herbst <kherbst@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Hawking Zhang <Hawking.Zhang@amd.com>,
-        Lijo Lazar <lijo.lazar@amd.com>,
-        YiPeng Chai <YiPeng.Chai@amd.com>,
-        Bokun Zhang <Bokun.Zhang@amd.com>,
-        Likun Gao <Likun.Gao@amd.com>,
-        Ville Syrjala <ville.syrjala@linux.intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Kevin Tian <kevin.tian@intel.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Yishai Hadas <yishaih@nvidia.com>,
-        Abhishek Sahu <abhsahu@nvidia.com>,
-        Yi Liu <yi.l.liu@intel.com>,
-        Jani Nikula <jani.nikula@intel.com>
-Subject: [PATCH v3 4/9] PCI/VGA: Improve the default VGA device selection
-Date:   Wed, 12 Jul 2023 00:31:50 +0800
-Message-Id: <20230711163155.791522-5-sui.jingfeng@linux.dev>
-In-Reply-To: <20230711163155.791522-1-sui.jingfeng@linux.dev>
-References: <20230711163155.791522-1-sui.jingfeng@linux.dev>
+        =?utf-8?B?SsO2cmc=?= Roedel <jroedel@suse.de>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>
+Subject: The VFIO/IOMMU/PCI MC at LPC 2023 - Call for Papers
+Message-ID: <20230711200916.GA699236@rocinante>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sui Jingfeng <suijingfeng@loongson.cn>
+Hello everyone!
 
-Currently, the strategy of selecting the default boot on a multiple video
-card coexistence system is not perfect. Potential problems are:
+Recently, we announced that the VFIO/IOMMU/PCI micro-conference is going to
+be part of this year's Linux Plumbers Conference, see:
 
-1) This function is a no-op on non-x86 architectures.
-2) It does not take the PCI Bar may get relocated into consideration.
-3) It is not effective for the PCI device without a dedicated VRAM Bar.
-4) It is device-agnostic, thus it has to waste the effort to iterate all
-   of the PCI Bar to find the VRAM aperture.
-5) It has invented lots of methods to determine which one is the default
-   boot device, but this is still a policy because it doesn't give the
-   user a choice to override.
+  https://lore.kernel.org/linux-pci/20230620114325.GA1387614@rocinante
 
-With the observation that device drivers may have better knowledge about
-which PCI bar contains the firmware FB. This patch tries to solve the above
-problems by introducing a function callback to the vga_client_register()
-function interface. DRM device drivers for the PCI device could provide
-a xx_vga_is_primary_gpu() function callback during the driver loading time.
-Once the driver binds the device successfully, VRAARB will call back to
-the driver. This gives the device drivers a chance to provide accurate
-boot device identification. Which in turn unlock the abitration service
-to non-x86 architectures. A device driver can also just pass a NULL pointer
-to keep the original behavior.
+That said, I am thrilled to announce that the Call for Papers (CfP) is open!
 
-This patch is intended to introducing the mechanism only, the specific
-implementation is left to the authors of various device driver. Also honor
-the comment: "Clients have *TWO* callback mechanisms they can use"
+If you would like to submit a talk for the MC, please follow the process at
+https://lpc.events/event/17/abstracts, selecting "VFIO/IOMMU/PCI MC" from
+the available tracks.
 
-Cc: Alex Deucher <alexander.deucher@amd.com>
-Cc: Christian Konig <christian.koenig@amd.com>
-Cc: Pan Xinhui <Xinhui.Pan@amd.com>
-Cc: David Airlie <airlied@gmail.com>
-Cc: Daniel Vetter <daniel@ffwll.ch>
-Cc: Jani Nikula <jani.nikula@linux.intel.com>
-Cc: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
-Cc: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Cc: Ben Skeggs <bskeggs@redhat.com>
-Cc: Karol Herbst <kherbst@redhat.com>
-Cc: Lyude Paul <lyude@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-Cc: Maxime Ripard <mripard@kernel.org>
-Cc: Thomas Zimmermann <tzimmermann@suse.de>
-Cc: Hawking Zhang <Hawking.Zhang@amd.com>
-Cc: Mario Limonciello <mario.limonciello@amd.com>
-Cc: Lijo Lazar <lijo.lazar@amd.com>
-Cc: YiPeng Chai <YiPeng.Chai@amd.com>
-Cc: Bokun Zhang <Bokun.Zhang@amd.com>
-Cc: Likun Gao <Likun.Gao@amd.com>
-Cc: Ville Syrjala <ville.syrjala@linux.intel.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-CC: Kevin Tian <kevin.tian@intel.com>
-Cc: Cornelia Huck <cohuck@redhat.com>
-Cc: Yishai Hadas <yishaih@nvidia.com>
-Cc: Abhishek Sahu <abhsahu@nvidia.com>
-Cc: Yi Liu <yi.l.liu@intel.com>
-Acked-by: Jani Nikula <jani.nikula@intel.com> # i915
-Reviewed-by: Lyude Paul <lyude@redhat.com> # nouveau
-Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
----
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  2 +-
- drivers/gpu/drm/i915/display/intel_vga.c   |  3 +-
- drivers/gpu/drm/loongson/lsdc_drv.c        |  2 +-
- drivers/gpu/drm/nouveau/nouveau_vga.c      |  2 +-
- drivers/gpu/drm/radeon/radeon_device.c     |  2 +-
- drivers/pci/vgaarb.c                       | 55 ++++++++++++++++++++--
- drivers/vfio/pci/vfio_pci_core.c           |  2 +-
- include/linux/vgaarb.h                     |  8 ++--
- 8 files changed, 61 insertions(+), 15 deletions(-)
+The deadline for talk proposal submission is early August, so only a few of
+weeks are left!  Remember: you can submit the proposal early and refine it
+later; there will be time.  So, don't hesitate!
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-index a92c6189b4b6..d98f0801ac77 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-@@ -4103,7 +4103,7 @@ int amdgpu_device_init(struct amdgpu_device *adev,
- 	/* this will fail for cards that aren't VGA class devices, just
- 	 * ignore it */
- 	if ((adev->pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
--		vga_client_register(adev->pdev, amdgpu_device_vga_set_decode);
-+		vga_client_register(adev->pdev, amdgpu_device_vga_set_decode, NULL);
- 
- 	px = amdgpu_device_supports_px(ddev);
- 
-diff --git a/drivers/gpu/drm/i915/display/intel_vga.c b/drivers/gpu/drm/i915/display/intel_vga.c
-index 286a0bdd28c6..98d7d4dffe9f 100644
---- a/drivers/gpu/drm/i915/display/intel_vga.c
-+++ b/drivers/gpu/drm/i915/display/intel_vga.c
-@@ -115,7 +115,6 @@ intel_vga_set_decode(struct pci_dev *pdev, bool enable_decode)
- 
- int intel_vga_register(struct drm_i915_private *i915)
- {
--
- 	struct pci_dev *pdev = to_pci_dev(i915->drm.dev);
- 	int ret;
- 
-@@ -127,7 +126,7 @@ int intel_vga_register(struct drm_i915_private *i915)
- 	 * then we do not take part in VGA arbitration and the
- 	 * vga_client_register() fails with -ENODEV.
- 	 */
--	ret = vga_client_register(pdev, intel_vga_set_decode);
-+	ret = vga_client_register(pdev, intel_vga_set_decode, NULL);
- 	if (ret && ret != -ENODEV)
- 		return ret;
- 
-diff --git a/drivers/gpu/drm/loongson/lsdc_drv.c b/drivers/gpu/drm/loongson/lsdc_drv.c
-index 188ec82afcfb..d10a28c2c494 100644
---- a/drivers/gpu/drm/loongson/lsdc_drv.c
-+++ b/drivers/gpu/drm/loongson/lsdc_drv.c
-@@ -289,7 +289,7 @@ static int lsdc_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	pci_set_drvdata(pdev, ddev);
- 
--	vga_client_register(pdev, lsdc_vga_set_decode);
-+	vga_client_register(pdev, lsdc_vga_set_decode, NULL);
- 
- 	drm_kms_helper_poll_init(ddev);
- 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_vga.c b/drivers/gpu/drm/nouveau/nouveau_vga.c
-index f8bf0ec26844..162b4f4676c7 100644
---- a/drivers/gpu/drm/nouveau/nouveau_vga.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_vga.c
-@@ -92,7 +92,7 @@ nouveau_vga_init(struct nouveau_drm *drm)
- 		return;
- 	pdev = to_pci_dev(dev->dev);
- 
--	vga_client_register(pdev, nouveau_vga_set_decode);
-+	vga_client_register(pdev, nouveau_vga_set_decode, NULL);
- 
- 	/* don't register Thunderbolt eGPU with vga_switcheroo */
- 	if (pci_is_thunderbolt_attached(pdev))
-diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
-index afbb3a80c0c6..71f2ff39d6a1 100644
---- a/drivers/gpu/drm/radeon/radeon_device.c
-+++ b/drivers/gpu/drm/radeon/radeon_device.c
-@@ -1425,7 +1425,7 @@ int radeon_device_init(struct radeon_device *rdev,
- 	/* if we have > 1 VGA cards, then disable the radeon VGA resources */
- 	/* this will fail for cards that aren't VGA class devices, just
- 	 * ignore it */
--	vga_client_register(rdev->pdev, radeon_vga_set_decode);
-+	vga_client_register(rdev->pdev, radeon_vga_set_decode, NULL);
- 
- 	if (rdev->flags & RADEON_IS_PX)
- 		runtime = true;
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index 953daf731b2c..610ddcccef24 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -53,6 +53,7 @@ struct vga_device {
- 	bool bridge_has_one_vga;
- 	bool is_firmware_default;	/* device selected by firmware */
- 	unsigned int (*set_decode)(struct pci_dev *pdev, bool decode);
-+	bool (*is_primary_gpu)(struct pci_dev *pdev);
- };
- 
- static LIST_HEAD(vga_list);
-@@ -958,6 +959,13 @@ EXPORT_SYMBOL(vga_set_legacy_decoding);
-  * @set_decode callback: If a client can disable its GPU VGA resource, it
-  * will get a callback from this to set the encode/decode state.
-  *
-+ * @is_primary_gpu callback: call back to the device driver, query if a PCI
-+ * GPU client is the primary display device, as device drivers (drm-based
-+ * or fbdev-based) may have better knowledge if a specific device is the
-+ * default boot device or should be the default boot device. But this
-+ * callback is optional. A device driver can simply pass a NULL pointer to
-+ * adhere to the original rules of arbitration.
-+ *
-  * Rationale: we cannot disable VGA decode resources unconditionally, some
-  * single GPU laptops seem to require ACPI or BIOS access to the VGA registers
-  * to control things like backlights etc. Hopefully newer multi-GPU laptops do
-@@ -973,7 +981,8 @@ EXPORT_SYMBOL(vga_set_legacy_decoding);
-  * Returns: 0 on success, -1 on failure
-  */
- int vga_client_register(struct pci_dev *pdev,
--		unsigned int (*set_decode)(struct pci_dev *pdev, bool decode))
-+		unsigned int (*set_decode)(struct pci_dev *pdev, bool decode),
-+		bool (*is_primary_gpu)(struct pci_dev *pdev))
- {
- 	int ret = -ENODEV;
- 	struct vga_device *vgadev;
-@@ -985,6 +994,7 @@ int vga_client_register(struct pci_dev *pdev,
- 		goto bail;
- 
- 	vgadev->set_decode = set_decode;
-+	vgadev->is_primary_gpu = is_primary_gpu;
- 	ret = 0;
- 
- bail:
-@@ -1490,6 +1500,30 @@ static void vga_arbiter_notify_clients(void)
- 	spin_unlock_irqrestore(&vga_lock, flags);
- }
- 
-+static void vga_arbiter_do_arbitration(struct pci_dev *pdev)
-+{
-+	struct vga_device *vgadev;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&vga_lock, flags);
-+	list_for_each_entry(vgadev, &vga_list, list) {
-+		if (vgadev->pdev != pdev)
-+			continue;
-+
-+		/* This device already the boot device, do nothing */
-+		if (pdev == vga_default_device())
-+			break;
-+
-+		if (vgadev->is_primary_gpu) {
-+			if (vgadev->is_primary_gpu(pdev)) {
-+				vgaarb_info(&pdev->dev, "Overriding as primary GPU\n");
-+				vga_set_default_device(pdev);
-+			}
-+		}
-+	}
-+	spin_unlock_irqrestore(&vga_lock, flags);
-+}
-+
- static int pci_notify(struct notifier_block *nb, unsigned long action,
- 		      void *data)
- {
-@@ -1509,13 +1543,24 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
- 	 * cases of hotplugable vga cards.
- 	 */
- 
--	if (action == BUS_NOTIFY_ADD_DEVICE)
-+	switch (action) {
-+	case BUS_NOTIFY_ADD_DEVICE:
- 		notify = vga_arbiter_add_pci_device(pdev);
--	else if (action == BUS_NOTIFY_DEL_DEVICE)
-+		if (notify)
-+			vga_arbiter_notify_clients();
-+		break;
-+	case BUS_NOTIFY_DEL_DEVICE:
- 		notify = vga_arbiter_del_pci_device(pdev);
-+		if (notify)
-+			vga_arbiter_notify_clients();
-+		break;
-+	case BUS_NOTIFY_BOUND_DRIVER:
-+		vga_arbiter_do_arbitration(pdev);
-+		break;
-+	default:
-+		break;
-+	}
- 
--	if (notify)
--		vga_arbiter_notify_clients();
- 	return 0;
- }
- 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 20d7b69ea6ff..531c4d8ef26e 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -2108,7 +2108,7 @@ static int vfio_pci_vga_init(struct vfio_pci_core_device *vdev)
- 	if (ret)
- 		return ret;
- 
--	ret = vga_client_register(pdev, vfio_pci_set_decode);
-+	ret = vga_client_register(pdev, vfio_pci_set_decode, NULL);
- 	if (ret)
- 		return ret;
- 	vga_set_legacy_decoding(pdev, vfio_pci_set_decode(pdev, false));
-diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
-index 97129a1bbb7d..e4102be21f47 100644
---- a/include/linux/vgaarb.h
-+++ b/include/linux/vgaarb.h
-@@ -33,7 +33,8 @@ struct pci_dev *vga_default_device(void);
- void vga_set_default_device(struct pci_dev *pdev);
- int vga_remove_vgacon(struct pci_dev *pdev);
- int vga_client_register(struct pci_dev *pdev,
--		unsigned int (*set_decode)(struct pci_dev *pdev, bool state));
-+		unsigned int (*set_decode)(struct pci_dev *pdev, bool state),
-+		bool (*is_primary_gpu)(struct pci_dev *pdev));
- #else /* CONFIG_VGA_ARB */
- static inline void vga_set_legacy_decoding(struct pci_dev *pdev,
- 		unsigned int decodes)
-@@ -59,7 +60,8 @@ static inline int vga_remove_vgacon(struct pci_dev *pdev)
- 	return 0;
- }
- static inline int vga_client_register(struct pci_dev *pdev,
--		unsigned int (*set_decode)(struct pci_dev *pdev, bool state))
-+		unsigned int (*set_decode)(struct pci_dev *pdev, bool state),
-+		bool (*is_primary_gpu)(struct pci_dev *pdev))
- {
- 	return 0;
- }
-@@ -97,7 +99,7 @@ static inline int vga_get_uninterruptible(struct pci_dev *pdev,
- 
- static inline void vga_client_unregister(struct pci_dev *pdev)
- {
--	vga_client_register(pdev, NULL);
-+	vga_client_register(pdev, NULL, NULL);
- }
- 
- #endif /* LINUX_VGA_H */
--- 
-2.25.1
+Again, you can find the complete MC proposal at:
 
+  https://drive.google.com/file/d/1U3_WvPzVeP7DcTSs5FN7jZ2EtTTzUSor
+
+As a reminder: the conference registration is still open, so remember to
+reserve your attendance.
+
+Thank you for your help, and see you at the LPC 2023!
+
+	Alex, Bjorn, Jörg, Lorenzo and Krzysztof
