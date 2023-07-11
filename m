@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B43FEB64DC
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Jul 2023 16:32:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C43F5C0015E
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Jul 2023 16:33:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233034AbjGKQcu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Jul 2023 12:32:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32980 "EHLO
+        id S232583AbjGKQdJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Jul 2023 12:33:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33908 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232648AbjGKQcd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2023 12:32:33 -0400
-Received: from out-9.mta0.migadu.com (out-9.mta0.migadu.com [91.218.175.9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7D8110EA
-        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2023 09:32:30 -0700 (PDT)
+        with ESMTP id S233242AbjGKQc7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2023 12:32:59 -0400
+Received: from out-62.mta0.migadu.com (out-62.mta0.migadu.com [IPv6:2001:41d0:1004:224b::3e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF3BD19BA
+        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2023 09:32:45 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1689093148;
+        t=1689093163;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=qerYEjJsYQa89wBNUybGoMjyzLMs27H7zUPn+Dcw/G0=;
-        b=Guu9GWOLPIQdkgo6IRvQX7zSkVsf7DNZDKM8AeogWr5E6rpQEYaIWbmNDJLcGU6Fen+QLD
-        9RIN+CGIDpMCU7gRAg76N6VsCw8OMavcu0tA+en7SF2lOR2aMCsxFl2WxdHYKo8LFblL7F
-        uBqREnG+4qj40UxbrWCEHB6XPKqAuvc=
+        bh=QoMhwjFigAbTHq+HcB9GYpyFfpHDzGgLNmwruJkUmC8=;
+        b=mjzopN32gkDIHH2DKeXPU4Uhh5gf5z6r2DVtvgerWF+e+HZlmhuYpklBE1idXQeZo+0qP6
+        kmmBiis6yM0xkO0eQgkG3GzLPBwQlnlpbqo8JYOMgGxYMoHSFvkTp+dFbaI/Dx0l2tA5er
+        DVLQ6sEcNFPLD8VVKk9IBe1o8Q3fX7c=
 From:   Sui Jingfeng <sui.jingfeng@linux.dev>
 To:     Alex Deucher <alexander.deucher@amd.com>,
         Christian Koenig <christian.koenig@amd.com>,
@@ -45,10 +45,16 @@ Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         linux-kernel@vger.kernel.org, intel-gfx@lists.freedesktop.org,
         nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
         kvm@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        Sui Jingfeng <suijingfeng@loongson.cn>
-Subject: [PATCH v3 3/9] PCI/VGA: Switch to aperture_contain_firmware_fb_nonreloc()
-Date:   Wed, 12 Jul 2023 00:31:49 +0800
-Message-Id: <20230711163155.791522-4-sui.jingfeng@linux.dev>
+        Sui Jingfeng <suijingfeng@loongson.cn>,
+        Pan Xinhui <Xinhui.Pan@amd.com>,
+        Hawking Zhang <Hawking.Zhang@amd.com>,
+        Lijo Lazar <lijo.lazar@amd.com>,
+        YiPeng Chai <YiPeng.Chai@amd.com>,
+        Bokun Zhang <Bokun.Zhang@amd.com>,
+        Likun Gao <Likun.Gao@amd.com>
+Subject: [PATCH v3 5/9] drm/amdgpu: Implement the is_primary_gpu callback of vga_client_register()
+Date:   Wed, 12 Jul 2023 00:31:51 +0800
+Message-Id: <20230711163155.791522-6-sui.jingfeng@linux.dev>
 In-Reply-To: <20230711163155.791522-1-sui.jingfeng@linux.dev>
 References: <20230711163155.791522-1-sui.jingfeng@linux.dev>
 MIME-Version: 1.0
@@ -60,77 +66,67 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-The observation behind this is that we should avoid accessing the global
-screen_info directly. Call the aperture_contain_firmware_fb_nonreloc()
-function to implement the detection of whether an aperture contains the
-firmware FB.
+[why]
 
-This patch helps to decouple the determination from the implementation.
-Or, in other words, we intend to make the determination opaque to the
-caller. The determination may choose to be arch-dependent or
-arch-independent. But vgaarb, as a consumer of the determination,
-shouldn't care how the does determination is implemented.
+The vga_is_firmware_default() function defined in drivers/pci/vgaarb.c is
+arch-dependent, it's a dummy on non-x86 architectures. This made VGAARB
+lost an important condition for the arbitration on non-x86 platform. The
+rules about which GPU is (or should be) the primary display device get used
+by userspace are obscure on non-x86 platform, let's made the things clear.
 
+[how]
+
+The device that owns the firmware framebuffer should be the default boot
+device. This patch adds an arch-independent function to implement this
+rule. The vgaarb subsystem will call back to amdgpu_is_primary_gpu() when
+drm/amdgpu is bound to an AMDGPU device successfully.
+
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Cc: Christian Konig <christian.koenig@amd.com>
+Cc: Pan Xinhui <Xinhui.Pan@amd.com>
+Cc: David Airlie <airlied@gmail.com>
+Cc: Daniel Vetter <daniel@ffwll.ch>
+Cc: Hawking Zhang <Hawking.Zhang@amd.com>
+Cc: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Lijo Lazar <lijo.lazar@amd.com>
+Cc: YiPeng Chai <YiPeng.Chai@amd.com>
+Cc: Bokun Zhang <Bokun.Zhang@amd.com>
+CC: Likun Gao <Likun.Gao@amd.com>
 Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
 ---
- drivers/pci/vgaarb.c | 19 ++++---------------
- 1 file changed, 4 insertions(+), 15 deletions(-)
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index bf96e085751d..953daf731b2c 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -14,6 +14,7 @@
- #define vgaarb_info(dev, fmt, arg...)	dev_info(dev, "vgaarb: " fmt, ##arg)
- #define vgaarb_err(dev, fmt, arg...)	dev_err(dev, "vgaarb: " fmt, ##arg)
- 
-+#include <linux/aperture.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/pci.h>
-@@ -26,7 +27,6 @@
- #include <linux/poll.h>
- #include <linux/miscdevice.h>
- #include <linux/slab.h>
--#include <linux/screen_info.h>
- #include <linux/vt.h>
- #include <linux/console.h>
- #include <linux/acpi.h>
-@@ -558,20 +558,11 @@ void vga_put(struct pci_dev *pdev, unsigned int rsrc)
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+index d98f0801ac77..b638eff58636 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+@@ -3690,6 +3690,15 @@ static void amdgpu_device_set_mcbp(struct amdgpu_device *adev)
+ 		DRM_INFO("MCBP is enabled\n");
  }
- EXPORT_SYMBOL(vga_put);
  
-+/* Select the device owning the boot framebuffer if there is one */
- static bool vga_is_firmware_default(struct pci_dev *pdev)
- {
- #if defined(CONFIG_X86) || defined(CONFIG_IA64)
--	u64 base = screen_info.lfb_base;
--	u64 size = screen_info.lfb_size;
- 	struct resource *r;
--	u64 limit;
--
--	/* Select the device owning the boot framebuffer if there is one */
--
--	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
--		base |= (u64)screen_info.ext_lfb_base << 32;
--
--	limit = base + size;
++static bool amdgpu_is_primary_gpu(struct pci_dev *pdev)
++{
++	struct drm_device *dev = pci_get_drvdata(pdev);
++	struct amdgpu_device *adev = drm_to_adev(dev);
++	struct amdgpu_gmc *gmc = &adev->gmc;
++
++	return drm_aperture_contain_firmware_fb(gmc->aper_base, gmc->aper_size);
++}
++
+ /**
+  * amdgpu_device_init - initialize the driver
+  *
+@@ -4103,7 +4112,8 @@ int amdgpu_device_init(struct amdgpu_device *adev,
+ 	/* this will fail for cards that aren't VGA class devices, just
+ 	 * ignore it */
+ 	if ((adev->pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
+-		vga_client_register(adev->pdev, amdgpu_device_vga_set_decode, NULL);
++		vga_client_register(adev->pdev, amdgpu_device_vga_set_decode,
++				    amdgpu_is_primary_gpu);
  
- 	/* Does firmware framebuffer belong to us? */
- 	pci_dev_for_each_resource(pdev, r) {
-@@ -581,10 +572,8 @@ static bool vga_is_firmware_default(struct pci_dev *pdev)
- 		if (!r->start || !r->end)
- 			continue;
+ 	px = amdgpu_device_supports_px(ddev);
  
--		if (base < r->start || limit >= r->end)
--			continue;
--
--		return true;
-+		if (aperture_contain_firmware_fb_nonreloc(r->start, r->end))
-+			return true;
- 	}
- #endif
- 	return false;
 -- 
 2.25.1
 
