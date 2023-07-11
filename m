@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 039FCEB64DC
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Jul 2023 12:59:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B0EBEB64DD
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Jul 2023 12:59:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232727AbjGKM7L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Jul 2023 08:59:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59572 "EHLO
+        id S232942AbjGKM7p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Jul 2023 08:59:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59958 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232841AbjGKM66 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2023 08:58:58 -0400
+        with ESMTP id S232936AbjGKM7V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2023 08:59:21 -0400
 Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 354BF19A2;
-        Tue, 11 Jul 2023 05:58:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 862C21FF0;
+        Tue, 11 Jul 2023 05:58:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689080323; x=1720616323;
+  t=1689080334; x=1720616334;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=bl/zYgzCi3o2blRR5uBjNAGlQOwq1q6m2wvBNMtj8IM=;
-  b=CKszODrILKgapBm45v/fZ/OsrMHt1EedoEngU4XDL2HE0dkC48GoN/zx
-   VwIk5O1VOKcHjnJnxCK7xYsbG7T4xn2UeROeuWvTOa5t9XokmfsTzSDZ6
-   1zE1cW9Q6CFhHogmMXrnqAMdT/etDQAUv54bx/qSIY/HqQ9PDfUa2Hfc/
-   kGHgGlwUW9GmMtTRr0B5fcHzKs2TuY55hMU67Xm35YCItIGE2/waxRYyp
-   iZbZWsZ9O1825f6WLIfnmJuyFl3erx4RSoBe3G2JV8fxB8wLT9WRunAia
-   4eWdnePmD+e3I6ERKXNcjTJROEItL8bhsKfLtp2AMKSx/Ea7jqiFRTVgW
+  bh=VXiT9izY1srYd/PzrRsixDHRHJUyflwxIABZHxexAYE=;
+  b=L8QJDufXB84+hB0q3oVyFwyZ3RmwO6s1v6BibHa6JTdXcEMxmhtAu640
+   pEQG2DWkvvWgyn0NnJGfShLZYiLZLb/xex85Mto8mBsSHjgigx5xL4MN5
+   ENMUAKrn3k/fH/7HNNnPwckeXK/nmDsh5/dFMHFnIszOXQICstGlqTo6k
+   qsFe3lo/gIpa+bKzqTgcai+TWdmWge1U/9ae8SiGjGZGKft9S/wffe+96
+   rrElWxFPM1VrmgqixG7n6WdKSm+8XBITuXqvownG9sx5WDTfXbc+ks+Jl
+   ZOKOUpkkJDkFpAOm7ejIw3aKsOk3AEGxvHE80Zdt5pp7qXrCNn92ho4RM
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10768"; a="367187501"
+X-IronPort-AV: E=McAfee;i="6600,9927,10768"; a="367187544"
 X-IronPort-AV: E=Sophos;i="6.01,196,1684825200"; 
-   d="scan'208";a="367187501"
+   d="scan'208";a="367187544"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jul 2023 05:57:32 -0700
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jul 2023 05:57:38 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10768"; a="834666738"
+X-IronPort-AV: E=McAfee;i="6600,9927,10768"; a="834666783"
 X-IronPort-AV: E=Sophos;i="6.01,196,1684825200"; 
-   d="scan'208";a="834666738"
+   d="scan'208";a="834666783"
 Received: from dev2 (HELO DEV2.igk.intel.com) ([10.237.148.94])
-  by fmsmga002.fm.intel.com with ESMTP; 11 Jul 2023 05:57:30 -0700
+  by fmsmga002.fm.intel.com with ESMTP; 11 Jul 2023 05:57:35 -0700
 From:   =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= 
         <amadeuszx.slawinski@linux.intel.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -51,9 +51,9 @@ Cc:     alsa-devel@alsa-project.org, linux-pci@vger.kernel.org,
         Hans de Goede <hdegoede@redhat.com>,
         =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= 
         <amadeuszx.slawinski@linux.intel.com>
-Subject: [PATCH 09/13] ASoC: Intel: avs: Convert to PCI device IDs defines
-Date:   Tue, 11 Jul 2023 14:57:22 +0200
-Message-Id: <20230711125726.3509391-10-amadeuszx.slawinski@linux.intel.com>
+Subject: [PATCH 11/13] ASoC: Intel: Skylake: Convert to PCI device IDs defines
+Date:   Tue, 11 Jul 2023 14:57:24 +0200
+Message-Id: <20230711125726.3509391-12-amadeuszx.slawinski@linux.intel.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230711125726.3509391-1-amadeuszx.slawinski@linux.intel.com>
 References: <20230711125726.3509391-1-amadeuszx.slawinski@linux.intel.com>
@@ -70,36 +70,154 @@ PCI_DEVICE_DATA() macro, to simplify declarations.
 Acked-by: Mark Brown <broonie@kernel.org>
 Signed-off-by: Amadeusz Sławiński <amadeuszx.slawinski@linux.intel.com>
 ---
- sound/soc/intel/avs/core.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ sound/soc/intel/skylake/skl-messages.c | 16 ++++++------
+ sound/soc/intel/skylake/skl.c          | 36 +++++++-------------------
+ 2 files changed, 18 insertions(+), 34 deletions(-)
 
-diff --git a/sound/soc/intel/avs/core.c b/sound/soc/intel/avs/core.c
-index 637501850728..859b217fc761 100644
---- a/sound/soc/intel/avs/core.c
-+++ b/sound/soc/intel/avs/core.c
-@@ -745,14 +745,14 @@ static const struct avs_spec apl_desc = {
- };
+diff --git a/sound/soc/intel/skylake/skl-messages.c b/sound/soc/intel/skylake/skl-messages.c
+index d31509298a0a..fc2eb04da172 100644
+--- a/sound/soc/intel/skylake/skl-messages.c
++++ b/sound/soc/intel/skylake/skl-messages.c
+@@ -169,7 +169,7 @@ static struct skl_dsp_loader_ops bxt_get_loader_ops(void)
  
- static const struct pci_device_id avs_ids[] = {
--	{ PCI_VDEVICE(INTEL, 0x9d70), (unsigned long)&skl_desc }, /* SKL */
--	{ PCI_VDEVICE(INTEL, 0xa170), (unsigned long)&skl_desc }, /* SKL-H */
--	{ PCI_VDEVICE(INTEL, 0x9d71), (unsigned long)&skl_desc }, /* KBL */
--	{ PCI_VDEVICE(INTEL, 0xa171), (unsigned long)&skl_desc }, /* KBL-H */
--	{ PCI_VDEVICE(INTEL, 0xa2f0), (unsigned long)&skl_desc }, /* KBL-S */
--	{ PCI_VDEVICE(INTEL, 0xa3f0), (unsigned long)&skl_desc }, /* CML-V */
--	{ PCI_VDEVICE(INTEL, 0x5a98), (unsigned long)&apl_desc }, /* APL */
--	{ PCI_VDEVICE(INTEL, 0x3198), (unsigned long)&apl_desc }, /* GML */
-+	{ PCI_DEVICE_DATA(INTEL, HDA_SKL_LP, &skl_desc) },
-+	{ PCI_DEVICE_DATA(INTEL, HDA_SKL, &skl_desc) },
-+	{ PCI_DEVICE_DATA(INTEL, HDA_KBL_LP, &skl_desc) },
-+	{ PCI_DEVICE_DATA(INTEL, HDA_KBL, &skl_desc) },
-+	{ PCI_DEVICE_DATA(INTEL, HDA_KBL_H, &skl_desc) },
-+	{ PCI_DEVICE_DATA(INTEL, HDA_CML_S, &skl_desc) },
-+	{ PCI_DEVICE_DATA(INTEL, HDA_APL, &apl_desc) },
-+	{ PCI_DEVICE_DATA(INTEL, HDA_GML, &apl_desc) },
- 	{ 0 }
+ static const struct skl_dsp_ops dsp_ops[] = {
+ 	{
+-		.id = 0x9d70,
++		.id = PCI_DEVICE_ID_INTEL_HDA_SKL_LP,
+ 		.num_cores = 2,
+ 		.loader_ops = skl_get_loader_ops,
+ 		.init = skl_sst_dsp_init,
+@@ -177,7 +177,7 @@ static const struct skl_dsp_ops dsp_ops[] = {
+ 		.cleanup = skl_sst_dsp_cleanup
+ 	},
+ 	{
+-		.id = 0x9d71,
++		.id = PCI_DEVICE_ID_INTEL_HDA_KBL_LP,
+ 		.num_cores = 2,
+ 		.loader_ops = skl_get_loader_ops,
+ 		.init = skl_sst_dsp_init,
+@@ -185,7 +185,7 @@ static const struct skl_dsp_ops dsp_ops[] = {
+ 		.cleanup = skl_sst_dsp_cleanup
+ 	},
+ 	{
+-		.id = 0x5a98,
++		.id = PCI_DEVICE_ID_INTEL_HDA_APL,
+ 		.num_cores = 2,
+ 		.loader_ops = bxt_get_loader_ops,
+ 		.init = bxt_sst_dsp_init,
+@@ -193,7 +193,7 @@ static const struct skl_dsp_ops dsp_ops[] = {
+ 		.cleanup = bxt_sst_dsp_cleanup
+ 	},
+ 	{
+-		.id = 0x3198,
++		.id = PCI_DEVICE_ID_INTEL_HDA_GML,
+ 		.num_cores = 2,
+ 		.loader_ops = bxt_get_loader_ops,
+ 		.init = bxt_sst_dsp_init,
+@@ -201,7 +201,7 @@ static const struct skl_dsp_ops dsp_ops[] = {
+ 		.cleanup = bxt_sst_dsp_cleanup
+ 	},
+ 	{
+-		.id = 0x9dc8,
++		.id = PCI_DEVICE_ID_INTEL_HDA_CNL_LP,
+ 		.num_cores = 4,
+ 		.loader_ops = bxt_get_loader_ops,
+ 		.init = cnl_sst_dsp_init,
+@@ -209,7 +209,7 @@ static const struct skl_dsp_ops dsp_ops[] = {
+ 		.cleanup = cnl_sst_dsp_cleanup
+ 	},
+ 	{
+-		.id = 0xa348,
++		.id = PCI_DEVICE_ID_INTEL_HDA_CNL_H,
+ 		.num_cores = 4,
+ 		.loader_ops = bxt_get_loader_ops,
+ 		.init = cnl_sst_dsp_init,
+@@ -217,7 +217,7 @@ static const struct skl_dsp_ops dsp_ops[] = {
+ 		.cleanup = cnl_sst_dsp_cleanup
+ 	},
+ 	{
+-		.id = 0x02c8,
++		.id = PCI_DEVICE_ID_INTEL_HDA_CML_LP,
+ 		.num_cores = 4,
+ 		.loader_ops = bxt_get_loader_ops,
+ 		.init = cnl_sst_dsp_init,
+@@ -225,7 +225,7 @@ static const struct skl_dsp_ops dsp_ops[] = {
+ 		.cleanup = cnl_sst_dsp_cleanup
+ 	},
+ 	{
+-		.id = 0x06c8,
++		.id = PCI_DEVICE_ID_INTEL_HDA_CML_H,
+ 		.num_cores = 4,
+ 		.loader_ops = bxt_get_loader_ops,
+ 		.init = cnl_sst_dsp_init,
+diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
+index 998bd0232cf1..77408a981b97 100644
+--- a/sound/soc/intel/skylake/skl.c
++++ b/sound/soc/intel/skylake/skl.c
+@@ -608,8 +608,8 @@ struct skl_clk_parent_src *skl_get_parent_clk(u8 clk_id)
+ static void init_skl_xtal_rate(int pci_id)
+ {
+ 	switch (pci_id) {
+-	case 0x9d70:
+-	case 0x9d71:
++	case PCI_DEVICE_ID_INTEL_HDA_SKL_LP:
++	case PCI_DEVICE_ID_INTEL_HDA_KBL_LP:
+ 		skl_clk_src[0].rate = 24000000;
+ 		return;
+ 
+@@ -1145,44 +1145,28 @@ static void skl_remove(struct pci_dev *pci)
+ /* PCI IDs */
+ static const struct pci_device_id skl_ids[] = {
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_SKL)
+-	/* Sunrise Point-LP */
+-	{ PCI_DEVICE(0x8086, 0x9d70),
+-		.driver_data = (unsigned long)&snd_soc_acpi_intel_skl_machines},
++	{ PCI_DEVICE_DATA(INTEL, HDA_SKL_LP, &snd_soc_acpi_intel_skl_machines) },
+ #endif
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_APL)
+-	/* BXT-P */
+-	{ PCI_DEVICE(0x8086, 0x5a98),
+-		.driver_data = (unsigned long)&snd_soc_acpi_intel_bxt_machines},
++	{ PCI_DEVICE_DATA(INTEL, HDA_APL, &snd_soc_acpi_intel_bxt_machines) },
+ #endif
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_KBL)
+-	/* KBL */
+-	{ PCI_DEVICE(0x8086, 0x9D71),
+-		.driver_data = (unsigned long)&snd_soc_acpi_intel_kbl_machines},
++	{ PCI_DEVICE_DATA(INTEL, HDA_KBL_LP, &snd_soc_acpi_intel_kbl_machines) },
+ #endif
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_GLK)
+-	/* GLK */
+-	{ PCI_DEVICE(0x8086, 0x3198),
+-		.driver_data = (unsigned long)&snd_soc_acpi_intel_glk_machines},
++	{ PCI_DEVICE_DATA(INTEL, HDA_GML, &snd_soc_acpi_intel_glk_machines) },
+ #endif
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_CNL)
+-	/* CNL */
+-	{ PCI_DEVICE(0x8086, 0x9dc8),
+-		.driver_data = (unsigned long)&snd_soc_acpi_intel_cnl_machines},
++	{ PCI_DEVICE_DATA(INTEL, HDA_CNL_LP, &snd_soc_acpi_intel_cnl_machines) },
+ #endif
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_CFL)
+-	/* CFL */
+-	{ PCI_DEVICE(0x8086, 0xa348),
+-		.driver_data = (unsigned long)&snd_soc_acpi_intel_cnl_machines},
++	{ PCI_DEVICE_DATA(INTEL, HDA_CNL_H, &snd_soc_acpi_intel_cnl_machines) },
+ #endif
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_CML_LP)
+-	/* CML-LP */
+-	{ PCI_DEVICE(0x8086, 0x02c8),
+-		.driver_data = (unsigned long)&snd_soc_acpi_intel_cnl_machines},
++	{ PCI_DEVICE_DATA(INTEL, HDA_CML_LP, &snd_soc_acpi_intel_cnl_machines) },
+ #endif
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_CML_H)
+-	/* CML-H */
+-	{ PCI_DEVICE(0x8086, 0x06c8),
+-		.driver_data = (unsigned long)&snd_soc_acpi_intel_cnl_machines},
++	{ PCI_DEVICE_DATA(INTEL, HDA_CML_H, &snd_soc_acpi_intel_cnl_machines) },
+ #endif
+ 	{ 0, }
  };
- MODULE_DEVICE_TABLE(pci, avs_ids);
 -- 
 2.34.1
 
