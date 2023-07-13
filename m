@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2302C001B0
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Jul 2023 07:10:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F6AC001DF
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Jul 2023 07:10:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234150AbjGMHKd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Jul 2023 03:10:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36320 "EHLO
+        id S234147AbjGMHKh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Jul 2023 03:10:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36354 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230281AbjGMHKb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2023 03:10:31 -0400
+        with ESMTP id S234149AbjGMHKd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2023 03:10:33 -0400
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B0EA119;
-        Thu, 13 Jul 2023 00:10:29 -0700 (PDT)
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36D61Otg013396;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C56C119;
+        Thu, 13 Jul 2023 00:10:32 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36D5QCOs006157;
         Thu, 13 Jul 2023 07:10:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=DE5Ui7Pw5qDglMLW1EMA7/HYCBRaPwY9cFGB1D8V3EE=;
- b=By0ur8OJO5SgFYh6ApoNzudBc5ULBxwk862fLrZJYVz05OposiNZYfhauXsddmJTjhDM
- 6iCmHSr0YenH4eKv0byvNPhwBnPEyom46Yytvp8oOx2BHMlAl6cUNH1HHLaAnk5qu+Bt
- neNuUMv5XFmq7Fu/VujICLUp/oxlDTBefNMLxXb26HUde9vG5lKn60XVesTh2ftlq7EF
- bOH/2BsMJLK6BJnzqIjIVi/+959hDCArc7eViidieCy3z+QdgD2W0c2HEa5SSH97+hht
- 0Mnxu6IZqeamZjju7rTl3FFF5ChsWjb09u6BqJdQxVAWRVV0EIcAaX0JraOBGLaTKHcg 3g== 
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=T9H/joa8i3z+04yWseOBwYveNeLbratgjd+8XxajjYM=;
+ b=k5mEecWLJZF2lgBJ5VXcRO3vOAJO5MXNQrzmecEfPGhir7iuRj+VjQtQwHxNYBBr6qZA
+ 2L1BQJFyK1vLAKg/alwmE+oGrTzKHJIrDuPlimY29o6iKJgDXH6VSkVzZyEahpM1vIBT
+ zHSkKX7PEgwZ9QkBZzHec2CGDHqJSYKMgl+EkWO74Cx2upHtj4uKkNcSh+O3BMwur5/j
+ DkxtgBEZvZMFwt73kQc5b3oq4Aiqe5m/7l8u191BE6+pOhMcZ6plxA1UHj6Cwsj9JsxH
+ BC+8yG+cx0rO24QaV248EkXG56NlxZIy4A6MYiL9Fa5BQJ33G64I4zpUT8PDkX998H6g 5A== 
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rtbmur3hx-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rt3f00vsp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Thu, 13 Jul 2023 07:10:25 +0000
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36D7AMdo030162;
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36D7AMpg030167;
         Thu, 13 Jul 2023 07:10:22 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3rq0vkymgy-1
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3rq0vkymh3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
         Thu, 13 Jul 2023 07:10:22 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36D7ALUB030146;
-        Thu, 13 Jul 2023 07:10:21 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36D7AM99030157;
+        Thu, 13 Jul 2023 07:10:22 GMT
 Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 36D7ALNK030144;
-        Thu, 13 Jul 2023 07:10:21 +0000
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 36D7ALIm030149;
+        Thu, 13 Jul 2023 07:10:22 +0000
 Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id C5F5447AD; Thu, 13 Jul 2023 12:40:20 +0530 (+0530)
+        id 6211047BB; Thu, 13 Jul 2023 12:40:21 +0530 (+0530)
 From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
 To:     manivannan.sadhasivam@linaro.org
 Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
@@ -51,83 +51,73 @@ Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
         quic_vbadigan@quicinc.com, quic_nitegupt@quicinc.com,
         quic_skananth@quicinc.com, quic_ramkri@quicinc.com,
         krzysztof.kozlowski@linaro.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Subject: [PATCH v4 0/9] PCI: EPC: Add support to wake up host from D3 states
-Date:   Thu, 13 Jul 2023 12:40:09 +0530
-Message-Id: <1689232218-28265-1-git-send-email-quic_krichai@quicinc.com>
+        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v4 2/9] PCI: qcom-ep: Add support for D-state change notification
+Date:   Thu, 13 Jul 2023 12:40:11 +0530
+Message-Id: <1689232218-28265-3-git-send-email-quic_krichai@quicinc.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1689232218-28265-1-git-send-email-quic_krichai@quicinc.com>
+References: <1689232218-28265-1-git-send-email-quic_krichai@quicinc.com>
 X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: nVnAlYQ2ebnUAzvlwW-vG-JKWsWCWYE6
-X-Proofpoint-ORIG-GUID: nVnAlYQ2ebnUAzvlwW-vG-JKWsWCWYE6
+X-Proofpoint-GUID: HkmAFijEPS4aW-7xLYeo_r8C5bnpWiFN
+X-Proofpoint-ORIG-GUID: HkmAFijEPS4aW-7xLYeo_r8C5bnpWiFN
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-07-13_04,2023-07-11_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxscore=0
- lowpriorityscore=0 priorityscore=1501 suspectscore=0 phishscore=0
- spamscore=0 bulkscore=0 mlxlogscore=463 impostorscore=0 adultscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
+ suspectscore=0 clxscore=1015 lowpriorityscore=0 malwarescore=0 bulkscore=0
+ phishscore=0 mlxscore=0 spamscore=0 adultscore=0 priorityscore=1501
+ mlxlogscore=886 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2305260000 definitions=main-2307130061
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Here we propose this patch series to add support in PCI endpoint
-driver to wake up host from D3 states.
+Add support to pass D-state change notification to Endpoint
+function driver.
 
-As endpoint cannot send any data/MSI when the D-state is in
-D3cold or D3hot. Endpoint needs to bring the device back to D0
-to send any kind of data.
-
-For this endpoint needs to send inband PME the device is in D3 state or
-toggle wake when the device is D3 cold and vaux is not supplied.
-
-As EPF doestn't know the D-state of the PCI, added a notify op whenever
-device state changes.
-
-Based on the D-state the EPF driver decides to wake host either by
-toggling wake or by sending PME.
-
-When the MHI state is in M3 MHI driver will wakeup the host using the
-wakeup op.
-
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 ---
-Changes from v3:
-	- changed the bool return type to int for waking the host in mhi ep driver
-	 as suggested by dan and bjorn.
-	- Changed commit logs as suggested by bjorn.
-Changes from v2:
-        - Addressed review comments made by mani.
-Changes from v1:
-        - Moved from RFC patch to regular patch
-        - Inclueded EPF patch and added a new op patch to notify D-state change.
----
+ drivers/pci/controller/dwc/pcie-qcom-ep.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Krishna chaitanya chundru (9):
-  PCI: endpoint: Add D-state change notifier support
-  PCI: qcom-ep: Add support for D-state change notification
-  PCI: epf-mhi: Add support for handling D-state notify from EPC
-  PCI: qcom-ep: Update the D-state log
-  PCI: endpoint: Add wakeup host API to EPC core
-  PCI: dwc: Add wakeup host op to pci_epc_ops
-  PCI: qcom-ep: Add wake up host op to dw_pcie_ep_ops
-  PCI: epf-mhi: Add wakeup host op
-  bus: mhi: ep: wake up host if the MHI state is in M3
-
- Documentation/PCI/endpoint/pci-endpoint.rst     | 11 +++++
- drivers/bus/mhi/ep/main.c                       | 27 ++++++++++++
- drivers/pci/controller/dwc/pcie-designware-ep.c | 12 +++++
- drivers/pci/controller/dwc/pcie-designware.h    |  3 ++
- drivers/pci/controller/dwc/pcie-qcom-ep.c       | 36 ++++++++++++++-
- drivers/pci/endpoint/functions/pci-epf-mhi.c    | 27 ++++++++++++
- drivers/pci/endpoint/pci-epc-core.c             | 58 +++++++++++++++++++++++++
- include/linux/mhi_ep.h                          |  4 ++
- include/linux/pci-epc.h                         | 12 +++++
- include/linux/pci-epf.h                         |  1 +
- 10 files changed, 190 insertions(+), 1 deletion(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+index 0fe7f06..66fd421 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+@@ -561,6 +561,7 @@ static irqreturn_t qcom_pcie_ep_global_irq_thread(int irq, void *data)
+ 	struct device *dev = pci->dev;
+ 	u32 status = readl_relaxed(pcie_ep->parf + PARF_INT_ALL_STATUS);
+ 	u32 mask = readl_relaxed(pcie_ep->parf + PARF_INT_ALL_MASK);
++	pci_power_t state;
+ 	u32 dstate, val;
+ 
+ 	writel_relaxed(status, pcie_ep->parf + PARF_INT_ALL_CLEAR);
+@@ -583,11 +584,16 @@ static irqreturn_t qcom_pcie_ep_global_irq_thread(int irq, void *data)
+ 		dstate = dw_pcie_readl_dbi(pci, DBI_CON_STATUS) &
+ 					   DBI_CON_STATUS_POWER_STATE_MASK;
+ 		dev_dbg(dev, "Received D%d state event\n", dstate);
++		state = dstate;
+ 		if (dstate == 3) {
+ 			val = readl_relaxed(pcie_ep->parf + PARF_PM_CTRL);
+ 			val |= PARF_PM_CTRL_REQ_EXIT_L1;
+ 			writel_relaxed(val, pcie_ep->parf + PARF_PM_CTRL);
++			state = PCI_D3hot;
++			if (gpiod_get_value(pcie_ep->reset))
++				state = PCI_D3cold;
+ 		}
++		pci_epc_dstate_notify(pci->ep.epc, state);
+ 	} else if (FIELD_GET(PARF_INT_ALL_LINK_UP, status)) {
+ 		dev_dbg(dev, "Received Linkup event. Enumeration complete!\n");
+ 		dw_pcie_ep_linkup(&pci->ep);
 -- 
 2.7.4
 
