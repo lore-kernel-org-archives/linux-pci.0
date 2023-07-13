@@ -2,87 +2,126 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 257FAC001DD
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Jul 2023 17:04:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6106CC001DD
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Jul 2023 17:19:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230093AbjGMRD7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Jul 2023 13:03:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38828 "EHLO
+        id S231360AbjGMRS7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Jul 2023 13:18:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46866 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229980AbjGMRD6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2023 13:03:58 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F6B52700;
-        Thu, 13 Jul 2023 10:03:58 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S229819AbjGMRS6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2023 13:18:58 -0400
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8929C26A3;
+        Thu, 13 Jul 2023 10:18:57 -0700 (PDT)
+Received: from jupiter.universe (dyndsl-091-248-214-236.ewe-ip-backbone.de [91.248.214.236])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A6E6D61AED;
-        Thu, 13 Jul 2023 17:03:57 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2C31C433C8;
-        Thu, 13 Jul 2023 17:03:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689267837;
-        bh=+qeyXsRrQ/U2yh6VTcdgE7vMtiDddsPP8kKRqmBbsC4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=ldRUBCz1IijQ2TRJznDuOdfdNLVlCgTn8OwirEAkjEQzdy1+SVvxmVgg9yF8qf3RA
-         GSXMDzrmc6CeMhEJsIwtEMxbWUjWfbKynBYzA6xfO57OQya8HgKi6EL4OOnMmdz6gG
-         SExAd79qm0KKzjb/zY0GM2xLCz/VUcQXe8f6RJzA1Njuk13+5tUeQGunZGFFlAe2Px
-         RxjqZMvof3cZguglyIFIalImEJlJsBQts9MCTAkLboqfs9rDNy0hcNgm3Eiilqd+pk
-         PK71+MiET4cGnHEmQN8mC7+H1Soki7SRRL+GnMBzzs0j1+4FqW0LJBGIqygWYCmfYm
-         ARAT3V8JMvRTA==
-Date:   Thu, 13 Jul 2023 12:03:55 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Radu Rendec <rrendec@redhat.com>
+        (Authenticated sender: sre)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id E28A26607052;
+        Thu, 13 Jul 2023 18:18:55 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1689268736;
+        bh=6jGIKPbfF8lFaKxaxnrLO3vT+yEQbM1fwyNNnYbXS6E=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=PLKB31XyoOBNRF8LVy2cE+0oXfj/7egsX6mmTa9pvIEw9EF1H/cIfCgJbglWhJjc+
+         OW2oPkLPEWQVMiJG712gHFi4b/610V11zA/aFHJ/o4Dc0/vJrzUNJkoc3+ajkOriug
+         I7NVE/iiV9qdRHR1NOpryI4vmIK5rQiTnvFn1bccajGr69n67Ui8HMEQY0Dpn7rbjA
+         rtvEvqAbtDI7E2VI5r9DN0ag4J/ChzR0v1JTwMXLWgZZX1cVqdFZy03wnigxlPxyA9
+         RHiBbdMHqFgw1NNdCpwhOx78OnvcBnu2TRJPSEobIKBj//XIsmH2Z5ddWmi9jZ7o3W
+         ynbpJUAQYTClA==
+Received: by jupiter.universe (Postfix, from userid 1000)
+        id CBDB5480086; Thu, 13 Jul 2023 19:18:53 +0200 (CEST)
+From:   Sebastian Reichel <sebastian.reichel@collabora.com>
+To:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Serge Semin <fancer.lancer@gmail.com>
 Cc:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof Wilczynski <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <maz@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
-Subject: Re: [PATCH 1/1] PCI: dwc: Use regular interrupt instead of chained
-Message-ID: <20230713170355.GA323073@bhelgaas>
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Simon Xue <xxm@rock-chips.com>, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Sebastian Reichel <sebastian.reichel@collabora.com>,
+        kernel@collabora.com
+Subject: [PATCH v2 2/3] dt-bindings: PCI: dwc: rockchip: Add missing legacy-interrupt-controller
+Date:   Thu, 13 Jul 2023 19:18:50 +0200
+Message-Id: <20230713171851.73052-3-sebastian.reichel@collabora.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230713171851.73052-1-sebastian.reichel@collabora.com>
+References: <20230713171851.73052-1-sebastian.reichel@collabora.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <8715f2b298c04422db311666eb2409464c29458b.camel@redhat.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 29, 2023 at 11:04:50PM -0400, Radu Rendec wrote:
-> On Thu, 2023-06-29 at 17:11 -0500, Bjorn Helgaas wrote:
-> ...
+Rockchip RK356x and RK3588 handle legacy interrupts via a ganged
+interrupts. The RK356x DT implements this via a sub-node named
+"legacy-interrupt-controller", just like a couple of other PCIe
+implementations. This adds proper documentation for this and updates
+the example to avoid regressions.
 
-> > If converting from chained to normal handlers can be done safely, I
-> > would definitely be in favor if doing it across all of drivers/pci/ at
-> > once so they're all consistent.  Otherwise that code just gets copied
-> > to new drivers, so the issue persists and spreads.
-> 
-> I think the conversion can be done safely, meaning that it won't break
-> the drivers. And by the way, there are other IRQ drivers (outside the
-> PCI space) that use chained interrupts.
-> 
-> Unfortunately, it seems we are going in circles. Chained interrupts are
-> bad because they let IRQ storms go unnoticed and lock up the system,
-> but converting them to regular interrupts is also bad because it breaks
-> the userspace ABI.
-> 
-> I am willing to help clean up this mess, but I think first we need to
-> come up with a solution that's acceptable for everybody. I was hoping
-> Marc and Thomas would chime in, but unfortunately that hasn't happened
-> yet - other than each of them pointing out (separately) what is wrong
-> with each approach.
+Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+---
+ .../bindings/pci/rockchip-dw-pcie.yaml        | 30 +++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-I don't think Marc or Thomas are going to chime in with a fully-formed
-solution.  I think to make progress, you (or Pali, or somebody) will
-have to try to address Marc and Thomas' comments, make a proposal, and
-we can iterate on it.
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+index aad53c7d8485..8460b1a87248 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+@@ -71,6 +71,28 @@ properties:
+       - const: legacy
+       - const: err
+ 
++  legacy-interrupt-controller:
++    description: Interrupt controller node for handling legacy PCI interrupts.
++    type: object
++    additionalProperties: false
++    properties:
++      "#address-cells":
++        const: 0
++
++      "#interrupt-cells":
++        const: 1
++
++      interrupt-controller: true
++
++      interrupts:
++        items:
++          - description: combined legacy interrupt
++    required:
++      - "#address-cells"
++      - "#interrupt-cells"
++      - interrupt-controller
++      - interrupts
++
+   msi-map: true
+ 
+   num-lanes: true
+@@ -158,6 +180,14 @@ examples:
+             reset-names = "pipe";
+             #address-cells = <3>;
+             #size-cells = <2>;
++
++            legacy-interrupt-controller {
++                interrupt-controller;
++                #address-cells = <0>;
++                #interrupt-cells = <1>;
++                interrupt-parent = <&gic>;
++                interrupts = <GIC_SPI 72 IRQ_TYPE_EDGE_RISING>;
++            };
+         };
+     };
+ ...
+-- 
+2.40.1
 
-Bjorn
