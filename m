@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6106CC001DD
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD6ABC001DE
 	for <linux-pci@archiver.kernel.org>; Thu, 13 Jul 2023 17:19:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231360AbjGMRS7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231852AbjGMRS7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 13 Jul 2023 13:18:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46866 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229819AbjGMRS6 (ORCPT
+        with ESMTP id S229656AbjGMRS6 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2023 13:18:58 -0400
 Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8929C26A3;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3511C2699;
         Thu, 13 Jul 2023 10:18:57 -0700 (PDT)
 Received: from jupiter.universe (dyndsl-091-248-214-236.ewe-ip-backbone.de [91.248.214.236])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id E28A26607052;
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id C9050660704F;
         Thu, 13 Jul 2023 18:18:55 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1689268736;
-        bh=6jGIKPbfF8lFaKxaxnrLO3vT+yEQbM1fwyNNnYbXS6E=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PLKB31XyoOBNRF8LVy2cE+0oXfj/7egsX6mmTa9pvIEw9EF1H/cIfCgJbglWhJjc+
-         OW2oPkLPEWQVMiJG712gHFi4b/610V11zA/aFHJ/o4Dc0/vJrzUNJkoc3+ajkOriug
-         I7NVE/iiV9qdRHR1NOpryI4vmIK5rQiTnvFn1bccajGr69n67Ui8HMEQY0Dpn7rbjA
-         rtvEvqAbtDI7E2VI5r9DN0ag4J/ChzR0v1JTwMXLWgZZX1cVqdFZy03wnigxlPxyA9
-         RHiBbdMHqFgw1NNdCpwhOx78OnvcBnu2TRJPSEobIKBj//XIsmH2Z5ddWmi9jZ7o3W
-         ynbpJUAQYTClA==
+        s=mail; t=1689268735;
+        bh=8SNAy+HvH8jQ2JIS228H02hqVwZkE4Q7e2sspvBi+Rw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=U8nI13odssM7oE33SH8LuPAfkYxOW48OW0KhbokYZWk/yQ5pWtyIvFgdnL7KnfiCn
+         qclTNdpJfONcLQcIRuyudlZI3sh5i9a/8Oma3sHyqluGxDGEpYyNAsinoIQNn0zufp
+         rh0KQvg9TDXfEaW9yGfeaPpIiYrAuSCYMjyR1Z2HNMtrUPtz3M9lL44+Vsvsj2aSHW
+         fsBvca5LKECMhkI7n9uc3DqY/0dO9fOIuXGGN+cJ6kKkU458TUIS2iWD7Cc0Rws2P8
+         r73NMTCkxO2WSoaghP7u3n7AxnWZSlxH7CvTXdrBCAC5QxFmPZ3ch4kkRpcAjFV0Xa
+         Qhb3XLi+jlHdg==
 Received: by jupiter.universe (Postfix, from userid 1000)
-        id CBDB5480086; Thu, 13 Jul 2023 19:18:53 +0200 (CEST)
+        id C896F480084; Thu, 13 Jul 2023 19:18:53 +0200 (CEST)
 From:   Sebastian Reichel <sebastian.reichel@collabora.com>
 To:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
         Serge Semin <fancer.lancer@gmail.com>
@@ -50,78 +50,54 @@ Cc:     Jingoo Han <jingoohan1@gmail.com>,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         Sebastian Reichel <sebastian.reichel@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v2 2/3] dt-bindings: PCI: dwc: rockchip: Add missing legacy-interrupt-controller
-Date:   Thu, 13 Jul 2023 19:18:50 +0200
-Message-Id: <20230713171851.73052-3-sebastian.reichel@collabora.com>
+Subject: [PATCH v2 0/3] RK3588 PCIe2 support
+Date:   Thu, 13 Jul 2023 19:18:48 +0200
+Message-Id: <20230713171851.73052-1-sebastian.reichel@collabora.com>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230713171851.73052-1-sebastian.reichel@collabora.com>
-References: <20230713171851.73052-1-sebastian.reichel@collabora.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rockchip RK356x and RK3588 handle legacy interrupts via a ganged
-interrupts. The RK356x DT implements this via a sub-node named
-"legacy-interrupt-controller", just like a couple of other PCIe
-implementations. This adds proper documentation for this and updates
-the example to avoid regressions.
+Hi,
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
----
- .../bindings/pci/rockchip-dw-pcie.yaml        | 30 +++++++++++++++++++
- 1 file changed, 30 insertions(+)
+This adds PCIe v2 support for RK3588. The series has been tested with
+the onboard RTL8125 network card on Rockchip RK3588 EVB1 (&pcie2x1l1)
+and Radxa Rock 5B (&pcie2x1l2).
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-index aad53c7d8485..8460b1a87248 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-@@ -71,6 +71,28 @@ properties:
-       - const: legacy
-       - const: err
- 
-+  legacy-interrupt-controller:
-+    description: Interrupt controller node for handling legacy PCI interrupts.
-+    type: object
-+    additionalProperties: false
-+    properties:
-+      "#address-cells":
-+        const: 0
-+
-+      "#interrupt-cells":
-+        const: 1
-+
-+      interrupt-controller: true
-+
-+      interrupts:
-+        items:
-+          - description: combined legacy interrupt
-+    required:
-+      - "#address-cells"
-+      - "#interrupt-cells"
-+      - interrupt-controller
-+      - interrupts
-+
-   msi-map: true
- 
-   num-lanes: true
-@@ -158,6 +180,14 @@ examples:
-             reset-names = "pipe";
-             #address-cells = <3>;
-             #size-cells = <2>;
-+
-+            legacy-interrupt-controller {
-+                interrupt-controller;
-+                #address-cells = <0>;
-+                #interrupt-cells = <1>;
-+                interrupt-parent = <&gic>;
-+                interrupts = <GIC_SPI 72 IRQ_TYPE_EDGE_RISING>;
-+            };
-         };
-     };
- ...
+Changes since v1:
+ * https://lore.kernel.org/all/20230616170022.76107-1-sebastian.reichel@collabora.com/
+ * Dropped patch adding 'RK3588' (queued by Rob)
+ * Updated patch adding legacy-interrupt-controller according to comments
+   from Rob and Serge
+    - added missing additionalProperties: false
+    - added all properties to new required property
+    - removed useless quotes around interrupt-controller
+    - added Rob's Reviewed-by
+ * Updated patch adding the missing RK356x/RK3588 interrupt names, so that it
+   provides more details about the interrupts
+ * Updated the DT patch according to the comment from Jonas Karlman, so that
+   the addresses are in 32 bit address space starting at 0x40000000
+
+[0] https://lore.kernel.org/all/20230612171337.74576-1-sebastian.reichel@collabora.com/
+
+Thanks,
+
+-- Sebastian
+
+Sebastian Reichel (3):
+  dt-bindings: PCI: dwc: rockchip: Fix interrupt-names issue
+  dt-bindings: PCI: dwc: rockchip: Add missing
+    legacy-interrupt-controller
+  arm64: dts: rockchip: rk3588: add PCIe2 support
+
+ .../bindings/pci/rockchip-dw-pcie.yaml        |  48 ++++++++
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |  76 +++++++++++-
+ arch/arm64/boot/dts/rockchip/rk3588.dtsi      |  54 +++++++++
+ arch/arm64/boot/dts/rockchip/rk3588s.dtsi     | 108 ++++++++++++++++++
+ 4 files changed, 285 insertions(+), 1 deletion(-)
+
 -- 
 2.40.1
 
