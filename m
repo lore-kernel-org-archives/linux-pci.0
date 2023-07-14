@@ -2,172 +2,114 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EC4BC001DD
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Jul 2023 12:25:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EA7DEB64DA
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Jul 2023 12:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235590AbjGNMZs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Jul 2023 08:25:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37126 "EHLO
+        id S235613AbjGNMaE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Jul 2023 08:30:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235946AbjGNMZ3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2023 08:25:29 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF04D3ABD;
-        Fri, 14 Jul 2023 05:24:57 -0700 (PDT)
+        with ESMTP id S235628AbjGNMaB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2023 08:30:01 -0400
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13F9C3C20;
+        Fri, 14 Jul 2023 05:29:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689337498; x=1720873498;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=9rLxITniA1sLQNMmewKfuHQKCayEQypmbjbNmv3sb5I=;
-  b=SVFMGr1m8k8DJNNjzPQDlA7A4Ju+gkPsVghSZcLmxjB9Ne4X/HXs6hhM
-   PlilqkxMOSqib4MFR7m4Ap+npNUI7cJ7PKbGKXGwjj5Gi9pvnZm/D1LK5
-   LNJTJZewJbp+AxfTYBI/f/EzeMsqLxDYZj+4R6/M8jJofQapnw7jTPDPH
-   nE+DxfKdwkJdaWBGdxTVrEFZziEQjvyX0Ma5mpmuILpDvZRnQGxDnWUSH
-   XH5bO1udJyC2g4GLaTMl0ALTfE93/aDhgi9bKJuNbLCMQ5Q6AMV3HYUso
-   Pm5ZHCF+tgN4RYs3SKzjn2BQHMd3x+2dui0Yqno1G+SN6Qmry6OpSfJ47
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10770"; a="429225921"
+  t=1689337778; x=1720873778;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=paNCn0i0ocmnyoUcYofPrK6VJYyVDAF9BUUDGQr8dR0=;
+  b=fB+bX9BCf2hjN44fGIOxz+dmN9pnLcu2JEC5cCf9/lcXP4Ht7V4sy0ST
+   eDc/oHbuhPA/noOk0qEMj0n0+G47NAsTmVXC2o9jH2owUwZMo0LBSEgXi
+   slK20vSAb4yS36DkVoaJE8W+Eogg9OJHUs5EED6Pw7RRnVkuUyGL74oBO
+   C1thX1Wo4ImeeppsEdM+YizULrvgRzQiHAgQ8vve9mzhzWBbNlazWdzQt
+   FODhPD+rPSjlbH7PxSlER65DgnkErReRus8gbXFaSkyHbRWPV7rlIhf49
+   eqwUBSPzBFe0U/UOmdjejjyIFF287nj8RcG5kAy+uEJaBbfKwNy6yqopl
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10770"; a="368101721"
 X-IronPort-AV: E=Sophos;i="6.01,205,1684825200"; 
-   d="scan'208";a="429225921"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2023 05:24:26 -0700
+   d="scan'208";a="368101721"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2023 05:29:16 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10770"; a="1053035016"
+X-IronPort-AV: E=McAfee;i="6600,9927,10770"; a="812415922"
 X-IronPort-AV: E=Sophos;i="6.01,205,1684825200"; 
-   d="scan'208";a="1053035016"
-Received: from dev2 (HELO DEV2.igk.intel.com) ([10.237.148.94])
-  by fmsmga005.fm.intel.com with ESMTP; 14 Jul 2023 05:24:23 -0700
-From:   =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= 
+   d="scan'208";a="812415922"
+Received: from rchauhax-mobl1.gar.corp.intel.com ([10.249.35.123])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Jul 2023 05:29:12 -0700
+Date:   Fri, 14 Jul 2023 15:29:09 +0300 (EEST)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     =?ISO-8859-2?Q?Amadeusz_S=B3awi=F1ski?= 
         <amadeuszx.slawinski@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Brown <broonie@kernel.org>, Takashi Iwai <tiwai@suse.com>
-Cc:     alsa-devel@alsa-project.org, linux-pci@vger.kernel.org,
+cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Brown <broonie@kernel.org>, Takashi Iwai <tiwai@suse.com>,
+        alsa-devel@alsa-project.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Cezary Rojewski <cezary.rojewski@intel.com>,
         Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>,
         Kai Vehmanen <kai.vehmanen@linux.intel.com>,
         Andy Shevchenko <andriy.shevchenko@intel.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= 
-        <amadeuszx.slawinski@linux.intel.com>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 15/15] ASoC: Intel: sst: Convert to PCI device IDs defines
-Date:   Fri, 14 Jul 2023 22:24:57 +0200
-Message-Id: <20230714202457.423866-16-amadeuszx.slawinski@linux.intel.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230714202457.423866-1-amadeuszx.slawinski@linux.intel.com>
-References: <20230714202457.423866-1-amadeuszx.slawinski@linux.intel.com>
+Subject: Re: [PATCH v3 07/15] ALSA: hda/i915:  Use global PCI match macro
+In-Reply-To: <20230714202457.423866-8-amadeuszx.slawinski@linux.intel.com>
+Message-ID: <9d3c56af-e9ff-7791-1644-2d362e428f48@linux.intel.com>
+References: <20230714202457.423866-1-amadeuszx.slawinski@linux.intel.com> <20230714202457.423866-8-amadeuszx.slawinski@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; boundary="8323329-1404882682-1689337755=:1695"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use PCI device IDs from pci_ids.h header. BSW replaces CHV, as 0x22a8
-was added in PCI header as BSW ID for consistency, as they are same
-(similar) platforms. The ACPI IDs are used only internally and lower
-16 bits uniquely define the device as vendor ID for Intel is 8086 for
-all of them. Use PCI_DEVICE_DATA() to match PCI device to be consistent
-with other Intel audio drivers.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Suggested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Amadeusz Sławiński <amadeuszx.slawinski@linux.intel.com>
----
- sound/soc/intel/atom/sst/sst.c     | 9 +++++----
- sound/soc/intel/atom/sst/sst.h     | 7 ++-----
- sound/soc/intel/atom/sst/sst_pci.c | 4 ++--
- 3 files changed, 9 insertions(+), 11 deletions(-)
+--8323329-1404882682-1689337755=:1695
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-diff --git a/sound/soc/intel/atom/sst/sst.c b/sound/soc/intel/atom/sst/sst.c
-index a0d29510d2bc..1807813298cb 100644
---- a/sound/soc/intel/atom/sst/sst.c
-+++ b/sound/soc/intel/atom/sst/sst.c
-@@ -16,6 +16,7 @@
- #include <linux/interrupt.h>
- #include <linux/io.h>
- #include <linux/firmware.h>
-+#include <linux/pci.h>
- #include <linux/pm_runtime.h>
- #include <linux/pm_qos.h>
- #include <linux/async.h>
-@@ -174,9 +175,9 @@ int sst_driver_ops(struct intel_sst_drv *sst)
- {
- 
- 	switch (sst->dev_id) {
--	case SST_MRFLD_PCI_ID:
--	case SST_BYT_ACPI_ID:
--	case SST_CHV_ACPI_ID:
-+	case PCI_DEVICE_ID_INTEL_SST_TNG:
-+	case PCI_DEVICE_ID_INTEL_SST_BYT:
-+	case PCI_DEVICE_ID_INTEL_SST_BSW:
- 		sst->tstamp = SST_TIME_STAMP_MRFLD;
- 		sst->ops = &mrfld_ops;
- 		return 0;
-@@ -222,7 +223,7 @@ static void sst_init_locks(struct intel_sst_drv *ctx)
- }
- 
- int sst_alloc_drv_context(struct intel_sst_drv **ctx,
--		struct device *dev, unsigned int dev_id)
-+		struct device *dev, unsigned short dev_id)
- {
- 	*ctx = devm_kzalloc(dev, sizeof(struct intel_sst_drv), GFP_KERNEL);
- 	if (!(*ctx))
-diff --git a/sound/soc/intel/atom/sst/sst.h b/sound/soc/intel/atom/sst/sst.h
-index 4d37d39fd8f4..126903e126e4 100644
---- a/sound/soc/intel/atom/sst/sst.h
-+++ b/sound/soc/intel/atom/sst/sst.h
-@@ -20,9 +20,6 @@
- 
- /* driver names */
- #define SST_DRV_NAME "intel_sst_driver"
--#define SST_MRFLD_PCI_ID 0x119A
--#define SST_BYT_ACPI_ID	0x80860F28
--#define SST_CHV_ACPI_ID	0x808622A8
- 
- #define SST_SUSPEND_DELAY 2000
- #define FW_CONTEXT_MEM (64*1024)
-@@ -358,7 +355,7 @@ struct sst_fw_save {
- struct intel_sst_drv {
- 	int			sst_state;
- 	int			irq_num;
--	unsigned int		dev_id;
-+	unsigned short		dev_id;
- 	void __iomem		*ddr;
- 	void __iomem		*shim;
- 	void __iomem		*mailbox;
-@@ -523,7 +520,7 @@ int sst_register(struct device *);
- int sst_unregister(struct device *);
- 
- int sst_alloc_drv_context(struct intel_sst_drv **ctx,
--		struct device *dev, unsigned int dev_id);
-+		struct device *dev, unsigned short dev_id);
- int sst_context_init(struct intel_sst_drv *ctx);
- void sst_context_cleanup(struct intel_sst_drv *ctx);
- void sst_configure_runtime_pm(struct intel_sst_drv *ctx);
-diff --git a/sound/soc/intel/atom/sst/sst_pci.c b/sound/soc/intel/atom/sst/sst_pci.c
-index 4058b4f80a0c..d1e64c3500be 100644
---- a/sound/soc/intel/atom/sst/sst_pci.c
-+++ b/sound/soc/intel/atom/sst/sst_pci.c
-@@ -32,7 +32,7 @@ static int sst_platform_get_resources(struct intel_sst_drv *ctx)
- 
- 	/* map registers */
- 	/* DDR base */
--	if (ctx->dev_id == SST_MRFLD_PCI_ID) {
-+	if (ctx->dev_id == PCI_DEVICE_ID_INTEL_SST_TNG) {
- 		ctx->ddr_base = pci_resource_start(pci, 0);
- 		/* check that the relocated IMR base matches with FW Binary */
- 		ddr_base = relocate_imr_addr_mrfld(ctx->ddr_base);
-@@ -173,7 +173,7 @@ static void intel_sst_remove(struct pci_dev *pci)
- 
- /* PCI Routines */
- static const struct pci_device_id intel_sst_ids[] = {
--	{ PCI_VDEVICE(INTEL, SST_MRFLD_PCI_ID), 0},
-+	{ PCI_DEVICE_DATA(INTEL, SST_TNG, 0) },
- 	{ 0, }
- };
- 
+Hi,
+
+Just a small nit, you have an extra space in the shortlog line.
+
 -- 
-2.34.1
+ i.
 
+On Fri, 14 Jul 2023, Amadeusz Sławiński wrote:
+
+> Instead of using local macro to match PCI device, use global one.
+> 
+> Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Signed-off-by: Amadeusz Sławiński <amadeuszx.slawinski@linux.intel.com>
+> ---
+>  sound/hda/hdac_i915.c | 7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
+> 
+> diff --git a/sound/hda/hdac_i915.c b/sound/hda/hdac_i915.c
+> index 161a9711cd63..2a451ff4fe6a 100644
+> --- a/sound/hda/hdac_i915.c
+> +++ b/sound/hda/hdac_i915.c
+> @@ -11,11 +11,6 @@
+>  #include <sound/hda_i915.h>
+>  #include <sound/hda_register.h>
+>  
+> -#define IS_HSW_CONTROLLER(pci) (((pci)->device == 0x0a0c) || \
+> -				((pci)->device == 0x0c0c) || \
+> -				((pci)->device == 0x0d0c) || \
+> -				((pci)->device == 0x160c))
+> -
+>  /**
+>   * snd_hdac_i915_set_bclk - Reprogram BCLK for HSW/BDW
+>   * @bus: HDA core bus
+> @@ -39,7 +34,7 @@ void snd_hdac_i915_set_bclk(struct hdac_bus *bus)
+>  
+>  	if (!acomp || !acomp->ops || !acomp->ops->get_cdclk_freq)
+>  		return; /* only for i915 binding */
+> -	if (!IS_HSW_CONTROLLER(pci))
+> +	if (!HDA_CONTROLLER_IS_HSW(pci))
+>  		return; /* only HSW/BDW */
+>  
+>  	cdclk_freq = acomp->ops->get_cdclk_freq(acomp->dev);
+> 
+--8323329-1404882682-1689337755=:1695--
