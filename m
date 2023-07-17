@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40096C001B0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA938C001DC
 	for <linux-pci@archiver.kernel.org>; Mon, 17 Jul 2023 17:27:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231146AbjGQR1M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jul 2023 13:27:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42954 "EHLO
+        id S231174AbjGQR1N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jul 2023 13:27:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229635AbjGQR1D (ORCPT
+        with ESMTP id S230500AbjGQR1D (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2023 13:27:03 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71176B9;
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF16AD8;
         Mon, 17 Jul 2023 10:26:57 -0700 (PDT)
 Received: from jupiter.universe (dyndsl-091-248-189-171.ewe-ip-backbone.de [91.248.189.171])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id C41976602329;
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id E09F86606FC8;
         Mon, 17 Jul 2023 18:26:55 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1689614815;
-        bh=zCQp1ogz508z6XY8UW74TYNiCI6zGXJQ14juwMUHFuY=;
+        s=mail; t=1689614816;
+        bh=GALTLk1kp81TWDcsFroSmRcnp70s2ikSUk1HG3RlfRQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PjuqyPP6FNMstblmNNyUcLTbaBHu8rFZqdVtn5U8dGvx5BsT+hLIeL+5r2GZkz1pg
-         3XWVdVZU611A1ThtQ3RwODScRqgLH89lNbzO4woyKOJnHF6LdW872MhtQATPH0OGBz
-         U/hOlPCyXbjqRVdsY1uOi0UZvpMO2shCvAqNot1Qoa1oyXOYAyVRmpp5mo/ziUIB7A
-         h4oIBUXIxgvCuGe1oTpobQXW3F/z/+b8sUDI3Z2OD1Q6cPIdTO9WP7m+E55e3s/UJl
-         A+bfiinMWT6XMYuP9DE7cu1HE4GZ19xNYXxiuT89XZIdahMff2BtFxBQQ9t4A1CMm1
-         MBdB9ot1PoNuw==
+        b=cZUsBZPo1A8U4vH4pXrI8+kODvY49w9R9s8Bz+sAvYJ6s81eW9IL/9fHAQ5b30ZlH
+         tQZa/pCyp5f2FzezGXpQGbAKmIb7mmxWwlBJU5YMGVS4FukE/HswiUgOn2HiLasLpa
+         sYXVwsyu81hz8eLju/qLDwAhVz2IDbq3amZfGnFYgbAjW4Z3NuAcWtqEhSKPa9+NOB
+         XuDHyHbZiv1/Q7vIgCnkRsAD42yrtPXOKOZgGUnqSLMlYrYFZTpceESix/i5XJZOCk
+         e9fV/ZLZJl6joamxDS9PxW5sW+wbPC30ZRna+SyZ1Ggs6gJCA+mTLAfeYV8Yw0qQ8g
+         F+31a4qQxOUKA==
 Received: by jupiter.universe (Postfix, from userid 1000)
-        id 1BD67480C78; Mon, 17 Jul 2023 19:26:53 +0200 (CEST)
+        id 1EE9D480C7A; Mon, 17 Jul 2023 19:26:53 +0200 (CEST)
 From:   Sebastian Reichel <sebastian.reichel@collabora.com>
 To:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
         Serge Semin <fancer.lancer@gmail.com>
@@ -50,9 +50,9 @@ Cc:     Jingoo Han <jingoohan1@gmail.com>,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         Sebastian Reichel <sebastian.reichel@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v3 2/5] dt-bindings: PCI: dwc: rockchip: Fix interrupt-names issue
-Date:   Mon, 17 Jul 2023 19:26:48 +0200
-Message-Id: <20230717172651.64324-3-sebastian.reichel@collabora.com>
+Subject: [PATCH v3 4/5] dt-bindings: PCI: dwc: rockchip: Add missing legacy-interrupt-controller
+Date:   Mon, 17 Jul 2023 19:26:50 +0200
+Message-Id: <20230717172651.64324-5-sebastian.reichel@collabora.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230717172651.64324-1-sebastian.reichel@collabora.com>
 References: <20230717172651.64324-1-sebastian.reichel@collabora.com>
@@ -62,102 +62,66 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The RK356x (and RK3588) have 5 ganged interrupts. For example the
-"legacy" interrupt combines "inta/intb/intc/intd" with a register
-providing the details.
+Rockchip RK356x and RK3588 handle legacy interrupts via a ganged
+interrupts. The RK356x DT implements this via a sub-node named
+"legacy-interrupt-controller", just like a couple of other PCIe
+implementations. This adds proper documentation for this and updates
+the example to avoid regressions.
 
-Currently the binding is not specifying these interrupts resulting
-in a bunch of errors for all rk356x boards using PCIe.
-
-Fix this by specifying the interrupts and add them to the example
-to prevent regressions.
-
-This changes the reference from snps,dw-pcie.yaml to
-snps,dw-pcie-common.yaml, since the interrupts are vendor
-specific and should not be listed in the generic file. The
-only other bit from the generic binding are the reg-names,
-which are overwritten by this binding.
-
+Reviewed-by: Rob Herring <robh@kernel.org>
 Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 ---
- .../bindings/pci/rockchip-dw-pcie.yaml        | 43 ++++++++++++++++++-
- 1 file changed, 42 insertions(+), 1 deletion(-)
+ .../bindings/pci/rockchip-dw-pcie.yaml        | 30 +++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
 diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-index a4f61ced5e88..7836b9a5547c 100644
+index ad9954f7fe02..1ae8dcfa072c 100644
 --- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
 +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-@@ -17,7 +17,8 @@ description: |+
-   snps,dw-pcie.yaml.
+@@ -93,6 +93,28 @@ properties:
+       - const: legacy
+       - const: err
  
- allOf:
--  - $ref: /schemas/pci/snps,dw-pcie.yaml#
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+  - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
- 
- properties:
-   compatible:
-@@ -60,6 +61,39 @@ properties:
-       - const: aux
-       - const: pipe
- 
-+  interrupts:
-+    items:
-+      - description:
-+          Combined system interrupt, which is used to signal the following
-+          interrupts - phy_link_up, dll_link_up, link_req_rst_not, hp_pme,
-+          hp, hp_msi, link_auto_bw, link_auto_bw_msi, bw_mgt, bw_mgt_msi,
-+          edma_wr, edma_rd, dpa_sub_upd, rbar_update, link_eq_req, ep_elbi_app
-+      - description:
-+          Combined PM interrupt, which is used to signal the following
-+          interrupts - linkst_in_l1sub, linkst_in_l1, linkst_in_l2,
-+          linkst_in_l0s, linkst_out_l1sub, linkst_out_l1, linkst_out_l2,
-+          linkst_out_l0s, pm_dstate_update
-+      - description:
-+          Combined message interrupt, which is used to signal the following
-+          interrupts - ven_msg, unlock_msg, ltr_msg, cfg_pme, cfg_pme_msi,
-+          pm_pme, pm_to_ack, pm_turnoff, obff_idle, obff_obff, obff_cpu_active
-+      - description:
-+          Combined legacy interrupt, which is used to signal the following
-+          interrupts - inta, intb, intc, intd
-+      - description:
-+          Combined error interrupt, which is used to signal the following
-+          interrupts - aer_rc_err, aer_rc_err_msi, rx_cpl_timeout,
-+          tx_cpl_timeout, cor_err_sent, nf_err_sent, f_err_sent, cor_err_rx,
-+          nf_err_rx, f_err_rx, radm_qoverflow
++  legacy-interrupt-controller:
++    description: Interrupt controller node for handling legacy PCI interrupts.
++    type: object
++    additionalProperties: false
++    properties:
++      "#address-cells":
++        const: 0
 +
-+  interrupt-names:
-+    items:
-+      - const: sys
-+      - const: pmc
-+      - const: msg
-+      - const: legacy
-+      - const: err
++      "#interrupt-cells":
++        const: 1
++
++      interrupt-controller: true
++
++      interrupts:
++        items:
++          - description: combined legacy interrupt
++    required:
++      - "#address-cells"
++      - "#interrupt-cells"
++      - interrupt-controller
++      - interrupts
 +
    msi-map: true
  
    num-lanes: true
-@@ -108,6 +142,7 @@ unevaluatedProperties: false
- 
- examples:
-   - |
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
- 
-     bus {
-         #address-cells = <2>;
-@@ -127,6 +162,12 @@ examples:
-                           "aclk_dbi", "pclk",
-                           "aux";
-             device_type = "pci";
-+            interrupts = <GIC_SPI 160 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 158 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 157 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 156 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-names = "sys", "pmc", "msg", "legacy", "err";
-             linux,pci-domain = <2>;
-             max-link-speed = <2>;
-             msi-map = <0x2000 &its 0x2000 0x1000>;
+@@ -180,6 +202,14 @@ examples:
+             reset-names = "pipe";
+             #address-cells = <3>;
+             #size-cells = <2>;
++
++            legacy-interrupt-controller {
++                interrupt-controller;
++                #address-cells = <0>;
++                #interrupt-cells = <1>;
++                interrupt-parent = <&gic>;
++                interrupts = <GIC_SPI 72 IRQ_TYPE_EDGE_RISING>;
++            };
+         };
+     };
+ ...
 -- 
 2.40.1
 
