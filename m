@@ -2,119 +2,69 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 095F9C04A6A
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jul 2023 12:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AEC0C001DF
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jul 2023 13:39:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229827AbjGQMzb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jul 2023 08:55:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36122 "EHLO
+        id S230113AbjGQNjX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jul 2023 09:39:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230147AbjGQMz1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2023 08:55:27 -0400
-Received: from mga06.intel.com (mga06b.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE5501B0;
-        Mon, 17 Jul 2023 05:55:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689598526; x=1721134526;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=VqCLuF6+Bx4Auyc0wAAAKOAjCrnRB30KAZm7eJddByA=;
-  b=A/8xH1mduUSXiRwXaJutZJN9Nrdf/MDIfnUkkpC5UbjYNzOkPu9vdlrn
-   +4MZt4zoICdX8XLTiAuHOOn4ei1eJsXs7/Ly2WsJoeznJQuEn/nH9dnyC
-   uUtewIaQB1SDfJmkMH++j30ffJI9oEi6mHBkvILr3CqqeAuLIi1yruhYO
-   3dLDTCWrbXDadGk6vmCMBFlWRW0eP4q0TawuFhw0xXMtdMuUR4g63YjPT
-   oqWjQwGsONNuq/RV8RIXmUFMzBBOAE03w2Wr5UHQQN6almP5v0oVEYApQ
-   vreW83qepjMu6SDDgZVtGu3BVtMKw9tS4WgX6lfNtAnv7gxCq/FHhGrnJ
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10774"; a="429680675"
-X-IronPort-AV: E=Sophos;i="6.01,211,1684825200"; 
-   d="scan'208";a="429680675"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2023 05:55:24 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10774"; a="793234537"
-X-IronPort-AV: E=Sophos;i="6.01,211,1684825200"; 
-   d="scan'208";a="793234537"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga004.fm.intel.com with ESMTP; 17 Jul 2023 05:55:17 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id DC6B0370; Mon, 17 Jul 2023 15:55:23 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Shuah Khan <skhan@linuxfoundation.org>,
-        David Gow <davidgow@google.com>,
-        Daniel Latypov <dlatypov@google.com>,
-        "Steven Rostedt (Google)" <rostedt@goodmis.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-        kunit-dev@googlegroups.com, linux-arm-kernel@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-trace-kernel@vger.kernel.org
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Brendan Higgins <brendan.higgins@linux.dev>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH v3 2/4] x86/asm: Replace custom COUNT_ARGS() & CONCATENATE() implementations
-Date:   Mon, 17 Jul 2023 15:55:19 +0300
-Message-Id: <20230717125521.43176-3-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.40.0.1.gaa8946217a0b
-In-Reply-To: <20230717125521.43176-1-andriy.shevchenko@linux.intel.com>
-References: <20230717125521.43176-1-andriy.shevchenko@linux.intel.com>
+        with ESMTP id S229835AbjGQNjW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2023 09:39:22 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C7668F;
+        Mon, 17 Jul 2023 06:39:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7D47661074;
+        Mon, 17 Jul 2023 13:39:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 60506C433CA;
+        Mon, 17 Jul 2023 13:39:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1689601160;
+        bh=JhtExtpwcPs3DxfwEaqMV3K5TXPPLv9dLOoieoSvxvY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=moSB2eBTRpkbZwMwx1IrLVoxXyRXUJlwnXMATxcfF5UNvsEr+aPOWjX6PM+hpvXlV
+         tUodaRaaG7fr095r9igvNANB6S4unuUipNCM5T96exHjt3NY61Rd2yKkngHqIW922t
+         ly5cVz+NccAR+oe6QgvwZsg5LsL4sxFXwnSEYzvw=
+Date:   Mon, 17 Jul 2023 15:39:17 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Sricharan Ramabadhran <quic_srichara@quicinc.com>
+Cc:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        robh@kernel.org, mani@kernel.org, lpieralisi@kernel.org,
+        bhelgaas@google.com, kw@linux.com, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH V4] PCI: qcom: Fixing broken pcie bring up for 2_3_3
+ configs ops
+Message-ID: <2023071729-shamrock-evidence-b698@gregkh>
+References: <20230717065535.2065582-1-quic_srichara@quicinc.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230717065535.2065582-1-quic_srichara@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Replace custom implementation of the macros from args.h.
+On Mon, Jul 17, 2023 at 12:25:35PM +0530, Sricharan Ramabadhran wrote:
+> PARF_SLV_ADDR_SPACE_SIZE_2_3_3 macro is used for IPQ8074
+> 2_3_3 post_init ops. PCIe slave addr size was initially set
+> to 0x358, but was wrongly changed to 0x168 as a part of
+> commit 39171b33f652 ("PCI: qcom: Remove PCIE20_ prefix from
+> register definitions"). Fixing it, by using the right macro
+> PARF_SLV_ADDR_SPACE_SIZE and remove the unused
+> PARF_SLV_ADDR_SPACE_SIZE_2_3_3.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/x86/include/asm/rmwcc.h | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+Note, you do have a full 72 columns to use, no need to make it smaller.
 
-diff --git a/arch/x86/include/asm/rmwcc.h b/arch/x86/include/asm/rmwcc.h
-index 7fa611216417..4b081e0d3306 100644
---- a/arch/x86/include/asm/rmwcc.h
-+++ b/arch/x86/include/asm/rmwcc.h
-@@ -2,12 +2,7 @@
- #ifndef _ASM_X86_RMWcc
- #define _ASM_X86_RMWcc
- 
--/* This counts to 12. Any more, it will return 13th argument. */
--#define __RMWcc_ARGS(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _n, X...) _n
--#define RMWcc_ARGS(X...) __RMWcc_ARGS(, ##X, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
--
--#define __RMWcc_CONCAT(a, b) a ## b
--#define RMWcc_CONCAT(a, b) __RMWcc_CONCAT(a, b)
-+#include <linux/args.h>
- 
- #define __CLOBBERS_MEM(clb...)	"memory", ## clb
- 
-@@ -48,7 +43,7 @@ cc_label:	c = true;						\
- #define GEN_UNARY_RMWcc_3(op, var, cc)					\
- 	GEN_UNARY_RMWcc_4(op, var, cc, "%[var]")
- 
--#define GEN_UNARY_RMWcc(X...) RMWcc_CONCAT(GEN_UNARY_RMWcc_, RMWcc_ARGS(X))(X)
-+#define GEN_UNARY_RMWcc(X...)	CONCATENATE(GEN_UNARY_RMWcc_, COUNT_ARGS(X))(X)
- 
- #define GEN_BINARY_RMWcc_6(op, var, cc, vcon, _val, arg0)		\
- 	__GEN_RMWcc(op " %[val], " arg0, var, cc,			\
-@@ -57,7 +52,7 @@ cc_label:	c = true;						\
- #define GEN_BINARY_RMWcc_5(op, var, cc, vcon, val)			\
- 	GEN_BINARY_RMWcc_6(op, var, cc, vcon, val, "%[var]")
- 
--#define GEN_BINARY_RMWcc(X...) RMWcc_CONCAT(GEN_BINARY_RMWcc_, RMWcc_ARGS(X))(X)
-+#define GEN_BINARY_RMWcc(X...)	CONCATENATE(GEN_BINARY_RMWcc_, COUNT_ARGS(X))(X)
- 
- #define GEN_UNARY_SUFFIXED_RMWcc(op, suffix, var, cc, clobbers...)	\
- 	__GEN_RMWcc(op " %[var]\n\t" suffix, var, cc,			\
--- 
-2.40.0.1.gaa8946217a0b
+> Without this pcie bring up on IPQ8074 is broken now.
 
+I do not understand, something that used to work now breaks, or this is
+preventing a new chip from being "brought up"?
+
+thanks,
+
+greg k-h
