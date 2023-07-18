@@ -2,93 +2,81 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2851DEB64DC
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Jul 2023 06:16:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 943E8EB64DA
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Jul 2023 09:16:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231337AbjGRGQx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Jul 2023 02:16:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54324 "EHLO
+        id S231665AbjGRJQQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Jul 2023 05:16:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231350AbjGRGQe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2023 02:16:34 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83ED51986;
-        Mon, 17 Jul 2023 23:15:49 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 5B1956146F;
-        Tue, 18 Jul 2023 06:15:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AD86C433C7;
-        Tue, 18 Jul 2023 06:15:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689660936;
-        bh=pIDYFv2ZkJ4bRQ7wTGYVbgGEKPWGKq3xt9sih1qj7QM=;
-        h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-        b=NpTtlamI7m1trWo+6u3KW79p3V9twD1Crf6/L9cvZGFm8JCRz6UUUZ/4v61wmGyBS
-         cw0nCmLkRjZyea4e7+AZ70d+3LZ5g4VPS2NF/r31EFnCWCV1DekXqlTqYbIsivsPb8
-         aoT5IDQavozjtDXfjXkdUlejoa1m81Kov+fLwCK0SmKalgacoczQp+XXWJcsLRb1TE
-         26cFnTi4LiIP2lAIOi8q021LXKDC5mrN3SzH/rKwObP1KCGQg0vFXlrN/2LMBaUwg7
-         Egerw7XB0SQLmyb//29uRlV4Z9FfewBYDrQvTREIK7MnqjS92cyMFo0hBFEJ86a3at
-         gx0c5zrpULfuw==
-From:   Vinod Koul <vkoul@kernel.org>
-To:     agross@kernel.org, andersson@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        konrad.dybcio@linaro.org, mani@kernel.org,
-        Mrinmay Sarkar <quic_msarkar@quicinc.com>
-Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
-        dmitry.baryshkov@linaro.org, Bjorn Helgaas <bhelgaas@google.com>,
+        with ESMTP id S231593AbjGRJQK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2023 05:16:10 -0400
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 877DD171B
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2023 02:16:09 -0700 (PDT)
+Received: by mail-lf1-x136.google.com with SMTP id 2adb3069b0e04-4f4b2bc1565so8937798e87.2
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2023 02:16:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1689671768; x=1692263768;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=1ArVM8hO5JmqawYj0bAdi35rTjPsLnVXsndSgTl9bpA=;
+        b=bDAOBbnEsu8XzXY6Qr9rFqFeguyvLdnAWlkhI+TFQkNYOP1B8tboggUAHVKCsgrd+F
+         ze+iedigN4Xr41ABn6jlbAmHMKX8Zv4IP5jMvYtEVWmN7Bd9e7FimswjLlSdv7eRpZvZ
+         bes7cZxSg7ZsSjXLHZ4A5ETGHk1pvus4yhJtq1c2mTVwGQ1uHt9XKFmQT9IPlQRFvr6x
+         9glNHyyB494PBA6b1VGcfU7qAZdV+2VF84TeVtaOjmQx6+ycDYdiBeleklFrdFZtu4WI
+         g+YRdES/EgAmJaLFH2W7X43k9VZEsnrnIJl3m2zEStsOHACWueEegpu0J2D3Ybgfcv25
+         /lWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1689671768; x=1692263768;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1ArVM8hO5JmqawYj0bAdi35rTjPsLnVXsndSgTl9bpA=;
+        b=iY9B+uStYjFpEH321jJXF2tfGb84DFX9rVfQ9LWmCI/WNQ10RUUkCSx54bhT/HDGyP
+         sm4gKDRotbRU6nGhTNAKJa/alUltv0QjJ9nUV5Rgyks9HoFfOS7zLx+/4MnycijTqazZ
+         Q3a7+ZHS7eae7Sty9gqIWkFP3cBh1pe/lBeIWxLliZkHBrnz2ia3PLLA/3zt14vImxb+
+         zJr5phUK3BDfFznOu4NaibV1/57q7Y5RiEGufVrzGibViGBuvbd+oNyl/sg+FhpJEIiR
+         rKq+rbpZP5zCnS1hyIzmhIRtyS0I5jsUYsr+ozXuQx/zStWB1APFLNmudRfK47jsu0oB
+         RMJg==
+X-Gm-Message-State: ABy/qLZ4RteNplxhaP3vGMcg/kU0QTo6T5/X3X+QiFIAYc8JKfXrbmX1
+        v3kCJzz14TRzVIPyDtrDQLgt5QudbF4=
+X-Google-Smtp-Source: APBJJlFWdyunRCXhL+SaA4OC9Q8/h0ko7xnGI/QFkqoV3ssjSMQvQ+1kijJLAn03S0LYMrH9pOSDbw==
+X-Received: by 2002:ac2:4e0d:0:b0:4f8:58ae:8ea8 with SMTP id e13-20020ac24e0d000000b004f858ae8ea8mr1256472lfr.58.1689671767520;
+        Tue, 18 Jul 2023 02:16:07 -0700 (PDT)
+Received: from mobilestation ([85.249.21.35])
+        by smtp.gmail.com with ESMTPSA id g18-20020ac25392000000b004fa52552c7csm341980lfh.151.2023.07.18.02.16.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Jul 2023 02:16:07 -0700 (PDT)
+Date:   Tue, 18 Jul 2023 12:16:04 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Krzysztof Wilczynski <kw@linux.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org
-In-Reply-To: <1689311319-22054-1-git-send-email-quic_msarkar@quicinc.com>
-References: <1689311319-22054-1-git-send-email-quic_msarkar@quicinc.com>
-Subject: Re: (subset) [PATCH v2 0/6] arm64: qcom: sa8775p: add support for
- PCIe
-Message-Id: <168966092968.340315.2461852657981161685.b4-ty@kernel.org>
-Date:   Tue, 18 Jul 2023 11:45:29 +0530
+        linux-pci@vger.kernel.org
+Subject: Re: Future of pci-mvebu
+Message-ID: <l3rqo422yn2mbf7qtkqk4ay2fz6jteygmahepvmleiyrxjoaw2@ptqtsl5s6mj6>
+References: <20230717220317.q7hgtpppvruxiapx@pali>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.12.2
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230717220317.q7hgtpppvruxiapx@pali>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+To += Mani
 
-On Fri, 14 Jul 2023 10:38:32 +0530, Mrinmay Sarkar wrote:
-> Update the relavent DT bindings for PCIe, add new config to the phy
-> driver add pcie and phy nodes to the .dtsi file and enable then in
-> board .dts file for the sa8775p-ride platform.
-> 
-> v1 -> v2:
-> - correct indentationand sort compatible in qcom,pcie binding
-> - correct clock name entry and sort compatible in pcie-phy binding
-> - sort compatible and change commit message in qcom pcie driver
-> - change offset name, added tx2 and rx2 offsets and sort compatible
->   in qmp pcie phy driver
-> - correct ranges property, added MSI, dma-coherent, cpu-pcie property
->   removed iommus property moved pinctrl and gpio property to board dts
->   and correct the allignment in pcie dtsi nodes
-> - added pinctrl and gpio property in board dts
-> 
-> [...]
+* He is now supposed to watch for the DW PCIe drivers.
 
-Applied, thanks!
-
-[2/6] dt-bindings: phy: qcom,qmp: Add sa8775p QMP PCIe PHY
-      commit: fd2d4e4c19864fdd400d961de899163323ab7fa9
-[4/6] phy: qcom-qmp-pcie: add support for sa8775p
-      commit: a05b6d5135ec3e65520ae0eaa1b24d4c6549424e
-
-Best regards,
--- 
-~Vinod
+On Tue, Jul 18, 2023 at 12:03:17AM +0200, Pali Rohár wrote:
+> Hello, I have just one question. What do you want to do with pci-mvebu
+> driver? It is already marked as broken for 3 kernel releases and I do
+> not see any progress from anybody (and you rejected my fixes). How long
+> do you want it to have marked as broken?
 
 
