@@ -2,60 +2,57 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD78EB64DD
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Jul 2023 06:16:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2851DEB64DC
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Jul 2023 06:16:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231463AbjGRGQu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Jul 2023 02:16:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58266 "EHLO
+        id S231337AbjGRGQx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Jul 2023 02:16:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231332AbjGRGQc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2023 02:16:32 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB48F2103;
-        Mon, 17 Jul 2023 23:15:45 -0700 (PDT)
+        with ESMTP id S231350AbjGRGQe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2023 02:16:34 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83ED51986;
+        Mon, 17 Jul 2023 23:15:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 31BFE6146C;
-        Tue, 18 Jul 2023 06:15:45 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A470C433C8;
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 5B1956146F;
         Tue, 18 Jul 2023 06:15:37 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2AD86C433C7;
+        Tue, 18 Jul 2023 06:15:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689660944;
-        bh=cUbtQFwtfNqfULDCUbv0nOM8BYXs2LTWrJLdZvxDQA8=;
+        s=k20201202; t=1689660936;
+        bh=pIDYFv2ZkJ4bRQ7wTGYVbgGEKPWGKq3xt9sih1qj7QM=;
         h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-        b=KJMbAtyc6I4UHt7JFBVCvT14hZFxEuSn4EUlSOeJYjfmbE5T15HppBRoUbJax/Vtm
-         869HTzQvKifHDgR2O6mXMZPwr9FNPI53GvIY3GS2y1ZXAk84W5q/JxvSiYhQPN6N/4
-         2pdCEkamrgQOIO6ksvmJ1MVA4wNMZ+QvYssZwsUmSTEZCR6yiSJq7yut8GDT5tNhUZ
-         hZsMUuT+RqvRZX4kJfQYgJn9iFHaasyZU3hPQPOsoVupT7pDyG2vOzZ7Vv9UMqPMBq
-         /POpr7jpl0bocB0WIjrTURwiWpsuZMWyF/GB8IzpM7p8HpMfIDZSJ6on4t0eynysl6
-         RRyyt8RJGyA1A==
+        b=NpTtlamI7m1trWo+6u3KW79p3V9twD1Crf6/L9cvZGFm8JCRz6UUUZ/4v61wmGyBS
+         cw0nCmLkRjZyea4e7+AZ70d+3LZ5g4VPS2NF/r31EFnCWCV1DekXqlTqYbIsivsPb8
+         aoT5IDQavozjtDXfjXkdUlejoa1m81Kov+fLwCK0SmKalgacoczQp+XXWJcsLRb1TE
+         26cFnTi4LiIP2lAIOi8q021LXKDC5mrN3SzH/rKwObP1KCGQg0vFXlrN/2LMBaUwg7
+         Egerw7XB0SQLmyb//29uRlV4Z9FfewBYDrQvTREIK7MnqjS92cyMFo0hBFEJ86a3at
+         gx0c5zrpULfuw==
 From:   Vinod Koul <vkoul@kernel.org>
-To:     linux-phy@lists.infradead.org, linux-rockchip@lists.infradead.org,
-        Sebastian Reichel <sebastian.reichel@collabora.com>
-Cc:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+To:     agross@kernel.org, andersson@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        konrad.dybcio@linaro.org, mani@kernel.org,
+        Mrinmay Sarkar <quic_msarkar@quicinc.com>
+Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
+        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
+        dmitry.baryshkov@linaro.org, Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
         =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
         Rob Herring <robh@kernel.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Simon Xue <xxm@rock-chips.com>, John Clark <inindev@gmail.com>,
-        Qu Wenruo <wqu@suse.com>, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, kernel@collabora.com
-In-Reply-To: <20230717173512.65169-1-sebastian.reichel@collabora.com>
-References: <20230717173512.65169-1-sebastian.reichel@collabora.com>
-Subject: Re: (subset) [PATCH v2 0/2] RK3588 PCIe3 support
-Message-Id: <168966093703.340315.14184672794247667224.b4-ty@kernel.org>
-Date:   Tue, 18 Jul 2023 11:45:37 +0530
+        Kishon Vijay Abraham I <kishon@kernel.org>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org
+In-Reply-To: <1689311319-22054-1-git-send-email-quic_msarkar@quicinc.com>
+References: <1689311319-22054-1-git-send-email-quic_msarkar@quicinc.com>
+Subject: Re: (subset) [PATCH v2 0/6] arm64: qcom: sa8775p: add support for
+ PCIe
+Message-Id: <168966092968.340315.2461852657981161685.b4-ty@kernel.org>
+Date:   Tue, 18 Jul 2023 11:45:29 +0530
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -65,25 +62,30 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
-On Mon, 17 Jul 2023 19:35:10 +0200, Sebastian Reichel wrote:
-> This adds PCIe v3 support for RK3588. The series depends on the PCIe
-> v2 series [0], since the the same binding is used. It has been tested
-> on Rockchip EVB1 and Radxa Rock 5B.
+On Fri, 14 Jul 2023 10:38:32 +0530, Mrinmay Sarkar wrote:
+> Update the relavent DT bindings for PCIe, add new config to the phy
+> driver add pcie and phy nodes to the .dtsi file and enable then in
+> board .dts file for the sa8775p-ride platform.
 > 
-> Note, that the PCIe3 PHY driver is currently missing bifurcation
-> support for RK3588. Thus after this series only PCIe3x4 is usable
-> (in aggregated x4 mode) without adding support for the PHY's
-> "rockchip,pcie30-phymode" DT property, which allows configuring
-> how the lanes are distributed. Aggregated 3x4 mode seems to be the
-> most common configuration. Both EVB1 and Rock 5B use it, so I
-> cannot test anything else anyways.
+> v1 -> v2:
+> - correct indentationand sort compatible in qcom,pcie binding
+> - correct clock name entry and sort compatible in pcie-phy binding
+> - sort compatible and change commit message in qcom pcie driver
+> - change offset name, added tx2 and rx2 offsets and sort compatible
+>   in qmp pcie phy driver
+> - correct ranges property, added MSI, dma-coherent, cpu-pcie property
+>   removed iommus property moved pinctrl and gpio property to board dts
+>   and correct the allignment in pcie dtsi nodes
+> - added pinctrl and gpio property in board dts
 > 
 > [...]
 
 Applied, thanks!
 
-[1/2] dt-bindings: phy: rockchip: add RK3588 PCIe v3 phy
-      commit: f66782cff479807ad7e98f0cf6a0c0babfe0159b
+[2/6] dt-bindings: phy: qcom,qmp: Add sa8775p QMP PCIe PHY
+      commit: fd2d4e4c19864fdd400d961de899163323ab7fa9
+[4/6] phy: qcom-qmp-pcie: add support for sa8775p
+      commit: a05b6d5135ec3e65520ae0eaa1b24d4c6549424e
 
 Best regards,
 -- 
