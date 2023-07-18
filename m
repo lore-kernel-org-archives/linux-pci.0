@@ -2,101 +2,113 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97480C3DA40
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Jul 2023 17:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EBE6C001DE
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Jul 2023 18:15:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233393AbjGRRq0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Jul 2023 13:46:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34642 "EHLO
+        id S229531AbjGRSPi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Jul 2023 14:15:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51342 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232704AbjGRRqR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2023 13:46:17 -0400
-Received: from mga07.intel.com (mga07.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8994C1985;
-        Tue, 18 Jul 2023 10:46:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689702376; x=1721238376;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=vvT4UazNBdh1eC96t3rmzDiofjn+r2ip5hL0umYvSx0=;
-  b=aelOWpJ7hLFo8H9oN2YAlDfcMwG9+0vRI1X8zNwonw5SYcAqZaLrgufy
-   KpC7VcrJX8OCuq6RVTsP5FdWlQVS5cYhF4M/6SIACShfxNwmslsNAjFKh
-   8Xt6bDr6nNMd9pyzEMHkDE2po7Eq9K8WDY5yJB6K5yYUG265wJ2wPHlZa
-   SBFXyuOYX8zULih58vUYwUgNuQpPYrsgx2fiwnEae2iS9G9qBz8q/jB88
-   da+fZGocdCsl1Vm/hgxpjY8o8HNNdR0zXfnNPkrFiIxrcR0B3UM5ruAF/
-   vHO299pmJdxWx2mgUUco2xtCoOyPaIN72fjJrGwOe4gTDQ8r/Z3qDQPCF
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10775"; a="432452407"
-X-IronPort-AV: E=Sophos;i="6.01,214,1684825200"; 
-   d="scan'208";a="432452407"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jul 2023 10:46:11 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10775"; a="727034251"
-X-IronPort-AV: E=Sophos;i="6.01,214,1684825200"; 
-   d="scan'208";a="727034251"
-Received: from unknown (HELO jiaqingz-acrn-container.sh.intel.com) ([10.239.138.235])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jul 2023 10:46:09 -0700
-From:   Jiaqing Zhao <jiaqing.zhao@linux.intel.com>
-To:     Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-serial@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-can@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiaqing Zhao <jiaqing.zhao@linux.intel.com>
-Subject: [PATCH 3/4] serial: 8250_pci: add support for ASIX AX99100
-Date:   Tue, 18 Jul 2023 17:41:59 +0000
-Message-Id: <20230718174200.2862849-4-jiaqing.zhao@linux.intel.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230718174200.2862849-1-jiaqing.zhao@linux.intel.com>
-References: <20230718174200.2862849-1-jiaqing.zhao@linux.intel.com>
+        with ESMTP id S229704AbjGRSPg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2023 14:15:36 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43B8E10B;
+        Tue, 18 Jul 2023 11:15:34 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id CA25F616A9;
+        Tue, 18 Jul 2023 18:15:33 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3AC62C433C9;
+        Tue, 18 Jul 2023 18:15:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689704133;
+        bh=kHxVNW1fF7PzuKK1ys+0NZi4M8XowaLr/7P8gkpdlJI=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ORusedm981Yj/+87SN8Dfy42m31DyCLpq9HqWv4ho+Z3KBXkCG5zYt1xECLY1h9UQ
+         FK8vM0+EOYl5JwIpVu6RsM/AW4ce1jHotCKLzfgoHQA5B0jwIuuLBO+20iCwv6yRBB
+         xEHN+GcJVpJsJ2xIOl9HVkaf5Q+lZWrS240/Pm8AYISW3D6gXZsNhNFT8y+hOOBBau
+         4ZFn3HOxn1BW0KJ+rk7XjsQ/UVxw10DAtsJyjQdzwivZXy2vkJZYZghTLZEONKu5yL
+         f6HbAnlhAW7VKw0PlwjWKZVskPOIKLloGmkTcS1tUVN7GMWjs+7h9Ca83jjkNCGDxT
+         TbK6CaPd77Ysg==
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-2b703d7ed3aso94633341fa.1;
+        Tue, 18 Jul 2023 11:15:33 -0700 (PDT)
+X-Gm-Message-State: ABy/qLZ1xDyG+BZSL9+Y0Zvg6B1XIfcRf2pai3q0M6ISSQ+MD2GS8+9K
+        yVCDPhMP7+40Pbv1owLz51/1Flr3TXZIAYuSGw==
+X-Google-Smtp-Source: APBJJlETguQ1GeiGzi5H2NtBXJoWqk6KyqjpW8Bc6IS6lJOA4xgoNinovssDBzEvIoFur6Atchxk6+cTA5VSi5CZrA8=
+X-Received: by 2002:a2e:9901:0:b0:2b8:6f78:ffa0 with SMTP id
+ v1-20020a2e9901000000b002b86f78ffa0mr7549480lji.18.1689704131164; Tue, 18 Jul
+ 2023 11:15:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <1688059190-4225-3-git-send-email-lizhi.hou@amd.com>
+ <20230629225631.GA446944@bhelgaas> <20230629235226.GA92592-robh@kernel.org> <9f39fc3d-ae40-e5b1-8d40-8c27fc4e1022@amd.com>
+In-Reply-To: <9f39fc3d-ae40-e5b1-8d40-8c27fc4e1022@amd.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Tue, 18 Jul 2023 12:15:18 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqLzGted2tYHM7uKZRYDHypz4P6KMXGDuYLgpYsJcUyU8Q@mail.gmail.com>
+Message-ID: <CAL_JsqLzGted2tYHM7uKZRYDHypz4P6KMXGDuYLgpYsJcUyU8Q@mail.gmail.com>
+Subject: Re: [PATCH V10 2/5] PCI: Create device tree node for bridge
+To:     Lizhi Hou <lizhi.hou@amd.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        max.zhen@amd.com, sonal.santan@amd.com,
+        stefano.stabellini@xilinx.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-All 4 PCI functions on ASIX AX99100 PCIe to Multi I/O Controller can be
-configured as a single-port serial port controller. The subvendor id is
-0x1000 when configured as serial port and MSI interrupts are supported.
+On Fri, Jun 30, 2023 at 12:25=E2=80=AFPM Lizhi Hou <lizhi.hou@amd.com> wrot=
+e:
+>
+>
+> On 6/29/23 16:52, Rob Herring wrote:
+> >>> +                   rp[i].child_addr[0] =3D j;
+> >>> +   ret =3D of_changeset_add_empty_prop(ocs, np, "dynamic");
+> >> It seems slightly confusing to use a "dynamic" property here when we
+> >> also have the OF_DYNAMIC dynamic flag above.  I think they have
+> >> different meanings, don't they?
+> > Hum, what's the property for? It's new in this version. Any DT property
+> > needs to be documented, but I don't see why we need it.
+>
+> This is mentioned in my previous reply for V9
+>
+> https://lore.kernel.org/lkml/af9b6bb3-a98d-4fb6-b51e-b48bca61dada@amd.com=
+/
+>
+> As we discussed before, "interrupt-map" was intended to be used here.
+>
+> And after thinking it more, it may not work for the cases where ppnode
+>
+> is not dynamically generated and it does not have "interrupt-map".
+>
+> For example the IBM ppc system, its device tree has nodes for pci bridge
+>
+> and it does not have "interrupt-map".
 
-Signed-off-by: Jiaqing Zhao <jiaqing.zhao@linux.intel.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/tty/serial/8250/8250_pci.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+How do you know? I ask because usually the only way I have visibility
+there is when I break something. In traditional OpenFirmware, which
+IBM PPC is, all PCI devices have a DT node because it's the firmware
+telling the OS "these are the devices I discovered and this is how I
+configured them".
 
-diff --git a/drivers/tty/serial/8250/8250_pci.c b/drivers/tty/serial/8250/8250_pci.c
-index d2d547b5da95..62a9bd30b4db 100644
---- a/drivers/tty/serial/8250/8250_pci.c
-+++ b/drivers/tty/serial/8250/8250_pci.c
-@@ -67,6 +67,8 @@ static const struct pci_device_id pci_use_msi[] = {
- 			 0xA000, 0x1000) },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_NETMOS, PCI_DEVICE_ID_NETMOS_9922,
- 			 0xA000, 0x1000) },
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ASIX, PCI_DEVICE_ID_ASIX_AX99100,
-+			 0xA000, 0x1000) },
- 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_HP_3PAR, PCI_DEVICE_ID_HPE_PCI_SERIAL,
- 			 PCI_ANY_ID, PCI_ANY_ID) },
- 	{ }
-@@ -5557,6 +5559,14 @@ static const struct pci_device_id serial_pci_tbl[] = {
- 	{	PCI_VENDOR_ID_NETMOS, PCI_DEVICE_ID_NETMOS_9865,
- 		0xA000, 0x3004,
- 		0, 0, pbn_b0_bt_4_115200 },
-+
-+	/*
-+	 * ASIX AX99100 PCIe to Multi I/O Controller
-+	 */
-+	{	PCI_VENDOR_ID_ASIX, PCI_DEVICE_ID_ASIX_AX99100,
-+		0xA000, 0x1000,
-+		0, 0, pbn_b0_1_115200 },
-+
- 	/* Intel CE4100 */
- 	{	PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CE4100_UART,
- 		PCI_ANY_ID,  PCI_ANY_ID, 0, 0,
--- 
-2.39.2
+> Based on previous discussions, OF_DYNAMIC should not be used here.
 
+For the same reasons, I don't think the behavior should change based
+on being dynamic. Now maybe the behavior when it's an ACPI system with
+DT overlays has to change, but that's a problem for later. I don't yet
+know if we'd handle that here somehow or elsewhere so that this node
+looks like a normal DT system.
+
+This should all work the same whether we've generated the nodes or
+they were already present in the FDT when we booted.
+
+> So I think adding "dynamic" might be a way to identify the dynamically
+>
+> added node. Or we can introduce a new flag e.g OF_IRQ_SWIZZLING.
+
+I hope not. The flags tend to be hacks.
+
+Rob
