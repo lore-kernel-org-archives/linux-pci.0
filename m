@@ -2,154 +2,98 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 392B0C0015E
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jul 2023 07:21:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDB8EC001DC
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jul 2023 07:42:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229447AbjGSHVO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Jul 2023 03:21:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52880 "EHLO
+        id S230310AbjGSHmj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Jul 2023 03:42:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37042 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229987AbjGSHVA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2023 03:21:00 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E030B210B;
-        Wed, 19 Jul 2023 00:20:43 -0700 (PDT)
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36J7G9oC032355;
-        Wed, 19 Jul 2023 07:20:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=X8U7m6oeXAUjm/N5kYm0WAl5wvbpfFgciZSimFM50A8=;
- b=G0dEsCpqrJY9vH8e3Kil2NAt8GTB9Boy2ZCQP2GyJ0IA8KGMlvYwJWhAsqxcG/M1oKPt
- c1DFSDgCeIr2BJG18MCSxkP1yhpCsHQf4PV5GfmLfqd+bTVghtgtXAMY2TIWOWfhUrip
- NThmO3sLfZ9EMnljsSKTtvIJm22p+3dczhmGdulSA+/Spd3VAfse4P2L3vgAJ7l7EsGl
- SOnpIXJv1qPYSiNKAhHKUjh+aqOcIZAda4fQr/tJ3BAo2x4aKfHtopvVHEkJJsLOE3wm
- Xpt7sV1jqScnVZQF4jmo/zNEtQFiE4V+0in3Y2ItVOANs6LxYznEK9FMW7NQUdmnrUa9 Ow== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rx8sk087t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 19 Jul 2023 07:20:24 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36J7KKSo022626;
-        Wed, 19 Jul 2023 07:20:20 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3rumhm1v72-1;
-        Wed, 19 Jul 2023 07:20:20 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36J7KKI9022612;
-        Wed, 19 Jul 2023 07:20:20 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 36J7KKre022582;
-        Wed, 19 Jul 2023 07:20:20 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id D5D014B07; Wed, 19 Jul 2023 12:50:19 +0530 (+0530)
-From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
-To:     manivannan.sadhasivam@linaro.org
-Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        quic_vbadigan@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_skananth@quicinc.com, quic_ramkri@quicinc.com,
-        krzysztof.kozlowski@linaro.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
+        with ESMTP id S230183AbjGSHmI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2023 03:42:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 573AB2685;
+        Wed, 19 Jul 2023 00:41:13 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id D831D612FD;
+        Wed, 19 Jul 2023 07:41:12 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6AD33C433C8;
+        Wed, 19 Jul 2023 07:41:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689752472;
+        bh=b8GEqB/2sTmMlL5y18FKSNhfxtcA7qKBejTmK0tI0EI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=O+YN10JPskc9ztReEFlJnjB72I1SIq5vKeTpSeV2hXjlFdrIp1fDy/b/q6uNV/WWD
+         QV1ujwc4umRfGoa6ZtU0Vp0Fbg9J2WvAi+WmdBIjYNufejEqOb7rEbLNBvw555cSqu
+         y+xjx4VrK7j8AZSkyro8k7IHin5y6ZreGREDgqvE8kp9v2Y9/Pdf+P21R4Qqm8tNtt
+         JhF/1YksfB4xnxrlx3VHVCDfcF8xNYd7pwHkSzC+PJCIZpytBhS2gQzefvdmjhMSKs
+         VZwsGVFwYFbJMoYpNtLMf3hXoB6knBJgLTdu34QSeJWv2I+y1ThAuZBQFWBYK+nbWr
+         zBvNXXyteGLrg==
+Date:   Wed, 19 Jul 2023 13:10:55 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Cc:     manivannan.sadhasivam@linaro.org, helgaas@kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, krzysztof.kozlowski@linaro.org,
         Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Conor Dooley <conor+dt@kernel.org>,
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS)
-Subject: [PATCH v10 1/4] dt-bindings: PCI: qcom: ep: Add interconnects path
-Date:   Wed, 19 Jul 2023 12:50:15 +0530
-Message-Id: <1689751218-24492-2-git-send-email-quic_krichai@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1689751218-24492-1-git-send-email-quic_krichai@quicinc.com>
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>
+Subject: Re: [PATCH v10 3/4] arm: dts: qcom: sdx55: Add CPU PCIe EP
+ interconnect path
+Message-ID: <20230719074055.GB9312@thinkpad>
 References: <1689751218-24492-1-git-send-email-quic_krichai@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: j5RE-AyD1ly7aUPmN4MrNP51q2U9nhI_
-X-Proofpoint-ORIG-GUID: j5RE-AyD1ly7aUPmN4MrNP51q2U9nhI_
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-19_04,2023-07-18_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 adultscore=0
- malwarescore=0 bulkscore=0 phishscore=0 mlxlogscore=999 impostorscore=0
- lowpriorityscore=0 clxscore=1015 suspectscore=0 priorityscore=1501
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2307190066
+ <1689751218-24492-4-git-send-email-quic_krichai@quicinc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1689751218-24492-4-git-send-email-quic_krichai@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some platforms may not boot if a device driver doesn't
-initialize the interconnect path. Mostly it is handled
-by the bootloader but we have starting to see cases
-where bootloader simply ignores them.
+On Wed, Jul 19, 2023 at 12:50:17PM +0530, Krishna chaitanya chundru wrote:
+> Add cpu-pcie interconnect path for PCIe EP to sdx55 platform.
+> 
+> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 
-Add the "pcie-mem" & "cpu-pcie" interconnect path as a required
-property to the bindings.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+- Mani
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-index 8111122..e553341 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie-ep.yaml
-@@ -71,6 +71,14 @@ properties:
-     description: GPIO used as WAKE# output signal
-     maxItems: 1
- 
-+  interconnects:
-+    maxItems: 2
-+
-+  interconnect-names:
-+    items:
-+      - const: pcie-mem
-+      - const: cpu-pcie
-+
-   resets:
-     maxItems: 1
- 
-@@ -98,6 +106,8 @@ required:
-   - interrupts
-   - interrupt-names
-   - reset-gpios
-+  - interconnects
-+  - interconnect-names
-   - resets
-   - reset-names
-   - power-domains
-@@ -167,7 +177,9 @@ examples:
-   - |
-     #include <dt-bindings/clock/qcom,gcc-sdx55.h>
-     #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/interconnect/qcom,sdx55.h>
-     #include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-     pcie_ep: pcie-ep@1c00000 {
-         compatible = "qcom,sdx55-pcie-ep";
-         reg = <0x01c00000 0x3000>,
-@@ -194,6 +206,9 @@ examples:
-         interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>,
-                      <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>;
-         interrupt-names = "global", "doorbell";
-+        interconnects = <&system_noc MASTER_PCIE &mc_virt SLAVE_EBI_CH0>,
-+                        <&mem_noc MASTER_AMPSS_M0 &system_noc SLAVE_PCIE_0>;
-+        interconnect-names = "pcie-mem", "cpu-pcie";
-         reset-gpios = <&tlmm 57 GPIO_ACTIVE_LOW>;
-         wake-gpios = <&tlmm 53 GPIO_ACTIVE_LOW>;
-         resets = <&gcc GCC_PCIE_BCR>;
+> ---
+>  arch/arm/boot/dts/qcom/qcom-sdx55.dtsi | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm/boot/dts/qcom/qcom-sdx55.dtsi b/arch/arm/boot/dts/qcom/qcom-sdx55.dtsi
+> index df3cd9c..a7c0c26 100644
+> --- a/arch/arm/boot/dts/qcom/qcom-sdx55.dtsi
+> +++ b/arch/arm/boot/dts/qcom/qcom-sdx55.dtsi
+> @@ -422,8 +422,9 @@
+>  			interrupt-names = "global",
+>  					  "doorbell";
+>  
+> -			interconnects = <&system_noc MASTER_PCIE &mc_virt SLAVE_EBI_CH0>;
+> -			interconnect-names = "pcie-mem";
+> +			interconnects = <&system_noc MASTER_PCIE &mc_virt SLAVE_EBI_CH0>,
+> +					<&mem_noc MASTER_AMPSS_M0 &system_noc SLAVE_PCIE_0>;
+> +			interconnect-names = "pcie-mem", "cpu-pcie";
+>  
+>  			resets = <&gcc GCC_PCIE_BCR>;
+>  			reset-names = "core";
+> -- 
+> 2.7.4
+> 
+
 -- 
-2.7.4
-
+மணிவண்ணன் சதாசிவம்
