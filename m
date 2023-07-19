@@ -2,141 +2,188 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C33EC001DF
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jul 2023 20:43:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75812C0015E
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jul 2023 21:13:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229625AbjGSUnT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Jul 2023 16:43:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43910 "EHLO
+        id S229766AbjGSVNQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Jul 2023 17:13:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56122 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbjGSUnS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2023 16:43:18 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD1909E;
-        Wed, 19 Jul 2023 13:43:17 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 699A46182F;
-        Wed, 19 Jul 2023 20:43:17 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A388C433C8;
-        Wed, 19 Jul 2023 20:43:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689799396;
-        bh=Tyjuk2o5/6zWPoP1zMw3/ypWfYVhxYWg4rjX3S4aZtg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=FiAa9y/2tv71wEXdSyAGzNYhBUxM+hvhiaqxmMnzXpP8UcpFHg9j/QVPzqJ1auM37
-         lbHnkX0NYfz7AI9yHQjtRu9TYLXdBTGLfLBfe6m5AW1ZMZ1Db0D8YHv0o/kXURCPBg
-         6o2jg6IJRGYIgt179i38xPkXzaLIsMgsxFnK0fpi91ooT8kKWcS8B/1ovFntmhRFU0
-         Q8BPuImDwnSqp/UoGGhqBPPlkEWcYQ8KgeRMf3mdhJTJhj6Do9nbOMZCXofTjkWIFw
-         Snq6WsZ6LAoKSxoq4zjBx4b7UYqEw6ID5xRozHH9G3pl2v8PjgHJhBEsxoAdXceHil
-         xp9Aiqzk429pA==
-Date:   Wed, 19 Jul 2023 15:43:14 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sui Jingfeng <sui.jingfeng@linux.dev>
-Cc:     David Airlie <airlied@gmail.com>, linux-fbdev@vger.kernel.org,
-        Sui Jingfeng <suijingfeng@loongson.cn>, kvm@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [Intel-gfx] [PATCH v3 3/9] PCI/VGA: Switch to
- aperture_contain_firmware_fb_nonreloc()
-Message-ID: <20230719204314.GA512532@bhelgaas>
+        with ESMTP id S229452AbjGSVNP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2023 17:13:15 -0400
+Received: from out-54.mta0.migadu.com (out-54.mta0.migadu.com [IPv6:2001:41d0:1004:224b::36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF62D1FC0
+        for <linux-pci@vger.kernel.org>; Wed, 19 Jul 2023 14:13:13 -0700 (PDT)
+Message-ID: <1a10cb43-7c96-069a-bdd2-3a8cdb7727e1@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1689801191;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=GsT5fBh8KwnUgUCpgN0LIT64s0RQIMJgl5uyUvT45hU=;
+        b=onl9tgCTxyWZS4mjI/YjCwX2bDOLsgCA+ISxwXBqf+mKSgHVlK/fYzNmGvtF4NA4SrazBc
+        kBA9R1hBsWYb8TEpWhBanuhWyYSEzs6MaENojEpZivIyXmyoqGyVN/eQDHOjtvSWb2USi9
+        +WJeGIgLdpDUwGRijlEDkt46oUuzP3w=
+Date:   Thu, 20 Jul 2023 05:13:01 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230711164310.791756-4-sui.jingfeng@linux.dev>
+Subject: Re: [PATCH 2/6] PCI/VGA: Deal with PCI VGA compatible devices only
+Content-Language: en-US
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, Sui@freedesktop.org,
+        Jingfeng@loongson.cn, Sui Jingfeng <suijingfeng@loongson.cn>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, loongson-kernel@lists.loongnix.cn,
+        Mario Limonciello <mario.limonciello@amd.com>
+References: <20230719182617.GA509912@bhelgaas>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Sui Jingfeng <sui.jingfeng@linux.dev>
+In-Reply-To: <20230719182617.GA509912@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc linux-pci; I don't apply or ack PCI patches unless they appear there]
+Hi,
 
-On Wed, Jul 12, 2023 at 12:43:04AM +0800, Sui Jingfeng wrote:
-> From: Sui Jingfeng <suijingfeng@loongson.cn>
-> 
-> The observation behind this is that we should avoid accessing the global
-> screen_info directly. Call the aperture_contain_firmware_fb_nonreloc()
-> function to implement the detection of whether an aperture contains the
-> firmware FB.
 
-Because it's better to access the global screen_info from
-aperture_contain_firmware_fb_nonreloc()?  The reasoning here is not
-super clear to me.
+On 2023/7/20 02:26, Bjorn Helgaas wrote:
+> On Tue, Jul 11, 2023 at 09:43:50PM +0800, Sui Jingfeng wrote:
+>> From: Sui Jingfeng<suijingfeng@loongson.cn>
+>>
+>> Currently, vgaarb only cares about PCI VGA-compatible class devices.
+>>
+>> While vga_arbiter_del_pci_device() gets called unbalanced when some PCI
+>> device is about to be removed. This happens even during the boot process.
+> The previous code calls vga_arbiter_add_pci_device() for every device
+> (every device present at boot and also every hot-added device).  It
+> only allocates a vga_device if pdev->class is 0x0300XX.
+>
+> It calls vga_arbiter_del_pci_device() for every device removal.  It
+> does nothing unless it finds a vga_device.
+> This seems symmetric and reasonable to me.  Did you observe a problem
+> with it?
+>
+Not big deal, but the vgaarb does do some useless work there.
 
-> This patch helps to decouple the determination from the implementation.
-> Or, in other words, we intend to make the determination opaque to the
-> caller. The determination may choose to be arch-dependent or
-> arch-independent. But vgaarb, as a consumer of the determination,
-> shouldn't care how the does determination is implemented.
 
-"how the determination ..."  (drop the "does")
+Right,  it calls vga_arbiter_del_pci_device() for every device removal.
 
-Are you saying that aperture_contain_firmware_fb_nonreloc() might be
-arch-dependent?  Are there multiple callers?  Or does this just move
-code from one place to a more appropriate place?
+And it can not finds a vga_device at the most time. (Because on normal 
+case, a user only have one or two GPU device in the system.)
 
-> Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
-> ---
->  drivers/pci/vgaarb.c | 19 ++++---------------
->  1 file changed, 4 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-> index bf96e085751d..953daf731b2c 100644
-> --- a/drivers/pci/vgaarb.c
-> +++ b/drivers/pci/vgaarb.c
-> @@ -14,6 +14,7 @@
->  #define vgaarb_info(dev, fmt, arg...)	dev_info(dev, "vgaarb: " fmt, ##arg)
->  #define vgaarb_err(dev, fmt, arg...)	dev_err(dev, "vgaarb: " fmt, ##arg)
->  
-> +#include <linux/aperture.h>
->  #include <linux/module.h>
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
-> @@ -26,7 +27,6 @@
->  #include <linux/poll.h>
->  #include <linux/miscdevice.h>
->  #include <linux/slab.h>
-> -#include <linux/screen_info.h>
->  #include <linux/vt.h>
->  #include <linux/console.h>
->  #include <linux/acpi.h>
-> @@ -558,20 +558,11 @@ void vga_put(struct pci_dev *pdev, unsigned int rsrc)
->  }
->  EXPORT_SYMBOL(vga_put);
->  
-> +/* Select the device owning the boot framebuffer if there is one */
->  static bool vga_is_firmware_default(struct pci_dev *pdev)
->  {
->  #if defined(CONFIG_X86) || defined(CONFIG_IA64)
-> -	u64 base = screen_info.lfb_base;
-> -	u64 size = screen_info.lfb_size;
->  	struct resource *r;
-> -	u64 limit;
-> -
-> -	/* Select the device owning the boot framebuffer if there is one */
-> -
-> -	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
-> -		base |= (u64)screen_info.ext_lfb_base << 32;
-> -
-> -	limit = base + size;
->  
->  	/* Does firmware framebuffer belong to us? */
->  	pci_dev_for_each_resource(pdev, r) {
-> @@ -581,10 +572,8 @@ static bool vga_is_firmware_default(struct pci_dev *pdev)
->  		if (!r->start || !r->end)
->  			continue;
->  
-> -		if (base < r->start || limit >= r->end)
-> -			continue;
-> -
-> -		return true;
-> +		if (aperture_contain_firmware_fb_nonreloc(r->start, r->end))
-> +			return true;
->  	}
->  #endif
->  	return false;
-> -- 
-> 2.25.1
-> 
+But even it can not finds a vga_device, vga_arbiter_del_pci_device() 
+still brings
+
+additional(and it is unnecessary) overheads.
+
+
+For an example, on my i3-8100 (the motherboard model is H110 D4L) machine,
+
+The PCI device(0000:00:1f.1) will trigger the call to 
+vga_arbiter_del_pci_device().
+
+
+Even though it can not finds a vga_device,
+
+vga_arbiter_del_pci_device() is *NOT* a no-op still.
+
+
+```
+
+static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
+{
+     struct vga_device *vgadev;
+     unsigned long flags;
+     bool ret = true;
+
+     spin_lock_irqsave(&vga_lock, flags);
+     vgadev = vgadev_find(pdev);
+     if (vgadev == NULL) {
+         ret = false;
+         goto bail;
+     }
+
+     // omit ...
+
+
+bail:
+     spin_unlock_irqrestore(&vga_lock, flags);
+     kfree(vgadev);
+     return ret;
+}
+
+```
+
+
+1) It call spin_lock_irqsave() and  spin_unlock_irqrestore() pair for 
+complete irrelevant PCI devices
+
+2) It try to find a vgadev with pdev pointer, which have to search the 
+whole list (All nodes in the list got accessed), because it can not find.
+
+3) It call kfree() to free NULL pointer, it's just that kfree() will 
+just return if you pass a NULL, so no bug happen.
+
+
+It is not efficient.
+
+While the major contribution of my patch is to filter irrelevant PCI device.
+
+Otherwise there 30+ noisy(useless) events got snooped. See below:
+
+
+```
+
+[    0.246077] pci 0000:01:00.0: vgaarb: setting as boot VGA device
+[    0.246077] pci 0000:01:00.0: vgaarb: bridge control possible
+[    0.246077] pci 0000:01:00.0: vgaarb: VGA device added: 
+decodes=io+mem,owns=io+mem,locks=none
+[    0.246077] vgaarb: loaded
+[    0.294169] skl_uncore 0000:00:00.0: vgaarb: pci_notify: action=3
+[    0.294182] skl_uncore 0000:00:00.0: vgaarb: pci_notify: action=4
+[    0.301297] pcieport 0000:00:01.0: vgaarb: pci_notify: action=3
+[    0.301482] pcieport 0000:00:01.0: vgaarb: pci_notify: action=4
+[    0.301488] pcieport 0000:00:1c.0: vgaarb: pci_notify: action=3
+[    0.301705] pcieport 0000:00:1c.0: vgaarb: pci_notify: action=4
+[    1.806445] xhci_hcd 0000:00:14.0: vgaarb: pci_notify: action=3
+[    1.810976] ahci 0000:00:17.0: vgaarb: pci_notify: action=3
+[    1.824383] xhci_hcd 0000:00:14.0: vgaarb: pci_notify: action=4
+[    1.857470] ahci 0000:00:17.0: vgaarb: pci_notify: action=4
+[    4.692700] intel_pch_thermal 0000:00:14.2: vgaarb: pci_notify: action=3
+[    4.693110] intel_pch_thermal 0000:00:14.2: vgaarb: pci_notify: action=4
+[    4.746712] i801_smbus 0000:00:1f.4: vgaarb: pci_notify: action=3
+[    4.747212] pci 0000:00:1f.1: vgaarb: pci_notify: action=0
+[    4.747227] pci 0000:00:1f.1: vgaarb: pci_notify: action=1
+[    4.747250] pci 0000:00:1f.1: vgaarb: pci_notify: action=2
+[    4.749098] i801_smbus 0000:00:1f.4: vgaarb: pci_notify: action=4
+[    4.799217] mei_me 0000:00:16.0: vgaarb: pci_notify: action=3
+[    4.802503] mei_me 0000:00:16.0: vgaarb: pci_notify: action=4
+[    4.874880] intel-lpss 0000:00:15.0: vgaarb: pci_notify: action=3
+[    4.881227] intel-lpss 0000:00:15.0: vgaarb: pci_notify: action=4
+[    4.881240] intel-lpss 0000:00:15.1: vgaarb: pci_notify: action=3
+[    4.887578] intel-lpss 0000:00:15.1: vgaarb: pci_notify: action=4
+[    4.985796] r8169 0000:02:00.0: vgaarb: pci_notify: action=3
+[    4.991862] r8169 0000:02:00.0: vgaarb: pci_notify: action=4
+[    5.404835] snd_hda_intel 0000:00:1f.3: vgaarb: pci_notify: action=3
+[    5.405175] snd_hda_intel 0000:00:1f.3: vgaarb: pci_notify: action=4
+[    5.405401] snd_hda_intel 0000:01:00.1: vgaarb: pci_notify: action=3
+[    5.405973] snd_hda_intel 0000:01:00.1: vgaarb: pci_notify: action=4
+[   10.793665] i915 0000:00:02.0: vgaarb: pci_notify: action=3
+[   11.201384] i915 0000:00:02.0: vgaarb: pci_notify: action=4
+[   16.135842] amdgpu 0000:01:00.0: vgaarb: pci_notify: action=3
+[   16.140458] amdgpu 0000:01:00.0: vgaarb: deactivate vga console
+[   16.638564] amdgpu 0000:01:00.0: vgaarb: pci_notify: action=4
+
+```
+
+
+
+
