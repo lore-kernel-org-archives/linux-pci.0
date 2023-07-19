@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78F03C04A94
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jul 2023 10:21:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7390DC001DC
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jul 2023 10:21:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230466AbjGSKVQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Jul 2023 06:21:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43096 "EHLO
+        id S230306AbjGSKVS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Jul 2023 06:21:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230430AbjGSKVL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2023 06:21:11 -0400
-Received: from fd01.gateway.ufhost.com (fd01.gateway.ufhost.com [61.152.239.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAA6C1FC4;
-        Wed, 19 Jul 2023 03:21:07 -0700 (PDT)
+        with ESMTP id S230490AbjGSKVN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2023 06:21:13 -0400
+Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57F131FDC;
+        Wed, 19 Jul 2023 03:21:09 -0700 (PDT)
 Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
         (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
         (Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
-        by fd01.gateway.ufhost.com (Postfix) with ESMTP id 5210781BB;
-        Wed, 19 Jul 2023 18:21:06 +0800 (CST)
+        by ex01.ufhost.com (Postfix) with ESMTP id 06B3224E2E3;
+        Wed, 19 Jul 2023 18:21:08 +0800 (CST)
 Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX165.cuchost.com
  (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 19 Jul
- 2023 18:21:06 +0800
+ 2023 18:21:08 +0800
 Received: from ubuntu.localdomain (113.72.147.86) by EXMBX171.cuchost.com
  (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 19 Jul
- 2023 18:21:05 +0800
+ 2023 18:21:06 +0800
 From:   Minda Chen <minda.chen@starfivetech.com>
 To:     Daire McNamara <daire.mcnamara@microchip.com>,
         Conor Dooley <conor@kernel.org>,
@@ -44,9 +44,9 @@ CC:     <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Leyfoon Tan <leyfoon.tan@starfivetech.com>,
         Kevin Xie <kevin.xie@starfivetech.com>,
         Minda Chen <minda.chen@starfivetech.com>
-Subject: [PATCH v1 7/9] dt-bindings: PCI: Add StarFive JH7110 PCIe controller
-Date:   Wed, 19 Jul 2023 18:20:55 +0800
-Message-ID: <20230719102057.22329-8-minda.chen@starfivetech.com>
+Subject: [PATCH v1 9/9] riscv: dts: starfive: add PCIe dts configuration for JH7110
+Date:   Wed, 19 Jul 2023 18:20:57 +0800
+Message-ID: <20230719102057.22329-10-minda.chen@starfivetech.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230719102057.22329-1-minda.chen@starfivetech.com>
 References: <20230719102057.22329-1-minda.chen@starfivetech.com>
@@ -60,160 +60,175 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add StarFive JH7110 SoC PCIe controller dt-bindings.
-JH7110 using PLDA XpressRICH PCIe host controller IP.
+Add PCIe dts configuraion for JH7110 SoC platform.
 
 Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
 Reviewed-by: Hal Feng <hal.feng@starfivetech.com>
 ---
- .../bindings/pci/starfive,jh7110-pcie.yaml    | 138 ++++++++++++++++++
- 1 file changed, 138 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
+ .../jh7110-starfive-visionfive-2.dtsi         | 44 ++++++++++
+ arch/riscv/boot/dts/starfive/jh7110.dtsi      | 88 +++++++++++++++++++
+ 2 files changed, 132 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml b/Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
-new file mode 100644
-index 000000000000..467286df557d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
-@@ -0,0 +1,138 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/starfive,jh7110-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi b/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
+index de0f40a8be93..70deb4a3cb56 100644
+--- a/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
++++ b/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
+@@ -208,6 +208,36 @@
+ 		};
+ 	};
+ 
++	pcie0_pins: pcie0-0 {
++		pcie-pins {
++			pinmux = <GPIOMUX(32, GPOUT_HIGH,
++					      GPOEN_ENABLE,
++					      GPI_NONE)>,
++				 <GPIOMUX(27, GPOUT_HIGH,
++					      GPOEN_ENABLE,
++					      GPI_NONE)>;
++			drive-strength = <2>;
++			input-enable;
++			input-schmitt-disable;
++			slew-rate = <0>;
++		};
++	};
 +
-+title: StarFive JH7110 PCIe host controller
++	pcie1_pins: pcie1-0 {
++		pcie-pins {
++			pinmux = <GPIOMUX(21, GPOUT_HIGH,
++					      GPOEN_ENABLE,
++					      GPI_NONE)>,
++				 <GPIOMUX(29, GPOUT_HIGH,
++					      GPOEN_ENABLE,
++					      GPI_NONE)>;
++			drive-strength = <2>;
++			input-enable;
++			input-schmitt-disable;
++			slew-rate = <0>;
++		};
++	};
 +
-+maintainers:
-+  - Minda Chen <minda.chen@starfivetech.com>
+ 	uart0_pins: uart0-0 {
+ 		tx-pins {
+ 			pinmux = <GPIOMUX(5, GPOUT_SYS_UART0_TX,
+@@ -233,6 +263,20 @@
+ 	};
+ };
+ 
++&pcie0 {
++	pinctrl-names = "default";
++	reset-gpios = <&sysgpio 26 GPIO_ACTIVE_LOW>;
++	pinctrl-0 = <&pcie0_pins>;
++	status = "okay";
++};
 +
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+  - $ref: plda,xpressrich-pcie-common.yaml#
-+  - $ref: /schemas/interrupt-controller/msi-controller.yaml#
-+  - $ref: /schemas/gpio/gpio-consumer-common.yaml#
++&pcie1 {
++	pinctrl-names = "default";
++	reset-gpios = <&sysgpio 28 GPIO_ACTIVE_LOW>;
++	pinctrl-0 = <&pcie1_pins>;
++	status = "okay";
++};
 +
-+properties:
-+  compatible:
-+    const: starfive,jh7110-pcie
+ &uart0 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&uart0_pins>;
+diff --git a/arch/riscv/boot/dts/starfive/jh7110.dtsi b/arch/riscv/boot/dts/starfive/jh7110.dtsi
+index 02354e642c44..6e1a73d9c1f4 100644
+--- a/arch/riscv/boot/dts/starfive/jh7110.dtsi
++++ b/arch/riscv/boot/dts/starfive/jh7110.dtsi
+@@ -629,5 +629,93 @@
+ 			#reset-cells = <1>;
+ 			power-domains = <&pwrc JH7110_PD_VOUT>;
+ 		};
 +
-+  clocks:
-+    items:
-+      - description: NOC bus clock
-+      - description: Transport layer clock
-+      - description: AXI MST0 clock
-+      - description: APB clock
++		pcie0: pcie@2b000000 {
++			compatible = "starfive,jh7110-pcie";
++			reg = <0x0 0x2b000000 0x0 0x100000>,
++			      <0x9 0x40000000 0x0 0x1000000>;
++			reg-names = "host", "cfg";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			ranges = <0x82000000  0x0 0x30000000  0x0 0x30000000 0x0 0x08000000>,
++				 <0xc3000000  0x9 0x00000000  0x9 0x00000000 0x0 0x40000000>;
++			interrupts = <56>;
++			interrupt-parent = <&plic>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc0 0x1>,
++					<0x0 0x0 0x0 0x2 &pcie_intc0 0x2>,
++					<0x0 0x0 0x0 0x3 &pcie_intc0 0x3>,
++					<0x0 0x0 0x0 0x4 &pcie_intc0 0x4>;
++			msi-parent = <&pcie0>;
++			msi-controller;
++			device_type = "pci";
++			starfive,stg-syscon = <&stg_syscon 0xc0 0xc4 0x130 0x1b8>;
++			bus-range = <0x0 0xff>;
++			clocks = <&syscrg JH7110_SYSCLK_NOC_BUS_STG_AXI>,
++				 <&stgcrg JH7110_STGCLK_PCIE0_TL>,
++				 <&stgcrg JH7110_STGCLK_PCIE0_AXI_MST0>,
++				 <&stgcrg JH7110_STGCLK_PCIE0_APB>;
++			clock-names = "noc", "tl", "axi_mst0", "apb";
++			resets = <&stgcrg JH7110_STGRST_PCIE0_AXI_MST0>,
++				 <&stgcrg JH7110_STGRST_PCIE0_AXI_SLV0>,
++				 <&stgcrg JH7110_STGRST_PCIE0_AXI_SLV>,
++				 <&stgcrg JH7110_STGRST_PCIE0_BRG>,
++				 <&stgcrg JH7110_STGRST_PCIE0_CORE>,
++				 <&stgcrg JH7110_STGRST_PCIE0_APB>;
++			reset-names = "mst0", "slv0", "slv", "brg",
++				      "core", "apb";
++			status = "disabled";
 +
-+  clock-names:
-+    items:
-+      - const: noc
-+      - const: tl
-+      - const: axi_mst0
-+      - const: apb
++			pcie_intc0: interrupt-controller {
++				#address-cells = <0>;
++				#interrupt-cells = <1>;
++				interrupt-controller;
++			};
++		};
 +
-+  resets:
-+    items:
-+      - description: AXI MST0 reset
-+      - description: AXI SLAVE reset
-+      - description: AXI SLAVE0 reset
-+      - description: PCIE BRIDGE reset
-+      - description: PCIE CORE reset
-+      - description: PCIE APB reset
++		pcie1: pcie@2c000000 {
++			compatible = "starfive,jh7110-pcie";
++			reg = <0x0 0x2c000000 0x0 0x1000000>,
++			      <0x9 0xc0000000 0x0 0x10000000>;
++			reg-names = "host", "cfg";
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			ranges = <0x82000000  0x0 0x38000000  0x0 0x38000000 0x0 0x08000000>,
++				 <0xc3000000  0x9 0x80000000  0x9 0x80000000 0x0 0x40000000>;
++			interrupts = <57>;
++			interrupt-parent = <&plic>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc1 0x1>,
++					<0x0 0x0 0x0 0x2 &pcie_intc1 0x2>,
++					<0x0 0x0 0x0 0x3 &pcie_intc1 0x3>,
++					<0x0 0x0 0x0 0x4 &pcie_intc1 0x4>;
++			msi-parent = <&pcie1>;
++			msi-controller;
++			device_type = "pci";
++			starfive,stg-syscon = <&stg_syscon 0x270 0x274 0x2e0 0x368>;
++			bus-range = <0x0 0xff>;
++			clocks = <&syscrg JH7110_SYSCLK_NOC_BUS_STG_AXI>,
++				 <&stgcrg JH7110_STGCLK_PCIE1_TL>,
++				 <&stgcrg JH7110_STGCLK_PCIE1_AXI_MST0>,
++				 <&stgcrg JH7110_STGCLK_PCIE1_APB>;
++			clock-names = "noc", "tl", "axi_mst0", "apb";
++			resets = <&stgcrg JH7110_STGRST_PCIE1_AXI_MST0>,
++				 <&stgcrg JH7110_STGRST_PCIE1_AXI_SLV0>,
++				 <&stgcrg JH7110_STGRST_PCIE1_AXI_SLV>,
++				 <&stgcrg JH7110_STGRST_PCIE1_BRG>,
++				 <&stgcrg JH7110_STGRST_PCIE1_CORE>,
++				 <&stgcrg JH7110_STGRST_PCIE1_APB>;
++			reset-names = "mst0", "slv0", "slv", "brg",
++				      "core", "apb";
++			status = "disabled";
 +
-+  reset-names:
-+    items:
-+      - const: mst0
-+      - const: slv0
-+      - const: slv
-+      - const: brg
-+      - const: core
-+      - const: apb
-+
-+  starfive,stg-syscon:
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
-+    items:
-+      - items:
-+          - description: phandle to System Register Controller stg_syscon node.
-+          - description: register0 offset of STG_SYSCONSAIF__SYSCFG register for PCIe.
-+          - description: register1 offset of STG_SYSCONSAIF__SYSCFG register for PCIe.
-+          - description: register2 offset of STG_SYSCONSAIF__SYSCFG register for PCIe.
-+          - description: register3 offset of STG_SYSCONSAIF__SYSCFG register for PCIe.
-+    description:
-+      The phandle to System Register Controller syscon node and the offset
-+      of STG_SYSCONSAIF__SYSCFG register for PCIe. Total 4 regsisters offset
-+      for PCIe.
-+
-+  phys:
-+    description:
-+      Specified PHY is attached to PCIe controller.
-+    maxItems: 1
-+
-+required:
-+  - compatible
-+  - reg
-+  - reg-names
-+  - "#interrupt-cells"
-+  - interrupts
-+  - interrupt-map-mask
-+  - interrupt-map
-+  - clocks
-+  - resets
-+  - starfive,stg-syscon
-+  - msi-controller
-+  - reset-gpios
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/gpio/gpio.h>
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie0: pcie@2b000000 {
-+            compatible = "starfive,jh7110-pcie";
-+            reg = <0x0 0x2b000000 0x0 0x1000000>,
-+                  <0x9 0x40000000 0x0 0x10000000>;
-+            reg-names = "host", "cfg";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            #interrupt-cells = <1>;
-+            device_type = "pci";
-+            ranges = <0x82000000  0x0 0x30000000  0x0 0x30000000 0x0 0x08000000>,
-+                     <0xc3000000  0x9 0x00000000  0x9 0x00000000 0x0 0x40000000>;
-+            starfive,stg-syscon = <&stg_syscon 0xc0 0xc4 0x130 0x1b8>;
-+            bus-range = <0x0 0xff>;
-+            interrupt-parent = <&plic>;
-+            interrupts = <56>;
-+            interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+            interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc0 0x1>,
-+                            <0x0 0x0 0x0 0x2 &pcie_intc0 0x2>,
-+                            <0x0 0x0 0x0 0x3 &pcie_intc0 0x3>,
-+                            <0x0 0x0 0x0 0x4 &pcie_intc0 0x4>;
-+            msi-parent = <&pcie0>;
-+            msi-controller;
-+            clocks = <&syscrg 86>,
-+                     <&stgcrg 10>,
-+                     <&stgcrg 8>,
-+                     <&stgcrg 9>;
-+            clock-names = "noc", "tl", "axi_mst0", "apb";
-+            resets = <&stgcrg 11>,
-+                     <&stgcrg 12>,
-+                     <&stgcrg 13>,
-+                     <&stgcrg 14>,
-+                     <&stgcrg 15>,
-+                     <&stgcrg 16>;
-+            reset-gpios = <&gpios 26 GPIO_ACTIVE_LOW>;
-+            phys = <&pciephy0>;
-+
-+            pcie_intc0: interrupt-controller {
-+                #address-cells = <0>;
-+                #interrupt-cells = <1>;
-+                interrupt-controller;
-+            };
-+        };
-+    };
++			pcie_intc1: interrupt-controller {
++				#address-cells = <0>;
++				#interrupt-cells = <1>;
++				interrupt-controller;
++			};
++		};
+ 	};
+ };
 -- 
 2.17.1
 
