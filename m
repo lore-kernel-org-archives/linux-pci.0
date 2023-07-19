@@ -2,105 +2,127 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA986C0015E
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jul 2023 21:16:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02543C001DC
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jul 2023 21:27:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229477AbjGSVQG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Jul 2023 17:16:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57378 "EHLO
+        id S229610AbjGSV1p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Jul 2023 17:27:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32904 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229471AbjGSVQG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2023 17:16:06 -0400
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EBE91FC0
-        for <linux-pci@vger.kernel.org>; Wed, 19 Jul 2023 14:16:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689801365; x=1721337365;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=YjYJXFZNKRa829Ef6CvuA69cIbjy+2D6KMvVRB+QSjQ=;
-  b=JiCxmPDuNxw4vBG0VXkEsx05MVnvoOzA37jHJudZ4+1jiZwgcYuMVG45
-   u/dCRg9J5cE7ITM3YoNvH8fVPXR34+KjM6xPgNx4VRSMesf6LBVQMISSp
-   0yEPLUPIqmaOuY/MHIxp6iK7z/Z1EXNneEq1R+OevIZuuhOfYsbBz3Y1A
-   EyCSN5vUSjMtmA2IylfeYYzx7WL4C0BzFibzPD2H31KMYhIOAApGVS7k5
-   QjHnNI/Mn0EEaIUShuSDVqCBsAyz8McR6VlwiGpM5cGa3uZ2PkRtvrlyh
-   CP+88dOjD7lcndBqGnmRqGxA0E8nDdrsR553M4C9yhYzR/S79ClmkGAdU
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10776"; a="370139076"
-X-IronPort-AV: E=Sophos;i="6.01,216,1684825200"; 
-   d="scan'208";a="370139076"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jul 2023 14:16:04 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10776"; a="701395418"
-X-IronPort-AV: E=Sophos;i="6.01,216,1684825200"; 
-   d="scan'208";a="701395418"
-Received: from unknown (HELO localhost.ch.intel.com) ([10.2.230.30])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jul 2023 14:16:04 -0700
-From:   Nirmal Patel <nirmal.patel@linux.intel.com>
-To:     nirmal.patel@linux.intel.com, <linux-pci@vger.kernel.org>
-Subject: [PATCH v2] PCI: vmd: Disable bridge window for domain reset
-Date:   Wed, 19 Jul 2023 16:56:10 -0400
-Message-Id: <20230719205610.922324-1-nirmal.patel@linux.intel.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229477AbjGSV1o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2023 17:27:44 -0400
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8A37C1FC0;
+        Wed, 19 Jul 2023 14:27:42 -0700 (PDT)
+Received: from loongson.cn (unknown [10.20.42.43])
+        by gateway (Coremail) with SMTP id _____8DxBfFNVbhkjXAHAA--.18836S3;
+        Thu, 20 Jul 2023 05:27:41 +0800 (CST)
+Received: from [10.20.42.43] (unknown [10.20.42.43])
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8CxF8xLVbhkCBc1AA--.40637S3;
+        Thu, 20 Jul 2023 05:27:39 +0800 (CST)
+Message-ID: <bf783bdf-d9e9-127b-cad2-4e19a28b3702@loongson.cn>
+Date:   Thu, 20 Jul 2023 05:27:39 +0800
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH 2/6] PCI/VGA: Deal with PCI VGA compatible devices only
+Content-Language: en-US
+To:     Sui Jingfeng <sui.jingfeng@linux.dev>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        Maxime Ripard <mripard@kernel.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        loongson-kernel@lists.loongnix.cn,
+        Mario Limonciello <mario.limonciello@amd.com>
+References: <20230719182617.GA509912@bhelgaas>
+ <1a10cb43-7c96-069a-bdd2-3a8cdb7727e1@linux.dev>
+From:   suijingfeng <suijingfeng@loongson.cn>
+In-Reply-To: <1a10cb43-7c96-069a-bdd2-3a8cdb7727e1@linux.dev>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: AQAAf8CxF8xLVbhkCBc1AA--.40637S3
+X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
+X-Coremail-Antispam: 1Uk129KBj93XoWxXrykZr1kKw1kCw1kXw45CFX_yoW5ZFWfp3
+        48G343G3y0qw1IgrW7ZF18CryUGFy5Ca4UJryftF18Ga12gwn7t3ZIvr4Y9ry5Jr4Fvr12
+        yrs7K34Svw47AabCm3ZEXasCq-sJn29KB7ZKAUJUUUUD529EdanIXcx71UUUUU7KY7ZEXa
+        sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+        0xBIdaVrnRJUUUP2b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+        IYs7xG6rWj6s0DM7CIcVAFz4kK6r106r15M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+        0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
+        Gr0_Gr1UM2kKe7AKxVWUAVWUtwAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYI
+        kI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUtVWr
+        XwAv7VC2z280aVAFwI0_Cr0_Gr1UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrw
+        CYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48J
+        MxC20s026xCaFVCjc4AY6r1j6r4UMxCIbckI1I0E14v26rWY6Fy7MI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r4j6ryUMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        W8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1l
+        IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU88cTPUUUU
+        U==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-During domain reset process we are accidentally enabling
-the prefetchable memory by writing 0x0 to Prefetchable Memory
-Base and Prefetchable Memory Limit registers. As a result certain
-platforms failed to boot up.
+Hi,
 
-When clearing Prefetchable Memory Base, Prefetchable Memory
-Limit and Prefetchable Base Upper 32 bits, the prefetchable
-memory range becomes 0x0-0x575000fffff. As a result the
-prefetchable memory is enabled accidentally. There is a gap
-between implementation and the PCI Express spec.
+On 2023/7/20 05:13, Sui Jingfeng wrote:
+> Otherwise there 30+ noisy(useless) events got snooped. See below:
+>
+>
+> ```
+>
+> [    0.246077] pci 0000:01:00.0: vgaarb: setting as boot VGA device
+> [    0.246077] pci 0000:01:00.0: vgaarb: bridge control possible
+> [    0.246077] pci 0000:01:00.0: vgaarb: VGA device added: 
+> decodes=io+mem,owns=io+mem,locks=none
+> [    0.246077] vgaarb: loaded
+> [    0.294169] skl_uncore 0000:00:00.0: vgaarb: pci_notify: action=3
+> [    0.294182] skl_uncore 0000:00:00.0: vgaarb: pci_notify: action=4
+> [    0.301297] pcieport 0000:00:01.0: vgaarb: pci_notify: action=3
+> [    0.301482] pcieport 0000:00:01.0: vgaarb: pci_notify: action=4
+> [    0.301488] pcieport 0000:00:1c.0: vgaarb: pci_notify: action=3
+> [    0.301705] pcieport 0000:00:1c.0: vgaarb: pci_notify: action=4
+> [    1.806445] xhci_hcd 0000:00:14.0: vgaarb: pci_notify: action=3
+> [    1.810976] ahci 0000:00:17.0: vgaarb: pci_notify: action=3
+> [    1.824383] xhci_hcd 0000:00:14.0: vgaarb: pci_notify: action=4
+> [    1.857470] ahci 0000:00:17.0: vgaarb: pci_notify: action=4
+> [    4.692700] intel_pch_thermal 0000:00:14.2: vgaarb: pci_notify: 
+> action=3
+> [    4.693110] intel_pch_thermal 0000:00:14.2: vgaarb: pci_notify: 
+> action=4
+> [    4.746712] i801_smbus 0000:00:1f.4: vgaarb: pci_notify: action=3
+> [    4.747212] pci 0000:00:1f.1: vgaarb: pci_notify: action=0
+> [    4.747227] pci 0000:00:1f.1: vgaarb: pci_notify: action=1
+> [    4.747250] pci 0000:00:1f.1: vgaarb: pci_notify: action=2
+> [    4.749098] i801_smbus 0000:00:1f.4: vgaarb: pci_notify: action=4
+> [    4.799217] mei_me 0000:00:16.0: vgaarb: pci_notify: action=3
+> [    4.802503] mei_me 0000:00:16.0: vgaarb: pci_notify: action=4
+> [    4.874880] intel-lpss 0000:00:15.0: vgaarb: pci_notify: action=3
+> [    4.881227] intel-lpss 0000:00:15.0: vgaarb: pci_notify: action=4
+> [    4.881240] intel-lpss 0000:00:15.1: vgaarb: pci_notify: action=3
+> [    4.887578] intel-lpss 0000:00:15.1: vgaarb: pci_notify: action=4
+> [    4.985796] r8169 0000:02:00.0: vgaarb: pci_notify: action=3
+> [    4.991862] r8169 0000:02:00.0: vgaarb: pci_notify: action=4
+> [    5.404835] snd_hda_intel 0000:00:1f.3: vgaarb: pci_notify: action=3
+> [    5.405175] snd_hda_intel 0000:00:1f.3: vgaarb: pci_notify: action=4
+> [    5.405401] snd_hda_intel 0000:01:00.1: vgaarb: pci_notify: action=3
+> [    5.405973] snd_hda_intel 0000:01:00.1: vgaarb: pci_notify: action=4
+> [   10.793665] i915 0000:00:02.0: vgaarb: pci_notify: action=3
+> [   11.201384] i915 0000:00:02.0: vgaarb: pci_notify: action=4
+> [   16.135842] amdgpu 0000:01:00.0: vgaarb: pci_notify: action=3
+> [   16.140458] amdgpu 0000:01:00.0: vgaarb: deactivate vga console
+> [   16.638564] amdgpu 0000:01:00.0: vgaarb: pci_notify: action=4
+>
+> ``` 
 
-Here is the quote from section 7.5.1.3.9 of PCI Express Base 6.0 spec:
 
-  The Prefetchable Memory Limit register must be programmed to a smaller
-  value than the Prefetchable Memory Base register if there is no
-  prefetchable memory on the secondary side of the bridge.
+After apply my patch, this events are still will notify me, it is just 
+that if we found it is irrelevant, we will return immediately.
 
-Write proper values to required Memory Base registers and follow
-same the style as  pci_disable_bridge_window.
-
-Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
----
-v1->v2: Follow same chain of operation as pci_disable_bridge_window
-        and update commit log.
----
- drivers/pci/controller/vmd.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 769eedeb8802..ca9081be917d 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -526,8 +526,16 @@ static void vmd_domain_reset(struct vmd_dev *vmd)
- 				     PCI_CLASS_BRIDGE_PCI))
- 					continue;
- 
--				memset_io(base + PCI_IO_BASE, 0,
--					  PCI_ROM_ADDRESS1 - PCI_IO_BASE);
-+				writel(0, base + PCI_IO_BASE);
-+				/* MMIO Base/Limit */
-+				writel(0x0000fff0, base + PCI_MEMORY_BASE);
-+
-+				/* Prefetchable MMIO Base/Limit */
-+				writel(0, base + PCI_PREF_LIMIT_UPPER32);
-+				writel(0x0000fff0, base + PCI_PREF_MEMORY_BASE);
-+				writel(0xffffffff, base + PCI_PREF_BASE_UPPER32);
-+				writel(0, base + PCI_IO_BASE_UPPER16);
-+				writeb(0, base + PCI_CAPABILITY_LIST);
- 			}
- 		}
- 	}
--- 
-2.31.1
+No further process is needed.
 
