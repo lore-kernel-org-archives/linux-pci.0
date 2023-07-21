@@ -2,313 +2,131 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B215C04A6A
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 17:25:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48AD8C41513
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 21:47:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231276AbjGURZE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jul 2023 13:25:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37338 "EHLO
+        id S229804AbjGUVr5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jul 2023 17:47:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231178AbjGURY7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 13:24:59 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCF542691;
-        Fri, 21 Jul 2023 10:24:57 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36L9cj4d019572;
-        Fri, 21 Jul 2023 17:24:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=85UC/4/Geciipqr3eLRLQLu1VtLSki/byJNTttdKQ+U=;
- b=BQctjkdwmXky1ogAZE8KcZQDePSzckhJ06NpF42rUkgVaYtXyl1zU4tfCGwkkfSlpCxh
- C2v7W9HiH7ym62Ey5xu8jeAD5kckfMb+ZgAltr134sK+r7L9a0TIV34G9/LOmcpwqtyS
- zcOUbE7vXkO72/tJTWTDwlgiZgjTpgfaJrrCup39ak5e2GxbRjJeoKAOFXCOiCLzr+I8
- r7Z+3JiBE+3zmrnnlUr7HRW+ZKUvcWKdGOWgMWQxKfUZYcdNxxqcvZ02BZYXPGgZtiQO
- WRNLQ2PdtN74Vih02jtx3LfdphhFpNTS8inr0Bg4i7s73//rUZbNFv/STs0VrQtJzI9n Jw== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rynfqsbam-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 21 Jul 2023 17:24:50 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36LHOlin023788;
-        Fri, 21 Jul 2023 17:24:47 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3rumhknepr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 21 Jul 2023 17:24:47 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36LHOlED023783;
-        Fri, 21 Jul 2023 17:24:47 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 36LHOkmQ023782;
-        Fri, 21 Jul 2023 17:24:47 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-        id 55CE632C9; Fri, 21 Jul 2023 22:54:46 +0530 (+0530)
-From:   Mrinmay Sarkar <quic_msarkar@quicinc.com>
-To:     agross@kernel.org, andersson@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        konrad.dybcio@linaro.org, mani@kernel.org
-Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
-        dmitry.baryshkov@linaro.org,
-        Mrinmay Sarkar <quic_msarkar@quicinc.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 3/4] arm64: dts: qcom: sa8775p: Add pcie0 and pcie1 nodes
-Date:   Fri, 21 Jul 2023 22:54:34 +0530
-Message-Id: <1689960276-29266-4-git-send-email-quic_msarkar@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1689960276-29266-1-git-send-email-quic_msarkar@quicinc.com>
-References: <1689960276-29266-1-git-send-email-quic_msarkar@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Buy7lTc0HZpSzw2aToXtieGhuNufd8cX
-X-Proofpoint-GUID: Buy7lTc0HZpSzw2aToXtieGhuNufd8cX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-07-21_10,2023-07-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
- lowpriorityscore=0 phishscore=0 malwarescore=0 priorityscore=1501
- impostorscore=0 mlxscore=0 bulkscore=0 spamscore=0 adultscore=0
- mlxlogscore=999 suspectscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2306200000 definitions=main-2307210151
+        with ESMTP id S229453AbjGUVr4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 17:47:56 -0400
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02DDDE0;
+        Fri, 21 Jul 2023 14:47:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=E38MX9oo65z/215o/TEX59gS79EIlstZFjBappQk6SZ/7+WXhH0rnjvbkQYM4Xj2/nJWWsRKhSsQr05rygAx6WZxWoxfE5hsWLtM8W8R31Qk5j2SzLjCvBtVZUj517q+DRR6k5DXCyqm3fHfNW+6LIbKxzXYV4QYY10xiuyY/oDfzww9YBdvhq0oSWMFCiuLN6KiDFZQ2P67pcKA2vj+qNO+NuAhdlYIfYjJPbCwqrcNpAQP2haQ1316cjBLDhVCU5orv0ekYt0RsRKhmfThJx1MdICRJonPFt77T9Ibim4XwdR0LmBw5jjva28QGQK/dMr7V739SMgA7ryTB82vpQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Z7SwQ0oHgUPkpegIrHVCIqrWo61mTFcFQ7woXR8A01M=;
+ b=P7qD2MWhK0XRZY+Rz5bYIt+VA/Jv8OkEzP7LnYzKlSDAKfmC22QbTT2uxg5cbJJwksEQMl+ULg8CN0Uh1scA7oMxu48UPCxS99mojXMOCEifoWMqKZYFnx/WG8906eWfD2O/40SH8DWxVqwlWjL87BZtJqtDQORD/YyvsmPKB/v9EcSpBTCU0nJhVElax2T2alWd5P8/pAKfiSupRdmZSbvEhi1fzaAc5mebTy9148jop1eHa1H/ht2CcPSLGUrwNZS/bOVZ41UzR91xxMgXBpbU0He23dOvRyte6jH6ES/NQOS7ebasvkLkpQYCf4QI+wEvTPYSKdWLjYJKNuIetw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Z7SwQ0oHgUPkpegIrHVCIqrWo61mTFcFQ7woXR8A01M=;
+ b=TO6dEdJq7jtIdqnfQnrL9shCmQbEj8FmvAs06Xjz0O9BjGNWCbVrTPD+sXgwRmFaXETwF1KZCjK4MLXuKOgKoKHfrQv210e/oP8SILNhEqHMz9gWklTf+Cbk8YSMrpbCl2M1rCS+iWrAW2dY3NLPVmnPUrXLESJd8CQQnLSkOuc=
+Received: from DM6PR06CA0022.namprd06.prod.outlook.com (2603:10b6:5:120::35)
+ by SN7PR12MB6790.namprd12.prod.outlook.com (2603:10b6:806:269::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6588.33; Fri, 21 Jul
+ 2023 21:47:53 +0000
+Received: from DM6NAM11FT003.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:120:cafe::5a) by DM6PR06CA0022.outlook.office365.com
+ (2603:10b6:5:120::35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.28 via Frontend
+ Transport; Fri, 21 Jul 2023 21:47:53 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ DM6NAM11FT003.mail.protection.outlook.com (10.13.173.162) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6609.28 via Frontend Transport; Fri, 21 Jul 2023 21:47:52 +0000
+Received: from ethanolx50f7host.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 21 Jul
+ 2023 16:47:51 -0500
+From:   Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
+To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-cxl@vger.kernel.org>
+CC:     Bjorn Helgaas <bhelgaas@google.com>, <oohall@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        "Vishal Verma" <vishal.l.verma@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        "Ben Widawsky" <bwidawsk@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
+        Yazen Ghannam <yazen.ghannam@amd.com>,
+        Terry Bowman <terry.bowman@amd.com>,
+        Robert Richter <rrichter@amd.com>,
+        Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
+Subject: [PATCH v2 0/3] PCI/AER, CXL: Fix appropriate _OSC check for CXL RAS Cap
+Date:   Fri, 21 Jul 2023 21:47:37 +0000
+Message-ID: <20230721214740.256602-1-Smita.KoralahalliChannabasappa@amd.com>
+X-Mailer: git-send-email 2.17.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT003:EE_|SN7PR12MB6790:EE_
+X-MS-Office365-Filtering-Correlation-Id: 74d09fe9-8930-403d-a9e0-08db8a3422c3
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: LJlKMI2Sf39hha1yIh0LDsMv6c5kPdx/ZbBpAAVf36BiJtRfx7nGWbPDMa2un6ceaaExxi/naS5QDEGI1u4O2rbJZXNGBzZ9m+ci7gYnM5IpcKxR8pPQWrSsO0MhbabgZwePa6Ikb6ir3T/r/+SQp0wM13TZbXlWpsXAwJmp9K6IoNmkeG0CYltQRmkkpQH7I1hOHRvcH9FGU4Nlx51iMg/aA2pwpZ44pcD576P7i8AFQBbjR+u4xcyCdlPeoseX042zcg2GwZyR3ReStrs9GvucbCzM6xto/YjB+wfCYSW4EofGx9JAyKvG9x9T0NUyzY+qAuIrNIiANWbETrjeolRuAhrtf3rfbz2N/D3DHWZ/cxGkWGeJ++mVkwrQ4CZxsX91MkalEDkx0cAzQTdGfYh+EmmkUk2+S8JPPrtdXrT0qfdhvIZadwsMny2Y9ZcL85lOx0/9RO5SrG8Er9OZN0kcsHgv7CufrYVP4YVOEpRf/7oLz4CnAXweb6W8oSyAq3NR1WAm/NXXBGmb4Gb9X3Ftqrn10twrV2p5wD2l3/LHmMioddOjy64B30SFWdg8HlR2lz5clYxlL/LfJZDf9BZbZ+BuLa+9mAaH+qf5PahptpmEBvqUsflZWXPRq5mr6rSBJ86k+EssowYCvlBl0ikQJM2REZgy76mQDl/+JLdC+OZqaE93m/G28/bChzHi87DUS9MRRxHARcGBd/T309VFHAj9XwiSg4Yr7Q//pbc5K3l0SjuoGjm5QD0g+eYo
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(136003)(346002)(376002)(39860400002)(396003)(82310400008)(451199021)(36840700001)(40470700004)(46966006)(26005)(41300700001)(8676002)(8936002)(1076003)(110136005)(356005)(81166007)(82740400003)(4326008)(478600001)(70206006)(70586007)(40480700001)(966005)(40460700003)(316002)(7696005)(36756003)(86362001)(47076005)(2906002)(83380400001)(54906003)(2616005)(4744005)(5660300002)(426003)(186003)(6666004)(7416002)(16526019)(336012)(36860700001)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jul 2023 21:47:52.8300
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 74d09fe9-8930-403d-a9e0-08db8a3422c3
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT003.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB6790
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add pcie dtsi nodes for two controllers found on sa8775p platform.
+This series of patches fixes the appropriate _OSC check for CXL RAS
+registers.
 
-Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
----
- arch/arm64/boot/dts/qcom/sa8775p.dtsi | 204 +++++++++++++++++++++++++++++++++-
- 1 file changed, 202 insertions(+), 2 deletions(-)
+First patch addresses the _OSC check.
 
-diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-index 59eedfc..7b55cb7 100644
---- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-@@ -481,8 +481,8 @@
- 				 <0>,
- 				 <0>,
- 				 <0>,
--				 <0>,
--				 <0>,
-+				 <&pcie0_phy>,
-+				 <&pcie1_phy>,
- 				 <0>,
- 				 <0>,
- 				 <0>;
-@@ -2357,4 +2357,204 @@
- 			     <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)>,
- 			     <GIC_PPI 12 (GIC_CPU_MASK_SIMPLE(8) | IRQ_TYPE_LEVEL_LOW)>;
- 	};
-+
-+	pcie0: pci@1c00000{
-+		compatible = "qcom,pcie-sa8775p";
-+		reg = <0x0 0x01c00000 0x0 0x3000>,
-+		      <0x0 0x40000000 0x0 0xf20>,
-+		      <0x0 0x40000f20 0x0 0xa8>,
-+		      <0x0 0x40001000 0x0 0x4000>,
-+		      <0x0 0x40100000 0x0 0x100000>,
-+		      <0x0 0x01c03000 0x0 0x1000>;
-+		reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
-+		device_type = "pci";
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
-+			 <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x1fd00000>;
-+		bus-range = <0x00 0xff>;
-+
-+		dma-coherent;
-+
-+		linux,pci-domain = <0>;
-+		num-lanes = <2>;
-+
-+		interrupts = <GIC_SPI 307 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 308 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 309 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 312 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 314 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-names = "msi0", "msi1", "msi2", "msi3",
-+				  "msi4", "msi5", "msi6", "msi7";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0x7>;
-+		interrupt-map = <0 0 0 1 &intc GIC_SPI 434 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 2 &intc GIC_SPI 435 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 3 &intc GIC_SPI 438 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 4 &intc GIC_SPI 439 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
-+			 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+			 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+			 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+			 <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>;
-+
-+		clock-names = "aux",
-+			      "cfg",
-+			      "bus_master",
-+			      "bus_slave",
-+			      "slave_q2a";
-+
-+		assigned-clocks = <&gcc GCC_PCIE_0_AUX_CLK>;
-+		assigned-clock-rates = <19200000>;
-+
-+		interconnects = <&pcie_anoc MASTER_PCIE_0 0 &mc_virt SLAVE_EBI1 0>,
-+				<&gem_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_PCIE_0 0>;
-+		interconnect-names = "pcie-mem", "cpu-pcie";
-+
-+		iommu-map = <0x0 &pcie_smmu 0x0000 0x1>,
-+			    <0x100 &pcie_smmu 0x0001 0x1>;
-+
-+		resets = <&gcc GCC_PCIE_0_BCR>;
-+		reset-names = "pci";
-+		power-domains = <&gcc PCIE_0_GDSC>;
-+
-+		phys = <&pcie0_phy>;
-+		phy-names = "pciephy";
-+
-+		status = "disabled";
-+	};
-+
-+	pcie0_phy: phy@1c04000 {
-+		compatible = "qcom,sa8775p-qmp-gen4x2-pcie-phy";
-+		reg = <0x0 0x1c04000 0x0 0x2000>;
-+
-+		clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
-+			 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+			 <&gcc GCC_PCIE_CLKREF_EN>,
-+			 <&gcc GCC_PCIE_0_PHY_RCHNG_CLK>,
-+			 <&gcc GCC_PCIE_0_PIPE_CLK>,
-+			 <&gcc GCC_PCIE_0_PIPEDIV2_CLK>,
-+			 <&gcc GCC_PCIE_0_PHY_AUX_CLK>;
-+
-+		clock-names = "aux", "cfg_ahb", "ref", "rchng", "pipe",
-+			      "pipediv2", "phy_aux";
-+
-+		assigned-clocks = <&gcc GCC_PCIE_0_PHY_RCHNG_CLK>;
-+		assigned-clock-rates = <100000000>;
-+
-+		resets = <&gcc GCC_PCIE_0_PHY_BCR>;
-+		reset-names = "phy";
-+
-+		#clock-cells = <0>;
-+		clock-output-names = "pcie_0_pipe_clk";
-+
-+		#phy-cells = <0>;
-+
-+		status = "disabled";
-+	};
-+
-+	pcie1: pci@1c10000{
-+		compatible = "qcom,pcie-sa8775p";
-+		reg = <0x0 0x01c10000 0x0 0x3000>,
-+		      <0x0 0x60000000 0x0 0xf20>,
-+		      <0x0 0x60000f20 0x0 0xa8>,
-+		      <0x0 0x60001000 0x0 0x4000>,
-+		      <0x0 0x60100000 0x0 0x100000>,
-+		      <0x0 0x01c13000 0x0 0x1000>;
-+		reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
-+		device_type = "pci";
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x01000000 0x0 0x00000000 0x0 0x60200000 0x0 0x100000>,
-+			 <0x02000000 0x0 0x60300000 0x0 0x60300000 0x0 0x1fd00000>;
-+		bus-range = <0x00 0xff>;
-+
-+		dma-coherent;
-+
-+		linux,pci-domain = <1>;
-+		num-lanes = <4>;
-+
-+		interrupts = <GIC_SPI 519 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-names = "msi0", "msi1", "msi2", "msi3",
-+				  "msi4", "msi5", "msi6", "msi7";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0x7>;
-+		interrupt-map = <0 0 0 1 &intc GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 2 &intc GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 3 &intc GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH>,
-+				<0 0 0 4 &intc GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		clocks = <&gcc GCC_PCIE_1_AUX_CLK>,
-+			 <&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-+			 <&gcc GCC_PCIE_1_MSTR_AXI_CLK>,
-+			 <&gcc GCC_PCIE_1_SLV_AXI_CLK>,
-+			 <&gcc GCC_PCIE_1_SLV_Q2A_AXI_CLK>;
-+
-+		clock-names = "aux",
-+			      "cfg",
-+			      "bus_master",
-+			      "bus_slave",
-+			      "slave_q2a";
-+
-+		assigned-clocks = <&gcc GCC_PCIE_1_AUX_CLK>;
-+		assigned-clock-rates = <19200000>;
-+
-+		interconnects = <&pcie_anoc MASTER_PCIE_1 0 &mc_virt SLAVE_EBI1 0>,
-+				<&gem_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_PCIE_1 0>;
-+		interconnect-names = "pcie-mem", "cpu-pcie";
-+
-+		iommu-map = <0x0 &pcie_smmu 0x0080 0x1>,
-+			    <0x100 &pcie_smmu 0x0081 0x1>;
-+
-+		resets = <&gcc GCC_PCIE_1_BCR>;
-+		reset-names = "pci";
-+		power-domains = <&gcc PCIE_1_GDSC>;
-+
-+		phys = <&pcie1_phy>;
-+		phy-names = "pciephy";
-+
-+		status = "disabled";
-+	};
-+
-+	pcie1_phy: phy@1c14000 {
-+		compatible = "qcom,sa8775p-qmp-gen4x4-pcie-phy";
-+		reg = <0x0 0x1c14000 0x0 0x4000>;
-+
-+		clocks = <&gcc GCC_PCIE_1_AUX_CLK>,
-+			 <&gcc GCC_PCIE_1_CFG_AHB_CLK>,
-+			 <&gcc GCC_PCIE_CLKREF_EN>,
-+			 <&gcc GCC_PCIE_1_PHY_RCHNG_CLK>,
-+			 <&gcc GCC_PCIE_1_PIPE_CLK>,
-+			 <&gcc GCC_PCIE_1_PIPEDIV2_CLK>,
-+			 <&gcc GCC_PCIE_1_PHY_AUX_CLK>;
-+
-+		clock-names = "aux", "cfg_ahb", "ref", "rchng", "pipe",
-+			      "pipediv2", "phy_aux";
-+
-+		assigned-clocks = <&gcc GCC_PCIE_1_PHY_RCHNG_CLK>;
-+		assigned-clock-rates = <100000000>;
-+
-+		resets = <&gcc GCC_PCIE_1_PHY_BCR>;
-+		reset-names = "phy";
-+
-+		#clock-cells = <0>;
-+		clock-output-names = "pcie_1_pipe_clk";
-+
-+		#phy-cells = <0>;
-+
-+		status = "disabled";
-+	};
- };
+Second patch moves around pcie_aer_is_native() function declaration to a
+common location to be used by cxl/pci module and third patch reuses
+pcie_aer_is_native() in cxl/pci module.
+
+Link to v1:
+https://lore.kernel.org/all/20230719192313.38591-1-Smita.KoralahalliChannabasappa@amd.com
+
+Smita Koralahalli (3):
+  cxl/pci: Fix appropriate checking for _OSC while handling CXL RAS
+    registers
+  PCI/AER: Export pcie_aer_is_native()
+  cxl/pci: Replace host_bridge->native_aer with pcie_aer_is_native()
+
+ drivers/cxl/pci.c          | 7 +++----
+ drivers/pci/pcie/aer.c     | 1 +
+ drivers/pci/pcie/portdrv.h | 2 --
+ include/linux/aer.h        | 2 ++
+ 4 files changed, 6 insertions(+), 6 deletions(-)
+
 -- 
-2.7.4
+2.17.1
 
