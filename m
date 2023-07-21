@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79487C04A6A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CABD3C04A94
 	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 17:24:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230356AbjGURY5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jul 2023 13:24:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37298 "EHLO
+        id S229531AbjGURY6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jul 2023 13:24:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37310 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbjGURYz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 13:24:55 -0400
+        with ESMTP id S229763AbjGURY4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 13:24:56 -0400
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14C7DE47;
-        Fri, 21 Jul 2023 10:24:54 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36LDMaLI018765;
-        Fri, 21 Jul 2023 17:24:47 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C01382691;
+        Fri, 21 Jul 2023 10:24:55 -0700 (PDT)
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36L9GwUC031311;
+        Fri, 21 Jul 2023 17:24:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=hoGiKXN9LLHxribbSg2vDjbqkf+ni+mrm6GlYquInYE=;
- b=R8nEk/49X2oMrzMATsitOju+ZV+l+SembJIDszq5qg7ek/6Ai7fNZJeWRPsddUh3ixQ3
- htA8zjuBP+Y3ojecu0UIQW3MuZZnuyN2p5XCsNi0mnxH9IKpdTfdpECVQZwPVBwF+GCb
- Rsb4HHgnxoOs4BiW+B1DeTdBwjMuuZ6PPxyv69yPW4F/xO/HQH8R9Cp9ekqOiW+/pLL7
- I3fzXHjbntYzrRWmDaLv5SKXhB12FTUfmOw6t3lyuuQz3AB9vEOT5jzOqur7ZDExka+X
- gDrisOMAPyFfAMgpuRWxlEhUcFt/ct0Yo5AifF9MgPAc7uCKLej5kONnIzkP51vtUU9l TQ== 
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=kAzD23HxFnLQVkojbJgEB4UEjXzhftCnufIVR1nhpu8=;
+ b=eo1/kXPMaacFWr87M7I9XbqcZn4jDohds3mZAXBQTGluNseVZuHZeewLpkiAgNfx4SGS
+ Fg1k4XjvuWLg28pqlgT2U5e0FMe1KAI/MA+yPzkD/37iq141QO+/19QjUDrZ4oXsRhvU
+ B4kfRjWRFVIuJEzrxZcIRVQy0Vk27ioRtRapuvhr9QpNplAdMU+wQ/HLmPgEp6cHbOQG
+ VrC2BQgHigeOqvu8o2RSggEK6sLLTZIogpRVfCX29HoJEiQrBpuR1I4E6G3w9fNsr0S9
+ VOhbaK+mDY7aP2z8Fbl6T44g50S1RdctjhEpijOxFqPTFDpw4HSWAfFI1sbfYJ8neMEz JA== 
 Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ryn5ysbk3-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ryg7w1ums-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 21 Jul 2023 17:24:46 +0000
+        Fri, 21 Jul 2023 17:24:49 +0000
 Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36LHOgSN023730;
-        Fri, 21 Jul 2023 17:24:42 GMT
+        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36LHOgsc023733;
+        Fri, 21 Jul 2023 17:24:45 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3rumhknep8-1
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3rumhknepm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 21 Jul 2023 17:24:41 +0000
+        Fri, 21 Jul 2023 17:24:45 +0000
 Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36LHOfuJ023720;
-        Fri, 21 Jul 2023 17:24:41 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36LHOjM1023763;
+        Fri, 21 Jul 2023 17:24:45 GMT
 Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 36LHOfXd023702;
-        Fri, 21 Jul 2023 17:24:41 +0000
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 36LHOjaH023762;
+        Fri, 21 Jul 2023 17:24:45 +0000
 Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-        id 9C12832C9; Fri, 21 Jul 2023 22:54:40 +0530 (+0530)
+        id B01FA32C9; Fri, 21 Jul 2023 22:54:44 +0530 (+0530)
 From:   Mrinmay Sarkar <quic_msarkar@quicinc.com>
 To:     agross@kernel.org, andersson@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
@@ -58,63 +58,50 @@ Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 0/4] arm64: qcom: sa8775p: add support for PCIe
-Date:   Fri, 21 Jul 2023 22:54:31 +0530
-Message-Id: <1689960276-29266-1-git-send-email-quic_msarkar@quicinc.com>
+Subject: [PATCH v3 2/4] PCI: qcom: Add support for sa8775p SoC
+Date:   Fri, 21 Jul 2023 22:54:33 +0530
+Message-Id: <1689960276-29266-3-git-send-email-quic_msarkar@quicinc.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1689960276-29266-1-git-send-email-quic_msarkar@quicinc.com>
+References: <1689960276-29266-1-git-send-email-quic_msarkar@quicinc.com>
 X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 1j3k2xGQuIK1kfYnPTFcpxhXU9O8HWIy
-X-Proofpoint-GUID: 1j3k2xGQuIK1kfYnPTFcpxhXU9O8HWIy
+X-Proofpoint-GUID: GwxYWPrONmwjXIHUa4nnSirwly1VYmFo
+X-Proofpoint-ORIG-GUID: GwxYWPrONmwjXIHUa4nnSirwly1VYmFo
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-07-21_10,2023-07-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 suspectscore=0
- impostorscore=0 clxscore=1015 mlxscore=0 mlxlogscore=705
- priorityscore=1501 malwarescore=0 lowpriorityscore=0 adultscore=0
- phishscore=0 spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 bulkscore=0
+ phishscore=0 mlxlogscore=997 impostorscore=0 clxscore=1015
+ priorityscore=1501 lowpriorityscore=0 adultscore=0 malwarescore=0
+ mlxscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2306200000 definitions=main-2307210151
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Update the relavent DT bindings for PCIe, add new config to the phy
-driver add pcie and phy nodes to the .dtsi file and enable then in 
-board .dts file for the sa8775p-ride platform.
+Add support for sa8775p SoC that uses controller version 5.90
+reusing the 1.9.0 config.
 
-v2 -> v3:
-- to align with dt-bindings rectified pcie default state
-- dropped PCIe PHY dt-bindings and PHY driver in this series as its
-  already applied [1]
-- To verify DTS against bindings for this series we required [2]
+Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-[1] https://lore.kernel.org/all/168966092968.340315.2461852657981161685.b4-ty@kernel.org/
-[2] https://lore.kernel.org/all/20230719110344.19983-1-quic_shazhuss@quicinc.com/
-
-v1 -> v2:
-- correct indentationand sort compatible in qcom,pcie binding
-- correct clock name entry and sort compatible in pcie-phy binding
-- sort compatible and change commit message in qcom pcie driver
-- change offset name and sort compatible in qmp pcie phy driver
-- correct ranges property, added MSI, dma-coherent, cpu-pcie property
-  removed iommus property moved pinctrl and gpio property to board dts
-  and correct the allignment in pcie dtsi nodes
-- added pinctrl and gpio property in board dts
-
-Mrinmay Sarkar (4):
-  dt-bindings: PCI: qcom: Add sa8775p compatible
-  PCI: qcom: Add support for sa8775p SoC
-  arm64: dts: qcom: sa8775p: Add pcie0 and pcie1 nodes
-  arm64: dts: qcom: sa8775p-ride: enable pcie nodes
-
- .../devicetree/bindings/pci/qcom,pcie.yaml         |  28 +++
- arch/arm64/boot/dts/qcom/sa8775p-ride.dts          |  80 ++++++++
- arch/arm64/boot/dts/qcom/sa8775p.dtsi              | 204 ++++++++++++++++++++-
- drivers/pci/controller/dwc/pcie-qcom.c             |   1 +
- 4 files changed, 311 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index cee4e40..e2f2940 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1613,6 +1613,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
+ 	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
+ 	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_1_9_0 },
++	{ .compatible = "qcom,pcie-sa8775p", .data = &cfg_1_9_0},
+ 	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
+ 	{ .compatible = "qcom,pcie-sc8180x", .data = &cfg_1_9_0 },
+ 	{ .compatible = "qcom,pcie-sc8280xp", .data = &cfg_1_9_0 },
 -- 
 2.7.4
 
