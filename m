@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CABD3C04A94
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 17:24:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04111C00528
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 17:25:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229531AbjGURY6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jul 2023 13:24:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37310 "EHLO
+        id S231235AbjGURZD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jul 2023 13:25:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229763AbjGURY4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 13:24:56 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C01382691;
-        Fri, 21 Jul 2023 10:24:55 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36L9GwUC031311;
-        Fri, 21 Jul 2023 17:24:49 GMT
+        with ESMTP id S231179AbjGURY7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 13:24:59 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 945412699;
+        Fri, 21 Jul 2023 10:24:58 -0700 (PDT)
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 36LDSV4t011700;
+        Fri, 21 Jul 2023 17:24:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=kAzD23HxFnLQVkojbJgEB4UEjXzhftCnufIVR1nhpu8=;
- b=eo1/kXPMaacFWr87M7I9XbqcZn4jDohds3mZAXBQTGluNseVZuHZeewLpkiAgNfx4SGS
- Fg1k4XjvuWLg28pqlgT2U5e0FMe1KAI/MA+yPzkD/37iq141QO+/19QjUDrZ4oXsRhvU
- B4kfRjWRFVIuJEzrxZcIRVQy0Vk27ioRtRapuvhr9QpNplAdMU+wQ/HLmPgEp6cHbOQG
- VrC2BQgHigeOqvu8o2RSggEK6sLLTZIogpRVfCX29HoJEiQrBpuR1I4E6G3w9fNsr0S9
- VOhbaK+mDY7aP2z8Fbl6T44g50S1RdctjhEpijOxFqPTFDpw4HSWAfFI1sbfYJ8neMEz JA== 
+ bh=MskCSFNl+rmVIkfxmIb4pmSgIy4cHH7XAmsFuhx3yZw=;
+ b=JP1oRmq2C+kSFKhf4JVjRWnr9hNb4BndoAEGdpcR8p8dP/WTHm6VEih5eUWjlf2baFcB
+ nxnfgqyiAGLAevwHZ5nobDbwboqefWNCIxmxad3o/9iEXNucC3AYet69LlinaH2pSALU
+ NNwfJlTF1dzlV3sYvRERoBr19ZjFzHBVwA7A2OPQx3Cd2NLM13wVoxYQNoCTmfIB0uNY
+ +9a/K+jUHVBtkCpyc68dks+lgIYxUK/+YjGnx/JigpHar0Tvhjceal7crf8tTTrTnpfV
+ uSfSfbkUQGNfG5oy0czwKAP3wnlYOkei0vmMahourJgYQdwpgR7xmHG50SpvzvFhBKH8 gw== 
 Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ryg7w1ums-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3rykseshh2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 21 Jul 2023 17:24:49 +0000
+        Fri, 21 Jul 2023 17:24:52 +0000
 Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36LHOgsc023733;
-        Fri, 21 Jul 2023 17:24:45 GMT
+        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 36LHOniK023804;
+        Fri, 21 Jul 2023 17:24:49 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3rumhknepm-1
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3rumhknepx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Fri, 21 Jul 2023 17:24:45 +0000
+        Fri, 21 Jul 2023 17:24:49 +0000
 Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36LHOjM1023763;
-        Fri, 21 Jul 2023 17:24:45 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 36LHOlEF023783;
+        Fri, 21 Jul 2023 17:24:49 GMT
 Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 36LHOjaH023762;
-        Fri, 21 Jul 2023 17:24:45 +0000
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 36LHOmRs023795;
+        Fri, 21 Jul 2023 17:24:48 +0000
 Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-        id B01FA32C9; Fri, 21 Jul 2023 22:54:44 +0530 (+0530)
+        id 0B3A132C9; Fri, 21 Jul 2023 22:54:48 +0530 (+0530)
 From:   Mrinmay Sarkar <quic_msarkar@quicinc.com>
 To:     agross@kernel.org, andersson@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
@@ -58,9 +58,9 @@ Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 2/4] PCI: qcom: Add support for sa8775p SoC
-Date:   Fri, 21 Jul 2023 22:54:33 +0530
-Message-Id: <1689960276-29266-3-git-send-email-quic_msarkar@quicinc.com>
+Subject: [PATCH v3 4/4] arm64: dts: qcom: sa8775p-ride: enable pcie nodes
+Date:   Fri, 21 Jul 2023 22:54:35 +0530
+Message-Id: <1689960276-29266-5-git-send-email-quic_msarkar@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1689960276-29266-1-git-send-email-quic_msarkar@quicinc.com>
 References: <1689960276-29266-1-git-send-email-quic_msarkar@quicinc.com>
@@ -68,40 +68,118 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: GwxYWPrONmwjXIHUa4nnSirwly1VYmFo
-X-Proofpoint-ORIG-GUID: GwxYWPrONmwjXIHUa4nnSirwly1VYmFo
+X-Proofpoint-GUID: brEAcvx3wGwZ2EfJv4qfdTElkpH9gVN0
+X-Proofpoint-ORIG-GUID: brEAcvx3wGwZ2EfJv4qfdTElkpH9gVN0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.254,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
  definitions=2023-07-21_10,2023-07-20_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 bulkscore=0
- phishscore=0 mlxlogscore=997 impostorscore=0 clxscore=1015
- priorityscore=1501 lowpriorityscore=0 adultscore=0 malwarescore=0
- mlxscore=0 suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2307210151
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 impostorscore=0
+ lowpriorityscore=0 suspectscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=765 mlxscore=0 spamscore=0 adultscore=0 bulkscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2306200000 definitions=main-2307210153
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for sa8775p SoC that uses controller version 5.90
-reusing the 1.9.0 config.
+Enable pcie0, pcie1 nodes and their respective phy's.
 
 Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arm64/boot/dts/qcom/sa8775p-ride.dts | 80 +++++++++++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index cee4e40..e2f2940 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1613,6 +1613,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
- 	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
- 	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_1_9_0 },
-+	{ .compatible = "qcom,pcie-sa8775p", .data = &cfg_1_9_0},
- 	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sc8180x", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sc8280xp", .data = &cfg_1_9_0 },
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p-ride.dts b/arch/arm64/boot/dts/qcom/sa8775p-ride.dts
+index 8c2890b..ed76680 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p-ride.dts
++++ b/arch/arm64/boot/dts/qcom/sa8775p-ride.dts
+@@ -552,6 +552,86 @@
+ 			bias-pull-down;
+ 		};
+ 	};
++
++	pcie0_default_state: pcie0-default-state {
++		perst-pins {
++			pins = "gpio2";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++
++		clkreq-pins {
++			pins = "gpio1";
++			function = "pcie0_clkreq";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		wake-pins {
++			pins = "gpio0";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++	};
++
++	pcie1_default_state: pcie1-default-state {
++		perst-pins {
++			pins = "gpio4";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++
++		clkreq-pins {
++			pins = "gpio3";
++			function = "pcie1_clkreq";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		wake-pins {
++			pins = "gpio5";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++	};
++};
++
++&pcie0 {
++	perst-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
++
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie0_default_state>;
++
++	status = "okay";
++};
++
++&pcie1 {
++	perst-gpios = <&tlmm 4 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 5 GPIO_ACTIVE_HIGH>;
++
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie1_default_state>;
++
++	status = "okay";
++};
++
++&pcie0_phy {
++	vdda-phy-supply = <&vreg_l5a>;
++	vdda-pll-supply = <&vreg_l1c>;
++
++	status = "okay";
++};
++
++&pcie1_phy {
++	vdda-phy-supply = <&vreg_l5a>;
++	vdda-pll-supply = <&vreg_l1c>;
++
++	status = "okay";
+ };
+ 
+ &uart10 {
 -- 
 2.7.4
 
