@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E646CC25B78
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 07:45:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3D52C25B7B
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 07:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231304AbjGUHpN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jul 2023 03:45:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37456 "EHLO
+        id S231247AbjGUHpP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jul 2023 03:45:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231268AbjGUHpK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 03:45:10 -0400
+        with ESMTP id S231224AbjGUHpM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 03:45:12 -0400
 Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4200219AD;
-        Fri, 21 Jul 2023 00:45:08 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9B4352D4B;
+        Fri, 21 Jul 2023 00:45:10 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.01,220,1684767600"; 
-   d="scan'208";a="170346723"
+   d="scan'208";a="170346730"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 21 Jul 2023 16:45:03 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 21 Jul 2023 16:45:04 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 9B564418F610;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id EED73418F604;
         Fri, 21 Jul 2023 16:45:03 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
@@ -30,10 +30,12 @@ To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
 Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v18 12/20] PCI: dwc: Expose dw_pcie_ep_exit() to module
-Date:   Fri, 21 Jul 2023 16:44:44 +0900
-Message-Id: <20230721074452.65545-13-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Rob Herring <robh@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>
+Subject: [PATCH v18 14/20] dt-bindings: PCI: dwc: Update maxItems of reg and reg-names
+Date:   Fri, 21 Jul 2023 16:44:46 +0900
+Message-Id: <20230721074452.65545-15-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com>
@@ -43,31 +45,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since no PCIe controller drivers call this, this change is not required
-for now. But, Renesas R-Car Gen4 PCIe controller driver will call this
-and if the controller driver is built as a kernel module, the following
-build error happens. So, expose dw_pcie_ep_exit() for it.
-
-ERROR: modpost: "dw_pcie_ep_exit" [drivers/pci/controller/dwc/pcie-rcar-gen4-ep-drv.ko] undefined!
+Update maxItems of reg and reg-names on both host and endpoint
+for supporting Renesas R-Car Gen4 PCIe controllers later.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 1 +
- 1 file changed, 1 insertion(+)
+ Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml | 4 ++--
+ Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml    | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index bd57516d5313..14c641395c3b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -695,6 +695,7 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+index 8fc2151691a4..cb727f60be0b 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
+@@ -33,11 +33,11 @@ properties:
+       normal controller functioning. iATU memory IO region is also required
+       if the space is unrolled (IP-core version >= 4.80a).
+     minItems: 2
+-    maxItems: 5
++    maxItems: 6
  
- 	pci_epc_mem_exit(epc);
- }
-+EXPORT_SYMBOL_GPL(dw_pcie_ep_exit);
+   reg-names:
+     minItems: 2
+-    maxItems: 5
++    maxItems: 6
+     items:
+       oneOf:
+         - description:
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 1a83f0f65f19..0bfcfd6ccb5f 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -33,11 +33,11 @@ properties:
+       are required for the normal controller work. iATU memory IO region is
+       also required if the space is unrolled (IP-core version >= 4.80a).
+     minItems: 2
+-    maxItems: 5
++    maxItems: 6
  
- static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
- {
+   reg-names:
+     minItems: 2
+-    maxItems: 5
++    maxItems: 6
+     items:
+       oneOf:
+         - description:
 -- 
 2.25.1
 
