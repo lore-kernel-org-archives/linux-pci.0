@@ -2,284 +2,229 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6F5BC05051
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 07:45:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4105DEB64DD
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 08:07:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231324AbjGUHpW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jul 2023 03:45:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37540 "EHLO
+        id S231321AbjGUIHl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jul 2023 04:07:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231266AbjGUHpT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 03:45:19 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3B73230CF;
-        Fri, 21 Jul 2023 00:45:13 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="6.01,220,1684767600"; 
-   d="scan'208";a="170346740"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 21 Jul 2023 16:45:04 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 9FF0F418FA64;
-        Fri, 21 Jul 2023 16:45:04 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
-        manivannan.sadhasivam@linaro.org, bhelgaas@google.com,
-        kishon@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org
-Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v18 18/20] PCI: rcar-gen4-ep: Add R-Car Gen4 PCIe Endpoint support
-Date:   Fri, 21 Jul 2023 16:44:50 +0900
-Message-Id: <20230721074452.65545-19-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com>
+        with ESMTP id S231309AbjGUIHk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 04:07:40 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1328C2706;
+        Fri, 21 Jul 2023 01:07:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1689926859; x=1721462859;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version:content-id;
+  bh=/x2E+8YwVi4rEKlaO6bbN2NXNezaRPCtMGgsNvrAxPQ=;
+  b=W9fD+JON+alEHWoPYszQXDVsfrkIZkEtf4uLl/QwYL6/RYOuE2A9dH/4
+   5pE1d6bqSjAL8ZFFS45gWhwxavT5jPSLGF2uudsvEbR+4gW+lxe1tivRN
+   yzcXfNFPcVpWVsSibhsyuVovIhf7FEn+yJiq2GDTfpLE4qNGoDLotiqOU
+   lh8Hga0efTbmZT/I8CVRdgHRQqFu43WAPjap0d/x9jO5UP2ET42I4bl28
+   a3YGHMtO7mmGmBzIB8yqW/8ATBAafWp9HBYUK3nwgTvO0ZpbBwaKounua
+   oLJEOPWriPUfZhA8JyOyJmFMgSykQGednU0xq+i+uY9mYTCvuhoucxcl+
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10777"; a="347266508"
+X-IronPort-AV: E=Sophos;i="6.01,220,1684825200"; 
+   d="scan'208";a="347266508"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2023 01:07:38 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10777"; a="790112254"
+X-IronPort-AV: E=Sophos;i="6.01,220,1684825200"; 
+   d="scan'208";a="790112254"
+Received: from ijarvine-mobl2.ger.corp.intel.com ([10.251.223.59])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jul 2023 01:07:32 -0700
+Date:   Fri, 21 Jul 2023 11:07:26 +0300 (EEST)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        =?ISO-8859-15?Q?Christian_K=F6nig?= <christian.koenig@amd.com>,
+        "Pan, Xinhui" <Xinhui.Pan@amd.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Jammy Zhou <Jammy.Zhou@amd.com>,
+        Ken Wang <Qingqing.Wang@amd.com>,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dean Luick <dean.luick@cornelisnetworks.com>,
+        =?ISO-8859-15?Q?Jonas_Dre=DFler?= <verdre@v0yd.nl>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH v5 05/11] drm/amdgpu: Use RMW accessors for changing
+ LNKCTL
+In-Reply-To: <20230720215550.GA554900@bhelgaas>
+Message-ID: <eff193b-31ea-5c36-cbc-6b15a477f3b1@linux.intel.com>
+References: <20230720215550.GA554900@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; BOUNDARY="8323329-1112654154-1689926049=:1785"
+Content-ID: <a15c9e5c-5a8d-6b73-c89c-5e25d229313e@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add R-Car Gen4 PCIe Endpoint support. This controller is based on
-Synopsys DesignWare PCIe.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
----
- drivers/pci/controller/dwc/Kconfig            |   9 +
- drivers/pci/controller/dwc/Makefile           |   2 +
- .../pci/controller/dwc/pcie-rcar-gen4-ep.c    | 189 ++++++++++++++++++
- 3 files changed, 200 insertions(+)
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c
+--8323329-1112654154-1689926049=:1785
+Content-Type: text/plain; CHARSET=ISO-8859-15
+Content-Transfer-Encoding: 8BIT
+Content-ID: <3ed5b531-8771-dc6a-eeed-b45f4e5ea5ef@linux.intel.com>
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 64d4d37bc891..4d877cd18374 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -424,4 +424,13 @@ config PCIE_RCAR_GEN4
- 	  Say Y here if you want PCIe host controller support on R-Car Gen4 SoCs.
- 	  This uses the DesignWare core.
- 
-+config PCIE_RCAR_GEN4_EP
-+	tristate "Renesas R-Car Gen4 PCIe Endpoint controller"
-+	depends on ARCH_RENESAS || COMPILE_TEST
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW_EP
-+	help
-+	  Say Y here if you want PCIe endpoint controller support on R-Car Gen4
-+	  SoCs. This uses the DesignWare core.
-+
- endmenu
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index 486cf706b53d..0fb0bde26ac4 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -28,6 +28,8 @@ obj-$(CONFIG_PCIE_UNIPHIER_EP) += pcie-uniphier-ep.o
- obj-$(CONFIG_PCIE_VISCONTI_HOST) += pcie-visconti.o
- pcie-rcar-gen4-host-drv-objs := pcie-rcar-gen4.o pcie-rcar-gen4-host.o
- obj-$(CONFIG_PCIE_RCAR_GEN4) += pcie-rcar-gen4-host-drv.o
-+pcie-rcar-gen4-ep-drv-objs := pcie-rcar-gen4.o pcie-rcar-gen4-ep.o
-+obj-$(CONFIG_PCIE_RCAR_GEN4_EP) += pcie-rcar-gen4-ep-drv.o
- 
- # The following drivers are for devices that use the generic ACPI
- # pci_root.c driver but don't support standard ECAM config access.
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c b/drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c
-new file mode 100644
-index 000000000000..3970a920f3fe
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4-ep.c
-@@ -0,0 +1,189 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * PCIe Endpoint driver for Renesas R-Car Gen4 Series SoCs
-+ * Copyright (C) 2022-2023 Renesas Electronics Corporation
-+ */
-+
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/of_device.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+
-+#include "pcie-rcar-gen4.h"
-+#include "pcie-designware.h"
-+
-+#define RCAR_GEN4_PCIE_EP_FUNC_DBI_OFFSET	0x1000
-+#define RCAR_GEN4_PCIE_EP_FUNC_DBI2_OFFSET	0x800
-+
-+static void rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	int ret;
-+
-+	ret = clk_bulk_prepare_enable(DW_PCIE_NUM_CORE_CLKS, dw->core_clks);
-+	if (ret) {
-+		dev_err(dw->dev, "Failed to enable ref clocks\n");
-+		return;
-+	}
-+
-+	rcar_gen4_pcie_basic_init(rcar);
-+
-+	writel(PCIEDMAINTSTSEN_INIT, rcar->base + PCIEDMAINTSTSEN);
-+}
-+
-+static void rcar_gen4_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	enum pci_barno bar;
-+
-+	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
-+		dw_pcie_ep_reset_bar(pci, bar);
-+}
-+
-+static void rcar_gen4_pcie_ep_deinit(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+
-+	writel(0, rcar->base + PCIEDMAINTSTSEN);
-+	rcar_gen4_pcie_basic_deinit(rcar);
-+	clk_bulk_disable_unprepare(DW_PCIE_NUM_CORE_CLKS, dw->core_clks);
-+}
-+
-+static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-+				       enum pci_epc_irq_type type,
-+				       u16 interrupt_num)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
-+
-+	switch (type) {
-+	case PCI_EPC_IRQ_INTX:
-+		return dw_pcie_ep_raise_intx_irq(ep, func_no);
-+	case PCI_EPC_IRQ_MSI:
-+		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-+	default:
-+		dev_err(dw->dev, "Unknown IRQ type\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct pci_epc_features rcar_gen4_pcie_epc_features = {
-+	.linkup_notifier = false,
-+	.msi_capable = true,
-+	.msix_capable = false,
-+	.reserved_bar = 1 << BAR_1 | 1 << BAR_3 | 1 << BAR_5,
-+	.align = SZ_1M,
-+};
-+
-+static const struct pci_epc_features*
-+rcar_gen4_pcie_ep_get_features(struct dw_pcie_ep *ep)
-+{
-+	return &rcar_gen4_pcie_epc_features;
-+}
-+
-+static unsigned int rcar_gen4_pcie_ep_func_conf_select(struct dw_pcie_ep *ep,
-+						       u8 func_no)
-+{
-+	return func_no * RCAR_GEN4_PCIE_EP_FUNC_DBI_OFFSET;
-+}
-+
-+static unsigned int rcar_gen4_pcie_ep_func_conf_select2(struct dw_pcie_ep *ep,
-+							u8 func_no)
-+{
-+	return func_no * RCAR_GEN4_PCIE_EP_FUNC_DBI2_OFFSET;
-+}
-+
-+static const struct dw_pcie_ep_ops pcie_ep_ops = {
-+	.ep_pre_init = rcar_gen4_pcie_ep_pre_init,
-+	.ep_init = rcar_gen4_pcie_ep_init,
-+	.ep_deinit = rcar_gen4_pcie_ep_deinit,
-+	.raise_irq = rcar_gen4_pcie_ep_raise_irq,
-+	.get_features = rcar_gen4_pcie_ep_get_features,
-+	.func_conf_select = rcar_gen4_pcie_ep_func_conf_select,
-+	.func_conf_select2 = rcar_gen4_pcie_ep_func_conf_select2,
-+};
-+
-+static int rcar_gen4_add_pcie_ep(struct rcar_gen4_pcie *rcar,
-+				 struct platform_device *pdev)
-+{
-+	struct dw_pcie_ep *ep = &rcar->dw.ep;
-+	int ret;
-+
-+	rcar->mode = DW_PCIE_EP_TYPE;
-+	ep->ops = &pcie_ep_ops;
-+
-+	ret = dw_pcie_ep_init(ep);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Failed to initialize endpoint\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void rcar_gen4_remove_pcie_ep(struct rcar_gen4_pcie *rcar)
-+{
-+	dw_pcie_ep_exit(&rcar->dw.ep);
-+}
-+
-+static int rcar_gen4_pcie_ep_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct rcar_gen4_pcie *rcar;
-+	int err;
-+
-+	rcar = rcar_gen4_pcie_devm_alloc(pdev);
-+	if (!rcar)
-+		return -ENOMEM;
-+
-+	err = rcar_gen4_pcie_get_resources(rcar);
-+	if (err < 0) {
-+		dev_err(dev, "Failed to request resource: %d\n", err);
-+		return err;
-+	}
-+
-+	err = rcar_gen4_pcie_prepare(rcar);
-+	if (err < 0)
-+		return err;
-+
-+	err = rcar_gen4_add_pcie_ep(rcar, pdev);
-+	if (err < 0)
-+		goto err_add;
-+
-+	return 0;
-+
-+err_add:
-+	rcar_gen4_pcie_unprepare(rcar);
-+
-+	return err;
-+}
-+
-+static void rcar_gen4_pcie_ep_remove(struct platform_device *pdev)
-+{
-+	struct rcar_gen4_pcie *rcar = platform_get_drvdata(pdev);
-+
-+	rcar_gen4_remove_pcie_ep(rcar);
-+	rcar_gen4_pcie_unprepare(rcar);
-+}
-+
-+static const struct of_device_id rcar_gen4_pcie_of_match[] = {
-+	{ .compatible = "renesas,rcar-gen4-pcie-ep", },
-+	{},
-+};
-+
-+static struct platform_driver rcar_gen4_pcie_ep_driver = {
-+	.driver = {
-+		.name = "pcie-rcar-gen4-ep",
-+		.of_match_table = rcar_gen4_pcie_of_match,
-+	},
-+	.probe = rcar_gen4_pcie_ep_probe,
-+	.remove_new = rcar_gen4_pcie_ep_remove,
-+};
-+module_platform_driver(rcar_gen4_pcie_ep_driver);
-+
-+MODULE_DESCRIPTION("Renesas R-Car Gen4 PCIe endpoint controller driver");
-+MODULE_LICENSE("GPL");
+On Thu, 20 Jul 2023, Bjorn Helgaas wrote:
+
+> On Mon, Jul 17, 2023 at 03:04:57PM +0300, Ilpo Järvinen wrote:
+> > Don't assume that only the driver would be accessing LNKCTL. ASPM
+> > policy changes can trigger write to LNKCTL outside of driver's control.
+> > And in the case of upstream bridge, the driver does not even own the
+> > device it's changing the registers for.
+> > 
+> > Use RMW capability accessors which do proper locking to avoid losing
+> > concurrent updates to the register value.
+> > 
+> > Fixes: a2e73f56fa62 ("drm/amdgpu: Add support for CIK parts")
+> > Fixes: 62a37553414a ("drm/amdgpu: add si implementation v10")
+> > Suggested-by: Lukas Wunner <lukas@wunner.de>
+> > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> > Cc: stable@vger.kernel.org
+> 
+> Do we have any reports of problems that are fixed by this patch (or by
+> others in the series)?  If not, I'm not sure it really fits the usual
+> stable kernel criteria:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/stable-kernel-rules.rst?id=v6.4
+
+I was on the edge with this. The answer to your direct question is no, 
+there are no such reports so it would be okay to leave stable out I think. 
+This applies to all patches in this series.
+
+Basically, this series came to be after Lukas noted the potential 
+concurrency issues with how LNKCTL is unprotected when reviewing 
+(internally) my bandwidth controller series. Then I went to look around 
+all LNKCTL usage and realized existing things might alreary have similar 
+issues.
+
+Do you want me to send another version w/o cc stable or you'll take care 
+of that?
+
+> > ---
+> >  drivers/gpu/drm/amd/amdgpu/cik.c | 36 +++++++++-----------------------
+> >  drivers/gpu/drm/amd/amdgpu/si.c  | 36 +++++++++-----------------------
+> >  2 files changed, 20 insertions(+), 52 deletions(-)
+> > 
+> > diff --git a/drivers/gpu/drm/amd/amdgpu/cik.c b/drivers/gpu/drm/amd/amdgpu/cik.c
+> > index 5641cf05d856..e63abdf52b6c 100644
+> > --- a/drivers/gpu/drm/amd/amdgpu/cik.c
+> > +++ b/drivers/gpu/drm/amd/amdgpu/cik.c
+> > @@ -1574,17 +1574,8 @@ static void cik_pcie_gen3_enable(struct amdgpu_device *adev)
+> >  			u16 bridge_cfg2, gpu_cfg2;
+> >  			u32 max_lw, current_lw, tmp;
+> >  
+> > -			pcie_capability_read_word(root, PCI_EXP_LNKCTL,
+> > -						  &bridge_cfg);
+> > -			pcie_capability_read_word(adev->pdev, PCI_EXP_LNKCTL,
+> > -						  &gpu_cfg);
+> > -
+> > -			tmp16 = bridge_cfg | PCI_EXP_LNKCTL_HAWD;
+> > -			pcie_capability_write_word(root, PCI_EXP_LNKCTL, tmp16);
+> > -
+> > -			tmp16 = gpu_cfg | PCI_EXP_LNKCTL_HAWD;
+> > -			pcie_capability_write_word(adev->pdev, PCI_EXP_LNKCTL,
+> > -						   tmp16);
+> > +			pcie_capability_set_word(root, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_HAWD);
+> > +			pcie_capability_set_word(adev->pdev, PCI_EXP_LNKCTL, PCI_EXP_LNKCTL_HAWD);
+> >  
+> >  			tmp = RREG32_PCIE(ixPCIE_LC_STATUS1);
+> >  			max_lw = (tmp & PCIE_LC_STATUS1__LC_DETECTED_LINK_WIDTH_MASK) >>
+> > @@ -1637,21 +1628,14 @@ static void cik_pcie_gen3_enable(struct amdgpu_device *adev)
+> >  				msleep(100);
+> >  
+> >  				/* linkctl */
+> > -				pcie_capability_read_word(root, PCI_EXP_LNKCTL,
+> > -							  &tmp16);
+> > -				tmp16 &= ~PCI_EXP_LNKCTL_HAWD;
+> > -				tmp16 |= (bridge_cfg & PCI_EXP_LNKCTL_HAWD);
+> > -				pcie_capability_write_word(root, PCI_EXP_LNKCTL,
+> > -							   tmp16);
+> > -
+> > -				pcie_capability_read_word(adev->pdev,
+> > -							  PCI_EXP_LNKCTL,
+> > -							  &tmp16);
+> > -				tmp16 &= ~PCI_EXP_LNKCTL_HAWD;
+> > -				tmp16 |= (gpu_cfg & PCI_EXP_LNKCTL_HAWD);
+> > -				pcie_capability_write_word(adev->pdev,
+> > -							   PCI_EXP_LNKCTL,
+> > -							   tmp16);
+> > +				pcie_capability_clear_and_set_word(root, PCI_EXP_LNKCTL,
+> > +								   PCI_EXP_LNKCTL_HAWD,
+> > +								   bridge_cfg &
+> > +								   PCI_EXP_LNKCTL_HAWD);
+> > +				pcie_capability_clear_and_set_word(adev->pdev, PCI_EXP_LNKCTL,
+> > +								   PCI_EXP_LNKCTL_HAWD,
+> > +								   gpu_cfg &
+> > +								   PCI_EXP_LNKCTL_HAWD);
+> 
+> Wow, there's a lot of pointless-looking work going on here:
+> 
+>   set root PCI_EXP_LNKCTL_HAWD
+>   set GPU  PCI_EXP_LNKCTL_HAWD
+> 
+>   for (i = 0; i < 10; i++) {
+>     read root PCI_EXP_LNKCTL
+>     read GPU  PCI_EXP_LNKCTL
+> 
+>     clear root PCI_EXP_LNKCTL_HAWD
+>     if (root PCI_EXP_LNKCTL_HAWD was set)
+>       set root PCI_EXP_LNKCTL_HAWD
+> 
+>     clear GPU  PCI_EXP_LNKCTL_HAWD
+>     if (GPU  PCI_EXP_LNKCTL_HAWD was set)
+>       set GPU  PCI_EXP_LNKCTL_HAWD
+>   }
+> 
+> If it really *is* pointless, it would be nice to clean it up, but that
+> wouldn't be material for this patch, so what you have looks good.
+
+I really don't know if it's needed or not. There's stuff which looks hw 
+specific going on besides those things you point out and I've not really 
+understood what all that does.
+
+One annoying thing is that this code has been copy-pasted to appear in 
+almost identical form in 4 files.
+
+I agree it certainly looks there might be room for cleaning things up here 
+but such cleanups look a bit too scary to me w/o hw to test them.
+
+> >  				/* linkctl2 */
+> >  				pcie_capability_read_word(root, PCI_EXP_LNKCTL2,
+> 
+> The PCI_EXP_LNKCTL2 stuff also includes RMW updates.  I don't see any
+> uses of PCI_EXP_LNKCTL2 outside this driver that look relevant, so I
+> guess we don't care about making the PCI_EXP_LNKCTL2 updates atomic?
+
+Currently no, which is why I left it out from this patchset.
+
+It is going to change soon though as I intend to submit bandwidth 
+controller series after this series which will add RMW ops for LNKCTL2.
+The LNKCTL2 RMW parts are now in that series rather than in this one.
+
+After adding the bandwidth controller, this driver might be able to use
+it instead of tweaking LNKCTL2 directly to alter PCIe link speed (but I 
+don't expect myself to be able to test these drivers and it feels too 
+risky to make such a change without testing it, unfortunately).
+
+
 -- 
-2.25.1
-
+ i.
+--8323329-1112654154-1689926049=:1785--
