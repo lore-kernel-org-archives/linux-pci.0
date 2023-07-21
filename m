@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04C29C001DC
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 21:47:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0971C001DC
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 21:48:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229898AbjGUVr6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jul 2023 17:47:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52546 "EHLO
+        id S229668AbjGUVsU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jul 2023 17:48:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229554AbjGUVr4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 17:47:56 -0400
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1nam02on2064.outbound.protection.outlook.com [40.107.96.64])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1667E269F;
-        Fri, 21 Jul 2023 14:47:56 -0700 (PDT)
+        with ESMTP id S230195AbjGUVr7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 17:47:59 -0400
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2040.outbound.protection.outlook.com [40.107.95.40])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82D7DE0;
+        Fri, 21 Jul 2023 14:47:58 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nR6ZZU3X/pMQhFg4r4cjVSBDlsKlafZYHeEdS3yI+WC2GZnBlXdZFghhJ6+RCDN+MGE0yYb4lJIUOoWDf08uOhfbOsZ97dIdSE1F7xpNGB37ATf9WcO4Y90/kcjXwmvQzQnTcntn8A+VhBdCKvF9KTt+Az+uFGEzBTfO6W4USF0Y3Lo+44jLVl9mswhxVDurx5upwFOhyEQf+nNEBygOzRhWe37VQFa8IXJ2KGcr9PNIYpMiWCbgklE+lj5VPsI8+ZZAKOIs4cD41Bnw6QWkywyFWyB1AVxTqyW+Yz6fJd5YZg12apucYAUgDmY5zc2qAfkjq4wDCvNoJZ35WBEtoA==
+ b=fruDMy4Aj80DYPlf4aHvhyO2iPATvl6ZUxAWYOFDLw4h3U1Rwn6Tb0LJv4exN0lHFIpYLNfU9hxXa0B5TjIHby9pjglGfWO31Z6vEBbsH7E8o7ijyYL8y2b1q14ANVd4Kn33X2QmYNreHgfQHTi5eR8v0avMRqjnZOsr4v8DA9evtxu3t2BxviZVKaOLf8CHpyE74oQ+gD+bxqiAS7Mzh7et/7HrIYyn7vTAe8QZOcE0tiqjaKrD6DETSZxYj8ECAH9hkJeiUPdlu5lpdeMnBsxcS3UGU245nQO+iQps6/cdaLKAVV2wjlfEaABc6jDrZ4bx6XbPQ6lyIXXuF45zXQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ImFtej2hD+NQ+WEh9U58ju2LXmLakH5vglo5gPxX1+Y=;
- b=MXmCpu+OD4QqA1gVGIZpMkZVWcJotsMCqetz3JviXYeHESFhPqa6RoWmuUntql9tNk8TXWHcnfDd0eSlOlgsBLj5iRDHzbPiTurtQBCdaJ/JR2xNl2AANGQuFpJ5IOcs8RqQFO6gOHKIEB6QRVRTqxXt3qJ9JpdpTL4bZThHjN9hLSLvCk6f+T25M7a7pJ5ccKpOZ2H31Yrj8qNKem/wppl3qRLW1f/pCp5ULFjc6Kv1hYeFEpelvxPdxbxCnCYUhgjqHW/DfIjOjLTsf7dqs9DLMbSFABPGsbF9PtpWKaCsUQuvjy5xLUXQ9r1U4YYa6c2pU/XlCet7kEyuL4eTjw==
+ bh=LBqSQSeJaZhURC6kSm/1FIRVRGLRnc87GbbNLDQTA+w=;
+ b=bVzEfJjHdNuyJyFXCnnT+U79UMbUzIDDyR4OpA46I5zPRwrDYmAQgKS/iKqZ6qCLUrf5rFo0HqESxHcJY1Mbxwb51JPKJbsTEGFBsEIBOu2YyWiOYREmxLxJZLnP7Kps9abz2hgmHXK2bbrhoQoX9alcj6s2rXHhSATmFBSw2LqgT7JUrNC/4bGA6zmOyzC8NRjl0qrVK5QCDwhv5AHKb/f2vxr31b2aaeCg8kz8EPxXUOCyXHdNvytc212HLTN0/6m0wXvDy0obGrTQb7zpZ6j7nDTgbikGX/2yPmCj6w7kfepLK4Tuhu5HMDbJkna4dgO7z6evHoI5LVUSwYsZrw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ImFtej2hD+NQ+WEh9U58ju2LXmLakH5vglo5gPxX1+Y=;
- b=JzOXFj8h8AdIaUeFpeLWo8c4wpF5nGzlfBxUVdsFdwxUWlEZNRvlEn+fdwNTxrlRDx/T4LCL0Ya1CENuUrCki++EsCIi8sgOhLrR3oDV4/wMHep/AqBjsIE7ea7v39QQbOPvxSI02bSf7f0p1hT2CKdYlUxr0ha9Vxy9IYCz4EE=
-Received: from DM6PR06CA0001.namprd06.prod.outlook.com (2603:10b6:5:120::14)
- by MW4PR12MB6778.namprd12.prod.outlook.com (2603:10b6:303:1e8::14) with
+ bh=LBqSQSeJaZhURC6kSm/1FIRVRGLRnc87GbbNLDQTA+w=;
+ b=5iSFX6A+UWNWItK7g5SbCenVbgdPfqKMv+oLi+SvkfLA8VLQpBZKdCOBknddfxrBbswJ48+aIUeieIRNDx8FBLYnCTolSm7WHIykmpRdJI7jDQkpy1y0XuPYVce+Q40DI4J76WHZGLYxOo2c20FYEJ6lZx++DwPp1zZ65nL/y3c=
+Received: from DM6PR06CA0014.namprd06.prod.outlook.com (2603:10b6:5:120::27)
+ by DS0PR12MB8217.namprd12.prod.outlook.com (2603:10b6:8:f1::15) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.25; Fri, 21 Jul
- 2023 21:47:53 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.24; Fri, 21 Jul
+ 2023 21:47:56 +0000
 Received: from DM6NAM11FT003.eop-nam11.prod.protection.outlook.com
- (2603:10b6:5:120:cafe::c) by DM6PR06CA0001.outlook.office365.com
- (2603:10b6:5:120::14) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.28 via Frontend
- Transport; Fri, 21 Jul 2023 21:47:53 +0000
+ (2603:10b6:5:120:cafe::7) by DM6PR06CA0014.outlook.office365.com
+ (2603:10b6:5:120::27) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.23 via Frontend
+ Transport; Fri, 21 Jul 2023 21:47:56 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  DM6NAM11FT003.mail.protection.outlook.com (10.13.173.162) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6609.28 via Frontend Transport; Fri, 21 Jul 2023 21:47:53 +0000
+ 15.20.6609.28 via Frontend Transport; Fri, 21 Jul 2023 21:47:55 +0000
 Received: from ethanolx50f7host.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 21 Jul
- 2023 16:47:52 -0500
+ 2023 16:47:53 -0500
 From:   Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
 To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-cxl@vger.kernel.org>
@@ -71,9 +71,9 @@ CC:     Bjorn Helgaas <bhelgaas@google.com>, <oohall@gmail.com>,
         Terry Bowman <terry.bowman@amd.com>,
         Robert Richter <rrichter@amd.com>,
         Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
-Subject: [PATCH v2 1/3] cxl/pci: Fix appropriate checking for _OSC while handling CXL RAS registers
-Date:   Fri, 21 Jul 2023 21:47:38 +0000
-Message-ID: <20230721214740.256602-2-Smita.KoralahalliChannabasappa@amd.com>
+Subject: [PATCH v2 3/3] cxl/pci: Replace host_bridge->native_aer with pcie_aer_is_native()
+Date:   Fri, 21 Jul 2023 21:47:40 +0000
+Message-ID: <20230721214740.256602-4-Smita.KoralahalliChannabasappa@amd.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20230721214740.256602-1-Smita.KoralahalliChannabasappa@amd.com>
 References: <20230721214740.256602-1-Smita.KoralahalliChannabasappa@amd.com>
@@ -84,71 +84,59 @@ X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6NAM11FT003:EE_|MW4PR12MB6778:EE_
-X-MS-Office365-Filtering-Correlation-Id: 40f10c06-8b07-4f54-f42a-08db8a34230f
+X-MS-TrafficTypeDiagnostic: DM6NAM11FT003:EE_|DS0PR12MB8217:EE_
+X-MS-Office365-Filtering-Correlation-Id: 510d81fb-1c0d-4653-cbd9-08db8a342470
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 4T3g/ZHtE9doqUvtrz2aSKiManJ6R/g4svxmjG+CflHDG5VZMNnkIcw1DpGlTX6XKhLCCpLjiYQQMY5eXKI0ae5hA++WmbCshu9CFv3XpR36u9fEq1FUDIqHkBWnjvfWdCTUB/jeriCA/3durlW0NC2I+TWOfcbAUZeeUtJyG9heENSJaiLVAKwJYYQyu9m6QB4URFL9bvalJgTwiwz68RXycosPMzSWtfkKx+T9cUVz3026NJYkhghra1LDw6eUD7CRCJcOp+mDCCLVOq3y0zKLm9zt5Hilr2N6Yxo3Qlyo4b8fMZRKHNG0DTB7A09Pn9awa0eomXItT+xVyzWxTWq7Np1tC1b4pNesVJSWGSDiGq8evk9i5uoyFbsc2UJ1+HYCSut4gj6TSnTIoAm0K5yUQASc05/m7ghy1GKeP8B7zR9Jd1jUAemYCpVa3/3QK9s7dUwpMTbtSDA+0BFllYOiCaTYEFf2feaOyvX4HKzGYRJtwWCZNOuKkMNk8cCSrr7ZyWUd9NKQAVFUIhMwYgWCDzrT4YVdtU9ekW41kD/nu9fRoK1ZWSfKGQCgj/qvORq6n4yHWovXjtqO8RM5+uEPsJs+0Vp3Gt+zp8zAgyNpFb7DjKzoPV/T6tuYePSP8bsfmfme0Hnn/+HCThL2Nr9IEvmBnx/qn0rdov7BjAMtoxkp3bnh17Rb8raF16lqCQTDKluJvSWe+cbf9PI8bM94hiX9UHMXOc5lCT3nWbwV8h9gf/g2joma74Fyw/9Ez89Lpdfypg8T1ofCtOoO3A==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(396003)(376002)(346002)(39860400002)(136003)(82310400008)(451199021)(46966006)(36840700001)(40470700004)(2906002)(36860700001)(83380400001)(40460700003)(2616005)(426003)(47076005)(356005)(81166007)(82740400003)(36756003)(86362001)(40480700001)(1076003)(16526019)(41300700001)(70206006)(336012)(7696005)(70586007)(4326008)(316002)(26005)(6666004)(186003)(8936002)(8676002)(7416002)(478600001)(54906003)(5660300002)(110136005)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: yA9mzmPUCA7lZZ7o9gtHFr0WTA0C9CM4pM3iNvTlu9pYZHPD4ThFSiQCAcLnMp477LzHl20gFef7wlqf/EqtEUWRLD9PjYirDJRjCZz4Fd4f80WKND20TgBVrdlIBioIPT+Uh5TkqpwGPqfijZwwOn00F+oWPURYr8jeAaW6exffdaFAvKRClGQ8h6XEAj9C9r9aGWzIaPcRkR90frPMm7LqudcD3MH4YjLExznDBJ9CP62+GmZszJn5qDympn37KAuKoIUiYlFZFa8qoyjMZ5iGtmlxvookr635Xl2llzLiQ1b4Liqp6rerwtCwdUmhPJsG5tSjWxUhFXBY0ZP+UgFhX0TwVDo2pyVq5dbz7BQR9Gq2ft0eFeu3R5JJH6kz/gDnj51JmT/6STEcnYwW4ar0v7jt6zEmesQTctpN9wK+SUEXJZeFN/RRlphtexYZYy7J7hqYkmBo1EWCZnDlZlVwVg1NcJv4gVIsClegTCDa5zWLrIdm/1odPIOLFrr8BuJWcyXtO8zDX/CY0ID9h/ERGBau7ALkwdW8ADW3+bD2avaPteWxNi1+LhY+FtOZmHdgU6ncR2P27vD1g6EVnwTO9f0A9xGaHM3eGcWfwwezrlwp7OiJYNkD8tsw3V7QP0bvuHiY1JfoHz+j9hRMjPv1N65Xs6doS9P8DFngFuJun7X9neHralGpCF/Zit6Za8TOuWA4D7MZ1qnrh/UpQJ5VDdt7OtAjWQ3OmOVF1era6czr7noUdowwA1TkyP+Tjo8rRsDuKMhC4LmInPWbzA==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(376002)(346002)(136003)(396003)(39860400002)(82310400008)(451199021)(46966006)(36840700001)(40470700004)(70206006)(36860700001)(7696005)(6666004)(81166007)(356005)(4326008)(7416002)(316002)(8936002)(8676002)(40460700003)(2906002)(36756003)(5660300002)(82740400003)(47076005)(70586007)(16526019)(2616005)(426003)(186003)(1076003)(40480700001)(26005)(41300700001)(336012)(86362001)(478600001)(83380400001)(54906003)(110136005)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jul 2023 21:47:53.2675
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jul 2023 21:47:55.6111
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 40f10c06-8b07-4f54-f42a-08db8a34230f
+X-MS-Exchange-CrossTenant-Network-Message-Id: 510d81fb-1c0d-4653-cbd9-08db8a342470
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT003.eop-nam11.prod.protection.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB6778
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8217
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-According to Section 9.17.2, Table 9-26 of CXL Specification [1], owner
-of AER should also own CXL Protocol Error Management as there is no
-explicit control of CXL Protocol error. And the CXL RAS Cap registers
-reported on Protocol errors should check for AER _OSC rather than CXL
-Memory Error Reporting Control _OSC.
+Reuse pcie_aer_is_native() to determine the native AER ownership.
 
-The CXL Memory Error Reporting Control _OSC specifically highlights
-handling Memory Error Logging and Signaling Enhancements. These kinds of
-errors are reported through a device's mailbox and can be managed
-independently from CXL Protocol Errors.
-
-This change fixes handling and reporting CXL Protocol Errors and RAS
-registers natively with native AER and FW-First CXL Memory Error Reporting
-Control.
-
-[1] Compute Express Link (CXL) Specification, Revision 3.1, Aug 1 2022.
-
-Fixes: 248529edc86f ("cxl: add RAS status unmasking for CXL")
 Signed-off-by: Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
 ---
 v2:
-	Added fixes tag.
-	Included what the patch fixes in commit message.
+	Replaced pcie_aer_is_native() at a later stage for automated
+	backports.
 ---
- drivers/cxl/pci.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/cxl/pci.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 1cb1494c28fe..2323169b6e5f 100644
+index 2323169b6e5f..44a21ab7add5 100644
 --- a/drivers/cxl/pci.c
 +++ b/drivers/cxl/pci.c
-@@ -541,9 +541,9 @@ static int cxl_pci_ras_unmask(struct pci_dev *pdev)
- 		return 0;
+@@ -529,7 +529,6 @@ static int cxl_pci_setup_regs(struct pci_dev *pdev, enum cxl_regloc_type type,
+ 
+ static int cxl_pci_ras_unmask(struct pci_dev *pdev)
+ {
+-	struct pci_host_bridge *host_bridge = pci_find_host_bridge(pdev->bus);
+ 	struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
+ 	void __iomem *addr;
+ 	u32 orig_val, val, mask;
+@@ -542,7 +541,7 @@ static int cxl_pci_ras_unmask(struct pci_dev *pdev)
  	}
  
--	/* BIOS has CXL error control */
--	if (!host_bridge->native_cxl_error)
--		return -ENXIO;
-+	/* BIOS has PCIe AER error control */
-+	if (!host_bridge->native_aer)
-+		return 0;
+ 	/* BIOS has PCIe AER error control */
+-	if (!host_bridge->native_aer)
++	if (!pcie_aer_is_native(pdev))
+ 		return 0;
  
  	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &cap);
- 	if (rc)
 -- 
 2.17.1
 
