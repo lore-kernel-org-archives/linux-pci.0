@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDD72C25B5E
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 07:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B22E1C25B75
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jul 2023 07:45:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231292AbjGUHpM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jul 2023 03:45:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37388 "EHLO
+        id S231297AbjGUHpN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jul 2023 03:45:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37372 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231224AbjGUHpI (ORCPT
+        with ESMTP id S231234AbjGUHpI (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2023 03:45:08 -0400
 Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 79FAE270A;
-        Fri, 21 Jul 2023 00:45:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5167519A1;
+        Fri, 21 Jul 2023 00:45:07 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.01,220,1684767600"; 
-   d="scan'208";a="170346710"
+   d="scan'208";a="170346714"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 21 Jul 2023 16:45:02 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 21 Jul 2023 16:45:03 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id BCBF2418F611;
-        Fri, 21 Jul 2023 16:45:02 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 1F367418F5EF;
+        Fri, 21 Jul 2023 16:45:03 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
         lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
@@ -31,9 +31,9 @@ Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v18 07/20] PCI: dwc: endpoint: Add multiple PFs support for dbi2
-Date:   Fri, 21 Jul 2023 16:44:39 +0900
-Message-Id: <20230721074452.65545-8-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v18 09/20] PCI: dwc: Add PCI_EXP_LNKCAP_MLW handling
+Date:   Fri, 21 Jul 2023 16:44:41 +0900
+Message-Id: <20230721074452.65545-10-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com>
@@ -43,115 +43,60 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The commit 24ede430fa49 ("PCI: designware-ep: Add multiple PFs support
-for DWC") added .func_conf_select() to get the configuration space of
-different PFs and assumed that the offsets between dbi and dbi2 would
-be the same. However, Renesas R-Car Gen4 PCIe controllers have different
-offsets of function 1: dbi (+0x1000) and dbi2 (+0x800). To get
-the offset for dbi2, add .func_conf_select2() and
-dw_pcie_ep_func_select2().
+Update dw_pcie_link_set_max_link_width() to set PCI_EXP_LNKCAP_MLW.
+In accordance with the DW PCIe RC/EP HW manuals [1,2,3,...] aside with
+the PORT_LINK_CTRL_OFF.LINK_CAPABLE and GEN2_CTRL_OFF.NUM_OF_LANES[8:0]
+field there is another one which needs to be updated. It's
+LINK_CAPABILITIES_REG.PCIE_CAP_MAX_LINK_WIDTH. If it isn't done at
+the very least the maximum link-width capability CSR won't expose
+the actual maximum capability.
 
-Notes that dw_pcie_ep_func_select2() will call .func_conf_select()
-if .func_conf_select2() doesn't exist for backward compatibility.
+[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.60a, March 2015, p.1032
+[2] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.70a, March 2016, p.1065
+[3] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.90a, March 2016, p.1057
+...
+[X] DesignWare Cores PCI Express Controller Databook - DWC PCIe Endpoint,
+      Version 5.40a, March 2019, p.1396
+[X+1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+      Version 5.40a, March 2019, p.1266
 
+Suggested-by: Serge Semin <fancer.lancer@gmail.com>
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 ---
- .../pci/controller/dwc/pcie-designware-ep.c   | 32 ++++++++++++++-----
- drivers/pci/controller/dwc/pcie-designware.h  |  3 +-
- 2 files changed, 26 insertions(+), 9 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 1d24ebf9686f..bd57516d5313 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -54,21 +54,35 @@ static unsigned int dw_pcie_ep_func_select(struct dw_pcie_ep *ep, u8 func_no)
- 	return func_offset;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 5cca34140d2a..c4998194fe74 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -730,7 +730,8 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+ 
+ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
+ {
+-	u32 lwsc, plc;
++	u32 lnkcap, lwsc, plc;
++	u8 cap;
+ 
+ 	if (!num_lanes)
+ 		return;
+@@ -766,6 +767,12 @@ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
+ 	}
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
+ 	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
++
++	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
++	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
++	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, num_lanes);
++	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
  }
  
-+static unsigned int dw_pcie_ep_func_select2(struct dw_pcie_ep *ep, u8 func_no)
-+{
-+	unsigned int func_offset = 0;
-+
-+	if (ep->ops->func_conf_select2)
-+		func_offset = ep->ops->func_conf_select2(ep, func_no);
-+	else if (ep->ops->func_conf_select)	/* for backward compatibility */
-+		func_offset = ep->ops->func_conf_select(ep, func_no);
-+
-+	return func_offset;
-+}
-+
- static void __dw_pcie_ep_reset_bar(struct dw_pcie *pci, u8 func_no,
- 				   enum pci_barno bar, int flags)
- {
--	u32 reg;
--	unsigned int func_offset = 0;
-+	u32 reg, reg_dbi2;
-+	unsigned int func_offset, func_offset_dbi2;
- 	struct dw_pcie_ep *ep = &pci->ep;
- 
- 	func_offset = dw_pcie_ep_func_select(ep, func_no);
-+	func_offset_dbi2 = dw_pcie_ep_func_select2(ep, func_no);
- 
- 	reg = func_offset + PCI_BASE_ADDRESS_0 + (4 * bar);
-+	reg_dbi2 = func_offset_dbi2 + PCI_BASE_ADDRESS_0 + (4 * bar);
- 	dw_pcie_dbi_ro_wr_en(pci);
--	dw_pcie_writel_dbi2(pci, reg, 0x0);
-+	dw_pcie_writel_dbi2(pci, reg_dbi2, 0x0);
- 	dw_pcie_writel_dbi(pci, reg, 0x0);
- 	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
--		dw_pcie_writel_dbi2(pci, reg + 4, 0x0);
-+		dw_pcie_writel_dbi2(pci, reg_dbi2 + 4, 0x0);
- 		dw_pcie_writel_dbi(pci, reg + 4, 0x0);
- 	}
- 	dw_pcie_dbi_ro_wr_dis(pci);
-@@ -232,13 +246,15 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 	enum pci_barno bar = epf_bar->barno;
- 	size_t size = epf_bar->size;
- 	int flags = epf_bar->flags;
--	unsigned int func_offset = 0;
-+	unsigned int func_offset, func_offset_dbi2;
- 	int ret, type;
--	u32 reg;
-+	u32 reg, reg_dbi2;
- 
- 	func_offset = dw_pcie_ep_func_select(ep, func_no);
-+	func_offset_dbi2 = dw_pcie_ep_func_select2(ep, func_no);
- 
- 	reg = PCI_BASE_ADDRESS_0 + (4 * bar) + func_offset;
-+	reg_dbi2 = PCI_BASE_ADDRESS_0 + (4 * bar) + func_offset_dbi2;
- 
- 	if (!(flags & PCI_BASE_ADDRESS_SPACE))
- 		type = PCIE_ATU_TYPE_MEM;
-@@ -254,11 +270,11 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
- 
- 	dw_pcie_dbi_ro_wr_en(pci);
- 
--	dw_pcie_writel_dbi2(pci, reg, lower_32_bits(size - 1));
-+	dw_pcie_writel_dbi2(pci, reg_dbi2, lower_32_bits(size - 1));
- 	dw_pcie_writel_dbi(pci, reg, flags);
- 
- 	if (flags & PCI_BASE_ADDRESS_MEM_TYPE_64) {
--		dw_pcie_writel_dbi2(pci, reg + 4, upper_32_bits(size - 1));
-+		dw_pcie_writel_dbi2(pci, reg_dbi2 + 4, upper_32_bits(size - 1));
- 		dw_pcie_writel_dbi(pci, reg + 4, 0);
- 	}
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 812c221b3f7c..94bc20f5f600 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -340,9 +340,10 @@ struct dw_pcie_ep_ops {
- 	 * access for different platform, if different func have different
- 	 * offset, return the offset of func. if use write a register way
- 	 * return a 0, and implement code in callback function of platform
--	 * driver.
-+	 * driver. The func_conf_select2 is for dbi2.
- 	 */
- 	unsigned int (*func_conf_select)(struct dw_pcie_ep *ep, u8 func_no);
-+	unsigned int (*func_conf_select2)(struct dw_pcie_ep *ep, u8 func_no);
- };
- 
- struct dw_pcie_ep_func {
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
 -- 
 2.25.1
 
