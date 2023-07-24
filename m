@@ -2,44 +2,165 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0588AC04A94
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Jul 2023 09:34:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CCB6C001DF
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Jul 2023 10:49:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231364AbjGXJeA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Jul 2023 05:34:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42848 "EHLO
+        id S229752AbjGXKtI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Jul 2023 06:49:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232243AbjGXJd7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2023 05:33:59 -0400
-X-Greylist: delayed 618 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 24 Jul 2023 02:33:58 PDT
-Received: from fluorez-com.cfd (fluorez-com.cfd [107.174.244.118])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7013129
-        for <linux-pci@vger.kernel.org>; Mon, 24 Jul 2023 02:33:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=re1; d=fluorez-com.cfd;
- h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:
- Content-Transfer-Encoding; i=info@fluorez-com.cfd;
- bh=LqAKS0rQcqRhfS2AomqosmxOtHjI8TSd2DPxtKmN8Fo=;
- b=jz3bgL7okWTtasqCw3ToC86prB4UZAGEREZTYNqCTvBVT38SKgMAiJEu/IDkoBFcFUW/0P/9uSvE
-   VN/FXd/pjLB/IFPQ21hMZwck8qsu2ZiTjGJCUfbEQCCcBnKAVTiQ9BRNULyxUEdKTJq9C9JvIseq
-   I5Ma2ODp9NDxtL0RPXzdgr9SV6pGm3/9uv0jFiXvmmEQsK48JuM8Erk0pbjJABiR+4A99gF5wg55
-   vyDX0/pchJ09Ds9Aj/Nfs1TW6SsiLAKCye0qGa28rBFape1UKGMS6EPdgf4bG6ZBrMXGJvWmY8Pk
-   eyBRgO9lSmTpSmC7GRQQMinbbi9s0KZ9YMEvow==
-Reply-To: info@coinloansupport.online
-From:   Coinloan Support Center <info@fluorez-com.cfd>
-To:     linux-pci@vger.kernel.org
-Subject: Don't miss out on our low Interest loan opportunity
-Date:   24 Jul 2023 10:46:46 +0200
-Message-ID: <20230724104646.42B20C0F78314C7F@fluorez-com.cfd>
+        with ESMTP id S232314AbjGXKtA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2023 06:49:00 -0400
+Received: from fd01.gateway.ufhost.com (fd01.gateway.ufhost.com [61.152.239.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D297102;
+        Mon, 24 Jul 2023 03:48:56 -0700 (PDT)
+Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
+        (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+        (Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
+        by fd01.gateway.ufhost.com (Postfix) with ESMTP id 4D52F7FD6;
+        Mon, 24 Jul 2023 18:48:49 +0800 (CST)
+Received: from EXMBX172.cuchost.com (172.16.6.92) by EXMBX165.cuchost.com
+ (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Mon, 24 Jul
+ 2023 18:48:49 +0800
+Received: from [192.168.125.136] (183.27.99.135) by EXMBX172.cuchost.com
+ (172.16.6.92) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Mon, 24 Jul
+ 2023 18:48:48 +0800
+Message-ID: <a687c273-48b1-651e-313f-d8140732c5d8@starfivetech.com>
+Date:   Mon, 24 Jul 2023 18:48:47 +0800
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.6.1
+Subject: Re: [PATCH v1 8/9] PCI: PLDA: starfive: Add JH7110 PCIe controller
+Content-Language: en-US
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     Minda Chen <minda.chen@starfivetech.com>,
+        Daire McNamara <daire.mcnamara@microchip.com>,
+        Conor Dooley <conor@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Emil Renner Berthing <emil.renner.berthing@canonical.com>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        "Palmer Dabbelt" <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        "Philipp Zabel" <p.zabel@pengutronix.de>,
+        Mason Huo <mason.huo@starfivetech.com>,
+        Leyfoon Tan <leyfoon.tan@starfivetech.com>
+References: <20230720161555.GA526946@bhelgaas>
+From:   Kevin Xie <kevin.xie@starfivetech.com>
+In-Reply-To: <20230720161555.GA526946@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [183.27.99.135]
+X-ClientProxiedBy: EXCAS062.cuchost.com (172.16.6.22) To EXMBX172.cuchost.com
+ (172.16.6.92)
+X-YovoleRuleAgent: yovoleflag
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Are you looking for a loan to either increase your activity or to=20
-carry out a project.=20
-We offer Crypto Loans at 2-7% interest rate with or without a=20
-credit check.
-Please get back to us if you are interested in more details.
+
+
+On 2023/7/21 0:15, Bjorn Helgaas wrote:
+> On Thu, Jul 20, 2023 at 06:11:59PM +0800, Kevin Xie wrote:
+>> On 2023/7/20 0:48, Bjorn Helgaas wrote:
+>> > On Wed, Jul 19, 2023 at 06:20:56PM +0800, Minda Chen wrote:
+>> >> Add StarFive JH7110 SoC PCIe controller platform
+>> >> driver codes.
+> 
+>> >> + * The BAR0/1 of bridge should be hidden during enumeration to
+>> >> + * avoid the sizing and resource allocation by PCIe core.
+>> >> + */
+>> >> +static bool starfive_pcie_hide_rc_bar(struct pci_bus *bus, unsigned int  devfn,
+>> >> +				      int offset)
+>> >> +{
+>> >> +	if (pci_is_root_bus(bus) && !devfn &&
+>> >> +	    (offset == PCI_BASE_ADDRESS_0 || offset == PCI_BASE_ADDRESS_1))
+>> >> +		return true;
+>> >> +
+>> >> +	return false;
+>> >> +}
+>> >> +
+>> >> +int starfive_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
+>> >> +			       int where, int size, u32 value)
+>> >> +{
+>> >> +	if (starfive_pcie_hide_rc_bar(bus, devfn, where))
+>> >> +		return PCIBIOS_BAD_REGISTER_NUMBER;
+>> > 
+>> > I think you are trying present BARs 0 & 1 as unimplemented.  Such BARs
+>> > are hardwired to zero, so you should make them behave that way (both
+>> > read and write).  Many callers of config accessors don't check the
+>> > return value, so I don't think it's reliable to just return
+>> > PCIBIOS_BAD_REGISTER_NUMBER.
+>> 
+>> This is a hardware defect that we did not hardwired those BARs to
+>> zero, and it is configurable for software now.  We have to add this
+>> filter function for workaround.
+> 
+> Yes.  My point is that this only affects the write path, and the read
+> probably does not read 0 as it should.  This means lspci will show the
+> wrong thing, and the PCI core will try to size the BAR when it doesn't
+> need to.  I haven't looked at the BAR sizing code; it might even come
+> up with a bogus size and address, when it *should* just conclude the
+> BAR doesn't exist at all.
+> 
+
+Got it, I will try to hide those BARs both in read and write operations.
+
+>> >> +	/* Ensure that PERST has been asserted for at least 100 ms */
+>> >> +	msleep(300);
+>> >> +	gpiod_set_value_cansleep(pcie->reset_gpio, 0);
+>> > 
+>> > At least 100 ms, but you sleep *300* ms?  This is probably related to
+>> > https://lore.kernel.org/r/20230718155515.GA483233@bhelgaas
+>> > 
+>> > Please include a comment with the source of the delay value.  I assume
+>> > it's T_PVPERL and T_PERST-CLK from the PCIe CEM spec.  This way we can
+>> > someday share those #defines across drivers.
+>> 
+>> Yes, the delay value here is T_PVPERL from PCIe CEM spec r2.0 (Table
+>> 2-4).  At the first time we set 100ms delay according to sector 2.2
+>> of the spec: "After there has been time (TPVPERL) for the power and
+>> clock to become stable, PERST# is deasserted high and the PCI
+>> Express functions can start up."
+>> 
+>> However, in the compatibility testing with several NVMe SSD, we
+>> found that Lenovo Thinklife ST8000 NVMe can not get ready in 100ms,
+>> and it actually needs almost 200ms.  Thus, we increased the T_PVPERL
+>> value to 300ms for the better device compatibility.
+>>
+>> We will use a macro to define T_PVPERL, and add comments for the
+>> source of it.  If the compatibility delay of 300ms is not
+>> reasonable, we can revert it to 100ms.
+> 
+> Thanks for this valuable information!  This NVMe issue potentially
+> affects many similar drivers, and we may need a more generic fix so
+> this device works well with all of them.
+> 
+> T_PVPERL is defined to start when power is stable.  Do you have a way
+> to accurately determine that point?  I'm guessing this:
+> 
+>   gpiod_set_value_cansleep(pcie->power_gpio, 1)
+> 
+> turns the power on?  But of course that doesn't mean it is instantly
+> stable.  Maybe your testing is telling you that your driver should
+> have a hardware-specific 200ms delay to wait for power to become
+> stable, followed by the standard 100ms for T_PVPERL?
+> 
+
+You are right, we did not take the power stable cost into account.
+T_PVPERL is enough for Lenovo Thinklife ST8000 NVMe SSD to get ready,
+and the extra cost is from the power circuit of a PCIe to M.2 connector,
+which is used to verify M.2 SSD with our EVB at early stage.
+
+As the Thinklife NVMe SSD may be a halted product,
+and the onboard power circuit of VisionFive V2 is no problem,
+we decided revert the sleep time to be 100ms.
+
+We will add a comment for the source of T_PVPERL until your define in pci.h is accepted.
+
+> Bjorn
