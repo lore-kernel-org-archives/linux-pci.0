@@ -2,228 +2,148 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C15B1C001E0
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jul 2023 10:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6200C0015E
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jul 2023 11:39:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233589AbjGYKEC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Jul 2023 06:04:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60422 "EHLO
+        id S234899AbjGYLj4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Jul 2023 07:39:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233809AbjGYKDa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jul 2023 06:03:30 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51B3C172A
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jul 2023 03:03:10 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id d2e1a72fcca58-66872d4a141so3035312b3a.1
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jul 2023 03:03:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1690279390; x=1690884190;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=omQl0KsY23ZTTqxsvNji4YWJ3tGKpnfvrjqf4UJUwos=;
-        b=C9FzHzeclNQcNPiVPE4DGrEpTPSKSXfpAFB3Pts30shmPBvzBwDAyjjloLCwhPCM8k
-         s6RraUiJTWUQQrvvj2+OB3PjaGqQn9cJDFbRn+u4CT8QtW8P/ZRpwgYLT2oRQoW+s9j9
-         TRYPmtwaBaQInazcRPhfhUmXJ6qKvfBAkssM/aH99kfTz9d8YFcWOJeOZCT+2nDRTFpb
-         S0dXfhlf+EbFs7rPlMW2xcHgJbMbwZhCypxghuKOSUxYgNKO58djPuoCyrncHEwbfK0L
-         De86mVbDD5HacAugf1hQU2DnEN9Dex3Hd6bpDPbf0pmWU/PthUlJx6ejWgZSKOzQfpIr
-         ZgXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690279390; x=1690884190;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=omQl0KsY23ZTTqxsvNji4YWJ3tGKpnfvrjqf4UJUwos=;
-        b=eZZs1syCQWg5QWZMX5orvbQv09dD5rinbFOyXwDUmQIUuiB7MI7y8sktJvqhszb/xv
-         lqzT9roXf/evMfHQkJ0KhT6JLitgAKgOmPCJOErgoS9y0k/e9o54YuIk3mVubiTug6wj
-         OJq8sjZ1/uXsWcMP4Zi0Gvj5zC2jp/OhOGzXek/YP8RoAZX/1NyKeRLWQulc3ARDvkqg
-         TcsnaR4px8u+ekGltlA2VTUVw6ZjCWu2PNfG1J0Amc4eM7q0764+jSIo6RycQS51mzhU
-         j0tIlcF3uaBnW+MJ76Ix4P6KoFktTBSg5V6Qufe7ktLr+/GGeH/ZL1YBtHjJAlCfCHlq
-         KUjg==
-X-Gm-Message-State: ABy/qLYa5pFe5mEaK1Ss/E80xWyIk+1ECLrxM9cQ92CVyUwmyGsSxK+c
-        olrtMr/S0U066dRhQd3655Xp
-X-Google-Smtp-Source: APBJJlEQ/Tr6zv7e7sgeMAaofqM/o/IS22CuvDSLgWCsWUoOcXam0olW16i+FwLejoKb8plfrHxPYg==
-X-Received: by 2002:a05:6a20:1d0:b0:137:7add:b7cc with SMTP id 16-20020a056a2001d000b001377addb7ccmr9589211pzz.22.1690279389725;
-        Tue, 25 Jul 2023 03:03:09 -0700 (PDT)
-Received: from thinkpad ([117.206.117.206])
-        by smtp.gmail.com with ESMTPSA id jm24-20020a17090304d800b001b9cdf11764sm10622156plb.31.2023.07.25.03.03.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Jul 2023 03:03:09 -0700 (PDT)
-Date:   Tue, 25 Jul 2023 15:33:02 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, thierry.reding@gmail.com,
-        jonathanh@nvidia.com, Sergey.Semin@baikalelectronics.ru,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kthota@nvidia.com,
-        mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Subject: Re: [PATCH V1] Revert "PCI: tegra194: Enable support for 256 Byte
- payload"
-Message-ID: <20230725100302.GD22139@thinkpad>
-References: <20230608093652.1409485-1-vidyas@nvidia.com>
- <20230725075159.GB22139@thinkpad>
- <815d102d-be0c-8e5d-ac12-1500d90628da@nvidia.com>
- <20230725083030.GC22139@thinkpad>
- <770da5a3-ea02-ce87-8515-beb246082de8@nvidia.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+        with ESMTP id S234881AbjGYLjz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jul 2023 07:39:55 -0400
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2074.outbound.protection.outlook.com [40.107.244.74])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D13E811B;
+        Tue, 25 Jul 2023 04:39:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=YHCgUMnwpKaopgL+JwQr/5EvbyV2Urq4aL6ebjzy44BQVvnCgEfn1kcUyK7RFdb3v371QAJ419pNzEJtkvCFREwNgDear3725EPtjRc+rhojl9QWLXpxRfFDhJ1VgcLnPtQ9R3Fvvbr5+S7ZQhdkiVpUnf+TZJDnstgUS6F8uMiLBsjwFGCkWniwCHuyN64wOTqLEyCXjQUJZtBgJWVlXaB6AZQZyJbc1OW9J85fJXCqdwc65nSRkVW5ssN+B0odya4+ISzISdp6ccUOqx3AgSqFBtLYKld/UjBcM7OenTD34Uc2igI9pKn3M9XQwVed2/oSJIc5o48xset6LefoXg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0Rq3oo6dG5NtyjCqzeaOhQmL6y9md63CI+T7ceOBsFk=;
+ b=I19+g6YuzMcyjzLvqXM8uyckmq/qq3xJOjkjJrT2rPOEA8ZsHnHREHGyEFd31LYX8SigpXr82jIpW/lQf7ynZlxlAHLl5F1u720zMvmHr37tGkK08RI7AS9Y3xi2DFb3Qiout65xqeUdY4wh81gpzH2Q1HVl5/g4ttBCIWCVKB2NnUlx+oT8WkJbTfT62mDbtpN5ry93AyvTv/pNzRqy7tpdfWDj+Qa8aVkbqUJF+q21Rbfy8HFgOIQc13hCppRQav9cp52GmOM9kuk9QrAzjFW5WB+Jnd7eCfqX1zQmIid4VoBtIRzKCbxAjqq/K++DFbHu/CMkFPjrqDgjQfHNJw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0Rq3oo6dG5NtyjCqzeaOhQmL6y9md63CI+T7ceOBsFk=;
+ b=HWFUg6qd3/YB6CqUlJAdDdrku2vZozLsFnCuB919yRG7EmZtbQ1DbzJhK6HcjenfMJSb3v9exxHr7DW9gkbS4tHDQHvQUrm2CY+n8/5aJnTTqkiVtjdnvnxt/a7KwEtAxNUaKfBQ2lRcKnst/ZbHTaRrht1L/aLPxkUUXWaQZqCI8oS70chiM+3gBECzLx4XF8m/dP4wFwiTHijb5AdN6MXKRalEWvqHuSjUZ1S6un0U1K0PuHHQO+g7ZOJD9cdoLjhayK1mhlZ4YHjeBtqRtaHDHMgVJDUL0wjbgBLCeVBlBO5Aud5WFEhECCN+HqhC2XRnizqG5tnokC35/R084w==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV2PR12MB5869.namprd12.prod.outlook.com (2603:10b6:408:176::16)
+ by PH0PR12MB8030.namprd12.prod.outlook.com (2603:10b6:510:28d::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6609.32; Tue, 25 Jul
+ 2023 11:39:52 +0000
+Received: from LV2PR12MB5869.namprd12.prod.outlook.com
+ ([fe80::5111:16e8:5afe:1da1]) by LV2PR12MB5869.namprd12.prod.outlook.com
+ ([fe80::5111:16e8:5afe:1da1%6]) with mapi id 15.20.6609.032; Tue, 25 Jul 2023
+ 11:39:52 +0000
+Date:   Tue, 25 Jul 2023 08:39:51 -0300
+From:   Jason Gunthorpe <jgg@nvidia.com>
+To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+        osamaabb@amazon.com, linux-pci@vger.kernel.org,
+        Clint Sbisa <csbisa@amazon.com>, catalin.marinas@arm.com,
+        maz@kernel.org
+Subject: Re: VFIO (PCI) and write combine mapping of BARs
+Message-ID: <ZL+0h9gvJGTyWKZX@nvidia.com>
+References: <2838d716b08c78ed24fdd3fe392e21222ee70067.camel@kernel.crashing.org>
+ <ZLD1l1274hQQ54RT@lpieralisi>
+ <ZLFBnACjoTbDmKuU@nvidia.com>
+ <bc6c3a08e3d0a343fe8317218106609ba159dfe2.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <770da5a3-ea02-ce87-8515-beb246082de8@nvidia.com>
+In-Reply-To: <bc6c3a08e3d0a343fe8317218106609ba159dfe2.camel@kernel.crashing.org>
+X-ClientProxiedBy: BLAPR03CA0066.namprd03.prod.outlook.com
+ (2603:10b6:208:329::11) To LV2PR12MB5869.namprd12.prod.outlook.com
+ (2603:10b6:408:176::16)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: LV2PR12MB5869:EE_|PH0PR12MB8030:EE_
+X-MS-Office365-Filtering-Correlation-Id: ca050d60-a27d-475e-9ac9-08db8d03dc46
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: g4kfOMAUNjHmP+1uJAphXxSAXubL+Wc9hsFKWUwomfYWsokmoM/eRpshwVkalGW9zIuUzG63IpEcjgvnvcsVp6/6sczMuC1i46Dsxxazw4RWXz2cg9TdMC7Ea9Zwi3Q1s8RLtzWgF92X8Hx0jqOw6NHBgkPwjmQUWBHnayKq8xsjg6atqphRaxWbbxDQprma5afM9LdnNFennnZNhf06obWgBSdpWfEr3XcM9ISuny+rtLIy07u/TTSBTLpi90P5WDylXjSy7XVmyqwgkLMJTyn1LzywGnUmQF5yDoIwd0OF4W2Aui/E7IH/lnAaYS91JwwT2I0dHDj+vw2yB/vzz7dgjmutuZoUApAlCrVpVgKIONDG9x2KeRc8niaIpymUeAIgdfGihf14Ni36D9yQrUhSFHFS5FW9CgvG1oyqD9Uc/5vC4im/4zd3N2smqIUjXi8YP68cAMywuSVhalet+LJ/AD4TzXfwGQBRZXD36XbcGR5zrsC6F/jUj0qO+Ddsl6IalczUYzJ2GQdZRErAuJZ6pvMURMoNLq3/hy7q+O989MkzKjY/5pqghUPs3+p4Sa4DWIER+rCBwl735RsHzLejszyIvvTaBR8p0Au1xBY=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV2PR12MB5869.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230028)(4636009)(39860400002)(346002)(376002)(396003)(136003)(366004)(451199021)(26005)(186003)(6506007)(5660300002)(36756003)(8676002)(8936002)(7416002)(2906002)(2616005)(86362001)(38100700002)(6916009)(4326008)(316002)(66946007)(66556008)(66476007)(478600001)(6512007)(6486002)(41300700001)(54906003)(67856001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?CBcXgRrjIDB4Gppv7rz0tF0WJyBS5v6v2Mair4S3RsUC6wqspUi03n5Czu/R?=
+ =?us-ascii?Q?Lk877nlq9WI1h4m951yA7B+JVSoRDSHXopnSvoYLNwNOpMLtfuXgMIB+4D8O?=
+ =?us-ascii?Q?rY+P8v4mJ93Hrm4S3UsxZaw3PrxoT3WebqRSWIU1wjhtlTMngS60CyDXtoiF?=
+ =?us-ascii?Q?1+JiBx+lIU/z0J0kH9PCL+DgYuAt/lhyPd2llgcxlNs66QoMO6ikVfsVqbxI?=
+ =?us-ascii?Q?MgSm/vFzOHWSzDtJyolc/jxQFHbwkker+lkoMTH7kNMx7ni9wqPhBKffRT5w?=
+ =?us-ascii?Q?CfSS67sfMpAQJqFraDFgE7y0Se+4qEeXcD6/fFXG6xzFCXhAI8rfXnqhE/Tt?=
+ =?us-ascii?Q?j2mw/G9LOQe1St6TNFSKIL8pp4T97LK6bDAI3wUTh7Go9npB4sHQJuvD7ywM?=
+ =?us-ascii?Q?D1tLSBaj7sbHs0NU55PAd0vowaKLj7Ynu5OwAWRvy99XoZZF+h3v/QmSaJWV?=
+ =?us-ascii?Q?Rn/HoBkpy/Nht9fynuj341+IA/afflA1XVrwaJCUDlWOfPGnioO/yoszofgJ?=
+ =?us-ascii?Q?iAzbp40Ne/X4tFg5o+LKReVjyN8ayTlUl+bLO9qUeX6EDskn0RE0VGypgLbr?=
+ =?us-ascii?Q?119zQNeLTmPWwRnTOXTG5E5Gx940YZTR1vvfd3YqFJ0ZW+X9DVBrUH8+f2Jo?=
+ =?us-ascii?Q?NcWwx1f849lZheqMyM/7+c6WT39809yKEd0CsRGn8BaVnY6lp2hnOYhyiUiU?=
+ =?us-ascii?Q?MaVwd3l65rOFw7rHTtuq/5aYtGPw8hbjAZNS7hnFDBNqw8EDt5DG84nnJF42?=
+ =?us-ascii?Q?xGX8PQcZ7vCt8mMSZPIDUKUFxZ5MhVHnVLHHIrfFwMafwlXn15Q/1fNYXUwD?=
+ =?us-ascii?Q?IbvtOK08XpXpMHTVM2Cq6/gtN0buoUD/Zcw1zVTG4cvnOtWES55/cvVQ5UyC?=
+ =?us-ascii?Q?7Ok1I5mLU5h8XejIbTLhG0AXvQnPNUU2n2BUhoyMPq6+9PR1rvQoYU+Tf2tV?=
+ =?us-ascii?Q?w9BgAcPSZNfAIPngFpyuuL7EJhF/UXSuZxY00mNpqGl3B94JbTeNER1QpoSL?=
+ =?us-ascii?Q?E9a2rBvev6Su4x5w6L0a2GEp47/0lH0Eupj1/v3wEaX2MV5QUjZEzpOiXosw?=
+ =?us-ascii?Q?hzgxCz4hZSoK/DqGB/RSIW+DgiVqT+9Tn/8az4BIPUG5axFwjThE6SNdOGKq?=
+ =?us-ascii?Q?x4ceK3bSgOdxYJ18XNC8vApgD5eZB+NbZpEORdqhlCxLdq6YNzYtCTOCA78O?=
+ =?us-ascii?Q?C5GCsq9dGsA3Pu0Fxd+xbHBix1cAZaeiUkLPFrJAbwTCsfOM7GG+uAL7H7Ec?=
+ =?us-ascii?Q?/W3yQabg1JtaaylV6CB/8p24K91YlFHxYJcFnuSmR12kBh03/EfEdM9rVEB4?=
+ =?us-ascii?Q?ZL4q+ZA14fQGWfWBoGRm9X2N4XERCmiskI09qlL6b/RzQyBHEKhPRuhw+hXv?=
+ =?us-ascii?Q?faOxLu1h7h90TpP1KmbSSb3us1pfBFgCqSlGupBe99yF5qU5p1FGRffvkJZ1?=
+ =?us-ascii?Q?Le3LSBL7++8XYqZiiUMRXMbMPZjFA3LivGXfMfX/sUP+LA03ig365DnemrlZ?=
+ =?us-ascii?Q?9qbRPUp6pamZxbdIIGCXGjI3n5AAB28hULuBSkPXgBwgs+vjbCUYkbG9MWHB?=
+ =?us-ascii?Q?X3tqGzN1OH+gmZQI5oOqN1XQwbb3J8JUMYJMaZ5L?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ca050d60-a27d-475e-9ac9-08db8d03dc46
+X-MS-Exchange-CrossTenant-AuthSource: LV2PR12MB5869.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Jul 2023 11:39:52.4458
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: nxKk3DwDh3suPpYy1D5aLGcqiKAS3ycBERNS90Rp37KgQwBu/x+oyVdq0ayBFMNI
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR12MB8030
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jul 25, 2023 at 02:51:10PM +0530, Vidya Sagar wrote:
+On Tue, Jul 25, 2023 at 04:15:39PM +1000, Benjamin Herrenschmidt wrote:
+> > Assuming this is for #2, I think VFIO has fallen into a bit of a trap
+> > by allowing userspace to form the mmap offset. I've seen this happen
+> > in other subsystems too. It seems like a good idea then you realize
+> > you need more stuff in the mmap space and become sad.
+> > 
+> > Typically the way out is to covert the mmap offset into a cookie where
+> > userspace issues some ioctl and then the ioctl returns an opaque mmap
+> > offset to use.
+> > 
+> > eg in the vfio context you'd do some 'prepare region for mmap' ioctl
+> > where you could specify flags. The kernel would encode the flags in
+> > the cookie and then mmap would do the right thing. Adding more stuff
+> > is done by enhancing the prepare ioctl.
+> > 
+> > Legacy mmap offsets are kept working.
 > 
-> 
-> On 7/25/2023 2:00 PM, Manivannan Sadhasivam wrote:
-> > External email: Use caution opening links or attachments
-> > 
-> > 
-> > On Tue, Jul 25, 2023 at 01:49:35PM +0530, Vidya Sagar wrote:
-> > > 
-> > > 
-> > > On 7/25/2023 1:21 PM, Manivannan Sadhasivam wrote:
-> > > > External email: Use caution opening links or attachments
-> > > > 
-> > > > 
-> > > > On Thu, Jun 08, 2023 at 03:06:52PM +0530, Vidya Sagar wrote:
-> > > > > This reverts commit 4fb8e46c1bc4 ("PCI: tegra194: Enable
-> > > > > support for 256 Byte payload")
-> > > > > 
-> > > > > Consider a PCIe hierarchy with a PCIe switch and a device connected
-> > > > > downstream of the switch that has support for MPS which is the minimum
-> > > > > in the hierarchy, and root port programmed with an MPS in its DevCtl
-> > > > > register that is greater than the minimum. In this scenario, the default
-> > > > > bus configuration of the kernel i.e. "PCIE_BUS_DEFAULT" doesn't
-> > > > > configure the MPS settings in the hierarchy correctly resulting in the
-> > > > > device with support for minimum MPS in the hierarchy receiving the TLPs
-> > > > > of size more than that. Although this can be addresed by appending
-> > > > > "pci=pcie_bus_safe" to the kernel command line, it doesn't seem to be a
-> > > > > good idea to always have this commandline argument even for the basic
-> > > > > functionality to work.
-> > > > > Reverting commit 4fb8e46c1bc4 ("PCI: tegra194: Enable support for 256
-> > > > > Byte payload") avoids this requirement and ensures that the basic
-> > > > > functionality of the devices irrespective of the hierarchy and the MPS of
-> > > > > the devices in the hierarchy.
-> > > > > To reap the benefits of having support for higher MPS, optionally, one can
-> > > > > always append the kernel command line with "pci=pcie_bus_perf".
-> > > > > 
-> > > > > Fixes: 4fb8e46c1bc4 ("PCI: tegra194: Enable support for 256 Byte payload")
-> > > > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> > > > 
-> > > > I know that this patch is merged. But I happen to test a similar change on Qcom
-> > > > platform during a patch review and found that the PCI core changes MPS to 128
-> > > > when a 128byte supported device is found:
-> > > > 
-> > > > [    3.174290] pci 0000:01:00.0: Upstream bridge's Max Payload Size set to 128 (was 256, max 128)
-> > > > [    3.186538] pci 0000:01:00.0: Max Payload Size set to 128 (was 128, max 128)
-> > > > 
-> > > > This was just randomly tested on a platform whose Root port DEVCAP was 128, but
-> > > > it shouldn't matter. And I didn't change the default bus configuration.
-> > > > 
-> > > > Wondering how you ended up facing issues with it.
-> > > 
-> > > If the endpiont device that has support only for 128byte MPS is connected
-> > > directly to the root port, then, I agree that the PCIe sub-system takes care
-> > > of changing the MPS to the common lowest MPS, but if the endpoint device is
-> > > connected behind a PCIe switch, then the PCIe subsystem doesn't configure
-> > > the MPS properly.
-> > > 
-> > 
-> > Ah, I missed the fact that your issue only happens with a PCIe switch. But
-> > shouldn't this be fixed in the PCI core instead?
-> > 
-> > I mean, PCI core should use 128byte in your case for Root port unless it is not
-> > allowed in the spec (which I doubt).
-> well, if the RP's DevCtl is set to 256MPS by default, then, the core
-> wouldn't do it automatically unless either 'pcie_bus_safe' or
-> 'pcie_bus_perf' is passed.
-> 
+> This indeed what I have in mind. IE. VFIO has legacy regions and add-on
+> regions though the latter is currently only exploited by some drivers
+> that create their own add-on regions. My proposal is to add an ioctl to
+> create them from userspace as "children" of an existing driver-provided
+> region, allowing to set different attributes for mmap.
 
-That's what I'm referring to. The default configuration shouldn't cause Root
-port to send TLPs with unsupported payload. Moreover, this is not the case for
-immediate children. So definitely the PCI core should exhibit the same behavior
-for all downstream devices. 
+I wouldn't call it children, you are just getting a different mmap
+cookie for the same region object.
+ 
+> In the current VFIO the implementation is *entirely* in vfio_pci_core
+> for PCI and entirely in vfio_platform_common.c for platform, so while
+> the same ioctls could be imagined to create sub-regions, it would have
+> to be completely implemented twice unless we do a lot of heavy lifting
+> to move some of that region stuff into common code.
 
-- Mani
+The machinery for managing the mmap cookies should be in common code
 
-> 
-> > 
-> > - Mani
-> > 
-> > > -Vidya Sagar
-> > > 
-> > > > 
-> > > > - Mani
-> > > > 
-> > > > > ---
-> > > > >    drivers/pci/controller/dwc/pcie-tegra194.c | 13 -------------
-> > > > >    1 file changed, 13 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-> > > > > index 4fdadc7b045f..877d81b13334 100644
-> > > > > --- a/drivers/pci/controller/dwc/pcie-tegra194.c
-> > > > > +++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-> > > > > @@ -892,7 +892,6 @@ static int tegra_pcie_dw_host_init(struct dw_pcie_rp *pp)
-> > > > >         struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > > > >         struct tegra_pcie_dw *pcie = to_tegra_pcie(pci);
-> > > > >         u32 val;
-> > > > > -     u16 val_16;
-> > > > > 
-> > > > >         pp->bridge->ops = &tegra_pci_ops;
-> > > > > 
-> > > > > @@ -900,11 +899,6 @@ static int tegra_pcie_dw_host_init(struct dw_pcie_rp *pp)
-> > > > >                 pcie->pcie_cap_base = dw_pcie_find_capability(&pcie->pci,
-> > > > >                                                               PCI_CAP_ID_EXP);
-> > > > > 
-> > > > > -     val_16 = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_DEVCTL);
-> > > > > -     val_16 &= ~PCI_EXP_DEVCTL_PAYLOAD;
-> > > > > -     val_16 |= PCI_EXP_DEVCTL_PAYLOAD_256B;
-> > > > > -     dw_pcie_writew_dbi(pci, pcie->pcie_cap_base + PCI_EXP_DEVCTL, val_16);
-> > > > > -
-> > > > >         val = dw_pcie_readl_dbi(pci, PCI_IO_BASE);
-> > > > >         val &= ~(IO_BASE_IO_DECODE | IO_BASE_IO_DECODE_BIT8);
-> > > > >         dw_pcie_writel_dbi(pci, PCI_IO_BASE, val);
-> > > > > @@ -1756,7 +1750,6 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
-> > > > >         struct device *dev = pcie->dev;
-> > > > >         u32 val;
-> > > > >         int ret;
-> > > > > -     u16 val_16;
-> > > > > 
-> > > > >         if (pcie->ep_state == EP_STATE_ENABLED)
-> > > > >                 return;
-> > > > > @@ -1887,11 +1880,6 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
-> > > > >         pcie->pcie_cap_base = dw_pcie_find_capability(&pcie->pci,
-> > > > >                                                       PCI_CAP_ID_EXP);
-> > > > > 
-> > > > > -     val_16 = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_DEVCTL);
-> > > > > -     val_16 &= ~PCI_EXP_DEVCTL_PAYLOAD;
-> > > > > -     val_16 |= PCI_EXP_DEVCTL_PAYLOAD_256B;
-> > > > > -     dw_pcie_writew_dbi(pci, pcie->pcie_cap_base + PCI_EXP_DEVCTL, val_16);
-> > > > > -
-> > > > >         /* Clear Slot Clock Configuration bit if SRNS configuration */
-> > > > >         if (pcie->enable_srns) {
-> > > > >                 val_16 = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base +
-> > > > > @@ -1900,7 +1888,6 @@ static void pex_ep_event_pex_rst_deassert(struct tegra_pcie_dw *pcie)
-> > > > >                 dw_pcie_writew_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA,
-> > > > >                                    val_16);
-> > > > >         }
-> > > > > -
-> > > > >         clk_set_rate(pcie->core_clk, GEN4_CORE_CLK_FREQ);
-> > > > > 
-> > > > >         val = (ep->msi_mem_phys & MSIX_ADDR_MATCH_LOW_OFF_MASK);
-> > > > > --
-> > > > > 2.25.1
-> > > > > 
-> > > > 
-> > > > --
-> > > > மணிவண்ணன் சதாசிவம்
-> > 
-> > --
-> > மணிவண்ணன் சதாசிவம்
-
--- 
-மணிவண்ணன் சதாசிவம்
+Jason
