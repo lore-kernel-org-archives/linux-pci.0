@@ -2,145 +2,104 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4535BC001E0
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jul 2023 11:40:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A320C0015E
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jul 2023 11:46:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234983AbjGYLkw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Jul 2023 07:40:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46922 "EHLO
+        id S231922AbjGYLqN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Jul 2023 07:46:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234965AbjGYLkm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jul 2023 07:40:42 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A95CA0
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jul 2023 04:39:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1690285191;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WOPLGXJyHcm8uItFp881KDB1MO8xx1vwf3DX/HVbIqA=;
-        b=V/DNqq90KrgB4G6+GGNicZUmn7g9tFgsCWcJK7KlTtDcxX4htgU3nxNPRkwoX+t+lmE/HE
-        G6eDeILnKuLCe6tC1xSqYrrLTX+4EImdlRqD12/eHZH+OrqPUbfCK+dxp0PYzgOKpCsO3R
-        prcEaHfBWL5dOXi6tE9OiBjHZYpDGmU=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-353-geGf6MLaOEGavSKJSuucHA-1; Tue, 25 Jul 2023 07:39:45 -0400
-X-MC-Unique: geGf6MLaOEGavSKJSuucHA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id EFCF680027F;
-        Tue, 25 Jul 2023 11:39:44 +0000 (UTC)
-Received: from dell-r430-03.lab.eng.brq2.redhat.com (dell-r430-03.lab.eng.brq2.redhat.com [10.37.153.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 186844094DC0;
-        Tue, 25 Jul 2023 11:39:43 +0000 (UTC)
-From:   Igor Mammedov <imammedo@redhat.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     terraluna977@gmail.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, imammedo@redhat.com, mst@redhat.com
-Subject: [RFC 3/3] acpipcihp: use __pci_bus_assign_resources() if bus doesn't have bridge
-Date:   Tue, 25 Jul 2023 13:39:38 +0200
-Message-Id: <20230725113938.2277420-4-imammedo@redhat.com>
-In-Reply-To: <20230725113938.2277420-1-imammedo@redhat.com>
-References: <20230725113938.2277420-1-imammedo@redhat.com>
+        with ESMTP id S230444AbjGYLqM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jul 2023 07:46:12 -0400
+Received: from mail-qt1-f178.google.com (mail-qt1-f178.google.com [209.85.160.178])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0594E3;
+        Tue, 25 Jul 2023 04:46:10 -0700 (PDT)
+Received: by mail-qt1-f178.google.com with SMTP id d75a77b69052e-403af7dfa3aso47876651cf.0;
+        Tue, 25 Jul 2023 04:46:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1690285510; x=1690890310;
+        h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
+         :message-id:from:references:cc:to:subject:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=t+U7+V25k2Ck5v+XluiNMNx3pz9hj50EHEimmZgNccA=;
+        b=QNPe9LQwroERlcC4fAGPMtRzEcO2yA9MlhlgU/5py3PPj3OAr5JtKA9MY5qOtWJIe2
+         sbwDYU/2K1tB19wUHhp0S8x39BeyrLGHQIgc8rCvp3w6NeKB0yE1o4zkKo80jUvLnkFZ
+         eyqsI+uS3RxsofDsA+nhLY5F33PJv3rX/ExwSoBMtIYa4s2mNsds0/GFmbj9PmOQhv25
+         aS+IBdVcey+voxigmbGOsK2E/dIhUA/tK7r9b28MV0TSXKFaCTClUTI5kSn9LQMFOspg
+         LXLqU5ypMwOkOCvGbd0uvtNw2XhBB3JaaoFJ6ZilZwDKOQQ1VtpMmCwqv/02CkThPjiF
+         1CaA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1690285510; x=1690890310;
+        h=content-transfer-encoding:in-reply-to:mime-version:user-agent:date
+         :message-id:from:references:cc:to:subject:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=t+U7+V25k2Ck5v+XluiNMNx3pz9hj50EHEimmZgNccA=;
+        b=ULBsY7faAPdn3aVIw9c4yeASvVG9PdQoIUfAiSuFRv+cRMgtL/A+pRW3cXzi1bNfKo
+         SPqOfBJbKGN8tFoEy/TTtBW1t22upcjNRR1RkK1J6yXOZWh0icCXJGM5RnhraAmFl58L
+         vCbAV0mZhURS78uNAcxmoSplCU1cCcIKbk0XquI/cHYiuVN9WaejRBbvml5tNdN7duAy
+         vHA2rhLuj9O+uzWDLTJ13slp4cq0HtPUC3iHIojsc8l1CG3kEYfywRi/Qd7Wjmk8AMjC
+         IeqvTTq1n6dYFvhplLD9ckKces37n8vykyqfSrIXIfDO60yFs+dQNZjgMMLxFQlz+zb7
+         3qDw==
+X-Gm-Message-State: ABy/qLbXV2dfQG+Kbw43XmDfk2/beTlOFDIBPttXHwdoHlqyTq15Rn23
+        5Xqixy/D4eDox4HgLAgA0A==
+X-Google-Smtp-Source: APBJJlFAD8MOnS1E+ahp3rLtFMSggO57zsPpAVA3y7pGzblMnF2KhMDZLQsUjHKu3M1ym6DCNyWtPw==
+X-Received: by 2002:a05:622a:105:b0:405:471b:7678 with SMTP id u5-20020a05622a010500b00405471b7678mr2713218qtw.5.1690285509835;
+        Tue, 25 Jul 2023 04:45:09 -0700 (PDT)
+Received: from [120.7.1.38] (198-84-239-141.cpe.teksavvy.com. [198.84.239.141])
+        by smtp.gmail.com with ESMTPSA id b20-20020ac85414000000b0040541a8bd66sm3955674qtq.60.2023.07.25.04.45.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 25 Jul 2023 04:45:09 -0700 (PDT)
+Subject: Re: [PATCH] hack to debug acpiphp crash
+To:     Igor Mammedov <imammedo@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, mst@redhat.com
+References: <11fc981c-af49-ce64-6b43-3e282728bd1a@gmail.com>
+ <20230724135902.2217991-1-imammedo@redhat.com>
+ <92150d8d-8a3a-d600-a996-f60a8e4c876c@gmail.com>
+ <20230725100644.6138efb6@imammedo.users.ipa.redhat.com>
+ <20230725104237.0c8d0dc1@imammedo.users.ipa.redhat.com>
+From:   Woody Suwalski <terraluna977@gmail.com>
+Message-ID: <d1333a63-c6b8-fe9a-24ce-05d2198323c2@gmail.com>
+Date:   Tue, 25 Jul 2023 07:45:08 -0400
+User-Agent: Mozilla/5.0 (X11; Linux i686; rv:91.0) Gecko/20100101 Firefox/91.0
+ SeaMonkey/2.53.16
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.2
+In-Reply-To: <20230725104237.0c8d0dc1@imammedo.users.ipa.redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Commit [1] switched hotplug to pci_assign_unassigned_bridge_resources()
-which requires bridge being available, however in S3 suspend/resume
-cycle  acpipcihp might receive device check event from firmware and
-in case bus->self == NULL, it would make kernel crash with NULL pointer
-dereference.
-The issue was triggered on  Dell Inspiron 7352/0W6WV0 laptop with
-following sequence:
-   1. suspend to RAM
-   2. wake up
-   3. suspend to RAM. which immediately wakes up and following
-      backtrace is observed:
-
-[  612.277651] BUG: kernel NULL pointer dereference, address: 0000000000000018
-[...]
-[  612.277735] Call Trace:
-[  612.277739]  <TASK>
-[  612.277741]  ? __die+0x1a/0x60
-[  612.277749]  ? page_fault_oops+0x158/0x430
-[  612.277755]  ? prb_read_valid+0x12/0x20
-[  612.277759]  ? console_unlock+0x4d/0x100
-[  612.277765]  ? __irq_work_queue_local+0x27/0x60
-[  612.277771]  ? irq_work_queue+0x2b/0x50
-[  612.277776]  ? exc_page_fault+0x357/0x600
-[  612.277781]  ? dev_printk_emit+0x7e/0xa0
-[  612.277786]  ? asm_exc_page_fault+0x22/0x30
-[  612.277792]  ? __pfx_pci_conf1_read+0x10/0x10
-[  612.277798]  ? pci_assign_unassigned_bridge_resources+0x1f/0x260
-[  612.277804]  ? pcibios_allocate_dev_resources+0x3c/0x2a0
-[  612.277809]  enable_slot+0x21f/0x3e0
-[  612.277816]  acpiphp_hotplug_notify+0x13d/0x260
-[  612.277822]  ? __pfx_acpiphp_hotplug_notify+0x10/0x10
-[  612.277827]  acpi_device_hotplug+0xbc/0x540
-[  612.277834]  acpi_hotplug_work_fn+0x15/0x20
-[  612.277839]  process_one_work+0x1f7/0x370
-[  612.277845]  worker_thread+0x45/0x3b0
-[  612.277850]  ? __pfx_worker_thread+0x10/0x10
-[  612.277854]  kthread+0xdc/0x110
-[  612.277860]  ? __pfx_kthread+0x10/0x10
-[  612.277866]  ret_from_fork+0x28/0x40
-[  612.277871]  ? __pfx_kthread+0x10/0x10
-[  612.277876]  ret_from_fork_asm+0x1b/0x30
-
-Fix it by reverting to __pci_bus_assign_resources() usage instead of
-pci_assign_unassigned_bridge_resources() when bus doesn't have bridge
-assigned to it.
-
-1) 40613da52b13fb21 (PCI: acpiphp: Reassign resources on bridge if necessary)
-
-Signed-off-by: Igor Mammedov <imammedo@redhat.com>
----
-v2: fix inverted bus->self condition
----
- drivers/pci/hotplug/acpiphp_glue.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index c0ffb1389fda..816555ab9171 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -499,6 +499,7 @@ pci_info(bus, "enable_slot bus: bridge: %d, bus->self: %p\n", bridge, bus->self)
- 				acpiphp_native_scan_bridge(dev);
- 		}
- 	} else {
-+		LIST_HEAD(add_list);
- 		int max, pass;
- 
- 		acpiphp_rescan_slot(slot);
-@@ -512,10 +513,18 @@ pci_info(bus, "enable_slot bus: bridge: %d, bus->self: %p\n", bridge, bus->self)
- 				if (pass && dev->subordinate) {
- 					check_hotplug_bridge(slot, dev);
- 					pcibios_resource_survey_bus(dev->subordinate);
-+					if (!bus->self)
-+						__pci_bus_size_bridges(dev->subordinate, &add_list);
- 				}
- 			}
- 		}
--		pci_assign_unassigned_bridge_resources(bus->self);
-+		if (bus->self) {
-+pci_info(bus->self, "enable_slot: pci_assign_unassigned_bridge_resources:\n");
-+			pci_assign_unassigned_bridge_resources(bus->self);
-+		} else {
-+pci_info(bus, "enable_slot: __pci_bus_assign_resources:\n");
-+			__pci_bus_assign_resources(bus, &add_list, NULL);
-+                }
- 	}
- 
- 	acpiphp_sanitize_bus(bus);
--- 
-2.39.3
+Igor Mammedov wrote:
+> On Tue, 25 Jul 2023 10:06:44 +0200
+> Igor Mammedov <imammedo@redhat.com> wrote:
+>
+>> PS:
+>> What happens is that on resume firmware (likely EC),
+>> issues ACPI bus check on root ports which (bus check) is
+>> wired to acpiphp module (though pciehp module was initialized
+>> at boot to manage root ports), it's likely firmware bug.
+>>
+>> I'd guess the intent behind this was to check if PCIe devices
+>> were hotplugged while laptop has been asleep, and for
+>> some reason they didn't use native PCIe hotplug to handle that.
+>> However looking at laptop specs you can't hotplug PCIe
+>> devices via external ports. Given how old laptop is
+>> it isn't going to be fixed, so we would need a workaround
+>> or fixup DSDT to skip buscheck.
+>>
+>> The options I see is to keep old kernel as for such case,
+>> or bail out early from bus check/enable_slot since root port
+>> is managed by pciehp module (and let it handle hotplug).
+> scratch all of above out (it's wrong). Looking at DSDT
+> firmware sends Notify(rpxx, 2 /* Wake */) event. Which
+> according to spec needs to be handed down to the native
+> device driver.
+>
+>
+I agree that this laptop is a tricky one. I had to adjust my kernel 
+config NOHZ just to make it suspend to ram, otherwise it was waking back 
+right after going to sleep (and the same nohz kernel worked on all my 
+other machines)...
 
