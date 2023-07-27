@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29E74C41513
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2ACAC001E0
 	for <linux-pci@archiver.kernel.org>; Thu, 27 Jul 2023 10:40:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232312AbjG0KkK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Jul 2023 06:40:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35630 "EHLO
+        id S232697AbjG0KkL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Jul 2023 06:40:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231225AbjG0KkJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jul 2023 06:40:09 -0400
-Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F2E92696;
-        Thu, 27 Jul 2023 03:40:07 -0700 (PDT)
-Received: from EXMBX166.cuchost.com (unknown [175.102.18.54])
+        with ESMTP id S232480AbjG0KkK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jul 2023 06:40:10 -0400
+Received: from fd01.gateway.ufhost.com (fd01.gateway.ufhost.com [61.152.239.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCD8726AB;
+        Thu, 27 Jul 2023 03:40:08 -0700 (PDT)
+Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
         (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-        (Client CN "EXMBX166", Issuer "EXMBX166" (not verified))
-        by ex01.ufhost.com (Postfix) with ESMTP id EA5F524E27E;
-        Thu, 27 Jul 2023 18:40:00 +0800 (CST)
-Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX166.cuchost.com
- (172.16.6.76) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Thu, 27 Jul
- 2023 18:40:00 +0800
+        (Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
+        by fd01.gateway.ufhost.com (Postfix) with ESMTP id CFC2680E2;
+        Thu, 27 Jul 2023 18:39:58 +0800 (CST)
+Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX165.cuchost.com
+ (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Thu, 27 Jul
+ 2023 18:39:58 +0800
 Received: from localhost.localdomain (113.72.147.196) by EXMBX171.cuchost.com
  (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Thu, 27 Jul
- 2023 18:39:59 +0800
+ 2023 18:39:57 +0800
 From:   Minda Chen <minda.chen@starfivetech.com>
 To:     =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Daire McNamara <daire.mcnamara@microchip.com>,
@@ -41,12 +41,10 @@ CC:     <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Leyfoon Tan <leyfoon.tan@starfivetech.com>,
         Kevin Xie <kevin.xie@starfivetech.com>,
         Minda Chen <minda.chen@starfivetech.com>
-Subject: [PATCH v2 3/4] dt-bindings: PCI: Add StarFive JH7110 PCIe controller
-Date:   Thu, 27 Jul 2023 18:39:48 +0800
-Message-ID: <20230727103949.26149-4-minda.chen@starfivetech.com>
+Subject: [PATCH v2 0/4] Refactoring Microchip PCIe driver and add StarFive PCIe
+Date:   Thu, 27 Jul 2023 18:39:45 +0800
+Message-ID: <20230727103949.26149-1-minda.chen@starfivetech.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230727103949.26149-1-minda.chen@starfivetech.com>
-References: <20230727103949.26149-1-minda.chen@starfivetech.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [113.72.147.196]
@@ -57,155 +55,91 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add StarFive JH7110 SoC PCIe controller dt-bindings.
-JH7110 using PLDA XpressRICH PCIe host controller IP.
+This patchset final purpose is add PCIe driver for StarFive JH7110 SoC.
+JH7110 using PLDA XpressRICH PCIe IP. Microchip PolarFire Using the
+same IP and have commit their codes, which are mixed with PLDA
+controller codes and Microchip platform codes.
 
-Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-Reviewed-by: Hal Feng <hal.feng@starfivetech.com>
----
- .../bindings/pci/starfive,jh7110-pcie.yaml    | 133 ++++++++++++++++++
- 1 file changed, 133 insertions(+)
+For re-use the PLDA controller codes, I request refactoring microchip
+codes, move PLDA common codes to PLDA files.
+Desigware and Cadence is good example for refactoring codes.
+
+So first step is extract the PLDA common codes from microchip, and
+refactoring the microchip codes.(patch1 - 2)
+Then, add Starfive codes. (patch3 - 4)
+
+This patchset is base on v6.5-rc1
+
+patch1 is move PLDA XpressRICH PCIe host common properties dt-binding
+       docs from microchip,pcie-host.yaml
+patch2 is extracting the PLDA common codes from microchip Polarfire PCIe
+       codes. The change list in the commit message.
+patch3 is add StarFive JH7110 PCIe dt-binding doc.
+patch4 is add StarFive JH7110 Soc PCIe codes.
+
+I have noticed that Daire have changed microchip's codes.
+https://patchwork.kernel.org/project/linux-pci/cover/20230630154859.2049521-1-daire.mcnamara@microchip.com/
+I have changed patch2 base on their commits. StarFive
+PCIe driver still can work. But their codes is under reviewed and
+maybe changing. Do not base on their changes first.
+I will base on their commit to change patch2 as soon as
+their commits are accepted.
+
+previous version:
+v1:https://patchwork.kernel.org/project/linux-pci/cover/20230719102057.22329-1-minda.chen@starfivetech.com/
+
+change:
+  v2:
+    patch1:
+      - squash dt-bindings patches to patch1
+      - add 'required' list. 
+      - plda doc rename to plda,xpressrich-axi-common.yaml
+    patch2:
+      - squash the microchip modification patch to patch 2.
+    patch3:
+      - remove the plda common required property.
+    patch4:
+      - Sync the hide rc bar ops with config read function.
+      - Revert the T_PVPERL to 100ms and add comments for the source.
+      - Replace the link check function by the standard link ops.
+      - Convert to new pm ops marcos.
+      - Some formats modification.
+      - pcie-plda-host modification merge to patch4.
+    other:
+      - remove the pcie-plda-plat.c
+      - remove the starfive dts patch first. for it depends on
+        stg clock and syscon setting.
+
+Minda Chen (4):
+  dt-bindings: PCI: Add PLDA XpressRICH PCIe host common properties
+  PCI: plda: Get common codes from Microchip PolarFire host
+  dt-bindings: PCI: Add StarFive JH7110 PCIe controller
+  PCI: starfive: Add JH7110 PCIe controller
+
+ .../bindings/pci/microchip,pcie-host.yaml     |  49 +-
+ .../pci/plda,xpressrich3-axi-common.yaml      |  69 ++
+ .../bindings/pci/starfive,jh7110-pcie.yaml    | 133 ++++
+ MAINTAINERS                                   |  19 +-
+ drivers/pci/controller/Kconfig                |   9 +-
+ drivers/pci/controller/Makefile               |   2 +-
+ drivers/pci/controller/plda/Kconfig           |  31 +
+ drivers/pci/controller/plda/Makefile          |   4 +
+ .../{ => plda}/pcie-microchip-host.c          | 594 ++--------------
+ drivers/pci/controller/plda/pcie-plda-host.c  | 665 ++++++++++++++++++
+ drivers/pci/controller/plda/pcie-plda.h       | 242 +++++++
+ drivers/pci/controller/plda/pcie-starfive.c   | 438 ++++++++++++
+ 12 files changed, 1645 insertions(+), 610 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
  create mode 100644 Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
+ create mode 100644 drivers/pci/controller/plda/Kconfig
+ create mode 100644 drivers/pci/controller/plda/Makefile
+ rename drivers/pci/controller/{ => plda}/pcie-microchip-host.c (50%)
+ create mode 100644 drivers/pci/controller/plda/pcie-plda-host.c
+ create mode 100644 drivers/pci/controller/plda/pcie-plda.h
+ create mode 100644 drivers/pci/controller/plda/pcie-starfive.c
 
-diff --git a/Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml b/Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
-new file mode 100644
-index 000000000000..9273e029fb20
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
-@@ -0,0 +1,133 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/starfive,jh7110-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: StarFive JH7110 PCIe host controller
-+
-+maintainers:
-+  - Kevin Xie <kevin.xie@starfivetech.com>
-+
-+allOf:
-+  - $ref: /schemas/pci/pci-bus.yaml#
-+  - $ref: plda,xpressrich3-axi-common.yaml#
-+  - $ref: /schemas/interrupt-controller/msi-controller.yaml#
-+  - $ref: /schemas/gpio/gpio-consumer-common.yaml#
-+
-+properties:
-+  compatible:
-+    const: starfive,jh7110-pcie
-+
-+  clocks:
-+    items:
-+      - description: NOC bus clock
-+      - description: Transport layer clock
-+      - description: AXI MST0 clock
-+      - description: APB clock
-+
-+  clock-names:
-+    items:
-+      - const: noc
-+      - const: tl
-+      - const: axi_mst0
-+      - const: apb
-+
-+  resets:
-+    items:
-+      - description: AXI MST0 reset
-+      - description: AXI SLAVE0 reset
-+      - description: AXI SLAVE reset
-+      - description: PCIE BRIDGE reset
-+      - description: PCIE CORE reset
-+      - description: PCIE APB reset
-+
-+  reset-names:
-+    items:
-+      - const: mst0
-+      - const: slv0
-+      - const: slv
-+      - const: brg
-+      - const: core
-+      - const: apb
-+
-+  starfive,stg-syscon:
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
-+    items:
-+      - items:
-+          - description: phandle to System Register Controller stg_syscon node.
-+          - description: register0 offset of STG_SYSCONSAIF__SYSCFG register for PCIe.
-+          - description: register1 offset of STG_SYSCONSAIF__SYSCFG register for PCIe.
-+          - description: register2 offset of STG_SYSCONSAIF__SYSCFG register for PCIe.
-+          - description: register3 offset of STG_SYSCONSAIF__SYSCFG register for PCIe.
-+    description:
-+      The phandle to System Register Controller syscon node and the offset
-+      of STG_SYSCONSAIF__SYSCFG register for PCIe. Total 4 regsisters offset
-+      for PCIe.
-+
-+  phys:
-+    description:
-+      Specified PHY is attached to PCIe controller.
-+    maxItems: 1
-+
-+required:
-+  - compatible
-+  - clocks
-+  - resets
-+  - starfive,stg-syscon
-+  - "#interrupt-cells"
-+  - interrupt-map-mask
-+  - interrupt-map
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/gpio/gpio.h>
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie0: pcie@2b000000 {
-+            compatible = "starfive,jh7110-pcie";
-+            reg = <0x9 0x40000000 0x0 0x10000000>,
-+                  <0x0 0x2b000000 0x0 0x1000000>;
-+            reg-names = "cfg", "apb";
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            #interrupt-cells = <1>;
-+            device_type = "pci";
-+            ranges = <0x82000000  0x0 0x30000000  0x0 0x30000000 0x0 0x08000000>,
-+                     <0xc3000000  0x9 0x00000000  0x9 0x00000000 0x0 0x40000000>;
-+            starfive,stg-syscon = <&stg_syscon 0xc0 0xc4 0x130 0x1b8>;
-+            bus-range = <0x0 0xff>;
-+            interrupt-parent = <&plic>;
-+            interrupts = <56>;
-+            interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+            interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc0 0x1>,
-+                            <0x0 0x0 0x0 0x2 &pcie_intc0 0x2>,
-+                            <0x0 0x0 0x0 0x3 &pcie_intc0 0x3>,
-+                            <0x0 0x0 0x0 0x4 &pcie_intc0 0x4>;
-+            msi-parent = <&pcie0>;
-+            msi-controller;
-+            clocks = <&syscrg 86>,
-+                     <&stgcrg 10>,
-+                     <&stgcrg 8>,
-+                     <&stgcrg 9>;
-+            clock-names = "noc", "tl", "axi_mst0", "apb";
-+            resets = <&stgcrg 11>,
-+                     <&stgcrg 12>,
-+                     <&stgcrg 13>,
-+                     <&stgcrg 14>,
-+                     <&stgcrg 15>,
-+                     <&stgcrg 16>;
-+            reset-gpios = <&gpios 26 GPIO_ACTIVE_LOW>;
-+            phys = <&pciephy0>;
-+
-+            pcie_intc0: interrupt-controller {
-+                #address-cells = <0>;
-+                #interrupt-cells = <1>;
-+                interrupt-controller;
-+            };
-+        };
-+    };
+
+base-commit: 06c2afb862f9da8dc5efa4b6076a0e48c3fbaaa5
 -- 
 2.17.1
 
