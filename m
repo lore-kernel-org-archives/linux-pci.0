@@ -2,382 +2,273 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80D15C41513
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Jul 2023 17:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D8A8C04A6A
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Jul 2023 17:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235741AbjG1RHP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Jul 2023 13:07:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40610 "EHLO
+        id S235903AbjG1RHR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Jul 2023 13:07:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234758AbjG1RHK (ORCPT
+        with ESMTP id S235081AbjG1RHK (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Jul 2023 13:07:10 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2087.outbound.protection.outlook.com [40.107.94.87])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 267BBB5;
-        Fri, 28 Jul 2023 10:07:07 -0700 (PDT)
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2075.outbound.protection.outlook.com [40.107.94.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6326635A8;
+        Fri, 28 Jul 2023 10:07:08 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Kfn9C2wYX5vprDHLalt/JcVa2fqn64VU0tKXlJkwyW1kxxXAI80gy6eY0SSZYGrJ1FE4q0M53YbVh7fXuJfNgLB2NqHvIztcgm8G0TQLFAon+wvfCEEWUX0ghwLbSqI2+SA9vWaCNG5qRJtdl+beMhkQnaDB+jydXcuEG/un3+LW03PdE7FmNHqIroi9GlhbHMEDDDPlkmuIBX376206Ho7zEZKE9TMnEWDJHKWni5q94oRY4wyq4CiVaZlZHPTi8R25jiK+1iTgk/vDaCTtaXqv9+7fPIv8mshDmP9AG/jmKRsMTs+a2WN2QVSA67gaVuS3PyFP+KjCL52Wm9eAxg==
+ b=JwsRE2thnRynzXCIfuAbQwvBCujMLskfOYgJccvSyvcEKbSomrfQJyHVLBx9iz0/b1ABiuFHKyqGqVcgLlstTORZjqYE+HaLae4oRR+Z/LcIKBYl2H+BXMEULP86rbFilxtwJPZg4Ui+bdFg/d4jq766ZHa32n/TWyikOlKXckW/VJyd1z8EJlE68dMW9bt4cUPin9fpJ6ZlG2XNDIH0e29+ymQQHTIGeo3GAhUCzYSOto4TcsYNTU2AIF5b11ABB+NW61ZhibB16hB7bCMzAVv/J/bs31QronCVF2zSUMyyehkWVHyZ9E5HCqXPF3BxAZKRUl91dUlyre8qAFh7GA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Mb8fk3c6owXtbs0RJr9UCcTG6YiCOgLA8W5ZtA7S1NI=;
- b=We/XeERDNM8dWEdNo1pF8TO74rnPAZ87J0aYelAGWC+NwXjAHTDJPVi0opWX3a8+IXsWlYkrEOUvnWAm7Oe1PcNP31i/crhW/qnAGNGoJHDossXTFK8j9VmbK3h/pwYi+cd4RDKRwVaEQcDAcvSGIGdE7r3pk6pWU9Dl0UHDjiXGxT9dz/EazZFgMRUKtJZY/jn8G0D+8rDj3/bvl7b4grbMI7QnNOyhOpvYmJkM8QdgZUjIk9q27LBhaZXx9EOS9bNDef1VWYpUL/Z0Fif2gDnKQDItvC+BOzp0WDQffufWN3/+fgYcPODWwh69F1vboi31+w7y6XP0y86Gwi6gMg==
+ bh=wBJs1W1gsz26MzBL1ZYcPD7bjCpk2QNv3lOk5FogfDE=;
+ b=Th8YZYwhqJDF4SmaftDyLVVVhIdD0+27W3ZX0QnGrT2jfi0zYsOpEtDczxFtggG+k8W15M2l7hOVO8HinmLjBtFSsqNLmVwqBrti5Bpo1Ppr6Gin5LobTEom/AYW8kwUg78SOH2Gnqa2HvejuOVmDJvA+88PrKha8qZgEu3nN85wf8ighoFsUtg956D619M4AfJN9L6HZwS/o9ehLYqQmAsiXs59Ahp3ejKhQb9QqTEFMh8OxEuQ80MAJgIRsa9pgQVua/IGw89NK2v7Zd/1oYA/b5qNEaZnvyv+Nzdqsh813NEsUKtD/Ehcr2i9f1qUxPFARA5hnmyTV7Lx75MMHg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
  dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
  header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Mb8fk3c6owXtbs0RJr9UCcTG6YiCOgLA8W5ZtA7S1NI=;
- b=gKWJSoQaSchbyyeho+FDfRSzqrF4yteEDKDz9xlfaIaPWCz+aMcLcWfLcJcmDTlqE+9u3wgrzhADpGj+zmOhB94kg0Igmtn8yYKEC+7hRzxExaxaMFiomAw/U8UBQdJyiYiOTQsoxIBQg4MWNMV//MUud5ORhXeL389E2CICGhI=
-Received: from BN9PR03CA0437.namprd03.prod.outlook.com (2603:10b6:408:113::22)
- by PH8PR12MB6842.namprd12.prod.outlook.com (2603:10b6:510:1c9::10) with
+ bh=wBJs1W1gsz26MzBL1ZYcPD7bjCpk2QNv3lOk5FogfDE=;
+ b=htm2EfPPPwnIPAirnny/134iXkrFShVE6asZQ8xUyIXCCxny+4qiWZsqj15j3LqjVrKX0Qdkm5Ksjdp0nHB369GBroMOBzS/GbK/e2L+2xwjYl9rOtoZlynRlC9SOI5T40/094SKW2ac26PoOytaNln+UDJrECE1jcstCa0PI6Q=
+Received: from DM6PR03CA0060.namprd03.prod.outlook.com (2603:10b6:5:100::37)
+ by BN9PR12MB5322.namprd12.prod.outlook.com (2603:10b6:408:103::13) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.29; Fri, 28 Jul
- 2023 17:07:04 +0000
-Received: from BN8NAM11FT112.eop-nam11.prod.protection.outlook.com
- (2603:10b6:408:113:cafe::b5) by BN9PR03CA0437.outlook.office365.com
- (2603:10b6:408:113::22) with Microsoft SMTP Server (version=TLS1_2,
+ 2023 17:07:05 +0000
+Received: from CY4PEPF0000EE31.namprd05.prod.outlook.com
+ (2603:10b6:5:100:cafe::f5) by DM6PR03CA0060.outlook.office365.com
+ (2603:10b6:5:100::37) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.29 via Frontend
- Transport; Fri, 28 Jul 2023 17:07:04 +0000
+ Transport; Fri, 28 Jul 2023 17:07:05 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
 Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BN8NAM11FT112.mail.protection.outlook.com (10.13.176.210) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6631.35 via Frontend Transport; Fri, 28 Jul 2023 17:07:04 +0000
-Received: from SATLEXMB05.amd.com (10.181.40.146) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
+Received: from SATLEXMB03.amd.com (165.204.84.17) by
+ CY4PEPF0000EE31.mail.protection.outlook.com (10.167.242.37) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6631.29 via Frontend Transport; Fri, 28 Jul 2023 17:07:05 +0000
+Received: from SATLEXMB05.amd.com (10.181.40.146) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 28 Jul
- 2023 12:07:02 -0500
+ 2023 12:07:04 -0500
 Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB05.amd.com
  (10.181.40.146) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 28 Jul
- 2023 12:07:01 -0500
+ 2023 12:07:04 -0500
 Received: from xsjlizhih40.xilinx.com (10.180.168.240) by SATLEXMB03.amd.com
  (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.27 via Frontend
- Transport; Fri, 28 Jul 2023 12:07:01 -0500
+ Transport; Fri, 28 Jul 2023 12:07:03 -0500
 From:   Lizhi Hou <lizhi.hou@amd.com>
 To:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <robh@kernel.org>
 CC:     Lizhi Hou <lizhi.hou@amd.com>, <max.zhen@amd.com>,
-        <sonal.santan@amd.com>, <stefano.stabellini@xilinx.com>,
-        =?UTF-8?q?Cl=C3=A9ment=20L=C3=A9ger?= <clement.leger@bootlin.com>
-Subject: [PATCH V12 1/5] of: dynamic: Add interfaces for creating device node dynamically
-Date:   Fri, 28 Jul 2023 10:06:54 -0700
-Message-ID: <1690564018-11142-2-git-send-email-lizhi.hou@amd.com>
+        <sonal.santan@amd.com>, <stefano.stabellini@xilinx.com>
+Subject: [PATCH V12 4/5] of: overlay: Extend of_overlay_fdt_apply() to specify the target node
+Date:   Fri, 28 Jul 2023 10:06:57 -0700
+Message-ID: <1690564018-11142-5-git-send-email-lizhi.hou@amd.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1690564018-11142-1-git-send-email-lizhi.hou@amd.com>
 References: <1690564018-11142-1-git-send-email-lizhi.hou@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BN8NAM11FT112:EE_|PH8PR12MB6842:EE_
-X-MS-Office365-Filtering-Correlation-Id: 449d302c-5e18-4264-6162-08db8f8d1131
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000EE31:EE_|BN9PR12MB5322:EE_
+X-MS-Office365-Filtering-Correlation-Id: d2436211-d3d2-4a08-53ae-08db8f8d1197
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: xtYO3PNkEcrZqNy2d68cqFrC7yO2OUF+r+d1+AzR1MUWxQWQfzr6SZwCyJmCw92HdSh+IHTAwYkBOdY/ldMnI6+ImFqYp0tKHtFGZIkT+WdSlmiIYGO3eQKPaYDhyFjy7ws5TjeWJx/LDmoY0Sv+9w0LY9+0u7JVCy3puGtxwuMc5HNLmJOa4x9kYIfI4fJGmmY/PnNoIWkf4ZzjCcaKpOhMYu3+x9hwwcqi9oJ6t9aE9JNxTQ+QrEnxAgirRsW44YUdLlpShQ79q8HW5o0KxbfPhFrwVCU505vgBwkCWEywrdovg4vtb6DJj+LftVL+sEucT6J9/tcpGXnFo70lJB25AgAG3Z8ZdOVfgwZ5pY/YAohD5zsTau3XM9vl88/dXIMmXBdl1CX6tIVO/mjdyNa+nwuHs3wySg6tenOlGdXt65crDM5hSpeo4y7ySZd6SvaMfQP04cWUrmWBe/cFLAhw5gp725xFlxzvUYAXjPmAH5aoAw0Fbn0fRrLhNsp3zXhdh/q285iPXn1wdUstgUI/R1S4jWvYcCa8hD8bpAC/MWY9KtnbE44haItyWdMVgtjQXUB0W8VLs5aQpchwLzdv96c4ehmbVdVQROpVZIoOChbGKde9JsT7RpUmGrbgGQGeo1pECHn3tQCxH4gv+kpwhRvq3FYRoEKbCpPKF+/osHwUd/EdvxtLGjuPkuzjrT00nguBkjfh9652eEzE5JTNoiPm9lX9pNwH8p+XAvuBZTf+wNsIlmR7lRQE238UVjnm4KqjyAH5PvE9ltOTSw==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(39860400002)(396003)(346002)(136003)(376002)(451199021)(82310400008)(36840700001)(46966006)(40470700004)(2906002)(66574015)(426003)(83380400001)(6666004)(2616005)(36756003)(336012)(186003)(44832011)(5660300002)(86362001)(47076005)(36860700001)(40460700003)(8676002)(41300700001)(316002)(8936002)(26005)(356005)(70586007)(4326008)(70206006)(478600001)(40480700001)(110136005)(54906003)(81166007)(82740400003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: l8t8DXCHGUoIgzGm/jhfenhwnDPngUBz8KovGPZDcwX7DF+Fpf022Hkl0L6lLZYF/Jc2XifKC6YPMtGI9i4eXi+472RSSg1y7EABjOyzp8hU2y72wefn4qrS8RMij6eQcE9uMgIjAPY8PZw1dViC4N5FsTJvp9SVoHaela72c4f5uyX616uD15H4WcG/fLo2DIZ+GEvCKBx7u6bg2F56kGR7lzM+loLfaxTPsYJNTCEM36wHQAd95WhKl28ccCipaqFkdB4pJHHSKUNtd7+mWPBOMijbc2KeK0kEw7kQwS2dcWHOxogkj9dexfWEVrd3Zjt3GMzt277zd1sMJujEgcCVL/iwe6JTvUC+xOQfSM1VWyI1h88ZFCoxhdfXj3jN8Qp5fRnqsF7IElUelYZj/H27B8eVqjjk6B6hUYWxTcq9c/JiMfAy7TzX4dSfMx84q8Vz7Hj0gtO2prup9yYhLHure9Cfsx8tfB/UpQR1OJolcF48UEakLS0THklEBHFIIZ4guG5HG/Vznn7LOFOf3j3ZNjAFIYBgYRRYAL79QW5GH4CKceNp0hK9MO/1gADoMeuIXq6hYjskzHDXK+gz70CqcaLQTnljsJmUuN4HTcmLMA5L4ZYCOBpKo8X3GmB23RmLQ0wD2ndkfBPljtmDtjdNv/wVFyf70o+A/6TG6DMKCnPdhnK7nhVC95xHI6u9a4oEyubE9VX766aOChCEXklAngpMsubn2VCFnCCpvZUUiBMiAyrEgdEcIVvOOTcVFeGB5MSDQSLDipP+3ec4ZA==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(39860400002)(396003)(376002)(346002)(136003)(82310400008)(451199021)(46966006)(36840700001)(40470700004)(86362001)(356005)(36756003)(40460700003)(2906002)(40480700001)(110136005)(54906003)(478600001)(82740400003)(81166007)(336012)(36860700001)(426003)(26005)(186003)(2616005)(47076005)(41300700001)(44832011)(8676002)(316002)(6666004)(70206006)(70586007)(5660300002)(4326008)(83380400001)(8936002)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2023 17:07:04.4354
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jul 2023 17:07:05.0254
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 449d302c-5e18-4264-6162-08db8f8d1131
+X-MS-Exchange-CrossTenant-Network-Message-Id: d2436211-d3d2-4a08-53ae-08db8f8d1197
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BN8NAM11FT112.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000EE31.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH8PR12MB6842
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5322
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-of_changeset_create_node() creates device node dynamically and attaches
-the newly created node to a changeset.
+Currently, in an overlay fdt fragment, it needs to specify the exact
+location in base DT. In another word, when the fdt fragment is generated,
+the base DT location for the fragment is already known.
 
-Expand of_changeset APIs to handle specific types of properties.
-    of_changeset_add_prop_string()
-    of_changeset_add_prop_string_array()
-    of_changeset_add_prop_u32_array()
+There is new use case that the base DT location is unknown when fdt
+fragment is generated. For example, the add-on device provide a fdt
+overlay with its firmware to describe its downstream devices. Because it
+is add-on device which can be plugged to different systems, its firmware
+will not be able to know the overlay location in base DT. Instead, the
+device driver will load the overlay fdt and apply it to base DT at runtime.
+In this case, of_overlay_fdt_apply() needs to be extended to specify
+the target node for device driver to apply overlay fdt.
+    int overlay_fdt_apply(..., struct device_node *base);
 
-Signed-off-by: Clément Léger <clement.leger@bootlin.com>
 Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
 ---
- drivers/of/dynamic.c  | 164 ++++++++++++++++++++++++++++++++++++++++++
- drivers/of/unittest.c |  19 ++++-
- include/linux/of.h    |  23 ++++++
- 3 files changed, 205 insertions(+), 1 deletion(-)
+ drivers/of/overlay.c  | 42 +++++++++++++++++++++++++++++++-----------
+ drivers/of/unittest.c |  3 ++-
+ include/linux/of.h    |  2 +-
+ 3 files changed, 34 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
-index e311d406b170..9259cebda4d6 100644
---- a/drivers/of/dynamic.c
-+++ b/drivers/of/dynamic.c
-@@ -487,6 +487,38 @@ struct device_node *__of_node_dup(const struct device_node *np,
- 	return NULL;
- }
- 
-+/**
-+ * of_changeset_create_node - Dynamically create a device node and attach to
-+ * a given changeset.
-+ *
-+ * @parent: Pointer to parent device node
-+ * @full_name: Node full name
-+ * @cset: Pointer to changeset
-+ *
-+ * Return: Pointer to the created device node or NULL in case of an error.
-+ */
-+struct device_node *of_changeset_create_node(struct device_node *parent,
-+					     const char *full_name,
-+					     struct of_changeset *cset)
-+{
-+	struct device_node *np;
-+	int ret;
-+
-+	np = __of_node_dup(NULL, full_name);
-+	if (!np)
-+		return NULL;
-+	np->parent = parent;
-+
-+	ret = of_changeset_attach_node(cset, np);
-+	if (ret) {
-+		of_node_put(np);
-+		return NULL;
-+	}
-+
-+	return np;
-+}
-+EXPORT_SYMBOL(of_changeset_create_node);
-+
- static void __of_changeset_entry_destroy(struct of_changeset_entry *ce)
+diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
+index 7feb643f1370..6f3ae30c878d 100644
+--- a/drivers/of/overlay.c
++++ b/drivers/of/overlay.c
+@@ -682,9 +682,11 @@ static int build_changeset(struct overlay_changeset *ovcs)
+  * 1) "target" property containing the phandle of the target
+  * 2) "target-path" property containing the path of the target
+  */
+-static struct device_node *find_target(struct device_node *info_node)
++static struct device_node *find_target(struct device_node *info_node,
++				       struct device_node *target_base)
  {
- 	if (ce->action == OF_RECONFIG_ATTACH_NODE &&
-@@ -960,3 +992,135 @@ int of_changeset_action(struct of_changeset *ocs, unsigned long action,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(of_changeset_action);
-+
-+static int of_changeset_add_prop_helper(struct of_changeset *ocs,
-+					struct device_node *np,
-+					const struct property *pp)
-+{
-+	struct property *new_pp;
-+	int ret;
-+
-+	new_pp = __of_prop_dup(pp, GFP_KERNEL);
-+	if (!new_pp)
-+		return -ENOMEM;
-+
-+	ret = of_changeset_add_property(ocs, np, new_pp);
-+	if (ret) {
-+		kfree(new_pp->name);
-+		kfree(new_pp->value);
-+		kfree(new_pp);
-+	}
-+
-+	return ret;
-+}
-+
-+/**
-+ * of_changeset_add_prop_string - Add a string property to a changeset
-+ *
-+ * @ocs:	changeset pointer
-+ * @np:		device node pointer
-+ * @prop_name:	name of the property to be added
-+ * @str:	pointer to null terminated string
-+ *
-+ * Create a string property and add it to a changeset.
-+ *
-+ * Return: 0 on success, a negative error value in case of an error.
-+ */
-+int of_changeset_add_prop_string(struct of_changeset *ocs,
-+				 struct device_node *np,
-+				 const char *prop_name, const char *str)
-+{
-+	struct property prop;
-+
-+	prop.name = (char *)prop_name;
-+	prop.length = strlen(str) + 1;
-+	prop.value = (void *)str;
-+
-+	return of_changeset_add_prop_helper(ocs, np, &prop);
-+}
-+EXPORT_SYMBOL_GPL(of_changeset_add_prop_string);
-+
-+/**
-+ * of_changeset_add_prop_string_array - Add a string list property to
-+ * a changeset
-+ *
-+ * @ocs:	changeset pointer
-+ * @np:		device node pointer
-+ * @prop_name:	name of the property to be added
-+ * @str_array:	pointer to an array of null terminated strings
-+ * @sz:		number of string array elements
-+ *
-+ * Create a string list property and add it to a changeset.
-+ *
-+ * Return: 0 on success, a negative error value in case of an error.
-+ */
-+int of_changeset_add_prop_string_array(struct of_changeset *ocs,
-+				       struct device_node *np,
-+				       const char *prop_name,
-+				       const char **str_array, size_t sz)
-+{
-+	struct property prop;
-+	int i, ret;
-+	char *vp;
-+
-+	prop.name = (char *)prop_name;
-+
-+	prop.length = 0;
-+	for (i = 0; i < sz; i++)
-+		prop.length += strlen(str_array[i]) + 1;
-+
-+	prop.value = kmalloc(prop.length, GFP_KERNEL);
-+	if (!prop.value)
-+		return -ENOMEM;
-+
-+	vp = prop.value;
-+	for (i = 0; i < sz; i++) {
-+		vp += snprintf(vp, (char *)prop.value + prop.length - vp, "%s",
-+			       str_array[i]) + 1;
-+	}
-+	ret = of_changeset_add_prop_helper(ocs, np, &prop);
-+	kfree(prop.value);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(of_changeset_add_prop_string_array);
-+
-+/**
-+ * of_changeset_add_prop_u32_array - Add a property of 32 bit integers
-+ * property to a changeset
-+ *
-+ * @ocs:	changeset pointer
-+ * @np:		device node pointer
-+ * @prop_name:	name of the property to be added
-+ * @array:	pointer to an array of 32 bit integers
-+ * @sz:		number of array elements
-+ *
-+ * Create a property of 32 bit integers and add it to a changeset.
-+ *
-+ * Return: 0 on success, a negative error value in case of an error.
-+ */
-+int of_changeset_add_prop_u32_array(struct of_changeset *ocs,
-+				    struct device_node *np,
-+				    const char *prop_name,
-+				    const u32 *array, size_t sz)
-+{
-+	struct property prop;
-+	__be32 *val;
-+	int i, ret;
-+
-+	val = kcalloc(sz, sizeof(__be32), GFP_KERNEL);
-+	if (!val)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < sz; i++)
-+		val[i] = cpu_to_be32(array[i]);
-+	prop.name = (char *)prop_name;
-+	prop.length = sizeof(u32) * sz;
-+	prop.value = (void *)val;
-+
-+	ret = of_changeset_add_prop_helper(ocs, np, &prop);
-+	kfree(val);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(of_changeset_add_prop_u32_array);
+ 	struct device_node *node;
++	char *target_path;
+ 	const char *path;
+ 	u32 val;
+ 	int ret;
+@@ -700,10 +702,23 @@ static struct device_node *find_target(struct device_node *info_node)
+ 
+ 	ret = of_property_read_string(info_node, "target-path", &path);
+ 	if (!ret) {
+-		node =  of_find_node_by_path(path);
+-		if (!node)
+-			pr_err("find target, node: %pOF, path '%s' not found\n",
+-			       info_node, path);
++		if (target_base) {
++			target_path = kasprintf(GFP_KERNEL, "%pOF%s", target_base, path);
++			if (!target_path)
++				return NULL;
++			node = of_find_node_by_path(target_path);
++			if (!node) {
++				pr_err("find target, node: %pOF, path '%s' not found\n",
++				       info_node, target_path);
++			}
++			kfree(target_path);
++		} else {
++			node =  of_find_node_by_path(path);
++			if (!node) {
++				pr_err("find target, node: %pOF, path '%s' not found\n",
++				       info_node, path);
++			}
++		}
+ 		return node;
+ 	}
+ 
+@@ -715,6 +730,7 @@ static struct device_node *find_target(struct device_node *info_node)
+ /**
+  * init_overlay_changeset() - initialize overlay changeset from overlay tree
+  * @ovcs:		Overlay changeset to build
++ * @target_base:	Point to the target node to apply overlay
+  *
+  * Initialize @ovcs.  Populate @ovcs->fragments with node information from
+  * the top level of @overlay_root.  The relevant top level nodes are the
+@@ -725,7 +741,8 @@ static struct device_node *find_target(struct device_node *info_node)
+  * detected in @overlay_root.  On error return, the caller of
+  * init_overlay_changeset() must call free_overlay_changeset().
+  */
+-static int init_overlay_changeset(struct overlay_changeset *ovcs)
++static int init_overlay_changeset(struct overlay_changeset *ovcs,
++				  struct device_node *target_base)
+ {
+ 	struct device_node *node, *overlay_node;
+ 	struct fragment *fragment;
+@@ -786,7 +803,7 @@ static int init_overlay_changeset(struct overlay_changeset *ovcs)
+ 
+ 		fragment = &fragments[cnt];
+ 		fragment->overlay = overlay_node;
+-		fragment->target = find_target(node);
++		fragment->target = find_target(node, target_base);
+ 		if (!fragment->target) {
+ 			of_node_put(fragment->overlay);
+ 			ret = -EINVAL;
+@@ -877,6 +894,7 @@ static void free_overlay_changeset(struct overlay_changeset *ovcs)
+  *
+  * of_overlay_apply() - Create and apply an overlay changeset
+  * @ovcs:	overlay changeset
++ * @base:	point to the target node to apply overlay
+  *
+  * Creates and applies an overlay changeset.
+  *
+@@ -900,7 +918,8 @@ static void free_overlay_changeset(struct overlay_changeset *ovcs)
+  * the caller of of_overlay_apply() must call free_overlay_changeset().
+  */
+ 
+-static int of_overlay_apply(struct overlay_changeset *ovcs)
++static int of_overlay_apply(struct overlay_changeset *ovcs,
++			    struct device_node *base)
+ {
+ 	int ret = 0, ret_revert, ret_tmp;
+ 
+@@ -908,7 +927,7 @@ static int of_overlay_apply(struct overlay_changeset *ovcs)
+ 	if (ret)
+ 		goto out;
+ 
+-	ret = init_overlay_changeset(ovcs);
++	ret = init_overlay_changeset(ovcs, base);
+ 	if (ret)
+ 		goto out;
+ 
+@@ -952,6 +971,7 @@ static int of_overlay_apply(struct overlay_changeset *ovcs)
+  * @overlay_fdt:	pointer to overlay FDT
+  * @overlay_fdt_size:	number of bytes in @overlay_fdt
+  * @ret_ovcs_id:	pointer for returning created changeset id
++ * @base:		pointer for the target node to apply overlay
+  *
+  * Creates and applies an overlay changeset.
+  *
+@@ -967,7 +987,7 @@ static int of_overlay_apply(struct overlay_changeset *ovcs)
+  */
+ 
+ int of_overlay_fdt_apply(const void *overlay_fdt, u32 overlay_fdt_size,
+-			 int *ret_ovcs_id)
++			 int *ret_ovcs_id, struct device_node *base)
+ {
+ 	void *new_fdt;
+ 	void *new_fdt_align;
+@@ -1037,7 +1057,7 @@ int of_overlay_fdt_apply(const void *overlay_fdt, u32 overlay_fdt_size,
+ 	}
+ 	ovcs->overlay_mem = overlay_mem;
+ 
+-	ret = of_overlay_apply(ovcs);
++	ret = of_overlay_apply(ovcs, base);
+ 	/*
+ 	 * If of_overlay_apply() error, calling free_overlay_changeset() may
+ 	 * result in a memory leak if the apply partly succeeded, so do NOT
 diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
-index a406a12eb208..d2b286d32db0 100644
+index d2b286d32db0..7bff6c4cb653 100644
 --- a/drivers/of/unittest.c
 +++ b/drivers/of/unittest.c
-@@ -802,7 +802,9 @@ static void __init of_unittest_changeset(void)
- 	struct property *ppname_n21, pname_n21 = { .name = "name", .length = 3, .value = "n21" };
- 	struct property *ppupdate, pupdate = { .name = "prop-update", .length = 5, .value = "abcd" };
- 	struct property *ppremove;
--	struct device_node *n1, *n2, *n21, *nchangeset, *nremove, *parent, *np;
-+	struct device_node *n1, *n2, *n21, *n22, *nchangeset, *nremove, *parent, *np;
-+	static const char * const str_array[] = { "str1", "str2", "str3" };
-+	const u32 u32_array[] = { 1, 2, 3 };
- 	struct of_changeset chgset;
+@@ -3478,7 +3478,8 @@ static int __init overlay_data_apply(const char *overlay_name, int *ovcs_id)
+ 	if (!size)
+ 		pr_err("no overlay data for %s\n", overlay_name);
  
- 	n1 = __of_node_dup(NULL, "n1");
-@@ -857,6 +859,17 @@ static void __init of_unittest_changeset(void)
- 	unittest(!of_changeset_add_property(&chgset, parent, ppadd), "fail add prop prop-add\n");
- 	unittest(!of_changeset_update_property(&chgset, parent, ppupdate), "fail update prop\n");
- 	unittest(!of_changeset_remove_property(&chgset, parent, ppremove), "fail remove prop\n");
-+	n22 = of_changeset_create_node(n2, "n22", &chgset);
-+	unittest(n22, "fail create n22\n");
-+	unittest(!of_changeset_add_prop_string(&chgset, n22, "prop-str", "abcd"),
-+		 "fail add prop prop-str");
-+	unittest(!of_changeset_add_prop_string_array(&chgset, n22, "prop-str-array",
-+						     (const char **)str_array,
-+						     ARRAY_SIZE(str_array)),
-+		 "fail add prop prop-str-array");
-+	unittest(!of_changeset_add_prop_u32_array(&chgset, n22, "prop-u32-array",
-+						  u32_array, ARRAY_SIZE(u32_array)),
-+		 "fail add prop prop-u32-array");
- 
- 	unittest(!of_changeset_apply(&chgset), "apply failed\n");
- 
-@@ -866,6 +879,9 @@ static void __init of_unittest_changeset(void)
- 	unittest((np = of_find_node_by_path("/testcase-data/changeset/n2/n21")),
- 		 "'%pOF' not added\n", n21);
- 	of_node_put(np);
-+	unittest((np = of_find_node_by_path("/testcase-data/changeset/n2/n22")),
-+		 "'%pOF' not added\n", n22);
-+	of_node_put(np);
- 
- 	unittest(!of_changeset_revert(&chgset), "revert failed\n");
- 
-@@ -874,6 +890,7 @@ static void __init of_unittest_changeset(void)
- 	of_node_put(n1);
- 	of_node_put(n2);
- 	of_node_put(n21);
-+	of_node_put(n22);
- #endif
- }
- 
+-	ret = of_overlay_fdt_apply(info->dtbo_begin, size, &info->ovcs_id);
++	ret = of_overlay_fdt_apply(info->dtbo_begin, size, &info->ovcs_id,
++				   NULL);
+ 	if (ovcs_id)
+ 		*ovcs_id = info->ovcs_id;
+ 	if (ret < 0)
 diff --git a/include/linux/of.h b/include/linux/of.h
-index 6ecde0515677..82d0a476ec75 100644
+index 82d0a476ec75..5fe5257a7ab7 100644
 --- a/include/linux/of.h
 +++ b/include/linux/of.h
-@@ -1580,6 +1580,29 @@ static inline int of_changeset_update_property(struct of_changeset *ocs,
- {
- 	return of_changeset_action(ocs, OF_RECONFIG_UPDATE_PROPERTY, np, prop);
- }
-+
-+struct device_node *of_changeset_create_node(struct device_node *parent,
-+					     const char *full_name,
-+					     struct of_changeset *cset);
-+int of_changeset_add_prop_string(struct of_changeset *ocs,
-+				 struct device_node *np,
-+				 const char *prop_name, const char *str);
-+int of_changeset_add_prop_string_array(struct of_changeset *ocs,
-+				       struct device_node *np,
-+				       const char *prop_name,
-+				       const char **str_array, size_t sz);
-+int of_changeset_add_prop_u32_array(struct of_changeset *ocs,
-+				    struct device_node *np,
-+				    const char *prop_name,
-+				    const u32 *array, size_t sz);
-+static inline int of_changeset_add_prop_u32(struct of_changeset *ocs,
-+					    struct device_node *np,
-+					    const char *prop_name,
-+					    const u32 val)
-+{
-+	return of_changeset_add_prop_u32_array(ocs, np, prop_name, &val, 1);
-+}
-+
- #else /* CONFIG_OF_DYNAMIC */
- static inline int of_reconfig_notifier_register(struct notifier_block *nb)
- {
+@@ -1668,7 +1668,7 @@ struct of_overlay_notify_data {
+ #ifdef CONFIG_OF_OVERLAY
+ 
+ int of_overlay_fdt_apply(const void *overlay_fdt, u32 overlay_fdt_size,
+-			 int *ovcs_id);
++			 int *ovcs_id, struct device_node *target_base);
+ int of_overlay_remove(int *ovcs_id);
+ int of_overlay_remove_all(void);
+ 
 -- 
 2.34.1
 
