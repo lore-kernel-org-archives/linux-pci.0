@@ -2,52 +2,56 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C44C4C001DF
-	for <linux-pci@archiver.kernel.org>; Fri, 28 Jul 2023 13:14:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B6A6C001DE
+	for <linux-pci@archiver.kernel.org>; Fri, 28 Jul 2023 13:14:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235827AbjG1NOJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 28 Jul 2023 09:14:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37718 "EHLO
+        id S236364AbjG1NOO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 28 Jul 2023 09:14:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234994AbjG1NOI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Jul 2023 09:14:08 -0400
-Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.154.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E5923A9B
-        for <linux-pci@vger.kernel.org>; Fri, 28 Jul 2023 06:14:07 -0700 (PDT)
+        with ESMTP id S233825AbjG1NOL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Jul 2023 09:14:11 -0400
+Received: from esa.microchip.iphmx.com (esa.microchip.iphmx.com [68.232.153.233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B93623A96
+        for <linux-pci@vger.kernel.org>; Fri, 28 Jul 2023 06:14:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1690550047; x=1722086047;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=z0fwAPNzFg8lhlVnwCKJCYD81rl4C9MhpAaVh5wSuOo=;
-  b=fBvmB3B7Ib/1ukZXjvT5aiDvDVqgITxyettAVEzF3aG/YEmjd3Z0g6kL
-   kG1ABDU3Cwz2kWeIwTuZYVtLUJGPKGkphe3gVPA1TuZBE37VulNpVxpN3
-   zjxcJxaiUzucW3YvVsBvqwv8eFHP3yabPcCQp5ltlbtR16tGVocoF38po
-   G8Y1r6AOz/JtRSeisKLDXWWLQqMUl8Hp6iDw/3qioe/MzjA23JnCfSazy
-   sODjf8riHw+fO4s8jnSgRzrs1Wb5XkumaTJlr9RZQGXRuCCtz+60tmI84
-   dCHk5bdPAo6Dedwf2658Q7ruwCBKDEX6kEpOX/zEZgHi9fZUwTKWhYD9b
+  t=1690550050; x=1722086050;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=1wJYS/t9aNrnjqOOsSV5jOkrGngLW9L3uxJDr/wqxEA=;
+  b=eZJQHQXfjcaaqIxMdrOvNzqLk6RutHC7CshQrjvsjTNrls9NY9lZOiWi
+   Y5pzWrOalzEu1aaRUYN9hk6rSqh6nRwu0OR/es3bEY/6uYsRv0Apwt6J9
+   B38GER//bZQ9r3SKr48zaQhQVqMwfuOZBGxptJLkTsh+HUpsHcOus4f0T
+   7MdbgqX2zQyQYiTDEcMeiqsNw8cVQizMiF3kLmS/z7UyxXEK6G6BP6Mrr
+   3DA1viRxqRBbzy15Bgw6fLztE/sqLLFHhf/lfQ+2pR7/IwuyxDUq0tBzS
+   d/EYVIBwDf23jb9mBmfuWCSAAhv+myr8wKN+RZBVudg5mLkvhgKkT55Oz
    w==;
 X-IronPort-AV: E=Sophos;i="6.01,237,1684825200"; 
-   d="scan'208";a="222752993"
+   d="scan'208";a="238431506"
 X-Amp-Result: SKIPPED(no attachment in message)
 Received: from unknown (HELO email.microchip.com) ([170.129.1.10])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Jul 2023 06:14:07 -0700
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Jul 2023 06:14:10 -0700
 Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.21; Fri, 28 Jul 2023 06:14:05 -0700
+ 15.1.2507.21; Fri, 28 Jul 2023 06:14:10 -0700
 Received: from daire-X570.amer.actel.com (10.10.115.15) by
  chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server id
- 15.1.2507.21 via Frontend Transport; Fri, 28 Jul 2023 06:14:04 -0700
+ 15.1.2507.21 via Frontend Transport; Fri, 28 Jul 2023 06:14:08 -0700
 From:   <daire.mcnamara@microchip.com>
 To:     <conor.dooley@microchip.com>, <lpieralisi@kernel.org>,
         <kw@linux.com>, <robh@kernel.org>, <bhelgaas@google.com>,
         <linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>
-CC:     Daire McNamara <daire.mcnamara@microchip.com>
-Subject: [PATCH v3 0/7] PCI: microchip: Fixes and clean-ups
-Date:   Fri, 28 Jul 2023 14:13:54 +0100
-Message-ID: <20230728131401.1615724-1-daire.mcnamara@microchip.com>
+CC:     Daire McNamara <daire.mcnamara@microchip.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Subject: [PATCH v3 2/7] PCI: microchip: Enable building driver as a module
+Date:   Fri, 28 Jul 2023 14:13:56 +0100
+Message-ID: <20230728131401.1615724-3-daire.mcnamara@microchip.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230728131401.1615724-1-daire.mcnamara@microchip.com>
+References: <20230728131401.1615724-1-daire.mcnamara@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
@@ -57,59 +61,45 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Daire McNamara <daire.mcnamara@microchip.com>
 
-This patch series contains fixes and clean-ups for the Microchip PolarFire SoC PCIe driver
+Enable building driver as a module. The expected use case is the
+driver is built as a module, is installed when needed, and cannot be
+removed once installed.
 
-These patches are extracted from the link below to separate them from the outbound and inbound
-range handling which is taking considerable time.
-Link: https://lore.kernel.org/linux-riscv/20230111125323.1911373-1-daire.mcnamara@microchip.com/
+The driver has .suppress_bind_attrs set to true.
 
-Resending with correct e-mail address list
+Link: https://lore.kernel.org/linux-pci/87y1wgbah8.wl-maz@kernel.org/
+Suggested-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+---
+ drivers/pci/controller/Kconfig               | 2 +-
+ drivers/pci/controller/pcie-microchip-host.c | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-These patches are regenerated on v6.5-rc3.
-
-Main changes from v2:
-- Reworked "Gather MSI information..." as suggested by Bjorn
-- merged 'Gather MSI Information..." and "Rename and refactor" as suggested by Bjorn
-- Re-generated on v6.5-rc3
-
-Main Changes from v1:
-- Dropped "Remove cast warning for devm_add_action_or_reset()". This
-  has been overtaken by a patch series from Krzysztof Wilczynski.
-- Improved the comment for "Enable building driver as a module" to
-  clarify what enables building the driver as a module.
-- Split "Gather MSI information from hardware config registers",
-  for clarity, into:
-   - "Gather MSI information from hardware config registers" purely
-      changing the of source of MSI-related information (Num MSIs and
-      MSI address) from #defines (which can be incorrect) to FPGA
-      configuration registers (which is the ultimate source of truth),
-      and a
-   - "Rename and refactor ..." patch as a function's code is now clearly
-      unrelated to its current name.
-
-cc: Conor Dooley <conor.dooley@microchip.com>
-cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-cc: "Krzysztof Wilczyński" <kw@linux.com>
-cc: Rob Herring <robh@kernel.org>
-cc: Bjorn Helgaas <bhelgaas@google.com>
-cc: linux-riscv@lists.infradead.org
-cc: linux-pci@vger.kernel.org
-
-Daire McNamara (8):
-  PCI: microchip: Correct the DED and SEC interrupt bit offsets
-  PCI: microchip: Enable building driver as a module
-  PCI: microchip: Align register, offset, and mask names with hw docs
-  PCI: microchip: Enable event handlers to access bridge and ctrl ptrs
-  PCI: microchip: Clean up initialisation of interrupts
-  PCI: microchip: Gather MSI information from hardware config registers
-  PCI: microchip: Re-partition code between probe() and init()
-
- drivers/pci/controller/Kconfig               |   2 +-
- drivers/pci/controller/pcie-microchip-host.c | 393 +++++++++++--------
- 2 files changed, 233 insertions(+), 162 deletions(-)
-
-
-base-commit: 6eaae198076080886b9e7d57f4ae06fa782f90ef
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 8d49bad7f847..f4ad0e9cca45 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -217,7 +217,7 @@ config PCIE_MT7621
+ 	  This selects a driver for the MediaTek MT7621 PCIe Controller.
+ 
+ config PCIE_MICROCHIP_HOST
+-	bool "Microchip AXI PCIe controller"
++	tristate "Microchip AXI PCIe controller"
+ 	depends on PCI_MSI && OF
+ 	select PCI_HOST_COMMON
+ 	help
+diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/pcie-microchip-host.c
+index dd5245904c87..5c89caaab8c9 100644
+--- a/drivers/pci/controller/pcie-microchip-host.c
++++ b/drivers/pci/controller/pcie-microchip-host.c
+@@ -1135,5 +1135,6 @@ static struct platform_driver mc_pcie_driver = {
+ };
+ 
+ builtin_platform_driver(mc_pcie_driver);
++MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Microchip PCIe host controller driver");
+ MODULE_AUTHOR("Daire McNamara <daire.mcnamara@microchip.com>");
 -- 
 2.25.1
 
