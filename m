@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8727C41513
-	for <linux-pci@archiver.kernel.org>; Mon, 31 Jul 2023 16:57:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE612C001DC
+	for <linux-pci@archiver.kernel.org>; Mon, 31 Jul 2023 16:57:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233627AbjGaQ5c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 Jul 2023 12:57:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54776 "EHLO
+        id S233591AbjGaQ5d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 Jul 2023 12:57:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54770 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233615AbjGaQ5a (ORCPT
+        with ESMTP id S233599AbjGaQ5a (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2023 12:57:30 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A5D9173D;
-        Mon, 31 Jul 2023 09:57:29 -0700 (PDT)
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7C031735;
+        Mon, 31 Jul 2023 09:57:28 -0700 (PDT)
 Received: from jupiter.universe (dyndsl-091-248-210-008.ewe-ip-backbone.de [91.248.210.8])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits))
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 3B76A6607120;
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 2AEFA660710D;
         Mon, 31 Jul 2023 17:57:27 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
         s=mail; t=1690822647;
-        bh=GALTLk1kp81TWDcsFroSmRcnp70s2ikSUk1HG3RlfRQ=;
+        bh=P9l17piVJUVOMtrFDWF3XbJJjzW9YfC02cUrfUQr3Dw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=m8o6k8EeKx1zZBOOe15TBm+kY3BiWkBrpBe1QCi3B2ASi0BP+YRrlZo/DcpQAE6DD
-         zUKWnwga9ntBIeWnxw2JBlQT61uR3qyMB2u/M+A1DqvFOA546BpJHDSAqTtd+tcR2B
-         qbWHBv/YwJ2jCoI6wMSLakWWUr8QReeq9qzAHhuhyAyPO5rCRxPw+34zmwxloE98tW
-         R/hQv61gjw4lpnZyOFIpQeVDM94FvsfEVs7FVjnasnwkSuQKTjT/3R3iPt+dcpbWnn
-         jplEbS7299jwVwdmWe7jb0mOhe5KT572ytQ+tgQIp8GlQheF3dHc1UvZpL+IZDSmyJ
-         pB73OuR0dPTPw==
+        b=Cq4AIz0NCArSne8qWA437xRyJwNao1oyJKvMT2bmmMbJ4iIwZxwb+VqviLOVntxA1
+         utncYdgkMoaPPJZXTiJ/GBP/OIoBipVdwfTmM5F+P/Gy1imdPHSmtiQW/AH5FPdvKJ
+         4RipzABmbg3wFy9kImOZN0FRmSIXov1SPQ7k+5R4145i258RlXj204487wUikY9spS
+         CPMpAP19BR48pETqGh4Gz1LGc2aB+tTFtPpB3NjJBHzYtvA6VZqy/0aKhL3XK0OUEL
+         jsWYA+hQqJxPU3efncwYHdSFqaL7F3vI4zJ8NNRc+Sf2iWaSqmoaUZRg0RTXc2JUyw
+         9q0z9aiH/VxdQ==
 Received: by jupiter.universe (Postfix, from userid 1000)
-        id 2E1184800B0; Mon, 31 Jul 2023 18:57:25 +0200 (CEST)
+        id 28DFA4800A2; Mon, 31 Jul 2023 18:57:25 +0200 (CEST)
 From:   Sebastian Reichel <sebastian.reichel@collabora.com>
 To:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
         Serge Semin <fancer.lancer@gmail.com>
@@ -50,9 +50,9 @@ Cc:     Jingoo Han <jingoohan1@gmail.com>,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         Sebastian Reichel <sebastian.reichel@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v4 4/5] dt-bindings: PCI: dwc: rockchip: Add missing legacy-interrupt-controller
-Date:   Mon, 31 Jul 2023 18:57:22 +0200
-Message-Id: <20230731165723.53069-5-sebastian.reichel@collabora.com>
+Subject: [PATCH v4 1/5] dt-bindings: PCI: dwc: improve msi handling
+Date:   Mon, 31 Jul 2023 18:57:19 +0200
+Message-Id: <20230731165723.53069-2-sebastian.reichel@collabora.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230731165723.53069-1-sebastian.reichel@collabora.com>
 References: <20230731165723.53069-1-sebastian.reichel@collabora.com>
@@ -62,66 +62,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rockchip RK356x and RK3588 handle legacy interrupts via a ganged
-interrupts. The RK356x DT implements this via a sub-node named
-"legacy-interrupt-controller", just like a couple of other PCIe
-implementations. This adds proper documentation for this and updates
-the example to avoid regressions.
+Allow missing "msi" interrupt, iff the node has a "msi-map" property.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
 Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 ---
- .../bindings/pci/rockchip-dw-pcie.yaml        | 30 +++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml        | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-index ad9954f7fe02..1ae8dcfa072c 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-@@ -93,6 +93,28 @@ properties:
-       - const: legacy
-       - const: err
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 1a83f0f65f19..d2b4fb8f6dcd 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -25,6 +25,15 @@ select:
+ allOf:
+   - $ref: /schemas/pci/pci-bus.yaml#
+   - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
++  - if:
++      not:
++        required:
++          - msi-map
++    then:
++      properties:
++        interrupt-names:
++          contains:
++            const: msi
  
-+  legacy-interrupt-controller:
-+    description: Interrupt controller node for handling legacy PCI interrupts.
-+    type: object
-+    additionalProperties: false
-+    properties:
-+      "#address-cells":
-+        const: 0
-+
-+      "#interrupt-cells":
-+        const: 1
-+
-+      interrupt-controller: true
-+
-+      interrupts:
-+        items:
-+          - description: combined legacy interrupt
-+    required:
-+      - "#address-cells"
-+      - "#interrupt-cells"
-+      - interrupt-controller
-+      - interrupts
-+
-   msi-map: true
+ properties:
+   reg:
+@@ -193,9 +202,6 @@ properties:
+           oneOf:
+             - description: See native "app" IRQ for details
+               enum: [ intr ]
+-    allOf:
+-      - contains:
+-          const: msi
  
-   num-lanes: true
-@@ -180,6 +202,14 @@ examples:
-             reset-names = "pipe";
-             #address-cells = <3>;
-             #size-cells = <2>;
-+
-+            legacy-interrupt-controller {
-+                interrupt-controller;
-+                #address-cells = <0>;
-+                #interrupt-cells = <1>;
-+                interrupt-parent = <&gic>;
-+                interrupts = <GIC_SPI 72 IRQ_TYPE_EDGE_RISING>;
-+            };
-         };
-     };
- ...
+ additionalProperties: true
+ 
 -- 
 2.40.1
 
