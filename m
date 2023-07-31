@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE612C001DC
-	for <linux-pci@archiver.kernel.org>; Mon, 31 Jul 2023 16:57:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75C84C04E69
+	for <linux-pci@archiver.kernel.org>; Mon, 31 Jul 2023 16:57:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233591AbjGaQ5d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 Jul 2023 12:57:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54770 "EHLO
+        id S233635AbjGaQ5e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 Jul 2023 12:57:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54774 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233599AbjGaQ5a (ORCPT
+        with ESMTP id S233616AbjGaQ5a (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2023 12:57:30 -0400
 Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7C031735;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F10DC1722;
         Mon, 31 Jul 2023 09:57:28 -0700 (PDT)
 Received: from jupiter.universe (dyndsl-091-248-210-008.ewe-ip-backbone.de [91.248.210.8])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
         (No client certificate requested)
         (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 2AEFA660710D;
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 2F0296607114;
         Mon, 31 Jul 2023 17:57:27 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
         s=mail; t=1690822647;
-        bh=P9l17piVJUVOMtrFDWF3XbJJjzW9YfC02cUrfUQr3Dw=;
+        bh=LndBn2sfnnYSo4boXhNYyWPRDUxKhkkg9Nz5WzmEHnA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cq4AIz0NCArSne8qWA437xRyJwNao1oyJKvMT2bmmMbJ4iIwZxwb+VqviLOVntxA1
-         utncYdgkMoaPPJZXTiJ/GBP/OIoBipVdwfTmM5F+P/Gy1imdPHSmtiQW/AH5FPdvKJ
-         4RipzABmbg3wFy9kImOZN0FRmSIXov1SPQ7k+5R4145i258RlXj204487wUikY9spS
-         CPMpAP19BR48pETqGh4Gz1LGc2aB+tTFtPpB3NjJBHzYtvA6VZqy/0aKhL3XK0OUEL
-         jsWYA+hQqJxPU3efncwYHdSFqaL7F3vI4zJ8NNRc+Sf2iWaSqmoaUZRg0RTXc2JUyw
-         9q0z9aiH/VxdQ==
+        b=aI2l1FBFfcyJHLaQlHGeCipptK9LqMUcVy0e7kkKiUYUXyfwej1qMIbw1BRKkDY9v
+         HMj88boZVS/DgnkK8Tg2YYuHRLgpzv8sIGCJckn9ved89NPoEjkrBpto4oCDh287+3
+         ifUeZwhp2maNO6jLqVevwajRhXHTw6bSxsUcn7Bjr9Ynia5nta8yBuHwFlFSz2TD7h
+         Afo2++kjTgkMSnwbrg1u1xDsFDgYdlIV6hHNQkfBxZxz2LoddBltKruSkvozE6D0eZ
+         2wpuKUyNbvwhDO7SizIfdo81gHrg5XqnZ0wrNAO2l8oUocgbdqZfTPQtNKTffZjcOL
+         TIlpqk8Og+C7w==
 Received: by jupiter.universe (Postfix, from userid 1000)
-        id 28DFA4800A2; Mon, 31 Jul 2023 18:57:25 +0200 (CEST)
+        id 2C7214800A9; Mon, 31 Jul 2023 18:57:25 +0200 (CEST)
 From:   Sebastian Reichel <sebastian.reichel@collabora.com>
 To:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
         Serge Semin <fancer.lancer@gmail.com>
@@ -50,9 +50,9 @@ Cc:     Jingoo Han <jingoohan1@gmail.com>,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         Sebastian Reichel <sebastian.reichel@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v4 1/5] dt-bindings: PCI: dwc: improve msi handling
-Date:   Mon, 31 Jul 2023 18:57:19 +0200
-Message-Id: <20230731165723.53069-2-sebastian.reichel@collabora.com>
+Subject: [PATCH v4 3/5] dt-bindings: PCI: dwc: rockchip: Use generic binding
+Date:   Mon, 31 Jul 2023 18:57:21 +0200
+Message-Id: <20230731165723.53069-4-sebastian.reichel@collabora.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20230731165723.53069-1-sebastian.reichel@collabora.com>
 References: <20230731165723.53069-1-sebastian.reichel@collabora.com>
@@ -62,40 +62,48 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Allow missing "msi" interrupt, iff the node has a "msi-map" property.
+Use the generic binding for Rockchip. This should either be
+ignored/dropped or squashed into the previous commit.
 
 Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
 ---
- .../devicetree/bindings/pci/snps,dw-pcie.yaml        | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml | 3 +--
+ Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml     | 6 +++++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-index 1a83f0f65f19..d2b4fb8f6dcd 100644
---- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
-@@ -25,6 +25,15 @@ select:
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+index 7836b9a5547c..ad9954f7fe02 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+@@ -17,8 +17,7 @@ description: |+
+   snps,dw-pcie.yaml.
+ 
  allOf:
-   - $ref: /schemas/pci/pci-bus.yaml#
-   - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
-+  - if:
-+      not:
-+        required:
-+          - msi-map
-+    then:
-+      properties:
-+        interrupt-names:
-+          contains:
-+            const: msi
+-  - $ref: /schemas/pci/pci-bus.yaml#
+-  - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
  
  properties:
-   reg:
-@@ -193,9 +202,6 @@ properties:
+   compatible:
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index d2b4fb8f6dcd..8bbdeb8821f8 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -196,12 +196,16 @@ properties:
+             Status register (the event is supposed to be unmasked in the
+             Link Control register).
+           const: bw_mg
++        - description:
++            Combined Legacy A/B/C/D interrupt signal. See "^int(a|b|c|d)$" for
++            details.
++          const: legacy
+         - description:
+             Vendor-specific IRQ names. Consider using the generic names above
+             for new bindings.
            oneOf:
              - description: See native "app" IRQ for details
-               enum: [ intr ]
--    allOf:
--      - contains:
--          const: msi
+-              enum: [ intr ]
++              enum: [ intr, sys, pmc, msg, err ]
  
  additionalProperties: true
  
