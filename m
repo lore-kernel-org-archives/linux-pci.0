@@ -2,37 +2,37 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C131C04FE0
-	for <linux-pci@archiver.kernel.org>; Mon, 31 Jul 2023 16:57:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8727C41513
+	for <linux-pci@archiver.kernel.org>; Mon, 31 Jul 2023 16:57:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233617AbjGaQ5a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 Jul 2023 12:57:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54752 "EHLO
+        id S233627AbjGaQ5c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 Jul 2023 12:57:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233591AbjGaQ53 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2023 12:57:29 -0400
-Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A922E1729;
-        Mon, 31 Jul 2023 09:57:28 -0700 (PDT)
+        with ESMTP id S233615AbjGaQ5a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2023 12:57:30 -0400
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A5D9173D;
+        Mon, 31 Jul 2023 09:57:29 -0700 (PDT)
 Received: from jupiter.universe (dyndsl-091-248-210-008.ewe-ip-backbone.de [91.248.210.8])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits))
         (No client certificate requested)
         (Authenticated sender: sre)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id 154256606FCD;
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 3B76A6607120;
         Mon, 31 Jul 2023 17:57:27 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
         s=mail; t=1690822647;
-        bh=6bj7q3XOaZvPQ3D5Rpuxi1xUU41U8fTcdodRo9gr6cE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=IApEo06CLoOTI/+bDpJ3jlireiem32kItGql8+F4MK6pufskhhq3WdFUR8SmKvKPk
-         s4QgT45kZvAvV984+0JWSFthWTHDx7HKAztaAE6Tbr6H8uZ6rJo/bwS3asLS8/i2/I
-         A/MuaptY26x6o6KPihalOQc1wKOvDUnTZfALpdA+gq1lZQOlaSyC62hDr4KK9nYADm
-         yT02J8Omgsbf/1G14+Yuo3BTfqB5GsGb5PJ1DCSSV2i6eBzSAXA2kfU4iHp0TnGCvf
-         Uq2r2xTz9ohyZUVj5KtYjyBxawoSuTs9jjrAvsBWu+/RjHQ4hGgtxu7Op/B5EB1fGJ
-         PkCDHhpXQH6eA==
+        bh=GALTLk1kp81TWDcsFroSmRcnp70s2ikSUk1HG3RlfRQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=m8o6k8EeKx1zZBOOe15TBm+kY3BiWkBrpBe1QCi3B2ASi0BP+YRrlZo/DcpQAE6DD
+         zUKWnwga9ntBIeWnxw2JBlQT61uR3qyMB2u/M+A1DqvFOA546BpJHDSAqTtd+tcR2B
+         qbWHBv/YwJ2jCoI6wMSLakWWUr8QReeq9qzAHhuhyAyPO5rCRxPw+34zmwxloE98tW
+         R/hQv61gjw4lpnZyOFIpQeVDM94FvsfEVs7FVjnasnwkSuQKTjT/3R3iPt+dcpbWnn
+         jplEbS7299jwVwdmWe7jb0mOhe5KT572ytQ+tgQIp8GlQheF3dHc1UvZpL+IZDSmyJ
+         pB73OuR0dPTPw==
 Received: by jupiter.universe (Postfix, from userid 1000)
-        id 274C9480099; Mon, 31 Jul 2023 18:57:25 +0200 (CEST)
+        id 2E1184800B0; Mon, 31 Jul 2023 18:57:25 +0200 (CEST)
 From:   Sebastian Reichel <sebastian.reichel@collabora.com>
 To:     linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
         Serge Semin <fancer.lancer@gmail.com>
@@ -50,71 +50,78 @@ Cc:     Jingoo Han <jingoohan1@gmail.com>,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         Sebastian Reichel <sebastian.reichel@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v4 0/5] RK3588 PCIe2 support
-Date:   Mon, 31 Jul 2023 18:57:18 +0200
-Message-Id: <20230731165723.53069-1-sebastian.reichel@collabora.com>
+Subject: [PATCH v4 4/5] dt-bindings: PCI: dwc: rockchip: Add missing legacy-interrupt-controller
+Date:   Mon, 31 Jul 2023 18:57:22 +0200
+Message-Id: <20230731165723.53069-5-sebastian.reichel@collabora.com>
 X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230731165723.53069-1-sebastian.reichel@collabora.com>
+References: <20230731165723.53069-1-sebastian.reichel@collabora.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Rockchip RK356x and RK3588 handle legacy interrupts via a ganged
+interrupts. The RK356x DT implements this via a sub-node named
+"legacy-interrupt-controller", just like a couple of other PCIe
+implementations. This adds proper documentation for this and updates
+the example to avoid regressions.
 
-This adds PCIe v2 support for RK3588. The series has been tested with
-the onboard RTL8125 network card on Rockchip RK3588 EVB1 (&pcie2x1l1)
-and Radxa Rock 5B (&pcie2x1l2).
+Reviewed-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+---
+ .../bindings/pci/rockchip-dw-pcie.yaml        | 30 +++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-Changes since v3:
- * https://lore.kernel.org/all/20230717172651.64324-1-sebastian.reichel@collabora.com/
- * Remove unneeded quotes in patch 1 (msi handling)
- * Update patch description of patch 2 (interrupt names) adding information
-   about Rockchip specific parts
-
-Changes since v2:
- * https://lore.kernel.org/all/20230713171851.73052-1-sebastian.reichel@collabora.com/
- * Removed num-ib-windows/num-ob-windows/num-viewport from DT
- * Added patch making 'msi' irq optional, if 'msi-map' property is available
- * Updated binding according two discussion with Serge Semin, I provided two
-   options by adding one extra patch that should be squashed into the main
-   one or dropped depending on preferences from DT binding  maintainers.
- * Collected Reviewed-by/Tested-by from Jagan Teki
-
-Changes since v1:
- * https://lore.kernel.org/all/20230616170022.76107-1-sebastian.reichel@collabora.com/
- * Dropped patch adding 'RK3588' (queued by Rob)
- * Updated patch adding legacy-interrupt-controller according to comments
-   from Rob and Serge
-    - added missing additionalProperties: false
-    - added all properties to new required property
-    - removed useless quotes around interrupt-controller
-    - added Rob's Reviewed-by
- * Updated patch adding the missing RK356x/RK3588 interrupt names, so that it
-   provides more details about the interrupts
- * Updated the DT patch according to the comment from Jonas Karlman, so that
-   the addresses are in 32 bit address space starting at 0x40000000
-
-[0] https://lore.kernel.org/all/20230612171337.74576-1-sebastian.reichel@collabora.com/
-
-Thanks,
-
--- Sebastian
-
-Sebastian Reichel (5):
-  dt-bindings: PCI: dwc: improve msi handling
-  dt-bindings: PCI: dwc: rockchip: Fix interrupt-names issue
-  dt-bindings: PCI: dwc: rockchip: Use generic binding
-  dt-bindings: PCI: dwc: rockchip: Add missing
-    legacy-interrupt-controller
-  arm64: dts: rockchip: rk3588: add PCIe2 support
-
- .../bindings/pci/rockchip-dw-pcie.yaml        |  70 ++++++++++++
- .../devicetree/bindings/pci/snps,dw-pcie.yaml |  18 +++-
- arch/arm64/boot/dts/rockchip/rk3588.dtsi      |  51 +++++++++
- arch/arm64/boot/dts/rockchip/rk3588s.dtsi     | 102 ++++++++++++++++++
- 4 files changed, 237 insertions(+), 4 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+index ad9954f7fe02..1ae8dcfa072c 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+@@ -93,6 +93,28 @@ properties:
+       - const: legacy
+       - const: err
+ 
++  legacy-interrupt-controller:
++    description: Interrupt controller node for handling legacy PCI interrupts.
++    type: object
++    additionalProperties: false
++    properties:
++      "#address-cells":
++        const: 0
++
++      "#interrupt-cells":
++        const: 1
++
++      interrupt-controller: true
++
++      interrupts:
++        items:
++          - description: combined legacy interrupt
++    required:
++      - "#address-cells"
++      - "#interrupt-cells"
++      - interrupt-controller
++      - interrupts
++
+   msi-map: true
+ 
+   num-lanes: true
+@@ -180,6 +202,14 @@ examples:
+             reset-names = "pipe";
+             #address-cells = <3>;
+             #size-cells = <2>;
++
++            legacy-interrupt-controller {
++                interrupt-controller;
++                #address-cells = <0>;
++                #interrupt-cells = <1>;
++                interrupt-parent = <&gic>;
++                interrupts = <GIC_SPI 72 IRQ_TYPE_EDGE_RISING>;
++            };
+         };
+     };
+ ...
 -- 
 2.40.1
 
