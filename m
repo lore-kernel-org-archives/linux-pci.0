@@ -2,144 +2,128 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE0EC001DF
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Aug 2023 19:24:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCEA5C41513
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Aug 2023 20:10:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229926AbjHBTYu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Aug 2023 15:24:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37702 "EHLO
+        id S230409AbjHBUKo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Aug 2023 16:10:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229495AbjHBTYt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2023 15:24:49 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8AE91119;
-        Wed,  2 Aug 2023 12:24:48 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 27F6361AE1;
-        Wed,  2 Aug 2023 19:24:48 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40F7BC433C7;
-        Wed,  2 Aug 2023 19:24:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691004287;
-        bh=ceVwIDyjSpFimVYJA8IpCtR5gV/pCzomVlAV3sy7vK8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=DVEWldMGeNvP66mevWA8PK/kEqqZkNcCybPk+5q6lc4jhziWzj+L4cr9l5j10oFWw
-         MtWiCnFHp5OMEuBxN+GvukCdaRDJj/GO8ZJBOWcd4KK53IDFjCkY4vE5JLp8ZS5QBQ
-         rkwaOJf/o4NCAkQaPOqojwL2eK2Be6GLt7URxpSmSb2f82l7Cl2ubCa5HsQuGpN3Up
-         V0uTawhQ1GCiVUD/Tl2XksQxaQ1lZSDsswgp2fucwZJN7B53z21xjNMQmObtjUpicV
-         eZLA/LOeD5v7pjJPxJ+uAEiyFyamxcpdn8Hptps3zDjVm2uQ2zeWNjrW/LyRFsNvY/
-         Y1HsTEDpLRt6A==
-Date:   Wed, 2 Aug 2023 14:24:45 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Verma, Achal" <a-verma1@ti.com>
-Cc:     Vignesh Raghavendra <vigneshr@ti.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof Wilczy_ski <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [EXTERNAL] Re: [PATCH v3] PCI: j721e: Delay 100ms T_PVPERL from
- power stable to PERST# inactive
-Message-ID: <20230802192445.GA64939@bhelgaas>
+        with ESMTP id S230239AbjHBUKn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2023 16:10:43 -0400
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2040.outbound.protection.outlook.com [40.107.220.40])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00B071734;
+        Wed,  2 Aug 2023 13:10:41 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SK3ijI13GQhoEcZbYepTcCT7/7GKoRYWE6Kl9kHC1ugefOLwezUksbCI6Jxw63ckjdZkJaIbJlpQmcO8ciRfW3Hl+9u6s3LxB/yE/nEZXUmDvsLwmJYp9QvrtVXEJRmVHl1itnUpkOlYc9DA3CKrGTyx+2opeT0SqwhYASk6ro9yHC/KaqAzpyxCfdAi5sWGWJDNsfhF/9XVwgO51Pm6Owy+YSayFc+SEurpTC7cC8sLZianAVuswKy7C1AcISVP/ilTXSHirLVz0ixkjVDBHg1ncR6/rKeKrbaRu6TLGzgAgmXKjOgbZ6nb9wioA4LEoqiu7qO1v0QIa1jY3jHH1Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=v3vLZQAndQUrsGXw591fgzQ/18EKgSFlfr/n0oMklM0=;
+ b=hvgGmgQrn7GgjonnhXqrNcCy6KMa9FvshEf3BdQo84cz4KA1By4SP+Bfp4WHwmDHTs2Qyqx5PJE2tqTFDdLli0LkBA9Q67zEKr7H8FSNTmLfHEzMV+OX8jmGqNsZMNpRc6NM+oMdRa3Eq69HQF9htFt81CePGDG8sBvaSivCNOQMHhJGPguUtLRxdN0CngZuecGAlBUZ5ai6iBGNfYxt/mK505khmFawvKFQLqodgtTW6c7OfhUgGPFqt4GjSuPx3/uzyuHnQe+eOA1vKlGi77w0nnn4nPVjV+gFEJ9xveDfTFUlYktKVUsMXgSWolYNhUjMapwuVxyb6GBdfVuNqQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=linux.intel.com smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=v3vLZQAndQUrsGXw591fgzQ/18EKgSFlfr/n0oMklM0=;
+ b=CL5WTUFoMjI87mW0wzxEFiva2bWMh7AdYiDzgR9dpL8Xo+8baUZExY2sxCjjsh0vrOIN4mKKqEvwY9TuoC2/bAifBXdOmOm2gOL6waVogCUxegLhmONG6M8THV18lvz4gmZ8m4ODlJuiHFrwlucvbQ2ekZnjJm8ANUMbzFKdiLM=
+Received: from MW4PR04CA0323.namprd04.prod.outlook.com (2603:10b6:303:82::28)
+ by IA1PR12MB6628.namprd12.prod.outlook.com (2603:10b6:208:3a0::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6631.45; Wed, 2 Aug
+ 2023 20:10:39 +0000
+Received: from CO1PEPF000044F7.namprd21.prod.outlook.com
+ (2603:10b6:303:82:cafe::5) by MW4PR04CA0323.outlook.office365.com
+ (2603:10b6:303:82::28) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.19 via Frontend
+ Transport; Wed, 2 Aug 2023 20:10:39 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1PEPF000044F7.mail.protection.outlook.com (10.167.241.197) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6652.5 via Frontend Transport; Wed, 2 Aug 2023 20:10:38 +0000
+Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 2 Aug
+ 2023 15:10:35 -0500
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, Iain Lane <iain@orangesquash.org.uk>,
+        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH v8 1/2] ACPI: Add comments to clarify some #ifdef statements
+Date:   Wed, 2 Aug 2023 15:10:12 -0500
+Message-ID: <20230802201013.910-2-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230802201013.910-1-mario.limonciello@amd.com>
+References: <20230802201013.910-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8951d4fd-279d-8a78-65a3-daeb4befa899@ti.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PEPF000044F7:EE_|IA1PR12MB6628:EE_
+X-MS-Office365-Filtering-Correlation-Id: 772e70ed-344c-470f-cc25-08db93948a56
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 1pT14d6aZ8s9M8p9V3IcO+5JXZuZr9xJJHesAcu6qhSs/joP3f1tz3zK2aW5GM637LvfRmrXE7z5rq6eQUKjC4NA/TGe/omwnQ0zurou64kjsjKDsylrlB3ftd6T9X5LD/iIPytRM51ywD9JrT9mSolGTue2kbBZ6JfoXY+3BwhNtTLoAvcBNGPPsi3rSG5riTCilToZtQq433OqSm3fQ03ZvGzYiQKc9Vd1FSZ+CF5Y9ou0u6w4MeHJRdCmdHThR7miF8eGHvr8uhLtL+sRrm4x1m8pKbjY5oelH76le8qp6B22z3bjlA136Qsn739g35Ei4LyUUBgMvXdkN33c8ihiGDerMViM0pIkzYF4/TxuOZCGSbli0UJ/iNR9VaimF8ThC4EbYQ6Etq1SfpfHEbSRNn28lkZ561Vspx+ow482eWDVs8PTyPDeQXGFCOMX6lO/oSDvT9f2oC1tZD+maA5oUdw+XRP29nt3RU7D6E7AKXzoi+Z8Y/ryqe3p/+hxYj/8jcuQA3srx+zBjipahC0J0FgFNRrHkUGofGw4v34usFjRvShx0Q6cNzyhEmUYIPtARgzGDaO2hrL3YBl2vempokA3V5XWIADGRrwcCyd+AwHPr2hqL5IOQZtemMiLsn4KOrtM97G5UO18mEnbswZzrS0UufsHapqwyN8KgjqzE4zbW7kSgRKk35bocE8sBnTJvr2revbHUmubvDHp3q5hlY5Q2GV1MLMBOku/Tkg90jvYA8WvyRezN+JXEWueCORIt4YZsggumlH0r3EuUQ==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(396003)(376002)(346002)(136003)(39860400002)(451199021)(82310400008)(40470700004)(36840700001)(46966006)(8936002)(8676002)(4744005)(47076005)(5660300002)(316002)(41300700001)(44832011)(4326008)(70206006)(2906002)(70586007)(478600001)(40460700003)(1076003)(81166007)(26005)(2616005)(110136005)(54906003)(40480700001)(36860700001)(83380400001)(86362001)(7696005)(6666004)(356005)(82740400003)(336012)(186003)(36756003)(426003)(16526019)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Aug 2023 20:10:38.4694
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 772e70ed-344c-470f-cc25-08db93948a56
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1PEPF000044F7.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6628
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 02, 2023 at 02:38:02PM +0530, Verma, Achal wrote:
-> On 7/18/2023 9:25 PM, Bjorn Helgaas wrote:
-> > On Fri, Jul 07, 2023 at 03:21:19PM +0530, Achal Verma wrote:
-> > > As per the PCIe Card Electromechanical specification REV. 5.0, PERST#
-> > > signal should be de-asserted after minimum 100ms from the time power-rails
-> > > become stable. So, to ensure 100ms delay to give sufficient time for
-> > > power-rails and refclk to become stable, change delay from 100us to 100ms.
-> > > 
-> > >  From PCIe Card Electromechanical specification REV. 5.0 section 2.9.2:
-> > > TPVPERL: Power stable to PERST# inactive - 100ms
-> > > 
-> > > Fixes: f3e25911a430 ("PCI: j721e: Add TI J721E PCIe driver")
-> > > Signed-off-by: Achal Verma <a-verma1@ti.com>
-> > > ---
-> > > 
-> > > Changes from v2:
-> > > * Fix commit message.
-> > > 
-> > > Change from v1:
-> > > * Add macro for delay value.
-> > > 
-> > >   drivers/pci/controller/cadence/pci-j721e.c | 11 +++++------
-> > >   drivers/pci/pci.h                          |  2 ++
-> > >   2 files changed, 7 insertions(+), 6 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
-> > > index e70213c9060a..32b6a7dc3cff 100644
-> > > --- a/drivers/pci/controller/cadence/pci-j721e.c
-> > > +++ b/drivers/pci/controller/cadence/pci-j721e.c
-> > > @@ -498,14 +498,13 @@ static int j721e_pcie_probe(struct platform_device *pdev)
-> > >   		/*
-> > >   		 * "Power Sequencing and Reset Signal Timings" table in
-> > > -		 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 3.0
-> > > -		 * indicates PERST# should be deasserted after minimum of 100us
-> > > -		 * once REFCLK is stable. The REFCLK to the connector in RC
-> > > -		 * mode is selected while enabling the PHY. So deassert PERST#
-> > > -		 * after 100 us.
-> > > +		 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 5.0
-> > > +		 * indicates PERST# should be deasserted after minimum of 100ms
-> > > +		 * after power rails achieve specified operating limits and
-> > > +		 * within this period reference clock should also become stable.
-> > 
-> > I think the problem is not that the current code is *wrong*, because
-> > we do need to observe T_PERST-CLK, but that it failed to *also*
-> > account for T_PVPERL.
-> > 
-> > There are two delays before deasserting PERST#:
-> > 
-> >    T_PVPERL: delay after power becomes stable
-> >    T_PERST-CLK: delay after REFCLK becomes stable
-> > 
-> > I assume power is enabled by phy_power_on(), and REFCLK is enabled by
-> > clk_prepare_enable():
-> > 
-> >    cdns_pcie_init_phy
-> >      cdns_pcie_enable_phy
-> >        phy_power_on             <-- power becomes stable
-> >    clk_prepare_enable           <-- REFCLK becomes stable
-> >    if (gpiod)
-> >      usleep_range
-> >      gpiod_set_value_cansleep(gpiod, 1)   <-- deassert PERST#
-> > 
-> > I don't actually know if phy_power_on() guarantees that power is
-> > stable before it returns.  But I guess that's our assumption?
-> > Similarly for clk_prepare_enable().
-> > 
-> > In any case, we have to observe both delays.  They overlap, and
-> > T_PVPERL is 1000 times longer than T_PERST-CLK, so there might be
-> > enough slop in an msleep(100) to cover both, but I think I would do
-> > the simple-minded:
-> > 
-> >    msleep(PCIE_TPVPERL_MS);
-> >    usleep_range(PCIE_TPERST_CLK_US, 2 * PCIE_TPERST_CLK_US);
-> > 
-> I think adding 100us more is not required since as you said and as also
-> mentioned in CEM spec, 100ms covers for both power rails and refclock to
-> get stable and 2 consecutive sleep call looks different to me.
-> But if still required (please let me know), will do the suggested change,
-> along with other fixes you asked below.
+With nested #ifdef statements it's sometimes difficult to tell
+which code goes with which statement.  One comment was wrong,
+so fix it and add another comment to clarify another.
 
-If REFCLK is stable when clk_prepare_enable() returns, and we don't
-start the msleep(PCIE_TPVPERL_MS) until then, it should be safe.  
-Maybe mention T_PERST-CLK in a comment, e.g.,
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ include/linux/acpi.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-  PCIe CEM r5.0, sec 2.2.1, requires both T_PVPERL (100ms) between
-  power stable and PERST# inactive and T_PERST_CLK (100us) between
-  REFCLK stable and PERST# inactive.  Starting the T_PVPERL delay
-  after REFCLK is stable means that delay covers T_PERST_CLK as well.
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 641dc48439873..0d5277b7c6323 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -1117,10 +1117,10 @@ static inline void arch_reserve_mem_area(acpi_physical_address addr,
+ 					  size_t size)
+ {
+ }
+-#endif /* CONFIG_X86 */
++#endif /* CONFIG_IA64 */
+ #else
+ #define acpi_os_set_prepare_sleep(func, pm1a_ctrl, pm1b_ctrl) do { } while (0)
+-#endif
++#endif /* CONFIG_ACPI */
+ 
+ #if defined(CONFIG_ACPI) && defined(CONFIG_PM)
+ int acpi_dev_suspend(struct device *dev, bool wakeup);
+-- 
+2.34.1
 
-Bjorn
