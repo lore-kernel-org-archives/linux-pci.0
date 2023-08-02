@@ -2,124 +2,99 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 148BBC41513
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Aug 2023 05:50:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88BB6C001DF
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Aug 2023 06:25:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230362AbjHBFuF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Aug 2023 01:50:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50226 "EHLO
+        id S232240AbjHBGZB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Aug 2023 02:25:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231868AbjHBFuF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2023 01:50:05 -0400
-Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22B1B10FF
-        for <linux-pci@vger.kernel.org>; Tue,  1 Aug 2023 22:50:03 -0700 (PDT)
-Received: by mail-pf1-x42d.google.com with SMTP id d2e1a72fcca58-686f8614ce5so6056871b3a.3
-        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2023 22:50:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1690955402; x=1691560202;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=dJviXEolxDsHscNjJ89nMsWSR/pVTtDnuSmhYDnoX4A=;
-        b=BKe9GEyzvb8YtpahAAWJSeYsdv3ZUUlAIlJ9J8BrNBy102qGUmj/NnozyHRuJ00zeg
-         qN7Rv2GRTW6QtCydqCufj5+2YffuNZ39A+TEcFp4qkfTj5c20D6uNGJbc0nqpORCScAA
-         Lrfa6wOBb0Z0iukec0fdtiyuyBYTAvePudz1460SM28xkZmUiiYyw2ltLRo9pS22kmGa
-         NSOPKta7jjqdKdHuIBjG6r7rCYhXbMaed3UdCVe3py2q3lTR9lASYpcziJMqcqo0sVFe
-         D6IbEJl2U2XCivjbCLyiv/VdTBnl2zR2Jlphs0mrRhzhfnoy+EJrzJHz1IGHpdQL0iUa
-         5IbA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1690955402; x=1691560202;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=dJviXEolxDsHscNjJ89nMsWSR/pVTtDnuSmhYDnoX4A=;
-        b=bKi9rTwNYGyR0y1VUZ8yvAr2Dc/plP7mgCE8rbC2IDhY9x0SjQyqV0HJMXcY9Z3StR
-         wGkXmE6YKD2Beh5CM8xsvUqOgm2znkSCfXBughMn7qYifFvwhFKPzddC9F8cjIoAlXo0
-         5M8pxBDATEF4miN1Wlk+f7xr27xHVenX5Z8/h/q+6NXUFJwM/j3qCYkRIjS+IIxjuVw2
-         S/Y99DMQ7DWjMqlZU0jDpT0q0+oi6KV8ZfleTD4Qx5XWBdvYZKDSuvCYwM2aYrp9jxJH
-         EReU3F8MyGVQgO2vDwLu46SYJrG60Fnw3NPH9k97hPe8wAwt0xHcjBz4dbXZzM2nYjwO
-         BpIg==
-X-Gm-Message-State: ABy/qLbAhaJJWdy+gJuIg1GsrsMBXE43YumkfRnR8z9P0BBe4YqJdQnI
-        oGu4kus4iIgMRk84ehI2U2FT
-X-Google-Smtp-Source: APBJJlHhp0Rpsf5K8jb6rviEQwM7/+spND8NP0jQBv3B2Py1ClnOITOPfT6jeZYgEpevIu/wsJHTeA==
-X-Received: by 2002:a05:6a00:a84:b0:668:97bf:5ed7 with SMTP id b4-20020a056a000a8400b0066897bf5ed7mr19895524pfl.22.1690955402602;
-        Tue, 01 Aug 2023 22:50:02 -0700 (PDT)
-Received: from thinkpad ([117.193.209.129])
-        by smtp.gmail.com with ESMTPSA id p24-20020aa78618000000b0068702b66ab1sm9662535pfn.174.2023.08.01.22.49.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Aug 2023 22:50:02 -0700 (PDT)
-Date:   Wed, 2 Aug 2023 11:19:55 +0530
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom-ep: Treat unknown irq events as an error
-Message-ID: <20230802054955.GG2370@thinkpad>
-References: <20230726152931.18134-1-manivannan.sadhasivam@linaro.org>
- <20230731165738.GA14380@bhelgaas>
+        with ESMTP id S229545AbjHBGZA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2023 02:25:00 -0400
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 86A3326AA;
+        Tue,  1 Aug 2023 23:24:48 -0700 (PDT)
+Received: from loongson.cn (unknown [10.20.42.43])
+        by gateway (Coremail) with SMTP id _____8CxtPCv9slk37MOAA--.35065S3;
+        Wed, 02 Aug 2023 14:24:47 +0800 (CST)
+Received: from [10.20.42.43] (unknown [10.20.42.43])
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8Dx_yOd9slkZSZFAA--.7441S3;
+        Wed, 02 Aug 2023 14:24:43 +0800 (CST)
+Message-ID: <36fb3a2c-cac9-3e63-b2f9-71345f57c89d@loongson.cn>
+Date:   Wed, 2 Aug 2023 14:24:29 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230731165738.GA14380@bhelgaas>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.13.0
+Subject: Re: [PATCH] PCI/VGA: Fixup the firmware fb address om demanding time
+To:     kernel test robot <lkp@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     oe-kbuild-all@lists.linux.dev, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        loongson-kernel@lists.loongnix.cn
+References: <20230801183706.702567-1-suijingfeng@loongson.cn>
+ <202308021153.w0leLadx-lkp@intel.com>
+Content-Language: en-US
+From:   suijingfeng <suijingfeng@loongson.cn>
+In-Reply-To: <202308021153.w0leLadx-lkp@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID: AQAAf8Dx_yOd9slkZSZFAA--.7441S3
+X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
+X-Coremail-Antispam: 1Uk129KBj93XoW7Cw1kZry3Wr4DKF47Zw47GFX_yoW8ZrW8pa
+        y8GFZxKrs5Jr1xGayxtr4Du3ZIvan8A345WFWDCr18uF98Zry8ur4IkrZxXF9I9rn7G34r
+        AF9aqr1kK34UGagCm3ZEXasCq-sJn29KB7ZKAUJUUUU7529EdanIXcx71UUUUU7KY7ZEXa
+        sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+        0xBIdaVrnRJUUUB2b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+        IYs7xG6rWj6s0DM7CIcVAFz4kK6r1Y6r17M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+        0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AK
+        xVW8Jr0_Cr1UM2kKe7AKxVWUXVWUAwAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07
+        AIYIkI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWU
+        AVWUtwAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI4
+        8JMxk0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_
+        Jr0_Gr1l4IxYO2xFxVAFwI0_Jrv_JF1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
+        xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
+        cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
+        AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E
+        14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU466zUUUUU
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jul 31, 2023 at 11:57:38AM -0500, Bjorn Helgaas wrote:
-> On Wed, Jul 26, 2023 at 08:59:31PM +0530, Manivannan Sadhasivam wrote:
-> > Sometimes, the Qcom PCIe EP controller can receive some interrupts that are
-> > not known to the driver like safety interrupts in newer SoCs. In those
-> > cases, if the driver doesn't clear the interrupts, then it will end up in
-> > interrupt storm. But the users won't have any idea about it due to the log
-> > being treated as a debug message.
-> > 
-> > So let's treat the unknown event log as an error, so that it at least makes
-> > the user aware, thereby getting fixed eventually.
-> 
-> Would it be practical to log the error message, then clear the
-> interrupt to avoid the interrupt storm?
+Hi,
 
-Just to make it clear that we are already clearing the IRQs in
-PARF_INT_ALL_CLEAR. But the issue is, on newer platforms there are a couple more
-of these registers that the driver should mask and clear.
+On 2023/8/2 11:40, kernel test robot wrote:
+> Hi Sui,
+>
+> kernel test robot noticed the following build errors:
+>
+> [auto build test ERROR on pci/next]
+> [also build test ERROR on pci/for-linus linus/master v6.5-rc4 next-20230801]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use '--base' as documented in
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+>
+> url:    https://github.com/intel-lab-lkp/linux/commits/Sui-Jingfeng/PCI-VGA-Fixup-the-firmware-fb-address-om-demanding-time/20230802-023743
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+> patch link:    https://lore.kernel.org/r/20230801183706.702567-1-suijingfeng%40loongson.cn
+> patch subject: [PATCH] PCI/VGA: Fixup the firmware fb address om demanding time
+> config: parisc64-defconfig (https://download.01.org/0day-ci/archive/20230802/202308021153.w0leLadx-lkp@intel.com/config)
+> compiler: hppa64-linux-gcc (GCC) 12.3.0
+> reproduce: (https://download.01.org/0day-ci/archive/20230802/202308021153.w0leLadx-lkp@intel.com/reproduce)
+>
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202308021153.w0leLadx-lkp@intel.com/
+>
+> All errors (new ones prefixed by >>):
+>
+>     hppa64-linux-ld: drivers/pci/vgaarb.o: in function `vga_arb_firmware_fb_addr_tracker':
+>>> (.text+0x1d0): undefined reference to `screen_info'
+>>> hppa64-linux-ld: (.text+0x1d4): undefined reference to `screen_info'
 
-Qcom faced an interrupt storm issue while bringing up PCIe EP on a new
-platform. On that platform, several interrupts were added for some specific
-usecases. Since we do not mask/clear those interrupts, it resulted in an
-interrupt storm. Moreover, the absence of error message made it difficult to
-debug the issue as there were no logs from the driver (they didn't enable DEBUG
-unfortunately during bringup as I thought one would do).
+How does this problem related to my patch?
+The dependency was introduce since the commit 86fd887b7fe3
+('vgaarb: Don't default exclusively to first video device with mem+io')
 
-So to catch these kind of issues in the future, I just want to promote the log
-to dev_err().
 
-- Mani
-
-> 
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > ---
-> >  drivers/pci/controller/dwc/pcie-qcom-ep.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> > index 267e1247d548..802dedcc929c 100644
-> > --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> > +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> > @@ -593,7 +593,7 @@ static irqreturn_t qcom_pcie_ep_global_irq_thread(int irq, void *data)
-> >  		dw_pcie_ep_linkup(&pci->ep);
-> >  		pcie_ep->link_status = QCOM_PCIE_EP_LINK_UP;
-> >  	} else {
-> > -		dev_dbg(dev, "Received unknown event: %d\n", status);
-> > +		dev_err(dev, "Received unknown event: %d\n", status);
-> >  	}
-> >  
-> >  	return IRQ_HANDLED;
-> > -- 
-> > 2.25.1
-> > 
-
--- 
-மணிவண்ணன் சதாசிவம்
