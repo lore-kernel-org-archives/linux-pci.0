@@ -2,53 +2,52 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CDB5C04A6A
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Aug 2023 15:12:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0990C001DF
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Aug 2023 15:12:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234125AbjHBPMo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Aug 2023 11:12:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35858 "EHLO
+        id S234160AbjHBPMq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Aug 2023 11:12:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233212AbjHBPMl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2023 11:12:41 -0400
+        with ESMTP id S233840AbjHBPMm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2023 11:12:42 -0400
 Received: from mgamail.intel.com (unknown [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E3352130
-        for <linux-pci@vger.kernel.org>; Wed,  2 Aug 2023 08:12:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 355452704
+        for <linux-pci@vger.kernel.org>; Wed,  2 Aug 2023 08:12:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1690989159; x=1722525159;
+  t=1690989160; x=1722525160;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=9bjYS8EbcpbOLglUOTbR7e45YjiztEBMTDXiB90OGkM=;
-  b=WDo1TNvgLYeMvudoX/hL0rZQ9v/1za8KnMnuf8KRUcVPnPxFO2+V4lbC
-   17tHBm4S83VPB4OkHRZH2Cq3yLhDSYRk4xo2T+a5ABTmBQGJZSkrXeLTX
-   U+Y16/sfuu+3AGI+dgKgjgsITfWyW+pvKuEuQ8Ms+C7gFMhhCtrJKgC1n
-   WAe4b4XBWZqfcVorerN7//rN4EkstJok2Ssf32itGdNlOr7M0dtx1AEN3
-   ubYSDV1+Vy1Vi7Gox4ZINv1jboSy+mPb59WuzsGOzfxTJBb5eEXq2uoPV
-   d7bgyILjOVkdIiGsvrsSAaS/725p7eQ+LCaLyXbeHmYF4DduYNqj8irmf
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10790"; a="369607261"
+  bh=AUNY4fOKGSINjHCvUnG98cy9TPxbQGOZ0uRCfqLy5bE=;
+  b=ZN+3zy8vFXMIA8Vp2j/D/lDBzKeNRm1SeUWfkyzrhcz/x34IZXa9f4ZQ
+   d8rmpNLiJIef6fh43EninT5RsdnQdToNySDtntPFaETvLnWK1F4hsvU+i
+   8mBjgCmovceAlpRYGpR/C7YG4aR4KbOE15zhv6LzpAu+stckyjc360Mb4
+   vwNncxexFH1sbeBIWECxkNRNo+KW8pMDcRoCqUbJRpqw+0+gpMOF/sqxv
+   Of5HNDPyqF1KN19B/+E5ZV2p3SZdSZEmzhJXmvoZfEOVxx7AwPlL84vaW
+   UVUFTZHggu/oBOyO76XU9wQNLXNJnjIKqVajtyIaCaaHihygpVhMu5KEl
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10790"; a="369607274"
 X-IronPort-AV: E=Sophos;i="6.01,249,1684825200"; 
-   d="scan'208";a="369607261"
+   d="scan'208";a="369607274"
 Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2023 08:01:15 -0700
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2023 08:01:16 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10790"; a="732428680"
+X-IronPort-AV: E=McAfee;i="6600,9927,10790"; a="732428688"
 X-IronPort-AV: E=Sophos;i="6.01,249,1684825200"; 
-   d="scan'208";a="732428680"
+   d="scan'208";a="732428688"
 Received: from rickylop-mobl1.amr.corp.intel.com (HELO pbossart-mobl3.intel.com) ([10.212.125.114])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2023 08:01:14 -0700
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2023 08:01:15 -0700
 From:   Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
 To:     alsa-devel@alsa-project.org
 Cc:     tiwai@suse.de, broonie@kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Kai Vehmanen <kai.vehmanen@linux.intel.com>,
+        Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>,
         Ranjani Sridharan <ranjani.sridharan@linux.intel.com>,
-        Bard Liao <yung-chuan.liao@linux.intel.com>,
-        Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
-Subject: [PATCH 2/5] ALSA: hda: add HD Audio PCI ID for Intel Arrow Lake-S
-Date:   Wed,  2 Aug 2023 10:01:02 -0500
-Message-Id: <20230802150105.24604-3-pierre-louis.bossart@linux.intel.com>
+        Bard Liao <yung-chuan.liao@linux.intel.com>
+Subject: [PATCH 4/5] ALSA: hda: intel-dsp-cfg: add LunarLake support
+Date:   Wed,  2 Aug 2023 10:01:04 -0500
+Message-Id: <20230802150105.24604-5-pierre-louis.bossart@linux.intel.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20230802150105.24604-1-pierre-louis.bossart@linux.intel.com>
 References: <20230802150105.24604-1-pierre-louis.bossart@linux.intel.com>
@@ -58,31 +57,34 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kai Vehmanen <kai.vehmanen@linux.intel.com>
+One more PCI ID for the road.
 
-Add HD Audio PCI ID for Intel Arrow Lake-S platform.
-
+Signed-off-by: Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
 Reviewed-by: Ranjani Sridharan <ranjani.sridharan@linux.intel.com>
 Reviewed-by: Bard Liao <yung-chuan.liao@linux.intel.com>
-Signed-off-by: Kai Vehmanen <kai.vehmanen@linux.intel.com>
-Signed-off-by: Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
 ---
- sound/pci/hda/hda_intel.c | 2 ++
- 1 file changed, 2 insertions(+)
+ sound/hda/intel-dsp-config.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/sound/pci/hda/hda_intel.c b/sound/pci/hda/hda_intel.c
-index 176567f0d0e0..765d95e79861 100644
---- a/sound/pci/hda/hda_intel.c
-+++ b/sound/pci/hda/hda_intel.c
-@@ -2499,6 +2499,8 @@ static const struct pci_device_id azx_ids[] = {
- 	{ PCI_DEVICE_DATA(INTEL, HDA_MTL, AZX_DRIVER_SKL | AZX_DCAPS_INTEL_SKYLAKE) },
- 	/* Lunarlake-P */
- 	{ PCI_DEVICE_DATA(INTEL, HDA_LNL_P, AZX_DRIVER_SKL | AZX_DCAPS_INTEL_SKYLAKE) },
-+	/* Arrow Lake-S */
-+	{ PCI_DEVICE_DATA(INTEL, HDA_ARL_S, AZX_DRIVER_SKL | AZX_DCAPS_INTEL_SKYLAKE) },
- 	/* Apollolake (Broxton-P) */
- 	{ PCI_DEVICE_DATA(INTEL, HDA_APL, AZX_DRIVER_SKL | AZX_DCAPS_INTEL_BROXTON) },
- 	/* Gemini-Lake */
+diff --git a/sound/hda/intel-dsp-config.c b/sound/hda/intel-dsp-config.c
+index 1abe65f0ba1b..dcf2453138a5 100644
+--- a/sound/hda/intel-dsp-config.c
++++ b/sound/hda/intel-dsp-config.c
+@@ -465,6 +465,14 @@ static const struct config_entry config_table[] = {
+ 	},
+ #endif
+ 
++/* Lunar Lake */
++#if IS_ENABLED(CONFIG_SND_SOC_SOF_LUNARLAKE)
++	/* Lunarlake-P */
++	{
++		.flags = FLAG_SOF | FLAG_SOF_ONLY_IF_DMIC_OR_SOUNDWIRE,
++		.device = PCI_DEVICE_ID_INTEL_HDA_LNL_P,
++	},
++#endif
+ };
+ 
+ static const struct config_entry *snd_intel_dsp_find_config
 -- 
 2.39.2
 
