@@ -2,226 +2,168 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51E65C04A94
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Aug 2023 03:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EBAFC04A94
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Aug 2023 04:30:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229607AbjHDDn7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Aug 2023 23:43:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49232 "EHLO
+        id S232103AbjHDEab (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Aug 2023 00:30:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229841AbjHDDnl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2023 23:43:41 -0400
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2055.outbound.protection.outlook.com [40.107.92.55])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 547BC4204;
-        Thu,  3 Aug 2023 20:43:37 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QqXOziP3uMvUKaLnfZ2QO43YqKeeLIjTLoAQCkHFEEqbtDttk1KRxT8xuR8azuowRHtBEY2DPl7R4U5GOdrUO0BMC1g7ys3Wn5KXhETAbcHl0Ac0UsV5RzlxGV5Aubkh0aN9LbaRo45O/XwZlPcNi/cGuTHR9LcDd+6EIqXYcgFpoEmnQPBjgHSIkfLIstxl73ajNcewoWnZ12mflBilA4t61KdNMYnQ/mWt0JrTtSUgkyOwVnfTQ789T7w0CmMpxGmXB6xY+oJg7TIcTX0WdSbaP27bj9Hs/RL05Z/BDf8ueTBfIOwkHqlGF0vGZpvsmRQNd0w3uxHci84OU5rYHQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=LEbh1VHYTTX6Kr0IFfAIU3r8/4U/uhamErK/+Vr0BN0=;
- b=PurPe068b8+LhM/gRZgJG1en0Gey3elqEGS4j3Pz7rp2KBoOeOd6XoKu4EF4WF74P+LXMsK+67e/CjGIpdWWMdO7OcJWvFHU7Itzyfo1AeBOsQumsIurpWSpoXQQqHq/lohxkcikufDXnK2V/Qh9W8sUkFMrf33DCAdDdxCCvqfY0fbk6z2Q17hedQtQtVVqFZRcdtQtWcGIZXXIEJmw2j4JSRWPDufyobt46O7uL7f4sdkrvawySbWYItfUi44OiM9w4lL+rSbWX0YDvuIvrFf/ztC16FrNYP63fGSuciJ2nKNJWxdfYcjV0OZISTeHYhDhWiRnvQ3Y9WcR10EnTw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LEbh1VHYTTX6Kr0IFfAIU3r8/4U/uhamErK/+Vr0BN0=;
- b=lzttx3nCoMrzLAxb+TVfuxjl2a9Y7xNyMpT4YXaIIPhkqyKvaP1U64rGa/KxG/U/VVc7dksJfw7buf1EoI+UEwrhmj/ablepI7M/krIaIUnEofd1+acAwx2so0PimjKsRDky0gf5wmJh8Acn5nBblXYDCMP9K8hUDzVrEymZIE8=
-Received: from CY5PR19CA0034.namprd19.prod.outlook.com (2603:10b6:930:1a::13)
- by CH3PR12MB7644.namprd12.prod.outlook.com (2603:10b6:610:14f::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.21; Fri, 4 Aug
- 2023 03:43:33 +0000
-Received: from CY4PEPF0000E9D8.namprd05.prod.outlook.com
- (2603:10b6:930:1a:cafe::30) by CY5PR19CA0034.outlook.office365.com
- (2603:10b6:930:1a::13) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.20 via Frontend
- Transport; Fri, 4 Aug 2023 03:43:33 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CY4PEPF0000E9D8.mail.protection.outlook.com (10.167.241.83) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6652.19 via Frontend Transport; Fri, 4 Aug 2023 03:43:33 +0000
-Received: from SITE-L-T34-2.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 3 Aug
- 2023 22:43:31 -0500
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     "Rafael J . Wysocki" <rafael@kernel.org>,
+        with ESMTP id S229498AbjHDEaa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Aug 2023 00:30:30 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6C6335BE;
+        Thu,  3 Aug 2023 21:30:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1691123429; x=1722659429;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=7SU+OnhENlKD0/sf+9S44cv0vNFtLHvqcGpWrAJLLlM=;
+  b=YX52LJlEcEFVvEMKj51u64xFMxabYMABhzQ20OsMTRx42XdIqbPOs9EU
+   iddJN2FoUElT+ntd30nRAODs0zIZVLFiaA571rEidsaAsCOJo2TZ1thzl
+   cx+OpxbobD/mRr0LM3EwznzkYjYy+IYo0z8o8qSYI3OGApBAMcZT6z89q
+   ApdthwVnKLSAbtoGtFYkfpq3q9aM3uX0bU0kYec621SwRAXWJKguf/fp7
+   9sBf9kH52KIAQjM/KkSaQBlTe4CX8fPHeP3Yvy1/N2yW2wU/mDNMaMi9t
+   eHJ1STCry+LvlbKo19J7b/dGs6v+tbZAMUb4mznmanq9Ib2CAgOEAhsIs
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10791"; a="401017267"
+X-IronPort-AV: E=Sophos;i="6.01,254,1684825200"; 
+   d="scan'208";a="401017267"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Aug 2023 21:30:29 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10791"; a="853565264"
+X-IronPort-AV: E=Sophos;i="6.01,254,1684825200"; 
+   d="scan'208";a="853565264"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by orsmga004.jf.intel.com with ESMTP; 03 Aug 2023 21:30:26 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1qRmSH-009c7u-0F;
+        Fri, 04 Aug 2023 07:30:25 +0300
+Date:   Fri, 4 Aug 2023 07:30:24 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Mario Limonciello <mario.limonciello@amd.com>
+Cc:     "Rafael J . Wysocki" <rafael@kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
-        <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
         Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        "Iain Lane" <iain@orangesquash.org.uk>,
-        Shyam-sundar S-k <Shyam-sundar.S-k@amd.com>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v9 2/3] ACPI: x86: s2idle: Adjust constraints logic building
-Date:   Thu, 3 Aug 2023 20:02:28 -0500
-Message-ID: <20230804010229.3664-3-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230804010229.3664-1-mario.limonciello@amd.com>
+        Iain Lane <iain@orangesquash.org.uk>,
+        Shyam-sundar S-k <Shyam-sundar.S-k@amd.com>
+Subject: Re: [PATCH v9 3/3] PCI/ACPI: Use device constraints to decide PCI
+ target state fallback policy
+Message-ID: <ZMx+4CxT/b8ShiWR@smile.fi.intel.com>
 References: <20230804010229.3664-1-mario.limonciello@amd.com>
+ <20230804010229.3664-4-mario.limonciello@amd.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000E9D8:EE_|CH3PR12MB7644:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8373be21-d49c-4401-a7f8-08db949cf9e5
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: wVFXs8H7PfjzUhJgqR9qN/Y1q6ZAiAYRIKyTr2HxliH1jlyPJGHtaZGYOfYcT+nBaBzKD3ibdAQapGfSd/PIyjFYeYLyKP7Quak2Tj3lNQUydGHinrQCLkPFCUdNKLNxH1eeUftywJc+kZB8q8xyrVb1f81YceQwe927t0LDUQqpzqLe0TSEXLUpSgu3ivXcvPaUGCrYTf3ALbji0H7noWTLYq4gUGNlDTSUiAFn7ZWMhQye9QZfPzD1sqFSkrDCTreaL0+jfngwkK+xVfdHe/oZPBOd5pFjG80eGj/xKCKieNUQUxeTHI66X/SRvzBUfW/4lchmYnWM0KsFNVZdL7t+D9x1GF7safsnXXRPzp6gyOyWnuFeKkMena94thsa9uws27vReSh5fzQaBUFiFgBYVvOsWJPJDlNoKl1E8d2JiYp2OhGZHLnJKAKZTd7EmgC4P/vZsdoHeR/ok7tCJAxAtPyq4Mea8wsQXRb69UunQ+RXOuf+tDxQ6qb7E0prvNuSZa9ro01Kcn2h5Tm7NLm/3Yt6C24bVQCCtalruntjQJYJXwxBdGjCdiiGtrEv0qYeYYumS6I75e7S1hv1jjZrO+PzPkyXarRYo+CSOfcC2tzSnc1c3RNEN8b/9/ktFQFRp+FPkiKymjf8kHLUJWsv7yusrrxg9J29VlMDqx1uYTEiUN4kSpyb/9X4bXFvE5fv48mjuWZ+7wI+ySD20u6aH0yfbDXO4N/KBsfZRBeql/svsi+xGOgIsq8uPEhXEkcl8hsgcGJkFKKYoqr9Yg==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(136003)(346002)(396003)(376002)(39860400002)(82310400008)(451199021)(1800799003)(186006)(36840700001)(46966006)(40470700004)(83380400001)(2616005)(426003)(36860700001)(47076005)(40480700001)(316002)(70586007)(70206006)(41300700001)(1076003)(4326008)(44832011)(26005)(8676002)(8936002)(5660300002)(6666004)(7696005)(478600001)(54906003)(110136005)(86362001)(40460700003)(82740400003)(356005)(81166007)(336012)(2906002)(16526019)(36756003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2023 03:43:33.0349
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8373be21-d49c-4401-a7f8-08db949cf9e5
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000E9D8.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7644
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230804010229.3664-4-mario.limonciello@amd.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Constraints are currently only stored when enabled.  To enable
-the ability to check if constraints are present they need to be
-stored even if disabled.
+On Thu, Aug 03, 2023 at 08:02:29PM -0500, Mario Limonciello wrote:
+> Since commit 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
+> PCIe ports from modern machines (>=2015) are allowed to be put into D3 by
+> storing a value to the `bridge_d3` variable in the `struct pci_dev`
+> structure.
+> 
+> pci_power_manageable() uses this variable to indicate a PCIe port can
+> enter D3.
+> pci_pm_suspend_noirq() uses the return from pci_power_manageable() to
+> decide whether to try to put a device into its target state for a sleep
+> cycle via pci_prepare_to_sleep().
+> 
+> For devices that support D3, the target state is selected by this policy:
+> 1. If platform_pci_power_manageable():
+>    Use platform_pci_choose_state()
+> 2. If the device is armed for wakeup:
+>    Select the deepest D-state that supports a PME.
+> 3. Else:
+>    Use D3hot.
+> 
+> Devices are considered power manageable by the platform when they have
+> one or more objects described in the table in section 7.3 of the ACPI 6.5
+> specification.
+> 
+> When devices are not considered power manageable; specs are ambiguous as
+> to what should happen.  In this situation Windows 11 leaves PCIe
+> ports in D0 while Linux puts them into D3 due to the above mentioned
+> commit.
+> 
+> In Windows systems that support Modern Standby specify hardware
+> pre-conditions for the SoC to achieve the lowest power state by device
+> constraints in a SOC specific "Power Engine Plugin" (PEP) [2] [3].
+> They can be marked as disabled or enabled and when enabled can specify
+> the minimum power state required for an ACPI device.
+> 
+> When it is ambiguous what should happen, adjust the logic for
+> pci_target_state() to check whether a device constraint is present
+> and enabled.
+> * If power manageable by ACPI use this to get to select target state
+> * If a device constraint is present but disabled then choose D0
+> * If a device constraint is present and enabled then use it
+> * If a device constraint is not present, then continue to existing
+>   logic (if marked for wakeup use deepest state that PME works)
+> * If not marked for wakeup choose D3hot
 
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
-v8->v9:
- * New patch
----
- drivers/acpi/x86/s2idle.c | 48 ++++++++++++++++++++-------------------
- 1 file changed, 25 insertions(+), 23 deletions(-)
+...
 
-diff --git a/drivers/acpi/x86/s2idle.c b/drivers/acpi/x86/s2idle.c
-index ce62e61a9605e..cb2ea92af3eb7 100644
---- a/drivers/acpi/x86/s2idle.c
-+++ b/drivers/acpi/x86/s2idle.c
-@@ -78,6 +78,7 @@ struct lpi_device_constraint {
- struct lpi_constraints {
- 	acpi_handle handle;
- 	int min_dstate;
-+	bool enabled;
- };
- 
- /* AMD Constraint package structure */
-@@ -120,8 +121,7 @@ static void lpi_device_get_constraints_amd(void)
- 			if (!lpi_constraints_table)
- 				goto free_acpi_buffer;
- 
--			acpi_handle_debug(lps0_device_handle,
--					  "LPI: constraints list begin:\n");
-+			acpi_handle_debug(lps0_device_handle, "LPI: constraints list begin:\n");
- 
- 			for (j = 0; j < package->package.count; ++j) {
- 				union acpi_object *info_obj = &package->package.elements[j];
-@@ -129,12 +129,12 @@ static void lpi_device_get_constraints_amd(void)
- 				struct lpi_constraints *list;
- 				acpi_status status;
- 
-+				list = &lpi_constraints_table[j];
-+				list->min_dstate = -EINVAL;
-+
- 				for (k = 0; k < info_obj->package.count; ++k) {
- 					union acpi_object *obj = &info_obj->package.elements[k];
- 
--					list = &lpi_constraints_table[lpi_constraints_table_size];
--					list->min_dstate = -1;
--
- 					switch (k) {
- 					case 0:
- 						dev_info.enabled = obj->integer.value;
-@@ -149,27 +149,29 @@ static void lpi_device_get_constraints_amd(void)
- 						dev_info.min_dstate = obj->integer.value;
- 						break;
- 					}
-+				}
- 
--					if (!dev_info.enabled || !dev_info.name ||
--					    !dev_info.min_dstate)
--						continue;
-+				if (!dev_info.name)
-+					continue;
- 
--					status = acpi_get_handle(NULL, dev_info.name,
--								 &list->handle);
--					if (ACPI_FAILURE(status))
--						continue;
-+				status = acpi_get_handle(NULL, dev_info.name, &list->handle);
-+				if (ACPI_FAILURE(status))
-+					continue;
- 
--					acpi_handle_debug(lps0_device_handle,
--							  "Name:%s\n", dev_info.name);
-+				acpi_handle_debug(lps0_device_handle,
-+						  "Name:%s, Enabled: %d, States: %d, MinDstate: %d\n",
-+						  dev_info.name,
-+						  dev_info.enabled,
-+						  dev_info.function_states,
-+						  dev_info.min_dstate);
- 
--					list->min_dstate = dev_info.min_dstate;
-+				list->min_dstate = dev_info.min_dstate;
- 
--					if (list->min_dstate < 0) {
--						acpi_handle_debug(lps0_device_handle,
--								  "Incomplete constraint defined\n");
--						continue;
--					}
-+				if (list->min_dstate < 0) {
-+					acpi_handle_debug(lps0_device_handle, "Incomplete constraint defined\n");
-+					continue;
- 				}
-+				list->enabled = dev_info.enabled;
- 				lpi_constraints_table_size++;
- 			}
- 		}
-@@ -232,7 +234,7 @@ static void lpi_device_get_constraints(void)
- 			}
- 		}
- 
--		if (!info.enabled || !info.package || !info.name)
-+		if (!info.package || !info.name)
- 			continue;
- 
- 		constraint = &lpi_constraints_table[lpi_constraints_table_size];
-@@ -244,7 +246,7 @@ static void lpi_device_get_constraints(void)
- 		acpi_handle_debug(lps0_device_handle,
- 				  "index:%d Name:%s\n", i, info.name);
- 
--		constraint->min_dstate = -1;
-+		constraint->min_dstate = -EINVAL;
- 
- 		for (j = 0; j < package_count; ++j) {
- 			union acpi_object *info_obj = &info.package[j];
-@@ -281,7 +283,7 @@ static void lpi_device_get_constraints(void)
- 					  "Incomplete constraint defined\n");
- 			continue;
- 		}
--
-+		constraint->enabled = info.enabled;
- 		lpi_constraints_table_size++;
- 	}
- 
+> +/**
+> + * acpi_get_lps0_constraint - get any LPS0 constraint for a device
+> + * @dev: device to get constraint for
+> + *
+> + * If a constraint has been specified in the _DSM method for the device,
+> + * and the constraint is enabled return it.  If the constraint is disabled,
+> + * return 0. Otherwise, return -ENODEV.
+> + */
+
+I believe you get a kernel-doc warning. Always test kernel doc with
+
+	scripts/kernel-doc -v -none -Wall ...your file...
+
+...
+
+> +/**
+> + * acpi_pci_device_constraint - determine if the platform has a contraint for the device
+> + * @dev: PCI device to check
+> + * @result (out): the constraint specified by the platform
+> + *
+> + * If the platform has specified a constraint for a device, this function will
+> + * return 0 and set @result to the constraint.
+> + * Otherwise, it will return an error code.
+> + */
+
+Ditto.
+
+...
+
+> +int acpi_pci_device_constraint(struct pci_dev *dev, int *result)
+> +{
+> +	int constraint;
+> +
+> +	constraint = acpi_get_lps0_constraint(&dev->dev);
+
+> +	pci_dbg(dev, "ACPI device constraint: %d\n", constraint);
+
+Does it make sense before the below check? Why can we be interested in the
+_exact_ negative values? (Note that non-printing is already a sign that either
+we don't call this or have negative constraint.)
+
+> +	if (constraint < 0)
+> +		return constraint;
+> +	*result = constraint;
+> +
+> +	return 0;
+> +}
+
 -- 
-2.34.1
+With Best Regards,
+Andy Shevchenko
+
 
