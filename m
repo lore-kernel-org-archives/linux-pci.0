@@ -2,83 +2,97 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7642CEB64DD
-	for <linux-pci@archiver.kernel.org>; Sat,  5 Aug 2023 05:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89659EB64DD
+	for <linux-pci@archiver.kernel.org>; Sat,  5 Aug 2023 07:58:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229516AbjHEF75 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 5 Aug 2023 01:59:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59212 "EHLO
+        id S229573AbjHEH6D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 5 Aug 2023 03:58:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjHEF74 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2023 01:59:56 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BAE6E4ED0;
-        Fri,  4 Aug 2023 22:59:55 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S229460AbjHEH6C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2023 03:58:02 -0400
+Received: from witt.link (witt.link [185.233.105.83])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B057101
+        for <linux-pci@vger.kernel.org>; Sat,  5 Aug 2023 00:58:00 -0700 (PDT)
+Received: from [10.0.0.117] (p5082aeb4.dip0.t-ipconnect.de [80.130.174.180])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature ECDSA (P-256) server-digest SHA256)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 51B9460A1A;
-        Sat,  5 Aug 2023 05:59:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 526B7C433C7;
-        Sat,  5 Aug 2023 05:59:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1691215194;
-        bh=TE1QwwH7vz6EtoxLzHCs+iszGyZ0+fhxjcjhaceK0JE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XzZSMoSP/tVdazrZpI4sCnjv3tKv6X9iShg+VAK8EegB8gnMpkqTVu1NhLmSIPLfD
-         y40poK0owMLEgViHceveY93+yeh3QxANvwGo0fTRxwgDYr+5bJtaAp3EZzG71+qQRE
-         ZSPgRXYClENqXNgTccGsJlQAlDfiRAcZ4EkPKp7c=
-Date:   Sat, 5 Aug 2023 07:59:51 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     Alistair Francis <alistair23@gmail.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        alex.williamson@redhat.com, christian.koenig@amd.com,
-        kch@nvidia.com, logang@deltatee.com, linux-kernel@vger.kernel.org,
-        Alistair Francis <alistair.francis@wdc.com>
-Subject: Re: [PATCH v2] PCI/DOE: Expose the DOE protocols via sysfs
-Message-ID: <2023080553-daringly-raider-0135@gregkh>
-References: <20230801121824.174556-1-alistair.francis@wdc.com>
- <2023080152-disobey-widen-65a4@gregkh>
- <CAKmqyKMEqrfP8BrXd9pVd4a5Aodipty-8bAkxK5xcGSewsC9JA@mail.gmail.com>
- <20230801170739.000048cb@Huawei.com>
- <CAKmqyKND01=xaiB-VFVsi3+KRbxu4dBKfh_RhCN-jric5VzNpA@mail.gmail.com>
- <20230802225248.GA19409@wunner.de>
- <CAKmqyKNypBUPNK37wby-0_7G2-10BmZ4f8WQbevVn9uX1mZreQ@mail.gmail.com>
- <20230804160542.GA19120@wunner.de>
+        by witt.link (Postfix) with ESMTPSA id B03842BEC34;
+        Sat,  5 Aug 2023 09:57:47 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=witt.link; s=dkim;
+        t=1691222268;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=l10MIReqKRYQ6OVgbsKPzfLHQNgDz0DXcxYdN2CYvnw=;
+        b=NmfshdRDR9vuBuQiRzH57PQiQLbrDwdBcoJjRFQxUh2na9YoRGNCM8t91f2Nq3P6wYOV/4
+        GyAyNC1ScPNkzDtF7fdshfrJ9gyZMSmn5l5hpVEdv9remfmKv8R5GeVqoHJcPKbpTYUNwN
+        1oaP+aGzvrAG0y+o9AMGGzV4MELm1i/aNXdY9nwjOvrXhoDi6I/0foWjae7Q6UjIjGQmOZ
+        dQFc4X83+6+lX6KSik46gQoyEo3PCPxkiOaFy/JYkv+FwAJL5ffFqA+TTaj6VjsYgsRVPc
+        u1lu7Jla9DfM98lj/1TG70QrRcLeNHYV4vRIQiPMoewhrpjkC8x1ocV+Azb+RA==
+Message-ID: <5d5dc59d-0ce0-c98c-c6c8-f1d748a8d968@witt.link>
+Date:   Sat, 5 Aug 2023 09:57:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230804160542.GA19120@wunner.de>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.12.0
+Subject: Re: [PATCH] PCI/ASPM: Add back L1 PM Substate save and restore
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     david.e.box@linux.intel.com, Thomas Witt <kernel@witt.link>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Tasev Nikola <tasev.stefanoska@skynet.be>,
+        Mark Enriquez <enriquezmark36@gmail.com>,
+        Koba Ko <koba.ko@canonical.com>, linux-pci@vger.kernel.org
+References: <20230627204124.GA366188@bhelgaas>
+ <20230628064637.GF14638@black.fi.intel.com>
+ <650f68a1-8d54-a5ad-079b-e8aea64c5130@witt.link>
+ <20230628105940.GK14638@black.fi.intel.com>
+ <4b47ec58-dc34-1129-4a50-baf2b84b0f53@witt.link>
+ <8af8d82dd0dc69851d0cfc41eba6e2acb22d2666.camel@linux.intel.com>
+ <20230630104154.GS14638@black.fi.intel.com>
+ <7efaf5d9-9469-9710-8a04-1483bc45c8b6@witt.link>
+ <098da63daae434f6ac0d34ea5303ccd8fb0435c1.camel@linux.intel.com>
+ <6673c6a1-16ba-aaa4-707a-70d92d9751f6@witt.link>
+ <20230731150128.GK14638@black.fi.intel.com>
+Content-Language: en-US
+From:   Thomas Witt <thomas@witt.link>
+In-Reply-To: <20230731150128.GK14638@black.fi.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Aug 04, 2023 at 06:05:42PM +0200, Lukas Wunner wrote:
-> On Fri, Aug 04, 2023 at 11:17:59AM -0400, Alistair Francis wrote:
-> > On Wed, Aug 2, 2023 at 6:52???PM Lukas Wunner <lukas@wunner.de> wrote:
-> > > I kind of like the approach of exposing a list which can be grep'ed,
-> > > even though it may go against the rule of having just one datum per
-> > > attribute.  I'd prefer a representation that's human-readable though,
-> > > e.g. "0001:01" for CMA-SPDM.
-> > 
-> > Yeah, it's my preferred method as well, but it's not going to be
-> > accepted upstream
+On 31/07/2023 17:01, Mika Westerberg wrote:
+> Hi Thomas,
 > 
-> How about procfs instead of sysfs?
+> Thanks for trying that. Did you manage to try out the S0ix script David
+> suggested? That should show us hopefully what is draining the battery in
+> s2idle.
 
-No, procfs is for "processes", not devices.
+Hi Mika,
 
-> No "single datum per file" rule over there.
-> PCI content goes into /proc/bus/pci/.
-> Already used by lspci to access config space.
+I did, with -s it gives
 
-And that is old legacy stuff, please, let us learn from our past
-mistakes in api creation, sysfs was created this way for a reason (i.e.
-large files in procfs do not work well over time.)
+Your system does not support low power S0 idle capability.
+Isolation suggestion:
+Please check BIOS low power S0 idle capability setting.
 
-thanks,
+with -r on
 
-greg k-h
+Your system did not achieve the runtime PC10 state during screen ON
+
+additionally, it encounters a syntax error:
+./s0ix-selftest-tool.sh: line 1182: wc:: syntax error in expression 
+(error token is ":")
+
+with -r off, it tries xset which fails due to a lack of xserver.
+
+Thomas
