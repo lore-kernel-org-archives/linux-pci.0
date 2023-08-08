@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89ED7C001B0
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 22:34:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE522C001DB
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 22:34:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230310AbjHHWeb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 18:34:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45156 "EHLO
+        id S230506AbjHHWeh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 18:34:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230319AbjHHWeb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 18:34:31 -0400
-Received: from out-85.mta1.migadu.com (out-85.mta1.migadu.com [95.215.58.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51FF310B
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 15:34:30 -0700 (PDT)
+        with ESMTP id S230233AbjHHWee (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 18:34:34 -0400
+Received: from out-80.mta1.migadu.com (out-80.mta1.migadu.com [95.215.58.80])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D252EFD
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 15:34:32 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1691534067;
+        t=1691534071;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=UkFV97CQa3g6DrhggAXuzog1hzg5W10mASK1ByxDhpo=;
-        b=PHfyGfjJY9Ur7O6u9zSuqLtFOfBXyBXUUFDLn09wdIeOTXwBdqdeMkEVbAfYkp+pfrdwJh
-        D5tcQm5d30zgqXzASPmeEsy3pgGMANJ4IzoPHXwSO2Y+GD73xe/yMnpf71ZJqNKtBbj1lo
-        lXO2AMWaiQes21PRybH44bgkLzjtuk4=
+        bh=mu/MhoXFJ/cEi4FsJokzAE/sQ7XHHhWDIZhXGhQKIk8=;
+        b=Adl1tcB78U1uq/fZLe6GYcn43LbRpfgPBKK17xeIW5yXvQaRZ0n/Abirru9G+fZ9WkrwIg
+        C9ZiabiIncjvC0hXZT2kaf7Z7KaAf0tycBNkaCe8u87wtDhLXUmSxsGGtI9dyQZg1sKAHZ
+        tIGGl4udI9xcc1Tdsvdo23/Yipt8Ehs=
 From:   Sui Jingfeng <sui.jingfeng@linux.dev>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Dave Airlie <airlied@redhat.com>, Daniel Vetter <daniel@ffwll.ch>,
         linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-kernel@vger.kernel.org,
         Sui Jingfeng <suijingfeng@loongson.cn>
-Subject: [PATCH v2 02/11] PCI: Add the pci_get_class_masked() helper
-Date:   Wed,  9 Aug 2023 06:34:03 +0800
-Message-Id: <20230808223412.1743176-3-sui.jingfeng@linux.dev>
+Subject: [PATCH v2 04/11] PCI/VGA: Drop the inline in the vga_update_device_decodes() function.
+Date:   Wed,  9 Aug 2023 06:34:05 +0800
+Message-Id: <20230808223412.1743176-5-sui.jingfeng@linux.dev>
 In-Reply-To: <20230808223412.1743176-1-sui.jingfeng@linux.dev>
 References: <20230808223412.1743176-1-sui.jingfeng@linux.dev>
 MIME-Version: 1.0
@@ -45,92 +45,60 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-Because there is no good way to get the mask member used to searching for
-devices that conform to a specific PCI class code, an application needs to
-process all PCI display devices can achieve its goal as follows:
+The vga_update_device_decodes() function is not performance-critical.
+So drop the inline. This patch also makes the parameter consistent with
+the argument, using the 'unsigned int' type instead of the 'signed' type
+to store the decode.
 
-pdev = NULL;
-do {
-	pdev = pci_get_class_masked(PCI_BASE_CLASS_DISPLAY << 16, 0xFF0000, pdev);
-	if (pdev)
-		do_something_for_pci_display_device(pdev);
-} while (pdev);
-
-While previously, we just can not ignore Sub-Class code and the Programming
-Interface byte when do the searching.
+Change the second argument of the vga_update_device_decodes() function
+to 'unsigned int' type.
 
 Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
 ---
- drivers/pci/search.c | 30 ++++++++++++++++++++++++++++++
- include/linux/pci.h  |  7 +++++++
- 2 files changed, 37 insertions(+)
+ drivers/pci/vgaarb.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index b4c138a6ec02..f1c15aea868b 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -334,6 +334,36 @@ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+index 8742a51d450f..dc10a262fb5e 100644
+--- a/drivers/pci/vgaarb.c
++++ b/drivers/pci/vgaarb.c
+@@ -860,24 +860,24 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
+ 	return ret;
  }
- EXPORT_SYMBOL(pci_get_device);
  
-+/**
-+ * pci_get_class_masked - begin or continue searching for a PCI device by class and mask
-+ * @class: search for a PCI device with this class designation
-+ * @from: Previous PCI device found in search, or %NULL for new search.
-+ *
-+ * Iterates through the list of known PCI devices.  If a PCI device is
-+ * found with a matching @class, the reference count to the device is
-+ * incremented and a pointer to its device structure is returned.
-+ * Otherwise, %NULL is returned.
-+ * A new search is initiated by passing %NULL as the @from argument.
-+ * Otherwise if @from is not %NULL, searches continue from next device
-+ * on the global list.  The reference count for @from is always decremented
-+ * if it is not %NULL.
-+ */
-+struct pci_dev *pci_get_class_masked(unsigned int class, unsigned int mask,
-+				     struct pci_dev *from)
-+{
-+	struct pci_device_id id = {
-+		.vendor = PCI_ANY_ID,
-+		.device = PCI_ANY_ID,
-+		.subvendor = PCI_ANY_ID,
-+		.subdevice = PCI_ANY_ID,
-+		.class_mask = mask,
-+		.class = class,
-+	};
-+
-+	return pci_get_dev_by_id(&id, from);
-+}
-+EXPORT_SYMBOL(pci_get_class_masked);
-+
- /**
-  * pci_get_class - begin or continue searching for a PCI device by class
-  * @class: search for a PCI device with this class designation
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0ff7500772e6..b20e7ba844bf 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1180,6 +1180,9 @@ struct pci_dev *pci_get_slot(struct pci_bus *bus, unsigned int devfn);
- struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
- 					    unsigned int devfn);
- struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
-+struct pci_dev *pci_get_class_masked(unsigned int class, unsigned int mask,
-+				     struct pci_dev *from);
-+
- int pci_dev_present(const struct pci_device_id *ids);
+-/* this is called with the lock */
+-static inline void vga_update_device_decodes(struct vga_device *vgadev,
+-					     int new_decodes)
++/* This is called with the lock */
++static void vga_update_device_decodes(struct vga_device *vgadev,
++				      unsigned int new_decodes)
+ {
+ 	struct device *dev = &vgadev->pdev->dev;
+-	int old_decodes, decodes_removed, decodes_unlocked;
++	unsigned int old_decodes = vgadev->decodes;
++	unsigned int decodes_removed = ~new_decodes & old_decodes;
++	unsigned int decodes_unlocked = vgadev->locks & decodes_removed;
  
- int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
-@@ -1895,6 +1898,10 @@ static inline struct pci_dev *pci_get_class(unsigned int class,
- 					    struct pci_dev *from)
- { return NULL; }
+-	old_decodes = vgadev->decodes;
+-	decodes_removed = ~new_decodes & old_decodes;
+-	decodes_unlocked = vgadev->locks & decodes_removed;
+ 	vgadev->decodes = new_decodes;
  
-+static inline struct pci_dev *pci_get_class_masked(unsigned int class,
-+						   unsigned int mask,
-+						   struct pci_dev *from)
-+{ return NULL; }
+-	vgaarb_info(dev, "changed VGA decodes: olddecodes=%s,decodes=%s:owns=%s\n",
+-		vga_iostate_to_str(old_decodes),
+-		vga_iostate_to_str(vgadev->decodes),
+-		vga_iostate_to_str(vgadev->owns));
++	vgaarb_info(dev,
++		    "VGA decodes changed: olddecodes=%s,decodes=%s:owns=%s\n",
++		    vga_iostate_to_str(old_decodes),
++		    vga_iostate_to_str(vgadev->decodes),
++		    vga_iostate_to_str(vgadev->owns));
  
- static inline int pci_dev_present(const struct pci_device_id *ids)
- { return 0; }
+-	/* if we removed locked decodes, lock count goes to zero, and release */
++	/* If we removed locked decodes, lock count goes to zero, and release */
+ 	if (decodes_unlocked) {
+ 		if (decodes_unlocked & VGA_RSRC_LEGACY_IO)
+ 			vgadev->io_lock_cnt = 0;
 -- 
 2.34.1
 
