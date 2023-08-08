@@ -2,119 +2,302 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41A0AC04A6A
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:18:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 704FEC001B0
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:19:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232100AbjHHQRm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:17:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40760 "EHLO
+        id S232478AbjHHQSo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:18:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232424AbjHHQQK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:16:10 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2071.outbound.protection.outlook.com [40.107.94.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E34826B8;
-        Tue,  8 Aug 2023 08:48:11 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=B4XnAYrjOf+5HPjb5xW+jUw4LJHM9x2onQoYjqjyir8WypiLgDKWxNpUBZlhHm0sjnOl2nfSkzo8OLs6AiBBEY+S0RggsHj07w55QQ8qEgL2mQolJeOWkNP7U4lN0zej0zBPXLFkTj9VkVOhoD2xRrkALdWzkTIcp/LjV+jlHmy3XQAYNr1daKKf7yPXbenlLLw5Zn/vv0CYy7vOSSWqGjQB3P376JJ+/jWJcFIh62h/uM7ZNsGoouVlDSHa9VFgZeWecnMLuvqYacqJsPYLlo8MNflk8Nhb02ZkKhbVsvwCG3UoRvvhCralTUX6BwEqRxWZDm29sRG0BMRFH5OKXA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=i6iMn9NAKlcBVF7tE7k+QmxyMwxfxbxz27R5FDL+wpU=;
- b=TKFrTlfW/00lygvqeyiFo81rpTadcwCBQokhwzgO907MRZvKkLgxfwreg72UIbUwIOW39skE0DzAAw5f3rmizpCZcZZmbQYgSCDWB1iN5/Gimgd6OMmHNJ4JhwErY7hDTxPnmDl0iJCcBKsxoixtNdIzgBKBfn53jRAWYGxM+efS0PPn4KGhhOQ+CbcpfFnjLYIydCqUwDaGNCOnJW1lPkh2THq6n5lkElUamPb3T4IHpzBRyZ7xSW0F2RXJF80gfY1IFIg34v+XDAdNOvuZKWj7WWYUfuOKEEKnwjPAAcVTiBd1vvZRdXWu999TFmxcewif2iBJXksvY3EOJRDuMw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=i6iMn9NAKlcBVF7tE7k+QmxyMwxfxbxz27R5FDL+wpU=;
- b=XfV+8yr1LIthpGUbSUFQx0q2aEmvJL3SwoueUt9h5vGvVqWSq5Cg3OacOAdN5vOZ+NU5dSEXybcDRx4XIN7sgA5606DFwgywTIztwAAu/sAXuORGACnhWIbSfNURyiLX+Rwzz0Dp0VthntvMI3f0AzW9bEU3jafaka7O3KmCQY0=
-Received: from SA9PR13CA0114.namprd13.prod.outlook.com (2603:10b6:806:24::29)
- by MW4PR12MB5602.namprd12.prod.outlook.com (2603:10b6:303:169::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.21; Tue, 8 Aug
- 2023 10:38:03 +0000
-Received: from SN1PEPF000252A4.namprd05.prod.outlook.com
- (2603:10b6:806:24:cafe::5a) by SA9PR13CA0114.outlook.office365.com
- (2603:10b6:806:24::29) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6678.17 via Frontend
- Transport; Tue, 8 Aug 2023 10:38:03 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- SN1PEPF000252A4.mail.protection.outlook.com (10.167.242.11) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6652.19 via Frontend Transport; Tue, 8 Aug 2023 10:38:03 +0000
-Received: from SATLEXMB05.amd.com (10.181.40.146) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Tue, 8 Aug
- 2023 05:38:02 -0500
-Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB05.amd.com
- (10.181.40.146) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Tue, 8 Aug
- 2023 05:37:48 -0500
-Received: from xhdthippesw40.xilinx.com (10.180.168.240) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.27 via Frontend
- Transport; Tue, 8 Aug 2023 05:37:45 -0500
-From:   Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-To:     <linux-kernel@vger.kernel.org>, <robh+dt@kernel.org>,
-        <bhelgaas@google.com>, <krzysztof.kozlowski@linaro.org>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>
-CC:     <lpieralisi@kernel.org>, <bharat.kumar.gogada@amd.com>,
-        <michal.simek@amd.com>, <linux-arm-kernel@lists.infradead.org>,
-        "Thippeswamy Havalige" <thippeswamy.havalige@amd.com>
-Subject: [PATCH v2 0/2] Increase ecam size value to discover 256 buses during
-Date:   Tue, 8 Aug 2023 16:07:31 +0530
-Message-ID: <20230808103733.93707-2-thippeswamy.havalige@amd.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230808103733.93707-1-thippeswamy.havalige@amd.com>
-References: <20230808103733.93707-1-thippeswamy.havalige@amd.com>
+        with ESMTP id S232598AbjHHQRU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:17:20 -0400
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C09A93C06;
+        Tue,  8 Aug 2023 08:48:24 -0700 (PDT)
+Received: from loongson.cn (unknown [10.20.42.43])
+        by gateway (Coremail) with SMTP id _____8Cxrus0WNJkk_ESAA--.39249S3;
+        Tue, 08 Aug 2023 22:59:00 +0800 (CST)
+Received: from openarena.loongson.cn (unknown [10.20.42.43])
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8DxJ80zWNJk4DNPAA--.1524S2;
+        Tue, 08 Aug 2023 22:58:59 +0800 (CST)
+From:   Sui Jingfeng <suijingfeng@loongson.cn>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Cc:     linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, loongson-kernel@lists.loongnix.cn
+Subject: [PATCH] PCI/VGA: Make the vga_is_firmware_default() less arch-independent
+Date:   Tue,  8 Aug 2023 22:58:59 +0800
+Message-Id: <20230808145859.1590625-1-suijingfeng@loongson.cn>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN1PEPF000252A4:EE_|MW4PR12MB5602:EE_
-X-MS-Office365-Filtering-Correlation-Id: 525f69cd-89fd-467f-9575-08db97fb8b55
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: CIQa9haKkOYq8Miv4wqNeG5+r3MYz83J3W9xyinmEDeSiZiu/A0mz8wgfVFdadu/J3KLDN4YVl61o+BOaqrpXLUX18O+sPdl+lAoSpSqwMgZI88hChW1YwcHJST/tnDX4P2k5hLuliJ3WUv7Rj8QjjXdd/VeAmNo9tgGvNwuTf4dpfy7b3on8WrlAl6I2sZ6bU2N299shDbsOcFFdxjZ0u2ZZkl+9/DWlJ5hum0f8BY5g1JoycPsMhgy2pFP7Bh4kF/jZwOrAjMXJOlNeFhzTfBzgEetEgqHvtaGhpy36BY8higywS+6SCyxQIJe45ypRIpiN0UEcGGgXtPvXD5y0emVGvuOJ2VZeIuvTkbzaOdnKeXtteeMJ2hHs4do1U4TTXVuhc/e872few8zTAPBYxHyUNK4ASVVFdEbD9WyM+p9FXDpnup0SSgkhfaFQffQ8xMLRFhWyt3qquyaKX040B2Vn+QpvXJEfiypb0mmPCyreWjE5Byw57BKH8ukArvj2sdS9bbvC/QOtw05Dtu/C7TXJmsJMh4B9Q4IGustVO4ShmCjud2EEPeAY22gNlLoOgAsLkDM183Gz9HsBSZNzewtMX3lsII8Y3JbXtt7c7m8im8xSHpD9VHMdW41/SR02O7xx6hAUONZL9C1fZrfPCD53QPp1vcM0G6o8A4ligciRkkWAU0gc/7EFIIDpCQmpmR4Sx2y7F8mzfnXQ4XPuNf4e3D0YPvw80MeXkWRZjCdxv9TyxGI/SAH2JfjVIP8mlMxo2u9WoNoUgZBCcWmmw==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(346002)(39860400002)(376002)(136003)(396003)(82310400008)(1800799003)(186006)(451199021)(46966006)(36840700001)(40470700004)(426003)(1076003)(26005)(2906002)(5660300002)(44832011)(83380400001)(8676002)(36860700001)(4744005)(47076005)(41300700001)(8936002)(2616005)(40460700003)(40480700001)(336012)(82740400003)(86362001)(316002)(356005)(54906003)(110136005)(478600001)(6666004)(81166007)(70206006)(70586007)(4326008)(36756003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2023 10:38:03.2659
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 525f69cd-89fd-467f-9575-08db97fb8b55
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: SN1PEPF000252A4.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB5602
+X-CM-TRANSID: AQAAf8DxJ80zWNJk4DNPAA--.1524S2
+X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
+X-Coremail-Antispam: 1Uk129KBj93XoW3Ww1fGrW7ZF15ur4kAw18WFX_yoW3CF4kpF
+        WfJFWfKFs8Gr4fJrZrGF48Xw1rZrsY9FW8KFW7A3Z3Ja43urykur1FyFZ0qryfJ397Jw4f
+        KF42yrn5GFsrXFXCm3ZEXasCq-sJn29KB7ZKAUJUUUUr529EdanIXcx71UUUUU7KY7ZEXa
+        sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+        0xBIdaVrnRJUUU90b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+        IYs7xG6rWj6s0DM7CIcVAFz4kK6r1Y6r17M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+        0_Jr0_Gr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AK
+        xVWxJr0_GcWln4kS14v26r1Y6r17M2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12
+        xvs2x26I8E6xACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y
+        6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64
+        vIr41l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1l4IxYO2xFxVAFwI0_
+        Jrv_JF1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1V
+        AY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAI
+        cVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
+        IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r1j6r4UYxBIdaVFxhVj
+        vjDU0xZFpf9x07jepB-UUUUU=
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Current driver is supports up to 16 buses. The following code fixes 
-to support up to 256 buses.
+Currently, the vga_is_firmware_default() function works only on x86 and
+IA64 architectures, but it is a no-op on ARM64, PPC, RISC-V, etc. This
+patch completes the implementation by tracking the firmware framebuffer's
+address range. The added code is trying to identify the VRAM aperture that
+contains the firmware framebuffer. Once found, related information about
+the VRAM aperture will be tracked.
 
-update "NWL_ECAM_VALUE_DEFAULT " to 16  can access up to 256MB ECAM
-region to detect 256 buses.
+Note that we need to identify the VRAM aperture before it get moved. We
+achieve this by using DECLARE_PCI_FIXUP_CLASS_HEADER(), which ensures that
+vga_arb_firmware_fb_addr_tracker() gets called before PCI resource
+allocation. Once we found the VRAM aperture that contains firmware fb, we
+are able to monitor the address changes of it. If the VRAM aperture of the
+primary GPU do moved, we will update our cached firmware framebuffer's
+address range accordingly. This approach overcomes the VRAM bar relocation
+issue successfully. Hence, this patch make the vga_is_firmware_default()
+function works on whatever arch that has UEFI GOP support, including x86
+and IA64. But, at the first step, we make it available only on platforms
+which PCI resource relocation do happens. Once provided method proved to
+be effective and reliable, it can be expanded to other arch easily.
 
-Update ecam size to 256MB in device tree binding example.
+This patch is tested on
+1) LS3A5000+LS7A2000 and LS3A5000+LS7A1000 platform.
+2) Intel i3-8100 CPU + H110 D4L motherboard with triple video cards:
 
-Thippeswamy Havalige (2):
-  dt-bindings: PCI: xilinx-nwl: Modify ECAM size in example.
-  PCI: xilinx-nwl: Increase ECAM size to accommodate 256 buses.
+$ lspci | grep VGA
 
- Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml | 2 +-
- drivers/pci/controller/pcie-xilinx-nwl.c                 | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Intel Corporation CoffeeLake-S GT2 [UHD Graphics 630]
+Advanced Micro Devices, Inc. [AMD/ATI] Ellesmere [Radeon RX 470] (rev cf)
+ASPEED Technology, Inc. ASPEED Graphics Family (rev 52)
 
+Note that on x86, in order to testing the new approach this patch provided,
+we remove the vga_arb_get_fb_range_from_screen_info() call in
+vga_is_firmware_default() function, as following.
+
+-#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+-       ret = vga_arb_get_fb_range_from_screen_info(&fb_start, &fb_end);
+-#else
+        ret = vga_arb_get_fb_range_from_tracker(&fb_start, &fb_end);
+-#endif
+
+It is just that we don't observe the case which VRAM Bar of VGA compatible
+controller moves, so there just no need to unify it. But on LoongArch,
+the VRAM Bar of AMDGPU do moves.
+
+v2:
+	* Fix test robot warnnings and fix typos
+
+v3:
+	* Fix linkage problems if the global screen_info is not exported
+
+Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
+---
+ drivers/pci/vgaarb.c | 154 ++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 139 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
+index 5a696078b382..e0919a70af3e 100644
+--- a/drivers/pci/vgaarb.c
++++ b/drivers/pci/vgaarb.c
+@@ -61,6 +61,92 @@ static bool vga_arbiter_used;
+ static DEFINE_SPINLOCK(vga_lock);
+ static DECLARE_WAIT_QUEUE_HEAD(vga_wait_queue);
+ 
++static struct firmware_fb_tracker {
++	/* The PCI(e) device who owns the firmware framebuffer */
++	struct pci_dev *pdev;
++	/* The index of the VRAM Bar */
++	unsigned int bar;
++	/* Firmware fb's offset from the VRAM aperture start */
++	resource_size_t offset;
++	/* The firmware fb's size, in bytes */
++	resource_size_t size;
++
++	/* Firmware fb's address range, suffer from change */
++	resource_size_t start;
++	resource_size_t end;
++} firmware_fb;
++
++/*
++ * Get the physical address range that the firmware framebuffer occupies.
++ *
++ * The global screen_info is arch-specific; it will not be exported if the
++ * CONFIG_EFI is not selected on Arm64. Hence, CONFIG_EFI is chosen as
++ * compile-time conditional to suppress linkage problems. This guard can be
++ * removed if the global screen_info became arch-independent one day.
++ */
++static bool vga_arb_get_fb_range_from_screen_info(resource_size_t *start,
++						  resource_size_t *end)
++{
++	resource_size_t fb_start = 0;
++	resource_size_t fb_size = 0;
++	resource_size_t fb_end;
++
++#if defined(CONFIG_EFI)
++	fb_start = screen_info.lfb_base;
++	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
++		fb_start |= (u64)screen_info.ext_lfb_base << 32;
++
++	fb_size = screen_info.lfb_size;
++#endif
++
++	/* No firmware framebuffer support */
++	if (!fb_start || !fb_size)
++		return false;
++
++	fb_end = fb_start + fb_size - 1;
++
++	*start = fb_start;
++	*end = fb_end;
++
++	return true;
++}
++
++static bool vga_arb_get_fb_range_from_tracker(resource_size_t *start,
++					      resource_size_t *end)
++{
++	struct pci_dev *pdev = firmware_fb.pdev;
++	resource_size_t new_vram_base;
++	resource_size_t new_fb_start;
++	resource_size_t old_fb_start;
++	resource_size_t old_fb_end;
++
++	/*
++	 * No firmware framebuffer support or no aperture that contains the
++	 * firmware FB is found. In this case, the firmware_fb.pdev will be
++	 * NULL. We will return immediately.
++	 */
++	if (!pdev)
++		return false;
++
++	new_vram_base = pdev->resource[firmware_fb.bar].start;
++	new_fb_start = new_vram_base + firmware_fb.offset;
++	old_fb_start = firmware_fb.start;
++	old_fb_end = firmware_fb.end;
++
++	if (new_fb_start != old_fb_start) {
++		firmware_fb.start = new_fb_start;
++		firmware_fb.end = new_fb_start + firmware_fb.size - 1;
++		vgaarb_dbg(&pdev->dev,
++			   "[0x%llx, 0x%llx] -> [0x%llx, 0x%llx]\n",
++			   (u64)old_fb_start, (u64)old_fb_end,
++			   (u64)firmware_fb.start, (u64)firmware_fb.end);
++	}
++
++	*start = firmware_fb.start;
++	*end = firmware_fb.end;
++
++	return true;
++}
+ 
+ static const char *vga_iostate_to_str(unsigned int iostate)
+ {
+@@ -543,20 +629,21 @@ void vga_put(struct pci_dev *pdev, unsigned int rsrc)
+ }
+ EXPORT_SYMBOL(vga_put);
+ 
++/* Select the device owning the boot framebuffer if there is one */
+ static bool vga_is_firmware_default(struct pci_dev *pdev)
+ {
+-#if defined(CONFIG_X86) || defined(CONFIG_IA64)
+-	u64 base = screen_info.lfb_base;
+-	u64 size = screen_info.lfb_size;
+ 	struct resource *r;
+-	u64 limit;
++	resource_size_t fb_start;
++	resource_size_t fb_end;
++	bool ret;
+ 
+-	/* Select the device owning the boot framebuffer if there is one */
+-
+-	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
+-		base |= (u64)screen_info.ext_lfb_base << 32;
+-
+-	limit = base + size;
++#if defined(CONFIG_X86) || defined(CONFIG_IA64)
++	ret = vga_arb_get_fb_range_from_screen_info(&fb_start, &fb_end);
++#else
++	ret = vga_arb_get_fb_range_from_tracker(&fb_start, &fb_end);
++#endif
++	if (!ret)
++		return false;
+ 
+ 	/* Does firmware framebuffer belong to us? */
+ 	pci_dev_for_each_resource(pdev, r) {
+@@ -566,12 +653,10 @@ static bool vga_is_firmware_default(struct pci_dev *pdev)
+ 		if (!r->start || !r->end)
+ 			continue;
+ 
+-		if (base < r->start || limit >= r->end)
+-			continue;
+-
+-		return true;
++		if (fb_start >= r->start && fb_end <= r->end)
++			return true;
+ 	}
+-#endif
++
+ 	return false;
+ }
+ 
+@@ -1555,3 +1640,42 @@ static int __init vga_arb_device_init(void)
+ 	return rc;
+ }
+ subsys_initcall_sync(vga_arb_device_init);
++
++static void vga_arb_firmware_fb_addr_tracker(struct pci_dev *pdev)
++{
++	resource_size_t fb_start;
++	resource_size_t fb_end;
++	unsigned int i;
++
++	/* Already found the pdev which has firmware framebuffer ownership */
++	if (firmware_fb.pdev)
++		return;
++
++	if (!vga_arb_get_fb_range_from_screen_info(&fb_start, &fb_end))
++		return;
++
++	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
++		struct resource *ap = &pdev->resource[i];
++
++		if (resource_type(ap) != IORESOURCE_MEM)
++			continue;
++
++		if (!ap->start || !ap->end)
++			continue;
++
++		if (ap->start <= fb_start && fb_end <= ap->end) {
++			firmware_fb.pdev = pdev;
++			firmware_fb.bar = i;
++			firmware_fb.size = fb_end - fb_start + 1;
++			firmware_fb.offset = fb_start - ap->start;
++			firmware_fb.start = fb_start;
++			firmware_fb.end = fb_end;
++
++			vgaarb_dbg(&pdev->dev,
++				   "BAR %u contains firmware FB\n", i);
++			break;
++		}
++	}
++}
++DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID, PCI_CLASS_DISPLAY_VGA,
++			       8, vga_arb_firmware_fb_addr_tracker);
 -- 
-1.8.3.1
+2.34.1
 
