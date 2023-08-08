@@ -2,38 +2,38 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F296FC04A94
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 22:34:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D00BC001DB
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 22:34:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230497AbjHHWei (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 18:34:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45380 "EHLO
+        id S231177AbjHHWeo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 18:34:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53968 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230521AbjHHWeh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 18:34:37 -0400
-Received: from out-78.mta1.migadu.com (out-78.mta1.migadu.com [95.215.58.78])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B9B9101
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 15:34:36 -0700 (PDT)
+        with ESMTP id S231215AbjHHWel (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 18:34:41 -0400
+Received: from out-76.mta1.migadu.com (out-76.mta1.migadu.com [95.215.58.76])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3E201B4
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 15:34:39 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1691534073;
+        t=1691534076;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=HQgYw5lX3SkYq1STywg88ED6q5FjX9omCE5FKYEvLx8=;
-        b=V2b/yZWh7iqOPKRM+woaS0Pcn2y/ZwlopGA/To5CR6hBItv7RHn++t0bdatVP+jBdJY3WF
-        XEy5JoecUt0pwfcntmWSCZuzjtsjWYXbh4aYIVQPplR1enGjSuBkUvCm7NtvjmK/1e2a/q
-        t2IOEGUJZhKpiH+y+nQ3gBn4OCPe5HA=
+        bh=OzZwtUzLVgyigIZtu0FTQnFL+tgS0hu77QEo/xERbug=;
+        b=DGYotxqNLyZsNF2IhhW+hGPcxHM/d9eMPF9lhqKC3341P3IrJ+qrPvpcLToq9oBZD1PR0F
+        A2j9JANAQEm7SnZ98HhQ6RDX0BuJJNhpHUfinaFEM9j29EBLRlA84huObzAoFTeTMViyZD
+        1oWz4mA51DDBJiuVfb30E9SV7R7bhqY=
 From:   Sui Jingfeng <sui.jingfeng@linux.dev>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Dave Airlie <airlied@redhat.com>, Daniel Vetter <daniel@ffwll.ch>,
         linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-kernel@vger.kernel.org,
         Sui Jingfeng <suijingfeng@loongson.cn>
-Subject: [PATCH v2 05/11] PCI/VGA: Move the new_state assignment out of the loop
-Date:   Wed,  9 Aug 2023 06:34:06 +0800
-Message-Id: <20230808223412.1743176-6-sui.jingfeng@linux.dev>
+Subject: [PATCH v2 07/11] PCI/VGA: vga_client_register() return -ENODEV on failure, not -1
+Date:   Wed,  9 Aug 2023 06:34:08 +0800
+Message-Id: <20230808223412.1743176-8-sui.jingfeng@linux.dev>
 In-Reply-To: <20230808223412.1743176-1-sui.jingfeng@linux.dev>
 References: <20230808223412.1743176-1-sui.jingfeng@linux.dev>
 MIME-Version: 1.0
@@ -45,53 +45,47 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-In the vga_arbiter_notify_clients() function, the value of the 'new_state'
-variable will be 'false' on systems that have more than one VGA device.
-The value will be 'true' if there is only one VGA device or no VGA device
-at all. Hence, its value is not relevant to the iteration of the loop.
-
-So move the assignment clause out of the loop. For a system with multiple
-video cards, this patch saves unnecessary assignment.
-
+Fixes: 934f992c763a ("drm/i915: Recognise non-VGA display devices")
 Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
 ---
- drivers/pci/vgaarb.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+ drivers/pci/vgaarb.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index dc10a262fb5e..6883067a802a 100644
+index 811510253553..a6b8c0def35d 100644
 --- a/drivers/pci/vgaarb.c
 +++ b/drivers/pci/vgaarb.c
-@@ -1468,22 +1468,20 @@ static void vga_arbiter_notify_clients(void)
- {
- 	struct vga_device *vgadev;
- 	unsigned long flags;
--	uint32_t new_decodes;
--	bool new_state;
-+	bool state;
+@@ -964,7 +964,7 @@ EXPORT_SYMBOL(vga_set_legacy_decoding);
+  *
+  * To unregister just call vga_client_unregister().
+  *
+- * Returns: 0 on success, -1 on failure
++ * Returns: 0 on success, -ENODEV on failure
+  */
+ int vga_client_register(struct pci_dev *pdev,
+ 		unsigned int (*set_decode)(struct pci_dev *pdev, bool decode))
+@@ -975,16 +975,13 @@ int vga_client_register(struct pci_dev *pdev,
  
- 	if (!vga_arbiter_used)
- 		return;
- 
-+	state = (vga_count > 1) ? false : true;
-+
  	spin_lock_irqsave(&vga_lock, flags);
- 	list_for_each_entry(vgadev, &vga_list, list) {
--		if (vga_count > 1)
--			new_state = false;
--		else
--			new_state = true;
- 		if (vgadev->set_decode) {
--			new_decodes = vgadev->set_decode(vgadev->pdev,
--							 new_state);
--			vga_update_device_decodes(vgadev, new_decodes);
-+			unsigned int decodes;
-+
-+			decodes = vgadev->set_decode(vgadev->pdev, state);
-+			vga_update_device_decodes(vgadev, decodes);
- 		}
- 	}
+ 	vgadev = vgadev_find(pdev);
+-	if (!vgadev)
+-		goto bail;
+-
+-	vgadev->set_decode = set_decode;
+-	ret = 0;
+-
+-bail:
++	if (vgadev) {
++		vgadev->set_decode = set_decode;
++		ret = 0;
++	}
  	spin_unlock_irqrestore(&vga_lock, flags);
+-	return ret;
+ 
++	return ret;
+ }
+ EXPORT_SYMBOL(vga_client_register);
+ 
 -- 
 2.34.1
 
