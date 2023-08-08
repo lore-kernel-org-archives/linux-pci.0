@@ -2,142 +2,103 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D69CBC001B0
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:49:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7E5DC04A6A
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:50:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229463AbjHHTtp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:49:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52708 "EHLO
+        id S230397AbjHHTuh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:50:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231527AbjHHTt0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:49:26 -0400
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94EE4504C8
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 09:54:32 -0700 (PDT)
-Received: from dggpemm500002.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RKfRj2C9cztRsG;
-        Tue,  8 Aug 2023 11:53:21 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- dggpemm500002.china.huawei.com (7.185.36.229) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.27; Tue, 8 Aug 2023 11:56:48 +0800
-From:   Xiongfeng Wang <wangxiongfeng2@huawei.com>
-To:     <bhelgaas@google.com>, <fbarrat@linux.ibm.com>,
-        <ajd@linux.ibm.com>, <mpe@ellerman.id.au>, <npiggin@gmail.com>,
-        <christophe.leroy@csgroup.eu>, <arnd@arndb.de>,
-        <gregkh@linuxfoundation.org>, <ben.widawsky@intel.com>
-CC:     <linux-pci@vger.kernel.org>, <yangyingliang@huawei.com>,
-        <linuxppc-dev@lists.ozlabs.org>, <jonathan.cameron@huawei.com>,
-        <david.e.box@linux.intel.com>, <helgaas@kernel.org>,
-        <wangxiongfeng2@huawei.com>
-Subject: [PATCH v2 1/2] PCI: Add pci_find_next_dvsec_capability to find next Designated VSEC
-Date:   Tue, 8 Aug 2023 12:08:57 +0800
-Message-ID: <20230808040858.183568-2-wangxiongfeng2@huawei.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20230808040858.183568-1-wangxiongfeng2@huawei.com>
-References: <20230808040858.183568-1-wangxiongfeng2@huawei.com>
+        with ESMTP id S229553AbjHHTuW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:50:22 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D971EA2B9
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 09:56:47 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qTHIO-0006g7-0w; Tue, 08 Aug 2023 09:38:24 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qTHIM-001vlU-W3; Tue, 08 Aug 2023 09:38:23 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qTHIM-00BLuB-9u; Tue, 08 Aug 2023 09:38:22 +0200
+Date:   Tue, 8 Aug 2023 09:38:22 +0200
+From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To:     Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+Cc:     "Russell King (Oracle)" <linux@armlinux.org.uk>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
+Message-ID: <20230808073822.35vlao5bs6bo2b2n@pengutronix.de>
+References: <20230114164125.1298-1-pali@kernel.org>
+ <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
+ <20230804134622.pmbymxtzxj2yfhri@pengutronix.de>
+ <20230808072701.gx6apjnnrppv7sit@pali>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.113.25]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpemm500002.china.huawei.com (7.185.36.229)
-X-CFilter-Loop: Reflected
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="mfde7qneidzydtp6"
+Content-Disposition: inline
+In-Reply-To: <20230808072701.gx6apjnnrppv7sit@pali>
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some devices may have several DVSEC (Designated Vendor-Specific Extended
-Capability) entries with the same DVSEC ID. Add
-pci_find_next_dvsec_capability() to find them all.
 
-Signed-off-by: Xiongfeng Wang <wangxiongfeng2@huawei.com>
-Reviewed-by: Andrew Donnellan <ajd@linux.ibm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c   | 39 ++++++++++++++++++++++++++-------------
- include/linux/pci.h |  2 ++
- 2 files changed, 28 insertions(+), 13 deletions(-)
+--mfde7qneidzydtp6
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 60230da957e0..2ff5b1ce0eec 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -749,35 +749,48 @@ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap)
- EXPORT_SYMBOL_GPL(pci_find_vsec_capability);
- 
- /**
-- * pci_find_dvsec_capability - Find DVSEC for vendor
-+ * pci_find_next_dvsec_capability - Find next DVSEC for vendor
-  * @dev: PCI device to query
-+ * @start: Address at which to start looking (0 to start at beginning of list)
-  * @vendor: Vendor ID to match for the DVSEC
-- * @dvsec: Designated Vendor-specific capability ID
-+ * @dvsec: Vendor-defined DVSEC ID
-  *
-- * If DVSEC has Vendor ID @vendor and DVSEC ID @dvsec return the capability
-- * offset in config space; otherwise return 0.
-+ * Returns the address of the next DVSEC if the DVSEC has Vendor ID @vendor and
-+ * DVSEC ID @dvsec; otherwise return 0. DVSEC can occur several times with the
-+ * same DVSEC ID for some devices, and this provides a way to find them all.
-  */
--u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec)
-+u16 pci_find_next_dvsec_capability(struct pci_dev *dev, u16 start, u16 vendor,
-+				   u16 dvsec)
- {
--	int pos;
-+	u16 pos = start;
- 
--	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DVSEC);
--	if (!pos)
--		return 0;
--
--	while (pos) {
-+	while ((pos = pci_find_next_ext_capability(dev, pos,
-+						  PCI_EXT_CAP_ID_DVSEC))) {
- 		u16 v, id;
- 
- 		pci_read_config_word(dev, pos + PCI_DVSEC_HEADER1, &v);
- 		pci_read_config_word(dev, pos + PCI_DVSEC_HEADER2, &id);
- 		if (vendor == v && dvsec == id)
- 			return pos;
--
--		pos = pci_find_next_ext_capability(dev, pos, PCI_EXT_CAP_ID_DVSEC);
- 	}
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(pci_find_next_dvsec_capability);
-+
-+/**
-+ * pci_find_dvsec_capability - Find DVSEC for vendor
-+ * @dev: PCI device to query
-+ * @vendor: Vendor ID to match for the DVSEC
-+ * @dvsec: Vendor-defined DVSEC ID
-+ *
-+ * If DVSEC has Vendor ID @vendor and DVSEC ID @dvsec return the capability
-+ * offset in config space; otherwise return 0.
-+ */
-+u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec)
-+{
-+	return pci_find_next_dvsec_capability(dev, 0, vendor, dvsec);
-+}
- EXPORT_SYMBOL_GPL(pci_find_dvsec_capability);
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c69a2cc1f412..82bb905daf72 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1168,6 +1168,8 @@ u16 pci_find_next_ext_capability(struct pci_dev *dev, u16 pos, int cap);
- struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
- u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap);
- u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec);
-+u16 pci_find_next_dvsec_capability(struct pci_dev *dev, u16 start, u16 vendor,
-+				   u16 dvsec);
- 
- u64 pci_get_dsn(struct pci_dev *dev);
- 
--- 
-2.20.1
+Hello Pali,
 
+On Tue, Aug 08, 2023 at 09:27:01AM +0200, Pali Roh=E1r wrote:
+> On Friday 04 August 2023 15:46:22 Uwe Kleine-K=F6nig wrote:
+> > On Fri, Aug 04, 2023 at 12:35:13PM +0100, Russell King (Oracle) wrote:
+> > > Uwe has a SATA controller for a bunch of disks in an Armada 370 based
+> > > NAS platform that is connected to PCIe, and removing PCIe support
+> > > effectively makes his platform utterly useless.
+> >=20
+> > While this is true there is really a problem on my platform with
+> > accessing the hard disks via that pci controller and a 88SE9215 SATA
+> > controller. While it seems to work in principle, it's incredible slow.
+>=20
+> Exactly those are things which randomly does not work.
+
+I had this slow behaviour consistently on next-20230803 and
+next-20230804 was fine. I thought that meant that there was something
+fixed between these two trees. Do you suggest this is worth to
+investigate as it might just be some butterfly effect that made the
+problem go away?
+
+Best regards
+Uwe
+
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+--mfde7qneidzydtp6
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmTR8O0ACgkQj4D7WH0S
+/k6I7ggAkvBg/yZHZHb90BJ38qJPf5cSgepg4MYV9kJ6MpxCNencGfuxH7UEFM7t
+IWKYzkNKBdz1eKskT5A4CHUoTJuiyNeZWNtarbL+DN8i4T2M7boyF5DjXlkYQvP9
+aFxs85BvugFvSaU1GqvxR1y5SgZZg7oJyGh+h6jFL4nS1NRokAwjAYh42zDROVfF
+EtxhrulOZjHx+qJDMb6Xow4BCyidTl7JJqW76jSvhu4lT5yn0HkOFWLr9VhF/bcY
+t0H/tnjggfbMqIOaOTAseZ4BN3Tsify5M4Jfjkql/1r0B+xC13pxF7Z1IfbNOoVa
+e2x5Pnr7y3dnC4VYsBBD9LjPbp4plw==
+=xwD8
+-----END PGP SIGNATURE-----
+
+--mfde7qneidzydtp6--
