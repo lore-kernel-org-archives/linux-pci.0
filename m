@@ -2,79 +2,102 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99ABBC001B0
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:09:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E167C001B0
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:15:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234577AbjHHTJp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:09:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52510 "EHLO
+        id S235215AbjHHTPc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:15:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231631AbjHHTJQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:09:16 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 641C92FA2B
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 09:31:03 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        with ESMTP id S234082AbjHHTPF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:15:05 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BCBD3C200;
+        Tue,  8 Aug 2023 09:38:01 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9CEE9623E4
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 07:04:10 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DE8C8C433C7;
-        Tue,  8 Aug 2023 07:04:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691478250;
-        bh=0kLVYnJCAHrNEd6IC9dxsFc15LPqkFS44LyZ4cxCS0Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fSB88tEpNsZbn8gqOxe9W3CgFZtxdkO2enG9vqfG8/RIDgsnU89A4kvtQcacVfVc0
-         tOGu8C+c4LLIPhl102KCUrO8ZPPMHu0LVsSlnnQL1k77WEtgHs/+KaS2pxnIPUA5Kh
-         VT0Q+ExeMeFPCQkqyXo1eY1SXLaiGzjizUOTAvqDUq9aiHKWrfTIpe1UNWl+Y+nuTf
-         aeUzieb0/N8tQnxm+bf75KnkwJFzubDXCEIauOwxpLYuWyxGKuZjSQJsJcbUKpEUYi
-         Xc8QqEXVoNnLc72odVBQPq9T/l4Gx+OPc/2nNKIATSql2dih6AtHdUkms8jUGJUUy3
-         1I0VuKNoWdZUg==
-Date:   Tue, 8 Aug 2023 12:33:57 +0530
-From:   mani <mani@kernel.org>
-To:     Li Chen <me@linux.beauty>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RFC] add __iomem cookie for EPF BAR
-Message-ID: <20230808070357.GC4990@thinkpad>
-References: <189cff865f3.fc7e71c96186.1411633612292556520@linux.beauty>
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 80AA62247E;
+        Tue,  8 Aug 2023 09:25:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1691486707; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1anG8IJZHp2UOy4q48lcqQRJhQy3OSUMlqLkKSLuNX8=;
+        b=AsKxsIU23VnIvXB6MjRIlupIpguZHhh6Uo3483cmq0eQ54rvU7PfooweNoA04ywlxHdN7P
+        cjr7MhnRQOLUzE3Rqzan1icRYIUiQS/IrUtR4A+E74NuQowflx/Y+Jsn8nA1WwETxeWbM1
+        ZST4X/QT7ijLm5K+qTWSKhRisknEDw4=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5658D13451;
+        Tue,  8 Aug 2023 09:25:07 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id s1joE/MJ0mSBFwAAMHmgww
+        (envelope-from <mkoutny@suse.com>); Tue, 08 Aug 2023 09:25:07 +0000
+Date:   Tue, 8 Aug 2023 11:25:06 +0200
+From:   Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To:     Igor Mammedov <imammedo@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, terraluna977@gmail.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org, mst@redhat.com,
+        rafael@kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 1/1] PCI: acpiphp:: use
+ pci_assign_unassigned_bridge_resources() only if bus->self not NULL
+Message-ID: <ku2hdnc2wixu5ygnwvtzbti3ujgkcte7fluvypno2zufnqqzt5@5ip4ndk4ha5l>
+References: <20230726123518.2361181-1-imammedo@redhat.com>
+ <20230726123518.2361181-2-imammedo@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="loif23qxzpmsi74g"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <189cff865f3.fc7e71c96186.1411633612292556520@linux.beauty>
+In-Reply-To: <20230726123518.2361181-2-imammedo@redhat.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Aug 07, 2023 at 08:28:30PM +0800, Li Chen wrote:
-> Hi All
-> 
-> Currently, the EPF's bar is allocated by pci_epf_alloc_space, which internally uses dma_alloc_coherent and the caching behavior of dma_alloc_coherent may vary depending on platforms.
-> 
-> The bar space is exported to RC, which means that RC may modify it without EP being aware of it, so EP still read from the cache and get stalled data. To address this issue, the bar space should be treated as iomem instead and forced to use io read/write APIs, which enforces volatile. 
-> 
 
-We already had a similar discussion on using volatile for BAR space and settled
-with {WRITE/READ}_ONCE macros in EPF Test driver [1].
+--loif23qxzpmsi74g
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Since the BAR space allocated in endpoint is not a MMIO, I don't think it should
-be forced as iomem. Rather EPF drivers should use _ONCE macros to access the
-fields to avoid coherency issues as suggested by Arnd earlier.
+Hello.
 
-- Mani
+On Wed, Jul 26, 2023 at 02:35:18PM +0200, Igor Mammedov <imammedo@redhat.co=
+m> wrote:
+> The issue was discovered on Dell Inspiron 7352/0W6WV0 laptop with
+> following sequence:
+>    1. suspend to RAM
+>    2. wake up with the same backtrace being observed:
+>    3. 2nd suspend to RAM attempt makes laptop freeze
 
-[1] https://lore.kernel.org/linux-pci/c49df2f9-9848-45aa-9d64-9e4e9841440f@app.fastmail.com/
+My Dell laptop suffers this since v6.5-rc1.
+I've found this thread because of the same call stack triggering the
+NULL ptr dereference I captured on my machine.
 
-> If you agree, I would create patches for existing EPF and EPF/EPC core and submit them for review.
-> 
-> Regards,
-> Li
+I applied this patch and resume works as before and I have observed no
+issues during typical usage.
 
--- 
-மணிவண்ணன் சதாசிவம்
+I'd be glad if a fix like this makes it into the next -rc.
+Feel free to add
+
+Tested-by: Michal Koutn=FD <mkoutny@suse.com>
+
+Thanks for looking into this,
+Michal
+
+--loif23qxzpmsi74g
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZNIJ4AAKCRAGvrMr/1gc
+jpuqAQC6YiooWMYGa8M8En3OudIzKzX9KgLGGk4WGtRNpJOoewD/XP+2J37kJXqr
+7MwD+1Fye6AtqSyVCMDokgVsiwqiiwM=
+=hxD1
+-----END PGP SIGNATURE-----
+
+--loif23qxzpmsi74g--
