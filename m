@@ -2,179 +2,278 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5006CC04A6A
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 20:26:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 950FCC04E69
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 20:38:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230417AbjHHU0f convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 16:26:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45110 "EHLO
+        id S230327AbjHHUi4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 16:38:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230195AbjHHU0T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 16:26:19 -0400
-Received: from mail-ot1-f49.google.com (mail-ot1-f49.google.com [209.85.210.49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77001222E7;
-        Tue,  8 Aug 2023 12:39:34 -0700 (PDT)
-Received: by mail-ot1-f49.google.com with SMTP id 46e09a7af769-6bcde3d8657so338632a34.0;
-        Tue, 08 Aug 2023 12:39:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691523574; x=1692128374;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=c58ks/9Dr1zfmu2zS+3clcM4+/iOwxmZoLK5TyGbzOA=;
-        b=KjWNRRrDvLJVFG/WPtWQrgIe+2J3lMSHdk7DQPU0u2i/GiLspYK3VrZqZ4q3m5CBrA
-         gwTxHNn1ZpYfTtp/dNwQPDgivO9PNzSSbzh9UdyO4qP9FDf5RkoYKOt+vBRmtoAKSTwf
-         /tvo27UY0QusBrOPZo1QaCG9Iso1i0zboccH6b3FpRJ6+sdeoPr7Hl/T69wgpPTkRLtQ
-         12+CWaX8lj8lk3I5lXAQsb7MlGVVZSgSfx216v60LD04n9rxvtO4y8m3xyUoEI3AmwTc
-         A5Qei6rq73DDk2JNrj+Vtcj4Qi/Pn+StHb0DlR/QDIl2pMt9gCMMoI2NZrm6N/Vu6Pxe
-         inEQ==
-X-Gm-Message-State: AOJu0YypN3cZGe8CEfpUvVH/bk8AqdZU64GPdUnd14hnqOkvMsUxmsBI
-        eROwG4f60p7b9EWTXbE4D8FiUdboR7TgSxw9i58=
-X-Google-Smtp-Source: AGHT+IGqqLxXoaFah+KuxrNf99luNlzlovc9mCHxcHPECaaaLauzdCLB9tuj6JZkAHUTjO61utQXwNJuomt3rbEABi4=
-X-Received: by 2002:a4a:a64a:0:b0:56c:484a:923d with SMTP id
- j10-20020a4aa64a000000b0056c484a923dmr786914oom.1.1691523573721; Tue, 08 Aug
- 2023 12:39:33 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230808192713.329414-1-helgaas@kernel.org>
-In-Reply-To: <20230808192713.329414-1-helgaas@kernel.org>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 8 Aug 2023 21:39:22 +0200
-Message-ID: <CAJZ5v0jc5dn+6WtH6O30EeJfGDLewiLaAY9YJEAO6d_n+Uv7ig@mail.gmail.com>
-Subject: Re: [PATCH] PCI: acpiphp: Log more slot and notification details
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
+        with ESMTP id S232698AbjHHUbv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 16:31:51 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 376034AA90;
+        Tue,  8 Aug 2023 09:50:14 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 60970623F2;
+        Tue,  8 Aug 2023 08:31:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A31BC433C8;
+        Tue,  8 Aug 2023 08:31:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691483517;
+        bh=MpyvTQzwBjHbZI8sMSOd7J9/piSikcHHm+TWFR/stac=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=pka7NzrVjEQNbyWGI/WnWkrr+a5FjLtxCmsQcCOXphsY9L5W46RUvd6aapwlo9jCS
+         NolUJckCfoY7fX/X9OHUnpMLYiuwRY70OYahppcxYoMgc9SHLse5Xn7id/DhVU/r/7
+         nnGGJeO6e3yUm2+hcyf2EF+9bqOSVK4poXjiqNSyxgEPFVLlt4kExzhNuWuz9Xm7fH
+         b1yO+pqKpbEjzdwsS/cserCryKALKg+zlphWhxpBehWtx4z+lnaAb+TJGL2UPyW0E/
+         ETh8bu5SwkRbm9SP9U2vRi75kNMH8ZwGOZ53Zv9IaZc7clxnmeiTFjwGGpWVI3Plsk
+         /lL4HFoVfbKgQ==
+Date:   Tue, 8 Aug 2023 09:31:49 +0100
+From:   Conor Dooley <conor@kernel.org>
+To:     Sunil V L <sunilvl@ventanamicro.com>
+Cc:     linux-doc@vger.kernel.org, linux-riscv@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
         "Rafael J . Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Igor Mammedov <imammedo@redhat.com>,
-        "Michael S . Tsirkin" <mst@redhat.com>,
-        Woody Suwalski <terraluna977@gmail.com>,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Atish Kumar Patra <atishp@rivosinc.com>,
+        Conor Dooley <conor.dooley@microchip.com>,
+        Will Deacon <will@kernel.org>, Haibo Xu <haibo1.xu@intel.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Marc Zyngier <maz@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Robert Moore <robert.moore@intel.com>,
+        Andrew Jones <ajones@ventanamicro.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Daniel Scally <djrscally@gmail.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Anup Patel <anup@brainfault.org>, Len Brown <lenb@kernel.org>
+Subject: Re: [RFC PATCH v1 12/21] irqchip/riscv-intc: Use swnode framework to
+ create fwnode
+Message-ID: <20230808-chuck-jailhouse-0cb08b55d1bd@spud>
+References: <20230803175916.3174453-1-sunilvl@ventanamicro.com>
+ <20230803175916.3174453-13-sunilvl@ventanamicro.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="KGbrO9FdUrNn/kR9"
+Content-Disposition: inline
+In-Reply-To: <20230803175916.3174453-13-sunilvl@ventanamicro.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 8, 2023 at 9:27 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> When registering an acpiphp slot, log the slot name in the same style as
-> pciehp and include the PCI bus/device and whether a device is present or
-> the slot is empty.
->
-> When handling an ACPI notification, log the PCI bus/device and notification
-> type.
->
-> Sample dmesg log diff:
->
->     ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
->   - acpiphp: Slot [3] registered
->   - acpiphp: Slot [4] registered
->     PCI host bridge to bus 0000:00
->     pci 0000:00:03.0: [8086:100e] type 00 class 0x020000
->     <ACPI Device Check notification>
->     pci 0000:00:04.0: [8086:100e] type 00 class 0x020000
->
->     ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
->   + acpiphp: pci 0000:00:03 Slot(3) registered (enabled)
->   + acpiphp: pci 0000:00:04 Slot(4) registered (empty)
->     PCI host bridge to bus 0000:00
->     pci 0000:00:03.0: [8086:100e] type 00 class 0x020000
->     <ACPI Device Check notification>
->   + acpiphp: pci 0000:00:04 Slot(4) Device Check
->     pci 0000:00:04.0: [8086:100e] type 00 class 0x020000
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+--KGbrO9FdUrNn/kR9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hey Sunil,
+
+On Thu, Aug 03, 2023 at 11:29:07PM +0530, Sunil V L wrote:
+> By using swnode framework, all data from ACPI tables can
+> be populated as properties of the swnode. This simplifies
+> the driver code and removes the need for ACPI vs DT checks.
+> Use this framework for RISC-V INTC driver.
+
+btw, you are permitted to use more than 60 characters in a commit
+message...
+
+>=20
+> Signed-off-by: Sunil V L <sunilvl@ventanamicro.com>
 > ---
->  drivers/pci/hotplug/acpiphp_core.c |  4 ----
->  drivers/pci/hotplug/acpiphp_glue.c | 23 +++++++++++++++++++++--
->  2 files changed, 21 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
-> index c02257f4b61c..19d47607d009 100644
-> --- a/drivers/pci/hotplug/acpiphp_core.c
-> +++ b/drivers/pci/hotplug/acpiphp_core.c
-> @@ -282,8 +282,6 @@ int acpiphp_register_hotplug_slot(struct acpiphp_slot *acpiphp_slot,
->                 goto error_slot;
->         }
->
-> -       pr_info("Slot [%s] registered\n", slot_name(slot));
+>  Documentation/riscv/acpi.rst     | 21 +++++++++++++++
+>  arch/riscv/include/asm/acpi.h    |  1 +
+>  drivers/acpi/riscv/Makefile      |  2 +-
+>  drivers/acpi/riscv/irqchip.c     | 46 ++++++++++++++++++++++++++++++++
+>  drivers/irqchip/irq-riscv-intc.c | 12 ++++-----
+>  5 files changed, 75 insertions(+), 7 deletions(-)
+>  create mode 100644 drivers/acpi/riscv/irqchip.c
+>=20
+> diff --git a/Documentation/riscv/acpi.rst b/Documentation/riscv/acpi.rst
+> index 9870a282815b..e2406546bc16 100644
+> --- a/Documentation/riscv/acpi.rst
+> +++ b/Documentation/riscv/acpi.rst
+> @@ -8,3 +8,24 @@ The ISA string parsing rules for ACPI are defined by `Ve=
+rsion ASCIIDOC
+>  Conversion, 12/2022 of the RISC-V specifications, as defined by tag
+>  "riscv-isa-release-1239329-2023-05-23" (commit 1239329
+>  ) <https://github.com/riscv/riscv-isa-manual/releases/tag/riscv-isa-rele=
+ase-1239329-2023-05-23>`_
+> +
+> +Interrupt Controller Drivers
+> +=3D=3D=3D=3D=3D=3D=3D
+> +
+> +ACPI drivers for RISC-V interrupt controllers use software node framewor=
+k to
+> +create the fwnode for the interrupt controllers. Below properties are
+> +additionally required for some firmware nodes apart from the properties
+> +defined by the device tree bindings for these interrupt controllers. The
+> +properties are created using the data in MADT table.
+
+I don't really understand this text, specifically what you are getting
+at w/ the dependency on devicetree properties. What exactly does "apart
+=66rom the properties defined by the devicetree bindings" mean?
+
+Is there prior art for this kind of "ACPI needs swnodes that look
+vaguely similar to devicetree" for other interrupt controllers?
+
+Thanks,
+Conor.
+
+> +1) RISC-V Interrupt Controller (INTC)
+> +-----------
+> +``hartid`` - Hart ID of the hart this interrupt controller belongs to.
+> +
+> +``riscv,imsic-addr`` - Physical base address of the Incoming MSI Control=
+ler
+> +(IMSIC) MMIO region of this hart.
+> +
+> +``riscv,imsic-size`` - Size in bytes of the IMSIC MMIO region of this ha=
+rt.
+> +
+> +``riscv,ext-intc-id`` - The unique ID of the external interrupts connect=
+ed
+> +to this hart.
+> diff --git a/arch/riscv/include/asm/acpi.h b/arch/riscv/include/asm/acpi.h
+> index 0c4e8b35103e..0ac2df2dd194 100644
+> --- a/arch/riscv/include/asm/acpi.h
+> +++ b/arch/riscv/include/asm/acpi.h
+> @@ -68,6 +68,7 @@ int acpi_get_riscv_isa(struct acpi_table_header *table,
+>  static inline int acpi_numa_get_nid(unsigned int cpu) { return NUMA_NO_N=
+ODE; }
+>  int acpi_get_cbo_block_size(struct acpi_table_header *table, unsigned in=
+t cpu, u32 *cbom_size,
+>  			    u32 *cboz_size, u32 *cbop_size);
+> +struct fwnode_handle *acpi_rintc_create_irqchip_fwnode(struct acpi_madt_=
+rintc *rintc);
+>  #else
+>  static inline void acpi_init_rintc_map(void) { }
+>  static inline struct acpi_madt_rintc *acpi_cpu_get_madt_rintc(int cpu)
+> diff --git a/drivers/acpi/riscv/Makefile b/drivers/acpi/riscv/Makefile
+> index 8b3b126e0b94..8b664190d172 100644
+> --- a/drivers/acpi/riscv/Makefile
+> +++ b/drivers/acpi/riscv/Makefile
+> @@ -1,2 +1,2 @@
+>  # SPDX-License-Identifier: GPL-2.0-only
+> -obj-y 	+=3D rhct.o
+> +obj-y 	+=3D rhct.o irqchip.o
+> diff --git a/drivers/acpi/riscv/irqchip.c b/drivers/acpi/riscv/irqchip.c
+> new file mode 100644
+> index 000000000000..36f066a2cad5
+> --- /dev/null
+> +++ b/drivers/acpi/riscv/irqchip.c
+> @@ -0,0 +1,46 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/*
+> + * Copyright (C) 2023, Ventana Micro Systems Inc
+> + *	Author: Sunil V L <sunilvl@ventanamicro.com>
+> + *
+> + */
+> +
+> +#include <linux/acpi.h>
+> +#include <linux/fwnode.h>
+> +#include <linux/irqdomain.h>
+> +#include <linux/list.h>
+> +#include <linux/property.h>
+> +
+> +struct riscv_irqchip_list {
+> +	struct fwnode_handle *fwnode;
+> +	struct list_head list;
+> +};
+> +
+> +LIST_HEAD(rintc_list);
+> +
+> +struct fwnode_handle *acpi_rintc_create_irqchip_fwnode(struct acpi_madt_=
+rintc *rintc)
+> +{
+> +	struct property_entry props[6] =3D {};
+> +	struct fwnode_handle *fwnode;
+> +	struct riscv_irqchip_list *rintc_element;
+> +
+> +	props[0] =3D PROPERTY_ENTRY_U64("hartid", rintc->hart_id);
+> +	props[1] =3D PROPERTY_ENTRY_U32("riscv,ext-intc-id", rintc->ext_intc_id=
+);
+> +	props[2] =3D PROPERTY_ENTRY_U64("riscv,imsic-addr", rintc->imsic_addr);
+> +	props[3] =3D PROPERTY_ENTRY_U32("riscv,imsic-size", rintc->imsic_size);
+> +	props[4] =3D PROPERTY_ENTRY_U32("#interrupt-cells", 1);
+> +
+> +	fwnode =3D fwnode_create_software_node_early(props, NULL);
+> +	if (fwnode) {
+> +		rintc_element =3D kzalloc(sizeof(*rintc_element), GFP_KERNEL);
+> +		if (!rintc_element) {
+> +			fwnode_remove_software_node(fwnode);
+> +			return NULL;
+> +		}
+> +
+> +		rintc_element->fwnode =3D fwnode;
+> +		list_add_tail(&rintc_element->list, &rintc_list);
+> +	}
+> +
+> +	return fwnode;
+> +}
+> diff --git a/drivers/irqchip/irq-riscv-intc.c b/drivers/irqchip/irq-riscv=
+-intc.c
+> index 1a0fc87152c5..1ef9cada1ed3 100644
+> --- a/drivers/irqchip/irq-riscv-intc.c
+> +++ b/drivers/irqchip/irq-riscv-intc.c
+> @@ -203,6 +203,12 @@ static int __init riscv_intc_acpi_init(union acpi_su=
+btable_headers *header,
+> =20
+>  	rintc =3D (struct acpi_madt_rintc *)header;
+> =20
+> +	fn =3D acpi_rintc_create_irqchip_fwnode(rintc);
+> +	if (!fn) {
+> +		pr_err("unable to create INTC FW node\n");
+> +		return -ENOMEM;
+> +	}
+> +
+>  	/*
+>  	 * The ACPI MADT will have one INTC for each CPU (or HART)
+>  	 * so riscv_intc_acpi_init() function will be called once
+> @@ -212,12 +218,6 @@ static int __init riscv_intc_acpi_init(union acpi_su=
+btable_headers *header,
+>  	if (riscv_hartid_to_cpuid(rintc->hart_id) !=3D smp_processor_id())
+>  		return 0;
+> =20
+> -	fn =3D irq_domain_alloc_named_fwnode("RISCV-INTC");
+> -	if (!fn) {
+> -		pr_err("unable to allocate INTC FW node\n");
+> -		return -ENOMEM;
+> -	}
 > -
->         return 0;
->  error_slot:
->         kfree(slot);
-> @@ -296,8 +294,6 @@ void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *acpiphp_slot)
->  {
->         struct slot *slot = acpiphp_slot->slot;
->
-> -       pr_info("Slot [%s] unregistered\n", slot_name(slot));
-> -
->         pci_hp_deregister(&slot->hotplug_slot);
->         kfree(slot);
+>  	return riscv_intc_init_common(fn);
 >  }
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index 328d1e416014..eeca2753a5c7 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -25,7 +25,7 @@
->   *    bus. It loses the refcount when the driver unloads.
->   */
->
-> -#define pr_fmt(fmt) "acpiphp_glue: " fmt
-> +#define pr_fmt(fmt) "acpiphp: " fmt
->
->  #include <linux/module.h>
->
-> @@ -333,6 +333,12 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
->                                        &val, 60*1000))
->                 slot->flags |= SLOT_ENABLED;
->
-> +       if (slot->slot)
-> +               pr_info("pci %04x:%02x:%02x Slot(%s) registered (%s)\n",
-> +                       pci_domain_nr(slot->bus), slot->bus->number,
-> +                       slot->device, slot_name(slot->slot),
-> +                       slot->flags & SLOT_ENABLED ? "enabled" : "empty");
-> +
->         return AE_OK;
->  }
->
-> @@ -351,8 +357,13 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
->                         acpi_unlock_hp_context();
->                 }
->                 slot->flags |= SLOT_IS_GOING_AWAY;
-> -               if (slot->slot)
-> +               if (slot->slot) {
-> +                       pr_info("pci %04x:%02x:%02x Slot(%s) unregistered\n",
-> +                               pci_domain_nr(slot->bus), slot->bus->number,
-> +                               slot->device, slot_name(slot->slot));
-> +
->                         acpiphp_unregister_hotplug_slot(slot);
-> +               }
->         }
->
->         mutex_lock(&bridge_mutex);
-> @@ -793,6 +804,14 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
->
->         pci_lock_rescan_remove();
->
-> +       pr_info("pci %04x:%02x:%02x Slot(%s) %s\n",
-> +               pci_domain_nr(slot->bus), slot->bus->number,
-> +               slot->device, slot_name(slot->slot),
-> +               type == ACPI_NOTIFY_BUS_CHECK ? "Bus Check" :
-> +               type == ACPI_NOTIFY_DEVICE_CHECK ? "Device Check" :
-> +               type == ACPI_NOTIFY_EJECT_REQUEST ? "Eject Request" :
-> +               "Notification");
-> +
+> =20
+> --=20
+> 2.39.2
+>=20
+>=20
+> _______________________________________________
+> linux-riscv mailing list
+> linux-riscv@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-riscv
 
-pr_debug() perhaps?
+--KGbrO9FdUrNn/kR9
+Content-Type: application/pgp-signature; name="signature.asc"
 
-On systems that don't have any hotplug problems these messages will
-just be filling the kernel log unnecessarily.
+-----BEGIN PGP SIGNATURE-----
 
->         switch (type) {
->         case ACPI_NOTIFY_BUS_CHECK:
->                 /* bus re-enumerate */
-> --
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZNH9dQAKCRB4tDGHoIJi
+0irpAQCn4tpo+ZUuKBiS5LlN2kTNA7QFVujwPoaS1jfnlSeJTAEAkLdDYwU7W+ML
+Vydp6LtqVqBQYdbOuMRHnZvBwVgH6A0=
+=cP5x
+-----END PGP SIGNATURE-----
+
+--KGbrO9FdUrNn/kR9--
