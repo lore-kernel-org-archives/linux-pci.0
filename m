@@ -2,125 +2,91 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E8B6C001B0
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 18:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C487C001B0
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:08:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231517AbjHHSrP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 14:47:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33840 "EHLO
+        id S232426AbjHHTIW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:08:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52582 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234186AbjHHSql (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 14:46:41 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F1614B8EF;
-        Tue,  8 Aug 2023 09:52:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1691513532; x=1723049532;
-  h=date:from:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=Tbh/ctA20NaTil9W5pSKrR3yHLRxmmuIH7RURQ9YCzs=;
-  b=lNoKbF+Mgr26r3e0BCr7OV2OdHm6Bi+Ka9q7oLzA806PY+ekB00rNCB5
-   jiA+Ih67gaJoOGX8IrsOk8hPqpBGbZbDRWqwGLq9D9lsAI9+nvBiBOHq9
-   pMbbEfxz2KX1sBcg6E3mYIgVkGhttDx4OAVgVvTPwyoFrpA9HtY6Wa9mN
-   Bvm2hspSJomMUgp3f9IQktyb9Vj2mqIrAeMjKv6Md31SJw/gPumFhJws2
-   yVPmGLl7Q+v1+aYIyL/ahVF5ojcuGpU2htnR+fkFi2vOn3c1ObwzcgtP2
-   4MitnncfMT50PXESHZGbBSTcdU6jgB+GQhFrJaay5rIL5VQy2m0qnBivR
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10795"; a="369782157"
-X-IronPort-AV: E=Sophos;i="6.01,156,1684825200"; 
-   d="scan'208";a="369782157"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2023 09:51:45 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10795"; a="796795565"
-X-IronPort-AV: E=Sophos;i="6.01,156,1684825200"; 
-   d="scan'208";a="796795565"
-Received: from mtofeni-mobl.ger.corp.intel.com ([10.252.48.21])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2023 09:51:43 -0700
-Date:   Tue, 8 Aug 2023 19:51:40 +0300 (EEST)
-From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     "Maciej W. Rozycki" <macro@orcam.me.uk>
-cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>, linux-pci@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] IB/hfi1: Remove pci_parent_bus_reset() duplication
-In-Reply-To: <alpine.DEB.2.21.2306200235510.14084@angie.orcam.me.uk>
-Message-ID: <07d51c9-e651-2e8e-bf3c-8a3966d5eb@linux.intel.com>
-References: <alpine.DEB.2.21.2306200153110.14084@angie.orcam.me.uk> <alpine.DEB.2.21.2306200235510.14084@angie.orcam.me.uk>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-738198269-1691513504=:2047"
+        with ESMTP id S232380AbjHHTH7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:07:59 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51D0646BA;
+        Tue,  8 Aug 2023 09:30:04 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 953072011C7;
+        Tue,  8 Aug 2023 08:08:58 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 5A2D32011BF;
+        Tue,  8 Aug 2023 08:08:58 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id B4DDC1800318;
+        Tue,  8 Aug 2023 14:08:56 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     frank.li@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
+        lpieralisi@kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        linux-imx@nxp.com
+Subject: [PATCH v3 4/9] arm: dts: nxp: Add i.MX6QDL and i.MX6QP PCIe EP supports
+Date:   Tue,  8 Aug 2023 13:34:13 +0800
+Message-Id: <1691472858-9383-5-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Add i.MX6QDL and i.MX6QP PCIe EP supports.
 
---8323329-738198269-1691513504=:2047
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+---
+ arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi | 14 ++++++++++++++
+ arch/arm/boot/dts/nxp/imx/imx6qp.dtsi  |  4 ++++
+ 2 files changed, 18 insertions(+)
 
-On Tue, 20 Jun 2023, Maciej W. Rozycki wrote:
-
-> Call pci_parent_bus_reset() rather than duplicating it in trigger_sbr().
-> There are extra preparatory checks made by the former function, but they 
-> are supposed to be neutral to the HFI1 device.
-> 
-> Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
-> ---
->  drivers/infiniband/hw/hfi1/pcie.c |   30 ++++--------------------------
->  1 file changed, 4 insertions(+), 26 deletions(-)
-> 
-> linux-ib-hfi1-pcie-sbr-parent-bus-reset.diff
-> Index: linux-macro/drivers/infiniband/hw/hfi1/pcie.c
-> ===================================================================
-> --- linux-macro.orig/drivers/infiniband/hw/hfi1/pcie.c
-> +++ linux-macro/drivers/infiniband/hw/hfi1/pcie.c
-> @@ -796,35 +796,13 @@ static void pcie_post_steps(struct hfi1_
->  /*
->   * Trigger a secondary bus reset (SBR) on ourselves using our parent.
->   *
-> - * Based on pci_parent_bus_reset() which is not exported by the
-> - * kernel core.
-> + * This is an end around to do an SBR during probe time.  A new API
-> + * needs to be implemented to have cleaner interface but this fixes
-> + * the current brokenness.
->   */
->  static int trigger_sbr(struct hfi1_devdata *dd)
->  {
-> -	struct pci_dev *dev = dd->pcidev;
-> -	struct pci_dev *pdev;
-> -
-> -	/* need a parent */
-> -	if (!dev->bus->self) {
-> -		dd_dev_err(dd, "%s: no parent device\n", __func__);
-> -		return -ENOTTY;
-> -	}
-> -
-> -	/* should not be anyone else on the bus */
-> -	list_for_each_entry(pdev, &dev->bus->devices, bus_list)
-> -		if (pdev != dev) {
-> -			dd_dev_err(dd,
-> -				   "%s: another device is on the same bus\n",
-> -				   __func__);
-> -			return -ENOTTY;
-> -		}
-> -
-> -	/*
-> -	 * This is an end around to do an SBR during probe time. A new API needs
-> -	 * to be implemented to have cleaner interface but this fixes the
-> -	 * current brokenness
-> -	 */
-> -	return pci_bridge_secondary_bus_reset(dev->bus->self);
-> +	return pci_parent_bus_reset(dd->pcidev, PCI_RESET_DO_RESET);
->  }
-
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi b/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
+index bda182edc589..be02f7882c68 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi
+@@ -289,6 +289,20 @@ pcie: pcie@1ffc000 {
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep: pcie-ep@1ffc000 {
++			compatible = "fsl,imx6q-pcie-ep";
++			reg = <0x01ffc000 0x04000>, <0x01000000 0xf00000>;
++			reg-names = "dbi", "addr_space";
++			num-lanes = <1>;
++			clocks = <&clks IMX6QDL_CLK_PCIE_AXI>,
++				 <&clks IMX6QDL_CLK_LVDS1_GATE>,
++				 <&clks IMX6QDL_CLK_PCIE_REF_125M>;
++			clock-names = "pcie", "pcie_bus", "pcie_phy";
++			num-ib-windows = <4>;
++			num-ob-windows = <4>;
++			status = "disabled";
++		};
++
+ 		aips1: bus@2000000 { /* AIPS1 */
+ 			compatible = "fsl,aips-bus", "simple-bus";
+ 			#address-cells = <1>;
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6qp.dtsi b/arch/arm/boot/dts/nxp/imx/imx6qp.dtsi
+index fc164991d2ae..4ca53a4c254c 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6qp.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx6qp.dtsi
+@@ -118,3 +118,7 @@ &mmdc0 {
+ &pcie {
+ 	compatible = "fsl,imx6qp-pcie";
+ };
++
++&pcie_ep {
++	compatible = "fsl,imx6qp-pcie-ep";
++};
 -- 
- i.
+2.34.1
 
---8323329-738198269-1691513504=:2047--
