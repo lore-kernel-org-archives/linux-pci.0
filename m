@@ -2,235 +2,161 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3124CC41513
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2377C001DB
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:05:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231564AbjHHQBB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:01:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43610 "EHLO
+        id S231716AbjHHQFf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:05:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34362 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbjHHP72 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 11:59:28 -0400
-Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 940A061A4;
-        Tue,  8 Aug 2023 08:44:30 -0700 (PDT)
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 3617D2011BC;
-        Tue,  8 Aug 2023 08:09:02 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id C35452011BA;
-        Tue,  8 Aug 2023 08:09:01 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 279571800319;
-        Tue,  8 Aug 2023 14:09:00 +0800 (+08)
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     frank.li@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
-        lpieralisi@kernel.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org
-Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
-        linux-imx@nxp.com
-Subject: [PATCH v3 7/9] PCI: imx6: Add i.MX6Q and i.MX6QP PCIe EP supports
-Date:   Tue,  8 Aug 2023 13:34:16 +0800
-Message-Id: <1691472858-9383-8-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        with ESMTP id S229801AbjHHQEP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:04:15 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 397DD2103
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 08:45:11 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id B0CB962411
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 07:26:09 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3BCAC433C8;
+        Tue,  8 Aug 2023 07:26:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691479569;
+        bh=M0SPxHUd5hAr/xJLALVcRATPCsI99nCm47kRUi6N1b0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qcI1Ya3s/9abghpUHxcz95GabocIMsmNtTmC9eNZAAlVSYSWVqMFTTBmmuKpjiWGh
+         yXlNiAkTryFhNetuzot8s9WgZaFRbMfxqgFVYhg+/QBqP1JV9Kpw8S/uBzj3hhNewg
+         5qm0KXrZUztRBsMr6e2y28vuwCBFs1YfMrkAUXa+6GRvA7jsJwNr49GKzc0KTbC/0z
+         QdOFw+BIn6HQtJRjjhdZW4tVfvaduCVKo97qfE754ybxp7Urv2oHy5aio7h7PcP640
+         tMJsuSR2GW8S+y9ThWN+TrDpkYDh/B4eKlPcVXk/KWx+2FgkRcGT6LdTgCezFVMdNX
+         XrLQ00Bs6Yw5A==
+Received: by pali.im (Postfix)
+        id A5BE1687; Tue,  8 Aug 2023 09:26:05 +0200 (CEST)
+Date:   Tue, 8 Aug 2023 09:26:05 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     "Russell King (Oracle)" <linux@armlinux.org.uk>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
+Message-ID: <20230808072605.n3rjfsxuogza7qth@pali>
+References: <20230114164125.1298-1-pali@kernel.org>
+ <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add i.MX6Q and i.MX6QP PCIe EP supports.
+On Friday 04 August 2023 12:35:13 Russell King (Oracle) wrote:
+> Hi,
+> 
+> So it seems this patch got applied, but it wasn't Cc'd to
+> linux-arm-kernel or anyone else, so those of us with platforms never
+> had a chance to comment on it.
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 59 +++++++++++++++++++++++++++
- 1 file changed, 59 insertions(+)
+You have received more changes and fixes for last 2 years for these
+issues and you have done **nothing**. You even not said anything.
+So you are the last one who can complain here.
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 27aaa2a6bf39..9a6531ddfef2 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -46,8 +46,10 @@
- 
- enum imx6_pcie_variants {
- 	IMX6Q,
-+	IMX6Q_EP,
- 	IMX6SX,
- 	IMX6QP,
-+	IMX6QP_EP,
- 	IMX7D,
- 	IMX8MQ,
- 	IMX8MM,
-@@ -67,6 +69,7 @@ struct imx6_pcie_drvdata {
- 	u32 flags;
- 	int dbi_length;
- 	const char *gpr;
-+	const struct pci_epc_features *epc_features;
- };
- 
- struct imx6_pcie {
-@@ -567,7 +570,9 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
- 		break;
- 	case IMX6QP:
-+	case IMX6QP_EP:
- 	case IMX6Q:
-+	case IMX6Q_EP:
- 		/* power up core phy and enable ref clock */
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 				   IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-@@ -619,7 +624,9 @@ static void imx6_pcie_disable_ref_clk(struct imx6_pcie *imx6_pcie)
- 		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
- 		break;
- 	case IMX6QP:
-+	case IMX6QP_EP:
- 	case IMX6Q:
-+	case IMX6Q_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 				IMX6Q_GPR1_PCIE_REF_CLK_EN, 0);
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-@@ -720,11 +727,13 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET);
- 		break;
- 	case IMX6QP:
-+	case IMX6QP_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 				   IMX6Q_GPR1_PCIE_SW_RST,
- 				   IMX6Q_GPR1_PCIE_SW_RST);
- 		break;
- 	case IMX6Q:
-+	case IMX6Q_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 				   IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-@@ -777,12 +786,14 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
- 		break;
- 	case IMX6QP:
-+	case IMX6QP_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 				   IMX6Q_GPR1_PCIE_SW_RST, 0);
- 
- 		usleep_range(200, 500);
- 		break;
- 	case IMX6Q:		/* Nothing to do */
-+	case IMX6Q_EP:
- 	case IMX8MM:
- 	case IMX8MM_EP:
- 	case IMX8MP:
-@@ -827,8 +838,10 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
- 
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6Q:
-+	case IMX6Q_EP:
- 	case IMX6SX:
- 	case IMX6QP:
-+	case IMX6QP_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6Q_GPR12_PCIE_CTL_2,
- 				   IMX6Q_GPR12_PCIE_CTL_2);
-@@ -851,8 +864,10 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
- 
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6Q:
-+	case IMX6Q_EP:
- 	case IMX6SX:
- 	case IMX6QP:
-+	case IMX6QP_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6Q_GPR12_PCIE_CTL_2, 0);
- 		break;
-@@ -1077,6 +1092,27 @@ static int imx6_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	return 0;
- }
- 
-+/*
-+ * i.MX6Q and i.MX6QP PCIe EP BAR definitions.
-+ * +-----------------------------------------------------------------+
-+ * | BAR0     | BAR1     | BAR2     | BAR3     | BAR4     | BAR5     |
-+ * +----------|----------|----------|----------|----------|----------+
-+ * | 64-bit   | Disabled | 32-bit   | 32-bit   | Disabled | Disabled |
-+ * |          |          |          | Fixed    |          |          |
-+ * |          |          |          | 256Bytes |          |          |
-+ * | Prefetch |          | Prefetch | None-    |          |          |
-+ * | Memory   |          | Memory   | Prefetch |          |          |
-+ * |          |          |          | IO       |          |          |
-+ * +-----------------------------------------------------------------+
-+ */
-+static const struct pci_epc_features imx6q_pcie_epc_features = {
-+	.linkup_notifier = false,
-+	.msi_capable = true,
-+	.msix_capable = false,
-+	.reserved_bar = 1 << BAR_4 | 1 << BAR_5,
-+	.align = SZ_64K,
-+};
-+
- static const struct pci_epc_features imx8m_pcie_epc_features = {
- 	.linkup_notifier = false,
- 	.msi_capable = true,
-@@ -1088,6 +1124,12 @@ static const struct pci_epc_features imx8m_pcie_epc_features = {
- static const struct pci_epc_features*
- imx6_pcie_ep_get_features(struct dw_pcie_ep *ep)
- {
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
-+
-+	if (imx6_pcie->drvdata->epc_features)
-+		return imx6_pcie->drvdata->epc_features;
-+
- 	return &imx8m_pcie_epc_features;
- }
- 
-@@ -1157,6 +1199,7 @@ static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 	case IMX6QP:
-+	case IMX6QP_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
- 				IMX6SX_GPR12_PCIE_PM_TURN_OFF);
-@@ -1478,6 +1521,13 @@ static const struct imx6_pcie_drvdata drvdata[] = {
- 		.dbi_length = 0x200,
- 		.gpr = "fsl,imx6q-iomuxc-gpr",
- 	},
-+	[IMX6Q_EP] = {
-+		.variant = IMX6Q_EP,
-+		.mode = DW_PCIE_EP_TYPE,
-+		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
-+		.gpr = "fsl,imx6q-iomuxc-gpr",
-+		.epc_features = &imx6q_pcie_epc_features,
-+	},
- 	[IMX6SX] = {
- 		.variant = IMX6SX,
- 		.flags = IMX6_PCIE_FLAG_IMX6_PHY |
-@@ -1493,6 +1543,13 @@ static const struct imx6_pcie_drvdata drvdata[] = {
- 		.dbi_length = 0x200,
- 		.gpr = "fsl,imx6q-iomuxc-gpr",
- 	},
-+	[IMX6QP_EP] = {
-+		.variant = IMX6QP_EP,
-+		.mode = DW_PCIE_EP_TYPE,
-+		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
-+		.gpr = "fsl,imx6q-iomuxc-gpr",
-+		.epc_features = &imx6q_pcie_epc_features,
-+	},
- 	[IMX7D] = {
- 		.variant = IMX7D,
- 		.flags = IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
-@@ -1531,8 +1588,10 @@ static const struct imx6_pcie_drvdata drvdata[] = {
- 
- static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie",  .data = &drvdata[IMX6Q],  },
-+	{ .compatible = "fsl,imx6q-pcie-ep", .data = &drvdata[IMX6Q_EP], },
- 	{ .compatible = "fsl,imx6sx-pcie", .data = &drvdata[IMX6SX], },
- 	{ .compatible = "fsl,imx6qp-pcie", .data = &drvdata[IMX6QP], },
-+	{ .compatible = "fsl,imx6qp-pcie-ep", .data = &drvdata[IMX6QP_EP], },
- 	{ .compatible = "fsl,imx7d-pcie",  .data = &drvdata[IMX7D],  },
- 	{ .compatible = "fsl,imx8mq-pcie", .data = &drvdata[IMX8MQ], },
- 	{ .compatible = "fsl,imx8mm-pcie", .data = &drvdata[IMX8MM], },
--- 
-2.34.1
+And I'm stopped communicating with people who do not want to communicate
+with me. This is pretty normal situation and you should have think about
+it. No?
 
+> *** This change causes a regression to working setups. ***
+> 
+> It appears that the *only* reason this patch was proposed is to stop a
+> kernel developer receiving problem reports from a set of users, but
+> completely ignores that there is another group of users where this works
+> fine - and thus the addition of this patch causes working setups to
+> regress.
+
+You should have come up and start solving issues. And not complaining
+now.
+
+> Because one is being bothered with problem reports is not a reason to
+> mark a driver broken - and especially not doing so in a way that those
+> who may be affected don't get an opportunity to comment on the patch!
+
+You had oportunity for last two years, so stop saying untruth
+information here.
+
+> Also, there is _zero_ information provided on what the reported problems
+> actually are, so no one else can guess what these issues are.
+> 
+> However, given that there are working setups and this change causes
+> those to regress, it needs to be reverted.
+> 
+> For example, I have an Atheros PCIe WiFi card in an Armada 388 Clearfog
+> platform, and this works fine.
+> 
+> Uwe has a SATA controller for a bunch of disks in an Armada 370 based
+> NAS platform that is connected to PCIe, and removing PCIe support
+> effectively makes his platform utterly useless.
+> 
+> Please revert this patch.
+
+Please do not revert it, instead start fixing problems.
+
+I'm really fed up with people who ignores all previous emails, did
+absolutely nothing in related area and start complaining that something
+does not work for them.
+
+> Thanks.
+> 
+> On Sat, Jan 14, 2023 at 05:41:25PM +0100, Pali Rohár wrote:
+> > People are reporting that pci-mvebu.c driver does not work with recent
+> > mainline kernel. There are more bugs which prevents its for daily usage.
+> > So lets mark it as broken for now, until somebody would be able to fix it
+> > in mainline kernel.
+> > 
+> > Signed-off-by: Pali Rohár <pali@kernel.org>
+> > 
+> > ---
+> > Bjorn: I would really appreciate if you take this change and send it in
+> > pull request for v6.2 release. There is no reason to wait more longer.
+> > 
+> > 
+> > I'm periodically receiving emails that driver does not work correctly
+> > anymore, PCIe cards are not detected or that they crashes during boot.
+> > 
+> > Some of the issues are handled in patches which are waiting on the list for
+> > a long time and nobody cares for them. Some others needs investigation.
+> > 
+> > I'm really tired in replying to those user emails as I cannot do more in
+> > this area. I have asked more people for help but either there were only
+> > promises without any action for more than year or simple no direction how
+> > to move forward or what to do with it.
+> > 
+> > So mark this driver as broken. Users would see the real current state
+> > and hopefully will stop reporting me old or new bugs.
+> > ---
+> >  drivers/pci/controller/Kconfig | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> > index 1569d9a3ada0..b4a4d84a358b 100644
+> > --- a/drivers/pci/controller/Kconfig
+> > +++ b/drivers/pci/controller/Kconfig
+> > @@ -9,6 +9,7 @@ config PCI_MVEBU
+> >  	depends on MVEBU_MBUS
+> >  	depends on ARM
+> >  	depends on OF
+> > +	depends on BROKEN
+> >  	select PCI_BRIDGE_EMUL
+> >  	help
+> >  	 Add support for Marvell EBU PCIe controller. This PCIe controller
+> > -- 
+> > 2.20.1
+> > 
+> 
+> -- 
+> RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
+> FTTP is here! 80Mbps down 10Mbps up. Decent connectivity at last!
