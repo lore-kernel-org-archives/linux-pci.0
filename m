@@ -2,89 +2,88 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 591CBC001B0
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:39:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B58C41513
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:44:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235252AbjHHTi7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:38:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35380 "EHLO
+        id S233296AbjHHTok (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:44:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230527AbjHHTil (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:38:41 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 436F111F4F
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 12:07:47 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id C915662AB6
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 19:07:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09D17C433CD;
-        Tue,  8 Aug 2023 19:07:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691521666;
-        bh=WfySy0HZnd3rEMYjuu89Dt4Hk6YRJtlornvYhcdqAxs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=u7FhtvUlajzN9jY95yriwj1zuk79R4U6GpululA8yvt21mXspXCtnZ7HSNkFiDXSx
-         gzEmryBDVK134I5rSy1zNp+OKyPzG2YJPR1IYRlPbSiIjfhuVqZam/BcoYeaSBnqOf
-         014CSza73j0X+reAgtQIxPLLBukHRauauxnKiw/OYYUBbxMY701yk+Y9WoQ3k10/tW
-         c2Xr72jEvnujGMMC45dKgvufvlqbRiARXRApJj53kFjtFjZnyOj477NHFhA6B7RXLj
-         KAEwOY+KHTyRqBSgivGA5CwAZkkqdB0ojL3tY1niT5j8ViBuP62LLB4EWhH/M+7+57
-         mjAz1Gphh/yPw==
-Received: by pali.im (Postfix)
-        id 9A182687; Tue,  8 Aug 2023 21:07:43 +0200 (CEST)
-Date:   Tue, 8 Aug 2023 21:07:43 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     "Russell King (Oracle)" <linux@armlinux.org.uk>
-Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
-Message-ID: <20230808190743.6fbn3rz5xdcuocvg@pali>
-References: <20230114164125.1298-1-pali@kernel.org>
- <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
- <20230808072605.n3rjfsxuogza7qth@pali>
- <ZNH8rM/EJQrEKsgo@shell.armlinux.org.uk>
- <ZNH/6zlAxeXqTcAs@shell.armlinux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZNH/6zlAxeXqTcAs@shell.armlinux.org.uk>
-User-Agent: NeoMutt/20180716
+        with ESMTP id S233625AbjHHTod (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:44:33 -0400
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 135AA170F0;
+        Tue,  8 Aug 2023 09:48:05 -0700 (PDT)
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 07D201A11B8;
+        Tue,  8 Aug 2023 08:08:54 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C21041A1190;
+        Tue,  8 Aug 2023 08:08:53 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 252931800318;
+        Tue,  8 Aug 2023 14:08:52 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     frank.li@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
+        lpieralisi@kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        linux-imx@nxp.com
+Subject: [PATCH v3 0/9] Add legacy i.MX PCIe EP mode supports
+Date:   Tue,  8 Aug 2023 13:34:09 +0800
+Message-Id: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tuesday 08 August 2023 09:42:19 Russell King (Oracle) wrote:
-> On Tue, Aug 08, 2023 at 09:28:28AM +0100, Russell King (Oracle) wrote:
-> > On Tue, Aug 08, 2023 at 09:26:05AM +0200, Pali Rohár wrote:
-> > > On Friday 04 August 2023 12:35:13 Russell King (Oracle) wrote:
-> > > > Hi,
-> > > > 
-> > > > So it seems this patch got applied, but it wasn't Cc'd to
-> > > > linux-arm-kernel or anyone else, so those of us with platforms never
-> > > > had a chance to comment on it.
-> > > 
-> > > You have received more changes and fixes for last 2 years for these
-> > > issues and you have done **nothing**. You even not said anything.
-> > > So you are the last one who can complain here.
-> > 
-> > That's because I can't help - what I have *works*. I have *zero*
-> > issues with the PCI interfaces on Armada 388.
-> > 
-> > > You should have come up and start solving issues. And not complaining
-> > > now.
-> > 
-> > How can one solve issues when they're probably hardware related and
-> > one doesn't experience them?
-> > 
-> > Sorry, but no. If you feel as strongly as you do, walk away.
-> 
-> ... and how dare you tell me what I should work on - you are *not* my
-> boss.
+Add legacy 32bit i.MX PCIe EP mode support
 
-I'm not your boss, but I'm still marked as maintainer of this code and
-you should get my review for any changes here. Or was there some change?
+The PCI controller contained in i.MX6/7 legacy SOCs is one dual mode
+PCIe controller, and can work either as RC or EP.
+
+This series add i.MX6/7 PCIe EP mode supports. And had been verified
+on i.MX6 sabresd and i.MX7 SDB boards.
+
+In the verification, one board PCIe is used as RC, the other one is used
+as EP.
+Use the cross TX/RX differential cable connect the two PCIe ports of
+these two boards.
+
++-----------+                +------------+
+|   PCIe TX |<-------------->|PCIe RX     |
+|           |                |            |
+|    Board  |                |    Board   |
+|           |                |            |
+|   PCIe RX |<-------------->|PCIe TX     |
++-----------+                +------------+
+
+Changes from v2 to v3:
+Add Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+into dt-bindings patches.
+
+Changes from v1 to v2:
+Refer to Frank's comments:
+To simple .get_features codes, add "const struct pci_epc_features"
+*epc_features in drvdata.
+
+Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml | 50 +++++++++++++++++++++++++++++++++++++++++----
+arch/arm/boot/dts/nxp/imx/imx6qdl.dtsi                       | 14 +++++++++++++
+arch/arm/boot/dts/nxp/imx/imx6qp.dtsi                        |  4 ++++
+arch/arm/boot/dts/nxp/imx/imx6sx.dtsi                        | 17 +++++++++++++++
+arch/arm/boot/dts/nxp/imx/imx7d.dtsi                         | 27 ++++++++++++++++++++++++
+drivers/pci/controller/dwc/pci-imx6.c                        | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+6 files changed, 201 insertions(+), 4 deletions(-)
+
+[PATCH v3 1/9] dt-bindings: PCI: fsl,imx6q: Add i.MX6Q and i.MX6QP
+[PATCH v3 2/9] dt-bindings: PCI: fsl,imx6q: Add i.MX6SX PCIe EP
+[PATCH v3 3/9] dt-bindings: PCI: fsl,imx6q: Add i.MX7D PCIe EP
+[PATCH v3 4/9] arm: dts: nxp: Add i.MX6QDL and i.MX6QP PCIe EP
+[PATCH v3 5/9] arm: dts: nxp: Add i.MX6SX PCIe EP support
+[PATCH v3 6/9] arm: dts: nxp: Add i.MX7D PCIe EP support
+[PATCH v3 7/9] PCI: imx6: Add i.MX6Q and i.MX6QP PCIe EP supports
+[PATCH v3 8/9] PCI: imx6: Add i.MX6SX PCIe EP support
+[PATCH v3 9/9] PCI: imx6: Add i.MX7D PCIe EP support
