@@ -2,128 +2,81 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A9F9C001B0
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9849EC001DE
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:44:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232763AbjHHQaF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:30:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46794 "EHLO
+        id S230313AbjHHQoL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:44:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232772AbjHHQ2z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:28:55 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3762812538;
-        Tue,  8 Aug 2023 08:51:10 -0700 (PDT)
+        with ESMTP id S229695AbjHHQn0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:43:26 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 673A4212D
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 08:55:44 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 9D43F62461;
-        Tue,  8 Aug 2023 08:41:53 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8003EC433C8;
-        Tue,  8 Aug 2023 08:41:47 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id ED529624BD
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 11:02:43 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4241BC433C7;
+        Tue,  8 Aug 2023 11:02:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691484113;
-        bh=RmuHI6SnVuFMKUQ2d0Pd88TnzEPcPc2NGqkjG7ikYO4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cwr+yMbUV+NM94lVf0ySZk4FQ2nozF+U9wyhfVylYCpXbt1OL0ssrTMJwXSxsdsHi
-         18rTqTqxxueHW+nMM+ermi6IQknqO8+usQdaIiyi1h1tiB82F262sqvPDUGDacSDkO
-         a+eTTnFx91yf6zmVoeagFEWEQ3lln0JhVGRC83P65FbUnGAKxwHLFQyg6fLOXTTdZn
-         A1EoGEKnrrv1NvaNJ3siqRI5n1/LCn3oUKEUABC06gGoEHMihEoitC1g2km+U7SlBq
-         HDlEJ7VYY0XrzBN2J0H3HcQA4IRPSXjHrlCgv6J3k9J5QInU+H7jleqW4Lu80DSrip
-         ExqC2/GRUi8eA==
-Date:   Tue, 8 Aug 2023 09:41:45 +0100
-From:   Conor Dooley <conor@kernel.org>
-To:     Sunil V L <sunilvl@ventanamicro.com>
-Cc:     linux-doc@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Atish Kumar Patra <atishp@rivosinc.com>,
-        Conor Dooley <conor.dooley@microchip.com>,
-        Will Deacon <will@kernel.org>, Haibo Xu <haibo1.xu@intel.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Marc Zyngier <maz@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Robert Moore <robert.moore@intel.com>,
-        Andrew Jones <ajones@ventanamicro.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Daniel Scally <djrscally@gmail.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Anup Patel <anup@brainfault.org>, Len Brown <lenb@kernel.org>
-Subject: Re: [RFC PATCH v1 20/21] RISC-V: ACPI: Create PLIC platform device
-Message-ID: <20230808-chalice-easing-1369c7386082@spud>
-References: <20230803175916.3174453-1-sunilvl@ventanamicro.com>
- <20230803175916.3174453-21-sunilvl@ventanamicro.com>
+        s=k20201202; t=1691492563;
+        bh=hOrjnmBvHRWa/gPz43eRdywRQ0atmS0NAUDdlupwrb0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=eA5Fz53PZedXwnRszgxstlozvYRwB9J+jxgXTpdqkaSQXclxq+a8yHT3bnuYO5oyJ
+         39ERNWmUSYkRX/Ln52APmjlzKGB7xc5Ov57aKcgMwj9bcu1pc9RE6fUG+/C/V5NLqo
+         rDdrPUETe88mZFCVZ0MRmZkQ6kLNbJG1Lts1zLhZBW+eMDYzK8x02oj21CAiWZ5BuT
+         SaVz7lqnAqBqgxpf+GJCHtWrQfEwHPfnkpqK/Qw8+CsVQolElhZvzZNmg7gsgXfFi7
+         wNCae1Z1fwB0pXcf2jjmS/f0lDwpMiWVLScASe53yrEOd70o5Y0FvY1YUaa3NucjgO
+         FawkjA74nvpvw==
+From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
+To:     conor.dooley@microchip.com, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, linux-riscv@lists.infradead.org,
+        linux-pci@vger.kernel.org, daire.mcnamara@microchip.com
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>
+Subject: Re: [PATCH v3 0/7] PCI: microchip: Fixes and clean-ups
+Date:   Tue,  8 Aug 2023 13:02:37 +0200
+Message-Id: <169149233963.79399.5232296870054239065.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20230728131401.1615724-1-daire.mcnamara@microchip.com>
+References: <20230728131401.1615724-1-daire.mcnamara@microchip.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="yKOyY2Nm+bU0Ajrr"
-Content-Disposition: inline
-In-Reply-To: <20230803175916.3174453-21-sunilvl@ventanamicro.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Fri, 28 Jul 2023 14:13:54 +0100, daire.mcnamara@microchip.com wrote:
+> This patch series contains fixes and clean-ups for the Microchip PolarFire SoC PCIe driver
+> 
+> These patches are extracted from the link below to separate them from the outbound and inbound
+> range handling which is taking considerable time.
+> Link: https://lore.kernel.org/linux-riscv/20230111125323.1911373-1-daire.mcnamara@microchip.com/
+> 
+> Resending with correct e-mail address list
+> 
+> [...]
 
---yKOyY2Nm+bU0Ajrr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Applied to controller/microchip, thanks!
 
-On Thu, Aug 03, 2023 at 11:29:15PM +0530, Sunil V L wrote:
-> Since PLIC needs to be a platform device
+[1/7] PCI: microchip: Correct the DED and SEC interrupt bit offsets
+      https://git.kernel.org/pci/pci/c/6d473a5a2613
+[2/7] PCI: microchip: Enable building driver as a module
+      https://git.kernel.org/pci/pci/c/2e245bc8a2ab
+[3/7] PCI: microchip: Align register, offset, and mask names with hw docs
+      https://git.kernel.org/pci/pci/c/4d6bf4c49578
+[4/7] PCI: microchip: Enable event handlers to access bridge and ctrl ptrs
+      https://git.kernel.org/pci/pci/c/d1d6a0c9e79c
+[5/7] PCI: microchip: Clean up initialisation of interrupts
+      https://git.kernel.org/pci/pci/c/4f0b91247f78
+[6/7] PCI: microchip: Gather MSI information from hardware config registers
+      https://git.kernel.org/pci/pci/c/1abb722888fd
+[7/7] PCI: microchip: Re-partition code between probe() and init()
+      https://git.kernel.org/pci/pci/c/bac406c34fbc
 
-For the unwashed, why does the PLCI need to be a platform device?
-(And while you're at that, please try to make use of the extra ~20
-characters per line that you can use here.)
-
-> probe the
-> MADT and create platform devices for each PLIC in the
-> system. Use software node framework for the fwnode
-> which allows to create properties and hence the
-> actual irqchip driver doesn't need to do anything
-> different for ACPI vs DT.
->=20
-> Signed-off-by: Sunil V L <sunilvl@ventanamicro.com>
-> Co-developed-by: Haibo Xu <haibo1.xu@intel.com>
-> Signed-off-by: Haibo Xu <haibo1.xu@intel.com>
-
-> +static struct fwnode_handle *acpi_plic_create_fwnode(struct acpi_madt_pl=
-ic *plic)
-> +{
-> +	struct fwnode_handle *fwnode, *parent_fwnode;
-> +	struct riscv_irqchip_list *plic_element;
-> +	struct software_node_ref_args *refs;
-> +	struct property_entry props[8] =3D {};
-> +	int nr_contexts;
-> +
-> +	props[0] =3D PROPERTY_ENTRY_U32("riscv,gsi-base", plic->gsi_base);
-> +	props[1] =3D PROPERTY_ENTRY_U32("riscv,ndev", plic->num_irqs);
-> +	props[2] =3D PROPERTY_ENTRY_U32("riscv,max_prio", plic->max_prio);
-
-My OCD wants to know why this gets an _ but the others have a -.
-
-> +	props[3] =3D PROPERTY_ENTRY_U8("riscv,plic-id", plic->id);
-> +	props[4] =3D PROPERTY_ENTRY_U64("riscv,plic-base", plic->base_addr);
-> +	props[5] =3D PROPERTY_ENTRY_U32("riscv,plic-size", plic->size);
-
---yKOyY2Nm+bU0Ajrr
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZNH/yQAKCRB4tDGHoIJi
-0o+oAQCMWQ+6bAgMjck+BSFaQF/FjtKfLfwDUTH+w218stePOwD8DiC9qCq9yuol
-xjAhVIcaeVplSIBN2+Ti/3cDd5sR5AE=
-=0Z4N
------END PGP SIGNATURE-----
-
---yKOyY2Nm+bU0Ajrr--
+Thanks,
+Lorenzo
