@@ -2,112 +2,93 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36750C04E69
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 17:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 661C1C04A6A
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 17:35:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234565AbjHHRZp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 13:25:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40112 "EHLO
+        id S230226AbjHHRf4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 13:35:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55078 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234374AbjHHRZY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 13:25:24 -0400
+        with ESMTP id S233708AbjHHRfd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 13:35:33 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAEF020268;
-        Tue,  8 Aug 2023 09:10:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDAE797D5D
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 09:15:29 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B1594624CB;
-        Tue,  8 Aug 2023 11:23:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B46A2C433C7;
-        Tue,  8 Aug 2023 11:23:02 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 973FA62166
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 07:56:27 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC7B1C433C8;
+        Tue,  8 Aug 2023 07:56:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691493786;
-        bh=uf47QcqVVednoTyXP/D1xitpSzvvxXjJ0RJvfi2KsoE=;
+        s=k20201202; t=1691481387;
+        bh=neADDd1vZwFjQNQRa9xqHewGQOvBGcnQpVQrUa/in54=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=qUUbmI60+gD371c+d5N6y7GEIlxhTL0jSQyQgcYZy3sb7K6SacbY+7NvuHjoVNSG1
-         WH9DqltMiROF3+twdf6p73ddnb2Hw1KfAOzYZq7P/mUBKFcJRIHAxz5oDTRh6uRDG1
-         TPuI/NpY6bBziU+F/N9X+5SEFAHG9X7/3exDlA9fquqR8UEUHsaDjTl5Fd9wohD2fm
-         VvyD37kojpCZemPC8cz1YSFCefwhsCxqSgTemzzGGFp8fFIvl22H3vYxRz5t9boOgf
-         cMoT5j2g8ZycnSQVVbwH+GIFmJpU8n8pV+3y/uNyXtdfoy9cRqxaxjkaZBDXs2VFs2
-         qDtayNRcM9nIg==
-Date:   Tue, 8 Aug 2023 13:22:59 +0200
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     Mark Brown <broonie@kernel.org>
-Cc:     Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: dwc: Provide deinit callback for i.MX
-Message-ID: <ZNIlk8YgUevE7kTH@lpieralisi>
-References: <20230712-pci-imx-regulator-cleanup-v2-1-3b1f6e9d26bc@kernel.org>
+        b=ndC3njM5PJwnLTcX9+AmJb3M8Hgb7ighXwFLymLrLJdYqH4cJJ+/0AthUWUBY4x0v
+         jUf20uQoGpJkxRcaoc1zGRtcFyK5PZnVlLgz817hUjRswA3MZsxaiJqVSBfhGYIXui
+         yr5h4uPJEuE7SnnDNQ40ppkWexA3ozkhzweUn6nAeUgXhioTFDavvb99IACszysG8K
+         XdX4NueJUepSKi+sYkhK4GAnJghLsb8BoJeRnmjkPOU7Akt2STd2wqV+paBOgzmlBC
+         w7HW8pbD/UVCYN58/EOue1PsWih4JSSZaI7LpQYJAuNgfWZ6NXuOWH4IUOLCu42TTB
+         L3AyF1uQPDlHw==
+Received: by pali.im (Postfix)
+        id 15CB9687; Tue,  8 Aug 2023 09:56:24 +0200 (CEST)
+Date:   Tue, 8 Aug 2023 09:56:23 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+Cc:     "Russell King (Oracle)" <linux@armlinux.org.uk>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
+Message-ID: <20230808075623.lmhvotnzzjsz5r2o@pali>
+References: <20230114164125.1298-1-pali@kernel.org>
+ <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
+ <20230804134622.pmbymxtzxj2yfhri@pengutronix.de>
+ <20230808072701.gx6apjnnrppv7sit@pali>
+ <20230808073822.35vlao5bs6bo2b2n@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230712-pci-imx-regulator-cleanup-v2-1-3b1f6e9d26bc@kernel.org>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230808073822.35vlao5bs6bo2b2n@pengutronix.de>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jul 12, 2023 at 12:02:57PM +0100, Mark Brown wrote:
-> The i.MX integration for the DesignWare PCI controller has a _host_exit()
-> operation which undoes everything that the _host_init() operation does but
-> does not wire this up as the host_deinit callback for the core, or call it
-> in any path other than suspend. This means that if we ever unwind the
-> initial probe of the device, for example because it fails, the regulator
-> core complains that the regulators for the device were left enabled:
+On Tuesday 08 August 2023 09:38:22 Uwe Kleine-König wrote:
+> Hello Pali,
 > 
-> imx6q-pcie 33800000.pcie: iATU: unroll T, 4 ob, 4 ib, align 64K, limit 16G
-> imx6q-pcie 33800000.pcie: Phy link never came up
-> imx6q-pcie 33800000.pcie: Phy link never came up
-> imx6q-pcie: probe of 33800000.pcie failed with error -110
-> ------------[ cut here ]------------
-> WARNING: CPU: 2 PID: 46 at drivers/regulator/core.c:2396 _regulator_put+0x110/0x128
+> On Tue, Aug 08, 2023 at 09:27:01AM +0200, Pali Rohár wrote:
+> > On Friday 04 August 2023 15:46:22 Uwe Kleine-König wrote:
+> > > On Fri, Aug 04, 2023 at 12:35:13PM +0100, Russell King (Oracle) wrote:
+> > > > Uwe has a SATA controller for a bunch of disks in an Armada 370 based
+> > > > NAS platform that is connected to PCIe, and removing PCIe support
+> > > > effectively makes his platform utterly useless.
+> > > 
+> > > While this is true there is really a problem on my platform with
+> > > accessing the hard disks via that pci controller and a 88SE9215 SATA
+> > > controller. While it seems to work in principle, it's incredible slow.
+> > 
+> > Exactly those are things which randomly does not work.
 > 
-> Wire up the callback so that the core can clean up after itself.
-> 
-> Reviewed-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Tested-by: Fabio Estevam <festevam@gmail.com>
-> Signed-off-by: Mark Brown <broonie@kernel.org>
-> ---
-> Changes in v2:
-> - Rebase onto v6.5-rc1.
-> - Link to v1: https://lore.kernel.org/r/20230703-pci-imx-regulator-cleanup-v1-1-b6c050ae2bad@kernel.org
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 1 +
->  1 file changed, 1 insertion(+)
+> I had this slow behaviour consistently on next-20230803 and
+> next-20230804 was fine. I thought that meant that there was something
+> fixed between these two trees. Do you suggest this is worth to
+> investigate as it might just be some butterfly effect that made the
+> problem go away?
 
-Applied to controller/dwc, thanks.
+These issues are there for a longer time, it started appearing after
+5.15 lts version. And by your description it means that they were not
+fixed yet.
 
-Lorenzo
-
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 27aaa2a6bf39..a18c20085e94 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -1040,6 +1040,7 @@ static void imx6_pcie_host_exit(struct dw_pcie_rp *pp)
->  
->  static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
->  	.host_init = imx6_pcie_host_init,
-> +	.host_deinit = imx6_pcie_host_exit,
->  };
->  
->  static const struct dw_pcie_ops dw_pcie_ops = {
+> Best regards
+> Uwe
 > 
-> ---
-> base-commit: 06c2afb862f9da8dc5efa4b6076a0e48c3fbaaa5
-> change-id: 20230703-pci-imx-regulator-cleanup-a17c8fd15ec5
-> 
-> Best regards,
 > -- 
-> Mark Brown <broonie@kernel.org>
-> 
+> Pengutronix e.K.                           | Uwe Kleine-König            |
+> Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+
