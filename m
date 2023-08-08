@@ -2,156 +2,128 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EFAC001DE
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:27:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A9F9C001B0
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:30:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232705AbjHHQ1i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:27:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34346 "EHLO
+        id S232763AbjHHQaF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:30:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230100AbjHHQ0R (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:26:17 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90F2D136
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 08:50:26 -0700 (PDT)
+        with ESMTP id S232772AbjHHQ2z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:28:55 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3762812538;
+        Tue,  8 Aug 2023 08:51:10 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 7CCAB60202
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 07:31:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AA52C433C7;
-        Tue,  8 Aug 2023 07:31:57 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9D43F62461;
+        Tue,  8 Aug 2023 08:41:53 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8003EC433C8;
+        Tue,  8 Aug 2023 08:41:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691479917;
-        bh=ATs2f06VXRPuOGQ04L+DaPWovVdeFCFuKK9xzmYIC14=;
+        s=k20201202; t=1691484113;
+        bh=RmuHI6SnVuFMKUQ2d0Pd88TnzEPcPc2NGqkjG7ikYO4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=N0ruxBMeU2doqFZn7yfljKGPTEdRD1aFxvsrZirlwWztN0RumGl1w8cunoA5kHL/y
-         lmCGn/IJSjONQMUWptmZXnE9TCxpfjLRGYwaMn7hg77wr/Dbbj/HNUALFAWGn6KUR3
-         GgVb5hKH7B9mhY0SrfjKXSgmivKBTaJvVDsA4bVV4cdQ+jcTAWH/SXJmOkpVUB/njD
-         1YQvm3COA9B6dguuHgl2Xc54fjYoGoBEthEnBUH5v+HZ1vEzZF5BnKHmv8KRc6cIbm
-         Ls4kLkW5qHgUTENS9hKRnqS3DPcSynSXaRr2yeZ2GPhH7ZRicquvlqaTOFtrNp0JXd
-         nkOZ33jUFdjQw==
-Received: by pali.im (Postfix)
-        id 8F91F687; Tue,  8 Aug 2023 09:31:54 +0200 (CEST)
-Date:   Tue, 8 Aug 2023 09:31:54 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Russell King (Oracle)" <linux@armlinux.org.uk>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        b=cwr+yMbUV+NM94lVf0ySZk4FQ2nozF+U9wyhfVylYCpXbt1OL0ssrTMJwXSxsdsHi
+         18rTqTqxxueHW+nMM+ermi6IQknqO8+usQdaIiyi1h1tiB82F262sqvPDUGDacSDkO
+         a+eTTnFx91yf6zmVoeagFEWEQ3lln0JhVGRC83P65FbUnGAKxwHLFQyg6fLOXTTdZn
+         A1EoGEKnrrv1NvaNJ3siqRI5n1/LCn3oUKEUABC06gGoEHMihEoitC1g2km+U7SlBq
+         HDlEJ7VYY0XrzBN2J0H3HcQA4IRPSXjHrlCgv6J3k9J5QInU+H7jleqW4Lu80DSrip
+         ExqC2/GRUi8eA==
+Date:   Tue, 8 Aug 2023 09:41:45 +0100
+From:   Conor Dooley <conor@kernel.org>
+To:     Sunil V L <sunilvl@ventanamicro.com>
+Cc:     linux-doc@vger.kernel.org, linux-riscv@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Atish Kumar Patra <atishp@rivosinc.com>,
+        Conor Dooley <conor.dooley@microchip.com>,
+        Will Deacon <will@kernel.org>, Haibo Xu <haibo1.xu@intel.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Marc Zyngier <maz@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Robert Moore <robert.moore@intel.com>,
+        Andrew Jones <ajones@ventanamicro.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
-Message-ID: <20230808073154.bstm3xwtjalyq3qb@pali>
-References: <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
- <20230804170655.GA147757@bhelgaas>
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Daniel Scally <djrscally@gmail.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Anup Patel <anup@brainfault.org>, Len Brown <lenb@kernel.org>
+Subject: Re: [RFC PATCH v1 20/21] RISC-V: ACPI: Create PLIC platform device
+Message-ID: <20230808-chalice-easing-1369c7386082@spud>
+References: <20230803175916.3174453-1-sunilvl@ventanamicro.com>
+ <20230803175916.3174453-21-sunilvl@ventanamicro.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="yKOyY2Nm+bU0Ajrr"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230804170655.GA147757@bhelgaas>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20230803175916.3174453-21-sunilvl@ventanamicro.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Friday 04 August 2023 12:06:55 Bjorn Helgaas wrote:
-> [+cc Krzysztof]
-> 
-> On Fri, Aug 04, 2023 at 12:35:13PM +0100, Russell King (Oracle) wrote:
-> > So it seems this patch got applied, but it wasn't Cc'd to
-> > linux-arm-kernel or anyone else, so those of us with platforms never
-> > had a chance to comment on it.
-> > 
-> > *** This change causes a regression to working setups. ***
-> > 
-> > It appears that the *only* reason this patch was proposed is to stop a
-> > kernel developer receiving problem reports from a set of users, but
-> > completely ignores that there is another group of users where this works
-> > fine - and thus the addition of this patch causes working setups to
-> > regress.
-> > 
-> > Because one is being bothered with problem reports is not a reason to
-> > mark a driver broken - and especially not doing so in a way that those
-> > who may be affected don't get an opportunity to comment on the patch!
-> > Also, there is _zero_ information provided on what the reported problems
-> > actually are, so no one else can guess what these issues are.
-> > 
-> > However, given that there are working setups and this change causes
-> > those to regress, it needs to be reverted.
-> > 
-> > For example, I have an Atheros PCIe WiFi card in an Armada 388 Clearfog
-> > platform, and this works fine.
-> > 
-> > Uwe has a SATA controller for a bunch of disks in an Armada 370 based
-> > NAS platform that is connected to PCIe, and removing PCIe support
-> > effectively makes his platform utterly useless.
-> > 
-> > Please revert this patch.
-> 
-> Sorry for the inconvenience.
-> 
-> I was under the mistaken impression that making the driver depend on
-> CONFIG_BROKEN would keep the driver available but only if the user
-> explicitly requested it, similar to how 
-> CONFIG_COMPILE_TEST works.  But obviously that's not the case, so
-> we'll revert the change.
-> 
-> I queued up the revert below, including a note in the Kconfig help
-> text about the known issues.
-> 
-> commit 814b6bb15367 ("Revert "PCI: mvebu: Mark driver as BROKEN"")
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Fri Aug 4 11:54:43 2023 -0500
-> 
->     Revert "PCI: mvebu: Mark driver as BROKEN"
->     
->     b3574f579ece ("PCI: mvebu: Mark driver as BROKEN") made it impossible to
->     enable the pci-mvebu driver.  The driver does have known problems, but as
->     Russell and Uwe reported, it does work in some configurations, so removing
->     it broke some working setups.
->     
->     Revert b3574f579ece so pci-mvebu is available.  Mention the known problems
->     in the Kconfig help text.
->     
->     Reported-by: Russell King (Oracle) <linux@armlinux.org.uk>
->     Link: https://lore.kernel.org/r/ZMzicVQEyHyZzBOc@shell.armlinux.org.uk
->     Reported-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
->     Link: https://lore.kernel.org/r/20230804134622.pmbymxtzxj2yfhri@pengutronix.de
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
 
-What you are trying to achieve with this patch now? Do you think that it
-is really correct to show that everything is working for everybody
-correctly? Use a common sense here.
+--yKOyY2Nm+bU0Ajrr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Or this is a way how kernel people are fixing bugs?
+On Thu, Aug 03, 2023 at 11:29:15PM +0530, Sunil V L wrote:
+> Since PLIC needs to be a platform device
 
-Now I'm starting understand why majority of HW industry say to not use
-"unsupported mainline kernel" and instead use our prepared patched
-kernels...
+For the unwashed, why does the PLCI need to be a platform device?
+(And while you're at that, please try to make use of the extra ~20
+characters per line that you can use here.)
 
-> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> index 8d49bad7f847..478f158b2dfb 100644
-> --- a/drivers/pci/controller/Kconfig
-> +++ b/drivers/pci/controller/Kconfig
-> @@ -179,13 +179,15 @@ config PCI_MVEBU
->  	depends on MVEBU_MBUS
->  	depends on ARM
->  	depends on OF
-> -	depends on BROKEN
->  	select PCI_BRIDGE_EMUL
->  	help
->  	 Add support for Marvell EBU PCIe controller. This PCIe controller
->  	 is used on 32-bit Marvell ARM SoCs: Dove, Kirkwood, Armada 370,
->  	 Armada XP, Armada 375, Armada 38x and Armada 39x.
->  
-> +	 This driver has known problems that may cause crashes during boot
-> +	 and failure to detect PCIe devices in some cases.
+> probe the
+> MADT and create platform devices for each PLIC in the
+> system. Use software node framework for the fwnode
+> which allows to create properties and hence the
+> actual irqchip driver doesn't need to do anything
+> different for ACPI vs DT.
+>=20
+> Signed-off-by: Sunil V L <sunilvl@ventanamicro.com>
+> Co-developed-by: Haibo Xu <haibo1.xu@intel.com>
+> Signed-off-by: Haibo Xu <haibo1.xu@intel.com>
+
+> +static struct fwnode_handle *acpi_plic_create_fwnode(struct acpi_madt_pl=
+ic *plic)
+> +{
+> +	struct fwnode_handle *fwnode, *parent_fwnode;
+> +	struct riscv_irqchip_list *plic_element;
+> +	struct software_node_ref_args *refs;
+> +	struct property_entry props[8] =3D {};
+> +	int nr_contexts;
 > +
->  config PCIE_MEDIATEK
->  	tristate "MediaTek PCIe controller"
->  	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
+> +	props[0] =3D PROPERTY_ENTRY_U32("riscv,gsi-base", plic->gsi_base);
+> +	props[1] =3D PROPERTY_ENTRY_U32("riscv,ndev", plic->num_irqs);
+> +	props[2] =3D PROPERTY_ENTRY_U32("riscv,max_prio", plic->max_prio);
+
+My OCD wants to know why this gets an _ but the others have a -.
+
+> +	props[3] =3D PROPERTY_ENTRY_U8("riscv,plic-id", plic->id);
+> +	props[4] =3D PROPERTY_ENTRY_U64("riscv,plic-base", plic->base_addr);
+> +	props[5] =3D PROPERTY_ENTRY_U32("riscv,plic-size", plic->size);
+
+--yKOyY2Nm+bU0Ajrr
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZNH/yQAKCRB4tDGHoIJi
+0o+oAQCMWQ+6bAgMjck+BSFaQF/FjtKfLfwDUTH+w218stePOwD8DiC9qCq9yuol
+xjAhVIcaeVplSIBN2+Ti/3cDd5sR5AE=
+=0Z4N
+-----END PGP SIGNATURE-----
+
+--yKOyY2Nm+bU0Ajrr--
