@@ -2,80 +2,142 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE839C41513
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D69CBC001B0
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:49:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234234AbjHHTsq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:48:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40822 "EHLO
+        id S229463AbjHHTtp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:49:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234803AbjHHTsf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:48:35 -0400
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8724DEB7;
-        Tue,  8 Aug 2023 09:53:06 -0700 (PDT)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id BC76D1A11CE;
-        Tue,  8 Aug 2023 08:08:59 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 825CA1A11C8;
-        Tue,  8 Aug 2023 08:08:59 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id D35B51800319;
-        Tue,  8 Aug 2023 14:08:57 +0800 (+08)
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     frank.li@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
-        lpieralisi@kernel.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org
-Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
-        linux-imx@nxp.com
-Subject: [PATCH v3 5/9] arm: dts: nxp: Add i.MX6SX PCIe EP support
-Date:   Tue,  8 Aug 2023 13:34:14 +0800
-Message-Id: <1691472858-9383-6-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        with ESMTP id S231527AbjHHTt0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:49:26 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94EE4504C8
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 09:54:32 -0700 (PDT)
+Received: from dggpemm500002.china.huawei.com (unknown [172.30.72.56])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RKfRj2C9cztRsG;
+        Tue,  8 Aug 2023 11:53:21 +0800 (CST)
+Received: from localhost.localdomain.localdomain (10.175.113.25) by
+ dggpemm500002.china.huawei.com (7.185.36.229) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.27; Tue, 8 Aug 2023 11:56:48 +0800
+From:   Xiongfeng Wang <wangxiongfeng2@huawei.com>
+To:     <bhelgaas@google.com>, <fbarrat@linux.ibm.com>,
+        <ajd@linux.ibm.com>, <mpe@ellerman.id.au>, <npiggin@gmail.com>,
+        <christophe.leroy@csgroup.eu>, <arnd@arndb.de>,
+        <gregkh@linuxfoundation.org>, <ben.widawsky@intel.com>
+CC:     <linux-pci@vger.kernel.org>, <yangyingliang@huawei.com>,
+        <linuxppc-dev@lists.ozlabs.org>, <jonathan.cameron@huawei.com>,
+        <david.e.box@linux.intel.com>, <helgaas@kernel.org>,
+        <wangxiongfeng2@huawei.com>
+Subject: [PATCH v2 1/2] PCI: Add pci_find_next_dvsec_capability to find next Designated VSEC
+Date:   Tue, 8 Aug 2023 12:08:57 +0800
+Message-ID: <20230808040858.183568-2-wangxiongfeng2@huawei.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20230808040858.183568-1-wangxiongfeng2@huawei.com>
+References: <20230808040858.183568-1-wangxiongfeng2@huawei.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.113.25]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ dggpemm500002.china.huawei.com (7.185.36.229)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add i.MX6SX PCIe EP support.
+Some devices may have several DVSEC (Designated Vendor-Specific Extended
+Capability) entries with the same DVSEC ID. Add
+pci_find_next_dvsec_capability() to find them all.
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+Signed-off-by: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+Reviewed-by: Andrew Donnellan <ajd@linux.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/arm/boot/dts/nxp/imx/imx6sx.dtsi | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/pci/pci.c   | 39 ++++++++++++++++++++++++++-------------
+ include/linux/pci.h |  2 ++
+ 2 files changed, 28 insertions(+), 13 deletions(-)
 
-diff --git a/arch/arm/boot/dts/nxp/imx/imx6sx.dtsi b/arch/arm/boot/dts/nxp/imx/imx6sx.dtsi
-index f6b35923ad83..13411a843e07 100644
---- a/arch/arm/boot/dts/nxp/imx/imx6sx.dtsi
-+++ b/arch/arm/boot/dts/nxp/imx/imx6sx.dtsi
-@@ -1471,5 +1471,22 @@ pcie: pcie@8ffc000 {
- 			power-domain-names = "pcie", "pcie_phy";
- 			status = "disabled";
- 		};
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 60230da957e0..2ff5b1ce0eec 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -749,35 +749,48 @@ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap)
+ EXPORT_SYMBOL_GPL(pci_find_vsec_capability);
+ 
+ /**
+- * pci_find_dvsec_capability - Find DVSEC for vendor
++ * pci_find_next_dvsec_capability - Find next DVSEC for vendor
+  * @dev: PCI device to query
++ * @start: Address at which to start looking (0 to start at beginning of list)
+  * @vendor: Vendor ID to match for the DVSEC
+- * @dvsec: Designated Vendor-specific capability ID
++ * @dvsec: Vendor-defined DVSEC ID
+  *
+- * If DVSEC has Vendor ID @vendor and DVSEC ID @dvsec return the capability
+- * offset in config space; otherwise return 0.
++ * Returns the address of the next DVSEC if the DVSEC has Vendor ID @vendor and
++ * DVSEC ID @dvsec; otherwise return 0. DVSEC can occur several times with the
++ * same DVSEC ID for some devices, and this provides a way to find them all.
+  */
+-u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec)
++u16 pci_find_next_dvsec_capability(struct pci_dev *dev, u16 start, u16 vendor,
++				   u16 dvsec)
+ {
+-	int pos;
++	u16 pos = start;
+ 
+-	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DVSEC);
+-	if (!pos)
+-		return 0;
+-
+-	while (pos) {
++	while ((pos = pci_find_next_ext_capability(dev, pos,
++						  PCI_EXT_CAP_ID_DVSEC))) {
+ 		u16 v, id;
+ 
+ 		pci_read_config_word(dev, pos + PCI_DVSEC_HEADER1, &v);
+ 		pci_read_config_word(dev, pos + PCI_DVSEC_HEADER2, &id);
+ 		if (vendor == v && dvsec == id)
+ 			return pos;
+-
+-		pos = pci_find_next_ext_capability(dev, pos, PCI_EXT_CAP_ID_DVSEC);
+ 	}
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(pci_find_next_dvsec_capability);
 +
-+		pcie_ep: pcie-ep@8ffc000 {
-+			compatible = "fsl,imx6sx-pcie-ep";
-+			reg = <0x08ffc000 0x04000>, <0x08000000 0xf00000>;
-+			reg-names = "dbi", "addr_space";
-+			num-lanes = <1>;
-+			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
-+				 <&clks IMX6SX_CLK_LVDS1_OUT>,
-+				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
-+				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
-+			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
-+			power-domains = <&pd_disp>, <&pd_pci>;
-+			power-domain-names = "pcie", "pcie_phy";
-+			num-ib-windows = <4>;
-+			num-ob-windows = <4>;
-+			status = "disabled";
-+		};
- 	};
- };
++/**
++ * pci_find_dvsec_capability - Find DVSEC for vendor
++ * @dev: PCI device to query
++ * @vendor: Vendor ID to match for the DVSEC
++ * @dvsec: Vendor-defined DVSEC ID
++ *
++ * If DVSEC has Vendor ID @vendor and DVSEC ID @dvsec return the capability
++ * offset in config space; otherwise return 0.
++ */
++u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec)
++{
++	return pci_find_next_dvsec_capability(dev, 0, vendor, dvsec);
++}
+ EXPORT_SYMBOL_GPL(pci_find_dvsec_capability);
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c69a2cc1f412..82bb905daf72 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1168,6 +1168,8 @@ u16 pci_find_next_ext_capability(struct pci_dev *dev, u16 pos, int cap);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap);
+ u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec);
++u16 pci_find_next_dvsec_capability(struct pci_dev *dev, u16 start, u16 vendor,
++				   u16 dvsec);
+ 
+ u64 pci_get_dsn(struct pci_dev *dev);
+ 
 -- 
-2.34.1
+2.20.1
 
