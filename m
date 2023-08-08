@@ -2,159 +2,112 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 098A7C04A6A
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 15:51:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFBDAC001DB
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 15:52:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230139AbjHHPu6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 11:50:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53936 "EHLO
+        id S230320AbjHHPwM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 11:52:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbjHHPtA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 11:49:00 -0400
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C896C10CF;
-        Tue,  8 Aug 2023 08:42:02 -0700 (PDT)
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 6D2E41A11D5;
-        Tue,  8 Aug 2023 08:09:03 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 007941A11C8;
-        Tue,  8 Aug 2023 08:09:03 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 481F91800318;
-        Tue,  8 Aug 2023 14:09:01 +0800 (+08)
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     frank.li@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
-        lpieralisi@kernel.org, robh+dt@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org
-Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
-        linux-imx@nxp.com
-Subject: [PATCH v3 8/9] PCI: imx6: Add i.MX6SX PCIe EP support
-Date:   Tue,  8 Aug 2023 13:34:17 +0800
-Message-Id: <1691472858-9383-9-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        with ESMTP id S229459AbjHHPut (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 11:50:49 -0400
+Received: from out4-smtp.messagingengine.com (out4-smtp.messagingengine.com [66.111.4.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FC8E1FFA
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 08:42:32 -0700 (PDT)
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
+        by mailout.nyi.internal (Postfix) with ESMTP id CC6725C00BD;
+        Tue,  8 Aug 2023 03:45:06 -0400 (EDT)
+Received: from imap51 ([10.202.2.101])
+  by compute6.internal (MEProxy); Tue, 08 Aug 2023 03:45:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+        :cc:content-type:content-type:date:date:from:from:in-reply-to
+        :in-reply-to:message-id:mime-version:references:reply-to:sender
+        :subject:subject:to:to; s=fm3; t=1691480706; x=1691567106; bh=gj
+        z6OiMLrclZFMOUDCUupdUehHVLB5u//qoVBb28758=; b=Zs1XR4Mpb4b6OHtphg
+        7fhSC6urXg/c1oB2RqwiSpHOSqGeYr8got8RKvBlXlsqV0yh27q8outTFwUBtIvo
+        2Q9JG3yKc3VrpmSpzgjC8lYENkZWHGniBqRglvSU7FR55Y12jFzveDa1VJsXPUPK
+        qKGhm/XEOLr+doQLI8J5EnCPLSHkLZ1FAkyoZU0HyxbELopFidStirDzHhZKgSqF
+        lO/kiZMwxDnIzw5ZocKKw9QkpwFLwzKnvmAb5mfa+vM8GUmW0UrNuDqDpsePyjC2
+        gzW9RzI9X8g3wROVk8yy0GiIIWTb5zvsgWuiUFPzPxL/WZsTk1Lz477x3sV5y0Sb
+        OhgA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:cc:content-type:content-type:date:date
+        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+        :message-id:mime-version:references:reply-to:sender:subject
+        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm3; t=1691480706; x=1691567106; bh=gjz6OiMLrclZF
+        MOUDCUupdUehHVLB5u//qoVBb28758=; b=i4fi9+pb0Go1yVsuU9zo7pqGl7iru
+        JSbYFrI0aBEJ0q3Uxu6d3GZPHdRNREVBDrzcNfqETD6SrbYBf2E/LOm0eYeAQv9t
+        YICd+WAInSszDs2GOQhG2EQQQIuR6fCKVdhCN1/myT4WUWjDOas55zoL2gM5OHOV
+        kBrCPwpQAy3Jj490SIxRlBQ7mWU1SdYjR9UZ6Lgp7mrehSErDihR2IbQIl4jmzrS
+        PwadcC/wgcGM01lXPTpirkOmd1xrtq2kTOcbZ1V2fKM94m+xX4wX2tZw4wgRKqY+
+        0nUUyzm8IDqZKiPWbX7DM5yzqCZG1t2H9q8hSbTVavSvXT3NjuEoC+02g==
+X-ME-Sender: <xms:gvLRZLUow1VgUUEqFGi7yRLafPkT5Hr10QU10M8VuwkF8FAVqZvLFA>
+    <xme:gvLRZDkPfZ-jCjtiUoxXdfB0CK9U1kMyscXaLGFd7r0cPvlVuASyhc99UyPSWK5r3
+    uHKTetrtJ4gClmGEWg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedviedrledugdduvddtucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:gvLRZHYJ2bGlUtNvvIwMfyeG1KpP76Fsh1sAtB_VBDQPsZD3KLEBdw>
+    <xmx:gvLRZGV3lAlemTTVW-ONrcOwKj7RqV-sSEeZ8OmzLTZeKX3-767gwQ>
+    <xmx:gvLRZFlY21pxcWJqKfQEWhEzJat1pjmNKRGxoG4EHHxFCqwgcVTugA>
+    <xmx:gvLRZLjFKuYtLsmQSPhsmybpqtzZt7FWEPiyBexxedgvaKFaKvjngg>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+        id 6458BB60089; Tue,  8 Aug 2023 03:45:06 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.9.0-alpha0-624-g7714e4406d-fm-20230801.001-g7714e440
+Mime-Version: 1.0
+Message-Id: <344b8ccd-23c9-4476-9493-1d2b9c23590d@app.fastmail.com>
+In-Reply-To: <20230808070357.GC4990@thinkpad>
+References: <189cff865f3.fc7e71c96186.1411633612292556520@linux.beauty>
+ <20230808070357.GC4990@thinkpad>
+Date:   Tue, 08 Aug 2023 09:44:44 +0200
+From:   "Arnd Bergmann" <arnd@arndb.de>
+To:     "Manivannan Sadhasivam" <mani@kernel.org>,
+        "Li Chen" <me@linux.beauty>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
+        "Kishon Vijay Abraham I" <kishon@ti.com>,
+        "Bjorn Helgaas" <helgaas@kernel.org>
+Subject: Re: [RFC] add __iomem cookie for EPF BAR
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the i.MX6SX PCIe EP support.
+On Tue, Aug 8, 2023, at 09:03, mani wrote:
+> On Mon, Aug 07, 2023 at 08:28:30PM +0800, Li Chen wrote:
+>> 
+>> Currently, the EPF's bar is allocated by pci_epf_alloc_space, which internally uses dma_alloc_coherent and the caching behavior of dma_alloc_coherent may vary depending on platforms.
+>> 
+>> The bar space is exported to RC, which means that RC may modify it without EP being aware of it, so EP still read from the cache and get stalled data. To address this issue, the bar space should be treated as iomem instead and forced to use io read/write APIs, which enforces volatile. 
+>> 
+>
+> We already had a similar discussion on using volatile for BAR space and settled
+> with {WRITE/READ}_ONCE macros in EPF Test driver [1].
+>
+> Since the BAR space allocated in endpoint is not a MMIO, I don't think it should
+> be forced as iomem. Rather EPF drivers should use _ONCE macros to access the
+> fields to avoid coherency issues as suggested by Arnd earlier.
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+Using readl/writel is clearly the wrong solution here as I explained
+before, but I assume that Li Chen is dealing with a real problem.
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 9a6531ddfef2..43c5251f5160 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -48,6 +48,7 @@ enum imx6_pcie_variants {
- 	IMX6Q,
- 	IMX6Q_EP,
- 	IMX6SX,
-+	IMX6SX_EP,
- 	IMX6QP,
- 	IMX6QP_EP,
- 	IMX7D,
-@@ -362,6 +363,7 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
- 				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
- 		break;
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_2);
-@@ -560,6 +562,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
- 		if (ret) {
- 			dev_err(dev, "unable to enable pcie_axi clock\n");
-@@ -621,6 +624,7 @@ static void imx6_pcie_disable_ref_clk(struct imx6_pcie *imx6_pcie)
- {
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
- 		break;
- 	case IMX6QP:
-@@ -718,6 +722,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
- 		reset_control_assert(imx6_pcie->apps_reset);
- 		break;
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
-@@ -782,6 +787,7 @@ static int imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
- 		break;
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
- 		break;
-@@ -840,6 +846,7 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
- 	case IMX6Q:
- 	case IMX6Q_EP:
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 	case IMX6QP:
- 	case IMX6QP_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-@@ -866,6 +873,7 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
- 	case IMX6Q:
- 	case IMX6Q_EP:
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 	case IMX6QP:
- 	case IMX6QP_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-@@ -1198,6 +1206,7 @@ static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
- 	/* Others poke directly at IOMUXC registers */
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 	case IMX6QP:
- 	case IMX6QP_EP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-@@ -1361,6 +1370,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 
- 	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
-+	case IMX6SX_EP:
- 		imx6_pcie->pcie_inbound_axi = devm_clk_get(dev,
- 							   "pcie_inbound_axi");
- 		if (IS_ERR(imx6_pcie->pcie_inbound_axi))
-@@ -1535,6 +1545,13 @@ static const struct imx6_pcie_drvdata drvdata[] = {
- 			 IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
- 		.gpr = "fsl,imx6q-iomuxc-gpr",
- 	},
-+	[IMX6SX_EP] = {
-+		.variant = IMX6SX_EP,
-+		.mode = DW_PCIE_EP_TYPE,
-+		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
-+		.gpr = "fsl,imx6q-iomuxc-gpr",
-+		.epc_features = &imx6q_pcie_epc_features,
-+	},
- 	[IMX6QP] = {
- 		.variant = IMX6QP,
- 		.flags = IMX6_PCIE_FLAG_IMX6_PHY |
-@@ -1590,6 +1607,7 @@ static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie",  .data = &drvdata[IMX6Q],  },
- 	{ .compatible = "fsl,imx6q-pcie-ep", .data = &drvdata[IMX6Q_EP], },
- 	{ .compatible = "fsl,imx6sx-pcie", .data = &drvdata[IMX6SX], },
-+	{ .compatible = "fsl,imx6sx-pcie-ep", .data = &drvdata[IMX6SX_EP], },
- 	{ .compatible = "fsl,imx6qp-pcie", .data = &drvdata[IMX6QP], },
- 	{ .compatible = "fsl,imx6qp-pcie-ep", .data = &drvdata[IMX6QP_EP], },
- 	{ .compatible = "fsl,imx7d-pcie",  .data = &drvdata[IMX7D],  },
--- 
-2.34.1
+If the cache is coherent with the device, then reading from the cache
+is clearly the right thing to do, but the mentioned "stall" problem may
+be related to the store buffers, where an dma_wmb() after the
+WRITE_ONCE() is missing. Similarly, a dma_rmb() might be missing before
+a READ_ONCE() to prevent prefetching during out-of-order execution.
 
+With readl()/writel(), you already get very heavy barriers, so it may
+end up working by accident, but these barriers are at the other side
+of the access (before writel and after readl) and may be the wrong
+type of barrier depending on the CPU.
+
+       Arnd
