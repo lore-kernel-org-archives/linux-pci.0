@@ -2,166 +2,103 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 610B3C41513
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 21:18:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1535CC001DB
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 21:20:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236576AbjHHVSw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 17:18:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34130 "EHLO
+        id S236596AbjHHVUH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 17:20:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236587AbjHHVSn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 17:18:43 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2B09E7;
-        Tue,  8 Aug 2023 14:16:13 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id 2adb3069b0e04-4fe7e67cc77so947183e87.2;
-        Tue, 08 Aug 2023 14:16:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1691529372; x=1692134172;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7BNjTP5A6iaNI8I0ONshSv2dOVlvAeNExB7nL8frDXM=;
-        b=kPJk8NVCa0OhcQbj4ylogCMt7dAfsI9yvrORqoGfysNysjEzWc2ZB+7zHoJsOgAVqe
-         oYMcEbr3U93UgOGF/33F1pYatSv/ft5i5CuTJkke34BHbam6cPRIpOkj1C2yeIae0DAq
-         y34jpG95/wTF194ZFgzZxzBl82OqkTWP0BmMjoOvGwM9eRqh8WWv8rQpo1udGGHushcP
-         1/J30RQD0BO400ObLlpNa+rfGLAUfRP+aQSEWfaP+Ic0CijMa8Y9Z9etx4EM+sdcki9V
-         s2/fsAJ1PWpB53TpjptaY41j3f/JUe72riJkmSCyKtR9ivhNQts1wQ6ujmj2T7lIaNZJ
-         frgA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1691529372; x=1692134172;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7BNjTP5A6iaNI8I0ONshSv2dOVlvAeNExB7nL8frDXM=;
-        b=EnhES3LjR/1gxAgrTdU2+LD7qgd9CS8u65WJy76Vk+5ORtOVWR5am5UyD+WiLt0m4Y
-         k4wmO6qbF6OEFbO9FU0PMcm//xm6NLZ9kTe7+HdGBR/j6ycMS3wSpSIme/2kc5CAvnn3
-         yeMp5BdjYclxiiDm9VIzRNvuLamosrBAgPVtig3TVupyFwPTJY4GrVwOdWEyRhjbRWU2
-         v+G97SwagNAREUAOfBZwwK+MHX9oXaAXKEY2PRcvMupmpplvlOUcaGwZLIMEob0iulyS
-         /aFz59nC0Na4yEn6Zztb0wTes8/F8uCE582EmzFfYnPBoxuAgoBodl+mywWPNnpKpBZ5
-         se3A==
-X-Gm-Message-State: AOJu0Yxuoc3xrT9GSVOmGm7ljfc+86zW6HBvw61m67gT7Au3Wg8mipKy
-        Y4zF3a9vtqFyW4UqT/09BnNnv6jbeHk=
-X-Google-Smtp-Source: AGHT+IFrbk/VfHFBjLAmGI1jyvpDVk0+ej8DQKimek6J+8iYsTeNTqGCNG+LkpMVasMLcc+YElYUSg==
-X-Received: by 2002:a05:6512:3f7:b0:4fb:7b4c:d38c with SMTP id n23-20020a05651203f700b004fb7b4cd38cmr360748lfq.60.1691529371918;
-        Tue, 08 Aug 2023 14:16:11 -0700 (PDT)
-Received: from mobilestation (89-109-45-41.dynamic.mts-nn.ru. [89.109.45.41])
-        by smtp.gmail.com with ESMTPSA id t9-20020a19ad09000000b004fe47879d93sm2016304lfc.106.2023.08.08.14.16.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 08 Aug 2023 14:16:11 -0700 (PDT)
-Date:   Wed, 9 Aug 2023 00:16:09 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "kw@linux.com" <kw@linux.com>,
-        "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
-        "kishon@kernel.org" <kishon@kernel.org>,
-        "krzysztof.kozlowski+dt@linaro.org" 
-        <krzysztof.kozlowski+dt@linaro.org>,
-        "conor+dt@kernel.org" <conor+dt@kernel.org>,
-        "marek.vasut+renesas@gmail.com" <marek.vasut+renesas@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-renesas-soc@vger.kernel.org" 
-        <linux-renesas-soc@vger.kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Subject: Re: [PATCH v18 08/20] PCI: dwc: Add dw_pcie_link_set_max_link_width()
-Message-ID: <rolemxcg3ezjdjkx2y2zbnoxq3zbpvo6cuukhr4lzevwim7pca@xagj3xq54dgg>
-References: <rt2vwgmdsxvkb2jh4v6mpnjpfvql44o72nxf663wbnkcvkmift@o2dl5oa435k3>
- <20230808150854.GA304435@bhelgaas>
+        with ESMTP id S236418AbjHHVTz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 17:19:55 -0400
+Received: from pandora.armlinux.org.uk (unknown [IPv6:2001:4d48:ad52:32c8:5054:ff:fe00:142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 525DE93E8
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 12:29:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:
+        Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=5dZLbm5Rli6MEFhiPPpRrh69sgXJDsI+XE+070W2AII=; b=ByV3MQ9SAHplBux+RJ82xsCd4s
+        CQXJHSCYe5sPj5jLJx1jQUMsPUQ48GJi91cfXtKIESevDnguwJVz8JD2Lf8olm4GU1Dc+0xbCHZVT
+        /MnxKiofyObfXl58mg503ZkSO/OORwnrDxxHbN4YAOi6V6qzNpe7q89bStvf6d9kTdwqH/mNDJ7J8
+        awnurFTS81VBHIBlblnCTTBKp6c4g8BxvFG3ltuNVogNdS4yRybKGDq7NErvC0dMst4UjuxXwexLa
+        abWZE0c2qlBIuz3xHzDviBTbma2Xe5ULWYxLO9FlifdJJWMQxoLioFgutS9oeDKuMCvhDXDvbZFQZ
+        YdpfuqsA==;
+Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:39384)
+        by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.96)
+        (envelope-from <linux@armlinux.org.uk>)
+        id 1qTSOp-0001dq-2X;
+        Tue, 08 Aug 2023 20:29:47 +0100
+Received: from linux by shell.armlinux.org.uk with local (Exim 4.94.2)
+        (envelope-from <linux@shell.armlinux.org.uk>)
+        id 1qTSOp-0008OU-Q1; Tue, 08 Aug 2023 20:29:47 +0100
+Date:   Tue, 8 Aug 2023 20:29:47 +0100
+From:   "Russell King (Oracle)" <linux@armlinux.org.uk>
+To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
+Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
+Message-ID: <ZNKXq0dhJTRfYLS1@shell.armlinux.org.uk>
+References: <20230114164125.1298-1-pali@kernel.org>
+ <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
+ <20230808072605.n3rjfsxuogza7qth@pali>
+ <ZNH8rM/EJQrEKsgo@shell.armlinux.org.uk>
+ <20230808190609.d7sbfklwlfo522lp@pali>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20230808150854.GA304435@bhelgaas>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230808190609.d7sbfklwlfo522lp@pali>
+Sender: Russell King (Oracle) <linux@armlinux.org.uk>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 08, 2023 at 10:08:54AM -0500, Bjorn Helgaas wrote:
-> On Tue, Aug 08, 2023 at 03:15:33AM +0300, Serge Semin wrote:
-> > On Mon, Aug 07, 2023 at 06:40:34PM -0500, Bjorn Helgaas wrote:
-> > > On Tue, Aug 08, 2023 at 01:53:11AM +0300, Serge Semin wrote:
-> > > > On Tue, Aug 01, 2023 at 01:50:59AM +0000, Yoshihiro Shimoda wrote:
-> > > > > > From: Serge Semin, Sent: Tuesday, August 1, 2023 8:54 AM
-> > > > > > On Fri, Jul 21, 2023 at 04:44:40PM +0900, Yoshihiro Shimoda wrote:
-> > > > > > > To improve code readability, add dw_pcie_link_set_max_link_width().
-> > > > > > > ...
+On Tue, Aug 08, 2023 at 09:06:09PM +0200, Pali Rohár wrote:
+> On Tuesday 08 August 2023 09:28:28 Russell King (Oracle) wrote:
+> > On Tue, Aug 08, 2023 at 09:26:05AM +0200, Pali Rohár wrote:
+> > > On Friday 04 August 2023 12:35:13 Russell King (Oracle) wrote:
+> > > > Hi,
+> > > > 
+> > > > So it seems this patch got applied, but it wasn't Cc'd to
+> > > > linux-arm-kernel or anyone else, so those of us with platforms never
+> > > > had a chance to comment on it.
 > > > 
-> > > > > > > @@ -1009,49 +1049,5 @@ void dw_pcie_setup(struct dw_pcie *pci)
-> > > > > > >  	val |= PORT_LINK_DLL_LINK_EN;
-> > > > > > >  	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
-> > > > > > >
-> > > > > > > -	if (!pci->num_lanes) {
-> > > > > > > -		dev_dbg(pci->dev, "Using h/w default number of lanes\n");
-> > > > > > > -		return;
-> > > > > > > -	}
-> > > > > > > -
-> > > > > > > -	/* Set the number of lanes */
-> > > > > > 
-> > > > > > > -	val &= ~PORT_LINK_FAST_LINK_MODE;
-> > > > > > 
-> > > > > > My series contains the patch which drops this line:
-> > > > > <snip URL>
-> > > > > > So either pick my patch up and add it to your series or still pick it up
-> > > > > > but with changing the authorship and adding me under the Suggested-by
-> > > > > > tag with the email-address I am using to review your series. Bjorn,
-> > > > > > what approach would you prefer? Perhaps alternative?
+> > > You have received more changes and fixes for last 2 years for these
+> > > issues and you have done **nothing**. You even not said anything.
+> > > So you are the last one who can complain here.
 > > 
-> > > I don't really see the argument here.  AFAICT, Yoshihiro's patch
-> > > (https://lore.kernel.org/r/20230721074452.65545-9-yoshihiro.shimoda.uh@renesas.com)
-> > > is a trivial refactoring to make dw_pcie_link_set_max_link_width(),
-> > > which might be reused elsewhere later, which seems perfectly fine.
-> > > 
-> > > It'd be fine with me to add a little detail in the commit log to
-> > > reference the Synopsys manual, which I don't have.  But doesn't seem
-> > > like a big deal to me.
-> > 
-> > More details are in one of my earlier comments to this patch which
-> > Yoshihiro promised to add to the patch log on the next patchset
-> > revision. You can read it here:
-> > https://lore.kernel.org/linux-pci/20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com/T/#m8ac364249f40c726da88316b67f11a6d55068ef0
-> > 
-> > > Dropping the PORT_LINK_FAST_LINK_MODE mask seems like a separate
-> > > question that should be in a separate patch.
-> > > https://lore.kernel.org/linux-pci/20230611192005.25636-6-Sergey.Semin@baikalelectronics.ru/
-> > > says it's redundant, so it sounds more like a cleanup than a fix.
-> > 
-> > That's the point of my comment. There is no need in copying that mask
-> > to the dw_pcie_link_set_max_link_width() method because first it's
-> > unrelated to the link-width setting, second it's redundant. There is
-> > my patch dropping the mask with the proper justification:
-> > https://lore.kernel.org/linux-pci/20230611192005.25636-6-Sergey.Semin@baikalelectronics.ru/
-> > It would be good to either merge it in before the Yoshihiro' series or
-> > add my patch to the Yoshihiro' patchset. But it's in the patchwork
-> > limbo now, neither you nor Lorenzo or Krzysztof were willing to merge
-> > it in. That's why I suggested to move the patch here with the denoted
-> > alterations. Could you give your resolution whether the suggested
-> > movement is ok or perhaps you or Lorenzo or Krzysztof consider merge
-> > it in as is?
+> > That's because I can't help - what I have *works*. I have *zero*
+> > issues with the PCI interfaces on Armada 388.
 > 
-> If I understand Yoshihiro's patch, it pulls code out into
-> dw_pcie_link_set_max_link_width() without changing that code.  That
-> seems like the best approach to me because it's very easy to review.
+> Perfect, apply your patch on your kernel setup and stop complaining
+> here. Nobody is interested for one Russel's user setup.
+
+What the fuck?
+
+What patch? I'm not proposing a patch. What I am asking for is the
+damage that you have caused (by making the driver depend on BROKEN
+because you don't want to support it anymore) be reverted so that
+those of us for whom IT IS WORKING can continue to use the driver.
+
+> > > You should have come up and start solving issues. And not complaining
+> > > now.
+> > 
+> > How can one solve issues when they're probably hardware related and
+> > one doesn't experience them?
+> > 
+> > Sorry, but no.
 > 
+> Ok, if you do not want, that we have nothing to discuss here, and your
+> patch should be rejected.
 
-> If we want to remove a little redundant code later in a separate
-> patch, that's fine too but doesn't seem urgent.  I don't think they
-> need to be tied together.
+What patch? You are making this crap up.
 
-Well, my point was the opposite: why would we need to maintain a dead,
-redundant code which also unrelated to the function it's being copied
-to, meanwhile there is already available patch which drops that code
-and Yoshihiro needs to resubmit a new revision of his series anyway?
-It would have been much better to just merge in my patch/change
-somehow (with another authorship if that's the problem) and forget
-about that from now on. If you get to merge in the Yoshohiro patchset
-first, my patch won't be cleanly applicable after that.
-
--Serge(y)
-
-> 
-> Bjorn
+-- 
+RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
+FTTP is here! 80Mbps down 10Mbps up. Decent connectivity at last!
