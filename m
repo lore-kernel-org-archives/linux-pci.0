@@ -2,108 +2,124 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 353EDC04FE0
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:22:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 000FEC04A6A
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:24:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235456AbjHHTWf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:22:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53334 "EHLO
+        id S234360AbjHHTY0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:24:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37926 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236181AbjHHTWA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:22:00 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A3FC10E9C7;
-        Tue,  8 Aug 2023 09:45:43 -0700 (PDT)
+        with ESMTP id S236241AbjHHTYK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:24:10 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A46AD92C1
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 12:20:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 526CE6254B;
-        Tue,  8 Aug 2023 13:06:20 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E2DFC433C7;
-        Tue,  8 Aug 2023 13:06:19 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 689BE62B1C
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 19:20:30 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1392C433C7;
+        Tue,  8 Aug 2023 19:20:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691499979;
-        bh=cRvpYcI51ENCIOzxv8f5XlXNoDaFznNKaW3wW2zr0ow=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=A6E7wuFXbhqek+azVh3Uj/E3WW6xluz7q3sP84yJsB2qv+iGQaPjVs4wBy+e+S/To
-         XkSdlquUSfO1uKp9oWK2o7UV6fJWQONPEnU1kHpDusthZ0jZdV+YrHV5nYBRJTi/F/
-         lmuRk1voPrSp7JLOh6a8/T2ZJYRo7Ib5bHjpBLjj1aCytZFqHGX4gSO3HR/eDY5uCe
-         30LLEt8CJPSLp/IiPCwKGk3dShL+BqfxQ7d0r3qRhpchAU+sRSViMoHOfC4fN6Knee
-         G0zi+oEi8htuuM5y1qG9meKOZEYv8UboJYiBSNyrFxiWSMXW+mb9BnfTCIPOpCBxxZ
-         Ap7e0/uyynO3w==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-        by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.95)
-        (envelope-from <maz@kernel.org>)
-        id 1qTMPh-0038M0-9S;
-        Tue, 08 Aug 2023 14:06:17 +0100
-Date:   Tue, 08 Aug 2023 14:06:08 +0100
-Message-ID: <867cq5hef3.wl-maz@kernel.org>
-From:   Marc Zyngier <maz@kernel.org>
-To:     Sunil V L <sunilvl@ventanamicro.com>
-Cc:     linux-doc@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        Jonathan Corbet <corbet@lwn.net>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will@kernel.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Len Brown <lenb@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Daniel Scally <djrscally@gmail.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Anup Patel <anup@brainfault.org>,
+        s=k20201202; t=1691522429;
+        bh=6e39yrlLiKSrgUoZ2M444RyiaqrYu/3GKu7yzntRXUI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=knblRZFv4xYk3/h5YWLYc8x4JJSh6TrKafTMWGlNegq8YrscP7JgxPAYaCweHUb9c
+         up+IHej4UtJ0ugwfumzqV117J24Uv/9gCDAPUCDrpd6oBmAsnUZD4Mdj5OWrO31trC
+         WlGHJzzMgIex59by5WFzDreSe5PNILNBk5Bgl3D4H3nqTAeqRc2Pddcoewn2NRlx8G
+         OJLhVrLU3pr/3MsTR05y0I6ou0LnaizgEFDgsNKbeT2FwMiac4YPOuuNi8qP4OrIHo
+         uLBn6p2MJ3KDdeSV6NOb4YsWsqiiVyw6nBN7EDT+wQcZrTMnBKcLU2jozjd5vLL1uO
+         SVNH6il+YDgXw==
+Received: by pali.im (Postfix)
+        id DC11A687; Tue,  8 Aug 2023 21:20:26 +0200 (CEST)
+Date:   Tue, 8 Aug 2023 21:20:26 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Russell King (Oracle)" <linux@armlinux.org.uk>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Robert Moore <robert.moore@intel.com>,
-        Haibo Xu <haibo1.xu@intel.com>,
-        Andrew Jones <ajones@ventanamicro.com>,
-        Conor Dooley <conor.dooley@microchip.com>,
-        Atish Kumar Patra <atishp@rivosinc.com>,
-        Anup Patel <apatel@ventanamicro.com>
-Subject: Re: [RFC PATCH v1 11/21] swnode: Add support to create early during boot
-In-Reply-To: <20230803175916.3174453-12-sunilvl@ventanamicro.com>
-References: <20230803175916.3174453-1-sunilvl@ventanamicro.com> <20230803175916.3174453-12-sunilvl@ventanamicro.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/28.2
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: sunilvl@ventanamicro.com, linux-doc@vger.kernel.org, linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, corbet@lwn.net, paul.walmsley@sifive.com, palmer@dabbelt.com, aou@eecs.berkeley.edu, catalin.marinas@arm.com, will@kernel.org, rafael@kernel.org, lenb@kernel.org, andriy.shevchenko@linux.intel.com, djrscally@gmail.com, heikki.krogerus@linux.intel.com, sakari.ailus@linux.intel.com, gregkh@linuxfoundation.org, daniel.lezcano@linaro.org, tglx@linutronix.de, anup@brainfault.org, bhelgaas@google.com, robert.moore@intel.com, haibo1.xu@intel.com, ajones@ventanamicro.com, conor.dooley@microchip.com, atishp@rivosinc.com, apatel@ventanamicro.com
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, kwilczynski@kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
+Message-ID: <20230808192026.t65ebdii5bv2xx5b@pali>
+References: <20230808072605.n3rjfsxuogza7qth@pali>
+ <20230808162627.GA314706@bhelgaas>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230808162627.GA314706@bhelgaas>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 03 Aug 2023 18:59:06 +0100,
-Sunil V L <sunilvl@ventanamicro.com> wrote:
+On Tuesday 08 August 2023 11:26:27 Bjorn Helgaas wrote:
+> [+cc linux-arm-kernel, beginning of thread:
+> https://lore.kernel.org/r/20230114164125.1298-1-pali@kernel.org]
 > 
-> From: Anup Patel <apatel@ventanamicro.com>
+> On Tue, Aug 08, 2023 at 09:26:05AM +0200, Pali Rohár wrote:
+> > On Friday 04 August 2023 12:35:13 Russell King (Oracle) wrote:
+> > ...
 > 
-> swnode framework can be used to create fwnode for interrupt
-> controllers. This helps in keeping the drivers same for both
-> DT and ACPI. To enable this, enhance the swnode framework so
-> that it can be created early during boot without dependency
-> on sysfs.
+> > > For example, I have an Atheros PCIe WiFi card in an Armada 388 Clearfog
+> > > platform, and this works fine.
+> > > 
+> > > Uwe has a SATA controller for a bunch of disks in an Armada 370 based
+> > > NAS platform that is connected to PCIe, and removing PCIe support
+> > > effectively makes his platform utterly useless.
+> > > 
+> > > Please revert this patch.
+> > 
+> > Please do not revert it, instead start fixing problems.
+> 
+> We know that like all the other drivers, the mvebu driver isn't
+> perfect.  But I don't think effectively removing the driver completely
+> helps anybody.  If people try to use it and notice problems, we have a
+> chance to try to fix them.
 
-Where is this coming from? We have had common abstractions for
-irqchips for a very long time. We can create fwnodes any odd way we
-want, but why oh why should we invent another method for that?
+I do not want to remove it. I was trying to find somebody who can start
+caring about issues. In last year I was resending patches, some smaller
+which could improve situation, but most of them were ignored or rejected.
 
-We already have multiple architectures such as arm64 and loongarch
-already having both DT and ACPI. Do they need another level of
-"abstraction"? No. Why is risc-v so special?
+So I'm here and waiting for alternatives, and I'm prepared to review
+changes and patches for mvebu, which can improve driver support.
 
-	M.
+But I do not see anything. The only one who wrote something useful was
+Uwe as he wanted to do some git bisect (which normally indicates issues
+or also fixup/patch).
 
--- 
-Without deviation from the norm, progress is not possible.
+Also some times ago Greg wrote something like that (mainline) kernel is
+place for unsupported and broken drivers. But mvebu is going in this
+direction.
+
+How can I otherwise point out to start doing something in this area?
+
+Or are you unhappy with the fact that there is at least somebody (me)
+who is willing to do patch review for this marvell stuff? You should
+have said it to me earlier.
+
+But as I'm reading now, that I should go away, maybe you should have to
+find also new reviewer for driver. Good luck here as there was nobody
+who even wanted to do anything in this area.
+
+> Or maybe I'm missing your point.  I think you're suggesting that we
+> keep pci-mvebu in the tree but unselectable because it depends on
+> CONFIG_BROKEN.  What would be the advantage of doing that?
+> 
+> Bjorn
+
+Well, all knows here that driver is in bad state. In past there were
+regressions and no accepted fixes for it. (At that time I prepared fix,
+but you did not like it and nobody else comes with other alternative
+patch).
+
+There area other options which can be done now, if there are only people
+like Russel who are complaining but refusing to do absolutely nothing.
+For example mark driver as experimental (there is some Kconfig symbol
+for it). Or add a new menuconfig selectable symbol which appropriately
+warn all distributions about problems and would be dependency for mvebu.
+(if you do not like broken symbol).
