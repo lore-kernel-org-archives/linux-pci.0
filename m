@@ -2,81 +2,102 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DEC6C04A6A
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 18:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39DEFC07E8B
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 18:21:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235217AbjHHSAO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 14:00:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56334 "EHLO
+        id S229990AbjHHSVq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 14:21:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229920AbjHHR7n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 13:59:43 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C55D72CEE2
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 09:27:20 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 531B062531
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 16:26:30 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71430C433B7;
-        Tue,  8 Aug 2023 16:26:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691511989;
-        bh=zE/uSYeRloetY2ZRpWdkDWpaPNmX2Vprz3+Hc9pFNr8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Sjdz06csNVGed3j66FD4E/PDkuW6p4aJDFTASGiBQPnqYPMIcBAKLqdysbMQqSGSj
-         Vr60OZ3318kwP8ODF2E8XcwylDOyDCIuuhhha7vfn24K0HNilLiRd0p0TJvmmCDf4q
-         PzutiWTgmR9s2XhbbObOl+ZnWfKF21ZcB4nOC1LkkOdXYuzjK6McaPjFAwvimVJ7qc
-         4sbBlNPB6fy3zfBF+yxgbTOtoRHWlaAzr7V6ZkLGLQsoAeTb0Dc81xM0/putFxpyCC
-         eGLnfxkHj0+g+njPF9/QrW+TT66W4OV1B3dqcx58PwF4rvi83hx3sT63JZgC2AUHyu
-         aV2sreGd2MOKg==
-Date:   Tue, 8 Aug 2023 11:26:27 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
-Cc:     "Russell King (Oracle)" <linux@armlinux.org.uk>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        with ESMTP id S235038AbjHHSVT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 14:21:19 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A86048DCE2;
+        Tue,  8 Aug 2023 10:31:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1691515904; x=1723051904;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=bekUQmkLqiuuNXeg0IhE6M5EXx5phX87uLqdbgvDBug=;
+  b=LzIZY7LXvL95dYeOdFA9WJLOWFIa62K76K1AKJGDb5ldaLmSElhdGc+B
+   41et612Dqr4L+/93K9nWiTNe+WyoJ4FJe69CmW58MtQTr2mjmlN61fgmB
+   3ZlIIO55bMNHinEtLeUWmwY4cyOa034tW8BYJK+iV4+PNqCV9qpHGZu00
+   tNDX2vxjSIdpyrPK+qbxnlOnTyQkqJjbRJqf3HyQxXOuJjE3D/3tPsuuO
+   kiNTlCtbq+DwHBRyxZgQxVyWF3o2w4XbaS26wdqYsJBb90/Hn9VnSi4zq
+   pxPv6RLXWLti3zonNxVlRKXWpznHSIJ7iYcM+8fyRL4KZ+K4bnyzIEH1q
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10795"; a="434668092"
+X-IronPort-AV: E=Sophos;i="6.01,156,1684825200"; 
+   d="scan'208";a="434668092"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2023 06:11:22 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10795"; a="731407306"
+X-IronPort-AV: E=Sophos;i="6.01,156,1684825200"; 
+   d="scan'208";a="731407306"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by orsmga002.jf.intel.com with ESMTP; 08 Aug 2023 06:11:16 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1qTMUS-009BJF-2O;
+        Tue, 08 Aug 2023 16:11:12 +0300
+Date:   Tue, 8 Aug 2023 16:11:12 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Sunil V L <sunilvl@ventanamicro.com>, linux-doc@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will@kernel.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Daniel Scally <djrscally@gmail.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Anup Patel <anup@brainfault.org>,
+        Marc Zyngier <maz@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
-Message-ID: <20230808162627.GA314706@bhelgaas>
+        Robert Moore <robert.moore@intel.com>,
+        Haibo Xu <haibo1.xu@intel.com>,
+        Andrew Jones <ajones@ventanamicro.com>,
+        Conor Dooley <conor.dooley@microchip.com>,
+        Atish Kumar Patra <atishp@rivosinc.com>
+Subject: Re: [RFC PATCH v1 05/21] arm64: PCI: Migrate ACPI related functions
+ to pci-acpi.c
+Message-ID: <ZNI+8CHSLT4g1UM6@smile.fi.intel.com>
+References: <20230803175916.3174453-6-sunilvl@ventanamicro.com>
+ <20230807224152.GA274647@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230808072605.n3rjfsxuogza7qth@pali>
+In-Reply-To: <20230807224152.GA274647@bhelgaas>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc linux-arm-kernel, beginning of thread:
-https://lore.kernel.org/r/20230114164125.1298-1-pali@kernel.org]
-
-On Tue, Aug 08, 2023 at 09:26:05AM +0200, Pali Rohár wrote:
-> On Friday 04 August 2023 12:35:13 Russell King (Oracle) wrote:
-> ...
-
-> > For example, I have an Atheros PCIe WiFi card in an Armada 388 Clearfog
-> > platform, and this works fine.
-> > 
-> > Uwe has a SATA controller for a bunch of disks in an Armada 370 based
-> > NAS platform that is connected to PCIe, and removing PCIe support
-> > effectively makes his platform utterly useless.
-> > 
-> > Please revert this patch.
+On Mon, Aug 07, 2023 at 05:41:52PM -0500, Bjorn Helgaas wrote:
+> On Thu, Aug 03, 2023 at 11:29:00PM +0530, Sunil V L wrote:
+> > The functions defined in arm64 for ACPI support are required
+> > for RISC-V also. To avoid duplication, copy these functions
+> > to common location.
 > 
-> Please do not revert it, instead start fixing problems.
+> I assume this is a "move" (not a copy) and the code being moved isn't
+> being changed.
 
-We know that like all the other drivers, the mvebu driver isn't
-perfect.  But I don't think effectively removing the driver completely
-helps anybody.  If people try to use it and notice problems, we have a
-chance to try to fix them.
+Not sure is proper -M -C will help to recognize that on the patch generation.
+Maybe -M 50 (or another carefully chosen percentage) can help.
 
-Or maybe I'm missing your point.  I think you're suggesting that we
-keep pci-mvebu in the tree but unselectable because it depends on
-CONFIG_BROKEN.  What would be the advantage of doing that?
+-- 
+With Best Regards,
+Andy Shevchenko
 
-Bjorn
+
