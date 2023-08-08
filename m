@@ -2,84 +2,97 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B51D8C41513
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:26:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C19D2C001DB
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:30:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233087AbjHHT0e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:26:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33700 "EHLO
+        id S236191AbjHHTaC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 15:30:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233460AbjHHT0F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:26:05 -0400
-Received: from pandora.armlinux.org.uk (unknown [IPv6:2001:4d48:ad52:32c8:5054:ff:fe00:142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EB6380AE
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 11:51:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:
-        Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
-        Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=S+XXnKtj7sFpmYD9cihTD7FnEzWIRdk2onC3cV6aol0=; b=od07sGnmhi3ThCrW+qINhg/ZuA
-        6MHnB/WLD+iZr2aUEEklMbjIVkiQIyhtWSzbWosw4J1b0DxaKj4dS3H7+9a6Sg0eD+ProgTYDGJgB
-        PogLlfeQAg4Xtk0NP3npFFqX5v3kHIwyCRREeqTRG7aOXEGcBkXkgAvp06izd8vL4suCWQMA2gV+g
-        Ca6EXfNSHLbYz05ATDhi1SAehakvH2Fg9i9iju+BRy7t6NN+IjbV8uofu1B5ekE+gHbTrjmFz06b+
-        Cwb883NOlFLtjShnVu813EJ/nIG4MzqxwtfNlkJuWiSJxu8/KyQQxdHTWGweva59F2QdAKqmoNDrj
-        XrONmvtA==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:44518)
-        by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.96)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1qTI4q-0006lE-0Y;
-        Tue, 08 Aug 2023 09:28:28 +0100
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.94.2)
-        (envelope-from <linux@shell.armlinux.org.uk>)
-        id 1qTI4q-0007uy-6j; Tue, 08 Aug 2023 09:28:28 +0100
-Date:   Tue, 8 Aug 2023 09:28:28 +0100
-From:   "Russell King (Oracle)" <linux@armlinux.org.uk>
-To:     Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>
+        with ESMTP id S236173AbjHHT3s (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:29:48 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B52127568
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 12:06:14 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8D66E62AB5
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 19:06:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C26B9C433C9;
+        Tue,  8 Aug 2023 19:06:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691521573;
+        bh=8S1xEjxPxCZE2Eq9dmX2B325fLGIgjNUDHsBaNzfPRY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=dg9LQCT9LBA393toHc759kXULDNeseZLmTpsejOqT03E9TYOlganuAkG1J2hHm/9i
+         vYe5zENzmckIrcFENoG1OxUAxNt2T0pNh3nhxn73HKbIC/e9ePSmhlNmcoJo7ubcbS
+         3g7KXGs+ztb3UPqozO1y+5QEMUZdKu07IRy83Hd+tqUTrMGOxNNOaGz/AmShsDhpr8
+         XjQG/NqzNi30Rejlaw4pAg2lr6CJ5wJv0auAdhUiqOpz15AspU+wG89Gd1nsH+mQa4
+         vLDHcg9UtL731WMctFXvvToS+4OPes+4LHmu8BkpwjV9GY9IdXe0JD25Tw/7vaxRBT
+         euUwNLEacYwjQ==
+Received: by pali.im (Postfix)
+        id E9F7C687; Tue,  8 Aug 2023 21:06:09 +0200 (CEST)
+Date:   Tue, 8 Aug 2023 21:06:09 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     "Russell King (Oracle)" <linux@armlinux.org.uk>
 Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>, linux-pci@vger.kernel.org
 Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
-Message-ID: <ZNH8rM/EJQrEKsgo@shell.armlinux.org.uk>
+Message-ID: <20230808190609.d7sbfklwlfo522lp@pali>
 References: <20230114164125.1298-1-pali@kernel.org>
  <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
  <20230808072605.n3rjfsxuogza7qth@pali>
+ <ZNH8rM/EJQrEKsgo@shell.armlinux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230808072605.n3rjfsxuogza7qth@pali>
-Sender: Russell King (Oracle) <linux@armlinux.org.uk>
+In-Reply-To: <ZNH8rM/EJQrEKsgo@shell.armlinux.org.uk>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 08, 2023 at 09:26:05AM +0200, Pali Rohár wrote:
-> On Friday 04 August 2023 12:35:13 Russell King (Oracle) wrote:
-> > Hi,
+On Tuesday 08 August 2023 09:28:28 Russell King (Oracle) wrote:
+> On Tue, Aug 08, 2023 at 09:26:05AM +0200, Pali RohÃ¡r wrote:
+> > On Friday 04 August 2023 12:35:13 Russell King (Oracle) wrote:
+> > > Hi,
+> > > 
+> > > So it seems this patch got applied, but it wasn't Cc'd to
+> > > linux-arm-kernel or anyone else, so those of us with platforms never
+> > > had a chance to comment on it.
 > > 
-> > So it seems this patch got applied, but it wasn't Cc'd to
-> > linux-arm-kernel or anyone else, so those of us with platforms never
-> > had a chance to comment on it.
+> > You have received more changes and fixes for last 2 years for these
+> > issues and you have done **nothing**. You even not said anything.
+> > So you are the last one who can complain here.
 > 
-> You have received more changes and fixes for last 2 years for these
-> issues and you have done **nothing**. You even not said anything.
-> So you are the last one who can complain here.
+> That's because I can't help - what I have *works*. I have *zero*
+> issues with the PCI interfaces on Armada 388.
 
-That's because I can't help - what I have *works*. I have *zero*
-issues with the PCI interfaces on Armada 388.
+Perfect, apply your patch on your kernel setup and stop complaining
+here. Nobody is interested for one Russel's user setup.
 
-> You should have come up and start solving issues. And not complaining
-> now.
+> > You should have come up and start solving issues. And not complaining
+> > now.
+> 
+> How can one solve issues when they're probably hardware related and
+> one doesn't experience them?
+> 
+> Sorry, but no.
 
-How can one solve issues when they're probably hardware related and
-one doesn't experience them?
+Ok, if you do not want, that we have nothing to discuss here, and your
+patch should be rejected.
 
-Sorry, but no. If you feel as strongly as you do, walk away.
+> If you feel as strongly as you do, walk away.
 
--- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTP is here! 80Mbps down 10Mbps up. Decent connectivity at last!
+What? You should go away and never return. Nobody is interested for one
+nobody Russel user. Thanks.
+
+And if you not agree with me, then go ahead and send a patch to remove
+my maintainer line from this driver and explain to all people that you
+are best one user on the world and that everybody should do what you
+wrote.
