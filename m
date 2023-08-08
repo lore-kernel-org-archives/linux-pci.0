@@ -2,161 +2,134 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 541F8C001DB
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1D3BC04A6A
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:07:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231248AbjHHQH3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:07:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46236 "EHLO
+        id S231816AbjHHQH5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:07:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231559AbjHHQFv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:05:51 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3BC2F6EB5
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 08:45:38 -0700 (PDT)
+        with ESMTP id S231658AbjHHQGa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:06:30 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F5AB30C0;
+        Tue,  8 Aug 2023 08:45:51 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id DCEB7623E1
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 07:27:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3D6AC433C7;
-        Tue,  8 Aug 2023 07:27:03 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1E9A5625B1;
+        Tue,  8 Aug 2023 15:08:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42A60C433C7;
+        Tue,  8 Aug 2023 15:08:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691479624;
-        bh=EopuX5FxOKTjRTVmex9E/nn6vq8p2q0flJ/9Afje0Gs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Z5VcLB25pnQopj2fU7//BTjsc8vdqkC1hya9BwFQcm/BusSGSij+Le8yCQSUxgAJb
-         Tm7CPlYMACAGjNCmEDBMu8mhk3CcsIq5rFZ11b8ZVUIEJ+O0J1wd/rZeaxWf/spvvV
-         sNvPKzjP77A+63Lbxo9SEiRimJeMNsHH4ySXdbRA3HgNg3Dz5tsmeI6/g5QRvHG9PB
-         R/nQumrQK4PhKg2Wy03J8yP73ObtMSloz0qKV9Yo3pJEY0VX2tno3SA2VLWDrTA70i
-         uIKS10//hwcHDmpnfVurgB/RTkCV5X12biAachNswg6QJEKt0HijcZCyn61ZYk2Xrb
-         A8S8vL8yCFXBA==
-Received: by pali.im (Postfix)
-        id 6B1C7687; Tue,  8 Aug 2023 09:27:01 +0200 (CEST)
-Date:   Tue, 8 Aug 2023 09:27:01 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-Cc:     "Russell King (Oracle)" <linux@armlinux.org.uk>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
-Message-ID: <20230808072701.gx6apjnnrppv7sit@pali>
-References: <20230114164125.1298-1-pali@kernel.org>
- <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
- <20230804134622.pmbymxtzxj2yfhri@pengutronix.de>
+        s=k20201202; t=1691507337;
+        bh=9Gw7YkUPnAg7btMMMieMmpWn6NAWZtq2U7FvhrT+Ou4=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=DkRx7ur7t63MQWui1LUaRscobadwh67mmRwqorgioTPiGMkktPMx2DyHiNmCEXc/P
+         nDtjAYSiq5ZhYJODACJrzBu0s0Qn4ItNx+eZmherR/eqsd5xCh+Pe4nSRcwjqLvDaz
+         fBzo+dQhY2X8HOhT5uwGvhuZx/CotDHr1HG7Pnc1TAqlAC4i68FeziRHWirNQQFXiO
+         YzoeHCCzmkkM3H3jnI2yTQDOGnGcrTqsuPXEstnnGhoDQUD0IU/VAPDPoU6kemcFhc
+         rWGdXxERVpvkeGXTCev9Y8GGlsbOSb03PGN9UNrgLIudtyrbodQ9gcyx/5Brq6Uief
+         hAZkFgmCJU52w==
+Date:   Tue, 8 Aug 2023 10:08:54 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Serge Semin <fancer.lancer@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "kw@linux.com" <kw@linux.com>,
+        "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+        "kishon@kernel.org" <kishon@kernel.org>,
+        "krzysztof.kozlowski+dt@linaro.org" 
+        <krzysztof.kozlowski+dt@linaro.org>,
+        "conor+dt@kernel.org" <conor+dt@kernel.org>,
+        "marek.vasut+renesas@gmail.com" <marek.vasut+renesas@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-renesas-soc@vger.kernel.org" 
+        <linux-renesas-soc@vger.kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>
+Subject: Re: [PATCH v18 08/20] PCI: dwc: Add dw_pcie_link_set_max_link_width()
+Message-ID: <20230808150854.GA304435@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230804134622.pmbymxtzxj2yfhri@pengutronix.de>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <rt2vwgmdsxvkb2jh4v6mpnjpfvql44o72nxf663wbnkcvkmift@o2dl5oa435k3>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Friday 04 August 2023 15:46:22 Uwe Kleine-König wrote:
-> [Cc += linux-arm-kernel list]
+On Tue, Aug 08, 2023 at 03:15:33AM +0300, Serge Semin wrote:
+> On Mon, Aug 07, 2023 at 06:40:34PM -0500, Bjorn Helgaas wrote:
+> > On Tue, Aug 08, 2023 at 01:53:11AM +0300, Serge Semin wrote:
+> > > On Tue, Aug 01, 2023 at 01:50:59AM +0000, Yoshihiro Shimoda wrote:
+> > > > > From: Serge Semin, Sent: Tuesday, August 1, 2023 8:54 AM
+> > > > > On Fri, Jul 21, 2023 at 04:44:40PM +0900, Yoshihiro Shimoda wrote:
+> > > > > > To improve code readability, add dw_pcie_link_set_max_link_width().
+> > > > > > ...
+> > 
+> > > > > > @@ -1009,49 +1049,5 @@ void dw_pcie_setup(struct dw_pcie *pci)
+> > > > > >  	val |= PORT_LINK_DLL_LINK_EN;
+> > > > > >  	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
+> > > > > >
+> > > > > > -	if (!pci->num_lanes) {
+> > > > > > -		dev_dbg(pci->dev, "Using h/w default number of lanes\n");
+> > > > > > -		return;
+> > > > > > -	}
+> > > > > > -
+> > > > > > -	/* Set the number of lanes */
+> > > > > 
+> > > > > > -	val &= ~PORT_LINK_FAST_LINK_MODE;
+> > > > > 
+> > > > > My series contains the patch which drops this line:
+> > > > <snip URL>
+> > > > > So either pick my patch up and add it to your series or still pick it up
+> > > > > but with changing the authorship and adding me under the Suggested-by
+> > > > > tag with the email-address I am using to review your series. Bjorn,
+> > > > > what approach would you prefer? Perhaps alternative?
 > 
-> On Fri, Aug 04, 2023 at 12:35:13PM +0100, Russell King (Oracle) wrote:
-> > So it seems this patch got applied, but it wasn't Cc'd to
-> > linux-arm-kernel or anyone else, so those of us with platforms never
-> > had a chance to comment on it.
+> > I don't really see the argument here.  AFAICT, Yoshihiro's patch
+> > (https://lore.kernel.org/r/20230721074452.65545-9-yoshihiro.shimoda.uh@renesas.com)
+> > is a trivial refactoring to make dw_pcie_link_set_max_link_width(),
+> > which might be reused elsewhere later, which seems perfectly fine.
 > > 
-> > *** This change causes a regression to working setups. ***
-> > 
-> > It appears that the *only* reason this patch was proposed is to stop a
-> > kernel developer receiving problem reports from a set of users, but
-> > completely ignores that there is another group of users where this works
-> > fine - and thus the addition of this patch causes working setups to
-> > regress.
-> > 
-> > Because one is being bothered with problem reports is not a reason to
-> > mark a driver broken - and especially not doing so in a way that those
-> > who may be affected don't get an opportunity to comment on the patch!
-> > Also, there is _zero_ information provided on what the reported problems
-> > actually are, so no one else can guess what these issues are.
-> > 
-> > However, given that there are working setups and this change causes
-> > those to regress, it needs to be reverted.
-> > 
-> > For example, I have an Atheros PCIe WiFi card in an Armada 388 Clearfog
-> > platform, and this works fine.
-> > 
-> > Uwe has a SATA controller for a bunch of disks in an Armada 370 based
-> > NAS platform that is connected to PCIe, and removing PCIe support
-> > effectively makes his platform utterly useless.
+> > It'd be fine with me to add a little detail in the commit log to
+> > reference the Synopsys manual, which I don't have.  But doesn't seem
+> > like a big deal to me.
 > 
-> While this is true there is really a problem on my platform with
-> accessing the hard disks via that pci controller and a 88SE9215 SATA
-> controller. While it seems to work in principle, it's incredible slow.
+> More details are in one of my earlier comments to this patch which
+> Yoshihiro promised to add to the patch log on the next patchset
+> revision. You can read it here:
+> https://lore.kernel.org/linux-pci/20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com/T/#m8ac364249f40c726da88316b67f11a6d55068ef0
+> 
+> > Dropping the PORT_LINK_FAST_LINK_MODE mask seems like a separate
+> > question that should be in a separate patch.
+> > https://lore.kernel.org/linux-pci/20230611192005.25636-6-Sergey.Semin@baikalelectronics.ru/
+> > says it's redundant, so it sounds more like a cleanup than a fix.
+> 
+> That's the point of my comment. There is no need in copying that mask
+> to the dw_pcie_link_set_max_link_width() method because first it's
+> unrelated to the link-width setting, second it's redundant. There is
+> my patch dropping the mask with the proper justification:
+> https://lore.kernel.org/linux-pci/20230611192005.25636-6-Sergey.Semin@baikalelectronics.ru/
+> It would be good to either merge it in before the Yoshihiro' series or
+> add my patch to the Yoshihiro' patchset. But it's in the patchwork
+> limbo now, neither you nor Lorenzo or Krzysztof were willing to merge
+> it in. That's why I suggested to move the patch here with the denoted
+> alterations. Could you give your resolution whether the suggested
+> movement is ok or perhaps you or Lorenzo or Krzysztof consider merge
+> it in as is?
 
-Exactly those are things which randomly does not work.
+If I understand Yoshihiro's patch, it pulls code out into
+dw_pcie_link_set_max_link_width() without changing that code.  That
+seems like the best approach to me because it's very easy to review.
 
-> I intend to bisect that, 6.1.x is still fine. Don't know when I find the
-> time though, as there are a few things that are more important
-> currently.
-> 
-> +1 on some information about what is already known about the breakage.
-> 
-> > Please revert this patch.
-> > 
-> > Thanks.
-> > 
-> > On Sat, Jan 14, 2023 at 05:41:25PM +0100, Pali Rohár wrote:
-> > > People are reporting that pci-mvebu.c driver does not work with recent
-> > > mainline kernel. There are more bugs which prevents its for daily usage.
-> > > So lets mark it as broken for now, until somebody would be able to fix it
-> > > in mainline kernel.
-> > > 
-> > > Signed-off-by: Pali Rohár <pali@kernel.org>
-> > > 
-> > > ---
-> > > Bjorn: I would really appreciate if you take this change and send it in
-> > > pull request for v6.2 release. There is no reason to wait more longer.
-> > > 
-> > > 
-> > > I'm periodically receiving emails that driver does not work correctly
-> > > anymore, PCIe cards are not detected or that they crashes during boot.
-> > > 
-> > > Some of the issues are handled in patches which are waiting on the list for
-> > > a long time and nobody cares for them. Some others needs investigation.
-> > > 
-> > > I'm really tired in replying to those user emails as I cannot do more in
-> > > this area. I have asked more people for help but either there were only
-> > > promises without any action for more than year or simple no direction how
-> > > to move forward or what to do with it.
-> > > 
-> > > So mark this driver as broken. Users would see the real current state
-> > > and hopefully will stop reporting me old or new bugs.
-> > > ---
-> > >  drivers/pci/controller/Kconfig | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > > 
-> > > diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> > > index 1569d9a3ada0..b4a4d84a358b 100644
-> > > --- a/drivers/pci/controller/Kconfig
-> > > +++ b/drivers/pci/controller/Kconfig
-> > > @@ -9,6 +9,7 @@ config PCI_MVEBU
-> > >  	depends on MVEBU_MBUS
-> > >  	depends on ARM
-> > >  	depends on OF
-> > > +	depends on BROKEN
-> > >  	select PCI_BRIDGE_EMUL
-> > >  	help
-> > >  	 Add support for Marvell EBU PCIe controller. This PCIe controller
-> > > -- 
-> > > 2.20.1
-> > > 
-> > 
-> > -- 
-> > RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-> > FTTP is here! 80Mbps down 10Mbps up. Decent connectivity at last!
-> > 
-> 
-> -- 
-> Pengutronix e.K.                           | Uwe Kleine-König            |
-> Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+If we want to remove a little redundant code later in a separate
+patch, that's fine too but doesn't seem urgent.  I don't think they
+need to be tied together.
 
-
+Bjorn
