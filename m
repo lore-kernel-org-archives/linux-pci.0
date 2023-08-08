@@ -2,60 +2,121 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76486C04E69
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44BBDC001DB
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 17:23:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233707AbjHHQyR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:54:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59308 "EHLO
+        id S234500AbjHHRXm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 13:23:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233648AbjHHQxo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:53:44 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F199C4FB06
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 08:58:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id EE10A614F9
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 15:58:16 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04381C433C7;
-        Tue,  8 Aug 2023 15:58:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691510296;
-        bh=dsivP5QK/puytThT6Z/o/BL2ZSnYkylTLjGfbpcLdi8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=d17bUPYC0qX1htLiPTAVikoi1UP+fA2yaPvY21PsAQSw0ijWbq0pjyxE/ftgcOnO8
-         +5+AATNiD0HGS1G3eTlJ+pir22Qsd7VJfQmN2yuaKQ5umSTU9A5QY6nOH2TqpZEclT
-         /awiJwvHAeB1JL3Y2IDDaZmbeT9DGUVBCbTOxvgLhqx0Z9CKCQobd4NSid9TCvoV2R
-         1cWGhjSsK04Pn3ROuChrr9YujNXmderX6Ph2zwBAMiExbnMLaZdUKjYmZJHrEi4ciD
-         Pw1El4upEKm94OHpcZNQXkPlGA+Db9npE3jqi9vE1OB7kRjSC9YGFyNpRgo2v3zFgh
-         n4siK90AThEcQ==
-Date:   Tue, 8 Aug 2023 10:58:14 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Xiongfeng Wang <wangxiongfeng2@huawei.com>
-Cc:     bhelgaas@google.com, fbarrat@linux.ibm.com, ajd@linux.ibm.com,
-        mpe@ellerman.id.au, npiggin@gmail.com, christophe.leroy@csgroup.eu,
-        arnd@arndb.de, gregkh@linuxfoundation.org, ben.widawsky@intel.com,
-        linux-pci@vger.kernel.org, yangyingliang@huawei.com,
-        david.e.box@linux.intel.com, jonathan.cameron@huawei.com,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v2 1/2] PCI: Add pci_find_next_dvsec_capability to find
- next Designated VSEC
-Message-ID: <20230808155814.GA313884@bhelgaas>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230808040858.183568-2-wangxiongfeng2@huawei.com>
+        with ESMTP id S234483AbjHHRXQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 13:23:16 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4890B1E5A4;
+        Tue,  8 Aug 2023 09:09:42 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 28FE62011CA;
+        Tue,  8 Aug 2023 08:08:55 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id E27E62011BA;
+        Tue,  8 Aug 2023 08:08:54 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 45A48181D0E2;
+        Tue,  8 Aug 2023 14:08:53 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     frank.li@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
+        lpieralisi@kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        linux-imx@nxp.com
+Subject: [PATCH v3 1/9] dt-bindings: PCI: fsl,imx6q: Add i.MX6Q and i.MX6QP PCIe EP compatibles
+Date:   Tue,  8 Aug 2023 13:34:10 +0800
+Message-Id: <1691472858-9383-2-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1691472858-9383-1-git-send-email-hongxing.zhu@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Don't re-post just for this, but if you do repost, add "()" after the
-function name in the subject line, as you did for the 2/2 patch.
+Add i.MX6Q and i.MX6QP PCIe EP compatibles.
+- Make the interrupts property optional, since i.MX6Q/i.MX6QP PCIe
+  don't have DMA capability.
+- To pass the schema check, specify the clocks property refer to the
+  different platforms.
 
-On Tue, Aug 08, 2023 at 12:08:57PM +0800, Xiongfeng Wang wrote:
-> Some devices may have several DVSEC (Designated Vendor-Specific Extended
-> Capability) entries with the same DVSEC ID. Add
-> pci_find_next_dvsec_capability() to find them all.
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ .../bindings/pci/fsl,imx6q-pcie-ep.yaml       | 31 ++++++++++++++++---
+ 1 file changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
+index ee155ed5f181..9b881777c801 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
+@@ -19,6 +19,8 @@ description: |+
+ properties:
+   compatible:
+     enum:
++      - fsl,imx6q-pcie-ep
++      - fsl,imx6qp-pcie-ep
+       - fsl,imx8mm-pcie-ep
+       - fsl,imx8mq-pcie-ep
+       - fsl,imx8mp-pcie-ep
+@@ -46,7 +48,7 @@ properties:
+ 
+   interrupts:
+     items:
+-      - description: builtin eDMA interrupter.
++      - description: builtin eDMA interrupter (optional).
+ 
+   interrupt-names:
+     items:
+@@ -56,8 +58,6 @@ required:
+   - compatible
+   - reg
+   - reg-names
+-  - interrupts
+-  - interrupt-names
+ 
+ allOf:
+   - $ref: /schemas/pci/snps,dw-pcie-ep.yaml#
+@@ -77,7 +77,30 @@ allOf:
+             - const: pcie_bus
+             - const: pcie_phy
+             - const: pcie_aux
+-    else:
++
++  - if:
++      properties:
++        compatible:
++          enum:
++            - fsl,imx6q-pcie-ep
++            - fsl,imx6qp-pcie-ep
++    then:
++      properties:
++        clocks:
++          maxItems: 3
++        clock-names:
++          items:
++            - const: pcie
++            - const: pcie_bus
++            - const: pcie_phy
++
++  - if:
++      properties:
++        compatible:
++          enum:
++            - fsl,imx8mm-pcie-ep
++            - fsl,imx8mp-pcie-ep
++    then:
+       properties:
+         clocks:
+           maxItems: 3
+-- 
+2.34.1
+
