@@ -2,150 +2,167 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9EC4C001DB
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 19:51:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8A52C001B0
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 20:21:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232230AbjHHTu7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 15:50:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36442 "EHLO
+        id S229733AbjHHUVH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 16:21:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231904AbjHHTun (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 15:50:43 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 385C853F12
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 09:56:38 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qTHfF-00010w-4J; Tue, 08 Aug 2023 10:02:01 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qTHfE-001vnq-B5; Tue, 08 Aug 2023 10:02:00 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qTHfD-00BM3x-KD; Tue, 08 Aug 2023 10:01:59 +0200
-Date:   Tue, 8 Aug 2023 10:01:59 +0200
-From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To:     Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        "Russell King (Oracle)" <linux@armlinux.org.uk>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
-Message-ID: <20230808080159.cjffiewenmazhrgx@pengutronix.de>
-References: <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
- <20230804170655.GA147757@bhelgaas>
- <20230808073154.bstm3xwtjalyq3qb@pali>
+        with ESMTP id S231830AbjHHUU5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 16:20:57 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 838495998;
+        Tue,  8 Aug 2023 12:27:19 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 19E4962ADC;
+        Tue,  8 Aug 2023 19:27:19 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34991C433C7;
+        Tue,  8 Aug 2023 19:27:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691522838;
+        bh=koE2O1Koz3SVVKu8roIdMywrfi7dwuz5XC5ik2SFJXw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=O1AjCojo2d4ECuimgWH06jPVzpH/QaAERktmLINMADX9gxIv1KBq+55GKvibimJBB
+         SsWDa//FvdN9mLvCF6Gz4rzR00jpDVYgYeTNdbkw6EsoXxvr/ZqK3rsV0FNfyMMQYV
+         AamSt0PbthTiZDUoxsDeSVO/IH8shpSyUbmwsK9SxQ/NwLmuyLuVULxcgOSrT960SK
+         fVGeJw2xy5Aawhe66juAqadI53xX/X6Z6biI5VqucHCU1xsx+vl5xx1myfhclOCjmo
+         J/TOmYfZnOhyRJrh7r2XX8hb6qYgBP66rNaABthrYrY1YO0rpe3QlxO7aMYe0Huqb+
+         b07MmClz7aimQ==
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     linux-pci@vger.kernel.org
+Cc:     "Rafael J . Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Igor Mammedov <imammedo@redhat.com>,
+        "Michael S . Tsirkin" <mst@redhat.com>,
+        Woody Suwalski <terraluna977@gmail.com>,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: acpiphp: Log more slot and notification details
+Date:   Tue,  8 Aug 2023 14:27:13 -0500
+Message-Id: <20230808192713.329414-1-helgaas@kernel.org>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="mgpjqowvhmrri6dx"
-Content-Disposition: inline
-In-Reply-To: <20230808073154.bstm3xwtjalyq3qb@pali>
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Bjorn Helgaas <bhelgaas@google.com>
 
---mgpjqowvhmrri6dx
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+When registering an acpiphp slot, log the slot name in the same style as
+pciehp and include the PCI bus/device and whether a device is present or
+the slot is empty.
 
-Hello Pali,
+When handling an ACPI notification, log the PCI bus/device and notification
+type.
 
-On Tue, Aug 08, 2023 at 09:31:54AM +0200, Pali Roh=E1r wrote:
-> On Friday 04 August 2023 12:06:55 Bjorn Helgaas wrote:
-> > I queued up the revert below, including a note in the Kconfig help
-> > text about the known issues.
-> >=20
-> > commit 814b6bb15367 ("Revert "PCI: mvebu: Mark driver as BROKEN"")
-> > Author: Bjorn Helgaas <bhelgaas@google.com>
-> > Date:   Fri Aug 4 11:54:43 2023 -0500
-> >=20
-> >     Revert "PCI: mvebu: Mark driver as BROKEN"
-> >    =20
-> >     b3574f579ece ("PCI: mvebu: Mark driver as BROKEN") made it impossib=
-le to
-> >     enable the pci-mvebu driver.  The driver does have known problems, =
-but as
-> >     Russell and Uwe reported, it does work in some configurations, so r=
-emoving
-> >     it broke some working setups.
-> >    =20
-> >     Revert b3574f579ece so pci-mvebu is available.  Mention the known p=
-roblems
-> >     in the Kconfig help text.
-> >    =20
-> >     Reported-by: Russell King (Oracle) <linux@armlinux.org.uk>
-> >     Link: https://lore.kernel.org/r/ZMzicVQEyHyZzBOc@shell.armlinux.org=
-=2Euk
-> >     Reported-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
-> >     Link: https://lore.kernel.org/r/20230804134622.pmbymxtzxj2yfhri@pen=
-gutronix.de
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >=20
->=20
-> What you are trying to achieve with this patch now?
+Sample dmesg log diff:
 
-We all agree that there are problems with the pci-mvebu driver. But to
-my knowledge it works in some configurations. So I guess the thing to
-achieve here is to go from "broken for everyone" (with the driver
-depending on BROKEN) to "broken for only some people". So in my view
-it's an improvement.
+    ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+  - acpiphp: Slot [3] registered
+  - acpiphp: Slot [4] registered
+    PCI host bridge to bus 0000:00
+    pci 0000:00:03.0: [8086:100e] type 00 class 0x020000
+    <ACPI Device Check notification>
+    pci 0000:00:04.0: [8086:100e] type 00 class 0x020000
 
-> Do you think that it is really correct to show that everything is
-> working for everybody correctly?
+    ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+  + acpiphp: pci 0000:00:03 Slot(3) registered (enabled)
+  + acpiphp: pci 0000:00:04 Slot(4) registered (empty)
+    PCI host bridge to bus 0000:00
+    pci 0000:00:03.0: [8086:100e] type 00 class 0x020000
+    <ACPI Device Check notification>
+  + acpiphp: pci 0000:00:04 Slot(4) Device Check
+    pci 0000:00:04.0: [8086:100e] type 00 class 0x020000
 
-What makes you think Bjorn considers everything to work fine? Both the
-commit log and the added help text suggest he's aware of problems.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/hotplug/acpiphp_core.c |  4 ----
+ drivers/pci/hotplug/acpiphp_glue.c | 23 +++++++++++++++++++++--
+ 2 files changed, 21 insertions(+), 6 deletions(-)
 
-> Now I'm starting understand why majority of HW industry say to not use
-> "unsupported mainline kernel" and instead use our prepared patched
-> kernels...
+diff --git a/drivers/pci/hotplug/acpiphp_core.c b/drivers/pci/hotplug/acpiphp_core.c
+index c02257f4b61c..19d47607d009 100644
+--- a/drivers/pci/hotplug/acpiphp_core.c
++++ b/drivers/pci/hotplug/acpiphp_core.c
+@@ -282,8 +282,6 @@ int acpiphp_register_hotplug_slot(struct acpiphp_slot *acpiphp_slot,
+ 		goto error_slot;
+ 	}
+ 
+-	pr_info("Slot [%s] registered\n", slot_name(slot));
+-
+ 	return 0;
+ error_slot:
+ 	kfree(slot);
+@@ -296,8 +294,6 @@ void acpiphp_unregister_hotplug_slot(struct acpiphp_slot *acpiphp_slot)
+ {
+ 	struct slot *slot = acpiphp_slot->slot;
+ 
+-	pr_info("Slot [%s] unregistered\n", slot_name(slot));
+-
+ 	pci_hp_deregister(&slot->hotplug_slot);
+ 	kfree(slot);
+ }
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index 328d1e416014..eeca2753a5c7 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -25,7 +25,7 @@
+  *    bus. It loses the refcount when the driver unloads.
+  */
+ 
+-#define pr_fmt(fmt) "acpiphp_glue: " fmt
++#define pr_fmt(fmt) "acpiphp: " fmt
+ 
+ #include <linux/module.h>
+ 
+@@ -333,6 +333,12 @@ static acpi_status acpiphp_add_context(acpi_handle handle, u32 lvl, void *data,
+ 				       &val, 60*1000))
+ 		slot->flags |= SLOT_ENABLED;
+ 
++	if (slot->slot)
++		pr_info("pci %04x:%02x:%02x Slot(%s) registered (%s)\n",
++			pci_domain_nr(slot->bus), slot->bus->number,
++			slot->device, slot_name(slot->slot),
++			slot->flags & SLOT_ENABLED ? "enabled" : "empty");
++
+ 	return AE_OK;
+ }
+ 
+@@ -351,8 +357,13 @@ static void cleanup_bridge(struct acpiphp_bridge *bridge)
+ 			acpi_unlock_hp_context();
+ 		}
+ 		slot->flags |= SLOT_IS_GOING_AWAY;
+-		if (slot->slot)
++		if (slot->slot) {
++			pr_info("pci %04x:%02x:%02x Slot(%s) unregistered\n",
++				pci_domain_nr(slot->bus), slot->bus->number,
++				slot->device, slot_name(slot->slot));
++
+ 			acpiphp_unregister_hotplug_slot(slot);
++		}
+ 	}
+ 
+ 	mutex_lock(&bridge_mutex);
+@@ -793,6 +804,14 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
+ 
+ 	pci_lock_rescan_remove();
+ 
++	pr_info("pci %04x:%02x:%02x Slot(%s) %s\n",
++		pci_domain_nr(slot->bus), slot->bus->number,
++		slot->device, slot_name(slot->slot),
++		type == ACPI_NOTIFY_BUS_CHECK ? "Bus Check" :
++		type == ACPI_NOTIFY_DEVICE_CHECK ? "Device Check" :
++		type == ACPI_NOTIFY_EJECT_REQUEST ? "Eject Request" :
++		"Notification");
++
+ 	switch (type) {
+ 	case ACPI_NOTIFY_BUS_CHECK:
+ 		/* bus re-enumerate */
+-- 
+2.34.1
 
-Yes, for a given company it's the easiest and cheapest option to just
-support a single kernel version. In this regard the patch adding the
-dependency on BROKEN is even worse than the commit that removes it
-again. In an ideal world Marvell would care to work on the issues of
-their hardware's drivers or at least provide enough documentation to the
-folks who care about these drivers. I guess we both know we're not in
-that ideal world.
-
-I wonder what's your objective problem with this revert. You can just
-keep PCI_MVEBU disabled, so it doesn't affect the machines you care
-about.  You might get some mail with complaints that the driver is
-broken in some configuration. But without this revert you might get
-(more?) complaints that the driver cannot be enabled. Is that any
-better?
-
-Best regards
-Uwe
-
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | https://www.pengutronix.de/ |
-
---mgpjqowvhmrri6dx
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmTR9nYACgkQj4D7WH0S
-/k6EsAgArknZlgr8MKKkmRRAH71tzcFrezhy1S30kumlnvqLMqcPOLTHe/HOjY1s
-G9xI3WpFJ5O9Omec7KtyJ3gJdqFspwfyIHJs7s2KCBRuukrC4yyvZuND+83WbFBj
-O4R6lnVrLgLSauNFhSb7hlsk4ODNiI8m8ukmc3FJvLA9+rWFZ0Df6RZmkMvVZX2u
-NKTdSP6J8iUm7YMqfM5/nFCAzmBs32ABqNYFtZ9l/cYlF4cCTVpe2UuyFnojn50Z
-S5ePMnmMuNx8SNfYuUWMWVuTfOFZxZ8lMVERs07ufPLnRiOaLv9KJAMTy8I/e+KN
-bYXA4uSagQ+UoarA3OK1AVwvr0Ej2w==
-=s6il
------END PGP SIGNATURE-----
-
---mgpjqowvhmrri6dx--
