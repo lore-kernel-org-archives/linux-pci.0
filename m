@@ -2,98 +2,156 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B352C07E8C
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:25:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1EFAC001DE
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:27:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232385AbjHHQZQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:25:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59496 "EHLO
+        id S232705AbjHHQ1i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:27:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34346 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232511AbjHHQX7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:23:59 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0602EA5EF;
-        Tue,  8 Aug 2023 08:49:53 -0700 (PDT)
+        with ESMTP id S230100AbjHHQ0R (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:26:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90F2D136
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 08:50:26 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 4CFC5625D3;
-        Tue,  8 Aug 2023 15:49:42 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 739F2C433C8;
-        Tue,  8 Aug 2023 15:49:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 7CCAB60202
+        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 07:31:58 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7AA52C433C7;
+        Tue,  8 Aug 2023 07:31:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691509781;
-        bh=PUAWonAUPbtW2YJxANM18kHRL54qijZd61xXDG7EdtQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Co+Az8nrKuQemD9Hz1qRzv4qPtBes76iELh6VLqx6l/qlo5Dwv/Xtch1YbXDDR7G7
-         xf6Nfye0WYpGVEKA1iDIVOMaloU7LBFqjzfoGIrNU2DL/evE3KDs/Nj4ULTtAwdwf3
-         kHjm5TTuzx7+/piJij9Y+gpYaOuWKUOE07l2rpLPWriQeJSCTJ8TYagvSTw6YGprWH
-         12tjXJV3bj/cmdeHDDsVk7WAQxuMNIW+nNqvkqKyr998HwSPUDP/AxyDSSpavuM+CX
-         xxQ7hTl6nrRM/4/Uc9F+WDwPi7zfE/nQOdFewyMB9fGVyiv5Xcsm2dPQdDH1e9hRgt
-         krg455JAeafCw==
-Date:   Tue, 8 Aug 2023 10:49:39 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-Cc:     linux-kernel@vger.kernel.org, robh+dt@kernel.org,
-        bhelgaas@google.com, krzysztof.kozlowski@linaro.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        lpieralisi@kernel.org, bharat.kumar.gogada@amd.com,
-        michal.simek@amd.com, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 2/2] PCI: xilinx-nwl: Increase ECAM size to
- accommodate 256 buses.
-Message-ID: <20230808154939.GA313654@bhelgaas>
+        s=k20201202; t=1691479917;
+        bh=ATs2f06VXRPuOGQ04L+DaPWovVdeFCFuKK9xzmYIC14=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=N0ruxBMeU2doqFZn7yfljKGPTEdRD1aFxvsrZirlwWztN0RumGl1w8cunoA5kHL/y
+         lmCGn/IJSjONQMUWptmZXnE9TCxpfjLRGYwaMn7hg77wr/Dbbj/HNUALFAWGn6KUR3
+         GgVb5hKH7B9mhY0SrfjKXSgmivKBTaJvVDsA4bVV4cdQ+jcTAWH/SXJmOkpVUB/njD
+         1YQvm3COA9B6dguuHgl2Xc54fjYoGoBEthEnBUH5v+HZ1vEzZF5BnKHmv8KRc6cIbm
+         Ls4kLkW5qHgUTENS9hKRnqS3DPcSynSXaRr2yeZ2GPhH7ZRicquvlqaTOFtrNp0JXd
+         nkOZ33jUFdjQw==
+Received: by pali.im (Postfix)
+        id 8F91F687; Tue,  8 Aug 2023 09:31:54 +0200 (CEST)
+Date:   Tue, 8 Aug 2023 09:31:54 +0200
+From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Russell King (Oracle)" <linux@armlinux.org.uk>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: mvebu: Mark driver as BROKEN
+Message-ID: <20230808073154.bstm3xwtjalyq3qb@pali>
+References: <ZMzicVQEyHyZzBOc@shell.armlinux.org.uk>
+ <20230804170655.GA147757@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20230808103733.93707-4-thippeswamy.havalige@amd.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20230804170655.GA147757@bhelgaas>
+User-Agent: NeoMutt/20180716
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 08, 2023 at 04:07:33PM +0530, Thippeswamy Havalige wrote:
-> Our controller is expecting ECAM size to be programmed by software. By
-> programming "NWL_ECAM_VALUE_DEFAULT  12" controller can access up to 16MB
-> ECAM region which is used to detect 16 buses, so by updating
-> "NWL_ECAM_VALUE_DEFAULT" to 16 so that controller can access up to 256MB
-> ECAM region to detect 256 buses.
+On Friday 04 August 2023 12:06:55 Bjorn Helgaas wrote:
+> [+cc Krzysztof]
 > 
-> Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
-> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>
-
-1) I'm still concerned that this adds a revlock with the corresponding
-DT change.  Is that acceptable?  Should it be mentioned in the commit
-log?
-
-2) Lorenzo or Krzysztof, if/when you apply this, please drop the
-period at the end of the subject line.  I've mentioned it several
-times to no avail.
-
-> ---
-> changes in v2:
-> - Update this changes in a seperate patch.
-> ---
->  drivers/pci/controller/pcie-xilinx-nwl.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> On Fri, Aug 04, 2023 at 12:35:13PM +0100, Russell King (Oracle) wrote:
+> > So it seems this patch got applied, but it wasn't Cc'd to
+> > linux-arm-kernel or anyone else, so those of us with platforms never
+> > had a chance to comment on it.
+> > 
+> > *** This change causes a regression to working setups. ***
+> > 
+> > It appears that the *only* reason this patch was proposed is to stop a
+> > kernel developer receiving problem reports from a set of users, but
+> > completely ignores that there is another group of users where this works
+> > fine - and thus the addition of this patch causes working setups to
+> > regress.
+> > 
+> > Because one is being bothered with problem reports is not a reason to
+> > mark a driver broken - and especially not doing so in a way that those
+> > who may be affected don't get an opportunity to comment on the patch!
+> > Also, there is _zero_ information provided on what the reported problems
+> > actually are, so no one else can guess what these issues are.
+> > 
+> > However, given that there are working setups and this change causes
+> > those to regress, it needs to be reverted.
+> > 
+> > For example, I have an Atheros PCIe WiFi card in an Armada 388 Clearfog
+> > platform, and this works fine.
+> > 
+> > Uwe has a SATA controller for a bunch of disks in an Armada 370 based
+> > NAS platform that is connected to PCIe, and removing PCIe support
+> > effectively makes his platform utterly useless.
+> > 
+> > Please revert this patch.
 > 
-> diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-> index a73554e..b515019 100644
-> --- a/drivers/pci/controller/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-> @@ -126,7 +126,7 @@
->  #define E_ECAM_CR_ENABLE		BIT(0)
->  #define E_ECAM_SIZE_LOC			GENMASK(20, 16)
->  #define E_ECAM_SIZE_SHIFT		16
-> -#define NWL_ECAM_VALUE_DEFAULT		12
-> +#define NWL_ECAM_VALUE_DEFAULT		16
+> Sorry for the inconvenience.
+> 
+> I was under the mistaken impression that making the driver depend on
+> CONFIG_BROKEN would keep the driver available but only if the user
+> explicitly requested it, similar to how 
+> CONFIG_COMPILE_TEST works.  But obviously that's not the case, so
+> we'll revert the change.
+> 
+> I queued up the revert below, including a note in the Kconfig help
+> text about the known issues.
+> 
+> commit 814b6bb15367 ("Revert "PCI: mvebu: Mark driver as BROKEN"")
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Fri Aug 4 11:54:43 2023 -0500
+> 
+>     Revert "PCI: mvebu: Mark driver as BROKEN"
+>     
+>     b3574f579ece ("PCI: mvebu: Mark driver as BROKEN") made it impossible to
+>     enable the pci-mvebu driver.  The driver does have known problems, but as
+>     Russell and Uwe reported, it does work in some configurations, so removing
+>     it broke some working setups.
+>     
+>     Revert b3574f579ece so pci-mvebu is available.  Mention the known problems
+>     in the Kconfig help text.
+>     
+>     Reported-by: Russell King (Oracle) <linux@armlinux.org.uk>
+>     Link: https://lore.kernel.org/r/ZMzicVQEyHyZzBOc@shell.armlinux.org.uk
+>     Reported-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+>     Link: https://lore.kernel.org/r/20230804134622.pmbymxtzxj2yfhri@pengutronix.de
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+
+What you are trying to achieve with this patch now? Do you think that it
+is really correct to show that everything is working for everybody
+correctly? Use a common sense here.
+
+Or this is a way how kernel people are fixing bugs?
+
+Now I'm starting understand why majority of HW industry say to not use
+"unsupported mainline kernel" and instead use our prepared patched
+kernels...
+
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index 8d49bad7f847..478f158b2dfb 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -179,13 +179,15 @@ config PCI_MVEBU
+>  	depends on MVEBU_MBUS
+>  	depends on ARM
+>  	depends on OF
+> -	depends on BROKEN
+>  	select PCI_BRIDGE_EMUL
+>  	help
+>  	 Add support for Marvell EBU PCIe controller. This PCIe controller
+>  	 is used on 32-bit Marvell ARM SoCs: Dove, Kirkwood, Armada 370,
+>  	 Armada XP, Armada 375, Armada 38x and Armada 39x.
 >  
->  #define CFG_DMA_REG_BAR			GENMASK(2, 0)
->  #define CFG_PCIE_CACHE			GENMASK(7, 0)
-> -- 
-> 1.8.3.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +	 This driver has known problems that may cause crashes during boot
+> +	 and failure to detect PCIe devices in some cases.
+> +
+>  config PCIE_MEDIATEK
+>  	tristate "MediaTek PCIe controller"
+>  	depends on ARCH_AIROHA || ARCH_MEDIATEK || COMPILE_TEST
