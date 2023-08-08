@@ -2,81 +2,147 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9849EC001DE
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4A5CC04A6A
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Aug 2023 16:50:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230313AbjHHQoL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Aug 2023 12:44:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59276 "EHLO
+        id S233575AbjHHQui (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Aug 2023 12:50:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229695AbjHHQn0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:43:26 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 673A4212D
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 08:55:44 -0700 (PDT)
+        with ESMTP id S233542AbjHHQtf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2023 12:49:35 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 499D017A83;
+        Tue,  8 Aug 2023 08:57:31 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id ED529624BD
-        for <linux-pci@vger.kernel.org>; Tue,  8 Aug 2023 11:02:43 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4241BC433C7;
-        Tue,  8 Aug 2023 11:02:41 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 1067862129;
+        Tue,  8 Aug 2023 15:56:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D403C433C7;
+        Tue,  8 Aug 2023 15:56:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1691492563;
-        bh=hOrjnmBvHRWa/gPz43eRdywRQ0atmS0NAUDdlupwrb0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eA5Fz53PZedXwnRszgxstlozvYRwB9J+jxgXTpdqkaSQXclxq+a8yHT3bnuYO5oyJ
-         39ERNWmUSYkRX/Ln52APmjlzKGB7xc5Ov57aKcgMwj9bcu1pc9RE6fUG+/C/V5NLqo
-         rDdrPUETe88mZFCVZ0MRmZkQ6kLNbJG1Lts1zLhZBW+eMDYzK8x02oj21CAiWZ5BuT
-         SaVz7lqnAqBqgxpf+GJCHtWrQfEwHPfnkpqK/Qw8+CsVQolElhZvzZNmg7gsgXfFi7
-         wNCae1Z1fwB0pXcf2jjmS/f0lDwpMiWVLScASe53yrEOd70o5Y0FvY1YUaa3NucjgO
-         FawkjA74nvpvw==
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     conor.dooley@microchip.com, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, linux-riscv@lists.infradead.org,
-        linux-pci@vger.kernel.org, daire.mcnamara@microchip.com
-Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>
-Subject: Re: [PATCH v3 0/7] PCI: microchip: Fixes and clean-ups
-Date:   Tue,  8 Aug 2023 13:02:37 +0200
-Message-Id: <169149233963.79399.5232296870054239065.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20230728131401.1615724-1-daire.mcnamara@microchip.com>
-References: <20230728131401.1615724-1-daire.mcnamara@microchip.com>
+        s=k20201202; t=1691510200;
+        bh=CYAIN+hBluNNXel12E9YVQxbYaxz9CVWUE5nfKL6+7k=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=HU3OlAtQ4k5a78DUGRFzHViT3BFA0n8uq26wIwdKsK8JoV0uKMiVMfwATnthIPWKR
+         AGQKAOsCr9glJ92tHpxRKk7UtjG+jfg5byfGwtCjoziA/Asjss9FOHndgXyDEBBXGF
+         bQ76F9cnbgFF1GQLncbdCjulv/b0RskJKgM8miGw4/8kEL7iF/lgyeuqnaC8XUzARz
+         XMVyi+k6Lfyhs2SU/xKvhoh76SxsP2UYtSTInLUzJxXHwYjiG5y/6IbLd2hPeRmd/R
+         hlbwugFanGIyJnWfxDeSetdMU8QbEFFmwwBuKYg2V85akWu8m87NuJt71TvGRArL3z
+         3IdLh5Q/0gwJQ==
+Date:   Tue, 8 Aug 2023 10:56:38 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+Cc:     linux-kernel@vger.kernel.org, robh+dt@kernel.org,
+        bhelgaas@google.com, krzysztof.kozlowski@linaro.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        lpieralisi@kernel.org, bharat.kumar.gogada@amd.com,
+        michal.simek@amd.com, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: xilinx-nwl: Remove unnecessary code which
+ updates primary,secondary and sub-ordinate bus numbers.
+Message-ID: <20230808155638.GA313716@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230808103733.93707-1-thippeswamy.havalige@amd.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 28 Jul 2023 14:13:54 +0100, daire.mcnamara@microchip.com wrote:
-> This patch series contains fixes and clean-ups for the Microchip PolarFire SoC PCIe driver
-> 
-> These patches are extracted from the link below to separate them from the outbound and inbound
-> range handling which is taking considerable time.
-> Link: https://lore.kernel.org/linux-riscv/20230111125323.1911373-1-daire.mcnamara@microchip.com/
-> 
-> Resending with correct e-mail address list
-> 
-> [...]
+On Tue, Aug 08, 2023 at 04:07:30PM +0530, Thippeswamy Havalige wrote:
+> The primary,secondary and sub-ordinate bus number registers are updated by
+> Linux PCI core, so remove code which updates repective fields of type 1
+> header 18th offset of Root Port configuration space.
 
-Applied to controller/microchip, thanks!
+Whoever applies this, please:
 
-[1/7] PCI: microchip: Correct the DED and SEC interrupt bit offsets
-      https://git.kernel.org/pci/pci/c/6d473a5a2613
-[2/7] PCI: microchip: Enable building driver as a module
-      https://git.kernel.org/pci/pci/c/2e245bc8a2ab
-[3/7] PCI: microchip: Align register, offset, and mask names with hw docs
-      https://git.kernel.org/pci/pci/c/4d6bf4c49578
-[4/7] PCI: microchip: Enable event handlers to access bridge and ctrl ptrs
-      https://git.kernel.org/pci/pci/c/d1d6a0c9e79c
-[5/7] PCI: microchip: Clean up initialisation of interrupts
-      https://git.kernel.org/pci/pci/c/4f0b91247f78
-[6/7] PCI: microchip: Gather MSI information from hardware config registers
-      https://git.kernel.org/pci/pci/c/1abb722888fd
-[7/7] PCI: microchip: Re-partition code between probe() and init()
-      https://git.kernel.org/pci/pci/c/bac406c34fbc
+  - Drop period from subject line
+  - Add space after comma
+  - s/repective/respective/
+  - Fix up "18th"; I suppose this refers to the 18h offset, but the
+    reference is too low-level and probably unnecessary since we
+    already listed the affected registers
 
-Thanks,
-Lorenzo
+> Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>
+> ---
+> changes in v2:
+> - Code increasing ECAM Size value is added into a seperate patch.
+> - Modified commit messages.
+> changes in v1:
+> - Modified commit messages.
+> ---
+>  drivers/pci/controller/pcie-xilinx-nwl.c | 16 ++--------------
+>  1 file changed, 2 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+> index 176686b..a73554e 100644
+> --- a/drivers/pci/controller/pcie-xilinx-nwl.c
+> +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+> @@ -165,8 +165,6 @@ struct nwl_pcie {
+>  	u32 ecam_size;
+>  	int irq_intx;
+>  	int irq_misc;
+> -	u32 ecam_value;
+
+The removal of "ecam_value" has nothing to do with the PCI core; it
+seems more related to the NWL_ECAM_VALUE_DEFAULT change, and I would
+either squash it into that patch or make it a separate "no functional
+change" cleanup patch.
+
+> -	u8 last_busno;
+>  	struct nwl_msi msi;
+>  	struct irq_domain *legacy_irq_domain;
+>  	struct clk *clk;
+> @@ -625,7 +623,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+>  {
+>  	struct device *dev = pcie->dev;
+>  	struct platform_device *pdev = to_platform_device(dev);
+> -	u32 breg_val, ecam_val, first_busno = 0;
+> +	u32 breg_val, ecam_val;
+>  	int err;
+>  
+>  	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
+> @@ -675,7 +673,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+>  			  E_ECAM_CR_ENABLE, E_ECAM_CONTROL);
+>  
+>  	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, E_ECAM_CONTROL) |
+> -			  (pcie->ecam_value << E_ECAM_SIZE_SHIFT),
+> +			  (NWL_ECAM_VALUE_DEFAULT << E_ECAM_SIZE_SHIFT),
+>  			  E_ECAM_CONTROL);
+>  
+>  	nwl_bridge_writel(pcie, lower_32_bits(pcie->phys_ecam_base),
+> @@ -683,15 +681,6 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+>  	nwl_bridge_writel(pcie, upper_32_bits(pcie->phys_ecam_base),
+>  			  E_ECAM_BASE_HI);
+>  
+> -	/* Get bus range */
+> -	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CONTROL);
+> -	pcie->last_busno = (ecam_val & E_ECAM_SIZE_LOC) >> E_ECAM_SIZE_SHIFT;
+> -	/* Write primary, secondary and subordinate bus numbers */
+> -	ecam_val = first_busno;
+> -	ecam_val |= (first_busno + 1) << 8;
+> -	ecam_val |= (pcie->last_busno << E_ECAM_SIZE_SHIFT);
+> -	writel(ecam_val, (pcie->ecam_base + PCI_PRIMARY_BUS));
+> -
+>  	if (nwl_pcie_link_up(pcie))
+>  		dev_info(dev, "Link is UP\n");
+>  	else
+> @@ -792,7 +781,6 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+>  	pcie = pci_host_bridge_priv(bridge);
+>  
+>  	pcie->dev = dev;
+> -	pcie->ecam_value = NWL_ECAM_VALUE_DEFAULT;
+>  
+>  	err = nwl_pcie_parse_dt(pcie, pdev);
+>  	if (err) {
+> -- 
+> 1.8.3.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
