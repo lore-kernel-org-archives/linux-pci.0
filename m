@@ -2,21 +2,21 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B0DC04A94
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D16C9C04FE0
 	for <linux-pci@archiver.kernel.org>; Wed,  9 Aug 2023 08:20:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231847AbjHIIUo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S231897AbjHIIUo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 9 Aug 2023 04:20:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36260 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36274 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230081AbjHIIUm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2023 04:20:42 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25EE41703;
-        Wed,  9 Aug 2023 01:20:42 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4RLNFf5Jtmz9tjF;
-        Wed,  9 Aug 2023 16:17:10 +0800 (CST)
+        with ESMTP id S229702AbjHIIUo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2023 04:20:44 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4212FE7D;
+        Wed,  9 Aug 2023 01:20:43 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.57])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4RLNJJ29p6zmXZQ;
+        Wed,  9 Aug 2023 16:19:28 +0800 (CST)
 Received: from localhost.localdomain (10.50.163.32) by
  canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -28,9 +28,9 @@ CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
         <linux-pci@vger.kernel.org>, <prime.zeng@hisilicon.com>,
         <linuxarm@huawei.com>, <yangyicong@hisilicon.com>,
         <hejunhao3@huawei.com>
-Subject: [PATCH 2/5] hwtracing: hisi_ptt: Handle the interrupt in hardirq context
-Date:   Wed, 9 Aug 2023 16:18:22 +0800
-Message-ID: <20230809081825.11518-3-yangyicong@huawei.com>
+Subject: [PATCH 5/5] hwtracing: hisi_ptt: Add dummy callback pmu::read()
+Date:   Wed, 9 Aug 2023 16:18:25 +0800
+Message-ID: <20230809081825.11518-6-yangyicong@huawei.com>
 X-Mailer: git-send-email 2.31.0
 In-Reply-To: <20230809081825.11518-1-yangyicong@huawei.com>
 References: <20230809081825.11518-1-yangyicong@huawei.com>
@@ -45,40 +45,42 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yicong Yang <yangyicong@hisilicon.com>
+From: Junhao He <hejunhao3@huawei.com>
 
-Handle the trace interrupt in the hardirq context, make sure the irq
-core won't threaded it by declaring IRQF_NO_THREAD and userspace won't
-balance it by declaring IRQF_NOBALANCING. Otherwise we may violate the
-synchronization requirements of the perf core, referenced to the
-change of arm-ccn PMU commit 0811ef7e2f54 ("bus: arm-ccn: fix PMU interrupt flags").
+When start trace with perf option "-C $cpu" and immediately stop it
+with SIGTERM or others, the perf core will invoke pmu::read() while
+the driver doesn't implement it. Add a dummy pmu::read() to avoid
+any issues.
 
-In the interrupt handler we mainly doing 2 things:
-- Copy the data from the local DMA buffer to the AUX buffer
-- Commit the data in the AUX buffer
-
+Signed-off-by: Junhao He <hejunhao3@huawei.com>
 Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
 ---
- drivers/hwtracing/ptt/hisi_ptt.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/hwtracing/ptt/hisi_ptt.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
-index 5f0a8e653ae8..89638ed96cf9 100644
+index 916686c6a9c8..7392e039b8c1 100644
 --- a/drivers/hwtracing/ptt/hisi_ptt.c
 +++ b/drivers/hwtracing/ptt/hisi_ptt.c
-@@ -346,9 +346,9 @@ static int hisi_ptt_register_irq(struct hisi_ptt *hisi_ptt)
- 		return ret;
+@@ -1184,6 +1184,10 @@ static void hisi_ptt_pmu_del(struct perf_event *event, int flags)
+ 	hisi_ptt_pmu_stop(event, PERF_EF_UPDATE);
+ }
  
- 	hisi_ptt->trace_irq = pci_irq_vector(pdev, HISI_PTT_TRACE_DMA_IRQ);
--	ret = devm_request_threaded_irq(&pdev->dev, hisi_ptt->trace_irq,
--					NULL, hisi_ptt_isr, 0,
--					DRV_NAME, hisi_ptt);
-+	ret = devm_request_irq(&pdev->dev, hisi_ptt->trace_irq, hisi_ptt_isr,
-+				IRQF_NOBALANCING | IRQF_NO_THREAD, DRV_NAME,
-+				hisi_ptt);
- 	if (ret) {
- 		pci_err(pdev, "failed to request irq %d, ret = %d\n",
- 			hisi_ptt->trace_irq, ret);
++static void hisi_ptt_pmu_read(struct perf_event *event)
++{
++}
++
+ static void hisi_ptt_remove_cpuhp_instance(void *hotplug_node)
+ {
+ 	cpuhp_state_remove_instance_nocalls(hisi_ptt_pmu_online, hotplug_node);
+@@ -1227,6 +1231,7 @@ static int hisi_ptt_register_pmu(struct hisi_ptt *hisi_ptt)
+ 		.stop		= hisi_ptt_pmu_stop,
+ 		.add		= hisi_ptt_pmu_add,
+ 		.del		= hisi_ptt_pmu_del,
++		.read		= hisi_ptt_pmu_read,
+ 	};
+ 
+ 	reg = readl(hisi_ptt->iobase + HISI_PTT_LOCATION);
 -- 
 2.24.0
 
