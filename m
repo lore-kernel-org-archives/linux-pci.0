@@ -2,168 +2,135 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47616C04A94
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Aug 2023 19:48:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 476B0C0015E
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Aug 2023 21:38:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234110AbjHITsU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Aug 2023 15:48:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49566 "EHLO
+        id S232191AbjHIVia (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Aug 2023 17:38:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38442 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234240AbjHITrg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2023 15:47:36 -0400
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2048.outbound.protection.outlook.com [40.107.223.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C269210D;
-        Wed,  9 Aug 2023 12:47:25 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SG/V6ZrxslfLLJYzmfaRnLLMUtl082REVAp/7MZ0xTtGj1O5GhNHvi+B6GnpsWBzRolew01VnTm851QaCsLphLLXa88Q8d+k6cnyeUCIkKriDD9NQkOMedz5oxsHJQefqxIKbEaV1D3rmHOW6mr14TMHWA7wlXZadG8JuSuflB413xe1wfttogROMI08LH0Kp5Tk17xJ3Eqwmn/o1ppw6I5ebhmyHfR6hj7QlsQdoajK+b1wsyUIAQ/wRYtmXnunB1v4HKYXhG3JoV2WzZgwrBHtKUDHKa+YFG2b2SiLvOQVPmZc5LmV1zGnFrMqNXa1+BdDCwlBUvbhWLukkdxlgg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=U7IljWi8fyJCaKaHKU70C/9A6XxwrDPhSFrCKPfFtKY=;
- b=WO67AGQfg1g2mZqBe5VhseRg/RkxRMhbfexNJDxxxmoZRHLt2Rkk7zX82q52C9Lyy0qbj6xET1h7jPuYDg7RFGGlzJDJ/ouvhu09KRkInmTsIw3wiRCNlBDFc89TxweZZxO5WCJwk4deLlmYjQSnv2oWvXmYAaRg6fkXdS2mFVsUhAvN7oXR7Qx6NGeHb4NXtIZRvJghW6X7/s/NWDID/AHN4MvFVFdoFx9NR+hI0MAjWeJocBufe71L+wo/nUn19lEsG/KBLSUQJfB2OtVvRONjNjl6DTiNiogRwIx5EjRmXaCmxCqW3Oqi6njXRccuXcpvwcHAFQScQtqQFoM9Ow==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=U7IljWi8fyJCaKaHKU70C/9A6XxwrDPhSFrCKPfFtKY=;
- b=46VVImrOUqrOszIcJMllAyK9grmcjgup1j8pV7pSrWk82E89j5ZJHV+a61ps+nvsWwwoYtZ8cr3MiLLVXgYs2GEJY2t0W7t7zeoE8B0tXoavI4mlp/OOVY85cw0NoOzhLPxOnriO5QucVEXVDaS1r7f5kcybkFFDYbWgXLx/Hgg=
-Received: from MW2PR16CA0057.namprd16.prod.outlook.com (2603:10b6:907:1::34)
- by DS0PR12MB8342.namprd12.prod.outlook.com (2603:10b6:8:f9::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.30; Wed, 9 Aug
- 2023 19:47:22 +0000
-Received: from CO1PEPF000042A9.namprd03.prod.outlook.com
- (2603:10b6:907:1:cafe::74) by MW2PR16CA0057.outlook.office365.com
- (2603:10b6:907:1::34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.28 via Frontend
- Transport; Wed, 9 Aug 2023 19:47:22 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1PEPF000042A9.mail.protection.outlook.com (10.167.243.38) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6652.19 via Frontend Transport; Wed, 9 Aug 2023 19:47:21 +0000
-Received: from SITE-L-T34-2.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 9 Aug
- 2023 14:47:19 -0500
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     "Rafael J . Wysocki" <rafael@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
-        <linux-acpi@vger.kernel.org>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        "Iain Lane" <iain@orangesquash.org.uk>,
-        Shyam-sundar S-k <Shyam-sundar.S-k@amd.com>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v11 8/9] PCI: Split PME state selection into a local static function
-Date:   Wed, 9 Aug 2023 13:54:52 -0500
-Message-ID: <20230809185453.40916-9-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230809185453.40916-1-mario.limonciello@amd.com>
-References: <20230809185453.40916-1-mario.limonciello@amd.com>
+        with ESMTP id S231251AbjHIVia (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2023 17:38:30 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 466851BCF
+        for <linux-pci@vger.kernel.org>; Wed,  9 Aug 2023 14:38:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1691617109; x=1723153109;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Z3KdIJWJzreqm09c8s71JBRGDg7rW1K1+OW3npQcbUk=;
+  b=ezD6Vk20EWTwEKhsPKZaBicCeqfYJmTp/xh21a/7hxgmdv2Pgabo7uOP
+   RTuqAaLh5Lqfyt5DJbsKMXBEsKU5hYOhbxtbwL2A0FQVQ1VtpBy9v/RIt
+   ezedz6NEu8CVA/hQwEDAxts67CoXBBHAo3eUNYPiSsFp5T7n+nvC8uWy5
+   3fKsfsmwE6yqY2idYKfx/8XGJ6ja/31yPgvjJyw/SHfCI4BuM/Jge4H2d
+   MMSY5Mv0AIv+By1jCVpRysqbOoxAL8crbZ0O4RWdV0pPSUIqVGEkMYVJn
+   rK7MeCFWADVYRmfB03T2esqzgMzpeyhWYPTd2zPQW64l+nSaO0Dhpcc+u
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10797"; a="361370106"
+X-IronPort-AV: E=Sophos;i="6.01,160,1684825200"; 
+   d="scan'208";a="361370106"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Aug 2023 14:38:28 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10797"; a="905800304"
+X-IronPort-AV: E=Sophos;i="6.01,160,1684825200"; 
+   d="scan'208";a="905800304"
+Received: from unknown (HELO localhost.ch.intel.com) ([10.2.230.30])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Aug 2023 14:38:28 -0700
+From:   Nirmal Patel <nirmal.patel@linux.intel.com>
+To:     nirmal.patel@linux.intel.com, <linux-pci@vger.kernel.org>
+Subject: [PATCH v4] PCI: vmd: Disable bridge window for domain reset
+Date:   Wed,  9 Aug 2023 17:14:54 -0400
+Message-Id: <20230809211454.1150589-1-nirmal.patel@linux.intel.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF000042A9:EE_|DS0PR12MB8342:EE_
-X-MS-Office365-Filtering-Correlation-Id: da5aeb87-5ed5-4666-71f3-08db991172b0
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: YVkYUY8kmZ/BydUO2qrjjIWDdSxd+kaiCeriLKumzdgWf7wW3mtUkIwyY5L/ipSqzKXzkgv38c6ghclQ8k3XIP79vTIM45LOS1l0Z1Qtr+bA2Vas9txE6pwooMeoG1UDfsplsPWNUa0ZH92gqodXQDHvC+aQplIa3h8G0FE7mqoWAlNEI+O7PaAW1njO13kotlN5VH2rODNZFsR6VPkDXYNIM1AaHO4dljcIfRb5axl0S/zE5195RuVUBZ81TIVNJmTVchUCY9qpQ+k9ZQvnj2tNue62Z8H7pkeJaf4RapLlrHKlDi81Vu+UPZ8zak40x60u1vbBg/ziLZSsxnBpQuEu6aoAKffItN5Fo3+UL33JyoWE52zoT49FayplzuImFx66xW9tSHXJuh6NdJbz+AY/BQ0+tHvGfG4OWfIq4mW3kjcUnVbxqsw1K9gAzV8hiPOnPDaJkDV4LNP5wzD09ydbpJ8kR0fmygf+mbzAl3C7IwdjMedm+cByScMks/omqOhtat5XqjzpfRN0eeqnpcEthT1Nb2wS4eCJqvP9jIt+QWfh467C/Wyl2RcZwmF+NNXi9S/ubfLbtZMdg0JyBTVzsYlFw6VOk+TVl+TQy75aU3PfiORwXjBWLmDtUWsOenKlg4t5+Z1ryElmVAO6xFd3BSJCH0YeyZAV4Qy+79O4/DODSl2KJUCLs1ddbyO1/p++y+0BbSuc9+Dg+1vgGRfpPKj8pOt6/Y3thQNfF3pJsHr9nLsyBimdvbFVkqUKbrlF2ax9Xu3dbZZ35alcCw==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230028)(4636009)(346002)(136003)(376002)(396003)(39860400002)(451199021)(82310400008)(1800799006)(186006)(46966006)(40470700004)(36840700001)(6666004)(7696005)(40460700003)(86362001)(1076003)(26005)(40480700001)(47076005)(426003)(83380400001)(2616005)(36756003)(36860700001)(16526019)(336012)(81166007)(356005)(82740400003)(44832011)(316002)(41300700001)(8676002)(8936002)(2906002)(4326008)(70586007)(70206006)(478600001)(54906003)(5660300002)(110136005)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Aug 2023 19:47:21.9310
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: da5aeb87-5ed5-4666-71f3-08db991172b0
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CO1PEPF000042A9.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8342
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When a device is not power manageable by the platform, and not already
-in a low power state pci_target_state() will find the deepest state
-that PME is supported and use this to select the wakeup state.
+During domain reset process vmd_domain_reset() clears PCI
+configuration space of VMD root ports. But certain platform
+has observed following errors and failed to boot.
+  ...
+  DMAR: VT-d detected Invalidation Queue Error: Reason f
+  DMAR: VT-d detected Invalidation Time-out Error: SID ffff
+  DMAR: VT-d detected Invalidation Completion Error: SID ffff
+  DMAR: QI HEAD: UNKNOWN qw0 = 0x0, qw1 = 0x0
+  DMAR: QI PRIOR: UNKNOWN qw0 = 0x0, qw1 = 0x0
+  DMAR: Invalidation Time-out Error (ITE) cleared
 
-Simplify this logic and split it out to a local function. No intended
-functional changes.
+The root cause is that memset_io() clears prefetchable memory base/limit
+registers and prefetchable base/limit 32 bits registers sequentially.
+This seems to be enabling prefetchable memory if the device disabled
+prefetchable memory originally.
 
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+Here is an example (before memset_io()):
+
+  PCI configuration space for 10000:00:00.0:
+  86 80 30 20 06 00 10 00 04 00 04 06 00 00 01 00
+  00 00 00 00 00 00 00 00 00 01 01 00 00 00 00 20
+  00 00 00 00 01 00 01 00 ff ff ff ff 75 05 00 00
+  ...
+
+So, prefetchable memory is ffffffff00000000-575000fffff, which is
+disabled. When memset_io() clears prefetchable base 32 bits register,
+the prefetchable memory becomes 0000000000000000-575000fffff, which is
+enabled and incorrect.
+
+Here is the quote from section 7.5.1.3.9 of PCI Express Base 6.0 spec:
+
+  The Prefetchable Memory Limit register must be programmed to a smaller
+  value than the Prefetchable Memory Base register if there is no
+  prefetchable memory on the secondary side of the bridge.
+
+This is believed to be the reason for the failure and in addition the
+sequence of operation in vmd_domain_reset() is not following the PCIe
+specs.
+
+Disable the bridge window by executing a sequence of operations
+borrowed from pci_disable_bridge_window() and pci_setup_bridge_io(),
+that comply with the PCI specifications.
+
+Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
 ---
-v10->v11:
- * New patch split from existing patch in v10
+v3->v4: Following same operation as pci_setup_bridge_io.
+v2->v3: Add more information to commit description.
+v1->v2: Follow same chain of operation as pci_disable_bridge_window
+        and update commit log.
 ---
- drivers/pci/pci.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+ drivers/pci/controller/vmd.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 60230da957e0c..693f4ca90452b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2660,6 +2660,20 @@ int pci_wake_from_d3(struct pci_dev *dev, bool enable)
- }
- EXPORT_SYMBOL(pci_wake_from_d3);
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index 769eedeb8802..ae5b4c1704e4 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -526,8 +526,21 @@ static void vmd_domain_reset(struct vmd_dev *vmd)
+ 				     PCI_CLASS_BRIDGE_PCI))
+ 					continue;
  
-+/*
-+ * Find the deepest state from which the device can generate
-+ * PME#.
-+ */
-+static inline pci_power_t pci_get_wake_pme_state(struct pci_dev *dev)
-+{
-+	pci_power_t state = PCI_D3hot;
+-				memset_io(base + PCI_IO_BASE, 0,
+-					  PCI_ROM_ADDRESS1 - PCI_IO_BASE);
++				/* Temporarily disable the I/O range before updating PCI_IO_BASE */
++				writel(0x0000ffff, base + PCI_IO_BASE_UPPER16);
++				/* Update lower 16 bits of I/O base/limit */
++				writew(0x00f0, base + PCI_IO_BASE);
++				/* Update upper 16 bits of I/O base/limit */
++				writel(0, base + PCI_IO_BASE_UPPER16);
 +
-+	while (state && !(dev->pme_support & (1 << state)))
-+		state--;
++				/* MMIO Base/Limit */
++				writel(0x0000fff0, base + PCI_MEMORY_BASE);
 +
-+	return state;
-+}
-+
- /**
-  * pci_target_state - find an appropriate low power state for a given PCI dev
-  * @dev: PCI device
-@@ -2701,21 +2715,8 @@ static pci_power_t pci_target_state(struct pci_dev *dev, bool wakeup)
- 	else if (!dev->pm_cap)
- 		return PCI_D0;
- 
--	if (wakeup && dev->pme_support) {
--		pci_power_t state = PCI_D3hot;
--
--		/*
--		 * Find the deepest state from which the device can generate
--		 * PME#.
--		 */
--		while (state && !(dev->pme_support & (1 << state)))
--			state--;
--
--		if (state)
--			return state;
--		else if (dev->pme_support & 1)
--			return PCI_D0;
--	}
-+	if (wakeup && dev->pme_support)
-+		return pci_get_wake_pme_state(dev);
- 
- 	return PCI_D3hot;
- }
++				/* Prefetchable MMIO Base/Limit */
++				writel(0, base + PCI_PREF_LIMIT_UPPER32);
++				writel(0x0000fff0, base + PCI_PREF_MEMORY_BASE);
++				writel(0xffffffff, base + PCI_PREF_BASE_UPPER32);
++				writeb(0, base + PCI_CAPABILITY_LIST);
+ 			}
+ 		}
+ 	}
 -- 
-2.34.1
+2.31.1
 
