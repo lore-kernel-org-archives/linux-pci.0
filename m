@@ -2,122 +2,91 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 133D0C04E69
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Aug 2023 07:10:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C1EC001E0
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Aug 2023 08:19:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230420AbjHIHKx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Aug 2023 03:10:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50546 "EHLO
+        id S230295AbjHIITH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Aug 2023 04:19:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231511AbjHIHKo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2023 03:10:44 -0400
-Received: from wout5-smtp.messagingengine.com (wout5-smtp.messagingengine.com [64.147.123.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD95B1FDC
-        for <linux-pci@vger.kernel.org>; Wed,  9 Aug 2023 00:10:42 -0700 (PDT)
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.47])
-        by mailout.west.internal (Postfix) with ESMTP id 9FDA83200934;
-        Wed,  9 Aug 2023 03:10:41 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute6.internal (MEProxy); Wed, 09 Aug 2023 03:10:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-        :cc:content-type:content-type:date:date:from:from:in-reply-to
-        :in-reply-to:message-id:mime-version:references:reply-to:sender
-        :subject:subject:to:to; s=fm3; t=1691565041; x=1691651441; bh=eb
-        SSyd7sDYt0Yru+YTZUFCPWBRSp4UGynnDfbD/M1DQ=; b=QPm9feMweqYqngVpsO
-        6Nd5yv+FEfHUFwcRaPuVs4mIl476Q6o6e/GUqVFfHWcUUNhMBNrqkdOk5EPPeiQ/
-        FVXyziTKk+tIkP7exl62bI4/58A/Rxk1KtTdVPMbAse4efFRFEOQWqzZSwqQgi97
-        Hm+5r7tbhr3HwFDy/FpBi7NotWikcKE0oLBdBFDTqZkB2KKLUj08eLDphYISCIu+
-        YfKbEm7vKnx46a0Ayk7B9aBQd/mkNvvndfsPjQ8gmew/+14sax86qX/vzGhRRq7z
-        /OQ7yqD+7Zv7rs2eAdrrDtwF1RWkhnu61um4eV1kjZoX+9Ib2rjtzn/lafwk8h3k
-        UJgA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-type:content-type:date:date
-        :feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-        :message-id:mime-version:references:reply-to:sender:subject
-        :subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; t=1691565041; x=1691651441; bh=ebSSyd7sDYt0Y
-        ru+YTZUFCPWBRSp4UGynnDfbD/M1DQ=; b=EX5y9FAQu/UHgOizKEjJyjxm+MyW8
-        4jxXRakBtJayJK4gzNuAjSi9pDHVc2rSpbg4dB7FEJBsYrYOOvkyZFAfwwxAZDkN
-        zNSbIDTejuYIpsIFPUkwOjlULvWrZWR0EY1m6+20A60vm+FyW147wupuLMNirzd/
-        40YvIuReM+56rSKvqanktr2BlVrKYNDEoW70/AuLyOnVTRmO6rzL8RXEo+pTME1E
-        iRn8glhNXKvX9FgyhD0RlvgBOeFCvnAlvKWrlrmsGJG/NFPyFvjGRZYxvtw2KYkV
-        Ox1Xx2kwHuZ4jMzTlSPjtIWU5LzOGsGY7Gl5MC25RYiPNtVTKrqUXcnRw==
-X-ME-Sender: <xms:8DvTZMylbN-B5r3AUbaIQ41SePS7Ecma3LnTDJbKqIO2MfTMlVYuPg>
-    <xme:8DvTZAT8PcYL5rYDlL2hsnXT2JQNsOYPwL70x1RB6VL6fyrEBeKYTWKk_XNbU6Gvz
-    WXAlLTi7njmn5MhutM>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedviedrleefgdduudegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
-    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:8DvTZOU94Nu2Uaf07TxCgco7Z_rDI1De7kYnPmBacmfJxpZXKRR4cg>
-    <xmx:8DvTZKiEFQAvuzSRNQtnVEjS3MsK3VBIgXD3df2-tzQDDkYq8vAN8Q>
-    <xmx:8DvTZOAvfJVqg0AKvz5nQoUdtFxif6QBbUkN8w1NZClh5-ncmqyCHA>
-    <xmx:8TvTZJMI5UU6mljkWS0d_20sVrr-29ZB5qTeWTRD0uCULKg3ZeH8Iw>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id D678CB60089; Wed,  9 Aug 2023 03:10:40 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-624-g7714e4406d-fm-20230801.001-g7714e440
-Mime-Version: 1.0
-Message-Id: <9b1213cf-a8f4-41b3-8918-a00bf0ff7f28@app.fastmail.com>
-In-Reply-To: <87sf8t58di.wl-me@linux.beauty>
-References: <189cff865f3.fc7e71c96186.1411633612292556520@linux.beauty>
- <20230808070357.GC4990@thinkpad>
- <344b8ccd-23c9-4476-9493-1d2b9c23590d@app.fastmail.com>
- <87sf8t58di.wl-me@linux.beauty>
-Date:   Wed, 09 Aug 2023 09:10:20 +0200
-From:   "Arnd Bergmann" <arnd@arndb.de>
-To:     "Li Chen" <me@linux.beauty>
-Cc:     "Manivannan Sadhasivam" <mani@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
-        "Kishon Vijay Abraham I" <kishon@ti.com>,
-        "Bjorn Helgaas" <helgaas@kernel.org>
-Subject: Re: [RFC] add __iomem cookie for EPF BAR
-Content-Type: text/plain
+        with ESMTP id S229931AbjHIITH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2023 04:19:07 -0400
+Received: from mail-oa1-x32.google.com (mail-oa1-x32.google.com [IPv6:2001:4860:4864:20::32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57A5810FE
+        for <linux-pci@vger.kernel.org>; Wed,  9 Aug 2023 01:19:06 -0700 (PDT)
+Received: by mail-oa1-x32.google.com with SMTP id 586e51a60fabf-1bba254a7d4so5159029fac.2
+        for <linux-pci@vger.kernel.org>; Wed, 09 Aug 2023 01:19:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1691569145; x=1692173945;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=1dO0fGXVkB6dDvOJvamtXS5ttOLi34wClCgZVQXXSJ8=;
+        b=fhmLGYJO7+qqXrUKU3dLw1C9KNcWX6EA1ZpYrt5wE7dPOIBYnglTiQWrNkQ4Oz94Ot
+         euX8EGdzFWJm6WHuiu6XZljYwJtJ2An9tufSo/uEaJkaMAHnYSBg/TxyfpDm3BEiZOjd
+         ObVHVuLKLJaSPka3Nlvs8BD0ep8WVv8OLiF9y9PVfA9Bp6pkhGSfodX9KbwGbs+qut7w
+         /CTDwdGzTcUI4Z83FQXJcs3GthwIRRkG26BZVHXPmWA8m4K0rKdvEEqJcwx+VKrURLKZ
+         shHdAnHS6q/aPkAz80+zLEYUoxgahnaL03HxmOTk3CDNLnD/08kRwxZWeGqMs2GAnHa5
+         aV6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1691569145; x=1692173945;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=1dO0fGXVkB6dDvOJvamtXS5ttOLi34wClCgZVQXXSJ8=;
+        b=Fdw5UXu115ifSwpEyWwZD2oyC823tXHooUEs7/HLJM3QQJZBOFYwd9L8SrbKFYlTkq
+         faHk/Yu+fEhHAQ4iUP9cX2KMSqr1zPb0714UW5bfefdjFMhpSrmPS10Byg1rSP9zWYVz
+         jClWyZYYwXwecUBtj4zZmPGCknqky7kXV4Lj+N3b8BvELi72oSe410HNtyWoTvFvBGN9
+         KNvjy/1kDDoRNKBf9G6QPFQZ4qcctwXEYEPQJ6+CJYLmGwuwCFa4e+8HRo02oIOwmu3b
+         rVkhwCXtVNWY+ETjrsc6uOQ0xBKSBI8rnmg825ThgCP/feUxjTEnBYHWC7RI+Q4IiFVp
+         zCdg==
+X-Gm-Message-State: AOJu0YxgZ+Nv5+24V11FbQLbABXvTd91HmZIpbfWz7bd4JznQOjkB32v
+        Z9hm21k4h7w0VZb8RkvFkFZn
+X-Google-Smtp-Source: AGHT+IHLhiTa1iK8j77LftG5ziiKVv7wb75Pz56OZcxKlLru9eds2r4O/GVW8Znek2Ua6SUJaRVTDQ==
+X-Received: by 2002:a05:6870:610a:b0:1be:dbd2:2bfe with SMTP id s10-20020a056870610a00b001bedbd22bfemr1810603oae.57.1691569145636;
+        Wed, 09 Aug 2023 01:19:05 -0700 (PDT)
+Received: from localhost.localdomain ([117.207.25.122])
+        by smtp.gmail.com with ESMTPSA id v13-20020a62a50d000000b00686ee7ba3easm9331881pfm.216.2023.08.09.01.18.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Aug 2023 01:19:05 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com
+Cc:     robh@kernel.org, gustavo.pimentel@synopsys.com,
+        jingoohan1@gmail.com, andersson@kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH 0/2] PCI: qcom: Enable ASPM on host bridge and devices
+Date:   Wed,  9 Aug 2023 13:48:38 +0530
+Message-Id: <20230809081840.16034-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 9, 2023, at 03:09, Li Chen wrote:
-> On Tue, 08 Aug 2023 15:44:44 +0800,
-> Arnd Bergmann wrote:
->> On Tue, Aug 8, 2023, at 09:03, mani wrote:
->> > On Mon, Aug 07, 2023 at 08:28:30PM +0800, Li Chen wrote:
->
->> If the cache is coherent with the device, then reading from the cache
->> is clearly the right thing to do,
->
-> I guess that even SoCs with CCI support might not handle cache for RC
-> access if specific bus interfaces are not connected.
+Hi,
 
-Correct, each device in the system can be cache-coherent or
-noncoherent, independent of the others, and needs to be marked
-correctly in the DT. The dma_alloc_coherent() call will either
-allocate cacheable or noncachable memory based on what the
-kernel thinks is required for the particular device.
+This series enables ASPM by default on the host bridge and devices of selected
+Qcom platforms.
 
->> but the mentioned "stall" problem may
->> be related to the store buffers, where an dma_wmb() after the
->> WRITE_ONCE() is missing. Similarly, a dma_rmb() might be missing before
->> a READ_ONCE() to prevent prefetching during out-of-order execution.
->> 
->> With readl()/writel(), you already get very heavy barriers, so it may
->> end up working by accident, but these barriers are at the other side
->> of the access (before writel and after readl) and may be the wrong
->> type of barrier depending on the CPU.
->
-> For systems that aren't cache-coherent, is it accurate to say that the 
-> store
-> buffer might still be utilized, and that there might still be a need 
-> for dma_wmb and dma_rmb?
+The motivation behind enabling ASPM in the controller driver is provided in the
+commit message of patch 2/2.
 
-Yes, the ordering is really independent of the cache, so these will
-be needed for portable code either way, the same way you need
-smp_wmb()/smp_rmb() between CPUs accessing shared memory locally.
+This series has been tested on SC8280-CRD and Lenovo Thinkpad X13s laptop
+and it helped save ~0.6W of power during runtime.
 
-     Arnd
+- Mani
+
+Manivannan Sadhasivam (2):
+  PCI: dwc: Add host_post_init() callback
+  PCI: qcom: Enable ASPM for platforms supporting 1.9.0 ops
+
+ .../pci/controller/dwc/pcie-designware-host.c |  3 ++
+ drivers/pci/controller/dwc/pcie-designware.h  |  1 +
+ drivers/pci/controller/dwc/pcie-qcom.c        | 28 +++++++++++++++++++
+ 3 files changed, 32 insertions(+)
+
+-- 
+2.25.1
+
