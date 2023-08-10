@@ -2,87 +2,197 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24936C04E69
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Aug 2023 10:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEA8BC001DB
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Aug 2023 10:51:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231994AbjHJKKO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Aug 2023 06:10:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59304 "EHLO
+        id S232230AbjHJKvU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Aug 2023 06:51:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229793AbjHJKKN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2023 06:10:13 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:242:246e::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 627F9E0;
-        Thu, 10 Aug 2023 03:10:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Transfer-Encoding:
-        Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-To:
-        Resent-Cc:Resent-Message-ID; bh=XPH3ccM1WntjRL018LDvln6t5cV6zUeBJ1hbOX8TkwM=;
-        t=1691662212; x=1692871812; b=g4rd5c22FTavcsWQLb4P4tRfHLl4JjPPfZUSFqcyBhqbKFv
-        kn+3zBvFueJ4kTaBqdisiWbNxuwJ1mKlvGxvxr4dV1nxngTL1fCGWyki2bsLPCi4l7lE8gBHApcY9
-        W63sP56ib+4e7lLJf97qpQqotdPsKD7ny1Y3tfLTWdmGBgQeaYYQvSEyQvNzDhIYI8LyDFNwFEpCW
-        Tack430EvrSHzNkOuqWqeaNXUoo9Q6mi0noNj/TkXkRRUANaHXsw7Dfbt53eqiqBGOuUnAUGyQUqI
-        dL6AuJPl5vp4Z7RHfAVGh58d7C0GoDt9I6sOGnvrJ3WsdzFOOCU7wcHb55tLZ1qw==;
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.96)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1qU1zS-00GSLS-0z;
-        Thu, 10 Aug 2023 11:29:58 +0200
-Message-ID: <6f63b0f1764428d400fe512d33957a578629ff04.camel@sipsolutions.net>
-Subject: Re: [PATCH] Fix nomenclature for USB and PCI wireless devices
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Alan Stern <stern@rowland.harvard.edu>,
-        Greg KH <gregkh@linuxfoundation.org>
-Cc:     USB mailing list <linux-usb@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org
-Date:   Thu, 10 Aug 2023 11:29:57 +0200
-In-Reply-To: <cce342f1-55b9-49ba-81a9-cc9e83735ff9@rowland.harvard.edu>
-References: <57da7c80-0e48-41b5-8427-884a02648f55@rowland.harvard.edu>
-         <2023080940-overhand-fondly-7ef7@gregkh>
-         <cce342f1-55b9-49ba-81a9-cc9e83735ff9@rowland.harvard.edu>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        with ESMTP id S229447AbjHJKvU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2023 06:51:20 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60E74B4;
+        Thu, 10 Aug 2023 03:51:19 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id EA68163CF2;
+        Thu, 10 Aug 2023 10:51:18 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0FA0CC433C7;
+        Thu, 10 Aug 2023 10:51:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1691664678;
+        bh=L99B55PNTBqp8V4rry9xXV7Cfll06W4h1rJqzyof8fY=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=bk/Vs3BeIzSWktA2LqEtqRPaO7y9ya68Fz/rE9R6Fq8rsQWTa18OawPIvL0WdS+Yj
+         OdfJCI/tcLztV8DvKgzKE74xMoKXcSl8dFFS2xjF26YaQLuTDEis6CFLZv6KpxnV9G
+         4cJ+9c6a2pzXHVvh50quvadTH3e8xHefefm9kRHlMm/iPdhWSzgH6xncGx0sA1Zk+h
+         9t4Nh5JwbL7NRqUn0Tgq3xidk6H9HE2IintUesb15PMt/Awo7ilE1iuFBVInHys6ZP
+         HzSYF4zRiBfDrHvCR9uPBGcxBwWHOgWsACvkKaIs2U6JjUxRdA3fq1Q670SyJn1Nyq
+         OE/OjclI8K1pg==
+Date:   Thu, 10 Aug 2023 05:51:16 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     sathyanarayanan.kuppuswamy@linux.intel.com,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+        linux-kernel@vger.kernel.org, koba.ko@canonical.com,
+        Oliver O'Halloran <oohall@gmail.com>, bhelgaas@google.com,
+        mika.westerberg@linux.intel.com
+Subject: Re: [PATCH v6 2/3] PCI/AER: Disable AER interrupt on suspend
+Message-ID: <20230810105116.GA22621@bhelgaas>
 MIME-Version: 1.0
-X-malware-bazaar: not-scanned
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAAd53p5QhaCA09G0BrhyDBXTKBbcgpXq0yAsj7PkG6wF8Qr=_w@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2023-08-09 at 10:05 -0400, Alan Stern wrote:
-> On Wed, Aug 09, 2023 at 02:16:48PM +0200, Greg KH wrote:
-> > On Tue, Aug 08, 2023 at 08:44:48PM -0400, Alan Stern wrote:
-> > > A mouse that uses a USB connection is called a "USB mouse" device (or
-> > > "USB mouse" for short), not a "mouse USB" device.  By analogy, a WiFi
-> > > adapter that connects to the host computer via USB is a "USB wireless=
-"
-> > > device, not a "wireless USB" device.  (The latter term more properly
-> > > refers to a defunct Wireless USB specification, which described a
-> > > technology for sending USB protocol messages over an ultra wideband
-> > > radio link.)
-> > >=20
-> > > Similarly for a WiFi adapter card that plugs into a PCIe slot: It is =
-a
-> > > "PCIe wireless" device, not a "wireless PCIe" device.
-> > >=20
-> > > Rephrase the text in the kernel source where the word ordering is
-> > > wrong.
-> > >=20
-> > > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> >=20
-> > Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->=20
-> Can you accept this patch, or should I ask Johannes Berg or Kalle Valo=
-=20
-> to merge it through the wireless subsystem?
->=20
+On Thu, Aug 10, 2023 at 04:17:21PM +0800, Kai-Heng Feng wrote:
+> On Thu, Aug 10, 2023 at 2:52 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Fri, Jul 21, 2023 at 11:58:24AM +0800, Kai-Heng Feng wrote:
+> > > On Tue, Jul 18, 2023 at 7:17 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > On Fri, May 12, 2023 at 08:00:13AM +0800, Kai-Heng Feng wrote:
+> > > > > PCIe services that share an IRQ with PME, such as AER or DPC,
+> > > > > may cause a spurious wakeup on system suspend. To prevent this,
+> > > > > disable the AER interrupt notification during the system suspend
+> > > > > process.
+> > > >
+> > > > I see that in this particular BZ dmesg log, PME, AER, and DPC do share
+> > > > the same IRQ, but I don't think this is true in general.
+> > > >
+> > > > Root Ports usually use MSI or MSI-X.  PME and hotplug events use the
+> > > > Interrupt Message Number in the PCIe Capability, but AER uses the one
+> > > > in the AER Root Error Status register, and DPC uses the one in the DPC
+> > > > Capability register.  Those potentially correspond to three distinct
+> > > > MSI/MSI-X vectors.
+> > > >
+> > > > I think this probably has nothing to do with the IRQ being *shared*,
+> > > > but just that putting the downstream component into D3cold, where the
+> > > > link state is L3, may cause the upstream component to log and signal a
+> > > > link-related error as the link goes completely down.
+> > >
+> > > That's quite likely a better explanation than my wording.
+> > > Assuming AER IRQ and PME IRQ are not shared, does system get woken up
+> > > by AER IRQ?
+> >
+> > Rafael could answer this better than I can, but
+> > Documentation/power/suspend-and-interrupts.rst says device interrupts
+> > are generally disabled during suspend after the "late" phase of
+> > suspending devices, i.e.,
+> >
+> >   dpm_suspend_noirq
+> >     suspend_device_irqs           <-- disable non-wakeup IRQs
+> >     dpm_noirq_suspend_devices
+> >       ...
+> >         pci_pm_suspend_noirq      # (I assume)
+> >           pci_prepare_to_sleep
+> >
+> > I think the downstream component would be put in D3cold by
+> > pci_prepare_to_sleep(), so non-wakeup interrupts should be disabled by
+> > then.
+> >
+> > I assume PME would generally *not* be disabled since it's needed for
+> > wakeup, so I think any interrupt that shares the PME IRQ and occurs
+> > during suspend may cause a spurious wakeup.
+> 
+> Yes, that's the case here.
+> 
+> > If so, it's exactly as you said at the beginning: AER/DPC/etc sharing
+> > the PME IRQ may cause spurious wakeups, and we would have to disable
+> > those other interrupts at the source, e.g., by clearing
+> > PCI_ERR_ROOT_CMD_FATAL_EN etc (exactly as your series does).
+> 
+> So is the series good to be merged now?
 
-Given that it touches pretty much only wireless drivers, I guess we
-should take it? For -next, though, so since Kalle usually takes drivers
-I'll wait for him to get back.
+If we merge as-is, won't we disable AER & DPC interrupts unnecessarily
+in the case where the link goes to D3hot?  In that case, there's no
+reason to expect interrupts related to the link going down, but things
+like PTM messages still work, and they may cause errors that we should
+know about.
 
-But the potential for conflicts seems low too, so I guess either way is
-fine.
-
-johannes
+> > > > I don't think D0-D3hot should be relevant here because in all those
+> > > > states, the link should be active because the downstream config space
+> > > > remains accessible.  So I'm not sure if it's possible, but I wonder if
+> > > > there's a more targeted place we could do this, e.g., in the path that
+> > > > puts downstream devices in D3cold.
+> > >
+> > > Let me try to work on this.
+> > >
+> > > Kai-Heng
+> > >
+> > > >
+> > > > > As Per PCIe Base Spec 5.0, section 5.2, titled "Link State Power Management",
+> > > > > TLP and DLLP transmission are disabled for a Link in L2/L3 Ready (D3hot), L2
+> > > > > (D3cold with aux power) and L3 (D3cold) states. So disabling the AER
+> > > > > notification during suspend and re-enabling them during the resume process
+> > > > > should not affect the basic functionality.
+> > > > >
+> > > > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=216295
+> > > > > Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > > > > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > > > > ---
+> > > > > v6:
+> > > > > v5:
+> > > > >  - Wording.
+> > > > >
+> > > > > v4:
+> > > > > v3:
+> > > > >  - No change.
+> > > > >
+> > > > > v2:
+> > > > >  - Only disable AER IRQ.
+> > > > >  - No more check on PME IRQ#.
+> > > > >  - Use helper.
+> > > > >
+> > > > >  drivers/pci/pcie/aer.c | 22 ++++++++++++++++++++++
+> > > > >  1 file changed, 22 insertions(+)
+> > > > >
+> > > > > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> > > > > index 1420e1f27105..9c07fdbeb52d 100644
+> > > > > --- a/drivers/pci/pcie/aer.c
+> > > > > +++ b/drivers/pci/pcie/aer.c
+> > > > > @@ -1356,6 +1356,26 @@ static int aer_probe(struct pcie_device *dev)
+> > > > >       return 0;
+> > > > >  }
+> > > > >
+> > > > > +static int aer_suspend(struct pcie_device *dev)
+> > > > > +{
+> > > > > +     struct aer_rpc *rpc = get_service_data(dev);
+> > > > > +     struct pci_dev *pdev = rpc->rpd;
+> > > > > +
+> > > > > +     aer_disable_irq(pdev);
+> > > > > +
+> > > > > +     return 0;
+> > > > > +}
+> > > > > +
+> > > > > +static int aer_resume(struct pcie_device *dev)
+> > > > > +{
+> > > > > +     struct aer_rpc *rpc = get_service_data(dev);
+> > > > > +     struct pci_dev *pdev = rpc->rpd;
+> > > > > +
+> > > > > +     aer_enable_irq(pdev);
+> > > > > +
+> > > > > +     return 0;
+> > > > > +}
+> > > > > +
+> > > > >  /**
+> > > > >   * aer_root_reset - reset Root Port hierarchy, RCEC, or RCiEP
+> > > > >   * @dev: pointer to Root Port, RCEC, or RCiEP
+> > > > > @@ -1420,6 +1440,8 @@ static struct pcie_port_service_driver aerdriver = {
+> > > > >       .service        = PCIE_PORT_SERVICE_AER,
+> > > > >
+> > > > >       .probe          = aer_probe,
+> > > > > +     .suspend        = aer_suspend,
+> > > > > +     .resume         = aer_resume,
+> > > > >       .remove         = aer_remove,
+> > > > >  };
+> > > > >
+> > > > > --
+> > > > > 2.34.1
+> > > > >
