@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C50FC41513
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Aug 2023 19:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01711C001B0
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Aug 2023 20:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229891AbjHLT2L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 12 Aug 2023 15:28:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44934 "EHLO
+        id S229832AbjHLUpM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 12 Aug 2023 16:45:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbjHLT2J (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Aug 2023 15:28:09 -0400
+        with ESMTP id S229480AbjHLUpL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Aug 2023 16:45:11 -0400
 Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56536A7;
-        Sat, 12 Aug 2023 12:28:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 786FA10F2;
+        Sat, 12 Aug 2023 13:45:14 -0700 (PDT)
 Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 37CJRoIG076165;
-        Sat, 12 Aug 2023 14:27:50 -0500
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 37CKj0el089686;
+        Sat, 12 Aug 2023 15:45:00 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1691868470;
-        bh=55RWzodTbWCMsqoWEKrNoqqHEfZA69jKPf9dnuUhe/4=;
-        h=From:To:CC:Subject:Date;
-        b=ctjcJDeB3afroj3cp19NBlZuA9iW0Mf2elqf0+G4WYvOb6l5oMzwrpBxZ91ebvvAa
-         u6uyL3RhXAWodxdTg0nBcHUQDB0KF26QqLAgOJRSzcHtY1ERlW02ucE6JSAEG0nX0f
-         bTTzFceFaFEdWvYritvMbaLWJnebdi22rpkBIMww=
-Received: from DLEE112.ent.ti.com (dlee112.ent.ti.com [157.170.170.23])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 37CJRoC4037657
+        s=ti-com-17Q1; t=1691873100;
+        bh=qs98ZG5d9WEE5HuZu48lVDNnMP0B6h7oimiTl2Sa3j8=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=G6VXDDfa48ICViV9UhbFOpqnUCubfDhvg56vIBLbeGNZllPAT48PyhuWnRwLERk7Q
+         FCnAQwil+lz9CVFmXBHCWeW+pXowqUDB80QERCvXYQe/seVhfitpKtbbWY6Rqy0Y5V
+         E6RkkFIpYjbQvxD/UosVYflb+6LvtkvUA8c0XdeQ=
+Received: from DLEE115.ent.ti.com (dlee115.ent.ti.com [157.170.170.26])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 37CKj0CC076204
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 12 Aug 2023 14:27:50 -0500
-Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE112.ent.ti.com
- (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
+        Sat, 12 Aug 2023 15:45:00 -0500
+Received: from DLEE100.ent.ti.com (157.170.170.30) by DLEE115.ent.ti.com
+ (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Sat, 12
- Aug 2023 14:27:49 -0500
-Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+ Aug 2023 15:44:59 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Sat, 12 Aug 2023 14:27:50 -0500
+ Frontend Transport; Sat, 12 Aug 2023 15:44:59 -0500
 Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
-        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 37CJRn8B024756;
-        Sat, 12 Aug 2023 14:27:49 -0500
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 37CKixqD067906;
+        Sat, 12 Aug 2023 15:44:59 -0500
 From:   Achal Verma <a-verma1@ti.com>
 To:     Vignesh Raghavendra <vigneshr@ti.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -48,10 +48,12 @@ To:     Vignesh Raghavendra <vigneshr@ti.com>,
 CC:     <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>, Achal Verma <a-verma1@ti.com>
-Subject: [PATCH v4] PCI: j721e: Delay T_PVPERL+TPERST_CLK before PERST# inactive
-Date:   Sun, 13 Aug 2023 00:57:48 +0530
-Message-ID: <20230812192748.458083-1-a-verma1@ti.com>
+Subject: [PATCH 2/2] PCI: cadence: Clear the ARI Capability Next Function Number of the last function
+Date:   Sun, 13 Aug 2023 02:14:55 +0530
+Message-ID: <20230812204455.479510-3-a-verma1@ti.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230812204455.479510-1-a-verma1@ti.com>
+References: <20230812204455.479510-1-a-verma1@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -60,98 +62,70 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As per the PCIe Card Electromechanical specification REV. 5.0, PERST#
-signal should be de-asserted after minimum 100ms from the time power-rails
-achieve specified operating limits and 100us after reference clock gets
-stable.
+From: Jasko-EXT Wojciech <wojciech.jasko-EXT@continental-corporation.com>
 
-From PCIe Card Electromechanical specification REV. 5.0 section 2.9.2:
-TPVPERL: Power stable to PERST# inactive - 100ms
-TPERST_CLK: REFCLK stable before PERST# inactive - 100us
+Next Function Number field in ARI Capability Register for last function
+must be zero by default as per the PCIe specification, indicating there
+is no next higher number function but that's not happening in our case,
+so this patch clears the Next Function Number field for last function used.
 
-Fixes: f3e25911a430 ("PCI: j721e: Add TI J721E PCIe driver")
+Signed-off-by: Jasko-EXT Wojciech <wojciech.jasko-EXT@continental-corporation.com>
 Signed-off-by: Achal Verma <a-verma1@ti.com>
+Reviewed-by: Vignesh Raghavendra <vigneshr@ti.com>
 ---
- drivers/pci/controller/cadence/pci-j721e.c | 29 +++++++++++-----------
- drivers/pci/pci.h                          |  3 +++
- 2 files changed, 17 insertions(+), 15 deletions(-)
+ drivers/pci/controller/cadence/pcie-cadence-ep.c | 14 +++++++++++++-
+ drivers/pci/controller/cadence/pcie-cadence.h    |  6 ++++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
-index 2c87e7728a65..2c3b3af59271 100644
---- a/drivers/pci/controller/cadence/pci-j721e.c
-+++ b/drivers/pci/controller/cadence/pci-j721e.c
-@@ -34,6 +34,8 @@
- #define J721E_PCIE_USER_LINKSTATUS	0x14
- #define LINK_STATUS			GENMASK(1, 0)
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+index b8b655d4047e..8742b2f594fd 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+@@ -565,7 +565,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	struct cdns_pcie *pcie = &ep->pcie;
+ 	struct device *dev = pcie->dev;
+ 	int max_epfs = sizeof(epc->function_num_map) * 8;
+-	int ret, value, epf;
++	int ret, epf, last_fn;
++	u32 reg, value;
  
-+#define PERST_INACTIVE_US (PCIE_TPVPERL_MS*USEC_PER_MSEC + PCIE_TPERST_CLK_US)
+ 	/*
+ 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
+@@ -573,6 +574,17 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	 */
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, epc->function_num_map);
+ 
++	/*
++	 * Next function field in ARI_CAP_AND_CTR register for last function
++	 * should be 0.
++	 * Clearing Next Function Number field for the last function used.
++	 */
++	last_fn = find_last_bit(&epc->function_num_map, BITS_PER_LONG);
++	reg     = CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(last_fn);
++	value  = cdns_pcie_readl(pcie, reg);
++	value &= ~CDNS_PCIE_ARI_CAP_NFN_MASK;
++	cdns_pcie_writel(pcie, reg, value);
 +
- enum link_status {
- 	NO_RECEIVERS_DETECTED,
- 	LINK_TRAINING_IN_PROGRESS,
-@@ -359,7 +361,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
- 	struct j721e_pcie *pcie;
- 	struct cdns_pcie_rc *rc = NULL;
- 	struct cdns_pcie_ep *ep = NULL;
--	struct gpio_desc *gpiod;
-+	struct gpio_desc *perst_gpiod;
- 	void __iomem *base;
- 	struct clk *clk;
- 	u32 num_lanes;
-@@ -468,11 +470,10 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 	if (ep->quirk_disable_flr) {
+ 		for (epf = 0; epf < max_epfs; epf++) {
+ 			if (!(epc->function_num_map & BIT(epf)))
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 7a5d05f3febc..adcab11e62cd 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -130,6 +130,12 @@
+ #define CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET	0xc0
+ #define CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET	0x200
  
- 	switch (mode) {
- 	case PCI_MODE_RC:
--		gpiod = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
--		if (IS_ERR(gpiod)) {
--			ret = PTR_ERR(gpiod);
--			if (ret != -EPROBE_DEFER)
--				dev_err(dev, "Failed to get reset GPIO\n");
-+		perst_gpiod = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
-+		if (IS_ERR(perst_gpiod)) {
-+			ret = PTR_ERR(perst_gpiod);
-+			dev_err(dev, "Failed to get reset GPIO\n");
- 			goto err_get_sync;
- 		}
- 
-@@ -498,16 +499,14 @@ static int j721e_pcie_probe(struct platform_device *pdev)
- 
- 		/*
- 		 * "Power Sequencing and Reset Signal Timings" table in
--		 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 3.0
--		 * indicates PERST# should be deasserted after minimum of 100us
--		 * once REFCLK is stable. The REFCLK to the connector in RC
--		 * mode is selected while enabling the PHY. So deassert PERST#
--		 * after 100 us.
-+		 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 5.0
-+		 * indicates PERST# should be deasserted after minimum of 100ms
-+		 * after power rails achieve specified operating limits and
-+		 * 100us after reference clock gets stable.
-+		 * PERST_INACTIVE_US accounts for both delays.
- 		 */
--		if (gpiod) {
--			usleep_range(100, 200);
--			gpiod_set_value_cansleep(gpiod, 1);
--		}
++/*
++ * Endpoint PF Registers
++ */
++#define CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(fn)	(0x144 + (fn) * 0x1000)
++#define CDNS_PCIE_ARI_CAP_NFN_MASK	GENMASK(15, 8)
 +
-+		fsleep(PERST_INACTIVE_US);
- 
- 		ret = cdns_pcie_host_setup(rc);
- 		if (ret < 0) {
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index a4c397434057..80d520be34e6 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -13,6 +13,9 @@
- 
- #define PCIE_LINK_RETRAIN_TIMEOUT_MS	1000
- 
-+#define PCIE_TPVPERL_MS		100	/* see PCIe CEM r5.0, sec 2.9.2 */
-+#define PCIE_TPERST_CLK_US	100
-+
- extern const unsigned char pcie_link_speed[];
- extern bool pci_early_dump;
- 
+ /*
+  * Root Port Registers (PCI configuration space for the root port function)
+  */
 -- 
 2.25.1
 
