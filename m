@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01711C001B0
-	for <linux-pci@archiver.kernel.org>; Sat, 12 Aug 2023 20:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A5E7C04E69
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Aug 2023 20:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229832AbjHLUpM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 12 Aug 2023 16:45:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48646 "EHLO
+        id S229480AbjHLUpO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 12 Aug 2023 16:45:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229480AbjHLUpL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Aug 2023 16:45:11 -0400
-Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 786FA10F2;
-        Sat, 12 Aug 2023 13:45:14 -0700 (PDT)
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 37CKj0el089686;
-        Sat, 12 Aug 2023 15:45:00 -0500
+        with ESMTP id S230379AbjHLUpN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Aug 2023 16:45:13 -0400
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33AE9171F;
+        Sat, 12 Aug 2023 13:45:16 -0700 (PDT)
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 37CKiwF4020192;
+        Sat, 12 Aug 2023 15:44:58 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1691873100;
-        bh=qs98ZG5d9WEE5HuZu48lVDNnMP0B6h7oimiTl2Sa3j8=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=G6VXDDfa48ICViV9UhbFOpqnUCubfDhvg56vIBLbeGNZllPAT48PyhuWnRwLERk7Q
-         FCnAQwil+lz9CVFmXBHCWeW+pXowqUDB80QERCvXYQe/seVhfitpKtbbWY6Rqy0Y5V
-         E6RkkFIpYjbQvxD/UosVYflb+6LvtkvUA8c0XdeQ=
-Received: from DLEE115.ent.ti.com (dlee115.ent.ti.com [157.170.170.26])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 37CKj0CC076204
+        s=ti-com-17Q1; t=1691873098;
+        bh=mmTcvOmzvh1G2Zt3WeekOlPqyTFdfYlojqbxNI4oq5U=;
+        h=From:To:CC:Subject:Date;
+        b=CzlDSXwgexJz7dMJeUorj33WNDFdUZpajxLO/v+AifXaX1lN85lwj4NTnIoR+oSXb
+         no2LcnwC+3jL67J4LLb/X9lj6TZG2TrFDHwmjFMYFnq7XicnfCffRX5V7QbZcf5hJl
+         feHy9/jSL+BfxoW7sfa96O78FyA1ntLIDWvxzWDA=
+Received: from DFLE112.ent.ti.com (dfle112.ent.ti.com [10.64.6.33])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 37CKiwLa030536
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 12 Aug 2023 15:45:00 -0500
-Received: from DLEE100.ent.ti.com (157.170.170.30) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
+        Sat, 12 Aug 2023 15:44:58 -0500
+Received: from DFLE108.ent.ti.com (10.64.6.29) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Sat, 12
- Aug 2023 15:44:59 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+ Aug 2023 15:44:57 -0500
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DFLE108.ent.ti.com
+ (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Sat, 12 Aug 2023 15:44:59 -0500
-Received: from localhost (ileaxei01-snat.itg.ti.com [10.180.69.5])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 37CKixqD067906;
-        Sat, 12 Aug 2023 15:44:59 -0500
+ Frontend Transport; Sat, 12 Aug 2023 15:44:56 -0500
+Received: from localhost (ileaxei01-snat2.itg.ti.com [10.180.69.6])
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id 37CKiupT081100;
+        Sat, 12 Aug 2023 15:44:56 -0500
 From:   Achal Verma <a-verma1@ti.com>
 To:     Vignesh Raghavendra <vigneshr@ti.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -48,12 +48,10 @@ To:     Vignesh Raghavendra <vigneshr@ti.com>,
 CC:     <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         <linux-kernel@vger.kernel.org>, Achal Verma <a-verma1@ti.com>
-Subject: [PATCH 2/2] PCI: cadence: Clear the ARI Capability Next Function Number of the last function
-Date:   Sun, 13 Aug 2023 02:14:55 +0530
-Message-ID: <20230812204455.479510-3-a-verma1@ti.com>
+Subject: [PATCH 0/2] Advertise ARI related capabilities.
+Date:   Sun, 13 Aug 2023 02:14:53 +0530
+Message-ID: <20230812204455.479510-1-a-verma1@ti.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230812204455.479510-1-a-verma1@ti.com>
-References: <20230812204455.479510-1-a-verma1@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -62,70 +60,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jasko-EXT Wojciech <wojciech.jasko-EXT@continental-corporation.com>
+This series addresses the limitation and flaw which are occurring due to
+ARI capability related bits not set correctly.
 
-Next Function Number field in ARI Capability Register for last function
-must be zero by default as per the PCIe specification, indicating there
-is no next higher number function but that's not happening in our case,
-so this patch clears the Next Function Number field for last function used.
+First patch addresses the issue of PCI_EXP_DEVCAP2_ARI being not set even
+when J7 PCIe controller in RC mode supports ARI Forwarding.
 
-Signed-off-by: Jasko-EXT Wojciech <wojciech.jasko-EXT@continental-corporation.com>
-Signed-off-by: Achal Verma <a-verma1@ti.com>
-Reviewed-by: Vignesh Raghavendra <vigneshr@ti.com>
----
- drivers/pci/controller/cadence/pcie-cadence-ep.c | 14 +++++++++++++-
- drivers/pci/controller/cadence/pcie-cadence.h    |  6 ++++++
- 2 files changed, 19 insertions(+), 1 deletion(-)
+Second patch related to the issue when PCIe controller is put in end point
+mode, Next function field in ARI capability for last function stores
+current_function+1 value, which is supposed to be zero to signal that
+current function is the last one.
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index b8b655d4047e..8742b2f594fd 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -565,7 +565,8 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	struct device *dev = pcie->dev;
- 	int max_epfs = sizeof(epc->function_num_map) * 8;
--	int ret, value, epf;
-+	int ret, epf, last_fn;
-+	u32 reg, value;
- 
- 	/*
- 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
-@@ -573,6 +574,17 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
- 	 */
- 	cdns_pcie_writel(pcie, CDNS_PCIE_LM_EP_FUNC_CFG, epc->function_num_map);
- 
-+	/*
-+	 * Next function field in ARI_CAP_AND_CTR register for last function
-+	 * should be 0.
-+	 * Clearing Next Function Number field for the last function used.
-+	 */
-+	last_fn = find_last_bit(&epc->function_num_map, BITS_PER_LONG);
-+	reg     = CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(last_fn);
-+	value  = cdns_pcie_readl(pcie, reg);
-+	value &= ~CDNS_PCIE_ARI_CAP_NFN_MASK;
-+	cdns_pcie_writel(pcie, reg, value);
-+
- 	if (ep->quirk_disable_flr) {
- 		for (epf = 0; epf < max_epfs; epf++) {
- 			if (!(epc->function_num_map & BIT(epf)))
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 7a5d05f3febc..adcab11e62cd 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -130,6 +130,12 @@
- #define CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET	0xc0
- #define CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET	0x200
- 
-+/*
-+ * Endpoint PF Registers
-+ */
-+#define CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(fn)	(0x144 + (fn) * 0x1000)
-+#define CDNS_PCIE_ARI_CAP_NFN_MASK	GENMASK(15, 8)
-+
- /*
-  * Root Port Registers (PCI configuration space for the root port function)
-  */
+
+Achal Verma (1):
+  PCI: cadence: Advertise ARI Forwarding Supported
+
+Jasko-EXT Wojciech (1):
+  PCI: cadence: Clear the ARI Capability Next Function Number of the
+    last function
+
+ drivers/pci/controller/cadence/pci-j721e.c     |  4 ++++
+ .../pci/controller/cadence/pcie-cadence-ep.c   | 14 +++++++++++++-
+ .../pci/controller/cadence/pcie-cadence-host.c |  7 +++++++
+ drivers/pci/controller/cadence/pcie-cadence.h  | 18 ++++++++++++++++++
+ 4 files changed, 42 insertions(+), 1 deletion(-)
+
 -- 
 2.25.1
 
