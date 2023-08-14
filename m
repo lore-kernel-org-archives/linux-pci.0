@@ -2,92 +2,91 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27B89EB64DD
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Aug 2023 01:45:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB8CEC04FE1
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Aug 2023 06:18:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229769AbjHNBoe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 13 Aug 2023 21:44:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49914 "EHLO
+        id S233634AbjHNGSY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Aug 2023 02:18:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43706 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231491AbjHNBob (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 13 Aug 2023 21:44:31 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11C40E52;
-        Sun, 13 Aug 2023 18:44:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1691977470; x=1723513470;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=H1bYfTn7A/qFI7qE6WjuM6lA5WEd0AWnwsOlRd3Pq2A=;
-  b=E7hGrmM5Wr3DO9uzkhNxUBRx11k877dkIUXMTbB5qjddRtMGwroq1Uuu
-   uIykL2TuUroSSm+CdDmLDlV93bQxdCP7AyETz/YKfkh77AK8ywMwgZfYD
-   39NqhHtlwzvunST8VKZHqG2LG5xIN0CYZj939ELERypMJHLk0F41rI2g0
-   XEB3w/NrbLpt8SZtG9z2MtWl6dBPHOy8QHyXLnoEtotVhJllZb7uzyfn0
-   fhXowuway4rKGUSaAPqndDazYXSvb/WKzR6shyBXwPLld9YukXMtD3/P4
-   sG9WzjzdfJtdolMRslUIai3te0X2lzVfFpD5JHMhD3qdQ5+DI0F110My+
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10801"; a="356904804"
-X-IronPort-AV: E=Sophos;i="6.01,171,1684825200"; 
-   d="scan'208";a="356904804"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2023 18:44:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10801"; a="907061650"
-X-IronPort-AV: E=Sophos;i="6.01,171,1684825200"; 
-   d="scan'208";a="907061650"
-Received: from lkp-server01.sh.intel.com (HELO d1ccc7e87e8f) ([10.239.97.150])
-  by orsmga005.jf.intel.com with ESMTP; 13 Aug 2023 18:44:27 -0700
-Received: from kbuild by d1ccc7e87e8f with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qVMd8-0009It-2c;
-        Mon, 14 Aug 2023 01:44:26 +0000
-Date:   Mon, 14 Aug 2023 09:44:14 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Lizhi Hou <lizhi.hou@amd.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh@kernel.org
-Cc:     oe-kbuild-all@lists.linux.dev, Lizhi Hou <lizhi.hou@amd.com>,
-        max.zhen@amd.com, sonal.santan@amd.com,
-        stefano.stabellini@xilinx.com
-Subject: Re: [PATCH V12 5/5] of: unittest: Add pci_dt_testdrv pci driver
-Message-ID: <202308140955.QY7JaDK3-lkp@intel.com>
-References: <1690564018-11142-6-git-send-email-lizhi.hou@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1690564018-11142-6-git-send-email-lizhi.hou@amd.com>
+        with ESMTP id S233830AbjHNGRv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Aug 2023 02:17:51 -0400
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12E1E18F;
+        Sun, 13 Aug 2023 23:17:49 -0700 (PDT)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id C145C201B0F;
+        Mon, 14 Aug 2023 08:17:47 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 86AFE201B08;
+        Mon, 14 Aug 2023 08:17:47 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id E15851800319;
+        Mon, 14 Aug 2023 14:17:45 +0800 (+08)
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     frank.li@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
+        lpieralisi@kernel.org, robh+dt@kernel.org,
+        krzysztof.kozlowski+dt@linaro.org
+Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
+        linux-imx@nxp.com
+Subject: [PATCH v4 6/9] arm: dts: nxp: Add i.MX7D PCIe EP support
+Date:   Mon, 14 Aug 2023 13:42:44 +0800
+Message-Id: <1691991767-15809-7-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1691991767-15809-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1691991767-15809-1-git-send-email-hongxing.zhu@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lizhi,
+Add i.MX7D PCIe EP support.
 
-kernel test robot noticed the following build warnings:
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+---
+ arch/arm/boot/dts/nxp/imx/imx7d.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus robh/for-next linus/master v6.5-rc6 next-20230809]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Lizhi-Hou/of-dynamic-Add-interfaces-for-creating-device-node-dynamically/20230729-010934
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/1690564018-11142-6-git-send-email-lizhi.hou%40amd.com
-patch subject: [PATCH V12 5/5] of: unittest: Add pci_dt_testdrv pci driver
-config: x86_64-allmodconfig (https://download.01.org/0day-ci/archive/20230814/202308140955.QY7JaDK3-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce: (https://download.01.org/0day-ci/archive/20230814/202308140955.QY7JaDK3-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202308140955.QY7JaDK3-lkp@intel.com/
-
-sparse warnings: (new ones prefixed by >>)
->> drivers/of/unittest.c:3737:5: sparse: sparse: symbol 'of_unittest_pci_dev_num' was not declared. Should it be static?
->> drivers/of/unittest.c:3738:5: sparse: sparse: symbol 'of_unittest_pci_child_num' was not declared. Should it be static?
-
+diff --git a/arch/arm/boot/dts/nxp/imx/imx7d.dtsi b/arch/arm/boot/dts/nxp/imx/imx7d.dtsi
+index 4b94b8afb55d..135684f17a20 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx7d.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx7d.dtsi
+@@ -156,6 +156,33 @@ pcie: pcie@33800000 {
+ 			fsl,imx7d-pcie-phy = <&pcie_phy>;
+ 			status = "disabled";
+ 		};
++
++		pcie_ep: pcie-ep@33800000 {
++			compatible = "fsl,imx7d-pcie-ep";
++			reg = <0x33800000 0x4000>,
++			      <0x40000000 0x10000000>;
++			reg-names = "dbi", "addr_space";
++			num-lanes = <1>;
++			clocks = <&clks IMX7D_PCIE_CTRL_ROOT_CLK>,
++				 <&clks IMX7D_PLL_ENET_MAIN_100M_CLK>,
++				 <&clks IMX7D_PCIE_PHY_ROOT_CLK>;
++			clock-names = "pcie", "pcie_bus", "pcie_phy";
++			assigned-clocks = <&clks IMX7D_PCIE_CTRL_ROOT_SRC>,
++					  <&clks IMX7D_PCIE_PHY_ROOT_SRC>;
++			assigned-clock-parents = <&clks IMX7D_PLL_ENET_MAIN_250M_CLK>,
++						 <&clks IMX7D_PLL_ENET_MAIN_100M_CLK>;
++
++			fsl,max-link-speed = <2>;
++			power-domains = <&pgc_pcie_phy>;
++			resets = <&src IMX7_RESET_PCIEPHY>,
++				 <&src IMX7_RESET_PCIE_CTRL_APPS_EN>,
++				 <&src IMX7_RESET_PCIE_CTRL_APPS_TURNOFF>;
++			reset-names = "pciephy", "apps", "turnoff";
++			fsl,imx7d-pcie-phy = <&pcie_phy>;
++			num-ib-windows = <4>;
++			num-ob-windows = <4>;
++			status = "disabled";
++		};
+ 	};
+ };
+ 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.34.1
+
