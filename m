@@ -2,27 +2,27 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7070EC001E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9037C04FE0
 	for <linux-pci@archiver.kernel.org>; Mon, 14 Aug 2023 06:18:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229728AbjHNGSX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Aug 2023 02:18:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43696 "EHLO
+        id S233663AbjHNGSZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Aug 2023 02:18:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233812AbjHNGRv (ORCPT
+        with ESMTP id S233823AbjHNGRv (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Aug 2023 02:17:51 -0400
 Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DB9610E5;
-        Sun, 13 Aug 2023 23:17:43 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F28D8F4;
+        Sun, 13 Aug 2023 23:17:47 -0700 (PDT)
 Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 0160E1A1C0E;
-        Mon, 14 Aug 2023 08:17:42 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 977951A1C08;
+        Mon, 14 Aug 2023 08:17:46 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C53B21A0567;
-        Mon, 14 Aug 2023 08:17:41 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 681A31A1BF4;
+        Mon, 14 Aug 2023 08:17:46 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 2C1251802200;
-        Mon, 14 Aug 2023 14:17:40 +0800 (+08)
+        by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id B9DCA1802200;
+        Mon, 14 Aug 2023 14:17:44 +0800 (+08)
 From:   Richard Zhu <hongxing.zhu@nxp.com>
 To:     frank.li@nxp.com, l.stach@pengutronix.de, shawnguo@kernel.org,
         lpieralisi@kernel.org, robh+dt@kernel.org,
@@ -31,9 +31,9 @@ Cc:     hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-kernel@vger.kernel.org, kernel@pengutronix.de,
         linux-imx@nxp.com
-Subject: [PATCH v4 1/9] dt-bindings: PCI: fsl,imx6q: Add i.MX6Q and i.MX6QP PCIe EP compatibles
-Date:   Mon, 14 Aug 2023 13:42:39 +0800
-Message-Id: <1691991767-15809-2-git-send-email-hongxing.zhu@nxp.com>
+Subject: [PATCH v4 5/9] arm: dts: nxp: Add i.MX6SX PCIe EP support
+Date:   Mon, 14 Aug 2023 13:42:43 +0800
+Message-Id: <1691991767-15809-6-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1691991767-15809-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1691991767-15809-1-git-send-email-hongxing.zhu@nxp.com>
@@ -42,81 +42,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add i.MX6Q and i.MX6QP PCIe EP compatibles.
-- Make the interrupts property optional, since i.MX6Q/i.MX6QP PCIe
-  don't have DMA capability.
-- To pass the schema check, specify the clocks property refer to the
-  different platforms.
+Add i.MX6SX PCIe EP support.
 
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 ---
- .../bindings/pci/fsl,imx6q-pcie-ep.yaml       | 31 ++++++++++++++++---
- 1 file changed, 27 insertions(+), 4 deletions(-)
+ arch/arm/boot/dts/nxp/imx/imx6sx.dtsi | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-index ee155ed5f181..9b881777c801 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-@@ -19,6 +19,8 @@ description: |+
- properties:
-   compatible:
-     enum:
-+      - fsl,imx6q-pcie-ep
-+      - fsl,imx6qp-pcie-ep
-       - fsl,imx8mm-pcie-ep
-       - fsl,imx8mq-pcie-ep
-       - fsl,imx8mp-pcie-ep
-@@ -46,7 +48,7 @@ properties:
- 
-   interrupts:
-     items:
--      - description: builtin eDMA interrupter.
-+      - description: builtin eDMA interrupter (optional).
- 
-   interrupt-names:
-     items:
-@@ -56,8 +58,6 @@ required:
-   - compatible
-   - reg
-   - reg-names
--  - interrupts
--  - interrupt-names
- 
- allOf:
-   - $ref: /schemas/pci/snps,dw-pcie-ep.yaml#
-@@ -77,7 +77,30 @@ allOf:
-             - const: pcie_bus
-             - const: pcie_phy
-             - const: pcie_aux
--    else:
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6sx.dtsi b/arch/arm/boot/dts/nxp/imx/imx6sx.dtsi
+index f6b35923ad83..13411a843e07 100644
+--- a/arch/arm/boot/dts/nxp/imx/imx6sx.dtsi
++++ b/arch/arm/boot/dts/nxp/imx/imx6sx.dtsi
+@@ -1471,5 +1471,22 @@ pcie: pcie@8ffc000 {
+ 			power-domain-names = "pcie", "pcie_phy";
+ 			status = "disabled";
+ 		};
 +
-+  - if:
-+      properties:
-+        compatible:
-+          enum:
-+            - fsl,imx6q-pcie-ep
-+            - fsl,imx6qp-pcie-ep
-+    then:
-+      properties:
-+        clocks:
-+          maxItems: 3
-+        clock-names:
-+          items:
-+            - const: pcie
-+            - const: pcie_bus
-+            - const: pcie_phy
-+
-+  - if:
-+      properties:
-+        compatible:
-+          enum:
-+            - fsl,imx8mm-pcie-ep
-+            - fsl,imx8mp-pcie-ep
-+    then:
-       properties:
-         clocks:
-           maxItems: 3
++		pcie_ep: pcie-ep@8ffc000 {
++			compatible = "fsl,imx6sx-pcie-ep";
++			reg = <0x08ffc000 0x04000>, <0x08000000 0xf00000>;
++			reg-names = "dbi", "addr_space";
++			num-lanes = <1>;
++			clocks = <&clks IMX6SX_CLK_PCIE_AXI>,
++				 <&clks IMX6SX_CLK_LVDS1_OUT>,
++				 <&clks IMX6SX_CLK_PCIE_REF_125M>,
++				 <&clks IMX6SX_CLK_DISPLAY_AXI>;
++			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_inbound_axi";
++			power-domains = <&pd_disp>, <&pd_pci>;
++			power-domain-names = "pcie", "pcie_phy";
++			num-ib-windows = <4>;
++			num-ob-windows = <4>;
++			status = "disabled";
++		};
+ 	};
+ };
 -- 
 2.34.1
 
