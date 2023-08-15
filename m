@@ -2,169 +2,120 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F0DDC05052
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Aug 2023 12:28:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CA1CC04A6A
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Aug 2023 12:31:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235938AbjHOM2H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Aug 2023 08:28:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47836 "EHLO
+        id S234148AbjHOMa4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Aug 2023 08:30:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37796 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237152AbjHOM1s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2023 08:27:48 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A91361BD6;
-        Tue, 15 Aug 2023 05:27:37 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37FCH3ca005901;
-        Tue, 15 Aug 2023 12:27:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=hBoqQNYinRixBsd7z6VRfQIvyEU0m9OlACM0wH7zDYo=;
- b=SBkD8csXcoL4BX+hV+G5sgFRGadv8ILvUGAk8mGgV5cQEswgjMJQWF2TjqH9M9eIfTbK
- pKfeKBIac2ubhZsClTfKmHFjaCuQnsIkl/OWKNAK1Tkj0OUixjl8bNQNZVz1gU/EI78L
- NT63KD6E0VvRYoNNk4YaeGny/fpSXn6TSqTKqhutNeggIxylbqYJNLDfh9EhGRXA6yoU
- 6ea7isWOe0TPU72b35V52jlwc6MYxyC8faE5FUJ20+e6krfLy8AwdnHof1DCTrzNY9X7
- fA/jCPqbQKZFN6YVH0upIq42YNVaFQ9HvJGJ5EnZOABIXNVnYIIunAR+oJpe5khZ7LkD KQ== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sg66hr9sy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 15 Aug 2023 12:27:33 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 37FCRUpO022574;
-        Tue, 15 Aug 2023 12:27:30 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3se35kb8qh-1;
-        Tue, 15 Aug 2023 12:27:30 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37FCRU21022568;
-        Tue, 15 Aug 2023 12:27:30 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 37FCRUkx022567;
-        Tue, 15 Aug 2023 12:27:30 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id B97F34BC5; Tue, 15 Aug 2023 17:57:29 +0530 (+0530)
-From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
-To:     manivannan.sadhasivam@linaro.org
+        with ESMTP id S237241AbjHOMam (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2023 08:30:42 -0400
+Received: from mail-ed1-x52d.google.com (mail-ed1-x52d.google.com [IPv6:2a00:1450:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91B291991
+        for <linux-pci@vger.kernel.org>; Tue, 15 Aug 2023 05:30:36 -0700 (PDT)
+Received: by mail-ed1-x52d.google.com with SMTP id 4fb4d7f45d1cf-52256241c66so11148058a12.1
+        for <linux-pci@vger.kernel.org>; Tue, 15 Aug 2023 05:30:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1692102635; x=1692707435;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=04Eq/C0GWaDiYcCYrFqsfXpuwAiZ6F9rzb+joKB8tu4=;
+        b=QALSGAwR/1jBMsDbraRK442+gevrVJNG2FA/em8vCb76K+1CLqdtNDinvvKckWUAKb
+         nwWZbPUM+DSirsEK5uyxcmn8S8hAn5Xod/kW2nrh/fkQAqzkjWnXdnNXwVdJUaNzQB+9
+         923puvHwQehggdSWpl8rXNaWQESFdtr3rBSMTfJ0XhA3iJ7VM7eRnNMGDV8P9pbtgU9u
+         jSkyPN/Xx4xN6McyfRYhiQ6ZhgydMGN7R5qMxqaR/D0L9sIOrgPFNcY0ACv8lzeiHPqq
+         aIhw8Fbag6QtCnFlSAEjGaCFazLXlW8A4KfSRlxujewqaUju/XrYCd30AEr9yBevpaVn
+         vFTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692102635; x=1692707435;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=04Eq/C0GWaDiYcCYrFqsfXpuwAiZ6F9rzb+joKB8tu4=;
+        b=Fw6qfAypHnelSRI3SR7FZVW7F+pM9V49t+y7m0gh/uC0szxS6IFj3ibN2qKKsNEMor
+         G7k1fbZF/ZRobPAJjMMTcv0huh+6+/2eCug+GM/2jrHPyb7eHJ9QExdTJ3NJhz3elz7s
+         QdVzfUKnnypDJGIbFJETVYci7m+JuWfYsChWK2xJE6h/5tAmTC2yyQF/inhEFG2JuEDL
+         CuKDOR1ImI9aTETR0yvIcHZzC02eLK+75TUp631eOuzaVs3qOUzaPIIhfYdEZI/JL7WY
+         mLdmlwrMVLrZ74NbAGWvPNDVreR7mkBpu7+sFq7wfv5cV4hF+i+iCs2s2dMvwMsaHtjH
+         irKA==
+X-Gm-Message-State: AOJu0Yykk1RSmzhI5cFKOxYU3QnUNVSdVMcmKnVEjUOFJYvVHxGurXJM
+        GnKNyX8wT575463r73VKwGgsCg==
+X-Google-Smtp-Source: AGHT+IHMvevtOqubR2zho6uMnwXtb+bjSLnRsMD5Yz9mGAKFCGHRaAcI1M3zTC7JreGower4LClqog==
+X-Received: by 2002:a05:6402:12c9:b0:521:ad49:8493 with SMTP id k9-20020a05640212c900b00521ad498493mr1949191edx.6.1692102634865;
+        Tue, 15 Aug 2023 05:30:34 -0700 (PDT)
+Received: from [192.168.1.20] ([178.197.214.188])
+        by smtp.gmail.com with ESMTPSA id v10-20020aa7d64a000000b00521d2f7459fsm6791546edr.49.2023.08.15.05.30.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Aug 2023 05:30:34 -0700 (PDT)
+Message-ID: <079b6c94-0507-4ff1-86c3-14d6a6080b4b@linaro.org>
+Date:   Tue, 15 Aug 2023 14:30:32 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+Subject: Re: [PATCH v1 1/3] dt-bindings: pci: qcom: Add binding for
+ operating-points-v2
+Content-Language: en-US
+To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+        manivannan.sadhasivam@linaro.org
 Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
         linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
         quic_vbadigan@quicinc.com, quic_nitegupt@quicinc.com,
         quic_skananth@quicinc.com, quic_ramkri@quicinc.com,
-        quic_parass@quicinc.com, krzysztof.kozlowski@linaro.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        Andy Gross <agross@kernel.org>,
+        quic_parass@quicinc.com, Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Conor Dooley <conor+dt@kernel.org>,
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS)
-Subject: [PATCH v1 2/3] arm64: dts: qcom: sm8450: Add opp table support to PCIe
-Date:   Tue, 15 Aug 2023 17:56:47 +0530
-Message-Id: <1692102408-7010-3-git-send-email-quic_krichai@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1692102408-7010-1-git-send-email-quic_krichai@quicinc.com>
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>
 References: <1692102408-7010-1-git-send-email-quic_krichai@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: zEh6PQ6qjuD4fP1KHG26jJ05RNTJbnew
-X-Proofpoint-GUID: zEh6PQ6qjuD4fP1KHG26jJ05RNTJbnew
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.591,FMLib:17.11.176.26
- definitions=2023-08-15_13,2023-08-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 suspectscore=0
- mlxscore=0 lowpriorityscore=0 bulkscore=0 phishscore=0 clxscore=1015
- priorityscore=1501 malwarescore=0 impostorscore=0 mlxlogscore=778
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308150111
+ <1692102408-7010-2-git-send-email-quic_krichai@quicinc.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+In-Reply-To: <1692102408-7010-2-git-send-email-quic_krichai@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe needs to choose the appropriate performance state of RPMH power
-domain based upon the PCIe gen speed.
+On 15/08/2023 14:26, Krishna chaitanya chundru wrote:
+> This adds a binding documenting operating-points-v2.
 
-So, let's add the OPP table support to specify RPMH performance states.
+1. Missing blank line. Don't write patches by yourself, but use tools
+which create proper commit automatically. Every decent editor does it.
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
----
- arch/arm64/boot/dts/qcom/sm8450.dtsi | 47 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+2. Please do not use "This commit/patch", but imperative mood. See
+longer explanation here:
+https://elixir.bootlin.com/linux/v5.17.1/source/Documentation/process/submitting-patches.rst#L95
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-index 595533a..681ea9c 100644
---- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-@@ -381,6 +381,49 @@
- 		};
- 	};
- 
-+	pcie0_opp_table: opp-table-pcie0 {
-+		compatible = "operating-points-v2";
-+
-+		opp-2500000 {
-+			opp-hz = /bits/ 64 <2500000>;
-+			opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS>;
-+		};
-+
-+		opp-5000000 {
-+			opp-hz = /bits/ 64 <5000000>;
-+			opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS>;
-+		};
-+
-+		opp-8000000 {
-+			opp-hz = /bits/ 64 <8000000>;
-+			opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS>;
-+		};
-+	};
-+
-+	pcie1_opp_table: opp-table-pcie1 {
-+		compatible = "operating-points-v2";
-+
-+		opp-2500000 {
-+			opp-hz = /bits/ 64 <2500000>;
-+			opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS>;
-+		};
-+
-+		opp-5000000 {
-+			opp-hz = /bits/ 64 <5000000>;
-+			opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS>;
-+		};
-+
-+		opp-8000000 {
-+			opp-hz = /bits/ 64 <8000000>;
-+			opp-level = <RPMH_REGULATOR_LEVEL_LOW_SVS>;
-+		};
-+
-+		opp-16000000 {
-+			opp-hz = /bits/ 64 <16000000>;
-+			opp-level = <RPMH_REGULATOR_LEVEL_NOM>;
-+		};
-+	};
-+
- 	reserved_memory: reserved-memory {
- 		#address-cells = <2>;
- 		#size-cells = <2>;
-@@ -1803,6 +1846,8 @@
- 			pinctrl-names = "default";
- 			pinctrl-0 = <&pcie0_default_state>;
- 
-+			operating-points-v2 = <&pcie0_opp_table>;
-+
- 			status = "disabled";
- 		};
- 
-@@ -1915,6 +1960,8 @@
- 			pinctrl-names = "default";
- 			pinctrl-0 = <&pcie1_default_state>;
- 
-+			operating-points-v2 = <&pcie1_opp_table>;
-+
- 			status = "disabled";
- 		};
- 
--- 
-2.7.4
+3. A nit, subject: drop second/last, redundant "binding for". The
+"dt-bindings" prefix is already stating that these are bindings.
+
+
+> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+> ---
+>  Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> index 81971be4..6bc99c5 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+> @@ -121,6 +121,8 @@ properties:
+>      description: GPIO controlled connection to WAKE# signal
+>      maxItems: 1
+>  
+> +  operating-points-v2: true
+
+phandle without actual table (opp-table) is rather meaningless.
+
+Best regards,
+Krzysztof
 
