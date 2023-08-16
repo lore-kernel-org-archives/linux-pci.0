@@ -2,113 +2,95 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F8F1C001B0
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Aug 2023 10:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE31C41513
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Aug 2023 11:45:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234289AbjHPKn7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Aug 2023 06:43:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42756 "EHLO
+        id S242200AbjHPLpS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Aug 2023 07:45:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243943AbjHPKnb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2023 06:43:31 -0400
-Received: from mail.zeus03.de (www.zeus03.de [194.117.254.33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EBA5211E
-        for <linux-pci@vger.kernel.org>; Wed, 16 Aug 2023 03:43:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        sang-engineering.com; h=from:to:cc:subject:date:message-id
-        :in-reply-to:references:mime-version:content-transfer-encoding;
-         s=k1; bh=JT/ceu3tRi/TtP6bujmqfafQ7JcoYnXeX4PGLaTdLSE=; b=ZE4bWY
-        xzImjPSE/fGTZArxDGKK/We1LyxUywLQ0RHkLRfA8V86IN11mT6uCdr9OBdHqnrn
-        iP6l8i9nSizrUfV4Rqud/S+uZLEi9+Gyd1mz3oJFKN2iA7/RmNiFE0YXZp63UrVm
-        bxCAiSU/fjtTT1y7NjJbB8JitoC5i0Hy0WFWaYJgAuI2inCrwqm2j2Qz5p+o2Res
-        8j1QazF/rq1tMtSBEScX6vpdnzFGHcbTRgj+5zN1QPsuMONR/znfd8jLpAVapMDh
-        y4cS9ZImugHHyeRAbbMY6I1hVDWhh1twGur3KNIi6gJMIlnBsmRgUhRRZFPpm8PX
-        PmHGQOCFoHioaf3A==
-Received: (qmail 102039 invoked from network); 16 Aug 2023 12:43:10 +0200
-Received: by mail.zeus03.de with ESMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 16 Aug 2023 12:43:10 +0200
-X-UD-Smtp-Session: l3s3148p1@PlM19gcDUr0gAwDPXy5qAJ1huuy56R1W
-From:   Wolfram Sang <wsa+renesas@sang-engineering.com>
-To:     linux-renesas-soc@vger.kernel.org
-Cc:     Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 2/2] PCI: rcar-host: add support for optional regulators
-Date:   Wed, 16 Aug 2023 12:42:50 +0200
-Message-Id: <20230816104251.19744-3-wsa+renesas@sang-engineering.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20230816104251.19744-1-wsa+renesas@sang-engineering.com>
-References: <20230816104251.19744-1-wsa+renesas@sang-engineering.com>
+        with ESMTP id S244720AbjHPLpD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2023 07:45:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC15E1FC3;
+        Wed, 16 Aug 2023 04:45:02 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 595EA61FFD;
+        Wed, 16 Aug 2023 11:45:02 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ECC2C433C7;
+        Wed, 16 Aug 2023 11:45:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692186301;
+        bh=zWNrCC9D/ZGZLVx6/MNogtB5y4I71xfms58Io+1Vxhg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=HrMr+pjtgrAkRbb4vE11dFmpCmp9zzwJcqbmWnO65g9F9hiJULyc+WCzKGCpYC3Md
+         Axw/XJr/4JIvfHpZOmweW9sE5CuNBU9eaCF/nClsBnP2Z/vld/akXe+48yD11fRSsX
+         lokhOaE5gwkDzCSo57oXRtIdksNfOSA9WgdOIFQTh1bzacBKdaPfxgpeo3DsDuFVdq
+         unf8bLX4SSuQWYMMQi5PAG7ycVEaY3y1uKebUKpSaDcc5I8MMI/5j3C1TjYFhxq/rH
+         t8yHKkAOnzlh9h1BNG0IdQwA0YZ5xVjR6gICiQVShzPBIr1itAYMDOZ/AYx5yw9a42
+         S5+WU9npF/slg==
+Date:   Wed, 16 Aug 2023 06:44:59 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Frank Li <Frank.Li@nxp.com>
+Cc:     bhelgaas@google.com, devicetree@vger.kernel.org,
+        gustavo.pimentel@synopsys.com, imx@lists.linux.dev, kw@linux.com,
+        leoyang.li@nxp.com, linux-arm-kernel@lists.infradead.org,
+        linux-imx@nxp.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, lorenzo.pieralisi@arm.com,
+        lpieralisi@kernel.org, mani@kernel.org,
+        manivannan.sadhasivam@linaro.org, minghuan.lian@nxp.com,
+        mingkai.hu@nxp.com, robh+dt@kernel.org, roy.zang@nxp.com,
+        shawnguo@kernel.org, zhiqiang.hou@nxp.com
+Subject: Re: [PATCH v11 1/3] PCI: Add macro PCIE_PME_TO_L2_TIMEOUT_US
+Message-ID: <20230816114459.GA284194@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230809153540.834653-2-Frank.Li@nxp.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The KingFisher board has regulators for miniPCIe, so enable these
-optional regulators using devm. devm will automatically disable them
-when the driver releases the device. Order variables in reverse-xmas
-while we are here.
+On Wed, Aug 09, 2023 at 11:35:38AM -0400, Frank Li wrote:
+> Introduce the PCIE_PME_TO_L2_TIMEOUT_US macro to facilitate checking the
+> L2 ready timeout in the PCI subsystem.
+> 
+> Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
 
-Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/pci/controller/pcie-rcar-host.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+Looks good, thanks!
 
-diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-index 88975e40ee2f..7aecc114af4f 100644
---- a/drivers/pci/controller/pcie-rcar-host.c
-+++ b/drivers/pci/controller/pcie-rcar-host.c
-@@ -29,6 +29,7 @@
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/regulator/consumer.h>
- 
- #include "pcie-rcar.h"
- 
-@@ -953,14 +954,20 @@ static const struct of_device_id rcar_pcie_of_match[] = {
- 	{},
- };
- 
-+/* Design note 346 from Linear Technology says order is not important */
-+static const char * const rcar_pcie_supplies[] = {
-+	"vpcie12v", "vpcie3v3", "vpcie1v5"
-+};
-+
- static int rcar_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-+	struct pci_host_bridge *bridge;
- 	struct rcar_pcie_host *host;
- 	struct rcar_pcie *pcie;
-+	unsigned int i;
- 	u32 data;
- 	int err;
--	struct pci_host_bridge *bridge;
- 
- 	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*host));
- 	if (!bridge)
-@@ -971,6 +978,13 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	pcie->dev = dev;
- 	platform_set_drvdata(pdev, host);
- 
-+	for (i = 0; i < ARRAY_SIZE(rcar_pcie_supplies); i++) {
-+		err = devm_regulator_get_enable_optional(dev, rcar_pcie_supplies[i]);
-+		if (err < 0 && err != -ENODEV)
-+			return dev_err_probe(dev, err, "can't enable regulator %s\n",
-+					     rcar_pcie_supplies[i]);
-+	}
-+
- 	pm_runtime_enable(pcie->dev);
- 	err = pm_runtime_get_sync(pcie->dev);
- 	if (err < 0) {
--- 
-2.35.1
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
+> ---
+>  drivers/pci/pci.h | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index a4c3974340576..da8156663c825 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -13,6 +13,12 @@
+>  
+>  #define PCIE_LINK_RETRAIN_TIMEOUT_MS	1000
+>  
+> +/*
+> + * PCIe r6.0, sec 5.3.3.2.1 <PME Synchronization>
+> + * Recommends 1ms to 10ms timeout to check L2 ready.
+> + */
+> +#define PCIE_PME_TO_L2_TIMEOUT_US	10000
+> +
+>  extern const unsigned char pcie_link_speed[];
+>  extern bool pci_early_dump;
+>  
+> -- 
+> 2.34.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
