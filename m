@@ -2,164 +2,172 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35542C0729B
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Aug 2023 13:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F404DC001B0
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Aug 2023 13:41:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245526AbjHPNY4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Aug 2023 09:24:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37922 "EHLO
+        id S238144AbjHPNlF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Aug 2023 09:41:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245497AbjHPNYr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2023 09:24:47 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8795D2128;
-        Wed, 16 Aug 2023 06:24:46 -0700 (PDT)
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37GC3BDl016950;
-        Wed, 16 Aug 2023 13:24:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=ncvThTf4R+Fa0H7XxPFNCi/XUyxtmgLg/dgqnenwFOI=;
- b=C8uCRl2T5JT/l23O4LxU2YX+8+dPAruM/JD7BvGBvPdgRuDyQjiijxv2cOBqqgJkAtU5
- HawhBJN3bjcbTqZmpSPYP5oAUa425zRygNNmhzufVFsCVXiop6PuntZ1lm7lyM+sOe3z
- 4UsT67MSHxhTreYKIocYemkOBolay0lbG6iEuF8Wb++SXHRj0YBr1DUb2pbUBpI8JaHP
- +hdlARubkzC7BQY25VBlIfhpftc3oKi2IKpChJLU5uClSoSGTOlg4YSOpaD+y0ueS22B
- 6v5TgIk5nPvjd5nmRE8tF0PLdJ3xqHhr55UAIu4dCODEEfs4qY6DXlvoQ9k0kYGu6CuR Aw== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sgmkks8gk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 16 Aug 2023 13:24:40 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 37GDOW44014775;
-        Wed, 16 Aug 2023 13:24:32 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3se35keug0-1;
-        Wed, 16 Aug 2023 13:24:32 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37GDOW1V014759;
-        Wed, 16 Aug 2023 13:24:32 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 37GDOWut014752;
-        Wed, 16 Aug 2023 13:24:32 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id 028984BCA; Wed, 16 Aug 2023 18:54:32 +0530 (+0530)
-From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
-To:     manivannan.sadhasivam@linaro.org
-Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        quic_vbadigan@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_skananth@quicinc.com, quic_ramkri@quicinc.com,
-        quic_parass@quicinc.com, krzysztof.kozlowski@linaro.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        Andy Gross <agross@kernel.org>,
+        with ESMTP id S245698AbjHPNks (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2023 09:40:48 -0400
+Received: from mail-yb1-xb2b.google.com (mail-yb1-xb2b.google.com [IPv6:2607:f8b0:4864:20::b2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A06E02D5F
+        for <linux-pci@vger.kernel.org>; Wed, 16 Aug 2023 06:40:41 -0700 (PDT)
+Received: by mail-yb1-xb2b.google.com with SMTP id 3f1490d57ef6-d682d2d1f0dso4546957276.1
+        for <linux-pci@vger.kernel.org>; Wed, 16 Aug 2023 06:40:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1692193241; x=1692798041;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=uW3Lzg0G0ukvtpwGKKg+qtuDKg0FVtuflLIlmeo8bN8=;
+        b=oZpRJpvRd2EjO2z7st8fP82ZF0z+F8XMZd6CEC4Akp0AyW5oLcP3COxI0/dxXXj0aC
+         uGuH/7R26eGcSkIsGoB0PF3OB0kC8lThxICjpcwL1Yc/TZLHnqMlwtpJR3Bw+wxYyuaH
+         sXS8SdL5TZstYI3btQdzsTD+ez6/futektEUaHEpD6u2fiQ7f9J4zGkH6a2b/z7ojrdR
+         ZE8GIE4fYhyH1IBcFN509pvt6IXev1j4uWirb08syYFzBuASjzXVsNFxfvPXNkAm5RNs
+         41eKbZ9m8SV5BTQDUDgSdVz8214YRA9W5+SNwtu2F65ggOFE0GkDUfFuZVwnrp6cTcnn
+         gOYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692193241; x=1692798041;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=uW3Lzg0G0ukvtpwGKKg+qtuDKg0FVtuflLIlmeo8bN8=;
+        b=dLJ3r0irNrx8b2N/+i8ESTfnUPSXnmICFOaFfybYKMAoDUJcSw8jnQm74w4zUE9+ul
+         JvxCxiEBI6m5GY9zXr4vbMmMXNTfv4EN1O1W/n023Tl7dFa8G55qeFxE1YIgqH6EdVTB
+         ChSQlT0UyG25MkPbAWlm/k2aoxMtRnGV9ikEnBqx/BMIUq8AEXcID3aKDk1utM6ZrnMA
+         ECKWuh9MESqF8FNj3ccAFbaSp21KcxWSDOz3LpLlNKO+TmnHahoh2iEWZJV5UUC1VqTS
+         pD2pIkLIETUAEmx8gogBwTSd3OCGLNQh91Mh8hupn2K20MyhIqHpnhX8GptHGQu6uVXP
+         OBkw==
+X-Gm-Message-State: AOJu0YzBeXchJZOjRZm11OFVe7HwjhqiD2/dwdXLGzSZq+YPbwRpwdOB
+        QHlWmE3sdIBcUTgtOO0h1J9Qn8x9IprgcHRgnL5ihw==
+X-Google-Smtp-Source: AGHT+IFNL56vtxDQRoreDk45OGBhvFCcV6wVgeoLWkPDigEeck6H4HmGis5nHvN0MbHwyvDBAYyT59QoiBLg/FrsP3Q=
+X-Received: by 2002:a25:d4cb:0:b0:d4c:f456:d563 with SMTP id
+ m194-20020a25d4cb000000b00d4cf456d563mr1825605ybf.8.1692193240831; Wed, 16
+ Aug 2023 06:40:40 -0700 (PDT)
+MIME-Version: 1.0
+References: <1692192264-18515-1-git-send-email-quic_krichai@quicinc.com> <1692192264-18515-3-git-send-email-quic_krichai@quicinc.com>
+In-Reply-To: <1692192264-18515-3-git-send-email-quic_krichai@quicinc.com>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date:   Wed, 16 Aug 2023 16:40:28 +0300
+Message-ID: <CAA8EJpoi0BkuQZef=v3JxB-axXe+jB0bEWCmsk1ZJYiaWiuevw@mail.gmail.com>
+Subject: Re: [PATCH v2 2/3] arm64: dts: qcom: sm8450: Add opp table support to PCIe
+To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Cc:     manivannan.sadhasivam@linaro.org, helgaas@kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, quic_parass@quicinc.com,
+        krzysztof.kozlowski@linaro.org, Andy Gross <agross@kernel.org>,
         Bjorn Andersson <andersson@kernel.org>,
         Konrad Dybcio <konrad.dybcio@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
         Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
         Conor Dooley <conor+dt@kernel.org>,
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS)
-Subject: [PATCH v2 2/3] arm64: dts: qcom: sm8450: Add opp table support to PCIe
-Date:   Wed, 16 Aug 2023 18:54:23 +0530
-Message-Id: <1692192264-18515-3-git-send-email-quic_krichai@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1692192264-18515-1-git-send-email-quic_krichai@quicinc.com>
-References: <1692192264-18515-1-git-send-email-quic_krichai@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Eb_K5VPi2k_8lYPVsX1MHDXiGFsfKymX
-X-Proofpoint-GUID: Eb_K5VPi2k_8lYPVsX1MHDXiGFsfKymX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-16_12,2023-08-15_02,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 suspectscore=0
- adultscore=0 clxscore=1011 mlxscore=0 malwarescore=0 lowpriorityscore=0
- mlxlogscore=680 spamscore=0 phishscore=0 impostorscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308160115
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe needs to choose the appropriate performance state of RPMH power
-domain based upon the PCIe gen speed.
+On Wed, 16 Aug 2023 at 16:25, Krishna chaitanya chundru
+<quic_krichai@quicinc.com> wrote:
+>
+> PCIe needs to choose the appropriate performance state of RPMH power
+> domain based upon the PCIe gen speed.
+>
+> So let's add the OPP table support to specify RPMH performance states.
+>
+> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+> ---
+>  arch/arm64/boot/dts/qcom/sm8450.dtsi | 47 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 47 insertions(+)
+>
+> diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> index 595533a..c77a683 100644
+> --- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
+> @@ -1803,7 +1803,28 @@
+>                         pinctrl-names = "default";
+>                         pinctrl-0 = <&pcie0_default_state>;
+>
+> +                       operating-points-v2 = <&pcie0_opp_table>;
+> +
+>                         status = "disabled";
+> +
+> +                       pcie0_opp_table: opp-table {
+> +                               compatible = "operating-points-v2";
+> +
+> +                               opp-2500000 {
 
-So let's add the OPP table support to specify RPMH performance states.
+As a random suggestion: these frequencies are calculated by the
+driver. It might be easier to use opp-level for the PCIe generation
+instead.
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
----
- arch/arm64/boot/dts/qcom/sm8450.dtsi | 47 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
+This way this OPP entry can become:
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-index 595533a..c77a683 100644
---- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-@@ -1803,7 +1803,28 @@
- 			pinctrl-names = "default";
- 			pinctrl-0 = <&pcie0_default_state>;
- 
-+			operating-points-v2 = <&pcie0_opp_table>;
-+
- 			status = "disabled";
-+
-+			pcie0_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-2500000 {
-+					opp-hz = /bits/ 64 <2500000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-5000000 {
-+					opp-hz = /bits/ 64 <5000000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-8000000 {
-+					opp-hz = /bits/ 64 <8000000>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+				};
-+			};
- 		};
- 
- 		pcie0_phy: phy@1c06000 {
-@@ -1915,7 +1936,33 @@
- 			pinctrl-names = "default";
- 			pinctrl-0 = <&pcie1_default_state>;
- 
-+			operating-points-v2 = <&pcie1_opp_table>;
-+
- 			status = "disabled";
-+
-+			pcie1_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				opp-2500000 {
-+					opp-hz = /bits/ 64 <2500000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-5000000 {
-+					opp-hz = /bits/ 64 <5000000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-8000000 {
-+					opp-hz = /bits/ 64 <8000000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+				};
-+
-+				opp-16000000 {
-+					opp-hz = /bits/ 64 <16000000>;
-+					required-opps = <&rpmhpd_opp_nom>;
-+				};
-+			};
- 		};
- 
- 		pcie1_phy: phy@1c0f000 {
+opp-1 {
+    opp-level = <1>;
+    required-opps = <&rpmhpd_opp_low_svs>;
+};
+
+> +                                       opp-hz = /bits/ 64 <2500000>;
+> +                                       required-opps = <&rpmhpd_opp_low_svs>;
+> +                               };
+> +
+> +                               opp-5000000 {
+> +                                       opp-hz = /bits/ 64 <5000000>;
+> +                                       required-opps = <&rpmhpd_opp_low_svs>;
+> +                               };
+> +
+> +                               opp-8000000 {
+> +                                       opp-hz = /bits/ 64 <8000000>;
+> +                                       required-opps = <&rpmhpd_opp_nom>;
+> +                               };
+> +                       };
+>                 };
+>
+>                 pcie0_phy: phy@1c06000 {
+> @@ -1915,7 +1936,33 @@
+>                         pinctrl-names = "default";
+>                         pinctrl-0 = <&pcie1_default_state>;
+>
+> +                       operating-points-v2 = <&pcie1_opp_table>;
+> +
+>                         status = "disabled";
+> +
+> +                       pcie1_opp_table: opp-table {
+> +                               compatible = "operating-points-v2";
+> +
+> +                               opp-2500000 {
+> +                                       opp-hz = /bits/ 64 <2500000>;
+> +                                       required-opps = <&rpmhpd_opp_low_svs>;
+> +                               };
+> +
+> +                               opp-5000000 {
+> +                                       opp-hz = /bits/ 64 <5000000>;
+> +                                       required-opps = <&rpmhpd_opp_low_svs>;
+> +                               };
+> +
+> +                               opp-8000000 {
+> +                                       opp-hz = /bits/ 64 <8000000>;
+> +                                       required-opps = <&rpmhpd_opp_low_svs>;
+> +                               };
+> +
+> +                               opp-16000000 {
+> +                                       opp-hz = /bits/ 64 <16000000>;
+> +                                       required-opps = <&rpmhpd_opp_nom>;
+> +                               };
+> +                       };
+>                 };
+>
+>                 pcie1_phy: phy@1c0f000 {
+> --
+> 2.7.4
+>
+
+
 -- 
-2.7.4
-
+With best wishes
+Dmitry
