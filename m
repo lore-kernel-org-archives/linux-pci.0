@@ -2,175 +2,161 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A5E7C27C54
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Aug 2023 22:11:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A791C41513
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Aug 2023 22:14:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346774AbjHPWLZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Aug 2023 18:11:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40636 "EHLO
+        id S1346752AbjHPWOF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Aug 2023 18:14:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346780AbjHPWKx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2023 18:10:53 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2048.outbound.protection.outlook.com [40.107.94.48])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 731812708;
-        Wed, 16 Aug 2023 15:10:52 -0700 (PDT)
+        with ESMTP id S1346897AbjHPWNx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2023 18:13:53 -0400
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on20605.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe5b::605])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 536902D66;
+        Wed, 16 Aug 2023 15:13:11 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fq8f1CbcAVhRkq2dpC6gDeg+LYphyzyTKGNsRfdCUeI4xweQWUl5+6rwtswRW5oI8evRYFaBj5crpudoekIlrruuhRCR6+oM2x/5zGw0+yjRezHK2k3J35HtHVgFXCOBflvmzaa/wOMrsKPQRQIc2JaSf9luN2skQXYPG4eahIJBQ0NmFPq5hVyX0atCGCrvfBxzzkFI1pStI0B9JZn9LvsJYxix9ULpqb2m44te9bXlh8VWUsd38QHMKrTHxXP4F8cs/tGLrFZrpOL9RVDmBnYgvvDWhmH+tz2MlUgKTvkrB7aTvZJTyayfULT+8IefiiQhWXQPquDUTyEp0QBnjQ==
+ b=mEhD4k8jTsPo7Duek3vZaU5W2fsVO/ep8FsXU2VqAoUufxfvQXiMxCADcV0VJYW4b+CzZdmFRdkQN6IWopQJJTgJT4oR8hsu5p4e7udgi7lq9hDfOpRI+mLUic1eXMqvTaCf4a3ukWpE1CruL89f4NM/NP64YAadDFo1KnGBrlqD/7gNuVOUVvXFSM7R1FkHGPlQVP0yjU2EjVIUkH4QDHpteNrN+ITuw6Rf1LL3FP5ceVB7eaz2aAUYKOg7T7YyH0o5ZXgP8SGRSRqtS5moezwzlIYi9GMfagEyzn8iK7VKIWwVxOXXo8VyzjWRf3S6xfIvQkdY1Okb8xUvOteL9g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=1z0oISn2A7L4+VMcPvWfDi5HZ7KR3PmdMVA1EiB6hso=;
- b=DQoeO386q3z2TsLqraVaIAu/87b5Vn6SXw+RiKgEUMa5m1rkjYSbSAXfkKv2miydNqaEV8PFpibn69cYlDfQX3qrv+LEBJggbe2tjDfVRYq9MRxz1V3dfYsz7nPFaLJZp1wpGUOv7y9lCayjbFQ92w6FQj/1gqag7VOVj86WK54JGlRVPxTNl0I5ffi19cea/V8Sag1cUhGSFofu1odzD2mVhRpgNgtXkHKnJIbxQfu1f+drnU3Hmp8wwYRZ+3bU8Ak4OP319F37LqiJdmvg+7gU18wELdmRhKCvhdLOdTc/5kKfX9kWC5d8Fk9Fj+UoE/ScZ+qnk7afj7U7CnVUJg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ bh=mEa1S3Jjl273nU4n/bARMyWrfZaAMKzaM+f9w4FrI0k=;
+ b=ZJUCAVd6BPs3A/D2c1DzRL16yV4QOalMiVpasZNKQUZPjBIAmPExfcKdwe9c6FFlca+wOpO5ETrhLesioUxQ2xkV/t2I5H1DHFLmZU1lTVxhJZNQl2R3D0vL4x8KjHdae4flz2CS8p9zqea2lHRMl5ZEHylWXkX3t49Wy2atfcJX/cMWnoRFhilPgzBsxvBREJnZRvq1fiaN3Ptx63bmxXPFzlzetsH49+9zdbRlrh+NUm2btFULQpa8T+9azsOBSjGmFc1wA5cLSBkU1eb4DcnSrqAlqYcsCJs/pzlYRbcvpwIbe5lbDacDBET9wtlp8akiqekea7fMtiR/wggAAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1z0oISn2A7L4+VMcPvWfDi5HZ7KR3PmdMVA1EiB6hso=;
- b=L0VWLB5hlzSNCIHP1g5m2nuqyoeFU/PAdEdZj1+ilvyK7RiJocIMPDqX3QOBRnrKRZJOwwQIg/EwZB48lZRhtVO2392CVt1zLjUNi21qhNlnBYnzwkqJ+idqS6ouaXStVGxNUbA35/Z0gLSgzLLRslpReW7cDNgeFQCgxCe9ifc=
-Received: from CY5PR15CA0176.namprd15.prod.outlook.com (2603:10b6:930:81::19)
- by CH3PR12MB7617.namprd12.prod.outlook.com (2603:10b6:610:140::21) with
+ bh=mEa1S3Jjl273nU4n/bARMyWrfZaAMKzaM+f9w4FrI0k=;
+ b=rFkGzMN9STYT9Wm7aXdu+f8f/rtbmi37UExzfKSDlZtmsE7Y7nI6sEo9nqlEYTB4CmIuPdQWwwrjB6wp4EouN0SvFRsmXJUS5Yk3jO4MRZf4Qf5eTvFwg9Z3RE2IYIlDn1KT4H4Kn8bSAJGAhT2XNiBTxX/drQja6rGJt11je8T4epjKQkkLuqW5i2fh0VdWwYMxrDEdi84G9yo/TPhY7DMgvyhJeZAgy6iyJX2bx8CchTH1mBTaacV1xcCKiQAzqEvmsR61w/vaBspWT5Rp6s88JilNKpGHzIspWm7HDBrk2l+M3WsKbb7jWNuEQ6eQnSDm5O4ndv+sYU1sQ01lgA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from LV8PR12MB9134.namprd12.prod.outlook.com (2603:10b6:408:180::21)
+ by SA1PR12MB7176.namprd12.prod.outlook.com (2603:10b6:806:2bd::19) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6678.29; Wed, 16 Aug
- 2023 22:10:46 +0000
-Received: from CY4PEPF0000EE32.namprd05.prod.outlook.com
- (2603:10b6:930:81:cafe::35) by CY5PR15CA0176.outlook.office365.com
- (2603:10b6:930:81::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6652.33 via Frontend
- Transport; Wed, 16 Aug 2023 22:10:46 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CY4PEPF0000EE32.mail.protection.outlook.com (10.167.242.38) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6699.14 via Frontend Transport; Wed, 16 Aug 2023 22:10:46 +0000
-Received: from SITE-L-T34-2.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 16 Aug
- 2023 17:10:44 -0500
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     "Rafael J . Wysocki" <rafael@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Andy Shevchenko" <andriy.shevchenko@linux.intel.com>,
-        <linux-acpi@vger.kernel.org>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        "Iain Lane" <iain@orangesquash.org.uk>,
-        Shyam-sundar S-k <Shyam-sundar.S-k@amd.com>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v12 8/9] ACPI: x86: s2idle: Add for_each_lpi_constraint() helper
-Date:   Wed, 16 Aug 2023 15:41:42 -0500
-Message-ID: <20230816204143.66281-9-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230816204143.66281-1-mario.limonciello@amd.com>
-References: <20230816204143.66281-1-mario.limonciello@amd.com>
-MIME-Version: 1.0
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6678.26; Wed, 16 Aug
+ 2023 22:12:04 +0000
+Received: from LV8PR12MB9134.namprd12.prod.outlook.com
+ ([fe80::5299:9b83:4bf3:fc51]) by LV8PR12MB9134.namprd12.prod.outlook.com
+ ([fe80::5299:9b83:4bf3:fc51%5]) with mapi id 15.20.6678.029; Wed, 16 Aug 2023
+ 22:12:04 +0000
+Date:   Wed, 16 Aug 2023 15:12:02 -0700
+From:   Saeed Mahameed <saeedm@nvidia.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Saeed Mahameed <saeed@kernel.org>,
+        Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        linux-pci@vger.kernel.org, Leon Romanovsky <leon@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Paolo Abeni <pabeni@redhat.com>,
+        Moshe Shemesh <moshe@mellanox.com>, netdev@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] net/mlx5: Convert PCI error values to generic errnos
+Message-ID: <ZN1JsroNi8iKSGNf@x130>
+References: <ZN1Da7oOOKQ/FnxI@x130>
+ <20230816220425.GA301099@bhelgaas>
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
+In-Reply-To: <20230816220425.GA301099@bhelgaas>
+X-ClientProxiedBy: SJ0PR13CA0147.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c6::32) To LV8PR12MB9134.namprd12.prod.outlook.com
+ (2603:10b6:408:180::21)
+MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000EE32:EE_|CH3PR12MB7617:EE_
-X-MS-Office365-Filtering-Correlation-Id: ac67eb50-d9d6-4e59-f2f9-08db9ea5a3fc
+X-MS-TrafficTypeDiagnostic: LV8PR12MB9134:EE_|SA1PR12MB7176:EE_
+X-MS-Office365-Filtering-Correlation-Id: dfa23eb7-eef5-4312-ac81-08db9ea5d28e
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: r3E4ApALcMmOHGdSfdJWL542I4Kp8qKmezy2gjEDnnp7J48apQi6nTKhxF+Ja1oGNwoYiN7YP7Rzc2apSVyePEdEnz51weA/uO78hTpzEr1fW8TNikJNq0nX+xwmMgdipDTjJpsbWJMVEs0OX8egwxPUd1eeLqlBSrepFk67Teba/jv9LlYyMBqpp336TkXVWWgB27JUpL6fN6bTp8iFAmOLn3+rmkYn8MNy7qLWuPpCuxzMoHLCHxdMMIBdzwLoR8HPS0DOnFG8OH6Dc0AoSYmpIsVSdCf6B4Ex+blfrBwA4qYwtIJNHkTC3fhsDvZAZpN9SLoHJfpho02idQmR4R7wg9MKsGZPJsr6mlMTy/LAUWCuWFwd8X7TqxmF8FlP1fw4UEXw9HphSystXhFoIgFbn6mBCLTwgq9bRvtvVTKIjDmLrKr1mxO9maSHNA04DBWWNhIeDLP3hZCMfqoGd69cv1ujA3iZa3O6UKwSEw6qjOCblzPl/MTbSp+6X2uofsp9jumifIm/SKwdmuaVzdP6H+S5YnFEJEbYtxvbmh5v8+6GQpkSNAjF5Zay0VP3JX/jF+6uTmO17v632cGfGcJINXt6MoETsNpagqHRDJhd0MCZEGl7HYOo1F0gHk5V44bNU/WOySoVmI4g0IHmI8cnC3gZdNm00nQPwtq/+Zgk+EKLRkiU+0FbkMTdQnbrYlwZhOXS8ZcVDH9Es1LHPWHnm67rqkFBTQoBHeWiUhrjT6FSiAL4/8Fyk7F8M+7ilxC+vkbFfAwOVX66Sg/dUw==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(39860400002)(396003)(136003)(346002)(376002)(451199024)(1800799009)(186009)(82310400011)(40470700004)(36840700001)(46966006)(316002)(54906003)(356005)(82740400003)(81166007)(110136005)(70586007)(70206006)(5660300002)(41300700001)(36860700001)(44832011)(47076005)(8676002)(4326008)(8936002)(2906002)(40460700003)(83380400001)(26005)(16526019)(40480700001)(478600001)(426003)(336012)(86362001)(7696005)(36756003)(1076003)(2616005)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Aug 2023 22:10:46.0175
+X-Microsoft-Antispam-Message-Info: FPlnYWFSCdeY0ujCqrzdOmW2TnAFlZcHsyUuXUttx/M72E5DKTdoDQaa2FA2zlJu5Ey5Ij9AOSQ9kl0njoNhpSZI7ow7IYSh+OlKKXzL5QZfNz4lONzXOT6wzv2R/nJGug9L8jk3+KoP2rTS3ReJJjq9cI7gne1dO/EmBqEoIMYTJjWuWu2z4thvYnwUxSJdZCcITRsDUgwyT+1pWcU3YE5fC6g+Z4TL8VejwqghhAKFsfcrG2MiUmr3sVpGWaV0RE4EyqJbFJVOfEKa/K8LENn6DK/7D2BRdAw7O8HESfWyjf9Tz8C46sFGf3M7pIbc2ubwHYuWY9ctY6/68vvyV2gkvbJvRRCb6EFDCbmFAqNU2axk0QnEn1zQAF57gjjWVMk3Z+wmumuzAahthhyZz+Igm6Lh8ssmJMVz9E6YO778W9KKsBjN3wficmw+OYt1jIYSdinJRkcs0Il7RhNTeEsPApMZ1stlHgVM/hx9DtFKJqspMEt9SRkuoo2YjqKAaxtNvrQs/GLJHLvDO/O75vlq0PQXBHyfQdcREZr9eqZ2qNrj2E5zkRBLp7gdg3SAQwxatt/O4azc5ApjtWdParSGJYeKe42lgXIWHtFnZjsynOHgO1cnUMqoLpI9X7XRB5RKBT+DrQP0oPua82vphw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:LV8PR12MB9134.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(39860400002)(396003)(136003)(346002)(366004)(376002)(451199024)(1800799009)(186009)(316002)(54906003)(6916009)(66946007)(66556008)(66476007)(5660300002)(41300700001)(84970400001)(66574015)(38100700002)(8676002)(4326008)(8936002)(33716001)(2906002)(83380400001)(26005)(478600001)(7416002)(86362001)(9686003)(6512007)(6506007)(6486002)(41533002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?iso-8859-1?Q?RhfOqNEL9QdufkA8pcqIWgCWEnSxw2CIq6ui5uh3Ofatv2NVu7N7zizLQO?=
+ =?iso-8859-1?Q?5GtiIMUl4WTyYWSypRGPoW01EjOsM0xb2X9nRVFOTmlNZRHeoyvpwfcfJl?=
+ =?iso-8859-1?Q?JxeuXHufUaBZAu5XHrGOvqo4TL2XwJPSXtUBsYv4WFsXbyz03Zla1C0X/G?=
+ =?iso-8859-1?Q?LZ2qz4hgmiHXUNPbn7T8xpHYtLdReSQxHF7633EoMLdZaSs92f7s2ZDOS8?=
+ =?iso-8859-1?Q?O7qunsZSA7ThlB03SuaUn2aTJxFSaVxFLLpqalamh5caIbSNSGDCQvkNRf?=
+ =?iso-8859-1?Q?VLvXfh6z7guh6+GtamvtTtg6cf0wB2ixA6KvKXZJRYH03sG0/PXmwwxBHo?=
+ =?iso-8859-1?Q?/SnH5UXfQl+mKuSh/1TCpbNSoj9D6tlYOIyx1I8GM3LmPpLe/oErr1c/nd?=
+ =?iso-8859-1?Q?rkgJPwJTpIDfOlxOaewi4T8bOYF6B0gyHjyIFZk1FO9E7KaBiiJ6cokZF8?=
+ =?iso-8859-1?Q?gepFtRJhgNAGKcyl7Uf1RK0Eus25XE/Nx3DcamlnecEsCehhFFwLbd8wWi?=
+ =?iso-8859-1?Q?nTOCaeapgASzvTH1czlSK45MbIRv3w6Mw3HpLaVGHveob5YjLX5QCZlujg?=
+ =?iso-8859-1?Q?Sob6EZGwKat6lLvWzv503Gx4v37qcyhmEjcURMY4ATOsjC3d1xLHtk6yWF?=
+ =?iso-8859-1?Q?58R8kLq8kvw+oS41ZDXcVE7p5Dh8DIrR0FfSZJwJ6+tF3CjOsimej0KLsj?=
+ =?iso-8859-1?Q?FFY2wg1zg18vl9iYEcPoxvQoBIXiCAs8DJ1a5KyQXdM18F1wnxm6G056lx?=
+ =?iso-8859-1?Q?qJaWA0TWG4IwnaRtyhlotx4yk3XtceSOp+EifKCCzxsN+B/U1pUC80unWz?=
+ =?iso-8859-1?Q?c6kSbgxm3Bgmhu0LdzaT51kv+38KT4z+mDB3kyNDaJpTB2BFElukr2egMg?=
+ =?iso-8859-1?Q?br1IZ5yN/TmZ5V5quQNMtQbTZ9mgfkCEVdBnJfG9JuL17cAsFBko/adPPA?=
+ =?iso-8859-1?Q?qY+P6moVJ9fatpnk/EQJ5NOhVmFALTbvLbksj9X5KH+hK3ZXe5AEGwkI+L?=
+ =?iso-8859-1?Q?Xner1YyXYCN59etaIoOaDGUMiyTyC3QsEPIfdls8BZ/YlQ8RMnhWJd3KBZ?=
+ =?iso-8859-1?Q?tk2Wa+9l5lqIaxZ757A0fBQggEl9uFu4LJUfU73pUfn5M5+wwiXXtGCCSk?=
+ =?iso-8859-1?Q?boE9ldLQPpHbZQ0klt/sJ0l7zp8Lal5k+Hz1VrHsovN/QW0zSPDKga30qI?=
+ =?iso-8859-1?Q?otSzsLxiY7aQPLX/1xNWbJIAxhIij030Wc1qjL4a0JypzC/C1vALrPWFjw?=
+ =?iso-8859-1?Q?QXug0pxD1ObXzqU6V9ggMrOBe3cdDt9OpV4MgoF2+vFeaiiqnmREgPdy4Y?=
+ =?iso-8859-1?Q?nAWaiMFo8J0mwyBdEld00/jvPcuq2+I8Mpxq+1PWf6qvRNeDBQVmD8F+hF?=
+ =?iso-8859-1?Q?mxpUYp4zskteUmQ5KAD1qM5X99ubBxUY42NxnHqVjrKrPmBEpGjiU9/pvB?=
+ =?iso-8859-1?Q?hAf0CqnVQdKn2IpJGDay/lfJAx857UK+UJRiwnc0IeQEdgGMiR6hEq+EXE?=
+ =?iso-8859-1?Q?AvI7EzVdAGavB2usi7NYeroKAh0AR789+0nleEvk7pBisgYGep7p/7Nh0N?=
+ =?iso-8859-1?Q?8krLg3UDqY2usWAWb4OGoz//um1VeTuzEdsGK7emeUlI3nCVGy1pMbTcj5?=
+ =?iso-8859-1?Q?NMkokTeDI23Dvd8yMBMrcBq9Ih0ZZ2wJMd?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dfa23eb7-eef5-4312-ac81-08db9ea5d28e
+X-MS-Exchange-CrossTenant-AuthSource: LV8PR12MB9134.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Aug 2023 22:12:04.3393
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac67eb50-d9d6-4e59-f2f9-08db9ea5a3fc
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000EE32.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB7617
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: U0CruKHpLetJpPNskFGDdwWYzDgeeqoWKc0uHPYdWP3HQdZIt9X+PvCQXT7DwdX9/DpBXjV4XYaJPBGNGviBeg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB7176
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+On 16 Aug 17:04, Bjorn Helgaas wrote:
+>On Wed, Aug 16, 2023 at 02:45:15PM -0700, Saeed Mahameed wrote:
+>> On 14 Aug 17:32, Bjorn Helgaas wrote:
+>> > On Mon, Aug 14, 2023 at 04:27:20PM +0300, Ilpo Järvinen wrote:
+>> > > mlx5_pci_link_toggle() returns mix PCI specific error codes and generic
+>> > > errnos.
+>> > >
+>> > > Convert the PCI specific error values to generic errno using
+>> > > pcibios_err_to_errno() before returning them.
+>> > >
+>> > > Fixes: eabe8e5e88f5 ("net/mlx5: Handle sync reset now event")
+>> > > Fixes: 212b4d7251c1 ("net/mlx5: Wait for firmware to enable CRS before pci_restore_state")
+>> > > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+>> > >
+>> > > ---
+>> > >
+>> > > Maintainers beware, this will conflict with read+write -> set/clear_word
+>> > > fixes in pci.git/pcie-rmw. As such, it might be the easiest for Bjorn to
+>> > > take it instead of net people.
+>> >
+>> > I provisionally rebased and applied it on pci/pcie-rmw.  Take a look
+>> > and make sure I didn't botch it -- I also found a case in
+>> > mlx5_check_dev_ids() that looks like it needs the same conversion.
+>> >
+>> > The commit as applied is below.
+>> >
+>> > If networking folks would prefer to take this, let me know and I can
+>> > drop it.
+>>
+>> I Just took this patch into my mlx5 submission queue and sent it to netdev
+>> tree, please drop it from your tree.
+>
+>OK, will do.  Note that this will generate a conflict between netdev
+>and the PCI tree during the merge window.
+>
 
-We have one existing and one coming user of this macro.
-Introduce a helper.
+In such case let me drop it and you submit it, I was worried it will
+conflict with another ongoing feature in mlx5, but I am almost sure it
+won't be ready this cycle, so no reason to panic, you can take the patch to
+the pci tree and I will revise my PR, it's not too late.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
-v11->v12:
- * New patch from Andy
----
- drivers/acpi/x86/s2idle.c | 26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+>Bjorn
 
-diff --git a/drivers/acpi/x86/s2idle.c b/drivers/acpi/x86/s2idle.c
-index 826f2924d05fe..8bda45579d44a 100644
---- a/drivers/acpi/x86/s2idle.c
-+++ b/drivers/acpi/x86/s2idle.c
-@@ -95,6 +95,11 @@ static struct lpi_constraints *lpi_constraints_table;
- static int lpi_constraints_table_size;
- static int rev_id;
- 
-+#define for_each_lpi_constraint(entry)						\
-+	for (int i = 0;								\
-+	     entry = &lpi_constraints_table[i], i < lpi_constraints_table_size;	\
-+	     i++)
-+
- static void lpi_device_get_constraints_amd(void)
- {
- 	union acpi_object *out_obj;
-@@ -297,30 +302,29 @@ static void lpi_device_get_constraints(void)
- 
- static void lpi_check_constraints(void)
- {
--	int i;
-+	struct lpi_constraints *entry;
- 
--	for (i = 0; i < lpi_constraints_table_size; ++i) {
--		acpi_handle handle = lpi_constraints_table[i].handle;
--		struct acpi_device *adev = acpi_fetch_acpi_dev(handle);
-+	for_each_lpi_constraint(entry) {
-+		struct acpi_device *adev = acpi_fetch_acpi_dev(entry->handle);
- 
- 		if (!adev)
- 			continue;
- 
--		acpi_handle_debug(handle,
-+		acpi_handle_debug(entry->handle,
- 			"LPI: required min power state:%s current power state:%s\n",
--			acpi_power_state_string(lpi_constraints_table[i].min_dstate),
-+			acpi_power_state_string(entry->min_dstate),
- 			acpi_power_state_string(adev->power.state));
- 
- 		if (!adev->flags.power_manageable) {
--			acpi_handle_info(handle, "LPI: Device not power manageable\n");
--			lpi_constraints_table[i].handle = NULL;
-+			acpi_handle_info(entry->handle, "LPI: Device not power manageable\n");
-+			entry->handle = NULL;
- 			continue;
- 		}
- 
--		if (adev->power.state < lpi_constraints_table[i].min_dstate)
--			acpi_handle_info(handle,
-+		if (adev->power.state < entry->min_dstate)
-+			acpi_handle_info(entry->handle,
- 				"LPI: Constraint not met; min power state:%s current power state:%s\n",
--				acpi_power_state_string(lpi_constraints_table[i].min_dstate),
-+				acpi_power_state_string(entry->min_dstate),
- 				acpi_power_state_string(adev->power.state));
- 	}
- }
--- 
-2.34.1
 
