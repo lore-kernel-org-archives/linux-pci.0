@@ -2,58 +2,65 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9630C27C7A
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Aug 2023 12:18:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D61EC27C7A
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Aug 2023 12:18:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350695AbjHQMRd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Aug 2023 08:17:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43366 "EHLO
+        id S1350725AbjHQMSF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Aug 2023 08:18:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350725AbjHQMRV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2023 08:17:21 -0400
+        with ESMTP id S1350780AbjHQMRv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2023 08:17:51 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A902213F;
-        Thu, 17 Aug 2023 05:17:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35EC3271B;
+        Thu, 17 Aug 2023 05:17:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1692274640; x=1723810640;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=JawHZC3vAEtY9CACT0MmR2cqpaQhxO/Iz1UNU6K7/Yw=;
-  b=FhiZyahZkvefu1AkSMtB2j6bcEoCrOva4VrvjIudd1p/mFhFUCzBttNZ
-   S7D3E8G9suJB+63nyUJnEBo1nks41r7BQIBGrT/XK+XWfsBNZG2+322zG
-   eZH03qmbC9SWY+gju/oJNgZQw2o/B64y7W5XDZOFfPiNInulqAlD86vMb
-   osE613yAhmlHfuLJoJ6DDXWq0P25xPzK2PD9/gxhms3fkTMQufB+GGJgE
-   sOPa9atVT9KJ+kcATIcrN7ufKmVnGRoxifIuGG9kDq23XLk6E67HgHNY6
-   A4j36y22SPjuQOPume+FYfIrcasm40+PlQlPfZLGDSzBfunoRxgH2pIKR
+  t=1692274668; x=1723810668;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=MxNTizQ6tenlbYCsauJlpeagfz1q3botHZCecKqmjcM=;
+  b=g1fqBTBWR55gcrsdkEaRBZhNvETfGRIJRwU42PYs+cFaydzSVa49uT6R
+   dJxEeWawQFGzHA8wbLkp/Uq3Zwy0kSrYVQ5zp27qVgpyjFi/7eviHWaUL
+   l55s0jJpFeavuxFgralO5n/8V4sprb3lgqUfpJM/xXj273GemoOWhMcmQ
+   6gJsPvipwecqpD71qCTB/2HNdFU85mtvBTCI9xm+3TFD8xJxv2eI3gEcD
+   DPdWJ9gpSwGIeyof1dm9qOM6tZh7E8mBNksUQDr75TEFSJJTkTZqUpH5L
+   xwGBuyml4CHopadVZKIW+nudqrj7xghnFXuQzJjTYfVblo33VYxo9wjN8
    A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="436696591"
+X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="436696655"
 X-IronPort-AV: E=Sophos;i="6.01,180,1684825200"; 
-   d="scan'208";a="436696591"
+   d="scan'208";a="436696655"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 05:17:19 -0700
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 05:17:30 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="848872880"
+X-IronPort-AV: E=McAfee;i="6600,9927,10803"; a="848872921"
 X-IronPort-AV: E=Sophos;i="6.01,180,1684825200"; 
-   d="scan'208";a="848872880"
+   d="scan'208";a="848872921"
 Received: from lababeix-mobl1.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.251.212.52])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 05:17:16 -0700
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Aug 2023 05:17:25 -0700
 From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Rob Herring <robh@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Lukas Wunner <lukas@wunner.de>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        "Pan, Xinhui" <Xinhui.Pan@amd.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org
+Cc:     Krishna chaitanya chundru <quic_krichai@quicinc.com>,
         Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
         Alex Deucher <alexdeucher@gmail.com>,
         =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 00/10] Add PCIe Bandwidth Controller
-Date:   Thu, 17 Aug 2023 15:16:58 +0300
-Message-Id: <20230817121708.53213-1-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 02/10] drm/radeon: Use RMW accessors for changing LNKCTL2
+Date:   Thu, 17 Aug 2023 15:17:00 +0300
+Message-Id: <20230817121708.53213-3-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230817121708.53213-1-ilpo.jarvinen@linux.intel.com>
+References: <20230817121708.53213-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -61,64 +68,149 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi all,
+Don't assume that only the driver would be accessing LNKCTL2. In the
+case of upstream (parent), the driver does not even own the device it's
+changing the registers for.
 
-This series adds PCIe bandwidth controller (bwctrl) and associated PCIe
-cooling driver to the thermal core side for limiting PCIe link speed
-due to thermal reasons. PCIe bandwidth controller is a PCI express bus
-port service driver. A cooling device is created for each port the
-service driver finds if they support changing speeds.
+Use RMW capability accessors which do proper locking to avoid losing
+concurrent updates to the register value. This change is also useful as
+a cleanup.
 
-bwctrl now is built on top of BW notifications revert. I'm just not
-sure what is the best practice when re-adding some old functionality in
-a modified form so please let me know if I need to somehow alter that
-patch.
+Suggested-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/gpu/drm/radeon/cik.c | 40 ++++++++++++++----------------------
+ drivers/gpu/drm/radeon/si.c  | 40 ++++++++++++++----------------------
+ 2 files changed, 30 insertions(+), 50 deletions(-)
 
-The series is based on top of the RMW changes in pci/pcie-rmw.
-
-Ilpo Järvinen (10):
-  PCI: Protect Link Control 2 Register with RMW locking
-  drm/radeon: Use RMW accessors for changing LNKCTL2
-  drm/amdgpu: Use RMW accessors for changing LNKCTL2
-  drm/IB/hfi1: Use RMW accessors for changing LNKCTL2
-  PCI: Store all PCIe Supported Link Speeds
-  PCI: Cache PCIe device's Supported Speed Vector
-  PCI/LINK: Re-add BW notification portdrv as PCIe BW controller
-  PCI/bwctrl: Add "controller" part into PCIe bwctrl
-  thermal: Add PCIe cooling driver
-  selftests/pcie_bwctrl: Create selftests
-
- MAINTAINERS                                   |   8 +
- drivers/gpu/drm/amd/amdgpu/cik.c              |  41 +--
- drivers/gpu/drm/amd/amdgpu/si.c               |  41 +--
- drivers/gpu/drm/radeon/cik.c                  |  40 +--
- drivers/gpu/drm/radeon/si.c                   |  40 +--
- drivers/infiniband/hw/hfi1/pcie.c             |  30 +-
- drivers/pci/pcie/Kconfig                      |   9 +
- drivers/pci/pcie/Makefile                     |   1 +
- drivers/pci/pcie/bwctrl.c                     | 309 ++++++++++++++++++
- drivers/pci/pcie/portdrv.c                    |   9 +-
- drivers/pci/pcie/portdrv.h                    |  10 +-
- drivers/pci/probe.c                           |  38 ++-
- drivers/pci/remove.c                          |   2 +
- drivers/thermal/Kconfig                       |  10 +
- drivers/thermal/Makefile                      |   2 +
- drivers/thermal/pcie_cooling.c                | 107 ++++++
- include/linux/pci-bwctrl.h                    |  33 ++
- include/linux/pci.h                           |   3 +
- include/uapi/linux/pci_regs.h                 |   1 +
- tools/testing/selftests/Makefile              |   1 +
- tools/testing/selftests/pcie_bwctrl/Makefile  |   2 +
- .../pcie_bwctrl/set_pcie_cooling_state.sh     | 122 +++++++
- .../selftests/pcie_bwctrl/set_pcie_speed.sh   |  67 ++++
- 23 files changed, 795 insertions(+), 131 deletions(-)
- create mode 100644 drivers/pci/pcie/bwctrl.c
- create mode 100644 drivers/thermal/pcie_cooling.c
- create mode 100644 include/linux/pci-bwctrl.h
- create mode 100644 tools/testing/selftests/pcie_bwctrl/Makefile
- create mode 100755 tools/testing/selftests/pcie_bwctrl/set_pcie_cooling_state.sh
- create mode 100755 tools/testing/selftests/pcie_bwctrl/set_pcie_speed.sh
-
+diff --git a/drivers/gpu/drm/radeon/cik.c b/drivers/gpu/drm/radeon/cik.c
+index a6f3c811ceb8..b1558b822f9c 100644
+--- a/drivers/gpu/drm/radeon/cik.c
++++ b/drivers/gpu/drm/radeon/cik.c
+@@ -9592,28 +9592,18 @@ static void cik_pcie_gen3_enable(struct radeon_device *rdev)
+ 								   PCI_EXP_LNKCTL_HAWD);
+ 
+ 				/* linkctl2 */
+-				pcie_capability_read_word(root, PCI_EXP_LNKCTL2,
+-							  &tmp16);
+-				tmp16 &= ~(PCI_EXP_LNKCTL2_ENTER_COMP |
+-					   PCI_EXP_LNKCTL2_TX_MARGIN);
+-				tmp16 |= (bridge_cfg2 &
+-					  (PCI_EXP_LNKCTL2_ENTER_COMP |
+-					   PCI_EXP_LNKCTL2_TX_MARGIN));
+-				pcie_capability_write_word(root,
+-							   PCI_EXP_LNKCTL2,
+-							   tmp16);
+-
+-				pcie_capability_read_word(rdev->pdev,
+-							  PCI_EXP_LNKCTL2,
+-							  &tmp16);
+-				tmp16 &= ~(PCI_EXP_LNKCTL2_ENTER_COMP |
+-					   PCI_EXP_LNKCTL2_TX_MARGIN);
+-				tmp16 |= (gpu_cfg2 &
+-					  (PCI_EXP_LNKCTL2_ENTER_COMP |
+-					   PCI_EXP_LNKCTL2_TX_MARGIN));
+-				pcie_capability_write_word(rdev->pdev,
+-							   PCI_EXP_LNKCTL2,
+-							   tmp16);
++				pcie_capability_clear_and_set_word(root, PCI_EXP_LNKCTL2,
++								   PCI_EXP_LNKCTL2_ENTER_COMP |
++								   PCI_EXP_LNKCTL2_TX_MARGIN,
++								   bridge_cfg2 |
++								   (PCI_EXP_LNKCTL2_ENTER_COMP |
++								    PCI_EXP_LNKCTL2_TX_MARGIN));
++				pcie_capability_clear_and_set_word(rdev->pdev, PCI_EXP_LNKCTL2,
++								   PCI_EXP_LNKCTL2_ENTER_COMP |
++								   PCI_EXP_LNKCTL2_TX_MARGIN,
++								   gpu_cfg2 |
++								   (PCI_EXP_LNKCTL2_ENTER_COMP |
++								    PCI_EXP_LNKCTL2_TX_MARGIN));
+ 
+ 				tmp = RREG32_PCIE_PORT(PCIE_LC_CNTL4);
+ 				tmp &= ~LC_SET_QUIESCE;
+@@ -9627,15 +9617,15 @@ static void cik_pcie_gen3_enable(struct radeon_device *rdev)
+ 	speed_cntl &= ~LC_FORCE_DIS_SW_SPEED_CHANGE;
+ 	WREG32_PCIE_PORT(PCIE_LC_SPEED_CNTL, speed_cntl);
+ 
+-	pcie_capability_read_word(rdev->pdev, PCI_EXP_LNKCTL2, &tmp16);
+-	tmp16 &= ~PCI_EXP_LNKCTL2_TLS;
++	tmp16 = 0;
+ 	if (speed_cap == PCIE_SPEED_8_0GT)
+ 		tmp16 |= PCI_EXP_LNKCTL2_TLS_8_0GT; /* gen3 */
+ 	else if (speed_cap == PCIE_SPEED_5_0GT)
+ 		tmp16 |= PCI_EXP_LNKCTL2_TLS_5_0GT; /* gen2 */
+ 	else
+ 		tmp16 |= PCI_EXP_LNKCTL2_TLS_2_5GT; /* gen1 */
+-	pcie_capability_write_word(rdev->pdev, PCI_EXP_LNKCTL2, tmp16);
++	pcie_capability_clear_and_set_word(rdev->pdev, PCI_EXP_LNKCTL2,
++					   PCI_EXP_LNKCTL2_TLS, tmp16);
+ 
+ 	speed_cntl = RREG32_PCIE_PORT(PCIE_LC_SPEED_CNTL);
+ 	speed_cntl |= LC_INITIATE_LINK_SPEED_CHANGE;
+diff --git a/drivers/gpu/drm/radeon/si.c b/drivers/gpu/drm/radeon/si.c
+index a91012447b56..32871ca09a0f 100644
+--- a/drivers/gpu/drm/radeon/si.c
++++ b/drivers/gpu/drm/radeon/si.c
+@@ -7189,28 +7189,18 @@ static void si_pcie_gen3_enable(struct radeon_device *rdev)
+ 								   PCI_EXP_LNKCTL_HAWD);
+ 
+ 				/* linkctl2 */
+-				pcie_capability_read_word(root, PCI_EXP_LNKCTL2,
+-							  &tmp16);
+-				tmp16 &= ~(PCI_EXP_LNKCTL2_ENTER_COMP |
+-					   PCI_EXP_LNKCTL2_TX_MARGIN);
+-				tmp16 |= (bridge_cfg2 &
+-					  (PCI_EXP_LNKCTL2_ENTER_COMP |
+-					   PCI_EXP_LNKCTL2_TX_MARGIN));
+-				pcie_capability_write_word(root,
+-							   PCI_EXP_LNKCTL2,
+-							   tmp16);
+-
+-				pcie_capability_read_word(rdev->pdev,
+-							  PCI_EXP_LNKCTL2,
+-							  &tmp16);
+-				tmp16 &= ~(PCI_EXP_LNKCTL2_ENTER_COMP |
+-					   PCI_EXP_LNKCTL2_TX_MARGIN);
+-				tmp16 |= (gpu_cfg2 &
+-					  (PCI_EXP_LNKCTL2_ENTER_COMP |
+-					   PCI_EXP_LNKCTL2_TX_MARGIN));
+-				pcie_capability_write_word(rdev->pdev,
+-							   PCI_EXP_LNKCTL2,
+-							   tmp16);
++				pcie_capability_clear_and_set_word(root, PCI_EXP_LNKCTL2,
++								   PCI_EXP_LNKCTL2_ENTER_COMP |
++								   PCI_EXP_LNKCTL2_TX_MARGIN,
++								   bridge_cfg2 &
++								   (PCI_EXP_LNKCTL2_ENTER_COMP |
++								    PCI_EXP_LNKCTL2_TX_MARGIN));
++				pcie_capability_clear_and_set_word(rdev->pdev, PCI_EXP_LNKCTL2,
++								   PCI_EXP_LNKCTL2_ENTER_COMP |
++								   PCI_EXP_LNKCTL2_TX_MARGIN,
++								   gpu_cfg2 &
++								   (PCI_EXP_LNKCTL2_ENTER_COMP |
++								    PCI_EXP_LNKCTL2_TX_MARGIN));
+ 
+ 				tmp = RREG32_PCIE_PORT(PCIE_LC_CNTL4);
+ 				tmp &= ~LC_SET_QUIESCE;
+@@ -7224,15 +7214,15 @@ static void si_pcie_gen3_enable(struct radeon_device *rdev)
+ 	speed_cntl &= ~LC_FORCE_DIS_SW_SPEED_CHANGE;
+ 	WREG32_PCIE_PORT(PCIE_LC_SPEED_CNTL, speed_cntl);
+ 
+-	pcie_capability_read_word(rdev->pdev, PCI_EXP_LNKCTL2, &tmp16);
+-	tmp16 &= ~PCI_EXP_LNKCTL2_TLS;
++	tmp16 = 0;
+ 	if (speed_cap == PCIE_SPEED_8_0GT)
+ 		tmp16 |= PCI_EXP_LNKCTL2_TLS_8_0GT; /* gen3 */
+ 	else if (speed_cap == PCIE_SPEED_5_0GT)
+ 		tmp16 |= PCI_EXP_LNKCTL2_TLS_5_0GT; /* gen2 */
+ 	else
+ 		tmp16 |= PCI_EXP_LNKCTL2_TLS_2_5GT; /* gen1 */
+-	pcie_capability_write_word(rdev->pdev, PCI_EXP_LNKCTL2, tmp16);
++	pcie_capability_clear_and_set_word(rdev->pdev, PCI_EXP_LNKCTL2,
++					   PCI_EXP_LNKCTL2_TLS, tmp16);
+ 
+ 	speed_cntl = RREG32_PCIE_PORT(PCIE_LC_SPEED_CNTL);
+ 	speed_cntl |= LC_INITIATE_LINK_SPEED_CHANGE;
 -- 
 2.30.2
 
