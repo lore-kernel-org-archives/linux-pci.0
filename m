@@ -2,242 +2,159 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A68BCC2FC1A
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Aug 2023 12:09:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DF1CC2FC18
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Aug 2023 12:11:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350633AbjHQMJB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Aug 2023 08:09:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38554 "EHLO
+        id S1350674AbjHQMLJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Aug 2023 08:11:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33386 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350666AbjHQMIl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2023 08:08:41 -0400
-Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E5C52D5A;
-        Thu, 17 Aug 2023 05:08:37 -0700 (PDT)
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 37HC8Qpn081407;
-        Thu, 17 Aug 2023 07:08:26 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1692274106;
-        bh=DSsIDRJkKIqN2Zvfz06o3GqRZ4WbwzC5i/Q1XGuPtOU=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=Ry6rHyhNX6zvmmEumeuV/ydpwvgCMc1RAA9PPV95bRCrucMcvY/kPgilB5moHUbQ+
-         hdNyXwvRao4KNQxL0fxH9VNkZWFMvVXhYC+TD0Q8OilmgXuDCohiKqF3lPxhVtlM6z
-         YoLLdXHWt763jDvfj5xSQOqQ+9L+tFmYcCXJYKPQ=
-Received: from DLEE112.ent.ti.com (dlee112.ent.ti.com [157.170.170.23])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 37HC8Qc0106636
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 17 Aug 2023 07:08:26 -0500
-Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE112.ent.ti.com
- (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Thu, 17
- Aug 2023 07:08:25 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Thu, 17 Aug 2023 07:08:25 -0500
-Received: from localhost (ileaxei01-snat2.itg.ti.com [10.180.69.6])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 37HC8OEf116518;
-        Thu, 17 Aug 2023 07:08:25 -0500
-From:   Achal Verma <a-verma1@ti.com>
-To:     Vignesh Raghavendra <vigneshr@ti.com>,
-        Tom Joseph <tjoseph@cadence.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof Wilczy_ski <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        with ESMTP id S1350732AbjHQMLF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2023 08:11:05 -0400
+Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2086.outbound.protection.outlook.com [40.107.95.86])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBEB52D68;
+        Thu, 17 Aug 2023 05:10:54 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=E+BrVkY/VEjL4Dee20IzLo8Of8fX7C7r00OJp9Oabbvy/IpNHyZLscOa/4wcgpug5OkXRYXxnvylrCDbyhxx6NUpScImQV3pFk2NiGPfM2+FXTyO07+h9/uyU/zZuiZrs4H/ilTNnZc4czlgSGH+40m9Sgoe/RUjAMP1lRBK+y/7ah5s/Mq2OHK/quwBImry3qWwcdcKSNrnhLKfYlGp6/NHcPC//nICbKozS6AURecWC3W86728CoXlER05iCAJvps36j3sDJKv796/Nx+rTKmV4as760SBwWGCuOoLp/7TN1wDdeGrGC9l3tsA9G8TicJia/AYD4Olsk6Eb7HvLQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xhaIFtd40nJutx+8uNmpgV6+pnbP4bDCepGq+QR4OSs=;
+ b=k83VJ3xEdC8bvxnsWZYdVdekgwBDHdNSoADZMe2DEdA2bo1pKdWmKGEclhN/Oag4RmahhyYa7ovewkUWt5yeuy7TTxIMYuzYA4DjMY3/tl2E34/zVop4quag2EksCCb4Ymh312XkBBKSuX+eVkGEPKBWPlOSYHCRJk+/lKudZfdhcJr6wp7ZaeSlKWq/RCVNx82hmu3UI4BUhepUj6g2WIxdXBv5N7THfn8Cvzoa00mgZ73fHEwN7sl5pCZeHaGE0VpQD/s3GVjBYqtCipsRtzf641dt2imHphsFFgfkhZGu0CyY6nooDGVI8KlclI2E1tOri1XaOygwlGO6C0PtLQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xhaIFtd40nJutx+8uNmpgV6+pnbP4bDCepGq+QR4OSs=;
+ b=w6s8fUjDc+oW/1hkIOvZQ4b8ncaDsXvZEgEEDJh5z61k4ah9OiZ5ZmVIL1A30bl5fNhTqyEtilASfsEzY5kgW5Bm9ONiyckJ7GDae2ikOKpzHHwgEQ8oMW4s+XrhLqcghWTSYJ8P30POVWer9jpqpTwiAyfh008N/hMPvMM1q50=
+Received: from SA1PR03CA0018.namprd03.prod.outlook.com (2603:10b6:806:2d3::29)
+ by MN6PR12MB8471.namprd12.prod.outlook.com (2603:10b6:208:473::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6678.26; Thu, 17 Aug
+ 2023 12:10:52 +0000
+Received: from SA2PEPF00001508.namprd04.prod.outlook.com
+ (2603:10b6:806:2d3:cafe::57) by SA1PR03CA0018.outlook.office365.com
+ (2603:10b6:806:2d3::29) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.17 via Frontend
+ Transport; Thu, 17 Aug 2023 12:10:52 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
+Received: from SATLEXMB03.amd.com (165.204.84.17) by
+ SA2PEPF00001508.mail.protection.outlook.com (10.167.242.40) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6699.15 via Frontend Transport; Thu, 17 Aug 2023 12:10:51 +0000
+Received: from SATLEXMB06.amd.com (10.181.40.147) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 17 Aug
+ 2023 07:10:51 -0500
+Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB06.amd.com
+ (10.181.40.147) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 17 Aug
+ 2023 07:10:51 -0500
+Received: from xhdthippesw40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server id 15.1.2507.27 via Frontend
+ Transport; Thu, 17 Aug 2023 07:10:48 -0500
+From:   Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+To:     <linux-pci@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Achal Verma <a-verma1@ti.com>
-Subject: [RFC PATCH 1/2] PCI: cadence: Add support to build pcie-cadence library as a kernel module
-Date:   Thu, 17 Aug 2023 17:38:22 +0530
-Message-ID: <20230817120823.1158766-2-a-verma1@ti.com>
+        <devicetree@vger.kernel.org>
+CC:     <bhelgaas@google.com>, <robh@kernel.org>, <kw@linux.com>,
+        <linux-kernel@vger.kernel.org>, <lpieralisi@kernel.org>,
+        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
+        "Thippeswamy Havalige" <thippeswamy.havalige@amd.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>
+Subject: [PATCH v3] PCI: xilinx-nwl: Remove unnecessary code which updates primary, secondary and sub-ordinate bus numbers
+Date:   Thu, 17 Aug 2023 17:40:40 +0530
+Message-ID: <20230817121044.8176-1-thippeswamy.havalige@amd.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230817120823.1158766-1-a-verma1@ti.com>
-References: <20230817120823.1158766-1-a-verma1@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SA2PEPF00001508:EE_|MN6PR12MB8471:EE_
+X-MS-Office365-Filtering-Correlation-Id: cedc233e-fff9-40d1-e8da-08db9f1b0040
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: bL2Pl2AZ4U0IOcMBPog231G/fHJ7AZKiuJALzoSndtFNGspFK/C9U16KXJYC0zikguWWNXqWQ9jN1V4vaGkN6Dpp7BlrdC7F8/SQk1Y75qptJxD7KAbAmTJdxljcp60iejV9Fxwc5l5r4AXmOMcpGH/WzSz/FlPWITgX9PWKU7g69LgN//+mXV3PPuv1RMCUG3JJ3l4JV0b8PEaFhQKIclb9z3nMTUqmwS85s6t1tgHAYAWWzsEDgFZvAcX58BWVo1osTmBZ+AyHWyuzItjRsKJ3GXKucqq3MMzsC01t5OXi+j7UIMbnASBfAIwJ51lLDx5Xcr5ZhY+qA/bChNNcxAWkHz/C4mEAyYaSM463zfWISooTO8f3tyu56IY1kJbDuhtD96+89IpRJVINKPPrW0jxtjZL8N4pdQO7iLLXWS1tmj/7LoDIN0CRCna8OOAEF4TZhvc45jHqjyJmGUAyanokghrqE6JkeAdGVEveHt0Ja2INfHTUroKqJfjRBZwP1/8TxbwByDLRLz3UX+DkK+6/TUC3TdlK8AL42/yGivN6HY4B/vvWzgGRAwL0X+2POn23do16G7qmn9Q4NBaVSDwkxTuavqEcGWQ03x02UaTL5wgD3OHSN7PDy2b+vj0/Eza8WcZ3aK7dlI78Xr/a/jth2p1D/CRQhv7sMT9fEzPk446UoqOmdoSTwVeBSgb0Lah3sl/AIfo5Rp0rLJyNJsySWlE5TC4PAJKiZqIUAwYyQHa99FUD5h62wX71nsh5FGhDL2ydjHltmnO1XjGQbIBQV50L9p38vMNJ+yKkBKY=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(39860400002)(396003)(346002)(136003)(376002)(1800799009)(451199024)(186009)(82310400011)(46966006)(40470700004)(36840700001)(316002)(54906003)(82740400003)(356005)(110136005)(81166007)(70586007)(70206006)(5660300002)(41300700001)(36860700001)(44832011)(47076005)(4326008)(8936002)(8676002)(26005)(40460700003)(2906002)(15650500001)(83380400001)(40480700001)(336012)(478600001)(426003)(7416002)(86362001)(36756003)(6666004)(1076003)(2616005)(36900700001)(2101003);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Aug 2023 12:10:51.9775
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: cedc233e-fff9-40d1-e8da-08db9f1b0040
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: SA2PEPF00001508.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN6PR12MB8471
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kishon Vijay Abraham I <kishon@ti.com>
+The primary,secondary and sub-ordinate bus number registers are updated by
+Linux PCI core, so remove code which updates respective fields of type 1
+header.
 
-Cadence PCIe controller driver can be build as kernel built-in driver only,
-which is not required since its not required at boot time.
-Thus, this change adds support to build Cadence PCIe driver as kernel
-module.
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Achal Verma <a-verma1@ti.com>
+Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>
 ---
- drivers/pci/controller/cadence/Kconfig             | 6 +++---
- drivers/pci/controller/cadence/pcie-cadence-ep.c   | 4 ++++
- drivers/pci/controller/cadence/pcie-cadence-host.c | 5 +++++
- drivers/pci/controller/cadence/pcie-cadence.c      | 9 +++++++++
- drivers/pci/controller/cadence/pcie-cadence.h      | 4 ++--
- 5 files changed, 23 insertions(+), 5 deletions(-)
+changes in v3:
+- Remove unnecessary period at end of subject line.
+- Updated commit message.
+changes in v2:
+- Code increasing ECAM Size value is added into a seperate patch.
+- Modified commit messages.
+changes in v1:
+- Modified commit messages.
+---
+ drivers/pci/controller/pcie-xilinx-nwl.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
-diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
-index 291d12711363..abc245dbedab 100644
---- a/drivers/pci/controller/cadence/Kconfig
-+++ b/drivers/pci/controller/cadence/Kconfig
-@@ -4,16 +4,16 @@ menu "Cadence-based PCIe controllers"
- 	depends on PCI
- 
- config PCIE_CADENCE
--	bool
-+	tristate
- 
- config PCIE_CADENCE_HOST
--	bool
-+	tristate
- 	depends on OF
- 	select IRQ_DOMAIN
- 	select PCIE_CADENCE
- 
- config PCIE_CADENCE_EP
--	bool
-+	tristate
- 	depends on OF
- 	depends on PCI_ENDPOINT
- 	select PCIE_CADENCE
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index 8742b2f594fd..85f0741166b5 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/delay.h>
- #include <linux/kernel.h>
-+#include <linux/module.h>
- #include <linux/of.h>
- #include <linux/pci-epc.h>
- #include <linux/platform_device.h>
-@@ -753,3 +754,6 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_ep_setup);
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index fc696d94f7a2..06f3e1de1de2 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/delay.h>
- #include <linux/kernel.h>
-+#include <linux/module.h>
- #include <linux/list_sort.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -72,6 +73,7 @@ void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 
- 	return rc->cfg_base + (where & 0xfff);
- }
-+EXPORT_SYMBOL_GPL(cdns_pci_map_bus);
- 
- static struct pci_ops cdns_pcie_host_ops = {
- 	.map_bus	= cdns_pci_map_bus,
-@@ -576,3 +578,6 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_host_setup);
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index 4251fac5e310..4d16f6f37d1c 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -5,6 +5,7 @@
- 
- #include <linux/kernel.h>
- #include <linux/of.h>
-+#include <linux/module.h>
- 
- #include "pcie-cadence.h"
- 
-@@ -23,6 +24,7 @@ void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
- 
- 	cdns_pcie_writel(pcie, CDNS_PCIE_LTSSM_CONTROL_CAP, ltssm_control_cap);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_detect_quiet_min_delay_set);
- 
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
- 				   u32 r, bool is_io,
-@@ -100,6 +102,7 @@ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_set_outbound_region);
- 
- void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
- 						  u8 busnr, u8 fn,
-@@ -134,6 +137,7 @@ void cdns_pcie_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), addr0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), addr1);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_set_outbound_region_for_normal_msg);
- 
- void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
+diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
+index 176686bdb15c..d8a3a08be1d5 100644
+--- a/drivers/pci/controller/pcie-xilinx-nwl.c
++++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+@@ -166,7 +166,6 @@ struct nwl_pcie {
+ 	int irq_intx;
+ 	int irq_misc;
+ 	u32 ecam_value;
+-	u8 last_busno;
+ 	struct nwl_msi msi;
+ 	struct irq_domain *legacy_irq_domain;
+ 	struct clk *clk;
+@@ -625,7 +624,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
  {
-@@ -146,6 +150,7 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r), 0);
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_reset_outbound_region);
+ 	struct device *dev = pcie->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+-	u32 breg_val, ecam_val, first_busno = 0;
++	u32 breg_val, ecam_val;
+ 	int err;
  
- void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
- {
-@@ -156,6 +161,7 @@ void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
- 		phy_exit(pcie->phy[i]);
- 	}
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_disable_phy);
+ 	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
+@@ -683,15 +682,6 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	nwl_bridge_writel(pcie, upper_32_bits(pcie->phys_ecam_base),
+ 			  E_ECAM_BASE_HI);
  
- int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
- {
-@@ -243,6 +249,7 @@ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cdns_pcie_init_phy);
- 
- static int cdns_pcie_suspend_noirq(struct device *dev)
- {
-@@ -271,3 +278,5 @@ const struct dev_pm_ops cdns_pcie_pm_ops = {
- 	NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
- 				  cdns_pcie_resume_noirq)
- };
-+
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index adcab11e62cd..5aa0b1298b17 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -532,7 +532,7 @@ static inline bool cdns_pcie_link_up(struct cdns_pcie *pcie)
- 	return true;
- }
- 
--#ifdef CONFIG_PCIE_CADENCE_HOST
-+#if IS_ENABLED(CONFIG_PCIE_CADENCE_HOST)
- int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
- void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			       int where);
-@@ -549,7 +549,7 @@ static inline void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int d
- }
- #endif
- 
--#ifdef CONFIG_PCIE_CADENCE_EP
-+#if IS_ENABLED(CONFIG_PCIE_CADENCE_EP)
- int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep);
- #else
- static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+-	/* Get bus range */
+-	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CONTROL);
+-	pcie->last_busno = (ecam_val & E_ECAM_SIZE_LOC) >> E_ECAM_SIZE_SHIFT;
+-	/* Write primary, secondary and subordinate bus numbers */
+-	ecam_val = first_busno;
+-	ecam_val |= (first_busno + 1) << 8;
+-	ecam_val |= (pcie->last_busno << E_ECAM_SIZE_SHIFT);
+-	writel(ecam_val, (pcie->ecam_base + PCI_PRIMARY_BUS));
+-
+ 	if (nwl_pcie_link_up(pcie))
+ 		dev_info(dev, "Link is UP\n");
+ 	else
 -- 
-2.25.1
+2.17.1
 
