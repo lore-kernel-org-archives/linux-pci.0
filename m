@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD3B1C7EE2A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC4A1C77B73
 	for <linux-pci@archiver.kernel.org>; Fri, 18 Aug 2023 05:16:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1356843AbjHRFPx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Aug 2023 01:15:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37688 "EHLO
+        id S1356786AbjHRFPr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Aug 2023 01:15:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50674 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1356508AbjHRFPX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2023 01:15:23 -0400
-Received: from NAM04-MW2-obe.outbound.protection.outlook.com (mail-mw2nam04on2082.outbound.protection.outlook.com [40.107.101.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7A2726B6;
-        Thu, 17 Aug 2023 22:15:12 -0700 (PDT)
+        with ESMTP id S1356493AbjHRFPJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2023 01:15:09 -0400
+Received: from NAM04-BN8-obe.outbound.protection.outlook.com (mail-bn8nam04on2057.outbound.protection.outlook.com [40.107.100.57])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4E8A26A8;
+        Thu, 17 Aug 2023 22:15:08 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ImAx0XHXweq9cxFzwr/38kpHevq4xVbdblWlY4eY2lhnY2sDEAz4tGzvAfm2khQQ3T9sOhJRQi9BFnJgDUTNr68d5VDjZ+UwGMiEa9iiBMm43FduywxkE2O1CM0zrSpljhw6G5VNyLzZwweXhYWoequMkiJRKBC3T30MAgx9d9jU1yU2OzZGRiLXuA9kc91UDpJzTTKAyRsowJYIdrPrt2cb49oavd0WbKH2+Ysdz7t2rkf7KhLru06yNwzz5bF0Q2k5m9/6R5P7yD7RuiBJWX2faRElZyU7LMtnl26bCJMzufFSMA+xaO9r3UwniolV5405wrzXnfHUJ0+x4uYgSg==
+ b=kYcRZVs40BQbuozWxFEij9XtUGzPQHnU+fZgChUK7XoyL2clgXV6Fpi2yWCI/ItNztqeB6S/hfoWCo1cISSsP3LmJexSPSP9f+ksrTqYxNJ5BfvpJHvaWn2N0trbDqmsRHoOa/q6mFVWIxw9/m6+d3HLrI0eZR4P0Nt45rHaFKBM23FAB/UMPCgaYC0jCCmQLK5VdIKVxCkfRTr32gXWnA8bOMS+RL3gCryZgHLaDQaaBlLz/3720NT9dTLipDcJwSFUUBan9BjDEQ+y4mLebTL37zD3v7yRlI9LIvVffHJp0ueHUGio+hRQSjLMk7FmOSXWBruRfdP3Nxzn17Qz/g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=6mdpErebdeUHIqJqXzE4h8gfzDj6nsgjdNisiSYee2M=;
- b=ItxB9DbmieBzS/7lNZlfGpiJX8M0gRkXW3OCM8IEYyv9712WUdsgzYFXOIdP9eN/YCwNEHs+cW33uG7/ZjlUplzGkQJxySuEk4lTVuDWNRYwfAc6x+BvmrC3jdhPzYUUuD5cv02CgCgulcbMh9P68N3YO/GpqFvzgVaDfLxvtbkcoJp42nNEvq/3qBdZCgT0rnKF/Uq1TOH62UVTT/X0YOJRHsH4LDbik+7xdAAxGcAPWK2dcNG5pRjPhUXCwlocEAO/ZNqAcCARTz0BDKJzKeB6IGAyyx59mjfXVR7TmxdHRtWxDtLpK1oiuHFhgP8js7+pznfusD6nNVWWZryvpw==
+ bh=0YuM/Sqk8U1Vs5QgWnHntvfb2qSkzjwojLanSNntx0w=;
+ b=hqKjthu4/cSSz4OeL8tYXxmlI/Ri1kqGoynLM/OvHTYef7gtu8CpWfHsHydDzBrCuqdL411vxmbZyZ6P6nmlofVrCBjjWgJP2BfMYDjPv861kV4NxcU1DJkFyI2qS36+OXMyupaN7ZFkn6gI1y5YIpkLAqVeGHwF+5RBoYz4QCBNv3Y3VKuylcH+83o6YwZfpH0XL8VHvED88EPdAf/j2UxLWZpVO5NtJe8sU8eCkxEjJUJZ6vcYsBADZvBTl196xMXgYX8XMwc12gZHnx8h5hR31oMDXlNVQjVjS4xYTrC7UlmoMmzZsYJtPhLC7afp/8JFADGZJOOjOxefuMDL9A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6mdpErebdeUHIqJqXzE4h8gfzDj6nsgjdNisiSYee2M=;
- b=xbgoxgWZBlHK0lcc1p9FE4WFjfIsfJPZ9RAxb9lVoVkn3Z0p1TLa5Sw6sxksrmH7D7PZGNU7wY054xMGHMB91T6SKTG3gtT0slq5lHvS7XmInRjrxv4EstoGgVFlUicONWVrFvLixJMSQXd2g6oKHn6tPXPPhv4Tk4OC/m4q7BM=
-Received: from SN7PR04CA0194.namprd04.prod.outlook.com (2603:10b6:806:126::19)
- by SA1PR12MB7367.namprd12.prod.outlook.com (2603:10b6:806:2b5::12) with
+ bh=0YuM/Sqk8U1Vs5QgWnHntvfb2qSkzjwojLanSNntx0w=;
+ b=Xw7OTaY/7AxoL4prHydDTWCXGiiqf2eQHlOfWlnAmShnjiHZPwhCu5n9grdkWAsPLazr2w3mm6n+zAGj6Vqh+vdRvaR2MiLW+hcUVeelDVT1cdnYtJ/e0vfiHxvNNaPaY/ONMbQ9iuh/k6ATOF2zb8FyfkC96HJZhbqhonltu9I=
+Received: from SN7PR04CA0205.namprd04.prod.outlook.com (2603:10b6:806:126::30)
+ by BN9PR12MB5354.namprd12.prod.outlook.com (2603:10b6:408:103::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6678.31; Fri, 18 Aug
- 2023 05:15:09 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.20; Fri, 18 Aug
+ 2023 05:15:05 +0000
 Received: from SN1PEPF0002636C.namprd02.prod.outlook.com
- (2603:10b6:806:126:cafe::7c) by SN7PR04CA0194.outlook.office365.com
- (2603:10b6:806:126::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.17 via Frontend
- Transport; Fri, 18 Aug 2023 05:15:09 +0000
+ (2603:10b6:806:126:cafe::dd) by SN7PR04CA0205.outlook.office365.com
+ (2603:10b6:806:126::30) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.20 via Frontend
+ Transport; Fri, 18 Aug 2023 05:15:05 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  SN1PEPF0002636C.mail.protection.outlook.com (10.167.241.137) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6699.15 via Frontend Transport; Fri, 18 Aug 2023 05:15:09 +0000
+ 15.20.6699.15 via Frontend Transport; Fri, 18 Aug 2023 05:15:05 +0000
 Received: from SITE-L-T34-2.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 18 Aug
- 2023 00:15:07 -0500
+ 2023 00:15:03 -0500
 From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     "Rafael J . Wysocki" <rafael@kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
@@ -65,9 +65,9 @@ CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         "Iain Lane" <iain@orangesquash.org.uk>,
         Shyam-sundar S-k <Shyam-sundar.S-k@amd.com>,
         Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v13 12/12] PCI: ACPI: Limit the Intel specific opt-in to D3 to 2024
-Date:   Fri, 18 Aug 2023 00:13:19 -0500
-Message-ID: <20230818051319.551-13-mario.limonciello@amd.com>
+Subject: [PATCH v13 09/12] ACPI: x86: s2idle: Add a function to get constraints for a device
+Date:   Fri, 18 Aug 2023 00:13:16 -0500
+Message-ID: <20230818051319.551-10-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230818051319.551-1-mario.limonciello@amd.com>
 References: <20230818051319.551-1-mario.limonciello@amd.com>
@@ -79,58 +79,98 @@ X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN1PEPF0002636C:EE_|SA1PR12MB7367:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3e262cff-f303-4be1-12d1-08db9faa17bb
+X-MS-TrafficTypeDiagnostic: SN1PEPF0002636C:EE_|BN9PR12MB5354:EE_
+X-MS-Office365-Filtering-Correlation-Id: 69c28048-0627-404d-4363-08db9faa1543
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 6GYZafMXTYjq2f0Gk9HfJWdLzCfZARHLscM/nu4D4J3PWWnsoVnp58mO2bQ/j7OM1mkFrUDJpLlLKNjOtnfnpIt5a21ir+eaRraBUOJ+Es0qA234tjXwEudwU7+r0VprHgE5H1igKGM6BcsGlWxu3BnYYc1Z/IMrhhXlOWmyBayBmz+9/+YdvBLPWY15X1dvi0DJJcWqPtiTKMlQpWyzzZaAmR8WcNfXudiFSwfZFQgQs/wvn7dWy9shcP/GuGLZ8V6+I4fJPXEiZo/b10cd5awMVDhJAAPkVEs8to7DCo6ztBi0zFaHN7ZXE9AgyCXXpXXvxMhqfF32JRVvVwZx9sS7KnNSnAVUcjdD/veUuncqJAWzn+Z44hL88+f0r9wbD5g4vXAJAKx9oFwXEVTwHHXwXe3paLPX9HSfYNkTDRLgDUxnntuLh3yzkFa7fdn4wsBd+0KlsM8DSVKzg1WlW1UjWjlefEn3kcuioOv5BDG2aznOfbQUXL2ABKpn4eWprJ0MddfV8aOAJQgcPP1drg++5eRhHMn5BPkYw8uKwi+52vWdakQKw0FVATWmrMw86KNKRHF55tlxO3vNTcwSHEMXpzIonGfI0zGvriJYl5s2yiMt9zzSTAytx/G25XaomgNLsNT6voLuyM3gTo1hTUARG0lqcKePQDvBmb811KXNJMYi/oeqFaouhe4k+fEBWU0w5XMg8Mcf2IRZtZVnKIGiQkiFVTT0oxysp73TeluUZX0Ewaz6xPCdDDNw146by7BPCwc4RVlqC6oqoFG77Q==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(346002)(376002)(136003)(396003)(39860400002)(451199024)(1800799009)(82310400011)(186009)(40470700004)(36840700001)(46966006)(86362001)(36756003)(82740400003)(356005)(81166007)(40480700001)(2616005)(5660300002)(44832011)(110136005)(16526019)(70586007)(478600001)(70206006)(7696005)(6666004)(54906003)(316002)(26005)(1076003)(4326008)(8676002)(8936002)(41300700001)(40460700003)(47076005)(336012)(36860700001)(83380400001)(426003)(4744005)(2906002)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: l204H1twffMidFE659CcoPdMvwlJ+OyjFFg2atIWnCtP1LZxH+wm93u8Vr/NwPvz1c8bxKw/096pQiwXsgMa+V70jytwwzhDMykuUjhLN75ofHAjIE3+2NbTQk1KYNtO3EHUR95tJy3SmpsZsTu2jAqbEMfMmwrDlsuNSS6Y6YvqPQcFgrhfWwuwlAKgfR5unqGpDcdp7M5JZvUTMnXFafK9oGHnOrYKLL6t9RLAhWVWaUrAVkBtbQF8OltG3AnCMntfbRfpKDsGD4ujPYY8KOH5kw6zPATtqVKwLcaLp/U13Q3BHs3srLODmhGPfsT2P/RwT5Jff6OGLKlN/dIfATuQ/0/ubs3LGeixczOCH8swYy+gKIA8ej93O8nf7KkBVjatODeJHw1dI0G1TRc1JcPFJf4EHGkvSkrY2BICKte9c5H6teFIx/dcPKjswKb06TBUiu/Gtq5T4RxHRvkAyRSCKC4RUItm3yFGg/Ltd4vGMWdNjYTYxkkusZ5tWIqmr0qWreDb6vV6zhU007LJiFHQl3bM7hCUORt0RzS/pgj675Go1nfcoRyslOy/ZlI0NslX0WMnWgnIdnsf2x/XW54QBUvm7PesSotgdbZJQKt94Z7wxwlQAyzS8yiouFzha5bo/y+WOY3IZ7t67o5FYMglbEhxmPE37Cyn838xGwMFRSmB0Z1Vjc3J2RWdpCVNkzTOCQwC/KEQzs8dgZ+cDDJjr1Qcpp96PscSXK9ZCXexUe40H95U0DHKQwl3n1Vnt2NWboSnVsME4+ug9MYaVg==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(346002)(136003)(39860400002)(376002)(396003)(186009)(1800799009)(82310400011)(451199024)(36840700001)(46966006)(40470700004)(6666004)(7696005)(40460700003)(86362001)(16526019)(336012)(426003)(1076003)(26005)(40480700001)(83380400001)(36756003)(36860700001)(47076005)(81166007)(82740400003)(356005)(2616005)(2906002)(54906003)(316002)(41300700001)(70206006)(70586007)(110136005)(44832011)(5660300002)(8676002)(4326008)(8936002)(478600001)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2023 05:15:09.3668
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2023 05:15:05.2418
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3e262cff-f303-4be1-12d1-08db9faa17bb
+X-MS-Exchange-CrossTenant-Network-Message-Id: 69c28048-0627-404d-4363-08db9faa1543
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: SN1PEPF0002636C.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB7367
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5354
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Intel systems that need to have PCIe ports in D3 for low power idle
-specify this by constraints on the ACPI PNP0D80 device. As this information
-is queried, limit the DMI BIOS year check to stop at 2024. This will
-allow future systems to rely on the constraints check to set up policy
-like non-Intel systems do.
+Other parts of the kernel may use constraints information to make
+decisions on what power state to put a device into.
 
 Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
 v12->v13:
- * New patch
+ * Drop checking for enabled, just return constraints
+v11->v12:
+ * Use for_each_lpi_constraint instead
+ * use CONFIG_SUSPEND instead of CONFIG_ACPI_SLEEP
+v9->v10:
+ * split from other patches
+ * kerneldoc fixes
+ * move debug statement to this function
 ---
- drivers/pci/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/acpi/x86/s2idle.c | 24 ++++++++++++++++++++++++
+ include/linux/acpi.h      |  6 ++++++
+ 2 files changed, 30 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0fc8d35154f97..5b9e11e254f34 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3049,10 +3049,11 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 			return true;
+diff --git a/drivers/acpi/x86/s2idle.c b/drivers/acpi/x86/s2idle.c
+index 1aa3cd5677bd8..dd961f3a60577 100644
+--- a/drivers/acpi/x86/s2idle.c
++++ b/drivers/acpi/x86/s2idle.c
+@@ -299,6 +299,30 @@ static void lpi_device_get_constraints(void)
+ 	ACPI_FREE(out_obj);
+ }
  
- 		/*
--		 * It is safe to put Intel PCIe ports from 2015 or newer
-+		 * It is safe to put Intel PCIe ports from 2015 to 2024
- 		 * to D3.
- 		 */
- 		if (bridge->vendor == PCI_VENDOR_ID_INTEL &&
-+		    dmi_get_bios_year() <= 2024 &&
- 		    dmi_get_bios_year() >= 2015)
- 			return true;
- 		break;
++/**
++ * acpi_get_lps0_constraint - get any LPS0 constraint for a device
++ * @dev: device to get constraints for
++ *
++ * Returns:
++ *  - the value for constraint.
++ *  - Otherwise, -ENODEV.
++ */
++int acpi_get_lps0_constraint(struct device *dev)
++{
++	struct lpi_constraints *entry;
++
++	for_each_lpi_constraint(entry) {
++		if (!device_match_acpi_handle(dev, entry->handle))
++			continue;
++		acpi_handle_debug(entry->handle,
++				  "ACPI device constraint: %d\n", entry->min_dstate);
++		return entry->min_dstate;
++	}
++	dev_dbg(dev, "No ACPI device constraint specified\n");
++
++	return -ENODEV;
++}
++
+ static void lpi_check_constraints(void)
+ {
+ 	struct lpi_constraints *entry;
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index f1552c04a2856..6745535444c76 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -1109,6 +1109,12 @@ struct acpi_s2idle_dev_ops {
+ };
+ int acpi_register_lps0_dev(struct acpi_s2idle_dev_ops *arg);
+ void acpi_unregister_lps0_dev(struct acpi_s2idle_dev_ops *arg);
++int acpi_get_lps0_constraint(struct device *dev);
++#else /* CONFIG_SUSPEND && CONFIG_X86 */
++static inline int acpi_get_lps0_constraint(struct device *dev)
++{
++	return -ENODEV;
++}
+ #endif /* CONFIG_SUSPEND && CONFIG_X86 */
+ #ifndef CONFIG_IA64
+ void arch_reserve_mem_area(acpi_physical_address addr, size_t size);
 -- 
 2.34.1
 
