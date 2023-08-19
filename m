@@ -2,109 +2,81 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E078CEE49A0
-	for <linux-pci@archiver.kernel.org>; Sat, 19 Aug 2023 02:41:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96BA8EE4993
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Aug 2023 10:59:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244143AbjHSCkf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Aug 2023 22:40:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37562 "EHLO
+        id S231699AbjHSK7v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 19 Aug 2023 06:59:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244235AbjHSCke (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2023 22:40:34 -0400
-Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 056273ABC;
-        Fri, 18 Aug 2023 19:40:31 -0700 (PDT)
-Received: from loongson.cn (unknown [10.20.42.43])
-        by gateway (Coremail) with SMTP id _____8CxLOudK+BkdQ0aAA--.48059S3;
-        Sat, 19 Aug 2023 10:40:29 +0800 (CST)
-Received: from [10.20.42.43] (unknown [10.20.42.43])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8Ax8uScK+BksBReAA--.33767S3;
-        Sat, 19 Aug 2023 10:40:29 +0800 (CST)
-Message-ID: <ed87b8de-9fb6-fbee-2c6d-cebf712ccda5@loongson.cn>
-Date:   Sat, 19 Aug 2023 10:40:28 +0800
+        with ESMTP id S231697AbjHSK7u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Aug 2023 06:59:50 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F90D48887;
+        Sat, 19 Aug 2023 03:57:06 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id AA8D961F36;
+        Sat, 19 Aug 2023 10:57:05 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85DCDC433C7;
+        Sat, 19 Aug 2023 10:57:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1692442625;
+        bh=Mn8ulUN0jq+qzUt1cHG1kBd7PLnMl6tB5HKMwHLTmc4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ITOT/jqJJxiT7PYDSYOmskWxqFHRsGeE1r260Po8q+Af5TmRBESANo+9/BcI524T3
+         1rnoXT4hHj6CdWGAz9HUCJlqjtS36q5kLmFMbbcOXXqhRO7ypfzqbyHAvX2uDgQ2xx
+         swqDk9+VaqScE2B2QbQqOok/LdKWC2TbGWTeXTD4=
+Date:   Sat, 19 Aug 2023 12:57:02 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Alistair Francis <alistair23@gmail.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        Jonathan.Cameron@huawei.com, lukas@wunner.de,
+        alex.williamson@redhat.com, christian.koenig@amd.com,
+        kch@nvidia.com, logang@deltatee.com, linux-kernel@vger.kernel.org,
+        chaitanyak@nvidia.com, rdunlap@infradead.org,
+        Alistair Francis <alistair.francis@wdc.com>
+Subject: Re: [PATCH v6 2/3] sysfs: Add a attr_is_visible function to
+ attribute_group
+Message-ID: <2023081959-spinach-cherisher-b025@gregkh>
+References: <20230817235810.596458-1-alistair.francis@wdc.com>
+ <20230817235810.596458-2-alistair.francis@wdc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.13.0
-Subject: Re: [PATCH v4] PCI/VGA: Make the vga_is_firmware_default() less
- arch-dependent
-Content-Language: en-US
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        loongson-kernel@lists.loongnix.cn, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org
-References: <20230817220853.GA328159@bhelgaas>
-From:   suijingfeng <suijingfeng@loongson.cn>
-In-Reply-To: <20230817220853.GA328159@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID: AQAAf8Ax8uScK+BksBReAA--.33767S3
-X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
-X-Coremail-Antispam: 1Uk129KBj93XoW7tr48uw4xGw17Zr43Xry3WrX_yoW8CF48pr
-        4YganrGF4kG3Z7A3sxAws5XF45uayvyFZ8Gry5Ar18ur45Gr1aqrnrKrZ0gwnrCrnxt3WS
-        krn8Kr4IkFyDZagCm3ZEXasCq-sJn29KB7ZKAUJUUUU7529EdanIXcx71UUUUU7KY7ZEXa
-        sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-        0xBIdaVrnRJUUUB0b4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-        IYs7xG6rWj6s0DM7CIcVAFz4kK6r1Y6r17M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-        0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-        Gr0_Gr1UM2kKe7AKxVWUXVWUAwAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYI
-        kI8VC2zVCFFI0UMc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUAVWU
-        twAv7VC2z280aVAFwI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcVAKI48JMx
-        k0xIA0c2IEe2xFo4CEbIxvr21l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_
-        Gr1l4IxYO2xFxVAFwI0_GFv_Wrylx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67
-        AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8I
-        cVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI
-        8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v2
-        6r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU466zUUUUU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230817235810.596458-2-alistair.francis@wdc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On Thu, Aug 17, 2023 at 07:58:09PM -0400, Alistair Francis wrote:
+> The documentation for sysfs_merge_group() specifically says
+> 
+>     This function returns an error if the group doesn't exist or any of the
+>     files already exist in that group, in which case none of the new files
+>     are created.
+> 
+> So just not adding the group if it's empty doesn't work, at least not
+> with the code we currently have. The code can be changed to support
+> this, but it is difficult to determine how this will affect existing use
+> cases.
 
+Did you try?  I'd really really really prefer we do it this way as it's
+much simpler overall to have the sysfs core "do the right thing
+automatically" than to force each and every bus/subsystem to have to
+manually add this type of attribute.
 
-On 2023/8/18 06:08, Bjorn Helgaas wrote:
-> I guess the point here is that:
->
->    - 03:00.0 BAR 0 is [mem 0xe0050000000-0xe005fffffff]
->
->    - screen_info says the framebuffer is
->      [mem 0xe0050000000-0xe005fffffff] (or part of it)
->
->    - Therefore, we want 03:00.0 to be the default VGA
->
->    - PCI core reassigns 03:00.0 BAR 0 to
->      [mem 0xe0030000000-0xe003fffffff]
->
->    - PCI core assigns a 00:06.1 BAR to contain
->      [mem 0xe0050000000-0xe005fffffff]
->
->    - vga_is_firmware_default() incorrectly decides 00:06.1 should be
->      the default VGA because it has a BAR that contains the screen_info
->      address range
->
-> Is that right?
+Also, on a personal level, I want this function to work as it will allow
+us to remove some code in some busses that don't really need to be there
+(dynamic creation of some device attributes), which will then also allow
+me to remove some apis in the driver core that should not be used at all
+anymore (but keep creeping back in as there is still a few users.)
 
-Yes, The 00:06.1 is loongson integrated display controller, integrated in LS7A1000 North bridge.
+So I'll be selfish here and say "please try to get my proposed change to
+work, it's really the correct thing to do here."
 
+thanks,
 
-On loongarch, before apply apply any patch, VGAARB always select 00:06.1 as the default boot device.
-because it is enumerated first. It is always the first VGA compatible device found on our system.
-Because its PCI domain, bus, function number is smallest. And it own IO and MEM, so the 00:06.1 will
-always be selected as the default boot device. Even you plug a discrete GPU on the mother board.
-
-
-Therefore we need help the vga_is_firmware_default() to overriding previous.
-On a multiple GPU co-exist case (on loongson platform), if no "overriding previous" being printed.
-then there something wrong. On normal case, we need the discrete GPU overriding the integrated one.
-Because the discrete GPU is more powerful than the platform integrated.
-
-But what we want is let the VGAARB determine the primary GPU by referencing the firmware.
-
-If firmware put the firmware framebuffer in the VRAM of the integrated display card(00:06.1).
-then the integrated display card should be the primary GPU.
-
-If firmware put the firmware framebuffer in the VRAM of the discrete display card,
-then the discrete display card should be the primary GPU.
-
+greg k-h
