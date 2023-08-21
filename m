@@ -2,124 +2,160 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6813FEE49AE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Aug 2023 18:54:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B4D4EE49A5
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Aug 2023 19:08:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229490AbjHUSyZ convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Aug 2023 14:54:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33294 "EHLO
+        id S229784AbjHUTIW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Aug 2023 15:08:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229499AbjHUSyY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2023 14:54:24 -0400
-Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EABEB65A5;
-        Mon, 21 Aug 2023 11:54:03 -0700 (PDT)
-Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-6874a386ec7so460145b3a.1;
-        Mon, 21 Aug 2023 11:54:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692644023; x=1693248823;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=AjNsowUK9gird43ia4GlcF2/+kMuvjQMQyQUr20YgY8=;
-        b=amwrs4uh45BMtmtUtzHNXlwhVSjGqBD76zMSECZDaXl+dtPX9a5THloXqYsZv5SSx+
-         GhsYMWBuQ//jlDXawrcaTaR4pvALU9H53LVU0L/j8ztAQSfKDYygplHam3MivfZgB6XS
-         2utuKvz2ckcnVLjKo1T0AqZaQfFjb0jghYGohaUbokXhdJlAlDxWYHjAwHuav3gH7YG8
-         F4RB9IxwgYh/jL9I91ZNAVRjED6f2f8+aV0sjE2m9LSlwhIHgbKmr3VGOJ1QuVX8Yfk1
-         j5+fLNLdQ1dqu/OLEwAqz07RoUDU0aZsr/c0OhXYeB3yAz+lR1PXmmwVpU+2pSGwFdFx
-         L5xw==
-X-Gm-Message-State: AOJu0YyiPbab9WQt6/FqQsKbaK4SBUdCr+9O+PEVndr6rhfR4Ol9Q3aJ
-        oOK0/8UpVh8OSMOj5FuCksH0R4FhQTS6tCsFpIh7k8si
-X-Google-Smtp-Source: AGHT+IGbkE5EtyoRuBeaQEblim4mO21X78UOxSVlgSlgdlH4DAwReaNaX8x02A4Ls5imOEsvndnFA+E2HFdO+x3TqsA=
-X-Received: by 2002:a4a:e882:0:b0:570:d852:f77f with SMTP id
- g2-20020a4ae882000000b00570d852f77fmr3034647ooe.1.1692643588293; Mon, 21 Aug
- 2023 11:46:28 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230818194027.27559-1-mario.limonciello@amd.com> <20230818194027.27559-5-mario.limonciello@amd.com>
-In-Reply-To: <20230818194027.27559-5-mario.limonciello@amd.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Mon, 21 Aug 2023 20:46:17 +0200
-Message-ID: <CAJZ5v0j_tmW1uWZF7ShK=fwnVGjjy8CSf7DJErJdSaD_dgW8WQ@mail.gmail.com>
-Subject: Re: [PATCH v14.c 4/4] PCI: ACPI: Limit the Intel specific opt-in to
- D3 to 2024
-To:     Mario Limonciello <mario.limonciello@amd.com>
+        with ESMTP id S229762AbjHUTIV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2023 15:08:21 -0400
+Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam04on2054.outbound.protection.outlook.com [40.107.102.54])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 414991BB;
+        Mon, 21 Aug 2023 12:08:20 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=a+Ir2iwjUUF2AbQYyn1hnl/RVusMj96c4blZwhTMG+f1N9SUH2SfRWWp/WIBML8LNZ1PHwqS2ZdMAg/wmAp6/88J3pXGJ5YJKqGwfE2bmtRJJEB0MBYWurpQTB+qAliSsbiVmuYY5eh/XyrMQFefDt7XUEKonnHRp8GqdfzWt9Dgt6WUdnOi1hOTdqIyE1NKlqROlf7Q/KXCW57D1UCcLd0C57xnos4PQtXHIBDPIkmTLK+DyokhYdS5I/1Z9C3sjrP+IqnOdVq/HDzNK67EknjsyJW7a1tbmcEtnhBj3SAUYc4nM36/cY4WnVda0REpTEWodtAGiBL+PetCFwP/1Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ikGcVF3RzrpuanPRnXZOfXLC3ZJ8N8vkYp0iCDN8H00=;
+ b=ewsf68uqRdFljRGCHLey71bZn4zb3p/iNzD5A3SBz4r7qNurdgWivwPe++Vhd7zEjeFBsojxPcQL9Z9uIT6gBFsWUvY8z75RXK8FXfyE/X1wUpJ2bcCmekkVlWtjng0RGTIkWCrldROHoveWIXIP48E5zFBiwu6w6dOH8ExroUsywN+336mv2e72ZB7rL7XuGUMDTXKG0EGWjYPQqqUgWAk+b7Qf/KDJEGK/+WIV7C8N0jHJniBzc7NPSDpNtxG5m6JWRQjEjWPtJD6EDZXhtuggTPn0OdBb7yqpCR1nqBJvtGtI/Nlqogqu76nNy+MHYGvGMTdrJf+ZmaWk14vPew==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ikGcVF3RzrpuanPRnXZOfXLC3ZJ8N8vkYp0iCDN8H00=;
+ b=HVOdFdFmvROMTm94f3JIYN5lJQXP9yv8aJEQ7Ghe7WA+CLAYBgdx0/hthYdwGE+eKtD2uGIRH+3JUXvQt0XVyXjLPrPQ1mlHrLbrUwSypXDSfYbbyHI09CliSeDyK25glcpFM4tSWPWs4fbWYNQ7EOFRhbhd6gT1cQ7imSEhkpE=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from MN0PR12MB6101.namprd12.prod.outlook.com (2603:10b6:208:3cb::10)
+ by SJ2PR12MB8783.namprd12.prod.outlook.com (2603:10b6:a03:4d0::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.20; Mon, 21 Aug
+ 2023 19:08:15 +0000
+Received: from MN0PR12MB6101.namprd12.prod.outlook.com
+ ([fe80::36f9:ffa7:c770:d146]) by MN0PR12MB6101.namprd12.prod.outlook.com
+ ([fe80::36f9:ffa7:c770:d146%7]) with mapi id 15.20.6699.022; Mon, 21 Aug 2023
+ 19:08:15 +0000
+Message-ID: <eceb8980-d957-44b8-961c-3accfce962de@amd.com>
+Date:   Mon, 21 Aug 2023 14:08:12 -0500
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v14.b 0/7] Export LPS0 constraints
+Content-Language: en-US
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
 Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
         Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
         Iain Lane <iain@orangesquash.org.uk>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+References: <20230818194007.27410-1-mario.limonciello@amd.com>
+ <CAJZ5v0gNZNRs4hpV5QxxTaPDu1Mp-vDhN-fZZ+_6AZg+nDmg1A@mail.gmail.com>
+From:   "Limonciello, Mario" <mario.limonciello@amd.com>
+In-Reply-To: <CAJZ5v0gNZNRs4hpV5QxxTaPDu1Mp-vDhN-fZZ+_6AZg+nDmg1A@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SA1PR04CA0011.namprd04.prod.outlook.com
+ (2603:10b6:806:2ce::18) To MN0PR12MB6101.namprd12.prod.outlook.com
+ (2603:10b6:208:3cb::10)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN0PR12MB6101:EE_|SJ2PR12MB8783:EE_
+X-MS-Office365-Filtering-Correlation-Id: a53c9afd-7054-41fa-f2e7-08dba279f8ac
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 4pYTy3rq1vGL7vHFLAlB9Qln1vLR8USDitER/j8LiSDjGfvOLlcc8+xuut5lR1MOVUWhWkmlcjXOPyOXuw+dRxfSXbYsmdc96gtQjMJSXHrSpaQVR5SDAw3hjZLg0ubsQBmrXI3vnb/cmKNiLiRBTelxijg7FCaaPUm3nP3y1hmLCb5y5lclFdAKrd0ZicuyHzV/Y5T3Y2zenchqJ2COGNKIXSk5aYDvn654ujPJroQkwhdQaH121buhzwEL7WJo9barUFcBtk8II8+RdSJg6S/f/DVWNRsxf1rCkFf+XPQdBYCX7SENJJ3/TKUgUx0TLMU1KnK4hXChMAkq2lyclKmKp2LGGrj7BXtPjcD2hfm1m/DlyszfNTXE1uEQWJsXNkKS3iYvLmBd3pUapec89EuHQKs8Iebgddxnu6i82o2JwqqahykOFEQSNwOF7DXkjfCCrGj6L9S7SHvDbugB1xTkaq1RmhDurbTinJkmuJeotq3F4bTqa3jQAgu1T8kYx7bbuur2Ir2Mgo8K5uIy7GaUM5Kk9FvKdId+hThT2h8lfAuRVUwM5nPmDghXJSO4+ZEIqVWxoIdF0S+r0d7qtWF/Pu1G1XZ1YeOyO8C5e6xF6POovxBNazvGEebXBElnRmtqP90TnEx+j32ezJOZBw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN0PR12MB6101.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(39860400002)(376002)(366004)(396003)(136003)(346002)(451199024)(1800799009)(186009)(86362001)(5660300002)(2616005)(41300700001)(66556008)(66476007)(316002)(2906002)(66946007)(6916009)(54906003)(31686004)(8676002)(478600001)(4326008)(8936002)(31696002)(6666004)(6486002)(53546011)(6506007)(38100700002)(6512007)(26005)(36756003)(83380400001)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?clVZNkRjbUNyNVhvL3FwbFViL090Rnk0QnoycHJHRVZTN21Gdno4QzhOamNV?=
+ =?utf-8?B?YUowOVZ4eVpYdFp3N21JZFU5bEU3M1liV2FhMllXN2RvR29rRVRSbEUxa3lN?=
+ =?utf-8?B?R0hZdmk2WURaWGhjM2lEMU1UOFFoUWtnMlUwTEtBL0NPeVBNS0JNckxDRTJz?=
+ =?utf-8?B?a0wydWlWekw4Wk4wb2lmdkRhaENLaXBuaUJrVUlPaW1UM2VaamxMQXhMM3Va?=
+ =?utf-8?B?WGNGNlNuSnFiMlJhaisyWjZOaVpHbitYZ3ZHL0hkZDZVbXlyc244c1ZrNTYr?=
+ =?utf-8?B?N2dGUmp3dDEyY0pOalpNY3Q4N0FqVjNxakFvbGxYN216QUovZHVrbHhrOW5Q?=
+ =?utf-8?B?Vy8xWWZVVldCWUJXdENlRlJPc1NiajJpNWVkRi9WcTVvWjkyOTYyMmlISjhD?=
+ =?utf-8?B?Z0N1NUhJNTRZQ0J1WDRwNkMzYWhVb0lYeG90M2VISnpoLzFXMVM4aE5iaVla?=
+ =?utf-8?B?eUd1bFJicThPWlI2UzgrV0ZFR09nMXN0SkFLU3NGemFpZzdhNWVFdnVXUHY5?=
+ =?utf-8?B?YU5JM3RxOTBzS2lzNllNNExCMVhsVlZpU0V1aEM0STJJb3VsYmFVLytVY0xh?=
+ =?utf-8?B?dVMrRmtGY011MzJpOTk5ekZmOFBCeVczdTJDVGI5SXFKYkc4RGRYODlFOG1C?=
+ =?utf-8?B?Qi9YNTd4bGpBTFhzUFNKTG9GSjYwQ1FGRXVvcjdHZGEwY0xuT2w2M2kzYTQv?=
+ =?utf-8?B?L0U1V1czT2J0bkRLZzF3YVM1aHlhelYrOUJXQ0M0NkFwT3BuNUYwREo0Zlh1?=
+ =?utf-8?B?S2FENGU4a3RRZUl5ZlhjWXErMGF2VkdiWDJnSVIyZCtCS3k2N1BMYXlHSmlr?=
+ =?utf-8?B?Zm5KZDJ5cGFOOGlYWFVFVDcwejNzdlp4UWZJeGZrMGZQemsxdHQ0bmxWM3NR?=
+ =?utf-8?B?aE1iRmFISGt2ZkZVQm1sL3lJV04yRzhDUjZRaTNnM2RNRWp0SjU0NkRUTFBh?=
+ =?utf-8?B?OXNhaWhLRC9EUTBQUTJhWFlxVU5saEVCZ2lDejlhYm1xekM1QlJiRTdpZGQz?=
+ =?utf-8?B?K0w2NGxCUVMvTDFlWFJ5T3cvK2l1L214MlJteThJRHMvanRlOFpNMW9xUGRx?=
+ =?utf-8?B?UXRDZnRRQUtCZnNHR0lUeWFxUVpReWFxeDM4Y0tvbWpSd3NEMWlrYU5CR1N1?=
+ =?utf-8?B?cnRWZHZZbW9SaFlnMnpHWmdSSXVOQkFLOUpsMmY1TGkwemNHSHZRdzJNS2o5?=
+ =?utf-8?B?ZmhDVHg5QkxKQ3Z3bnZsaE96RUorMTNDUjlzQkZPUG5TTTgxb2pPcEs4MDcz?=
+ =?utf-8?B?c25mYVROMDhNNG9pTTNaRGcvZ0VoSDVMTzgxaFBCYUdlYWRPYnlyMW1ON0c4?=
+ =?utf-8?B?YTJ1b3MrcFBLRFlXNmtIdkNQamExQzJGVHF2aURBZEdjeU4vaWR1dCtXbE4w?=
+ =?utf-8?B?cE4vRFkxN21hYjlhME0vWmNBUkVDOUpyWDU3d2tTRk5pYnNYN3FUWGpyZ24w?=
+ =?utf-8?B?Um9rTXdualplSzk2NitkOXBsM2FhMVFFTzQzRWVyMlFpMW5pOUt5a28xbk1k?=
+ =?utf-8?B?dm9PQ1RxLzBueGlDcjBQQ0g0YUVKV0plZXFVK1psZm1wVkZ0WER4YzhHN3JK?=
+ =?utf-8?B?K2VQYjNjN1R6QndKR0JpcGVabldMZWpiNUZoZ3B1SVpERU13dGkzYVBxTndI?=
+ =?utf-8?B?YzN2dy9wZ2F3UVdWWUs2MVc1bklkVndqU01md2FiV3BoWjBxdXczWURLOW11?=
+ =?utf-8?B?VHB0YlpQcmhmRnJSVWdCUDhNZ09HbDVsNHcvUXhISVB4RlQ2ZlgxR1B1WWg5?=
+ =?utf-8?B?UG5QdmNwV1h5YlcxTUVrUDc4amt4Qm1hamNLVVJ6TmFVTWRZS3BuODB0VUFw?=
+ =?utf-8?B?N0dLY21CMzZUZGVOUUxhNFFEZFRkZzJQTEVBcFIyR2c4Z0NvK3hKcnB0TGN4?=
+ =?utf-8?B?N2E5UkdQaEVMZncza0VzR1NhNUt1K2RNSzR0VnZialAzRzJHaDdHZUQzaXpL?=
+ =?utf-8?B?OFpJYlR6bkhQcitTT0Y5Qy8vcmd4ek5saWRIUXZmMldxM3lJQWhtSzJ4bzI2?=
+ =?utf-8?B?T0tTOWNsdkUrRS8xczJUMjMwZGk1YWJ5aEhXQy84YUpDMlVwamZnMHFNQitO?=
+ =?utf-8?B?UXdBNFRuajZldWNucmI5djNXc3V4aFJsT2w4bU1wUHlaT0J2NlVremRnWjhw?=
+ =?utf-8?Q?olSDxut1eIwbQv+24mRui2ibo?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a53c9afd-7054-41fa-f2e7-08dba279f8ac
+X-MS-Exchange-CrossTenant-AuthSource: MN0PR12MB6101.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Aug 2023 19:08:15.1716
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YkkPOyKbqR4/iY1nrJb7zqS1sU5qXUVNMh1N4M9RoniEGUiSMVX9OfZbBeIspa9KHZFHUuQzS7jYiMP8lO7e6g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB8783
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Aug 18, 2023 at 9:40 PM Mario Limonciello
-<mario.limonciello@amd.com> wrote:
->
-> Intel systems that need to have PCIe ports in D3 for low power idle
-> specify this by constraints on the ACPI PNP0D80 device. As this information
-> is queried by acpi_pci_bridge_d3(), limit the DMI BIOS year check to stop
-> at 2024. This will allow future systems to rely on the constraints check
-> and ACPI checks to set up policy like non-Intel systems do.
 
-So I'm not sure about the value of this change.
 
-The behavior is made Intel-specific in [14a 1/1] and it will be that
-way at least for some time.  This change only sets the date after
-which it won't be Intel-specific any more, but for what reason
-exactly?
-
-And why is 2024 the cut-off year (and not 2025, for example)?
-
-If Intel platforms continue to be OK with putting all PCIe ports into
-D3hot beyond 2024, why restrict the kernel from doing so on them?
-
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
-> v13->v14:
->  * Use a variable instead
-> v12->v13:
->  * New patch
-> ---
->  drivers/pci/pci.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
+On 8/21/2023 1:31 PM, Rafael J. Wysocki wrote:
+> On Fri, Aug 18, 2023 at 9:40 PM Mario Limonciello
+> <mario.limonciello@amd.com> wrote:
+>> LPS0 constraints can be useful to other parts of the kernel to make
+>> decisions what state to put devices into.
+>>
+>> In v14 this series has been split into 3 parts.
+>>   part A: Immediate fix for AMD issue.
+>>   part B: LPS0 export improvements
+>>   part C: Long term solution for all vendors
+>>
+>> This is part B, it can be applied and reviewed independently from part A.
+>>
+>> Andy Shevchenko (1):
+>>    ACPI: x86: s2idle: Add for_each_lpi_constraint() helper
+>>
+>> Mario Limonciello (6):
+>>    ACPI: Adjust #ifdef for *_lps0_dev use
+>>    ACPI: x86: s2idle: Post-increment variables when getting constraints
+>>    ACPI: x86: s2idle: Catch multiple ACPI_TYPE_PACKAGE objects
+>>    ACPI: x86: s2idle: Fix a logic error parsing AMD constraints table
+>>    ACPI: x86: s2idle: Add more debugging for AMD constraints parsing
+>>    ACPI: x86: s2idle: Add a function to get constraints for a device
+>>
+>>   drivers/acpi/x86/s2idle.c | 96 +++++++++++++++++++++++++--------------
+>>   include/linux/acpi.h      | 10 +++-
+>>   2 files changed, 70 insertions(+), 36 deletions(-)
+>>
+>> --
+> All applied as 6.6 material, but I rewrote the last patch my way, so
+> please see the result in the bleeding-edge branch and let me know if
+> there's anything wrong with it.
 >
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index bfdad2eb36d13..c8787d898c377 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3037,16 +3037,22 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
->                         return false;
->
->                 /*
-> -                * Allow Intel PCIe ports from 2015 onward to go into D3 to
-> +                * Allow Intel PCIe ports from 2015 to 2024 to go into D3 to
->                  * achieve additional energy conservation on some platforms.
->                  *
-> +                * Intel systems from 2025 onward that need this are expected
-> +                * to specify this in an LPS0 device constraint instead.
-> +                *
->                  * This is only set for Intel PCIe ports as it causes problems
->                  * on both AMD Rembrandt and Phoenix platforms where USB keyboards
->                  * can not be used to wake the system from suspend.
->                  */
-> -               if (bridge->vendor == PCI_VENDOR_ID_INTEL &&
-> -                   dmi_get_bios_year() >= 2015)
-> -                       return true;
-> +               if (bridge->vendor == PCI_VENDOR_ID_INTEL) {
-> +                       int year = dmi_get_bios_year();
-> +
-> +                       if (year >= 2015 && year <= 2024)
-> +                               return true;
-> +               }
->                 break;
->         }
->
-> --
-> 2.34.1
->
+> Thanks!
+Looks great, thanks!
