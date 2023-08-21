@@ -2,118 +2,221 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6D3DEE49AE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Aug 2023 14:16:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C21E0EE4996
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Aug 2023 14:42:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235794AbjHUOQL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Aug 2023 10:16:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42686 "EHLO
+        id S236095AbjHUOmT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Aug 2023 10:42:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43522 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235768AbjHUOQC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2023 10:16:02 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE923EE;
-        Mon, 21 Aug 2023 07:15:56 -0700 (PDT)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 37LDku5g013644;
-        Mon, 21 Aug 2023 14:15:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=Ay7KPWNjOeMgB6BdqMOnzyDYADeHyVKMyY58vSYGbhE=;
- b=Z26OKIkE5gIEJxKwxLVG0i5vAaGETpPW7xp10mAdUdZat7pDlqnpLt6MwqMQflWM2tzf
- PcQMmVHtP4jTrrJQuFhpAbipupbmallfm/Tj5dSJbh182q/N1E/XKBH1qBG634ywD8GO
- Yj5LEqOtpA5wJFQNp/tYonSNLtx2DxvC53IQliA7+EEcgNYjslplKBOY8sAnTSN20fq7
- V2Wax8Q5qcqBsBFAp9TFQbzVTCB0EJYK4ebZfkh/VsoQV77FB+OODGbfte8DD5GeAuKV
- h2zpGom4kspx/VXHgmEgKGNRp+ceNcWAL66uN2sSjKlz0b5Z5YRzcBbnt60pRVUpucy/ jg== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sjn2rbsp7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 21 Aug 2023 14:15:48 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 37LEFjeo010012;
-        Mon, 21 Aug 2023 14:15:45 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sjptkpqf6-1;
-        Mon, 21 Aug 2023 14:15:45 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 37LEFjeH010000;
-        Mon, 21 Aug 2023 14:15:45 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 37LEFjvB009992;
-        Mon, 21 Aug 2023 14:15:45 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id 8D22D4C13; Mon, 21 Aug 2023 19:45:44 +0530 (+0530)
-From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
-To:     manivannan.sadhasivam@linaro.org
-Cc:     helgaas@kernel.org, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        quic_vbadigan@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_skananth@quicinc.com, quic_ramkri@quicinc.com,
-        quic_parass@quicinc.com, krzysztof.kozlowski@linaro.org,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        with ESMTP id S236096AbjHUOmR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2023 10:42:17 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13086F0;
+        Mon, 21 Aug 2023 07:42:14 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 655D563A5F;
+        Mon, 21 Aug 2023 14:42:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF976C433C7;
+        Mon, 21 Aug 2023 14:42:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1692628932;
+        bh=52OKjdLnV3pWDyoccRcefrV4SrypcfY1Bxxz8eiiXcw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=key8/FoxfX/Cfe3tNBW4IoMMuBqGOTSFlcN9Mplhx1Ln1eR3+jgv+0n+9YvOHaQk1
+         n60IZ+xZod07cPxz58E21zZ2Ra0rTd5R9Jv926H7aNUI79R6F288GGkTJZxW3WdLVx
+         oGp2hEF8xeCkWcQDWR3JA5Mj4NGGCkNDuwB7bqSJY4tBhpPKMc7BB44Gw5stcqvx4m
+         UuI26qmvFHSPwRixC44a6v15jHrhLf2Ldc5kI9qUQvAuImnRDkh6mBPQC/3VC/fPDT
+         kBgVUmaq78SYChr+hrauXEYzYjgmM3f7lVFBkTbHVYnihVM66UVyruGOWQ2qZNmTi1
+         NSRvSGFomGvAw==
+Date:   Mon, 21 Aug 2023 16:42:05 +0200
+From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
+To:     Jim Quinlan <james.quinlan@broadcom.com>, robh@kernel.org
+Cc:     linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Cyril Brulebois <kibi@debian.org>,
+        Phil Elwell <phil@raspberrypi.com>,
+        bcm-kernel-feedback-list@broadcom.com,
         Conor Dooley <conor+dt@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS)
-Subject: [PATCH v3 1/3] dt-bindings: pci: qcom: Add opp table
-Date:   Mon, 21 Aug 2023 19:45:41 +0530
-Message-Id: <1692627343-4380-2-git-send-email-quic_krichai@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1692627343-4380-1-git-send-email-quic_krichai@quicinc.com>
-References: <1692627343-4380-1-git-send-email-quic_krichai@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: YhJ7NV25567AufG2d9hcXOFVQ4zKFi7T
-X-Proofpoint-ORIG-GUID: YhJ7NV25567AufG2d9hcXOFVQ4zKFi7T
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-08-21_01,2023-08-18_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1015
- lowpriorityscore=0 mlxlogscore=880 spamscore=0 priorityscore=1501
- phishscore=0 suspectscore=0 mlxscore=0 impostorscore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2306200000 definitions=main-2308210131
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Jim Quinlan <jim2101024@gmail.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>
+Subject: Re: [PATCH v6 0/5] PCI: brcmstb: Configure appropriate HW CLKREQ#
+ mode
+Message-ID: <ZON3vXwjkSpoqY2K@lpieralisi>
+References: <20230623144100.34196-1-james.quinlan@broadcom.com>
+ <ZOMhq8a/wnURWsFP@lpieralisi>
+ <CA+-6iNy7bqxSgCrgtPv3R-0ZePT92LWL0s3Zvz8kAANVH9b=cQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CA+-6iNy7bqxSgCrgtPv3R-0ZePT92LWL0s3Zvz8kAANVH9b=cQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe needs to choose the appropriate performance state of RPMH power
-domain based upon the PCIe gen speed.
+On Mon, Aug 21, 2023 at 08:15:02AM -0400, Jim Quinlan wrote:
+> On Mon, Aug 21, 2023 at 4:35 AM Lorenzo Pieralisi <lpieralisi@kernel.org> wrote:
+> >
+> > On Fri, Jun 23, 2023 at 10:40:53AM -0400, Jim Quinlan wrote:
+> > > v6 -- No code has been changed.
+> > >    -- Changed commit subject and comment in "#PERST" commit (Bjorn, Cyril)
+> > >    -- Changed sign-off and author email address for all commits.
+> > >       This was due to a change in Broadcom's upstreaming policy.
+> > >
+> > > v5 -- Remove DT property "brcm,completion-timeout-us" from
+> > >       "DT bindings" commit.  Although this error may be reported
+> > >       as a completion timeout, its cause was traced to an
+> > >       internal bus timeout which may occur even when there is
+> > >       no PCIe access being processed.  We set a timeout of four
+> > >       seconds only if we are operating in "L1SS CLKREQ#" mode.
+> > >    -- Correct CEM 2.0 reference provided by HW engineer,
+> > >       s/3.2.5.2.5/3.2.5.2.2/ (Bjorn)
+> > >    -- Add newline to dev_info() string (Stefan)
+> > >    -- Change variable rval to unsigned (Stefan)
+> > >    -- s/implementaion/implementation/ (Bjorn)
+> > >    -- s/superpowersave/powersupersave/ (Bjorn)
+> > >    -- Slightly modify message on "PERST#" commit.
+> > >    -- Rebase to torvalds master
+> > >
+> > > v4 -- New commit that asserts PERST# for 2711/RPi SOCs at PCIe RC
+> > >       driver probe() time.  This is done in Raspian Linux and its
+> > >       absence may be the cause of a failing test case.
+> > >    -- New commit that removes stale comment.
+> > >
+> > > v3 -- Rewrote commit msgs and comments refering panics if L1SS
+> > >       is enabled/disabled; the code snippet that unadvertises L1SS
+> > >       eliminates the panic scenario. (Bjorn)
+> > >    -- Add reference for "400ns of CLKREQ# assertion" blurb (Bjorn)
+> > >    -- Put binding names in DT commit Subject (Bjorn)
+> > >    -- Add a verb to a commit's subject line (Bjorn)
+> > >    -- s/accomodat(\w+)/accommodat$1/g (Bjorn)
+> > >    -- Rewrote commit msgs and comments refering panics if L1SS
+> > >       is enabled/disabled; the code snippet that unadvertises L1SS
+> > >       eliminates the panic scenario. (Bjorn)
+> > >
+> > > v2 -- Changed binding property 'brcm,completion-timeout-msec' to
+> > >       'brcm,completion-timeout-us'.  (StefanW for standard suffix).
+> > >    -- Warn when clamping timeout value, and include clamped
+> > >       region in message. Also add min and max in YAML. (StefanW)
+> > >    -- Qualify description of "brcm,completion-timeout-us" so that
+> > >       it refers to PCIe transactions. (StefanW)
+> > >    -- Remvove mention of Linux specifics in binding description. (StefanW)
+> > >    -- s/clkreq#/CLKREQ#/g (Bjorn)
+> > >    -- Refactor completion-timeout-us code to compare max and min to
+> > >       value given by the property (as opposed to the computed value).
+> > >
+> > > v1 -- The current driver assumes the downstream devices can
+> > >       provide CLKREQ# for ASPM.  These commits accomodate devices
+> > >       w/ or w/o clkreq# and also handle L1SS-capable devices.
+> > >
+> > >    -- The Raspian Linux folks have already been using a PCIe RC
+> > >       property "brcm,enable-l1ss".  These commits use the same
+> > >       property, in a backward-compatible manner, and the implementaion
+> > >       adds more detail and also automatically identifies devices w/o
+> > >       a clkreq# signal, i.e. most devices plugged into an RPi CM4
+> > >       IO board.
+> > >
+> > >
+> > > Jim Quinlan (5):
+> > >   dt-bindings: PCI: brcmstb: Add brcm,enable-l1ss property
+> > >   PCI: brcmstb: Configure HW CLKREQ# mode appropriate for downstream
+> > >     device
+> >
+> > I am not merging the first two patches since the discussion thread
+> > is still open and I'd like to understand better what can/should be
+> > done, sorry.
+> 
+> Hello Lorenzo,
+> 
+> This patch-set has been stable for months, V5 was out early May and
+> the V6 changes
+> did not involve code.  I'm a little surprised that you are voicing
+> concern at this stage.
+> 
+> The previous discussions covered all aspects of these commits AFAICT.
+> Please  review
+> them and the commit messages and let me know what issues you do not understand
+> or any topics that were not considered.
 
-Adding the Operating Performance Points table allows to adjust power domain
-performance state, depending on the PCIe gen speed.
+I disagree with the reasoning behind "brcm,enable-l1ss" property usage
+instead of a command line option - at least I would like to get a
+comment from DT maintainers about it.
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 4 ++++
- 1 file changed, 4 insertions(+)
+I think Bjorn made the point consistently and I also think he is right.
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index 81971be4..779339c 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -121,6 +121,10 @@ properties:
-     description: GPIO controlled connection to WAKE# signal
-     maxItems: 1
- 
-+  operating-points-v2: true
-+  opp-table:
-+    type: object
-+
- required:
-   - compatible
-   - reg
--- 
-2.7.4
+I would like to get Rob's opinion on this. I know he acked the DT
+bindings (I have a comment on those too) but regardless, it is clearly a
+property used for what is a command line configuration parameter,
+no two ways about it.
+
+Thanks,
+Lorenzo
+
+> 
+> Are you concerned about the Broadcom STB/CM community  or the RPi community?
+> For the former, I have direct communication w/ our customers and none of them
+> are even close to using upstream (they may backport my commits).  For
+> the latter, I have
+> tested these commits on the official RPi4 and CM4 IO platforms, and
+> Cyril has also put in
+> an admiral amount of testing.
+> 
+> Note that I have on my desk a CM4 IO board w/ a conventional PCIe
+> device, and it does not boot
+> upstream master Linux until these patches are applied.
+> 
+> Further, Raspian OS has already introduced the "brcm,enable-l1ss"
+> property but did not upstream it, and
+> my commits are backwards compatible with this.
+> 
+> >
+> > >   PCI: brcmstb: Set higher value for internal bus timeout
+> > >   PCI: brcmstb: Assert PERST# on BCM2711
+> > >   PCI: brcmstb: Remove stale comment
+> >
+> > Is it OK to apply these three on their own ? Overall it would be
+> > great to avoid mixing patches with different end goals in a single
+> > series.
+> 
+> Well, they are related for one customer who wants to use L1SS power
+> savings AND require
+> a long  period for the internal timeout.  But, yes, these commits are
+> fine  to apply
+> independently.
+> 
+> Regards,
+> Jim Quinlan
+> Broadcom STB
+> 
+> >
+> > Thanks,
+> > Lorenzo
+> >
+> > >  .../bindings/pci/brcm,stb-pcie.yaml           |  9 ++
+> > >  drivers/pci/controller/pcie-brcmstb.c         | 91 ++++++++++++++++---
+> > >  2 files changed, 89 insertions(+), 11 deletions(-)
+> > >
+> > >
+> > > base-commit: 8a28a0b6f1a1dcbf5a834600a9acfbe2ba51e5eb
+> > > --
+> > > 2.17.1
+> > >
+> >
+> >
+
 
