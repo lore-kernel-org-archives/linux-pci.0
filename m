@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E57E9EE49AE
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 09:31:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A686AEE49B4
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 09:31:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235145AbjHWJbl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Aug 2023 05:31:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33246 "EHLO
+        id S235235AbjHWJbm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Aug 2023 05:31:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55862 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235578AbjHWJYC (ORCPT
+        with ESMTP id S235580AbjHWJYC (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2023 05:24:02 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 59FCC44BF;
-        Wed, 23 Aug 2023 02:12:03 -0700 (PDT)
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5A0775B9F;
+        Wed, 23 Aug 2023 02:12:02 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.01,195,1684767600"; 
-   d="scan'208";a="177395326"
+   d="scan'208";a="173694712"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 23 Aug 2023 18:12:02 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 23 Aug 2023 18:12:01 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 4A365400856C;
-        Wed, 23 Aug 2023 18:12:02 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id CC25D4002942;
+        Wed, 23 Aug 2023 18:12:01 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
         lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
@@ -31,86 +31,94 @@ Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v19 03/19] PCI: dwc: Add outbound MSG TLPs support
-Date:   Wed, 23 Aug 2023 18:11:37 +0900
-Message-Id: <20230823091153.2578417-4-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v19 00/19] PCI: rcar-gen4: Add R-Car Gen4 PCIe support
+Date:   Wed, 23 Aug 2023 18:11:34 +0900
+Message-Id: <20230823091153.2578417-1-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230823091153.2578417-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20230823091153.2578417-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add "code" and "routing" into struct dw_pcie_ob_atu_cfg for triggering
-INTx IRQs by iATU in the PCIe endpoint mode in near the future.
-PCIE_ATU_INHIBIT_PAYLOAD is set to issue TLP type of Msg instead of
-MsgD. So, this implementation supports the data-less messages only
-for now.
+Add R-Car S4-8 (R-Car Gen4) PCIe Host and Endpoint support.
+To support them, modify PCIe DesignWare common codes.
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-designware.c | 9 +++++++--
- drivers/pci/controller/dwc/pcie-designware.h | 4 ++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+Changes from v18:
+https://lore.kernel.org/linux-pci/20230721074452.65545-1-yoshihiro.shimoda.uh@renesas.com/
+ - Based on the latest pci.git / next branch and the following patches:
+   [PATCH v3 0/2] Cleanup IRQ type definitions
+   https://lore.kernel.org/linux-pci/20230802094036.1052472-1-dlemoal@kernel.org/
+ - Drop some patches about converting "legacy" to "INTx".
+ - Add detailed description in the patch 0[26]/19.
+ - Add a new patch "Expose dw_pcie_write_dbi2" in the patch 11/19.
+ - Revise typo in the patch 12/19.
+ - Fix calling order of deinit in the patch 12/19.
+ - Revise Kconfig about kernel module names in the patch 1[67]/19.
+ - Rename drivers' file names in the patch 1[67]/19.
+ - Some other minor change/fix in the patch 1[67]/19.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 780b1e38e763..d1dfe6f2eb4c 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -498,7 +498,7 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_UPPER_TARGET,
- 			      upper_32_bits(atu->pci_addr));
- 
--	val = atu->type | PCIE_ATU_FUNC_NUM(atu->func_no);
-+	val = atu->type | atu->routing | PCIE_ATU_FUNC_NUM(atu->func_no);
- 	if (upper_32_bits(limit_addr) > upper_32_bits(cpu_addr) &&
- 	    dw_pcie_ver_is_ge(pci, 460A))
- 		val |= PCIE_ATU_INCREASE_REGION_SIZE;
-@@ -506,7 +506,12 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 		val = dw_pcie_enable_ecrc(val);
- 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL1, val);
- 
--	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, PCIE_ATU_ENABLE);
-+	val = PCIE_ATU_ENABLE;
-+	if (atu->type == PCIE_ATU_TYPE_MSG) {
-+		/* The data-less messages only for now */
-+		val |= PCIE_ATU_INHIBIT_PAYLOAD | atu->code;
-+	}
-+	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_REGION_CTRL2, val);
- 
- 	/*
- 	 * Make sure ATU enable takes effect before any subsequent config
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 05fbd361ecc3..d31c018a3803 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -147,11 +147,13 @@
- #define PCIE_ATU_TYPE_IO		0x2
- #define PCIE_ATU_TYPE_CFG0		0x4
- #define PCIE_ATU_TYPE_CFG1		0x5
-+#define PCIE_ATU_TYPE_MSG		0x10
- #define PCIE_ATU_TD			BIT(8)
- #define PCIE_ATU_FUNC_NUM(pf)           ((pf) << 20)
- #define PCIE_ATU_REGION_CTRL2		0x004
- #define PCIE_ATU_ENABLE			BIT(31)
- #define PCIE_ATU_BAR_MODE_ENABLE	BIT(30)
-+#define PCIE_ATU_INHIBIT_PAYLOAD	BIT(22)
- #define PCIE_ATU_FUNC_NUM_MATCH_EN      BIT(19)
- #define PCIE_ATU_LOWER_BASE		0x008
- #define PCIE_ATU_UPPER_BASE		0x00C
-@@ -292,6 +294,8 @@ struct dw_pcie_ob_atu_cfg {
- 	int index;
- 	int type;
- 	u8 func_no;
-+	u8 code;
-+	u8 routing;
- 	u64 cpu_addr;
- 	u64 pci_addr;
- 	u64 size;
+Changes from v17:m
+https://lore.kernel.org/linux-pci/20230705114206.3585188-1-yoshihiro.shimoda.uh@renesas.com/
+ - Based on the latest pci.git / next branch.
+ - Add comments ine the commit log in the patch 01/20.
+ - Drop "Implicit" from "Message Routing" in the patch 01/20.
+ - Add Reviewed-by tag in the patch 0[14569]/20.
+ - Fix typo in the patch 07/20.
+ - Drop unnecessary description from the commit log in the patch 09/20.
+ - Add clk_bulk_disable_unprepare() calling in the patch 1[78]/20.
+ - Use .remove_new() in the patch 1[78]/20.
+ - Add rcar_gen4_pcie_basic_deinit() and .deinit() in the patch 17/20.
+ - Call rcar_gen4_pcie_basic_deinit() in .ep_deinit() in the patch 18/20.
+ - Minor updates for improved code readability in the patch 1[78]/20.
+
+Yoshihiro Shimoda (19):
+  PCI: Add INTx Mechanism Messages macros
+  PCI: dwc: Change arguments of dw_pcie_prog_outbound_atu()
+  PCI: dwc: Add outbound MSG TLPs support
+  PCI: designware-ep: Add INTx IRQs support
+  PCI: dwc: endpoint: Add multiple PFs support for dbi2
+  PCI: dwc: Add dw_pcie_link_set_max_link_width()
+  PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling
+  PCI: tegra194: Drop PCI_EXP_LNKSTA_NLW setting
+  PCI: dwc: Add EDMA_UNROLL capability flag
+  PCI: dwc: Expose dw_pcie_ep_exit() to module
+  PCI: dwc: Expose dw_pcie_write_dbi2() to module
+  PCI: dwc: endpoint: Introduce .pre_init() and .deinit()
+  dt-bindings: PCI: dwc: Update maxItems of reg and reg-names
+  dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
+  dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
+  PCI: rcar-gen4: Add R-Car Gen4 PCIe Host support
+  PCI: rcar-gen4-ep: Add R-Car Gen4 PCIe Endpoint support
+  MAINTAINERS: Update PCI DRIVER FOR RENESAS R-CAR for R-Car Gen4
+  misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
+
+ .../bindings/pci/rcar-gen4-pci-ep.yaml        | 106 +++++++++
+ .../bindings/pci/rcar-gen4-pci-host.yaml      | 123 +++++++++++
+ .../bindings/pci/snps,dw-pcie-ep.yaml         |   4 +-
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |   4 +-
+ MAINTAINERS                                   |   1 +
+ drivers/misc/pci_endpoint_test.c              |   4 +
+ drivers/pci/controller/dwc/Kconfig            |  20 ++
+ drivers/pci/controller/dwc/Makefile           |   4 +
+ .../pci/controller/dwc/pcie-designware-ep.c   | 136 ++++++++++--
+ .../pci/controller/dwc/pcie-designware-host.c |  52 +++--
+ drivers/pci/controller/dwc/pcie-designware.c  | 156 ++++++-------
+ drivers/pci/controller/dwc/pcie-designware.h  |  29 ++-
+ .../controller/dwc/pcie-rcar-gen4-ep-drv.c    | 178 +++++++++++++++
+ .../controller/dwc/pcie-rcar-gen4-host-drv.c  | 145 ++++++++++++
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 208 ++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-rcar-gen4.h   |  44 ++++
+ drivers/pci/controller/dwc/pcie-tegra194.c    |   6 -
+ drivers/pci/pci.h                             |  18 ++
+ 18 files changed, 1107 insertions(+), 131 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-ep-drv.c
+ create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-host-drv.c
+ create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.c
+ create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.h
+
 -- 
 2.25.1
 
