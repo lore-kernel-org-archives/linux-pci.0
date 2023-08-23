@@ -2,56 +2,95 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3944BEE49B2
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 12:04:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48CE9EE4993
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 12:10:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234757AbjHWME7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Aug 2023 08:04:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34386 "EHLO
+        id S234873AbjHWMKq convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Aug 2023 08:10:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45188 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234771AbjHWMEn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2023 08:04:43 -0400
-Received: from gandalf.ozlabs.org (mail.ozlabs.org [IPv6:2404:9400:2221:ea00::3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C25B1990;
-        Wed, 23 Aug 2023 05:04:13 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4RW4d36fb2z4wy7;
-        Wed, 23 Aug 2023 22:04:07 +1000 (AEST)
-From:   Michael Ellerman <patch-notifications@ellerman.id.au>
-To:     linuxppc-dev <linuxppc-dev@ozlabs.org>,
-        Mahesh Salgaonkar <mahesh@linux.ibm.com>
-Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Nathan Lynch <nathanl@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <169235811556.193557.1023625262204809514.stgit@jupiter>
-References: <169235811556.193557.1023625262204809514.stgit@jupiter>
-Subject: Re: [PATCH v9 1/2] powerpc/rtas: export rtas_error_rc() for reuse.
-Message-Id: <169279175579.797584.15043748481336876672.b4-ty@ellerman.id.au>
-Date:   Wed, 23 Aug 2023 21:55:55 +1000
+        with ESMTP id S234900AbjHWMKo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2023 08:10:44 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9EF31716;
+        Wed, 23 Aug 2023 05:10:20 -0700 (PDT)
+Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4RW4lH6Syfz67QqC;
+        Wed, 23 Aug 2023 20:09:31 +0800 (CST)
+Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
+ (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Wed, 23 Aug
+ 2023 13:10:14 +0100
+Date:   Wed, 23 Aug 2023 13:10:13 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Alistair Francis <alistair23@gmail.com>
+CC:     Lukas Wunner <lukas@wunner.de>,
+        Damien Le Moal <dlemoal@kernel.org>, <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, <alex.williamson@redhat.com>,
+        <christian.koenig@amd.com>, <kch@nvidia.com>,
+        <gregkh@linuxfoundation.org>, <logang@deltatee.com>,
+        <linux-kernel@vger.kernel.org>, <chaitanyak@nvidia.com>,
+        <rdunlap@infradead.org>,
+        Alistair Francis <alistair.francis@wdc.com>
+Subject: Re: [PATCH v4] PCI/DOE: Expose the DOE protocols via sysfs
+Message-ID: <20230823131013.000005b9@Huawei.com>
+In-Reply-To: <CAKmqyKMRxN68N_29HjEDb2UVU+_RyAc7Z7+iouHP_xq3f_UX0g@mail.gmail.com>
+References: <20230810163342.1059509-1-alistair.francis@wdc.com>
+        <b3d437f5-fe33-4677-e336-a67ac9b8d477@kernel.org>
+        <20230812082108.GD9469@wunner.de>
+        <CAKmqyKMRxN68N_29HjEDb2UVU+_RyAc7Z7+iouHP_xq3f_UX0g@mail.gmail.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Originating-IP: [10.202.227.76]
+X-ClientProxiedBy: lhrpeml500006.china.huawei.com (7.191.161.198) To
+ lhrpeml500005.china.huawei.com (7.191.163.240)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 18 Aug 2023 16:59:07 +0530, Mahesh Salgaonkar wrote:
-> Also, #define descriptive names for common rtas return codes and use it
-> instead of numeric values.
+On Tue, 15 Aug 2023 14:36:31 -0400
+Alistair Francis <alistair23@gmail.com> wrote:
+
+> On Sat, Aug 12, 2023 at 4:21 AM Lukas Wunner <lukas@wunner.de> wrote:
+> >
+> > On Fri, Aug 11, 2023 at 10:03:58AM +0900, Damien Le Moal wrote:  
+> > > On 8/11/23 01:33, Alistair Francis wrote:  
+> > > > Each DOE feature is exposed as a single file. The files are empty and
+> > > > the information is contained in the file name.  
+> > >
+> > > s/feature/protocol ?  
+> >
+> > DOE r1.1 replaced all occurrences of "protocol" with the term "feature"
+> > or "Data Object Type".
+> >
+> > PCIe r6.1 (which was published July 24) incorporated that change.
+> >
+> > So going forward the term "protocol" is deprecated in the DOE context.
+> >
+> > We should use the terms used by the (latest) PCIe Base Spec so that
+> > users can easily make the connection between the language in the spec
+> > and our code.
+> >
+> > Unfortunately this patch uses a mix of "protocol" and "feature".
+> > It should use the latter term exclusively.  
 > 
+> The existing file uses protocols, so I have tried to match the
+> existing style. I have changed the names to feature though
+
+Feel free to fix the rest of the file as a precursor ;)
+
+Jonathan
+
 > 
+> Alistair
+> 
+> >
+> > Thanks,
+> >
+> > Lukas  
 
-Applied to powerpc/next.
-
-[1/2] powerpc/rtas: export rtas_error_rc() for reuse.
-      https://git.kernel.org/powerpc/c/e160bf64e2d3df7bf83ed41d09390a32490be6c5
-[2/2] PCI: rpaphp: Error out on busy status from get-sensor-state
-      https://git.kernel.org/powerpc/c/77583f77ed9b1452ac62caebf09b2206da10bbf9
-
-cheers
