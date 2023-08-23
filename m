@@ -2,178 +2,676 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04814EE49B1
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 00:02:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25EAEEE49B0
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 00:50:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231842AbjHWACs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Aug 2023 20:02:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40332 "EHLO
+        id S231902AbjHWAuG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Aug 2023 20:50:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229796AbjHWACs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Aug 2023 20:02:48 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B801FB;
-        Tue, 22 Aug 2023 17:02:46 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 28DD46151A;
-        Wed, 23 Aug 2023 00:02:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A7FDC433C8;
-        Wed, 23 Aug 2023 00:02:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692748965;
-        bh=ctdCJfL67RtKCkpOnTUgVh2uDuaL/GwwnDDhyi3PCTw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=UhnLUUvfdySw2w4ijgC9BvYkVmDrTPblB96PrgJsVG3X15mtylUcjS0Ae5EWiMRfv
-         8gwnSXsSF9JCVnID8g8bA2bU9XJwPCvebqxHcsc5gPCPZ0BJCDPKeO62J4vJJ16Ows
-         znxOdJtpbnG8uOFU5A8bSDRpe3NRaDYCmIairamVNGfGJKHHqg9zTxZ20wxBVO+PH6
-         NMe4TI+NyZh/9v+3GRrSP3pZLM5xWwJsPJr+CUYEAk5CdXzEvDLn9UddZqR5qw10pp
-         o7c3d64FFGIty7NaSO2YoBImNopsUpy4xocQ4qRGwofyBFWGVYk5rXjqjDD9T82Xpw
-         OnI91RwI/hJWQ==
-Date:   Tue, 22 Aug 2023 19:02:43 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     Mario Limonciello <mario.limonciello@amd.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-acpi@vger.kernel.org, Iain Lane <iain@orangesquash.org.uk>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        stable@vger.kernel.org
-Subject: Re: [PATCH v14.a 1/1] PCI: Only put Intel PCIe ports >= 2015 into D3
-Message-ID: <20230823000243.GA391238@bhelgaas>
+        with ESMTP id S230156AbjHWAuF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Aug 2023 20:50:05 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C91D4CD6;
+        Tue, 22 Aug 2023 17:50:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692751801; x=1724287801;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=m74Pl3pvDh4ONwv/L1TlxRbQupn1Ollb4NPyT/C2hRQ=;
+  b=fkj9W739MxCK22xQ9BpDQHdKslT5AK63yN35wn4Rm4nmxUcfUrIEpr3Z
+   4uAlSs2KuIwLcs/RD2za/lm651DhToV1LBtOqN8D8N1gGHBOObztLoGLy
+   ScKWMTOMezXKNXuFtT8SVqgfRbKJqfaa6W3C68V9B5RdfNXqwq27TFFYp
+   bX0Ki9c4YioV9yIB4JmlAQQJdxSTzbiLYUsNtJQI+zJed/P3s1zVLhJ4b
+   EPHhmlnWZQapcFdoTBOuIef98qOH6cs3sSXSQD+DCUoF4Yqjs8/GiPFYB
+   4lwyTE6AnK1v0AfvzaE2eQA/mNWE+9luwmNeEM0hFlsbBKq8mZv2c9uNd
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10810"; a="405031973"
+X-IronPort-AV: E=Sophos;i="6.01,194,1684825200"; 
+   d="scan'208";a="405031973"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2023 17:50:01 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10810"; a="801892911"
+X-IronPort-AV: E=Sophos;i="6.01,194,1684825200"; 
+   d="scan'208";a="801892911"
+Received: from lkp-server02.sh.intel.com (HELO daf8bb0a381d) ([10.239.97.151])
+  by fmsmga008.fm.intel.com with ESMTP; 22 Aug 2023 17:49:56 -0700
+Received: from kbuild by daf8bb0a381d with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qYc4J-0000fk-38;
+        Wed, 23 Aug 2023 00:49:55 +0000
+Date:   Wed, 23 Aug 2023 08:48:56 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+        manivannan.sadhasivam@linaro.org
+Cc:     oe-kbuild-all@lists.linux.dev, helgaas@kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, quic_parass@quicinc.com,
+        krzysztof.kozlowski@linaro.org,
+        Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        "(open list:OPERATING PERFORMANCE POINTS (OPP))" 
+        <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH v4 3/4] OPP: Add api to retrieve opps which is at most
+ the provided level
+Message-ID: <202308230848.SzyPhc6B-lkp@intel.com>
+References: <1692717141-32743-4-git-send-email-quic_krichai@quicinc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAJZ5v0hU3mWFaaujWozHnPw8+A=bf2OwzcendXjpP35wCv_B6g@mail.gmail.com>
+In-Reply-To: <1692717141-32743-4-git-send-email-quic_krichai@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 22, 2023 at 12:11:10PM +0200, Rafael J. Wysocki wrote:
-> On Tue, Aug 22, 2023 at 12:42 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Aug 18, 2023 at 02:39:32PM -0500, Mario Limonciello wrote:
-> > > commit 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
-> > > changed pci_bridge_d3_possible() so that any vendor's PCIe ports
-> > > from modern machines (>=2015) are allowed to be put into D3.
-> > >
-> > > Iain reports that USB devices can't be used to wake a Lenovo Z13
-> > > from suspend. This is because the PCIe root port has been put
-> > > into D3 and AMD's platform can't handle USB devices waking in this
-> > > case.
-> > >
-> > > This behavior is only reported on Linux. Comparing the behavior
-> > > on Windows and Linux, Windows doesn't put the root ports into D3.
-> > >
-> > > To fix the issue without regressing existing Intel systems,
-> > > limit the >=2015 check to only apply to Intel PCIe ports.
+Hi Krishna,
 
-> > > @@ -3037,10 +3037,15 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
-> > >                       return false;
-> > >
-> > >               /*
-> > > -              * It should be safe to put PCIe ports from 2015 or newer
-> > > -              * to D3.
-> > > +              * Allow Intel PCIe ports from 2015 onward to go into D3 to
-> > > +              * achieve additional energy conservation on some platforms.
-> > > +              *
-> > > +              * This is only set for Intel PCIe ports as it causes problems
-> > > +              * on both AMD Rembrandt and Phoenix platforms where USB keyboards
-> > > +              * can not be used to wake the system from suspend.
-> > >                */
-> > > -             if (dmi_get_bios_year() >= 2015)
-> > > +             if (bridge->vendor == PCI_VENDOR_ID_INTEL &&
-> > > +                 dmi_get_bios_year() >= 2015)
-> > >                       return true;
-> >
-> > Hmm.  I'm really not a fan of checks like this that aren't connected
-> > to an actual property of the platform.  The Intel Vendor ID tells us
-> > nothing about what the actual problem is, which makes it really hard
-> > to maintain in the future.  It's also very AMD- and Intel-centric,
-> > when this code is ostensibly arch-agnostic, so this potentially
-> > regresses ARM64, RISC-V, powerpc, etc.
-> 
-> That's a fair point.
-> 
-> Would it be better to reverse this and filter out AMD systems as they
-> are affected by the existing check?
+kernel test robot noticed the following build warnings:
 
-Since we're trying to avoid an issue on AMD systems, I would
-definitely prefer to have the code change mention AMD instead of
-Intel.
+[auto build test WARNING on pci/for-linus]
+[also build test WARNING on robh/for-next rafael-pm/linux-next linus/master v6.5-rc7 next-20230822]
+[cannot apply to pci/next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-> > It's bad enough that we check for 2015.  A BIOS security update to a
-> > 2014 platform will break things,
-> 
-> Well, not necessarily.  Pre-2015 systems already worked and the check
-> was added as "surely, everything 2015 or newer should work either".
-> While it is true that putting PCIe Root Ports into D3hot was necessary
-> for extra energy conservation on Intel systems, it actually has been
-> expected to work everywhere.
+url:    https://github.com/intel-lab-lkp/linux/commits/Krishna-chaitanya-chundru/dt-bindings-pci-qcom-Add-opp-table/20230822-232104
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
+patch link:    https://lore.kernel.org/r/1692717141-32743-4-git-send-email-quic_krichai%40quicinc.com
+patch subject: [PATCH v4 3/4] OPP: Add api to retrieve opps which is at most the provided level
+config: um-defconfig (https://download.01.org/0day-ci/archive/20230823/202308230848.SzyPhc6B-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce: (https://download.01.org/0day-ci/archive/20230823/202308230848.SzyPhc6B-lkp@intel.com/reproduce)
 
-This is a tangent; I was just trying to make the point that the date
-check means a BIOS update may change Linux behavior even if the update
-has nothing to do with PM, and I think that's a bad thing even if the
-new behavior is not a failure.  But this is water under the bridge and
-is probably not going to cause problems in the future.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202308230848.SzyPhc6B-lkp@intel.com/
 
-> > even though the update has nothing to do with D3.  We're stuck
-> > with that one, and it's old enough that maybe it won't bite us any
-> > more, but I hate to add more.
-> 
-> Well, how would you like to deal with the systems that don't work
-> today, because they expect a different behavior?
->
-> Effectively, the current behavior for all modern systems is to allow
-> bridge D3 if there are no indications that it shouldn't be allowed.
-> The platforms in question assume the reverse, so what else can be
-> done?
-> 
-> > The list of conditions in pci_bridge_d3_possible() is a pretty good
-> > clue that we don't really know what we're doing, and all we can do is
-> > find configurations that happen to work.
-> 
-> Yes, because by the spec it all should work just fine.  The PCI PM 1.2
-> specification defines the expected behavior for bridges and the PCIe
-> specification claims to be a superset of that.
-> 
-> What we need to deal with here is basically non-compliant systems and
-> so we have to catch the various forms of non-compliance.
+All warnings (new ones prefixed by >>):
 
-Thanks for this, that helps.  If pci_bridge_d3_possible() is a list of
-quirks for systems that are known to be broken (or at least not known
-to work correctly and avoiding D3 is acceptable), then we should
-document and use it that way.
+         | ^
+   include/linux/unaligned/packed_struct.h:17:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      17 | {
+         | ^
+   include/linux/unaligned/packed_struct.h:23:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      23 | {
+         | ^
+   include/linux/unaligned/packed_struct.h:29:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      29 | {
+         | ^
+   include/linux/unaligned/packed_struct.h:35:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      35 | {
+         | ^
+   include/linux/unaligned/packed_struct.h:41:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      41 | {
+         | ^
+   include/asm-generic/unaligned.h:26:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      26 | {
+         | ^
+   include/asm-generic/unaligned.h:31:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      31 | {
+         | ^
+   include/asm-generic/unaligned.h:36:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      36 | {
+         | ^
+   include/asm-generic/unaligned.h:41:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      41 | {
+         | ^
+   include/asm-generic/unaligned.h:46:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      46 | {
+         | ^
+   include/asm-generic/unaligned.h:51:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      51 | {
+         | ^
+   include/asm-generic/unaligned.h:56:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      56 | {
+         | ^
+   include/asm-generic/unaligned.h:61:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      61 | {
+         | ^
+   include/asm-generic/unaligned.h:66:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      66 | {
+         | ^
+   include/asm-generic/unaligned.h:71:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      71 | {
+         | ^
+   include/asm-generic/unaligned.h:76:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      76 | {
+         | ^
+   include/asm-generic/unaligned.h:81:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      81 | {
+         | ^
+   include/asm-generic/unaligned.h:86:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      86 | {
+         | ^
+   include/asm-generic/unaligned.h:91:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      91 | {
+         | ^
+   include/asm-generic/unaligned.h:96:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      96 | {
+         | ^
+   include/asm-generic/unaligned.h:101:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     101 | {
+         | ^
+   include/asm-generic/unaligned.h:106:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     106 | {
+         | ^
+   include/asm-generic/unaligned.h:113:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     113 | {
+         | ^
+   include/asm-generic/unaligned.h:118:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     118 | {
+         | ^
+   include/asm-generic/unaligned.h:125:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     125 | {
+         | ^
+   include/asm-generic/unaligned.h:130:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     130 | {
+         | ^
+   include/asm-generic/unaligned.h:140:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     140 | {
+         | ^
+   include/asm-generic/unaligned.h:145:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     145 | {
+         | ^
+   include/asm-generic/unaligned.h:151:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     151 | {
+         | ^
+   arch/um/include/asm/uaccess.h:25:22: error: storage class specified for parameter 'raw_copy_from_user'
+      25 | extern unsigned long raw_copy_from_user(void *to, const void __user *from, unsigned long n);
+         |                      ^~~~~~~~~~~~~~~~~~
+   arch/um/include/asm/uaccess.h:26:22: error: storage class specified for parameter 'raw_copy_to_user'
+      26 | extern unsigned long raw_copy_to_user(void __user *to, const void *from, unsigned long n);
+         |                      ^~~~~~~~~~~~~~~~
+   arch/um/include/asm/uaccess.h:27:22: error: storage class specified for parameter '__clear_user'
+      27 | extern unsigned long __clear_user(void __user *mem, unsigned long len);
+         |                      ^~~~~~~~~~~~
+   arch/um/include/asm/uaccess.h:28:19: error: storage class specified for parameter '__access_ok'
+      28 | static inline int __access_ok(const void __user *ptr, unsigned long size);
+         |                   ^~~~~~~~~~~
+>> arch/um/include/asm/uaccess.h:28:19: warning: parameter '__access_ok' declared 'inline'
+>> arch/um/include/asm/uaccess.h:28:1: warning: 'gnu_inline' attribute ignored [-Wattributes]
+      28 | static inline int __access_ok(const void __user *ptr, unsigned long size);
+         | ^~~~~~
+   arch/um/include/asm/uaccess.h:28:19: error: 'no_instrument_function' attribute applies only to functions
+      28 | static inline int __access_ok(const void __user *ptr, unsigned long size);
+         |                   ^~~~~~~~~~~
+   In file included from arch/um/include/asm/uaccess.h:37:
+   include/asm-generic/uaccess.h:136:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     136 | {
+         | ^
+   include/asm-generic/uaccess.h:144:12: error: storage class specified for parameter '__put_user_bad'
+     144 | extern int __put_user_bad(void) __attribute__((noreturn));
+         |            ^~~~~~~~~~~~~~
+   include/asm-generic/uaccess.h:197:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     197 | {
+         | ^
+   include/asm-generic/uaccess.h:205:12: error: storage class specified for parameter '__get_user_bad'
+     205 | extern int __get_user_bad(void) __attribute__((noreturn));
+         |            ^~~~~~~~~~~~~~
+   include/asm-generic/uaccess.h:221:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     221 | {
+         | ^
+   In file included from ./arch/um/include/generated/asm/extable.h:1,
+                    from include/asm-generic/uaccess.h:229:
+   include/asm-generic/extable.h:18:1: warning: empty declaration
+      18 | struct exception_table_entry
+         | ^~~~~~
+   include/asm-generic/extable.h:24:1: warning: empty declaration
+      24 | struct pt_regs;
+         | ^~~~~~
+   include/asm-generic/extable.h:25:12: error: storage class specified for parameter 'fixup_exception'
+      25 | extern int fixup_exception(struct pt_regs *regs);
+         |            ^~~~~~~~~~~~~~~
+   In file included from include/linux/compiler_types.h:80,
+                    from <command-line>:
+   include/linux/compiler_attributes.h:356:41: error: expected declaration specifiers before '__attribute__'
+     356 | #define __must_check                    __attribute__((__warn_unused_result__))
+         |                                         ^~~~~~~~~~~~~
+   include/asm-generic/uaccess.h:231:1: note: in expansion of macro '__must_check'
+     231 | __must_check long strncpy_from_user(char *dst, const char __user *src,
+         | ^~~~~~~~~~~~
+   include/linux/compiler_attributes.h:356:41: error: expected declaration specifiers before '__attribute__'
+     356 | #define __must_check                    __attribute__((__warn_unused_result__))
+         |                                         ^~~~~~~~~~~~~
+   include/asm-generic/uaccess.h:233:1: note: in expansion of macro '__must_check'
+     233 | __must_check long strnlen_user(const char __user *src, long n);
+         | ^~~~~~~~~~~~
+   arch/um/include/asm/uaccess.h:40:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      40 | {
+         | ^
+   include/linux/uaccess.h:82:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      82 | {
+         | ^
+   include/linux/uaccess.h:94:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      94 | {
+         | ^
+   include/linux/uaccess.h:122:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     122 | {
+         | ^
+   include/linux/uaccess.h:132:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     132 | {
+         | ^
+   include/linux/uaccess.h:144:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     144 | {
+         | ^
+   include/linux/uaccess.h:164:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     164 | {
+         | ^
+   include/linux/uaccess.h:181:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     181 | {
+         | ^
+   include/linux/uaccess.h:189:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     189 | {
+         | ^
+   include/linux/uaccess.h:202:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     202 | {
+         | ^
+   include/linux/uaccess.h:209:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     209 | {
+         | ^
+   include/linux/uaccess.h:214:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     214 | {
+         | ^
+   include/linux/uaccess.h:226:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     226 | {
+         | ^
+   include/linux/uaccess.h:236:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     236 | {
+         | ^
+   include/linux/uaccess.h:249:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     249 | {
+         | ^
+   include/linux/uaccess.h:281:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     281 | {
+         | ^
+   include/linux/uaccess.h:292:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     292 | {
+         | ^
+   include/linux/uaccess.h:298:25: error: storage class specified for parameter 'check_zeroed_user'
+     298 | extern __must_check int check_zeroed_user(const void __user *from, size_t size);
+         |                         ^~~~~~~~~~~~~~~~~
+--
+         | ^
+   include/linux/page_ref.h:88:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      88 | {
+         | ^
+   include/linux/page_ref.h:93:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      93 | {
+         | ^
+   include/linux/page_ref.h:98:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      98 | {
+         | ^
+   include/linux/page_ref.h:105:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     105 | {
+         | ^
+   include/linux/page_ref.h:114:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     114 | {
+         | ^
+   include/linux/page_ref.h:119:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     119 | {
+         | ^
+   include/linux/page_ref.h:126:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     126 | {
+         | ^
+   include/linux/page_ref.h:131:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     131 | {
+         | ^
+   include/linux/page_ref.h:138:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     138 | {
+         | ^
+   include/linux/page_ref.h:143:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     143 | {
+         | ^
+   include/linux/page_ref.h:152:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     152 | {
+         | ^
+   include/linux/page_ref.h:157:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     157 | {
+         | ^
+   include/linux/page_ref.h:164:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     164 | {
+         | ^
+   include/linux/page_ref.h:169:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     169 | {
+         | ^
+   include/linux/page_ref.h:176:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     176 | {
+         | ^
+   include/linux/page_ref.h:181:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     181 | {
+         | ^
+   include/linux/page_ref.h:190:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     190 | {
+         | ^
+   include/linux/page_ref.h:195:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     195 | {
+         | ^
+   include/linux/page_ref.h:204:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     204 | {
+         | ^
+   include/linux/page_ref.h:209:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     209 | {
+         | ^
+   include/linux/page_ref.h:218:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     218 | {
+         | ^
+   include/linux/page_ref.h:223:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     223 | {
+         | ^
+   include/linux/page_ref.h:232:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     232 | {
+         | ^
+   include/linux/page_ref.h:237:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     237 | {
+         | ^
+   include/linux/page_ref.h:246:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     246 | {
+         | ^
+   include/linux/page_ref.h:262:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     262 | {
+         | ^
+   include/linux/page_ref.h:267:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     267 | {
+         | ^
+   include/linux/page_ref.h:312:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     312 | {
+         | ^
+   include/linux/page_ref.h:317:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     317 | {
+         | ^
+   include/linux/page_ref.h:326:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     326 | {
+         | ^
+   include/linux/page_ref.h:331:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     331 | {
+         | ^
+   include/linux/page_ref.h:341:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     341 | {
+         | ^
+   In file included from arch/um/include/asm/pgtable.h:11,
+                    from include/linux/pgtable.h:6,
+                    from include/linux/mm.h:29:
+>> arch/um/include/asm/fixmap.h:35:1: warning: empty declaration
+      35 | enum fixed_addresses {
+         | ^~~~
+   arch/um/include/asm/fixmap.h:39:13: error: storage class specified for parameter '__set_fixmap'
+      39 | extern void __set_fixmap (enum fixed_addresses idx,
+         |             ^~~~~~~~~~~~
+   In file included from arch/um/include/asm/fixmap.h:54:
+   include/asm-generic/fixmap.h:31:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      31 | {
+         | ^
+   include/asm-generic/fixmap.h:37:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      37 | {
+         | ^
+   In file included from include/asm-generic/pgtable-nopud.h:7,
+                    from arch/um/include/asm/pgtable-3level.h:10,
+                    from arch/um/include/asm/pgtable.h:28:
+   include/asm-generic/pgtable-nop4d.h:9:31: error: storage class specified for parameter 'p4d_t'
+       9 | typedef struct { pgd_t pgd; } p4d_t;
+         |                               ^~~~~
+   include/asm-generic/pgtable-nop4d.h:21:49: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      21 | static inline int pgd_none(pgd_t pgd)           { return 0; }
+         |                                                 ^
+   include/asm-generic/pgtable-nop4d.h:22:49: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      22 | static inline int pgd_bad(pgd_t pgd)            { return 0; }
+         |                                                 ^
+   include/asm-generic/pgtable-nop4d.h:23:49: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      23 | static inline int pgd_present(pgd_t pgd)        { return 1; }
+         |                                                 ^
+   include/asm-generic/pgtable-nop4d.h:24:49: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      24 | static inline void pgd_clear(pgd_t *pgd)        { }
+         |                                                 ^
+   include/asm-generic/pgtable-nop4d.h:35:21: error: expected '=', ',', ';', 'asm' or '__attribute__' before '*' token
+      35 | static inline p4d_t *p4d_offset(pgd_t *pgd, unsigned long address)
+         |                     ^
+   include/asm-generic/pgtable-nopud.h:16:18: error: expected specifier-qualifier-list before 'p4d_t'
+      16 | typedef struct { p4d_t p4d; } pud_t;
+         |                  ^~~~~
+   include/asm-generic/pgtable-nopud.h:16:31: error: storage class specified for parameter 'pud_t'
+      16 | typedef struct { p4d_t p4d; } pud_t;
+         |                               ^~~~~
+   include/asm-generic/pgtable-nopud.h:28:28: error: expected declaration specifiers or '...' before 'p4d_t'
+      28 | static inline int p4d_none(p4d_t p4d)           { return 0; }
+         |                            ^~~~~
+   include/asm-generic/pgtable-nopud.h:29:27: error: expected declaration specifiers or '...' before 'p4d_t'
+      29 | static inline int p4d_bad(p4d_t p4d)            { return 0; }
+         |                           ^~~~~
+   include/asm-generic/pgtable-nopud.h:30:31: error: expected declaration specifiers or '...' before 'p4d_t'
+      30 | static inline int p4d_present(p4d_t p4d)        { return 1; }
+         |                               ^~~~~
+   include/asm-generic/pgtable-nopud.h:31:30: error: expected declaration specifiers or '...' before 'p4d_t'
+      31 | static inline void p4d_clear(p4d_t *p4d)        { }
+         |                              ^~~~~
+   include/asm-generic/pgtable-nopud.h:42:21: error: expected '=', ',', ';', 'asm' or '__attribute__' before '*' token
+      42 | static inline pud_t *pud_offset(p4d_t *p4d, unsigned long address)
+         |                     ^
+   arch/um/include/asm/pgtable-3level.h:64:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      64 | {
+         | ^
+   arch/um/include/asm/pgtable-3level.h:68:46: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      68 | static inline void pgd_mkuptodate(pgd_t pgd) { pgd_val(pgd) &= ~_PAGE_NEWPAGE; }
+         |                                              ^
+   arch/um/include/asm/pgtable-3level.h:72:31: error: expected declaration specifiers or '...' before 'pud_t'
+      72 | static inline void pud_clear (pud_t *pud)
+         |                               ^~~~~
+   arch/um/include/asm/pgtable-3level.h:81:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      81 | {
+         | ^
+   arch/um/include/asm/pgtable-3level.h:86:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      86 | {
+         | ^
+   arch/um/include/asm/pgtable-3level.h:95:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      95 | {
+         | ^
+   arch/um/include/asm/pgtable.h:33:14: error: storage class specified for parameter 'swapper_pg_dir'
+      33 | extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
+         |              ^~~~~~~~~~~~~~
+   arch/um/include/asm/pgtable.h:36:23: error: storage class specified for parameter 'empty_zero_page'
+      36 | extern unsigned long *empty_zero_page;
+         |                       ^~~~~~~~~~~~~~~
+   arch/um/include/asm/pgtable.h:46:22: error: storage class specified for parameter 'end_iomem'
+      46 | extern unsigned long end_iomem;
+         |                      ^~~~~~~~~
+   arch/um/include/asm/pgtable.h:112:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     112 | {
+         | ^
+   arch/um/include/asm/pgtable.h:121:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     121 | {
+         | ^
+   arch/um/include/asm/pgtable.h:126:38: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     126 | static inline int pte_exec(pte_t pte){
+         |                                      ^
+   arch/um/include/asm/pgtable.h:132:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     132 | {
+         | ^
+   arch/um/include/asm/pgtable.h:138:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     138 | {
+         | ^
+   arch/um/include/asm/pgtable.h:143:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     143 | {
+         | ^
+   arch/um/include/asm/pgtable.h:148:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     148 | {
+         | ^
+   arch/um/include/asm/pgtable.h:153:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     153 | {
+         | ^
+   arch/um/include/asm/pgtable.h:164:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     164 | {
+         | ^
+   arch/um/include/asm/pgtable.h:170:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     170 | {
+         | ^
+   arch/um/include/asm/pgtable.h:176:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     176 | {
+         | ^
+   arch/um/include/asm/pgtable.h:182:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     182 | {
+         | ^
+   arch/um/include/asm/pgtable.h:191:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     191 | {
+         | ^
+   arch/um/include/asm/pgtable.h:199:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     199 | {
+         | ^
+   arch/um/include/asm/pgtable.h:205:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     205 | {
+         | ^
+   arch/um/include/asm/pgtable.h:211:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     211 | {
+         | ^
+   arch/um/include/asm/pgtable.h:219:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     219 | {
+         | ^
+   arch/um/include/asm/pgtable.h:227:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     227 | {
+         | ^
+   arch/um/include/asm/pgtable.h:233:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     233 | {
+         | ^
+   arch/um/include/asm/pgtable.h:247:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     247 | {
+         | ^
+   arch/um/include/asm/pgtable.h:253:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     253 | {
+         | ^
+   arch/um/include/asm/pgtable.h:276:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     276 | {
+         | ^
+>> arch/um/include/asm/pgtable.h:289:1: warning: empty declaration
+     289 | struct mm_struct;
+         | ^~~~~~
+   arch/um/include/asm/pgtable.h:290:15: error: storage class specified for parameter 'virt_to_pte'
+     290 | extern pte_t *virt_to_pte(struct mm_struct *mm, unsigned long addr);
+         |               ^~~~~~~~~~~
+   arch/um/include/asm/pgtable.h:317:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     317 | {
+         | ^
+   arch/um/include/asm/pgtable.h:322:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     322 | {
+         | ^
+   arch/um/include/asm/pgtable.h:328:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     328 | {
+         | ^
+   In file included from include/linux/pgtable.h:14:
+   include/asm-generic/pgtable_uffd.h:6:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+       6 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:11:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      11 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:16:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      16 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:21:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      21 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:26:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      26 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:31:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      31 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:36:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      36 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:41:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      41 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:46:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      46 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:51:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      51 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:56:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      56 | {
+         | ^
+   include/asm-generic/pgtable_uffd.h:61:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      61 | {
+         | ^
+   In file included from include/linux/pgtable.h:15:
+   include/linux/page_table_check.h:119:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     119 | {
+         | ^
+   include/linux/page_table_check.h:123:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     123 | {
+         | ^
+   include/linux/page_table_check.h:128:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     128 | {
+         | ^
+   include/linux/page_table_check.h:133:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     133 | {
+         | ^
+   include/linux/page_table_check.h:137:67: error: expected declaration specifiers or '...' before 'pud_t'
+     137 |                                               unsigned long addr, pud_t pud)
+         |                                                                   ^~~~~
+   include/linux/page_table_check.h:144:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     144 | {
+         | ^
+   include/linux/page_table_check.h:150:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     150 | {
+         | ^
+   include/linux/page_table_check.h:154:65: error: expected declaration specifiers or '...' before 'pud_t'
+     154 |                                             unsigned long addr, pud_t *pudp,
+         |                                                                 ^~~~~
+   include/linux/page_table_check.h:155:45: error: expected declaration specifiers or '...' before 'pud_t'
+     155 |                                             pud_t pud)
+         |                                             ^~~~~
+   include/linux/page_table_check.h:162:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     162 | {
+         | ^
+   include/linux/pgtable.h:63:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      63 | {
+         | ^
+   include/linux/pgtable.h:70:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      70 | {
+         | ^
+   include/linux/pgtable.h:78:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      78 | {
+         | ^
+   include/linux/pgtable.h:91:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+      91 | {
+         | ^
+   include/linux/pgtable.h:106:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     106 | {
+         | ^
+   include/linux/pgtable.h:110:1: error: expected '=', ',', ';', 'asm' or '__attribute__' before '{' token
+     110 | {
+         | ^
+..
 
-The current documentation ("checks if it is possible to move to D3")
-frames it as "does the bridge have the required features?" instead of
-"do we know about something broken in this bridge or this platform?"
 
-If something is broken, I would expect tests based on the device or
-DMI check.  But several some are not obvious defects.  E.g.,
-"bridge->is_hotplug_bridge && !pciehp_is_native(bridge)" -- what
-defect are we finding there?  What does the spec require that isn't
-happening?
+vim +28 arch/um/include/asm/uaccess.h
 
-In this particular patch, apparently we assume any non-Intel port or
-any BIOS before 2015 is broken.  Obviously way too general.  We know
-"USB keyboards don't wake from suspend," but I think we need something
-at the PCI level like "PME interrupt doesn't happen when bridge is in
-state X" (i.e., the part that is non-compliant), and "one consequence
-is that downstream devices can't wake from suspend."
+^1da177e4c3f41 include/asm-um/uaccess.h      Linus Torvalds     2005-04-16  12  
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  13  #define __under_task_size(addr, size) \
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  14  	(((unsigned long) (addr) < TASK_SIZE) && \
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  15  	 (((unsigned long) (addr) + (size)) < TASK_SIZE))
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  16  
+f8d65d27e677da arch/um/include/asm/uaccess.h Richard Weinberger 2015-05-12  17  #define __access_ok_vsyscall(addr, size) \
+f8d65d27e677da arch/um/include/asm/uaccess.h Richard Weinberger 2015-05-12  18  	  (((unsigned long) (addr) >= FIXADDR_USER_START) && \
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  19  	  ((unsigned long) (addr) + (size) <= FIXADDR_USER_END) && \
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  20  	  ((unsigned long) (addr) + (size) >= (unsigned long)(addr)))
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  21  
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  22  #define __addr_range_nowrap(addr, size) \
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  23  	((unsigned long) (addr) <= ((unsigned long) (addr) + (size)))
+fced95cacfc21b arch/um/include/asm/uaccess.h Al Viro            2011-08-18  24  
+a668ce3a001fe0 arch/um/include/asm/uaccess.h Al Viro            2017-03-28  25  extern unsigned long raw_copy_from_user(void *to, const void __user *from, unsigned long n);
+a668ce3a001fe0 arch/um/include/asm/uaccess.h Al Viro            2017-03-28 @26  extern unsigned long raw_copy_to_user(void __user *to, const void *from, unsigned long n);
+f8d65d27e677da arch/um/include/asm/uaccess.h Richard Weinberger 2015-05-12 @27  extern unsigned long __clear_user(void __user *mem, unsigned long len);
+12700c17fc2861 arch/um/include/asm/uaccess.h Arnd Bergmann      2022-02-15 @28  static inline int __access_ok(const void __user *ptr, unsigned long size);
+f8d65d27e677da arch/um/include/asm/uaccess.h Richard Weinberger 2015-05-12  29  
 
-> > I don't have any better suggestions, other than that this should be
-> > described somehow via ACPI (and not in vendor-specific stuff like
-> > PNP0D80).
-> 
-> Well, it isn't in practice.
-
-If this is basically quirks and we treat it that way (comments about
-the breakage and references to what the spec violations are), maybe
-this is the best we can do.
-
-Bjorn
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
