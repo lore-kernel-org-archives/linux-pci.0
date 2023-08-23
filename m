@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C894EE49B2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56894EE49B4
 	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 09:48:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231419AbjHWJrc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Aug 2023 05:47:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42154 "EHLO
+        id S231717AbjHWJrf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Aug 2023 05:47:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42294 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236106AbjHWJlb (ORCPT
+        with ESMTP id S236102AbjHWJlb (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2023 05:41:31 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2EC995BBD;
-        Wed, 23 Aug 2023 02:12:34 -0700 (PDT)
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 293DD5BB5;
+        Wed, 23 Aug 2023 02:12:30 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.01,195,1684767600"; 
-   d="scan'208";a="177395354"
+   d="scan'208";a="173694730"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 23 Aug 2023 18:12:05 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 23 Aug 2023 18:12:03 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 03ABC4002942;
-        Wed, 23 Aug 2023 18:12:05 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 71634400294A;
+        Wed, 23 Aug 2023 18:12:03 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
         lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
@@ -30,11 +30,10 @@ To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
 Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-Subject: [PATCH v19 19/19] misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
-Date:   Wed, 23 Aug 2023 18:11:53 +0900
-Message-Id: <20230823091153.2578417-20-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v19 10/19] PCI: dwc: Expose dw_pcie_ep_exit() to module
+Date:   Wed, 23 Aug 2023 18:11:44 +0900
+Message-Id: <20230823091153.2578417-11-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230823091153.2578417-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230823091153.2578417-1-yoshihiro.shimoda.uh@renesas.com>
@@ -44,37 +43,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Renesas R8A779F0 in pci_device_id table so that pci-epf-test
-can be used for testing PCIe EP on R-Car S4-8.
+Since no PCIe controller drivers call this, this change is not required
+for now. But, Renesas R-Car Gen4 PCIe controller driver will call this
+and if the controller driver is built as a kernel module, the following
+build error happens. So, expose dw_pcie_ep_exit() for it.
+
+ERROR: modpost: "dw_pcie_ep_exit" [drivers/pci/controller/dwc/pcie-rcar-gen4-ep-drv.ko] undefined!
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/misc/pci_endpoint_test.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index ed4d0ef5e5c3..150083dab71a 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -81,6 +81,7 @@
- #define PCI_DEVICE_ID_RENESAS_R8A774B1		0x002b
- #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
- #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
-+#define PCI_DEVICE_ID_RENESAS_R8A779F0		0x0031
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 500b092984b0..9a51a723b892 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -696,6 +696,7 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
  
- static DEFINE_IDA(pci_endpoint_test_ida);
+ 	pci_epc_mem_exit(epc);
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_ep_exit);
  
-@@ -990,6 +991,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774B1),},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774C0),},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A774E1),},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
-+	  .driver_data = (kernel_ulong_t)&default_data,
-+	},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
- 	  .driver_data = (kernel_ulong_t)&j721e_data,
- 	},
+ static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
+ {
 -- 
 2.25.1
 
