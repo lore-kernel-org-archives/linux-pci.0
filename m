@@ -2,118 +2,90 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B92B3EE4993
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 14:03:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 772F2EE49A0
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 14:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234904AbjHWODd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Aug 2023 10:03:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37130 "EHLO
+        id S236187AbjHWOPd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Aug 2023 10:15:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234430AbjHWODd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2023 10:03:33 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E212CD0
-        for <linux-pci@vger.kernel.org>; Wed, 23 Aug 2023 07:02:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692799367;
+        with ESMTP id S236188AbjHWOPc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2023 10:15:32 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 461CAE57;
+        Wed, 23 Aug 2023 07:15:30 -0700 (PDT)
+From:   Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1692800128;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ERUI+NK+jUnEExmqCqtfIrVKBUpED9COp25lOAtb1+k=;
-        b=T++nq0FWg3piBDc2z/tAGGAHPmh9ksHC4Dupj1PCrp7pYFlnFozKEcuF93TBKgdu6ZYgXs
-        vUvpgq2EpVRHWMI19MKlY0fC25QeYqcAmaQrWAPdw3sy7BJPdBEh7njAfPSKyn7oHH6vC/
-        0kaPpwRUnd6nxzeeS/4Po12mcn1hkXE=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-480-MTpPGWwdNN-P7LedSTUn1g-1; Wed, 23 Aug 2023 10:02:46 -0400
-X-MC-Unique: MTpPGWwdNN-P7LedSTUn1g-1
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-26f591c1a2cso3759122a91.3
-        for <linux-pci@vger.kernel.org>; Wed, 23 Aug 2023 07:02:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692799354; x=1693404154;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ERUI+NK+jUnEExmqCqtfIrVKBUpED9COp25lOAtb1+k=;
-        b=jJQklE1AQB13756C8tBcrKZ9Ta0IXkUfNRQ9vqLDYV4YvxRWzRACYbxSQrjI2w+mfS
-         ojXCd34iK3DmNlJLqO1xJgAQByd/UuVw0hNpRuBp6pQW/Em2I06pqtI24uHaM8HatmdJ
-         fO+BJPVIJb7iUHc666rUkOtqloJEMmAsuYmJO0h9jv0DXoWHrc+n/2PpY6Z9omzwIs1n
-         gBpW/EMUkdkJelPRDY2zWSUfDRCRytYE+Yv20djfkPf5xnuF9f9gZBqLd8WekwpjIYrc
-         /o8sgMul4MIF6XySayK+gvICiY6XEykCNo4ObmdlrHnu1YhoCc4N1naWEGcDXOBsvgXq
-         74eA==
-X-Gm-Message-State: AOJu0YygwG+lmY6EbB9LtuemHW1FmthdvWVY8e3b37iTLm0owfIDJLgm
-        yBI0m1wNyIdXLKEw43xcCd65/zy3Pgm0c5NsNUfuoxQ6IPeIpjpFw8R217H1eGCEbzH1btrIaBr
-        hlqEOuzqMxmBgehieI8u/ETFciJDESHas9P4=
-X-Received: by 2002:a17:90a:7348:b0:269:25a8:66c with SMTP id j8-20020a17090a734800b0026925a8066cmr9103882pjs.45.1692799354047;
-        Wed, 23 Aug 2023 07:02:34 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGW15JE4LCJ/KkWX1lMJBTT7PNOrDO2QO/djYtszrlFSukD3QntsPQ15tf/oS3atq2ke0SzXuOjqxDb14QYQdk=
-X-Received: by 2002:a17:90a:7348:b0:269:25a8:66c with SMTP id
- j8-20020a17090a734800b0026925a8066cmr9103833pjs.45.1692799353440; Wed, 23 Aug
- 2023 07:02:33 -0700 (PDT)
+        bh=tC3legbKEgh6GaaSn5yn0aimdQy2CL6olThV+is3i/s=;
+        b=sRRyH1OEK1xpWU6ptY+xbUO0aV2vsPkBsmcJa6O4urXCbLGekvw7terr9WvATbiptHdkYf
+        xt5yWFn6vPnZq61Oavlx5zIoX5KaSiqyIs6Trxn8rgn92dCTQRxKggCCP/J5flumSc2Mlf
+        UBG6H4x1lwJMdidZ3o46qeqI6iHDlkPUG2F8TiH024VrILCJaBrQ1XMOVfK7x0uX7tDNHD
+        DAbWJ5FL7R4vsisj4BwPYbO2yHkCPoofEKtxnx8fl5ZX9u4xtulo5QrAy4g9ofv6dFyKzE
+        XkcWxyh5s22ZANx57zn1FadqYzi85hQRjRHxU9vHQV/l37T3PmTAvD9bkf5TBA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1692800128;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=tC3legbKEgh6GaaSn5yn0aimdQy2CL6olThV+is3i/s=;
+        b=MavnPf9nYe9evfczAehjxfX9HzO8oe/uGl9hyapHj2jdVIqagf2I/DQx6+MNEOJdt5Fmw2
+        eVxr+alc9JcjDhDw==
+To:     =?utf-8?B?6buE5bCR5rOi?= <huangshaobo3@xiaomi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Ahmed S. Darwish" <darwi@linutronix.de>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Kevin Tian <kevin.tian@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     =?utf-8?B?5p2O6auY6bmP?= <chenwei29@xiaomi.com>,
+        =?utf-8?B?5qKB5Lyf?= =?utf-8?B?6bmP?= <weipengliang@xiaomi.com>,
+        =?utf-8?B?57+B6YeR6aOe?= <wengjinfei@xiaomi.com>,
+        =?utf-8?B?54aK5Lqu?= <xiongliang@xiaomi.com>
+Subject: Re: Subject: [PATCH] pci/msi: remove redundant calculation in
+ msi_setup_msi_desc
+In-Reply-To: <3ebf5d8032ad418da4f24516cd23406e@xiaomi.com>
+References: <3ebf5d8032ad418da4f24516cd23406e@xiaomi.com>
+Date:   Wed, 23 Aug 2023 16:15:27 +0200
+Message-ID: <87bkexetfk.ffs@tglx>
 MIME-Version: 1.0
-References: <CA+cBOTeWrsTyANjLZQ=bGoBQ_yOkkV1juyRvJq-C8GOrbW6t9Q@mail.gmail.com>
- <20230821131223.GJ3465@black.fi.intel.com> <CA+cBOTc-7U_sumg6g-uBs9w3m8xipuOV1VY=4nmBcyuppgi8_g@mail.gmail.com>
- <20230823050714.GP3465@black.fi.intel.com> <CA+cBOTdS5djXL=93VThP9K67pjYKHtjceqSczKf8NQonhpgo5Q@mail.gmail.com>
- <20230823074447.GR3465@black.fi.intel.com> <20230823075649.GS3465@black.fi.intel.com>
- <CA+cBOTco17b_8ZMhU8gXy8z2mtZXvVxrEUdKaAuZMhyFYC3yeQ@mail.gmail.com> <20230823090525.GT3465@black.fi.intel.com>
-In-Reply-To: <20230823090525.GT3465@black.fi.intel.com>
-From:   Kamil Paral <kparal@redhat.com>
-Date:   Wed, 23 Aug 2023 16:02:06 +0200
-Message-ID: <CA+cBOTeOSBkw_-AM6desmdVQjTXUZbKppK_PDiOM3sXQW5QKiA@mail.gmail.com>
-Subject: Re: [REGRESSION] resume with a Thunderbolt dock broke with commit
- e8b908146d44 "PCI/PM: Increase wait time after resume"
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     linux-pci@vger.kernel.org, regressions@lists.linux.dev,
-        bhelgaas@google.com, chris.chiu@canonical.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 23, 2023 at 11:05=E2=80=AFAM Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> OK. Did you change any BIOS settings from the defaults that might have
-> affect on this? Sometimes these are exposed to through the BIOS menu and
-> the user can change those (Lenovo typically does not, expose them
-> though).
+On Fri, Aug 18 2023 at 07:26, =E9=BB=84=E5=B0=91=E6=B3=A2 wrote:
 
-These BIOS pages seem they could be relevant:
-https://imgur.com/a/vEltxpj
+Your patch is corrupt:
 
-And heureka, "Thunderbolt BIOS Assist Mode" affects this! It was
-disabled (not sure if that's the default or I changed it before).
-After I enable it, the resume 60+ second delay is gone, it resumes in
-standard ~5 seconds. The dock devices (mouse, LAN) still take a few
-extra seconds to activate. The dmesg for a resume with TB assist mode
-is here:
-https://bugzilla-attachments.redhat.com/attachment.cgi?id=3D1984785
+ Applying: Subject: [PATCH] pci/msi: remove redundant calculation in msi_se=
+tup_msi_desc
+ error: corrupt patch at line 12
 
-Unfortunately, it seems to have its own quirks. There seems to be
-something like ~20% chance that the dock devices are no longer
-available after resume. I see the dock as connected in boltctl, but I
-no longer see the devices in lsusb. Reconnecting the dock doesn't
-help, more suspend&resume cycles don't help, only system reboot helps.
-I captured this situation in this dmesg (there are multiple resume
-events, the devices disappear after the last one):
-https://bugzilla-attachments.redhat.com/attachment.cgi?id=3D1984786
+It's DOS mangled and whitespace damaged.
 
-This might be the same problem that I described regarding
-pcie_aspm=3Doff to Bjorn, but I'd need to check. Either way, this wasn't
-happening when the TB assist mode was disabled.
+> Whether to support 64-bit address status has been calculated before,
+> and the calculation result can be used directly afterwards, so use
+> msi_attrib.is_64 to avoid double calculation.
 
-> Can you also attach output of acpidump to and dmesg with
-> "thunderbolt.dyndbg=3D+p" in the command line?
+I'm not seeing what this solves:
 
-acpidump:
-https://bugzilla-attachments.redhat.com/attachment.cgi?id=3D1984802
+> -       if (control & PCI_MSI_FLAGS_64BIT)
+> +       if (desc.pci.msi_attrib.is_64)
 
-dmesg with "thunderbolt.dyndbg=3D+p" and one suspend&resume cycle:
-https://bugzilla-attachments.redhat.com/attachment.cgi?id=3D1984803
+Both variants resolve to a test of a bit and a conditional instruction
+on the result. It's exactly zero difference in terms of "calculation".
 
-I'm currently running kernel 6.4.8 packaged in Fedora 38 for these
-experiments, I hope that's OK. If needed, I can switch to the latest
-kernel.
+So all this does is change the memory location to test. Not more not
+less. It does not generate better code and does not save anything.
+
+Thanks,
+
+        tglx
 
