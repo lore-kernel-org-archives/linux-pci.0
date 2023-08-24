@@ -2,155 +2,118 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6AAC88CB2
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Aug 2023 23:44:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5399CC3DA6F
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Aug 2023 01:28:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238686AbjHWXnm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Aug 2023 19:43:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55402 "EHLO
+        id S238958AbjHXB2S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Aug 2023 21:28:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236932AbjHWXnX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2023 19:43:23 -0400
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2077.outbound.protection.outlook.com [40.107.244.77])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1054C10DB;
-        Wed, 23 Aug 2023 16:43:22 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EbcoupKUsGjvypmL5essOVDI7a6z4zH29CRCrS4dwbZS0xMDyTySFNVJ1epJE+fdVK+T1kWMHIQ8csuRj4ulR0wHJWqeKtU/DQCshMwNh2kh11H1Z5ZaKlYPEysrbZcWmFXSJWasmCd2WVq35UCUaaaIqlgHprq7o4gez2magcYoWip+AGfqdSgAIJ5GHfKuqBb/1KMM1NxAnjYtcQe02j5QBZScBrmfxQo41rik4eSf4ZB7ArwimcxJH+qjfRIADN77Fuj57vjOuA8l08GbCk0X+K8lMmb+4oR51uNrBn1zKWOUfbDSGH3HwhdzpNigwdEi18dokJz3NemtKUmb6w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=xEQDOtofzDNcuxxkpsvWr6bA/oWY/SgrOHxI+YzZGuw=;
- b=eAHS/RVDnKMikXtYnCgf38afjJibytjmrCYANj+sauxrW0td0VHtlZYSnldGTZ//UMzKH/pGnVX54/OrY6Z+m5Osh0ws0BXjWYx3yPFiy3RY4soJWZVYISTWwXuQzD2hfo+q7ZKhXDz/ejpuCnM9A/rgGe4pnIuki4k3cTnIy+LhFCrts6R1RoFoy35Yc0kzMt+CWsDSWShmL7gTb2j7QAjHKkdyqROHvGpz1j7F9tqku4qj2/LrQjK/w09kPKFMguZVtXC2yD4YyTiqTYao3xE30QqfEdITKvPWayhqpum0VddCk2bubhUuwVvwr+IRz6zMaDlQ05udGft7szWnTA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=xEQDOtofzDNcuxxkpsvWr6bA/oWY/SgrOHxI+YzZGuw=;
- b=x1JMHoE4opoBaVHrCHJIs5bNRm0HxU2FY6cDzlSlAeOovhYkqz4ZlFLbxH/y/A7z2yrhpu6/RxZAMxD1vVSZQLl8niRSEm0qiltFK3MEAg1di3SIUDr64tJMgw5eVRY19jt3HLhL8Rw6w6YVWbU2aPma8HowKFLj3GRrFseAdVY=
-Received: from CY5PR10CA0015.namprd10.prod.outlook.com (2603:10b6:930:1c::34)
- by DS7PR12MB6070.namprd12.prod.outlook.com (2603:10b6:8:9e::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.24; Wed, 23 Aug
- 2023 23:43:19 +0000
-Received: from CY4PEPF0000E9DA.namprd05.prod.outlook.com
- (2603:10b6:930:1c:cafe::f8) by CY5PR10CA0015.outlook.office365.com
- (2603:10b6:930:1c::34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.25 via Frontend
- Transport; Wed, 23 Aug 2023 23:43:19 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CY4PEPF0000E9DA.mail.protection.outlook.com (10.167.241.79) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6699.15 via Frontend Transport; Wed, 23 Aug 2023 23:43:19 +0000
-Received: from ethanolx50f7host.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 23 Aug
- 2023 18:43:17 -0500
-From:   Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
-To:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-cxl@vger.kernel.org>
-CC:     Bjorn Helgaas <bhelgaas@google.com>, <oohall@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        "Vishal Verma" <vishal.l.verma@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        "Ben Widawsky" <bwidawsk@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
-        Yazen Ghannam <yazen.ghannam@amd.com>,
-        Terry Bowman <terry.bowman@amd.com>,
-        Robert Richter <rrichter@amd.com>,
-        Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
-Subject: [PATCH v4 1/3] cxl/pci: Fix appropriate checking for _OSC while handling CXL RAS registers
-Date:   Wed, 23 Aug 2023 23:43:03 +0000
-Message-ID: <20230823234305.27333-2-Smita.KoralahalliChannabasappa@amd.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230823234305.27333-1-Smita.KoralahalliChannabasappa@amd.com>
-References: <20230823234305.27333-1-Smita.KoralahalliChannabasappa@amd.com>
+        with ESMTP id S238963AbjHXB2F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2023 21:28:05 -0400
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E792A8;
+        Wed, 23 Aug 2023 18:28:03 -0700 (PDT)
+Received: by mail-lf1-x12f.google.com with SMTP id 2adb3069b0e04-4ffa6e25ebbso485210e87.0;
+        Wed, 23 Aug 2023 18:28:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1692840481; x=1693445281;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=vetduGgViyjJuBVB9gXghwBbpYcZ8lgc6rsEZ+ryBhg=;
+        b=bSPmJe7askH7b9NH4mjqq6RLQC6eX0h5LXpSMm8NM6ys8+iLfWFFcs5CzdsXh4pKE9
+         qFLctkzCQzkdxYUm1VpTW8hNn0+HY57iabA36hAMbn5n8N/9dy0SiBHxpHzH/w10JKuM
+         mRnpIsqCND3C6BrmGekgBOTcA2yUgIeGtM3sZ60STB+b3pkhzzOAdHal6gS6dyK/pyB8
+         yz9Km4D6q8iokTdZdGaTpyi1BPpIiPiA6Ks7QpZY+53Voa3iEkKV3RTyt8GzVhWDMXSL
+         NRrSGqvtFEAhUux7POZyI2GNNkWac/19vUWIPUIKTCvZPz+JdehTW9P+iERmWneG+t29
+         +u/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1692840481; x=1693445281;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=vetduGgViyjJuBVB9gXghwBbpYcZ8lgc6rsEZ+ryBhg=;
+        b=liT9Kw9J0jzM7GcqGx4swcip2TCkNfQjpFsWvUCLlVdMB7a6UybbvHgB/gtIH0Ih5O
+         gjanRfUnaBYciVSU4I6IJgAx4ZPbT9xlYA/pztjXGGLZjcBetPUkye1wEXGFxN9VRfKu
+         3ozmc/UiBKY5ffdlJvVxdO5IjrYXqPLnxqmdz5zYWtX8YKY8EX+cMq1yZEngTh7yJBiC
+         MUbTwegZMxsB+GUpxfWST0Wxah+O3cPgCo2hPxZG0sGvrn9YZl/RLedHtvWZ1TNVmt+z
+         H/Fp5CaZnGnn/WIV7Gwwm88PsIqWJAXZ0rl7t2YaijGMo0HBy9k0J6CTSyjcUTUb//qY
+         fiLg==
+X-Gm-Message-State: AOJu0YxkcrPXm0+DHz4XTMY60vEpcRdYZDZHZPZrNyJHYnd8DNEROKBA
+        yV17WdhQt9c7vSF/9f6cDVdcbupPiPSj6q8+TzyrgRMc6/E=
+X-Google-Smtp-Source: AGHT+IFi/Mw7Vt2L+WyArvzM1+AIiEFUSEpUSgFh1dVwGs4f+9QtM7KcOZYse+N1/w7fBFFj2jDgMctFRlOKndymaYc=
+X-Received: by 2002:a05:6512:615:b0:4f8:5e62:b94b with SMTP id
+ b21-20020a056512061500b004f85e62b94bmr4577882lfe.9.1692840481031; Wed, 23 Aug
+ 2023 18:28:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000E9DA:EE_|DS7PR12MB6070:EE_
-X-MS-Office365-Filtering-Correlation-Id: 15127256-14bb-4600-20a1-08dba432bb03
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: vxGWf6s0Ikq6YdrCE1HnjSEiyCxk2QCc4cEMeELWHItQyFJ4IE6i55noODRA+d88ek2dIVqAl8yqbgmJL4vDzJb/pW8ezBkYh+eJo5ffsXd+A/gooxXgzU89JZUNDcH+Bx1Lofx9eoTu45fMw2HozXVQQKk7uV6PYARmtiEww8GywULIks+WLmdVrqqfIooj9I/DHnNb+qfACbFnz/1O8DEcjZThNWfGTwqPPg2ECbDaJ1nzuXC4cArzX2KsHCoWY2R29yM0YqoSy8Y07EdoI1tew9kdnnNzE6PKkGFVprPNH4mwheacnOUwgNHhuVrvB3LgwRKNz7Iyqtx+DigZlKpq0NTMxuifHeahstskwjvYYA2BxvTm7oVjulC8dOLeVCdjEN+bWvKFE6CwD6sv1WvUj0j/D7+tTgZCdOo/TjSPwiKiggjvWGpFAaztxOdz8dfV04JsY3+73XPTef9YL9NrPxCHRSEReLXiwSo9V84eW71ybXe2LbV0ofoIrliVgs30sNdMt5FOY/hlLRUJKRlzbYuraQqoEcVkTsLHg6LruxtP7S6add/JRdpnZsxrQvO2C4P8mBwlMSfBv6ngbK+j3KMj4Uah8UXBPieMNb2m69+P2jHXW3ePznNiwTi09RJHtqA8iwXc+bY6viSPaotYsSVOCsOPPTLNHNv8+ht9PT1w7Rkt69vbxKDEkAhpqzizqRgeXfwEqGhAsWy7v/dvh9zOHFHAU+4pbQOR0zKRzx2YKUaI7x3xvG7JhvIsGE3IM3BEFnTiddZ2xkDlEA==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(136003)(396003)(39860400002)(376002)(346002)(186009)(1800799009)(451199024)(82310400011)(46966006)(36840700001)(40470700004)(54906003)(70586007)(316002)(70206006)(110136005)(8676002)(8936002)(2616005)(4326008)(36756003)(40460700003)(41300700001)(1076003)(356005)(82740400003)(81166007)(478600001)(6666004)(40480700001)(83380400001)(7416002)(2906002)(47076005)(7696005)(36860700001)(86362001)(426003)(336012)(5660300002)(16526019)(26005)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Aug 2023 23:43:19.4827
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 15127256-14bb-4600-20a1-08dba432bb03
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000E9DA.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR12MB6070
+References: <CAJZ5v0gvP3YRWTLtV9_b+W_QQ=K_wkFEDj-qT4cNW2RYfTPEgg@mail.gmail.com>
+ <20230823205024.GA481013@bhelgaas>
+In-Reply-To: <20230823205024.GA481013@bhelgaas>
+From:   Feiyang Chen <chris.chenfeiyang@gmail.com>
+Date:   Thu, 24 Aug 2023 09:27:47 +0800
+Message-ID: <CACWXhKniWqJBHaMk7jQUnuF7PGHxoOtFQ4fYpHxFRkJ+9n5mJA@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI/PM: Only read PCI_PM_CTRL register when available
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     Feiyang Chen <chenfeiyang@loongson.cn>, bhelgaas@google.com,
+        rafael.j.wysocki@intel.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        anders.roxell@linaro.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org, guyinggang@loongson.cn,
+        siyanteng@loongson.cn, chenhuacai@loongson.cn,
+        loongson-kernel@lists.loongnix.cn
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-cxl_pci fails to unmask CXL protocol errors when CXL memory error reporting
-is not granted native control. Given that CXL memory error reporting uses
-the event interface and protocol errors use AER, unmask protocol errors
-based only on the native AER setting. Without this change end user
-deployments will fail to report protocol errors in the case where native
-memory error handling is not granted to Linux.
+On Thu, Aug 24, 2023 at 4:50=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> On Wed, Aug 23, 2023 at 02:46:25PM +0200, Rafael J. Wysocki wrote:
+> > On Wed, Aug 23, 2023 at 9:28=E2=80=AFAM Ilpo J=C3=A4rvinen
+> > <ilpo.jarvinen@linux.intel.com> wrote:
+> > > On Tue, 22 Aug 2023, Rafael J. Wysocki wrote:
+> > > > On Tue, Aug 22, 2023 at 3:24=E2=80=AFPM Ilpo J=C3=A4rvinen
+> > > > <ilpo.jarvinen@linux.intel.com> wrote:
+> > > > >
+> > > > > On Tue, 22 Aug 2023, Feiyang Chen wrote:
+> > > > >
+> > > > > > When the current state is already PCI_D0, pci_power_up() will r=
+eturn
+> > > > > > 0 even though dev->pm_cap is not set. In that case, we should n=
+ot
+> > > > > > read the PCI_PM_CTRL register in pci_set_full_power_state().
+> > > > >
+> > > > > IMHO, this is a bit misleading because after this patch, pci_powe=
+r_up()
+> > > > > returns always an error if dev->pm_cap is not set.
+> > > >
+> > > > Yes, it does, but it has 2 callers only and the other one ignores t=
+he
+> > > > return value, so this only matters here.
+> > >
+> > > I did only mean that the changelog could be more clear how it achieve=
+s
+> > > the desired result (as currently it states opposite of what the code
+> > > does w.r.t. that return value).
+> >
+> > Fair enough.
+> >
+> > It looks like the changelog has not been updated since v1.
+> >
+> > > I'm not against the approach taken by patch.
+>
+> Feiyang, would you update the commit log so it matches the code and
+> post it as a v3?
+>
 
-Also, return zero instead of an error code to not block the communication
-with the cxl device when in native memory error reporting mode.
+Sure. I will update the commit log.
 
-Fixes: 248529edc86f ("cxl: add RAS status unmasking for CXL")
-Signed-off-by: Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>
-Reviewed-by: Robert Richter <rrichter@amd.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
----
-v2:
-	Added fixes tag.
-	Included what the patch fixes in commit message.
-v3:
-	Added "Reviewed-by" tag.
-v4:
-	"Reviewed-by" tags.
-	Complete rephrase of the commit message based on Dan's comments.
-	Added a comment why the patch is returning zero.
----
- drivers/cxl/pci.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks,
+Feiyang
 
-diff --git a/drivers/cxl/pci.c b/drivers/cxl/pci.c
-index 1cb1494c28fe..2323169b6e5f 100644
---- a/drivers/cxl/pci.c
-+++ b/drivers/cxl/pci.c
-@@ -541,9 +541,9 @@ static int cxl_pci_ras_unmask(struct pci_dev *pdev)
- 		return 0;
- 	}
- 
--	/* BIOS has CXL error control */
--	if (!host_bridge->native_cxl_error)
--		return -ENXIO;
-+	/* BIOS has PCIe AER error control */
-+	if (!host_bridge->native_aer)
-+		return 0;
- 
- 	rc = pcie_capability_read_word(pdev, PCI_EXP_DEVCTL, &cap);
- 	if (rc)
--- 
-2.17.1
-
+> Bjorn
