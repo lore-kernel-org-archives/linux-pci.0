@@ -2,45 +2,46 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C93C88CB2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90565EE4993
 	for <linux-pci@archiver.kernel.org>; Thu, 24 Aug 2023 19:38:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234545AbjHXThh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Aug 2023 15:37:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41796 "EHLO
+        id S243258AbjHXThj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Aug 2023 15:37:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243292AbjHXThZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2023 15:37:25 -0400
+        with ESMTP id S243303AbjHXThg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2023 15:37:36 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4FD11BE6;
-        Thu, 24 Aug 2023 12:37:23 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE3C21B0;
+        Thu, 24 Aug 2023 12:37:34 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2307D63E83;
-        Thu, 24 Aug 2023 19:37:23 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4651DC433C7;
-        Thu, 24 Aug 2023 19:37:22 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 6901C644D4;
+        Thu, 24 Aug 2023 19:37:34 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A183C433C7;
+        Thu, 24 Aug 2023 19:37:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692905842;
-        bh=B381UX5uUyWBuzt4gPftg6j/LYRWdv9CcySZJg/PAhE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=X9cmEMTGlesTF4j1LarIq+a+xcORDhl79TtRp/MoahlxeB9Q3G0P2AL3NCKbJXLM5
-         6Jci/J6uGpvdV4pNHjRnRKnRwWbsW6k4nduoFYu7esZYjHO5f8VJ+IijVj0ZOBpSvO
-         v+EriMjYqEM4np1KVvcv3DbQ9VV4nGAWGW1ry0SHGhrJhW3kzoF0jgzNUx2rB4xiKt
-         Hwh5QiZmoq8s/dJKxKeEGkEHf/NCkMHoMRhHhkyrzz6MYifsEetCVjO6dRjDCQwwJX
-         XM4v0yokgtemJqVYkPXOBDm5AqF8MExq/U9z+8XCF8F8atE5kvtxGATkwOZOIXAOdc
-         cEkw99V2cI21Q==
+        s=k20201202; t=1692905853;
+        bh=fSgKkOz6KJKW51DIFdH/cpNTVrz4ktudomud2D4E+30=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=tTImTmQa3rgEXJUfnXB3J7KmfFGqi0sDbao4O/gRM0G30huBZ1Pv+2lhNaQzGl0E6
+         2jPoal+4Pad7Qf9fuiZ9ajBTBjYQxqhUP3e3pFX6gNCeyb0beidOXPLCvQ/D9UI0vg
+         Y9Yd/AYC6wRBIG0No310afDAoXGyZI46EYP0Uh0WfTtzlWZh7i33g+EtYqwLgg8mj3
+         rAx9IJJQpUbZtabR07AnpauV4ZFW4EviZNbYoXefmwSGusRHHhRyiNxIDSDvALiG5y
+         yLJXZF6UUkPaiPqVyF8kHghjBlFXNeDnaxGG9Ge47Hq+V6InF7+KbIUBwBTyNC7Iog
+         DqPp9JnD7HFPQ==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 00/12] PCI: Miscellaneous cleanups
-Date:   Thu, 24 Aug 2023 14:37:00 -0500
-Message-Id: <20230824193712.542167-1-helgaas@kernel.org>
+Subject: [PATCH 05/12] PCI: Use consistent put_user() pointer types
+Date:   Thu, 24 Aug 2023 14:37:05 -0500
+Message-Id: <20230824193712.542167-6-helgaas@kernel.org>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230824193712.542167-1-helgaas@kernel.org>
+References: <20230824193712.542167-1-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -48,33 +49,55 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Simplify some trivial things and fix some typos and formatting
-inconsistencies.
+We used u8, u16, and u32 for get_user() pointer types, but "unsigned char",
+"unsigned short", and "unsigned int" for put_user().
 
-Most are based on v6.5-rc1 (actually on the current "misc" branch, so there
-may be minor conflicts).
+Use u8, u16, and u32 for put_user() for consistency.  No functional change
+intended.
 
-The last ("Simplify pcie_capability_clear_and_set_word()") is based on the
-current "pcie-rmw" branch because it changes the same code as that branch
-does.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/syscall.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-No functional change intended for any of this, except the printk changes
-("%#08x" vs "%#010x").
-
-Bjorn Helgaas (12):
-  PCI: mvebu: Remove unused struct mvebu_pcie.busn
-  PCI: Unexport pcie_port_bus_type
-  PCI: Remove unnecessary initializations
-  PCI: Fix printk field formatting
-  PCI: Use consistent put_user() pointer types
-  PCI/AER: Simplify AER_RECOVER_RING_SIZE definition
-  PCI: Simplify pci_pio_to_address()
-  PCI: Simplify pci_dev_driver()
-  PCI: Fix pci_bus_resetable(), pci_slot_resetable() name typos
-  PCI: Fix typos in docs and comments
-  PCI: Fix code formatting inconsistencies
-  PCI: Simplify pcie_capability_clear_and_set_word() control flow
-
+diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
+index 61a6fe3cde21..803acbf33eb2 100644
+--- a/drivers/pci/syscall.c
++++ b/drivers/pci/syscall.c
+@@ -52,13 +52,13 @@ SYSCALL_DEFINE5(pciconfig_read, unsigned long, bus, unsigned long, dfn,
+ 
+ 	switch (len) {
+ 	case 1:
+-		err = put_user(byte, (unsigned char __user *)buf);
++		err = put_user(byte, (u8 __user *)buf);
+ 		break;
+ 	case 2:
+-		err = put_user(word, (unsigned short __user *)buf);
++		err = put_user(word, (u16 __user *)buf);
+ 		break;
+ 	case 4:
+-		err = put_user(dword, (unsigned int __user *)buf);
++		err = put_user(dword, (u32 __user *)buf);
+ 		break;
+ 	}
+ 	pci_dev_put(dev);
+@@ -70,13 +70,13 @@ SYSCALL_DEFINE5(pciconfig_read, unsigned long, bus, unsigned long, dfn,
+ 	   they get instead of a machine check on x86.  */
+ 	switch (len) {
+ 	case 1:
+-		put_user(-1, (unsigned char __user *)buf);
++		put_user(-1, (u8 __user *)buf);
+ 		break;
+ 	case 2:
+-		put_user(-1, (unsigned short __user *)buf);
++		put_user(-1, (u16 __user *)buf);
+ 		break;
+ 	case 4:
+-		put_user(-1, (unsigned int __user *)buf);
++		put_user(-1, (u32 __user *)buf);
+ 		break;
+ 	}
+ 	pci_dev_put(dev);
 -- 
 2.34.1
 
