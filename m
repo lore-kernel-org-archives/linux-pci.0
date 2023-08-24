@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90565EE4993
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Aug 2023 19:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D6DC27C40
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Aug 2023 19:38:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243258AbjHXThj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Aug 2023 15:37:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40598 "EHLO
+        id S239015AbjHXTiK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Aug 2023 15:38:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243303AbjHXThg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2023 15:37:36 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE3C21B0;
-        Thu, 24 Aug 2023 12:37:34 -0700 (PDT)
+        with ESMTP id S243269AbjHXThl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2023 15:37:41 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B4DE10EF;
+        Thu, 24 Aug 2023 12:37:39 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 6901C644D4;
-        Thu, 24 Aug 2023 19:37:34 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A183C433C7;
-        Thu, 24 Aug 2023 19:37:33 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C6731654DF;
+        Thu, 24 Aug 2023 19:37:38 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07B10C433C7;
+        Thu, 24 Aug 2023 19:37:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692905853;
-        bh=fSgKkOz6KJKW51DIFdH/cpNTVrz4ktudomud2D4E+30=;
+        s=k20201202; t=1692905858;
+        bh=cRcXheMwP6+1IJC+RJCLu/hAsRt8eGGz+8gJIYd9Mr4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tTImTmQa3rgEXJUfnXB3J7KmfFGqi0sDbao4O/gRM0G30huBZ1Pv+2lhNaQzGl0E6
-         2jPoal+4Pad7Qf9fuiZ9ajBTBjYQxqhUP3e3pFX6gNCeyb0beidOXPLCvQ/D9UI0vg
-         Y9Yd/AYC6wRBIG0No310afDAoXGyZI46EYP0Uh0WfTtzlWZh7i33g+EtYqwLgg8mj3
-         rAx9IJJQpUbZtabR07AnpauV4ZFW4EviZNbYoXefmwSGusRHHhRyiNxIDSDvALiG5y
-         yLJXZF6UUkPaiPqVyF8kHghjBlFXNeDnaxGG9Ge47Hq+V6InF7+KbIUBwBTyNC7Iog
-         DqPp9JnD7HFPQ==
+        b=Fnx+q3wot+N0rwZlsRkmOo/a0ur9OMBcgzbVfO3Q8KyWCUaQeV6CE76fqtj4mNNnh
+         v97rUHuo2De5LEkm26rmn5ClFd2dKmfOKv9bac/BrqNzLcHhU8LGFEHi1VBDwqpRF8
+         LR3QN/egT81La04HcYJpfRMcO5J8/kOgQYM/6K+RP4MQ3Jtw1RmVYfXUsYGOYHzCmH
+         +uYo/OAZQ5v8jUuYBrZkZm4wTSAuHNursZE06y3MYBcj2gEkLEYkje42oaVtyVW6n6
+         GBynX9Mr9JsBjTYJ7OjXlFPRfktdzX7qTIp3xy52+JwD3M7oMe2Ma6/xOjCJFpANXp
+         qgLtgWRu8xhpg==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 05/12] PCI: Use consistent put_user() pointer types
-Date:   Thu, 24 Aug 2023 14:37:05 -0500
-Message-Id: <20230824193712.542167-6-helgaas@kernel.org>
+Subject: [PATCH 07/12] PCI: Simplify pci_pio_to_address()
+Date:   Thu, 24 Aug 2023 14:37:07 -0500
+Message-Id: <20230824193712.542167-8-helgaas@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230824193712.542167-1-helgaas@kernel.org>
 References: <20230824193712.542167-1-helgaas@kernel.org>
@@ -49,55 +49,38 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-We used u8, u16, and u32 for get_user() pointer types, but "unsigned char",
-"unsigned short", and "unsigned int" for put_user().
-
-Use u8, u16, and u32 for put_user() for consistency.  No functional change
-intended.
+Simplify pci_pio_to_address() by removing an unnecessary local variable.
+No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/syscall.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/pci.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
-index 61a6fe3cde21..803acbf33eb2 100644
---- a/drivers/pci/syscall.c
-+++ b/drivers/pci/syscall.c
-@@ -52,13 +52,13 @@ SYSCALL_DEFINE5(pciconfig_read, unsigned long, bus, unsigned long, dfn,
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 60230da957e0..4d2b11c71e62 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4191,16 +4191,12 @@ int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
  
- 	switch (len) {
- 	case 1:
--		err = put_user(byte, (unsigned char __user *)buf);
-+		err = put_user(byte, (u8 __user *)buf);
- 		break;
- 	case 2:
--		err = put_user(word, (unsigned short __user *)buf);
-+		err = put_user(word, (u16 __user *)buf);
- 		break;
- 	case 4:
--		err = put_user(dword, (unsigned int __user *)buf);
-+		err = put_user(dword, (u32 __user *)buf);
- 		break;
- 	}
- 	pci_dev_put(dev);
-@@ -70,13 +70,13 @@ SYSCALL_DEFINE5(pciconfig_read, unsigned long, bus, unsigned long, dfn,
- 	   they get instead of a machine check on x86.  */
- 	switch (len) {
- 	case 1:
--		put_user(-1, (unsigned char __user *)buf);
-+		put_user(-1, (u8 __user *)buf);
- 		break;
- 	case 2:
--		put_user(-1, (unsigned short __user *)buf);
-+		put_user(-1, (u16 __user *)buf);
- 		break;
- 	case 4:
--		put_user(-1, (unsigned int __user *)buf);
-+		put_user(-1, (u32 __user *)buf);
- 		break;
- 	}
- 	pci_dev_put(dev);
+ phys_addr_t pci_pio_to_address(unsigned long pio)
+ {
+-	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+-
+ #ifdef PCI_IOBASE
+-	if (pio >= MMIO_UPPER_LIMIT)
+-		return address;
+-
+-	address = logic_pio_to_hwaddr(pio);
++	if (pio < MMIO_UPPER_LIMIT)
++		return logic_pio_to_hwaddr(pio);
+ #endif
+ 
+-	return address;
++	return (phys_addr_t) OF_BAD_ADDR;
+ }
+ EXPORT_SYMBOL_GPL(pci_pio_to_address);
+ 
 -- 
 2.34.1
 
