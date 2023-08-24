@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7242CC3DA6F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB758C27C40
 	for <linux-pci@archiver.kernel.org>; Thu, 24 Aug 2023 19:38:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243251AbjHXThj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S243248AbjHXThj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 24 Aug 2023 15:37:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40568 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243302AbjHXThe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2023 15:37:34 -0400
+        with ESMTP id S243300AbjHXThb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2023 15:37:31 -0400
 Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CFBE1B0;
-        Thu, 24 Aug 2023 12:37:32 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 351781B0;
+        Thu, 24 Aug 2023 12:37:30 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 2983A644D4;
-        Thu, 24 Aug 2023 19:37:32 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6619BC433C7;
-        Thu, 24 Aug 2023 19:37:31 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id C781D62F30;
+        Thu, 24 Aug 2023 19:37:29 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AB6AC433C7;
+        Thu, 24 Aug 2023 19:37:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692905851;
-        bh=uEaMGXPYtC/OHWRHgB52pCJcn99x8H/XeVoKPGgjVAc=;
+        s=k20201202; t=1692905849;
+        bh=6dM5htjtuz3wYC09SylqU1yXQX9msSG6lGcCCxKAt6Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MmuwhMGtCFLPUZJ+UZh04i07ySTvpsNgfXjo9ieiXm1+FRwTdBGDCwBuBBN4tqACc
-         OdzqCvk39MvrHGVkUjtkwbY2DNZPvozHgJPrIYhL/AkdQF2oqh88LjKrtqaaLtAbuO
-         nuqA5M+ZM8tbXNFGJSMCN9JP5/oIUFTOsOGeLUvuqBzIMdnVJ2gKFFnrPOTidvUpVR
-         kaMypFf+DH9c/vukiDNz3HQ0TwVuNnxHN4vEqfX0dfTeo2jGu3gJQWPKe0Daxc6cjK
-         jGxc6h8WgxkUkF7WIsK9BAYlhYzmYaAg6GRztKshjOFXTMEO6wnmrK3/V7h2MXtsIG
-         naRtAn9DZI/zQ==
+        b=Fn+ehaV0/RbQC0DvyBVHKcvkixkdD9xx2cL1ADIPUoRtHQqQnxTwXmu8cYramlh5Q
+         dLajzUyk/gVPAZfY063PWlZgPHzOSZxHhzrENyY4PJ3rnFhkscDO7tmAmHydxvIS7W
+         F9Wxe0M3RBvkmuk3H2/iCXNlZIzJnk/rKBEIojd0VVnc1pODITYtl+d9IdTlEklPi8
+         8VpCFTWNcrsYovHLDDWMyV1KWYmo0iSO7tSD7foz2d741czmihufXtNZ9tyWfidJpN
+         G3yybza14PT9fP1xXA4raYAHvqWsQfru9DXojOSc75K3nCQdDQEjkzBIiDpo3KiIEB
+         vCg0qISdN87AQ==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 04/12] PCI: Fix printk field formatting
-Date:   Thu, 24 Aug 2023 14:37:04 -0500
-Message-Id: <20230824193712.542167-5-helgaas@kernel.org>
+Subject: [PATCH 03/12] PCI: Remove unnecessary initializations
+Date:   Thu, 24 Aug 2023 14:37:03 -0500
+Message-Id: <20230824193712.542167-4-helgaas@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20230824193712.542167-1-helgaas@kernel.org>
 References: <20230824193712.542167-1-helgaas@kernel.org>
@@ -49,38 +49,36 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Previously we used "%#08x" to print a 32-bit value.  This fills an
-8-character field with "0x...", but of course many 32-bit values require a
-10-character field "0x12345678" for this format.  Fix the formats to avoid
-confusion.
+We always assign "fields" immediately, so remove the unnecessary
+initializations.  No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/setup-res.c | 4 ++--
+ drivers/pci/pci-driver.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 967f9a758923..ceaa69491f5e 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -104,7 +104,7 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 	pci_read_config_dword(dev, reg, &check);
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 1f9845377eff..a44ecf6bf5d2 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -193,7 +193,7 @@ static ssize_t new_id_store(struct device_driver *driver, const char *buf,
+ 	u32 vendor, device, subvendor = PCI_ANY_ID,
+ 		subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
+ 	unsigned long driver_data = 0;
+-	int fields = 0;
++	int fields;
+ 	int retval = 0;
  
- 	if ((new ^ check) & mask) {
--		pci_err(dev, "BAR %d: error updating (%#08x != %#08x)\n",
-+		pci_err(dev, "BAR %d: error updating (%#010x != %#010x)\n",
- 			resno, new, check);
- 	}
+ 	fields = sscanf(buf, "%x %x %x %x %x %x %lx",
+@@ -260,7 +260,7 @@ static ssize_t remove_id_store(struct device_driver *driver, const char *buf,
+ 	struct pci_driver *pdrv = to_pci_driver(driver);
+ 	u32 vendor, device, subvendor = PCI_ANY_ID,
+ 		subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
+-	int fields = 0;
++	int fields;
+ 	size_t retval = -ENODEV;
  
-@@ -113,7 +113,7 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
- 		pci_write_config_dword(dev, reg + 4, new);
- 		pci_read_config_dword(dev, reg + 4, &check);
- 		if (check != new) {
--			pci_err(dev, "BAR %d: error updating (high %#08x != %#08x)\n",
-+			pci_err(dev, "BAR %d: error updating (high %#010x != %#010x)\n",
- 				resno, new, check);
- 		}
- 	}
+ 	fields = sscanf(buf, "%x %x %x %x %x %x",
 -- 
 2.34.1
 
