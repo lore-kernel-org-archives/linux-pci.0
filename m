@@ -2,107 +2,90 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89777C3DA6F
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Aug 2023 09:22:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 052FBC3DA66
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Aug 2023 09:33:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235619AbjHYJWC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Aug 2023 05:22:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42154 "EHLO
+        id S244284AbjHYJcm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Aug 2023 05:32:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54118 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244268AbjHYJVk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Aug 2023 05:21:40 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD3591FD5
-        for <linux-pci@vger.kernel.org>; Fri, 25 Aug 2023 02:21:29 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id 4fb4d7f45d1cf-52889bc61b6so1107060a12.0
-        for <linux-pci@vger.kernel.org>; Fri, 25 Aug 2023 02:21:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1692955288; x=1693560088;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=BZgZaMT5PxJw7tH308zexA8qRHLlWqjM6kGNr72Z26s=;
-        b=jgOPuKgBX8LsnrVBpxagR7rRtJfRP/bebUcJD3vsbi9xMm9l58gC5cw0r9Rwle91RV
-         Wja0F4kONox6Ip3jRnT9XV1l0mvTExirg4luRv4XJDQm2JvV9/i18ZZPEhs3fb8wp/EA
-         Wxi/KVB6lDqtjacSQIuEtNyipWhI37UPSYngi9L0IhEotJPJIBsZrQPxd+O2kFkqjPap
-         Oyj83NsoppXK2usstyN2s52q7Xr8jf836fC2pwmfwgYphLNfckGneihT7c9/Z5C1tu3I
-         pJV+fMDodmM9NYPDGckACE9KsEhilTtRo1YK5WuEF22EomDIDkAmJ9enp9I9A6eEpXa/
-         D9dg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692955288; x=1693560088;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BZgZaMT5PxJw7tH308zexA8qRHLlWqjM6kGNr72Z26s=;
-        b=fdEqupEveY/iqBNYX96n24TvUWVwCzjG6jbV3VEG4DBG//4E9+pzuNBaTnfK43KYD6
-         2HY5cyBbsGdB8QWDFBAxQS/nM3haleavDl9Ri12UO3vjpAgt6HK4uSjcnC/ni4Njv4rZ
-         62bbVBCTDClmDjDxTRKFsb4pgu4n1XZ4GUx8s/DNrmBzVnU5zh5sxHj9yWJjVtT+2klV
-         sGicbSWlu5JZKNoA7ebrn70HpA6UxONvAaejhkY2a3y6oRe0SAuiuDNf4tIGBso4tiTD
-         3EYSd9hSwpQJpo7PND9BveeJtFnQCQjYYkenKYrSCNWPtsWDHB9LqODw/HuHYOtDmrrC
-         kW1Q==
-X-Gm-Message-State: AOJu0Ywfa3oHWrC6vWvAWCYFbxoY5mxcN3D4vbdA7g6QAIe8xZCZGkAj
-        NAUHejObY/qQPtoKKukdQcY1jg==
-X-Google-Smtp-Source: AGHT+IEo+aS/DfSwbspGBPf6zJxemZO9RG5G7PRer+UtxBoyL3dwDOJaiFVu4h7L5dLcZvA/9TmNCQ==
-X-Received: by 2002:a17:906:76cf:b0:9a1:b98a:c723 with SMTP id q15-20020a17090676cf00b009a1b98ac723mr9218632ejn.4.1692955287927;
-        Fri, 25 Aug 2023 02:21:27 -0700 (PDT)
-Received: from [192.168.0.22] ([77.252.47.198])
-        by smtp.gmail.com with ESMTPSA id ck16-20020a170906c45000b00992b8d56f3asm738608ejb.105.2023.08.25.02.21.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Aug 2023 02:21:27 -0700 (PDT)
-Message-ID: <f04b6606-6ca9-28d1-6a10-1e543a5d5fb7@linaro.org>
-Date:   Fri, 25 Aug 2023 11:21:25 +0200
+        with ESMTP id S234471AbjHYJc0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Aug 2023 05:32:26 -0400
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A6CA61FC4;
+        Fri, 25 Aug 2023 02:32:23 -0700 (PDT)
+X-IronPort-AV: E=Sophos;i="6.02,195,1688396400"; 
+   d="scan'208";a="173961350"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie5.idc.renesas.com with ESMTP; 25 Aug 2023 18:32:23 +0900
+Received: from localhost.localdomain (unknown [10.166.15.32])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id F0D4840134E8;
+        Fri, 25 Aug 2023 18:32:22 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        lpieralisi@kernel.org, robh+dt@kernel.org, kw@linux.com,
+        manivannan.sadhasivam@linaro.org, bhelgaas@google.com,
+        kishon@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        conor+dt@kernel.org
+Cc:     marek.vasut+renesas@gmail.com, fancer.lancer@gmail.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v20 01/19] PCI: Add INTx Mechanism Messages macros
+Date:   Fri, 25 Aug 2023 18:32:01 +0900
+Message-Id: <20230825093219.2685912-2-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230825093219.2685912-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20230825093219.2685912-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: [PATCH v3 09/11] dt-bindings: PCI: Add StarFive JH7110 PCIe
- controller
-To:     Minda Chen <minda.chen@starfivetech.com>,
-        Rob Herring <robh@kernel.org>
-Cc:     Rob Herring <robh+dt@kernel.org>, linux-pci@vger.kernel.org,
-        Kevin Xie <kevin.xie@starfivetech.com>,
-        linux-riscv@lists.infradead.org,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84s?= =?UTF-8?Q?ki?= <kw@linux.com>,
-        Mason Huo <mason.huo@starfivetech.com>,
-        Conor Dooley <conor@kernel.org>,
-        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
-        Daire McNamara <daire.mcnamara@microchip.com>,
-        linux-kernel@vger.kernel.org,
-        Emil Renner Berthing <emil.renner.berthing@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Leyfoon Tan <leyfoon.tan@starfivetech.com>,
-        devicetree@vger.kernel.org
-References: <20230814082016.104181-1-minda.chen@starfivetech.com>
- <20230814082016.104181-10-minda.chen@starfivetech.com>
- <169228685644.1140409.12427674208274594176.robh@kernel.org>
- <5450650c-3750-a0ee-72a1-bfa0a4545e0a@starfivetech.com>
-Content-Language: en-US
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-In-Reply-To: <5450650c-3750-a0ee-72a1-bfa0a4545e0a@starfivetech.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 25/08/2023 11:06, Minda Chen wrote:
->>
->> Reviewed-by: Rob Herring <robh@kernel.org>
->>
-> Hi Rob
-> Thanks. 
-> I see other PCIe maintainer have not reviewed PCIe driver codes(or no coments).
-> Could you help to review PCIe driver codes patches? (I just commit new version 4). Thanks.
+Add "Message Routing" and "INTx Mechanism Messages" macros to enable
+a PCIe driver to send messages for INTx Interrupt Signaling.
 
-Please relax, and help out by reviewing other patches on the mailing
-lists in order to relieve the burden of maintainers and move your
-patches higher up the list.
+The "Message Routing" is from Table 2-17, and the "INTx Mechanism
+Messages" is from Table 2-18 on the PCI Express Base Specification,
+Rev. 4.0 Version 1.0.
 
-Best regards,
-Krzysztof
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/pci.h | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 83778dc1615d..99231fa7dcfc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -19,6 +19,24 @@
+  */
+ #define PCIE_PME_TO_L2_TIMEOUT_US	10000
+ 
++/* Message Routing (r[2:0]) */
++#define PCI_MSG_TYPE_R_RC	0
++#define PCI_MSG_TYPE_R_ADDR	1
++#define PCI_MSG_TYPE_R_ID	2
++#define PCI_MSG_TYPE_R_BC	3
++#define PCI_MSG_TYPE_R_LOCAL	4
++#define PCI_MSG_TYPE_R_GATHER	5
++
++/* INTx Mechanism Messages */
++#define PCI_MSG_CODE_ASSERT_INTA	0x20
++#define PCI_MSG_CODE_ASSERT_INTB	0x21
++#define PCI_MSG_CODE_ASSERT_INTC	0x22
++#define PCI_MSG_CODE_ASSERT_INTD	0x23
++#define PCI_MSG_CODE_DEASSERT_INTA	0x24
++#define PCI_MSG_CODE_DEASSERT_INTB	0x25
++#define PCI_MSG_CODE_DEASSERT_INTC	0x26
++#define PCI_MSG_CODE_DEASSERT_INTD	0x27
++
+ extern const unsigned char pcie_link_speed[];
+ extern bool pci_early_dump;
+ 
+-- 
+2.25.1
 
