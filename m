@@ -2,176 +2,101 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE640C88CB2
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Aug 2023 08:57:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12E3FC7EE2C
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Aug 2023 09:02:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238636AbjHYI5Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Aug 2023 04:57:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34318 "EHLO
+        id S233456AbjHYJBl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Aug 2023 05:01:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243999AbjHYI5C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Aug 2023 04:57:02 -0400
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DCA21BCD
-        for <linux-pci@vger.kernel.org>; Fri, 25 Aug 2023 01:56:59 -0700 (PDT)
-Received: by mail-pl1-x636.google.com with SMTP id d9443c01a7336-1bf0b24d925so6019985ad.3
-        for <linux-pci@vger.kernel.org>; Fri, 25 Aug 2023 01:56:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=igel-co-jp.20221208.gappssmtp.com; s=20221208; t=1692953818; x=1693558618;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=PuYpZM6PXIOW+mhZVcLd16VhM2ysqwu49mtAIt5qLW4=;
-        b=XJI+RgEwntTJURM5icHrckj7NF7KZ2u9/gATyKSnG6Hxh8S3Akyf7eGFrPzRpAwIWH
-         pABtwf2Px48a0WSy4soAL0gEJiGf1ie8FxoD1Zp2QYzZLDgbSd/9OFMqoFxH0yTknBuy
-         qkEGF44entkwssrw7dkxPlTeGY/d65Di/G5EjNlwxhYjDQhMx4Kq9Y0Q4PLJARcXYTjN
-         yEjy4rKO/0Jh3zgn5iBdBliTWnonBowOWOQQqZklWgrJZ8OFh4QsKT65MBst5p4TUKoj
-         o6LiBH7kW5acDNxsB5b+j2krPyKy0UXiZJlDBd5eyYYwoRqOmJ57AMXRzng/g7Qkph0K
-         nsuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1692953818; x=1693558618;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=PuYpZM6PXIOW+mhZVcLd16VhM2ysqwu49mtAIt5qLW4=;
-        b=drsD+ZfkqEPVGtDqty9QfIcPABYH3Pi5R9GYuTfPHqEAP76mcHo0W3sk4aPq9+UmR7
-         NigY62rBagoBNpcCjfLaRsXkSRoOIRbtBxtqBKYkTd0BeyN2//CQvAkeTqRpA4me1Q2M
-         JZNXngSfO38Ap5cKo7tmlRCtwCccHc78Z3XCA/qrjnlnbz300lRkkA7J78aj5TN/Evn3
-         O/uZrArmT/7pEy3bIRUsJugIQQrG0rjKn/p/MqkqKKOHi9c5Wo+jeCMH0BGAyFUdb3Vl
-         YlpASOsex0+M8XOmwJt8AW8stzqtT1zdXL6MVI0XAUfoJ8z+KvBeSDSZvDg/jM0A4cSe
-         Df9A==
-X-Gm-Message-State: AOJu0Ywckv7P7G4TiOtdbmYJULOFbPp9BOBLk8JajwHQSunuFayPdNPY
-        zpRW5zsHEm75Y81YtjA2fLb0xg==
-X-Google-Smtp-Source: AGHT+IHYWcfQ7Kb+iZyOzphRNN53Hlx0lIarlId7bFcTsB0jDjAG/jIhpb7lPzAWrM0c65K2Dof5VQ==
-X-Received: by 2002:a17:902:ea08:b0:1c0:a30e:2388 with SMTP id s8-20020a170902ea0800b001c0a30e2388mr9285190plg.31.1692953818594;
-        Fri, 25 Aug 2023 01:56:58 -0700 (PDT)
-Received: from [10.16.161.199] (napt.igel.co.jp. [219.106.231.132])
-        by smtp.gmail.com with ESMTPSA id v11-20020a170902d68b00b001bf11cf2e21sm1117064ply.210.2023.08.25.01.56.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Aug 2023 01:56:58 -0700 (PDT)
-Message-ID: <a24e048b-c1a2-78fe-9cd2-a5967e566a73@igel.co.jp>
-Date:   Fri, 25 Aug 2023 17:56:53 +0900
+        with ESMTP id S232648AbjHYJBh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Aug 2023 05:01:37 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A65A1CD2;
+        Fri, 25 Aug 2023 02:01:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692954095; x=1724490095;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=wt7Z9jwm6HYtpbqOcPwsAZgItQ7w8UhRblltQlxs1JU=;
+  b=VRYKE4CkgjBrwmQZ6OE93a5hROwLJxqwhgaOiFfoNrw/Tve1QF5qWNg3
+   7V+7YbXKL+J2ihs/q5g0Cgm7Zizlomo3QasmSE1uzrhPfJsqVKJN5tzdw
+   9jQ9UPF85Hxe0uOxC6U7hmzTeNR6DmicA3/CKNxermoDchLa5kopaeFrM
+   lSjqT8ODowrxNo5941F3ImoAmX3bCf1+kudyF9SlyO7JHVOad9txtcg4G
+   B3KIfxx857pdmNBc518vSMop7J47fz5b9b0o5cngozUkHHG1O2LAC0l4c
+   llyY9DXsJ6WxK/2CGTxBeyTm6i4sBH73gEGxOf4Oygu3L3woQd28ObK6s
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10812"; a="354999053"
+X-IronPort-AV: E=Sophos;i="6.02,195,1688454000"; 
+   d="scan'208";a="354999053"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Aug 2023 02:01:29 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10812"; a="984039519"
+X-IronPort-AV: E=Sophos;i="6.02,195,1688454000"; 
+   d="scan'208";a="984039519"
+Received: from enguerra-mobl.ger.corp.intel.com ([10.251.213.8])
+  by fmsmga006-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Aug 2023 02:01:27 -0700
+Date:   Fri, 25 Aug 2023 12:01:25 +0300 (EEST)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 00/12] PCI: Miscellaneous cleanups
+In-Reply-To: <20230824193712.542167-1-helgaas@kernel.org>
+Message-ID: <bfdee8c-ed51-94ba-418-6f69c9c62@linux.intel.com>
+References: <20230824193712.542167-1-helgaas@kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:102.0)
- Gecko/20100101 Thunderbird/102.14.0
-Subject: Re: [RFC] Proposal of QEMU PCI Endpoint test environment
-Content-Language: en-US
-To:     Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Marcel Apfelbaum <marcel.apfelbaum@gmail.com>,
-        qemu-devel@nongnu.org, Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Kishon Vijay Abraham I <kishon@kernel.org>
-References: <CANXvt5oKt=AKdqv24LT079e+6URnfqJcfTJh0ajGA17paJUEKw@mail.gmail.com>
- <20230823060923.GA3737@thinkpad>
-From:   Shunsuke Mie <mie@igel.co.jp>
-In-Reply-To: <20230823060923.GA3737@thinkpad>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="8323329-613642315-1692954088=:3206"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-On 2023/08/23 15:09, Manivannan Sadhasivam wrote:
-> On Fri, Aug 18, 2023 at 10:46:02PM +0900, Shunsuke Mie wrote:
->> Hi all,
->>
->> We are proposing to add a new test syste to Linux for PCIe Endpoint. That
->> can be run on QEMU without real hardware. At present, partially we have
->> confirmed that pci-epf-test is working, but it is not yet complete.
->> However, we would appreciate your comments on the architecture design.
->>
->> # Background
->> The background is as follows.
->>
->> PCI Endpoint function driver is implemented using the PCIe Endpoint
->> framework, but it requires physical boards for testing, and it is difficult
->> to test sufficiently. In order to find bugs and hardware-dependent
->> implementations early, continuous testing is required. Since it is
->> difficult to automate tests that require hardware, this RFC proposes a
->> virtual environment for testing PCI endpoint function drivers.
->>
-> This sounds exciting to me and yes, it is going to be really helpful for
-> validating EP framework as a whole.
->
->> # Architecture
->> The overview of the architecture is as follows.
->>
->>    Guest 1                        Guest 2
->> +-------------------------+    +----------------------------+
->> | Linux kernel            |    | Linux kernel               |
->> |                         |    |                            |
->> | PCI EP function driver  |    |                            |
->> | (e.g. pci-epf-test)     |    |                            |
->> |-------------------------|    | PCI Device Driver          |
->> | (2) QEMU EPC Driver     |    | (e.g. pci_endpoint_test)   |
->> +-------------------------+    +----------------------------+
->> +-------------------------+    +----------------------------+
->> | QEMU                    |    | QEMU                       |
->> |-------------------------|    |----------------------------|
->> | (1) QEMU PCI EPC Device *----* (3) QEMU EPF Bridge Device |
->> +-------------------------+    +----------------------------+
->>
->> At present, it is designed to work guests only on the same host, and
->> communication is done through Unix domain sockets.
->>
->> The three parts shown in the figure were introduced this time.
->>
->> (1) QEMU PCI Endpoint Controller(EPC) Device
->> PCI Endpoint Controller implemented as QEMU PCI device.
->> (2) QEMU PCI Endpoint Controller(EPC) Driver
->> Linux kernel driver that drives the device (1). It registers a epc device
->> to linux kernel and handling each operations for the epc device.
->> (3) QEMU PCI Endpoint function(EPF) Bridge Device
->> QEMU PCI device that cooperates with (1) and performs accesses to pci
->> configuration space, BAR and memory space to communicate each guests, and
->> generates interruptions to the guest 1.
->>
-> I'm not very familiar with Qemu, but why can't the existing Qemu PCIe host
-> controller devices used for EP communication? I mean, what is the need for a
-> dedicated EPF bridge device (3) in host? (Guest 2 as per your diagram).
->
-> Is that because you use socket communication between EP and host?
+--8323329-613642315-1692954088=:3206
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-At least, the part that communicates with (1) is necessary, but I don't 
-know if
-the current implementation is appropriate. In addition, there is a 
-performance
-issue, so I am currently investigating QEMU more. e.g. pci emulation, 
-shared-memory, etc.
+On Thu, 24 Aug 2023, Bjorn Helgaas wrote:
 
-I'd like to improve and submit a next rfc.
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Simplify some trivial things and fix some typos and formatting
+> inconsistencies.
+> 
+> Most are based on v6.5-rc1 (actually on the current "misc" branch, so there
+> may be minor conflicts).
+> 
+> The last ("Simplify pcie_capability_clear_and_set_word()") is based on the
+> current "pcie-rmw" branch because it changes the same code as that branch
+> does.
+> 
+> No functional change intended for any of this, except the printk changes
+> ("%#08x" vs "%#010x").
+> 
+> Bjorn Helgaas (12):
+>   PCI: mvebu: Remove unused struct mvebu_pcie.busn
+>   PCI: Unexport pcie_port_bus_type
+>   PCI: Remove unnecessary initializations
+>   PCI: Fix printk field formatting
+>   PCI: Use consistent put_user() pointer types
+>   PCI/AER: Simplify AER_RECOVER_RING_SIZE definition
+>   PCI: Simplify pci_pio_to_address()
+>   PCI: Simplify pci_dev_driver()
+>   PCI: Fix pci_bus_resetable(), pci_slot_resetable() name typos
+>   PCI: Fix typos in docs and comments
+>   PCI: Fix code formatting inconsistencies
+>   PCI: Simplify pcie_capability_clear_and_set_word() control flow
 
-Thanks,
+I read through all these patches. For the whole series:
 
-Shunsuke Mie
+Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-> - Mani
->
->> Each projects are:
->> (1), (3) https://github.com/ShunsukeMie/qemu/tree/epf-bridge/v1
->> files: hw/misc/{qemu-epc.{c,h}, epf-bridge.c}
->> (2) https://github.com/ShunsukeMie/linux-virtio-rdma/tree/qemu-epc
->> files: drivers/pci/controller/pcie-qemu-ep.c
->>
->> # Protocol
->>
->> PCI, PCIe has a layer structure that includes Physical, Data Lane and
->> Transaction. The communicates between the bridge(3) and controller (1)
->> mimic the Transaction. Specifically, a protocol is implemented for
->> exchanging fd for communication protocol version check and communication,
->> in addition to the interaction equivalent to PCIe Transaction Layer Packet
->> (Read and Write of I/O, Memory, Configuration space and Message). In my
->> mind, we need to discuss the communication mor.
->>
->> We also are planning to post the patch set after the code is organized and
->> the protocol discussion is matured.
->>
->> Best regards,
->> Shunsuke
+
+-- 
+ i.
+
+--8323329-613642315-1692954088=:3206--
