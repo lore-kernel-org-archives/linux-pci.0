@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A95EEE49A5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA45EE49A6
 	for <linux-pci@archiver.kernel.org>; Fri, 25 Aug 2023 09:02:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242408AbjHYJCS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Aug 2023 05:02:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37516 "EHLO
+        id S241397AbjHYJCT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Aug 2023 05:02:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239834AbjHYJBm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Aug 2023 05:01:42 -0400
-Received: from fd01.gateway.ufhost.com (fd01.gateway.ufhost.com [61.152.239.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 355111BD9;
-        Fri, 25 Aug 2023 02:01:39 -0700 (PDT)
-Received: from EXMBX166.cuchost.com (unknown [175.102.18.54])
+        with ESMTP id S239225AbjHYJBl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Aug 2023 05:01:41 -0400
+Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7E591BCD;
+        Fri, 25 Aug 2023 02:01:38 -0700 (PDT)
+Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
         (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-        (Client CN "EXMBX166", Issuer "EXMBX166" (not verified))
-        by fd01.gateway.ufhost.com (Postfix) with ESMTP id D619F81B1;
-        Fri, 25 Aug 2023 17:01:37 +0800 (CST)
-Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX166.cuchost.com
- (172.16.6.76) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 25 Aug
- 2023 17:01:37 +0800
+        (Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
+        by ex01.ufhost.com (Postfix) with ESMTP id AC97F24DBC0;
+        Fri, 25 Aug 2023 17:01:36 +0800 (CST)
+Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX165.cuchost.com
+ (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 25 Aug
+ 2023 17:01:36 +0800
 Received: from ubuntu.localdomain (113.72.145.205) by EXMBX171.cuchost.com
  (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 25 Aug
- 2023 17:01:34 +0800
+ 2023 17:01:32 +0800
 From:   Minda Chen <minda.chen@starfivetech.com>
 To:     Daire McNamara <daire.mcnamara@microchip.com>,
         Conor Dooley <conor@kernel.org>,
@@ -45,12 +45,10 @@ CC:     <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Leyfoon Tan <leyfoon.tan@starfivetech.com>,
         Kevin Xie <kevin.xie@starfivetech.com>,
         Minda Chen <minda.chen@starfivetech.com>
-Subject: [PATCH v4 03/11] PCI: microchip: Move PLDA IP register macros to pcie-plda.h
-Date:   Fri, 25 Aug 2023 17:01:21 +0800
-Message-ID: <20230825090129.65721-4-minda.chen@starfivetech.com>
+Subject: [PATCH v4 0/11] Refactoring Microchip PCIe driver and add StarFive PCIe
+Date:   Fri, 25 Aug 2023 17:01:18 +0800
+Message-ID: <20230825090129.65721-1-minda.chen@starfivetech.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230825090129.65721-1-minda.chen@starfivetech.com>
-References: <20230825090129.65721-1-minda.chen@starfivetech.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [113.72.145.205]
@@ -61,279 +59,127 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move PLDA PCIe host controller IP registers macros to
-pcie-plda.h, Including bridge and configuration space
-registers.
+This patchset final purpose is add PCIe driver for StarFive JH7110 SoC.
+JH7110 using PLDA XpressRICH PCIe IP. Microchip PolarFire Using the
+same IP and have commit their codes, which are mixed with PLDA
+controller codes and Microchip platform codes.
 
-Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
----
- MAINTAINERS                                   |   8 ++
- .../pci/controller/plda/pcie-microchip-host.c | 108 +++---------------
- drivers/pci/controller/plda/pcie-plda.h       | 102 +++++++++++++++++
- 3 files changed, 126 insertions(+), 92 deletions(-)
+For re-use the PLDA controller codes, I request refactoring microchip
+codes, move PLDA common codes to PLDA files.
+Desigware and Cadence is good example for refactoring codes.
+
+So first step is extract the PLDA common codes from microchip, and
+refactoring the microchip codes.(patch1 - 8)
+Then, add Starfive codes. (patch9 - 11)
+
+This patchset is base on v6.5-rc7
+
+The patch is base on Daire microchip commit,(accepted, not merge in mainline now)
+https://patchwork.kernel.org/project/linux-pci/cover/20230728131401.1615724-1-daire.mcnamara@microchip.com/
+patch11 dts patch base on stg clk patchset and syscon patch(these will be merged in 6.6-rcx).
+https://patchwork.kernel.org/project/linux-riscv/cover/20230713113902.56519-1-xingyu.wu@starfivetech.com/
+https://patchwork.kernel.org/project/linux-riscv/patch/20230717023040.78860-7-xingyu.wu@starfivetech.com/
+
+patch1 is move PLDA XpressRICH PCIe host common properties dt-binding
+       docs from microchip,pcie-host.yaml
+patch2 is move PolarFire codes to PLDA directory.
+patch3 is move PLDA IP register macros to plda-pcie.h
+patch4 is rename data structure setup and IRQ functions in microchip codes.
+patch5 is move the patch4 functions to common file pcie-plda-host.c
+patch6 is Add PLDA event interrupt codes and IRQ domain ops.
+patch7 is rename IRQ init function in microchip codes, prepare to move
+the common file pcie-plda-host.c,
+patch8 is move IRQ init functions and other functions to pcie-plda-host.c
+patch9 is add StarFive JH7110 PCIe dt-binding doc.
+patch10 is add StarFive JH7110 Soc PCIe codes.
+patch11 is Starfive dts config
+
+previous version:
+v1:https://patchwork.kernel.org/project/linux-pci/cover/20230719102057.22329-1-minda.chen@starfivetech.com/
+v2:https://patchwork.kernel.org/project/linux-pci/cover/20230727103949.26149-1-minda.chen@starfivetech.com/
+v3:https://patchwork.kernel.org/project/linux-pci/cover/20230814082016.104181-1-minda.chen@starfivetech.com/
+
+change:
+  v4:
+    patch 3:
+    Copy the interrupt events macros to pcie-plda-host.c
+    patch 7 - 8:
+    get_events() change in patch 7. Patch 8 is just move the codes.
+    other change:
+    All the functions in commit message add (). 
+  v3:
+    patch 2- 8:
+      - splite refactoring patches to multiple patch.
+      - rename plda_pcie to plda_pcie_rp. Maybe other vendor will
+        upstream PLDA ep codes.
+    patch 9:
+      - Remove the redundant reference.
+      - move the offset value to codes in starfive,stg-syscon
+      - change reset-gpio to prest-gpio.
+    patch10:
+      - Add 100ms delay after preset for PCIe 6.0 spec.
+      - stg-syscon related modification.
+    patch11:
+      - Add dts configure.
+  v2:
+    patch1:
+      - squash dt-bindings patches to patch1
+      - add 'required' list. 
+      - plda doc rename to plda,xpressrich-axi-common.yaml
+    patch2 - 8:
+      - squash the microchip modification patch.
+    patch9:
+      - remove the plda common required property.
+    patch10:
+      - Sync the hide rc bar ops with config read function.
+      - Revert the T_PVPERL to 100ms and add comments for the source.
+      - Replace the link check function by the standard link ops.
+      - Convert to new pm ops marcos.
+      - Some formats modification.
+      - pcie-plda-host modification merge to patch4.
+    other:
+      - remove the pcie-plda-plat.c
+      - remove the starfive dts patch first. for it depends on
+        stg clock and syscon setting.
+
+Minda Chen (11):
+  dt-bindings: PCI: Add PLDA XpressRICH PCIe host common properties
+  PCI: microchip: Move pcie-microchip-host.c to plda directory
+  PCI: microchip: Move PLDA IP register macros to pcie-plda.h
+  PCI: microchip: Rename data structure and functions
+  PCI: plda: Move the common functions to pcie-plda-host.c
+  PCI: plda: Add event interrupt codes and IRQ domain ops
+  PCI: microchip: Rename IRQ init function
+  PCI: microchip: Move IRQ init functions to pcie-plda-host.c
+  dt-bindings: PCI: Add StarFive JH7110 PCIe controller
+  PCI: starfive: Add JH7110 PCIe controller
+  riscv: dts: starfive: add PCIe dts configuration for JH7110
+
+ .../bindings/pci/microchip,pcie-host.yaml     |  55 +-
+ .../pci/plda,xpressrich3-axi-common.yaml      |  75 +++
+ .../bindings/pci/starfive,jh7110-pcie.yaml    | 120 ++++
+ MAINTAINERS                                   |  17 +-
+ .../jh7110-starfive-visionfive-2.dtsi         |  64 ++
+ arch/riscv/boot/dts/starfive/jh7110.dtsi      |  86 +++
+ drivers/pci/controller/Kconfig                |   9 +-
+ drivers/pci/controller/Makefile               |   2 +-
+ drivers/pci/controller/plda/Kconfig           |  30 +
+ drivers/pci/controller/plda/Makefile          |   4 +
+ .../{ => plda}/pcie-microchip-host.c          | 601 ++---------------
+ drivers/pci/controller/plda/pcie-plda-host.c  | 631 ++++++++++++++++++
+ drivers/pci/controller/plda/pcie-plda.h       | 232 +++++++
+ drivers/pci/controller/plda/pcie-starfive.c   | 460 +++++++++++++
+ 14 files changed, 1781 insertions(+), 605 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
+ create mode 100644 drivers/pci/controller/plda/Kconfig
+ create mode 100644 drivers/pci/controller/plda/Makefile
+ rename drivers/pci/controller/{ => plda}/pcie-microchip-host.c (55%)
+ create mode 100644 drivers/pci/controller/plda/pcie-plda-host.c
  create mode 100644 drivers/pci/controller/plda/pcie-plda.h
+ create mode 100644 drivers/pci/controller/plda/pcie-starfive.c
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9ad275262e74..bec32d66e711 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -16274,6 +16274,14 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
- F:	drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
- 
-+PCI DRIVER FOR PLDA PCIE IP
-+M:	Daire McNamara <daire.mcnamara@microchip.com>
-+M:	Kevin Xie <kevin.xie@starfivetech.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/plda,*
-+F:	drivers/pci/controller/plda/*plda*
-+
- PCI DRIVER FOR RENESAS R-CAR
- M:	Marek Vasut <marek.vasut+renesas@gmail.com>
- M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
-index a953ba1c9b0f..465215c5effa 100644
---- a/drivers/pci/controller/plda/pcie-microchip-host.c
-+++ b/drivers/pci/controller/plda/pcie-microchip-host.c
-@@ -19,6 +19,7 @@
- #include <linux/platform_device.h>
- 
- #include "../../pci.h"
-+#include "pcie-plda.h"
- 
- /* Number of MSI IRQs */
- #define MC_MAX_NUM_MSI_IRQS			32
-@@ -30,84 +31,6 @@
- #define MC_PCIE_BRIDGE_ADDR			(MC_PCIE1_BRIDGE_ADDR)
- #define MC_PCIE_CTRL_ADDR			(MC_PCIE1_CTRL_ADDR)
- 
--/* PCIe Bridge Phy Regs */
--#define PCIE_PCI_IRQ_DW0			0xa8
--#define  MSIX_CAP_MASK				BIT(31)
--#define  NUM_MSI_MSGS_MASK			GENMASK(6, 4)
--#define  NUM_MSI_MSGS_SHIFT			4
--
--#define IMASK_LOCAL				0x180
--#define  DMA_END_ENGINE_0_MASK			0x00000000u
--#define  DMA_END_ENGINE_0_SHIFT			0
--#define  DMA_END_ENGINE_1_MASK			0x00000000u
--#define  DMA_END_ENGINE_1_SHIFT			1
--#define  DMA_ERROR_ENGINE_0_MASK		0x00000100u
--#define  DMA_ERROR_ENGINE_0_SHIFT		8
--#define  DMA_ERROR_ENGINE_1_MASK		0x00000200u
--#define  DMA_ERROR_ENGINE_1_SHIFT		9
--#define  A_ATR_EVT_POST_ERR_MASK		0x00010000u
--#define  A_ATR_EVT_POST_ERR_SHIFT		16
--#define  A_ATR_EVT_FETCH_ERR_MASK		0x00020000u
--#define  A_ATR_EVT_FETCH_ERR_SHIFT		17
--#define  A_ATR_EVT_DISCARD_ERR_MASK		0x00040000u
--#define  A_ATR_EVT_DISCARD_ERR_SHIFT		18
--#define  A_ATR_EVT_DOORBELL_MASK		0x00000000u
--#define  A_ATR_EVT_DOORBELL_SHIFT		19
--#define  P_ATR_EVT_POST_ERR_MASK		0x00100000u
--#define  P_ATR_EVT_POST_ERR_SHIFT		20
--#define  P_ATR_EVT_FETCH_ERR_MASK		0x00200000u
--#define  P_ATR_EVT_FETCH_ERR_SHIFT		21
--#define  P_ATR_EVT_DISCARD_ERR_MASK		0x00400000u
--#define  P_ATR_EVT_DISCARD_ERR_SHIFT		22
--#define  P_ATR_EVT_DOORBELL_MASK		0x00000000u
--#define  P_ATR_EVT_DOORBELL_SHIFT		23
--#define  PM_MSI_INT_INTA_MASK			0x01000000u
--#define  PM_MSI_INT_INTA_SHIFT			24
--#define  PM_MSI_INT_INTB_MASK			0x02000000u
--#define  PM_MSI_INT_INTB_SHIFT			25
--#define  PM_MSI_INT_INTC_MASK			0x04000000u
--#define  PM_MSI_INT_INTC_SHIFT			26
--#define  PM_MSI_INT_INTD_MASK			0x08000000u
--#define  PM_MSI_INT_INTD_SHIFT			27
--#define  PM_MSI_INT_INTX_MASK			0x0f000000u
--#define  PM_MSI_INT_INTX_SHIFT			24
--#define  PM_MSI_INT_MSI_MASK			0x10000000u
--#define  PM_MSI_INT_MSI_SHIFT			28
--#define  PM_MSI_INT_AER_EVT_MASK		0x20000000u
--#define  PM_MSI_INT_AER_EVT_SHIFT		29
--#define  PM_MSI_INT_EVENTS_MASK			0x40000000u
--#define  PM_MSI_INT_EVENTS_SHIFT		30
--#define  PM_MSI_INT_SYS_ERR_MASK		0x80000000u
--#define  PM_MSI_INT_SYS_ERR_SHIFT		31
--#define  NUM_LOCAL_EVENTS			15
--#define ISTATUS_LOCAL				0x184
--#define IMASK_HOST				0x188
--#define ISTATUS_HOST				0x18c
--#define IMSI_ADDR				0x190
--#define ISTATUS_MSI				0x194
--
--/* PCIe Master table init defines */
--#define ATR0_PCIE_WIN0_SRCADDR_PARAM		0x600u
--#define  ATR0_PCIE_ATR_SIZE			0x25
--#define  ATR0_PCIE_ATR_SIZE_SHIFT		1
--#define ATR0_PCIE_WIN0_SRC_ADDR			0x604u
--#define ATR0_PCIE_WIN0_TRSL_ADDR_LSB		0x608u
--#define ATR0_PCIE_WIN0_TRSL_ADDR_UDW		0x60cu
--#define ATR0_PCIE_WIN0_TRSL_PARAM		0x610u
--
--/* PCIe AXI slave table init defines */
--#define ATR0_AXI4_SLV0_SRCADDR_PARAM		0x800u
--#define  ATR_SIZE_SHIFT				1
--#define  ATR_IMPL_ENABLE			1
--#define ATR0_AXI4_SLV0_SRC_ADDR			0x804u
--#define ATR0_AXI4_SLV0_TRSL_ADDR_LSB		0x808u
--#define ATR0_AXI4_SLV0_TRSL_ADDR_UDW		0x80cu
--#define ATR0_AXI4_SLV0_TRSL_PARAM		0x810u
--#define  PCIE_TX_RX_INTERFACE			0x00000000u
--#define  PCIE_CONFIG_INTERFACE			0x00000001u
--
--#define ATR_ENTRY_SIZE				32
--
- /* PCIe Controller Phy Regs */
- #define SEC_ERROR_EVENT_CNT			0x20
- #define DED_ERROR_EVENT_CNT			0x24
-@@ -179,20 +102,21 @@
- #define EVENT_LOCAL_DMA_END_ENGINE_1		12
- #define EVENT_LOCAL_DMA_ERROR_ENGINE_0		13
- #define EVENT_LOCAL_DMA_ERROR_ENGINE_1		14
--#define EVENT_LOCAL_A_ATR_EVT_POST_ERR		15
--#define EVENT_LOCAL_A_ATR_EVT_FETCH_ERR		16
--#define EVENT_LOCAL_A_ATR_EVT_DISCARD_ERR	17
--#define EVENT_LOCAL_A_ATR_EVT_DOORBELL		18
--#define EVENT_LOCAL_P_ATR_EVT_POST_ERR		19
--#define EVENT_LOCAL_P_ATR_EVT_FETCH_ERR		20
--#define EVENT_LOCAL_P_ATR_EVT_DISCARD_ERR	21
--#define EVENT_LOCAL_P_ATR_EVT_DOORBELL		22
--#define EVENT_LOCAL_PM_MSI_INT_INTX		23
--#define EVENT_LOCAL_PM_MSI_INT_MSI		24
--#define EVENT_LOCAL_PM_MSI_INT_AER_EVT		25
--#define EVENT_LOCAL_PM_MSI_INT_EVENTS		26
--#define EVENT_LOCAL_PM_MSI_INT_SYS_ERR		27
--#define NUM_EVENTS				28
-+#define NUM_MC_EVENTS				15
-+#define EVENT_LOCAL_A_ATR_EVT_POST_ERR		(NUM_MC_EVENTS + EVENT_A_ATR_EVT_POST_ERR)
-+#define EVENT_LOCAL_A_ATR_EVT_FETCH_ERR		(NUM_MC_EVENTS + EVENT_A_ATR_EVT_FETCH_ERR)
-+#define EVENT_LOCAL_A_ATR_EVT_DISCARD_ERR	(NUM_MC_EVENTS + EVENT_A_ATR_EVT_DISCARD_ERR)
-+#define EVENT_LOCAL_A_ATR_EVT_DOORBELL		(NUM_MC_EVENTS + EVENT_A_ATR_EVT_DOORBELL)
-+#define EVENT_LOCAL_P_ATR_EVT_POST_ERR		(NUM_MC_EVENTS + EVENT_P_ATR_EVT_POST_ERR)
-+#define EVENT_LOCAL_P_ATR_EVT_FETCH_ERR		(NUM_MC_EVENTS + EVENT_P_ATR_EVT_FETCH_ERR)
-+#define EVENT_LOCAL_P_ATR_EVT_DISCARD_ERR	(NUM_MC_EVENTS + EVENT_P_ATR_EVT_DISCARD_ERR)
-+#define EVENT_LOCAL_P_ATR_EVT_DOORBELL		(NUM_MC_EVENTS + EVENT_P_ATR_EVT_DOORBELL)
-+#define EVENT_LOCAL_PM_MSI_INT_INTX		(NUM_MC_EVENTS + EVENT_PM_MSI_INT_INTX)
-+#define EVENT_LOCAL_PM_MSI_INT_MSI		(NUM_MC_EVENTS + EVENT_PM_MSI_INT_MSI)
-+#define EVENT_LOCAL_PM_MSI_INT_AER_EVT		(NUM_MC_EVENTS + EVENT_PM_MSI_INT_AER_EVT)
-+#define EVENT_LOCAL_PM_MSI_INT_EVENTS		(NUM_MC_EVENTS + EVENT_PM_MSI_INT_EVENTS)
-+#define EVENT_LOCAL_PM_MSI_INT_SYS_ERR		(NUM_MC_EVENTS + EVENT_PM_MSI_INT_SYS_ERR)
-+#define NUM_EVENTS				(NUM_MC_EVENTS + NUM_PLDA_EVENTS)
- 
- #define PCIE_EVENT_CAUSE(x, s)	\
- 	[EVENT_PCIE_ ## x] = { __stringify(x), s }
-diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
-new file mode 100644
-index 000000000000..727fc54312c9
---- /dev/null
-+++ b/drivers/pci/controller/plda/pcie-plda.h
-@@ -0,0 +1,102 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * PLDA PCIe host controller driver
-+ */
-+
-+#ifndef _PCIE_PLDA_H
-+#define _PCIE_PLDA_H
-+
-+/* PCIe Bridge Phy Regs */
-+#define PCIE_PCI_IRQ_DW0			0xa8
-+#define  MSIX_CAP_MASK				BIT(31)
-+#define  NUM_MSI_MSGS_MASK			GENMASK(6, 4)
-+#define  NUM_MSI_MSGS_SHIFT			4
-+
-+#define IMASK_LOCAL				0x180
-+#define  DMA_END_ENGINE_0_MASK			0x00000000u
-+#define  DMA_END_ENGINE_0_SHIFT			0
-+#define  DMA_END_ENGINE_1_MASK			0x00000000u
-+#define  DMA_END_ENGINE_1_SHIFT			1
-+#define  DMA_ERROR_ENGINE_0_MASK		0x00000100u
-+#define  DMA_ERROR_ENGINE_0_SHIFT		8
-+#define  DMA_ERROR_ENGINE_1_MASK		0x00000200u
-+#define  DMA_ERROR_ENGINE_1_SHIFT		9
-+#define  A_ATR_EVT_POST_ERR_MASK		0x00010000u
-+#define  A_ATR_EVT_POST_ERR_SHIFT		16
-+#define  A_ATR_EVT_FETCH_ERR_MASK		0x00020000u
-+#define  A_ATR_EVT_FETCH_ERR_SHIFT		17
-+#define  A_ATR_EVT_DISCARD_ERR_MASK		0x00040000u
-+#define  A_ATR_EVT_DISCARD_ERR_SHIFT		18
-+#define  A_ATR_EVT_DOORBELL_MASK		0x00000000u
-+#define  A_ATR_EVT_DOORBELL_SHIFT		19
-+#define  P_ATR_EVT_POST_ERR_MASK		0x00100000u
-+#define  P_ATR_EVT_POST_ERR_SHIFT		20
-+#define  P_ATR_EVT_FETCH_ERR_MASK		0x00200000u
-+#define  P_ATR_EVT_FETCH_ERR_SHIFT		21
-+#define  P_ATR_EVT_DISCARD_ERR_MASK		0x00400000u
-+#define  P_ATR_EVT_DISCARD_ERR_SHIFT		22
-+#define  P_ATR_EVT_DOORBELL_MASK		0x00000000u
-+#define  P_ATR_EVT_DOORBELL_SHIFT		23
-+#define  PM_MSI_INT_INTA_MASK			0x01000000u
-+#define  PM_MSI_INT_INTA_SHIFT			24
-+#define  PM_MSI_INT_INTB_MASK			0x02000000u
-+#define  PM_MSI_INT_INTB_SHIFT			25
-+#define  PM_MSI_INT_INTC_MASK			0x04000000u
-+#define  PM_MSI_INT_INTC_SHIFT			26
-+#define  PM_MSI_INT_INTD_MASK			0x08000000u
-+#define  PM_MSI_INT_INTD_SHIFT			27
-+#define  PM_MSI_INT_INTX_MASK			0x0f000000u
-+#define  PM_MSI_INT_INTX_SHIFT			24
-+#define  PM_MSI_INT_MSI_MASK			0x10000000u
-+#define  PM_MSI_INT_MSI_SHIFT			28
-+#define  PM_MSI_INT_AER_EVT_MASK		0x20000000u
-+#define  PM_MSI_INT_AER_EVT_SHIFT		29
-+#define  PM_MSI_INT_EVENTS_MASK			0x40000000u
-+#define  PM_MSI_INT_EVENTS_SHIFT		30
-+#define  PM_MSI_INT_SYS_ERR_MASK		0x80000000u
-+#define  PM_MSI_INT_SYS_ERR_SHIFT		31
-+#define  NUM_LOCAL_EVENTS			15
-+#define ISTATUS_LOCAL				0x184
-+#define IMASK_HOST				0x188
-+#define ISTATUS_HOST				0x18c
-+#define IMSI_ADDR				0x190
-+#define ISTATUS_MSI				0x194
-+
-+/* PCIe Master table init defines */
-+#define ATR0_PCIE_WIN0_SRCADDR_PARAM		0x600u
-+#define  ATR0_PCIE_ATR_SIZE			0x25
-+#define  ATR0_PCIE_ATR_SIZE_SHIFT		1
-+#define ATR0_PCIE_WIN0_SRC_ADDR			0x604u
-+#define ATR0_PCIE_WIN0_TRSL_ADDR_LSB		0x608u
-+#define ATR0_PCIE_WIN0_TRSL_ADDR_UDW		0x60cu
-+#define ATR0_PCIE_WIN0_TRSL_PARAM		0x610u
-+
-+/* PCIe AXI slave table init defines */
-+#define ATR0_AXI4_SLV0_SRCADDR_PARAM		0x800u
-+#define  ATR_SIZE_SHIFT				1
-+#define  ATR_IMPL_ENABLE			1
-+#define ATR0_AXI4_SLV0_SRC_ADDR			0x804u
-+#define ATR0_AXI4_SLV0_TRSL_ADDR_LSB		0x808u
-+#define ATR0_AXI4_SLV0_TRSL_ADDR_UDW		0x80cu
-+#define ATR0_AXI4_SLV0_TRSL_PARAM		0x810u
-+#define  PCIE_TX_RX_INTERFACE			0x00000000u
-+#define  PCIE_CONFIG_INTERFACE			0x00000001u
-+
-+#define ATR_ENTRY_SIZE				32
-+
-+#define EVENT_A_ATR_EVT_POST_ERR		0
-+#define EVENT_A_ATR_EVT_FETCH_ERR		1
-+#define EVENT_A_ATR_EVT_DISCARD_ERR		2
-+#define EVENT_A_ATR_EVT_DOORBELL		3
-+#define EVENT_P_ATR_EVT_POST_ERR		4
-+#define EVENT_P_ATR_EVT_FETCH_ERR		5
-+#define EVENT_P_ATR_EVT_DISCARD_ERR		6
-+#define EVENT_P_ATR_EVT_DOORBELL		7
-+#define EVENT_PM_MSI_INT_INTX			8
-+#define EVENT_PM_MSI_INT_MSI			9
-+#define EVENT_PM_MSI_INT_AER_EVT		10
-+#define EVENT_PM_MSI_INT_EVENTS			11
-+#define EVENT_PM_MSI_INT_SYS_ERR		12
-+#define NUM_PLDA_EVENTS				13
-+
-+#endif
+base-commit: 706a741595047797872e669b3101429ab8d378ef
 -- 
 2.17.1
 
