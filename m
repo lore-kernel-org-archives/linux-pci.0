@@ -2,52 +2,54 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4461EC83F16
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18A2BC83F14
 	for <linux-pci@archiver.kernel.org>; Sun, 27 Aug 2023 13:38:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231173AbjH0Nib (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 27 Aug 2023 09:38:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50724 "EHLO
+        id S231133AbjH0Ni3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 27 Aug 2023 09:38:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231326AbjH0Nhy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Aug 2023 09:37:54 -0400
+        with ESMTP id S231262AbjH0NiA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Aug 2023 09:38:00 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24A8911C;
-        Sun, 27 Aug 2023 06:37:47 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8479011C;
+        Sun, 27 Aug 2023 06:37:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693143467; x=1724679467;
+  t=1693143477; x=1724679477;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=a9cC7XMVxGaabK3z5UOurx49JbMnDMwvJOk4xEq/etw=;
-  b=YF5n4QS5uPmEyzuugdjdituZlK0lakrO9gh95p+o8yxWNVcL0mY5QX2g
-   fozO5OYV0ecWQZ15AaLMAuQdmO5B6Evt+OHpXz+j0RlG7iCbA2/44Mj8b
-   QQAa4qstRRYOh/YTqN3ewI6eLdSeEk/jbtdo2v7Uq1laZ+dFDSSlUx4eI
-   xFV6Mrg4A5VbWTMRcCBZwV0x4AirL1Qw/vVB1nhY/hVVxp5q0Kap2CQTA
-   1JVfa6upKc7FAx7s/jWVpC5Jgi34drHz08sQEiOlakT4KAlvL3KQXKR0z
-   9tCyQ+iGg2BKmnnqa57tAjSrfFIo41ctEz8ABwGfl2hsq1VJZs2j4IaRu
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10815"; a="354471036"
+  bh=2++8yCZGRSSz4uOxVbgjndMH1wIP9iMn3E11M0dDVTs=;
+  b=IPYiVkjRRr66ClnIkWnZCf3Kk5iHNR+sh2d95aM1bJZRfOvMRsBXeRjb
+   51PyPUO40gf/HKnqcH1FE6T0Z2nv7HMmRXzA3K0hLDtymNkt0w81MpCLV
+   DzyefOylslcYXqgVThEHuhk5Wk6mUInaY+l/NUXrniv6PzU2LYkorH9z3
+   PNFgQBRC7bpIYc1cxc7IY1bTk9GcOtlb9hhcEMDCFGEZqQdgAXOLtyylO
+   xX9urYG+b20PtIgMAEN9JXfGaOpc2Gs2scnSix9jdiHW13UydVMG6dPht
+   2agwlsFnHuekMFR1rdDeZxZI689PRZpoaPUpZlr3OsjNSAwbb1Hr61LK5
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10815"; a="354471056"
 X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
-   d="scan'208";a="354471036"
+   d="scan'208";a="354471056"
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 06:37:47 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 06:37:57 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10815"; a="1068752185"
+X-IronPort-AV: E=McAfee;i="6600,9927,10815"; a="1068752214"
 X-IronPort-AV: E=Sophos;i="6.02,205,1688454000"; 
-   d="scan'208";a="1068752185"
+   d="scan'208";a="1068752214"
 Received: from dplotkin-mobl.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.249.41.231])
-  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 06:37:44 -0700
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2023 06:37:53 -0700
 From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
         Andi Shyti <andi.shyti@kernel.org>,
         =?UTF-8?q?Philippe=20Mathieu-Daud=C3=A9?= <philmd@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org
+        Brian King <brking@us.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v2 6/8] PCI: Do error check on own line to split long if conditions
-Date:   Sun, 27 Aug 2023 16:37:03 +0300
-Message-Id: <20230827133705.12991-7-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v2 8/8] scsi: ipr: Do PCI error checks on own line
+Date:   Sun, 27 Aug 2023 16:37:05 +0300
+Message-Id: <20230827133705.12991-9-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20230827133705.12991-1-ilpo.jarvinen@linux.intel.com>
 References: <20230827133705.12991-1-ilpo.jarvinen@linux.intel.com>
@@ -58,96 +60,52 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Placing PCI error code check inside if condition usually results in
-need to split lines. Combined with additional conditions the if
-condition becomes messy.
-
-Convert to the usual error handling pattern with an additional variable
-to improve code readability. In addition, reverse the logic in
-pci_find_vsec_capability() to get rid of &&.
+Instead of if conditions with line splits, use the usual error handling
+pattern with a separate variable to improve readability.
 
 No functional changes intended.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/pci.c    | 9 ++++++---
- drivers/pci/probe.c  | 6 +++---
- drivers/pci/quirks.c | 6 +++---
- 3 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/scsi/ipr.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 60230da957e0..e5a58f0fe58d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -732,15 +732,18 @@ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap)
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 4e13797b2a4a..81e3d464d1f6 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -761,12 +761,14 @@ static void ipr_mask_and_clear_interrupts(struct ipr_ioa_cfg *ioa_cfg,
+ static int ipr_save_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
  {
- 	u16 vsec = 0;
- 	u32 header;
-+	int ret;
+ 	int pcix_cmd_reg = pci_find_capability(ioa_cfg->pdev, PCI_CAP_ID_PCIX);
++	int rc;
  
- 	if (vendor != dev->vendor)
+ 	if (pcix_cmd_reg == 0)
  		return 0;
  
- 	while ((vsec = pci_find_next_ext_capability(dev, vsec,
- 						     PCI_EXT_CAP_ID_VNDR))) {
--		if (pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER,
--					  &header) == PCIBIOS_SUCCESSFUL &&
--		    PCI_VNDR_HEADER_ID(header) == cap)
-+		ret = pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
-+		if (ret != PCIBIOS_SUCCESSFUL)
-+			continue;
-+
-+		if (PCI_VNDR_HEADER_ID(header) == cap)
- 			return vsec;
+-	if (pci_read_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
+-				 &ioa_cfg->saved_pcix_cmd_reg) != PCIBIOS_SUCCESSFUL) {
++	rc = pci_read_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
++				  &ioa_cfg->saved_pcix_cmd_reg);
++	if (rc != PCIBIOS_SUCCESSFUL) {
+ 		dev_err(&ioa_cfg->pdev->dev, "Failed to save PCI-X command register\n");
+ 		return -EIO;
  	}
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8bac3ce02609..0717ff62e54f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1652,15 +1652,15 @@ static void pci_set_removable(struct pci_dev *dev)
- static bool pci_ext_cfg_is_aliased(struct pci_dev *dev)
+@@ -785,10 +787,12 @@ static int ipr_save_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
+ static int ipr_set_pcix_cmd_reg(struct ipr_ioa_cfg *ioa_cfg)
  {
- #ifdef CONFIG_PCI_QUIRKS
--	int pos;
-+	int pos, ret;
- 	u32 header, tmp;
+ 	int pcix_cmd_reg = pci_find_capability(ioa_cfg->pdev, PCI_CAP_ID_PCIX);
++	int rc;
  
- 	pci_read_config_dword(dev, PCI_VENDOR_ID, &header);
- 
- 	for (pos = PCI_CFG_SPACE_SIZE;
- 	     pos < PCI_CFG_SPACE_EXP_SIZE; pos += PCI_CFG_SPACE_SIZE) {
--		if (pci_read_config_dword(dev, pos, &tmp) != PCIBIOS_SUCCESSFUL
--		    || header != tmp)
-+		ret = pci_read_config_dword(dev, pos, &tmp);
-+		if ((ret != PCIBIOS_SUCCESSFUL) || (header != tmp))
- 			return false;
- 	}
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 321156ca273d..863b9a64c1fe 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5381,7 +5381,7 @@ int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
-  */
- static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- {
--	int pos, i = 0;
-+	int pos, i = 0, ret;
- 	u8 next_cap;
- 	u16 reg16, *cap;
- 	struct pci_cap_saved_state *state;
-@@ -5427,8 +5427,8 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- 		pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
- 
- 		pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
--		if (pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status) !=
--		    PCIBIOS_SUCCESSFUL || (status == 0xffffffff))
-+		ret = pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status);
-+		if ((ret != PCIBIOS_SUCCESSFUL) || (status == 0xffffffff))
- 			pdev->cfg_size = PCI_CFG_SPACE_SIZE;
- 
- 		if (pci_find_saved_cap(pdev, PCI_CAP_ID_EXP))
+ 	if (pcix_cmd_reg) {
+-		if (pci_write_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
+-					  ioa_cfg->saved_pcix_cmd_reg) != PCIBIOS_SUCCESSFUL) {
++		rc = pci_write_config_word(ioa_cfg->pdev, pcix_cmd_reg + PCI_X_CMD,
++					   ioa_cfg->saved_pcix_cmd_reg);
++		if (rc != PCIBIOS_SUCCESSFUL) {
+ 			dev_err(&ioa_cfg->pdev->dev, "Failed to setup PCI-X command register\n");
+ 			return -EIO;
+ 		}
 -- 
 2.30.2
 
