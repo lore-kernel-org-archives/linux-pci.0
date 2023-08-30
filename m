@@ -2,68 +2,78 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 993C1C83F1B
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:43:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E364AC83F1F
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:43:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233280AbjH3Siz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:38:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34802 "EHLO
+        id S234883AbjH3Si4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:38:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42282 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242589AbjH3JH4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 05:07:56 -0400
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ADD6D2;
-        Wed, 30 Aug 2023 02:07:51 -0700 (PDT)
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1c09673b006so28386565ad.1;
-        Wed, 30 Aug 2023 02:07:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693386471; x=1693991271;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eMt0K9Nx/qyWZ8nyxb9sC51keiWIwpiG27r1lMoXe+k=;
-        b=cyfZgwE7JM7Ljk89aI8A53Hb/LpJPqMoI8kV2idUVpijxRIZD3YaYxiMTOI5jhlODA
-         jePCpp7RQ8mHX8mLAxyfHTyumwA4XRDqsVx3RhTMvn/huEZudfvv4iFxZD7kNJAFgRJc
-         YNEtmmzrzgnoG+ChbnjhX1Roi1m7b3xdsq+Sy1w5qn0V1VPlApqplZ7uN3oY60p4eXEZ
-         xo19pfXUGk8vpiNX2f4SGaZVpj39Qk0zcqztUfgg608JKWu0f4aQjY3d3vMFBT6CxJVh
-         bBli2ydHxNZNoyKnJ2v4YJnAw6LNxrV/07/XRCsFJqLOhZ9UeEE9sk1eKgAQgBi84ob+
-         mSpg==
-X-Gm-Message-State: AOJu0YysLE+CgVQPWu1EB1nGOv0ROuxtejcVKucoD3aY8vLaz5GQQ+lG
-        C8CuoFT6FajzU/s25y8hBZ0=
-X-Google-Smtp-Source: AGHT+IHNMP/G9HuOyP12UWEg2o746OTejatuFZZ0CbkE3esMuj0fkjJMFwGmdA2hN3yZfjNw7QOQkg==
-X-Received: by 2002:a17:903:1c4:b0:1bf:728:7458 with SMTP id e4-20020a17090301c400b001bf07287458mr1617276plh.58.1693386470756;
-        Wed, 30 Aug 2023 02:07:50 -0700 (PDT)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id p14-20020a170902a40e00b001c1f0b3e900sm4910499plq.229.2023.08.30.02.07.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Aug 2023 02:07:50 -0700 (PDT)
-Date:   Wed, 30 Aug 2023 18:07:49 +0900
-From:   =?utf-8?Q?=22Krzysztof_Wilczy=C5=84ski=22?= <kw@linux.com>
-To:     Li Chen <me@linux.beauty>
-Cc:     Tom Joseph <tjoseph@cadence.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: cadence: remove unused cdns_plat_pcie->is_rc
-Message-ID: <20230830090749.GA231187@rocinante>
-References: <189258d19e1.1132188131010980.7371471641115980549@linux.beauty>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <189258d19e1.1132188131010980.7371471641115980549@linux.beauty>
+        with ESMTP id S242250AbjH3HhY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 03:37:24 -0400
+Received: from sender4-op-o15.zoho.com (sender4-op-o15.zoho.com [136.143.188.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C938ACC9;
+        Wed, 30 Aug 2023 00:37:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1693380989; cv=none; 
+        d=zohomail.com; s=zohoarc; 
+        b=Xh+6YYqVFs13LVGx52JUHtqyAYhbtT8LtZhcS/UPImSUToBxnKy388gOpj4B2oIM2dBHiPxKKIMO12FWT7wZoCkf2BFhB87Pjr7/3mhq+Yak2G4KoDYLaS36CAgzpVWQsbV8zeQl+FBEhHzhDfLlOiojeruBqV7T7V3u/c+BiZs=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+        t=1693380989; h=Content-Type:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+        bh=jenJxNPD4sIUE9oxP6Q3NIl26GLGxyIRqGTHEYAup1E=; 
+        b=kAGY7pjuGVCOqff8MBzCUCUDmD+rv1Os3tJr3kzxv5KoCMNJYM9PtxZYSXTqLEmJkX3SbwgQnz7TCpMm6G82LJW6XoPvSXBHfAIi2su539vFVD65f1c11qxe4TKTxPcKkk/TcY+bvbZROGcBxzqBmwDnCrVcTPX/fAxrUF3p8+o=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+        dkim=pass  header.i=linux.beauty;
+        spf=pass  smtp.mailfrom=me@linux.beauty;
+        dmarc=pass header.from=<me@linux.beauty>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1693380989;
+        s=zmail; d=linux.beauty; i=me@linux.beauty;
+        h=Date:Date:Message-ID:From:From:To:To:Subject:Subject:In-Reply-To:Cc:Cc:References:MIME-Version:Content-Type:Message-Id:Reply-To;
+        bh=jenJxNPD4sIUE9oxP6Q3NIl26GLGxyIRqGTHEYAup1E=;
+        b=mXnEp4LtfrSD1zWIqdrfehZXi5ir+35k+PpJBpxAdHZH56ArwR5xL694kUG2CgPx
+        IawhbSsjBXrPmdUxqHH8pcK7CxVBI1Ud+e93Ly+ugvVU8AYgnH+ieaXN/49rT7msiBM
+        YsU9rFL3RRMwQZSJUsKN/CpAOF0Sb4midiIvPTS0=
+Received: from lchen-ArchLinux.linux.beauty (180.169.129.130 [180.169.129.130]) by mx.zohomail.com
+        with SMTPS id 1693380987315851.5942332068321; Wed, 30 Aug 2023 00:36:27 -0700 (PDT)
+Date:   Wed, 30 Aug 2023 15:36:05 +0800
+Message-ID: <877cpdvv6i.wl-me@linux.beauty>
+From:   Li Chen <me@linux.beauty>
+To:     Frank Li <Frank.Li@nxp.com>
+Subject: Re: [PATCH 0/3] Add RC-to-EP doorbell with platform MSI controller
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?ISO-8859-4?Q?Goj=F2?=) APEL-LB/10.8 EasyPG/1.0.0
+ Emacs/28.2 (x86_64-pc-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+In-Reply-To: <20230426203436.1277307-1-Frank.Li@nxp.com> (message from Frank Li on Wed, 26 Apr 2023 16:34:33 -0400)
+Cc:     tglx@linutronix.de, aisheng.dong@nxp.com, bhelgaas@google.com,
+        devicetree@vger.kernel.org, festevam@gmail.com, frank.li@nxp.com,
+        imx@lists.linux.dev, jdmason@kudzu.us, kernel@pengutronix.de,
+        kishon@ti.com, krzysztof.kozlowski+dt@linaro.org, kw@linux.com,
+        linux-arm-kernel@lists.infradead.org, linux-imx@nxp.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lorenzo.pieralisi@arm.com, lpieralisi@kernel.org,
+        manivannan.sadhasivam@linaro.org, maz@kernel.org,
+        ntb@lists.linux.dev, peng.fan@nxp.com, robh+dt@kernel.org,
+        s.hauer@pengutronix.de, shawnguo@kernel.org
+References: <20230426203436.1277307-1-Frank.Li@nxp.com>
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-ZohoMailClient: External
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
 
-> We already have cdns_plat_pcie_of_data->is_rc.
+Hi Frank,
 
-Applied to controller/cadence, thank you!
+Frank Li <Frank.Li@nxp.com> writes:
 
-[1/1] PCI: cadence: Drop unused member from struct cdns_plat_pcie
-      https://git.kernel.org/pci/pci/c/abc6119edfe8
+> drivers/misc/pci_endpoint_test.c | 41 +++++++++++
+> drivers/pci/endpoint/pci-epf-core.c | 109 ++++++++++++++++++++++++++++
+> include/linux/pci-epf.h | 16 ++++
+> include/uapi/linux/pcitest.h | 1 +
+> tools/pci/pcitest.c | 16 +++-
+> 5 files changed, 182 insertions(+), 1 deletion(-)
 
-	Krzysztof
+It seems that you forgot to add changes to drivers/pci/endpoint/functions/pci-epf-test.c.
+
+Regards,
+Li
