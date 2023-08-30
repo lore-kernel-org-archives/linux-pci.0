@@ -2,101 +2,110 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A7A9C83F1B
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:39:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCD6C83F17
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236628AbjH3Siv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:38:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39226 "EHLO
+        id S238671AbjH3Six (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:38:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242720AbjH3JVm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 05:21:42 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69F1BCCF;
-        Wed, 30 Aug 2023 02:21:39 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 07A126068B;
-        Wed, 30 Aug 2023 09:21:39 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 241C4C433C8;
-        Wed, 30 Aug 2023 09:21:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693387298;
-        bh=siIZODpxnuFofigGdK4dwZYoGFyU6ZVlCj0AGqstUXY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=NgYUZygmBVLwFbvipWgScmV9bhRY4kEtxv+LxE1ZR+6xyl9Ra9l+OKjTkwsKUnCLD
-         beOWKm9nyL1Va+AILsLgv0NtwJ2QtqXMLv8ynDEuGiIwgZVZMt16SIOHzWgxPuZsVN
-         xeLpsiLkB27M4lZ/rwqit+jHi9YByXMQjBcgdZxxb19C2y+hzqxYHKYG7Sd6rgWYJB
-         K58+CwM9JjdL3H3y/i5yaHv7FD8sfAfdnK17j8OSiwPXnt7bFmP5S7jI+0rEoCdy1F
-         nppDZS0xW0zmchJck+DBVrBKJVLogG9rnkW+0dtk7EMGUAWgGLjnalXMzHZwviC1QH
-         wy9DkZFZ+4FVw==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     Ross Lagerwall <ross.lagerwall@citrix.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath11k@lists.infradead.org, regressions@lists.linux.dev
-Subject: [regression v6.5-rc1] PCI: comm "swapper/0" leaking memory
-Date:   Wed, 30 Aug 2023 12:21:34 +0300
-Message-ID: <878r9sga1t.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+        with ESMTP id S243661AbjH3LYf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 07:24:35 -0400
+X-Greylist: delayed 525 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 30 Aug 2023 04:24:31 PDT
+Received: from out-245.mta0.migadu.com (out-245.mta0.migadu.com [IPv6:2001:41d0:1004:224b::f5])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06BB1185
+        for <linux-pci@vger.kernel.org>; Wed, 30 Aug 2023 04:24:31 -0700 (PDT)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1693394153;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=yb+XrAs7p/uVFQHI/WIGJJnBL8UHr9s0W2yc+Aw9HB8=;
+        b=DQIPbHXjCEL1XRjgI8qUIGrjENjBVN+8g0H3qkTlRv717qujOhlbI9f+qb7WgC0HTu7QOb
+        VjyHUqq8o/liZ/z0nM++7ft8suZFkjs9/5dLwbuH9A2fg2mBgYjKd5q2bDT24iINXpmHAw
+        9/WBfPgfyJ3eM/e/WPmvRCpLd8xkXzY=
+From:   Sui Jingfeng <sui.jingfeng@linux.dev>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Gerd Hoffmann <kraxel@redhat.com>,
+        Gurchetan Singh <gurchetansingh@chromium.org>,
+        Chia-I Wu <olvaffe@gmail.com>
+Cc:     dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Sui Jingfeng <suijingfeng@loongson.cn>,
+        Dave Airlie <airlied@redhat.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>
+Subject: [-next 5/5] drm/qxl: Switch to pci_is_vga()
+Date:   Wed, 30 Aug 2023 19:15:32 +0800
+Message-Id: <20230830111532.444535-6-sui.jingfeng@linux.dev>
+In-Reply-To: <20230830111532.444535-1-sui.jingfeng@linux.dev>
+References: <20230830111532.444535-1-sui.jingfeng@linux.dev>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-I noticed that starting from v6.5-rc1 my ath11k tests reported several
-memory leaks from swapper/0:
+Should be no functional change, just for cleanup purpose.
 
-unreferenced object 0xffff88810a02b7a8 (size 96):
-  comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
-  hex dump (first 32 bytes):
-    80 b8 02 0a 81 88 ff ff b8 72 07 00 00 c9 ff ff  .........r......
-    c8 b7 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  ................
-  backtrace:
-unreferenced object 0xffff88810a02b880 (size 96):
-  comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
-  hex dump (first 32 bytes):
-    58 b9 02 0a 81 88 ff ff a8 b7 02 0a 81 88 ff ff  X...............
-    a0 b8 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  ................
-  backtrace:
-unreferenced object 0xffff88810a02b958 (size 96):
-  comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
-  hex dump (first 32 bytes):
-    30 ba 02 0a 81 88 ff ff 80 b8 02 0a 81 88 ff ff  0...............
-    78 b9 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  x...............
-  backtrace:
-unreferenced object 0xffff88810a02ba30 (size 96):
-  comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
-  hex dump (first 32 bytes):
-    08 bb 02 0a 81 88 ff ff 58 b9 02 0a 81 88 ff ff  ........X.......
-    50 ba 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  P...............
-  backtrace:
-unreferenced object 0xffff88810a02bb08 (size 96):
-  comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
-  hex dump (first 32 bytes):
-    e0 bb 02 0a 81 88 ff ff 30 ba 02 0a 81 88 ff ff  ........0.......
-    28 bb 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  (...............
-  backtrace:
+Cc: Dave Airlie <airlied@redhat.com>
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: David Airlie <airlied@gmail.com>
+Cc: Daniel Vetter <daniel@ffwll.ch>
+Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
+---
+ drivers/gpu/drm/qxl/qxl_drv.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-I can easily reproduce this by doing a simple insmod and rmmod of ath11k
-and it's dependencies (mac80211, MHI etc). I can reliability reproduce
-the leaks but I only see them once after a boot, I need to reboot the
-host to see the leaks again. v6.4 has no leaks.
+diff --git a/drivers/gpu/drm/qxl/qxl_drv.c b/drivers/gpu/drm/qxl/qxl_drv.c
+index a3b83f89e061..08586bd2448f 100644
+--- a/drivers/gpu/drm/qxl/qxl_drv.c
++++ b/drivers/gpu/drm/qxl/qxl_drv.c
+@@ -68,11 +68,6 @@ module_param_named(num_heads, qxl_num_crtc, int, 0400);
+ static struct drm_driver qxl_driver;
+ static struct pci_driver qxl_pci_driver;
+ 
+-static bool is_vga(struct pci_dev *pdev)
+-{
+-	return pdev->class == PCI_CLASS_DISPLAY_VGA << 8;
+-}
+-
+ static int
+ qxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+@@ -100,7 +95,7 @@ qxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (ret)
+ 		goto disable_pci;
+ 
+-	if (is_vga(pdev) && pdev->revision < 5) {
++	if (pci_is_vga(pdev) && pdev->revision < 5) {
+ 		ret = vga_get_interruptible(pdev, VGA_RSRC_LEGACY_IO);
+ 		if (ret) {
+ 			DRM_ERROR("can't get legacy vga ioports\n");
+@@ -131,7 +126,7 @@ qxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ unload:
+ 	qxl_device_fini(qdev);
+ put_vga:
+-	if (is_vga(pdev) && pdev->revision < 5)
++	if (pci_is_vga(pdev) && pdev->revision < 5)
+ 		vga_put(pdev, VGA_RSRC_LEGACY_IO);
+ disable_pci:
+ 	pci_disable_device(pdev);
+@@ -159,7 +154,7 @@ qxl_pci_remove(struct pci_dev *pdev)
+ 
+ 	drm_dev_unregister(dev);
+ 	drm_atomic_helper_shutdown(dev);
+-	if (is_vga(pdev) && pdev->revision < 5)
++	if (pci_is_vga(pdev) && pdev->revision < 5)
+ 		vga_put(pdev, VGA_RSRC_LEGACY_IO);
+ }
+ 
+-- 
+2.34.1
 
-I did a bisect and found the commit below. I verified reverting the
-commit makes the leaks go away.
-
-commit e54223275ba1bc6f704a6bab015fcd2ae4f72572
-Author:     Ross Lagerwall <ross.lagerwall@citrix.com>
-AuthorDate: Thu May 25 16:32:48 2023 +0100
-Commit:     Bjorn Helgaas <bhelgaas@google.com>
-CommitDate: Fri Jun 9 15:06:16 2023 -0500
-
-    PCI: Release resource invalidated by coalescing
-
-Kalle
