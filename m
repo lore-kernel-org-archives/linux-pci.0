@@ -2,77 +2,79 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1ED0C6FA8F
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:43:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90B9EC83F1C
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:44:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238703AbjH3SjG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:39:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59778 "EHLO
+        id S236805AbjH3SjH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:39:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243697AbjH3Lbr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 07:31:47 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 045D3132;
-        Wed, 30 Aug 2023 04:31:45 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 8B3F760BAF;
-        Wed, 30 Aug 2023 11:31:44 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74045C433C7;
-        Wed, 30 Aug 2023 11:31:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693395104;
-        bh=I3QUcjvGQNK/WN89qE62mUZVvbzh+sWhFO8OhwQe9X8=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=RqVB98BtcFRECsHjf/CiUJ0L+JtoTi59vAb6U8d2YYLwJ231NZIjyA7npgBQJAX+z
-         egaJ/xuBPVb5pFWPpdsnbrE6deMEAJFAZnO3hv0rbHqpELBHeDWrCSgLl+mq2shwYp
-         cp89hgjpa+AEKmITt/z5pYxu4CtjtGeQmjAeziRaqbpFUVoisXX+zf9nPAJZhawVRs
-         LSU7v1ESMqoq6VQ5BRdLt6j6ndZVc5jW82b9o/9bXd3e+uTQpEzwDaav0YSSOvVAt/
-         xBdzUgx+j1YjBcGgECYyJ80/0lk513eTmFp2cLf2w1Eq4hyp4MMZNUQTEsslS7ue5m
-         rCRv6PRhC+2Kg==
-From:   Kalle Valo <kvalo@kernel.org>
-To:     "Linux regression tracking (Thorsten Leemhuis)" 
-        <regressions@leemhuis.info>
-Cc:     Ross Lagerwall <ross.lagerwall@citrix.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux regressions mailing list <regressions@lists.linux.dev>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ath11k@lists.infradead.org
-Subject: Re: [regression v6.5-rc1] PCI: comm "swapper/0" leaking memory
-References: <878r9sga1t.fsf@kernel.org>
-        <8a737241-f216-169a-8bd3-d0832439b99e@leemhuis.info>
-Date:   Wed, 30 Aug 2023 14:31:40 +0300
-In-Reply-To: <8a737241-f216-169a-8bd3-d0832439b99e@leemhuis.info> (Linux
-        regression tracking's message of "Wed, 30 Aug 2023 11:55:47 +0200")
-Message-ID: <874jkgg40z.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+        with ESMTP id S243667AbjH3LYh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 07:24:37 -0400
+Received: from out-251.mta0.migadu.com (out-251.mta0.migadu.com [91.218.175.251])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42AC4CDB
+        for <linux-pci@vger.kernel.org>; Wed, 30 Aug 2023 04:24:32 -0700 (PDT)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1693394151;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=pgG068lwbSrL85NgvUHE0qbc19Xz9h3Wp1jv9CrKb5c=;
+        b=BKbMYeKuNn9w8yBXx4KLlXqnPUTn8v0BW6xul9d3yqsah7BbL6O/ml1fXOw1/5XOVj3U3O
+        qWMzRKfVm8NU8K/LEsd0wKIobhbEriwxUla5mUczR2uSAalvqYFba+ZXVu7C8kfPwBF4co
+        kiTbzT5nv73FUV61tfctQ3srW3fnE6c=
+From:   Sui Jingfeng <sui.jingfeng@linux.dev>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Gerd Hoffmann <kraxel@redhat.com>,
+        Gurchetan Singh <gurchetansingh@chromium.org>,
+        Chia-I Wu <olvaffe@gmail.com>
+Cc:     dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Sui Jingfeng <suijingfeng@loongson.cn>,
+        David Airlie <airlied@redhat.com>,
+        Daniel Vetter <daniel@ffwll.ch>
+Subject: [-next 4/5] drm/virgpu: Switch to pci_is_vga()
+Date:   Wed, 30 Aug 2023 19:15:31 +0800
+Message-Id: <20230830111532.444535-5-sui.jingfeng@linux.dev>
+In-Reply-To: <20230830111532.444535-1-sui.jingfeng@linux.dev>
+References: <20230830111532.444535-1-sui.jingfeng@linux.dev>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-"Linux regression tracking (Thorsten Leemhuis)"
-<regressions@leemhuis.info> writes:
+From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-> Hi, Thorsten here, the Linux kernel's regression tracker. Partially
-> top-posting for once, to make this easily accessible to everyone.
->
-> Thx for the report. To quote one aspect:
->
->> v6.4 has no leaks.
->
-> I pretty sure you mean stock 6.4 here. But FWIW, the culprit was
-> backported to 6.4.y and 6.1.y, so they latest versions might be affected
-> as well.
+Should be no functional change, just for cleanup purpose.
 
-Yes, I mean v6.4 release tagged by Linus:
+Cc: David Airlie <airlied@redhat.com>
+Cc: Gerd Hoffmann <kraxel@redhat.com>
+Cc: Gurchetan Singh <gurchetansingh@chromium.org>
+Cc: Chia-I Wu <olvaffe@gmail.com>
+Cc: Daniel Vetter <daniel@ffwll.ch>
+Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
+---
+ drivers/gpu/drm/virtio/virtgpu_drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-6995e2de6891 Linux 6.4
-
+diff --git a/drivers/gpu/drm/virtio/virtgpu_drv.c b/drivers/gpu/drm/virtio/virtgpu_drv.c
+index add075681e18..3a368304475a 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_drv.c
++++ b/drivers/gpu/drm/virtio/virtgpu_drv.c
+@@ -51,7 +51,7 @@ static int virtio_gpu_pci_quirk(struct drm_device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+ 	const char *pname = dev_name(&pdev->dev);
+-	bool vga = (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
++	bool vga = pci_is_vga(pdev);
+ 	int ret;
+ 
+ 	DRM_INFO("pci: %s detected at %s\n",
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.34.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
