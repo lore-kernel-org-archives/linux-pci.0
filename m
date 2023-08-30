@@ -2,171 +2,107 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A1AAC83F19
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:44:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB2E4C83F17
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:44:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238789AbjH3SjK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:39:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50602 "EHLO
+        id S238814AbjH3SjP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:39:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38280 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244711AbjH3Nr1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 09:47:27 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F304BAC
-        for <linux-pci@vger.kernel.org>; Wed, 30 Aug 2023 06:47:24 -0700 (PDT)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 92163616CA
-        for <linux-pci@vger.kernel.org>; Wed, 30 Aug 2023 13:47:24 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE70EC433C7;
-        Wed, 30 Aug 2023 13:47:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1693403244;
-        bh=qGkiZ5nW/LcfMhkyJ3tD6NL0RJDsb9L6RBBJoyR748s=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CwoDsqF02ZoFEoXFezLADIWYmido5fh0JHTcdsciqtvAkyZTe/SCH3I+q9rnBTQIU
-         IcZDiM/qodeLPZ5URyZLyua1TS5N4AVhwYI8qxkCuu/5zeS+NAcEusEvQlQ0g0GK0L
-         axwSV5qRNBemro8taE6Je57nozP8KpBPTBTU5e68SWfVcKMbIqukkxiAfZwukNkWXW
-         f5N6+396MksA7C03VtS8kKi9GPoIEhCksiVTDWxiGXir+AtjU7W0Tk/m2vPINRijJp
-         1xK98CwMZW6fCd27upH9yl1JdpjhVsS2homd5gsy07HnKMXgT3g4JEqRgVUPkYHtE0
-         5+cvqV4zsVnFQ==
-Date:   Wed, 30 Aug 2023 15:47:19 +0200
-From:   Lorenzo Pieralisi <lpieralisi@kernel.org>
-To:     "Patel, Nirmal" <nirmal.patel@linux.intel.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4] PCI: vmd: Do not change the BIOS Hotplug setting on
- VMD rootports
-Message-ID: <ZO9IZ+4ZPB5h4hjW@lpieralisi>
-References: <20230829180045.GA800434@bhelgaas>
- <3f7046d5-2e2c-4a6b-9e3d-507717528567@linux.intel.com>
+        with ESMTP id S243664AbjH3LYg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 07:24:36 -0400
+Received: from out-252.mta0.migadu.com (out-252.mta0.migadu.com [IPv6:2001:41d0:1004:224b::fc])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 211F6CD7
+        for <linux-pci@vger.kernel.org>; Wed, 30 Aug 2023 04:24:31 -0700 (PDT)
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1693394144;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DLVdHbG85+44P7qsiRYYVxfolXMOcHBsopMctAcePck=;
+        b=J59qCFT0OBGdEmbDi4JY96Y0g2lOm/hwpx206PWQver8wN02CSpISQoonof/5wEaRuSTR5
+        ouCPVB3GdJM3Uyt4LGtJGwvB4wkGB4hupMSzjpaR//dtI0uBmIqZbmOBuyKnZ/kB5JxLUi
+        kgv1cwNYtl3n58wormShqGG2v91FWKM=
+From:   Sui Jingfeng <sui.jingfeng@linux.dev>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Gerd Hoffmann <kraxel@redhat.com>,
+        Gurchetan Singh <gurchetansingh@chromium.org>,
+        Chia-I Wu <olvaffe@gmail.com>
+Cc:     dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        Sui Jingfeng <suijingfeng@loongson.cn>,
+        "Maciej W. Rozycki" <macro@orcam.me.uk>
+Subject: [-next 1/5] PCI: Add the pci_is_vga() helper
+Date:   Wed, 30 Aug 2023 19:15:28 +0800
+Message-Id: <20230830111532.444535-2-sui.jingfeng@linux.dev>
+In-Reply-To: <20230830111532.444535-1-sui.jingfeng@linux.dev>
+References: <20230830111532.444535-1-sui.jingfeng@linux.dev>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3f7046d5-2e2c-4a6b-9e3d-507717528567@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 29, 2023 at 02:35:36PM -0700, Patel, Nirmal wrote:
-> On 8/29/2023 11:00 AM, Bjorn Helgaas wrote:
-> > On Tue, Aug 29, 2023 at 01:10:22AM -0400, Nirmal Patel wrote:
-> >> Currently during Host boot up, VMD UEFI driver loads and configures
-> >> all the VMD endpoints devices and devices behind VMD. Then during
-> >> VMD rootport creation, VMD driver honors ACPI settings for Hotplug,
-> >> AER, DPC, PM and enables these features based on BIOS settings.
-> >>
-> >> During the Guest boot up, ACPI settings along with VMD UEFI driver are
-> >> not present in Guest BIOS which results in assigning default values to
-> >> Hotplug, AER, DPC, etc. As a result hotplug is disabled on the VMD
-> >> rootports in the Guest OS.
-> >>
-> >> VMD driver in Guest should be able to see the same settings as seen
-> >> by Host VMD driver. Because of the missing implementation of VMD UEFI
-> >> driver in Guest BIOS, the Hotplug is disabled on VMD rootport in
-> >> Guest OS. Hot inserted drives don't show up and hot removed drives
-> >> do not disappear even if VMD supports Hotplug in Guest. This
-> >> behavior is observed in various combinations of guest OSes i.e. RHEL,
-> >> SLES and hypervisors i.e. KVM and ESXI.
-> >>
-> >> This change will make the VMD Host and Guest Driver to keep the settings
-> >> implemented by the UEFI VMD DXE driver and thus honoring the user
-> >> selections for hotplug in the BIOS.
-> > These settings are negotiated between the OS and the BIOS.  The guest
-> > runs a different BIOS than the host, so why should the guest setting
-> > be related to the host setting?
-> >
-> > I'm not a virtualization whiz, and I don't understand all of what's
-> > going on here, so please correct me when I go wrong:
-> >
-> > IIUC you need to change the guest behavior.  The guest currently sees
-> > vmd_bridge->native_pcie_hotplug as FALSE, and you need it to be TRUE?
-> 
-> Correct.
+From: Sui Jingfeng <suijingfeng@loongson.cn>
 
-Why ? Can you explain to us please what the bug is ?
+The PCI code and ID assignment specification defined four types of
+display controllers for the display base class(03h), and the devices
+with 0x00h sub-class code are VGA devices. VGA devices with programming
+interface 0x00 is VGA-compatible, VGA devices with programming interface
+0x01 are 8514-compatible controllers. Besides, PCI_CLASS_NOT_DEFINED_VGA
+is defined to provide backward compatibility for devices that were built
+before the class code field was defined. Hence, introduce the pci_is_vga()
+helper, let it handle the details for us. It returns true if the PCI(e)
+device being tested belongs to the VGA devices category.
 
-It is clear that "hotplug is broken in the guest" is not enough
-to fix this sensibly.
+Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>
+Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
+---
+ include/linux/pci.h | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
 
-> > Currently this is copied from the guest's
-> > root_bridge->native_pcie_hotplug, so that must also be FALSE.
-> >
-> > I guess the guest sees a fabricated host bridge, which would start
-> > with native_pcie_hotplug as TRUE (from pci_init_host_bridge()), and
-> > then it must be set to FALSE because the guest _OSC didn't grant
-> > ownership to the OS?  (The guest dmesg should show this, right?)
-> 
-> This is my understanding too. I don't know much in detail about Guest
-> expectation.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index cf6e0b057752..ace727001911 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -713,6 +713,33 @@ static inline bool pci_is_bridge(struct pci_dev *dev)
+ 		dev->hdr_type == PCI_HEADER_TYPE_CARDBUS;
+ }
+ 
++/**
++ * The PCI code and ID assignment specification defined four types of
++ * display controllers for the display base class(03h), and the devices
++ * with 0x00h sub-class code are VGA devices. VGA devices with programming
++ * interface 0x00 is VGA-compatible, VGA devices with programming interface
++ * 0x01 are 8514-compatible controllers. Besides, PCI_CLASS_NOT_DEFINED_VGA
++ * is defined to provide backward compatibility for devices that were built
++ * before the class code field was defined. This means that it belong to the
++ * VGA devices category also.
++ *
++ * Returns:
++ * true if the PCI device is a VGA device, false otherwise.
++ */
++static inline bool pci_is_vga(struct pci_dev *pdev)
++{
++	if (!pdev)
++		return false;
++
++	if ((pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA)
++		return true;
++
++	if ((pdev->class >> 8) == PCI_CLASS_NOT_DEFINED_VGA)
++		return true;
++
++	return false;
++}
++
+ #define for_each_pci_bridge(dev, bus)				\
+ 	list_for_each_entry(dev, &bus->devices, bus_list)	\
+ 		if (!pci_is_bridge(dev)) {} else
+-- 
+2.34.1
 
-What clears native_pcie_hotplug in the guest (if it does not have
-ACPI firmware and therefore no _OSC negotiation) ?
-
-> > In the guest, vmd_enable_domain() allocates a host bridge via
-> > pci_create_root_bus(), and that would again start with
-> > native_pcie_hotplug as TRUE.  It's not an ACPI host bridge, so I don't
-> > think we do _OSC negotiation for it.  After this patch removes the
-> > copy from the fabricated host bridge, it would be left as TRUE.
-> 
-> VMD was not dependent on _OSC settings and is not ACPI Host bridge. It
-> became _OSC dependent after the patch 04b12ef163d1.
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/drivers/pci/controller/vmd.c?id=04b12ef163d10e348db664900ae7f611b83c7a0e
-> 
-> This patch was added as a quick fix for AER flooding but it could
-> have been avoided by using rate limit for AER.
-> 
-> I don't know all the history of VMD driver but does it have to be
-> dependent on root_bridge flags from _OSC? Is reverting 04b12ef163d1
-> a better idea than not allowing just hotplug flags to be copied from
-> root_bridge?
-
-No, a better idea is to understand what the bug is and fix it for
-good.
-
-So we are back to the drawing board to define how the host bridge
-driver works in the host and in the guest to understand how hardware
-is configured and what do we expect from it.
-
-Thanks,
-Lorenzo
-
-> 
-> Thanks.
-> 
-> >
-> > If this is on track, it seems like if we want the guest to own PCIe
-> > hotplug, the guest BIOS _OSC for the fabricated host bridge should
-> > grant ownership of it.
-> 
-> I will try to check this option.
-> 
-> >
-> >> Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-> >> ---
-> >> v3->v4: Rewrite the commit log.
-> >> v2->v3: Update the commit log.
-> >> v1->v2: Update the commit log.
-> >> ---
-> >>  drivers/pci/controller/vmd.c | 2 --
-> >>  1 file changed, 2 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> >> index 769eedeb8802..52c2461b4761 100644
-> >> --- a/drivers/pci/controller/vmd.c
-> >> +++ b/drivers/pci/controller/vmd.c
-> >> @@ -701,8 +701,6 @@ static int vmd_alloc_irqs(struct vmd_dev *vmd)
-> >>  static void vmd_copy_host_bridge_flags(struct pci_host_bridge *root_bridge,
-> >>  				       struct pci_host_bridge *vmd_bridge)
-> >>  {
-> >> -	vmd_bridge->native_pcie_hotplug = root_bridge->native_pcie_hotplug;
-> >> -	vmd_bridge->native_shpc_hotplug = root_bridge->native_shpc_hotplug;
-> >>  	vmd_bridge->native_aer = root_bridge->native_aer;
-> >>  	vmd_bridge->native_pme = root_bridge->native_pme;
-> >>  	vmd_bridge->native_ltr = root_bridge->native_ltr;
-> >> -- 
-> >> 2.31.1
-> >>
-> 
