@@ -2,137 +2,252 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65AE3C83F1C
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FBDC83F1A
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:38:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229848AbjH3Sio (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:38:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35436 "EHLO
+        id S229512AbjH3Sip (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:38:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344203AbjH3S13 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 14:27:29 -0400
-Received: from EUR02-AM0-obe.outbound.protection.outlook.com (mail-am0eur02on2078.outbound.protection.outlook.com [40.107.247.78])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBBE7198;
-        Wed, 30 Aug 2023 11:27:25 -0700 (PDT)
+        with ESMTP id S242587AbjH3JHo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 05:07:44 -0400
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9102ED2;
+        Wed, 30 Aug 2023 02:07:37 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lFmM0U5K/re/I72JvB/LIivFyhvdS5jOM5qjFqKT950tBGn5AopJPmmS15krhbtArYT4RwF17GPsmQylXEK4h8nuHTFShen001BQWMYY7e6S8MjFDWgToaNWsLvneDTjVg7eZmqvanskzuKMgK1mr+EyRMyI3KW2OHH2bn9bYnSDRuf/+h9grOz+AvzwcO9dGpLJGIiJH4t069q8XhSo0s21xdrJDZqz8FWs7G4iLLpA5ATbfKwkeWMP263RVovQkNgMEkClsG/CY11kwmomZkhnzO8p/ZkJG2GXSk2m5OrVO6GO3b7amzchaKxeehuBD/h62yoDWko0nHZHGvmvOQ==
+ b=EY1mRSXwlYhIB6G6RufrbEZDVAwwmTphaARBDls6j4VzvEjK4xxT2mI9NnSicxqa5kcSvzKILR8XdjXRe2HxSJQ5A8zFQITz3jxFIYPEEfQ8GXcfpDE+K8CmW+sxIlDU/dW/WNktuKHSQxTt2GJGy9Gfke5cZJAgU3Bsl3QXBrQ0kZuRvjIykxhfjvtbKuMJ4zzo75K5Bl4EUYJ6w2pctqB9Vu2L1BsnFCLTwOGk7ULejgKTGNqXmDpqqZ7J6csGRGxZmzOwJZ6IV4d7JoiJjWw2+VoL7cI+so2Ju4YiU42e6OzAH9ybKM7820VXUqQkP9iV7O0zxybYaRU171FRig==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=UnP7U9jS81eVV6fyH48zwT6sfcUWwvbka9JYFNwBrok=;
- b=VlAO8GhLh1UmSZqLpTHqUMtXLjBfZZ+k/S1L3s7uMGILQSR9w8aRT74v1g6fkkrU568NeCpZqNP2t4l7um681KcawOsQTNvX7eh+5C8ISwilX5M3/kgpt6sB+KQwXYY/BEeC5JPZPfi7qLL/cyic24mWnIlKfbR0wQcfXOu/QIwigHcgm3VAXJUv4IJquepSiGvE7X6ZWh9Sy7mFKJ9SsPXZlGIAr3W281C3h0mBRY8S3W9ou2PinbEbsYNoHHgEg2RtRBaJXldk721aMzVVNYM5zO9HUO6hBC2o10lP8GXL1cYf5HlBQcWHt0pNkUfKh0KndjWr+NF27JbKEYr++w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ bh=FK2rvL8XJ6T13bb1n4kbDrDbVptcpak7O8ilmpKuHWE=;
+ b=HZ1wuY3eoMMQQCZxb17SGAJA8hEZcuM1S3zcK8+5hyobHnRhJqLxW1gT+Pvl4xOO0KRZoHgtBsgmLToab5dAwTzCAn4NmmK+MbVhPiTxdj/k4tSxu071jDp8lEzvB34aoueYXPru5b7jB3/CqY5cAd5nKVvZ/FoXPIOlZj1/WyzZf8JSaxKKMUIqZRrk6Ad1fbXcAFbGcCyva1GSo6Z35zYjrXi7OcVjd/t5m5ycnO9+/0+HeBLZUUMvnL6Uj376moOOAd29R0ME5noMzzkcCehwa1nqB8OiyUejKVShGQp9rzErO7Qg06j/IpjPaxzSQpDa53JN1RGYVTx6hUTDWA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UnP7U9jS81eVV6fyH48zwT6sfcUWwvbka9JYFNwBrok=;
- b=lPxVQy3FQFp2KHe1ZzvItHeDZebciQhsCvGrbMnlpR9vqcBq45ecSy81wM4rUg/m8Jsi4/KUxCT5YuEKWUWny/4qpvh3SIO3OfLH+UoT+7XBU+KfchbMMz3cYGfBb+7imTzSPx7uokXNFtt0KGkh06sHczXwSFj8hlD47cRuTKI=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM6PR04MB4838.eurprd04.prod.outlook.com (2603:10a6:20b:4::16)
- by PA4PR04MB7693.eurprd04.prod.outlook.com (2603:10a6:102:e0::7) with
+ bh=FK2rvL8XJ6T13bb1n4kbDrDbVptcpak7O8ilmpKuHWE=;
+ b=zoSFokW+7nE0bL+57NkdkFnCPBJXHoue1eLAQEE4XNFp/yF82KsiaWqGHylyEm/O0OdKFdMitliXHvf0A4FU1tVTSEszrhhcCJ95KZXMoxdlXRSouiTvI+e8p2aI02+lIew+iqdl23a8pxCxutGMpjeZUpcALno2IqCgcLiQwtE=
+Received: from DS7PR06CA0037.namprd06.prod.outlook.com (2603:10b6:8:54::12) by
+ BY5PR12MB4869.namprd12.prod.outlook.com (2603:10b6:a03:1d9::23) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.21; Wed, 30 Aug
- 2023 18:27:22 +0000
-Received: from AM6PR04MB4838.eurprd04.prod.outlook.com
- ([fe80::a680:2943:82d1:6aa8]) by AM6PR04MB4838.eurprd04.prod.outlook.com
- ([fe80::a680:2943:82d1:6aa8%3]) with mapi id 15.20.6699.035; Wed, 30 Aug 2023
- 18:27:21 +0000
-Date:   Wed, 30 Aug 2023 14:27:05 -0400
-From:   Frank Li <Frank.li@nxp.com>
-To:     Li Chen <me@linux.beauty>
-Cc:     tglx@linutronix.de, aisheng.dong@nxp.com, bhelgaas@google.com,
-        devicetree@vger.kernel.org, festevam@gmail.com,
-        imx@lists.linux.dev, jdmason@kudzu.us, kernel@pengutronix.de,
-        kishon@ti.com, krzysztof.kozlowski+dt@linaro.org, kw@linux.com,
-        linux-arm-kernel@lists.infradead.org, linux-imx@nxp.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        lorenzo.pieralisi@arm.com, lpieralisi@kernel.org,
-        manivannan.sadhasivam@linaro.org, maz@kernel.org,
-        ntb@lists.linux.dev, peng.fan@nxp.com, robh+dt@kernel.org,
-        s.hauer@pengutronix.de, shawnguo@kernel.org
-Subject: Re: [PATCH 0/3] Add RC-to-EP doorbell with platform MSI controller
-Message-ID: <ZO+J+eg3TbvEKIUh@lizhi-Precision-Tower-5810>
-References: <20230426203436.1277307-1-Frank.Li@nxp.com>
- <877cpdvv6i.wl-me@linux.beauty>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <877cpdvv6i.wl-me@linux.beauty>
-X-ClientProxiedBy: SJ0PR05CA0005.namprd05.prod.outlook.com
- (2603:10b6:a03:33b::10) To AM6PR04MB4838.eurprd04.prod.outlook.com
- (2603:10a6:20b:4::16)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6699.35; Wed, 30 Aug
+ 2023 09:07:34 +0000
+Received: from CY4PEPF0000EDD4.namprd03.prod.outlook.com
+ (2603:10b6:8:54:cafe::e4) by DS7PR06CA0037.outlook.office365.com
+ (2603:10b6:8:54::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.18 via Frontend
+ Transport; Wed, 30 Aug 2023 09:07:34 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CY4PEPF0000EDD4.mail.protection.outlook.com (10.167.241.208) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6745.17 via Frontend Transport; Wed, 30 Aug 2023 09:07:34 +0000
+Received: from SATLEXMB05.amd.com (10.181.40.146) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 30 Aug
+ 2023 04:07:33 -0500
+Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB05.amd.com
+ (10.181.40.146) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 30 Aug
+ 2023 04:07:32 -0500
+Received: from xhdthippesw40.xilinx.com (10.180.168.240) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.27 via Frontend
+ Transport; Wed, 30 Aug 2023 04:07:29 -0500
+From:   Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+To:     <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <bhelgaas@google.com>,
+        <krzysztof.kozlowski+dt@linaro.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+CC:     <lpieralisi@kernel.org>, <robh@kernel.org>, <conor+dt@kernel.org>,
+        <michal.simek@amd.com>, <bharat.kumar.gogada@amd.com>,
+        Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v7 2/3] dt-bindings: PCI: xilinx-xdma: Add YAML schemas for Xilinx XDMA PCIe Root Port Bridge
+Date:   Wed, 30 Aug 2023 14:37:06 +0530
+Message-ID: <20230830090707.278136-3-thippeswamy.havalige@amd.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230830090707.278136-1-thippeswamy.havalige@amd.com>
+References: <20230830090707.278136-1-thippeswamy.havalige@amd.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM6PR04MB4838:EE_|PA4PR04MB7693:EE_
-X-MS-Office365-Filtering-Correlation-Id: d35aa1ca-a8ac-4738-336d-08dba986c000
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000EDD4:EE_|BY5PR12MB4869:EE_
+X-MS-Office365-Filtering-Correlation-Id: c25de3ad-9991-4363-59a1-08dba9388ca0
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 8DMbIqRmcB78tEAE+eft/f+8NzN8l3TffjsD2RPz6LTL1c76TQESxeopOhpoQ6mdlGklCfP6fgIXcxvToUm/Ll1y+lIQNt8jOCm+diPIWZHV86H/L01JUcE5tfeQMnIBXGpbqBEqw5Wg3yP9HHeffUhsMJ7hwEAh5TsuSKq6XGxd21sOkyq0hLA5gZYv30jZN4oA9Zj08JYTn/6y2PqLNEvGDX9zWLbrki64dslFXD7Tl4y0DYdxEbmt0A6d1IHXZPj7RD+MKrMe+zkV23kPuag6L2kuGGJjYX+SrFmKdRUzhSfaFHA4CmFEB+pOFuXDPepHzSBEAppayK3c+bbTlF3bIQIGGmVKNnEDOOdj0NfUTtqfih793X25LhWQHg3VOeWblVXZsWt7/Ja8TA1cU368cgeod2FRG793+yW45Pbx5XCQ8rhUJgr3lgOv5pLTZ3WRE3yIgvW+UwYC2jXujuWSTRyQKnjLYNvZoYCyBMSxCLzr8x04gYMkfsKUKqr6+tXOmGEqacFTMEXC6NkVn7TcBFH0Y9bT/V1ANl0w6HbyffK+sh6a4C7p/vJdHINbWisei76y3kb2cBtgw0V59Bbu2Mw1/CGg5x4f5M94boenBzPWG2/HhKV6bJQNNo+h
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM6PR04MB4838.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(376002)(39860400002)(346002)(136003)(366004)(396003)(1800799009)(451199024)(186009)(41300700001)(7416002)(33716001)(38350700002)(38100700002)(86362001)(478600001)(83380400001)(6666004)(26005)(9686003)(6512007)(6486002)(6506007)(52116002)(4744005)(66946007)(2906002)(66556008)(6916009)(316002)(66476007)(5660300002)(8936002)(4326008)(8676002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?C2ZXriP3Z/hVEadtqx3S2/lORO+D0PHSpnOJwSCek63cK3PaSSEbK1wMBoNg?=
- =?us-ascii?Q?3uaQm8xtYtweJr5/iCoyrANgbgAyWr+OZ1O3qAoifwonwITBIurAI+ltOq5q?=
- =?us-ascii?Q?fl3HgHneNrmBKKETp3mthJtskWIQ+hWxb/9a/vkZ47mkxE7WFBvXguftA72U?=
- =?us-ascii?Q?ubH5VC7K7h2haQnZnc8PNOp9SCAOCQlQngF/ykzcxvRd69nv/asLjD+Z38A3?=
- =?us-ascii?Q?ryEOfD+vGLnBOh8WqJ5OfDdUqxht4wEA6mNN6s29rnwddgdkOwcDVsnWZfS0?=
- =?us-ascii?Q?/dvxvDijCrja/Seppy/yAfXvtHTf+ANQe3jQqqBpbFbzGtTOD4Uzj4kqv64F?=
- =?us-ascii?Q?b0hrPqH1H8rFQEtVWCzDPZzAoyZ8ow7bKXlgOb+qojLa1VCUjvl8ecwkxyaY?=
- =?us-ascii?Q?eG1vEpF1Eg4riRtK5hAwq7RTykNnbtP5sFYGYpOywQSFpqyNs0O4m+Trlaj8?=
- =?us-ascii?Q?MOYqHTMZovpoDD6Co3bkEjNW3nKdr9rt86FAq0rWei0pPKVI8VXabxOiJXyI?=
- =?us-ascii?Q?eyBTS771/2RJI8OqHH/F54KHZCJh+utxyZJDvAZqXBYV4nKidI/rrwJdpkS6?=
- =?us-ascii?Q?bRNydpiyMR/E3CHLv8rtvUDSiuhyuaoe7/VQxQ801q+vyWYpy6uCAKA2JLxp?=
- =?us-ascii?Q?SizZG3cbUa+mNFFWWZ/xE8zLOlIERccB3EFFd5nbpeDm9fbFub+XrOkvOHSa?=
- =?us-ascii?Q?tx2Vq2P01FbyZZtf+HP2Jm0k1XZBFCPUUKv5+2VpaqapXbuzsVsqeX7qCzBx?=
- =?us-ascii?Q?od5mE3Mk+vvzBwm2oX9P7k91fD5jhRGpVd1Si+f2TfM34gXhL94/v+XMqdDb?=
- =?us-ascii?Q?0q4638HEuFlQ0U5G4NgQtGqXgkrYTvLxULFvgbAceuJi5Yd7BiM1XITnG0bI?=
- =?us-ascii?Q?u1t5eZnCLRxqq0c6m2esogvjmhVJ46Fe/oyWLTkSSFtZWfU7g9wIq8NztIRm?=
- =?us-ascii?Q?j3HGspCfhIhayhz12Ft48ATLTTDEqxHBi72tZrOyuxMr6FV8NKargJGwVvxM?=
- =?us-ascii?Q?A8mt6sIfZA1qqmxLFEDsDPoQ9ayEurkS66OFZwxBc7Nxr8/BmEs6MCF7xvME?=
- =?us-ascii?Q?E65DdG9AhwfVO3sZQGp36Sq9BzG/k5d9qs2lRn54TIO4SBKT2gUb2hQGjoFW?=
- =?us-ascii?Q?JhRokhH6HY3oZx+tTEM3Knw8+AcnUU5q+sLam2FKLlMIOkvDLDJzgMCbAA4Y?=
- =?us-ascii?Q?qIMMjWwAGOclsNdWSPjge8apmfwK3AO65uMXRuphbGncdVqPaot58DeNd+E3?=
- =?us-ascii?Q?6Qm5MUiXvCAHMf/GfaeYWy5cfZeEsxlv6r+g+HBsLynkmE40f51hZytIwQob?=
- =?us-ascii?Q?6bkUZYr4/QMUs5JmgDP6Vr+OvhvYteGLj46X2pKhwIC9hoTPG2IWWFC2YXIw?=
- =?us-ascii?Q?y43GigAV1iL3QqpPy1ck2CsBXCcv0zCEZ5RJQLdrxYll/2BXQXnpRIK5nh8l?=
- =?us-ascii?Q?z7tbyqRwRo6W325/273SzPZbIjqOROLWaPt0ebT0J0n7cMeX1MZSznAlB4cY?=
- =?us-ascii?Q?TWPf3QSgFUgQu9aTd48PMrRZF6uSTXloe8wYyVQbHCjocPNz1QXp4oSc7ahn?=
- =?us-ascii?Q?NM51KqQhz7s44P88zVE=3D?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d35aa1ca-a8ac-4738-336d-08dba986c000
-X-MS-Exchange-CrossTenant-AuthSource: AM6PR04MB4838.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Aug 2023 18:27:21.6482
+X-Microsoft-Antispam-Message-Info: NHLZkve401ADdQ4Q7YOLGJBsfoNXT4ZfXCHrdEQjwOXgV6q7EQyX0XYj2c556B/olqRyFItpkwHb7PEmAw2pkKb1994Ub/JXGJfEjnmTT+lDwsk03jvtJToys3jbxYwiiMp+1jtUDJXy/D/4wf6tXqgZJQeqqpRMD5Hp8lU+sWMlw1d/c88YEPXKZJtzorxWrA8J+3QUwA1YriOUEsTw56x+GXe6rY2Gb0U9hl/WqlloXxoi04H4jAgd4qahCgN4Dwn2gszHvx7Yuz9IF6tk7NIIigr5RxLlfNT7PhXA2Pg9c5egB0A4450HrqSHhOhcABftIsbEjBDdAo5+uXd/hvg5LgJtyKY0ENXMXkWZnbcdp2Wln4A50UFVNVWTiUY8eegK2I649gWgTJe//LMv2t2QxjSO39xdzuWNhqWBuctYBp/9r3JQBIU76Db4inj8kRVUFz9y1FhYFBNklbc5BbdExYSR3TauPcwY5aJIThzomNK8e+7v3lj7V4h685nAFFd6WpNLTJM52HT/D0HViOryF68PiuZDV7jKF+QrCOi0oa1MQwQ6deJhcYXJcvP6rwyPVLAyv/53FWbUCVshkEA4sEsThuqlcHBM9uW6GnUS4oE2PaGxqOtEo7sgqMapTZ6KTCYWU5PcTtcmnL6N/pEF7D6pJC5uflEUAGA5ldGoy3k9VKMK61Tl77n9x16AX1izFKdiSqHo+idUBxIah3qSBN2TWXDI6sNKVOANvHJwmIlOXJQWJqq4MvNZ7tPUNFxd1cSgHjwFRz1QOYMD9Q61i7wMq6LnG5Smu8SsHac7zb8V58gAHTiZTZcGhA2Q
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(396003)(136003)(346002)(39860400002)(376002)(451199024)(186009)(1800799009)(82310400011)(36840700001)(46966006)(40470700004)(6666004)(4326008)(82740400003)(86362001)(40480700001)(36756003)(36860700001)(356005)(47076005)(478600001)(426003)(110136005)(70586007)(26005)(336012)(966005)(2906002)(81166007)(40460700003)(70206006)(8676002)(5660300002)(8936002)(316002)(44832011)(1076003)(2616005)(7416002)(54906003)(41300700001)(36900700001)(2101003);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Aug 2023 09:07:34.4545
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: lM68itc1bBGiES5tBibXwGTfB1QmPALrNaC0Gx5YBENzwiKmG4Ew4o42wVamv7T/28ib68veEdnX7OFRPO/qsQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB7693
+X-MS-Exchange-CrossTenant-Network-Message-Id: c25de3ad-9991-4363-59a1-08dba9388ca0
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000EDD4.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR12MB4869
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 30, 2023 at 03:36:05PM +0800, Li Chen wrote:
-> 
-> Hi Frank,
-> 
-> Frank Li <Frank.Li@nxp.com> writes:
-> 
-> > drivers/misc/pci_endpoint_test.c | 41 +++++++++++
-> > drivers/pci/endpoint/pci-epf-core.c | 109 ++++++++++++++++++++++++++++
-> > include/linux/pci-epf.h | 16 ++++
-> > include/uapi/linux/pcitest.h | 1 +
-> > tools/pci/pcitest.c | 16 +++-
-> > 5 files changed, 182 insertions(+), 1 deletion(-)
-> 
-> It seems that you forgot to add changes to drivers/pci/endpoint/functions/pci-epf-test.c.
+Add YAML dtschemas of Xilinx XDMA Soft IP PCIe Root Port Bridge
+dt binding.
 
-Yes, let us wait for mani's feedback and Update together.
+Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+changes in v7:
+- None
+changes in v6:
+- None
+change in v5:
+- Modified uppercase case hex value to lower case.
+change in v4:
+- Removed unnecessary space.
+changes in v3:
+- Fixed compatible string issue.
+- Modified ranges property description to maxItems.
+- Modified address-cell property of interrupt-controller child node.
+changes in v2:
+- None
+---
+ .../devicetree/bindings/pci/xlnx,xdma-host.yaml    | 114 +++++++++++++++++++++
+ 1 file changed, 114 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/xlnx,xdma-host.yaml
 
-Frank
+diff --git a/Documentation/devicetree/bindings/pci/xlnx,xdma-host.yaml b/Documentation/devicetree/bindings/pci/xlnx,xdma-host.yaml
+new file mode 100644
+index 0000000..0aa00b8
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/xlnx,xdma-host.yaml
+@@ -0,0 +1,114 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/xlnx,xdma-host.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Xilinx XDMA PL PCIe Root Port Bridge
++
++maintainers:
++  - Thippeswamy Havalige <thippeswamy.havalige@amd.com>
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  compatible:
++    const: xlnx,xdma-host-3.00
++
++  reg:
++    maxItems: 1
++
++  ranges:
++    maxItems: 2
++
++  interrupts:
++    items:
++      - description: interrupt asserted when miscellaneous interrupt is received.
++      - description: msi0 interrupt asserted when an MSI is received.
++      - description: msi1 interrupt asserted when an MSI is received.
++
++  interrupt-names:
++    items:
++      - const: misc
++      - const: msi0
++      - const: msi1
++
++  interrupt-map-mask:
++    items:
++      - const: 0
++      - const: 0
++      - const: 0
++      - const: 7
++
++  interrupt-map:
++    maxItems: 4
++
++  "#interrupt-cells":
++    const: 1
++
++  interrupt-controller:
++    description: identifies the node as an interrupt controller
++    type: object
++    properties:
++      interrupt-controller: true
++
++      "#address-cells":
++        const: 0
++
++      "#interrupt-cells":
++        const: 1
++
++    required:
++      - interrupt-controller
++      - "#address-cells"
++      - "#interrupt-cells"
++
++    additionalProperties: false
++
++required:
++  - compatible
++  - reg
++  - ranges
++  - interrupts
++  - interrupt-map
++  - interrupt-map-mask
++  - "#interrupt-cells"
++  - interrupt-controller
++
++unevaluatedProperties: false
++
++examples:
++
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/interrupt-controller/irq.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++        pcie@a0000000 {
++            compatible = "xlnx,xdma-host-3.00";
++            reg = <0x0 0xa0000000 0x0 0x10000000>;
++            ranges = <0x2000000 0x0 0xb0000000 0x0 0xb0000000 0x0 0x1000000>,
++                     <0x43000000 0x5 0x0 0x5 0x0 0x0 0x1000000>;
++            #address-cells = <3>;
++            #size-cells = <2>;
++            #interrupt-cells = <1>;
++            device_type = "pci";
++            interrupt-parent = <&gic>;
++            interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 90 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 91 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "misc", "msi0", "msi1";
++            interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++            interrupt-map = <0 0 0 1 &pcie_intc_0 0>,
++                            <0 0 0 2 &pcie_intc_0 1>,
++                            <0 0 0 3 &pcie_intc_0 2>,
++                            <0 0 0 4 &pcie_intc_0 3>;
++            pcie_intc_0: interrupt-controller {
++                #address-cells = <0>;
++                #interrupt-cells = <1>;
++                interrupt-controller;
++            };
++        };
++    };
+-- 
+1.8.3.1
 
-> 
-> Regards,
-> Li
