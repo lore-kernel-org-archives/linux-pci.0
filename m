@@ -2,120 +2,135 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF27C83F1B
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:44:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8144C83F1A
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:44:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238757AbjH3SjI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S238763AbjH3SjI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 30 Aug 2023 14:39:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38312 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243665AbjH3LYg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 07:24:36 -0400
-Received: from out-251.mta0.migadu.com (out-251.mta0.migadu.com [91.218.175.251])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 365F6CDA
-        for <linux-pci@vger.kernel.org>; Wed, 30 Aug 2023 04:24:31 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1693394147;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=duMfcSX8fViHE4Nde8EnuLeu99bLF0srnO8TViASf/g=;
-        b=mcBA/F25UOYO/KXJJ64vjpnG+5RuiwByGc4xNO5cbK45vy4PlO3ZPV/X4BtfQnP0FAAde1
-        VDqD/IWTzwtopdOE1yBNJzg+V1RDwrfmfWBFny8QuamUf7qfc18SkgIQ/YrA0AdE80FdTb
-        n3mRig5+pwFqLgnMMXd33NhWAcmuYQg=
-From:   Sui Jingfeng <sui.jingfeng@linux.dev>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Gerd Hoffmann <kraxel@redhat.com>,
-        Gurchetan Singh <gurchetansingh@chromium.org>,
-        Chia-I Wu <olvaffe@gmail.com>
-Cc:     dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Sui Jingfeng <suijingfeng@loongson.cn>,
-        "Maciej W. Rozycki" <macro@orcam.me.uk>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Subject: [-next 2/5] PCI/VGA: Deal with VGA devices
-Date:   Wed, 30 Aug 2023 19:15:29 +0800
-Message-Id: <20230830111532.444535-3-sui.jingfeng@linux.dev>
-In-Reply-To: <20230830111532.444535-1-sui.jingfeng@linux.dev>
-References: <20230830111532.444535-1-sui.jingfeng@linux.dev>
+        with ESMTP id S242889AbjH3Jzz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 05:55:55 -0400
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B47451B0;
+        Wed, 30 Aug 2023 02:55:52 -0700 (PDT)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+        by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1qbHvQ-0002P7-2Q; Wed, 30 Aug 2023 11:55:48 +0200
+Message-ID: <8a737241-f216-169a-8bd3-d0832439b99e@leemhuis.info>
+Date:   Wed, 30 Aug 2023 11:55:47 +0200
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [regression v6.5-rc1] PCI: comm "swapper/0" leaking memory
+Content-Language: en-US, de-DE
+To:     Kalle Valo <kvalo@kernel.org>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath11k@lists.infradead.org, regressions@lists.linux.dev
+References: <878r9sga1t.fsf@kernel.org>
+From:   "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+In-Reply-To: <878r9sga1t.fsf@kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1693389352;552f9eec;
+X-HE-SMSGID: 1qbHvQ-0002P7-2Q
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sui Jingfeng <suijingfeng@loongson.cn>
+Hi, Thorsten here, the Linux kernel's regression tracker. Partially
+top-posting for once, to make this easily accessible to everyone.
 
-VGAARB only cares about PCI(e) VGA devices, thus filtering out unqualified
-devices as early as possible. This also means that deleting a non-VGA
-device snooped won't unnecessarily call into vga_arbiter_del_pci_device()
-function. By using the newly implemented pci_is_vga(),
-PCI(e) with PCI_CLASS_NOT_DEFINED_VGA class code will also be handled.
+Thx for the report. To quote one aspect:
 
-Cc: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
-Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
----
- drivers/pci/vgaarb.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+> v6.4 has no leaks.
 
-diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-index 5e6b1eb54c64..ef8fe685de67 100644
---- a/drivers/pci/vgaarb.c
-+++ b/drivers/pci/vgaarb.c
-@@ -764,10 +764,6 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
- 	struct pci_dev *bridge;
- 	u16 cmd;
- 
--	/* Only deal with VGA class devices */
--	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
--		return false;
--
- 	/* Allocate structure */
- 	vgadev = kzalloc(sizeof(struct vga_device), GFP_KERNEL);
- 	if (vgadev == NULL) {
-@@ -1503,6 +1499,9 @@ static int pci_notify(struct notifier_block *nb, unsigned long action,
- 
- 	vgaarb_dbg(dev, "%s\n", __func__);
- 
-+	if (!pci_is_vga(pdev))
-+		return 0;
-+
- 	/*
- 	 * For now, we're only interested in devices added and removed.
- 	 * I didn't test this thing here, so someone needs to double check
-@@ -1537,8 +1536,8 @@ static struct miscdevice vga_arb_device = {
- 
- static int __init vga_arb_device_init(void)
- {
-+	struct pci_dev *pdev = NULL;
- 	int rc;
--	struct pci_dev *pdev;
- 
- 	rc = misc_register(&vga_arb_device);
- 	if (rc < 0)
-@@ -1547,11 +1546,11 @@ static int __init vga_arb_device_init(void)
- 	bus_register_notifier(&pci_bus_type, &pci_notifier);
- 
- 	/* Add all VGA class PCI devices by default */
--	pdev = NULL;
--	while ((pdev =
--		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--			       PCI_ANY_ID, pdev)) != NULL)
--		vga_arbiter_add_pci_device(pdev);
-+	do {
-+		pdev = pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, pdev);
-+		if (pci_is_vga(pdev))
-+			vga_arbiter_add_pci_device(pdev);
-+	} while (pdev);
- 
- 	pr_info("loaded\n");
- 	return rc;
--- 
-2.34.1
+I pretty sure you mean stock 6.4 here. But FWIW, the culprit was
+backported to 6.4.y and 6.1.y, so they latest versions might be affected
+as well.
 
+For the rest of this mail:
+
+[TLDR: I'm adding this report to the list of tracked Linux kernel
+regressions; the text you find below is based on a few templates
+paragraphs you might have encountered already in similar form.
+See link in footer if these mails annoy you.]
+
+On 30.08.23 11:21, Kalle Valo wrote:
+> 
+> I noticed that starting from v6.5-rc1 my ath11k tests reported several
+> memory leaks from swapper/0:
+> 
+> unreferenced object 0xffff88810a02b7a8 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     80 b8 02 0a 81 88 ff ff b8 72 07 00 00 c9 ff ff  .........r......
+>     c8 b7 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  ................
+>   backtrace:
+> unreferenced object 0xffff88810a02b880 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     58 b9 02 0a 81 88 ff ff a8 b7 02 0a 81 88 ff ff  X...............
+>     a0 b8 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  ................
+>   backtrace:
+> unreferenced object 0xffff88810a02b958 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     30 ba 02 0a 81 88 ff ff 80 b8 02 0a 81 88 ff ff  0...............
+>     78 b9 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  x...............
+>   backtrace:
+> unreferenced object 0xffff88810a02ba30 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     08 bb 02 0a 81 88 ff ff 58 b9 02 0a 81 88 ff ff  ........X.......
+>     50 ba 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  P...............
+>   backtrace:
+> unreferenced object 0xffff88810a02bb08 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     e0 bb 02 0a 81 88 ff ff 30 ba 02 0a 81 88 ff ff  ........0.......
+>     28 bb 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  (...............
+>   backtrace:
+> 
+> I can easily reproduce this by doing a simple insmod and rmmod of ath11k
+> and it's dependencies (mac80211, MHI etc). I can reliability reproduce
+> the leaks but I only see them once after a boot, I need to reboot the
+> host to see the leaks again. v6.4 has no leaks.
+> 
+> I did a bisect and found the commit below. I verified reverting the
+> commit makes the leaks go away.
+> 
+> commit e54223275ba1bc6f704a6bab015fcd2ae4f72572
+> Author:     Ross Lagerwall <ross.lagerwall@citrix.com>
+> AuthorDate: Thu May 25 16:32:48 2023 +0100
+> Commit:     Bjorn Helgaas <bhelgaas@google.com>
+> CommitDate: Fri Jun 9 15:06:16 2023 -0500
+> 
+>     PCI: Release resource invalidated by coalescing
+
+To be sure the issue doesn't fall through the cracks unnoticed, I'm
+adding it to regzbot, the Linux kernel regression tracking bot:
+
+#regzbot ^introduced e54223275ba1bc6f704a6bab015fcd2ae4f72572
+#regzbot title PCI: comm "swapper/0" leaking memory
+#regzbot ignore-activity
+
+This isn't a regression? This issue or a fix for it are already
+discussed somewhere else? It was fixed already? You want to clarify when
+the regression started to happen? Or point out I got the title or
+something else totally wrong? Then just reply and tell me -- ideally
+while also telling regzbot about it, as explained by the page listed in
+the footer of this mail.
+
+Developers: When fixing the issue, remember to add 'Link:' tags pointing
+to the report (the parent of this mail). See page linked in footer for
+details.
+
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
