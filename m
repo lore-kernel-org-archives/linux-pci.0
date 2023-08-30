@@ -2,71 +2,77 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4FCEC83F01
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1ED0C6FA8F
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:43:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230350AbjH3Si5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:38:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51228 "EHLO
+        id S238703AbjH3SjG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:39:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242462AbjH3IiQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 04:38:16 -0400
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E8D51B7;
-        Wed, 30 Aug 2023 01:38:13 -0700 (PDT)
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-68a3b66f350so4552348b3a.3;
-        Wed, 30 Aug 2023 01:38:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693384693; x=1693989493;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1lso90RA8r0QFl8oNeSfyna4ggS/yqsLQ6/p/yWOBqw=;
-        b=jC+d9WhzxFSu3PrSZBxfSvAjiFtJlZoSGo8LuLH2+LKJDGH9pXvS/48bca5zWBgSzS
-         i8xRwDRZdHgzuA4Y3kaoUyZlib6ikyQmD+GmC4xpIH3hok3NiXk7gTBJwqK3dUh5tYDw
-         LZqRMi7Q00j4+IuJhJwlPXtJ01SenF3aBEoNBauoY1FntSVoZV8uTLoTkqTCza40n9mN
-         +/MNJPg46eBTNGpnYPiQlQOQI5H8Vw+lA96PpuqBBMNVV15Wc5BmyWZdwkRKKNnjlucL
-         2tJJy6Cdb/oBu4NByhk2fSNYVzfvJGtzoI4DkEVF+DjngtQ9QCw6gNUqLjmhLoDkazMo
-         j5jw==
-X-Gm-Message-State: AOJu0YwYQ2A+8FUQC51IYJscKLYnS3x4CB9NWUDOKOwkzztw3JpGWWK8
-        3nxc5KBXMzpgRC4UOACKlvQ=
-X-Google-Smtp-Source: AGHT+IEESIUI4gHi3kgreJ6Pa4DcR+epwjv3ReGjUSKiNEj6O0829Ivdv1VFRDhNXqFV6lqq0Jt9SQ==
-X-Received: by 2002:a05:6a00:181e:b0:68a:5395:7aaf with SMTP id y30-20020a056a00181e00b0068a53957aafmr1886059pfa.15.1693384692852;
-        Wed, 30 Aug 2023 01:38:12 -0700 (PDT)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id e21-20020aa78255000000b0066f37665a63sm9605076pfn.73.2023.08.30.01.38.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Aug 2023 01:38:12 -0700 (PDT)
-Date:   Wed, 30 Aug 2023 17:38:10 +0900
-From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To:     korantwork@gmail.com
-Cc:     nirmal.patel@linux.intel.com, linux-kernel@vger.kernel.org,
-        hch@infradead.org, linux-pci@vger.kernel.org,
-        Xinghui Li <korantli@tencent.com>,
-        Dan Carpenter <error27@gmail.com>
-Subject: Re: [PATCH] PCI: vmd: Clean up an indentation issue reported by
- Smatch
-Message-ID: <20230830083810.GA227515@rocinante>
-References: <20230627113808.269716-1-korantwork@gmail.com>
+        with ESMTP id S243697AbjH3Lbr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 07:31:47 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 045D3132;
+        Wed, 30 Aug 2023 04:31:45 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 8B3F760BAF;
+        Wed, 30 Aug 2023 11:31:44 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74045C433C7;
+        Wed, 30 Aug 2023 11:31:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1693395104;
+        bh=I3QUcjvGQNK/WN89qE62mUZVvbzh+sWhFO8OhwQe9X8=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=RqVB98BtcFRECsHjf/CiUJ0L+JtoTi59vAb6U8d2YYLwJ231NZIjyA7npgBQJAX+z
+         egaJ/xuBPVb5pFWPpdsnbrE6deMEAJFAZnO3hv0rbHqpELBHeDWrCSgLl+mq2shwYp
+         cp89hgjpa+AEKmITt/z5pYxu4CtjtGeQmjAeziRaqbpFUVoisXX+zf9nPAJZhawVRs
+         LSU7v1ESMqoq6VQ5BRdLt6j6ndZVc5jW82b9o/9bXd3e+uTQpEzwDaav0YSSOvVAt/
+         xBdzUgx+j1YjBcGgECYyJ80/0lk513eTmFp2cLf2w1Eq4hyp4MMZNUQTEsslS7ue5m
+         rCRv6PRhC+2Kg==
+From:   Kalle Valo <kvalo@kernel.org>
+To:     "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions@leemhuis.info>
+Cc:     Ross Lagerwall <ross.lagerwall@citrix.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux regressions mailing list <regressions@lists.linux.dev>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ath11k@lists.infradead.org
+Subject: Re: [regression v6.5-rc1] PCI: comm "swapper/0" leaking memory
+References: <878r9sga1t.fsf@kernel.org>
+        <8a737241-f216-169a-8bd3-d0832439b99e@leemhuis.info>
+Date:   Wed, 30 Aug 2023 14:31:40 +0300
+In-Reply-To: <8a737241-f216-169a-8bd3-d0832439b99e@leemhuis.info> (Linux
+        regression tracking's message of "Wed, 30 Aug 2023 11:55:47 +0200")
+Message-ID: <874jkgg40z.fsf@kernel.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230627113808.269716-1-korantwork@gmail.com>
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+"Linux regression tracking (Thorsten Leemhuis)"
+<regressions@leemhuis.info> writes:
 
-> There is one inconsistent indenting warning:
-> "drivers/pci/controller/vmd.c:1058 vmd_resume()
-> warn: inconsistent indenting"
-> 
-> Fix it and remove the unnecessary if.
+> Hi, Thorsten here, the Linux kernel's regression tracker. Partially
+> top-posting for once, to make this easily accessible to everyone.
+>
+> Thx for the report. To quote one aspect:
+>
+>> v6.4 has no leaks.
+>
+> I pretty sure you mean stock 6.4 here. But FWIW, the culprit was
+> backported to 6.4.y and 6.1.y, so they latest versions might be affected
+> as well.
 
-Applied to controller/vmd, thank you!
+Yes, I mean v6.4 release tagged by Linus:
 
-[1/1] PCI: vmd: Fix inconsistent indentation in vmd_resume()
-      https://git.kernel.org/pci/pci/c/1bae18a3eeee
+6995e2de6891 Linux 6.4
 
-	Krzysztof
+-- 
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
