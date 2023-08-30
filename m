@@ -2,110 +2,68 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCD6C83F17
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 993C1C83F1B
 	for <linux-pci@archiver.kernel.org>; Wed, 30 Aug 2023 18:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238671AbjH3Six (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Aug 2023 14:38:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38262 "EHLO
+        id S233280AbjH3Siz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Aug 2023 14:38:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34802 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243661AbjH3LYf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 07:24:35 -0400
-X-Greylist: delayed 525 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 30 Aug 2023 04:24:31 PDT
-Received: from out-245.mta0.migadu.com (out-245.mta0.migadu.com [IPv6:2001:41d0:1004:224b::f5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06BB1185
-        for <linux-pci@vger.kernel.org>; Wed, 30 Aug 2023 04:24:31 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1693394153;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=yb+XrAs7p/uVFQHI/WIGJJnBL8UHr9s0W2yc+Aw9HB8=;
-        b=DQIPbHXjCEL1XRjgI8qUIGrjENjBVN+8g0H3qkTlRv717qujOhlbI9f+qb7WgC0HTu7QOb
-        VjyHUqq8o/liZ/z0nM++7ft8suZFkjs9/5dLwbuH9A2fg2mBgYjKd5q2bDT24iINXpmHAw
-        9/WBfPgfyJ3eM/e/WPmvRCpLd8xkXzY=
-From:   Sui Jingfeng <sui.jingfeng@linux.dev>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Gerd Hoffmann <kraxel@redhat.com>,
-        Gurchetan Singh <gurchetansingh@chromium.org>,
-        Chia-I Wu <olvaffe@gmail.com>
-Cc:     dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        Sui Jingfeng <suijingfeng@loongson.cn>,
-        Dave Airlie <airlied@redhat.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>
-Subject: [-next 5/5] drm/qxl: Switch to pci_is_vga()
-Date:   Wed, 30 Aug 2023 19:15:32 +0800
-Message-Id: <20230830111532.444535-6-sui.jingfeng@linux.dev>
-In-Reply-To: <20230830111532.444535-1-sui.jingfeng@linux.dev>
-References: <20230830111532.444535-1-sui.jingfeng@linux.dev>
+        with ESMTP id S242589AbjH3JH4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2023 05:07:56 -0400
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6ADD6D2;
+        Wed, 30 Aug 2023 02:07:51 -0700 (PDT)
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1c09673b006so28386565ad.1;
+        Wed, 30 Aug 2023 02:07:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693386471; x=1693991271;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eMt0K9Nx/qyWZ8nyxb9sC51keiWIwpiG27r1lMoXe+k=;
+        b=cyfZgwE7JM7Ljk89aI8A53Hb/LpJPqMoI8kV2idUVpijxRIZD3YaYxiMTOI5jhlODA
+         jePCpp7RQ8mHX8mLAxyfHTyumwA4XRDqsVx3RhTMvn/huEZudfvv4iFxZD7kNJAFgRJc
+         YNEtmmzrzgnoG+ChbnjhX1Roi1m7b3xdsq+Sy1w5qn0V1VPlApqplZ7uN3oY60p4eXEZ
+         xo19pfXUGk8vpiNX2f4SGaZVpj39Qk0zcqztUfgg608JKWu0f4aQjY3d3vMFBT6CxJVh
+         bBli2ydHxNZNoyKnJ2v4YJnAw6LNxrV/07/XRCsFJqLOhZ9UeEE9sk1eKgAQgBi84ob+
+         mSpg==
+X-Gm-Message-State: AOJu0YysLE+CgVQPWu1EB1nGOv0ROuxtejcVKucoD3aY8vLaz5GQQ+lG
+        C8CuoFT6FajzU/s25y8hBZ0=
+X-Google-Smtp-Source: AGHT+IHNMP/G9HuOyP12UWEg2o746OTejatuFZZ0CbkE3esMuj0fkjJMFwGmdA2hN3yZfjNw7QOQkg==
+X-Received: by 2002:a17:903:1c4:b0:1bf:728:7458 with SMTP id e4-20020a17090301c400b001bf07287458mr1617276plh.58.1693386470756;
+        Wed, 30 Aug 2023 02:07:50 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id p14-20020a170902a40e00b001c1f0b3e900sm4910499plq.229.2023.08.30.02.07.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Aug 2023 02:07:50 -0700 (PDT)
+Date:   Wed, 30 Aug 2023 18:07:49 +0900
+From:   =?utf-8?Q?=22Krzysztof_Wilczy=C5=84ski=22?= <kw@linux.com>
+To:     Li Chen <me@linux.beauty>
+Cc:     Tom Joseph <tjoseph@cadence.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI: cadence: remove unused cdns_plat_pcie->is_rc
+Message-ID: <20230830090749.GA231187@rocinante>
+References: <189258d19e1.1132188131010980.7371471641115980549@linux.beauty>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <189258d19e1.1132188131010980.7371471641115980549@linux.beauty>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Sui Jingfeng <suijingfeng@loongson.cn>
+Hello,
 
-Should be no functional change, just for cleanup purpose.
+> We already have cdns_plat_pcie_of_data->is_rc.
 
-Cc: Dave Airlie <airlied@redhat.com>
-Cc: Gerd Hoffmann <kraxel@redhat.com>
-Cc: David Airlie <airlied@gmail.com>
-Cc: Daniel Vetter <daniel@ffwll.ch>
-Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
----
- drivers/gpu/drm/qxl/qxl_drv.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+Applied to controller/cadence, thank you!
 
-diff --git a/drivers/gpu/drm/qxl/qxl_drv.c b/drivers/gpu/drm/qxl/qxl_drv.c
-index a3b83f89e061..08586bd2448f 100644
---- a/drivers/gpu/drm/qxl/qxl_drv.c
-+++ b/drivers/gpu/drm/qxl/qxl_drv.c
-@@ -68,11 +68,6 @@ module_param_named(num_heads, qxl_num_crtc, int, 0400);
- static struct drm_driver qxl_driver;
- static struct pci_driver qxl_pci_driver;
- 
--static bool is_vga(struct pci_dev *pdev)
--{
--	return pdev->class == PCI_CLASS_DISPLAY_VGA << 8;
--}
--
- static int
- qxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
-@@ -100,7 +95,7 @@ qxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (ret)
- 		goto disable_pci;
- 
--	if (is_vga(pdev) && pdev->revision < 5) {
-+	if (pci_is_vga(pdev) && pdev->revision < 5) {
- 		ret = vga_get_interruptible(pdev, VGA_RSRC_LEGACY_IO);
- 		if (ret) {
- 			DRM_ERROR("can't get legacy vga ioports\n");
-@@ -131,7 +126,7 @@ qxl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- unload:
- 	qxl_device_fini(qdev);
- put_vga:
--	if (is_vga(pdev) && pdev->revision < 5)
-+	if (pci_is_vga(pdev) && pdev->revision < 5)
- 		vga_put(pdev, VGA_RSRC_LEGACY_IO);
- disable_pci:
- 	pci_disable_device(pdev);
-@@ -159,7 +154,7 @@ qxl_pci_remove(struct pci_dev *pdev)
- 
- 	drm_dev_unregister(dev);
- 	drm_atomic_helper_shutdown(dev);
--	if (is_vga(pdev) && pdev->revision < 5)
-+	if (pci_is_vga(pdev) && pdev->revision < 5)
- 		vga_put(pdev, VGA_RSRC_LEGACY_IO);
- }
- 
--- 
-2.34.1
+[1/1] PCI: cadence: Drop unused member from struct cdns_plat_pcie
+      https://git.kernel.org/pci/pci/c/abc6119edfe8
 
+	Krzysztof
