@@ -2,41 +2,40 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45408C83F3E
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Sep 2023 19:57:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4E0BCA0FE9
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Sep 2023 19:57:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236105AbjIDT56 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S236368AbjIDT56 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 4 Sep 2023 15:57:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59836 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49312 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236937AbjIDT55 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Sep 2023 15:57:57 -0400
-Received: from out-216.mta1.migadu.com (out-216.mta1.migadu.com [95.215.58.216])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 077601715
-        for <linux-pci@vger.kernel.org>; Mon,  4 Sep 2023 12:57:49 -0700 (PDT)
+        with ESMTP id S236321AbjIDT5x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Sep 2023 15:57:53 -0400
+Received: from out-213.mta1.migadu.com (out-213.mta1.migadu.com [95.215.58.213])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE08BD
+        for <linux-pci@vger.kernel.org>; Mon,  4 Sep 2023 12:57:43 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1693857466;
+        t=1693857462;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=LqpDfy7jFw2xJEvEvsvRPCTDdY9j+2hqZZDtflMLDhg=;
-        b=WStnGQXeW5BqIuHoiyaRzA+TJzXqxO/w6kqSS4bJpIIHA8VKpuQJC55KX3cJTyU0ojlG48
-        rQA4YgJna8esL75FwGA1ZCP6tfeU2Te6m7aNzn1JJt1o1j+Trw9b2ZZgImETGb439FHPM2
-        KY/rIaV6Z10ITNKiYHL2D3EBhLDq5cI=
+        bh=Kmuyy5d8TjfKPYFKMrpKxMdJxlBIiyPktdk9/3dqaTc=;
+        b=MRbIL1ezV+MLDlrq8FrN2e2iqKWOCBSzCMXu00ItCM4BykmOR85mcBF+KstvvBGs6g1CU3
+        mO/B8rdGeNOFX1B78Vqej0MqiBxruE4A0+Vuxx2Pu/ErmZJgbG1UNtUYiHBqabuPRdixNg
+        0+mVRFLiH5Q5VIHnOltwIszhLHFeGRg=
 From:   Sui Jingfeng <sui.jingfeng@linux.dev>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         linux-kernel@vger.kernel.org, intel-gfx@lists.freedesktop.org,
         nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
         Sui Jingfeng <suijingfeng@loongson.cn>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>
-Subject: [RFC,drm-misc-next v4 5/9] drm/i915: Implement .be_primary() callback
-Date:   Tue,  5 Sep 2023 03:57:20 +0800
-Message-Id: <20230904195724.633404-6-sui.jingfeng@linux.dev>
+        Alex Deucher <alexander.deucher@amd.com>,
+        Christian Koenig <christian.koenig@amd.com>
+Subject: [RFC,drm-misc-next v4 3/9] drm/radeon: Implement .be_primary() callback
+Date:   Tue,  5 Sep 2023 03:57:18 +0800
+Message-Id: <20230904195724.633404-4-sui.jingfeng@linux.dev>
 In-Reply-To: <20230904195724.633404-1-sui.jingfeng@linux.dev>
 References: <20230904195724.633404-1-sui.jingfeng@linux.dev>
 MIME-Version: 1.0
@@ -50,50 +49,45 @@ From: Sui Jingfeng <suijingfeng@loongson.cn>
 
 On a machine with multiple GPUs, a Linux user has no control over which one
 is primary at boot time. This patch tries to solve the mentioned problem by
-implementing the .be_primary() callback. Pass i915.modeset=10 on the kernel
-cmd line if you really want the device bound by i915 drm driver to be the
+implementing the .be_primary() callback. Pass radeon.modeset=10 on the
+kernel cmd line if you really want the device bound by radeon to be the
 primary video adapter, no matter what VGAARB say.
 
-Cc: Jani Nikula <jani.nikula@linux.intel.com>
-Cc: David Airlie <airlied@gmail.com>
-Cc: Daniel Vetter <daniel@ffwll.ch>
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Cc: Christian Koenig <christian.koenig@amd.com>
 Signed-off-by: Sui Jingfeng <suijingfeng@loongson.cn>
 ---
- drivers/gpu/drm/i915/display/intel_vga.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ drivers/gpu/drm/radeon/radeon_device.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/gpu/drm/i915/display/intel_vga.c b/drivers/gpu/drm/i915/display/intel_vga.c
-index 98d7d4dffe9f..e3f78ba2668b 100644
---- a/drivers/gpu/drm/i915/display/intel_vga.c
-+++ b/drivers/gpu/drm/i915/display/intel_vga.c
-@@ -113,6 +113,17 @@ intel_vga_set_decode(struct pci_dev *pdev, bool enable_decode)
- 		return VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
- }
+diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
+index 71f2ff39d6a1..b661cd3a8dc2 100644
+--- a/drivers/gpu/drm/radeon/radeon_device.c
++++ b/drivers/gpu/drm/radeon/radeon_device.c
+@@ -1263,6 +1263,14 @@ static const struct vga_switcheroo_client_ops radeon_switcheroo_ops = {
+ 	.can_switch = radeon_switcheroo_can_switch,
+ };
  
-+static bool intel_want_to_be_primary(struct pci_dev *pdev)
++static bool radeon_want_to_be_primary(struct pci_dev *pdev)
 +{
-+	struct drm_i915_private *i915 = pdev_to_i915(pdev);
-+	struct i915_params *params = &i915->params;
-+
-+	if (params->modeset == 10)
++	if (radeon_modeset == 10)
 +		return true;
 +
 +	return false;
 +}
 +
- int intel_vga_register(struct drm_i915_private *i915)
- {
- 	struct pci_dev *pdev = to_pci_dev(i915->drm.dev);
-@@ -126,7 +137,8 @@ int intel_vga_register(struct drm_i915_private *i915)
- 	 * then we do not take part in VGA arbitration and the
- 	 * vga_client_register() fails with -ENODEV.
- 	 */
--	ret = vga_client_register(pdev, intel_vga_set_decode, NULL);
-+	ret = vga_client_register(pdev, intel_vga_set_decode,
-+				  intel_want_to_be_primary);
- 	if (ret && ret != -ENODEV)
- 		return ret;
+ /**
+  * radeon_device_init - initialize the driver
+  *
+@@ -1425,7 +1433,7 @@ int radeon_device_init(struct radeon_device *rdev,
+ 	/* if we have > 1 VGA cards, then disable the radeon VGA resources */
+ 	/* this will fail for cards that aren't VGA class devices, just
+ 	 * ignore it */
+-	vga_client_register(rdev->pdev, radeon_vga_set_decode, NULL);
++	vga_client_register(rdev->pdev, radeon_vga_set_decode, radeon_want_to_be_primary);
  
+ 	if (rdev->flags & RADEON_IS_PX)
+ 		runtime = true;
 -- 
 2.34.1
 
