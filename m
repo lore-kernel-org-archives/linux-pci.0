@@ -2,128 +2,73 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6E2CCA0FE2
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Sep 2023 16:23:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70BE8CA0FF8
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Sep 2023 16:23:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345161AbjIEQXr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Sep 2023 12:23:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35654 "EHLO
+        id S1345389AbjIEQXu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:23:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56328 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1354797AbjIEO20 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Sep 2023 10:28:26 -0400
-Received: from out-218.mta0.migadu.com (out-218.mta0.migadu.com [IPv6:2001:41d0:1004:224b::da])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53B10189
-        for <linux-pci@vger.kernel.org>; Tue,  5 Sep 2023 07:28:21 -0700 (PDT)
-Message-ID: <e3d2d996-a2c1-c4b8-7722-f67aefac8193@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1693924098;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=UR1E0EgY5MLLLn/rotdUHKRy5Nxe3OW4mUJd7Y8S7Ac=;
-        b=f82FFX3ED+RO8uacw2rhS2YPv3o9jaMPTNOmmpLcmCuk5FgapClX0a64QrddQ0431Won7u
-        3xWw4hB8t8g3ByC+AcVTZNZBKfLw1/o2iWi8F0esh9FSw9iqyg6m/2vliRccsaX40+fZHo
-        +At90VECeg91hXCSsjHb/OR4Zc5Cglo=
-Date:   Tue, 5 Sep 2023 22:28:02 +0800
+        with ESMTP id S1346864AbjIEEXG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Sep 2023 00:23:06 -0400
+Received: from mail-pg1-f169.google.com (mail-pg1-f169.google.com [209.85.215.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9529E1B6;
+        Mon,  4 Sep 2023 21:23:02 -0700 (PDT)
+Received: by mail-pg1-f169.google.com with SMTP id 41be03b00d2f7-53482b44007so833111a12.2;
+        Mon, 04 Sep 2023 21:23:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693887782; x=1694492582;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=CE7wOb4f3tQJ0IpYRUrURtk1HHBKDBeRdhJ1pSca2yY=;
+        b=OajjDja1Exlrml+zLtAlEQwTIANfGeXxM+jXzxEPCdnQrTOtoBzj+p99zYG+j53UQi
+         gHfNgzem2H+v2OJuAIRnC69iaxT8WqQuWU1wefvd3kM3o0XemUvQNg2AdgkuiKTSZKuX
+         oVs8e2lL1VwEq34HaJjn1VeJv5heF1Fft2fEd3VUeMpmKobt/n4uiin0VHkR9nNG1Td6
+         1J8/9JmAvRjDU5w1hQhfOukdUgmsrdpFtUrjPD2rzMLA3DlSU4jaEL7ee1tyAHhyQfX+
+         JUe2neIjDi2spiTZh24lJxmv78fimcIwFEw5D9TmfRGgfxzKqoYZaPWD4g0ElBLSEXPY
+         /TGA==
+X-Gm-Message-State: AOJu0YzK2Jl8TOappD95WzvY8776gWNT3pDYWoXLS5Yzc1yVv3rGcQrh
+        m/TvDfCm/nVLOipMmiqQR1c=
+X-Google-Smtp-Source: AGHT+IFc03AUpiWiy/oRZskvvaA5OqpDqcG8THI2I2F1zX9fnD1bics6NjU8YxO+SVhTfR8334u5bg==
+X-Received: by 2002:a17:90a:66c7:b0:26d:4ab3:fe11 with SMTP id z7-20020a17090a66c700b0026d4ab3fe11mr8299685pjl.24.1693887781945;
+        Mon, 04 Sep 2023 21:23:01 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id m13-20020a17090a7f8d00b002609cadc56esm8153904pjl.11.2023.09.04.21.23.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Sep 2023 21:23:01 -0700 (PDT)
+Date:   Tue, 5 Sep 2023 13:22:59 +0900
+From:   Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     lpieralisi@kernel.org, robh@kernel.org, bhelgaas@google.com,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        mani@kernel.org, marek.vasut+renesas@gmail.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH 0/3] dt-bindings: PCI: Revise dwc and rcar-gen4-pcie
+Message-ID: <20230905042259.GB1102453@rocinante>
+References: <20230901131711.2861283-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
-Subject: Re: [RFC, drm-misc-next v4 0/9] PCI/VGA: Allowing the user to select
- the primary video adapter at boot time
-Content-Language: en-US
-To:     =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Daniel Vetter <daniel@ffwll.ch>
-Cc:     Sui Jingfeng <suijingfeng@loongson.cn>,
-        nouveau@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        Thomas Zimmermann <tzimmermann@suse.de>
-References: <20230904195724.633404-1-sui.jingfeng@linux.dev>
- <874jk8j45s.fsf@intel.com> <b11fedb4-d577-d007-0ef8-ac62775d9eee@gmail.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From:   Sui Jingfeng <sui.jingfeng@linux.dev>
-In-Reply-To: <b11fedb4-d577-d007-0ef8-ac62775d9eee@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230901131711.2861283-1-yoshihiro.shimoda.uh@renesas.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Hello,
 
-On 2023/9/5 21:28, Christian König wrote:
->>>
->>> 2) Typically, those non-86 machines don't have a good UEFI firmware
->>>     support, which doesn't support select primary GPU as firmware 
->>> stage.
->>>     Even on x86, there are old UEFI firmwares which already made 
->>> undesired
->>>     decision for you.
->>>
->>> 3) This series is attempt to solve the remain problems at the driver 
->>> level,
->>>     while another series[1] of me is target to solve the majority of 
->>> the
->>>     problems at device level.
->>>
->>> Tested (limited) on x86 with four video card mounted, Intel UHD 
->>> Graphics
->>> 630 is the default boot VGA, successfully override by ast2400 with
->>> ast.modeset=10 append at the kernel cmd line.
->> The value 10 is incredibly arbitrary, and multiplied as a magic number
->> all over the place.
->
-> +1 
+> This patch series is based on pci.git / controller/rcar branch
+> to fix dt-bindings doc patches. Krzysztof mentioned that the paches
+> will be squashed everything later [1].
 
+Applied and squashed against prior patches:
 
-This is the exact reason why I made this series as RFC, because this is a open-ended problem.
-The choices of 3,4,5,6,7,8 and 9 are as arbitrary as the number of '10'. '1' and '2' is
-definitely not suitable, because the seat has already been taken.
+  - https://git.kernel.org/pci/pci/c/554931ed3795
+  - https://git.kernel.org/pci/pci/c/d828097a0bef
+  - https://git.kernel.org/pci/pci/c/c1ff8c2d1a8c
 
-Take the drm/nouveau as an example:
+Thank you, Shimoda-san!
 
-
-```
-
-MODULE_PARM_DESC(modeset, "enable driver (default: auto, "
-		          "0 = disabled, 1 = enabled, 2 = headless)");
-int nouveau_modeset = -1;
-module_param_named(modeset, nouveau_modeset, int, 0400);
-
-```
-
-
-'1' is for enable the drm driver, some driver even override the 'nomodeset' parameter.
-
-'2' is not suitable, because nouveau use it as headless GPU (render-only or compute class GPU?)
-
-'3' is also not likely the best, the concerns is that
-what if a specific drm driver want to expand the usage in the future?
-
-
-The reason I pick up the digit '10' is that
-
-
-1) The modeset parameter is unlikely to get expanded up to 10 usages.
-
-Other drm drivers only use the '-1', '0' and 1, choose '2' will conflict with drm/nouveau.
-By pick the digit '10', it leave some space(room) to various device driver authors.
-It also helps to keep the usage consistent across various drivers.
-
-
-2) An int taken up 4 byte, I don't want to waste even a single byte,
-
-While in the process of defencing my patch, I have to say
-draft another kernel command line would cause the wasting of precious RAM storage.
-
-An int can have 2^31 usage, why we can't improve the utilization rate?
-
-3) Please consider the fact that the modeset is the most common and attractive parameter
-
-No name is better than the 'modeset', as other name is not easy to remember.
-
-Again, this is for Linux user, thus it is not arbitrary.
-Despite simple and trivial, I think about it more than one week.
-
+	Krzysztof
