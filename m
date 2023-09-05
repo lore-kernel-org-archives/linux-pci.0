@@ -2,113 +2,207 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 473C5C83F33
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Sep 2023 20:26:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0728CCA0FF3
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Sep 2023 16:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237001AbjIDU0N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Sep 2023 16:26:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36342 "EHLO
+        id S232245AbjIEQXV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Sep 2023 12:23:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229942AbjIDU0M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Sep 2023 16:26:12 -0400
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CFA2180;
-        Mon,  4 Sep 2023 13:26:08 -0700 (PDT)
-Received: by mail-ed1-x533.google.com with SMTP id 4fb4d7f45d1cf-52c88a03f99so2244889a12.2;
-        Mon, 04 Sep 2023 13:26:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693859167; x=1694463967; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=lXnvIlMPp5u/cZPb67xk/RAZDHLqGyudVRdveB/ZbLY=;
-        b=Jigp5HdRo5+dvn+3nrGbwpV9iJemIs+qY9eznh8FztFQUQRCBWOkhguUSUVKyeLzpq
-         zlTV1SgTLi7vHpn+mVHvm/AUPCIf2YGJrl5522epfg9noakMNR/IlRP+KF0IYiscv/FG
-         sZ6U0UENtgfvnrFyD3ggg7WK3dll1+KYeDSJhEsr/yelWv4UUItmzyC0pmckrwKDT2VE
-         Yomq/dEGL4q6dFo+leG1tqSysRgoVS/SP9mUHP0ZzyO3GduhPUX6U429tAVLOH0osFS0
-         IuB7ElyV7t7DGMUbf45nFUWtMYSYUXLzy5bnTWHyNXbF6f2QwApbic8yW5EkLbAmcQYL
-         CZ6Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20221208; t=1693859167; x=1694463967;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=lXnvIlMPp5u/cZPb67xk/RAZDHLqGyudVRdveB/ZbLY=;
-        b=KW2KKc/ADath6/N2qZZRwrFM2PLiJGJR0kKZHAqIHAfnhb7Mz73NrnwaUJvUStXHmc
-         6/HehYDhjGtk+DIrdnkBoXsPnYb77AZfs05wn5EwfqDj9/mKEvwXHo1iyxCeXSnEkeNs
-         ySSFADlqhDF5XHYSe4Zj0jw1Tua32wSFnsT+kS9H+0nuZlc7BM//0s2PXs5aW+jQuKA5
-         RGLy4fUpUVg+cTxlqh/WoQrcHfOVxtnedLEPOd6/ffQRdIrsLs9h13PNHBJ8j6L3Pbto
-         W9iaEo5bQNHzcEYyJVRmTeCrDtfEQvuTuUh+NKF0jfGaJXDLOrWi63AtQYjMghUJ58ZP
-         fNEw==
-X-Gm-Message-State: AOJu0Yxjd6sjHK951X448HgdkPAi0SMw22Bonj3Bu+0DpbixsIgjrLIm
-        POf0Qjm1j9J1AmbkTAwcwgoX931E29JvjWzK8TTQZEEtZEY=
-X-Google-Smtp-Source: AGHT+IG24dlXnnwhnhpbMLq5+johSI+3gKyPXR6QUWW8K2AHBtDt2PqcyJvBc46enRBKemtJkuc0SY2C/ykw4EP+1YE=
-X-Received: by 2002:a05:6402:5159:b0:52a:943:9ab5 with SMTP id
- n25-20020a056402515900b0052a09439ab5mr8010894edd.31.1693859166815; Mon, 04
- Sep 2023 13:26:06 -0700 (PDT)
+        with ESMTP id S1354453AbjIELsh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Sep 2023 07:48:37 -0400
+Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5020B1AD;
+        Tue,  5 Sep 2023 04:48:32 -0700 (PDT)
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 385BmMkh103769;
+        Tue, 5 Sep 2023 06:48:22 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1693914502;
+        bh=/iPn0yREcHMFWliXICPndWnFxV56aW4OXQpn08OE5mY=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=DXB+AQ9akhiFeX9N1vc5Jl4qDySFY6M0rguw7ZRGEGgenpYHdwC5lj16fZxp9UiZ7
+         huSvmPmwCVU6rSIlJwIPPCCsbn4daZ9f2C5pMgddxzYSr5kYLljjjEyvCUZfLf0LiL
+         XVIRKmEs7D5g12taU7/8Hv7wMXS2+FaRU4T2x64s=
+Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 385BmMQE054158
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 5 Sep 2023 06:48:22 -0500
+Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Tue, 5
+ Sep 2023 06:48:20 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
+ Frontend Transport; Tue, 5 Sep 2023 06:48:21 -0500
+Received: from localhost (ileaxei01-snat2.itg.ti.com [10.180.69.6])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id 385BmKNJ046722;
+        Tue, 5 Sep 2023 06:48:20 -0500
+From:   Achal Verma <a-verma1@ti.com>
+To:     Vignesh Raghavendra <vigneshr@ti.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof Wilczy_ski <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>
+CC:     <devicetree@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, Achal Verma <a-verma1@ti.com>
+Subject: [RFC PATCH 2/2] pci: j721e: Enable reference clock output from serdes
+Date:   Tue, 5 Sep 2023 17:18:16 +0530
+Message-ID: <20230905114816.2993628-3-a-verma1@ti.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20230905114816.2993628-1-a-verma1@ti.com>
+References: <20230905114816.2993628-1-a-verma1@ti.com>
 MIME-Version: 1.0
-References: <88ffb216-96f9-f232-7fe5-48bf82e6aa70@gmail.com>
-In-Reply-To: <88ffb216-96f9-f232-7fe5-48bf82e6aa70@gmail.com>
-From:   brett hassall <brett.hassall@gmail.com>
-Date:   Tue, 5 Sep 2023 06:25:55 +1000
-Message-ID: <CANiJ1U9-2zfc5aJJUaYnTBTg+2vMjcfgsuxcFFnn+CjVQ1fCoA@mail.gmail.com>
-Subject: Re: upstream linux cannot achieve package C8 power saving
-To:     Bagas Sanjaya <bagasdotme@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Maciej W. Rozycki" <macro@orcam.me.uk>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Ajay Agarwal <ajayagarwal@google.com>,
-        =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Michael Bottini <michael.a.bottini@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Power Management <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi
+PCIe1 in J7AHP EVM has EP side connector reference clock connection from
+serdes named SOC_SERDES0_REFCLK(PCIE_REFCLK_OUT) unlike PCIe0 which has
+reference clock connection from on-board serdes. To enable this reference
+clock out, ACSPCIE clock buffer pads have to be enabled.
 
-I contacted the Ubuntu developers to see if they were ok with using
-their patches.
+This change enables ACSPCIE clock buffer pads and select clock source for
+reference clock output.
 
-They advised the patches were outdated and further development was
-under discussion.
+Signed-off-by: Achal Verma <a-verma1@ti.com>
+---
+ .../pci/controller/cadence/pci-j721e-host.c   | 96 +++++++++++++++++++
+ 1 file changed, 96 insertions(+)
 
-The current patches work and would benefit Linux users until something
-better comes along.
+diff --git a/drivers/pci/controller/cadence/pci-j721e-host.c b/drivers/pci/controller/cadence/pci-j721e-host.c
+index af47aa090159..106472920f68 100644
+--- a/drivers/pci/controller/cadence/pci-j721e-host.c
++++ b/drivers/pci/controller/cadence/pci-j721e-host.c
+@@ -10,10 +10,21 @@
+ #include <linux/gpio/consumer.h>
+ #include <linux/delay.h>
+ #include <linux/of_device.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
+ 
+ #include "pcie-cadence.h"
+ #include "pci-j721e.h"
+ 
++#define CTRL_MMR_LOCK2_MASK		0xFFFFFFFF
++#define CTRL_MMR_LOCK2_KICK0_UNLOCK_VAL	0x68EF3490
++#define CTRL_MMR_LOCK2_KICK1_UNLOCK_VAL	0xD172BC5A
++#define CTRL_MMR_LOCK_KICK_LOCK_VAL	0xFFFFFFFF
++#define CTRL_MMR_ACSPCIE_PAD_MASK	0xFFFFFFFF
++#define CTRL_MMR_ACSPCIE_PAD_EN		0x01000000
++#define PCIE_REFCLK_CLKSEL_OUT_EN	BIT(8)
++#define PCIE_REFCLK_CLKSEL_MASK	GENMASK(1, 0)
++
+ static int cdns_ti_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 *value)
+ {
+@@ -79,6 +90,84 @@ static const struct of_device_id of_j721e_pcie_host_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, of_j721e_pcie_host_match);
+ 
++static int j721e_enable_acspcie(struct j721e_pcie *pcie)
++{
++	struct device *dev = pcie->cdns_pcie->dev;
++	struct device_node *node = dev->of_node;
++	struct of_phandle_args args;
++	unsigned int lock2_kick0_offset, lock2_kick1_offset;
++	unsigned int acspcie_pad_offset, refclk_clksel_offset;
++	unsigned int refclk_clksel_source;
++	struct regmap *syscon;
++	u32 val = 0, mask = 0;
++	int ret;
++
++	/*
++	 * If property ti,syscon-pcie-refclk-out exists, believe PCIe connector
++	 * requires PCIe ref clock from Serdes, so enable ACSPCIE pads and mux
++	 * to source out PCIe ref clock else ref clock has to be supplied from
++	 * on-board clock generator.
++	 */
++	syscon = syscon_regmap_lookup_by_phandle(node, "ti,syscon-pcie-refclk-out");
++	if (IS_ERR(syscon))
++		return 0;
++
++	ret = of_parse_phandle_with_fixed_args(node, "ti,syscon-pcie-refclk-out", 5,
++						0, &args);
++	if (ret) {
++		dev_err(dev, "Failed to read ti,syscon-pcie-refclk-out property\n");
++		return ret;
++	}
++
++	lock2_kick0_offset = args.args[0];
++	lock2_kick1_offset = args.args[1];
++	acspcie_pad_offset = args.args[2];
++	refclk_clksel_offset = args.args[3];
++	refclk_clksel_source = args.args[4];
++
++	/* Un-lock Partition 2 : 8000h to 9FFFh */
++	mask = CTRL_MMR_LOCK2_MASK;
++	val = CTRL_MMR_LOCK2_KICK0_UNLOCK_VAL;
++	ret = regmap_update_bits(syscon, lock2_kick0_offset, mask, val);
++	if (ret)
++		goto err;
++
++	val = CTRL_MMR_LOCK2_KICK1_UNLOCK_VAL;
++	ret = regmap_update_bits(syscon, lock2_kick1_offset, mask, val);
++	if (ret)
++		goto err;
++
++	/* Enable ACSPCIe PADS  */
++	mask = CTRL_MMR_ACSPCIE_PAD_MASK;
++	val = CTRL_MMR_ACSPCIE_PAD_EN;
++	ret = regmap_update_bits(syscon, acspcie_pad_offset, mask, val);
++	if (ret)
++		goto err;
++
++	/* PCIE_REFCLKx_CLKSEL : EN + ref_clk_source */
++	mask = PCIE_REFCLK_CLKSEL_OUT_EN | PCIE_REFCLK_CLKSEL_MASK;
++	val = PCIE_REFCLK_CLKSEL_OUT_EN | refclk_clksel_source;
++	ret = regmap_update_bits(syscon, refclk_clksel_offset, mask, val);
++	if (ret)
++		goto err;
++
++	/* Re-lock Partition 2 : 8000h to 9FFFh */
++	mask = CTRL_MMR_LOCK_KICK_LOCK_VAL;
++	val = CTRL_MMR_LOCK_KICK_LOCK_VAL;
++	ret = regmap_update_bits(syscon, lock2_kick0_offset, mask, val);
++	if (ret)
++		goto err;
++
++	ret = regmap_update_bits(syscon, lock2_kick1_offset, mask, val);
++	if (ret)
++		goto err;
++
++	return 0;
++err:
++	dev_err(dev, "Failed to enable ref clock out\n");
++	return ret;
++}
++
+ static int j721e_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -121,6 +210,13 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	/*
++	 * Enable ACSPCIe clock buffer to source out reference clock for EP
++	 */
++	ret = j721e_enable_acspcie(pcie);
++	if (ret < 0)
++		return ret;
++
+ 	pcie->perst_gpiod = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+ 	if (IS_ERR(pcie->perst_gpiod)) {
+ 		ret = PTR_ERR(pcie->perst_gpiod);
+-- 
+2.25.1
 
-Would you like me to proceed with the formal patch still ?
-
-Thanks
-Brett
-
-
-On Wed, 30 Aug 2023 at 11:11, Bagas Sanjaya <bagasdotme@gmail.com> wrote:
->
-> Hi,
->
-> I notice a bug report on Bugzilla [1]. Quoting from it:
->
-> > v6.5 (and at least v5.15, v5.19 and v6.4 as well) will not go to a higher power saving level than package C3.
-> >
-> > With the inclusion of a patch that combines 3 Ubuntu commits related to VMD ASPM & LTR, package C8 is used.
->
-> See Bugzilla for the full thread.
->
-> FYI, the attached proposed fix is the same as Brett's another BZ report [2].
-> I include it for upstreaming.
->
-> To Brett: Would you like to submit the proper, formal patch (see
-> Documentation/process/submitting-patches.rst for details)?
->
-> Thanks.
->
-> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=217841
-> [2]: https://bugzilla.kernel.org/show_bug.cgi?id=217828
->
-> --
-> An old man doll... just what I always wanted! - Clara
