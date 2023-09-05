@@ -2,179 +2,147 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90A15CA0FFD
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Sep 2023 18:41:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 637E4CA0FFA
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Sep 2023 18:44:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231941AbjIESla (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Sep 2023 14:41:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55814 "EHLO
+        id S232518AbjIESop (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Sep 2023 14:44:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49508 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240551AbjIESWT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Sep 2023 14:22:19 -0400
-Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CEE5BCA;
-        Tue,  5 Sep 2023 11:21:47 -0700 (PDT)
-Received: from loongson.cn (unknown [10.20.42.43])
-        by gateway (Coremail) with SMTP id _____8Cx7+tgZPdkSMQfAA--.62735S3;
-        Wed, 06 Sep 2023 01:24:48 +0800 (CST)
-Received: from [0.0.0.0] (unknown [10.20.42.43])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8Dx5sxgZPdk7UltAA--.46048S3;
-        Wed, 06 Sep 2023 01:24:48 +0800 (CST)
-Message-ID: <40f32814-ca87-6e29-0e10-4b4463a2920d@loongson.cn>
-Date:   Wed, 6 Sep 2023 01:24:47 +0800
+        with ESMTP id S233633AbjIESon (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Sep 2023 14:44:43 -0400
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DEDACE4
+        for <linux-pci@vger.kernel.org>; Tue,  5 Sep 2023 11:44:14 -0700 (PDT)
+Received: by mail-lf1-x133.google.com with SMTP id 2adb3069b0e04-5009d4a4897so4847242e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 05 Sep 2023 11:44:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.com; s=cloud; t=1693939397; x=1694544197; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=OfYnmYbnlw/oOdEXRRJF1VOqzdakA8jCVvd4ZjMv2EM=;
+        b=GzKoQODVSeqGzroH0R1N7OloJKzQwEniXzrD/hXT0oqdibIWZ75b8VdmnCqNO8KR93
+         xLUL/hHqpKMWxjvpvsNSGKiXt8UujcAtzZ6TsiRLNdA13iXN44NAHGajbo4lR3i65IIk
+         kYklsGMyNV6sAngXgTJbM6FBAJsVyfgTOsx7I=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1693939397; x=1694544197;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=OfYnmYbnlw/oOdEXRRJF1VOqzdakA8jCVvd4ZjMv2EM=;
+        b=MZnCx7AAgH0bQmUAoVCOm5sIW0VYvbALhvtoHRxCV0uwYM+igB6jHkEim+NXzXXNkE
+         XEOcSFpxoi4UTb5Qv37nFTxKYXm6lrfrLitytdbdIF7Y+Tbq9TjyBve+shpD2jBw6y2C
+         HtSnvdQNqKIBBbUXkvSasJCJ66OHEobTIBKfW6fIXAUcPwVyaQKv3prlLcZlpl2/ZnRg
+         lqlWZVTnkEpjtnrVJK/BZMuzi7/oaWB4xyI4Mb1ghXuUqtGSs471q4IzWGxXIE25MDxF
+         /uclKexk1i4YPJXpqNjzby9ctI7XTbX5rxZHp/CvZWHtXf7eT/FmMO/Vrry5oBwmFpea
+         NANg==
+X-Gm-Message-State: AOJu0YweeN09xbLBvVXh7U/x8jbfhFoptkONtTpnSnv2LMSoBKIBpoTd
+        Ux0WifeKm4oFrrU9eVIS3ncprg26toBt7/BnPsjRj4zzL0ri6maamA==
+X-Google-Smtp-Source: AGHT+IHRpYJwtBkvQItpDOzpsoiC8Dj7/UWfHFdTNS2CIKeWgrIXNYkWJnDsvCEq1d6lrwFV0p0pXAjnk5zgzKOzDrQ=
+X-Received: by 2002:ac2:5925:0:b0:500:b828:7a04 with SMTP id
+ v5-20020ac25925000000b00500b8287a04mr259335lfi.18.1693931329871; Tue, 05 Sep
+ 2023 09:28:49 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [RFC,drm-misc-next v4 3/9] drm/radeon: Implement .be_primary()
- callback
-Content-Language: en-US
-To:     =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        Sui Jingfeng <sui.jingfeng@linux.dev>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, intel-gfx@lists.freedesktop.org,
-        nouveau@lists.freedesktop.org, linux-pci@vger.kernel.org,
-        Alex Deucher <alexander.deucher@amd.com>
-References: <20230904195724.633404-1-sui.jingfeng@linux.dev>
- <20230904195724.633404-4-sui.jingfeng@linux.dev>
- <d3e6a9ce-1c7a-8e44-3127-413cd471a8e9@amd.com>
-From:   suijingfeng <suijingfeng@loongson.cn>
-In-Reply-To: <d3e6a9ce-1c7a-8e44-3127-413cd471a8e9@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf8Dx5sxgZPdk7UltAA--.46048S3
-X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
-X-Coremail-Antispam: 1Uk129KBj93XoWxGry3tr4UZrW7Zr1fCw13WrX_yoWruFW8pa
-        ySqFW7ArykG3W0y347Aw4UuFyrX3yrJayUtrn5Jas5Zws8JrW0vryjvw4qgasrJrZ3Aw4Y
-        va4ag3W7ZFyDA3cCm3ZEXasCq-sJn29KB7ZKAUJUUUU5529EdanIXcx71UUUUU7KY7ZEXa
-        sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-        0xBIdaVrnRJUUU9Sb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-        IYs7xG6rWj6s0DM7CIcVAFz4kK6r106r15M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-        0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AK
-        xVW8Jr0_Cr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2x26I8E6xACxx
-        1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv
-        67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07
-        AlzVAYIcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE
-        7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI
-        8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWU
-        CwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r
-        1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBI
-        daVFxhVjvjDU0xZFpf9x07j0WlkUUUUU=
+References: <878r9sga1t.fsf@kernel.org>
+In-Reply-To: <878r9sga1t.fsf@kernel.org>
+From:   Ross Lagerwall <ross.lagerwall@cloud.com>
+Date:   Tue, 5 Sep 2023 17:28:38 +0100
+Message-ID: <CAG7k0Epk6KJvoDJKVc86sc_ems3DTbKvPLouBzOoVvn1tZwQ=w@mail.gmail.com>
+Subject: Re: [regression v6.5-rc1] PCI: comm "swapper/0" leaking memory
+To:     Kalle Valo <kvalo@kernel.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath11k@lists.infradead.org,
+        regressions@lists.linux.dev
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-
-On 2023/9/5 13:50, Christian König wrote:
-> Am 04.09.23 um 21:57 schrieb Sui Jingfeng:
->> From: Sui Jingfeng <suijingfeng@loongson.cn>
->>
->> On a machine with multiple GPUs, a Linux user has no control over 
->> which one
->> is primary at boot time.
+On Wed, Aug 30, 2023 at 10:21=E2=80=AFAM Kalle Valo <kvalo@kernel.org> wrot=
+e:
 >
-> Question is why is that useful? Should we give users the ability to 
-> control that?
+> [CAUTION - EXTERNAL EMAIL] DO NOT reply, click links, or open attachments=
+ unless you have verified the sender and know the content is safe.
 >
-> I don't see an use case for this.
+> Hi,
+>
+> I noticed that starting from v6.5-rc1 my ath11k tests reported several
+> memory leaks from swapper/0:
+>
+> unreferenced object 0xffff88810a02b7a8 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     80 b8 02 0a 81 88 ff ff b8 72 07 00 00 c9 ff ff  .........r......
+>     c8 b7 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  ................
+>   backtrace:
+> unreferenced object 0xffff88810a02b880 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     58 b9 02 0a 81 88 ff ff a8 b7 02 0a 81 88 ff ff  X...............
+>     a0 b8 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  ................
+>   backtrace:
+> unreferenced object 0xffff88810a02b958 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     30 ba 02 0a 81 88 ff ff 80 b8 02 0a 81 88 ff ff  0...............
+>     78 b9 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  x...............
+>   backtrace:
+> unreferenced object 0xffff88810a02ba30 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     08 bb 02 0a 81 88 ff ff 58 b9 02 0a 81 88 ff ff  ........X.......
+>     50 ba 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  P...............
+>   backtrace:
+> unreferenced object 0xffff88810a02bb08 (size 96):
+>   comm "swapper/0", pid 1, jiffies 4294671838 (age 98.120s)
+>   hex dump (first 32 bytes):
+>     e0 bb 02 0a 81 88 ff ff 30 ba 02 0a 81 88 ff ff  ........0.......
+>     28 bb 02 0a 81 88 ff ff 00 00 00 00 00 00 00 00  (...............
+>   backtrace:
+>
+> I can easily reproduce this by doing a simple insmod and rmmod of ath11k
+> and it's dependencies (mac80211, MHI etc). I can reliability reproduce
+> the leaks but I only see them once after a boot, I need to reboot the
+> host to see the leaks again. v6.4 has no leaks.
+>
+> I did a bisect and found the commit below. I verified reverting the
+> commit makes the leaks go away.
+>
+> commit e54223275ba1bc6f704a6bab015fcd2ae4f72572
+> Author:     Ross Lagerwall <ross.lagerwall@citrix.com>
+> AuthorDate: Thu May 25 16:32:48 2023 +0100
+> Commit:     Bjorn Helgaas <bhelgaas@google.com>
+> CommitDate: Fri Jun 9 15:06:16 2023 -0500
+>
+>     PCI: Release resource invalidated by coalescing
+>
+> Kalle
 >
 
-On a specific machine with multiple GPUs mounted, only the
-primary graphics get POST-ed (initialized) by the firmware.
-Therefore the DRM drivers for the rest video cards have to
-work without the prerequisite setups done by firmware, This
-is called as POST.
+Hi Kalle,
 
-One of the use cases is to test if a specific DRM driver
-would works properly, under the circumstance of not being
-POST-ed, The ast drm driver is the first one which refused
-to work if not being POST-ed by the firmware.
+I can't reproduce the leak by loading/unloading the ath11k module. I suspec=
+t
+that the leak is always there when PCI resources are coalesced but
+kmemleak doesn't notice until ath11k is loaded.
 
-Before apply this series, I was unable make drm/ast as the
-primary video card easily. The problem is that on a multiple
-video card configuration, the monitor connected with my
-AST2400 card not light up. While confusing, a naive programmer
-may suspect the PRIME is not working.
+Can you please try the following to confirm it fixes it?
 
-After applied this series and passing ast.modeset=10 on the
-kernel cmd line, I found that the monitor connected with my
-ast2400 video card still black, It doesn't display and It
-doesn't show image to me.
+Ross
 
-While in the process of study drm/ast, I know that drm/ast
-driver has the POST code shipped, See the ast_post_gpu() function.
-Then, I was wondering why this function doesn't works.
+8<-----------------------
 
-After a short-time (hasty) debugging, I found that the ast_post_gpu()
-function didn't get run. Because it have something to do with the
-ast->config_mode. Without thinking too much, I hardcoded the
-ast->config_mode as ast_use_p2a, the key point is to force the
-ast_post_gpu() function to run.
-
-
-```
-
---- a/drivers/gpu/drm/ast/ast_main.c
-+++ b/drivers/gpu/drm/ast/ast_main.c
-@@ -132,6 +132,8 @@ static int ast_device_config_init(struct ast_device 
-*ast)
-                 }
-         }
-
-+       ast->config_mode = ast_use_p2a;
-+
-         switch (ast->config_mode) {
-         case ast_use_defaults:
-                 drm_info(dev, "Using default configuration\n");
-
-```
-
-Then, the monitor light up, it display the Ubuntu greeter to me. Therefore
-my patch is useful, at least for the Linux drm driver tester and developer.
-It allow programmers to test the specific part of a specific driver without
-changing a line of the source code and without the need of sudo authority.
-
-It improves the efficiency of the testing and patch verification. I know
-the PrimaryGPU option of Xorg conf, but this approach will remember the
-setup have been made, you need modify it with root authority each time
-you want to switch the primary. But on the process of rapid developing
-and/or testing for multiple video drivers, with only one computer hardware
-resource available. What we really want is a one-shot command, as provided
-by this series.  So, this is the first use case.
-
-
-The second use case is that sometime the firmware is not reliable.
-While there are thousands of ARM64, PowerPC and Mips servers machine,
-Most of them don't have a good UEFI firmware support. I haven't test the
-drm/amdgpu and drm/radeon at my ARM64 server yet. Because this ARM64
-server always use the platform(BMC) integrated display controller as primary.
-The UEFI firmware of it does not provide options menu to tune.
-So, for the first time, the discrete card because useless, despite more powerful.
-I will take time to carry on the testing, so I will be able to tell more
-in the future.
-
-
-Even on X86, when select the PEG as primary on the UEFI BIOS menu.
-There is no way to tell the bios which one of my three
-discrete video be the primary. Not to mention some old UEFI
-firmware, which doesn't provide a setting at all.
-While the benefit of my approach is the flexibility.
-Yes the i915, amdgpu and radeon are good quality,
-but there may have programmers want to try nouveau.
-
-
-The third use case is that VGAARB is also not reliable, It will
-select a wrong device as primary. Especially on Arm64, Loongarch
-and mips arch etc. And the X server will use this wrong device
-as primary and completely crash there. Either because of lacking
-a driver or the driver has a bug which can not bear the graphic
-environment up. VGAARB is firmware dependent.
-My patch provide a temporary method to rescue.
-
-
-The forth is probably the PRIME and reverse PRIME development
-and developing driver for new video cards.
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8bac3ce02609..907c873473e2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -998,6 +998,7 @@ static int pci_register_host_bridge(struct
+pci_host_bridge *bridge)
+         res =3D window->res;
+         if (!res->flags && !res->start && !res->end) {
+             release_resource(res);
++            resource_list_destroy_entry(window);
+             continue;
+         }
