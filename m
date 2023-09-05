@@ -2,179 +2,246 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F22D2CA0FE2
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Sep 2023 17:39:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E771CA0FFA
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Sep 2023 18:26:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231962AbjIERjl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Sep 2023 13:39:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48758 "EHLO
+        id S240079AbjIES0t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Sep 2023 14:26:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239360AbjIERjd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Sep 2023 13:39:33 -0400
-Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8311387923;
-        Tue,  5 Sep 2023 10:14:48 -0700 (PDT)
-Received: from loongson.cn (unknown [10.20.42.43])
-        by gateway (Coremail) with SMTP id _____8CxfOp8UPdkQbUfAA--.36894S3;
-        Tue, 05 Sep 2023 23:59:56 +0800 (CST)
-Received: from [0.0.0.0] (unknown [10.20.42.43])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8AxTSN6UPdk3iVtAA--.47347S3;
-        Tue, 05 Sep 2023 23:59:54 +0800 (CST)
-Message-ID: <3eced3f5-622f-31a6-f8a0-ff0812be74ff@loongson.cn>
-Date:   Tue, 5 Sep 2023 23:59:54 +0800
+        with ESMTP id S232744AbjIES0t (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Sep 2023 14:26:49 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7396813E
+        for <linux-pci@vger.kernel.org>; Tue,  5 Sep 2023 11:26:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1693938379; x=1725474379;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=bo77MIsE7TC9LPx5x1LU0yPU5Ea/493vuZ/HOOinzEQ=;
+  b=RYSWHhqnecudHmcw+0isUaXXLix7GLGe7B+I+/B+ZGOpMiK4JVPZc+VX
+   nzq6gGYrLHPbrOvqDNeb43Xdb8bNJlaGhPg4tj1vesbJufXjU2VjGEDba
+   y9x04533lqwxas4li8izTkfynCyR3G8fQmVtrf1URfw+ojEoAHAfP3hZM
+   zRiZE1cyr5fp6O5gcqHWLtecfwkcGhY0y30Lq6JgKrHBTn/xfLUaN76N3
+   SZGhGEduBvxB4QtoMc6WdFL+OwkTJHQRw6mACyA9OSQRmyPCAqIR3XzQ+
+   F1yIyhhee1/zuccrSCVwa/W3Fr2ho/esBa79uf9GUOctVXYNQ9C/9mrsF
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10824"; a="443239564"
+X-IronPort-AV: E=Sophos;i="6.02,229,1688454000"; 
+   d="scan'208";a="443239564"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Sep 2023 10:04:04 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10824"; a="734725034"
+X-IronPort-AV: E=Sophos;i="6.02,229,1688454000"; 
+   d="scan'208";a="734725034"
+Received: from lkp-server02.sh.intel.com (HELO e0b2ea88afd5) ([10.239.97.151])
+  by orsmga007.jf.intel.com with ESMTP; 05 Sep 2023 10:04:03 -0700
+Received: from kbuild by e0b2ea88afd5 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qdZST-0001td-2u;
+        Tue, 05 Sep 2023 17:03:31 +0000
+Date:   Wed, 06 Sep 2023 00:59:19 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     "Krzysztof =?utf-8?Q?Wilczy=C5=84ski" ?= <kwilczynski@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:controller/rcar] BUILD SUCCESS
+ 7af65c1120567de8624e021d798438252cbde876
+Message-ID: <202309060016.f4MbIrcz-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.0
-Subject: Re: [Nouveau] [RFC, drm-misc-next v4 0/9] PCI/VGA: Allowing the user
- to select the primary video adapter at boot time
-Content-Language: en-US
-To:     Thomas Zimmermann <tzimmermann@suse.de>,
-        Sui Jingfeng <sui.jingfeng@linux.dev>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        "Koenig, Christian" <Christian.Koenig@amd.com>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Cc:     nouveau@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        amd-gfx@lists.freedesktop.org, linux-pci@vger.kernel.org
-References: <20230904195724.633404-1-sui.jingfeng@linux.dev>
- <151c0429-dbc2-e987-1491-6c733ca159ac@suse.de>
-From:   suijingfeng <suijingfeng@loongson.cn>
-In-Reply-To: <151c0429-dbc2-e987-1491-6c733ca159ac@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf8AxTSN6UPdk3iVtAA--.47347S3
-X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
-X-Coremail-Antispam: 1Uk129KBj93XoWxtw4rXF17JFykZFWkAr47trc_yoW7Xr15pF
-        Z0gay3Kr4kGr48C340v3WruFWfu3yrJayfJrn7t34j9an8KryjvFZrtr45Ka47Ar1fXF1Y
-        qF9xt34xt3W3AagCm3ZEXasCq-sJn29KB7ZKAUJUUUUx529EdanIXcx71UUUUU7KY7ZEXa
-        sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-        0xBIdaVrnRJUUUPYb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-        IYs7xG6rWj6s0DM7CIcVAFz4kK6r1Y6r17M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-        0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
-        GcCE3s1ln4kS14v26r126r1DM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2
-        x26I8E6xACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r126r1D
-        McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7
-        I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCF
-        x2IqxVCFs4IE7xkEbVWUJVW8JwCFI7km07C267AKxVWUAVWUtwC20s026c02F40E14v26r
-        1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij
-        64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr
-        0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF
-        0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07jFApnUUUUU=
+Content-Type: text/plain; charset=us-ascii
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/rcar
+branch HEAD: 7af65c1120567de8624e021d798438252cbde876  misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
 
-On 2023/9/5 18:49, Thomas Zimmermann wrote:
-> Hi
->
-> Am 04.09.23 um 21:57 schrieb Sui Jingfeng:
->> From: Sui Jingfeng <suijingfeng@loongson.cn>
->>
->> On a machine with multiple GPUs, a Linux user has no control over which
->> one is primary at boot time. This series tries to solve above mentioned
->> problem by introduced the ->be_primary() function stub. The specific
->> device drivers can provide an implementation to hook up with this 
->> stub by
->> calling the vga_client_register() function.
->>
->> Once the driver bound the device successfully, VGAARB will call back to
->> the device driver. To query if the device drivers want to be primary or
->> not. Device drivers can just pass NULL if have no such needs.
->>
->> Please note that:
->>
->> 1) The ARM64, Loongarch, Mips servers have a lot PCIe slot, and I would
->>     like to mount at least three video cards.
->>
->> 2) Typically, those non-86 machines don't have a good UEFI firmware
->>     support, which doesn't support select primary GPU as firmware stage.
->>     Even on x86, there are old UEFI firmwares which already made 
->> undesired
->>     decision for you.
->>
->> 3) This series is attempt to solve the remain problems at the driver 
->> level,
->>     while another series[1] of me is target to solve the majority of the
->>     problems at device level.
->>
->> Tested (limited) on x86 with four video card mounted, Intel UHD Graphics
->> 630 is the default boot VGA, successfully override by ast2400 with
->> ast.modeset=10 append at the kernel cmd line.
->
-> FYI: per-driver modeset parameters are deprecated and not to be used. 
-> Please don't promote them.
+elapsed time: 723m
 
+configs tested: 174
+configs skipped: 2
 
-Well, please wait, I want to explain.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r025-20230905   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                   randconfig-001-20230905   gcc  
+arc                  randconfig-r022-20230905   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                      integrator_defconfig   gcc  
+arm                   randconfig-001-20230905   clang
+arm64                            allmodconfig   gcc  
+arm64                             allnoconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r026-20230905   gcc  
+arm64                randconfig-r031-20230905   clang
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r011-20230905   gcc  
+hexagon               randconfig-001-20230905   clang
+hexagon               randconfig-002-20230905   clang
+i386                             allmodconfig   gcc  
+i386                              allnoconfig   gcc  
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-001-20230905   clang
+i386         buildonly-randconfig-002-20230905   clang
+i386         buildonly-randconfig-003-20230905   clang
+i386         buildonly-randconfig-004-20230905   clang
+i386         buildonly-randconfig-005-20230905   clang
+i386         buildonly-randconfig-006-20230905   clang
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                  randconfig-001-20230905   clang
+i386                  randconfig-002-20230905   clang
+i386                  randconfig-003-20230905   clang
+i386                  randconfig-004-20230905   clang
+i386                  randconfig-005-20230905   clang
+i386                  randconfig-006-20230905   clang
+i386                  randconfig-011-20230905   gcc  
+i386                  randconfig-012-20230905   gcc  
+i386                  randconfig-013-20230905   gcc  
+i386                  randconfig-014-20230905   gcc  
+i386                  randconfig-015-20230905   gcc  
+i386                  randconfig-016-20230905   gcc  
+i386                 randconfig-r006-20230905   clang
+loongarch                        alldefconfig   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                        allyesconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20230905   gcc  
+loongarch            randconfig-r014-20230905   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                        mvme16x_defconfig   gcc  
+m68k                 randconfig-r015-20230905   gcc  
+m68k                 randconfig-r036-20230905   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                             allmodconfig   gcc  
+mips                              allnoconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                     cu1000-neo_defconfig   clang
+mips                           ip32_defconfig   gcc  
+mips                      malta_kvm_defconfig   clang
+mips                           rs90_defconfig   clang
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r002-20230905   gcc  
+nios2                randconfig-r023-20230905   gcc  
+openrisc                         allmodconfig   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+openrisc                 simple_smp_defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r016-20230905   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   gcc  
+powerpc                   lite5200b_defconfig   clang
+powerpc              randconfig-r001-20230905   clang
+powerpc                        warp_defconfig   gcc  
+powerpc64            randconfig-r021-20230905   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                 randconfig-001-20230905   clang
+riscv                randconfig-r005-20230905   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                  randconfig-001-20230905   gcc  
+s390                 randconfig-r013-20230905   gcc  
+s390                 randconfig-r035-20230905   clang
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                        apsh4ad0a_defconfig   gcc  
+sh                                  defconfig   gcc  
+sh                   randconfig-r003-20230905   gcc  
+sh                           se7751_defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r004-20230905   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                   randconfig-r032-20230905   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-001-20230905   clang
+x86_64       buildonly-randconfig-002-20230905   clang
+x86_64       buildonly-randconfig-003-20230905   clang
+x86_64       buildonly-randconfig-004-20230905   clang
+x86_64       buildonly-randconfig-005-20230905   clang
+x86_64       buildonly-randconfig-006-20230905   clang
+x86_64                              defconfig   gcc  
+x86_64                randconfig-001-20230905   gcc  
+x86_64                randconfig-002-20230905   gcc  
+x86_64                randconfig-003-20230905   gcc  
+x86_64                randconfig-004-20230905   gcc  
+x86_64                randconfig-005-20230905   gcc  
+x86_64                randconfig-006-20230905   gcc  
+x86_64                randconfig-011-20230905   clang
+x86_64                randconfig-012-20230905   clang
+x86_64                randconfig-013-20230905   clang
+x86_64                randconfig-014-20230905   clang
+x86_64                randconfig-015-20230905   clang
+x86_64                randconfig-016-20230905   clang
+x86_64                randconfig-071-20230905   clang
+x86_64                randconfig-072-20230905   clang
+x86_64                randconfig-073-20230905   clang
+x86_64                randconfig-074-20230905   clang
+x86_64                randconfig-075-20230905   clang
+x86_64                randconfig-076-20230905   clang
+x86_64               randconfig-r033-20230905   clang
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                            allnoconfig   gcc  
+xtensa                           allyesconfig   gcc  
+xtensa                       common_defconfig   gcc  
+xtensa               randconfig-r012-20230905   gcc  
+xtensa               randconfig-r024-20230905   gcc  
+xtensa               randconfig-r034-20230905   gcc  
 
-
-drm/nouveau already promote it a little bit.
-
-Despite no code of conduct or specification guiding how the modules parameters should be.
-Noticed that there already have a lot of DRM drivers support the modeset parameters,
-for the modeset parameter, authors of various device driver try to make the usage not
-conflict with others. I believe that this is good thing for Linux users.
-It is probably the responsibility of the drm core maintainers to force various drm
-drivers to reach a minimal consensus. Probably it pains to do so and doesn't pay off.
-But reach a minimal consensus do benefit to Linux users.
-
-
-> You can use modprobe.blacklist or initcall_blacklist on the kernel 
-> command line.
->
-There are some cases where the modprobe.blacklist doesn't works,
-I have come cross several time during the past.
-Because the device selected by the VGAARB is device-level thing,
-it is not the driver's problem.
-
-Sometimes when VGAARB has a bug, it will select a wrong device as primary.
-And the X server will use this wrong device as primary and completely crash
-there, due to lack a driver. Take my old S3 Graphics as an example:
-
-$ lspci | grep VGA
-
-  00:06.1 VGA compatible controller: Loongson Technology LLC DC (Display Controller) (rev 01)
-  03:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Caicos XT [Radeon HD 7470/8470 / R5 235/310 OEM]
-  07:00.0 VGA compatible controller: S3 Graphics Ltd. Device 9070 (rev 01)
-  08:00.0 VGA compatible controller: S3 Graphics Ltd. Device 9070 (rev 01)
-
-Before apply this patch:
-
-[    0.361748] pci 0000:00:06.1: vgaarb: setting as boot VGA device
-[    0.361753] pci 0000:00:06.1: vgaarb: VGA device added: decodes=io+mem,owns=io+mem,locks=none
-[    0.361765] pci 0000:03:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
-[    0.361773] pci 0000:07:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
-[    0.361779] pci 0000:08:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
-[    0.361781] vgaarb: loaded
-[    0.367838] pci 0000:00:06.1: Overriding boot device as 1002:6778
-[    0.367841] pci 0000:00:06.1: Overriding boot device as 5333:9070
-[    0.367843] pci 0000:00:06.1: Overriding boot device as 5333:9070
-
-
-For known reason, one of my system select the S3 Graphics as primary GPU.
-But this S3 Graphics not even have a decent drm upstream driver yet.
-Under such a case, I begin to believe that only the device who has a
-driver deserve the primary.
-
-Under such a condition, I want to reboot and enter the graphic environment
-with other working video cards. Either platform integrated and discrete GPU.
-This don't means I should compromise by un-mount the S3 graphics card from
-the motherboard, this also don't means that I should update my BIOS setting.
-As sometimes, the BIOS is more worse.
-
-With this series applied, all I need to do is to reboot the computer and
-pass a command line. By force override another video card (who has a
-decent driver support) as primary, I'm able to do the debugging under
-graphic environment. I would like to examine what's wrong with the vgaarb
-on a specific platform under X server graphic environment.
-
-Probably try compile a driver for this card and see it works, simply reboot
-without the need to change anything. It is so efficient. So this is probably
-the second usage of my patch. It hand the right of control back to the
-graphic developer.
-
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
