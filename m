@@ -2,179 +2,212 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E685EE14DA
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Sep 2023 19:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B01FEE14C3
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Sep 2023 19:30:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244171AbjIFTQt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Sep 2023 15:16:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43046 "EHLO
+        id S244198AbjIFTaC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Sep 2023 15:30:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243932AbjIFTQn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Sep 2023 15:16:43 -0400
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2083.outbound.protection.outlook.com [40.107.220.83])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CF251724;
-        Wed,  6 Sep 2023 12:16:40 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=i2SWKWz1luwaFqrKZdRqlA8y1cC+CF3FdP7DeCyAUn8FwpISEzrjAyF52whqZX2SiTCY4z5j2F84qlAS3yq2Uo7u68e3JEbdJiSYXMWRPmdUZjMYgtdydwfRMeXP/N6fxH5JlIilctyIxu/+FRYOoIMGhybCsRVYtjYFMxxIPBnf5tnl/NPekG+vXkePT7w0UCCEcCB0iDADyl/M8xJZ0GgB/dT9vAI/btqEKBDaDy+FmEvGmRiNwAZf7LhA5RO4/bH6YZPopN864z2GPs4XT5MLgi+ZEnOq0LR9Dbb/Ay0Av8EVgMmiJ3cQnnQkvHQ8cS6lhdWn+phzrJEQwZXsHw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jMINZpGe4Tmcf7sznCpjthcF3tkn9xAgC24SFAdpxHc=;
- b=Y/0KOS5e3JG27DWkQpb3+ejosjdc9CvrjjyyaUdvFcZB1+Rqo90ZwyTNcy9k94qkDCtpQbMuIeeoLOw+Lpm4mMs6JYINuouzVdnLMPc6aH5HQOkPaHD5Wf+Ey5+4hJCfoqqQkzgLaglo1vN8yO+cRG2DUv5qd3XVTpSRK9jTb6zUaBCVZmLV+Ob0Om9wH4Xk05rqnuI1w15p2eu8bwLfCGpYktPbqFeUdKxkOZYuDk5oavpYwfJkkaZ2D8olVvdEOPz0UVb7x6/J4Jvurj9gGBdE2lyKevaL+4VY2oX7frtfl3v0+uA0RvoLO0ykrZDmjdytV8rDcBEyhsQJa+5j/Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=redhat.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jMINZpGe4Tmcf7sznCpjthcF3tkn9xAgC24SFAdpxHc=;
- b=neLGc+00M6Q2CbV2srI5k8mk0FZcsGzwYdLKoGqMAltLpyfX8aOULE7AWy0lvZjK/koPEyCofeoNx74jdSPsn/cMd682FIgnItiiVtZ/s8DDw2nC0N+UgoQIoSV0fn79vhbDx2J+NLh1RDa/vzwXj2Flvmk4UPzwkzhlnacn7Vc=
-Received: from BL0PR1501CA0014.namprd15.prod.outlook.com
- (2603:10b6:207:17::27) by PH7PR12MB7161.namprd12.prod.outlook.com
- (2603:10b6:510:200::13) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.34; Wed, 6 Sep
- 2023 19:16:37 +0000
-Received: from BL6PEPF0001AB54.namprd02.prod.outlook.com
- (2603:10b6:207:17:cafe::9b) by BL0PR1501CA0014.outlook.office365.com
- (2603:10b6:207:17::27) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.34 via Frontend
- Transport; Wed, 6 Sep 2023 19:16:37 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BL6PEPF0001AB54.mail.protection.outlook.com (10.167.241.6) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6768.26 via Frontend Transport; Wed, 6 Sep 2023 19:16:37 +0000
-Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 6 Sep
- 2023 14:16:31 -0500
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     Hans de Goede <hdegoede@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-CC:     Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
-        "open list:X86 PLATFORM DRIVERS" 
-        <platform-driver-x86@vger.kernel.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        <linux-pm@vger.kernel.org>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v17 3/4] PCI: Check for changes in pci_bridge_d3_possible() when updating D3
-Date:   Wed, 6 Sep 2023 13:43:53 -0500
-Message-ID: <20230906184354.45846-4-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230906184354.45846-1-mario.limonciello@amd.com>
-References: <20230906184354.45846-1-mario.limonciello@amd.com>
+        with ESMTP id S242758AbjIFTaA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Sep 2023 15:30:00 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F049EE41
+        for <linux-pci@vger.kernel.org>; Wed,  6 Sep 2023 12:29:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1694028548;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=BkNqqrFNSye+85FOkqcxyjqr5JGuixiZESeFlYs5s54=;
+        b=IsTS3+6fEHweIbXR6J/mJPEfQ9EPsjkIHiBk7ChChv4w0trKNxcjHsypXHP/n5hU391G/Y
+        mERCo2JMncadXJxedTyM/Qox3Zf8/nBBfF8lf2hxg2+SPCgrfh4mv8MobDZaxrlntIbUz7
+        7UVX+5Zr8tn/DGaC4k/DtB2yDlKCnMM=
+Received: from mail-il1-f200.google.com (mail-il1-f200.google.com
+ [209.85.166.200]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-628-UnGz1_mYPQClVWHDlWuaTg-1; Wed, 06 Sep 2023 15:29:07 -0400
+X-MC-Unique: UnGz1_mYPQClVWHDlWuaTg-1
+Received: by mail-il1-f200.google.com with SMTP id e9e14a558f8ab-34bb89fa29eso1264535ab.3
+        for <linux-pci@vger.kernel.org>; Wed, 06 Sep 2023 12:29:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20221208; t=1694028546; x=1694633346;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=BkNqqrFNSye+85FOkqcxyjqr5JGuixiZESeFlYs5s54=;
+        b=IZ0nJJhiH68PGHR/7c3kMEmkG9/Xus3oFqJBcCC6h3u4T8Veu4z5a1+6N+UQXUxbTT
+         fXmrECt/4p8/y4MpYjQdIMNbgLbje0YuIVtICv59A3BIsY9KXeYStxW8iwyq9vRwBex6
+         cFSLdg6OxgaEnLUtTq/7aAne6eV2TXKlIC8W7jguebqwre3lIuT1Vklb8bn15ce5d+bC
+         DmMHk+9q3zTbF0YQSWxxiWC6PAu8JO9vFAAWrfsbFhcUtutDBf736aV1dHsqQi9XZFWi
+         +B7j1im8vnAOoNvpG2PdBTzUlPGH+6pgasNjghIljeo2lCg+ubQZwlSQDHs01FnjzkgK
+         iBqA==
+X-Gm-Message-State: AOJu0YwHbFaZFVRLyZ1ljBWx34vtXKrYtnjroO93ouAJfh0ML4JfWcvQ
+        Yrq/WsXoQoZuxP0iLDdfWoSFGeVKpQUHb6CQ7oT/xNS5ttXdaoL2dEj76d+pbHXH8S+6dsPg91c
+        vVjkFWiIhQUdwbEhgbLE+
+X-Received: by 2002:a05:6e02:1d11:b0:347:6b30:5bd3 with SMTP id i17-20020a056e021d1100b003476b305bd3mr21867132ila.13.1694028546537;
+        Wed, 06 Sep 2023 12:29:06 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEyKFIvkN7zuLMbU6PvggO334g+2dgeQZvJcZ8JKJqA6E6EEEA4iTKmp69E/q99AN/ZBKFIOQ==
+X-Received: by 2002:a05:6e02:1d11:b0:347:6b30:5bd3 with SMTP id i17-20020a056e021d1100b003476b305bd3mr21867112ila.13.1694028546213;
+        Wed, 06 Sep 2023 12:29:06 -0700 (PDT)
+Received: from redhat.com ([38.15.60.12])
+        by smtp.gmail.com with ESMTPSA id m11-20020a92710b000000b0034e28100d1csm3233596ilc.58.2023.09.06.12.29.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Sep 2023 12:29:05 -0700 (PDT)
+Date:   Wed, 6 Sep 2023 13:29:04 -0600
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     Sui Jingfeng <sui.jingfeng@linux.dev>
+Cc:     Sui Jingfeng <suijingfeng@loongson.cn>,
+        nouveau@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        amd-gfx@lists.freedesktop.org,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>
+Subject: Re: [RFC, drm-misc-next v4 0/9] PCI/VGA: Allowing the user to
+ select the primary video adapter at boot time
+Message-ID: <20230906132904.4e49e269.alex.williamson@redhat.com>
+In-Reply-To: <a6337007-b6fa-2ce9-d0cd-46465b540205@linux.dev>
+References: <20230904195724.633404-1-sui.jingfeng@linux.dev>
+        <20230905085243.4b22725e.alex.williamson@redhat.com>
+        <a6337007-b6fa-2ce9-d0cd-46465b540205@linux.dev>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.35; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF0001AB54:EE_|PH7PR12MB7161:EE_
-X-MS-Office365-Filtering-Correlation-Id: 86805025-a223-4a3e-6c0d-08dbaf0dcac4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: A73mtvIsIPO3oMVwtiC/75u9DEM70BtoY/BcCb+MPwlRnHoje5O6GEYG8cVJ5Z/0pfnWM73orVEzB9MgtPVmXp6vKcYEKDH6aU5COKzu7Udr6OMs8gXGoepF2Oz7Fyb9v6ifmD6GtV67O/M/PLTwy4YG8m/r4iQQlCRWR7HwhT3GmPrfon+W1xeLCvbtoI6IGsb1/dRtJ/cgVjkW/2pw1WY+f7zGloe8tf9cjJ4xGDibxU/R6I/ngyj9T0ghPUvf0o8p0Ympn4e+3Sy2wh8qNseTTqPlshyw1KUr4Mrp7yGfjEfmGHvE4b4GrQmlvTwEHUEsokyeOWrt+gGEXiO0a5sNt2/X3nrujFBW5YmSVvuu7cQ5+Wt0cRtPOphM+VMQSK73Khv6iK0xdRELxCkcTrHIp5xOoYR+i4TBS5ENX5Thlr5XYf+MYQFNqel4xvcpNtOUPHkHZdoWqexWzWz1TTzreIQ0zmhZE12t7J9Q608Us/AbGmO9JRcIx1bY2nJ90J04Ti3Ae/abJRAp7hnkz7zJu4NqsgPfTp7tqwkc8gt9UISfHJoH98REC/IAQTibi7vUH2v1trEOQBn8g0eoZCZuIG8/8j6+XuUO5O+H+RmduGNzlKEEQkciYVLXJAMibYp42F6t3W+A8sB3lmVYZjpHraxakmJw1hajfp2LSpbGR7i1xFayImwXLcbpqVpq96472SQT5cdwUXKhomvq1Fq/GSGzqinFjVdL6mBzHSoMAjimSQRM4s5EljXfhBABGou7TVXO78ft97G8APj8pA==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(376002)(39860400002)(396003)(346002)(136003)(451199024)(1800799009)(82310400011)(186009)(46966006)(36840700001)(40470700004)(2616005)(316002)(54906003)(1076003)(478600001)(4326008)(8936002)(8676002)(356005)(81166007)(82740400003)(7696005)(110136005)(70586007)(70206006)(40480700001)(41300700001)(5660300002)(44832011)(83380400001)(16526019)(26005)(6666004)(336012)(426003)(2906002)(47076005)(36860700001)(40460700003)(86362001)(36756003)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Sep 2023 19:16:37.3894
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 86805025-a223-4a3e-6c0d-08dbaf0dcac4
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BL6PEPF0001AB54.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB7161
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As drivers can report an optin or veto for a given PCI device it's
-possible that pci_bridge_d3_possible() reports different values while
-calling pci_bridge_d3_update().  Take these values into account while
-updating the ability for a bridge to go into D3.
+On Wed, 6 Sep 2023 11:51:59 +0800
+Sui Jingfeng <sui.jingfeng@linux.dev> wrote:
 
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
- drivers/pci/pci.c | 29 +++++++++++++++++++----------
- 1 file changed, 19 insertions(+), 10 deletions(-)
+> Hi,
+>=20
+>=20
+> On 2023/9/5 22:52, Alex Williamson wrote:
+> > On Tue,  5 Sep 2023 03:57:15 +0800
+> > Sui Jingfeng <sui.jingfeng@linux.dev> wrote:
+> > =20
+> >> From: Sui Jingfeng <suijingfeng@loongson.cn>
+> >>
+> >> On a machine with multiple GPUs, a Linux user has no control over which
+> >> one is primary at boot time. This series tries to solve above mentioned
+> >> problem by introduced the ->be_primary() function stub. The specific
+> >> device drivers can provide an implementation to hook up with this stub=
+ by
+> >> calling the vga_client_register() function.
+> >>
+> >> Once the driver bound the device successfully, VGAARB will call back to
+> >> the device driver. To query if the device drivers want to be primary or
+> >> not. Device drivers can just pass NULL if have no such needs.
+> >>
+> >> Please note that:
+> >>
+> >> 1) The ARM64, Loongarch, Mips servers have a lot PCIe slot, and I would
+> >>     like to mount at least three video cards.
+> >>
+> >> 2) Typically, those non-86 machines don't have a good UEFI firmware
+> >>     support, which doesn't support select primary GPU as firmware stag=
+e.
+> >>     Even on x86, there are old UEFI firmwares which already made undes=
+ired
+> >>     decision for you.
+> >>
+> >> 3) This series is attempt to solve the remain problems at the driver l=
+evel,
+> >>     while another series[1] of me is target to solve the majority of t=
+he
+> >>     problems at device level.
+> >>
+> >> Tested (limited) on x86 with four video card mounted, Intel UHD Graphi=
+cs
+> >> 630 is the default boot VGA, successfully override by ast2400 with
+> >> ast.modeset=3D10 append at the kernel cmd line.
+> >>
+> >> $ lspci | grep VGA
+> >>
+> >>   00:02.0 VGA compatible controller: Intel Corporation CoffeeLake-S GT=
+2 [UHD Graphics 630] =20
+> > In all my previous experiments with VGA routing and IGD I found that
+> > IGD can't actually release VGA routing and Intel confirmed the hardware
+> > doesn't have the ability to do so. =20
+>=20
+> Which model of the IGD you are using?=C2=A0even for the IGD in Atom D2550,
+> the legacy 128KB VGA memory range can be=C2=A0tuned to be mapped to IGD
+> or to the DMI Interface. See the 1.7.3.2 section of the N2000 datasheet[1=
+].
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 06ab73f58adf..9004d8ea460a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3100,6 +3100,14 @@ static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
- 	return !*d3cold_ok;
- }
- 
-+static void pci_bridge_d3_propagate(struct pci_dev *bridge, bool d3_ok)
-+{
-+	if (bridge->bridge_d3 != d3_ok) {
-+		bridge->bridge_d3 = d3_ok;
-+		pci_bridge_d3_propagate(bridge, d3_ok);
-+	}
-+}
-+
- /*
-  * pci_bridge_d3_update - Update bridge D3 capabilities
-  * @dev: PCI device which is changed
-@@ -3112,12 +3120,16 @@ void pci_bridge_d3_update(struct pci_dev *dev)
- {
- 	bool remove = !device_is_registered(&dev->dev);
- 	struct pci_dev *bridge;
--	bool d3cold_ok = true;
-+	bool d3_ok = true;
- 
- 	bridge = pci_upstream_bridge(dev);
--	if (!bridge || !pci_bridge_d3_possible(bridge))
-+	if (!bridge)
- 		return;
- 
-+	/* Propagate change to upstream bridges */
-+	d3_ok = pci_bridge_d3_possible(bridge);
-+	pci_bridge_d3_propagate(bridge, d3_ok);
-+
- 	/*
- 	 * If D3 is currently allowed for the bridge, removing one of its
- 	 * children won't change that.
-@@ -3134,7 +3146,7 @@ void pci_bridge_d3_update(struct pci_dev *dev)
- 	 * first may allow us to skip checking its siblings.
- 	 */
- 	if (!remove)
--		pci_dev_check_d3cold(dev, &d3cold_ok);
-+		pci_dev_check_d3cold(dev, &d3_ok);
- 
- 	/*
- 	 * If D3 is currently not allowed for the bridge, this may be caused
-@@ -3142,15 +3154,12 @@ void pci_bridge_d3_update(struct pci_dev *dev)
- 	 * so we need to go through all children to find out if one of them
- 	 * continues to block D3.
- 	 */
--	if (d3cold_ok && !bridge->bridge_d3)
-+	if (d3_ok && !bridge->bridge_d3)
- 		pci_walk_bus(bridge->subordinate, pci_dev_check_d3cold,
--			     &d3cold_ok);
-+			     &d3_ok);
- 
--	if (bridge->bridge_d3 != d3cold_ok) {
--		bridge->bridge_d3 = d3cold_ok;
--		/* Propagate change to upstream bridges */
--		pci_bridge_d3_update(bridge);
--	}
-+	/* Propagate change to upstream bridges */
-+	pci_bridge_d3_propagate(bridge, d3_ok);
- }
- 
- /**
--- 
-2.34.1
+I believe it's the VGA I/O that can't be disabled, there's no means to
+do so other than the I/O enable bit in the command register and iirc
+the driver depends on this for other features.  The history of this is
+pretty old, but here are some links:
+
+https://lore.kernel.org/all/1376486637.31494.19.camel@ul30vt.home/
+https://bbs.archlinux.org/viewtopic.php?pid=3D1400212#p1400212
+https://lore.kernel.org/all/20130815223917.27890.28003.stgit@bling.home/
+https://lore.kernel.org/all/20130824144701.23370.42110.stgit@bling.home/
+https://lore.kernel.org/all/20140509201655.2849.97478.stgit@bling.home/
+
+I think the issue was that i915 doesn't claim to the VGA arbiter to be
+controlling legacy VGA ranges, but in fact the hardware does claim
+those ranges.  We can "fix" i915 to report that VGA MMIO space is
+owned and can be controlled, but then Xorg likely sees multiple VGA
+arbiter clients and disables DRI because it wants to mmap VGA MMIO
+space.
+
+Therefore unless something has changed in the past 10yrs, i915 owns but
+does not advertise ownership of the VGA address spaces and therefore
+the arbiter can't and doesn't know to change VGA routing to enable a
+"be_primary" path to another device.
+=20
+> If a specific model of Intel has a bug in the VGA routing hardware logic =
+unit,
+> I would like to ignore it. Or switch to the UEFI firmware on such hardwar=
+e.
+
+That's a convenient and impractical approach.  I expect all Intel HD
+graphics has this issue.  Unknown for Xe.
+
+> It is the hardware engineer's responsibility, I will not worry about it.
+
+We often need to deal with broken hardware in the kernel.
+
+> Thanks for you tell this.
+>=20
+> [1] https://www.intel.com/content/dam/doc/datasheet/atom-d2000-n2000-vol-=
+2-datasheet.pdf
+>=20
+>=20
+> >   It will always be primary from a
+> > VGA routing perspective.  Was this actually tested with non-UEFI? =20
+>=20
+>=20
+> As you already said,=C2=A0the generous Intel already have confirmed that =
+the hardware defect.
+> So probably this is a good chance to switch to UEFI to solve the problem.=
+ Then, no
+> testing for legacy is needed.
+
+Then why are we hacking on VGA arbitration in this series at all?
+
+> > I suspect it might only work in UEFI mode where we probably don't
+> > actually have a dependency on VGA routing.  This is essentially why
+> > vfio requires UEFI ROMs when assigning GPUs to VMs, VGA routing is too
+> > broken to use on Intel systems with IGD.  Thanks, =20
+>=20
+> Thanks for you tell me this.
+>=20
+> To be honest, I have only tested my patch on machines with UEFI=C2=A0firm=
+ware.
+> Since UEFI because the main stream, but if this patch is really useful for
+> majority machine, I'm satisfied. The results is not too bad.
+
+This looks like a pretty significant scoping issue if you're proposing
+changes to the VGA arbiter which specifically handles the routing of
+legacy VGA address spaces but are not willing to commit to testing
+legacy configurations.  Thanks,
+
+Alex
 
