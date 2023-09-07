@@ -2,233 +2,95 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7C15EC873F
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 15:45:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E8A2EC8742
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 15:45:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233249AbjIGPmq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Sep 2023 11:42:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41972 "EHLO
+        id S233499AbjIGPmr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Sep 2023 11:42:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243734AbjIGP1p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 11:27:45 -0400
-Received: from EUR04-VI1-obe.outbound.protection.outlook.com (mail-vi1eur04on0602.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe0e::602])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88F2F1BF;
-        Thu,  7 Sep 2023 08:27:17 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jB5r5pGk8K4fmUt3k47rvpXKCRzwje4GqhFrjJEpF72SHA3nZlwdk25h1kL2Sl776dOWlWyzYoYVyu3+JonFJlpEQyEB8y1RMUQhwqMN+DwCNYaqibcYX4Xj7KmgTJL8dFI2DstuWbjgnupywRna0Za8w0e7CWwiJENVt9H5ESoFuNLTIitN2RjcOF+2nka1kfpt0cLbUJ5PYc2VVeXRHKEA1mmWpYogHxCUlpW654wQD8dCngW91Hjhj6Yc+AFA32jCO929w/lI3SbF1VOPlGa2WmrUK4jW4DkG7bTdlu4bsct3BBVG9PxgcadtSnAbQ/WRfpKYwbKt1Vh/nSajXA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=kY8XzdNiYboXAV1d8i5yP+GzvTbAaOMww832LVridIs=;
- b=VVu3PQOuk5UeuslojoyTld38X2zIqL99HbueTYkmjdYp5uzNJ+JnJiOxpNiB3W08B6rjos/IW/DTnh82iKstH0zqrvDgWQ62pO6B4mf8fOxfGnNTmjSXip/15dFIcUTO0k0nPebfb30NKUTK4SEn2rgjfzrZZBW57RySVgLi+LD9HT2/ee1/QobD3TYE1LGDPHGvsxloSLy2Mhv7Vq3Yp4l+9mV3QuGrRSHaiIFk++1ujUbe0qSOq6Hk6H0eErEajVQOAW/EC18Os0ntvCE9uIJOe/o4yhzVosS371oS0MXkaIr0IAbBqWNBDQP6rLL0KcE7LAAxA4Uz8vVjdzAnkA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kY8XzdNiYboXAV1d8i5yP+GzvTbAaOMww832LVridIs=;
- b=VCgn7rtYCecBzHkNGB/Op4yz7EizRpMNsZY6tWZ7mObyQgG/CWz8TS0oPMcpTcfHPRyRIoKuqi7gvvv7Gy1MNupOIJbMm/aiuQUt14IZsTY5tClZhCzCLB/XXlezUzSna0ddMwhAIvg+/3AGyZLtTTswZwVu32y2fb9/ePMNkkE=
-Received: from DU0PR04MB9417.eurprd04.prod.outlook.com (2603:10a6:10:358::11)
- by AS8PR04MB9064.eurprd04.prod.outlook.com (2603:10a6:20b:447::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6745.36; Thu, 7 Sep
- 2023 05:54:44 +0000
-Received: from DU0PR04MB9417.eurprd04.prod.outlook.com
- ([fe80::2b3:d8de:95c8:b28b]) by DU0PR04MB9417.eurprd04.prod.outlook.com
- ([fe80::2b3:d8de:95c8:b28b%3]) with mapi id 15.20.6745.034; Thu, 7 Sep 2023
- 05:54:44 +0000
-From:   Peng Fan <peng.fan@nxp.com>
-To:     "Peng Fan (OSS)" <peng.fan@oss.nxp.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "pali@kernel.org" <pali@kernel.org>,
-        "ilpo.jarvinen@linux.intel.com" <ilpo.jarvinen@linux.intel.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH V2] pci: introduce static_nr to indicate domain_nr from
- which IDA
-Thread-Topic: [PATCH V2] pci: introduce static_nr to indicate domain_nr from
- which IDA
-Thread-Index: AQHZzxhuyRkzZgDao0KEaKWaunEMhbAPAT5A
-Date:   Thu, 7 Sep 2023 05:54:43 +0000
-Message-ID: <DU0PR04MB94177C282FE6E37C46098A7388EEA@DU0PR04MB9417.eurprd04.prod.outlook.com>
-References: <20230815013744.45652-1-peng.fan@oss.nxp.com>
-In-Reply-To: <20230815013744.45652-1-peng.fan@oss.nxp.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: DU0PR04MB9417:EE_|AS8PR04MB9064:EE_
-x-ms-office365-filtering-correlation-id: eb386b5e-9436-423b-bf4a-08dbaf66ef58
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: RQ9zzUA+82IX+X/OzbSQKAa7wsRzEIePMdNAQ/AEm1V2Ah3C/D3AHA6FGwKJ6HbpNjzCiZbIjCP0DLOpXJElq8hcgdUexWcliWs6NufBrxm6YSdCDpTTqqlkhVUFJWnGMtkBHpidbskk2R/Rl9IyVq5jtxk1ZT9Ff59COTtSAhe3UHSKFUiaLI/aAwRhuvFIGcevKu5PbPA5kOPIdZx2KLKUEoHlbqtuWW39FxrPDn7KGQUtgae+XBZ/do6YZY35Eua19oLtScZJ8eLWxuWITsXKyT2PagB2FyCVmYCS1jd+HarQrh9n03KZIKNqFM3R98NCWbD+oAC/H8HjBokyBjJluhZA9XjE02X60wNMXMYsjVycr6sM7SEgYjYJT/Dzh+U7e1YVjt6c9pb5s3zTS8w+stb5lMrUX4wwj2+cFiagueBMsbX1NN5mzYiaYCfUHnPpVpVuPOUQFYEwrJLi28qdrGY1hvzPhpzEG9R+xlKs7x5g05zque7CHq/wESGl7KkuluM8avQv3idOi3S56uwPTsfowpXjQI6ucMPfkgt63bJ0WVCRmxjjgzqt4Q8HPUZ/nlKoFGwltwNOF63zheZnTJ+Q0yCgdPLJn+/ViG9IQ1o+eGXx+RB8mVgtf7Xh
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DU0PR04MB9417.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(136003)(39860400002)(396003)(366004)(376002)(346002)(186009)(451199024)(1800799009)(83380400001)(122000001)(478600001)(26005)(55016003)(7696005)(6506007)(71200400001)(9686003)(2906002)(4326008)(5660300002)(52536014)(8936002)(8676002)(33656002)(44832011)(54906003)(64756008)(316002)(66446008)(66476007)(66946007)(66556008)(76116006)(110136005)(41300700001)(86362001)(38070700005)(38100700002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Fns1KpCDZADtOCaV9vdaoalzDAAIa57xi1UaWSjhCew343Gg8QzAgWGuVBcM?=
- =?us-ascii?Q?57K1+sSiaHZBvUEj/gx/vpeEGQH+CTx5a1yt1FmQnCQ7TyUhTRk1vYo5v8M9?=
- =?us-ascii?Q?zXE8/gcIelcxF9BeyjTXguJjmfnF7qFMNn8z3Hvj9RIlr05X2k7Yu36xIQrr?=
- =?us-ascii?Q?dciZT80RsipjejCg7O/kXw/K1XFhFW5D7yv9MATzbqQRKmV42xL/JONS3+QL?=
- =?us-ascii?Q?g6EbE6+wRVTgBunYiLwWcSmEMcwgvL3q3IzxXpUmvxzXdmvjh8joVse35yPE?=
- =?us-ascii?Q?Sb1IjLpZ71lIA3j15WADFvgwGziQ7eeW7X3yXbQp/fhh/dcK5zvjNfodcYD3?=
- =?us-ascii?Q?jJlO9YyqODTj7cN/HkLMhWbJEdbM8FROoXQo3cGn/nJM5m/sCQnykFvZQlPJ?=
- =?us-ascii?Q?zYMSahfqilHgSr1835t1Kb7uG3RztFIU6VLGu5LO2jE1267e0nQmH0t/Nhmm?=
- =?us-ascii?Q?S7nyOgJ8MdcTCRQow8TCMQaoAN/Ec/qgDFfH0kXlqPmqiaBZc9RRoa+Dnkrx?=
- =?us-ascii?Q?MY+BEmotW3zfMNEuhqWL4uhJllIFd/qFN8wDvV5+Sa5vgiYvv98LLFfeDdnC?=
- =?us-ascii?Q?CTSewavhbbysPaQnlrE2XqlBvEPBj2rYeioTCVoDrRQymGF2/pWEu67sXkrY?=
- =?us-ascii?Q?doHb5oui8OAIq/BfUwlzTHTBg40clZAsP3cbK606prYLzMKMTzmmiCD45wKL?=
- =?us-ascii?Q?HigqyOpBKe08PiDl+k6Rc5+jYaiHoDHqaCNYkY1LPGzPjQc/KeLN1BRWU77D?=
- =?us-ascii?Q?LI7Np4sifHIQjkux3C5CpFARBkzqjNVLH8WmHp9n7Q3RZugaSDcSlVDf06fq?=
- =?us-ascii?Q?ccRVfAi4rZf+1lbnKK7YLQ/bIyOOxwtCtWEpuTmP7Rly6WCvVbeygHGLuEyN?=
- =?us-ascii?Q?yCKq5xdPfO79QM5/svVaBHfPHwZjpSvBrxrELPtQeWivuTVU1yFqenhHEfv2?=
- =?us-ascii?Q?5PB+LtA7SjpWFU9bb4yItdvgxPd0n2HBaYKiXnKNspYXEb+9kn4wRfKV24JN?=
- =?us-ascii?Q?+70XMQnYP3+5sVuX/tzOjuGaid8wOJSzfDXsLrMA5OKomvpWptPKFpFh27wT?=
- =?us-ascii?Q?ie15gKzdj8QSC4SLdEdY+RbP7WVA8TLP8zVTQozaEI66rR/pjVXAy91+XMXR?=
- =?us-ascii?Q?Hfnxb0BOn3yDpfHybBOSQ+iNemFxsM8QL4mOONlQNhjpTV0q61uvttKiTba3?=
- =?us-ascii?Q?+v51Tz1SXxYDIHPNI5CMj5D8rFV27amfPQjUQ7vVV1Vj9eKSPuFtwXfzhu/Y?=
- =?us-ascii?Q?DKYvAcHlsAyriAQO28ui3OAkt3235lV29PGZkwluzNDgWQDkcC1XZIiI4Nu0?=
- =?us-ascii?Q?VTPOnNkWFfT+/Vb/zVvVTd7DK8Sw3jL/pUhWUsqO3gWP6hApVIYdUfW9xDBn?=
- =?us-ascii?Q?5VWyDg0pS4YT28Ve5ZqFpaRI8GtPJaOZUfMEC1ro1VnzCjFhE9qYL06NYGPJ?=
- =?us-ascii?Q?TWKBCh81JlnFYW4PigM5LYEwz3alxuFxtnHUsz9DkQ+qoMVntvMV0/uORhDz?=
- =?us-ascii?Q?pllaTwJq5kL7zyIDUEjbX9m17gY+IjOd5vTpsPmTYBZXcz/2umQcttJnWZ0/?=
- =?us-ascii?Q?x8FUBfVMcvwi6VofA2Q=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S238886AbjIGPYA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 11:24:00 -0400
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2CDA4CF;
+        Thu,  7 Sep 2023 08:23:47 -0700 (PDT)
+Received: from loongson.cn (unknown [10.20.42.43])
+        by gateway (Coremail) with SMTP id _____8Dx_7vjwvlkkF8hAA--.7519S3;
+        Thu, 07 Sep 2023 20:32:35 +0800 (CST)
+Received: from [0.0.0.0] (unknown [10.20.42.43])
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8CxLCPTwvlkZKhwAA--.54321S3;
+        Thu, 07 Sep 2023 20:32:31 +0800 (CST)
+Message-ID: <5d9f9780-995f-33dc-e3db-3112aa085062@loongson.cn>
+Date:   Thu, 7 Sep 2023 20:32:19 +0800
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DU0PR04MB9417.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: eb386b5e-9436-423b-bf4a-08dbaf66ef58
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Sep 2023 05:54:43.9627
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: /M/jUo4Lu7aPKazpCfnQQEoW6+CvBp2RGI+Yvr+IUbeFT2YfCZkRjLy1ZNvaWpJNCxsfQ+tvB8zKNUwx/bp+aw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB9064
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Subject: Re: [Nouveau] [RFC, drm-misc-next v4 0/9] PCI/VGA: Allowing the user
+ to select the primary video adapter at boot time
+Content-Language: en-US
+To:     =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Sui Jingfeng <sui.jingfeng@linux.dev>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>
+Cc:     nouveau@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
+References: <20230904195724.633404-1-sui.jingfeng@linux.dev>
+ <44ec8549-dc36-287e-4359-abd3ec8d22d6@suse.de>
+ <5afd2efb-f838-f9b7-02a9-2cf4d4fd2382@loongson.cn>
+ <2adfa653-ac35-d560-be52-c92848a1eef5@gmail.com>
+ <b51d49f3-e3de-6b8d-9cb4-df5c03f3cdc0@loongson.cn>
+ <10509692-ce04-e225-5a27-abc955554bdc@gmail.com>
+ <a9af88c5-4509-96ff-a7fd-a0f72d2f1e6a@linux.dev>
+ <127fab21-bc5c-f782-e42b-1092fbb8df34@amd.com>
+From:   suijingfeng <suijingfeng@loongson.cn>
+In-Reply-To: <127fab21-bc5c-f782-e42b-1092fbb8df34@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: AQAAf8CxLCPTwvlkZKhwAA--.54321S3
+X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
+X-Coremail-Antispam: 1Uk129KBj9xXoW7Jw15CrW3Jry5Kr17Ar4rXrc_yoWxAwb_ua
+        1jyrn5J3y8GwnrZFnxG3W5CrWvg34vq34Fg3yktry5Jr1UXasIka1xCF15uF1FvF40qFn8
+        Xry0kFs3Zw4jkosvyTuYvTs0mTUanT9S1TB71UUUUjJqnTZGkaVYY2UrUUUUj1kv1TuYvT
+        s0mT0YCTnIWjqI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUI
+        cSsGvfJTRUUUbqxYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20x
+        vaj40_Wr0E3s1l1IIY67AEw4v_Jrv_JF1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+        w2x7M28EF7xvwVC0I7IYx2IY67AKxVW8JVW5JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+        W8JVWxJwA2z4x0Y4vEx4A2jsIE14v26r4UJVWxJr1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+        6F4UJVW0owAaw2AFwI0_JF0_Jw1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqjxCEc2xF0c
+        Ia020Ex4CE44I27wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JF0_
+        Jw1lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrw
+        CYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r1q6r43MxAIw28IcxkI7VAKI48J
+        MxC20s026xCaFVCjc4AY6r1j6r4UMxCIbckI1I0E14v26r126r1DMI8I3I0E5I8CrVAFwI
+        0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y
+        0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxV
+        W8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1l
+        IxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU8svtJUUUU
+        U==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 Hi,
 
-> Subject: [PATCH V2] pci: introduce static_nr to indicate domain_nr from
-> which IDA
 
-Gentle ping..
+On 2023/9/7 17:08, Christian König wrote:
+> Well, I have over 25 years of experience with display hardware and 
+> what you describe here was never an issue. 
 
-Thanks,
-Peng.
+I want to give you an example to let you know more.
 
->=20
-> From: Peng Fan <peng.fan@nxp.com>
->=20
-> When PCI node was created using an overlay and the overlay is
-> reverted/destroyed, the "linux,pci-domain" property no longer exists, so
-> of_get_pci_domain_nr will return failure. Then
-> of_pci_bus_release_domain_nr will actually use the dynamic IDA, even if
-> the IDA was allocated in static IDA.
->=20
-> Introduce a static_nr field in pci_bus to indicate whether the IDA is a
-> dynamic or static in order to free the correct one.
->=20
-> Fixes: c14f7ccc9f5d ("PCI: Assign PCI domain IDs by ida_alloc()")
-> Signed-off-by: Peng Fan <peng.fan@nxp.com>
-> ---
->=20
-> V2:
->  Update commit message
->  Move static_nr:1 to stay besides others :1 fields.
->=20
->  drivers/pci/pci.c   | 22 ++++++++++++++--------
->  include/linux/pci.h |  1 +
->  2 files changed, 15 insertions(+), 8 deletions(-)
->=20
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c index
-> 60230da957e0..5c98502bcda6 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -6881,10 +6881,10 @@ static void
-> of_pci_reserve_static_domain_nr(void)
->  	}
->  }
->=20
-> -static int of_pci_bus_find_domain_nr(struct device *parent)
-> +static int of_pci_bus_find_domain_nr(struct pci_bus *bus, struct device
-> +*parent)
->  {
->  	static bool static_domains_reserved =3D false;
-> -	int domain_nr;
-> +	int domain_nr, ret;
->=20
->  	/* On the first call scan device tree for static allocations. */
->  	if (!static_domains_reserved) {
-> @@ -6892,6 +6892,8 @@ static int of_pci_bus_find_domain_nr(struct
-> device *parent)
->  		static_domains_reserved =3D true;
->  	}
->=20
-> +	bus->static_nr =3D 0;
-> +
->  	if (parent) {
->  		/*
->  		 * If domain is in DT, allocate it in static IDA.  This @@ -
-> 6899,10 +6901,14 @@ static int of_pci_bus_find_domain_nr(struct device
-> *parent)
->  		 * in DT.
->  		 */
->  		domain_nr =3D of_get_pci_domain_nr(parent->of_node);
-> -		if (domain_nr >=3D 0)
-> -			return ida_alloc_range(&pci_domain_nr_static_ida,
-> -					       domain_nr, domain_nr,
-> -					       GFP_KERNEL);
-> +		if (domain_nr >=3D 0) {
-> +			ret =3D ida_alloc_range(&pci_domain_nr_static_ida,
-> +					      domain_nr, domain_nr,
-> GFP_KERNEL);
-> +			if (ret >=3D 0)
-> +				bus->static_nr =3D 1;
-> +
-> +			return ret;
-> +		}
->  	}
->=20
->  	/*
-> @@ -6920,7 +6926,7 @@ static void of_pci_bus_release_domain_nr(struct
-> pci_bus *bus, struct device *par
->  		return;
->=20
->  	/* Release domain from IDA where it was allocated. */
-> -	if (of_get_pci_domain_nr(parent->of_node) =3D=3D bus->domain_nr)
-> +	if (bus->static_nr)
->  		ida_free(&pci_domain_nr_static_ida, bus->domain_nr);
->  	else
->  		ida_free(&pci_domain_nr_dynamic_ida, bus->domain_nr);
-> @@ -6928,7 +6934,7 @@ static void of_pci_bus_release_domain_nr(struct
-> pci_bus *bus, struct device *par
->=20
->  int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)  =
-{
-> -	return acpi_disabled ? of_pci_bus_find_domain_nr(parent) :
-> +	return acpi_disabled ? of_pci_bus_find_domain_nr(bus, parent) :
->  			       acpi_pci_bus_find_domain_nr(bus);  }
->=20
-> diff --git a/include/linux/pci.h b/include/linux/pci.h index
-> eeb2e6f6130f..222a1729ea7e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -677,6 +677,7 @@ struct pci_bus {
->  	struct bin_attribute	*legacy_mem;	/* Legacy mem */
->  	unsigned int		is_added:1;
->  	unsigned int		unsafe_warn:1;	/* warned about
-> RW1C config write */
-> +	unsigned int		static_nr:1;
->  };
->=20
->  #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
-> --
-> 2.37.1
+I have a ASRock AD2550B-ITX board[1],
+When another discrete video card is mounted into it mini PCIe slot or PCI slot,
+The IGD cannot be the primary display adapter anymore. The display is totally black.
+I have try to draft a few trivial patch to help fix this[2].
+
+And I want to use the IGD as primary, does this count as an issue?
+
+[1] https://www.asrock.com/mb/Intel/AD2550-ITX/
+[2] https://patchwork.freedesktop.org/series/123073/
 
