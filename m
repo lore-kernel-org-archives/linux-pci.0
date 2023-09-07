@@ -2,231 +2,111 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7783EC873E
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 15:45:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F5F8EC873D
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 15:45:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230351AbjIGPmn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Sep 2023 11:42:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52294 "EHLO
+        id S232217AbjIGPmp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Sep 2023 11:42:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344953AbjIGPeJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 11:34:09 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 685A21BF0
-        for <linux-pci@vger.kernel.org>; Thu,  7 Sep 2023 08:33:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694100832; x=1725636832;
-  h=date:from:to:cc:subject:message-id;
-  bh=MZUIwOBiIutI0/60YX0OWUbMDWA6EPoOcwXykqWQQ2g=;
-  b=dAegVrJQDJieJKESWRGBlCsEJb9GtoT7gdUh549ZfQZHnH9RCYO3dgK+
-   Kuf7Y5czjiT2nkjZek8dWKVaadTtNcTry3bXrEPm/TNAaoe9l++BryloL
-   y6A2e/5n/PntG6+8tnDOh1d7UU0uTPfjHKZtbLCQ6Lbg50LTlyTrj8T+e
-   jKnhvLYW2De9mNNMQqEaktQuH7Sjg7g5gPQ6pySh/M4UIW9Kb9LGJnn54
-   0q2xjCes0QsL80dwQ/Y+/0PFCYurjGzbNxm1b4Bqt7O3UUYuxb8ekeNPC
-   IAvP8jGLqoACOeXz2rO7H9U79K+T/YWrtGUTWTfA50rAOu3iLp+zAmSBR
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10825"; a="408282747"
-X-IronPort-AV: E=Sophos;i="6.02,234,1688454000"; 
-   d="scan'208";a="408282747"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Sep 2023 00:18:44 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10825"; a="718578174"
-X-IronPort-AV: E=Sophos;i="6.02,234,1688454000"; 
-   d="scan'208";a="718578174"
-Received: from lkp-server01.sh.intel.com (HELO 59b3c6e06877) ([10.239.97.150])
-  by orsmga006.jf.intel.com with ESMTP; 07 Sep 2023 00:18:42 -0700
-Received: from kbuild by 59b3c6e06877 with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qe9Hk-0000yx-2E;
-        Thu, 07 Sep 2023 07:18:40 +0000
-Date:   Thu, 07 Sep 2023 15:18:17 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- 8ec9c1d5d0a5a4744516adb483b97a238892f9d5
-Message-ID: <202309071515.9M5LtU8x-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S240182AbjIGPYO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 11:24:14 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A2F8E66;
+        Thu,  7 Sep 2023 08:24:09 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38740McB021542;
+        Thu, 7 Sep 2023 06:01:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=J+y7Wak/6lSVL84og9A1a1Ald3OU+kiUXVx8BSzTJCU=;
+ b=Nv1OANp4eJSZz/AcaHsvyw/qEa+IESofZHFYxSv86mzZB1Kp/m9p8efOnFZmfOrCymKv
+ 5pf+NyouUZGvH+EZGCg7kL2uleZkX224OlCRllgKnCwc1tC8t+IUOob+z/Gtuwl7JLl9
+ JOarqR1OfkfN1DEINcMc9J+dNrEozJlAo69EPq4j5eEHMTUsGoiXEG9UHjvU4Ip7Mj4A
+ KYDKDuZHLFLADc6cQifgPyNz87S0/ubbkGVQvkmtVoGUJW1WNUA2hiZLI5miFY4Se1rg
+ pNjSoQF+evFyF1RxQ51qMEOpxNQnuK0JTzKOpcHXNKrQ/AWpIUkIx45wiIlRl/JEVFq4 vg== 
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sy4bqgg64-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 07 Sep 2023 06:01:01 +0000
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 38760wIC011319;
+        Thu, 7 Sep 2023 06:00:58 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sux4kjqut-1;
+        Thu, 07 Sep 2023 06:00:58 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38760wbf011314;
+        Thu, 7 Sep 2023 06:00:58 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 38760vbj011313;
+        Thu, 07 Sep 2023 06:00:58 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
+        id 38A5913A9; Thu,  7 Sep 2023 11:30:57 +0530 (+0530)
+From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
+To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org, mani@kernel.org
+Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, rafael@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, quic_parass@quicinc.com,
+        Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Subject: [PATCH v5 1/5] dt-bindings: pci: qcom: Add opp table
+Date:   Thu,  7 Sep 2023 11:30:29 +0530
+Message-Id: <1694066433-8677-2-git-send-email-quic_krichai@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
+References: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: YjE3EIyot4WZsOOo6uASrBAPS_8cc0Wr
+X-Proofpoint-ORIG-GUID: YjE3EIyot4WZsOOo6uASrBAPS_8cc0Wr
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-06_12,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 clxscore=1015
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 suspectscore=0
+ phishscore=0 spamscore=0 mlxlogscore=913 mlxscore=0 impostorscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309070052
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: 8ec9c1d5d0a5a4744516adb483b97a238892f9d5  PCI: Free released resource after coalescing
+PCIe needs to choose the appropriate performance state of RPMH power
+domain based upon the PCIe gen speed.
 
-elapsed time: 805m
+Adding the Operating Performance Points table allows to adjust power domain
+performance state, depending on the PCIe gen speed.
 
-configs tested: 161
-configs skipped: 2
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20230907   gcc  
-arc                  randconfig-r004-20230907   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                   randconfig-001-20230907   clang
-arm64                            allmodconfig   gcc  
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r001-20230907   clang
-arm64                randconfig-r012-20230907   gcc  
-arm64                randconfig-r016-20230907   gcc  
-arm64                randconfig-r034-20230907   clang
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-hexagon               randconfig-001-20230907   clang
-hexagon               randconfig-002-20230907   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20230907   clang
-i386         buildonly-randconfig-002-20230907   clang
-i386         buildonly-randconfig-003-20230907   clang
-i386         buildonly-randconfig-004-20230907   clang
-i386         buildonly-randconfig-005-20230907   clang
-i386         buildonly-randconfig-006-20230907   clang
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                  randconfig-001-20230907   clang
-i386                  randconfig-002-20230907   clang
-i386                  randconfig-003-20230907   clang
-i386                  randconfig-004-20230907   clang
-i386                  randconfig-005-20230907   clang
-i386                  randconfig-006-20230907   clang
-i386                  randconfig-011-20230907   gcc  
-i386                  randconfig-012-20230907   gcc  
-i386                  randconfig-013-20230907   gcc  
-i386                  randconfig-014-20230907   gcc  
-i386                  randconfig-015-20230907   gcc  
-i386                  randconfig-016-20230907   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20230907   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r031-20230907   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-microblaze           randconfig-r022-20230907   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r011-20230907   clang
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r014-20230907   gcc  
-nios2                randconfig-r033-20230907   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-openrisc             randconfig-r002-20230907   gcc  
-openrisc             randconfig-r013-20230907   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   gcc  
-powerpc64            randconfig-r024-20230907   gcc  
-powerpc64            randconfig-r036-20230907   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20230907   clang
-riscv                randconfig-r021-20230907   gcc  
-riscv                randconfig-r023-20230907   gcc  
-riscv                randconfig-r032-20230907   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20230907   gcc  
-s390                 randconfig-r003-20230907   clang
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r025-20230907   gcc  
-sparc                randconfig-r035-20230907   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                   randconfig-r005-20230907   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-001-20230907   clang
-x86_64       buildonly-randconfig-002-20230907   clang
-x86_64       buildonly-randconfig-003-20230907   clang
-x86_64       buildonly-randconfig-004-20230907   clang
-x86_64       buildonly-randconfig-005-20230907   clang
-x86_64       buildonly-randconfig-006-20230907   clang
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20230907   gcc  
-x86_64                randconfig-002-20230907   gcc  
-x86_64                randconfig-003-20230907   gcc  
-x86_64                randconfig-004-20230907   gcc  
-x86_64                randconfig-005-20230907   gcc  
-x86_64                randconfig-006-20230907   gcc  
-x86_64                randconfig-011-20230907   clang
-x86_64                randconfig-012-20230907   clang
-x86_64                randconfig-013-20230907   clang
-x86_64                randconfig-014-20230907   clang
-x86_64                randconfig-015-20230907   clang
-x86_64                randconfig-016-20230907   clang
-x86_64                randconfig-071-20230907   clang
-x86_64                randconfig-072-20230907   clang
-x86_64                randconfig-073-20230907   clang
-x86_64                randconfig-074-20230907   clang
-x86_64                randconfig-075-20230907   clang
-x86_64                randconfig-076-20230907   clang
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa               randconfig-r006-20230907   gcc  
-xtensa               randconfig-r015-20230907   gcc  
-xtensa               randconfig-r026-20230907   gcc  
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index eadba38..ac5a167 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -122,6 +122,10 @@ properties:
+     description: GPIO controlled connection to WAKE# signal
+     maxItems: 1
+ 
++  operating-points-v2: true
++  opp-table:
++    type: object
++
+ required:
+   - compatible
+   - reg
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.7.4
+
