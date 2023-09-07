@@ -2,225 +2,103 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D41EC873E
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 16:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6585EEC873D
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 16:35:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232613AbjIGQbe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Sep 2023 12:31:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45140 "EHLO
+        id S236729AbjIGQfJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Sep 2023 12:35:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238169AbjIGQbK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 12:31:10 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D6F61FF6;
-        Thu,  7 Sep 2023 09:18:12 -0700 (PDT)
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3874sYcr024320;
-        Thu, 7 Sep 2023 06:01:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=E2/rZXApw2tHGMvkwZrvHBMnvXncapvh3R4u/7IfL5M=;
- b=l8lNDfzchWOulH200UbVDRyFg5XkgHs7N3LL4IdlupJ0XRRzlWgX7oWLg7JvvdjEVgqU
- xLiM5Jx08I72TfBr0CGQQiTnt/GCi1wA7DW67zq860p46cYoPdm4fvNkuR4PlN0+QwxY
- 5b3tP73Q/CwxBIPKeW2lk/ge75WYW730eMjwztpn57DVTUFU/N3BEUIBmJq+xThrctKp
- L+NcEsbAej795br3/C0G1RJC6qy0vg0hSDkX4OIW8m4lUN7/ooyDAQtsxljo+eSm+4j+
- qy6tpiU4EbB8TFtIaaIcrvzdl+v+0JXvomgHKalZx2BAeR5mbh9LXeVm9CoQ3zOugYZB rw== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sy50d8ck7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 07 Sep 2023 06:01:04 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 38760wID011319;
-        Thu, 7 Sep 2023 06:01:01 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sux4kjqvc-1;
-        Thu, 07 Sep 2023 06:01:01 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38760sNT011295;
-        Thu, 7 Sep 2023 06:01:01 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3876109W011363;
-        Thu, 07 Sep 2023 06:01:01 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id 52D3B13BA; Thu,  7 Sep 2023 11:31:00 +0530 (+0530)
-From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
-To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org, mani@kernel.org
-Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, rafael@kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, quic_vbadigan@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
-        quic_ramkri@quicinc.com, quic_parass@quicinc.com,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Subject: [PATCH v5 5/5] PCI: qcom: Add OPP support to scale performance state of power domain
-Date:   Thu,  7 Sep 2023 11:30:33 +0530
-Message-Id: <1694066433-8677-6-git-send-email-quic_krichai@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
-References: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Scwlq_BSajw-yOZNptPblDV7DZL5y0fm
-X-Proofpoint-GUID: Scwlq_BSajw-yOZNptPblDV7DZL5y0fm
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-06_12,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
- spamscore=0 malwarescore=0 priorityscore=1501 mlxlogscore=999 adultscore=0
- suspectscore=0 bulkscore=0 lowpriorityscore=0 impostorscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309070052
+        with ESMTP id S231835AbjIGQfJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 12:35:09 -0400
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8B119449B;
+        Thu,  7 Sep 2023 09:34:40 -0700 (PDT)
+Received: from loongson.cn (unknown [10.20.42.43])
+        by gateway (Coremail) with SMTP id _____8CxrutK+_lkF4chAA--.64027S3;
+        Fri, 08 Sep 2023 00:33:14 +0800 (CST)
+Received: from [0.0.0.0] (unknown [10.20.42.43])
+        by localhost.localdomain (Coremail) with SMTP id AQAAf8AxDCNK+_lkoPBwAA--.55158S3;
+        Fri, 08 Sep 2023 00:33:14 +0800 (CST)
+Message-ID: <39736dad-41e3-8b24-ccef-ac3425a6c9f4@loongson.cn>
+Date:   Fri, 8 Sep 2023 00:33:13 +0800
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Subject: Re: [Nouveau] [RFC, drm-misc-next v4 0/9] PCI/VGA: Allowing the user
+ to select the primary video adapter at boot time
+Content-Language: en-US
+To:     =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        Sui Jingfeng <sui.jingfeng@linux.dev>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>,
+        Thomas Zimmermann <tzimmermann@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>
+Cc:     nouveau@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org
+References: <20230904195724.633404-1-sui.jingfeng@linux.dev>
+ <44ec8549-dc36-287e-4359-abd3ec8d22d6@suse.de>
+ <5afd2efb-f838-f9b7-02a9-2cf4d4fd2382@loongson.cn>
+ <2adfa653-ac35-d560-be52-c92848a1eef5@gmail.com>
+ <b51d49f3-e3de-6b8d-9cb4-df5c03f3cdc0@loongson.cn>
+ <10509692-ce04-e225-5a27-abc955554bdc@gmail.com>
+ <a9af88c5-4509-96ff-a7fd-a0f72d2f1e6a@linux.dev>
+ <127fab21-bc5c-f782-e42b-1092fbb8df34@amd.com>
+From:   suijingfeng <suijingfeng@loongson.cn>
+In-Reply-To: <127fab21-bc5c-f782-e42b-1092fbb8df34@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: AQAAf8AxDCNK+_lkoPBwAA--.55158S3
+X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
+X-Coremail-Antispam: 1Uk129KBj9xXoW7JrW5CryktF1fZFy8GrWDKFX_yoWfZFbE9F
+        18t34kCw4jyan3XrWSgr47W39Ygr47Gr18ZrWrWrya934rKa98KrZ5C395ZryrGF10grn8
+        GryFqa4fC3s29osvyTuYvTs0mTUanT9S1TB71UUUUj7qnTZGkaVYY2UrUUUUj1kv1TuYvT
+        s0mT0YCTnIWjqI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUI
+        cSsGvfJTRUUUbDkYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20x
+        vaj40_Wr0E3s1l1IIY67AEw4v_JrI_Jryl8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+        w2x7M28EF7xvwVC0I7IYx2IY67AKxVWUCVW8JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+        W8JVWxJwA2z4x0Y4vEx4A2jsIE14v26r4j6F4UM28EF7xvwVC2z280aVCY1x0267AKxVW8
+        JVW8Jr1ln4kS14v26r126r1DM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2
+        x26I8E6xACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r126r1D
+        McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7
+        I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrwCF
+        x2IqxVCFs4IE7xkEbVWUJVW8JwCFI7km07C267AKxVWUAVWUtwC20s026c02F40E14v26r
+        1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij
+        64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr
+        0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF
+        0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU8h0ePUUUUU==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-While scaling the interconnect clocks based on PCIe link speed, it is also
-mandatory to scale the power domain performance state so that the SoC can
-run under optimum power conditions.
+Hi,
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 58 ++++++++++++++++++++++++++++------
- 1 file changed, 49 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index ca6350b..1817e96 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -22,6 +22,7 @@
- #include <linux/of.h>
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
-+#include <linux/pm_opp.h>
- #include <linux/pm_runtime.h>
- #include <linux/platform_device.h>
- #include <linux/phy/pcie.h>
-@@ -240,6 +241,7 @@ struct qcom_pcie {
- 	const struct qcom_pcie_cfg *cfg;
- 	struct dentry *debugfs;
- 	bool suspended;
-+	bool opp_supported;
- };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
-@@ -1357,14 +1359,13 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
- 	return 0;
- }
- 
--static int qcom_pcie_icc_update(struct qcom_pcie *pcie)
-+static int qcom_pcie_icc_opp_update(struct qcom_pcie *pcie)
- {
- 	struct dw_pcie *pci = pcie->pci;
-+	struct dev_pm_opp *opp;
- 	u32 offset, status, bw;
- 	int speed, width;
--
--	if (!pcie->icc_mem)
--		return 0;
-+	int ret;
- 
- 	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
- 	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
-@@ -1391,7 +1392,21 @@ static int qcom_pcie_icc_update(struct qcom_pcie *pcie)
- 		break;
- 	}
- 
--	return icc_set_bw(pcie->icc_mem, 0, width * bw);
-+	if (pcie->opp_supported) {
-+		opp = dev_pm_opp_find_level_exact(pci->dev, speed);
-+		if (!IS_ERR(opp)) {
-+			ret = dev_pm_opp_set_opp(pci->dev, opp);
-+			if (ret)
-+				dev_err(pci->dev, "Failed to set opp: level %d ret %d\n",
-+					dev_pm_opp_get_level(opp), ret);
-+			dev_pm_opp_put(opp);
-+		}
-+	}
-+
-+	if (pcie->icc_mem)
-+		ret = icc_set_bw(pcie->icc_mem, 0, width * bw);
-+
-+	return ret;
- }
- 
- static int qcom_pcie_link_transition_count(struct seq_file *s, void *data)
-@@ -1434,8 +1449,10 @@ static void qcom_pcie_init_debugfs(struct qcom_pcie *pcie)
- static int qcom_pcie_probe(struct platform_device *pdev)
- {
- 	const struct qcom_pcie_cfg *pcie_cfg;
-+	unsigned long max_level = INT_MAX;
- 	struct device *dev = &pdev->dev;
- 	struct qcom_pcie *pcie;
-+	struct dev_pm_opp *opp;
- 	struct dw_pcie_rp *pp;
- 	struct resource *res;
- 	struct dw_pcie *pci;
-@@ -1506,6 +1523,27 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		goto err_pm_runtime_put;
- 
-+	/* OPP table is optional */
-+	ret = devm_pm_opp_of_add_table(dev);
-+	if (ret && ret != -ENODEV) {
-+		dev_err_probe(dev, ret, "Failed to add OPP table\n");
-+		goto err_pm_runtime_put;
-+	}
-+
-+	/* vote for max level in the opp table if opp table is present */
-+	if (ret != -ENODEV) {
-+		opp = dev_pm_opp_find_level_floor(dev, &max_level);
-+		if (!IS_ERR(opp)) {
-+			ret = dev_pm_opp_set_opp(dev, opp);
-+			if (ret)
-+				dev_err_probe(pci->dev, ret,
-+					      "Failed to set opp: level %d\n",
-+					      dev_pm_opp_get_level(opp));
-+			dev_pm_opp_put(opp);
-+		}
-+		pcie->opp_supported = true;
-+	}
-+
- 	ret = pcie->cfg->ops->get_resources(pcie);
- 	if (ret)
- 		goto err_pm_runtime_put;
-@@ -1524,9 +1562,9 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		goto err_phy_exit;
- 	}
- 
--	ret = qcom_pcie_icc_update(pcie);
-+	ret = qcom_pcie_icc_opp_update(pcie);
- 	if (ret)
--		dev_err(dev, "failed to update interconnect bandwidth: %d\n",
-+		dev_err(dev, "failed to update interconnect bandwidth/opp: %d\n",
- 			ret);
- 
- 	if (pcie->mhi)
-@@ -1575,6 +1613,8 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
- 	 */
- 	if (!dw_pcie_link_up(pcie->pci)) {
- 		qcom_pcie_host_deinit(&pcie->pci->pp);
-+		if (pcie->opp_supported)
-+			dev_pm_opp_set_opp(dev, NULL);
- 		pcie->suspended = true;
- 	}
- 
-@@ -1594,9 +1634,9 @@ static int qcom_pcie_resume_noirq(struct device *dev)
- 		pcie->suspended = false;
- 	}
- 
--	ret = qcom_pcie_icc_update(pcie);
-+	ret = qcom_pcie_icc_opp_update(pcie);
- 	if (ret)
--		dev_err(dev, "failed to update interconnect bandwidth: %d\n",
-+		dev_err(dev, "failed to update interconnect bandwidth/opp: %d\n",
- 			ret);
- 
- 	return 0;
--- 
-2.7.4
+On 2023/9/7 17:08, Christian König wrote:
+
+
+> I strongly suggest that you just completely drop this here 
+
+
+Drop this is OK, no problem. Then I will go to develop something else.
+This version is not intended to merge originally, as it's a RFC.
+Also, the core mechanism already finished, it is the first patch in this series.
+Things left are just policy (how to specify one and parse the kernel CMD line) and nothing interesting left.
+It is actually to fulfill my promise at V3 which is to give some examples as usage cases.
+
+
+> and go into the AST driver and try to fix it. 
+
+Well, someone tell me that this is well defined behavior yesterday,
+which imply that it is not a bug. I'm not going to fix a non-bug.
+But if thomas ask me to fix it, then I probably have to try to fix.
+But I suggest if things not broken, don't fix it. Otherwise this may
+incur more big trouble. For server's single display use case, it is
+good enough.
+
+
+Thanks.
 
