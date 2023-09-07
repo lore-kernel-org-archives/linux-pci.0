@@ -2,120 +2,186 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6180EC874D
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 17:25:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6B14EC8743
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 17:57:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243432AbjIGRZ5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Sep 2023 13:25:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33614 "EHLO
+        id S245112AbjIGR52 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Sep 2023 13:57:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243345AbjIGRZz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 13:25:55 -0400
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2B22CDE;
-        Thu,  7 Sep 2023 10:25:26 -0700 (PDT)
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3875npUj020188;
-        Thu, 7 Sep 2023 06:00:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=4UZ+9/d3SUM0emzxqN6v0bSiJxRg8md3/J0gazE6Jus=;
- b=gm2rQaPdYM1dMA9hG4fC18hPDDutkM2tlypr2RULNAQ58tN/diNfKohTFxTdWH+ev6SF
- i5AsQ5T0XIVvlVf5ozahoGGZO01ju4XPnX+pLqPRknpFCgGMrEcqWBmuvbCgs8WwbrU+
- Ngu9f7U5g6Eew0mF81+XPk3TY6xQO+OYOiLoPxqbTAV02xXaVMy7TclQwV4+WUYIxS0I
- oBg5dSbWQ1w1GJ/VfXe/SwM6oUVQEwveVWX/VsJLELtMEE+71S0ATT/lKju4XHAJ9EEH
- NjNsYc0VYzySmGHx2dfPsmZOn0i8/IwwfvK464nQnwEOtbQh2UcR4JewyKmeI9XVctid iQ== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sxpt02m7x-1
+        with ESMTP id S234034AbjIGR51 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 13:57:27 -0400
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4665170C;
+        Thu,  7 Sep 2023 10:56:55 -0700 (PDT)
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3875ea8L030697;
+        Thu, 7 Sep 2023 06:04:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=mZTbIBpUd9iXC5m5eQrkVF6qpnr7KXC2jM0o5fpM0RQ=;
+ b=Cfabf4gAtq5ZJUNPjlaBrrXzZNiTjiQcl7L4KTYdFqB94KjiMgiI/Q3sN8Ge0MP7sMo6
+ CPhQzTSa6J5KKyCoUOLQ7A6tFVogn4kbbd3MpG4rrXopIYuu2ugdvShTzWoJPm+OAmeS
+ rKB6ZmM7Ji+Fu4BYFN4jInTXSbZxST+lRinA6L9nKuIe510Twg4kJCDrGw9WPeeJrlQe
+ VBR+cKGNrF2IgcQolmwQC/5mfX0TllcHzlsR1bSVFODfyqBEEOSRoDyuEQZzYfbgO9//
+ /9fMUpatrn3FeG2Dz1ImOmwMLddszYUI4ukbNalWhSA/1YIzuyARvHrqgwz3S/rGpM/z fw== 
+Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sxgsqubjw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 07 Sep 2023 06:00:58 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 38760tdn011300;
-        Thu, 7 Sep 2023 06:00:55 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sux4kjqum-1;
-        Thu, 07 Sep 2023 06:00:55 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38760sNR011295;
-        Thu, 7 Sep 2023 06:00:54 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 38760sRL011294;
-        Thu, 07 Sep 2023 06:00:54 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
-        id E6FB513A9; Thu,  7 Sep 2023 11:30:53 +0530 (+0530)
-From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
-To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org, mani@kernel.org
-Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, rafael@kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, quic_vbadigan@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
-        quic_ramkri@quicinc.com, quic_parass@quicinc.com,
-        Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Subject: [PATCH v5 0/5] PCI: qcom: Add support for OPP
-Date:   Thu,  7 Sep 2023 11:30:28 +0530
-Message-Id: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
+        Thu, 07 Sep 2023 06:04:53 +0000
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 38764pvE018083
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 7 Sep 2023 06:04:51 GMT
+Received: from [10.216.2.98] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 6 Sep
+ 2023 23:04:45 -0700
+Message-ID: <a43e5d7d-9254-03d4-3899-08dd23a6347a@quicinc.com>
+Date:   Thu, 7 Sep 2023 11:34:40 +0530
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH v4 3/4] OPP: Add api to retrieve opps which is at most the
+ provided level
+Content-Language: en-US
+To:     Pavan Kondeti <quic_pkondeti@quicinc.com>
+CC:     <manivannan.sadhasivam@linaro.org>, <helgaas@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_vbadigan@quicinc.com>,
+        <quic_nitegupt@quicinc.com>, <quic_skananth@quicinc.com>,
+        <quic_ramkri@quicinc.com>, <quic_parass@quicinc.com>,
+        <krzysztof.kozlowski@linaro.org>,
+        Viresh Kumar <vireshk@kernel.org>,
+        "Nishanth Menon" <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        "open list:OPERATING PERFORMANCE POINTS (OPP)" 
+        <linux-pm@vger.kernel.org>
+References: <1692717141-32743-1-git-send-email-quic_krichai@quicinc.com>
+ <1692717141-32743-4-git-send-email-quic_krichai@quicinc.com>
+ <20c40635-0ad9-4de3-b18b-ccbcc2fd3779@quicinc.com>
+From:   Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
+In-Reply-To: <20c40635-0ad9-4de3-b18b-ccbcc2fd3779@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 8W5aLJY1N9CQqKdZdvw0uQdbuFlbHFoH
-X-Proofpoint-GUID: 8W5aLJY1N9CQqKdZdvw0uQdbuFlbHFoH
+X-Proofpoint-GUID: ylCDB2iUxcWj3nXhFWPZQuv-HIiSs6PT
+X-Proofpoint-ORIG-GUID: ylCDB2iUxcWj3nXhFWPZQuv-HIiSs6PT
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
  definitions=2023-09-06_12,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 spamscore=0
- mlxscore=0 phishscore=0 impostorscore=0 suspectscore=0 mlxlogscore=815
- adultscore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309070052
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 spamscore=0
+ lowpriorityscore=0 adultscore=0 impostorscore=0 phishscore=0 bulkscore=0
+ suspectscore=0 priorityscore=1501 malwarescore=0 clxscore=1015 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2308100000
+ definitions=main-2309070052
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch adds support for OPP to vote for the performance state of RPMH
-power domain based upon GEN speed it PCIe got enumerated.
 
-Before link up PCIe driver will vote for the maximum performance state.
+On 8/23/2023 6:35 AM, Pavan Kondeti wrote:
+> On Tue, Aug 22, 2023 at 08:42:20PM +0530, Krishna chaitanya chundru wrote:
+>> Add dev_pm_opp_find_level_floor() for searching a lesser match or
+>> operating on OPP in the order of decreasing level.
+>>
+> "OPP: Add api to retrieve opps which is at most the provided level". Pls
+> change this to "opp: Add dev_pm_opp_find_level_floor()". The API name
+> conveys the message.
+>
+> In the description, you can give a use case. i.e voting for the max
+> level during initialization of a driver.
+>
+Done
+>> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+>> ---
+>>   drivers/opp/core.c     | 26 ++++++++++++++++++++++++++
+>>   include/linux/pm_opp.h |  4 ++++
+>>   2 files changed, 30 insertions(+)
+>>
+>> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+>> index 954c948..e668cf2 100644
+>> --- a/drivers/opp/core.c
+>> +++ b/drivers/opp/core.c
+>> @@ -727,6 +727,32 @@ struct dev_pm_opp *dev_pm_opp_find_level_ceil(struct device *dev,
+>>   }
+>>   EXPORT_SYMBOL_GPL(dev_pm_opp_find_level_ceil);
+>>   
+>> +
+>> +/**
+>> + * dev_pm_opp_find_level_floor() - Search for a rounded floor freq
+>> + * @dev:	device for which we do this operation
+>> + * @freq:	Start level
+>> + *
+> %s/freq/level
+>
+> Run make W=1 so that kerneldoc is tested.
+Done
+>> + * Search for the matching floor *available* OPP from a starting level
+>> + * for a device.
+>> + *
+>> + * Return: matching *opp and refreshes *level accordingly, else returns
+>> + * ERR_PTR in case of error and should be handled using IS_ERR. Error return
+>> + * values can be:
+> What do you mean by refresh here?
 
-Add API dev_pm_opp_find_level_floor to find To find the highest opp for a device
-based on the level.
+Level  argument will be updated by this API with the opp level being 
+returned here,
 
-Changes from v4:
-	- Added a separate patch for returning error from the qcom_pcie_upadate
-	  and moved opp update logic to icc_update and used a bool variable to 
-	  update the opp.
-	- Addressed comments made by pavan.
-changes from v3:
-	- Removing the opp vote on suspend when the link is not up and link is not
-	  up and add debug prints as suggested by pavan.
-	- Added dev_pm_opp_find_level_floor API to find the highest opp to vote.
-changes from v2:
-	- Instead of using the freq based opp search use level based as suggested
-	  by Dmitry Baryshkov.
-Changes from v1:
-        - Addressed comments from Krzysztof Kozlowski.
-        - Added the rpmhpd_opp_xxx phandle as suggested by pavan.
-        - Added dev_pm_opp_set_opp API call which was missed on previous patch.
+I was trying to use same terminology used in other API's
 
-Krishna chaitanya chundru (5):
-  dt-bindings: pci: qcom: Add opp table
-  arm64: dts: qcom: sm8450: Add opp table support to PCIe
-  opp: Add dev_pm_opp_find_level_floor()
-  PCI: qcom: Return error from 'qcom_pcie_icc_update'
-  PCI: qcom: Add OPP support to scale performance state of power domain
+>> + * EINVAL:	for bad pointer
+>> + * ERANGE:	no match found for search
+>> + * ENODEV:	if device not found in list of registered devices
+>> + *
+>> + * The callers are required to call dev_pm_opp_put() for the returned OPP after
+>> + * use.
+>> + */
+>> +struct dev_pm_opp *dev_pm_opp_find_level_floor(struct device *dev,
+>> +					      unsigned long *level)
+>> +{
+>> +	return _find_key_floor(dev, level, 0, true, _read_level, NULL);
+>> +}
+>> +EXPORT_SYMBOL_GPL(dev_pm_opp_find_level_floor);
+>> +
+>>   /**
+>>    * dev_pm_opp_find_bw_ceil() - Search for a rounded ceil bandwidth
+>>    * @dev:	device for which we do this operation
+>> diff --git a/include/linux/pm_opp.h b/include/linux/pm_opp.h
+>> index dc1fb58..a3bc386 100644
+>> --- a/include/linux/pm_opp.h
+>> +++ b/include/linux/pm_opp.h
+>> @@ -128,6 +128,8 @@ struct dev_pm_opp *dev_pm_opp_find_level_exact(struct device *dev,
+>>   					       unsigned int level);
+>>   struct dev_pm_opp *dev_pm_opp_find_level_ceil(struct device *dev,
+>>   					      unsigned int *level);
+>> +struct dev_pm_opp *dev_pm_opp_find_level_floor(struct device *dev,
+>> +					      unsigned long *level);
+>>   
+>>   struct dev_pm_opp *dev_pm_opp_find_freq_ceil(struct device *dev,
+>>   					     unsigned long *freq);
+>> @@ -285,6 +287,8 @@ static inline struct dev_pm_opp *dev_pm_opp_find_bw_ceil(struct device *dev,
+>>   
+>>   static inline struct dev_pm_opp *dev_pm_opp_find_bw_floor(struct device *dev,
+>>   					unsigned int *bw, int index)
+>> +static inline struct dev_pm_opp *dev_pm_opp_find_level_floor(struct device *dev,
+>> +					unsigned long *level)
+>>   {
+>>   	return ERR_PTR(-EOPNOTSUPP);
+>>   }
+>>
+> Please run ./scripts/checkpatch.pl --strict <your patch> and fix the
+> indentation warnings from this patch.
+>
+> Thanks,
+> Pavan
 
- .../devicetree/bindings/pci/qcom,pcie.yaml         |  4 ++
- arch/arm64/boot/dts/qcom/sm8450.dtsi               | 47 ++++++++++++++++
- drivers/opp/core.c                                 | 25 +++++++++
- drivers/pci/controller/dwc/pcie-qcom.c             | 63 ++++++++++++++++++----
- include/linux/pm_opp.h                             |  9 ++++
- 5 files changed, 137 insertions(+), 11 deletions(-)
+Done
 
--- 
-2.7.4
+- KC
 
