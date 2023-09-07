@@ -2,29 +2,29 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45CB1EC874F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B07C9EC8750
 	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 18:30:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343510AbjIGSao (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1344149AbjIGSao (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 7 Sep 2023 14:30:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39856 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56180 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242520AbjIGSam (ORCPT
+        with ESMTP id S241633AbjIGSam (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 14:30:42 -0400
 Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27D8E1BCF;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 957D51BD3;
         Thu,  7 Sep 2023 11:30:10 -0700 (PDT)
 Received: from EXMBX166.cuchost.com (unknown [175.102.18.54])
         (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
         (Client CN "EXMBX166", Issuer "EXMBX166" (not verified))
-        by ex01.ufhost.com (Postfix) with ESMTP id 5E40A24E238;
-        Thu,  7 Sep 2023 17:11:06 +0800 (CST)
+        by ex01.ufhost.com (Postfix) with ESMTP id 4639B24E1DE;
+        Thu,  7 Sep 2023 17:11:01 +0800 (CST)
 Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX166.cuchost.com
  (172.16.6.76) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Thu, 7 Sep
- 2023 17:11:06 +0800
+ 2023 17:11:01 +0800
 Received: from ubuntu.localdomain (113.72.144.73) by EXMBX171.cuchost.com
  (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Thu, 7 Sep
- 2023 17:11:05 +0800
+ 2023 17:11:00 +0800
 From:   Minda Chen <minda.chen@starfivetech.com>
 To:     Daire McNamara <daire.mcnamara@microchip.com>,
         Conor Dooley <conor@kernel.org>,
@@ -45,12 +45,10 @@ CC:     <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Leyfoon Tan <leyfoon.tan@starfivetech.com>,
         Kevin Xie <kevin.xie@starfivetech.com>,
         Minda Chen <minda.chen@starfivetech.com>
-Subject: [PATCH v5 06/11] PCI: plda: Add event interrupt codes and IRQ domain ops
-Date:   Thu, 7 Sep 2023 17:10:53 +0800
-Message-ID: <20230907091058.125630-7-minda.chen@starfivetech.com>
+Subject: [PATCH v5 0/11] Refactoring Microchip PCIe driver and add StarFive PCIe
+Date:   Thu, 7 Sep 2023 17:10:47 +0800
+Message-ID: <20230907091058.125630-1-minda.chen@starfivetech.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20230907091058.125630-1-minda.chen@starfivetech.com>
-References: <20230907091058.125630-1-minda.chen@starfivetech.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [113.72.144.73]
@@ -61,178 +59,138 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For PolarFire implements non-PLDA local interrupt events, most of
-event interrupt process codes can not be re-used. PLDA implements
-new codes and IRQ domain ops like PolarFire.
+This patchset final purpose is add PCIe driver for StarFive JH7110 SoC.
+JH7110 using PLDA XpressRICH PCIe IP. Microchip PolarFire Using the
+same IP and have commit their codes, which are mixed with PLDA
+controller codes and Microchip platform codes.
 
-plda_get_events() adds a new IRQ num to event num mapping codes for
-PLDA local event except DMA engine interrupt events. The DMA engine
-interrupt events are implemented by vendors.
+For re-use the PLDA controller codes, I request refactoring microchip
+codes, move PLDA common codes to PLDA files.
+Desigware and Cadence is good example for refactoring codes.
 
-Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
----
- drivers/pci/controller/plda/pcie-plda-host.c | 115 +++++++++++++++++++
- drivers/pci/controller/plda/pcie-plda.h      |  10 ++
- 2 files changed, 125 insertions(+)
+So first step is extract the PLDA common codes from microchip, and
+refactoring the microchip codes.(patch1 - 8)
+Then, add Starfive codes. (patch9 - 11)
 
-diff --git a/drivers/pci/controller/plda/pcie-plda-host.c b/drivers/pci/controller/plda/pcie-plda-host.c
-index ce02cfe6b5fa..8a8b463281cb 100644
---- a/drivers/pci/controller/plda/pcie-plda-host.c
-+++ b/drivers/pci/controller/plda/pcie-plda-host.c
-@@ -250,6 +250,121 @@ int plda_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 	return 0;
- }
- 
-+irqreturn_t plda_event_handler(int irq, void *dev_id)
-+{
-+	return IRQ_HANDLED;
-+}
-+
-+static u32 plda_get_events(struct plda_pcie_rp *port)
-+{
-+	u32 events, val, origin;
-+
-+	origin = readl_relaxed(port->bridge_addr + ISTATUS_LOCAL);
-+
-+	/* Error events and doorbell events */
-+	events = (origin >> A_ATR_EVT_POST_ERR_SHIFT) & 0xff;
-+
-+	/* INTx events */
-+	if (origin & PM_MSI_INT_INTX_MASK)
-+		events |= BIT(EVENT_PM_MSI_INT_INTX);
-+
-+	/* MSI event and sys events */
-+	val = (origin >> PM_MSI_INT_MSI_SHIFT) & 0xf;
-+	events |= val << EVENT_PM_MSI_INT_MSI;
-+
-+	return events;
-+}
-+
-+void plda_handle_event(struct irq_desc *desc)
-+{
-+	struct plda_pcie_rp *port = irq_desc_get_handler_data(desc);
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	u32 bit;
-+	unsigned long events;
-+
-+	chained_irq_enter(chip, desc);
-+
-+	events = plda_get_events(port);
-+	for_each_set_bit(bit, &events, port->num_events)
-+		generic_handle_domain_irq(port->event_domain, bit);
-+
-+	chained_irq_exit(chip, desc);
-+}
-+
-+static u32 plda_hwirq_to_mask(int hwirq)
-+{
-+	u32 mask;
-+
-+	if (hwirq < EVENT_PM_MSI_INT_INTX)
-+		mask = BIT(hwirq + A_ATR_EVT_POST_ERR_SHIFT);
-+	else if (hwirq == EVENT_PM_MSI_INT_INTX)
-+		mask = PM_MSI_INT_INTX_MASK;
-+	else
-+		mask = BIT(hwirq + PM_MSI_TO_MASK_OFFSET);
-+
-+	return mask;
-+}
-+
-+static void plda_ack_event_irq(struct irq_data *data)
-+{
-+	struct plda_pcie_rp *port = irq_data_get_irq_chip_data(data);
-+
-+	writel_relaxed(plda_hwirq_to_mask(data->hwirq),
-+		       port->bridge_addr + ISTATUS_LOCAL);
-+}
-+
-+static void plda_mask_event_irq(struct irq_data *data)
-+{
-+	struct plda_pcie_rp *port = irq_data_get_irq_chip_data(data);
-+	u32 mask, val;
-+
-+	mask = plda_hwirq_to_mask(data->hwirq);
-+
-+	raw_spin_lock(&port->lock);
-+	val = readl_relaxed(port->bridge_addr + IMASK_LOCAL);
-+	val &= ~mask;
-+	writel_relaxed(val, port->bridge_addr + IMASK_LOCAL);
-+	raw_spin_unlock(&port->lock);
-+}
-+
-+static void plda_unmask_event_irq(struct irq_data *data)
-+{
-+	struct plda_pcie_rp *port = irq_data_get_irq_chip_data(data);
-+	u32 mask, val;
-+
-+	mask = plda_hwirq_to_mask(data->hwirq);
-+
-+	raw_spin_lock(&port->lock);
-+	val = readl_relaxed(port->bridge_addr + IMASK_LOCAL);
-+	val |= mask;
-+	writel_relaxed(val, port->bridge_addr + IMASK_LOCAL);
-+	raw_spin_unlock(&port->lock);
-+}
-+
-+static struct irq_chip plda_event_irq_chip = {
-+	.name = "PLDA PCIe EVENT",
-+	.irq_ack = plda_ack_event_irq,
-+	.irq_mask = plda_mask_event_irq,
-+	.irq_unmask = plda_unmask_event_irq,
-+};
-+
-+static int plda_pcie_event_map(struct irq_domain *domain, unsigned int irq,
-+			       irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &plda_event_irq_chip, handle_level_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops plda_evt_dom_ops = {
-+	.map = plda_pcie_event_map,
-+};
-+
-+static const struct plda_event_ops plda_event_ops = {
-+	.get_events = plda_get_events,
-+};
-+
- void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
- 			    phys_addr_t axi_addr, phys_addr_t pci_addr,
- 			    size_t size)
-diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
-index a5eb02ec6171..cc8fc8a2da91 100644
---- a/drivers/pci/controller/plda/pcie-plda.h
-+++ b/drivers/pci/controller/plda/pcie-plda.h
-@@ -102,6 +102,14 @@
- #define EVENT_PM_MSI_INT_SYS_ERR		12
- #define NUM_PLDA_EVENTS				13
- 
-+#define PM_MSI_TO_MASK_OFFSET			19
-+
-+struct plda_pcie_rp;
-+
-+struct plda_event_ops {
-+	u32 (*get_events)(struct plda_pcie_rp *pcie);
-+};
-+
- struct plda_msi {
- 	struct mutex lock;		/* Protect used bitmap */
- 	struct irq_domain *msi_domain;
-@@ -118,10 +126,12 @@ struct plda_pcie_rp {
- 	raw_spinlock_t lock;
- 	struct plda_msi msi;
- 	void __iomem *bridge_addr;
-+	int num_events;
- };
- 
- void plda_handle_msi(struct irq_desc *desc);
- int plda_allocate_msi_domains(struct plda_pcie_rp *port);
-+irqreturn_t plda_event_handler(int irq, void *dev_id);
- void plda_handle_intx(struct irq_desc *desc);
- int plda_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 		       irq_hw_number_t hwirq);
+This patchset is base on v6.5
+
+The patch is base on Daire microchip commit,(accepted, not merge in mainline now)
+https://patchwork.kernel.org/project/linux-pci/cover/20230728131401.1615724-1-daire.mcnamara@microchip.com/
+patch11 dts patch base on stg clk patchset and syscon patch(these will be merged in 6.6-rcx).
+https://patchwork.kernel.org/project/linux-riscv/cover/20230713113902.56519-1-xingyu.wu@starfivetech.com/
+https://patchwork.kernel.org/project/linux-riscv/patch/20230717023040.78860-7-xingyu.wu@starfivetech.com/
+
+patch1 is move PLDA XpressRICH PCIe host common properties dt-binding
+       docs from microchip,pcie-host.yaml
+patch2 is move PolarFire codes to PLDA directory.
+patch3 is move PLDA IP register macros to plda-pcie.h
+patch4 is rename data structure setup and IRQ functions in microchip codes.
+patch5 is move the patch4 functions to common file pcie-plda-host.c
+patch6 is Add PLDA event interrupt codes and IRQ domain ops.
+patch7 is rename IRQ init function in microchip codes, prepare to move
+the common file pcie-plda-host.c,
+patch8 is move IRQ init functions and other functions to pcie-plda-host.c
+patch9 is add StarFive JH7110 PCIe dt-binding doc.
+patch10 is add StarFive JH7110 Soc PCIe codes.
+patch11 is Starfive dts config
+
+previous version:
+v1:https://patchwork.kernel.org/project/linux-pci/cover/20230719102057.22329-1-minda.chen@starfivetech.com/
+v2:https://patchwork.kernel.org/project/linux-pci/cover/20230727103949.26149-1-minda.chen@starfivetech.com/
+v3:https://patchwork.kernel.org/project/linux-pci/cover/20230814082016.104181-1-minda.chen@starfivetech.com/
+v4:https://patchwork.kernel.org/project/linux-pci/cover/20230825090129.65721-1-minda.chen@starfivetech.com/
+
+change:
+  v5:
+    patch 6 -8:
+    	- Some variables names changed (evt->event).
+    	- plda_handle_event() using a unify callback function to get events
+num.
+	- Add plda_event_ops data structure.
+    patch 10:
+	plda_event_ops changed which is related to patch 6- 8 changed.
+
+  v4:
+    patch 3:
+    	Copy the interrupt events macros to pcie-plda-host.c
+    patch 7 - 8:
+    	get_events() change in patch 7. Patch 8 is just move the codes.
+    other change:
+	All the functions in commit message add (). 
+  v3:
+    patch 2- 8:
+      - splite refactoring patches to multiple patch.
+      - rename plda_pcie to plda_pcie_rp. Maybe other vendor will
+        upstream PLDA ep codes.
+    patch 9:
+      - Remove the redundant reference.
+      - move the offset value to codes in starfive,stg-syscon
+      - change reset-gpio to prest-gpio.
+    patch10:
+      - Add 100ms delay after preset for PCIe 6.0 spec.
+      - stg-syscon related modification.
+    patch11:
+      - Add dts configure.
+  v2:
+    patch1:
+      - squash dt-bindings patches to patch1
+      - add 'required' list. 
+      - plda doc rename to plda,xpressrich-axi-common.yaml
+    patch2 - 8:
+      - squash the microchip modification patch.
+    patch9:
+      - remove the plda common required property.
+    patch10:
+      - Sync the hide rc bar ops with config read function.
+      - Revert the T_PVPERL to 100ms and add comments for the source.
+      - Replace the link check function by the standard link ops.
+      - Convert to new pm ops marcos.
+      - Some formats modification.
+      - pcie-plda-host modification merge to patch4.
+    other:
+      - remove the pcie-plda-plat.c
+      - remove the starfive dts patch first. for it depends on
+        stg clock and syscon setting.
+
+Minda Chen (11):
+  dt-bindings: PCI: Add PLDA XpressRICH PCIe host common properties
+  PCI: microchip: Move pcie-microchip-host.c to plda directory
+  PCI: microchip: Move PLDA IP register macros to pcie-plda.h
+  PCI: microchip: Rename data structure and functions
+  PCI: plda: Move the common functions to pcie-plda-host.c
+  PCI: plda: Add event interrupt codes and IRQ domain ops
+  PCI: microchip: Rename IRQ init function
+  PCI: microchip: Move IRQ init functions to pcie-plda-host.c
+  dt-bindings: PCI: Add StarFive JH7110 PCIe controller
+  PCI: starfive: Add JH7110 PCIe controller
+  riscv: dts: starfive: add PCIe dts configuration for JH7110
+
+ .../bindings/pci/microchip,pcie-host.yaml     |  55 +-
+ .../pci/plda,xpressrich3-axi-common.yaml      |  75 ++
+ .../bindings/pci/starfive,jh7110-pcie.yaml    | 120 ++++
+ MAINTAINERS                                   |  17 +-
+ .../jh7110-starfive-visionfive-2.dtsi         |  64 ++
+ arch/riscv/boot/dts/starfive/jh7110.dtsi      |  86 +++
+ drivers/pci/controller/Kconfig                |   9 +-
+ drivers/pci/controller/Makefile               |   2 +-
+ drivers/pci/controller/plda/Kconfig           |  30 +
+ drivers/pci/controller/plda/Makefile          |   4 +
+ .../{ => plda}/pcie-microchip-host.c          | 605 ++--------------
+ drivers/pci/controller/plda/pcie-plda-host.c  | 656 ++++++++++++++++++
+ drivers/pci/controller/plda/pcie-plda.h       | 239 +++++++
+ drivers/pci/controller/plda/pcie-starfive.c   | 460 ++++++++++++
+ 14 files changed, 1817 insertions(+), 605 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/starfive,jh7110-pcie.yaml
+ create mode 100644 drivers/pci/controller/plda/Kconfig
+ create mode 100644 drivers/pci/controller/plda/Makefile
+ rename drivers/pci/controller/{ => plda}/pcie-microchip-host.c (54%)
+ create mode 100644 drivers/pci/controller/plda/pcie-plda-host.c
+ create mode 100644 drivers/pci/controller/plda/pcie-plda.h
+ create mode 100644 drivers/pci/controller/plda/pcie-starfive.c
+
+
+base-commit: 2dde18cd1d8fac735875f2e4987f11817cc0bc2c
 -- 
 2.17.1
 
