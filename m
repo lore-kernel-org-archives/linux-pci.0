@@ -2,290 +2,120 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E726EC874E
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 17:20:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6180EC874D
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 17:25:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242978AbjIGRUy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Sep 2023 13:20:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49854 "EHLO
+        id S243432AbjIGRZ5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Sep 2023 13:25:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243118AbjIGRUt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 13:20:49 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 013171997;
-        Thu,  7 Sep 2023 10:20:27 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 86BAFC433BA;
-        Thu,  7 Sep 2023 17:19:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694107178;
-        bh=PDYzKzKBiT+TNRB0Vx9DGh637mV1YPZ7MK8eR9exGSM=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=JMkXUvGT/Y966Dbf7awJ/2xSLEzBMKgM2X9b5kTlxjxVl5sVC6scLZDEq69QyshBv
-         MPNfAjyRobt7/cKZhggS1TQ1E5gZ4sMU22/F6OboC086P6ANUtmX5TM1AmSN4eD4JT
-         DjA99JZd5+p9lwJF7ntmpu7RNgVfTyXBIPubtW3NXuR/wCfC1AOLp0fYn47glSHuSg
-         dFO5+D/MvNUaFHh2PMqpx8YaLPe7qf4Mv0VSDqhVR6eLZhVkiVAwfFezotmKNTcFGz
-         yIv0smcgHsTQbBZecI1B8q9oVf4jbxjSLXDOjCgigAU3U5vz8ByvUDTRpMUjwcF9oA
-         nyozRGnecgqaA==
-Received: by mail-lj1-f180.google.com with SMTP id 38308e7fff4ca-2b962c226ceso20790601fa.3;
-        Thu, 07 Sep 2023 10:19:38 -0700 (PDT)
-X-Gm-Message-State: AOJu0YxQLZWJVMrvW4SZCTny3ZiBk5HWocTCS/bBhFT50cFn4+pjXd5h
-        aD6Uq5G0LVCo6tq9pzKDr9uzsDYFv4z31OV/tw==
-X-Google-Smtp-Source: AGHT+IHwjbAmkZ5Ec05zBPZFrd7GQGZKn4oCw4jlv8sjHh+612eF77vIQwMOoqyB67ypCSbg/TV0tjClokFnPf/SQgg=
-X-Received: by 2002:a2e:9303:0:b0:2bc:f252:6cc4 with SMTP id
- e3-20020a2e9303000000b002bcf2526cc4mr4293480ljh.10.1694107176462; Thu, 07 Sep
- 2023 10:19:36 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230907091058.125630-1-minda.chen@starfivetech.com> <20230907091058.125630-12-minda.chen@starfivetech.com>
-In-Reply-To: <20230907091058.125630-12-minda.chen@starfivetech.com>
-From:   Rob Herring <robh+dt@kernel.org>
-Date:   Thu, 7 Sep 2023 12:19:24 -0500
-X-Gmail-Original-Message-ID: <CAL_Jsq+TeDK0Lh7Yf9CwLPDPfvuv9C8A6dKDEBVxMtncyuzQQg@mail.gmail.com>
-Message-ID: <CAL_Jsq+TeDK0Lh7Yf9CwLPDPfvuv9C8A6dKDEBVxMtncyuzQQg@mail.gmail.com>
-Subject: Re: [PATCH v5 11/11] riscv: dts: starfive: add PCIe dts configuration
- for JH7110
-To:     Minda Chen <minda.chen@starfivetech.com>
-Cc:     Daire McNamara <daire.mcnamara@microchip.com>,
-        Conor Dooley <conor@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Emil Renner Berthing <emil.renner.berthing@canonical.com>,
+        with ESMTP id S243345AbjIGRZz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 13:25:55 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2B22CDE;
+        Thu,  7 Sep 2023 10:25:26 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3875npUj020188;
+        Thu, 7 Sep 2023 06:00:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id; s=qcppdkim1;
+ bh=4UZ+9/d3SUM0emzxqN6v0bSiJxRg8md3/J0gazE6Jus=;
+ b=gm2rQaPdYM1dMA9hG4fC18hPDDutkM2tlypr2RULNAQ58tN/diNfKohTFxTdWH+ev6SF
+ i5AsQ5T0XIVvlVf5ozahoGGZO01ju4XPnX+pLqPRknpFCgGMrEcqWBmuvbCgs8WwbrU+
+ Ngu9f7U5g6Eew0mF81+XPk3TY6xQO+OYOiLoPxqbTAV02xXaVMy7TclQwV4+WUYIxS0I
+ oBg5dSbWQ1w1GJ/VfXe/SwM6oUVQEwveVWX/VsJLELtMEE+71S0ATT/lKju4XHAJ9EEH
+ NjNsYc0VYzySmGHx2dfPsmZOn0i8/IwwfvK464nQnwEOtbQh2UcR4JewyKmeI9XVctid iQ== 
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sxpt02m7x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 07 Sep 2023 06:00:58 +0000
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 38760tdn011300;
+        Thu, 7 Sep 2023 06:00:55 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sux4kjqum-1;
+        Thu, 07 Sep 2023 06:00:55 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38760sNR011295;
+        Thu, 7 Sep 2023 06:00:54 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 38760sRL011294;
+        Thu, 07 Sep 2023 06:00:54 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
+        id E6FB513A9; Thu,  7 Sep 2023 11:30:53 +0530 (+0530)
+From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
+To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org, mani@kernel.org
+Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, rafael@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-riscv@lists.infradead.org, linux-pci@vger.kernel.org,
-        =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Mason Huo <mason.huo@starfivetech.com>,
-        Leyfoon Tan <leyfoon.tan@starfivetech.com>,
-        Kevin Xie <kevin.xie@starfivetech.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        linux-pm@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, quic_parass@quicinc.com,
+        Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Subject: [PATCH v5 0/5] PCI: qcom: Add support for OPP
+Date:   Thu,  7 Sep 2023 11:30:28 +0530
+Message-Id: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 8W5aLJY1N9CQqKdZdvw0uQdbuFlbHFoH
+X-Proofpoint-GUID: 8W5aLJY1N9CQqKdZdvw0uQdbuFlbHFoH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
+ definitions=2023-09-06_12,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1011 spamscore=0
+ mlxscore=0 phishscore=0 impostorscore=0 suspectscore=0 mlxlogscore=815
+ adultscore=0 bulkscore=0 priorityscore=1501 lowpriorityscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309070052
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 7, 2023 at 4:11=E2=80=AFAM Minda Chen <minda.chen@starfivetech.=
-com> wrote:
->
-> Add PCIe dts configuraion for JH7110 SoC platform.
->
-> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-> Reviewed-by: Hal Feng <hal.feng@starfivetech.com>
-> ---
->  .../jh7110-starfive-visionfive-2.dtsi         | 64 ++++++++++++++
->  arch/riscv/boot/dts/starfive/jh7110.dtsi      | 86 +++++++++++++++++++
->  2 files changed, 150 insertions(+)
->
-> diff --git a/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dt=
-si b/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
-> index de0f40a8be93..4dd61e2fec7d 100644
-> --- a/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
-> +++ b/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
-> @@ -15,6 +15,8 @@
->                 i2c2 =3D &i2c2;
->                 i2c5 =3D &i2c5;
->                 i2c6 =3D &i2c6;
-> +               pcie0 =3D &pcie0;
-> +               pcie1 =3D &pcie1;
+This patch adds support for OPP to vote for the performance state of RPMH
+power domain based upon GEN speed it PCIe got enumerated.
 
-That's not a defined alias. We already have "linux,pci-domain" if you
-need to number PCI host bridges.
+Before link up PCIe driver will vote for the maximum performance state.
 
->                 serial0 =3D &uart0;
->         };
->
-> @@ -208,6 +210,54 @@
->                 };
->         };
->
-> +       pcie0_pins: pcie0-0 {
-> +               wake-pins {
-> +                       pinmux =3D <GPIOMUX(32, GPOUT_LOW,
-> +                                             GPOEN_DISABLE,
-> +                                             GPI_NONE)>;
-> +                       bias-pull-up;
-> +                       drive-strength =3D <2>;
-> +                       input-enable;
-> +                       input-schmitt-disable;
-> +                       slew-rate =3D <0>;
-> +               };
-> +
-> +               clkreq-pins {
-> +                       pinmux =3D <GPIOMUX(27, GPOUT_LOW,
-> +                                             GPOEN_DISABLE,
-> +                                             GPI_NONE)>;
-> +                       bias-pull-down;
-> +                       drive-strength =3D <2>;
-> +                       input-enable;
-> +                       input-schmitt-disable;
-> +                       slew-rate =3D <0>;
-> +               };
-> +       };
-> +
-> +       pcie1_pins: pcie1-0 {
-> +               wake-pins {
-> +                       pinmux =3D <GPIOMUX(21, GPOUT_LOW,
-> +                                             GPOEN_DISABLE,
-> +                                             GPI_NONE)>;
-> +                       bias-pull-up;
-> +                       drive-strength =3D <2>;
-> +                       input-enable;
-> +                       input-schmitt-disable;
-> +                       slew-rate =3D <0>;
-> +               };
-> +
-> +               clkreq-pins {
-> +                       pinmux =3D <GPIOMUX(29, GPOUT_LOW,
-> +                                             GPOEN_DISABLE,
-> +                                             GPI_NONE)>;
-> +                       bias-pull-down;
-> +                       drive-strength =3D <2>;
-> +                       input-enable;
-> +                       input-schmitt-disable;
-> +                       slew-rate =3D <0>;
-> +               };
-> +       };
-> +
->         uart0_pins: uart0-0 {
->                 tx-pins {
->                         pinmux =3D <GPIOMUX(5, GPOUT_SYS_UART0_TX,
-> @@ -233,6 +283,20 @@
->         };
->  };
->
-> +&pcie0 {
-> +       pinctrl-names =3D "default";
-> +       perst-gpios =3D <&sysgpio 26 GPIO_ACTIVE_LOW>;
-> +       pinctrl-0 =3D <&pcie0_pins>;
-> +       status =3D "okay";
-> +};
-> +
-> +&pcie1 {
-> +       pinctrl-names =3D "default";
-> +       perst-gpios =3D <&sysgpio 28 GPIO_ACTIVE_LOW>;
-> +       pinctrl-0 =3D <&pcie1_pins>;
-> +       status =3D "okay";
-> +};
-> +
->  &uart0 {
->         pinctrl-names =3D "default";
->         pinctrl-0 =3D <&uart0_pins>;
-> diff --git a/arch/riscv/boot/dts/starfive/jh7110.dtsi b/arch/riscv/boot/d=
-ts/starfive/jh7110.dtsi
-> index 02354e642c44..7a5dc43cf63c 100644
-> --- a/arch/riscv/boot/dts/starfive/jh7110.dtsi
-> +++ b/arch/riscv/boot/dts/starfive/jh7110.dtsi
-> @@ -629,5 +629,91 @@
->                         #reset-cells =3D <1>;
->                         power-domains =3D <&pwrc JH7110_PD_VOUT>;
->                 };
-> +
-> +               pcie0: pcie@940000000 {
-> +                       compatible =3D "starfive,jh7110-pcie";
-> +                       reg =3D <0x9 0x40000000 0x0 0x1000000>,
-> +                             <0x0 0x2b000000 0x0 0x100000>;
-> +                       reg-names =3D "cfg", "apb";
-> +                       #address-cells =3D <3>;
-> +                       #size-cells =3D <2>;
-> +                       #interrupt-cells =3D <1>;
-> +                       ranges =3D <0x82000000  0x0 0x30000000  0x0 0x300=
-00000 0x0 0x08000000>,
-> +                                <0xc3000000  0x9 0x00000000  0x9 0x00000=
-000 0x0 0x40000000>;
-> +                       interrupts =3D <56>;
-> +                       interrupt-parent =3D <&plic>;
-> +                       interrupt-map-mask =3D <0x0 0x0 0x0 0x7>;
-> +                       interrupt-map =3D <0x0 0x0 0x0 0x1 &pcie_intc0 0x=
-1>,
-> +                                       <0x0 0x0 0x0 0x2 &pcie_intc0 0x2>=
-,
-> +                                       <0x0 0x0 0x0 0x3 &pcie_intc0 0x3>=
-,
-> +                                       <0x0 0x0 0x0 0x4 &pcie_intc0 0x4>=
-;
-> +                       msi-controller;
-> +                       device_type =3D "pci";
-> +                       starfive,stg-syscon =3D <&stg_syscon>;
-> +                       bus-range =3D <0x0 0xff>;
-> +                       clocks =3D <&syscrg JH7110_SYSCLK_NOC_BUS_STG_AXI=
->,
-> +                                <&stgcrg JH7110_STGCLK_PCIE0_TL>,
-> +                                <&stgcrg JH7110_STGCLK_PCIE0_AXI_MST0>,
-> +                                <&stgcrg JH7110_STGCLK_PCIE0_APB>;
-> +                       clock-names =3D "noc", "tl", "axi_mst0", "apb";
-> +                       resets =3D <&stgcrg JH7110_STGRST_PCIE0_AXI_MST0>=
-,
-> +                                <&stgcrg JH7110_STGRST_PCIE0_AXI_SLV0>,
-> +                                <&stgcrg JH7110_STGRST_PCIE0_AXI_SLV>,
-> +                                <&stgcrg JH7110_STGRST_PCIE0_BRG>,
-> +                                <&stgcrg JH7110_STGRST_PCIE0_CORE>,
-> +                                <&stgcrg JH7110_STGRST_PCIE0_APB>;
-> +                       reset-names =3D "mst0", "slv0", "slv", "brg",
-> +                                     "core", "apb";
-> +                       status =3D "disabled";
-> +
-> +                       pcie_intc0: interrupt-controller {
-> +                               #address-cells =3D <0>;
-> +                               #interrupt-cells =3D <1>;
-> +                               interrupt-controller;
-> +                       };
-> +               };
-> +
-> +               pcie1: pcie@9c0000000 {
-> +                       compatible =3D "starfive,jh7110-pcie";
-> +                       reg =3D <0x9 0xc0000000 0x0 0x1000000>,
-> +                             <0x0 0x2c000000 0x0 0x100000>;
-> +                       reg-names =3D "cfg", "apb";
-> +                       #address-cells =3D <3>;
-> +                       #size-cells =3D <2>;
-> +                       #interrupt-cells =3D <1>;
-> +                       ranges =3D <0x82000000  0x0 0x38000000  0x0 0x380=
-00000 0x0 0x08000000>,
-> +                                <0xc3000000  0x9 0x80000000  0x9 0x80000=
-000 0x0 0x40000000>;
-> +                       interrupts =3D <57>;
-> +                       interrupt-parent =3D <&plic>;
-> +                       interrupt-map-mask =3D <0x0 0x0 0x0 0x7>;
-> +                       interrupt-map =3D <0x0 0x0 0x0 0x1 &pcie_intc1 0x=
-1>,
-> +                                       <0x0 0x0 0x0 0x2 &pcie_intc1 0x2>=
-,
-> +                                       <0x0 0x0 0x0 0x3 &pcie_intc1 0x3>=
-,
-> +                                       <0x0 0x0 0x0 0x4 &pcie_intc1 0x4>=
-;
-> +                       msi-controller;
-> +                       device_type =3D "pci";
-> +                       starfive,stg-syscon =3D <&stg_syscon>;
-> +                       bus-range =3D <0x0 0xff>;
-> +                       clocks =3D <&syscrg JH7110_SYSCLK_NOC_BUS_STG_AXI=
->,
-> +                                <&stgcrg JH7110_STGCLK_PCIE1_TL>,
-> +                                <&stgcrg JH7110_STGCLK_PCIE1_AXI_MST0>,
-> +                                <&stgcrg JH7110_STGCLK_PCIE1_APB>;
-> +                       clock-names =3D "noc", "tl", "axi_mst0", "apb";
-> +                       resets =3D <&stgcrg JH7110_STGRST_PCIE1_AXI_MST0>=
-,
-> +                                <&stgcrg JH7110_STGRST_PCIE1_AXI_SLV0>,
-> +                                <&stgcrg JH7110_STGRST_PCIE1_AXI_SLV>,
-> +                                <&stgcrg JH7110_STGRST_PCIE1_BRG>,
-> +                                <&stgcrg JH7110_STGRST_PCIE1_CORE>,
-> +                                <&stgcrg JH7110_STGRST_PCIE1_APB>;
-> +                       reset-names =3D "mst0", "slv0", "slv", "brg",
-> +                                     "core", "apb";
-> +                       status =3D "disabled";
-> +
-> +                       pcie_intc1: interrupt-controller {
-> +                               #address-cells =3D <0>;
-> +                               #interrupt-cells =3D <1>;
-> +                               interrupt-controller;
-> +                       };
-> +               };
->         };
->  };
-> --
-> 2.17.1
->
+Add API dev_pm_opp_find_level_floor to find To find the highest opp for a device
+based on the level.
+
+Changes from v4:
+	- Added a separate patch for returning error from the qcom_pcie_upadate
+	  and moved opp update logic to icc_update and used a bool variable to 
+	  update the opp.
+	- Addressed comments made by pavan.
+changes from v3:
+	- Removing the opp vote on suspend when the link is not up and link is not
+	  up and add debug prints as suggested by pavan.
+	- Added dev_pm_opp_find_level_floor API to find the highest opp to vote.
+changes from v2:
+	- Instead of using the freq based opp search use level based as suggested
+	  by Dmitry Baryshkov.
+Changes from v1:
+        - Addressed comments from Krzysztof Kozlowski.
+        - Added the rpmhpd_opp_xxx phandle as suggested by pavan.
+        - Added dev_pm_opp_set_opp API call which was missed on previous patch.
+
+Krishna chaitanya chundru (5):
+  dt-bindings: pci: qcom: Add opp table
+  arm64: dts: qcom: sm8450: Add opp table support to PCIe
+  opp: Add dev_pm_opp_find_level_floor()
+  PCI: qcom: Return error from 'qcom_pcie_icc_update'
+  PCI: qcom: Add OPP support to scale performance state of power domain
+
+ .../devicetree/bindings/pci/qcom,pcie.yaml         |  4 ++
+ arch/arm64/boot/dts/qcom/sm8450.dtsi               | 47 ++++++++++++++++
+ drivers/opp/core.c                                 | 25 +++++++++
+ drivers/pci/controller/dwc/pcie-qcom.c             | 63 ++++++++++++++++++----
+ include/linux/pm_opp.h                             |  9 ++++
+ 5 files changed, 137 insertions(+), 11 deletions(-)
+
+-- 
+2.7.4
+
