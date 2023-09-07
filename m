@@ -2,125 +2,225 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 389D2EC8741
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 16:18:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D41EC873E
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Sep 2023 16:31:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237783AbjIGQSp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Sep 2023 12:18:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46194 "EHLO
+        id S232613AbjIGQbe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Sep 2023 12:31:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242985AbjIGQSP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 12:18:15 -0400
+        with ESMTP id S238169AbjIGQbK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Sep 2023 12:31:10 -0400
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3DF059F3;
-        Thu,  7 Sep 2023 09:04:03 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3879swWG020769;
-        Thu, 7 Sep 2023 09:56:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=JJN2an9C7cmZNdVoHcnWUPhZpuiuA4IshU4Q+93acDg=;
- b=krTLe3BVzK1kwTO4z/hdANOSKIW7Wnt8yVUzH5P+yZl6MK040hpCyHCvGCvd3rkxoZgw
- CuGyuIENjG4CNA8ssmIaWcjNOw/9vrIDK2EChJyIGgHiOeU3P/4y9dkMs2FsV4U+Up7A
- 8WHmAYERTgVsevoY/PBagE4KVxByQbS7HX4pH+XFXDSEbgYvKdhMNqkTOWEbYL9Case5
- 6TjMF5pnczV0TbV6hjL7/oHgB2/+sh2AN6eRALFKfJmB7O/v6Q+WrKS8Devj+lCRpUpI
- 67v3ArK0HBrAjiaNft7vCCMWsaftQvpaFgfpn9Wxsf4WSPLMK4ki1UaKfLmsb5vclKsO uQ== 
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3syaad087m-1
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D6F61FF6;
+        Thu,  7 Sep 2023 09:18:12 -0700 (PDT)
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3874sYcr024320;
+        Thu, 7 Sep 2023 06:01:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references; s=qcppdkim1;
+ bh=E2/rZXApw2tHGMvkwZrvHBMnvXncapvh3R4u/7IfL5M=;
+ b=l8lNDfzchWOulH200UbVDRyFg5XkgHs7N3LL4IdlupJ0XRRzlWgX7oWLg7JvvdjEVgqU
+ xLiM5Jx08I72TfBr0CGQQiTnt/GCi1wA7DW67zq860p46cYoPdm4fvNkuR4PlN0+QwxY
+ 5b3tP73Q/CwxBIPKeW2lk/ge75WYW730eMjwztpn57DVTUFU/N3BEUIBmJq+xThrctKp
+ L+NcEsbAej795br3/C0G1RJC6qy0vg0hSDkX4OIW8m4lUN7/ooyDAQtsxljo+eSm+4j+
+ qy6tpiU4EbB8TFtIaaIcrvzdl+v+0JXvomgHKalZx2BAeR5mbh9LXeVm9CoQ3zOugYZB rw== 
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3sy50d8ck7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 07 Sep 2023 09:56:58 +0000
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-        by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3879uudp008519
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 7 Sep 2023 09:56:57 GMT
-Received: from [10.216.2.98] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Thu, 7 Sep
- 2023 02:56:48 -0700
-Message-ID: <347293d1-15e5-5412-9695-01be768283ad@quicinc.com>
-Date:   Thu, 7 Sep 2023 15:26:45 +0530
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH v5 2/5] arm64: dts: qcom: sm8450: Add opp table support to
- PCIe
-Content-Language: en-US
-To:     Konrad Dybcio <konrad.dybcio@linaro.org>, <agross@kernel.org>,
-        <andersson@kernel.org>, <krzysztof.kozlowski+dt@linaro.org>,
-        <conor+dt@kernel.org>, <vireshk@kernel.org>, <nm@ti.com>,
-        <sboyd@kernel.org>, <mani@kernel.org>
-CC:     <lpieralisi@kernel.org>, <kw@linux.com>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <rafael@kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pm@vger.kernel.org>, <quic_vbadigan@quicinc.com>,
-        <quic_nitegupt@quicinc.com>, <quic_skananth@quicinc.com>,
-        <quic_ramkri@quicinc.com>, <quic_parass@quicinc.com>
+        Thu, 07 Sep 2023 06:01:04 +0000
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 38760wID011319;
+        Thu, 7 Sep 2023 06:01:01 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3sux4kjqvc-1;
+        Thu, 07 Sep 2023 06:01:01 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38760sNT011295;
+        Thu, 7 Sep 2023 06:01:01 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-krichai-hyd.qualcomm.com [10.213.110.112])
+        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3876109W011363;
+        Thu, 07 Sep 2023 06:01:01 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 4058933)
+        id 52D3B13BA; Thu,  7 Sep 2023 11:31:00 +0530 (+0530)
+From:   Krishna chaitanya chundru <quic_krichai@quicinc.com>
+To:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org, mani@kernel.org
+Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, rafael@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, quic_parass@quicinc.com,
+        Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Subject: [PATCH v5 5/5] PCI: qcom: Add OPP support to scale performance state of power domain
+Date:   Thu,  7 Sep 2023 11:30:33 +0530
+Message-Id: <1694066433-8677-6-git-send-email-quic_krichai@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
 References: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
- <1694066433-8677-3-git-send-email-quic_krichai@quicinc.com>
- <38f64349-5139-4207-91eb-cd39fabd4496@linaro.org>
-From:   Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
-In-Reply-To: <38f64349-5139-4207-91eb-cd39fabd4496@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.80.80.8]
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: zu2wqzDPrSeflYuDgfDtMYFS5isYnDnA
-X-Proofpoint-GUID: zu2wqzDPrSeflYuDgfDtMYFS5isYnDnA
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: Scwlq_BSajw-yOZNptPblDV7DZL5y0fm
+X-Proofpoint-GUID: Scwlq_BSajw-yOZNptPblDV7DZL5y0fm
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.957,Hydra:6.0.601,FMLib:17.11.176.26
- definitions=2023-09-07_02,2023-09-05_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- priorityscore=1501 suspectscore=0 clxscore=1015 mlxlogscore=634
- adultscore=0 phishscore=0 spamscore=0 bulkscore=0 lowpriorityscore=0
- impostorscore=0 mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2308100000 definitions=main-2309070087
+ definitions=2023-09-06_12,2023-09-05_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
+ spamscore=0 malwarescore=0 priorityscore=1501 mlxlogscore=999 adultscore=0
+ suspectscore=0 bulkscore=0 lowpriorityscore=0 impostorscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2308100000 definitions=main-2309070052
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+While scaling the interconnect clocks based on PCIe link speed, it is also
+mandatory to scale the power domain performance state so that the SoC can
+run under optimum power conditions.
 
-On 9/7/2023 2:34 PM, Konrad Dybcio wrote:
-> On 7.09.2023 08:00, Krishna chaitanya chundru wrote:
->> PCIe needs to choose the appropriate performance state of RPMH power
->> domain based up on the PCIe gen speed.
->>
->> So let's add the OPP table support to specify RPMH performance states.
->>
->> Use opp-level for the PCIe gen speed for easier use.
->>
->> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
->> ---
-> [...]
->
->> +
->> +			pcie1_opp_table: opp-table {
->> +				compatible = "operating-points-v2";
->> +
->> +				opp-1 {
->> +					opp-level = <1>;
->> +					required-opps = <&rpmhpd_opp_low_svs>;
->> +				};
->> +
->> +				opp-2 {
->> +					opp-level = <2>;
->> +					required-opps = <&rpmhpd_opp_low_svs>;
->> +				};
->> +
->> +				opp-3 {
->> +					opp-level = <3>;
->> +					required-opps = <&rpmhpd_opp_low_svs>;
-> Is gen3 not supposed to require nom like on pcie0?
-This particular controller instance can operate at low svs for GEN3.
-> Also, can all non-maximum OPPs run at just low_svs?
-This depends on the hardware capability, for this instance expect GEN4 
-remaining can operate in LOW svs. It varies from controller instance to 
-instance and also from target to target.
-> Konrad
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 58 ++++++++++++++++++++++++++++------
+ 1 file changed, 49 insertions(+), 9 deletions(-)
 
-- KC
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index ca6350b..1817e96 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -22,6 +22,7 @@
+ #include <linux/of.h>
+ #include <linux/of_gpio.h>
+ #include <linux/pci.h>
++#include <linux/pm_opp.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/platform_device.h>
+ #include <linux/phy/pcie.h>
+@@ -240,6 +241,7 @@ struct qcom_pcie {
+ 	const struct qcom_pcie_cfg *cfg;
+ 	struct dentry *debugfs;
+ 	bool suspended;
++	bool opp_supported;
+ };
+ 
+ #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
+@@ -1357,14 +1359,13 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static int qcom_pcie_icc_update(struct qcom_pcie *pcie)
++static int qcom_pcie_icc_opp_update(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
++	struct dev_pm_opp *opp;
+ 	u32 offset, status, bw;
+ 	int speed, width;
+-
+-	if (!pcie->icc_mem)
+-		return 0;
++	int ret;
+ 
+ 	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
+@@ -1391,7 +1392,21 @@ static int qcom_pcie_icc_update(struct qcom_pcie *pcie)
+ 		break;
+ 	}
+ 
+-	return icc_set_bw(pcie->icc_mem, 0, width * bw);
++	if (pcie->opp_supported) {
++		opp = dev_pm_opp_find_level_exact(pci->dev, speed);
++		if (!IS_ERR(opp)) {
++			ret = dev_pm_opp_set_opp(pci->dev, opp);
++			if (ret)
++				dev_err(pci->dev, "Failed to set opp: level %d ret %d\n",
++					dev_pm_opp_get_level(opp), ret);
++			dev_pm_opp_put(opp);
++		}
++	}
++
++	if (pcie->icc_mem)
++		ret = icc_set_bw(pcie->icc_mem, 0, width * bw);
++
++	return ret;
+ }
+ 
+ static int qcom_pcie_link_transition_count(struct seq_file *s, void *data)
+@@ -1434,8 +1449,10 @@ static void qcom_pcie_init_debugfs(struct qcom_pcie *pcie)
+ static int qcom_pcie_probe(struct platform_device *pdev)
+ {
+ 	const struct qcom_pcie_cfg *pcie_cfg;
++	unsigned long max_level = INT_MAX;
+ 	struct device *dev = &pdev->dev;
+ 	struct qcom_pcie *pcie;
++	struct dev_pm_opp *opp;
+ 	struct dw_pcie_rp *pp;
+ 	struct resource *res;
+ 	struct dw_pcie *pci;
+@@ -1506,6 +1523,27 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto err_pm_runtime_put;
+ 
++	/* OPP table is optional */
++	ret = devm_pm_opp_of_add_table(dev);
++	if (ret && ret != -ENODEV) {
++		dev_err_probe(dev, ret, "Failed to add OPP table\n");
++		goto err_pm_runtime_put;
++	}
++
++	/* vote for max level in the opp table if opp table is present */
++	if (ret != -ENODEV) {
++		opp = dev_pm_opp_find_level_floor(dev, &max_level);
++		if (!IS_ERR(opp)) {
++			ret = dev_pm_opp_set_opp(dev, opp);
++			if (ret)
++				dev_err_probe(pci->dev, ret,
++					      "Failed to set opp: level %d\n",
++					      dev_pm_opp_get_level(opp));
++			dev_pm_opp_put(opp);
++		}
++		pcie->opp_supported = true;
++	}
++
+ 	ret = pcie->cfg->ops->get_resources(pcie);
+ 	if (ret)
+ 		goto err_pm_runtime_put;
+@@ -1524,9 +1562,9 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_phy_exit;
+ 	}
+ 
+-	ret = qcom_pcie_icc_update(pcie);
++	ret = qcom_pcie_icc_opp_update(pcie);
+ 	if (ret)
+-		dev_err(dev, "failed to update interconnect bandwidth: %d\n",
++		dev_err(dev, "failed to update interconnect bandwidth/opp: %d\n",
+ 			ret);
+ 
+ 	if (pcie->mhi)
+@@ -1575,6 +1613,8 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
+ 	 */
+ 	if (!dw_pcie_link_up(pcie->pci)) {
+ 		qcom_pcie_host_deinit(&pcie->pci->pp);
++		if (pcie->opp_supported)
++			dev_pm_opp_set_opp(dev, NULL);
+ 		pcie->suspended = true;
+ 	}
+ 
+@@ -1594,9 +1634,9 @@ static int qcom_pcie_resume_noirq(struct device *dev)
+ 		pcie->suspended = false;
+ 	}
+ 
+-	ret = qcom_pcie_icc_update(pcie);
++	ret = qcom_pcie_icc_opp_update(pcie);
+ 	if (ret)
+-		dev_err(dev, "failed to update interconnect bandwidth: %d\n",
++		dev_err(dev, "failed to update interconnect bandwidth/opp: %d\n",
+ 			ret);
+ 
+ 	return 0;
+-- 
+2.7.4
 
