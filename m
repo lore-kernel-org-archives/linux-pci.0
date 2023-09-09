@@ -2,88 +2,136 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 145C2EEB57C
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Sep 2023 00:24:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C181EEB565
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Sep 2023 00:24:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243170AbjIIAYn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Sep 2023 20:24:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42300 "EHLO
+        id S245440AbjIIAY4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Sep 2023 20:24:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344814AbjIIAYl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2023 20:24:41 -0400
+        with ESMTP id S243954AbjIIAYy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2023 20:24:54 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE7F42110;
-        Fri,  8 Sep 2023 17:24:07 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E513C433AB;
-        Sat,  9 Sep 2023 00:23:10 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B25D213C;
+        Fri,  8 Sep 2023 17:24:20 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B234C43391;
+        Sat,  9 Sep 2023 00:22:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694218991;
-        bh=Snqvgixc7bVxYnxBEd8RYTOCCMGUKkpLC2JkYXwsr+M=;
+        s=k20201202; t=1694218978;
+        bh=L9x+G8UCR33S83uNdYr1KZLtat2puAJtZl52yQPvtj4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VcQCA6Bsmkc3B6ZMeQXCXMtz2MR+XYy/pKfkpkjWunpsmX2Y6ig7vAgCBLd357APG
-         Opgqk5bTmOAnGPCJHTu49j4BYnyKcvxEavQLUgx8wmNj0AcckRXbzIS0sreNCJqgLJ
-         2z24N4TaHWPDVN+eUYgBLGERfpJVrgYlWb1D1hCsfDUOD1f5m/lRRdbZ3mEWcRwuTn
-         8LG+nojMCYT10FMlkB/Tr/MBASXVNq7IQLIQfRExhSNRh2e3B10SX3iUft/NglZEfi
-         E03y46cTbbdz8dtSdindZrQHGvkoULbSdnH6pH18kEzM2ukyVJftpXzEwoZATNVEWT
-         cBFKpFz6f9oIQ==
+        b=SfGYJHFOujQKGc2SgVKwK7Pd7ml8Q6WHovJShDDkrmYDwJOfZ9n+8AQGBJS2yhKce
+         1OJ4VNgOy7tZKlnli2gX/FeeWRjhC8R+wumojOruqnYnP4/JJ4MXbvqJd2XfoZKpeK
+         HoHUpjiaB8iCVJhZpkIQ1hsmPuSXqtH6r/rT5cuXw4fwvfDt9rGftBJUSjGrESdY+z
+         faCYa7uOjG/wHKmsX9l8ofpEL+fwGTf6evam0lMeOQmJ2JTJ/8pWsQzb9uAT9T0wdG
+         /SfDFZDwvCg+WVDs5Hdgn9FbINuPXzqn8V/BZ+vrBqZNlhCzx59nkxjQDVS2o4C6xx
+         +HeTn4RQBNSww==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Niklas Schnelle <schnelle@linux.ibm.com>,
-        Arnd Bergmann <arnd@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 3/9] PCI: Make quirk using inw() depend on HAS_IOPORT
-Date:   Fri,  8 Sep 2023 20:22:54 -0400
-Message-Id: <20230909002302.3578361-3-sashal@kernel.org>
+Cc:     Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, kw@linux.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.4 10/11] PCI: vmd: Disable bridge window for domain reset
+Date:   Fri,  8 Sep 2023 20:22:30 -0400
+Message-Id: <20230909002233.3578213-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230909002302.3578361-1-sashal@kernel.org>
-References: <20230909002302.3578361-1-sashal@kernel.org>
+In-Reply-To: <20230909002233.3578213-1-sashal@kernel.org>
+References: <20230909002233.3578213-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.52
+X-stable-base: Linux 6.4.15
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Niklas Schnelle <schnelle@linux.ibm.com>
+From: Nirmal Patel <nirmal.patel@linux.intel.com>
 
-[ Upstream commit f768c75d61582b011962f9dcb9ff8eafb8da0383 ]
+[ Upstream commit f73eedc90bf73d48e8368e6b0b4ad76a7fffaef7 ]
 
-In the future inw() and friends will not be compiled on architectures
-without I/O port support.
+During domain reset process vmd_domain_reset() clears PCI
+configuration space of VMD root ports. But certain platform
+has observed following errors and failed to boot.
+  ...
+  DMAR: VT-d detected Invalidation Queue Error: Reason f
+  DMAR: VT-d detected Invalidation Time-out Error: SID ffff
+  DMAR: VT-d detected Invalidation Completion Error: SID ffff
+  DMAR: QI HEAD: UNKNOWN qw0 = 0x0, qw1 = 0x0
+  DMAR: QI PRIOR: UNKNOWN qw0 = 0x0, qw1 = 0x0
+  DMAR: Invalidation Time-out Error (ITE) cleared
 
-Co-developed-by: Arnd Bergmann <arnd@kernel.org>
-Link: https://lore.kernel.org/r/20230703135255.2202721-2-schnelle@linux.ibm.com
-Signed-off-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+The root cause is that memset_io() clears prefetchable memory base/limit
+registers and prefetchable base/limit 32 bits registers sequentially.
+This seems to be enabling prefetchable memory if the device disabled
+prefetchable memory originally.
+
+Here is an example (before memset_io()):
+
+  PCI configuration space for 10000:00:00.0:
+  86 80 30 20 06 00 10 00 04 00 04 06 00 00 01 00
+  00 00 00 00 00 00 00 00 00 01 01 00 00 00 00 20
+  00 00 00 00 01 00 01 00 ff ff ff ff 75 05 00 00
+  ...
+
+So, prefetchable memory is ffffffff00000000-575000fffff, which is
+disabled. When memset_io() clears prefetchable base 32 bits register,
+the prefetchable memory becomes 0000000000000000-575000fffff, which is
+enabled and incorrect.
+
+Here is the quote from section 7.5.1.3.9 of PCI Express Base 6.0 spec:
+
+  The Prefetchable Memory Limit register must be programmed to a smaller
+  value than the Prefetchable Memory Base register if there is no
+  prefetchable memory on the secondary side of the bridge.
+
+This is believed to be the reason for the failure and in addition the
+sequence of operation in vmd_domain_reset() is not following the PCIe
+specs.
+
+Disable the bridge window by executing a sequence of operations
+borrowed from pci_disable_bridge_window() and pci_setup_bridge_io(),
+that comply with the PCI specifications.
+
+Link: https://lore.kernel.org/r/20230810215029.1177379-1-nirmal.patel@linux.intel.com
+Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/controller/vmd.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 472fa2c8ebcec..3caa0907de00a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -268,6 +268,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NEC,	PCI_DEVICE_ID_NEC_CBUS_2,	quirk_isa_d
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NEC,	PCI_DEVICE_ID_NEC_CBUS_3,	quirk_isa_dma_hangs);
- #endif
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index e718a816d4814..ad56df98b8e63 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -541,8 +541,23 @@ static void vmd_domain_reset(struct vmd_dev *vmd)
+ 				     PCI_CLASS_BRIDGE_PCI))
+ 					continue;
  
-+#ifdef CONFIG_HAS_IOPORT
- /*
-  * Intel NM10 "TigerPoint" LPC PM1a_STS.BM_STS must be clear
-  * for some HT machines to use C4 w/o hanging.
-@@ -287,6 +288,7 @@ static void quirk_tigerpoint_bm_sts(struct pci_dev *dev)
+-				memset_io(base + PCI_IO_BASE, 0,
+-					  PCI_ROM_ADDRESS1 - PCI_IO_BASE);
++				/*
++				 * Temporarily disable the I/O range before updating
++				 * PCI_IO_BASE.
++				 */
++				writel(0x0000ffff, base + PCI_IO_BASE_UPPER16);
++				/* Update lower 16 bits of I/O base/limit */
++				writew(0x00f0, base + PCI_IO_BASE);
++				/* Update upper 16 bits of I/O base/limit */
++				writel(0, base + PCI_IO_BASE_UPPER16);
++
++				/* MMIO Base/Limit */
++				writel(0x0000fff0, base + PCI_MEMORY_BASE);
++
++				/* Prefetchable MMIO Base/Limit */
++				writel(0, base + PCI_PREF_LIMIT_UPPER32);
++				writel(0x0000fff0, base + PCI_PREF_MEMORY_BASE);
++				writel(0xffffffff, base + PCI_PREF_BASE_UPPER32);
+ 			}
+ 		}
  	}
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_TGP_LPC, quirk_tigerpoint_bm_sts);
-+#endif
- 
- /* Chipsets where PCI->PCI transfers vanish or hang */
- static void quirk_nopcipci(struct pci_dev *dev)
 -- 
 2.40.1
 
