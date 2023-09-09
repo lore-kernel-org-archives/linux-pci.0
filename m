@@ -2,88 +2,136 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66BB9EEB57C
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Sep 2023 00:39:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E9EEEB57A
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Sep 2023 00:45:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345977AbjIIAjn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Sep 2023 20:39:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55666 "EHLO
+        id S235426AbjIIApd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Sep 2023 20:45:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244331AbjIIAjV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2023 20:39:21 -0400
+        with ESMTP id S238613AbjIIAot (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2023 20:44:49 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A699D2113;
-        Fri,  8 Sep 2023 17:38:43 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74346C433CC;
-        Sat,  9 Sep 2023 00:22:58 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C766A4C0B;
+        Fri,  8 Sep 2023 17:42:15 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B554FC433B9;
+        Sat,  9 Sep 2023 00:23:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694218979;
-        bh=2s3vHOMcNdcrZU+wGpSckbUw5LTnWIjmBpY4tiNXT3Y=;
+        s=k20201202; t=1694219004;
+        bh=V0MImz1xAE/TyhOME1EuyZM7y0o7ZCzN2MWLmZPFMtQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aES672KGlhFHH7EMYIW4hszEwx8mOrhSKkQtdza+0DPW+vRpdFdwEQBkoEURCnqql
-         XyQKNaKCvhJN2ErOaURG2v96qMFP+NklAMZiRR7V/UTq3OYKhd/90fcZ/0ijrNUGo9
-         OZXapFwQOeMi24utpgLNK4/qLbXOXBSeXkD9wQLsww7nLaVyVCZPbPY9U3n3a7GEmK
-         n+efi4KurSn+GaVvNUx32MrBaMHQL17zb/Gf5b5tQfCYYp8RLeNmhkCC3oJ/od4MaH
-         RiHaoSFIXbVfwbCRFH8ADtSKjM7erZSGUG1Fl3rTVMwuRKc/iJ+Z3+ZviUlpN7KnAR
-         Bnkym/Ajkp2Aw==
+        b=d+R2rJcDnbT5B63IjQfAXafksffg+rF+j39gATniyLwCAOywhXbqswv6ETrtekTYf
+         x+B/4JW8r/0Xf4j/djYBFP66Z5JQyKKWL/tiygeexQa4Av9OoQmZTio3rvWShfpmDU
+         ZBbpG7By4LQoFumWJKaCGq3UwY9xQa2fnmW8A70J/QHb7hXjJTrwKmFIcLG3DTtlsP
+         kAQ3DfeJuErBpxvQZB8dTbO+E2Fu+1JtxSbwvHRs+qJqhYaRbxgZyY1RQXj/6UxM4N
+         j3iSvVFQYX/p1V64q5GdzE2bP0urmkblLnPVfKfVYlDY/vr3DSRof2FOeaopKLlb9a
+         EJWugFfRF8ssA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yong-Xuan Wang <yongxuan.wang@sifive.com>,
+Cc:     Nirmal Patel <nirmal.patel@linux.intel.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Sasha Levin <sashal@kernel.org>, paul.walmsley@sifive.com,
-        greentime.hu@sifive.com, kw@linux.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.4 11/11] PCI: fu740: Set the number of MSI vectors
-Date:   Fri,  8 Sep 2023 20:22:31 -0400
-Message-Id: <20230909002233.3578213-11-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, kw@linux.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 8/9] PCI: vmd: Disable bridge window for domain reset
+Date:   Fri,  8 Sep 2023 20:22:59 -0400
+Message-Id: <20230909002302.3578361-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230909002233.3578213-1-sashal@kernel.org>
-References: <20230909002233.3578213-1-sashal@kernel.org>
+In-Reply-To: <20230909002302.3578361-1-sashal@kernel.org>
+References: <20230909002302.3578361-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.4.15
+X-stable-base: Linux 6.1.52
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yong-Xuan Wang <yongxuan.wang@sifive.com>
+From: Nirmal Patel <nirmal.patel@linux.intel.com>
 
-[ Upstream commit 551a60e1225e71fff8efd9390204c505b0870e0f ]
+[ Upstream commit f73eedc90bf73d48e8368e6b0b4ad76a7fffaef7 ]
 
-The iMSI-RX module of the DW PCIe controller provides multiple sets of
-MSI_CTRL_INT_i_* registers, and each set is capable of handling 32 MSI
-interrupts. However, the fu740 PCIe controller driver only enabled one set
-of MSI_CTRL_INT_i_* registers, as the total number of supported interrupts
-was not specified.
+During domain reset process vmd_domain_reset() clears PCI
+configuration space of VMD root ports. But certain platform
+has observed following errors and failed to boot.
+  ...
+  DMAR: VT-d detected Invalidation Queue Error: Reason f
+  DMAR: VT-d detected Invalidation Time-out Error: SID ffff
+  DMAR: VT-d detected Invalidation Completion Error: SID ffff
+  DMAR: QI HEAD: UNKNOWN qw0 = 0x0, qw1 = 0x0
+  DMAR: QI PRIOR: UNKNOWN qw0 = 0x0, qw1 = 0x0
+  DMAR: Invalidation Time-out Error (ITE) cleared
 
-Set the supported number of MSI vectors to enable all the MSI_CTRL_INT_i_*
-registers on the fu740 PCIe core, allowing the system to fully utilize the
-available MSI interrupts.
+The root cause is that memset_io() clears prefetchable memory base/limit
+registers and prefetchable base/limit 32 bits registers sequentially.
+This seems to be enabling prefetchable memory if the device disabled
+prefetchable memory originally.
 
-Link: https://lore.kernel.org/r/20230807055621.2431-1-yongxuan.wang@sifive.com
-Signed-off-by: Yong-Xuan Wang <yongxuan.wang@sifive.com>
+Here is an example (before memset_io()):
+
+  PCI configuration space for 10000:00:00.0:
+  86 80 30 20 06 00 10 00 04 00 04 06 00 00 01 00
+  00 00 00 00 00 00 00 00 00 01 01 00 00 00 00 20
+  00 00 00 00 01 00 01 00 ff ff ff ff 75 05 00 00
+  ...
+
+So, prefetchable memory is ffffffff00000000-575000fffff, which is
+disabled. When memset_io() clears prefetchable base 32 bits register,
+the prefetchable memory becomes 0000000000000000-575000fffff, which is
+enabled and incorrect.
+
+Here is the quote from section 7.5.1.3.9 of PCI Express Base 6.0 spec:
+
+  The Prefetchable Memory Limit register must be programmed to a smaller
+  value than the Prefetchable Memory Base register if there is no
+  prefetchable memory on the secondary side of the bridge.
+
+This is believed to be the reason for the failure and in addition the
+sequence of operation in vmd_domain_reset() is not following the PCIe
+specs.
+
+Disable the bridge window by executing a sequence of operations
+borrowed from pci_disable_bridge_window() and pci_setup_bridge_io(),
+that comply with the PCI specifications.
+
+Link: https://lore.kernel.org/r/20230810215029.1177379-1-nirmal.patel@linux.intel.com
+Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
 Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-fu740.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/vmd.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
-index 0c90583c078bf..1e9b44b8bba48 100644
---- a/drivers/pci/controller/dwc/pcie-fu740.c
-+++ b/drivers/pci/controller/dwc/pcie-fu740.c
-@@ -299,6 +299,7 @@ static int fu740_pcie_probe(struct platform_device *pdev)
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
- 	pci->pp.ops = &fu740_pcie_host_ops;
-+	pci->pp.num_vectors = MAX_MSI_IRQS;
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index d1eb17e3f1474..d4c9b888a79d7 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -526,8 +526,23 @@ static void vmd_domain_reset(struct vmd_dev *vmd)
+ 				     PCI_CLASS_BRIDGE_PCI))
+ 					continue;
  
- 	/* SiFive specific region: mgmt */
- 	afp->mgmt_base = devm_platform_ioremap_resource_byname(pdev, "mgmt");
+-				memset_io(base + PCI_IO_BASE, 0,
+-					  PCI_ROM_ADDRESS1 - PCI_IO_BASE);
++				/*
++				 * Temporarily disable the I/O range before updating
++				 * PCI_IO_BASE.
++				 */
++				writel(0x0000ffff, base + PCI_IO_BASE_UPPER16);
++				/* Update lower 16 bits of I/O base/limit */
++				writew(0x00f0, base + PCI_IO_BASE);
++				/* Update upper 16 bits of I/O base/limit */
++				writel(0, base + PCI_IO_BASE_UPPER16);
++
++				/* MMIO Base/Limit */
++				writel(0x0000fff0, base + PCI_MEMORY_BASE);
++
++				/* Prefetchable MMIO Base/Limit */
++				writel(0, base + PCI_PREF_LIMIT_UPPER32);
++				writel(0x0000fff0, base + PCI_PREF_MEMORY_BASE);
++				writel(0xffffffff, base + PCI_PREF_BASE_UPPER32);
+ 			}
+ 		}
+ 	}
 -- 
 2.40.1
 
