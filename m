@@ -2,88 +2,244 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77B5EEEB57B
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Sep 2023 01:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC0F8EEB584
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Sep 2023 09:29:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234841AbjIIBmU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Sep 2023 21:42:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39616 "EHLO
+        id S1344405AbjIIJ3M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 9 Sep 2023 05:29:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232068AbjIIBmT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Sep 2023 21:42:19 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AF8A1FE0;
-        Fri,  8 Sep 2023 18:42:15 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C00BC433BB;
-        Sat,  9 Sep 2023 00:23:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694219028;
-        bh=H6a1aURnFd4oVdvbRBmRi8y7C0Jcr43sFa/mWBxl9KE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=D6hNClG850u+HoiBbqZVE6y11zKFITpW9VGFwAYspAJDJCgbUE3HcV+M/VmmwNJtz
-         vje6WKWZJd3rNFgn82lMHsPw9WlM5x7IRZ6CNbzecIscSoIJJsTyXadKOVN/KjBrrP
-         49YdYxKtt3LvwKKMDw63PYrbm2BABAoiYIJ/Uej3g/Pn4YG0JXnd1Nv0UYbrYnBsj3
-         aoxTfXGvDTCMJoW2pnSxeX0hm0HYnjezoHynrTfjfOBy75laJBBmtl9mHfeKtWzwM4
-         lMiRd7/c/26alFL2a2BDk9B8hUtnuakxWg7njaMHd1tgkg+Gl2rDwQSNnnz1rn4VIp
-         UzA5JhR5X4aLg==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yong-Xuan Wang <yongxuan.wang@sifive.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Sasha Levin <sashal@kernel.org>, paul.walmsley@sifive.com,
-        greentime.hu@sifive.com, kw@linux.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 7/7] PCI: fu740: Set the number of MSI vectors
-Date:   Fri,  8 Sep 2023 20:23:26 -0400
-Message-Id: <20230909002329.3578534-7-sashal@kernel.org>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20230909002329.3578534-1-sashal@kernel.org>
-References: <20230909002329.3578534-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.131
-Content-Transfer-Encoding: 8bit
+        with ESMTP id S229957AbjIIJ3K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 9 Sep 2023 05:29:10 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B158170C
+        for <linux-pci@vger.kernel.org>; Sat,  9 Sep 2023 02:29:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1694251745; x=1725787745;
+  h=date:from:to:cc:subject:message-id;
+  bh=Z76sXLaM+JAZm8gr3kUoF5XPy8KgTXdYIPkUbTJAT9c=;
+  b=T81zQDsaMAFkkP+FliihMvtVTSPyx7v7jYtuzWGtOgKOlBy9UWVG6Oh3
+   I6e3FtMuswPhYZgWDEO5Bwfp1shSOCZvhb7uGUvkd0s00g1zz8O//FtyC
+   4S3m6zvygT3VAkf4PwxLR/ZWTkmTq5/gN0onG6yibssKiWgyEWQ8nKwBK
+   A1J3TDDm4kfvvnC1hDW1cqeZAqZh1bf13pKWuShbEWK87cVUXJ2wVbGNx
+   1EUy0HF/mh0VCV1eLFngUEIEQBgS1x3Gf1dwZqY7orytltewNs0JaWPos
+   sWdJXMXeMIvn7cBVVgmBnIvY1yY1rILoItxN7sDQTzqdpRNVN8529IyDU
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10827"; a="357273722"
+X-IronPort-AV: E=Sophos;i="6.02,239,1688454000"; 
+   d="scan'208";a="357273722"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Sep 2023 02:29:04 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10827"; a="866377623"
+X-IronPort-AV: E=Sophos;i="6.02,239,1688454000"; 
+   d="scan'208";a="866377623"
+Received: from lkp-server01.sh.intel.com (HELO 59b3c6e06877) ([10.239.97.150])
+  by orsmga004.jf.intel.com with ESMTP; 09 Sep 2023 02:29:02 -0700
+Received: from kbuild by 59b3c6e06877 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qeuGy-0003EP-0g;
+        Sat, 09 Sep 2023 09:29:00 +0000
+Date:   Sat, 09 Sep 2023 17:28:56 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org
+Subject: [pci:for-linus] BUILD SUCCESS
+ 5260bd6d36c83c5b269c33baaaf8c78e520908b0
+Message-ID: <202309091755.ZH7lvTWB-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yong-Xuan Wang <yongxuan.wang@sifive.com>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
+branch HEAD: 5260bd6d36c83c5b269c33baaaf8c78e520908b0  Revert "PCI: Mark NVIDIA T4 GPUs to avoid bus reset"
 
-[ Upstream commit 551a60e1225e71fff8efd9390204c505b0870e0f ]
+elapsed time: 724m
 
-The iMSI-RX module of the DW PCIe controller provides multiple sets of
-MSI_CTRL_INT_i_* registers, and each set is capable of handling 32 MSI
-interrupts. However, the fu740 PCIe controller driver only enabled one set
-of MSI_CTRL_INT_i_* registers, as the total number of supported interrupts
-was not specified.
+configs tested: 172
+configs skipped: 2
 
-Set the supported number of MSI vectors to enable all the MSI_CTRL_INT_i_*
-registers on the fu740 PCIe core, allowing the system to fully utilize the
-available MSI interrupts.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Link: https://lore.kernel.org/r/20230807055621.2431-1-yongxuan.wang@sifive.com
-Signed-off-by: Yong-Xuan Wang <yongxuan.wang@sifive.com>
-Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/controller/dwc/pcie-fu740.c | 1 +
- 1 file changed, 1 insertion(+)
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r004-20230909   gcc  
+alpha                randconfig-r031-20230909   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                     nsimosci_hs_defconfig   gcc  
+arc                   randconfig-001-20230909   gcc  
+arc                    vdk_hs38_smp_defconfig   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                      jornada720_defconfig   gcc  
+arm                         lpc32xx_defconfig   clang
+arm                         orion5x_defconfig   clang
+arm                   randconfig-001-20230909   clang
+arm64                            allmodconfig   gcc  
+arm64                             allnoconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r002-20230909   clang
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+hexagon               randconfig-001-20230909   clang
+hexagon               randconfig-002-20230909   clang
+hexagon              randconfig-r001-20230909   clang
+hexagon              randconfig-r026-20230909   clang
+i386                             allmodconfig   clang
+i386                             allmodconfig   gcc  
+i386                              allnoconfig   clang
+i386                              allnoconfig   gcc  
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-001-20230909   clang
+i386         buildonly-randconfig-002-20230909   clang
+i386         buildonly-randconfig-003-20230909   clang
+i386         buildonly-randconfig-004-20230909   clang
+i386         buildonly-randconfig-005-20230909   clang
+i386         buildonly-randconfig-006-20230909   clang
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                  randconfig-001-20230909   clang
+i386                  randconfig-002-20230909   clang
+i386                  randconfig-003-20230909   clang
+i386                  randconfig-004-20230909   clang
+i386                  randconfig-005-20230909   clang
+i386                  randconfig-006-20230909   clang
+i386                  randconfig-011-20230909   gcc  
+i386                  randconfig-012-20230909   gcc  
+i386                  randconfig-013-20230909   gcc  
+i386                  randconfig-014-20230909   gcc  
+i386                  randconfig-015-20230909   gcc  
+i386                  randconfig-016-20230909   gcc  
+i386                 randconfig-r025-20230909   gcc  
+i386                 randconfig-r035-20230909   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                        allyesconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20230909   gcc  
+loongarch            randconfig-r033-20230909   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+microblaze           randconfig-r003-20230909   gcc  
+microblaze           randconfig-r014-20230909   gcc  
+mips                             allmodconfig   gcc  
+mips                              allnoconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                      bmips_stb_defconfig   clang
+mips                 randconfig-r024-20230909   clang
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r023-20230909   gcc  
+openrisc                         allmodconfig   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r032-20230909   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   gcc  
+powerpc                 canyonlands_defconfig   gcc  
+powerpc                      ep88xc_defconfig   gcc  
+powerpc                      katmai_defconfig   clang
+powerpc                      ppc44x_defconfig   clang
+powerpc                     tqm8541_defconfig   gcc  
+powerpc64            randconfig-r005-20230909   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                 randconfig-001-20230909   clang
+riscv                randconfig-r022-20230909   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                  randconfig-001-20230909   gcc  
+s390                 randconfig-r034-20230909   clang
+s390                 randconfig-r036-20230909   clang
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sh                   randconfig-r013-20230909   gcc  
+sparc                            allmodconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r011-20230909   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+sparc64              randconfig-r012-20230909   gcc  
+sparc64              randconfig-r021-20230909   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-001-20230909   clang
+x86_64       buildonly-randconfig-002-20230909   clang
+x86_64       buildonly-randconfig-003-20230909   clang
+x86_64       buildonly-randconfig-004-20230909   clang
+x86_64       buildonly-randconfig-005-20230909   clang
+x86_64       buildonly-randconfig-006-20230909   clang
+x86_64                              defconfig   gcc  
+x86_64                randconfig-001-20230909   gcc  
+x86_64                randconfig-002-20230909   gcc  
+x86_64                randconfig-003-20230909   gcc  
+x86_64                randconfig-004-20230909   gcc  
+x86_64                randconfig-005-20230909   gcc  
+x86_64                randconfig-006-20230909   gcc  
+x86_64                randconfig-011-20230909   clang
+x86_64                randconfig-012-20230909   clang
+x86_64                randconfig-013-20230909   clang
+x86_64                randconfig-014-20230909   clang
+x86_64                randconfig-015-20230909   clang
+x86_64                randconfig-016-20230909   clang
+x86_64                randconfig-071-20230909   clang
+x86_64                randconfig-072-20230909   clang
+x86_64                randconfig-073-20230909   clang
+x86_64                randconfig-074-20230909   clang
+x86_64                randconfig-075-20230909   clang
+x86_64                randconfig-076-20230909   clang
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                            allnoconfig   gcc  
+xtensa                           allyesconfig   gcc  
+xtensa               randconfig-r006-20230909   gcc  
+xtensa               randconfig-r015-20230909   gcc  
+xtensa               randconfig-r016-20230909   gcc  
 
-diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
-index 78d002be4f821..f6c71c1b657b6 100644
---- a/drivers/pci/controller/dwc/pcie-fu740.c
-+++ b/drivers/pci/controller/dwc/pcie-fu740.c
-@@ -301,6 +301,7 @@ static int fu740_pcie_probe(struct platform_device *pdev)
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
- 	pci->pp.ops = &fu740_pcie_host_ops;
-+	pci->pp.num_vectors = MAX_MSI_IRQS;
- 
- 	/* SiFive specific region: mgmt */
- 	afp->mgmt_base = devm_platform_ioremap_resource_byname(pdev, "mgmt");
 -- 
-2.40.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
