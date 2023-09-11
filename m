@@ -2,102 +2,89 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FEE6CA0EC5
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:47:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BADF4CA0EC6
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:47:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350668AbjIKVkb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:40:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40418 "EHLO
+        id S239209AbjIKVkf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:40:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237497AbjIKMyX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 08:54:23 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83FCECEB;
-        Mon, 11 Sep 2023 05:54:18 -0700 (PDT)
+        with ESMTP id S236314AbjIKKOi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 06:14:38 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59A9FE5F;
+        Mon, 11 Sep 2023 03:14:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694436858; x=1725972858;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=/wVoKjEeeLBla+cD7axdVwdKaE7wsNtpVj0vYnNrywc=;
-  b=Z3fj7/2EfR1b3zuqQtYOaM4Yb6DW282iMlq+B69OcNKYepd0qNVuV31z
-   lJ73kZHdjxFHj+TdSw6+Tienu22amOVY35deP/3o4tQBqhmx1IZu061me
-   mowQRZu6GIIXfr4OL2ppgYe2Bp5OQT0efZv8a98PzYteMP0xNjXo0WfCR
-   Stql+xNZfXygVuAEZj5bYVo+uzIRNxe7pI2wEpIxKWO4BPQYZCu7dOLVI
-   k2/cXyVIluxOR581pjqjxBXyl3mcyjuF9AnB5Y3f2aL92VORQTRdUJYzD
-   x2zpBcpN37L8rNdxSf+y45Aeuxj2ZPu42IkvVRsNgXQPuKplyUgMG32fu
+  t=1694427273; x=1725963273;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=8cErPzEwXD3qIbTswHx7PcLlm6oqRfL3GjzcV7/9D1A=;
+  b=eYszJ6MLBmjj+HDB2YsjXojPS/4LH3tT4wOSXjcyWQb7y2+/pw4KBoBJ
+   kkr7l9WPvhoFN8ZiGPUYVgZMfIZUoWP0UjlCj/Dp1YzHOIVZ7Y+7BrcMd
+   BXGAgv/77WRi6C6pxyFi6BeSK50/ms41fVYi/RsPV+WOECuqTvoXWSmI6
+   hxHsPHln06SnaMh0BNcS3oxmMwX9EHxoFj9s3HzS6Im4pVAdDBL7AvjK6
+   XrDaxtGmZdZCCfH6zsKxoNfI1coTw29xM9FpAltjCBP2VeuxvzhQySwoO
+   HQcYsyA7pEbYTKvDcFR5dBQsdgnItWADQaJ/03km+GxFJT+6Dq+m86rHt
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="357511140"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="357511140"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:08 -0700
+X-IronPort-AV: E=McAfee;i="6600,9927,10829"; a="380743863"
+X-IronPort-AV: E=Sophos;i="6.02,243,1688454000"; 
+   d="scan'208";a="380743863"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 03:14:32 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858304123"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="858304123"
-Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
-  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:02 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, 3chas3@gmail.com, brking@us.ibm.com,
-        dalias@libc.org, glaubitz@physik.fu-berlin.de,
-        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, kw@linux.com,
-        linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-atm-general@lists.sourceforge.net,
-        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
-        lpieralisi@kernel.org, martin.petersen@oracle.com,
-        mattst88@gmail.com, netdev@vger.kernel.org,
-        richard.henderson@linaro.org, toan@os.amperecomputing.com,
-        ysato@users.sourceforge.jp,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH v3 0/6] PCI/treewide: Cleanup/streamline PCI error code handling
-Date:   Mon, 11 Sep 2023 15:53:48 +0300
-Message-Id: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
+X-IronPort-AV: E=McAfee;i="6600,9927,10829"; a="719939076"
+X-IronPort-AV: E=Sophos;i="6.02,243,1688454000"; 
+   d="scan'208";a="719939076"
+Received: from unknown (HELO bapvecise024..) ([10.190.254.46])
+  by orsmga006.jf.intel.com with ESMTP; 11 Sep 2023 03:14:28 -0700
+From:   sharath.kumar.d.m@intel.com
+To:     sharath.kumar.d.m@intel.com
+Cc:     bhelgaas@google.com, dinguyen@kernel.org, kw@linux.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lpieralisi@kernel.org, robh@kernel.org
+Subject: [PATCH v3 0/2] PCI: altera: add support to agilex family
+Date:   Mon, 11 Sep 2023 15:45:03 +0530
+Message-Id: <20230911101503.1769696-1-sharath.kumar.d.m@intel.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230906110918.1501376-1-sharath.kumar.d.m@intel.com>
+References: <20230906110918.1501376-1-sharath.kumar.d.m@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As the first step towards converting PCI accessor function return codes
-into normal errnos this series cleans up related code paths which have
-complicated multi-line construct to handle the PCI error checking.
+From: D M Sharath Kumar <sharath.kumar.d.m@intel.com>
 
-I'd prefer these (the remaining ones) to be routed through PCI tree due
-to PCI accessor function return code conversion being built on top of
-them.
+added new callback for
+1) read,write to root port configuration registers
+2) read,write to endpoint configuration registers
+3) root port interrupt handler
 
-v3:
-- Return pci_generic_config_read32()'s error code directly
-- Removed already accepted patches
+agilex and newer platforms need to implemant the callback and generic root port driver should work ( without much changes ) , legacy platforms (arria and startix) implement configuration read,write directly in wrapper api _altera_pcie_cfg_read/_altera_pcie_cfg_write
 
-v2:
-- Moved ret local var to the inner block (I2C: ali15x3)
-- Removed already accepted patches
+changelog v2:
+saperated into two patches
+1.refactored the driver for easily portability to future Altera FPGA
+platforms
+2.added support for "Agilex" FPGA
 
+this driver supports PCI RP IP on Agilex FPGA, as these are FPGA its up
+to the user to add PCI RP or not ( as per his needs). we are not adding
+the device tree as part of this commit. we are expecting the add device
+tree changes only if he is adding PCI RP IP in his design
 
-Ilpo Järvinen (6):
-  alpha: Streamline convoluted PCI error handling
-  sh: pci: Do PCI error check on own line
-  atm: iphase: Do PCI error checks on own line
-  PCI: Do error check on own line to split long if conditions
-  PCI: xgene: Do PCI error check on own line & keep return value
-  scsi: ipr: Do PCI error checks on own line
+changelog v3:
+incorporate review comments from Bjorn Helgaas
 
- arch/alpha/kernel/sys_miata.c      | 17 +++++++++--------
- arch/sh/drivers/pci/common.c       |  7 ++++---
- drivers/atm/iphase.c               | 20 +++++++++++---------
- drivers/pci/controller/pci-xgene.c |  7 ++++---
- drivers/pci/pci.c                  |  9 ++++++---
- drivers/pci/probe.c                |  6 +++---
- drivers/pci/quirks.c               |  6 +++---
- drivers/scsi/ipr.c                 | 12 ++++++++----
- 8 files changed, 48 insertions(+), 36 deletions(-)
+D M Sharath Kumar (2):
+  PCI: altera: refactor driver for supporting new platforms
+  PCI: altera: add support for agilex family fpga
+
+ drivers/pci/controller/pcie-altera.c | 305 ++++++++++++++++++++++++---
+ 1 file changed, 275 insertions(+), 30 deletions(-)
 
 -- 
-2.30.2
+2.34.1
 
