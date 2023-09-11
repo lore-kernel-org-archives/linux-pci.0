@@ -2,89 +2,119 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BADF4CA0EC6
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB5F6CA0EC6
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:47:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239209AbjIKVkf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:40:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50184 "EHLO
+        id S1350674AbjIKVkh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:40:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236314AbjIKKOi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 06:14:38 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59A9FE5F;
-        Mon, 11 Sep 2023 03:14:33 -0700 (PDT)
+        with ESMTP id S242740AbjIKQON (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 12:14:13 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 178271B8;
+        Mon, 11 Sep 2023 09:14:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694427273; x=1725963273;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=8cErPzEwXD3qIbTswHx7PcLlm6oqRfL3GjzcV7/9D1A=;
-  b=eYszJ6MLBmjj+HDB2YsjXojPS/4LH3tT4wOSXjcyWQb7y2+/pw4KBoBJ
-   kkr7l9WPvhoFN8ZiGPUYVgZMfIZUoWP0UjlCj/Dp1YzHOIVZ7Y+7BrcMd
-   BXGAgv/77WRi6C6pxyFi6BeSK50/ms41fVYi/RsPV+WOECuqTvoXWSmI6
-   hxHsPHln06SnaMh0BNcS3oxmMwX9EHxoFj9s3HzS6Im4pVAdDBL7AvjK6
-   XrDaxtGmZdZCCfH6zsKxoNfI1coTw29xM9FpAltjCBP2VeuxvzhQySwoO
-   HQcYsyA7pEbYTKvDcFR5dBQsdgnItWADQaJ/03km+GxFJT+6Dq+m86rHt
+  t=1694448849; x=1725984849;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:content-transfer-encoding:mime-version;
+  bh=PCK5N7MTX0TyDy4xAO7NmL2IUmc1Gi2m4JoFRYk5vSI=;
+  b=F7/AegDloF8uqJB+DF15yRougZ6Mf6QwoxwcraAk8E8OnviuTyEzdyyJ
+   wctg9KpZNpTIIuNt9VM3+BbHsSmxh81Z3qbwBNrSm7zf24LXM/4XK+W2u
+   ge2JFW1+OY9MWic0KTazlZBYQsy5yqvun7EWeZ4QjBe0jkgX3lk0JFgxr
+   k8CeBZrJGa53MY2fAda6s/JnIQnFBd7XIWjri1e9rSSeYiFmt3ASkvj+v
+   Zgmir4+9nUejsMtR6HdLjIsLK3pHeFdRVT0I3ISD2pTwfCjaa9h2k/FBj
+   QL+jYQ/IAmljfE/7efPIRTEPxhSN62dbbWI9Y0gj2vhWRR8MccX1K1K8z
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10829"; a="380743863"
-X-IronPort-AV: E=Sophos;i="6.02,243,1688454000"; 
-   d="scan'208";a="380743863"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 03:14:32 -0700
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="409093577"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="409093577"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 09:14:08 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10829"; a="719939076"
-X-IronPort-AV: E=Sophos;i="6.02,243,1688454000"; 
-   d="scan'208";a="719939076"
-Received: from unknown (HELO bapvecise024..) ([10.190.254.46])
-  by orsmga006.jf.intel.com with ESMTP; 11 Sep 2023 03:14:28 -0700
-From:   sharath.kumar.d.m@intel.com
-To:     sharath.kumar.d.m@intel.com
-Cc:     bhelgaas@google.com, dinguyen@kernel.org, kw@linux.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        lpieralisi@kernel.org, robh@kernel.org
-Subject: [PATCH v3 0/2] PCI: altera: add support to agilex family
-Date:   Mon, 11 Sep 2023 15:45:03 +0530
-Message-Id: <20230911101503.1769696-1-sharath.kumar.d.m@intel.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230906110918.1501376-1-sharath.kumar.d.m@intel.com>
-References: <20230906110918.1501376-1-sharath.kumar.d.m@intel.com>
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858397637"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="858397637"
+Received: from spandruv-desk1.amr.corp.intel.com ([10.255.229.210])
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 09:14:07 -0700
+Message-ID: <f35db90cd67adf4b0f48cd6f2a6ad8fbd0c1a679.camel@linux.intel.com>
+Subject: Re: [PATCH 00/10] Add PCIe Bandwidth Controller
+From:   srinivas pandruvada <srinivas.pandruvada@linux.intel.com>
+To:     Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Krishna Chaitanya Chundru <quic_krichai@quicinc.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Zhang Rui <rui.zhang@intel.com>, linux-pm@vger.kernel.org
+Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon, 11 Sep 2023 09:14:07 -0700
+In-Reply-To: <25bf206e-864b-644-9b4-a0f461b4285@linux.intel.com>
+References: <20230817121708.53213-1-ilpo.jarvinen@linux.intel.com>
+         <fa5a20d0-77db-58bd-3956-ac664dffa587@quicinc.com>
+         <21b95d9-86a5-dcb0-9dda-3f1cdd426b9e@linux.intel.com>
+         <647e2b5e-6064-dbfa-bb56-f74358efd1fe@quicinc.com>
+         <25bf206e-864b-644-9b4-a0f461b4285@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: D M Sharath Kumar <sharath.kumar.d.m@intel.com>
+On Mon, 2023-09-11 at 18:47 +0300, Ilpo J=C3=A4rvinen wrote:
+> + thermal people.
+>=20
+>=20
 
-added new callback for
-1) read,write to root port configuration registers
-2) read,write to endpoint configuration registers
-3) root port interrupt handler
+...
 
-agilex and newer platforms need to implemant the callback and generic root port driver should work ( without much changes ) , legacy platforms (arria and startix) implement configuration read,write directly in wrapper api _altera_pcie_cfg_read/_altera_pcie_cfg_write
+> Hi,
+>=20
+> Okay, thanks for the clarification. So the point is to plan for
+> adding=20
+> support for Link Width later and currently only support throttling
+> Link=20
+> Speed. In any case, the Link Width control seems to be controlled
+> using=20
+> a different approach (Link Width change does not require Link
+> Retraining).
+>=20
+> I don't know either how such 2 dimensioned throttling (Link Speed and
+> Link Width) is supposed to be realized using the thermal/cooling
+> device=20
+> interface which only provides a single integer as the current state.
+> That=20
+> is, whether to provide a single cooling device (with a single integer
+> exposed to userspace) or separate cooling device for each dimension?
+>=20
+> Perhaps thermal people could provide some insight on this? Is there
+> some=20
+> precedent I could take look at?
+Yes. The processor cooling device does similar. 1-3 are reserved for P-
+state and and 4-7 for T-states.
 
-changelog v2:
-saperated into two patches
-1.refactored the driver for easily portability to future Altera FPGA
-platforms
-2.added support for "Agilex" FPGA
+But I don't suggest using such method. This causes confusion and
+difficult to change. For example if we increase range of P-state
+control, then there is no way to know what is the start point of T-
+states.
 
-this driver supports PCI RP IP on Agilex FPGA, as these are FPGA its up
-to the user to add PCI RP or not ( as per his needs). we are not adding
-the device tree as part of this commit. we are expecting the add device
-tree changes only if he is adding PCI RP IP in his design
+It is best to create to separate cooling devices for BW and link width.
 
-changelog v3:
-incorporate review comments from Bjorn Helgaas
+Also there is a requirement that anything you add to thermal sysfs, it
+should have some purpose for thermal control. I hope Link width control
+is targeted to similar use case BW control.
 
-D M Sharath Kumar (2):
-  PCI: altera: refactor driver for supporting new platforms
-  PCI: altera: add support for agilex family fpga
+Thanks,
+Srinivas
 
- drivers/pci/controller/pcie-altera.c | 305 ++++++++++++++++++++++++---
- 1 file changed, 275 insertions(+), 30 deletions(-)
 
--- 
-2.34.1
+>=20
 
