@@ -2,54 +2,54 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 829CDCA0EE0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF39BCA0ED3
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:40:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350381AbjIKVhp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:37:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54282 "EHLO
+        id S1350292AbjIKVhr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:37:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54152 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238280AbjIKNxJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 09:53:09 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 849A7FA;
-        Mon, 11 Sep 2023 06:53:04 -0700 (PDT)
+        with ESMTP id S237263AbjIKMYP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 08:24:15 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 516CBCDC;
+        Mon, 11 Sep 2023 05:24:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694440384; x=1725976384;
+  t=1694435051; x=1725971051;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
   bh=DmVsQV3zOT9DX7Yw/gra0oxWL2x43W4fLVBXzfwaRcc=;
-  b=VCDSBXjcoisSBXYrzPJUmvX23DormbyO0ZQRWTfRvhvBw868/f8B0zLu
-   jjSeODkJAGaZukbx10gtC5k83orlc2L3KnX6Gv/wpuPVOYaIsaU98qHCD
-   j6uLnCyK1FSNeopQ4bBSMJp/w+nAgWEef0qFZ1QYR80o8UNQjLvoSlWop
-   +EB07wuNOqz/xM24cS4j9ly2suvsxI0i1azrSDBkefV0O6g6vGcmbOuEa
-   1vBGBwOGWgUxXLNj8EdB0rApbD0b3Qt5EzGM3gLXzvwcIwFX+Fa5i8MkI
-   7Z5f1Iw/ep6kq0mwaP9YW5a9tC5sylc5CAg24Z9Mx4sD/kE+MVmoUXyY/
+  b=P/F4mHjGL//L0AC8dEmQ0S5fcPW/sFFlgqEH8R4fcuHEhdhn0VtjesqG
+   9mq7bfUcZrEjcaNF6M94AejeMxqwCutAZyF96hQO5q8R6a6kw2P+IoUGd
+   WtKSdrPr/MiDfpu8tJiFM8ugobiEkTNp1paIICa0kU5GKmGb4Zp0CMrRF
+   pxFRIeUClyPbUIKmDIoiZhygGU4p/hjEal2SH+A9x3ZMwD+3QxW0N3tMK
+   Qvu3UWx/GtcVpjervdF8oE11MeRicOL2oXnY9KkPuShwCQtjxEgbeg5tw
+   JhGIYbUpeACofS6Z4ijdbHvYqz7Bx9Pm8JPwSQKUCPbTZ9nCegIxdjWsi
    Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="357525637"
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="376979027"
 X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="357525637"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 06:53:04 -0700
+   d="scan'208";a="376979027"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:24:07 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="772592754"
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="736753992"
 X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="772592754"
+   d="scan'208";a="736753992"
 Received: from unknown (HELO bapvecise024..) ([10.190.254.46])
-  by orsmga008.jf.intel.com with ESMTP; 11 Sep 2023 06:53:01 -0700
+  by orsmga007.jf.intel.com with ESMTP; 11 Sep 2023 05:24:03 -0700
 From:   sharath.kumar.d.m@intel.com
-To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org, dinguyen@kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        D M Sharath Kumar <sharath.kumar.d.m@intel.com>
+To:     helgaas@kernel.org
+Cc:     bhelgaas@google.com, dinguyen@kernel.org, kw@linux.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lpieralisi@kernel.org, robh@kernel.org, sharath.kumar.d.m@intel.com
 Subject: [PATCH v3 1/2] PCI: altera: refactor driver for supporting new platforms
-Date:   Mon, 11 Sep 2023 19:23:31 +0530
-Message-Id: <20230911135332.1777342-2-sharath.kumar.d.m@intel.com>
+Date:   Mon, 11 Sep 2023 17:54:34 +0530
+Message-Id: <20230911122435.1774301-2-sharath.kumar.d.m@intel.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230911135332.1777342-1-sharath.kumar.d.m@intel.com>
-References: <20230906110918.1501376-2-sharath.kumar.d.m@intel.com>
- <20230911135332.1777342-1-sharath.kumar.d.m@intel.com>
+In-Reply-To: <20230911122435.1774301-1-sharath.kumar.d.m@intel.com>
+References: <20230908195242.GA304243@bhelgaas>
+ <20230911122435.1774301-1-sharath.kumar.d.m@intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
