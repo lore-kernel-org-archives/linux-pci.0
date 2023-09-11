@@ -2,174 +2,140 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BBF3CA0EC7
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 23:17:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 378DBCA0EC6
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Sep 2023 00:46:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230480AbjIKXRB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 19:17:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42468 "EHLO
+        id S231349AbjILAqM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 20:46:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55822 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1352370AbjIKVpE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 17:45:04 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7C4F5252;
-        Mon, 11 Sep 2023 14:16:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694466969; x=1726002969;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=wdu/qy8147uIVVSTXdWZn2iHz/+9TqVoz5bgFNXyio4=;
-  b=d6DhgI3elWCUDyG9EI14WLd+3/UzzR1WqFxMD6DmKA+iNVTK9QH+m47S
-   eeHy0G+EkP9ZnXHkRhcbjcTgV43wKZ39qQu/BLWzwiZ5PC8BC5GC8aFVf
-   Q9j/jmQXxlsXZj3Gu7BgYc0Iecf/SW+T1nvw4f1Obd8jNJzsFW75C8YNW
-   WgRMnnLIdRygpD52cQUrR9zVkN8n7KxNHfHH9Vhi4kvapfkQtOkiFOsxd
-   vYVqbmKG+uEATN4MSUCsCBYcnOIyfbv1sG0JGDK69Q7h5xV5rcBPDikn1
-   9wsqjFvj37S+SAKcF3bTM9bLPFgi9B4ByS83hCgCO3xPF6Q0rqAdl+lzA
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="378115893"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="378115893"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 14:13:52 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858492595"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="858492595"
-Received: from smile.fi.intel.com ([10.237.72.54])
-  by fmsmga002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 14:13:47 -0700
-Received: from andy by smile.fi.intel.com with local (Exim 4.96)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1qfoE4-008QR8-1H;
-        Tue, 12 Sep 2023 00:13:44 +0300
-Date:   Tue, 12 Sep 2023 00:13:44 +0300
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc:     Herve Codina <herve.codina@bootlin.com>,
-        Lizhi Hou <lizhi.hou@amd.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        robh@kernel.org, max.zhen@amd.com, sonal.santan@amd.com,
-        stefano.stabellini@xilinx.com,
-        =?iso-8859-1?Q?Cl=E9ment_L=E9ger?= <clement.leger@bootlin.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [PATCH V13 2/5] PCI: Create device tree node for bridge
-Message-ID: <ZP+DCFqQIKth5eAL@smile.fi.intel.com>
-References: <1692120000-46900-1-git-send-email-lizhi.hou@amd.com>
- <1692120000-46900-3-git-send-email-lizhi.hou@amd.com>
- <20230911154856.000076c3@Huawei.com>
- <20230911173503.0db85e4b@bootlin.com>
- <20230911164741.00003904@Huawei.com>
- <20230911172256.00002ee3@Huawei.com>
+        with ESMTP id S232043AbjILAqE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 20:46:04 -0400
+Received: from EUR04-VI1-obe.outbound.protection.outlook.com (mail-vi1eur04on060b.outbound.protection.outlook.com [IPv6:2a01:111:f400:fe0e::60b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9AA8141923;
+        Mon, 11 Sep 2023 17:35:22 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=JM9T91Hk2Yy0wLB09pZdnPTd9iFpXDHoc24rfWyQ8tJKgTQL6aEO9b8qTWcqE1iIU29oI0eBWJZuvub3t16yRjp1JaZRfK6I9QzGU7UUFJT4d6Wd9cCTp0pnvCqVIDpuND22uWYhYmfnmqoclH/sq1eQxNq6pI24b6+gtfbBpssetXp43M6efkC6bmQ5w5aK/JOd1YFiNxRxpgN6eTmbW15kO0pSvFxavNOtlQ9zfK8UBSOwmK2L62IRuvUK2gTx2nNdMDlt+7N2jzxEc/5jRYSgAtSf5Jj88p7mV0mLS4jYSHMMjeb+x/HPx0pW2XWNbakuOI0AhsL8At4E5BkRgg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4EhE1gap6D3kYZSQq/ASaMYmSkecBwLLo1zEPZt2hAI=;
+ b=CWrHluc6fKzH68k4DRjjWfzn5kBQ5aWAILiCXFSHtkfqPEpK7Mdshwttgeb9MQrxnCS+ewgpzlXx3YVhUqUjlHKfaNxuI7D/ULgAYA5WbVcE0Eii/1yN/qm6whoxVwyrKBqhv7BTUINH4AmBWK+lyRzgJHkRgYM/d3gOlyjMjANe1EvAWSgsPS4cUGm7s7UoqldD4bo7RgL0e7jZcptgSUKyHcXzRBzvREKlrIj08jOqVXvnEBE0oUdCQov00e/UWquOQUOzHxICSpp4y3WfMSdYoKBNnbY0EFQP1khXTdT9++r2xCc1A59iWlvwroeWkXhXCAzJGHySX/VTirk52w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4EhE1gap6D3kYZSQq/ASaMYmSkecBwLLo1zEPZt2hAI=;
+ b=SXQlHhfGySxEy+U7abpSFU/Yy1bwUQXigpBOy3Uy+oTM1c0WPukunK/J2d1h+lkMYBtFR4UYooxID3R6ibf7meU0wb3F5erP5/didx6ErVbWiatlq2A+wyP8NN7dfGRWg3q8Z6glB7/ws2mPedrjk3cIIfB4cFXz/hu4l8KM7ls=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from AM6PR04MB4838.eurprd04.prod.outlook.com (2603:10a6:20b:4::16)
+ by PAXPR04MB8125.eurprd04.prod.outlook.com (2603:10a6:102:1cc::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6768.35; Mon, 11 Sep
+ 2023 22:09:52 +0000
+Received: from AM6PR04MB4838.eurprd04.prod.outlook.com
+ ([fe80::aa90:117d:c1d0:346a]) by AM6PR04MB4838.eurprd04.prod.outlook.com
+ ([fe80::aa90:117d:c1d0:346a%3]) with mapi id 15.20.6768.029; Mon, 11 Sep 2023
+ 22:09:52 +0000
+From:   Frank Li <Frank.Li@nxp.com>
+To:     manivannan.sadhasivam@linaro.org
+Cc:     Frank.li@nxp.com, aisheng.dong@nxp.com, bhelgaas@google.com,
+        devicetree@vger.kernel.org, festevam@gmail.com,
+        imx@lists.linux.dev, jdmason@kudzu.us, kernel@pengutronix.de,
+        kishon@kernel.org, kw@linux.com,
+        linux-arm-kernel@lists.infradead.org, linux-imx@nxp.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lorenzo.pieralisi@arm.com, lpieralisi@kernel.org, maz@kernel.org,
+        s.hauer@pengutronix.de, shawnguo@kernel.org, tglx@linutronix.de
+Subject: [PATCH v2 2/5] PCI: dwc: add doorbell support by use MSI controller
+Date:   Mon, 11 Sep 2023 18:09:17 -0400
+Message-Id: <20230911220920.1817033-3-Frank.Li@nxp.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230911220920.1817033-1-Frank.Li@nxp.com>
+References: <20230911220920.1817033-1-Frank.Li@nxp.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR07CA0010.namprd07.prod.outlook.com
+ (2603:10b6:a02:bc::23) To AM6PR04MB4838.eurprd04.prod.outlook.com
+ (2603:10a6:20b:4::16)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230911172256.00002ee3@Huawei.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: AM6PR04MB4838:EE_|PAXPR04MB8125:EE_
+X-MS-Office365-Filtering-Correlation-Id: 132e49fa-d0a7-43f8-1fcf-08dbb313d2c9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Si/R84P0WKU4WEEhixSFHJEqa94WJUkEPAYKQSyWPPWVccxPc2G97kwIARoiDSHTlsVWJsjJRvk6VQVZrCpAs4rAYtWr+o5k5LqoofYFVt/2agpi1OofJCCGUvSAm6GkTC8gfnPmb4rNgVaI4PDEi/8VCbfhXNwHIdNgfC7B7BEAoK+CG5LnhX9j4YlDo9ryEJwCl+I6j9ogugTAO0tEVd5aQhAwWB6ReCI1Kpj5JOQiKYucILn5CzxnxGKlgMdOSC1jIUBWgWVG/rpaZSPwpuSGBigWDrvGLO6Ba4WA8jJICANOvf3fDpFNkbcp/3CE37APk/JVPgyt9L9R5SpEFruPkZjqN0XqNOm0CPfpIGz3KJbWol3hHJqAbbrL99E3CU9DSxFxx5t35Q9VTZXb+q627hIQVw+chfmi8MZ2mN/yH6yqLRgYlsN97t2pJdq5HaHEQ4BFAuUkZLZxtMkLGA5gIZ4G8OVtO1k9idHo6oVZ5hdIJYBL+dXdav44WoQR69vMnFtMTxFx94wzENMDLWFJOwqik7ZhMQ572gX5Le1fJ7mWgiF/RpwBoaoA4UJgj6I44KjA1KlmUdS44i+KkcrBmSXGdX2di6Tg0FnguzFO080hJZGa3R4iPWX18pe4
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM6PR04MB4838.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(39860400002)(376002)(366004)(136003)(396003)(346002)(1800799009)(186009)(451199024)(6512007)(26005)(1076003)(86362001)(2906002)(83380400001)(6486002)(2616005)(52116002)(6506007)(6666004)(7416002)(38350700002)(478600001)(38100700002)(36756003)(5660300002)(8676002)(8936002)(66476007)(66556008)(4326008)(6916009)(316002)(66946007)(41300700001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?RrNdvTxONOmEkXTSjRRVJ1pswjZ6mcc3kJTyhwlLIqafNei71LKqzhBiSobF?=
+ =?us-ascii?Q?h2fMDT11AaXtqYlSzU8Rza1Jc2925QD19qNPGRvl91S05gJmAKrWAZ0B3OpA?=
+ =?us-ascii?Q?srO5HpRUUlcxfv0VNu4yCp+YnmmcS/DiNkCvXG8w8xj2BJuS+4Vwth1hSKjN?=
+ =?us-ascii?Q?+Kt5fJTduUwRvUfKEBeEbmqhAR/OhCKs0JwdhaeC45PfmFI+2eJSctSeOUC/?=
+ =?us-ascii?Q?uh667IZtBDSVNzdbyfTuZ99kqejrWHXzfS7SGCH8mgZ169kpdKrUJ/JXpgDG?=
+ =?us-ascii?Q?54URkGeuj7hAH1FigDwYEaPjNrQq3PX40B7gjlAkKycfRk36aUxLrtIW/4fs?=
+ =?us-ascii?Q?YcmuwCP5IJ45PrETBWs15lSLDn/x1KU8NJ/LimmnZQ7syqXtOuFvm0tnXOwz?=
+ =?us-ascii?Q?+eqqaCQ8JeI/WgDkBvLZtE1+oFe/yQtVYHPEZLxl9pJiZwrZiR63Xpuw+ZH8?=
+ =?us-ascii?Q?Nc6roMVCA11asIMvtJv2mlR1bj2H57dREBcPgDm1jWZH3N7DJ0FzZd9JipBv?=
+ =?us-ascii?Q?N9pz3EfHuOHfmdcF+xRUFV30tRABFdASMry2PJKiICkE62ptxEB0RxXGalJR?=
+ =?us-ascii?Q?kUKDdeGAiav37Nh7SqTR/uUzLei/iBBMQAykEOZEWDp7tgpA5jhqpWLk7yXW?=
+ =?us-ascii?Q?SwgcrRCk2wlL3L9y4AAplZ8oWgg9iUKqyiUuxnjKPIBeQyQ3zHDszDUCeS2W?=
+ =?us-ascii?Q?fW8kGSVCEg8/t/yem7B+f9rrpWfNqG1RFzwQEpzYsL9DWWNXVEGZaa1y7eT7?=
+ =?us-ascii?Q?ssZAfaoyHQ5YrMg2tKnxjntSwDDa/5jr6Cf1qWr9Dpfmgs+P0RCaQuhuaJlQ?=
+ =?us-ascii?Q?pIR7SLqToc8UB7/L8aHMIN7p8EDzxBr+nLshjFj7tjGyA6H/kS2EAQZCUOoq?=
+ =?us-ascii?Q?32bCrDuiodCVDsx1JsIU6guT1TDBz/P1gavLTpMwc/OA2irKWArE87e3Zyjh?=
+ =?us-ascii?Q?9gK9OPaHbR69//fM9fFIAVZd1KiokDEnURahNfpOZ9uTCvWGus9J3lk5rTwF?=
+ =?us-ascii?Q?n8otDZlw5lzvK21RSD9hFPJFFM0WphwpfzEYSbhXwIMmmai2C17Xnu2/ac+E?=
+ =?us-ascii?Q?XoauVjl9+kPgBTKr6FJgEf01e+G046VL8gTKXW11Z4ElaGO3GRCS+MbLi/xQ?=
+ =?us-ascii?Q?ks0G/fo+6lkRy21mlNJ86ccw+4Y1fIQ8Basxr2N2Zj3S7a6SDmQ6NY05w7gx?=
+ =?us-ascii?Q?vbiy/VssMcSm3IdyWLbMTERDgyNiXzrjuvQ+VaWWoKaVv1sVJBUt5I2sH6So?=
+ =?us-ascii?Q?dHRuAY5EWeNrjLmPPJ7nkIE3v1p5/UDpYGxnCZ4ycyVqfKFzN7rJNO7KII/d?=
+ =?us-ascii?Q?FtkIjfXgY5mpZTGv5WT8Duh0w8apIUCFmo/BGDCCdn8RGUTo1cyArxRhtNIg?=
+ =?us-ascii?Q?wF6ZuCtPK4BjemAb8Ft5/C5zGCQ/4UknbgKa/VtQhqdEPxjZaVY+kvsZRCy2?=
+ =?us-ascii?Q?RMPlGkCEaHoiiieRO9ua6357ALARGg/Bjqbed2O3CMRr03AiU32TERjrx7ov?=
+ =?us-ascii?Q?2sSE1jo7B3Ko3wNEDrLdgMcwgbYQHa5ECThU1iTn4CPXBkCh2VQXc4FFYBSU?=
+ =?us-ascii?Q?y4U7iHPVVOi0g5HLJA1aLdHMakmlX6xn599Ffi/q?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 132e49fa-d0a7-43f8-1fcf-08dbb313d2c9
+X-MS-Exchange-CrossTenant-AuthSource: AM6PR04MB4838.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Sep 2023 22:09:52.8026
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: KMH0qVgSc6npN8FBytjjLhSMnBIQ2uFR7th6qglISl/+6FaGrK4P6C506/3NBkk4Yu9hl7G1IbfvFk2Da8fngQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAXPR04MB8125
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 11, 2023 at 05:22:56PM +0100, Jonathan Cameron wrote:
-> On Mon, 11 Sep 2023 16:47:41 +0100
-> Jonathan Cameron <Jonathan.Cameron@Huawei.com> wrote:
-> > On Mon, 11 Sep 2023 17:35:03 +0200
-> > Herve Codina <herve.codina@bootlin.com> wrote:
-> > > On Mon, 11 Sep 2023 15:48:56 +0100
-> > > Jonathan Cameron <Jonathan.Cameron@Huawei.com> wrote:
-> > > > On Tue, 15 Aug 2023 10:19:57 -0700
-> > > > Lizhi Hou <lizhi.hou@amd.com> wrote:
+Call pci_epc_generic_alloc_doorbell() to alloc an platform MSI address
+space.The Endpoint (EP) function drver can maps the memory assigned for the
+BAR region by the PCI host to the message address of the platform MSI
+interrupt controller in the PCI EP. As a result, when the PCI RC writes to
+the BAR region, it triggers an IRQ at the EP.
 
-> > > > > The PCI endpoint device such as Xilinx Alveo PCI card maps the register
-> > > > > spaces from multiple hardware peripherals to its PCI BAR. Normally,
-> > > > > the PCI core discovers devices and BARs using the PCI enumeration process.
-> > > > > There is no infrastructure to discover the hardware peripherals that are
-> > > > > present in a PCI device, and which can be accessed through the PCI BARs.
-> > > > > 
-> > > > > Apparently, the device tree framework requires a device tree node for the
-> > > > > PCI device. Thus, it can generate the device tree nodes for hardware
-> > > > > peripherals underneath. Because PCI is self discoverable bus, there might
-> > > > > not be a device tree node created for PCI devices. Furthermore, if the PCI
-> > > > > device is hot pluggable, when it is plugged in, the device tree nodes for
-> > > > > its parent bridges are required. Add support to generate device tree node
-> > > > > for PCI bridges.
-> > > > > 
-> > > > > Add an of_pci_make_dev_node() interface that can be used to create device
-> > > > > tree node for PCI devices.
-> > > > > 
-> > > > > Add a PCI_DYNAMIC_OF_NODES config option. When the option is turned on,
-> > > > > the kernel will generate device tree nodes for PCI bridges unconditionally.
-> > > > > 
-> > > > > Initially, add the basic properties for the dynamically generated device
-> > > > > tree nodes which include #address-cells, #size-cells, device_type,
-> > > > > compatible, ranges, reg.
-> > > > > 
-> > > > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > > > Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>      
-> > > > 
-> > > > I tried to bring this up for a custom PCIe card emulated in QEMU on an ARM ACPI
-> > > > machine.
-> > > > 
-> > > > There are some missing parts that were present in Clements series, but not this
-> > > > one, particularly creation of the root pci object.
-> > > > 
-> > > > Anyhow, hit an intermittent crash...    
-> > > 
-> > > I am facing the same issues.
-> > > 
-> > > I use a custom PCIe board too but on x86 ACPI machine.
-> > > 
-> > > In order to have a working system, I need also to build a DT node for the PCI
-> > > Host bridge (previously done by Clement's patch) and I am a bit stuck with
-> > > interrupts.
-> > > 
-> > > On your side (ACPI machine) how do you handle this ?  
-> > 
-> > That was next on my list to look at now I've gotten the device tree stuff
-> > to show up.
-> > 
-> > > I mean is your PCI host bridge provided by ACPI ? And if so, you probably need
-> > > to build a DT node for this PCI host bridge and add some interrupt-map,
-> > > interrupt-map-mask properties in the DT node.  
-> > 
-> > Agreed. Potentially some other stuff, but interrupts are the thing that
-> > showed up first as an issue.
-> > 
-> > Given the only reason I'm looking at this is to potentially solve
-> > a long term CXL / MCTP over I2C upstreaming problem on QEMU side, I've only
-> > limited time to throw at this (thought it was a short activity
-> > for a Friday afternoon :)  Will see if it turns out not too be
-> > too hard to build the rest.
-> > 
-> > I can at least boot same system with device tree and check I'm matching
-> > what is being generated by QEMU.
-> 
-> So, I'm not really sure how to approach this.  It seems 'unwise'/'unworkable' to
-> instantiate the device tree blob for the interrupt controller we already have
-> ACPI for and without that I have nothing to route to.
-> 
-> Or can we just ignore the interrupt map stuff completely and instead
-> rely on instantiating an interrupt controller on the card (that under
-> the hood uses non DT paths to make interrupts actually happen?)
-> 
-> That path to me seems workable and keeps the boundary of ACPI vs DT
-> actually getting used within the card specific driver.
-> 
-> Suggestions welcome!
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+---
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Interestingly I haven't got your message in the thread via `b4`.
-Anyways, I think that was has been discussed at some point and
-DT appears just to be handy blob format to be supplied along with
-the device as "description of its configuration". Whatever format
-is chosen it should be available for ACPI/DT/etc platforms and
-be uniform. ACPI also supports overlays (as a debug feature, though)
-but would it make sense to have AML (compiled ASL) for ACPI and DTB
-for DT platforms and etc for etc platforms with duplicative data
-inside with all limitations of the each of those formats and their
-respective parsers/interpreters?
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index f9182f8d552f4..4f6be5f4ba18a 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -477,6 +477,8 @@ static const struct pci_epc_ops epc_ops = {
+ 	.start			= dw_pcie_ep_start,
+ 	.stop			= dw_pcie_ep_stop,
+ 	.get_features		= dw_pcie_ep_get_features,
++	.alloc_doorbell		= pci_epc_generic_alloc_doorbell,
++	.free_doorbell		= pci_epc_generic_free_doorbell,
+ };
+ 
+ int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.34.1
 
