@@ -2,151 +2,118 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE63CA0EC0
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:41:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A5ECA0EC4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:41:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244334AbjIKVkM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:40:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48538 "EHLO
+        id S1350648AbjIKVkS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:40:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240620AbjIKOtG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 10:49:06 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95A63E40;
-        Mon, 11 Sep 2023 07:49:00 -0700 (PDT)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4RkqLc5GfBz687wh;
-        Mon, 11 Sep 2023 22:47:20 +0800 (CST)
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Mon, 11 Sep
- 2023 15:48:57 +0100
-Date:   Mon, 11 Sep 2023 15:48:56 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Lizhi Hou <lizhi.hou@amd.com>
-CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <robh@kernel.org>,
-        <max.zhen@amd.com>, <sonal.santan@amd.com>,
-        <stefano.stabellini@xilinx.com>,
-        =?ISO-8859-1?Q?Cl=E9ment_L=E9ger?= <clement.leger@bootlin.com>
-Subject: Re: [PATCH V13 2/5] PCI: Create device tree node for bridge
-Message-ID: <20230911154856.000076c3@Huawei.com>
-In-Reply-To: <1692120000-46900-3-git-send-email-lizhi.hou@amd.com>
-References: <1692120000-46900-1-git-send-email-lizhi.hou@amd.com>
-        <1692120000-46900-3-git-send-email-lizhi.hou@amd.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        with ESMTP id S237504AbjIKMyd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 08:54:33 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95F19E4B;
+        Mon, 11 Sep 2023 05:54:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1694436869; x=1725972869;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=RKVN1bWO+6tJ6WlmxsOXbk1vq7oGMYXcJ+RHQjqKcpI=;
+  b=bUWitqMHJGU633zc/Q/sIHhMdeFHAvfs/B8VP5XJ6il1JBZefbVulsxG
+   fA00ac7Cnc/s2hzzvrtjBvHQ3abVM59iirsEfL44JgMnVu6E8DVTJ4YTY
+   aBqVxCFXyX9ZGPjAd/NlthlVSiv6WkggN8i4buRyBOEP7NGwdxvPoGxAQ
+   OwUqoudOJJ4x44nqUCJPy+vDr3jbUo9uSehQSSHUlmmBcws646fMBOMX/
+   98LC0B5OOerAZ/G6LP/Mp2YRY4UVMiox4xMS7d9fPR3z7eJfSOCRM0UDg
+   VxgSX5Qc2qeDjwjgj1kx6ibvN5N1OLjQg0I3nksP9OQY8E2fQVwvOFDkb
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="357511221"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="357511221"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:29 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858304289"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="858304289"
+Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
+  by fmsmga002-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:54:23 -0700
+From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-pci@vger.kernel.org, Chas Williams <3chas3@gmail.com>,
+        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     brking@us.ibm.com, dalias@libc.org, glaubitz@physik.fu-berlin.de,
+        ink@jurassic.park.msu.ru, jejb@linux.ibm.com, kw@linux.com,
+        linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
+        lpieralisi@kernel.org, martin.petersen@oracle.com,
+        mattst88@gmail.com, richard.henderson@linaro.org,
+        toan@os.amperecomputing.com, ysato@users.sourceforge.jp,
+        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v3 3/6] atm: iphase: Do PCI error checks on own line
+Date:   Mon, 11 Sep 2023 15:53:51 +0300
+Message-Id: <20230911125354.25501-4-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
+References: <20230911125354.25501-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml500006.china.huawei.com (7.191.161.198) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 15 Aug 2023 10:19:57 -0700
-Lizhi Hou <lizhi.hou@amd.com> wrote:
+In get_esi() PCI errors are checked inside line-split if conditions (in
+addition to the file not following the coding style). To make the code
+in get_esi() more readable, fix the coding style and use the usual
+error handling pattern with a separate variable.
 
-> The PCI endpoint device such as Xilinx Alveo PCI card maps the register
-> spaces from multiple hardware peripherals to its PCI BAR. Normally,
-> the PCI core discovers devices and BARs using the PCI enumeration process.
-> There is no infrastructure to discover the hardware peripherals that are
-> present in a PCI device, and which can be accessed through the PCI BARs.
-> 
-> Apparently, the device tree framework requires a device tree node for the
-> PCI device. Thus, it can generate the device tree nodes for hardware
-> peripherals underneath. Because PCI is self discoverable bus, there might
-> not be a device tree node created for PCI devices. Furthermore, if the PCI
-> device is hot pluggable, when it is plugged in, the device tree nodes for
-> its parent bridges are required. Add support to generate device tree node
-> for PCI bridges.
-> 
-> Add an of_pci_make_dev_node() interface that can be used to create device
-> tree node for PCI devices.
-> 
-> Add a PCI_DYNAMIC_OF_NODES config option. When the option is turned on,
-> the kernel will generate device tree nodes for PCI bridges unconditionally.
-> 
-> Initially, add the basic properties for the dynamically generated device
-> tree nodes which include #address-cells, #size-cells, device_type,
-> compatible, ranges, reg.
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
+In addition, initialization of 'error' variable at declaration is not
+needed.
 
-I tried to bring this up for a custom PCIe card emulated in QEMU on an ARM ACPI
-machine.
+No function changes intended.
 
-There are some missing parts that were present in Clements series, but not this
-one, particularly creation of the root pci object.
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/atm/iphase.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-Anyhow, hit an intermittent crash...
+diff --git a/drivers/atm/iphase.c b/drivers/atm/iphase.c
+index 324148686953..9bba8f280a4d 100644
+--- a/drivers/atm/iphase.c
++++ b/drivers/atm/iphase.c
+@@ -2291,19 +2291,21 @@ static int get_esi(struct atm_dev *dev)
+ static int reset_sar(struct atm_dev *dev)  
+ {  
+ 	IADEV *iadev;  
+-	int i, error = 1;  
++	int i, error;
+ 	unsigned int pci[64];  
+ 	  
+ 	iadev = INPH_IA_DEV(dev);  
+-	for(i=0; i<64; i++)  
+-	  if ((error = pci_read_config_dword(iadev->pci,  
+-				i*4, &pci[i])) != PCIBIOS_SUCCESSFUL)  
+-  	      return error;  
++	for (i = 0; i < 64; i++) {
++		error = pci_read_config_dword(iadev->pci, i * 4, &pci[i]);
++		if (error != PCIBIOS_SUCCESSFUL)
++			return error;
++	}
+ 	writel(0, iadev->reg+IPHASE5575_EXT_RESET);  
+-	for(i=0; i<64; i++)  
+-	  if ((error = pci_write_config_dword(iadev->pci,  
+-					i*4, pci[i])) != PCIBIOS_SUCCESSFUL)  
+-	    return error;  
++	for (i = 0; i < 64; i++) {
++		error = pci_write_config_dword(iadev->pci, i * 4, pci[i]);
++		if (error != PCIBIOS_SUCCESSFUL)
++			return error;
++	}
+ 	udelay(5);  
+ 	return 0;  
+ }  
+-- 
+2.30.2
 
-
-> ---
-> +static int of_pci_prop_intr_map(struct pci_dev *pdev, struct of_changeset *ocs,
-> +				struct device_node *np)
-> +{
-> +	struct of_phandle_args out_irq[OF_PCI_MAX_INT_PIN];
-> +	u32 i, addr_sz[OF_PCI_MAX_INT_PIN], map_sz = 0;
-> +	__be32 laddr[OF_PCI_ADDRESS_CELLS] = { 0 };
-> +	u32 int_map_mask[] = { 0xffff00, 0, 0, 7 };
-> +	struct device_node *pnode;
-> +	struct pci_dev *child;
-> +	u32 *int_map, *mapp;
-> +	int ret;
-> +	u8 pin;
-> +
-> +	pnode = pci_device_to_OF_node(pdev->bus->self);
-> +	if (!pnode)
-> +		pnode = pci_bus_to_OF_node(pdev->bus);
-> +
-> +	if (!pnode) {
-> +		pci_err(pdev, "failed to get parent device node");
-> +		return -EINVAL;
-> +	}
-> +
-> +	laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
-> +	for (pin = 1; pin <= OF_PCI_MAX_INT_PIN;  pin++) {
-> +		i = pin - 1;
-> +		out_irq[i].np = pnode;
-> +		out_irq[i].args_count = 1;
-> +		out_irq[i].args[0] = pin;
-> +		ret = of_irq_parse_raw(laddr, &out_irq[i]);
-> +		if (ret) {
-> +			pci_err(pdev, "parse irq %d failed, ret %d", pin, ret);
-> +			continue;
-
-If all the interrupt parsing fails we continue ever time...
-
-> +		}
-> +		ret = of_property_read_u32(out_irq[i].np, "#address-cells",
-> +					   &addr_sz[i]);
-> +		if (ret)
-> +			addr_sz[i] = 0;
-
-This never happens.
-
-> +	}
-> +
-> +	list_for_each_entry(child, &pdev->subordinate->devices, bus_list) {
-> +		for (pin = 1; pin <= OF_PCI_MAX_INT_PIN; pin++) {
-> +			i = pci_swizzle_interrupt_pin(child, pin) - 1;
-> +			map_sz += 5 + addr_sz[i] + out_irq[i].args_count;
-
-and here we end up derefencing random memory which happens in my case to cause
-a massive allocation sometimes and that fails one of the assertions in the
-allocator.
-
-I'd suggest just setting addr_sz[xxx] = {}; above
-to ensure it's initialized. Then the if(ret) handling should not be needed
-as well as of_property_read_u32 should be side effect free I hope!
-
-> +		}
-> +	}
-> +
-> +	int_map = kcalloc(map_sz, sizeof(u32), GFP_KERNEL);
-> +	mapp = int_map;
