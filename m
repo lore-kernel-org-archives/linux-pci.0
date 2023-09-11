@@ -2,97 +2,94 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB59FCA0EC2
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:41:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0AA4CA0EC8
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:41:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243845AbjIKVj1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:39:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40396 "EHLO
+        id S1350592AbjIKVja (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:39:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52246 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237207AbjIKMPT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 08:15:19 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59D01198;
-        Mon, 11 Sep 2023 05:15:15 -0700 (PDT)
+        with ESMTP id S238001AbjIKNbT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 09:31:19 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F197106;
+        Mon, 11 Sep 2023 06:31:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694434515; x=1725970515;
+  t=1694439075; x=1725975075;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=i3M/qRLC52zinS1Ub+dGO9M7VTVBWgGGC/7YYN8zcDU=;
-  b=MzeGmzY0PNN1POP30aXAL45CTzd6gpo7SdlbuA5hkZwwDToiWxBEii6x
-   0dSqKsGuyOgTI0IafKVckRfrF6e9j7XiFat0cYnT2rrin8PHKLHQ8LtPz
-   WxNNFYOVYz0CdvoP1a/G5fRrfWEB4r3xoApMq+YPfc8HujpMF1lZGcmaq
-   kr7XQqGktZOaT/D3kZskYdtrmHkK2lN7v3wJLgQTEf8au6/NKHqzKSxTP
-   CZ3XNegKY+hjahf3vxcwDMcyQTCxjzmf9uowE5HmuWhck3GhuW4IA5znh
-   3yyt5mpOFzaja+nPgWGzigz+lNjT4mczilCGn3zlZFveSPI//FqQvHqAM
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="381863433"
+  bh=hhntH08KwDzWZFhlYntAoxLtfPyiIglkNSydQprvVBY=;
+  b=JXCyl1ilgELaFhRR5bLOXC5MBMBzaR7qhljTvj78arjCgJzXm1lfPfRH
+   iZk8HX4Lua6RmW1H1RfB/zltRZg58/7HdfPNUxB97ag3O2MSppWFAp2K/
+   mT2v/4yTtqc7TtE2d2Jvmu6jo4Y5KuEn/cA4Rsc2P+qlgC53KOIDozf8a
+   kiPTc0jrSJOkbIi73Nek3btTnr9XLRfxS1s/bDf+ikab9UADIa6QOM4wI
+   3NT/JWiwNixwdxflkeCJxELz8zpj9UfM7KzV/eXiB+DK3T8g19Jc3m45t
+   vYPrRFE3uTkwNCjV8bkW5DvsBBjjxRYQqqgNNbycj2qk3XXMuwONj/PZf
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="409050010"
 X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="381863433"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:15:15 -0700
+   d="scan'208";a="409050010"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 06:31:07 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="746383254"
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="736771632"
 X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="746383254"
-Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:15:12 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>, linux-rdma@vger.kernel.org,
+   d="scan'208";a="736771632"
+Received: from unknown (HELO bapvecise024..) ([10.190.254.46])
+  by orsmga007.jf.intel.com with ESMTP; 11 Sep 2023 06:31:04 -0700
+From:   sharath.kumar.d.m@intel.com
+To:     helgaas@kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 1/8] IB/hfi1: Use FIELD_GET() to extract Link Width
-Date:   Mon, 11 Sep 2023 15:14:54 +0300
-Message-Id: <20230911121501.21910-2-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230911121501.21910-1-ilpo.jarvinen@linux.intel.com>
-References: <20230911121501.21910-1-ilpo.jarvinen@linux.intel.com>
+Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, dinguyen@kernel.org,
+        D M Sharath Kumar <sharath.kumar.d.m@intel.com>
+Subject: [PATCH v3 0/2] PCI: altera: add support to agilex family
+Date:   Mon, 11 Sep 2023 19:01:38 +0530
+Message-Id: <20230911133140.1776551-1-sharath.kumar.d.m@intel.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230906110918.1501376-1-sharath.kumar.d.m@intel.com>
+References: <20230906110918.1501376-1-sharath.kumar.d.m@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use FIELD_GET() to extract PCIe Negotiated Link Width field instead of
-custom masking and shifting.
+From: D M Sharath Kumar <sharath.kumar.d.m@intel.com>
 
-While at it, also fix function's comment.
+added new callback for
+1) read,write to root port configuration registers
+2) read,write to endpoint configuration registers
+3) root port interrupt handler
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/infiniband/hw/hfi1/pcie.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+agilex and newer platforms need to implemant the callback and generic root 
+port driver should work ( without much changes ) , legacy platforms (arria
+ and startix) implement configuration read,write directly in wrapper 
+api _altera_pcie_cfg_read/_altera_pcie_cfg_write
 
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index 08732e1ac966..d497e4c623c1 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -3,6 +3,7 @@
-  * Copyright(c) 2015 - 2019 Intel Corporation.
-  */
- 
-+#include <linux/bitfield.h>
- #include <linux/pci.h>
- #include <linux/io.h>
- #include <linux/delay.h>
-@@ -210,10 +211,10 @@ static u32 extract_speed(u16 linkstat)
- 	return speed;
- }
- 
--/* return the PCIe link speed from the given link status */
-+/* return the PCIe Link Width from the given link status */
- static u32 extract_width(u16 linkstat)
- {
--	return (linkstat & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT;
-+	return FIELD_GET(PCI_EXP_LNKSTA_NLW, linkstat);
- }
- 
- /* read the link status and set dd->{lbus_width,lbus_speed,lbus_info} */
+changelog v2:
+saperated into two patches
+1.refactored the driver for easily portability to future Altera FPGA
+platforms
+2.added support for "Agilex" FPGA
+
+this driver supports PCI RP IP on Agilex FPGA, as these are FPGA its up
+to the user to add PCI RP or not ( as per his needs). we are not adding
+the device tree as part of this commit. we are expecting the add device
+tree changes only if he is adding PCI RP IP in his design
+
+changelog v3:
+incorporate review comments from Bjorn Helgaas
+
+
+D M Sharath Kumar (2):
+  PCI: altera: refactor driver for supporting new platforms
+  PCI: altera: add support for agilex family fpga
+
+ drivers/pci/controller/pcie-altera.c | 305 ++++++++++++++++++++++++---
+ 1 file changed, 275 insertions(+), 30 deletions(-)
+
 -- 
-2.30.2
+2.34.1
 
