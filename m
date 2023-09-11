@@ -2,81 +2,248 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA902CA0ED2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54BB7CA0ECF
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:41:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350438AbjIKVi2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:38:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40394 "EHLO
+        id S1350433AbjIKViX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:38:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37628 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237204AbjIKMPP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 08:15:15 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54763198;
-        Mon, 11 Sep 2023 05:15:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694434511; x=1725970511;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=3dD4ERLPrydK12d07yl5BuAZY/vrO1N+CXctHyNn6JM=;
-  b=Y5+QstJn4r9XqCWcFpDjPSHsguBzlg8ggZoju/QmUoRoWAfLAmKQfvXb
-   zYy7tF6hl97uH61PJ8lYbROhxS4aJIB9OWqVrz2TrOI5H5pmcGIdAnEXO
-   1Cx8IDDCooLvGnK91wkrQl1Wzazj71/C8wlLx8aEjv138VUJSz2kJCIYQ
-   qD0z4CnV7Jg1WrCYRjBH/l/vEnlpX0vsRBGPAozSWnSHvikBx8UVhAOz4
-   oc2mStr2gx6hKxaKngZ4fTJ3w3boAO3KvFa6ZSSoNKF3Ow7gSOBO9AIPL
-   ssef+szktWpk50Kv1sR348GDuBg9tovUnMHnGC5gcz+Vmh1WZp59+Z+YU
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="381863419"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="381863419"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:15:10 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="746383240"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="746383240"
-Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
-  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:15:09 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 0/8] PCI/treewide: PCIe Link Width field access cleanup
-Date:   Mon, 11 Sep 2023 15:14:53 +0300
-Message-Id: <20230911121501.21910-1-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
+        with ESMTP id S241777AbjIKPOW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 11:14:22 -0400
+Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [IPv6:2001:4b98:dc4:8::226])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF9B5FA;
+        Mon, 11 Sep 2023 08:14:16 -0700 (PDT)
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 6E69BC0025;
+        Mon, 11 Sep 2023 15:13:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+        t=1694445255;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ojuPiNmXmCazeh3wr8WutwjTo9jG8jJh57glhlUbxKQ=;
+        b=IjcYBOellcOfTpijLCpK9WnTM4/S/aHyvMuAt5a98uJnhkxBmZKIURIgO3VH/+TVpKUVf2
+        aG+r9ONNUgm0rHj8yq6enm0iDDgY7XptJJipf55c1DMLRXAKUjwPa+QVs87DmPJHVL2K/m
+        7Wu0kxenpt3iwns8cXXXFRSxcxoHCSdozRAE1ddfnLZone36fnaQUhOPIL8h4g8sTgDrMi
+        J5/RQinVOdc3JHbQDIlFv8bWneJfngxF6pk6Y6YWiOBCrFNQeIPlldLSgmo+hyHu2TvCPQ
+        XWWAJyKyrx+9XCOhC3y6VaPdoPSK7MWUWFCYv6COmBp6ITiS5UNbvwXWPZSljw==
+Date:   Mon, 11 Sep 2023 17:13:19 +0200
+From:   Herve Codina <herve.codina@bootlin.com>
+To:     Lizhi Hou <lizhi.hou@amd.com>
+Cc:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <robh@kernel.org>,
+        <max.zhen@amd.com>, <sonal.santan@amd.com>,
+        <stefano.stabellini@xilinx.com>
+Subject: Re: [PATCH V13 2/5] PCI: Create device tree node for bridge
+Message-ID: <20230911171319.495bb837@bootlin.com>
+In-Reply-To: <1692120000-46900-3-git-send-email-lizhi.hou@amd.com>
+References: <1692120000-46900-1-git-send-email-lizhi.hou@amd.com>
+        <1692120000-46900-3-git-send-email-lizhi.hou@amd.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-GND-Sasl: herve.codina@bootlin.com
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Instead of custom code to extract the PCIe Negotiated and Maximum Link
-Width fields, make the code more obvious using FIELD_GET/PREP().
+Hi Lizhi,
 
-Ilpo Järvinen (8):
-  IB/hfi1: Use FIELD_GET() to extract Link Width
-  media: cobalt: Use FIELD_GET() to extract Link Width
-  igb: Use FIELD_GET() to extract Link Width
-  PCI: tegra194: Use FIELD_GET()/FIELD_PREP() with Link Width fields
-  PCI: mvebu: Use FIELD_PREP() with Link Width
-  PCI: Use FIELD_GET() to extract Link Width
-  scsi: esas2r: Use FIELD_GET() to extract Link Width
-  scsi: qla2xxx: Use FIELD_GET() to extract Link Width
+On Tue, 15 Aug 2023 10:19:57 -0700
+Lizhi Hou <lizhi.hou@amd.com> wrote:
+...
+> +void of_pci_make_dev_node(struct pci_dev *pdev)
+> +{
+> +	struct device_node *ppnode, *np = NULL;
+> +	const char *pci_type;
+> +	struct of_changeset *cset;
+> +	const char *name;
+> +	int ret;
+> +
+> +	/*
+> +	 * If there is already a device tree node linked to this device,
+> +	 * return immediately.
+> +	 */
+> +	if (pci_device_to_OF_node(pdev))
+> +		return;
+> +
+> +	/* Check if there is device tree node for parent device */
+> +	if (!pdev->bus->self)
+> +		ppnode = pdev->bus->dev.of_node;
+> +	else
+> +		ppnode = pdev->bus->self->dev.of_node;
+> +	if (!ppnode)
+> +		return;
+> +
+> +	if (pci_is_bridge(pdev))
+> +		pci_type = "pci";
+> +	else
+> +		pci_type = "dev";
+> +
+> +	name = kasprintf(GFP_KERNEL, "%s@%x,%x", pci_type,
+> +			 PCI_SLOT(pdev->devfn), PCI_FUNC(pdev->devfn));
+> +	if (!name)
+> +		return;
+> +
+> +	cset = kmalloc(sizeof(*cset), GFP_KERNEL);
+> +	if (!cset)
+> +		goto failed;
+> +	of_changeset_init(cset);
+> +
+> +	np = of_changeset_create_node(ppnode, name, cset);
+> +	if (!np)
+> +		goto failed;
 
- drivers/infiniband/hw/hfi1/pcie.c          |  5 +++--
- drivers/media/pci/cobalt/cobalt-driver.c   | 11 ++++++-----
- drivers/net/ethernet/intel/igb/e1000_mac.c |  6 +++---
- drivers/pci/controller/dwc/pcie-tegra194.c |  9 ++++-----
- drivers/pci/controller/pci-mvebu.c         |  2 +-
- drivers/pci/pci-sysfs.c                    |  5 ++---
- drivers/pci/pci.c                          |  6 +++---
- drivers/scsi/esas2r/esas2r_ioctl.c         |  8 ++++----
- drivers/scsi/qla2xxx/qla_os.c              |  3 ++-
- 9 files changed, 28 insertions(+), 27 deletions(-)
+The "goto failed" will leak the cset previously allocated.
+
+np->data = cset; (next line) allows to free the cset when the node is destroyed
+(of_node_put() calls). When the node cannot be created, the allocated cset should
+be freed.
+
+> +	np->data = cset;
+> +
+> +	ret = of_pci_add_properties(pdev, cset, np);
+> +	if (ret)
+> +		goto failed;
+> +
+> +	ret = of_changeset_apply(cset);
+> +	if (ret)
+> +		goto failed;
+> +
+> +	pdev->dev.of_node = np;
+> +	kfree(name);
+> +
+> +	return;
+> +
+> +failed:
+> +	if (np)
+> +		of_node_put(np);
+> +	kfree(name);
+> +}
+> +#endif
+> +
+>  #endif /* CONFIG_PCI */
+>  
+...
+> +static int of_pci_prop_intr_map(struct pci_dev *pdev, struct of_changeset *ocs,
+> +				struct device_node *np)
+> +{
+> +	struct of_phandle_args out_irq[OF_PCI_MAX_INT_PIN];
+> +	u32 i, addr_sz[OF_PCI_MAX_INT_PIN], map_sz = 0;
+> +	__be32 laddr[OF_PCI_ADDRESS_CELLS] = { 0 };
+> +	u32 int_map_mask[] = { 0xffff00, 0, 0, 7 };
+> +	struct device_node *pnode;
+> +	struct pci_dev *child;
+> +	u32 *int_map, *mapp;
+> +	int ret;
+> +	u8 pin;
+> +
+> +	pnode = pci_device_to_OF_node(pdev->bus->self);
+> +	if (!pnode)
+> +		pnode = pci_bus_to_OF_node(pdev->bus);
+> +
+> +	if (!pnode) {
+> +		pci_err(pdev, "failed to get parent device node");
+> +		return -EINVAL;
+> +	}
+> +
+> +	laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+> +	for (pin = 1; pin <= OF_PCI_MAX_INT_PIN;  pin++) {
+> +		i = pin - 1;
+> +		out_irq[i].np = pnode;
+> +		out_irq[i].args_count = 1;
+> +		out_irq[i].args[0] = pin;
+> +		ret = of_irq_parse_raw(laddr, &out_irq[i]);
+> +		if (ret) {
+> +			pci_err(pdev, "parse irq %d failed, ret %d", pin, ret);
+> +			continue;
+> +		}
+> +		ret = of_property_read_u32(out_irq[i].np, "#address-cells",
+> +					   &addr_sz[i]);
+> +		if (ret)
+> +			addr_sz[i] = 0;
+> +	}
+
+if of_irq_parse_raw() fails, addr_sz[i] is not initialized and map_sz bellow is
+computed with uninitialized values.
+On the test I did, this lead to a kernel crash due to the following kcalloc()
+called with incorrect values.
+
+Are interrupt-map and interrupt-map-mask properties needed in all cases ?
+I mean are they mandatory for the host pci bridge ?
+
+> +
+> +	list_for_each_entry(child, &pdev->subordinate->devices, bus_list) {
+> +		for (pin = 1; pin <= OF_PCI_MAX_INT_PIN; pin++) {
+> +			i = pci_swizzle_interrupt_pin(child, pin) - 1;
+> +			map_sz += 5 + addr_sz[i] + out_irq[i].args_count;
+
+of_irq_parse_raw() can fail on some pins.
+Is it correct to set map_sz based on information related to all pins even if
+of_irq_parse_raw() previously failed on some pins ?
+
+> +		}
+> +	}
+> +
+> +	int_map = kcalloc(map_sz, sizeof(u32), GFP_KERNEL);
+> +	mapp = int_map;
+> +
+> +	list_for_each_entry(child, &pdev->subordinate->devices, bus_list) {
+> +		for (pin = 1; pin <= OF_PCI_MAX_INT_PIN; pin++) {
+> +			*mapp = (child->bus->number << 16) |
+> +				(child->devfn << 8);
+> +			mapp += OF_PCI_ADDRESS_CELLS;
+> +			*mapp = pin;
+> +			mapp++;
+> +			i = pci_swizzle_interrupt_pin(child, pin) - 1;
+> +			*mapp = out_irq[i].np->phandle;
+> +			mapp++;
+> +			if (addr_sz[i]) {
+> +				ret = of_property_read_u32_array(out_irq[i].np,
+> +								 "reg", mapp,
+> +								 addr_sz[i]);
+> +				if (ret)
+> +					goto failed;
+> +			}
+> +			mapp += addr_sz[i];
+> +			memcpy(mapp, out_irq[i].args,
+> +			       out_irq[i].args_count * sizeof(u32));
+> +			mapp += out_irq[i].args_count;
+> +		}
+> +	}
+> +
+> +	ret = of_changeset_add_prop_u32_array(ocs, np, "interrupt-map", int_map,
+> +					      map_sz);
+> +	if (ret)
+> +		goto failed;
+> +
+> +	ret = of_changeset_add_prop_u32(ocs, np, "#interrupt-cells", 1);
+> +	if (ret)
+> +		goto failed;
+> +
+> +	ret = of_changeset_add_prop_u32_array(ocs, np, "interrupt-map-mask",
+> +					      int_map_mask,
+> +					      ARRAY_SIZE(int_map_mask));
+> +	if (ret)
+> +		goto failed;
+> +
+> +	kfree(int_map);
+> +	return 0;
+> +
+> +failed:
+> +	kfree(int_map);
+> +	return ret;
+> +}
+> +
+...
+
+Regards,
+Hervé
 
 -- 
-2.30.2
-
+Hervé Codina, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
