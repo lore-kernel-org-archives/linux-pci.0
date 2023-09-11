@@ -2,93 +2,120 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40A80CA0EC6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D83BCA0ED6
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:41:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350600AbjIKVjd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:39:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38022 "EHLO
+        id S244053AbjIKVjf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:39:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238173AbjIKNpN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 09:45:13 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 698AFCD7;
-        Mon, 11 Sep 2023 06:45:09 -0700 (PDT)
+        with ESMTP id S237209AbjIKMPX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 08:15:23 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 712E3198;
+        Mon, 11 Sep 2023 05:15:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694439909; x=1725975909;
+  t=1694434518; x=1725970518;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=hhntH08KwDzWZFhlYntAoxLtfPyiIglkNSydQprvVBY=;
-  b=bx0Q+MLK5Z0fq2p+Z3aVkc/TlRX6yUx9C/681XRUMaM0wNVYlgW6Zqmu
-   EKhcUr96N9maVJDoM8cbSSiq4qHaQaTR+WsS6SuDQD4vz22nCodsAb81R
-   R+yfMRFXd/Ym1r45DoxY9wyAtWm5ayy7ISsm4vSOTlbKGLDTVgGNp4Evp
-   shT1WWyM4e6GJ81rIc7K0l7J4pI6Kizq6r+NLWyOs8nhJCtgeBeIjz+EP
-   hNJHkY9Q281iM8+y7d2Z2OjQitIIjeuX5ZVYDMO0gZ5wa6u4bMSvmOuly
-   C+GzR72Tm8kJgF51+6/ou4YBZJnIe9l1lnGyN5dxNSDk4dH8Cg9prnDbb
+  bh=vNTSAGXmwOlVOUYjZEZNHYyqgouEHbaugoCgRtuF0B0=;
+  b=XVQOP2olsx3/GXjzO11w5DY9mVd+RhG3h0fLDcwOvpfxs9dX+o0CkG8f
+   0aXWDa1w/ySZaEv5rH6GhDiB1pYzY4Fuj1lsg6Q+dVJLoEiINZ1QrNt8p
+   ZSqFuOv9JGyJLLvIVYA0+beauGxPvWt+nF5VTvhGzYlQEtgJioq1Ff3XN
+   bnZX2B4F7qku8+QL58Ww4RrFNK28y3fwnDsJJwO5z216hsIFrPpqVytVN
+   oiti1AC//Ch1Fgw79DuM5E7Zxgpu8XNVOJWoqt/6Nii7TCrV4/WojdAm5
+   mg8wNcKrFvoBF7uZuW4u8Wy4a/OJ40E6vPFLKdJ8jq1CPlENnLgX24Vrq
    A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="444500435"
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="381863461"
 X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="444500435"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 06:45:08 -0700
+   d="scan'208";a="381863461"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:15:18 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="813379966"
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="746383272"
 X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="813379966"
-Received: from unknown (HELO bapvecise024..) ([10.190.254.46])
-  by fmsmga004.fm.intel.com with ESMTP; 11 Sep 2023 06:45:05 -0700
-From:   sharath.kumar.d.m@intel.com
-To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org, dinguyen@kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        D M Sharath Kumar <sharath.kumar.d.m@intel.com>
-Subject: [PATCH v3 0/2] PCI: altera: add support to agilex family
-Date:   Mon, 11 Sep 2023 19:15:39 +0530
-Message-Id: <20230911134541.1777043-1-sharath.kumar.d.m@intel.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20230616063313.862996-2-sharath.kumar.d.m@intel.com>
-References: <20230616063313.862996-2-sharath.kumar.d.m@intel.com>
+   d="scan'208";a="746383272"
+Received: from mzarkov-mobl3.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.36.200])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 05:15:16 -0700
+From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        linux-media@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 2/8] media: cobalt: Use FIELD_GET() to extract Link Width
+Date:   Mon, 11 Sep 2023 15:14:55 +0300
+Message-Id: <20230911121501.21910-3-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230911121501.21910-1-ilpo.jarvinen@linux.intel.com>
+References: <20230911121501.21910-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: D M Sharath Kumar <sharath.kumar.d.m@intel.com>
+Use FIELD_GET() to extract PCIe Negotiated and Maximum Link Width fields
+instead of custom masking and shifting.
 
-added new callback for
-1) read,write to root port configuration registers
-2) read,write to endpoint configuration registers
-3) root port interrupt handler
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/media/pci/cobalt/cobalt-driver.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-agilex and newer platforms need to implemant the callback and generic root 
-port driver should work ( without much changes ) , legacy platforms (arria
- and startix) implement configuration read,write directly in wrapper 
-api _altera_pcie_cfg_read/_altera_pcie_cfg_write
-
-changelog v2:
-saperated into two patches
-1.refactored the driver for easily portability to future Altera FPGA
-platforms
-2.added support for "Agilex" FPGA
-
-this driver supports PCI RP IP on Agilex FPGA, as these are FPGA its up
-to the user to add PCI RP or not ( as per his needs). we are not adding
-the device tree as part of this commit. we are expecting the add device
-tree changes only if he is adding PCI RP IP in his design
-
-changelog v3:
-incorporate review comments from Bjorn Helgaas
-
-
-D M Sharath Kumar (2):
-  PCI: altera: refactor driver for supporting new platforms
-  PCI: altera: add support for agilex family fpga
-
- drivers/pci/controller/pcie-altera.c | 305 ++++++++++++++++++++++++---
- 1 file changed, 275 insertions(+), 30 deletions(-)
-
+diff --git a/drivers/media/pci/cobalt/cobalt-driver.c b/drivers/media/pci/cobalt/cobalt-driver.c
+index 74edcc76d12f..6e1a0614e6d0 100644
+--- a/drivers/media/pci/cobalt/cobalt-driver.c
++++ b/drivers/media/pci/cobalt/cobalt-driver.c
+@@ -8,6 +8,7 @@
+  *  All rights reserved.
+  */
+ 
++#include <linux/bitfield.h>
+ #include <linux/delay.h>
+ #include <media/i2c/adv7604.h>
+ #include <media/i2c/adv7842.h>
+@@ -210,17 +211,17 @@ void cobalt_pcie_status_show(struct cobalt *cobalt)
+ 	pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &stat);
+ 	cobalt_info("PCIe link capability 0x%08x: %s per lane and %u lanes\n",
+ 			capa, get_link_speed(capa),
+-			(capa & PCI_EXP_LNKCAP_MLW) >> 4);
++			FIELD_GET(PCI_EXP_LNKCAP_MLW, capa));
+ 	cobalt_info("PCIe link control 0x%04x\n", ctrl);
+ 	cobalt_info("PCIe link status 0x%04x: %s per lane and %u lanes\n",
+ 		    stat, get_link_speed(stat),
+-		    (stat & PCI_EXP_LNKSTA_NLW) >> 4);
++		    FIELD_GET(PCI_EXP_LNKSTA_NLW, stat));
+ 
+ 	/* Bus */
+ 	pcie_capability_read_dword(pci_bus_dev, PCI_EXP_LNKCAP, &capa);
+ 	cobalt_info("PCIe bus link capability 0x%08x: %s per lane and %u lanes\n",
+ 			capa, get_link_speed(capa),
+-			(capa & PCI_EXP_LNKCAP_MLW) >> 4);
++			FIELD_GET(PCI_EXP_LNKCAP_MLW, capa));
+ 
+ 	/* Slot */
+ 	pcie_capability_read_dword(pci_dev, PCI_EXP_SLTCAP, &capa);
+@@ -239,7 +240,7 @@ static unsigned pcie_link_get_lanes(struct cobalt *cobalt)
+ 	if (!pci_is_pcie(pci_dev))
+ 		return 0;
+ 	pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &link);
+-	return (link & PCI_EXP_LNKSTA_NLW) >> 4;
++	return FIELD_GET(PCI_EXP_LNKSTA_NLW, link);
+ }
+ 
+ static unsigned pcie_bus_link_get_lanes(struct cobalt *cobalt)
+@@ -250,7 +251,7 @@ static unsigned pcie_bus_link_get_lanes(struct cobalt *cobalt)
+ 	if (!pci_is_pcie(pci_dev))
+ 		return 0;
+ 	pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &link);
+-	return (link & PCI_EXP_LNKCAP_MLW) >> 4;
++	return FIELD_GET(PCI_EXP_LNKCAP_MLW, link);
+ }
+ 
+ static void msi_config_show(struct cobalt *cobalt, struct pci_dev *pci_dev)
 -- 
-2.34.1
+2.30.2
 
