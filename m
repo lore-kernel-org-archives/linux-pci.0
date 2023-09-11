@@ -2,138 +2,341 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04EEECA0EC5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D1CCA0EE3
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:41:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350476AbjIKVit (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:38:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60876 "EHLO
+        id S1350472AbjIKVir (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:38:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47906 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242551AbjIKPry (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 11:47:54 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.115])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36E46121;
-        Mon, 11 Sep 2023 08:47:50 -0700 (PDT)
+        with ESMTP id S244471AbjIKUho (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 16:37:44 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A02BE127;
+        Mon, 11 Sep 2023 13:37:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694447270; x=1725983270;
-  h=date:from:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=X08U4r/zjdzoD2xlVs+dRrXtqyQrZjNfvPMLi8zpWCM=;
-  b=Zq2JNCIc+9yIqGHnEy76FHTSvESKp2+Skka2V9E3cgWOvKIYc3Ou7mvl
-   05D2kVK8KjQ/Jenmr4sQaDJmo8E5pD9XSjUacWDWYIeePZuUpJpNmzpdg
-   qfWodjQaBUXLBzut9SD48+7CQX+JL8YFP3SoLq3X7DJqx/kJOoDL4orgt
-   GUK3wv7mU4eJLJmsButhTPknq48xz+K86Cah72JdHmxEZZLma+0J3Jc7N
-   WtJfJZeuM3mp5LKG+171ToB9hD4zWM8r2hgCAjTgBpO6SnqZ783QqK8Gz
-   CbzBRSPuwm2cITFuVo/XHCZtlS5coxDd/WT0+qSt3pPahL0kSlvNhn32c
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="378034289"
+  t=1694464658; x=1726000658;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=/9BP9zKlaz6FdwO5Fmzt1TO6pHP3R1/+I+S+8iwDxmw=;
+  b=iAyO7WCs2SMjE88d1fQKzzCiQVLunzn2pYcZnrd3smarQ2hShLaiCcn5
+   sSr/NZL0G0UPXCHKwZwr6TmPALLFc69P3fWyxGwEd7sRrH78+9UYEcSGb
+   fYhct1e1uqpoLu5FPKigU8Uv9i2aC0WMveuyjc/dSWNJ7gL0eS/UlK3Sp
+   Z8XqBR+8J/CA9eb/15LQkEwf2f3305xwvopeT5vq37c46ar2ve9dHKgzO
+   SQb9vVpauWubH7nCNnWUorqsa6fqdNGSQXTnHlETKt/H4C4sfXPdyNeUk
+   o/mDyzFaQ1Uycf8+HkRYZyDHjpyIBl1I2w8fiZmg2NKd0IGPXvAlztFAB
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="444630933"
 X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="378034289"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 08:47:26 -0700
+   d="scan'208";a="444630933"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 13:37:22 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="772630737"
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858482054"
 X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="772630737"
-Received: from mzarkov-mobl3.ger.corp.intel.com ([10.252.36.200])
-  by orsmga008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 08:47:21 -0700
-Date:   Mon, 11 Sep 2023 18:47:19 +0300 (EEST)
-From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Krishna Chaitanya Chundru <quic_krichai@quicinc.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Zhang Rui <rui.zhang@intel.com>, linux-pm@vger.kernel.org
-cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Alex Deucher <alexdeucher@gmail.com>
-Subject: Re: [PATCH 00/10] Add PCIe Bandwidth Controller
-In-Reply-To: <647e2b5e-6064-dbfa-bb56-f74358efd1fe@quicinc.com>
-Message-ID: <25bf206e-864b-644-9b4-a0f461b4285@linux.intel.com>
-References: <20230817121708.53213-1-ilpo.jarvinen@linux.intel.com> <fa5a20d0-77db-58bd-3956-ac664dffa587@quicinc.com> <21b95d9-86a5-dcb0-9dda-3f1cdd426b9e@linux.intel.com> <647e2b5e-6064-dbfa-bb56-f74358efd1fe@quicinc.com>
+   d="scan'208";a="858482054"
+Received: from smile.fi.intel.com ([10.237.72.54])
+  by fmsmga002.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 13:37:20 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.96)
+        (envelope-from <andriy.shevchenko@intel.com>)
+        id 1qfnen-008Q1O-1H;
+        Mon, 11 Sep 2023 23:37:17 +0300
+Date:   Mon, 11 Sep 2023 23:37:17 +0300
+From:   Andy Shevchenko <andriy.shevchenko@intel.com>
+To:     Lizhi Hou <lizhi.hou@amd.com>, Andrew Lunn <andrew@lunn.ch>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, robh@kernel.org, max.zhen@amd.com,
+        sonal.santan@amd.com, stefano.stabellini@xilinx.com
+Subject: Re: [PATCH V13 0/5] Generate device tree node for pci devices
+Message-ID: <ZP96feVs2ev7098Y@smile.fi.intel.com>
+References: <1692120000-46900-1-git-send-email-lizhi.hou@amd.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323329-2146389531-1694445120=:1823"
-Content-ID: <d4d8e4d9-df60-ff9e-806d-24cbd22967d6@linux.intel.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1692120000-46900-1-git-send-email-lizhi.hou@amd.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323329-2146389531-1694445120=:1823
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
-Content-ID: <c9761ce4-b9a2-dcba-a6f7-24d03a34d4@linux.intel.com>
-
-+ thermal people.
-
-On Mon, 11 Sep 2023, Krishna Chaitanya Chundru wrote:
-> On 9/4/2023 4:46 PM, Ilpo Järvinen wrote:
-> > On Mon, 4 Sep 2023, Krishna Chaitanya Chundru wrote:
-> > > On 8/17/2023 5:46 PM, Ilpo Järvinen wrote:
-> > > > 
-> > > > This series adds PCIe bandwidth controller (bwctrl) and associated PCIe
-> > > > cooling driver to the thermal core side for limiting PCIe link speed
-> > > > due to thermal reasons. PCIe bandwidth controller is a PCI express bus
-> > > > port service driver. A cooling device is created for each port the
-> > > > service driver finds if they support changing speeds.
-> > > I see we had support for only link speed changes here but we need to add
-> > > support for
-> > > 
-> > > link width change also as bandwidth notification from PCIe supports both
-> > > link
-> > > speed and link width.
-> > Hi,
-> > 
-> > Thanks for the comment. In case you mean that the changes in Link Width
-> > should be reported correctly, they already are since the sysfs interface
-> > reads them directly from LNKSTA register.
-> > 
-> > Or did you perhaps mean that Bandwidth Controller should support also
-> > changing Link Width? If this is the case I don't know how it can be
-> > realized so a pointer on how it can be achieved would be appreciated.
+On Tue, Aug 15, 2023 at 10:19:55AM -0700, Lizhi Hou wrote:
+> This patch series introduces OF overlay support for PCI devices which
+> primarily addresses two use cases. First, it provides a data driven method
+> to describe hardware peripherals that are present in a PCI endpoint and
+> hence can be accessed by the PCI host. Second, it allows reuse of a OF
+> compatible driver -- often used in SoC platforms -- in a PCI host based
+> system.
 > 
-> I didn't have any idea on how thermal framework works.
+> There are 2 series devices rely on this patch:
 > 
-> But as we are adding bandwidth controller support we need to add support for
-> width change also, may be we are not using this now, but we may need it in the
-> future.
-> 
-> We had similar use case based on the bandwidth requirement on devices like
-> WLAN, the client try to reduce or increase the link speed and link width.
-> 
-> So in the bandwidth controller driver we can add support for link width also.
-> So any client can easily use the driver to change link speed or width or both
-> to reduce the power consumption.
-> 
-> Adding link width support should be similar to how you added the link speed
-> supported.
-> 
-> Please correct me if I misunderstood something here.
+>   1) Xilinx Alveo Accelerator cards (FPGA based device)
 
-Hi,
+>   2) Microchip LAN9662 Ethernet Controller
 
-Okay, thanks for the clarification. So the point is to plan for adding 
-support for Link Width later and currently only support throttling Link 
-Speed. In any case, the Link Width control seems to be controlled using 
-a different approach (Link Width change does not require Link Retraining).
+I believe you should Cc this to Andrew Lunn for the comments.
+IIRC something similar was tried to being solved for DSA (?)
+devices where SFP hotpluggable hardware can be attached or
+detached at run-time (sorry if I messes / mixing up things,
+I wrote this from my memory, might be completely wrong).
 
-I don't know either how such 2 dimensioned throttling (Link Speed and 
-Link Width) is supposed to be realized using the thermal/cooling device 
-interface which only provides a single integer as the current state. That 
-is, whether to provide a single cooling device (with a single integer 
-exposed to userspace) or separate cooling device for each dimension?
+>      Please see: https://lore.kernel.org/lkml/20220427094502.456111-1-clement.leger@bootlin.com/
+> 
+> Normally, the PCI core discovers PCI devices and their BARs using the
+> PCI enumeration process. However, the process does not provide a way to
+> discover the hardware peripherals that are present in a PCI device, and
+> which can be accessed through the PCI BARs. Also, the enumeration process
+> does not provide a way to associate MSI-X vectors of a PCI device with the
+> hardware peripherals that are present in the device. PCI device drivers
+> often use header files to describe the hardware peripherals and their
+> resources as there is no standard data driven way to do so. This patch
+> series proposes to use flattened device tree blob to describe the
+> peripherals in a data driven way. Based on previous discussion, using
+> device tree overlay is the best way to unflatten the blob and populate
+> platform devices. To use device tree overlay, there are three obvious
+> problems that need to be resolved.
+> 
+> First, we need to create a base tree for non-DT system such as x86_64. A
+> patch series has been submitted for this:
+> https://lore.kernel.org/lkml/20220624034327.2542112-1-frowand.list@gmail.com/
+> https://lore.kernel.org/lkml/20220216050056.311496-1-lizhi.hou@xilinx.com/
 
-Perhaps thermal people could provide some insight on this? Is there some 
-precedent I could take look at?
+Can you point out to the ACPI excerpt(s) of the description of anything related
+to the device(s) in question?
+
+> Second, a device tree node corresponding to the PCI endpoint is required
+> for overlaying the flattened device tree blob for that PCI endpoint.
+> Because PCI is a self-discoverable bus, a device tree node is usually not
+> created for PCI devices. This series adds support to generate a device
+> tree node for a PCI device which advertises itself using PCI quirks
+> infrastructure.
+> 
+> Third, we need to generate device tree nodes for PCI bridges since a child
+> PCI endpoint may choose to have a device tree node created.
+> 
+> This patch series is made up of three patches.
+> 
+> The first patch is adding OF interface to create or destroy OF node
+> dynamically.
+> 
+> The second patch introduces a kernel option, CONFIG_PCI_DYNAMIC_OF_NODES.
+> When the option is turned on, the kernel will generate device tree nodes
+> for all PCI bridges unconditionally. The patch also shows how to use the
+> PCI quirks infrastructure, DECLARE_PCI_FIXUP_FINAL to generate a device
+> tree node for a device. Specifically, the patch generates a device tree
+> node for Xilinx Alveo U50 PCIe accelerator device. The generated device
+> tree nodes do not have any property.
+> 
+> The third patch adds basic properties ('reg', 'compatible' and
+> 'device_type') to the dynamically generated device tree nodes. More
+> properties can be added in the future.
+> 
+> Here is the example of device tree nodes generated within the ARM64 QEMU.
+> 
+> # lspci -t
+> -[0000:00]-+-00.0
+>            +-01.0
+>            +-03.0-[01-03]----00.0-[02-03]----00.0-[03]----00.0
+>            +-03.1-[04]--
+>            \-04.0-[05-06]----00.0-[06]--
+> 
+> Without CONFIG_PCI_DYNAMIC_OF_NODES
+> 
+> # tree /sys/firmware/devicetree/base/pcie@10000000/
+> /sys/firmware/devicetree/base/pcie@10000000/
+> |-- #address-cells
+> |-- #interrupt-cells
+> |-- #size-cells
+> |-- bus-range
+> |-- compatible
+> |-- device_type
+> |-- dma-coherent
+> |-- interrupt-map
+> |-- interrupt-map-mask
+> |-- linux,pci-domain
+> |-- msi-map
+> |-- name
+> |-- ranges
+> `-- reg
+> 
+> With CONFIG_PCI_DYNAMIC_OF_NODES
+> 
+> # tree /sys/firmware/devicetree/base/pcie@10000000/
+> /sys/firmware/devicetree/base/pcie@10000000/
+> |-- #address-cells
+> |-- #interrupt-cells
+> |-- #size-cells
+> |-- bus-range
+> |-- compatible
+> |-- device_type
+> |-- dma-coherent
+> |-- interrupt-map
+> |-- interrupt-map-mask
+> |-- linux,pci-domain
+> |-- msi-map
+> |-- name
+> |-- pci@3,0
+> |   |-- #address-cells
+> |   |-- #interrupt-cells
+> |   |-- #size-cells
+> |   |-- bus-range
+> |   |-- compatible
+> |   |-- device_type
+> |   |-- interrupt-map
+> |   |-- interrupt-map-mask
+> |   |-- interrupts
+> |   |-- pci@0,0
+> |   |   |-- #address-cells
+> |   |   |-- #interrupt-cells
+> |   |   |-- #size-cells
+> |   |   |-- bus-range
+> |   |   |-- compatible
+> |   |   |-- device_type
+> |   |   |-- interrupt-map
+> |   |   |-- interrupt-map-mask
+> |   |   |-- pci@0,0
+> |   |   |   |-- #address-cells
+> |   |   |   |-- #interrupt-cells
+> |   |   |   |-- #size-cells
+> |   |   |   |-- bus-range
+> |   |   |   |-- compatible
+> |   |   |   |-- dev@0,0
+> |   |   |   |   |-- #address-cells
+> |   |   |   |   |-- #size-cells
+> |   |   |   |   |-- compatible
+> |   |   |   |   |-- ranges
+> |   |   |   |   `-- reg
+> |   |   |   |-- device_type
+> |   |   |   |-- interrupt-map
+> |   |   |   |-- interrupt-map-mask
+> |   |   |   |-- ranges
+> |   |   |   `-- reg
+> |   |   |-- ranges
+> |   |   `-- reg
+> |   |-- ranges
+> |   `-- reg
+> |-- pci@3,1
+> |   |-- #address-cells
+> |   |-- #interrupt-cells
+> |   |-- #size-cells
+> |   |-- bus-range
+> |   |-- compatible
+> |   |-- device_type
+> |   |-- interrupt-map
+> |   |-- interrupt-map-mask
+> |   |-- interrupts
+> |   |-- ranges
+> |   `-- reg
+> |-- pci@4,0
+> |   |-- #address-cells
+> |   |-- #interrupt-cells
+> |   |-- #size-cells
+> |   |-- bus-range
+> |   |-- compatible
+> |   |-- device_type
+> |   |-- interrupt-map
+> |   |-- interrupt-map-mask
+> |   |-- pci@0,0
+> |   |   |-- #address-cells
+> |   |   |-- #interrupt-cells
+> |   |   |-- #size-cells
+> |   |   |-- bus-range
+> |   |   |-- compatible
+> |   |   |-- device_type
+> |   |   |-- interrupt-map
+> |   |   |-- interrupt-map-mask
+> |   |   |-- interrupts
+> |   |   |-- ranges
+> |   |   `-- reg
+> |   |-- ranges
+> |   `-- reg
+> |-- ranges
+> `-- reg
+> 
+> Changes since v12:
+> - Minor fix for kernel test robot warning
+> 
+> Changes since v11:
+> - Create interrupt related properties
+> 
+> Changes since v10:
+> - Remove 'dynamic' property
+> 
+> Changes since v9:
+> - Introduce 'dynamic' property to identify dynamically generated device tree
+>   node for PCI device
+> - Added 'bus-range' property to remove dtc warnings
+> - Minor code review fixes
+> 
+> Changes since v8:
+> - Added patches to create unit test to verifying address translation
+>     The test relies on QEMU PCI Test Device, please see
+>         https://github.com/houlz0507/xoclv2/blob/pci-dt-0329/pci-dt-patch-0329/README
+>     for test setup
+> - Minor code review fixes
+> 
+> Changes since v7:
+> - Modified dynamic node creation interfaces
+> - Added unittest for new added interfaces
+> 
+> Changes since v6:
+> - Removed single line wrapper functions
+> - Added Signed-off-by Clément Léger <clement.leger@bootlin.com>
+> 
+> Changes since v5:
+> - Fixed code review comments
+> - Fixed incorrect 'ranges' and 'reg' properties
+> 
+> Changes since RFC v4:
+> - Fixed code review comments
+> 
+> Changes since RFC v3:
+> - Split the Xilinx Alveo U50 PCI quirk to a separate patch
+> - Minor changes in commit description and code comment
+> 
+> Changes since RFC v2:
+> - Merged patch 3 with patch 2
+> - Added OF interfaces of_changeset_add_prop_* and use them to create
+>   properties.
+> - Added '#address-cells', '#size-cells' and 'ranges' properties.
+> 
+> Changes since RFC v1:
+> - Added one patch to create basic properties.
+> - To move DT related code out of PCI subsystem, replaced of_node_alloc()
+>   with of_create_node()/of_destroy_node()
+> 
+> Lizhi Hou (5):
+>   of: dynamic: Add interfaces for creating device node dynamically
+>   PCI: Create device tree node for bridge
+>   PCI: Add quirks to generate device tree node for Xilinx Alveo U50
+>   of: overlay: Extend of_overlay_fdt_apply() to specify the target node
+>   of: unittest: Add pci_dt_testdrv pci driver
+> 
+>  drivers/of/dynamic.c                          | 164 ++++++++
+>  drivers/of/overlay.c                          |  42 ++-
+>  drivers/of/unittest-data/Makefile             |   3 +-
+>  .../of/unittest-data/overlay_pci_node.dtso    |  22 ++
+>  drivers/of/unittest.c                         | 211 ++++++++++-
+>  drivers/pci/Kconfig                           |  12 +
+>  drivers/pci/Makefile                          |   1 +
+>  drivers/pci/bus.c                             |   2 +
+>  drivers/pci/of.c                              |  79 ++++
+>  drivers/pci/of_property.c                     | 355 ++++++++++++++++++
+>  drivers/pci/pci.h                             |  12 +
+>  drivers/pci/quirks.c                          |  12 +
+>  drivers/pci/remove.c                          |   1 +
+>  include/linux/of.h                            |  25 +-
+>  14 files changed, 926 insertions(+), 15 deletions(-)
+>  create mode 100644 drivers/of/unittest-data/overlay_pci_node.dtso
+>  create mode 100644 drivers/pci/of_property.c
+> 
+> -- 
+> 2.34.1
+> 
 
 -- 
- i.
---8323329-2146389531-1694445120=:1823--
+With Best Regards,
+Andy Shevchenko
+
+
