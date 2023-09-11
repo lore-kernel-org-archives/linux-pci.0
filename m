@@ -2,160 +2,155 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B043CA0EDA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F089CA0ED9
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:40:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236007AbjIKVha (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:37:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35056 "EHLO
+        id S240539AbjIKVhW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:37:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43356 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241588AbjIKU5N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 16:57:13 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ADD13C17;
-        Mon, 11 Sep 2023 13:52:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694465537; x=1726001537;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=74b3SgpPHonhG4WHBUjAVxMA0p2luRUXXNpPdJQ6VmM=;
-  b=ZD4CtUBMMEDFKYmZfGaxg2zC7KIvLz9IlKK9Umv3V9jMuNGVYJ31uW73
-   0/LiwocYMGaEGTy23kyH/UVRkHjQeBeKCnmAXol4OsN8WeaRJbiI2Z/SN
-   KGrjRlT6+avAMSpOMpI5g7B6p+taGwV9+CIbMttvpoAZTgJENGQWPBRKt
-   xoRfjN7EAiWuzKKrv0vhIyXKGrWHGY42UbL63Xb5qXYe6l8YgM4KioQnD
-   WOuWQ1l5p3gf5UEaH3CdR6JSty+nqQCbNJ+WfINEF04pELNiC2OitVJ15
-   qylip/jEy6sagpDcjS0UStWwsZjZYp1/O6ADZK+LUa829L1Zvc/C6pS7z
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="368455909"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="368455909"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 13:48:19 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="720125738"
-X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
-   d="scan'208";a="720125738"
-Received: from smile.fi.intel.com ([10.237.72.54])
-  by orsmga006.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 13:48:17 -0700
-Received: from andy by smile.fi.intel.com with local (Exim 4.96)
-        (envelope-from <andriy.shevchenko@intel.com>)
-        id 1qfnpO-008Q8E-01;
-        Mon, 11 Sep 2023 23:48:14 +0300
-Date:   Mon, 11 Sep 2023 23:48:13 +0300
-From:   Andy Shevchenko <andriy.shevchenko@intel.com>
-To:     Lizhi Hou <lizhi.hou@amd.com>
-Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, robh@kernel.org, max.zhen@amd.com,
-        sonal.santan@amd.com, stefano.stabellini@xilinx.com,
-        =?iso-8859-1?Q?Cl=E9ment_L=E9ger?= <clement.leger@bootlin.com>
-Subject: Re: [PATCH V13 1/5] of: dynamic: Add interfaces for creating device
- node dynamically
-Message-ID: <ZP99DdtruXfI6L/L@smile.fi.intel.com>
-References: <1692120000-46900-1-git-send-email-lizhi.hou@amd.com>
- <1692120000-46900-2-git-send-email-lizhi.hou@amd.com>
+        with ESMTP id S236192AbjIKJzN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 05:55:13 -0400
+Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 400C6E68
+        for <linux-pci@vger.kernel.org>; Mon, 11 Sep 2023 02:55:08 -0700 (PDT)
+X-ASG-Debug-ID: 1694426104-086e234a2b485f0001-0c9NHn
+Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx1.zhaoxin.com with ESMTP id Y8LIEnxLF2E8zCXN (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Mon, 11 Sep 2023 17:55:04 +0800 (CST)
+X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Received: from ZXBJMBX03.zhaoxin.com (10.29.252.7) by ZXSHMBX2.zhaoxin.com
+ (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Mon, 11 Sep
+ 2023 17:55:02 +0800
+Received: from [192.168.1.204] (125.76.214.122) by ZXBJMBX03.zhaoxin.com
+ (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Mon, 11 Sep
+ 2023 17:54:56 +0800
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
+Message-ID: <9e4fa680-f96e-4dfc-a047-37a2a5f8b779@zhaoxin.com>
+X-Barracuda-RBL-Trusted-Forwarder: 192.168.1.204
+Date:   Mon, 11 Sep 2023 17:54:54 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1692120000-46900-2-git-send-email-lizhi.hou@amd.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 2/5] ACPI/APEI: Remove static from apei_hest_parse()
+To:     Bjorn Helgaas <helgaas@kernel.org>
+X-ASG-Orig-Subj: Re: [PATCH v3 2/5] ACPI/APEI: Remove static from apei_hest_parse()
+CC:     <lenb@kernel.org>, <james.morse@arm.com>, <tony.luck@intel.com>,
+        <bp@alien8.de>, <bhelgaas@google.com>, <robert.moore@intel.com>,
+        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>,
+        <acpica-devel@lists.linuxfoundation.org>, <ErosZhang@zhaoxin.com>
+References: <20230810231718.GA49532@bhelgaas>
+From:   LeoLiu-oc <leoliu-oc@zhaoxin.com>
+In-Reply-To: <20230810231718.GA49532@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [125.76.214.122]
+X-ClientProxiedBy: ZXSHCAS1.zhaoxin.com (10.28.252.161) To
+ ZXBJMBX03.zhaoxin.com (10.29.252.7)
+X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
+X-Barracuda-Start-Time: 1694426104
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://10.28.252.35:4443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at zhaoxin.com
+X-Barracuda-Scan-Msg-Size: 3311
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
+X-Barracuda-Spam-Score: -2.02
+X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.113956
+        Rule breakdown below
+         pts rule name              description
+        ---- ---------------------- --------------------------------------------------
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 15, 2023 at 10:19:56AM -0700, Lizhi Hou wrote:
-> of_changeset_create_node() creates device node dynamically and attaches
-> the newly created node to a changeset.
+
+
+在 2023/8/11 7:17, Bjorn Helgaas 写道:
+> On Tue, Jul 04, 2023 at 08:05:17PM +0800, LeoLiu-oc wrote:
+>> From: leoliu-oc <leoliu-oc@zhaoxin.com>
+>>
+>> Each dev with AER capability needs to call the apei_hest_parse function to
+>> match and extract register values from HEST PCIe AER structures.
+>> Therefore, remove static from apei_hest_parse() so that it can be called
+>> in another file.
 > 
-> Expand of_changeset APIs to handle specific types of properties.
->     of_changeset_add_prop_string()
->     of_changeset_add_prop_string_array()
->     of_changeset_add_prop_u32_array()
-
-...
-
-> +/**
-> + * of_changeset_add_prop_string - Add a string property to a changeset
-> + *
-> + * @ocs:	changeset pointer
-> + * @np:		device node pointer
-> + * @prop_name:	name of the property to be added
-> + * @str:	pointer to null terminated string
-> + *
-> + * Create a string property and add it to a changeset.
-> + *
-> + * Return: 0 on success, a negative error value in case of an error.
-> + */
-> +int of_changeset_add_prop_string(struct of_changeset *ocs,
-> +				 struct device_node *np,
-> +				 const char *prop_name, const char *str)
-> +{
-> +	struct property prop;
-> +
-> +	prop.name = (char *)prop_name;
-
-This looks not nice. You dropped const qualifier, which is a bit worrying.
-Can  you fix underneath APIs/data types so we can avoid this?
-
-> +	prop.length = strlen(str) + 1;
-
-> +	prop.value = (void *)str;
-
-Do you need this casting?
-
-Okay, seems also related to the const qualifier. I would accept this in a form
-of const void *, but it will probably look a bit weird. What about to have a value
-to be a union?
-
-> +	return of_changeset_add_prop_helper(ocs, np, &prop);
-> +}
-
-...
-
-> +	prop.name = (char *)prop_name;
-
-Same comment as per above.
-
-...
-
-> +	prop.length = 0;
-> +	for (i = 0; i < sz; i++)
-> +		prop.length += strlen(str_array[i]) + 1;
-> +
-> +	prop.value = kmalloc(prop.length, GFP_KERNEL);
-> +	if (!prop.value)
-> +		return -ENOMEM;
-> +
-> +	vp = prop.value;
-> +	for (i = 0; i < sz; i++) {
-> +		vp += snprintf(vp, (char *)prop.value + prop.length - vp, "%s",
-> +			       str_array[i]) + 1;
-> +	}
-
-Is all this kinda of reinventing kasprintf()? Perhaps you can somehow utilize
-kasprintf_strarray()? It might require to get a common denominator that takes
-a formatting string as a parameter.
-
-> +	ret = of_changeset_add_prop_helper(ocs, np, &prop);
-> +	kfree(prop.value);
-
-...
-
-> +	for (i = 0; i < sz; i++)
-> +		val[i] = cpu_to_be32(array[i]);
-
-NIH cpu_to_be32_array()
-
-...
-
-> +	prop.name = (char *)prop_name;
-> +	prop.length = sizeof(u32) * sz;
-> +	prop.value = (void *)val;
-
-Do you need this casting?
-
--- 
-With Best Regards,
-Andy Shevchenko
+> Can you reword the subject line and commit log in the positive?
+> "Removing static" is a negative thing and it's semantically a bit too
+> low level -- it's clearly what the *code* does, but we can see that
+> from the patch, and what we want to know here is *why* it's important.
+> What this really does is expose apei_hest_parse() for use by other
+> subsystems.
+> 
+> Browsing the drivers/acpi commit log history, I see that Rafael adds
+> "()" after function names, so please do the same here (you did do that
+> once above, but not in the first line).
+> 
 
 
+This function is required in patch v3 4/5 to traverse the HEST to find 
+the HEST AER structures, so changed the definition to be global.
+
+I will pay attention to this matter in the next version.
+
+LeoLiu-oc
+
+>> Signed-off-by: leoliu-oc <leoliu-oc@zhaoxin.com>
+>> ---
+>>   drivers/acpi/apei/hest.c | 2 +-
+>>   include/acpi/apei.h      | 5 +++++
+>>   2 files changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/acpi/apei/hest.c b/drivers/acpi/apei/hest.c
+>> index fb839a5c480ee..fd40c035c9b2e 100644
+>> --- a/drivers/acpi/apei/hest.c
+>> +++ b/drivers/acpi/apei/hest.c
+>> @@ -132,7 +132,7 @@ static bool hest_match_pci(struct acpi_hest_header *hest_hdr,
+>>   	return false;
+>>   }
+>>   
+>> -static int apei_hest_parse(apei_hest_func_t func, void *data)
+>> +int apei_hest_parse(apei_hest_func_t func, void *data)
+> 
+> If this is going to exported to the PCI subsystem, I think it needs
+> some kernel-doc.  For example, it's important to know that it stops
+> parsing the HEST if func returns anything non-zero.  This is how
+> pci_acpi_program_hest_aer_params() knows that it got good data that
+> matches the device it wants.
+> 
+> Given the fact that apei_hest_parse_aer() fills in the struct
+> acpi_hest_parse_aer_info with pointers into the HEST table data, it's
+> also important to know that this HEST table data is persistent.
+>
+Thank you suggestion, and I will consider carefully.
+
+Best Regards.
+LeoLiu-oc
+
+>>   {
+>>   	struct acpi_hest_header *hest_hdr;
+>>   	int i, rc, len;
+>> diff --git a/include/acpi/apei.h b/include/acpi/apei.h
+>> index 8a0b2b9edbafe..f975e4fe78fcb 100644
+>> --- a/include/acpi/apei.h
+>> +++ b/include/acpi/apei.h
+>> @@ -37,9 +37,14 @@ typedef int (*apei_hest_func_t)(struct acpi_hest_header *hest_hdr, void *data);
+>>   
+>>   #ifdef CONFIG_ACPI_APEI
+>>   void __init acpi_hest_init(void);
+>> +int apei_hest_parse(apei_hest_func_t func, void *data);
+>>   int apei_hest_parse_aer(struct acpi_hest_header *hest_hdr, void *data);
+>>   #else
+>>   static inline void acpi_hest_init(void) { }
+>> +static inline int apei_hest_parse(apei_hest_func_t func, void *data)
+>> +{
+>> +	return -EINVAL;
+>> +}
+>>   static inline int apei_hest_parse_aer(struct acpi_hest_header *hest_hdr, void *data)
+>>   {
+>>   	return -EINVAL;
+>> -- 
+>> 2.34.1
+>>
