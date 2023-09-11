@@ -2,117 +2,368 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B4CCA0EC5
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:47:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8831CA0EC8
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:47:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242346AbjIKVkX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:40:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44664 "EHLO
+        id S1350660AbjIKVk3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:40:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242450AbjIKPgZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 11:36:25 -0400
-Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [217.70.183.194])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69B49E9;
-        Mon, 11 Sep 2023 08:36:19 -0700 (PDT)
-Received: by mail.gandi.net (Postfix) with ESMTPSA id BAB6C40004;
-        Mon, 11 Sep 2023 15:35:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-        t=1694446577;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3ANDeLZjV5lzAaJjoCPyh76BQ46mQC+o7bmbGehRwMY=;
-        b=X//OkO1AojU8koknd9JyYVKBEmbSLqFNl9OMqJS8PHtuhmXasUTxRa8dd4d432BoBRTAa3
-        liY5GQszHTiWjz1YCdXghxRFaeAXGSeCDkfyR6aQYey1c/yvEWPjm+16dK+eDv89BWP7tL
-        thlyLBEhWXqlsMO0EZQUsbi5wJLMnJ0W3TB73HdjYnmPjLPkxZdPbZznbdcu42ZCPSzyGO
-        TwqcJkY0YxKFXCdci0kpINnBoVJxuqyPmXj11A4/Y2Y9JnUA1OCp4gjAzmObtaLwXOQmfr
-        /L2yxRRMzThTPfumWfup1XLJeNwYthK0yvuv0qxs3uI/fJGeiuv7Z0oXwQmpLQ==
-Date:   Mon, 11 Sep 2023 17:35:03 +0200
-From:   Herve Codina <herve.codina@bootlin.com>
-To:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-Cc:     Lizhi Hou <lizhi.hou@amd.com>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <robh@kernel.org>, <max.zhen@amd.com>, <sonal.santan@amd.com>,
-        <stefano.stabellini@xilinx.com>,
-        =?UTF-8?B?Q2zDqW1lbnQgTMOpZ2Vy?= <clement.leger@bootlin.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH V13 2/5] PCI: Create device tree node for bridge
-Message-ID: <20230911173503.0db85e4b@bootlin.com>
-In-Reply-To: <20230911154856.000076c3@Huawei.com>
-References: <1692120000-46900-1-git-send-email-lizhi.hou@amd.com>
-        <1692120000-46900-3-git-send-email-lizhi.hou@amd.com>
-        <20230911154856.000076c3@Huawei.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; x86_64-redhat-linux-gnu)
+        with ESMTP id S237926AbjIKNVz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 09:21:55 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B48712A;
+        Mon, 11 Sep 2023 06:21:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1694438511; x=1725974511;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=6hZ/scxqcpisakdOuYAsA4BjUmqsqsB5dHsi1FpGb4o=;
+  b=kPxgy4SFmu43byrcW8dGg7a35TeX9SNQ3ftzIF5bo+8iZO5keqF/vm5K
+   aX6N+PmMeid6thrjH65DwfiFMY9hS0lBa3osmgd7TX2Q/ItLA7FxN7kZ1
+   39kWjaPRqD9Ic5zznO7JrQrchY+rnOmhVHmsN+NONZadxbd6rrMJkQb2i
+   kKAslRR6cSpAzkLG+X+6GZtKIINEGSIVcBiYaEcPNzuktL7v1IJOSLw3Y
+   3kcJnXTfwsC+KNnuvTC2uZD6G83zD4zN57D1czv+sOyYTZik3jKWhkSbW
+   DxyrSWvz5xeIAErP7W+HG1q8CX43cWKUtO0q8HC6xZBntvU3tcQ+XMxon
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="357517084"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="357517084"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 06:21:50 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="858312464"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="858312464"
+Received: from unknown (HELO bapvecise024..) ([10.190.254.46])
+  by fmsmga002.fm.intel.com with ESMTP; 11 Sep 2023 06:21:47 -0700
+From:   sharath.kumar.d.m@intel.com
+To:     helgaas@kernel.org
+Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        dinguyen@kernel.org, linux-kernel@vger.kernel.org,
+        D M Sharath Kumar <sharath.kumar.d.m@intel.com>
+Subject: [PATCH v3 2/2] PCI: altera: add support for agilex family fpga
+Date:   Mon, 11 Sep 2023 18:52:14 +0530
+Message-Id: <20230911132214.1776157-3-sharath.kumar.d.m@intel.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230911132214.1776157-1-sharath.kumar.d.m@intel.com>
+References: <20230906110918.1501376-3-sharath.kumar.d.m@intel.com>
+ <20230911132214.1776157-1-sharath.kumar.d.m@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-GND-Sasl: herve.codina@bootlin.com
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jonathan,
+From: D M Sharath Kumar <sharath.kumar.d.m@intel.com>
 
-On Mon, 11 Sep 2023 15:48:56 +0100
-Jonathan Cameron <Jonathan.Cameron@Huawei.com> wrote:
+create new instance of struct altera_pcie_data for
+"altr,pcie-root-port-3.0"
+provide corresponding callback
+"port_conf_off" points to avmm port config register base
 
-> On Tue, 15 Aug 2023 10:19:57 -0700
-> Lizhi Hou <lizhi.hou@amd.com> wrote:
-> 
-> > The PCI endpoint device such as Xilinx Alveo PCI card maps the register
-> > spaces from multiple hardware peripherals to its PCI BAR. Normally,
-> > the PCI core discovers devices and BARs using the PCI enumeration process.
-> > There is no infrastructure to discover the hardware peripherals that are
-> > present in a PCI device, and which can be accessed through the PCI BARs.
-> > 
-> > Apparently, the device tree framework requires a device tree node for the
-> > PCI device. Thus, it can generate the device tree nodes for hardware
-> > peripherals underneath. Because PCI is self discoverable bus, there might
-> > not be a device tree node created for PCI devices. Furthermore, if the PCI
-> > device is hot pluggable, when it is plugged in, the device tree nodes for
-> > its parent bridges are required. Add support to generate device tree node
-> > for PCI bridges.
-> > 
-> > Add an of_pci_make_dev_node() interface that can be used to create device
-> > tree node for PCI devices.
-> > 
-> > Add a PCI_DYNAMIC_OF_NODES config option. When the option is turned on,
-> > the kernel will generate device tree nodes for PCI bridges unconditionally.
-> > 
-> > Initially, add the basic properties for the dynamically generated device
-> > tree nodes which include #address-cells, #size-cells, device_type,
-> > compatible, ranges, reg.
-> > 
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>  
-> 
-> I tried to bring this up for a custom PCIe card emulated in QEMU on an ARM ACPI
-> machine.
-> 
-> There are some missing parts that were present in Clements series, but not this
-> one, particularly creation of the root pci object.
-> 
-> Anyhow, hit an intermittent crash...
+Signed-off-by: D M Sharath Kumar <sharath.kumar.d.m@intel.com>
+---
+ drivers/pci/controller/pcie-altera.c | 207 ++++++++++++++++++++++++++-
+ 1 file changed, 206 insertions(+), 1 deletion(-)
 
-I am facing the same issues.
-
-I use a custom PCIe board too but on x86 ACPI machine.
-
-In order to have a working system, I need also to build a DT node for the PCI
-Host bridge (previously done by Clement's patch) and I am a bit stuck with
-interrupts.
-
-On your side (ACPI machine) how do you handle this ?
-I mean is your PCI host bridge provided by ACPI ? And if so, you probably need
-to build a DT node for this PCI host bridge and add some interrupt-map,
-interrupt-map-mask properties in the DT node.
-
-Best regards,
-Hervé
-
+diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+index 878f86b1cc6b..aa14ea588487 100644
+--- a/drivers/pci/controller/pcie-altera.c
++++ b/drivers/pci/controller/pcie-altera.c
+@@ -79,9 +79,20 @@
+ #define S10_TLP_FMTTYPE_CFGWR0		0x45
+ #define S10_TLP_FMTTYPE_CFGWR1		0x44
+ 
++#define AGLX_RP_CFG_ADDR(pcie, reg)     \
++	(((pcie)->hip_base) + (reg))
++#define AGLX_RP_SECONDARY(pcie)         \
++	readb(AGLX_RP_CFG_ADDR(pcie, PCI_SECONDARY_BUS))
++
++#define AGLX_BDF_REG			0x00002004
++#define AGLX_ROOT_PORT_IRQ_STATUS	0x14c
++#define AGLX_ROOT_PORT_IRQ_ENABLE	0x150
++#define AGLX_CFG_AER			(1<<4)
++
+ enum altera_pcie_version {
+ 	ALTERA_PCIE_V1 = 0,
+ 	ALTERA_PCIE_V2,
++	ALTERA_PCIE_V3, /* AGILEX p-tile, f-tile */
+ };
+ 
+ struct altera_pcie {
+@@ -93,6 +104,8 @@ struct altera_pcie {
+ 	struct irq_domain	*irq_domain;
+ 	struct resource		bus_range;
+ 	const struct altera_pcie_data	*pcie_data;
++	void __iomem		*cs_base;
++	u32			port_conf_off;
+ };
+ 
+ struct altera_pcie_ops {
+@@ -138,6 +151,39 @@ static inline u32 cra_readl(struct altera_pcie *pcie, const u32 reg)
+ 	return readl_relaxed(pcie->cra_base + reg);
+ }
+ 
++static inline void cs_writel(struct altera_pcie *pcie, const u32 value,
++				const u32 reg)
++{
++	writel_relaxed(value, pcie->cs_base + reg);
++}
++
++static inline void cs_writew(struct altera_pcie *pcie, const u32 value,
++				const u32 reg)
++{
++	writew_relaxed(value, pcie->cs_base + reg);
++}
++
++static inline void cs_writeb(struct altera_pcie *pcie, const u32 value,
++				const u32 reg)
++{
++	writeb_relaxed(value, pcie->cs_base + reg);
++}
++
++static inline u32 cs_readl(struct altera_pcie *pcie, const u32 reg)
++{
++	return readl_relaxed(pcie->cs_base + reg);
++}
++
++static inline u32 cs_readw(struct altera_pcie *pcie, const u32 reg)
++{
++	return readw_relaxed(pcie->cs_base + reg);
++}
++
++static inline u32 cs_readb(struct altera_pcie *pcie, const u32 reg)
++{
++	return readb_relaxed(pcie->cs_base + reg);
++}
++
+ static bool altera_pcie_link_up(struct altera_pcie *pcie)
+ {
+ 	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
+@@ -152,6 +198,14 @@ static bool s10_altera_pcie_link_up(struct altera_pcie *pcie)
+ 	return !!(readw(addr) & PCI_EXP_LNKSTA_DLLLA);
+ }
+ 
++static bool aglx_altera_pcie_link_up(struct altera_pcie *pcie)
++{
++	void __iomem *addr = AGLX_RP_CFG_ADDR(pcie,
++		pcie->pcie_data->cap_offset + PCI_EXP_LNKSTA);
++
++	return !!(readw(addr) & PCI_EXP_LNKSTA_DLLLA);
++}
++
+ /*
+  * Altera PCIe port uses BAR0 of RC's configuration space as the translation
+  * from PCI bus to native BUS.  Entire DDR region is mapped into PCIe space
+@@ -432,6 +486,101 @@ static int s10_rp_write_cfg(struct altera_pcie *pcie, u8 busno, u32 devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
++static int aglx_rp_read_cfg(struct altera_pcie *pcie, u8 busno, u32 devfn,
++			int where, int size, u32 *value)
++{
++	void __iomem *addr = AGLX_RP_CFG_ADDR(pcie, where);
++
++	switch (size) {
++	case 1:
++		*value = readb(addr);
++		break;
++	case 2:
++		*value = readw(addr);
++		break;
++	default:
++		*value = readl(addr);
++		break;
++	}
++
++	/* interrupt pin not programmed in hardware, set to INTA*/
++	if (where == PCI_INTERRUPT_PIN && size == 1)
++		*value = 0x01;
++	else if (where == PCI_INTERRUPT_LINE)
++		*value |= 0x0100;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int aglx_rp_write_cfg(struct altera_pcie *pcie, u8 busno, u32 devfn,
++			int where, int size, u32 value)
++{
++	void __iomem *addr = AGLX_RP_CFG_ADDR(pcie, where);
++
++	switch (size) {
++	case 1:
++		writeb(value, addr);
++		break;
++	case 2:
++		writew(value, addr);
++		break;
++	default:
++		writel(value, addr);
++		break;
++	}
++
++	/*
++	 * Monitor changes to PCI_PRIMARY_BUS register on root port
++	 * and update local copy of root bus number accordingly.
++	 */
++	if (busno == pcie->root_bus_nr && where == PCI_PRIMARY_BUS)
++		pcie->root_bus_nr = value & 0xff;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int aglx_nonrp_write_cfg(struct altera_pcie *pcie, u8 busno,
++		unsigned int devfn, int where, int size, u32 value)
++{
++	cs_writel(pcie, ((busno<<8) | devfn), AGLX_BDF_REG);
++	if (busno > AGLX_RP_SECONDARY(pcie))
++		where |= (1<<12); /* type 1 */
++
++	switch (size) {
++	case 1:
++		cs_writeb(pcie, value, where);
++		break;
++	case 2:
++		cs_writew(pcie, value, where);
++		break;
++	default:
++		cs_writel(pcie, value, where);
++		break;
++	}
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int aglx_nonrp_read_cfg(struct altera_pcie *pcie, u8 busno,
++		unsigned int devfn, int where, int size, u32 *value)
++{
++	cs_writel(pcie, ((busno<<8) | devfn), AGLX_BDF_REG);
++	if (busno > AGLX_RP_SECONDARY(pcie))
++		where |= (1<<12); /* type 1 */
++
++	switch (size) {
++	case 1:
++		*value = cs_readb(pcie, where);
++		break;
++	case 2:
++		*value = cs_readw(pcie, where);
++		break;
++	default:
++		*value = cs_readl(pcie, where);
++		break;
++	}
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static int arr_read_cfg(struct altera_pcie *pcie, u8 busno, u32 devfn,
+ 		int where, int size, u32 *value)
+ {
+@@ -688,6 +837,30 @@ static void altera_pcie_isr(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
+ }
+ 
++static void aglx_isr(struct irq_desc *desc)
++{
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct altera_pcie *pcie;
++	struct device *dev;
++	u32 status;
++	int ret;
++
++	chained_irq_enter(chip, desc);
++	pcie = irq_desc_get_handler_data(desc);
++	dev = &pcie->pdev->dev;
++
++	status = readl((pcie->hip_base + pcie->port_conf_off
++		+ AGLX_ROOT_PORT_IRQ_STATUS));
++	if (status & AGLX_CFG_AER) {
++		ret = generic_handle_domain_irq(pcie->irq_domain, 0);
++		if (ret)
++			dev_err_ratelimited(dev, "unexpected IRQ\n");
++	}
++	writel(AGLX_CFG_AER, (pcie->hip_base + pcie->port_conf_off
++		+ AGLX_ROOT_PORT_IRQ_STATUS));
++	chained_irq_exit(chip, desc);
++}
++
+ static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+@@ -723,13 +896,25 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ 			return PTR_ERR(pcie->cra_base);
+ 	}
+ 
+-	if (pcie->pcie_data->version == ALTERA_PCIE_V2) {
++	if ((pcie->pcie_data->version == ALTERA_PCIE_V2) ||
++		(pcie->pcie_data->version == ALTERA_PCIE_V3)) {
+ 		pcie->hip_base =
+ 			devm_platform_ioremap_resource_byname(pdev, "Hip");
+ 		if (IS_ERR(pcie->hip_base))
+ 			return PTR_ERR(pcie->hip_base);
+ 	}
+ 
++	if (pcie->pcie_data->version == ALTERA_PCIE_V3) {
++		pcie->cs_base =
++			devm_platform_ioremap_resource_byname(pdev, "Cs");
++		if (IS_ERR(pcie->cs_base))
++			return PTR_ERR(pcie->cs_base);
++		of_property_read_u32(pcie->pdev->dev.of_node, "port_conf_stat",
++			&pcie->port_conf_off);
++		dev_dbg(&pcie->pdev->dev, "port_conf_stat_off =%#x\n",
++				pcie->port_conf_off);
++	}
++
+ 	/* setup IRQ */
+ 	pcie->irq = platform_get_irq(pdev, 0);
+ 	if (pcie->irq < 0)
+@@ -767,6 +952,15 @@ static const struct altera_pcie_ops altera_pcie_ops_2_0 = {
+ 	.rp_isr = altera_pcie_isr,
+ };
+ 
++static const struct altera_pcie_ops altera_pcie_ops_3_0 = {
++	.rp_read_cfg = aglx_rp_read_cfg,
++	.rp_write_cfg = aglx_rp_write_cfg,
++	.get_link_status = aglx_altera_pcie_link_up,
++	.nonrp_read_cfg = aglx_nonrp_read_cfg,
++	.nonrp_write_cfg = aglx_nonrp_write_cfg,
++	.rp_isr = aglx_isr,
++};
++
+ static const struct altera_pcie_data altera_pcie_1_0_data = {
+ 	.ops = &altera_pcie_ops_1_0,
+ 	.cap_offset = 0x80,
+@@ -787,11 +981,19 @@ static const struct altera_pcie_data altera_pcie_2_0_data = {
+ 	.cfgwr1 = S10_TLP_FMTTYPE_CFGWR1,
+ };
+ 
++static const struct altera_pcie_data altera_pcie_3_0_data = {
++	.ops = &altera_pcie_ops_3_0,
++	.version = ALTERA_PCIE_V3,
++	.cap_offset = 0x70,
++};
++
+ static const struct of_device_id altera_pcie_of_match[] = {
+ 	{.compatible = "altr,pcie-root-port-1.0",
+ 	 .data = &altera_pcie_1_0_data },
+ 	{.compatible = "altr,pcie-root-port-2.0",
+ 	 .data = &altera_pcie_2_0_data },
++	{.compatible = "altr,pcie-root-port-3.0",
++	.data = &altera_pcie_3_0_data },
+ 	{},
+ };
+ 
+@@ -836,6 +1038,9 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 		/* enable all interrupts */
+ 		cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
+ 		altera_pcie_host_init(pcie);
++	} else if (pcie->pcie_data->version == ALTERA_PCIE_V3) {
++		writel(AGLX_CFG_AER, (pcie->hip_base + pcie->port_conf_off
++			+ AGLX_ROOT_PORT_IRQ_ENABLE));
+ 	}
+ 
+ 	bridge->sysdata = pcie;
 -- 
-Hervé Codina, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+2.34.1
+
