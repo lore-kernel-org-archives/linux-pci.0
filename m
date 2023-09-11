@@ -2,155 +2,279 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F089CA0ED9
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:40:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB3B9CA0EDE
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Sep 2023 21:40:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240539AbjIKVhW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Sep 2023 17:37:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43356 "EHLO
+        id S239572AbjIKVhk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Sep 2023 17:37:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52254 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236192AbjIKJzN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 05:55:13 -0400
-Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 400C6E68
-        for <linux-pci@vger.kernel.org>; Mon, 11 Sep 2023 02:55:08 -0700 (PDT)
-X-ASG-Debug-ID: 1694426104-086e234a2b485f0001-0c9NHn
-Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx1.zhaoxin.com with ESMTP id Y8LIEnxLF2E8zCXN (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Mon, 11 Sep 2023 17:55:04 +0800 (CST)
-X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
-Received: from ZXBJMBX03.zhaoxin.com (10.29.252.7) by ZXSHMBX2.zhaoxin.com
- (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Mon, 11 Sep
- 2023 17:55:02 +0800
-Received: from [192.168.1.204] (125.76.214.122) by ZXBJMBX03.zhaoxin.com
- (10.29.252.7) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Mon, 11 Sep
- 2023 17:54:56 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
-Message-ID: <9e4fa680-f96e-4dfc-a047-37a2a5f8b779@zhaoxin.com>
-X-Barracuda-RBL-Trusted-Forwarder: 192.168.1.204
-Date:   Mon, 11 Sep 2023 17:54:54 +0800
+        with ESMTP id S238002AbjIKNbV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Sep 2023 09:31:21 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75206123;
+        Mon, 11 Sep 2023 06:31:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1694439076; x=1725975076;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=DmVsQV3zOT9DX7Yw/gra0oxWL2x43W4fLVBXzfwaRcc=;
+  b=DL7Ri55HLuRjCUT0ndnxqa8JuuFWN4G4UFHGVAeI0Zv5mEYq4lDAI30p
+   Cjx+9wrOVWy7j+mch9bIOzHWuEb01YeWBBTQ4E55XEoXRKlZwtd1TiTz3
+   IETzmdc0aW3S4zlIZbtEdrrVxbOFU8RwVSY1zLFKIg/21D1nsT6myPYhh
+   1YKSapsmhyAiHPd6TlX7MwX6oLKE6h4zlvVrR8H8ECWPf+Z6co4rciJMF
+   CuMQ6rW9ZeQ6rYjZUwVFuXy4sDD5JroJgJZpTG0Kcv7NlMR6lqauBEVOT
+   d7BYCP20Wras0yqm35T9infDp2Ie5Umxhme8yASesrHaYwW/1mYMddcyA
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="409050038"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="409050038"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2023 06:31:12 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10830"; a="736771649"
+X-IronPort-AV: E=Sophos;i="6.02,244,1688454000"; 
+   d="scan'208";a="736771649"
+Received: from unknown (HELO bapvecise024..) ([10.190.254.46])
+  by orsmga007.jf.intel.com with ESMTP; 11 Sep 2023 06:31:07 -0700
+From:   sharath.kumar.d.m@intel.com
+To:     helgaas@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, dinguyen@kernel.org,
+        D M Sharath Kumar <sharath.kumar.d.m@intel.com>
+Subject: [PATCH v3 1/2] PCI: altera: refactor driver for supporting new platforms
+Date:   Mon, 11 Sep 2023 19:01:39 +0530
+Message-Id: <20230911133140.1776551-2-sharath.kumar.d.m@intel.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230911133140.1776551-1-sharath.kumar.d.m@intel.com>
+References: <20230906110918.1501376-1-sharath.kumar.d.m@intel.com>
+ <20230911133140.1776551-1-sharath.kumar.d.m@intel.com>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/5] ACPI/APEI: Remove static from apei_hest_parse()
-To:     Bjorn Helgaas <helgaas@kernel.org>
-X-ASG-Orig-Subj: Re: [PATCH v3 2/5] ACPI/APEI: Remove static from apei_hest_parse()
-CC:     <lenb@kernel.org>, <james.morse@arm.com>, <tony.luck@intel.com>,
-        <bp@alien8.de>, <bhelgaas@google.com>, <robert.moore@intel.com>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>,
-        <acpica-devel@lists.linuxfoundation.org>, <ErosZhang@zhaoxin.com>
-References: <20230810231718.GA49532@bhelgaas>
-From:   LeoLiu-oc <leoliu-oc@zhaoxin.com>
-In-Reply-To: <20230810231718.GA49532@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [125.76.214.122]
-X-ClientProxiedBy: ZXSHCAS1.zhaoxin.com (10.28.252.161) To
- ZXBJMBX03.zhaoxin.com (10.29.252.7)
-X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
-X-Barracuda-Start-Time: 1694426104
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://10.28.252.35:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 3311
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: -2.02
-X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.113956
-        Rule breakdown below
-         pts rule name              description
-        ---- ---------------------- --------------------------------------------------
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: D M Sharath Kumar <sharath.kumar.d.m@intel.com>
 
+added the below callbacks that eases is supporting newer platforms
+for read/write to root port configuration space registers
+for read/write to non root port (endpoint, switch) cfg space regs
+root port interrupt handler
 
-在 2023/8/11 7:17, Bjorn Helgaas 写道:
-> On Tue, Jul 04, 2023 at 08:05:17PM +0800, LeoLiu-oc wrote:
->> From: leoliu-oc <leoliu-oc@zhaoxin.com>
->>
->> Each dev with AER capability needs to call the apei_hest_parse function to
->> match and extract register values from HEST PCIe AER structures.
->> Therefore, remove static from apei_hest_parse() so that it can be called
->> in another file.
-> 
-> Can you reword the subject line and commit log in the positive?
-> "Removing static" is a negative thing and it's semantically a bit too
-> low level -- it's clearly what the *code* does, but we can see that
-> from the patch, and what we want to know here is *why* it's important.
-> What this really does is expose apei_hest_parse() for use by other
-> subsystems.
-> 
-> Browsing the drivers/acpi commit log history, I see that Rafael adds
-> "()" after function names, so please do the same here (you did do that
-> once above, but not in the first line).
-> 
+Signed-off-by: D M Sharath Kumar <sharath.kumar.d.m@intel.com>
+---
+ drivers/pci/controller/pcie-altera.c | 100 +++++++++++++++++++--------
+ 1 file changed, 70 insertions(+), 30 deletions(-)
 
+diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+index a9536dc4bf96..878f86b1cc6b 100644
+--- a/drivers/pci/controller/pcie-altera.c
++++ b/drivers/pci/controller/pcie-altera.c
+@@ -3,6 +3,7 @@
+  * Copyright Altera Corporation (C) 2013-2015. All rights reserved
+  *
+  * Author: Ley Foon Tan <lftan@altera.com>
++ * Author: sharath <sharath.kumar.d.m@intel.com>
+  * Description: Altera PCIe host controller driver
+  */
+ 
+@@ -99,10 +100,15 @@ struct altera_pcie_ops {
+ 	void (*tlp_write_pkt)(struct altera_pcie *pcie, u32 *headers,
+ 			      u32 data, bool align);
+ 	bool (*get_link_status)(struct altera_pcie *pcie);
+-	int (*rp_read_cfg)(struct altera_pcie *pcie, int where,
+-			   int size, u32 *value);
++	int (*rp_read_cfg)(struct altera_pcie *pcie, u8 busno,
++			unsigned int devfn, int where, int size, u32 *value);
+ 	int (*rp_write_cfg)(struct altera_pcie *pcie, u8 busno,
+-			    int where, int size, u32 value);
++			unsigned int devfn, int where, int size, u32 value);
++	int (*nonrp_read_cfg)(struct altera_pcie *pcie, u8 busno,
++			unsigned int devfn, int where, int size, u32 *value);
++	int (*nonrp_write_cfg)(struct altera_pcie *pcie, u8 busno,
++			unsigned int devfn, int where, int size, u32 value);
++	void (*rp_isr)(struct irq_desc *desc);
+ };
+ 
+ struct altera_pcie_data {
+@@ -379,8 +385,8 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int s10_rp_read_cfg(struct altera_pcie *pcie, int where,
+-			   int size, u32 *value)
++static int s10_rp_read_cfg(struct altera_pcie *pcie, u8 busno, u32 devfn,
++		int where, int size, u32 *value)
+ {
+ 	void __iomem *addr = S10_RP_CFG_ADDR(pcie, where);
+ 
+@@ -399,7 +405,7 @@ static int s10_rp_read_cfg(struct altera_pcie *pcie, int where,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int s10_rp_write_cfg(struct altera_pcie *pcie, u8 busno,
++static int s10_rp_write_cfg(struct altera_pcie *pcie, u8 busno, u32 devfn,
+ 			    int where, int size, u32 value)
+ {
+ 	void __iomem *addr = S10_RP_CFG_ADDR(pcie, where);
+@@ -426,18 +432,13 @@ static int s10_rp_write_cfg(struct altera_pcie *pcie, u8 busno,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int _altera_pcie_cfg_read(struct altera_pcie *pcie, u8 busno,
+-				 unsigned int devfn, int where, int size,
+-				 u32 *value)
++static int arr_read_cfg(struct altera_pcie *pcie, u8 busno, u32 devfn,
++		int where, int size, u32 *value)
+ {
+ 	int ret;
+ 	u32 data;
+ 	u8 byte_en;
+ 
+-	if (busno == pcie->root_bus_nr && pcie->pcie_data->ops->rp_read_cfg)
+-		return pcie->pcie_data->ops->rp_read_cfg(pcie, where,
+-							 size, value);
+-
+ 	switch (size) {
+ 	case 1:
+ 		byte_en = 1 << (where & 3);
+@@ -470,18 +471,13 @@ static int _altera_pcie_cfg_read(struct altera_pcie *pcie, u8 busno,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-static int _altera_pcie_cfg_write(struct altera_pcie *pcie, u8 busno,
+-				  unsigned int devfn, int where, int size,
+-				  u32 value)
++static int arr_write_cfg(struct altera_pcie *pcie, u8 busno, u32 devfn,
++			    int where, int size, u32 value)
+ {
+ 	u32 data32;
+ 	u32 shift = 8 * (where & 3);
+ 	u8 byte_en;
+ 
+-	if (busno == pcie->root_bus_nr && pcie->pcie_data->ops->rp_write_cfg)
+-		return pcie->pcie_data->ops->rp_write_cfg(pcie, busno,
+-						     where, size, value);
+-
+ 	switch (size) {
+ 	case 1:
+ 		data32 = (value & 0xff) << shift;
+@@ -499,6 +495,35 @@ static int _altera_pcie_cfg_write(struct altera_pcie *pcie, u8 busno,
+ 
+ 	return tlp_cfg_dword_write(pcie, busno, devfn, (where & ~DWORD_MASK),
+ 				   byte_en, data32);
++
++}
++
++static int _altera_pcie_cfg_read(struct altera_pcie *pcie, u8 busno,
++				 unsigned int devfn, int where, int size,
++				 u32 *value)
++{
++	if (busno == pcie->root_bus_nr && pcie->pcie_data->ops->rp_read_cfg)
++		return pcie->pcie_data->ops->rp_read_cfg(pcie, busno, devfn,
++							where, size, value);
++
++	if (pcie->pcie_data->ops->nonrp_read_cfg)
++		return pcie->pcie_data->ops->nonrp_read_cfg(pcie, busno, devfn,
++							where, size, value);
++	return PCIBIOS_FUNC_NOT_SUPPORTED;
++}
++
++static int _altera_pcie_cfg_write(struct altera_pcie *pcie, u8 busno,
++				  unsigned int devfn, int where, int size,
++				  u32 value)
++{
++	if (busno == pcie->root_bus_nr && pcie->pcie_data->ops->rp_write_cfg)
++		return pcie->pcie_data->ops->rp_write_cfg(pcie, busno, devfn,
++						     where, size, value);
++
++	if (pcie->pcie_data->ops->nonrp_write_cfg)
++		return pcie->pcie_data->ops->nonrp_write_cfg(pcie, busno, devfn,
++						     where, size, value);
++	return PCIBIOS_FUNC_NOT_SUPPORTED;
+ }
+ 
+ static int altera_pcie_cfg_read(struct pci_bus *bus, unsigned int devfn,
+@@ -660,7 +685,6 @@ static void altera_pcie_isr(struct irq_desc *desc)
+ 				dev_err_ratelimited(dev, "unexpected IRQ, INT%d\n", bit);
+ 		}
+ 	}
+-
+ 	chained_irq_exit(chip, desc);
+ }
+ 
+@@ -691,9 +715,13 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ {
+ 	struct platform_device *pdev = pcie->pdev;
+ 
+-	pcie->cra_base = devm_platform_ioremap_resource_byname(pdev, "Cra");
+-	if (IS_ERR(pcie->cra_base))
+-		return PTR_ERR(pcie->cra_base);
++	if ((pcie->pcie_data->version == ALTERA_PCIE_V1) ||
++		(pcie->pcie_data->version == ALTERA_PCIE_V2)) {
++		pcie->cra_base =
++			devm_platform_ioremap_resource_byname(pdev, "Cra");
++		if (IS_ERR(pcie->cra_base))
++			return PTR_ERR(pcie->cra_base);
++	}
+ 
+ 	if (pcie->pcie_data->version == ALTERA_PCIE_V2) {
+ 		pcie->hip_base =
+@@ -707,7 +735,8 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ 	if (pcie->irq < 0)
+ 		return pcie->irq;
+ 
+-	irq_set_chained_handler_and_data(pcie->irq, altera_pcie_isr, pcie);
++	irq_set_chained_handler_and_data(pcie->irq,
++		pcie->pcie_data->ops->rp_isr, pcie);
+ 	return 0;
+ }
+ 
+@@ -720,6 +749,11 @@ static const struct altera_pcie_ops altera_pcie_ops_1_0 = {
+ 	.tlp_read_pkt = tlp_read_packet,
+ 	.tlp_write_pkt = tlp_write_packet,
+ 	.get_link_status = altera_pcie_link_up,
++	.rp_read_cfg = arr_read_cfg,
++	.rp_write_cfg = arr_write_cfg,
++	.nonrp_read_cfg = arr_read_cfg,
++	.nonrp_write_cfg = arr_write_cfg,
++	.rp_isr = altera_pcie_isr,
+ };
+ 
+ static const struct altera_pcie_ops altera_pcie_ops_2_0 = {
+@@ -728,6 +762,9 @@ static const struct altera_pcie_ops altera_pcie_ops_2_0 = {
+ 	.get_link_status = s10_altera_pcie_link_up,
+ 	.rp_read_cfg = s10_rp_read_cfg,
+ 	.rp_write_cfg = s10_rp_write_cfg,
++	.nonrp_read_cfg = arr_read_cfg,
++	.nonrp_write_cfg = arr_write_cfg,
++	.rp_isr = altera_pcie_isr,
+ };
+ 
+ static const struct altera_pcie_data altera_pcie_1_0_data = {
+@@ -792,11 +829,14 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	/* clear all interrupts */
+-	cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
+-	/* enable all interrupts */
+-	cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
+-	altera_pcie_host_init(pcie);
++	if ((pcie->pcie_data->version == ALTERA_PCIE_V1) ||
++		(pcie->pcie_data->version == ALTERA_PCIE_V2)) {
++		/* clear all interrupts */
++		cra_writel(pcie, P2A_INT_STS_ALL, P2A_INT_STATUS);
++		/* enable all interrupts */
++		cra_writel(pcie, P2A_INT_ENA_ALL, P2A_INT_ENABLE);
++		altera_pcie_host_init(pcie);
++	}
+ 
+ 	bridge->sysdata = pcie;
+ 	bridge->busnr = pcie->root_bus_nr;
+-- 
+2.34.1
 
-This function is required in patch v3 4/5 to traverse the HEST to find 
-the HEST AER structures, so changed the definition to be global.
-
-I will pay attention to this matter in the next version.
-
-LeoLiu-oc
-
->> Signed-off-by: leoliu-oc <leoliu-oc@zhaoxin.com>
->> ---
->>   drivers/acpi/apei/hest.c | 2 +-
->>   include/acpi/apei.h      | 5 +++++
->>   2 files changed, 6 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/acpi/apei/hest.c b/drivers/acpi/apei/hest.c
->> index fb839a5c480ee..fd40c035c9b2e 100644
->> --- a/drivers/acpi/apei/hest.c
->> +++ b/drivers/acpi/apei/hest.c
->> @@ -132,7 +132,7 @@ static bool hest_match_pci(struct acpi_hest_header *hest_hdr,
->>   	return false;
->>   }
->>   
->> -static int apei_hest_parse(apei_hest_func_t func, void *data)
->> +int apei_hest_parse(apei_hest_func_t func, void *data)
-> 
-> If this is going to exported to the PCI subsystem, I think it needs
-> some kernel-doc.  For example, it's important to know that it stops
-> parsing the HEST if func returns anything non-zero.  This is how
-> pci_acpi_program_hest_aer_params() knows that it got good data that
-> matches the device it wants.
-> 
-> Given the fact that apei_hest_parse_aer() fills in the struct
-> acpi_hest_parse_aer_info with pointers into the HEST table data, it's
-> also important to know that this HEST table data is persistent.
->
-Thank you suggestion, and I will consider carefully.
-
-Best Regards.
-LeoLiu-oc
-
->>   {
->>   	struct acpi_hest_header *hest_hdr;
->>   	int i, rc, len;
->> diff --git a/include/acpi/apei.h b/include/acpi/apei.h
->> index 8a0b2b9edbafe..f975e4fe78fcb 100644
->> --- a/include/acpi/apei.h
->> +++ b/include/acpi/apei.h
->> @@ -37,9 +37,14 @@ typedef int (*apei_hest_func_t)(struct acpi_hest_header *hest_hdr, void *data);
->>   
->>   #ifdef CONFIG_ACPI_APEI
->>   void __init acpi_hest_init(void);
->> +int apei_hest_parse(apei_hest_func_t func, void *data);
->>   int apei_hest_parse_aer(struct acpi_hest_header *hest_hdr, void *data);
->>   #else
->>   static inline void acpi_hest_init(void) { }
->> +static inline int apei_hest_parse(apei_hest_func_t func, void *data)
->> +{
->> +	return -EINVAL;
->> +}
->>   static inline int apei_hest_parse_aer(struct acpi_hest_header *hest_hdr, void *data)
->>   {
->>   	return -EINVAL;
->> -- 
->> 2.34.1
->>
