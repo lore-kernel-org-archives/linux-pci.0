@@ -2,41 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D943FCA0ECF
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Sep 2023 10:39:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A35C9CA0ECA
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Sep 2023 10:44:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234094AbjILKjy convert rfc822-to-8bit (ORCPT
+        id S230223AbjILKoI convert rfc822-to-8bit (ORCPT
         <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Sep 2023 06:39:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59418 "EHLO
+        Tue, 12 Sep 2023 06:44:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230223AbjILKjy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Sep 2023 06:39:54 -0400
+        with ESMTP id S234297AbjILKoG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Sep 2023 06:44:06 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51E9E9F;
-        Tue, 12 Sep 2023 03:39:50 -0700 (PDT)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4RlKny2mRzz6K6ZD;
-        Tue, 12 Sep 2023 18:39:18 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67B5E1FF6;
+        Tue, 12 Sep 2023 03:34:06 -0700 (PDT)
+Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4RlKZZ4gLPz6J7jc;
+        Tue, 12 Sep 2023 18:29:26 +0800 (CST)
 Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
  (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Tue, 12 Sep
- 2023 11:39:47 +0100
-Date:   Tue, 12 Sep 2023 11:39:46 +0100
+ 2023 11:34:04 +0100
+Date:   Tue, 12 Sep 2023 11:34:03 +0100
 From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
 To:     Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
 CC:     <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        "Nilesh Javali" <njavali@marvell.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 8/8] scsi: qla2xxx: Use FIELD_GET() to extract Link
- Width
-Message-ID: <20230912113946.00001e7a@Huawei.com>
-In-Reply-To: <20230911121501.21910-9-ilpo.jarvinen@linux.intel.com>
+        "Jesse Brandeburg" <jesse.brandeburg@intel.com>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        "Eric Dumazet" <edumazet@google.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "Paolo Abeni" <pabeni@redhat.com>,
+        <intel-wired-lan@lists.osuosl.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/8] igb: Use FIELD_GET() to extract Link Width
+Message-ID: <20230912113403.00006c39@Huawei.com>
+In-Reply-To: <20230911121501.21910-4-ilpo.jarvinen@linux.intel.com>
 References: <20230911121501.21910-1-ilpo.jarvinen@linux.intel.com>
-        <20230911121501.21910-9-ilpo.jarvinen@linux.intel.com>
+        <20230911121501.21910-4-ilpo.jarvinen@linux.intel.com>
 Organization: Huawei Technologies Research and Development (UK) Ltd.
 X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
@@ -50,47 +52,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 11 Sep 2023 15:15:01 +0300
+On Mon, 11 Sep 2023 15:14:56 +0300
 Ilpo Järvinen <ilpo.jarvinen@linux.intel.com> wrote:
 
-> Use FIELD_GET() to extract PCIe Maximum Link Width field instead of
+> Use FIELD_GET() to extract PCIe Negotiated Link Width field instead of
 > custom masking and shifting.
 > 
 > Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 > ---
->  drivers/scsi/qla2xxx/qla_os.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  drivers/net/ethernet/intel/igb/e1000_mac.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 877e4f446709..0c97a5e4249c 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -5,6 +5,7 @@
->   */
->  #include "qla_def.h"
+> diff --git a/drivers/net/ethernet/intel/igb/e1000_mac.c b/drivers/net/ethernet/intel/igb/e1000_mac.c
+> index caf91c6f52b4..5a23b9cfec6c 100644
+> --- a/drivers/net/ethernet/intel/igb/e1000_mac.c
+> +++ b/drivers/net/ethernet/intel/igb/e1000_mac.c
+> @@ -1,6 +1,7 @@
+>  // SPDX-License-Identifier: GPL-2.0
+>  /* Copyright(c) 2007 - 2018 Intel Corporation. */
 >  
 > +#include <linux/bitfield.h>
->  #include <linux/moduleparam.h>
->  #include <linux/vmalloc.h>
+>  #include <linux/if_ether.h>
 >  #include <linux/delay.h>
-> @@ -632,7 +633,7 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha, char *str, size_t str_len)
+>  #include <linux/pci.h>
+> @@ -50,9 +51,8 @@ s32 igb_get_bus_info_pcie(struct e1000_hw *hw)
+>  			break;
+>  		}
 >  
->  		pcie_capability_read_dword(ha->pdev, PCI_EXP_LNKCAP, &lstat);
->  		lspeed = lstat & PCI_EXP_LNKCAP_SLS;
-> -		lwidth = (lstat & PCI_EXP_LNKCAP_MLW) >> 4;
-> +		lwidth = FIELD_GET(PCI_EXP_LNKCAP_MLW, lstat);
+> -		bus->width = (enum e1000_bus_width)((pcie_link_status &
+> -						     PCI_EXP_LNKSTA_NLW) >>
+> -						     PCI_EXP_LNKSTA_NLW_SHIFT);
+> +		bus->width = (enum e1000_bus_width)FIELD_GET(PCI_EXP_LNKSTA_NLW,
+> +							     pcie_link_status);
 
-As previous.  Whilst I'm happy to see this change I'd prefer to see it
-used in all similar cases so do the lspeed one just above as well.
+This cast is a bit ugly given it takes the values 0, 1, 2, 3 and
+we extra a field that the spec says contains 1, 2, 4, 8 etc
+Hence it only works because only 1 and 2 are used I think...  Not nice.
 
-As a reviewer I don't want to care about the alignment of a particular
-field and hence whether it needs shifting or just masking.
-I want to review the header once to see it matches the spec, then never
-look at it again!
+
+Also, whilst looking at this I note that e1000e has it's own defines
+for PCIE_LINK_WIDTH_MASK and PCIE_LINK_WIDTH_SHIFT 
+
+Looks like those should be changed to use the standard defines.
+
+For extra giggles there are two e1000_bus_width enum definitions in different
+headers.
+
+Actual patch is good - just 'interesting' stuff noticed whilst looking at it :)
 
 Jonathan
 
+
+>  	}
 >  
->  		switch (lspeed) {
->  		case 1:
+>  	reg = rd32(E1000_STATUS);
 
