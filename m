@@ -2,61 +2,61 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FC3FEDE9A1
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Sep 2023 10:52:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3262DEDE9A4
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Sep 2023 10:52:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231710AbjINKww (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S230141AbjINKww (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 14 Sep 2023 06:52:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40050 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230141AbjINKwv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2023 06:52:51 -0400
+        with ESMTP id S231404AbjINKww (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2023 06:52:52 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E5EABD
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEE9FDC
         for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2023 03:52:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1694688767; x=1726224767;
   h=date:from:to:cc:subject:message-id;
-  bh=veEcSAZ/8Dr0acmcNxUE3ZCyXLBySDQKjMSK1/yYXxI=;
-  b=NpJlcI5j6sngEZVLkb94y4wjX95i3NEYMQEOA4ujF+C5h10mAYA5O8eY
-   P/OXL1voxHJKsAQYQlQannnOMyIf+oDLq1NOPlGGeb7/iVFvDDNkmXzuA
-   Maxx7wifdSyor3l453BS485nRMI442NvwNiT7fQprBoeYHsxeKL43JqMk
-   bIffrGd/Vowmdt2QKvfzy6CcaUp6tabzxGcxkZlVDTeW/bMz1FSt2iM28
-   x8UclMMG2oq0DMv6MBQhzr4GJmIH2wiJWYROeoZydgCvDbKBZierkivrp
-   TbApAsK0rtlmnWDMZsybFq6OU8Cr6ltlyr97XTuIgZWughHBPgEtcCUUx
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10832"; a="382720284"
+  bh=Gr7ff8fBNJmZmbyUuj1xiJD0wJNxE0iAOo+KzjHzk84=;
+  b=WBFKFJTi6EA56NxIgnwTtCyMuHblLEj/qtK9lxsDX0u4U02FEy4Agyyu
+   r5MQ26N8LdbNbrT7/YKAzyJG/fCUkrF6qHT/vaKi47uxXxbdwsQ3dD3Xf
+   /uTbfumai3NmlpAPd2jGfaClNItFjJpZ8BmocHluoTI7YvsaPM7BnGE3r
+   kuasLwWAN6D0xrCk5XXpd52gCXy0NnS8HDsFRCqbEVGyxd/hUJJtKUwsV
+   cpBZdFOJMtWFIWz+n4P/i0+9OAxGNI9+OcjmCBlLJyRz5vSiq9vIiP8TQ
+   c1ouA3wIPClAolguO3dbD9vCwuuSvdqzwX2mY1NbQt1G9XOWdDqEyHYWI
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10832"; a="382720286"
 X-IronPort-AV: E=Sophos;i="6.02,145,1688454000"; 
-   d="scan'208";a="382720284"
+   d="scan'208";a="382720286"
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
   by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2023 03:52:47 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10832"; a="991352010"
+X-IronPort-AV: E=McAfee;i="6600,9927,10832"; a="991352014"
 X-IronPort-AV: E=Sophos;i="6.02,145,1688454000"; 
-   d="scan'208";a="991352010"
+   d="scan'208";a="991352014"
 Received: from lkp-server02.sh.intel.com (HELO 9ef86b2655e5) ([10.239.97.151])
   by fmsmga006.fm.intel.com with ESMTP; 14 Sep 2023 03:52:45 -0700
 Received: from kbuild by 9ef86b2655e5 with local (Exim 4.96)
         (envelope-from <lkp@intel.com>)
-        id 1qgjxj-0001Vp-2z;
-        Thu, 14 Sep 2023 10:52:43 +0000
-Date:   Thu, 14 Sep 2023 18:52:12 +0800
+        id 1qgjxk-0001W0-06;
+        Thu, 14 Sep 2023 10:52:44 +0000
+Date:   Thu, 14 Sep 2023 18:52:22 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [pci:endpoint] BUILD SUCCESS
- 3731355b37a3bd6658808d5c24323b88a0c4d392
-Message-ID: <202309141810.3DZ5Ytcj-lkp@intel.com>
+Subject: [pci:controller/cadence] BUILD SUCCESS
+ 77e50a40c63ee4f509f363442b862fb2f10afbc8
+Message-ID: <202309141820.wRsKzWRM-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint
-branch HEAD: 3731355b37a3bd6658808d5c24323b88a0c4d392  PCI: endpoint: Use IS_ERR_OR_NULL() helper function
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/cadence
+branch HEAD: 77e50a40c63ee4f509f363442b862fb2f10afbc8  PCI: cadence: Drop unused member from struct cdns_plat_pcie
 
-elapsed time: 720m
+elapsed time: 721m
 
 configs tested: 161
 configs skipped: 3
