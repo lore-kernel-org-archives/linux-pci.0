@@ -2,174 +2,145 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA37EEEC3D
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 19:00:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DEDACD37A9
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 20:39:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233362AbjIOS7p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:59:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43846 "EHLO
+        id S236653AbjIOUik (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Sep 2023 16:38:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236652AbjIOS7R (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2023 14:59:17 -0400
-Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam04on2074.outbound.protection.outlook.com [40.107.102.74])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E89E1AF;
-        Fri, 15 Sep 2023 11:59:11 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=jpVoEKcxpwiuzKcMbtoMhAq/5sEcEBrwLLR0DkD7jGZk9KXyXMimdIbfLQ7EfznxkG0ilyUE9E/P0AjJ2xrj0kXMQOTnWa1Zjqct3S+xBq/Ajlc7ETfpwyKrf5sE2uRrYiWlEMlDRDfGw6AycXYIuxjH2IlDd3GoURV28XrF3rrWB2gJ5vkvNP5Y2fA3DvCaGnT32ypfxeo/RLNV5JGo4hX6GItzjvM+wsrDz9rEADN3RP1Cf3OUbo7V5CvrEfab08TulpVqXI4wmnlPZIGDap4yj0C/K/mydpQUOYqfO0LNXB7+svVjnvgAVAJ2nJ76QhCLZlTgU1zc5rtkY7gvSg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nM6ZWZakbe+IBI1miklYz4jGu8Gbpl9xf2mO7nvcpH0=;
- b=ZDjbu/qySScK8yNrOTl14z4mCJGXNsA0lzfyihH0t159xdOXo/qWYaldzZgwPk8Kn9e+CA9ziFOwNFgC1geXI4Pf64F2aF9bjzbkUAozv5DjEka+MA/g6mbPOZg83J8uR4mLM8cU1eY6ZMkqJSXiFG+/0b2w1jx9PEAyTLY2qKi7mIEMIbd3cMDrqRjembkezxIVRaGpnxPHHpslyPXVOlyP79o0iHcOangcT5ioMtjaKjBQQs6x7VWZGTJiIoFNjSz8xA4NQSG8c9Up09fqFlHofjVKq7gMWDl0cFglBmYUKxNzclWqxjVaBTPoTECS/Y6pQDfgbm7gND4yCgRMAA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nM6ZWZakbe+IBI1miklYz4jGu8Gbpl9xf2mO7nvcpH0=;
- b=nPCuxiBUdewwJAVkIR6R4+vmHvgrbZaBbjsETge6qg2vOeG1khS5MQDBUjN8fdf1w7ChFiFX9p1kf4uMVUiyVsl5MppbyMGXubYdBmvcYWDRoY/p0nCywNxl2qO+/xegjUvdEvSbsENQCkMQ2vn79bFvxrNEVrdXZYXzMRWMO6w=
-Received: from BL1PR13CA0178.namprd13.prod.outlook.com (2603:10b6:208:2bd::33)
- by BN9PR12MB5381.namprd12.prod.outlook.com (2603:10b6:408:102::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.21; Fri, 15 Sep
- 2023 18:59:09 +0000
-Received: from BL02EPF0001A0F9.namprd03.prod.outlook.com
- (2603:10b6:208:2bd:cafe::ac) by BL1PR13CA0178.outlook.office365.com
- (2603:10b6:208:2bd::33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.21 via Frontend
- Transport; Fri, 15 Sep 2023 18:59:09 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
-Received: from SATLEXMB03.amd.com (165.204.84.17) by
- BL02EPF0001A0F9.mail.protection.outlook.com (10.167.242.100) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6792.19 via Frontend Transport; Fri, 15 Sep 2023 18:59:09 +0000
-Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 15 Sep
- 2023 13:59:09 -0500
-Received: from xsjlizhih40.xilinx.com (10.180.168.240) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.27 via Frontend
- Transport; Fri, 15 Sep 2023 13:59:08 -0500
-From:   Lizhi Hou <lizhi.hou@amd.com>
-To:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <herve.codina@bootlin.com>,
-        <Jonathan.Cameron@Huawei.com>
-CC:     Lizhi Hou <lizhi.hou@amd.com>, <bhelgaas@google.com>,
-        <robh@kernel.org>
-Subject: [PATCH 2/2] PCI: of_property: Fix uninitialized variable when of_irq_parse_raw() failed
-Date:   Fri, 15 Sep 2023 11:08:07 -0700
-Message-ID: <1694801287-17217-2-git-send-email-lizhi.hou@amd.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1694801287-17217-1-git-send-email-lizhi.hou@amd.com>
-References: <1694801287-17217-1-git-send-email-lizhi.hou@amd.com>
+        with ESMTP id S237486AbjIOUih (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2023 16:38:37 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D14F8F3;
+        Fri, 15 Sep 2023 13:38:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35890C433C7;
+        Fri, 15 Sep 2023 20:38:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694810312;
+        bh=6Q5uD+Zu8AqpFSr7DdUZmiNzQVx8ArnIRoKFeBRbrQQ=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=qQ2iyLjwa7dvCYxKHf2pb1xYmjUKk31qUJTGag1QN09CHOP4ctdyYN9gCl+v1QvYY
+         niCKla3y+gP0W69WjI3Q/wYqj2nZFcltdDlDYPh+9Nf0uvN10a5CABsdORmk4IlC8q
+         +wpFBM+txR2+IvVsJmH3R+AJZEu31glf4ve6NUCfJU8XjRdGegYxCSSseVCwyyFIH1
+         DKkOkH7POk0SwA3MmpEDjqK5jQ9DxnPZ726i0FIlhn4B+w4stGpSNNz7OQ77Pd7Ukc
+         OFIb2fbnQzLF42hmO+mSVQY4om9vb2b/ySY0eVIJ0/lkeR91SAHYSnZsjCA7Fizl7C
+         2NuyeF9VrsGXw==
+Date:   Fri, 15 Sep 2023 15:38:30 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "kw@linux.com" <kw@linux.com>,
+        "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "kishon@kernel.org" <kishon@kernel.org>,
+        "krzysztof.kozlowski+dt@linaro.org" 
+        <krzysztof.kozlowski+dt@linaro.org>,
+        "conor+dt@kernel.org" <conor+dt@kernel.org>,
+        "marek.vasut+renesas@gmail.com" <marek.vasut+renesas@gmail.com>,
+        "fancer.lancer@gmail.com" <fancer.lancer@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-renesas-soc@vger.kernel.org" 
+        <linux-renesas-soc@vger.kernel.org>
+Subject: Re: [PATCH v20 16/19] PCI: rcar-gen4: Add R-Car Gen4 PCIe Host
+ support
+Message-ID: <20230915203830.GA105215@bhelgaas>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF0001A0F9:EE_|BN9PR12MB5381:EE_
-X-MS-Office365-Filtering-Correlation-Id: e65c5161-bd34-4747-0543-08dbb61dd812
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: nNvggFL68bNTYVWHSPdxZdudNoxKDmhsjIWOkQCIGhD7ZaS3EEPO+L4A46J+e47l+jO1epGwgKwZ9qDxUG2KBJoMBTbk6VFUOxoSW955SKaeyxYuiADbXEy+d9zTdlT5MWcPsKFu27u3yZG/A4BMv4rsYOnmoTG8j4I6BtPvdX8qCZXvEyUkqxFdyPdKcGXBJnlnRxyx+IJsck3QGG1L2bF3Hi0WJiTamjBe62ONg08N+0qKbMEmmrnP5YLhhrv40jwpKxTgao3r39XIz6JFU7yYnBEbwu+jGvK+aVEfH2r2t0pQ7ZD0qLVnx3jALRiITR6nNkneX42aMKgrm1LSacOe/KiI8n5HJrJHgmszy0mgVd4wNwHZdd1j+RqwVdGbtiuyOA6dUdZFoDmtDdl1jA5cJhlSzTEPBh5STr22KmpcLxq3+IlcEhAOFAqURwqJk0WJvg66nlyazv7CZtyxafVEOVPawUrW3yGlefo1t51WZxT99sSfm9lEVd8v7Q7tegQsl23G231KQcJjkAZWBt/rPJYu1nvTN4LVJs2yay/XSV3D2IBX+M7tVNejK38OOQn6OvYidW3a5H1xy295oewCWBbd++Q7OQIBzWYeQLe81lxxPe5k26SoyvtPWGwpAmlF2ArSw540rAUmTG947xWPm1Wa0tM0QhbM16ooh4AnagboOMmMp06XIytMGlDJKtW5XsrONQtsl27nWfHJlFtLo20f+svrxJu8e7hOWgw02M/FuWTrcWdvJmRV66acySdK/DJ2+Kd6XsKLOuD5Ng==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(396003)(39860400002)(346002)(376002)(136003)(82310400011)(451199024)(1800799009)(186009)(36840700001)(40470700004)(46966006)(336012)(40480700001)(2906002)(426003)(83380400001)(2616005)(478600001)(966005)(26005)(86362001)(40460700003)(356005)(36860700001)(70206006)(36756003)(70586007)(82740400003)(81166007)(47076005)(5660300002)(54906003)(316002)(41300700001)(110136005)(44832011)(4326008)(8676002)(8936002)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2023 18:59:09.8111
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: e65c5161-bd34-4747-0543-08dbb61dd812
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BL02EPF0001A0F9.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR12MB5381
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <TYBPR01MB534112A636FAFB61A4038337D8F6A@TYBPR01MB5341.jpnprd01.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In function of_pci_prop_intr_map(), addr_sz[i] will be uninitialized if
-of_irq_parse_raw() returns failure. Add addr_sz array initialization. And
-when parsing irq failed, skip generating interrupt-map pair for the pin.
+On Fri, Sep 15, 2023 at 09:37:15AM +0000, Yoshihiro Shimoda wrote:
+> > From: Bjorn Helgaas, Sent: Friday, September 15, 2023 1:35 AM
+> > On Fri, Aug 25, 2023 at 06:32:16PM +0900, Yoshihiro Shimoda wrote:
+> > > Add R-Car Gen4 PCIe Host support. This controller is based on
+> > > Synopsys DesignWare PCIe, but this controller has vendor-specific
+> > > registers so that requires initialization code like mode setting
+> > > and retraining and so on.
+> > >
+> > > To reduce code delta, adds some helper functions which are used by
+> > > both the host driver and the endpoint driver (which is added
+> > > immediately afterwards) into a separate file.
+> > >
+> > > Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> > > Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+> > > ---
+> > >  drivers/pci/controller/dwc/Kconfig            |  10 +
+> > >  drivers/pci/controller/dwc/Makefile           |   2 +
+> > >  .../controller/dwc/pcie-rcar-gen4-host-drv.c  | 135 +++++++++++
+> > >  drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 227 ++++++++++++++++++
+> > >  drivers/pci/controller/dwc/pcie-rcar-gen4.h   |  44 ++++
+> > >  5 files changed, 418 insertions(+)
+> > >  create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4-host-drv.c
+> > 
+> > Is "pcie-rcar-gen4-host-drv.c" following some pattern?  I don't see
+> > "-drv" in any nearby filenames.  Typical names are "-host.c" for host
+> > driver and "-ep.c" for endpoint driver.
+> 
+> This is not following some pattern on pcie subsystem. But, some
+> other subsystems have "*drv.c" filenames. Manivannan suggested the
+> filenames to rename the module filenames [1].
+>
+> < Now >
+> The source code filenames : pcie-rcar-gen4-{host,ep}-drv.c
+> The module filenames : pcie-rcar-gen4-{host,ep}.ko
+> 
+> < Previous >
+> The source code filenames : pcie-rcar-gen4-{host,ep}.c
+> The module filenames : pcie-rcar-gen4-{host,ep}-drv.ko
+> 
+> [1]
+> https://lore.kernel.org/linux-pci/20230724122820.GM6291@thinkpad/
+> 
+> I don't have a strong opinion on which filenames are good.
 
-Fixes: 407d1a51921e ("PCI: Create device tree node for bridge")
-Reported-by: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-Closes: https://lore.kernel.org/all/20230911154856.000076c3@Huawei.com/
-Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
----
- drivers/pci/of_property.c | 25 ++++++++++++++++++-------
- 1 file changed, 18 insertions(+), 7 deletions(-)
+I have an opinion :)  I think splitting this up into four files is way
+more complicated than it needs to be.  This is all for driving a
+single piece of hardware, and I don't think there's enough benefit to
+split it into separate files.
 
-diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
-index 710ec35ba4a1..c2c7334152bc 100644
---- a/drivers/pci/of_property.c
-+++ b/drivers/pci/of_property.c
-@@ -186,8 +186,8 @@ static int of_pci_prop_interrupts(struct pci_dev *pdev,
- static int of_pci_prop_intr_map(struct pci_dev *pdev, struct of_changeset *ocs,
- 				struct device_node *np)
- {
-+	u32 i, addr_sz[OF_PCI_MAX_INT_PIN] = { 0 }, map_sz = 0;
- 	struct of_phandle_args out_irq[OF_PCI_MAX_INT_PIN];
--	u32 i, addr_sz[OF_PCI_MAX_INT_PIN], map_sz = 0;
- 	__be32 laddr[OF_PCI_ADDRESS_CELLS] = { 0 };
- 	u32 int_map_mask[] = { 0xffff00, 0, 0, 7 };
- 	struct device_node *pnode;
-@@ -213,33 +213,44 @@ static int of_pci_prop_intr_map(struct pci_dev *pdev, struct of_changeset *ocs,
- 		out_irq[i].args[0] = pin;
- 		ret = of_irq_parse_raw(laddr, &out_irq[i]);
- 		if (ret) {
--			pci_err(pdev, "parse irq %d failed, ret %d", pin, ret);
-+			out_irq[i].np = NULL;
-+			pci_dbg(pdev, "parse irq %d failed, ret %d", pin, ret);
- 			continue;
- 		}
--		ret = of_property_read_u32(out_irq[i].np, "#address-cells",
--					   &addr_sz[i]);
--		if (ret)
--			addr_sz[i] = 0;
-+		of_property_read_u32(out_irq[i].np, "#address-cells",
-+				     &addr_sz[i]);
- 	}
- 
- 	list_for_each_entry(child, &pdev->subordinate->devices, bus_list) {
- 		for (pin = 1; pin <= OF_PCI_MAX_INT_PIN; pin++) {
- 			i = pci_swizzle_interrupt_pin(child, pin) - 1;
-+			if (!out_irq[i].np)
-+				continue;
- 			map_sz += 5 + addr_sz[i] + out_irq[i].args_count;
- 		}
- 	}
- 
-+	/*
-+	 * Parsing interrupt failed for all pins. In this case, it does not
-+	 * need to generate interrupt-map property.
-+	 */
-+	if (!map_sz)
-+		return 0;
-+
- 	int_map = kcalloc(map_sz, sizeof(u32), GFP_KERNEL);
- 	mapp = int_map;
- 
- 	list_for_each_entry(child, &pdev->subordinate->devices, bus_list) {
- 		for (pin = 1; pin <= OF_PCI_MAX_INT_PIN; pin++) {
-+			i = pci_swizzle_interrupt_pin(child, pin) - 1;
-+			if (!out_irq[i].np)
-+				continue;
-+
- 			*mapp = (child->bus->number << 16) |
- 				(child->devfn << 8);
- 			mapp += OF_PCI_ADDRESS_CELLS;
- 			*mapp = pin;
- 			mapp++;
--			i = pci_swizzle_interrupt_pin(child, pin) - 1;
- 			*mapp = out_irq[i].np->phandle;
- 			mapp++;
- 			if (addr_sz[i]) {
--- 
-2.34.1
+Most drivers, even those that support both host and endpoint mode, are
+in a single file, e.g., pcie-artpec6.c, pci-imx6.c, pcie-keembay.c,
+pcie-tegra194.c, pci-dra7xx.c, pci-keystone.c.
 
+That makes the Makefile very simple and there's only one module name
+to worry about.
+
+> > > +	msleep(100);	/* pe_rst requires 100msec delay */
+> > 
+> > Can we include a spec reference for this delay?  Ideally this would be
+> > a #define and likely shared across drivers.
+> 
+> I think so. Some other PCIe drivers also call "msleep(100)".
+> So, I'll add a #define into drivers/pci/pci.h.
+
+Yes.  I'm trying to move away from "msleep(100)" for everybody so we
+can make sure all the drivers include the appropriate delays and
+they're all based on the same reasoning.
+
+> > > +#define PCIEDMAINTSTSEN		0x0314
+> > > +#define PCIEDMAINTSTSEN_INIT	GENMASK(15, 0)
+> > 
+> > These register offsets are hard to decode whenthey'reallruntogether.
+> 
+> Unfortunately, these registers' offset names are from the datasheet.
+> Perhaps, adding full register names as comments like below are helpful:
+> -----
+> /* PCIe Interrupt Status 0 */
+> +#define PCIEINTSTS0		0x0084
+> 
+> /* PCIe DMA Interrupt Status Enable */
+> #define PCIEDMAINTSTSEN		0x0314
+> #define PCIEDMAINTSTSEN_INIT	GENMASK(15, 0)
+
+It's good to use names from the datasheet.  The comments should be
+enough.
+
+Bjorn
