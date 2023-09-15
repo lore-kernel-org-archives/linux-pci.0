@@ -2,154 +2,187 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35044CA553F
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 01:24:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C08EE021A
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 03:28:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230193AbjIOBYf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Sep 2023 21:24:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34104 "EHLO
+        id S230497AbjIOD2a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Sep 2023 23:28:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44060 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230100AbjIOBYf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2023 21:24:35 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0269D2100;
-        Thu, 14 Sep 2023 18:24:31 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49779C433C7;
-        Fri, 15 Sep 2023 01:24:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1694741070;
-        bh=vS3iu08Cwn5zp58ICQbFGVM/ExFnYRepOJGvP5mCAm8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=OGrLN7oEYwE+06uYD2I3VrYYBqPNuK7Y2vZsZ7zWOBxzMbgRLd3Yy646Jf5mAgIDc
-         jWIR05G2vvRqUJ668iYVw0mF4mndxyjsHw9k74MCWMc6UcezRXZsd3dmjQ/Dyji/I1
-         xKYguQQOXlyVrnG0zS+Edbkw3V2M2nukT/dru00Ea5qPxEuD955hIMfzKk0VRTTQpr
-         D2hQaBAttssfX575Wr7dlcVsrtVnCtarmJuj2JY49pZa0gvim8gUwQK31OVddiGOqT
-         hJuICLCzKmSUO6H7WXOFf8nFKX397Z5fzLMRHA7GbmzLuGBhDrUuhFJqom/6yvLUzt
-         ZNg98N5TABXmQ==
-Date:   Thu, 14 Sep 2023 20:24:27 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
-        "open list:X86 PLATFORM DRIVERS" 
-        <platform-driver-x86@vger.kernel.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        linux-pm@vger.kernel.org,
-        "open list:USB XHCI DRIVER" <linux-usb@vger.kernel.org>,
-        iain@orangesquash.org.uk
-Subject: Re: [PATCH v18 2/2] PCI: Add a quirk for AMD PCIe root ports w/ USB4
- controllers
-Message-ID: <20230915012427.GA87601@bhelgaas>
+        with ESMTP id S231571AbjIOD2a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2023 23:28:30 -0400
+X-Greylist: delayed 355 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 14 Sep 2023 20:28:25 PDT
+Received: from sphereful.davidgow.net (sphereful.davidgow.net [203.29.242.92])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39EF11FCE;
+        Thu, 14 Sep 2023 20:28:24 -0700 (PDT)
+Received: by sphereful.davidgow.net (Postfix, from userid 119)
+        id 10F751D57FC; Fri, 15 Sep 2023 11:22:21 +0800 (AWST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
+        s=201606; t=1694748141;
+        bh=yXQyOokVKuRuBBGZrk5jYZQNuKOW+gvtulUP9frgc30=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=rAI9KNCTGOfH9Y/6xji5DOjHpGEGwwZ+ZnUriMWVeYVdctJXRs0SEDiLErZwyrw2D
+         mSPmK7tD54B8o3crc7Uel+uImTo4ScMn9GghjOVC7jKoLuqhNFVAGL9/iH+2AjAiHY
+         aGfw2Bz619HInRZ9LTtJb681AdWHos5CeBTgGMJT/cAn8zlLAL0vmi/lvrCgHrmvI5
+         vgPwTCwF002HsirhkGiWmvl2ZokYG0yp0tmgDAQgLx08JNJH1I4bI+t23CjGUuazXb
+         ZQNLMzMB+5C2fc5/kUHPkMUb/1qGOh6QqBddgHHhjeuxUpRedq0ewWiiM4lrqS8jky
+         8uEYO77qqz97GcXIv9QUuPzi1D4bVCSZWzPP7g6nFQqFTV1+Av2nlr6Ead/6R86r+4
+         Nk0JRs2mBPlz6UeBrsDkKAleiiaiX2VQSR96eokzeZ26KR2WCXi/EWU501AaDGnrSR
+         oZTtJDS2nfn73LayND+owWa6tmfaAg4fS+HVWb31LoBfywRaE80ZpJHf0iRC7zr3/t
+         nyuzl1jP5Xc3bRIVByQGsD5t4IdQpWAAnD7xSZugAEuqVtyPewWfgXReG4RJCWvv0Q
+         McBxOXcK4xAzmue/0V5KFfhgstI5jyT91VLT3WGDzmjKYWxkq1DW3Q2xO9KJeuwGFO
+         5vLcRG+EhU9Pb5+yP1mMjcN8=
+Received: from [IPV6:2001:8003:8824:9e00::bec] (unknown [IPv6:2001:8003:8824:9e00::bec])
+        by sphereful.davidgow.net (Postfix) with ESMTPSA id 573341D57F7;
+        Fri, 15 Sep 2023 11:22:19 +0800 (AWST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
+        s=201606; t=1694748139;
+        bh=yXQyOokVKuRuBBGZrk5jYZQNuKOW+gvtulUP9frgc30=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=FT+c/0nqvmmJ8ErjgrsLbfav1tec05UdP3xK4Pvl4IDdhNFHWnqdOMMiKVwE2a/6q
+         0gzNpznDu0czUXO9709+kdU0dJlEPQFGhFt3coVTkhsmlHnOl1SBNu2RGVnMYt0gyg
+         NouksuUX6OEKW1uRbFrpUJMdTyM94q84t3m6BTH2zpkoBt1qkuXkQs7ELsyxoFVG9q
+         EOlDdN6BmyqhcAXxNeHTULTq9ednE/5dH6M2X5m07JRYEflxGfB4CEz5/KSjdWpdh6
+         JOFJZ9ptoJ5ugjymetQ/5b7WFkOp7ULrwNAfVya4DO4g4M++VEpKeXf9FQoDsGUD1+
+         tyGBgmk3qlaJjiv3kS+maOTnE9s/Ok5hd4SGYGQ06dwSPX3u4/+Vkl36zOQoAxHHE/
+         Wx44cg97pDuj3VECDJFUqntpgwKKwlSXQ17fVDRWGXm39mG2KGA/+eKKgo3nCi7soz
+         0lBVQ51ROAz8zIOZRLiVoLBAqWFOcw7RX8y72LyjjZSQtzuiR716/ybba7/S1jbl7k
+         hpxsYNjHSNWoenDDnsArDnHnTFDaySmaVAfu+6ZZR0Js6VoR8UyG1vd6Tv3GW1udIi
+         4qwg2zV5DFRiM23LeJjRu4I9h1evATV/4/yHeDmf9qqAAw4BKSenvA4Znagx7WE/DW
+         awbxQbN5I0CRTF47i5YiUT0c=
+Message-ID: <59f6ff78-6b45-465a-bd41-28c7a5d10931@davidgow.net>
+Date:   Fri, 15 Sep 2023 11:22:14 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: Fwd: Kernel 6.5.2 Causes Marvell Technology Group 88SE9128 PCIe
+ SATA to Constantly Reset
+Content-Language: fr
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
+        Bagas Sanjaya <bagasdotme@gmail.com>
+Cc:     Damien Le Moal <dlemoal@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        patenteng <dimitar@daskalov.co.uk>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Regressions <regressions@lists.linux.dev>,
+        Linux IDE and libata <linux-ide@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
+References: <dacb34e4-ce58-bc0e-8206-672d743a3e34@gmail.com>
+ <ZQHRQHAPQdG+Nu1o@x1-carbon>
+From:   David Gow <david@davidgow.net>
+In-Reply-To: <ZQHRQHAPQdG+Nu1o@x1-carbon>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <67fe444c-e3e4-4063-a7ad-e0c3c835bc68@amd.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 14, 2023 at 07:55:46PM -0500, Mario Limonciello wrote:
-> On 9/13/2023 23:59, Mario Limonciello wrote:
-> > On 9/13/2023 16:16, Mario Limonciello wrote:
-> > > On 9/13/2023 16:05, Bjorn Helgaas wrote:
-> > > [cut]
-> > > > > > I expect it to be an ongoing issue.  I also expect unless we use
-> > > > > > constraints or convince the firmware team to add a _S0W object with a
-> > > > > > value of "0" for the sake of Linux that we will be
-> > > > > > adding IDs every year
-> > > > > > to wherever this lands as we reproduce it on newer SoCs.
-> > > > > 
-> > > > > So maybe the way to go is to make the AMD PMC driver set a flag for
-> > > > > Root Ports on suspend or similar.
-> > > > 
-> > > > I like the quirk approach.  When PMC is involved, the device behavior
-> > > > doesn't conform to what it advertised via PME_Support.
-> > > > 
-> > > > The v18 quirk isn't connected to PMC at all, so IIUC it avoids
-> > > > D3hot/D3cold unnecessarily when amd/pmc is not loaded.
-> > > > 
-> > > 
-> > > Technically someone could; but realistically no one will be using
-> > > these machines without amd-pmc.
-> > > 
-> > > The battery life over suspend would be abhorrent.
-> > > 
-> > > > I don't object to avoiding D3hot/D3cold unconditionally.  Presumably
-> > > > we *could* save a little power by using them when amd/pci isn't
-> > > > loaded, but amd/pci would have to iterate through all PCI devices when
-> > > > it loads, save previous state, do the quirk, and then restore the
-> > > > previous state on module unload.  And it would have to use notifiers
-> > > > or assume no Root Port hotplug.  All sounds kind of complicated.
-> > > > 
-> > > 
-> > > Yeah this does sound needlessly complicated.
-> > > 
-> > > > Maybe it would even be enough to just clear dev->pme_support so we
-> > > > know wakeups don't work.  It would be a pretty big benefit if we
-> > > > didn't have to add another bit and complicate pci_prepare_to_sleep()
-> > > > or pci_target_state().
-> > > > 
-> > > 
-> > > I don't think clearing PME support entirely is going to help.  The
-> > > reason is that pci_target_state() will fall back to PCI_D3hot when
-> > > dev->pme_support is fully cleared.
-> > > 
-> > > I think that clearing *just the bits* for D3hot and D3cold in PME
-> > > support should work though.  I'll test this.
-> > 
-> > I did confirm this works properly.
-> > 
-> > > 
-> > > Assuming it works how about if we put the quirk to clear the
-> > > D3hot/D3cold PME support bit in
-> > > drivers/platform/x86/amd/pmc/pmc-quirks.c?
-> > > 
-> > > It's still a quirk file and it makes it very clear that this
-> > > behavior is caused by what amd-pmc does.
-> > 
-> > I've got it coded up like this and working, so please let me know if
-> > this approach is amenable and I'll drop an updated version.
-> > 
-> > If you would prefer it to be in pci/quirks.c I believe I can do either.
+Le 2023/09/13 à 23:12, Niklas Cassel a écrit :
+> On Wed, Sep 13, 2023 at 06:25:31PM +0700, Bagas Sanjaya wrote:
+>> Hi,
+>>
+>> I notice a regression report on Bugzilla [1]. Quoting from it:
+>>
+>>> After upgrading to 6.5.2 from 6.4.12 I keep getting the following kernel messages around three times per second:
+>>>
+>>> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>>> [ 9683.270399] ata16.00: configured for UDMA/66
+>>>
+>>> So I've tracked the offending device:
+>>>
+>>> ll /sys/class/ata_port/ata16
+>>> lrwxrwxrwx 1 root root 0 Sep 10 21:51 /sys/class/ata_port/ata16 -> ../../devices/pci0000:00/0000:00:1c.7/0000:0a:00.0/ata16/ata_port/ata16
+>>>
+>>> cat /sys/bus/pci/devices/0000:0a:00.0/uevent
+>>> DRIVER=ahci
+>>> PCI_CLASS=10601
+>>> PCI_ID=1B4B:9130
+>>> PCI_SUBSYS_ID=1043:8438
+>>> PCI_SLOT_NAME=0000:0a:00.0
+>>> MODALIAS=pci:v00001B4Bd00009130sv00001043sd00008438bc01sc06i01
+>>>
+>>> lspci | grep 0a:00.0
+>>> 0a:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe SATA 6 Gb/s RAID controller with HyperDuo (rev 11)
+>>>
+>>> I am not using the 88SE9128, so I have no way of knowing whether it works or not. It may simply be getting reset a couple of times per second or it may not function at all.
+>>
+>> See Bugzilla for the full thread.
+>>
+>> patenteng: I have asked you to bisect this regression. Any conclusion?
+>>
+>> Anyway, I'm adding this regression to regzbot:
+>>
+>> #regzbot: introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cgi?id=217902
 > 
-> I've also got a variation with pci/quirks.c working too.
+> Hello Bagas, patenteng,
 > 
-> Here's the trade offs:
 > 
-> pci/quirks.c
-> ------------
-> * Two lines for every platform affected by this.  IE:
-> DECLARE_PCI_FIXUP_SUSPEND(PCI_VENDOR_ID_AMD, 0x14b9,
-> quirk_disable_pme_suspend);
-> DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_AMD, 0x14b9, quirk_reenable_pme);
-> * D3hot/D3cold works at runtime (since PME works at runtime)
-> * Only runs if s2idle is used
-> * Runs whether amd-pmc is bound or not.
+> FYI, the prints:
+> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [ 9683.270399] ata16.00: configured for UDMA/66
 > 
-> drivers/platform/x86/amd/pmc/pmc-quirks.c
-> -----------------------------------------
-> * 1 line for adding new affected platforms
-> * Runs at probe; PME is disabled for D3hot/D3cold at runtime.
-> * Only runs if s2idle is used
-> * Only runs if amd-pmc is bound.
+> Just show that ATA error handler has been invoked.
+> There was no reset performed.
 > 
-> Having implemented both ways and given users will effectively always use
-> amd-pmc, I have a preference towards pci/quirks.c which only patches
-> dev->pme_support to drop D3hot/cold at suspend time and restores it at
-> resume.
+> If there was a reset, you would have seen something like:
+> [    1.441326] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    1.541250] ata8.00: configured for UDMA/133
+> [    1.541411] ata8: hard resetting link
 > 
-> Please let me know which way you prefer.
+> 
+> Could you please try this patch and see if it improves things for you:
+> https://lore.kernel.org/linux-ide/20230913150443.1200790-1-nks@flawful.org/T/#u
+> 
 
-I think the pci/quirks.c one sounds nicer.  I was envisioning a
-one-time quirk where it'd be easy to log a note about this issue, but
-I see why the suspend/resume quirk has advantages.  I don't really
-like opaque magic behavior (like D3hot/D3cold not being used when
-dmesg and lspci claim that PME in those states *should* work), but
-maybe we can figure out some way to make that visible.
+FWIW, I'm seeing a very similar issue both in 6.5.2 and in git master 
+[aed8aee11130 ("Merge tag 'pmdomain-v6.6-rc1' of 
+git://git.kernel.org/pub/scm/linux/kernel/git/ulfh/linux-pm") with that 
+patch applied.
 
-Bjorn
+
+The log is similar (the last two lines repeat several times a second):
+[    0.369632] ata14: SATA max UDMA/133 abar m2048@0xf7c10000 port 
+0xf7c10480 irq 33
+[    0.683693] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.031662] ata14.00: ATAPI: MARVELL VIRTUALL, 1.09, max UDMA/66
+[    1.031852] ata14.00: configured for UDMA/66
+[    1.414145] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.414505] ata14.00: configured for UDMA/66
+[    1.744094] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.744368] ata14.00: configured for UDMA/66
+[    2.073916] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.074276] ata14.00: configured for UDMA/66
+
+
+lspci shows:
+09:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230 PCIe 2.0 
+x2 4-port SATA 6 Gb/s RAID Controller (rev 10) (prog-if 01 [AHCI 1.0])
+         Subsystem: Gigabyte Technology Co., Ltd Device b000
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+ParErr- Stepping- SERR- FastB2B- DisINTx+
+         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+         Latency: 0, Cache Line Size: 64 bytes
+         Interrupt: pin A routed to IRQ 33
+         Region 0: I/O ports at b050 [size=8]
+         Region 1: I/O ports at b040 [size=4]
+         Region 2: I/O ports at b030 [size=8]
+         Region 3: I/O ports at b020 [size=4]
+         Region 4: I/O ports at b000 [size=32]
+         Region 5: Memory at f7c10000 (32-bit, non-prefetchable) [size=2K]
+         Expansion ROM at f7c00000 [disabled] [size=64K]
+         Capabilities: <access denied>
+         Kernel driver in use: ahci
+
+The controller in question lives on a Gigabyte Z87X-UD5H-CF motherboard. 
+I'm using the controller for several drives, and it's working, it's just 
+spammy. (At worst, there's some performance hitching, but that might 
+just be journald rotating logs as they fill up with the message).
+
+I haven't had a chance to bisect yet (this is a slightly awkward machine 
+for me to install test kernels on), but can also confirm it worked with 
+6.4.12.
+
+Hopefully that's useful. I'll get back to you if I manage to bisect it.
+
+Cheers,
+-- David
