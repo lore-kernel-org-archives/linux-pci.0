@@ -2,166 +2,151 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B57EED61A
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 18:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23DB5EEEC3F
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 19:00:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236589AbjIOSsd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Sep 2023 14:48:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50152 "EHLO
+        id S236601AbjIOS7p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Sep 2023 14:59:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236998AbjIOSsa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2023 14:48:30 -0400
-Received: from EUR05-VI1-obe.outbound.protection.outlook.com (mail-vi1eur05on2046.outbound.protection.outlook.com [40.107.21.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2805E3A94;
-        Fri, 15 Sep 2023 11:45:18 -0700 (PDT)
+        with ESMTP id S236641AbjIOS7Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2023 14:59:16 -0400
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2051.outbound.protection.outlook.com [40.107.94.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78C5AF9;
+        Fri, 15 Sep 2023 11:59:11 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Gbj9NZ+KUU0uJAbCeuBkPgjWdmM+j5v8imj4YTJSp89jMtHpljv5jiINy3uESQzRBfBpZP8Z9k+pAuYHjDQ6KpNfmMATtJ/C202yU06B4t7VLyKJ/6Ud1j5HnxKaczz1D/xIa/QGkaNptD/FTk4FhtB8crJCSFfz8o1Z+elPvfU3J6Vn0qp4vu/GupUTRKoggkmowB65QuWGVxQy0AeFTplmwtHqcUtxgj8nd3+dkFc3gvI1mDWUQwxrAUSVwV5LgfIcCjimhBqbWWsCYi4tB3XfiFNbLy/DkTgRZtUA9aweIXSz3YgJ0SokE7gC2STPdhEv7X7fSMyGGh8wKfSAAg==
+ b=hootONcXvIkJMkj4bo9UwN9nvylPlOWitxeOEpiVa7yq4umaOwexFR3uttSu1Knrjk4RM732L/UAw0tEQ2hM2xMyf/1zk2cbK+OoX5YeRwjQlbGtUpsGBOcWK1fCs3S+jtoR0/B+C9c1GD/kZUbPJmXOXpT+9EO/7WwX+o9M2ddmlwI+xFxFkLOq2u63ihyCspCM1bQuqobOyEY0L85PDuTyDcnUs4Jr7zHuCkDBqMvVrqQbw9vEhv2JlsUCmC9fw2JHTQrpz8VGfQHcUbyZuIGxtQqq9L70iOIYxtI6LY4XgBKVNJIIzEC0utnCF7pIcsIrO7YxCZr1DM6Pn4EdPQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fa0JrSzrIWObI+M3MwG4/GbDzXhyXZdAEdLKKyybH2Q=;
- b=VUQFnWmVHASVylRMMUuQAEF4KLLo+hUgGt3usDvlI3Z8RouynkzM9+jSQ4EjzSvOKCm5KnZccUtjsRE3EE2cuwBo8LVIzOvd4sVjoIIKNQfs0qEa0xlBWHMfO2qxPZw9Ux6Wf9XuqFDmBfanWutOGpZfFJzB5qDVFcdRM9dPpbKky+xr8WdswB7n24w6Qp15RJx1Yaqca6PI7ccLM1qRQA/8cD0fxXKGp1vnB2zL3wVYGoKe2gDOjtJY263dRrcNDQykJFmXgsCDc3jTaYaWs1NRcTGgc8jq/36riUtCF1+57DJ8Z+hmDiZ+GuuiefsyqRg/pU45qKNM3Ct2HjZmSA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ bh=gjyaxVsTLBhP//KKYCPbJ27HdfiX3W3zpkxt1SQlsZc=;
+ b=ZXHOW5EJ8+xarP118dU6tIqkN67zFeknzDxQXQISso2CrYLOMNJkSLfpchnGjP0vo50Q4wU8T9In5z9fBtDFZ+OvBtyE2/0krbRysv8hW0bLBku9poOyijaAA1YXVfHc6BgdmK2OpXdggkJO4ceqaI1nLVtKE0DpNOCSaTTEV7Pheew1y1PtCrNKkxrryF8pfwdsd4pdolS9CqEwYLL5mxttFSgzE0vO5/eglPQeBlHNkJNAwenOUFeOmqQdJdys2SmqTrTNf27kqmuLyviu43YC31H0BICphvOufuOcqbgkrBmx5+K9I84XwKj1RMgDrLqV+2Ps3g+YKB1gZKgFSw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fa0JrSzrIWObI+M3MwG4/GbDzXhyXZdAEdLKKyybH2Q=;
- b=PmPzzvK/p5Uh/xliv24cjTM87dU378bz7bnPkhaWWpAOrwwcpZpScyS0DhbBR/sRMTaTPSi/xUmCmfvObf7LEvLBkFxn43V3bv2A8e51pH9UEj7INBtPSfggM1YBFMTEpOBgGhI65TSIn9PPusAmcH7ZBrY/nERq7i8cmZjswAI=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from AM6PR04MB4838.eurprd04.prod.outlook.com (2603:10a6:20b:4::16)
- by GV1PR04MB9184.eurprd04.prod.outlook.com (2603:10a6:150:28::14) with
+ bh=gjyaxVsTLBhP//KKYCPbJ27HdfiX3W3zpkxt1SQlsZc=;
+ b=xhDGzLyodC7uh79AeF2h+WHQVh3bQTWuQ1kZpaOQyV2bWbT10OZhRuVbhdDn9p6eVTnQNgr8eXg7RRwKY3/QN2GMXy2b4zc/kYk/fzU2cORUdrru+uBmhTDK4lTSBnfg2P/UvLz8VJ8otY93VXneS5BppZ1b6Fo5UdLXRELpdtQ=
+Received: from BL1PR13CA0151.namprd13.prod.outlook.com (2603:10b6:208:2bd::6)
+ by SJ0PR12MB5610.namprd12.prod.outlook.com (2603:10b6:a03:423::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.21; Fri, 15 Sep
- 2023 18:43:28 +0000
-Received: from AM6PR04MB4838.eurprd04.prod.outlook.com
- ([fe80::aa90:117d:c1d0:346a]) by AM6PR04MB4838.eurprd04.prod.outlook.com
- ([fe80::aa90:117d:c1d0:346a%3]) with mapi id 15.20.6792.020; Fri, 15 Sep 2023
- 18:43:27 +0000
-From:   Frank Li <Frank.Li@nxp.com>
-To:     Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linuxppc-dev@lists.ozlabs.org (open list:PCI DRIVER FOR FREESCALE
-        LAYERSCAPE),
-        linux-pci@vger.kernel.org (open list:PCI DRIVER FOR FREESCALE
-        LAYERSCAPE),
-        linux-arm-kernel@lists.infradead.org (moderated list:PCI DRIVER FOR
-        FREESCALE LAYERSCAPE), linux-kernel@vger.kernel.org (open list)
-Cc:     imx@lists.linux.dev
-Subject: [PATCH 1/3] PCI: layerscape: add function pointer for exit_from_l2()
-Date:   Fri, 15 Sep 2023 14:43:04 -0400
-Message-Id: <20230915184306.2374670-1-Frank.Li@nxp.com>
-X-Mailer: git-send-email 2.34.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR03CA0186.namprd03.prod.outlook.com
- (2603:10b6:a03:2ef::11) To AM6PR04MB4838.eurprd04.prod.outlook.com
- (2603:10a6:20b:4::16)
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.19; Fri, 15 Sep
+ 2023 18:59:09 +0000
+Received: from BL02EPF0001A0F9.namprd03.prod.outlook.com
+ (2603:10b6:208:2bd:cafe::8c) by BL1PR13CA0151.outlook.office365.com
+ (2603:10b6:208:2bd::6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.22 via Frontend
+ Transport; Fri, 15 Sep 2023 18:59:08 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
+Received: from SATLEXMB03.amd.com (165.204.84.17) by
+ BL02EPF0001A0F9.mail.protection.outlook.com (10.167.242.100) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6792.19 via Frontend Transport; Fri, 15 Sep 2023 18:59:08 +0000
+Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Fri, 15 Sep
+ 2023 13:59:08 -0500
+Received: from xsjlizhih40.xilinx.com (10.180.168.240) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.27 via Frontend
+ Transport; Fri, 15 Sep 2023 13:59:07 -0500
+From:   Lizhi Hou <lizhi.hou@amd.com>
+To:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <herve.codina@bootlin.com>,
+        <Jonathan.Cameron@Huawei.com>
+CC:     Lizhi Hou <lizhi.hou@amd.com>, <bhelgaas@google.com>,
+        <robh@kernel.org>
+Subject: [PATCH 1/2] PCI: of: Fix memory leak when of_changeset_create_node() failed
+Date:   Fri, 15 Sep 2023 11:08:06 -0700
+Message-ID: <1694801287-17217-1-git-send-email-lizhi.hou@amd.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: AM6PR04MB4838:EE_|GV1PR04MB9184:EE_
-X-MS-Office365-Filtering-Correlation-Id: d87edcb0-45e6-48d9-c32f-08dbb61ba657
+X-MS-TrafficTypeDiagnostic: BL02EPF0001A0F9:EE_|SJ0PR12MB5610:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9dad24ac-d755-4ca9-f7fb-08dbb61dd782
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: xQJgz11ms0ET0a/a5/+B21+ko6ahYCMjdpO6k9+CjPwYG1F4RMx0b+IdYIx7ewKlY8eBjihH+84E5TyAmDmZlHQ1xgF6ii2/KPKBrf3BVzvJpAmfJePOwxh+tnTH2ArBCW2trZBU8YRNGn8B6VdLfZxayGYboK/OG/2WTf6LWJJ7NIcO751dPbS7Mblaw6AWTYx4KaH/vKCIyQWkmOc/W/fceHNtCLYXqCFZvjTYJL5BIG1ETiCnX5nqZzoeY4WSVSNNG5WBJYcZHpPgCH0riBpE/PScYkD1fEiJ6qeRUYSrAfCp+TzIv1v7VCKvQ7EvfJw4STk5FrNtVwibmLS0m4yQ3YQvUcgKiP/1HMGBcJWEcL2iv/mBOJVxyH9BYuh6EEwgPI8U5Jw15p6Um4YCk7R0GPDBjFnpuDtgwskMQh+Xfuu+FcUzHbn98NjaOc930tob79OkekFTZ/MLIRD490CizKBP90tsn2+N7spi8u0n/IkjeZ4L9Ld+KoKbUvZaJ+DzX/Fd3jPubDLHyno/YPvEw6uP30lZ86bJQG4jqu0MlzMRS4t29DKBgRgtC0tyFEMiOAKtkyDbPXEYSeGbYOiNNReWQ1da9dSFxMJlg6i5w1qTRWWJ8Zrh4U76irEpeFxTNSrBg8VKnAS0Gzrd6Q==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM6PR04MB4838.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(39860400002)(136003)(376002)(366004)(396003)(451199024)(1800799009)(186009)(478600001)(6512007)(6506007)(6486002)(6666004)(52116002)(2906002)(4326008)(86362001)(8676002)(5660300002)(8936002)(41300700001)(316002)(110136005)(66476007)(66946007)(66556008)(38350700002)(1076003)(2616005)(26005)(921005)(36756003)(83380400001)(38100700002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?zqxivQnPFaQ6+A2jiF0kKNL7NpgqRKPsbr/YDXPCD0UmRTP/J46Zt9DtOdaq?=
- =?us-ascii?Q?yUNj4k7xBBKMjie0isGbgmI28V+pWD5dvDFyRvSZSrswNcfP9lhEd5BUicJQ?=
- =?us-ascii?Q?7XQO+pp7EamoR1LO928lvVAYqA+LYY2OHg02VNn3aGOSMRU6Hx3OqtLiDTeD?=
- =?us-ascii?Q?9My3UpSEpyebWwatj2nf2T+uYKBfiNrwCOIMmKw/qBlX+BlepaSnq6bOILJI?=
- =?us-ascii?Q?Zphp75eOV8e21OLNF6vEEIH5nAVt3+LNykVBSSs2uTRxC/fxbtr6Q+3qeBLV?=
- =?us-ascii?Q?6jmY72UbOWzGQb8BCD1qNqNuEWR58cqy/rJqR65kqiN3mvRi9zGP6q72cuIC?=
- =?us-ascii?Q?dPEs1hO/a9RYiIeaG4gXNHwfhgnHZNIOozuc6frbWZm/CXtYo/5K45gaujKb?=
- =?us-ascii?Q?CoLkzbBJTxzEdMtVAh8mwLlNZQt5K4S5V3D3pJJoq+YHU4NRrUvqoyw29VLe?=
- =?us-ascii?Q?ogK7gdz0hjlynp7YXWUlFNQLUnU9xmKpJlVzKolJrPAMfgQu8M6IfNX4XyD3?=
- =?us-ascii?Q?5GlGkCGGJ3locK6diKizgN/pAnSniOTeo+KWfy0nYGM3SZy2yGkoYwzHvYOP?=
- =?us-ascii?Q?ueVukBW0+abjPcXqsdr5KvD6OnxJLz6UU+2ZQj03XM/oe8LmgbdwkXPo4o3W?=
- =?us-ascii?Q?dk1l3cQ2PCyV9TZmXfhtiA5s5mebpoX9p0XTTcs6aPJctp53gN56FbvZETqZ?=
- =?us-ascii?Q?n+h0HmOpPQKPCirTqdafEwtejoWKabP5SSBSM3D9PDpECz7Kiq7y58UZx7ym?=
- =?us-ascii?Q?U/cycbzabhLvtUWxH2AEY71U2Ms68vMgWRYmfTG9iueaLfOyma7yaTSN+9aE?=
- =?us-ascii?Q?IVVuNYtjgssHpr8Rt8CcOm9HKziH9mOGRAg0uQ5PBPCSzTxz+miacfGycad4?=
- =?us-ascii?Q?5UMwjoFI8T4elQv1/3Eq8jwS3XLmg1b8Yl6GOTOw2i7Wj3MdHzIcEfrYLQ8G?=
- =?us-ascii?Q?2XqOGtDZkpdqTqY3AyTAQoTZt69kQxY/LqdmRnjje3bUxVVhuGRRgNTKZe9/?=
- =?us-ascii?Q?ngzoc/ZvRO/NSwMjPkASWyLZJnaQiFlZrZPZzAmFGnyxpVe1DRkhU06TwXL7?=
- =?us-ascii?Q?0kYaV3qzC3mPR558G1SE318+a/PHZsa1EwWMNM/4+M5pAPTrHT8VKygtp4Sh?=
- =?us-ascii?Q?kBaHIinlR3YW3lNR32xQQ3rmbnoflCoPLy/Ah0WESzkiDynAv1Ybs0VX5gbB?=
- =?us-ascii?Q?xo/t3jSnODbHyH/+w36+14Ol35OLAJXHypiNmB1jSaot9TUTauvMD8MecEas?=
- =?us-ascii?Q?xwmbvmkIB4NvdXsZVuksHA7TiVlKRNhxHC02LKYaqlTEY1uqdVGXxFlwLMvc?=
- =?us-ascii?Q?uxe+28GcYHMPE6WIpTt3Hp3FYyC8rL5b//7eHaD/iBpdbIp0mKEkiyGjL1/U?=
- =?us-ascii?Q?V+qEarBnDIUnXZDZHbonVt99OzDLFgeO+hty/3FifkeLJmax0ePug+neekRF?=
- =?us-ascii?Q?PB8L6NDw7gTRB8lIiC8PhhKtmbtZL4lyBJTDKHFcSo7aNY+KOgiuExo2O7pB?=
- =?us-ascii?Q?/iK1Uu0rwgptdXRSJoSHrGZ9+9zsDEAlAcGewEeoTZaNsY+iyKA4wn+1vKne?=
- =?us-ascii?Q?5Bz8zh95ppR13Cws3glrmovcoPvGVYNNXKSn30AD?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d87edcb0-45e6-48d9-c32f-08dbb61ba657
-X-MS-Exchange-CrossTenant-AuthSource: AM6PR04MB4838.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2023 18:43:27.6351
+X-Microsoft-Antispam-Message-Info: emtoL4aaGJ/LY+LTUjwq1FdGkKDazvmqrACL3+9X5RjHvKV4bSoVanYQwW8w+kolpkK+mo+tZ2sOnoNOnvNLn9anGvkL39FzOIGIPKxRX12Fpjv3mL884ra/0NVocMRTcGL9NX9x6YvIN2x29VisIDrcqseS1QxHdZG35E1fA6ZdjSm3qMQAC3Q+v+P5gljeCk5eT4/v3tl2G8wRuTvKmvzMpL+g6+QWC5LU/Vq455MWhNoOUMNfggll69/iEm3Ml77UMB/K49Bi4pIoQBoFyzkYy9xO80USLjdK9QaXZ7+pkNXEMIlwB+BlQweUjZK+IuAhrbSCh6nwB57GzOCJN5OPSn3cV0M41nh71vnJtqy2qbShIcWd2CSgN2bERsE3e34r9bSXBWiF63lPcgTaY9usiVXMDxqWvd0A8JhyDPC/00D6crul4j7De6R3iIPBnzfyxydr5cc//CQ0DVP/B6NvuvlUnBM4BtV1P2rfiwlxzgRYhUunFmQ5TtfiJVT66xiBTrohFdgssGuYjcOh551eUGknbajz0a1g4Ernfg4V6V+7Rv0JJa0RGmX5kVJRlnWKYXkWh+AbshmRtwFvKTbqURkWT2O4esBNvdoEVsy1r+PpUwZ3Cxd9nj0wzODO2z8FIk49Hi3uz9P/AwAGkqZJ2+17EZmv+Rw1LMGxhTXeQKrUN23MgGq6abKVK4Dl1t5s+C0z3G4W3pjLP09chcChss6WXZap4792HCvLESl+1hXV3POBMfk9f77BGWCbgcH7OgHZK/GRkGOpvb4SgQ==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(376002)(346002)(136003)(39860400002)(396003)(1800799009)(451199024)(186009)(82310400011)(46966006)(36840700001)(40470700004)(40460700003)(36860700001)(2906002)(47076005)(36756003)(86362001)(356005)(81166007)(4326008)(8676002)(40480700001)(8936002)(2616005)(5660300002)(26005)(70206006)(70586007)(110136005)(54906003)(316002)(426003)(41300700001)(82740400003)(336012)(966005)(478600001)(83380400001)(44832011)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2023 18:59:08.8579
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: NpogN6G/T+EQPwiVETH42g+cXHPXNssHdf9FBZPr37tEU0D/Sqk6HMhMY8vQC9u2uf68nS2zGK9R6/IcUjWjWA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: GV1PR04MB9184
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9dad24ac-d755-4ca9-f7fb-08dbb61dd782
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BL02EPF0001A0F9.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB5610
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Difference layerscape chip have not difference exit_from_l2() method.
-Using function pointer for ls1028. It prepare for other layerscape
-suspend/resume support.
+Destroy and free cset when failure happens.
 
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
+Fixes: 407d1a51921e ("PCI: Create device tree node for bridge")
+Reported-by: Herve Codina <herve.codina@bootlin.com>
+Closes: https://lore.kernel.org/all/20230911171319.495bb837@bootlin.com/
+Signed-off-by: Lizhi Hou <lizhi.hou@amd.com>
 ---
- drivers/pci/controller/dwc/pci-layerscape.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/pci/of.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-index b931d597656f6..20c48c06e2248 100644
---- a/drivers/pci/controller/dwc/pci-layerscape.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape.c
-@@ -39,6 +39,8 @@
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 2af64bcb7da3..498b5cae8bca 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -657,30 +657,33 @@ void of_pci_make_dev_node(struct pci_dev *pdev)
  
- struct ls_pcie_drvdata {
- 	const u32 pf_off;
-+	const struct dw_pcie_host_ops *ops;
-+	void (*exit_from_l2)(struct dw_pcie_rp *pp);
- 	bool pm_support;
- };
+ 	cset = kmalloc(sizeof(*cset), GFP_KERNEL);
+ 	if (!cset)
+-		goto failed;
++		goto failed_alloc_cset;
+ 	of_changeset_init(cset);
  
-@@ -180,6 +182,7 @@ static const struct ls_pcie_drvdata ls1021a_drvdata = {
- static const struct ls_pcie_drvdata layerscape_drvdata = {
- 	.pf_off = 0xc0000,
- 	.pm_support = true,
-+	.exit_from_l2 = ls_pcie_exit_from_l2,
- };
+ 	np = of_changeset_create_node(cset, ppnode, name);
+ 	if (!np)
+-		goto failed;
+-	np->data = cset;
++		goto failed_create_node;
  
- static const struct of_device_id ls_pcie_of_match[] = {
-@@ -213,7 +216,7 @@ static int ls_pcie_probe(struct platform_device *pdev)
- 	pcie->drvdata = of_device_get_match_data(dev);
+ 	ret = of_pci_add_properties(pdev, cset, np);
+ 	if (ret)
+-		goto failed;
++		goto failed_add_prop;
  
- 	pci->dev = dev;
--	pci->pp.ops = &ls_pcie_host_ops;
-+	pci->pp.ops = pcie->drvdata->ops ? pcie->drvdata->ops : &ls_pcie_host_ops;
+ 	ret = of_changeset_apply(cset);
+ 	if (ret)
+-		goto failed;
++		goto failed_add_prop;
  
- 	pcie->pci = pci;
++	np->data = cset;
+ 	pdev->dev.of_node = np;
+ 	kfree(name);
  
-@@ -251,7 +254,7 @@ static int ls_pcie_resume_noirq(struct device *dev)
- 	if (!pcie->drvdata->pm_support)
- 		return 0;
+ 	return;
  
--	ls_pcie_exit_from_l2(&pcie->pci->pp);
-+	pcie->drvdata->exit_from_l2(&pcie->pci->pp);
- 
- 	return dw_pcie_resume_noirq(pcie->pci);
+-failed:
+-	if (np)
+-		of_node_put(np);
++failed_add_prop:
++	of_node_put(np);
++failed_create_node:
++	of_changeset_destroy(cset);
++	kfree(cset);
++failed_alloc_cset:
+ 	kfree(name);
  }
+ #endif
 -- 
 2.34.1
 
