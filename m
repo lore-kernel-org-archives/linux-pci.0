@@ -2,187 +2,168 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C08EE021A
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 03:28:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B09BEEAA42
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 03:47:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230497AbjIOD2a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Sep 2023 23:28:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44060 "EHLO
+        id S231214AbjIODrw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Sep 2023 23:47:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231571AbjIOD2a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2023 23:28:30 -0400
-X-Greylist: delayed 355 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 14 Sep 2023 20:28:25 PDT
-Received: from sphereful.davidgow.net (sphereful.davidgow.net [203.29.242.92])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39EF11FCE;
-        Thu, 14 Sep 2023 20:28:24 -0700 (PDT)
-Received: by sphereful.davidgow.net (Postfix, from userid 119)
-        id 10F751D57FC; Fri, 15 Sep 2023 11:22:21 +0800 (AWST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
-        s=201606; t=1694748141;
-        bh=yXQyOokVKuRuBBGZrk5jYZQNuKOW+gvtulUP9frgc30=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=rAI9KNCTGOfH9Y/6xji5DOjHpGEGwwZ+ZnUriMWVeYVdctJXRs0SEDiLErZwyrw2D
-         mSPmK7tD54B8o3crc7Uel+uImTo4ScMn9GghjOVC7jKoLuqhNFVAGL9/iH+2AjAiHY
-         aGfw2Bz619HInRZ9LTtJb681AdWHos5CeBTgGMJT/cAn8zlLAL0vmi/lvrCgHrmvI5
-         vgPwTCwF002HsirhkGiWmvl2ZokYG0yp0tmgDAQgLx08JNJH1I4bI+t23CjGUuazXb
-         ZQNLMzMB+5C2fc5/kUHPkMUb/1qGOh6QqBddgHHhjeuxUpRedq0ewWiiM4lrqS8jky
-         8uEYO77qqz97GcXIv9QUuPzi1D4bVCSZWzPP7g6nFQqFTV1+Av2nlr6Ead/6R86r+4
-         Nk0JRs2mBPlz6UeBrsDkKAleiiaiX2VQSR96eokzeZ26KR2WCXi/EWU501AaDGnrSR
-         oZTtJDS2nfn73LayND+owWa6tmfaAg4fS+HVWb31LoBfywRaE80ZpJHf0iRC7zr3/t
-         nyuzl1jP5Xc3bRIVByQGsD5t4IdQpWAAnD7xSZugAEuqVtyPewWfgXReG4RJCWvv0Q
-         McBxOXcK4xAzmue/0V5KFfhgstI5jyT91VLT3WGDzmjKYWxkq1DW3Q2xO9KJeuwGFO
-         5vLcRG+EhU9Pb5+yP1mMjcN8=
-Received: from [IPV6:2001:8003:8824:9e00::bec] (unknown [IPv6:2001:8003:8824:9e00::bec])
-        by sphereful.davidgow.net (Postfix) with ESMTPSA id 573341D57F7;
-        Fri, 15 Sep 2023 11:22:19 +0800 (AWST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=davidgow.net;
-        s=201606; t=1694748139;
-        bh=yXQyOokVKuRuBBGZrk5jYZQNuKOW+gvtulUP9frgc30=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=FT+c/0nqvmmJ8ErjgrsLbfav1tec05UdP3xK4Pvl4IDdhNFHWnqdOMMiKVwE2a/6q
-         0gzNpznDu0czUXO9709+kdU0dJlEPQFGhFt3coVTkhsmlHnOl1SBNu2RGVnMYt0gyg
-         NouksuUX6OEKW1uRbFrpUJMdTyM94q84t3m6BTH2zpkoBt1qkuXkQs7ELsyxoFVG9q
-         EOlDdN6BmyqhcAXxNeHTULTq9ednE/5dH6M2X5m07JRYEflxGfB4CEz5/KSjdWpdh6
-         JOFJZ9ptoJ5ugjymetQ/5b7WFkOp7ULrwNAfVya4DO4g4M++VEpKeXf9FQoDsGUD1+
-         tyGBgmk3qlaJjiv3kS+maOTnE9s/Ok5hd4SGYGQ06dwSPX3u4/+Vkl36zOQoAxHHE/
-         Wx44cg97pDuj3VECDJFUqntpgwKKwlSXQ17fVDRWGXm39mG2KGA/+eKKgo3nCi7soz
-         0lBVQ51ROAz8zIOZRLiVoLBAqWFOcw7RX8y72LyjjZSQtzuiR716/ybba7/S1jbl7k
-         hpxsYNjHSNWoenDDnsArDnHnTFDaySmaVAfu+6ZZR0Js6VoR8UyG1vd6Tv3GW1udIi
-         4qwg2zV5DFRiM23LeJjRu4I9h1evATV/4/yHeDmf9qqAAw4BKSenvA4Znagx7WE/DW
-         awbxQbN5I0CRTF47i5YiUT0c=
-Message-ID: <59f6ff78-6b45-465a-bd41-28c7a5d10931@davidgow.net>
-Date:   Fri, 15 Sep 2023 11:22:14 +0800
+        with ESMTP id S229554AbjIODrw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Sep 2023 23:47:52 -0400
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1nam02on2056.outbound.protection.outlook.com [40.107.96.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0D33196
+        for <linux-pci@vger.kernel.org>; Thu, 14 Sep 2023 20:47:47 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MHDIxR/is2ywHVpSv+uqdMVu4kochE7whtRXOZn9aH1LEP7zuk+7OIU9Aqmtcc80MszC5fRUYqya+u3v3CrwJV3c1G9mp4z7UTNcuQCwPBFqUKJ1Cz0wUYjCsy46dbX9cwK//fV+hZjqKan48RznFZ/WK+SD9xMq7tg1funrIZboEY6bk0VJqyIk95+opaeKmwrwQUwqCN5r+VtHAyJHxpyITp/n0VT04zxvA0ThVzxVBgkYZFjokJxIVrI+gtomUNQVGTrDynUSRif/NV0z970qFcJBtyftoXpdRvlCHvQYdbR3OuT6o2w+6CvFcGS826r1ify3HiaEKe3P/eEXZA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=uqdJuUN0VqGMZKVTXGiGK3lTEcnil+hjRKAv67BR8KM=;
+ b=EzIVA4WxwjjqwyDawroXnBvRCbn1r09SJTkIohlA2Jo6Etmpj/7R2wEr1tD3U/x8Sj5ekSlm40JWJu5CXgTXA6StlisIZP2ICwh5BJcE1qsu7/kITxQ3TDeXqHivGpAe12qugsJF8dGN9A/YHvkPpVCs07ovk6AlkRqVdPXFD6BryLG7TM87Wjh1bGNx70ewPluXWySpaEZ/yEWmRgPBpmYtFXtzHtg4SgDLj5x0MZSoh4lL2Yo05SxLlQnWExbNvH8wMpKGOpKEoAuHO9tFtHtlH6qjWNxygonEFbxRDGnvKtJ+r3KbEr1lB3WW9Bdw94Nmd75H2opMJR6iRsOOWA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=uqdJuUN0VqGMZKVTXGiGK3lTEcnil+hjRKAv67BR8KM=;
+ b=cEnXUdpIKbX0Lvri1XV6BFlwfVqcCxeCLSg8+fCgwr810Hf+HDul0Tbi+72iA33GdxGwpedGQvPZXfLB5nenbTz0KV4sXMfcG7VPnT/wd/pGq5wjsL2IV+mMYKzjfAw+Jz3iaQEHyvqSwMywz/1puG/hzoOKlkAjgPwaD8qaKjU=
+Received: from BL6PEPF0001641D.NAMP222.PROD.OUTLOOK.COM
+ (2603:10b6:22e:400:0:1004:0:12) by DS0PR12MB8220.namprd12.prod.outlook.com
+ (2603:10b6:8:f5::12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.19; Fri, 15 Sep
+ 2023 03:47:45 +0000
+Received: from MN1PEPF0000ECD8.namprd02.prod.outlook.com
+ (2a01:111:f403:f902::2) by BL6PEPF0001641D.outlook.office365.com
+ (2603:1036:903:4::a) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.21 via Frontend
+ Transport; Fri, 15 Sep 2023 03:47:45 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ MN1PEPF0000ECD8.mail.protection.outlook.com (10.167.242.137) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6792.20 via Frontend Transport; Fri, 15 Sep 2023 03:47:45 +0000
+Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Thu, 14 Sep
+ 2023 22:47:40 -0500
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+CC:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        <iain@orangesquash.org.uk>,
+        Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH v19 0/2] Add quirk for PCIe root port on AMD systems
+Date:   Thu, 14 Sep 2023 21:33:52 -0500
+Message-ID: <20230915023354.939-1-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Fwd: Kernel 6.5.2 Causes Marvell Technology Group 88SE9128 PCIe
- SATA to Constantly Reset
-Content-Language: fr
-To:     Niklas Cassel <Niklas.Cassel@wdc.com>,
-        Bagas Sanjaya <bagasdotme@gmail.com>
-Cc:     Damien Le Moal <dlemoal@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        patenteng <dimitar@daskalov.co.uk>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Regressions <regressions@lists.linux.dev>,
-        Linux IDE and libata <linux-ide@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-References: <dacb34e4-ce58-bc0e-8206-672d743a3e34@gmail.com>
- <ZQHRQHAPQdG+Nu1o@x1-carbon>
-From:   David Gow <david@davidgow.net>
-In-Reply-To: <ZQHRQHAPQdG+Nu1o@x1-carbon>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN1PEPF0000ECD8:EE_|DS0PR12MB8220:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8cdae6ee-4450-4bc9-618f-08dbb59e8587
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: AGftj2lqIlQjjGdPJk61DxUH7LpaXO/GHsozsS+9e0vRuBvSiWIViuvhzvSg6Tf+YzV0JJuLrIOxCHuxg/DjqHg64uEym6uRRKSSn+XpwqS79ii4NVNtg4XkBkGGVbpxhZ+w9+HPI77U/Ssp78wReBJzDDjf0J3HE9pTfGjn5yqVrqO3f1vS/q4ZeEDX26tEPzorgyhvtUQ81xq6EnZTuYSs5Y205KcD0WvZYNr15Onet0lNEeaI1EsyXPjU8UEUWuqc2d2dPsufaOAW+2O/2A7RIcRzqq3blP1oKLFE0mauBW7eBQuo9e8+4E9ix5KmdJu0i9dyBfu20VOIriLUUSdRxMbmSQd85FsNH75EkeOxb0ccqoG6tnbSQioPdfwF82dCHAaPglu1SUE/cB2PbZHCFqHxp4fy4t70/Ux9qWIrERZmKDJwQGkvHJ/2O3y2MX4hup/6BZfLBFmXBLKmY1hymVyTmiWClwLAFbbZ64fEfy9fut6BiS5HXTltoduJezuz/oeW+/gytNwdblUIDbct6Kyy6y4x4zdjD3wDekSaCv+iXveqfBmp65uyJvQW5VXXKaoc4EqGnlkjQ4JC3Tl8wF2PpuMRc0kHd7XBHGLHG0GKdnXaSwdCpk7vD49m4+y20jI87+QOYCPPy85aLzCnYvKEgZcoz/z2B/C5ANOr2PUMrkwhCQH2NKMO5499AQiTiTv+qnnNMfBgK3Eso2imr3+Syf3vFMWANUROvInHnGyDV0gYBeOq+ME11QWojYOc6fuj2G1oEo2lQHkAHGyq0eu0liUBW1K08HhAa1Q=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(376002)(346002)(136003)(39860400002)(396003)(186009)(1800799009)(451199024)(82310400011)(36840700001)(40470700004)(46966006)(40480700001)(41300700001)(4326008)(8936002)(8676002)(54906003)(316002)(70586007)(70206006)(110136005)(2906002)(40460700003)(5660300002)(44832011)(2616005)(36860700001)(426003)(47076005)(336012)(1076003)(83380400001)(26005)(16526019)(81166007)(86362001)(356005)(6666004)(36756003)(82740400003)(7696005)(478600001)(966005)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Sep 2023 03:47:45.2290
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8cdae6ee-4450-4bc9-618f-08dbb59e8587
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: MN1PEPF0000ECD8.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8220
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Le 2023/09/13 à 23:12, Niklas Cassel a écrit :
-> On Wed, Sep 13, 2023 at 06:25:31PM +0700, Bagas Sanjaya wrote:
->> Hi,
->>
->> I notice a regression report on Bugzilla [1]. Quoting from it:
->>
->>> After upgrading to 6.5.2 from 6.4.12 I keep getting the following kernel messages around three times per second:
->>>
->>> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>> [ 9683.270399] ata16.00: configured for UDMA/66
->>>
->>> So I've tracked the offending device:
->>>
->>> ll /sys/class/ata_port/ata16
->>> lrwxrwxrwx 1 root root 0 Sep 10 21:51 /sys/class/ata_port/ata16 -> ../../devices/pci0000:00/0000:00:1c.7/0000:0a:00.0/ata16/ata_port/ata16
->>>
->>> cat /sys/bus/pci/devices/0000:0a:00.0/uevent
->>> DRIVER=ahci
->>> PCI_CLASS=10601
->>> PCI_ID=1B4B:9130
->>> PCI_SUBSYS_ID=1043:8438
->>> PCI_SLOT_NAME=0000:0a:00.0
->>> MODALIAS=pci:v00001B4Bd00009130sv00001043sd00008438bc01sc06i01
->>>
->>> lspci | grep 0a:00.0
->>> 0a:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9128 PCIe SATA 6 Gb/s RAID controller with HyperDuo (rev 11)
->>>
->>> I am not using the 88SE9128, so I have no way of knowing whether it works or not. It may simply be getting reset a couple of times per second or it may not function at all.
->>
->> See Bugzilla for the full thread.
->>
->> patenteng: I have asked you to bisect this regression. Any conclusion?
->>
->> Anyway, I'm adding this regression to regzbot:
->>
->> #regzbot: introduced: v6.4..v6.5 https://bugzilla.kernel.org/show_bug.cgi?id=217902
-> 
-> Hello Bagas, patenteng,
-> 
-> 
-> FYI, the prints:
-> [ 9683.269830] ata16: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [ 9683.270399] ata16.00: configured for UDMA/66
-> 
-> Just show that ATA error handler has been invoked.
-> There was no reset performed.
-> 
-> If there was a reset, you would have seen something like:
-> [    1.441326] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [    1.541250] ata8.00: configured for UDMA/133
-> [    1.541411] ata8: hard resetting link
-> 
-> 
-> Could you please try this patch and see if it improves things for you:
-> https://lore.kernel.org/linux-ide/20230913150443.1200790-1-nks@flawful.org/T/#u
-> 
+Iain reports that USB devices can't be used to wake a Lenovo Z13
+from suspend. This is because the PCIe root port has been put
+into D3hot and AMD's platform can't handle USB devices waking the
+platform from a hardware sleep state in this case.
 
-FWIW, I'm seeing a very similar issue both in 6.5.2 and in git master 
-[aed8aee11130 ("Merge tag 'pmdomain-v6.6-rc1' of 
-git://git.kernel.org/pub/scm/linux/kernel/git/ulfh/linux-pm") with that 
-patch applied.
+The firmware doesn't express this limitation in a way that Linux
+recognizes so this series introduces a quirk for this problem.
 
+Previous submissions:
+* v18
+  https://lore.kernel.org/linux-usb/20230913040832.114610-1-mario.limonciello@amd.com/T/#m92a2654129d5f6be5439d8a94fb36734804763c1
+* v17
+  https://lore.kernel.org/platform-driver-x86/20230906184354.45846-1-mario.limonciello@amd.com/
+  This version implemented constraints for the amd-pmc driver and introduced
+  a veto/optin system for the PCI core as suggested by Hans.
+  Rafael suggested not to use the veto/optin system and instead use a quirk.
+* v16
+  https://lore.kernel.org/platform-driver-x86/20230829171212.156688-1-mario.limonciello@amd.com/
+  This version implemented constraints for the amd-pmc driver.
+* v15
+  https://lore.kernel.org/platform-driver-x86/20230828042819.47013-1-mario.limonciello@amd.com/#t
+  This version hardcoded the quirk into amd-pmc driver as part of suspend
+  callback.
+* v14
+  https://lore.kernel.org/linux-pci/20230818193932.27187-1-mario.limonciello@amd.com/
+  https://lore.kernel.org/linux-pci/20230818194007.27410-1-mario.limonciello@amd.com/
+  https://lore.kernel.org/linux-pci/20230818194027.27559-1-mario.limonciello@amd.com/
+  This version implemented constraints exporting and limited the policy for
+  >= 2015 to Intel only. It also added support for constraints optin.
+  V13 was split into multiple parts to make it easier to land. 14.b was
+  merged.
+* v13
+  https://lore.kernel.org/linux-pci/20230818051319.551-1-mario.limonciello@amd.com/
+* v12
+  https://lore.kernel.org/linux-pci/20230816204143.66281-1-mario.limonciello@amd.com/
+* v11
+  https://lore.kernel.org/linux-pci/20230809185453.40916-1-mario.limonciello@amd.com/
+* v10
+  https://lore.kernel.org/linux-pci/20230804210129.5356-1-mario.limonciello@amd.com/
+* v9
+  https://lore.kernel.org/linux-pci/20230804010229.3664-1-mario.limonciello@amd.com/
+* v8
+  https://lore.kernel.org/linux-pci/20230802201013.910-1-mario.limonciello@amd.com/
+* v7
+  https://lore.kernel.org/linux-pci/20230711005325.1499-1-mario.limonciello@amd.com/
+* v6
+  https://lore.kernel.org/linux-pci/20230708214457.1229-1-mario.limonciello@amd.com/
+* v5
+  https://lore.kernel.org/linux-pci/20230530163947.230418-1-mario.limonciello@amd.com/
+* v4
+  https://lore.kernel.org/linux-pci/20230524190726.17012-1-mario.limonciello@amd.com/
+* v3
+  https://lore.kernel.org/linux-pci/20230524152136.1033-1-mario.limonciello@amd.com/
+* v2
+  https://lore.kernel.org/linux-pci/20230517150827.89819-1-mario.limonciello@amd.com/
+* v1
+  https://lore.kernel.org/linux-pci/20230515231515.1440-1-mario.limonciello@amd.com/
 
-The log is similar (the last two lines repeat several times a second):
-[    0.369632] ata14: SATA max UDMA/133 abar m2048@0xf7c10000 port 
-0xf7c10480 irq 33
-[    0.683693] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    1.031662] ata14.00: ATAPI: MARVELL VIRTUALL, 1.09, max UDMA/66
-[    1.031852] ata14.00: configured for UDMA/66
-[    1.414145] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    1.414505] ata14.00: configured for UDMA/66
-[    1.744094] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    1.744368] ata14.00: configured for UDMA/66
-[    2.073916] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-[    2.074276] ata14.00: configured for UDMA/66
+Mario Limonciello (2):
+  PCI: Move the `PCI_CLASS_SERIAL_USB_USB4` definition to common header
+  PCI: Add a quirk for AMD PCIe root ports w/ USB4 controllers
+
+ drivers/pci/quirks.c      | 61 +++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/nhi.h |  2 --
+ include/linux/pci_ids.h   |  1 +
+ 3 files changed, 62 insertions(+), 2 deletions(-)
 
 
-lspci shows:
-09:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230 PCIe 2.0 
-x2 4-port SATA 6 Gb/s RAID Controller (rev 10) (prog-if 01 [AHCI 1.0])
-         Subsystem: Gigabyte Technology Co., Ltd Device b000
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-         Latency: 0, Cache Line Size: 64 bytes
-         Interrupt: pin A routed to IRQ 33
-         Region 0: I/O ports at b050 [size=8]
-         Region 1: I/O ports at b040 [size=4]
-         Region 2: I/O ports at b030 [size=8]
-         Region 3: I/O ports at b020 [size=4]
-         Region 4: I/O ports at b000 [size=32]
-         Region 5: Memory at f7c10000 (32-bit, non-prefetchable) [size=2K]
-         Expansion ROM at f7c00000 [disabled] [size=64K]
-         Capabilities: <access denied>
-         Kernel driver in use: ahci
+base-commit: 0bb80ecc33a8fb5a682236443c1e740d5c917d1d
+-- 
+2.34.1
 
-The controller in question lives on a Gigabyte Z87X-UD5H-CF motherboard. 
-I'm using the controller for several drives, and it's working, it's just 
-spammy. (At worst, there's some performance hitching, but that might 
-just be journald rotating logs as they fill up with the message).
-
-I haven't had a chance to bisect yet (this is a slightly awkward machine 
-for me to install test kernels on), but can also confirm it worked with 
-6.4.12.
-
-Hopefully that's useful. I'll get back to you if I manage to bisect it.
-
-Cheers,
--- David
