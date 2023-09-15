@@ -2,49 +2,49 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2F2AEED619
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8562EED61B
 	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 15:59:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236340AbjIOP6i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Sep 2023 11:58:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39436 "EHLO
+        id S236354AbjIOP6k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Sep 2023 11:58:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236307AbjIOP6T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2023 11:58:19 -0400
+        with ESMTP id S236316AbjIOP61 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2023 11:58:27 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB45210CC;
-        Fri, 15 Sep 2023 08:58:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4646610D9;
+        Fri, 15 Sep 2023 08:58:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694793494; x=1726329494;
+  t=1694793502; x=1726329502;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=NhlkmvqwXXZH4QHEWc0JDmQFQmEU6+At1abVX2qhUbE=;
-  b=gRXL6fm54nh32aZdL1QubRiPWDkaOQ+hqi23yuTTsdf8xzExkPdsDApz
-   zuRINN5802a764vd+xnsv50kfXX61a0BMCRgUZlNXBuzizNYIQUp7ijux
-   A/pHzpawDaYXxOr7dqvRKlrPY8WaoyR/dUuKMnTw5YENEuQMTF9WG+GTr
-   mMN+qK5EIyBWw2fVyEzUx5F2BhUCbPws9S4P4SFx5YYNu1dCcOV86ahtV
-   QJsI0564OpwlBxEF0JusAY2u8M95mtut48mJgWtc1IX2xmZOXq2lmG96r
-   Sl7RlvqVwzG8ol7DrCcn7u5hIzz6kDnMBRpnTG7wMyt+jqC095umbH5Jo
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10834"; a="369594644"
+  bh=NbHznSzo9cAXWJrSxFdkec/xGu/0KxsGpf1kX0P/iv0=;
+  b=NIDYjfdhtQjbYH7xdIniMywUKRIFlesNT+VfT2BCDMDTxUpTz0pc1uqJ
+   vzntkmrRFTa+r/NCZn7tFbPE2qAMk+JLeMYg5GHzrT3sJzMHzSWNBAUxU
+   qBiBXuGBXKvoC62Qm0Vz0OmAlUVkDHyOBFN1HeQCy1Ouy3xUNP4pwU9pn
+   qLlvMW/gukJ47dzaplb3eqigfSsafCQ2hSd47PsRQ743AluGsP/eFwkc+
+   keP/80xC33LXUH9zDhPc1Kh9r4Cu5zOujrsfod3UsWR2oGaqdKeW3zNGT
+   8ipk2akUh+r8/fIAm6Y3Zb4U957vqVBKzIyV9wCCMDxyPSTjq3xnVQq5f
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10834"; a="369594668"
 X-IronPort-AV: E=Sophos;i="6.02,149,1688454000"; 
-   d="scan'208";a="369594644"
+   d="scan'208";a="369594668"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2023 08:58:14 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2023 08:58:22 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10834"; a="745036699"
+X-IronPort-AV: E=McAfee;i="6600,9927,10834"; a="745036707"
 X-IronPort-AV: E=Sophos;i="6.02,149,1688454000"; 
-   d="scan'208";a="745036699"
+   d="scan'208";a="745036707"
 Received: from srdoo-mobl1.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.38.99])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2023 08:58:13 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2023 08:58:20 -0700
 From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         linux-kernel@vger.kernel.org
 Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 4/7] PCI/ASPM: Use time constants
-Date:   Fri, 15 Sep 2023 18:57:49 +0300
-Message-Id: <20230915155752.84640-5-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 7/7] PCI/ASPM: Convert printk() to pr_*() and add include
+Date:   Fri, 15 Sep 2023 18:57:52 +0300
+Message-Id: <20230915155752.84640-8-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20230915155752.84640-1-ilpo.jarvinen@linux.intel.com>
 References: <20230915155752.84640-1-ilpo.jarvinen@linux.intel.com>
@@ -55,73 +55,39 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use defined constants to convert between time units.
+Convert printk(KERN_INFO ...) to pr_info() and add the correct include
+for it.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/pcie/aspm.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/pci/pcie/aspm.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 4cd11ab27233..60135fc7281a 100644
+index fb25892d15b7..855feaefd7f4 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -21,6 +21,8 @@
+@@ -18,6 +18,7 @@
+ #include <linux/errno.h>
+ #include <linux/pm.h>
+ #include <linux/init.h>
++#include <linux/printk.h>
  #include <linux/slab.h>
- #include <linux/jiffies.h>
- #include <linux/delay.h>
-+#include <linux/time.h>
-+
- #include "../pci.h"
+ #include <linux/time.h>
  
- #ifdef MODULE_PARAM_PREFIX
-@@ -272,7 +274,7 @@ static u32 calc_l0s_latency(u32 lnkcap)
- 	u32 encoding = FIELD_GET(PCI_EXP_LNKCAP_L0SEL, lnkcap);
- 
- 	if (encoding == 0x7)
--		return (5 * 1000);	/* > 4us */
-+		return 5 * NSEC_PER_USEC;	/* > 4us */
- 	return (64 << encoding);
- }
- 
-@@ -290,8 +292,8 @@ static u32 calc_l1_latency(u32 lnkcap)
- 	u32 encoding = FIELD_GET(PCI_EXP_LNKCAP_L1EL, lnkcap);
- 
- 	if (encoding == 0x7)
--		return (65 * 1000);	/* > 64us */
--	return (1000 << encoding);
-+		return 65 * NSEC_PER_USEC;	/* > 64us */
-+	return NSEC_PER_USEC << encoding;
- }
- 
- /* Convert L1 acceptable latency encoding to ns */
-@@ -299,7 +301,7 @@ static u32 calc_l1_acceptable(u32 encoding)
- {
- 	if (encoding == 0x7)
- 		return U32_MAX;
--	return (1000 << encoding);
-+	return NSEC_PER_USEC << encoding;
- }
- 
- /* Convert L1SS T_pwr encoding to usec */
-@@ -327,7 +329,7 @@ static u32 calc_l12_pwron(struct pci_dev *pdev, u32 scale, u32 val)
-  */
- static void encode_l12_threshold(u32 threshold_us, u32 *scale, u32 *value)
- {
--	u64 threshold_ns = (u64) threshold_us * 1000;
-+	u64 threshold_ns = (u64)threshold_us * NSEC_PER_USEC;
- 
- 	/*
- 	 * LTR_L1.2_THRESHOLD_Value ("value") is a 10-bit field with max
-@@ -419,7 +421,7 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
- 		if ((link->aspm_capable & ASPM_STATE_L1) &&
- 		    (latency + l1_switch_latency > acceptable_l1))
- 			link->aspm_capable &= ~ASPM_STATE_L1;
--		l1_switch_latency += 1000;
-+		l1_switch_latency += NSEC_PER_USEC;
- 
- 		link = link->parent;
+@@ -1367,10 +1368,10 @@ static int __init pcie_aspm_disable(char *str)
+ 		aspm_policy = POLICY_DEFAULT;
+ 		aspm_disabled = 1;
+ 		aspm_support_enabled = false;
+-		printk(KERN_INFO "PCIe ASPM is disabled\n");
++		pr_info("PCIe ASPM is disabled\n");
+ 	} else if (!strcmp(str, "force")) {
+ 		aspm_force = 1;
+-		printk(KERN_INFO "PCIe ASPM is forcibly enabled\n");
++		pr_info("PCIe ASPM is forcibly enabled\n");
  	}
+ 	return 1;
+ }
 -- 
 2.30.2
 
