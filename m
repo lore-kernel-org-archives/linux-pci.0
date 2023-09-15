@@ -2,49 +2,49 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F31EED616
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 15:58:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA8E3EED60B
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Sep 2023 15:59:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236305AbjIOP6g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Sep 2023 11:58:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52998 "EHLO
+        id S236333AbjIOP6i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Sep 2023 11:58:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236237AbjIOP6L (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2023 11:58:11 -0400
+        with ESMTP id S236304AbjIOP6S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Sep 2023 11:58:18 -0400
 Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E46CE78;
-        Fri, 15 Sep 2023 08:58:07 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E2C610D9;
+        Fri, 15 Sep 2023 08:58:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694793487; x=1726329487;
+  t=1694793492; x=1726329492;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=j6SDgstlq1BV6IaLeRs7Qh9MPTgsTGm9fYKFIXYrqvw=;
-  b=cjhaxKYYeV367qEMFqa7L+W8L+73NN5NluUZLrsxa6hbc0/F+i7rYrOk
-   iPTfs9ftGw48oyuKl5VXsQnL0jmbZNkrtB4HLf2EVYRpUEjo/6/U15aBC
-   HrtuFzYmgvWgf32iYWDxT6j88xaLJ4RSkW8HOqhZVMxS4qp/vhNA0FFhn
-   bhz6RmsSKLm0i+p7cKlwqJf2wr6qsvJK1u44/MXlvOUyTrQH/8Q9+j02D
-   5JUg5dHX04LEKw5/hCeiy/sxtSvVkBm2G9RRGfzXyl0DUBuB2lt1fwm1W
-   Uvfsv8n9gcy81simQUuysrJWInlQI3g5VvuwhSbdf16T72ONs/F0JAzka
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10834"; a="369594611"
+  bh=oC+J51tGvN01jsQNJsaVvoKnBvB9vBS5Yv0KL0IOWys=;
+  b=B3kJOAr3XSyI4Wieru29LTbHaM12uI63wHR1NMFu3gOb6jJiP8jvgi5M
+   8ZvYSbjaH/LDOgcXXXz3z16/MAO6z+mOzwjQotduM+mum9HVh5LH2Zzzn
+   nmVXj8BSSqqT3N9piWadqxMEVfyjY+G24apnubCgO75XINLZ+0DIXyZRz
+   B2UyURsHYYG9EZCaKbQBDx0xqXnA1YCH2gW19kMM9lam1g85PUcfkqVZM
+   860emiZZ1YjHJ0U+Pooktw55x0EHPdiCTGuf6u/x1KYzGJEzx1jAU0cri
+   UylFAH54TitS37FaM61ljGr7VsDdEAUczlXPCr9yDMfRs8J0tmWB1Lxyy
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10834"; a="369594629"
 X-IronPort-AV: E=Sophos;i="6.02,149,1688454000"; 
-   d="scan'208";a="369594611"
+   d="scan'208";a="369594629"
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2023 08:58:06 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2023 08:58:12 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10834"; a="745036686"
+X-IronPort-AV: E=McAfee;i="6600,9927,10834"; a="745036695"
 X-IronPort-AV: E=Sophos;i="6.02,149,1688454000"; 
-   d="scan'208";a="745036686"
+   d="scan'208";a="745036695"
 Received: from srdoo-mobl1.ger.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.38.99])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2023 08:58:04 -0700
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Sep 2023 08:58:10 -0700
 From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         linux-kernel@vger.kernel.org
 Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 1/7] PCI: Add PCI_L1SS_CTL2 fields
-Date:   Fri, 15 Sep 2023 18:57:46 +0300
-Message-Id: <20230915155752.84640-2-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 3/7] PCI/ASPM: Return U32_MAX instead of bit magic construct
+Date:   Fri, 15 Sep 2023 18:57:48 +0300
+Message-Id: <20230915155752.84640-4-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20230915155752.84640-1-ilpo.jarvinen@linux.intel.com>
 References: <20230915155752.84640-1-ilpo.jarvinen@linux.intel.com>
@@ -55,26 +55,44 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add L1 PM Substates Control 2 Register fields (PCI_L1SS_CTL2_*).
+Instead of returning a bit obscure -1U, make code's intent of returning
+the maximum representable value more obvious by returning U32_MAX.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- include/uapi/linux/pci_regs.h | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/pcie/aspm.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e5f558d96493..3a7ea9581568 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1088,6 +1088,8 @@
- #define  PCI_L1SS_CTL1_LTR_L12_TH_VALUE	0x03ff0000  /* LTR_L1.2_THRESHOLD_Value */
- #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
- #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
-+#define  PCI_L1SS_CTL2_T_PWR_ON_SCALE	0x00000003  /* T_POWER_ON Scale */
-+#define  PCI_L1SS_CTL2_T_PWR_ON_VALUE	0x000000f8  /* T_POWER_ON Value */
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 06f175d8dee5..4cd11ab27233 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -9,6 +9,7 @@
  
- /* Designated Vendor-Specific (DVSEC, PCI_EXT_CAP_ID_DVSEC) */
- #define PCI_DVSEC_HEADER1		0x4 /* Designated Vendor-Specific Header1 */
+ #include <linux/bitfield.h>
+ #include <linux/kernel.h>
++#include <linux/limits.h>
+ #include <linux/math.h>
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+@@ -279,7 +280,7 @@ static u32 calc_l0s_latency(u32 lnkcap)
+ static u32 calc_l0s_acceptable(u32 encoding)
+ {
+ 	if (encoding == 0x7)
+-		return -1U;
++		return U32_MAX;
+ 	return (64 << encoding);
+ }
+ 
+@@ -297,7 +298,7 @@ static u32 calc_l1_latency(u32 lnkcap)
+ static u32 calc_l1_acceptable(u32 encoding)
+ {
+ 	if (encoding == 0x7)
+-		return -1U;
++		return U32_MAX;
+ 	return (1000 << encoding);
+ }
+ 
 -- 
 2.30.2
 
