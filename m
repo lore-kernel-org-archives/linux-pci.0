@@ -2,174 +2,81 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32608CD37B0
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Sep 2023 16:46:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5323CC46CA1
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Sep 2023 17:00:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230359AbjIRQqt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Sep 2023 12:46:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57218 "EHLO
+        id S231305AbjIRRAU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Sep 2023 13:00:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230310AbjIRQqb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2023 12:46:31 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D674A1FC9;
-        Mon, 18 Sep 2023 09:17:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695053858; x=1726589858;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=kDT+yWJAUHrBQ8ex5Uxk7tCrxharMirq80UQzoJeAvk=;
-  b=JubL0SGD129feTlxJbpEtLUy5fAs6Exf+tYTFgooSXcczDpaAndTVc2O
-   IF0Rux7dygTVLWBcC4nqidMxiFnC9c9tQTT7d/0L8LA6pH6wjY6QBCPt4
-   vfW9hx7c70IMqrxn6dvsW/jMsIbI77mMPrXEqzimjXBMRAH0wccmmY+b0
-   ljVmKf0zfF+ds94dkq8IEqhKersOT5Ic7MaP8L3ZF99+f5xWE8YLVQRQ2
-   mtUxcJiutcmG+YrkgBBt6b4bqxU2qPf0VtrarGrLJcyHzlajnCYICAAmf
-   4sOY5Oy5Ju7Rf1jzssP6IFHfna1L8EbF8G0neV4V4BgBdMppJOvGGBUfk
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="446113624"
-X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="446113624"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:13:53 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="811343130"
-X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
-   d="scan'208";a="811343130"
-Received: from nprotaso-mobl1.ccr.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.49.156])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:13:47 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linux-kernel@vger.kernel.org,
-        Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Leon Romanovsky <leon@kernel.org>, linux-rdma@vger.kernel.org
-Cc:     ath10k@lists.infradead.org, ath11k@lists.infradead.org,
-        ath12k@lists.infradead.org, intel-wired-lan@lists.osuosl.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-bluetooth@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Dean Luick <dean.luick@cornelisnetworks.com>
-Subject: [PATCH v2 12/13] RDMA/hfi1: Use pci_disable/enable_link_state()
-Date:   Mon, 18 Sep 2023 16:11:02 +0300
-Message-Id: <20230918131103.24119-13-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230918131103.24119-1-ilpo.jarvinen@linux.intel.com>
-References: <20230918131103.24119-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S231284AbjIRRAN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2023 13:00:13 -0400
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [IPv6:2a01:37:3000::53df:4ef0:0])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C037495
+        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2023 10:00:01 -0700 (PDT)
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id EF3C1280014E2;
+        Mon, 18 Sep 2023 16:26:37 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id D9E06527B26; Mon, 18 Sep 2023 16:26:37 +0200 (CEST)
+Date:   Mon, 18 Sep 2023 16:26:37 +0200
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Mario Limonciello <mario.limonciello@amd.com>
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/sysfs: Protect driver's D3cold preference from user
+ space
+Message-ID: <20230918142637.GA28754@wunner.de>
+References: <b8a7f4af2b73f6b506ad8ddee59d747cbf834606.1695025365.git.lukas@wunner.de>
+ <20230918130742.GU1599918@black.fi.intel.com>
+ <fd432ea4-247a-49ca-88e6-c9f88485eb98@amd.com>
+ <20230918132424.GA11357@wunner.de>
+ <888824f7-06b5-4df4-ac04-c6cd599ff6f7@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <888824f7-06b5-4df4-ac04-c6cd599ff6f7@amd.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-IB/hfi1 driver adjusts ASPM state itself which leaves ASPM service
-driver in PCI core unaware of the link state changes the driver
-implemented.
+On Mon, Sep 18, 2023 at 08:28:51AM -0500, Mario Limonciello wrote:
+> On 9/18/2023 08:24, Lukas Wunner wrote:
+> > On Mon, Sep 18, 2023 at 08:14:21AM -0500, Mario Limonciello wrote:
+> > > What's the history behind why userspace is allowed to opt a device out of
+> > > D3cold in the first place?
+> > > 
+> > > It feels like it should have been a debugging only thing to me.
+> > 
+> > That's a fair question.
+> > 
+> > Apparently the default for d3cold_allowed was originally "false"
+> > and user space could opt in to D3cold.  Then commit 4f9c1397e2e8
+> > ("PCI/PM: Enable D3/D3cold by default for most devices") changed
+> > the default to "true".  That was 11 years ago.
+> > 
+> > I agree that today this should all work automatically and a
+> > user space option to disable D3cold on a per-device basis only
+> > really makes sense as a debugging aid, hence belongs in debugfs.
+> > 
+> 
+> Thanks.  Then perhaps as part of moving it to debugfs it makes sense to
+> simplify the logic.
 
-Call pci_disable_link_state() and pci_enable_link_state() instead of
-adjusting ASPMC field in LNKCTL directly in the driver and let PCI core
-handle the ASPM state management. Remove the functions that handled the
-ASPM changes that are now unnecessary.
+d3cold_allowed is documented in Documentation/ABI/testing/sysfs-bus-pci,
+so it's user space ABI which we're not allowed to break.  We'd have to
+declare it deprecated, emit a warning when it's used and slowly phase
+it out over the years.
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Dean Luick <dean.luick@cornelisnetworks.com>
----
- drivers/infiniband/hw/hfi1/aspm.c | 38 +++----------------------------
- drivers/infiniband/hw/hfi1/pcie.c |  2 +-
- 2 files changed, 4 insertions(+), 36 deletions(-)
+Until then, the $SUBJECT_PATCH probably still makes sense to reinstate
+the behavior we had until 2016...
 
-diff --git a/drivers/infiniband/hw/hfi1/aspm.c b/drivers/infiniband/hw/hfi1/aspm.c
-index a3c53be4072c..8e3fc1d4c9c6 100644
---- a/drivers/infiniband/hw/hfi1/aspm.c
-+++ b/drivers/infiniband/hw/hfi1/aspm.c
-@@ -54,45 +54,13 @@ static void aspm_hw_set_l1_ent_latency(struct hfi1_devdata *dd)
- 	pci_write_config_dword(dd->pcidev, PCIE_CFG_REG_PL3, reg32);
- }
- 
--static void aspm_hw_enable_l1(struct hfi1_devdata *dd)
--{
--	struct pci_dev *parent = dd->pcidev->bus->self;
--
--	/*
--	 * If the driver does not have access to the upstream component,
--	 * it cannot support ASPM L1 at all.
--	 */
--	if (!parent)
--		return;
--
--	/* Enable ASPM L1 first in upstream component and then downstream */
--	pcie_capability_clear_and_set_word(parent, PCI_EXP_LNKCTL,
--					   PCI_EXP_LNKCTL_ASPMC,
--					   PCI_EXP_LNKCTL_ASPM_L1);
--	pcie_capability_clear_and_set_word(dd->pcidev, PCI_EXP_LNKCTL,
--					   PCI_EXP_LNKCTL_ASPMC,
--					   PCI_EXP_LNKCTL_ASPM_L1);
--}
--
--void aspm_hw_disable_l1(struct hfi1_devdata *dd)
--{
--	struct pci_dev *parent = dd->pcidev->bus->self;
--
--	/* Disable ASPM L1 first in downstream component and then upstream */
--	pcie_capability_clear_and_set_word(dd->pcidev, PCI_EXP_LNKCTL,
--					   PCI_EXP_LNKCTL_ASPMC, 0x0);
--	if (parent)
--		pcie_capability_clear_and_set_word(parent, PCI_EXP_LNKCTL,
--						   PCI_EXP_LNKCTL_ASPMC, 0x0);
--}
--
- static  void aspm_enable(struct hfi1_devdata *dd)
- {
- 	if (dd->aspm_enabled || aspm_mode == ASPM_MODE_DISABLED ||
- 	    !dd->aspm_supported)
- 		return;
- 
--	aspm_hw_enable_l1(dd);
-+	pci_enable_link_state(dd->pcidev, PCI_EXP_LNKCTL_ASPM_L1);
- 	dd->aspm_enabled = true;
- }
- 
-@@ -101,7 +69,7 @@ static  void aspm_disable(struct hfi1_devdata *dd)
- 	if (!dd->aspm_enabled || aspm_mode == ASPM_MODE_ENABLED)
- 		return;
- 
--	aspm_hw_disable_l1(dd);
-+	pci_disable_link_state(dd->pcidev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
- 	dd->aspm_enabled = false;
- }
- 
-@@ -254,7 +222,7 @@ void aspm_init(struct hfi1_devdata *dd)
- 	/* Start with ASPM disabled */
- 	aspm_hw_set_l1_ent_latency(dd);
- 	dd->aspm_enabled = false;
--	aspm_hw_disable_l1(dd);
-+	pci_disable_link_state(dd->pcidev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
- 
- 	/* Now turn on ASPM if configured */
- 	aspm_enable_all(dd);
-diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index 08732e1ac966..767f6cb770b6 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -1182,7 +1182,7 @@ int do_pcie_gen3_transition(struct hfi1_devdata *dd)
- 	 * will be enabled if required later
- 	 */
- 	dd_dev_info(dd, "%s: clearing ASPM\n", __func__);
--	aspm_hw_disable_l1(dd);
-+	pci_disable_link_state(dd->pcidev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
- 
- 	/*
- 	 * step 5f: clear DirectSpeedChange
--- 
-2.30.2
+Thanks,
 
+Lukas
