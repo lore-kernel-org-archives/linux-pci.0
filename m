@@ -2,168 +2,114 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32AD6C46CA1
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Sep 2023 15:48:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38BE9CD37B0
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Sep 2023 15:48:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229868AbjIRPsG convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Sep 2023 11:48:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39284 "EHLO
+        id S229743AbjIRPse (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Sep 2023 11:48:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229853AbjIRPsC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2023 11:48:02 -0400
-Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C05710DE;
-        Mon, 18 Sep 2023 08:45:06 -0700 (PDT)
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-59bfb0825efso40025527b3.3;
-        Mon, 18 Sep 2023 08:45:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695051730; x=1695656530;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=a+5V/p0RnqTnQDaOQcXpPM/b/+ioYkgQSZlIueT0vYQ=;
-        b=h3uFNFZSRZ79griQi4Oo3PD2ZW13S6Fc/srDus0Fp9O6ErfoCkepDQdcH4MNjedg0c
-         +Q2AQ0Pw2YMCplLCezpK0v/IiLEmbZEmEoxZ9EScko3uDfibj6A7krz3gKxpMQmqmauF
-         V6HoWScOXmrsEDdShSKvnioWy6hL84wN0t1ZGNyOSo9U/lcqz2mQIKwKvWpE/Rs+oV1e
-         J+Fsk1j/cdQE146jLcWBoV27NmoujN7uFsJiVS2ViGjbZ4uA9HC9nUeFmU3gq/rXTNss
-         AjlnHgJVn35JYj4t3KgWQKCmhipMJ3asvhK2bj4ScoX2NnmN7JZAilsMBH3K6Tk5LYlF
-         YMOQ==
-X-Gm-Message-State: AOJu0YyWHhzIeMcNtbTlmNj2ro5Wueoii0axN3Ph3HfdHm+pfski4QAL
-        HZjCPn8ovxyh2dTsW6bTutZk7oFrsnjBHg==
-X-Google-Smtp-Source: AGHT+IH4LxYttot7BaoGgMHEuQ/6w3CQ6r6Ze5e6ndPI5jLKaRvqLpS0OXqnV26zbkiksvcQRJR3Qg==
-X-Received: by 2002:a81:4f81:0:b0:589:e7ab:d4e5 with SMTP id d123-20020a814f81000000b00589e7abd4e5mr10230888ywb.0.1695051730677;
-        Mon, 18 Sep 2023 08:42:10 -0700 (PDT)
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com. [209.85.128.177])
-        by smtp.gmail.com with ESMTPSA id h125-20020a816c83000000b005772abf6234sm2648718ywc.11.2023.09.18.08.42.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 18 Sep 2023 08:42:10 -0700 (PDT)
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-59e77e4f707so18770817b3.0;
-        Mon, 18 Sep 2023 08:42:10 -0700 (PDT)
-X-Received: by 2002:a0d:d491:0:b0:579:ec06:eb3d with SMTP id
- w139-20020a0dd491000000b00579ec06eb3dmr10848131ywd.21.1695051730200; Mon, 18
- Sep 2023 08:42:10 -0700 (PDT)
+        with ESMTP id S229751AbjIRPsc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2023 11:48:32 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93351CFC;
+        Mon, 18 Sep 2023 08:46:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1695051983; x=1726587983;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=s0vQPYCvTArOJ8UKcbPeJ71cltUHLof64ZzmndGbOp4=;
+  b=g2uLs8OADS77SXqB3EuVJrEreMnzHFPTafxvzmdEL/C30iUp3zH7jq1d
+   ABZ3Kgh5gdJWDrpY5cUPNAW0MC6MwehHgL8SJnJWsyivkRwisemiLfzRD
+   JkRNPbicHlrpKkMhHoxPsPyTChaGYZWWo9+635t/DgCn0pxxUem/ScJGT
+   4SLlJpWs3qxKi0/KMeTdVUlZ787kIuyPnPSg8tREZhknRBZJx+ocIwy8D
+   LwpMktM8zntgHLuDzWer72KmurJ5RX9+isF15HXWJoMsVjFIyeFEABBjp
+   SRMTXuInJSNLU6fsVFUgEno8xmvLj+zQAa0qNs2pEZq25iAy6AzZxGniE
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="446113610"
+X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
+   d="scan'208";a="446113610"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:13:45 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10837"; a="811343017"
+X-IronPort-AV: E=Sophos;i="6.02,156,1688454000"; 
+   d="scan'208";a="811343017"
+Received: from nprotaso-mobl1.ccr.corp.intel.com (HELO ijarvine-mobl2.ger.corp.intel.com) ([10.252.49.156])
+  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Sep 2023 06:13:39 -0700
+From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Heiner Kallweit <hkallweit1@gmail.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@kernel.org>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>,
+        ath12k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc:     ath10k@lists.infradead.org, ath11k@lists.infradead.org,
+        intel-wired-lan@lists.osuosl.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-bluetooth@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH v2 11/13] wifi: ath12k: Use pci_disable/enable_link_state()
+Date:   Mon, 18 Sep 2023 16:11:01 +0300
+Message-Id: <20230918131103.24119-12-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230918131103.24119-1-ilpo.jarvinen@linux.intel.com>
+References: <20230918131103.24119-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
-References: <cover.1694596125.git.ysato@users.sourceforge.jp> <701db4418652fc2ed36570ac20d57117ec6941c5.1694596125.git.ysato@users.sourceforge.jp>
-In-Reply-To: <701db4418652fc2ed36570ac20d57117ec6941c5.1694596125.git.ysato@users.sourceforge.jp>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 18 Sep 2023 17:41:57 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVoSYzvtTK7h+vEaGvkdL+3=zccHy9au6On9bOadT=JRg@mail.gmail.com>
-Message-ID: <CAMuHMdVoSYzvtTK7h+vEaGvkdL+3=zccHy9au6On9bOadT=JRg@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 09/30] Documentation/devicetree: Add
- renesas,sh7751-pci binding document.
-To:     Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc:     linux-sh@vger.kernel.org, glaubitz@physik.fu-berlin.de,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Sato-san,
+ath12k driver adjusts ASPM state itself which leaves ASPM service
+driver in PCI core unaware of the link state changes the driver
+implemented.
 
-On Wed, Sep 13, 2023 at 11:24 AM Yoshinori Sato
-<ysato@users.sourceforge.jp> wrote:
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+Call pci_disable_link_state() and pci_enable_link_state() instead of
+adjusting ASPMC field in LNKCTL directly in the driver and let PCI core
+handle the ASPM state management.
 
-Thanks for your patch!
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/net/wireless/ath/ath12k/pci.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/renesas,sh7751-pci.yaml
-> @@ -0,0 +1,57 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/renesas,sh7751-pci.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Renesas SH7751 PCI Host controller
-> +
-> +maintainers:
-> +  - Yoshinori Sato <ysato@users.sourceforge.jp>
-> +
-> +properties:
-> +  compatible:
-> +      - items:
-
-make dt_binding_check
-DT_SCHEMA_FILES=Documentation/devicetree/bindings/pci/renesas,sh7751-pci.yaml:
-
-    Documentation/devicetree/bindings/pci/renesas,sh7751-pci.yaml:14:7:
-[warning] wrong indentation: expected 4 but found 6 (indentation)
-
-> +          - enum:
-> +              - renesas,r2d-pci                 # Renesas RTS7751R2D board
-
-    Documentation/devicetree/bindings/pci/renesas,sh7751-pci.yaml:16:32:
-[error] syntax error: found character '\t' that cannot start any token
-(syntax)
-
-> +              - iodata,julian-pci        # IO DATA DEVICE Julian board
-
-Please drop the two board-specific compatible values, they do not
-represent different implementations of the PCI core in the SH7751 SoC.
-
-> +          - const: renesas,sh7751-pci
-> +
-> +  reg:
-> +    minItems: 3
-> +
-> +  interrupt-cells:
-> +    const: 1
-> +
-> +  address-cells:
-> +    const: 3
-> +
-> +  size-cells:
-> +    const: 2;
-> +
-> +  range:
-> +    description: |
-> +      The PCI bus memory area and I/O area.
-> +
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupt-cells
-> +  - address-cells
-> +  - size-cells
-> +  - range
-> +
-> +examples:
-> +  - |
-> +        pci@fe200000 {
-
-Please align "pci" with the "|" above
-
-> +                compatible = "renesas,sh7751-pci";
-
-Please indent by 4 spaces
-
-> +                #address-cells = <3>;
-> +                #size-cells = <2>;
-> +                ranges = <0x02000000 0 0xfd000000 0xfd000000 0 0x01000000>,
-> +                         <0x01000000 0 0xfe240000 0xfe240000 0 0x00040000>;
-> +                reg = <0xfe200000 0x0400>,
-> +                      <0x0c000000 0x04000000>,
-> +                      <0xff800000 0x0030>;
-> +                #interrupt-cells = <1>;
-
-    Documentation/devicetree/bindings/pci/renesas,sh7751-pci.example.dtb:
-pci@fe200000: 'device_type' is a required property
-        from schema $id: http://devicetree.org/schemas/pci/pci-bus.yaml#
-
-> +        };
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
+diff --git a/drivers/net/wireless/ath/ath12k/pci.c b/drivers/net/wireless/ath/ath12k/pci.c
+index fae5dfd6e9d7..9401f62476be 100644
+--- a/drivers/net/wireless/ath/ath12k/pci.c
++++ b/drivers/net/wireless/ath/ath12k/pci.c
+@@ -794,19 +794,15 @@ static void ath12k_pci_aspm_disable(struct ath12k_pci *ab_pci)
+ 		   u16_get_bits(ab_pci->link_ctl, PCI_EXP_LNKCTL_ASPM_L1));
+ 
+ 	/* disable L0s and L1 */
+-	pcie_capability_clear_word(ab_pci->pdev, PCI_EXP_LNKCTL,
+-				   PCI_EXP_LNKCTL_ASPMC);
+-
++	pci_disable_link_state(ab_pci->pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
+ 	set_bit(ATH12K_PCI_ASPM_RESTORE, &ab_pci->flags);
+ }
+ 
+ static void ath12k_pci_aspm_restore(struct ath12k_pci *ab_pci)
+ {
+ 	if (test_and_clear_bit(ATH12K_PCI_ASPM_RESTORE, &ab_pci->flags))
+-		pcie_capability_clear_and_set_word(ab_pci->pdev, PCI_EXP_LNKCTL,
+-						   PCI_EXP_LNKCTL_ASPMC,
+-						   ab_pci->link_ctl &
+-						   PCI_EXP_LNKCTL_ASPMC);
++		pci_enable_link_state(ab_pci->pdev, ab_pci->link_ctl &
++				      (PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1));
+ }
+ 
+ static void ath12k_pci_kill_tasklets(struct ath12k_base *ab)
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+2.30.2
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
