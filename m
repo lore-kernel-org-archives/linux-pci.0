@@ -2,93 +2,243 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 372B1C46CA1
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Sep 2023 17:06:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36C6BC46CA1
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Sep 2023 18:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229955AbjIRRGM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Sep 2023 13:06:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35670 "EHLO
+        id S229606AbjIRSQx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Sep 2023 14:16:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229508AbjIRRGL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2023 13:06:11 -0400
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F03F8E
-        for <linux-pci@vger.kernel.org>; Mon, 18 Sep 2023 10:06:02 -0700 (PDT)
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by bmailout3.hostsharing.net (Postfix) with ESMTPS id DDD42100B0390;
-        Mon, 18 Sep 2023 15:24:24 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 92E68595A2E; Mon, 18 Sep 2023 15:24:24 +0200 (CEST)
-Date:   Mon, 18 Sep 2023 15:24:24 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/sysfs: Protect driver's D3cold preference from user
- space
-Message-ID: <20230918132424.GA11357@wunner.de>
-References: <b8a7f4af2b73f6b506ad8ddee59d747cbf834606.1695025365.git.lukas@wunner.de>
- <20230918130742.GU1599918@black.fi.intel.com>
- <fd432ea4-247a-49ca-88e6-c9f88485eb98@amd.com>
+        with ESMTP id S229436AbjIRSQw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Sep 2023 14:16:52 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BE19DB;
+        Mon, 18 Sep 2023 11:16:47 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 444B1C433C7;
+        Mon, 18 Sep 2023 18:16:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695061006;
+        bh=2Mf/KGXjOsLhdTJn0eQyev4ZjscAq6j6d9GO+qy7b14=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=ZFKfOA27gDIN3NHNZ1+QfDEaw+ZsgZWlXgJ0VTQEgYIXysloU1UY26e6yS8EXEAF9
+         JE/b75loLovE5AwV/J0DihYHt3CwzH9uvQwGrsbl2rilK2TJvVu2YmlUkn08IqzEkN
+         6WlW7yiC256+krGc3NwsHLd8P5cyVjoGtbNRe/qOo0yjsi3ON/SCX/S/kGiUQLUHHm
+         yas9aehqyAd9BPH5u7vuBsMB1DOpFs/lWpC9R6DQGvimGDdnRdLi67rgRwAcUk6VaO
+         VFpIS4VWxXTWxFCr3NsaRRrDcnbGDvJ3fQpHfuPFL32Ns93Vf9EW5ulgEkWvyef/Xv
+         gNaCsRGxJHAWQ==
+Date:   Mon, 18 Sep 2023 13:16:44 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Shiju Jose <shiju.jose@huawei.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc:     "rafael@kernel.org" <rafael@kernel.org>,
+        "lenb@kernel.org" <lenb@kernel.org>,
+        "tony.luck@intel.com" <tony.luck@intel.com>,
+        "james.morse@arm.com" <james.morse@arm.com>,
+        "bp@alien8.de" <bp@alien8.de>,
+        "ying.huang@intel.com" <ying.huang@intel.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        Jonathan Cameron <jonathan.cameron@huawei.com>,
+        tanxiaofei <tanxiaofei@huawei.com>,
+        "Zengtao (B)" <prime.zeng@hisilicon.com>,
+        Dave Jiang <dave.jiang@intel.com>
+Subject: Re: [RFC PATCH 1/1] ACPI / APEI: Fix for overwriting aer info when
+ error status data have multiple sections
+Message-ID: <20230918181644.GA197123@bhelgaas>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <fd432ea4-247a-49ca-88e6-c9f88485eb98@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <c1a4d76b89c44437b328fe8a6d3517dc@huawei.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 18, 2023 at 08:14:21AM -0500, Mario Limonciello wrote:
-> On 9/18/2023 08:07, Mika Westerberg wrote:
-> > On Mon, Sep 18, 2023 at 02:48:01PM +0200, Lukas Wunner wrote:
-> > > struct pci_dev contains two flags which govern whether the device may
-> > > suspend to D3cold:
-> > > 
-> > > * no_d3cold provides an opt-out for drivers (e.g. if a device is known
-> > >    to not wake from D3cold)
-> > > 
-> > > * d3cold_allowed provides an opt-out for user space (default is true,
-> > >    user space may set to false)
-> > > 
-> > > Since commit 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend"),
-> > > the user space setting overwrites the driver setting.  Essentially user
-> > > space is trusted to know better than the driver whether D3cold is
-> > > working.
-> > > 
-> > > That feels unsafe and wrong.  Assume that the change was introduced
-> > > inadvertently and do not overwrite no_d3cold when d3cold_allowed is
-> > > modified.  Instead, consider d3cold_allowed in addition to no_d3cold
-> > > when choosing a suspend state for the device.
-> > > 
-> > > That way, user space may opt out of D3cold if the driver hasn't, but it
-> > > may no longer force an opt in if the driver has opted out.
-> > 
-> > Makes sense. I just wonder should the sysfs write fail from userspace
-> > perspective if the driver has opted out and userspace tries to force it?
-> > Or it does that already?
+[+to Rafael, probably the logical place to apply this]
+
+On Mon, Sep 18, 2023 at 01:07:45PM +0000, Shiju Jose wrote:
+> >-----Original Message-----
+> >From: Bjorn Helgaas <helgaas@kernel.org>
+> > ...
+
+> >On Sat, Sep 16, 2023 at 01:44:35AM +0800, shiju.jose@huawei.com wrote:
+> >> From: Shiju Jose <shiju.jose@huawei.com>
+> >>
+> >> ghes_handle_aer() lacks synchronization with
+> >> aer_recover_work_func(), so when error status data have multiple
+> >> sections, aer_recover_work_func() may use estatus data for
+> >> aer_capability_regs after it has been overwritten.
+> >>
+> >> The problem statement is here,
+> >> https://lore.kernel.org/all/20230901225755.GA90053@bhelgaas/
+> >>
+> >> In ghes_handle_aer() allocates memory for aer_capability_regs from the
+> >> ghes_estatus_pool and copy data for aer_capability_regs from the
+> >> estatus buffer. Free the memory in aer_recover_work_func() after
+> >> processing the data using the ghes_estatus_pool_region_free() added.
+> >
+> >Thanks for working this up!  I had it on my to-do list, but
+> >obviously had not gotten to it yet.
+> >
+> >> Reported-by: Bjorn Helgaas <helgaas@kernel.org>
+> >> Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
+> >> ---
+> >>  drivers/acpi/apei/ghes.c | 23 ++++++++++++++++++++++-
+> >>  drivers/pci/pcie/aer.c   | 10 ++++++++++
+> >>  include/acpi/ghes.h      |  1 +
+> >>  3 files changed, 33 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c index
+> >> ef59d6ea16da..63ad0541db38 100644
+> >> --- a/drivers/acpi/apei/ghes.c
+> >> +++ b/drivers/acpi/apei/ghes.c
+> >> @@ -209,6 +209,20 @@ int ghes_estatus_pool_init(unsigned int num_ghes)
+> >>  	return -ENOMEM;
+> >>  }
+> >>
+> >> +/**
+> >> + * ghes_estatus_pool_region_free - free previously allocated memory
+> >> + *				   from the ghes_estatus_pool.
+> >> + * @addr: address of memory to free.
+> >> + * @size: size of memory to free.
+> >> + *
+> >> + * Returns none.
+> >> + */
+> >> +void ghes_estatus_pool_region_free(unsigned long addr, u32 size) {
+> >> +	gen_pool_free(ghes_estatus_pool, addr, size); }
+> >> +EXPORT_SYMBOL_GPL(ghes_estatus_pool_region_free);
+> >> +
+> >>  static int map_gen_v2(struct ghes *ghes)  {
+> >>  	return
+> >> apei_map_generic_address(&ghes->generic_v2->read_ack_register);
+> >> @@ -564,6 +578,7 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+> >>  	    pcie_err->validation_bits & CPER_PCIE_VALID_AER_INFO) {
+> >>  		unsigned int devfn;
+> >>  		int aer_severity;
+> >> +		u8 *aer_info;
+> >>
+> >>  		devfn = PCI_DEVFN(pcie_err->device_id.device,
+> >>  				  pcie_err->device_id.function);
+> >> @@ -577,11 +592,17 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
+> >>  		if (gdata->flags & CPER_SEC_RESET)
+> >>  			aer_severity = AER_FATAL;
+> >>
+> >> +		aer_info = (void *)gen_pool_alloc(ghes_estatus_pool,
+> >> +						  sizeof(struct aer_capability_regs));
+> >> +		if (!aer_info)
+> >> +			return;
+> >> +		memcpy(aer_info, pcie_err->aer_info, sizeof(struct
+> >> +aer_capability_regs));
+> >
+> >This is a very straightforward approach to fixing this, and it looks pretty
+> >reasonable, although I'd rather not have to pull more GHES stuff into aer.c
+> >(ghes.h and ghes_estatus_pool_region_free()).
+> >
+> >What I had in mind was to put a queue of aer_capability_regs on the PCI side
+> >that could be used by both the APEI path and the native path.
+> >
+> >In the APEI path, platform firmware reads the error information from the
+> >hardware, and it feeds into PCI AER via aer_recover_queue().
+> >
+> >In the native path, Linux should be reading reads the same error information
+> >from the hardware, but it feeds into PCI AER quite differently, via
+> >aer_process_err_devices() and handle_error_source().
+> >
+> >These paths are fundamentally doing the exact same thing, but the data
+> >handling and dmesg logging are needlessly different.  I'd like to see them get a
+> >little more unified, so the native path could someday also feed into
+> >aer_recover_queue().
+> >
+> >Does that make any sense?
 > 
-> What's the history behind why userspace is allowed to opt a device out of
-> D3cold in the first place?
+> Thanks for letting us know.
+> Make sense, solution with in the AER looks better. 
+
+Thanks for considering this.  The AER rework I have in mind is a
+longer-term project, so unless you have time and interest in doing
+that, I think we should apply your patch since it's all ready to go.
+
+You pointed to the problem statement, but I think it would be good to
+include a brief outline directly in the commit log, e.g., something
+like this:
+
+  ghes_handle_aer() passes AER data to the PCI core for logging and
+  recovery by calling aer_recover_queue() with a pointer to struct
+  aer_capability_regs.
+
+  The problem was that aer_recover_queue() queues the pointer directly
+  without copying the aer_capability_regs data.  The pointer was to
+  the ghes->estatus buffer, which could be reused before
+  aer_recover_work_func() reads the data.
+
+  To avoid this problem, allocate a new aer_capability_regs structure
+  from the ghes_estatus_pool, copy the AER data from the ghes->estatus
+  buffer into it, pass a pointer to the new struct to
+  aer_recover_queue(), and free it after aer_recover_work_func() has
+  processed it.
+
+What's your take on this, Rafael?  The biggest change is in
+drivers/acpi, so if you want to take it, feel free to add my:
+
+  Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> >>  		aer_recover_queue(pcie_err->device_id.segment,
+> >>  				  pcie_err->device_id.bus,
+> >>  				  devfn, aer_severity,
+> >>  				  (struct aer_capability_regs *)
+> >> -				  pcie_err->aer_info);
+> >> +				  aer_info);
+> >>  	}
+> >>  #endif
+> >>  }
+> >> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c index
+> >> e85ff946e8c8..388b614c11fd 100644
+> >> --- a/drivers/pci/pcie/aer.c
+> >> +++ b/drivers/pci/pcie/aer.c
+> >> @@ -29,6 +29,7 @@
+> >>  #include <linux/kfifo.h>
+> >>  #include <linux/slab.h>
+> >>  #include <acpi/apei.h>
+> >> +#include <acpi/ghes.h>
+> >>  #include <ras/ras_event.h>
+> >>
+> >>  #include "../pci.h"
+> >> @@ -996,6 +997,15 @@ static void aer_recover_work_func(struct work_struct
+> >*work)
+> >>  			continue;
+> >>  		}
+> >>  		cper_print_aer(pdev, entry.severity, entry.regs);
+> >> +		/*
+> >> +		 * Memory for aer_capability_regs(entry.regs) is being
+> >allocated from the
+> >> +		 * ghes_estatus_pool to protect it from overwriting when
+> >multiple sections
+> >> +		 * are present in the error status. Thus free the same after
+> >processing
+> >> +		 * the data.
+> >> +		 */
+> >> +		ghes_estatus_pool_region_free((unsigned long)entry.regs,
+> >> +					      sizeof(struct aer_capability_regs));
+> >> +
+> >>  		if (entry.severity == AER_NONFATAL)
+> >>  			pcie_do_recovery(pdev, pci_channel_io_normal,
+> >>  					 aer_root_reset);
+> >> diff --git a/include/acpi/ghes.h b/include/acpi/ghes.h index
+> >> 3c8bba9f1114..40d89e161076 100644
+> >> --- a/include/acpi/ghes.h
+> >> +++ b/include/acpi/ghes.h
+> >> @@ -78,6 +78,7 @@ static inline struct list_head
+> >> *ghes_get_devices(void) { return NULL; }  #endif
+> >>
+> >>  int ghes_estatus_pool_init(unsigned int num_ghes);
+> >> +void ghes_estatus_pool_region_free(unsigned long addr, u32 size);
+> >>
+> >>  static inline int acpi_hest_get_version(struct acpi_hest_generic_data
+> >> *gdata)  {
+> >> --
+> >> 2.34.1
+> >>
 > 
-> It feels like it should have been a debugging only thing to me.
-
-That's a fair question.
-
-Apparently the default for d3cold_allowed was originally "false"
-and user space could opt in to D3cold.  Then commit 4f9c1397e2e8
-("PCI/PM: Enable D3/D3cold by default for most devices") changed
-the default to "true".  That was 11 years ago.
-
-I agree that today this should all work automatically and a
-user space option to disable D3cold on a per-device basis only
-really makes sense as a debugging aid, hence belongs in debugfs.
-
-Thanks,
-
-Lukas
+> Thanks,
+> Shiju
